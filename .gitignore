@@ -1,0 +1,5 @@
+*.swp
+node_modules/
+tags
+.DS_Store
+dist/css/*.map
