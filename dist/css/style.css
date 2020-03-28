@@ -1,203 +1,205 @@
 body {
-    background-color: black;
-    margin: 0;
-    color: white;
-    font-size: 14px;
+  background-color: black;
+  margin: 0;
+  color: white;
+  font-size: 14px;
 }
 
 .flexcontainer {
-    display: flex;
+  display: flex;
 }
 
 .settings {
-    background-color: black;
-    display: none;
+  background-color: black;
+  display: none;
 }
 
 #settingsbutton {
-    background-color: black;
-    color: red;
+  background-color: black;
+  color: red;
 }
 
 .tracker {
-    background-color: black;
-    position: relative;
-    left: 0;
-    top: 0;
-    empty-cells: show;
-    border-spacing: 0;
-    border: 0;
+  background-color: black;
+  position: relative;
+  left: 0;
+  top: 0;
+  empty-cells: show;
+  border-spacing: 0;
+  border: 0;
 }
 
 .tracker td {
-    width: 64px;
-    height: 64px;
-    padding: 0;
-    background-repeat: no-repeat;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  background-repeat: no-repeat;
 }
 
 .tracker .halfcell {
-    width: 32px;
-    height: 64px;
+  width: 32px;
+  height: 64px;
 }
 
 .itemconfig {
-    border-spacing: 0;
-    border: 1px solid white;
+  border-spacing: 0;
+  border: 1px solid white;
 }
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .stoops {
-    width: 128px;
-    height: 128px;
-    background-size: 200% 200%;
+  width: 128px;
+  height: 128px;
+  background-size: 200% 200%;
 }
 
 input {
-    margin-top: 5px;
-    margin-bottom: 5px;
-    display: inline-block;
-    *display: inline;
-    /* for IE7*/
-    zoom: 1;
-    /* for IE7*/
-    vertical-align: middle;
-    margin-left: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  display: inline-block;
+  *display: inline;
+  /* for IE7*/
+  zoom: 1;
+  /* for IE7*/
+  vertical-align: middle;
+  margin-left: 20px;
 }
 
 label {
-    display: inline-block;
-    *display: inline;
-    /* for IE7*/
-    zoom: 1;
-    /* for IE7*/
-    float: left;
-    padding-top: 5px;
-    text-align: right;
-    width: 140px;
+  display: inline-block;
+  *display: inline;
+  /* for IE7*/
+  zoom: 1;
+  /* for IE7*/
+  float: left;
+  padding-top: 5px;
+  text-align: right;
+  width: 140px;
 }
 
 .lonk {
-    width: 64px;
-    height: 64px;
-    border-spacing: 0;
-    border: 0;
+  width: 64px;
+  height: 64px;
+  border-spacing: 0;
+  border: 0;
 }
 
 .corner {
-    width: 32px;
-    height: 32px;
+  width: 32px;
+  height: 32px;
 }
 
 .true {
-    opacity: 1;
+  opacity: 1;
 }
 
 .false {
-    opacity: 0.25;
+  opacity: 0.25;
 }
 
 .mini {
-    width: 16px;
-    height: 16px;
-    vertical-align: text-bottom;
+  width: 16px;
+  height: 16px;
+  vertical-align: text-bottom;
 }
 
 .boss {
-    width: 24px;
-    height: 24px;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 75% 75%;
-    position: absolute;
-    margin-left: -12px;
-    margin-top: -12px;
-    z-index: 2;
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 75% 75%;
+  position: absolute;
+  margin-left: -12px;
+  margin-top: -12px;
+  z-index: 2;
 }
 
 .dungeon {
-    width: 48px;
-    height: 48px;
-    background-size: 100% 100%;
-    position: absolute;
-    margin-left: -24px;
-    margin-top: -24px;
+  width: 48px;
+  height: 48px;
+  background-size: 100% 100%;
+  position: absolute;
+  margin-left: -24px;
+  margin-top: -24px;
 }
 
 .itemdiv {
-    left: 0;
-    width: 480px;
-    margin: 0 auto;
-    display: inline-block;
-    vertical-align: middle;
+  left: 0;
+  width: 480px;
+  margin: 0 auto;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .mapdiv {
-    background-image: url("../img/map.png");
-    position: relative;
-    width: 884px;
-    height: 442px;
-    display: inline-block;
-    vertical-align: middle;
+  background-image: url("/dist/img/map.png");
+  position: relative;
+  width: 884px;
+  height: 442px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .mapvdiv {
-    background-image: url("../img/mapv.png");
-    position: relative;
-    width: 438px;
-    height: 888px;
-    display: inline-block;
-    vertical-align: top;
+  background-image: url("/dist/img/mapv.png");
+  position: relative;
+  width: 438px;
+  height: 888px;
+  display: inline-block;
+  vertical-align: top;
 }
 
 .chest {
-    width: 24px;
-    height: 24px;
-    background-size: 100% 100%;
-    position: absolute;
-    margin-left: -12px;
-    margin-top: -12px;
+  width: 24px;
+  height: 24px;
+  background-size: 100% 100%;
+  position: absolute;
+  margin-left: -12px;
+  margin-top: -12px;
 }
 
 .unavailable {
-    background-color: red;
+  background-color: red;
 }
 
 .available {
-    background-color: lime;
+  background-color: lime;
 }
 
 .possible {
-    background-color: yellow;
+  background-color: yellow;
 }
 
 .opened {
-    background-color: #7f7f7f;
+  background-color: #7f7f7f;
 }
 
 #layoutDiv {
-    display: block;
-    margin: 0 auto;
-    width: 95%;
+  display: block;
+  margin: 0 auto;
+  width: 95%;
 }
 
 #settingsDiv {
-    display: inline-block;
-    vertical-align: top;
-    margin-left: 15px;
+  display: inline-block;
+  vertical-align: top;
+  margin-left: 15px;
 }
 
 footer {
-    width: 100%;
-    text-align: center;
+  width: 100%;
+  text-align: center;
 }
 
 .span-bloc {
-    border: 3px solid black;
-    color: black;
+  border: 3px solid black;
+  color: black;
 }
+
+/*# sourceMappingURL=style.css.map */
 
 /*# sourceMappingURL=style.css.map */
