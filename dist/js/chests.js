@@ -739,7 +739,7 @@ chests[36] = {
 };
 
 chests[37] = {
-    name: "Lumberjack Tree <img src='img/agahnim.png' class='mini'><img src='img/boots.png' class='mini'>",
+    name: "Lumberjack Tree <img src='img/agahnim0.png' class='mini'><img src='img/boots.png' class='mini'>",
     x: "15.1%",
     y: "7.6%",
     isOpened: false,
