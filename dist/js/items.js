@@ -1,4 +1,4 @@
-var defaultItemGrid = [
+let defaultItemGrid = [
     [
         "bow",
         "hookshot",
@@ -49,7 +49,7 @@ var defaultItemGrid = [
     ],
 ]
 
-var items = {
+let items = {
     bow: 0,
     hookshot: false,
     hammer: false,
@@ -93,7 +93,7 @@ var items = {
     blank: false
 }
 
-var dungeonchests = {
+let dungeonchests = {
     0: 3,
     1: 2,
     2: 2,
@@ -107,7 +107,7 @@ var dungeonchests = {
 }
 
 
-var itemsMin = {
+let itemsMin = {
     sword: 0,
     shield: 0,
     tunic: 1,
@@ -132,7 +132,7 @@ var itemsMin = {
     boss9: 1
 }
 
-var itemsMax = {
+let itemsMax = {
     sword: 4,
     shield: 3,
     tunic: 3,

@@ -7,7 +7,7 @@ function steve() {
 }
 
 // define dungeon chests
-var dungeons = new Array
+let dungeons = new Array
 
 dungeons[0] = {
     name: "Eastern Palace",
@@ -300,7 +300,7 @@ dungeons[9] = {
 }
 
 //define overworld chests
-var chests = new Array
+let chests = new Array
 
 chests[0] = {
     name: "King's Tomb <img src='/dist/img/boots.png' class='mini'> + <img src='/dist/img/glove2.png' class='mini'>/<img src='/dist/img/mirror.png' class='mini'>",
@@ -601,7 +601,7 @@ chests[25] = {
     y: "46.7%",
     isOpened: false,
     isAvailable: function () {
-        for (var k = 0; k < 10; k++)
+        for (let k = 0; k < 10; k++)
             if (prizes[k] == 1 && items["boss" + k] == 2)
                 return "available"
         return "unavailable"
@@ -1037,8 +1037,8 @@ chests[61] = {
     isOpened: false,
     isAvailable: function () {
         //crystal check
-        var crystalCount = 0
-        for (var k = 0; k < 10; k++)
+        let crystalCount = 0
+        for (let k = 0; k < 10; k++)
             if (prizes[k] == 4 && items["boss" + k] == 2)
                 crystalCount++
 
@@ -1059,8 +1059,8 @@ chests[62] = {
     y: "3.2%",
     isOpened: false,
     isAvailable: function () {
-        var pendantCount = 0
-        for (var k = 0; k < 10; k++)
+        let pendantCount = 0
+        for (let k = 0; k < 10; k++)
             if ((prizes[k] == 1 || prizes[k] == 2) && items["boss" + k] == 2)
                 if (++pendantCount == 3)
                     return "available"

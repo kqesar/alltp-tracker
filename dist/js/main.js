@@ -1,28 +1,28 @@
-var prizes = []
-var medallions = []
+let prizes = []
+let medallions = []
 
-var itemGrid = []
-var itemLayout = []
-var showchests = true
-var showprizes = true
-var showmedals = true
+let itemGrid = []
+let itemLayout = []
+let showchests = true
+let showprizes = true
+let showmedals = true
 
-var editmode = false
-var selected = {}
+let editmode = false
+let selected = {}
 
 function setCookie(obj) {
-    var d = new Date()
+    let d = new Date()
     d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000))
-    var expires = "expires=" + d.toUTCString()
-    var val = JSON.stringify(obj)
+    let expires = "expires=" + d.toUTCString()
+    let val = JSON.stringify(obj)
     document.cookie = "key=" + val + ";" + expires + ";path=/"
 }
 
 function getCookie() {
-    var name = "key="
-    var ca = document.cookie.split(';')
-    for (var i = 0; i < ca.length; i++) {
-        var c = ca[i]
+    let name = "key="
+    let ca = document.cookie.split(';')
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i]
         while (c.charAt(0) == ' ') {
             c = c.substring(1)
         }
@@ -33,8 +33,8 @@ function getCookie() {
     return {}
 }
 
-var cookiekeys = ['map', 'iZoom', 'mZoom', 'mOrien', 'mPos', 'chest', 'prize', 'medal', 'items']
-var cookieDefault = {
+let cookiekeys = ['map', 'iZoom', 'mZoom', 'mOrien', 'mPos', 'chest', 'prize', 'medal', 'items']
+let cookieDefault = {
     map: 1,
     iZoom: 100,
     mZoom: 51,
@@ -46,7 +46,7 @@ var cookieDefault = {
     items: defaultItemGrid
 }
 
-var cookielock = false
+let cookielock = false
 
 function loadCookie() {
     if (cookielock)
@@ -168,7 +168,7 @@ function setOrientation() {
 
 }
 
-var prevH = false
+let prevH = false
 
 function setMapOrientation(H) {
     if (H == prevH) {
@@ -177,15 +177,15 @@ function setMapOrientation(H) {
     prevH = H
 
 
-    var chest = document.getElementsByClassName("mapspan")
-    var i
+    let chest = document.getElementsByClassName("mapspan")
+    let i
 
     if (H) {
         document.getElementById("mapdiv").classList.remove('mapdiv')
         document.getElementById("mapdiv").classList.add('mapvdiv')
         for (i = 0; i < chest.length; i++) {
-            var x = parseFloat(chest[i].style.left) / 100
-            var y = parseFloat(chest[i].style.top) / 100
+            let x = parseFloat(chest[i].style.left) / 100
+            let y = parseFloat(chest[i].style.top) / 100
 
             if (x > 0.5) {
                 chest[i].style.left = (((x - 0.5) * 2) * 100) + '%'
@@ -199,8 +199,8 @@ function setMapOrientation(H) {
         document.getElementById("mapdiv").classList.add('mapdiv')
         document.getElementById("mapdiv").classList.remove('mapvdiv')
         for (i = 0; i < chest.length; i++) {
-            var x = parseFloat(chest[i].style.left) / 100
-            var y = parseFloat(chest[i].style.top) / 100
+            let x = parseFloat(chest[i].style.left) / 100
+            let y = parseFloat(chest[i].style.top) / 100
 
             if (y > 0.5) {
                 chest[i].style.left = (((x / 2) + 0.5) * 100) + '%'
@@ -216,8 +216,8 @@ function setMapOrientation(H) {
 
 function showSettings(sender) {
     if (editmode) {
-        var r, c
-        var startdraw = false
+        let r, c
+        let startdraw = false
         for (r = 7; r >= 0 && !startdraw; r--) {
             if (!itemLayout[r] || !itemLayout[r].length) {
                 itemGrid[r]['row'].style.display = 'none'
@@ -253,7 +253,7 @@ function showSettings(sender) {
         sender.innerHTML = '🔧'
         saveCookie()
     } else {
-        var x = document.getElementById("settings")
+        let x = document.getElementById("settings")
         if (!x.style.display || x.style.display == 'none') {
             x.style.display = 'initial'
             sender.innerHTML = 'X'
@@ -292,7 +292,7 @@ function clickRowButton(row) {
 
 
 function EditMode() {
-    var r, c
+    let r, c
 
     for (r = 0; r < 8; r++) {
         itemGrid[r]['row'].style.display = ''
@@ -314,7 +314,7 @@ function EditMode() {
 
 
 function createItemTracker(sender) {
-    var r
+    let r
     for (r = 0; r < 8; r++) {
         itemGrid[r] = []
         itemLayout[r] = []
@@ -323,14 +323,14 @@ function createItemTracker(sender) {
         itemGrid[r]['row'].className = 'tracker'
         sender.appendChild(itemGrid[r]['row'])
 
-        var tr = document.createElement('tr')
+        let tr = document.createElement('tr')
         itemGrid[r]['row'].appendChild(tr)
 
         itemGrid[r]['half'] = document.createElement('td')
         itemGrid[r]['half'].className = 'halfcell'
         tr.appendChild(itemGrid[r]['half'])
 
-        var i
+        let i
         for (i = 0; i < 7; i++) {
             itemGrid[r][i] = []
             itemLayout[r][i] = 'blank'
@@ -339,11 +339,11 @@ function createItemTracker(sender) {
             itemGrid[r][i]['item'].className = 'griditem'
             tr.appendChild(itemGrid[r][i]['item'])
 
-            var tdt = document.createElement('table')
+            let tdt = document.createElement('table')
             tdt.className = 'lonk'
             itemGrid[r][i]['item'].appendChild(tdt)
 
-            var tdtr1 = document.createElement('tr')
+            let tdtr1 = document.createElement('tr')
             tdt.appendChild(tdtr1)
             itemGrid[r][i][0] = document.createElement('th')
             itemGrid[r][i][0].className = 'corner'
@@ -353,7 +353,7 @@ function createItemTracker(sender) {
             itemGrid[r][i][1].className = 'corner'
             itemGrid[r][i][1].onclick = new Function("gridItemClick(" + r + "," + i + ",1)")
             tdtr1.appendChild(itemGrid[r][i][1])
-            var tdtr2 = document.createElement('tr')
+            let tdtr2 = document.createElement('tr')
             tdt.appendChild(tdtr2)
             itemGrid[r][i][2] = document.createElement('th')
             itemGrid[r][i][2].className = 'corner'
@@ -365,7 +365,7 @@ function createItemTracker(sender) {
             tdtr2.appendChild(itemGrid[r][i][3])
         }
 
-        var half = document.createElement('td')
+        let half = document.createElement('td')
         half.className = 'halfcell'
         tr.appendChild(half)
         itemGrid[r]['button'] = document.createElement('button')
@@ -379,7 +379,7 @@ function createItemTracker(sender) {
 }
 
 function updateGridItem(row, index) {
-    var item = itemLayout[row][index]
+    let item = itemLayout[row][index]
 
     if (editmode) {
         if (!item || item == 'blank') {
@@ -413,7 +413,7 @@ function updateGridItem(row, index) {
     itemGrid[row][index]['item'].className = "griditem " + (!!items[item])
 
     if (item.substring(0, 4) == "boss") {
-        var d = item.substring(4, 5)
+        let d = item.substring(4, 5)
 
         if (showchests) {
             itemGrid[row][index][2].style.backgroundImage = "url(/dist/img/chest" + dungeonchests[d] + ".png)"
@@ -444,7 +444,7 @@ function updateGridItemAll() {
 }
 
 function setGridItem(item, row, index) {
-    var previtem = itemLayout[row][index]
+    let previtem = itemLayout[row][index]
     itemLayout[row][index] = item
     if (item != 'blank')
         document.getElementById(item).style.opacity = 0.25
@@ -455,8 +455,8 @@ function initGridRow(itemsets) {
     prizes = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     medallions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-    var r, c
-    var startdraw = false
+    let r, c
+    let startdraw = false
     for (r = 7; r >= 0 && !startdraw; r--) {
         if (!itemsets[r] || !itemsets[r].length) {
             itemGrid[r]['row'].style.display = 'none'
@@ -500,7 +500,7 @@ function gridItemClick(row, col, corner) {
     if (editmode) {
         if (selected.item) {
             document.getElementById(selected.item).style.border = '1px solid white'
-            var old = itemLayout[row][col]
+            let old = itemLayout[row][col]
 
             if (old == selected.item) {
                 selected = {}
@@ -510,8 +510,8 @@ function gridItemClick(row, col, corner) {
             if (selected.item != 'blank') {
                 document.getElementById(selected.item).style.opacity = 0.25
 
-                var r, c
-                var found = false
+                let r, c
+                let found = false
                 for (r = 0; r < 8; r++) {
                     for (c = 0; c < 7; c++) {
                         if (itemLayout[r][c] == selected.item) {
@@ -535,7 +535,7 @@ function gridItemClick(row, col, corner) {
         } else if (selected.row !== undefined) {
             itemGrid[selected.row][selected.col]['item'].style.border = '1px solid white'
 
-            var temp = itemLayout[row][col]
+            let temp = itemLayout[row][col]
             itemLayout[row][col] = itemLayout[selected.row][selected.col]
             itemLayout[selected.row][selected.col] = temp
             updateGridItem(row, col)
@@ -549,10 +549,10 @@ function gridItemClick(row, col, corner) {
         return
     }
 
-    var item = itemLayout[row][col]
+    let item = itemLayout[row][col]
 
     if (item.substring(0, 4) == "boss") {
-        var d = item.substring(4, 5)
+        let d = item.substring(4, 5)
 
         if (corner == 1 && showmedals && d >= 8) {
             medallions[d]++
@@ -572,14 +572,14 @@ function gridItemClick(row, col, corner) {
                 toggleChest(4)
             }
             // Change the mouseover text on the map
-            var dungeonName
+            let dungeonName
             if (d == 8)
                 dungeonName = "Misery Mire"
             else
                 dungeonName = "Turtle Rock"
             dungeons[d].name = dungeonName + " <img src='/dist/img/medallion" + medallions[d] + ".png' class='mini'><img src='/dist/img/lantern.png' class='mini'>"
         } else if (corner == 2 && showchests) {
-            var chestitem = 'chest' + d
+            let chestitem = 'chest' + d
             dungeonchests[d]--
             if (dungeonchests[d] < 0)
                 dungeonchests[d] = itemsMax[chestitem]
@@ -593,7 +593,7 @@ function gridItemClick(row, col, corner) {
             if (prizes[d] == 5)
                 prizes[d] = 0
             // Update Sahasralah, Fat Fairy, and Master Sword Pedestal
-            var pendantChests = [25, 61, 62]
+            let pendantChests = [25, 61, 62]
             for (k = 0; k < pendantChests.length; k++) {
                 if (!chests[pendantChests[k]].isOpened)
                     document.getElementById(pendantChests[k]).className = "mapspan chest " + chests[pendantChests[k]].isAvailable()
@@ -635,7 +635,7 @@ function gridItemClick(row, col, corner) {
 }
 
 function itemConfigClick(sender) {
-    var item = sender.id
+    let item = sender.id
 
     if (selected.item) {
         document.getElementById(selected.item).style.border = '0px'
@@ -643,7 +643,7 @@ function itemConfigClick(sender) {
         selected = {item: item}
     } else if (selected.row !== undefined) {
         itemGrid[selected.row][selected.col]['item'].style.border = '1px solid white'
-        var old = itemLayout[selected.row][selected.col]
+        let old = itemLayout[selected.row][selected.col]
 
         if (old == item) {
             selected = {}
@@ -653,8 +653,8 @@ function itemConfigClick(sender) {
         if (item != 'blank') {
             sender.style.opacity = 0.25
 
-            var r, c
-            var found = false
+            let r, c
+            let found = false
             for (r = 0; r < 8; r++) {
                 for (c = 0; c < 7; c++) {
                     if (itemLayout[r][c] == item) {
@@ -683,11 +683,11 @@ function itemConfigClick(sender) {
 }
 
 function populateMapdiv() {
-    var mapdiv = document.getElementById('mapdiv')
+    let mapdiv = document.getElementById('mapdiv')
 
     // Initialize all chests on the map
     for (k = 0; k < chests.length; k++) {
-        var s = document.createElement('span')
+        let s = document.createElement('span')
         s.style.backgroundImage = 'url(/dist/img/poi.png)'
         s.style.color = 'black'
         s.id = k
@@ -705,7 +705,7 @@ function populateMapdiv() {
 
     // Dungeon bosses & chests
     for (k = 0; k < dungeons.length; k++) {
-        var s = document.createElement('span')
+        let s = document.createElement('span')
         s.style.backgroundImage = 'url(/dist/img/' + dungeons[k].image + ')'
         s.id = 'bossMap' + k
         s.onmouseover = new Function('highlightDungeon(' + k + ')')
@@ -728,20 +728,20 @@ function populateMapdiv() {
 }
 
 function populateItemconfig() {
-    var grid = document.getElementById('itemconfig')
+    let grid = document.getElementById('itemconfig')
 
-    var i = 0
+    let i = 0
 
-    var row
+    let row
 
-    for (var key in items) {
+    for (let key in items) {
         if (i % 10 == 0) {
             row = document.createElement('tr')
             grid.appendChild(row)
         }
         i++
 
-        var rowitem = document.createElement('td')
+        let rowitem = document.createElement('td')
         rowitem.className = 'corner'
         rowitem.id = key
         rowitem.style.backgroundSize = '100% 100%'
