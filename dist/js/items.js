@@ -23,7 +23,7 @@ var defaultItemGrid = [
         "quake",
         "boss2",
     ],
-        [
+    [
         "shovel",
         "glove",
         "bottle",
@@ -72,7 +72,7 @@ var items = {
     shovel: false,
     mushroom: false,
     powder: false,
-    bottle:0,
+    bottle: 0,
     cape: false,
     icerod: false,
     byrna: false,
@@ -91,7 +91,7 @@ var items = {
     agahnim: 0,
 
     blank: false
-};
+}
 
 var dungeonchests = {
     0: 3,
@@ -103,67 +103,67 @@ var dungeonchests = {
     6: 4,
     7: 3,
     8: 2,
-    9: 5     
+    9: 5
 }
 
 
 var itemsMin = {
-    sword:0,
-    shield:0,
-    tunic:1,
+    sword: 0,
+    shield: 0,
+    tunic: 1,
 
-    bottle:0,
-    bow:0,
-    boomerang:0,
-    glove:0,
+    bottle: 0,
+    bow: 0,
+    boomerang: 0,
+    glove: 0,
 
-	boss0: 1,
-	boss1: 1,
-	boss2: 1,
+    boss0: 1,
+    boss1: 1,
+    boss2: 1,
 
-    agahnim:0,
+    agahnim: 0,
 
-	boss3: 1,
-	boss4: 1,
-	boss5: 1,
-	boss6: 1,
-	boss7: 1,
-	boss8: 1,
-	boss9: 1
-};
+    boss3: 1,
+    boss4: 1,
+    boss5: 1,
+    boss6: 1,
+    boss7: 1,
+    boss8: 1,
+    boss9: 1
+}
 
 var itemsMax = {
-    sword:4,
-    shield:3,
-    tunic:3,
+    sword: 4,
+    shield: 3,
+    tunic: 3,
 
-    bottle:4,
-    bow:3,
-    boomerang:3,
-    glove:2,
+    bottle: 4,
+    bow: 3,
+    boomerang: 3,
+    glove: 2,
 
-	boss0: 2,
-	boss1: 2,
-	boss2: 2,
+    boss0: 2,
+    boss1: 2,
+    boss2: 2,
 
-    agahnim:1,
+    agahnim: 1,
 
-	boss3: 2,
-	boss4: 2,
-	boss5: 2,
-	boss6: 2,
-	boss7: 2,
-	boss8: 2,
-	boss9: 2,
-	
-	chest0: 3,
+    boss3: 2,
+    boss4: 2,
+    boss5: 2,
+    boss6: 2,
+    boss7: 2,
+    boss8: 2,
+    boss9: 2,
+
+    chest0: 3,
     chest1: 2,
     chest2: 2,
-	chest3: 5,
+    chest3: 5,
     chest4: 6,
     chest5: 2,
     chest6: 4,
     chest7: 3,
     chest8: 2,
-    chest9: 5 
-};
+    chest9: 5
+}
