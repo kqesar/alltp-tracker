@@ -77,7 +77,7 @@ dungeons[2] = {
 };
 
 dungeons[3] = {
-    name: "Palace of Darkness <img src='img/lantern.png' class='mini'>",
+    name: "Palace of Darkness <img src='/dist/img/lantern.png' class='mini'>",
     x: "97.0%",
     y: "40.0%",
     image: "boss32.png",
@@ -101,7 +101,7 @@ dungeons[3] = {
 };
 
 dungeons[4] = {
-    name: "Swamp Palace <img src='img/mirror.png' class='mini'>",
+    name: "Swamp Palace <img src='/dist/img/mirror.png' class='mini'>",
     x: "73.5%",
     y: "91.0%",
     image: "boss42.png",
@@ -212,7 +212,7 @@ dungeons[7] = {
 };
 
 dungeons[8] = {
-    name: "Misery Mire <img src='img/medallion0.png' class='mini'><img src='img/lantern.png' class='mini'>",
+    name: "Misery Mire <img src='/dist/img/medallion0.png' class='mini'><img src='/dist/img/lantern.png' class='mini'>",
     x: "55.8%",
     y: "82.9%",
     image: "boss82.png",
@@ -256,7 +256,7 @@ dungeons[8] = {
 };
 
 dungeons[9] = {
-    name: "Turtle Rock <img src='img/medallion0.png' class='mini'><img src='img/lantern.png' class='mini'>",
+    name: "Turtle Rock <img src='/dist/img/medallion0.png' class='mini'><img src='/dist/img/lantern.png' class='mini'>",
     x: "96.9%",
     y: "7.0%",
     image: "boss92.png",
@@ -303,7 +303,7 @@ dungeons[9] = {
 var chests = new Array;
 
 chests[0] = {
-    name: "King's Tomb <img src='img/boots.png' class='mini'> + <img src='img/glove2.png' class='mini'>/<img src='img/mirror.png' class='mini'>",
+    name: "King's Tomb <img src='/dist/img/boots.png' class='mini'> + <img src='/dist/img/glove2.png' class='mini'>/<img src='/dist/img/mirror.png' class='mini'>",
     x: "30.8%",
     y: "29.6%",
     isOpened: false,
@@ -349,7 +349,7 @@ chests[3] = {
 };
 
 chests[4] = {
-    name: "Mimic Cave (<img src='img/mirror.png' class='mini'> outside of Turtle Rock)(Yellow = <img src='img/medallion0.png' class='mini'> unkown OR possible w/out <img src='img/firerod.png' class='mini'>)",
+    name: "Mimic Cave (<img src='/dist/img/mirror.png' class='mini'> outside of Turtle Rock)(Yellow = <img src='/dist/img/medallion0.png' class='mini'> unkown OR possible w/out <img src='/dist/img/firerod.png' class='mini'>)",
     x: "42.6%",
     y: "9.3%",
     isOpened: false,
@@ -381,7 +381,7 @@ chests[5] = {
 };
 
 chests[6] = {
-    name: "Chicken House <img src='img/bomb.png' class='mini'>",
+    name: "Chicken House <img src='/dist/img/bomb.png' class='mini'>",
     x: "4.4%",
     y: "54.2%",
     isOpened: false,
@@ -391,7 +391,7 @@ chests[6] = {
 };
 
 chests[7] = {
-    name: "Bombable Hut <img src='img/bomb.png' class='mini'>",
+    name: "Bombable Hut <img src='/dist/img/bomb.png' class='mini'>",
     x: "55.4%",
     y: "57.8%",
     isOpened: false,
@@ -415,7 +415,7 @@ chests[8] = {
 };
 
 chests[9] = {
-    name: "Aginah's Cave <img src='img/bomb.png' class='mini'>",
+    name: "Aginah's Cave <img src='/dist/img/bomb.png' class='mini'>",
     x: "10.0%",
     y: "82.6%",
     isOpened: false,
@@ -437,7 +437,7 @@ chests[10] = {
 };
 
 chests[11] = {
-    name: "DW Death Mountain (2) : Don't need <img src='img/moonpearl.png' class='mini'>",
+    name: "DW Death Mountain (2) : Don't need <img src='/dist/img/moonpearl.png' class='mini'>",
     x: "92.8%",
     y: "14.7%",
     isOpened: false,
@@ -449,7 +449,7 @@ chests[11] = {
 };
 
 chests[12] = {
-    name: "Sahasrahla's Hut (3) <img src='img/bomb.png' class='mini'>/<img src='img/boots.png' class='mini'>",
+    name: "Sahasrahla's Hut (3) <img src='/dist/img/bomb.png' class='mini'>/<img src='/dist/img/boots.png' class='mini'>",
     x: "40.7%",
     y: "41.4%",
     isOpened: false,
@@ -471,7 +471,7 @@ chests[13] = {
 };
 
 chests[14] = {
-    name: "Kakariko Well (4 + <img src='img/bomb.png' class='mini'>)",
+    name: "Kakariko Well (4 + <img src='/dist/img/bomb.png' class='mini'>)",
     x: "1.7%",
     y: "41.0%",
     isOpened: false,
@@ -481,7 +481,7 @@ chests[14] = {
 };
 
 chests[15] = {
-    name: "Thieve's Hut (4 + <img src='img/bomb.png' class='mini'>)",
+    name: "Thieve's Hut (4 + <img src='/dist/img/bomb.png' class='mini'>)",
     x: "6.4%",
     y: "41.0%",
     isOpened: false,
@@ -491,7 +491,7 @@ chests[15] = {
 };
 
 chests[16] = {
-    name: "Hype Cave! <img src='img/bomb.png' class='mini'> (NPC + 4 <img src='img/bomb.png' class='mini'>)",
+    name: "Hype Cave! <img src='/dist/img/bomb.png' class='mini'> (NPC + 4 <img src='/dist/img/bomb.png' class='mini'>)",
     x: "80.0%",
     y: "77.1%",
     isOpened: false,
@@ -503,7 +503,7 @@ chests[16] = {
 };
 
 chests[17] = {
-    name: "Death Mountain East (5 + 2 <img src='img/bomb.png' class='mini'>)",
+    name: "Death Mountain East (5 + 2 <img src='/dist/img/bomb.png' class='mini'>)",
     x: "41.4%",
     y: "17.1%",
     isOpened: false,
@@ -516,7 +516,7 @@ chests[17] = {
 };
 
 chests[18] = {
-    name: "West of Sanctuary <img src='img/boots.png' class='mini'>",
+    name: "West of Sanctuary <img src='/dist/img/boots.png' class='mini'>",
     x: "19.5%",
     y: "29.3%",
     isOpened: false,
@@ -529,7 +529,7 @@ chests[18] = {
 };
 
 chests[19] = {
-    name: "Minimoldorm Cave (NPC + 4) <img src='img/bomb.png' class='mini'>",
+    name: "Minimoldorm Cave (NPC + 4) <img src='/dist/img/bomb.png' class='mini'>",
     x: "32.6%",
     y: "93.4%",
     isOpened: false,
@@ -539,7 +539,7 @@ chests[19] = {
 };
 
 chests[20] = {
-    name: "Ice Rod Cave <img src='img/bomb.png' class='mini'>",
+    name: "Ice Rod Cave <img src='/dist/img/bomb.png' class='mini'>",
     x: "44.7%",
     y: "76.9%",
     isOpened: false,
@@ -549,7 +549,7 @@ chests[20] = {
 };
 
 chests[21] = {
-    name: "Cave Under Rock (bottom chest) <img src='img/hookshot.png' class='mini'>/<img src='img/boots.png' class='mini'>",
+    name: "Cave Under Rock (bottom chest) <img src='/dist/img/hookshot.png' class='mini'>/<img src='/dist/img/boots.png' class='mini'>",
     x: "91.6%",
     y: "8.6%",
     isOpened: false,
@@ -561,7 +561,7 @@ chests[21] = {
 };
 
 chests[22] = {
-    name: "Cave Under Rock (3 top chests) <img src='img/hookshot.png' class='mini'>",
+    name: "Cave Under Rock (3 top chests) <img src='/dist/img/hookshot.png' class='mini'>",
     x: "91.6%",
     y: "3.4%",
     isOpened: false,
@@ -596,7 +596,7 @@ chests[24] = {
 };
 
 chests[25] = {
-    name: "Sahasrahla <img src='img/pendant0.png' class='mini'>",
+    name: "Sahasrahla <img src='/dist/img/pendant0.png' class='mini'>",
     x: "40.7%",
     y: "46.7%",
     isOpened: false,
@@ -621,7 +621,7 @@ chests[26] = {
 };
 
 chests[27] = {
-    name: "Dying Boy: Distract him with <img src='img/bottle0.png' class='mini'> so that you can rob his family!",
+    name: "Dying Boy: Distract him with <img src='/dist/img/bottle0.png' class='mini'> so that you can rob his family!",
     x: "7.8%",
     y: "52.1%",
     isOpened: false,
@@ -645,7 +645,7 @@ chests[28] = {
 };
 
 chests[29] = {
-    name: "Fugitive under the bridge <img src='img/flippers.png' class='mini'>",
+    name: "Fugitive under the bridge <img src='/dist/img/flippers.png' class='mini'>",
     x: "35.4%",
     y: "69.7%",
     isOpened: false,
@@ -657,7 +657,7 @@ chests[29] = {
 };
 
 chests[30] = {
-    name: "Ether Tablet <img src='img/sword2.png' class='mini'><img src='img/book.png' class='mini'>",
+    name: "Ether Tablet <img src='/dist/img/sword2.png' class='mini'><img src='/dist/img/book.png' class='mini'>",
     x: "21.0%",
     y: "3.0%",
     isOpened: false,
@@ -669,7 +669,7 @@ chests[30] = {
 };
 
 chests[31] = {
-    name: "Bombos Tablet <img src='img/mirror.png' class='mini'><img src='img/sword2.png' class='mini'><img src='img/book.png' class='mini'>",
+    name: "Bombos Tablet <img src='/dist/img/mirror.png' class='mini'><img src='/dist/img/sword2.png' class='mini'><img src='/dist/img/book.png' class='mini'>",
     x: "11.0%",
     y: "92.2%",
     isOpened: false,
@@ -717,7 +717,7 @@ chests[34] = {
 };
 
 chests[35] = {
-    name: "Witch: Give her <img src='img/mushroom.png' class='mini'>",
+    name: "Witch: Give her <img src='/dist/img/mushroom.png' class='mini'>",
     x: "40.8%",
     y: "32.5%",
     isOpened: false,
@@ -739,7 +739,7 @@ chests[36] = {
 };
 
 chests[37] = {
-    name: "Lumberjack Tree <img src='img/agahnim0.png' class='mini'><img src='img/boots.png' class='mini'>",
+    name: "Lumberjack Tree <img src='/dist/img/agahnim0.png' class='mini'><img src='/dist/img/boots.png' class='mini'>",
     x: "15.1%",
     y: "7.6%",
     isOpened: false,
@@ -763,7 +763,7 @@ chests[38] = {
 };
 
 chests[39] = {
-    name: "South of Grove <img src='img/mirror.png' class='mini'>",
+    name: "South of Grove <img src='/dist/img/mirror.png' class='mini'>",
     x: "14.1%",
     y: "84.1%",
     isOpened: false,
@@ -775,7 +775,7 @@ chests[39] = {
 };
 
 chests[40] = {
-    name: "Graveyard Cliff Cave <img src='img/mirror.png' class='mini'>",
+    name: "Graveyard Cliff Cave <img src='/dist/img/mirror.png' class='mini'>",
     x: "28.1%",
     y: "27.0%",
     isOpened: false,
@@ -787,7 +787,7 @@ chests[40] = {
 };
 
 chests[41] = {
-    name: "Checkerboard Cave <img src='img/mirror.png' class='mini'>",
+    name: "Checkerboard Cave <img src='/dist/img/mirror.png' class='mini'>",
     x: "8.8%",
     y: "77.3%",
     isOpened: false,
@@ -799,7 +799,7 @@ chests[41] = {
 };
 
 chests[42] = {
-    name: "<img src='img/hammer.png' class='mini'><img src='img/hammer.png' class='mini'><img src='img/hammer.png' class='mini'><img src='img/hammer.png' class='mini'><img src='img/hammer.png' class='mini'><img src='img/hammer.png' class='mini'><img src='img/hammer.png' class='mini'><img src='img/hammer.png' class='mini'>!!!!!!!!",
+    name: "<img src='/dist/img/hammer.png' class='mini'><img src='/dist/img/hammer.png' class='mini'><img src='/dist/img/hammer.png' class='mini'><img src='/dist/img/hammer.png' class='mini'><img src='/dist/img/hammer.png' class='mini'><img src='/dist/img/hammer.png' class='mini'><img src='/dist/img/hammer.png' class='mini'><img src='/dist/img/hammer.png' class='mini'>!!!!!!!!",
     x: "65.8%",
     y: "60.1%",
     isOpened: false,
@@ -811,7 +811,7 @@ chests[42] = {
 };
 
 chests[43] = {
-    name: "Library <img src='img/boots.png' class='mini'>",
+    name: "Library <img src='/dist/img/boots.png' class='mini'>",
     x: "7.7%",
     y: "65.9%",
     isOpened: false,
@@ -833,7 +833,7 @@ chests[44] = {
 };
 
 chests[45] = {
-    name: "Spectacle Rock <img src='img/mirror.png' class='mini'>",
+    name: "Spectacle Rock <img src='/dist/img/mirror.png' class='mini'>",
     x: "25.4%",
     y: "8.5%",
     isOpened: false,
@@ -848,7 +848,7 @@ chests[45] = {
 };
 
 chests[46] = {
-    name: "Floating Island <img src='img/mirror.png' class='mini'>",
+    name: "Floating Island <img src='/dist/img/mirror.png' class='mini'>",
     x: "40.2%",
     y: "3.0%",
     isOpened: false,
@@ -863,7 +863,7 @@ chests[46] = {
 };
 
 chests[47] = {
-    name: "Race Minigame <img src='img/bomb.png' class='mini'>/<img src='img/boots.png' class='mini'>",
+    name: "Race Minigame <img src='/dist/img/bomb.png' class='mini'>/<img src='/dist/img/boots.png' class='mini'>",
     x: "1.8%",
     y: "69.8%",
     isOpened: false,
@@ -873,7 +873,7 @@ chests[47] = {
 };
 
 chests[48] = {
-    name: "Desert West Ledge <img src='img/book.png' class='mini'>/<img src='img/mirror.png' class='mini'>",
+    name: "Desert West Ledge <img src='/dist/img/book.png' class='mini'>/<img src='/dist/img/mirror.png' class='mini'>",
     x: "1.5%",
     y: "91.0%",
     isOpened: false,
@@ -885,7 +885,7 @@ chests[48] = {
 };
 
 chests[49] = {
-    name: "Lake Hylia Island <img src='img/mirror.png' class='mini'>",
+    name: "Lake Hylia Island <img src='/dist/img/mirror.png' class='mini'>",
     x: "36.1%",
     y: "82.9%",
     isOpened: false,
@@ -900,7 +900,7 @@ chests[49] = {
 };
 
 chests[50] = {
-    name: "Bumper Cave <img src='img/cape.png' class='mini'>",
+    name: "Bumper Cave <img src='/dist/img/cape.png' class='mini'>",
     x: "67.1%",
     y: "15.2%",
     isOpened: false,
@@ -939,7 +939,7 @@ chests[52] = {
 };
 
 chests[53] = {
-    name: "Zora River Ledge <img src='img/flippers.png' class='mini'>",
+    name: "Zora River Ledge <img src='/dist/img/flippers.png' class='mini'>",
     x: "47.5%",
     y: "17.3%",
     isOpened: false,
@@ -953,7 +953,7 @@ chests[53] = {
 };
 
 chests[54] = {
-    name: "Buried Itam <img src='img/shovel.png' class='mini'>",
+    name: "Buried Itam <img src='/dist/img/shovel.png' class='mini'>",
     x: "14.4%",
     y: "66.2%",
     isOpened: false,
@@ -965,7 +965,7 @@ chests[54] = {
 };
 
 chests[55] = {
-    name: "Fall to Escape Sewer (3) <img src='img/glove1.png' class='mini'> + <img src='img/bomb.png' class='mini'>/<img src='img/boots.png' class='mini'>",
+    name: "Fall to Escape Sewer (3) <img src='/dist/img/glove1.png' class='mini'> + <img src='/dist/img/bomb.png' class='mini'>/<img src='/dist/img/boots.png' class='mini'>",
     x: "26.8%",
     y: "32.4%",
     isOpened: false,
@@ -1007,7 +1007,7 @@ chests[58] = {
 };
 
 chests[59] = {
-    name: "Mad Batter <img src='img/hammer.png' class='mini'>/<img src='img/mirror.png' class='mini'> + <img src='img/powder.png' class='mini'>",
+    name: "Mad Batter <img src='/dist/img/hammer.png' class='mini'>/<img src='/dist/img/mirror.png' class='mini'> + <img src='/dist/img/powder.png' class='mini'>",
     x: "16.0%",
     y: "58.0%",
     isOpened: false,
@@ -1019,7 +1019,7 @@ chests[59] = {
 };
 
 chests[60] = {
-    name: "Take the frog home <img src='img/mirror.png' class='mini'>",
+    name: "Take the frog home <img src='/dist/img/mirror.png' class='mini'>",
     x: "15.2%",
     y: "51.8%",
     isOpened: false,
@@ -1031,7 +1031,7 @@ chests[60] = {
 };
 
 chests[61] = {
-    name: "Fat Fairy: Buy OJ bomb from Dark Link's House after <img src='img/crystal0.png' class='mini'>5 <img src='img/crystal0.png' class='mini'>6 (2 items)",
+    name: "Fat Fairy: Buy OJ bomb from Dark Link's House after <img src='/dist/img/crystal0.png' class='mini'>5 <img src='/dist/img/crystal0.png' class='mini'>6 (2 items)",
     x: "73.5%",
     y: "48.5%",
     isOpened: false,
@@ -1054,7 +1054,7 @@ chests[61] = {
 
 
 chests[62] = {
-    name: "Master Sword Pedestal <img src='img/pendant0.png' class='mini'><img src='img/pendant1.png' class='mini'><img src='img/pendant2.png' class='mini'> (can check with <img src='img/book.png' class='mini'>)",
+    name: "Master Sword Pedestal <img src='/dist/img/pendant0.png' class='mini'><img src='/dist/img/pendant1.png' class='mini'><img src='/dist/img/pendant2.png' class='mini'> (can check with <img src='/dist/img/book.png' class='mini'>)",
     x: "2.5%",
     y: "3.2%",
     isOpened: false,
