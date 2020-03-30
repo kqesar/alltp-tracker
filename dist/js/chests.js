@@ -10,7 +10,7 @@ function steve() {
 let dungeons = new Array
 
 dungeons[0] = {
-    name: "Eastern Palace",
+    name: "Eastern Palace <img src='/dist/img/bow2.png' class='mini'/>",
     x: "46.8%",
     y: "38.8%",
     image: "boss02.png",
@@ -29,7 +29,7 @@ dungeons[0] = {
 }
 
 dungeons[1] = {
-    name: "Desert Palace",
+    name: "Desert Palace <img src='/dist/img/glove1.png' class='mini'/>  <img src='/dist/img/book.png' class='mini'/>  <img src='/dist/img/lantern.png' class='mini'/>",
     x: "3.8%",
     y: "78.4%",
     image: "boss12.png",
@@ -57,7 +57,7 @@ dungeons[1] = {
 }
 
 dungeons[2] = {
-    name: "Tower of Hera",
+    name: "Tower of Hera <img src='/dist/img/glove1.png' class='mini'/> <img src='/dist/img/mirror.png' class='mini'/> <img src='/dist/img/lantern.png' class='mini'/>",
     x: "31.0%",
     y: "5.5%",
     image: "boss22.png",
@@ -77,7 +77,7 @@ dungeons[2] = {
 }
 
 dungeons[3] = {
-    name: "Palace of Darkness <img src='/dist/img/lantern.png' class='mini'>",
+    name: "Palace of Darkness <img src='/dist/img/lantern.png' class='mini'> <img src='/dist/img/hammer.png' class='mini'/> <img src='/dist/img/glove1.png' class='mini'/> <img src='/dist/img/agahnim1.png' class='mini'/>",
     x: "97.0%",
     y: "40.0%",
     image: "boss32.png",
@@ -101,7 +101,7 @@ dungeons[3] = {
 }
 
 dungeons[4] = {
-    name: "Swamp Palace <img src='/dist/img/mirror.png' class='mini'>",
+    name: "Swamp Palace <img src='/dist/img/mirror.png' class='mini'> <img src='/dist/img/flippers.png' class='mini'/> <img src='/dist/img/hammer.png' class='mini'/> <img src='/dist/img/hookshot.png' class='mini'/>",
     x: "73.5%",
     y: "91.0%",
     image: "boss42.png",
@@ -146,7 +146,7 @@ dungeons[4] = {
 }
 
 dungeons[5] = {
-    name: "Skull Woods",
+    name: "Skull Woods <img src='/dist/img/firerod.png' class='mini'/>",
     x: "53.3%",
     y: "5.4%",
     image: "boss52.png",
@@ -166,7 +166,7 @@ dungeons[5] = {
 }
 
 dungeons[6] = {
-    name: "Thieves' Town",
+    name: "Thieves' Town <img src='/dist/img/glove2.png' class='mini'/>",
     x: "56.4%",
     y: "47.9%",
     image: "boss62.png",
@@ -186,7 +186,7 @@ dungeons[6] = {
 }
 
 dungeons[7] = {
-    name: "Ice Palace (yellow=must bomb jump)",
+    name: "Ice Palace (yellow=must bomb jump) <img src='/dist/img/firerod.png' class='mini'/>",
     x: "89.8%",
     y: "85.8%",
     image: "boss72.png",
@@ -256,7 +256,7 @@ dungeons[8] = {
 }
 
 dungeons[9] = {
-    name: "Turtle Rock <img src='/dist/img/medallion0.png' class='mini'><img src='/dist/img/lantern.png' class='mini'>",
+    name: "Turtle Rock <img src='/dist/img/medallion0.png' class='mini'> <img src='/dist/img/lantern.png' class='mini'> <img src='/dist/img/icerod.png' class='mini'/> <img src='/dist/img/firerod.png' class='mini'/>",
     x: "96.9%",
     y: "7.0%",
     image: "boss92.png",
