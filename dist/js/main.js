@@ -49,8 +49,9 @@ let cookieDefault = {
 let cookielock = false
 
 function loadCookie() {
-    if (cookielock)
+    if (cookielock) {
         return
+    }
     cookielock = true
 
     cookieobj = getCookie()
@@ -80,8 +81,9 @@ function loadCookie() {
 }
 
 function saveCookie() {
-    if (cookielock)
+    if (cookielock) {
         return
+    }
     cookielock = true
 
     cookieobj = {}
@@ -109,10 +111,11 @@ function saveCookie() {
 // Event of clicking a chest on the map
 function toggleChest(x) {
     chests[x].isOpened = !chests[x].isOpened
-    if (chests[x].isOpened)
+    if (chests[x].isOpened) {
         document.getElementById(x).className = "mapspan chest opened"
-    else
+    } else {
         document.getElementById(x).className = "mapspan chest " + chests[x].isAvailable()
+    }
 }
 
 // Highlights a chest location and shows the name as caption
@@ -157,9 +160,13 @@ function showMedallion(sender) {
 
 function setOrder(H) {
     if (H) {
-        document.getElementById('layoutdiv').classList.remove('flexcontainer')
+        document.getElementById('layoutdiv')
+            .classList
+            .remove('flexcontainer')
     } else {
-        document.getElementById('layoutdiv').classList.add('flexcontainer')
+        document.getElementById('layoutdiv')
+            .classList
+            .add('flexcontainer')
     }
     saveCookie()
 }
@@ -181,8 +188,12 @@ function setMapOrientation(H) {
     let i
 
     if (H) {
-        document.getElementById("mapdiv").classList.remove('mapdiv')
-        document.getElementById("mapdiv").classList.add('mapvdiv')
+        document.getElementById("mapdiv")
+            .classList
+            .remove('mapdiv')
+        document.getElementById("mapdiv")
+            .classList
+            .add('mapvdiv')
         for (i = 0; i < chest.length; i++) {
             let x = parseFloat(chest[i].style.left) / 100
             let y = parseFloat(chest[i].style.top) / 100
@@ -196,8 +207,12 @@ function setMapOrientation(H) {
             }
         }
     } else {
-        document.getElementById("mapdiv").classList.add('mapdiv')
-        document.getElementById("mapdiv").classList.remove('mapvdiv')
+        document.getElementById("mapdiv")
+            .classList
+            .add('mapdiv')
+        document.getElementById("mapdiv")
+            .classList
+            .remove('mapvdiv')
         for (i = 0; i < chest.length; i++) {
             let x = parseFloat(chest[i].style.left) / 100
             let y = parseFloat(chest[i].style.top) / 100
@@ -444,10 +459,10 @@ function updateGridItemAll() {
 }
 
 function setGridItem(item, row, index) {
-    let previtem = itemLayout[row][index]
     itemLayout[row][index] = item
-    if (item != 'blank')
-        document.getElementById(item).style.opacity = 0.25
+    if (item != 'blank') {
+        document.getElementById(item).style.opacity = "0.25"
+    }
     updateGridItem(row, index)
 }
 
@@ -508,7 +523,7 @@ function gridItemClick(row, col, corner) {
             }
 
             if (selected.item != 'blank') {
-                document.getElementById(selected.item).style.opacity = 0.25
+                document.getElementById(selected.item).style.opacity = "0.25"
 
                 let r, c
                 let found = false
@@ -521,15 +536,16 @@ function gridItemClick(row, col, corner) {
                         }
                     }
 
-                    if (found)
+                    if (found) {
                         break
+                    }
                 }
             }
 
             itemLayout[row][col] = selected.item
             updateGridItem(row, col)
 
-            document.getElementById(old).style.opacity = 1
+            document.getElementById(old).style.opacity = "1"
 
             selected = {}
         } else if (selected.row !== undefined) {
@@ -556,16 +572,19 @@ function gridItemClick(row, col, corner) {
 
         if (corner == 1 && showmedals && d >= 8) {
             medallions[d]++
-            if (medallions[d] == 4)
+            if (medallions[d] == 4) {
                 medallions[d] = 0
+            }
             // Update availability of dungeon boss AND chests
-            if (dungeons[d].isBeaten)
+            if (dungeons[d].isBeaten) {
                 document.getElementById("bossMap" + d).className = "mapspan boss opened"
-            else
+            } else {
                 document.getElementById("bossMap" + d).className = "mapspan boss " + dungeons[d].isBeatable()
+            }
 
-            if (dungeonchests[d] > 0)
+            if (dungeonchests[d] > 0) {
                 document.getElementById("dungeon" + d).className = "mapspan 1dungeon " + dungeons[d].canGetChest()
+            }
             // TRock medallion affects Mimic Cave
             if (d == 9) {
                 chests[4].isOpened = !chests[4].isOpened
@@ -573,30 +592,35 @@ function gridItemClick(row, col, corner) {
             }
             // Change the mouseover text on the map
             let dungeonName
-            if (d == 8)
+            if (d == 8) {
                 dungeonName = "Misery Mire"
-            else
+            } else {
                 dungeonName = "Turtle Rock"
+            }
             dungeons[d].name = dungeonName + " <img src='/dist/img/medallion" + medallions[d] + ".png' class='mini'><img src='/dist/img/lantern.png' class='mini'>"
         } else if (corner == 2 && showchests) {
             let chestitem = 'chest' + d
             dungeonchests[d]--
-            if (dungeonchests[d] < 0)
+            if (dungeonchests[d] < 0) {
                 dungeonchests[d] = itemsMax[chestitem]
+            }
 
-            if (dungeonchests[d] == 0)
+            if (dungeonchests[d] == 0) {
                 document.getElementById("dungeon" + d).className = "mapspan dungeon opened"
-            else
+            } else {
                 document.getElementById("dungeon" + d).className = "mapspan dungeon " + dungeons[d].canGetChest()
+            }
         } else if (corner == 3 && showprizes) {
             prizes[d]++
-            if (prizes[d] == 5)
+            if (prizes[d] == 5) {
                 prizes[d] = 0
+            }
             // Update Sahasralah, Fat Fairy, and Master Sword Pedestal
             let pendantChests = [25, 61, 62]
             for (k = 0; k < pendantChests.length; k++) {
-                if (!chests[pendantChests[k]].isOpened)
+                if (!chests[pendantChests[k]].isOpened) {
                     document.getElementById(pendantChests[k]).className = "mapspan chest " + chests[pendantChests[k]].isAvailable()
+                }
             }
         } else {
             items[item]++
@@ -605,10 +629,11 @@ function gridItemClick(row, col, corner) {
             }
 
             dungeons[d].isBeaten = !dungeons[d].isBeaten
-            if (dungeons[d].isBeaten)
+            if (dungeons[d].isBeaten) {
                 document.getElementById("bossMap" + d).className = "mapspan boss opened"
-            else
+            } else {
                 document.getElementById("bossMap" + d).className = "mapspan boss " + dungeons[d].isBeatable()
+            }
 
         }
     } else if ((typeof items[item]) == "boolean") {
@@ -621,14 +646,17 @@ function gridItemClick(row, col, corner) {
     }
 
     for (k = 0; k < chests.length; k++) {
-        if (!chests[k].isOpened)
+        if (!chests[k].isOpened) {
             document.getElementById(k).className = "mapspan chest " + chests[k].isAvailable()
+        }
     }
     for (k = 0; k < dungeons.length; k++) {
-        if (!dungeons[k].isBeaten)
+        if (!dungeons[k].isBeaten) {
             document.getElementById("bossMap" + k).className = "mapspan boss " + dungeons[k].isBeatable()
-        if (dungeonchests[k])
+        }
+        if (dungeonchests[k]) {
             document.getElementById("dungeon" + k).className = "mapspan dungeon " + dungeons[k].canGetChest()
+        }
     }
 
     updateGridItem(row, col)
@@ -651,7 +679,7 @@ function itemConfigClick(sender) {
         }
 
         if (item != 'blank') {
-            sender.style.opacity = 0.25
+            sender.style.opacity = "0.25"
 
             let r, c
             let found = false
@@ -665,15 +693,16 @@ function itemConfigClick(sender) {
                     }
                 }
 
-                if (found)
+                if (found) {
                     break
+                }
             }
         }
 
         itemLayout[selected.row][selected.col] = item
         updateGridItem(selected.row, selected.col)
 
-        document.getElementById(old).style.opacity = 1
+        document.getElementById(old).style.opacity = "1"
 
         selected = {}
     } else {
@@ -696,10 +725,11 @@ function populateMapdiv() {
         s.onmouseout = new Function('unhighlight(' + k + ')')
         s.style.left = chests[k].x
         s.style.top = chests[k].y
-        if (chests[k].isOpened)
+        if (chests[k].isOpened) {
             s.className = "mapspan chest opened"
-        else
+        } else {
             s.className = "mapspan chest " + chests[k].isAvailable()
+        }
         mapdiv.appendChild(s)
     }
 
