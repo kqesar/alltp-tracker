@@ -4,9 +4,9 @@ module.exports = function (grunt) {
         connect: {
             server: {
                 options: {
-                    base: 'dist',
                     port: 8000,
-                    livereload: true
+                    livereload: true,
+                    open: true
                 },
             }
         },
@@ -22,7 +22,10 @@ module.exports = function (grunt) {
                 livereload: true,
             },
             html: {
-                files: ['dist/index.html'],
+                files: ['index.html'],
+            },
+            js: {
+                files: ['dist/js/**/*.js'],
             },
             sass: {
                 options: {
