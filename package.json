@@ -8,6 +8,6 @@
     "grunt-contrib-uglify": "^5.2.1",
     "grunt-contrib-watch": "^1.1.0",
     "livereload": "^0.9.3",
-    "node-sass": "^7.0.1"
+    "node-sass": "^7.0.0"
   }
 }
