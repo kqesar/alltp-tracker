@@ -1,13 +1,13 @@
 {
   "dependencies": {
     "global": "^4.4.0",
-    "grunt": "^1.5.3",
+    "grunt": "^1.6.1",
     "grunt-cli": "^1.4.3",
     "grunt-contrib-connect": "^3.0.0",
     "grunt-contrib-sass": "^2.0.0",
-    "grunt-contrib-uglify": "^5.2.1",
+    "grunt-contrib-uglify": "^5.2.2",
     "grunt-contrib-watch": "^1.1.0",
     "livereload": "^0.9.3",
-    "node-sass": "^7.0.1"
+    "node-sass": "^7.0.3"
   }
 }
