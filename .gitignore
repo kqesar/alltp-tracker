@@ -4,3 +4,5 @@ tags
 .DS_Store
 dist/css/*.map
 .idea/
+.vscode/
+packages/tracker-react/dist/

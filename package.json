@@ -1,13 +1,16 @@
 {
-  "dependencies": {
-    "global": "^4.4.0",
-    "grunt": "^1.6.1",
-    "grunt-cli": "^1.4.3",
-    "grunt-contrib-connect": "^3.0.0",
-    "grunt-contrib-sass": "^2.0.0",
-    "grunt-contrib-uglify": "^5.2.2",
-    "grunt-contrib-watch": "^1.1.0",
-    "livereload": "^0.9.3",
-    "node-sass": "^7.0.3"
+  "name": "alltp-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "turbo": "^1.10.15"
   }
 }
