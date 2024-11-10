@@ -1,0 +1,4 @@
+
+> tracker-react@0.0.0 lint /Users/kqesar/wd/alltp-tracker/packages/tracker-react
+> eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+

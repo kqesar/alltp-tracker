@@ -2,12 +2,12 @@
   "dependencies": {
     "global": "^4.4.0",
     "grunt": "^1.6.1",
-    "grunt-cli": "^1.4.3",
-    "grunt-contrib-connect": "^3.0.0",
+    "grunt-cli": "^1.5.0",
+    "grunt-contrib-connect": "^5.0.1",
     "grunt-contrib-sass": "^2.0.0",
     "grunt-contrib-uglify": "^5.2.2",
     "grunt-contrib-watch": "^1.1.0",
     "livereload": "^0.9.3",
-    "node-sass": "^7.0.3"
+    "sass": "^1.80.6"
   }
 }
