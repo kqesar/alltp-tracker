@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './styles.css';
-import { items as initialItems, defaultItemGrid, itemsMin, itemsMax, dungeonchests} from './data/items';
+import { items as initialItems, defaultItemGrid, itemsMin, itemsMax, dungeonchests } from './data/items';
 
 /**
  * Main application component for the LttP Item Tracker
@@ -14,7 +14,10 @@ function App() {
   // UI state
   const [showSettings, setShowSettings] = useState(false);
 
-  // Simple item click handler for testing
+  /**
+   * Handles item state changes when clicked
+   * @param item - The item identifier to update
+   */
   const handleItemClick = (item: string) => {
     if (!item || item === 'blank') return;
     
@@ -22,14 +25,9 @@ function App() {
     if (typeof items[item] === 'boolean') {
       newItems[item] = !newItems[item];
     } else {
-      console.log(`Incrementing item: ${item}`);
       newItems[item] = (newItems[item] as number) + 1;
-      console.log(`New value for ${item}: ${newItems[item]}`);
-      // Use dynamic max value from itemsMax, fallback to 4 if not defined
       const maxValue = itemsMax[item];
-      console.log(`Max value for ${item}: ${maxValue}`);
       const minValue = itemsMin[item];
-      console.log(`Min value for ${item}: ${minValue}`);
       if (newItems[item] > maxValue) {
         newItems[item] = minValue;
       }
@@ -37,172 +35,204 @@ function App() {
     setItems(newItems);
   };
 
-  // Get background image for an item
-  const getItemBackground = (item: string) => {
-    if (!item || item === 'blank') {
-      return '';
-    }
+  /**
+   * Gets the background image URL for an item
+   * @param item - The item identifier
+   * @returns CSS background-image URL string
+   */
+  const getItemBackground = (item: string): string => {
+    if (!item || item === 'blank') return '';
 
     if (typeof items[item] === 'boolean') {
-      // Boolean items just have one image (item.png)
       return `url(/assets/${item}.png)`;
     } else {
-      // Numeric items have multiple images (item0.png, item1.png, etc.)
       return `url(/assets/${item}${items[item]}.png)`;
     }
   };
 
-  // Get item opacity based on its state
-  const getItemOpacity = (item: string) => {
+  /**
+   * Calculates opacity based on item state
+   * @param item - The item identifier
+   * @returns Opacity value as string
+   */
+  const getItemOpacity = (item: string): string => {
     if (!item || item === 'blank') return '0.25';
     
     if (typeof items[item] === 'boolean') {
-      // Boolean items: full opacity if true, low opacity if false
       return items[item] ? '1' : '0.25';
     } else if (typeof items[item] === 'number' && item.indexOf('boss') === 0) {
-      return '1'
-    }
-    else{
-      // Numeric items: full opacity if > minimum value, low opacity if at minimum
+      return '1';
+    } else {
       const minValue = itemsMin[item] || 0;
       return (items[item] as number) > minValue ? '1' : '0.25';
     }
   };
 
-  // Render a single grid item
-  const renderGridItem = (row: number, col: number) => {
-    const item = itemLayout[row][col];
-    
-    // Special handling for boss items
-    if (item && item.startsWith('boss')) {
-      const bossNumber = parseInt(item.replace('boss', ''));
-      return (
-        <td 
-          key={`${row}_${col}`} 
-          className="griditem" 
-          style={{
-            backgroundImage: getItemBackground(item),
-            opacity: getItemOpacity(item),
-            width: '64px',
-            height: '64px',
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
-            cursor: 'pointer',
-            position: 'relative'
-          }}
-          onClick={() => handleItemClick(item)}
-        >
-          {/* Medallion (top-right) - only for Dark World bosses (3-9) */}
-          {bossNumber >= 8 && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '2px',
-                right: '2px',
-                width: '28px',
-                height: '28px',
-                backgroundImage: `url(/assets/medallion0.png)`,
-                backgroundSize: '100% 100%',
-                backgroundRepeat: 'no-repeat',
-                cursor: 'pointer',
-                zIndex: 2
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                // Handle medallion click logic here
-              }}
-            />
-          )}
-          
-          {/* Chest count (bottom-left) */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '2px',
-              left: '2px',
-              width: '28px',
-              height: '28px',
-              backgroundImage: `url(/assets/chest${dungeonchests[bossNumber]}.png)`,
-              backgroundSize: '100% 100%',
-              backgroundRepeat: 'no-repeat',
-              cursor: 'pointer',
-              zIndex: 2
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              // Handle chest click logic here
-            }}
-          />
-          
-          {/* Crystal/Pendant (bottom-right) */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '2px',
-              right: '2px',
-              width: '28px',
-              height: '28px',
-              backgroundImage: `url(/assets/dungeon.png)`,
-              backgroundSize: '100% 100%',
-              backgroundRepeat: 'no-repeat',
-              cursor: 'pointer',
-              zIndex: 2
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              // Handle crystal/pendant click logic here
-            }}
-          />
-          
-          <table className="lonk">
-            <tbody>
-              <tr>
-                <th className="corner" />
-                <th className="corner" />
-              </tr>
-              <tr>
-                <th className="corner" />
-                <th className="corner" />
-              </tr>
-            </tbody>
-          </table>
-        </td>
-      );
-    }
-    
-    // Regular item rendering
+  /**
+   * Creates common grid item styles
+   * @param item - The item identifier
+   * @returns Style object for grid items
+   */
+  const getGridItemStyles = (item: string) => ({
+    backgroundImage: getItemBackground(item),
+    opacity: getItemOpacity(item),
+    width: '64px',
+    height: '64px',
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    cursor: 'pointer'
+  });
+
+  /**
+   * Creates overlay element styles for boss items
+   * @param position - Position object with top/bottom and left/right values
+   * @returns Style object for overlay elements
+   */
+  const getOverlayStyles = (position: { top?: string; bottom?: string; left?: string; right?: string }) => ({
+    position: 'absolute' as const,
+    width: '28px',
+    height: '28px',
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    cursor: 'pointer',
+    zIndex: 2,
+    ...position
+  });
+
+  /**
+   * Renders the standard corner table for grid items
+   */
+  const renderCornerTable = () => (
+    <table className="lonk">
+      <tbody>
+        <tr>
+          <th className="corner" />
+          <th className="corner" />
+        </tr>
+        <tr>
+          <th className="corner" />
+          <th className="corner" />
+        </tr>
+      </tbody>
+    </table>
+  );
+
+  /**
+   * Renders medallion overlay for Dark World bosses
+   * @param bossNumber - The boss number (0-9)
+   */
+  const renderMedallionOverlay = (bossNumber: number) => {
+    if (bossNumber < 8) return null;
+
     return (
-      <td 
-        key={`${row}_${col}`} 
-        className="griditem" 
+      <div
         style={{
-          backgroundImage: getItemBackground(item),
-          opacity: getItemOpacity(item),
-          width: '64px',
-          height: '64px',
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          cursor: 'pointer'
+          ...getOverlayStyles({ top: '2px', right: '2px' }),
+          backgroundImage: 'url(/assets/medallion0.png)'
         }}
-        onClick={() => handleItemClick(item)}
-      >
-        <table className="lonk">
-          <tbody>
-            <tr>
-              <th className="corner" />
-              <th className="corner" />
-            </tr>
-            <tr>
-              <th className="corner" />
-              <th className="corner" />
-            </tr>
-          </tbody>
-        </table>
-      </td>
+        onClick={(e) => {
+          e.stopPropagation();
+          // TODO: Handle medallion click logic
+        }}
+      />
     );
   };
 
-  // Render a grid row
+  /**
+   * Renders chest count overlay for dungeons
+   * @param bossNumber - The boss number (0-9)
+   */
+  const renderChestOverlay = (bossNumber: number) => (
+    <div
+      style={{
+        ...getOverlayStyles({ bottom: '2px', left: '2px' }),
+        backgroundImage: `url(/assets/chest${dungeonchests[bossNumber]}.png)`
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        // TODO: Handle chest click logic
+      }}
+    />
+  );
+
+  /**
+   * Renders crystal/pendant overlay for dungeons
+   * @param bossNumber - The boss number (0-9)
+   */
+  const renderRewardOverlay = (bossNumber: number) => (
+    <div
+      style={{
+        ...getOverlayStyles({ bottom: '2px', right: '2px' }),
+        backgroundImage: 'url(/assets/dungeon0.png)'
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        // TODO: Handle crystal/pendant click logic
+      }}
+    />
+  );
+
+  /**
+   * Renders a boss item with overlays
+   * @param row - Grid row index
+   * @param col - Grid column index
+   * @param item - The boss item identifier
+   * @param bossNumber - The boss number (0-9)
+   */
+  const renderBossItem = (row: number, col: number, item: string, bossNumber: number) => (
+    <td 
+      key={`${row}_${col}`} 
+      className="griditem" 
+      style={{
+        ...getGridItemStyles(item),
+        position: 'relative'
+      }}
+      onClick={() => handleItemClick(item)}
+    >
+      {renderMedallionOverlay(bossNumber)}
+      {renderChestOverlay(bossNumber)}
+      {renderRewardOverlay(bossNumber)}
+      {renderCornerTable()}
+    </td>
+  );
+
+  /**
+   * Renders a regular (non-boss) item
+   * @param row - Grid row index
+   * @param col - Grid column index
+   * @param item - The item identifier
+   */
+  const renderRegularItem = (row: number, col: number, item: string) => (
+    <td 
+      key={`${row}_${col}`} 
+      className="griditem" 
+      style={getGridItemStyles(item)}
+      onClick={() => handleItemClick(item)}
+    >
+      {renderCornerTable()}
+    </td>
+  );
+
+  /**
+   * Renders a single grid item (boss or regular)
+   * @param row - Grid row index
+   * @param col - Grid column index
+   */
+  const renderGridItem = (row: number, col: number) => {
+    const item = itemLayout[row][col];
+    
+    if (item && item.startsWith('boss')) {
+      const bossNumber = parseInt(item.replace('boss', ''));
+      return renderBossItem(row, col, item, bossNumber);
+    }
+    
+    return renderRegularItem(row, col, item);
+  };
+
+  /**
+   * Renders a complete grid row
+   * @param rowIndex - The row index to render
+   */
   const renderGridRow = (rowIndex: number) => {
     const row = itemLayout[rowIndex];
     if (!row) return null;
@@ -212,13 +242,37 @@ function App() {
         <tbody>
           <tr>
             <td className="halfcell" />
-            {row.slice(0, 7).map((_: any, colIndex: number) => renderGridItem(rowIndex, colIndex))}
+            {row.slice(0, 7).map((_: any, colIndex: number) => 
+              renderGridItem(rowIndex, colIndex)
+            )}
             <td className="halfcell" />
           </tr>
         </tbody>
       </table>
     );
   };
+
+  /**
+   * Renders the settings panel
+   */
+  const renderSettings = () => (
+    <div id='settingsDiv'>
+      <button 
+        id="settingsbutton" 
+        type="button" 
+        onClick={() => setShowSettings(!showSettings)}
+      >
+        {showSettings ? 'X' : '🔧'}
+      </button>
+      
+      {showSettings && (
+        <fieldset id="settings" className="settings" style={{ display: 'initial' }}>
+          <legend>Settings</legend>
+          <p>Settings panel - more options coming soon!</p>
+        </fieldset>
+      )}
+    </div>
+  );
 
   return (
     <div>
@@ -227,23 +281,7 @@ function App() {
           {itemLayout.map((_: any, rowIndex: number) => renderGridRow(rowIndex))}
         </div>
         <div id='mapdiv' className='mapdiv'></div>
-        
-        <div id='settingsDiv'>
-          <button 
-            id="settingsbutton" 
-            type="button" 
-            onClick={() => setShowSettings(!showSettings)}
-          >
-            {showSettings ? 'X' : '🔧'}
-          </button>
-          
-          {showSettings && (
-            <fieldset id="settings" className="settings" style={{ display: 'initial' }}>
-              <legend>Settings</legend>
-              <p>Settings panel - more options coming soon!</p>
-            </fieldset>
-          )}
-        </div>
+        {renderSettings()}
       </div>
       
       <div style={{ width: '100%', textAlign: 'center' }} id="caption">&nbsp;</div>
