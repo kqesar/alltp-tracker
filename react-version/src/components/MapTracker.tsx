@@ -89,12 +89,12 @@ const MapTracker: React.FC<MapTrackerProps> = ({
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       {/* Render chests */}
       {chestsState.map((chest, index) => {
         const coords = transformCoordinates(chest.x, chest.y);
         return (
-          <span
+          <div
             key={`chest-${index}`}
             className={`mapspan chest ${getChestAvailability(index)}`}
             style={{
@@ -102,7 +102,12 @@ const MapTracker: React.FC<MapTrackerProps> = ({
               position: 'absolute',
               left: coords.x,
               top: coords.y,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              width: '24px',
+              height: '24px',
+              backgroundSize: '100% 100%',
+              marginLeft: '-12px',
+              marginTop: '-12px'
             }}
             onClick={() => toggleChest(index)}
             onMouseOver={() => highlightChest(index)}
@@ -115,7 +120,7 @@ const MapTracker: React.FC<MapTrackerProps> = ({
       {dungeonsState.map((dungeon, index) => {
         const coords = transformCoordinates(dungeon.x, dungeon.y);
         return (
-          <span
+          <div
             key={`boss-${index}`}
             className={`mapspan boss ${getDungeonBossAvailability(index)}`}
             style={{
@@ -123,7 +128,12 @@ const MapTracker: React.FC<MapTrackerProps> = ({
               position: 'absolute',
               left: coords.x,
               top: coords.y,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              width: '24px',
+              height: '24px',
+              backgroundSize: '100% 100%',
+              marginLeft: '-12px',
+              marginTop: '-12px'
             }}
             onMouseOver={() => highlightDungeon(index)}
             onMouseOut={unhighlightChest}
@@ -135,7 +145,7 @@ const MapTracker: React.FC<MapTrackerProps> = ({
       {dungeonsState.map((dungeon, index) => {
         const coords = transformCoordinates(dungeon.x, dungeon.y);
         return (
-          <span
+          <div
             key={`dungeon-${index}`}
             className={`mapspan dungeon ${getDungeonChestAvailability(index)}`}
             style={{
@@ -143,7 +153,12 @@ const MapTracker: React.FC<MapTrackerProps> = ({
               position: 'absolute',
               left: coords.x,
               top: coords.y,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              width: '24px',
+              height: '24px',
+              backgroundSize: '100% 100%',
+              marginLeft: '-12px',
+              marginTop: '-12px'
             }}
             onMouseOver={() => highlightDungeon(index)}
             onMouseOut={unhighlightChest}

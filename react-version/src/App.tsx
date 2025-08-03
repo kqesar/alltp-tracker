@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import './styles.css';
 import { items as initialItems, defaultItemGrid, itemsMin, itemsMax, dungeonchests } from './data/items';
+import { chests as initialChests, dungeons as initialDungeons } from './data/chests';
+import MapTracker from './components/MapTracker';
 
 /**
  * Main application component for the LttP Item Tracker
@@ -10,6 +12,10 @@ function App() {
   // Game state
   const [items, setItems] = useState({ ...initialItems });
   const [itemLayout] = useState(JSON.parse(JSON.stringify(defaultItemGrid)));
+  const [chestsState, setChestsState] = useState([...initialChests]);
+  const [dungeonsState, setDungeonsState] = useState([...initialDungeons]);
+  const [medallions] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); // Medallion assignments for dungeons
+  const [mapOrientation] = useState(false); // Light/Dark World toggle
   
   // UI state
   const [showSettings, setShowSettings] = useState(false);
@@ -157,9 +163,9 @@ function App() {
 
   /**
    * Renders crystal/pendant overlay for dungeons
-   * @param bossNumber - The boss number (0-9)
+   * @param _bossNumber - The boss number (0-9) - unused for now
    */
-  const renderRewardOverlay = (bossNumber: number) => (
+  const renderRewardOverlay = (_bossNumber: number) => (
     <div
       style={{
         ...getOverlayStyles({ bottom: '2px', right: '2px' }),
@@ -280,7 +286,18 @@ function App() {
         <div id='itemdiv' className='itemdiv'>
           {itemLayout.map((_: any, rowIndex: number) => renderGridRow(rowIndex))}
         </div>
-        <div id='mapdiv' className='mapdiv'></div>
+        <div id='mapdiv' className='mapdiv'>
+          <MapTracker
+            chestsState={chestsState}
+            setChestsState={setChestsState}
+            dungeonsState={dungeonsState}
+            setDungeonsState={setDungeonsState}
+            items={items}
+            medallions={medallions}
+            dungeonChests={dungeonchests}
+            mapOrientation={mapOrientation}
+          />
+        </div>
         {renderSettings()}
       </div>
       
