@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface MapTrackerProps {
   chestsState: any[];
@@ -9,6 +9,8 @@ interface MapTrackerProps {
   medallions: number[];
   dungeonChests: any;
   mapOrientation: boolean;
+  caption: string;
+  setCaption: (caption: string) => void;
 }
 
 /**
@@ -18,18 +20,26 @@ const MapTracker: React.FC<MapTrackerProps> = ({
   chestsState,
   setChestsState,
   dungeonsState,
+  setDungeonsState,
   items,
   medallions,
   dungeonChests,
-  mapOrientation
+  mapOrientation,
+  setCaption
 }) => {
-  const [, setCaption] = useState('&nbsp;');
 
   // Toggle chest opened/closed state
   const toggleChest = (chestIndex: number) => {
     const newChests = [...chestsState];
     newChests[chestIndex].isOpened = !newChests[chestIndex].isOpened;
     setChestsState(newChests);
+  };
+
+  // Toggle dungeon boss beaten/not beaten state
+  const toggleDungeonBoss = (dungeonIndex: number) => {
+    const newDungeons = [...dungeonsState];
+    newDungeons[dungeonIndex].isBeaten = !newDungeons[dungeonIndex].isBeaten;
+    setDungeonsState(newDungeons);
   };
 
   // Highlight chest and show caption
@@ -119,22 +129,19 @@ const MapTracker: React.FC<MapTrackerProps> = ({
       {/* Render dungeon bosses */}
       {dungeonsState.map((dungeon, index) => {
         const coords = transformCoordinates(dungeon.x, dungeon.y);
+        const availabilityClass = getDungeonBossAvailability(index);
         return (
           <div
             key={`boss-${index}`}
-            className={`mapspan boss ${getDungeonBossAvailability(index)}`}
+            className={`mapspan boss ${availabilityClass}`}
             style={{
               backgroundImage: `url(/assets/${dungeon.image})`,
               position: 'absolute',
               left: coords.x,
               top: coords.y,
-              cursor: 'pointer',
-              width: '24px',
-              height: '24px',
-              backgroundSize: '100% 100%',
-              marginLeft: '-12px',
-              marginTop: '-12px'
+              cursor: 'pointer'
             }}
+            onClick={() => toggleDungeonBoss(index)}
             onMouseOver={() => highlightDungeon(index)}
             onMouseOut={unhighlightChest}
           />
@@ -153,12 +160,7 @@ const MapTracker: React.FC<MapTrackerProps> = ({
               position: 'absolute',
               left: coords.x,
               top: coords.y,
-              cursor: 'pointer',
-              width: '24px',
-              height: '24px',
-              backgroundSize: '100% 100%',
-              marginLeft: '-12px',
-              marginTop: '-12px'
+              cursor: 'pointer'
             }}
             onMouseOver={() => highlightDungeon(index)}
             onMouseOut={unhighlightChest}

@@ -19,6 +19,7 @@ function App() {
   
   // UI state
   const [showSettings, setShowSettings] = useState(false);
+  const [caption, setCaption] = useState('&nbsp;');
 
   /**
    * Handles item state changes when clicked
@@ -296,12 +297,14 @@ function App() {
             medallions={medallions}
             dungeonChests={dungeonchests}
             mapOrientation={mapOrientation}
+            caption={caption}
+            setCaption={setCaption}
           />
         </div>
         {renderSettings()}
       </div>
       
-      <div style={{ width: '100%', textAlign: 'center' }} id="caption">&nbsp;</div>
+      <div style={{ width: '100%', textAlign: 'center' }} id="caption" dangerouslySetInnerHTML={{ __html: caption }}></div>
     </div>
   );
 }
