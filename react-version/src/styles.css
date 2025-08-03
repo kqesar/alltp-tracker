@@ -104,6 +104,26 @@ label {
     width: 16px;
     height: 16px;
     vertical-align: text-bottom;
+    display: inline-block;
+    margin: 0 1px;
+}
+
+/* Caption specific styles to override Tailwind */
+#caption {
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 8px;
+    min-height: 24px;
+}
+
+#caption .mini {
+    width: 16px !important;
+    height: 16px !important;
+    vertical-align: text-bottom !important;
+    display: inline-block !important;
+    margin: 0 1px !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .boss {

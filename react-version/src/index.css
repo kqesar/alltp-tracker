@@ -1,3 +1,25 @@
+@import "tailwindcss";
+
+/* Override Tailwind base styles for the tracker */
+#root {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+}
+
+/* Specific overrides for caption and mini images */
+#caption img.mini {
+  width: 16px !important;
+  height: 16px !important;
+  vertical-align: text-bottom !important;
+  display: inline-block !important;
+  margin: 0 2px !important;
+  border: none !important;
+  box-shadow: none !important;
+  max-width: none !important;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
