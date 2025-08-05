@@ -25,8 +25,6 @@ function App() {
   const [medallions, setMedallions] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); // Medallion assignments for dungeons
   const [mapOrientation] = useState(false); // Light/Dark World toggle
 
-  // UI state
-  const [showSettings, setShowSettings] = useState(false);
   const [caption, setCaption] = useState("&nbsp;");
 
   /**
@@ -280,7 +278,7 @@ function App() {
   const renderGridItem = (row: number, col: number) => {
     const item = itemLayout[row][col];
 
-    if (item && item.startsWith("boss")) {
+    if (item?.startsWith("boss")) {
       const bossNumber = parseInt(item.replace("boss", ""));
       return renderBossItem(row, col, item, bossNumber);
     }
@@ -312,32 +310,6 @@ function App() {
       </table>
     );
   };
-
-  /**
-   * Renders the settings panel
-   */
-  const renderSettings = () => (
-    <div id="settingsDiv">
-      <button
-        id="settingsbutton"
-        onClick={() => setShowSettings(!showSettings)}
-        type="button"
-      >
-        {showSettings ? "X" : "🔧"}
-      </button>
-
-      {showSettings && (
-        <fieldset
-          className="settings"
-          id="settings"
-          style={{ display: "initial" }}
-        >
-          <legend>Settings</legend>
-          <p>Settings panel - more options coming soon!</p>
-        </fieldset>
-      )}
-    </div>
-  );
 
   return (
     <div>
@@ -372,7 +344,6 @@ function App() {
             setDungeonsState={setDungeonsState}
           />
         </div>
-        {renderSettings()}
       </div>
 
       <div id="caption" style={{ textAlign: "center", width: "100%" }}>
