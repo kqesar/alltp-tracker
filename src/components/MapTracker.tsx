@@ -51,9 +51,38 @@ export const MapTracker = ({
     setCaption("&nbsp;");
   };
 
-  // Highlight dungeon and show caption
+  // Highlight dungeon and show caption with dynamic medallion info
   const highlightDungeon = (dungeonIndex: number) => {
-    setCaption(dungeonsState[dungeonIndex].name);
+    let dungeonName = dungeonsState[dungeonIndex].name;
+
+    // For Misery Mire (8) and Turtle Rock (9), update medallion in caption
+    if (dungeonIndex === 8 || dungeonIndex === 9) {
+      const medallionValue = medallions[dungeonIndex];
+      let medallionName = "medallion0"; // default/unknown
+
+      switch (medallionValue) {
+        case 1:
+          medallionName = "medallion1"; // bombos
+          break;
+        case 2:
+          medallionName = "medallion2"; // ether
+          break;
+        case 3:
+          medallionName = "medallion0"; // quake (uses medallion0 image)
+          break;
+        default:
+          medallionName = "medallion0"; // unknown
+          break;
+      }
+
+      // Replace the medallion image in the name
+      dungeonName = dungeonName.replace(
+        /<img src='\/assets\/medallion0\.png' class='mini'>/g,
+        `<img src='/assets/${medallionName}.png' class='mini'>`,
+      );
+    }
+
+    setCaption(dungeonName);
   };
 
   // Get chest availability class

@@ -22,7 +22,7 @@ function App() {
   const [itemLayout] = useState(JSON.parse(JSON.stringify(defaultItemGrid)));
   const [chestsState, setChestsState] = useState([...initialChests]);
   const [dungeonsState, setDungeonsState] = useState([...initialDungeons]);
-  const [medallions] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); // Medallion assignments for dungeons
+  const [medallions, setMedallions] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); // Medallion assignments for dungeons
   const [mapOrientation] = useState(false); // Light/Dark World toggle
 
   // UI state
@@ -155,15 +155,26 @@ function App() {
   const renderMedallionOverlay = (bossNumber: number) => {
     if (bossNumber < 8) return null;
 
+    const medallionValue = medallions[bossNumber];
+    // Map medallion values to image files (medallion0.png to medallion2.png):
+    // 0 = unknown/not assigned (medallion0.png)
+    // 1 = bombos (medallion1.png)
+    // 2 = ether (medallion2.png)
+    // 3 = quake (cycle back to medallion0.png)
+    const imageIndex = medallionValue === 3 ? 0 : medallionValue;
+
     return (
       <div
         onClick={(e) => {
           e.stopPropagation();
-          // TODO: Handle medallion click logic
+          // Cycle from 0 to 3, then back to 0
+          const newMedallions = [...medallions];
+          newMedallions[bossNumber] = (medallionValue + 1) % 4;
+          setMedallions(newMedallions);
         }}
         style={{
           ...getOverlayStyles({ right: "2px", top: "2px" }),
-          backgroundImage: "url(/assets/medallion0.png)",
+          backgroundImage: `url(/assets/medallion${imageIndex}.png)`,
         }}
       />
     );
