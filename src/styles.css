@@ -1,0 +1,218 @@
+body {
+  margin: 0;
+  font-size: 14px;
+  color: white;
+  background-color: black;
+}
+
+.flexcontainer {
+  display: flex;
+}
+
+.settings {
+  display: none;
+  background-color: black;
+}
+
+#settingsbutton {
+  color: red;
+  background-color: black;
+}
+
+.tracker {
+  position: relative;
+  top: 0;
+  left: 0;
+  empty-cells: show;
+  border-spacing: 0;
+  background-color: black;
+  border: 0;
+}
+
+.tracker td {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  background-repeat: no-repeat;
+}
+
+.tracker .halfcell {
+  width: 32px;
+  height: 64px;
+}
+
+.itemconfig {
+  border-spacing: 0;
+  border: 1px solid white;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.stoops {
+  width: 128px;
+  height: 128px;
+  background-size: 200% 200%;
+}
+
+input {
+  display: inline-block;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+label {
+  display: inline-block;
+  width: 140px;
+  padding-top: 5px;
+  text-align: right;
+}
+
+.lonk {
+  width: 64px;
+  height: 64px;
+  border-spacing: 0;
+  border: 0;
+}
+
+.corner {
+  width: 32px;
+  height: 32px;
+}
+
+.true {
+  opacity: 1;
+}
+
+.false {
+  opacity: 0.25;
+}
+
+.mini {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 1px;
+  vertical-align: text-bottom;
+}
+
+/* Caption specific styles to override Tailwind */
+#caption {
+  min-height: 24px;
+  padding: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+#caption .mini {
+  display: inline-block !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 1px !important;
+  vertical-align: text-bottom !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.boss {
+  position: absolute;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  margin-left: -12px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 75% 75%;
+}
+
+.dungeon {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  margin-top: -24px;
+  margin-left: -24px;
+  background-size: 100% 100%;
+}
+
+.itemdiv {
+  left: 0;
+  display: inline-block;
+  width: 480px;
+  margin: 0 auto;
+  vertical-align: middle;
+}
+
+.mapdiv {
+  position: relative;
+  display: inline-block;
+  width: 884px;
+  height: 442px;
+  vertical-align: middle;
+  background-image: url("/assets/map.png");
+}
+
+.mapvdiv {
+  position: relative;
+  display: inline-block;
+  width: 438px;
+  height: 888px;
+  vertical-align: top;
+  background-image: url("/assets/mapv.png");
+}
+
+.chest {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  margin-left: -12px;
+  background-size: 100% 100%;
+}
+
+.unavailable {
+  background-color: red;
+}
+
+.available {
+  background-color: lime;
+}
+
+.possible {
+  background-color: yellow;
+}
+
+.opened {
+  background-color: #7f7f7f;
+}
+
+.mapspan {
+  cursor: pointer;
+}
+
+#layoutDiv {
+  display: block;
+  width: 95%;
+  margin: 0 auto;
+}
+
+#settingsDiv {
+  display: inline-block;
+  margin-left: 15px;
+  vertical-align: top;
+}
+
+footer {
+  width: 100%;
+  text-align: center;
+}
+
+.span-bloc {
+  color: black;
+  border: 3px solid black;
+}
+
+.griditem {
+  cursor: pointer;
+}

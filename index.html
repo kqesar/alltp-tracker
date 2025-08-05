@@ -1,51 +1,13 @@
-<html>
-    <head>
-        <title>LttP Item Tracker</title>
-        <meta charset="UTF-8">
-        <link rel="stylesheet" href="dist/css/style.css" type="text/css">
-    
-        <script type="text/javascript" src="dist/js/items.js"></script>
-        <script type="text/javascript" src="dist/js/chests.js"></script>
-        <script type="text/javascript" src="dist/js/main.js"></script>
-    </head>
-
-    <body>
-        <div id='layoutdiv'>
-            <div id='itemdiv' class='itemdiv'></div>
-            <div id='mapdiv' class='mapdiv'></div>
-            <div id='settingsDiv'>
-                <!-- Setting panel-->
-                <button id='settingsbutton' type='button' onclick='showSettings(this)'>🔧</button>
-                <fieldset id='settings' class='settings'>
-                    <legend>Settings</legend>
-                    <fieldset>
-                        <legend>Item Tracker</legend>
-                        <button type="button" onclick="EditMode()">Edit Mode</button>
-                        <fieldset>
-                            <legend>Dungeon Display</legend>
-                            <input type="checkbox" name="showchest" checked='true' onchange="showChest(this)">Chests
-                            <input type="checkbox" name="showcrystal" checked='true' onchange="showCrystal(this)">Prizes
-                            <input type="checkbox" name="showmedallion" checked='true' onchange="showMedallion(this)">Medals<br>
-                        </fieldset>
-                    </fieldset>
-                    <fieldset>
-                        <legend>Map Tracker</legend>
-                        <input type="checkbox" name="showmap" checked='true' onchange="showTracker('mapdiv', this)">Enabled<br>
-                        Position:
-                        <input type='radio' name='mapposition' value='Below' checked='true' onclick="setOrder(true)">Below
-                        <input type='radio' name='mapposition' value='Side' onclick="setOrder(false)">Side<br>
-                        Orientation:
-                        <input type='radio' name='maporientation' value='Horizontal' checked='true' onclick="setMapOrientation(false)">Horizontal
-                        <input type='radio' name='maporientation' value='Verical' onclick="setMapOrientation(true)">Vertical<br>
-                    </fieldset>
-                </fieldset>
-            </div>
-        </div>
-        <div width='100%' id="caption" align='center'></div>
-        <table id='itemconfig' class='itemconfig' style='display:none'></table>
-        <script type="text/javascript">
-            init();
-        </script>
-    </body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LttP Item Tracker</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
-

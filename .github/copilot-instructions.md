@@ -7,3 +7,17 @@ Each component with will be documented with comments explaining its purpose and 
 Each component will be small
 Each component will be tested with vitest and react testing library
 To launch the project, run `pnpm install` to install dependencies, then `pnpm dev` to start the development server. in /react-version folder.
+A React component is created like that:
+
+```tsx
+type MyComponentProps = {
+  message: string;
+};
+export const MyComponent = ({ message }: MyComponentProps) => {
+  return (
+    <div>
+      <h1>{message}</h1>
+    </div>
+  );
+};
+```
