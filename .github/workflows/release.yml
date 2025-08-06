@@ -1,0 +1,117 @@
+name: Release and Changelog
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check for changes since last release
+        id: check-changes
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No previous tags found, proceeding with release"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            # Check if there are commits since the last tag
+            COMMITS_SINCE_TAG=$(git rev-list ${LATEST_TAG}..HEAD --count)
+            if [ "$COMMITS_SINCE_TAG" -gt "0" ]; then
+              echo "Found $COMMITS_SINCE_TAG commits since $LATEST_TAG"
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+            else
+              echo "No commits since last tag $LATEST_TAG"
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Run tests
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: pnpm test
+
+      - name: Build project
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: pnpm build
+
+      - name: Create release (automatic)
+        if: steps.check-changes.outputs.has_changes == 'true' && github.event_name == 'push'
+        run: |
+          pnpm release
+          git push --follow-tags origin ${{ github.ref_name }}
+
+      - name: Create release (manual)
+        if: steps.check-changes.outputs.has_changes == 'true' && github.event_name == 'workflow_dispatch'
+        run: |
+          pnpm release --release-as ${{ github.event.inputs.release_type }}
+          git push --follow-tags origin ${{ github.ref_name }}
+
+      - name: Get version
+        if: steps.check-changes.outputs.has_changes == 'true'
+        id: get-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        if: steps.check-changes.outputs.has_changes == 'true'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get-version.outputs.version }}
+          release_name: Release ${{ steps.get-version.outputs.version }}
+          body_path: ./CHANGELOG.md
+          draft: false
+          prerelease: false
+
+      - name: Upload build artifacts
+        if: steps.check-changes.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ steps.get-version.outputs.version }}
+          path: dist/

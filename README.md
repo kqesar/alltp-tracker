@@ -138,4 +138,42 @@ This project uses modern React practices:
 - **Modular architecture** with small, focused components
 - **Biome** for consistent code formatting
 
+### Conventional Commits
+
+This project follows the [Conventional Commits](https://conventionalcommits.org/) specification. All commit messages should be formatted as:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+#### Types:
+- **feat**: A new feature
+- **fix**: A bug fix
+- **docs**: Documentation only changes
+- **style**: Changes that do not affect the meaning of the code
+- **refactor**: A code change that neither fixes a bug nor adds a feature
+- **perf**: A code change that improves performance
+- **test**: Adding missing tests or correcting existing tests
+- **build**: Changes that affect the build system or external dependencies
+- **ci**: Changes to our CI configuration files and scripts
+- **chore**: Other changes that don't modify src or test files
+
+#### Examples:
+```bash
+feat(tracker): add medallion overlay for boss dungeons
+fix(map): correct chest coordinates transformation
+docs(readme): update installation instructions
+```
+
+### Release Process
+
+Releases are automated using GitHub Actions:
+- **Automatic**: Push to master branch triggers automatic patch release
+- **Manual**: Use GitHub Actions workflow dispatch to create minor/major releases
+- **Changelog**: Automatically generated from conventional commits
+
 Pull requests welcome for bug fixes, feature improvements, and code quality enhancements!
