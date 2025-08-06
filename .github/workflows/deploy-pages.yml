@@ -1,0 +1,207 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-create-pr:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run build
+        run: pnpm build
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create gh-pages branch if it doesn't exist
+        run: |
+          if ! git ls-remote --heads origin gh-pages | grep -q gh-pages; then
+            echo "Creating gh-pages branch..."
+            git checkout --orphan gh-pages
+            git rm -rf .
+            echo "# GitHub Pages" > README.md
+            git add README.md
+            git commit -m "chore: initialize gh-pages branch"
+            git push origin gh-pages
+            git checkout master
+          fi
+
+      - name: Check if dist has changes
+        id: check-changes
+        run: |
+          # Create temporary directory for comparison
+          mkdir -p /tmp/gh-pages-check
+          
+          # Get current gh-pages content
+          git fetch origin gh-pages
+          git worktree add /tmp/gh-pages-check gh-pages
+          
+          # Compare dist with gh-pages content (excluding README.md)
+          if [ -d "/tmp/gh-pages-check" ]; then
+            # Create dist copy without git files
+            rsync -av --exclude='.git*' dist/ /tmp/dist-compare/
+            
+            # Compare (ignore README.md)
+            if ! diff -r /tmp/dist-compare /tmp/gh-pages-check --exclude="README.md" --exclude=".git*" >/dev/null 2>&1; then
+              echo "Changes detected in dist folder"
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+            else
+              echo "No changes in dist folder"
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "gh-pages is empty, deploying"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+          
+          # Cleanup
+          git worktree remove /tmp/gh-pages-check --force || true
+          rm -rf /tmp/dist-compare || true
+
+      - name: Create deployment PR
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          BRANCH_NAME="deploy/gh-pages-$TIMESTAMP"
+          
+          # Create deployment branch from gh-pages
+          git fetch origin gh-pages
+          git checkout -b $BRANCH_NAME origin/gh-pages
+          
+          # Clear everything except .git
+          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
+          
+          # Copy dist content to root
+          cp -r ../dist/* . 2>/dev/null || cp -r ../dist/. . 2>/dev/null || true
+          
+          # Add deployment info
+          echo "# A Link to the Past Tracker" > README.md
+          echo "" >> README.md
+          echo "🎮 **Live Demo**: [Open Tracker](./index.html)" >> README.md
+          echo "" >> README.md
+          echo "Built from commit: ${{ github.sha }}" >> README.md
+          echo "Deployed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> README.md
+          echo "" >> README.md
+          echo "---" >> README.md
+          echo "*Auto-deployed from [kqesar/alltp-tracker](https://github.com/kqesar/alltp-tracker)*" >> README.md
+          
+          # Commit changes
+          git add -A
+          git commit -m "deploy: update GitHub Pages
+
+          - Built from commit ${{ github.sha }}
+          - Generated at $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          
+          [skip ci]" || exit 0
+          
+          # Push branch
+          git push origin $BRANCH_NAME
+          
+          # Store branch name for later steps
+          echo $BRANCH_NAME > /tmp/branch_name
+
+      - name: Create Pull Request
+        if: steps.check-changes.outputs.has_changes == 'true'
+        id: create-pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const branchName = fs.readFileSync('/tmp/branch_name', 'utf8').trim();
+            
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚀 Deploy to GitHub Pages - ${new Date().toISOString().split('T')[0]}`,
+              head: branchName,
+              base: 'gh-pages',
+              body: `## 🚀 Automated GitHub Pages Deployment
+              
+              This PR contains the built assets for GitHub Pages deployment.
+              
+              ### 📋 Build Information
+              - **Source commit**: ${context.sha}
+              - **Built at**: ${new Date().toISOString()}
+              - **Workflow run**: [${context.runId}](${context.payload.repository.html_url}/actions/runs/${context.runId})
+              
+              ### ✅ Automated Checks
+              - ✅ Build successful (\`pnpm build\`)
+              
+              This PR will be automatically merged.
+              
+              ---
+              *This is an automated deployment PR created by GitHub Actions.*`,
+              draft: false
+            });
+            
+            // Enable auto-merge
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              commit_title: `🚀 Deploy to GitHub Pages`,
+              commit_message: `Auto-merge deployment PR #${pr.number}`,
+              merge_method: 'squash'
+            });
+            
+            console.log(`PR #${pr.number} created and merged successfully!`);
+            
+            return pr.number;
+
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-create-pr
+    if: always()
+    
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
