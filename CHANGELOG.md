@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.4](https://github.com/kqesar/alltp-tracker/compare/v1.2.3...v1.2.4) (2025-08-06)
+
+
+### 🐛 Bug Fixes
+
+* use proper asset paths with BASE_URL for GitHub Pages ([2695e2d](https://github.com/kqesar/alltp-tracker/commit/2695e2db5538e366813c66775a4e36b5b0e458cf))
+
 ### [1.2.3](https://github.com/kqesar/alltp-tracker/compare/v1.2.2...v1.2.3) (2025-08-06)
 
 
