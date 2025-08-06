@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 1.1.0 (2025-08-06)
+
+
+### ✨ Features
+
+* add chests ([5b61f7b](https://github.com/kqesar/alltp-tracker/commit/5b61f7b5a6793549536e47b9865b150af763a41e))
+* add dependabot [#20](https://github.com/kqesar/alltp-tracker/issues/20) ([83c5fad](https://github.com/kqesar/alltp-tracker/commit/83c5fad3d37efe5cb87b86cab9bf4466116eb280))
+* add react version ([6a82206](https://github.com/kqesar/alltp-tracker/commit/6a82206e673d2e25dd276172d063b9b177afaa55))
+* add rewards management ([b43fc70](https://github.com/kqesar/alltp-tracker/commit/b43fc70dcd77579c11148398c55c3d2d9c8e2d9a))
+* add tailwind ([17fd06d](https://github.com/kqesar/alltp-tracker/commit/17fd06dcb2d9bb14bc89d68678391de5911ffb9e))
+* bump packages and remove yarn ([cbb33ea](https://github.com/kqesar/alltp-tracker/commit/cbb33ea53c30b250b80c01106fb0d9fcb83c8203))
+* bump sass ([4db8f30](https://github.com/kqesar/alltp-tracker/commit/4db8f30018b50d76f60fede033624f1e33307a4d))
+* evolve react version ([5f67908](https://github.com/kqesar/alltp-tracker/commit/5f67908c7e729132999ea06859f113e9f299efda))
+* medaillon management ([de560dc](https://github.com/kqesar/alltp-tracker/commit/de560dca43b8b410d643d9a4c46c5c83669f915e))
+* optimize app.tsx ([2172d8a](https://github.com/kqesar/alltp-tracker/commit/2172d8ae361958a8491aebf6b5581533e3d72ab2))
+* remove codeQL workflow ([1e5e74e](https://github.com/kqesar/alltp-tracker/commit/1e5e74e010959fb5d1e351f4c66e555b8056e2db))
+* remove settings ([d4ca121](https://github.com/kqesar/alltp-tracker/commit/d4ca121d06147f206b54b9f2b3dcc39772b8a85b))
+* update License ([fda378e](https://github.com/kqesar/alltp-tracker/commit/fda378e2e85aff932200bb7153b92ef1db855936))
+* update vscode config, delete useless file and update README ([0761dc2](https://github.com/kqesar/alltp-tracker/commit/0761dc2e15bc675759d1fd9dfcc3e5570023bd67))
+
+
+### 🐛 Bug Fixes
+
+* fix URL to git clone repository [#24](https://github.com/kqesar/alltp-tracker/issues/24) ([0157b68](https://github.com/kqesar/alltp-tracker/commit/0157b68cfe22ee2e09b7fd5c5b4e919454b116b2))
+* **global:** fix test stup file ([92fa835](https://github.com/kqesar/alltp-tracker/commit/92fa8359123cb41c8715d8cc813700fa2ab8836d))
+
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
 ## [Unreleased]
 
 ### ✨ Features
