@@ -1,0 +1,60 @@
+{
+  "commitUrlFormat": "https://github.com/kqesar/alltp-tracker/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/kqesar/alltp-tracker/compare/{{previousTag}}...{{currentTag}}",
+  "issuePrefixes": ["#"],
+  "issueUrlFormat": "https://github.com/kqesar/alltp-tracker/issues/{{id}}",
+  "releaseCommitMessageFormat": "chore(release): {{currentTag}}",
+  "types": [
+    {
+      "section": "✨ Features",
+      "type": "feat"
+    },
+    {
+      "section": "🐛 Bug Fixes",
+      "type": "fix"
+    },
+    {
+      "section": "⚡ Performance Improvements",
+      "type": "perf"
+    },
+    {
+      "section": "⏪ Reverts",
+      "type": "revert"
+    },
+    {
+      "hidden": false,
+      "section": "📚 Documentation",
+      "type": "docs"
+    },
+    {
+      "hidden": true,
+      "section": "💎 Styles",
+      "type": "style"
+    },
+    {
+      "section": "🔧 Code Refactoring",
+      "type": "refactor"
+    },
+    {
+      "hidden": true,
+      "section": "✅ Tests",
+      "type": "test"
+    },
+    {
+      "hidden": true,
+      "section": "📦 Build System",
+      "type": "build"
+    },
+    {
+      "hidden": true,
+      "section": "👷 CI/CD",
+      "type": "ci"
+    },
+    {
+      "hidden": true,
+      "section": "🏠 Chores",
+      "type": "chore"
+    }
+  ],
+  "userUrlFormat": "https://github.com/{{user}}"
+}
