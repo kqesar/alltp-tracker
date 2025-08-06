@@ -29,7 +29,7 @@ This tracker is designed for **A Link to the Past randomizer** players who need 
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/kqesar/alltp-tracker
 cd alltp-tracker
 
 # Install dependencies
