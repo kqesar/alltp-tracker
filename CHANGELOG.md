@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.2](https://github.com/kqesar/alltp-tracker/compare/v1.2.1...v1.2.2) (2025-08-06)
+
+
+### 🐛 Bug Fixes
+
+* use gh-pages branch deployment to bypass environment protection ([9f5a638](https://github.com/kqesar/alltp-tracker/commit/9f5a638f8bd9eb0f7a6fded82d7c35f51630d0b9))
+
 ### [1.2.1](https://github.com/kqesar/alltp-tracker/compare/v1.2.0...v1.2.1) (2025-08-06)
 
 
