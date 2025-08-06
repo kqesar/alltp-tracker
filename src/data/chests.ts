@@ -1,6 +1,72 @@
 // Type definitions
 export interface ItemState {
-  [key: string]: any;
+  // Index signature for dynamic access
+  [key: string]: number | boolean;
+
+  // Numeric items (progressive)
+  agahnim: number;
+  boomerang: number;
+  boss0: number;
+  boss1: number;
+  boss2: number;
+  boss3: number;
+  boss4: number;
+  boss5: number;
+  boss6: number;
+  boss7: number;
+  boss8: number;
+  boss9: number;
+  bottle: number;
+  bow: number;
+  chest0: number;
+  chest1: number;
+  chest2: number;
+  chest3: number;
+  chest4: number;
+  chest5: number;
+  chest6: number;
+  chest7: number;
+  chest8: number;
+  chest9: number;
+  dungeon: number;
+  glove: number;
+  reward0: number;
+  reward1: number;
+  reward2: number;
+  reward3: number;
+  reward4: number;
+  reward5: number;
+  reward6: number;
+  reward7: number;
+  reward8: number;
+  reward9: number;
+  shield: number;
+  sword: number;
+  tunic: number;
+
+  // Boolean items
+  blank: boolean;
+  bombos: boolean;
+  book: boolean;
+  boots: boolean;
+  byrna: boolean;
+  cape: boolean;
+  ether: boolean;
+  firerod: boolean;
+  flippers: boolean;
+  flute: boolean;
+  hammer: boolean;
+  hookshot: boolean;
+  icerod: boolean;
+  lantern: boolean;
+  mirror: boolean;
+  moonpearl: boolean;
+  mushroom: boolean;
+  net: boolean;
+  powder: boolean;
+  quake: boolean;
+  shovel: boolean;
+  somaria: boolean;
 }
 
 export interface ChestItem {
@@ -26,11 +92,12 @@ export interface DungeonItem {
 // Helper function for checking if player can access Dark World
 function steve(items: ItemState): boolean {
   if (!items.moonpearl) return false;
-  if (items.glove === 2 || (items.glove && items.hammer)) return true;
+  if (items.glove === 2 || ((items.glove as number) > 0 && items.hammer))
+    return true;
   return (
-    items.agahnim &&
+    (items.agahnim as number) > 0 &&
     items.hookshot &&
-    (items.hammer || items.glove || items.flippers)
+    (items.hammer || (items.glove as number) > 0 || items.flippers)
   );
 }
 

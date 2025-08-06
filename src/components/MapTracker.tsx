@@ -1,13 +1,13 @@
-import type { ChestItem, DungeonItem } from "../data/chests";
+import type { ChestItem, DungeonItem, ItemState } from "../data/chests";
 
 interface MapTrackerProps {
   chestsState: ChestItem[];
   setChestsState: (chests: ChestItem[]) => void;
   dungeonsState: DungeonItem[];
   setDungeonsState: (dungeons: DungeonItem[]) => void;
-  items: any;
+  items: ItemState;
   medallions: number[];
-  dungeonChests: any;
+  dungeonChests: Record<number, number>;
   mapOrientation: boolean;
   caption: string;
   setCaption: (caption: string) => void;
@@ -121,13 +121,13 @@ export const MapTracker = ({
 
     if (xNum > 0.5) {
       return {
-        x: (xNum - 0.5) * 2 * 100 + "%",
-        y: (yNum / 2 + 0.5) * 100 + "%",
+        x: `${(xNum - 0.5) * 2 * 100}%`,
+        y: `${(yNum / 2 + 0.5) * 100}%`,
       };
     } else {
       return {
-        x: xNum * 2 * 100 + "%",
-        y: (yNum / 2) * 100 + "%",
+        x: `${xNum * 2 * 100}%`,
+        y: `${(yNum / 2) * 100}%`,
       };
     }
   };

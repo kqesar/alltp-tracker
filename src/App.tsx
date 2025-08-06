@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./styles.css";
 import { MapTracker } from "./components/MapTracker";
 import {
+  type ItemState,
   chests as initialChests,
   dungeons as initialDungeons,
 } from "./data/chests";
@@ -18,7 +19,9 @@ import {
  */
 function App() {
   // Game state
-  const [items, setItems] = useState({ ...initialItems });
+  const [items, setItems] = useState<ItemState>({
+    ...initialItems,
+  } as ItemState);
   const [itemLayout] = useState(JSON.parse(JSON.stringify(defaultItemGrid)));
   const [chestsState, setChestsState] = useState([...initialChests]);
   const [dungeonsState, setDungeonsState] = useState([...initialDungeons]);
@@ -301,7 +304,7 @@ function App() {
             <td className="halfcell" />
             {row
               .slice(0, 7)
-              .map((_: any, colIndex: number) =>
+              .map((_: string, colIndex: number) =>
                 renderGridItem(rowIndex, colIndex),
               )}
             <td className="halfcell" />
@@ -315,7 +318,7 @@ function App() {
     <div>
       <div id="layoutdiv">
         <div className="itemdiv" id="itemdiv">
-          {itemLayout.map((_: any, rowIndex: number) =>
+          {itemLayout.map((_: string[], rowIndex: number) =>
             renderGridRow(rowIndex),
           )}
         </div>
@@ -324,16 +327,16 @@ function App() {
             caption={caption}
             chestsState={chestsState}
             dungeonChests={[
-              items.chest0,
-              items.chest1,
-              items.chest2,
-              items.chest3,
-              items.chest4,
-              items.chest5,
-              items.chest6,
-              items.chest7,
-              items.chest8,
-              items.chest9,
+              items.chest0 as number,
+              items.chest1 as number,
+              items.chest2 as number,
+              items.chest3 as number,
+              items.chest4 as number,
+              items.chest5 as number,
+              items.chest6 as number,
+              items.chest7 as number,
+              items.chest8 as number,
+              items.chest9 as number,
             ]}
             dungeonsState={dungeonsState}
             items={items}

@@ -4,10 +4,10 @@ import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  base: process.env.NODE_ENV === 'production' ? '/alltp-tracker/' : '/',
+  base: process.env.NODE_ENV === "production" ? "/alltp-tracker/" : "/",
   build: {
     outDir: "dist",
     sourcemap: true,
   },
+  plugins: [react(), tailwindcss()],
 });

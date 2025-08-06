@@ -24,4 +24,4 @@ export const MyComponent = ({ message }: MyComponentProps) => {
 
 If needed, you can update markdown files to reflect any changes or additional instructions.
 
-Each created commits will be in new branched before pushing and creating a pull request.
+Each new features must not to be pushed to the master branch without a pull request.
