@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/kqesar/alltp-tracker/compare/v1.1.1...v1.2.0) (2025-08-06)
+
+
+### ✨ Features
+
+* add automated GitHub Pages deployment workflow ([bca71c2](https://github.com/kqesar/alltp-tracker/commit/bca71c2b4be2104bacffd7fa80420a30cf92a85e))
+
 ### [1.1.1](https://github.com/kqesar/alltp-tracker/compare/v1.1.0...v1.1.1) (2025-08-06)
 
 ## 1.1.0 (2025-08-06)
