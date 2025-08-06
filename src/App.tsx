@@ -31,6 +31,15 @@ function App() {
   const [caption, setCaption] = useState("&nbsp;");
 
   /**
+   * Gets the correct asset path with base URL support
+   * @param assetPath - The asset path relative to assets folder
+   * @returns Complete asset URL
+   */
+  const getAssetPath = (assetPath: string): string => {
+    return `${import.meta.env.BASE_URL}assets/${assetPath}`;
+  };
+
+  /**
    * H,andles item state changes when clicked
    * @param item - The item identifier to update
    */
@@ -71,9 +80,9 @@ function App() {
     if (!item || item === "blank") return "";
 
     if (typeof items[item] === "boolean") {
-      return `url(/assets/${item}.png)`;
+      return `url(${getAssetPath(`${item}.png`)})`;
     } else {
-      return `url(/assets/${item}${items[item]}.png)`;
+      return `url(${getAssetPath(`${item}${items[item]}.png`)})`;
     }
   };
 
@@ -175,7 +184,7 @@ function App() {
         }}
         style={{
           ...getOverlayStyles({ right: "2px", top: "2px" }),
-          backgroundImage: `url(/assets/medallion${imageIndex}.png)`,
+          backgroundImage: `url(${getAssetPath(`medallion${imageIndex}.png`)})`,
         }}
       />
     );
@@ -197,7 +206,7 @@ function App() {
         }}
         style={{
           ...getOverlayStyles({ bottom: "2px", left: "2px" }),
-          backgroundImage: `url(/assets/chest${chestValue}.png)`,
+          backgroundImage: `url(${getAssetPath(`chest${chestValue}.png`)})`,
         }}
       />
     );
@@ -221,7 +230,7 @@ function App() {
         }}
         style={{
           ...getOverlayStyles({ bottom: "2px", right: "2px" }),
-          backgroundImage: `url(/assets/dungeon${rewardValue}.png)`,
+          backgroundImage: `url(${getAssetPath(`dungeon${rewardValue}.png`)})`,
         }}
       />
     );

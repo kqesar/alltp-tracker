@@ -14,6 +14,15 @@ interface MapTrackerProps {
 }
 
 /**
+ * Gets the correct asset path with base URL support
+ * @param assetPath - The asset path relative to assets folder
+ * @returns Complete asset URL
+ */
+const getAssetPath = (assetPath: string): string => {
+  return `${import.meta.env.BASE_URL}assets/${assetPath}`;
+};
+
+/**
  * MapTracker component handles the map display with chests and dungeons
  */
 export const MapTracker = ({
@@ -145,7 +154,7 @@ export const MapTracker = ({
             onMouseOut={unhighlightChest}
             onMouseOver={() => highlightChest(index)}
             style={{
-              backgroundImage: "url(/assets/poi.png)",
+              backgroundImage: `url(${getAssetPath("poi.png")})`,
               backgroundSize: "100% 100%",
               cursor: "pointer",
               height: "24px",
@@ -172,7 +181,7 @@ export const MapTracker = ({
             onMouseOut={unhighlightChest}
             onMouseOver={() => highlightDungeon(index)}
             style={{
-              backgroundImage: `url(/assets/${dungeon.image})`,
+              backgroundImage: `url(${getAssetPath(dungeon.image)})`,
               cursor: "pointer",
               left: coords.x,
               position: "absolute",
@@ -192,7 +201,7 @@ export const MapTracker = ({
             onMouseOut={unhighlightChest}
             onMouseOver={() => highlightDungeon(index)}
             style={{
-              backgroundImage: "url(/assets/poi.png)",
+              backgroundImage: `url(${getAssetPath("poi.png")})`,
               cursor: "pointer",
               left: coords.x,
               position: "absolute",
