@@ -194,7 +194,13 @@ This project is automatically deployed to GitHub Pages using GitHub Actions:
    - ✅ `pnpm lint` - Code quality validation
    - ✅ `pnpm test` - Test suite execution
    - ✅ `pnpm build` - Production build verification
-3. **Deploy**: Built assets are automatically deployed to GitHub Pages
+3. **Deploy**: Built assets are automatically pushed to `gh-pages` branch and deployed
+
+### GitHub Pages Configuration
+The deployment uses the traditional `gh-pages` branch approach:
+- Built assets are pushed to the `gh-pages` branch
+- GitHub Pages serves content from the `gh-pages` branch
+- No environment protection rules interfere with deployment
 
 ### Manual Deployment
 You can manually trigger a deployment via:
