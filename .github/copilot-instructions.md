@@ -21,3 +21,5 @@ export const MyComponent = ({ message }: MyComponentProps) => {
   );
 };
 ```
+
+If needed, you can update the README.md file to reflect any changes or additional instructions.
