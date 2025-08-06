@@ -193,10 +193,8 @@ This project is automatically deployed to GitHub Pages using GitHub Actions:
 2. **Quality Checks**: 
    - ✅ `pnpm lint` - Code quality validation
    - ✅ `pnpm test` - Test suite execution
-   - ✅ `pnpm build` - Production build
-3. **PR Creation**: Automated PR with built assets to `gh-pages` branch
-4. **Auto-merge**: PR is automatically merged if all checks pass
-5. **Deploy**: Built assets are deployed to GitHub Pages
+   - ✅ `pnpm build` - Production build verification
+3. **Deploy**: Built assets are automatically deployed to GitHub Pages
 
 ### Manual Deployment
 You can manually trigger a deployment via:
