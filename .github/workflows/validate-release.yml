@@ -12,8 +12,15 @@ permissions:
   pull-requests: write
 
 jobs:
+  ci:
+    if: startsWith(github.head_ref, 'release/')
+    uses: ./.github/workflows/ci.yml
+    with:
+      build: true
+
   validate:
     runs-on: ubuntu-latest
+    needs: ci
     if: startsWith(github.head_ref, 'release/')
     
     steps:
@@ -34,15 +41,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
-
-      - name: Run linter
-        run: pnpm lint
-
-      - name: Run tests
-        run: pnpm test
-
-      - name: Build project
-        run: pnpm build
 
       - name: Validate changelog
         run: |
