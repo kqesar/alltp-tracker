@@ -107,37 +107,11 @@ function App() {
   /**
    * Creates common grid item styles
    * @param item - The item identifier
-   * @returns Style object for grid items
+   * @returns Style object for grid items (only dynamic properties)
    */
   const getGridItemStyles = (item: string) => ({
     backgroundImage: getItemBackground(item),
-    backgroundRepeat: "no-repeat",
-    backgroundSize: "100% 100%",
-    cursor: "pointer",
-    height: "64px",
     opacity: getItemOpacity(item),
-    width: "64px",
-  });
-
-  /**
-   * Creates overlay element styles for boss items
-   * @param position - Position object with top/bottom and left/right values
-   * @returns Style object for overlay elements
-   */
-  const getOverlayStyles = (position: {
-    top?: string;
-    bottom?: string;
-    left?: string;
-    right?: string;
-  }) => ({
-    backgroundRepeat: "no-repeat",
-    backgroundSize: "100% 100%",
-    cursor: "pointer",
-    height: "28px",
-    position: "absolute" as const,
-    width: "28px",
-    zIndex: 2,
-    ...position,
   });
 
   /**
@@ -175,6 +149,7 @@ function App() {
 
     return (
       <div
+        className="overlay-base overlay--top-right"
         onClick={(e) => {
           e.stopPropagation();
           // Cycle from 0 to 3, then back to 0
@@ -183,7 +158,6 @@ function App() {
           setMedallions(newMedallions);
         }}
         style={{
-          ...getOverlayStyles({ right: "2px", top: "2px" }),
           backgroundImage: `url(${getAssetPath(`medallion${imageIndex}.png`)})`,
         }}
       />
@@ -200,12 +174,12 @@ function App() {
 
     return (
       <div
+        className="overlay-base overlay--bottom-left"
         onClick={(e) => {
           e.stopPropagation();
           handleItemClick(chestKey);
         }}
         style={{
-          ...getOverlayStyles({ bottom: "2px", left: "2px" }),
           backgroundImage: `url(${getAssetPath(`chest${chestValue}.png`)})`,
         }}
       />
@@ -222,6 +196,7 @@ function App() {
 
     return (
       <div
+        className="overlay-base overlay--bottom-right"
         onClick={(e) => {
           e.stopPropagation();
           // Cycle from 0 to 4, then back to 0
@@ -229,7 +204,6 @@ function App() {
           setItems({ ...items, [rewardKey]: nextValue });
         }}
         style={{
-          ...getOverlayStyles({ bottom: "2px", right: "2px" }),
           backgroundImage: `url(${getAssetPath(`dungeon${rewardValue}.png`)})`,
         }}
       />
@@ -250,13 +224,10 @@ function App() {
     bossNumber: number,
   ) => (
     <td
-      className="griditem"
+      className="griditem grid-item-base grid-item-relative"
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
-      style={{
-        ...getGridItemStyles(item),
-        position: "relative",
-      }}
+      style={getGridItemStyles(item)}
     >
       {renderMedallionOverlay(bossNumber)}
       {renderChestOverlay(bossNumber)}
@@ -273,7 +244,7 @@ function App() {
    */
   const renderRegularItem = (row: number, col: number, item: string) => (
     <td
-      className="griditem"
+      className="griditem grid-item-base"
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
       style={getGridItemStyles(item)}
@@ -358,7 +329,7 @@ function App() {
         </div>
       </div>
 
-      <div id="caption" style={{ textAlign: "center", width: "100%" }}>
+      <div className="caption-container" id="caption">
         {caption === "&nbsp;" ? (
           <span>&nbsp;</span>
         ) : (

@@ -292,26 +292,22 @@ label {
 .availability-state--unavailable,
 .unavailable {
   background-color: var(--color-error);
-  border-radius: var(--border-radius);
 }
 
 .availability-state--available,
 .available {
   background-color: var(--color-success);
-  border-radius: var(--border-radius);
 }
 
 .availability-state--possible,
 .possible {
   color: #000;
   background-color: var(--color-warning);
-  border-radius: var(--border-radius);
 }
 
 .availability-state--completed,
 .opened {
   background-color: var(--color-disabled);
-  border-radius: var(--border-radius);
 }
 
 /* Interactive Elements */
@@ -442,4 +438,71 @@ footer {
     width: 24px;
     height: 48px;
   }
+}
+
+/* Grid Item Base Styles */
+.grid-item-base {
+  width: 64px;
+  height: 64px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.grid-item-relative {
+  position: relative;
+}
+
+/* Overlay Components */
+.overlay-base {
+  position: absolute;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.overlay--top-right {
+  top: 2px;
+  right: 2px;
+}
+
+.overlay--bottom-left {
+  bottom: 2px;
+  left: 2px;
+}
+
+.overlay--bottom-right {
+  right: 2px;
+  bottom: 2px;
+}
+
+/* Map Container */
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Map Element Base */
+.map-element-base {
+  position: absolute;
+  cursor: pointer;
+  background-size: 100% 100%;
+}
+
+/* Map Chest Specific */
+.map-chest {
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  margin-left: -12px;
+}
+
+/* Caption Container */
+.caption-container {
+  width: 100%;
+  text-align: center;
 }
