@@ -142,28 +142,21 @@ export const MapTracker = ({
   };
 
   return (
-    <div style={{ height: "100%", position: "relative", width: "100%" }}>
+    <div className="map-container">
       {/* Render chests */}
       {chestsState.map((chest, index) => {
         const coords = transformCoordinates(chest.x, chest.y);
         return (
           <div
-            className={`mapspan chest ${getChestAvailability(index)}`}
+            className={`mapspan chest map-element-base map-chest ${getChestAvailability(index)}`}
             key={`chest-${chest.id}`}
             onClick={() => toggleChest(index)}
             onMouseOut={unhighlightChest}
             onMouseOver={() => highlightChest(index)}
             style={{
               backgroundImage: `url(${getAssetPath("poi.png")})`,
-              backgroundSize: "100% 100%",
-              cursor: "pointer",
-              height: "24px",
               left: coords.x,
-              marginLeft: "-12px",
-              marginTop: "-12px",
-              position: "absolute",
               top: coords.y,
-              width: "24px",
             }}
           />
         );
@@ -175,16 +168,14 @@ export const MapTracker = ({
         const availabilityClass = getDungeonBossAvailability(index);
         return (
           <div
-            className={`mapspan boss ${availabilityClass}`}
+            className={`mapspan boss map-element-base ${availabilityClass}`}
             key={`boss-${dungeon.id}`}
             onClick={() => toggleDungeonBoss(index)}
             onMouseOut={unhighlightChest}
             onMouseOver={() => highlightDungeon(index)}
             style={{
               backgroundImage: `url(${getAssetPath(dungeon.image)})`,
-              cursor: "pointer",
               left: coords.x,
-              position: "absolute",
               top: coords.y,
             }}
           />
@@ -196,15 +187,13 @@ export const MapTracker = ({
         const coords = transformCoordinates(dungeon.x, dungeon.y);
         return (
           <div
-            className={`mapspan dungeon ${getDungeonChestAvailability(index)}`}
+            className={`mapspan dungeon map-element-base ${getDungeonChestAvailability(index)}`}
             key={`dungeon-${dungeon.id}`}
             onMouseOut={unhighlightChest}
             onMouseOver={() => highlightDungeon(index)}
             style={{
               backgroundImage: `url(${getAssetPath("poi.png")})`,
-              cursor: "pointer",
               left: coords.x,
-              position: "absolute",
               top: coords.y,
             }}
           />
