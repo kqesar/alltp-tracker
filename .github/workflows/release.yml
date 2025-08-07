@@ -78,24 +78,146 @@ jobs:
         if: steps.check-changes.outputs.has_changes == 'true'
         run: pnpm build
 
-      - name: Create release (automatic)
+      - name: Create release branch and PR (automatic)
         if: steps.check-changes.outputs.has_changes == 'true' && github.event_name == 'push'
+        id: create-release-auto
         run: |
+          # Create a unique branch name with timestamp
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          BRANCH_NAME="release/changelog-$TIMESTAMP"
+          
+          # Create and switch to release branch
+          git checkout -b $BRANCH_NAME
+          
+          # Run standard-version to update changelog and version
           pnpm release
-          git push --follow-tags origin ${{ github.ref_name }}
+          
+          # Push the release branch
+          git push origin $BRANCH_NAME
+          
+          # Get the new version for PR details
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          
+          # Store branch name and version for next step
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "version=v$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create release (manual)
+      - name: Create release branch and PR (manual)
         if: steps.check-changes.outputs.has_changes == 'true' && github.event_name == 'workflow_dispatch'
+        id: create-release-manual
         run: |
+          # Create a unique branch name with timestamp
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          BRANCH_NAME="release/changelog-$TIMESTAMP"
+          
+          # Create and switch to release branch
+          git checkout -b $BRANCH_NAME
+          
+          # Run standard-version with specified release type
           pnpm release --release-as ${{ github.event.inputs.release_type }}
-          git push --follow-tags origin ${{ github.ref_name }}
+          
+          # Push the release branch
+          git push origin $BRANCH_NAME
+          
+          # Get the new version for PR details
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          
+          # Store branch name and version for next step
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "version=v$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Get version
+      - name: Create and auto-merge PR
         if: steps.check-changes.outputs.has_changes == 'true'
-        id: get-version
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=v$VERSION" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branchName = "${{ steps.create-release-auto.outputs.branch_name || steps.create-release-manual.outputs.branch_name }}";
+            const version = "${{ steps.create-release-auto.outputs.version || steps.create-release-manual.outputs.version }}";
+            const releaseType = "${{ github.event.inputs.release_type || 'patch' }}";
+            
+            // Read changelog to get recent changes
+            const fs = require('fs');
+            let changelogContent = '';
+            try {
+              changelogContent = fs.readFileSync('./CHANGELOG.md', 'utf8');
+              // Extract the latest release section (first section after the header)
+              const sections = changelogContent.split('\n## ');
+              if (sections.length > 1) {
+                changelogContent = '## ' + sections[1].split('\n## ')[0];
+              }
+            } catch (error) {
+              console.log('Could not read changelog:', error);
+            }
+            
+            // Create the pull request
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚀 Release ${version}`,
+              head: branchName,
+              base: 'master',
+              body: `## 📋 Release ${version}
+              
+              This PR contains the automated release for version ${version}.
+              
+              ### 📝 Changes in this release:
+              ${changelogContent}
+              
+              ### 🔧 What's included:
+              - ✅ **Version bump**: Updated to ${version}
+              - ✅ **Changelog**: Auto-generated from conventional commits
+              - ✅ **Git tag**: Will be created after merge
+              
+              ### 🤖 Automation:
+              - **Release type**: ${releaseType}
+              - **Triggered by**: ${context.eventName === 'workflow_dispatch' ? 'Manual workflow dispatch' : 'Push to master'}
+              - **Created at**: ${new Date().toISOString()}
+              
+              This PR will be automatically merged and a GitHub release will be created.
+              
+              ---
+              *Automated release PR created by GitHub Actions*`,
+              draft: false
+            });
+            
+            console.log(`Created PR #${pr.number}: ${pr.html_url}`);
+            
+            // Wait a moment for PR to be fully created
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Enable auto-merge
+            try {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                commit_title: `🚀 Release ${version}`,
+                commit_message: `Automated release for ${version}\n\nAuto-merged from PR #${pr.number}`,
+                merge_method: 'squash'
+              });
+              
+              console.log(`Successfully merged PR #${pr.number}`);
+              
+              // Now create and push the git tag
+              const { data: commit } = await github.rest.repos.getCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'master'
+              });
+              
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/${version}`,
+                sha: commit.sha
+              });
+              
+              console.log(`Created tag ${version}`);
+              
+            } catch (error) {
+              console.error('Error during merge or tag creation:', error);
+              throw error;
+            }
 
       - name: Create GitHub Release
         if: steps.check-changes.outputs.has_changes == 'true'
@@ -103,8 +225,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.get-version.outputs.version }}
-          release_name: Release ${{ steps.get-version.outputs.version }}
+          tag_name: ${{ steps.create-release-auto.outputs.version || steps.create-release-manual.outputs.version }}
+          release_name: Release ${{ steps.create-release-auto.outputs.version || steps.create-release-manual.outputs.version }}
           body_path: ./CHANGELOG.md
           draft: false
           prerelease: false
@@ -113,5 +235,5 @@ jobs:
         if: steps.check-changes.outputs.has_changes == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ steps.get-version.outputs.version }}
+          name: dist-${{ steps.create-release-auto.outputs.version || steps.create-release-manual.outputs.version }}
           path: dist/

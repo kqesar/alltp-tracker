@@ -1,0 +1,133 @@
+name: Validate Release PR
+
+on:
+  pull_request:
+    branches:
+      - master
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'release/')
+    
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run linter
+        run: pnpm lint
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Validate changelog
+        run: |
+          if [ ! -f "CHANGELOG.md" ]; then
+            echo "❌ Validation failed: CHANGELOG.md not found"
+            exit 1
+          fi
+          
+          # Check if changelog has been updated (has content)
+          if [ ! -s "CHANGELOG.md" ]; then
+            echo "❌ Validation failed: CHANGELOG.md is empty"
+            exit 1
+          fi
+          
+          echo "✅ Changelog validation successful"
+
+      - name: Validate version bump
+        run: |
+          # Check if package.json version follows semver
+          VERSION=$(node -p "require('./package.json').version")
+          if ! echo "$VERSION" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Validation failed: Invalid version format: $VERSION"
+            exit 1
+          fi
+          
+          echo "✅ Version validation successful: $VERSION"
+
+      - name: Verify build artifacts
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed: dist directory not found"
+            exit 1
+          fi
+          
+          if [ ! -f "dist/index.html" ]; then
+            echo "❌ Build failed: index.html not found in dist"
+            exit 1
+          fi
+          
+          echo "✅ Build verification successful"
+
+      - name: Comment PR status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const version = require('./package.json').version;
+            
+            // Read changelog excerpt
+            let changelogExcerpt = '';
+            try {
+              const changelog = fs.readFileSync('./CHANGELOG.md', 'utf8');
+              const sections = changelog.split('\n## ');
+              if (sections.length > 1) {
+                const latestSection = '## ' + sections[1].split('\n## ')[0];
+                changelogExcerpt = latestSection.substring(0, 500) + (latestSection.length > 500 ? '...' : '');
+              }
+            } catch (error) {
+              changelogExcerpt = 'Could not read changelog excerpt';
+            }
+            
+            const comment = `## ✅ Release PR Validation Successful
+
+            All validation checks have passed for version **v${version}**:
+            
+            - ✅ **Linting**: Code style validation passed
+            - ✅ **Tests**: All unit tests passed  
+            - ✅ **Build**: Production build successful
+            - ✅ **Changelog**: Updated and validated
+            - ✅ **Version**: Valid semver format (${version})
+            - ✅ **Artifacts**: Build artifacts verified
+
+            ### 📝 Latest Changelog:
+            \`\`\`
+            ${changelogExcerpt}
+            \`\`\`
+
+            This release PR is ready for auto-merge! 🚀
+
+            ---
+            *Automated validation completed at ${new Date().toISOString()}*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
