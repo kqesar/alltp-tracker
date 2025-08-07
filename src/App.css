@@ -1,3 +1,4 @@
+/* App Root Container */
 #root {
   max-width: 1280px;
   padding: 2rem;
@@ -5,19 +6,23 @@
   text-align: center;
 }
 
+/* Logo Component */
 .logo {
   height: 6em;
   padding: 1.5em;
-  transition: filter 300ms;
+  transition: filter 300ms ease-in-out;
   will-change: filter;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+/* Logo Animation */
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -27,16 +32,34 @@
   }
 }
 
+/* Apply animation only when motion is preferred */
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
 }
 
+/* Card Component */
 .card {
   padding: 2em;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  transition: all 0.25s ease-in-out;
 }
 
+.card:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Documentation Link */
 .read-the-docs {
+  font-size: 0.875rem;
   color: #888;
+  transition: color 0.25s ease-in-out;
+}
+
+.read-the-docs:hover {
+  color: #aaa;
 }

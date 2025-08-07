@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Override Tailwind base styles for the tracker */
+/* Root Element Override - Prevent Tailwind conflicts */
 #root {
   width: 100%;
   max-width: none;
@@ -8,42 +8,50 @@
   text-align: left;
 }
 
-/* Specific overrides for caption and mini images */
-#caption img.mini {
-  display: inline-block !important;
-  width: 16px !important;
-  max-width: none !important;
-  height: 16px !important;
-  margin: 0 2px !important;
-  vertical-align: text-bottom !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
+/* Enhanced CSS Custom Properties */
 :root {
+  /* Typography */
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
+  /* Color Scheme */
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
+  /* Typography Optimization */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Custom Properties for Consistency */
+  --color-primary: #646cff;
+  --color-primary-hover: #535bf2;
+  --color-primary-light: #747bff;
+  --transition-duration: 0.25s;
+  --border-radius: 0.5rem;
 }
 
+/* Enhanced Link Styling */
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--color-primary);
   text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  transition: color var(--transition-duration);
 }
 
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Body Layout */
 body {
   display: flex;
   place-items: center;
@@ -52,39 +60,90 @@ body {
   margin: 0;
 }
 
+/* Typography */
 h1 {
+  margin: 0.5em 0;
   font-size: 3.2em;
   line-height: 1.1;
 }
 
+/* Enhanced Button Component */
 button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   padding: 0.6em 1.2em;
   font-family: inherit;
   font-size: 1em;
   font-weight: 500;
+
   cursor: pointer;
+  user-select: none;
   background-color: #1a1a1a;
   border: 1px solid transparent;
-  border-radius: 8px;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  border-radius: var(--border-radius);
+
+  transition: all var(--transition-duration);
 }
 
+button:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
+/* Light Theme Support */
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
-    color: #747bff;
+    color: var(--color-primary-light);
   }
+
   button {
     background-color: #f9f9f9;
+  }
+}
+
+/* Specific Caption Overrides for Tailwind */
+#caption img.mini {
+  display: inline-block !important;
+  width: 16px !important;
+  max-width: none !important;
+  height: 16px !important;
+  margin: 0 2px !important;
+  vertical-align: text-bottom !important;
+  /* Crisp rendering for pixel art */
+  image-rendering: pixelated;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

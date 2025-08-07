@@ -1,31 +1,77 @@
-body {
-  margin: 0;
-  font-size: 14px;
-  color: white;
-  background-color: black;
+/* CSS Custom Properties for consistent theming */
+:root {
+  --color-primary: #646cff;
+  --color-success: #00ff00;
+  --color-warning: #ffff00;
+  --color-error: #ff0000;
+  --color-disabled: #7f7f7f;
+  --color-text: #ffffff;
+  --color-bg: #000000;
+  --color-bg-secondary: #1a1a1a;
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+
+  --border-radius: 0.5rem;
+  --transition: 0.25s ease-in-out;
 }
 
+body {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+/* Layout Components */
 .flexcontainer {
   display: flex;
+  gap: var(--spacing-md);
 }
 
 .settings {
   display: none;
-  background-color: black;
+  padding: var(--spacing-md);
+  background-color: var(--color-bg);
+  border-radius: var(--border-radius);
 }
 
+.settings--visible {
+  display: block;
+}
+
+.settings-button {
+  padding: var(--spacing-sm);
+  color: var(--color-error);
+  cursor: pointer;
+  background-color: var(--color-bg);
+  border: none;
+  transition: opacity var(--transition);
+}
+
+.settings-button:hover {
+  opacity: 0.8;
+}
+
+/* Legacy ID selector for backward compatibility */
 #settingsbutton {
-  color: red;
-  background-color: black;
+  color: var(--color-error);
+  background-color: var(--color-bg);
 }
 
+/* Tracker Grid Component */
 .tracker {
   position: relative;
   top: 0;
   left: 0;
   empty-cells: show;
   border-spacing: 0;
-  background-color: black;
+  background-color: var(--color-bg);
   border: 0;
 }
 
@@ -34,6 +80,8 @@ body {
   height: 64px;
   padding: 0;
   background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
 
 .tracker .halfcell {
@@ -41,21 +89,46 @@ body {
   height: 64px;
 }
 
+/* Item Configuration */
 .itemconfig {
   border-spacing: 0;
-  border: 1px solid white;
+  border: 1px solid var(--color-text);
+  border-radius: var(--border-radius);
 }
 
+/* Reset and Base Styles */
 * {
   box-sizing: border-box;
 }
 
+/* Special Items */
 .stoops {
   width: 128px;
   height: 128px;
   background-size: 200% 200%;
 }
 
+/* Form Elements */
+.form-input {
+  display: inline-block;
+  padding: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text);
+  background-color: var(--color-bg-secondary);
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius);
+}
+
+.form-label {
+  display: inline-block;
+  width: 140px;
+  padding-top: var(--spacing-xs);
+  margin-right: var(--spacing-xs);
+  text-align: right;
+}
+
+/* Legacy selectors for backward compatibility */
 input {
   display: inline-block;
   margin-top: 5px;
@@ -69,6 +142,7 @@ label {
   text-align: right;
 }
 
+/* Item Grid Components */
 .lonk {
   width: 64px;
   height: 64px;
@@ -81,30 +155,41 @@ label {
   height: 32px;
 }
 
+/* Item State Classes */
+.item-state--active,
 .true {
   opacity: 1;
 }
 
+.item-state--inactive,
 .false {
   opacity: 0.25;
 }
 
+/* Mini Icons Component */
 .mini {
   display: inline-block;
   width: 16px;
   height: 16px;
   margin: 0 1px;
   vertical-align: text-bottom;
+  /* Crisp image rendering for pixel art */
+  image-rendering: pixelated;
 }
 
-/* Caption specific styles to override Tailwind */
+/* Caption Component with Tailwind overrides */
+.caption,
 #caption {
   min-height: 24px;
-  padding: 8px;
-  font-size: 14px;
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-sm);
   line-height: 1.4;
+  word-wrap: break-word;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: var(--border-radius);
 }
 
+.caption .mini,
 #caption .mini {
   display: inline-block !important;
   width: 16px !important;
@@ -113,8 +198,10 @@ label {
   vertical-align: text-bottom !important;
   border: none !important;
   box-shadow: none !important;
+  /* Inherit image rendering from parent .mini class */
 }
 
+/* Map Element Components */
 .boss {
   position: absolute;
   z-index: 2;
@@ -122,9 +209,15 @@ label {
   height: 24px;
   margin-top: -12px;
   margin-left: -12px;
+  cursor: pointer;
   background-repeat: no-repeat;
   background-position: center;
   background-size: 75% 75%;
+  transition: transform var(--transition);
+}
+
+.boss:hover {
+  transform: scale(1.1);
 }
 
 .dungeon {
@@ -133,9 +226,19 @@ label {
   height: 48px;
   margin-top: -24px;
   margin-left: -24px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: center;
   background-size: 100% 100%;
+  transition: transform var(--transition);
 }
 
+.dungeon:hover {
+  transform: scale(1.1);
+}
+
+/* Layout Container Components */
+.layout-item-container,
 .itemdiv {
   left: 0;
   display: inline-block;
@@ -144,6 +247,7 @@ label {
   vertical-align: middle;
 }
 
+.layout-map-container,
 .mapdiv {
   position: relative;
   display: inline-block;
@@ -151,8 +255,11 @@ label {
   height: 442px;
   vertical-align: middle;
   background-image: url("/assets/map.png");
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
+.layout-map-container--vertical,
 .mapvdiv {
   position: relative;
   display: inline-block;
@@ -160,6 +267,8 @@ label {
   height: 888px;
   vertical-align: top;
   background-image: url("/assets/mapv.png");
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .chest {
@@ -168,51 +277,169 @@ label {
   height: 24px;
   margin-top: -12px;
   margin-left: -12px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: center;
   background-size: 100% 100%;
+  transition: transform var(--transition);
 }
 
+.chest:hover {
+  transform: scale(1.1);
+}
+
+/* Availability State Classes */
+.availability-state--unavailable,
 .unavailable {
-  background-color: red;
+  background-color: var(--color-error);
+  border-radius: var(--border-radius);
 }
 
+.availability-state--available,
 .available {
-  background-color: lime;
+  background-color: var(--color-success);
+  border-radius: var(--border-radius);
 }
 
+.availability-state--possible,
 .possible {
-  background-color: yellow;
+  color: #000;
+  background-color: var(--color-warning);
+  border-radius: var(--border-radius);
 }
 
+.availability-state--completed,
 .opened {
-  background-color: #7f7f7f;
+  background-color: var(--color-disabled);
+  border-radius: var(--border-radius);
 }
 
+/* Interactive Elements */
+.interactive-element,
 .mapspan {
   cursor: pointer;
+  transition: all var(--transition);
 }
 
+.interactive-element:hover,
+.mapspan:hover {
+  filter: brightness(1.1);
+}
+
+.interactive-element:focus-visible,
+.mapspan:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Main Layout Components */
+.main-layout,
 #layoutDiv {
   display: block;
   width: 95%;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
+.settings-container,
 #settingsDiv {
   display: inline-block;
-  margin-left: 15px;
+  margin-left: var(--spacing-lg);
   vertical-align: top;
 }
 
+/* Footer Component */
+.footer,
 footer {
   width: 100%;
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-disabled);
   text-align: center;
 }
 
+/* Utility Classes */
+.highlighted-block,
 .span-bloc {
-  color: black;
-  border: 3px solid black;
+  padding: var(--spacing-xs);
+  font-weight: bold;
+  color: var(--color-bg);
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 3px solid var(--color-bg);
+  border-radius: var(--border-radius);
 }
 
+.grid-item,
 .griditem {
   cursor: pointer;
+  border-radius: var(--border-radius);
+  transition: all var(--transition);
+}
+
+.grid-item:hover,
+.griditem:hover {
+  filter: brightness(1.1);
+  transform: scale(1.05);
+}
+
+.grid-item:active,
+.griditem:active {
+  transform: scale(0.95);
+}
+
+/* Focus Management */
+.grid-item:focus-visible,
+.griditem:focus-visible,
+.interactive-element:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .flexcontainer {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .layout-item-container,
+  .itemdiv {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .layout-map-container,
+  .mapdiv {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+    aspect-ratio: 2 / 1;
+  }
+
+  .layout-map-container--vertical,
+  .mapvdiv {
+    aspect-ratio: 1 / 2;
+  }
+
+  .tracker td {
+    width: 48px;
+    height: 48px;
+  }
+
+  .tracker .halfcell {
+    width: 24px;
+    height: 48px;
+  }
 }
