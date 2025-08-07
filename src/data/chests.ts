@@ -139,7 +139,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: "Desert Palace <img src='/assets/glove1.png' class='mini'/>  <img src='/assets/book.png' class='mini'/>  <img src='/assets/lantern.png' class='mini'/>",
+    name: "Desert Palace <img src='/assets/glove1.png' class='mini'/>  <img src='/assets/book.png' class='mini'/>  <img src='/assets/lantern.png' class='mini'/>  <img src='/assets/boots.png' class='mini'/>",
     x: "3.8%",
     y: "78.4%",
   },
@@ -183,7 +183,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: "Palace of Darkness <img src='/assets/lantern.png' class='mini'> <img src='/assets/hammer.png' class='mini'/> <img src='/assets/glove1.png' class='mini'/> <img src='/assets/agahnim1.png' class='mini'/>",
+    name: "Palace of Darkness <img src='/assets/moonpearl.png' class='mini'/> <img src='/assets/bow2.png' class='mini'/> <img src='/assets/hammer.png' class='mini'/> <img src='/assets/glove1.png' class='mini'/>",
     x: "97.0%",
     y: "40.0%",
   },
@@ -219,7 +219,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: "Swamp Palace <img src='/assets/mirror.png' class='mini'> <img src='/assets/flippers.png' class='mini'/> <img src='/assets/hammer.png' class='mini'/> <img src='/assets/hookshot.png' class='mini'/>",
+    name: "Swamp Palace <img src='/assets/moonpearl.png' class='mini'/> <img src='/assets/mirror.png' class='mini'/> <img src='/assets/flippers.png' class='mini'/> <img src='/assets/hammer.png' class='mini'/> <img src='/assets/hookshot.png' class='mini'/> <img src='/assets/glove1.png' class='mini'/>",
     x: "73.5%",
     y: "91.0%",
   },
@@ -236,7 +236,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: "Skull Woods <img src='/assets/firerod.png' class='mini'/>",
+    name: "Skull Woods <img src='/assets/moonpearl.png' class='mini'/> <img src='/assets/firerod.png' class='mini'/>",
     x: "53.3%",
     y: "5.4%",
   },
@@ -253,7 +253,7 @@ export const dungeons: DungeonItem[] = [
       return "unavailable";
     },
     isBeaten: false,
-    name: "Thieves' Town <img src='/assets/glove2.png' class='mini'/>",
+    name: "Thieves' Town <img src='/assets/moonpearl.png' class='mini'/> <img src='/assets/glove2.png' class='mini'/>",
     x: "56.4%",
     y: "47.9%",
   },
@@ -280,7 +280,7 @@ export const dungeons: DungeonItem[] = [
       return "possible";
     },
     isBeaten: false,
-    name: "Ice Palace (yellow=must bomb jump) <img src='/assets/firerod.png' class='mini'/>",
+    name: "Ice Palace <img src='/assets/moonpearl.png' class='mini'/> <img src='/assets/flippers.png' class='mini'/> <img src='/assets/glove2.png' class='mini'/> <img src='/assets/hammer.png' class='mini'/> <img src='/assets/firerod.png' class='mini'/> <img src='/assets/hookshot.png' class='mini'/>",
     x: "89.8%",
     y: "85.8%",
   },
@@ -330,7 +330,7 @@ export const dungeons: DungeonItem[] = [
       return "possible";
     },
     isBeaten: false,
-    name: "Misery Mire <img src='/assets/medallion0.png' class='mini'><img src='/assets/lantern.png' class='mini'>",
+    name: "Misery Mire <img src='/assets/moonpearl.png' class='mini'/> <img src='/assets/flute.png' class='mini'/> <img src='/assets/glove2.png' class='mini'/> <img src='/assets/somaria.png' class='mini'/> <img src='/assets/boots.png' class='mini'/> <img src='/assets/medallion0.png' class='mini'/> <img src='/assets/lantern.png' class='mini'/>",
     x: "55.8%",
     y: "82.9%",
   },
@@ -385,7 +385,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: "Turtle Rock <img src='/assets/medallion0.png' class='mini'> <img src='/assets/lantern.png' class='mini'> <img src='/assets/icerod.png' class='mini'/> <img src='/assets/firerod.png' class='mini'/>",
+    name: "Turtle Rock <img src='/assets/moonpearl.png' class='mini'/> <img src='/assets/hammer.png' class='mini'/> <img src='/assets/glove2.png' class='mini'/> <img src='/assets/somaria.png' class='mini'/> <img src='/assets/hookshot.png' class='mini'/> <img src='/assets/medallion0.png' class='mini'/> <img src='/assets/icerod.png' class='mini'/> <img src='/assets/firerod.png' class='mini'/>",
     x: "96.9%",
     y: "7.0%",
   },
