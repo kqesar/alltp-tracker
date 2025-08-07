@@ -16,8 +16,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    with:
+      build: true
+
+  deploy:
     runs-on: ubuntu-latest
+    needs: ci
+    if: needs.ci.outputs.test-status == 'success' && needs.ci.outputs.lint-status == 'success'
     
     steps:
       - name: Checkout code
@@ -37,12 +44,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
-
-      - name: Run tests
-        run: pnpm test
-
-      - name: Run linting
-        run: pnpm lint
 
       - name: Build project
         run: pnpm build
