@@ -1,46 +1,25 @@
 import { getAssetPath } from "@/utils";
-import type { ChestItem, DungeonItem, ItemState } from "../data/chests";
+import { useGameStore } from "../stores/gameStore";
 
 interface MapTrackerProps {
-  chestsState: ChestItem[];
-  setChestsState: (chests: ChestItem[]) => void;
-  dungeonsState: DungeonItem[];
-  setDungeonsState: (dungeons: DungeonItem[]) => void;
-  items: ItemState;
-  medallions: number[];
   dungeonChests: Record<number, number>;
-  mapOrientation: boolean;
-  caption: string;
-  setCaption: (caption: string) => void;
 }
 
 /**
  * MapTracker component handles the map display with chests and dungeons
  */
-export const MapTracker = ({
-  chestsState,
-  setChestsState,
-  dungeonsState,
-  setDungeonsState,
-  items,
-  medallions,
-  dungeonChests,
-  mapOrientation,
-  setCaption,
-}: MapTrackerProps) => {
-  // Toggle chest opened/closed state
-  const toggleChest = (chestIndex: number) => {
-    const newChests = [...chestsState];
-    newChests[chestIndex].isOpened = !newChests[chestIndex].isOpened;
-    setChestsState(newChests);
-  };
-
-  // Toggle dungeon boss beaten/not beaten state
-  const toggleDungeonBoss = (dungeonIndex: number) => {
-    const newDungeons = [...dungeonsState];
-    newDungeons[dungeonIndex].isBeaten = !newDungeons[dungeonIndex].isBeaten;
-    setDungeonsState(newDungeons);
-  };
+export const MapTracker = ({ dungeonChests }: MapTrackerProps) => {
+  // Get all state and actions from Zustand store
+  const {
+    chestsState,
+    dungeonsState,
+    items,
+    medallions,
+    mapOrientation,
+    toggleChest,
+    toggleDungeonBoss,
+    setCaption,
+  } = useGameStore();
 
   // Highlight chest and show caption
   const highlightChest = (chestIndex: number) => {
