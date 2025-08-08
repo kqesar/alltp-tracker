@@ -1,3 +1,4 @@
+import { getAssetPath } from "@/utils";
 import type { ChestItem, DungeonItem, ItemState } from "../data/chests";
 
 interface MapTrackerProps {
@@ -12,15 +13,6 @@ interface MapTrackerProps {
   caption: string;
   setCaption: (caption: string) => void;
 }
-
-/**
- * Gets the correct asset path with base URL support
- * @param assetPath - The asset path relative to assets folder
- * @returns Complete asset URL
- */
-const getAssetPath = (assetPath: string): string => {
-  return `${import.meta.env.BASE_URL}assets/${assetPath}`;
-};
 
 /**
  * MapTracker component handles the map display with chests and dungeons
@@ -85,10 +77,7 @@ export const MapTracker = ({
       }
 
       // Replace the medallion image in the name
-      dungeonName = dungeonName.replace(
-        /<img src='\/assets\/medallion0\.png' class='mini'>/g,
-        `<img src='/assets/${medallionName}.png' class='mini'>`,
-      );
+      dungeonName = dungeonName.replace("medallion0", medallionName);
     }
 
     setCaption(dungeonName);

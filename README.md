@@ -2,9 +2,8 @@
 
 A web-based item and progress tracker for The Legend of Zelda: A Link to the Past randomizer speedruns and playthroughs. This application helps players track their collected items, dungeon progress, and chest locations throughout their adventure in Hyrule.
 
-## 🌐 Live Demo
-
-**Try it now:** [https://kqesar.github.io/alltp-tracker/](https://kqesar.github.io/alltp-tracker/)
+### Live Site
+The tracker is available at: **[https://kqesar.github.io/alltp-tracker/](https://kqesar.github.io/alltp-tracker/)**
 
 The tracker is automatically deployed to GitHub Pages from the latest master branch.
 
@@ -205,6 +204,3 @@ The deployment uses the traditional `gh-pages` branch approach:
 ### Manual Deployment
 You can manually trigger a deployment via:
 - GitHub Actions → Deploy to GitHub Pages → Run workflow
-
-### Live Site
-The tracker is available at: **[https://kqesar.github.io/alltp-tracker/](https://kqesar.github.io/alltp-tracker/)**
