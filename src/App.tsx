@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./styles.css";
+import { CornerTable } from "./components/CornerTable";
 import { MapTracker } from "./components/MapTracker";
 import {
   type ItemState,
@@ -106,24 +107,6 @@ function App() {
   });
 
   /**
-   * Renders the standard corner table for grid items
-   */
-  const renderCornerTable = () => (
-    <table className="lonk">
-      <tbody>
-        <tr>
-          <th className="corner" />
-          <th className="corner" />
-        </tr>
-        <tr>
-          <th className="corner" />
-          <th className="corner" />
-        </tr>
-      </tbody>
-    </table>
-  );
-
-  /**
    * Renders medallion overlay for Dark World bosses
    * @param bossNumber - The boss number (0-9)
    */
@@ -223,7 +206,7 @@ function App() {
       {renderMedallionOverlay(bossNumber)}
       {renderChestOverlay(bossNumber)}
       {renderRewardOverlay(bossNumber)}
-      {renderCornerTable()}
+      <CornerTable />
     </td>
   );
 
@@ -240,7 +223,7 @@ function App() {
       onClick={() => handleItemClick(item)}
       style={getGridItemStyles(item)}
     >
-      {renderCornerTable()}
+      <CornerTable />
     </td>
   );
 
