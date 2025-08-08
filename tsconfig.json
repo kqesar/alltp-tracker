@@ -23,5 +23,10 @@
     "useDefineForClassFields": true
   },
   "exclude": ["node_modules", "dist", "types"],
-  "include": ["src"]
+  "include": ["src"],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }
