@@ -2,30 +2,29 @@ import { getAssetPath } from "@/utils";
 import type { DungeonItem } from "../data/chests";
 import { useGameStore } from "../stores/gameStore";
 
-type DungeonBossProps = {
+type DungeonChestProps = {
   dungeon: DungeonItem;
   index: number;
+  chestCount: number;
 };
 
 /**
- * DungeonBoss component handles the rendering of a single dungeon boss on the map
+ * DungeonChest component handles the rendering of a single dungeon chest indicator on the map
  * @param dungeon - The dungeon data
  * @param index - The dungeon index
+ * @param chestCount - Number of chests remaining in the dungeon
  */
-export const DungeonBoss = ({ dungeon, index }: DungeonBossProps) => {
-  const { items, medallions, mapOrientation, toggleDungeonBoss, setCaption } =
-    useGameStore();
+export const DungeonChest = ({
+  dungeon,
+  index,
+  chestCount,
+}: DungeonChestProps) => {
+  const { items, medallions, mapOrientation, setCaption } = useGameStore();
 
-  // Get dungeon boss availability class
+  // Get dungeon chest availability class
   const getAvailabilityClass = () => {
-    const bossKey = `boss${index}`;
-    const bossValue = items[bossKey] as number;
-
-    // If boss is beaten (value 2), return "opened"
-    if (bossValue === 2) return "opened";
-
-    if (dungeon.isBeaten) return "opened";
-    return dungeon.isBeatable(items, medallions);
+    if (chestCount === 0) return "opened";
+    return dungeon.canGetChest(items, medallions);
   };
 
   // Highlight dungeon and show caption with dynamic medallion info
@@ -92,12 +91,11 @@ export const DungeonBoss = ({ dungeon, index }: DungeonBossProps) => {
 
   return (
     <div
-      className={`mapspan boss map-element-base ${availabilityClass}`}
-      onClick={() => toggleDungeonBoss(index)}
+      className={`mapspan dungeon map-element-base ${availabilityClass}`}
       onMouseOut={handleUnhighlight}
       onMouseOver={handleHighlight}
       style={{
-        backgroundImage: `url(${getAssetPath(dungeon.image)})`,
+        backgroundImage: `url(${getAssetPath("poi.png")})`,
         left: coords.x,
         top: coords.y,
       }}
