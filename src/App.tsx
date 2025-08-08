@@ -2,17 +2,8 @@ import { useState } from "react";
 import "./styles.css";
 import { CornerTable } from "./components/CornerTable";
 import { MapTracker } from "./components/MapTracker";
-import {
-  type ItemState,
-  chests as initialChests,
-  dungeons as initialDungeons,
-} from "./data/chests";
-import {
-  defaultItemGrid,
-  items as initialItems,
-  itemsMax,
-  itemsMin,
-} from "./data/items";
+import { defaultItemGrid, itemsMin } from "./data/items";
+import { useGameStore } from "./stores/gameStore";
 import { getAssetPath } from "./utils";
 
 /**
@@ -20,48 +11,12 @@ import { getAssetPath } from "./utils";
  * Manages the overall state of items, layout, settings, and game state
  */
 function App() {
-  // Game state
-  const [items, setItems] = useState<ItemState>({
-    ...initialItems,
-  } as ItemState);
+  // Get state and actions from Zustand store
+  const { items, medallions, caption, handleItemClick, handleMedallionChange } =
+    useGameStore();
+
+  // Layout state (keep local as it doesn't need to be shared)
   const [itemLayout] = useState(JSON.parse(JSON.stringify(defaultItemGrid)));
-  const [chestsState, setChestsState] = useState([...initialChests]);
-  const [dungeonsState, setDungeonsState] = useState([...initialDungeons]);
-  const [medallions, setMedallions] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); // Medallion assignments for dungeons
-  const [mapOrientation] = useState(false); // Light/Dark World toggle
-
-  const [caption, setCaption] = useState("&nbsp;");
-  /**
-   * Handles item state changes when clicked
-   * @param item - The item identifier to update
-   */
-  const handleItemClick = (item: string) => {
-    if (!item || item === "blank") return;
-
-    const newItems = { ...items };
-    if (typeof items[item] === "boolean") {
-      newItems[item] = !newItems[item];
-    } else {
-      // Special logic for chest items - decrement instead of increment
-      if (item.startsWith("chest")) {
-        newItems[item] = (newItems[item] as number) - 1;
-        const maxValue = itemsMax[item];
-        const minValue = itemsMin[item];
-        if (newItems[item] < minValue) {
-          newItems[item] = maxValue;
-        }
-      } else {
-        // Normal increment logic for other items
-        newItems[item] = (newItems[item] as number) + 1;
-        const maxValue = itemsMax[item];
-        const minValue = itemsMin[item];
-        if (newItems[item] > maxValue) {
-          newItems[item] = minValue;
-        }
-      }
-    }
-    setItems(newItems);
-  };
 
   /**
    * Gets the background image URL for an item
@@ -127,9 +82,8 @@ function App() {
         onClick={(e) => {
           e.stopPropagation();
           // Cycle from 0 to 3, then back to 0
-          const newMedallions = [...medallions];
-          newMedallions[bossNumber] = (medallionValue + 1) % 4;
-          setMedallions(newMedallions);
+          const newMedallion = (medallionValue + 1) % 4;
+          handleMedallionChange(bossNumber, newMedallion);
         }}
         style={{
           backgroundImage: `url(${getAssetPath(`medallion${imageIndex}.png`)})`,
@@ -173,9 +127,7 @@ function App() {
         className="overlay-base overlay--bottom-right"
         onClick={(e) => {
           e.stopPropagation();
-          // Cycle from 0 to 4, then back to 0
-          const nextValue = rewardValue >= 4 ? 0 : rewardValue + 1;
-          setItems({ ...items, [rewardKey]: nextValue });
+          handleItemClick(rewardKey);
         }}
         style={{
           backgroundImage: `url(${getAssetPath(`dungeon${rewardValue}.png`)})`,
@@ -278,8 +230,6 @@ function App() {
         </div>
         <div className="mapdiv" id="mapdiv">
           <MapTracker
-            caption={caption}
-            chestsState={chestsState}
             dungeonChests={[
               items.chest0,
               items.chest1,
@@ -292,13 +242,6 @@ function App() {
               items.chest8,
               items.chest9,
             ]}
-            dungeonsState={dungeonsState}
-            items={items}
-            mapOrientation={mapOrientation}
-            medallions={medallions}
-            setCaption={setCaption}
-            setChestsState={setChestsState}
-            setDungeonsState={setDungeonsState}
           />
         </div>
       </div>

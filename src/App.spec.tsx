@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import App from "./App";
+import { useGameStore } from "./stores/gameStore";
 
 // Mock the MapTracker component since it's tested separately
 vi.mock("./components/MapTracker", () => ({
@@ -170,6 +171,9 @@ describe("App", () => {
   });
 
   it("maintains item state consistency", () => {
+    // Reset store state to initial values
+    useGameStore.getState().reset();
+
     render(<App />);
 
     // Test that clicking multiple times maintains consistent state
