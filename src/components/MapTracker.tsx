@@ -1,5 +1,6 @@
 import { getAssetPath } from "@/utils";
 import { useGameStore } from "../stores/gameStore";
+import { DungeonBoss } from "./DungeonBoss";
 
 interface MapTrackerProps {
   dungeonChests: Record<number, number>;
@@ -69,19 +70,6 @@ export const MapTracker = ({ dungeonChests }: MapTrackerProps) => {
     return chest.isAvailable(items, medallions);
   };
 
-  // Get dungeon boss availability class
-  const getDungeonBossAvailability = (dungeonIndex: number) => {
-    const bossKey = `boss${dungeonIndex}`;
-    const bossValue = items[bossKey] as number;
-
-    // If boss is beaten (value 2), return "opened"
-    if (bossValue === 2) return "opened";
-
-    const dungeon = dungeonsState[dungeonIndex];
-    if (dungeon.isBeaten) return "opened";
-    return dungeon.isBeatable(items, medallions);
-  };
-
   // Get dungeon chest availability class
   const getDungeonChestAvailability = (dungeonIndex: number) => {
     const dungeon = dungeonsState[dungeonIndex];
@@ -131,24 +119,19 @@ export const MapTracker = ({ dungeonChests }: MapTrackerProps) => {
       })}
 
       {/* Render dungeon bosses */}
-      {dungeonsState.map((dungeon, index) => {
-        const coords = transformCoordinates(dungeon.x, dungeon.y);
-        const availabilityClass = getDungeonBossAvailability(index);
-        return (
-          <div
-            className={`mapspan boss map-element-base ${availabilityClass}`}
-            key={`boss-${dungeon.id}`}
-            onClick={() => toggleDungeonBoss(index)}
-            onMouseOut={unhighlightChest}
-            onMouseOver={() => highlightDungeon(index)}
-            style={{
-              backgroundImage: `url(${getAssetPath(dungeon.image)})`,
-              left: coords.x,
-              top: coords.y,
-            }}
-          />
-        );
-      })}
+      {dungeonsState.map((dungeon, index) => (
+        <DungeonBoss
+          dungeon={dungeon}
+          index={index}
+          items={items}
+          key={`boss-${dungeon.id}`}
+          mapOrientation={mapOrientation}
+          medallions={medallions}
+          onHighlight={highlightDungeon}
+          onToggle={toggleDungeonBoss}
+          onUnhighlight={unhighlightChest}
+        />
+      ))}
 
       {/* Render dungeon chests */}
       {dungeonsState.map((dungeon, index) => {
