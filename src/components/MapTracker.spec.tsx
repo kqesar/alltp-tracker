@@ -10,9 +10,7 @@ describe("MapTracker", () => {
   });
 
   it("renders without crashing", () => {
-    const { container } = render(
-      <MapTracker dungeonChests={[3, 2, 2, 2, 2, 2, 2, 2, 2, 2]} />,
-    );
+    const { container } = render(<MapTracker />);
     expect(container).toBeTruthy();
   });
 
@@ -20,9 +18,7 @@ describe("MapTracker", () => {
     // Change something in the store
     useGameStore.getState().handleItemClick("hookshot");
 
-    const { container } = render(
-      <MapTracker dungeonChests={[3, 2, 2, 2, 2, 2, 2, 2, 2, 2]} />,
-    );
+    const { container } = render(<MapTracker />);
     expect(container).toBeTruthy();
 
     // Verify hookshot is now true in store
@@ -31,9 +27,7 @@ describe("MapTracker", () => {
   });
 
   it("renders map spans", () => {
-    const { container } = render(
-      <MapTracker dungeonChests={[3, 2, 2, 2, 2, 2, 2, 2, 2, 2]} />,
-    );
+    const { container } = render(<MapTracker />);
 
     // Check that mapspan elements exist
     const mapElements = container.querySelectorAll(".mapspan");
@@ -41,15 +35,13 @@ describe("MapTracker", () => {
   });
 
   it("responds to store changes", () => {
-    const { rerender } = render(
-      <MapTracker dungeonChests={[3, 2, 2, 2, 2, 2, 2, 2, 2, 2]} />,
-    );
+    const { rerender } = render(<MapTracker />);
 
     // Change store state
     useGameStore.getState().toggleChest(0);
 
     // Re-render to trigger update
-    rerender(<MapTracker dungeonChests={[3, 2, 2, 2, 2, 2, 2, 2, 2, 2]} />);
+    rerender(<MapTracker />);
 
     // Verify store was updated
     const { chestsState } = useGameStore.getState();

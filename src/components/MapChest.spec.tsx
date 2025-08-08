@@ -2,6 +2,7 @@ import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChestItem, ItemState } from "../data/chests";
+import { useGameStore } from "../stores/gameStore";
 import { MapChest } from "./MapChest";
 
 // Mock getAssetPath
@@ -22,6 +23,8 @@ vi.mock("../stores/gameStore", () => ({
     toggleChest: mockToggleChest,
   })),
 }));
+
+const mockUseGameStore = vi.mocked(useGameStore);
 
 const mockChest: ChestItem = {
   id: 1,
@@ -160,7 +163,7 @@ describe("MapChest", () => {
       await user.unhover(chestElement);
     }
 
-    expect(mockSetCaption).toHaveBeenCalledWith("&nbsp;");
+    expect(mockSetCaption).toHaveBeenCalledWith("");
   });
 
   it("shows 'opened' class when chest is opened", () => {
@@ -172,15 +175,13 @@ describe("MapChest", () => {
   });
 
   it("transforms coordinates correctly for vertical orientation", () => {
-    vi.doMock("../stores/gameStore", () => ({
-      useGameStore: vi.fn(() => ({
-        items: mockItems,
-        mapOrientation: true,
-        medallions: mockMedallions,
-        setCaption: mockSetCaption,
-        toggleChest: mockToggleChest,
-      })),
-    }));
+    mockUseGameStore.mockReturnValue({
+      items: mockItems,
+      mapOrientation: true,
+      medallions: mockMedallions,
+      setCaption: mockSetCaption,
+      toggleChest: mockToggleChest,
+    });
 
     const chestWithCoords = {
       ...mockChest,
@@ -197,8 +198,6 @@ describe("MapChest", () => {
       left: "50%",
       top: "80%",
     });
-
-    vi.doUnmock("../stores/gameStore");
   });
 
   it("calls chest.isAvailable with items and medallions", () => {

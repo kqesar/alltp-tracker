@@ -3,14 +3,10 @@ import { DungeonBoss } from "./DungeonBoss";
 import { DungeonChest } from "./DungeonChest";
 import { MapChest } from "./MapChest";
 
-interface MapTrackerProps {
-  dungeonChests: Record<number, number>;
-}
-
 /**
  * MapTracker component handles the map display with chests and dungeons
  */
-export const MapTracker = ({ dungeonChests }: MapTrackerProps) => {
+export const MapTracker = () => {
   // Get all state and actions from Zustand store
   const { chestsState, dungeonsState } = useGameStore();
 
@@ -33,7 +29,6 @@ export const MapTracker = ({ dungeonChests }: MapTrackerProps) => {
       {/* Render dungeon chests */}
       {dungeonsState.map((dungeon, index) => (
         <DungeonChest
-          chestCount={dungeonChests[index]}
           dungeon={dungeon}
           index={index}
           key={`dungeon-${dungeon.id}`}

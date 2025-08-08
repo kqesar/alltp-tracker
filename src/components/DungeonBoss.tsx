@@ -61,7 +61,7 @@ export const DungeonBoss = ({ dungeon, index }: DungeonBossProps) => {
 
   // Remove highlight and clear caption
   const handleUnhighlight = () => {
-    setCaption("&nbsp;");
+    setCaption("");
   };
 
   // Transform coordinates for vertical orientation
