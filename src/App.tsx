@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./styles.css";
+import { Caption } from "./components/Caption";
 import { CornerTable } from "./components/CornerTable";
 import { MapTracker } from "./components/MapTracker";
 import { defaultItemGrid, itemsMin } from "./data/items";
@@ -229,29 +230,12 @@ function App() {
           )}
         </div>
         <div className="mapdiv" id="mapdiv">
-          <MapTracker
-            dungeonChests={[
-              items.chest0,
-              items.chest1,
-              items.chest2,
-              items.chest3,
-              items.chest4,
-              items.chest5,
-              items.chest6,
-              items.chest7,
-              items.chest8,
-              items.chest9,
-            ]}
-          />
+          <MapTracker />
         </div>
       </div>
 
       <div className="caption-container" id="caption">
-        {caption === "&nbsp;" ? (
-          <span>&nbsp;</span>
-        ) : (
-          <span dangerouslySetInnerHTML={{ __html: caption }} />
-        )}
+        <Caption text={caption} />
       </div>
     </div>
   );

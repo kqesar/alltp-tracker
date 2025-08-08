@@ -30,7 +30,7 @@ interface GameState {
 }
 
 const initialState = {
-  caption: "&nbsp;",
+  caption: "",
   chestsState: [...initialChests],
   dungeonsState: [...initialDungeons],
   items: { ...initialItems } as ItemState,
@@ -81,7 +81,7 @@ export const useGameStore = create<GameState>()(
 
         // Update caption if it's currently showing a dungeon with medallion info
         let updatedCaption = caption;
-        if ((bossNumber === 8 || bossNumber === 9) && caption !== "&nbsp;") {
+        if ((bossNumber === 8 || bossNumber === 9) && caption !== "") {
           if (
             caption.includes("Misery Mire") ||
             caption.includes("Turtle Rock") ||

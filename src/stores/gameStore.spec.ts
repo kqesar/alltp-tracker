@@ -10,7 +10,7 @@ describe("GameStore", () => {
   it("initializes with default state", () => {
     const state = useGameStore.getState();
 
-    expect(state.caption).toBe("&nbsp;");
+    expect(state.caption).toBe("");
     expect(state.medallions).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     expect(state.mapOrientation).toBe(false);
     expect(state.items).toBeDefined();
@@ -150,7 +150,7 @@ describe("GameStore", () => {
     reset();
 
     const state = useGameStore.getState();
-    expect(state.caption).toBe("&nbsp;");
+    expect(state.caption).toBe("");
     expect(state.medallions[8]).toBe(0);
   });
 });

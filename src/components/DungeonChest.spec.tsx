@@ -2,23 +2,12 @@ import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { DungeonItem, ItemState } from "../data/chests";
+import { useGameStore } from "../stores/gameStore";
 import { DungeonChest } from "./DungeonChest";
 
 // Mock getAssetPath
 vi.mock("@/utils", () => ({
   getAssetPath: vi.fn((path: string) => `/mocked/path/${path}`),
-}));
-
-// Mock useGameStore
-const mockSetCaption = vi.fn();
-
-vi.mock("../stores/gameStore", () => ({
-  useGameStore: vi.fn(() => ({
-    items: mockItems,
-    mapOrientation: false,
-    medallions: mockMedallions,
-    setCaption: mockSetCaption,
-  })),
 }));
 
 const mockDungeon: DungeonItem = {
@@ -55,7 +44,7 @@ const mockItems: ItemState = {
   byrna: false,
   cape: false,
   chest0: 0,
-  chest1: 0,
+  chest1: 5, // Default chest count for index 1
   chest2: 0,
   chest3: 0,
   chest4: 0,
@@ -99,8 +88,23 @@ const mockItems: ItemState = {
 
 const mockMedallions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
+// Mock useGameStore
+const mockSetCaption = vi.fn();
+
+const mockGameStore = {
+  items: mockItems,
+  mapOrientation: false,
+  medallions: mockMedallions,
+  setCaption: mockSetCaption,
+};
+
+vi.mock("../stores/gameStore", () => ({
+  useGameStore: vi.fn(() => mockGameStore),
+}));
+
+const mockUseGameStore = vi.mocked(useGameStore);
+
 const defaultProps = {
-  chestCount: 5,
   dungeon: mockDungeon,
   index: 1,
 };
@@ -144,19 +148,27 @@ describe("DungeonChest", () => {
       await user.unhover(chestElement);
     }
 
-    expect(mockSetCaption).toHaveBeenCalledWith("&nbsp;");
+    expect(mockSetCaption).toHaveBeenCalledWith("");
   });
 
   it("shows 'opened' class when chestCount is 0", () => {
-    render(<DungeonChest {...defaultProps} chestCount={0} />);
+    // Update the mock store to have chest1 = 0
+    mockUseGameStore.mockReturnValue({
+      ...mockGameStore,
+      items: {
+        ...mockItems,
+        chest1: 0, // Set chest count to 0 for index 1
+      },
+    });
+
+    render(<DungeonChest {...defaultProps} />);
 
     const chestElement = document.querySelector(".mapspan.dungeon");
     expect(chestElement).toHaveClass("opened");
   });
 
   it("transforms coordinates correctly for vertical orientation", () => {
-    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
-    useGameStore.mockReturnValue({
+    mockUseGameStore.mockReturnValue({
       items: mockItems,
       mapOrientation: true,
       medallions: mockMedallions,
@@ -187,8 +199,7 @@ describe("DungeonChest", () => {
       name: "Misery Mire <img src='medallion0.png' />",
     };
 
-    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
-    useGameStore.mockReturnValue({
+    mockUseGameStore.mockReturnValue({
       items: mockItems,
       mapOrientation: false,
       medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0], // bombos for Misery Mire
@@ -220,8 +231,7 @@ describe("DungeonChest", () => {
       name: "Turtle Rock <img src='medallion0.png' />",
     };
 
-    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
-    useGameStore.mockReturnValue({
+    mockUseGameStore.mockReturnValue({
       items: mockItems,
       mapOrientation: false,
       medallions: [0, 0, 0, 0, 0, 0, 0, 0, 0, 2], // ether for Turtle Rock
@@ -247,6 +257,9 @@ describe("DungeonChest", () => {
   });
 
   it("calls dungeon.canGetChest with items and medallions", () => {
+    // Reset mock to original state
+    mockUseGameStore.mockReturnValue(mockGameStore);
+
     const mockCanGetChest = vi.fn(() => "unavailable");
     const dungeonWithMock = {
       ...mockDungeon,

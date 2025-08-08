@@ -2,6 +2,7 @@ import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { DungeonItem, ItemState } from "../data/chests";
+import { useGameStore } from "../stores/gameStore";
 import { DungeonBoss } from "./DungeonBoss";
 
 // Mock getAssetPath
@@ -90,6 +91,8 @@ vi.mock("../stores/gameStore", () => ({
   })),
 }));
 
+const mockUseGameStore = vi.mocked(useGameStore);
+
 const mockDungeon: DungeonItem = {
   canGetChest: vi.fn(() => "available"),
   id: 1,
@@ -157,12 +160,11 @@ describe("DungeonBoss", () => {
       await user.unhover(bossElement);
     }
 
-    expect(mockSetCaption).toHaveBeenCalledWith("&nbsp;");
+    expect(mockSetCaption).toHaveBeenCalledWith("");
   });
 
   it("shows 'opened' class when boss is beaten (value 2)", () => {
-    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
-    useGameStore.mockReturnValue({
+    mockUseGameStore.mockReturnValue({
       items: { ...mockItems, boss1: 2 },
       mapOrientation: false,
       medallions: mockMedallions,
@@ -186,8 +188,7 @@ describe("DungeonBoss", () => {
   });
 
   it("transforms coordinates correctly for vertical orientation", () => {
-    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
-    useGameStore.mockReturnValue({
+    mockUseGameStore.mockReturnValue({
       items: mockItems,
       mapOrientation: true,
       medallions: mockMedallions,
@@ -213,8 +214,7 @@ describe("DungeonBoss", () => {
   });
 
   it("transforms coordinates correctly for vertical orientation when x <= 50%", () => {
-    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
-    useGameStore.mockReturnValue({
+    mockUseGameStore.mockReturnValue({
       items: mockItems,
       mapOrientation: true,
       medallions: mockMedallions,
@@ -258,8 +258,7 @@ describe("DungeonBoss", () => {
       name: "Misery Mire <img src='medallion0.png' />",
     };
 
-    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
-    useGameStore.mockReturnValue({
+    mockUseGameStore.mockReturnValue({
       items: mockItems,
       mapOrientation: false,
       medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0], // bombos for Misery Mire

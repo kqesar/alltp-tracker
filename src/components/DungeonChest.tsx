@@ -5,21 +5,19 @@ import { useGameStore } from "../stores/gameStore";
 type DungeonChestProps = {
   dungeon: DungeonItem;
   index: number;
-  chestCount: number;
 };
 
 /**
  * DungeonChest component handles the rendering of a single dungeon chest indicator on the map
  * @param dungeon - The dungeon data
  * @param index - The dungeon index
- * @param chestCount - Number of chests remaining in the dungeon
  */
-export const DungeonChest = ({
-  dungeon,
-  index,
-  chestCount,
-}: DungeonChestProps) => {
+export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
   const { items, medallions, mapOrientation, setCaption } = useGameStore();
+
+  // Get chest count from store
+  const chestKey = `chest${index}` as keyof typeof items;
+  const chestCount = items[chestKey] as number;
 
   // Get dungeon chest availability class
   const getAvailabilityClass = () => {
@@ -60,7 +58,7 @@ export const DungeonChest = ({
 
   // Remove highlight and clear caption
   const handleUnhighlight = () => {
-    setCaption("&nbsp;");
+    setCaption("");
   };
 
   // Transform coordinates for vertical orientation
