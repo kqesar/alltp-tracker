@@ -28,42 +28,6 @@ body {
   background-color: var(--color-bg);
 }
 
-/* Layout Components */
-.flexcontainer {
-  display: flex;
-  gap: var(--spacing-md);
-}
-
-.settings {
-  display: none;
-  padding: var(--spacing-md);
-  background-color: var(--color-bg);
-  border-radius: var(--border-radius);
-}
-
-.settings--visible {
-  display: block;
-}
-
-.settings-button {
-  padding: var(--spacing-sm);
-  color: var(--color-error);
-  cursor: pointer;
-  background-color: var(--color-bg);
-  border: none;
-  transition: opacity var(--transition);
-}
-
-.settings-button:hover {
-  opacity: 0.8;
-}
-
-/* Legacy ID selector for backward compatibility */
-#settingsbutton {
-  color: var(--color-error);
-  background-color: var(--color-bg);
-}
-
 /* Tracker Grid Component */
 .tracker {
   position: relative;
@@ -89,13 +53,6 @@ body {
   height: 64px;
 }
 
-/* Item Configuration */
-.itemconfig {
-  border-spacing: 0;
-  border: 1px solid var(--color-text);
-  border-radius: var(--border-radius);
-}
-
 /* Reset and Base Styles */
 * {
   box-sizing: border-box;
@@ -106,40 +63,6 @@ body {
   width: 128px;
   height: 128px;
   background-size: 200% 200%;
-}
-
-/* Form Elements */
-.form-input {
-  display: inline-block;
-  padding: var(--spacing-xs);
-  margin-top: var(--spacing-xs);
-  margin-bottom: var(--spacing-xs);
-  color: var(--color-text);
-  background-color: var(--color-bg-secondary);
-  border: 1px solid #ccc;
-  border-radius: var(--border-radius);
-}
-
-.form-label {
-  display: inline-block;
-  width: 140px;
-  padding-top: var(--spacing-xs);
-  margin-right: var(--spacing-xs);
-  text-align: right;
-}
-
-/* Legacy selectors for backward compatibility */
-input {
-  display: inline-block;
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
-
-label {
-  display: inline-block;
-  width: 140px;
-  padding-top: 5px;
-  text-align: right;
 }
 
 /* Item Grid Components */
@@ -238,7 +161,6 @@ label {
 }
 
 /* Layout Container Components */
-.layout-item-container,
 .itemdiv {
   left: 0;
   display: inline-block;
@@ -247,7 +169,6 @@ label {
   vertical-align: middle;
 }
 
-.layout-map-container,
 .mapdiv {
   position: relative;
   display: inline-block;
@@ -255,18 +176,6 @@ label {
   height: 442px;
   vertical-align: middle;
   background-image: url("/assets/map.png");
-  background-repeat: no-repeat;
-  background-size: cover;
-}
-
-.layout-map-container--vertical,
-.mapvdiv {
-  position: relative;
-  display: inline-block;
-  width: 438px;
-  height: 888px;
-  vertical-align: top;
-  background-image: url("/assets/mapv.png");
   background-repeat: no-repeat;
   background-size: cover;
 }
@@ -311,83 +220,37 @@ label {
 }
 
 /* Interactive Elements */
-.interactive-element,
 .mapspan {
   cursor: pointer;
   transition: all var(--transition);
 }
 
-.interactive-element:hover,
 .mapspan:hover {
   filter: brightness(1.1);
 }
 
-.interactive-element:focus-visible,
 .mapspan:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* Main Layout Components */
-.main-layout,
-#layoutDiv {
-  display: block;
-  width: 95%;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.settings-container,
-#settingsDiv {
-  display: inline-block;
-  margin-left: var(--spacing-lg);
-  vertical-align: top;
-}
-
-/* Footer Component */
-.footer,
-footer {
-  width: 100%;
-  padding: var(--spacing-md);
-  margin-top: var(--spacing-lg);
-  font-size: var(--font-size-sm);
-  color: var(--color-disabled);
-  text-align: center;
-}
-
-/* Utility Classes */
-.highlighted-block,
-.span-bloc {
-  padding: var(--spacing-xs);
-  font-weight: bold;
-  color: var(--color-bg);
-  background-color: rgba(255, 255, 255, 0.9);
-  border: 3px solid var(--color-bg);
-  border-radius: var(--border-radius);
-}
-
-.grid-item,
+/* Grid Item Components */
 .griditem {
   cursor: pointer;
   border-radius: var(--border-radius);
   transition: all var(--transition);
 }
 
-.grid-item:hover,
 .griditem:hover {
   filter: brightness(1.1);
   transform: scale(1.05);
 }
 
-.grid-item:active,
 .griditem:active {
   transform: scale(0.95);
 }
 
-/* Focus Management */
-.grid-item:focus-visible,
-.griditem:focus-visible,
-.interactive-element:focus-visible {
+.griditem:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
@@ -405,28 +268,16 @@ footer {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .flexcontainer {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .layout-item-container,
   .itemdiv {
     width: 100%;
     max-width: 480px;
   }
 
-  .layout-map-container,
   .mapdiv {
     width: 100%;
     max-width: 600px;
     height: auto;
     aspect-ratio: 2 / 1;
-  }
-
-  .layout-map-container--vertical,
-  .mapvdiv {
-    aspect-ratio: 1 / 2;
   }
 
   .tracker td {

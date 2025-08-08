@@ -39,7 +39,7 @@ export const MyComponent = ({ message }: MyComponentProps) => {
 ### File Organization
 - Components go in `src/components/`
 - Data and types go in `src/data/`
-- Tests should be co-located with components (`.spec.tsx` or `.test.tsx`)
+- Tests should be co-located with components (`.spec.tsx`)
 - Use absolute imports when possible
 
 ## Development Workflow
@@ -79,6 +79,7 @@ To launch the project:
 - Use React hooks appropriately (useState, useEffect, etc.)
 - Handle loading states and error states properly
 - Ensure accessibility (a11y) standards are met
+- **DO NOT** keep the file tsconfig.tsbuildinfo
 
 ### Performance
 - Use React.memo for expensive components when needed
