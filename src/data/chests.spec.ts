@@ -292,12 +292,12 @@ describe("ItemState interface", () => {
     const items: ItemState = { ...baseItemState };
 
     // Test dynamic access
-    expect(items["hookshot"]).toBe(false);
-    expect(items["glove"]).toBe(0);
+    expect(items.hookshot).toBe(false);
+    expect(items.glove).toBe(0);
 
     // Test setting values dynamically
-    items["hookshot"] = true;
-    items["glove"] = 2;
+    items.hookshot = true;
+    items.glove = 2;
 
     expect(items.hookshot).toBe(true);
     expect(items.glove).toBe(2);
