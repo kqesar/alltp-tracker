@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { DungeonItem, ItemState } from "../data/chests";
 import { DungeonBoss } from "./DungeonBoss";
 
@@ -9,19 +9,11 @@ vi.mock("@/utils", () => ({
   getAssetPath: vi.fn((path: string) => `/mocked/path/${path}`),
 }));
 
-const mockDungeon: DungeonItem = {
-  canGetChest: vi.fn(() => "available"),
-  id: 1,
-  image: "boss01.png",
-  isBeatable: vi.fn(() => "available"),
-  isBeaten: false,
-  name: "Test Dungeon",
-  x: "50%",
-  y: "50%",
-};
+// Mock useGameStore
+const mockToggleDungeonBoss = vi.fn();
+const mockSetCaption = vi.fn();
 
 const mockItems: ItemState = {
-  // Add other required properties for ItemState
   agahnim: 0,
   blank: false,
   bombos: false,
@@ -88,18 +80,37 @@ const mockItems: ItemState = {
 
 const mockMedallions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
+vi.mock("../stores/gameStore", () => ({
+  useGameStore: vi.fn(() => ({
+    items: mockItems,
+    mapOrientation: false,
+    medallions: mockMedallions,
+    setCaption: mockSetCaption,
+    toggleDungeonBoss: mockToggleDungeonBoss,
+  })),
+}));
+
+const mockDungeon: DungeonItem = {
+  canGetChest: vi.fn(() => "available"),
+  id: 1,
+  image: "boss01.png",
+  isBeatable: vi.fn(() => "available"),
+  isBeaten: false,
+  name: "Test Dungeon",
+  x: "50%",
+  y: "50%",
+};
+
 const defaultProps = {
   dungeon: mockDungeon,
   index: 1,
-  items: mockItems,
-  mapOrientation: false,
-  medallions: mockMedallions,
-  onHighlight: vi.fn(),
-  onToggle: vi.fn(),
-  onUnhighlight: vi.fn(),
 };
 
 describe("DungeonBoss", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders with correct initial properties", () => {
     render(<DungeonBoss {...defaultProps} />);
 
@@ -112,39 +123,33 @@ describe("DungeonBoss", () => {
     });
   });
 
-  it("calls onToggle when clicked", async () => {
+  it("calls toggleDungeonBoss when clicked", async () => {
     const user = userEvent.setup();
-    const onToggle = vi.fn();
-
-    render(<DungeonBoss {...defaultProps} onToggle={onToggle} />);
+    render(<DungeonBoss {...defaultProps} />);
 
     const bossElement = document.querySelector(".mapspan.boss");
     if (bossElement) {
       await user.click(bossElement);
     }
 
-    expect(onToggle).toHaveBeenCalledWith(1);
+    expect(mockToggleDungeonBoss).toHaveBeenCalledWith(1);
   });
 
-  it("calls onHighlight when hovered", async () => {
+  it("sets caption when hovered", async () => {
     const user = userEvent.setup();
-    const onHighlight = vi.fn();
-
-    render(<DungeonBoss {...defaultProps} onHighlight={onHighlight} />);
+    render(<DungeonBoss {...defaultProps} />);
 
     const bossElement = document.querySelector(".mapspan.boss");
     if (bossElement) {
       await user.hover(bossElement);
     }
 
-    expect(onHighlight).toHaveBeenCalledWith(1);
+    expect(mockSetCaption).toHaveBeenCalledWith("Test Dungeon");
   });
 
-  it("calls onUnhighlight when mouse leaves", async () => {
+  it("clears caption when mouse leaves", async () => {
     const user = userEvent.setup();
-    const onUnhighlight = vi.fn();
-
-    render(<DungeonBoss {...defaultProps} onUnhighlight={onUnhighlight} />);
+    render(<DungeonBoss {...defaultProps} />);
 
     const bossElement = document.querySelector(".mapspan.boss");
     if (bossElement) {
@@ -152,13 +157,20 @@ describe("DungeonBoss", () => {
       await user.unhover(bossElement);
     }
 
-    expect(onUnhighlight).toHaveBeenCalled();
+    expect(mockSetCaption).toHaveBeenCalledWith("&nbsp;");
   });
 
   it("shows 'opened' class when boss is beaten (value 2)", () => {
-    const itemsWithBeatenBoss = { ...mockItems, boss1: 2 };
+    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
+    useGameStore.mockReturnValue({
+      items: { ...mockItems, boss1: 2 },
+      mapOrientation: false,
+      medallions: mockMedallions,
+      setCaption: mockSetCaption,
+      toggleDungeonBoss: mockToggleDungeonBoss,
+    });
 
-    render(<DungeonBoss {...defaultProps} items={itemsWithBeatenBoss} />);
+    render(<DungeonBoss {...defaultProps} />);
 
     const bossElement = document.querySelector(".mapspan.boss");
     expect(bossElement).toHaveClass("opened");
@@ -174,19 +186,22 @@ describe("DungeonBoss", () => {
   });
 
   it("transforms coordinates correctly for vertical orientation", () => {
+    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
+    useGameStore.mockReturnValue({
+      items: mockItems,
+      mapOrientation: true,
+      medallions: mockMedallions,
+      setCaption: mockSetCaption,
+      toggleDungeonBoss: mockToggleDungeonBoss,
+    });
+
     const dungeonWithCoords = {
       ...mockDungeon,
       x: "75%", // > 50%, should be transformed
       y: "60%",
     };
 
-    render(
-      <DungeonBoss
-        {...defaultProps}
-        dungeon={dungeonWithCoords}
-        mapOrientation={true}
-      />,
-    );
+    render(<DungeonBoss {...defaultProps} dungeon={dungeonWithCoords} />);
 
     const bossElement = document.querySelector(".mapspan.boss");
     // For x > 50%: (0.75 - 0.5) * 2 * 100 = 50%
@@ -198,19 +213,22 @@ describe("DungeonBoss", () => {
   });
 
   it("transforms coordinates correctly for vertical orientation when x <= 50%", () => {
+    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
+    useGameStore.mockReturnValue({
+      items: mockItems,
+      mapOrientation: true,
+      medallions: mockMedallions,
+      setCaption: mockSetCaption,
+      toggleDungeonBoss: mockToggleDungeonBoss,
+    });
+
     const dungeonWithCoords = {
       ...mockDungeon,
       x: "25%", // <= 50%, different transformation
       y: "60%",
     };
 
-    render(
-      <DungeonBoss
-        {...defaultProps}
-        dungeon={dungeonWithCoords}
-        mapOrientation={true}
-      />,
-    );
+    render(<DungeonBoss {...defaultProps} dungeon={dungeonWithCoords} />);
 
     const bossElement = document.querySelector(".mapspan.boss");
     // For x <= 50%: 0.25 * 2 * 100 = 50%
@@ -231,5 +249,39 @@ describe("DungeonBoss", () => {
     render(<DungeonBoss {...defaultProps} dungeon={dungeonWithMock} />);
 
     expect(mockIsBeatable).toHaveBeenCalledWith(mockItems, mockMedallions);
+  });
+
+  it("updates medallion info for Misery Mire (index 8)", async () => {
+    const user = userEvent.setup();
+    const dungeonWithMedallion = {
+      ...mockDungeon,
+      name: "Misery Mire <img src='medallion0.png' />",
+    };
+
+    const useGameStore = vi.mocked(require("../stores/gameStore").useGameStore);
+    useGameStore.mockReturnValue({
+      items: mockItems,
+      mapOrientation: false,
+      medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0], // bombos for Misery Mire
+      setCaption: mockSetCaption,
+      toggleDungeonBoss: mockToggleDungeonBoss,
+    });
+
+    render(
+      <DungeonBoss
+        {...defaultProps}
+        dungeon={dungeonWithMedallion}
+        index={8}
+      />,
+    );
+
+    const bossElement = document.querySelector(".mapspan.boss");
+    if (bossElement) {
+      await user.hover(bossElement);
+    }
+
+    expect(mockSetCaption).toHaveBeenCalledWith(
+      "Misery Mire <img src='medallion1.png' />",
+    );
   });
 });
