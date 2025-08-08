@@ -12,6 +12,7 @@ import {
   itemsMax,
   itemsMin,
 } from "./data/items";
+import { getAssetPath } from "./utils";
 
 /**
  * Main application component for the LttP Item Tracker
@@ -29,18 +30,8 @@ function App() {
   const [mapOrientation] = useState(false); // Light/Dark World toggle
 
   const [caption, setCaption] = useState("&nbsp;");
-
   /**
-   * Gets the correct asset path with base URL support
-   * @param assetPath - The asset path relative to assets folder
-   * @returns Complete asset URL
-   */
-  const getAssetPath = (assetPath: string): string => {
-    return `${import.meta.env.BASE_URL}assets/${assetPath}`;
-  };
-
-  /**
-   * H,andles item state changes when clicked
+   * Handles item state changes when clicked
    * @param item - The item identifier to update
    */
   const handleItemClick = (item: string) => {
@@ -307,16 +298,16 @@ function App() {
             caption={caption}
             chestsState={chestsState}
             dungeonChests={[
-              items.chest0 as number,
-              items.chest1 as number,
-              items.chest2 as number,
-              items.chest3 as number,
-              items.chest4 as number,
-              items.chest5 as number,
-              items.chest6 as number,
-              items.chest7 as number,
-              items.chest8 as number,
-              items.chest9 as number,
+              items.chest0,
+              items.chest1,
+              items.chest2,
+              items.chest3,
+              items.chest4,
+              items.chest5,
+              items.chest6,
+              items.chest7,
+              items.chest8,
+              items.chest9,
             ]}
             dungeonsState={dungeonsState}
             items={items}
