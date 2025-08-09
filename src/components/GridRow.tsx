@@ -1,0 +1,37 @@
+import { GridItem } from "./GridItem";
+
+type GridRowProps = {
+  /** Grid row index */
+  rowIndex: number;
+  /** Array of item identifiers for this row */
+  row: string[];
+};
+
+/**
+ * GridRow component that renders a complete grid row with tracker table structure
+ * Contains a table with halfcells on the sides and GridItems in between
+ * @param rowIndex - The row index for key generation and passing to GridItems
+ * @param row - Array of item identifiers for this row
+ */
+export const GridRow = ({ rowIndex, row }: GridRowProps) => {
+  if (!row) return null;
+
+  return (
+    <table className="tracker" key={rowIndex}>
+      <tbody>
+        <tr>
+          <td className="halfcell" />
+          {row.slice(0, 7).map((item: string, colIndex: number) => (
+            <GridItem
+              col={colIndex}
+              item={item}
+              key={`grid-${rowIndex}-${item}`}
+              row={rowIndex}
+            />
+          ))}
+          <td className="halfcell" />
+        </tr>
+      </tbody>
+    </table>
+  );
+};
