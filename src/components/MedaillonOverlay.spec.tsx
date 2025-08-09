@@ -4,12 +4,12 @@ import { useGameStore } from "@/stores/gameStore";
 import { MedaillonOverlay } from "./MedaillonOverlay";
 
 // Mock the game store
-vi.mock("@/stores/gameStore", () => ({
+vi.mock("../stores/gameStore", () => ({
   useGameStore: vi.fn(),
 }));
 
 // Mock the utils
-vi.mock("@/utils", () => ({
+vi.mock("../utils", () => ({
   getAssetPath: vi.fn((path: string) => `/assets/${path}`),
 }));
 

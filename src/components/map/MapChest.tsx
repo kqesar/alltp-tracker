@@ -1,6 +1,6 @@
-import type { ChestItem } from "../../data/chests";
-import { useGameStore } from "../../stores/gameStore";
-import { getAssetPath } from "../../utils";
+import type { ChestItem } from "@/data/chests";
+import { useGameStore } from "@/stores/gameStore";
+import { getAssetPath } from "@/utils";
 
 type MapChestProps = {
   chest: ChestItem;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ItemState } from "../data/chests";
+import type { ItemState } from "@/data/chests";
 
 // Import the steve function by reading the file source
 // Since it's not exported, we'll test it indirectly through the chests logic

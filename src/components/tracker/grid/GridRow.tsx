@@ -1,12 +1,11 @@
 import { GridItem } from "./GridItem";
 
 type GridRowProps = {
-  /** Grid row index */
+  /** The index of the row in the grid */
   rowIndex: number;
   /** Array of item identifiers for this row */
   row: string[];
 };
-
 /**
  * GridRow component that renders a complete grid row with tracker table structure
  * Contains a table with halfcells on the sides and GridItems in between

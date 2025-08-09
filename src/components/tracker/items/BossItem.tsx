@@ -1,7 +1,7 @@
-import { itemsMin } from "../../../data/items";
-import { useGameStore } from "../../../stores/gameStore";
-import { getAssetPath } from "../../../utils";
-import { CornerTable } from "../../CornerTable";
+import { CornerTable } from "@/components/CornerTable";
+import { itemsMin } from "@/data/items";
+import { useGameStore } from "@/stores/gameStore";
+import { getAssetPath } from "@/utils";
 import { ChestOverlay } from "../overlays/ChestOverlay";
 import { MedaillonOverlay } from "../overlays/MedaillonOverlay";
 import { RewardOverlay } from "../overlays/RewardOverlay";

@@ -1,8 +1,8 @@
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { DungeonItem, ItemState } from "../data/chests";
-import { useGameStore } from "../stores/gameStore";
+import type { DungeonItem, ItemState } from "@/data/chests";
+import { useGameStore } from "@/stores/gameStore";
 import { DungeonChest } from "./DungeonChest";
 
 // Mock getAssetPath
@@ -98,7 +98,7 @@ const mockGameStore = {
   setCaption: mockSetCaption,
 };
 
-vi.mock("../stores/gameStore", () => ({
+vi.mock("@/stores/gameStore", () => ({
   useGameStore: vi.fn(() => mockGameStore),
 }));
 

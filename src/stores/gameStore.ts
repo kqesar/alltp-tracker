@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import type { ChestItem, DungeonItem, ItemState } from "../data/chests";
 import {
+  type ChestItem,
+  type DungeonItem,
+  type ItemState,
   chests as initialChests,
   dungeons as initialDungeons,
-} from "../data/chests";
-import { items as initialItems, itemsMax, itemsMin } from "../data/items";
+} from "@/data/chests";
+import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
 
 interface GameState {
   // State
