@@ -19,7 +19,6 @@ export const RewardOverlay = ({ bossNumber }: RewardOverlayProps) => {
   return (
     <div
       className="overlay-base overlay--bottom-right"
-      data-testid={`reward-overlay-${bossNumber}`}
       onClick={(e) => {
         e.stopPropagation();
         handleItemClick(rewardKey);

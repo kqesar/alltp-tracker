@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import App from "../App";
+import App from "@/App";
 
 // Mock the MapTracker component for integration tests
-vi.mock("../components/MapTracker", () => ({
+vi.mock("@/components/MapTracker", () => ({
   MapTracker: ({ caption }: { caption: string }) => (
     <div data-testid="map-tracker">
       Map Tracker Component - Caption: {caption}

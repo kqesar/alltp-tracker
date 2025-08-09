@@ -1,7 +1,7 @@
-import { CornerTable } from "@/components/CornerTable";
 import { itemsMin } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
+import { CornerTable } from "./CornerTable";
 
 type RegularItemProps = {
   row: number;

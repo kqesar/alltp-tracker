@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import App from "../App";
+import App from "@/App";
 
 /**
  * Integration tests to verify GridRow component integration in App

@@ -1,6 +1,6 @@
+import type { DungeonItem } from "@/data/chests";
+import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
-import type { DungeonItem } from "../data/chests";
-import { useGameStore } from "../stores/gameStore";
 
 type DungeonChestProps = {
   dungeon: DungeonItem;

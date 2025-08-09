@@ -1,6 +1,6 @@
-import { useGameStore } from "../../stores/gameStore";
-import { DungeonBoss } from "../DungeonBoss";
-import { DungeonChest } from "../DungeonChest";
+import { useGameStore } from "@/stores/gameStore";
+import { DungeonBoss } from "./DungeonBoss";
+import { DungeonChest } from "./DungeonChest";
 import { MapChest } from "./MapChest";
 
 /**
@@ -11,7 +11,7 @@ export const MapTracker = () => {
   const { chestsState, dungeonsState } = useGameStore();
 
   return (
-    <div className="map-container">
+    <div className="map-container" data-testid="map-tracker">
       {/* Render chests */}
       {chestsState.map((chest, index) => (
         <MapChest chest={chest} index={index} key={`chest-${chest.id}`} />

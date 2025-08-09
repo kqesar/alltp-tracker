@@ -19,7 +19,6 @@ export const ChestOverlay = ({ bossNumber }: ChestOverlayProps) => {
   return (
     <div
       className="overlay-base overlay--bottom-left"
-      data-testid={`chest-overlay-${bossNumber}`}
       onClick={(e) => {
         e.stopPropagation();
         handleItemClick(chestKey);

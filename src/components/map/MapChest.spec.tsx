@@ -1,8 +1,8 @@
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ChestItem, ItemState } from "../../data/chests";
-import { useGameStore } from "../../stores/gameStore";
+import type { ChestItem, ItemState } from "@/data/chests";
+import { useGameStore } from "@/stores/gameStore";
 import { MapChest } from "./MapChest";
 
 // Mock getAssetPath
@@ -14,7 +14,7 @@ vi.mock("../../utils", () => ({
 const mockToggleChest = vi.fn();
 const mockSetCaption = vi.fn();
 
-vi.mock("../stores/gameStore", () => ({
+vi.mock("@/stores/gameStore", () => ({
   useGameStore: vi.fn(() => ({
     items: mockItems,
     mapOrientation: false,

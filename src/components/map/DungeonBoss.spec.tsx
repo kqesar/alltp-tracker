@@ -1,8 +1,8 @@
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { DungeonItem, ItemState } from "../data/chests";
-import { useGameStore } from "../stores/gameStore";
+import type { DungeonItem, ItemState } from "@/data/chests";
+import { useGameStore } from "@/stores/gameStore";
 import { DungeonBoss } from "./DungeonBoss";
 
 // Mock getAssetPath
@@ -81,7 +81,7 @@ const mockItems: ItemState = {
 
 const mockMedallions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-vi.mock("../stores/gameStore", () => ({
+vi.mock("@/stores/gameStore", () => ({
   useGameStore: vi.fn(() => ({
     items: mockItems,
     mapOrientation: false,

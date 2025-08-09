@@ -44,10 +44,21 @@ export const MyComponent = ({ message }: MyComponentProps) => {
 - **Co-location**: Keep related files (component + test) together
 - **Progressive Enhancement**: Build features incrementally with clear interfaces
 
+### Import Standards
+- **Use @ aliases**: Always use `@/` aliases instead of relative imports (`../`) for better maintainability
+  - `@/components/` for component imports
+  - `@/stores/` for store imports  
+  - `@/types/` for type definitions
+  - `@/data/` for data imports
+  - `@/utils/` for utility functions
+- **Example**: Use `import { useGameStore } from "@/stores/gameStore"` instead of `import { useGameStore } from "../stores/gameStore"`
+- **Type Safety**: Import types from their original definition files when needed for compatibility
+
 When creating new components:
 1. Determine the appropriate folder based on functionality
 2. Create both the component and its test file
-3. Import components directly from their file paths
+3. Import components directly from their file paths using @ aliases
+4. Use appropriate @ aliases for all internal imports
 4. Follow the established patterns for similar components
 
 ### File Organization
@@ -83,11 +94,20 @@ To launch the project:
 - Follow the existing code style (Biome is configured)
 - Run `pnpm lint` to check for linting issues
 - Ensure TypeScript compilation passes without errors
+- **Update documentation** (copilot instructions and README) for any architectural changes
 
 ### Git Workflow
 - Each new feature must not be pushed to the master branch without a pull request
 - Use descriptive commit messages
 - Keep commits focused and atomic
+
+### Documentation Maintenance
+- **ALWAYS** update the copilot instructions when making architectural changes
+- **ALWAYS** update the README when adding new features or changing setup procedures
+- **ALWAYS** update documentation when changing file organization or project structure
+- **ALWAYS** update instructions when introducing new development patterns or practices
+- Review and update documentation as part of every significant change
+- Ensure documentation stays current with the actual codebase
 
 ## Important Guidelines
 

@@ -1,27 +1,38 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useGameStore } from "../../../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { ChestOverlay } from "./ChestOverlay";
 
 // Mock the game store
-vi.mock("../../../stores/gameStore", () => ({
+vi.mock("@/stores/gameStore", () => ({
   useGameStore: vi.fn(),
 }));
 
 // Mock the utils
-vi.mock("../../../utils", () => ({
+vi.mock("@/utils", () => ({
   getAssetPath: vi.fn((path: string) => `/assets/${path}`),
 }));
 
 describe("ChestOverlay", () => {
-  const mockHandleChestClick = vi.fn();
+  const mockHandleItemClick = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     // biome-ignore lint/suspicious/noExplicitAny: Mocking test function
     (useGameStore as any).mockReturnValue({
-      chests: [0, 1, 2, 3, 4, 5],
-      handleChestClick: mockHandleChestClick,
+      handleItemClick: mockHandleItemClick,
+      items: {
+        chest0: 0,
+        chest1: 1,
+        chest2: 2,
+        chest3: 3,
+        chest4: 4,
+        chest5: 5,
+        chest6: 6,
+        chest7: 7,
+        chest8: 8,
+        chest9: 9,
+      },
     });
   });
 
@@ -46,7 +57,7 @@ describe("ChestOverlay", () => {
     const overlay = screen.getByTestId("chest-overlay-1");
     fireEvent.click(overlay);
 
-    expect(mockHandleChestClick).toHaveBeenCalledWith(1);
+    expect(mockHandleItemClick).toHaveBeenCalledWith("chest1");
   });
 
   it("should stop event propagation on click", () => {
@@ -61,7 +72,7 @@ describe("ChestOverlay", () => {
     const overlay = screen.getByTestId("chest-overlay-0");
     fireEvent.click(overlay);
 
-    expect(mockHandleChestClick).toHaveBeenCalledWith(0);
+    expect(mockHandleItemClick).toHaveBeenCalledWith("chest0");
     expect(parentClickHandler).not.toHaveBeenCalled();
   });
 
