@@ -40,14 +40,14 @@ export const MyComponent = ({ message }: MyComponentProps) => {
 - **Separation of Concerns**: Components are organized by functionality (tracker, map, ui)
 - **Single Responsibility**: Each component has a focused, specific purpose
 - **Composition over Inheritance**: Use composition patterns for complex functionality
-- **Clean Imports**: Use index.ts files for organized folder-level imports
+- **Direct Imports**: Always import components directly from their file paths, no index.ts files
 - **Co-location**: Keep related files (component + test) together
 - **Progressive Enhancement**: Build features incrementally with clear interfaces
 
 When creating new components:
 1. Determine the appropriate folder based on functionality
 2. Create both the component and its test file
-3. Update relevant index.ts files for clean imports
+3. Import components directly from their file paths
 4. Follow the established patterns for similar components
 
 ### File Organization
@@ -62,8 +62,9 @@ When creating new components:
 - Data and types go in `src/data/`
 - State management in `src/stores/` using Zustand
 - Tests should be co-located with components (`.spec.tsx`)
-- Use clean imports via index.ts files for organized folders
-- Import from folder level (e.g., `from "./components/tracker"`) rather than deep paths
+- **DO NOT** use index.ts files for component exports
+- Always import components directly from their file paths (e.g., `from "./components/tracker/TrackerGrid"`)
+- Use relative imports with explicit file extensions when needed
 
 ## Development Workflow
 

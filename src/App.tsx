@@ -1,8 +1,8 @@
 import { useState } from "react";
 import "./styles.css";
-import { MapTracker } from "./components/map";
-import { TrackerGrid } from "./components/tracker";
-import { Caption } from "./components/ui";
+import { MapTracker } from "./components/map/MapTracker";
+import { TrackerGrid } from "./components/tracker/TrackerGrid";
+import { Caption } from "./components/ui/Caption";
 import { defaultItemGrid } from "./data/items";
 import { useGameStore } from "./stores/gameStore";
 
