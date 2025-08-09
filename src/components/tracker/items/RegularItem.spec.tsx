@@ -1,20 +1,20 @@
 import { fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "../../../stores/gameStore";
 import { RegularItem } from "./RegularItem";
 
 // Mock the game store
-vi.mock("../stores/gameStore", () => ({
+vi.mock("../../../stores/gameStore", () => ({
   useGameStore: vi.fn(),
 }));
 
 // Mock the utils
-vi.mock("../utils", () => ({
+vi.mock("../../../utils", () => ({
   getAssetPath: vi.fn((path: string) => `/assets/${path}`),
 }));
 
 // Mock the data/items
-vi.mock("../data/items", () => ({
+vi.mock("../../../data/items", () => ({
   itemsMin: {
     boomerang: 0,
     boots: 0,
@@ -24,7 +24,7 @@ vi.mock("../data/items", () => ({
 }));
 
 // Mock the CornerTable component
-vi.mock("./CornerTable", () => ({
+vi.mock("../../CornerTable", () => ({
   CornerTable: () => <div data-testid="corner-table">CornerTable</div>,
 }));
 

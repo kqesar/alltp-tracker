@@ -36,11 +36,34 @@ export const MyComponent = ({ message }: MyComponentProps) => {
 };
 ```
 
+### Component Architecture Principles
+- **Separation of Concerns**: Components are organized by functionality (tracker, map, ui)
+- **Single Responsibility**: Each component has a focused, specific purpose
+- **Composition over Inheritance**: Use composition patterns for complex functionality
+- **Clean Imports**: Use index.ts files for organized folder-level imports
+- **Co-location**: Keep related files (component + test) together
+- **Progressive Enhancement**: Build features incrementally with clear interfaces
+
+When creating new components:
+1. Determine the appropriate folder based on functionality
+2. Create both the component and its test file
+3. Update relevant index.ts files for clean imports
+4. Follow the established patterns for similar components
+
 ### File Organization
-- Components go in `src/components/`
+- Components are organized in logical sub-folders within `src/components/`:
+  - `tracker/`: Item tracking functionality
+    - `TrackerGrid.tsx`: Main item grid component
+    - `grid/`: Grid rendering components (GridRow, GridItem)
+    - `items/`: Item-specific components (BossItem, RegularItem)
+    - `overlays/`: Interactive overlay components (ChestOverlay, RewardOverlay, MedaillonOverlay)
+  - `map/`: Map-related components (MapTracker, MapChest)
+  - `ui/`: Reusable UI components (Caption)
 - Data and types go in `src/data/`
+- State management in `src/stores/` using Zustand
 - Tests should be co-located with components (`.spec.tsx`)
-- Use absolute imports when possible
+- Use clean imports via index.ts files for organized folders
+- Import from folder level (e.g., `from "./components/tracker"`) rather than deep paths
 
 ## Development Workflow
 

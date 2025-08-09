@@ -1,20 +1,20 @@
 import { fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "../../../stores/gameStore";
 import { BossItem } from "./BossItem";
 
 // Mock the game store
-vi.mock("../stores/gameStore", () => ({
+vi.mock("../../../stores/gameStore", () => ({
   useGameStore: vi.fn(),
 }));
 
 // Mock the utils
-vi.mock("../utils", () => ({
+vi.mock("../../../utils", () => ({
   getAssetPath: vi.fn((path: string) => `/assets/${path}`),
 }));
 
 // Mock the data/items
-vi.mock("../data/items", () => ({
+vi.mock("../../../data/items", () => ({
   itemsMin: {
     boss0: 0,
     boss1: 0,
@@ -22,25 +22,25 @@ vi.mock("../data/items", () => ({
 }));
 
 // Mock the overlay components
-vi.mock("./MedaillonOverlay", () => ({
+vi.mock("../overlays/MedaillonOverlay", () => ({
   MedaillonOverlay: ({ bossNumber }: { bossNumber: number }) => (
     <div data-testid={`medallion-overlay-${bossNumber}`}>MedaillonOverlay</div>
   ),
 }));
 
-vi.mock("./ChestOverlay", () => ({
+vi.mock("../overlays/ChestOverlay", () => ({
   ChestOverlay: ({ bossNumber }: { bossNumber: number }) => (
     <div data-testid={`chest-overlay-${bossNumber}`}>ChestOverlay</div>
   ),
 }));
 
-vi.mock("./RewardOverlay", () => ({
+vi.mock("../overlays/RewardOverlay", () => ({
   RewardOverlay: ({ bossNumber }: { bossNumber: number }) => (
     <div data-testid={`reward-overlay-${bossNumber}`}>RewardOverlay</div>
   ),
 }));
 
-vi.mock("./CornerTable", () => ({
+vi.mock("../../CornerTable", () => ({
   CornerTable: () => <div data-testid="corner-table">CornerTable</div>,
 }));
 

@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "../../stores/gameStore";
 import { MapTracker } from "./MapTracker";
 
 describe("MapTracker", () => {

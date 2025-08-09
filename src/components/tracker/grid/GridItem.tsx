@@ -1,5 +1,5 @@
-import { BossItem } from "./BossItem";
-import { RegularItem } from "./RegularItem";
+import { BossItem } from "../items/BossItem";
+import { RegularItem } from "../items/RegularItem";
 
 type GridItemProps = {
   /** Grid row index */

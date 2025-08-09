@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { GridItem } from "./GridItem";
 
 // Mock the child components
-vi.mock("./BossItem", () => ({
+vi.mock("../items/BossItem", () => ({
   BossItem: ({
     bossNumber,
     col,
@@ -27,7 +27,7 @@ vi.mock("./BossItem", () => ({
   ),
 }));
 
-vi.mock("./RegularItem", () => ({
+vi.mock("../items/RegularItem", () => ({
   RegularItem: ({
     col,
     item,

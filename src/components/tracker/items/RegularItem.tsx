@@ -1,27 +1,22 @@
-import { itemsMin } from "../data/items";
-import { useGameStore } from "../stores/gameStore";
-import { getAssetPath } from "../utils";
-import { ChestOverlay } from "./ChestOverlay";
-import { CornerTable } from "./CornerTable";
-import { MedaillonOverlay } from "./MedaillonOverlay";
-import { RewardOverlay } from "./RewardOverlay";
+import { itemsMin } from "../../../data/items";
+import { useGameStore } from "../../../stores/gameStore";
+import { getAssetPath } from "../../../utils";
+import { CornerTable } from "../../CornerTable";
 
-type BossItemProps = {
+type RegularItemProps = {
   row: number;
   col: number;
   item: string;
-  bossNumber: number;
 };
 
 /**
- * BossItem component renders a boss item with overlays in the tracker grid
- * Used for all boss items that require medallion, chest, and reward overlays
+ * RegularItem component renders a regular (non-boss) item in the tracker grid
+ * Used for all items that are not boss items (swords, shields, bottles, etc.)
  * @param row - Grid row index
  * @param col - Grid column index
- * @param item - The boss item identifier
- * @param bossNumber - The boss number (0-9)
+ * @param item - The item identifier
  */
-export const BossItem = ({ row, col, item, bossNumber }: BossItemProps) => {
+export const RegularItem = ({ row, col, item }: RegularItemProps) => {
   const { items, handleItemClick } = useGameStore();
 
   /**
@@ -69,14 +64,11 @@ export const BossItem = ({ row, col, item, bossNumber }: BossItemProps) => {
 
   return (
     <td
-      className="griditem grid-item-base grid-item-relative"
+      className="griditem grid-item-base"
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
       style={getGridItemStyles(item)}
     >
-      <MedaillonOverlay bossNumber={bossNumber} />
-      <ChestOverlay bossNumber={bossNumber} />
-      <RewardOverlay bossNumber={bossNumber} />
       <CornerTable />
     </td>
   );

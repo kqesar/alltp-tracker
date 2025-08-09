@@ -1,8 +1,8 @@
 import { useState } from "react";
 import "./styles.css";
-import { Caption } from "./components/Caption";
-import { GridRow } from "./components/GridRow";
-import { MapTracker } from "./components/MapTracker";
+import { MapTracker } from "./components/map";
+import { TrackerGrid } from "./components/tracker";
+import { Caption } from "./components/ui";
 import { defaultItemGrid } from "./data/items";
 import { useGameStore } from "./stores/gameStore";
 
@@ -20,16 +20,7 @@ function App() {
   return (
     <div>
       <div id="layoutdiv">
-        <div className="itemdiv" id="itemdiv">
-          {itemLayout.map((row: string[], rowIndex: number) => (
-            <GridRow
-              // biome-ignore lint/suspicious/noArrayIndexKey: Row position is stable and meaningful in grid layout
-              key={`row-${rowIndex}`}
-              row={row}
-              rowIndex={rowIndex}
-            />
-          ))}
-        </div>
+        <TrackerGrid itemLayout={itemLayout} />
         <div className="mapdiv" id="mapdiv">
           <MapTracker />
         </div>

@@ -1,12 +1,12 @@
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ChestItem, ItemState } from "../data/chests";
-import { useGameStore } from "../stores/gameStore";
+import type { ChestItem, ItemState } from "../../data/chests";
+import { useGameStore } from "../../stores/gameStore";
 import { MapChest } from "./MapChest";
 
 // Mock getAssetPath
-vi.mock("@/utils", () => ({
+vi.mock("../../utils", () => ({
   getAssetPath: vi.fn((path: string) => `/mocked/path/${path}`),
 }));
 
