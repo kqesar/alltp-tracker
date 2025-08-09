@@ -3,6 +3,7 @@ import "./styles.css";
 import { Caption } from "./components/Caption";
 import { CornerTable } from "./components/CornerTable";
 import { MapTracker } from "./components/MapTracker";
+import { RewardOverlay } from "./components/RewardOverlay";
 import { defaultItemGrid, itemsMin } from "./data/items";
 import { useGameStore } from "./stores/gameStore";
 import { getAssetPath } from "./utils";
@@ -116,28 +117,6 @@ function App() {
   };
 
   /**
-   * Renders crystal/pendant overlay for dungeons
-   * @param bossNumber - The boss number (0-9) used to get individual reward
-   */
-  const renderRewardOverlay = (bossNumber: number) => {
-    const rewardKey = `reward${bossNumber}`;
-    const rewardValue = items[rewardKey] as number;
-
-    return (
-      <div
-        className="overlay-base overlay--bottom-right"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleItemClick(rewardKey);
-        }}
-        style={{
-          backgroundImage: `url(${getAssetPath(`dungeon${rewardValue}.png`)})`,
-        }}
-      />
-    );
-  };
-
-  /**
    * Renders a boss item with overlays
    * @param row - Grid row index
    * @param col - Grid column index
@@ -158,7 +137,7 @@ function App() {
     >
       {renderMedallionOverlay(bossNumber)}
       {renderChestOverlay(bossNumber)}
-      {renderRewardOverlay(bossNumber)}
+      <RewardOverlay bossNumber={bossNumber} />
       <CornerTable />
     </td>
   );
