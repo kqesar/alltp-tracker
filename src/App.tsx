@@ -4,6 +4,7 @@ import { Caption } from "./components/Caption";
 import { ChestOverlay } from "./components/ChestOverlay";
 import { CornerTable } from "./components/CornerTable";
 import { MapTracker } from "./components/MapTracker";
+import { MedaillonOverlay } from "./components/MedaillonOverlay";
 import { RewardOverlay } from "./components/RewardOverlay";
 import { defaultItemGrid, itemsMin } from "./data/items";
 import { useGameStore } from "./stores/gameStore";
@@ -15,8 +16,7 @@ import { getAssetPath } from "./utils";
  */
 function App() {
   // Get state and actions from Zustand store
-  const { items, medallions, caption, handleItemClick, handleMedallionChange } =
-    useGameStore();
+  const { items, caption, handleItemClick } = useGameStore();
 
   // Layout state (keep local as it doesn't need to be shared)
   const [itemLayout] = useState(JSON.parse(JSON.stringify(defaultItemGrid)));
@@ -65,37 +65,6 @@ function App() {
   });
 
   /**
-   * Renders medallion overlay for Dark World bosses
-   * @param bossNumber - The boss number (0-9)
-   */
-  const renderMedallionOverlay = (bossNumber: number) => {
-    if (bossNumber < 8) return null;
-
-    const medallionValue = medallions[bossNumber];
-    // Map medallion values to image files (medallion0.png to medallion2.png):
-    // 0 = unknown/not assigned (medallion0.png)
-    // 1 = bombos (medallion1.png)
-    // 2 = ether (medallion2.png)
-    // 3 = quake (cycle back to medallion0.png)
-    const imageIndex = medallionValue === 3 ? 0 : medallionValue;
-
-    return (
-      <div
-        className="overlay-base overlay--top-right"
-        onClick={(e) => {
-          e.stopPropagation();
-          // Cycle from 0 to 3, then back to 0
-          const newMedallion = (medallionValue + 1) % 4;
-          handleMedallionChange(bossNumber, newMedallion);
-        }}
-        style={{
-          backgroundImage: `url(${getAssetPath(`medallion${imageIndex}.png`)})`,
-        }}
-      />
-    );
-  };
-
-  /**
    * Renders a boss item with overlays
    * @param row - Grid row index
    * @param col - Grid column index
@@ -114,7 +83,7 @@ function App() {
       onClick={() => handleItemClick(item)}
       style={getGridItemStyles(item)}
     >
-      {renderMedallionOverlay(bossNumber)}
+      <MedaillonOverlay bossNumber={bossNumber} />
       <ChestOverlay bossNumber={bossNumber} />
       <RewardOverlay bossNumber={bossNumber} />
       <CornerTable />
