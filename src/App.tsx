@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./styles.css";
 import { Caption } from "./components/Caption";
+import { ChestOverlay } from "./components/ChestOverlay";
 import { CornerTable } from "./components/CornerTable";
 import { MapTracker } from "./components/MapTracker";
 import { RewardOverlay } from "./components/RewardOverlay";
@@ -95,28 +96,6 @@ function App() {
   };
 
   /**
-   * Renders chest count overlay for dungeons
-   * @param bossNumber - The boss number (0-9)
-   */
-  const renderChestOverlay = (bossNumber: number) => {
-    const chestKey = `chest${bossNumber}`;
-    const chestValue = items[chestKey] as number;
-
-    return (
-      <div
-        className="overlay-base overlay--bottom-left"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleItemClick(chestKey);
-        }}
-        style={{
-          backgroundImage: `url(${getAssetPath(`chest${chestValue}.png`)})`,
-        }}
-      />
-    );
-  };
-
-  /**
    * Renders a boss item with overlays
    * @param row - Grid row index
    * @param col - Grid column index
@@ -136,7 +115,7 @@ function App() {
       style={getGridItemStyles(item)}
     >
       {renderMedallionOverlay(bossNumber)}
-      {renderChestOverlay(bossNumber)}
+      <ChestOverlay bossNumber={bossNumber} />
       <RewardOverlay bossNumber={bossNumber} />
       <CornerTable />
     </td>
