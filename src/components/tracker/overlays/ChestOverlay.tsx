@@ -1,5 +1,5 @@
-import { useGameStore } from "../stores/gameStore";
-import { getAssetPath } from "../utils";
+import { useGameStore } from "../../../stores/gameStore";
+import { getAssetPath } from "../../../utils";
 
 type ChestOverlayProps = {
   bossNumber: number;

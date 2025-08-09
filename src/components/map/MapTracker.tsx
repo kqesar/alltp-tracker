@@ -1,6 +1,6 @@
-import { useGameStore } from "../stores/gameStore";
-import { DungeonBoss } from "./DungeonBoss";
-import { DungeonChest } from "./DungeonChest";
+import { useGameStore } from "../../stores/gameStore";
+import { DungeonBoss } from "../DungeonBoss";
+import { DungeonChest } from "../DungeonChest";
 import { MapChest } from "./MapChest";
 
 /**

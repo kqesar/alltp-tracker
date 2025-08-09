@@ -125,15 +125,50 @@ Each dungeon boss has three clickable overlays:
 ```
 src/
 ├── components/
-│   ├── MapTracker.tsx      # Interactive map component
-│   └── Settings.tsx        # Game settings (future)
+│   ├── tracker/           # Item tracking components
+│   │   ├── TrackerGrid.tsx        # Main item grid layout
+│   │   ├── grid/                  # Grid rendering components
+│   │   │   ├── GridRow.tsx        # Individual grid rows
+│   │   │   └── GridItem.tsx       # Individual grid items
+│   │   ├── items/                 # Item-specific components
+│   │   │   ├── BossItem.tsx       # Boss-specific item handling
+│   │   │   └── RegularItem.tsx    # Standard item handling
+│   │   └── overlays/              # Interactive overlay components
+│   │       ├── ChestOverlay.tsx   # Dungeon chest counter
+│   │       ├── RewardOverlay.tsx  # Boss reward indicator
+│   │       └── MedaillonOverlay.tsx # Medallion requirement selector
+│   ├── map/               # Map-related components
+│   │   ├── MapTracker.tsx         # Interactive map component
+│   │   └── MapChest.tsx           # Map chest markers
+│   └── ui/                # UI utility components
+│       └── Caption.tsx            # Hover caption display
 ├── data/
 │   ├── chests.ts          # Chest and dungeon definitions
 │   └── items.ts           # Item definitions and layout
+├── stores/
+│   └── gameStore.ts       # Zustand state management
+├── hooks/                 # Custom React hooks
 ├── App.tsx                # Main application logic
 ├── main.tsx              # React entry point
 └── styles.css            # Game-specific styling
 ```
+
+### Component Architecture
+
+The application follows a modular component architecture with clear separation of concerns:
+
+- **tracker/**: Contains all item tracking functionality
+  - `TrackerGrid`: Main container for the item grid layout
+  - `grid/`: Rendering components for the grid structure
+  - `items/`: Item-specific logic and display components
+  - `overlays/`: Interactive overlay components for complex dungeon interactions
+
+- **map/**: Map and location tracking components
+  - `MapTracker`: Main interactive map with chest and boss markers
+  - `MapChest`: Individual chest marker components
+
+- **ui/**: Reusable UI components
+  - `Caption`: Dynamic hover information display
 
 ## 🤝 Contributing
 
