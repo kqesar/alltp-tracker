@@ -113,14 +113,12 @@ describe("GridItem", () => {
       expect(regularItem).toHaveAttribute("data-row", "0");
     });
 
-    it("should render RegularItem for empty string", () => {
-      render(<GridItem col={0} item="" row={0} />);
+    it("should render grid spacer for empty string", () => {
+      const { container } = render(<GridItem col={0} item="" row={0} />);
 
-      const regularItem = screen.getByTestId("regular-item");
-      expect(regularItem).toBeInTheDocument();
-      expect(regularItem).toHaveAttribute("data-col", "0");
-      expect(regularItem).toHaveAttribute("data-item", "");
-      expect(regularItem).toHaveAttribute("data-row", "0");
+      const spacer = container.querySelector(".grid-spacer");
+      expect(spacer).toBeInTheDocument();
+      expect(spacer).toHaveAttribute("aria-hidden", "true");
     });
 
     it("should render RegularItem for agahnim", () => {
@@ -135,20 +133,26 @@ describe("GridItem", () => {
   });
 
   describe("Edge cases", () => {
-    it("should render RegularItem for null item", () => {
-      // biome-ignore lint/suspicious/noExplicitAny: Testing edge case with null
-      render(<GridItem col={0} item={null as any} row={0} />);
+    it("should render grid spacer for null item", () => {
+      const { container } = render(
+        // biome-ignore lint/suspicious/noExplicitAny: Testing edge case with null
+        <GridItem col={0} item={null as any} row={0} />,
+      );
 
-      const regularItem = screen.getByTestId("regular-item");
-      expect(regularItem).toBeInTheDocument();
+      const spacer = container.querySelector(".grid-spacer");
+      expect(spacer).toBeInTheDocument();
+      expect(spacer).toHaveAttribute("aria-hidden", "true");
     });
 
-    it("should render RegularItem for undefined item", () => {
-      // biome-ignore lint/suspicious/noExplicitAny: Testing edge case with undefined
-      render(<GridItem col={0} item={undefined as any} row={0} />);
+    it("should render grid spacer for undefined item", () => {
+      const { container } = render(
+        // biome-ignore lint/suspicious/noExplicitAny: Testing edge case with undefined
+        <GridItem col={0} item={undefined as any} row={0} />,
+      );
 
-      const regularItem = screen.getByTestId("regular-item");
-      expect(regularItem).toBeInTheDocument();
+      const spacer = container.querySelector(".grid-spacer");
+      expect(spacer).toBeInTheDocument();
+      expect(spacer).toHaveAttribute("aria-hidden", "true");
     });
 
     it("should render RegularItem for item containing 'boss' but not starting with it", () => {

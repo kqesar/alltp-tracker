@@ -58,9 +58,18 @@ export const MyComponent = ({ message }: MyComponentProps) => {
 ### Constants Management
 - **Centralized Constants**: All hardcoded values must be defined in `src/constants/index.ts`
 - **Simple Export Pattern**: Use simple export declarations (`export const OBJECT = {}`, `export const ARRAY = []`)
-- **Categorized Organization**: Group related constants into objects (CSS_CLASSES, DUNGEON_INDICES, etc.)
+- **Categorized Organization**: Group related constants into objects (CSS_CLASSES, DUNGEON_INDICES, KEYBOARD_NAVIGATION, etc.)
 - **Import Pattern**: Always import constants using `@/constants` alias
-- **Coverage**: Include CSS class names, magic numbers, asset names, configuration values
+- **Coverage**: Include CSS class names, magic numbers, asset names, configuration values, keyboard key codes
+
+### Save Management Standards
+- **Auto-Save System**: Use 5-second intervals with localStorage persistence
+- **Save Slots**: Support 10 save slots (0-9) with slot 0 reserved for auto-save
+- **Data Format**: JSON serialization with metadata (version, timestamp, platform)
+- **Error Handling**: Graceful handling of localStorage errors and data validation
+- **Confirmation Modals**: Use ConfirmationModal component for destructive operations
+- **Method Restoration**: Ensure ChestItem and DungeonItem methods are restored after deserialization
+- **State Management**: Use individual Zustand selectors to prevent object creation and infinite re-renders
 
 ### Header Component Standards
 - **Fixed Positioning**: Use fixed header with backdrop-filter blur effect for modern appearance
@@ -81,9 +90,9 @@ When creating new components:
 ### File Organization
 - Components are organized in logical sub-folders within `src/components/`:
   - `tracker/`: Item tracking functionality
-    - `TrackerGrid.tsx`: Main item grid component using CSS Grid layout
-    - `grid/`: Grid rendering components (GridRow, GridItem)
-    - `items/`: Item-specific components (BossItem, RegularItem)
+    - `TrackerGrid.tsx`: Main item grid component using CSS Grid layout with keyboard navigation
+    - `grid/`: Grid rendering components (GridRow, GridItem) with spacer support for layout consistency
+    - `items/`: Item-specific components (BossItem, RegularItem) with keyboard navigation support
     - `overlays/`: Interactive overlay components (ChestOverlay, RewardOverlay, MedaillonOverlay)
   - `map/`: Map-related components (MapTracker, MapChest, DungeonBoss)
   - `ui/`: Reusable UI components (Caption, Header)
@@ -92,13 +101,18 @@ When creating new components:
   - `variables.css`: CSS custom properties and design tokens
   - `base.css`: Reset styles and foundational rules
   - `header.css`: Header component styles with backdrop blur
-  - `tracker.css`: CSS Grid layout and tracker-specific styles
+  - `tracker.css`: CSS Grid layout, tracker-specific styles, and grid spacer classes
   - `map.css`: Map components and location markers
   - `overlays.css`: Interactive overlay components
   - `ui.css`: Caption system and mini icons
 - Data and types go in `src/data/`
 - Constants go in `src/constants/index.ts` with simple export pattern
 - State management in `src/stores/` using Zustand
+  - `gameStore.ts`: Main game state (items, chests, dungeons, medallions)
+  - `persistenceStore.ts`: Save/load operations and auto-save functionality
+- Custom hooks in `src/hooks/` for reusable logic
+  - `useAutoSave.ts`: Auto-save functionality with 5-second intervals
+  - `useKeyboardNavigation.ts`: Keyboard navigation system for tracker grid
 - Tests should be co-located with components (`.spec.tsx`)
 - **DO NOT** use index.ts files for component exports
 - Always import components directly from their file paths (e.g., `from "./components/tracker/TrackerGrid"`)
@@ -107,20 +121,51 @@ When creating new components:
 
 ### Web Standards Compliance
 - **W3C HTML Validation**: All HTML output is valid according to W3C standards
-- **WCAG Accessibility**: Meets WCAG accessibility compliance with semantic HTML
-- **CSS Grid Layout**: Modern CSS Grid replaces legacy table-based layouts
+- **WCAG Accessibility**: Meets WCAG accessibility compliance with semantic HTML and keyboard navigation
+- **CSS Grid Layout**: Modern CSS Grid replaces legacy table-based layouts with proper spacer elements
 - **Semantic HTML**: Uses proper semantic elements (button, section, nav, header, main)
 - **ARIA Attributes**: Proper ARIA labels and roles for screen reader accessibility
+- **Keyboard Navigation**: Full keyboard support with arrow keys, Tab sequences, and focus management
 - **No Table Layouts**: CSS Grid is used for all grid layouts instead of HTML tables
 - **Modern CSS**: Uses CSS custom properties, backdrop-filter, and modern selectors
+
+### Keyboard Navigation Architecture
+- **useKeyboardNavigation Hook**: Custom hook managing keyboard events and focus states
+- **Arrow Key Navigation**: Directional navigation with wrap-around support
+- **Tab Sequence Navigation**: Standard Tab/Shift+Tab linear navigation
+- **Space/Enter Activation**: Standard activation keys for interactive elements
+- **Focus Management**: Visual focus indicators and programmatic focus control
+- **Grid Position Tracking**: Intelligent position calculation with empty cell handling
+- **Accessibility Integration**: WCAG-compliant keyboard navigation patterns
+
+### Grid Layout & Spacer System
+- **CSS Grid Container**: Semantic grid structure using `display: grid`
+- **Grid Spacer Elements**: Invisible spacers maintain layout consistency for empty cells
+- **Layout Preservation**: Empty cells render spacer divs instead of null to prevent column misalignment
+- **Responsive Design**: Grid adapts to different screen sizes with consistent spacing
+- **Data Attributes**: Grid position tracking via `data-grid-row` and `data-grid-col` attributes
+
+### Persistence & Auto-Save Architecture
+- **Individual Selectors**: Use individual Zustand selectors instead of object destructuring to prevent infinite re-renders
+- **Error Boundaries**: Proper error handling for localStorage operations and data validation
+
+When working with persistence:
+1. Use individual selectors from stores to avoid object creation
+2. Always restore methods for ChestItem and DungeonItem objects after loading
+3. Include proper error handling and user feedback
+4. Use ConfirmationModal for destructive operations
+5. Maintain data integrity with version checking and validation
 
 ### Layout Architecture
 - **CSS Grid Container**: `TrackerGrid.tsx` uses CSS Grid with `grid-template-columns`
 - **Grid Rows**: `GridRow.tsx` uses `display: contents` for CSS Grid participation
+- **Grid Spacers**: `GridItem.tsx` renders invisible spacers for empty cells to maintain grid alignment
 - **Button Elements**: All interactive grid items are semantic `<button>` elements
 - **Accessibility**: Each button has proper `aria-label` for screen reader support
+- **Keyboard Navigation**: Integrated useKeyboardNavigation hook for arrow key and Tab navigation
 - **Visual Consistency**: Identical rendering to original table layout maintained
 - **Responsive Design**: CSS Grid adapts to different screen sizes automatically
+- **Data Attributes**: Grid position tracking via `data-grid-row` and `data-grid-col` attributes
 
 ## Development Workflow
 
@@ -180,6 +225,7 @@ To launch the project:
 - **ALWAYS** update instructions when introducing new development patterns or practices
 - Review and update documentation as part of every significant change
 - Ensure documentation stays current with the actual codebase
+- **DO NOT** update the CHANGELOG.md file unless specifically requested
 
 ## Important Guidelines
 
@@ -199,10 +245,13 @@ To launch the project:
 - **Use constants** from `@/constants` for all hardcoded values
 - **Web Standards Compliance**: Follow W3C HTML validation and WCAG accessibility guidelines
 - **CSS Grid Layout**: Use CSS Grid instead of HTML tables for layout purposes
+- **Grid Spacers**: Always render spacer elements for empty cells instead of null to maintain layout
 - **Semantic HTML**: Use appropriate semantic elements (button, section, header, nav, main)
 - **Accessibility First**: Include proper ARIA attributes and labels for all interactive elements
+- **Keyboard Navigation**: Include data attributes and focus handlers for grid navigation
 - **DO NOT** keep the file tsconfig.tsbuildinfo
 - **DO NOT** use HTML tables for layout - use CSS Grid instead
+- **DO NOT** return null for empty grid cells - use spacer elements instead
 
 ### Performance
 - Use React.memo for expensive components when needed

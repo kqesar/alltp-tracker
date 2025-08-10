@@ -12,6 +12,8 @@ type BossItemProps = {
   col: number;
   item: string;
   bossNumber: number;
+  /** Callback when item receives focus for keyboard navigation */
+  onFocus?: () => void;
 };
 
 /**
@@ -21,8 +23,15 @@ type BossItemProps = {
  * @param col - Grid column index
  * @param item - The boss item identifier
  * @param bossNumber - The boss number (0-9)
+ * @param onFocus - Callback when item receives focus
  */
-export const BossItem = ({ row, col, item, bossNumber }: BossItemProps) => {
+export const BossItem = ({
+  row,
+  col,
+  item,
+  bossNumber,
+  onFocus,
+}: BossItemProps) => {
   const { items, handleItemClick } = useGameStore();
 
   /**
@@ -106,8 +115,11 @@ export const BossItem = ({ row, col, item, bossNumber }: BossItemProps) => {
     <button
       aria-label={`${getBossName(bossNumber)}, ${getBossStateDescription(item)}. Click to change state.`}
       className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} ${CSS_CLASSES.GRID_ITEM_RELATIVE}`}
+      data-grid-col={col}
+      data-grid-row={row}
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
+      onFocus={onFocus}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();

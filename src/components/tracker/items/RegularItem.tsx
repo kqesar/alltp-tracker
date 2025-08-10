@@ -8,6 +8,8 @@ type RegularItemProps = {
   row: number;
   col: number;
   item: string;
+  /** Callback when item receives focus for keyboard navigation */
+  onFocus?: () => void;
 };
 
 /**
@@ -16,8 +18,9 @@ type RegularItemProps = {
  * @param row - Grid row index
  * @param col - Grid column index
  * @param item - The item identifier
+ * @param onFocus - Callback when item receives focus
  */
-export const RegularItem = ({ row, col, item }: RegularItemProps) => {
+export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
   const { items, handleItemClick } = useGameStore();
 
   /**
@@ -134,9 +137,12 @@ export const RegularItem = ({ row, col, item }: RegularItemProps) => {
     <button
       aria-label={`${getItemName(item)}, ${getItemStateDescription(item)}. Click to change state.`}
       className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
+      data-grid-col={col}
+      data-grid-row={row}
       disabled={item === "blank"}
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
+      onFocus={onFocus}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();

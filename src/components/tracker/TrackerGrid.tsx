@@ -1,5 +1,6 @@
 import { GridItem } from "@/components/tracker/grid/GridItem";
 import { CSS_CLASSES } from "@/constants";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 
 type TrackerGridProps = {
   /** Grid layout data - array of rows containing item identifiers */
@@ -9,14 +10,22 @@ type TrackerGridProps = {
 /**
  * TrackerGrid component that renders the complete item tracker grid using CSS Grid
  * Uses semantic HTML with proper grid layout instead of tables
+ * Includes keyboard navigation support for accessibility
  * @param itemLayout - 2D array representing the grid layout with item identifiers
  */
 export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
+  const { containerRef, updateFocusPosition } = useKeyboardNavigation({
+    enabled: true,
+    itemLayout,
+    totalRows: itemLayout.length,
+  });
+
   return (
     <section
       aria-label="Item tracker grid"
       className={CSS_CLASSES.ITEMDIV}
       id="itemdiv"
+      ref={containerRef}
     >
       <h2 className="sr-only">Item Tracker</h2>
       <div className={CSS_CLASSES.TRACKER}>
@@ -44,6 +53,7 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
                 col={colIndex}
                 item={item}
                 key={`grid-${rowIndex}-${colIndex}-${item || "empty"}`}
+                onFocus={() => updateFocusPosition(rowIndex, colIndex)}
                 row={rowIndex}
               />
             ))}
