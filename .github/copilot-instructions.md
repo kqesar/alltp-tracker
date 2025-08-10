@@ -105,7 +105,12 @@ When creating new components:
   - `map.css`: Map components and location markers
   - `overlays.css`: Interactive overlay components
   - `ui.css`: Caption system and mini icons
+  - `tooltip.css`: Tooltip system with positioning and animations
+  - `help.css`: Help overlay styles with responsive design
 - Data and types go in `src/data/`
+  - `items.ts`: Item definitions and default state
+  - `chests.ts`: Chest locations and requirements  
+  - `tooltips.ts`: Tooltip content for items, dungeons, and help system
 - Constants go in `src/constants/index.ts` with simple export pattern
 - State management in `src/stores/` using Zustand
   - `gameStore.ts`: Main game state (items, chests, dungeons, medallions)
@@ -113,6 +118,7 @@ When creating new components:
 - Custom hooks in `src/hooks/` for reusable logic
   - `useAutoSave.ts`: Auto-save functionality with 5-second intervals
   - `useKeyboardNavigation.ts`: Keyboard navigation system for tracker grid
+  - `useTooltip.ts`: Tooltip visibility and interaction management
 - Tests should be co-located with components (`.spec.tsx`)
 - **DO NOT** use index.ts files for component exports
 - Always import components directly from their file paths (e.g., `from "./components/tracker/TrackerGrid"`)
@@ -166,6 +172,48 @@ When working with persistence:
 - **Visual Consistency**: Identical rendering to original table layout maintained
 - **Responsive Design**: CSS Grid adapts to different screen sizes automatically
 - **Data Attributes**: Grid position tracking via `data-grid-row` and `data-grid-col` attributes
+
+### Tooltips & Help System Architecture
+- **Tooltip Component**: Rich contextual help with intelligent positioning and accessibility
+- **Help Overlay**: Comprehensive help system with tabbed interface for shortcuts and gameplay tips
+- **useTooltip Hook**: Manages tooltip visibility, interactions, and event handling
+- **Tooltip Data**: Centralized content database for items, dungeons, and help information
+- **Smart Positioning**: Tooltips automatically adjust position to stay within viewport bounds
+- **Accessibility First**: Full keyboard support, ARIA attributes, and screen reader compatibility
+- **Delay Management**: Configurable show/hide delays to prevent accidental tooltips
+- **Rich Content**: Support for structured content including mechanics, tips, requirements, and shortcuts
+- **Integration Ready**: Easy integration with existing tracker components via trigger props
+
+#### Tooltip Component Standards
+- **Positioning Options**: Support for top, bottom, left, right positioning with auto-adjustment
+- **Content Structure**: Title, description, mechanics, tips, shortcuts, requirements (dungeons)
+- **Event Handling**: Mouse hover, keyboard focus, touch interactions
+- **Performance**: Efficient cleanup of timeouts and event listeners
+- **Responsive Design**: Adapts content and positioning for mobile screens
+- **Animation**: Smooth fade-in/scale animations with reduced motion support
+
+#### Help System Standards
+- **Modal Interface**: Full-screen overlay with backdrop blur and focus management
+- **Tabbed Navigation**: Keyboard shortcuts and gameplay tips in separate tabs
+- **Keyboard Display**: Visual representation of keys with proper styling
+- **Content Organization**: Hierarchical sections for easy navigation
+- **Accessibility**: Proper modal semantics, focus trapping, and escape handling
+- **Responsive**: Mobile-optimized layout with touch-friendly interactions
+
+#### Tooltip Data Standards
+- **Type Safety**: Full TypeScript types for tooltip and dungeon data structures
+- **Content Quality**: Comprehensive descriptions, mechanics explanations, and practical tips
+- **Consistency**: Standardized format across all items and dungeons
+- **Extensibility**: Easy addition of new tooltip content without code changes
+- **Validation**: Automated tests ensure data completeness and structure
+
+When implementing tooltips:
+1. Use the Tooltip component wrapper around trigger elements
+2. Import tooltip data from `@/data/tooltips` for consistent content
+3. Configure appropriate positioning and delay for the use case
+4. Ensure proper accessibility attributes on trigger elements
+5. Test tooltip positioning at viewport edges
+6. Use the useTooltip hook for custom implementations when needed
 
 ## Development Workflow
 
