@@ -39,7 +39,7 @@ export const Header = () => {
           <img
             alt="Triforce icon"
             className="header__icon"
-            src="/zelda-triforce.ico"
+            src={`${import.meta.env.BASE_URL}zelda-triforce.ico`}
           />
           <span className="sr-only">ALttP Randomizer</span>
           ALttPR
