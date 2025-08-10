@@ -50,10 +50,10 @@ describe("RegularItem", () => {
   it("renders regular item with correct classes", () => {
     const { container } = render(<RegularItem col={0} item="sword" row={0} />);
 
-    const td = container.querySelector("td");
-    expect(td).toBeInTheDocument();
-    expect(td).toHaveClass("griditem", "grid-item-base");
-    expect(td).not.toHaveClass("grid-item-relative");
+    const button = container.querySelector("button");
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveClass("griditem", "grid-item-base");
+    expect(button).not.toHaveClass("grid-item-relative");
   });
 
   it("renders CornerTable component", () => {
@@ -69,11 +69,11 @@ describe("RegularItem", () => {
       <RegularItem col={2} item="hookshot" row={1} />,
     );
 
-    const td = container.querySelector("td");
-    expect(td).toBeInTheDocument();
+    const button = container.querySelector("button");
+    expect(button).toBeInTheDocument();
 
-    if (td) {
-      fireEvent.click(td);
+    if (button) {
+      fireEvent.click(button);
     }
 
     expect(mockHandleItemClick).toHaveBeenCalledWith("hookshot");
@@ -82,9 +82,9 @@ describe("RegularItem", () => {
   it("renders with correct structure", () => {
     const { container } = render(<RegularItem col={4} item="boots" row={3} />);
 
-    const td = container.querySelector("td");
-    expect(td).toBeInTheDocument();
-    expect(td).toHaveClass("griditem", "grid-item-base");
+    const button = container.querySelector("button");
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveClass("griditem", "grid-item-base");
   });
 
   describe("background image handling", () => {
@@ -93,8 +93,8 @@ describe("RegularItem", () => {
         <RegularItem col={0} item="hookshot" row={0} />,
       );
 
-      const td = container.querySelector("td");
-      expect(td).toHaveStyle({
+      const button = container.querySelector("button");
+      expect(button).toHaveStyle({
         backgroundImage: "url(/assets/hookshot.png)",
       });
     });
@@ -104,8 +104,8 @@ describe("RegularItem", () => {
         <RegularItem col={0} item="sword" row={0} />,
       );
 
-      const td = container.querySelector("td");
-      expect(td).toHaveStyle({
+      const button = container.querySelector("button");
+      expect(button).toHaveStyle({
         backgroundImage: "url(/assets/sword2.png)",
       });
     });
@@ -115,8 +115,8 @@ describe("RegularItem", () => {
         <RegularItem col={0} item="blank" row={0} />,
       );
 
-      const td = container.querySelector("td");
-      expect(td).toHaveStyle({
+      const button = container.querySelector("button");
+      expect(button).toHaveStyle({
         backgroundImage: "",
       });
     });
@@ -124,8 +124,8 @@ describe("RegularItem", () => {
     it("renders empty background for empty item string", () => {
       const { container } = render(<RegularItem col={0} item="" row={0} />);
 
-      const td = container.querySelector("td");
-      expect(td).toHaveStyle({
+      const button = container.querySelector("button");
+      expect(button).toHaveStyle({
         backgroundImage: "",
       });
     });
@@ -137,8 +137,8 @@ describe("RegularItem", () => {
         <RegularItem col={0} item="hookshot" row={0} />,
       );
 
-      const td = container.querySelector("td");
-      expect(td).toHaveStyle({
+      const button = container.querySelector("button");
+      expect(button).toHaveStyle({
         opacity: "1",
       });
     });
@@ -148,8 +148,8 @@ describe("RegularItem", () => {
         <RegularItem col={0} item="boots" row={0} />,
       );
 
-      const td = container.querySelector("td");
-      expect(td).toHaveStyle({
+      const button = container.querySelector("button");
+      expect(button).toHaveStyle({
         opacity: "0.25",
       });
     });
@@ -157,8 +157,8 @@ describe("RegularItem", () => {
     it("renders full opacity for number items above minimum", () => {
       const { container } = render(<RegularItem col={0} item="bow" row={0} />);
 
-      const td = container.querySelector("td");
-      expect(td).toHaveStyle({
+      const button = container.querySelector("button");
+      expect(button).toHaveStyle({
         opacity: "1",
       });
     });
@@ -168,8 +168,8 @@ describe("RegularItem", () => {
         <RegularItem col={0} item="boomerang" row={0} />,
       );
 
-      const td = container.querySelector("td");
-      expect(td).toHaveStyle({
+      const button = container.querySelector("button");
+      expect(button).toHaveStyle({
         opacity: "0.25",
       });
     });
@@ -179,8 +179,8 @@ describe("RegularItem", () => {
         <RegularItem col={0} item="blank" row={0} />,
       );
 
-      const td = container.querySelector("td");
-      expect(td).toHaveStyle({
+      const button = container.querySelector("button");
+      expect(button).toHaveStyle({
         opacity: "0.25",
       });
     });
@@ -194,14 +194,14 @@ describe("RegularItem", () => {
       <RegularItem col={2} item="hookshot" row={1} />,
     );
 
-    const td1 = container1.querySelector("td");
-    const td2 = container2.querySelector("td");
+    const div1 = container1.querySelector("button");
+    const div2 = container2.querySelector("button");
 
-    expect(td1).toBeInTheDocument();
-    expect(td2).toBeInTheDocument();
+    expect(div1).toBeInTheDocument();
+    expect(div2).toBeInTheDocument();
 
     // Both should have the same classes but render different items
-    expect(td1).toHaveClass("griditem", "grid-item-base");
-    expect(td2).toHaveClass("griditem", "grid-item-base");
+    expect(div1).toHaveClass("griditem", "grid-item-base");
+    expect(div2).toHaveClass("griditem", "grid-item-base");
   });
 });
