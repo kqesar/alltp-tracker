@@ -22,7 +22,8 @@ This tracker is designed for **A Link to the Past randomizer** players who need 
 - **Styling**: Custom CSS with game-themed assets
 - **Package Manager**: pnpm
 - **Code Quality**: Biome for linting and formatting
-- **Testing**: Vitest with React Testing Library
+- **Testing**: Vitest with React Testing Library and comprehensive coverage reporting
+- **CI/CD**: GitHub Actions with automated testing and coverage reporting
 
 ## 🚀 How to Launch
 
@@ -56,7 +57,7 @@ pnpm build
 pnpm preview
 ```
 
-### Code Quality
+### Code Quality & Testing
 
 ```bash
 # Run linter
@@ -70,7 +71,20 @@ pnpm test
 
 # Run tests with coverage
 pnpm test:coverage
+
+# Run tests with coverage and display table
+pnpm test:coverage:show
+
+# Display coverage table (requires coverage data)
+pnpm coverage
 ```
+
+#### Coverage Reporting
+The project includes comprehensive test coverage reporting:
+- **Terminal Display**: Use `pnpm test:coverage:show` for an immediate coverage table
+- **CI Integration**: Coverage metrics are automatically reported in PR comments
+- **Quality Thresholds**: 🟢 Excellent (≥90%), 🟡 Good (≥80%), 🟠 Fair (≥70%), 🔴 Needs Improvement (<70%)
+- **Current Status**: 94.6% lines, 95.8% functions, 74.95% branches
 
 ## 🎯 How to Use
 
@@ -206,6 +220,16 @@ This project uses modern React practices and development standards:
 - **@ Alias imports**: Use `@/` aliases instead of relative imports for better maintainability
 - **Centralized constants**: All hardcoded values stored in `@/constants` for consistency
 - **Biome** for consistent code formatting and linting
+- **Comprehensive testing**: All components must have tests with high coverage standards
+
+### Testing Standards
+- **Required**: All new components must include tests
+- **Coverage Targets**: Lines ≥90%, Functions ≥90%, Branches ≥80%
+- **Tools**: Vitest with React Testing Library
+- **Commands**: 
+  - `pnpm test` - Run tests
+  - `pnpm test:coverage:show` - Run tests with coverage table
+  - `pnpm coverage` - View existing coverage metrics
 
 ### Import Examples
 ```tsx
@@ -280,8 +304,9 @@ This project is automatically deployed to GitHub Pages using GitHub Actions:
 1. **Trigger**: Push to `master` branch or manual workflow dispatch
 2. **Quality Checks**: 
    - ✅ `pnpm lint` - Code quality validation
-   - ✅ `pnpm test` - Test suite execution
+   - ✅ `pnpm test:coverage` - Test suite execution with coverage reporting
    - ✅ `pnpm build` - Production build verification
+   - 📊 Coverage metrics automatically reported in PR comments
 3. **Deploy**: Built assets are automatically pushed to `gh-pages` branch and deployed
 
 ### GitHub Pages Configuration
@@ -293,3 +318,19 @@ The deployment uses the traditional `gh-pages` branch approach:
 ### Manual Deployment
 You can manually trigger a deployment via:
 - GitHub Actions → Deploy to GitHub Pages → Run workflow
+
+---
+
+## 📈 Recent Improvements
+
+### Coverage Integration
+- ✅ **Terminal Coverage Display**: New `pnpm test:coverage:show` command shows formatted coverage table
+- ✅ **CI Coverage Reporting**: Automated coverage metrics in PR comments with color-coded status indicators
+- ✅ **Enhanced Scripts**: Added `pnpm coverage` for quick coverage viewing
+- ✅ **Quality Thresholds**: Clear coverage standards with visual feedback (🟢🟡🟠🔴)
+
+### Development Experience
+- ✅ **Modern Import System**: Complete migration to `@/` aliases for better maintainability
+- ✅ **Centralized Constants**: All hardcoded values moved to `@/constants` for consistency
+- ✅ **Comprehensive Testing**: High coverage standards with automated reporting
+- ✅ **Enhanced CI/CD**: Integrated coverage reporting in pull request workflow
