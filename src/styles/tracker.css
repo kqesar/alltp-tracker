@@ -47,6 +47,13 @@
 }
 
 /* Grid Item Components */
+.grid-spacer {
+  width: 64px;
+  height: 64px;
+  pointer-events: none;
+  background: transparent;
+}
+
 .griditem {
   padding: 0;
   margin: 0;

@@ -4,6 +4,7 @@ export const CSS_CLASSES = {
   CORNER: "corner",
   GRID_ITEM_BASE: "grid-item-base",
   GRID_ITEM_RELATIVE: "grid-item-relative",
+  GRID_SPACER: "grid-spacer",
   GRIDITEM: "griditem",
   HALFCELL: "halfcell",
 
@@ -73,6 +74,17 @@ export const AVAILABILITY_CLASSES = {
 export const GRID_CONSTANTS = {
   ITEMS_PER_ROW: 7,
 };
+
+// Keyboard Navigation Constants
+export const KEYBOARD_NAVIGATION = {
+  ARROW_DOWN: "ArrowDown",
+  ARROW_LEFT: "ArrowLeft",
+  ARROW_RIGHT: "ArrowRight",
+  ARROW_UP: "ArrowUp",
+  ENTER: "Enter",
+  SPACE: " ",
+  TAB: "Tab",
+} as const;
 
 // Empty String Constant
 export const EMPTY_STRING = "";

@@ -15,7 +15,8 @@ This project was originally forked from [TestRunnerSRL/lttp-tracker](https://git
 - **Modern development stack** with pnpm, Vitest, and comprehensive testing
 - **Enhanced architecture** with modular components and centralized state management
 - **Web standards compliance** with W3C HTML validation and WCAG accessibility
-- **Modern CSS Grid layout** replacing legacy table-based layouts
+- **Modern CSS Grid layout** replacing legacy table-based layouts with proper spacer elements
+- **Keyboard navigation** with full arrow key and Tab sequence support for accessibility
 - **Advanced CI/CD pipeline** with automated testing, coverage reporting, and security analysis
 - **Improved user experience** with better accessibility and responsive design
 
@@ -35,7 +36,7 @@ This tracker is designed for **A Link to the Past randomizer** players who need 
 - **Frontend**: React 19 with TypeScript 5
 - **Layout**: Modern CSS Grid architecture with W3C compliance
 - **Styling**: Custom CSS with game-themed assets and semantic HTML
-- **Accessibility**: WCAG compliant with proper ARIA attributes
+- **Accessibility**: WCAG compliant with proper ARIA attributes and full keyboard navigation
 - **Package Manager**: pnpm
 - **Code Quality**: Biome for linting and formatting
 - **Testing**: Vitest with React Testing Library and comprehensive coverage reporting
@@ -101,7 +102,8 @@ The project includes comprehensive test coverage reporting:
 - **Terminal Display**: Use `pnpm test:coverage:show` for an immediate coverage table
 - **CI Integration**: Coverage metrics are automatically reported in PR comments
 - **Quality Thresholds**: 🟢 Excellent (≥90%), 🟡 Good (≥80%), 🟠 Fair (≥70%), 🔴 Needs Improvement (<70%)
-- **Current Status**: 94.6% lines, 95.8% functions, 74.95% branches
+- **Current Status**: 84.37% lines, 85.56% functions, 78.31% branches, 289 tests passing
+- **Comprehensive Testing**: Includes unit tests, integration tests, and keyboard navigation tests
 
 ## 🎯 How to Use
 
@@ -109,6 +111,22 @@ The project includes comprehensive test coverage reporting:
 - **Click items** in the left grid to cycle through their states (0-4 for progressive items, on/off for binary items)
 - **Visual feedback**: Items show as dimmed when not obtained, bright when obtained
 - **Progressive items**: Bow (0-4), Gloves (0-2), Sword (0-4), etc. cycle through upgrade levels
+
+### Keyboard Navigation
+Full keyboard accessibility is supported for power users and accessibility:
+- **Arrow Keys** (⬅️ ➡️ ⬆️ ⬇️): Navigate through the item grid with automatic wrap-around
+- **Tab/Shift+Tab**: Sequential navigation through all interactive elements
+- **Space/Enter**: Activate items to cycle through their states
+- **Focus Indicators**: Visual focus highlights for keyboard navigation
+- **Grid Position**: Intelligent navigation that skips empty cells and maintains position
+
+### Keyboard Navigation
+Full keyboard accessibility is supported for power users and accessibility:
+- **Arrow Keys** (⬅️ ➡️ ⬆️ ⬇️): Navigate through the item grid with automatic wrap-around
+- **Tab/Shift+Tab**: Sequential navigation through all interactive elements
+- **Space/Enter**: Activate items to cycle through their states
+- **Focus Indicators**: Visual focus highlights for keyboard navigation
+- **Grid Position**: Intelligent navigation that skips empty cells and maintains position
 
 ### Map Interaction
 - **Chest markers**: Click to mark overworld chests as opened/unopened
@@ -126,10 +144,6 @@ Each dungeon boss has three clickable overlays:
 - **Red**: Not accessible with current items  
 - **Yellow**: Partially accessible (some items missing)
 - **Dimmed**: Already completed/opened
-
-### Caption System
-- **Hover over items** on the map to see detailed requirement information
-- **Dynamic medallion info**: Captions for Misery Mire and Turtle Rock update to show the currently selected medallion requirement
 
 ## 🎮 Game Features
 
@@ -193,6 +207,7 @@ src/
 │   ├── overlays.css       # Interactive overlay components
 │   └── ui.css             # Caption system and mini icons
 ├── hooks/                 # Custom React hooks
+│   └── useKeyboardNavigation.ts # Keyboard navigation system for tracker grid
 ├── App.tsx                # Main application logic
 └── main.tsx              # React entry point
 ```

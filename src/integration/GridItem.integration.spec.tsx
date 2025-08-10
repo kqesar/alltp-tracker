@@ -36,15 +36,15 @@ describe("App - GridItem Integration", () => {
     expect(trackerRows).toHaveLength(6);
   });
 
-  it("should render 7 items per row (excluding halfcell elements)", () => {
+  it("should render the correct number of items per row (excluding empty cells)", () => {
     render(<App />);
 
-    // Check first row has 7 grid items (buttons)
+    // Check first row has 5 grid items (buttons) - empty strings are not rendered
     const firstRow = document.querySelector(".tracker-row");
     expect(firstRow).toBeInTheDocument();
 
     const gridButtons = firstRow?.querySelectorAll("button.griditem");
-    expect(gridButtons).toHaveLength(7);
+    expect(gridButtons).toHaveLength(5); // ["", "hookshot", "hammer", "firerod", "icerod", "boomerang", ""] = 5 non-empty items
 
     // Should have halfcells for spacing
     const halfcells = firstRow?.querySelectorAll(".halfcell");
