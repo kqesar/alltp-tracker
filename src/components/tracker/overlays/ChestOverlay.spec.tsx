@@ -86,6 +86,7 @@ describe("ChestOverlay", () => {
         `background-image: url(/assets/chest${bossNumber}.png)`,
       );
 
+      // biome-ignore lint/complexity/noUselessFragments: Testing re-renders
       rerender(<></>);
     }
   });

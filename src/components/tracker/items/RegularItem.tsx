@@ -63,12 +63,87 @@ export const RegularItem = ({ row, col, item }: RegularItemProps) => {
     opacity: getItemOpacity(item),
   });
 
+  /**
+   * Get item display name for accessibility
+   * @param item - The item identifier
+   * @returns Human-readable item name
+   */
+  const getItemName = (item: string): string => {
+    if (!item || item === "blank") return "Empty slot";
+
+    // Convert item identifiers to readable names
+    const itemNames: Record<string, string> = {
+      bomb: "Bombs",
+      bombos: "Bombos Medallion",
+      book: "Book of Mudora",
+      boomerang: "Boomerang",
+      boots: "Pegasus Boots",
+      bottle: "Bottle",
+      bow: "Bow",
+      byrna: "Cane of Byrna",
+      cape: "Magic Cape",
+      ether: "Ether Medallion",
+      firerod: "Fire Rod",
+      flippers: "Zora's Flippers",
+      flute: "Flute",
+      glove: "Power Glove",
+      halfmagic: "Half Magic",
+      hammer: "Hammer",
+      hookshot: "Hookshot",
+      icerod: "Ice Rod",
+      lantern: "Lantern",
+      mail: "Mail",
+      mirror: "Magic Mirror",
+      moonpearl: "Moon Pearl",
+      mushroom: "Mushroom",
+      net: "Bug Net",
+      powder: "Magic Powder",
+      quake: "Quake Medallion",
+      shield: "Shield",
+      somaria: "Cane of Somaria",
+      sword: "Sword",
+      // Add more mappings as needed
+    };
+
+    return itemNames[item] || item.charAt(0).toUpperCase() + item.slice(1);
+  };
+
+  /**
+   * Get item state description for accessibility
+   * @param item - The item identifier
+   * @returns Description of current state
+   */
+  const getItemStateDescription = (item: string): string => {
+    if (!item || item === "blank") return "empty";
+
+    if (typeof items[item] === "boolean") {
+      return items[item] ? "obtained" : "not obtained";
+    } else if (typeof items[item] === "number") {
+      const count = items[item] as number;
+      const minValue = itemsMin[item] || 0;
+      if (count > minValue) {
+        return `level ${count}`;
+      } else {
+        return "not obtained";
+      }
+    }
+    return "unknown state";
+  };
+
   return (
     <td
+      aria-label={`${getItemName(item)}, ${getItemStateDescription(item)}. Click to change state.`}
       className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleItemClick(item);
+        }
+      }}
       style={getGridItemStyles(item)}
+      tabIndex={item === "blank" ? -1 : 0}
     >
       <CornerTable />
     </td>

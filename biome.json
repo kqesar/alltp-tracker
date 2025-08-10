@@ -28,6 +28,7 @@
       "!**/.husky/**",
       "!**/build/**",
       "!**/coverage/**",
+      "!**/coverage_backup/**",
       "!package.json",
       "!pnpm-lock.yaml",
       "!**/.git/**"

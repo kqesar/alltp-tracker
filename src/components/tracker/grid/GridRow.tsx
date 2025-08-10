@@ -17,10 +17,17 @@ export const GridRow = ({ rowIndex, row }: GridRowProps) => {
   if (!row) return null;
 
   return (
-    <table className={CSS_CLASSES.TRACKER} key={rowIndex}>
+    <table
+      aria-label={`Item tracker row ${rowIndex + 1}`}
+      className={CSS_CLASSES.TRACKER}
+      key={rowIndex}
+    >
+      <caption className="sr-only">
+        Item tracker row {rowIndex + 1} containing {row.length} items
+      </caption>
       <tbody>
         <tr>
-          <td className={CSS_CLASSES.HALFCELL} />
+          <td aria-hidden="true" className={CSS_CLASSES.HALFCELL} />
           {row.slice(0, 7).map((item: string, colIndex: number) => (
             <GridItem
               col={colIndex}
@@ -29,7 +36,7 @@ export const GridRow = ({ rowIndex, row }: GridRowProps) => {
               row={rowIndex}
             />
           ))}
-          <td className={CSS_CLASSES.HALFCELL} />
+          <td aria-hidden="true" className={CSS_CLASSES.HALFCELL} />
         </tr>
       </tbody>
     </table>

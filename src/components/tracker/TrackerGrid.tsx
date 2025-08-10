@@ -13,7 +13,12 @@ type TrackerGridProps = {
  */
 export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
   return (
-    <div className={CSS_CLASSES.ITEMDIV} id="itemdiv">
+    <section
+      aria-label="Item tracker grid"
+      className={CSS_CLASSES.ITEMDIV}
+      id="itemdiv"
+    >
+      <h2 className="sr-only">Item Tracker</h2>
       {itemLayout.map((row: string[], rowIndex: number) => (
         <GridRow
           // biome-ignore lint/suspicious/noArrayIndexKey: Row position is stable and meaningful in grid layout
@@ -22,6 +27,6 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
           rowIndex={rowIndex}
         />
       ))}
-    </div>
+    </section>
   );
 };

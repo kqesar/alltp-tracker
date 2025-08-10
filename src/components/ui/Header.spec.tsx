@@ -23,7 +23,9 @@ describe("Header", () => {
 
   it("renders ALttPR link with correct attributes", () => {
     render(<Header />);
-    const alttprLink = screen.getByRole("link", { name: /alttpr/i });
+    const alttprLink = screen.getByRole("link", {
+      name: /Visit ALttP Randomizer website/i,
+    });
 
     expect(alttprLink).toBeInTheDocument();
     expect(alttprLink).toHaveAttribute("href", "https://alttpr.com/");
@@ -47,9 +49,15 @@ describe("Header", () => {
   it("renders all navigation links", () => {
     render(<Header />);
 
-    expect(screen.getByRole("link", { name: /github/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /alttpr/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /original/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /View source code on GitHub/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Visit ALttP Randomizer website/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Visit original tracker inspiration/i }),
+    ).toBeInTheDocument();
   });
 
   it("has proper accessibility attributes", () => {
@@ -62,17 +70,23 @@ describe("Header", () => {
     const svgElements = document.querySelectorAll('svg[aria-hidden="true"]');
     expect(svgElements).toHaveLength(2);
 
-    // Check that IMG icon has aria-hidden attribute (ALttPR link)
-    const imgElements = document.querySelectorAll('img[aria-hidden="true"]');
+    // Check that IMG icon has proper alt text (ALttPR link)
+    const imgElements = document.querySelectorAll('img[alt="Triforce icon"]');
     expect(imgElements).toHaveLength(1);
 
-    // Check that each link has proper title attributes
-    expect(screen.getByTitle("View source code on GitHub")).toBeInTheDocument();
+    // Check that each link has proper aria-label attributes
     expect(
-      screen.getByTitle("Visit ALttP Randomizer website"),
+      screen.getByLabelText("View source code on GitHub (opens in new tab)"),
     ).toBeInTheDocument();
     expect(
-      screen.getByTitle("Original tracker inspiration"),
+      screen.getByLabelText(
+        "Visit ALttP Randomizer website (opens in new tab)",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(
+        "Visit original tracker inspiration (opens in new tab)",
+      ),
     ).toBeInTheDocument();
   });
 });
