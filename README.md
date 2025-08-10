@@ -7,6 +7,18 @@ The tracker is available at: **[https://kqesar.github.io/alltp-tracker/](https:/
 
 The tracker is automatically deployed to GitHub Pages from the latest master branch.
 
+## 📜 Project History
+
+This project was originally forked from [TestRunnerSRL/lttp-tracker](https://github.com/TestRunnerSRL/lttp-tracker). However, the codebase has evolved dramatically with a complete rewrite using modern technologies:
+
+- **Complete React 19 + TypeScript migration** from the original implementation
+- **Modern development stack** with pnpm, Vitest, and comprehensive testing
+- **Enhanced architecture** with modular components and centralized state management
+- **Advanced CI/CD pipeline** with automated testing, coverage reporting, and security analysis
+- **Improved user experience** with better accessibility and responsive design
+
+Due to these extensive changes, the codebases are now fundamentally different, though the core functionality and game logic remain inspired by the original tracker.
+
 ## 🎮 What is it for
 
 This tracker is designed for **A Link to the Past randomizer** players who need to:
@@ -23,7 +35,8 @@ This tracker is designed for **A Link to the Past randomizer** players who need 
 - **Package Manager**: pnpm
 - **Code Quality**: Biome for linting and formatting
 - **Testing**: Vitest with React Testing Library and comprehensive coverage reporting
-- **CI/CD**: GitHub Actions with automated testing and coverage reporting
+- **Security**: CodeQL static analysis for vulnerability detection
+- **CI/CD**: GitHub Actions with automated testing, coverage reporting, and security analysis
 
 ## 🚀 How to Launch
 
@@ -305,8 +318,10 @@ This project is automatically deployed to GitHub Pages using GitHub Actions:
 2. **Quality Checks**: 
    - ✅ `pnpm lint` - Code quality validation
    - ✅ `pnpm test:coverage` - Test suite execution with coverage reporting
+   - 🔒 `CodeQL Analysis` - Security vulnerability scanning
    - ✅ `pnpm build` - Production build verification
    - 📊 Coverage metrics automatically reported in PR comments
+   - 🛡️ Security findings available in GitHub Security tab
 3. **Deploy**: Built assets are automatically pushed to `gh-pages` branch and deployed
 
 ### GitHub Pages Configuration
