@@ -62,6 +62,14 @@ export const MyComponent = ({ message }: MyComponentProps) => {
 - **Import Pattern**: Always import constants using `@/constants` alias
 - **Coverage**: Include CSS class names, magic numbers, asset names, configuration values
 
+### Header Component Standards
+- **Fixed Positioning**: Use fixed header with backdrop-filter blur effect for modern appearance
+- **Navigation Pattern**: Include essential external links (GitHub, ALttPR, Original tracker) with appropriate icons
+- **Icon Integration**: Use authentic assets (triforce icon for ALttPR) and SVG icons for GitHub
+- **Responsive Design**: Ensure header adapts to different screen sizes
+- **Accessibility**: Include proper alt text for icons and semantic navigation structure
+- **Styling**: Use modular CSS from `@/styles/header.css` with proper backdrop blur effects
+
 When creating new components:
 1. Determine the appropriate folder based on functionality
 2. Create both the component and its test file
@@ -77,8 +85,17 @@ When creating new components:
     - `grid/`: Grid rendering components (GridRow, GridItem)
     - `items/`: Item-specific components (BossItem, RegularItem)
     - `overlays/`: Interactive overlay components (ChestOverlay, RewardOverlay, MedaillonOverlay)
-  - `map/`: Map-related components (MapTracker, MapChest)
-  - `ui/`: Reusable UI components (Caption)
+  - `map/`: Map-related components (MapTracker, MapChest, DungeonBoss)
+  - `ui/`: Reusable UI components (Caption, Header)
+- **Modular CSS Architecture** in `src/styles/`:
+  - `index.css`: Master import file for all stylesheets
+  - `variables.css`: CSS custom properties and design tokens
+  - `base.css`: Reset styles and foundational rules
+  - `header.css`: Header component styles with backdrop blur
+  - `tracker.css`: Item grid and tracker-specific styles
+  - `map.css`: Map components and location markers
+  - `overlays.css`: Interactive overlay components
+  - `ui.css`: Caption system and mini icons
 - Data and types go in `src/data/`
 - Constants go in `src/constants/index.ts` with simple export pattern
 - State management in `src/stores/` using Zustand
@@ -86,6 +103,7 @@ When creating new components:
 - **DO NOT** use index.ts files for component exports
 - Always import components directly from their file paths (e.g., `from "./components/tracker/TrackerGrid"`)
 - Use @ aliases for all imports instead of relative imports
+- **CSS imports**: Use `@/styles/index.css` in main App component, individual modules imported via index.css
 
 ## Development Workflow
 

@@ -1,0 +1,44 @@
+/* Mini Icons Component */
+.mini {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 1px;
+  vertical-align: text-bottom;
+  /* Crisp image rendering for pixel art */
+  image-rendering: pixelated;
+}
+
+/* Caption Component with Tailwind overrides */
+.caption,
+#caption {
+  min-height: 24px;
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  word-wrap: break-word;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: var(--border-radius);
+}
+
+.caption .mini,
+#caption .mini {
+  display: inline-block !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 1px !important;
+  vertical-align: text-bottom !important;
+  border: none !important;
+  box-shadow: none !important;
+  /* Inherit image rendering from parent .mini class */
+}
+
+/* Caption Container */
+.caption-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 1rem;
+  text-align: center;
+}

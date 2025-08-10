@@ -170,7 +170,8 @@ src/
 │   │   ├── DungeonBoss.tsx        # Dungeon boss markers
 │   │   └── DungeonChest.tsx       # Dungeon chest markers
 │   └── ui/                # UI utility components
-│       └── Caption.tsx            # Hover caption display
+│       ├── Caption.tsx            # Hover caption display
+│       └── Header.tsx             # Fixed header with navigation
 ├── constants/             # Centralized constants
 │   └── index.ts          # All hardcoded values and configuration
 ├── data/
@@ -178,10 +179,18 @@ src/
 │   └── items.ts           # Item definitions and layout
 ├── stores/
 │   └── gameStore.ts       # Zustand state management
+├── styles/                # Modular CSS architecture
+│   ├── index.css          # Main stylesheet imports
+│   ├── variables.css      # CSS custom properties and design tokens
+│   ├── base.css           # Reset styles and foundational rules
+│   ├── header.css         # Header component styles
+│   ├── tracker.css        # Item grid and tracker components
+│   ├── map.css            # Map components and location markers
+│   ├── overlays.css       # Interactive overlay components
+│   └── ui.css             # Caption system and mini icons
 ├── hooks/                 # Custom React hooks
 ├── App.tsx                # Main application logic
-├── main.tsx              # React entry point
-└── styles.css            # Game-specific styling
+└── main.tsx              # React entry point
 ```
 
 ### Component Architecture
@@ -202,6 +211,17 @@ The application follows a modular component architecture with clear separation o
 
 - **ui/**: Reusable UI components
   - `Caption`: Dynamic hover information display
+  - `Header`: Fixed header with navigation and external links
+
+- **styles/**: Modular CSS architecture
+  - `variables.css`: CSS custom properties and design tokens
+  - `base.css`: Reset styles and foundational rules
+  - `header.css`: Header component with backdrop blur and responsive design
+  - `tracker.css`: Item grid components and tracker-specific styles
+  - `map.css`: Map components and location markers
+  - `overlays.css`: Interactive overlay components
+  - `ui.css`: Caption system and mini icons
+  - `index.css`: Master import file for all stylesheets
 
 - **constants/**: Centralized configuration management
   - All CSS class names, magic numbers, asset paths, and configuration values
@@ -250,10 +270,26 @@ This project uses modern React practices and development standards:
 import { CSS_CLASSES } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
+import { Header } from "@/components/ui/Header";
 
 // ❌ Avoid - Relative imports
 import { CSS_CLASSES } from "../constants";
 import { useGameStore } from "../../stores/gameStore";
+```
+
+### CSS Architecture
+```tsx
+// ✅ Main App component uses modular CSS
+import "@/styles/index.css";
+
+// ✅ Individual style modules are imported via index.css
+// - @/styles/variables.css (design tokens)
+// - @/styles/base.css (reset and foundation)  
+// - @/styles/header.css (header component)
+// - @/styles/tracker.css (item grid)
+// - @/styles/map.css (map components)
+// - @/styles/overlays.css (interactive overlays)
+// - @/styles/ui.css (caption and mini icons)
 ```
 
 ### Constants Usage

@@ -1,0 +1,30 @@
+/* CSS Custom Properties for consistent theming */
+:root {
+  --color-primary: #646cff;
+  --color-success: #00ff00;
+  --color-warning: #ffff00;
+  --color-error: #ff0000;
+  --color-disabled: #7f7f7f;
+  --color-text: #ffffff;
+  --color-bg: #000000;
+  --color-bg-secondary: #1a1a1a;
+  --color-bg-header: rgba(0, 0, 0, 0.9);
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+
+  --border-radius: 0.5rem;
+  --transition: 0.25s ease-in-out;
+
+  --header-height: 4rem;
+  --z-header: 1000;
+  --z-overlay: 2;
+}

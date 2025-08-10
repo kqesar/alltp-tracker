@@ -1,8 +1,9 @@
 import { useState } from "react";
-import "./styles.css";
+import "@/styles/index.css";
 import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { Caption } from "@/components/ui/Caption";
+import { Header } from "@/components/ui/Header";
 import { CSS_CLASSES } from "@/constants";
 import { defaultItemGrid } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
@@ -19,18 +20,21 @@ function App() {
   const [itemLayout] = useState(defaultItemGrid);
 
   return (
-    <div>
-      <div id="layoutdiv">
-        <TrackerGrid itemLayout={itemLayout} />
-        <div className={CSS_CLASSES.MAPDIV} id="mapdiv">
-          <MapTracker />
+    <>
+      <Header />
+      <main className="main-content">
+        <div id="layoutdiv">
+          <TrackerGrid itemLayout={itemLayout} />
+          <div className={CSS_CLASSES.MAPDIV} id="mapdiv">
+            <MapTracker />
+          </div>
         </div>
-      </div>
 
-      <div className={CSS_CLASSES.CAPTION_CONTAINER} id="caption">
-        <Caption text={caption} />
-      </div>
-    </div>
+        <div className={CSS_CLASSES.CAPTION_CONTAINER} id="caption">
+          <Caption text={caption} />
+        </div>
+      </main>
+    </>
   );
 }
 

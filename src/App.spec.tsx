@@ -13,12 +13,18 @@ vi.mock("@/components/map/MapTracker", () => ({
 }));
 
 // Mock CSS import
-vi.mock("./styles.css", () => ({}));
+vi.mock("@/styles/index.css", () => ({}));
 
 describe("App", () => {
   it("renders without crashing", () => {
     render(<App />);
     expect(screen.getByTestId("map-tracker")).toBeInTheDocument();
+  });
+
+  it("renders the header component", () => {
+    render(<App />);
+    expect(screen.getByText("ALLTP Tracker")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /github/i })).toBeInTheDocument();
   });
 
   it("renders the item grid layout", () => {

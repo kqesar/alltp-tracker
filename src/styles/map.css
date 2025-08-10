@@ -1,0 +1,133 @@
+/* Map Layout Container */
+.mapdiv {
+  position: relative;
+  display: inline-block;
+  width: 884px;
+  height: 442px;
+  vertical-align: middle;
+  background-image: url("/assets/map.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Map Container */
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Map Element Base */
+.map-element-base {
+  position: absolute;
+  cursor: pointer;
+  background-size: 100% 100%;
+}
+
+/* Map Element Components */
+.boss {
+  position: absolute;
+  z-index: var(--z-overlay);
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  margin-left: -12px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 75% 75%;
+  transition: transform var(--transition);
+}
+
+.boss:hover {
+  transform: scale(1.1);
+}
+
+.dungeon {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  margin-top: -24px;
+  margin-left: -24px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  transition: transform var(--transition);
+}
+
+.dungeon:hover {
+  transform: scale(1.1);
+}
+
+.chest {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  margin-left: -12px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  transition: transform var(--transition);
+}
+
+.chest:hover {
+  transform: scale(1.1);
+}
+
+/* Map Chest Specific */
+.map-chest {
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  margin-left: -12px;
+}
+
+/* Interactive Elements */
+.mapspan {
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.mapspan:hover {
+  filter: brightness(1.1);
+}
+
+.mapspan:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Availability State Classes */
+.availability-state--unavailable,
+.unavailable {
+  background-color: var(--color-error);
+}
+
+.availability-state--available,
+.available {
+  background-color: var(--color-success);
+}
+
+.availability-state--possible,
+.possible {
+  color: #000;
+  background-color: var(--color-warning);
+}
+
+.availability-state--completed,
+.opened {
+  background-color: var(--color-disabled);
+}
+
+/* Responsive Design for Map */
+@media (max-width: 768px) {
+  .mapdiv {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+    aspect-ratio: 2 / 1;
+  }
+}

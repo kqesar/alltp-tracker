@@ -1,7 +1,6 @@
-/* App Root Container */
+/* App Root Container - Minimal app-specific styles */
 #root {
   max-width: 1280px;
-  padding: 2rem;
   margin: 0 auto;
   text-align: center;
 }
