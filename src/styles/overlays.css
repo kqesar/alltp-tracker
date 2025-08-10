@@ -1,0 +1,25 @@
+/* Overlay Components */
+.overlay-base {
+  position: absolute;
+  z-index: var(--z-overlay);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.overlay--top-right {
+  top: 2px;
+  right: 2px;
+}
+
+.overlay--bottom-left {
+  bottom: 2px;
+  left: 2px;
+}
+
+.overlay--bottom-right {
+  right: 2px;
+  bottom: 2px;
+}

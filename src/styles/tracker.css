@@ -1,0 +1,116 @@
+/* Tracker Grid Component */
+.tracker {
+  position: relative;
+  top: 0;
+  left: 0;
+  empty-cells: show;
+  border-spacing: 0;
+  background-color: var(--color-bg);
+  border: 0;
+}
+
+.tracker td {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.tracker .halfcell {
+  width: 32px;
+  height: 64px;
+}
+
+/* Item Grid Components */
+.lonk {
+  width: 64px;
+  height: 64px;
+  border-spacing: 0;
+  border: 0;
+}
+
+.corner {
+  width: 32px;
+  height: 32px;
+}
+
+/* Grid Item Components */
+.griditem {
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  transition: all var(--transition);
+}
+
+.griditem:hover {
+  filter: brightness(1.1);
+  transform: scale(1.05);
+}
+
+.griditem:active {
+  transform: scale(0.95);
+}
+
+.griditem:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Grid Item Base Styles */
+.grid-item-base {
+  width: 64px;
+  height: 64px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.grid-item-relative {
+  position: relative;
+}
+
+/* Item State Classes */
+.item-state--active,
+.true {
+  opacity: 1;
+}
+
+.item-state--inactive,
+.false {
+  opacity: 0.25;
+}
+
+/* Special Items */
+.stoops {
+  width: 128px;
+  height: 128px;
+  background-size: 200% 200%;
+}
+
+/* Layout Container Components */
+.itemdiv {
+  left: 0;
+  display: inline-block;
+  width: 480px;
+  margin: 0 auto;
+  vertical-align: middle;
+}
+
+/* Responsive Design for Tracker */
+@media (max-width: 768px) {
+  .itemdiv {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .tracker td {
+    width: 48px;
+    height: 48px;
+  }
+
+  .tracker .halfcell {
+    width: 24px;
+    height: 48px;
+  }
+}
