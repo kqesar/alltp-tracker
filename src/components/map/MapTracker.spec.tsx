@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MapTracker } from "@/components/map/MapTracker";
 import { useGameStore } from "@/stores/gameStore";
@@ -16,7 +16,9 @@ describe("MapTracker", () => {
 
   it("uses store data for rendering", () => {
     // Change something in the store
-    useGameStore.getState().handleItemClick("hookshot");
+    act(() => {
+      useGameStore.getState().handleItemClick("hookshot");
+    });
 
     const { container } = render(<MapTracker />);
     expect(container).toBeTruthy();
@@ -38,7 +40,9 @@ describe("MapTracker", () => {
     const { rerender } = render(<MapTracker />);
 
     // Change store state
-    useGameStore.getState().toggleChest(0);
+    act(() => {
+      useGameStore.getState().toggleChest(0);
+    });
 
     // Re-render to trigger update
     rerender(<MapTracker />);
