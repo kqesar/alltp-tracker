@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/kqesar/alltp-tracker/compare/v1.2.6...v1.3.0) (2025-08-10)
+
+
+### 🐛 Bug Fixes
+
+* add more img in caption [#19](https://github.com/kqesar/alltp-tracker/issues/19) ([26da441](https://github.com/kqesar/alltp-tracker/commit/26da441d9eeac562154ce0e33db8848de8749f89))
+* change import, update instructions and fix tests ([ffb5fc6](https://github.com/kqesar/alltp-tracker/commit/ffb5fc63d4fc2911e37b57a4d0f956556c0ef817))
+
+
+### 🔧 Code Refactoring
+
+* Add DungeonBoss component ([2a3fbcb](https://github.com/kqesar/alltp-tracker/commit/2a3fbcb2d59114f4cbf3524345a04b499d7fbf02))
+* add more components for map ([75be449](https://github.com/kqesar/alltp-tracker/commit/75be44945e73ade1e3420c7e7454b8c63f626efc))
+* create TrackerGrid and sub-folders ([3466b9c](https://github.com/kqesar/alltp-tracker/commit/3466b9c02daca89d62acda168a12f93841d4474b))
+* delete duplicate component and update import ([ea3d117](https://github.com/kqesar/alltp-tracker/commit/ea3d117f251e0747ac93c50da65629c0ad766710))
+* get functions and data from store ([c2753df](https://github.com/kqesar/alltp-tracker/commit/c2753df2b33ff41d461aca906f33e6aaed865486))
+* **items:** create corner table component ([7f952cc](https://github.com/kqesar/alltp-tracker/commit/7f952ccc17dedc76facb5b939c6622f54e067fcd))
+* move asset path ([0646ced](https://github.com/kqesar/alltp-tracker/commit/0646ced9350b32063e97e430a25ff88df1ba3cd6))
+* move chest overlay rendering ([3657580](https://github.com/kqesar/alltp-tracker/commit/365758059bfa0779519c545f73f1e5b12e3b2700))
+* move grid item and grid row ([a35513b](https://github.com/kqesar/alltp-tracker/commit/a35513b9a98ba2f628339c1fe96bdd812ba1fa26))
+* move medaillon overlay rendering ([e2ef948](https://github.com/kqesar/alltp-tracker/commit/e2ef948795314de569bdd5940d75e3a1a3c24f10))
+* move regular item and boss item ([0457243](https://github.com/kqesar/alltp-tracker/commit/045724343fcadd3bcb786d3c28c37c1ca4ff8f6f))
+* move reward overlay rendering ([11ce55d](https://github.com/kqesar/alltp-tracker/commit/11ce55d7d64a73e29882b402a939513560527a2c))
+* optimize styles ([595b0d0](https://github.com/kqesar/alltp-tracker/commit/595b0d053ab84457311ee9caf53688620a0da97f))
+* put hardcoded style in css files ([eabba40](https://github.com/kqesar/alltp-tracker/commit/eabba401d3bb469d27cf857d369aea754e6ed751))
+* remove index.ts and avoid export file ([f11085c](https://github.com/kqesar/alltp-tracker/commit/f11085c8cf19278ce54f9b519972e6ecf9ebd922))
+* remove useless css classes ([c76a980](https://github.com/kqesar/alltp-tracker/commit/c76a98009031aa9c4397bce5658d9e2cba27d154))
+* replace test extension to spec ([0690624](https://github.com/kqesar/alltp-tracker/commit/06906241e6642cca9c64da9458c8a64adb88f176))
+
+
+### ✨ Features
+
+* add test coverage in PR ([d35e93c](https://github.com/kqesar/alltp-tracker/commit/d35e93cc6536e80f99b74960241d079c0000a77f))
+* add zustand ([a722ef4](https://github.com/kqesar/alltp-tracker/commit/a722ef4d8a17dec8a864df3189f3db9b55b46a6b))
+
 ### [1.2.6](https://github.com/kqesar/alltp-tracker/compare/v1.2.5...v1.2.6) (2025-08-07)
 
 ### [1.2.5](https://github.com/kqesar/alltp-tracker/compare/v1.2.4...v1.2.5) (2025-08-07)
