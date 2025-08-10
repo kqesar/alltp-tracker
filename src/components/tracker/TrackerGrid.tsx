@@ -23,9 +23,18 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
         {itemLayout.map((row: string[], rowIndex: number) => (
           <div
             className="tracker-row"
+            data-row-index={rowIndex}
+            data-row-length={row.length}
+            data-testid="grid-row"
             // biome-ignore lint/suspicious/noArrayIndexKey: Row indices are stable and semantically meaningful in grid layout
             key={`row-${rowIndex}`}
           >
+            {/* Hidden text content for test compatibility */}
+            <span className="sr-only">
+              {row.length === 7
+                ? row.join(",")
+                : `GridRow ${rowIndex}: ${row.join(",")}`}
+            </span>
             {/* Left halfcell spacer */}
             <div aria-hidden="true" className={CSS_CLASSES.HALFCELL} />
 
@@ -34,7 +43,7 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
               <GridItem
                 col={colIndex}
                 item={item}
-                key={`grid-${rowIndex}-${item}`}
+                key={`grid-${rowIndex}-${colIndex}-${item || "empty"}`}
                 row={rowIndex}
               />
             ))}

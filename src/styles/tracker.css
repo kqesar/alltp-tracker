@@ -33,10 +33,12 @@
 
 /* Item Grid Components */
 .lonk {
+  /* CSS Grid for 2x2 corner layout */
+  display: grid;
+  grid-template-rows: 32px 32px;
+  grid-template-columns: 32px 32px;
   width: 64px;
   height: 64px;
-  border-spacing: 0;
-  border: 0;
 }
 
 .corner {

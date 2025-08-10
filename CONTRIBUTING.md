@@ -130,15 +130,25 @@ pnpm test:coverage
 ```
 src/
 ├── components/          # React components
-│   ├── MapTracker.tsx  # Main map component
-│   └── ...
+│   ├── tracker/        # Item tracking with CSS Grid layout
+│   │   ├── TrackerGrid.tsx    # Main CSS Grid container
+│   │   ├── grid/              # Grid rendering components
+│   │   ├── items/             # Item-specific components  
+│   │   └── overlays/          # Interactive overlays
+│   ├── map/            # Map components
+│   │   ├── MapTracker.tsx     # Main map component
+│   │   └── ...
+│   └── ui/             # Reusable UI components
 ├── data/               # Game data and configurations
 │   ├── chests.ts      # Chest and dungeon definitions
 │   ├── items.ts       # Item definitions and layout
 │   └── ...
+├── styles/             # Modular CSS architecture
+│   ├── tracker.css    # CSS Grid layout system
+│   └── ...
 ├── App.tsx            # Main application component
 ├── main.tsx           # React entry point
-└── styles.css         # Global styles
+└── ...
 ```
 
 ### Best Practices
@@ -148,6 +158,9 @@ src/
 - Keep components small and focused
 - Add TypeScript types for all props
 - Add JSDoc comments for complex components
+- Use semantic HTML elements (button, section, nav, etc.)
+- Ensure WCAG accessibility compliance
+- Use CSS Grid for layout instead of HTML tables
 
 #### State Management
 - Use useState for local state
