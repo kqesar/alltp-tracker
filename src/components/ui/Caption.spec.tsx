@@ -43,7 +43,7 @@ describe("Caption", () => {
     expect(img).not.toBeNull();
     expect(img).toHaveAttribute("src", "/assets/bow2.png");
     expect(img).toHaveAttribute("class", "mini");
-    expect(img).toHaveAttribute("alt", "");
+    expect(img).toHaveAttribute("alt", "Item icon");
   });
 
   it("renders multiple images in text", () => {

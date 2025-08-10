@@ -45,9 +45,15 @@ export const Caption = ({ text }: CaptionProps) => {
       const srcPath = match[1];
       const className = match[2] || "";
 
-      // Create React img element
+      // Create React img element with improved accessibility
       parts.push(
-        <img alt="" className={className} key={`img-${key++}`} src={srcPath} />,
+        <img
+          alt="Item icon"
+          aria-hidden="true"
+          className={className}
+          key={`img-${key++}`}
+          src={srcPath}
+        />,
       );
 
       currentIndex = match.index + fullMatch.length;
@@ -66,5 +72,9 @@ export const Caption = ({ text }: CaptionProps) => {
 
   const renderedContent = parseHtmlText(text);
 
-  return <span>{renderedContent}</span>;
+  return (
+    <output aria-label="Item description" aria-live="polite">
+      {renderedContent}
+    </output>
+  );
 };

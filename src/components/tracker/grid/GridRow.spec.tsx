@@ -56,14 +56,14 @@ describe("GridRow", () => {
 
       render(<GridRow row={testRow} rowIndex={2} />);
 
-      const cells = screen.getAllByRole("cell");
-      const halfCells = cells.filter((cell) =>
-        cell.className.includes("halfcell"),
-      );
+      // Use direct DOM query for aria-hidden cells
+      const { container } = render(<GridRow row={testRow} rowIndex={2} />);
+      const allCells = container.querySelectorAll("td");
+      const halfCells = container.querySelectorAll(".halfcell");
 
       expect(halfCells).toHaveLength(2);
-      expect(cells[0]).toHaveClass("halfcell");
-      expect(cells[cells.length - 1]).toHaveClass("halfcell");
+      expect(allCells[0]).toHaveClass("halfcell");
+      expect(allCells[allCells.length - 1]).toHaveClass("halfcell");
     });
   });
 
@@ -192,24 +192,25 @@ describe("GridRow", () => {
     });
 
     it("should return null for undefined row", () => {
-      // biome-ignore lint/suspicious/noExplicitAny: Testing edge case with undefined
       const { container } = render(
+        // biome-ignore lint/suspicious/noExplicitAny: Testing edge case with undefined
         <GridRow row={undefined as any} rowIndex={0} />,
       );
       expect(container.firstChild).toBeNull();
     });
 
     it("should handle empty row array", () => {
-      render(<GridRow row={[]} rowIndex={1} />);
+      const { container } = render(<GridRow row={[]} rowIndex={1} />);
 
       const table = screen.getByRole("table");
       expect(table).toBeInTheDocument();
 
       // Should still have halfcells but no GridItems
-      const cells = screen.getAllByRole("cell");
+      // Use direct DOM query since halfcells are aria-hidden
+      const allCells = container.querySelectorAll("td");
       const gridItems = screen.queryAllByTestId("grid-item");
 
-      expect(cells).toHaveLength(2); // Only halfcells
+      expect(allCells).toHaveLength(2); // Only halfcells (aria-hidden)
       expect(gridItems).toHaveLength(0);
     });
 
@@ -247,11 +248,15 @@ describe("GridRow", () => {
     it("should have correct total number of cells", () => {
       const testRow = ["hookshot", "hammer", "firerod"];
 
-      render(<GridRow row={testRow} rowIndex={0} />);
+      const { container } = render(<GridRow row={testRow} rowIndex={0} />);
 
-      const allCells = screen.getAllByRole("cell");
-      // 2 halfcells + 3 GridItems = 5 total cells
-      expect(allCells).toHaveLength(5);
+      // Use direct DOM query to include aria-hidden cells
+      const allCells = container.querySelectorAll("td");
+      // Only accessible GridItem cells should be found via role
+      const accessibleCells = screen.getAllByRole("cell");
+
+      expect(allCells).toHaveLength(5); // 2 halfcells + 3 GridItems
+      expect(accessibleCells).toHaveLength(3); // Only GridItems (halfcells are aria-hidden)
     });
 
     it("should maintain table structure with maximum items", () => {
@@ -265,11 +270,15 @@ describe("GridRow", () => {
         "item7",
       ];
 
-      render(<GridRow row={testRow} rowIndex={1} />);
+      const { container } = render(<GridRow row={testRow} rowIndex={1} />);
 
-      const allCells = screen.getAllByRole("cell");
-      // 2 halfcells + 7 GridItems = 9 total cells
-      expect(allCells).toHaveLength(9);
+      // Use direct DOM query to include aria-hidden cells
+      const allCells = container.querySelectorAll("td");
+      // Only accessible GridItem cells should be found via role
+      const accessibleCells = screen.getAllByRole("cell");
+
+      expect(allCells).toHaveLength(9); // 2 halfcells + 7 GridItems
+      expect(accessibleCells).toHaveLength(7); // Only GridItems (halfcells are aria-hidden)
 
       const gridItems = screen.getAllByTestId("grid-item");
       expect(gridItems).toHaveLength(7);

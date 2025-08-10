@@ -21,18 +21,29 @@ function App() {
 
   return (
     <>
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <Header />
-      <main className="main-content">
+      <main className="main-content" id="main-content">
         <div id="layoutdiv">
           <TrackerGrid itemLayout={itemLayout} />
-          <div className={CSS_CLASSES.MAPDIV} id="mapdiv">
+          <aside
+            aria-label="Map display"
+            className={CSS_CLASSES.MAPDIV}
+            id="mapdiv"
+          >
             <MapTracker />
-          </div>
+          </aside>
         </div>
 
-        <div className={CSS_CLASSES.CAPTION_CONTAINER} id="caption">
+        <aside
+          aria-label="Item information"
+          className={CSS_CLASSES.CAPTION_CONTAINER}
+          id="caption"
+        >
           <Caption text={caption} />
-        </div>
+        </aside>
       </main>
     </>
   );

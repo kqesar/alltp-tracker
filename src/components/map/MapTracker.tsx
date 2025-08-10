@@ -12,7 +12,12 @@ export const MapTracker = () => {
   const { chestsState, dungeonsState } = useGameStore();
 
   return (
-    <div className={CSS_CLASSES.MAP_CONTAINER} data-testid="map-tracker">
+    <section
+      aria-label="Map tracker with locations and dungeons"
+      className={CSS_CLASSES.MAP_CONTAINER}
+      data-testid="map-tracker"
+    >
+      <h2 className="sr-only">Map Locations</h2>
       {/* Render chests */}
       {chestsState.map((chest, index) => (
         <MapChest chest={chest} index={index} key={`chest-${chest.id}`} />
@@ -35,6 +40,6 @@ export const MapTracker = () => {
           key={`dungeon-${dungeon.id}`}
         />
       ))}
-    </div>
+    </section>
   );
 };

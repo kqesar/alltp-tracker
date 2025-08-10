@@ -68,11 +68,52 @@ export const BossItem = ({ row, col, item, bossNumber }: BossItemProps) => {
     opacity: getItemOpacity(item),
   });
 
+  /**
+   * Get boss name for accessibility
+   * @param bossNumber - The boss number
+   * @returns Human-readable boss name
+   */
+  const getBossName = (bossNumber: number): string => {
+    const bossNames: Record<number, string> = {
+      0: "Armos Knights",
+      1: "Lanmolas",
+      2: "Moldorm",
+      3: "Helmasaur King",
+      4: "Arrghus",
+      5: "Mothula",
+      6: "Blind the Thief",
+      7: "Kholdstare",
+      8: "Vitreous",
+      9: "Trinexx",
+    };
+    return bossNames[bossNumber] || `Boss ${bossNumber}`;
+  };
+
+  /**
+   * Get boss state description for accessibility
+   * @param item - The item identifier
+   * @returns Description of current state
+   */
+  const getBossStateDescription = (item: string): string => {
+    if (typeof items[item] === "number") {
+      const state = items[item] as number;
+      return state > 0 ? "defeated" : "not defeated";
+    }
+    return "unknown state";
+  };
+
   return (
     <td
+      aria-label={`${getBossName(bossNumber)}, ${getBossStateDescription(item)}. Click to change state.`}
       className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} ${CSS_CLASSES.GRID_ITEM_RELATIVE}`}
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleItemClick(item);
+        }
+      }}
       style={getGridItemStyles(item)}
     >
       <MedaillonOverlay bossNumber={bossNumber} />

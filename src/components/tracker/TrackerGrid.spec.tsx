@@ -71,7 +71,11 @@ describe("TrackerGrid", () => {
 
       const container = document.getElementById("itemdiv");
       expect(container).toBeInTheDocument();
-      expect(container).toBeEmptyDOMElement();
+
+      // Container should only have the screen reader heading
+      const heading = screen.getByText("Item Tracker");
+      expect(heading).toBeInTheDocument();
+      expect(heading).toHaveClass("sr-only");
 
       const gridRows = screen.queryAllByTestId("grid-row");
       expect(gridRows).toHaveLength(0);

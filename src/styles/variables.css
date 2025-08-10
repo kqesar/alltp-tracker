@@ -10,6 +10,11 @@
   --color-bg-secondary: #1a1a1a;
   --color-bg-header: rgba(0, 0, 0, 0.9);
 
+  /* Improved contrast ratios for accessibility */
+  --color-text-secondary: #e0e0e0;
+  --color-border: #404040;
+  --color-focus: #646cff;
+
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
@@ -27,4 +32,15 @@
   --header-height: 4rem;
   --z-header: 1000;
   --z-overlay: 2;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-text: #ffffff;
+    --color-bg: #000000;
+    --color-primary: #ffffff;
+    --color-border: #ffffff;
+    --color-focus: #ffffff;
+  }
 }
