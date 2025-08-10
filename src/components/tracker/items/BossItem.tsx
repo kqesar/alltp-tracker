@@ -103,7 +103,7 @@ export const BossItem = ({ row, col, item, bossNumber }: BossItemProps) => {
   };
 
   return (
-    <td
+    <button
       aria-label={`${getBossName(bossNumber)}, ${getBossStateDescription(item)}. Click to change state.`}
       className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} ${CSS_CLASSES.GRID_ITEM_RELATIVE}`}
       key={`${row}_${col}`}
@@ -115,11 +115,12 @@ export const BossItem = ({ row, col, item, bossNumber }: BossItemProps) => {
         }
       }}
       style={getGridItemStyles(item)}
+      type="button"
     >
       <MedaillonOverlay bossNumber={bossNumber} />
       <ChestOverlay bossNumber={bossNumber} />
       <RewardOverlay bossNumber={bossNumber} />
       <CornerTable />
-    </td>
+    </button>
   );
 };

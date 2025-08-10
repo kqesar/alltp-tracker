@@ -1,4 +1,4 @@
-import { GridRow } from "@/components/tracker/grid/GridRow";
+import { GridItem } from "@/components/tracker/grid/GridItem";
 import { CSS_CLASSES } from "@/constants";
 
 type TrackerGridProps = {
@@ -7,8 +7,8 @@ type TrackerGridProps = {
 };
 
 /**
- * TrackerGrid component that renders the complete item tracker grid
- * Maps over the grid layout and renders each row using GridRow components
+ * TrackerGrid component that renders the complete item tracker grid using CSS Grid
+ * Uses semantic HTML with proper grid layout instead of tables
  * @param itemLayout - 2D array representing the grid layout with item identifiers
  */
 export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
@@ -19,14 +19,31 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
       id="itemdiv"
     >
       <h2 className="sr-only">Item Tracker</h2>
-      {itemLayout.map((row: string[], rowIndex: number) => (
-        <GridRow
-          // biome-ignore lint/suspicious/noArrayIndexKey: Row position is stable and meaningful in grid layout
-          key={`row-${rowIndex}`}
-          row={row}
-          rowIndex={rowIndex}
-        />
-      ))}
+      <div className={CSS_CLASSES.TRACKER}>
+        {itemLayout.map((row: string[], rowIndex: number) => (
+          <div
+            className="tracker-row"
+            // biome-ignore lint/suspicious/noArrayIndexKey: Row indices are stable and semantically meaningful in grid layout
+            key={`row-${rowIndex}`}
+          >
+            {/* Left halfcell spacer */}
+            <div aria-hidden="true" className={CSS_CLASSES.HALFCELL} />
+
+            {/* Grid items */}
+            {row.slice(0, 7).map((item: string, colIndex: number) => (
+              <GridItem
+                col={colIndex}
+                item={item}
+                key={`grid-${rowIndex}-${item}`}
+                row={rowIndex}
+              />
+            ))}
+
+            {/* Right halfcell spacer */}
+            <div aria-hidden="true" className={CSS_CLASSES.HALFCELL} />
+          </div>
+        ))}
+      </div>
     </section>
   );
 };

@@ -64,9 +64,9 @@ describe("BossItem", () => {
       <BossItem bossNumber={0} col={0} item="boss0" row={0} />,
     );
 
-    const td = container.querySelector("td");
-    expect(td).toBeInTheDocument();
-    expect(td).toHaveClass("griditem", "grid-item-base", "grid-item-relative");
+    const div = container.querySelector("button");
+    expect(div).toBeInTheDocument();
+    expect(div).toHaveClass("griditem", "grid-item-base", "grid-item-relative");
   });
 
   it("renders all overlay components with correct boss number", () => {
@@ -85,11 +85,11 @@ describe("BossItem", () => {
       <BossItem bossNumber={0} col={2} item="boss0" row={1} />,
     );
 
-    const td = container.querySelector("td");
-    expect(td).toBeInTheDocument();
+    const button = container.querySelector("button");
+    expect(button).toBeInTheDocument();
 
-    if (td) {
-      fireEvent.click(td);
+    if (button) {
+      fireEvent.click(button);
     }
 
     expect(mockHandleItemClick).toHaveBeenCalledWith("boss0");
@@ -100,8 +100,8 @@ describe("BossItem", () => {
       <BossItem bossNumber={0} col={0} item="boss0" row={0} />,
     );
 
-    const td = container.querySelector("td");
-    expect(td).toHaveStyle({
+    const button = container.querySelector("button");
+    expect(button).toHaveStyle({
       backgroundImage: "url(/assets/boss01.png)",
     });
   });
@@ -111,8 +111,8 @@ describe("BossItem", () => {
       <BossItem bossNumber={1} col={0} item="boss1" row={0} />,
     );
 
-    const td = container.querySelector("td");
-    expect(td).toHaveStyle({
+    const button = container.querySelector("button");
+    expect(button).toHaveStyle({
       opacity: "1",
     });
   });
@@ -139,9 +139,9 @@ describe("BossItem", () => {
       <BossItem bossNumber={1} col={4} item="boss1" row={3} />,
     );
 
-    const td = container.querySelector("td");
-    expect(td).toBeInTheDocument();
-    expect(td).toHaveClass("grid-item-relative");
+    const button = container.querySelector("button");
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveClass("grid-item-relative");
 
     // Check that all overlays are children of the td
     const overlays = container.querySelectorAll('[data-testid*="overlay"]');

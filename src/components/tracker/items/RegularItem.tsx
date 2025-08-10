@@ -131,9 +131,10 @@ export const RegularItem = ({ row, col, item }: RegularItemProps) => {
   };
 
   return (
-    <td
+    <button
       aria-label={`${getItemName(item)}, ${getItemStateDescription(item)}. Click to change state.`}
       className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
+      disabled={item === "blank"}
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
       onKeyDown={(e) => {
@@ -143,9 +144,9 @@ export const RegularItem = ({ row, col, item }: RegularItemProps) => {
         }
       }}
       style={getGridItemStyles(item)}
-      tabIndex={item === "blank" ? -1 : 0}
+      type="button"
     >
       <CornerTable />
-    </td>
+    </button>
   );
 };

@@ -3,10 +3,18 @@
   position: relative;
   top: 0;
   left: 0;
-  empty-cells: show;
-  border-spacing: 0;
+  /* CSS Grid for tracker grid layout */
+  display: grid;
+  grid-template-columns: 32px repeat(7, 64px) 32px; /* halfcell + 7 items + halfcell */
+  grid-gap: 0;
+  align-items: center;
+  justify-content: center;
   background-color: var(--color-bg);
   border: 0;
+}
+
+.tracker-row {
+  display: contents; /* Makes children participate in parent grid */
 }
 
 .tracker td {
@@ -38,23 +46,30 @@
 
 /* Grid Item Components */
 .griditem {
+  padding: 0;
+  margin: 0;
   cursor: pointer;
+  background: transparent;
+  border: none;
   border-radius: var(--border-radius);
   transition: all var(--transition);
 }
 
 .griditem:hover {
+  border: none; /* Ensure no border on hover */
   filter: brightness(1.1);
   transform: scale(1.05);
 }
 
 .griditem:active {
+  border: none; /* Ensure no border on active */
   transform: scale(0.95);
 }
 
 .griditem:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+  border: none;
 }
 
 /* Grid Item Base Styles */
@@ -102,6 +117,10 @@
   .itemdiv {
     width: 100%;
     max-width: 480px;
+  }
+
+  .tracker {
+    grid-template-columns: 24px repeat(7, 48px) 24px; /* Responsive halfcell + items */
   }
 
   .tracker td {
