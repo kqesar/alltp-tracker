@@ -82,6 +82,7 @@ export const KEYBOARD_NAVIGATION = {
   ARROW_RIGHT: "ArrowRight",
   ARROW_UP: "ArrowUp",
   ENTER: "Enter",
+  ESCAPE: "Escape",
   SPACE: " ",
   TAB: "Tab",
 } as const;

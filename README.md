@@ -205,7 +205,9 @@ src/
 │   ├── tracker.css        # Item grid and tracker components
 │   ├── map.css            # Map components and location markers
 │   ├── overlays.css       # Interactive overlay components
-│   └── ui.css             # Caption system and mini icons
+│   ├── ui.css             # Caption system and mini icons
+│   ├── tooltip.css        # Tooltip system with positioning and animations
+│   └── help.css           # Help overlay styles with responsive design
 ├── hooks/                 # Custom React hooks
 │   └── useKeyboardNavigation.ts # Keyboard navigation system for tracker grid
 ├── App.tsx                # Main application logic
@@ -240,6 +242,8 @@ The application follows a modular component architecture with clear separation o
   - `map.css`: Map components and location markers
   - `overlays.css`: Interactive overlay components
   - `ui.css`: Caption system and mini icons
+  - `tooltip.css`: Tooltip system with positioning and animations
+  - `help.css`: Help overlay styles with responsive design
   - `index.css`: Master import file for all stylesheets
 
 - **constants/**: Centralized configuration management
