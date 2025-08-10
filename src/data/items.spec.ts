@@ -5,7 +5,7 @@ import {
   items,
   itemsMax,
   itemsMin,
-} from "./items";
+} from "@/data/items";
 
 describe("items data", () => {
   it("should export a valid items object", () => {

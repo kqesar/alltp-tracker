@@ -1,4 +1,5 @@
-import { GridItem } from "./GridItem";
+import { GridItem } from "@/components/tracker/grid/GridItem";
+import { CSS_CLASSES } from "@/constants";
 
 type GridRowProps = {
   /** The index of the row in the grid */
@@ -16,10 +17,10 @@ export const GridRow = ({ rowIndex, row }: GridRowProps) => {
   if (!row) return null;
 
   return (
-    <table className="tracker" key={rowIndex}>
+    <table className={CSS_CLASSES.TRACKER} key={rowIndex}>
       <tbody>
         <tr>
-          <td className="halfcell" />
+          <td className={CSS_CLASSES.HALFCELL} />
           {row.slice(0, 7).map((item: string, colIndex: number) => (
             <GridItem
               col={colIndex}
@@ -28,7 +29,7 @@ export const GridRow = ({ rowIndex, row }: GridRowProps) => {
               row={rowIndex}
             />
           ))}
-          <td className="halfcell" />
+          <td className={CSS_CLASSES.HALFCELL} />
         </tr>
       </tbody>
     </table>

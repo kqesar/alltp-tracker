@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { CornerTable } from "./CornerTable";
+import { CornerTable } from "@/components/CornerTable";
 
 describe("CornerTable", () => {
   it("renders without crashing", () => {

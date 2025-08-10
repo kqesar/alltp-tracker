@@ -15,6 +15,7 @@ dist-ssr
 
 # TypeScript
 *.tsbuildinfo
+viteconfig.js
 
 # Editor directories and files
 .idea

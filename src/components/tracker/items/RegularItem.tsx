@@ -1,4 +1,5 @@
 import { CornerTable } from "@/components/CornerTable";
+import { CSS_CLASSES } from "@/constants";
 import { itemsMin } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
@@ -64,7 +65,7 @@ export const RegularItem = ({ row, col, item }: RegularItemProps) => {
 
   return (
     <td
-      className="griditem grid-item-base"
+      className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
       style={getGridItemStyles(item)}

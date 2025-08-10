@@ -139,9 +139,13 @@ src/
 │   │       └── MedaillonOverlay.tsx # Medallion requirement selector
 │   ├── map/               # Map-related components
 │   │   ├── MapTracker.tsx         # Interactive map component
-│   │   └── MapChest.tsx           # Map chest markers
+│   │   ├── MapChest.tsx           # Map chest markers
+│   │   ├── DungeonBoss.tsx        # Dungeon boss markers
+│   │   └── DungeonChest.tsx       # Dungeon chest markers
 │   └── ui/                # UI utility components
 │       └── Caption.tsx            # Hover caption display
+├── constants/             # Centralized constants
+│   └── index.ts          # All hardcoded values and configuration
 ├── data/
 │   ├── chests.ts          # Chest and dungeon definitions
 │   └── items.ts           # Item definitions and layout
@@ -166,17 +170,67 @@ The application follows a modular component architecture with clear separation o
 - **map/**: Map and location tracking components
   - `MapTracker`: Main interactive map with chest and boss markers
   - `MapChest`: Individual chest marker components
+  - `DungeonBoss`: Interactive dungeon boss markers
+  - `DungeonChest`: Dungeon-specific chest counters
 
 - **ui/**: Reusable UI components
   - `Caption`: Dynamic hover information display
 
+- **constants/**: Centralized configuration management
+  - All CSS class names, magic numbers, asset paths, and configuration values
+  - Simple export pattern for easy maintenance and consistency
+
+### Development Standards
+
+#### Import System
+- **@ Aliases**: All imports use `@/` aliases instead of relative paths for better maintainability
+- **Examples**:
+  - `import { CSS_CLASSES } from "@/constants"`
+  - `import { useGameStore } from "@/stores/gameStore"`
+  - `import { TrackerGrid } from "@/components/tracker/TrackerGrid"`
+
+#### Constants Management
+- **Centralized**: All hardcoded values are defined in `src/constants/index.ts`
+- **Categorized**: Constants are organized into logical groups (CSS_CLASSES, DUNGEON_INDICES, etc.)
+- **Simple Exports**: Uses simple export declarations (`export const OBJECT = {}`)
+- **Coverage**: Includes CSS class names, magic numbers, asset names, and configuration values
+
 ## 🤝 Contributing
 
-This project uses modern React practices:
+This project uses modern React practices and development standards:
+
+### Code Standards
 - **Functional components** with hooks
-- **TypeScript** for type safety
+- **TypeScript** for type safety and better development experience
 - **Modular architecture** with small, focused components
-- **Biome** for consistent code formatting
+- **@ Alias imports**: Use `@/` aliases instead of relative imports for better maintainability
+- **Centralized constants**: All hardcoded values stored in `@/constants` for consistency
+- **Biome** for consistent code formatting and linting
+
+### Import Examples
+```tsx
+// ✅ Good - Use @ aliases
+import { CSS_CLASSES } from "@/constants";
+import { useGameStore } from "@/stores/gameStore";
+import { TrackerGrid } from "@/components/tracker/TrackerGrid";
+
+// ❌ Avoid - Relative imports
+import { CSS_CLASSES } from "../constants";
+import { useGameStore } from "../../stores/gameStore";
+```
+
+### Constants Usage
+```tsx
+// ✅ Good - Use centralized constants
+<div className={CSS_CLASSES.MAP_CONTAINER}>
+  {GRID_CONSTANTS.ITEMS_PER_ROW}
+</div>
+
+// ❌ Avoid - Hardcoded values
+<div className="map-container">
+  {7}
+</div>
+```
 
 ### Conventional Commits
 

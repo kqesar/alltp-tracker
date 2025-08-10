@@ -1,4 +1,5 @@
-import { GridRow } from "./grid/GridRow";
+import { GridRow } from "@/components/tracker/grid/GridRow";
+import { CSS_CLASSES } from "@/constants";
 
 type TrackerGridProps = {
   /** Grid layout data - array of rows containing item identifiers */
@@ -12,7 +13,7 @@ type TrackerGridProps = {
  */
 export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
   return (
-    <div className="itemdiv" id="itemdiv">
+    <div className={CSS_CLASSES.ITEMDIV} id="itemdiv">
       {itemLayout.map((row: string[], rowIndex: number) => (
         <GridRow
           // biome-ignore lint/suspicious/noArrayIndexKey: Row position is stable and meaningful in grid layout

@@ -1,7 +1,7 @@
 import { fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MedaillonOverlay } from "@/components/tracker/overlays/MedaillonOverlay";
 import { useGameStore } from "@/stores/gameStore";
-import { MedaillonOverlay } from "./MedaillonOverlay";
 
 // Mock the game store
 vi.mock("@/stores/gameStore", () => ({

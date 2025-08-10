@@ -1,7 +1,8 @@
+import { DungeonBoss } from "@/components/map/DungeonBoss";
+import { DungeonChest } from "@/components/map/DungeonChest";
+import { MapChest } from "@/components/map/MapChest";
+import { CSS_CLASSES } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
-import { DungeonBoss } from "./DungeonBoss";
-import { DungeonChest } from "./DungeonChest";
-import { MapChest } from "./MapChest";
 
 /**
  * MapTracker component handles the map display with chests and dungeons
@@ -11,7 +12,7 @@ export const MapTracker = () => {
   const { chestsState, dungeonsState } = useGameStore();
 
   return (
-    <div className="map-container" data-testid="map-tracker">
+    <div className={CSS_CLASSES.MAP_CONTAINER} data-testid="map-tracker">
       {/* Render chests */}
       {chestsState.map((chest, index) => (
         <MapChest chest={chest} index={index} key={`chest-${chest.id}`} />

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { GridItem } from "./GridItem";
+import { GridItem } from "@/components/tracker/grid/GridItem";
 
 // Mock the child components
 vi.mock("../items/BossItem", () => ({

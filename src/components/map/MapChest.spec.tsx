@@ -1,9 +1,9 @@
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MapChest } from "@/components/map/MapChest";
 import type { ChestItem, ItemState } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
-import { MapChest } from "./MapChest";
 
 // Mock getAssetPath
 vi.mock("../../utils", () => ({

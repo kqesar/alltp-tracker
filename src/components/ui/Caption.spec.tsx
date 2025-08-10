@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Caption } from "./Caption";
+import { Caption } from "@/components/ui/Caption";
 
 describe("Caption", () => {
   it("renders empty span for empty text", () => {
