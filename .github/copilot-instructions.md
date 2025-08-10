@@ -97,20 +97,37 @@ To launch the project:
 ### Testing
 - All new components must have tests
 - Run `pnpm test` to execute tests
+- Run `pnpm test:coverage` for coverage reports
+- Run `pnpm test:coverage:show` to see coverage table in terminal
+- Run `pnpm coverage` to view existing coverage data
 - Use React Testing Library best practices
 - Test user interactions, not implementation details
 - Note: Some warnings about act() wrappers and duplicate keys are expected and non-blocking
+
+### Coverage Standards
+- **Target Coverage**: Maintain high coverage across all metrics
+  - Lines: ≥90% (Excellent)
+  - Functions: ≥90% (Excellent)
+  - Statements: ≥90% (Excellent)
+  - Branches: ≥80% (Good target, ≥90% excellent)
+- **Coverage Reporting**: Integrated in CI/CD pipeline with PR comments
+- **Local Coverage**: Use `pnpm test:coverage:show` for detailed terminal output
+- **Quality Thresholds**: 🟢 ≥90%, 🟡 ≥80%, 🟠 ≥70%, 🔴 <70%
 
 ### Code Quality
 - Follow the existing code style (Biome is configured)
 - Run `pnpm lint` to check for linting issues
 - Ensure TypeScript compilation passes without errors
+- **Maintain test coverage**: New code should include comprehensive tests
+- **Coverage Integration**: CI automatically reports coverage in PR comments
 - **Update documentation** (copilot instructions and README) for any architectural changes
 
 ### Git Workflow
 - Each new feature must not be pushed to the master branch without a pull request
 - Use descriptive commit messages
 - Keep commits focused and atomic
+- **Coverage validation**: PR comments automatically show coverage metrics
+- **Quality gates**: All CI checks (lint, test, coverage, build) must pass
 
 ### Documentation Maintenance
 - **ALWAYS** update the copilot instructions when making architectural changes

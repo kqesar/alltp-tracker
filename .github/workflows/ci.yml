@@ -53,9 +53,36 @@ jobs:
         id: lint
         run: pnpm lint
 
-      - name: Run tests
+      - name: Run tests with coverage
         id: test
-        run: pnpm test
+        run: pnpm test:coverage
+
+      - name: Generate coverage summary
+        id: coverage
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            echo "Coverage file found, processing..."
+            # Extract coverage data using node
+            node -e "
+              const fs = require('fs');
+              try {
+                const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+                const total = coverage.total;
+                console.log('COVERAGE_LINES=' + total.lines.pct);
+                console.log('COVERAGE_STATEMENTS=' + total.statements.pct);
+                console.log('COVERAGE_FUNCTIONS=' + total.functions.pct);
+                console.log('COVERAGE_BRANCHES=' + total.branches.pct);
+                console.log('COVERAGE_AVAILABLE=true');
+              } catch (e) {
+                console.log('COVERAGE_AVAILABLE=false');
+                console.log('Error reading coverage:', e.message);
+              }
+            " >> $GITHUB_ENV
+          else
+            echo "COVERAGE_AVAILABLE=false" >> $GITHUB_ENV
+            echo "Coverage file not found"
+          fi
 
       - name: Build project
         id: build
@@ -65,6 +92,12 @@ jobs:
       - name: Comment PR with results
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
+        env:
+          COVERAGE_AVAILABLE: ${{ env.COVERAGE_AVAILABLE }}
+          COVERAGE_LINES: ${{ env.COVERAGE_LINES }}
+          COVERAGE_STATEMENTS: ${{ env.COVERAGE_STATEMENTS }}
+          COVERAGE_FUNCTIONS: ${{ env.COVERAGE_FUNCTIONS }}
+          COVERAGE_BRANCHES: ${{ env.COVERAGE_BRANCHES }}
         with:
           script: |
             const lintStatus = '${{ steps.lint.outcome }}' === 'success' ? '✅' : '❌';
@@ -77,6 +110,42 @@ jobs:
               buildRow = `| Build | ${buildStatus} |`;
             }
 
+            // Coverage section
+            let coverageSection = '';
+            if (process.env.COVERAGE_AVAILABLE === 'true') {
+              const lines = process.env.COVERAGE_LINES;
+              const statements = process.env.COVERAGE_STATEMENTS;
+              const functions = process.env.COVERAGE_FUNCTIONS;
+              const branches = process.env.COVERAGE_BRANCHES;
+              
+              const getCoverageEmoji = (pct) => {
+                const num = parseFloat(pct);
+                if (num >= 90) return '🟢';
+                if (num >= 80) return '🟡';
+                if (num >= 70) return '🟠';
+                return '🔴';
+              };
+              
+              coverageSection = `
+            ## 📊 Test Coverage
+
+            | Metric | Coverage | Status |
+            |--------|----------|--------|
+            | Lines | ${lines}% | ${getCoverageEmoji(lines)} |
+            | Statements | ${statements}% | ${getCoverageEmoji(statements)} |
+            | Functions | ${functions}% | ${getCoverageEmoji(functions)} |
+            | Branches | ${branches}% | ${getCoverageEmoji(branches)} |
+
+            `;
+            } else if ('${{ steps.test.outcome }}' === 'success') {
+              coverageSection = `
+            ## 📊 Test Coverage
+            
+            ⚠️ Coverage data not available
+            
+            `;
+            }
+
             const hasFailures = lintStatus === '❌' || testStatus === '❌' || 
               ('${{ inputs.build }}' === 'true' && '${{ steps.build.outcome }}' === 'failure');
 
@@ -87,7 +156,7 @@ jobs:
             | Linting | ${lintStatus} |
             | Tests | ${testStatus} |
             ${buildRow}
-
+            ${coverageSection}
             ${hasFailures ? '❌ Some checks failed. Please review the logs above.' : '✅ All checks passed!'}
 
             ---

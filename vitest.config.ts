@@ -15,6 +15,7 @@ export default defineConfig({
     coverage: {
       exclude: ["src/interfaces", "src/vite-*.ts", "src/main.tsx"],
       include: ["src"],
+      reporter: ["html", "json", "json-summary"],
     },
     environment: "jsdom",
     globals: true,
