@@ -30,7 +30,7 @@ export const GridRow = ({ rowIndex, row }: GridRowProps) => {
         <GridItem
           col={colIndex}
           item={item}
-          key={`grid-${rowIndex}-${item}`}
+          key={`grid-${rowIndex}-${colIndex}-${item}`}
           row={rowIndex}
         />
       ))}
