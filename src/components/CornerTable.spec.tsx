@@ -1,29 +1,29 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { CornerTable } from "@/components/CornerTable";
 
 describe("CornerTable", () => {
   it("renders without crashing", () => {
-    render(<CornerTable />);
-    const table = screen.getByRole("table");
-    expect(table).toBeInTheDocument();
+    const { container } = render(<CornerTable />);
+    const cornerGrid = container.querySelector(".lonk");
+    expect(cornerGrid).toBeInTheDocument();
   });
 
   it("has the correct CSS class", () => {
-    render(<CornerTable />);
-    const table = screen.getByRole("table");
-    expect(table).toHaveClass("lonk");
+    const { container } = render(<CornerTable />);
+    const cornerGrid = container.querySelector(".lonk");
+    expect(cornerGrid).toHaveClass("lonk");
   });
 
-  it("renders the correct table structure", () => {
-    render(<CornerTable />);
+  it("renders the correct grid structure", () => {
+    const { container } = render(<CornerTable />);
 
-    // Check for table body
-    const tbody = screen.getByRole("rowgroup");
-    expect(tbody).toBeInTheDocument();
+    // Check for main grid container
+    const cornerGrid = container.querySelector(".lonk");
+    expect(cornerGrid).toBeInTheDocument();
 
-    // Check for 4 corner cells (2 rows x 2 columns)
-    const cornerCells = screen.getAllByRole("columnheader");
+    // Check for 4 corner divs (2x2 CSS Grid)
+    const cornerCells = container.querySelectorAll(".corner");
     expect(cornerCells).toHaveLength(4);
 
     // Each cell should have the corner class
@@ -32,20 +32,26 @@ describe("CornerTable", () => {
     });
   });
 
-  it("renders exactly 2 rows", () => {
-    render(<CornerTable />);
+  it("renders exactly 4 corner cells", () => {
+    const { container } = render(<CornerTable />);
 
-    const rows = screen.getAllByRole("row");
-    expect(rows).toHaveLength(2);
+    const corners = container.querySelectorAll(".corner");
+    expect(corners).toHaveLength(4);
   });
 
-  it("each row has exactly 2 cells", () => {
-    render(<CornerTable />);
+  it("has proper CSS Grid structure", () => {
+    const { container } = render(<CornerTable />);
 
-    const rows = screen.getAllByRole("row");
-    rows.forEach((row) => {
-      const cells = row.querySelectorAll("th");
-      expect(cells).toHaveLength(2);
+    const cornerGrid = container.querySelector(".lonk");
+    expect(cornerGrid).toBeInTheDocument();
+
+    // Verify all 4 corners are direct children
+    const directChildren = cornerGrid?.children;
+    expect(directChildren).toHaveLength(4);
+
+    // All children should be corner elements
+    Array.from(directChildren || []).forEach((child) => {
+      expect(child).toHaveClass("corner");
     });
   });
 });

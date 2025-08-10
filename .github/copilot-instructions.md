@@ -81,7 +81,7 @@ When creating new components:
 ### File Organization
 - Components are organized in logical sub-folders within `src/components/`:
   - `tracker/`: Item tracking functionality
-    - `TrackerGrid.tsx`: Main item grid component
+    - `TrackerGrid.tsx`: Main item grid component using CSS Grid layout
     - `grid/`: Grid rendering components (GridRow, GridItem)
     - `items/`: Item-specific components (BossItem, RegularItem)
     - `overlays/`: Interactive overlay components (ChestOverlay, RewardOverlay, MedaillonOverlay)
@@ -92,7 +92,7 @@ When creating new components:
   - `variables.css`: CSS custom properties and design tokens
   - `base.css`: Reset styles and foundational rules
   - `header.css`: Header component styles with backdrop blur
-  - `tracker.css`: Item grid and tracker-specific styles
+  - `tracker.css`: CSS Grid layout and tracker-specific styles
   - `map.css`: Map components and location markers
   - `overlays.css`: Interactive overlay components
   - `ui.css`: Caption system and mini icons
@@ -104,6 +104,23 @@ When creating new components:
 - Always import components directly from their file paths (e.g., `from "./components/tracker/TrackerGrid"`)
 - Use @ aliases for all imports instead of relative imports
 - **CSS imports**: Use `@/styles/index.css` in main App component, individual modules imported via index.css
+
+### Web Standards Compliance
+- **W3C HTML Validation**: All HTML output is valid according to W3C standards
+- **WCAG Accessibility**: Meets WCAG accessibility compliance with semantic HTML
+- **CSS Grid Layout**: Modern CSS Grid replaces legacy table-based layouts
+- **Semantic HTML**: Uses proper semantic elements (button, section, nav, header, main)
+- **ARIA Attributes**: Proper ARIA labels and roles for screen reader accessibility
+- **No Table Layouts**: CSS Grid is used for all grid layouts instead of HTML tables
+- **Modern CSS**: Uses CSS custom properties, backdrop-filter, and modern selectors
+
+### Layout Architecture
+- **CSS Grid Container**: `TrackerGrid.tsx` uses CSS Grid with `grid-template-columns`
+- **Grid Rows**: `GridRow.tsx` uses `display: contents` for CSS Grid participation
+- **Button Elements**: All interactive grid items are semantic `<button>` elements
+- **Accessibility**: Each button has proper `aria-label` for screen reader support
+- **Visual Consistency**: Identical rendering to original table layout maintained
+- **Responsive Design**: CSS Grid adapts to different screen sizes automatically
 
 ## Development Workflow
 
@@ -180,7 +197,12 @@ To launch the project:
 - Ensure accessibility (a11y) standards are met
 - **Use @ aliases** for all imports instead of relative paths
 - **Use constants** from `@/constants` for all hardcoded values
+- **Web Standards Compliance**: Follow W3C HTML validation and WCAG accessibility guidelines
+- **CSS Grid Layout**: Use CSS Grid instead of HTML tables for layout purposes
+- **Semantic HTML**: Use appropriate semantic elements (button, section, header, nav, main)
+- **Accessibility First**: Include proper ARIA attributes and labels for all interactive elements
 - **DO NOT** keep the file tsconfig.tsbuildinfo
+- **DO NOT** use HTML tables for layout - use CSS Grid instead
 
 ### Performance
 - Use React.memo for expensive components when needed

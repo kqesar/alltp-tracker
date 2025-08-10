@@ -1,20 +1,15 @@
 import { CSS_CLASSES } from "@/constants";
 
 /**
- * CornerTable renders the standard corner table layout for grid items
+ * CornerTable renders the standard corner grid layout for grid items
+ * Uses CSS Grid instead of table for standards compliance
  * This is a decorative component that provides the visual corner styling
  */
 export const CornerTable = () => (
-  <table className={CSS_CLASSES.LONK}>
-    <tbody>
-      <tr>
-        <th className={CSS_CLASSES.CORNER} />
-        <th className={CSS_CLASSES.CORNER} />
-      </tr>
-      <tr>
-        <th className={CSS_CLASSES.CORNER} />
-        <th className={CSS_CLASSES.CORNER} />
-      </tr>
-    </tbody>
-  </table>
+  <div className={CSS_CLASSES.LONK}>
+    <div className={CSS_CLASSES.CORNER} />
+    <div className={CSS_CLASSES.CORNER} />
+    <div className={CSS_CLASSES.CORNER} />
+    <div className={CSS_CLASSES.CORNER} />
+  </div>
 );

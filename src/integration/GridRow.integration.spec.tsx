@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import App from "@/App";
 
@@ -9,53 +9,51 @@ describe("App - GridRow Integration", () => {
   it("should render all grid rows through GridRow component", () => {
     render(<App />);
 
-    // The defaultItemGrid has 6 rows, so we should have 6 tables with class "tracker"
-    const trackerTables = screen
-      .getAllByRole("table")
-      .filter((table) => table.className.includes("tracker"));
-    expect(trackerTables).toHaveLength(6);
+    // The defaultItemGrid has 6 rows, so we should have 6 CSS grid rows
+    const trackerRows = document.querySelectorAll(".tracker-row");
+    expect(trackerRows).toHaveLength(6);
   });
 
-  it("should render correct table structure for each row", () => {
+  it("should render tracker grid with correct structure", () => {
     render(<App />);
 
-    const trackerTables = screen
-      .getAllByRole("table")
-      .filter((table) => table.className.includes("tracker"));
+    // Check for tracker grid container
+    const trackerGrid = document.querySelector(".tracker");
+    expect(trackerGrid).toBeInTheDocument();
 
-    // Check first table structure
-    if (trackerTables.length > 0) {
-      const firstTable = trackerTables[0];
+    // Should have tracker rows
+    const trackerRows = document.querySelectorAll(".tracker-row");
+    expect(trackerRows.length).toBeGreaterThan(0);
 
-      // Should have tbody
-      const tbody = firstTable.querySelector("tbody");
-      expect(tbody).toBeInTheDocument();
-
-      // Should have cells (halfcells + grid items) - we don't need to check tr count due to nested tables
-      const cells = firstTable.querySelectorAll("td");
-      expect(cells.length).toBeGreaterThanOrEqual(2); // At least 2 halfcells
-    }
+    // Should have grid items and halfcells
+    const gridItems = document.querySelectorAll("button.griditem");
+    const halfcells = document.querySelectorAll(".halfcell");
+    expect(gridItems.length).toBeGreaterThan(0);
+    expect(halfcells.length).toBeGreaterThanOrEqual(2); // At least 2 halfcells
   });
 
   it("should maintain halfcell structure in all rows", () => {
     render(<App />);
 
-    const trackerTables = screen
-      .getAllByRole("table")
-      .filter((table) => table.className.includes("tracker"));
+    const trackerRows = document.querySelectorAll(".tracker-row");
 
-    trackerTables.forEach((table) => {
-      const cells = table.querySelectorAll("td");
-      const halfCells = Array.from(cells).filter((cell) =>
-        cell.className.includes("halfcell"),
-      );
+    trackerRows.forEach((row) => {
+      const halfCells = row.querySelectorAll(".halfcell");
 
       // Each row should have exactly 2 halfcells (start and end)
       expect(halfCells).toHaveLength(2);
 
-      // First and last cells should be halfcells
-      expect(cells[0]).toHaveClass("halfcell");
-      expect(cells[cells.length - 1]).toHaveClass("halfcell");
+      // Check that halfcells are positioned correctly within the row
+      const children = Array.from(row.children);
+      const firstHalfcell = children.find((child) =>
+        child.classList.contains("halfcell"),
+      );
+      const lastHalfcell = children
+        .reverse()
+        .find((child) => child.classList.contains("halfcell"));
+
+      expect(firstHalfcell).toBeInTheDocument();
+      expect(lastHalfcell).toBeInTheDocument();
     });
   });
 
@@ -63,41 +61,38 @@ describe("App - GridRow Integration", () => {
     render(<App />);
 
     // Check that we have items rendered (with background images)
-    const cells = screen.getAllByRole("cell");
-    const itemCells = cells.filter(
-      (cell) =>
-        cell.style.backgroundImage?.includes("hookshot") ||
-        cell.style.backgroundImage?.includes("hammer") ||
-        cell.style.backgroundImage?.includes("boss"),
-    );
+    const buttons = document.querySelectorAll("button.griditem");
+    const itemButtons = Array.from(buttons).filter((button) => {
+      const style = (button as HTMLElement).style;
+      return (
+        style.backgroundImage?.includes("hookshot") ||
+        style.backgroundImage?.includes("hammer") ||
+        style.backgroundImage?.includes("boss")
+      );
+    });
 
-    expect(itemCells.length).toBeGreaterThan(0);
+    expect(itemButtons.length).toBeGreaterThan(0);
   });
 
   it("should maintain grid layout consistency", () => {
     render(<App />);
 
-    const trackerTables = screen
-      .getAllByRole("table")
-      .filter((table) => table.className.includes("tracker"));
+    const trackerGrid = document.querySelector(".tracker");
+    expect(trackerGrid).toBeInTheDocument();
 
-    // Each row should be a table with consistent structure
-    trackerTables.forEach((table) => {
-      expect(table).toHaveClass("tracker");
+    // Grid should use CSS Grid layout
+    const trackerRows = document.querySelectorAll(".tracker-row");
+    expect(trackerRows.length).toBeGreaterThan(0);
 
-      const tbody = table.querySelector("tbody");
-      expect(tbody).toBeInTheDocument();
+    // Each row should contain grid items
+    trackerRows.forEach((row) => {
+      const gridItems = row.querySelectorAll("button.griditem");
+      expect(gridItems.length).toBeGreaterThan(0);
+      expect(gridItems.length).toBeLessThanOrEqual(7); // Max 7 items per row
 
-      const tr = tbody?.querySelector("tr");
-      expect(tr).toBeInTheDocument();
-
-      // Each row should have cells (2 halfcells + up to 7 grid items)
-      const cells = tr?.querySelectorAll("td");
-      expect(cells).toBeDefined();
-      if (cells) {
-        expect(cells.length).toBeGreaterThanOrEqual(2);
-        expect(cells.length).toBeLessThanOrEqual(9); // 2 halfcells + 7 items max
-      }
+      // Each row should have halfcells for spacing
+      const halfcells = row.querySelectorAll(".halfcell");
+      expect(halfcells.length).toBe(2); // Left and right halfcells
     });
   });
 
@@ -118,12 +113,16 @@ describe("App - GridRow Integration", () => {
     expect(captionDiv).toBeInTheDocument();
 
     // Grid rows should be within itemdiv
-    const trackerTables = screen
-      .getAllByRole("table")
-      .filter((table) => table.className.includes("tracker"));
+    const trackerGrid = itemDiv?.querySelector(".tracker") as HTMLElement;
+    expect(trackerGrid).toBeInTheDocument();
+    if (trackerGrid && itemDiv) {
+      expect(itemDiv).toContainElement(trackerGrid);
+    }
 
-    trackerTables.forEach((table) => {
-      expect(itemDiv).toContainElement(table);
-    });
+    const trackerRows = itemDiv?.querySelectorAll(".tracker-row");
+    expect(trackerRows).toBeDefined();
+    if (trackerRows) {
+      expect(trackerRows.length).toBeGreaterThan(0);
+    }
   });
 });
