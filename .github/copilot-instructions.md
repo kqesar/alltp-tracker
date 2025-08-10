@@ -120,14 +120,23 @@ To launch the project:
 - Ensure TypeScript compilation passes without errors
 - **Maintain test coverage**: New code should include comprehensive tests
 - **Coverage Integration**: CI automatically reports coverage in PR comments
+- **Security Analysis**: CodeQL automatically scans for vulnerabilities in PRs
 - **Update documentation** (copilot instructions and README) for any architectural changes
+
+### Security Standards
+- **CodeQL Analysis**: Automated security vulnerability scanning for all TypeScript/JavaScript code
+- **PR Integration**: CodeQL status automatically reported in PR comments
+- **Security Findings**: Available in GitHub Security tab for review
+- **Weekly Scans**: Automated weekly security analysis runs on Sundays
+- **Quality Queries**: Uses GitHub's security-and-quality query suite for comprehensive analysis
 
 ### Git Workflow
 - Each new feature must not be pushed to the master branch without a pull request
 - Use descriptive commit messages
 - Keep commits focused and atomic
 - **Coverage validation**: PR comments automatically show coverage metrics
-- **Quality gates**: All CI checks (lint, test, coverage, build) must pass
+- **Security validation**: CodeQL analysis automatically scans for vulnerabilities
+- **Quality gates**: All CI checks (lint, test, coverage, build, security) must pass
 
 ### Documentation Maintenance
 - **ALWAYS** update the copilot instructions when making architectural changes
