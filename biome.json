@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.1.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
   "assist": {
     "actions": {
       "source": {
@@ -21,17 +21,17 @@
     "ignoreUnknown": false,
     "includes": [
       "**",
-      "!**/node_modules/**",
-      "!**/dist/**",
-      "!**/dist_dev/**",
-      "!**/dev-dist/**",
-      "!**/.husky/**",
-      "!**/build/**",
-      "!**/coverage/**",
-      "!**/coverage_backup/**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/dist_dev",
+      "!**/dev-dist",
+      "!**/.husky",
+      "!**/build",
+      "!**/coverage",
+      "!**/coverage_backup",
       "!package.json",
       "!pnpm-lock.yaml",
-      "!**/.git/**"
+      "!**/.git"
     ]
   },
   "formatter": {
@@ -55,6 +55,9 @@
         "noStaticElementInteractions": "off",
         "useKeyWithClickEvents": "off",
         "useKeyWithMouseEvents": "off"
+      },
+      "correctness": {
+        "useUniqueElementIds": "off"
       },
       "recommended": true,
       "security": {

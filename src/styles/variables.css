@@ -32,6 +32,21 @@
   --header-height: 4rem;
   --z-header: 1000;
   --z-overlay: 2;
+
+  /* Responsive breakpoints */
+  --breakpoint-mobile: 480px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+
+  /* Touch target sizing (minimum 44px as per Apple/Google guidelines) */
+  --touch-target-min: 44px;
+  --touch-target-spacing: 8px;
+
+  /* Mobile-specific sizing */
+  --mobile-item-size: 48px;
+  --mobile-grid-gap: 4px;
+  --mobile-padding: 1rem;
+  --mobile-header-height: 3.5rem;
 }
 
 /* High contrast mode support */

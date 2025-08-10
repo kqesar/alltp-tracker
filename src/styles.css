@@ -114,13 +114,13 @@ body {
 
 .caption .mini,
 #caption .mini {
-  display: inline-block !important;
-  width: 16px !important;
-  height: 16px !important;
-  margin: 0 1px !important;
-  vertical-align: text-bottom !important;
-  border: none !important;
-  box-shadow: none !important;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 1px;
+  vertical-align: text-bottom;
+  border: none;
+  box-shadow: none;
   /* Inherit image rendering from parent .mini class */
 }
 
@@ -260,9 +260,9 @@ body {
   *,
   *::before,
   *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
   }
 }
 

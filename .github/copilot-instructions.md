@@ -107,6 +107,7 @@ When creating new components:
   - `ui.css`: Caption system and mini icons
   - `tooltip.css`: Tooltip system with positioning and animations
   - `help.css`: Help overlay styles with responsive design
+  - `mobile.css`: Mobile & touch optimizations with responsive breakpoints
 - Data and types go in `src/data/`
   - `items.ts`: Item definitions and default state
   - `chests.ts`: Chest locations and requirements  
@@ -119,6 +120,8 @@ When creating new components:
   - `useAutoSave.ts`: Auto-save functionality with 5-second intervals
   - `useKeyboardNavigation.ts`: Keyboard navigation system for tracker grid
   - `useTooltip.ts`: Tooltip visibility and interaction management
+  - `useTouchGestures.ts`: Touch gesture recognition (tap, long-press, swipe) for mobile devices
+  - `useDeviceDetection.ts`: Device type and capability detection for responsive features
 - Tests should be co-located with components (`.spec.tsx`)
 - **DO NOT** use index.ts files for component exports
 - Always import components directly from their file paths (e.g., `from "./components/tracker/TrackerGrid"`)
@@ -214,6 +217,49 @@ When implementing tooltips:
 4. Ensure proper accessibility attributes on trigger elements
 5. Test tooltip positioning at viewport edges
 6. Use the useTooltip hook for custom implementations when needed
+
+### Mobile & Touch Optimization Architecture
+- **Mobile-First CSS**: Responsive design with progressive enhancement from mobile to desktop
+- **Touch Gesture System**: Complete touch interaction handling with useTouchGestures hook
+- **Device Detection**: Runtime device capability detection with useDeviceDetection hook
+- **Responsive Breakpoints**: Mobile (≤480px), Tablet (≤768px), Desktop (>1024px)
+- **Touch Targets**: WCAG-compliant 44px minimum touch targets with 48px item sizing
+- **Accessibility**: Full mobile accessibility with proper ARIA attributes and focus management
+- **Performance**: Optimized bundle with mobile-specific CSS and JavaScript features
+- **Testing**: Comprehensive mobile test coverage with 30+ mobile-specific test scenarios
+
+#### Mobile CSS Standards
+- **Responsive Variables**: CSS custom properties for mobile sizing and spacing
+- **Mobile-First Breakpoints**: Progressive enhancement from mobile base styles
+- **Touch Target Sizing**: Minimum 44px touch targets, 48px mobile item sizing
+- **Grid Optimization**: Responsive CSS Grid with mobile-specific column sizing
+- **Typography**: Mobile-optimized font scaling and readability improvements
+- **Performance**: Optimized CSS delivery with mobile-specific optimizations
+
+#### Touch Gesture Standards
+- **Gesture Recognition**: Tap, long-press, and swipe gesture detection
+- **Configurable Options**: Customizable delays, thresholds, and gesture callbacks
+- **Device Integration**: Automatic touch capability detection and gesture enabling
+- **Type Safety**: Full TypeScript support with proper event typing
+- **Performance**: Efficient event handling with proper cleanup and memory management
+- **Accessibility**: Compatible with assistive technologies and screen readers
+
+#### Device Detection Standards
+- **Capability Detection**: Touch support, screen size, and device type detection
+- **Orientation Handling**: Portrait/landscape detection with responsive adjustments
+- **Pixel Ratio**: High-DPI display detection for crisp graphics
+- **Media Queries**: Runtime media query evaluation for responsive features
+- **Performance**: Efficient viewport tracking with debounced resize handling
+- **Server-Side Safe**: SSR-compatible with proper hydration handling
+
+When working with mobile features:
+1. Use useDeviceDetection for responsive behavior logic
+2. Apply useTouchGestures to interactive elements on touch devices
+3. Follow mobile-first CSS principles with progressive enhancement
+4. Ensure 44px minimum touch targets for accessibility compliance
+5. Test on multiple device sizes and orientations
+6. Use responsive CSS variables from mobile.css
+7. Verify touch gesture functionality doesn't interfere with native gestures
 
 ## Development Workflow
 

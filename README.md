@@ -17,6 +17,7 @@ This project was originally forked from [TestRunnerSRL/lttp-tracker](https://git
 - **Web standards compliance** with W3C HTML validation and WCAG accessibility
 - **Modern CSS Grid layout** replacing legacy table-based layouts with proper spacer elements
 - **Keyboard navigation** with full arrow key and Tab sequence support for accessibility
+- **Mobile optimization** with touch gestures, responsive design, and device detection
 - **Advanced CI/CD pipeline** with automated testing, coverage reporting, and security analysis
 - **Improved user experience** with better accessibility and responsive design
 
@@ -133,6 +134,19 @@ Full keyboard accessibility is supported for power users and accessibility:
 - **Boss icons**: Click to mark dungeon bosses as beaten
 - **Hover information**: Mouse over any element to see requirements and details
 
+### Mobile & Touch Experience ✨ **NEW**
+- **Touch Gestures**: Natural touch interactions for mobile devices
+  - **Tap**: Normal interaction (equivalent to left-click)
+  - **Long Press**: Alternative interaction for advanced features
+  - **Touch-Optimized**: 48px item sizes with 44px minimum touch targets for accessibility
+- **Responsive Design**: Mobile-first approach with adaptive layouts
+  - **Mobile** (≤480px): Optimized grid and typography
+  - **Tablet** (≤768px): Balanced layout for medium screens
+  - **Desktop** (>1024px): Full feature experience
+- **Device Detection**: Automatic capability detection for optimal experience
+- **Orientation Support**: Portrait and landscape modes with adaptive layouts
+- **Touch Accessibility**: Full compatibility with screen readers and assistive technologies
+
 ### Boss Overlays
 Each dungeon boss has three clickable overlays:
 - **Top-right (Medallion)**: For Misery Mire and Turtle Rock, cycle through medallion requirements (Unknown/Bombos/Ether/Quake)
@@ -207,7 +221,8 @@ src/
 │   ├── overlays.css       # Interactive overlay components
 │   ├── ui.css             # Caption system and mini icons
 │   ├── tooltip.css        # Tooltip system with positioning and animations
-│   └── help.css           # Help overlay styles with responsive design
+│   ├── help.css           # Help overlay styles with responsive design
+│   └── mobile.css         # Mobile & touch optimizations
 ├── hooks/                 # Custom React hooks
 │   └── useKeyboardNavigation.ts # Keyboard navigation system for tracker grid
 ├── App.tsx                # Main application logic
