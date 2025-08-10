@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.2](https://github.com/kqesar/alltp-tracker/compare/v2.0.1...v2.0.2) (2025-08-10)
+
 ### [2.0.1](https://github.com/kqesar/alltp-tracker/compare/v1.3.0...v2.0.1) (2025-08-10)
 
 ## [1.3.0](https://github.com/kqesar/alltp-tracker/compare/v1.2.6...v1.3.0) (2025-08-10)
