@@ -4,6 +4,8 @@ import { MedaillonOverlay } from "@/components/tracker/overlays/MedaillonOverlay
 import { RewardOverlay } from "@/components/tracker/overlays/RewardOverlay";
 import { CSS_CLASSES } from "@/constants";
 import { itemsMin } from "@/data/items";
+import { useDeviceDetection } from "@/hooks/useDeviceDetection";
+import { useTouchGestures } from "@/hooks/useTouchGestures";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
 
@@ -33,6 +35,30 @@ export const BossItem = ({
   onFocus,
 }: BossItemProps) => {
   const { items, handleItemClick } = useGameStore();
+  const { isTouchDevice } = useDeviceDetection();
+
+  // Set up touch gestures for mobile devices
+  const { ref: touchRef } = useTouchGestures({
+    disabled: item === "blank" || !isTouchDevice,
+    onLongPress: () => {
+      // Long press could cycle backward through states or show detailed info
+      if (item !== "blank") {
+        handleItemClick(item);
+      }
+    },
+    onTap: () => {
+      if (item !== "blank") {
+        handleItemClick(item);
+      }
+    },
+  });
+
+  // Type-safe ref callback for button element
+  const setButtonRef = (element: HTMLButtonElement | null) => {
+    if (touchRef) {
+      touchRef.current = element;
+    }
+  };
 
   /**
    * Gets the background image URL for an item
@@ -126,6 +152,7 @@ export const BossItem = ({
           handleItemClick(item);
         }
       }}
+      ref={setButtonRef}
       style={getGridItemStyles(item)}
       type="button"
     >

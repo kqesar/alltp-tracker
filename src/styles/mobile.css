@@ -1,0 +1,223 @@
+/* Mobile & Touch Optimizations */
+
+/* Base mobile optimizations */
+@media (max-width: 768px) {
+  /* Mobile-first font scaling */
+  :root {
+    --font-size-sm: 0.75rem;
+    --font-size-base: 0.875rem;
+    --font-size-lg: 1rem;
+    --font-size-xl: 1.125rem;
+    --header-height: var(--mobile-header-height);
+  }
+
+  /* Body optimizations for mobile */
+  body {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    font-size: var(--font-size-base);
+  }
+
+  /* Mobile tracker grid - responsive sizing */
+  .tracker {
+    grid-template-columns: 24px repeat(7, var(--mobile-item-size)) 24px;
+    grid-gap: var(--mobile-grid-gap);
+    justify-content: center;
+    padding: var(--mobile-padding);
+  }
+
+  /* Mobile item sizing */
+  .tracker td,
+  .grid-item-base,
+  .griditem {
+    width: var(--mobile-item-size);
+    min-width: var(--touch-target-min);
+    height: var(--mobile-item-size);
+    min-height: var(--touch-target-min);
+  }
+
+  .tracker .halfcell,
+  .grid-spacer {
+    width: 24px;
+    height: var(--mobile-item-size);
+  }
+
+  /* Mobile corner grid adjustments */
+  .lonk {
+    grid-template-rows: 24px 24px;
+    grid-template-columns: 24px 24px;
+    width: var(--mobile-item-size);
+    height: var(--mobile-item-size);
+  }
+
+  .corner {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Enhanced touch targets */
+  .griditem {
+    padding: var(--touch-target-spacing);
+    margin: 2px;
+    border-radius: 8px;
+  }
+
+  /* Mobile hover effects (disable on touch devices) */
+  .griditem:hover {
+    filter: none;
+    transform: none;
+  }
+
+  /* Enhanced touch feedback */
+  .griditem:active {
+    background-color: rgba(100, 108, 255, 0.2);
+    transform: scale(0.9);
+    transition: transform 0.1s ease;
+  }
+
+  /* Mobile header adjustments */
+  .header {
+    height: var(--mobile-header-height);
+    padding: 0 var(--mobile-padding);
+  }
+
+  .header__title {
+    font-size: var(--font-size-lg);
+  }
+
+  .header__nav {
+    gap: 0.5rem;
+  }
+
+  .header__link,
+  .header__help-button {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: 0.5rem;
+    font-size: var(--font-size-sm);
+  }
+
+  .header__icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Small mobile phones */
+@media (max-width: 480px) {
+  :root {
+    --mobile-item-size: 42px;
+    --mobile-grid-gap: 2px;
+    --mobile-padding: 0.5rem;
+  }
+
+  .tracker {
+    grid-template-columns: 20px repeat(7, var(--mobile-item-size)) 20px;
+    padding: var(--mobile-padding);
+  }
+
+  .tracker .halfcell,
+  .grid-spacer {
+    width: 20px;
+  }
+
+  .lonk {
+    grid-template-rows: 21px 21px;
+    grid-template-columns: 21px 21px;
+  }
+
+  .corner {
+    width: 21px;
+    height: 21px;
+  }
+
+  .header__title {
+    font-size: var(--font-size-base);
+  }
+
+  .header__nav {
+    gap: 0.25rem;
+  }
+
+  .header__link span:not(.sr-only),
+  .header__help-button span:not(.sr-only) {
+    display: none; /* Hide text labels on very small screens */
+  }
+}
+
+/* Landscape orientation optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  :root {
+    --mobile-header-height: 3rem;
+  }
+
+  .tracker {
+    padding: 0.5rem var(--mobile-padding);
+  }
+
+  .header {
+    height: var(--mobile-header-height);
+  }
+
+  .header__title {
+    font-size: var(--font-size-base);
+  }
+}
+
+/* Touch gesture enhancements */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable hover effects on touch devices */
+  .griditem:hover {
+    border: none;
+    filter: none;
+    transform: none;
+  }
+
+  /* Enhanced touch feedback */
+  .griditem:active {
+    background-color: rgba(100, 108, 255, 0.3);
+    transform: scale(0.95);
+    transition: all 0.1s ease;
+  }
+
+  /* Tooltip adjustments for touch */
+  .tooltip {
+    position: fixed;
+    z-index: 9999;
+  }
+
+  /* Larger touch targets for overlays */
+  .overlay-button {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: 0.75rem;
+  }
+}
+
+/* High DPI displays (Retina) */
+@media (min-resolution: 192dpi) {
+  .grid-item-base,
+  .griditem {
+    image-rendering: crisp-edges;
+    background-size: 100% 100%;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .griditem {
+    transition: none;
+  }
+
+  .griditem:active {
+    transform: none;
+  }
+}
+
+/* Dark mode adjustments for mobile */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+  .griditem:active {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}

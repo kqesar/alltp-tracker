@@ -28,7 +28,7 @@ export const GridItem = ({ row, col, item, onFocus }: GridItemProps) => {
   }
 
   if (item?.startsWith("boss")) {
-    const bossNumber = parseInt(item.replace("boss", ""));
+    const bossNumber = parseInt(item.replace("boss", ""), 10);
     return (
       <BossItem
         bossNumber={bossNumber}

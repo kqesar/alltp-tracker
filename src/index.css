@@ -123,16 +123,16 @@ button:disabled {
 
 /* Specific Caption Overrides for Tailwind */
 #caption img.mini {
-  display: inline-block !important;
-  width: 16px !important;
-  max-width: none !important;
-  height: 16px !important;
-  margin: 0 2px !important;
-  vertical-align: text-bottom !important;
+  display: inline-block;
+  width: 16px;
+  max-width: none;
+  height: 16px;
+  margin: 0 2px;
+  vertical-align: text-bottom;
   /* Crisp rendering for pixel art */
   image-rendering: pixelated;
-  border: none !important;
-  box-shadow: none !important;
+  border: none;
+  box-shadow: none;
 }
 
 /* Accessibility Improvements */
@@ -140,8 +140,8 @@ button:disabled {
   *,
   *::before,
   *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
   }
 }

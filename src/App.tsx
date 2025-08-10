@@ -25,6 +25,7 @@ function App() {
         Skip to main content
       </a>
       <Header />
+      {/* Static IDs are intentional for SPA layout elements referenced by CSS and skip links */}
       <main className="main-content" id="main-content">
         <div id="layoutdiv">
           <TrackerGrid itemLayout={itemLayout} />
