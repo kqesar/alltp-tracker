@@ -1,9 +1,9 @@
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { DungeonBoss } from "@/components/map/DungeonBoss";
 import type { DungeonItem, ItemState } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
-import { DungeonBoss } from "./DungeonBoss";
 
 // Mock getAssetPath
 vi.mock("@/utils", () => ({

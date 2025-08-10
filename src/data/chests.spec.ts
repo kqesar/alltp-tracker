@@ -5,7 +5,7 @@ import {
   type DungeonItem,
   dungeons,
   type ItemState,
-} from "./chests";
+} from "@/data/chests";
 
 // Test data
 const baseItemState: ItemState = {

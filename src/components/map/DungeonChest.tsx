@@ -1,3 +1,13 @@
+import {
+  ASSET_NAMES,
+  AVAILABILITY_CLASSES,
+  CHEST_STATES,
+  CSS_CLASSES,
+  DUNGEON_INDICES,
+  EMPTY_STRING,
+  MAP_COORDINATES,
+  MEDALLION_VALUES,
+} from "@/constants";
 import type { DungeonItem } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
@@ -21,7 +31,7 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
 
   // Get dungeon chest availability class
   const getAvailabilityClass = () => {
-    if (chestCount === 0) return "opened";
+    if (chestCount === CHEST_STATES.OPENED) return AVAILABILITY_CLASSES.OPENED;
     return dungeon.canGetChest(items, medallions);
   };
 
@@ -30,27 +40,33 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
     let dungeonName = dungeon.name;
 
     // For Misery Mire (8) and Turtle Rock (9), update medallion in caption
-    if (index === 8 || index === 9) {
+    if (
+      index === DUNGEON_INDICES.MISERY_MIRE ||
+      index === DUNGEON_INDICES.TURTLE_ROCK
+    ) {
       const medallionValue = medallions[index];
-      let medallionName = "medallion0"; // default/unknown
+      let medallionName = ASSET_NAMES.MEDALLION_UNKNOWN; // default/unknown
 
       switch (medallionValue) {
-        case 1:
-          medallionName = "medallion1"; // bombos
+        case MEDALLION_VALUES.BOMBOS:
+          medallionName = ASSET_NAMES.MEDALLION_BOMBOS; // bombos
           break;
-        case 2:
-          medallionName = "medallion2"; // ether
+        case MEDALLION_VALUES.ETHER:
+          medallionName = ASSET_NAMES.MEDALLION_ETHER; // ether
           break;
-        case 3:
-          medallionName = "medallion0"; // quake (uses medallion0 image)
+        case MEDALLION_VALUES.QUAKE:
+          medallionName = ASSET_NAMES.MEDALLION_UNKNOWN; // quake (uses medallion0 image)
           break;
         default:
-          medallionName = "medallion0"; // unknown
+          medallionName = ASSET_NAMES.MEDALLION_UNKNOWN; // unknown
           break;
       }
 
       // Replace the medallion image in the name
-      dungeonName = dungeonName.replace("medallion0", medallionName);
+      dungeonName = dungeonName.replace(
+        ASSET_NAMES.MEDALLION_UNKNOWN,
+        medallionName,
+      );
     }
 
     setCaption(dungeonName);
@@ -58,7 +74,7 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
 
   // Remove highlight and clear caption
   const handleUnhighlight = () => {
-    setCaption("");
+    setCaption(EMPTY_STRING);
   };
 
   // Transform coordinates for vertical orientation
@@ -68,18 +84,18 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
 
     if (!mapOrientation) return { x, y };
 
-    const xNum = parseFloat(x) / 100;
-    const yNum = parseFloat(y) / 100;
+    const xNum = parseFloat(x) / MAP_COORDINATES.PERCENTAGE_MULTIPLIER;
+    const yNum = parseFloat(y) / MAP_COORDINATES.PERCENTAGE_MULTIPLIER;
 
-    if (xNum > 0.5) {
+    if (xNum > MAP_COORDINATES.SPLIT_THRESHOLD) {
       return {
-        x: `${(xNum - 0.5) * 2 * 100}%`,
-        y: `${(yNum / 2 + 0.5) * 100}%`,
+        x: `${(xNum - MAP_COORDINATES.SPLIT_THRESHOLD) * MAP_COORDINATES.COORDINATE_MULTIPLIER * MAP_COORDINATES.PERCENTAGE_MULTIPLIER}%`,
+        y: `${(yNum / MAP_COORDINATES.COORDINATE_MULTIPLIER + MAP_COORDINATES.SPLIT_THRESHOLD) * MAP_COORDINATES.PERCENTAGE_MULTIPLIER}%`,
       };
     } else {
       return {
-        x: `${xNum * 2 * 100}%`,
-        y: `${(yNum / 2) * 100}%`,
+        x: `${xNum * MAP_COORDINATES.COORDINATE_MULTIPLIER * MAP_COORDINATES.PERCENTAGE_MULTIPLIER}%`,
+        y: `${(yNum / MAP_COORDINATES.COORDINATE_MULTIPLIER) * MAP_COORDINATES.PERCENTAGE_MULTIPLIER}%`,
       };
     }
   };
@@ -89,11 +105,11 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
 
   return (
     <div
-      className={`mapspan dungeon map-element-base ${availabilityClass}`}
+      className={`${CSS_CLASSES.MAPSPAN} dungeon ${CSS_CLASSES.MAP_ELEMENT_BASE} ${availabilityClass}`}
       onMouseOut={handleUnhighlight}
       onMouseOver={handleHighlight}
       style={{
-        backgroundImage: `url(${getAssetPath("poi.png")})`,
+        backgroundImage: `url(${getAssetPath(ASSET_NAMES.POI)})`,
         left: coords.x,
         top: coords.y,
       }}

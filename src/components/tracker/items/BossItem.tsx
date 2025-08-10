@@ -1,10 +1,11 @@
 import { CornerTable } from "@/components/CornerTable";
+import { ChestOverlay } from "@/components/tracker/overlays/ChestOverlay";
+import { MedaillonOverlay } from "@/components/tracker/overlays/MedaillonOverlay";
+import { RewardOverlay } from "@/components/tracker/overlays/RewardOverlay";
+import { CSS_CLASSES } from "@/constants";
 import { itemsMin } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
-import { ChestOverlay } from "../overlays/ChestOverlay";
-import { MedaillonOverlay } from "../overlays/MedaillonOverlay";
-import { RewardOverlay } from "../overlays/RewardOverlay";
 
 type BossItemProps = {
   row: number;
@@ -69,7 +70,7 @@ export const BossItem = ({ row, col, item, bossNumber }: BossItemProps) => {
 
   return (
     <td
-      className="griditem grid-item-base grid-item-relative"
+      className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} ${CSS_CLASSES.GRID_ITEM_RELATIVE}`}
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
       style={getGridItemStyles(item)}

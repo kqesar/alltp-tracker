@@ -51,15 +51,24 @@ export const MyComponent = ({ message }: MyComponentProps) => {
   - `@/types/` for type definitions
   - `@/data/` for data imports
   - `@/utils/` for utility functions
+  - `@/constants/` for constants imports
 - **Example**: Use `import { useGameStore } from "@/stores/gameStore"` instead of `import { useGameStore } from "../stores/gameStore"`
 - **Type Safety**: Import types from their original definition files when needed for compatibility
+
+### Constants Management
+- **Centralized Constants**: All hardcoded values must be defined in `src/constants/index.ts`
+- **Simple Export Pattern**: Use simple export declarations (`export const OBJECT = {}`, `export const ARRAY = []`)
+- **Categorized Organization**: Group related constants into objects (CSS_CLASSES, DUNGEON_INDICES, etc.)
+- **Import Pattern**: Always import constants using `@/constants` alias
+- **Coverage**: Include CSS class names, magic numbers, asset names, configuration values
 
 When creating new components:
 1. Determine the appropriate folder based on functionality
 2. Create both the component and its test file
 3. Import components directly from their file paths using @ aliases
 4. Use appropriate @ aliases for all internal imports
-4. Follow the established patterns for similar components
+5. Use constants from `@/constants` instead of hardcoded values
+6. Follow the established patterns for similar components
 
 ### File Organization
 - Components are organized in logical sub-folders within `src/components/`:
@@ -71,11 +80,12 @@ When creating new components:
   - `map/`: Map-related components (MapTracker, MapChest)
   - `ui/`: Reusable UI components (Caption)
 - Data and types go in `src/data/`
+- Constants go in `src/constants/index.ts` with simple export pattern
 - State management in `src/stores/` using Zustand
 - Tests should be co-located with components (`.spec.tsx`)
 - **DO NOT** use index.ts files for component exports
 - Always import components directly from their file paths (e.g., `from "./components/tracker/TrackerGrid"`)
-- Use relative imports with explicit file extensions when needed
+- Use @ aliases for all imports instead of relative imports
 
 ## Development Workflow
 
@@ -89,6 +99,7 @@ To launch the project:
 - Run `pnpm test` to execute tests
 - Use React Testing Library best practices
 - Test user interactions, not implementation details
+- Note: Some warnings about act() wrappers and duplicate keys are expected and non-blocking
 
 ### Code Quality
 - Follow the existing code style (Biome is configured)
@@ -123,6 +134,8 @@ To launch the project:
 - Use React hooks appropriately (useState, useEffect, etc.)
 - Handle loading states and error states properly
 - Ensure accessibility (a11y) standards are met
+- **Use @ aliases** for all imports instead of relative paths
+- **Use constants** from `@/constants` for all hardcoded values
 - **DO NOT** keep the file tsconfig.tsbuildinfo
 
 ### Performance

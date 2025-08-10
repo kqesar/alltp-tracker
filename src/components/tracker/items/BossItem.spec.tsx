@@ -1,7 +1,7 @@
 import { fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BossItem } from "@/components/tracker/items/BossItem";
 import { useGameStore } from "@/stores/gameStore";
-import { BossItem } from "./BossItem";
 
 // Mock the game store
 vi.mock("@/stores/gameStore", () => ({

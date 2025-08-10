@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ChestOverlay } from "@/components/tracker/overlays/ChestOverlay";
 import { useGameStore } from "@/stores/gameStore";
-import { ChestOverlay } from "./ChestOverlay";
 
 // Mock the game store
 vi.mock("@/stores/gameStore", () => ({

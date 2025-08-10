@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { TrackerGrid } from "./TrackerGrid";
+import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 
 // Mock the GridRow component
 vi.mock("./grid/GridRow", () => ({

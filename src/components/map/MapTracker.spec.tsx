@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
+import { MapTracker } from "@/components/map/MapTracker";
 import { useGameStore } from "@/stores/gameStore";
-import { MapTracker } from "./MapTracker";
 
 describe("MapTracker", () => {
   beforeEach(() => {
