@@ -48,7 +48,7 @@ export const Caption = ({ text }: CaptionProps) => {
       // Create React img element with improved accessibility
       parts.push(
         <img
-          alt="Item icon"
+          alt={className === "mini" ? "Game item icon" : "Item icon"}
           aria-hidden="true"
           className={className}
           key={`img-${key++}`}
@@ -73,8 +73,27 @@ export const Caption = ({ text }: CaptionProps) => {
   const renderedContent = parseHtmlText(text);
 
   return (
-    <output aria-label="Item description" aria-live="polite">
-      {renderedContent}
+    <output
+      aria-label="Item description"
+      aria-live="polite"
+      className="caption-output"
+    >
+      <span className="caption-content">
+        {renderedContent.map((part, index) => {
+          // Add subtle spacing between text and images
+          if (typeof part === "string") {
+            return (
+              <span
+                className="caption-text"
+                key={`text-${part.slice(0, 20)}-${index}`}
+              >
+                {part}
+              </span>
+            );
+          }
+          return part;
+        })}
+      </span>
     </output>
   );
 };

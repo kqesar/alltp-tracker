@@ -9,36 +9,268 @@
   image-rendering: pixelated;
 }
 
-/* Caption Component with Tailwind overrides */
-.caption,
-#caption {
-  min-height: 24px;
-  padding: var(--spacing-sm);
-  font-size: var(--font-size-sm);
-  line-height: 1.4;
-  word-wrap: break-word;
-  background-color: rgba(0, 0, 0, 0.8);
-  border-radius: var(--border-radius);
+/* Big Key Toggle Component */
+.bigkey-toggle-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: var(--z-modal);
+  pointer-events: auto;
 }
 
-.caption .mini,
-#caption .mini {
-  display: inline-block;
+.bigkey-toggle {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  transition: all var(--transition);
+}
+
+.bigkey-toggle:hover,
+.bigkey-toggle--hover {
+  background: rgba(0, 0, 0, 0.95);
+  border-color: var(--color-primary-hover);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+.bigkey-toggle--active {
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.2);
+  border-color: var(--color-primary);
+}
+
+.bigkey-toggle--active:hover,
+.bigkey-toggle--active.bigkey-toggle--hover {
+  background: rgba(var(--color-primary-rgb), 0.3);
+  border-color: var(--color-primary-hover);
+}
+
+.bigkey-toggle__icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 16px;
   height: 16px;
-  margin: 0 1px;
+}
+
+.bigkey-toggle__key-icon {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  background: currentColor;
+  border-radius: 2px;
+}
+
+.bigkey-toggle__key-icon::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  content: "";
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
+}
+
+.bigkey-toggle__slash {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    currentColor 45%,
+    currentColor 55%,
+    transparent 60%
+  );
+}
+
+.bigkey-toggle__text {
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Caption Component with Enhanced Typography and Layout */
+.caption,
+#caption {
+  max-height: 100%; /* Ensure it fits in the fixed container */
+  padding: var(--spacing-sm) var(--spacing-md);
+  overflow: hidden; /* Prevent content from overflowing */
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+  hyphens: auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  background-color: rgba(0, 0, 0, 0.85);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  transition: all var(--transition); /* Prevent content from overflowing */
+}
+
+/* Enhanced Caption Output Component */
+.caption-output {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  overflow-y: auto; /* Allow scrolling for very long content */
+  -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
+  color: var(--color-text);
+  text-align: center;
+  scrollbar-width: none; /* Hide scrollbar for IE and Edge */
+}
+
+/* Hide scrollbar for webkit browsers */
+.caption-output::-webkit-scrollbar {
+  display: none;
+}
+
+.caption-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  min-height: 100%;
+  padding: var(--spacing-xs) 0;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.caption-text {
+  display: inline;
+  line-height: inherit;
+}
+
+/* Enhanced Mini Icons in Caption */
+.caption .mini,
+#caption .mini,
+.caption-output .mini,
+.caption-content .mini {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin: 0 var(--spacing-xs);
   vertical-align: text-bottom;
   border: none;
   box-shadow: none;
-  /* Inherit image rendering from parent .mini class */
+  transition: transform 0.15s ease;
+  /* Inherit crisp rendering from base .mini class */
 }
 
-/* Caption Container */
+/* Hover effect for mini icons */
+.caption-output .mini:hover,
+.caption-content .mini:hover {
+  transform: scale(1.1);
+}
+
+/* Improved text spacing around icons */
+.caption-content img.mini + img.mini {
+  margin-left: var(--spacing-sm);
+}
+
+/* Long text handling */
+.caption-content {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* Enhanced Caption Container */
 .caption-container {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 1rem;
-  text-align: center;
+  height: 4rem; /* Fixed height to prevent layout shift */
+  padding: var(--spacing-sm);
+  overflow: hidden; /* Prevent content overflow from affecting layout */
+  text-align: center; /* Prevent content overflow from affecting layout */
+}
+
+/* Responsive Design for Caption */
+@media (max-width: 768px) {
+  .caption,
+  #caption {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+  }
+
+  .caption-container {
+    height: 3.5rem; /* Fixed height on mobile too */
+    padding: var(--spacing-xs);
+  }
+
+  .caption .mini,
+  #caption .mini,
+  .caption-output .mini,
+  .caption-content .mini {
+    width: 16px;
+    height: 16px;
+    margin: 0 2px;
+  }
+}
+
+/* Dark/Light theme adjustments */
+@media (prefers-color-scheme: light) {
+  .caption,
+  #caption {
+    color: var(--color-text-dark, #213547);
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .caption-content {
+    text-shadow: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .caption,
+  #caption {
+    background-color: var(--color-bg-secondary);
+    border: 2px solid var(--color-primary);
+  }
+
+  .caption-content {
+    font-weight: 600;
+    text-shadow: none;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .caption,
+  #caption {
+    transition: none;
+  }
+
+  .caption-output .mini,
+  .caption-content .mini {
+    transition: none;
+  }
+
+  .caption-output .mini:hover,
+  .caption-content .mini:hover {
+    transform: none;
+  }
 }

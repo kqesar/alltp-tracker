@@ -24,6 +24,67 @@ export type DungeonTooltipData = TooltipData & {
 
 // Item tooltips data
 export const itemTooltips: Record<string, TooltipData> = {
+  // Big Keys for keysanity mode
+  bigkey0: {
+    description: "Big Key for Eastern Palace - required to access the boss",
+    mechanics: "In keysanity mode, can be found anywhere in the world",
+    tips: "Essential for completing Eastern Palace and defeating Armos Knights",
+    title: "Eastern Palace Big Key",
+  },
+  bigkey1: {
+    description: "Big Key for Desert Palace - required to access the boss",
+    mechanics: "In keysanity mode, can be found anywhere in the world",
+    tips: "Essential for completing Desert Palace and defeating Lanmolas",
+    title: "Desert Palace Big Key",
+  },
+  bigkey2: {
+    description: "Big Key for Tower of Hera - required to access the boss",
+    mechanics: "In keysanity mode, can be found anywhere in the world",
+    tips: "Essential for completing Tower of Hera and defeating Moldorm",
+    title: "Tower of Hera Big Key",
+  },
+  bigkey3: {
+    description: "Big Key for Palace of Darkness - required to access the boss",
+    mechanics: "In keysanity mode, can be found anywhere in the world",
+    tips: "Essential for completing Palace of Darkness and defeating Helmasaur King",
+    title: "Palace of Darkness Big Key",
+  },
+  bigkey4: {
+    description: "Big Key for Swamp Palace - required to access the boss",
+    mechanics: "In keysanity mode, can be found anywhere in the world",
+    tips: "Essential for completing Swamp Palace and defeating Arrghus",
+    title: "Swamp Palace Big Key",
+  },
+  bigkey5: {
+    description: "Big Key for Skull Woods - required to access the boss",
+    mechanics: "In keysanity mode, can be found anywhere in the world",
+    tips: "Essential for completing Skull Woods and defeating Mothula",
+    title: "Skull Woods Big Key",
+  },
+  bigkey6: {
+    description: "Big Key for Thieves' Town - required to access the boss",
+    mechanics: "In keysanity mode, can be found anywhere in the world",
+    tips: "Essential for completing Thieves' Town and defeating Blind",
+    title: "Thieves' Town Big Key",
+  },
+  bigkey7: {
+    description: "Big Key for Ice Palace - required to access the boss",
+    mechanics: "In keysanity mode, can be found anywhere in the world",
+    tips: "Essential for completing Ice Palace and defeating Kholdstare",
+    title: "Ice Palace Big Key",
+  },
+  bigkey8: {
+    description: "Big Key for Misery Mire - required to access the boss",
+    mechanics: "In keysanity mode, can be found anywhere in the world",
+    tips: "Essential for completing Misery Mire and defeating Vitreous",
+    title: "Misery Mire Big Key",
+  },
+  bigkey9: {
+    description: "Big Key for Turtle Rock - required to access the boss",
+    mechanics: "In keysanity mode, can be found anywhere in the world",
+    tips: "Essential for completing Turtle Rock and defeating Trinexx",
+    title: "Turtle Rock Big Key",
+  },
   // Medallions
   bombos: {
     description: "Powerful medallion that creates screen-wide explosions",

@@ -16,6 +16,16 @@ const mockSetCaption = vi.fn();
 
 const mockItems: ItemState = {
   agahnim: 0,
+  bigkey0: 0,
+  bigkey1: 0,
+  bigkey2: 0,
+  bigkey3: 0,
+  bigkey4: 0,
+  bigkey5: 0,
+  bigkey6: 0,
+  bigkey7: 0,
+  bigkey8: 0,
+  bigkey9: 0,
   blank: false,
   bombos: false,
   book: false,
@@ -83,6 +93,7 @@ const mockMedallions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 vi.mock("@/stores/gameStore", () => ({
   useGameStore: vi.fn(() => ({
+    bigKeysVisible: true,
     items: mockItems,
     mapOrientation: false,
     medallions: mockMedallions,
@@ -239,16 +250,30 @@ describe("DungeonBoss", () => {
     });
   });
 
-  it("calls dungeon.isBeatable with items and medallions", () => {
+  it("calls dungeon.isBeatable with items, medallions, and bigKeysVisible", () => {
     const mockIsBeatable = vi.fn(() => "unavailable");
     const dungeonWithMock = {
       ...mockDungeon,
       isBeatable: mockIsBeatable,
     };
 
+    // Ensure the mock returns the expected values
+    mockUseGameStore.mockReturnValue({
+      bigKeysVisible: true,
+      items: mockItems,
+      mapOrientation: false,
+      medallions: mockMedallions,
+      setCaption: mockSetCaption,
+      toggleDungeonBoss: mockToggleDungeonBoss,
+    });
+
     render(<DungeonBoss {...defaultProps} dungeon={dungeonWithMock} />);
 
-    expect(mockIsBeatable).toHaveBeenCalledWith(mockItems, mockMedallions);
+    expect(mockIsBeatable).toHaveBeenCalledWith(
+      mockItems,
+      mockMedallions,
+      true,
+    );
   });
 
   it("updates medallion info for Misery Mire (index 8)", async () => {

@@ -31,22 +31,22 @@ describe("App - GridItem Integration", () => {
   it("should render the expected number of grid rows", () => {
     render(<App />);
 
-    // The defaultItemGrid has 6 rows, so we should have 6 CSS grid rows
+    // The defaultItemGrid has 7 rows (reorganized layout), so we should have 7 CSS grid rows
     const trackerRows = document.querySelectorAll(".tracker-row");
-    expect(trackerRows).toHaveLength(6);
+    expect(trackerRows).toHaveLength(7);
   });
 
   it("should render the correct number of items per row (excluding empty cells)", () => {
     render(<App />);
 
-    // Check first row has 5 grid items (buttons) - empty strings are not rendered
+    // Check first row has 7 grid items (buttons) - all items in first row are now non-empty
     const firstRow = document.querySelector(".tracker-row");
     expect(firstRow).toBeInTheDocument();
 
     const gridButtons = firstRow?.querySelectorAll("button.griditem");
-    expect(gridButtons).toHaveLength(5); // ["", "hookshot", "hammer", "firerod", "icerod", "boomerang", ""] = 5 non-empty items
+    expect(gridButtons).toHaveLength(7); // ["flute", "hookshot", "hammer", "firerod", "icerod", "boomerang", "net"] = 7 items
 
-    // Should have halfcells for spacing
+    // Should have 2 halfcells for grid alignment (one at start, one at end)
     const halfcells = firstRow?.querySelectorAll(".halfcell");
     expect(halfcells).toHaveLength(2);
   });
