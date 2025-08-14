@@ -120,7 +120,7 @@ export const dungeons: DungeonItem[] = [
       bigKeysVisible?: boolean,
     ) => {
       if (items.bow > 1) {
-        // Si les grosses clés sont affichées, vérifier qu'on possède la grosse clé
+        // If big keys are displayed, check that we have the big key
         if (bigKeysVisible && !items.bigkey0) return "unavailable";
         return "available";
       }
