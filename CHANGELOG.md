@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/kqesar/alltp-tracker/compare/v2.2.1...v2.3.0) (2025-08-14)
+
+
+### ✨ Features
+
+* add big keys management ([#47](https://github.com/kqesar/alltp-tracker/issues/47)) ([098b9ec](https://github.com/kqesar/alltp-tracker/commit/098b9ec71807d3abe1fdfe1f721f52b03a69e79d))
+* add little keys management ([#48](https://github.com/kqesar/alltp-tracker/issues/48)) ([85eee48](https://github.com/kqesar/alltp-tracker/commit/85eee480065985ce43fab50373e4db1cf9189f3a))
+
 ### [2.2.1](https://github.com/kqesar/alltp-tracker/compare/v2.2.0...v2.2.1) (2025-08-14)
 
 
