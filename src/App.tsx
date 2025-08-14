@@ -2,6 +2,7 @@ import { useState } from "react";
 import "@/styles/index.css";
 import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
+import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
 import { Caption } from "@/components/ui/Caption";
 import { Header } from "@/components/ui/Header";
 import { CSS_CLASSES } from "@/constants";
@@ -14,7 +15,7 @@ import { useGameStore } from "@/stores/gameStore";
  */
 function App() {
   // Get state and actions from Zustand store
-  const { caption } = useGameStore();
+  const { caption, bigKeysVisible, setBigKeysVisible } = useGameStore();
 
   // Layout state (keep local as it doesn't need to be shared)
   const [itemLayout] = useState(defaultItemGrid);
@@ -25,6 +26,7 @@ function App() {
         Skip to main content
       </a>
       <Header />
+      <BigKeyToggle isVisible={bigKeysVisible} onToggle={setBigKeysVisible} />
       {/* Static IDs are intentional for SPA layout elements referenced by CSS and skip links */}
       <main className="main-content" id="main-content">
         <div id="layoutdiv">

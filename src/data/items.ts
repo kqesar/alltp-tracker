@@ -1,16 +1,29 @@
 // Default item grid layout
 export const defaultItemGrid: string[][] = [
-  ["", "hookshot", "hammer", "firerod", "icerod", "boomerang", ""],
-  ["bow", "lantern", "flute", "sword", "tunic", "shield", "boss0"],
-  ["flute", "book", "mirror", "bombos", "ether", "quake", "boss1"],
-  ["shovel", "glove", "bottle", "somaria", "byrna", "boots", "boss2"],
-  ["powder", "mushroom", "cape", "mirror", "moonpearl", "flippers", "agahnim"],
+  ["flute", "hookshot", "hammer", "firerod", "icerod", "boomerang", "net"],
+  ["bow", "lantern", "shield", "sword", "tunic", "agahnim", "boots"],
+  ["shovel", "book", "quake", "bombos", "ether", "bigkey0", "boss0"],
+  ["powder", "glove", "bottle", "somaria", "byrna", "bigkey1", "boss1"],
+  ["mushroom", "cape", "mirror", "moonpearl", "flippers", "bigkey2", "boss2"],
   ["boss3", "boss4", "boss5", "boss6", "boss7", "boss8", "boss9"],
+  ["bigkey3", "bigkey4", "bigkey5", "bigkey6", "bigkey7", "bigkey8", "bigkey9"],
 ];
 
 // Item states - both boolean and numeric
 export const items: Record<string, number | boolean> = {
   agahnim: 0,
+
+  // Big keys for keysanity mode (0 = not obtained, 1 = obtained)
+  bigkey0: 0, // Eastern Palace
+  bigkey1: 0, // Desert Palace
+  bigkey2: 0, // Tower of Hera
+  bigkey3: 0, // Palace of Darkness
+  bigkey4: 0, // Swamp Palace
+  bigkey5: 0, // Skull Woods
+  bigkey6: 0, // Thieves' Town
+  bigkey7: 0, // Ice Palace
+  bigkey8: 0, // Misery Mire
+  bigkey9: 0, // Turtle Rock
 
   blank: false,
   bombos: false,
@@ -98,6 +111,18 @@ export const dungeonchests: Record<number, number> = {
 // Item minimum values
 export const itemsMin: Record<string, number> = {
   agahnim: 0,
+
+  // Big keys minimum values
+  bigkey0: 0,
+  bigkey1: 0,
+  bigkey2: 0,
+  bigkey3: 0,
+  bigkey4: 0,
+  bigkey5: 0,
+  bigkey6: 0,
+  bigkey7: 0,
+  bigkey8: 0,
+  bigkey9: 0,
   boomerang: 0,
 
   boss0: 1,
@@ -150,6 +175,18 @@ export const itemsMin: Record<string, number> = {
 // Item maximum values
 export const itemsMax: Record<string, number> = {
   agahnim: 1,
+
+  // Big keys maximum values
+  bigkey0: 1,
+  bigkey1: 1,
+  bigkey2: 1,
+  bigkey3: 1,
+  bigkey4: 1,
+  bigkey5: 1,
+  bigkey6: 1,
+  bigkey7: 1,
+  bigkey8: 1,
+  bigkey9: 1,
   boomerang: 3,
 
   boss0: 2,

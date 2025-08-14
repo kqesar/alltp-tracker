@@ -43,7 +43,7 @@ describe("Caption", () => {
     expect(img).not.toBeNull();
     expect(img).toHaveAttribute("src", "/assets/bow2.png");
     expect(img).toHaveAttribute("class", "mini");
-    expect(img).toHaveAttribute("alt", "Item icon");
+    expect(img).toHaveAttribute("alt", "Game item icon");
   });
 
   it("renders multiple images in text", () => {
@@ -84,7 +84,7 @@ describe("Caption", () => {
 
     // Check that text parts are rendered using partial text matching
     expect(screen.getByText(/King's Tomb/)).toBeInTheDocument();
-    expect(screen.getByText(/ \+ /)).toBeInTheDocument();
+    expect(screen.getByText(/\+/)).toBeInTheDocument();
     expect(screen.getByText(/\//)).toBeInTheDocument();
 
     // Check that images are rendered

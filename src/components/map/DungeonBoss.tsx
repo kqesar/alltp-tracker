@@ -14,8 +14,14 @@ type DungeonBossProps = {
  * @param index - The dungeon index
  */
 export const DungeonBoss = ({ dungeon, index }: DungeonBossProps) => {
-  const { items, medallions, mapOrientation, toggleDungeonBoss, setCaption } =
-    useGameStore();
+  const {
+    items,
+    medallions,
+    mapOrientation,
+    toggleDungeonBoss,
+    setCaption,
+    bigKeysVisible,
+  } = useGameStore();
 
   // Get dungeon boss availability class
   const getAvailabilityClass = () => {
@@ -26,7 +32,7 @@ export const DungeonBoss = ({ dungeon, index }: DungeonBossProps) => {
     if (bossValue === 2) return "opened";
 
     if (dungeon.isBeaten) return "opened";
-    return dungeon.isBeatable(items, medallions);
+    return dungeon.isBeatable(items, medallions, bigKeysVisible);
   };
 
   // Highlight dungeon and show caption with dynamic medallion info

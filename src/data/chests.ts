@@ -85,7 +85,11 @@ export interface DungeonItem {
   y: string;
   image: string;
   isBeaten: boolean;
-  isBeatable: (items: ItemState, medallions?: number[]) => string;
+  isBeatable: (
+    items: ItemState,
+    medallions?: number[],
+    bigKeysVisible?: boolean,
+  ) => string;
   canGetChest: (items: ItemState, medallions?: number[]) => string;
 }
 
@@ -110,9 +114,17 @@ export const dungeons: DungeonItem[] = [
     },
     id: 0,
     image: "boss02.png",
-    isBeatable: (items: ItemState) => {
-      if (items.bow > 1) return "available";
-      else return "unavailable";
+    isBeatable: (
+      items: ItemState,
+      medallions?: number[],
+      bigKeysVisible?: boolean,
+    ) => {
+      if (items.bow > 1) {
+        // If big keys are displayed, check that we have the big key
+        if (bigKeysVisible && !items.bigkey0) return "unavailable";
+        return "available";
+      }
+      return "unavailable";
     },
     isBeaten: false,
     name: `Eastern Palace <img src='${import.meta.env.BASE_URL}assets/bow2.png' class='mini'/>`,
@@ -130,11 +142,19 @@ export const dungeons: DungeonItem[] = [
     },
     id: 1,
     image: "boss12.png",
-    isBeatable: (items: ItemState) => {
+    isBeatable: (
+      items: ItemState,
+      medallions?: number[],
+      bigKeysVisible?: boolean,
+    ) => {
       if (!items.glove) return "unavailable";
       if (!items.book && !(items.flute && items.glove === 2 && items.mirror))
         return "unavailable";
       if (!items.lantern && !items.firerod) return "unavailable";
+
+      // If big keys are displayed, check that we have the big key
+      if (bigKeysVisible && !items.bigkey1) return "unavailable";
+
       if (!items.boots) return "possible";
       return "available";
     },
@@ -149,10 +169,18 @@ export const dungeons: DungeonItem[] = [
     },
     id: 2,
     image: "boss22.png",
-    isBeatable: (items: ItemState) => {
+    isBeatable: (
+      items: ItemState,
+      medallions?: number[],
+      bigKeysVisible?: boolean,
+    ) => {
       if (!items.flute && !items.glove) return "unavailable";
       if (!items.mirror && !(items.hookshot && items.hammer))
         return "unavailable";
+
+      // If big keys are displayed, check that we have the big key
+      if (bigKeysVisible && !items.bigkey2) return "unavailable";
+
       if (items.firerod || items.lantern) return "available";
       return "possible";
     },
@@ -176,10 +204,18 @@ export const dungeons: DungeonItem[] = [
     },
     id: 3,
     image: "boss32.png",
-    isBeatable: (items: ItemState) => {
+    isBeatable: (
+      items: ItemState,
+      medallions?: number[],
+      bigKeysVisible?: boolean,
+    ) => {
       if (!items.moonpearl || !(items.bow > 1) || !items.hammer)
         return "unavailable";
       if (!items.agahnim && !items.glove) return "unavailable";
+
+      // If big keys are displayed, check that we have the big key
+      if (bigKeysVisible && !items.bigkey3) return "unavailable";
+
       return "available";
     },
     isBeaten: false,
@@ -211,7 +247,12 @@ export const dungeons: DungeonItem[] = [
     },
     id: 4,
     image: "boss42.png",
-    isBeatable: (items: ItemState) => {
+    isBeatable: (
+      items: ItemState,
+      medallions?: number[],
+      bigKeysVisible?: boolean,
+    ) => {
+      if (bigKeysVisible && !items.bigkey4) return "unavailable";
       if (!items.moonpearl || !items.mirror || !items.flippers)
         return "unavailable";
       if (!items.hammer || !items.hookshot) return "unavailable";
@@ -231,7 +272,12 @@ export const dungeons: DungeonItem[] = [
     },
     id: 5,
     image: "boss52.png",
-    isBeatable: (items: ItemState) => {
+    isBeatable: (
+      items: ItemState,
+      medallions?: number[],
+      bigKeysVisible?: boolean,
+    ) => {
+      if (bigKeysVisible && !items.bigkey5) return "unavailable";
       if (!steve(items) || !items.firerod) return "unavailable";
       return "available";
     },
@@ -248,7 +294,12 @@ export const dungeons: DungeonItem[] = [
     },
     id: 6,
     image: "boss62.png",
-    isBeatable: (items: ItemState) => {
+    isBeatable: (
+      items: ItemState,
+      medallions?: number[],
+      bigKeysVisible?: boolean,
+    ) => {
+      if (bigKeysVisible && !items.bigkey6) return "unavailable";
       if (steve(items)) return "available";
       return "unavailable";
     },
@@ -267,7 +318,12 @@ export const dungeons: DungeonItem[] = [
     },
     id: 7,
     image: "boss72.png",
-    isBeatable: (items: ItemState) => {
+    isBeatable: (
+      items: ItemState,
+      medallions?: number[],
+      bigKeysVisible?: boolean,
+    ) => {
+      if (bigKeysVisible && !items.bigkey7) return "unavailable";
       if (
         !items.moonpearl ||
         !items.flippers ||
@@ -306,7 +362,12 @@ export const dungeons: DungeonItem[] = [
     },
     id: 8,
     image: "boss82.png",
-    isBeatable: (items: ItemState, medallions: number[] = []) => {
+    isBeatable: (
+      items: ItemState,
+      medallions: number[] = [],
+      bigKeysVisible?: boolean,
+    ) => {
+      if (bigKeysVisible && !items.bigkey8) return "unavailable";
       if (
         !items.moonpearl ||
         !items.flute ||
@@ -361,7 +422,12 @@ export const dungeons: DungeonItem[] = [
     },
     id: 9,
     image: "boss92.png",
-    isBeatable: (items: ItemState, medallions: number[] = []) => {
+    isBeatable: (
+      items: ItemState,
+      medallions: number[] = [],
+      bigKeysVisible?: boolean,
+    ) => {
+      if (bigKeysVisible && !items.bigkey9) return "unavailable";
       if (
         !items.moonpearl ||
         !items.hammer ||

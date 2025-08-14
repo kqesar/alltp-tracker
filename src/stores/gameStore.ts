@@ -17,6 +17,7 @@ interface GameState {
   medallions: number[];
   caption: string;
   mapOrientation: boolean;
+  bigKeysVisible: boolean;
 
   // Actions
   setCaption: (caption: string) => void;
@@ -26,12 +27,14 @@ interface GameState {
   toggleDungeonBoss: (dungeonIndex: number) => void;
   setChestsState: (chests: ChestItem[]) => void;
   setDungeonsState: (dungeons: DungeonItem[]) => void;
+  setBigKeysVisible: (visible: boolean) => void;
 
   // Reset function for testing or new game
   reset: () => void;
 }
 
 const initialState = {
+  bigKeysVisible: true,
   caption: "",
   chestsState: [...initialChests],
   dungeonsState: [...initialDungeons],
@@ -121,6 +124,8 @@ export const useGameStore = create<GameState>()(
       },
 
       reset: () => set(initialState),
+
+      setBigKeysVisible: (visible: boolean) => set({ bigKeysVisible: visible }),
 
       setCaption: (caption: string) => set({ caption }),
 

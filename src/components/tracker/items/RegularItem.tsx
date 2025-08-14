@@ -23,10 +23,10 @@ type RegularItemProps = {
  * @param onFocus - Callback when item receives focus
  */
 export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
-  const { items, handleItemClick } = useGameStore();
+  const { items, handleItemClick, bigKeysVisible } = useGameStore();
   const { isTouchDevice } = useDeviceDetection();
 
-  // Set up touch gestures for mobile devices
+  // Set up touch gestures for mobile devices (must be called before any early returns)
   const { ref: touchRef } = useTouchGestures({
     disabled: item === "blank" || !isTouchDevice,
     onLongPress: () => {
@@ -43,6 +43,19 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
     },
   });
 
+  // Hide big key items if bigKeysVisible is false
+  if (item?.startsWith("bigkey") && !bigKeysVisible) {
+    return (
+      <div
+        className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
+        data-grid-col={col}
+        data-grid-row={row}
+        key={`${row}_${col}`}
+        style={{ opacity: 0, pointerEvents: "none" }}
+      />
+    );
+  }
+
   // Type-safe ref callback for button element
   const setButtonRef = (element: HTMLButtonElement | null) => {
     if (touchRef) {
@@ -58,6 +71,11 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
   const getItemBackground = (item: string): string => {
     if (!item || item === "blank") return "";
 
+    // Special handling for big keys - all use the same bigkey.png image
+    if (item.startsWith("bigkey")) {
+      return `url(${getAssetPath("bigkey.png")})`;
+    }
+
     if (typeof items[item] === "boolean") {
       return `url(${getAssetPath(`${item}.png`)})`;
     } else {
@@ -72,6 +90,11 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
    */
   const getItemOpacity = (item: string): string => {
     if (!item || item === "blank") return "0.25";
+
+    // Special handling for big keys - obtained (1) = full opacity, not obtained (0) = low opacity
+    if (item.startsWith("bigkey")) {
+      return (items[item] as number) === 1 ? "1" : "0.25";
+    }
 
     if (typeof items[item] === "boolean") {
       return items[item] ? "1" : "0.25";
@@ -103,6 +126,18 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
 
     // Convert item identifiers to readable names
     const itemNames: Record<string, string> = {
+      // Big keys for keysanity
+      bigkey0: "Eastern Palace Big Key",
+      bigkey1: "Desert Palace Big Key",
+      bigkey2: "Tower of Hera Big Key",
+      bigkey3: "Palace of Darkness Big Key",
+      bigkey4: "Swamp Palace Big Key",
+      bigkey5: "Skull Woods Big Key",
+      bigkey6: "Thieves' Town Big Key",
+      bigkey7: "Ice Palace Big Key",
+      bigkey8: "Misery Mire Big Key",
+      bigkey9: "Turtle Rock Big Key",
+
       bomb: "Bombs",
       bombos: "Bombos Medallion",
       book: "Book of Mudora",

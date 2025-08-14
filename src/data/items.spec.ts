@@ -150,7 +150,7 @@ describe("defaultItemGrid", () => {
   });
 
   it("should have expected dimensions", () => {
-    expect(defaultItemGrid.length).toBe(6); // 6 rows
+    expect(defaultItemGrid.length).toBe(7); // 7 rows (reorganized grid layout)
     expect(defaultItemGrid[0].length).toBe(7); // 7 columns
   });
 

@@ -9,9 +9,9 @@ describe("App - GridRow Integration", () => {
   it("should render all grid rows through GridRow component", () => {
     render(<App />);
 
-    // The defaultItemGrid has 6 rows, so we should have 6 CSS grid rows
+    // The defaultItemGrid has 7 rows (reorganized layout), so we should have 7 CSS grid rows
     const trackerRows = document.querySelectorAll(".tracker-row");
-    expect(trackerRows).toHaveLength(6);
+    expect(trackerRows).toHaveLength(7);
   });
 
   it("should render tracker grid with correct structure", () => {
