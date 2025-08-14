@@ -22,8 +22,8 @@ export const MedaillonOverlay = ({ bossNumber }: MedaillonOverlayProps) => {
   // 0 = unknown/not assigned (medallion0.png)
   // 1 = bombos (medallion1.png)
   // 2 = ether (medallion2.png)
-  // 3 = quake (cycle back to medallion0.png)
-  const imageIndex = medallionValue === 3 ? 0 : medallionValue;
+  // 3 = quake (medallion3.png)
+  const imageIndex = medallionValue === 4 ? 0 : medallionValue;
 
   return (
     <div

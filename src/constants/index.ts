@@ -49,6 +49,7 @@ export const MEDALLION_VALUES = {
 export const ASSET_NAMES = {
   MEDALLION_BOMBOS: "medallion1",
   MEDALLION_ETHER: "medallion2",
+  MEDALLION_QUAKE: "medallion3",
   MEDALLION_UNKNOWN: "medallion0",
   POI: "poi.png",
 };

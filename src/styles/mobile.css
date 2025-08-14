@@ -90,8 +90,7 @@
     gap: 0.5rem;
   }
 
-  .header__link,
-  .header__help-button {
+  .header__link {
     min-width: var(--touch-target-min);
     min-height: var(--touch-target-min);
     padding: 0.5rem;
@@ -140,8 +139,7 @@
     gap: 0.25rem;
   }
 
-  .header__link span:not(.sr-only),
-  .header__help-button span:not(.sr-only) {
+  .header__link span:not(.sr-only) {
     display: none; /* Hide text labels on very small screens */
   }
 }

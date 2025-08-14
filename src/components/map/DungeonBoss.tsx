@@ -46,10 +46,7 @@ export const DungeonBoss = ({ dungeon, index }: DungeonBossProps) => {
           medallionName = "medallion2"; // ether
           break;
         case 3:
-          medallionName = "medallion0"; // quake (uses medallion0 image)
-          break;
-        default:
-          medallionName = "medallion0"; // unknown
+          medallionName = "medallion3"; // quake (uses medallion3 image)
           break;
       }
 

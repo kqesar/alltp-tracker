@@ -145,3 +145,7 @@ button:disabled {
     animation-iteration-count: 1;
   }
 }
+
+#layoutdiv {
+  text-align: center;
+}

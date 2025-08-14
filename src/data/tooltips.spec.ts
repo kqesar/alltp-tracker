@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   type DungeonTooltipData,
   dungeonTooltips,
-  helpContent,
   itemTooltips,
   type TooltipData,
 } from "./tooltips";
@@ -172,86 +171,6 @@ describe("tooltips data", () => {
     it("has medallion information for special dungeons", () => {
       expect(dungeonTooltips.boss8.medallion).toBeDefined(); // Misery Mire
       expect(dungeonTooltips.boss9.medallion).toBeDefined(); // Turtle Rock
-    });
-  });
-
-  describe("helpContent", () => {
-    it("has keyboardShortcuts section", () => {
-      expect(helpContent.keyboardShortcuts).toBeDefined();
-      expect(helpContent.keyboardShortcuts.title).toBe("Keyboard Shortcuts");
-      expect(Array.isArray(helpContent.keyboardShortcuts.sections)).toBe(true);
-    });
-
-    it("has gameplayTips section", () => {
-      expect(helpContent.gameplayTips).toBeDefined();
-      expect(helpContent.gameplayTips.title).toBe("Gameplay Tips");
-      expect(Array.isArray(helpContent.gameplayTips.sections)).toBe(true);
-    });
-
-    it("keyboard shortcuts have proper structure", () => {
-      helpContent.keyboardShortcuts.sections.forEach((section) => {
-        expect(section.title).toBeDefined();
-        expect(typeof section.title).toBe("string");
-        expect(section.title.length).toBeGreaterThan(0);
-
-        expect(Array.isArray(section.shortcuts)).toBe(true);
-        section.shortcuts.forEach((shortcut) => {
-          expect(shortcut.keys).toBeDefined();
-          expect(Array.isArray(shortcut.keys)).toBe(true);
-          expect(shortcut.keys.length).toBeGreaterThan(0);
-
-          expect(shortcut.description).toBeDefined();
-          expect(typeof shortcut.description).toBe("string");
-          expect(shortcut.description.length).toBeGreaterThan(0);
-        });
-      });
-    });
-
-    it("gameplay tips have proper structure", () => {
-      helpContent.gameplayTips.sections.forEach((section) => {
-        expect(section.title).toBeDefined();
-        expect(typeof section.title).toBe("string");
-        expect(section.title.length).toBeGreaterThan(0);
-
-        expect(Array.isArray(section.tips)).toBe(true);
-        section.tips.forEach((tip) => {
-          expect(typeof tip).toBe("string");
-          expect(tip.length).toBeGreaterThan(0);
-        });
-      });
-    });
-
-    it("includes essential keyboard shortcuts", () => {
-      const allShortcuts = helpContent.keyboardShortcuts.sections
-        .flatMap((section) => section.shortcuts)
-        .flatMap((shortcut) => shortcut.keys);
-
-      expect(allShortcuts).toContain("←");
-      expect(allShortcuts).toContain("→");
-      expect(allShortcuts).toContain("↑");
-      expect(allShortcuts).toContain("↓");
-      expect(allShortcuts).toContain("Space");
-      expect(allShortcuts).toContain("Enter");
-      expect(allShortcuts).toContain("Tab");
-    });
-
-    it("includes essential gameplay tips", () => {
-      const allTips = helpContent.gameplayTips.sections.flatMap(
-        (section) => section.tips,
-      );
-
-      expect(allTips.some((tip) => tip.includes("Moon Pearl"))).toBe(true);
-      expect(allTips.some((tip) => tip.includes("Lantern"))).toBe(true);
-      expect(allTips.some((tip) => tip.includes("medallion"))).toBe(true);
-    });
-
-    it("has multiple sections for both help types", () => {
-      expect(
-        helpContent.keyboardShortcuts.sections.length,
-      ).toBeGreaterThanOrEqual(3);
-      expect(helpContent.gameplayTips.sections.length).toBeGreaterThanOrEqual(
-        3,
-      );
     });
   });
 

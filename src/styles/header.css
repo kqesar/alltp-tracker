@@ -59,28 +59,6 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.header__help-button {
-  display: flex;
-  gap: var(--spacing-xs);
-  align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  cursor: pointer;
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--border-radius);
-  transition: all var(--transition);
-}
-
-.header__help-button:hover,
-.header__help-button:focus {
-  color: var(--color-primary);
-  outline: none;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: var(--color-primary);
-}
-
 .header__icon {
   width: 20px;
   height: 20px;
