@@ -66,9 +66,9 @@ describe("Header", () => {
     const nav = screen.getByRole("navigation");
     expect(nav).toBeInTheDocument();
 
-    // Check that SVG icons have aria-hidden attribute (Help, GitHub and Original links)
+    // Check that SVG icons have aria-hidden attribute (GitHub and Original links)
     const svgElements = document.querySelectorAll('svg[aria-hidden="true"]');
-    expect(svgElements).toHaveLength(3);
+    expect(svgElements).toHaveLength(2);
 
     // Check that IMG icon has proper alt text (ALttPR link)
     const imgElements = document.querySelectorAll('img[alt="Triforce icon"]');

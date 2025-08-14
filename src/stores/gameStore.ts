@@ -102,10 +102,7 @@ export const useGameStore = create<GameState>()(
                   medallionName = "medallion2";
                   break;
                 case 3:
-                  medallionName = "medallion0";
-                  break;
-                default:
-                  medallionName = "medallion0";
+                  medallionName = "medallion3";
                   break;
               }
 

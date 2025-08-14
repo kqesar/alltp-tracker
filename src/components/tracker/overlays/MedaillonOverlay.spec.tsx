@@ -71,7 +71,7 @@ describe("MedaillonOverlay", () => {
 
     const overlay = container.querySelector(".overlay-base.overlay--top-right");
     expect(overlay).toHaveStyle({
-      backgroundImage: "url(/assets/medallion0.png)",
+      backgroundImage: "url(/assets/medallion3.png)",
     });
   });
 
