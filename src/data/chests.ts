@@ -152,7 +152,7 @@ export const dungeons: DungeonItem[] = [
         return "unavailable";
       if (!items.lantern && !items.firerod) return "unavailable";
 
-      // Si les grosses clés sont affichées, vérifier qu'on possède la grosse clé
+      // If big keys are displayed, check that we have the big key
       if (bigKeysVisible && !items.bigkey1) return "unavailable";
 
       if (!items.boots) return "possible";
