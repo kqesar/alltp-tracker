@@ -70,7 +70,7 @@
 /* Main content offset for fixed header */
 .main-content {
   padding: var(--spacing-lg);
-  margin-top: var(--header-height);
+  margin-top: 8rem;
 }
 
 /* Responsive header */

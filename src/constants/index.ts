@@ -45,6 +45,23 @@ export const MEDALLION_VALUES = {
   UNKNOWN: 0,
 };
 
+// Small Keys Maximum Values per Dungeon
+export const SMALL_KEYS_MAX = {
+  DESERT_PALACE: 1, // smallkey1
+  EASTERN_PALACE: 1, // smallkey0
+  ICE_PALACE: 2, // smallkey7
+  MISERY_MIRE: 3, // smallkey8
+  PALACE_OF_DARKNESS: 6, // smallkey3
+  SKULL_WOODS: 3, // smallkey5
+  SWAMP_PALACE: 1, // smallkey4
+  THIEVES_TOWN: 1, // smallkey6
+  TOWER_OF_HERA: 1, // smallkey2
+  TURTLE_ROCK: 4, // smallkey9
+} as const;
+
+// Small Keys Maximum Values per Dungeon Index (ordered by dungeon index 0-9)
+export const SMALL_KEYS_MAX_BY_INDEX = [1, 1, 1, 6, 1, 3, 1, 2, 3, 4] as const;
+
 // Asset Names
 export const ASSET_NAMES = {
   MEDALLION_BOMBOS: "medallion1",

@@ -18,10 +18,12 @@ interface GameState {
   caption: string;
   mapOrientation: boolean;
   bigKeysVisible: boolean;
+  smallKeys: number[]; // Array of 10 dungeons (0-9) with small key counts
 
   // Actions
   setCaption: (caption: string) => void;
   handleItemClick: (item: string) => void;
+  handleSmallKeyClick: (dungeonIndex: number) => void;
   handleMedallionChange: (bossNumber: number, newValue: number) => void;
   toggleChest: (chestIndex: number) => void;
   toggleDungeonBoss: (dungeonIndex: number) => void;
@@ -41,6 +43,7 @@ const initialState = {
   items: { ...initialItems } as ItemState,
   mapOrientation: false,
   medallions: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  smallKeys: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 10 dungeons, all start at 0
 };
 
 export const useGameStore = create<GameState>()(
@@ -121,6 +124,23 @@ export const useGameStore = create<GameState>()(
           caption: updatedCaption,
           medallions: newMedallions,
         });
+      },
+
+      handleSmallKeyClick: (dungeonIndex: number) => {
+        const { smallKeys } = get();
+        const newSmallKeys = [...smallKeys];
+
+        // Get maximum for this dungeon
+        const maxValues = [1, 1, 1, 6, 1, 3, 1, 2, 3, 4]; // Based on SMALL_KEYS_MAX
+        const maxForDungeon = maxValues[dungeonIndex] || 0;
+
+        // Increment count, reset to 0 if exceeding max
+        newSmallKeys[dungeonIndex] =
+          newSmallKeys[dungeonIndex] + 1 > maxForDungeon
+            ? 0
+            : newSmallKeys[dungeonIndex] + 1;
+
+        set({ smallKeys: newSmallKeys });
       },
 
       reset: () => set(initialState),

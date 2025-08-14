@@ -84,9 +84,9 @@ describe("App - GridRow Integration", () => {
     const trackerRows = document.querySelectorAll(".tracker-row");
     expect(trackerRows.length).toBeGreaterThan(0);
 
-    // Each row should contain grid items
+    // Each row should contain grid items or empty containers with overlays
     trackerRows.forEach((row) => {
-      const gridItems = row.querySelectorAll("button.griditem");
+      const gridItems = row.querySelectorAll("button.griditem, .griditem");
       expect(gridItems.length).toBeGreaterThan(0);
       expect(gridItems.length).toBeLessThanOrEqual(7); // Max 7 items per row
 

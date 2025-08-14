@@ -1,5 +1,7 @@
 import { CornerTable } from "@/components/CornerTable";
-import { CSS_CLASSES } from "@/constants";
+import { BigKey } from "@/components/tracker/items/BigKey";
+import { SmallKey } from "@/components/tracker/items/SmallKey";
+import { CSS_CLASSES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import { itemsMin } from "@/data/items";
 import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 import { useTouchGestures } from "@/hooks/useTouchGestures";
@@ -23,7 +25,7 @@ type RegularItemProps = {
  * @param onFocus - Callback when item receives focus
  */
 export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
-  const { items, handleItemClick, bigKeysVisible } = useGameStore();
+  const { items, handleItemClick, bigKeysVisible, smallKeys } = useGameStore();
   const { isTouchDevice } = useDeviceDetection();
 
   // Set up touch gestures for mobile devices (must be called before any early returns)
@@ -43,16 +45,59 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
     },
   });
 
-  // Hide big key items if bigKeysVisible is false
-  if (item?.startsWith("bigkey") && !bigKeysVisible) {
+  // For big key items, render as empty item with overlays when bigKeysVisible is true
+  if (item?.startsWith("bigkey")) {
+    const dungeonIndex = parseInt(item.replace("bigkey", ""), 10);
+
+    if (!bigKeysVisible) {
+      return (
+        <div
+          className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
+          data-grid-col={col}
+          data-grid-row={row}
+          key={`${row}_${col}`}
+          style={{ opacity: 0, pointerEvents: "none" }}
+        />
+      );
+    }
+
     return (
       <div
-        className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
+        className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} bigkey-container`}
         data-grid-col={col}
         data-grid-row={row}
         key={`${row}_${col}`}
-        style={{ opacity: 0, pointerEvents: "none" }}
-      />
+      >
+        {/* 2x2 Grid Layout */}
+        <div className="bigkey-grid">
+          {/* Top Left - Empty */}
+          <div className="bigkey-quadrant bigkey-quadrant--top-left"></div>
+
+          {/* Top Right - Big Key */}
+          <div className="bigkey-quadrant bigkey-quadrant--top-right">
+            <BigKey col={col} dungeonIndex={dungeonIndex} row={row} />
+          </div>
+
+          {/* Bottom Left - Small Key */}
+          <div className="bigkey-quadrant bigkey-quadrant--bottom-left">
+            <SmallKey col={col} dungeonIndex={dungeonIndex} row={row} />
+          </div>
+
+          {/* Bottom Right - Small Keys Count Display */}
+          <div className="bigkey-quadrant bigkey-quadrant--bottom-right">
+            <div
+              className={`bigkey-count ${
+                (smallKeys[dungeonIndex] || 0) ===
+                SMALL_KEYS_MAX_BY_INDEX[dungeonIndex]
+                  ? "bigkey-count--maxed"
+                  : ""
+              }`}
+            >
+              {smallKeys[dungeonIndex] || 0}
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
