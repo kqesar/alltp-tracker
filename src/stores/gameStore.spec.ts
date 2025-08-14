@@ -153,4 +153,105 @@ describe("GameStore", () => {
     expect(state.caption).toBe("");
     expect(state.medallions[8]).toBe(0);
   });
+
+  describe("Small Keys", () => {
+    it("initializes with zero small keys for all dungeons", () => {
+      const { smallKeys } = useGameStore.getState();
+      expect(smallKeys).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    });
+
+    it("increments small key count for Eastern Palace (max 1)", () => {
+      const { handleSmallKeyClick } = useGameStore.getState();
+
+      handleSmallKeyClick(0); // Eastern Palace
+      expect(useGameStore.getState().smallKeys[0]).toBe(1);
+
+      // Should reset to 0 when clicking at max
+      handleSmallKeyClick(0);
+      expect(useGameStore.getState().smallKeys[0]).toBe(0);
+    });
+
+    it("increments small key count for Palace of Darkness (max 6)", () => {
+      const { handleSmallKeyClick } = useGameStore.getState();
+
+      // Test incrementing to max
+      for (let i = 1; i <= 6; i++) {
+        handleSmallKeyClick(3); // Palace of Darkness
+        expect(useGameStore.getState().smallKeys[3]).toBe(i);
+      }
+
+      // Should reset to 0 when clicking at max
+      handleSmallKeyClick(3);
+      expect(useGameStore.getState().smallKeys[3]).toBe(0);
+    });
+
+    it("increments small key count for Skull Woods (max 3)", () => {
+      const { handleSmallKeyClick } = useGameStore.getState();
+
+      // Test incrementing to max
+      for (let i = 1; i <= 3; i++) {
+        handleSmallKeyClick(5); // Skull Woods
+        expect(useGameStore.getState().smallKeys[5]).toBe(i);
+      }
+
+      // Should reset to 0 when clicking at max
+      handleSmallKeyClick(5);
+      expect(useGameStore.getState().smallKeys[5]).toBe(0);
+    });
+
+    it("increments small key count for Turtle Rock (max 4)", () => {
+      const { handleSmallKeyClick } = useGameStore.getState();
+
+      // Test incrementing to max
+      for (let i = 1; i <= 4; i++) {
+        handleSmallKeyClick(9); // Turtle Rock
+        expect(useGameStore.getState().smallKeys[9]).toBe(i);
+      }
+
+      // Should reset to 0 when clicking at max
+      handleSmallKeyClick(9);
+      expect(useGameStore.getState().smallKeys[9]).toBe(0);
+    });
+
+    it("handles all dungeons correctly with their respective maximums", () => {
+      const { handleSmallKeyClick } = useGameStore.getState();
+      const maxValues = [1, 1, 1, 6, 1, 3, 1, 2, 3, 4];
+
+      // Test each dungeon
+      maxValues.forEach((max, dungeonIndex) => {
+        // Reset store to ensure clean state
+        useGameStore.getState().reset();
+
+        // Increment to maximum
+        for (let i = 1; i <= max; i++) {
+          handleSmallKeyClick(dungeonIndex);
+          expect(useGameStore.getState().smallKeys[dungeonIndex]).toBe(i);
+        }
+
+        // One more click should reset to 0
+        handleSmallKeyClick(dungeonIndex);
+        expect(useGameStore.getState().smallKeys[dungeonIndex]).toBe(0);
+      });
+    });
+
+    it("resets small keys when store is reset", () => {
+      const { handleSmallKeyClick, reset } = useGameStore.getState();
+
+      // Add some small keys
+      handleSmallKeyClick(0);
+      handleSmallKeyClick(3);
+      handleSmallKeyClick(5);
+
+      expect(useGameStore.getState().smallKeys[0]).toBe(1);
+      expect(useGameStore.getState().smallKeys[3]).toBe(1);
+      expect(useGameStore.getState().smallKeys[5]).toBe(1);
+
+      // Reset
+      reset();
+
+      expect(useGameStore.getState().smallKeys).toEqual([
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ]);
+    });
+  });
 });

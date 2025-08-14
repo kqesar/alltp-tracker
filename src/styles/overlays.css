@@ -23,3 +23,191 @@
   right: 2px;
   bottom: 2px;
 }
+
+/* Big Key Overlay Styles */
+.big-key-overlay {
+  padding: 0;
+  margin: 0;
+
+  /* Reset button styles */
+  font: inherit;
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+/* Show border only when parent container is hovered */
+.bigkey-container:hover .big-key-overlay {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.big-key-overlay:hover,
+.big-key-overlay:focus {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+  background-color: rgba(0, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+}
+
+.big-key-overlay--obtained {
+  background-color: rgba(0, 100, 0, 0.7);
+  border-color: rgba(0, 255, 0, 0.6);
+}
+
+.big-key-overlay--obtained:hover {
+  background-color: rgba(0, 120, 0, 0.9);
+  border-color: rgba(0, 255, 0, 0.8);
+}
+
+.big-key-icon {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+  opacity: 0.9;
+}
+
+/* Small Key Overlay Styles */
+.small-key-overlay {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px;
+  margin: 0;
+
+  /* Reset button styles */
+  font: inherit;
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+/* Show border only when parent container is hovered */
+.bigkey-container:hover .small-key-overlay {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.small-key-overlay:hover,
+.small-key-overlay:focus {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+  background-color: rgba(0, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+}
+
+.small-key-overlay--maxed {
+  background-color: rgba(0, 100, 0, 0.7);
+  border-color: rgba(0, 255, 0, 0.6);
+}
+
+.small-key-overlay--maxed:hover {
+  background-color: rgba(0, 120, 0, 0.9);
+  border-color: rgba(0, 255, 0, 0.8);
+}
+
+.small-key-icon {
+  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+  opacity: 0.9;
+}
+
+.small-key-count {
+  flex-shrink: 0;
+  min-width: 8px;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+}
+
+.small-key-count--maxed {
+  color: #0f0;
+}
+
+/* Mobile responsiveness for overlays */
+@media (max-width: 768px) {
+  .overlay-base {
+    width: 24px;
+    height: 24px;
+  }
+
+  .small-key-count {
+    font-size: 8px;
+  }
+}
+
+/* Big Key Container 2x2 Grid System */
+.bigkey-container {
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s ease;
+}
+
+.bigkey-container:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.bigkey-grid {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  width: 100%;
+  height: 100%;
+}
+
+.bigkey-quadrant {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.bigkey-quadrant--top-left {
+  border-radius: 4px 0 0 0;
+}
+
+.bigkey-quadrant--top-right {
+  border-radius: 0 4px 0 0;
+}
+
+.bigkey-quadrant--bottom-left {
+  border-radius: 0 0 0 4px;
+}
+
+.bigkey-quadrant--bottom-right {
+  border-radius: 0 0 4px 0;
+}
+
+.bigkey-count {
+  font-size: 20px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+}
+
+.bigkey-count--maxed {
+  color: #0f0;
+}
+
+/* Adjust overlay positioning for 2x2 grid */
+.bigkey-quadrant .overlay-base {
+  position: static;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+}

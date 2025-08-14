@@ -75,7 +75,7 @@ export interface ChestItem {
   x: string;
   y: string;
   isOpened: boolean;
-  isAvailable: (items: ItemState, medallions?: number[]) => string;
+  isAvailable: (items: ItemState, _medallions?: number[]) => string;
 }
 
 export interface DungeonItem {
@@ -87,10 +87,10 @@ export interface DungeonItem {
   isBeaten: boolean;
   isBeatable: (
     items: ItemState,
-    medallions?: number[],
+    _medallions?: number[],
     bigKeysVisible?: boolean,
   ) => string;
-  canGetChest: (items: ItemState, medallions?: number[]) => string;
+  canGetChest: (items: ItemState, _medallions?: number[]) => string;
 }
 
 // Helper function for checking if player can access Dark World
@@ -116,7 +116,7 @@ export const dungeons: DungeonItem[] = [
     image: "boss02.png",
     isBeatable: (
       items: ItemState,
-      medallions?: number[],
+      _medallions?: number[],
       bigKeysVisible?: boolean,
     ) => {
       if (items.bow > 1) {
@@ -144,7 +144,7 @@ export const dungeons: DungeonItem[] = [
     image: "boss12.png",
     isBeatable: (
       items: ItemState,
-      medallions?: number[],
+      _medallions?: number[],
       bigKeysVisible?: boolean,
     ) => {
       if (!items.glove) return "unavailable";
@@ -171,7 +171,7 @@ export const dungeons: DungeonItem[] = [
     image: "boss22.png",
     isBeatable: (
       items: ItemState,
-      medallions?: number[],
+      _medallions?: number[],
       bigKeysVisible?: boolean,
     ) => {
       if (!items.flute && !items.glove) return "unavailable";
@@ -206,7 +206,7 @@ export const dungeons: DungeonItem[] = [
     image: "boss32.png",
     isBeatable: (
       items: ItemState,
-      medallions?: number[],
+      _medallions?: number[],
       bigKeysVisible?: boolean,
     ) => {
       if (!items.moonpearl || !(items.bow > 1) || !items.hammer)
@@ -249,7 +249,7 @@ export const dungeons: DungeonItem[] = [
     image: "boss42.png",
     isBeatable: (
       items: ItemState,
-      medallions?: number[],
+      _medallions?: number[],
       bigKeysVisible?: boolean,
     ) => {
       if (bigKeysVisible && !items.bigkey4) return "unavailable";
@@ -274,7 +274,7 @@ export const dungeons: DungeonItem[] = [
     image: "boss52.png",
     isBeatable: (
       items: ItemState,
-      medallions?: number[],
+      _medallions?: number[],
       bigKeysVisible?: boolean,
     ) => {
       if (bigKeysVisible && !items.bigkey5) return "unavailable";
@@ -296,7 +296,7 @@ export const dungeons: DungeonItem[] = [
     image: "boss62.png",
     isBeatable: (
       items: ItemState,
-      medallions?: number[],
+      _medallions?: number[],
       bigKeysVisible?: boolean,
     ) => {
       if (bigKeysVisible && !items.bigkey6) return "unavailable";
@@ -320,7 +320,7 @@ export const dungeons: DungeonItem[] = [
     image: "boss72.png",
     isBeatable: (
       items: ItemState,
-      medallions?: number[],
+      _medallions?: number[],
       bigKeysVisible?: boolean,
     ) => {
       if (bigKeysVisible && !items.bigkey7) return "unavailable";

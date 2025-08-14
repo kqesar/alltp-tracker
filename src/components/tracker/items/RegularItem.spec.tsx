@@ -28,9 +28,32 @@ vi.mock("../../CornerTable", () => ({
   CornerTable: () => <div data-testid="corner-table">CornerTable</div>,
 }));
 
+// Mock the SmallKey component
+vi.mock("./SmallKey", () => ({
+  SmallKey: ({
+    dungeonIndex,
+    row,
+    col,
+  }: {
+    dungeonIndex: number;
+    row: number;
+    col: number;
+  }) => (
+    <div
+      data-col={col}
+      data-row={row}
+      data-testid={`small-key-${dungeonIndex}`}
+    >
+      SmallKey {dungeonIndex}
+    </div>
+  ),
+}));
+
 describe("RegularItem", () => {
   const mockHandleItemClick = vi.fn();
   const mockItems = {
+    bigkey0: 0, // big key item
+    bigkey1: 1, // big key item (obtained)
     blank: "", // blank item
     boomerang: 0, // number item at minimum
     boots: false, // boolean item (not acquired)
@@ -42,8 +65,10 @@ describe("RegularItem", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (useGameStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      bigKeysVisible: true,
       handleItemClick: mockHandleItemClick,
       items: mockItems,
+      smallKeys: [0, 1, 2, 3, 0, 3, 1, 2, 3, 4], // Mock smallKeys array
     });
   });
 
@@ -203,5 +228,63 @@ describe("RegularItem", () => {
     // Both should have the same classes but render different items
     expect(div1).toHaveClass("griditem", "grid-item-base");
     expect(div2).toHaveClass("griditem", "grid-item-base");
+  });
+
+  describe("SmallKey integration", () => {
+    it("renders SmallKey for big key items when bigKeysVisible is true", () => {
+      const { getByTestId } = render(
+        <RegularItem col={5} item="bigkey0" row={2} />,
+      );
+
+      expect(getByTestId("small-key-0")).toBeInTheDocument();
+      expect(getByTestId("small-key-0")).toHaveAttribute("data-row", "2");
+      expect(getByTestId("small-key-0")).toHaveAttribute("data-col", "5");
+    });
+
+    it("renders SmallKey for different big key items", () => {
+      const { getByTestId: getByTestId1 } = render(
+        <RegularItem col={5} item="bigkey3" row={4} />,
+      );
+      const { getByTestId: getByTestId2 } = render(
+        <RegularItem col={6} item="bigkey9" row={6} />,
+      );
+
+      expect(getByTestId1("small-key-3")).toBeInTheDocument();
+      expect(getByTestId2("small-key-9")).toBeInTheDocument();
+    });
+
+    it("does not render SmallKey for non-bigkey items", () => {
+      const { queryByTestId } = render(
+        <RegularItem col={0} item="sword" row={0} />,
+      );
+
+      expect(queryByTestId("small-key-0")).not.toBeInTheDocument();
+    });
+
+    it("does not render SmallKey when bigKeysVisible is false", () => {
+      (useGameStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        bigKeysVisible: false,
+        handleItemClick: mockHandleItemClick,
+        items: mockItems,
+        smallKeys: [0, 1, 2, 3, 0, 3, 1, 2, 3, 4], // Mock smallKeys array
+      });
+
+      const { queryByTestId } = render(
+        <RegularItem col={5} item="bigkey0" row={2} />,
+      );
+
+      expect(queryByTestId("small-key-0")).not.toBeInTheDocument();
+    });
+
+    it("passes correct props to SmallKey component", () => {
+      const { getByTestId } = render(
+        <RegularItem col={6} item="bigkey8" row={6} />,
+      );
+
+      const smallKey = getByTestId("small-key-8");
+      expect(smallKey).toHaveAttribute("data-row", "6");
+      expect(smallKey).toHaveAttribute("data-col", "6");
+      expect(smallKey).toHaveTextContent("SmallKey 8");
+    });
   });
 });
