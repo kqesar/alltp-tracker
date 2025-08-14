@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/kqesar/alltp-tracker/compare/v2.1.0...v2.2.0) (2025-08-14)
+
+
+### 🐛 Bug Fixes
+
+* fix some bugs ([4b09909](https://github.com/kqesar/alltp-tracker/commit/4b0990999f9b3112a6ce35708b5cf605aa191022))
+* update path zelda triforce ([5dc51cb](https://github.com/kqesar/alltp-tracker/commit/5dc51cb11d07ec89004bdeff11febfb5d14eb5ed))
+
+
+### ✨ Features
+
+* add more mobile responsive ([4c83465](https://github.com/kqesar/alltp-tracker/commit/4c83465c0da974146c36a9e9243bc2bb296b39c1))
+* Add tooltip Modal to help to use tracker ([865a0a6](https://github.com/kqesar/alltp-tracker/commit/865a0a617a14b1dca87f82e1694155640eafd668))
+* **tracker:** enhance tracker navigation ([2441f3f](https://github.com/kqesar/alltp-tracker/commit/2441f3ff1520bab8a478235efb2e7f59072c05c3))
+
 ## [2.1.0](https://github.com/kqesar/alltp-tracker/compare/v2.0.2...v2.1.0) (2025-08-10)
 
 
