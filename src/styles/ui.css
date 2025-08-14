@@ -203,7 +203,7 @@
   height: 4rem; /* Fixed height to prevent layout shift */
   padding: var(--spacing-sm);
   overflow: hidden; /* Prevent content overflow from affecting layout */
-  text-align: center; /* Prevent content overflow from affecting layout */
+  text-align: center;
 }
 
 /* Responsive Design for Caption */
