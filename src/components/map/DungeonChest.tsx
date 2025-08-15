@@ -55,10 +55,7 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
           medallionName = ASSET_NAMES.MEDALLION_ETHER; // ether
           break;
         case MEDALLION_VALUES.QUAKE:
-          medallionName = ASSET_NAMES.MEDALLION_UNKNOWN; // quake (uses medallion0 image)
-          break;
-        default:
-          medallionName = ASSET_NAMES.MEDALLION_UNKNOWN; // unknown
+          medallionName = ASSET_NAMES.MEDALLION_QUAKE; // quake (uses medallion0 image)
           break;
       }
 
