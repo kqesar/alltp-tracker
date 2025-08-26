@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.3.6](https://github.com/kqesar/alltp-tracker/compare/v2.3.5...v2.3.6) (2025-08-26)
+
+
+### 📚 Documentation
+
+* add professional status badges to README ([#65](https://github.com/kqesar/alltp-tracker/issues/65)) ([398d82e](https://github.com/kqesar/alltp-tracker/commit/398d82e1466782311cdf18f47377a34f2a7ef5dd))
+
 ### [2.3.5](https://github.com/kqesar/alltp-tracker/compare/v2.3.4...v2.3.5) (2025-08-25)
 
 ### [2.3.4](https://github.com/kqesar/alltp-tracker/compare/v2.3.3...v2.3.4) (2025-08-25)
