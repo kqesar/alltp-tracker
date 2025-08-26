@@ -1,10 +1,8 @@
 # A Link to the Past Tracker
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/kqesar/alltp-tracker/deploy-pages.yml?branch=master&label=build)
-![Coverage](https://img.shields.io/codecov/c/github/kqesar/alltp-tracker?label=coverage)
 ![Version](https://img.shields.io/github/v/release/kqesar/alltp-tracker?label=version)
 ![License](https://img.shields.io/github/license/kqesar/alltp-tracker?label=license)
-![TypeScript](https://img.shields.io/github/languages/top/kqesar/alltp-tracker?label=language)
 
 A web-based item and progress tracker for The Legend of Zelda: A Link to the Past randomizer speedruns and playthroughs. This application helps players track their collected items, dungeon progress, and chest locations throughout their adventure in Hyrule.
 
