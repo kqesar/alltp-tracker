@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.3.7](https://github.com/kqesar/alltp-tracker/compare/v2.3.6...v2.3.7) (2025-08-26)
+
+
+### 🐛 Bug Fixes
+
+* remove 2 badges ([#67](https://github.com/kqesar/alltp-tracker/issues/67)) ([79671b5](https://github.com/kqesar/alltp-tracker/commit/79671b52cb60e4f7e827636f054169a07c964c11))
+
 ### [2.3.6](https://github.com/kqesar/alltp-tracker/compare/v2.3.5...v2.3.6) (2025-08-26)
 
 
