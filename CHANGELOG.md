@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.3.15](https://github.com/kqesar/alltp-tracker/compare/v2.3.14...v2.3.15) (2026-01-04)
+
 ### [2.3.14](https://github.com/kqesar/alltp-tracker/compare/v2.3.13...v2.3.14) (2026-01-04)
 
 ### [2.3.13](https://github.com/kqesar/alltp-tracker/compare/v2.3.12...v2.3.13) (2026-01-04)
