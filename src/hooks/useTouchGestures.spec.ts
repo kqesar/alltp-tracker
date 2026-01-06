@@ -14,9 +14,9 @@ const createMockElement = () =>
 
 describe("useTouchGestures", () => {
   let mockElement: HTMLElement;
-  let onTap: ReturnType<typeof vi.fn>;
-  let onLongPress: ReturnType<typeof vi.fn>;
-  let onSwipe: ReturnType<typeof vi.fn>;
+  let onTap: (event: TouchEvent | MouseEvent) => void;
+  let onLongPress: (event: TouchEvent | MouseEvent) => void;
+  let onSwipe: (direction: "left" | "right" | "up" | "down") => void;
 
   beforeEach(() => {
     mockElement = createMockElement();

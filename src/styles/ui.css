@@ -15,6 +15,8 @@
   top: 80px;
   right: 20px;
   z-index: var(--z-modal);
+  display: flex;
+  gap: var(--spacing-sm);
   pointer-events: auto;
 }
 
@@ -104,6 +106,13 @@
 .bigkey-toggle__text {
   white-space: nowrap;
   user-select: none;
+}
+
+/* Reset Icon in Big Key Toggle */
+.bigkey-toggle__reset-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
 }
 
 /* Caption Component with Enhanced Typography and Layout */

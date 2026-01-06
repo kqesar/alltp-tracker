@@ -5,21 +5,29 @@ import { defaultItemGrid } from "@/data/items";
 
 // Mock the gameStore
 vi.mock("@/stores/gameStore", () => ({
-  useGameStore: () => ({
-    handleItemClick: vi.fn(),
-    items: {
-      bomb: false,
-      boots: false,
-      bow: 0,
-      moonpearl: false,
-      shield: 0,
-      sword: 0,
-    },
-    medallions: {
-      8: 0, // Misery Mire
-      9: 0, // Turtle Rock
-    },
-  }),
+  useGameStore: (selector?: (state: unknown) => unknown) => {
+    const state = {
+      handleItemClick: vi.fn(),
+      itemLayout: defaultItemGrid,
+      items: {
+        bomb: false,
+        boots: false,
+        bow: 0,
+        moonpearl: false,
+        shield: 0,
+        sword: 0,
+      },
+      medallions: {
+        8: 0, // Misery Mire
+        9: 0, // Turtle Rock
+      },
+      setItemLayout: vi.fn(),
+    };
+    if (selector) {
+      return selector(state);
+    }
+    return state;
+  },
 }));
 
 // Mock the keyboard navigation hook
@@ -81,7 +89,7 @@ describe("Mobile Touch Integration", () => {
       screenSize: "small",
     });
 
-    const { container } = render(<TrackerGrid itemLayout={defaultItemGrid} />);
+    const { container } = render(<TrackerGrid />);
 
     // Check that the tracker grid is rendered
     const tracker = container.querySelector(".tracker");
@@ -95,7 +103,7 @@ describe("Mobile Touch Integration", () => {
       isTouchDevice: true,
     });
 
-    render(<TrackerGrid itemLayout={defaultItemGrid} />);
+    render(<TrackerGrid />);
 
     // Find an interactive item button
     const itemButtons = screen.getAllByRole("button");
@@ -116,7 +124,7 @@ describe("Mobile Touch Integration", () => {
       screenSize: "small",
     });
 
-    const { container } = render(<TrackerGrid itemLayout={defaultItemGrid} />);
+    const { container } = render(<TrackerGrid />);
 
     // Check that mobile-specific styling is applied through CSS
     const tracker = container.querySelector(".tracker");
@@ -130,7 +138,7 @@ describe("Mobile Touch Integration", () => {
       isTouchDevice: false,
     });
 
-    const { container } = render(<TrackerGrid itemLayout={defaultItemGrid} />);
+    const { container } = render(<TrackerGrid />);
 
     const tracker = container.querySelector(".tracker");
     expect(tracker).toBeInTheDocument();
@@ -146,7 +154,7 @@ describe("Mobile Touch Integration", () => {
       screenSize: "medium",
     });
 
-    const { container } = render(<TrackerGrid itemLayout={defaultItemGrid} />);
+    const { container } = render(<TrackerGrid />);
 
     const tracker = container.querySelector(".tracker");
     expect(tracker).toBeInTheDocument();
@@ -157,7 +165,7 @@ describe("Mobile Touch Integration", () => {
       isTouchDevice: true,
     });
 
-    render(<TrackerGrid itemLayout={defaultItemGrid} />);
+    render(<TrackerGrid />);
 
     // Check that all interactive elements have proper accessibility labels
     const buttons = screen.getAllByRole("button");
@@ -176,9 +184,7 @@ describe("Mobile Touch Integration", () => {
       orientation: "portrait",
     });
 
-    const { rerender, container } = render(
-      <TrackerGrid itemLayout={defaultItemGrid} />,
-    );
+    const { rerender, container } = render(<TrackerGrid />);
 
     // Test portrait orientation
     expect(container.querySelector(".tracker")).toBeInTheDocument();
@@ -187,7 +193,7 @@ describe("Mobile Touch Integration", () => {
     Object.assign(mockDeviceDetection, {
       orientation: "landscape",
     });
-    rerender(<TrackerGrid itemLayout={defaultItemGrid} />);
+    rerender(<TrackerGrid />);
 
     expect(container.querySelector(".tracker")).toBeInTheDocument();
   });
@@ -198,7 +204,7 @@ describe("Mobile Touch Integration", () => {
       pixelRatio: 2,
     });
 
-    const { container } = render(<TrackerGrid itemLayout={defaultItemGrid} />);
+    const { container } = render(<TrackerGrid />);
 
     const tracker = container.querySelector(".tracker");
     expect(tracker).toBeInTheDocument();

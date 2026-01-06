@@ -14,6 +14,22 @@ type RegularItemProps = {
   item: string;
   /** Callback when item receives focus for keyboard navigation */
   onFocus?: () => void;
+  /** Whether this item is draggable */
+  draggable?: boolean;
+  /** Handler for drag start event */
+  onDragStart?: () => void;
+  /** Handler for drag over event */
+  onDragOver?: (e: React.DragEvent) => void;
+  /** Handler for drag leave event */
+  onDragLeave?: () => void;
+  /** Handler for drop event */
+  onDrop?: () => void;
+  /** Handler for drag end event */
+  onDragEnd?: () => void;
+  /** Whether this item is the current drop target */
+  isDropTarget?: boolean;
+  /** Whether this item is being dragged */
+  isDragging?: boolean;
 };
 
 /**
@@ -24,7 +40,20 @@ type RegularItemProps = {
  * @param item - The item identifier
  * @param onFocus - Callback when item receives focus
  */
-export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
+export const RegularItem = ({
+  row,
+  col,
+  item,
+  onFocus,
+  draggable = false,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
+  isDropTarget = false,
+  isDragging = false,
+}: RegularItemProps) => {
   const { items, handleItemClick, bigKeysVisible, smallKeys } = useGameStore();
   const { isTouchDevice } = useDeviceDetection();
 
@@ -240,15 +269,30 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
     return "unknown state";
   };
 
+  const dragClassName = [
+    CSS_CLASSES.GRIDITEM,
+    CSS_CLASSES.GRID_ITEM_BASE,
+    isDragging ? "dragging" : "",
+    isDropTarget ? "drop-target" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <button
       aria-label={`${getItemName(item)}, ${getItemStateDescription(item)}. Click to change state.`}
-      className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
+      className={dragClassName}
       data-grid-col={col}
       data-grid-row={row}
       disabled={item === "blank"}
+      draggable={draggable && item !== "blank"}
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
+      onDragEnd={onDragEnd}
+      onDragLeave={onDragLeave}
+      onDragOver={onDragOver}
+      onDragStart={onDragStart}
+      onDrop={onDrop}
       onFocus={onFocus}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {

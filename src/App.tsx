@@ -1,4 +1,3 @@
-import { useState } from "react";
 import "@/styles/index.css";
 import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
@@ -6,7 +5,6 @@ import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
 import { Caption } from "@/components/ui/Caption";
 import { Header } from "@/components/ui/Header";
 import { CSS_CLASSES } from "@/constants";
-import { defaultItemGrid } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
 
 /**
@@ -16,9 +14,6 @@ import { useGameStore } from "@/stores/gameStore";
 function App() {
   // Get state and actions from Zustand store
   const { caption, bigKeysVisible, setBigKeysVisible } = useGameStore();
-
-  // Layout state (keep local as it doesn't need to be shared)
-  const [itemLayout] = useState(defaultItemGrid);
 
   return (
     <>
@@ -30,7 +25,7 @@ function App() {
       {/* Static IDs are intentional for SPA layout elements referenced by CSS and skip links */}
       <main className="main-content" id="main-content">
         <div id="layoutdiv">
-          <TrackerGrid itemLayout={itemLayout} />
+          <TrackerGrid />
           <aside
             aria-label="Map display"
             className={CSS_CLASSES.MAPDIV}

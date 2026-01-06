@@ -59,6 +59,24 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Button reset for header buttons */
+.header__button {
+  font-family: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+
+.header__button:hover {
+  color: var(--color-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.header__button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .header__icon {
   width: 20px;
   height: 20px;

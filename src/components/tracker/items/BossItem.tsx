@@ -16,6 +16,22 @@ type BossItemProps = {
   bossNumber: number;
   /** Callback when item receives focus for keyboard navigation */
   onFocus?: () => void;
+  /** Whether this item is draggable */
+  draggable?: boolean;
+  /** Handler for drag start event */
+  onDragStart?: () => void;
+  /** Handler for drag over event */
+  onDragOver?: (e: React.DragEvent) => void;
+  /** Handler for drag leave event */
+  onDragLeave?: () => void;
+  /** Handler for drop event */
+  onDrop?: () => void;
+  /** Handler for drag end event */
+  onDragEnd?: () => void;
+  /** Whether this item is the current drop target */
+  isDropTarget?: boolean;
+  /** Whether this item is being dragged */
+  isDragging?: boolean;
 };
 
 /**
@@ -33,6 +49,14 @@ export const BossItem = ({
   item,
   bossNumber,
   onFocus,
+  draggable = false,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
+  isDropTarget = false,
+  isDragging = false,
 }: BossItemProps) => {
   const { items, handleItemClick } = useGameStore();
   const { isTouchDevice } = useDeviceDetection();
@@ -137,14 +161,30 @@ export const BossItem = ({
     return "unknown state";
   };
 
+  const dragClassName = [
+    CSS_CLASSES.GRIDITEM,
+    CSS_CLASSES.GRID_ITEM_BASE,
+    CSS_CLASSES.GRID_ITEM_RELATIVE,
+    isDragging ? "dragging" : "",
+    isDropTarget ? "drop-target" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <button
       aria-label={`${getBossName(bossNumber)}, ${getBossStateDescription(item)}. Click to change state.`}
-      className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} ${CSS_CLASSES.GRID_ITEM_RELATIVE}`}
+      className={dragClassName}
       data-grid-col={col}
       data-grid-row={row}
+      draggable={draggable}
       key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
+      onDragEnd={onDragEnd}
+      onDragLeave={onDragLeave}
+      onDragOver={onDragOver}
+      onDragStart={onDragStart}
+      onDrop={onDrop}
       onFocus={onFocus}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {

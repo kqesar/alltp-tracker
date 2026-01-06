@@ -107,3 +107,8 @@ export const KEYBOARD_NAVIGATION = {
 
 // Empty String Constant
 export const EMPTY_STRING = "";
+
+// LocalStorage Keys
+export const STORAGE_KEYS = {
+  ITEM_LAYOUT: "alltp-tracker-item-layout",
+} as const;

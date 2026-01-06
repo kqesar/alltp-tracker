@@ -1,0 +1,8 @@
+# Robots.txt for ALLTP Tracker
+# https://kqesar.github.io/alltp-tracker/
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://kqesar.github.io/alltp-tracker/sitemap.xml

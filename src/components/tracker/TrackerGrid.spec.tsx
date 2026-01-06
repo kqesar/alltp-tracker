@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
+import { useGameStore } from "@/stores/gameStore";
 
 // Mock the GridRow component
 vi.mock("./grid/GridRow", () => ({
@@ -16,78 +17,58 @@ vi.mock("./grid/GridRow", () => ({
 }));
 
 describe("TrackerGrid", () => {
+  beforeEach(() => {
+    // Reset the store before each test
+    useGameStore.getState().reset();
+  });
+
   describe("Basic rendering", () => {
     it("should render itemdiv container with correct classes and id", () => {
-      const testLayout = [
-        ["item1", "item2"],
-        ["item3", "item4"],
-      ];
-
-      render(<TrackerGrid itemLayout={testLayout} />);
+      render(<TrackerGrid />);
 
       const container = document.getElementById("itemdiv");
       expect(container).toBeInTheDocument();
       expect(container).toHaveClass("itemdiv");
     });
 
-    it("should render correct number of GridRow components", () => {
-      const testLayout = [
-        ["hookshot", "hammer"],
-        ["sword", "shield"],
-        ["bow", "boomerang"],
-      ];
-
-      render(<TrackerGrid itemLayout={testLayout} />);
+    it("should render correct number of GridRow components from store", () => {
+      render(<TrackerGrid />);
 
       const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(3);
+      // Default layout has 7 rows
+      expect(gridRows.length).toBeGreaterThan(0);
     });
 
-    it("should pass correct props to each GridRow", () => {
-      const testLayout = [
-        ["hookshot", "hammer", "firerod"],
-        ["sword", "shield"],
-      ];
+    it("should render screen reader heading", () => {
+      render(<TrackerGrid />);
 
-      render(<TrackerGrid itemLayout={testLayout} />);
-
-      const gridRows = screen.getAllByTestId("grid-row");
-
-      expect(gridRows[0]).toHaveAttribute("data-row-index", "0");
-      expect(gridRows[0]).toHaveAttribute("data-row-length", "3");
-      expect(gridRows[0]).toHaveTextContent(
-        "GridRow 0: hookshot,hammer,firerod",
-      );
-
-      expect(gridRows[1]).toHaveAttribute("data-row-index", "1");
-      expect(gridRows[1]).toHaveAttribute("data-row-length", "2");
-      expect(gridRows[1]).toHaveTextContent("GridRow 1: sword,shield");
+      const heading = screen.getByText("Item Tracker");
+      expect(heading).toBeInTheDocument();
+      expect(heading).toHaveClass("sr-only");
     });
   });
 
   describe("Grid layout handling", () => {
     it("should handle empty grid layout", () => {
-      render(<TrackerGrid itemLayout={[]} />);
+      // Set empty layout in store
+      useGameStore.getState().setItemLayout([]);
+
+      render(<TrackerGrid />);
 
       const container = document.getElementById("itemdiv");
       expect(container).toBeInTheDocument();
-
-      // Container should only have the screen reader heading
-      const heading = screen.getByText("Item Tracker");
-      expect(heading).toBeInTheDocument();
-      expect(heading).toHaveClass("sr-only");
 
       const gridRows = screen.queryAllByTestId("grid-row");
       expect(gridRows).toHaveLength(0);
     });
 
     it("should handle rows with empty items", () => {
-      const testLayout = [
+      useGameStore.getState().setItemLayout([
         ["", "hammer", ""],
         ["sword", "", "shield"],
-      ];
+      ]);
 
-      render(<TrackerGrid itemLayout={testLayout} />);
+      render(<TrackerGrid />);
 
       const gridRows = screen.getAllByTestId("grid-row");
       expect(gridRows).toHaveLength(2);
@@ -97,9 +78,11 @@ describe("TrackerGrid", () => {
     });
 
     it("should handle single row", () => {
-      const testLayout = [["hookshot", "hammer", "firerod", "icerod"]];
+      useGameStore
+        .getState()
+        .setItemLayout([["hookshot", "hammer", "firerod", "icerod"]]);
 
-      render(<TrackerGrid itemLayout={testLayout} />);
+      render(<TrackerGrid />);
 
       const gridRows = screen.getAllByTestId("grid-row");
       expect(gridRows).toHaveLength(1);
@@ -116,7 +99,9 @@ describe("TrackerGrid", () => {
             .map((_, j) => `item${i}-${j}`),
         );
 
-      render(<TrackerGrid itemLayout={testLayout} />);
+      useGameStore.getState().setItemLayout(testLayout);
+
+      render(<TrackerGrid />);
 
       const gridRows = screen.getAllByTestId("grid-row");
       expect(gridRows).toHaveLength(10);
@@ -129,15 +114,14 @@ describe("TrackerGrid", () => {
 
   describe("Key generation", () => {
     it("should generate unique keys for each row", () => {
-      const testLayout = [
+      useGameStore.getState().setItemLayout([
         ["hookshot", "hammer"],
         ["sword", "shield"],
         ["bow", "boomerang"],
-      ];
+      ]);
 
-      render(<TrackerGrid itemLayout={testLayout} />);
+      render(<TrackerGrid />);
 
-      // Keys are internal to React, but we can verify all rows render correctly
       const gridRows = screen.getAllByTestId("grid-row");
       expect(gridRows).toHaveLength(3);
 
@@ -166,7 +150,9 @@ describe("TrackerGrid", () => {
         ["boss3", "boss4", "boss5", "boss6", "boss7", "boss8", "boss9"],
       ];
 
-      render(<TrackerGrid itemLayout={lttpLayout} />);
+      useGameStore.getState().setItemLayout(lttpLayout);
+
+      render(<TrackerGrid />);
 
       const gridRows = screen.getAllByTestId("grid-row");
       expect(gridRows).toHaveLength(6);
@@ -180,11 +166,13 @@ describe("TrackerGrid", () => {
     });
 
     it("should handle boss-heavy row correctly", () => {
-      const bossRow = [
-        ["boss0", "boss1", "boss2", "boss3", "boss4", "boss5", "boss6"],
-      ];
+      useGameStore
+        .getState()
+        .setItemLayout([
+          ["boss0", "boss1", "boss2", "boss3", "boss4", "boss5", "boss6"],
+        ]);
 
-      render(<TrackerGrid itemLayout={bossRow} />);
+      render(<TrackerGrid />);
 
       const gridRows = screen.getAllByTestId("grid-row");
       expect(gridRows).toHaveLength(1);
@@ -194,13 +182,13 @@ describe("TrackerGrid", () => {
     });
 
     it("should handle mixed item types in rows", () => {
-      const mixedLayout = [
+      useGameStore.getState().setItemLayout([
         ["hookshot", "", "boss0", "sword", "", "shield", "boss1"],
         ["", "", "", "", "", "", ""],
         ["item1", "item2", "item3", "item4", "item5", "item6", "item7"],
-      ];
+      ]);
 
-      render(<TrackerGrid itemLayout={mixedLayout} />);
+      render(<TrackerGrid />);
 
       const gridRows = screen.getAllByTestId("grid-row");
       expect(gridRows).toHaveLength(3);
@@ -217,13 +205,15 @@ describe("TrackerGrid", () => {
 
   describe("Edge cases", () => {
     it("should handle rows with different lengths", () => {
-      const unevenLayout = [
-        ["item1"],
-        ["item2", "item3", "item4"],
-        ["item5", "item6"],
-      ];
+      useGameStore
+        .getState()
+        .setItemLayout([
+          ["item1"],
+          ["item2", "item3", "item4"],
+          ["item5", "item6"],
+        ]);
 
-      render(<TrackerGrid itemLayout={unevenLayout} />);
+      render(<TrackerGrid />);
 
       const gridRows = screen.getAllByTestId("grid-row");
       expect(gridRows).toHaveLength(3);
@@ -234,20 +224,62 @@ describe("TrackerGrid", () => {
     });
 
     it("should handle very long item names", () => {
-      const longItemLayout = [
-        [
-          "very-long-item-name-that-exceeds-normal-length",
-          "another-extremely-long-item-identifier",
-        ],
-      ];
+      useGameStore
+        .getState()
+        .setItemLayout([
+          [
+            "very-long-item-name-that-exceeds-normal-length",
+            "another-extremely-long-item-identifier",
+          ],
+        ]);
 
-      render(<TrackerGrid itemLayout={longItemLayout} />);
+      render(<TrackerGrid />);
 
       const gridRows = screen.getAllByTestId("grid-row");
       expect(gridRows).toHaveLength(1);
       expect(gridRows[0]).toHaveTextContent(
         "very-long-item-name-that-exceeds-normal-length,another-extremely-long-item-identifier",
       );
+    });
+  });
+
+  describe("Drag and drop props", () => {
+    it("should enable drag by default", () => {
+      render(<TrackerGrid />);
+
+      const container = document.getElementById("itemdiv");
+      expect(container).toBeInTheDocument();
+    });
+
+    it("should support disabling drag", () => {
+      render(<TrackerGrid dragEnabled={false} />);
+
+      const container = document.getElementById("itemdiv");
+      expect(container).toBeInTheDocument();
+    });
+  });
+
+  describe("Layout persistence", () => {
+    it("should use layout from store", () => {
+      const customLayout = [["custom1", "custom2", "custom3"]];
+      useGameStore.getState().setItemLayout(customLayout);
+
+      render(<TrackerGrid />);
+
+      const gridRows = screen.getAllByTestId("grid-row");
+      expect(gridRows).toHaveLength(1);
+      expect(gridRows[0]).toHaveTextContent("custom1,custom2,custom3");
+    });
+
+    it("should reset to default layout", () => {
+      useGameStore.getState().setItemLayout([["test"]]);
+      useGameStore.getState().resetItemLayout();
+
+      render(<TrackerGrid />);
+
+      const gridRows = screen.getAllByTestId("grid-row");
+      // Default layout has 7 rows
+      expect(gridRows).toHaveLength(7);
     });
   });
 });

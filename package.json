@@ -48,34 +48,34 @@
     }
   },
   "dependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "zustand": "^5.0.8"
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.2",
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
+    "@biomejs/biome": "^2.3.11",
+    "@commitlint/cli": "^20.3.0",
+    "@commitlint/config-conventional": "^20.3.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^25.0.3",
-    "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.0.16",
     "commitizen": "^4.3.1",
     "conventional-changelog-cli": "^5.0.0",
     "cz-conventional-changelog": "^3.3.0",
     "husky": "^9.1.7",
-    "jsdom": "^27.1.0",
+    "jsdom": "^27.4.0",
     "lint-staged": "^16.2.7",
     "sort-package-json": "^3.6.0",
     "standard-version": "^9.5.0",
     "typescript": "~5.9.3",
     "vite": "^7.3.0",
     "vite-plugin-compression": "^0.5.1",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.16"
   },
   "engines": {
     "node": ">=22.0.0",

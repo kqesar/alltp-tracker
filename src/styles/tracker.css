@@ -142,3 +142,39 @@
     height: 48px;
   }
 }
+
+/* Drag and Drop Styles */
+.griditem[draggable="true"] {
+  cursor: grab;
+}
+
+.griditem[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Item being dragged */
+.griditem.dragging {
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+/* Drop target highlight */
+.griditem.drop-target,
+.grid-spacer.drop-target {
+  outline: 3px dashed var(--color-primary, #ffd700);
+  outline-offset: -3px;
+  background-color: rgba(255, 215, 0, 0.2);
+  transform: scale(1.05);
+  transition: all 0.15s ease-out;
+}
+
+/* Smooth transitions for drag and drop */
+.griditem {
+  transition:
+    transform var(--transition, 0.15s ease),
+    opacity var(--transition, 0.15s ease),
+    box-shadow var(--transition, 0.15s ease),
+    outline 0.15s ease;
+}

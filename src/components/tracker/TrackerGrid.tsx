@@ -1,23 +1,42 @@
 import { GridItem } from "@/components/tracker/grid/GridItem";
 import { CSS_CLASSES } from "@/constants";
+import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import { useGameStore } from "@/stores/gameStore";
 
 type TrackerGridProps = {
-  /** Grid layout data - array of rows containing item identifiers */
-  itemLayout: string[][];
+  /** Whether drag and drop is enabled */
+  dragEnabled?: boolean;
 };
 
 /**
  * TrackerGrid component that renders the complete item tracker grid using CSS Grid
  * Uses semantic HTML with proper grid layout instead of tables
  * Includes keyboard navigation support for accessibility
- * @param itemLayout - 2D array representing the grid layout with item identifiers
+ * Supports drag and drop for customizable item layout
  */
-export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
+export const TrackerGrid = ({ dragEnabled = true }: TrackerGridProps) => {
+  const itemLayout = useGameStore((state) => state.itemLayout);
+  const setItemLayout = useGameStore((state) => state.setItemLayout);
+
   const { containerRef, updateFocusPosition } = useKeyboardNavigation({
     enabled: true,
     itemLayout,
     totalRows: itemLayout.length,
+  });
+
+  const {
+    handleDragStart,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleDragEnd,
+    isDropTarget,
+    isDraggedItem,
+  } = useDragAndDrop({
+    enabled: dragEnabled,
+    itemLayout,
+    onLayoutChange: setItemLayout,
   });
 
   return (
@@ -51,8 +70,16 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
             {row.slice(0, 7).map((item: string, colIndex: number) => (
               <GridItem
                 col={colIndex}
+                draggable={dragEnabled}
+                isDragging={isDraggedItem(rowIndex, colIndex)}
+                isDropTarget={isDropTarget(rowIndex, colIndex)}
                 item={item}
                 key={`grid-${rowIndex}-${colIndex}-${item || "empty"}`}
+                onDragEnd={handleDragEnd}
+                onDragLeave={handleDragLeave}
+                onDragOver={(e) => handleDragOver(e, rowIndex, colIndex)}
+                onDragStart={() => handleDragStart(item, rowIndex, colIndex)}
+                onDrop={() => handleDrop(rowIndex, colIndex)}
                 onFocus={() => updateFocusPosition(rowIndex, colIndex)}
                 row={rowIndex}
               />

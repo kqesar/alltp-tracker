@@ -3,11 +3,20 @@ import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BigKeyToggle } from "./BigKeyToggle";
 
+// Mock the gameStore
+const mockResetItemLayout = vi.fn();
+vi.mock("@/stores/gameStore", () => ({
+  useGameStore: (
+    selector: (state: { resetItemLayout: () => void }) => unknown,
+  ) => selector({ resetItemLayout: mockResetItemLayout }),
+}));
+
 describe("BigKeyToggle", () => {
   const mockOnToggle = vi.fn();
 
   beforeEach(() => {
     mockOnToggle.mockClear();
+    mockResetItemLayout.mockClear();
   });
 
   it("renders with correct visible state", () => {
@@ -62,7 +71,7 @@ describe("BigKeyToggle", () => {
   it("displays key icon", () => {
     render(<BigKeyToggle isVisible={true} onToggle={mockOnToggle} />);
 
-    const button = screen.getByRole("button");
+    const button = screen.getByRole("button", { name: "Hide big keys" });
     const icon = button.querySelector(".bigkey-toggle__icon");
     const keyIcon = button.querySelector(".bigkey-toggle__key-icon");
 
@@ -73,7 +82,7 @@ describe("BigKeyToggle", () => {
   it("shows slash overlay when hidden", () => {
     render(<BigKeyToggle isVisible={false} onToggle={mockOnToggle} />);
 
-    const button = screen.getByRole("button");
+    const button = screen.getByRole("button", { name: "Show big keys" });
     const slash = button.querySelector(".bigkey-toggle__slash");
 
     expect(slash).toBeInTheDocument();
@@ -82,9 +91,44 @@ describe("BigKeyToggle", () => {
   it("does not show slash overlay when visible", () => {
     render(<BigKeyToggle isVisible={true} onToggle={mockOnToggle} />);
 
-    const button = screen.getByRole("button");
+    const button = screen.getByRole("button", { name: "Hide big keys" });
     const slash = button.querySelector(".bigkey-toggle__slash");
 
     expect(slash).not.toBeInTheDocument();
+  });
+
+  describe("Reset Item Tracker button", () => {
+    it("renders Reset Item Tracker button", () => {
+      render(<BigKeyToggle isVisible={true} onToggle={mockOnToggle} />);
+
+      const resetButton = screen.getByRole("button", {
+        name: /reset item tracker/i,
+      });
+      expect(resetButton).toBeInTheDocument();
+      expect(resetButton).toHaveAttribute("title", "Reset Item Tracker");
+    });
+
+    it("calls resetItemLayout when Reset button is clicked", async () => {
+      const user = userEvent.setup();
+      render(<BigKeyToggle isVisible={true} onToggle={mockOnToggle} />);
+
+      const resetButton = screen.getByRole("button", {
+        name: /reset item tracker/i,
+      });
+      await user.click(resetButton);
+
+      expect(mockResetItemLayout).toHaveBeenCalledTimes(1);
+    });
+
+    it("displays reset icon", () => {
+      render(<BigKeyToggle isVisible={true} onToggle={mockOnToggle} />);
+
+      const resetButton = screen.getByRole("button", {
+        name: /reset item tracker/i,
+      });
+      const resetIcon = resetButton.querySelector(".bigkey-toggle__reset-icon");
+
+      expect(resetIcon).toBeInTheDocument();
+    });
   });
 });

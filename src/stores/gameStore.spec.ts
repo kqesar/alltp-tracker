@@ -1,10 +1,38 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { STORAGE_KEYS } from "@/constants";
+import { defaultItemGrid } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    clear: () => {
+      store = {};
+    },
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+  };
+})();
+
+Object.defineProperty(window, "localStorage", { value: localStorageMock });
 
 describe("GameStore", () => {
   beforeEach(() => {
+    // Clear localStorage mock
+    localStorageMock.clear();
+    vi.clearAllMocks();
     // Reset the store before each test
     useGameStore.getState().reset();
+  });
+
+  afterEach(() => {
+    localStorageMock.clear();
   });
 
   it("initializes with default state", () => {
@@ -252,6 +280,66 @@ describe("GameStore", () => {
       expect(useGameStore.getState().smallKeys).toEqual([
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       ]);
+    });
+  });
+
+  describe("Item Layout Persistence", () => {
+    it("saves item layout to localStorage when setItemLayout is called", () => {
+      const { setItemLayout } = useGameStore.getState();
+      const newLayout = [
+        ["bow", "hookshot"],
+        ["boots", "glove"],
+      ];
+
+      setItemLayout(newLayout);
+
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        STORAGE_KEYS.ITEM_LAYOUT,
+        JSON.stringify(newLayout),
+      );
+    });
+
+    it("clears localStorage when resetItemLayout is called", () => {
+      const { setItemLayout, resetItemLayout } = useGameStore.getState();
+
+      // First set a custom layout
+      setItemLayout([["bow", "hookshot"]]);
+
+      // Then reset
+      resetItemLayout();
+
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith(
+        STORAGE_KEYS.ITEM_LAYOUT,
+      );
+      expect(useGameStore.getState().itemLayout).toEqual(
+        defaultItemGrid.map((row) => [...row]),
+      );
+    });
+
+    it("updates store state when setItemLayout is called", () => {
+      const { setItemLayout } = useGameStore.getState();
+      const newLayout = [
+        ["bow", "hookshot"],
+        ["boots", "glove"],
+      ];
+
+      setItemLayout(newLayout);
+
+      expect(useGameStore.getState().itemLayout).toEqual(newLayout);
+    });
+
+    it("resets to default layout when resetItemLayout is called", () => {
+      const { setItemLayout, resetItemLayout } = useGameStore.getState();
+
+      // First set a custom layout
+      setItemLayout([["bow", "hookshot"]]);
+
+      // Then reset
+      resetItemLayout();
+
+      expect(useGameStore.getState().itemLayout).toEqual(
+        defaultItemGrid.map((row) => [...row]),
+      );
     });
   });
 });
