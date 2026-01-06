@@ -1,6 +1,12 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { STORAGE_KEYS } from "@/constants";
+import {
+  MAP_ORIENTATION_VALUES,
+  MAP_POSITION_VALUES,
+  type MapOrientation,
+  type MapPosition,
+  STORAGE_KEYS,
+} from "@/constants";
 import {
   type ChestItem,
   type DungeonItem,
@@ -73,6 +79,65 @@ const getInitialItemLayout = (): string[][] => {
   return savedLayout ?? defaultItemGrid.map((row) => [...row]);
 };
 
+/**
+ * Load map orientation from localStorage
+ */
+const loadMapOrientationFromStorage = (): MapOrientation => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.MAP_ORIENTATION);
+    if (
+      stored === MAP_ORIENTATION_VALUES.HORIZONTAL ||
+      stored === MAP_ORIENTATION_VALUES.VERTICAL
+    ) {
+      return stored;
+    }
+    return MAP_ORIENTATION_VALUES.HORIZONTAL;
+  } catch {
+    return MAP_ORIENTATION_VALUES.HORIZONTAL;
+  }
+};
+
+/**
+ * Save map orientation to localStorage
+ */
+const saveMapOrientationToStorage = (orientation: MapOrientation): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.MAP_ORIENTATION, orientation);
+  } catch {
+    // Silently fail if localStorage is not available
+  }
+};
+
+/**
+ * Load map position from localStorage
+ */
+const loadMapPositionFromStorage = (): MapPosition => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.MAP_POSITION);
+    if (
+      stored === MAP_POSITION_VALUES.SIDE ||
+      stored === MAP_POSITION_VALUES.TOP ||
+      stored === MAP_POSITION_VALUES.BOTTOM
+    ) {
+      return stored;
+    }
+    return MAP_POSITION_VALUES.SIDE;
+  } catch {
+    return MAP_POSITION_VALUES.SIDE;
+  }
+};
+
+/**
+ * Save map position to localStorage
+ */
+const saveMapPositionToStorage = (position: MapPosition): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.MAP_POSITION, position);
+  } catch {
+    // Silently fail if localStorage is not available
+  }
+};
+
 interface GameState {
   // State
   items: ItemState;
@@ -80,7 +145,8 @@ interface GameState {
   dungeonsState: DungeonItem[];
   medallions: number[];
   caption: string;
-  mapOrientation: boolean;
+  mapOrientation: MapOrientation;
+  mapPosition: MapPosition;
   bigKeysVisible: boolean;
   smallKeys: number[]; // Array of 10 dungeons (0-9) with small key counts
   itemLayout: string[][]; // Customizable item grid layout
@@ -97,6 +163,10 @@ interface GameState {
   setBigKeysVisible: (visible: boolean) => void;
   setItemLayout: (layout: string[][]) => void;
   resetItemLayout: () => void;
+  setMapOrientation: (orientation: MapOrientation) => void;
+  setMapPosition: (position: MapPosition) => void;
+  toggleMapOrientation: () => void;
+  cycleMapPosition: () => void;
 
   // Reset function for testing or new game
   reset: () => void;
@@ -109,7 +179,8 @@ const initialState = {
   dungeonsState: [...initialDungeons],
   itemLayout: getInitialItemLayout(),
   items: { ...initialItems } as ItemState,
-  mapOrientation: false,
+  mapOrientation: loadMapOrientationFromStorage(),
+  mapPosition: loadMapPositionFromStorage(),
   medallions: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   smallKeys: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 10 dungeons, all start at 0
 };
@@ -118,6 +189,26 @@ export const useGameStore = create<GameState>()(
   devtools(
     (set, get) => ({
       ...initialState,
+
+      cycleMapPosition: () => {
+        const { mapPosition } = get();
+        let newPosition: MapPosition;
+        switch (mapPosition) {
+          case MAP_POSITION_VALUES.SIDE:
+            newPosition = MAP_POSITION_VALUES.TOP;
+            break;
+          case MAP_POSITION_VALUES.TOP:
+            newPosition = MAP_POSITION_VALUES.BOTTOM;
+            break;
+          case MAP_POSITION_VALUES.BOTTOM:
+            newPosition = MAP_POSITION_VALUES.SIDE;
+            break;
+          default:
+            newPosition = MAP_POSITION_VALUES.SIDE;
+        }
+        saveMapPositionToStorage(newPosition);
+        set({ mapPosition: newPosition });
+      },
 
       handleItemClick: (item: string) => {
         if (!item || item === "blank") return;
@@ -233,6 +324,16 @@ export const useGameStore = create<GameState>()(
         set({ itemLayout: newLayout });
       },
 
+      setMapOrientation: (orientation: MapOrientation) => {
+        saveMapOrientationToStorage(orientation);
+        set({ mapOrientation: orientation });
+      },
+
+      setMapPosition: (position: MapPosition) => {
+        saveMapPositionToStorage(position);
+        set({ mapPosition: position });
+      },
+
       toggleChest: (chestIndex: number) => {
         const { chestsState } = get();
         const newChests = [...chestsState];
@@ -246,6 +347,16 @@ export const useGameStore = create<GameState>()(
         newDungeons[dungeonIndex].isBeaten =
           !newDungeons[dungeonIndex].isBeaten;
         set({ dungeonsState: newDungeons });
+      },
+
+      toggleMapOrientation: () => {
+        const { mapOrientation } = get();
+        const newOrientation =
+          mapOrientation === MAP_ORIENTATION_VALUES.HORIZONTAL
+            ? MAP_ORIENTATION_VALUES.VERTICAL
+            : MAP_ORIENTATION_VALUES.HORIZONTAL;
+        saveMapOrientationToStorage(newOrientation);
+        set({ mapOrientation: newOrientation });
       },
     }),
     {
@@ -261,6 +372,9 @@ export const useDungeons = () => useGameStore((state) => state.dungeonsState);
 export const useMedallions = () => useGameStore((state) => state.medallions);
 export const useCaption = () => useGameStore((state) => state.caption);
 export const useItemLayout = () => useGameStore((state) => state.itemLayout);
+export const useMapOrientation = () =>
+  useGameStore((state) => state.mapOrientation);
+export const useMapPosition = () => useGameStore((state) => state.mapPosition);
 export const useGameActions = () =>
   useGameStore((state) => ({
     handleItemClick: state.handleItemClick,

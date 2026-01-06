@@ -111,4 +111,23 @@ export const EMPTY_STRING = "";
 // LocalStorage Keys
 export const STORAGE_KEYS = {
   ITEM_LAYOUT: "alltp-tracker-item-layout",
+  MAP_ORIENTATION: "alltp-tracker-map-orientation",
+  MAP_POSITION: "alltp-tracker-map-position",
 } as const;
+
+// Map Settings
+export const MAP_ORIENTATION_VALUES = {
+  HORIZONTAL: "horizontal",
+  VERTICAL: "vertical",
+} as const;
+
+export const MAP_POSITION_VALUES = {
+  BOTTOM: "bottom",
+  SIDE: "side",
+  TOP: "top",
+} as const;
+
+export type MapOrientation =
+  (typeof MAP_ORIENTATION_VALUES)[keyof typeof MAP_ORIENTATION_VALUES];
+export type MapPosition =
+  (typeof MAP_POSITION_VALUES)[keyof typeof MAP_POSITION_VALUES];

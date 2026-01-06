@@ -4,7 +4,11 @@ import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
 import { Caption } from "@/components/ui/Caption";
 import { Header } from "@/components/ui/Header";
-import { CSS_CLASSES } from "@/constants";
+import {
+  CSS_CLASSES,
+  MAP_ORIENTATION_VALUES,
+  MAP_POSITION_VALUES,
+} from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 
 /**
@@ -13,7 +17,35 @@ import { useGameStore } from "@/stores/gameStore";
  */
 function App() {
   // Get state and actions from Zustand store
-  const { caption, bigKeysVisible, setBigKeysVisible } = useGameStore();
+  const {
+    caption,
+    bigKeysVisible,
+    setBigKeysVisible,
+    mapOrientation,
+    mapPosition,
+  } = useGameStore();
+
+  // Compute CSS classes for map orientation
+  const mapClasses = [
+    CSS_CLASSES.MAPDIV,
+    mapOrientation === MAP_ORIENTATION_VALUES.VERTICAL
+      ? "mapdiv--vertical"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  // Compute layout class based on map position
+  const layoutClasses = ["layoutdiv", `layoutdiv--map-${mapPosition}`].join(
+    " ",
+  );
+
+  // Render map component
+  const mapComponent = (
+    <aside aria-label="Map display" className={mapClasses} id="mapdiv">
+      <MapTracker />
+    </aside>
+  );
 
   return (
     <>
@@ -24,15 +56,10 @@ function App() {
       <BigKeyToggle isVisible={bigKeysVisible} onToggle={setBigKeysVisible} />
       {/* Static IDs are intentional for SPA layout elements referenced by CSS and skip links */}
       <main className="main-content" id="main-content">
-        <div id="layoutdiv">
+        <div className={layoutClasses} id="layoutdiv">
+          {mapPosition === MAP_POSITION_VALUES.TOP && mapComponent}
           <TrackerGrid />
-          <aside
-            aria-label="Map display"
-            className={CSS_CLASSES.MAPDIV}
-            id="mapdiv"
-          >
-            <MapTracker />
-          </aside>
+          {mapPosition !== MAP_POSITION_VALUES.TOP && mapComponent}
         </div>
 
         <aside

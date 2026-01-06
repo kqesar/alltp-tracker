@@ -93,7 +93,7 @@ const mockSetCaption = vi.fn();
 
 const mockGameStore = {
   items: mockItems,
-  mapOrientation: false,
+  mapOrientation: "horizontal",
   medallions: mockMedallions,
   setCaption: mockSetCaption,
 };
@@ -170,7 +170,7 @@ describe("DungeonChest", () => {
   it("transforms coordinates correctly for vertical orientation", () => {
     mockUseGameStore.mockReturnValue({
       items: mockItems,
-      mapOrientation: true,
+      mapOrientation: "vertical",
       medallions: mockMedallions,
       setCaption: mockSetCaption,
     });
@@ -201,7 +201,7 @@ describe("DungeonChest", () => {
 
     mockUseGameStore.mockReturnValue({
       items: mockItems,
-      mapOrientation: false,
+      mapOrientation: "horizontal",
       medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0], // bombos for Misery Mire
       setCaption: mockSetCaption,
     });
@@ -233,7 +233,7 @@ describe("DungeonChest", () => {
 
     mockUseGameStore.mockReturnValue({
       items: mockItems,
-      mapOrientation: false,
+      mapOrientation: "horizontal",
       medallions: [0, 0, 0, 0, 0, 0, 0, 0, 0, 2], // ether for Turtle Rock
       setCaption: mockSetCaption,
     });

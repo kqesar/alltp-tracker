@@ -17,7 +17,7 @@ const mockSetCaption = vi.fn();
 vi.mock("@/stores/gameStore", () => ({
   useGameStore: vi.fn(() => ({
     items: mockItems,
-    mapOrientation: false,
+    mapOrientation: "horizontal",
     medallions: mockMedallions,
     setCaption: mockSetCaption,
     toggleChest: mockToggleChest,
@@ -177,7 +177,7 @@ describe("MapChest", () => {
   it("transforms coordinates correctly for vertical orientation", () => {
     mockUseGameStore.mockReturnValue({
       items: mockItems,
-      mapOrientation: true,
+      mapOrientation: "vertical",
       medallions: mockMedallions,
       setCaption: mockSetCaption,
       toggleChest: mockToggleChest,

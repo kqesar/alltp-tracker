@@ -6,6 +6,7 @@ import {
   DUNGEON_INDICES,
   EMPTY_STRING,
   MAP_COORDINATES,
+  MAP_ORIENTATION_VALUES,
   MEDALLION_VALUES,
 } from "@/constants";
 import type { DungeonItem } from "@/data/chests";
@@ -79,7 +80,7 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
     const x = dungeon.x;
     const y = dungeon.y;
 
-    if (!mapOrientation) return { x, y };
+    if (mapOrientation === MAP_ORIENTATION_VALUES.HORIZONTAL) return { x, y };
 
     const xNum = parseFloat(x) / MAP_COORDINATES.PERCENTAGE_MULTIPLIER;
     const yNum = parseFloat(y) / MAP_COORDINATES.PERCENTAGE_MULTIPLIER;

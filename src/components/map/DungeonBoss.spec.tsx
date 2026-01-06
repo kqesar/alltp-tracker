@@ -95,7 +95,7 @@ vi.mock("@/stores/gameStore", () => ({
   useGameStore: vi.fn(() => ({
     bigKeysVisible: true,
     items: mockItems,
-    mapOrientation: false,
+    mapOrientation: "horizontal",
     medallions: mockMedallions,
     setCaption: mockSetCaption,
     toggleDungeonBoss: mockToggleDungeonBoss,
@@ -177,7 +177,7 @@ describe("DungeonBoss", () => {
   it("shows 'opened' class when boss is beaten (value 2)", () => {
     mockUseGameStore.mockReturnValue({
       items: { ...mockItems, boss1: 2 },
-      mapOrientation: false,
+      mapOrientation: "horizontal",
       medallions: mockMedallions,
       setCaption: mockSetCaption,
       toggleDungeonBoss: mockToggleDungeonBoss,
@@ -201,7 +201,7 @@ describe("DungeonBoss", () => {
   it("transforms coordinates correctly for vertical orientation", () => {
     mockUseGameStore.mockReturnValue({
       items: mockItems,
-      mapOrientation: true,
+      mapOrientation: "vertical",
       medallions: mockMedallions,
       setCaption: mockSetCaption,
       toggleDungeonBoss: mockToggleDungeonBoss,
@@ -227,7 +227,7 @@ describe("DungeonBoss", () => {
   it("transforms coordinates correctly for vertical orientation when x <= 50%", () => {
     mockUseGameStore.mockReturnValue({
       items: mockItems,
-      mapOrientation: true,
+      mapOrientation: "vertical",
       medallions: mockMedallions,
       setCaption: mockSetCaption,
       toggleDungeonBoss: mockToggleDungeonBoss,
@@ -261,7 +261,7 @@ describe("DungeonBoss", () => {
     mockUseGameStore.mockReturnValue({
       bigKeysVisible: true,
       items: mockItems,
-      mapOrientation: false,
+      mapOrientation: "horizontal",
       medallions: mockMedallions,
       setCaption: mockSetCaption,
       toggleDungeonBoss: mockToggleDungeonBoss,
@@ -285,7 +285,7 @@ describe("DungeonBoss", () => {
 
     mockUseGameStore.mockReturnValue({
       items: mockItems,
-      mapOrientation: false,
+      mapOrientation: "horizontal",
       medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0], // bombos for Misery Mire
       setCaption: mockSetCaption,
       toggleDungeonBoss: mockToggleDungeonBoss,

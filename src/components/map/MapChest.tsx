@@ -1,4 +1,4 @@
-import { CSS_CLASSES } from "@/constants";
+import { CSS_CLASSES, MAP_ORIENTATION_VALUES } from "@/constants";
 import type { ChestItem } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
@@ -38,7 +38,7 @@ export const MapChest = ({ chest, index }: MapChestProps) => {
     const x = chest.x;
     const y = chest.y;
 
-    if (!mapOrientation) return { x, y };
+    if (mapOrientation === MAP_ORIENTATION_VALUES.HORIZONTAL) return { x, y };
 
     const xNum = parseFloat(x) / 100;
     const yNum = parseFloat(y) / 100;
