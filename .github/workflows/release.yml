@@ -224,15 +224,14 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.check-changes.outputs.has_changes == 'true'
-        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.create-release-auto.outputs.version || steps.create-release-manual.outputs.version }}
-          release_name: Release ${{ steps.create-release-auto.outputs.version || steps.create-release-manual.outputs.version }}
-          body_path: ./CHANGELOG.md
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.create-release-auto.outputs.version || steps.create-release-manual.outputs.version }}"
+          gh release create "$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Release $VERSION" \
+            --notes-file ./CHANGELOG.md
 
       - name: Upload build artifacts
         if: steps.check-changes.outputs.has_changes == 'true'
