@@ -30,6 +30,7 @@ export const GridRow = ({ rowIndex, row }: GridRowProps) => {
         <GridItem
           col={colIndex}
           item={item}
+          // biome-ignore lint/suspicious/noArrayIndexKey: Grid positions are fixed and semantically meaningful in the layout
           key={`grid-${rowIndex}-${colIndex}-${item}`}
           row={rowIndex}
         />

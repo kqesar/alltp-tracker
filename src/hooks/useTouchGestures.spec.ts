@@ -1,6 +1,17 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type Mock,
+  vi,
+} from "vitest";
 import { useTouchGestures } from "./useTouchGestures";
+
+type GestureEvent = TouchEvent | MouseEvent;
+type SwipeDirection = "left" | "right" | "up" | "down";
 
 // Mock timers
 vi.useFakeTimers();
@@ -14,15 +25,15 @@ const createMockElement = () =>
 
 describe("useTouchGestures", () => {
   let mockElement: HTMLElement;
-  let onTap: ReturnType<typeof vi.fn>;
-  let onLongPress: ReturnType<typeof vi.fn>;
-  let onSwipe: ReturnType<typeof vi.fn>;
+  let onTap: Mock<(event: GestureEvent) => void>;
+  let onLongPress: Mock<(event: GestureEvent) => void>;
+  let onSwipe: Mock<(direction: SwipeDirection) => void>;
 
   beforeEach(() => {
     mockElement = createMockElement();
-    onTap = vi.fn();
-    onLongPress = vi.fn();
-    onSwipe = vi.fn();
+    onTap = vi.fn<(event: GestureEvent) => void>();
+    onLongPress = vi.fn<(event: GestureEvent) => void>();
+    onSwipe = vi.fn<(direction: SwipeDirection) => void>();
   });
 
   afterEach(() => {

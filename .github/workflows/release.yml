@@ -59,13 +59,16 @@ jobs:
             echo "No previous tags found, proceeding with release"
             echo "has_changes=true" >> $GITHUB_OUTPUT
           else
-            # Check if there are commits since the last tag
-            COMMITS_SINCE_TAG=$(git rev-list ${LATEST_TAG}..HEAD --count)
-            if [ "$COMMITS_SINCE_TAG" -gt "0" ]; then
-              echo "Found $COMMITS_SINCE_TAG commits since $LATEST_TAG"
+            # Only count user-facing commit types (feat/fix/perf/refactor/docs).
+            # Dependency bumps (build/chore/ci/test/style) reach prod via the
+            # deploy workflow but must not trigger an empty version release.
+            RELEASABLE=$(git log ${LATEST_TAG}..HEAD --pretty=%s \
+              | grep -cE '^(feat|fix|perf|refactor|docs)(\(.+\))?!?:' || true)
+            if [ "$RELEASABLE" -gt "0" ]; then
+              echo "Found $RELEASABLE releasable commit(s) since $LATEST_TAG"
               echo "has_changes=true" >> $GITHUB_OUTPUT
             else
-              echo "No commits since last tag $LATEST_TAG"
+              echo "No releasable commits since $LATEST_TAG (deps/chore only)"
               echo "has_changes=false" >> $GITHUB_OUTPUT
             fi
           fi

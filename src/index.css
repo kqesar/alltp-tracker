@@ -9,27 +9,26 @@
 /* Enhanced CSS Custom Properties */
 :root {
   /* Typography */
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  /* Color Scheme */
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  /* Typography Optimization */
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  /* Custom Properties for Consistency */
   --color-primary: #646cff;
   --color-primary-hover: #535bf2;
   --color-primary-light: #747bff;
   --transition-duration: 0.25s;
   --border-radius: 0.5rem;
+  /* Typography */
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Typography Optimization */
+  font-synthesis: none;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.87);
+
+  /* Color Scheme */
+  color-scheme: light dark;
+  background-color: #242424;
+  text-rendering: optimizeLegibility;
 }
 
 /* Enhanced Link Styling */
