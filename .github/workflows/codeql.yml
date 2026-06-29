@@ -30,10 +30,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
         # Configure CodeQL to use more queries for thorough analysis
@@ -41,7 +41,7 @@ jobs:
         # Auto-detect build mode for JavaScript/TypeScript projects
         
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '22'
 
@@ -56,7 +56,7 @@ jobs:
     # Auto-build attempts to build the project automatically
     # For JavaScript/TypeScript, this usually works well
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
+      uses: github/codeql-action/autobuild@v4
 
     # Alternative manual build step if autobuild fails
     # Uncomment and customize if needed:
@@ -65,7 +65,7 @@ jobs:
     #     pnpm build
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       with:
         category: "/language:${{matrix.language}}"
         # Upload results to GitHub Security tab
@@ -73,7 +73,7 @@ jobs:
 
     - name: Comment PR with CodeQL status
       if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         script: |
           const comment = `## 🔒 CodeQL Security Analysis
