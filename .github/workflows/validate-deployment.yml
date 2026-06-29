@@ -18,13 +18,13 @@ jobs:
     
     steps:
       - name: Checkout source branch (master)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # Get the source commit from the PR body
           ref: master
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
 
@@ -60,7 +60,7 @@ jobs:
           echo "✅ Build verification successful"
 
       - name: Comment PR status
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const comment = `## ✅ Deployment Validation Successful
