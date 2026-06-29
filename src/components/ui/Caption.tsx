@@ -85,6 +85,7 @@ export const Caption = ({ text }: CaptionProps) => {
             return (
               <span
                 className="caption-text"
+                // biome-ignore lint/suspicious/noArrayIndexKey: Caption parts are derived from static content and never reordered
                 key={`text-${part.slice(0, 20)}-${index}`}
               >
                 {part}

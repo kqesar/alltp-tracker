@@ -34,7 +34,7 @@ export const useTouchGestures = ({
     startX: 0,
     startY: 0,
   });
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const elementRef = useRef<HTMLElement | null>(null);
 
   const clearLongPressTimer = useCallback(() => {

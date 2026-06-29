@@ -52,6 +52,7 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
               <GridItem
                 col={colIndex}
                 item={item}
+                // biome-ignore lint/suspicious/noArrayIndexKey: Grid positions are fixed and semantically meaningful in the layout
                 key={`grid-${rowIndex}-${colIndex}-${item || "empty"}`}
                 onFocus={() => updateFocusPosition(rowIndex, colIndex)}
                 row={rowIndex}
