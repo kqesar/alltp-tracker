@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.3.19](https://github.com/kqesar/alltp-tracker/compare/v2.3.18...v2.3.19) (2026-06-29)
+
+
+### 🐛 Bug Fixes
+
+* remove old code ql ([#121](https://github.com/kqesar/alltp-tracker/issues/121)) ([1ccd9c6](https://github.com/kqesar/alltp-tracker/commit/1ccd9c6b6031151af2cd57a23b0484e9f78f38b2))
+
 ### [2.3.18](https://github.com/kqesar/alltp-tracker/compare/v2.3.17...v2.3.18) (2026-01-05)
 
 ### [2.3.17](https://github.com/kqesar/alltp-tracker/compare/v2.3.16...v2.3.17) (2026-01-05)
