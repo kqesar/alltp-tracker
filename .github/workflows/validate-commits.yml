@@ -5,6 +5,10 @@ on:
     branches:
       - master
 
+# Least-privilege default: this workflow only needs to read the repository
+permissions:
+  contents: read
+
 jobs:
   validate-commits:
     runs-on: ubuntu-latest
