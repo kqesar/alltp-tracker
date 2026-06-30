@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.5.0](https://github.com/kqesar/alltp-tracker/compare/v2.4.1...v2.5.0) (2026-06-30)
+
+
+### ✨ Features
+
+* coherent color system and real modal dialogs ([#134](https://github.com/kqesar/alltp-tracker/issues/134)) ([f2a3b74](https://github.com/kqesar/alltp-tracker/commit/f2a3b742f5946f52897a81907e22c163c61ede3c))
+
 ### [2.4.1](https://github.com/kqesar/alltp-tracker/compare/v2.4.0...v2.4.1) (2026-06-30)
 
 
