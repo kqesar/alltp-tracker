@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.6.0](https://github.com/kqesar/alltp-tracker/compare/v2.5.0...v2.6.0) (2026-06-30)
+
+
+### ✨ Features
+
+* run-type preset selection framework ([#136](https://github.com/kqesar/alltp-tracker/issues/136)) ([41ba75d](https://github.com/kqesar/alltp-tracker/commit/41ba75d59665c6ecda13fe66a54a6f3d708dbcd5))
+
 ## [2.5.0](https://github.com/kqesar/alltp-tracker/compare/v2.4.1...v2.5.0) (2026-06-30)
 
 
