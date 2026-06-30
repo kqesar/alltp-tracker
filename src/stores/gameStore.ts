@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { useShallow } from "zustand/react/shallow";
-import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { DUNGEON_INDICES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import {
   buildDungeonCaption,
   type ChestItem,
@@ -157,7 +157,8 @@ export const useGameStore = create<GameState>()(
           let updatedCaption = caption;
           const dungeon = dungeonsState[bossNumber];
           if (
-            (bossNumber === 8 || bossNumber === 9) &&
+            (bossNumber === DUNGEON_INDICES.MISERY_MIRE ||
+              bossNumber === DUNGEON_INDICES.TURTLE_ROCK) &&
             dungeon &&
             caption.startsWith(dungeon.name)
           ) {

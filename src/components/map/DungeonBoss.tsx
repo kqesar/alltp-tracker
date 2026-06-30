@@ -1,4 +1,4 @@
-import { CSS_CLASSES } from "@/constants";
+import { BOSS_STATES, CSS_CLASSES } from "@/constants";
 import { buildDungeonCaption, type DungeonItem } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, transformMapCoordinates } from "@/utils";
@@ -28,8 +28,8 @@ export const DungeonBoss = ({ dungeon, index }: DungeonBossProps) => {
     const bossKey = `boss${index}`;
     const bossValue = items[bossKey] as number;
 
-    // If boss is beaten (value 2), return "opened"
-    if (bossValue === 2) return "opened";
+    // If boss is beaten, return "opened"
+    if (bossValue === BOSS_STATES.BEATEN) return "opened";
 
     if (dungeon.isBeaten) return "opened";
     return dungeon.isBeatable(items, medallions, bigKeysVisible);

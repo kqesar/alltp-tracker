@@ -1,3 +1,5 @@
+import { DUNGEON_INDICES, GLOVE_LEVELS, MEDALLION_VALUES } from "@/constants";
+
 // Type definitions
 
 /** Accessibility states returned by chest/dungeon availability logic. */
@@ -111,7 +113,7 @@ function steve(items: ItemState): boolean {
 
 /** True when the player has the Titan's Mitt (glove level 2). */
 function hasTitansMitt(items: ItemState): boolean {
-  return items.glove === 2;
+  return items.glove === GLOVE_LEVELS.TITAN;
 }
 
 /**
@@ -126,12 +128,15 @@ function checkMedallion(
 ): Availability | null {
   if (!items.bombos && !items.ether && !items.quake) return "unavailable";
   if (
-    (medallions[index] === 1 && !items.bombos) ||
-    (medallions[index] === 2 && !items.ether) ||
-    (medallions[index] === 3 && !items.quake)
+    (medallions[index] === MEDALLION_VALUES.BOMBOS && !items.bombos) ||
+    (medallions[index] === MEDALLION_VALUES.ETHER && !items.ether) ||
+    (medallions[index] === MEDALLION_VALUES.QUAKE && !items.quake)
   )
     return "unavailable";
-  if (medallions[index] === 0 && !(items.bombos && items.ether && items.quake))
+  if (
+    medallions[index] === MEDALLION_VALUES.UNKNOWN &&
+    !(items.bombos && items.ether && items.quake)
+  )
     return "possible";
   return null;
 }
@@ -161,8 +166,13 @@ export function buildDungeonCaption(
   index: number,
   medallions: number[],
 ): string {
-  if (index !== 8 && index !== 9) return dungeon.name;
-  return `${dungeon.name} ${icon(medallionAsset(medallions[index] ?? 0))}`;
+  if (
+    index !== DUNGEON_INDICES.MISERY_MIRE &&
+    index !== DUNGEON_INDICES.TURTLE_ROCK
+  ) {
+    return dungeon.name;
+  }
+  return `${dungeon.name} ${icon(medallionAsset(medallions[index] ?? MEDALLION_VALUES.UNKNOWN))}`;
 }
 
 // Define dungeon objects
