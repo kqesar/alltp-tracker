@@ -1,56 +1,85 @@
-/* CSS Custom Properties for consistent theming */
+/*
+ * Design tokens — a single, coherent source of truth for the UI theme.
+ * Grouped by role so the system stays readable and maintainable.
+ */
 :root {
-  --color-primary: #646cff;
-  --color-primary-hover: #535bf2;
-  --color-primary-rgb: 100, 108, 255;
-  /* Triforce gold accent for headings and highlights */
+  /* ---- Brand / accent (Triforce gold is the primary accent) ---- */
   --color-accent: #e6c34a;
-  --color-success: #00ff00;
-  --color-warning: #ffff00;
-  --color-error: #ff0000;
-  --color-disabled: #7f7f7f;
-  --color-text: #ffffff;
-  --color-bg: #000000;
-  --color-bg-secondary: #1a1a1a;
-  --color-bg-header: rgba(0, 0, 0, 0.9);
+  --color-accent-strong: #f2d469;
+  --color-accent-rgb: 230, 195, 74;
 
-  /* Improved contrast ratios for accessibility */
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #e0e0e0;
-  --color-border: #404040;
-  --color-focus: #646cff;
+  /* Secondary interactive colour (links, focus) */
+  --color-primary: #7c83ff;
+  --color-primary-hover: #9aa0ff;
+  --color-primary-rgb: 124, 131, 255;
+  --color-focus: var(--color-accent);
 
+  /* ---- Surfaces (dark slate scale, low -> elevated) ---- */
+  --color-bg: #07070b;
+  --surface-1: #11121a; /* base panels */
+  --surface-2: #181a26; /* cards */
+  --surface-3: #202332; /* elevated (modals, menus) */
+  --color-bg-secondary: var(--surface-2);
+  --color-bg-header: rgba(10, 11, 18, 0.85);
+  --overlay-backdrop: rgba(4, 5, 9, 0.66);
+
+  /* ---- Text ---- */
+  --color-text: #f4f5fb;
+  --color-text-primary: #f4f5fb;
+  --color-text-secondary: #b6bacb;
+  --color-text-muted: #7e8398;
+
+  /* ---- Borders ---- */
+  --color-border: #2b2f3f;
+  --color-border-strong: #3c4256;
+
+  /* ---- Feedback (UI messages / buttons) ---- */
+  --color-success: #3fb950;
+  --color-warning: #e6c34a;
+  --color-danger: #f0506e;
+  --color-danger-hover: #f76a85;
+
+  /* ---- Map marker states (kept vivid for at-a-glance scanning) ---- */
+  --state-available: #2ecc40;
+  --state-possible: #ffdc00;
+  --state-unavailable: #ff4136;
+  --state-opened: #7f7f7f;
+  --color-disabled: var(--state-opened);
+
+  /* ---- Typography ---- */
   --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
 
+  /* ---- Spacing ---- */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
 
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-
+  /* ---- Radius / motion / shadow ---- */
   --border-radius: 0.5rem;
-  --transition: 0.25s ease-in-out;
+  --border-radius-lg: 0.875rem;
+  --transition: 0.2s ease-in-out;
+  --shadow-elevated: 0 18px 48px rgba(0, 0, 0, 0.55);
 
+  /* ---- Layering ---- */
   --header-height: 4rem;
   --z-overlay: 2;
   --z-header: 1000;
   --z-modal: 2000;
 
-  /* Responsive breakpoints */
+  /* ---- Responsive breakpoints ---- */
   --breakpoint-mobile: 480px;
   --breakpoint-tablet: 768px;
   --breakpoint-desktop: 1024px;
 
-  /* Touch target sizing (minimum 44px as per Apple/Google guidelines) */
+  /* ---- Touch / mobile sizing ---- */
   --touch-target-min: 44px;
   --touch-target-spacing: 8px;
-
-  /* Mobile-specific sizing */
   --mobile-item-size: 48px;
   --mobile-grid-gap: 4px;
   --mobile-padding: 1rem;
@@ -62,6 +91,7 @@
   :root {
     --color-text: #ffffff;
     --color-bg: #000000;
+    --color-accent: #ffffff;
     --color-primary: #ffffff;
     --color-border: #ffffff;
     --color-focus: #ffffff;

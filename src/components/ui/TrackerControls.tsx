@@ -1,4 +1,6 @@
-import { type ChangeEvent, useRef } from "react";
+import { type ChangeEvent, useRef, useState } from "react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Modal } from "@/components/ui/Modal";
 import { useGameStore } from "@/stores/gameStore";
 
 /**
@@ -12,14 +14,12 @@ export const TrackerControls = () => {
   const importState = useGameStore((state) => state.importState);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleReset = () => {
-    if (
-      window.confirm(
-        "Start a new game? This will clear all tracked progress and cannot be undone.",
-      )
-    ) {
-      reset();
-    }
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+
+  const confirmReset = () => {
+    reset();
+    setIsResetOpen(false);
   };
 
   const handleExport = () => {
@@ -43,7 +43,7 @@ export const TrackerControls = () => {
     const reader = new FileReader();
     reader.onload = () => {
       if (!importState(String(reader.result))) {
-        window.alert("Could not import this file: it is not a valid save.");
+        setImportError("This file is not a valid tracker save.");
       }
     };
     reader.readAsText(file);
@@ -53,7 +53,7 @@ export const TrackerControls = () => {
     <div className="tracker-controls">
       <button
         className="tracker-controls__button"
-        onClick={handleReset}
+        onClick={() => setIsResetOpen(true)}
         title="Start a new game (clears progress)"
         type="button"
       >
@@ -84,6 +84,33 @@ export const TrackerControls = () => {
         tabIndex={-1}
         type="file"
       />
+
+      <ConfirmDialog
+        confirmLabel="New game"
+        isOpen={isResetOpen}
+        message="This will clear all tracked progress and cannot be undone."
+        onCancel={() => setIsResetOpen(false)}
+        onConfirm={confirmReset}
+        title="Start a new game?"
+        tone="danger"
+      />
+
+      <Modal
+        footer={
+          <button
+            className="modal-btn modal-btn--primary"
+            onClick={() => setImportError(null)}
+            type="button"
+          >
+            OK
+          </button>
+        }
+        isOpen={importError !== null}
+        onClose={() => setImportError(null)}
+        title="Import failed"
+      >
+        <p className="modal__message">{importError}</p>
+      </Modal>
     </div>
   );
 };
