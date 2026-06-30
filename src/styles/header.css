@@ -33,7 +33,10 @@
 .header__title {
   margin: 0;
   font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 14px rgba(230, 195, 74, 0.25);
 }
 
 .header__nav {
@@ -67,10 +70,10 @@
   fill: currentColor;
 }
 
-/* Main content offset for fixed header */
+/* Main content offset for fixed header (header is 4rem tall) */
 .main-content {
   padding: var(--spacing-lg);
-  margin-top: 8rem;
+  margin-top: 6rem;
 }
 
 /* Responsive header */

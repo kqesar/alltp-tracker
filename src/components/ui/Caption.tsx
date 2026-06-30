@@ -10,9 +10,18 @@ type CaptionProps = {
  * @param text - The text content which may contain HTML img tags
  */
 export const Caption = ({ text }: CaptionProps) => {
-  // If text is empty or just whitespace, return empty span
-  if (!text || text.trim() === "" || text === "") {
-    return <span />;
+  // When nothing is selected, show a helpful hint instead of an empty bar
+  if (!text || text.trim() === "") {
+    return (
+      <output
+        aria-live="polite"
+        className="caption-output caption-output--empty"
+      >
+        <span className="caption-hint">
+          Hover an item or a map location to see its details here.
+        </span>
+      </output>
+    );
   }
 
   /**

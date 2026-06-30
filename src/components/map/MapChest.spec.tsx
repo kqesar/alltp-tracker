@@ -5,8 +5,9 @@ import { MapChest } from "@/components/map/MapChest";
 import type { ChestItem, ItemState } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 
-// Mock getAssetPath
-vi.mock("../../utils", () => ({
+// Mock getAssetPath but keep the real coordinate transform
+vi.mock("../../utils", async (importActual) => ({
+  ...(await importActual<typeof import("../../utils")>()),
   getAssetPath: vi.fn((path: string) => `/mocked/path/${path}`),
 }));
 
@@ -28,7 +29,7 @@ const mockUseGameStore = vi.mocked(useGameStore);
 
 const mockChest: ChestItem = {
   id: 1,
-  isAvailable: vi.fn(() => "available"),
+  isAvailable: vi.fn(() => "available" as const),
   isOpened: false,
   name: "Test Chest",
   x: "50%",
@@ -201,7 +202,7 @@ describe("MapChest", () => {
   });
 
   it("calls chest.isAvailable with items and medallions", () => {
-    const mockIsAvailable = vi.fn(() => "unavailable");
+    const mockIsAvailable = vi.fn(() => "unavailable" as const);
     const chestWithMock = {
       ...mockChest,
       isAvailable: mockIsAvailable,

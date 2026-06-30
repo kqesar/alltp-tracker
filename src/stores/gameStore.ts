@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
 import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import {
+  buildDungeonCaption,
   type ChestItem,
   type DungeonItem,
   type ItemState,
@@ -150,37 +152,20 @@ export const useGameStore = create<GameState>()(
           const newMedallions = [...medallions];
           newMedallions[bossNumber] = newValue;
 
-          // Update caption if it's currently showing a dungeon with medallion info
+          // If the caption currently shows this dungeon, rebuild it so the
+          // medallion icon stays in sync (no fragile string replace).
           let updatedCaption = caption;
-          if ((bossNumber === 8 || bossNumber === 9) && caption !== "") {
-            if (
-              caption.includes("Misery Mire") ||
-              caption.includes("Turtle Rock") ||
-              caption.includes("medallion")
-            ) {
-              const dungeon = dungeonsState[bossNumber];
-              if (dungeon) {
-                updatedCaption = dungeon.name;
-
-                let medallionName = "medallion0";
-                switch (newValue) {
-                  case 1:
-                    medallionName = "medallion1";
-                    break;
-                  case 2:
-                    medallionName = "medallion2";
-                    break;
-                  case 3:
-                    medallionName = "medallion3";
-                    break;
-                }
-
-                updatedCaption = updatedCaption.replace(
-                  /<img src='\/assets\/medallion0\.png' class='mini'\/>/g,
-                  `<img src='/assets/${medallionName}.png' class='mini'/>`,
-                );
-              }
-            }
+          const dungeon = dungeonsState[bossNumber];
+          if (
+            (bossNumber === 8 || bossNumber === 9) &&
+            dungeon &&
+            caption.startsWith(dungeon.name)
+          ) {
+            updatedCaption = buildDungeonCaption(
+              dungeon,
+              bossNumber,
+              newMedallions,
+            );
           }
 
           set({
@@ -269,10 +254,12 @@ export const useDungeons = () => useGameStore((state) => state.dungeonsState);
 export const useMedallions = () => useGameStore((state) => state.medallions);
 export const useCaption = () => useGameStore((state) => state.caption);
 export const useGameActions = () =>
-  useGameStore((state) => ({
-    handleItemClick: state.handleItemClick,
-    handleMedallionChange: state.handleMedallionChange,
-    setCaption: state.setCaption,
-    toggleChest: state.toggleChest,
-    toggleDungeonBoss: state.toggleDungeonBoss,
-  }));
+  useGameStore(
+    useShallow((state) => ({
+      handleItemClick: state.handleItemClick,
+      handleMedallionChange: state.handleMedallionChange,
+      setCaption: state.setCaption,
+      toggleChest: state.toggleChest,
+      toggleDungeonBoss: state.toggleDungeonBoss,
+    })),
+  );

@@ -34,20 +34,21 @@
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  background: rgba(0, 0, 0, 0.85);
-  border: 2px solid var(--color-primary);
+  /* Subtle frosted pill, not an outlined checkbox */
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--border-radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(6px);
   transition: all var(--transition);
 }
 
 .tracker-controls__button:hover {
-  background: rgba(var(--color-primary-rgb), 0.3);
-  border-color: var(--color-primary-hover);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  color: var(--color-accent);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--color-accent);
   transform: translateY(-1px);
 }
 
@@ -192,6 +193,19 @@
   display: inline;
   line-height: inherit;
 }
+/* Empty-state hint shown when nothing is selected */
+.caption-output--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.caption-hint {
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  color: var(--color-text-secondary);
+  opacity: 0.65;
+}
 
 /* Enhanced Mini Icons in Caption */
 .caption .mini,
@@ -259,20 +273,6 @@
     width: 16px;
     height: 16px;
     margin: 0 2px;
-  }
-}
-
-/* Dark/Light theme adjustments */
-@media (prefers-color-scheme: light) {
-  .caption,
-  #caption {
-    color: var(--color-text-dark, #213547);
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .caption-content {
-    text-shadow: none;
   }
 }
 

@@ -81,18 +81,19 @@ describe("GameStore", () => {
   });
 
   it("updates caption when medallion changes for dungeon in caption", () => {
-    const { setCaption, handleMedallionChange } = useGameStore.getState();
+    const { setCaption, handleMedallionChange, dungeonsState } =
+      useGameStore.getState();
 
-    // Set caption to show something with Misery Mire (to trigger the logic)
-    setCaption("Misery Mire something");
+    // Simulate hovering Misery Mire (caption shows its real name)
+    setCaption(dungeonsState[8].name);
 
     // Change medallion for boss 8 (Misery Mire)
     handleMedallionChange(8, 1);
 
     const caption = useGameStore.getState().caption;
-    // The caption should now contain the updated medallion image
+    // The caption should now contain the resolved medallion icon
     expect(caption).toContain("medallion1.png");
-    // And should contain the full dungeon name from the data
+    // And should still contain the dungeon name from the data
     expect(caption).toContain("Misery Mire");
   });
 

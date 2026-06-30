@@ -8,8 +8,9 @@ vi.mock("@/stores/gameStore", () => ({
   useGameStore: vi.fn(),
 }));
 
-// Mock the utils
-vi.mock("@/utils", () => ({
+// Mock getAssetPath but keep the real item-visual helpers
+vi.mock("@/utils", async (importActual) => ({
+  ...(await importActual<typeof import("@/utils")>()),
   getAssetPath: vi.fn((path: string) => `/assets/${path}`),
 }));
 

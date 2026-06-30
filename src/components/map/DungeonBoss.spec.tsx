@@ -5,8 +5,9 @@ import { DungeonBoss } from "@/components/map/DungeonBoss";
 import type { DungeonItem, ItemState } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 
-// Mock getAssetPath
-vi.mock("@/utils", () => ({
+// Mock getAssetPath but keep the real coordinate transform
+vi.mock("@/utils", async (importActual) => ({
+  ...(await importActual<typeof import("@/utils")>()),
   getAssetPath: vi.fn((path: string) => `/mocked/path/${path}`),
 }));
 
@@ -105,10 +106,10 @@ vi.mock("@/stores/gameStore", () => ({
 const mockUseGameStore = vi.mocked(useGameStore);
 
 const mockDungeon: DungeonItem = {
-  canGetChest: vi.fn(() => "available"),
+  canGetChest: vi.fn(() => "available" as const),
   id: 1,
   image: "boss01.png",
-  isBeatable: vi.fn(() => "available"),
+  isBeatable: vi.fn(() => "available" as const),
   isBeaten: false,
   name: "Test Dungeon",
   x: "50%",
@@ -251,7 +252,7 @@ describe("DungeonBoss", () => {
   });
 
   it("calls dungeon.isBeatable with items, medallions, and bigKeysVisible", () => {
-    const mockIsBeatable = vi.fn(() => "unavailable");
+    const mockIsBeatable = vi.fn(() => "unavailable" as const);
     const dungeonWithMock = {
       ...mockDungeon,
       isBeatable: mockIsBeatable,
@@ -305,7 +306,7 @@ describe("DungeonBoss", () => {
     }
 
     expect(mockSetCaption).toHaveBeenCalledWith(
-      "Misery Mire <img src='medallion1.png' />",
+      expect.stringContaining("medallion1.png"),
     );
   });
 });

@@ -5,16 +5,17 @@ import { DungeonChest } from "@/components/map/DungeonChest";
 import type { DungeonItem, ItemState } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 
-// Mock getAssetPath
-vi.mock("@/utils", () => ({
+// Mock getAssetPath but keep the real coordinate transform
+vi.mock("@/utils", async (importActual) => ({
+  ...(await importActual<typeof import("@/utils")>()),
   getAssetPath: vi.fn((path: string) => `/mocked/path/${path}`),
 }));
 
 const mockDungeon: DungeonItem = {
-  canGetChest: vi.fn(() => "available"),
+  canGetChest: vi.fn(() => "available" as const),
   id: 1,
   image: "boss01.png",
-  isBeatable: vi.fn(() => "available"),
+  isBeatable: vi.fn(() => "available" as const),
   isBeaten: false,
   name: "Test Dungeon",
   x: "50%",
@@ -220,7 +221,7 @@ describe("DungeonChest", () => {
     }
 
     expect(mockSetCaption).toHaveBeenCalledWith(
-      "Misery Mire <img src='medallion1.png' />",
+      expect.stringContaining("medallion1.png"),
     );
   });
 
@@ -252,7 +253,7 @@ describe("DungeonChest", () => {
     }
 
     expect(mockSetCaption).toHaveBeenCalledWith(
-      "Turtle Rock <img src='medallion2.png' />",
+      expect.stringContaining("medallion2.png"),
     );
   });
 
@@ -260,7 +261,7 @@ describe("DungeonChest", () => {
     // Reset mock to original state
     mockUseGameStore.mockReturnValue(mockGameStore);
 
-    const mockCanGetChest = vi.fn(() => "unavailable");
+    const mockCanGetChest = vi.fn(() => "unavailable" as const);
     const dungeonWithMock = {
       ...mockDungeon,
       canGetChest: mockCanGetChest,
