@@ -306,7 +306,7 @@ describe("DungeonBoss", () => {
     }
 
     expect(mockSetCaption).toHaveBeenCalledWith(
-      "Misery Mire <img src='medallion1.png' />",
+      expect.stringContaining("medallion1.png"),
     );
   });
 });

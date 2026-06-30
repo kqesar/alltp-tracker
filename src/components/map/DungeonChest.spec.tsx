@@ -221,7 +221,7 @@ describe("DungeonChest", () => {
     }
 
     expect(mockSetCaption).toHaveBeenCalledWith(
-      "Misery Mire <img src='medallion1.png' />",
+      expect.stringContaining("medallion1.png"),
     );
   });
 
@@ -253,7 +253,7 @@ describe("DungeonChest", () => {
     }
 
     expect(mockSetCaption).toHaveBeenCalledWith(
-      "Turtle Rock <img src='medallion2.png' />",
+      expect.stringContaining("medallion2.png"),
     );
   });
 

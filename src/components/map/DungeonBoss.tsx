@@ -1,5 +1,5 @@
 import { CSS_CLASSES } from "@/constants";
-import type { DungeonItem } from "@/data/chests";
+import { buildDungeonCaption, type DungeonItem } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, transformMapCoordinates } from "@/utils";
 
@@ -35,32 +35,9 @@ export const DungeonBoss = ({ dungeon, index }: DungeonBossProps) => {
     return dungeon.isBeatable(items, medallions, bigKeysVisible);
   };
 
-  // Highlight dungeon and show caption with dynamic medallion info
+  // Highlight dungeon and show caption (medallion icon resolved for 8/9)
   const handleHighlight = () => {
-    let dungeonName = dungeon.name;
-
-    // For Misery Mire (8) and Turtle Rock (9), update medallion in caption
-    if (index === 8 || index === 9) {
-      const medallionValue = medallions[index];
-      let medallionName = "medallion0"; // default/unknown
-
-      switch (medallionValue) {
-        case 1:
-          medallionName = "medallion1"; // bombos
-          break;
-        case 2:
-          medallionName = "medallion2"; // ether
-          break;
-        case 3:
-          medallionName = "medallion3"; // quake (uses medallion3 image)
-          break;
-      }
-
-      // Replace the medallion image in the name
-      dungeonName = dungeonName.replace("medallion0", medallionName);
-    }
-
-    setCaption(dungeonName);
+    setCaption(buildDungeonCaption(dungeon, index, medallions));
   };
 
   // Remove highlight and clear caption

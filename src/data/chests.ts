@@ -146,6 +146,25 @@ function icon(asset: string): string {
   return `<img src='${import.meta.env.BASE_URL}assets/${asset}' class='mini'/>`;
 }
 
+/** Icon asset for a medallion requirement value (0 = unknown, 1-3 = specific). */
+function medallionAsset(value: number): string {
+  return `medallion${value}.png`;
+}
+
+/**
+ * Builds the caption for a dungeon. For Misery Mire (8) and Turtle Rock (9)
+ * it appends the currently-selected medallion requirement icon, resolved from
+ * the medallions array — replacing the previous fragile string-replace logic.
+ */
+export function buildDungeonCaption(
+  dungeon: DungeonItem,
+  index: number,
+  medallions: number[],
+): string {
+  if (index !== 8 && index !== 9) return dungeon.name;
+  return `${dungeon.name} ${icon(medallionAsset(medallions[index] ?? 0))}`;
+}
+
 // Define dungeon objects
 export const dungeons: DungeonItem[] = [
   {
@@ -418,7 +437,7 @@ export const dungeons: DungeonItem[] = [
       return "possible";
     },
     isBeaten: false,
-    name: `Misery Mire ${icon("moonpearl.png")} ${icon("flute.png")} ${icon("glove2.png")} ${icon("somaria.png")} ${icon("boots.png")} ${icon("medallion0.png")} ${icon("lantern.png")}`,
+    name: `Misery Mire ${icon("moonpearl.png")} ${icon("flute.png")} ${icon("glove2.png")} ${icon("somaria.png")} ${icon("boots.png")} ${icon("lantern.png")}`,
     x: "55.8%",
     y: "82.9%",
   },
@@ -464,7 +483,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: `Turtle Rock ${icon("moonpearl.png")} ${icon("hammer.png")} ${icon("glove2.png")} ${icon("somaria.png")} ${icon("hookshot.png")} ${icon("medallion0.png")} ${icon("icerod.png")} ${icon("firerod.png")}`,
+    name: `Turtle Rock ${icon("moonpearl.png")} ${icon("hammer.png")} ${icon("glove2.png")} ${icon("somaria.png")} ${icon("hookshot.png")} ${icon("icerod.png")} ${icon("firerod.png")}`,
     x: "96.9%",
     y: "7.0%",
   },
