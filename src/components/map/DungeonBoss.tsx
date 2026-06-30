@@ -1,7 +1,7 @@
 import { CSS_CLASSES } from "@/constants";
 import type { DungeonItem } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
-import { getAssetPath } from "@/utils";
+import { getAssetPath, transformMapCoordinates } from "@/utils";
 
 type DungeonBossProps = {
   dungeon: DungeonItem;
@@ -68,30 +68,7 @@ export const DungeonBoss = ({ dungeon, index }: DungeonBossProps) => {
     setCaption("");
   };
 
-  // Transform coordinates for vertical orientation
-  const getTransformedCoordinates = () => {
-    const x = dungeon.x;
-    const y = dungeon.y;
-
-    if (!mapOrientation) return { x, y };
-
-    const xNum = parseFloat(x) / 100;
-    const yNum = parseFloat(y) / 100;
-
-    if (xNum > 0.5) {
-      return {
-        x: `${(xNum - 0.5) * 2 * 100}%`,
-        y: `${(yNum / 2 + 0.5) * 100}%`,
-      };
-    } else {
-      return {
-        x: `${xNum * 2 * 100}%`,
-        y: `${(yNum / 2) * 100}%`,
-      };
-    }
-  };
-
-  const coords = getTransformedCoordinates();
+  const coords = transformMapCoordinates(dungeon.x, dungeon.y, mapOrientation);
   const availabilityClass = getAvailabilityClass();
 
   return (

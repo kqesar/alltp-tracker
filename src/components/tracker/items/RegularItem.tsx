@@ -1,12 +1,11 @@
 import { CornerTable } from "@/components/CornerTable";
-import { BigKey } from "@/components/tracker/items/BigKey";
-import { SmallKey } from "@/components/tracker/items/SmallKey";
-import { CSS_CLASSES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { BigKeyCell } from "@/components/tracker/items/BigKeyCell";
+import { CSS_CLASSES } from "@/constants";
 import { itemsMin } from "@/data/items";
 import { useDeviceDetection } from "@/hooks/useDeviceDetection";
 import { useTouchGestures } from "@/hooks/useTouchGestures";
 import { useGameStore } from "@/stores/gameStore";
-import { getAssetPath } from "@/utils";
+import { getGridItemStyles } from "@/utils";
 
 type RegularItemProps = {
   row: number;
@@ -25,7 +24,7 @@ type RegularItemProps = {
  * @param onFocus - Callback when item receives focus
  */
 export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
-  const { items, handleItemClick, bigKeysVisible, smallKeys } = useGameStore();
+  const { items, handleItemClick } = useGameStore();
   const { isTouchDevice } = useDeviceDetection();
 
   // Set up touch gestures for mobile devices (must be called before any early returns)
@@ -45,60 +44,9 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
     },
   });
 
-  // For big key items, render as empty item with overlays when bigKeysVisible is true
+  // Big key items render the dedicated keysanity cell (key + small key + count)
   if (item?.startsWith("bigkey")) {
-    const dungeonIndex = parseInt(item.replace("bigkey", ""), 10);
-
-    if (!bigKeysVisible) {
-      return (
-        <div
-          className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
-          data-grid-col={col}
-          data-grid-row={row}
-          key={`${row}_${col}`}
-          style={{ opacity: 0, pointerEvents: "none" }}
-        />
-      );
-    }
-
-    return (
-      <div
-        className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} bigkey-container`}
-        data-grid-col={col}
-        data-grid-row={row}
-        key={`${row}_${col}`}
-      >
-        {/* 2x2 Grid Layout */}
-        <div className="bigkey-grid">
-          {/* Top Left - Empty */}
-          <div className="bigkey-quadrant bigkey-quadrant--top-left"></div>
-
-          {/* Top Right - Big Key */}
-          <div className="bigkey-quadrant bigkey-quadrant--top-right">
-            <BigKey col={col} dungeonIndex={dungeonIndex} row={row} />
-          </div>
-
-          {/* Bottom Left - Small Key */}
-          <div className="bigkey-quadrant bigkey-quadrant--bottom-left">
-            <SmallKey col={col} dungeonIndex={dungeonIndex} row={row} />
-          </div>
-
-          {/* Bottom Right - Small Keys Count Display */}
-          <div className="bigkey-quadrant bigkey-quadrant--bottom-right">
-            <div
-              className={`bigkey-count ${
-                (smallKeys[dungeonIndex] || 0) ===
-                SMALL_KEYS_MAX_BY_INDEX[dungeonIndex]
-                  ? "bigkey-count--maxed"
-                  : ""
-              }`}
-            >
-              {smallKeys[dungeonIndex] || 0}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <BigKeyCell col={col} item={item} row={row} />;
   }
 
   // Type-safe ref callback for button element
@@ -107,59 +55,6 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
       touchRef.current = element;
     }
   };
-
-  /**
-   * Gets the background image URL for an item
-   * @param item - The item identifier
-   * @returns CSS background-image URL string
-   */
-  const getItemBackground = (item: string): string => {
-    if (!item || item === "blank") return "";
-
-    // Special handling for big keys - all use the same bigkey.png image
-    if (item.startsWith("bigkey")) {
-      return `url(${getAssetPath("bigkey.png")})`;
-    }
-
-    if (typeof items[item] === "boolean") {
-      return `url(${getAssetPath(`${item}.png`)})`;
-    } else {
-      return `url(${getAssetPath(`${item}${items[item]}.png`)})`;
-    }
-  };
-
-  /**
-   * Calculates opacity based on item state
-   * @param item - The item identifier
-   * @returns Opacity value as string
-   */
-  const getItemOpacity = (item: string): string => {
-    if (!item || item === "blank") return "0.25";
-
-    // Special handling for big keys - obtained (1) = full opacity, not obtained (0) = low opacity
-    if (item.startsWith("bigkey")) {
-      return (items[item] as number) === 1 ? "1" : "0.25";
-    }
-
-    if (typeof items[item] === "boolean") {
-      return items[item] ? "1" : "0.25";
-    } else if (typeof items[item] === "number" && item.indexOf("boss") === 0) {
-      return "1";
-    } else {
-      const minValue = itemsMin[item] || 0;
-      return (items[item] as number) > minValue ? "1" : "0.25";
-    }
-  };
-
-  /**
-   * Creates common grid item styles
-   * @param item - The item identifier
-   * @returns Style object for grid items (only dynamic properties)
-   */
-  const getGridItemStyles = (item: string) => ({
-    backgroundImage: getItemBackground(item),
-    opacity: getItemOpacity(item),
-  });
 
   /**
    * Get item display name for accessibility
@@ -257,7 +152,7 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
         }
       }}
       ref={setButtonRef}
-      style={getGridItemStyles(item)}
+      style={getGridItemStyles(item, items)}
       type="button"
     >
       <CornerTable />

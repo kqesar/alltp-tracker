@@ -5,8 +5,9 @@ import { DungeonBoss } from "@/components/map/DungeonBoss";
 import type { DungeonItem, ItemState } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 
-// Mock getAssetPath
-vi.mock("@/utils", () => ({
+// Mock getAssetPath but keep the real coordinate transform
+vi.mock("@/utils", async (importActual) => ({
+  ...(await importActual<typeof import("@/utils")>()),
   getAssetPath: vi.fn((path: string) => `/mocked/path/${path}`),
 }));
 
