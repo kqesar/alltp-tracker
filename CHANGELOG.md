@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.7.0](https://github.com/kqesar/alltp-tracker/compare/v2.6.0...v2.7.0) (2026-06-30)
+
+
+### ✨ Features
+
+* show the active run settings in the preset modal ([#138](https://github.com/kqesar/alltp-tracker/issues/138)) ([7022fb1](https://github.com/kqesar/alltp-tracker/commit/7022fb15f893fb01efca02cbeecefc60ca92738d))
+
 ## [2.6.0](https://github.com/kqesar/alltp-tracker/compare/v2.5.0...v2.6.0) (2026-06-30)
 
 
