@@ -1,6 +1,7 @@
 import { type ChangeEvent, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
+import { PresetSelector } from "@/components/ui/PresetSelector";
 import { useGameStore } from "@/stores/gameStore";
 
 /**
@@ -51,6 +52,7 @@ export const TrackerControls = () => {
 
   return (
     <div className="tracker-controls">
+      <PresetSelector />
       <button
         className="tracker-controls__button"
         onClick={() => setIsResetOpen(true)}

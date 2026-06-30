@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { useGameStore } from "@/stores/gameStore";
 
 describe("GameStore", () => {
@@ -313,6 +313,37 @@ describe("GameStore", () => {
       const { importState } = useGameStore.getState();
       expect(importState("not valid json")).toBe(false);
       expect(importState("null")).toBe(false);
+    });
+  });
+
+  describe("Run-type presets", () => {
+    afterEach(() => {
+      // Restore the default preset so other tests are unaffected
+      useGameStore.getState().applyPreset("open");
+    });
+
+    it("applyPreset switches preset, applies keysanity and resets the board", () => {
+      useGameStore.getState().toggleChest(0);
+      expect(useGameStore.getState().chestsState[0].isOpened).toBe(true);
+
+      useGameStore.getState().applyPreset("keysanity");
+
+      const state = useGameStore.getState();
+      expect(state.presetId).toBe("keysanity");
+      expect(state.settings.keysanity).toBe(true);
+      expect(state.bigKeysVisible).toBe(true);
+      expect(state.chestsState[0].isOpened).toBe(false);
+    });
+
+    it("a non-keysanity preset hides big keys", () => {
+      useGameStore.getState().applyPreset("open");
+      expect(useGameStore.getState().bigKeysVisible).toBe(false);
+    });
+
+    it("reset keeps the current preset", () => {
+      useGameStore.getState().applyPreset("keysanity");
+      useGameStore.getState().reset();
+      expect(useGameStore.getState().presetId).toBe("keysanity");
     });
   });
 });
