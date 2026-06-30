@@ -45,6 +45,19 @@ export const MEDALLION_VALUES = {
   UNKNOWN: 0,
 };
 
+// Glove (gauntlet) progression levels
+export const GLOVE_LEVELS = {
+  NONE: 0,
+  POWER: 1, // Power Glove
+  TITAN: 2, // Titan's Mitt
+} as const;
+
+// Boss progression states (value stored in items.bossN)
+export const BOSS_STATES = {
+  BEATEN: 2,
+  UNBEATEN: 0,
+} as const;
+
 // Small Keys Maximum Values per Dungeon
 export const SMALL_KEYS_MAX = {
   DESERT_PALACE: 1, // smallkey1
