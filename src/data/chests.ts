@@ -136,6 +136,16 @@ function checkMedallion(
   return null;
 }
 
+/**
+ * Builds the inline icon markup used inside chest/dungeon names. Centralizing
+ * it here keeps the raw <img> markup out of the data definitions, so the
+ * markup format lives in a single place.
+ * @param asset - Icon asset filename (e.g. "moonpearl.png")
+ */
+function icon(asset: string): string {
+  return `<img src='${import.meta.env.BASE_URL}assets/${asset}' class='mini'/>`;
+}
+
 // Define dungeon objects
 export const dungeons: DungeonItem[] = [
   {
@@ -158,7 +168,7 @@ export const dungeons: DungeonItem[] = [
       return "unavailable";
     },
     isBeaten: false,
-    name: `Eastern Palace <img src='${import.meta.env.BASE_URL}assets/bow2.png' class='mini'/>`,
+    name: `Eastern Palace ${icon("bow2.png")}`,
     x: "46.8%",
     y: "38.8%",
   },
@@ -190,7 +200,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: `Desert Palace <img src='${import.meta.env.BASE_URL}assets/glove1.png' class='mini'/>  <img src='${import.meta.env.BASE_URL}assets/book.png' class='mini'/>  <img src='${import.meta.env.BASE_URL}assets/lantern.png' class='mini'/>  <img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'/>`,
+    name: `Desert Palace ${icon("glove1.png")}  ${icon("book.png")}  ${icon("lantern.png")}  ${icon("boots.png")}`,
     x: "3.8%",
     y: "78.4%",
   },
@@ -216,7 +226,7 @@ export const dungeons: DungeonItem[] = [
       return "possible";
     },
     isBeaten: false,
-    name: `Tower of Hera <img src='${import.meta.env.BASE_URL}assets/glove1.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/lantern.png' class='mini'/>`,
+    name: `Tower of Hera ${icon("glove1.png")} ${icon("mirror.png")} ${icon("lantern.png")}`,
     x: "31.0%",
     y: "5.5%",
   },
@@ -250,7 +260,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: `Palace of Darkness <img src='${import.meta.env.BASE_URL}assets/moonpearl.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/bow2.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/glove1.png' class='mini'/>`,
+    name: `Palace of Darkness ${icon("moonpearl.png")} ${icon("bow2.png")} ${icon("hammer.png")} ${icon("glove1.png")}`,
     x: "97.0%",
     y: "40.0%",
   },
@@ -291,7 +301,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: `Swamp Palace <img src='${import.meta.env.BASE_URL}assets/moonpearl.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/flippers.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/hookshot.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/glove1.png' class='mini'/>`,
+    name: `Swamp Palace ${icon("moonpearl.png")} ${icon("mirror.png")} ${icon("flippers.png")} ${icon("hammer.png")} ${icon("hookshot.png")} ${icon("glove1.png")}`,
     x: "73.5%",
     y: "91.0%",
   },
@@ -313,7 +323,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: `Skull Woods <img src='${import.meta.env.BASE_URL}assets/moonpearl.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/firerod.png' class='mini'/>`,
+    name: `Skull Woods ${icon("moonpearl.png")} ${icon("firerod.png")}`,
     x: "53.3%",
     y: "5.4%",
   },
@@ -335,7 +345,7 @@ export const dungeons: DungeonItem[] = [
       return "unavailable";
     },
     isBeaten: false,
-    name: `Thieves' Town <img src='${import.meta.env.BASE_URL}assets/moonpearl.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/glove2.png' class='mini'/>`,
+    name: `Thieves' Town ${icon("moonpearl.png")} ${icon("glove2.png")}`,
     x: "56.4%",
     y: "47.9%",
   },
@@ -367,7 +377,7 @@ export const dungeons: DungeonItem[] = [
       return "possible";
     },
     isBeaten: false,
-    name: `Ice Palace <img src='${import.meta.env.BASE_URL}assets/moonpearl.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/flippers.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/glove2.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/firerod.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/hookshot.png' class='mini'/>`,
+    name: `Ice Palace ${icon("moonpearl.png")} ${icon("flippers.png")} ${icon("glove2.png")} ${icon("hammer.png")} ${icon("firerod.png")} ${icon("hookshot.png")}`,
     x: "89.8%",
     y: "85.8%",
   },
@@ -408,7 +418,7 @@ export const dungeons: DungeonItem[] = [
       return "possible";
     },
     isBeaten: false,
-    name: `Misery Mire <img src='${import.meta.env.BASE_URL}assets/moonpearl.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/flute.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/glove2.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/somaria.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/medallion0.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/lantern.png' class='mini'/>`,
+    name: `Misery Mire ${icon("moonpearl.png")} ${icon("flute.png")} ${icon("glove2.png")} ${icon("somaria.png")} ${icon("boots.png")} ${icon("medallion0.png")} ${icon("lantern.png")}`,
     x: "55.8%",
     y: "82.9%",
   },
@@ -454,7 +464,7 @@ export const dungeons: DungeonItem[] = [
       return "available";
     },
     isBeaten: false,
-    name: `Turtle Rock <img src='${import.meta.env.BASE_URL}assets/moonpearl.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/glove2.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/somaria.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/hookshot.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/medallion0.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/icerod.png' class='mini'/> <img src='${import.meta.env.BASE_URL}assets/firerod.png' class='mini'/>`,
+    name: `Turtle Rock ${icon("moonpearl.png")} ${icon("hammer.png")} ${icon("glove2.png")} ${icon("somaria.png")} ${icon("hookshot.png")} ${icon("medallion0.png")} ${icon("icerod.png")} ${icon("firerod.png")}`,
     x: "96.9%",
     y: "7.0%",
   },
@@ -471,7 +481,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `King's Tomb <img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'> + <img src='${import.meta.env.BASE_URL}assets/glove2.png' class='mini'>/<img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'>`,
+    name: `King's Tomb ${icon("boots.png")} + ${icon("glove2.png")}/${icon("mirror.png")}`,
     x: "30.8%",
     y: "29.6%",
   },
@@ -523,7 +533,7 @@ export const chests: ChestItem[] = [
       return "possible";
     },
     isOpened: false,
-    name: `Mimic Cave (<img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'> outside of Turtle Rock)(Yellow = <img src='${import.meta.env.BASE_URL}assets/medallion0.png' class='mini'> unkown OR possible w/out <img src='${import.meta.env.BASE_URL}assets/firerod.png' class='mini'>)`,
+    name: `Mimic Cave (${icon("mirror.png")} outside of Turtle Rock)(Yellow = ${icon("medallion0.png")} unkown OR possible w/out ${icon("firerod.png")})`,
     x: "42.6%",
     y: "9.3%",
   },
@@ -539,7 +549,7 @@ export const chests: ChestItem[] = [
     id: 6,
     isAvailable: () => "available",
     isOpened: false,
-    name: `Chicken House <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>`,
+    name: `Chicken House ${icon("bomb.png")}`,
     x: "4.4%",
     y: "54.2%",
   },
@@ -550,7 +560,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Bombable Hut <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>`,
+    name: `Bombable Hut ${icon("bomb.png")}`,
     x: "55.4%",
     y: "57.8%",
   },
@@ -569,7 +579,7 @@ export const chests: ChestItem[] = [
     id: 9,
     isAvailable: () => "available",
     isOpened: false,
-    name: `Aginah's Cave <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>`,
+    name: `Aginah's Cave ${icon("bomb.png")}`,
     x: "10.0%",
     y: "82.6%",
   },
@@ -596,7 +606,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `DW Death Mountain (2) : Don't need <img src='${import.meta.env.BASE_URL}assets/moonpearl.png' class='mini'>`,
+    name: `DW Death Mountain (2) : Don't need ${icon("moonpearl.png")}`,
     x: "92.8%",
     y: "14.7%",
   },
@@ -604,7 +614,7 @@ export const chests: ChestItem[] = [
     id: 12,
     isAvailable: () => "available",
     isOpened: false,
-    name: `Sahasrahla's Hut (3) <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>/<img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'>`,
+    name: `Sahasrahla's Hut (3) ${icon("bomb.png")}/${icon("boots.png")}`,
     x: "40.7%",
     y: "41.4%",
   },
@@ -623,7 +633,7 @@ export const chests: ChestItem[] = [
     id: 14,
     isAvailable: () => "available",
     isOpened: false,
-    name: `Kakariko Well (4 + <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>)`,
+    name: `Kakariko Well (4 + ${icon("bomb.png")})`,
     x: "1.7%",
     y: "41.0%",
   },
@@ -631,7 +641,7 @@ export const chests: ChestItem[] = [
     id: 15,
     isAvailable: () => "available",
     isOpened: false,
-    name: `Thieve's Hut (4 + <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>)`,
+    name: `Thieve's Hut (4 + ${icon("bomb.png")})`,
     x: "6.4%",
     y: "41.0%",
   },
@@ -643,7 +653,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Hype Cave! <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'> (NPC + 4 <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>)`,
+    name: `Hype Cave! ${icon("bomb.png")} (NPC + 4 ${icon("bomb.png")})`,
     x: "80.0%",
     y: "77.1%",
   },
@@ -658,7 +668,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Death Mountain East (5 + 2 <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>)`,
+    name: `Death Mountain East (5 + 2 ${icon("bomb.png")})`,
     x: "41.4%",
     y: "17.1%",
   },
@@ -669,7 +679,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `West of Sanctuary <img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'>`,
+    name: `West of Sanctuary ${icon("boots.png")}`,
     x: "19.5%",
     y: "29.3%",
   },
@@ -680,7 +690,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `West of Sanctuary <img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'>`,
+    name: `West of Sanctuary ${icon("boots.png")}`,
     x: "22.5%",
     y: "36.6%",
   },
@@ -688,7 +698,7 @@ export const chests: ChestItem[] = [
     id: 19,
     isAvailable: () => "available",
     isOpened: false,
-    name: `Minimoldorm Cave (NPC + 4) <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>`,
+    name: `Minimoldorm Cave (NPC + 4) ${icon("bomb.png")}`,
     x: "32.6%",
     y: "93.4%",
   },
@@ -696,7 +706,7 @@ export const chests: ChestItem[] = [
     id: 20,
     isAvailable: () => "available",
     isOpened: false,
-    name: `Ice Rod Cave <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>`,
+    name: `Ice Rod Cave ${icon("bomb.png")}`,
     x: "44.7%",
     y: "76.9%",
   },
@@ -712,7 +722,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Cave Under Rock (bottom chest) <img src='${import.meta.env.BASE_URL}assets/hookshot.png' class='mini'>/<img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'>`,
+    name: `Cave Under Rock (bottom chest) ${icon("hookshot.png")}/${icon("boots.png")}`,
     x: "91.6%",
     y: "8.6%",
   },
@@ -724,7 +734,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Cave Under Rock (3 top chests) <img src='${import.meta.env.BASE_URL}assets/hookshot.png' class='mini'>`,
+    name: `Cave Under Rock (3 top chests) ${icon("hookshot.png")}`,
     x: "91.6%",
     y: "3.4%",
   },
@@ -751,7 +761,7 @@ export const chests: ChestItem[] = [
     id: 25,
     isAvailable: () => "unavailable", // Needs pendant logic
     isOpened: false,
-    name: `Sahasrahla <img src='${import.meta.env.BASE_URL}assets/pendant0.png' class='mini'>`,
+    name: `Sahasrahla ${icon("pendant0.png")}`,
     x: "40.7%",
     y: "46.7%",
   },
@@ -774,7 +784,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Dying Boy: Distract him with <img src='${import.meta.env.BASE_URL}assets/bottle0.png' class='mini'> so that you can rob his family!`,
+    name: `Dying Boy: Distract him with ${icon("bottle0.png")} so that you can rob his family!`,
     x: "7.8%",
     y: "52.1%",
   },
@@ -797,7 +807,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Fugitive under the bridge <img src='${import.meta.env.BASE_URL}assets/flippers.png' class='mini'>`,
+    name: `Fugitive under the bridge ${icon("flippers.png")}`,
     x: "35.4%",
     y: "69.7%",
   },
@@ -814,7 +824,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Ether Tablet <img src='${import.meta.env.BASE_URL}assets/sword2.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/book.png' class='mini'>`,
+    name: `Ether Tablet ${icon("sword2.png")}${icon("book.png")}`,
     x: "21.0%",
     y: "3.0%",
   },
@@ -831,7 +841,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Bombos Tablet <img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/sword2.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/book.png' class='mini'>`,
+    name: `Bombos Tablet ${icon("mirror.png")}${icon("sword2.png")}${icon("book.png")}`,
     x: "11.0%",
     y: "92.2%",
   },
@@ -882,7 +892,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Witch: Give her <img src='${import.meta.env.BASE_URL}assets/mushroom.png' class='mini'>`,
+    name: `Witch: Give her ${icon("mushroom.png")}`,
     x: "40.8%",
     y: "32.5%",
   },
@@ -901,7 +911,7 @@ export const chests: ChestItem[] = [
       return "possible";
     },
     isOpened: false,
-    name: `Lumberjack Tree <img src='${import.meta.env.BASE_URL}assets/agahnim0.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'>`,
+    name: `Lumberjack Tree ${icon("agahnim0.png")}${icon("boots.png")}`,
     x: "15.1%",
     y: "7.6%",
   },
@@ -927,7 +937,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `South of Grove <img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'>`,
+    name: `South of Grove ${icon("mirror.png")}`,
     x: "14.1%",
     y: "84.1%",
   },
@@ -938,7 +948,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Graveyard Cliff Cave <img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'>`,
+    name: `Graveyard Cliff Cave ${icon("mirror.png")}`,
     x: "28.1%",
     y: "27.0%",
   },
@@ -950,7 +960,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Checkerboard Cave <img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'>`,
+    name: `Checkerboard Cave ${icon("mirror.png")}`,
     x: "8.8%",
     y: "77.3%",
   },
@@ -962,7 +972,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `<img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'>!!!!!!!!`,
+    name: `${icon("hammer.png")}${icon("hammer.png")}${icon("hammer.png")}${icon("hammer.png")}${icon("hammer.png")}${icon("hammer.png")}${icon("hammer.png")}${icon("hammer.png")}!!!!!!!!`,
     x: "65.8%",
     y: "60.1%",
   },
@@ -973,7 +983,7 @@ export const chests: ChestItem[] = [
       return "possible";
     },
     isOpened: false,
-    name: `Library <img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'>`,
+    name: `Library ${icon("boots.png")}`,
     x: "7.7%",
     y: "65.9%",
   },
@@ -995,7 +1005,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Spectacle Rock <img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'>`,
+    name: `Spectacle Rock ${icon("mirror.png")}`,
     x: "25.4%",
     y: "8.5%",
   },
@@ -1013,7 +1023,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Floating Island <img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'>`,
+    name: `Floating Island ${icon("mirror.png")}`,
     x: "40.2%",
     y: "3.0%",
   },
@@ -1021,7 +1031,7 @@ export const chests: ChestItem[] = [
     id: 47,
     isAvailable: () => "available",
     isOpened: false,
-    name: `Race Minigame <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>/<img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'>`,
+    name: `Race Minigame ${icon("bomb.png")}/${icon("boots.png")}`,
     x: "1.8%",
     y: "69.8%",
   },
@@ -1033,7 +1043,7 @@ export const chests: ChestItem[] = [
       return "possible";
     },
     isOpened: false,
-    name: `Desert West Ledge <img src='${import.meta.env.BASE_URL}assets/book.png' class='mini'>/<img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'>`,
+    name: `Desert West Ledge ${icon("book.png")}/${icon("mirror.png")}`,
     x: "1.5%",
     y: "91.0%",
   },
@@ -1054,7 +1064,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Lake Hylia Island <img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'>`,
+    name: `Lake Hylia Island ${icon("mirror.png")}`,
     x: "36.1%",
     y: "82.9%",
   },
@@ -1068,7 +1078,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Bumper Cave <img src='${import.meta.env.BASE_URL}assets/cape.png' class='mini'>`,
+    name: `Bumper Cave ${icon("cape.png")}`,
     x: "67.1%",
     y: "15.2%",
   },
@@ -1108,7 +1118,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Zora River Ledge <img src='${import.meta.env.BASE_URL}assets/flippers.png' class='mini'>`,
+    name: `Zora River Ledge ${icon("flippers.png")}`,
     x: "47.5%",
     y: "17.3%",
   },
@@ -1119,7 +1129,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Buried Item <img src='${import.meta.env.BASE_URL}assets/shovel.png' class='mini'>`,
+    name: `Buried Item ${icon("shovel.png")}`,
     x: "14.4%",
     y: "66.2%",
   },
@@ -1130,7 +1140,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Fall to Escape Sewer (3) <img src='${import.meta.env.BASE_URL}assets/glove1.png' class='mini'> + <img src='${import.meta.env.BASE_URL}assets/bomb.png' class='mini'>/<img src='${import.meta.env.BASE_URL}assets/boots.png' class='mini'>`,
+    name: `Fall to Escape Sewer (3) ${icon("glove1.png")} + ${icon("bomb.png")}/${icon("boots.png")}`,
     x: "26.8%",
     y: "32.4%",
   },
@@ -1170,7 +1180,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Mad Batter <img src='${import.meta.env.BASE_URL}assets/hammer.png' class='mini'>/<img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'> + <img src='${import.meta.env.BASE_URL}assets/powder.png' class='mini'>`,
+    name: `Mad Batter ${icon("hammer.png")}/${icon("mirror.png")} + ${icon("powder.png")}`,
     x: "16.0%",
     y: "58.0%",
   },
@@ -1182,7 +1192,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Take the frog home <img src='${import.meta.env.BASE_URL}assets/mirror.png' class='mini'>`,
+    name: `Take the frog home ${icon("mirror.png")}`,
     x: "15.2%",
     y: "51.8%",
   },
@@ -1195,7 +1205,7 @@ export const chests: ChestItem[] = [
       return "unavailable";
     },
     isOpened: false,
-    name: `Fat Fairy: Buy OJ bomb from Dark Link's House after <img src='${import.meta.env.BASE_URL}assets/crystal0.png' class='mini'>5 <img src='${import.meta.env.BASE_URL}assets/crystal0.png' class='mini'>6 (2 items)`,
+    name: `Fat Fairy: Buy OJ bomb from Dark Link's House after ${icon("crystal0.png")}5 ${icon("crystal0.png")}6 (2 items)`,
     x: "73.5%",
     y: "48.5%",
   },
@@ -1206,7 +1216,7 @@ export const chests: ChestItem[] = [
       return "unavailable"; // Needs pendant counting logic
     },
     isOpened: false,
-    name: `Master Sword Pedestal <img src='${import.meta.env.BASE_URL}assets/pendant0.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/pendant1.png' class='mini'><img src='${import.meta.env.BASE_URL}assets/pendant2.png' class='mini'> (can check with <img src='${import.meta.env.BASE_URL}assets/book.png' class='mini'>)`,
+    name: `Master Sword Pedestal ${icon("pendant0.png")}${icon("pendant1.png")}${icon("pendant2.png")} (can check with ${icon("book.png")})`,
     x: "2.5%",
     y: "3.2%",
   },
