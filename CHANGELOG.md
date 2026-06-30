@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.4.1](https://github.com/kqesar/alltp-tracker/compare/v2.4.0...v2.4.1) (2026-06-30)
+
+
+### 🔧 Code Refactoring
+
+* replace remaining magic numbers with named constants ([#132](https://github.com/kqesar/alltp-tracker/issues/132)) ([54d419e](https://github.com/kqesar/alltp-tracker/commit/54d419e976b6e933114ee24d21d3ee9d69ef366f))
+
 ## [2.4.0](https://github.com/kqesar/alltp-tracker/compare/v2.3.19...v2.4.0) (2026-06-30)
 
 
