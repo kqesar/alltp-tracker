@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { dungeons, type ItemState } from "@/data/chests";
+import { chests, dungeons, type ItemState } from "@/data/chests";
 import { items as baseItems } from "@/data/items";
+
+/** A medallions array (length 10) with one dungeon's requirement set. */
+const medallionsWith = (index: number, value: number): number[] => {
+  const arr = Array(10).fill(0);
+  arr[index] = value;
+  return arr;
+};
 
 /**
  * These tests exercise the REAL dungeon accessibility logic (the functions
@@ -120,6 +127,109 @@ describe("dungeon accessibility (real logic)", () => {
           makeItems({ bow: 2, glove: 1, hammer: false, moonpearl: true }),
         ),
       ).toBe("unavailable");
+    });
+  });
+
+  describe("Misery Mire (index 8) - medallion gate", () => {
+    const mire = dungeons[8];
+    const baseReqs = {
+      boots: true,
+      flute: true,
+      glove: 2,
+      lantern: true,
+      moonpearl: true,
+      somaria: true,
+    } satisfies Partial<ItemState>;
+
+    it("is available when all medallions are owned (unknown requirement)", () => {
+      expect(
+        mire.isBeatable(
+          makeItems({ ...baseReqs, bombos: true, ether: true, quake: true }),
+          medallionsWith(8, 0),
+        ),
+      ).toBe("available");
+    });
+
+    it("is unavailable with no medallion items", () => {
+      expect(mire.isBeatable(makeItems(baseReqs), medallionsWith(8, 0))).toBe(
+        "unavailable",
+      );
+    });
+
+    it("is unavailable when the required medallion is missing", () => {
+      // requirement is Bombos (1) but only Ether is owned
+      expect(
+        mire.isBeatable(
+          makeItems({ ...baseReqs, ether: true }),
+          medallionsWith(8, 1),
+        ),
+      ).toBe("unavailable");
+    });
+
+    it("is possible when requirement unknown and not all medallions owned", () => {
+      expect(
+        mire.isBeatable(
+          makeItems({ ...baseReqs, bombos: true }),
+          medallionsWith(8, 0),
+        ),
+      ).toBe("possible");
+    });
+  });
+
+  describe("Turtle Rock (index 9) - medallion gate", () => {
+    const turtle = dungeons[9];
+    const baseReqs = {
+      firerod: true,
+      glove: 2,
+      hammer: true,
+      hookshot: true,
+      icerod: true,
+      moonpearl: true,
+      somaria: true,
+    } satisfies Partial<ItemState>;
+
+    it("is available with the required medallion satisfied", () => {
+      expect(
+        turtle.isBeatable(
+          makeItems({ ...baseReqs, ether: true }),
+          medallionsWith(9, 2),
+        ),
+      ).toBe("available");
+    });
+
+    it("is unavailable with no medallion items", () => {
+      expect(turtle.isBeatable(makeItems(baseReqs), medallionsWith(9, 0))).toBe(
+        "unavailable",
+      );
+    });
+  });
+
+  describe("Mimic Cave chest - medallion gate", () => {
+    const mimic = chests.find((chest) => chest.name.includes("Mimic Cave"));
+    const baseReqs = {
+      glove: 2,
+      hammer: true,
+      mirror: true,
+      moonpearl: true,
+      somaria: true,
+    } satisfies Partial<ItemState>;
+
+    it("is available with medallions, mirror and the fire rod", () => {
+      expect(
+        mimic?.isAvailable(
+          makeItems({ ...baseReqs, ether: true, firerod: true }),
+          medallionsWith(9, 2),
+        ),
+      ).toBe("available");
+    });
+
+    it("is only possible without the fire rod", () => {
+      expect(
+        mimic?.isAvailable(
+          makeItems({ ...baseReqs, ether: true, firerod: false }),
+          medallionsWith(9, 2),
+        ),
+      ).toBe("possible");
     });
   });
 });

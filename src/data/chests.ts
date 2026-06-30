@@ -100,13 +100,40 @@ export interface DungeonItem {
 // Helper function for checking if player can access Dark World
 function steve(items: ItemState): boolean {
   if (!items.moonpearl) return false;
-  if (items.glove === 2 || ((items.glove as number) > 0 && items.hammer))
+  if (hasTitansMitt(items) || ((items.glove as number) > 0 && items.hammer))
     return true;
   return (
     (items.agahnim as number) > 0 &&
     items.hookshot &&
     (items.hammer || (items.glove as number) > 0 || items.flippers)
   );
+}
+
+/** True when the player has the Titan's Mitt (glove level 2). */
+function hasTitansMitt(items: ItemState): boolean {
+  return items.glove === 2;
+}
+
+/**
+ * Evaluates the medallion gate for Misery Mire / Turtle Rock.
+ * @returns an Availability when the gate is decisive ("unavailable" / "possible"),
+ * or null when the gate is satisfied and evaluation should continue.
+ */
+function checkMedallion(
+  items: ItemState,
+  medallions: number[],
+  index: number,
+): Availability | null {
+  if (!items.bombos && !items.ether && !items.quake) return "unavailable";
+  if (
+    (medallions[index] === 1 && !items.bombos) ||
+    (medallions[index] === 2 && !items.ether) ||
+    (medallions[index] === 3 && !items.quake)
+  )
+    return "unavailable";
+  if (medallions[index] === 0 && !(items.bombos && items.ether && items.quake))
+    return "possible";
+  return null;
 }
 
 // Define dungeon objects
@@ -137,7 +164,7 @@ export const dungeons: DungeonItem[] = [
   },
   {
     canGetChest: (items: ItemState) => {
-      if (!items.book && !(items.flute && items.glove === 2 && items.mirror))
+      if (!items.book && !(items.flute && hasTitansMitt(items) && items.mirror))
         return "unavailable";
       if (items.boots && (items.firerod || items.lantern) && items.glove)
         return "available";
@@ -152,7 +179,7 @@ export const dungeons: DungeonItem[] = [
       bigKeysVisible?: boolean,
     ) => {
       if (!items.glove) return "unavailable";
-      if (!items.book && !(items.flute && items.glove === 2 && items.mirror))
+      if (!items.book && !(items.flute && hasTitansMitt(items) && items.mirror))
         return "unavailable";
       if (!items.lantern && !items.firerod) return "unavailable";
 
@@ -199,7 +226,7 @@ export const dungeons: DungeonItem[] = [
       if (
         !items.agahnim &&
         !(items.hammer && items.glove) &&
-        !(items.glove === 2 && items.flippers)
+        !(hasTitansMitt(items) && items.flippers)
       )
         return "unavailable";
       if (items.bow > 1 && (items.chest3 > 1 || items.hammer))
@@ -314,7 +341,7 @@ export const dungeons: DungeonItem[] = [
   },
   {
     canGetChest: (items: ItemState) => {
-      if (!items.moonpearl || !items.flippers || items.glove !== 2)
+      if (!items.moonpearl || !items.flippers || !hasTitansMitt(items))
         return "unavailable";
       if (!items.firerod && !items.bombos) return "unavailable";
       if (items.hammer) return "available";
@@ -331,7 +358,7 @@ export const dungeons: DungeonItem[] = [
       if (
         !items.moonpearl ||
         !items.flippers ||
-        items.glove !== 2 ||
+        !hasTitansMitt(items) ||
         !items.hammer
       )
         return "unavailable";
@@ -346,19 +373,12 @@ export const dungeons: DungeonItem[] = [
   },
   {
     canGetChest: (items: ItemState, medallions: number[] = []) => {
-      if (!items.moonpearl || !items.flute || items.glove !== 2)
+      if (!items.moonpearl || !items.flute || !hasTitansMitt(items))
         return "unavailable";
       if (!items.boots && !items.hookshot) return "unavailable";
       // Medallion Check
-      if (!items.bombos && !items.ether && !items.quake) return "unavailable";
-      if (
-        (medallions[8] === 1 && !items.bombos) ||
-        (medallions[8] === 2 && !items.ether) ||
-        (medallions[8] === 3 && !items.quake)
-      )
-        return "unavailable";
-      if (medallions[8] === 0 && !(items.bombos && items.ether && items.quake))
-        return "possible";
+      const medallion = checkMedallion(items, medallions, 8);
+      if (medallion) return medallion;
 
       if (!items.lantern && !items.firerod) return "possible";
       if (items.chest8 > 1 || items.somaria) return "available";
@@ -375,21 +395,14 @@ export const dungeons: DungeonItem[] = [
       if (
         !items.moonpearl ||
         !items.flute ||
-        items.glove !== 2 ||
+        !hasTitansMitt(items) ||
         !items.somaria
       )
         return "unavailable";
       if (!items.boots && !items.hookshot) return "unavailable";
       // Medallion Check
-      if (!items.bombos && !items.ether && !items.quake) return "unavailable";
-      if (
-        (medallions[8] === 1 && !items.bombos) ||
-        (medallions[8] === 2 && !items.ether) ||
-        (medallions[8] === 3 && !items.quake)
-      )
-        return "unavailable";
-      if (medallions[8] === 0 && !(items.bombos && items.ether && items.quake))
-        return "possible";
+      const medallion = checkMedallion(items, medallions, 8);
+      if (medallion) return medallion;
 
       if (items.lantern || items.firerod) return "available";
       return "possible";
@@ -404,21 +417,14 @@ export const dungeons: DungeonItem[] = [
       if (
         !items.moonpearl ||
         !items.hammer ||
-        items.glove !== 2 ||
+        !hasTitansMitt(items) ||
         !items.somaria
       )
         return "unavailable";
       if (!items.hookshot && !items.mirror) return "unavailable";
       // Medallion Check
-      if (!items.bombos && !items.ether && !items.quake) return "unavailable";
-      if (
-        (medallions[9] === 1 && !items.bombos) ||
-        (medallions[9] === 2 && !items.ether) ||
-        (medallions[9] === 3 && !items.quake)
-      )
-        return "unavailable";
-      if (medallions[9] === 0 && !(items.bombos && items.ether && items.quake))
-        return "possible";
+      const medallion = checkMedallion(items, medallions, 9);
+      if (medallion) return medallion;
 
       if (!items.firerod) return "possible";
       if (items.chest9 > 1 || items.icerod) return "available";
@@ -435,22 +441,15 @@ export const dungeons: DungeonItem[] = [
       if (
         !items.moonpearl ||
         !items.hammer ||
-        items.glove !== 2 ||
+        !hasTitansMitt(items) ||
         !items.somaria
       )
         return "unavailable";
       if (!items.hookshot && !items.mirror) return "unavailable";
       if (!items.icerod || !items.firerod) return "unavailable";
       // Medallion Check
-      if (!items.bombos && !items.ether && !items.quake) return "unavailable";
-      if (
-        (medallions[9] === 1 && !items.bombos) ||
-        (medallions[9] === 2 && !items.ether) ||
-        (medallions[9] === 3 && !items.quake)
-      )
-        return "unavailable";
-      if (medallions[9] === 0 && !(items.bombos && items.ether && items.quake))
-        return "possible";
+      const medallion = checkMedallion(items, medallions, 9);
+      if (medallion) return medallion;
 
       return "available";
     },
@@ -467,7 +466,7 @@ export const chests: ChestItem[] = [
     id: 0,
     isAvailable: (items: ItemState) => {
       if (!items.boots) return "unavailable";
-      if ((steve(items) && items.mirror) || items.glove === 2)
+      if ((steve(items) && items.mirror) || hasTitansMitt(items))
         return "available";
       return "unavailable";
     },
@@ -513,20 +512,13 @@ export const chests: ChestItem[] = [
       if (
         !items.moonpearl ||
         !items.hammer ||
-        items.glove !== 2 ||
+        !hasTitansMitt(items) ||
         !items.somaria ||
         !items.mirror
       )
         return "unavailable";
-      if (!items.bombos && !items.ether && !items.quake) return "unavailable";
-      if (
-        (medallions[9] === 1 && !items.bombos) ||
-        (medallions[9] === 2 && !items.ether) ||
-        (medallions[9] === 3 && !items.quake)
-      )
-        return "unavailable";
-      if (medallions[9] === 0 && !(items.bombos && items.ether && items.quake))
-        return "possible";
+      const medallion = checkMedallion(items, medallions, 9);
+      if (medallion) return medallion;
       if (items.firerod) return "available";
       return "possible";
     },
@@ -584,7 +576,7 @@ export const chests: ChestItem[] = [
   {
     id: 10,
     isAvailable: (items: ItemState) => {
-      if (items.flute && items.moonpearl && items.glove === 2)
+      if (items.flute && items.moonpearl && hasTitansMitt(items))
         return "available";
       return "unavailable";
     },
@@ -597,7 +589,7 @@ export const chests: ChestItem[] = [
     id: 11,
     isAvailable: (items: ItemState) => {
       if (
-        items.glove === 2 &&
+        hasTitansMitt(items) &&
         (items.hookshot || (items.mirror && items.hammer))
       )
         return "available";
@@ -713,7 +705,7 @@ export const chests: ChestItem[] = [
     isAvailable: (items: ItemState) => {
       if (
         items.moonpearl &&
-        items.glove === 2 &&
+        hasTitansMitt(items) &&
         (items.hookshot || (items.mirror && items.hammer && items.boots))
       )
         return "available";
@@ -727,7 +719,7 @@ export const chests: ChestItem[] = [
   {
     id: 22,
     isAvailable: (items: ItemState) => {
-      if (items.moonpearl && items.glove === 2 && items.hookshot)
+      if (items.moonpearl && hasTitansMitt(items) && items.hookshot)
         return "available";
       return "unavailable";
     },
@@ -789,7 +781,7 @@ export const chests: ChestItem[] = [
   {
     id: 28,
     isAvailable: (items: ItemState) => {
-      if (items.moonpearl && items.glove === 2 && items.mirror)
+      if (items.moonpearl && hasTitansMitt(items) && items.mirror)
         return "available";
       return "unavailable";
     },
@@ -849,7 +841,9 @@ export const chests: ChestItem[] = [
       if (
         items.moonpearl &&
         items.glove &&
-        (items.agahnim || items.hammer || (items.glove === 2 && items.flippers))
+        (items.agahnim ||
+          items.hammer ||
+          (hasTitansMitt(items) && items.flippers))
       )
         return "available";
       return "unavailable";
@@ -951,7 +945,8 @@ export const chests: ChestItem[] = [
   {
     id: 41,
     isAvailable: (items: ItemState) => {
-      if (items.flute && items.glove === 2 && items.mirror) return "available";
+      if (items.flute && hasTitansMitt(items) && items.mirror)
+        return "available";
       return "unavailable";
     },
     isOpened: false,
@@ -962,7 +957,7 @@ export const chests: ChestItem[] = [
   {
     id: 42,
     isAvailable: (items: ItemState) => {
-      if (items.moonpearl && items.glove === 2 && items.hammer)
+      if (items.moonpearl && hasTitansMitt(items) && items.hammer)
         return "available";
       return "unavailable";
     },
@@ -1011,7 +1006,7 @@ export const chests: ChestItem[] = [
         (items.glove || items.flute) &&
         (items.hookshot || (items.hammer && items.mirror))
       ) {
-        if (items.mirror && items.moonpearl && items.glove === 2)
+        if (items.mirror && items.moonpearl && hasTitansMitt(items))
           return "available";
         else return "possible";
       }
@@ -1033,7 +1028,7 @@ export const chests: ChestItem[] = [
   {
     id: 48,
     isAvailable: (items: ItemState) => {
-      if (items.book || (items.flute && items.glove === 2 && items.mirror))
+      if (items.book || (items.flute && hasTitansMitt(items) && items.mirror))
         return "available";
       return "possible";
     },
@@ -1049,7 +1044,9 @@ export const chests: ChestItem[] = [
         if (
           items.moonpearl &&
           items.mirror &&
-          (items.agahnim || items.glove === 2 || (items.glove && items.hammer))
+          (items.agahnim ||
+            hasTitansMitt(items) ||
+            (items.glove && items.hammer))
         )
           return "available";
         else return "possible";
@@ -1081,7 +1078,7 @@ export const chests: ChestItem[] = [
       if (
         items.agahnim ||
         (items.glove && items.hammer && items.moonpearl) ||
-        (items.glove === 2 && items.moonpearl && items.flippers)
+        (hasTitansMitt(items) && items.moonpearl && items.flippers)
       )
         return "available";
       return "unavailable";
@@ -1166,7 +1163,8 @@ export const chests: ChestItem[] = [
     isAvailable: (items: ItemState) => {
       if (
         items.powder &&
-        (items.hammer || (items.glove === 2 && items.mirror && items.moonpearl))
+        (items.hammer ||
+          (hasTitansMitt(items) && items.mirror && items.moonpearl))
       )
         return "available";
       return "unavailable";
@@ -1179,7 +1177,7 @@ export const chests: ChestItem[] = [
   {
     id: 60,
     isAvailable: (items: ItemState) => {
-      if (items.moonpearl && items.glove === 2 && items.mirror)
+      if (items.moonpearl && hasTitansMitt(items) && items.mirror)
         return "available";
       return "unavailable";
     },
