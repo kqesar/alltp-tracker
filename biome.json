@@ -31,7 +31,8 @@
       "!**/coverage_backup",
       "!package.json",
       "!pnpm-lock.yaml",
-      "!**/.git"
+      "!**/.git",
+      "!**/.claude"
     ]
   },
   "formatter": {

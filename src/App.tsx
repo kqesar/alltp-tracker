@@ -5,6 +5,7 @@ import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
 import { Caption } from "@/components/ui/Caption";
 import { Header } from "@/components/ui/Header";
+import { TrackerControls } from "@/components/ui/TrackerControls";
 import { CSS_CLASSES } from "@/constants";
 import { defaultItemGrid } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
@@ -26,6 +27,7 @@ function App() {
         Skip to main content
       </a>
       <Header />
+      <TrackerControls />
       <BigKeyToggle isVisible={bigKeysVisible} onToggle={setBigKeysVisible} />
       {/* Static IDs are intentional for SPA layout elements referenced by CSS and skip links */}
       <main className="main-content" id="main-content">

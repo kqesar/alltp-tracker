@@ -18,6 +18,39 @@
   pointer-events: auto;
 }
 
+/* Tracker Controls Component (new game / export / import) */
+.tracker-controls {
+  position: fixed;
+  top: 80px;
+  left: 20px;
+  z-index: var(--z-modal);
+  display: flex;
+  gap: var(--spacing-sm);
+  pointer-events: auto;
+}
+
+.tracker-controls__button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  transition: all var(--transition);
+}
+
+.tracker-controls__button:hover {
+  background: rgba(var(--color-primary-rgb), 0.3);
+  border-color: var(--color-primary-hover);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px);
+}
+
 .bigkey-toggle {
   display: flex;
   gap: var(--spacing-sm);
