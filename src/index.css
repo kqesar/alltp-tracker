@@ -25,9 +25,9 @@
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.87);
 
-  /* Color Scheme */
-  color-scheme: light dark;
-  background-color: #242424;
+  /* Color Scheme - this is a dark-themed tracker */
+  color-scheme: dark;
+  background-color: #0d0d12;
   text-rendering: optimizeLegibility;
 }
 
@@ -102,22 +102,6 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
   transform: none;
-}
-
-/* Light Theme Support */
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-
-  a:hover {
-    color: var(--color-primary-light);
-  }
-
-  button {
-    background-color: #f9f9f9;
-  }
 }
 
 /* Specific Caption Overrides for Tailwind */

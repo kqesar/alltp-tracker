@@ -11,10 +11,10 @@ vi.mock("@/utils", () => ({
 }));
 
 const mockDungeon: DungeonItem = {
-  canGetChest: vi.fn(() => "available"),
+  canGetChest: vi.fn(() => "available" as const),
   id: 1,
   image: "boss01.png",
-  isBeatable: vi.fn(() => "available"),
+  isBeatable: vi.fn(() => "available" as const),
   isBeaten: false,
   name: "Test Dungeon",
   x: "50%",
@@ -260,7 +260,7 @@ describe("DungeonChest", () => {
     // Reset mock to original state
     mockUseGameStore.mockReturnValue(mockGameStore);
 
-    const mockCanGetChest = vi.fn(() => "unavailable");
+    const mockCanGetChest = vi.fn(() => "unavailable" as const);
     const dungeonWithMock = {
       ...mockDungeon,
       canGetChest: mockCanGetChest,

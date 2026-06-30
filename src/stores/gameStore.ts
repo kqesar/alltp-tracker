@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
 import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import {
   type ChestItem,
@@ -269,10 +270,12 @@ export const useDungeons = () => useGameStore((state) => state.dungeonsState);
 export const useMedallions = () => useGameStore((state) => state.medallions);
 export const useCaption = () => useGameStore((state) => state.caption);
 export const useGameActions = () =>
-  useGameStore((state) => ({
-    handleItemClick: state.handleItemClick,
-    handleMedallionChange: state.handleMedallionChange,
-    setCaption: state.setCaption,
-    toggleChest: state.toggleChest,
-    toggleDungeonBoss: state.toggleDungeonBoss,
-  }));
+  useGameStore(
+    useShallow((state) => ({
+      handleItemClick: state.handleItemClick,
+      handleMedallionChange: state.handleMedallionChange,
+      setCaption: state.setCaption,
+      toggleChest: state.toggleChest,
+      toggleDungeonBoss: state.toggleDungeonBoss,
+    })),
+  );

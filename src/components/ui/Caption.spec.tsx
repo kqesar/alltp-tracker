@@ -3,28 +3,19 @@ import { describe, expect, it } from "vitest";
 import { Caption } from "@/components/ui/Caption";
 
 describe("Caption", () => {
-  it("renders empty span for empty text", () => {
-    const { container } = render(<Caption text="" />);
-    expect(container.firstChild).toEqual(
-      expect.objectContaining({ tagName: "SPAN" }),
-    );
-    expect(container.firstChild?.textContent).toBe("");
+  it("renders a hint for empty text", () => {
+    render(<Caption text="" />);
+    expect(screen.getByText(/hover an item/i)).toBeInTheDocument();
   });
 
-  it("renders empty span for whitespace text", () => {
-    const { container } = render(<Caption text="   " />);
-    expect(container.firstChild).toEqual(
-      expect.objectContaining({ tagName: "SPAN" }),
-    );
-    expect(container.firstChild?.textContent).toBe("");
+  it("renders a hint for whitespace text", () => {
+    render(<Caption text="   " />);
+    expect(screen.getByText(/hover an item/i)).toBeInTheDocument();
   });
 
-  it("renders empty span for &nbsp;", () => {
+  it("renders no game content when empty", () => {
     const { container } = render(<Caption text="" />);
-    expect(container.firstChild).toEqual(
-      expect.objectContaining({ tagName: "SPAN" }),
-    );
-    expect(container.firstChild?.textContent).toBe("");
+    expect(container.querySelector("img")).toBeNull();
   });
 
   it("renders plain text without HTML", () => {

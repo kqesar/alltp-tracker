@@ -1,4 +1,8 @@
 // Type definitions
+
+/** Accessibility states returned by chest/dungeon availability logic. */
+export type Availability = "available" | "possible" | "unavailable";
+
 export interface ItemState {
   // Index signature for dynamic access
   [key: string]: number | boolean;
@@ -75,7 +79,7 @@ export interface ChestItem {
   x: string;
   y: string;
   isOpened: boolean;
-  isAvailable: (items: ItemState, _medallions?: number[]) => string;
+  isAvailable: (items: ItemState, _medallions?: number[]) => Availability;
 }
 
 export interface DungeonItem {
@@ -89,8 +93,8 @@ export interface DungeonItem {
     items: ItemState,
     _medallions?: number[],
     bigKeysVisible?: boolean,
-  ) => string;
-  canGetChest: (items: ItemState, _medallions?: number[]) => string;
+  ) => Availability;
+  canGetChest: (items: ItemState, _medallions?: number[]) => Availability;
 }
 
 // Helper function for checking if player can access Dark World

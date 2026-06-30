@@ -28,7 +28,7 @@ const mockUseGameStore = vi.mocked(useGameStore);
 
 const mockChest: ChestItem = {
   id: 1,
-  isAvailable: vi.fn(() => "available"),
+  isAvailable: vi.fn(() => "available" as const),
   isOpened: false,
   name: "Test Chest",
   x: "50%",
@@ -201,7 +201,7 @@ describe("MapChest", () => {
   });
 
   it("calls chest.isAvailable with items and medallions", () => {
-    const mockIsAvailable = vi.fn(() => "unavailable");
+    const mockIsAvailable = vi.fn(() => "unavailable" as const);
     const chestWithMock = {
       ...mockChest,
       isAvailable: mockIsAvailable,

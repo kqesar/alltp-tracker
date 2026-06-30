@@ -192,6 +192,19 @@
   display: inline;
   line-height: inherit;
 }
+/* Empty-state hint shown when nothing is selected */
+.caption-output--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.caption-hint {
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  color: var(--color-text-secondary);
+  opacity: 0.65;
+}
 
 /* Enhanced Mini Icons in Caption */
 .caption .mini,

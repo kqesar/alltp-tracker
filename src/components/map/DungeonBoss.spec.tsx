@@ -105,10 +105,10 @@ vi.mock("@/stores/gameStore", () => ({
 const mockUseGameStore = vi.mocked(useGameStore);
 
 const mockDungeon: DungeonItem = {
-  canGetChest: vi.fn(() => "available"),
+  canGetChest: vi.fn(() => "available" as const),
   id: 1,
   image: "boss01.png",
-  isBeatable: vi.fn(() => "available"),
+  isBeatable: vi.fn(() => "available" as const),
   isBeaten: false,
   name: "Test Dungeon",
   x: "50%",
@@ -251,7 +251,7 @@ describe("DungeonBoss", () => {
   });
 
   it("calls dungeon.isBeatable with items, medallions, and bigKeysVisible", () => {
-    const mockIsBeatable = vi.fn(() => "unavailable");
+    const mockIsBeatable = vi.fn(() => "unavailable" as const);
     const dungeonWithMock = {
       ...mockDungeon,
       isBeatable: mockIsBeatable,

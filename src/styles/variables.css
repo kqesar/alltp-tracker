@@ -3,6 +3,8 @@
   --color-primary: #646cff;
   --color-primary-hover: #535bf2;
   --color-primary-rgb: 100, 108, 255;
+  /* Triforce gold accent for headings and highlights */
+  --color-accent: #e6c34a;
   --color-success: #00ff00;
   --color-warning: #ffff00;
   --color-error: #ff0000;

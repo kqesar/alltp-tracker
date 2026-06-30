@@ -8,7 +8,17 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: var(--font-size-sm);
   color: var(--color-text);
+  /* Subtle depth instead of a flat black background */
   background-color: var(--color-bg);
+  background-image:
+    radial-gradient(
+      circle at 50% -10%,
+      rgba(var(--color-primary-rgb), 0.12),
+      transparent 55%
+    ),
+    linear-gradient(180deg, #11111a 0%, #07070b 100%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Focus styles for accessibility */
