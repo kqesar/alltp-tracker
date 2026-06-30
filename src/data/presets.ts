@@ -126,3 +126,38 @@ export const DEFAULT_PRESET_ID = "open";
 export const getPreset = (id: string): Preset =>
   presets.find((preset) => preset.id === id) ??
   (presets.find((preset) => preset.id === DEFAULT_PRESET_ID) as Preset);
+
+/** Human-readable labels for run settings. */
+export const MODE_LABELS: Record<RunMode, string> = {
+  inverted: "Inverted",
+  open: "Open",
+  retro: "Retro",
+  standard: "Standard",
+};
+
+export const GOAL_LABELS: Record<RunGoal, string> = {
+  "all-dungeons": "All Dungeons",
+  "fast-ganon": "Fast Ganon",
+  ganon: "Defeat Ganon",
+  pedestal: "Pedestal",
+  "triforce-hunt": "Triforce Hunt",
+};
+
+export const ENTRANCE_LABELS: Record<EntranceShuffle, string> = {
+  crossed: "Crossworld",
+  full: "Full",
+  insanity: "Insanity",
+  none: "None",
+  restricted: "Restricted",
+  simple: "Simple",
+};
+
+/** A labeled summary of a run's settings, for display. */
+export const describeSettings = (
+  settings: RunSettings,
+): { label: string; value: string }[] => [
+  { label: "Mode", value: MODE_LABELS[settings.mode] },
+  { label: "Goal", value: GOAL_LABELS[settings.goal] },
+  { label: "Keysanity", value: settings.keysanity ? "On" : "Off" },
+  { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
+];

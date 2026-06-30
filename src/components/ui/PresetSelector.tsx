@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
-import { getPreset, presets } from "@/data/presets";
+import { describeSettings, getPreset, presets } from "@/data/presets";
 import { useGameStore } from "@/stores/gameStore";
 
 /**
@@ -11,6 +11,7 @@ import { useGameStore } from "@/stores/gameStore";
  */
 export const PresetSelector = () => {
   const presetId = useGameStore((state) => state.presetId);
+  const settings = useGameStore((state) => state.settings);
   const applyPreset = useGameStore((state) => state.applyPreset);
 
   const [isListOpen, setIsListOpen] = useState(false);
@@ -51,6 +52,14 @@ export const PresetSelector = () => {
         onClose={() => setIsListOpen(false)}
         title="Choose a run type"
       >
+        <dl aria-label="Current run settings" className="run-settings">
+          {describeSettings(settings).map((row) => (
+            <div className="run-settings__row" key={row.label}>
+              <dt className="run-settings__label">{row.label}</dt>
+              <dd className="run-settings__value">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
         <ul className="preset-list">
           {presets.map((preset) => (
             <li key={preset.id}>

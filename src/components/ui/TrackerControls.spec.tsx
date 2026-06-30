@@ -7,9 +7,19 @@ vi.mock("@/stores/gameStore", () => ({ useGameStore: vi.fn() }));
 
 const reset = vi.fn();
 const fakeState = {
+  // PresetSelector is rendered inside TrackerControls, so its store fields
+  // are needed too.
+  applyPreset: vi.fn(),
   exportState: vi.fn(() => "{}"),
   importState: vi.fn(() => true),
+  presetId: "open",
   reset,
+  settings: {
+    entranceShuffle: "none" as const,
+    goal: "ganon" as const,
+    keysanity: false,
+    mode: "open" as const,
+  },
 };
 
 beforeEach(() => {
