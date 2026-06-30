@@ -11,6 +11,7 @@ import {
   dungeons as initialDungeons,
 } from "@/data/chests";
 import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
+import { DEFAULT_PRESET_ID, getPreset, type RunSettings } from "@/data/presets";
 
 /**
  * Serializable snapshot of the tracker progress.
@@ -25,6 +26,8 @@ type PersistedState = {
   bigKeysVisible: boolean;
   chestsOpened: boolean[];
   dungeonsBeaten: boolean[];
+  presetId: string;
+  settings: RunSettings;
 };
 
 interface GameState {
@@ -38,7 +41,12 @@ interface GameState {
   bigKeysVisible: boolean;
   smallKeys: number[]; // Array of 10 dungeons (0-9) with small key counts
 
+  // Run-type preset
+  presetId: string;
+  settings: RunSettings;
+
   // Actions
+  applyPreset: (presetId: string) => void;
   setCaption: (caption: string) => void;
   handleItemClick: (item: string) => void;
   handleSmallKeyClick: (dungeonIndex: number) => void;
@@ -62,16 +70,21 @@ interface GameState {
  * flags (isOpened / isBeaten) are independent from the source data — this is
  * what prevents the previous reset() bug where toggling mutated the defaults.
  */
-const createInitialState = () => ({
-  bigKeysVisible: true,
-  caption: "",
-  chestsState: initialChests.map((chest) => ({ ...chest })),
-  dungeonsState: initialDungeons.map((dungeon) => ({ ...dungeon })),
-  items: { ...initialItems } as ItemState,
-  mapOrientation: false,
-  medallions: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  smallKeys: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 10 dungeons, all start at 0
-});
+const createInitialState = (presetId: string = DEFAULT_PRESET_ID) => {
+  const preset = getPreset(presetId);
+  return {
+    bigKeysVisible: preset.settings.keysanity,
+    caption: "",
+    chestsState: initialChests.map((chest) => ({ ...chest })),
+    dungeonsState: initialDungeons.map((dungeon) => ({ ...dungeon })),
+    items: { ...initialItems } as ItemState,
+    mapOrientation: false,
+    medallions: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    presetId: preset.id,
+    settings: preset.settings,
+    smallKeys: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 10 dungeons, all start at 0
+  };
+};
 
 /** Project the current progress into its serializable form. */
 const toPersisted = (state: GameState): PersistedState => ({
@@ -80,6 +93,8 @@ const toPersisted = (state: GameState): PersistedState => ({
   dungeonsBeaten: state.dungeonsState.map((dungeon) => dungeon.isBeaten),
   items: state.items,
   medallions: state.medallions,
+  presetId: state.presetId,
+  settings: state.settings,
   smallKeys: state.smallKeys,
 });
 
@@ -105,6 +120,8 @@ const applyPersisted = <T extends ReturnType<typeof createInitialState>>(
     ? ({ ...base.items, ...persisted.items } as ItemState)
     : base.items,
   medallions: persisted.medallions ?? base.medallions,
+  presetId: persisted.presetId ?? base.presetId,
+  settings: persisted.settings ?? base.settings,
   smallKeys: persisted.smallKeys ?? base.smallKeys,
 });
 
@@ -113,6 +130,8 @@ export const useGameStore = create<GameState>()(
     persist(
       (set, get) => ({
         ...createInitialState(),
+
+        applyPreset: (presetId: string) => set(createInitialState(presetId)),
 
         exportState: () => JSON.stringify(toPersisted(get()), null, 2),
 
@@ -202,7 +221,7 @@ export const useGameStore = create<GameState>()(
           }
         },
 
-        reset: () => set(createInitialState()),
+        reset: () => set(createInitialState(get().presetId)),
 
         setBigKeysVisible: (visible: boolean) =>
           set({ bigKeysVisible: visible }),
