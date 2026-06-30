@@ -254,4 +254,64 @@ describe("GameStore", () => {
       ]);
     });
   });
+
+  describe("Reset and persistence", () => {
+    it("reset clears opened chests and beaten dungeons", () => {
+      const { toggleChest, toggleDungeonBoss, reset } = useGameStore.getState();
+
+      toggleChest(0);
+      toggleDungeonBoss(0);
+      expect(useGameStore.getState().chestsState[0].isOpened).toBe(true);
+      expect(useGameStore.getState().dungeonsState[0].isBeaten).toBe(true);
+
+      reset();
+
+      expect(useGameStore.getState().chestsState[0].isOpened).toBe(false);
+      expect(useGameStore.getState().dungeonsState[0].isBeaten).toBe(false);
+    });
+
+    it("toggling a chest does not mutate the initial defaults", () => {
+      const { toggleChest, reset } = useGameStore.getState();
+
+      toggleChest(1);
+      expect(useGameStore.getState().chestsState[1].isOpened).toBe(true);
+
+      // After reset the previously toggled chest must be closed again,
+      // proving the defaults were never mutated in place.
+      reset();
+      expect(useGameStore.getState().chestsState[1].isOpened).toBe(false);
+    });
+
+    it("exports and imports progress as a round-trip", () => {
+      const { handleItemClick, toggleChest, handleMedallionChange, reset } =
+        useGameStore.getState();
+
+      handleItemClick("hookshot");
+      toggleChest(2);
+      handleMedallionChange(8, 2);
+
+      const saved = useGameStore.getState().exportState();
+      const expectedHookshot = useGameStore.getState().items.hookshot;
+
+      reset();
+      expect(useGameStore.getState().chestsState[2].isOpened).toBe(false);
+
+      const ok = useGameStore.getState().importState(saved);
+
+      expect(ok).toBe(true);
+      expect(useGameStore.getState().items.hookshot).toBe(expectedHookshot);
+      expect(useGameStore.getState().chestsState[2].isOpened).toBe(true);
+      expect(useGameStore.getState().medallions[8]).toBe(2);
+      // Imported chests must still carry their availability functions.
+      expect(typeof useGameStore.getState().chestsState[2].isAvailable).toBe(
+        "function",
+      );
+    });
+
+    it("importState returns false for invalid input", () => {
+      const { importState } = useGameStore.getState();
+      expect(importState("not valid json")).toBe(false);
+      expect(importState("null")).toBe(false);
+    });
+  });
 });

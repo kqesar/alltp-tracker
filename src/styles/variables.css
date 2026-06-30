@@ -1,6 +1,8 @@
 /* CSS Custom Properties for consistent theming */
 :root {
   --color-primary: #646cff;
+  --color-primary-hover: #535bf2;
+  --color-primary-rgb: 100, 108, 255;
   --color-success: #00ff00;
   --color-warning: #ffff00;
   --color-error: #ff0000;
@@ -11,9 +13,12 @@
   --color-bg-header: rgba(0, 0, 0, 0.9);
 
   /* Improved contrast ratios for accessibility */
+  --color-text-primary: #ffffff;
   --color-text-secondary: #e0e0e0;
   --color-border: #404040;
   --color-focus: #646cff;
+
+  --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
 
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -30,8 +35,9 @@
   --transition: 0.25s ease-in-out;
 
   --header-height: 4rem;
-  --z-header: 1000;
   --z-overlay: 2;
+  --z-header: 1000;
+  --z-modal: 2000;
 
   /* Responsive breakpoints */
   --breakpoint-mobile: 480px;
