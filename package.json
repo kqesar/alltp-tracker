@@ -72,7 +72,7 @@
     "lint-staged": "^17.0.8",
     "sort-package-json": "^4.0.0",
     "standard-version": "^9.5.0",
-    "typescript": "~6.0.3",
+    "typescript": "~7.0.2",
     "vite": "^8.1.4",
     "vite-plugin-compression": "^0.5.1",
     "vitest": "^4.1.10"
