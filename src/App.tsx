@@ -1,5 +1,4 @@
 import { useState } from "react";
-import "@/styles/index.css";
 import { MapLegend } from "@/components/map/MapLegend";
 import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
