@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { chests, dungeons, type ItemState } from "@/data/chests";
+import { chests } from "@/data/chests";
+import { dungeons } from "@/data/dungeons";
 import { items as defaultItems } from "@/data/items";
+import type { ItemState } from "@/data/logic";
 
 /**
  * Characterization tests: they do not assert what the logic *should* say, they

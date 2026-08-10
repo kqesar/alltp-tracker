@@ -1,4 +1,4 @@
-import type { ChestItem } from "@/data/chests";
+import type { ChestItem } from "@/data/logic";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, transformMapCoordinates } from "@/utils";
 

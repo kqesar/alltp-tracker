@@ -19,7 +19,7 @@ export const MapTracker = () => {
       <h2 className="sr-only">Map Locations</h2>
       {/* Render chests */}
       {chestsState.map((chest, index) => (
-        <MapChest chest={chest} index={index} key={`chest-${chest.id}`} />
+        <MapChest chest={chest} index={index} key={`chest-${chest.name}`} />
       ))}
 
       {/* Render dungeon bosses */}
@@ -27,7 +27,7 @@ export const MapTracker = () => {
         <DungeonBoss
           dungeon={dungeon}
           index={index}
-          key={`boss-${dungeon.id}`}
+          key={`boss-${dungeon.image}`}
         />
       ))}
 
@@ -36,7 +36,7 @@ export const MapTracker = () => {
         <DungeonChest
           dungeon={dungeon}
           index={index}
-          key={`dungeon-${dungeon.id}`}
+          key={`dungeon-${dungeon.image}`}
         />
       ))}
     </section>

@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DungeonChest } from "@/components/map/DungeonChest";
-import type { DungeonItem, ItemState } from "@/data/chests";
+import type { DungeonItem, ItemState } from "@/data/logic";
 import { useGameStore } from "@/stores/gameStore";
 
 // Mock getAssetPath but keep the real coordinate transform
@@ -13,7 +13,6 @@ vi.mock("@/utils", async (importActual) => ({
 
 const mockDungeon: DungeonItem = {
   canGetChest: vi.fn(() => "available" as const),
-  id: 1,
   image: "boss01.png",
   isBeatable: vi.fn(() => "available" as const),
   isBeaten: false,

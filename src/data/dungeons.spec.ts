@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { chests, dungeons, type ItemState } from "@/data/chests";
+import { chests } from "@/data/chests";
+import { dungeons } from "@/data/dungeons";
 import { items as baseItems } from "@/data/items";
+import type { ItemState } from "@/data/logic";
 
 /** A medallions array (length 10) with one dungeon's requirement set. */
 const medallionsWith = (index: number, value: number): number[] => {

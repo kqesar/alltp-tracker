@@ -1,15 +1,15 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { DUNGEON_INDICES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { chests as initialChests } from "@/data/chests";
+import { dungeons as initialDungeons } from "@/data/dungeons";
+import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
 import {
   buildDungeonCaption,
   type ChestItem,
   type DungeonItem,
   type ItemState,
-  chests as initialChests,
-  dungeons as initialDungeons,
-} from "@/data/chests";
-import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
+} from "@/data/logic";
 import { DEFAULT_PRESET_ID, getPreset, type RunSettings } from "@/data/presets";
 
 /**

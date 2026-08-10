@@ -1,6 +1,6 @@
 import { MAP_COORDINATES } from "@/constants";
-import type { ItemState } from "@/data/chests";
 import { itemsMin } from "@/data/items";
+import type { ItemState } from "@/data/logic";
 
 /**
  * Gets the correct asset path with base URL support

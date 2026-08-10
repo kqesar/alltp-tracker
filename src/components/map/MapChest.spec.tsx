@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MapChest } from "@/components/map/MapChest";
-import type { ChestItem, ItemState } from "@/data/chests";
+import type { ChestItem, ItemState } from "@/data/logic";
 import { useGameStore } from "@/stores/gameStore";
 
 // Mock getAssetPath but keep the real coordinate transform
@@ -28,7 +28,6 @@ vi.mock("@/stores/gameStore", () => ({
 const mockUseGameStore = vi.mocked(useGameStore);
 
 const mockChest: ChestItem = {
-  id: 1,
   isAvailable: vi.fn(() => "available" as const),
   isOpened: false,
   name: "Test Chest",

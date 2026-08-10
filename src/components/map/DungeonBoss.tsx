@@ -1,5 +1,5 @@
 import { BOSS_STATES } from "@/constants";
-import { buildDungeonCaption, type DungeonItem } from "@/data/chests";
+import { buildDungeonCaption, type DungeonItem } from "@/data/logic";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, transformMapCoordinates } from "@/utils";
 
