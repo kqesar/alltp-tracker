@@ -12,7 +12,6 @@ describe("GameStore", () => {
 
     expect(state.caption).toBe("");
     expect(state.medallions).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    expect(state.mapOrientation).toBe(false);
     expect(state.items).toBeDefined();
     expect(state.chestsState).toBeDefined();
     expect(state.dungeonsState).toBeDefined();

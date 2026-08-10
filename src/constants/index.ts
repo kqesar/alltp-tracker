@@ -32,13 +32,6 @@ export const BOSS_STATES = {
 /** Small keys available per dungeon, indexed by dungeon index 0-9. */
 export const SMALL_KEYS_MAX_BY_INDEX = [1, 1, 1, 6, 1, 3, 1, 2, 3, 4] as const;
 
-/** Percentage-coordinate maths for map markers. */
-export const MAP_COORDINATES = {
-  COORDINATE_MULTIPLIER: 2,
-  PERCENTAGE_MULTIPLIER: 100,
-  SPLIT_THRESHOLD: 0.5,
-};
-
 /** Columns rendered per tracker grid row. */
 export const ITEMS_PER_ROW = 7;
 
