@@ -16,13 +16,13 @@ export default defineConfig({
       exclude: ["src/interfaces", "src/vite-*.ts", "src/main.tsx"],
       include: ["src"],
       reporter: ["html", "json", "json-summary"],
-      // Floor thresholds (just below current coverage) to catch regressions
-      // without blocking day-to-day work. Raise these as coverage improves.
+      // Floors sit just under current coverage so a regression fails the build
+      // without blocking day-to-day work. Raise them as coverage improves.
       thresholds: {
-        branches: 55,
-        functions: 80,
-        lines: 75,
-        statements: 72,
+        branches: 82,
+        functions: 89,
+        lines: 87,
+        statements: 85,
       },
     },
     environment: "jsdom",
