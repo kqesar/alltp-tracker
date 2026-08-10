@@ -10,6 +10,30 @@
   background-size: cover;
 }
 
+/*
+ * Stacked layout. The asset is one 884x442 image holding the Light World in
+ * its left half and the Dark World in its right, so rather than ship a second
+ * asset we paint it twice and slide each copy so one half lands in each row.
+ */
+.layout--stacked .mapdiv {
+  width: 442px;
+  height: 884px;
+  background-image: url("/assets/map.png"), url("/assets/map.png");
+  background-position:
+    0 0,
+    -442px 442px;
+  background-size:
+    884px 442px,
+    884px 442px;
+}
+
+/* The map is now much taller than the item grid, so anchor both to the top
+   instead of letting the short one float to the middle of the tall one. */
+.layout--stacked .mapdiv,
+.layout--stacked .itemdiv {
+  vertical-align: top;
+}
+
 /* Map Container */
 .map-container {
   position: relative;
@@ -150,5 +174,18 @@
     max-width: 600px;
     height: auto;
     aspect-ratio: 2 / 1;
+  }
+
+  /* Stacked is the layout that suits a narrow screen, so let it fill the width
+     and scale both halves with it. */
+  .layout--stacked .mapdiv {
+    max-width: 442px;
+    aspect-ratio: 1 / 2;
+    background-position:
+      0 0,
+      -100% 100%;
+    background-size:
+      200% 50%,
+      200% 50%;
   }
 }

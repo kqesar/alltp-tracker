@@ -57,3 +57,42 @@ export const getGridItemStyles = (item: string, items: ItemState) => ({
   backgroundImage: getItemBackground(item, items),
   opacity: getItemOpacity(item, items),
 });
+
+/**
+ * How the two worlds are arranged on screen.
+ * - `side-by-side`: as the map asset stores them, Light World left, Dark right
+ * - `stacked`: Light World on top, Dark World below, for tall/narrow screens
+ */
+export type MapLayout = "side-by-side" | "stacked";
+
+/** Midpoint of the map asset, where the Light World ends and the Dark begins. */
+const WORLD_SPLIT = 0.5;
+
+/**
+ * Re-projects a marker's percentage coordinates for the current layout.
+ *
+ * Marker coordinates are authored against the side-by-side asset. Stacked,
+ * each world spans the full width and half the height, so a marker's x doubles
+ * within its own half while its y halves — shifted into the lower half for
+ * Dark World markers.
+ * @param x - Horizontal position as a percentage string (e.g. "46.8%")
+ * @param y - Vertical position as a percentage string
+ * @param layout - The arrangement currently on screen
+ * @returns The percentage strings to position the marker with
+ */
+export const transformMapCoordinates = (
+  x: string,
+  y: string,
+  layout: MapLayout,
+): { x: string; y: string } => {
+  if (layout === "side-by-side") return { x, y };
+
+  const xFraction = Number.parseFloat(x) / 100;
+  const yFraction = Number.parseFloat(y) / 100;
+  const isDarkWorld = xFraction > WORLD_SPLIT;
+
+  const stackedX = (isDarkWorld ? xFraction - WORLD_SPLIT : xFraction) * 2;
+  const stackedY = yFraction / 2 + (isDarkWorld ? WORLD_SPLIT : 0);
+
+  return { x: `${stackedX * 100}%`, y: `${stackedY * 100}%` };
+};

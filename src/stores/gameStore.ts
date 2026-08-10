@@ -11,6 +11,7 @@ import {
   type ItemState,
 } from "@/data/logic";
 import { DEFAULT_PRESET_ID, getPreset, type RunSettings } from "@/data/presets";
+import type { MapLayout } from "@/utils";
 
 /**
  * Serializable snapshot of the tracker progress.
@@ -23,6 +24,7 @@ type PersistedState = {
   medallions: number[];
   smallKeys: number[];
   bigKeysVisible: boolean;
+  mapLayout: MapLayout;
   chestsOpened: boolean[];
   dungeonsBeaten: boolean[];
   presetId: string;
@@ -37,6 +39,7 @@ interface GameState {
   medallions: number[];
   caption: string;
   bigKeysVisible: boolean;
+  mapLayout: MapLayout;
   smallKeys: number[]; // Array of 10 dungeons (0-9) with small key counts
 
   // Run-type preset
@@ -54,6 +57,7 @@ interface GameState {
   setChestsState: (chests: ChestItem[]) => void;
   setDungeonsState: (dungeons: DungeonItem[]) => void;
   setBigKeysVisible: (visible: boolean) => void;
+  setMapLayout: (layout: MapLayout) => void;
 
   // Persistence helpers
   exportState: () => string;
@@ -76,6 +80,7 @@ const createInitialState = (presetId: string = DEFAULT_PRESET_ID) => {
     chestsState: initialChests.map((chest) => ({ ...chest })),
     dungeonsState: initialDungeons.map((dungeon) => ({ ...dungeon })),
     items: { ...initialItems } as ItemState,
+    mapLayout: "side-by-side" as MapLayout,
     medallions: Array(10).fill(0) as number[],
     presetId: preset.id,
     settings: preset.settings,
@@ -99,6 +104,7 @@ const toPersisted = (state: GameState): PersistedState => ({
   chestsOpened: state.chestsState.map((chest) => chest.isOpened),
   dungeonsBeaten: state.dungeonsState.map((dungeon) => dungeon.isBeaten),
   items: state.items,
+  mapLayout: state.mapLayout,
   medallions: state.medallions,
   presetId: state.presetId,
   settings: state.settings,
@@ -126,6 +132,7 @@ const applyPersisted = <T extends ReturnType<typeof createInitialState>>(
   items: persisted.items
     ? ({ ...base.items, ...persisted.items } as ItemState)
     : base.items,
+  mapLayout: persisted.mapLayout ?? base.mapLayout,
   medallions: persisted.medallions ?? base.medallions,
   presetId: persisted.presetId ?? base.presetId,
   settings: persisted.settings ?? base.settings,
@@ -234,6 +241,8 @@ export const useGameStore = create<GameState>()(
 
         setDungeonsState: (dungeons: DungeonItem[]) =>
           set({ dungeonsState: dungeons }),
+
+        setMapLayout: (layout: MapLayout) => set({ mapLayout: layout }),
 
         toggleChest: (chestIndex: number) =>
           set((state) => ({

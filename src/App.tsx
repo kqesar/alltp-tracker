@@ -15,7 +15,8 @@ import { useGameStore } from "@/stores/gameStore";
  */
 function App() {
   // Get state and actions from Zustand store
-  const { caption, bigKeysVisible, setBigKeysVisible } = useGameStore();
+  const { caption, bigKeysVisible, setBigKeysVisible, mapLayout } =
+    useGameStore();
 
   // Layout state (keep local as it doesn't need to be shared)
   const [itemLayout] = useState(defaultItemGrid);
@@ -30,7 +31,10 @@ function App() {
       <BigKeyToggle isVisible={bigKeysVisible} onToggle={setBigKeysVisible} />
       {/* Static IDs are intentional for SPA layout elements referenced by CSS and skip links */}
       <main className="main-content" id="main-content">
-        <div id="layoutdiv">
+        <div
+          className={mapLayout === "stacked" ? "layout--stacked" : undefined}
+          id="layoutdiv"
+        >
           <TrackerGrid itemLayout={itemLayout} />
           <aside aria-label="Map display" className="mapdiv" id="mapdiv">
             <MapTracker />

@@ -46,7 +46,7 @@ All game state lives in `src/stores/gameStore.ts`, created with `zustand` + `dev
 - `tracker/` — `TrackerGrid` → `grid/GridItem` (routes: empty → spacer, `bigkey*` → `BigKeyCell`, else → `Item`) → `items/Item`, which renders boss overlays when the id starts with `boss`.
 - `tracker/overlays/BossOverlays.tsx` — one `Overlay` skeleton behind `CounterOverlay` (chest count and reward) and `MedaillonOverlay`.
 - `tracker/items/KeyToggle.tsx` — the keysanity big-key and small-key buttons, one component with a `variant` prop.
-- `map/MapMarkers.tsx` — one `Marker` handling position, icon and hover caption; `MapChest`, `DungeonBoss` and `DungeonChest` supply only their availability rule.
+- `map/MapMarkers.tsx` — one `Marker` handling position, icon and hover caption; `MapChest`, `DungeonBoss` and `DungeonChest` supply only their availability rule. Marker coordinates are authored against the side-by-side asset and re-projected by `transformMapCoordinates` when `mapLayout` is `stacked`; the matching CSS lives under `.layout--stacked` in `map.css` and repaints the single map asset as two rows.
 - `ui/` — `Header`, `Caption`, `Modal`, `ConfirmDialog`, `PresetSelector`, `TrackerControls`, `BigKeyToggle`.
 
 ### Tests

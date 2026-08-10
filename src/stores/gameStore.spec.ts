@@ -345,4 +345,25 @@ describe("GameStore", () => {
       expect(useGameStore.getState().presetId).toBe("keysanity");
     });
   });
+
+  describe("map layout", () => {
+    it("starts with the two worlds side by side", () => {
+      expect(useGameStore.getState().mapLayout).toBe("side-by-side");
+    });
+
+    it("switches to the stacked layout", () => {
+      useGameStore.getState().setMapLayout("stacked");
+      expect(useGameStore.getState().mapLayout).toBe("stacked");
+    });
+
+    it("survives an export/import round trip", () => {
+      useGameStore.getState().setMapLayout("stacked");
+      const saved = useGameStore.getState().exportState();
+
+      useGameStore.getState().setMapLayout("side-by-side");
+      expect(useGameStore.getState().importState(saved)).toBe(true);
+
+      expect(useGameStore.getState().mapLayout).toBe("stacked");
+    });
+  });
 });

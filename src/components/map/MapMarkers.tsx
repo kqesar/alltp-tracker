@@ -5,7 +5,7 @@ import {
   type DungeonItem,
 } from "@/data/logic";
 import { useGameStore } from "@/stores/gameStore";
-import { getAssetPath } from "@/utils";
+import { getAssetPath, transformMapCoordinates } from "@/utils";
 
 type MarkerProps = {
   /** Extra classes identifying the marker kind, e.g. "chest map-chest" */
@@ -34,7 +34,8 @@ const Marker = ({
   caption,
   onClick,
 }: MarkerProps) => {
-  const { setCaption } = useGameStore();
+  const { mapLayout, setCaption } = useGameStore();
+  const position = transformMapCoordinates(x, y, mapLayout);
 
   return (
     <div
@@ -44,8 +45,8 @@ const Marker = ({
       onMouseOver={() => setCaption(caption)}
       style={{
         backgroundImage: `url(${getAssetPath(asset)})`,
-        left: x,
-        top: y,
+        left: position.x,
+        top: position.y,
       }}
     />
   );

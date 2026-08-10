@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useGameStore } from "@/stores/gameStore";
 import App from "./App";
@@ -192,5 +192,20 @@ describe("App", () => {
       fireEvent.click(hookshotButton);
       expect(hookshotButton).toHaveStyle("opacity: 0.25");
     }
+  });
+
+  it("stacks the map when the stacked layout is selected", () => {
+    useGameStore.getState().setMapLayout("side-by-side");
+    render(<App />);
+
+    expect(document.getElementById("layoutdiv")).not.toHaveClass(
+      "layout--stacked",
+    );
+
+    act(() => {
+      useGameStore.getState().setMapLayout("stacked");
+    });
+
+    expect(document.getElementById("layoutdiv")).toHaveClass("layout--stacked");
   });
 });

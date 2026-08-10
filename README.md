@@ -23,7 +23,7 @@ Originally forked from [TestRunnerSRL/lttp-tracker](https://github.com/TestRunne
 | 🟥 red | out of logic |
 | ⬛ grey | already done |
 
-Click a chest to mark it opened, or a boss to mark it beaten. Hover anything to see its requirements.
+Click a chest to mark it opened, or a boss to mark it beaten. Hover anything to see its requirements. **Stacked map** puts the Dark World under the Light World instead of beside it, which suits a tall or narrow screen; the choice is remembered.
 
 **Boss overlays** — each boss cell carries three corners: the medallion requirement (top right, Misery Mire and Turtle Rock only), the remaining chest count (bottom left) and the reward, crystal or pendant (bottom right).
 
