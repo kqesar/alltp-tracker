@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.7.1](https://github.com/kqesar/alltp-tracker/compare/v2.7.0...v2.7.1) (2026-08-10)
+
+
+### 🔧 Code Refactoring
+
+* halve the codebase, fix the mobile tap bug, and make the map layout reachable ([#149](https://github.com/kqesar/alltp-tracker/issues/149)) ([f9be8aa](https://github.com/kqesar/alltp-tracker/commit/f9be8aab2937483479a5dad4d57f5ac2c1d940e6))
+
 ## [2.7.0](https://github.com/kqesar/alltp-tracker/compare/v2.6.0...v2.7.0) (2026-06-30)
 
 
