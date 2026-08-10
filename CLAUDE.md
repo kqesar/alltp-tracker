@@ -22,48 +22,48 @@ pnpm coverage                # Show existing coverage table without rerunning
 Run a single test file: `pnpm vitest run src/stores/gameStore.spec.ts`
 Run tests matching a name: `pnpm vitest run -t "some test name"`
 
-There is no `index.ts` barrel/export pattern anywhere — always import components/hooks/utils directly from their file path.
+Note: `tsc -b` emits `vite.config.js` at the repo root. It is gitignored and excluded from Biome; delete it if it gets in the way.
+
+There are no barrel/`index.ts` re-export files — always import from the file path.
 
 ## Architecture
 
-### State: single Zustand store
-All game state lives in one store, `src/stores/gameStore.ts`, created with `zustand` + `devtools` + `persist` middleware (localStorage key `alltp-tracker-state`). There is no separate persistence store — save/load, import/export, and reset all live here.
+### State: a single Zustand store
+All game state lives in `src/stores/gameStore.ts`, created with `zustand` + `devtools` + `persist` (localStorage key `alltp-tracker-state`). There is no separate persistence store — save/load, import/export and reset all live here. Components call bare `useGameStore()`; there are no selector hooks.
 
-- `items` — an `ItemState` object (from `src/data/items.ts`) keyed by item id; values are `boolean` (toggle items) or `number` (progressive items, e.g. sword 0-4, glove 0-2). `handleItemClick` inspects the current value's type to decide toggle-vs-increment behavior, wrapping at `itemsMin`/`itemsMax` from `src/data/items.ts`. Chest items (`chest0`..`chest9`) decrement instead of increment.
-- `chestsState` / `dungeonsState` — arrays of `ChestItem`/`DungeonItem` (from `src/data/chests.ts`). These carry non-serializable methods (`isAvailable`, `isBeatable`, etc.), so the store's `persist.partialize`/`merge` only round-trip the boolean flags (`isOpened`, `isBeaten`) and re-apply them onto freshly-constructed objects on load (`applyPersisted`/`toPersisted` in gameStore.ts). When adding new persisted fields, extend `PersistedState` and both of these functions together, not just the `GameState` interface.
-- `smallKeys` — fixed-length array of 10 (one per dungeon, indexed via `DUNGEON_INDICES`), capped per-dungeon by `SMALL_KEYS_MAX_BY_INDEX` (`src/constants`).
-- `presetId`/`settings` (`RunSettings` from `src/data/presets.ts`) — run-type presets (e.g. keysanity) applied via `applyPreset`, which rebuilds the whole state via `createInitialState`.
-- Prefer the exported selector hooks (`useItems`, `useChests`, `useDungeons`, `useMedallions`, `useCaption`, `useGameActions`) over destructuring the whole store, to avoid unnecessary re-renders. `useGameActions` uses `useShallow` — follow that pattern for any new grouped-action selector.
+- `items` — keyed by item id; values are `boolean` (toggles) or `number` (progressive). `handleItemClick` reads the current value's type, then steps by `-1` for `chest*` counters and `+1` for everything else, wrapping between `itemsMin[item]` and `itemsMax[item]`.
+- `chestsState` / `dungeonsState` — `ChestItem[]` / `DungeonItem[]` carrying non-serializable predicates, so `persist.partialize`/`merge` round-trip only the `isOpened` / `isBeaten` booleans and re-apply them onto freshly built objects (`toPersisted` / `applyPersisted`). **Any new persisted field must be added to `PersistedState`, `toPersisted` and `applyPersisted` together**, not just to `GameState`.
+- `smallKeys` — 10 entries capped by `SMALL_KEYS_MAX_BY_INDEX`.
+- `presetId` / `settings` — run-type presets from `src/data/presets.ts`; `applyPreset` rebuilds the whole state via `createInitialState`.
 
 ### Data layer (`src/data/`)
-- `items.ts` — item definitions, the tracker grid layout, and per-item min/max values.
-- `chests.ts` — chest and dungeon definitions plus their accessibility logic (`isAvailable`/`isBeatable` predicates driven by current `items`/`medallions`), and `buildDungeonCaption`.
-- `presets.ts` — run-type presets (`RunSettings`, `getPreset`, `DEFAULT_PRESET_ID`).
-- `tooltips.ts` — tooltip copy for items/dungeons.
+- `logic.ts` — the types (`ItemState`, `ChestItem`, `DungeonItem`, `Availability`) plus the shared predicates: `canReachDarkWorld`, `canReachSouthDarkWorld`, `canReachDeathMountain`, `canReachEastDeathMountain`, `hasTitansMitt`, `checkMedallion`, the `avail()` helper and `buildDungeonCaption`. Prefer reusing a named predicate over re-spelling its expression.
+- `chests.ts` / `dungeons.ts` — the 65 chests and 10 dungeons. Entries omit `isOpened`/`isBeaten`; the loader at the bottom of each file adds them. Position in the array *is* the identity — there is no `id` field.
+- `items.ts` — one `[min, max, initial?]` range table from which `items`, `itemsMin` and `itemsMax` are derived, plus `itemLabels` for accessibility names. Do not reintroduce parallel tables.
+- `presets.ts` — run types (`getPreset`, `presets`, `describeSettings`).
 
 ### Components (`src/components/`)
-- `tracker/` — the CSS Grid item panel. `TrackerGrid` → `grid/GridRow` (renders with `display: contents` to participate in the parent grid) → `grid/GridItem` (renders a spacer `div` for empty cells instead of `null`, to keep column alignment) → `items/RegularItem` / `items/BossItem` / `items/BigKey` / `items/SmallKey`.
-- `map/` — `MapTracker` (interactive overworld/dungeon map), `MapChest`, `DungeonChest`, `DungeonBoss`, `MapLegend`. Coordinates are percentage-based and run through `transformMapCoordinates` (`src/utils/index.ts`) to support the vertical/split map orientation.
-- `tracker/overlays/` — `ChestOverlay` (remaining chest count), `RewardOverlay` (crystal/pendant), `MedaillonOverlay` (Bombos/Ether/Quake requirement for Misery Mire / Turtle Rock).
+- `tracker/` — `TrackerGrid` → `grid/GridItem` (routes: empty → spacer, `bigkey*` → `BigKeyCell`, else → `Item`) → `items/Item`, which renders boss overlays when the id starts with `boss`.
+- `tracker/overlays/BossOverlays.tsx` — one `Overlay` skeleton behind `CounterOverlay` (chest count and reward) and `MedaillonOverlay`.
+- `tracker/items/KeyToggle.tsx` — the keysanity big-key and small-key buttons, one component with a `variant` prop.
+- `map/MapMarkers.tsx` — one `Marker` handling position, icon and hover caption; `MapChest`, `DungeonBoss` and `DungeonChest` supply only their availability rule.
 - `ui/` — `Header`, `Caption`, `Modal`, `ConfirmDialog`, `PresetSelector`, `TrackerControls`, `BigKeyToggle`.
 
-Every component has a co-located `*.spec.tsx`. Broader interaction tests live under `src/integration/*.integration.spec.tsx` (keyboard navigation, mobile gestures, grid wiring).
+### Tests
+`src/data/logic.characterization.spec.ts` snapshots chest availability, dungeon chest access and beatability across 15 item states. **It is a refactor guard: if the snapshot moves without an intended rule change, the change is wrong. Never update it to make the suite pass.**
 
-### Hooks (`src/hooks/`)
-`useKeyboardNavigation` (arrow-key/Tab grid navigation with wrap-around, uses `data-grid-row`/`data-grid-col` attributes), `useDeviceDetection`, `useTouchGestures`.
-
-### Constants (`src/constants/index.ts`)
-All magic numbers, CSS class name strings, asset names, and config values are centralized here (`CSS_CLASSES`, `DUNGEON_INDICES`, `MAP_COORDINATES`, `SMALL_KEYS_MAX_BY_INDEX`, etc.). Don't hardcode values already covered here.
+Write assertions that can fail — this codebase previously carried tests asserting `expect([all four states]).toContain(result)` and "keyboard navigation" specs that pressed no keys.
 
 ## Conventions
 
-- **Imports**: use the `@/` alias (`@/components/...`, `@/stores/gameStore`, `@/data/...`, `@/constants`, `@/utils`) instead of relative paths (`tsconfig.json` and both vite/vitest configs map `@` → `src`).
-- **No HTML tables for layout, no `null` for empty grid cells** — use CSS Grid + spacer elements (see `GridItem.tsx`).
-- Interactive grid elements are semantic `<button>`s with `aria-label`s; keep new interactive elements keyboard-accessible and screen-reader friendly (WCAG-focused project).
-- Biome (not ESLint/Prettier) handles lint + format; `biome.json` auto-organizes imports on save/check. Run `pnpm lint:fix` before committing.
-- Styles are modular CSS files under `src/styles/`, imported through `src/styles/index.css`.
-- Coverage thresholds are enforced in `vitest.config.ts` (branches 55 / functions 80 / lines 75 / statements 72) — these are floors slightly below current coverage to catch regressions, not aspirational targets.
+- Import via the `@/` alias (`tsconfig.json` and both vite/vitest configs map `@` → `src`).
+- CSS class names are written literally in the JSX; there is deliberately no `CSS_CLASSES` map. `src/constants/index.ts` holds only values with game meaning.
+- CSS Grid for layout, never tables; empty cells render a spacer rather than `null`.
+- Interactive elements are semantic `<button>`s with `aria-label`. A native button fires click on Enter and Space, so do not add key handlers for them.
+- Styles live in `src/styles/`, all imported by `styles/index.css`, which `main.tsx` alone imports. `reset.css` must stay first in that list — it sits at the base of the cascade.
+- Biome (not ESLint/Prettier) handles lint + format and sorts imports and object keys.
+- Coverage thresholds in `vitest.config.ts` are floors just below current coverage.
 
 ## Commits
 
-Conventional Commits are enforced by commitlint via a husky `commit-msg` hook (`type(scope): description`, types: feat/fix/docs/style/refactor/perf/test/build/ci/chore/revert). `pnpm commit` runs commitizen for a guided commit message. A `pre-commit` hook runs `lint-staged` (Biome) on staged files.
+Conventional Commits, enforced by commitlint via a husky `commit-msg` hook (`feat`/`fix`/`docs`/`style`/`refactor`/`perf`/`test`/`build`/`ci`/`chore`/`revert`). `pnpm commit` runs commitizen. A `pre-commit` hook runs `lint-staged` (Biome) on staged files. Do not add Co-Authored-By trailers.
