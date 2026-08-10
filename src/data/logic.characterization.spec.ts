@@ -138,14 +138,14 @@ describe("game logic characterization", () => {
     ).toMatchSnapshot();
   });
 
-  it.each(scenarios)("dungeon chest access — $name", ({
-    items,
-    medallions,
-  }) => {
-    expect(
-      dungeons.map((dungeon) => dungeon.canGetChest(items, medallions)),
-    ).toMatchSnapshot();
-  });
+  it.each(scenarios)(
+    "dungeon chest access — $name",
+    ({ items, medallions }) => {
+      expect(
+        dungeons.map((dungeon) => dungeon.canGetChest(items, medallions)),
+      ).toMatchSnapshot();
+    },
+  );
 
   it.each(scenarios)("dungeon beatable — $name", ({ items, medallions }) => {
     expect({
