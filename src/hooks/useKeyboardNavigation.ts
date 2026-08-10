@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { GRID_CONSTANTS, KEYBOARD_NAVIGATION } from "@/constants";
+import { ITEMS_PER_ROW, KEYBOARD_NAVIGATION } from "@/constants";
 
 type GridPosition = {
   row: number;
@@ -59,12 +59,7 @@ export const useKeyboardNavigation = ({
   const isValidPosition = useCallback(
     (row: number, col: number): boolean => {
       // Check bounds
-      if (
-        row < 0 ||
-        row >= totalRows ||
-        col < 0 ||
-        col >= GRID_CONSTANTS.ITEMS_PER_ROW
-      ) {
+      if (row < 0 || row >= totalRows || col < 0 || col >= ITEMS_PER_ROW) {
         return false;
       }
 
@@ -106,16 +101,16 @@ export const useKeyboardNavigation = ({
 
       // Wrap around for horizontal movement
       if (deltaCol !== 0) {
-        const maxAttempts = totalRows * GRID_CONSTANTS.ITEMS_PER_ROW;
+        const maxAttempts = totalRows * ITEMS_PER_ROW;
         let attempts = 0;
 
         while (attempts < maxAttempts) {
           // Handle column wrapping
-          if (newCol >= GRID_CONSTANTS.ITEMS_PER_ROW) {
+          if (newCol >= ITEMS_PER_ROW) {
             newCol = 0;
             newRow = (newRow + 1) % totalRows;
           } else if (newCol < 0) {
-            newCol = GRID_CONSTANTS.ITEMS_PER_ROW - 1;
+            newCol = ITEMS_PER_ROW - 1;
             newRow = newRow - 1 < 0 ? totalRows - 1 : newRow - 1;
           }
 
@@ -225,7 +220,7 @@ export const useKeyboardNavigation = ({
    */
   const focusFirstItem = useCallback((): void => {
     for (let row = 0; row < totalRows; row++) {
-      for (let col = 0; col < GRID_CONSTANTS.ITEMS_PER_ROW; col++) {
+      for (let col = 0; col < ITEMS_PER_ROW; col++) {
         if (isValidPosition(row, col)) {
           focusPosition(row, col);
           return;

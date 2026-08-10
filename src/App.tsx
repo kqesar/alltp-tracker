@@ -7,7 +7,6 @@ import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
 import { Caption } from "@/components/ui/Caption";
 import { Header } from "@/components/ui/Header";
 import { TrackerControls } from "@/components/ui/TrackerControls";
-import { CSS_CLASSES } from "@/constants";
 import { defaultItemGrid } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -34,11 +33,7 @@ function App() {
       <main className="main-content" id="main-content">
         <div id="layoutdiv">
           <TrackerGrid itemLayout={itemLayout} />
-          <aside
-            aria-label="Map display"
-            className={CSS_CLASSES.MAPDIV}
-            id="mapdiv"
-          >
+          <aside aria-label="Map display" className="mapdiv" id="mapdiv">
             <MapTracker />
             <MapLegend />
           </aside>
@@ -46,7 +41,7 @@ function App() {
 
         <aside
           aria-label="Item information"
-          className={CSS_CLASSES.CAPTION_CONTAINER}
+          className="caption-container"
           id="caption"
         >
           <Caption text={caption} />

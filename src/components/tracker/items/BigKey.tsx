@@ -1,4 +1,3 @@
-import { CSS_CLASSES } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
 
@@ -33,7 +32,7 @@ export const BigKey = ({ dungeonIndex, row, col }: BigKeyProps) => {
   return (
     <button
       aria-label={`Big key for dungeon ${dungeonIndex}: ${isObtained ? "obtained" : "not obtained"}`}
-      className={`${CSS_CLASSES.OVERLAY_BASE} big-key-overlay ${isObtained ? "big-key-overlay--obtained" : ""}`}
+      className={`overlay-base big-key-overlay ${isObtained ? "big-key-overlay--obtained" : ""}`}
       data-dungeon={dungeonIndex}
       data-grid-col={col}
       data-grid-row={row}

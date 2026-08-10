@@ -1,7 +1,6 @@
 import { DungeonBoss } from "@/components/map/DungeonBoss";
 import { DungeonChest } from "@/components/map/DungeonChest";
 import { MapChest } from "@/components/map/MapChest";
-import { CSS_CLASSES } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 
 /**
@@ -14,7 +13,7 @@ export const MapTracker = () => {
   return (
     <section
       aria-label="Map tracker with locations and dungeons"
-      className={CSS_CLASSES.MAP_CONTAINER}
+      className="map-container"
       data-testid="map-tracker"
     >
       <h2 className="sr-only">Map Locations</h2>

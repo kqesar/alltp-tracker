@@ -1,6 +1,5 @@
 import { CornerTable } from "@/components/CornerTable";
 import { BigKeyCell } from "@/components/tracker/items/BigKeyCell";
-import { CSS_CLASSES } from "@/constants";
 import { itemsMin } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
 import { getGridItemStyles } from "@/utils";
@@ -111,7 +110,7 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
   return (
     <button
       aria-label={`${getItemName(item)}, ${getItemStateDescription(item)}. Click to change state.`}
-      className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
+      className="griditem grid-item-base"
       data-grid-col={col}
       data-grid-row={row}
       disabled={item === "blank"}

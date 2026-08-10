@@ -1,4 +1,3 @@
-import { CSS_CLASSES } from "@/constants";
 import { buildDungeonCaption, type DungeonItem } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, transformMapCoordinates } from "@/utils";
@@ -41,7 +40,7 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
 
   return (
     <div
-      className={`${CSS_CLASSES.MAPSPAN} dungeon ${CSS_CLASSES.MAP_ELEMENT_BASE} ${availabilityClass}`}
+      className={`mapspan dungeon map-element-base ${availabilityClass}`}
       onMouseOut={handleUnhighlight}
       onMouseOver={handleHighlight}
       style={{

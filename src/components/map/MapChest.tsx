@@ -1,4 +1,3 @@
-import { CSS_CLASSES } from "@/constants";
 import type { ChestItem } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, transformMapCoordinates } from "@/utils";
@@ -38,7 +37,7 @@ export const MapChest = ({ chest, index }: MapChestProps) => {
 
   return (
     <div
-      className={`${CSS_CLASSES.MAPSPAN} chest ${CSS_CLASSES.MAP_ELEMENT_BASE} ${CSS_CLASSES.MAP_CHEST} ${availabilityClass}`}
+      className={`mapspan chest map-element-base map-chest ${availabilityClass}`}
       onClick={() => toggleChest(index)}
       onMouseOut={handleUnhighlight}
       onMouseOver={handleHighlight}

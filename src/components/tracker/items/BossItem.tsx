@@ -2,7 +2,6 @@ import { CornerTable } from "@/components/CornerTable";
 import { ChestOverlay } from "@/components/tracker/overlays/ChestOverlay";
 import { MedaillonOverlay } from "@/components/tracker/overlays/MedaillonOverlay";
 import { RewardOverlay } from "@/components/tracker/overlays/RewardOverlay";
-import { CSS_CLASSES } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 import { getGridItemStyles } from "@/utils";
 
@@ -70,7 +69,7 @@ export const BossItem = ({
   return (
     <button
       aria-label={`${getBossName(bossNumber)}, ${getBossStateDescription(item)}. Click to change state.`}
-      className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} ${CSS_CLASSES.GRID_ITEM_RELATIVE}`}
+      className="griditem grid-item-base grid-item-relative"
       data-grid-col={col}
       data-grid-row={row}
       onClick={() => handleItemClick(item)}

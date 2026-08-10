@@ -1,4 +1,3 @@
-import { CSS_CLASSES } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
 
@@ -27,7 +26,7 @@ export const MedaillonOverlay = ({ bossNumber }: MedaillonOverlayProps) => {
 
   return (
     <div
-      className={`${CSS_CLASSES.OVERLAY_BASE} ${CSS_CLASSES.OVERLAY_TOP_RIGHT}`}
+      className="overlay-base overlay--top-right"
       onClick={(e) => {
         e.stopPropagation();
         // Cycle from 0 to 3, then back to 0

@@ -1,4 +1,4 @@
-import { BOSS_STATES, CSS_CLASSES } from "@/constants";
+import { BOSS_STATES } from "@/constants";
 import { buildDungeonCaption, type DungeonItem } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, transformMapCoordinates } from "@/utils";
@@ -50,7 +50,7 @@ export const DungeonBoss = ({ dungeon, index }: DungeonBossProps) => {
 
   return (
     <div
-      className={`${CSS_CLASSES.MAPSPAN} boss ${CSS_CLASSES.MAP_ELEMENT_BASE} ${availabilityClass}`}
+      className={`mapspan boss map-element-base ${availabilityClass}`}
       onClick={() => toggleDungeonBoss(index)}
       onMouseOut={handleUnhighlight}
       onMouseOver={handleHighlight}

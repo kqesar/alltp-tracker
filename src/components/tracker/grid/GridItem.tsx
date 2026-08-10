@@ -1,6 +1,5 @@
 import { BossItem } from "@/components/tracker/items/BossItem";
 import { RegularItem } from "@/components/tracker/items/RegularItem";
-import { CSS_CLASSES } from "@/constants";
 
 type GridItemProps = {
   /** Grid row index */
@@ -24,7 +23,7 @@ type GridItemProps = {
 export const GridItem = ({ row, col, item, onFocus }: GridItemProps) => {
   // Render empty spacer for empty cells to maintain grid layout
   if (!item || item === "") {
-    return <div aria-hidden="true" className={CSS_CLASSES.GRID_SPACER} />;
+    return <div aria-hidden="true" className="grid-spacer" />;
   }
 
   if (item?.startsWith("boss")) {

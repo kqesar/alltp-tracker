@@ -1,4 +1,3 @@
-import { CSS_CLASSES } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
 
@@ -19,7 +18,7 @@ export const ChestOverlay = ({ bossNumber }: ChestOverlayProps) => {
 
   return (
     <div
-      className={`${CSS_CLASSES.OVERLAY_BASE} ${CSS_CLASSES.OVERLAY_BOTTOM_LEFT}`}
+      className="overlay-base overlay--bottom-left"
       data-testid={`chest-overlay-${bossNumber}`}
       onClick={(e) => {
         e.stopPropagation();

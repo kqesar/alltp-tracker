@@ -1,6 +1,6 @@
 import { BigKey } from "@/components/tracker/items/BigKey";
 import { SmallKey } from "@/components/tracker/items/SmallKey";
-import { CSS_CLASSES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 
 type BigKeyCellProps = {
@@ -22,7 +22,7 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
   if (!bigKeysVisible) {
     return (
       <div
-        className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
+        className="griditem grid-item-base"
         data-grid-col={col}
         data-grid-row={row}
         style={{ opacity: 0, pointerEvents: "none" }}
@@ -35,7 +35,7 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
 
   return (
     <div
-      className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} bigkey-container`}
+      className="griditem grid-item-base bigkey-container"
       data-grid-col={col}
       data-grid-row={row}
     >

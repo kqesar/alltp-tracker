@@ -1,4 +1,4 @@
-import { CSS_CLASSES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
 
@@ -34,7 +34,7 @@ export const SmallKey = ({ dungeonIndex, row, col }: SmallKeyProps) => {
   return (
     <button
       aria-label={`Small keys for dungeon ${dungeonIndex}: ${count}/${maxKeys}`}
-      className={`${CSS_CLASSES.OVERLAY_BASE} small-key-overlay ${isMaxed ? "small-key-overlay--maxed" : ""}`}
+      className={`overlay-base small-key-overlay ${isMaxed ? "small-key-overlay--maxed" : ""}`}
       data-dungeon={dungeonIndex}
       data-grid-col={col}
       data-grid-row={row}
