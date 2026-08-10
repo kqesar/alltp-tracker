@@ -1,10 +1,4 @@
-import {
-  ASSET_NAMES,
-  AVAILABILITY_CLASSES,
-  CHEST_STATES,
-  CSS_CLASSES,
-  EMPTY_STRING,
-} from "@/constants";
+import { CSS_CLASSES } from "@/constants";
 import { buildDungeonCaption, type DungeonItem } from "@/data/chests";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, transformMapCoordinates } from "@/utils";
@@ -28,11 +22,10 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
 
   // Get dungeon chest availability class
   const getAvailabilityClass = () => {
-    if (chestCount === CHEST_STATES.OPENED) return AVAILABILITY_CLASSES.OPENED;
+    if (chestCount === 0) return "opened";
     return dungeon.canGetChest(items, medallions);
   };
 
-  // Highlight dungeon and show caption with dynamic medallion info
   // Highlight dungeon and show caption (medallion icon resolved for 8/9)
   const handleHighlight = () => {
     setCaption(buildDungeonCaption(dungeon, index, medallions));
@@ -40,7 +33,7 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
 
   // Remove highlight and clear caption
   const handleUnhighlight = () => {
-    setCaption(EMPTY_STRING);
+    setCaption("");
   };
 
   const coords = transformMapCoordinates(dungeon.x, dungeon.y, mapOrientation);
@@ -52,7 +45,7 @@ export const DungeonChest = ({ dungeon, index }: DungeonChestProps) => {
       onMouseOut={handleUnhighlight}
       onMouseOver={handleHighlight}
       style={{
-        backgroundImage: `url(${getAssetPath(ASSET_NAMES.POI)})`,
+        backgroundImage: `url(${getAssetPath("poi.png")})`,
         left: coords.x,
         top: coords.y,
       }}

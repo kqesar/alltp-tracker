@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { useShallow } from "zustand/react/shallow";
 import { DUNGEON_INDICES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import {
   buildDungeonCaption,
@@ -266,20 +265,3 @@ export const useGameStore = create<GameState>()(
     },
   ),
 );
-
-// Selectors to optimize re-renders
-export const useItems = () => useGameStore((state) => state.items);
-export const useChests = () => useGameStore((state) => state.chestsState);
-export const useDungeons = () => useGameStore((state) => state.dungeonsState);
-export const useMedallions = () => useGameStore((state) => state.medallions);
-export const useCaption = () => useGameStore((state) => state.caption);
-export const useGameActions = () =>
-  useGameStore(
-    useShallow((state) => ({
-      handleItemClick: state.handleItemClick,
-      handleMedallionChange: state.handleMedallionChange,
-      setCaption: state.setCaption,
-      toggleChest: state.toggleChest,
-      toggleDungeonBoss: state.toggleDungeonBoss,
-    })),
-  );

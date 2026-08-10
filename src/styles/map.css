@@ -101,23 +101,19 @@
 }
 
 /* Availability State Classes */
-.availability-state--unavailable,
 .unavailable {
   background-color: var(--state-unavailable);
 }
 
-.availability-state--available,
 .available {
   background-color: var(--state-available);
 }
 
-.availability-state--possible,
 .possible {
   color: #000;
   background-color: var(--state-possible);
 }
 
-.availability-state--completed,
 .opened {
   background-color: var(--state-opened);
 }

@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  defaultItemGrid,
-  dungeonchests,
-  items,
-  itemsMax,
-  itemsMin,
-} from "@/data/items";
+import { defaultItemGrid, items, itemsMax, itemsMin } from "@/data/items";
 
 describe("items data", () => {
   it("should export a valid items object", () => {
@@ -161,27 +155,6 @@ describe("defaultItemGrid", () => {
     coreItems.forEach((item) => {
       expect(flatGrid).toContain(item);
     });
-  });
-});
-
-describe("dungeonchests", () => {
-  it("should export valid dungeon chest counts", () => {
-    expect(typeof dungeonchests).toBe("object");
-    expect(dungeonchests).not.toBeNull();
-  });
-
-  it("should have 10 dungeons (0-9)", () => {
-    for (let i = 0; i <= 9; i++) {
-      expect(dungeonchests).toHaveProperty(i.toString());
-      expect(typeof dungeonchests[i]).toBe("number");
-      expect(dungeonchests[i]).toBeGreaterThan(0);
-    }
-  });
-
-  it("should match chest counts in items", () => {
-    for (let i = 0; i <= 9; i++) {
-      expect(dungeonchests[i]).toBe(items[`chest${i}`]);
-    }
   });
 });
 

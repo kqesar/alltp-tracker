@@ -2,8 +2,6 @@ import { CornerTable } from "@/components/CornerTable";
 import { BigKeyCell } from "@/components/tracker/items/BigKeyCell";
 import { CSS_CLASSES } from "@/constants";
 import { itemsMin } from "@/data/items";
-import { useDeviceDetection } from "@/hooks/useDeviceDetection";
-import { useTouchGestures } from "@/hooks/useTouchGestures";
 import { useGameStore } from "@/stores/gameStore";
 import { getGridItemStyles } from "@/utils";
 
@@ -25,36 +23,11 @@ type RegularItemProps = {
  */
 export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
   const { items, handleItemClick } = useGameStore();
-  const { isTouchDevice } = useDeviceDetection();
-
-  // Set up touch gestures for mobile devices (must be called before any early returns)
-  const { ref: touchRef } = useTouchGestures({
-    disabled: item === "blank" || !isTouchDevice,
-    onLongPress: () => {
-      // Long press could cycle backward through states or show detailed info
-      if (item !== "blank") {
-        // For now, just handle normal click on long press
-        handleItemClick(item);
-      }
-    },
-    onTap: () => {
-      if (item !== "blank") {
-        handleItemClick(item);
-      }
-    },
-  });
 
   // Big key items render the dedicated keysanity cell (key + small key + count)
   if (item?.startsWith("bigkey")) {
     return <BigKeyCell col={col} item={item} row={row} />;
   }
-
-  // Type-safe ref callback for button element
-  const setButtonRef = (element: HTMLButtonElement | null) => {
-    if (touchRef) {
-      touchRef.current = element;
-    }
-  };
 
   /**
    * Get item display name for accessibility
@@ -142,16 +115,8 @@ export const RegularItem = ({ row, col, item, onFocus }: RegularItemProps) => {
       data-grid-col={col}
       data-grid-row={row}
       disabled={item === "blank"}
-      key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
       onFocus={onFocus}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleItemClick(item);
-        }
-      }}
-      ref={setButtonRef}
       style={getGridItemStyles(item, items)}
       type="button"
     >

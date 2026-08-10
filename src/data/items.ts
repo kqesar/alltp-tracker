@@ -94,20 +94,6 @@ export const items: Record<string, number | boolean> = {
   tunic: 1,
 };
 
-// Dungeon chest counts
-export const dungeonchests: Record<number, number> = {
-  0: 3,
-  1: 2,
-  2: 2,
-  3: 5,
-  4: 6,
-  5: 2,
-  6: 4,
-  7: 3,
-  8: 2,
-  9: 5,
-};
-
 // Item minimum values
 export const itemsMin: Record<string, number> = {
   agahnim: 0,

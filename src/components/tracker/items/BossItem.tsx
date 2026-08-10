@@ -3,8 +3,6 @@ import { ChestOverlay } from "@/components/tracker/overlays/ChestOverlay";
 import { MedaillonOverlay } from "@/components/tracker/overlays/MedaillonOverlay";
 import { RewardOverlay } from "@/components/tracker/overlays/RewardOverlay";
 import { CSS_CLASSES } from "@/constants";
-import { useDeviceDetection } from "@/hooks/useDeviceDetection";
-import { useTouchGestures } from "@/hooks/useTouchGestures";
 import { useGameStore } from "@/stores/gameStore";
 import { getGridItemStyles } from "@/utils";
 
@@ -34,30 +32,6 @@ export const BossItem = ({
   onFocus,
 }: BossItemProps) => {
   const { items, handleItemClick } = useGameStore();
-  const { isTouchDevice } = useDeviceDetection();
-
-  // Set up touch gestures for mobile devices
-  const { ref: touchRef } = useTouchGestures({
-    disabled: item === "blank" || !isTouchDevice,
-    onLongPress: () => {
-      // Long press could cycle backward through states or show detailed info
-      if (item !== "blank") {
-        handleItemClick(item);
-      }
-    },
-    onTap: () => {
-      if (item !== "blank") {
-        handleItemClick(item);
-      }
-    },
-  });
-
-  // Type-safe ref callback for button element
-  const setButtonRef = (element: HTMLButtonElement | null) => {
-    if (touchRef) {
-      touchRef.current = element;
-    }
-  };
 
   /**
    * Get boss name for accessibility
@@ -99,16 +73,8 @@ export const BossItem = ({
       className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} ${CSS_CLASSES.GRID_ITEM_RELATIVE}`}
       data-grid-col={col}
       data-grid-row={row}
-      key={`${row}_${col}`}
       onClick={() => handleItemClick(item)}
       onFocus={onFocus}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleItemClick(item);
-        }
-      }}
-      ref={setButtonRef}
       style={getGridItemStyles(item, items)}
       type="button"
     >

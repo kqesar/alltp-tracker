@@ -95,12 +95,10 @@
 }
 
 /* Item State Classes */
-.item-state--active,
 .true {
   opacity: 1;
 }
 
-.item-state--inactive,
 .false {
   opacity: 0.25;
 }

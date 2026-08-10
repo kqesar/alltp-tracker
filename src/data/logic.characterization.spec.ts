@@ -108,7 +108,7 @@ const scenarios: Array<{
     name: "hera access",
   },
   {
-    items: state({ bombos: true, ether: true, quake: true, ...everything }),
+    items: everything,
     medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2],
     name: "all medallions with mire bombos and turtle ether",
   },

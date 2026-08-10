@@ -47,58 +47,22 @@ export const MEDALLION_VALUES = {
 
 // Glove (gauntlet) progression levels
 export const GLOVE_LEVELS = {
-  NONE: 0,
-  POWER: 1, // Power Glove
   TITAN: 2, // Titan's Mitt
 } as const;
 
 // Boss progression states (value stored in items.bossN)
 export const BOSS_STATES = {
   BEATEN: 2,
-  UNBEATEN: 0,
-} as const;
-
-// Small Keys Maximum Values per Dungeon
-export const SMALL_KEYS_MAX = {
-  DESERT_PALACE: 1, // smallkey1
-  EASTERN_PALACE: 1, // smallkey0
-  ICE_PALACE: 2, // smallkey7
-  MISERY_MIRE: 3, // smallkey8
-  PALACE_OF_DARKNESS: 6, // smallkey3
-  SKULL_WOODS: 3, // smallkey5
-  SWAMP_PALACE: 1, // smallkey4
-  THIEVES_TOWN: 1, // smallkey6
-  TOWER_OF_HERA: 1, // smallkey2
-  TURTLE_ROCK: 4, // smallkey9
 } as const;
 
 // Small Keys Maximum Values per Dungeon Index (ordered by dungeon index 0-9)
 export const SMALL_KEYS_MAX_BY_INDEX = [1, 1, 1, 6, 1, 3, 1, 2, 3, 4] as const;
-
-// Asset Names
-export const ASSET_NAMES = {
-  MEDALLION_BOMBOS: "medallion1",
-  MEDALLION_ETHER: "medallion2",
-  MEDALLION_QUAKE: "medallion3",
-  MEDALLION_UNKNOWN: "medallion0",
-  POI: "poi.png",
-};
 
 // Map Orientation Constants
 export const MAP_COORDINATES = {
   COORDINATE_MULTIPLIER: 2,
   PERCENTAGE_MULTIPLIER: 100,
   SPLIT_THRESHOLD: 0.5,
-};
-
-// Chest States
-export const CHEST_STATES = {
-  OPENED: 0,
-};
-
-// Availability Classes
-export const AVAILABILITY_CLASSES = {
-  OPENED: "opened",
 };
 
 // Grid Constants
@@ -112,11 +76,4 @@ export const KEYBOARD_NAVIGATION = {
   ARROW_LEFT: "ArrowLeft",
   ARROW_RIGHT: "ArrowRight",
   ARROW_UP: "ArrowUp",
-  ENTER: "Enter",
-  ESCAPE: "Escape",
-  SPACE: " ",
-  TAB: "Tab",
 } as const;
-
-// Empty String Constant
-export const EMPTY_STRING = "";
