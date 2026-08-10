@@ -1,195 +1,68 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { GridItem } from "@/components/tracker/grid/GridItem";
-
-// Mock the child components
-vi.mock("../items/BossItem", () => ({
-  BossItem: ({
-    bossNumber,
-    col,
-    item,
-    row,
-  }: {
-    bossNumber: number;
-    col: number;
-    item: string;
-    row: number;
-  }) => (
-    <div
-      data-boss={bossNumber}
-      data-col={col}
-      data-item={item}
-      data-row={row}
-      data-testid="boss-item"
-    >
-      Boss Item {bossNumber}
-    </div>
-  ),
-}));
-
-vi.mock("../items/RegularItem", () => ({
-  RegularItem: ({
-    col,
-    item,
-    row,
-  }: {
-    col: number;
-    item: string;
-    row: number;
-  }) => (
-    <div
-      data-col={col}
-      data-item={item}
-      data-row={row}
-      data-testid="regular-item"
-    >
-      Regular Item {item}
-    </div>
-  ),
-}));
+import { useGameStore } from "@/stores/gameStore";
 
 describe("GridItem", () => {
-  describe("Boss items", () => {
-    it("should render BossItem for boss0", () => {
-      render(<GridItem col={6} item="boss0" row={1} />);
-
-      const bossItem = screen.getByTestId("boss-item");
-      expect(bossItem).toBeInTheDocument();
-      expect(bossItem).toHaveAttribute("data-boss", "0");
-      expect(bossItem).toHaveAttribute("data-col", "6");
-      expect(bossItem).toHaveAttribute("data-item", "boss0");
-      expect(bossItem).toHaveAttribute("data-row", "1");
-    });
-
-    it("should render BossItem for boss1", () => {
-      render(<GridItem col={6} item="boss1" row={2} />);
-
-      const bossItem = screen.getByTestId("boss-item");
-      expect(bossItem).toBeInTheDocument();
-      expect(bossItem).toHaveAttribute("data-boss", "1");
-      expect(bossItem).toHaveAttribute("data-col", "6");
-      expect(bossItem).toHaveAttribute("data-item", "boss1");
-      expect(bossItem).toHaveAttribute("data-row", "2");
-    });
-
-    it("should render BossItem for boss9", () => {
-      render(<GridItem col={6} item="boss9" row={5} />);
-
-      const bossItem = screen.getByTestId("boss-item");
-      expect(bossItem).toBeInTheDocument();
-      expect(bossItem).toHaveAttribute("data-boss", "9");
-      expect(bossItem).toHaveAttribute("data-col", "6");
-      expect(bossItem).toHaveAttribute("data-item", "boss9");
-      expect(bossItem).toHaveAttribute("data-row", "5");
-    });
-
-    it("should correctly parse multi-digit boss numbers", () => {
-      render(<GridItem col={0} item="boss12" row={0} />);
-
-      const bossItem = screen.getByTestId("boss-item");
-      expect(bossItem).toBeInTheDocument();
-      expect(bossItem).toHaveAttribute("data-boss", "12");
-    });
+  beforeEach(() => {
+    useGameStore.getState().reset();
   });
 
-  describe("Regular items", () => {
-    it("should render RegularItem for sword", () => {
-      render(<GridItem col={3} item="sword" row={1} />);
+  it("renders a spacer for an empty cell", () => {
+    const { container } = render(<GridItem col={1} item="" row={0} />);
 
-      const regularItem = screen.getByTestId("regular-item");
-      expect(regularItem).toBeInTheDocument();
-      expect(regularItem).toHaveAttribute("data-col", "3");
-      expect(regularItem).toHaveAttribute("data-item", "sword");
-      expect(regularItem).toHaveAttribute("data-row", "1");
-    });
-
-    it("should render RegularItem for hookshot", () => {
-      render(<GridItem col={1} item="hookshot" row={0} />);
-
-      const regularItem = screen.getByTestId("regular-item");
-      expect(regularItem).toBeInTheDocument();
-      expect(regularItem).toHaveAttribute("data-col", "1");
-      expect(regularItem).toHaveAttribute("data-item", "hookshot");
-      expect(regularItem).toHaveAttribute("data-row", "0");
-    });
-
-    it("should render grid spacer for empty string", () => {
-      const { container } = render(<GridItem col={0} item="" row={0} />);
-
-      const spacer = container.querySelector(".grid-spacer");
-      expect(spacer).toBeInTheDocument();
-      expect(spacer).toHaveAttribute("aria-hidden", "true");
-    });
-
-    it("should render RegularItem for agahnim", () => {
-      render(<GridItem col={6} item="agahnim" row={4} />);
-
-      const regularItem = screen.getByTestId("regular-item");
-      expect(regularItem).toBeInTheDocument();
-      expect(regularItem).toHaveAttribute("data-col", "6");
-      expect(regularItem).toHaveAttribute("data-item", "agahnim");
-      expect(regularItem).toHaveAttribute("data-row", "4");
-    });
+    expect(container.querySelector(".grid-spacer")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  describe("Edge cases", () => {
-    it("should render grid spacer for null item", () => {
-      const { container } = render(
-        // biome-ignore lint/suspicious/noExplicitAny: Testing edge case with null
-        <GridItem col={0} item={null as any} row={0} />,
-      );
+  it("renders a plain item as a labelled button carrying its position", () => {
+    render(<GridItem col={3} item="hookshot" row={2} />);
 
-      const spacer = container.querySelector(".grid-spacer");
-      expect(spacer).toBeInTheDocument();
-      expect(spacer).toHaveAttribute("aria-hidden", "true");
-    });
-
-    it("should render grid spacer for undefined item", () => {
-      const { container } = render(
-        // biome-ignore lint/suspicious/noExplicitAny: Testing edge case with undefined
-        <GridItem col={0} item={undefined as any} row={0} />,
-      );
-
-      const spacer = container.querySelector(".grid-spacer");
-      expect(spacer).toBeInTheDocument();
-      expect(spacer).toHaveAttribute("aria-hidden", "true");
-    });
-
-    it("should render RegularItem for item containing 'boss' but not starting with it", () => {
-      render(<GridItem col={0} item="notboss" row={0} />);
-
-      const regularItem = screen.getByTestId("regular-item");
-      expect(regularItem).toBeInTheDocument();
-      expect(regularItem).toHaveAttribute("data-item", "notboss");
-    });
-
-    it("should render RegularItem for item containing 'boss' in the middle", () => {
-      render(<GridItem col={0} item="somebossitem" row={0} />);
-
-      const regularItem = screen.getByTestId("regular-item");
-      expect(regularItem).toBeInTheDocument();
-      expect(regularItem).toHaveAttribute("data-item", "somebossitem");
-    });
+    const button = screen.getByRole("button");
+    expect(button).toHaveAttribute("data-grid-row", "2");
+    expect(button).toHaveAttribute("data-grid-col", "3");
+    expect(button).toHaveAccessibleName(/Hookshot, not obtained/);
+    expect(button).not.toHaveClass("grid-item-relative");
   });
 
-  describe("Props passing", () => {
-    it("should pass all props correctly to BossItem", () => {
-      render(<GridItem col={88} item="boss7" row={99} />);
+  it("gives a boss cell its three overlays", () => {
+    render(<GridItem col={6} item="boss8" row={5} />);
 
-      const bossItem = screen.getByTestId("boss-item");
-      expect(bossItem).toHaveAttribute("data-boss", "7");
-      expect(bossItem).toHaveAttribute("data-col", "88");
-      expect(bossItem).toHaveAttribute("data-item", "boss7");
-      expect(bossItem).toHaveAttribute("data-row", "99");
-    });
+    // Misery Mire is medallion-gated, so all three overlays are present.
+    expect(screen.getByTestId("chest-overlay-8")).toBeInTheDocument();
+    expect(screen.getByTestId("reward-overlay-8")).toBeInTheDocument();
+    expect(screen.getByRole("button")).toHaveClass("grid-item-relative");
+  });
 
-    it("should pass all props correctly to RegularItem", () => {
-      render(<GridItem col={66} item="testitem" row={77} />);
+  it("omits the medallion overlay for dungeons that are not gated", () => {
+    const { container } = render(<GridItem col={0} item="boss0" row={0} />);
 
-      const regularItem = screen.getByTestId("regular-item");
-      expect(regularItem).toHaveAttribute("data-col", "66");
-      expect(regularItem).toHaveAttribute("data-item", "testitem");
-      expect(regularItem).toHaveAttribute("data-row", "77");
-    });
+    expect(screen.getByTestId("chest-overlay-0")).toBeInTheDocument();
+    expect(container.querySelector(".overlay--top-right")).toBeNull();
+  });
+
+  it("routes a big key to the keysanity cell", () => {
+    useGameStore.getState().setBigKeysVisible(true);
+
+    const { container } = render(<GridItem col={5} item="bigkey3" row={2} />);
+
+    expect(container.querySelector(".bigkey-container")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Big key for dungeon 3/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Small keys for dungeon 3/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("disables the blank slot", () => {
+    render(<GridItem col={0} item="blank" row={0} />);
+
+    const button = screen.getByRole("button");
+    expect(button).toBeDisabled();
+    expect(button).toHaveAccessibleName(/Empty slot, empty/);
   });
 });

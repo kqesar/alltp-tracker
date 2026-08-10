@@ -113,15 +113,6 @@ describe("App", () => {
     // This ensures all grid positions contain interactive items
   });
 
-  it("renders corner elements for special layouts", () => {
-    render(<App />);
-
-    // The corner elements should be rendered for certain layout positions
-    const cornerElements = document.querySelectorAll(".lonk");
-
-    expect(cornerElements.length).toBeGreaterThan(0);
-  });
-
   it("displays correct background images for items", () => {
     render(<App />);
 

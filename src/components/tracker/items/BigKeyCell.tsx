@@ -1,5 +1,4 @@
-import { BigKey } from "@/components/tracker/items/BigKey";
-import { SmallKey } from "@/components/tracker/items/SmallKey";
+import { KeyToggle } from "@/components/tracker/items/KeyToggle";
 import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -46,12 +45,22 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
 
         {/* Top Right - Big Key */}
         <div className="bigkey-quadrant bigkey-quadrant--top-right">
-          <BigKey col={col} dungeonIndex={dungeonIndex} row={row} />
+          <KeyToggle
+            col={col}
+            dungeonIndex={dungeonIndex}
+            row={row}
+            variant="big-key"
+          />
         </div>
 
         {/* Bottom Left - Small Key */}
         <div className="bigkey-quadrant bigkey-quadrant--bottom-left">
-          <SmallKey col={col} dungeonIndex={dungeonIndex} row={row} />
+          <KeyToggle
+            col={col}
+            dungeonIndex={dungeonIndex}
+            row={row}
+            variant="small-key"
+          />
         </div>
 
         {/* Bottom Right - Small Keys Count Display */}

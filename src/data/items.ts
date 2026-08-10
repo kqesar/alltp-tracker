@@ -99,3 +99,52 @@ export const itemsMin: Record<string, number> = Object.fromEntries(
 export const itemsMax: Record<string, number> = Object.fromEntries(
   numericEntries.map(([name, [, max]]) => [name, max]),
 );
+
+/** Dungeon bosses, in dungeon-index order. */
+const BOSS_NAMES = [
+  "Armos Knights",
+  "Lanmolas",
+  "Moldorm",
+  "Helmasaur King",
+  "Arrghus",
+  "Mothula",
+  "Blind the Thief",
+  "Kholdstare",
+  "Vitreous",
+  "Trinexx",
+];
+
+/** Item ids whose readable name is not just the capitalised id. */
+const ITEM_NAMES: Record<string, string> = {
+  bombos: "Bombos Medallion",
+  book: "Book of Mudora",
+  boots: "Pegasus Boots",
+  byrna: "Cane of Byrna",
+  cape: "Magic Cape",
+  ether: "Ether Medallion",
+  firerod: "Fire Rod",
+  flippers: "Zora's Flippers",
+  glove: "Power Glove",
+  icerod: "Ice Rod",
+  mirror: "Magic Mirror",
+  moonpearl: "Moon Pearl",
+  net: "Bug Net",
+  powder: "Magic Powder",
+  quake: "Quake Medallion",
+  somaria: "Cane of Somaria",
+};
+
+/**
+ * Human-readable name for an item id, used in accessibility labels.
+ * @param item - The item identifier, e.g. "moonpearl" or "boss3"
+ */
+export const itemLabels = (item: string): string => {
+  if (!item || item === "blank") return "Empty slot";
+
+  if (item.startsWith("boss")) {
+    const index = Number.parseInt(item.slice("boss".length), 10);
+    return BOSS_NAMES[index] ?? `Boss ${index}`;
+  }
+
+  return ITEM_NAMES[item] ?? item.charAt(0).toUpperCase() + item.slice(1);
+};

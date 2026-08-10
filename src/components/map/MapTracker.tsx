@@ -1,6 +1,8 @@
-import { DungeonBoss } from "@/components/map/DungeonBoss";
-import { DungeonChest } from "@/components/map/DungeonChest";
-import { MapChest } from "@/components/map/MapChest";
+import {
+  DungeonBoss,
+  DungeonChest,
+  MapChest,
+} from "@/components/map/MapMarkers";
 import { useGameStore } from "@/stores/gameStore";
 
 /**
