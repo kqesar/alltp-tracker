@@ -1,6 +1,5 @@
-import { BigKey } from "@/components/tracker/items/BigKey";
-import { SmallKey } from "@/components/tracker/items/SmallKey";
-import { CSS_CLASSES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { KeyToggle } from "@/components/tracker/items/KeyToggle";
+import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import { useGameStore } from "@/stores/gameStore";
 
 type BigKeyCellProps = {
@@ -22,7 +21,7 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
   if (!bigKeysVisible) {
     return (
       <div
-        className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE}`}
+        className="griditem grid-item-base"
         data-grid-col={col}
         data-grid-row={row}
         style={{ opacity: 0, pointerEvents: "none" }}
@@ -35,7 +34,7 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
 
   return (
     <div
-      className={`${CSS_CLASSES.GRIDITEM} ${CSS_CLASSES.GRID_ITEM_BASE} bigkey-container`}
+      className="griditem grid-item-base bigkey-container"
       data-grid-col={col}
       data-grid-row={row}
     >
@@ -46,12 +45,22 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
 
         {/* Top Right - Big Key */}
         <div className="bigkey-quadrant bigkey-quadrant--top-right">
-          <BigKey col={col} dungeonIndex={dungeonIndex} row={row} />
+          <KeyToggle
+            col={col}
+            dungeonIndex={dungeonIndex}
+            row={row}
+            variant="big-key"
+          />
         </div>
 
         {/* Bottom Left - Small Key */}
         <div className="bigkey-quadrant bigkey-quadrant--bottom-left">
-          <SmallKey col={col} dungeonIndex={dungeonIndex} row={row} />
+          <KeyToggle
+            col={col}
+            dungeonIndex={dungeonIndex}
+            row={row}
+            variant="small-key"
+          />
         </div>
 
         {/* Bottom Right - Small Keys Count Display */}

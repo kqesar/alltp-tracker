@@ -6,14 +6,17 @@ import { useGameStore } from "@/stores/gameStore";
 vi.mock("@/stores/gameStore", () => ({ useGameStore: vi.fn() }));
 
 const reset = vi.fn();
+const setMapLayout = vi.fn();
 const fakeState = {
   // PresetSelector is rendered inside TrackerControls, so its store fields
   // are needed too.
   applyPreset: vi.fn(),
   exportState: vi.fn(() => "{}"),
   importState: vi.fn(() => true),
+  mapLayout: "side-by-side" as "side-by-side" | "stacked",
   presetId: "open",
   reset,
+  setMapLayout,
   settings: {
     entranceShuffle: "none" as const,
     goal: "ganon" as const,
@@ -63,5 +66,30 @@ describe("TrackerControls", () => {
 
     expect(reset).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("offers to stack the map while it is side by side", () => {
+    render(<TrackerControls />);
+
+    const toggle = screen.getByRole("button", { name: /map/i });
+    expect(toggle).toHaveTextContent("Stacked map");
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(toggle);
+    expect(setMapLayout).toHaveBeenCalledWith("stacked");
+  });
+
+  it("offers to unstack the map once it is stacked", () => {
+    fakeState.mapLayout = "stacked";
+    render(<TrackerControls />);
+
+    const toggle = screen.getByRole("button", { name: /map/i });
+    expect(toggle).toHaveTextContent("Side-by-side map");
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(toggle);
+    expect(setMapLayout).toHaveBeenCalledWith("side-by-side");
+
+    fakeState.mapLayout = "side-by-side";
   });
 });

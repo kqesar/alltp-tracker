@@ -31,21 +31,6 @@
   height: 64px;
 }
 
-/* Item Grid Components */
-.lonk {
-  /* CSS Grid for 2x2 corner layout */
-  display: grid;
-  grid-template-rows: 32px 32px;
-  grid-template-columns: 32px 32px;
-  width: 64px;
-  height: 64px;
-}
-
-.corner {
-  width: 32px;
-  height: 32px;
-}
-
 /* Grid Item Components */
 .grid-spacer {
   width: 64px;
@@ -95,12 +80,10 @@
 }
 
 /* Item State Classes */
-.item-state--active,
 .true {
   opacity: 1;
 }
 
-.item-state--inactive,
 .false {
   opacity: 0.25;
 }

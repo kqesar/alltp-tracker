@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useGameStore } from "@/stores/gameStore";
 import App from "./App";
@@ -113,15 +113,6 @@ describe("App", () => {
     // This ensures all grid positions contain interactive items
   });
 
-  it("renders corner elements for special layouts", () => {
-    render(<App />);
-
-    // The corner elements should be rendered for certain layout positions
-    const cornerElements = document.querySelectorAll(".lonk");
-
-    expect(cornerElements.length).toBeGreaterThan(0);
-  });
-
   it("displays correct background images for items", () => {
     render(<App />);
 
@@ -201,5 +192,20 @@ describe("App", () => {
       fireEvent.click(hookshotButton);
       expect(hookshotButton).toHaveStyle("opacity: 0.25");
     }
+  });
+
+  it("stacks the map when the stacked layout is selected", () => {
+    useGameStore.getState().setMapLayout("side-by-side");
+    render(<App />);
+
+    expect(document.getElementById("layoutdiv")).not.toHaveClass(
+      "layout--stacked",
+    );
+
+    act(() => {
+      useGameStore.getState().setMapLayout("stacked");
+    });
+
+    expect(document.getElementById("layoutdiv")).toHaveClass("layout--stacked");
   });
 });

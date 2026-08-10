@@ -1,5 +1,4 @@
 import { useState } from "react";
-import "@/styles/index.css";
 import { MapLegend } from "@/components/map/MapLegend";
 import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
@@ -7,7 +6,6 @@ import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
 import { Caption } from "@/components/ui/Caption";
 import { Header } from "@/components/ui/Header";
 import { TrackerControls } from "@/components/ui/TrackerControls";
-import { CSS_CLASSES } from "@/constants";
 import { defaultItemGrid } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -17,7 +15,8 @@ import { useGameStore } from "@/stores/gameStore";
  */
 function App() {
   // Get state and actions from Zustand store
-  const { caption, bigKeysVisible, setBigKeysVisible } = useGameStore();
+  const { caption, bigKeysVisible, setBigKeysVisible, mapLayout } =
+    useGameStore();
 
   // Layout state (keep local as it doesn't need to be shared)
   const [itemLayout] = useState(defaultItemGrid);
@@ -32,13 +31,12 @@ function App() {
       <BigKeyToggle isVisible={bigKeysVisible} onToggle={setBigKeysVisible} />
       {/* Static IDs are intentional for SPA layout elements referenced by CSS and skip links */}
       <main className="main-content" id="main-content">
-        <div id="layoutdiv">
+        <div
+          className={mapLayout === "stacked" ? "layout--stacked" : undefined}
+          id="layoutdiv"
+        >
           <TrackerGrid itemLayout={itemLayout} />
-          <aside
-            aria-label="Map display"
-            className={CSS_CLASSES.MAPDIV}
-            id="mapdiv"
-          >
+          <aside aria-label="Map display" className="mapdiv" id="mapdiv">
             <MapTracker />
             <MapLegend />
           </aside>
@@ -46,7 +44,7 @@ function App() {
 
         <aside
           aria-label="Item information"
-          className={CSS_CLASSES.CAPTION_CONTAINER}
+          className="caption-container"
           id="caption"
         >
           <Caption text={caption} />

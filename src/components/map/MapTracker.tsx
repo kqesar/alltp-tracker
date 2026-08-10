@@ -1,7 +1,8 @@
-import { DungeonBoss } from "@/components/map/DungeonBoss";
-import { DungeonChest } from "@/components/map/DungeonChest";
-import { MapChest } from "@/components/map/MapChest";
-import { CSS_CLASSES } from "@/constants";
+import {
+  DungeonBoss,
+  DungeonChest,
+  MapChest,
+} from "@/components/map/MapMarkers";
 import { useGameStore } from "@/stores/gameStore";
 
 /**
@@ -14,13 +15,13 @@ export const MapTracker = () => {
   return (
     <section
       aria-label="Map tracker with locations and dungeons"
-      className={CSS_CLASSES.MAP_CONTAINER}
+      className="map-container"
       data-testid="map-tracker"
     >
       <h2 className="sr-only">Map Locations</h2>
       {/* Render chests */}
       {chestsState.map((chest, index) => (
-        <MapChest chest={chest} index={index} key={`chest-${chest.id}`} />
+        <MapChest chest={chest} index={index} key={`chest-${chest.name}`} />
       ))}
 
       {/* Render dungeon bosses */}
@@ -28,7 +29,7 @@ export const MapTracker = () => {
         <DungeonBoss
           dungeon={dungeon}
           index={index}
-          key={`boss-${dungeon.id}`}
+          key={`boss-${dungeon.image}`}
         />
       ))}
 
@@ -37,7 +38,7 @@ export const MapTracker = () => {
         <DungeonChest
           dungeon={dungeon}
           index={index}
-          key={`dungeon-${dungeon.id}`}
+          key={`dungeon-${dungeon.image}`}
         />
       ))}
     </section>

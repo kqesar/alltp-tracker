@@ -13,7 +13,11 @@ export const TrackerControls = () => {
   const reset = useGameStore((state) => state.reset);
   const exportState = useGameStore((state) => state.exportState);
   const importState = useGameStore((state) => state.importState);
+  const mapLayout = useGameStore((state) => state.mapLayout);
+  const setMapLayout = useGameStore((state) => state.setMapLayout);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isStacked = mapLayout === "stacked";
 
   const [isResetOpen, setIsResetOpen] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
@@ -76,6 +80,19 @@ export const TrackerControls = () => {
         type="button"
       >
         Import
+      </button>
+      <button
+        aria-pressed={isStacked}
+        className="tracker-controls__button"
+        onClick={() => setMapLayout(isStacked ? "side-by-side" : "stacked")}
+        title={
+          isStacked
+            ? "Show the two worlds side by side"
+            : "Stack the Dark World under the Light World"
+        }
+        type="button"
+      >
+        {isStacked ? "Side-by-side map" : "Stacked map"}
       </button>
       <input
         accept="application/json,.json"

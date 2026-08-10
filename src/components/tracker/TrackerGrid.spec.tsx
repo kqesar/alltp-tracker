@@ -1,253 +1,97 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 
-// Mock the GridRow component
-vi.mock("./grid/GridRow", () => ({
-  GridRow: ({ rowIndex, row }: { rowIndex: number; row: string[] }) => (
-    <div
-      data-row-index={rowIndex}
-      data-row-length={row.length}
-      data-testid="grid-row"
-    >
-      GridRow {rowIndex}: {row.join(",")}
-    </div>
-  ),
-}));
+/** Query the grid cell rendered at a given layout position. */
+const cellAt = (row: number, col: number) =>
+  document.querySelector(`[data-grid-row="${row}"][data-grid-col="${col}"]`);
 
 describe("TrackerGrid", () => {
-  describe("Basic rendering", () => {
-    it("should render itemdiv container with correct classes and id", () => {
-      const testLayout = [
-        ["item1", "item2"],
-        ["item3", "item4"],
-      ];
+  it("renders the labelled grid container", () => {
+    render(<TrackerGrid itemLayout={[["hookshot", "hammer"]]} />);
 
-      render(<TrackerGrid itemLayout={testLayout} />);
-
-      const container = document.getElementById("itemdiv");
-      expect(container).toBeInTheDocument();
-      expect(container).toHaveClass("itemdiv");
-    });
-
-    it("should render correct number of GridRow components", () => {
-      const testLayout = [
-        ["hookshot", "hammer"],
-        ["sword", "shield"],
-        ["bow", "boomerang"],
-      ];
-
-      render(<TrackerGrid itemLayout={testLayout} />);
-
-      const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(3);
-    });
-
-    it("should pass correct props to each GridRow", () => {
-      const testLayout = [
-        ["hookshot", "hammer", "firerod"],
-        ["sword", "shield"],
-      ];
-
-      render(<TrackerGrid itemLayout={testLayout} />);
-
-      const gridRows = screen.getAllByTestId("grid-row");
-
-      expect(gridRows[0]).toHaveAttribute("data-row-index", "0");
-      expect(gridRows[0]).toHaveAttribute("data-row-length", "3");
-      expect(gridRows[0]).toHaveTextContent(
-        "GridRow 0: hookshot,hammer,firerod",
-      );
-
-      expect(gridRows[1]).toHaveAttribute("data-row-index", "1");
-      expect(gridRows[1]).toHaveAttribute("data-row-length", "2");
-      expect(gridRows[1]).toHaveTextContent("GridRow 1: sword,shield");
-    });
+    const container = document.getElementById("itemdiv");
+    expect(container).toBeInTheDocument();
+    expect(container).toHaveClass("itemdiv");
+    expect(container).toHaveAttribute("aria-label", "Item tracker grid");
   });
 
-  describe("Grid layout handling", () => {
-    it("should handle empty grid layout", () => {
-      render(<TrackerGrid itemLayout={[]} />);
+  it("renders one row per layout row, tagged with its index and length", () => {
+    render(
+      <TrackerGrid
+        itemLayout={[
+          ["hookshot", "hammer", "firerod"],
+          ["sword", "shield"],
+        ]}
+      />,
+    );
 
-      const container = document.getElementById("itemdiv");
-      expect(container).toBeInTheDocument();
-
-      // Container should only have the screen reader heading
-      const heading = screen.getByText("Item Tracker");
-      expect(heading).toBeInTheDocument();
-      expect(heading).toHaveClass("sr-only");
-
-      const gridRows = screen.queryAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(0);
-    });
-
-    it("should handle rows with empty items", () => {
-      const testLayout = [
-        ["", "hammer", ""],
-        ["sword", "", "shield"],
-      ];
-
-      render(<TrackerGrid itemLayout={testLayout} />);
-
-      const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(2);
-
-      expect(gridRows[0]).toHaveTextContent("GridRow 0: ,hammer,");
-      expect(gridRows[1]).toHaveTextContent("GridRow 1: sword,,shield");
-    });
-
-    it("should handle single row", () => {
-      const testLayout = [["hookshot", "hammer", "firerod", "icerod"]];
-
-      render(<TrackerGrid itemLayout={testLayout} />);
-
-      const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(1);
-      expect(gridRows[0]).toHaveAttribute("data-row-index", "0");
-      expect(gridRows[0]).toHaveAttribute("data-row-length", "4");
-    });
-
-    it("should handle large grid layout", () => {
-      const testLayout = Array(10)
-        .fill(0)
-        .map((_, i) =>
-          Array(7)
-            .fill(0)
-            .map((_, j) => `item${i}-${j}`),
-        );
-
-      render(<TrackerGrid itemLayout={testLayout} />);
-
-      const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(10);
-
-      // Check first and last rows
-      expect(gridRows[0]).toHaveAttribute("data-row-index", "0");
-      expect(gridRows[9]).toHaveAttribute("data-row-index", "9");
-    });
+    const rows = screen.getAllByTestId("grid-row");
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveAttribute("data-row-index", "0");
+    expect(rows[0]).toHaveAttribute("data-row-length", "3");
+    expect(rows[1]).toHaveAttribute("data-row-index", "1");
+    expect(rows[1]).toHaveAttribute("data-row-length", "2");
   });
 
-  describe("Key generation", () => {
-    it("should generate unique keys for each row", () => {
-      const testLayout = [
-        ["hookshot", "hammer"],
-        ["sword", "shield"],
-        ["bow", "boomerang"],
-      ];
+  it("renders an interactive button per item, addressable by grid position", () => {
+    render(
+      <TrackerGrid
+        itemLayout={[
+          ["hookshot", "hammer"],
+          ["sword", "boss0"],
+        ]}
+      />,
+    );
 
-      render(<TrackerGrid itemLayout={testLayout} />);
-
-      // Keys are internal to React, but we can verify all rows render correctly
-      const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(3);
-
-      gridRows.forEach((row, index) => {
-        expect(row).toHaveAttribute("data-row-index", index.toString());
-      });
-    });
+    expect(cellAt(0, 0)).toHaveAttribute(
+      "aria-label",
+      expect.stringContaining("Hookshot"),
+    );
+    expect(cellAt(1, 0)).toHaveAttribute(
+      "aria-label",
+      expect.stringContaining("Sword"),
+    );
+    expect(cellAt(1, 1)).toHaveAttribute(
+      "aria-label",
+      expect.stringContaining("Armos Knights"),
+    );
   });
 
-  describe("Real-world scenarios", () => {
-    it("should handle typical LttP tracker layout structure", () => {
-      const lttpLayout = [
-        ["", "hookshot", "hammer", "firerod", "icerod", "boomerang", ""],
-        ["bow", "lantern", "flute", "sword", "tunic", "shield", "boss0"],
-        ["flute", "book", "mirror", "bombos", "ether", "quake", "boss1"],
-        ["shovel", "glove", "bottle", "somaria", "byrna", "boots", "boss2"],
-        [
-          "powder",
-          "mushroom",
-          "cape",
-          "mirror",
-          "moonpearl",
-          "flippers",
-          "agahnim",
-        ],
-        ["boss3", "boss4", "boss5", "boss6", "boss7", "boss8", "boss9"],
-      ];
+  it("renders a hidden spacer instead of a button for empty cells", () => {
+    render(<TrackerGrid itemLayout={[["", "hammer"]]} />);
 
-      render(<TrackerGrid itemLayout={lttpLayout} />);
+    // The empty cell produces no addressable button...
+    expect(cellAt(0, 0)).toBeNull();
+    expect(cellAt(0, 1)).toBeInTheDocument();
 
-      const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(6);
-
-      // Check that boss items are in the right places
-      expect(gridRows[1]).toHaveTextContent("boss0");
-      expect(gridRows[2]).toHaveTextContent("boss1");
-      expect(gridRows[5]).toHaveTextContent(
-        "boss3,boss4,boss5,boss6,boss7,boss8,boss9",
-      );
-    });
-
-    it("should handle boss-heavy row correctly", () => {
-      const bossRow = [
-        ["boss0", "boss1", "boss2", "boss3", "boss4", "boss5", "boss6"],
-      ];
-
-      render(<TrackerGrid itemLayout={bossRow} />);
-
-      const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(1);
-      expect(gridRows[0]).toHaveTextContent(
-        "boss0,boss1,boss2,boss3,boss4,boss5,boss6",
-      );
-    });
-
-    it("should handle mixed item types in rows", () => {
-      const mixedLayout = [
-        ["hookshot", "", "boss0", "sword", "", "shield", "boss1"],
-        ["", "", "", "", "", "", ""],
-        ["item1", "item2", "item3", "item4", "item5", "item6", "item7"],
-      ];
-
-      render(<TrackerGrid itemLayout={mixedLayout} />);
-
-      const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(3);
-
-      expect(gridRows[0]).toHaveTextContent(
-        "hookshot,,boss0,sword,,shield,boss1",
-      );
-      expect(gridRows[1]).toHaveTextContent(",,,,,,");
-      expect(gridRows[2]).toHaveTextContent(
-        "item1,item2,item3,item4,item5,item6,item7",
-      );
-    });
+    // ...but still occupies a grid slot so columns stay aligned.
+    const spacer = document.querySelector(".grid-spacer");
+    expect(spacer).toBeInTheDocument();
+    expect(spacer).toHaveAttribute("aria-hidden", "true");
   });
 
-  describe("Edge cases", () => {
-    it("should handle rows with different lengths", () => {
-      const unevenLayout = [
-        ["item1"],
-        ["item2", "item3", "item4"],
-        ["item5", "item6"],
-      ];
+  it("keeps each row flanked by half-cell spacers", () => {
+    render(<TrackerGrid itemLayout={[["hookshot"]]} />);
 
-      render(<TrackerGrid itemLayout={unevenLayout} />);
+    const row = screen.getByTestId("grid-row");
+    expect(row.querySelectorAll(".halfcell")).toHaveLength(2);
+  });
 
-      const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(3);
+  it("caps a row at seven columns", () => {
+    const tenItems = Array.from({ length: 10 }, (_, i) => `item${i}`);
 
-      expect(gridRows[0]).toHaveAttribute("data-row-length", "1");
-      expect(gridRows[1]).toHaveAttribute("data-row-length", "3");
-      expect(gridRows[2]).toHaveAttribute("data-row-length", "2");
-    });
+    render(<TrackerGrid itemLayout={[tenItems]} />);
 
-    it("should handle very long item names", () => {
-      const longItemLayout = [
-        [
-          "very-long-item-name-that-exceeds-normal-length",
-          "another-extremely-long-item-identifier",
-        ],
-      ];
+    expect(cellAt(0, 6)).toBeInTheDocument();
+    expect(cellAt(0, 7)).toBeNull();
+  });
 
-      render(<TrackerGrid itemLayout={longItemLayout} />);
+  it("renders an empty layout without crashing", () => {
+    render(<TrackerGrid itemLayout={[]} />);
 
-      const gridRows = screen.getAllByTestId("grid-row");
-      expect(gridRows).toHaveLength(1);
-      expect(gridRows[0]).toHaveTextContent(
-        "very-long-item-name-that-exceeds-normal-length,another-extremely-long-item-identifier",
-      );
-    });
+    expect(document.getElementById("itemdiv")).toBeInTheDocument();
+    expect(screen.queryAllByTestId("grid-row")).toHaveLength(0);
+    expect(screen.getByText("Item Tracker")).toHaveClass("sr-only");
   });
 });

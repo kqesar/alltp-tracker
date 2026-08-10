@@ -1,43 +1,17 @@
-// CSS Class Names
-export const CSS_CLASSES = {
-  CAPTION_CONTAINER: "caption-container",
-  CORNER: "corner",
-  GRID_ITEM_BASE: "grid-item-base",
-  GRID_ITEM_RELATIVE: "grid-item-relative",
-  GRID_SPACER: "grid-spacer",
-  GRIDITEM: "griditem",
-  HALFCELL: "halfcell",
+/**
+ * Values that carry game meaning and are shared across modules. Plain CSS class
+ * names are written literally in the JSX instead: aliasing "griditem" to
+ * CSS_CLASSES.GRIDITEM only made the markup harder to grep against the
+ * stylesheets.
+ */
 
-  // Layout classes
-  ITEMDIV: "itemdiv",
-
-  // Special classes
-  LONK: "lonk",
-  MAP_CHEST: "map-chest",
-  MAP_CONTAINER: "map-container",
-  MAP_ELEMENT_BASE: "map-element-base",
-  MAPDIV: "mapdiv",
-
-  // Map element classes
-  MAPSPAN: "mapspan",
-  MINI: "mini",
-
-  // Overlay classes
-  OVERLAY_BASE: "overlay-base",
-  OVERLAY_BOTTOM_LEFT: "overlay--bottom-left",
-  OVERLAY_BOTTOM_RIGHT: "overlay--bottom-right",
-  OVERLAY_TOP_RIGHT: "overlay--top-right",
-  // Grid and tracker classes
-  TRACKER: "tracker",
-};
-
-// Dungeon Indices
+/** Dungeons whose entrance is gated behind a medallion. */
 export const DUNGEON_INDICES = {
   MISERY_MIRE: 8,
   TURTLE_ROCK: 9,
 };
 
-// Medallion Values
+/** Value stored in medallions[dungeonIndex]. */
 export const MEDALLION_VALUES = {
   BOMBOS: 1,
   ETHER: 2,
@@ -45,78 +19,26 @@ export const MEDALLION_VALUES = {
   UNKNOWN: 0,
 };
 
-// Glove (gauntlet) progression levels
+/** Glove (gauntlet) progression levels. */
 export const GLOVE_LEVELS = {
-  NONE: 0,
-  POWER: 1, // Power Glove
   TITAN: 2, // Titan's Mitt
 } as const;
 
-// Boss progression states (value stored in items.bossN)
+/** Boss progression state stored in items.bossN. */
 export const BOSS_STATES = {
   BEATEN: 2,
-  UNBEATEN: 0,
 } as const;
 
-// Small Keys Maximum Values per Dungeon
-export const SMALL_KEYS_MAX = {
-  DESERT_PALACE: 1, // smallkey1
-  EASTERN_PALACE: 1, // smallkey0
-  ICE_PALACE: 2, // smallkey7
-  MISERY_MIRE: 3, // smallkey8
-  PALACE_OF_DARKNESS: 6, // smallkey3
-  SKULL_WOODS: 3, // smallkey5
-  SWAMP_PALACE: 1, // smallkey4
-  THIEVES_TOWN: 1, // smallkey6
-  TOWER_OF_HERA: 1, // smallkey2
-  TURTLE_ROCK: 4, // smallkey9
-} as const;
-
-// Small Keys Maximum Values per Dungeon Index (ordered by dungeon index 0-9)
+/** Small keys available per dungeon, indexed by dungeon index 0-9. */
 export const SMALL_KEYS_MAX_BY_INDEX = [1, 1, 1, 6, 1, 3, 1, 2, 3, 4] as const;
 
-// Asset Names
-export const ASSET_NAMES = {
-  MEDALLION_BOMBOS: "medallion1",
-  MEDALLION_ETHER: "medallion2",
-  MEDALLION_QUAKE: "medallion3",
-  MEDALLION_UNKNOWN: "medallion0",
-  POI: "poi.png",
-};
+/** Columns rendered per tracker grid row. */
+export const ITEMS_PER_ROW = 7;
 
-// Map Orientation Constants
-export const MAP_COORDINATES = {
-  COORDINATE_MULTIPLIER: 2,
-  PERCENTAGE_MULTIPLIER: 100,
-  SPLIT_THRESHOLD: 0.5,
-};
-
-// Chest States
-export const CHEST_STATES = {
-  OPENED: 0,
-};
-
-// Availability Classes
-export const AVAILABILITY_CLASSES = {
-  OPENED: "opened",
-};
-
-// Grid Constants
-export const GRID_CONSTANTS = {
-  ITEMS_PER_ROW: 7,
-};
-
-// Keyboard Navigation Constants
+/** Arrow keys handled by the grid navigation. */
 export const KEYBOARD_NAVIGATION = {
   ARROW_DOWN: "ArrowDown",
   ARROW_LEFT: "ArrowLeft",
   ARROW_RIGHT: "ArrowRight",
   ARROW_UP: "ArrowUp",
-  ENTER: "Enter",
-  ESCAPE: "Escape",
-  SPACE: " ",
-  TAB: "Tab",
 } as const;
-
-// Empty String Constant
-export const EMPTY_STRING = "";

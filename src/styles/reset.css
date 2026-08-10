@@ -1,4 +1,4 @@
-/* Root Element Override - Prevent Tailwind conflicts */
+/* Root element: undo the Vite starter's centred, width-capped layout */
 #root {
   width: 100%;
   max-width: none;
@@ -104,7 +104,7 @@ button:disabled {
   transform: none;
 }
 
-/* Specific Caption Overrides for Tailwind */
+/* Inline item icons inside caption text */
 #caption img.mini {
   display: inline-block;
   width: 16px;
@@ -116,17 +116,6 @@ button:disabled {
   image-rendering: pixelated;
   border: none;
   box-shadow: none;
-}
-
-/* Accessibility Improvements */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms;
-    animation-duration: 0.01ms;
-    animation-iteration-count: 1;
-  }
 }
 
 #layoutdiv {

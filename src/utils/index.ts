@@ -1,6 +1,5 @@
-import { MAP_COORDINATES } from "@/constants";
-import type { ItemState } from "@/data/chests";
 import { itemsMin } from "@/data/items";
+import type { ItemState } from "@/data/logic";
 
 /**
  * Gets the correct asset path with base URL support
@@ -17,7 +16,7 @@ export const getAssetPath = (assetPath: string): string => {
  * @param items - Current item state
  * @returns CSS background-image value (empty string for blank slots)
  */
-export const getItemBackground = (item: string, items: ItemState): string => {
+const getItemBackground = (item: string, items: ItemState): string => {
   if (!item || item === "blank") return "";
   // Big keys all share a single image
   if (item.startsWith("bigkey")) return `url(${getAssetPath("bigkey.png")})`;
@@ -33,7 +32,7 @@ export const getItemBackground = (item: string, items: ItemState): string => {
  * @param items - Current item state
  * @returns Opacity value as a string
  */
-export const getItemOpacity = (item: string, items: ItemState): string => {
+const getItemOpacity = (item: string, items: ItemState): string => {
   if (!item || item === "blank") return "0.25";
   if (item.startsWith("bigkey")) {
     return (items[item] as number) === 1 ? "1" : "0.25";
@@ -41,7 +40,8 @@ export const getItemOpacity = (item: string, items: ItemState): string => {
   if (typeof items[item] === "boolean") {
     return items[item] ? "1" : "0.25";
   }
-  if (typeof items[item] === "number" && item.indexOf("boss") === 0) {
+  // A boss icon is always drawn at full strength; its overlays carry the state.
+  if (typeof items[item] === "number" && item.startsWith("boss")) {
     return "1";
   }
   const minValue = itemsMin[item] || 0;
@@ -59,34 +59,40 @@ export const getGridItemStyles = (item: string, items: ItemState) => ({
 });
 
 /**
- * Transforms a map marker's percentage coordinates for the current map
- * orientation. In vertical orientation the light and dark worlds are stacked,
- * so the right half of the map is moved below the left half.
+ * How the two worlds are arranged on screen.
+ * - `side-by-side`: as the map asset stores them, Light World left, Dark right
+ * - `stacked`: Light World on top, Dark World below, for tall/narrow screens
+ */
+export type MapLayout = "side-by-side" | "stacked";
+
+/** Midpoint of the map asset, where the Light World ends and the Dark begins. */
+const WORLD_SPLIT = 0.5;
+
+/**
+ * Re-projects a marker's percentage coordinates for the current layout.
+ *
+ * Marker coordinates are authored against the side-by-side asset. Stacked,
+ * each world spans the full width and half the height, so a marker's x doubles
+ * within its own half while its y halves — shifted into the lower half for
+ * Dark World markers.
  * @param x - Horizontal position as a percentage string (e.g. "46.8%")
  * @param y - Vertical position as a percentage string
- * @param mapOrientation - true when the map is shown vertically (stacked)
- * @returns The transformed { x, y } percentage strings
+ * @param layout - The arrangement currently on screen
+ * @returns The percentage strings to position the marker with
  */
 export const transformMapCoordinates = (
   x: string,
   y: string,
-  mapOrientation: boolean,
+  layout: MapLayout,
 ): { x: string; y: string } => {
-  if (!mapOrientation) return { x, y };
+  if (layout === "side-by-side") return { x, y };
 
-  const { COORDINATE_MULTIPLIER, PERCENTAGE_MULTIPLIER, SPLIT_THRESHOLD } =
-    MAP_COORDINATES;
-  const xNum = parseFloat(x) / PERCENTAGE_MULTIPLIER;
-  const yNum = parseFloat(y) / PERCENTAGE_MULTIPLIER;
+  const xFraction = Number.parseFloat(x) / 100;
+  const yFraction = Number.parseFloat(y) / 100;
+  const isDarkWorld = xFraction > WORLD_SPLIT;
 
-  if (xNum > SPLIT_THRESHOLD) {
-    return {
-      x: `${(xNum - SPLIT_THRESHOLD) * COORDINATE_MULTIPLIER * PERCENTAGE_MULTIPLIER}%`,
-      y: `${(yNum / COORDINATE_MULTIPLIER + SPLIT_THRESHOLD) * PERCENTAGE_MULTIPLIER}%`,
-    };
-  }
-  return {
-    x: `${xNum * COORDINATE_MULTIPLIER * PERCENTAGE_MULTIPLIER}%`,
-    y: `${(yNum / COORDINATE_MULTIPLIER) * PERCENTAGE_MULTIPLIER}%`,
-  };
+  const stackedX = (isDarkWorld ? xFraction - WORLD_SPLIT : xFraction) * 2;
+  const stackedY = yFraction / 2 + (isDarkWorld ? WORLD_SPLIT : 0);
+
+  return { x: `${stackedX * 100}%`, y: `${stackedY * 100}%` };
 };

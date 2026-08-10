@@ -1,17 +1,17 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { useShallow } from "zustand/react/shallow";
 import { DUNGEON_INDICES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { chests as initialChests } from "@/data/chests";
+import { dungeons as initialDungeons } from "@/data/dungeons";
+import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
 import {
   buildDungeonCaption,
   type ChestItem,
   type DungeonItem,
   type ItemState,
-  chests as initialChests,
-  dungeons as initialDungeons,
-} from "@/data/chests";
-import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
+} from "@/data/logic";
 import { DEFAULT_PRESET_ID, getPreset, type RunSettings } from "@/data/presets";
+import type { MapLayout } from "@/utils";
 
 /**
  * Serializable snapshot of the tracker progress.
@@ -24,6 +24,7 @@ type PersistedState = {
   medallions: number[];
   smallKeys: number[];
   bigKeysVisible: boolean;
+  mapLayout: MapLayout;
   chestsOpened: boolean[];
   dungeonsBeaten: boolean[];
   presetId: string;
@@ -37,8 +38,8 @@ interface GameState {
   dungeonsState: DungeonItem[];
   medallions: number[];
   caption: string;
-  mapOrientation: boolean;
   bigKeysVisible: boolean;
+  mapLayout: MapLayout;
   smallKeys: number[]; // Array of 10 dungeons (0-9) with small key counts
 
   // Run-type preset
@@ -56,6 +57,7 @@ interface GameState {
   setChestsState: (chests: ChestItem[]) => void;
   setDungeonsState: (dungeons: DungeonItem[]) => void;
   setBigKeysVisible: (visible: boolean) => void;
+  setMapLayout: (layout: MapLayout) => void;
 
   // Persistence helpers
   exportState: () => string;
@@ -78,13 +80,23 @@ const createInitialState = (presetId: string = DEFAULT_PRESET_ID) => {
     chestsState: initialChests.map((chest) => ({ ...chest })),
     dungeonsState: initialDungeons.map((dungeon) => ({ ...dungeon })),
     items: { ...initialItems } as ItemState,
-    mapOrientation: false,
-    medallions: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    mapLayout: "side-by-side" as MapLayout,
+    medallions: Array(10).fill(0) as number[],
     presetId: preset.id,
     settings: preset.settings,
-    smallKeys: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 10 dungeons, all start at 0
+    smallKeys: Array(10).fill(0) as number[], // 10 dungeons, all start at 0
   };
 };
+
+/** Flip one boolean flag on one entry, leaving the rest of the array alone. */
+const toggleFlagAt = <T, K extends keyof T>(
+  entries: T[],
+  target: number,
+  flag: K,
+): T[] =>
+  entries.map((entry, index) =>
+    index === target ? { ...entry, [flag]: !entry[flag] } : entry,
+  );
 
 /** Project the current progress into its serializable form. */
 const toPersisted = (state: GameState): PersistedState => ({
@@ -92,6 +104,7 @@ const toPersisted = (state: GameState): PersistedState => ({
   chestsOpened: state.chestsState.map((chest) => chest.isOpened),
   dungeonsBeaten: state.dungeonsState.map((dungeon) => dungeon.isBeaten),
   items: state.items,
+  mapLayout: state.mapLayout,
   medallions: state.medallions,
   presetId: state.presetId,
   settings: state.settings,
@@ -119,6 +132,7 @@ const applyPersisted = <T extends ReturnType<typeof createInitialState>>(
   items: persisted.items
     ? ({ ...base.items, ...persisted.items } as ItemState)
     : base.items,
+  mapLayout: persisted.mapLayout ?? base.mapLayout,
   medallions: persisted.medallions ?? base.medallions,
   presetId: persisted.presetId ?? base.presetId,
   settings: persisted.settings ?? base.settings,
@@ -139,31 +153,26 @@ export const useGameStore = create<GameState>()(
           if (!item || item === "blank") return;
 
           const { items } = get();
-          const newItems = { ...items };
+          const current = items[item];
 
-          if (typeof items[item] === "boolean") {
-            newItems[item] = !newItems[item];
-          } else {
-            // Special logic for chest items - decrement instead of increment
-            if (item.startsWith("chest")) {
-              newItems[item] = (newItems[item] as number) - 1;
-              const maxValue = itemsMax[item];
-              const minValue = itemsMin[item];
-              if (newItems[item] < minValue) {
-                newItems[item] = maxValue;
-              }
-            } else {
-              // Normal increment logic for other items
-              newItems[item] = (newItems[item] as number) + 1;
-              const maxValue = itemsMax[item];
-              const minValue = itemsMin[item];
-              if (newItems[item] > maxValue) {
-                newItems[item] = minValue;
-              }
-            }
+          if (typeof current === "boolean") {
+            set({ items: { ...items, [item]: !current } });
+            return;
           }
 
-          set({ items: newItems });
+          // Chest counters count down as chests are emptied; everything else
+          // counts up. Both wrap round to the far end of their range.
+          const step = item.startsWith("chest") ? -1 : 1;
+          const min = itemsMin[item];
+          const max = itemsMax[item];
+          const next = current + step;
+
+          set({
+            items: {
+              ...items,
+              [item]: next < min ? max : next > max ? min : next,
+            },
+          });
         },
 
         handleMedallionChange: (bossNumber: number, newValue: number) => {
@@ -233,21 +242,23 @@ export const useGameStore = create<GameState>()(
         setDungeonsState: (dungeons: DungeonItem[]) =>
           set({ dungeonsState: dungeons }),
 
+        setMapLayout: (layout: MapLayout) => set({ mapLayout: layout }),
+
         toggleChest: (chestIndex: number) =>
           set((state) => ({
-            chestsState: state.chestsState.map((chest, index) =>
-              index === chestIndex
-                ? { ...chest, isOpened: !chest.isOpened }
-                : chest,
+            chestsState: toggleFlagAt(
+              state.chestsState,
+              chestIndex,
+              "isOpened",
             ),
           })),
 
         toggleDungeonBoss: (dungeonIndex: number) =>
           set((state) => ({
-            dungeonsState: state.dungeonsState.map((dungeon, index) =>
-              index === dungeonIndex
-                ? { ...dungeon, isBeaten: !dungeon.isBeaten }
-                : dungeon,
+            dungeonsState: toggleFlagAt(
+              state.dungeonsState,
+              dungeonIndex,
+              "isBeaten",
             ),
           })),
       }),
@@ -266,20 +277,3 @@ export const useGameStore = create<GameState>()(
     },
   ),
 );
-
-// Selectors to optimize re-renders
-export const useItems = () => useGameStore((state) => state.items);
-export const useChests = () => useGameStore((state) => state.chestsState);
-export const useDungeons = () => useGameStore((state) => state.dungeonsState);
-export const useMedallions = () => useGameStore((state) => state.medallions);
-export const useCaption = () => useGameStore((state) => state.caption);
-export const useGameActions = () =>
-  useGameStore(
-    useShallow((state) => ({
-      handleItemClick: state.handleItemClick,
-      handleMedallionChange: state.handleMedallionChange,
-      setCaption: state.setCaption,
-      toggleChest: state.toggleChest,
-      toggleDungeonBoss: state.toggleDungeonBoss,
-    })),
-  );

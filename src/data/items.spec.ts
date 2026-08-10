@@ -1,359 +1,107 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultItemGrid,
-  dungeonchests,
+  itemLabels,
   items,
   itemsMax,
   itemsMin,
 } from "@/data/items";
 
-describe("items data", () => {
-  it("should export a valid items object", () => {
-    expect(typeof items).toBe("object");
-    expect(items).not.toBeNull();
-    expect(Object.keys(items).length).toBeGreaterThan(0);
-  });
+const dungeonIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-  it("should have consistent boolean items", () => {
-    const booleanItems = [
-      "blank",
-      "bombos",
-      "book",
-      "boots",
-      "byrna",
-      "cape",
-      "ether",
-      "firerod",
-      "flippers",
-      "flute",
-      "hammer",
-      "hookshot",
-      "icerod",
-      "lantern",
-      "mirror",
-      "moonpearl",
-      "mushroom",
-      "net",
-      "powder",
-      "quake",
-      "shovel",
-      "somaria",
-    ];
+describe("item ranges", () => {
+  it("starts every progressive item inside its own bounds", () => {
+    Object.keys(itemsMin).forEach((name) => {
+      const value = items[name] as number;
 
-    booleanItems.forEach((item) => {
-      expect(items).toHaveProperty(item);
-      expect(typeof items[item]).toBe("boolean");
+      expect(itemsMin[name]).toBeLessThanOrEqual(itemsMax[name]);
+      expect(value).toBeGreaterThanOrEqual(itemsMin[name]);
+      expect(value).toBeLessThanOrEqual(itemsMax[name]);
     });
   });
 
-  it("should have consistent numeric items", () => {
-    const numericItems = [
-      "agahnim",
-      "boomerang",
-      "boss0",
-      "boss1",
-      "boss2",
-      "boss3",
-      "boss4",
-      "boss5",
-      "boss6",
-      "boss7",
-      "boss8",
-      "boss9",
-      "bottle",
-      "bow",
-      "chest0",
-      "chest1",
-      "chest2",
-      "chest3",
-      "chest4",
-      "chest5",
-      "chest6",
-      "chest7",
-      "chest8",
-      "chest9",
-      "dungeon",
-      "glove",
-      "reward0",
-      "reward1",
-      "reward2",
-      "reward3",
-      "reward4",
-      "reward5",
-      "reward6",
-      "reward7",
-      "reward8",
-      "reward9",
-      "shield",
-      "sword",
-      "tunic",
-    ];
+  it("bounds min and max to exactly the progressive items", () => {
+    expect(Object.keys(itemsMin).sort()).toEqual(Object.keys(itemsMax).sort());
 
-    numericItems.forEach((item) => {
-      expect(items).toHaveProperty(item);
-      expect(typeof items[item]).toBe("number");
-      expect(items[item]).toBeGreaterThanOrEqual(0);
+    Object.keys(itemsMin).forEach((name) => {
+      expect(typeof items[name]).toBe("number");
     });
   });
 
-  it("should have valid initial values", () => {
-    // Check some specific initial values
-    expect(items.tunic).toBe(1); // Should start with green tunic
-    expect(items.agahnim).toBe(0); // Should start without Agahnim defeated
-    expect(items.hookshot).toBe(false); // Should start without hookshot
-    expect(items.glove).toBe(0); // Should start without gloves
+  it("keeps the documented bounds for the progressive items", () => {
+    expect([itemsMin.sword, itemsMax.sword]).toEqual([0, 4]);
+    expect([itemsMin.glove, itemsMax.glove]).toEqual([0, 2]);
+    expect([itemsMin.bow, itemsMax.bow]).toEqual([0, 3]);
+    expect([itemsMin.bottle, itemsMax.bottle]).toEqual([0, 4]);
+    // The tunic is never lost, so it starts at and never drops below 1.
+    expect([itemsMin.tunic, itemsMax.tunic, items.tunic]).toEqual([1, 3, 1]);
+  });
 
-    // Boss states should start at 1 (not beaten)
-    for (let i = 0; i <= 9; i++) {
-      expect(items[`boss${i}`]).toBe(1);
-    }
+  it("starts each dungeon with its full chest count and a live boss", () => {
+    const expectedChests = [3, 2, 2, 5, 6, 2, 4, 3, 2, 5];
 
-    // Chest counts should be positive
-    for (let i = 0; i <= 9; i++) {
-      expect(items[`chest${i}`]).toBeGreaterThan(0);
-    }
+    dungeonIndices.forEach((index) => {
+      // Chest counters start full and are counted down.
+      expect(items[`chest${index}`]).toBe(expectedChests[index]);
+      expect(itemsMax[`chest${index}`]).toBe(expectedChests[index]);
+      expect(itemsMin[`chest${index}`]).toBe(0);
+
+      expect(items[`boss${index}`]).toBe(1);
+      expect(items[`bigkey${index}`]).toBe(0);
+      expect(items[`reward${index}`]).toBe(0);
+    });
+  });
+
+  it("starts every non-progressive item unheld", () => {
+    Object.entries(items)
+      .filter(([, value]) => typeof value === "boolean")
+      .forEach(([, value]) => {
+        expect(value).toBe(false);
+      });
   });
 });
 
 describe("defaultItemGrid", () => {
-  it("should export a valid grid layout", () => {
-    expect(Array.isArray(defaultItemGrid)).toBe(true);
-    expect(defaultItemGrid.length).toBeGreaterThan(0);
-
-    // Each row should be an array
+  it("is a 7x7 grid", () => {
+    expect(defaultItemGrid).toHaveLength(7);
     defaultItemGrid.forEach((row) => {
-      expect(Array.isArray(row)).toBe(true);
-      expect(row.length).toBeGreaterThan(0);
+      expect(row).toHaveLength(7);
     });
   });
 
-  it("should have consistent row lengths", () => {
-    const firstRowLength = defaultItemGrid[0].length;
-
-    defaultItemGrid.forEach((row) => {
-      expect(row.length).toBe(firstRowLength);
-    });
-  });
-
-  it("should contain valid item identifiers", () => {
-    const validItems = new Set([
-      ...Object.keys(items),
-      "", // Empty cells are allowed
-      "blank", // Blank cells are allowed
-    ]);
-
-    defaultItemGrid.forEach((row) => {
-      row.forEach((item) => {
-        expect(validItems.has(item)).toBe(true);
-      });
-    });
-  });
-
-  it("should have expected dimensions", () => {
-    expect(defaultItemGrid.length).toBe(7); // 7 rows (reorganized grid layout)
-    expect(defaultItemGrid[0].length).toBe(7); // 7 columns
-  });
-
-  it("should contain core items", () => {
-    const flatGrid = defaultItemGrid.flat();
-    const coreItems = ["hookshot", "hammer", "sword", "bow", "glove"];
-
-    coreItems.forEach((item) => {
-      expect(flatGrid).toContain(item);
-    });
-  });
-});
-
-describe("dungeonchests", () => {
-  it("should export valid dungeon chest counts", () => {
-    expect(typeof dungeonchests).toBe("object");
-    expect(dungeonchests).not.toBeNull();
-  });
-
-  it("should have 10 dungeons (0-9)", () => {
-    for (let i = 0; i <= 9; i++) {
-      expect(dungeonchests).toHaveProperty(i.toString());
-      expect(typeof dungeonchests[i]).toBe("number");
-      expect(dungeonchests[i]).toBeGreaterThan(0);
-    }
-  });
-
-  it("should match chest counts in items", () => {
-    for (let i = 0; i <= 9; i++) {
-      expect(dungeonchests[i]).toBe(items[`chest${i}`]);
-    }
-  });
-});
-
-describe("itemsMin", () => {
-  it("should export valid minimum values", () => {
-    expect(typeof itemsMin).toBe("object");
-    expect(itemsMin).not.toBeNull();
-  });
-
-  it("should have minimum values for numeric items", () => {
-    const numericItems = [
-      "agahnim",
-      "boomerang",
-      "boss0",
-      "boss1",
-      "boss2",
-      "boss3",
-      "boss4",
-      "boss5",
-      "boss6",
-      "boss7",
-      "boss8",
-      "boss9",
-      "bottle",
-      "bow",
-      "chest0",
-      "chest1",
-      "chest2",
-      "chest3",
-      "chest4",
-      "chest5",
-      "chest6",
-      "chest7",
-      "chest8",
-      "chest9",
-      "dungeon",
-      "glove",
-      "reward0",
-      "reward1",
-      "reward2",
-      "reward3",
-      "reward4",
-      "reward5",
-      "reward6",
-      "reward7",
-      "reward8",
-      "reward9",
-      "shield",
-      "sword",
-      "tunic",
-    ];
-
-    numericItems.forEach((item) => {
-      expect(itemsMin).toHaveProperty(item);
-      expect(typeof itemsMin[item]).toBe("number");
-      expect(itemsMin[item]).toBeGreaterThanOrEqual(0);
-    });
-  });
-
-  it("should have reasonable minimum values", () => {
-    // Check some specific minimum values
-    expect(itemsMin.agahnim).toBe(0);
-    expect(itemsMin.tunic).toBe(1); // Green tunic minimum
-    expect(itemsMin.glove).toBe(0);
-    expect(itemsMin.sword).toBe(0);
-  });
-});
-
-describe("itemsMax", () => {
-  it("should export valid maximum values", () => {
-    expect(typeof itemsMax).toBe("object");
-    expect(itemsMax).not.toBeNull();
-  });
-
-  it("should have maximum values for numeric items", () => {
-    const numericItems = [
-      "agahnim",
-      "boomerang",
-      "boss0",
-      "boss1",
-      "boss2",
-      "boss3",
-      "boss4",
-      "boss5",
-      "boss6",
-      "boss7",
-      "boss8",
-      "boss9",
-      "bottle",
-      "bow",
-      "chest0",
-      "chest1",
-      "chest2",
-      "chest3",
-      "chest4",
-      "chest5",
-      "chest6",
-      "chest7",
-      "chest8",
-      "chest9",
-      "dungeon",
-      "glove",
-      "reward0",
-      "reward1",
-      "reward2",
-      "reward3",
-      "reward4",
-      "reward5",
-      "reward6",
-      "reward7",
-      "reward8",
-      "reward9",
-      "shield",
-      "sword",
-      "tunic",
-    ];
-
-    numericItems.forEach((item) => {
-      expect(itemsMax).toHaveProperty(item);
-      expect(typeof itemsMax[item]).toBe("number");
-      expect(itemsMax[item]).toBeGreaterThan(itemsMin[item]);
-    });
-  });
-
-  it("should have reasonable maximum values", () => {
-    // Check some specific maximum values
-    expect(itemsMax.agahnim).toBeGreaterThan(0);
-    expect(itemsMax.tunic).toBeGreaterThan(1); // Should allow blue and red tunics
-    expect(itemsMax.glove).toBeGreaterThan(0);
-    expect(itemsMax.sword).toBeGreaterThan(0);
-    expect(itemsMax.bottle).toBeGreaterThan(0);
-  });
-
-  it("should maintain min <= initial <= max relationship", () => {
-    Object.keys(itemsMin).forEach((item) => {
-      if (typeof items[item] === "number") {
-        expect(itemsMin[item]).toBeLessThanOrEqual(items[item] as number);
-        expect(items[item] as number).toBeLessThanOrEqual(itemsMax[item]);
-      }
-    });
-  });
-});
-
-describe("data consistency", () => {
-  it("should have consistent item definitions across exports", () => {
-    // All items in itemsMin should exist in items
-    Object.keys(itemsMin).forEach((item) => {
-      expect(items).toHaveProperty(item);
-    });
-
-    // All items in itemsMax should exist in items
-    Object.keys(itemsMax).forEach((item) => {
+  it("only places items the store knows about", () => {
+    defaultItemGrid.flat().forEach((item) => {
       expect(items).toHaveProperty(item);
     });
   });
 
-  it("should have proper boss count consistency", () => {
-    // Should have 10 bosses (0-9)
-    for (let i = 0; i <= 9; i++) {
-      expect(items).toHaveProperty(`boss${i}`);
-      expect(items).toHaveProperty(`chest${i}`);
-      expect(items).toHaveProperty(`reward${i}`);
-    }
+  it("lays out all ten bosses and all ten big keys", () => {
+    const flat = defaultItemGrid.flat();
+
+    dungeonIndices.forEach((index) => {
+      expect(flat).toContain(`boss${index}`);
+      expect(flat).toContain(`bigkey${index}`);
+    });
+  });
+});
+
+describe("itemLabels", () => {
+  it("spells out ids that are not just capitalised", () => {
+    expect(itemLabels("moonpearl")).toBe("Moon Pearl");
+    expect(itemLabels("book")).toBe("Book of Mudora");
   });
 
-  it("should have grid items exist in items definition", () => {
-    const gridItems = defaultItemGrid.flat().filter((item) => item !== "");
+  it("capitalises anything else", () => {
+    expect(itemLabels("hookshot")).toBe("Hookshot");
+  });
 
-    gridItems.forEach((item) => {
-      if (item !== "blank") {
-        expect(items).toHaveProperty(item);
-      }
-    });
+  it("names bosses rather than their index", () => {
+    expect(itemLabels("boss0")).toBe("Armos Knights");
+    expect(itemLabels("boss9")).toBe("Trinexx");
+  });
+
+  it("describes empty slots", () => {
+    expect(itemLabels("blank")).toBe("Empty slot");
+    expect(itemLabels("")).toBe("Empty slot");
   });
 });

@@ -9,16 +9,16 @@
  * flags whether the tracker's accessibility logic fully models the preset.
  */
 
-export type RunMode = "open" | "standard" | "inverted" | "retro";
+type RunMode = "open" | "standard" | "inverted" | "retro";
 
-export type RunGoal =
+type RunGoal =
   | "ganon"
   | "fast-ganon"
   | "all-dungeons"
   | "pedestal"
   | "triforce-hunt";
 
-export type EntranceShuffle =
+type EntranceShuffle =
   | "none"
   | "simple"
   | "restricted"
@@ -34,7 +34,7 @@ export type RunSettings = {
   entranceShuffle: EntranceShuffle;
 };
 
-export type Preset = {
+type Preset = {
   id: string;
   name: string;
   description: string;

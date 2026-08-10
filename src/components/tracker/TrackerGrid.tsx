@@ -1,5 +1,4 @@
 import { GridItem } from "@/components/tracker/grid/GridItem";
-import { CSS_CLASSES } from "@/constants";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 
 type TrackerGridProps = {
@@ -23,12 +22,12 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
   return (
     <section
       aria-label="Item tracker grid"
-      className={CSS_CLASSES.ITEMDIV}
+      className="itemdiv"
       id="itemdiv"
       ref={containerRef}
     >
       <h2 className="sr-only">Item Tracker</h2>
-      <div className={CSS_CLASSES.TRACKER}>
+      <div className="tracker">
         {itemLayout.map((row: string[], rowIndex: number) => (
           <div
             className="tracker-row"
@@ -38,14 +37,8 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
             // biome-ignore lint/suspicious/noArrayIndexKey: Row indices are stable and semantically meaningful in grid layout
             key={`row-${rowIndex}`}
           >
-            {/* Hidden text content for test compatibility */}
-            <span className="sr-only">
-              {row.length === 7
-                ? row.join(",")
-                : `GridRow ${rowIndex}: ${row.join(",")}`}
-            </span>
             {/* Left halfcell spacer */}
-            <div aria-hidden="true" className={CSS_CLASSES.HALFCELL} />
+            <div aria-hidden="true" className="halfcell" />
 
             {/* Grid items */}
             {row.slice(0, 7).map((item: string, colIndex: number) => (
@@ -60,7 +53,7 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
             ))}
 
             {/* Right halfcell spacer */}
-            <div aria-hidden="true" className={CSS_CLASSES.HALFCELL} />
+            <div aria-hidden="true" className="halfcell" />
           </div>
         ))}
       </div>

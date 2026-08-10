@@ -31,6 +31,8 @@
       "!**/coverage_backup",
       "!package.json",
       "!pnpm-lock.yaml",
+      "!vite.config.js",
+      "!vite.config.d.ts",
       "!**/.git",
       "!**/.claude"
     ]
