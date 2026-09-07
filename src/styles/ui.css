@@ -141,7 +141,6 @@
 }
 
 /* Caption Component with Enhanced Typography and Layout */
-.caption,
 #caption {
   max-height: 100%; /* Ensure it fits in the fixed container */
   padding: var(--spacing-sm) var(--spacing-md);
@@ -208,10 +207,9 @@
 }
 
 /* Enhanced Mini Icons in Caption */
-.caption .mini,
-#caption .mini,
 .caption-output .mini,
-.caption-content .mini {
+.caption-content .mini,
+#caption .mini {
   display: inline-block;
   width: 18px;
   height: 18px;
@@ -255,7 +253,6 @@
 
 /* Responsive Design for Caption */
 @media (max-width: 768px) {
-  .caption,
   #caption {
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: var(--font-size-sm);
@@ -266,10 +263,9 @@
     padding: var(--spacing-xs);
   }
 
-  .caption .mini,
-  #caption .mini,
   .caption-output .mini,
-  .caption-content .mini {
+  .caption-content .mini,
+  #caption .mini {
     width: 16px;
     height: 16px;
     margin: 0 2px;
@@ -278,7 +274,6 @@
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-  .caption,
   #caption {
     background-color: var(--color-bg-secondary);
     border: 2px solid var(--color-primary);
@@ -292,7 +287,6 @@
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .caption,
   #caption {
     transition: none;
   }
