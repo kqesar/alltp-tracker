@@ -6,28 +6,29 @@
 version: 2
 
 # A multi-ecosystem group collapses npm, Docker and GitHub Actions into a
-# single pull request instead of one per ecosystem. The group owns the
-# schedule; each entry below only declares which ecosystem and which packages
-# it contributes, and `patterns` is mandatory once an entry joins a group.
+# single pull request instead of one per ecosystem. Everything that shapes that
+# shared pull request — schedule, commit message — belongs to the group and is
+# rejected on the individual entries; each entry only declares which ecosystem
+# and which packages it contributes, and `patterns` is mandatory once an entry
+# joins a group.
 # https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/configuring-multi-ecosystem-updates
 multi-ecosystem-groups:
   all-dependencies:
     schedule:
       interval: weekly
+    # `build` is in the commitlint type-enum, and this is the prefix Dependabot
+    # already picked by itself on the npm PRs.
+    commit-message:
+      prefix: 'build(deps)'
 
 updates:
   # --------------------------------------------------------------------------
   # npm — runtime and dev dependencies
   # --------------------------------------------------------------------------
-  # The prefix is spelled out on every entry so the shared commit message is
-  # deterministic whichever ecosystem Dependabot attributes the PR to, and so
-  # commitlint keeps accepting it (`build` is in the type-enum).
   - package-ecosystem: npm
     directory: '/'
     multi-ecosystem-group: all-dependencies
     patterns: ['*']
-    commit-message:
-      prefix: 'build(deps)'
 
   # --------------------------------------------------------------------------
   # Base images
@@ -41,8 +42,6 @@ updates:
     directory: '/'
     multi-ecosystem-group: all-dependencies
     patterns: ['*']
-    commit-message:
-      prefix: 'build(deps)'
 
   # --------------------------------------------------------------------------
   # GitHub Actions
@@ -55,5 +54,3 @@ updates:
     directory: '/'
     multi-ecosystem-group: all-dependencies
     patterns: ['*']
-    commit-message:
-      prefix: 'build(deps)'
