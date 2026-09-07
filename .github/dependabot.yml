@@ -19,3 +19,41 @@ updates:
           - "patch"
           - "major"
     open-pull-requests-limit: 1
+
+      # --------------------------------------------------------------------------
+  # Base images
+  # --------------------------------------------------------------------------
+  # A major here needs a human: Dependabot has no idea which Node releases are
+  # LTS, and this project is LTS-only. `node:25-alpine` is a valid bump and a
+  # wrong one. Check the release line before merging.
+  - package-ecosystem: docker
+    directories:
+      - '/'
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    commit-message:
+      prefix: 'chore(docker)'
+    groups:
+      base-images:
+        patterns: ['*']
+        update-types: ['major', 'minor', 'patch']
+
+  # --------------------------------------------------------------------------
+  # GitHub Actions
+  # --------------------------------------------------------------------------
+  # Actions are pinned by commit SHA against supply-chain tampering, which makes
+  # them invisible to any manual "is this current?" check — the tag comment is
+  # the only hint, and it lies as soon as it is stale. Dependabot rewrites both
+  # the SHA and the comment, which is the only sustainable way to keep pinning.
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    commit-message:
+      prefix: 'chore(ci)'
+    groups:
+      actions:
+        patterns: ['*']
+        update-types: ['major', 'minor', 'patch']
