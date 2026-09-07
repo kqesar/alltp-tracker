@@ -4,40 +4,45 @@
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 
 version: 2
-updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "weekly"
-    # Group all updates (deps + devDeps) into a single PR
-    groups:
-      all-dependencies:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-          - "major"
-    open-pull-requests-limit: 1
 
-      # --------------------------------------------------------------------------
+# A multi-ecosystem group collapses npm, Docker and GitHub Actions into a
+# single pull request instead of one per ecosystem. The group owns the
+# schedule; each entry below only declares which ecosystem and which packages
+# it contributes, and `patterns` is mandatory once an entry joins a group.
+# https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/configuring-multi-ecosystem-updates
+multi-ecosystem-groups:
+  all-dependencies:
+    schedule:
+      interval: weekly
+
+updates:
+  # --------------------------------------------------------------------------
+  # npm — runtime and dev dependencies
+  # --------------------------------------------------------------------------
+  # The prefix is spelled out on every entry so the shared commit message is
+  # deterministic whichever ecosystem Dependabot attributes the PR to, and so
+  # commitlint keeps accepting it (`build` is in the type-enum).
+  - package-ecosystem: npm
+    directory: '/'
+    multi-ecosystem-group: all-dependencies
+    patterns: ['*']
+    commit-message:
+      prefix: 'build(deps)'
+
+  # --------------------------------------------------------------------------
   # Base images
   # --------------------------------------------------------------------------
   # A major here needs a human: Dependabot has no idea which Node releases are
   # LTS, and this project is LTS-only. `node:25-alpine` is a valid bump and a
   # wrong one. Check the release line before merging.
+  # Nothing to update yet — the repo has no Dockerfile — but the entry is kept
+  # so image bumps join the group from the day one lands.
   - package-ecosystem: docker
-    directories:
-      - '/'
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 1
+    directory: '/'
+    multi-ecosystem-group: all-dependencies
+    patterns: ['*']
     commit-message:
-      prefix: 'chore(docker)'
-    groups:
-      base-images:
-        patterns: ['*']
-        update-types: ['major', 'minor', 'patch']
+      prefix: 'build(deps)'
 
   # --------------------------------------------------------------------------
   # GitHub Actions
@@ -48,12 +53,7 @@ updates:
   # the SHA and the comment, which is the only sustainable way to keep pinning.
   - package-ecosystem: github-actions
     directory: '/'
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 1
+    multi-ecosystem-group: all-dependencies
+    patterns: ['*']
     commit-message:
-      prefix: 'chore(ci)'
-    groups:
-      actions:
-        patterns: ['*']
-        update-types: ['major', 'minor', 'patch']
+      prefix: 'build(deps)'
