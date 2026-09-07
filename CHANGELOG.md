@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.8.1](https://github.com/kqesar/alltp-tracker/compare/v2.8.0...v2.8.1) (2026-09-07)
+
+
+### 🐛 Bug Fixes
+
+* **css:** align biome schema version and drop unused .caption selectors ([0bd76b4](https://github.com/kqesar/alltp-tracker/commit/0bd76b4162e02289cfa572c887da05a4979cb0c9))
+* **dependabot:** move commit-message onto the multi-ecosystem group ([d9aa0a8](https://github.com/kqesar/alltp-tracker/commit/d9aa0a80e7c4b49b56bebadec59642b1ecbafb85))
+* **test:** restore coverage and typecheck under vitest 5 ([8bb6a6d](https://github.com/kqesar/alltp-tracker/commit/8bb6a6d9c3536ad3c529f5f829f477ca22c22cca))
+
 ## [2.8.0](https://github.com/kqesar/alltp-tracker/compare/v2.7.1...v2.8.0) (2026-09-07)
 
 
