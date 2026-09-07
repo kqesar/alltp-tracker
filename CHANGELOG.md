@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.8.0](https://github.com/kqesar/alltp-tracker/compare/v2.7.1...v2.8.0) (2026-09-07)
+
+
+### ✨ Features
+
+* add docket and github actions ([#157](https://github.com/kqesar/alltp-tracker/issues/157)) ([1bb54ba](https://github.com/kqesar/alltp-tracker/commit/1bb54ba2fa45b05c5f347c99130ee1b381253d89))
+
 ### [2.7.1](https://github.com/kqesar/alltp-tracker/compare/v2.7.0...v2.7.1) (2026-08-10)
 
 
