@@ -1,6 +1,8 @@
-// Test data, in the shape the ALttPR pack will declare: the package itself
-// holds no address and no game fact.
-import { defineRaceProfile, type RaceProfile } from "../src/race";
+// The racing rules ALttPR autotracking answers to, as @alltp/autotrack's
+// race profile: the memory a race permits and the categories of tracked
+// information, permitted or not. The memory map (memory.ts) files every
+// range it reads under one of these categories.
+import { defineRaceProfile, type RaceProfile } from "@alltp/autotrack";
 
 /**
  * The ALttPR rules: "The Official ALTTPR Race-legal Auto-tracker
