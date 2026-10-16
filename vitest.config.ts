@@ -24,10 +24,10 @@ export default defineConfig({
       // Floors sit just under current coverage so a regression fails the build
       // without blocking day-to-day work. Raise them as coverage improves.
       thresholds: {
-        branches: 90,
-        functions: 97,
-        lines: 97,
-        statements: 95,
+        branches: 92,
+        functions: 98,
+        lines: 98,
+        statements: 97,
       },
     },
     // Listing the projects by path keeps agent worktrees under .claude out.
