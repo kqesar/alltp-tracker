@@ -22,6 +22,17 @@ export {
   type Source,
   type Visible,
 } from "./location";
+export {
+  MEDALLION_FACTS,
+  MEDALLION_RULES,
+  MEDALLIONS,
+  type Medallion,
+  medallionFacts,
+  PADS,
+  type Pad,
+  type PadKnowledge,
+  padsFromUpstream,
+} from "./medallions";
 export { compile, regionModules, world } from "./pack";
 export { NAMED_RULES, RULES } from "./rules";
 export {
