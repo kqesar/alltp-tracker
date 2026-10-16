@@ -16,10 +16,6 @@ dist-ssr
 # TypeScript
 *.tsbuildinfo
 
-# Compiled Vite config artifacts (source of truth is vite.config.ts)
-vite.config.js
-vite.config.d.ts
-
 # Editor directories and files
 .idea
 .DS_Store
@@ -33,3 +29,7 @@ vite.config.d.ts
 # committed; personal settings and worktrees stay local.
 .claude/settings.local.json
 .claude/worktrees/
+
+# Playwright
+playwright-report/
+test-results/

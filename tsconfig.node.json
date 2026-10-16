@@ -4,7 +4,12 @@
     "composite": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "skipLibCheck": true
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "outDir": "node_modules/.tmp/tsc-node",
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "tsBuildInfoFile": "node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "playwright.config.ts", "e2e"]
 }

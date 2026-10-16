@@ -90,7 +90,7 @@ export const TrackerControls = () => {
   };
 
   return (
-    <div className="tracker-controls">
+    <div className="tracker-controls" data-testid="toolbar">
       <PresetSelector />
       <button
         className="tracker-controls__button"
