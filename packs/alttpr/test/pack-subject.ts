@@ -7,8 +7,9 @@
 // `fill` (Location::canFill, with the always-allow and fill rules) is not
 // answered yet: it waits for src/fill.ts and the key model, since placing a
 // key is what it asks about. The runner counts those cases as skipped.
-import { type CompiledWorld, solve, type Tri } from "@alltp/engine";
+import { type CompiledWorld, type State, solve, type Tri } from "@alltp/engine";
 import { locationId } from "../src/location";
+import { medallionFacts, padsFromUpstream } from "../src/medallions";
 import { compile, regionModules } from "../src/pack";
 import { type AlttprSettings, settingsFromUpstream } from "../src/settings";
 import { canFill, type RegionDef, regionId } from "../src/world";
@@ -21,13 +22,6 @@ function settingsOf(world: CaseWorld): AlttprSettings {
 }
 
 function compiled(world: CaseWorld): CompiledWorld {
-  // Medallions placed at the Misery Mire and Turtle Rock pads are knowledge
-  // the state must carry; until a port models them, a case placing one
-  // cannot be answered
-  const placed = Object.keys(world.locationItems);
-  if (placed.length > 0) {
-    throw new Error(`Placed items are not modeled yet: ${placed.join(", ")}`);
-  }
   const settings = settingsOf(world);
   const key = JSON.stringify(settings);
   let found = worlds.get(key);
@@ -37,6 +31,15 @@ function compiled(world: CaseWorld): CompiledWorld {
   }
   return found;
 }
+
+/**
+ * The case's state, with what its world placed at the medallion pads as the
+ * knowledge the pack reads (medallions.ts). Any other placement throws.
+ */
+const withPads = (state: State, world: CaseWorld): State => ({
+  ...state,
+  ...medallionFacts(padsFromUpstream(world.locationItems)),
+});
 
 /** The region upstream names `name` (a key of World/Standard.php). */
 function regionNamed(name: string, settings: AlttprSettings): RegionDef {
@@ -49,7 +52,7 @@ function regionNamed(name: string, settings: AlttprSettings): RegionDef {
 
 export const PACK: ContractSubject = {
   location: (name, state, world) =>
-    solve(compiled(world), state).location(locationId(name)),
+    solve(compiled(world), withPads(state, world)).location(locationId(name)),
 
   // Region::canComplete: the prize location's rule, or true for a region
   // with no can_complete (Region.php:201-207)
@@ -57,11 +60,11 @@ export const PACK: ContractSubject = {
     const prize = regionNamed(name, settingsOf(world)).prize;
     return prize === undefined
       ? "yes"
-      : solve(compiled(world), state).location(prize);
+      : solve(compiled(world), withPads(state, world)).location(prize);
   },
 
   regionEnter: (name, state, world) =>
-    solve(compiled(world), state).region(regionId(name)),
+    solve(compiled(world), withPads(state, world)).region(regionId(name)),
 
   regionFill: (name, item, world) => {
     const settings = settingsOf(world);

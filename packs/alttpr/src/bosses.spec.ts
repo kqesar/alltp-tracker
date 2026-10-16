@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { BOSS_SLOTS, BOSSES } from "./bosses";
 import { HELPERS } from "./helpers";
 import { stateFromUpstream } from "./items";
+import { MEDALLION_RULES } from "./medallions";
 import { NAMED_RULES, RULES } from "./rules";
 import {
   type AlttprSettings,
@@ -283,6 +284,7 @@ describe("the named rules", () => {
       ...Object.keys(HELPERS),
       ...Object.keys(BOSSES),
       ...Object.keys(BOSS_SLOTS),
+      ...Object.keys(MEDALLION_RULES),
     ];
     expect(new Set(names).size).toBe(names.length);
     expect(Object.keys(NAMED_RULES)).toHaveLength(names.length);
