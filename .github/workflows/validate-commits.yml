@@ -12,14 +12,29 @@ permissions:
 jobs:
   validate-commits:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Validate commit messages
-        uses: wagoid/commitlint-github-action@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
-          configFile: '.commitlintrc.json'
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Run the commitlint pinned in package.json, the one the husky hook runs.
+      # A third-party action bundles its own older copy, which rejected every
+      # Dependabot body: newer commitlint skips long lines that hold a URL.
+      - name: Validate commit messages
+        run: pnpm exec commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
