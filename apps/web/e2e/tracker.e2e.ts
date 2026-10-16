@@ -13,6 +13,47 @@ const openTracker = async (page: Page) => {
   await expect(page.getByTestId("item-grid")).toBeVisible();
 };
 
+/** More Tab stops than the page has before the map. */
+const MAX_TAB_STOPS = 40;
+
+/**
+ * Tab from the top of the page to the first map marker (the markers all share
+ * one style), and list the stops that do not draw the focus ring
+ * (--focus-ring): on the control itself, or on the label dressing it.
+ */
+const focusStopsWithoutRing = async (page: Page) => {
+  const ring = await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.boxShadow = "var(--focus-ring)";
+    document.body.append(probe);
+    const value = getComputedStyle(probe).boxShadow;
+    probe.remove();
+    return value;
+  });
+
+  const unringed: string[] = [];
+  for (let stop = 0; stop < MAX_TAB_STOPS; stop++) {
+    await page.keyboard.press("Tab");
+    const focused = await page.evaluate((ring) => {
+      const element = document.activeElement ?? document.body;
+      const drawn = element.closest("label") ?? element;
+      // Read the ring where its transition ends, not where it starts
+      for (const animation of drawn.getAnimations()) animation.finish();
+      return {
+        name:
+          element.getAttribute("data-testid") ??
+          element.textContent?.trim() ??
+          element.tagName,
+        onMap: element.closest("#map") !== null,
+        ringed: getComputedStyle(drawn).boxShadow === ring,
+      };
+    }, ring);
+    if (!focused.ringed) unringed.push(focused.name);
+    if (focused.onMap) return unringed;
+  }
+  throw new Error(`no map marker within ${MAX_TAB_STOPS} Tab stops`);
+};
+
 for (const width of WIDTHS) {
   test.describe(`at ${width}px`, () => {
     const phone = width < 600;
@@ -93,6 +134,14 @@ for (const width of WIDTHS) {
       await openTracker(page);
 
       expect(await unreachableClickables(page)).toEqual([]);
+    });
+
+    test("rings every control the keyboard focuses", async ({ page }) => {
+      await openTracker(page);
+
+      const unringed = await focusStopsWithoutRing(page);
+
+      expect(unringed).toEqual([]);
     });
   });
 }

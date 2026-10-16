@@ -46,6 +46,12 @@
   border-color: var(--color-accent);
 }
 
+/* The page's focus ring, which the raised shadow above would replace */
+.tracker-controls__button:focus-visible,
+.bigkey-toggle:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
 /* Toolbar icons, and labels that only show once the toolbar has room for
    them: below that the text stays in the button, visually hidden, so it
    still names it. */
