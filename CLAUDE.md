@@ -12,6 +12,7 @@ This tracker is meant to become the reference tracker for randomizer runs, so ev
 - **Verify in a real browser.** UI work is driven with Playwright (screenshots at 390 / 820 / 1440 / 1920 px, real interactions) and audited with axe-core plus a check for clickable elements a keyboard cannot reach; jsdom alone misses layout and focus bugs.
 - **Dependencies are welcome when they earn their place.** Add a library when it is the better engineering choice over hand-rolled code, and state why: what it replaces, its size and maintenance, and why it beats the alternative. Remove a dependency the moment it stops earning it.
 - **Game rules come from the randomizer's own source**, never from memory; record the upstream commit they were read from.
+- **The platform is a choice, not a ceiling.** Today the tracker is front-end only, deployed as static files on GitHub Pages. The day that blocks something worth building (a relay for autotracking or multi-device sync, accounts, secrets for a racetime.gg or Archipelago integration, a server-side job), say so plainly and propose concrete options with trade-offs (serverless functions or an edge worker, a small backend, the Tauri desktop app, another host) instead of working around it. Once the platform has moved, delete this rule.
 
 ## Commands
 
