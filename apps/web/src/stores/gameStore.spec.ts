@@ -5,7 +5,11 @@ import v2Export from "@/stores/fixtures/v2-export.json";
 import v5KeysanityExport from "@/stores/fixtures/v5-keysanity-export.json";
 import v5LocalStorage from "@/stores/fixtures/v5-local-storage.json";
 import { useGameStore } from "@/stores/gameStore";
-import { PERSIST_VERSION, parseSave } from "@/stores/persistence";
+import {
+  PERSIST_VERSION,
+  type Progress,
+  parseSave,
+} from "@/stores/persistence";
 
 const STORAGE_KEY = "alltp-tracker-state";
 
@@ -556,6 +560,65 @@ describe("GameStore", () => {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
       expect(stored.state).not.toHaveProperty("past");
       expect(stored.state).not.toHaveProperty("future");
+    });
+  });
+
+  describe("what the game says", () => {
+    /** Gives the hookshot to a run that lacks it. */
+    const hookshot = (progress: Progress) =>
+      progress.items.hookshot
+        ? null
+        : { items: { ...progress.items, hookshot: true } };
+
+    it("is laid on the run and every step of its history, as no step", () => {
+      const { handleItemClick } = useGameStore.getState();
+      handleItemClick("bow");
+      handleItemClick("hammer");
+      useGameStore.getState().undo();
+
+      useGameStore.getState().applyGameNews(hookshot);
+
+      const state = useGameStore.getState();
+      expect(state.items.hookshot).toBe(true);
+      expect(state.past).toHaveLength(1);
+      expect(state.past[0].items.hookshot).toBe(true);
+      expect(state.future[0].items).toMatchObject({
+        hammer: true,
+        hookshot: true,
+      });
+      // Undoing the player's bow keeps the game's hookshot
+      state.undo();
+      expect(useGameStore.getState().items).toMatchObject({
+        bow: 0,
+        hookshot: true,
+      });
+    });
+
+    it("sets nothing, and saves nothing, when it changes nothing", () => {
+      useGameStore.getState().applyGameNews(hookshot);
+      const before = useGameStore.getState();
+      let sets = 0;
+      const unsubscribe = useGameStore.subscribe(() => sets++);
+      localStorage.clear();
+
+      useGameStore.getState().applyGameNews(hookshot);
+      unsubscribe();
+
+      expect(sets).toBe(0);
+      expect(useGameStore.getState()).toBe(before);
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+    });
+
+    it("syncs the run to the game as one undo step", () => {
+      useGameStore.getState().handleItemClick("sword");
+      const items = useGameStore.getState().items;
+
+      useGameStore.getState().syncWithGame({ items: { ...items, sword: 0 } });
+
+      expect(useGameStore.getState().items.sword).toBe(0);
+      useGameStore.getState().undo();
+      expect(useGameStore.getState().items.sword).toBe(1);
+      expect(useGameStore.getState().past).toHaveLength(1);
     });
   });
 

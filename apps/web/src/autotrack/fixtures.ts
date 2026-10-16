@@ -1,6 +1,7 @@
 // Fixtures for the autotracking specs, not part of the app: one status of
 // each diagnostic code, a console's memory holding an alttpr.com seed in
-// play, and the clock, page visibility and permission the specs drive.
+// play (a location's flag set, the whole decoded), and the clock, page
+// visibility and permission the specs drive.
 
 import type {
   BridgeInfo,
@@ -11,6 +12,12 @@ import type {
   SessionStatus,
   Visibility,
 } from "@alltp/autotrack";
+import {
+  CHECK_FLAGS,
+  MEMORY_RANGE,
+  type MemoryRangeId,
+} from "@alltp/pack-alttpr";
+import { readMemory } from "@/autotrack/reading";
 
 export const SNI: BridgeInfo = {
   kind: "sni",
@@ -158,6 +165,52 @@ export const seedMemory = ({ race }: { race: boolean }) => {
   memory[SAVE(0x191)] = 0x08; // Armos Knights (room $C8, its boss bit)
   return memory;
 };
+
+/** Where a range's byte at A-bus address `at` lies in a memory image. */
+const imageAddress = (range: MemoryRangeId, at: number) =>
+  MEMORY_RANGE[range].address + (at - MEMORY_RANGE[range].bus);
+
+/**
+ * Set the flag that says a location was checked, in a memory image.
+ * @param memory - A memory image, as `seedMemory` makes
+ * @param location - The pack's location id
+ */
+export const checkIn = (memory: Uint8Array, location: string) => {
+  const entry = CHECK_FLAGS.find(({ id }) => id === location);
+  if (entry === undefined) throw new RangeError(`No flag for ${location}`);
+  const { flag } = entry;
+  const at = imageAddress(flag.range, flag.at);
+  if ("atLeast" in flag) {
+    memory[at] = Math.max(memory[at], flag.atLeast);
+    return;
+  }
+  memory[at] |= flag.mask & 0xff;
+  if (flag.size === 2) memory[at + 1] |= flag.mask >> 8;
+};
+
+/**
+ * A memory image decoded as the session decodes its snapshot.
+ * @param memory - A memory image, as `seedMemory` makes
+ * @param options - Race Mode, and the ranges not read yet
+ */
+export const readingOf = (
+  memory: Uint8Array,
+  {
+    race = false,
+    unread = [],
+  }: { race?: boolean; unread?: readonly MemoryRangeId[] } = {},
+) =>
+  readMemory(
+    {
+      bytes: (id) => {
+        const { address, size } = MEMORY_RANGE[id as MemoryRangeId];
+        return memory.subarray(address, address + size);
+      },
+      has: (id) => !unread.includes(id as MemoryRangeId),
+    },
+    race,
+    Date.UTC(2026, 9, 16, 20, 15),
+  );
 
 /** Real time's turn: settles the promises waiting, timers of 0 ms first. */
 export const settle = () =>

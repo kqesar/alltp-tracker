@@ -24,6 +24,7 @@ import {
   stopAutotrack,
   useAutotrackStore,
 } from "@/stores/autotrackStore";
+import { useGameStore } from "@/stores/gameStore";
 import { MemoryTransport } from "../../../../../packages/autotrack/test/memory-transport";
 
 const FIREFOX_LINUX = parseUserAgent(
@@ -54,6 +55,7 @@ const open = async (onClose = () => {}) => {
 beforeEach(() => {
   localStorage.clear();
   act(() => {
+    useGameStore.setState(useGameStore.getInitialState(), true);
     useAutotrackStore.setState(useAutotrackStore.getInitialState(), true);
     useAutotrackStore.setState({ environment: FIREFOX_LINUX });
   });
@@ -314,6 +316,71 @@ describe("AutotrackDialog's actions", () => {
     await user.click(screen.getByTestId("autotrack-disconnect"));
     expect(screen.getByTestId("autotrack-headline")).toHaveTextContent("Off");
     expect(useAutotrackStore.getState().connectOnStart).toBe(false);
+  });
+
+  it("syncs the board to the game, and says what it changed", async () => {
+    const user = userEvent.setup();
+    const clock = new ManualClock();
+    setAutotrackOptions({
+      clock,
+      permission: GRANTED,
+      random: () => 0,
+      transport: () => new MemoryTransport(seedMemory({ race: false }), {}),
+      visibility: new FakeVisibility(),
+    });
+    await open();
+    expect(screen.queryByTestId("autotrack-sync")).toBeNull();
+    await user.click(screen.getByTestId("autotrack-connect"));
+    await act(() => clock.advance(0));
+    expect(useGameStore.getState().items.sword).toBe(2);
+    act(() => useGameStore.getState().handleItemClick("sword"));
+
+    const sync = screen.getByRole("button", { name: "Sync from game" });
+    expect(sync).toHaveAccessibleDescription(
+      "The board follows your game as you play, and the marks you set beyond it stay. Sync from game sets the board to the game, clearing them.",
+    );
+    await user.click(sync);
+
+    expect(useGameStore.getState().items.sword).toBe(2);
+    expect(screen.getByTestId("autotrack-sync-status")).toHaveTextContent(
+      "1 mark set to the game's. Undo takes it back.",
+    );
+    await user.click(sync);
+    expect(screen.getByTestId("autotrack-sync-status")).toHaveTextContent(
+      "The board already matches the game.",
+    );
+    act(() => {
+      useGameStore.getState().handleItemClick("sword");
+      useGameStore.getState().handleItemClick("hookshot");
+    });
+    await user.click(sync);
+    expect(screen.getByTestId("autotrack-sync-status")).toHaveTextContent(
+      "2 marks set to the game's. Undo takes them back.",
+    );
+  });
+
+  it("says when no game in play was read yet, and what Race Mode keeps", async () => {
+    const user = userEvent.setup();
+    await open();
+    show(
+      statusOf("connected", {
+        race: {
+          active: true,
+          flag: "race",
+          overridden: false,
+          raceLegal: true,
+          setting: "auto",
+        },
+      }),
+    );
+
+    expect(screen.getByTestId("autotrack-follow")).toHaveTextContent(
+      "In Race Mode, what races forbid tracking stays yours to mark: pendants and crystals, chests inside dungeons, bottles.",
+    );
+    await user.click(screen.getByTestId("autotrack-sync"));
+    expect(screen.getByTestId("autotrack-sync-status")).toHaveTextContent(
+      "No game in play read yet.",
+    );
   });
 
   it("keeps the wish to connect on start in a checkbox", async () => {

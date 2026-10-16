@@ -65,6 +65,19 @@ type GameState = Progress &
     undo: () => void;
     /** Re-apply the change most recently undone */
     redo: () => void;
+
+    /**
+     * Lay what the game says on the run, outside the history: no undo
+     * step, and every step of the history gets it too, so undoing a change
+     * of the player's never undoes the game's. Nothing is set, and nothing
+     * re-renders, when it changes nothing.
+     * @param change - The slices it changes in a run, or null for none
+     */
+    applyGameNews: (
+      change: (progress: Progress) => Partial<Progress> | null,
+    ) => void;
+    /** Set the run to what the game holds: one undo step, as the player's. */
+    syncWithGame: (next: Partial<Progress>) => void;
   };
 
 /** Undo depth: far more than a run needs, and each step is a few KB. */
@@ -181,6 +194,23 @@ export const useGameStore = create<GameState>()(
         ...createProgress(),
         ...createPrefs(),
 
+        applyGameNews: (change) => {
+          const state = get();
+          const now = change(progressOf(state));
+          let moved = false;
+          const rebase = (history: Progress[]) =>
+            history.map((progress) => {
+              const changed = change(progress);
+              if (changed === null) return progress;
+              moved = true;
+              return { ...progress, ...changed };
+            });
+          const past = rebase(state.past);
+          const future = rebase(state.future);
+          if (now === null && !moved) return;
+          set({ ...now, ...(moved ? { future, past } : {}) });
+        },
+
         applyPreset: (presetId: string) =>
           set((state) => {
             const progress = createProgress(presetId);
@@ -288,6 +318,9 @@ export const useGameStore = create<GameState>()(
             (current + direction + MEDALLION_STATES) % MEDALLION_STATES,
           );
         },
+
+        syncWithGame: (next: Partial<Progress>) =>
+          set((state) => record(state, next)),
 
         toggleChecks: (locations: readonly string[]) =>
           set((state) => {

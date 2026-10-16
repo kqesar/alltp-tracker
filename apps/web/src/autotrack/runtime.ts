@@ -15,6 +15,8 @@ import { ALTTPR_AUTOTRACK } from "@alltp/pack-alttpr";
 import { type AutotrackReading, readMemory } from "@/autotrack/reading";
 
 export { detectEnvironment } from "@alltp/autotrack";
+// What lays the readings on the board: needed only once a session runs
+export { createFollower } from "@/autotrack/follow";
 
 /** Where the runtime reports to. */
 export type RuntimeSink = {

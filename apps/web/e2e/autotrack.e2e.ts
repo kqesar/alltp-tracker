@@ -1,4 +1,9 @@
-import { ALTTPR_RACE_PROFILE, MEMORY_RANGES } from "@alltp/pack-alttpr";
+import {
+  ALTTPR_RACE_PROFILE,
+  CHECK_FLAGS,
+  MEMORY_RANGE,
+  MEMORY_RANGES,
+} from "@alltp/pack-alttpr";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
@@ -42,6 +47,21 @@ const bootSeed = (bridge: FakeUsb2Snes, { race }: { race: boolean }) => {
   memory[SAVE(0x150)] = 0x10; // Eastern Palace's compass chest (room $A8)
   memory[SAVE(0x191)] = 0x08; // Armos Knights (room $C8, its boss bit)
 };
+
+/** Sets the flag that says a location was checked, as the game does. */
+const checkIn = (bridge: FakeUsb2Snes, location: string) => {
+  const entry = CHECK_FLAGS.find(({ id }) => id === location);
+  if (entry === undefined || "atLeast" in entry.flag) {
+    throw new Error(`No bit flag for ${location}`);
+  }
+  const { at, mask, range } = entry.flag;
+  const address = MEMORY_RANGE[range].address + (at - MEMORY_RANGE[range].bus);
+  bridge.memory[address] |= mask & 0xff;
+  bridge.memory[address + 1] |= mask >> 8;
+};
+
+/** DungeonsCompleted's high byte: Eastern Palace's prize taken ($2000). */
+const EASTERN_DONE = () => [SAVE(0x473), 0x20] as const;
 
 const permittedCategory = (category: string) =>
   ALTTPR_RACE_PROFILE.categories[category]?.permitted === true;
@@ -104,6 +124,171 @@ const openDialog = async (page: Page) => {
 };
 
 const STEPS = ["get-bridge", "run-bridge", "emulator", "permission", "game"];
+
+/** Connect from the dialog, and close it once connected. */
+const connect = async (page: Page) => {
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-connect").click();
+  await expect(dialog(page).getByTestId("autotrack-headline")).toHaveText(
+    "Connected",
+  );
+  await page.keyboard.press("Escape");
+  await expect(dialog(page)).toBeHidden();
+};
+
+/** An item cell's accessible name, for its state. */
+const cell = (name: string, state: string) =>
+  `${name}, ${state}. Click to change state.`;
+
+test("marks the board and the map from the game as it changes", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  const [at, bit] = EASTERN_DONE();
+  bridge.memory[at] |= bit; // the Pendant of Courage, from Eastern Palace
+  await openTracker(page);
+  const hookshot = page.getByTestId("item-hookshot");
+  await expect(hookshot).toHaveAccessibleName(cell("Hookshot", "not obtained"));
+
+  await connect(page);
+
+  await expect(hookshot).toHaveAccessibleName(cell("Hookshot", "obtained"));
+  await expect(page.getByTestId("item-moonpearl")).toHaveAccessibleName(
+    cell("Moon Pearl", "obtained"),
+  );
+  await expect(page.getByTestId("item-sword")).toHaveAccessibleName(
+    cell("Sword", "level 2"),
+  );
+  await expect(page.getByTestId("item-boss0")).toHaveAccessibleName(
+    "Armos Knights, defeated. Click to change state.",
+  );
+  await expect(page.getByTestId("reward-overlay-0")).toHaveAccessibleName(
+    /reward: the Pendant of Courage/,
+  );
+  // Two of its three items found: the compass chest and the boss
+  await expect(page.getByTestId("chest-overlay-0")).toHaveAccessibleName(
+    /chests: 1 left/,
+  );
+  await expect(page.getByTestId("marker-links-house")).toHaveAccessibleName(
+    "Link's House: done",
+  );
+  await expect(
+    page.getByTestId("boss-marker-eastern-palace"),
+  ).toHaveAccessibleName(/boss done/);
+
+  // The game goes on: the hammer, then King's Tomb
+  bridge.memory[SAVE(0x34b)] = 0x01;
+  await expect(page.getByTestId("item-hammer")).toHaveAccessibleName(
+    cell("Hammer", "obtained"),
+  );
+  const tomb = page.getByTestId("marker-kings-tomb");
+  await expect(tomb).not.toHaveAccessibleName(/done/);
+  checkIn(bridge, "kings-tomb");
+  await expect(tomb).toHaveAccessibleName("King's Tomb: done");
+  // None of it is a step of the player's undo history
+  await expect(page.getByTestId("undo")).toBeDisabled();
+});
+
+test("keeps the player's marks beyond the game until Sync from game", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  await openTracker(page);
+  await connect(page);
+  const sword = page.getByTestId("item-sword");
+  await expect(sword).toHaveAccessibleName(cell("Sword", "level 2"));
+
+  // The Tempered Sword, marked by hand ahead of the game
+  await sword.click();
+  await expect(sword).toHaveAccessibleName(cell("Sword", "level 3"));
+  // The game goes on: the hammer comes, the mark stays
+  bridge.memory[SAVE(0x34b)] = 0x01;
+  await expect(page.getByTestId("item-hammer")).toHaveAccessibleName(
+    cell("Hammer", "obtained"),
+  );
+  await expect(sword).toHaveAccessibleName(cell("Sword", "level 3"));
+
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-sync").click();
+  await expect(dialog(page).getByTestId("autotrack-sync-status")).toHaveText(
+    "1 mark set to the game's. Undo takes it back.",
+  );
+  await page.keyboard.press("Escape");
+  await expect(sword).toHaveAccessibleName(cell("Sword", "level 2"));
+
+  // Undo takes the sync back; the game's hammer stays
+  await page.getByTestId("undo").click();
+  await expect(sword).toHaveAccessibleName(cell("Sword", "level 3"));
+  await expect(page.getByTestId("item-hammer")).toHaveAccessibleName(
+    cell("Hammer", "obtained"),
+  );
+});
+
+test("undoes the player's own change, never the game's", async ({ page }) => {
+  bootSeed(bridge, { race: false });
+  await openTracker(page);
+  await connect(page);
+  const net = page.getByTestId("item-net");
+  const hammer = page.getByTestId("item-hammer");
+
+  await net.click();
+  await expect(net).toHaveAccessibleName(cell("Bug Net", "obtained"));
+  bridge.memory[SAVE(0x34b)] = 0x01; // the game: the hammer
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "obtained"));
+
+  await page.getByTestId("undo").click();
+
+  await expect(net).toHaveAccessibleName(cell("Bug Net", "not obtained"));
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "obtained"));
+  await expect(page.getByTestId("undo")).toBeDisabled();
+  await page.getByTestId("redo").click();
+  await expect(net).toHaveAccessibleName(cell("Bug Net", "obtained"));
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "obtained"));
+});
+
+test("a race seed leaves pendants, crystals and dungeon chests to the player", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: true });
+  const [at, bit] = EASTERN_DONE();
+  bridge.memory[at] |= bit;
+  await openTracker(page);
+  // Marked by hand: Eastern Palace's prize a crystal, its chests all found
+  const reward = page.getByTestId("reward-overlay-0");
+  const chests = page.getByTestId("chest-overlay-0");
+  for (let click = 0; click < 3; click++) await reward.click();
+  for (let click = 0; click < 3; click++) await chests.click();
+  await expect(reward).toHaveAccessibleName(/reward: a crystal$/);
+  await expect(chests).toHaveAccessibleName(/chests: 0 left$/);
+
+  await connect(page);
+
+  // What races permit comes in: items, bosses, checks outside dungeons
+  await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+    cell("Hookshot", "obtained"),
+  );
+  await expect(page.getByTestId("item-boss0")).toHaveAccessibleName(/defeated/);
+  await expect(page.getByTestId("marker-links-house")).toHaveAccessibleName(
+    "Link's House: done",
+  );
+  // What they forbid stays as the player marked it, Sync included
+  await openDialog(page);
+  await expect(dialog(page).getByTestId("autotrack-follow")).toContainText(
+    "pendants and crystals, chests inside dungeons, bottles",
+  );
+  await dialog(page).getByTestId("autotrack-sync").click();
+  await expect(dialog(page).getByTestId("autotrack-sync-status")).toHaveText(
+    "The board already matches the game.",
+  );
+  await page.keyboard.press("Escape");
+  await expect(reward).toHaveAccessibleName(/reward: a crystal$/);
+  await expect(chests).toHaveAccessibleName(/chests: 0 left$/);
+  await expect(page.getByTestId("item-bottle")).toHaveAccessibleName(
+    cell("Bottle", "not obtained"),
+  );
+  await expect.poll(() => bridge.reads.length).toBeGreaterThan(30);
+  expect(forbiddenReads(bridge)).toEqual([]);
+});
 
 test("connects through the dialog, ticks every step and lists what it read", async ({
   page,
@@ -290,6 +475,14 @@ test("the stream view never connects, even when the tracker does", async ({
   const stream = await page.context().newPage();
   await stream.goto(`./?view=obs&bridge=${port}`);
   await expect(stream.getByTestId("obs-view")).toBeVisible();
+  // It shows what the tracker read, and follows it as the game goes on
+  await expect(stream.getByTestId("item-hookshot")).toHaveAccessibleName(
+    cell("Hookshot", "obtained"),
+  );
+  bridge.memory[SAVE(0x34b)] = 0x01; // the hammer
+  await expect(stream.getByTestId("item-hammer")).toHaveAccessibleName(
+    cell("Hammer", "obtained"),
+  );
   // The tracker's session is the bridge's only client
   await stream.waitForTimeout(1_000);
   expect(bridge.accepted).toBe(1);
