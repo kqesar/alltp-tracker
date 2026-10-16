@@ -17,18 +17,18 @@ export const BigKeyToggle = ({ isVisible, onToggle }: BigKeyToggleProps) => {
   return (
     <div className="bigkey-toggle-container" data-testid="bigkey-toggle">
       <button
-        aria-label={isVisible ? "Hide big keys" : "Show big keys"}
         className={`bigkey-toggle ${isVisible ? "bigkey-toggle--active" : ""}`}
+        data-testid="key-cells-toggle"
         onClick={handleClick}
         title={isVisible ? "Hide big keys" : "Show big keys"}
         type="button"
       >
-        <div className="bigkey-toggle__icon">
-          <div className="bigkey-toggle__key-icon" />
-          {!isVisible && <div className="bigkey-toggle__slash" />}
-        </div>
-        <span className="bigkey-toggle__text">
-          {isVisible ? "Hide" : "Show"} Big Keys
+        <span aria-hidden="true" className="bigkey-toggle__icon">
+          <span className="bigkey-toggle__key-icon" />
+          {!isVisible && <span className="bigkey-toggle__slash" />}
+        </span>
+        <span className="toolbar-label">
+          {isVisible ? "Hide" : "Show"} big keys
         </span>
       </button>
     </div>
