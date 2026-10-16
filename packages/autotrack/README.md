@@ -346,13 +346,26 @@ gives the CPU where it is not frozen (Firefox on Linux): elsewhere `arch` is
 - `test/session.e2e.spec.ts`: one realistic session end to end.
 - Each guarantee was checked by breaking the code and watching a test fail.
 
+## Checked against a real bridge
+
+SNI v0.0.103 (linux-amd64), RetroArch 1.22.2 (AppImage), bsnes-mercury
+Performance (libretro buildbot, 2026-10-16), an ALttPR open seed, on
+2026-10-16:
+
+- `AppVersion` answers `SNI-v0.0.103`, with a `v`; `DeviceList` gives
+  `ra://127.0.0.1:55355`; `Info` gives `["1.22.2", "retroarch", "alttpr"]`
+  for content named `alttpr - NoGlitches-open-ganon_9MQ9gO1wMD`, so the ROM
+  field is not the full name.
+- bsnes-mercury exposes ROM bank `$30`: `GetAddress` at `$18_0213` (A-bus
+  `$30:8213`, the race flag) and at `$00_7FC0` (the header) returned the
+  ROM file's bytes, through SNI and through `READ_CORE_MEMORY` directly.
+- WRAM at `$F5_xxxx` reads live values (game mode `$7E:0010`).
+- Snes9x answers `READ_CORE_MEMORY` with `-1 no memory map defined`.
+
 ## Not verified against a real bridge
 
 - SNI dropping the socket on RetroArch + Snes9x is read from SNI's source,
-  not observed.
-- Whether bsnes-mercury exposes ROM bank `$30` to `READ_CORE_MEMORY`. If it
-  does not, SNI returns zeros, which read as "not a race ROM": a pack should
-  cross-check a ROM byte it knows is non-zero before trusting the flag.
+  not observed (RetroArch's own refusal, above, is).
 - QUsb2Snes's close reasons for RetroArch failures: only "Error in device
   protocol" reaches the client in the code read; the specific texts may not.
 - Chromium's 7-day block after dismissals and Firefox's behaviour while its
