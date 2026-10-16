@@ -104,6 +104,25 @@ describe("StreamViewControl", () => {
       expect(url.selectionStart).toBe(0);
       expect(url.selectionEnd).toBe(obsUrl.length);
     });
+
+    it("says Cmd+C on a Mac", async () => {
+      setClipboard(undefined);
+      document.execCommand = vi.fn(() => false);
+      Object.defineProperty(navigator, "platform", {
+        configurable: true,
+        value: "MacIntel",
+      });
+      try {
+        openDialog();
+        fireEvent.click(screen.getByTestId("stream-view-copy"));
+
+        expect(await screen.findByText("Press Cmd+C to copy.")).toBe(
+          screen.getByTestId("stream-view-status"),
+        );
+      } finally {
+        Reflect.deleteProperty(navigator, "platform");
+      }
+    });
   });
 
   it("links to the view in a new tab", () => {

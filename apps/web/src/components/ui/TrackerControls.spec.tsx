@@ -1,5 +1,13 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type Mock,
+  vi,
+} from "vitest";
 import { TrackerControls } from "@/components/ui/TrackerControls";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -106,6 +114,43 @@ const chooseFile = (text: string) =>
   fireEvent.change(screen.getByTestId("import-file"), {
     target: { files: [new File([text], "save.json")] },
   });
+
+describe("TrackerControls on each platform", () => {
+  const onAMac = (mac: boolean) =>
+    Object.defineProperty(navigator, "platform", {
+      configurable: true,
+      value: mac ? "MacIntel" : "Win32",
+    });
+  afterEach(() => Reflect.deleteProperty(navigator, "platform"));
+
+  it("names Cmd+Z for undo and redo on a Mac", () => {
+    onAMac(true);
+    render(<TrackerControls />);
+
+    expect(screen.getByTestId("undo")).toHaveAttribute(
+      "title",
+      "Undo the last change (Cmd+Z)",
+    );
+    expect(screen.getByTestId("redo")).toHaveAttribute(
+      "title",
+      "Redo (Cmd+Shift+Z)",
+    );
+  });
+
+  it("names Ctrl+Z elsewhere", () => {
+    onAMac(false);
+    render(<TrackerControls />);
+
+    expect(screen.getByTestId("undo")).toHaveAttribute(
+      "title",
+      "Undo the last change (Ctrl+Z)",
+    );
+    expect(screen.getByTestId("redo")).toHaveAttribute(
+      "title",
+      "Redo (Ctrl+Shift+Z)",
+    );
+  });
+});
 
 describe("TrackerControls import", () => {
   it("asks before replacing progress, then loads the save and says so", async () => {

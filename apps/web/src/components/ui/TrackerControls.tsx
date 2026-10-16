@@ -14,6 +14,7 @@ import { ToolbarMenu, ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
 import { useGameStore } from "@/stores/gameStore";
 import { type Progress, parseSave } from "@/stores/persistence";
 import type { MapLayout } from "@/utils";
+import { commandKey } from "@/utils/platform";
 
 /** How long a status message such as "Save imported" stays on screen. */
 const STATUS_DURATION_MS = 4000;
@@ -133,7 +134,7 @@ export const TrackerControls = () => {
         data-testid="undo"
         disabled={!canUndo}
         onClick={undo}
-        title="Undo the last change (Ctrl+Z)"
+        title={`Undo the last change (${commandKey()}+Z)`}
         type="button"
       >
         <UndoIcon />
@@ -145,7 +146,7 @@ export const TrackerControls = () => {
         data-testid="redo"
         disabled={!canRedo}
         onClick={redo}
-        title="Redo (Ctrl+Shift+Z)"
+        title={`Redo (${commandKey()}+Shift+Z)`}
         type="button"
       >
         <RedoIcon />

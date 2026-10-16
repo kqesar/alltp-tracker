@@ -1,4 +1,5 @@
 import { type Chord, type Modifier, parseChord } from "@/data/keymap";
+import { altKey, isApplePlatform } from "@/utils/platform";
 
 /**
  * What each physical key (`KeyboardEvent.code`) types on the player's layout,
@@ -50,25 +51,15 @@ export const keyLabel = (code: string, layout?: LayoutMap | null): string => {
   return FALLBACK_LABELS[code] ?? code;
 };
 
-/** Whether this is an Apple device, whose keyboards say Option and Cmd. */
-const isApple = () => {
-  const platform =
-    (navigator as Navigator & { userAgentData?: { platform?: string } })
-      .userAgentData?.platform ??
-    navigator.platform ??
-    "";
-  return /mac|iphone|ipad|ipod/i.test(platform);
-};
-
 /** A modifier as its keycap names it. */
 const modifierLabel = (modifier: Modifier): string => {
   switch (modifier) {
     case "Alt":
-      return isApple() ? "Option" : "Alt";
+      return altKey();
     case "Control":
       return "Ctrl";
     case "Meta":
-      return isApple() ? "Cmd" : "Win";
+      return isApplePlatform() ? "Cmd" : "Win";
     case "Shift":
       return "Shift";
   }

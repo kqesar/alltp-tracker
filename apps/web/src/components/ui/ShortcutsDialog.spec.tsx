@@ -331,6 +331,25 @@ describe("ShortcutsDialog", () => {
     expect(dialog()).not.toHaveTextContent("while the key cells are shown");
   });
 
+  it("names Cmd+Z and Option on a Mac", async () => {
+    Object.defineProperty(navigator, "platform", {
+      configurable: true,
+      value: "MacIntel",
+    });
+    try {
+      const user = await openWithKeyboard();
+      expect(dialog()).toHaveTextContent("Cmd+Z undoes it.");
+
+      await capture(user, "shortcut-advance-hookshot");
+      await user.keyboard("{Control>}r{/Control}");
+      expect(status()).toHaveTextContent(
+        "Pick a key alone, or with Shift or Option.",
+      );
+    } finally {
+      Reflect.deleteProperty(navigator, "platform");
+    }
+  });
+
   it("closes with Done", async () => {
     const user = await openWithKeyboard();
 
