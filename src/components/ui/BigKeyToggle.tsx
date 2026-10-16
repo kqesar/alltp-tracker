@@ -15,7 +15,7 @@ export const BigKeyToggle = ({ isVisible, onToggle }: BigKeyToggleProps) => {
   };
 
   return (
-    <div className="bigkey-toggle-container">
+    <div className="bigkey-toggle-container" data-testid="bigkey-toggle">
       <button
         aria-label={isVisible ? "Hide big keys" : "Show big keys"}
         className={`bigkey-toggle ${isVisible ? "bigkey-toggle--active" : ""}`}

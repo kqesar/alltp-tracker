@@ -4,6 +4,8 @@ paths:
   - "src/**/*.spec.tsx"
   - "src/test-setup.ts"
   - "vitest.config.ts"
+  - "e2e/**"
+  - "playwright.config.ts"
 ---
 
 # Tests
@@ -13,4 +15,5 @@ paths:
 - **Reset the store** in `beforeEach` with `useGameStore.setState(useGameStore.getInitialState(), true)` (and `localStorage.clear()` when persistence matters). Two specs mock `@/stores/gameStore` entirely with a selector-calling `vi.fn()`; keep their fake state in step with the store's fields.
 - jsdom has `<dialog>` but not `showModal()` / `close()`; `src/test-setup.ts` stubs them by toggling `open`. Escape is simulated by dispatching a cancelable `cancel` event on the dialog.
 - `src/data/logic.characterization.spec.ts` is a refactor guard (see `.claude/rules/data.md`): never update it to make the suite pass.
+- **Browser tests** live in `e2e/*.e2e.ts` (Playwright + `@axe-core/playwright`, Chromium, production build under `/alltp-tracker/`). One page load per width carries every check for that width, to keep the run short. A known defect is pinned with `test.fail(condition, reason)`: the test turns red the moment the defect is fixed, so the fixing commit must drop the marker. CI runs them in their own job, parallel to the unit tests, on the runner's preinstalled Chrome.
 - Coverage thresholds in `vitest.config.ts` are floors just below current coverage; raise them when coverage rises.

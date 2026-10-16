@@ -22,10 +22,11 @@ pnpm lint                    # Biome check
 pnpm lint:fix                # Biome check --write
 pnpm test                    # Run tests once (vitest run)
 pnpm test:coverage           # Run tests with coverage (enforces the floors)
+pnpm test:e2e                # Playwright + axe on the production build, 4 widths (~10 s)
 pnpm vitest run <file>       # One spec file; add -t "name" to filter by test name
 ```
 
-`tsc -b` emits `vite.config.js` at the repo root. It is gitignored and excluded from Biome; delete it if it gets in the way.
+`tsc -b` writes its build info and the config projects' output under `node_modules/.tmp`, never next to the sources: a stray `vite.config.js` would shadow `vite.config.ts`.
 
 The `verifier` subagent runs lint, types, tests and build and returns only the failures; use it instead of reading full command output.
 

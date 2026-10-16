@@ -20,6 +20,8 @@
       "Bash(pnpm lint:fix)",
       "Bash(pnpm test)",
       "Bash(pnpm test:coverage)",
+      "Bash(pnpm test:e2e)",
+      "Bash(pnpm test:e2e *)",
       "Bash(pnpm build)",
       "Bash(pnpm vitest run *)",
       "Bash(pnpm exec tsc -b)",

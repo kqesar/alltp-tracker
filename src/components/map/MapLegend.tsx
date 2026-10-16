@@ -11,7 +11,11 @@ const LEGEND_ITEMS = [
  * understandable without relying on colour alone (accessibility).
  */
 export const MapLegend = () => (
-  <section aria-label="Map availability legend" className="map-legend">
+  <section
+    aria-label="Map availability legend"
+    className="map-legend"
+    data-testid="map-legend"
+  >
     {LEGEND_ITEMS.map((item) => (
       <span className="map-legend__item" key={item.className}>
         <span

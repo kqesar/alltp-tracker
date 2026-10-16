@@ -33,4 +33,4 @@ paths:
 
 ## Verify in the browser
 
-After any visible change, run the app (`node_modules/.bin/vite --port <p>` avoids an install round-trip) and drive it with Playwright at 390 / 820 / 1440 / 1920 px: no horizontal overflow, no overlapping regions, zero console errors, axe-core clean, every clickable element reachable by keyboard. Look at the screenshots, not just the numbers.
+After any visible change, run `pnpm test:e2e` (overflow, overlapping regions, console errors and failed requests, axe, keyboard reachability at 390 / 820 / 1440 / 1920 px), and look at the page yourself: screenshots of each width via Playwright, since a test passing is not the same as the design being right. Extend `e2e/tracker.e2e.ts` when a new behaviour needs a real browser.
