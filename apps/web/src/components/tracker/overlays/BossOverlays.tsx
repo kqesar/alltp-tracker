@@ -114,9 +114,7 @@ const MEDALLION_STATES = MEDALLION_LABELS.length;
  */
 export const MedallionPicker = ({ index, row, col }: CornerProps) => {
   const stored = useGameStore((state) => state.medallions[index]);
-  const handleMedallionChange = useGameStore(
-    (state) => state.handleMedallionChange,
-  );
+  const stepMedallion = useGameStore((state) => state.stepMedallion);
 
   if (
     index !== DUNGEON_INDICES.MISERY_MIRE &&
@@ -134,12 +132,7 @@ export const MedallionPicker = ({ index, row, col }: CornerProps) => {
       corner="top-right"
       label={`${placeName(dungeons[index].name)} medallion: ${MEDALLION_LABELS[medallion]}`}
       position={{ col, row, slot: 1 }}
-      step={(direction) =>
-        handleMedallionChange(
-          index,
-          (medallion + direction + MEDALLION_STATES) % MEDALLION_STATES,
-        )
-      }
+      step={(direction) => stepMedallion(index, direction)}
       testId={`medallion-overlay-${index}`}
     />
   );

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { MEDALLION_VALUES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import { chests } from "@/data/chests";
 import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
 import type { ItemState } from "@/data/logic";
@@ -27,6 +27,8 @@ type GameState = Progress &
     handleItemClick: (item: string, direction?: Direction) => void;
     handleSmallKeyClick: (dungeonIndex: number, direction?: Direction) => void;
     handleMedallionChange: (bossNumber: number, newValue: number) => void;
+    /** Step a dungeon's medallion through unknown, Bombos, Ether, Quake */
+    stepMedallion: (dungeonIndex: number, direction?: Direction) => void;
     toggleChest: (chestIndex: number) => void;
     setBigKeysVisible: (visible: boolean) => void;
     setMapLayout: (layout: MapLayout) => void;
@@ -52,6 +54,9 @@ type GameState = Progress &
 
 /** Undo depth: far more than a run needs, and each step is a few KB. */
 const HISTORY_LIMIT = 200;
+
+/** Medallion states: unknown, then Bombos, Ether and Quake. */
+const MEDALLION_STATES = MEDALLION_VALUES.QUAKE + 1;
 
 /** A fresh run of the given preset: nothing found, nothing opened. */
 const createProgress = (presetId: string = DEFAULT_PRESET_ID): Progress => {
@@ -230,6 +235,15 @@ export const useGameStore = create<GameState>()(
           set({ bigKeysVisible: visible }),
 
         setMapLayout: (layout: MapLayout) => set({ mapLayout: layout }),
+
+        stepMedallion: (dungeonIndex: number, direction: Direction = 1) => {
+          // Modulo keeps a malformed stored value inside the four states
+          const current = get().medallions[dungeonIndex] % MEDALLION_STATES;
+          get().handleMedallionChange(
+            dungeonIndex,
+            (current + direction + MEDALLION_STATES) % MEDALLION_STATES,
+          );
+        },
 
         toggleChest: (chestIndex: number) =>
           set((state) =>
