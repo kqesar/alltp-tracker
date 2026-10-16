@@ -1,21 +1,25 @@
 #!/usr/bin/env node
-// Makes the opaque black backdrop of item icons transparent, so they sit on
-// whatever surface shows them (tooltip, grid, light themes) instead of in a
-// black square.
+// Makes the opaque black backdrop of every image transparent, so it sits on
+// whatever surface shows it (tooltip, grid, map, a stream over footage)
+// instead of in a black square.
 //
 //   node scripts/transparent-icons.mjs [--check]
 //
-// For each listed PNG, the near-black pixels connected to the image border
-// are the backdrop. They become transparent, except those touching a coloured
-// pixel: that ring is kept as a 1 px black outline, as the sprites have in the
-// game, so the art stays crisp on a light surface. Black inside the sprite
-// (not connected to the border) is never touched. Decoding and encoding go
+// For each PNG of public/assets but the map, the backdrop is the near-black
+// region flooded in from the image's corners: a backdrop is a rectangle behind
+// the sprite, so it holds the corners. It becomes transparent, except the
+// pixels touching a coloured one: that ring is kept as a 1 px black outline,
+// as the sprites have in the game, so the art stays crisp on a light surface.
+// Black inside the sprite is never touched, nor black that reaches the border
+// between transparent corners: the disc behind a reward glyph, the dark panes
+// of Kholdstare's shell. Neither is a translucent badge (the chest counts),
+// whose pixels are never near-black and opaque. Decoding and encoding go
 // through Chromium's canvas (the Playwright browser already installed for the
 // e2e suite), so no image library is needed.
 //
-// --check only reports which listed files still have a backdrop, and exits 1
-// if any does.
-import { readFileSync, writeFileSync } from "node:fs";
+// --check only reports which files still have a backdrop, and exits 1 if any
+// does.
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
@@ -25,51 +29,15 @@ const ASSETS = join(
   "../public/assets",
 );
 
-// Item and requirement icons only. Counter overlays (chest*, dungeon*), boss
-// portraits, the map and the marker frame keep their backdrop on purpose.
-const ICONS = [
-  "bombos",
-  "book",
-  "boomerang0",
-  "boomerang1",
-  "boomerang2",
-  "boomerang3",
-  "boots",
-  "bottle0",
-  "bow0",
-  "bow1",
-  "bow2",
-  "bow3",
-  "byrna",
-  "cape",
-  "crystal0",
-  "ether",
-  "firerod",
-  "flippers",
-  "flute",
-  "glove0",
-  "glove1",
-  "glove2",
-  "hammer",
-  "hookshot",
-  "icerod",
-  "lantern",
-  "mirror",
-  "mushroom",
-  "net",
-  "pendant0",
-  "pendant1",
-  "pendant2",
-  "powder",
-  "quake",
-  "shovel",
-  "somaria",
-];
+// Every image but the map, which is a scene, not a sprite on a backdrop
+const ICONS = readdirSync(ASSETS)
+  .filter((file) => file.endsWith(".png") && file !== "map.png")
+  .map((file) => file.slice(0, -".png".length))
+  .sort();
 
 // The digit of bottle1-4 breaks the bottle's outline, so a flood from the
 // border would leak into the bottle. The empty bottle has the same outline:
-// its transparent pixels bound the flood instead. Listed after bottle0, which
-// must be processed first.
+// its transparent pixels bound the flood instead, so it is processed first.
 const BOUNDED_BY = {
   bottle1: "bottle0",
   bottle2: "bottle0",
@@ -87,7 +55,11 @@ const browser = await chromium.launch();
 const page = await browser.newPage();
 
 const results = [];
-for (const name of [...ICONS, ...Object.keys(BOUNDED_BY)]) {
+// Bounded icons last, once the icon bounding them has been processed
+for (const name of [
+  ...ICONS.filter((icon) => !(icon in BOUNDED_BY)),
+  ...Object.keys(BOUNDED_BY),
+]) {
   const file = join(ASSETS, `${name}.png`);
   const source = dataUrlOf(name);
   const bound = BOUNDED_BY[name] ? dataUrlOf(BOUNDED_BY[name]) : null;
@@ -125,12 +97,9 @@ for (const name of [...ICONS, ...Object.keys(BOUNDED_BY)]) {
         (!outside || outside[index * 4 + 3] === 0);
       const isVisible = (index) => data[index * 4 + 3] > 16;
 
-      // Flood the backdrop in from the border through near-black pixels
+      // Flood the backdrop in from the corners through near-black pixels
       const inBackdrop = new Uint8Array(width * height);
-      const stack = [];
-      for (let x = 0; x < width; x++) stack.push(x, (height - 1) * width + x);
-      for (let y = 0; y < height; y++)
-        stack.push(y * width, y * width + width - 1);
+      const stack = [0, width - 1, (height - 1) * width, height * width - 1];
       while (stack.length > 0) {
         const index = stack.pop();
         if (inBackdrop[index] || !isBlack(index)) continue;
