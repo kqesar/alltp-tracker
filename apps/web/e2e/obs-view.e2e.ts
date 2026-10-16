@@ -104,14 +104,16 @@ test.describe("the stream view", () => {
     expect(boss).toBeTruthy();
     if (!boss) return;
     expect(await alphaAt(page, boss.x + 2, boss.y + 2)).toBe(0);
-    // ...while the icon itself is drawn
-    expect(
-      await alphaAt(
-        page,
-        hammer.x + hammer.width / 2,
-        hammer.y + hammer.height / 2,
-      ),
-    ).toBe(255);
+    // ...while the icon itself is drawn, once loaded
+    await expect
+      .poll(() =>
+        alphaAt(
+          page,
+          hammer.x + hammer.width / 2,
+          hammer.y + hammer.height / 2,
+        ),
+      )
+      .toBe(255);
 
     const { violations } = await new AxeBuilder({ page })
       .withTags(WCAG_AA)
