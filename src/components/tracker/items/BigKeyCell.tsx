@@ -22,10 +22,10 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
   if (!bigKeysVisible) {
     return (
       <div
-        className="griditem grid-item-base"
+        aria-hidden="true"
+        className="grid-spacer"
         data-grid-col={col}
         data-grid-row={row}
-        style={{ opacity: 0, pointerEvents: "none" }}
       />
     );
   }

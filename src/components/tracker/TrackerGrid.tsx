@@ -1,5 +1,6 @@
 import { GridItem } from "@/components/tracker/grid/GridItem";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import { useGameStore } from "@/stores/gameStore";
 
 type TrackerGridProps = {
   /** Grid layout data - array of rows containing item identifiers */
@@ -13,10 +14,18 @@ type TrackerGridProps = {
  * @param itemLayout - 2D array representing the grid layout with item identifiers
  */
 export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
+  const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
+  // A row of nothing but key cells would be empty while they are hidden
+  const rows = bigKeysVisible
+    ? itemLayout
+    : itemLayout.filter(
+        (row) => !row.every((item) => item.startsWith("bigkey")),
+      );
+
   const { containerRef, updateFocusPosition } = useKeyboardNavigation({
     enabled: true,
-    itemLayout,
-    totalRows: itemLayout.length,
+    itemLayout: rows,
+    totalRows: rows.length,
   });
 
   return (
@@ -29,7 +38,7 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
     >
       <h2 className="sr-only">Item Tracker</h2>
       <div className="tracker">
-        {itemLayout.map((row: string[], rowIndex: number) => (
+        {rows.map((row: string[], rowIndex: number) => (
           <div
             className="tracker-row"
             data-row-index={rowIndex}

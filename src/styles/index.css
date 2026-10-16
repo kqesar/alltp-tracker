@@ -2,6 +2,7 @@
 @import "./reset.css";
 @import "./variables.css";
 @import "./base.css";
+@import "./layout.css";
 @import "./header.css";
 @import "./tracker.css";
 @import "./map.css";

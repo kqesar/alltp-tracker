@@ -9,94 +9,61 @@
   image-rendering: pixelated;
 }
 
-/* Big Key Toggle Component */
-.bigkey-toggle-container {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  z-index: var(--z-modal);
-  pointer-events: auto;
-}
-
-/* Tracker Controls Component (new game / export / import) */
+/* Tracker controls: run type, new game, undo/redo, save files, map layout */
 .tracker-controls {
-  position: fixed;
-  top: 80px;
-  left: 20px;
-  z-index: var(--z-modal);
   display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
-  pointer-events: auto;
+  align-items: center;
 }
 
-.tracker-controls__button {
+/* Shared look of every toolbar button */
+.tracker-controls__button,
+.bigkey-toggle {
+  display: inline-flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  min-height: 2.5rem;
   padding: var(--spacing-sm) var(--spacing-md);
-  font-family: var(--font-family);
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text-secondary);
-  cursor: pointer;
+  white-space: nowrap;
   /* Subtle frosted pill, not an outlined checkbox */
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--surface-glass);
+  border: 1px solid var(--color-border-glass);
   border-radius: var(--border-radius);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(6px);
-  transition: all var(--transition);
+  box-shadow: var(--shadow-raised);
+  transition:
+    color var(--transition),
+    background-color var(--transition),
+    border-color var(--transition);
+}
+
+.tracker-controls__button:hover:not(:disabled),
+.bigkey-toggle:hover {
+  color: var(--color-accent);
+  background: var(--surface-hover);
+  border-color: var(--color-accent);
 }
 
 .tracker-controls__button:disabled {
-  cursor: not-allowed;
   opacity: 0.45;
 }
 
 .tracker-controls__status {
-  align-self: center;
   font-size: var(--font-size-sm);
   color: var(--color-success);
 }
 
-.tracker-controls__button:hover:not(:disabled) {
-  color: var(--color-accent);
-  background: rgba(255, 255, 255, 0.12);
-  border-color: var(--color-accent);
-  transform: translateY(-1px);
-}
-
-.bigkey-toggle {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  cursor: pointer;
-  background: rgba(0, 0, 0, 0.85);
-  border: 2px solid var(--color-primary);
-  border-radius: var(--border-radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
-  transition: all var(--transition);
-}
-
-.bigkey-toggle:hover {
-  background: rgba(0, 0, 0, 0.95);
-  border-color: var(--color-primary-hover);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-  transform: translateY(-1px);
+/* Key cells toggle: pushed to the far end of the toolbar */
+.bigkey-toggle-container {
+  margin-inline-start: auto;
 }
 
 .bigkey-toggle--active {
-  color: var(--color-primary);
-  background: rgba(var(--color-primary-rgb), 0.2);
-  border-color: var(--color-primary);
-}
-
-.bigkey-toggle--active:hover {
-  background: rgba(var(--color-primary-rgb), 0.3);
-  border-color: var(--color-primary-hover);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .bigkey-toggle__icon {
@@ -130,10 +97,7 @@
 
 .bigkey-toggle__slash {
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   pointer-events: none;
   background: linear-gradient(
     45deg,
@@ -145,7 +109,6 @@
 }
 
 .bigkey-toggle__text {
-  white-space: nowrap;
   user-select: none;
 }
 
@@ -284,8 +247,8 @@
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   #caption {
-    background-color: var(--color-bg-secondary);
-    border: 2px solid var(--color-primary);
+    background-color: var(--surface-2);
+    border: 2px solid var(--color-accent);
   }
 
   .caption-content {

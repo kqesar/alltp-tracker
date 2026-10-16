@@ -15,7 +15,10 @@ export const getAssetPath = (assetPath: string): string => {
  * @param value - The item's current value in the store
  * @returns CSS background-image value (empty string for blank slots)
  */
-const getItemBackground = (item: string, value: number | boolean): string => {
+export const getItemBackground = (
+  item: string,
+  value: number | boolean,
+): string => {
   if (!item || item === "blank") return "";
   // Big keys all share a single image
   if (item.startsWith("bigkey")) return `url(${getAssetPath("bigkey.png")})`;
@@ -24,32 +27,21 @@ const getItemBackground = (item: string, value: number | boolean): string => {
 };
 
 /**
- * Computes the opacity for a tracker item: full when obtained, dimmed otherwise.
+ * Whether a tracker cell shows its item as not obtained (drawn dimmed).
  * @param item - The item identifier
  * @param value - The item's current value in the store
- * @returns Opacity value as a string
  */
-const getItemOpacity = (item: string, value: number | boolean): string => {
-  if (!item || item === "blank") return "0.25";
-  if (item.startsWith("bigkey")) {
-    return value === 1 ? "1" : "0.25";
-  }
-  if (typeof value === "boolean") return value ? "1" : "0.25";
+export const isItemDimmed = (
+  item: string,
+  value: number | boolean,
+): boolean => {
+  if (!item || item === "blank") return true;
+  if (item.startsWith("bigkey")) return value !== 1;
+  if (typeof value === "boolean") return !value;
   // A boss icon is always drawn at full strength; its overlays carry the state.
-  if (item.startsWith("boss")) return "1";
-  const minValue = itemsMin[item] || 0;
-  return value > minValue ? "1" : "0.25";
+  if (item.startsWith("boss")) return false;
+  return value <= (itemsMin[item] || 0);
 };
-
-/**
- * Dynamic style object (background + opacity) for a tracker grid item.
- * @param item - The item identifier
- * @param value - The item's current value in the store
- */
-export const getGridItemStyles = (item: string, value: number | boolean) => ({
-  backgroundImage: getItemBackground(item, value),
-  opacity: getItemOpacity(item, value),
-});
 
 /**
  * How the two worlds are arranged on screen.

@@ -5,7 +5,7 @@ import {
 import { BOSS_STATES } from "@/constants";
 import { itemLabels, itemsMin } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
-import { getGridItemStyles } from "@/utils";
+import { getItemBackground, isItemDimmed } from "@/utils";
 
 type ItemProps = {
   row: number;
@@ -48,14 +48,14 @@ export const Item = ({ row, col, item, onFocus }: ItemProps) => {
   return (
     <button
       aria-label={`${itemLabels(item)}, ${describeState(item, value)}. Click to change state.`}
-      className={`griditem grid-item-base${bossNumber === null ? "" : " grid-item-relative"}`}
+      className={`griditem grid-item-base${isItemDimmed(item, value) ? " griditem--dimmed" : ""}`}
       data-grid-col={col}
       data-grid-row={row}
       data-testid={`item-${item}`}
       disabled={item === "blank"}
       onClick={() => handleItemClick(item)}
       onFocus={onFocus}
-      style={getGridItemStyles(item, value)}
+      style={{ backgroundImage: getItemBackground(item, value) }}
       type="button"
     >
       {bossNumber !== null && (

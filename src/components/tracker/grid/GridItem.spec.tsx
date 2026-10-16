@@ -34,14 +34,14 @@ describe("GridItem", () => {
     // Misery Mire is medallion-gated, so all three overlays are present.
     expect(screen.getByTestId("chest-overlay-8")).toBeInTheDocument();
     expect(screen.getByTestId("reward-overlay-8")).toBeInTheDocument();
-    expect(screen.getByRole("button")).toHaveClass("grid-item-relative");
+    expect(screen.getByTestId("medallion-overlay-8")).toBeInTheDocument();
   });
 
   it("omits the medallion overlay for dungeons that are not gated", () => {
-    const { container } = render(<GridItem col={0} item="boss0" row={0} />);
+    render(<GridItem col={0} item="boss0" row={0} />);
 
     expect(screen.getByTestId("chest-overlay-0")).toBeInTheDocument();
-    expect(container.querySelector(".overlay--top-right")).toBeNull();
+    expect(screen.queryByTestId("medallion-overlay-0")).toBeNull();
   });
 
   it("routes a big key to the keysanity cell", () => {

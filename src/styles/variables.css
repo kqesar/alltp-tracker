@@ -1,25 +1,22 @@
 /*
- * Design tokens — a single, coherent source of truth for the UI theme.
- * Grouped by role so the system stays readable and maintainable.
+ * Design tokens — the single source of truth for the UI theme, grouped by
+ * role. Components use these names, never raw values.
  */
 :root {
-  /* ---- Brand / accent (Triforce gold is the primary accent) ---- */
+  /* ---- Accent: Triforce gold, the one brand colour ---- */
   --color-accent: #e6c34a;
   --color-accent-strong: #f2d469;
   --color-accent-rgb: 230, 195, 74;
-
-  /* Secondary interactive colour (links, focus) */
-  --color-primary: #7c83ff;
-  --color-primary-hover: #9aa0ff;
-  --color-primary-rgb: 124, 131, 255;
-  --color-focus: var(--color-accent);
+  --color-on-accent: #1a1300;
 
   /* ---- Surfaces (dark slate scale, low -> elevated) ---- */
   --color-bg: #07070b;
+  --color-bg-rgb: 7, 7, 11;
   --surface-1: #11121a; /* base panels */
   --surface-2: #181a26; /* cards */
   --surface-3: #202332; /* elevated (modals, menus) */
-  --color-bg-secondary: var(--surface-2);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --surface-glass: rgba(255, 255, 255, 0.06);
   --color-bg-header: rgba(10, 11, 18, 0.85);
   --overlay-backdrop: rgba(4, 5, 9, 0.66);
 
@@ -27,27 +24,33 @@
   --color-text: #f4f5fb;
   --color-text-primary: #f4f5fb;
   --color-text-secondary: #b6bacb;
-  --color-text-muted: #7e8398;
+  --color-text-muted: #8a8fa5;
 
   /* ---- Borders ---- */
   --color-border: #2b2f3f;
   --color-border-strong: #3c4256;
+  --color-border-glass: rgba(255, 255, 255, 0.14);
 
   /* ---- Feedback (UI messages / buttons) ---- */
   --color-success: #3fb950;
-  --color-warning: #e6c34a;
   --color-danger: #f0506e;
   --color-danger-hover: #f76a85;
 
-  /* ---- Map marker states (kept vivid for at-a-glance scanning) ---- */
+  /* ---- Map marker states: the community's green / yellow / red / grey,
+     each paired with a glyph so colour is never the only cue ---- */
   --state-available: #2ecc40;
   --state-possible: #ffdc00;
   --state-unavailable: #ff4136;
   --state-opened: #7f7f7f;
-  --color-disabled: var(--state-opened);
+  --state-ink: #0b0b0f; /* glyph colour on a state swatch */
+
+  /* ---- Focus: a dark gap then a gold ring, visible on any background,
+     the busy map included ---- */
+  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
 
   /* ---- Typography ---- */
-  --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
@@ -61,26 +64,27 @@
   --spacing-xl: 2rem;
 
   /* ---- Radius / motion / shadow ---- */
+  --border-radius-sm: 0.25rem;
   --border-radius: 0.5rem;
   --border-radius-lg: 0.875rem;
   --transition: 0.2s ease-in-out;
+  --shadow-raised: 0 2px 8px rgba(0, 0, 0, 0.25);
   --shadow-elevated: 0 18px 48px rgba(0, 0, 0, 0.55);
 
   /* ---- Layering ---- */
-  --header-height: 4rem;
   --z-overlay: 2;
-  --z-header: 1000;
-  --z-modal: 2000;
+  --z-tooltip: 1500;
 }
 
 /* High contrast mode support */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
   :root {
     --color-text: #ffffff;
+    --color-text-secondary: #ffffff;
     --color-bg: #000000;
+    --color-bg-rgb: 0, 0, 0;
     --color-accent: #ffffff;
-    --color-primary: #ffffff;
     --color-border: #ffffff;
-    --color-focus: #ffffff;
+    --color-border-glass: #ffffff;
   }
 }

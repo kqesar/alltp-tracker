@@ -1,127 +1,80 @@
-/* Map Layout Container */
+/*
+ * The map: one asset holding the Light World in its left half and the Dark
+ * World in its right. It fills its column at a fixed aspect ratio, and the
+ * markers are sized in container units, so everything scales together.
+ */
 .mapdiv {
   position: relative;
-  display: inline-block;
-  width: 884px;
-  height: 442px;
-  vertical-align: middle;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  container-type: inline-size;
+  image-rendering: pixelated;
   background-image: url("/assets/map.png");
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: 100% 100%;
 }
 
-/*
- * Stacked layout. The asset is one 884x442 image holding the Light World in
- * its left half and the Dark World in its right, so rather than ship a second
- * asset we paint it twice and slide each copy so one half lands in each row.
- */
+/* Stacked: the asset is painted twice, each copy showing one half, so the
+   Dark World lands under the Light World without a second image. */
 .layout--stacked .mapdiv {
-  width: 442px;
-  height: 884px;
+  aspect-ratio: 1 / 2;
   background-image: url("/assets/map.png"), url("/assets/map.png");
   background-position:
     0 0,
-    -442px 442px;
+    100% 100%;
   background-size:
-    884px 442px,
-    884px 442px;
+    200% 50%,
+    200% 50%;
 }
 
-/* The map is now much taller than the item grid, so anchor both to the top
-   instead of letting the short one float to the middle of the tall one. */
-.layout--stacked .mapdiv,
-.layout--stacked .itemdiv {
-  vertical-align: top;
-}
-
-/* Map Container */
 .map-container {
   position: relative;
   width: 100%;
   height: 100%;
 }
 
-/* Map Element Base */
-.map-element-base {
+/* Markers. Sizes reproduce the original 24 / 48 px on an 884 px map, as a
+   share of the map's width: 2.7cqw side by side, 5.4cqw once each world
+   spans the full width. */
+.mapspan {
+  --marker: clamp(12px, 2.7cqw, 36px);
   position: absolute;
+  width: var(--marker);
+  aspect-ratio: 1;
   cursor: pointer;
-  background-size: 100% 100%;
-}
-
-/* Map Element Components */
-.boss {
-  position: absolute;
-  z-index: var(--z-overlay);
-  width: 24px;
-  height: 24px;
-  margin-top: -12px;
-  margin-left: -12px;
-  cursor: pointer;
+  image-rendering: pixelated;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 75% 75%;
-  transition: transform var(--transition);
-}
-
-.boss:hover {
-  transform: scale(1.1);
+  background-size: 100% 100%;
+  translate: -50% -50%;
+  transition:
+    transform var(--transition),
+    filter var(--transition);
 }
 
 .dungeon {
-  position: absolute;
-  width: 48px;
-  height: 48px;
-  margin-top: -24px;
-  margin-left: -24px;
-  cursor: pointer;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 100% 100%;
-  transition: transform var(--transition);
+  --marker: clamp(20px, 5.4cqw, 72px);
 }
 
-.dungeon:hover {
-  transform: scale(1.1);
+/* The boss icon sits on its dungeon's square, above it. */
+.boss {
+  z-index: var(--z-overlay);
+  background-size: 75% 75%;
 }
 
-.chest {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  margin-top: -12px;
-  margin-left: -12px;
-  cursor: pointer;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 100% 100%;
-  transition: transform var(--transition);
+.layout--stacked .mapspan {
+  --marker: clamp(12px, 5.4cqw, 36px);
 }
 
-.chest:hover {
-  transform: scale(1.1);
+.layout--stacked .dungeon {
+  --marker: clamp(20px, 10.9cqw, 72px);
 }
 
-/* Map Chest Specific */
-.map-chest {
-  width: 24px;
-  height: 24px;
-  margin-top: -12px;
-  margin-left: -12px;
-}
-
-/* Interactive Elements */
-.mapspan {
-  cursor: pointer;
-  transition: all var(--transition);
-}
-
-.mapspan:hover {
-  filter: brightness(1.1);
-}
-
-.mapspan:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+@media (hover: hover) {
+  .mapspan:hover {
+    filter: brightness(1.1);
+    transform: scale(1.1);
+  }
 }
 
 /* Availability State Classes */
@@ -134,7 +87,7 @@
 }
 
 .possible {
-  color: #000;
+  color: var(--state-ink);
   background-color: var(--state-possible);
 }
 
@@ -146,9 +99,8 @@
 .map-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-sm) var(--spacing-lg);
+  gap: var(--spacing-xs) var(--spacing-lg);
   justify-content: center;
-  margin-top: var(--spacing-md);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
@@ -165,27 +117,4 @@
   height: 14px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 3px;
-}
-
-/* Responsive Design for Map */
-@media (max-width: 768px) {
-  .mapdiv {
-    width: 100%;
-    max-width: 600px;
-    height: auto;
-    aspect-ratio: 2 / 1;
-  }
-
-  /* Stacked is the layout that suits a narrow screen, so let it fill the width
-     and scale both halves with it. */
-  .layout--stacked .mapdiv {
-    max-width: 442px;
-    aspect-ratio: 1 / 2;
-    background-position:
-      0 0,
-      -100% 100%;
-    background-size:
-      200% 50%,
-      200% 50%;
-  }
 }
