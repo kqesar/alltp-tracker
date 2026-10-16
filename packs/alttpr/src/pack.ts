@@ -15,6 +15,17 @@ import { buildWorld, type RegionModule } from "./world";
 import { OPEN_REGIONS } from "./worlds/open";
 import { STANDARD_REGIONS } from "./worlds/standard";
 
+/**
+ * Every name a requirement may read from the state: the items, the
+ * medallion facts and the facts derived from the items. Anything that
+ * compiles a world of this pack takes its item list from here.
+ */
+export const STATE_NAMES: readonly string[] = [
+  ...ITEM_IDS,
+  ...MEDALLION_FACTS,
+  ...DERIVED_FACTS,
+];
+
 /** The region modules of the run's world: Standard's or Open's. */
 export function regionModules(
   settings: AlttprSettings,
@@ -35,7 +46,7 @@ export function world(settings: AlttprSettings): World {
  */
 export function compile(settings: AlttprSettings): CompiledWorld {
   return compileWorld(world(settings), loadRules(RULES), {
-    items: [...ITEM_IDS, ...MEDALLION_FACTS, ...DERIVED_FACTS],
+    items: STATE_NAMES,
     settings,
   });
 }
