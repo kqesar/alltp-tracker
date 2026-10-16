@@ -20,6 +20,16 @@ export {
   type TransportOperation,
 } from "./errors";
 export {
+  type AutotrackPack,
+  type AutotrackPackSource,
+  definePack,
+  type GameCheck,
+  type GameCheckResult,
+  type RaceFlagProbe,
+  type RaceFlagReading,
+  type RangeSpec,
+} from "./pack";
+export {
   type ByteRange,
   type PlannedRequest,
   type PlanOptions,
@@ -35,6 +45,20 @@ export type {
   WebSocketFactory,
   WebSocketLike,
 } from "./platform";
+export {
+  assertRaceSafe,
+  defineRaceProfile,
+  type RaceCategory,
+  type RaceFlagSpec,
+  type RaceProfile,
+} from "./race";
+export {
+  type RaceFlagState,
+  type RaceSetting,
+  type RaceStatus,
+  raceStatus,
+} from "./race-mode";
+export type { MemorySnapshot, PollUpdate } from "./scheduler";
 export type {
   BridgeInfo,
   BridgeKind,
