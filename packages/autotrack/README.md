@@ -319,8 +319,9 @@ set up the emulator (RetroArch with bsnes-mercury and Network Commands, FX
 Pak Pro, BizHawk, NWA), allow the browser connection, load the game. Each
 step lists the status keys that mark it done or failing, and variants per
 OS, CPU, browser and device, with English text, links and sources.
-`setupProgress(status, environment, { game })` derives each step's state and
-the step to open. `sniAssets(environment)` names the SNI download
+`setupProgress(status, environment, { game, device })` derives each step's
+state and the step to open; `device`, the UI's pick, fits the text until the
+session names the device it attached. `sniAssets(environment)` names the SNI download
 (`sni-v{version}-windows-amd64.zip`, `-darwin-universal.tar.gz`,
 `-linux-amd64(-notray).tar.xz`, arm64 variants).
 
