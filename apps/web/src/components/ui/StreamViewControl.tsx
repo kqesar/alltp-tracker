@@ -6,6 +6,7 @@ import { ITEMS_PER_ROW } from "@/constants";
 import { defaultItemGrid } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
 import { visibleRows } from "@/utils";
+import { commandKey } from "@/utils/platform";
 import { obsViewUrl, trackerUrl } from "@/utils/view";
 
 /** The icons' own size: a source of 64 px cells draws every pixel whole. */
@@ -45,10 +46,12 @@ export const StreamViewControl = ({
       setStatus("Copied.");
     } catch {
       // No clipboard access (an insecure page, a denied permission): select
-      // the address, so that the older copy command or Ctrl+C takes it.
+      // the address, so that the older copy command or Ctrl/Cmd+C takes it.
       urlRef.current?.select();
       setStatus(
-        document.execCommand?.("copy") ? "Copied." : "Press Ctrl+C to copy.",
+        document.execCommand?.("copy")
+          ? "Copied."
+          : `Press ${commandKey()}+C to copy.`,
       );
     }
   };

@@ -29,6 +29,7 @@ import { useKeyboardLayout } from "@/stores/keyboardLayoutStore";
 import { getAssetPath } from "@/utils";
 import { placeName } from "@/utils/caption";
 import { chordText } from "@/utils/keyLabels";
+import { altKey, commandKey } from "@/utils/platform";
 
 const DIRECTIONS: ShortcutDirection[] = ["advance", "back"];
 
@@ -57,7 +58,7 @@ const iconOf = (control: ControlId): string => {
 const refusalMessage = (refusal: Refusal, chord: string) =>
   refusal === "key"
     ? `${chord} can't be a shortcut: it keeps its own job. Pick another key.`
-    : `${chord} belongs to the browser or the system. Pick a key alone, or with Shift or Alt.`;
+    : `${chord} belongs to the browser or the system. Pick a key alone, or with Shift or ${altKey()}.`;
 
 /** A binding waiting for the player to say what happens to the key's holder. */
 type Conflict = { action: ActionId; chord: Chord; holder: ActionId };
@@ -299,7 +300,7 @@ export const ShortcutsDialog = ({ onClose }: { onClose: () => void }) => {
           </button>
           <p className="shortcuts__hint">
             {shortcuts.enabled
-              ? "While the tracker has focus, a key steps its control forward, as a click does, or back, as a right-click does. Ctrl+Z undoes it."
+              ? `While the tracker has focus, a key steps its control forward, as a click does, or back, as a right-click does. ${commandKey()}+Z undoes it.`
               : "Shortcuts are off: no key changes the board until they are back on."}
           </p>
         </div>
