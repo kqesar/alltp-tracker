@@ -379,6 +379,19 @@ describe("Usb2SnesTransport protocol errors", () => {
     });
   });
 
+  it("reports a socket that only errors before opening as unreachable", async () => {
+    // Node 22's WebSocket fires "error" and never "close" on a refused port
+    const socket = new HandSocket();
+    const transport = new Usb2SnesTransport({ socket: () => socket });
+    const opening = rejection(transport.open());
+    socket.onerror?.({});
+    expect(await opening).toMatchObject({
+      code: "unreachable",
+      detail: { reason: "error" },
+    });
+    expect(socket.closedWith).toBe(1000);
+  });
+
   it("fails to open without a WebSocket", async () => {
     const transport = new Usb2SnesTransport({
       socket: () => {
