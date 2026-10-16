@@ -3,94 +3,168 @@ import { useRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   chooseFit,
+  type FitLayout,
   HYSTERESIS_PX,
-  measureNeeds,
+  probeToolbar,
+  rowsAt,
+  type ToolbarFit,
   useToolbarFit,
 } from "@/hooks/useToolbarFit";
 
-const NEEDS = { icons: 700, labels: 1200 };
+describe("rowsAt", () => {
+  const layout = { gap: 10, padding: 20, widths: [100, 100, 100] };
+
+  it("breaks the controls into rows one after another, as flex-wrap does", () => {
+    expect(rowsAt(layout, 340)).toBe(1);
+    expect(rowsAt(layout, 339)).toBe(2);
+    expect(rowsAt(layout, 230)).toBe(2);
+    expect(rowsAt(layout, 229)).toBe(3);
+  });
+
+  it("keeps a control wider than the bar on a row of its own", () => {
+    expect(rowsAt({ gap: 10, padding: 0, widths: [500, 50] }, 100)).toBe(2);
+  });
+});
+
+/** Each form laid out: a richer form has wider or more controls. */
+const LAYOUTS: Record<ToolbarFit, FitLayout> = {
+  compact: { gap: 0, padding: 0, widths: [60, 60, 60, 60] },
+  icons: { gap: 8, padding: 0, widths: [300, 300] },
+  labels: { gap: 8, padding: 0, widths: [500, 500] },
+  more: { gap: 8, padding: 0, widths: [200, 200, 200] },
+  "more-keys": { gap: 0, padding: 0, widths: [100, 100, 100, 100] },
+  "more-map": { gap: 8, padding: 0, widths: [150, 150, 150] },
+};
+const layoutOf = (fit: ToolbarFit) => LAYOUTS[fit];
 
 describe("chooseFit", () => {
   it.each([
-    [1300, "labels"],
-    [1200, "labels"],
-    [1199, "icons"],
-    [700, "icons"],
-    [699, "more"],
-    [0, "more"],
+    [1100, "labels"],
+    [1008, "labels"],
+    [1007, "icons"],
+    [608, "icons"],
+    [607, "more"],
+    [408, "more"],
+    [407, "more-map"],
+    [308, "more-map"],
+    [307, "more-keys"],
+    [200, "more-keys"],
+    [199, "compact"],
+    [50, "compact"],
   ] as const)("at %i px with nothing shown yet, picks %s", (width, fit) => {
-    expect(chooseFit(width, NEEDS)).toBe(fit);
+    expect(chooseFit(width, layoutOf)).toBe(fit);
+  });
+
+  it("needs one row for the full bar, two once it folds into More", () => {
+    // The icons on two rows would fit at 400 px: the bar folds instead
+    expect(rowsAt(LAYOUTS.icons, 400)).toBe(2);
+    expect(chooseFit(400, layoutOf)).not.toBe("icons");
+  });
+
+  it("lays out only the forms it has to, richest first", () => {
+    const asked = vi.fn(layoutOf);
+
+    chooseFit(700, asked);
+
+    expect(asked.mock.calls.map(([fit]) => fit)).toEqual(["labels", "icons"]);
   });
 
   it("keeps a form while it fits, and falls back as soon as it no longer does", () => {
-    expect(chooseFit(1200, NEEDS, "labels")).toBe("labels");
-    expect(chooseFit(700, NEEDS, "icons")).toBe("icons");
-    expect(chooseFit(1199, NEEDS, "labels")).toBe("icons");
-    expect(chooseFit(699, NEEDS, "icons")).toBe("more");
-    expect(chooseFit(600, NEEDS, "labels")).toBe("more");
+    expect(chooseFit(1008, layoutOf, "labels")).toBe("labels");
+    expect(chooseFit(408, layoutOf, "more")).toBe("more");
+    expect(chooseFit(1007, layoutOf, "labels")).toBe("icons");
+    expect(chooseFit(407, layoutOf, "more")).toBe("more-map");
+    expect(chooseFit(250, layoutOf, "labels")).toBe("more-keys");
   });
 
   it("moves up only with room to spare, so an edge width cannot flip it", () => {
-    expect(chooseFit(700 + HYSTERESIS_PX - 1, NEEDS, "more")).toBe("more");
-    expect(chooseFit(700 + HYSTERESIS_PX, NEEDS, "more")).toBe("icons");
-    expect(chooseFit(1200 + HYSTERESIS_PX - 1, NEEDS, "icons")).toBe("icons");
-    expect(chooseFit(1200 + HYSTERESIS_PX, NEEDS, "icons")).toBe("labels");
+    expect(chooseFit(408 + HYSTERESIS_PX - 1, layoutOf, "more-map")).toBe(
+      "more-map",
+    );
+    expect(chooseFit(408 + HYSTERESIS_PX, layoutOf, "more-map")).toBe("more");
+    expect(chooseFit(1008 + HYSTERESIS_PX - 1, layoutOf, "icons")).toBe(
+      "icons",
+    );
+    expect(chooseFit(1008 + HYSTERESIS_PX, layoutOf, "icons")).toBe("labels");
     // Without the margin, a scrollbar's width could undo each switch
     expect(HYSTERESIS_PX).toBeGreaterThan(17);
   });
 });
 
-/** The width layout would give each element, by its role in the test. */
+/** The live toolbar's width, as layout would give it. */
 let available = 2000;
-let needs = { ...NEEDS };
-const measured: { fit: string; status: boolean; toolbars: number }[] = [];
+/** Each control's width in the hidden copy, by the form it is laid out in. */
+let controlWidth: Record<ToolbarFit, number>;
+const seen: { fold: string; toolbars: number }[] = [];
 
 beforeEach(() => {
   available = 2000;
-  needs = { ...NEEDS };
-  measured.length = 0;
+  controlWidth = {
+    compact: 60,
+    icons: 200,
+    labels: 400,
+    more: 150,
+    "more-keys": 80,
+    "more-map": 100,
+  };
+  seen.length = 0;
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
     function (this: HTMLElement) {
-      // The hidden copy is laid out at its content's width
-      if (this.style.width === "max-content") {
-        const fit = this.dataset.fit as keyof typeof NEEDS;
-        measured.push({
-          fit,
-          status: Boolean(this.querySelector(".tracker-controls__status")),
-          toolbars: document.querySelectorAll('[data-testid="toolbar"]').length,
-        });
-        return { width: needs[fit] } as DOMRect;
+      if (this.dataset.testid === "toolbar") {
+        return { width: available } as DOMRect;
       }
-      return { width: available } as DOMRect;
+      const probe = this.closest<HTMLElement>("[data-fit]");
+      const fit = (probe?.dataset.fit ?? "labels") as ToolbarFit;
+      seen.push({
+        fold: probe?.dataset.fold ?? "",
+        toolbars: document.querySelectorAll('[data-testid="toolbar"]').length,
+      });
+      return { width: Number(this.dataset.w ?? controlWidth[fit]) } as DOMRect;
     },
   );
 });
 
 afterEach(() => vi.restoreAllMocks());
 
-const Bar = () => (
-  <div className="toolbar" data-fit="icons" data-testid="toolbar">
-    <button id="mode" type="button">
-      Open
-    </button>
-    <output className="tracker-controls__status">Save imported.</output>
-  </div>
-);
+describe("probeToolbar", () => {
+  it("lays a hidden copy out: its controls through wrappers, without the status line", () => {
+    render(
+      <div
+        className="toolbar"
+        data-testid="toolbar"
+        style={{ columnGap: "8px", paddingLeft: "4px", paddingRight: "6px" }}
+      >
+        <button data-w="70" id="mode" type="button">
+          Open
+        </button>
+        <span style={{ display: "contents" }}>
+          <button data-w="40" type="button">
+            Export
+          </button>
+        </span>
+        <span style={{ display: "none" }}>
+          <button data-w="999" type="button">
+            Hidden
+          </button>
+        </span>
+        <input aria-label="File" style={{ position: "absolute" }} type="file" />
+        <output className="tracker-controls__status" data-w="999">
+          Save imported.
+        </output>
+      </div>,
+    );
+    const probe = probeToolbar(screen.getByTestId("toolbar"));
 
-describe("measureNeeds", () => {
-  it("lays a hidden copy out in each full form, without the status line", () => {
-    render(<Bar />);
+    const layout = probe.layoutOf("more-map");
+    probe.dispose();
 
-    const result = measureNeeds(screen.getByTestId("toolbar"));
-
-    expect(result).toEqual(NEEDS);
-    expect(measured).toEqual([
-      { fit: "labels", status: false, toolbars: 1 },
-      { fit: "icons", status: false, toolbars: 1 },
+    expect(layout).toEqual({ gap: 8, padding: 10, widths: [70, 40] });
+    // Laid out folded as the form says, with no second toolbar to find
+    expect(seen).toEqual([
+      { fold: "labels secondary map", toolbars: 1 },
+      { fold: "labels secondary map", toolbars: 1 },
     ]);
-    // The copy is gone, and the toolbar left as it was
     expect(document.body.children).toHaveLength(1);
-    expect(screen.getByTestId("toolbar")).toHaveAttribute("data-fit", "icons");
   });
 });
 
@@ -121,6 +195,7 @@ describe("useToolbarFit", () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
+  /** Three controls, no gap or padding: their width decides the rows. */
   const Toolbar = ({ label = "Open" }: { label?: string }) => {
     renders++;
     const ref = useRef<HTMLDivElement>(null);
@@ -128,17 +203,18 @@ describe("useToolbarFit", () => {
     return (
       <div className="toolbar" data-testid="toolbar" ref={ref}>
         <button type="button">{label}</button>
+        <button type="button">Undo</button>
+        <button type="button">Redo</button>
       </div>
     );
   };
-  const fit = () => screen.getByTestId("toolbar").dataset.fit;
+  const toolbar = () => screen.getByTestId("toolbar");
   /** Resize the toolbar: the observers watching it are told. */
   const resizeTo = (width: number) => {
     available = width;
-    const toolbar = screen.getByTestId("toolbar");
     act(() => {
       for (const { callback, targets } of observers) {
-        if (targets.includes(toolbar)) callback();
+        if (targets.includes(toolbar())) callback();
       }
     });
   };
@@ -146,35 +222,52 @@ describe("useToolbarFit", () => {
   it("picks the richest form that fits, before paint", () => {
     render(<Toolbar />);
 
-    expect(fit()).toBe("labels");
+    expect(toolbar()).toHaveAttribute("data-fit", "labels");
+    expect(toolbar()).toHaveAttribute("data-fold", "");
   });
 
-  it("follows resizes, with a margin before moving up, and no re-render", () => {
+  it("folds step by step down to the narrowest bar, writing what it folds", () => {
+    render(<Toolbar />);
+    const folds: Record<number, [string?, string?]> = {};
+
+    for (const width of [700, 400, 250, 170, 100]) {
+      resizeTo(width);
+      folds[width] = [toolbar().dataset.fit, toolbar().dataset.fold];
+    }
+
+    expect(folds).toEqual({
+      100: ["compact", "labels secondary map keys new-game"],
+      170: ["more-keys", "labels secondary map keys"],
+      250: ["more-map", "labels secondary map"],
+      400: ["more", "labels secondary"],
+      700: ["icons", "labels"],
+    });
+  });
+
+  it("moves back up with a margin, and never re-renders React", () => {
     render(<Toolbar />);
     const rendered = renders;
 
-    resizeTo(1000);
-    expect(fit()).toBe("icons");
-    resizeTo(500);
-    expect(fit()).toBe("more");
-    resizeTo(710);
-    expect(fit()).toBe("more");
-    resizeTo(730);
-    expect(fit()).toBe("icons");
+    resizeTo(250);
+    expect(toolbar().dataset.fit).toBe("more-map");
+    resizeTo(300 + HYSTERESIS_PX - 1);
+    expect(toolbar().dataset.fit).toBe("more-map");
+    resizeTo(300 + HYSTERESIS_PX);
+    expect(toolbar().dataset.fit).toBe("more");
     expect(renders).toBe(rendered);
   });
 
   it("measures again when the toolbar's content changes", async () => {
-    available = 1000;
+    available = 700;
     const { rerender } = render(<Toolbar />);
-    expect(fit()).toBe("icons");
+    expect(toolbar().dataset.fit).toBe("icons");
 
-    needs = { icons: 1100, labels: 1500 };
+    controlWidth = { ...controlWidth, icons: 300 };
     rerender(<Toolbar label="Keysanity" />);
     // The mutation observer runs once React has written the new label
     await act(() => Promise.resolve());
 
-    expect(fit()).toBe("more");
+    expect(toolbar().dataset.fit).toBe("more");
   });
 
   it("stops watching once unmounted", () => {

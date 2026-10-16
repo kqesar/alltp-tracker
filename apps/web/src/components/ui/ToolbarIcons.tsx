@@ -26,6 +26,9 @@ export const RedoIcon = () => (
   <Icon path="m15 14 5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
 );
 
+/** A circling arrow: start over. */
+export const NewGameIcon = () => <Icon path="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" />;
+
 /** Three dots in a row: more actions. */
 export const MoreIcon = () => (
   <Icon path="M4 12a1 1 0 1 0 2 0 1 1 0 1 0-2 0M11 12a1 1 0 1 0 2 0 1 1 0 1 0-2 0M18 12a1 1 0 1 0 2 0 1 1 0 1 0-2 0" />

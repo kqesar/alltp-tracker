@@ -12,9 +12,15 @@ const openTracker = async (page: Page) => {
 
 /**
  * Text metrics wider than macOS's system font, as Linux and Windows fonts
- * can be: every toolbar label takes more room, on any machine.
+ * are: every toolbar label takes more room, on any machine. CI's Ubuntu
+ * font with 0.08em already broke the bar at 360 px; 0.16em is harsher than
+ * any real system font.
  */
-const WIDE_FONT = ".toolbar, .toolbar * { letter-spacing: 0.08em !important; }";
+const wideFont = (spacing: string) =>
+  `.toolbar, .toolbar * { letter-spacing: ${spacing} !important; }`;
+
+/** A larger default font size, as a reader may set it: rem grows with it. */
+const largeText = (px: number) => `:root { font-size: ${px}px !important; }`;
 
 /** Let the toolbar settle: its observers run before the next frames. */
 const settle = (page: Page) =>
@@ -66,7 +72,7 @@ const toolbarLayout = (page: Page) =>
  */
 const sweep = async (page: Page) => {
   const broken: string[] = [];
-  for (let width = 360; width <= 1920; width += 40) {
+  for (let width = 320; width <= 1920; width += 40) {
     await page.setViewportSize({ height: 900, width });
     await settle(page);
     const layout = await toolbarLayout(page);
@@ -87,9 +93,12 @@ const sweep = async (page: Page) => {
 
 for (const [name, css] of [
   ["the system font", ""],
-  ["a wider font", WIDE_FONT],
+  ["a wider font", wideFont("0.08em")],
+  ["a much wider font", wideFont("0.16em")],
+  // The browser's default text size at 150 %, an accessibility setting
+  ["a 150 % text size", largeText(24)],
 ] as const) {
-  test(`the toolbar holds from 360 to 1920 px with ${name}`, async ({
+  test(`the toolbar holds from 320 to 1920 px with ${name}`, async ({
     page,
   }) => {
     await openTracker(page);
@@ -263,5 +272,116 @@ test.describe("the More menu", () => {
       await expect(dialog).toBeHidden();
       await expect(more).toBeFocused();
     }
+  });
+});
+
+test("the More menu opens on screen wherever its button wraps", async ({
+  page,
+}) => {
+  await openTracker(page);
+  const off: string[] = [];
+  for (const [name, css] of [
+    ["system font", ""],
+    ["0.16em", wideFont("0.16em")],
+    ["175 % text", largeText(28)],
+  ] as const) {
+    const style = css ? await page.addStyleTag({ content: css }) : null;
+    for (const width of [320, 360, 390, 640]) {
+      await page.setViewportSize({ height: 800, width });
+      await settle(page);
+      await page.getByTestId("toolbar-more").click();
+      const box = await page.getByRole("menu", { name: "More" }).boundingBox();
+      if (!box || box.x < 0 || box.x + box.width > width) {
+        off.push(`${name} at ${width}px: ${box?.x} + ${box?.width}`);
+      }
+      await page.keyboard.press("Escape");
+    }
+    await style?.evaluate((tag) => (tag as Element).remove());
+  }
+
+  expect(off).toEqual([]);
+});
+
+test.describe("the narrowest bar, with the largest text", () => {
+  test.use({
+    hasTouch: true,
+    isMobile: true,
+    viewport: { height: 640, width: 320 },
+  });
+  test.beforeEach(async ({ page }) => {
+    await openTracker(page);
+    // Text at 175 %: even the map layout and key cells fold into More
+    await page.addStyleTag({ content: largeText(28) });
+    await settle(page);
+  });
+
+  test("folds settings into More as choices, and New game to an icon", async ({
+    page,
+  }) => {
+    const layout = await toolbarLayout(page);
+    expect(layout.fit).toBe("compact");
+    expect(layout.rows).toBeLessThanOrEqual(2);
+    expect(layout.overflow).toBeLessThanOrEqual(0.5);
+    // Undo, Redo and New game stay in view; New game keeps its name
+    await expect(page.getByTestId("undo")).toBeVisible();
+    await expect(page.getByTestId("redo")).toBeVisible();
+    await expect(
+      page.getByRole("button", { exact: true, name: "New game" }),
+    ).toBeVisible();
+    await expect(page.getByTestId("map-layout")).toBeHidden();
+    await expect(page.getByTestId("key-cells-toggle")).toBeHidden();
+
+    await page.getByTestId("toolbar-more").click();
+    const menu = page.getByRole("menu", { name: "More" });
+    const map = menu.getByRole("group", { name: "Map" });
+    await expect(map.getByRole("menuitemradio")).toHaveCount(3);
+    await expect(
+      map.getByRole("menuitemradio", { name: "Auto" }),
+    ).toHaveAttribute("aria-checked", "true");
+    const keys = menu.getByRole("menuitemcheckbox", { name: "Big keys" });
+    await expect(keys).toHaveAttribute("aria-checked", "false");
+    const { violations } = await new AxeBuilder({ page })
+      .include('[data-testid="toolbar"]')
+      .withTags(WCAG_AA)
+      .analyze();
+    expect(violations.map(({ id, nodes }) => `${id} ×${nodes.length}`)).toEqual(
+      [],
+    );
+
+    // A choice sets the layout; the check shows the key cells
+    await map.getByRole("menuitemradio", { name: "Stack" }).click();
+    await expect(page.getByTestId("layout")).toHaveClass(/layout--stacked/);
+    await page.getByTestId("toolbar-more").click();
+    await expect(
+      menu.getByRole("menuitemradio", { name: "Stack" }),
+    ).toHaveAttribute("aria-checked", "true");
+    await keys.click();
+    await expect(page.getByTestId("big-key-0")).toBeVisible();
+  });
+
+  test("reaches every item from the keyboard, the folded settings included", async ({
+    page,
+  }) => {
+    await tabTo(page, "toolbar-more");
+    await page.keyboard.press("Enter");
+    const reached: string[] = [];
+    for (let press = 0; press < 9; press++) {
+      reached.push((await focusedTestId(page)) ?? "");
+      expect(await focusRinged(page)).toBe(true);
+      await page.keyboard.press("ArrowDown");
+    }
+
+    expect(reached).toEqual([
+      "toolbar-more-export",
+      "toolbar-more-import",
+      "toolbar-more-stream-view",
+      "toolbar-more-shortcuts",
+      "toolbar-more-map-auto",
+      "toolbar-more-map-side-by-side",
+      "toolbar-more-map-stacked",
+      "toolbar-more-big-keys",
+      // Down from the last item wraps to the first
+      "toolbar-more-export",
+    ]);
   });
 });

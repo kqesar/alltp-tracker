@@ -64,16 +64,17 @@
   height: 18px;
 }
 
-/* Unless the labelled bar fits on one row (data-fit, set by useToolbarFit
+/* Unless the labelled bar fits on one row (data-fold, set by useToolbarFit
    from the widths it measures), its buttons are icons, square 40 px targets */
-.toolbar:not([data-fit="labels"]) .tracker-controls__button,
-.toolbar:not([data-fit="labels"]) .bigkey-toggle {
+.toolbar[data-fold~="labels"] .tracker-controls__button,
+.toolbar[data-fold~="labels"] .bigkey-toggle {
   justify-content: center;
   min-width: 2.5rem;
   padding-inline: var(--spacing-sm);
 }
 
-.toolbar:not([data-fit="labels"]) .toolbar-label {
+.toolbar[data-fold~="labels"] .toolbar-label,
+.toolbar[data-fold~="new-game"] .new-game__label {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -89,6 +90,11 @@
 .tracker-controls__status {
   font-size: var(--font-size-sm);
   color: var(--color-success);
+}
+
+/* Empty, it is no flex item: its gap would push a control onto a new row */
+.tracker-controls__status:empty {
+  display: none;
 }
 
 /* Segmented control: a native radio group dressed as one pill */

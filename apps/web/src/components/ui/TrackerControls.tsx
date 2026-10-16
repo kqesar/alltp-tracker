@@ -7,10 +7,17 @@ import { StreamViewControl } from "@/components/ui/StreamViewControl";
 import {
   ExportIcon,
   ImportIcon,
+  NewGameIcon,
   RedoIcon,
   UndoIcon,
 } from "@/components/ui/ToolbarIcons";
-import { ToolbarMenu, ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
+import {
+  ToolbarMenu,
+  ToolbarMenuChoice,
+  ToolbarMenuGroup,
+  ToolbarMenuItem,
+  ToolbarMenuSeparator,
+} from "@/components/ui/ToolbarMenu";
 import { useGameStore } from "@/stores/gameStore";
 import { type Progress, parseSave } from "@/stores/persistence";
 import type { MapLayout } from "@/utils";
@@ -56,6 +63,8 @@ export const TrackerControls = () => {
   const canUndo = useGameStore((state) => state.past.length > 0);
   const canRedo = useGameStore((state) => state.future.length > 0);
   const mapLayout = useGameStore((state) => state.mapLayout);
+  const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
+  const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
   const setMapLayout = useGameStore((state) => state.setMapLayout);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -126,7 +135,11 @@ export const TrackerControls = () => {
         title="Start a new game (clears progress)"
         type="button"
       >
-        New game
+        {/* Its words, or its icon where the narrowest bar folds it */}
+        <span className="new-game__icon">
+          <NewGameIcon />
+        </span>
+        <span className="new-game__label">New game</span>
       </button>
       <button
         aria-keyshortcuts="Control+Z Meta+Z"
@@ -177,22 +190,56 @@ export const TrackerControls = () => {
         <ShortcutsButton />
       </span>
       <ToolbarMenu>
-        <ToolbarMenuItem
-          icon={<ExportIcon />}
-          label="Export"
-          onSelect={handleExport}
-          testId="toolbar-more-export"
-        />
-        <ToolbarMenuItem
-          icon={<ImportIcon />}
-          label="Import"
-          onSelect={handleImportClick}
-          testId="toolbar-more-import"
-        />
-        <StreamViewControl variant="menu" />
-        <ShortcutsButton variant="menu" />
+        {(folded) => (
+          <>
+            <ToolbarMenuItem
+              icon={<ExportIcon />}
+              label="Export"
+              onSelect={handleExport}
+              testId="toolbar-more-export"
+            />
+            <ToolbarMenuItem
+              icon={<ImportIcon />}
+              label="Import"
+              onSelect={handleImportClick}
+              testId="toolbar-more-import"
+            />
+            <StreamViewControl variant="menu" />
+            <ShortcutsButton variant="menu" />
+            {/* Settings the narrowest bars fold away, as menu choices */}
+            {folded.has("map") && (
+              <>
+                <ToolbarMenuSeparator />
+                <ToolbarMenuGroup label="Map">
+                  {MAP_LAYOUTS.map((option) => (
+                    <ToolbarMenuChoice
+                      checked={mapLayout === option.value}
+                      key={option.value}
+                      kind="radio"
+                      label={option.label}
+                      onSelect={() => setMapLayout(option.value)}
+                      testId={`toolbar-more-map-${option.value}`}
+                    />
+                  ))}
+                </ToolbarMenuGroup>
+              </>
+            )}
+            {folded.has("keys") && (
+              <>
+                <ToolbarMenuSeparator />
+                <ToolbarMenuChoice
+                  checked={bigKeysVisible}
+                  kind="checkbox"
+                  label="Big keys"
+                  onSelect={() => setBigKeysVisible(!bigKeysVisible)}
+                  testId="toolbar-more-big-keys"
+                />
+              </>
+            )}
+          </>
+        )}
       </ToolbarMenu>
-      <fieldset className="segmented" data-testid="map-layout">
+      <fieldset className="segmented toolbar-map" data-testid="map-layout">
         <legend className="segmented__legend">Map</legend>
         {MAP_LAYOUTS.map((option) => (
           <label
