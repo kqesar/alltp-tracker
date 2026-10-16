@@ -96,8 +96,7 @@ export const DungeonBoss = ({
   dungeon: DungeonItem;
   index: number;
 }) => {
-  const { items, medallions, bigKeysVisible, toggleDungeonBoss } =
-    useGameStore();
+  const { items, medallions, settings, toggleDungeonBoss } = useGameStore();
 
   const beaten =
     (items[`boss${index}`] as number) === BOSS_STATES.BEATEN ||
@@ -111,7 +110,7 @@ export const DungeonBoss = ({
       state={
         beaten
           ? "opened"
-          : dungeon.isBeatable(items, medallions, bigKeysVisible)
+          : dungeon.isBeatable(items, medallions, settings.keysanity)
       }
       testId={`boss-marker-${index}`}
       variant="boss"

@@ -48,7 +48,8 @@ export interface DungeonItem {
   isBeatable: (
     items: ItemState,
     medallions?: number[],
-    bigKeysVisible?: boolean,
+    /** Keysanity: the big key is shuffled into the world and must be found */
+    requireBigKey?: boolean,
   ) => Availability;
   canGetChest: (items: ItemState, medallions?: number[]) => Availability;
 }

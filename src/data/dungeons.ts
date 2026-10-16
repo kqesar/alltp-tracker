@@ -13,13 +13,13 @@ type DungeonDefinition = Omit<DungeonItem, "isBeaten">;
 const towerOfHeraBeatable: DungeonItem["isBeatable"] = (
   items,
   _medallions,
-  bigKeysVisible,
+  requireBigKey,
 ) => {
   if (!items.flute && !items.glove) return "unavailable";
   if (!items.mirror && !(items.hookshot && items.hammer)) return "unavailable";
 
-  // If big keys are displayed, check that we have the big key
-  if (bigKeysVisible && !items.bigkey2) return "unavailable";
+  // With keysanity the big key is not guaranteed to be inside the dungeon
+  if (requireBigKey && !items.bigkey2) return "unavailable";
 
   if (items.firerod || items.lantern) return "available";
   return "possible";
@@ -32,10 +32,10 @@ const DUNGEONS: DungeonDefinition[] = [
       return "possible";
     },
     image: "boss02.png",
-    isBeatable: (items, _medallions, bigKeysVisible) => {
+    isBeatable: (items, _medallions, requireBigKey) => {
       if (items.bow > 1) {
-        // If big keys are displayed, check that we have the big key
-        if (bigKeysVisible && !items.bigkey0) return "unavailable";
+        // With keysanity the big key is not guaranteed to be inside the dungeon
+        if (requireBigKey && !items.bigkey0) return "unavailable";
         return "available";
       }
       return "unavailable";
@@ -54,14 +54,14 @@ const DUNGEONS: DungeonDefinition[] = [
       return "possible";
     },
     image: "boss12.png",
-    isBeatable: (items, _medallions, bigKeysVisible) => {
+    isBeatable: (items, _medallions, requireBigKey) => {
       if (!items.glove) return "unavailable";
       if (!items.book && !(items.flute && hasTitansMitt(items) && items.mirror))
         return "unavailable";
       if (!items.lantern && !items.firerod) return "unavailable";
 
-      // If big keys are displayed, check that we have the big key
-      if (bigKeysVisible && !items.bigkey1) return "unavailable";
+      // With keysanity the big key is not guaranteed to be inside the dungeon
+      if (requireBigKey && !items.bigkey1) return "unavailable";
 
       if (!items.boots) return "possible";
       return "available";
@@ -72,7 +72,7 @@ const DUNGEONS: DungeonDefinition[] = [
   },
   {
     // Reaching a chest in Hera means reaching the boss, so both share one
-    // predicate. canGetChest deliberately omits bigKeysVisible: a big key is
+    // predicate. canGetChest deliberately omits requireBigKey: a big key is
     // needed for the boss, not for the chests on the way.
     canGetChest: (items) => towerOfHeraBeatable(items),
     image: "boss22.png",
@@ -95,13 +95,13 @@ const DUNGEONS: DungeonDefinition[] = [
       return "possible";
     },
     image: "boss32.png",
-    isBeatable: (items, _medallions, bigKeysVisible) => {
+    isBeatable: (items, _medallions, requireBigKey) => {
       if (!items.moonpearl || !(items.bow > 1) || !items.hammer)
         return "unavailable";
       if (!items.agahnim && !items.glove) return "unavailable";
 
-      // If big keys are displayed, check that we have the big key
-      if (bigKeysVisible && !items.bigkey3) return "unavailable";
+      // With keysanity the big key is not guaranteed to be inside the dungeon
+      if (requireBigKey && !items.bigkey3) return "unavailable";
 
       return "available";
     },
@@ -132,8 +132,8 @@ const DUNGEONS: DungeonDefinition[] = [
       return "possible";
     },
     image: "boss42.png",
-    isBeatable: (items, _medallions, bigKeysVisible) => {
-      if (bigKeysVisible && !items.bigkey4) return "unavailable";
+    isBeatable: (items, _medallions, requireBigKey) => {
+      if (requireBigKey && !items.bigkey4) return "unavailable";
       if (!items.moonpearl || !items.mirror || !items.flippers)
         return "unavailable";
       if (!items.hammer || !items.hookshot) return "unavailable";
@@ -151,8 +151,8 @@ const DUNGEONS: DungeonDefinition[] = [
       return "possible";
     },
     image: "boss52.png",
-    isBeatable: (items, _medallions, bigKeysVisible) => {
-      if (bigKeysVisible && !items.bigkey5) return "unavailable";
+    isBeatable: (items, _medallions, requireBigKey) => {
+      if (requireBigKey && !items.bigkey5) return "unavailable";
       if (!canReachDarkWorld(items) || !items.firerod) return "unavailable";
       return "available";
     },
@@ -167,8 +167,8 @@ const DUNGEONS: DungeonDefinition[] = [
       return "available";
     },
     image: "boss62.png",
-    isBeatable: (items, _medallions, bigKeysVisible) => {
-      if (bigKeysVisible && !items.bigkey6) return "unavailable";
+    isBeatable: (items, _medallions, requireBigKey) => {
+      if (requireBigKey && !items.bigkey6) return "unavailable";
       if (canReachDarkWorld(items)) return "available";
       return "unavailable";
     },
@@ -185,8 +185,8 @@ const DUNGEONS: DungeonDefinition[] = [
       return "possible";
     },
     image: "boss72.png",
-    isBeatable: (items, _medallions, bigKeysVisible) => {
-      if (bigKeysVisible && !items.bigkey7) return "unavailable";
+    isBeatable: (items, _medallions, requireBigKey) => {
+      if (requireBigKey && !items.bigkey7) return "unavailable";
       if (
         !items.moonpearl ||
         !items.flippers ||
@@ -216,8 +216,8 @@ const DUNGEONS: DungeonDefinition[] = [
       return "possible";
     },
     image: "boss82.png",
-    isBeatable: (items, medallions = [], bigKeysVisible) => {
-      if (bigKeysVisible && !items.bigkey8) return "unavailable";
+    isBeatable: (items, medallions = [], requireBigKey) => {
+      if (requireBigKey && !items.bigkey8) return "unavailable";
       if (
         !items.moonpearl ||
         !items.flute ||
@@ -256,8 +256,8 @@ const DUNGEONS: DungeonDefinition[] = [
       return "possible";
     },
     image: "boss92.png",
-    isBeatable: (items, medallions = [], bigKeysVisible) => {
-      if (bigKeysVisible && !items.bigkey9) return "unavailable";
+    isBeatable: (items, medallions = [], requireBigKey) => {
+      if (requireBigKey && !items.bigkey9) return "unavailable";
       if (
         !items.moonpearl ||
         !items.hammer ||

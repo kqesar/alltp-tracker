@@ -2,6 +2,7 @@ import {
   CounterOverlay,
   MedaillonOverlay,
 } from "@/components/tracker/overlays/BossOverlays";
+import { BOSS_STATES } from "@/constants";
 import { itemLabels, itemsMin } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
 import { getGridItemStyles } from "@/utils";
@@ -23,7 +24,8 @@ const describeState = (item: string, value: number | boolean): string => {
   if (!item || item === "blank") return "empty";
   if (typeof value === "boolean") return value ? "obtained" : "not obtained";
   if (typeof value !== "number") return "unknown state";
-  if (item.startsWith("boss")) return value > 0 ? "defeated" : "not defeated";
+  if (item.startsWith("boss"))
+    return value === BOSS_STATES.BEATEN ? "defeated" : "not defeated";
   return value > (itemsMin[item] ?? 0) ? `level ${value}` : "not obtained";
 };
 
