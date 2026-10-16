@@ -30,6 +30,7 @@
       "!**/coverage",
       "!**/coverage_backup",
       "!**/package.json",
+      "!packs/*/test/upstream",
       "!**/playwright-report",
       "!**/test-results",
       "!pnpm-lock.yaml",

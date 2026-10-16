@@ -1,0 +1,91 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/NoGlitches/DeathMountain/WestTest.php",
+  "class": "NoGlitches\\WestTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "NoGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":52,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Lamp","Flute"]},"kind":"location","line":53,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["MagicMirror","Hookshot"]},"kind":"location","line":54,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["MagicMirror","Hammer"]},"kind":"location","line":55,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["UpgradedSword"]},"kind":"location","line":56,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["BookOfMudora"]},"kind":"location","line":57,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute","MagicMirror","BookOfMudora","ProgressiveSword","ProgressiveSword"],"base":"setUp"},"kind":"location","line":58,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute","MagicMirror","BookOfMudora","L2Sword"],"base":"setUp"},"kind":"location","line":59,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute","MagicMirror","BookOfMudora","L3Sword"],"base":"setUp"},"kind":"location","line":60,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":10,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute","MagicMirror","BookOfMudora","L4Sword"],"base":"setUp"},"kind":"location","line":61,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp","MagicMirror","BookOfMudora","ProgressiveSword","ProgressiveSword"],"base":"setUp"},"kind":"location","line":62,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp","MagicMirror","BookOfMudora","L2Sword"],"base":"setUp"},"kind":"location","line":63,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":13,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp","MagicMirror","BookOfMudora","L3Sword"],"base":"setUp"},"kind":"location","line":64,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":14,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp","MagicMirror","BookOfMudora","L4Sword"],"base":"setUp"},"kind":"location","line":65,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp","MagicMirror","BookOfMudora","ProgressiveSword","ProgressiveSword"],"base":"setUp"},"kind":"location","line":66,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp","MagicMirror","BookOfMudora","L2Sword"],"base":"setUp"},"kind":"location","line":67,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp","MagicMirror","BookOfMudora","L3Sword"],"base":"setUp"},"kind":"location","line":68,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp","MagicMirror","BookOfMudora","L4Sword"],"base":"setUp"},"kind":"location","line":69,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp","MagicMirror","BookOfMudora","ProgressiveSword","ProgressiveSword"],"base":"setUp"},"kind":"location","line":70,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":20,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp","MagicMirror","BookOfMudora","L2Sword"],"base":"setUp"},"kind":"location","line":71,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":21,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp","MagicMirror","BookOfMudora","L3Sword"],"base":"setUp"},"kind":"location","line":72,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":22,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp","MagicMirror","BookOfMudora","L4Sword"],"base":"setUp"},"kind":"location","line":73,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":23,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute","Hammer","Hookshot","BookOfMudora","ProgressiveSword","ProgressiveSword"],"base":"setUp"},"kind":"location","line":74,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":24,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute","Hammer","Hookshot","BookOfMudora","L2Sword"],"base":"setUp"},"kind":"location","line":75,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":25,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute","Hammer","Hookshot","BookOfMudora","L3Sword"],"base":"setUp"},"kind":"location","line":76,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":26,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute","Hammer","Hookshot","BookOfMudora","L4Sword"],"base":"setUp"},"kind":"location","line":77,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":27,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp","Hammer","Hookshot","BookOfMudora","ProgressiveSword","ProgressiveSword"],"base":"setUp"},"kind":"location","line":78,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":28,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp","Hammer","Hookshot","BookOfMudora","L2Sword"],"base":"setUp"},"kind":"location","line":79,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":29,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp","Hammer","Hookshot","BookOfMudora","L3Sword"],"base":"setUp"},"kind":"location","line":80,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":30,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp","Hammer","Hookshot","BookOfMudora","L4Sword"],"base":"setUp"},"kind":"location","line":81,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":31,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp","Hammer","Hookshot","BookOfMudora","ProgressiveSword","ProgressiveSword"],"base":"setUp"},"kind":"location","line":82,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":32,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp","Hammer","Hookshot","BookOfMudora","L2Sword"],"base":"setUp"},"kind":"location","line":83,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":33,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp","Hammer","Hookshot","BookOfMudora","L3Sword"],"base":"setUp"},"kind":"location","line":84,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":34,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp","Hammer","Hookshot","BookOfMudora","L4Sword"],"base":"setUp"},"kind":"location","line":85,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":35,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp","Hammer","Hookshot","BookOfMudora","ProgressiveSword","ProgressiveSword"],"base":"setUp"},"kind":"location","line":86,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":36,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp","Hammer","Hookshot","BookOfMudora","L2Sword"],"base":"setUp"},"kind":"location","line":87,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":37,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp","Hammer","Hookshot","BookOfMudora","L3Sword"],"base":"setUp"},"kind":"location","line":88,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":38,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp","Hammer","Hookshot","BookOfMudora","L4Sword"],"base":"setUp"},"kind":"location","line":89,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":39,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":91,"location":"Old Man","method":"testLocation"},
+    {"dataSet":40,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":92,"location":"Old Man","method":"testLocation"},
+    {"dataSet":41,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"location","line":93,"location":"Old Man","method":"testLocation"},
+    {"dataSet":42,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute","Lamp"],"base":"setUp"},"kind":"location","line":94,"location":"Old Man","method":"testLocation"},
+    {"dataSet":43,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp"],"base":"setUp"},"kind":"location","line":95,"location":"Old Man","method":"testLocation"},
+    {"dataSet":44,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp"],"base":"setUp"},"kind":"location","line":96,"location":"Old Man","method":"testLocation"},
+    {"dataSet":45,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp"],"base":"setUp"},"kind":"location","line":97,"location":"Old Man","method":"testLocation"},
+    {"dataSet":46,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":99,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":47,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":100,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":48,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute"],"base":"setUp"},"kind":"location","line":101,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":49,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp"],"base":"setUp"},"kind":"location","line":102,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":50,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp"],"base":"setUp"},"kind":"location","line":103,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":51,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp"],"base":"setUp"},"kind":"location","line":104,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":52,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":106,"location":"Spectacle Rock","method":"testLocation"},
+    {"dataSet":53,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":107,"location":"Spectacle Rock","method":"testLocation"},
+    {"dataSet":54,"expected":false,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["MagicMirror"]},"kind":"location","line":108,"location":"Spectacle Rock","method":"testLocation"},
+    {"dataSet":55,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["Flute","MagicMirror"],"base":"setUp"},"kind":"location","line":109,"location":"Spectacle Rock","method":"testLocation"},
+    {"dataSet":56,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp","MagicMirror"],"base":"setUp"},"kind":"location","line":110,"location":"Spectacle Rock","method":"testLocation"},
+    {"dataSet":57,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp","MagicMirror"],"base":"setUp"},"kind":"location","line":111,"location":"Spectacle Rock","method":"testLocation"},
+    {"dataSet":58,"expected":true,"file":"tests/NoGlitches/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp","MagicMirror"],"base":"setUp"},"kind":"location","line":112,"location":"Spectacle Rock","method":"testLocation"}
+  ]
+}

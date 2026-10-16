@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    // The importer is plain JavaScript, so Node runs it without a build step;
+    // its JSDoc types are checked like the TypeScript sources.
+    "allowJs": true,
+    "checkJs": true,
     "isolatedModules": true,
     // No DOM: a pack is data and pure functions, run wherever the engine runs.
     "lib": ["ES2022"],
@@ -17,5 +21,5 @@
     "types": [],
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "test", "vitest.config.ts"]
+  "include": ["src", "test", "scripts", "vitest.config.ts"]
 }
