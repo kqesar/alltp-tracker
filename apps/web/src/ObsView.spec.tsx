@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ObsView } from "@/ObsView";
 import { useGameStore } from "@/stores/gameStore";
@@ -61,6 +62,21 @@ describe("ObsView", () => {
     fireEvent.click(hammer);
 
     expect(hammer).toHaveAccessibleName(/^Hammer, obtained\./);
+  });
+
+  it("steps its items with their keyboard shortcuts too", async () => {
+    const user = userEvent.setup();
+    render(<ObsView background={null} />);
+
+    await user.keyboard("w");
+
+    expect(screen.getByTestId("item-hookshot")).toHaveAccessibleName(
+      /^Hookshot, obtained\./,
+    );
+    await user.keyboard("{Control>}z{/Control}");
+    expect(screen.getByTestId("item-hookshot")).toHaveAccessibleName(
+      /^Hookshot, not obtained\./,
+    );
   });
 
   it("marks the page as the stream view while it is shown", () => {

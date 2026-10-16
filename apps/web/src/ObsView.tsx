@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { defaultItemGrid } from "@/data/items";
+import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
 import { useGameStore } from "@/stores/gameStore";
 import { visibleRows } from "@/utils";
@@ -15,11 +16,13 @@ type ObsViewProps = {
  * The stream view (`?view=obs`): the item grid alone, on a transparent page,
  * for an OBS browser source. It fills the source, centred, at a size that
  * keeps the pixel art crisp, and follows the run live through the store's
- * cross-tab sync. Its items stay clickable, for OBS's Interact window.
+ * cross-tab sync. Its items stay clickable, and its undo and item shortcuts
+ * work, for OBS's Interact window.
  * Nothing else of the app is drawn here: no header, toolbar, map or tooltip.
  */
 export const ObsView = ({ background }: ObsViewProps) => {
   useUndoShortcuts();
+  useItemShortcuts();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const rows = visibleRows(defaultItemGrid, bigKeysVisible).length;
   const stageRef = useRef<HTMLElement>(null);
