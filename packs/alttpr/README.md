@@ -17,6 +17,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/fill.ts` | `app/Location.php`: `canFill`, whether the randomizer may place an item somewhere |
 | `src/keys.ts` | `app/Support/LocationCollection.php`: where a dungeon's items may sit (`itemInLocations`), and the key model |
 | `src/dungeons.ts` | the thirteen dungeons, the code of their items and their pool |
+| `src/tracker.ts` | `TrackerInput`, what the player records, and `toState`, the state it gives |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -103,6 +104,32 @@ engine's graph:
 - **Pending modules.** A region file not ported yet still has its module: its
   upstream regions with no entrance and no location. The worlds list every
   module from the start, so a port only fills its own module in.
+
+## What the player records
+
+A `TrackerInput` is what the player records of a run, and
+`toState(input, settings)` the engine state it gives, from scratch on every
+call: knowledge is not monotone (learning that Misery Mire wants Ether
+closes it to a player holding Bombos only), so nothing carries over.
+
+- **Items**, by pack id, within their pool: everything the player marks by
+  hand (`INVENTORY_ITEM_IDS`). Big keys, maps and compasses count whenever
+  marked. Prizes, events and small keys are not items the player marks.
+- **Finished dungeons and their prizes.** The solver computes no event:
+  Zelda is rescued from the start in Open (`Randomizer.php:133-135`) and
+  once Hyrule Castle is finished in Standard; Agahnim is defeated with
+  Castle Tower, Agahnim 2 with Ganon's Tower. The other ten dungeons drop a
+  pendant or a crystal, shuffled among them. The player records it as one
+  of the four classes the rules tell apart (`PRIZES`): the green pendant,
+  which Sahasrahla wants; another pendant, which only the pedestal reads,
+  with all three; a red crystal (5 or 6), which the Pyramid Fairy wants;
+  another crystal, which only counts. A finished dungeon's known prize
+  gives the next item of its class, in dungeon order.
+- **The medallion pads**, through their facts (`src/medallions.ts`). A pad
+  the player has not noted is unknown.
+- **The derived facts** (`src/derived.ts`), from the items it gives.
+- **Small keys**, per dungeon, only with wild keys. Outside keysanity the
+  key model reads the dungeons without them.
 
 ## The key model
 

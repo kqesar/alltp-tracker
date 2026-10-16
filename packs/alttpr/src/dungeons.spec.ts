@@ -8,6 +8,7 @@ import {
   dungeonPool,
   dungeonRegions,
 } from "./dungeons";
+import { EVENT_LOCATIONS } from "./fill";
 import { locationId } from "./location";
 import { regionModules } from "./pack";
 import { OPEN, STANDARD } from "./settings";
@@ -44,6 +45,14 @@ describe("the dungeons", () => {
     }
     expect(DUNGEON_IDS).toHaveLength(13);
     expect(() => dungeon("hyrule-castle-tower")).toThrow(/No dungeon/);
+  });
+
+  it("give an event where their prize location holds one, else a prize", () => {
+    for (const d of DUNGEONS) {
+      const prize = dungeonRegions(d, STANDARD)[0]?.prize ?? "";
+      expect(EVENT_LOCATIONS.includes(prize), d.id).toBe("event" in d);
+    }
+    expect(DUNGEONS.filter((d) => !("event" in d))).toHaveLength(10);
   });
 
   it("hold the pool's dungeon items", () => {

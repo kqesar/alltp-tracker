@@ -26,6 +26,16 @@ export interface DungeonDef {
   readonly code: string;
   /** Its `$region_items`, which name that code. */
   readonly source: Source;
+  /**
+   * The event its prize location holds, which completing it gives: Zelda
+   * rescued, Agahnim or Agahnim 2 defeated. A dungeon without one drops a
+   * pendant or a crystal, which the randomizer shuffles among the ten of
+   * them (app/Randomizer.php:464-540).
+   */
+  readonly event?: {
+    readonly item: "defeatAgahnim" | "defeatAgahnim2" | "rescueZelda";
+    readonly source: Source;
+  };
 }
 
 const at = (file: string, line: number): Source =>
@@ -35,6 +45,10 @@ const at = (file: string, line: number): Source =>
 export const DUNGEONS = [
   {
     code: "H2",
+    event: {
+      item: "rescueZelda",
+      source: at("HyruleCastleEscape", 56),
+    },
     id: "hyrule-castle",
     name: "Hyrule Castle",
     region: "escape",
@@ -63,6 +77,10 @@ export const DUNGEONS = [
   },
   {
     code: "A1",
+    event: {
+      item: "defeatAgahnim",
+      source: at("HyruleCastleTower", 47),
+    },
     id: "castle-tower",
     name: "Castle Tower",
     region: "hyruleCastleTower",
@@ -119,6 +137,10 @@ export const DUNGEONS = [
   },
   {
     code: "A2",
+    event: {
+      item: "defeatAgahnim2",
+      source: at("GanonsTower", 84),
+    },
     id: "ganons-tower",
     name: "Ganon's Tower",
     region: "ganonsTower",
