@@ -6,6 +6,7 @@ import {
   type ChestItem,
   type DungeonItem,
 } from "@/data/logic";
+import { useTooltip } from "@/hooks/useTooltip";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, toWorldPosition } from "@/utils";
 import { captionToText } from "@/utils/caption";
@@ -51,7 +52,7 @@ export const MapChest = ({
   const medallions = useGameStore((state) => state.medallions);
   const opened = useGameStore((state) => state.chestsOpened[index]);
   const toggleChest = useGameStore((state) => state.toggleChest);
-  const setCaption = useGameStore((state) => state.setCaption);
+  const tooltip = useTooltip({ index, kind: "chest" });
 
   const state: MarkerState = opened
     ? "opened"
@@ -59,15 +60,12 @@ export const MapChest = ({
 
   return (
     <button
+      {...tooltip}
       aria-label={`${captionToText(chest.name)}: ${STATE_LABELS[state]}`}
       aria-pressed={opened}
       className={`mapspan chest state-glyph ${state}`}
       data-testid={`chest-marker-${index}`}
-      onBlur={() => setCaption("")}
       onClick={() => toggleChest(index)}
-      onFocus={() => setCaption(chest.name)}
-      onMouseEnter={() => setCaption(chest.name)}
-      onMouseLeave={() => setCaption("")}
       style={markerStyle(chest.x, chest.y, "poi.png")}
       type="button"
     />
@@ -92,7 +90,7 @@ export const MapDungeon = ({
   const medallions = useGameStore((state) => state.medallions);
   const keysanity = useGameStore((state) => state.settings.keysanity);
   const handleItemClick = useGameStore((state) => state.handleItemClick);
-  const setCaption = useGameStore((state) => state.setCaption);
+  const tooltip = useTooltip({ index, kind: "dungeon" });
 
   const beaten = (items[`boss${index}`] as number) === BOSS_STATES.BEATEN;
   const bossState: MarkerState = beaten
@@ -104,8 +102,6 @@ export const MapDungeon = ({
 
   const caption = buildDungeonCaption(dungeon, index, medallions);
   const chests = remaining === 1 ? "1 chest left" : `${remaining} chests left`;
-  const show = () => setCaption(caption);
-  const hide = () => setCaption("");
 
   return (
     <>
@@ -113,20 +109,17 @@ export const MapDungeon = ({
         aria-hidden="true"
         className={`mapspan dungeon state-glyph ${chestState}`}
         data-testid={`dungeon-marker-${index}`}
-        onMouseEnter={show}
-        onMouseLeave={hide}
+        onPointerEnter={tooltip.onPointerEnter}
+        onPointerLeave={tooltip.onPointerLeave}
         style={markerStyle(dungeon.x, dungeon.y, "poi.png")}
       />
       <button
+        {...tooltip}
         aria-label={`${captionToText(caption)}: boss ${STATE_LABELS[bossState]}, ${chests} (${STATE_LABELS[chestState]})`}
         aria-pressed={beaten}
         className={`mapspan boss state-glyph ${bossState}`}
         data-testid={`boss-marker-${index}`}
-        onBlur={hide}
         onClick={() => handleItemClick(`boss${index}`)}
-        onFocus={show}
-        onMouseEnter={show}
-        onMouseLeave={hide}
         style={markerStyle(dungeon.x, dungeon.y, dungeon.image)}
         type="button"
       />

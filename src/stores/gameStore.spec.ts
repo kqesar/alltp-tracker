@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { chests } from "@/data/chests";
-import { dungeons } from "@/data/dungeons";
 import { useGameStore } from "@/stores/gameStore";
 import { PERSIST_VERSION, parseSave } from "@/stores/persistence";
 
@@ -27,19 +26,12 @@ describe("GameStore", () => {
     const state = useGameStore.getState();
 
     expect(state.presetId).toBe("open");
-    expect(state.caption).toBe("");
     expect(state.medallions).toEqual(Array(10).fill(0));
     expect(state.smallKeys).toEqual(Array(10).fill(0));
     expect(state.chestsOpened).toEqual(chests.map(() => false));
     expect(state.items.boss0).toBe(1);
     expect(state.bigKeysVisible).toBe(false);
     expect(state.mapLayout).toBe("auto");
-  });
-
-  it("updates caption", () => {
-    useGameStore.getState().setCaption("Test caption");
-
-    expect(useGameStore.getState().caption).toBe("Test caption");
   });
 
   describe("item clicks", () => {
@@ -94,17 +86,6 @@ describe("GameStore", () => {
       useGameStore.getState().handleMedallionChange(8, 2);
 
       expect(useGameStore.getState().medallions[8]).toBe(2);
-    });
-
-    it("refreshes the caption of the dungeon on screen", () => {
-      const { setCaption, handleMedallionChange } = useGameStore.getState();
-
-      setCaption(dungeons[8].name);
-      handleMedallionChange(8, 1);
-
-      const { caption } = useGameStore.getState();
-      expect(caption).toContain("medallion1.png");
-      expect(caption).toContain("Misery Mire");
     });
   });
 
@@ -231,15 +212,13 @@ describe("GameStore", () => {
   });
 
   describe("persistence", () => {
-    it("saves progress and preferences, but not the caption", () => {
-      useGameStore.getState().setCaption("hovered");
+    it("saves progress and preferences", () => {
       useGameStore.getState().handleItemClick("flute");
 
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
       expect(stored.version).toBe(PERSIST_VERSION);
       expect(stored.state.items.flute).toBe(true);
       expect(stored.state).toHaveProperty("mapLayout");
-      expect(stored.state).not.toHaveProperty("caption");
     });
 
     it("restores the valid fields of a damaged save and resets the rest", async () => {
@@ -382,9 +361,8 @@ describe("GameStore", () => {
       expect(useGameStore.getState().items.bow).toBe(0);
     });
 
-    it("leaves display preferences and the caption out of the history", () => {
+    it("leaves display preferences out of the history", () => {
       const state = useGameStore.getState();
-      state.setCaption("hovered");
       state.setMapLayout("stacked");
       state.setBigKeysVisible(true);
 

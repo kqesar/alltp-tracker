@@ -1,10 +1,9 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { DUNGEON_INDICES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import { chests } from "@/data/chests";
-import { dungeons } from "@/data/dungeons";
 import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
-import { buildDungeonCaption, type ItemState } from "@/data/logic";
+import type { ItemState } from "@/data/logic";
 import { DEFAULT_PRESET_ID, getPreset } from "@/data/presets";
 import {
   migrate,
@@ -22,12 +21,8 @@ export type Direction = 1 | -1;
 
 type GameState = Progress &
   Prefs & {
-    /** What the pointer rests on; transient, never saved */
-    caption: string;
-
     // Actions
     applyPreset: (presetId: string) => void;
-    setCaption: (caption: string) => void;
     /** Step an item by one: forward on click, back (`-1`) on right-click */
     handleItemClick: (item: string, direction?: Direction) => void;
     handleSmallKeyClick: (dungeonIndex: number, direction?: Direction) => void;
@@ -155,7 +150,6 @@ export const useGameStore = create<GameState>()(
                   : progress.settings.keysanity,
             };
           }),
-        caption: "",
 
         exportState: () =>
           JSON.stringify(toSaveFile(progressOf(get())), null, 2),
@@ -189,31 +183,9 @@ export const useGameStore = create<GameState>()(
 
         handleMedallionChange: (bossNumber: number, newValue: number) => {
           const state = get();
-          const { medallions, caption } = state;
-          const newMedallions = [...medallions];
+          const newMedallions = [...state.medallions];
           newMedallions[bossNumber] = newValue;
-
-          // If the caption currently shows this dungeon, rebuild it so the
-          // medallion icon stays in sync (no fragile string replace).
-          let updatedCaption = caption;
-          const dungeon = dungeons[bossNumber];
-          if (
-            (bossNumber === DUNGEON_INDICES.MISERY_MIRE ||
-              bossNumber === DUNGEON_INDICES.TURTLE_ROCK) &&
-            dungeon &&
-            caption.startsWith(dungeon.name)
-          ) {
-            updatedCaption = buildDungeonCaption(
-              dungeon,
-              bossNumber,
-              newMedallions,
-            );
-          }
-
-          set({
-            ...record(state, { medallions: newMedallions }),
-            caption: updatedCaption,
-          });
+          set(record(state, { medallions: newMedallions }));
         },
 
         handleSmallKeyClick: (
@@ -257,8 +229,6 @@ export const useGameStore = create<GameState>()(
         setBigKeysVisible: (visible: boolean) =>
           set({ bigKeysVisible: visible }),
 
-        setCaption: (caption: string) => set({ caption }),
-
         setMapLayout: (layout: MapLayout) => set({ mapLayout: layout }),
 
         toggleChest: (chestIndex: number) =>
@@ -299,7 +269,7 @@ export const useGameStore = create<GameState>()(
         migrate: (persisted, version) =>
           migrate(persisted, version) as PersistedState,
         name: "alltp-tracker-state",
-        // Only persist progress and prefs; caption and history are transient.
+        // Only persist progress and prefs; the history is transient.
         partialize: (state) => toPersisted(state),
         version: PERSIST_VERSION,
       },

@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import App from "@/App";
 import { useGameStore } from "@/stores/gameStore";
@@ -8,8 +14,6 @@ const chestMarkers = (state: string) =>
   screen
     .getAllByTestId(/^chest-marker-/)
     .filter((marker) => marker.classList.contains(state));
-
-const HINT = "Hover an item or a map location to see its details here.";
 
 // The whole application, real map included, driven the way a player does.
 describe("App Integration Tests", () => {
@@ -26,17 +30,15 @@ describe("App Integration Tests", () => {
     expect(chestMarkers("available").length).toBeGreaterThan(reachableBefore);
   });
 
-  it("shows a marker's details while it is hovered", () => {
+  it("shows a marker's details in a tooltip while it is hovered", async () => {
     render(<App />);
     const marker = screen.getByTestId("boss-marker-0");
 
-    expect(screen.getByTestId("caption")).toHaveTextContent(HINT);
+    fireEvent.pointerEnter(marker, { pointerType: "mouse" });
+    expect(screen.getByTestId("tooltip")).toHaveTextContent(/Eastern Palace/);
 
-    fireEvent.mouseOver(marker);
-    expect(screen.getByTestId("caption")).toHaveTextContent(/Eastern Palace/);
-
-    fireEvent.mouseOut(marker);
-    expect(screen.getByTestId("caption")).toHaveTextContent(HINT);
+    fireEvent.pointerLeave(marker, { pointerType: "mouse" });
+    await waitFor(() => expect(screen.queryByTestId("tooltip")).toBeNull());
   });
 
   it("marks an overworld chest opened and back when clicked", () => {

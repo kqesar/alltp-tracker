@@ -5,7 +5,7 @@ paths:
 
 # State: a single Zustand store
 
-All game state lives in `src/stores/gameStore.ts`: `zustand` + `devtools` (development only) + `persist` (localStorage key `alltp-tracker-state`). The store holds only serializable data; the chest and dungeon tables with their predicates stay static in `src/data/`. Its shape is `Progress & Prefs` plus the transient `caption`, both types declared in `src/stores/persistence.ts`.
+All game state lives in `src/stores/gameStore.ts`: `zustand` + `devtools` (development only) + `persist` (localStorage key `alltp-tracker-state`). The store holds only serializable data; the chest and dungeon tables with their predicates stay static in `src/data/`. Its shape is `Progress & Prefs` plus the undo history, both types declared in `src/stores/persistence.ts`. Transient UI state (the tooltip) lives in its own store, `tooltipStore.ts`.
 
 - **`Progress`** — the run; "New game" (`reset`), `applyPreset` and `loadProgress` replace it.
   - `items` — keyed by item id; `boolean` (toggles) or `number` (progressive). `handleItemClick` steps `-1` for `chest*` counters and `+1` for everything else, wrapping between `itemsMin[item]` and `itemsMax[item]`. `bossN` (1 alive, 2 beaten) is the only "boss beaten" flag: the grid cell and the map marker both read and toggle it.
@@ -22,7 +22,7 @@ All game state lives in `src/stores/gameStore.ts`: `zustand` + `devtools` (devel
 
 ## History
 
-`past` / `future` hold earlier `Progress` snapshots for undo/redo (cap 200), never persisted. Every action that changes `Progress` goes through `record(state, next)`, which pushes the current run and clears `future`; prefs and the caption bypass it. Rehydration (first load, another tab via `crossTabSync.ts`) clears the history.
+`past` / `future` hold earlier `Progress` snapshots for undo/redo (cap 200), never persisted. Every action that changes `Progress` goes through `record(state, next)`, which pushes the current run and clears `future`; prefs bypass it. Rehydration (first load, another tab via `crossTabSync.ts`) clears the history.
 
 ## Subscriptions
 

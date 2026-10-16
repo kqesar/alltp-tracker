@@ -8,9 +8,11 @@ import { dungeons } from "@/data/dungeons";
 import { itemLabels } from "@/data/items";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
 import { useStepHandlers } from "@/hooks/useStepHandlers";
+import { useTooltip } from "@/hooks/useTooltip";
 import { useGameStore } from "@/stores/gameStore";
 import { getItemBackground } from "@/utils";
 import { placeName } from "@/utils/caption";
+import { mergeHandlers } from "@/utils/mergeHandlers";
 
 type BossCellProps = {
   row: number;
@@ -29,6 +31,12 @@ export const BossCell = ({ row, col, item }: BossCellProps) => {
   const value = useGameStore((state) => state.items[item]);
   const handleItemClick = useGameStore((state) => state.handleItemClick);
   const beaten = value === BOSS_STATES.BEATEN;
+  const handlers = mergeHandlers(
+    useGridFocusable({ col, row, slot: 0 }),
+    useStepHandlers((direction) => handleItemClick(item, direction)),
+    // The boss cell shows what its dungeon needs, like its map marker
+    useTooltip({ index, kind: "dungeon" }),
+  );
 
   return (
     <fieldset
@@ -36,8 +44,7 @@ export const BossCell = ({ row, col, item }: BossCellProps) => {
       className="grid-item-base boss-cell"
     >
       <button
-        {...useGridFocusable({ col, row, slot: 0 })}
-        {...useStepHandlers((direction) => handleItemClick(item, direction))}
+        {...handlers}
         aria-label={`${itemLabels(item)}, ${beaten ? "defeated" : "not defeated"}. Click to change state.`}
         className="griditem boss-cell__boss"
         data-testid={`item-${item}`}

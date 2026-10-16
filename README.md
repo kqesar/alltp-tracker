@@ -23,7 +23,7 @@ Originally forked from [TestRunnerSRL/lttp-tracker](https://github.com/TestRunne
 | 🟥 red | out of logic |
 | ⬛ grey | already done |
 
-Each state also has a glyph (✓ ? ✕), so colour is never the only cue. Click a chest to mark it opened, or a boss to mark it beaten. Hover or focus anything to see its requirements. **Map: Auto / Side / Stack** sets how the two worlds sit: Auto keeps them side by side while there is room and stacks them on a narrow screen; the choice is remembered on this device.
+Each state also has a glyph (✓ ? ✕), so colour is never the only cue. Click a chest to mark it opened, or a boss to mark it beaten. Hover or focus anything to see its requirements in a tooltip; on a touch screen, press and hold. **Map: Auto / Side / Stack** sets how the two worlds sit: Auto keeps them side by side while there is room and stacks them on a narrow screen; the choice is remembered on this device.
 
 **Boss overlays** — each boss cell carries three corner buttons: the medallion requirement (top right, Misery Mire and Turtle Rock only), the remaining chest count (bottom left) and the reward, crystal or pendant (bottom right). Click steps them forward, right-click back.
 
