@@ -1,4 +1,5 @@
 import {
+  type ComponentProps,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
@@ -159,7 +160,10 @@ type ToolbarMenuItemProps = {
   label: string;
   onSelect: () => void;
   testId: string;
-};
+} & Pick<
+  ComponentProps<"button">,
+  "onFocus" | "onPointerDown" | "onPointerEnter"
+>;
 
 /**
  * An item of the More menu: an icon and its label, reached with the arrow
@@ -170,8 +174,10 @@ export const ToolbarMenuItem = ({
   label,
   onSelect,
   testId,
+  ...handlers
 }: ToolbarMenuItemProps) => (
   <button
+    {...handlers}
     className="toolbar-menu__item"
     data-testid={testId}
     onClick={onSelect}

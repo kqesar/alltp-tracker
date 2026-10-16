@@ -163,7 +163,7 @@ describe("the toolbar's More menu", () => {
         name === "Shortcuts" ? "{End}{Enter}" : "{ArrowDown}{ArrowDown}{Enter}",
       );
 
-      const dialog = screen.getByRole("dialog", { name: title });
+      const dialog = await screen.findByRole("dialog", { name: title });
       expect(screen.queryByRole("menu")).toBeNull();
       await user.click(within(dialog).getByRole("button", { name: "Done" }));
       expect(screen.queryByRole("dialog")).toBeNull();
