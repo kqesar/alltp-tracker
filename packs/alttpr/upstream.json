@@ -72,7 +72,7 @@
     {
       "file": "app/Region/Standard/LightWorld/DeathMountain/East.php",
       "module": "src/regions/standard/light-world/death-mountain/east.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/LightWorld/DeathMountain/West.php",
