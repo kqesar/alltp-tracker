@@ -4,7 +4,7 @@ See the [README](README.md) for setup and the layout of the codebase.
 
 ## Workflow
 
-Branch off `master`, keep commits focused, open a pull request. Every PR runs lint, type-checking, the unit tests with coverage, the browser tests (Playwright + axe, in a parallel job), commit-message validation and CodeQL; all of them must pass.
+Branch off `master`, keep commits focused, open a pull request. Every PR runs lint, type-checking, the unit tests with coverage, the browser tests (Playwright + axe, in a parallel job), commit-message validation and CodeQL; all of them must pass. A pull request that only changes Markdown runs the commit-message validation alone.
 
 ```bash
 git switch -c feat/your-feature

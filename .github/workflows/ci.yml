@@ -5,7 +5,12 @@ on:
   # run on every pull request, whatever its branch, and on master once merged.
   push:
     branches: [master]
+    # No job reads Markdown: a docs-only change has nothing to test or deploy
+    paths-ignore: &docs-only
+      - '**.md'
+      - LICENSE
   pull_request:
+    paths-ignore: *docs-only
   # Run from the Actions tab on master to redeploy the site
   workflow_dispatch:
 
