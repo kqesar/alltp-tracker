@@ -1,5 +1,7 @@
 import { DUNGEON_INDICES } from "@/constants";
 import { dungeons } from "@/data/dungeons";
+import type { ControlId } from "@/data/keymap";
+import { useControlShortcuts } from "@/hooks/useControlShortcuts";
 import { type GridPosition, useGridFocusable } from "@/hooks/useGridNavigation";
 import { useStepHandlers } from "@/hooks/useStepHandlers";
 import { type Direction, useGameStore } from "@/stores/gameStore";
@@ -13,6 +15,8 @@ type OverlayProps = {
   corner: Corner;
   /** Asset filename, without the assets/ prefix */
   asset: string;
+  /** The control it is, for its keyboard shortcuts, e.g. "chest3" */
+  control: ControlId;
   /** What a screen reader hears: the dungeon, the counter and its value */
   label: string;
   position: GridPosition;
@@ -27,6 +31,7 @@ type OverlayProps = {
 const Overlay = ({
   corner,
   asset,
+  control,
   label,
   position,
   step,
@@ -34,7 +39,7 @@ const Overlay = ({
 }: OverlayProps) => (
   <button
     {...useGridFocusable(position)}
-    {...useStepHandlers(step)}
+    {...useStepHandlers(step, useControlShortcuts(control).aria)}
     aria-label={label}
     className={`overlay-base overlay--${corner}`}
     data-testid={testId}
@@ -73,6 +78,7 @@ export const ChestCounter = ({ index, row, col }: CornerProps) => {
   return (
     <Overlay
       asset={`chest${remaining}.png`}
+      control={`chest${index}`}
       corner="bottom-left"
       label={`${placeName(dungeons[index].name)} chests: ${remaining} left`}
       position={{ col, row, slot: 2 }}
@@ -95,6 +101,7 @@ export const RewardPicker = ({ index, row, col }: CornerProps) => {
   return (
     <Overlay
       asset={`dungeon${reward}.png`}
+      control={`reward${index}`}
       corner="bottom-right"
       label={`${placeName(dungeons[index].name)} reward: ${REWARD_LABELS[reward]}`}
       position={{ col, row, slot: 3 }}
@@ -129,6 +136,7 @@ export const MedallionPicker = ({ index, row, col }: CornerProps) => {
   return (
     <Overlay
       asset={`medallion${medallion}.png`}
+      control={`medallion${index}`}
       corner="top-right"
       label={`${placeName(dungeons[index].name)} medallion: ${MEDALLION_LABELS[medallion]}`}
       position={{ col, row, slot: 1 }}

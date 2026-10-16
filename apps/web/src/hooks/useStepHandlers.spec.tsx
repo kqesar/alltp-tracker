@@ -28,7 +28,7 @@ describe("stepping back with right-click and '-'", () => {
     fireEvent.keyDown(sword, { key: "-" });
 
     expect(items().sword).toBe(1);
-    expect(sword).toHaveAttribute("aria-keyshortcuts", "-");
+    expect(sword.getAttribute("aria-keyshortcuts")?.split(" ")).toContain("-");
   });
 
   it("ignores the contextmenu a touch long-press fires", () => {

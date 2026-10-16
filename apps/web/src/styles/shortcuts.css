@@ -1,0 +1,53 @@
+/* Keyboard shortcuts: key chips, and the keys line of the tooltip. */
+
+/* A chord: one chip per key, as printed on the keycap */
+.key-chord {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  font: inherit;
+  white-space: nowrap;
+}
+
+.key-chord__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.375rem;
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--border-radius-sm);
+}
+
+.key-chord__plus {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* The keys line of the tooltip, under its caption */
+.tooltip__keys {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-sm);
+  align-items: center;
+}
+
+.tooltip__shortcut {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.tooltip__key-name {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}

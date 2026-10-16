@@ -6,6 +6,7 @@ import {
 import { BOSS_STATES } from "@/constants";
 import { dungeons } from "@/data/dungeons";
 import { itemLabels } from "@/data/items";
+import { useControlShortcuts } from "@/hooks/useControlShortcuts";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
 import { useStepHandlers } from "@/hooks/useStepHandlers";
 import { useTooltip } from "@/hooks/useTooltip";
@@ -33,7 +34,10 @@ export const BossCell = ({ row, col, item }: BossCellProps) => {
   const beaten = value === BOSS_STATES.BEATEN;
   const handlers = mergeHandlers(
     useGridFocusable({ col, row, slot: 0 }),
-    useStepHandlers((direction) => handleItemClick(item, direction)),
+    useStepHandlers(
+      (direction) => handleItemClick(item, direction),
+      useControlShortcuts(item).aria,
+    ),
     // The boss cell shows what its dungeon needs, like its map marker
     useTooltip({ index, kind: "dungeon" }),
   );

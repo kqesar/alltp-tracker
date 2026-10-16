@@ -134,4 +134,62 @@ describe("Tooltip", () => {
     });
     expect(tooltip()).toHaveTextContent("Misery Mire");
   });
+
+  describe("keyboard shortcuts", () => {
+    const renderGrid = () =>
+      render(
+        <>
+          <TrackerGrid itemLayout={[["hookshot", "boss8", "net"]]} />
+          <Tooltip />
+        </>,
+      );
+    const hover = (testId: string) =>
+      fireEvent.pointerEnter(screen.getByTestId(testId), {
+        pointerType: "mouse",
+      });
+    const keys = () => screen.queryByTestId("tooltip-keys");
+
+    it("shows an item's keys, forward and back, under its name", () => {
+      renderGrid();
+
+      hover("item-hookshot");
+
+      expect(tooltip()).toHaveTextContent(/^Hookshot/);
+      expect(keys()).toHaveTextContent(/^W\s*back\s*Shift\+W$/);
+      // Two chords, each a <kbd> of <kbd> keys
+      const chords = [...(keys()?.querySelectorAll("kbd") ?? [])].filter(
+        (kbd) => kbd.parentElement?.tagName !== "KBD",
+      );
+      expect(chords).toHaveLength(2);
+    });
+
+    it("shows the keys of a dungeon's cell, each named", () => {
+      act(() =>
+        useGameStore.getState().setKeymap({
+          "advance:chest8": "Digit9",
+          "advance:medallion8": "BracketLeft",
+        }),
+      );
+      renderGrid();
+
+      hover("item-boss8");
+
+      expect(keys()).toHaveTextContent(/^Medallion\s*\[\s*Chests\s*9$/);
+    });
+
+    it("shows no keys for an unbound item, nor while shortcuts are off", () => {
+      act(() => useGameStore.getState().setKeymap({}));
+      renderGrid();
+      hover("item-net");
+      expect(keys()).toBeNull();
+
+      act(() => {
+        useGameStore.getState().setKeymap({ "advance:net": "KeyM" });
+        useGameStore.getState().setShortcutsEnabled(false);
+      });
+      hover("item-net");
+      expect(tooltip()).toHaveTextContent("Bug Net");
+      expect(keys()).toBeNull();
+    });
+  });
 });

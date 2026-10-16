@@ -1,4 +1,5 @@
 import { itemLabels, itemsMin } from "@/data/items";
+import { useControlShortcuts } from "@/hooks/useControlShortcuts";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
 import { useStepHandlers } from "@/hooks/useStepHandlers";
 import { useTooltip } from "@/hooks/useTooltip";
@@ -36,7 +37,10 @@ export const Item = ({ row, col, item }: ItemProps) => {
   const handleItemClick = useGameStore((state) => state.handleItemClick);
   const handlers = mergeHandlers(
     useGridFocusable({ col, row, slot: 0 }),
-    useStepHandlers((direction) => handleItemClick(item, direction)),
+    useStepHandlers(
+      (direction) => handleItemClick(item, direction),
+      useControlShortcuts(item).aria,
+    ),
     useTooltip({ item, kind: "item" }),
   );
 
