@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.10.0](https://github.com/kqesar/alltp-tracker/compare/v2.9.0...v2.10.0) (2026-10-16)
+
+
+### 🐛 Bug Fixes
+
+* **assets:** give item icons a transparent background ([a787eed](https://github.com/kqesar/alltp-tracker/commit/a787eed38f5a8161bd727a82660c7809255bce5f))
+
+
+### ✨ Features
+
+* **engine:** add a small ALttP sample world ([9992393](https://github.com/kqesar/alltp-tracker/commit/9992393e27e9e45cc46cb296c49baa6eddc0282b))
+* **engine:** add the @alltp/engine workspace package with Kleene logic ([c1f6e38](https://github.com/kqesar/alltp-tracker/commit/c1f6e3845516c9d3dc485dd7422f41285626d187))
+* **engine:** compile worlds and solve region/location availability ([c5f224a](https://github.com/kqesar/alltp-tracker/commit/c5f224ab5e03617252e571de41fa2ee688116ae7))
+* **engine:** load helper/group rules and evaluate requirements ([f7ca2ff](https://github.com/kqesar/alltp-tracker/commit/f7ca2ffec7d85169963c5aed743480ce4e60ca75))
+* **engine:** parse and print the requirement DSL ([9e891ae](https://github.com/kqesar/alltp-tracker/commit/9e891aeb3419fc951a6308a92d4b473cec81f2bf))
+
+
+### 📚 Documentation
+
+* **engine:** document the design, DSL grammar, solver and Phase 2 questions ([2edee41](https://github.com/kqesar/alltp-tracker/commit/2edee418002690d1bdfc3dea4b4fdc16cad0fe8c))
+
 ## [2.9.0](https://github.com/kqesar/alltp-tracker/compare/v2.8.1...v2.9.0) (2026-10-16)
 
 
