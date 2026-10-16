@@ -1,6 +1,7 @@
 import { type ReactNode, useId } from "react";
 import type { AutotrackReading } from "@/autotrack/reading";
 import { describeReading } from "@/autotrack/readout";
+import { useGameStore } from "@/stores/gameStore";
 
 /** One group of the readout: a heading and its entries, or why it has none. */
 const Group = ({
@@ -53,7 +54,7 @@ const UNREAD = {
 /**
  * "What I read": the items, the checked locations and the run's progress as
  * the tracker decoded them from memory at the last change, for the player to
- * hold against their game. It does not touch the tracker's board.
+ * hold against their game, and what of it the board has no cell for.
  * @param reading - The last reading
  * @param live - Whether the session still reads; else the reading is the
  * last before it lost the game
@@ -66,7 +67,8 @@ export const Readout = ({
   reading: AutotrackReading;
 }) => {
   const titleId = useId();
-  const readout = describeReading(reading);
+  const keysanity = useGameStore((state) => state.settings.keysanity);
+  const readout = describeReading(reading, keysanity);
   const time = new Date(reading.at).toLocaleTimeString();
 
   return (
@@ -168,6 +170,16 @@ export const Readout = ({
             ))}
           </dl>
         </Group>
+        {readout.untracked.length > 0 && (
+          <Group
+            count={readout.untracked.length}
+            testId="readout-untracked"
+            title="Not on the board"
+            wide
+          >
+            <Chips entries={readout.untracked} />
+          </Group>
+        )}
         {(["race-mode", "not-read"] as const).map((why) => {
           const labels = readout.withheld
             .filter((entry) => entry.why === why)

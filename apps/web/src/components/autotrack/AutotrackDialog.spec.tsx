@@ -11,6 +11,7 @@ import {
   FakeVisibility,
   GRANTED,
   ManualClock,
+  readingOf,
   SAVE,
   STATUSES,
   seedMemory,
@@ -508,6 +509,33 @@ describe("AutotrackDialog's readout", () => {
     );
     expect(within(readout).getByTestId("readout-progress")).toHaveTextContent(
       "✓Game startedyes✓Zelda rescuedyes–Triforce reachedno",
+    );
+  });
+
+  it("names what it read that the board has no cell for", async () => {
+    await open();
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x37b)] = 0x02; // Quarter Magic
+    act(() =>
+      useAutotrackStore.setState({
+        active: true,
+        reading: readingOf(memory),
+        shown: STATUSES.connected,
+      }),
+    );
+
+    expect(screen.getByTestId("readout-untracked")).toHaveTextContent(
+      "Not on the boardQuarter Magic",
+    );
+    // The board then counts small keys: not with keysanity
+    memory[SAVE(0x37c + 6)] = 1;
+    act(() => useAutotrackStore.setState({ reading: readingOf(memory) }));
+    expect(screen.getByTestId("readout-untracked")).toHaveTextContent(
+      "Small keys",
+    );
+    act(() => useGameStore.getState().applyPreset("keysanity"));
+    expect(screen.getByTestId("readout-untracked")).not.toHaveTextContent(
+      "Small keys",
     );
   });
 
