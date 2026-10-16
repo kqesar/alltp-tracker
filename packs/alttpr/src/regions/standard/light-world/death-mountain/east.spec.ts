@@ -29,6 +29,18 @@ describe("East Death Mountain", () => {
     ]);
   });
 
+  it("gives the Floating Island to the mirror from the Dark World's Death Mountain", () => {
+    const at = (state: Record<string, number>) =>
+      solve(compile(OPEN), state).location(ISLAND);
+    const dark = { ...UP, glove: 2, hookshot: 1, magicMirror: 1 };
+    expect(at({ ...dark, moonPearl: 1 })).toBe("yes");
+    // A bunny lifts no rock
+    expect(at(dark)).toBe("no");
+    // The power glove does not take Link up to the Dark World's side
+    expect(at({ ...dark, glove: 1, moonPearl: 1 })).toBe("no");
+    expect(at({ ...dark, magicMirror: 0, moonPearl: 1 })).toBe("no");
+  });
+
   it("shows the Floating Island from its own side of the mountain", () => {
     const seen = (state: Record<string, number>) =>
       solve(compile(OPEN), state).visible(ISLAND);

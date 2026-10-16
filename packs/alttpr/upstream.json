@@ -7,7 +7,7 @@
     {
       "file": "app/Region/Standard/DarkWorld/DeathMountain/East.php",
       "module": "src/regions/standard/dark-world/death-mountain/east.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/DarkWorld/DeathMountain/West.php",
@@ -222,7 +222,7 @@
     {
       "file": "tests/NoGlitches/DarkWorld/DeathMountain/EastTest.php",
       "fixture": "test/upstream/NoGlitches/DarkWorld/DeathMountain/East.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/DarkWorld/DeathMountain/WestTest.php",
