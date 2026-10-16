@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
+import { pixelsIn, unreachableClickables, WCAG_AA, WIDTHS } from "./support";
 
 /** Regions that must never cover one another, by data-testid. */
 const REGIONS = ["toolbar", "item-grid", "map-tracker", "map-legend"] as const;
@@ -154,6 +154,54 @@ test.describe("a tooltip", () => {
     );
 
     expect(cornerAlphas).toEqual([0, 0, 0]);
+  });
+});
+
+test.describe("a missing item", () => {
+  test.beforeEach(({ page }) => openTracker(page));
+
+  test("is drawn greyed, its focus ring at full strength", async ({ page }) => {
+    const hammer = page.getByTestId("item-hammer");
+    await expect(hammer).toHaveAccessibleName(/^Hammer, not obtained\./);
+    const box = await hammer.boundingBox();
+    expect(box).toBeTruthy();
+    if (!box) return;
+
+    // The icon itself, every pixel of it grey: the old veil only darkened it
+    const icon = (await pixelsIn(page, box)).filter(
+      ([red, green, blue]) => Math.max(red, green, blue) > 24,
+    );
+    const spread = Math.max(
+      ...icon.map(
+        (pixel) =>
+          Math.max(...pixel.slice(0, 3)) - Math.min(...pixel.slice(0, 3)),
+      ),
+    );
+    expect(icon.length).toBeGreaterThan(box.width * box.height * 0.1);
+    expect(spread).toBeLessThanOrEqual(3);
+
+    // A keyboard focus ring stays gold, drawn outside the filter
+    await page.getByTestId("item-flute").focus();
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("Escape");
+    await expect(hammer).toBeFocused();
+    const [[red, green, blue]] = await pixelsIn(page, {
+      height: 1,
+      width: 1,
+      x: box.x + box.width / 2,
+      y: box.y - 3,
+    });
+    expect([red > 200, green > 160, blue < 120]).toEqual([true, true, true]);
+
+    // Held, it is drawn in its own colours again
+    await hammer.click();
+    await page.mouse.move(0, 0);
+    const held = (await pixelsIn(page, box)).map(
+      (pixel) =>
+        Math.max(...pixel.slice(0, 3)) - Math.min(...pixel.slice(0, 3)),
+    );
+    expect(Math.max(...held)).toBeGreaterThan(40);
   });
 });
 

@@ -11,7 +11,6 @@
 
   /* ---- Surfaces (dark slate scale, low -> elevated) ---- */
   --color-bg: #07070b;
-  --color-bg-rgb: 7, 7, 11;
   --surface-1: #11121a; /* base panels */
   --surface-2: #181a26; /* cards */
   --surface-3: #202332; /* elevated (modals, menus) */
@@ -43,6 +42,12 @@
   --state-unavailable: #ff4136;
   --state-opened: #7f7f7f;
   --state-ink: #0b0b0f; /* glyph colour on a state swatch */
+
+  /* ---- Item not obtained: greyed, at the brightness where every missing
+     icon stays below every held one in contrast with the page (2.2:1
+     median against 4.3:1) yet keeps its shape; the same over stream
+     footage ---- */
+  --missing-item-filter: grayscale(1) brightness(0.55);
 
   /* ---- Focus: a dark gap then a gold ring, visible on any background,
      the busy map included ---- */
@@ -84,7 +89,6 @@
     --color-text: #ffffff;
     --color-text-secondary: #ffffff;
     --color-bg: #000000;
-    --color-bg-rgb: 0, 0, 0;
     --color-accent: #ffffff;
     --color-border: #ffffff;
     --color-border-glass: #ffffff;

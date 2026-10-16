@@ -25,3 +25,25 @@ export const unreachableClickables = (page: Page, within = "body") =>
         ),
     within,
   );
+
+/** A region of the page as rendered, one RGBA quadruple per pixel. */
+export const pixelsIn = async (
+  page: Page,
+  clip: { x: number; y: number; width: number; height: number },
+) => {
+  const png = await page.screenshot({ clip });
+  return page.evaluate(async (base64) => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+    context.drawImage(image, 0, 0);
+    const { data } = context.getImageData(0, 0, image.width, image.height);
+    return Array.from({ length: data.length / 4 }, (_, index) => [
+      ...data.subarray(index * 4, index * 4 + 4),
+    ]);
+  }, png.toString("base64"));
+};
