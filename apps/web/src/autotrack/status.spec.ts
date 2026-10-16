@@ -34,6 +34,15 @@ describe("phaseOf", () => {
       stopped: "busy",
     });
   });
+
+  it("is off, with its own words, while another tab holds the session", () => {
+    expect(phaseOf(STATUSES.idle, true, true)).toBe("off");
+    expect(headlineOf(STATUSES.idle, true, true)).toBe(
+      "Running in another tab",
+    );
+    // Off is off, whichever tab
+    expect(headlineOf(STATUSES.idle, false, true)).toBe("Off");
+  });
 });
 
 describe("shownStatus", () => {

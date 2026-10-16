@@ -17,9 +17,15 @@ export type Phase = "off" | "busy" | "on" | "problem";
  * The dot's phase.
  * @param status - The status shown (see `shownStatus`)
  * @param active - Whether a session runs or is starting
+ * @param elsewhere - Whether another tab of the tracker holds the session:
+ * this one reads nothing, and waits without a busy dot
  */
-export const phaseOf = (status: SessionStatus, active: boolean): Phase => {
-  if (!active) return "off";
+export const phaseOf = (
+  status: SessionStatus,
+  active: boolean,
+  elsewhere = false,
+): Phase => {
+  if (!active || elsewhere) return "off";
   switch (status.code) {
     case "connected":
       return "on";
@@ -70,9 +76,15 @@ const deviceName = (kind: DeviceKind) => DEVICE_NAMES[kind];
  * player's terms; the setup guide says what to do.
  * @param status - The status shown
  * @param active - Whether a session runs or is starting
+ * @param elsewhere - Whether another tab of the tracker holds the session
  */
-export const headlineOf = (status: SessionStatus, active: boolean): string => {
+export const headlineOf = (
+  status: SessionStatus,
+  active: boolean,
+  elsewhere = false,
+): string => {
   if (!active) return "Off";
+  if (elsewhere) return "Running in another tab";
   switch (status.code) {
     case "idle":
     case "stopped":

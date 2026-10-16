@@ -22,6 +22,7 @@ import {
   disconnectAutotrack,
   preloadAutotrack,
   retryAutotrack,
+  stopAutotrack,
   syncFromGame,
   useAutotrackStore,
 } from "@/stores/autotrackStore";
@@ -58,9 +59,16 @@ const deviceName = (info: DeviceInfo) =>
     .join(" ");
 
 /** The line under the headline: what is connected, or what happens next. */
-const detailOf = (status: SessionStatus, active: boolean): string => {
+const detailOf = (
+  status: SessionStatus,
+  active: boolean,
+  elsewhere: boolean,
+): string => {
   if (!active) {
     return "Reads your game through SNI or QUsb2Snes as you play. Set it up below, then connect.";
+  }
+  if (elsewhere) {
+    return "Another tab of the tracker reads your game and marks it on the board. This tab takes over when that one closes or disconnects.";
   }
   switch (status.code) {
     case "connected":
@@ -90,6 +98,7 @@ const detailOf = (status: SessionStatus, active: boolean): string => {
  */
 export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
   const active = useAutotrackStore((state) => state.active);
+  const elsewhere = useAutotrackStore((state) => state.elsewhere);
   const shown = useAutotrackStore((state) => state.shown);
   const environment = useAutotrackStore((state) => state.environment);
   const reading = useAutotrackStore((state) => state.reading);
@@ -121,11 +130,11 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
     if (manualReport !== null) reportRef.current?.select();
   }, [manualReport]);
 
-  const phase = unavailable ? "problem" : phaseOf(shown, active);
+  const phase = unavailable ? "problem" : phaseOf(shown, active, elsewhere);
   const headline = unavailable
     ? "Autotracking could not be loaded"
-    : headlineOf(shown, active);
-  const connected = active && shown.code === "connected";
+    : headlineOf(shown, active, elsewhere);
+  const connected = active && !elsewhere && shown.code === "connected";
   const race = connected && shown.race.active ? shown.race : null;
   const canRetry = active && "retryInMs" in shown;
 
@@ -181,7 +190,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
             <p className="autotrack-status__detail">
               {unavailable
                 ? "Reload the page to try again; your run is saved."
-                : detailOf(shown, active)}
+                : detailOf(shown, active, elsewhere)}
             </p>
             {connected && (
               <p className="autotrack-status__detail" data-testid="race-mode">
@@ -194,7 +203,18 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
         </div>
 
         <div className="autotrack-actions">
-          {active ? (
+          {elsewhere ? (
+            // Stops waiting here only: the other tab, and the wish to
+            // connect on start, stay as they are
+            <button
+              className="modal-btn modal-btn--ghost"
+              data-testid="autotrack-stop-waiting"
+              onClick={stopAutotrack}
+              type="button"
+            >
+              Stop waiting
+            </button>
+          ) : active ? (
             <button
               className="modal-btn modal-btn--ghost"
               data-testid="autotrack-disconnect"
@@ -251,7 +271,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
             value={manualReport}
           />
         )}
-        {active && (
+        {active && !elsewhere && (
           <div className="autotrack-follow" data-testid="autotrack-follow">
             <p className="autotrack-follow__text" id={followId}>
               The board follows your game as you play, and the marks you set

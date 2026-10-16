@@ -8,6 +8,7 @@ import { act, render } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  FakeLocks,
   FakeVisibility,
   GRANTED,
   ManualClock,
@@ -382,5 +383,89 @@ describe("the session's code", () => {
       active: false,
       unavailable: false,
     });
+  });
+});
+describe("autotracking across the tracker's tabs", () => {
+  let locks: FakeLocks;
+  let uninstall: () => void;
+  /** Another tab of the tracker, autotracking: it holds the lock. */
+  let releaseOther: () => void;
+
+  beforeEach(() => {
+    locks = new FakeLocks();
+    uninstall = locks.install();
+  });
+
+  afterEach(() => uninstall());
+
+  const otherTabAutotracks = () => {
+    void locks.request("alltp-tracker-autotrack", {}, () => {
+      return new Promise<void>((release) => {
+        releaseOther = release;
+      });
+    });
+  };
+
+  it("waits while another tab autotracks, then takes over", async () => {
+    const h = harness();
+    otherTabAutotracks();
+
+    // It waits for the other tab, as long as that one autotracks
+    const connecting = connectAutotrack();
+    await h.advance(1000);
+
+    expect(state()).toMatchObject({ active: true, elsewhere: true });
+    expect(h.transports).toHaveLength(0);
+
+    // The other tab closes
+    releaseOther();
+    await act(() => connecting);
+    await h.advance(0);
+
+    expect(state()).toMatchObject({ active: true, elsewhere: false });
+    expect(state().status.code).toBe("connected");
+    expect(h.transports).toHaveLength(1);
+    expect(locks.isHeld).toBe(true);
+  });
+
+  it("stops waiting at the player's word", async () => {
+    const h = harness();
+    otherTabAutotracks();
+    const connecting = connectAutotrack();
+    await h.advance(0);
+    expect(state().elsewhere).toBe(true);
+
+    act(() => stopAutotrack());
+    await act(() => connecting);
+    releaseOther();
+    await h.advance(1000);
+
+    expect(state()).toMatchObject({ active: false, elsewhere: false });
+    expect(h.transports).toHaveLength(0);
+    expect(locks.isHeld).toBe(false);
+  });
+
+  it("holds the lock while it autotracks, and lets it go as it stops", async () => {
+    const h = harness();
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(locks.isHeld).toBe(true);
+    expect(state().elsewhere).toBe(false);
+
+    act(() => stopAutotrack());
+    await act(() => settle());
+
+    expect(locks.isHeld).toBe(false);
+  });
+
+  it("gives the lock back when stopped as it is granted", async () => {
+    const h = harness();
+    const connecting = connectAutotrack();
+    act(() => stopAutotrack());
+    await act(() => connecting);
+    await h.advance(0);
+
+    expect(h.transports).toHaveLength(0);
+    expect(locks.isHeld).toBe(false);
   });
 });

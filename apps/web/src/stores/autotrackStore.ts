@@ -22,6 +22,11 @@ type AutotrackState = {
   connectOnStart: boolean;
   /** A session runs, or loads: from Connect until Disconnect. */
   active: boolean;
+  /**
+   * Another tab of the tracker holds the session: this one waits, and takes
+   * over when that one closes or disconnects.
+   */
+  elsewhere: boolean;
   /** The session's status, as it reports it (the diagnostic report's). */
   status: SessionStatus;
   /** The status the UI shows: a retry keeps the failure it retries. */
@@ -58,6 +63,7 @@ export const useAutotrackStore = create<AutotrackState>()(
       bridge: null,
       connectOnStart: false,
       devices: [],
+      elsewhere: false,
       environment: null,
       reading: null,
       setConnectOnStart: (connectOnStart) => set({ connectOnStart }),
@@ -137,12 +143,59 @@ const sinkFor = (mine: number): RuntimeSink => ({
   },
 });
 
+/** The Web Lock one tab of the tracker holds while it autotracks. */
+const LOCK = "alltp-tracker-autotrack";
+
+/** Lets the lock go, while this page holds it. */
+let releaseLock: (() => void) | null = null;
+
+/** Stops waiting for the lock, while this page waits. */
+let stopWaiting: AbortController | null = null;
+
+/**
+ * Take the autotracking lock: at once when no other tab of the tracker holds
+ * it, else when that tab lets it go (it closes, or disconnects), saying so
+ * meanwhile. Two tabs never both read the game and lay it on the run. A
+ * browser without Web Locks goes ahead, as before them.
+ * @param mine - The connect taking it
+ * @returns Whether it holds the lock; false once stopped
+ */
+const takeLock = async (mine: number): Promise<boolean> => {
+  const locks = (navigator as { locks?: LockManager }).locks;
+  if (locks === undefined) return true;
+  const request = (options: LockOptions) =>
+    new Promise<boolean>((resolve) => {
+      locks
+        .request(LOCK, options, (lock) => {
+          // Not free, or no longer wanted: let it go at once
+          if (lock === null || mine !== generation) {
+            resolve(false);
+            return;
+          }
+          resolve(true);
+          return new Promise<void>((release) => {
+            releaseLock = release;
+          });
+        })
+        .catch(() => resolve(false));
+    });
+  if (await request({ ifAvailable: true })) return true;
+  if (mine !== generation) return false;
+  set({ elsewhere: true });
+  stopWaiting = new AbortController();
+  const held = await request({ signal: stopWaiting.signal });
+  if (mine === generation) set({ elsewhere: false });
+  return held;
+};
+
 /**
  * Start autotracking: load the session's code if needed, then connect, and
  * keep connecting until Disconnect. Never more than one session: a second
- * call while one runs does nothing. The stream view (`?view=obs`) never
- * connects: the tracker it shows on stream holds the session, and the view
- * follows the run through the shared storage.
+ * call while one runs does nothing, and across the tracker's tabs the first
+ * to connect holds the session while the others wait (`elsewhere`). The
+ * stream view (`?view=obs`) never connects: the tracker it shows on stream
+ * holds the session, and the view follows the run through the shared
+ * storage.
  */
 export const connectAutotrack = async () => {
   if (isObsView() || useAutotrackStore.getState().active) return;
@@ -150,14 +203,18 @@ export const connectAutotrack = async () => {
   set({
     active: true,
     connectOnStart: true,
+    elsewhere: false,
     reading: null,
     shown: IDLE,
     status: IDLE,
     unavailable: false,
   });
   try {
-    const { createFollower, detectEnvironment, startRuntime } =
-      await loadRuntime();
+    const loading = loadRuntime();
+    // Waiting for another tab must not leave a failed fetch unhandled
+    loading.catch(() => {});
+    if (!(await takeLock(mine))) return;
+    const { createFollower, detectEnvironment, startRuntime } = await loading;
     const environment =
       useAutotrackStore.getState().environment ?? (await detectEnvironment());
     if (mine !== generation) return;
@@ -182,8 +239,13 @@ export const stopAutotrack = () => {
   runtime?.stop();
   runtime = null;
   follower = null;
+  stopWaiting?.abort();
+  stopWaiting = null;
+  releaseLock?.();
+  releaseLock = null;
   set({
     active: false,
+    elsewhere: false,
     reading: null,
     shown: STOPPED,
     since: Date.now(),

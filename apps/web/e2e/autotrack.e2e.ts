@@ -290,6 +290,42 @@ test("a race seed leaves pendants, crystals and dungeon chests to the player", a
   expect(forbiddenReads(bridge)).toEqual([]);
 });
 
+test("one tab of the tracker reads the game; another waits, then takes over", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  await openTracker(page);
+  await connect(page);
+  const second = await page.context().newPage();
+
+  // The second tab connects on start, as the first one asked
+  await second.goto(`./?bridge=${port}`);
+  await expect(second.getByTestId("autotrack-live")).toHaveText(
+    "Autotracking: Running in another tab",
+  );
+  // It follows the board through storage, and never reaches the bridge
+  await expect(second.getByTestId("item-hookshot")).toHaveAccessibleName(
+    cell("Hookshot", "obtained"),
+  );
+  bridge.memory[SAVE(0x34b)] = 0x01;
+  await expect(second.getByTestId("item-hammer")).toHaveAccessibleName(
+    cell("Hammer", "obtained"),
+  );
+  expect(bridge.accepted).toBe(1);
+
+  await page.close();
+
+  await expect(second.getByTestId("autotrack-live")).toHaveText(
+    "Autotracking: Connected",
+  );
+  expect(bridge.accepted).toBe(2);
+  // And it lays the game on the board from now on
+  bridge.memory[SAVE(0x345)] = 0x01; // the Fire Rod
+  await expect(second.getByTestId("item-firerod")).toHaveAccessibleName(
+    cell("Fire Rod", "obtained"),
+  );
+});
+
 test("connects through the dialog, ticks every step and lists what it read", async ({
   page,
 }) => {
