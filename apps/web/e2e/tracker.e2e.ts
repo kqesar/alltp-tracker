@@ -125,6 +125,47 @@ test.describe("a tooltip", () => {
     await expect(tooltip).toBeHidden();
   });
 
+  test("stays while hovered, yet lets a press reach the item it covers", async ({
+    page,
+  }) => {
+    // Skull Woods' boss sits under the Magic Mirror: its tooltip, above it,
+    // covers the mirror's cell
+    const boss = page.getByTestId("item-boss5");
+    const mirror = page.getByTestId("item-mirror");
+    const tooltip = page.getByTestId("tooltip");
+    const bossBox = await boss.boundingBox();
+    const mirrorBox = await mirror.boundingBox();
+    expect(bossBox && mirrorBox).toBeTruthy();
+    if (!bossBox || !mirrorBox) return;
+    await page.mouse.move(
+      bossBox.x + bossBox.width / 2,
+      bossBox.y + bossBox.height / 2,
+    );
+    await expect(tooltip).toContainText("Skull Woods");
+    const x = mirrorBox.x + mirrorBox.width / 2;
+    const y = mirrorBox.y + mirrorBox.height / 2;
+    const tip = await tooltip.boundingBox();
+    expect(tip).toBeTruthy();
+    if (!tip) return;
+    expect(
+      x >= tip.x &&
+        x <= tip.x + tip.width &&
+        y >= tip.y &&
+        y <= tip.y + tip.height,
+    ).toBe(true);
+
+    // A quick flick lands on the tooltip, over the mirror: it stays (WCAG
+    // 1.4.13, hoverable), and a press there reaches the mirror
+    await page.mouse.move(x, y);
+    await page.waitForTimeout(300);
+    await expect(tooltip).toContainText("Skull Woods");
+    await page.mouse.down();
+    await page.mouse.up();
+
+    await expect(mirror).toHaveAccessibleName(/^Magic Mirror, obtained\./);
+    await expect(tooltip).toBeHidden();
+  });
+
   test("follows keyboard focus and closes on Escape", async ({ page }) => {
     await page.getByTestId("item-flute").focus();
     await page.keyboard.press("ArrowRight");

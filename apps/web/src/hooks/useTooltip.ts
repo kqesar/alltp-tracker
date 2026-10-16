@@ -5,6 +5,7 @@ import {
   useRef,
 } from "react";
 import {
+  isOnTooltip,
   scheduleHide,
   type TooltipTarget,
   useTooltipStore,
@@ -26,7 +27,9 @@ const isKeyboardFocus = (element: HTMLElement) => {
  * Handlers that show `target`'s tooltip on the element they are spread on:
  * on mouse hover, on keyboard focus, and on a touch long-press — a tap stays
  * the control's own action, and the click that ends a long-press is
- * swallowed so it does not also toggle the control.
+ * swallowed so it does not also toggle the control. While the pointer is on
+ * a tooltip covering this control, the tooltip shown stays (it is hoverable)
+ * until the pointer leaves it.
  * @param target - What the tooltip describes
  */
 export const useTooltip = (target: TooltipTarget) => {
@@ -60,11 +63,19 @@ export const useTooltip = (target: TooltipTarget) => {
       }, LONG_PRESS_MS);
     },
     onPointerEnter: (event: PointerEvent<HTMLElement>) => {
-      if (event.pointerType === "mouse") show(event.currentTarget);
+      if (event.pointerType !== "mouse") return;
+      if (!isOnTooltip(event.clientX, event.clientY)) show(event.currentTarget);
     },
     onPointerLeave: (event: PointerEvent<HTMLElement>) => {
       endPress();
       if (event.pointerType === "mouse") scheduleHide(event.currentTarget);
+    },
+    // Off another control's tooltip and onto this one: show this one's
+    onPointerMove: (event: PointerEvent<HTMLElement>) => {
+      if (event.pointerType !== "mouse") return;
+      const { anchor } = useTooltipStore.getState();
+      if (!anchor || anchor === event.currentTarget) return;
+      if (!isOnTooltip(event.clientX, event.clientY)) show(event.currentTarget);
     },
     onPointerUp: endPress,
   };

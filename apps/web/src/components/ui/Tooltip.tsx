@@ -16,7 +16,9 @@ import { buildDungeonCaption } from "@/data/logic";
 import { useGameStore } from "@/stores/gameStore";
 import {
   cancelHide,
+  isOnTooltip,
   scheduleHide,
+  setTooltipElement,
   type TooltipTarget,
   useTooltipStore,
 } from "@/stores/tooltipStore";
@@ -90,7 +92,11 @@ type Placement = { left: number; top: number; side: "above" | "below" };
  * when there is room, below otherwise, kept inside the viewport. Its text is
  * already in the control's accessible name, so it is hidden from assistive
  * technology. It follows WCAG 1.4.13: Escape dismisses it, the pointer can
- * move onto it, and it stays until the pointer or focus leaves.
+ * move onto it, and it stays until the pointer or focus leaves. It takes no
+ * pointer events itself, so it never swallows a press meant for the control
+ * it covers (a boss's tooltip lies over the cell above): whether the pointer
+ * is on it is told by position, and a press there hides it and acts on the
+ * control underneath.
  */
 export const Tooltip = () => {
   const target = useTooltipStore((state) => state.target);
@@ -122,8 +128,9 @@ export const Tooltip = () => {
     });
   }, [anchor, caption, lines.length]);
 
-  // Dismiss on Escape, on a press elsewhere (touch has no hover to leave),
-  // and when the page scrolls or resizes from under it.
+  // Dismiss on Escape, on a press off its anchor (touch has no hover to
+  // leave), and when the page scrolls or resizes from under it. Stay while
+  // the mouse is on it; once it leaves for anything but the anchor, go.
   useEffect(() => {
     if (!anchor) return;
     const hide = () => useTooltipStore.getState().hide();
@@ -131,16 +138,26 @@ export const Tooltip = () => {
       if (event.key === "Escape") hide();
     };
     const onPointerDown = (event: PointerEvent) => {
-      const node = event.target as Node;
-      if (!anchor.contains(node) && !ref.current?.contains(node)) hide();
+      if (!anchor.contains(event.target as Node)) hide();
+    };
+    let hovered = false;
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      const onTooltip = isOnTooltip(event.clientX, event.clientY);
+      if (onTooltip === hovered) return;
+      hovered = onTooltip;
+      if (onTooltip) cancelHide();
+      else if (!anchor.contains(event.target as Node)) scheduleHide(anchor);
     };
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("pointermove", onPointerMove, { passive: true });
     window.addEventListener("scroll", hide, { capture: true, passive: true });
     window.addEventListener("resize", hide);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("scroll", hide, { capture: true });
       window.removeEventListener("resize", hide);
     };
@@ -153,9 +170,10 @@ export const Tooltip = () => {
       aria-hidden="true"
       className={`tooltip tooltip--${placement?.side ?? "above"}`}
       data-testid="tooltip"
-      onPointerEnter={cancelHide}
-      onPointerLeave={() => scheduleHide(anchor)}
-      ref={ref}
+      ref={(element) => {
+        ref.current = element;
+        setTooltipElement(element);
+      }}
       style={
         placement
           ? { left: placement.left, top: placement.top }
