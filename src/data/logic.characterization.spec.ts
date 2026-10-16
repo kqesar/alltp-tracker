@@ -82,7 +82,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "uuuuuuuuuu",
       chests:
-        "uaauuaauuauuauaauuuuaauuuauuuuuuuuuuuapuuuuupauuapuuuuuuuaaauuuua",
+        "uaauuaauuauuauaauuuaauuuauuuuuuuuuuuapuuuuupauuapuuuuuuuaaauuuua",
       dungeonChests: "puuuuuuuuu",
     },
     items: state(),
@@ -94,7 +94,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "aaaaaaaaaa",
       chests:
-        "aaaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
+        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
       dungeonChests: "aaaaaaaaaa",
     },
     items: everything,
@@ -106,7 +106,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "aaaaaaaaaa",
       chests:
-        "aaaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
+        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
       dungeonChests: "aaaaaaaaaa",
     },
     items: everything,
@@ -118,7 +118,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "uuuuuuuuuu",
       chests:
-        "uaauuaauuauuauaauuaaaauuuauuuuuuuuuuuapuuuuuaauuapuuuuuuuaaauuuua",
+        "uaauuaauuauuauaauuaaauuuauuuuuuuuuuuapuuuuuaauuapuuuuuuuaaauuuua",
       dungeonChests: "puuuuuuuuu",
     },
     items: state({ boots: true, sword: 1 }),
@@ -130,7 +130,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "uuuuuuauuu",
       chests:
-        "uaauuaaaaauuaaaaauuuaauuaauauuuuuaaauapauuuupapuapupaapuaaaauuaua",
+        "uaauuaaaaauuaaaaauuaauuaauauuuuuaaauapauuuupapuapupaapuaaaauuaua",
       dungeonChests: "puupupauuu",
     },
     items: state({ glove: 1, hammer: true, moonpearl: true }),
@@ -142,7 +142,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "uuuuuuauuu",
       chests:
-        "uaauuaaaaauuauaaauuuaauuaauauuuuuuaauapauuuupapuapupuapuaaaauuuua",
+        "uaauuaaaaauuauaaauuaauuaauauuuuuuaauapauuuupapuapupuapuaaaauuuua",
       dungeonChests: "puuuupauuu",
     },
     items: state({ glove: 2, moonpearl: true }),
@@ -154,7 +154,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "uuuuuuauuu",
       chests:
-        "uaauuaaaaauuauaaauuuaauuaauauuauuuauuapuuuuupauuapppaaauuaaauuuua",
+        "uaauuaaaaauuauaaauuaauuaauauuauuuauuapuuuuupauuapppaaauuaaauuuua",
       dungeonChests: "puupupauuu",
     },
     items: state({
@@ -171,7 +171,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "uuuuuuuuuu",
       chests:
-        "uaauuaauuauuauaauuuuaauuuauuuuuuuuuuuapuuuuupauuapuuuuuuuaaauuuua",
+        "uaauuaauuauuauaauuuaauuuauuuuuuuuuuuapuuuuupauuapuuuuuuuaaauuuua",
       dungeonChests: "puuuuuuuuu",
     },
     items: state({ moonpearl: true }),
@@ -183,7 +183,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "uupuuuuuuu",
       chests:
-        "uaauuaauuauuauaauuuuaauuuauuuuuuuuaauapauuaupaauaauuuupuaaaauuuua",
+        "uaauuaauuauuauaauuuaauuuauuuuuuuuaauapauuaupaauaauuuupuaaaauuuua",
       dungeonChests: "pppuuuuuuu",
     },
     items: state({ flute: true, glove: 2, mirror: true }),
@@ -195,7 +195,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "upuuuuuuuu",
       chests:
-        "uaauuaauuauuauaauuuuaauuuauuuuuuuuaauapauuuupapuaauuuupuaaaauuupa",
+        "uaauuaauuauuauaauuuaauuuauuuuuuuuaauapauuuupapuaauuuupuaaaauuupa",
       dungeonChests: "ppuuuuuuuu",
     },
     items: state({ book: true, firerod: true, glove: 1 }),
@@ -207,7 +207,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "uuuuuuuuuu",
       chests:
-        "uaauuaauuauuauaauuuuaauuuauuuuuuuuuuuapuuuuupauuapuuuuuuuaaauuuua",
+        "uaauuaauuauuauaauuuaauuuauuuuuuuuuuuapuuuuupauuapuuuuuuuaaauuuua",
       dungeonChests: "puuuuuuuuu",
     },
     items: state({ hammer: true, hookshot: true, mirror: true }),
@@ -219,7 +219,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "aaaaaaaaaa",
       chests:
-        "aaaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
+        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
       dungeonChests: "aaaaaaaaaa",
     },
     items: everything,
@@ -231,7 +231,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "aaaaaaaauu",
       chests:
-        "aaaauaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
+        "aaaauaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
       dungeonChests: "aaaaaaaauu",
     },
     items: state({ ...everything, bombos: true, ether: false, quake: false }),
@@ -243,7 +243,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "aaaaaaaaaa",
       chests:
-        "aaaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
+        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
       dungeonChests: "aaaaaaaaaa",
     },
     items: state({ ...everything, chest4: 2 }),
@@ -255,7 +255,7 @@ const scenarios: Array<{
       beatableWithBigKeys: "uuuuuuuuuu",
       beatableWithoutBigKeys: "uaauaaaaaa",
       chests:
-        "aaaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
+        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapa",
       dungeonChests: "paapaaaaaa",
     },
     items: state({ ...everything, bow: 0 }),

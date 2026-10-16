@@ -57,7 +57,7 @@ The whole application state lives in one Zustand store, `src/stores/gameStore.ts
 src/
 ├── data/         game data and rules
 │   ├── logic.ts     types + reachability predicates (canReachDarkWorld, …)
-│   ├── chests.ts    the 65 overworld chests
+│   ├── chests.ts    the 64 overworld chests
 │   ├── dungeons.ts  the 10 dungeons
 │   ├── items.ts     item ranges, starting values and labels
 │   └── presets.ts   run types

@@ -154,12 +154,6 @@ export const chests: ChestItem[] = [
     y: "29.3%",
   },
   {
-    isAvailable: (items) => avail(items.boots),
-    name: `West of Sanctuary ${icon("boots.png")}`,
-    x: "22.5%",
-    y: "36.6%",
-  },
-  {
     isAvailable: () => "available",
     name: `Minimoldorm Cave (NPC + 4) ${icon("bomb.png")}`,
     x: "32.6%",
