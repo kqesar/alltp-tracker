@@ -67,7 +67,7 @@
     {
       "file": "app/Region/Standard/IcePalace.php",
       "module": "src/regions/standard/ice-palace.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/LightWorld/DeathMountain/East.php",
@@ -287,7 +287,7 @@
     {
       "file": "tests/NoGlitches/IcePalaceTest.php",
       "fixture": "test/upstream/NoGlitches/IcePalace.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/LightWorldTest.php",
