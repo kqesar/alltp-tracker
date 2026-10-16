@@ -1,9 +1,6 @@
-import {
-  CounterOverlay,
-  MedaillonOverlay,
-} from "@/components/tracker/overlays/BossOverlays";
-import { BOSS_STATES } from "@/constants";
 import { itemLabels, itemsMin } from "@/data/items";
+import { useGridFocusable } from "@/hooks/useGridNavigation";
+import { useStepHandlers } from "@/hooks/useStepHandlers";
 import { useGameStore } from "@/stores/gameStore";
 import { getItemBackground, isItemDimmed } from "@/utils";
 
@@ -11,8 +8,6 @@ type ItemProps = {
   row: number;
   col: number;
   item: string;
-  /** Callback when item receives focus for keyboard navigation */
-  onFocus?: () => void;
 };
 
 /**
@@ -24,47 +19,34 @@ const describeState = (item: string, value: number | boolean): string => {
   if (!item || item === "blank") return "empty";
   if (typeof value === "boolean") return value ? "obtained" : "not obtained";
   if (typeof value !== "number") return "unknown state";
-  if (item.startsWith("boss"))
-    return value === BOSS_STATES.BEATEN ? "defeated" : "not defeated";
   return value > (itemsMin[item] ?? 0) ? `level ${value}` : "not obtained";
 };
 
 /**
- * A single cell of the tracker grid. Boss cells additionally carry the
- * medallion, chest-count and reward overlays.
+ * A single item cell of the tracker grid. Click steps it forward (toggles or
+ * levels up), right-click or "-" steps it back.
  * @param row - Grid row index
  * @param col - Grid column index
- * @param item - The item identifier, e.g. "bow" or "boss3"
- * @param onFocus - Callback when the cell receives focus
+ * @param item - The item identifier, e.g. "bow"
  */
-export const Item = ({ row, col, item, onFocus }: ItemProps) => {
+export const Item = ({ row, col, item }: ItemProps) => {
   const value = useGameStore((state) => state.items[item]);
   const handleItemClick = useGameStore((state) => state.handleItemClick);
-
-  const bossNumber = item.startsWith("boss")
-    ? Number.parseInt(item.slice("boss".length), 10)
-    : null;
+  const focusable = useGridFocusable({ col, row, slot: 0 });
+  const steps = useStepHandlers((direction) =>
+    handleItemClick(item, direction),
+  );
 
   return (
     <button
+      {...focusable}
+      {...steps}
       aria-label={`${itemLabels(item)}, ${describeState(item, value)}. Click to change state.`}
       className={`griditem grid-item-base${isItemDimmed(item, value) ? " griditem--dimmed" : ""}`}
-      data-grid-col={col}
-      data-grid-row={row}
       data-testid={`item-${item}`}
       disabled={item === "blank"}
-      onClick={() => handleItemClick(item)}
-      onFocus={onFocus}
       style={{ backgroundImage: getItemBackground(item, value) }}
       type="button"
-    >
-      {bossNumber !== null && (
-        <>
-          <MedaillonOverlay bossNumber={bossNumber} />
-          <CounterOverlay bossNumber={bossNumber} kind="chest" />
-          <CounterOverlay bossNumber={bossNumber} kind="reward" />
-        </>
-      )}
-    </button>
+    />
   );
 };

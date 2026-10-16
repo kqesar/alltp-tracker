@@ -34,11 +34,3 @@ export const SMALL_KEYS_MAX_BY_INDEX = [1, 1, 1, 6, 1, 3, 1, 2, 3, 4] as const;
 
 /** Columns rendered per tracker grid row. */
 export const ITEMS_PER_ROW = 7;
-
-/** Arrow keys handled by the grid navigation. */
-export const KEYBOARD_NAVIGATION = {
-  ARROW_DOWN: "ArrowDown",
-  ARROW_LEFT: "ArrowLeft",
-  ARROW_RIGHT: "ArrowRight",
-  ARROW_UP: "ArrowUp",
-} as const;

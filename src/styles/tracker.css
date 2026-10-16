@@ -64,3 +64,20 @@
 .griditem:focus-visible {
   z-index: 1;
 }
+
+/* Boss cell: a fieldset grouping the boss button, which fills the cell, and
+   its overlay buttons in the corners */
+.boss-cell {
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.boss-cell__boss {
+  position: absolute;
+  inset: 0;
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}

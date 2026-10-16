@@ -12,7 +12,7 @@ Originally forked from [TestRunnerSRL/lttp-tracker](https://github.com/TestRunne
 
 ## Using it
 
-**Items** — click a cell to cycle its state. Progressive items step through their levels (sword 0→4, gloves 0→2) and wrap back to the start; the rest toggle on and off. Dimmed means not obtained.
+**Items** — click a cell to cycle its state, right-click to step it back. Progressive items step through their levels (sword 0→4, gloves 0→2) and wrap round; the rest toggle on and off. Dimmed means not obtained. **Undo / Redo** (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z) take back any change, a new game included.
 
 **Map** — every marker is colour-coded against the items you hold:
 
@@ -23,11 +23,11 @@ Originally forked from [TestRunnerSRL/lttp-tracker](https://github.com/TestRunne
 | 🟥 red | out of logic |
 | ⬛ grey | already done |
 
-Click a chest to mark it opened, or a boss to mark it beaten. Hover anything to see its requirements. **Stacked map** puts the Dark World under the Light World instead of beside it, which suits a tall or narrow screen; the choice is remembered.
+Each state also has a glyph (✓ ? ✕), so colour is never the only cue. Click a chest to mark it opened, or a boss to mark it beaten. Hover or focus anything to see its requirements. **Map: Auto / Side / Stack** sets how the two worlds sit: Auto keeps them side by side while there is room and stacks them on a narrow screen; the choice is remembered on this device.
 
-**Boss overlays** — each boss cell carries three corners: the medallion requirement (top right, Misery Mire and Turtle Rock only), the remaining chest count (bottom left) and the reward, crystal or pendant (bottom right).
+**Boss overlays** — each boss cell carries three corner buttons: the medallion requirement (top right, Misery Mire and Turtle Rock only), the remaining chest count (bottom left) and the reward, crystal or pendant (bottom right). Click steps them forward, right-click back.
 
-**Keyboard** — arrow keys move around the grid and wrap at the edges, Tab walks through every control, Space and Enter activate the focused cell.
+**Keyboard** — the item grid is a single Tab stop: arrow keys move inside it (through a boss's overlays too) and wrap, Home / End jump to the ends of a row, Ctrl+Home / End to the ends of the grid. Space and Enter step the focused control forward, "-" steps it back. Every map marker is a button Tab can reach; "Skip to map" jumps there.
 
 **Presets** — pick a run type to set the rules; keysanity adds the big and small key cells to the grid. Progress is saved to the browser automatically, and can be exported or imported as JSON.
 

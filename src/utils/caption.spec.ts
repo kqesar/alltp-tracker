@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { chests } from "@/data/chests";
 import { dungeons } from "@/data/dungeons";
 import { icon } from "@/data/logic";
-import { captionToText, iconLabel } from "@/utils/caption";
+import { captionToText, iconLabel, placeName } from "@/utils/caption";
 
 describe("captionToText", () => {
   it("reads each icon as the item it stands for", () => {
@@ -37,5 +37,12 @@ describe("iconLabel", () => {
   it("falls back to the item's own label", () => {
     expect(iconLabel("moonpearl")).toBe("Moon Pearl");
     expect(iconLabel("hookshot")).toBe("Hookshot");
+  });
+});
+
+describe("placeName", () => {
+  it("keeps only the name of the place", () => {
+    expect(placeName(dungeons[0].name)).toBe("Eastern Palace");
+    expect(placeName(dungeons[9].name)).toBe("Turtle Rock");
   });
 });

@@ -1,4 +1,5 @@
 import { BigKeyCell } from "@/components/tracker/items/BigKeyCell";
+import { BossCell } from "@/components/tracker/items/BossCell";
 import { Item } from "@/components/tracker/items/Item";
 
 type GridItemProps = {
@@ -8,8 +9,6 @@ type GridItemProps = {
   col: number;
   /** Item identifier from the grid layout */
   item: string;
-  /** Callback when item receives focus for keyboard navigation */
-  onFocus?: () => void;
 };
 
 /**
@@ -18,14 +17,17 @@ type GridItemProps = {
  * @param row - Grid row index
  * @param col - Grid column index
  * @param item - Item identifier from the layout grid
- * @param onFocus - Callback when item receives focus
  */
-export const GridItem = ({ row, col, item, onFocus }: GridItemProps) => {
+export const GridItem = ({ row, col, item }: GridItemProps) => {
   if (!item) return <div aria-hidden="true" className="grid-spacer" />;
 
   if (item.startsWith("bigkey")) {
     return <BigKeyCell col={col} item={item} row={row} />;
   }
 
-  return <Item col={col} item={item} onFocus={onFocus} row={row} />;
+  if (item.startsWith("boss")) {
+    return <BossCell col={col} item={item} row={row} />;
+  }
+
+  return <Item col={col} item={item} row={row} />;
 };

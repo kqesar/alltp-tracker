@@ -1,6 +1,10 @@
 import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { dungeons } from "@/data/dungeons";
+import { useGridFocusable } from "@/hooks/useGridNavigation";
+import { useStepHandlers } from "@/hooks/useStepHandlers";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
+import { placeName } from "@/utils/caption";
 
 type KeyToggleProps = {
   /** Dungeon index (0-9) */
@@ -37,13 +41,19 @@ export const KeyToggle = ({
   );
 
   const isBigKey = variant === "big-key";
+  const focusable = useGridFocusable({ col, row, slot: isBigKey ? 0 : 1 });
+  const steps = useStepHandlers((direction) => {
+    if (isBigKey) handleItemClick(`bigkey${dungeonIndex}`, direction);
+    else handleSmallKeyClick(dungeonIndex, direction);
+  });
+  const dungeon = placeName(dungeons[dungeonIndex].name);
   const maxKeys = SMALL_KEYS_MAX_BY_INDEX[dungeonIndex] || 0;
   const obtained = bigKey === 1;
 
   const isComplete = isBigKey ? obtained : count === maxKeys;
   const label = isBigKey
-    ? `Big key for dungeon ${dungeonIndex}: ${obtained ? "obtained" : "not obtained"}`
-    : `Small keys for dungeon ${dungeonIndex}: ${count}/${maxKeys}`;
+    ? `${dungeon} big key: ${obtained ? "obtained" : "not obtained"}`
+    : `${dungeon} small keys: ${count} of ${maxKeys}`;
 
   return (
     <button
@@ -53,20 +63,14 @@ export const KeyToggle = ({
           ? `${variant}-overlay--${isBigKey ? "obtained" : "maxed"}`
           : ""
       }`}
+      {...focusable}
+      {...steps}
       data-dungeon={dungeonIndex}
-      data-grid-col={col}
-      data-grid-row={row}
-      onClick={(event) => {
-        // Keep the click from also toggling the cell underneath.
-        event.preventDefault();
-        event.stopPropagation();
-        if (isBigKey) handleItemClick(`bigkey${dungeonIndex}`);
-        else handleSmallKeyClick(dungeonIndex);
-      }}
-      title={isBigKey ? label : `Small keys: ${count}/${maxKeys}`}
+      data-testid={`${variant}-${dungeonIndex}`}
+      title={label}
       type="button"
     >
-      <div
+      <span
         className={`${variant}-icon`}
         style={{
           backgroundImage: `url(${getAssetPath(
