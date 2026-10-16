@@ -13,6 +13,7 @@ import {
   formatFixture,
   importAll,
   importItems,
+  importLocations,
   importTestFile,
   matchAll,
   parseClass,
@@ -479,6 +480,136 @@ describe("importItems", () => {
   });
 });
 
+const WORLDS: Record<string, string> = {
+  "app/Region/Open/Escape.php": `<?php
+namespace ALttP\\Region\\Open;
+
+use ALttP\\Region;
+
+class Escape extends Region\\Standard\\Escape
+{
+}
+`,
+  "app/Region/Standard/Escape.php": `<?php
+namespace ALttP\\Region\\Standard;
+
+use ALttP\\Location;
+use ALttP\\Location\\Medallion as Pad;
+use ALttP\\Region;
+use ALttP\\Support\\LocationCollection;
+
+class Escape extends Region
+{
+    public function __construct(World $world)
+    {
+        $this->locations = new LocationCollection([
+            new Location\\Chest("Sanctuary", [0xEA79], null, $this),
+            new Location\\Prize\\Event("Escape - Prize", [null], null, $this),
+            new Pad("Some Medallion", [null, 't0' => 0x5020], null, $this),
+        ]);
+        $this->shops = new ShopCollection;
+    }
+}
+`,
+  "app/World/Open.php": `<?php
+namespace ALttP\\World;
+
+use ALttP\\Region;
+
+class Open extends World
+{
+    public function __construct(int $id = 0, array $config = [])
+    {
+        $this->regions = [
+            'Escape' => new Region\\Open\\Escape($this),
+        ];
+    }
+}
+`,
+  "app/World/Standard.php": `<?php
+namespace ALttP\\World;
+
+use ALttP\\Region;
+
+class Standard extends World
+{
+    public function __construct(int $id = 0, array $config = [])
+    {
+        $this->regions = [
+            'Escape' => new Region\\Standard\\Escape($this),
+        ];
+    }
+}
+`,
+};
+
+const readWorld = (file: string) => {
+  const text = WORLDS[file];
+  if (text === undefined) throw new Error(`No ${file}`);
+  return text;
+};
+
+describe("importLocations", () => {
+  it("lists each world's regions and every location their files build", () => {
+    const index = importLocations(readWorld, HEADER);
+    expect(index.regions).toEqual([
+      {
+        extends: "app/Region/Standard/Escape.php",
+        file: "app/Region/Open/Escape.php",
+        line: 11,
+        mode: "open",
+        name: "Escape",
+      },
+      {
+        file: "app/Region/Standard/Escape.php",
+        line: 11,
+        mode: "standard",
+        name: "Escape",
+      },
+    ]);
+    // Through `use` and its alias; the collection and the shops are not
+    // locations
+    expect(index.locations).toEqual([
+      {
+        file: "app/Region/Standard/Escape.php",
+        kind: "Chest",
+        line: 14,
+        name: "Sanctuary",
+      },
+      {
+        file: "app/Region/Standard/Escape.php",
+        kind: "Prize\\Event",
+        line: 15,
+        name: "Escape - Prize",
+      },
+      {
+        file: "app/Region/Standard/Escape.php",
+        kind: "Medallion",
+        line: 16,
+        name: "Some Medallion",
+      },
+    ]);
+  });
+
+  it("refuses names it cannot read and locations built twice", () => {
+    const twice = (file: string) =>
+      readWorld(file).replace('"Some Medallion"', '"Sanctuary"');
+    expect(() => importLocations(twice, HEADER)).toThrow(
+      /"Sanctuary" is built twice/,
+    );
+    const computed = (file: string) =>
+      readWorld(file).replace('"Sanctuary"', "$name");
+    expect(() => importLocations(computed, HEADER)).toThrow(
+      /without a literal name/,
+    );
+    const unnamed = (file: string) =>
+      readWorld(file).replace("'Escape' => new", "new");
+    expect(() => importLocations(unnamed, HEADER)).toThrow(
+      /region without a name/,
+    );
+  });
+});
+
 describe("formatFixture", () => {
   it("writes the header first, one case per line, keys sorted", () => {
     // Built from entries: Biome sorts the keys of object literals, and the
@@ -573,11 +704,13 @@ describe("the checkout", () => {
     write("tests/NoGlitches/TestCase.php", "<?php // not a test class");
     write("app/Item.php", ITEM_PHP);
     write("resources/lang/en/item.php", ENGLISH_PHP);
+    for (const [file, text] of Object.entries(WORLDS)) write(file, text);
     write("out/NoGlitches/Removed.json", "{}");
 
     const out = join(root, "out");
-    const { items, summary, upstream } = importAll(root, out);
+    const { items, locations, summary, upstream } = importAll(root, out);
     expect(items).toBe(4);
+    expect(locations).toBe(3);
     expect(
       JSON.parse(readFileSync(join(out, "items.json"), "utf8")).items,
     ).toHaveLength(4);

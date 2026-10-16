@@ -1,0 +1,338 @@
+{
+  "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+  "license": "MIT, Copyright (c) 2016 sporchia",
+  "logic": 31,
+  "repo": "sporchia/alttp_vt_randomizer",
+  "rules": [
+    {
+      "file": "app/Region/Standard/DarkWorld/DeathMountain/East.php",
+      "module": "src/regions/standard/dark-world/death-mountain/east.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/DarkWorld/DeathMountain/West.php",
+      "module": "src/regions/standard/dark-world/death-mountain/west.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/DarkWorld/Mire.php",
+      "module": "src/regions/standard/dark-world/mire.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/DarkWorld/NorthEast.php",
+      "module": "src/regions/standard/dark-world/north-east.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/DarkWorld/NorthWest.php",
+      "module": "src/regions/standard/dark-world/north-west.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/DarkWorld/South.php",
+      "module": "src/regions/standard/dark-world/south.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/DesertPalace.php",
+      "module": "src/regions/standard/desert-palace.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/EasternPalace.php",
+      "module": "src/regions/standard/eastern-palace.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/Fountains.php",
+      "module": "src/regions/standard/fountains.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/GanonsTower.php",
+      "module": "src/regions/standard/ganons-tower.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/HyruleCastleEscape.php",
+      "module": "src/regions/standard/hyrule-castle-escape.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/HyruleCastleTower.php",
+      "module": "src/regions/standard/hyrule-castle-tower.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/IcePalace.php",
+      "module": "src/regions/standard/ice-palace.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/LightWorld/DeathMountain/East.php",
+      "module": "src/regions/standard/light-world/death-mountain/east.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/LightWorld/DeathMountain/West.php",
+      "module": "src/regions/standard/light-world/death-mountain/west.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/LightWorld/NorthEast.php",
+      "module": "src/regions/standard/light-world/north-east.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/LightWorld/NorthWest.php",
+      "module": "src/regions/standard/light-world/north-west.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/LightWorld/South.php",
+      "module": "src/regions/standard/light-world/south.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/Medallions.php",
+      "module": "src/regions/standard/medallions.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/MiseryMire.php",
+      "module": "src/regions/standard/misery-mire.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/PalaceOfDarkness.php",
+      "module": "src/regions/standard/palace-of-darkness.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/SkullWoods.php",
+      "module": "src/regions/standard/skull-woods.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/SwampPalace.php",
+      "module": "src/regions/standard/swamp-palace.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/ThievesTown.php",
+      "module": "src/regions/standard/thieves-town.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/TowerOfHera.php",
+      "module": "src/regions/standard/tower-of-hera.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Standard/TurtleRock.php",
+      "module": "src/regions/standard/turtle-rock.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Open/HyruleCastleEscape.php",
+      "module": "src/regions/open/hyrule-castle-escape.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Boss.php",
+      "module": "src/bosses.ts",
+      "role": "Boss::canBeat: every boss location and the GT and Ganon fights call it",
+      "status": "pending"
+    },
+    {
+      "file": "app/Support/ItemCollection.php",
+      "module": "src/helpers.ts",
+      "role": "has, hasSword, canLiftRocks, canExtendMagic, canKillMostThings...: every rule calls them",
+      "status": "pending"
+    },
+    {
+      "file": "app/Support/LocationCollection.php",
+      "module": "src/keys.ts",
+      "role": "itemInLocations: the dungeon key rules ask where a key or big key sits",
+      "status": "pending"
+    },
+    {
+      "file": "app/World.php",
+      "module": "src/settings.ts",
+      "role": "config() defaults and the settings it derives (requireBetterBow and Sword, wild dungeon items) that rules read",
+      "status": "pending"
+    },
+    {
+      "file": "config/logic.php",
+      "module": "src/settings.ts",
+      "role": "the glitch flags World::config falls back to for each logic (all off for NoGlitches)",
+      "status": "pending"
+    },
+    {
+      "file": "app/World/Standard.php",
+      "module": "src/worlds/standard.ts",
+      "role": "the regions of a Standard world",
+      "status": "pending"
+    },
+    {
+      "file": "app/World/Open.php",
+      "module": "src/worlds/open.ts",
+      "role": "the regions of an Open world: Standard's, but its own escape",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region.php",
+      "module": "src/world.ts",
+      "role": "canEnter / canComplete, which region rules call on one another, and canFill, the dungeon item lock",
+      "status": "pending"
+    },
+    {
+      "file": "app/Location.php",
+      "module": "src/fill.ts",
+      "role": "canAccess (region, then location rule) and canFill / fill (always-allow and fill rules)",
+      "status": "pending"
+    },
+    {
+      "file": "app/Item.php",
+      "module": "src/items.ts",
+      "role": "the item names and classes, which decide how items count (Item\\Bottle for bottleCount...)",
+      "status": "ported"
+    },
+    {
+      "file": "config/item.php",
+      "module": "src/items.ts",
+      "role": "the item pool, which bounds each count (four swords, six Palace of Darkness keys...)",
+      "status": "ported"
+    },
+    {
+      "file": "resources/lang/en/item.php",
+      "module": "src/items.ts",
+      "role": "English item names, which Item::get falls back to: the tests write 'Flute'",
+      "status": "ported"
+    }
+  ],
+  "tests": [
+    {
+      "file": "tests/TestCase.php",
+      "module": "test/upstream-state.ts",
+      "role": "allItems / allItemsExcept and addCollected: the collections every case holds",
+      "status": "ported"
+    },
+    {
+      "file": "tests/NoGlitches/DarkWorld/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/NoGlitches/DarkWorld/DeathMountain/East.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/DarkWorld/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/NoGlitches/DarkWorld/DeathMountain/West.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/DarkWorld/MireTest.php",
+      "fixture": "test/upstream/NoGlitches/DarkWorld/Mire.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/DarkWorld/NorthEastTest.php",
+      "fixture": "test/upstream/NoGlitches/DarkWorld/NorthEast.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/DarkWorld/NorthWestTest.php",
+      "fixture": "test/upstream/NoGlitches/DarkWorld/NorthWest.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/DarkWorld/SouthTest.php",
+      "fixture": "test/upstream/NoGlitches/DarkWorld/South.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/NoGlitches/DeathMountain/East.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/NoGlitches/DeathMountain/West.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/DesertPalaceTest.php",
+      "fixture": "test/upstream/NoGlitches/DesertPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/EasternPalaceTest.php",
+      "fixture": "test/upstream/NoGlitches/EasternPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/GanonsTowerTest.php",
+      "fixture": "test/upstream/NoGlitches/GanonsTower.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/HyruleCastleEscapeTest.php",
+      "fixture": "test/upstream/NoGlitches/HyruleCastleEscape.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/HyruleCastleTowerTest.php",
+      "fixture": "test/upstream/NoGlitches/HyruleCastleTower.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/IcePalaceTest.php",
+      "fixture": "test/upstream/NoGlitches/IcePalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/LightWorldTest.php",
+      "fixture": "test/upstream/NoGlitches/LightWorld.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/MiseryMireTest.php",
+      "fixture": "test/upstream/NoGlitches/MiseryMire.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/OpenTest.php",
+      "fixture": "test/upstream/NoGlitches/Open.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/PalaceOfDarknessTest.php",
+      "fixture": "test/upstream/NoGlitches/PalaceOfDarkness.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/SkullWoodsTest.php",
+      "fixture": "test/upstream/NoGlitches/SkullWoods.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/SwampPalaceTest.php",
+      "fixture": "test/upstream/NoGlitches/SwampPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/ThievesTownTest.php",
+      "fixture": "test/upstream/NoGlitches/ThievesTown.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/TowerOfHeraTest.php",
+      "fixture": "test/upstream/NoGlitches/TowerOfHera.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/NoGlitches/TurtleRockTest.php",
+      "fixture": "test/upstream/NoGlitches/TurtleRock.json",
+      "status": "pending"
+    }
+  ]
+}

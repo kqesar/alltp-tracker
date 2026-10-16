@@ -141,3 +141,30 @@ export function loadItemTable(): ItemTable {
     readFileSync(join(FIXTURES_DIR, "items.json"), "utf8"),
   ) as ItemTable;
 }
+
+/** The regions of the Standard and Open worlds and their locations. */
+export interface LocationIndex {
+  readonly files: readonly string[];
+  readonly locations: readonly {
+    readonly file: string;
+    /** The upstream Location class: Chest, BigChest, Prize\Crystal… */
+    readonly kind: string;
+    readonly line: number;
+    readonly name: string;
+  }[];
+  readonly regions: readonly {
+    /** The region class this one extends, whose file builds its locations. */
+    readonly extends?: string;
+    readonly file: string;
+    readonly line: number;
+    readonly mode: string;
+    readonly name: string;
+  }[];
+  readonly upstream: UpstreamHeader;
+}
+
+export function loadLocationIndex(): LocationIndex {
+  return JSON.parse(
+    readFileSync(join(FIXTURES_DIR, "locations.json"), "utf8"),
+  ) as LocationIndex;
+}
