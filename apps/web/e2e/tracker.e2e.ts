@@ -352,6 +352,23 @@ test.describe("a missing item", () => {
   });
 });
 
+test("keeps the skip links out of view until focused, at any text size", async ({
+  page,
+}) => {
+  await openTracker(page);
+  // A 175 % default text size makes each link taller than a fixed offset
+  await page.addStyleTag({ content: ":root { font-size: 28px !important; }" });
+  const links = page.getByRole("link", { name: /^Skip to/ });
+
+  for (const link of await links.all()) {
+    const box = await link.boundingBox();
+    expect(box && box.y + box.height).toBeLessThanOrEqual(0);
+  }
+  await page.keyboard.press("Tab");
+  await expect(links.first()).toBeFocused();
+  await expect(links.first()).toBeInViewport({ ratio: 1 });
+});
+
 test.describe("a run", () => {
   test.beforeEach(({ page }) => openTracker(page));
 
