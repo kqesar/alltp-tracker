@@ -29,6 +29,8 @@ export function print(expr: Expr): string {
       return `@${expr.name}`;
     case "setting":
       return `${expr.negated ? "!" : ""}setting(${expr.name})`;
+    case "reach":
+      return `reach(${expr.region})`;
     case "maybe":
       return `?${isAtomic(expr.expr) ? print(expr.expr) : `(${print(expr.expr)})`}`;
     case "and":
@@ -58,6 +60,7 @@ function isAtomic(expr: Expr): boolean {
     case "const":
     case "helper":
     case "maybe":
+    case "reach":
     case "setting":
       return true;
     case "item":

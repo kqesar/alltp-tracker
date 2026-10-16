@@ -20,22 +20,25 @@ export const UNKNOWN = -1;
 const PENDING = -2;
 
 /**
- * Scratch space for one solve: item values by item index, and each helper's
- * result by helper index (UNKNOWN until first used, then memoized).
+ * Scratch space for one solve: item values by item index, each helper's
+ * result by helper index (UNKNOWN until first used, then memoized), and the
+ * region levels the solver is filling in, which `reach()` reads. The solver
+ * only evaluates `reach()` once every level is final.
  */
 export interface Context {
   readonly values: Float64Array;
   readonly helpers: Int8Array;
+  readonly regions: Uint8Array;
 }
 
 export type Compiled = (ctx: Context) => Level;
 
 /**
- * Compiles requirements into closures over item and helper indices: the
- * solver's fast path. Names are resolved once here, so evaluating reads typed
- * arrays instead of looking strings up. Semantics are those of `evaluate()`.
- * Requirements and helper bodies must be folded first (`foldSettings`): a
- * setting left in them is a DefinitionError.
+ * Compiles requirements into closures over item, helper and region indices:
+ * the solver's fast path. Names are resolved once here, so evaluating reads
+ * typed arrays instead of looking strings up. Semantics are those of
+ * `evaluate()`. Requirements and helper bodies must be folded first
+ * (`foldSettings`): a setting left in them is a DefinitionError.
  */
 export class Compiler {
   /** Every item a compiled requirement reads; its index is the item index. */
@@ -44,9 +47,14 @@ export class Compiler {
   private readonly helperIndex = new Map<string, number>();
   private readonly helperBodies: Compiled[] = [];
   private readonly rules: Rules;
+  private readonly regionIndex: ReadonlyMap<string, number>;
 
-  constructor(rules: Rules) {
+  constructor(
+    rules: Rules,
+    regionIndex: ReadonlyMap<string, number> = new Map(),
+  ) {
     this.rules = rules;
+    this.regionIndex = regionIndex;
   }
 
   get helperCount(): number {
@@ -84,6 +92,15 @@ export class Compiler {
         throw new DefinitionError(
           `Unfolded setting "${expr.name}" (${UNFOLDED})`,
         );
+      case "reach": {
+        const index = this.regionIndex.get(expr.region);
+        if (index === undefined) {
+          throw new DefinitionError(
+            `Unknown region "${expr.region}" in reach()`,
+          );
+        }
+        return (ctx) => ctx.regions[index] as Level;
+      }
       case "maybe": {
         const inner = this.compile(expr.expr);
         return (ctx) => {

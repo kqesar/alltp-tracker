@@ -1,7 +1,9 @@
+import type { Expr } from "./ast";
 import { type Compiled, Compiler } from "./compile";
 import {
   checkReferences,
   DefinitionError,
+  findReach,
   NO_RULES,
   parseIn,
   type Rules,
@@ -12,7 +14,10 @@ import { YES } from "./tri";
 /** A one-way connection; a two-way passage is two exits. */
 export interface Exit {
   readonly to: string;
-  /** Requirement to take it; `true` when omitted. */
+  /**
+   * Requirement to take it; `true` when omitted. It cannot use `reach()`,
+   * directly or through a helper (see the README).
+   */
   readonly req?: string;
 }
 
@@ -20,7 +25,10 @@ export interface Exit {
 export interface Location {
   /** Unique across the whole world. */
   readonly id: string;
-  /** Requirement once in the region; `true` when omitted. */
+  /**
+   * Requirement once in the region; `true` when omitted. It may use
+   * `reach(region)` for a location that also needs another region reached.
+   */
   readonly req?: string;
 }
 
@@ -87,7 +95,8 @@ const ALWAYS: Compiled = () => YES;
  * on it for every state. Throws a DefinitionError for a duplicate region or
  * location id, an exit to an unknown region, an unknown start, a requirement
  * that does not parse (naming the exit or location), a reference the rules
- * cannot resolve, or a setting missing from `options.settings`.
+ * cannot resolve, a `reach()` of an unknown region or in an exit, or a
+ * setting missing from `options.settings`.
  *
  * Names are checked on the requirements as written, so a typo in a branch
  * that the settings switch off is still an error. Then every setting is
@@ -99,12 +108,6 @@ export function compileWorld(
   rules: Rules = NO_RULES,
   options: CompileOptions = {},
 ): CompiledWorld {
-  const items =
-    options.items === undefined ? undefined : new Set(options.items);
-  if (items !== undefined) checkRulesItems(rules, items);
-  const settings = options.settings ?? {};
-  const foldedRules = foldRules(rules, settings);
-
   const regionIndex = new Map<string, number>();
   for (const region of world.regions) {
     if (regionIndex.has(region.id)) {
@@ -117,15 +120,36 @@ export function compileWorld(
     throw new DefinitionError(`Start region "${world.start}" does not exist`);
   }
 
-  const compiler = new Compiler(foldedRules);
+  const items =
+    options.items === undefined ? undefined : new Set(options.items);
+  checkRules(rules, items, regionIndex);
+  const settings = options.settings ?? {};
+  const foldedRules = foldRules(rules, settings);
+
+  const compiler = new Compiler(foldedRules, regionIndex);
   // Packs repeat requirements a lot: each distinct text compiles once.
+  const parsed = new Map<string, Expr>();
   const cache = new Map<string, Compiled>();
-  const compileReq = (req: string | undefined, where: string): Compiled => {
+  const reachMemo = new Map<string, readonly string[] | null>();
+  const exitChecked = new Set<string>();
+  const compileReq = (
+    req: string | undefined,
+    where: string,
+    inExit = false,
+  ): Compiled => {
     if (req === undefined) return ALWAYS;
+    let expr = parsed.get(req);
+    if (expr === undefined) {
+      expr = parseIn(req, where);
+      parsed.set(req, expr);
+    }
+    if (inExit && !exitChecked.has(req)) {
+      checkNoReach(expr, rules, where, reachMemo);
+      exitChecked.add(req);
+    }
     let compiled = cache.get(req);
     if (compiled === undefined) {
-      const expr = parseIn(req, where);
-      checkReferences(expr, rules, where, items);
+      checkReferences(expr, rules, where, items, regionIndex);
       compiled = compiler.compile(foldSettings(expr, settings, where));
       cache.set(req, compiled);
     }
@@ -152,7 +176,7 @@ export function compileWorld(
       }
       exitTargets.push(target);
       exitReqs.push(
-        compileReq(exit.req, `Exit "${region.id}" -> "${exit.to}"`),
+        compileReq(exit.req, `Exit "${region.id}" -> "${exit.to}"`, true),
       );
     }
     exitOffsets[r + 1] = exitTargets.length;
@@ -188,18 +212,47 @@ export function compileWorld(
   };
 }
 
-/** With a known item list, helpers and groups must stick to it as well. */
-function checkRulesItems(rules: Rules, items: ReadonlySet<string>): void {
-  for (const [name, members] of rules.groups) {
-    for (const member of members) {
-      if (!items.has(member)) {
-        throw new DefinitionError(
-          `Group "${name}" has unknown item "${member}"`,
-        );
+/**
+ * Helpers and groups must stick to the item list when there is one, and a
+ * helper's `reach()` must name a region of this world.
+ */
+function checkRules(
+  rules: Rules,
+  items: ReadonlySet<string> | undefined,
+  regions: ReadonlyMap<string, number>,
+): void {
+  if (items !== undefined) {
+    for (const [name, members] of rules.groups) {
+      for (const member of members) {
+        if (!items.has(member)) {
+          throw new DefinitionError(
+            `Group "${name}" has unknown item "${member}"`,
+          );
+        }
       }
     }
   }
   for (const [name, expr] of rules.helpers) {
-    checkReferences(expr, rules, `Helper "@${name}"`, items);
+    checkReferences(expr, rules, `Helper "@${name}"`, items, regions);
   }
+}
+
+/**
+ * Rejects `reach()` in an exit requirement, directly or through any chain of
+ * helpers: the single-pass solver evaluates each exit once, before the
+ * regions it would read have their final level.
+ */
+function checkNoReach(
+  expr: Expr,
+  rules: Rules,
+  where: string,
+  memo: Map<string, readonly string[] | null>,
+): void {
+  const chain = findReach(expr, rules, memo);
+  if (chain === undefined) return;
+  const through =
+    chain.length > 1 ? ` through ${chain.slice(0, -1).join(" -> ")}` : "";
+  throw new DefinitionError(
+    `${where} uses ${chain.at(-1)}${through}: reach() is allowed only in location requirements`,
+  );
 }

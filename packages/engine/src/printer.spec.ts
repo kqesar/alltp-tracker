@@ -24,6 +24,8 @@ describe("print", () => {
     ["sword>=setting(minSword)", "sword >= setting(minSword)"],
     ["?sword >= setting(minSword)", "?(sword >= setting(minSword))"],
     ["count(c1,c2)>=setting(n)", "count(c1, c2) >= setting(n)"],
+    ["reach( ledge )&mirror", "reach(ledge) & mirror"],
+    ["maybe(reach(ledge))", "?reach(ledge)"],
     [
       "moonpearl&(hammer|glove>=1&flippers)",
       "moonpearl & (hammer | glove & flippers)",

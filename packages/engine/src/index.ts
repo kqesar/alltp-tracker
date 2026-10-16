@@ -12,6 +12,7 @@ export {
   type MaybeExpr,
   type OrExpr,
   RESERVED_WORDS,
+  type ReachExpr,
   type SettingExpr,
   type SettingThreshold,
   type Threshold,

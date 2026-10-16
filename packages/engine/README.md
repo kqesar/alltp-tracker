@@ -81,8 +81,9 @@ Choices that shape everything else:
   monotone: getting an item never makes anything less available. The property
   tests check this, and the solver depends on it (see below).
 - **Check at load, not at solve.** Unknown helpers, helper cycles, unknown
-  regions, duplicate ids, missing or mistyped settings and parse errors are
-  all `DefinitionError`s from `loadRules` / `compileWorld`. Given the game's item list, so are misspelled
+  regions, duplicate ids, missing or mistyped settings, `reach()` in an exit
+  and parse errors are all `DefinitionError`s from `loadRules` /
+  `compileWorld`. Given the game's item list, so are misspelled
   item names, which would otherwise read as "never collected". `solve` cannot
   fail on data a pack shipped.
 - **Two evaluators, one semantics.** `evaluate()` is a plain tree walk, short
@@ -120,6 +121,7 @@ primary     = "(" , or_expr , ")"
             | "count" , "(" , name , { "," , name } , ")" , ">=" , threshold
             | helper
             | [ "!" ] , setting                (* the only negation *)
+            | "reach" , "(" , name , ")"       (* locations only *)
             | "true" | "false" | "maybe"
             | name , [ ">=" , threshold ] ;
 
@@ -129,12 +131,13 @@ helper      = "@" , identifier ;            (* no space after "@" *)
 name        = identifier - reserved ;
 identifier  = lower , { lower | upper | digit | "_" } ;   (* [a-z][a-zA-Z0-9_]* *)
 integer     = digit , { digit } ;           (* a safe integer *)
-reserved    = "true" | "false" | "maybe" | "count" | "setting" ;
+reserved    = "true" | "false" | "maybe" | "count" | "setting" | "reach" ;
 ```
 
 Whitespace (space, tab, CR, LF) may sit between any two tokens. `>=` is one
 token, and so is `@name`. A `setting` after `>=` must be a numeric setting,
-anywhere else a boolean one.
+anywhere else a boolean one. `reach()` names a region by its id, so only a
+region whose id is a `name` can be reached.
 
 ### Precedence, tightest first
 
@@ -163,6 +166,7 @@ anything else (absent, `false`) as 0.
 | `count(a, b, g) >= n` | `yes` if the sum of `value` over the distinct items named is at least `n`, else `no`. A group name expands to its members. |
 | `x >= setting(s)`, `count(…) >= setting(s)` | as above, with `n` the value of the numeric setting `s` |
 | `setting(s)` / `!setting(s)` | `yes` / `no` as the boolean setting `s` is true, the other way round with `!` |
+| `reach(r)` | the level of region `r` in the solved world (location requirements only, see [reach()](#reach-locations-that-need-a-second-region)) |
 | `@h` | the value of helper `h` |
 | `true` / `false` / `maybe` | `yes` / `no` / `maybe` |
 | `?x`, `maybe(x)` | `soften(x)`: `no` becomes `maybe` |
@@ -251,6 +255,8 @@ level(r)     = max over exits u -> r of  min(level(u), req(exit))
 
 and then `location = min(level(its region), req(location))`. In words: a path
 is as good as its weakest exit, and a region is as good as its best path.
+Exit requirements read the state only. Location requirements may also read
+the final region levels, through `reach()`.
 
 ### Algorithm
 
@@ -264,7 +270,8 @@ queue, just one bucket (stack) per level above `no`:
    it on the matching stack.
 3. Once the yes-stack is empty, pop the maybe-stack the same way, skipping any
    region that was raised to `yes` after it was queued.
-4. For each reachable region, evaluate its locations.
+4. For each reachable region, evaluate its locations. Every region level is
+   final by now, which is what `reach()` reads.
 
 Every region is expanded exactly once, at its final level. Nothing reached
 later can beat `yes`, and the maybe phase only produces `maybe`. So each exit
@@ -283,6 +290,35 @@ once.
 The property tests check this solver against the fixpoint definition iterated
 literally (Bellman-Ford style, everything re-evaluated each round) on random
 worlds with cycles and self-loops.
+
+### reach(): locations that need a second region
+
+Some checks sit in one region but need another one reached as well. Mimic
+Cave is a location of east Death Mountain, yet its door is only reachable from
+Turtle Rock's ledge in the Dark World, through the mirror:
+
+```ts
+{ id: "mimicCave", req: "mirror & reach(turtleRockLedge)" }
+```
+
+`reach(r)` is the level of region `r`, so the location is
+`min(level(eastDeathMountain), mirror, level(turtleRockLedge))`, and a ledge
+reached only as `maybe` makes the cave a `maybe`. Step 4 of the algorithm runs
+once every level is final, so `reach()` reads final values and costs one array
+read.
+
+`reach()` is a `DefinitionError` in an exit requirement, written there or used
+through any chain of helpers (`Exit "r" -> "s" uses reach(r) through @a -> @b`).
+The single pass relies on exit requirements depending on the state alone: each
+exit is evaluated once, when its source region is expanded at its final level.
+An exit reading another region's level could see it before it is final, and
+would have to be evaluated again each time that level rose. That is a general
+fixpoint iteration, costing up to a full pass per raise instead of one pass
+in all. A pack that needs "this passage opens once that region is reached"
+expresses it with the graph (an exit from that region) or, later, with events
+(see the open questions). A helper that uses `reach()` stays usable in
+locations, and every `reach()` must name a region of the world, in helpers
+too, used or not.
 
 ### Why monotonicity matters
 
@@ -326,7 +362,7 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
 
 ## Tests
 
-`pnpm vitest run --project engine` runs 236 tests in about 0.5 s:
+`pnpm vitest run --project engine` runs 258 tests in about 0.5 s:
 
 - **Kleene tables:** both truth tables written out in full, plus every lattice
   law on all combinations.
@@ -337,6 +373,10 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
 - **Settings:** a folding table (negation, thresholds, constants simplified
   away, flat shape kept), every setting error, helpers folded per run, and
   typos caught in branches the settings switch off.
+- **reach():** the Mimic Cave pattern at no / maybe / yes, a region raised
+  after the location's own region was expanded, reach() through a helper, and
+  every error: in an exit directly, through a chain of helpers, after a
+  reach-free helper was cached, and unknown regions in locations and helpers.
 - **Rules:** helper and group loading, helper cycles (self, 2-, 3-cycles, a cycle
   not containing the starting helper, and a diamond that must *not* count as one),
   unknown references, invalid names.
@@ -347,14 +387,16 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
   entered through a maybe exit, reuse across solves (no memo leaks), and every
   `DefinitionError`.
 - **Properties (fast-check):** random requirements and worlds use settings,
-  negated settings and setting thresholds throughout. `parse(print(ast))`
+  negated settings and setting thresholds throughout, and location
+  requirements use `reach()` (exits never do). `parse(print(ast))`
   round-trips; printing any tree gives an equivalent requirement; folding
   leaves no setting, keeps the meaning and the parser's shape, helpers
   included; compiled evaluation equals `evaluate`; the solver equals the
   literal fixpoint; and monotonicity in items, for requirements and for every
   region and location of compiled worlds. Seeded mutations fail them with
   shrunk counterexamples: `>=` to `===` in compiled item tests fails three,
-  a fold that ignores `!` three, a fold that skips the inside of `?x` four.
+  a fold that ignores `!` three, a fold that skips the inside of `?x` four, a
+  compiled `reach()` that drops `maybe` two.
 
 ## How a game pack plugs in
 

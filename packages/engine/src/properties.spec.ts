@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   anyExpr,
   canonicalExpr,
+  regionLevels,
   rules,
   settings,
   state,
@@ -24,12 +25,15 @@ const RUNS = { numRuns: 500 };
 /**
  * The fixpoint definition, iterated literally until nothing changes
  * (Bellman-Ford style, every requirement re-evaluated each round): slow, but
- * obviously the specification. The real solver must agree with it.
+ * obviously the specification. Locations come after, once every region level
+ * is known, which is what `reach()` reads. The real solver must agree.
  */
 function referenceSolve(w: World, s: State, r: Rules, set: Settings) {
-  const req = (text: string | undefined): Tri =>
-    text === undefined ? "yes" : evaluate(parse(text), s, r, { settings: set });
   const regions: Record<string, Tri> = {};
+  const req = (text: string | undefined): Tri =>
+    text === undefined
+      ? "yes"
+      : evaluate(parse(text), s, r, { regions, settings: set });
   for (const region of w.regions) {
     regions[region.id] = region.id === w.start ? "yes" : "no";
   }
@@ -85,12 +89,18 @@ describe("printer/parser round trip", () => {
 
   it("print(ast) of any other tree parses to an equivalent requirement", () => {
     fc.assert(
-      fc.property(anyExpr, state, settings, (expr, s, set) => {
-        const options = { settings: set };
-        expect(evaluate(parse(print(expr)), s, rules, options)).toBe(
-          evaluate(expr, s, rules, options),
-        );
-      }),
+      fc.property(
+        anyExpr,
+        state,
+        settings,
+        regionLevels,
+        (expr, s, set, regions) => {
+          const options = { regions, settings: set };
+          expect(evaluate(parse(print(expr)), s, rules, options)).toBe(
+            evaluate(expr, s, rules, options),
+          );
+        },
+      ),
       RUNS,
     );
   });
@@ -99,14 +109,20 @@ describe("printer/parser round trip", () => {
 describe("settings folding", () => {
   it("leaves no setting, keeps the meaning and the parser's shape", () => {
     fc.assert(
-      fc.property(canonicalExpr, state, settings, (expr, s, set) => {
-        const folded = foldSettings(expr, set, "Requirement");
-        expect(settingsLeft(folded)).toEqual([]);
-        expect(evaluate(folded, s, foldRules(rules, set))).toBe(
-          evaluate(expr, s, rules, { settings: set }),
-        );
-        expect(parse(print(folded))).toEqual(folded);
-      }),
+      fc.property(
+        canonicalExpr,
+        state,
+        settings,
+        regionLevels,
+        (expr, s, set, regions) => {
+          const folded = foldSettings(expr, set, "Requirement");
+          expect(settingsLeft(folded)).toEqual([]);
+          expect(evaluate(folded, s, foldRules(rules, set), { regions })).toBe(
+            evaluate(expr, s, rules, { regions, settings: set }),
+          );
+          expect(parse(print(folded))).toEqual(folded);
+        },
+      ),
       RUNS,
     );
   });
@@ -124,20 +140,32 @@ describe("settings folding", () => {
 });
 
 describe("compiled evaluation", () => {
-  it("agrees with the reference evaluator", () => {
+  it("agrees with the reference evaluator, reach() included", () => {
     fc.assert(
       fc.property(canonicalExpr, state, settings, (expr, s, set) => {
+        // r1 and r2 get levels that vary with the state, for reach().
         const compiled = compileWorld(
           {
-            regions: [{ id: "r", locations: [{ id: "l", req: print(expr) }] }],
-            start: "r",
+            regions: [
+              {
+                exits: [
+                  { req: "bow", to: "r1" },
+                  { req: "?hammer", to: "r2" },
+                ],
+                id: "r0",
+                locations: [{ id: "l", req: print(expr) }],
+              },
+              { exits: [{ req: "glove", to: "r2" }], id: "r1" },
+              { id: "r2" },
+            ],
+            start: "r0",
           },
           rules,
           { settings: set },
         );
-        expect(solve(compiled, s).location("l")).toBe(
-          evaluate(expr, s, rules, { settings: set }),
-        );
+        const solution = solve(compiled, s);
+        const options = { regions: solution.regions(), settings: set };
+        expect(solution.location("l")).toBe(evaluate(expr, s, rules, options));
       }),
       RUNS,
     );
@@ -165,8 +193,9 @@ describe("monotonicity: more items never lowers anything", () => {
         anyExpr,
         stateAndMore,
         settings,
-        (expr, [less, more], set) => {
-          const options = { settings: set };
+        regionLevels,
+        (expr, [less, more], set, regions) => {
+          const options = { regions, settings: set };
           const before = evaluate(expr, less, rules, options);
           const after = evaluate(expr, more, rules, options);
           expect(compare(before, after)).toBeLessThanOrEqual(0);

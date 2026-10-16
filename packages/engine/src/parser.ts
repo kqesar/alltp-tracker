@@ -176,6 +176,11 @@ class Parser {
           negated: false,
           type: "setting",
         };
+      case "reach":
+        return {
+          region: this.parseParenthesizedName("reach", "a region name"),
+          type: "reach",
+        };
       default: {
         if (this.peek().kind !== ">=") {
           return { min: 1, name: token.text, type: "item" };
