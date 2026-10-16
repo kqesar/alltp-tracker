@@ -1,27 +1,15 @@
-import { isMainThread } from "node:worker_threads";
-import { describe, expect, inject, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { analyze } from "../src/analyze";
 import type { State } from "../src/evaluate";
 import { compileWorld } from "../src/world";
 import { syntheticGame } from "./synthetic";
-
-declare module "vitest" {
-  export interface ProvidedContext {
-    /** Set by vitest.config.ts when the run instruments code for coverage. */
-    coverage: boolean;
-  }
-}
+import { fastest, TIMING_TIMEOUT_MS, underCoverage } from "./timing";
 
 // Blockers are asked for on demand (a hover, a "what next?" panel), but a
 // panel may want every location at once. The budget is 10 ms for all 1000
 // locations of the synthetic world, both targets, on average over a game;
-// the analysis needs 2 to 3 ms.
-//
-// A few ms is easy to lose to a busy machine (parallel test files, other
-// processes), so the test times CPU rather than the wall clock: Vitest runs
-// each test file in a process of its own, whose CPU time does not count the
-// time spent waiting for a core. Each stage is timed several times and its
-// fastest run counts.
+// the analysis needs 2 to 3 ms. Each stage is timed on CPU (see timing.ts)
+// several times, and its fastest run counts.
 //
 // Coverage instrumentation (`pnpm test:coverage`, what CI runs) makes this
 // code several times slower, so it measures the instrumentation more than
@@ -30,20 +18,6 @@ declare module "vitest" {
 const BUDGET_MS = 10;
 const COVERAGE_FACTOR = 8;
 const RUNS = 7;
-// Wall time, for Vitest's timeout only: 160 passes take well under a second
-// on a quiet machine, but much longer under coverage on a loaded one.
-const TIMEOUT_MS = 60_000;
-
-/**
- * Milliseconds of this process's CPU time. In a worker thread (another
- * Vitest pool), the process also runs other test files: fall back to the
- * wall clock there.
- */
-const clock = (): number => {
-  if (!isMainThread) return performance.now();
-  const { system, user } = process.cpuUsage();
-  return (system + user) / 1000;
-};
 
 describe("analyze performance", () => {
   const game = syntheticGame();
@@ -76,24 +50,17 @@ describe("analyze performance", () => {
     expect(tally.nothing).toBeGreaterThan(50);
   });
 
-  const budget = inject("coverage") ? BUDGET_MS * COVERAGE_FACTOR : BUDGET_MS;
+  const budget = underCoverage() ? BUDGET_MS * COVERAGE_FACTOR : BUDGET_MS;
 
   it(
     `analyzes every location in under ${budget} ms on average`,
     () => {
       for (const state of states) everything(state); // warm up the JIT
       let total = 0;
-      for (const state of states) {
-        let fastest = Number.POSITIVE_INFINITY;
-        for (let run = 0; run < RUNS; run++) {
-          const start = clock();
-          everything(state);
-          fastest = Math.min(fastest, clock() - start);
-        }
-        total += fastest;
-      }
+      for (const state of states)
+        total += fastest(() => everything(state), RUNS);
       expect(total / states.length).toBeLessThan(budget);
     },
-    TIMEOUT_MS,
+    TIMING_TIMEOUT_MS,
   );
 });
