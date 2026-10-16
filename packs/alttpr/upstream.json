@@ -149,7 +149,7 @@
       "file": "app/Support/ItemCollection.php",
       "module": "src/helpers.ts",
       "role": "has, hasSword, canLiftRocks, canExtendMagic, canKillMostThings...: every rule calls them",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Support/LocationCollection.php",
