@@ -1,10 +1,26 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 /** Phone, tablet, laptop and desktop: the widths every layout must hold at. */
 export const WIDTHS = [390, 820, 1440, 1920] as const;
 
 /** The accessibility standard every page state is held to. */
 export const WCAG_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+
+/**
+ * Click a secondary toolbar action: its own button where the toolbar has room
+ * for it, else its item in the More menu.
+ * @param button - The action's toolbar button
+ * @param item - The data-testid of its More menu item
+ */
+export const clickToolbarAction = async (
+  page: Page,
+  button: Locator,
+  item: string,
+) => {
+  if (await button.isVisible()) return button.click();
+  await page.getByTestId("toolbar-more").click();
+  await page.getByTestId(item).click();
+};
 
 /**
  * Clickable-looking elements a keyboard can never reach.

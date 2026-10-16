@@ -4,13 +4,15 @@ const EDITABLE =
 
 /**
  * Whether a key press is meant for something other than the board: a field
- * being typed in, or an open dialog, which covers the board the player would
- * be changing without seeing it.
+ * being typed in, an open menu, whose keys are its own, or an open dialog,
+ * which covers the board the player would be changing without seeing it.
  * @param event - The keydown event
  */
 export const isAwayFromBoard = (event: KeyboardEvent): boolean => {
   const target = event.target instanceof Element ? event.target : null;
   return Boolean(
-    target?.closest(EDITABLE) || document.querySelector("dialog[open]"),
+    target?.closest(EDITABLE) ||
+      target?.closest('[role="menu"]') ||
+      document.querySelector("dialog[open]"),
   );
 };

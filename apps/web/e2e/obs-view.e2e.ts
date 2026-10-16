@@ -1,7 +1,12 @@
 import { inflateSync } from "node:zlib";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
+import {
+  clickToolbarAction,
+  unreachableClickables,
+  WCAG_AA,
+  WIDTHS,
+} from "./support";
 
 /** OBS-typical browser source sizes, a very wide strip last. */
 const SOURCES = [
@@ -257,7 +262,11 @@ for (const width of WIDTHS) {
 
     test("fits, passes axe and is keyboard-reachable", async ({ page }) => {
       await page.goto("./");
-      await page.getByTestId("stream-view-button").click();
+      await clickToolbarAction(
+        page,
+        page.getByTestId("stream-view-button"),
+        "toolbar-more-stream-view",
+      );
       const dialog = page.getByRole("dialog", { name: "Stream view" });
       await expect(dialog).toBeVisible();
 
@@ -293,7 +302,11 @@ test.describe("the stream view dialog", () => {
   }) => {
     const url = `${baseURL}?view=obs`;
     await page.goto("./");
-    await page.getByTestId("stream-view-button").click();
+    await clickToolbarAction(
+      page,
+      page.getByTestId("stream-view-button"),
+      "toolbar-more-stream-view",
+    );
 
     await expect(page.getByTestId("stream-view-url")).toHaveValue(url);
     await page.getByTestId("stream-view-copy").click();

@@ -56,9 +56,18 @@ const tabTo = async (page: Page, testId: string) => {
   throw new Error(`Tab never reached ${testId}`);
 };
 
-/** Open the shortcuts dialog from the toolbar with the keyboard alone. */
+/**
+ * Open the shortcuts dialog from the toolbar with the keyboard alone: its own
+ * button where the toolbar has room for it, else the More menu's last item.
+ */
 const openShortcuts = async (page: Page) => {
-  await tabTo(page, "shortcuts-button");
+  if (await page.getByTestId("shortcuts-button").isVisible()) {
+    await tabTo(page, "shortcuts-button");
+  } else {
+    await tabTo(page, "toolbar-more");
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("End");
+  }
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
   await expect(dialog).toBeVisible();

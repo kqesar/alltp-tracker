@@ -150,6 +150,30 @@ describe("item shortcuts", () => {
     expect(screen.getByTestId("field")).toHaveValue("w1");
   });
 
+  it("leaves an open menu its own keys", async () => {
+    const user = userEvent.setup();
+    render(
+      <Board>
+        <div aria-label="More" role="menu">
+          <button
+            data-testid="field"
+            role="menuitem"
+            tabIndex={-1}
+            type="button"
+          >
+            Export
+          </button>
+        </div>
+      </Board>,
+    );
+    act(() => screen.getByTestId("field").focus());
+
+    await user.keyboard("w1");
+
+    expect(items().hookshot).toBe(false);
+    expect(items().chest0).toBe(3);
+  });
+
   it("does nothing while a dialog covers the board", async () => {
     const user = userEvent.setup();
     render(
