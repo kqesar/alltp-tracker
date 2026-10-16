@@ -58,7 +58,7 @@ pnpm dev          # http://localhost:5173
 | `pnpm build` | production build |
 | `pnpm preview` | serve the production build |
 | `pnpm typecheck` | type-check every workspace |
-| `pnpm test` | run the unit tests (app and engine) |
+| `pnpm test` | run the unit tests (app, engine and game packs) |
 | `pnpm test:e2e` | browser tests: Playwright + axe on the production build |
 | `pnpm test:coverage:show` | tests with a coverage table |
 | `pnpm lint` / `pnpm lint:fix` | Biome check / autofix |
@@ -70,7 +70,7 @@ The repository is a pnpm workspace:
 ```
 apps/web/          the tracker web app (Vite + React), deployed to GitHub Pages
 packages/engine/   @alltp/engine: a game-agnostic logic engine (rule language, three-valued solver)
-packs/             game packs: each game's rules, items and map data (coming with the v31 rules port)
+packs/alttpr/      @alltp/pack-alttpr: ALttPR's items, and the official tests its v31 rules are held to
 ```
 
 In the app, the whole state lives in one Zustand store, `apps/web/src/stores/gameStore.ts`, persisted to localStorage. Everything else reads from it.
