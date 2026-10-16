@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
+import { tabTo, unreachableClickables, WCAG_AA, WIDTHS } from "./support";
 
 /**
  * What a French AZERTY keyboard types, key by key, as Chromium's layout map
@@ -42,18 +42,6 @@ const openTracker = async (page: Page) => {
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await expect(page.getByTestId("item-grid")).toBeVisible();
-};
-
-/** Press Tab until the element `testId` has focus; fail if it never does. */
-const tabTo = async (page: Page, testId: string) => {
-  for (let press = 0; press < 400; press++) {
-    const focused = await page.evaluate(() =>
-      document.activeElement?.getAttribute("data-testid"),
-    );
-    if (focused === testId) return;
-    await page.keyboard.press("Tab");
-  }
-  throw new Error(`Tab never reached ${testId}`);
 };
 
 /**
