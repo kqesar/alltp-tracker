@@ -28,6 +28,15 @@ export {
   MEMORY_SOURCES,
   type MemoryRangeId,
 } from "./autotrack/memory";
+export { ALTTPR_AUTOTRACK } from "./autotrack/pack";
+export {
+  ALTTPR_GAME_CHECK,
+  ALTTPR_RACE_FLAG,
+  checkGame,
+  type GameCheckCode,
+  probeRaceFlag,
+  type RaceFlagProbeResult,
+} from "./autotrack/probes";
 export { ALTTPR_RACE_PROFILE } from "./autotrack/race-profile";
 export { BOSS_SLOTS, BOSSES } from "./bosses";
 export {
