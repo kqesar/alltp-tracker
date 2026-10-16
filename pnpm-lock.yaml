@@ -154,6 +154,9 @@ importers:
       '@alltp/autotrack':
         specifier: workspace:*
         version: link:../../packages/autotrack
+      '@alltp/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       '@alltp/pack-alttpr':
         specifier: workspace:*
         version: link:../../packs/alttpr
