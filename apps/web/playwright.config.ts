@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 4173;
+// Worktrees that run the suite side by side each pass their own E2E_PORT
+const PORT = Number(process.env.E2E_PORT ?? 4173);
 // The production build, served under the GitHub Pages base path it ships with
 const BASE_URL = `http://localhost:${PORT}/alltp-tracker/`;
 const CI = Boolean(process.env.CI);
@@ -30,7 +31,10 @@ export default defineConfig({
   },
   webServer: {
     command: `pnpm build && pnpm preview --port ${PORT} --strictPort`,
-    reuseExistingServer: !CI,
+    // Never test a server this run did not start: one left on the port by
+    // another worktree or an earlier run serves some other build. With
+    // --strictPort, a busy port fails the run instead.
+    reuseExistingServer: false,
     url: BASE_URL,
   },
 });
