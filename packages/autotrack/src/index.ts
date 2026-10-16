@@ -13,6 +13,27 @@ export {
   pakToBus,
 } from "./address";
 export {
+  classifyReadFailure,
+  type Evidence,
+  isOriginRefusal,
+  type Remedy,
+  SESSION_CODES,
+  type SessionCode,
+  type SessionStatus,
+  type UnreadableCause,
+} from "./diagnostics";
+export {
+  type BrowserFamily,
+  type CpuArchitecture,
+  detectEnvironment,
+  type Environment,
+  type LoopbackAccess,
+  loopbackAccess,
+  type NavigatorLike,
+  type OperatingSystem,
+  parseUserAgent,
+} from "./environment";
+export {
   DefinitionError,
   RaceViolationError,
   TransportError,
@@ -29,6 +50,12 @@ export {
   type RaceFlagReading,
   type RangeSpec,
 } from "./pack";
+export {
+  LOCAL_NETWORK_PERMISSION_NAMES,
+  type LocalNetworkPermission,
+  type PermissionState,
+  systemPermission,
+} from "./permission";
 export {
   type ByteRange,
   type PlannedRequest,
@@ -59,6 +86,13 @@ export {
   raceStatus,
 } from "./race-mode";
 export type { MemorySnapshot, PollUpdate } from "./scheduler";
+export {
+  AutotrackSession,
+  type BackoffOptions,
+  backoffDelay,
+  DEFAULT_BACKOFF,
+  type SessionOptions,
+} from "./session";
 export type {
   BridgeInfo,
   BridgeKind,
