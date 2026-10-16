@@ -252,8 +252,8 @@ A **race profile** is one community's rules: the memory it permits, its
 categories of tracked information, permitted or not, and its race flag. The
 package defines the shape (`defineRaceProfile`); packs bring the profiles.
 The ALttPR one, from "The Official ALTTPR Race-legal Auto-tracker
-Specification" v1.2 (link.alttpr.com/autotracking), is test data in
-`test/alttpr-profile.ts` until `packs/alttpr` takes it:
+Specification" v1.2 (link.alttpr.com/autotracking), lives in the pack
+(`packs/alttpr/src/autotrack/race-profile.ts`); this package's tests import it:
 
 - permitted memory (LoROM, ends inclusive): `$00:FFB0-$00:FFDF` (header),
   `$7E:0000-$7E:00B0`, `$7E:010B`, `$7E:F000-$7E:F500`, `$30:8210-$30:823F`;
