@@ -16,7 +16,8 @@
 // Output, under test/upstream/ by default: one JSON file per test class,
 // mirroring its path (tests/NoGlitches/EasternPalaceTest.php becomes
 // NoGlitches/EasternPalace.json), the item table of app/Item.php as
-// items.json, and a copy of the upstream LICENSE. Files
+// items.json, the regions and locations of the Standard and Open worlds as
+// locations.json, and a copy of the upstream LICENSE. Files
 // are deterministic: classes, cases (by line) and object keys are sorted, and
 // each case sits on one line so a re-import diffs case by case.
 
@@ -1349,6 +1350,8 @@ const FIXTURE_ORDER = [
   "unsupported",
   "cases",
   "items",
+  "regions",
+  "locations",
 ];
 
 /** @param {string} key */
@@ -1523,9 +1526,216 @@ export function importAll(checkout, out) {
   writeFileSync(itemsTarget, formatFixture(items));
   stale.delete(itemsTarget);
 
+  const locations = importLocations(
+    (file) => readFileSync(join(checkout, file), "utf8"),
+    upstream,
+  );
+  const locationsTarget = join(out, "locations.json");
+  writeFileSync(locationsTarget, formatFixture(locations));
+  stale.delete(locationsTarget);
+
   for (const path of stale) rmSync(path);
   copyFileSync(join(checkout, "LICENSE"), join(out, "LICENSE"));
-  return { items: items.items.length, summary, upstream };
+  return {
+    items: items.items.length,
+    locations: locations.locations.length,
+    summary,
+    upstream,
+  };
+}
+
+/** The worlds this pack covers, each the class that lists its regions. */
+export const WORLD_FILES = /** @type {const} */ ({
+  open: "app/World/Open.php",
+  standard: "app/World/Standard.php",
+});
+
+/**
+ * The `use` imports of a PHP file: alias to fully qualified name.
+ *
+ * @param {Token[]} tokens
+ * @returns {Map<string, string>}
+ */
+function imports(tokens) {
+  const aliases = new Map();
+  for (let i = 0; i < tokens.length; i++) {
+    if (isKeyword(tokens[i], "class")) break;
+    if (!isKeyword(tokens[i], "use")) continue;
+    const parts = [];
+    let alias;
+    i++;
+    while (i < tokens.length && !isPunct(tokens[i], ";")) {
+      if (isKeyword(tokens[i], "as")) alias = String(tokens[++i]?.value);
+      else parts.push(String(tokens[i]?.value));
+      i++;
+    }
+    const name = parts.join("").replace(/^\\/, "");
+    aliases.set(alias ?? name.split("\\").pop(), name);
+  }
+  return aliases;
+}
+
+/**
+ * The namespace a PHP file declares, or "".
+ *
+ * @param {Token[]} tokens
+ */
+function namespaceOf(tokens) {
+  const start = tokens.findIndex((token) => isKeyword(token, "namespace"));
+  if (start < 0) return "";
+  const end = tokens.findIndex((token, i) => i > start && isPunct(token, ";"));
+  return tokens
+    .slice(start + 1, end)
+    .map((token) => token.value)
+    .join("");
+}
+
+/**
+ * Resolves the class written by `tokens` (`Location\Chest`, `Medallion`,
+ * `\ALttP\Region`) as PHP does, through the file's imports and namespace.
+ *
+ * @param {Token[]} tokens
+ * @param {Map<string, string>} aliases
+ * @param {string} namespace
+ */
+function resolveClass(tokens, aliases, namespace) {
+  const written = tokens.map((token) => token.value).join("");
+  if (written.startsWith("\\")) return written.slice(1);
+  const [first = "", ...rest] = written.split("\\");
+  const base = aliases.get(first);
+  if (base !== undefined) return [base, ...rest].join("\\");
+  return namespace === "" ? written : `${namespace}\\${written}`;
+}
+
+/** @param {string} fqn a class under ALttP\, which lives under app/ */
+function classFile(fqn) {
+  return `app/${fqn
+    .replace(/^ALttP\\/, "")
+    .split("\\")
+    .join("/")}.php`;
+}
+
+/**
+ * Every `new <class>(` in `tokens`: the class written, resolved, and the
+ * index of its opening parenthesis.
+ *
+ * @param {Token[]} tokens
+ */
+function constructions(tokens) {
+  const aliases = imports(tokens);
+  const namespace = namespaceOf(tokens);
+  /** @type {{ fqn: string, line: number, open: number, start: number }[]} */
+  const found = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (!isKeyword(tokens[i], "new")) continue;
+    let end = i + 1;
+    while (
+      tokens[end]?.type === "ident" ||
+      (isPunct(tokens[end], "\\") && tokens[end + 1]?.type === "ident")
+    ) {
+      end++;
+    }
+    if (end === i + 1 || !isPunct(tokens[end], "(")) continue;
+    found.push({
+      fqn: resolveClass(tokens.slice(i + 1, end), aliases, namespace),
+      line: /** @type {Token} */ (tokens[i]).line,
+      open: end,
+      start: i,
+    });
+  }
+  return found;
+}
+
+/**
+ * The regions of the Standard and Open worlds (World/Standard.php,
+ * World/Open.php: name, mode, file) and every location their region files
+ * build: its name, its kind (the Location class: Chest, Prize\Crystal…),
+ * file and line. A region class that extends another lists its parent, as
+ * Open's escape does Standard's: its locations are built there.
+ *
+ * @param {(file: string) => string} read the text of a file of the checkout
+ * @param {UpstreamHeader} upstream
+ */
+export function importLocations(read, upstream) {
+  /** @type {{ extends?: string, file: string, line: number, mode: string, name: string }[]} */
+  const regions = [];
+  for (const [mode, worldFile] of Object.entries(WORLD_FILES)) {
+    const tokens = tokenize(read(worldFile));
+    for (const { fqn, line, start } of constructions(tokens)) {
+      if (!fqn.startsWith("ALttP\\Region\\")) continue;
+      // `'North East Light World' => new Region\Standard\…($this)`
+      const name = tokens[start - 2];
+      if (!isPunct(tokens[start - 1], "=>") || name?.type !== "string") {
+        throw new SyntaxError(`${worldFile}:${line}: a region without a name`);
+      }
+      regions.push({
+        file: classFile(fqn),
+        line,
+        mode,
+        name: String(name.value),
+      });
+    }
+  }
+  if (regions.length === 0) throw new Error("No regions found in the worlds");
+
+  /** @type {{ file: string, kind: string, line: number, name: string }[]} */
+  const locations = [];
+  // The region files, and the classes they extend, which build locations too
+  const files = [...new Set(regions.map((region) => region.file))].sort();
+  /** @type {Map<string, string>} */
+  const parents = new Map();
+  for (let f = 0; f < files.length; f++) {
+    const file = /** @type {string} */ (files[f]);
+    const tokens = tokenize(read(file));
+    const php = tokens.findIndex((token) => isKeyword(token, "class"));
+    if (isKeyword(tokens[php + 2], "extends")) {
+      let end = php + 3;
+      while (tokens[end]?.type === "ident" || isPunct(tokens[end], "\\")) end++;
+      const parent = resolveClass(
+        tokens.slice(php + 3, end),
+        imports(tokens),
+        namespaceOf(tokens),
+      );
+      if (parent !== "ALttP\\Region") {
+        parents.set(file, classFile(parent));
+        if (!files.includes(classFile(parent))) files.push(classFile(parent));
+      }
+    }
+    for (const { fqn, line, open } of constructions(tokens)) {
+      if (!fqn.startsWith("ALttP\\Location\\")) continue;
+      const name = tokens[open + 1];
+      if (name?.type !== "string") {
+        throw new SyntaxError(
+          `${file}:${line}: a location without a literal name`,
+        );
+      }
+      locations.push({
+        file,
+        kind: fqn.slice("ALttP\\Location\\".length),
+        line,
+        name: String(name.value),
+      });
+    }
+  }
+  for (const region of regions) {
+    const parent = parents.get(region.file);
+    if (parent !== undefined) region.extends = parent;
+  }
+  const names = new Set();
+  for (const location of locations) {
+    if (names.has(location.name)) {
+      throw new Error(`Location "${location.name}" is built twice`);
+    }
+    names.add(location.name);
+  }
+  return {
+    files: Object.values(WORLD_FILES),
+    generated:
+      "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream worlds and regions. Re-import, never edit.",
+    locations,
+    regions,
+    upstream,
+  };
 }
 
 export const ITEMS_FILE = "app/Item.php";
@@ -1623,8 +1833,14 @@ function main(argv) {
     );
     process.exit(2);
   }
-  const { items, summary, upstream } = importAll(resolve(checkout), out);
+  const { items, locations, summary, upstream } = importAll(
+    resolve(checkout),
+    out,
+  );
   process.stdout.write(`${ITEMS_FILE}: ${items} items and aliases\n`);
+  process.stdout.write(
+    `${Object.values(WORLD_FILES).join(", ")}: ${locations} locations\n`,
+  );
   /** @type {Record<string, number>} */
   const kinds = {};
   let unsupportedRows = 0;
