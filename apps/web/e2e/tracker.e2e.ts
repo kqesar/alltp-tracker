@@ -201,6 +201,28 @@ test.describe("a tooltip", () => {
 test.describe("a missing item", () => {
   test.beforeEach(({ page }) => openTracker(page));
 
+  type Box = { x: number; y: number; width: number; height: number };
+
+  /**
+   * The colour spread (max - min channel) of each pixel drawn in a region,
+   * those brighter than the page, once the region's image has loaded: at
+   * least `share` of its pixels drawn.
+   */
+  const drawnSpreads = async (page: Page, clip: Box, share: number) => {
+    const read = async () =>
+      (await pixelsIn(page, clip))
+        .filter(([red, green, blue]) => Math.max(red, green, blue) > 24)
+        .map(
+          (pixel) =>
+            Math.max(...pixel.slice(0, 3)) - Math.min(...pixel.slice(0, 3)),
+        );
+    const minimum = clip.width * clip.height * share;
+    await expect
+      .poll(async () => (await read()).length)
+      .toBeGreaterThan(minimum);
+    return read();
+  };
+
   test("is drawn greyed, its focus ring at full strength", async ({ page }) => {
     const hammer = page.getByTestId("item-hammer");
     await expect(hammer).toHaveAccessibleName(/^Hammer, not obtained\./);
@@ -209,17 +231,8 @@ test.describe("a missing item", () => {
     if (!box) return;
 
     // The icon itself, every pixel of it grey: the old veil only darkened it
-    const icon = (await pixelsIn(page, box)).filter(
-      ([red, green, blue]) => Math.max(red, green, blue) > 24,
-    );
-    const spread = Math.max(
-      ...icon.map(
-        (pixel) =>
-          Math.max(...pixel.slice(0, 3)) - Math.min(...pixel.slice(0, 3)),
-      ),
-    );
-    expect(icon.length).toBeGreaterThan(box.width * box.height * 0.1);
-    expect(spread).toBeLessThanOrEqual(3);
+    const missing = await drawnSpreads(page, box, 0.1);
+    expect(Math.max(...missing)).toBeLessThanOrEqual(3);
 
     // A keyboard focus ring stays gold, drawn outside the filter
     await page.getByTestId("item-flute").focus();
@@ -238,11 +251,9 @@ test.describe("a missing item", () => {
     // Held, it is drawn in its own colours again
     await hammer.click();
     await page.mouse.move(0, 0);
-    const held = (await pixelsIn(page, box)).map(
-      (pixel) =>
-        Math.max(...pixel.slice(0, 3)) - Math.min(...pixel.slice(0, 3)),
-    );
-    expect(Math.max(...held)).toBeGreaterThan(40);
+    await expect
+      .poll(async () => Math.max(...(await drawnSpreads(page, box, 0.1))))
+      .toBeGreaterThan(40);
   });
 
   test("greys a boss not beaten the same way, its overlays in colour", async ({
@@ -254,22 +265,17 @@ test.describe("a missing item", () => {
     const reward = await page.getByTestId("reward-overlay-0").boundingBox();
     expect(box && reward).toBeTruthy();
     if (!box || !reward) return;
-    /** The colour spread of the pixels drawn (brighter than the page). */
-    const drawnSpreads = (pixels: number[][]) =>
-      pixels
-        .filter(([red, green, blue]) => Math.max(red, green, blue) > 24)
-        .map(
-          (pixel) =>
-            Math.max(...pixel.slice(0, 3)) - Math.min(...pixel.slice(0, 3)),
-        );
-    const spreadOf = (pixels: number[][]) => Math.max(...drawnSpreads(pixels));
 
-    // The portrait's top half, clear of the corner overlays: drawn, and grey
-    const portrait = await pixelsIn(page, { ...box, height: box.height / 2 });
-    expect(drawnSpreads(portrait).length).toBeGreaterThan(portrait.length / 4);
-    expect(spreadOf(portrait)).toBeLessThanOrEqual(3);
+    // The portrait's top half, clear of the corner overlays: grey
+    const portrait = await drawnSpreads(
+      page,
+      { ...box, height: box.height / 2 },
+      0.25,
+    );
+    expect(Math.max(...portrait)).toBeLessThanOrEqual(3);
     // The reward overlay keeps its colours (the unknown reward's "?" glyph)
-    expect(spreadOf(await pixelsIn(page, reward))).toBeGreaterThan(40);
+    const overlay = await drawnSpreads(page, reward, 0.1);
+    expect(Math.max(...overlay)).toBeGreaterThan(40);
   });
 });
 
