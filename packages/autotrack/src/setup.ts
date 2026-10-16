@@ -272,6 +272,7 @@ export const SETUP_STEPS: readonly SetupStep[] = [
           "By hand on Arch or CachyOS: download bsnes_mercury_performance_libretro.so.zip from the libretro buildbot (linux/x86_64/latest), unzip it, and copy the .so to /usr/lib/libretro/ (sudo install -m644 bsnes_mercury_performance_libretro.so /usr/lib/libretro/).",
           "On Debian or Ubuntu: sudo apt install libretro-bsnes-mercury-performance.",
           "retroarch.cfg lives in ~/.config/retroarch/ (Flatpak: ~/.var/app/org.libretro.RetroArch/config/retroarch/).",
+          "The AppImage from retroarch.com keeps its Core Downloader. With a RetroArch.AppImage.home folder next to the AppImage, it uses that folder as its home: retroarch.cfg and the cores then live in RetroArch.AppImage.home/.config/retroarch/.",
         ],
         links: [
           {
@@ -283,6 +284,7 @@ export const SETUP_STEPS: readonly SetupStep[] = [
           "https://gitlab.archlinux.org/archlinux/packaging/packages/retroarch/-/raw/main/retroarch-config.patch",
           "https://salsa.debian.org/games-team/libretro/retroarch/-/raw/master/debian/patches/01_config.patch",
           "https://github.com/flathub/org.libretro.RetroArch",
+          "https://docs.appimage.org/user-guide/portable-mode.html",
           RA_CFG_DOC,
         ],
         title: "RetroArch on Linux",
