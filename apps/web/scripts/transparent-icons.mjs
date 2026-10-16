@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Gives every image of public/assets but the map a transparent background,
 // so it sits on whatever surface shows it (tooltip, grid, map, a stream over
-// footage) instead of in a black square.
+// footage) instead of in a black square, and draws every sprite at full
+// opacity, so the app's one greyed style dims them all alike.
 //
 //   node scripts/transparent-icons.mjs [--check]
 //
@@ -22,6 +23,8 @@
 //   inside the sprite is never touched, nor black that reaches the border
 //   between transparent corners: the disc behind a reward glyph, the dark
 //   panes of Kholdstare's shell.
+// - A sprite or badge drawn at one partial opacity throughout (the chest
+//   counts, the missing sword and shield) is made opaque.
 //
 // Decoding and encoding go through Chromium's canvas (the Playwright browser
 // already installed for the e2e suite), so no image library is needed.
@@ -242,6 +245,18 @@ for (const name of ICONS) {
             (n) => !inBackdrop[n] && alpha(data, n) > 16,
           );
           if (!touchesSprite) data[i * 4 + 3] = 0;
+        }
+      }
+
+      // ---- One partial opacity throughout: made opaque ----
+      const partial = new Set();
+      for (let i = 0; i < width * height; i++) {
+        if (alpha(data, i) > 0) partial.add(alpha(data, i));
+      }
+      const [only] = partial;
+      if (partial.size === 1 && only < 255) {
+        for (let i = 0; i < width * height; i++) {
+          if (alpha(data, i) > 0) data[i * 4 + 3] = 255;
         }
       }
 
