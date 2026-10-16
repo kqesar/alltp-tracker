@@ -151,7 +151,12 @@ test.describe("installation", () => {
     const { installabilityErrors } = await cdp.send(
       "Page.getInstallabilityErrors",
     );
-    expect(installabilityErrors).toEqual([]);
+    // Playwright's browser contexts are incognito-like, and a full Chrome
+    // (CI's channel) never installs from incognito: that error is about the
+    // test's browser, not the app. Every other one fails the test.
+    expect(
+      installabilityErrors.filter(({ errorId }) => errorId !== "in-incognito"),
+    ).toEqual([]);
   });
 });
 
