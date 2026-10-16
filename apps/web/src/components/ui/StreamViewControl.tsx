@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { StreamIcon } from "@/components/ui/ToolbarIcons";
+import { ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
 import { ITEMS_PER_ROW } from "@/constants";
 import { defaultItemGrid } from "@/data/items";
 import { useGameStore } from "@/stores/gameStore";
@@ -13,8 +14,13 @@ const NATIVE_CELL = 64;
 /**
  * The toolbar's Stream button and its dialog: the address of the stream view
  * (`?view=obs`) to paste into an OBS browser source, and how to set it up.
+ * @param variant - A toolbar button, or an item of the toolbar's More menu
  */
-export const StreamViewControl = () => {
+export const StreamViewControl = ({
+  variant = "toolbar",
+}: {
+  variant?: "toolbar" | "menu";
+}) => {
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState("");
@@ -49,16 +55,25 @@ export const StreamViewControl = () => {
 
   return (
     <>
-      <button
-        className="tracker-controls__button"
-        data-testid="stream-view-button"
-        onClick={() => setIsOpen(true)}
-        title="Show the item grid on stream (OBS)"
-        type="button"
-      >
-        <StreamIcon />
-        <span className="toolbar-label">Stream view</span>
-      </button>
+      {variant === "menu" ? (
+        <ToolbarMenuItem
+          icon={<StreamIcon />}
+          label="Stream view"
+          onSelect={() => setIsOpen(true)}
+          testId="toolbar-more-stream-view"
+        />
+      ) : (
+        <button
+          className="tracker-controls__button"
+          data-testid="stream-view-button"
+          onClick={() => setIsOpen(true)}
+          title="Show the item grid on stream (OBS)"
+          type="button"
+        >
+          <StreamIcon />
+          <span className="toolbar-label">Stream view</span>
+        </button>
+      )}
 
       <Modal
         footer={

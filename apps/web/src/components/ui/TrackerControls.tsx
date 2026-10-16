@@ -2,6 +2,7 @@ import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import { PresetSelector } from "@/components/ui/PresetSelector";
+import { ShortcutsButton } from "@/components/ui/ShortcutsButton";
 import { StreamViewControl } from "@/components/ui/StreamViewControl";
 import {
   ExportIcon,
@@ -9,6 +10,7 @@ import {
   RedoIcon,
   UndoIcon,
 } from "@/components/ui/ToolbarIcons";
+import { ToolbarMenu, ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
 import { useGameStore } from "@/stores/gameStore";
 import { type Progress, parseSave } from "@/stores/persistence";
 import type { MapLayout } from "@/utils";
@@ -149,25 +151,46 @@ export const TrackerControls = () => {
         <RedoIcon />
         <span className="sr-only">Redo</span>
       </button>
-      <button
-        className="tracker-controls__button"
-        onClick={handleExport}
-        title="Export progress to a file"
-        type="button"
-      >
-        <ExportIcon />
-        <span className="toolbar-label">Export</span>
-      </button>
-      <button
-        className="tracker-controls__button"
-        onClick={handleImportClick}
-        title="Import progress from a file"
-        type="button"
-      >
-        <ImportIcon />
-        <span className="toolbar-label">Import</span>
-      </button>
-      <StreamViewControl />
+      {/* The secondary actions: in the toolbar where it has room for them
+          all on one row, in the More menu below that (toolbar-menu.css) */}
+      <span className="toolbar-secondary">
+        <button
+          className="tracker-controls__button"
+          onClick={handleExport}
+          title="Export progress to a file"
+          type="button"
+        >
+          <ExportIcon />
+          <span className="toolbar-label">Export</span>
+        </button>
+        <button
+          className="tracker-controls__button"
+          onClick={handleImportClick}
+          title="Import progress from a file"
+          type="button"
+        >
+          <ImportIcon />
+          <span className="toolbar-label">Import</span>
+        </button>
+        <StreamViewControl />
+        <ShortcutsButton />
+      </span>
+      <ToolbarMenu>
+        <ToolbarMenuItem
+          icon={<ExportIcon />}
+          label="Export"
+          onSelect={handleExport}
+          testId="toolbar-more-export"
+        />
+        <ToolbarMenuItem
+          icon={<ImportIcon />}
+          label="Import"
+          onSelect={handleImportClick}
+          testId="toolbar-more-import"
+        />
+        <StreamViewControl variant="menu" />
+        <ShortcutsButton variant="menu" />
+      </ToolbarMenu>
       <fieldset className="segmented" data-testid="map-layout">
         <legend className="segmented__legend">Map</legend>
         {MAP_LAYOUTS.map((option) => (

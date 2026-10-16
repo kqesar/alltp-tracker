@@ -1,0 +1,80 @@
+/*
+ * The toolbar's secondary actions (Export, Import, Stream view, Shortcuts).
+ * The full toolbar, buttons drawn as icons, needs 50rem of viewport to stay
+ * on one row; below that they fold into the More menu, and the actions used
+ * during a run (Mode, New game, Undo, Redo, Map, key cells) keep the bar to
+ * one or two rows down to a phone.
+ */
+.toolbar-secondary {
+  display: contents;
+}
+
+.toolbar-more {
+  position: relative;
+  display: none;
+}
+
+@media (max-width: 49.99rem) {
+  .toolbar-secondary {
+    display: none;
+  }
+
+  .toolbar-more {
+    display: inline-flex;
+  }
+}
+
+/* Under its button, right edges aligned: the button sits mid-bar, so the
+   menu opens over the bar rather than past the viewport's right edge */
+.toolbar-menu {
+  position: absolute;
+  top: calc(100% + var(--spacing-xs));
+  right: 0;
+  z-index: var(--z-menu);
+  display: grid;
+  gap: 2px;
+  min-width: 12rem;
+  padding: var(--spacing-xs);
+  background: var(--surface-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-elevated);
+}
+
+.toolbar-menu[hidden] {
+  display: none;
+}
+
+.toolbar-menu__item {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 var(--spacing-md) 0 var(--spacing-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--border-radius-sm);
+  transition:
+    color var(--transition),
+    background-color var(--transition);
+}
+
+.toolbar-menu__item:hover,
+.toolbar-menu__item:focus-visible {
+  color: var(--color-accent);
+  background: var(--surface-hover);
+}
+
+/* Open, the button stays lit, as a pressed toggle does */
+.toolbar-more [aria-expanded="true"] {
+  color: var(--color-accent);
+  background: var(--surface-hover);
+  border-color: var(--color-accent);
+}

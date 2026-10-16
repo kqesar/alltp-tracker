@@ -81,6 +81,8 @@
   /* ---- Layering ---- */
   --z-overlay: 2;
   --z-notice: 1000;
+  /* An open menu covers the update notice, never the reverse */
+  --z-menu: 1001;
   --z-tooltip: 1500;
 }
 
