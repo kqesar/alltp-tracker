@@ -64,24 +64,22 @@
   height: 18px;
 }
 
-/* With its labels the full toolbar needs a 1246 px viewport to stay on one
-   row: below 80rem its buttons are icons, square 40 px targets */
-@media (max-width: 79.99rem) {
-  .tracker-controls__button,
-  .bigkey-toggle {
-    justify-content: center;
-    min-width: 2.5rem;
-    padding-inline: var(--spacing-sm);
-  }
+/* Unless the labelled bar fits on one row (data-fit, set by useToolbarFit
+   from the widths it measures), its buttons are icons, square 40 px targets */
+.toolbar:not([data-fit="labels"]) .tracker-controls__button,
+.toolbar:not([data-fit="labels"]) .bigkey-toggle {
+  justify-content: center;
+  min-width: 2.5rem;
+  padding-inline: var(--spacing-sm);
+}
 
-  .toolbar-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    white-space: nowrap;
-    clip-path: inset(50%);
-  }
+.toolbar:not([data-fit="labels"]) .toolbar-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
 }
 
 .tracker-controls__button:disabled {

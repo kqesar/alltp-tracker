@@ -50,7 +50,8 @@ export const ToolbarMenu = ({ children }: { children: ReactNode }) => {
     (landing === "first" ? all[0] : all.at(-1))?.focus();
   }, [landing]);
 
-  // A press outside the menu and its button closes it
+  // A press outside the menu and its button closes it, as does the button
+  // going away: the toolbar unfolding where it has room again
   useEffect(() => {
     if (!isOpen) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -59,7 +60,17 @@ export const ToolbarMenu = ({ children }: { children: ReactNode }) => {
       }
     };
     document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    const hidden =
+      typeof ResizeObserver === "function"
+        ? new ResizeObserver(([entry]) => {
+            if (entry && entry.contentRect.width === 0) setLanding(null);
+          })
+        : undefined;
+    if (wrapperRef.current) hidden?.observe(wrapperRef.current);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      hidden?.disconnect();
+    };
   }, [isOpen]);
 
   const onButtonKeyDown = (event: KeyboardEvent) => {

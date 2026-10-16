@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { MapLegend } from "@/components/map/MapLegend";
 import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
@@ -8,6 +9,7 @@ import { TrackerControls } from "@/components/ui/TrackerControls";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
 import { defaultItemGrid } from "@/data/items";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
+import { useToolbarFit } from "@/hooks/useToolbarFit";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -21,6 +23,8 @@ function App() {
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
   const mapLayout = useGameStore((state) => state.mapLayout);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  useToolbarFit(toolbarRef);
 
   return (
     <>
@@ -32,7 +36,7 @@ function App() {
       </a>
       <UpdatePrompt />
       <Header />
-      <div className="toolbar" data-testid="toolbar">
+      <div className="toolbar" data-testid="toolbar" ref={toolbarRef}>
         <TrackerControls />
         <BigKeyToggle isVisible={bigKeysVisible} onToggle={setBigKeysVisible} />
       </div>

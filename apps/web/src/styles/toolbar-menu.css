@@ -1,9 +1,9 @@
 /*
  * The toolbar's secondary actions (Export, Import, Stream view, Shortcuts).
- * The full toolbar, buttons drawn as icons, needs 50rem of viewport to stay
- * on one row; below that they fold into the More menu, and the actions used
- * during a run (Mode, New game, Undo, Redo, Map, key cells) keep the bar to
- * one or two rows down to a phone.
+ * Where even the bar of icons does not fit on one row (data-fit="more", set
+ * by useToolbarFit from the widths it measures) they fold into the More
+ * menu, and the actions used during a run (Mode, New game, Undo, Redo, Map,
+ * key cells) keep the bar to one or two rows down to a phone.
  */
 .toolbar-secondary {
   display: contents;
@@ -14,14 +14,12 @@
   display: none;
 }
 
-@media (max-width: 49.99rem) {
-  .toolbar-secondary {
-    display: none;
-  }
+.toolbar[data-fit="more"] .toolbar-secondary {
+  display: none;
+}
 
-  .toolbar-more {
-    display: inline-flex;
-  }
+.toolbar[data-fit="more"] .toolbar-more {
+  display: inline-flex;
 }
 
 /* Under its button, right edges aligned: the button sits mid-bar, so the
