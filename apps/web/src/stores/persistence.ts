@@ -5,6 +5,7 @@ import {
 } from "@/constants";
 import { chests } from "@/data/chests";
 import { items as freshItems, itemsMax, itemsMin } from "@/data/items";
+import { DEFAULT_SHORTCUTS, type ShortcutPrefs } from "@/data/keymap";
 import type { ItemState } from "@/data/logic";
 import {
   ENTRANCE_LABELS,
@@ -27,13 +28,18 @@ export type Progress = {
 };
 
 /**
- * How this device shows the tracker. Preferences survive a new game, a preset
- * switch and an import: a save moved from a desktop to a phone keeps the
- * phone's layout.
+ * How this device shows and drives the tracker. Preferences survive a new
+ * game, a preset switch and an import: a save moved from a desktop to a phone
+ * keeps the phone's layout.
  */
 export type Prefs = {
   bigKeysVisible: boolean;
   mapLayout: MapLayout;
+  /**
+   * Keyboard shortcuts: one self-contained object, apart from the run, so a
+   * later save format (or the desktop app) can carry it as it is.
+   */
+  shortcuts: ShortcutPrefs;
 };
 
 /** What localStorage holds and what a save file carries. */
@@ -44,7 +50,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Bumped whenever PersistedState changes shape; `migrate` upgrades older saves. */
-export const PERSIST_VERSION = 4;
+export const PERSIST_VERSION = 5;
 
 /** Length of the chest table before version 3. */
 const V2_CHEST_COUNT = 65;
@@ -97,6 +103,13 @@ const migrateV3 = (saved: Record<string, unknown>): Record<string, unknown> =>
   saved.mapLayout === "side-by-side" ? { ...saved, mapLayout: "auto" } : saved;
 
 /**
+ * Version 5 adds keyboard shortcuts to the preferences. A save from before
+ * has none: it gets the default keymap, switched on, as a first visit does.
+ */
+const migrateV4 = (saved: Record<string, unknown>): Record<string, unknown> =>
+  "shortcuts" in saved ? saved : { ...saved, shortcuts: DEFAULT_SHORTCUTS };
+
+/**
  * Upgrade a save written by an earlier version to the current shape. Fields
  * are not validated here; restoring a save falls back field by field.
  * @param saved - The stored or imported object
@@ -111,6 +124,7 @@ export const migrate = (
   if (version < 2) state = migrateV1(state);
   if (version < 3) state = migrateV2(state);
   if (version < 4) state = migrateV3(state);
+  if (version < 5) state = migrateV4(state);
   return state as Partial<PersistedState>;
 };
 
