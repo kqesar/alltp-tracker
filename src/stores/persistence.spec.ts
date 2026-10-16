@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { chests } from "@/data/chests";
 import {
+  migrate,
   PERSIST_VERSION,
   parseSave,
   SAVE_FORMAT,
@@ -110,5 +111,25 @@ describe("validateProgress", () => {
       `chestsOpened must hold ${chests.length} true/false flags`,
       "smallKeys must hold 10 counts within each dungeon's keys",
     ]);
+  });
+});
+
+describe("migrate", () => {
+  it("moves a version 3 side-by-side layout, the old default, to auto", () => {
+    expect(migrate({ mapLayout: "side-by-side" }, 3)).toEqual({
+      mapLayout: "auto",
+    });
+  });
+
+  it("keeps a stacked layout, which was always a choice", () => {
+    expect(migrate({ mapLayout: "stacked" }, 3)).toEqual({
+      mapLayout: "stacked",
+    });
+  });
+
+  it("leaves a current save alone", () => {
+    expect(migrate({ mapLayout: "side-by-side" }, PERSIST_VERSION)).toEqual({
+      mapLayout: "side-by-side",
+    });
   });
 });

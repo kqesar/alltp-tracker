@@ -14,7 +14,7 @@ const fakeState = {
   exportState: vi.fn(() => "{}"),
   future: [] as unknown[],
   loadProgress: vi.fn(),
-  mapLayout: "side-by-side" as "side-by-side" | "stacked",
+  mapLayout: "auto" as "auto" | "side-by-side" | "stacked",
   past: [] as unknown[],
   presetId: "open",
   redo: vi.fn(),
@@ -72,29 +72,31 @@ describe("TrackerControls", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("offers to stack the map while it is side by side", () => {
-    render(<TrackerControls />);
-
-    const toggle = screen.getByRole("button", { name: /map/i });
-    expect(toggle).toHaveTextContent("Stacked map");
-    expect(toggle).toHaveAttribute("aria-pressed", "false");
-
-    fireEvent.click(toggle);
-    expect(setMapLayout).toHaveBeenCalledWith("stacked");
-  });
-
-  it("offers to unstack the map once it is stacked", () => {
+  it("offers the three map layouts as one radio group, current one checked", () => {
     fakeState.mapLayout = "stacked";
     render(<TrackerControls />);
 
-    const toggle = screen.getByRole("button", { name: /map/i });
-    expect(toggle).toHaveTextContent("Side-by-side map");
-    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    const group = screen.getByRole("group", { name: "Map" });
+    const options = within(group).getAllByRole("radio");
 
-    fireEvent.click(toggle);
+    expect(options.map((option) => option.getAttribute("value"))).toEqual([
+      "auto",
+      "side-by-side",
+      "stacked",
+    ]);
+    expect(within(group).getByRole("radio", { name: "Stack" })).toBeChecked();
+    expect(
+      within(group).getByRole("radio", { name: "Auto" }),
+    ).not.toBeChecked();
+    fakeState.mapLayout = "auto";
+  });
+
+  it("switches the map layout when another option is picked", () => {
+    render(<TrackerControls />);
+
+    fireEvent.click(screen.getByRole("radio", { name: "Side" }));
+
     expect(setMapLayout).toHaveBeenCalledWith("side-by-side");
-
-    fakeState.mapLayout = "side-by-side";
   });
 });
 

@@ -1,51 +1,59 @@
 /*
- * The map: one asset holding the Light World in its left half and the Dark
- * World in its right. It fills its column at a fixed aspect ratio, and the
- * markers are sized in container units, so everything scales together.
+ * The map: two square worlds cut from one asset (the Light World is its left
+ * half, the Dark World its right). Side by side or stacked, each world is a
+ * size container, so its markers are sized in its own units and scale with
+ * it. The original markers were 24 / 48 px on a 442 px world: 5.43cqw and
+ * 10.86cqw. Markers never go under 24 px, the WCAG 2.5.8 target size.
  */
-.mapdiv {
+.map-panel {
+  container: map / inline-size;
+}
+
+.map-worlds {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+}
+
+.map-worlds--stacked {
+  grid-template-columns: 1fr;
+}
+
+/* Auto: stack once a world side by side would be under ~17rem wide. */
+@container map (width < 35rem) {
+  .map-worlds--auto {
+    grid-template-columns: 1fr;
+  }
+}
+
+.map-world {
   position: relative;
-  width: 100%;
-  aspect-ratio: 2 / 1;
+  aspect-ratio: 1;
   container-type: inline-size;
-  image-rendering: pixelated;
   background-image: url("/assets/map.png");
   background-repeat: no-repeat;
-  background-size: 100% 100%;
+  background-size: 200% 100%;
 }
 
-/* Stacked: the asset is painted twice, each copy showing one half, so the
-   Dark World lands under the Light World without a second image. */
-.layout--stacked .mapdiv {
-  aspect-ratio: 1 / 2;
-  background-image: url("/assets/map.png"), url("/assets/map.png");
-  background-position:
-    0 0,
-    100% 100%;
-  background-size:
-    200% 50%,
-    200% 50%;
+.map-world--dark {
+  background-position: 100% 0;
 }
 
-.map-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-/* Markers. Sizes reproduce the original 24 / 48 px on an 884 px map, as a
-   share of the map's width: 2.7cqw side by side, 5.4cqw once each world
-   spans the full width. */
+/* Markers */
 .mapspan {
-  --marker: clamp(12px, 2.7cqw, 36px);
+  --marker: clamp(24px, 5.43cqw, 40px);
   position: absolute;
+  top: var(--y);
+  left: var(--x);
   width: var(--marker);
   aspect-ratio: 1;
-  cursor: pointer;
-  image-rendering: pixelated;
+  padding: 0;
+  background-color: transparent;
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100% 100%;
+  border: none;
+  border-radius: 2px;
   translate: -50% -50%;
   transition:
     transform var(--transition),
@@ -53,7 +61,8 @@
 }
 
 .dungeon {
-  --marker: clamp(20px, 5.4cqw, 72px);
+  --marker: clamp(20px, 10.86cqw, 80px);
+  cursor: default;
 }
 
 /* The boss icon sits on its dungeon's square, above it. */
@@ -62,37 +71,72 @@
   background-size: 75% 75%;
 }
 
-.layout--stacked .mapspan {
-  --marker: clamp(12px, 5.4cqw, 36px);
-}
-
-.layout--stacked .dungeon {
-  --marker: clamp(20px, 10.9cqw, 72px);
+/* Above every other marker, so nothing covers the focus ring */
+.mapspan:focus-visible {
+  z-index: calc(var(--z-overlay) + 1);
 }
 
 @media (hover: hover) {
-  .mapspan:hover {
+  button.mapspan:hover {
     filter: brightness(1.1);
     transform: scale(1.1);
   }
 }
 
-/* Availability State Classes */
+/* Availability states: a colour and a glyph, so colour is never the only cue */
 .unavailable {
+  --glyph: "✕";
   background-color: var(--state-unavailable);
 }
 
 .available {
+  --glyph: "✓";
   background-color: var(--state-available);
 }
 
 .possible {
-  color: var(--state-ink);
+  --glyph: "?";
   background-color: var(--state-possible);
 }
 
 .opened {
+  --glyph: "";
   background-color: var(--state-opened);
+}
+
+.state-glyph::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--marker, 14px) * 0.62);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--state-ink);
+  content: var(--glyph);
+}
+
+/* On a dungeon square the boss icon covers the middle: badge a corner. */
+.dungeon.state-glyph::after {
+  inset: auto 0 0 auto;
+  width: 40%;
+  height: 40%;
+  font-size: calc(var(--marker) * 0.3);
+}
+
+/* On the boss icon itself, a small badge in the top corner. */
+.boss.state-glyph::after {
+  inset: -18% -18% auto auto;
+  width: 50%;
+  height: 50%;
+  font-size: calc(var(--marker) * 0.36);
+  background-color: inherit;
+  border: 1px solid var(--state-ink);
+  border-radius: 50%;
+}
+
+.boss.opened::after {
+  display: none;
 }
 
 /* Map availability legend */
@@ -112,9 +156,10 @@
 }
 
 .map-legend__swatch {
+  --marker: 16px;
+  position: relative;
   display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  width: 16px;
+  height: 16px;
   border-radius: 3px;
 }

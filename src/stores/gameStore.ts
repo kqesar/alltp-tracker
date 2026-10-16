@@ -70,7 +70,7 @@ const createProgress = (presetId: string = DEFAULT_PRESET_ID): Progress => {
 /** Display preferences for a first visit. */
 const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
   bigKeysVisible: getPreset(presetId).settings.keysanity,
-  mapLayout: "side-by-side",
+  mapLayout: "auto",
 });
 
 /** Lay saved progress over fresh progress; a missing field keeps its fresh value. */
@@ -97,7 +97,9 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
       ? saved.bigKeysVisible
       : base.bigKeysVisible,
   mapLayout:
-    saved.mapLayout === "side-by-side" || saved.mapLayout === "stacked"
+    saved.mapLayout === "auto" ||
+    saved.mapLayout === "side-by-side" ||
+    saved.mapLayout === "stacked"
       ? saved.mapLayout
       : base.mapLayout,
 });

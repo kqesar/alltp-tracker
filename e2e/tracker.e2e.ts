@@ -4,6 +4,9 @@ import { expect, type Page, test } from "@playwright/test";
 /** Phone, tablet, laptop and desktop: the widths every layout must hold at. */
 const WIDTHS = [390, 820, 1440, 1920] as const;
 
+/** The accessibility standard every page state is held to. */
+const WCAG_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+
 /** Regions that must never cover one another, by data-testid. */
 const REGIONS = [
   "toolbar",
@@ -57,13 +60,23 @@ for (const width of WIDTHS) {
       });
 
       await openTracker(page);
-      const { violations } = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      const audit = new AxeBuilder({ page }).withTags(WCAG_AA);
+      const { violations } = await audit
+        .disableRules(["target-size"])
+        .analyze();
+      // Map markers sit where the location is in the game, some closer than
+      // 24 px apart: WCAG 2.5.8's "essential" exception for map pins. Every
+      // other target must meet the size rule.
+      const { violations: smallTargets } = await new AxeBuilder({ page })
+        .withRules(["target-size"])
+        .exclude(".mapspan")
         .analyze();
 
       expect(problems).toEqual([]);
       expect(
-        violations.map(({ id, nodes }) => `${id} ×${nodes.length}`),
+        [...violations, ...smallTargets].map(
+          ({ id, nodes }) => `${id} ×${nodes.length}`,
+        ),
       ).toEqual([]);
     });
 
@@ -103,7 +116,6 @@ for (const width of WIDTHS) {
     test("lets a keyboard reach everything a pointer can click", async ({
       page,
     }) => {
-      test.fail(true, "Map markers and overlays become buttons (PR C)");
       await openTracker(page);
 
       expect(await unreachableClickables(page)).toEqual([]);

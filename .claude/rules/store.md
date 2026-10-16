@@ -12,7 +12,7 @@ All game state lives in `src/stores/gameStore.ts`: `zustand` + `devtools` (devel
   - `chestsOpened` — one boolean per overworld chest, indexed by position in `chests`.
   - `smallKeys` — 10 entries capped by `SMALL_KEYS_MAX_BY_INDEX`; `medallions` — 10 entries, only 8 and 9 used.
   - `presetId` / `settings` — run type from `src/data/presets.ts`. Logic reads `settings` (e.g. `settings.keysanity`), never a display preference.
-- **`Prefs`** — how this device shows the tracker (`mapLayout`, `bigKeysVisible`). They survive a new game, a preset switch and an import. `applyPreset` changes `bigKeysVisible` only when the run's keysanity changes.
+- **`Prefs`** — how this device shows the tracker (`mapLayout`: `auto` by default, `side-by-side` or `stacked`; `bigKeysVisible`). They survive a new game, a preset switch and an import. `applyPreset` changes `bigKeysVisible` only when the run's keysanity changes.
 
 ## Saves
 

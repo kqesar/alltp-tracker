@@ -13,7 +13,8 @@ paths:
 ## Components (`src/components/`)
 
 - `tracker/` — `TrackerGrid` → `grid/GridItem` (empty → spacer, `bigkey*` → `BigKeyCell`, else → `Item`) → `items/Item`, which renders boss overlays when the id starts with `boss`. `overlays/BossOverlays.tsx` holds one `Overlay` skeleton behind `CounterOverlay` (chest count, reward) and `MedaillonOverlay`; `items/KeyToggle.tsx` is the keysanity big/small key button (`variant` prop).
-- `map/MapMarkers.tsx` — one `Marker` for position, icon and hover caption; `MapChest`, `DungeonBoss` and `DungeonChest` supply only their availability. Coordinates are authored against the side-by-side asset and re-projected by `transformMapCoordinates` (`src/utils`) for the stacked layout.
+- `map/MapTracker.tsx` draws two square worlds (`map-world-light` / `-dark`), side by side, stacked or `auto` (stacks below 35rem via a container query). Coordinates are authored against the whole asset and placed in their world by `toWorldPosition` (`src/utils`).
+- `map/MapMarkers.tsx` — `MapChest` and `MapDungeon` are `<button>`s named by `captionToText` (`src/utils/caption.ts`) plus their state, with a glyph per state (✓ ? ✕) besides the colour. The dungeon square under a boss is decorative (`aria-hidden`). Markers keep a 24 px floor; where real locations sit closer than that, WCAG 2.5.8's map-pin exception applies and the e2e target-size check skips `.mapspan`.
 - `ui/` — `Header`, `Caption`, `Modal` (native `<dialog>` + `showModal()`), `ConfirmDialog` (opens on Cancel via `data-autofocus`), `PresetSelector`, `TrackerControls`, `BigKeyToggle`.
 - Subscribe to the store with one selector per slice, never bare `useGameStore()`.
 

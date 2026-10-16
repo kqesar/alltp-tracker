@@ -44,7 +44,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Bumped whenever PersistedState changes shape; `migrate` upgrades older saves. */
-export const PERSIST_VERSION = 3;
+export const PERSIST_VERSION = 4;
 
 /** Length of the chest table before version 3. */
 const V2_CHEST_COUNT = 65;
@@ -88,6 +88,15 @@ const migrateV2 = (saved: Record<string, unknown>): Record<string, unknown> => {
 };
 
 /**
+ * Until version 3 "side-by-side" was the only map layout besides "stacked",
+ * and the default, so a saved "side-by-side" is rarely a choice. Version 4
+ * adds "auto" (side by side while there is room, stacked below) and moves
+ * those saves to it; "stacked" was chosen and stays.
+ */
+const migrateV3 = (saved: Record<string, unknown>): Record<string, unknown> =>
+  saved.mapLayout === "side-by-side" ? { ...saved, mapLayout: "auto" } : saved;
+
+/**
  * Upgrade a save written by an earlier version to the current shape. Fields
  * are not validated here; restoring a save falls back field by field.
  * @param saved - The stored or imported object
@@ -101,6 +110,7 @@ export const migrate = (
   let state = saved;
   if (version < 2) state = migrateV1(state);
   if (version < 3) state = migrateV2(state);
+  if (version < 4) state = migrateV3(state);
   return state as Partial<PersistedState>;
 };
 
