@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.9.0](https://github.com/kqesar/alltp-tracker/compare/v2.8.1...v2.9.0) (2026-10-16)
+
+
+### 🔧 Code Refactoring
+
+* **store:** serializable progress, one boss source, persist v2 ([c7ca268](https://github.com/kqesar/alltp-tracker/commit/c7ca2687d13ec336454423c2c619732179cff74d))
+
+
+### 📚 Documentation
+
+* flag the static, front-only platform when it starts to block ([b555a71](https://github.com/kqesar/alltp-tracker/commit/b555a71f9c3d62db2c7e9aa6413ab385152f7334))
+* keep the architecture fitted to the need ([f412ddb](https://github.com/kqesar/alltp-tracker/commit/f412ddb8045e325f3315967227ee0d2c478baafa))
+* keep the tracker's design current ([1853bf3](https://github.com/kqesar/alltp-tracker/commit/1853bf33c852c2ec2db3aad37d814fec07190b2f))
+* set the quality bar for the tracker in CLAUDE.md ([c08b8ff](https://github.com/kqesar/alltp-tracker/commit/c08b8ff97684b12a999814363d2b9e4186a72599))
+
+
+### ✨ Features
+
+* **layout:** fluid shell with an in-flow toolbar ([b1f4ff9](https://github.com/kqesar/alltp-tracker/commit/b1f4ff94fbd6b50470f6f98588bf3ec8310642ac))
+* **map:** two-world map with button markers ([8d3315a](https://github.com/kqesar/alltp-tracker/commit/8d3315a706a2eed741ba15d26718b93e7952a606))
+* **save:** validate imports, confirm before overwriting, native dialogs ([0538b3d](https://github.com/kqesar/alltp-tracker/commit/0538b3dd81290c2cf2ed3dec3097fb0c14d0df56))
+* **store:** undo/redo and cross-tab sync ([b66e17b](https://github.com/kqesar/alltp-tracker/commit/b66e17b88b298917483412f9ab757fe6e861dfdc))
+* **tracker:** boss cells, right-click, roving keyboard navigation ([8d77674](https://github.com/kqesar/alltp-tracker/commit/8d7767466cc157f70fbcdcafae87ba90d0d228a3))
+* **ui:** anchored tooltip replaces the caption bar ([f0021fa](https://github.com/kqesar/alltp-tracker/commit/f0021faa0f25361264d6455e52a94cb2c4d27815))
+* **ui:** compact toolbar and header on small screens ([6f2c93f](https://github.com/kqesar/alltp-tracker/commit/6f2c93f0449b68d3f29a476557dc13b7ed7bd8e6))
+
+
+### 🐛 Bug Fixes
+
+* **a11y:** name header links by their visible text ([a56ff2b](https://github.com/kqesar/alltp-tracker/commit/a56ff2b1e9db02dd2da359ec3bc385f7efd5718e))
+* announce boss state correctly and gate bosses on keysanity ([3bbc704](https://github.com/kqesar/alltp-tracker/commit/3bbc704115666e083450a36d1e92d958a94770a5))
+* **data:** remove the duplicate West of Sanctuary chest ([3f0b5d7](https://github.com/kqesar/alltp-tracker/commit/3f0b5d72f92735f517e6574ad4405d56fd4469bc))
+* **lint:** sort tsconfig.node.json and keep Playwright output out of Biome ([9474604](https://github.com/kqesar/alltp-tracker/commit/9474604fef289eb9341de0bbab0ec1f8de7445be))
+
 ### [2.8.1](https://github.com/kqesar/alltp-tracker/compare/v2.8.0...v2.8.1) (2026-09-07)
 
 
