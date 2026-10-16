@@ -1,0 +1,31 @@
+{
+  "background_color": "#07070b",
+  "categories": ["games", "utilities"],
+  "description": "Item and progress tracker for The Legend of Zelda: A Link to the Past randomizer runs. Works offline.",
+  "display": "standalone",
+  "icons": [
+    {
+      "sizes": "192x192",
+      "src": "icons/icon-192.png",
+      "type": "image/png"
+    },
+    {
+      "sizes": "512x512",
+      "src": "icons/icon-512.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "src": "icons/icon-maskable-512.png",
+      "type": "image/png"
+    }
+  ],
+  "id": "/alltp-tracker/",
+  "lang": "en",
+  "name": "A Link to the Past Tracker",
+  "scope": "/alltp-tracker/",
+  "short_name": "ALLTP Tracker",
+  "start_url": "/alltp-tracker/",
+  "theme_color": "#07070b"
+}

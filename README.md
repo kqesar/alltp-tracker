@@ -43,6 +43,14 @@ Capturing a browser window instead? Window capture has no transparency: add `&bg
 
 Items not yet obtained are greyed in the icon alone, as in the app, so they stay legible over bright and dark scenes alike.
 
+## Offline and install
+
+After its first visit, the tracker loads and works with no network at all: the browser keeps every file it needs (the code, the item art, the map), and the run stays saved on the device as always. To give it a window of its own, install it: the install button in the address bar of Chrome or Edge, or **Share → Add to Home Screen** in Safari on iOS.
+
+A new version never reloads the tracker in the middle of a run. A notice, "A new version is available", waits for you: **Reload** switches to it and keeps your progress; dismissing it leaves the new version for the next time you open the tracker.
+
+For development: the service worker (`apps/web/sw/sw.ts`) exists in production builds only, so `pnpm dev` runs without it and `pnpm preview` with it. A small Vite plugin (`apps/web/sw/plugin.ts`) writes into it every file of the build with a hash of its content; any change to a shipped file changes the worker, which is how browsers find a new version, so there is no version number to bump. The install icons are drawn from the favicon by `pnpm --filter @alltp/web pwa-icons` (`-- --check` verifies them).
+
 ## Development
 
 Requires Node ≥ 22 and pnpm (the exact version is pinned in `package.json` and selected automatically).

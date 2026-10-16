@@ -1,0 +1,19 @@
+{
+  // The service worker runs in a worker scope, not a window: its own lib, no
+  // DOM. Its Vite plugin (plugin.ts) is checked with the configs instead.
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["ES2022", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "../node_modules/.tmp/tsc-sw",
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.sw.tsbuildinfo",
+    "types": []
+  },
+  "include": ["sw.ts"]
+}

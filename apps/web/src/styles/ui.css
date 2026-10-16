@@ -18,7 +18,8 @@
 
 /* Shared look of every toolbar button */
 .tracker-controls__button,
-.bigkey-toggle {
+.bigkey-toggle,
+.update-prompt__button {
   display: inline-flex;
   gap: var(--spacing-sm);
   align-items: center;
@@ -40,7 +41,8 @@
 }
 
 .tracker-controls__button:hover:not(:disabled),
-.bigkey-toggle:hover {
+.bigkey-toggle:hover,
+.update-prompt__button:hover {
   color: var(--color-accent);
   background: var(--surface-hover);
   border-color: var(--color-accent);
@@ -48,7 +50,8 @@
 
 /* The page's focus ring, which the raised shadow above would replace */
 .tracker-controls__button:focus-visible,
-.bigkey-toggle:focus-visible {
+.bigkey-toggle:focus-visible,
+.update-prompt__button:focus-visible {
   box-shadow: var(--focus-ring);
 }
 
@@ -245,4 +248,73 @@
 
 .tooltip--below {
   --tooltip-shift: -4px;
+}
+
+/* Update notice: fixed at the bottom, over the page, so showing it never
+   shifts the board. Empty, the region has no box and lets clicks through. */
+.update-prompt {
+  position: fixed;
+  inset-inline: var(--spacing-md);
+  bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-notice);
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.update-prompt__card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+  max-width: 100%;
+  padding: var(--spacing-sm);
+  padding-inline-start: var(--spacing-md);
+  color: var(--color-text);
+  pointer-events: auto;
+  background: var(--surface-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-elevated);
+  animation: update-prompt-in 0.18s ease-out;
+}
+
+.update-prompt__message {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+/* The buttons wrap together, under the message, where it leaves no room */
+.update-prompt__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-inline-start: auto;
+}
+
+.update-prompt__button--primary {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.update-prompt__button--primary:hover {
+  color: var(--color-on-accent);
+  background: var(--color-accent-strong);
+  border-color: var(--color-accent-strong);
+}
+
+@keyframes update-prompt-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (max-width: 40rem) {
+  /* A phone: the full width, like the toolbar above */
+  .update-prompt__card {
+    flex: 1;
+  }
 }

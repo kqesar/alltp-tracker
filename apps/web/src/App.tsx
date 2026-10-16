@@ -6,6 +6,7 @@ import { Header } from "@/components/ui/Header";
 import { ShortcutsButton } from "@/components/ui/ShortcutsButton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { TrackerControls } from "@/components/ui/TrackerControls";
+import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
 import { defaultItemGrid } from "@/data/items";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
@@ -30,6 +31,7 @@ function App() {
       <a className="skip-link" href="#map">
         Skip to map
       </a>
+      <UpdatePrompt />
       <Header />
       <div className="toolbar" data-testid="toolbar">
         <TrackerControls />
