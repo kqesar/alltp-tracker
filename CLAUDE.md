@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-A Link to the Past Tracker — a React 19 + TypeScript web app for tracking item/dungeon/chest progress in ALttP Randomizer playthroughs. Package manager is **pnpm** (required, `>=10.0.0`; Node `>=22.0.0`).
+A Link to the Past Tracker — a React 19 + TypeScript web app for tracking item/dungeon/chest progress in ALttP Randomizer playthroughs. Package manager is **pnpm**, pinned by `packageManager` in `package.json` (pnpm switches to that version itself; CI reads it too); Node `>=22.0.0`. Build scripts are denied by default, so a dependency that needs one (esbuild) is listed under `allowBuilds` in `pnpm-workspace.yaml`.
 
 ## Commands
 

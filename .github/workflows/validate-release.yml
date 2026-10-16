@@ -34,14 +34,8 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: '10'
-
-      - name: Install dependencies
-        run: pnpm install
-
+      # Lint, tests and the production build already ran in the `ci` job this
+      # one needs; the steps below only read files, so no install is required.
       - name: Validate changelog
         run: |
           if [ ! -f "CHANGELOG.md" ]; then
@@ -67,20 +61,6 @@ jobs:
           fi
           
           echo "✅ Version validation successful: $VERSION"
-
-      - name: Verify build artifacts
-        run: |
-          if [ ! -d "dist" ]; then
-            echo "❌ Build failed: dist directory not found"
-            exit 1
-          fi
-          
-          if [ ! -f "dist/index.html" ]; then
-            echo "❌ Build failed: index.html not found in dist"
-            exit 1
-          fi
-          
-          echo "✅ Build verification successful"
 
       - name: Comment PR status
         uses: actions/github-script@v9
@@ -111,7 +91,6 @@ jobs:
             - ✅ **Build**: Production build successful
             - ✅ **Changelog**: Updated and validated
             - ✅ **Version**: Valid semver format (${version})
-            - ✅ **Artifacts**: Build artifacts verified
 
             ### 📝 Latest Changelog:
             \`\`\`
