@@ -193,8 +193,9 @@ export const useGameStore = create<GameState>()(
           try {
             const parsed = JSON.parse(json);
             if (typeof parsed !== "object" || parsed === null) return false;
-            // Exports written before version 2 carry `dungeonsBeaten`
-            const version = "dungeonsBeaten" in parsed ? 1 : PERSIST_VERSION;
+            // Export files carry no version yet: version 1 is the one with
+            // `dungeonsBeaten`, anything else was written by version 2.
+            const version = "dungeonsBeaten" in parsed ? 1 : 2;
             set(restoreProgress(createProgress(), migrate(parsed, version)));
             return true;
           } catch {

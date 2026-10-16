@@ -28,7 +28,13 @@ export type Prefs = {
 export type PersistedState = Progress & Prefs;
 
 /** Bumped whenever PersistedState changes shape; `migrate` upgrades older saves. */
-export const PERSIST_VERSION = 2;
+export const PERSIST_VERSION = 3;
+
+/** Length of the chest table before version 3. */
+const V2_CHEST_COUNT = 65;
+
+/** The second "West of Sanctuary" entry, removed in version 3. */
+const DUPLICATE_CHEST_INDEX = 19;
 
 /**
  * Version 1 stored a boss's "beaten" flag twice: `items.bossN` from the grid
@@ -47,6 +53,25 @@ const migrateV1 = (saved: Record<string, unknown>): Record<string, unknown> => {
 };
 
 /**
+ * Up to version 2 the chest table listed West of Sanctuary twice (indices 18
+ * and 19, the second added by the React port). Version 3 drops index 19: every
+ * later chest moves up one, and the remaining entry counts as opened if either
+ * copy was. Keyed on the length, so a save of any older shape is caught.
+ */
+const migrateV2 = (saved: Record<string, unknown>): Record<string, unknown> => {
+  const opened = saved.chestsOpened;
+  if (!Array.isArray(opened) || opened.length !== V2_CHEST_COUNT) return saved;
+
+  const chestsOpened = opened.filter(
+    (_, index) => index !== DUPLICATE_CHEST_INDEX,
+  );
+  chestsOpened[DUPLICATE_CHEST_INDEX - 1] =
+    opened[DUPLICATE_CHEST_INDEX - 1] === true ||
+    opened[DUPLICATE_CHEST_INDEX] === true;
+  return { ...saved, chestsOpened };
+};
+
+/**
  * Upgrade a save written by an earlier version to the current shape. Fields
  * are not validated here; restoring a save falls back field by field.
  * @param saved - The stored or imported object
@@ -61,5 +86,6 @@ export const migrate = (
   }
   let state = saved as Record<string, unknown>;
   if (version < 2) state = migrateV1(state);
+  if (version < 3) state = migrateV2(state);
   return state as Partial<PersistedState>;
 };

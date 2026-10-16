@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MapTracker } from "@/components/map/MapTracker";
 import { chests } from "@/data/chests";
 import { dungeons } from "@/data/dungeons";
@@ -20,6 +20,17 @@ describe("MapTracker", () => {
     expect(screen.getAllByTestId(/^dungeon-marker-/)).toHaveLength(
       dungeons.length,
     );
+  });
+
+  it("renders without React warnings such as duplicate keys", () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    render(<MapTracker />);
+
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 
   it("recolours markers when the items held change", () => {

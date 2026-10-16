@@ -44,7 +44,7 @@ Components subscribe with selectors — `useGameStore((state) => state.items[ite
 
 ### Data layer (`src/data/`)
 - `logic.ts` — the types (`ItemState`, `ChestItem`, `DungeonItem`, `Availability`) plus the shared predicates: `canReachDarkWorld`, `canReachSouthDarkWorld`, `canReachDeathMountain`, `canReachEastDeathMountain`, `hasTitansMitt`, `checkMedallion`, the `avail()` helper and `buildDungeonCaption`. Prefer reusing a named predicate over re-spelling its expression.
-- `chests.ts` / `dungeons.ts` — the 65 chests and 10 dungeons, static: progress lives in the store. Position in the array *is* the identity — there is no `id` field — so the persisted `chestsOpened` follows that order, and reordering or removing an entry needs a save migration.
+- `chests.ts` / `dungeons.ts` — the 64 chests and 10 dungeons, static: progress lives in the store. Position in the array *is* the identity — there is no `id` field — so the persisted `chestsOpened` follows that order, and reordering or removing an entry needs a save migration.
 - `items.ts` — one `[min, max, initial?]` range table from which `items`, `itemsMin` and `itemsMax` are derived, plus `itemLabels` for accessibility names. Do not reintroduce parallel tables.
 - `presets.ts` — run types (`getPreset`, `presets`, `describeSettings`).
 

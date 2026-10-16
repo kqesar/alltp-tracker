@@ -15,13 +15,19 @@ const chestNamed = (prefix: string) => {
 
 describe("chest table", () => {
   it("declares every chest with usable coordinates", () => {
-    expect(chests).toHaveLength(65);
+    expect(chests).toHaveLength(64);
 
     chests.forEach((chest) => {
       expect(chest.name.length).toBeGreaterThan(0);
       expect(chest.x).toMatch(/^\d+(\.\d+)?%$/);
       expect(chest.y).toMatch(/^\d+(\.\d+)?%$/);
     });
+  });
+
+  it("names every chest once, since the name keys its map marker", () => {
+    const names = chests.map((chest) => chest.name);
+
+    expect(new Set(names).size).toBe(names.length);
   });
 });
 

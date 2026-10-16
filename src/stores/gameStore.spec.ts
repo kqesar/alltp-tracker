@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { chests } from "@/data/chests";
 import { dungeons } from "@/data/dungeons";
 import { useGameStore } from "@/stores/gameStore";
+import { PERSIST_VERSION } from "@/stores/persistence";
 
 const STORAGE_KEY = "alltp-tracker-state";
 
@@ -203,6 +204,23 @@ describe("GameStore", () => {
       expect(chestsOpened[0]).toBe(true);
     });
 
+    it("moves an older export's chest flags past the removed duplicate chest", () => {
+      // 65 flags: the table listed West of Sanctuary at both 18 and 19
+      const chestsOpened = Array(65).fill(false);
+      chestsOpened[19] = true; // the duplicate West of Sanctuary
+      chestsOpened[20] = true; // the chest after it
+      chestsOpened[64] = true; // the last chest
+
+      useGameStore.getState().importState(JSON.stringify({ chestsOpened }));
+
+      const opened = useGameStore.getState().chestsOpened;
+      expect(opened).toHaveLength(chests.length);
+      expect(opened[18]).toBe(true);
+      expect(opened[19]).toBe(true);
+      expect(opened[63]).toBe(true);
+      expect(opened.filter(Boolean)).toHaveLength(3);
+    });
+
     it("rejects input that is not a JSON object", () => {
       const { importState } = useGameStore.getState();
 
@@ -217,7 +235,7 @@ describe("GameStore", () => {
       useGameStore.getState().handleItemClick("flute");
 
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
-      expect(stored.version).toBe(2);
+      expect(stored.version).toBe(PERSIST_VERSION);
       expect(stored.state.items.flute).toBe(true);
       expect(stored.state).toHaveProperty("mapLayout");
       expect(stored.state).not.toHaveProperty("caption");
@@ -244,7 +262,7 @@ describe("GameStore", () => {
       expect(state.mapLayout).toBe("stacked");
 
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
-      expect(stored.version).toBe(2);
+      expect(stored.version).toBe(PERSIST_VERSION);
       expect(stored.state).not.toHaveProperty("dungeonsBeaten");
     });
   });
