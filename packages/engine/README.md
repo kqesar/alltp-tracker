@@ -75,6 +75,7 @@ requirement text ──parse──▶ AST ──loadRules / compileWorld──�
 | `world.ts` | `World` types; `compileWorld` validates and lays the graph out as arrays |
 | `solve.ts` | The solver and `Solution` |
 | `explain.ts` | `explain`: the route to a location and its requirement, node by node |
+| `analyze.ts` | `analyze`: blockers, the minimal sets of items that would unlock a location |
 
 Choices that shape everything else:
 
@@ -404,13 +405,120 @@ folded requirements, which are what the solver ran: with `hard: true`,
 takes no settings argument: a second settings object could only disagree with
 the compiled world.
 
+## Blockers: what to collect next
+
+```ts
+const analysis = analyze(world, state, { acquirable, maxAtoms: 3 });
+analysis.blockers("mimicCave", "yes");
+// { sets: [[{ item: "hookshot", min: 1 }, { item: "mirror", min: 1 }]], truncated: false }
+analysis.blockers("ganonsTower", "yes"); // [[{ group: "crystal", min: 7 }]]
+analysis.doableNow(); // the locations at yes now
+```
+
+### Definition
+
+An **atom** is one thing to get: `{ item, min }` (hold at least `min` of the
+item) or `{ group, min }` (have `min` of the group's members in all, whichever
+they are). A fact the pack derives into the state, such as `agahnim`, is an
+item like any other. A **set** of atoms is applied to the state by raising each
+item to at least its `min`, a pointwise max.
+
+`blockers(location, target)` lists **every minimal set of at most `maxAtoms`
+atoms (default 3) whose application brings the location to `target`** (`yes`,
+or `maybe` and above). Minimal is pointwise: no other listed set asks for less,
+that is for a subset of its atoms at levels no higher. So `[[]]` means "already
+there", and `[]` means "nothing within `maxAtoms` atoms gets there". The sets
+come fewest atoms first, then by name and level; within a set, items come
+before groups, each by name.
+
+- Only items `options.acquirable(item)` accepts are proposed (default: all).
+- An item's levels are bounded by `options.maxLevel(item)`. By default, that is
+  the largest of 1 and every threshold an exit, location or helper tests the
+  item at (`sword >= 2` somewhere makes it 2), which is the most an item test
+  can ask. It also bounds how much a count can take from one item, so a count
+  over an item no test reads above 1 takes 1 from it. A pack that knows its
+  ranges should pass them.
+
+### Algorithm
+
+1. **Threshold.** For a target `t`, `[expr >= t]` is a monotone Boolean
+   function of the item levels. `&` and `|` (min and max) commute with the
+   threshold. `?x` reaches `yes` exactly when `x` does, and always reaches
+   `maybe`. The constant `maybe` reaches `maybe`, not `yes`.
+2. **Antichains of needs.** A node's value is the antichain of its minimal
+   *needs*: the atoms still missing, relative to the state. An item test `x >= m`
+   is `[[]]` when held, `[[x >= m]]` when acquirable within `maxLevel`, `[]`
+   otherwise. `a & b` is every pairwise join (pointwise max) of their needs, and
+   `a | b` the union, each then minimized (sorted fewest atoms first, a need
+   can only be covered by one before it, so one pass keeps exactly the minimal
+   ones). A need with more than `maxAtoms` atoms is dropped as soon as it
+   appears. That is sound: a join never has fewer atoms than its operands, and
+   a need with too many atoms covers only needs with too many atoms.
+3. **Counts.** `count(g) >= n` over a single group is one atom on the group's
+   count: its current value is the members' sum, its ceiling the sum of their
+   ceilings. Any other count (items, or a mix) needs `d` more units. Its needs
+   are every way to add exactly `d` units with at most `maxAtoms` atoms, each
+   raising one item with room left by 1 up to its room. A minimal way adds
+   exactly `d` (one more unit could be taken back), so no two ways compare.
+   They are enumerated fewest atoms first, and stop past the cap.
+4. **Regions.** A region's value is the least fixpoint of
+   `R(r) = union over exits u -> r of R(u) & exit`, seeded with `[[]]` where the
+   solver already reaches the target. Exits cannot use `reach()`, so their
+   values are fixed, computed once per distinct requirement. A worklist expands
+   a region only with the needs it gained since it was last expanded. It keeps
+   one bucket per atom count and takes the fewest first: a join never has fewer
+   atoms than its inputs, so when a bucket runs every cheaper need is final, as
+   in Dijkstra's algorithm, and costlier needs are covered before they spread.
+   A region takes in only the candidates its antichain does not cover yet,
+   merged into it without sorting it again.
+5. **Locations.** `R(region) & requirement`, where `reach(r)` reads `R(r)`.
+   Helpers are memoized per target, requirement values per expression, region
+   values per target and results per location, for the life of the `Analysis`.
+
+### The cap, and `truncated`
+
+A node keeps at most `MAX_SETS` (32) needs, the cheapest by the order above.
+When it has more, the rest are dropped and the result says
+`truncated: true`, as does every result that depends on that node. A truncated
+list is still sound (every set listed works), but some minimal sets may be
+missing, and with them a listed set may not be minimal. The flag is per result,
+so an early-game location three items away from many alternatives can be
+truncated while its neighbors are exact.
+
+### Group counts are their own quantity
+
+A crystal count is one goal for a player ("get 2 more crystals"), and as item
+atoms it would be up to 7 of them, beyond any useful bound, in C(7, d)
+combinations. So the analysis treats a group's count as a variable of its own,
+independent of its members' items. That is sound: getting the members for real
+only adds to the count. It is minimal over those variables, not over items:
+with five crystals, `crystal6 & count(crystal) >= 7` gives
+`[{ item: "crystal6", min: 1 }, { group: "crystal", min: 7 }]`, read "crystal 6, and 7
+crystals in all". The brute-force test models exactly this, with a virtual item
+standing for the count.
+
+### Cost
+
+Every value holds at most S = 32 needs of at most k = `maxAtoms` atoms, so `&`
+costs at most S² joins of O(k) and a minimize of O(S² log S + S³ k), and `|`
+less. In the fixpoint, each need a region accepts is joined with each exit's
+needs once. Without the cap, a need is accepted at most once (once covered, it
+stays covered); with it, an antichain still only improves in a well-founded
+order (sorted, it decreases lexicographically), so the fixpoint terminates.
+When each region accepts O(S) needs over the run, which the bucket order makes
+the usual case, the total per target is O((E · S · Sₑ + L · S · Sₗ) · k) joins
+plus their minimizes, for E exits, L locations, and exit and location
+requirements of Sₑ and Sₗ needs: linear in the world, with constants set by S
+and k. Measured below: a few ms for every location of a 300-region world.
+
 ## Performance
 
 A seeded synthetic world at randomizer scale (`test/synthetic.ts`): 300
 regions, 899 exits (a spanning tree from the start plus cycles), 1000
 locations, 20 chained helpers, progressive items, softened items and crystal
 counts. Every stage of the game yields all three outcomes. Measured on an Apple
-M3 with Node 24.20.0:
+M3 with Node 24.20.0 (the `compileWorld` and `analyze` rows later, on the same
+machine, at a moment when the `solve` rows reproduced):
 
 | Case | Vitest bench, mean (p99) | Production bundle, mean (p99) |
 | --- | --- | --- |
@@ -419,25 +527,53 @@ M3 with Node 24.20.0:
 | `solve`, mid game (50% of items) | 0.177 ms (0.19) | 0.033 ms (0.035) |
 | `solve`, late game (85% of items) | 0.171 ms (0.19) | 0.032 ms (0.034) |
 | `solve` + `locations()` snapshot, mid game | 0.264 ms (0.36) | n/a |
-| `compileWorld` (once per game / mode) | 1.28 ms (3.59) | 1.04 ms (1.46) |
+| `compileWorld` (once per game / mode) | 1.78 ms (3.27) | 1.57 ms (3.44) |
+| `analyze` + `blockers` of one location, mid game | 0.279 ms (0.42) | 0.041 ms (0.083) |
+| `blockers` of every location, both targets, early game | 5.39 ms (6.16) | 5.52 ms (6.33) |
+| `blockers` of every location, both targets, mid game | 0.692 ms (0.92) | 0.620 ms (1.41) |
+| `blockers` of every location, both targets, late game | 0.506 ms (0.66) | 0.463 ms (0.94) |
 
 The budget is 5 ms per full solve, so it can run on every click. A mid-game
-solve uses about 4% of it under Vitest and under 1% from a bundle.
+solve uses about 4% of it under Vitest and under 1% from a bundle. Settings,
+`reach()`, the visible channel and the route `explain` reads cost the solver
+little: timed against the previous version in the same process, a solve stays
+within about 10%. `compileWorld` costs about 0.3 ms more (folding, and the
+trees `explain` and `analyze` keep).
+
+Blockers are asked for on demand. Every location of the world, for both
+targets, takes about 5 ms in the early game, when most of the world is two or
+three items away by many routes, and well under 1 ms later; averaged over a
+game (20 stages from 10% to 90% of the items), 2 to 3 ms, against a budget of
+10 ms. The analysis avoids imported constants in its hot loops, so Vitest and
+a bundle time it alike. Under coverage instrumentation it runs 2 to 5 times
+slower.
 
 - `pnpm vitest bench --run packages/engine` runs `test/solve.bench.ts` (Vitest
   5's `bench` fixture).
-- The "production bundle" column comes from the same solves built with
-  `vite build` and timed with `performance.now()` in plain Node. Vitest runs
-  sources through its module runner, which turns every imported binding into a
-  getter (it warns about this). The hot path reads imported constants on every
-  node, which costs about 5×. So the Vitest column is an upper bound.
+- The "production bundle" column comes from the same cases built into a bundle
+  (`vite build` for the solver rows, esbuild for the rest) and timed with
+  `performance.now()` in plain Node. Vitest runs sources through its module
+  runner, which turns every imported binding into a getter (it warns about
+  this). The solver's hot path reads imported constants on every node, which
+  costs about 5×. So the Vitest column is an upper bound.
 - `test/performance.spec.ts` runs with `pnpm test`. It fails if the average of
   2000 solves reaches 5 ms, after checking the world's size and its outcome mix,
   so it can't pass by timing a trivial solve.
+- `test/analyze.performance.spec.ts` asks for the blockers of every location,
+  for both targets, at 20 stages of the game (10% to 90% of the items). It
+  fails if a stage takes 10 ms or more on average, after checking that an
+  early stage has real work: sets to list, locations already there, locations
+  out of reach. A few ms is easy to lose to a busy machine, so it times the
+  CPU time of its own process (Vitest runs each test file in one) and keeps
+  each stage's fastest of 7 runs: with the load average at 27 on 8 cores, it
+  still measured about 3 ms. Coverage instrumentation (`pnpm test:coverage`,
+  which CI runs) slows this code several times over; `vitest.config.ts` tells
+  the test, which then allows 8× the budget, enough to catch a blow-up but not
+  a slow drift. A plain `pnpm test` holds the real budget.
 
 ## Tests
 
-`pnpm vitest run --project engine` runs 291 tests in about 0.8 s:
+`pnpm vitest run --project engine` runs 310 tests in about 1 s:
 
 - **Kleene tables:** both truth tables written out in full, plus every lattice
   law on all combinations.
@@ -460,6 +596,15 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
 - **Explain:** a chain of exits with their values, a maybe exit, the best of
   two routes (bottleneck), the start, a region out of reach, exact traces
   (helpers, branches past a short-circuit, `reach()`), folded settings.
+- **Blockers:** one item; a progressive level as one atom (`sword >= 2` from
+  sword 1); the minimal ways out of an `|`; a region path joined with the
+  location; a cycle; needs a region gains after its first expansion; a need
+  dropped once a cheaper way covers it; group counts as one atom (and as their
+  own quantity beside a member); counts over items spread on the items with
+  room, with and without `maxLevel`; `[[]]`, `[]` and `maxAtoms`; the maybe
+  threshold; `acquirable`; helpers and `reach()` (Mimic Cave); the cap with
+  `truncated`, and a neighbor it does not touch; memoization, `doableNow` and
+  bad input.
 - **Rules:** helper and group loading, helper cycles (self, 2-, 3-cycles, a cycle
   not containing the starting helper, and a diamond that must *not* count as one),
   unknown references, invalid names.
@@ -487,6 +632,20 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
   `maybe` two, a visible channel started from zero two, an anti-monotone
   visible requirement two, a `via` that keeps the first raise instead of the
   last one, and a traced `?x` that does not soften, two each.
+- **Blockers against brute force (fast-check):** 1000 random worlds of up to 5
+  regions (a spanning tree plus cycle-closing exits) over five items, one of
+  them progressive, and a group; random states, `acquirable` subsets and
+  `maxAtoms` from 0 to 3. For every location and both targets, every need of
+  at most `maxAtoms` atoms is applied and solved (group counts as a virtual
+  item, see above), and the minimal ones that reach the target must be exactly
+  `blockers()`. A truncated result is checked for soundness instead, and the
+  run fails if more than 1 in 20 results were truncated or fewer than 1 in 5
+  had something to collect, so it cannot pass vacuously (about a third do).
+  `doableNow()` must match the solver. Seeded mutations: no minimization fails
+  it and a hand case; pruning at `maxAtoms - 1`, it and two hand cases; `?x`
+  read as `x` for maybe, it and a hand case; an incremental merge that keeps
+  covered needs, it and a hand case; a worklist that never expands a region
+  twice, a hand case, and the brute force in 7 runs out of 8.
 
 ## How a game pack plugs in
 
@@ -514,6 +673,12 @@ The tracker would then:
 3. Let `toState` derive what is not a raw item: crystals and pendants from
    beaten dungeons and their prizes, `agahnim` from the boss toggle, medallion
    knowledge, key counts.
+4. On demand (a hover, a "what next?" panel), call `explain(compiled, state, id)`
+   for why a location is what it is, and
+   `analyze(compiled, state, { acquirable, maxLevel }).blockers(id, "yes")` for
+   what would unlock it. `acquirable` says which items the player can still
+   get (not the derived facts the pack infers by itself, if it wants them
+   hidden); `maxLevel` gives the item ranges from `pack.items`.
 
 Multi-game seeds (SMZ3) are one graph: both games' regions under prefixed ids,
 joined by the exits that cross between them. The engine doesn't care which game
@@ -553,7 +718,9 @@ a region belongs to.
 6. **Knowledge is not monotone.** A medallion going from unknown to known can
    lower a location (from `maybe` to `no`). Monotonicity holds for items, not
    for knowledge. `toState` should model knowledge as "still possible" flags,
-   and the docs should say which state changes can lower a result.
+   and the docs should say which state changes can lower a result. Blockers
+   follow: a knowledge flag the player cannot "collect" should not be
+   `acquirable`.
 7. **Helper parameters.** `@canBeatBoss(moldorm)` would save dozens of helpers,
    at the cost of a substitution step and cycle checks per instantiation.
    Is it worth it?
