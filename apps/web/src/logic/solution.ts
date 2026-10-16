@@ -20,11 +20,11 @@ import {
   dungeonStatus,
   type Filler,
   filler,
-  fromLegacy,
   LEGACY_DUNGEONS,
   MARKERS,
   type MapMarker,
   type MarkerStatus,
+  type Medallion,
   markerStatus,
   OPEN,
   regionModules,
@@ -33,7 +33,8 @@ import {
   type TrackerInput,
   toState,
 } from "@alltp/pack-alttpr";
-import { BOSS_STATES } from "@/constants";
+import { BOSS_STATES, DUNGEON_INDICES } from "@/constants";
+import { packReading } from "@/logic/packItems";
 import { packSettings } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 import type { Progress } from "@/stores/persistence";
@@ -58,36 +59,38 @@ export type Inputs = Pick<
 /** The slices a marker's status reads: the solution's, and what is checked. */
 type MarkerInputs = Inputs & Pick<Progress, "checked">;
 
-/** A dungeon counter's item id. */
-const COUNTER = /^chest\d$/;
+/** The medallion each value of the store's `medallions` names. */
+const PAD_VALUES: readonly (Medallion | "unknown")[] = [
+  "unknown",
+  "bombos",
+  "ether",
+  "quake",
+];
+
+/** What a pad wants, from the store's value for it. */
+const padOf = (value: number | undefined): Medallion | "unknown" =>
+  PAD_VALUES[value ?? 0] ?? "unknown";
 
 /**
- * What the player recorded, as the pack's TrackerInput. The items keep the
- * tracker's ids, so they go through the pack's legacy table: the bow and
- * its silver arrows, bosses beaten, prizes, the medallion pads, the small
- * keys. A dungeon counter is no item. Like a legacy run, a run counts
- * Hyrule Castle finished, Zelda rescued: the tracker does not record the
- * escape, which in Standard opens the Light World.
+ * What the player recorded, as the pack's TrackerInput: the items, bosses
+ * beaten and prizes through the app's one table (packReading), the
+ * medallion pads (Misery Mire's slot 8, Turtle Rock's 9), the small keys
+ * by grid dungeon.
  */
 export const trackerInput = ({
   items,
   medallions,
   smallKeys,
-}: Inputs): TrackerInput => {
-  const legacy: Record<string, number | boolean> = {};
-  for (const [id, value] of Object.entries(items)) {
-    if (!COUNTER.test(id) && id !== "agahnim2") legacy[id] = value;
-  }
-  const { input } = fromLegacy({
-    chestsOpened: [],
-    items: legacy,
-    medallions,
-    smallKeys,
-  });
-  return items.agahnim2 === 1
-    ? { ...input, beaten: { ...input.beaten, "ganons-tower": true } }
-    : input;
-};
+}: Inputs): TrackerInput => ({
+  ...packReading(items),
+  keys: Object.fromEntries(
+    LEGACY_DUNGEONS.map((id, index) => [id, smallKeys[index] ?? 0]),
+  ),
+  medallions: {
+    mire: padOf(medallions[DUNGEON_INDICES.MISERY_MIRE]),
+    turtleRock: padOf(medallions[DUNGEON_INDICES.TURTLE_ROCK]),
+  },
+});
 
 const fillers = new WeakMap<AlttprSettings, Filler>();
 

@@ -12,11 +12,13 @@ import { items, itemsMax, itemsMin } from "@/data/items";
 const ADDED = ["agahnim2"];
 
 /**
- * A save keeps the tracker's item ids, and the pack reads them through its
- * frozen copy of the version 5 tables (packs/alttpr/src/legacy.ts), live
- * runs and old saves alike. Each test holds the app's table to it: if they
- * drift apart, the rules read the wrong items. (The chest and dungeon tables
- * it also froze were held to it until the map moved to the pack's markers.)
+ * A save keeps the tracker's item ids, and the pack keeps a frozen copy of
+ * the version 5 tables (packs/alttpr/src/legacy.ts), which old saves are
+ * migrated through. Each test holds the app's table to it: if they drift
+ * apart, an old save reads as other items. (A live run is read through the
+ * app's own table, logic/packItems.ts, which its spec holds to the same
+ * copy; the chest and dungeon tables it also froze were held to it until
+ * the map moved to the pack's markers.)
  */
 describe("the app's tables, against the pack's legacy copy", () => {
   it("track the same items, each with the same range", () => {
