@@ -55,6 +55,16 @@ describe("App", () => {
     expect(sword).toHaveAccessibleName(/^Sword, not obtained\./);
   });
 
+  it("announces a boss as alive until it is marked beaten", () => {
+    render(<App />);
+    const armos = screen.getByTestId("item-boss0");
+
+    expect(armos).toHaveAccessibleName(/^Armos Knights, not defeated\./);
+
+    fireEvent.click(armos);
+    expect(armos).toHaveAccessibleName(/^Armos Knights, defeated\./);
+  });
+
   it("gives every boss a chest counter and a reward, and a medallion to Misery Mire and Turtle Rock only", () => {
     render(<App />);
 

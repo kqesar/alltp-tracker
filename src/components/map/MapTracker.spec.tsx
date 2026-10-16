@@ -39,6 +39,35 @@ describe("MapTracker", () => {
     expect(kingsTomb).toHaveClass("available");
   });
 
+  it("does not demand big keys outside keysanity, even while they are displayed", () => {
+    act(() => {
+      const state = useGameStore.getState();
+      state.setBigKeysVisible(true);
+      state.handleItemClick("bow");
+      state.handleItemClick("bow");
+    });
+    render(<MapTracker />);
+
+    expect(screen.getByTestId("boss-marker-0")).toHaveClass("available");
+  });
+
+  it("demands the big key in keysanity, even while key cells are hidden", () => {
+    act(() => {
+      const state = useGameStore.getState();
+      state.applyPreset("keysanity");
+      state.setBigKeysVisible(false);
+      state.handleItemClick("bow");
+      state.handleItemClick("bow");
+    });
+    render(<MapTracker />);
+
+    expect(screen.getByTestId("boss-marker-0")).toHaveClass("unavailable");
+
+    act(() => useGameStore.getState().handleItemClick("bigkey0"));
+
+    expect(screen.getByTestId("boss-marker-0")).toHaveClass("available");
+  });
+
   it("marks a chest opened when it is clicked", () => {
     render(<MapTracker />);
 
