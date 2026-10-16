@@ -172,6 +172,11 @@ describe("MapTracker worlds and markers", () => {
     expect(screen.getByTestId("marker-kakariko-well")).toHaveAccessibleName(
       "Kakariko Well (5 checks): available",
     );
+    const island = screen.getByTestId("marker-lake-hylia-island");
+    expect(island).toHaveAccessibleName(
+      "Lake Hylia Island: visible, not reachable yet",
+    );
+    expect(island).toHaveClass("seen");
 
     expect(
       screen.getByTestId("boss-marker-eastern-palace"),

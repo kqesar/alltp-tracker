@@ -40,6 +40,48 @@ test.describe("the map", () => {
     await expect(kingsTomb).toHaveClass(/\bavailable\b/);
   });
 
+  test("shows the Pedestal seen with the Book, available with the three pendants", async ({
+    page,
+  }) => {
+    await openTracker(page);
+    const pedestal = page.getByTestId("marker-master-sword-pedestal");
+    await expect(pedestal).toHaveAccessibleName(
+      "Master Sword Pedestal: out of logic",
+    );
+
+    await page.getByTestId("item-book").click();
+
+    await expect(pedestal).toHaveAccessibleName(
+      "Master Sword Pedestal: visible, not reachable yet",
+    );
+    await page.mouse.move(0, 0);
+    // Its own colour, and an eye drawn over the ink rather than a letter
+    await expect(pedestal).toHaveCSS("background-color", "rgb(127, 219, 255)");
+    const glyph = await pedestal.evaluate((element) => {
+      const after = getComputedStyle(element, "::after");
+      return { content: after.content, mask: after.maskImage };
+    });
+    expect(glyph.content).toBe('""');
+    expect(glyph.mask).toContain("svg");
+
+    // The three pendants: Eastern Palace's green, Desert Palace's and Tower
+    // of Hera's other two
+    for (const [index, clicks] of [
+      [0, 1],
+      [1, 2],
+      [2, 2],
+    ] as const) {
+      await page.getByTestId(`item-boss${index}`).click();
+      for (let click = 0; click < clicks; click++) {
+        await page.getByTestId(`reward-overlay-${index}`).click();
+      }
+    }
+
+    await expect(pedestal).toHaveAccessibleName(
+      "Master Sword Pedestal: available",
+    );
+  });
+
   test("restores the checks of a version 5 save left in localStorage", async ({
     page,
   }) => {

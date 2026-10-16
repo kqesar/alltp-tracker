@@ -39,15 +39,42 @@ import { packSettings } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 import type { Progress } from "@/stores/persistence";
 
+/**
+ * What a location shows while it is not checked: the pack's markerStatus,
+ * or seen, for one out of logic that the player can already see (the Book
+ * reads the Pedestal, a ledge item shows from below).
+ */
+export type LocationStatus = MarkerStatus | "seen";
+
 /** What a marker shows: what is left in logic, or done. */
-export type MarkerState = MarkerStatus | "opened";
+export type MarkerState = LocationStatus | "opened";
 
 /** The words a screen reader hears for each state; the glyph says it on screen. */
 export const STATE_LABELS: Record<MarkerState, string> = {
   available: "available",
   opened: "done",
   possible: "maybe available",
+  seen: "visible, not reachable yet",
   unavailable: "out of logic",
+};
+
+/**
+ * What locations left show, from their tris and what can be seen of them
+ * (`visible`, never below the tri): available > possible > seen >
+ * unavailable. markerStatus says the first two; failing those, seen when
+ * one of them can be seen, a `maybe` sight included, as a `maybe` tri is
+ * possible.
+ * @param tris - The locations' tris
+ * @param visibles - What can be seen of each, in the same order
+ */
+export const locationStatus = (
+  tris: readonly Tri[],
+  visibles: readonly Tri[],
+): LocationStatus => {
+  const status = markerStatus(tris);
+  return status === "unavailable" && visibles.some((seen) => seen !== "no")
+    ? "seen"
+    : status;
 };
 
 /** The slices of the run the solution reads. */
@@ -110,6 +137,11 @@ export interface Solution {
   readonly settings: AlttprSettings;
   /** Every location of the run's world, as the tracker shows it. */
   readonly tris: Readonly<Record<string, Tri>>;
+  /**
+   * What can be seen of every location: the engine's visible channel, the
+   * tri itself for a location that cannot be seen from afar.
+   */
+  readonly visibles: Readonly<Record<string, Tri>>;
 }
 
 let last: { inputs: Inputs; solution: Solution } | undefined;
@@ -136,7 +168,11 @@ export const solutionOf = (state: Inputs): Solution => {
     fillerOf(settings),
     toState(trackerInput(state), settings),
   );
-  const solution = { settings, tris: keyed.locations() };
+  const solution = {
+    settings,
+    tris: keyed.locations(),
+    visibles: keyed.solution.visibles(),
+  };
   last = {
     inputs: {
       items: state.items,
@@ -162,9 +198,19 @@ export const markerById = (id: string): MapMarker => {
 
 const tri = (solution: Solution, id: string): Tri => solution.tris[id] ?? "no";
 
+const seen = (solution: Solution, id: string): Tri =>
+  solution.visibles[id] ?? "no";
+
+/** What locations of a solution show: locationStatus of their tris. */
+const statusOf = (solution: Solution, ids: readonly string[]) =>
+  locationStatus(
+    ids.map((id) => tri(solution, id)),
+    ids.map((id) => seen(solution, id)),
+  );
+
 /**
  * What a location marker shows: done once every location it stands for is
- * checked, else markerStatus of those left.
+ * checked, else locationStatus of those left.
  */
 export const markerStateOf = (
   marker: MapMarker,
@@ -172,8 +218,7 @@ export const markerStateOf = (
 ): MarkerState => {
   const left = marker.locations.filter((id) => !state.checked[id]);
   if (left.length === 0) return "opened";
-  const solution = solutionOf(state);
-  return markerStatus(left.map((id) => tri(solution, id)));
+  return statusOf(solutionOf(state), left);
 };
 
 const itemLocations = new Map<string, readonly string[]>();
@@ -305,7 +350,7 @@ export const markerDetail = (
 ): MarkerState[] => {
   const solution = solutionOf(state);
   return marker.locations.map((id) =>
-    state.checked[id] ? "opened" : markerStatus([tri(solution, id)]),
+    state.checked[id] ? "opened" : statusOf(solution, [id]),
   );
 };
 

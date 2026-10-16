@@ -36,9 +36,12 @@
   --color-danger-hover: #f76a85;
 
   /* ---- Map marker states: the community's green / yellow / red / grey,
-     each paired with a glyph so colour is never the only cue ---- */
+     and light blue for a location seen but not reachable yet (EmoTracker's
+     "inspectable"), each paired with a glyph so colour is never the only
+     cue ---- */
   --state-available: #2ecc40;
   --state-possible: #ffdc00;
+  --state-seen: #7fdbff;
   --state-unavailable: #ff4136;
   --state-opened: #7f7f7f;
   --state-ink: #0b0b0f; /* glyph colour on a state swatch */

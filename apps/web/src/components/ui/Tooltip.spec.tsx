@@ -63,6 +63,19 @@ describe("Tooltip", () => {
     expect(rows()).toEqual(["Out of logic unavailable"]);
   });
 
+  it("says a location seen from afar is visible, not reachable yet", () => {
+    renderMap();
+
+    fireEvent.pointerEnter(screen.getByTestId("marker-lake-hylia-island"), {
+      pointerType: "mouse",
+    });
+
+    expect(rows()).toEqual(["Visible, not reachable yet seen"]);
+    expect(
+      screen.getByTestId("tooltip-checks").querySelector(".state-glyph"),
+    ).toHaveClass("seen");
+  });
+
   it("gives a dungeon's items left, those surely in logic, and each chest", () => {
     renderMap();
     fireEvent.pointerEnter(screen.getByTestId("boss-marker-eastern-palace"), {
