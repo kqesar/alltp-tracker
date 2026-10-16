@@ -10,10 +10,11 @@ import {
   icon,
 } from "@/data/logic";
 
-/** A chest as declared below; `isOpened` is progress, added by the loader. */
-type ChestDefinition = Omit<ChestItem, "isOpened">;
-
-const CHESTS: ChestDefinition[] = [
+/**
+ * Every overworld chest. Opened flags are progress and live in the store
+ * (`chestsOpened`), indexed by position in this table.
+ */
+export const chests: ChestItem[] = [
   {
     isAvailable: (items) => {
       if (!items.boots) return "unavailable";
@@ -530,9 +531,3 @@ const CHESTS: ChestDefinition[] = [
     y: "57.1%",
   },
 ];
-
-/** Every overworld chest, each starting closed. */
-export const chests: ChestItem[] = CHESTS.map((chest) => ({
-  ...chest,
-  isOpened: false,
-}));

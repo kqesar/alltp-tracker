@@ -5,7 +5,7 @@ import { useGameStore } from "@/stores/gameStore";
 
 describe("GridItem", () => {
   beforeEach(() => {
-    useGameStore.getState().reset();
+    useGameStore.setState(useGameStore.getInitialState(), true);
   });
 
   it("renders a spacer for an empty cell", () => {

@@ -13,7 +13,7 @@ vi.mock("@/styles/index.css", () => ({}));
 
 describe("App", () => {
   beforeEach(() => {
-    act(() => useGameStore.getState().applyPreset("open"));
+    act(() => useGameStore.setState(useGameStore.getInitialState(), true));
   });
 
   it("renders the header, the item grid and the map", () => {

@@ -1,4 +1,5 @@
 import type React from "react";
+import { useGameStore } from "@/stores/gameStore";
 
 type CaptionProps = {
   text: string;
@@ -109,3 +110,11 @@ export const Caption = ({ text }: CaptionProps) => {
     </output>
   );
 };
+
+/**
+ * The caption bar wired to the store. It subscribes on its own, so a hover
+ * re-renders this bar and nothing else.
+ */
+export const LiveCaption = () => (
+  <Caption text={useGameStore((state) => state.caption)} />
+);

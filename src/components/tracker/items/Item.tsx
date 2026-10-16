@@ -38,7 +38,8 @@ const describeState = (item: string, value: number | boolean): string => {
  * @param onFocus - Callback when the cell receives focus
  */
 export const Item = ({ row, col, item, onFocus }: ItemProps) => {
-  const { items, handleItemClick } = useGameStore();
+  const value = useGameStore((state) => state.items[item]);
+  const handleItemClick = useGameStore((state) => state.handleItemClick);
 
   const bossNumber = item.startsWith("boss")
     ? Number.parseInt(item.slice("boss".length), 10)
@@ -46,7 +47,7 @@ export const Item = ({ row, col, item, onFocus }: ItemProps) => {
 
   return (
     <button
-      aria-label={`${itemLabels(item)}, ${describeState(item, items[item])}. Click to change state.`}
+      aria-label={`${itemLabels(item)}, ${describeState(item, value)}. Click to change state.`}
       className={`griditem grid-item-base${bossNumber === null ? "" : " grid-item-relative"}`}
       data-grid-col={col}
       data-grid-row={row}
@@ -54,7 +55,7 @@ export const Item = ({ row, col, item, onFocus }: ItemProps) => {
       disabled={item === "blank"}
       onClick={() => handleItemClick(item)}
       onFocus={onFocus}
-      style={getGridItemStyles(item, items)}
+      style={getGridItemStyles(item, value)}
       type="button"
     >
       {bossNumber !== null && (

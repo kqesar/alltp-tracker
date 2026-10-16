@@ -14,7 +14,7 @@ const HINT = "Hover an item or a map location to see its details here.";
 // The whole application, real map included, driven the way a player does.
 describe("App Integration Tests", () => {
   beforeEach(() => {
-    act(() => useGameStore.getState().applyPreset("open"));
+    act(() => useGameStore.setState(useGameStore.getInitialState(), true));
   });
 
   it("turns map markers reachable when an item unlocks them", () => {
@@ -58,6 +58,22 @@ describe("App Integration Tests", () => {
     fireEvent.click(screen.getByTestId("item-boss0"));
 
     expect(screen.getByTestId("boss-marker-0")).toHaveClass("opened");
+  });
+
+  it("marks the grid boss beaten when its map marker is clicked, and back", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByTestId("boss-marker-3"));
+    expect(screen.getByTestId("item-boss3")).toHaveAccessibleName(
+      /^Helmasaur King, defeated\./,
+    );
+    expect(screen.getByTestId("boss-marker-3")).toHaveClass("opened");
+
+    fireEvent.click(screen.getByTestId("boss-marker-3"));
+    expect(screen.getByTestId("item-boss3")).toHaveAccessibleName(
+      /^Helmasaur King, not defeated\./,
+    );
+    expect(screen.getByTestId("boss-marker-3")).not.toHaveClass("opened");
   });
 
   it("reaches Tower of Hera's boss once the route and light are held", () => {

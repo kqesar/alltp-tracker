@@ -46,13 +46,14 @@ type CounterOverlayProps = {
  * @param kind - Which counter to render
  */
 export const CounterOverlay = ({ bossNumber, kind }: CounterOverlayProps) => {
-  const { items, handleItemClick } = useGameStore();
   const { asset, corner } = COUNTERS[kind];
   const itemKey = `${kind}${bossNumber}`;
+  const value = useGameStore((state) => state.items[itemKey] as number);
+  const handleItemClick = useGameStore((state) => state.handleItemClick);
 
   return (
     <Overlay
-      asset={`${asset}${items[itemKey] as number}.png`}
+      asset={`${asset}${value}.png`}
       corner={corner}
       onActivate={() => handleItemClick(itemKey)}
       testId={`${kind}-overlay-${bossNumber}`}
@@ -69,11 +70,12 @@ const MEDALLION_STATES = 4;
  * @param bossNumber - The boss number (0-9)
  */
 export const MedaillonOverlay = ({ bossNumber }: { bossNumber: number }) => {
-  const { medallions, handleMedallionChange } = useGameStore();
+  const medallion = useGameStore((state) => state.medallions[bossNumber]);
+  const handleMedallionChange = useGameStore(
+    (state) => state.handleMedallionChange,
+  );
 
   if (bossNumber < 8) return null;
-
-  const medallion = medallions[bossNumber];
 
   return (
     <Overlay

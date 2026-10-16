@@ -7,7 +7,7 @@ import { useGameStore } from "@/stores/gameStore";
 
 describe("MapTracker", () => {
   beforeEach(() => {
-    act(() => useGameStore.getState().applyPreset("open"));
+    act(() => useGameStore.setState(useGameStore.getInitialState(), true));
   });
 
   it("draws one marker per chest, and a boss and a chest marker per dungeon", () => {
@@ -74,6 +74,6 @@ describe("MapTracker", () => {
     fireEvent.click(screen.getByTestId("chest-marker-0"));
 
     expect(screen.getByTestId("chest-marker-0")).toHaveClass("opened");
-    expect(useGameStore.getState().chestsState[0].isOpened).toBe(true);
+    expect(useGameStore.getState().chestsOpened[0]).toBe(true);
   });
 });

@@ -6,9 +6,6 @@ import {
   icon,
 } from "@/data/logic";
 
-/** A dungeon as declared below; `isBeaten` is progress, added by the loader. */
-type DungeonDefinition = Omit<DungeonItem, "isBeaten">;
-
 /** Shared by Tower of Hera's canGetChest and isBeatable. */
 const towerOfHeraBeatable: DungeonItem["isBeatable"] = (
   items,
@@ -25,7 +22,11 @@ const towerOfHeraBeatable: DungeonItem["isBeatable"] = (
   return "possible";
 };
 
-const DUNGEONS: DungeonDefinition[] = [
+/**
+ * The ten dungeons, in dungeon-index order. Whether a boss is beaten is
+ * progress, stored as `items.bossN` in the store.
+ */
+export const dungeons: DungeonItem[] = [
   {
     canGetChest: (items) => {
       if (items.bow > 1 && items.chest0 > 1) return "available";
@@ -278,9 +279,3 @@ const DUNGEONS: DungeonDefinition[] = [
     y: "7.0%",
   },
 ];
-
-/** The ten dungeons, each starting unbeaten. */
-export const dungeons: DungeonItem[] = DUNGEONS.map((dungeon) => ({
-  ...dungeon,
-  isBeaten: false,
-}));

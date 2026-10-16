@@ -1,307 +1,257 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { chests } from "@/data/chests";
+import { dungeons } from "@/data/dungeons";
 import { useGameStore } from "@/stores/gameStore";
+
+const STORAGE_KEY = "alltp-tracker-state";
+
+/** Write a save the way an older release left it in localStorage. */
+const storeSave = (state: object, version: number) =>
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, version }));
 
 describe("GameStore", () => {
   beforeEach(() => {
-    // Reset the store before each test
-    useGameStore.getState().reset();
+    localStorage.clear();
+    useGameStore.setState(useGameStore.getInitialState(), true);
   });
 
-  it("initializes with default state", () => {
+  it("starts a fresh Open run with nothing found", () => {
     const state = useGameStore.getState();
 
+    expect(state.presetId).toBe("open");
     expect(state.caption).toBe("");
-    expect(state.medallions).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    expect(state.items).toBeDefined();
-    expect(state.chestsState).toBeDefined();
-    expect(state.dungeonsState).toBeDefined();
+    expect(state.medallions).toEqual(Array(10).fill(0));
+    expect(state.smallKeys).toEqual(Array(10).fill(0));
+    expect(state.chestsOpened).toEqual(chests.map(() => false));
+    expect(state.items.boss0).toBe(1);
+    expect(state.bigKeysVisible).toBe(false);
+    expect(state.mapLayout).toBe("side-by-side");
   });
 
   it("updates caption", () => {
-    const { setCaption } = useGameStore.getState();
-
-    setCaption("Test caption");
+    useGameStore.getState().setCaption("Test caption");
 
     expect(useGameStore.getState().caption).toBe("Test caption");
   });
 
-  it("handles boolean item clicks", () => {
-    const { handleItemClick, items } = useGameStore.getState();
+  describe("item clicks", () => {
+    it("toggles a boolean item", () => {
+      useGameStore.getState().handleItemClick("hookshot");
+      expect(useGameStore.getState().items.hookshot).toBe(true);
 
-    // Assuming hookshot is a boolean item that starts as false
-    const initialValue = items.hookshot;
+      useGameStore.getState().handleItemClick("hookshot");
+      expect(useGameStore.getState().items.hookshot).toBe(false);
+    });
 
-    handleItemClick("hookshot");
+    it("steps a progressive item up", () => {
+      useGameStore.getState().handleItemClick("bow");
 
-    expect(useGameStore.getState().items.hookshot).toBe(!initialValue);
+      expect(useGameStore.getState().items.bow).toBe(1);
+    });
+
+    it("counts a dungeon's chests down and wraps back to full", () => {
+      const { handleItemClick } = useGameStore.getState();
+
+      handleItemClick("chest0");
+      expect(useGameStore.getState().items.chest0).toBe(2);
+
+      handleItemClick("chest0");
+      handleItemClick("chest0");
+      expect(useGameStore.getState().items.chest0).toBe(0);
+
+      handleItemClick("chest0");
+      expect(useGameStore.getState().items.chest0).toBe(3);
+    });
+
+    it("toggles a boss between alive and beaten", () => {
+      useGameStore.getState().handleItemClick("boss4");
+      expect(useGameStore.getState().items.boss4).toBe(2);
+
+      useGameStore.getState().handleItemClick("boss4");
+      expect(useGameStore.getState().items.boss4).toBe(1);
+    });
+
+    it("ignores blank item clicks", () => {
+      const before = useGameStore.getState().items;
+
+      useGameStore.getState().handleItemClick("");
+      useGameStore.getState().handleItemClick("blank");
+
+      expect(useGameStore.getState().items).toBe(before);
+    });
   });
 
-  it("handles numeric item clicks", () => {
-    const { handleItemClick } = useGameStore.getState();
+  describe("medallions", () => {
+    it("stores the medallion picked for a dungeon", () => {
+      useGameStore.getState().handleMedallionChange(8, 2);
 
-    // Test increment logic for bow (assuming it's numeric)
-    const initialBow = useGameStore.getState().items.bow;
+      expect(useGameStore.getState().medallions[8]).toBe(2);
+    });
 
-    handleItemClick("bow");
+    it("refreshes the caption of the dungeon on screen", () => {
+      const { setCaption, handleMedallionChange } = useGameStore.getState();
 
-    const newBow = useGameStore.getState().items.bow;
-    expect(newBow).not.toBe(initialBow);
+      setCaption(dungeons[8].name);
+      handleMedallionChange(8, 1);
+
+      const { caption } = useGameStore.getState();
+      expect(caption).toContain("medallion1.png");
+      expect(caption).toContain("Misery Mire");
+    });
   });
 
-  it("handles chest item clicks (decrement logic)", () => {
-    const { handleItemClick } = useGameStore.getState();
+  it("toggles one chest and leaves the others alone", () => {
+    useGameStore.getState().toggleChest(2);
 
-    // Chest items should decrement
-    const initialChest = useGameStore.getState().items.chest0;
+    const opened = useGameStore.getState().chestsOpened;
+    expect(opened[2]).toBe(true);
+    expect(opened.filter(Boolean)).toHaveLength(1);
 
-    handleItemClick("chest0");
-
-    const newChest = useGameStore.getState().items.chest0;
-    expect(newChest).toBeLessThanOrEqual(initialChest);
-  });
-
-  it("ignores blank item clicks", () => {
-    const { handleItemClick } = useGameStore.getState();
-    const initialState = { ...useGameStore.getState().items };
-
-    handleItemClick("");
-    handleItemClick("blank");
-
-    expect(useGameStore.getState().items).toEqual(initialState);
-  });
-
-  it("handles medallion changes", () => {
-    const { handleMedallionChange } = useGameStore.getState();
-
-    handleMedallionChange(8, 2);
-
-    const medallions = useGameStore.getState().medallions;
-    expect(medallions[8]).toBe(2);
-  });
-
-  it("updates caption when medallion changes for dungeon in caption", () => {
-    const { setCaption, handleMedallionChange, dungeonsState } =
-      useGameStore.getState();
-
-    // Simulate hovering Misery Mire (caption shows its real name)
-    setCaption(dungeonsState[8].name);
-
-    // Change medallion for boss 8 (Misery Mire)
-    handleMedallionChange(8, 1);
-
-    const caption = useGameStore.getState().caption;
-    // The caption should now contain the resolved medallion icon
-    expect(caption).toContain("medallion1.png");
-    // And should still contain the dungeon name from the data
-    expect(caption).toContain("Misery Mire");
-  });
-
-  it("toggles chest state", () => {
-    const { toggleChest } = useGameStore.getState();
-    const initialIsOpened = useGameStore.getState().chestsState[0].isOpened;
-
-    toggleChest(0);
-
-    const newIsOpened = useGameStore.getState().chestsState[0].isOpened;
-    expect(newIsOpened).toBe(!initialIsOpened);
-  });
-
-  it("toggles dungeon boss state", () => {
-    const { toggleDungeonBoss } = useGameStore.getState();
-    const initialIsBeaten = useGameStore.getState().dungeonsState[0].isBeaten;
-
-    toggleDungeonBoss(0);
-
-    const newIsBeaten = useGameStore.getState().dungeonsState[0].isBeaten;
-    expect(newIsBeaten).toBe(!initialIsBeaten);
-  });
-
-  it("resets to initial state", () => {
-    const { setCaption, handleMedallionChange, reset } =
-      useGameStore.getState();
-
-    // Make some changes
-    setCaption("Changed");
-    handleMedallionChange(8, 3);
-
-    // Reset
-    reset();
-
-    const state = useGameStore.getState();
-    expect(state.caption).toBe("");
-    expect(state.medallions[8]).toBe(0);
+    useGameStore.getState().toggleChest(2);
+    expect(useGameStore.getState().chestsOpened[2]).toBe(false);
   });
 
   describe("Small Keys", () => {
-    it("initializes with zero small keys for all dungeons", () => {
-      const { smallKeys } = useGameStore.getState();
-      expect(smallKeys).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    });
-
-    it("increments small key count for Eastern Palace (max 1)", () => {
-      const { handleSmallKeyClick } = useGameStore.getState();
-
-      handleSmallKeyClick(0); // Eastern Palace
-      expect(useGameStore.getState().smallKeys[0]).toBe(1);
-
-      // Should reset to 0 when clicking at max
-      handleSmallKeyClick(0);
-      expect(useGameStore.getState().smallKeys[0]).toBe(0);
-    });
-
-    it("increments small key count for Palace of Darkness (max 6)", () => {
-      const { handleSmallKeyClick } = useGameStore.getState();
-
-      // Test incrementing to max
-      for (let i = 1; i <= 6; i++) {
-        handleSmallKeyClick(3); // Palace of Darkness
-        expect(useGameStore.getState().smallKeys[3]).toBe(i);
-      }
-
-      // Should reset to 0 when clicking at max
-      handleSmallKeyClick(3);
-      expect(useGameStore.getState().smallKeys[3]).toBe(0);
-    });
-
-    it("increments small key count for Skull Woods (max 3)", () => {
-      const { handleSmallKeyClick } = useGameStore.getState();
-
-      // Test incrementing to max
-      for (let i = 1; i <= 3; i++) {
-        handleSmallKeyClick(5); // Skull Woods
-        expect(useGameStore.getState().smallKeys[5]).toBe(i);
-      }
-
-      // Should reset to 0 when clicking at max
-      handleSmallKeyClick(5);
-      expect(useGameStore.getState().smallKeys[5]).toBe(0);
-    });
-
-    it("increments small key count for Turtle Rock (max 4)", () => {
-      const { handleSmallKeyClick } = useGameStore.getState();
-
-      // Test incrementing to max
-      for (let i = 1; i <= 4; i++) {
-        handleSmallKeyClick(9); // Turtle Rock
-        expect(useGameStore.getState().smallKeys[9]).toBe(i);
-      }
-
-      // Should reset to 0 when clicking at max
-      handleSmallKeyClick(9);
-      expect(useGameStore.getState().smallKeys[9]).toBe(0);
-    });
-
-    it("handles all dungeons correctly with their respective maximums", () => {
-      const { handleSmallKeyClick } = useGameStore.getState();
+    it("counts each dungeon's keys up to its maximum, then back to 0", () => {
       const maxValues = [1, 1, 1, 6, 1, 3, 1, 2, 3, 4];
 
-      // Test each dungeon
       maxValues.forEach((max, dungeonIndex) => {
-        // Reset store to ensure clean state
-        useGameStore.getState().reset();
-
-        // Increment to maximum
-        for (let i = 1; i <= max; i++) {
-          handleSmallKeyClick(dungeonIndex);
-          expect(useGameStore.getState().smallKeys[dungeonIndex]).toBe(i);
+        for (let count = 1; count <= max; count++) {
+          useGameStore.getState().handleSmallKeyClick(dungeonIndex);
+          expect(useGameStore.getState().smallKeys[dungeonIndex]).toBe(count);
         }
 
-        // One more click should reset to 0
-        handleSmallKeyClick(dungeonIndex);
+        useGameStore.getState().handleSmallKeyClick(dungeonIndex);
         expect(useGameStore.getState().smallKeys[dungeonIndex]).toBe(0);
       });
     });
+  });
 
-    it("resets small keys when store is reset", () => {
-      const { handleSmallKeyClick, reset } = useGameStore.getState();
+  describe("new game", () => {
+    it("clears the run but keeps the preset and the display preferences", () => {
+      const state = useGameStore.getState();
+      state.applyPreset("keysanity");
+      state.setMapLayout("stacked");
+      state.setBigKeysVisible(false);
+      state.toggleChest(0);
+      state.handleItemClick("boss0");
+      state.handleItemClick("hookshot");
+      state.handleSmallKeyClick(3);
+      state.handleMedallionChange(8, 3);
 
-      // Add some small keys
-      handleSmallKeyClick(0);
-      handleSmallKeyClick(3);
-      handleSmallKeyClick(5);
+      useGameStore.getState().reset();
 
-      expect(useGameStore.getState().smallKeys[0]).toBe(1);
-      expect(useGameStore.getState().smallKeys[3]).toBe(1);
-      expect(useGameStore.getState().smallKeys[5]).toBe(1);
-
-      // Reset
-      reset();
-
-      expect(useGameStore.getState().smallKeys).toEqual([
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      ]);
+      const after = useGameStore.getState();
+      expect(after.chestsOpened[0]).toBe(false);
+      expect(after.items.boss0).toBe(1);
+      expect(after.items.hookshot).toBe(false);
+      expect(after.smallKeys[3]).toBe(0);
+      expect(after.medallions[8]).toBe(0);
+      expect(after.presetId).toBe("keysanity");
+      expect(after.mapLayout).toBe("stacked");
+      expect(after.bigKeysVisible).toBe(false);
     });
   });
 
-  describe("Reset and persistence", () => {
-    it("reset clears opened chests and beaten dungeons", () => {
-      const { toggleChest, toggleDungeonBoss, reset } = useGameStore.getState();
-
-      toggleChest(0);
-      toggleDungeonBoss(0);
-      expect(useGameStore.getState().chestsState[0].isOpened).toBe(true);
-      expect(useGameStore.getState().dungeonsState[0].isBeaten).toBe(true);
-
-      reset();
-
-      expect(useGameStore.getState().chestsState[0].isOpened).toBe(false);
-      expect(useGameStore.getState().dungeonsState[0].isBeaten).toBe(false);
-    });
-
-    it("toggling a chest does not mutate the initial defaults", () => {
-      const { toggleChest, reset } = useGameStore.getState();
-
-      toggleChest(1);
-      expect(useGameStore.getState().chestsState[1].isOpened).toBe(true);
-
-      // After reset the previously toggled chest must be closed again,
-      // proving the defaults were never mutated in place.
-      reset();
-      expect(useGameStore.getState().chestsState[1].isOpened).toBe(false);
-    });
-
-    it("exports and imports progress as a round-trip", () => {
+  describe("export and import", () => {
+    it("round-trips the progress of a run", () => {
       const { handleItemClick, toggleChest, handleMedallionChange, reset } =
         useGameStore.getState();
-
       handleItemClick("hookshot");
+      handleItemClick("boss3");
       toggleChest(2);
       handleMedallionChange(8, 2);
-
       const saved = useGameStore.getState().exportState();
-      const expectedHookshot = useGameStore.getState().items.hookshot;
 
       reset();
-      expect(useGameStore.getState().chestsState[2].isOpened).toBe(false);
+      expect(useGameStore.getState().chestsOpened[2]).toBe(false);
 
-      const ok = useGameStore.getState().importState(saved);
+      expect(useGameStore.getState().importState(saved)).toBe(true);
 
-      expect(ok).toBe(true);
-      expect(useGameStore.getState().items.hookshot).toBe(expectedHookshot);
-      expect(useGameStore.getState().chestsState[2].isOpened).toBe(true);
-      expect(useGameStore.getState().medallions[8]).toBe(2);
-      // Imported chests must still carry their availability functions.
-      expect(typeof useGameStore.getState().chestsState[2].isAvailable).toBe(
-        "function",
-      );
+      const state = useGameStore.getState();
+      expect(state.items.hookshot).toBe(true);
+      expect(state.items.boss3).toBe(2);
+      expect(state.chestsOpened[2]).toBe(true);
+      expect(state.medallions[8]).toBe(2);
     });
 
-    it("importState returns false for invalid input", () => {
+    it("keeps this device's display preferences", () => {
+      const saved = useGameStore.getState().exportState();
+      useGameStore.getState().setMapLayout("stacked");
+      useGameStore.getState().setBigKeysVisible(true);
+
+      useGameStore.getState().importState(saved);
+
+      expect(useGameStore.getState().mapLayout).toBe("stacked");
+      expect(useGameStore.getState().bigKeysVisible).toBe(true);
+    });
+
+    it("reads a version 1 export, whose map kept its own beaten flags", () => {
+      const v1Export = JSON.stringify({
+        chestsOpened: [true],
+        dungeonsBeaten: [false, true],
+        items: { boss0: 2, hookshot: true },
+      });
+
+      expect(useGameStore.getState().importState(v1Export)).toBe(true);
+
+      const { items, chestsOpened } = useGameStore.getState();
+      expect(items.boss0).toBe(2);
+      expect(items.boss1).toBe(2);
+      expect(items.boss2).toBe(1);
+      expect(items.hookshot).toBe(true);
+      expect(chestsOpened[0]).toBe(true);
+    });
+
+    it("rejects input that is not a JSON object", () => {
       const { importState } = useGameStore.getState();
+
       expect(importState("not valid json")).toBe(false);
       expect(importState("null")).toBe(false);
     });
   });
 
-  describe("Run-type presets", () => {
-    afterEach(() => {
-      // Restore the default preset so other tests are unaffected
-      useGameStore.getState().applyPreset("open");
+  describe("persistence", () => {
+    it("saves progress and preferences, but not the caption", () => {
+      useGameStore.getState().setCaption("hovered");
+      useGameStore.getState().handleItemClick("flute");
+
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+      expect(stored.version).toBe(2);
+      expect(stored.state.items.flute).toBe(true);
+      expect(stored.state).toHaveProperty("mapLayout");
+      expect(stored.state).not.toHaveProperty("caption");
     });
 
-    it("applyPreset switches preset, applies keysanity and resets the board", () => {
+    it("upgrades a version 1 save, folding map-beaten bosses into the grid", async () => {
+      storeSave(
+        {
+          chestsOpened: [false, true],
+          dungeonsBeaten: [false, false, false, true],
+          items: { boss5: 2 },
+          mapLayout: "stacked",
+        },
+        1,
+      );
+
+      await useGameStore.persist.rehydrate();
+
+      const state = useGameStore.getState();
+      expect(state.items.boss3).toBe(2);
+      expect(state.items.boss5).toBe(2);
+      expect(state.items.boss4).toBe(1);
+      expect(state.chestsOpened[1]).toBe(true);
+      expect(state.mapLayout).toBe("stacked");
+
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+      expect(stored.version).toBe(2);
+      expect(stored.state).not.toHaveProperty("dungeonsBeaten");
+    });
+  });
+
+  describe("Run-type presets", () => {
+    it("switches preset, turns key cells on for keysanity and clears the board", () => {
       useGameStore.getState().toggleChest(0);
-      expect(useGameStore.getState().chestsState[0].isOpened).toBe(true);
 
       useGameStore.getState().applyPreset("keysanity");
 
@@ -309,37 +259,36 @@ describe("GameStore", () => {
       expect(state.presetId).toBe("keysanity");
       expect(state.settings.keysanity).toBe(true);
       expect(state.bigKeysVisible).toBe(true);
-      expect(state.chestsState[0].isOpened).toBe(false);
+      expect(state.chestsOpened[0]).toBe(false);
     });
 
-    it("a non-keysanity preset hides big keys", () => {
+    it("turns key cells off when leaving keysanity", () => {
+      useGameStore.getState().applyPreset("keysanity");
       useGameStore.getState().applyPreset("open");
+
       expect(useGameStore.getState().bigKeysVisible).toBe(false);
     });
 
-    it("reset keeps the current preset", () => {
+    it("keeps the player's key-cell choice between two non-keysanity presets", () => {
+      useGameStore.getState().setBigKeysVisible(true);
+
+      useGameStore.getState().applyPreset("standard");
+
+      expect(useGameStore.getState().bigKeysVisible).toBe(true);
+    });
+
+    it("keeps the map layout across a preset switch", () => {
+      useGameStore.getState().setMapLayout("stacked");
+
       useGameStore.getState().applyPreset("keysanity");
-      useGameStore.getState().reset();
-      expect(useGameStore.getState().presetId).toBe("keysanity");
+
+      expect(useGameStore.getState().mapLayout).toBe("stacked");
     });
   });
 
   describe("map layout", () => {
-    it("starts with the two worlds side by side", () => {
-      expect(useGameStore.getState().mapLayout).toBe("side-by-side");
-    });
-
     it("switches to the stacked layout", () => {
       useGameStore.getState().setMapLayout("stacked");
-      expect(useGameStore.getState().mapLayout).toBe("stacked");
-    });
-
-    it("survives an export/import round trip", () => {
-      useGameStore.getState().setMapLayout("stacked");
-      const saved = useGameStore.getState().exportState();
-
-      useGameStore.getState().setMapLayout("side-by-side");
-      expect(useGameStore.getState().importState(saved)).toBe(true);
 
       expect(useGameStore.getState().mapLayout).toBe("stacked");
     });

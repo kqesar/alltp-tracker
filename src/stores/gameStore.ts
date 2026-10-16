@@ -1,84 +1,49 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { DUNGEON_INDICES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
-import { chests as initialChests } from "@/data/chests";
-import { dungeons as initialDungeons } from "@/data/dungeons";
+import { chests } from "@/data/chests";
+import { dungeons } from "@/data/dungeons";
 import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
+import { buildDungeonCaption, type ItemState } from "@/data/logic";
+import { DEFAULT_PRESET_ID, getPreset } from "@/data/presets";
 import {
-  buildDungeonCaption,
-  type ChestItem,
-  type DungeonItem,
-  type ItemState,
-} from "@/data/logic";
-import { DEFAULT_PRESET_ID, getPreset, type RunSettings } from "@/data/presets";
+  migrate,
+  PERSIST_VERSION,
+  type PersistedState,
+  type Prefs,
+  type Progress,
+} from "@/stores/persistence";
 import type { MapLayout } from "@/utils";
 
-/**
- * Serializable snapshot of the tracker progress.
- * Chest/dungeon objects carry functions (isAvailable, isBeatable, ...) that
- * cannot be persisted, so only their boolean flags are stored and re-applied
- * onto the fresh game data when loading.
- */
-type PersistedState = {
-  items: ItemState;
-  medallions: number[];
-  smallKeys: number[];
-  bigKeysVisible: boolean;
-  mapLayout: MapLayout;
-  chestsOpened: boolean[];
-  dungeonsBeaten: boolean[];
-  presetId: string;
-  settings: RunSettings;
-};
+type GameState = Progress &
+  Prefs & {
+    /** What the pointer rests on; transient, never saved */
+    caption: string;
 
-interface GameState {
-  // State
-  items: ItemState;
-  chestsState: ChestItem[];
-  dungeonsState: DungeonItem[];
-  medallions: number[];
-  caption: string;
-  bigKeysVisible: boolean;
-  mapLayout: MapLayout;
-  smallKeys: number[]; // Array of 10 dungeons (0-9) with small key counts
+    // Actions
+    applyPreset: (presetId: string) => void;
+    setCaption: (caption: string) => void;
+    handleItemClick: (item: string) => void;
+    handleSmallKeyClick: (dungeonIndex: number) => void;
+    handleMedallionChange: (bossNumber: number, newValue: number) => void;
+    toggleChest: (chestIndex: number) => void;
+    setBigKeysVisible: (visible: boolean) => void;
+    setMapLayout: (layout: MapLayout) => void;
 
-  // Run-type preset
-  presetId: string;
-  settings: RunSettings;
+    // Persistence helpers
+    exportState: () => string;
+    importState: (json: string) => boolean;
 
-  // Actions
-  applyPreset: (presetId: string) => void;
-  setCaption: (caption: string) => void;
-  handleItemClick: (item: string) => void;
-  handleSmallKeyClick: (dungeonIndex: number) => void;
-  handleMedallionChange: (bossNumber: number, newValue: number) => void;
-  toggleChest: (chestIndex: number) => void;
-  toggleDungeonBoss: (dungeonIndex: number) => void;
-  setBigKeysVisible: (visible: boolean) => void;
-  setMapLayout: (layout: MapLayout) => void;
+    /** Start a new game with the current preset; display prefs are kept */
+    reset: () => void;
+  };
 
-  // Persistence helpers
-  exportState: () => string;
-  importState: (json: string) => boolean;
-
-  // Reset function for testing or new game
-  reset: () => void;
-}
-
-/**
- * Build a fresh game state. Chests and dungeons are cloned so their mutable
- * flags (isOpened / isBeaten) are independent from the source data — this is
- * what prevents the previous reset() bug where toggling mutated the defaults.
- */
-const createInitialState = (presetId: string = DEFAULT_PRESET_ID) => {
+/** A fresh run of the given preset: nothing found, nothing opened. */
+const createProgress = (presetId: string = DEFAULT_PRESET_ID): Progress => {
   const preset = getPreset(presetId);
   return {
-    bigKeysVisible: preset.settings.keysanity,
-    caption: "",
-    chestsState: initialChests.map((chest) => ({ ...chest })),
-    dungeonsState: initialDungeons.map((dungeon) => ({ ...dungeon })),
+    chestsOpened: chests.map(() => false),
     items: { ...initialItems } as ItemState,
-    mapLayout: "side-by-side" as MapLayout,
     medallions: Array(10).fill(0) as number[],
     presetId: preset.id,
     settings: preset.settings,
@@ -86,21 +51,42 @@ const createInitialState = (presetId: string = DEFAULT_PRESET_ID) => {
   };
 };
 
-/** Flip one boolean flag on one entry, leaving the rest of the array alone. */
-const toggleFlagAt = <T, K extends keyof T>(
-  entries: T[],
-  target: number,
-  flag: K,
-): T[] =>
-  entries.map((entry, index) =>
-    index === target ? { ...entry, [flag]: !entry[flag] } : entry,
-  );
+/** Display preferences for a first visit. */
+const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
+  bigKeysVisible: getPreset(presetId).settings.keysanity,
+  mapLayout: "side-by-side",
+});
 
-/** Project the current progress into its serializable form. */
+/** Lay saved progress over fresh progress; a missing field keeps its fresh value. */
+const restoreProgress = (
+  base: Progress,
+  saved: Partial<PersistedState>,
+): Progress => ({
+  chestsOpened: base.chestsOpened.map(
+    (opened, index) => saved.chestsOpened?.[index] ?? opened,
+  ),
+  items: saved.items
+    ? ({ ...base.items, ...saved.items } as ItemState)
+    : base.items,
+  medallions: saved.medallions ?? base.medallions,
+  presetId: saved.presetId ?? base.presetId,
+  settings: saved.settings ?? base.settings,
+  smallKeys: saved.smallKeys ?? base.smallKeys,
+});
+
+/** Lay saved display preferences over the current ones. */
+const restorePrefs = (base: Prefs, saved: Partial<PersistedState>): Prefs => ({
+  bigKeysVisible:
+    typeof saved.bigKeysVisible === "boolean"
+      ? saved.bigKeysVisible
+      : base.bigKeysVisible,
+  mapLayout: saved.mapLayout ?? base.mapLayout,
+});
+
+/** Project the store onto its serializable form. */
 const toPersisted = (state: GameState): PersistedState => ({
   bigKeysVisible: state.bigKeysVisible,
-  chestsOpened: state.chestsState.map((chest) => chest.isOpened),
-  dungeonsBeaten: state.dungeonsState.map((dungeon) => dungeon.isBeaten),
+  chestsOpened: state.chestsOpened,
   items: state.items,
   mapLayout: state.mapLayout,
   medallions: state.medallions,
@@ -109,41 +95,27 @@ const toPersisted = (state: GameState): PersistedState => ({
   smallKeys: state.smallKeys,
 });
 
-/** Re-apply a persisted/imported snapshot onto a fresh state (functions intact). */
-const applyPersisted = <T extends ReturnType<typeof createInitialState>>(
-  base: T,
-  persisted: Partial<PersistedState>,
-): T => ({
-  ...base,
-  bigKeysVisible:
-    typeof persisted.bigKeysVisible === "boolean"
-      ? persisted.bigKeysVisible
-      : base.bigKeysVisible,
-  chestsState: base.chestsState.map((chest, index) => ({
-    ...chest,
-    isOpened: persisted.chestsOpened?.[index] ?? chest.isOpened,
-  })),
-  dungeonsState: base.dungeonsState.map((dungeon, index) => ({
-    ...dungeon,
-    isBeaten: persisted.dungeonsBeaten?.[index] ?? dungeon.isBeaten,
-  })),
-  items: persisted.items
-    ? ({ ...base.items, ...persisted.items } as ItemState)
-    : base.items,
-  mapLayout: persisted.mapLayout ?? base.mapLayout,
-  medallions: persisted.medallions ?? base.medallions,
-  presetId: persisted.presetId ?? base.presetId,
-  settings: persisted.settings ?? base.settings,
-  smallKeys: persisted.smallKeys ?? base.smallKeys,
-});
-
 export const useGameStore = create<GameState>()(
   devtools(
     persist(
       (set, get) => ({
-        ...createInitialState(),
+        ...createProgress(),
+        ...createPrefs(),
 
-        applyPreset: (presetId: string) => set(createInitialState(presetId)),
+        applyPreset: (presetId: string) =>
+          set((state) => {
+            const progress = createProgress(presetId);
+            return {
+              ...progress,
+              // Key cells follow the run type when it turns keysanity on or
+              // off; otherwise the player's own choice stands.
+              bigKeysVisible:
+                progress.settings.keysanity === state.settings.keysanity
+                  ? state.bigKeysVisible
+                  : progress.settings.keysanity,
+            };
+          }),
+        caption: "",
 
         exportState: () => JSON.stringify(toPersisted(get()), null, 2),
 
@@ -174,14 +146,14 @@ export const useGameStore = create<GameState>()(
         },
 
         handleMedallionChange: (bossNumber: number, newValue: number) => {
-          const { medallions, caption, dungeonsState } = get();
+          const { medallions, caption } = get();
           const newMedallions = [...medallions];
           newMedallions[bossNumber] = newValue;
 
           // If the caption currently shows this dungeon, rebuild it so the
           // medallion icon stays in sync (no fragile string replace).
           let updatedCaption = caption;
-          const dungeon = dungeonsState[bossNumber];
+          const dungeon = dungeons[bossNumber];
           if (
             (bossNumber === DUNGEON_INDICES.MISERY_MIRE ||
               bossNumber === DUNGEON_INDICES.TURTLE_ROCK) &&
@@ -221,14 +193,16 @@ export const useGameStore = create<GameState>()(
           try {
             const parsed = JSON.parse(json);
             if (typeof parsed !== "object" || parsed === null) return false;
-            set(applyPersisted(createInitialState(), parsed as PersistedState));
+            // Exports written before version 2 carry `dungeonsBeaten`
+            const version = "dungeonsBeaten" in parsed ? 1 : PERSIST_VERSION;
+            set(restoreProgress(createProgress(), migrate(parsed, version)));
             return true;
           } catch {
             return false;
           }
         },
 
-        reset: () => set(createInitialState(get().presetId)),
+        reset: () => set(createProgress(get().presetId)),
 
         setBigKeysVisible: (visible: boolean) =>
           set({ bigKeysVisible: visible }),
@@ -239,30 +213,26 @@ export const useGameStore = create<GameState>()(
 
         toggleChest: (chestIndex: number) =>
           set((state) => ({
-            chestsState: toggleFlagAt(
-              state.chestsState,
-              chestIndex,
-              "isOpened",
-            ),
-          })),
-
-        toggleDungeonBoss: (dungeonIndex: number) =>
-          set((state) => ({
-            dungeonsState: toggleFlagAt(
-              state.dungeonsState,
-              dungeonIndex,
-              "isBeaten",
+            chestsOpened: state.chestsOpened.map((opened, index) =>
+              index === chestIndex ? !opened : opened,
             ),
           })),
       }),
       {
-        // Rebuild chest/dungeon objects (with their functions) from saved flags.
-        merge: (persisted, current) =>
-          applyPersisted(current, (persisted ?? {}) as Partial<PersistedState>),
+        merge: (persisted, current) => {
+          const saved = (persisted ?? {}) as Partial<PersistedState>;
+          return {
+            ...current,
+            ...restoreProgress(current, saved),
+            ...restorePrefs(current, saved),
+          };
+        },
+        migrate: (persisted, version) =>
+          migrate(persisted, version) as PersistedState,
         name: "alltp-tracker-state",
-        // Only persist serializable progress; caption is transient.
+        // Only persist progress and prefs; the caption is transient.
         partialize: (state) => toPersisted(state),
-        version: 1,
+        version: PERSIST_VERSION,
       },
     ),
     {
