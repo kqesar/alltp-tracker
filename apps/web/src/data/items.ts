@@ -1,3 +1,29 @@
+/**
+ * The items a run tracks, by the tracker's ids: `boolean` for an item held
+ * or not, `number` for a progressive one, a counter or a boss (1 alive, 2
+ * beaten). The members named are those compared as numbers, which the index
+ * signature alone would type as `number | boolean`.
+ */
+export interface ItemState {
+  [key: string]: number | boolean;
+
+  agahnim: number;
+  agahnim2: number;
+  bow: number;
+  chest0: number;
+  chest1: number;
+  chest2: number;
+  chest3: number;
+  chest4: number;
+  chest5: number;
+  chest6: number;
+  chest7: number;
+  chest8: number;
+  chest9: number;
+  glove: number;
+  sword: number;
+}
+
 // Default item grid layout
 export const defaultItemGrid: string[][] = [
   ["flute", "hookshot", "hammer", "firerod", "icerod", "boomerang", "net"],

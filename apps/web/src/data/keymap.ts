@@ -1,7 +1,7 @@
+import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { DUNGEON_INDICES } from "@/constants";
-import { dungeons } from "@/data/dungeons";
 import { defaultItemGrid, itemLabels } from "@/data/items";
-import { placeName } from "@/utils/caption";
+import { dungeonName } from "@/logic/settings";
 
 /**
  * The keyboard shortcuts of the item grid, as plain data: which key steps
@@ -79,7 +79,7 @@ export const dungeonControls = (index: number): ControlId[] => [
 /** Every control a shortcut can step: the items, then dungeon by dungeon. */
 export const CONTROLS: readonly ControlId[] = [
   ...ITEM_CONTROLS,
-  ...dungeons.flatMap((_, index) => dungeonControls(index)),
+  ...LEGACY_DUNGEONS.flatMap((_, index) => dungeonControls(index)),
 ];
 
 /** Every action, forward then back for each control. */
@@ -139,7 +139,7 @@ export const controlName = (control: ControlId): string => {
 export const controlTitle = (control: ControlId): string => {
   const index = dungeonOf(control);
   if (index === null) return itemLabels(control);
-  return `${placeName(dungeons[index].name)} ${controlName(control).toLowerCase()}`;
+  return `${dungeonName(index)} ${controlName(control).toLowerCase()}`;
 };
 
 /**
@@ -186,7 +186,10 @@ const itemKeys = (): [ControlId, string][] => {
  * Palace 1, Desert Palace 2, ... Turtle Rock 0).
  */
 const chestKeys = (): [ControlId, string][] =>
-  dungeons.map((_, index) => [`chest${index}`, `Digit${(index + 1) % 10}`]);
+  LEGACY_DUNGEONS.map((_, index) => [
+    `chest${index}`,
+    `Digit${(index + 1) % 10}`,
+  ]);
 
 /**
  * The keymap of a first visit: a key steps its control forward as a click

@@ -41,6 +41,14 @@ import type { Progress } from "@/stores/persistence";
 /** What a marker shows: what is left in logic, or done. */
 export type MarkerState = MarkerStatus | "opened";
 
+/** The words a screen reader hears for each state; the glyph says it on screen. */
+export const STATE_LABELS: Record<MarkerState, string> = {
+  available: "available",
+  opened: "done",
+  possible: "maybe available",
+  unavailable: "out of logic",
+};
+
 /** The slices of the run the solution reads. */
 export type Inputs = Pick<
   Progress,

@@ -2,13 +2,13 @@ import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { MEDALLION_VALUES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import type { ItemState } from "@/data/items";
 import { items as initialItems } from "@/data/items";
 import {
   DEFAULT_SHORTCUTS,
   type Keymap,
   restoreShortcuts,
 } from "@/data/keymap";
-import type { ItemState } from "@/data/logic";
 import { DEFAULT_PRESET_ID, getPreset, type RunSettings } from "@/data/presets";
 import { counterMax } from "@/logic/settings";
 import {

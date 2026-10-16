@@ -8,9 +8,9 @@ import {
   MEDALLION_VALUES,
   SMALL_KEYS_MAX_BY_INDEX,
 } from "@/constants";
+import type { ItemState } from "@/data/items";
 import { items as freshItems, itemsMax, itemsMin } from "@/data/items";
 import { DEFAULT_SHORTCUTS, type ShortcutPrefs } from "@/data/keymap";
-import type { ItemState } from "@/data/logic";
 import {
   DEFAULT_PRESET_ID,
   ENTRANCE_LABELS,
