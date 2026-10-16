@@ -2,6 +2,55 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.12.0](https://github.com/kqesar/alltp-tracker/compare/v2.11.0...v2.12.0) (2026-10-16)
+
+
+### ✨ Features
+
+* **alttpr:** decode items, checks, bosses and events from memory ([3cf2d9a](https://github.com/kqesar/alltp-tracker/commit/3cf2d9aabe9669ba7047a5d7efb5975788d5841f))
+* **alttpr:** map the ALttPR memory for autotracking ([3379b68](https://github.com/kqesar/alltp-tracker/commit/3379b68e4fb5a6562c939d2417d55600497fd1a0))
+* **alttpr:** map the app's legacy ids, markers and dungeons to the pack ([a96bd38](https://github.com/kqesar/alltp-tracker/commit/a96bd3829702173dc0450159dd204e9fb7613657))
+* **alttpr:** place every check of the world on a map marker ([dad8c71](https://github.com/kqesar/alltp-tracker/commit/dad8c7116b9280579a126d0700affcb588297c99))
+* **alttpr:** port Location::canFill and where dungeon items may sit ([2f1d070](https://github.com/kqesar/alltp-tracker/commit/2f1d07080e96dc2d2a7d022352c5aa69bbbf9f24))
+* **alttpr:** read a dungeon counter by the pigeonhole principle ([05d0992](https://github.com/kqesar/alltp-tracker/commit/05d09928f293e3cd74f31b625a9dd1054137f282))
+* **alttpr:** read untracked keys through a sound key model ([29e397c](https://github.com/kqesar/alltp-tracker/commit/29e397c985283aa82b7a243bacb1c637eed144c8))
+* **alttpr:** recognise alttpr.com seeds and read the race flag safely ([e209f8d](https://github.com/kqesar/alltp-tracker/commit/e209f8da18cf010cf5527cb03143ea3f1a8fad00))
+* **alttpr:** take the ALttPR v1.2 race profile over from the autotrack tests ([a0d6340](https://github.com/kqesar/alltp-tracker/commit/a0d63401b39e341729d4410dfc23448dcee3df31))
+* **alttpr:** turn what the player records into the rules' state ([9d85003](https://github.com/kqesar/alltp-tracker/commit/9d85003476cc2101aec2817c9d8ecb23ad460c36))
+* **autotrack:** fit the setup guide to a picked device before one attaches ([4676fa4](https://github.com/kqesar/alltp-tracker/commit/4676fa49cc38f24b5fd40df3d96c0aec9f6a7816))
+* **web:** autotrack from one tab of the tracker at a time ([5ff0be8](https://github.com/kqesar/alltp-tracker/commit/5ff0be880fefd9106c322a136e5e53d1b6b1c997))
+* **web:** draw dungeon counts from 7 to 14 ([a0c2385](https://github.com/kqesar/alltp-tracker/commit/a0c2385b9d0a8639eea512ba92621cd8d0cd746e))
+* **web:** draw the map from the alttpr pack ([765f9d0](https://github.com/kqesar/alltp-tracker/commit/765f9d08434251333b79a6244ef105a827aea5ec))
+* **web:** lay what autotracking reads on the board ([8203d1c](https://github.com/kqesar/alltp-tracker/commit/8203d1c959f462b00b5d07645df62dd2417f043d))
+* **web:** name what autotracking read that the board leaves alone ([2650848](https://github.com/kqesar/alltp-tracker/commit/2650848a2bde50e28eb93b6e6d52d51f776a1a36))
+* **web:** read a run's settings as the alttpr pack's ([1752dcc](https://github.com/kqesar/alltp-tracker/commit/1752dccbe9c16ccf91471103442b0c000503221c))
+* **web:** run one autotracking session per page, lazily, from the tracker ([3620e43](https://github.com/kqesar/alltp-tracker/commit/3620e437732c653cf49503d88d81bf8ea1e4f430))
+* **web:** save checked locations by the pack's ids (version 6) ([d6cd1c4](https://github.com/kqesar/alltp-tracker/commit/d6cd1c4fcc1c68a8d8de3ccb71a7346f1c8be9e4))
+* **web:** set up and watch autotracking from the toolbar ([be0ba01](https://github.com/kqesar/alltp-tracker/commit/be0ba016f8533cc090eec5fd8efa2a34a9a1e25a))
+* **web:** show a location seen but not reachable yet as its own state ([8e42d5d](https://github.com/kqesar/alltp-tracker/commit/8e42d5d2ccd5a41a304d362dbed64549f91d5b2f))
+* **web:** solve the run with the alttpr pack ([ff3bc76](https://github.com/kqesar/alltp-tracker/commit/ff3bc76ee2a17c1cd00b3dbecf9d4a41c28520fc))
+* **web:** track each dungeon's map and compass in keysanity ([726bbfe](https://github.com/kqesar/alltp-tracker/commit/726bbfe9f1de8cad974a8ceb6e00bae806bcfb48))
+
+
+### 🐛 Bug Fixes
+
+* **autotrack:** read a drop after a working read as a lost connection ([d97d85b](https://github.com/kqesar/alltp-tracker/commit/d97d85b5584395a9b43c97d6ded973b37be09a80))
+* **web:** take each dungeon's small keys from the pack, none for Eastern ([623c124](https://github.com/kqesar/alltp-tracker/commit/623c124320e7fd8d2a63738dc2d7f4c085a9ba90))
+
+
+### 📚 Documentation
+
+* **autotrack:** point at the race profile's new home in the pack ([4e5e638](https://github.com/kqesar/alltp-tracker/commit/4e5e6381295972599ff8f95b33705f89d85f6d3d))
+* **claude:** describe the autotracking UI, its store and the fold order ([9b4f61a](https://github.com/kqesar/alltp-tracker/commit/9b4f61a7f17dac1002319931379e5bde0b16d858))
+* describe how the board follows the game ([d8f2ec6](https://github.com/kqesar/alltp-tracker/commit/d8f2ec68acdac8d432a069f81d417efd3d2c258b))
+* point to the in-app autotracking setup ([27f8652](https://github.com/kqesar/alltp-tracker/commit/27f8652462a485c7a2b84de72016e7255df6fa23))
+
+
+### 🔧 Code Refactoring
+
+* **web:** drop the 2017 logic for the alttpr pack's ([8ae724b](https://github.com/kqesar/alltp-tracker/commit/8ae724b6baf15c2d403f613a91bbad07b1d59ab4))
+* **web:** read the tracker's items through one table of the pack's ([c2f980a](https://github.com/kqesar/alltp-tracker/commit/c2f980a9f6b569902fe4fb673e476a4ee4cfc89f))
+
 ## [2.11.0](https://github.com/kqesar/alltp-tracker/compare/v2.10.1...v2.11.0) (2026-10-16)
 
 
