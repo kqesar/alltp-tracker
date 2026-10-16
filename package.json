@@ -31,7 +31,7 @@
     "test:coverage": "vitest run --coverage",
     "test:coverage:show": "vitest run --coverage && node scripts/show-coverage.js",
     "test:e2e": "pnpm --filter @alltp/web test:e2e",
-    "typecheck": "tsc -b apps/web && pnpm --filter @alltp/engine typecheck"
+    "typecheck": "tsc -b"
   },
   "lint-staged": {
     "apps/web/{src,public,e2e,scripts}/**/*.{js,mjs,jsx,ts,tsx,json,css}": [

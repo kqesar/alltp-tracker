@@ -1,0 +1,6 @@
+{
+  // Solution file: `tsc -b` type-checks every workspace through its own
+  // tsconfig. Add a workspace here when it is created.
+  "files": [],
+  "references": [{ "path": "apps/web" }, { "path": "packages/engine" }]
+}
