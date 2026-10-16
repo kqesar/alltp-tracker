@@ -51,3 +51,25 @@ export const captionToText = (caption: string): string =>
  */
 export const placeName = (caption: string): string =>
   caption.replace(ICON_TAG, "").replace(/\s+/g, " ").trim();
+
+/** A caption cut into its text runs and its icons (by asset stem). */
+export type CaptionPart = string | { icon: string };
+
+/**
+ * Splits a caption so it can be rendered without injecting HTML: text stays
+ * text, each inline icon becomes `{ icon: "boots" }`.
+ * @param caption - A chest or dungeon name, which may hold `<img>` icons
+ */
+export const parseCaption = (caption: string): CaptionPart[] => {
+  const parts: CaptionPart[] = [];
+  let last = 0;
+  for (const match of caption.matchAll(ICON_TAG)) {
+    const text = caption.slice(last, match.index).replace(/\s+/g, " ");
+    if (text.trim()) parts.push(text);
+    parts.push({ icon: match[1] });
+    last = (match.index ?? 0) + match[0].length;
+  }
+  const rest = caption.slice(last).replace(/\s+/g, " ");
+  if (rest.trim()) parts.push(rest);
+  return parts;
+};

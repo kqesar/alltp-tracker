@@ -2,8 +2,8 @@ import { MapLegend } from "@/components/map/MapLegend";
 import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
-import { LiveCaption } from "@/components/ui/Caption";
 import { Header } from "@/components/ui/Header";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { TrackerControls } from "@/components/ui/TrackerControls";
 import { defaultItemGrid } from "@/data/items";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
@@ -43,15 +43,8 @@ function App() {
             <MapLegend />
           </div>
         </div>
-
-        <aside
-          aria-label="Item information"
-          className="caption-container"
-          id="caption"
-        >
-          <LiveCaption />
-        </aside>
       </main>
+      <Tooltip />
     </>
   );
 }

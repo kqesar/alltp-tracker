@@ -1,8 +1,10 @@
 import { itemLabels, itemsMin } from "@/data/items";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
 import { useStepHandlers } from "@/hooks/useStepHandlers";
+import { useTooltip } from "@/hooks/useTooltip";
 import { useGameStore } from "@/stores/gameStore";
 import { getItemBackground, isItemDimmed } from "@/utils";
+import { mergeHandlers } from "@/utils/mergeHandlers";
 
 type ItemProps = {
   row: number;
@@ -32,15 +34,15 @@ const describeState = (item: string, value: number | boolean): string => {
 export const Item = ({ row, col, item }: ItemProps) => {
   const value = useGameStore((state) => state.items[item]);
   const handleItemClick = useGameStore((state) => state.handleItemClick);
-  const focusable = useGridFocusable({ col, row, slot: 0 });
-  const steps = useStepHandlers((direction) =>
-    handleItemClick(item, direction),
+  const handlers = mergeHandlers(
+    useGridFocusable({ col, row, slot: 0 }),
+    useStepHandlers((direction) => handleItemClick(item, direction)),
+    useTooltip({ item, kind: "item" }),
   );
 
   return (
     <button
-      {...focusable}
-      {...steps}
+      {...handlers}
       aria-label={`${itemLabels(item)}, ${describeState(item, value)}. Click to change state.`}
       className={`griditem grid-item-base${isItemDimmed(item, value) ? " griditem--dimmed" : ""}`}
       data-testid={`item-${item}`}

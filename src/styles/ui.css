@@ -174,164 +174,40 @@
   user-select: none;
 }
 
-/* Caption Component with Enhanced Typography and Layout */
-#caption {
-  max-height: 100%; /* Ensure it fits in the fixed container */
-  padding: var(--spacing-sm) var(--spacing-md);
-  overflow: hidden; /* Prevent content from overflowing */
-  font-size: var(--font-size-base);
-  line-height: 1.4;
-  hyphens: auto;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  background-color: rgba(0, 0, 0, 0.85);
-  border-radius: var(--border-radius);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
-  transition: all var(--transition);
-}
-
-/* Enhanced Caption Output Component */
-.caption-output {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  height: 100%;
-  overflow-y: auto; /* Allow scrolling for very long content */
-  -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
-  color: var(--color-text);
-  text-align: center;
-  scrollbar-width: none; /* Hide scrollbar for IE and Edge */
-}
-
-/* Hide scrollbar for webkit browsers */
-.caption-output::-webkit-scrollbar {
-  display: none;
-}
-
-.caption-content {
+/* Tooltip: one per page, anchored to the control it describes */
+.tooltip {
+  position: fixed;
+  z-index: var(--z-tooltip);
   display: flex;
   flex-wrap: wrap;
+  gap: 2px var(--spacing-xs);
   align-items: center;
-  justify-content: center;
-  max-width: 100%;
-  min-height: 100%;
-  padding: var(--spacing-xs) 0;
-  font-weight: 500;
-  letter-spacing: 0.025em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
-}
-
-.caption-text {
-  display: inline;
-  line-height: inherit;
-}
-/* Empty-state hint shown when nothing is selected */
-.caption-output--empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-.caption-hint {
+  max-width: min(22rem, calc(100vw - 16px));
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-size: var(--font-size-sm);
-  font-style: italic;
-  color: var(--color-text-secondary);
-  opacity: 0.65;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--color-text);
+  background: var(--surface-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-elevated);
+  animation: tooltip-in 0.12s ease-out;
 }
 
-/* Enhanced Mini Icons in Caption */
-.caption-output .mini,
-.caption-content .mini,
-#caption .mini {
-  display: inline-block;
+.tooltip .mini {
   width: 18px;
   height: 18px;
-  margin: 0 var(--spacing-xs);
-  vertical-align: text-bottom;
-  border: none;
-  box-shadow: none;
-  transition: transform 0.15s ease;
-  /* Inherit crisp rendering from base .mini class */
+  margin: 0;
 }
 
-/* Hover effect for mini icons */
-.caption-output .mini:hover,
-.caption-content .mini:hover {
-  transform: scale(1.1);
-}
-
-/* Improved text spacing around icons */
-.caption-content img.mini + img.mini {
-  margin-left: var(--spacing-sm);
-}
-
-/* Long text handling */
-.caption-content {
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  white-space: normal;
-}
-
-/* Enhanced Caption Container */
-.caption-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 4rem; /* Fixed height to prevent layout shift */
-  padding: var(--spacing-sm);
-  overflow: hidden; /* Prevent content overflow from affecting layout */
-  text-align: center;
-}
-
-/* Responsive Design for Caption */
-@media (max-width: 768px) {
-  #caption {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: var(--font-size-sm);
-  }
-
-  .caption-container {
-    height: 3.5rem; /* Fixed height on mobile too */
-    padding: var(--spacing-xs);
-  }
-
-  .caption-output .mini,
-  .caption-content .mini,
-  #caption .mini {
-    width: 16px;
-    height: 16px;
-    margin: 0 2px;
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tooltip-shift, 4px));
   }
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  #caption {
-    background-color: var(--surface-2);
-    border: 2px solid var(--color-accent);
-  }
-
-  .caption-content {
-    font-weight: 600;
-    text-shadow: none;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  #caption {
-    transition: none;
-  }
-
-  .caption-output .mini,
-  .caption-content .mini {
-    transition: none;
-  }
-
-  .caption-output .mini:hover,
-  .caption-content .mini:hover {
-    transform: none;
-  }
+.tooltip--below {
+  --tooltip-shift: -4px;
 }

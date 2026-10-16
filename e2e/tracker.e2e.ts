@@ -8,13 +8,7 @@ const WIDTHS = [390, 820, 1440, 1920] as const;
 const WCAG_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 /** Regions that must never cover one another, by data-testid. */
-const REGIONS = [
-  "toolbar",
-  "item-grid",
-  "map-tracker",
-  "map-legend",
-  "caption",
-] as const;
+const REGIONS = ["toolbar", "item-grid", "map-tracker", "map-legend"] as const;
 
 /** Load the tracker with nothing tracked. */
 const openTracker = async (page: Page) => {
@@ -122,6 +116,45 @@ for (const width of WIDTHS) {
     });
   });
 }
+
+test.describe("a tooltip", () => {
+  test.beforeEach(({ page }) => openTracker(page));
+
+  test("appears beside the hovered marker and stays on screen", async ({
+    page,
+  }) => {
+    // Turtle Rock's boss sits against the map's right edge
+    const marker = page.getByTestId("boss-marker-9");
+    await marker.hover();
+
+    const tooltip = page.getByTestId("tooltip");
+    await expect(tooltip).toContainText("Turtle Rock");
+    const box = await tooltip.boundingBox();
+    const anchor = await marker.boundingBox();
+    const width = page.viewportSize()?.width ?? 0;
+    expect(box && anchor).toBeTruthy();
+    if (!box || !anchor) return;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    // Above or below the marker, not on top of it
+    expect(
+      box.y + box.height <= anchor.y || box.y >= anchor.y + anchor.height,
+    ).toBe(true);
+
+    await page.mouse.move(0, 0);
+    await expect(tooltip).toBeHidden();
+  });
+
+  test("follows keyboard focus and closes on Escape", async ({ page }) => {
+    await page.getByTestId("item-flute").focus();
+    await page.keyboard.press("ArrowRight");
+
+    await expect(page.getByTestId("tooltip")).toHaveText("Hookshot");
+
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("tooltip")).toBeHidden();
+  });
+});
 
 test.describe("a run", () => {
   test.beforeEach(({ page }) => openTracker(page));
