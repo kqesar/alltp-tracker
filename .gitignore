@@ -29,4 +29,7 @@ vite.config.d.ts
 *.sln
 *.sw?
 
-.claude
+# Claude Code: the shared config (rules, agents, hooks, settings.json) is
+# committed; personal settings and worktrees stay local.
+.claude/settings.local.json
+.claude/worktrees/

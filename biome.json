@@ -34,7 +34,8 @@
       "!vite.config.js",
       "!vite.config.d.ts",
       "!**/.git",
-      "!**/.claude"
+      "!**/.claude/settings.local.json",
+      "!**/.claude/worktrees"
     ]
   },
   "formatter": {

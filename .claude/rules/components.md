@@ -1,0 +1,36 @@
+---
+paths:
+  - "src/components/**"
+  - "src/hooks/**"
+  - "src/styles/**"
+  - "src/App.tsx"
+  - "src/main.tsx"
+  - "index.html"
+---
+
+# UI, styles and accessibility
+
+## Components (`src/components/`)
+
+- `tracker/` — `TrackerGrid` → `grid/GridItem` (empty → spacer, `bigkey*` → `BigKeyCell`, else → `Item`) → `items/Item`, which renders boss overlays when the id starts with `boss`. `overlays/BossOverlays.tsx` holds one `Overlay` skeleton behind `CounterOverlay` (chest count, reward) and `MedaillonOverlay`; `items/KeyToggle.tsx` is the keysanity big/small key button (`variant` prop).
+- `map/MapMarkers.tsx` — one `Marker` for position, icon and hover caption; `MapChest`, `DungeonBoss` and `DungeonChest` supply only their availability. Coordinates are authored against the side-by-side asset and re-projected by `transformMapCoordinates` (`src/utils`) for the stacked layout.
+- `ui/` — `Header`, `Caption`, `Modal` (native `<dialog>` + `showModal()`), `ConfirmDialog` (opens on Cancel via `data-autofocus`), `PresetSelector`, `TrackerControls`, `BigKeyToggle`.
+- Subscribe to the store with one selector per slice, never bare `useGameStore()`.
+
+## Semantics and accessibility
+
+- Every interactive element is a semantic `<button>` (or link) with an accessible name; never a clickable `div`, and never a button inside a button. A native button fires click on Enter and Space, so add no key handlers for them.
+- State is never conveyed by colour alone; give it text in the accessible name and a shape or glyph on screen.
+- Landmarks and headings stay meaningful (`header`, `main`, labelled `section`s, one `h1`).
+- Dialogs go through `Modal`; a destructive confirmation starts focus on the safe choice.
+
+## CSS
+
+- Styles live in `src/styles/`, all imported by `styles/index.css`, which `main.tsx` alone imports. `reset.css` stays first in that list.
+- Class names are written literally in the JSX; there is no `CSS_CLASSES` map.
+- CSS Grid for layout, never tables; empty grid cells render a spacer rather than `null`.
+- Colours, spacing and sizes come from the tokens in `variables.css`; respect `prefers-reduced-motion`.
+
+## Verify in the browser
+
+After any visible change, run the app (`node_modules/.bin/vite --port <p>` avoids an install round-trip) and drive it with Playwright at 390 / 820 / 1440 / 1920 px: no horizontal overflow, no overlapping regions, zero console errors, axe-core clean, every clickable element reachable by keyboard. Look at the screenshots, not just the numbers.
