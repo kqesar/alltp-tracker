@@ -47,15 +47,14 @@ describe("GridItem", () => {
   it("routes a big key to the keysanity cell", () => {
     useGameStore.getState().setBigKeysVisible(true);
 
-    const { container } = render(<GridItem col={5} item="bigkey3" row={2} />);
+    render(<GridItem col={5} item="bigkey3" row={2} />);
 
-    expect(container.querySelector(".bigkey-container")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Big key for dungeon 3/ }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Small keys for dungeon 3/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("big-key-3")).toHaveAccessibleName(
+      "Palace of Darkness big key: not obtained",
+    );
+    expect(screen.getByTestId("small-key-3")).toHaveAccessibleName(
+      "Palace of Darkness small keys: 0 of 6",
+    );
   });
 
   it("disables the blank slot", () => {

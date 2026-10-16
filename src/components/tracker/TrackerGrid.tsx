@@ -1,5 +1,9 @@
 import { GridItem } from "@/components/tracker/grid/GridItem";
-import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import { ITEMS_PER_ROW } from "@/constants";
+import {
+  GridFocusProvider,
+  useGridNavigation,
+} from "@/hooks/useGridNavigation";
 import { useGameStore } from "@/stores/gameStore";
 
 type TrackerGridProps = {
@@ -8,9 +12,8 @@ type TrackerGridProps = {
 };
 
 /**
- * TrackerGrid component that renders the complete item tracker grid using CSS Grid
- * Uses semantic HTML with proper grid layout instead of tables
- * Includes keyboard navigation support for accessibility
+ * The item grid, laid out with CSS Grid. It is a single Tab stop: arrow keys
+ * move between its controls (see useGridNavigation).
  * @param itemLayout - 2D array representing the grid layout with item identifiers
  */
 export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
@@ -22,11 +25,7 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
         (row) => !row.every((item) => item.startsWith("bigkey")),
       );
 
-  const { containerRef, updateFocusPosition } = useKeyboardNavigation({
-    enabled: true,
-    itemLayout: rows,
-    totalRows: rows.length,
-  });
+  const { containerRef, focus } = useGridNavigation();
 
   return (
     <section
@@ -37,36 +36,39 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
       ref={containerRef}
     >
       <h2 className="sr-only">Item Tracker</h2>
-      <div className="tracker">
-        {rows.map((row: string[], rowIndex: number) => (
-          <div
-            className="tracker-row"
-            data-row-index={rowIndex}
-            data-row-length={row.length}
-            data-testid="grid-row"
-            // biome-ignore lint/suspicious/noArrayIndexKey: Row indices are stable and semantically meaningful in grid layout
-            key={`row-${rowIndex}`}
-          >
-            {/* Left halfcell spacer */}
-            <div aria-hidden="true" className="halfcell" />
+      <GridFocusProvider value={focus}>
+        <div className="tracker">
+          {rows.map((row: string[], rowIndex: number) => (
+            <div
+              className="tracker-row"
+              data-row-index={rowIndex}
+              data-row-length={row.length}
+              data-testid="grid-row"
+              // biome-ignore lint/suspicious/noArrayIndexKey: Row indices are stable and semantically meaningful in grid layout
+              key={`row-${rowIndex}`}
+            >
+              {/* Left halfcell spacer */}
+              <div aria-hidden="true" className="halfcell" />
 
-            {/* Grid items */}
-            {row.slice(0, 7).map((item: string, colIndex: number) => (
-              <GridItem
-                col={colIndex}
-                item={item}
-                // biome-ignore lint/suspicious/noArrayIndexKey: Grid positions are fixed and semantically meaningful in the layout
-                key={`grid-${rowIndex}-${colIndex}-${item || "empty"}`}
-                onFocus={() => updateFocusPosition(rowIndex, colIndex)}
-                row={rowIndex}
-              />
-            ))}
+              {/* Grid items */}
+              {row
+                .slice(0, ITEMS_PER_ROW)
+                .map((item: string, colIndex: number) => (
+                  <GridItem
+                    col={colIndex}
+                    item={item}
+                    // biome-ignore lint/suspicious/noArrayIndexKey: Grid positions are fixed and semantically meaningful in the layout
+                    key={`grid-${rowIndex}-${colIndex}-${item || "empty"}`}
+                    row={rowIndex}
+                  />
+                ))}
 
-            {/* Right halfcell spacer */}
-            <div aria-hidden="true" className="halfcell" />
-          </div>
-        ))}
-      </div>
+              {/* Right halfcell spacer */}
+              <div aria-hidden="true" className="halfcell" />
+            </div>
+          ))}
+        </div>
+      </GridFocusProvider>
     </section>
   );
 };

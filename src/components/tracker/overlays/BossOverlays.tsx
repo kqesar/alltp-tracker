@@ -1,5 +1,10 @@
-import { useGameStore } from "@/stores/gameStore";
+import { DUNGEON_INDICES } from "@/constants";
+import { dungeons } from "@/data/dungeons";
+import { type GridPosition, useGridFocusable } from "@/hooks/useGridNavigation";
+import { useStepHandlers } from "@/hooks/useStepHandlers";
+import { type Direction, useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
+import { placeName } from "@/utils/caption";
 
 /** Corner of the boss cell an overlay occupies. */
 type Corner = "top-right" | "bottom-left" | "bottom-right";
@@ -8,84 +13,134 @@ type OverlayProps = {
   corner: Corner;
   /** Asset filename, without the assets/ prefix */
   asset: string;
-  onActivate: () => void;
-  testId?: string;
+  /** What a screen reader hears: the dungeon, the counter and its value */
+  label: string;
+  position: GridPosition;
+  step: (direction: Direction) => void;
+  testId: string;
 };
 
 /**
- * Shared presentation for the small icons layered onto a boss cell. Clicks are
- * stopped from reaching the boss button underneath.
+ * A small button layered onto a corner of a boss cell, beside the boss button
+ * rather than inside it. Click steps it forward, right-click back.
  */
-const Overlay = ({ corner, asset, onActivate, testId }: OverlayProps) => (
-  <div
+const Overlay = ({
+  corner,
+  asset,
+  label,
+  position,
+  step,
+  testId,
+}: OverlayProps) => (
+  <button
+    {...useGridFocusable(position)}
+    {...useStepHandlers(step)}
+    aria-label={label}
     className={`overlay-base overlay--${corner}`}
     data-testid={testId}
-    onClick={(event) => {
-      event.stopPropagation();
-      onActivate();
-    }}
     style={{ backgroundImage: `url(${getAssetPath(asset)})` }}
+    type="button"
   />
 );
 
-/** Which item family a counter overlay cycles, and how it is drawn. */
-const COUNTERS = {
-  chest: { asset: "chest", corner: "bottom-left" },
-  reward: { asset: "dungeon", corner: "bottom-right" },
-} as const;
+/** The prize a dungeon's boss drops, by the value of `rewardN`. */
+const REWARD_LABELS = [
+  "unknown",
+  "the Pendant of Courage",
+  "a pendant",
+  "a crystal",
+  "crystal 5 or 6",
+];
 
-type CounterOverlayProps = {
-  bossNumber: number;
-  kind: keyof typeof COUNTERS;
+/** The medallion a dungeon's entrance asks for, by the value of `medallions[n]`. */
+const MEDALLION_LABELS = ["unknown", "Bombos", "Ether", "Quake"];
+
+type CornerProps = {
+  /** The dungeon index (0-9) */
+  index: number;
+  row: number;
+  col: number;
 };
 
 /**
- * Renders one of the two counters attached to a boss: the remaining chests in
- * the dungeon (bottom left) or the boss reward (bottom right).
- * @param bossNumber - The boss number (0-9)
- * @param kind - Which counter to render
+ * Chests left in the dungeon (bottom left). Clicking counts one down.
+ * @param index - The dungeon index (0-9)
  */
-export const CounterOverlay = ({ bossNumber, kind }: CounterOverlayProps) => {
-  const { asset, corner } = COUNTERS[kind];
-  const itemKey = `${kind}${bossNumber}`;
-  const value = useGameStore((state) => state.items[itemKey] as number);
+export const ChestCounter = ({ index, row, col }: CornerProps) => {
+  const remaining = useGameStore((state) => state.items[`chest${index}`]);
   const handleItemClick = useGameStore((state) => state.handleItemClick);
 
   return (
     <Overlay
-      asset={`${asset}${value}.png`}
-      corner={corner}
-      onActivate={() => handleItemClick(itemKey)}
-      testId={`${kind}-overlay-${bossNumber}`}
+      asset={`chest${remaining}.png`}
+      corner="bottom-left"
+      label={`${placeName(dungeons[index].name)} chests: ${remaining} left`}
+      position={{ col, row, slot: 2 }}
+      step={(direction) => handleItemClick(`chest${index}`, direction)}
+      testId={`chest-overlay-${index}`}
+    />
+  );
+};
+
+/**
+ * The boss's prize (bottom right): unknown, a pendant, or a crystal.
+ * @param index - The dungeon index (0-9)
+ */
+export const RewardPicker = ({ index, row, col }: CornerProps) => {
+  const reward = useGameStore(
+    (state) => state.items[`reward${index}`] as number,
+  );
+  const handleItemClick = useGameStore((state) => state.handleItemClick);
+
+  return (
+    <Overlay
+      asset={`dungeon${reward}.png`}
+      corner="bottom-right"
+      label={`${placeName(dungeons[index].name)} reward: ${REWARD_LABELS[reward]}`}
+      position={{ col, row, slot: 3 }}
+      step={(direction) => handleItemClick(`reward${index}`, direction)}
+      testId={`reward-overlay-${index}`}
     />
   );
 };
 
 /** Number of medallion states: unknown, Bombos, Ether, Quake. */
-const MEDALLION_STATES = 4;
+const MEDALLION_STATES = MEDALLION_LABELS.length;
 
 /**
- * Renders the medallion requirement for the two Dark World dungeons gated
- * behind one (Misery Mire and Turtle Rock). Nothing is drawn for the others.
- * @param bossNumber - The boss number (0-9)
+ * The medallion that opens Misery Mire or Turtle Rock (top right). Nothing is
+ * drawn for the other dungeons.
+ * @param index - The dungeon index (0-9)
  */
-export const MedaillonOverlay = ({ bossNumber }: { bossNumber: number }) => {
-  const medallion = useGameStore((state) => state.medallions[bossNumber]);
+export const MedallionPicker = ({ index, row, col }: CornerProps) => {
+  const stored = useGameStore((state) => state.medallions[index]);
   const handleMedallionChange = useGameStore(
     (state) => state.handleMedallionChange,
   );
 
-  if (bossNumber < 8) return null;
+  if (
+    index !== DUNGEON_INDICES.MISERY_MIRE &&
+    index !== DUNGEON_INDICES.TURTLE_ROCK
+  ) {
+    return null;
+  }
+
+  // Modulo keeps a malformed stored value pointing at a real asset.
+  const medallion = stored % MEDALLION_STATES;
 
   return (
     <Overlay
-      // Modulo keeps a malformed imported value pointing at a real asset.
-      asset={`medallion${medallion % MEDALLION_STATES}.png`}
+      asset={`medallion${medallion}.png`}
       corner="top-right"
-      onActivate={() =>
-        handleMedallionChange(bossNumber, (medallion + 1) % MEDALLION_STATES)
+      label={`${placeName(dungeons[index].name)} medallion: ${MEDALLION_LABELS[medallion]}`}
+      position={{ col, row, slot: 1 }}
+      step={(direction) =>
+        handleMedallionChange(
+          index,
+          (medallion + direction + MEDALLION_STATES) % MEDALLION_STATES,
+        )
       }
-      testId={`medallion-overlay-${bossNumber}`}
+      testId={`medallion-overlay-${index}`}
     />
   );
 };

@@ -17,6 +17,9 @@ import {
 } from "@/stores/persistence";
 import type { MapLayout } from "@/utils";
 
+/** Which way a click moves a counter or a progressive item. */
+export type Direction = 1 | -1;
+
 type GameState = Progress &
   Prefs & {
     /** What the pointer rests on; transient, never saved */
@@ -25,8 +28,9 @@ type GameState = Progress &
     // Actions
     applyPreset: (presetId: string) => void;
     setCaption: (caption: string) => void;
-    handleItemClick: (item: string) => void;
-    handleSmallKeyClick: (dungeonIndex: number) => void;
+    /** Step an item by one: forward on click, back (`-1`) on right-click */
+    handleItemClick: (item: string, direction?: Direction) => void;
+    handleSmallKeyClick: (dungeonIndex: number, direction?: Direction) => void;
     handleMedallionChange: (bossNumber: number, newValue: number) => void;
     toggleChest: (chestIndex: number) => void;
     setBigKeysVisible: (visible: boolean) => void;
@@ -157,7 +161,7 @@ export const useGameStore = create<GameState>()(
           JSON.stringify(toSaveFile(progressOf(get())), null, 2),
         future: [],
 
-        handleItemClick: (item: string) => {
+        handleItemClick: (item: string, direction: Direction = 1) => {
           if (!item || item === "blank") return;
 
           set((state) => {
@@ -170,7 +174,7 @@ export const useGameStore = create<GameState>()(
 
             // Chest counters count down as chests are emptied; everything
             // else counts up. Both wrap round to the far end of their range.
-            const step = item.startsWith("chest") ? -1 : 1;
+            const step = (item.startsWith("chest") ? -1 : 1) * direction;
             const min = itemsMin[item];
             const max = itemsMax[item];
             const next = current + step;
@@ -212,18 +216,20 @@ export const useGameStore = create<GameState>()(
           });
         },
 
-        handleSmallKeyClick: (dungeonIndex: number) => {
+        handleSmallKeyClick: (
+          dungeonIndex: number,
+          direction: Direction = 1,
+        ) => {
           const state = get();
           const newSmallKeys = [...state.smallKeys];
 
           // Maximum small keys per dungeon, indexed 0-9
           const maxForDungeon = SMALL_KEYS_MAX_BY_INDEX[dungeonIndex] ?? 0;
 
-          // Increment count, reset to 0 if exceeding max
+          // Step the count, wrapping between 0 and the dungeon's maximum
+          const next = newSmallKeys[dungeonIndex] + direction;
           newSmallKeys[dungeonIndex] =
-            newSmallKeys[dungeonIndex] + 1 > maxForDungeon
-              ? 0
-              : newSmallKeys[dungeonIndex] + 1;
+            next > maxForDungeon ? 0 : next < 0 ? maxForDungeon : next;
 
           set(record(state, { smallKeys: newSmallKeys }));
         },

@@ -44,3 +44,10 @@ export const captionToText = (caption: string): string =>
     .replace(/\s+([),/])/g, "$1")
     .replace(/([(/])\s+/g, "$1")
     .trim();
+
+/**
+ * A location's name alone, without the icons of what it needs.
+ * @param caption - A chest or dungeon name, e.g. "Eastern Palace <img …>"
+ */
+export const placeName = (caption: string): string =>
+  caption.replace(ICON_TAG, "").replace(/\s+/g, " ").trim();

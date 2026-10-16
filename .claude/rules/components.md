@@ -12,7 +12,8 @@ paths:
 
 ## Components (`src/components/`)
 
-- `tracker/` — `TrackerGrid` → `grid/GridItem` (empty → spacer, `bigkey*` → `BigKeyCell`, else → `Item`) → `items/Item`, which renders boss overlays when the id starts with `boss`. `overlays/BossOverlays.tsx` holds one `Overlay` skeleton behind `CounterOverlay` (chest count, reward) and `MedaillonOverlay`; `items/KeyToggle.tsx` is the keysanity big/small key button (`variant` prop).
+- `tracker/` — `TrackerGrid` → `grid/GridItem` routes a cell: empty → spacer, `bigkey*` → `BigKeyCell` (two `KeyToggle` buttons), `boss*` → `BossCell` (a `<fieldset>` named after the dungeon: the boss button plus `MedallionPicker`, `ChestCounter`, `RewardPicker` as sibling buttons from `overlays/BossOverlays.tsx`), else → `Item`.
+- Every grid control spreads `useGridFocusable({ row, col, slot })` (roving tab index, arrow-key position; slot 0 is the cell's main control, then reading order) and `useStepHandlers(step)` (click forward, right-click or "-" back, touch long-press ignored). Never put a button inside another.
 - `map/MapTracker.tsx` draws two square worlds (`map-world-light` / `-dark`), side by side, stacked or `auto` (stacks below 35rem via a container query). Coordinates are authored against the whole asset and placed in their world by `toWorldPosition` (`src/utils`).
 - `map/MapMarkers.tsx` — `MapChest` and `MapDungeon` are `<button>`s named by `captionToText` (`src/utils/caption.ts`) plus their state, with a glyph per state (✓ ? ✕) besides the colour. The dungeon square under a boss is decorative (`aria-hidden`). Markers keep a 24 px floor; where real locations sit closer than that, WCAG 2.5.8's map-pin exception applies and the e2e target-size check skips `.mapspan`.
 - `ui/` — `Header`, `Caption`, `Modal` (native `<dialog>` + `showModal()`), `ConfirmDialog` (opens on Cancel via `data-autofocus`), `PresetSelector`, `TrackerControls`, `BigKeyToggle`.
