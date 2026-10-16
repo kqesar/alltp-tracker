@@ -1,0 +1,46 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/NoGlitches/HyruleCastleEscapeTest.php",
+  "class": "NoGlitches\\HyruleCastleEscapeTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "NoGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":72,"location":"Sanctuary","method":"testFillLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":74,"location":"Sewers - Secret Room - Left","method":"testFillLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":76,"location":"Sewers - Secret Room - Middle","method":"testFillLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":78,"location":"Sewers - Secret Room - Right","method":"testFillLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":80,"location":"Sewers - Dark Cross","method":"testFillLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":82,"location":"Hyrule Castle - Boomerang Chest","method":"testFillLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":84,"location":"Hyrule Castle - Map Chest","method":"testFillLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":86,"location":"Hyrule Castle - Zelda's Cell","method":"testFillLocation"},
+    {"dataSet":0,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","items":{"add":["UncleSword","KeyH2"],"base":"setUp"},"kind":"location","line":93,"location":"Sanctuary","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","items":{"add":["UncleSword","KeyH2"],"base":"setUp"},"kind":"location","line":95,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","items":{"add":["UncleSword","KeyH2"],"base":"setUp"},"kind":"location","line":97,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","items":{"add":["UncleSword","KeyH2"],"base":"setUp"},"kind":"location","line":99,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","items":{"add":["UncleSword"],"base":"setUp"},"kind":"location","line":101,"location":"Sewers - Dark Cross","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","items":{"add":["UncleSword"],"base":"setUp"},"kind":"location","line":103,"location":"Hyrule Castle - Boomerang Chest","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","items":{"add":["UncleSword"],"base":"setUp"},"kind":"location","line":105,"location":"Hyrule Castle - Map Chest","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/NoGlitches/HyruleCastleEscapeTest.php","items":{"add":["UncleSword"],"base":"setUp"},"kind":"location","line":107,"location":"Hyrule Castle - Zelda's Cell","method":"testLocation"}
+  ]
+}
