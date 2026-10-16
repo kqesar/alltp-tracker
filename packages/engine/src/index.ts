@@ -24,6 +24,7 @@ export {
   type Rules,
   type RulesSource,
 } from "./rules";
+export { Solution, solve } from "./solve";
 export {
   and,
   compare,
@@ -38,3 +39,12 @@ export {
   type Tri,
   YES,
 } from "./tri";
+export {
+  type CompiledWorld,
+  type CompileOptions,
+  compileWorld,
+  type Exit,
+  type Location,
+  type Region,
+  type World,
+} from "./world";
