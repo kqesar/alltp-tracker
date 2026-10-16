@@ -70,8 +70,7 @@
   transition: all var(--transition);
 }
 
-.bigkey-toggle:hover,
-.bigkey-toggle--hover {
+.bigkey-toggle:hover {
   background: rgba(0, 0, 0, 0.95);
   border-color: var(--color-primary-hover);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
@@ -84,8 +83,7 @@
   border-color: var(--color-primary);
 }
 
-.bigkey-toggle--active:hover,
-.bigkey-toggle--active.bigkey-toggle--hover {
+.bigkey-toggle--active:hover {
   background: rgba(var(--color-primary-rgb), 0.3);
   border-color: var(--color-primary-hover);
 }

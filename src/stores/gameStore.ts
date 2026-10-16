@@ -54,8 +54,6 @@ interface GameState {
   handleMedallionChange: (bossNumber: number, newValue: number) => void;
   toggleChest: (chestIndex: number) => void;
   toggleDungeonBoss: (dungeonIndex: number) => void;
-  setChestsState: (chests: ChestItem[]) => void;
-  setDungeonsState: (dungeons: DungeonItem[]) => void;
   setBigKeysVisible: (visible: boolean) => void;
   setMapLayout: (layout: MapLayout) => void;
 
@@ -237,11 +235,6 @@ export const useGameStore = create<GameState>()(
 
         setCaption: (caption: string) => set({ caption }),
 
-        setChestsState: (chests: ChestItem[]) => set({ chestsState: chests }),
-
-        setDungeonsState: (dungeons: DungeonItem[]) =>
-          set({ dungeonsState: dungeons }),
-
         setMapLayout: (layout: MapLayout) => set({ mapLayout: layout }),
 
         toggleChest: (chestIndex: number) =>
@@ -273,7 +266,9 @@ export const useGameStore = create<GameState>()(
       },
     ),
     {
-      name: "game-storage", // For the devtools
+      // Devtools only in development: no store snapshot in production builds
+      enabled: import.meta.env.DEV,
+      name: "game-storage",
     },
   ),
 );
