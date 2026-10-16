@@ -1,0 +1,647 @@
+/*
+ * Autotracking: the toolbar control's status dot and race-legal badge, and
+ * the dialog (status, setup guide, what was read).
+ */
+
+/* ---- The status dot: a shape per phase besides its colour ---- */
+.autotrack-dot {
+  --dot-size: 9px;
+  display: block;
+  flex-shrink: 0;
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+}
+
+/* Off: a hollow ring */
+.autotrack-dot[data-phase="off"] {
+  border: 2px solid var(--color-text-muted);
+}
+
+/* Busy: a half-filled disc, breathing unless motion is reduced */
+.autotrack-dot[data-phase="busy"] {
+  background: linear-gradient(
+    to right,
+    var(--color-accent) 50%,
+    transparent 50%
+  );
+  border: 2px solid var(--color-accent);
+  animation: autotrack-busy 1.2s ease-in-out infinite alternate;
+}
+
+/* On: a filled disc */
+.autotrack-dot[data-phase="on"] {
+  background: var(--color-success);
+}
+
+/* A problem: a triangle, the warning sign's shape */
+.autotrack-dot[data-phase="problem"] {
+  --dot-size: 11px;
+  background: var(--color-danger);
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+@keyframes autotrack-busy {
+  to {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .autotrack-dot[data-phase="busy"] {
+    animation: none;
+  }
+}
+
+.autotrack-dot--large {
+  --dot-size: 14px;
+}
+
+.autotrack-dot--large[data-phase="problem"] {
+  --dot-size: 17px;
+}
+
+/* The plug with its dot at the lower right, as a presence badge sits on an
+   avatar */
+.autotrack-icon {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.autotrack-icon .autotrack-dot {
+  position: absolute;
+  right: -3px;
+  bottom: -2px;
+  /* A cut-out ring of the page's colour keeps the dot apart from the plug */
+  box-shadow: 0 0 0 2px var(--color-bg);
+}
+
+.autotrack-icon .autotrack-dot[data-phase="problem"] {
+  right: -4px;
+  bottom: -3px;
+  box-shadow: none;
+  /* A triangle takes no ring: an outline drawn by a filter instead */
+  filter: drop-shadow(0 0 1px var(--color-bg))
+    drop-shadow(0 0 1px var(--color-bg));
+}
+
+/* ---- The race-legal badge ---- */
+.race-badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 1px var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-success);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border: 1px solid var(--color-success);
+  border-radius: var(--border-radius-sm);
+}
+
+/* ---- Folded into More (toolbar-menu.css), the menu button's dot ---- */
+.toolbar-more .tracker-controls__button {
+  position: relative;
+}
+
+.toolbar-more__badge .autotrack-dot {
+  box-shadow: 0 0 0 2px var(--color-bg);
+}
+
+.toolbar-menu__detail {
+  padding-inline-start: var(--spacing-md);
+  margin-inline-start: auto;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* ---- The dialog ---- */
+.autotrack {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.autotrack__heading {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.autotrack-status {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-sm) var(--spacing-md);
+  align-items: start;
+  padding: var(--spacing-md);
+  background: var(--surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.autotrack-status[data-phase="problem"] {
+  border-color: var(--color-danger);
+}
+
+.autotrack-status[data-phase="on"] {
+  border-color: var(--color-success);
+}
+
+/* The dot sits on the headline's first line */
+.autotrack-status > .autotrack-dot {
+  margin-top: 0.3em;
+}
+
+.autotrack-status__text {
+  display: grid;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+/* The headline, and the race-legal badge beside it or under it */
+.autotrack-status__title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-sm);
+  align-items: center;
+}
+
+.autotrack-status__headline {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+
+.autotrack-status__detail {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.autotrack-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.autotrack-actions .modal-btn {
+  min-height: 2.5rem;
+}
+
+.autotrack-actions__status {
+  font-size: var(--font-size-sm);
+  color: var(--color-success);
+}
+
+.autotrack-actions__status:empty {
+  display: none;
+}
+
+.autotrack-report {
+  width: 100%;
+  padding: var(--spacing-sm);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  resize: vertical;
+  background: var(--surface-1);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius);
+}
+
+.autotrack-option {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.autotrack-option__input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.autotrack-option label {
+  cursor: pointer;
+}
+
+/* ---- Setup guide ---- */
+.setup {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.setup__header {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.setup__count {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.setup__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-md);
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* The system tabs: a segmented row, as the map layout's */
+.setup-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-glass);
+  border: 1px solid var(--color-border-glass);
+  border-radius: var(--border-radius);
+}
+
+.setup-tabs__tab {
+  min-height: 2.25rem;
+  padding: 0 var(--spacing-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--border-radius-sm);
+  transition:
+    color var(--transition),
+    background-color var(--transition);
+}
+
+.setup-tabs__tab:hover {
+  color: var(--color-accent);
+}
+
+.setup-tabs__tab[aria-selected="true"] {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+.setup-tabs__tab:focus-visible,
+.setup-step__toggle:focus-visible,
+.setup-device__select:focus-visible,
+.autotrack-option__input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.setup-device {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-sm);
+  align-items: center;
+}
+
+.setup-device__label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.setup-device__select {
+  min-height: 2.25rem;
+  padding: 0 var(--spacing-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius);
+}
+
+.setup-device__select:disabled {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+
+.setup-steps {
+  display: grid;
+  gap: var(--spacing-xs);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.setup-step {
+  background: var(--surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.setup-step[data-state="failing"] {
+  border-color: var(--color-danger);
+}
+
+.setup-step__heading {
+  margin: 0;
+  font-size: inherit;
+}
+
+.setup-step__toggle {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs)
+    var(--spacing-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--border-radius);
+}
+
+.setup-step__toggle:hover {
+  background: var(--surface-hover);
+}
+
+/* A chevron that turns as the step opens */
+.setup-step__toggle::after {
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-inline-start: auto;
+  content: "";
+  border-right: 2px solid var(--color-text-muted);
+  border-bottom: 2px solid var(--color-text-muted);
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform var(--transition);
+}
+
+.setup-step__toggle[aria-expanded="true"]::after {
+  transform: rotate(-135deg) translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .setup-step__toggle::after {
+    transition: none;
+  }
+}
+
+/* The step's mark: its number to do, a tick done, "!" failing */
+.setup-step__mark {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+}
+
+.setup-step[data-state="done"] .setup-step__mark {
+  color: var(--state-ink);
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.setup-step[data-state="failing"] .setup-step__mark {
+  color: var(--state-ink);
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.setup-step[data-state="done"] .setup-step__title {
+  color: var(--color-text-secondary);
+}
+
+.setup-step__body {
+  display: grid;
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-md) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.setup-step__body[hidden] {
+  display: none;
+}
+
+.setup-variant {
+  display: grid;
+  gap: var(--spacing-xs);
+  overflow-wrap: anywhere;
+}
+
+.setup-variant__title {
+  margin: var(--spacing-xs) 0 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.setup-variant__lead {
+  margin: 0;
+}
+
+.setup-variant__items {
+  display: grid;
+  gap: var(--spacing-xs);
+  padding-inline-start: var(--spacing-lg);
+  margin: 0;
+}
+
+.setup-variant__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  margin: 0;
+}
+
+.setup-variant a,
+.setup-fix a {
+  color: var(--color-accent);
+}
+
+.setup-variant code {
+  padding: 0 var(--spacing-xs);
+  font-family: var(--font-family-mono);
+  font-size: 0.9em;
+  color: var(--color-text-primary);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.setup-fix {
+  display: grid;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--color-text-primary);
+  background: rgba(240, 80, 110, 0.08);
+  border-inline-start: 3px solid var(--color-danger);
+  border-radius: var(--border-radius-sm);
+}
+
+.setup-fix__title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.setup-fix__line {
+  margin: 0;
+}
+
+/* ---- What I read ---- */
+.readout {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.readout__meta {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.readout__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--spacing-sm);
+}
+
+.readout__group {
+  display: grid;
+  gap: var(--spacing-xs);
+  align-content: start;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+/* The items and the longest lists take the whole width */
+.readout__group--wide,
+.readout__group:has(.readout__pairs) {
+  grid-column: 1 / -1;
+}
+
+.readout__title {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.readout__none {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.readout__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.readout__chip {
+  padding: 2px var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.readout__pairs {
+  display: grid;
+  gap: var(--spacing-xs);
+  margin: 0;
+}
+
+.readout__pair {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.readout__pair dt {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.readout__pair dd {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 40rem) {
+  .readout__pair {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.readout__facts {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  list-style: none;
+}
+
+.readout__fact {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: baseline;
+  color: var(--color-text-primary);
+}
+
+.readout__mark {
+  flex-shrink: 0;
+  width: 1rem;
+  text-align: center;
+}
+
+.readout__fact[data-value="true"] .readout__mark {
+  color: var(--color-success);
+}
+
+.readout__value {
+  margin-inline-start: auto;
+  color: var(--color-text-muted);
+}

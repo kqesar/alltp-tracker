@@ -1,4 +1,9 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  AutotrackControl,
+  AutotrackLiveRegion,
+  AutotrackMoreBadge,
+} from "@/components/autotrack/AutotrackControl";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import { PresetSelector } from "@/components/ui/PresetSelector";
@@ -165,6 +170,11 @@ export const TrackerControls = () => {
         <RedoIcon />
         <span className="sr-only">Redo</span>
       </button>
+      {/* Its status stays in view: it folds into More last of all */}
+      <span className="toolbar-autotrack">
+        <AutotrackControl />
+      </span>
+      <AutotrackLiveRegion />
       {/* The secondary actions: in the toolbar where it has room for them
           all on one row, in the More menu below that (toolbar-menu.css) */}
       <span className="toolbar-secondary">
@@ -189,9 +199,10 @@ export const TrackerControls = () => {
         <StreamViewControl />
         <ShortcutsButton />
       </span>
-      <ToolbarMenu>
+      <ToolbarMenu badge={<AutotrackMoreBadge />}>
         {(folded) => (
           <>
+            {folded.has("autotrack") && <AutotrackControl variant="menu" />}
             <ToolbarMenuItem
               icon={<ExportIcon />}
               label="Export"

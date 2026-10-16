@@ -228,7 +228,11 @@ test.describe("the More menu", () => {
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(390);
 
-    await page.getByTestId("item-grid").click({ position: { x: 4, y: 4 } });
+    // The menu opens over the grid's left side: press its right side
+    const grid = await page.getByTestId("item-grid").boundingBox();
+    await page
+      .getByTestId("item-grid")
+      .click({ position: { x: (grid?.width ?? 8) - 4, y: 4 } });
     await expect(menu).toBeHidden();
   });
 
@@ -298,16 +302,16 @@ test.describe("the narrowest bar, with the largest text", () => {
   });
   test.beforeEach(async ({ page }) => {
     await openTracker(page);
-    // Text at 175 %: even the map layout and key cells fold into More
+    // Text at 175 %: the map layout, the key cells, even Autotracking fold
     await page.addStyleTag({ content: largeText(28) });
     await settle(page);
   });
 
-  test("folds settings into More as choices, and New game to an icon", async ({
+  test("folds settings and Autotracking into More, and New game to an icon", async ({
     page,
   }) => {
     const layout = await toolbarLayout(page);
-    expect(layout.fit).toBe("compact");
+    expect(layout.fit).toBe("more-autotrack");
     expect(layout.rows).toBeLessThanOrEqual(2);
     expect(layout.overflow).toBeLessThanOrEqual(0.5);
     // Undo, Redo and New game stay in view; New game keeps its name
@@ -318,9 +322,15 @@ test.describe("the narrowest bar, with the largest text", () => {
     ).toBeVisible();
     await expect(page.getByTestId("map-layout")).toBeHidden();
     await expect(page.getByTestId("key-cells-toggle")).toBeHidden();
+    // Autotracking folds last; its dot stays in view, on More
+    await expect(page.getByTestId("autotrack-button")).toBeHidden();
+    await expect(page.getByTestId("toolbar-more-badge")).toBeVisible();
 
     await page.getByTestId("toolbar-more").click();
     const menu = page.getByRole("menu", { name: "More" });
+    await expect(menu.getByRole("menuitem").first()).toHaveAccessibleName(
+      "Autotracking, Off",
+    );
     const map = menu.getByRole("group", { name: "Map" });
     await expect(map.getByRole("menuitemradio")).toHaveCount(3);
     await expect(
@@ -353,13 +363,14 @@ test.describe("the narrowest bar, with the largest text", () => {
     await tabTo(page, "toolbar-more");
     await page.keyboard.press("Enter");
     const reached: string[] = [];
-    for (let press = 0; press < 9; press++) {
+    for (let press = 0; press < 10; press++) {
       reached.push((await focusedTestId(page)) ?? "");
       expect(await focusRinged(page)).toBe(true);
       await page.keyboard.press("ArrowDown");
     }
 
     expect(reached).toEqual([
+      "toolbar-more-autotrack",
       "toolbar-more-export",
       "toolbar-more-import",
       "toolbar-more-stream-view",
@@ -369,7 +380,7 @@ test.describe("the narrowest bar, with the largest text", () => {
       "toolbar-more-map-stacked",
       "toolbar-more-big-keys",
       // Down from the last item wraps to the first
-      "toolbar-more-export",
+      "toolbar-more-autotrack",
     ]);
   });
 });

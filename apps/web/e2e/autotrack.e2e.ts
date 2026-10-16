@@ -1,0 +1,386 @@
+import { ALTTPR_RACE_PROFILE, MEMORY_RANGES } from "@alltp/pack-alttpr";
+import AxeBuilder from "@axe-core/playwright";
+import { expect, type Page, test } from "@playwright/test";
+import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
+import {
+  clickToolbarAction,
+  focusedTestId,
+  focusRinged,
+  tabTo,
+  unreachableClickables,
+  WCAG_AA,
+  WIDTHS,
+} from "./support";
+
+// The browser connects to a fake usb2snes bridge (SNI on RetroArch) over a
+// real WebSocket: the page at http://localhost reaches ws://localhost with no
+// permission prompt. Its memory holds an alttpr.com seed in play, in the FX
+// Pak Pro space the bridge takes: ROM from $00_0000 (LoROM, headerless), WRAM
+// from $F5_0000.
+const ROM_HEADER = 0x00_7fc0;
+const RACE_FLAG = 0x18_0213;
+const WRAM = 0xf5_0000;
+const SAVE = (offset: number) => WRAM + 0xf000 + offset;
+
+/** Writes a seed in play: a few items and checks, on the overworld. */
+const bootSeed = (bridge: FakeUsb2Snes, { race }: { race: boolean }) => {
+  const { memory } = bridge;
+  const title = (race ? "VT RACE" : "VT OPEN").padEnd(21, " ");
+  for (let i = 0; i < title.length; i++) {
+    memory[ROM_HEADER + i] = title.charCodeAt(i);
+  }
+  // The race flag and its complement (vt app/Rom.php:908-920)
+  memory.set(race ? [0x01, 0x00] : [0x00, 0x01], RACE_FLAG);
+  memory[WRAM + 0x10] = 0x09; // game mode: the overworld
+  memory[SAVE(0x342)] = 0x01; // Hookshot
+  memory[SAVE(0x357)] = 0x01; // Moon Pearl
+  memory[SAVE(0x359)] = 0x02; // Master Sword
+  memory[SAVE(0x35c)] = 0x02; // one empty bottle: a HUD fact races forbid
+  memory[SAVE(0x374)] = 0x04; // the Pendant of Courage: a prize, forbidden
+  memory[SAVE(0x3c5)] = 0x02; // Zelda rescued
+  memory[SAVE(0x208)] = 0x10; // Link's House chest (room $104)
+  memory[SAVE(0x150)] = 0x10; // Eastern Palace's compass chest (room $A8)
+  memory[SAVE(0x191)] = 0x08; // Armos Knights (room $C8, its boss bit)
+};
+
+const permittedCategory = (category: string) =>
+  ALTTPR_RACE_PROFILE.categories[category]?.permitted === true;
+
+const holds = (range: { address: number; size: number }, at: number) =>
+  range.address <= at && at < range.address + range.size;
+
+/**
+ * The reads Race Mode forbids among those the bridge was sent: a byte
+ * outside the memory the race specification permits, or inside a forbidden
+ * range where no permitted range shares it (a boss room inside the dungeon
+ * rooms is read for the boss).
+ */
+const forbiddenReads = (bridge: FakeUsb2Snes) =>
+  bridge.reads.filter(([address, size]) => {
+    for (let at = address; at < address + size; at++) {
+      if (!ALTTPR_RACE_PROFILE.permitted.some((range) => holds(range, at))) {
+        return true;
+      }
+      const inside = MEMORY_RANGES.filter((range) => holds(range, at));
+      if (
+        inside.length > 0 &&
+        !inside.some((range) => permittedCategory(range.category))
+      ) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+let bridge: FakeUsb2Snes;
+/** The port the bridge listens on: the page's `?bridge=`. */
+let port: number;
+
+test.beforeEach(async () => {
+  bridge = await FakeUsb2Snes.start();
+  port = Number(new URL(bridge.url).port);
+});
+
+test.afterEach(() => bridge.stop());
+
+/** Load the tracker, pointed at the fake bridge, with nothing saved. */
+const openTracker = async (page: Page) => {
+  await page.goto(`./?bridge=${port}`);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await expect(page.getByTestId("item-grid")).toBeVisible();
+};
+
+const dialog = (page: Page) =>
+  page.getByRole("dialog", { name: "Autotracking" });
+
+const openDialog = async (page: Page) => {
+  await clickToolbarAction(
+    page,
+    page.getByTestId("autotrack-button"),
+    "toolbar-more-autotrack",
+  );
+  await expect(dialog(page)).toBeVisible();
+};
+
+const STEPS = ["get-bridge", "run-bridge", "emulator", "permission", "game"];
+
+test("connects through the dialog, ticks every step and lists what it read", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  await openTracker(page);
+  await openDialog(page);
+  const shown = dialog(page);
+  await expect(shown.getByTestId("autotrack-headline")).toHaveText("Off");
+  // Nothing connects before the player asks
+  expect(bridge.accepted).toBe(0);
+  await expect(shown.getByTestId("setup-toggle-get-bridge")).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+
+  await shown.getByTestId("autotrack-connect").click();
+
+  await expect(shown.getByTestId("autotrack-headline")).toHaveText("Connected");
+  for (const step of STEPS) {
+    await expect(shown.getByTestId(`setup-step-${step}`)).toHaveAttribute(
+      "data-state",
+      "done",
+    );
+  }
+  await expect(shown.getByTestId("setup-count")).toHaveText(
+    "5 of 5 steps done",
+  );
+  await expect(shown.getByTestId("race-mode")).toHaveText(
+    "Race Mode is off: this seed is not a race seed.",
+  );
+  await expect(page.getByTestId("race-badge")).toHaveCount(0);
+
+  const items = shown.getByTestId("readout-items");
+  for (const item of ["Hookshot", "Moon Pearl", "Master Sword", "Bottle ×1"]) {
+    await expect(items.getByText(item, { exact: true })).toBeVisible();
+  }
+  await expect(shown.getByTestId("readout-prizes")).toHaveText(
+    /Pendant of Courage/,
+  );
+  await expect(shown.getByTestId("readout-bosses")).toHaveText(
+    /Eastern Palace/,
+  );
+  const checked = shown.getByTestId("readout-checked");
+  await expect(checked).toContainText("Locations checked (4)");
+  await expect(checked).toContainText("Link's House");
+  await expect(checked).toContainText("Compass Chest, Boss");
+
+  // One connection, kept: the session polls over it
+  await expect.poll(() => bridge.opcodes().length).toBeGreaterThan(12);
+  expect(bridge.accepted).toBe(1);
+  await page.keyboard.press("Escape");
+  const button = page.getByTestId("autotrack-button");
+  await expect(button).toHaveAccessibleName(/Connected/);
+  await expect(button.getByTestId("autotrack-dot")).toHaveAttribute(
+    "data-phase",
+    "on",
+  );
+});
+
+test("a race seed shows the race-legal badge and is never read where races forbid", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: true });
+  await openTracker(page);
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-connect").click();
+
+  const shown = dialog(page);
+  await expect(shown.getByTestId("autotrack-headline")).toHaveText("Connected");
+  await expect(shown.getByTestId("race-badge")).toBeVisible();
+  await expect(shown.getByTestId("race-mode")).toHaveText(
+    "This is a race seed: the tracker reads only what races permit.",
+  );
+  await expect(shown.getByTestId("readout-items")).toContainText("Hookshot");
+  // What races forbid is neither read nor shown
+  await expect(shown.getByTestId("readout-prizes")).toHaveText(
+    /Not read in Race Mode/,
+  );
+  await expect(shown.getByTestId("readout-items")).not.toContainText("Bottle");
+  const withheld = shown.getByTestId("readout-race-mode");
+  for (const fact of ["Pendants and crystals", "Bottles", "Checks inside"]) {
+    await expect(withheld).toContainText(fact);
+  }
+  await expect(shown.getByTestId("readout-checked")).toContainText(
+    "Locations checked (1)",
+  );
+
+  // Many polls later, still nothing forbidden asked for
+  await expect.poll(() => bridge.reads.length).toBeGreaterThan(30);
+  expect(forbiddenReads(bridge)).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByTestId("autotrack-button").getByTestId("race-badge"),
+  ).toBeVisible();
+});
+
+test("losing the bridge says so without a dialog, then reconnects on its own", async ({
+  page,
+}) => {
+  // A player who allowed the connection: the session then retries on its own
+  // (while Chromium's permission is undecided, it waits for a click instead)
+  await page.addInitScript(() => {
+    const query = navigator.permissions.query.bind(navigator.permissions);
+    navigator.permissions.query = (descriptor) =>
+      (descriptor.name as string) === "loopback-network"
+        ? Promise.resolve({ onchange: null, state: "granted" } as never)
+        : query(descriptor);
+  });
+  bootSeed(bridge, { race: true });
+  await openTracker(page);
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-connect").click();
+  await expect(dialog(page).getByTestId("autotrack-headline")).toHaveText(
+    "Connected",
+  );
+  await page.keyboard.press("Escape");
+  const dot = page.getByTestId("autotrack-button").getByTestId("autotrack-dot");
+  const live = page.getByTestId("autotrack-live");
+  await expect(live).toHaveText("Autotracking: Connected");
+  // A connection that has lived 5 s is retried at once when it drops
+  await page.waitForTimeout(5_500);
+
+  await bridge.stop();
+
+  await expect(dot).toHaveAttribute("data-phase", "problem");
+  await expect(live).toHaveText(
+    "Autotracking: SNI isn't running, or the browser is blocking it",
+  );
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByTestId("autotrack-button")).toHaveAccessibleName(
+    /SNI isn't running, or the browser is blocking it/,
+  );
+
+  bridge = await FakeUsb2Snes.start({ port });
+  bootSeed(bridge, { race: true });
+
+  await expect(dot).toHaveAttribute("data-phase", "on", { timeout: 15_000 });
+  await expect(live).toHaveText("Autotracking: Connected");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect.poll(() => bridge.reads.length).toBeGreaterThan(10);
+  expect(forbiddenReads(bridge)).toEqual([]);
+});
+
+test("reconnects on the next visit until the player disconnects", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  await openTracker(page);
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-connect").click();
+  await expect(dialog(page).getByTestId("autotrack-headline")).toHaveText(
+    "Connected",
+  );
+
+  await page.reload();
+  const dot = page.getByTestId("autotrack-button").getByTestId("autotrack-dot");
+  await expect(dot).toHaveAttribute("data-phase", "on");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-disconnect").click();
+  await expect(dialog(page).getByTestId("autotrack-headline")).toHaveText(
+    "Off",
+  );
+  await expect.poll(() => bridge.connections).toBe(0);
+  const accepted = bridge.accepted;
+  await page.reload();
+  await expect(page.getByTestId("item-grid")).toBeVisible();
+  await expect(dot).toHaveAttribute("data-phase", "off");
+  expect(bridge.accepted).toBe(accepted);
+});
+
+test("the stream view never connects, even when the tracker does", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  await openTracker(page);
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-connect").click();
+  await expect(dialog(page).getByTestId("autotrack-headline")).toHaveText(
+    "Connected",
+  );
+  const stream = await page.context().newPage();
+  await stream.goto(`./?view=obs&bridge=${port}`);
+  await expect(stream.getByTestId("obs-view")).toBeVisible();
+  // The tracker's session is the bridge's only client
+  await stream.waitForTimeout(1_000);
+  expect(bridge.accepted).toBe(1);
+  expect(bridge.connections).toBe(1);
+});
+
+for (const width of WIDTHS) {
+  test.describe(`at ${width}px`, () => {
+    const phone = width < 600;
+    test.use({
+      hasTouch: phone,
+      isMobile: phone,
+      viewport: { height: phone ? 844 : 900, width },
+    });
+
+    test("is set up and connected from the keyboard alone, passing axe", async ({
+      page,
+    }) => {
+      bootSeed(bridge, { race: true });
+      await openTracker(page);
+
+      // The toolbar's control, or the More menu's first item once folded
+      if (await page.getByTestId("autotrack-button").isVisible()) {
+        await tabTo(page, "autotrack-button");
+      } else {
+        await tabTo(page, "toolbar-more");
+        await page.keyboard.press("Enter");
+        expect(await focusedTestId(page)).toBe("toolbar-more-autotrack");
+      }
+      expect(await focusRinged(page)).toBe(true);
+      await page.keyboard.press("Enter");
+      await expect(dialog(page)).toBeVisible();
+      expect(await focusedTestId(page)).toBe("autotrack-connect");
+      await page.keyboard.press("Enter");
+      await expect(dialog(page).getByTestId("autotrack-headline")).toHaveText(
+        "Connected",
+      );
+      // Focus stays on the button, now Disconnect
+      expect(await focusedTestId(page)).toBe("autotrack-disconnect");
+
+      // The system tabs: Tab reaches the selected one (the system detected),
+      // the arrow keys and Home and End select another
+      const selected = await page
+        .getByRole("tab", { selected: true })
+        .getAttribute("data-testid");
+      await tabTo(page, selected ?? "", 20);
+      await page.keyboard.press("End");
+      expect(await focusedTestId(page)).toBe("setup-tab-linux");
+      expect(await focusRinged(page)).toBe(true);
+      await expect(page.getByTestId("setup-tab-linux")).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+      // A step opens from the keyboard, with the Linux instructions
+      await tabTo(page, "setup-toggle-run-bridge", 20);
+      expect(await focusRinged(page)).toBe(true);
+      await page.keyboard.press("Enter");
+      await expect(page.getByTestId("setup-step-run-bridge")).toContainText(
+        "./sni",
+      );
+
+      // Colours as they settle: Connect turned Disconnect mid-transition
+      await page.evaluate(() => {
+        for (const animation of document.getAnimations()) animation.finish();
+      });
+      const { violations } = await new AxeBuilder({ page })
+        .include("dialog[open]")
+        .withTags(WCAG_AA)
+        .analyze();
+      expect(
+        violations.map(({ id, nodes }) => `${id} ×${nodes.length}`),
+      ).toEqual([]);
+      expect(await unreachableClickables(page, "dialog[open]")).toEqual([]);
+      // The dialog fits the screen
+      const box = await dialog(page).boundingBox();
+      expect(box && box.x >= 0 && box.x + box.width <= width).toBe(true);
+
+      await page.keyboard.press("Escape");
+      await expect(dialog(page)).toBeHidden();
+      // The toolbar, with its dot and badge, passes too
+      const toolbar = await new AxeBuilder({ page })
+        .include('[data-testid="toolbar"]')
+        .withTags(WCAG_AA)
+        .analyze();
+      expect(
+        toolbar.violations.map(({ id, nodes }) => `${id} ×${nodes.length}`),
+      ).toEqual([]);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(0);
+    });
+  });
+}

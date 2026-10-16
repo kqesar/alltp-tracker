@@ -48,6 +48,11 @@ export const StreamIcon = () => (
   <Icon path="M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6M2 12a8 8 0 0 1 8 8M2 16a4 4 0 0 1 4 4M2 20h.01" />
 );
 
+/** A plug: the link to the game, autotracking. */
+export const PlugIcon = () => (
+  <Icon path="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4" />
+);
+
 export const ReloadIcon = () => (
   <Icon path="M20 12a8 8 0 1 1-2.34-5.66L20 8.5M20 3.5v5h-5" />
 );
