@@ -2,7 +2,9 @@ import { create } from "zustand";
 
 /** What a tooltip describes; its text is derived live from the game state. */
 export type TooltipTarget =
-  | { kind: "chest"; index: number }
+  /** A map marker, by the pack's id */
+  | { kind: "marker"; id: string }
+  /** A dungeon's grid cell, by its index (0-9) */
   | { kind: "dungeon"; index: number }
   | { kind: "item"; item: string };
 

@@ -1,26 +1,34 @@
+import { MARKED_DUNGEONS, MARKERS } from "@alltp/pack-alttpr";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MapTracker } from "@/components/map/MapTracker";
-import { chests } from "@/data/chests";
-import { dungeons } from "@/data/dungeons";
 import { useGameStore } from "@/stores/gameStore";
+
+const LOCATION_MARKERS = MARKERS.filter((marker) => !marker.dungeon);
 
 describe("MapTracker", () => {
   beforeEach(() => {
     act(() => useGameStore.setState(useGameStore.getInitialState(), true));
   });
 
-  it("draws one marker per chest, and a boss and a chest marker per dungeon", () => {
+  it("draws the pack's markers: one per location, a boss and a square per dungeon", () => {
     render(<MapTracker />);
 
-    expect(screen.getAllByTestId(/^chest-marker-/)).toHaveLength(chests.length);
+    expect(screen.getAllByTestId(/^marker-/)).toHaveLength(
+      LOCATION_MARKERS.length,
+    );
     expect(screen.getAllByTestId(/^boss-marker-/)).toHaveLength(
-      dungeons.length,
+      MARKED_DUNGEONS.length,
     );
     expect(screen.getAllByTestId(/^dungeon-marker-/)).toHaveLength(
-      dungeons.length,
+      MARKED_DUNGEONS.length,
     );
+    // The three places the old map lacked
+    for (const id of ["marker-waterfall-fairy", "boss-marker-castle-tower"]) {
+      expect(screen.getByTestId(id)).toBeInTheDocument();
+    }
+    expect(screen.getByTestId("boss-marker-ganons-tower")).toBeInTheDocument();
   });
 
   it("renders without React warnings such as duplicate keys", () => {
@@ -37,7 +45,7 @@ describe("MapTracker", () => {
   it("recolours markers when the items held change", () => {
     render(<MapTracker />);
     // King's Tomb needs boots and either Titan's Mitt or the Dark World route
-    const kingsTomb = screen.getByTestId("chest-marker-0");
+    const kingsTomb = screen.getByTestId("marker-kings-tomb");
 
     expect(kingsTomb).toHaveClass("unavailable");
 
@@ -57,36 +65,75 @@ describe("MapTracker", () => {
       state.setBigKeysVisible(true);
       state.handleItemClick("bow");
       state.handleItemClick("bow");
+      state.handleItemClick("lantern");
     });
     render(<MapTracker />);
 
-    expect(screen.getByTestId("boss-marker-0")).toHaveClass("available");
+    expect(screen.getByTestId("boss-marker-eastern-palace")).toHaveClass(
+      "available",
+    );
   });
 
-  it("demands the big key in keysanity, even while key cells are hidden", () => {
+  it("demands the big key in keysanity, then the map and compass it may hold", () => {
     act(() => {
       const state = useGameStore.getState();
       state.applyPreset("keysanity");
       state.setBigKeysVisible(false);
       state.handleItemClick("bow");
       state.handleItemClick("bow");
+      state.handleItemClick("lantern");
     });
     render(<MapTracker />);
+    const boss = screen.getByTestId("boss-marker-eastern-palace");
 
-    expect(screen.getByTestId("boss-marker-0")).toHaveClass("unavailable");
+    expect(boss).toHaveClass("unavailable");
 
     act(() => useGameStore.getState().handleItemClick("bigkey0"));
 
-    expect(screen.getByTestId("boss-marker-0")).toHaveClass("available");
+    // Wild maps and compasses: the boss wants both, unless it holds one
+    // (EasternPalace.php:90-91), which the tracker cannot know
+    expect(boss).toHaveClass("possible");
   });
 
-  it("marks a chest opened when it is clicked", () => {
+  it("checks every location of a marker when it is clicked", () => {
     render(<MapTracker />);
 
-    fireEvent.click(screen.getByTestId("chest-marker-0"));
+    fireEvent.click(screen.getByTestId("marker-kakariko-well"));
 
-    expect(screen.getByTestId("chest-marker-0")).toHaveClass("opened");
-    expect(useGameStore.getState().checked).toEqual({ "kings-tomb": true });
+    expect(screen.getByTestId("marker-kakariko-well")).toHaveClass("opened");
+    expect(Object.keys(useGameStore.getState().checked)).toHaveLength(5);
+  });
+
+  it("marks a boss beaten, Agahnim's for his towers", () => {
+    render(<MapTracker />);
+
+    fireEvent.click(screen.getByTestId("boss-marker-eastern-palace"));
+    fireEvent.click(screen.getByTestId("boss-marker-castle-tower"));
+    fireEvent.click(screen.getByTestId("boss-marker-ganons-tower"));
+
+    expect(useGameStore.getState().items).toMatchObject({
+      agahnim: 1,
+      agahnim2: 1,
+      boss0: 2,
+    });
+    expect(screen.getByTestId("boss-marker-ganons-tower")).toHaveClass(
+      "opened",
+    );
+  });
+
+  it("shows a dungeon's square by its counter, done once counted down", () => {
+    render(<MapTracker />);
+    const square = screen.getByTestId("dungeon-marker-eastern-palace");
+
+    expect(square).toHaveClass("possible");
+
+    act(() => {
+      for (let item = 0; item < 3; item++) {
+        useGameStore.getState().handleItemClick("chest0");
+      }
+    });
+
+    expect(square).toHaveClass("opened");
   });
 });
 
@@ -104,42 +151,54 @@ describe("MapTracker worlds and markers", () => {
       "Light World",
     );
     // Eastern Palace lies in the Light World, Palace of Darkness in the Dark
-    expect(light.getByTestId("boss-marker-0")).toBeInTheDocument();
-    expect(dark.getByTestId("boss-marker-3")).toBeInTheDocument();
+    expect(light.getByTestId("boss-marker-eastern-palace")).toBeInTheDocument();
     expect(
-      light.queryAllByTestId(/^chest-marker-/).length +
-        dark.queryAllByTestId(/^chest-marker-/).length,
-    ).toBe(chests.length);
+      dark.getByTestId("boss-marker-palace-of-darkness"),
+    ).toBeInTheDocument();
+    expect(dark.getByTestId("boss-marker-ganons-tower")).toBeInTheDocument();
+    expect(
+      light.queryAllByTestId(/^marker-/).length +
+        dark.queryAllByTestId(/^marker-/).length,
+    ).toBe(LOCATION_MARKERS.length);
   });
 
-  it("makes every chest and boss a button named by its place and state", () => {
+  it("makes every marker and boss a button named by its place and state", () => {
     render(<MapTracker />);
 
-    const kingsTomb = screen.getByTestId("chest-marker-0");
+    const kingsTomb = screen.getByTestId("marker-kings-tomb");
     expect(kingsTomb.tagName).toBe("BUTTON");
-    expect(kingsTomb).toHaveAccessibleName(
-      "King's Tomb Pegasus Boots + Titan's Mitt/Magic Mirror: out of logic",
-    );
+    expect(kingsTomb).toHaveAccessibleName("King's Tomb: out of logic");
     expect(kingsTomb).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("marker-kakariko-well")).toHaveAccessibleName(
+      "Kakariko Well (5 checks): available",
+    );
 
-    expect(screen.getByTestId("boss-marker-0")).toHaveAccessibleName(
-      /^Eastern Palace Bow: boss out of logic, 3 chests left \(maybe available\)$/,
+    expect(
+      screen.getByTestId("boss-marker-eastern-palace"),
+    ).toHaveAccessibleName(
+      "Eastern Palace: boss out of logic, 3 chests left (maybe available)",
+    );
+    expect(screen.getByTestId("boss-marker-misery-mire")).toHaveAccessibleName(
+      /^Misery Mire, unknown medallion: boss out of logic/,
+    );
+    expect(screen.getByTestId("boss-marker-castle-tower")).toHaveAccessibleName(
+      "Castle Tower: boss out of logic, no item to find",
     );
   });
 
   it("keeps the dungeon square out of the accessibility tree", () => {
     render(<MapTracker />);
 
-    expect(screen.getByTestId("dungeon-marker-0")).toHaveAttribute(
+    expect(screen.getByTestId("dungeon-marker-eastern-palace")).toHaveAttribute(
       "aria-hidden",
       "true",
     );
   });
 
-  it("toggles a chest from the keyboard like any button", async () => {
+  it("toggles a marker from the keyboard like any button", async () => {
     const user = userEvent.setup();
     render(<MapTracker />);
-    const kingsTomb = screen.getByTestId("chest-marker-0");
+    const kingsTomb = screen.getByTestId("marker-kings-tomb");
 
     kingsTomb.focus();
     await user.keyboard("{Enter}");

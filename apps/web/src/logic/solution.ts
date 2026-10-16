@@ -26,6 +26,9 @@ import {
   type MapMarker,
   type MarkerStatus,
   markerStatus,
+  OPEN,
+  regionModules,
+  STANDARD,
   solveWithKeys,
   type TrackerInput,
   toState,
@@ -178,6 +181,22 @@ const itemLocationsOf = (
   return found;
 };
 
+/** A dungeon's index in the grid (0-9), or -1 for one it lacks. */
+const gridIndex = (id: DungeonId): number =>
+  (LEGACY_DUNGEONS as readonly string[]).indexOf(id);
+
+/**
+ * The items a dungeon's counter has left: the grid's ten dungeons have one;
+ * Castle Tower and Ganon's Tower do not (undefined).
+ */
+export const dungeonCount = (
+  id: DungeonId,
+  state: Pick<Progress, "items">,
+): number | undefined => {
+  const index = gridIndex(id);
+  return index >= 0 ? Number(state.items[`chest${index}`]) : undefined;
+};
+
 /**
  * What a dungeon's square shows. With a counter (the ten dungeons of the
  * grid), done at 0, else dungeonStatus: the pigeonhole rule over its item
@@ -191,9 +210,8 @@ export const dungeonStateOf = (id: DungeonId, state: Inputs): MarkerState => {
   const tris = itemLocationsOf(id, solution.settings).map((location) =>
     tri(solution, location),
   );
-  const index = (LEGACY_DUNGEONS as readonly string[]).indexOf(id);
-  if (index >= 0) {
-    const left = Number(state.items[`chest${index}`]);
+  const left = dungeonCount(id, state);
+  if (left !== undefined) {
     return left > 0 ? dungeonStatus(left, tris) : "opened";
   }
   return dungeonItemCount(dungeon(id), solution.settings) > 0
@@ -201,9 +219,23 @@ export const dungeonStateOf = (id: DungeonId, state: Inputs): MarkerState => {
     : "opened";
 };
 
+/**
+ * How many of a dungeon's items left are surely in logic: those the
+ * locations out of logic cannot all hold (pigeonholes). 0 without a counter.
+ */
+export const itemsSurelyInLogic = (id: DungeonId, state: Inputs): number => {
+  const left = dungeonCount(id, state);
+  if (left === undefined) return 0;
+  const solution = solutionOf(state);
+  const notYes = itemLocationsOf(id, solution.settings).filter(
+    (location) => tri(solution, location) !== "yes",
+  ).length;
+  return Math.max(0, left - notYes);
+};
+
 /** Whether the player marked a dungeon's boss beaten. */
 export const isBeaten = (id: DungeonId, items: Progress["items"]): boolean => {
-  const index = (LEGACY_DUNGEONS as readonly string[]).indexOf(id);
+  const index = gridIndex(id);
   if (index >= 0) return items[`boss${index}`] === BOSS_STATES.BEATEN;
   if (id === "castle-tower") return items.agahnim === 1;
   return id === "ganons-tower" && items.agahnim2 === 1;
@@ -227,6 +259,43 @@ export const bossStateOf = (id: DungeonId, state: Inputs): MarkerState => {
   if (isBeaten(id, state.items)) return "opened";
   const solution = solutionOf(state);
   return markerStatus([tri(solution, prizeOf(id, solution.settings))]);
+};
+
+/** Every location's official name, Open's and Standard's worlds together. */
+const NAMES: ReadonlyMap<string, string> = new Map(
+  [OPEN, STANDARD].flatMap((settings) =>
+    regionModules(settings).flatMap((module) =>
+      module.regions.flatMap((region) =>
+        region.locations.map((location) => [location.id, location.name]),
+      ),
+    ),
+  ),
+);
+
+/**
+ * A location's name under its marker: its official name, without the
+ * marker's own name when it starts with it ("Kakariko Well - Top" is "Top"
+ * under Kakariko Well).
+ */
+export const locationLabel = (marker: MapMarker, id: string): string => {
+  const name = NAMES.get(id) ?? id;
+  if (!name.startsWith(marker.name) || name === marker.name) return name;
+  return name.slice(marker.name.length).replace(/^\s*-?\s*/, "") || name;
+};
+
+/**
+ * What each location of a marker shows, in the marker's order: done once
+ * checked, else its own status. A dungeon's locations are counted, never
+ * checked, so they show their status.
+ */
+export const markerDetail = (
+  marker: MapMarker,
+  state: MarkerInputs,
+): MarkerState[] => {
+  const solution = solutionOf(state);
+  return marker.locations.map((id) =>
+    state.checked[id] ? "opened" : markerStatus([tri(solution, id)]),
+  );
 };
 
 /** A location's tri as the tracker shows it, stable between changes. */

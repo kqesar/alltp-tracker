@@ -243,6 +243,70 @@
   margin: 0;
 }
 
+.tooltip__title {
+  font-weight: 700;
+}
+
+.tooltip__pad {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  color: var(--color-text-secondary);
+}
+
+/* A map marker's detail: each line on a row of its own under the name */
+.tooltip__count,
+.tooltip__checks {
+  flex-basis: 100%;
+}
+
+.tooltip__count {
+  color: var(--color-text-secondary);
+}
+
+.tooltip__checks {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* A long list (a dungeon's chests) in two columns, so it stays on screen */
+.tooltip__checks--columns {
+  columns: 2;
+  column-gap: var(--spacing-md);
+}
+
+.tooltip__check {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  min-width: 0;
+  break-inside: avoid;
+}
+
+.tooltip__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tooltip__check--opened {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+}
+
+/* The state's swatch and glyph, as on the map and in its legend */
+.tooltip__glyph {
+  --marker: 14px;
+  position: relative;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
 @keyframes tooltip-in {
   from {
     opacity: 0;
@@ -252,6 +316,11 @@
 
 .tooltip--below {
   --tooltip-shift: -4px;
+}
+
+/* Room for a long list's two columns */
+.tooltip--wide {
+  max-width: min(34rem, calc(100vw - 16px));
 }
 
 /* Update notice: fixed at the bottom, over the page, so showing it never

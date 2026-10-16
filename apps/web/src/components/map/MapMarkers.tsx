@@ -1,35 +1,36 @@
-import { LEGACY_CHESTS } from "@alltp/pack-alttpr";
-import type { CSSProperties } from "react";
-import { BOSS_STATES } from "@/constants";
 import {
-  type Availability,
-  buildDungeonCaption,
-  type ChestItem,
-  type DungeonItem,
-} from "@/data/logic";
+  type DungeonId,
+  LEGACY_DUNGEONS,
+  type MapMarker,
+} from "@alltp/pack-alttpr";
+import type { CSSProperties } from "react";
 import { useTooltip } from "@/hooks/useTooltip";
+import {
+  dungeonCount,
+  type MarkerState,
+  useBossStatus,
+  useMarkerStatus,
+} from "@/logic/solution";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, toWorldPosition } from "@/utils";
-import { captionToText } from "@/utils/caption";
-
-/** What a marker shows: an availability, or done. */
-type MarkerState = Availability | "opened";
 
 /** The words a screen reader hears for each state; the glyph says it on screen. */
-const STATE_LABELS: Record<MarkerState, string> = {
+export const STATE_LABELS: Record<MarkerState, string> = {
   available: "available",
   opened: "done",
   possible: "maybe available",
   unavailable: "out of logic",
 };
 
+/** The medallion each value of the store's `medallions` names. */
+const MEDALLION_NAMES = ["unknown", "Bombos", "Ether", "Quake"];
+
 /** Position, icon and sizing variables shared by every marker. */
 const markerStyle = (
-  x: string,
-  y: string,
+  marker: MapMarker,
   asset: string,
 ): CSSProperties & Record<"--x" | "--y", string> => {
-  const position = toWorldPosition(x, y);
+  const position = toWorldPosition(`${marker.x}%`, `${marker.y}%`);
   return {
     "--x": `${position.x}%`,
     "--y": `${position.y}%`,
@@ -38,94 +39,101 @@ const markerStyle = (
 };
 
 /**
- * An overworld chest. Clicking it marks the chest opened.
- * @param chest - The chest data
- * @param index - Its index in the chest list
+ * A marker standing for one location or several (a cave's chests). Clicking
+ * it checks them all, or none once all are.
+ * @param marker - The pack's marker
  */
-export const MapChest = ({
-  chest,
-  index,
-}: {
-  chest: ChestItem;
-  index: number;
-}) => {
-  const items = useGameStore((state) => state.items);
-  const medallions = useGameStore((state) => state.medallions);
-  const locations = LEGACY_CHESTS[index]?.locations ?? [];
-  const opened = useGameStore(
-    (state) =>
-      locations.length > 0 && locations.every((id) => state.checked[id]),
-  );
-  const toggleChecks = useGameStore((state) => state.toggleChecks);
-  const tooltip = useTooltip({ index, kind: "chest" });
-
-  const state: MarkerState = opened
-    ? "opened"
-    : chest.isAvailable(items, medallions);
+export const MapLocation = ({ marker }: { marker: MapMarker }) => {
+  const state = useMarkerStatus(marker.id);
+  const toggleChecks = useGameStore((store) => store.toggleChecks);
+  const tooltip = useTooltip({ id: marker.id, kind: "marker" });
+  const count = marker.locations.length;
 
   return (
     <button
       {...tooltip}
-      aria-label={`${captionToText(chest.name)}: ${STATE_LABELS[state]}`}
-      aria-pressed={opened}
+      aria-label={`${marker.name}${count > 1 ? ` (${count} checks)` : ""}: ${STATE_LABELS[state]}`}
+      aria-pressed={state === "opened"}
       className={`mapspan chest state-glyph ${state}`}
-      data-testid={`chest-marker-${index}`}
-      onClick={() => toggleChecks(locations)}
-      style={markerStyle(chest.x, chest.y, "poi.png")}
+      data-testid={`marker-${marker.id}`}
+      onClick={() => toggleChecks(marker.locations)}
+      style={markerStyle(marker, "poi.png")}
       type="button"
     />
   );
 };
 
+/** The control that marks a dungeon's boss beaten: its grid cell's. */
+const bossControl = (id: DungeonId): string => {
+  const index = (LEGACY_DUNGEONS as readonly string[]).indexOf(id);
+  if (index >= 0) return `boss${index}`;
+  return id === "castle-tower" ? "agahnim" : "agahnim2";
+};
+
+/** The boss's portrait: the grid's, or Agahnim's for his two towers. */
+const bossArt = (id: DungeonId): string => {
+  const index = (LEGACY_DUNGEONS as readonly string[]).indexOf(id);
+  return index >= 0 ? `boss${index}2.png` : "agahnim1.png";
+};
+
 /**
- * A dungeon: a square showing whether its chests can be reached, under the
+ * A dungeon: a square showing what its counter has left in logic, under the
  * boss icon, the button, which shows whether the boss can be beaten.
- * Clicking it marks the boss beaten, the same flag as the grid's boss cell.
- * @param dungeon - The dungeon data
- * @param index - The dungeon index
+ * Clicking it marks the boss beaten, the same flag as the grid's boss cell
+ * (Agahnim's for Castle Tower).
+ * @param marker - The pack's marker of the dungeon
+ * @param dungeon - Its dungeon
  */
 export const MapDungeon = ({
   dungeon,
-  index,
+  marker,
 }: {
-  dungeon: DungeonItem;
-  index: number;
+  dungeon: DungeonId;
+  marker: MapMarker;
 }) => {
-  const items = useGameStore((state) => state.items);
-  const medallions = useGameStore((state) => state.medallions);
-  const keysanity = useGameStore((state) => state.settings.keysanity);
-  const handleItemClick = useGameStore((state) => state.handleItemClick);
-  const tooltip = useTooltip({ index, kind: "dungeon" });
+  const squareState = useMarkerStatus(marker.id);
+  const bossState = useBossStatus(dungeon);
+  const left = useGameStore((store) => dungeonCount(dungeon, store));
+  const medallion = useGameStore((store) =>
+    dungeon === "misery-mire"
+      ? store.medallions[8]
+      : dungeon === "turtle-rock"
+        ? store.medallions[9]
+        : undefined,
+  );
+  const handleItemClick = useGameStore((store) => store.handleItemClick);
+  const tooltip = useTooltip({ id: marker.id, kind: "marker" });
 
-  const beaten = (items[`boss${index}`] as number) === BOSS_STATES.BEATEN;
-  const bossState: MarkerState = beaten
-    ? "opened"
-    : dungeon.isBeatable(items, medallions, keysanity);
-  const remaining = items[`chest${index}`] as number;
-  const chestState: MarkerState =
-    remaining === 0 ? "opened" : dungeon.canGetChest(items, medallions);
-
-  const caption = buildDungeonCaption(dungeon, index, medallions);
-  const chests = remaining === 1 ? "1 chest left" : `${remaining} chests left`;
+  const pad =
+    medallion === undefined
+      ? ""
+      : `, ${MEDALLION_NAMES[medallion % MEDALLION_NAMES.length] ?? "unknown"} medallion`;
+  const counter =
+    left === undefined
+      ? squareState === "opened"
+        ? "no item to find"
+        : `its chests ${STATE_LABELS[squareState]}`
+      : `${left === 1 ? "1 chest" : `${left} chests`} left (${STATE_LABELS[squareState]})`;
+  const beaten = bossState === "opened";
 
   return (
     <>
       <div
         aria-hidden="true"
-        className={`mapspan dungeon state-glyph ${chestState}`}
-        data-testid={`dungeon-marker-${index}`}
+        className={`mapspan dungeon state-glyph ${squareState}`}
+        data-testid={`dungeon-marker-${dungeon}`}
         onPointerEnter={tooltip.onPointerEnter}
         onPointerLeave={tooltip.onPointerLeave}
-        style={markerStyle(dungeon.x, dungeon.y, "poi.png")}
+        style={markerStyle(marker, "poi.png")}
       />
       <button
         {...tooltip}
-        aria-label={`${captionToText(caption)}: boss ${STATE_LABELS[bossState]}, ${chests} (${STATE_LABELS[chestState]})`}
+        aria-label={`${marker.name}${pad}: boss ${STATE_LABELS[bossState]}, ${counter}`}
         aria-pressed={beaten}
         className={`mapspan boss state-glyph ${bossState}`}
-        data-testid={`boss-marker-${index}`}
-        onClick={() => handleItemClick(`boss${index}`)}
-        style={markerStyle(dungeon.x, dungeon.y, dungeon.image)}
+        data-testid={`boss-marker-${dungeon}`}
+        onClick={() => handleItemClick(bossControl(dungeon))}
+        style={markerStyle(marker, bossArt(dungeon))}
         type="button"
       />
     </>

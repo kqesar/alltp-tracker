@@ -153,7 +153,7 @@ test.describe("a tooltip", () => {
     page,
   }) => {
     // Turtle Rock's boss sits against the map's right edge
-    const marker = page.getByTestId("boss-marker-9");
+    const marker = page.getByTestId("boss-marker-turtle-rock");
     await marker.hover();
 
     const tooltip = page.getByTestId("tooltip");
@@ -226,11 +226,11 @@ test.describe("a tooltip", () => {
     await expect(page.getByTestId("tooltip")).toBeHidden();
   });
 
-  test("shows its item icons without a black backdrop", async ({ page }) => {
-    // King's Tomb: boots, Titan's Mitt and mirror, all once on black squares
-    await page.getByTestId("chest-marker-0").hover();
+  test("shows its icons without a black backdrop", async ({ page }) => {
+    // The medallion Misery Mire's pad asks for, once on a black square
+    await page.getByTestId("boss-marker-misery-mire").hover();
     const icons = page.getByTestId("tooltip").locator("img");
-    await expect(icons).toHaveCount(3);
+    await expect(icons).toHaveCount(1);
 
     const cornerAlphas = await icons.evaluateAll((images) =>
       (images as HTMLImageElement[]).map((image) => {
@@ -243,7 +243,7 @@ test.describe("a tooltip", () => {
       }),
     );
 
-    expect(cornerAlphas).toEqual([0, 0, 0]);
+    expect(cornerAlphas).toEqual([0]);
   });
 });
 

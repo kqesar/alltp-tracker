@@ -9,10 +9,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import App from "@/App";
 import { useGameStore } from "@/stores/gameStore";
 
-/** Overworld chest markers currently drawn with the given state class. */
+/** Location markers currently drawn with the given state class. */
 const chestMarkers = (state: string) =>
   screen
-    .getAllByTestId(/^chest-marker-/)
+    .getAllByTestId(/^marker-/)
     .filter((marker) => marker.classList.contains(state));
 
 // The whole application, real map included, driven the way a player does.
@@ -32,7 +32,7 @@ describe("App Integration Tests", () => {
 
   it("shows a marker's details in a tooltip while it is hovered", async () => {
     render(<App />);
-    const marker = screen.getByTestId("boss-marker-0");
+    const marker = screen.getByTestId("boss-marker-eastern-palace");
 
     fireEvent.pointerEnter(marker, { pointerType: "mouse" });
     expect(screen.getByTestId("tooltip")).toHaveTextContent(/Eastern Palace/);
@@ -41,9 +41,9 @@ describe("App Integration Tests", () => {
     await waitFor(() => expect(screen.queryByTestId("tooltip")).toBeNull());
   });
 
-  it("marks an overworld chest opened and back when clicked", () => {
+  it("marks a location checked and back when its marker is clicked", () => {
     render(<App />);
-    const chest = screen.getByTestId("chest-marker-0");
+    const chest = screen.getByTestId("marker-kings-tomb");
 
     fireEvent.click(chest);
     expect(chest).toHaveClass("opened");
@@ -55,37 +55,55 @@ describe("App Integration Tests", () => {
   it("greys a dungeon on the map once its boss is beaten in the grid", () => {
     render(<App />);
 
-    expect(screen.getByTestId("boss-marker-0")).not.toHaveClass("opened");
+    expect(screen.getByTestId("boss-marker-eastern-palace")).not.toHaveClass(
+      "opened",
+    );
 
     fireEvent.click(screen.getByTestId("item-boss0"));
 
-    expect(screen.getByTestId("boss-marker-0")).toHaveClass("opened");
+    expect(screen.getByTestId("boss-marker-eastern-palace")).toHaveClass(
+      "opened",
+    );
   });
 
   it("marks the grid boss beaten when its map marker is clicked, and back", () => {
     render(<App />);
 
-    fireEvent.click(screen.getByTestId("boss-marker-3"));
+    fireEvent.click(screen.getByTestId("boss-marker-palace-of-darkness"));
     expect(screen.getByTestId("item-boss3")).toHaveAccessibleName(
       /^Helmasaur King, defeated\./,
     );
-    expect(screen.getByTestId("boss-marker-3")).toHaveClass("opened");
+    expect(screen.getByTestId("boss-marker-palace-of-darkness")).toHaveClass(
+      "opened",
+    );
 
-    fireEvent.click(screen.getByTestId("boss-marker-3"));
+    fireEvent.click(screen.getByTestId("boss-marker-palace-of-darkness"));
     expect(screen.getByTestId("item-boss3")).toHaveAccessibleName(
       /^Helmasaur King, not defeated\./,
     );
-    expect(screen.getByTestId("boss-marker-3")).not.toHaveClass("opened");
+    expect(
+      screen.getByTestId("boss-marker-palace-of-darkness"),
+    ).not.toHaveClass("opened");
   });
 
-  it("reaches Tower of Hera's boss once the route and light are held", () => {
+  it("reaches Tower of Hera's boss once the route, light and a weapon are held", () => {
     render(<App />);
-    expect(screen.getByTestId("boss-marker-2")).toHaveClass("unavailable");
+    expect(screen.getByTestId("boss-marker-tower-of-hera")).toHaveClass(
+      "unavailable",
+    );
 
     fireEvent.click(screen.getByTestId("item-flute"));
     fireEvent.click(screen.getByTestId("item-mirror"));
     fireEvent.click(screen.getByTestId("item-lantern"));
+    // Moldorm wants a sword or the hammer (Boss.php, canBeat)
+    expect(screen.getByTestId("boss-marker-tower-of-hera")).toHaveClass(
+      "unavailable",
+    );
 
-    expect(screen.getByTestId("boss-marker-2")).toHaveClass("available");
+    fireEvent.click(screen.getByTestId("item-sword"));
+
+    expect(screen.getByTestId("boss-marker-tower-of-hera")).toHaveClass(
+      "available",
+    );
   });
 });

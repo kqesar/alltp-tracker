@@ -1,6 +1,5 @@
-import { MapChest, MapDungeon } from "@/components/map/MapMarkers";
-import { chests } from "@/data/chests";
-import { dungeons } from "@/data/dungeons";
+import { MARKERS } from "@alltp/pack-alttpr";
+import { MapDungeon, MapLocation } from "@/components/map/MapMarkers";
 import { useGameStore } from "@/stores/gameStore";
 import { toWorldPosition, type World } from "@/utils";
 
@@ -9,10 +8,23 @@ const WORLDS: { id: World; label: string }[] = [
   { id: "dark", label: "Dark World" },
 ];
 
+/** The pack's markers, by the world whose half of the map they sit in. */
+const MARKERS_BY_WORLD: Record<World, typeof MARKERS> = {
+  dark: MARKERS.filter(
+    (marker) =>
+      toWorldPosition(`${marker.x}%`, `${marker.y}%`).world === "dark",
+  ),
+  light: MARKERS.filter(
+    (marker) =>
+      toWorldPosition(`${marker.x}%`, `${marker.y}%`).world === "light",
+  ),
+};
+
 /**
- * The two worlds, each drawn as its own square with the chests and dungeons
- * that lie in it. Side by side or stacked, per the player's map layout; on
- * "auto" the map stacks itself when it gets too narrow (see map.css).
+ * The two worlds, each drawn as its own square with the pack's markers that
+ * lie in it: a location's (or a cave's), or a dungeon's. Side by side or
+ * stacked, per the player's map layout; on "auto" the map stacks itself
+ * when it gets too narrow (see map.css).
  */
 export const MapTracker = () => {
   const mapLayout = useGameStore((state) => state.mapLayout);
@@ -31,23 +43,16 @@ export const MapTracker = () => {
           data-testid={`map-world-${world.id}`}
           key={world.id}
         >
-          {chests.map((chest, index) =>
-            toWorldPosition(chest.x, chest.y).world === world.id ? (
-              <MapChest
-                chest={chest}
-                index={index}
-                key={`chest-${chest.name}`}
-              />
-            ) : null,
-          )}
-          {dungeons.map((dungeon, index) =>
-            toWorldPosition(dungeon.x, dungeon.y).world === world.id ? (
+          {MARKERS_BY_WORLD[world.id].map((marker) =>
+            marker.dungeon === undefined ? (
+              <MapLocation key={marker.id} marker={marker} />
+            ) : (
               <MapDungeon
-                dungeon={dungeon}
-                index={index}
-                key={`dungeon-${dungeon.image}`}
+                dungeon={marker.dungeon}
+                key={marker.id}
+                marker={marker}
               />
-            ) : null,
+            ),
           )}
         </section>
       ))}
