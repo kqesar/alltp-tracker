@@ -12,7 +12,7 @@
     {
       "file": "app/Region/Standard/DarkWorld/DeathMountain/West.php",
       "module": "src/regions/standard/dark-world/death-mountain/west.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/DarkWorld/Mire.php",
@@ -227,7 +227,7 @@
     {
       "file": "tests/NoGlitches/DarkWorld/DeathMountain/WestTest.php",
       "fixture": "test/upstream/NoGlitches/DarkWorld/DeathMountain/West.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/DarkWorld/MireTest.php",
