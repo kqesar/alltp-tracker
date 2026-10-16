@@ -1,6 +1,19 @@
-import type { Expr } from "./ast";
+import type { Expr, Threshold } from "./ast";
 import { countedItems, DefinitionError, type Rules } from "./rules";
 import { type Level, MAYBE, NO, rank, YES } from "./tri";
+
+const UNFOLDED =
+  "compileWorld folds settings before compiling: compile folded requirements and rules";
+
+/** A threshold of a folded requirement: always a number by then. */
+function folded(min: Threshold): number {
+  if (typeof min !== "number") {
+    throw new DefinitionError(
+      `Unfolded setting "${min.setting}" (${UNFOLDED})`,
+    );
+  }
+  return min;
+}
 
 /** Helper slot states in `Context.helpers`, beside a computed Level. */
 export const UNKNOWN = -1;
@@ -21,6 +34,8 @@ export type Compiled = (ctx: Context) => Level;
  * Compiles requirements into closures over item and helper indices: the
  * solver's fast path. Names are resolved once here, so evaluating reads typed
  * arrays instead of looking strings up. Semantics are those of `evaluate()`.
+ * Requirements and helper bodies must be folded first (`foldSettings`): a
+ * setting left in them is a DefinitionError.
  */
 export class Compiler {
   /** Every item a compiled requirement reads; its index is the item index. */
@@ -46,7 +61,7 @@ export class Compiler {
       }
       case "item": {
         const index = this.item(expr.name);
-        const min = expr.min;
+        const min = folded(expr.min);
         return (ctx) => (ctx.values[index] >= min ? YES : NO);
       }
       case "count": {
@@ -54,7 +69,7 @@ export class Compiler {
           countedItems(expr.names, this.rules.groups),
           (name) => this.item(name),
         );
-        const min = expr.min;
+        const min = folded(expr.min);
         return (ctx) => {
           let total = 0;
           for (let i = 0; i < indices.length; i++) {
@@ -65,6 +80,10 @@ export class Compiler {
       }
       case "helper":
         return this.helperCall(expr.name);
+      case "setting":
+        throw new DefinitionError(
+          `Unfolded setting "${expr.name}" (${UNFOLDED})`,
+        );
       case "maybe": {
         const inner = this.compile(expr.expr);
         return (ctx) => {

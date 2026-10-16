@@ -18,6 +18,12 @@ describe("print", () => {
     ["?count(a) >= 1", "?(count(a) >= 1)"],
     ["??@h", "??@h"],
     ["maybe | false & true", "maybe | false & true"],
+    ["setting( open )", "setting(open)"],
+    ["! setting(open)&a", "!setting(open) & a"],
+    ["maybe(!setting(open))", "?!setting(open)"],
+    ["sword>=setting(minSword)", "sword >= setting(minSword)"],
+    ["?sword >= setting(minSword)", "?(sword >= setting(minSword))"],
+    ["count(c1,c2)>=setting(n)", "count(c1, c2) >= setting(n)"],
     [
       "moonpearl&(hammer|glove>=1&flippers)",
       "moonpearl & (hammer | glove & flippers)",

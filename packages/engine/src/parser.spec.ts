@@ -7,6 +7,11 @@ const helper = (name: string): Expr => ({ name, type: "helper" });
 const and = (...args: Expr[]): Expr => ({ args, type: "and" });
 const or = (...args: Expr[]): Expr => ({ args, type: "or" });
 const maybe = (expr: Expr): Expr => ({ expr, type: "maybe" });
+const setting = (name: string, negated = false): Expr => ({
+  name,
+  negated,
+  type: "setting",
+});
 
 describe("parse: valid requirements", () => {
   it.each<[string, Expr]>([
@@ -27,6 +32,18 @@ describe("parse: valid requirements", () => {
     ["?sword >= 2", maybe(item("sword", 2))],
     ["(a)", item("a")],
     [" \t\n a \r\n", item("a")],
+    ["setting(swordless)", setting("swordless")],
+    ["!setting(swordless)", setting("swordless", true)],
+    ["! setting ( open )", setting("open", true)],
+    ["?!setting(open)", maybe(setting("open", true))],
+    [
+      "sword >= setting(minSword)",
+      { min: { setting: "minSword" }, name: "sword", type: "item" },
+    ],
+    [
+      "count(crystal) >= setting(crystalsTower)",
+      { min: { setting: "crystalsTower" }, names: ["crystal"], type: "count" },
+    ],
   ])("%j", (source, expected) => {
     expect(parse(source)).toEqual(expected);
   });
@@ -71,6 +88,15 @@ describe("parse: valid requirements", () => {
     expect(parse("maybe & true1")).toEqual(
       and({ type: "const", value: "maybe" }, item("true1")),
     );
+    expect(parse("settings & setting1")).toEqual(
+      and(item("settings"), item("setting1")),
+    );
+  });
+
+  it("binds ! to the setting right after it, like any operand", () => {
+    expect(parse("!setting(a) & b | setting(c)")).toEqual(
+      or(and(setting("a", true), item("b")), setting("c")),
+    );
   });
 });
 
@@ -84,12 +110,27 @@ describe("parse: invalid requirements name the position", () => {
     ["a b", 2, 'but found "b"'],
     ["(a | b", 6, 'Expected "&", "|" or ")" but found end of input'],
     ["maybe(a", 7, 'Expected "&", "|" or ")"'],
-    ["!a", 0, "there is no negation"],
-    ["a & ~b", 4, "there is no negation"],
+    ["!a", 0, 'Unexpected "!" at position 0 (only a setting can be negated'],
+    ["a & !(setting(b))", 4, "only a setting can be negated"],
+    ["!!setting(b)", 0, "only a setting can be negated"],
+    ["!@h", 0, "only a setting can be negated"],
+    ["a & ~b", 4, "only a setting can be negated"],
+    ["setting", 7, 'Expected "(" after "setting" but found end of input'],
+    ["setting()", 8, 'Expected a setting name but found ")"'],
+    ["setting(maybe)", 8, 'Expected a setting name but found "maybe"'],
+    ["setting(a b)", 10, 'Expected ")" but found "b"'],
+    ["setting(a) >= 2", 11, 'but found ">="'],
+    ["!setting", 8, 'Expected "(" after "setting"'],
+    ["a >= setting", 12, 'Expected "(" after "setting"'],
+    ["a >= setting(2)", 13, 'Expected a setting name but found "2"'],
     ["a < 2", 2, 'only ">=" comparisons exist'],
     ["a == 2", 2, 'only ">=" comparisons exist'],
     ["a > 2", 2, 'only ">=" comparisons exist'],
-    ["a >= x", 5, 'Expected an integer after ">=" but found "x"'],
+    [
+      "a >= x",
+      5,
+      'Expected an integer or "setting(name)" after ">=" but found "x"',
+    ],
     ["a >=", 4, "found end of input"],
     ["a >= 99999999999999999999", 5, "too large"],
     ["Sword", 0, "names start with a lowercase letter"],
@@ -122,8 +163,8 @@ describe("parse: invalid requirements name the position", () => {
   });
 
   it("reports the first error in reading order, lexical or not", () => {
-    // The "&" at 4 is a syntax error; the "!" at 6 a lexical one. A lexer
+    // The "&" at 4 is a syntax error; the "~" at 6 a lexical one. A lexer
     // run ahead of the parser would report the later one.
-    expect(() => parse("a & & !b")).toThrow("at position 4");
+    expect(() => parse("a & & ~b")).toThrow("at position 4");
   });
 });

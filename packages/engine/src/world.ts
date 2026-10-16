@@ -6,6 +6,7 @@ import {
   parseIn,
   type Rules,
 } from "./rules";
+import { foldRules, foldSettings, type Settings } from "./settings";
 import { YES } from "./tri";
 
 /** A one-way connection; a two-way passage is two exits. */
@@ -46,6 +47,14 @@ export interface CompileOptions {
    * otherwise silently read as "never collected".
    */
   readonly items?: Iterable<string>;
+  /**
+   * The run's settings. Every setting a requirement or helper uses must be
+   * here with the right type (a boolean for `setting(name)`, a non-negative
+   * integer for `>= setting(name)`), or it is a DefinitionError. They are
+   * folded into the requirements before anything is compiled, so a solve
+   * never reads them.
+   */
+  readonly settings?: Settings;
 }
 
 /**
@@ -74,10 +83,16 @@ export interface CompiledWorld {
 const ALWAYS: Compiled = () => YES;
 
 /**
- * Checks and compiles a world once; `solve` then runs on it for every state.
- * Throws a DefinitionError for a duplicate region or location id, an exit to
- * an unknown region, an unknown start, a requirement that does not parse
- * (naming the exit or location), or a reference the rules cannot resolve.
+ * Checks and compiles a world once per game and settings; `solve` then runs
+ * on it for every state. Throws a DefinitionError for a duplicate region or
+ * location id, an exit to an unknown region, an unknown start, a requirement
+ * that does not parse (naming the exit or location), a reference the rules
+ * cannot resolve, or a setting missing from `options.settings`.
+ *
+ * Names are checked on the requirements as written, so a typo in a branch
+ * that the settings switch off is still an error. Then every setting is
+ * folded to a constant (`foldSettings`), helpers included, and only the
+ * folded requirements are compiled.
  */
 export function compileWorld(
   world: World,
@@ -87,6 +102,8 @@ export function compileWorld(
   const items =
     options.items === undefined ? undefined : new Set(options.items);
   if (items !== undefined) checkRulesItems(rules, items);
+  const settings = options.settings ?? {};
+  const foldedRules = foldRules(rules, settings);
 
   const regionIndex = new Map<string, number>();
   for (const region of world.regions) {
@@ -100,7 +117,7 @@ export function compileWorld(
     throw new DefinitionError(`Start region "${world.start}" does not exist`);
   }
 
-  const compiler = new Compiler(rules);
+  const compiler = new Compiler(foldedRules);
   // Packs repeat requirements a lot: each distinct text compiles once.
   const cache = new Map<string, Compiled>();
   const compileReq = (req: string | undefined, where: string): Compiled => {
@@ -109,7 +126,7 @@ export function compileWorld(
     if (compiled === undefined) {
       const expr = parseIn(req, where);
       checkReferences(expr, rules, where, items);
-      compiled = compiler.compile(expr);
+      compiled = compiler.compile(foldSettings(expr, settings, where));
       cache.set(req, compiled);
     }
     return compiled;

@@ -1,5 +1,6 @@
 import type { Expr } from "./ast";
 import { countedItems, DefinitionError, NO_RULES, type Rules } from "./rules";
+import { type Settings, settingFlag, thresholdValue } from "./settings";
 import { fromRank, type Level, MAYBE, NO, rank, type Tri, YES } from "./tri";
 
 /**
@@ -14,17 +15,28 @@ export function itemValue(state: State, name: string): number {
   return typeof value === "number" ? value : 0;
 }
 
+export interface EvaluateOptions {
+  /** The run's settings, for `setting(name)` and `>= setting(name)`. */
+  readonly settings?: Settings;
+}
+
+const NO_SETTINGS: Settings = {};
+const WHERE = "Requirement";
+
 /**
  * Evaluates one requirement: the reference semantics of the DSL. It walks the
- * tree directly and memoizes helpers for the duration of the call. The solver
- * runs the same semantics through compiled closures instead
- * (`compile.ts`), and a property test holds the two to the same answers.
+ * tree directly, reads settings as it meets them and memoizes helpers for the
+ * duration of the call. The solver runs the same semantics through compiled
+ * closures instead (`compile.ts`, after `compileWorld` folded the settings),
+ * and a property test holds the two to the same answers.
  */
 export function evaluate(
   expr: Expr,
   state: State,
   rules: Rules = NO_RULES,
+  options: EvaluateOptions = {},
 ): Tri {
+  const settings = options.settings ?? NO_SETTINGS;
   const memo = new Map<string, Level>();
   const pending = new Set<string>();
 
@@ -32,15 +44,21 @@ export function evaluate(
     switch (node.type) {
       case "const":
         return rank(node.value);
-      case "item":
-        return itemValue(state, node.name) >= node.min ? YES : NO;
+      case "item": {
+        const min = thresholdValue(settings, node.min, WHERE);
+        return itemValue(state, node.name) >= min ? YES : NO;
+      }
       case "count": {
         let total = 0;
         for (const name of countedItems(node.names, rules.groups)) {
           total += itemValue(state, name);
         }
-        return total >= node.min ? YES : NO;
+        return total >= thresholdValue(settings, node.min, WHERE) ? YES : NO;
       }
+      case "setting":
+        return settingFlag(settings, node.name, WHERE) !== node.negated
+          ? YES
+          : NO;
       case "helper": {
         const known = memo.get(node.name);
         if (known !== undefined) return known;

@@ -4,14 +4,17 @@ import {
   anyExpr,
   canonicalExpr,
   rules,
+  settings,
   state,
   stateAndMore,
   world,
 } from "../test/arbitraries";
+import { type Expr, walk } from "./ast";
 import { evaluate, type State } from "./evaluate";
 import { parse } from "./parser";
 import { print } from "./printer";
 import type { Rules } from "./rules";
+import { foldRules, foldSettings, type Settings } from "./settings";
 import { solve } from "./solve";
 import { and, compare, type Tri } from "./tri";
 import { compileWorld, type World } from "./world";
@@ -23,9 +26,9 @@ const RUNS = { numRuns: 500 };
  * (Bellman-Ford style, every requirement re-evaluated each round): slow, but
  * obviously the specification. The real solver must agree with it.
  */
-function referenceSolve(w: World, s: State, r: Rules) {
+function referenceSolve(w: World, s: State, r: Rules, set: Settings) {
   const req = (text: string | undefined): Tri =>
-    text === undefined ? "yes" : evaluate(parse(text), s, r);
+    text === undefined ? "yes" : evaluate(parse(text), s, r, { settings: set });
   const regions: Record<string, Tri> = {};
   for (const region of w.regions) {
     regions[region.id] = region.id === w.start ? "yes" : "no";
@@ -55,6 +58,21 @@ function referenceSolve(w: World, s: State, r: Rules) {
   return { locations, regions };
 }
 
+/** Every setting node or setting threshold left in `expr`. */
+function settingsLeft(expr: Expr): string[] {
+  const left: string[] = [];
+  walk(expr, (node) => {
+    if (node.type === "setting") left.push(print(node));
+    if (
+      (node.type === "item" || node.type === "count") &&
+      typeof node.min !== "number"
+    ) {
+      left.push(print(node));
+    }
+  });
+  return left;
+}
+
 describe("printer/parser round trip", () => {
   it("parse(print(ast)) gives back any tree the parser can build", () => {
     fc.assert(
@@ -67,9 +85,10 @@ describe("printer/parser round trip", () => {
 
   it("print(ast) of any other tree parses to an equivalent requirement", () => {
     fc.assert(
-      fc.property(anyExpr, state, (expr, s) => {
-        expect(evaluate(parse(print(expr)), s, rules)).toBe(
-          evaluate(expr, s, rules),
+      fc.property(anyExpr, state, settings, (expr, s, set) => {
+        const options = { settings: set };
+        expect(evaluate(parse(print(expr)), s, rules, options)).toBe(
+          evaluate(expr, s, rules, options),
         );
       }),
       RUNS,
@@ -77,18 +96,48 @@ describe("printer/parser round trip", () => {
   });
 });
 
+describe("settings folding", () => {
+  it("leaves no setting, keeps the meaning and the parser's shape", () => {
+    fc.assert(
+      fc.property(canonicalExpr, state, settings, (expr, s, set) => {
+        const folded = foldSettings(expr, set, "Requirement");
+        expect(settingsLeft(folded)).toEqual([]);
+        expect(evaluate(folded, s, foldRules(rules, set))).toBe(
+          evaluate(expr, s, rules, { settings: set }),
+        );
+        expect(parse(print(folded))).toEqual(folded);
+      }),
+      RUNS,
+    );
+  });
+
+  it("folds every helper body too", () => {
+    fc.assert(
+      fc.property(settings, (set) => {
+        for (const body of foldRules(rules, set).helpers.values()) {
+          expect(settingsLeft(body)).toEqual([]);
+        }
+      }),
+      { numRuns: 50 },
+    );
+  });
+});
+
 describe("compiled evaluation", () => {
   it("agrees with the reference evaluator", () => {
     fc.assert(
-      fc.property(canonicalExpr, state, (expr, s) => {
+      fc.property(canonicalExpr, state, settings, (expr, s, set) => {
         const compiled = compileWorld(
           {
             regions: [{ id: "r", locations: [{ id: "l", req: print(expr) }] }],
             start: "r",
           },
           rules,
+          { settings: set },
         );
-        expect(solve(compiled, s).location("l")).toBe(evaluate(expr, s, rules));
+        expect(solve(compiled, s).location("l")).toBe(
+          evaluate(expr, s, rules, { settings: set }),
+        );
       }),
       RUNS,
     );
@@ -98,9 +147,9 @@ describe("compiled evaluation", () => {
 describe("solver", () => {
   it("agrees with the literal fixpoint on random worlds, cycles included", () => {
     fc.assert(
-      fc.property(world, state, (w, s) => {
-        const solution = solve(compileWorld(w, rules), s);
-        const expected = referenceSolve(w, s, rules);
+      fc.property(world, state, settings, (w, s, set) => {
+        const solution = solve(compileWorld(w, rules, { settings: set }), s);
+        const expected = referenceSolve(w, s, rules, set);
         expect(solution.regions()).toEqual(expected.regions);
         expect(solution.locations()).toEqual(expected.locations);
       }),
@@ -110,21 +159,27 @@ describe("solver", () => {
 });
 
 describe("monotonicity: more items never lowers anything", () => {
-  it("holds for every requirement", () => {
+  it("holds for every requirement, settings and their negations included", () => {
     fc.assert(
-      fc.property(anyExpr, stateAndMore, (expr, [less, more]) => {
-        const before = evaluate(expr, less, rules);
-        const after = evaluate(expr, more, rules);
-        expect(compare(before, after)).toBeLessThanOrEqual(0);
-      }),
+      fc.property(
+        anyExpr,
+        stateAndMore,
+        settings,
+        (expr, [less, more], set) => {
+          const options = { settings: set };
+          const before = evaluate(expr, less, rules, options);
+          const after = evaluate(expr, more, rules, options);
+          expect(compare(before, after)).toBeLessThanOrEqual(0);
+        },
+      ),
       RUNS,
     );
   });
 
-  it("holds for every region and location of a world", () => {
+  it("holds for every region and location of a compiled world", () => {
     fc.assert(
-      fc.property(world, stateAndMore, (w, [less, more]) => {
-        const compiled = compileWorld(w, rules);
+      fc.property(world, stateAndMore, settings, (w, [less, more], set) => {
+        const compiled = compileWorld(w, rules, { settings: set });
         const before = solve(compiled, less);
         const after = solve(compiled, more);
         for (const id of compiled.regionIds) {
