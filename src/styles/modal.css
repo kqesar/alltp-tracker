@@ -109,7 +109,7 @@
 }
 
 .modal-btn--primary {
-  color: #1a1300;
+  color: var(--color-on-accent);
   background: var(--color-accent);
 }
 
@@ -174,7 +174,7 @@
 }
 
 .preset-selector__label {
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -207,7 +207,7 @@
 
 .run-settings__label {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -267,11 +267,12 @@
 
 .preset-card__badge {
   padding: 1px var(--spacing-xs);
-  font-size: 0.65rem;
-  color: var(--color-bg);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-on-accent);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: var(--color-warning);
+  background: var(--color-accent);
   border-radius: var(--border-radius);
 }
 

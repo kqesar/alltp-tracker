@@ -1,0 +1,77 @@
+/*
+ * Page layout. One custom property, --cell, sizes the item grid (8 cells
+ * wide counting its two half cells, 7 rows tall) and the map with it: side by
+ * side, the map is 14 cells wide, so its two square worlds are exactly as
+ * tall as the grid. --cell follows the space available, from phone to wide
+ * desktop, instead of fixed pixels.
+ */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-lg);
+}
+
+.main-content {
+  padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg);
+  container: app / inline-size;
+}
+
+.layout {
+  --gap: var(--spacing-lg);
+  /* Wide: as large as the width allows (22 cells and a gap) without the grid
+     outgrowing the viewport height left under the header and toolbar. */
+  --cell: clamp(
+    40px,
+    min((100cqi - var(--gap)) / 22, (100dvh - 14rem) / 7),
+    96px
+  );
+  display: grid;
+  grid-template-columns: calc(var(--cell) * 8) calc(var(--cell) * 14);
+  gap: var(--gap);
+  align-items: start;
+  justify-content: center;
+}
+
+/* Stacked, each world keeps the grid's 7-cell height. */
+.layout--stacked {
+  grid-template-columns: calc(var(--cell) * 8) calc(var(--cell) * 7);
+}
+
+.map-panel {
+  display: grid;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+/* Medium: the map moves under the grid and takes the width. */
+@container app (width < 70rem) {
+  .layout {
+    --cell: clamp(40px, 100cqi / 8, 72px);
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  .map-panel {
+    width: min(100%, 60rem);
+  }
+
+  .layout--stacked .map-panel {
+    width: min(100%, 30rem);
+  }
+}
+
+/* Narrow: the grid spans the screen. */
+@container app (width < 40rem) {
+  .layout {
+    --cell: calc(100cqi / 8);
+  }
+}
+
+@media (max-width: 40rem) {
+  .toolbar,
+  .main-content {
+    padding-inline: var(--spacing-md);
+  }
+}

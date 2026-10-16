@@ -25,20 +25,22 @@ function App() {
         Skip to main content
       </a>
       <Header />
-      <TrackerControls />
-      <BigKeyToggle isVisible={bigKeysVisible} onToggle={setBigKeysVisible} />
-      {/* Static IDs are intentional for SPA layout elements referenced by CSS and skip links */}
+      <div className="toolbar" data-testid="toolbar">
+        <TrackerControls />
+        <BigKeyToggle isVisible={bigKeysVisible} onToggle={setBigKeysVisible} />
+      </div>
       <main className="main-content" id="main-content">
         <div
-          className={mapLayout === "stacked" ? "layout--stacked" : undefined}
+          className={`layout${mapLayout === "stacked" ? " layout--stacked" : ""}`}
           data-testid="layout"
-          id="layoutdiv"
         >
           <TrackerGrid itemLayout={defaultItemGrid} />
-          <aside aria-label="Map display" className="mapdiv" id="mapdiv">
-            <MapTracker />
+          <div className="map-panel">
+            <div className="mapdiv">
+              <MapTracker />
+            </div>
             <MapLegend />
-          </aside>
+          </div>
         </div>
 
         <aside

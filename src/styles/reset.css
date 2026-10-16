@@ -1,123 +1,58 @@
-/* Root element: undo the Vite starter's centred, width-capped layout */
-#root {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  text-align: left;
+/* Base reset: sits first in the cascade, sets no theme of its own. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-/* Enhanced CSS Custom Properties */
-:root {
-  /* Typography */
-  --color-primary: #646cff;
-  --color-primary-hover: #535bf2;
-  --color-primary-light: #747bff;
-  --transition-duration: 0.25s;
-  --border-radius: 0.5rem;
-  /* Typography */
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  font-weight: 400;
+html {
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  /* Typography Optimization */
   font-synthesis: none;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.87);
-
-  /* Color Scheme - this is a dark-themed tracker */
-  color-scheme: dark;
-  background-color: #0d0d12;
   text-rendering: optimizeLegibility;
 }
 
-/* Enhanced Link Styling */
-a {
-  font-weight: 500;
-  color: var(--color-primary);
-  text-decoration: inherit;
-  transition: color var(--transition-duration);
-}
-
-a:hover {
-  color: var(--color-primary-hover);
-}
-
-a:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-/* Body Layout */
-body {
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+h1,
+h2,
+h3,
+p,
+dl,
+dd,
+ul {
   margin: 0;
 }
 
-/* Typography */
-h1 {
-  margin: 0.5em 0;
-  font-size: 3.2em;
-  line-height: 1.1;
+ul[class] {
+  padding: 0;
+  list-style: none;
 }
 
-/* Enhanced Button Component */
+img,
+svg {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
 button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0.6em 1.2em;
-  font-family: inherit;
-  font-size: 1em;
-  font-weight: 500;
-
   cursor: pointer;
-  user-select: none;
-  background-color: #1a1a1a;
-  border: 1px solid transparent;
-  border-radius: var(--border-radius);
-
-  transition: all var(--transition-duration);
-}
-
-button:hover {
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
-}
-
-button:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-button:active {
-  transform: translateY(0);
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
-  transform: none;
-}
-
-/* Inline item icons inside caption text */
-#caption img.mini {
-  display: inline-block;
-  width: 16px;
-  max-width: none;
-  height: 16px;
-  margin: 0 2px;
-  vertical-align: text-bottom;
-  /* Crisp rendering for pixel art */
-  image-rendering: pixelated;
-  border: none;
-  box-shadow: none;
-}
-
-#layoutdiv {
-  text-align: center;
 }

@@ -7,7 +7,6 @@ const WIDTHS = [390, 820, 1440, 1920] as const;
 /** Regions that must never cover one another, by data-testid. */
 const REGIONS = [
   "toolbar",
-  "bigkey-toggle",
   "item-grid",
   "map-tracker",
   "map-legend",
@@ -71,7 +70,6 @@ for (const width of WIDTHS) {
     test("fits the viewport with no region covering another", async ({
       page,
     }) => {
-      test.fail(true, "Fixed by the fluid layout (PR C)");
       await openTracker(page);
 
       const overflow = await page.evaluate(

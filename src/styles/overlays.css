@@ -2,9 +2,10 @@
 .overlay-base {
   position: absolute;
   z-index: var(--z-overlay);
-  width: 28px;
-  height: 28px;
+  width: calc(var(--cell) * 0.44);
+  height: calc(var(--cell) * 0.44);
   cursor: pointer;
+  image-rendering: pixelated;
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
@@ -43,10 +44,7 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-.big-key-overlay:hover,
-.big-key-overlay:focus {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 1px;
+.big-key-overlay:hover {
   background-color: rgba(0, 0, 0, 0.9);
   border-color: rgba(255, 255, 255, 0.6);
   transform: scale(1.05);
@@ -94,10 +92,7 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-.small-key-overlay:hover,
-.small-key-overlay:focus {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 1px;
+.small-key-overlay:hover {
   background-color: rgba(0, 0, 0, 0.9);
   border-color: rgba(255, 255, 255, 0.6);
   transform: scale(1.05);
@@ -121,14 +116,6 @@
   background-position: center;
   background-size: 100%;
   opacity: 0.9;
-}
-
-/* Mobile responsiveness for overlays */
-@media (max-width: 768px) {
-  .overlay-base {
-    width: 24px;
-    height: 24px;
-  }
 }
 
 /* Big Key Container 2x2 Grid System */
@@ -176,14 +163,14 @@
 }
 
 .bigkey-count {
-  font-size: 20px;
+  font-size: calc(var(--cell) * 0.3);
   font-weight: bold;
   color: rgba(255, 255, 255, 0.8);
   text-align: center;
 }
 
 .bigkey-count--maxed {
-  color: #0f0;
+  color: var(--state-available);
 }
 
 /* Adjust overlay positioning for 2x2 grid */

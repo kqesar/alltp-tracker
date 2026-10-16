@@ -1,47 +1,28 @@
-/* Header Component */
+/* Header: brand and external links, in the page flow */
 .header {
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-  z-index: var(--z-header);
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
   align-items: center;
   justify-content: space-between;
-  height: var(--header-height);
-  padding: 0 var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
   background: var(--color-bg-header);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-}
-
-.header__brand {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.header__brand:hover {
-  color: var(--color-primary);
-  transition: color var(--transition);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .header__title {
-  margin: 0;
   font-size: var(--font-size-xl);
   font-weight: 700;
+  line-height: 1.2;
   color: var(--color-accent);
   letter-spacing: 0.04em;
-  text-shadow: 0 0 14px rgba(230, 195, 74, 0.25);
+  text-shadow: 0 0 14px rgba(var(--color-accent-rgb), 0.25);
 }
 
 .header__nav {
   display: flex;
-  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
   align-items: center;
 }
 
@@ -49,53 +30,35 @@
   display: flex;
   gap: var(--spacing-xs);
   align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
+  min-height: 2.25rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-size: var(--font-size-sm);
-  color: var(--color-text);
-  text-decoration: none;
+  color: var(--color-text-secondary);
   border-radius: var(--border-radius);
-  transition: all var(--transition);
+  transition:
+    color var(--transition),
+    background-color var(--transition);
 }
 
 .header__link:hover {
-  color: var(--color-primary);
-  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-accent);
+  background-color: var(--surface-hover);
 }
 
 .header__icon {
-  width: 20px;
-  height: 20px;
-  /* For image icons */
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
   fill: currentColor;
 }
 
-/* Main content offset for fixed header (header is 4rem tall) */
-.main-content {
-  padding: var(--spacing-lg);
-  margin-top: 6rem;
-}
-
-/* Responsive header */
-@media (max-width: 768px) {
+@media (max-width: 40rem) {
   .header {
-    padding: 0 var(--spacing-md);
-  }
-
-  .header__brand {
-    font-size: var(--font-size-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
   }
 
   .header__title {
     font-size: var(--font-size-lg);
-  }
-
-  .header__link {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: var(--font-size-sm);
-  }
-
-  .header__nav {
-    gap: var(--spacing-sm);
   }
 }
