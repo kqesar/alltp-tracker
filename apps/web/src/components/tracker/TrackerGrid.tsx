@@ -5,6 +5,7 @@ import {
   useGridNavigation,
 } from "@/hooks/useGridNavigation";
 import { useGameStore } from "@/stores/gameStore";
+import { visibleRows } from "@/utils";
 
 type TrackerGridProps = {
   /** Grid layout data - array of rows containing item identifiers */
@@ -18,12 +19,7 @@ type TrackerGridProps = {
  */
 export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
-  // A row of nothing but key cells would be empty while they are hidden
-  const rows = bigKeysVisible
-    ? itemLayout
-    : itemLayout.filter(
-        (row) => !row.every((item) => item.startsWith("bigkey")),
-      );
+  const rows = visibleRows(itemLayout, bigKeysVisible);
 
   const { containerRef, focus } = useGridNavigation();
 

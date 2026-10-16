@@ -44,6 +44,20 @@ export const isItemDimmed = (
 };
 
 /**
+ * The rows of the item grid on screen: while the key cells are hidden, a row
+ * of nothing but key cells is left out, since it would be empty.
+ * @param layout - The grid layout, one array of item identifiers per row
+ * @param bigKeysVisible - Whether the key cells are shown
+ */
+export const visibleRows = (
+  layout: string[][],
+  bigKeysVisible: boolean,
+): string[][] =>
+  bigKeysVisible
+    ? layout
+    : layout.filter((row) => !row.every((item) => item.startsWith("bigkey")));
+
+/**
  * How the two worlds are arranged on screen.
  * - `auto`: side by side while each world gets enough width, stacked below
  * - `side-by-side`: as the map asset stores them, Light World left, Dark right

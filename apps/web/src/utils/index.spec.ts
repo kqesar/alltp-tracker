@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { toWorldPosition } from "@/utils";
+import { defaultItemGrid } from "@/data/items";
+import { toWorldPosition, visibleRows } from "@/utils";
 
 describe("toWorldPosition", () => {
   it("spreads a Light World marker across its own square", () => {
@@ -39,5 +40,20 @@ describe("toWorldPosition", () => {
         expect(position.y).toBeLessThanOrEqual(100);
       }
     }
+  });
+});
+
+describe("visibleRows", () => {
+  it("keeps every row while the key cells are shown", () => {
+    expect(visibleRows(defaultItemGrid, true)).toBe(defaultItemGrid);
+  });
+
+  it("drops a row of nothing but key cells while they are hidden", () => {
+    const rows = visibleRows(defaultItemGrid, false);
+
+    expect(rows).toHaveLength(defaultItemGrid.length - 1);
+    expect(rows.flat()).not.toContain("bigkey3");
+    // A key cell sharing its row with other items keeps its place
+    expect(rows.flat()).toContain("bigkey0");
   });
 });
