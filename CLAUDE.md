@@ -2,6 +2,15 @@
 
 A Link to the Past Tracker — a React 19 + TypeScript (Vite, Zustand, Biome, Vitest) web app tracking items, chests and dungeons in ALttP Randomizer runs. Package manager is **pnpm**, pinned by `packageManager` in `package.json` (pnpm switches to that version itself; CI reads it too); Node `>=22.0.0`. Build scripts are denied by default, so a dependency that needs one (esbuild) is listed under `allowBuilds` in `pnpm-workspace.yaml`.
 
+## Layout
+
+A pnpm workspace. Dependencies point one way: `apps/web` → packs → `packages/engine`, and the engine imports nothing.
+
+- `apps/web` — the tracker app (`@alltp/web`); all React, Vite and Playwright code and configs.
+- `packages/engine` — `@alltp/engine`, the game-agnostic logic engine; its README is the design doc.
+- `packs/*` — game packs (rules as data, items, map markers); `packs/alttpr` arrives with the v31 port.
+- Root — shared tooling only: Biome, TypeScript (a solution `tsconfig.json`), Vitest (`projects` + coverage over every workspace), husky, commitlint, standard-version (bumps the root `package.json`, the product version). Commit scopes follow the workspace: `web`, `engine`, `alttpr`.
+
 Area rules live in `.claude/rules/` and load when you touch their files: `store.md` (state, persistence), `data.md` (game data and logic), `components.md` (UI, styles, a11y), `tests.md`.
 
 ## Quality bar

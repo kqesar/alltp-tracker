@@ -45,16 +45,26 @@ pnpm dev          # http://localhost:5173
 | `pnpm dev` | development server |
 | `pnpm build` | production build |
 | `pnpm preview` | serve the production build |
-| `pnpm test` | run the tests |
+| `pnpm typecheck` | type-check every workspace |
+| `pnpm test` | run the unit tests (app and engine) |
+| `pnpm test:e2e` | browser tests: Playwright + axe on the production build |
 | `pnpm test:coverage:show` | tests with a coverage table |
 | `pnpm lint` / `pnpm lint:fix` | Biome check / autofix |
 
 ## How it fits together
 
-The whole application state lives in one Zustand store, `src/stores/gameStore.ts`, persisted to localStorage. Everything else reads from it.
+The repository is a pnpm workspace:
 
 ```
-src/
+apps/web/          the tracker web app (Vite + React), deployed to GitHub Pages
+packages/engine/   @alltp/engine: a game-agnostic logic engine (rule language, three-valued solver)
+packs/             game packs: each game's rules, items and map data (coming with the v31 rules port)
+```
+
+In the app, the whole state lives in one Zustand store, `apps/web/src/stores/gameStore.ts`, persisted to localStorage. Everything else reads from it.
+
+```
+apps/web/src/
 ├── data/         game data and rules
 │   ├── logic.ts     types + reachability predicates (canReachDarkWorld, …)
 │   ├── chests.ts    the 64 overworld chests
@@ -70,7 +80,7 @@ src/
 
 Each chest and dungeon carries its own accessibility predicate, so adding a location means adding one entry to a table rather than touching the components.
 
-`src/data/logic.characterization.spec.ts` snapshots what that logic answers across a range of item states. It exists to catch accidental rule changes during refactors: if it moves, the game logic moved with it.
+`apps/web/src/data/logic.characterization.spec.ts` snapshots what that logic answers across a range of item states. It exists to catch accidental rule changes during refactors: if it moves, the game logic moved with it.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the commit and release conventions.
 
