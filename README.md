@@ -12,7 +12,7 @@ Originally forked from [TestRunnerSRL/lttp-tracker](https://github.com/TestRunne
 
 ## Using it
 
-**Items** — click a cell to cycle its state, right-click to step it back. Progressive items step through their levels (sword 0→4, gloves 0→2) and wrap round; the rest toggle on and off. Dimmed means not obtained. **Undo / Redo** (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z) take back any change, a new game included.
+**Items** — click a cell to cycle its state, right-click to step it back. Progressive items step through their levels (sword 0→4, gloves 0→2) and wrap round; the rest toggle on and off. Greyed means not obtained. **Undo / Redo** (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z) take back any change, a new game included.
 
 **Map** — every marker is colour-coded against the items you hold:
 
@@ -41,7 +41,7 @@ The stream view, [`?view=obs`](https://kqesar.github.io/alltp-tracker/?view=obs)
 
 Capturing a browser window instead? Window capture has no transparency: add `&bg=00ff00` (any 3, 4, 6 or 8-digit hex colour) for a solid background to key out with a *Chroma Key* filter. In a browser source, eight digits make a translucent backdrop instead, e.g. `&bg=000000a0`, for busy footage.
 
-Items not yet obtained are greyed in the stream view rather than darkened, so they stay legible over bright and dark scenes alike.
+Items not yet obtained are greyed in the icon alone, as in the app, so they stay legible over bright and dark scenes alike.
 
 ## Development
 

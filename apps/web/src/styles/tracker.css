@@ -38,15 +38,24 @@
     filter var(--transition);
 }
 
-/* Not obtained: darken the icon with a veil rather than fading the button
-   itself, so the focus ring keeps its full strength. */
+/* Not obtained: the icon alone is greyed and dimmed, never the whole cell, so
+   it reads on the app's page and over stream footage alike. The button hides
+   its own copy of the icon and the pseudo-element redraws it through the
+   filter: the focus ring, drawn by the button, keeps its full strength. */
+.griditem--dimmed {
+  background-size: 0 0;
+}
+
 .griditem--dimmed::after {
   position: absolute;
   inset: 0;
   pointer-events: none;
   content: "";
-  background: rgba(var(--color-bg-rgb), 0.75);
+  background-image: inherit;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
   border-radius: inherit;
+  filter: var(--missing-item-filter);
 }
 
 @media (hover: hover) {

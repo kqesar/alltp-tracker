@@ -22,27 +22,10 @@
   left: var(--obs-left, 0);
 }
 
-/* The tints the app lays on its dark page would show as dark squares */
+/* The tints the app lays on its dark page would show as dark squares. Items
+   not obtained need nothing here: tracker.css greys the icon alone. */
 .obs-view .tracker,
 .obs-view .bigkey-container,
 .obs-view .bigkey-quadrant {
   background-color: transparent;
-}
-
-/* Not obtained. The app's veil darkens the whole cell, which over footage is
-   a dark square, and the icon at a quarter of its brightness vanishes on a
-   dark scene. Here the icon alone is greyed and dimmed, as stream trackers
-   draw a missing item, so it reads on bright and dark scenes alike. The
-   veil's pseudo-element redraws the icon through the filter and the button
-   hides its own copy, so the focus ring keeps its full strength. */
-.obs-view .griditem--dimmed {
-  background-size: 0 0;
-}
-
-.obs-view .griditem--dimmed::after {
-  background-color: transparent;
-  background-image: inherit;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  filter: grayscale(1) brightness(0.55);
 }
