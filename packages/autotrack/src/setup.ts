@@ -533,7 +533,9 @@ function deviceOf(status: SessionStatus): DeviceKind | null {
 /**
  * Each step's state for the current status, with the variants that fit the
  * environment (null: show every variant) and the device in use, if known.
- * `game` is the name the text uses for the game, from the pack.
+ * `game` is the name the text uses for the game, from the pack. `device` is
+ * the device to fit the text to while the status names none, as a UI's
+ * picker does before anything is attached; the device in use wins.
  */
 export function setupProgress(
   status: SessionStatus,
@@ -541,6 +543,7 @@ export function setupProgress(
   options: {
     readonly game?: string;
     readonly steps?: readonly SetupStep[];
+    readonly device?: DeviceKind;
   } = {},
 ): SetupProgress {
   const game = options.game ?? "Randomizer";
@@ -550,7 +553,7 @@ export function setupProgress(
     items: variant.items.map((item) => item.replaceAll("{game}", game)),
   });
   const keys = statusKeys(status);
-  const device = deviceOf(status);
+  const device = deviceOf(status) ?? options.device ?? null;
   const progress = steps.map((step) => {
     const state: StepState = keys.some((key) => step.failing.includes(key))
       ? "failing"

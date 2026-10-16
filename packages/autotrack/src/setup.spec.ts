@@ -153,6 +153,23 @@ describe("setupProgress", () => {
     expect(done.focus).toBeNull();
   });
 
+  it("fits the text to a picked device until one is attached", () => {
+    const emulatorFor = (status: SessionStatus) =>
+      setupProgress(status, FIREFOX_LINUX, { device: "fxpakpro" })
+        .steps.find((s) => s.step.id === "emulator")
+        ?.variants.map((v) => v.title);
+
+    expect(emulatorFor({ code: "idle" })).toEqual([
+      "FX Pak Pro",
+      "FX Pak Pro on Linux",
+    ]);
+    // The device in use wins over the pick
+    expect(emulatorFor(unreadable("no-memory-map"))).toEqual([
+      "RetroArch",
+      "RetroArch on Linux",
+    ]);
+  });
+
   it("splits memory failures into keys", () => {
     expect(statusKeys(unreadable("zero-filled"))).toEqual([
       "memory-unreadable",
