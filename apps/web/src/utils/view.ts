@@ -36,6 +36,27 @@ export const obsBackground = (
   return digits ? `#${digits.toLowerCase()}` : null;
 };
 
+/** `&bridge=` names the port SNI listens on, when it is not the usual one. */
+const BRIDGE_PARAM = "bridge";
+
+/**
+ * The autotracking bridge's address from `?bridge=<port>`: SNI or QUsb2Snes on
+ * this computer at another port than 23074 (a bridge configured otherwise, the
+ * browser tests' fake one). Only a port is taken, so a link can never point
+ * the tracker at another machine. Undefined when absent or not a port.
+ * @param search - The query string, `window.location.search` by default
+ */
+export const bridgeUrl = (
+  search: string = window.location.search,
+): string | undefined => {
+  const port = new URLSearchParams(search).get(BRIDGE_PARAM) ?? "";
+  if (!/^\d{1,5}$/.test(port)) return undefined;
+  const number = Number(port);
+  return number >= 1 && number <= 65_535
+    ? `ws://localhost:${number}`
+    : undefined;
+};
+
 /**
  * The address of the full tracker for this deployment, with no query string.
  * @param page - The address of the current page
