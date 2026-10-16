@@ -143,7 +143,7 @@
       "file": "app/Boss.php",
       "module": "src/bosses.ts",
       "role": "Boss::canBeat: every boss location and the GT and Ganon fights call it",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Support/ItemCollection.php",

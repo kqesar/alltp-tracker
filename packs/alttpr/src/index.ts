@@ -1,5 +1,6 @@
 // Public entry point of @alltp/pack-alttpr: the app imports the pack from
 // here only, as it does the engine.
+export { BOSS_SLOTS, BOSSES } from "./bosses";
 export { GROUPS, HELPERS, type Rule } from "./helpers";
 export {
   type Contribution,
@@ -20,6 +21,7 @@ export {
   locationKind,
   type Source,
 } from "./location";
+export { NAMED_RULES, RULES } from "./rules";
 export {
   type AlttprSettings,
   type Mode,
