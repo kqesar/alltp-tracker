@@ -1,6 +1,12 @@
 // Public entry point of @alltp/pack-alttpr: the app imports the pack from
 // here only, as it does the engine.
 export { BOSS_SLOTS, BOSSES } from "./bosses";
+export {
+  DERIVED,
+  DERIVED_FACTS,
+  type DerivedFact,
+  derivedFacts,
+} from "./derived";
 export { GROUPS, HELPERS, type Rule } from "./helpers";
 export {
   type Contribution,

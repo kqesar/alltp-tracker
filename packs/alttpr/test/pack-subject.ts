@@ -8,6 +8,7 @@
 // answered yet: it waits for src/fill.ts and the key model, since placing a
 // key is what it asks about. The runner counts those cases as skipped.
 import { type CompiledWorld, type State, solve, type Tri } from "@alltp/engine";
+import { derivedFacts } from "../src/derived";
 import { locationId } from "../src/location";
 import { medallionFacts, padsFromUpstream } from "../src/medallions";
 import { compile, regionModules } from "../src/pack";
@@ -34,11 +35,13 @@ function compiled(world: CaseWorld): CompiledWorld {
 
 /**
  * The case's state, with what its world placed at the medallion pads as the
- * knowledge the pack reads (medallions.ts). Any other placement throws.
+ * knowledge the pack reads (medallions.ts), and the facts its items give
+ * under its world's settings (derived.ts). Any other placement throws.
  */
-const withPads = (state: State, world: CaseWorld): State => ({
+const withFacts = (state: State, world: CaseWorld): State => ({
   ...state,
   ...medallionFacts(padsFromUpstream(world.locationItems)),
+  ...derivedFacts(state, settingsOf(world)),
 });
 
 /** The region upstream names `name` (a key of World/Standard.php). */
@@ -52,7 +55,7 @@ function regionNamed(name: string, settings: AlttprSettings): RegionDef {
 
 export const PACK: ContractSubject = {
   location: (name, state, world) =>
-    solve(compiled(world), withPads(state, world)).location(locationId(name)),
+    solve(compiled(world), withFacts(state, world)).location(locationId(name)),
 
   // Region::canComplete: the prize location's rule, or true for a region
   // with no can_complete (Region.php:201-207)
@@ -60,11 +63,11 @@ export const PACK: ContractSubject = {
     const prize = regionNamed(name, settingsOf(world)).prize;
     return prize === undefined
       ? "yes"
-      : solve(compiled(world), withPads(state, world)).location(prize);
+      : solve(compiled(world), withFacts(state, world)).location(prize);
   },
 
   regionEnter: (name, state, world) =>
-    solve(compiled(world), withPads(state, world)).region(regionId(name)),
+    solve(compiled(world), withFacts(state, world)).region(regionId(name)),
 
   regionFill: (name, item, world) => {
     const settings = settingsOf(world);
