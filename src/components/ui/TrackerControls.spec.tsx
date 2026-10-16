@@ -12,9 +12,12 @@ const fakeState = {
   // are needed too.
   applyPreset: vi.fn(),
   exportState: vi.fn(() => "{}"),
+  future: [] as unknown[],
   loadProgress: vi.fn(),
   mapLayout: "side-by-side" as "side-by-side" | "stacked",
+  past: [] as unknown[],
   presetId: "open",
+  redo: vi.fn(),
   reset,
   setMapLayout,
   settings: {
@@ -23,6 +26,7 @@ const fakeState = {
     keysanity: false,
     mode: "open" as const,
   },
+  undo: vi.fn(),
 };
 
 beforeEach(() => {
@@ -173,5 +177,33 @@ describe("TrackerControls export", () => {
 
     click.mockRestore();
     vi.useRealTimers();
+  });
+});
+
+describe("TrackerControls undo and redo", () => {
+  it("disables both buttons while there is nothing to undo or redo", () => {
+    render(<TrackerControls />);
+
+    expect(screen.getByTestId("undo")).toBeDisabled();
+    expect(screen.getByTestId("redo")).toBeDisabled();
+  });
+
+  it("undoes and redoes from the toolbar, with the shortcuts announced", () => {
+    fakeState.past = [{}];
+    fakeState.future = [{}];
+    render(<TrackerControls />);
+
+    fireEvent.click(screen.getByTestId("undo"));
+    fireEvent.click(screen.getByTestId("redo"));
+
+    expect(fakeState.undo).toHaveBeenCalledTimes(1);
+    expect(fakeState.redo).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("undo")).toHaveAccessibleName("Undo");
+    expect(screen.getByTestId("undo")).toHaveAttribute(
+      "aria-keyshortcuts",
+      "Control+Z Meta+Z",
+    );
+    fakeState.past = [];
+    fakeState.future = [];
   });
 });

@@ -20,6 +20,10 @@ All game state lives in `src/stores/gameStore.ts`: `zustand` + `devtools` (devel
 - `validateProgress` checks every field against the current tables. `parseSave` (import) refuses a file with any invalid field and names it; rehydration from localStorage is lenient and keeps the valid fields.
 - Exports are `{ format: "alltp-tracker-save", version, progress }`; bare objects from earlier versions still import.
 
+## History
+
+`past` / `future` hold earlier `Progress` snapshots for undo/redo (cap 200), never persisted. Every action that changes `Progress` goes through `record(state, next)`, which pushes the current run and clears `future`; prefs and the caption bypass it. Rehydration (first load, another tab via `crossTabSync.ts`) clears the history.
+
 ## Subscriptions
 
 Components subscribe with selectors — `useGameStore((state) => state.items[item])` — never bare `useGameStore()`: a component re-renders only for the slice it shows. A selector must return a stable value; for several fields use one selector per field or `useShallow`.

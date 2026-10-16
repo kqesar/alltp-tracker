@@ -21,6 +21,10 @@ export const TrackerControls = () => {
   const reset = useGameStore((state) => state.reset);
   const exportState = useGameStore((state) => state.exportState);
   const loadProgress = useGameStore((state) => state.loadProgress);
+  const undo = useGameStore((state) => state.undo);
+  const redo = useGameStore((state) => state.redo);
+  const canUndo = useGameStore((state) => state.past.length > 0);
+  const canRedo = useGameStore((state) => state.future.length > 0);
   const mapLayout = useGameStore((state) => state.mapLayout);
   const setMapLayout = useGameStore((state) => state.setMapLayout);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,6 +99,28 @@ export const TrackerControls = () => {
         type="button"
       >
         New game
+      </button>
+      <button
+        aria-keyshortcuts="Control+Z Meta+Z"
+        className="tracker-controls__button"
+        data-testid="undo"
+        disabled={!canUndo}
+        onClick={undo}
+        title="Undo the last change (Ctrl+Z)"
+        type="button"
+      >
+        Undo
+      </button>
+      <button
+        aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y"
+        className="tracker-controls__button"
+        data-testid="redo"
+        disabled={!canRedo}
+        onClick={redo}
+        title="Redo (Ctrl+Shift+Z)"
+        type="button"
+      >
+        Redo
       </button>
       <button
         className="tracker-controls__button"
