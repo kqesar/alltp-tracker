@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { defaultItemGrid } from "@/data/items";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
 import { useGameStore } from "@/stores/gameStore";
+import { useUpdateStore } from "@/stores/updateStore";
 import { visibleRows } from "@/utils";
 import { fitObsGrid } from "@/utils/view";
 
@@ -19,6 +20,9 @@ type ObsViewProps = {
  * cross-tab sync. Its items stay clickable, and its undo and item shortcuts
  * work, for OBS's Interact window.
  * Nothing else of the app is drawn here: no header, toolbar, map or tooltip.
+ * Nor the update notice: nobody clicks in a browser source, so the view takes
+ * a new version as soon as it is ready. It only shows the run, which is saved
+ * in localStorage, so the reload loses nothing.
  */
 export const ObsView = ({ background }: ObsViewProps) => {
   useUndoShortcuts();
@@ -26,6 +30,11 @@ export const ObsView = ({ background }: ObsViewProps) => {
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const rows = visibleRows(defaultItemGrid, bigKeysVisible).length;
   const stageRef = useRef<HTMLElement>(null);
+  const applyUpdate = useUpdateStore((state) => state.apply);
+
+  useEffect(() => {
+    applyUpdate?.();
+  }, [applyUpdate]);
 
   // The page itself must be transparent too: base.css paints the body
   useLayoutEffect(() => {

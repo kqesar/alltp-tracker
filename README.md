@@ -41,7 +41,7 @@ The stream view, [`?view=obs`](https://kqesar.github.io/alltp-tracker/?view=obs)
 
 Capturing a browser window instead? Window capture has no transparency: add `&bg=00ff00` (any 3, 4, 6 or 8-digit hex colour) for a solid background to key out with a *Chroma Key* filter. In a browser source, eight digits make a translucent backdrop instead, e.g. `&bg=000000a0`, for busy footage.
 
-Items not yet obtained are greyed in the icon alone, as in the app, so they stay legible over bright and dark scenes alike.
+Items not yet obtained are greyed in the icon alone, as in the app, so they stay legible over bright and dark scenes alike. Nobody clicks in a browser source, so the stream view takes a new version of the tracker on its own as soon as it is ready.
 
 ## Offline and install
 
