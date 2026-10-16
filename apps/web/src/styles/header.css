@@ -53,6 +53,15 @@
   fill: currentColor;
 }
 
+/* The 16 px pixel-art favicon, at a whole multiple of its pixels (its 32 px
+   frame halved, or as is on a 2x screen), in the same 18 px footprint */
+.header__icon--pixel {
+  width: 16px;
+  height: 16px;
+  margin: 1px;
+  image-rendering: pixelated;
+}
+
 @media (max-width: 40rem) {
   .header {
     padding: var(--spacing-sm) var(--spacing-md);

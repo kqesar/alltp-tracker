@@ -38,7 +38,7 @@ export const Header = () => {
         >
           <img
             alt=""
-            className="header__icon"
+            className="header__icon header__icon--pixel"
             src={`${import.meta.env.BASE_URL}zelda-triforce.ico`}
           />
           <span className="header__label">ALttPR</span>{" "}
