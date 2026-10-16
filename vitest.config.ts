@@ -43,7 +43,11 @@ export default defineConfig({
     projects: [
       {
         extends: true,
-        test: { include: ["src/**/*.spec.{ts,tsx}"], name: "app" },
+        test: {
+          benchmark: { include: ["src/**/*.bench.{ts,tsx}"] },
+          include: ["src/**/*.spec.{ts,tsx}"],
+          name: "app",
+        },
       },
       "packages/*",
     ],
