@@ -5,8 +5,10 @@
 // dungeon is a region of app/World/Standard.php whose `$region_items` name
 // its dungeon items, and config/item.php:94-147 holds how many of each the
 // pool has, which items.ts keeps as each item's maximum.
+import type { Tri } from "@alltp/engine";
 import { ITEMS } from "./items";
 import type { Source } from "./location";
+import type { MarkerStatus } from "./markers";
 import { regionModules } from "./pack";
 import type { AlttprSettings } from "./settings";
 import type { RegionDef } from "./world";
@@ -205,4 +207,46 @@ export function dungeonLocations(
   return dungeonRegions(d, settings).flatMap((r) =>
     r.locations.filter((l) => l.kind !== "prize").map((l) => l.id),
   );
+}
+
+/**
+ * How many items the dungeon's counter starts from: its item locations,
+ * less the dungeon items that stay in it (Region::canFill keeps each class
+ * that is not wild, Region.php:232-246), which are no items to the player.
+ * Eastern Palace starts from 3 in a standard run, 5 with wild maps and
+ * compasses, 6 in keysanity, where every location may hold a key.
+ */
+export function dungeonItemCount(
+  d: DungeonDef,
+  settings: AlttprSettings,
+): number {
+  const pool = dungeonPool(d);
+  const kept =
+    (settings.wildKeys ? 0 : pool.smallKeys) +
+    (settings.wildBigKeys ? 0 : pool.bigKey) +
+    (settings.wildMaps ? 0 : pool.map) +
+    (settings.wildCompasses ? 0 : pool.compass);
+  return dungeonLocations(d, settings).length - kept;
+}
+
+/**
+ * What a dungeon's counter shows, from the items it has left (`remaining`)
+ * and the tris of all its item locations: the player does not say which
+ * they opened. The items left sit at distinct locations not opened yet, so
+ * when more are left than there are `maybe` and `no` locations, one of them
+ * is surely at a `yes` one, opened or not (pigeonholes): available.
+ * Otherwise possible while some location is `yes` or `maybe`, else
+ * unavailable. "Reachable locations at least the items left" would say
+ * available too soon: two `yes` and two `no` locations with two items left
+ * may be the two `yes` opened already. With nothing left the dungeon is
+ * done, which the app shows on its own: unavailable here.
+ */
+export function dungeonStatus(
+  remaining: number,
+  tris: readonly Tri[],
+): MarkerStatus {
+  if (remaining <= 0) return "unavailable";
+  const yes = tris.filter((t) => t === "yes").length;
+  if (remaining > tris.length - yes) return "available";
+  return yes > 0 || tris.includes("maybe") ? "possible" : "unavailable";
 }
