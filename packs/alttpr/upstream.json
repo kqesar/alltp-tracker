@@ -262,7 +262,7 @@
     {
       "file": "tests/NoGlitches/DesertPalaceTest.php",
       "fixture": "test/upstream/NoGlitches/DesertPalace.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/EasternPalaceTest.php",
@@ -292,7 +292,7 @@
     {
       "file": "tests/NoGlitches/LightWorldTest.php",
       "fixture": "test/upstream/NoGlitches/LightWorld.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/MiseryMireTest.php",
