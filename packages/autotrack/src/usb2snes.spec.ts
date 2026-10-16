@@ -290,7 +290,7 @@ async function handTransport() {
   expect(socket.binaryType).toBe("arraybuffer");
   socket.open();
   await Promise.resolve();
-  socket.receive(JSON.stringify({ Results: ["SNI-0.0.103"] }));
+  socket.receive(JSON.stringify({ Results: ["SNI-v0.0.103"] }));
   await opening;
   return { socket, transport };
 }
