@@ -1,0 +1,48 @@
+/*
+ * Stream view (?view=obs, ObsView.tsx): the item grid alone, for an OBS
+ * browser source, which composites the page's alpha over the scene. Nothing
+ * here may paint a background, so the page, the stage and the grid are all
+ * transparent; ObsView sets --cell and the grid's offset from the viewport.
+ */
+:root[data-view="obs"],
+:root[data-view="obs"] body {
+  overflow: hidden;
+  background: transparent;
+}
+
+.obs-view {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.obs-view .itemdiv {
+  position: absolute;
+  top: var(--obs-top, 0);
+  left: var(--obs-left, 0);
+}
+
+/* The tints the app lays on its dark page would show as dark squares */
+.obs-view .tracker,
+.obs-view .bigkey-container,
+.obs-view .bigkey-quadrant {
+  background-color: transparent;
+}
+
+/* Not obtained. The app's veil darkens the whole cell, which over footage is
+   a dark square, and the icon at a quarter of its brightness vanishes on a
+   dark scene. Here the icon alone is greyed and dimmed, as stream trackers
+   draw a missing item, so it reads on bright and dark scenes alike. The
+   veil's pseudo-element redraws the icon through the filter and the button
+   hides its own copy, so the focus ring keeps its full strength. */
+.obs-view .griditem--dimmed {
+  background-size: 0 0;
+}
+
+.obs-view .griditem--dimmed::after {
+  background-color: transparent;
+  background-image: inherit;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  filter: grayscale(1) brightness(0.55);
+}
