@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "isolatedModules": true,
+    // No DOM: a pack is data and pure functions, run wherever the engine runs.
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    // Only what is imported is typed: no ambient @types/* leak into sources.
+    "types": [],
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}

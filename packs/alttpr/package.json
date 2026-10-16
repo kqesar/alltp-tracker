@@ -1,0 +1,19 @@
+{
+  "name": "@alltp/pack-alttpr",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A Link to the Past Randomizer game pack: the v31 rules as data, items and upstream tests",
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@alltp/engine": "workspace:*"
+  }
+}

@@ -50,7 +50,8 @@ jobs:
         id: lint
         run: pnpm lint
 
-      # Every workspace: the web app, its config files and e2e suite, the engine
+      # Every workspace: the web app, its config files and e2e suite, the
+      # engine and the game packs
       - name: Type-check
         id: typecheck
         run: pnpm typecheck
