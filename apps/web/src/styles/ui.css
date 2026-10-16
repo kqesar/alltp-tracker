@@ -64,9 +64,9 @@
   height: 18px;
 }
 
-@media (max-width: 60rem) {
-  /* Icon buttons: square 40 px targets, so the toolbar fits two rows on a
-     phone */
+/* With its labels the full toolbar needs a 1246 px viewport to stay on one
+   row: below 80rem its buttons are icons, square 40 px targets */
+@media (max-width: 79.99rem) {
   .tracker-controls__button,
   .bigkey-toggle {
     justify-content: center;

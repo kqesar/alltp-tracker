@@ -48,7 +48,7 @@ test("the toolbar keeps to one row from 640 px, and to two on a phone", async ({
 }) => {
   await openTracker(page);
   const rows: Record<number, number> = {};
-  for (const width of [360, 390, 640, 768, 820, 1440, 1920]) {
+  for (const width of [360, 390, 640, 768, 820, 1024, 1200, 1280, 1440, 1920]) {
     await page.setViewportSize({ height: 900, width });
     rows[width] = await toolbarRows(page);
   }
@@ -59,6 +59,9 @@ test("the toolbar keeps to one row from 640 px, and to two on a phone", async ({
     640: 1,
     768: 1,
     820: 1,
+    1024: 1,
+    1200: 1,
+    1280: 1,
     1440: 1,
     1920: 1,
   });
