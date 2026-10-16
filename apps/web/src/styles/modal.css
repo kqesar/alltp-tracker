@@ -280,3 +280,77 @@
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
+
+/* Stream view dialog: the browser source URL and the OBS setup steps */
+.stream-view {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.stream-view__label-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs);
+}
+
+.stream-view__label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stream-view__status {
+  font-size: var(--font-size-sm);
+  color: var(--color-success);
+}
+
+.stream-view__field {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.stream-view__url {
+  flex: 1;
+  min-width: 0;
+  padding: var(--spacing-sm);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius);
+}
+
+.stream-view__steps {
+  display: grid;
+  gap: var(--spacing-sm);
+  padding-inline-start: var(--spacing-lg);
+  margin: 0;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.stream-view__note {
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.stream-view code {
+  padding: 0 var(--spacing-xs);
+  font-family: var(--font-family-mono);
+  font-size: 0.9em;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+/* The footer link wears the dialog's button style */
+a.modal-btn {
+  display: inline-flex;
+  align-items: center;
+}

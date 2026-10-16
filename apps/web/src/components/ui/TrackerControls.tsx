@@ -2,6 +2,7 @@ import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import { PresetSelector } from "@/components/ui/PresetSelector";
+import { StreamViewControl } from "@/components/ui/StreamViewControl";
 import {
   ExportIcon,
   ImportIcon,
@@ -166,6 +167,7 @@ export const TrackerControls = () => {
         <ImportIcon />
         <span className="toolbar-label">Import</span>
       </button>
+      <StreamViewControl />
       <fieldset className="segmented" data-testid="map-layout">
         <legend className="segmented__legend">Map</legend>
         {MAP_LAYOUTS.map((option) => (

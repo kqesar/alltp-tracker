@@ -29,3 +29,8 @@ export const RedoIcon = () => (
 export const ExportIcon = () => <Icon path="M12 3v12M7 10l5 5 5-5M5 21h14" />;
 
 export const ImportIcon = () => <Icon path="M12 15V3M7 8l5-5 5 5M5 21h14" />;
+
+/** A screen casting from its corner: the stream view. */
+export const StreamIcon = () => (
+  <Icon path="M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6M2 12a8 8 0 0 1 8 8M2 16a4 4 0 0 1 4 4M2 20h.01" />
+);
