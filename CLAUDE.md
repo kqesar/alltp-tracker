@@ -29,16 +29,22 @@ There are no barrel/`index.ts` re-export files — always import from the file p
 ## Architecture
 
 ### State: a single Zustand store
-All game state lives in `src/stores/gameStore.ts`, created with `zustand` + `devtools` + `persist` (localStorage key `alltp-tracker-state`). There is no separate persistence store — save/load, import/export and reset all live here. Components call bare `useGameStore()`; there are no selector hooks.
+All game state lives in `src/stores/gameStore.ts`, created with `zustand` + `devtools` (development only) + `persist` (localStorage key `alltp-tracker-state`). The store holds only serializable data; the chest and dungeon tables with their predicates stay static in `src/data/`. Its shape is `Progress & Prefs` plus the transient `caption`, both types declared in `src/stores/persistence.ts`:
 
-- `items` — keyed by item id; values are `boolean` (toggles) or `number` (progressive). `handleItemClick` reads the current value's type, then steps by `-1` for `chest*` counters and `+1` for everything else, wrapping between `itemsMin[item]` and `itemsMax[item]`.
-- `chestsState` / `dungeonsState` — `ChestItem[]` / `DungeonItem[]` carrying non-serializable predicates, so `persist.partialize`/`merge` round-trip only the `isOpened` / `isBeaten` booleans and re-apply them onto freshly built objects (`toPersisted` / `applyPersisted`). **Any new persisted field must be added to `PersistedState`, `toPersisted` and `applyPersisted` together**, not just to `GameState`.
-- `smallKeys` — 10 entries capped by `SMALL_KEYS_MAX_BY_INDEX`.
-- `presetId` / `settings` — run-type presets from `src/data/presets.ts`; `applyPreset` rebuilds the whole state via `createInitialState`.
+- **`Progress`** — the run; "New game" (`reset`), `applyPreset` and `importState` replace it.
+  - `items` — keyed by item id; values are `boolean` (toggles) or `number` (progressive). `handleItemClick` reads the current value's type, then steps by `-1` for `chest*` counters and `+1` for everything else, wrapping between `itemsMin[item]` and `itemsMax[item]`. `bossN` (1 alive, 2 beaten) is the only "boss beaten" flag: the grid cell and the map marker both read and toggle it.
+  - `chestsOpened` — one boolean per overworld chest, indexed by position in `chests`.
+  - `smallKeys` — 10 entries capped by `SMALL_KEYS_MAX_BY_INDEX`; `medallions` — 10 entries, only 8 and 9 used.
+  - `presetId` / `settings` — run-type presets from `src/data/presets.ts`. Logic reads `settings` (e.g. `settings.keysanity`), never a display preference.
+- **`Prefs`** — how this device shows the tracker (`mapLayout`, `bigKeysVisible`). They survive a new game, a preset switch and an import. `applyPreset` changes `bigKeysVisible` only when the run's keysanity changes.
+
+**Persisted shape changes** bump `PERSIST_VERSION` and add a step to `migrate` in `persistence.ts`, which also upgrades imported files; then update `toPersisted`, `restoreProgress` / `restorePrefs` together. Never bump the version without a migration — persist would silently drop every existing save.
+
+Components subscribe with selectors — `useGameStore((state) => state.items[item])` — and never call bare `useGameStore()`: a component must re-render only for the slice it shows. Tests reset the store with `useGameStore.setState(useGameStore.getInitialState(), true)`.
 
 ### Data layer (`src/data/`)
 - `logic.ts` — the types (`ItemState`, `ChestItem`, `DungeonItem`, `Availability`) plus the shared predicates: `canReachDarkWorld`, `canReachSouthDarkWorld`, `canReachDeathMountain`, `canReachEastDeathMountain`, `hasTitansMitt`, `checkMedallion`, the `avail()` helper and `buildDungeonCaption`. Prefer reusing a named predicate over re-spelling its expression.
-- `chests.ts` / `dungeons.ts` — the 65 chests and 10 dungeons. Entries omit `isOpened`/`isBeaten`; the loader at the bottom of each file adds them. Position in the array *is* the identity — there is no `id` field.
+- `chests.ts` / `dungeons.ts` — the 65 chests and 10 dungeons, static: progress lives in the store. Position in the array *is* the identity — there is no `id` field — so the persisted `chestsOpened` follows that order, and reordering or removing an entry needs a save migration.
 - `items.ts` — one `[min, max, initial?]` range table from which `items`, `itemsMin` and `itemsMax` are derived, plus `itemLabels` for accessibility names. Do not reintroduce parallel tables.
 - `presets.ts` — run types (`getPreset`, `presets`, `describeSettings`).
 

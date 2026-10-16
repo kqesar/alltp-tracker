@@ -37,7 +37,8 @@ const Marker = ({
   testId,
   onClick,
 }: MarkerProps) => {
-  const { mapLayout, setCaption } = useGameStore();
+  const mapLayout = useGameStore((state) => state.mapLayout);
+  const setCaption = useGameStore((state) => state.setCaption);
   const position = transformMapCoordinates(x, y, mapLayout);
 
   return (
@@ -68,14 +69,17 @@ export const MapChest = ({
   chest: ChestItem;
   index: number;
 }) => {
-  const { items, medallions, toggleChest } = useGameStore();
+  const items = useGameStore((state) => state.items);
+  const medallions = useGameStore((state) => state.medallions);
+  const opened = useGameStore((state) => state.chestsOpened[index]);
+  const toggleChest = useGameStore((state) => state.toggleChest);
 
   return (
     <Marker
       asset="poi.png"
       caption={chest.name}
       onClick={() => toggleChest(index)}
-      state={chest.isOpened ? "opened" : chest.isAvailable(items, medallions)}
+      state={opened ? "opened" : chest.isAvailable(items, medallions)}
       testId={`chest-marker-${index}`}
       variant="chest map-chest"
       x={chest.x}
@@ -85,7 +89,8 @@ export const MapChest = ({
 };
 
 /**
- * A dungeon boss. Clicking it marks the boss beaten.
+ * A dungeon boss. Clicking it marks the boss beaten, the same flag as the
+ * boss cell in the tracker grid.
  * @param dungeon - The dungeon data
  * @param index - The dungeon index
  */
@@ -96,21 +101,20 @@ export const DungeonBoss = ({
   dungeon: DungeonItem;
   index: number;
 }) => {
-  const { items, medallions, settings, toggleDungeonBoss } = useGameStore();
+  const items = useGameStore((state) => state.items);
+  const medallions = useGameStore((state) => state.medallions);
+  const keysanity = useGameStore((state) => state.settings.keysanity);
+  const handleItemClick = useGameStore((state) => state.handleItemClick);
 
-  const beaten =
-    (items[`boss${index}`] as number) === BOSS_STATES.BEATEN ||
-    dungeon.isBeaten;
+  const beaten = (items[`boss${index}`] as number) === BOSS_STATES.BEATEN;
 
   return (
     <Marker
       asset={dungeon.image}
       caption={buildDungeonCaption(dungeon, index, medallions)}
-      onClick={() => toggleDungeonBoss(index)}
+      onClick={() => handleItemClick(`boss${index}`)}
       state={
-        beaten
-          ? "opened"
-          : dungeon.isBeatable(items, medallions, settings.keysanity)
+        beaten ? "opened" : dungeon.isBeatable(items, medallions, keysanity)
       }
       testId={`boss-marker-${index}`}
       variant="boss"
@@ -133,7 +137,8 @@ export const DungeonChest = ({
   dungeon: DungeonItem;
   index: number;
 }) => {
-  const { items, medallions } = useGameStore();
+  const items = useGameStore((state) => state.items);
+  const medallions = useGameStore((state) => state.medallions);
   const remaining = items[`chest${index}`] as number;
 
   return (

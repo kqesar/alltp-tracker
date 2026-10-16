@@ -15,8 +15,9 @@ type BigKeyCellProps = {
  * non-interactive placeholder so the grid layout stays stable.
  */
 export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
-  const { bigKeysVisible, smallKeys } = useGameStore();
   const dungeonIndex = parseInt(item.replace("bigkey", ""), 10);
+  const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
+  const keyCount = useGameStore((state) => state.smallKeys[dungeonIndex] || 0);
 
   if (!bigKeysVisible) {
     return (
@@ -29,7 +30,6 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
     );
   }
 
-  const keyCount = smallKeys[dungeonIndex] || 0;
   const isMaxed = keyCount === SMALL_KEYS_MAX_BY_INDEX[dungeonIndex];
 
   return (

@@ -2,7 +2,7 @@ import { MapLegend } from "@/components/map/MapLegend";
 import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
-import { Caption } from "@/components/ui/Caption";
+import { LiveCaption } from "@/components/ui/Caption";
 import { Header } from "@/components/ui/Header";
 import { TrackerControls } from "@/components/ui/TrackerControls";
 import { defaultItemGrid } from "@/data/items";
@@ -13,9 +13,9 @@ import { useGameStore } from "@/stores/gameStore";
  * Manages the overall state of items, layout, settings, and game state
  */
 function App() {
-  // Get state and actions from Zustand store
-  const { caption, bigKeysVisible, setBigKeysVisible, mapLayout } =
-    useGameStore();
+  const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
+  const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
+  const mapLayout = useGameStore((state) => state.mapLayout);
 
   return (
     <>
@@ -44,7 +44,7 @@ function App() {
           className="caption-container"
           id="caption"
         >
-          <Caption text={caption} />
+          <LiveCaption />
         </aside>
       </main>
     </>

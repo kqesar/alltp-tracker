@@ -29,13 +29,16 @@ export const KeyToggle = ({
   col,
   variant,
 }: KeyToggleProps) => {
-  const { items, smallKeys, handleItemClick, handleSmallKeyClick } =
-    useGameStore();
+  const bigKey = useGameStore((state) => state.items[`bigkey${dungeonIndex}`]);
+  const count = useGameStore((state) => state.smallKeys[dungeonIndex] || 0);
+  const handleItemClick = useGameStore((state) => state.handleItemClick);
+  const handleSmallKeyClick = useGameStore(
+    (state) => state.handleSmallKeyClick,
+  );
 
   const isBigKey = variant === "big-key";
   const maxKeys = SMALL_KEYS_MAX_BY_INDEX[dungeonIndex] || 0;
-  const count = smallKeys[dungeonIndex] || 0;
-  const obtained = (items[`bigkey${dungeonIndex}`] as number) === 1;
+  const obtained = bigKey === 1;
 
   const isComplete = isBigKey ? obtained : count === maxKeys;
   const label = isBigKey

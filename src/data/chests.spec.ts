@@ -14,23 +14,14 @@ const chestNamed = (prefix: string) => {
 };
 
 describe("chest table", () => {
-  it("declares every chest closed with usable coordinates", () => {
+  it("declares every chest with usable coordinates", () => {
     expect(chests).toHaveLength(65);
 
     chests.forEach((chest) => {
-      expect(chest.isOpened).toBe(false);
       expect(chest.name.length).toBeGreaterThan(0);
       expect(chest.x).toMatch(/^\d+(\.\d+)?%$/);
       expect(chest.y).toMatch(/^\d+(\.\d+)?%$/);
     });
-  });
-
-  it("keeps chest progress independent of the source table", () => {
-    // The store clones chests; mutating a clone must not leak back here.
-    const clone = { ...chests[0], isOpened: true };
-
-    expect(clone.isOpened).toBe(true);
-    expect(chests[0].isOpened).toBe(false);
   });
 });
 

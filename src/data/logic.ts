@@ -35,7 +35,6 @@ export interface ChestItem {
   name: string;
   x: string;
   y: string;
-  isOpened: boolean;
   isAvailable: (items: ItemState, medallions?: number[]) => Availability;
 }
 
@@ -44,7 +43,6 @@ export interface DungeonItem {
   x: string;
   y: string;
   image: string;
-  isBeaten: boolean;
   isBeatable: (
     items: ItemState,
     medallions?: number[],
