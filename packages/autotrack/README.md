@@ -1,0 +1,359 @@
+# @alltp/autotrack
+
+The tracker's autotracking connection layer: it reaches a local bridge (SNI
+or QUsb2Snes) from a static HTTPS page, attaches to the emulator or console
+the bridge sees, reads the memory a game pack asks for, and says in plain
+terms what to fix when any of that fails.
+
+- **Game-agnostic.** No address, no game id and no racing rule lives here. A
+  pack supplies its memory ranges, its race profile, its race flag, its game
+  check and, for a combined ROM such as SMZ3, its modes.
+- **No UI, no DOM, no Node.** The sources compile against ES2022 only
+  (`tsconfig.src.json`); browser APIs come through typed seams
+  (`src/platform.ts`, `src/permission.ts`) that tests replace.
+- **No runtime dependency.** `ws` is a dev dependency for the fake bridge.
+- Status: first version, not wired into the app yet. `src/index.ts` is the
+  public surface.
+
+```ts
+import {
+  AutotrackSession,
+  bus,
+  definePack,
+  defineRaceProfile,
+  detectEnvironment,
+} from "@alltp/autotrack";
+
+const profile = defineRaceProfile({ /* the community's rules, see "Race Mode" */ });
+const pack = definePack({
+  gameCheck: { ranges: ["header"], verify: (bytes) => /* ... */ ({ ok: true }) },
+  id: "alttpr",
+  profile,
+  ranges: [
+    { address: bus(0x00ffc0), category: "rom-header", id: "header", size: 0x15 },
+    { address: bus(0x7ef340), category: "items", everyMs: 500, id: "items", size: 0x40 },
+  ],
+});
+
+const session = new AutotrackSession({ environment: await detectEnvironment(), pack });
+session.subscribe((status) => render(status)); // status.code, see "Diagnostic codes"
+session.onUpdate(({ changed, snapshot }) => apply(changed, snapshot));
+button.onclick = () => session.start(); // from a click: the browser may prompt
+```
+
+## Architecture
+
+```
+AutotrackSession ──────────────── one run loop, one generation per start()
+  │  connect → list devices → attach → game check → poll, with backoff
+  │  diagnoses every failure as a SessionStatus
+  ├── Transport (interface) ────── Usb2SnesTransport today; a RetroArch UDP
+  │                                 transport in the Tauri app later
+  └── Poller ──────────────────── plans per (due set, mode), built once
+        ├── planReads()            coalescing into usb2snes GetAddress pieces
+        ├── assertRaceSafe()       checks every race plan before it is used
+        └── MemorySnapshot         one buffer per attach, views per range
+```
+
+| Module | Role |
+| --- | --- |
+| `address.ts` | FX Pak Pro regions; LoROM/HiROM A-bus ⇄ FX Pak translation |
+| `plan.ts` | Read planning: merge, pack into requests, cut at pages |
+| `race.ts` | Race profiles, `covers`, the race guard |
+| `race-mode.ts` | The Race Mode switch: setting × race flag |
+| `pack.ts` | The pack contract and `definePack` (errors at load) |
+| `transport.ts` | The transport interface and device types |
+| `usb2snes.ts` | The usb2snes WebSocket client |
+| `scheduler.ts` | The poller: two-phase ticks, modes, snapshots and diffs |
+| `diagnostics.ts` | `SessionStatus`, failure classification |
+| `permission.ts` | The browser's local network permission |
+| `environment.ts` | `detectEnvironment()`: OS, CPU, browser, loopback gating |
+| `session.ts` | `AutotrackSession`: the state machine |
+| `setup.ts` | The setup guide as data, and `setupProgress()` |
+| `report.ts` | `describeStatus()`, `diagnosticReport()` |
+
+### Transports: usb2snes, and why not gRPC-web
+
+SNI and QUsb2Snes both serve the usb2snes WebSocket protocol on
+`ws://localhost:23074` (8080 is retired in both). It is the only transport
+here. SNI also serves gRPC-web on port 8190; it was weighed for its device
+kind, capabilities and `FetchFields`, and left out on evidence:
+
+- **The core name is not there.** RetroArch's `GET_STATUS` reply puts the
+  core's `system_id` first (command.c, `command_get_status`, master at
+  75f278e286c1c6e9226d58268b4ab43b53974e84), and every
+  SNES core's info file says `systemid = "super_nes"` (libretro-core-info:
+  snes9x, bsnes_mercury_*, mesen-s, snes9x2010). SNI's `FetchFields(CoreName)`
+  relays that string, so it cannot tell Snes9x from bsnes-mercury.
+- **The device kind is already in the usb2snes path.** SNI's `DeviceList`
+  returns device URIs whose scheme is the driver (`ra://`, `fxpakpro://`,
+  `luabridge://`, `emunwa://`; services/usb2snes/usb2snes.go); QUsb2Snes
+  names carry a prefix (`SD2SNES `, `RetroArch `, `Emu - `), and `Info`
+  carries its flags (`NO_ROM_READ`).
+- **Capabilities are static per driver** (`driverCapabilities` in each SNI
+  driver), so they follow from the kind.
+- **Errors are no richer.** SNI's RetroArch driver turns a `-1` read reply
+  into zeros on both paths (devices/snes/drivers/retroarch/raclient.go,
+  `MultiReadMemory`: "filling response with $00").
+- **Cost.** A second loopback origin to permit, a CORS preflight per call,
+  SNI only. Bundled with esbuild (minified, ESM, browser) for the two calls
+  that matter, `ListDevices` and `FetchFields`:
+
+  | Option | Minified | gzip |
+  | --- | ---: | ---: |
+  | `@connectrpc/connect-web` 2.2.0 + `@bufbuild/protobuf` 2.16.0 (generated `sni_pb.ts`) | 127,914 B | 35,851 B |
+  | Hand-written gRPC-web framing and protobuf wire code | 1,582 B | 851 B |
+  | For scale: this package's connection core (session, transport, poller) | 27,128 B | 9,887 B |
+
+  Even the hand-written client would buy nothing the usb2snes path lacks.
+
+The `Transport` interface takes plans in FX Pak Pro space and returns bytes,
+so a direct RetroArch UDP transport (`READ_CORE_MEMORY` on port 55355) can
+slot in for the desktop app; it would translate with `pakToBus()` and could
+surface RetroArch's error texts, which `classifyReadFailure` already knows.
+
+### The usb2snes protocol as implemented
+
+From QUsb2Snes docs/Protocol.md and core/wsservercommands.cpp at
+184545cb6ed174b6cc4e7e646ddf0ee23407ebd1, and SNI
+services/usb2snes/usb2snes.go at 77ba8ac44ec63fc1c5f41549b6da9851085790a2.
+
+- Requests are JSON text frames `{Opcode, Space: "SNES", Operands}`; JSON
+  replies are `{Results: [...]}`; `GetAddress` replies with raw bytes, in one
+  message (SNI) or several (QUsb2Snes on some devices): the client
+  accumulates into the caller's buffer.
+- Replies carry no id, so the client keeps **one request in flight** and
+  queues the rest. A reply that times out drops the socket: a late reply
+  would be taken for the next request's.
+- `AppVersion` identifies the bridge (`SNI-0.0.103`, `QUsb2Snes-0.7.42`);
+  `Name` names the client; `DeviceList`; `Attach` has no reply, so `Info`
+  follows to confirm it (Protocol.md's advice).
+- `GetAddress` takes several `(address, size)` pairs. QUsb2Snes refuses a
+  pair over 255 bytes when there are several ("VGet with a size > 255"), but
+  takes one pair of any size, so a plan with one span sends it whole.
+- Errors close the socket. SNI drops it without a close frame (the browser
+  sees 1006); QUsb2Snes closes with 1000 and the error text as the reason,
+  or 1008 "Not in trusted origin" for a site it does not trust yet.
+
+### Address spaces
+
+Every address in this package is in the **FX Pak Pro space**, the one
+`GetAddress` takes on both bridges (SNI README "FX Pak Pro Address Space";
+sni.proto `AddressSpace`):
+
+| FX Pak Pro | Memory |
+| --- | --- |
+| `$00_0000-$DF_FFFF` | ROM, linear (file offset without header) |
+| `$E0_0000-$EF_FFFF` | SRAM, linear |
+| `$F5_0000-$F6_FFFF` | WRAM (`$7E:0000-$7F:FFFF`) |
+| `$F7_0000-$F9_08FF` | VRAM, APU, CGRAM, OAM, MISC, PPU and CPU registers (FX Pak Pro only) |
+
+What each bridge does with it:
+
+- **FX Pak Pro**: native; SNI and QUsb2Snes pass addresses through.
+- **SNI on RetroArch, Lua bridges and NWA emulators**: SNI translates to the
+  SNES A-bus with the ROM's mapping, which it detects on `Attach` by reading
+  the header (`mapping.Detect`, devices/snes/mapping/). The RetroArch driver
+  assumes the core exposes the A-bus, "true for the bsnes-mercury core at
+  least" (SNI README, RetroArch). SNI translates each piece's start address
+  and reads on from there, so the planner never lets a ROM or SRAM piece
+  cross an 8 KiB page (LoROM pages are 32 KiB, HiROM SRAM windows 8 KiB).
+- **QUsb2Snes on RetroArch**: its own translation (retroarchhost.cpp,
+  `translateAddress`): WRAM to `$7E0000+`; ROM only for HiROM with
+  `READ_CORE_MEMORY` ("Half of LoROM is unmapped ... in bsnes-mercury"), so
+  a LoROM game's ROM reads fail and Info reports `NO_ROM_READ`; on Snes9x
+  it falls back to `READ_CORE_RAM`.
+
+`bus(address, mapping)` translates a pack's A-bus address once, at load;
+`busRange(first, last)` refuses a range that is not one block (a LoROM bank
+crossing). The code ports alttpo/snes mapping/{lorom,hirom}/mapping.go at
+644082b79cd30cc28a8f02ed545da286b9c4984a, the library SNI uses, limits
+included: LoROM covers 2 MiB of ROM (banks are masked with `$3F`).
+
+Example: the ALttPR race flag at A-bus `$30:8213` (LoROM) is ROM offset
+`$18_0213`; WRAM `$7E:F340` is `$F5_F340`.
+
+## Diagnostic codes
+
+`session.status` is a `SessionStatus`, discriminated by `code`. Every
+waiting status carries `retryInMs`: the delay before the next attempt, or
+`null` when the session waits for the user (a permission change wakes it,
+and so does `retryNow()`).
+
+| Code | Meaning | Data for the UI | Retry |
+| --- | --- | --- | --- |
+| `idle`, `stopped` | Not started; stopped | | none |
+| `connecting` | Opening the socket | `url`, `attempt` | |
+| `local-network-prompt` | The browser shows its permission prompt (the socket has hung in CONNECTING for `promptAfterMs`, 1.5 s, and the permission reads `prompt`) | `permission` | waits for the answer |
+| `local-network-denied` | The permission is denied, or a prompt was shown and not accepted | `permission` (name, state) | user (no timer: Chromium blocks a site for 7 days after 3 dismissals) |
+| `browser-blocks-bridge` | Safari / iOS: ws://localhost from HTTPS is mixed content | `browser` | user |
+| `bridge-unreachable` | Nothing answered: SNI not running, another port, or a block the browser does not report | `url`, `attempt`, `permission`, `detail` | backoff; user while a Chromium permission is undecided (151+ prompts even when nothing listens) |
+| `bridge-refused` | The bridge accepted then refused the site (QUsb2Snes "Not in trusted origin": click Yes in its window) | `detail` | user (a retry pops QUsb2Snes's question again) |
+| `no-device` | The bridge sees no emulator or console (QUsb2Snes lists RetroArch only once its core and content answer) | `bridge` | backoff, same socket |
+| `attaching` | Attaching | `bridge`, `device`, `devices` | |
+| `attach-failed` | `Attach`/`Info` closed the socket | `device`, `detail` | backoff |
+| `memory-unreadable` | Attached, but memory cannot be read | `cause`, `evidence`, `remedy`, `detail`, `device` | backoff |
+| `game-mismatch` | The pack's game check failed | `check.code`, `check.message` | backoff, same socket |
+| `connected` | Polling | `race`, `unreadable`, `paused` | a drop after `stableAfterMs` (5 s) reconnects at once |
+
+`memory-unreadable` causes, with the evidence that settles them:
+
+| Cause | Evidence | Remedy |
+| --- | --- | --- |
+| `no-memory-map` | RetroArch's reply `-1 no memory map defined` (command.c, `command_memory_get_pointer`), QUsb2Snes's "core does not support memory read", or **inferred**: SNI drops the socket on the first `GetAddress` of a RetroArch device with content loaded (mapping detection fails on the zero-filled header reads) | `switch-core` to bsnes-mercury |
+| `address-unmapped` | `-1 no descriptor for address`, `-1 no data for descriptor` | `switch-core` |
+| `no-content` | `Info` said nothing runs (SNI's "No Info" fallback, the FX Pak Pro menu), or QUsb2Snes's "not running a super nintendo game" | `load-game` |
+| `rom-unreadable` | `Info` flag `NO_ROM_READ` and the game check needs ROM; QUsb2Snes "Can't get ROM info" | `use-sni` on QUsb2Snes |
+| `zero-filled` | Every byte of the game check is zero: SNI's substitute for failed RetroArch reads | `switch-core` on RetroArch |
+| `read-failed` | Anything else | `check-bridge-log` |
+
+Which cores give RetroArch a memory map (`RETRO_ENVIRONMENT_SET_MEMORY_MAPS`
+in the core's libretro.cpp): bsnes-mercury yes (SNI's documented core),
+Mesen-S and Snes9x 2010 yes but untested with SNI, Snes9x, bsnes and bsnes-hd
+no.
+
+`describeStatus(status)` gives one English sentence per status;
+`diagnosticReport()` a copyable plain-text report (package version,
+environment, bridge, devices, status, message, remedy, race state, times),
+without the ROM name or the User-Agent string.
+
+## Local network access
+
+Sources: Chrome release notes 142, 145 and 147; WICG Local Network Access
+spec; Chromium and Firefox sources as cited in the research notes; Firefox
+153 and 154 release notes; WebKit bug 171934.
+
+- **Chromium** gates fetch to loopback from public pages since 142 and
+  WebSockets since **147** ("WebSockets connections to local addresses now
+  trigger permission prompts"). Since 145 the permission is split:
+  `loopback-network` (localhost, 127.0.0.1) and `local-network` (LAN);
+  `local-network-access` stays as an alias that combines both. The prompt
+  reads "Access other apps and services on this device".
+- **Firefox** gates loopback since 153 and WebSockets since **154**; it
+  knows `loopback-network` and `local-network`, not the alias. A denied
+  WebSocket looks exactly like a closed port.
+- **Safari / iOS**: no prompt; `ws://localhost` from HTTPS is blocked as
+  mixed content (bug 171934 open). The tracker cannot autotrack there from
+  GitHub Pages; the desktop app is the way.
+- `ws://localhost` is not mixed content in Chromium and Firefox (loopback is
+  potentially trustworthy); no `Access-Control-Allow-Private-Network` and no
+  `targetAddressSpace` are needed for it.
+- A page cannot tell "denied" from "nothing listening" from the socket
+  (close 1006 either way, by spec). `systemPermission()` queries
+  `loopback-network`, then `local-network-access` (Chrome 142-144); the
+  session reads the state after a failure and how long the socket hung: a
+  pending prompt holds a loopback socket in CONNECTING while the bridge
+  listens. The UI should call `start()` from a click while the state is
+  `prompt`.
+
+## Race Mode
+
+A **race profile** is one community's rules: the memory it permits, its
+categories of tracked information, permitted or not, and its race flag. The
+package defines the shape (`defineRaceProfile`); packs bring the profiles.
+The ALttPR one, from "The Official ALTTPR Race-legal Auto-tracker
+Specification" v1.2 (link.alttpr.com/autotracking), is test data in
+`test/alttpr-profile.ts` until `packs/alttpr` takes it:
+
+- permitted memory (LoROM, ends inclusive): `$00:FFB0-$00:FFDF` (header),
+  `$7E:0000-$7E:00B0`, `$7E:010B`, `$7E:F000-$7E:F500`, `$30:8210-$30:823F`;
+  "Reading memory outside the above memory addresses is prohibited";
+- permitted categories: items, keys, boss kills, checks outside dungeons,
+  game start, goal, "at least one bomb/arrow", the MSU-1 track, the header,
+  the race flag; forbidden: dungeon checks and counts, prizes, spheres,
+  entrances, HUD data (counts, equipped item, heart pieces, bottle
+  contents), and anything else;
+- race flag `$30:8213`: `0x01` race, `0x00` not.
+
+Compliant by construction:
+
+1. `definePack` refuses a race-permitted range outside permitted memory and
+   a category the profile does not know.
+2. Each tick has a **race phase** and a **casual phase**. The race phase
+   reads the flag, the mode probe and the permitted ranges, through a plan
+   whose merges never bridge into forbidden ranges or unpermitted memory;
+   `assertRaceSafe` checks every race plan when it is built, before any use.
+3. The casual phase (forbidden categories) runs only if Race Mode is off
+   **after the flag the race phase just read**: a race ROM loaded mid-session
+   never receives a forbidden read.
+4. It fails closed: in `auto`, Race Mode is on until the flag reads "open",
+   and stays on when the device cannot read ROM (`NO_ROM_READ`) or the flag
+   reads neither value.
+5. The user may turn it `off` over a race ROM; `race.overridden` is then
+   true, and the spec asks the UI to show a warning.
+
+`race.raceLegal` is true when every read the poller issues is permitted:
+Race Mode is on, or the pack reads nothing forbidden.
+
+The fast-check property in `scheduler.spec.ts` runs random packs under the
+ALttPR profile and checks every piece sent: inside permitted memory, and
+forbidden bytes only where a permitted range covers them.
+
+## Polling
+
+- A pack's cadences (`everyMs`) set a tick (their gcd) and a cycle (their
+  lcm, at most 4096 ticks). `definePack` lays the cycle out as distinct due
+  sets; the poller builds a plan per due set and mode on first use and
+  reuses it, with the request's JSON cached by the transport.
+- A poll allocates no buffer: bytes land in one scratch buffer, then in a
+  snapshot buffer allocated at attach, with a fixed view per range. What a
+  poll still allocates: the promises, the WebSocket message.
+- `onUpdate` receives the same `PollUpdate` object every time, with the ids
+  that changed; `snapshot.previous(id)` holds the bytes before the change.
+- Polling pauses while the page is hidden (`pauseWhenHidden`).
+
+### Modes: combined ROMs
+
+SMZ3 holds Super Metroid and ALttP in one ROM: the running game's state is
+in WRAM, the other's in SRAM. A pack declares `modes: { range, names,
+decode }`: the probe range is read on every tick, first, and ranges with
+`modes: [...]` are read only in those modes. Plans follow the last mode the
+probe gave; a tick that sees a new mode keeps only the shared ranges and
+skips the casual phase, and the next tick reads the new layout. Categories
+stay per range, and the profile per community.
+
+## Setup guide and environment
+
+`SETUP_STEPS` is the "Set up autotracking" guide as data: get SNI, run it,
+set up the emulator (RetroArch with bsnes-mercury and Network Commands, FX
+Pak Pro, BizHawk, NWA), allow the browser connection, load the game. Each
+step lists the status keys that mark it done or failing, and variants per
+OS, CPU, browser and device, with English text, links and sources.
+`setupProgress(status, environment, { game })` derives each step's state and
+the step to open. `sniAssets(environment)` names the SNI download
+(`sni-v{version}-windows-amd64.zip`, `-darwin-universal.tar.gz`,
+`-linux-amd64(-notray).tar.xz`, arm64 variants).
+
+`detectEnvironment()` reads User-Agent Client Hints (CPU from
+`getHighEntropyValues`) and falls back to the User-Agent string, which only
+gives the CPU where it is not frozen (Firefox on Linux): elsewhere `arch` is
+`"unknown"` and the guide lists every download for the OS.
+
+## Tests
+
+- `test/fake-usb2snes.ts`: an in-process usb2snes server on `ws`, over a
+  16 MiB memory image, behaving like SNI or QUsb2Snes and failing on demand
+  (no device, dropped socket, dropped mid-read, close with reason, untrusted
+  origin, hangs, chunked replies). `ws` is there because Node 22 ships a
+  WebSocket client, not a server; the client side is Node's own WebSocket,
+  the one browsers expose.
+- `test/memory-transport.ts`: a scriptable in-memory transport for the
+  session under fake timers.
+- Properties (fast-check): planning covers every byte, respects limits and
+  pages, bridges at most `gap` bytes and no barrier, makes the fewest spans,
+  and places every range; Race Mode never sends a forbidden byte; address
+  translation round-trips.
+- `test/session.e2e.spec.ts`: one realistic session end to end.
+- Each guarantee was checked by breaking the code and watching a test fail.
+
+## Not verified against a real bridge
+
+- SNI dropping the socket on RetroArch + Snes9x is read from SNI's source,
+  not observed.
+- Whether bsnes-mercury exposes ROM bank `$30` to `READ_CORE_MEMORY`. If it
+  does not, SNI returns zeros, which read as "not a race ROM": a pack should
+  cross-check a ROM byte it knows is non-zero before trusting the flag.
+- QUsb2Snes's close reasons for RetroArch failures: only "Error in device
+  protocol" reaches the client in the code read; the specific texts may not.
+- Chromium's 7-day block after dismissals and Firefox's behaviour while its
+  prompt is open come from source reading, not from a browser.
