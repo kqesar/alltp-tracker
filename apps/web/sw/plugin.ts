@@ -6,8 +6,15 @@ import type { Plugin } from "vite";
 /** Where the worker is served: the base path, so its scope is the whole app. */
 const SW_FILE = "sw.js";
 
-/** The identifier in sw.ts that the precache list replaces. */
-const PLACEHOLDER = "__PRECACHE__";
+/** The page, which carries its build id for the page's code to read. */
+const PAGE_FILE = "index.html";
+
+/** The meta tag naming the build a page belongs to (read by main.tsx). */
+const BUILD_META = "alltp-tracker-build";
+
+/** Identifiers in sw.ts that the build fills in. */
+const PRECACHE_PLACEHOLDER = "__PRECACHE__";
+const BUILD_PLACEHOLDER = "__BUILD__";
 
 /** Hex digits of SHA-256 kept as a file's revision: 64 bits. */
 const REVISION_LENGTH = 16;
@@ -31,7 +38,11 @@ const filesIn = (directory: string) =>
  * bundle and public directory alike, each with a hash of its content. The
  * worker's bytes thus change exactly when a shipped file does, which is what
  * makes the browser install a new version: there is no version to bump.
- * Production builds only; the dev server runs without a worker.
+ *
+ * The build also gets an id, a hash of all those files: written into the
+ * worker and into index.html, it tells a page whether a waiting worker is a
+ * version it does not run yet. Production builds only; the dev server runs
+ * without a worker.
  */
 export const serviceWorker = (): Plugin => {
   let base = "/";
@@ -54,6 +65,15 @@ export const serviceWorker = (): Plugin => {
     },
     generateBundle: {
       handler(_options, bundle) {
+        /** Put a value in place of a placeholder that must occur once. */
+        const fill = (code: string, placeholder: string, value: string) => {
+          const parts = code.split(placeholder);
+          if (parts.length !== 2) {
+            this.error(`${SW_FILE} must use ${placeholder} exactly once`);
+          }
+          return parts.join(value);
+        };
+
         const files = new Map<string, string | Uint8Array>();
         for (const output of Object.values(bundle)) {
           if (output.fileName === SW_FILE) continue;
@@ -67,28 +87,42 @@ export const serviceWorker = (): Plugin => {
             files.set(name, readFileSync(path));
           }
         }
-        if (!files.has("index.html")) {
-          this.error("index.html is not in the bundle yet: nothing to serve");
+        const page = bundle[PAGE_FILE];
+        if (page?.type !== "asset" || typeof page.source !== "string") {
+          this.error(`${PAGE_FILE} is not in the bundle yet: nothing to serve`);
         }
 
-        const precache = [...files.keys()]
-          .sort()
-          .map((name) => [`${base}${name}`, revisionOf(files.get(name) ?? "")]);
+        // The id covers every file as built, the page before it carries it
+        const revisions = (names: string[]) =>
+          names.map((name) => [name, revisionOf(files.get(name) ?? "")]);
+        const build = revisionOf(
+          JSON.stringify(revisions([...files.keys()].sort())),
+        );
+        const marked = page.source.replace(
+          "</head>",
+          `  <meta content="${build}" name="${BUILD_META}" />\n  </head>`,
+        );
+        if (marked === page.source) this.error(`${PAGE_FILE} has no </head>`);
+        page.source = marked;
+        files.set(PAGE_FILE, marked);
 
+        const precache = revisions([...files.keys()].sort()).map(
+          ([name, revision]) => [`${base}${name}`, revision],
+        );
         const worker = bundle[SW_FILE];
         if (worker?.type !== "chunk") this.error(`${SW_FILE} was not built`);
-        const parts = worker.code.split(PLACEHOLDER);
-        if (parts.length !== 2) {
-          this.error(`${SW_FILE} must use ${PLACEHOLDER} exactly once`);
-        }
-        worker.code = parts.join(JSON.stringify(precache));
+        worker.code = fill(
+          fill(worker.code, PRECACHE_PLACEHOLDER, JSON.stringify(precache)),
+          BUILD_PLACEHOLDER,
+          JSON.stringify(build),
+        );
 
         const bytes = [...files.values()].reduce(
           (total, content) => total + Buffer.byteLength(content),
           0,
         );
         log(
-          `${SW_FILE}: precaches ${precache.length} files, ${(bytes / 1000).toFixed(0)} kB`,
+          `${SW_FILE}: build ${build}, precaches ${precache.length} files, ${(bytes / 1000).toFixed(0)} kB`,
         );
       },
       // After Vite has written index.html into the bundle
