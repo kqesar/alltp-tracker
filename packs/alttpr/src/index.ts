@@ -9,6 +9,19 @@ export {
   type UnmappedLocation,
 } from "./autotrack/check-flags";
 export {
+  type BossDungeon,
+  type CheckReading,
+  type DecodeOptions,
+  decodeChecks,
+  decodeItems,
+  decodeProgress,
+  type Fact,
+  type ItemReading,
+  type MemoryView,
+  type ProgressReading,
+  type Unsettled,
+} from "./autotrack/decode";
+export {
   type AlttprRange,
   MEMORY_RANGE,
   MEMORY_RANGES,

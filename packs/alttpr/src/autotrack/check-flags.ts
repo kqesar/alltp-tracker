@@ -18,7 +18,7 @@
 // (MEMORY_SOURCES.z3): DungeonsCompleted, ProgressIndicator, Aga2Duck.
 
 import {
-  DUNGEONS,
+  DUNGEON,
   type DungeonCode,
   MEMORY_RANGES,
   type MemoryRangeId,
@@ -387,10 +387,6 @@ const PRIZES: readonly (readonly [string, DungeonCode])[] = [
   ["turtle-rock/prize", "D7"],
 ];
 
-const DUNGEON_BIT = Object.fromEntries(
-  DUNGEONS.map((dungeon) => [dungeon.code, dungeon.bit]),
-) as Readonly<Record<DungeonCode, number>>;
-
 const DUNGEONS_COMPLETED = SAVE_DATA + 0x472;
 const PROGRESS = SAVE_DATA + 0x3c5;
 
@@ -442,7 +438,7 @@ export const CHECK_FLAGS: readonly CheckEntry[] = [
       id,
       DUNGEONS_COMPLETED - SAVE_DATA,
       2,
-      DUNGEON_BIT[code],
+      DUNGEON[code].bit,
       "z3:dungeondrops.asm:323-329",
     ),
   ),
