@@ -6,6 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Link to the Past Tracker — a React 19 + TypeScript web app for tracking item/dungeon/chest progress in ALttP Randomizer playthroughs. Package manager is **pnpm**, pinned by `packageManager` in `package.json` (pnpm switches to that version itself; CI reads it too); Node `>=22.0.0`. Build scripts are denied by default, so a dependency that needs one (esbuild) is listed under `allowBuilds` in `pnpm-workspace.yaml`.
 
+## Quality bar
+
+This tracker is meant to become the reference tracker for randomizer runs, so every change is held to that standard on every axis: runtime performance (renders, CPU, memory, storage), visual design (pixel-perfect at every width), accessibility and semantic HTML, code and algorithm quality, bundle size, dependencies, tests, CI and infrastructure.
+
+- **Fix what you find.** A defect noticed while working on something else — a bug, a re-render storm, an a11y violation, a flaky or vacuous test, a broken workflow — is fixed, in its own commit, without waiting to be asked. Say what was found and fixed.
+- **Verify in a real browser.** UI work is driven with Playwright (screenshots at 390 / 820 / 1440 / 1920 px, real interactions) and audited with axe-core plus a check for clickable elements a keyboard cannot reach; jsdom alone misses layout and focus bugs.
+- **Dependencies are welcome when they earn their place.** Add a library when it is the better engineering choice over hand-rolled code, and state why: what it replaces, its size and maintenance, and why it beats the alternative. Remove a dependency the moment it stops earning it.
+- **Game rules come from the randomizer's own source**, never from memory; record the upstream commit they were read from.
+
 ## Commands
 
 ```bash
