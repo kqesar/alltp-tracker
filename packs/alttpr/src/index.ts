@@ -39,7 +39,7 @@ export {
   type PadKnowledge,
   padsFromUpstream,
 } from "./medallions";
-export { compile, regionModules, world } from "./pack";
+export { compile, regionModules, STATE_NAMES, world } from "./pack";
 export { NAMED_RULES, RULES } from "./rules";
 export {
   type AlttprSettings,

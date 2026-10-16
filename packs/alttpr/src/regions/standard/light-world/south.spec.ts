@@ -3,9 +3,7 @@
 // model. The contract covers the rest (test/contract.spec.ts).
 import { compileWorld, loadRules, type State, solve } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
-import { ITEM_IDS } from "../../../items";
-import { MEDALLION_FACTS } from "../../../medallions";
-import { compile, regionModules } from "../../../pack";
+import { compile, regionModules, STATE_NAMES } from "../../../pack";
 import { RULES } from "../../../rules";
 import {
   type AlttprSettings,
@@ -34,7 +32,7 @@ function withSouthDarkWorld(settings: AlttprSettings) {
     ),
   }));
   return compileWorld(buildWorld(modules), loadRules(RULES), {
-    items: [...ITEM_IDS, ...MEDALLION_FACTS],
+    items: STATE_NAMES,
     settings,
   });
 }
