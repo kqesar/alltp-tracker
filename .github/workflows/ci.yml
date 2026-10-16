@@ -54,6 +54,11 @@ jobs:
         id: lint
         run: pnpm lint
 
+      # The app's tsc -b (run by the build) covers only what the app imports;
+      # until the app imports the engine, check its types on their own.
+      - name: Type-check the engine
+        run: pnpm --filter @alltp/engine typecheck
+
       - name: Run tests with coverage
         id: test
         run: pnpm test:coverage
