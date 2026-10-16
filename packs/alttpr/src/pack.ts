@@ -6,6 +6,7 @@ import {
   loadRules,
   type World,
 } from "@alltp/engine";
+import { DERIVED_FACTS } from "./derived";
 import { ITEM_IDS } from "./items";
 import { MEDALLION_FACTS } from "./medallions";
 import { RULES } from "./rules";
@@ -28,13 +29,13 @@ export function world(settings: AlttprSettings): World {
 
 /**
  * The run's world, compiled with its settings and checked against the item
- * list and the medallion facts: about a millisecond, once per run or
- * settings change. Throws a DefinitionError if the pack does not hold
- * together.
+ * list, the medallion facts and the derived facts: about a millisecond, once
+ * per run or settings change. Throws a DefinitionError if the pack does not
+ * hold together.
  */
 export function compile(settings: AlttprSettings): CompiledWorld {
   return compileWorld(world(settings), loadRules(RULES), {
-    items: [...ITEM_IDS, ...MEDALLION_FACTS],
+    items: [...ITEM_IDS, ...MEDALLION_FACTS, ...DERIVED_FACTS],
     settings,
   });
 }
