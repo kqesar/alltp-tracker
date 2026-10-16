@@ -102,7 +102,7 @@
     {
       "file": "app/Region/Standard/MiseryMire.php",
       "module": "src/regions/standard/misery-mire.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/PalaceOfDarkness.php",
