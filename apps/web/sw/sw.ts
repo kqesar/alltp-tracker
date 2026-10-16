@@ -6,10 +6,11 @@
  *   each one against its hash. A file whose content did not change since the
  *   last version is kept as it is, so an update downloads only what changed.
  * - activate: drop the files no longer in the build, then control the pages.
- * - fetch: answer from the cache, falling back to the network for anything
- *   else on this origin.
+ * - fetch: the page itself from the network first, so a reload shows the
+ *   latest release; the cached copy when the network fails or is slow. Every
+ *   other file from the cache, falling back to the network.
  *
- * A new version waits until the page asks it to take over (see
+ * A new version waits until a page asks it to take over (see
  * src/stores/updateStore.ts): the player picks the moment, never mid-run.
  */
 // The worker lib types `self` as any worker; this file runs as a service worker
@@ -23,14 +24,21 @@ const scope = self as unknown as ServiceWorkerGlobalScope;
  */
 declare const __PRECACHE__: [path: string, revision: string][];
 
-/** The page's request to activate the waiting version (updateStore.ts). */
+/** This build's id, also in its index.html (sw/plugin.ts). */
+declare const __BUILD__: string;
+
+/** What pages ask of a worker (src/stores/updateStore.ts). */
 const SKIP_WAITING = "skip-waiting";
+const GET_BUILD = "get-build";
 
 /**
  * One cache for every version. Other projects of the same GitHub Pages site
  * share this origin and its caches: this name is the only one touched here.
  */
 const CACHE = "alltp-tracker-precache";
+
+/** How long a page load waits for the network before taking the cache. */
+const NETWORK_TIMEOUT_MS = 3000;
 
 /** Each precached file by its path, with the revision it must have. */
 const files = new Map(
@@ -87,19 +95,43 @@ const dropStaleFiles = async () => {
   await Promise.all(stale.map((request) => cache.delete(request)));
 };
 
+/**
+ * The page: the release on the server whenever it answers in time, so a
+ * reload always shows the latest version; this build's copy when offline,
+ * on an error, or past the timeout on a poor network.
+ */
+const loadPage = async (url: string, key: string) => {
+  // Revalidated past the HTTP cache, where GitHub Pages keeps it ten minutes
+  const network = fetch(url, { cache: "no-cache" }).then(
+    // A navigation cannot be answered with a redirected response
+    (response) => (response.ok && !response.redirected ? response : null),
+    () => null,
+  );
+  const timeout = new Promise<null>((resolve) =>
+    setTimeout(resolve, NETWORK_TIMEOUT_MS, null),
+  );
+  return (
+    (await Promise.race([network, timeout])) ??
+    (await caches.match(key, { cacheName: CACHE })) ??
+    (await network) ??
+    Response.error()
+  );
+};
+
 scope.addEventListener("install", (event) => {
   event.waitUntil(precache());
 });
 
 scope.addEventListener("activate", (event) => {
   // Claiming makes a first visit offline-ready without a reload. An update
-  // gets here once a page asks for it (and that page reloads), or once no
-  // page runs the previous version any more.
+  // gets here once a page asks for it, or once no page runs the previous
+  // version any more.
   event.waitUntil(dropStaleFiles().then(() => scope.clients.claim()));
 });
 
 scope.addEventListener("message", (event) => {
   if (event.data === SKIP_WAITING) void scope.skipWaiting();
+  if (event.data === GET_BUILD) event.ports[0]?.postMessage(__BUILD__);
 });
 
 scope.addEventListener("fetch", (event) => {
@@ -113,6 +145,10 @@ scope.addEventListener("fetch", (event) => {
     : url.pathname;
   const file = files.get(path);
   if (!file) return;
+  if (request.mode === "navigate" && path.endsWith("/index.html")) {
+    event.respondWith(loadPage(request.url, file.key));
+    return;
+  }
   event.respondWith(
     caches
       .match(file.key, { cacheName: CACHE })

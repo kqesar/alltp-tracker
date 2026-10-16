@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "@/styles/index.css";
 import { ObsView } from "@/ObsView";
 import { syncAcrossTabs } from "@/stores/crossTabSync";
-import { registerServiceWorker } from "@/stores/updateStore";
+import { checkForUpdates, registerServiceWorker } from "@/stores/updateStore";
 import { isObsView, obsBackground } from "@/utils/view";
 import App from "./App.tsx";
 
@@ -16,13 +16,18 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener(
     "load",
     () => {
-      registerServiceWorker(
-        navigator.serviceWorker,
-        `${import.meta.env.BASE_URL}sw.js`,
-        () => window.location.reload(),
-      ).catch((error: unknown) => {
-        console.warn("The tracker will not work offline:", error);
-      });
+      const build = document.querySelector<HTMLMetaElement>(
+        'meta[name="alltp-tracker-build"]',
+      );
+      registerServiceWorker(navigator.serviceWorker, {
+        build: build?.content ?? "",
+        reload: () => window.location.reload(),
+        url: `${import.meta.env.BASE_URL}sw.js`,
+      })
+        .then(checkForUpdates)
+        .catch((error: unknown) => {
+          console.warn("The tracker will not work offline:", error);
+        });
     },
     { once: true },
   );
