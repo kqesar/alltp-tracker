@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "changelog-sections": [
+    { "section": "✨ Features", "type": "feat" },
+    { "section": "🐛 Bug Fixes", "type": "fix" },
+    { "section": "⚡ Performance Improvements", "type": "perf" },
+    { "section": "⏪ Reverts", "type": "revert" },
+    { "section": "📚 Documentation", "type": "docs" },
+    { "section": "🔧 Code Refactoring", "type": "refactor" },
+    { "hidden": true, "section": "💎 Styles", "type": "style" },
+    { "hidden": true, "section": "✅ Tests", "type": "test" },
+    { "hidden": true, "section": "📦 Build System", "type": "build" },
+    { "hidden": true, "section": "👷 CI/CD", "type": "ci" },
+    { "hidden": true, "section": "🏠 Chores", "type": "chore" }
+  ],
+  "include-component-in-tag": false,
+  "packages": {
+    ".": {
+      "package-name": "alltp-tracker",
+      "release-type": "node"
+    }
+  }
+}

@@ -9,7 +9,7 @@ A pnpm workspace. Dependencies point one way: `apps/web` → packs → `packages
 - `apps/web` — the tracker app (`@alltp/web`); all React, Vite and Playwright code and configs.
 - `packages/engine` — `@alltp/engine`, the game-agnostic logic engine; its README is the design doc.
 - `packs/*` — game packs (rules as data, items, map markers); `packs/alttpr` arrives with the v31 port.
-- Root — shared tooling only: Biome, TypeScript (a solution `tsconfig.json`), Vitest (`projects` + coverage over every workspace), husky, commitlint, standard-version (bumps the root `package.json`, the product version). Commit scopes follow the workspace: `web`, `engine`, `alttpr`.
+- Root — shared tooling only: Biome, TypeScript (a solution `tsconfig.json`), Vitest (`projects` + coverage over every workspace), husky, commitlint. The root `package.json` carries the product version, which release-please bumps. Commit scopes follow the workspace: `web`, `engine`, `alttpr`.
 
 Area rules live in `.claude/rules/` and load when you touch their files: `store.md` (state, persistence), `data.md` (game data and logic), `components.md` (UI, styles, a11y), `tests.md`, `engine.md` (the logic engine).
 
@@ -51,4 +51,4 @@ The `verifier` subagent runs lint, types, tests and build and returns only the f
 
 ## Commits
 
-Conventional Commits, enforced by commitlint via a husky `commit-msg` hook (`feat`/`fix`/`docs`/`style`/`refactor`/`perf`/`test`/`build`/`ci`/`chore`/`revert`); body lines ≤ 100 characters. A `pre-commit` hook runs `lint-staged` (Biome) on staged files. Do not add Co-Authored-By trailers. `standard-version` derives releases from commit types, so mark a commit breaking (`!` / `BREAKING CHANGE`) only when users must act — an automatic save migration is not breaking.
+Conventional Commits, enforced by commitlint via a husky `commit-msg` hook (`feat`/`fix`/`docs`/`style`/`refactor`/`perf`/`test`/`build`/`ci`/`chore`/`revert`); body lines ≤ 100 characters. A `pre-commit` hook runs `lint-staged` (Biome) on staged files. Do not add Co-Authored-By trailers. release-please derives the version and changelog from commit types (`release-please-config.json` lists which are shown: `feat`, `fix`, `perf`, `revert`, `docs`, `refactor`), so mark a commit breaking (`!` / `BREAKING CHANGE`) only when users must act — an automatic save migration is not breaking.
