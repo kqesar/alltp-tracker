@@ -3,34 +3,47 @@ import { itemValue, type State } from "./evaluate";
 import { type Level, MAYBE, NO, TRI_VALUES, type Tri, YES } from "./tri";
 import type { CompiledWorld } from "./world";
 
-/** The availability of every region and location for one state. */
+/**
+ * The availability of every region and location for one state, and what
+ * the player can see: `visible(id)` is never below `location(id)`.
+ */
 export class Solution {
   readonly #world: CompiledWorld;
   readonly #regions: Uint8Array;
   readonly #locations: Uint8Array;
+  readonly #visibles: Uint8Array;
 
   constructor(
     world: CompiledWorld,
     regions: Uint8Array,
     locations: Uint8Array,
+    visibles: Uint8Array,
   ) {
     this.#world = world;
     this.#regions = regions;
     this.#locations = locations;
+    this.#visibles = visibles;
   }
 
   /** Throws a RangeError for an id the world does not have. */
   region(id: string): Tri {
-    const index = this.#world.regionIndex.get(id);
-    if (index === undefined) throw new RangeError(`Unknown region "${id}"`);
-    return TRI_VALUES[this.#regions[index]];
+    return TRI_VALUES[
+      this.#regions[indexOf(this.#world.regionIndex, id, "region")]
+    ];
   }
 
   /** Throws a RangeError for an id the world does not have. */
   location(id: string): Tri {
-    const index = this.#world.locationIndex.get(id);
-    if (index === undefined) throw new RangeError(`Unknown location "${id}"`);
-    return TRI_VALUES[this.#locations[index]];
+    return TRI_VALUES[this.#locations[locationIndex(this.#world, id)]];
+  }
+
+  /**
+   * Whether the player can see what the location holds:
+   * `max(location(id), min(level(from), visible.req))`, so `location(id)` for
+   * a location without `visible`. Throws a RangeError for an unknown id.
+   */
+  visible(id: string): Tri {
+    return TRI_VALUES[this.#visibles[locationIndex(this.#world, id)]];
   }
 
   regions(): Record<string, Tri> {
@@ -40,7 +53,25 @@ export class Solution {
   locations(): Record<string, Tri> {
     return snapshot(this.#world.locationIds, this.#locations);
   }
+
+  /** `visible()` of every location. */
+  visibles(): Record<string, Tri> {
+    return snapshot(this.#world.locationIds, this.#visibles);
+  }
 }
+
+function indexOf(
+  index: ReadonlyMap<string, number>,
+  id: string,
+  kind: string,
+): number {
+  const found = index.get(id);
+  if (found === undefined) throw new RangeError(`Unknown ${kind} "${id}"`);
+  return found;
+}
+
+const locationIndex = (world: CompiledWorld, id: string) =>
+  indexOf(world.locationIndex, id, "location");
 
 function snapshot(
   ids: readonly string[],
@@ -55,7 +86,8 @@ function snapshot(
  * A region's level is the best, over every path from the start, of the worst
  * exit on that path: `level(start) = yes`, and otherwise the least fixpoint of
  * `level(r) = max over exits u -> r of min(level(u), req(exit))`. A location
- * is `min(level(its region), req(location))`.
+ * is `min(level(its region), req(location))`, and what can be seen of it
+ * `max(location, min(level(from), visible.req))`.
  *
  * With only three levels this is a widest-path search with one bucket per
  * level, highest first. Regions reached with "yes" are expanded first, so
@@ -73,7 +105,7 @@ export function solve(world: CompiledWorld, state: State): Solution {
   const regionCount = world.regionIds.length;
   const levels = new Uint8Array(regionCount);
   // Exits cannot use reach() (compileWorld rejects it), so `levels` is read
-  // only by location requirements, once the regions below are all final.
+  // only by location and visible requirements, once regions are all final.
   const ctx: Context = {
     helpers: new Int8Array(world.helperCount).fill(UNKNOWN),
     regions: levels,
@@ -122,5 +154,18 @@ export function solve(world: CompiledWorld, state: State): Solution {
     }
   }
 
-  return new Solution(world, levels, locations);
+  // The second channel: what can be seen. It starts as the availability and
+  // can only rise; a requirement that cannot raise it is not evaluated.
+  const visibles = locations.slice();
+  const { visibleFrom, visibleLocations, visibleReqs } = world;
+  for (let v = 0; v < visibleLocations.length; v++) {
+    const l = visibleLocations[v];
+    const from = levels[visibleFrom[v]];
+    if (from <= visibles[l]) continue;
+    const req = visibleReqs[v](ctx);
+    const seen = req < from ? req : from;
+    if (seen > visibles[l]) visibles[l] = seen;
+  }
+
+  return new Solution(world, levels, locations, visibles);
 }

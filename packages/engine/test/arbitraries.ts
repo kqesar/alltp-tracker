@@ -207,8 +207,10 @@ const exitReq = fc.option(
 
 /**
  * A world of 1 to 8 regions starting at r0, each with up to 4 exits to any
- * region (cycles and self-loops included) and up to 3 locations. Location
- * requirements may reach() any of its regions; exit requirements never do.
+ * region (cycles and self-loops included) and up to 3 locations, about a
+ * third of them visible from somewhere (their own region or any other).
+ * Location and visible requirements may reach() any region; exit
+ * requirements never do.
  */
 export const world: fc.Arbitrary<World> = fc
   .integer({ max: 8, min: 1 })
@@ -217,23 +219,30 @@ export const world: fc.Arbitrary<World> = fc
     const locationReq = fc.option(exprArbitraries(ids).canonical.map(print), {
       nil: undefined,
     });
+    const visible = fc.option(
+      fc.record({
+        from: fc.option(fc.constantFrom(...ids), { nil: undefined }),
+        req: locationReq,
+      }),
+      { freq: 2, nil: undefined },
+    );
     const region = fc.record({
       exits: fc.array(
         fc.record({ req: exitReq, to: fc.constantFrom(...ids) }),
-        {
-          maxLength: 4,
-        },
+        { maxLength: 4 },
       ),
-      locations: fc.array(locationReq, { maxLength: 3 }),
+      locations: fc.array(fc.record({ req: locationReq, visible }), {
+        maxLength: 3,
+      }),
     });
     return fc.array(region, { maxLength: count, minLength: count }).map(
       (regions): World => ({
         regions: regions.map((r, i) => ({
           exits: r.exits,
           id: `r${i}`,
-          locations: r.locations.map((locReq, j) => ({
+          locations: r.locations.map((location, j) => ({
             id: `r${i}l${j}`,
-            req: locReq,
+            ...location,
           })),
         })),
         start: "r0",

@@ -17,7 +17,7 @@ import { print } from "./printer";
 import type { Rules } from "./rules";
 import { foldRules, foldSettings, type Settings } from "./settings";
 import { solve } from "./solve";
-import { and, compare, type Tri } from "./tri";
+import { and, compare, or, type Tri } from "./tri";
 import { compileWorld, type World } from "./world";
 
 const RUNS = { numRuns: 500 };
@@ -51,15 +51,22 @@ function referenceSolve(w: World, s: State, r: Rules, set: Settings) {
     }
   }
   const locations: Record<string, Tri> = {};
+  const visibles: Record<string, Tri> = {};
   for (const region of w.regions) {
     for (const location of region.locations ?? []) {
-      locations[location.id] = and(
-        regions[region.id] ?? "no",
-        req(location.req),
-      );
+      const available = and(regions[region.id] ?? "no", req(location.req));
+      locations[location.id] = available;
+      const visible = location.visible;
+      visibles[location.id] =
+        visible === undefined
+          ? available
+          : or(
+              available,
+              and(regions[visible.from ?? region.id] ?? "no", req(visible.req)),
+            );
     }
   }
-  return { locations, regions };
+  return { locations, regions, visibles };
 }
 
 /** Every setting node or setting threshold left in `expr`. */
@@ -180,6 +187,23 @@ describe("solver", () => {
         const expected = referenceSolve(w, s, rules, set);
         expect(solution.regions()).toEqual(expected.regions);
         expect(solution.locations()).toEqual(expected.locations);
+        expect(solution.visibles()).toEqual(expected.visibles);
+      }),
+      RUNS,
+    );
+  });
+
+  it("never shows a location as less visible than available", () => {
+    fc.assert(
+      fc.property(world, state, settings, (w, s, set) => {
+        const compiled = compileWorld(w, rules, { settings: set });
+        const solution = solve(compiled, s);
+        for (const id of compiled.locationIds) {
+          expect(
+            compare(solution.location(id), solution.visible(id)),
+            `location ${id}`,
+          ).toBeLessThanOrEqual(0);
+        }
       }),
       RUNS,
     );
@@ -205,7 +229,7 @@ describe("monotonicity: more items never lowers anything", () => {
     );
   });
 
-  it("holds for every region and location of a compiled world", () => {
+  it("holds for every region, location and visible of a compiled world", () => {
     fc.assert(
       fc.property(world, stateAndMore, settings, (w, [less, more], set) => {
         const compiled = compileWorld(w, rules, { settings: set });
@@ -221,6 +245,10 @@ describe("monotonicity: more items never lowers anything", () => {
           expect(
             compare(before.location(id), after.location(id)),
             `location ${id}`,
+          ).toBeLessThanOrEqual(0);
+          expect(
+            compare(before.visible(id), after.visible(id)),
+            `visible ${id}`,
           ).toBeLessThanOrEqual(0);
         }
       }),

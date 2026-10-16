@@ -79,13 +79,58 @@ describe("ALttP sample world", () => {
     expect(solution.location("chestGame")).toBe(expected);
   });
 
-  it("shows a visible-only item as maybe until it can be reached", () => {
-    const portal = { glove: 2, moonpearl: true };
-    expect(at({}).location("bumperCaveLedge")).toBe("no");
-    expect(at(portal).location("bumperCaveLedge")).toBe("maybe");
-    expect(at({ ...portal, cape: true }).location("bumperCaveLedge")).toBe(
+  it.each<[string, State, Tri, Tri]>([
+    // [case, state, location, visible]
+    ["nothing", {}, "no", "no"],
+    ["the portal: seen from below", { glove: 2, moonpearl: true }, "no", "yes"],
+    [
+      "the portal and the cape",
+      { cape: true, glove: 2, moonpearl: true },
       "yes",
-    );
+      "yes",
+    ],
+  ])(
+    "sees the Bumper Cave ledge before reaching it: %s",
+    (_, state, location, visible) => {
+      const solution = at(state);
+      expect(solution.location("bumperCaveLedge")).toBe(location);
+      expect(solution.visible("bumperCaveLedge")).toBe(visible);
+    },
+  );
+
+  it.each<[string, State, Tri, Tri]>([
+    // [case, state, location, visible]
+    ["Death Mountain, no Book", { flute: true }, "no", "no"],
+    ["the Book off the mountain", { book: true }, "no", "no"],
+    ["the Book on Death Mountain", { book: true, flute: true }, "no", "yes"],
+    // The dark cave: the mountain, and so the reading, is only a maybe.
+    ["the Book through the dark cave", { book: true, glove: 1 }, "no", "maybe"],
+    [
+      "everything it needs",
+      { book: true, flute: true, mirror: true, sword: 2 },
+      "yes",
+      "yes",
+    ],
+  ])(
+    "reads the Ether tablet with the Book: %s",
+    (_, state, location, visible) => {
+      const solution = at(state);
+      expect(solution.location("etherTablet")).toBe(location);
+      expect(solution.visible("etherTablet")).toBe(visible);
+    },
+  );
+
+  it("keeps visible equal to availability where no visible entry is given", () => {
+    const solution = at({ book: true, flute: true, glove: 2, moonpearl: true });
+    const { bumperCaveLedge, etherTablet, ...others } = solution.visibles();
+    const {
+      bumperCaveLedge: _b,
+      etherTablet: _e,
+      ...available
+    } = solution.locations();
+    expect(bumperCaveLedge).toBe("yes");
+    expect(etherTablet).toBe("yes");
+    expect(others).toEqual(available);
   });
 
   it("gates Ganon's Tower on count(crystal) >= 7", () => {

@@ -21,6 +21,17 @@ export interface Exit {
   readonly req?: string;
 }
 
+/**
+ * Where a location's contents can be seen before they can be collected: the
+ * Bumper Cave ledge from below, the Ether tablet read with the Book.
+ */
+export interface Visibility {
+  /** The region to see it from; the location's own region when omitted. */
+  readonly from?: string;
+  /** What seeing it needs once there; `true` when omitted. */
+  readonly req?: string;
+}
+
 /** Something to collect: a chest, an NPC, a boss prize. */
 export interface Location {
   /** Unique across the whole world. */
@@ -30,6 +41,12 @@ export interface Location {
    * `reach(region)` for a location that also needs another region reached.
    */
   readonly req?: string;
+  /**
+   * When its contents can be seen without collecting them: solved into
+   * `Solution.visible()`, beside the location's availability. Its `req` may
+   * use `reach()` too.
+   */
+  readonly visible?: Visibility;
 }
 
 export interface Region {
@@ -86,6 +103,12 @@ export interface CompiledWorld {
   readonly exitReqs: readonly Compiled[];
   readonly locationOffsets: Int32Array;
   readonly locationReqs: readonly Compiled[];
+  /** Locations with a `visible` entry, by location index... */
+  readonly visibleLocations: Int32Array;
+  /** ...the region index each is seen from... */
+  readonly visibleFrom: Int32Array;
+  /** ...and what seeing it needs, all three in the same order. */
+  readonly visibleReqs: readonly Compiled[];
 }
 
 const ALWAYS: Compiled = () => YES;
@@ -165,6 +188,9 @@ export function compileWorld(
   const locationIndex = new Map<string, number>();
   const locationReqs: Compiled[] = [];
   const locationRegion: string[] = [];
+  const visibleLocations: number[] = [];
+  const visibleFrom: number[] = [];
+  const visibleReqs: Compiled[] = [];
 
   world.regions.forEach((region, r) => {
     for (const exit of region.exits ?? []) {
@@ -188,10 +214,23 @@ export function compileWorld(
           `Duplicate location "${location.id}" (regions "${locationRegion[seen]}" and "${region.id}")`,
         );
       }
+      const where = `Location "${location.id}"`;
       locationIndex.set(location.id, locationIds.length);
       locationIds.push(location.id);
       locationRegion.push(region.id);
-      locationReqs.push(compileReq(location.req, `Location "${location.id}"`));
+      locationReqs.push(compileReq(location.req, where));
+
+      const visible = location.visible;
+      if (visible === undefined) continue;
+      const from = regionIndex.get(visible.from ?? region.id);
+      if (from === undefined) {
+        throw new DefinitionError(
+          `${where} is visible from unknown region "${visible.from}"`,
+        );
+      }
+      visibleLocations.push(locationIds.length - 1);
+      visibleFrom.push(from);
+      visibleReqs.push(compileReq(visible.req, `${where} (visible)`));
     }
     locationOffsets[r + 1] = locationIds.length;
   });
@@ -209,6 +248,9 @@ export function compileWorld(
     regionIds: world.regions.map((region) => region.id),
     regionIndex,
     start,
+    visibleFrom: Int32Array.from(visibleFrom),
+    visibleLocations: Int32Array.from(visibleLocations),
+    visibleReqs,
   };
 }
 
@@ -253,6 +295,6 @@ function checkNoReach(
   const through =
     chain.length > 1 ? ` through ${chain.slice(0, -1).join(" -> ")}` : "";
   throw new DefinitionError(
-    `${where} uses ${chain.at(-1)}${through}: reach() is allowed only in location requirements`,
+    `${where} uses ${chain.at(-1)}${through}: reach() is allowed only in location and visible requirements`,
   );
 }

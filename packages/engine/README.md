@@ -29,7 +29,11 @@ const world = compileWorld(
       {
         exits: [{ req: "flute | @canLiftRocks & ?lantern", to: "deathMountain" }],
         id: "lightWorld",
-        locations: [{ id: "linksUncle" }, { id: "library", req: "boots" }],
+        locations: [
+          { id: "linksUncle" },
+          // On its shelf, the item shows before the boots can knock it down.
+          { id: "library", req: "boots", visible: {} },
+        ],
       },
       { id: "deathMountain", locations: [{ id: "oldMan", req: "?lantern" }] },
     ],
@@ -42,6 +46,7 @@ const world = compileWorld(
 const solution = solve(world, { glove: 1 }); // once per click
 solution.region("deathMountain"); // "maybe": the Old Man's cave is dark
 solution.location("library"); // "no"
+solution.visible("library"); // "yes": seen, not yet collectable
 solution.locations(); // { linksUncle: "yes", library: "no", oldMan: "maybe" }
 ```
 
@@ -96,7 +101,7 @@ Choices that shape everything else:
 | Value | Meaning for the player |
 | --- | --- |
 | `yes` | In logic with the items held. |
-| `maybe` | Possible, but through something the logic can't vouch for: a dark room without a light source, an unknown medallion, a sequence break, an item that is visible but not obtainable yet. |
+| `maybe` | Possible, but through something the logic can't vouch for: a dark room without a light source, an unknown medallion, a sequence break. |
 | `no` | Out of logic. |
 
 The values are ordered `no < maybe < yes` and combine with strong Kleene logic:
@@ -105,6 +110,30 @@ and `or() = no`, this is a distributive lattice: commutative, associative,
 idempotent, absorptive and distributive both ways. `tri.spec.ts` checks every
 law on all 27 triples. `soften` (the DSL's `?x` / `maybe(x)`) maps `no` to
 `maybe` and leaves the others alone. All three operators are monotone.
+
+### Visible: a second channel, not a fourth value
+
+"I can see what it holds" (the Bumper Cave ledge from below, the Ether tablet
+read with the Book) is not "I might get it": it says nothing about whether the
+item can be collected. So it is not folded into `maybe`, and not a fourth
+`Tri` value either, which would break the lattice. A location may carry
+
+```ts
+{ id: "etherTablet", req: "book & mirror & sword >= 2", visible: { req: "book" } }
+```
+
+and the solver fills a second array beside the availability:
+
+```
+visible(l) = max(location(l), min(level(from), visible.req))
+```
+
+`from` is a region id and defaults to the location's own region; `req`
+defaults to `true` and may use `reach()`. A location without `visible` has
+`visible(l) = location(l)`, so `visible` is never below the availability, and
+like it, it never goes down when an item is found. `Tri` and its laws are
+unchanged: `visible` is the same lattice, read as "can see" rather than "can
+get". `solution.visible(id)` and `solution.visibles()` read it.
 
 ## The requirement language
 
@@ -245,18 +274,19 @@ Inside a pack, the error is wrapped with where it happened, and the
 ### Definition
 
 A `World` is `{ regions, start }`. Each region has one-way `exits: { to, req }[]`
-and `locations: { id, req }[]`, and a requirement defaults to `true`. For a
-state, region levels are the **least fixpoint** of
+and `locations: { id, req, visible?: { from?, req? } }[]`, and a requirement
+defaults to `true`. For a state, region levels are the **least fixpoint** of
 
 ```
 level(start) = yes
 level(r)     = max over exits u -> r of  min(level(u), req(exit))
 ```
 
-and then `location = min(level(its region), req(location))`. In words: a path
-is as good as its weakest exit, and a region is as good as its best path.
-Exit requirements read the state only. Location requirements may also read
-the final region levels, through `reach()`.
+and then `location = min(level(its region), req(location))` and
+`visible = max(location, min(level(from), visible.req))`. In words: a path is
+as good as its weakest exit, and a region is as good as its best path. Exit
+requirements read the state only. Location and visible requirements may also
+read the final region levels, through `reach()`.
 
 ### Algorithm
 
@@ -272,6 +302,9 @@ queue, just one bucket (stack) per level above `no`:
    region that was raised to `yes` after it was queued.
 4. For each reachable region, evaluate its locations. Every region level is
    final by now, which is what `reach()` reads.
+5. Copy the availability into the visible array, then raise each location
+   with a `visible` entry to `min(level(from), visible.req)` when that is
+   higher. The requirement is skipped when `from` cannot raise it.
 
 Every region is expanded exactly once, at its final level. Nothing reached
 later can beat `yes`, and the maybe phase only produces `maybe`. So each exit
@@ -283,7 +316,8 @@ expanded only when raised.
 
 **Cost per solve:** O(R + E + L) plus the size of the requirements actually
 evaluated (each AST node at most once, helper bodies included), for R regions,
-E exits and L locations. Memory is O(R + L) typed arrays. Compiling is linear in
+E exits and L locations; a `visible` entry costs one more requirement. Memory
+is O(R + L) typed arrays. Compiling is linear in
 the world's size, and each distinct requirement text is parsed and compiled
 once.
 
@@ -362,7 +396,7 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
 
 ## Tests
 
-`pnpm vitest run --project engine` runs 258 tests in about 0.5 s:
+`pnpm vitest run --project engine` runs 281 tests in about 0.6 s:
 
 - **Kleene tables:** both truth tables written out in full, plus every lattice
   law on all combinations.
@@ -377,6 +411,11 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
   after the location's own region was expanded, reach() through a helper, and
   every error: in an exit directly, through a chain of helpers, after a
   reach-free helper was cached, and unknown regions in locations and helpers.
+- **Visible:** no entry means the availability; seen from another region;
+  read from a region reached as maybe; the visible requirement's own maybe;
+  availability winning over visibility; `reach()` in a visible requirement;
+  the snapshot; unknown `from` regions and parse errors, named. The sample
+  pins the Bumper Cave ledge and the Ether tablet at every stage.
 - **Rules:** helper and group loading, helper cycles (self, 2-, 3-cycles, a cycle
   not containing the starting helper, and a diamond that must *not* count as one),
   unknown references, invalid names.
@@ -387,16 +426,19 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
   entered through a maybe exit, reuse across solves (no memo leaks), and every
   `DefinitionError`.
 - **Properties (fast-check):** random requirements and worlds use settings,
-  negated settings and setting thresholds throughout, and location
-  requirements use `reach()` (exits never do). `parse(print(ast))`
-  round-trips; printing any tree gives an equivalent requirement; folding
-  leaves no setting, keeps the meaning and the parser's shape, helpers
-  included; compiled evaluation equals `evaluate`; the solver equals the
-  literal fixpoint; and monotonicity in items, for requirements and for every
-  region and location of compiled worlds. Seeded mutations fail them with
-  shrunk counterexamples: `>=` to `===` in compiled item tests fails three,
-  a fold that ignores `!` three, a fold that skips the inside of `?x` four, a
-  compiled `reach()` that drops `maybe` two.
+  negated settings and setting thresholds throughout, location and visible
+  requirements use `reach()` (exits never do), and a third of the locations
+  are visible from some region. `parse(print(ast))` round-trips; printing any
+  tree gives an equivalent requirement; folding leaves no setting, keeps the
+  meaning and the parser's shape, helpers included; compiled evaluation
+  equals `evaluate`; the solver equals the literal fixpoint, visibles
+  included; `visible >= location`; and monotonicity in items, for
+  requirements and for every region, location and visible of compiled
+  worlds. Seeded mutations fail them with shrunk counterexamples: `>=` to
+  `===` in compiled item tests fails three, a fold that ignores `!` three, a
+  fold that skips the inside of `?x` four, a compiled `reach()` that drops
+  `maybe` two, a visible channel started from zero two, an anti-monotone
+  visible requirement two.
 
 ## How a game pack plugs in
 
@@ -444,11 +486,10 @@ a region belongs to.
    target comes from state at solve time (an unknown target leads nowhere, or
    `maybe` everywhere). That breaks the fixed array layout, so measure before
    choosing.
-3. **"Visible item" semantics.** The sample folds visible-only items into
-   `maybe` (`… | maybe`). But "I can see what it is" (Bumper Cave ledge, Ether
-   tablet) is not "possible but unconfirmed". Rather than a fourth value, which
-   would break the lattice, a location could carry an optional `visible`
-   requirement solved into a second channel, keeping `Tri` pure.
+3. **"Visible item" semantics.** Done: `Location.visible` is solved into a
+   second channel (see [Visible](#visible-a-second-channel-not-a-fourth-value)),
+   and the sample's Bumper Cave ledge and Ether tablet use it instead of the old
+   `… | maybe` idiom. Still open: how the map shows "seen, not collectable".
 4. **Settings, swordless, placement variants.** Done as option (b):
    compile-time `setting(name)`, `!setting(name)` and `>= setting(name)`,
    folded by `compileWorld` (see [Settings](#settings)). Option (a), the pack
