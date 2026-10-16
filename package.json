@@ -73,6 +73,7 @@
     "commitizen": "^4.3.2",
     "conventional-changelog-cli": "^5.0.0",
     "cz-conventional-changelog": "^3.3.0",
+    "fast-check": "4.10.2",
     "husky": "^9.1.7",
     "jsdom": "^30.0.1",
     "lint-staged": "^17.5.0",
