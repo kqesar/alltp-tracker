@@ -62,7 +62,7 @@
     {
       "file": "app/Region/Standard/HyruleCastleTower.php",
       "module": "src/regions/standard/hyrule-castle-tower.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/IcePalace.php",
@@ -282,7 +282,7 @@
     {
       "file": "tests/NoGlitches/HyruleCastleTowerTest.php",
       "fixture": "test/upstream/NoGlitches/HyruleCastleTower.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/IcePalaceTest.php",
