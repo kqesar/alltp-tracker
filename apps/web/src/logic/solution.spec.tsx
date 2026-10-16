@@ -13,7 +13,9 @@ import { packSettings } from "@/logic/settings";
 import {
   bossStateOf,
   dungeonStateOf,
+  locationStatus,
   markerById,
+  markerDetail,
   markerStateOf,
   solutionOf,
   trackerInput,
@@ -127,8 +129,48 @@ describe("solutionOf", () => {
   });
 });
 
+describe("locationStatus", () => {
+  // [tris, visibles, status]: available > possible > seen > unavailable
+  it.each([
+    [["yes"], ["yes"], "available"],
+    [["yes", "yes"], ["yes", "yes"], "available"],
+    [["yes", "no"], ["yes", "yes"], "possible"],
+    [["yes", "no"], ["yes", "no"], "possible"],
+    [["maybe"], ["maybe"], "possible"],
+    [["maybe", "no"], ["maybe", "yes"], "possible"],
+    [["no"], ["yes"], "seen"],
+    [["no"], ["maybe"], "seen"],
+    [["no", "no"], ["no", "yes"], "seen"],
+    [["no"], ["no"], "unavailable"],
+    [["no", "no"], ["no", "no"], "unavailable"],
+    [[], [], "unavailable"],
+  ] as const)("reads tris %j, seen %j, as %s", (tris, visibles, status) => {
+    expect(locationStatus(tris, visibles)).toBe(status);
+  });
+});
+
 describe("what a marker shows", () => {
   const show = (id: string) => markerStateOf(markerById(id), store());
+
+  it("shows a location seen from afar, out of logic, as seen", () => {
+    // Seen from the shore from the start: Lake Hylia Island, Desert Ledge
+    expect(show("lake-hylia-island")).toBe("seen");
+    expect(show("desert-ledge")).toBe("seen");
+
+    // The Book reads the Pedestal; the three pendants take the sword
+    expect(show("master-sword-pedestal")).toBe("unavailable");
+    give({ book: true });
+    expect(show("master-sword-pedestal")).toBe("seen");
+    expect(markerDetail(markerById("master-sword-pedestal"), store())).toEqual([
+      "seen",
+    ]);
+    give({ boss0: 2, boss1: 2, boss2: 2, reward0: 1, reward1: 2, reward2: 2 });
+    expect(show("master-sword-pedestal")).toBe("available");
+    act(() => store().toggleChecks(["master-sword-pedestal"]));
+    expect(show("master-sword-pedestal")).toBe("opened");
+    // The Book opens Desert Palace, whose ledge is now in logic
+    expect(show("desert-ledge")).toBe("available");
+  });
 
   it("reads a location marker from the locations it still stands for", () => {
     // King's Tomb wants the boots and a way to lift its gravestone

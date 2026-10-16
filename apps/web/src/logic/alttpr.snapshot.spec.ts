@@ -26,13 +26,15 @@ import {
  * Each state is one line per kind, one character per marker or dungeon, in
  * the order of the pack's MARKERS (63 location markers, then the dungeons:
  * their square, the counter) and MARKED_DUNGEONS (their boss): "a"
- * available, "p" possible, "u" unavailable, "o" done.
+ * available, "p" possible, "s" seen (out of logic, but in sight), "u"
+ * unavailable, "o" done.
  */
 
 const CODES: Record<MarkerState, string> = {
   available: "a",
   opened: "o",
   possible: "p",
+  seen: "s",
   unavailable: "u",
 };
 
@@ -86,7 +88,7 @@ const scenarios: Array<{
     expected: {
       bosses: "uuuuuuuuuuuu",
       markers:
-        "uaauuaauuauuauaauuuaauuuauuuuuuuuuuuauuuuuuuauuauuuuuuuuapauuuupuuuuuuuuuuou",
+        "uaauuaauuauuauaauuuaauuuauuuuuuuuuuuauuuuuuuauuassuuuuuuapauuuupuuuuuuuuuuou",
     },
     items: state(),
     medallions: noMedallions,
@@ -96,7 +98,7 @@ const scenarios: Array<{
     expected: {
       bosses: "aaaoaaaaaaau",
       markers:
-        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaauuaaaaaaaaaaaou",
+        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaausaaaaaaaaaaaou",
     },
     items: everything,
     medallions: allMedallions,
@@ -106,7 +108,7 @@ const scenarios: Array<{
     expected: {
       bosses: "aaaoaaaaaaau",
       markers:
-        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaauuaaaaaaaaaaaou",
+        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaausaaaaaaaaaaaou",
     },
     items: everything,
     medallions: noMedallions,
@@ -116,7 +118,7 @@ const scenarios: Array<{
     expected: {
       bosses: "uuuuuuuuuuuu",
       markers:
-        "uaauuaauuauuauaauuaaauuuauuuuuuuuuuuauuuuuuaauuauuuuuuuuapauuuupuuuuuuuuuuou",
+        "uaauuaauuauuauaauuaaauuuauuuuuuuuuuuauuuuuuaauuassuuuuuuapauuuupuuuuuuuuuuou",
     },
     items: state({ boots: true, sword: 1 }),
     medallions: noMedallions,
@@ -126,7 +128,7 @@ const scenarios: Array<{
     expected: {
       bosses: "uuuuuuuauuuu",
       markers:
-        "uaauuaaaaauuauaaauuaauuaauauuuuuaauuauuuuuuuauuauuuaauuaapauuuupuupupauuuuou",
+        "uaauuaaaaauuauaaauuaauuaauauuuuuaauuauuuuuuuauuasssaasuaapauuuupuupupauuuuou",
     },
     items: state({ glove: 1, hammer: true, moonpearl: true }),
     medallions: noMedallions,
@@ -136,7 +138,7 @@ const scenarios: Array<{
     expected: {
       bosses: "uuuuuuuuuuuu",
       markers:
-        "uaauuaaaaauuauaaauuaauuaauauauuuuauuauuuuuuuauuauuuuauuaapauauupuuuupauuuuou",
+        "uaauuaaaaauuauaaauuaauuaauauauuuuauuauuuuuuuauuasssuasuaapauauupuuuupauuuuou",
     },
     items: state({ glove: 2, moonpearl: true }),
     medallions: noMedallions,
@@ -146,7 +148,7 @@ const scenarios: Array<{
     expected: {
       bosses: "uuuouuuuuuuu",
       markers:
-        "uaauuaaaaauuauaaauuaauuaauauuauuuauuauuuuuuuauuauuuaaauuapauuuupuupupauuuaou",
+        "uaauuaaaaauuauaaauuaauuaauauuauuuauuauuuuuuuauuasssaaauuapauuuupuupupauuuaou",
     },
     items: state({
       agahnim: 1,
@@ -161,7 +163,7 @@ const scenarios: Array<{
     expected: {
       bosses: "uuuuuuuuuuuu",
       markers:
-        "uaauuaauuauuauaauuuaauuuauuuuuuuuuuuauuuuuuuauuauuuuuuuuapauuuupuuuuuuuuuuou",
+        "uaauuaauuauuauaauuuaauuuauuuuuuuuuuuauuuuuuuauuassuuuuuuapauuuupuuuuuuuuuuou",
     },
     items: state({ moonpearl: true }),
     medallions: noMedallions,
@@ -171,7 +173,7 @@ const scenarios: Array<{
     expected: {
       bosses: "uuuuuuuuuuuu",
       markers:
-        "uaauuaauuauuauaauuuaauuuauuuuuuuuauuauauuauuaauaauuuuuuaapauuuupppuuuuuuuuou",
+        "uaauuaauuauuauaauuuaauuuauuuuuuuuauuauauuauuaauaasuuusuaapauuuupppuuuuuuuuou",
     },
     items: state({ flute: true, glove: 2, mirror: true }),
     medallions: noMedallions,
@@ -181,7 +183,7 @@ const scenarios: Array<{
     expected: {
       bosses: "upuuuuuuuuuu",
       markers:
-        "uaauuaauuauuauaauuuaauuuauuuuuuuuauuauuuuuuuauuaauuuuuuaaaauuuuppuuuuuuuuuou",
+        "uaauuaauuauuauaauuuaauuuauuuuuuuuauuauuuuuuuauuaasuuusuaaaauuusppuuuuuuuuuou",
     },
     items: state({ book: true, firerod: true, glove: 1 }),
     medallions: noMedallions,
@@ -191,7 +193,7 @@ const scenarios: Array<{
     expected: {
       bosses: "uuuuuuuuuuuu",
       markers:
-        "uaauuaauuauuauaauuuaauuuauuuuuuuuuuuauuuuuuuauuauuuuuuuuapauuuupuuuuuuuuuuou",
+        "uaauuaauuauuauaauuuaauuuauuuuuuuuuuuauuuuuuuauuassuuuuuuapauuuupuuuuuuuuuuou",
     },
     items: state({ hammer: true, hookshot: true, mirror: true }),
     medallions: noMedallions,
@@ -201,7 +203,7 @@ const scenarios: Array<{
     expected: {
       bosses: "aaaoaaaaaaau",
       markers:
-        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaauuaaaaaaaaaaaou",
+        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaausaaaaaaaaaaaou",
     },
     items: everything,
     medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2],
@@ -211,7 +213,7 @@ const scenarios: Array<{
     expected: {
       bosses: "aaaoaaaaauuu",
       markers:
-        "aaaauaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaauuaaaaaaaauuaou",
+        "aaaauaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaausaaaaaaaauuaou",
     },
     items: state({ ...everything, bombos: true, ether: false, quake: false }),
     medallions: [0, 0, 0, 0, 0, 0, 0, 0, 2, 3],
@@ -221,7 +223,7 @@ const scenarios: Array<{
     expected: {
       bosses: "aaaoaaaaaaau",
       markers:
-        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaauuaaaaaaaaaaaou",
+        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaausaaaaaaaaaaaou",
     },
     items: state({ ...everything, chest4: 2 }),
     medallions: allMedallions,
@@ -231,7 +233,7 @@ const scenarios: Array<{
     expected: {
       bosses: "uaaouaaaaaau",
       markers:
-        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaauuaaapaaaaaaaou",
+        "aaaaaaaaaaaaaaaaaaaaaaaaauaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaausaaapaaaaaaaou",
     },
     items: state({ ...everything, bow: 0 }),
     medallions: allMedallions,

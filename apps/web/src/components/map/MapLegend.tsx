@@ -2,6 +2,7 @@
 const LEGEND_ITEMS = [
   { className: "available", label: "Available now" },
   { className: "possible", label: "Maybe, or only some" },
+  { className: "seen", label: "Visible, not reachable yet" },
   { className: "unavailable", label: "Out of logic" },
   { className: "opened", label: "Opened / cleared" },
 ] as const;

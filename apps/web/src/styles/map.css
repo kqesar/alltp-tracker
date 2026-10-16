@@ -99,6 +99,20 @@
   background-color: var(--state-possible);
 }
 
+.seen {
+  --glyph: "";
+  background-color: var(--state-seen);
+}
+
+/* An eye, drawn as a mask over the glyph's ink: no font draws one in the
+   ink colour on every system (emoji fonts paint it in their own colours) */
+.seen.state-glyph::after {
+  background-color: var(--state-ink);
+  mask:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='M12 4.5C6.8 4.5 2.6 8 1 12c1.6 4 5.8 7.5 11 7.5S21.4 16 23 12c-1.6-4-5.8-7.5-11-7.5ZM12 7.3a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 1 0 0-9.4Zm0 2.3a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 1 0 0-4.8Z'/></svg>")
+    center / 80% no-repeat;
+}
+
 .opened {
   --glyph: "";
   background-color: var(--state-opened);
