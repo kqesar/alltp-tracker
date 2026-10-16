@@ -33,7 +33,7 @@ Click a chest to mark it opened, or a boss to mark it beaten. Hover anything to 
 
 ## Development
 
-Requires Node ≥ 22 and pnpm ≥ 10.
+Requires Node ≥ 22 and pnpm (the exact version is pinned in `package.json` and selected automatically).
 
 ```bash
 pnpm install
