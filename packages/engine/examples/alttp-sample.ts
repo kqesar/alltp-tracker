@@ -96,7 +96,13 @@ export const sampleWorld: World = {
         { id: "oldMan", req: "?lantern" },
         { id: "spectacleRockCave" },
         { id: "spectacleRock", req: "mirror" },
-        { id: "etherTablet", req: "book & mirror & sword >= 2" },
+        {
+          id: "etherTablet",
+          req: "book & mirror & sword >= 2",
+          // With the Book, the tablet reads from Death Mountain: what it
+          // holds shows long before the sword can claim it.
+          visible: { from: "deathMountainWest", req: "book" },
+        },
       ],
     },
     {
@@ -147,10 +153,11 @@ export const sampleWorld: World = {
       id: "darkWorldNorthWest",
       locations: [
         { id: "chestGame", req: "moonpearl" },
-        // Visible from below without the cape: shown as a maybe.
+        // Out of logic without the cape, but seen from the path below.
         {
           id: "bumperCaveLedge",
-          req: "moonpearl & cape & @canLiftRocks | maybe",
+          req: "moonpearl & cape & @canLiftRocks",
+          visible: {},
         },
       ],
     },

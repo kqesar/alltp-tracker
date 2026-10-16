@@ -136,14 +136,14 @@ describe("reach(): definition errors", () => {
 
   it("rejects reach() written in an exit", () => {
     expect(failure(twoRegions("hammer & reach(s)"))).toBe(
-      'Exit "r" -> "s" uses reach(s): reach() is allowed only in location requirements',
+      'Exit "r" -> "s" uses reach(s): reach() is allowed only in location and visible requirements',
     );
   });
 
   it("rejects reach() an exit uses through a chain of helpers", () => {
     const rules = { helpers: { a: "x | @b", b: "?@c", c: "y & reach(r)" } };
     expect(failure(twoRegions("@a"), rules)).toBe(
-      'Exit "r" -> "s" uses reach(r) through @a -> @b -> @c: reach() is allowed only in location requirements',
+      'Exit "r" -> "s" uses reach(r) through @a -> @b -> @c: reach() is allowed only in location and visible requirements',
     );
   });
 
@@ -164,7 +164,7 @@ describe("reach(): definition errors", () => {
       start: "r",
     };
     expect(failure(world, rules)).toBe(
-      'Exit "r" -> "s" uses reach(r) through @mixed: reach() is allowed only in location requirements',
+      'Exit "r" -> "s" uses reach(r) through @mixed: reach() is allowed only in location and visible requirements',
     );
   });
 

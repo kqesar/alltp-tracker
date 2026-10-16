@@ -3,8 +3,9 @@
  *
  * - `"yes"`: in logic with the items held.
  * - `"maybe"`: possible, but through something the logic cannot vouch for: a
- *   dark room without a light source, an unknown medallion, a sequence break,
- *   an item that is visible but not yet obtainable.
+ *   dark room without a light source, an unknown medallion, a sequence break.
+ *   (An item that can be seen but not collected is not a maybe: see
+ *   `Solution.visible`.)
  * - `"no"`: out of logic.
  *
  * Ordered `no < maybe < yes`. `and` is the minimum and `or` the maximum. There

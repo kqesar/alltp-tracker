@@ -56,5 +56,6 @@ export {
   type Exit,
   type Location,
   type Region,
+  type Visibility,
   type World,
 } from "./world";
