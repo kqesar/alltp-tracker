@@ -1,4 +1,4 @@
-import type { Expr } from "./ast";
+import type { Expr, Threshold } from "./ast";
 import type { Tri } from "./tri";
 
 const CONSTANTS: Readonly<Record<Tri, string>> = {
@@ -20,11 +20,15 @@ export function print(expr: Expr): string {
     case "const":
       return CONSTANTS[expr.value];
     case "item":
-      return expr.min === 1 ? expr.name : `${expr.name} >= ${expr.min}`;
+      return expr.min === 1
+        ? expr.name
+        : `${expr.name} >= ${printThreshold(expr.min)}`;
     case "count":
-      return `count(${expr.names.join(", ")}) >= ${expr.min}`;
+      return `count(${expr.names.join(", ")}) >= ${printThreshold(expr.min)}`;
     case "helper":
       return `@${expr.name}`;
+    case "setting":
+      return `${expr.negated ? "!" : ""}setting(${expr.name})`;
     case "maybe":
       return `?${isAtomic(expr.expr) ? print(expr.expr) : `(${print(expr.expr)})`}`;
     case "and":
@@ -44,12 +48,17 @@ export function print(expr: Expr): string {
   }
 }
 
+function printThreshold(min: Threshold): string {
+  return typeof min === "number" ? String(min) : `setting(${min.setting})`;
+}
+
 /** Prints without parentheses after `?`; comparisons get them for clarity. */
 function isAtomic(expr: Expr): boolean {
   switch (expr.type) {
     case "const":
     case "helper":
     case "maybe":
+    case "setting":
       return true;
     case "item":
       return expr.min === 1;

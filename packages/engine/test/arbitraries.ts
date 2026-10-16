@@ -1,11 +1,12 @@
 // fast-check generators shared by the property tests: requirements over a
-// small item alphabet (so random states and requirements overlap), states,
-// "more items" extensions of a state, and random worlds with cycles.
+// small item alphabet (so random states and requirements overlap), settings,
+// states, "more items" extensions of a state, and random worlds with cycles.
 import fc from "fast-check";
-import type { Expr } from "../src/ast";
+import type { Expr, Threshold } from "../src/ast";
 import { itemValue, type State } from "../src/evaluate";
 import { print } from "../src/printer";
 import { loadRules } from "../src/rules";
+import type { Settings } from "../src/settings";
 import type { World } from "../src/world";
 
 export const ITEMS = [
@@ -20,6 +21,10 @@ export const ITEMS = [
   "sword_2",
 ] as const;
 
+/** Settings every generated `settings` value defines, flags and numbers. */
+export const FLAG_SETTINGS = ["open", "swordless"] as const;
+export const NUMBER_SETTINGS = ["crystals", "minSword"] as const;
+
 export const rules = loadRules({
   groups: { crystal: ["c1", "c2", "c3"] },
   helpers: {
@@ -27,20 +32,32 @@ export const rules = loadRules({
     crystals: "count(crystal) >= 2",
     darkRoom: "?lantern",
     heavy: "@canLiftRocks & glove >= 2 | hammer & @darkRoom",
+    // Settings inside a helper: folded with the world's settings.
+    swordGate:
+      "!setting(swordless) & sword_2 >= setting(minSword) | setting(swordless) & hammer",
   },
 });
 
 const HELPER_NAMES = [...rules.helpers.keys()];
 const DEPTH = { depthIdentifier: "expr", maxDepth: 4 } as const;
 
+const threshold = (max: number): fc.Arbitrary<Threshold> =>
+  fc.oneof(
+    { arbitrary: fc.integer({ max, min: 0 }), weight: 4 },
+    {
+      arbitrary: fc.record({ setting: fc.constantFrom(...NUMBER_SETTINGS) }),
+      weight: 1,
+    },
+  );
+
 const leaf: fc.Arbitrary<Expr> = fc.oneof(
   fc.record({
-    min: fc.integer({ max: 3, min: 0 }),
+    min: threshold(3),
     name: fc.constantFrom(...ITEMS),
     type: fc.constant("item" as const),
   }),
   fc.record({
-    min: fc.integer({ max: 5, min: 0 }),
+    min: threshold(5),
     names: fc.array(fc.constantFrom(...ITEMS, "crystal"), {
       maxLength: 3,
       minLength: 1,
@@ -54,6 +71,11 @@ const leaf: fc.Arbitrary<Expr> = fc.oneof(
   fc.record({
     type: fc.constant("const" as const),
     value: fc.constantFrom("yes" as const, "maybe" as const, "no" as const),
+  }),
+  fc.record({
+    name: fc.constantFrom(...FLAG_SETTINGS),
+    negated: fc.boolean(),
+    type: fc.constant("setting" as const),
   }),
 );
 
@@ -95,6 +117,14 @@ export const anyExpr: fc.Arbitrary<Expr> = fc.letrec<{ expr: Expr }>((tie) => ({
     }),
   ),
 })).expr;
+
+/** A value for every setting the generated requirements can use. */
+export const settings: fc.Arbitrary<Settings> = fc.record({
+  crystals: fc.integer({ max: 4, min: 0 }),
+  minSword: fc.integer({ max: 3, min: 0 }),
+  open: fc.boolean(),
+  swordless: fc.boolean(),
+});
 
 const itemValueArb = fc.oneof(fc.boolean(), fc.integer({ max: 3, min: 0 }));
 

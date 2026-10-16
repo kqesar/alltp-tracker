@@ -12,9 +12,17 @@ export {
   type MaybeExpr,
   type OrExpr,
   RESERVED_WORDS,
+  type SettingExpr,
+  type SettingThreshold,
+  type Threshold,
   walk,
 } from "./ast";
-export { evaluate, itemValue, type State } from "./evaluate";
+export {
+  type EvaluateOptions,
+  evaluate,
+  itemValue,
+  type State,
+} from "./evaluate";
 export { ParseError, parse } from "./parser";
 export { print } from "./printer";
 export {
@@ -24,6 +32,7 @@ export {
   type Rules,
   type RulesSource,
 } from "./rules";
+export { foldSettings, type Settings } from "./settings";
 export { Solution, solve } from "./solve";
 export {
   and,

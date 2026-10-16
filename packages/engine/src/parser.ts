@@ -1,4 +1,4 @@
-import { type Expr, RESERVED_WORDS } from "./ast";
+import { type Expr, RESERVED_WORDS, type Threshold } from "./ast";
 
 /**
  * A requirement that does not follow the grammar (see the README). `pos` is
@@ -17,7 +17,7 @@ export class ParseError extends Error {
   }
 }
 
-type Punctuation = "&" | "|" | "(" | ")" | "," | "?" | ">=";
+type Punctuation = "&" | "|" | "(" | ")" | "," | "?" | "!" | ">=";
 
 interface Token {
   readonly kind: Punctuation | "ident" | "helper" | "int" | "eof";
@@ -28,6 +28,7 @@ interface Token {
 
 const SINGLE_CHAR: Readonly<Record<string, Punctuation>> = {
   ",": ",",
+  "!": "!",
   "?": "?",
   "(": "(",
   ")": ")",
@@ -36,7 +37,8 @@ const SINGLE_CHAR: Readonly<Record<string, Punctuation>> = {
 };
 
 const COMPARISON_HINT = 'only ">=" comparisons exist';
-const NEGATION_HINT = "there is no negation: rules must stay monotone";
+const NEGATION_HINT =
+  'only a setting can be negated, as in "!setting(name)": item rules must stay monotone';
 
 const isLower = (c: string | undefined) =>
   c !== undefined && c >= "a" && c <= "z";
@@ -127,9 +129,25 @@ class Parser {
         return { name: token.text, type: "helper" };
       case "ident":
         return this.parseWord(token);
+      case "!":
+        return this.parseNegation(token);
       default:
         throw this.unexpected(token, 'an item, a "@helper", "?" or "("');
     }
+  }
+
+  /** After "!": only `setting(name)` may follow. */
+  private parseNegation(bang: Token): Expr {
+    const word = this.peek();
+    if (word.kind !== "ident" || word.text !== "setting") {
+      throw this.error(bang.pos, 'Unexpected "!"', NEGATION_HINT);
+    }
+    this.next();
+    return {
+      name: this.parseParenthesizedName("setting", "a setting name"),
+      negated: true,
+      type: "setting",
+    };
   }
 
   /** After "(": a whole requirement, then ")". */
@@ -152,17 +170,38 @@ class Parser {
         return { expr: this.parseGroup(), type: "maybe" };
       case "count":
         return this.parseCount();
+      case "setting":
+        return {
+          name: this.parseParenthesizedName("setting", "a setting name"),
+          negated: false,
+          type: "setting",
+        };
       default: {
         if (this.peek().kind !== ">=") {
           return { min: 1, name: token.text, type: "item" };
         }
         this.next();
-        return { min: this.parseInteger(), name: token.text, type: "item" };
+        return { min: this.parseThreshold(), name: token.text, type: "item" };
       }
     }
   }
 
-  /** After "count": `( name { , name } ) >= integer`. */
+  /** After a keyword such as "setting": `( name )`. */
+  private parseParenthesizedName(keyword: string, what: string): string {
+    const open = this.next();
+    if (open.kind !== "(") {
+      throw this.unexpected(open, `"(" after "${keyword}"`);
+    }
+    const name = this.next();
+    if (name.kind !== "ident" || RESERVED_WORDS.has(name.text)) {
+      throw this.unexpected(name, what);
+    }
+    const close = this.next();
+    if (close.kind !== ")") throw this.unexpected(close, '")"');
+    return name.text;
+  }
+
+  /** After "count": `( name { , name } ) >= threshold`. */
   private parseCount(): Expr {
     const open = this.next();
     if (open.kind !== "(") throw this.unexpected(open, '"(" after "count"');
@@ -182,13 +221,19 @@ class Parser {
     if (comparison.kind !== ">=") {
       throw this.unexpected(comparison, '">=" after "count(...)"');
     }
-    return { min: this.parseInteger(), names, type: "count" };
+    return { min: this.parseThreshold(), names, type: "count" };
   }
 
-  private parseInteger(): number {
+  /** After ">=": an integer or `setting(name)`. */
+  private parseThreshold(): Threshold {
     const token = this.next();
+    if (token.kind === "ident" && token.text === "setting") {
+      return {
+        setting: this.parseParenthesizedName("setting", "a setting name"),
+      };
+    }
     if (token.kind !== "int") {
-      throw this.unexpected(token, 'an integer after ">="');
+      throw this.unexpected(token, 'an integer or "setting(name)" after ">="');
     }
     const value = Number(token.text);
     if (!Number.isSafeInteger(value)) {
@@ -252,7 +297,7 @@ class Parser {
     if (c === ">" || c === "<" || c === "=") {
       throw this.error(pos, `Unexpected ${shown}`, COMPARISON_HINT);
     }
-    if (c === "!" || c === "~") {
+    if (c === "~") {
       throw this.error(pos, `Unexpected ${shown}`, NEGATION_HINT);
     }
     if (isUpper(c)) {
