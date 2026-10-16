@@ -1,0 +1,286 @@
+// The map markers: where each check sits on the tracker's map, and what a
+// marker shows for the locations it stands for.
+//
+// The coordinate space is the legacy map's (apps/web/public/assets/map.png,
+// 884 x 442): `x` and `y` are percents of the whole image's width and
+// height, the Light World on its left half (x 0 to 50), the Dark World on
+// its right half (50 to 100). The legacy chests.ts and dungeons.ts wrote
+// them as "30.8%"; here they are numbers.
+import type { Tri } from "@alltp/engine";
+import {
+  DUNGEONS,
+  type DungeonId,
+  dungeon,
+  dungeonLocations,
+} from "./dungeons";
+import { LEGACY_CHESTS, LEGACY_DUNGEONS } from "./legacy";
+import { locationId, type Source } from "./location";
+import { STANDARD } from "./settings";
+
+/** One marker on the map. */
+export interface MapMarker {
+  /** Its id, the slug of its name. */
+  readonly id: string;
+  /** Its label, as text. */
+  readonly name: string;
+  /** Percent of the map's width: the Light World is 0-50, the Dark 50-100. */
+  readonly x: number;
+  /** Percent of the map's height. */
+  readonly y: number;
+  /** The locations it stands for. */
+  readonly locations: readonly string[];
+  /** A dungeon marker's dungeon, whose item locations it stands for. */
+  readonly dungeon?: DungeonId;
+  /**
+   * Where its position comes from: the legacy map's marker of that index,
+   * or, for a marker the legacy map lacked, where it was read and why.
+   */
+  readonly position:
+    | { readonly legacy: "chest" | "dungeon"; readonly index: number }
+    | { readonly source: Source; readonly why: string };
+}
+
+/** The legacy chests.ts positions, by marker index: [x, y]. */
+export const LEGACY_CHEST_POSITIONS: readonly (readonly [number, number])[] = [
+  [30.8, 29.6],
+  [23.4, 93.4],
+  [27.4, 67.9],
+  [39.9, 9.3],
+  [42.6, 9.3],
+  [8.1, 57.8],
+  [4.4, 54.2],
+  [55.4, 57.8],
+  [60.8, 47.9],
+  [10, 82.6],
+  [51.7, 79.5],
+  [92.8, 14.7],
+  [40.7, 41.4],
+  [78.6, 14.9],
+  [1.7, 41],
+  [6.4, 41],
+  [80, 77.1],
+  [41.4, 17.1],
+  [19.5, 29.3],
+  [32.6, 93.4],
+  [44.7, 76.9],
+  [91.6, 8.6],
+  [91.6, 3.4],
+  [52.1, 46.4],
+  [4.5, 46.8],
+  [40.7, 46.7],
+  [65.5, 68.6],
+  [7.8, 52.1],
+  [65.2, 52.2],
+  [35.4, 69.7],
+  [21, 3],
+  [11, 92.2],
+  [96, 17.2],
+  [47.5, 12.1],
+  [20.8, 20.4],
+  [40.8, 32.5],
+  [9.4, 13],
+  [15.1, 7.6],
+  [24.3, 14.8],
+  [14.1, 84.1],
+  [28.1, 27],
+  [8.8, 77.3],
+  [65.8, 60.1],
+  [7.7, 65.9],
+  [6.2, 8.6],
+  [25.4, 8.5],
+  [40.2, 3],
+  [1.8, 69.8],
+  [1.5, 91],
+  [36.1, 82.9],
+  [67.1, 15.2],
+  [79, 43.5],
+  [52.9, 69.2],
+  [47.5, 17.3],
+  [14.4, 66.2],
+  [26.8, 32.4],
+  [29.8, 41.8],
+  [24.9, 44.1],
+  [23, 28],
+  [16, 58],
+  [15.2, 51.8],
+  [73.5, 48.5],
+  [2.5, 3.2],
+  [24.9, 57.1],
+];
+
+/** The legacy dungeons.ts positions, by dungeon index: [x, y]. */
+export const LEGACY_DUNGEON_POSITIONS: readonly (readonly [number, number])[] =
+  [
+    [46.8, 38.8],
+    [3.8, 78.4],
+    [31, 5.5],
+    [97, 40],
+    [73.5, 91],
+    [53.3, 5.4],
+    [56.4, 47.9],
+    [89.8, 85.8],
+    [55.8, 82.9],
+    [96.9, 7],
+  ];
+
+/**
+ * The name of each legacy chest marker, by index, as the map labels it now:
+ * the place, without the icons of what it needs. "Bridge" (63) stands for
+ * no location and gets no marker.
+ */
+const CHEST_NAMES = [
+  "King's Tomb",
+  "Dam",
+  "Link's House",
+  "Spiral Cave",
+  "Mimic Cave",
+  "Kakariko Tavern",
+  "Chicken House",
+  "Brewery",
+  "C-Shaped House",
+  "Aginah's Cave",
+  "Mire Shed",
+  "Superbunny Cave",
+  "Sahasrahla's Hut",
+  "Spike Cave",
+  "Kakariko Well",
+  "Blind's Hideout",
+  "Hype Cave",
+  "Paradox Cave",
+  "Pegasus Rocks",
+  "Mini Moldorm Cave",
+  "Ice Rod Cave",
+  "Hookshot Cave Bottom Right",
+  "Hookshot Cave",
+  "Chest Game",
+  "Bottle Merchant",
+  "Sahasrahla",
+  "Stumpy",
+  "Sick Kid",
+  "Purple Chest",
+  "Hobo",
+  "Ether Tablet",
+  "Bombos Tablet",
+  "Catfish",
+  "King Zora",
+  "Old Man",
+  "Potion Shop",
+  "Lost Woods Hideout",
+  "Lumberjack Tree",
+  "Spectacle Rock Cave",
+  "Cave 45",
+  "Graveyard Ledge",
+  "Checkerboard Cave",
+  "Hammer Pegs",
+  "Library",
+  "Mushroom",
+  "Spectacle Rock",
+  "Floating Island",
+  "Maze Race",
+  "Desert Ledge",
+  "Lake Hylia Island",
+  "Bumper Cave",
+  "Pyramid",
+  "Digging Game",
+  "Zora's Ledge",
+  "Flute Spot",
+  "Sewers Secret Room",
+  "Secret Passage",
+  "Hyrule Castle",
+  "Sanctuary",
+  "Magic Bat",
+  "Blacksmith",
+  "Pyramid Fairy",
+  "Master Sword Pedestal",
+] as const;
+
+const fromLegacyChests: readonly MapMarker[] = CHEST_NAMES.map(
+  (name, index) => {
+    const [x, y] = LEGACY_CHEST_POSITIONS[index] ?? [0, 0];
+    return {
+      id: locationId(name),
+      locations: LEGACY_CHESTS[index]?.locations ?? [],
+      name,
+      position: { index, legacy: "chest" },
+      x,
+      y,
+    };
+  },
+);
+
+const dungeonMarker = (
+  id: DungeonId,
+  [x, y]: readonly [number, number],
+  position: MapMarker["position"],
+): MapMarker => ({
+  dungeon: id,
+  id,
+  locations: dungeonLocations(dungeon(id), STANDARD),
+  name: dungeon(id).name,
+  position,
+  x,
+  y,
+});
+
+/**
+ * The markers the legacy map lacked, placed for review. Their positions are
+ * the game's, read off the map image and the alttprandohelper tracker the
+ * legacy map comes from (crossproduct42/alttprandohelper, style.css), whose
+ * worlds each span 0-100%: its Light World x is halved here.
+ */
+const NEW_MARKERS: readonly MapMarker[] = [
+  {
+    id: "waterfall-fairy",
+    locations: ["waterfall-fairy/left", "waterfall-fairy/right"],
+    name: "Waterfall Fairy",
+    position: {
+      source: "game",
+      why: "the Waterfall of Wishing, up Zora's River: alttprandohelper's fairy-lw (89.8%, 14.7%)",
+    },
+    x: 44.9,
+    y: 14.7,
+  },
+  dungeonMarker("castle-tower", [25, 52.6], {
+    source: "game",
+    why: "Hyrule Castle's gate, below the legacy castle marker: alttprandohelper's agahnim (50%, 52.6%)",
+  }),
+  dungeonMarker("ganons-tower", [78.2, 4], {
+    source: "game",
+    why: "the tower atop the Dark World's Death Mountain, read off the map image",
+  }),
+];
+
+/**
+ * Every marker of the map: the legacy map's 63 chest markers that stand for
+ * a location (in their legacy order), the 10 legacy dungeons, and the
+ * markers the legacy map lacked. Each check of the world is on exactly one.
+ */
+export const MARKERS: readonly MapMarker[] = [
+  ...fromLegacyChests,
+  ...LEGACY_DUNGEONS.map((id, index) =>
+    dungeonMarker(id, LEGACY_DUNGEON_POSITIONS[index] ?? [0, 0], {
+      index,
+      legacy: "dungeon",
+    }),
+  ),
+  ...NEW_MARKERS,
+];
+
+/** The dungeons with a marker: every one but Hyrule Castle's escape. */
+export const MARKED_DUNGEONS: readonly DungeonId[] = DUNGEONS.map(
+  (d) => d.id,
+).filter((id) => MARKERS.some((m) => m.dungeon === id));
+
+/** What a marker shows. */
+export type MarkerStatus = "available" | "possible" | "unavailable";
+
+/**
+ * What a marker shows for the tris of the locations it still stands for
+ * (those not checked yet): available when all are `yes`, possible when
+ * some are `yes` or `maybe`, unavailable when none is. With none left the
+ * marker is done, which the app shows on its own: unavailable here.
+ */
+export function markerStatus(tris: readonly Tri[]): MarkerStatus {
+  if (tris.length > 0 && tris.every((t) => t === "yes")) return "available";
+  return tris.some((t) => t !== "no") ? "possible" : "unavailable";
+}

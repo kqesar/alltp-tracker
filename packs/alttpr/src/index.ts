@@ -109,6 +109,15 @@ export {
   type Visible,
 } from "./location";
 export {
+  LEGACY_CHEST_POSITIONS,
+  LEGACY_DUNGEON_POSITIONS,
+  MARKED_DUNGEONS,
+  MARKERS,
+  type MapMarker,
+  type MarkerStatus,
+  markerStatus,
+} from "./markers";
+export {
   MEDALLION_FACTS,
   MEDALLION_RULES,
   MEDALLIONS,

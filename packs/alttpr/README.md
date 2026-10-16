@@ -19,6 +19,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/dungeons.ts` | the thirteen dungeons, the code of their items and their pool |
 | `src/tracker.ts` | `TrackerInput`, what the player records, and `toState`, the state it gives |
 | `src/legacy.ts` | the app's save format before the pack (version 5), mapped to the pack |
+| `src/markers.ts` | the map markers, and what a marker shows |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -153,6 +154,29 @@ keeps a frozen copy of that format (the app at 2.11.0) and maps it:
   Ganon's Tower, and what is no check (trades, fountains, pads, events);
 - `fromLegacy(progress)`: a whole legacy run as a `TrackerInput`, its
   checked locations and its counters.
+
+## The map
+
+`MARKERS` places every check of the world on exactly one marker, in the
+legacy map's coordinate space (`apps/web/public/assets/map.png`, 884 x 442):
+`x` and `y` are percents of the whole image, the Light World on its left
+half (x 0 to 50), the Dark World on its right half. A marker stands for one
+location or several (a cave's chests), or for a dungeon's item locations.
+
+- The legacy map's 63 chest markers that stand for a check keep their
+  position and their group, in their legacy order, under plain names.
+- Its 10 dungeons keep theirs.
+- Three markers are new, for what it lacked: the Waterfall of Wishing
+  (`waterfall-fairy`), Castle Tower and Ganon's Tower. Each says where its
+  position was read: the alttprandohelper tracker the legacy map comes from
+  (its worlds each span 0-100%, so its Light World x is halved), or the map
+  image itself.
+- The Blacksmith sits in the Light World, where the smiths reward, though
+  upstream's region is the Dark World's, where the frog waits.
+
+`markerStatus(tris)` reads a marker from the tris of the locations it still
+stands for: available when all are `yes`, possible when some are `yes` or
+`maybe`, unavailable otherwise.
 
 ## The key model
 
