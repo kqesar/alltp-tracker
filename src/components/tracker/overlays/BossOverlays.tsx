@@ -83,6 +83,7 @@ export const MedaillonOverlay = ({ bossNumber }: { bossNumber: number }) => {
       onActivate={() =>
         handleMedallionChange(bossNumber, (medallion + 1) % MEDALLION_STATES)
       }
+      testId={`medallion-overlay-${bossNumber}`}
     />
   );
 };

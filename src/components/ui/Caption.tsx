@@ -16,6 +16,7 @@ export const Caption = ({ text }: CaptionProps) => {
       <output
         aria-live="polite"
         className="caption-output caption-output--empty"
+        data-testid="caption"
       >
         <span className="caption-hint">
           Hover an item or a map location to see its details here.
@@ -86,6 +87,7 @@ export const Caption = ({ text }: CaptionProps) => {
       aria-label="Item description"
       aria-live="polite"
       className="caption-output"
+      data-testid="caption"
     >
       <span className="caption-content">
         {renderedContent.map((part, index) => {

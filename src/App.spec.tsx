@@ -1,211 +1,94 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useGameStore } from "@/stores/gameStore";
 import App from "./App";
 
 // Mock the MapTracker component since it's tested separately
 vi.mock("@/components/map/MapTracker", () => ({
-  MapTracker: ({ caption }: { caption: string }) => (
-    <div data-testid="map-tracker">
-      Map Tracker Component - Caption: {caption}
-    </div>
-  ),
+  MapTracker: () => <div data-testid="map-tracker" />,
 }));
 
 // Mock CSS import
 vi.mock("@/styles/index.css", () => ({}));
 
 describe("App", () => {
-  it("renders without crashing", () => {
-    render(<App />);
-    expect(screen.getByTestId("map-tracker")).toBeInTheDocument();
+  beforeEach(() => {
+    act(() => useGameStore.getState().applyPreset("open"));
   });
 
-  it("renders the header component", () => {
+  it("renders the header, the item grid and the map", () => {
     render(<App />);
+
     expect(screen.getByText("ALLTP Tracker")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /github/i })).toBeInTheDocument();
-  });
-
-  it("renders the item grid layout", () => {
-    render(<App />);
-    // Check for the main tracker grid
-    const trackerGrid = document.querySelector(".tracker");
-    expect(trackerGrid).toBeInTheDocument();
-
-    // Check for some buttons
-    const buttons = screen.getAllByRole("button");
-    expect(buttons.length).toBeGreaterThan(0);
-  });
-
-  it("renders caption container with initial empty state", () => {
-    render(<App />);
-    // The caption area exists somewhere in the layout
-    const layoutDiv = document.getElementById("layoutdiv");
-    expect(layoutDiv).toBeInTheDocument();
-
-    // The MapTracker mock should be rendered
+    expect(screen.getByTestId("item-grid")).toHaveAccessibleName(
+      "Item tracker grid",
+    );
     expect(screen.getByTestId("map-tracker")).toBeInTheDocument();
   });
 
-  it("handles item clicks for boolean items", () => {
+  it("toggles a boolean item on and off", () => {
     render(<App />);
+    const hookshot = screen.getByTestId("item-hookshot");
 
-    // Find buttons with background images (item buttons)
-    const buttons = screen.getAllByRole("button");
-    const itemButtons = buttons.filter((button) =>
-      button.style.backgroundImage?.includes("hookshot"),
-    );
+    expect(hookshot).toHaveAccessibleName(/^Hookshot, not obtained\./);
 
-    if (itemButtons.length > 0) {
-      const hookshotButton = itemButtons[0];
+    fireEvent.click(hookshot);
+    expect(hookshot).toHaveAccessibleName(/^Hookshot, obtained\./);
 
-      // Initially should have low opacity (inactive state)
-      expect(hookshotButton).toHaveStyle("opacity: 0.25");
+    fireEvent.click(hookshot);
+    expect(hookshot).toHaveAccessibleName(/^Hookshot, not obtained\./);
+  });
 
-      // Click to activate
-      fireEvent.click(hookshotButton);
+  it("steps a progressive item up and wraps back to none", () => {
+    render(<App />);
+    const sword = screen.getByTestId("item-sword");
 
-      // Should now have full opacity (active state)
-      expect(hookshotButton).toHaveStyle("opacity: 1");
+    for (let level = 1; level <= 4; level++) {
+      fireEvent.click(sword);
+      expect(sword).toHaveAccessibleName(
+        new RegExp(`^Sword, level ${level}\\.`),
+      );
     }
+
+    fireEvent.click(sword);
+    expect(sword).toHaveAccessibleName(/^Sword, not obtained\./);
   });
 
-  it("handles item clicks for numeric items", () => {
+  it("gives every boss a chest counter and a reward, and a medallion to Misery Mire and Turtle Rock only", () => {
     render(<App />);
 
-    // Find buttons with bow background
-    const buttons = screen.getAllByRole("button");
-    const bowButtons = buttons.filter((button) =>
-      button.style.backgroundImage?.includes("bow"),
-    );
-
-    if (bowButtons.length > 0) {
-      const bowButton = bowButtons[0];
-
-      // Initially should be at minimum value
-      expect(bowButton).toHaveStyle("opacity: 0.25");
-
-      // Click to cycle through values
-      fireEvent.click(bowButton);
-      expect(bowButton).toHaveStyle("opacity: 1");
+    for (let boss = 0; boss < 10; boss++) {
+      expect(screen.getByTestId(`chest-overlay-${boss}`)).toBeInTheDocument();
+      expect(screen.getByTestId(`reward-overlay-${boss}`)).toBeInTheDocument();
     }
+    expect(screen.getAllByTestId(/^medallion-overlay-/)).toHaveLength(2);
+    expect(screen.getByTestId("medallion-overlay-8")).toBeInTheDocument();
+    expect(screen.getByTestId("medallion-overlay-9")).toBeInTheDocument();
   });
 
-  it("ignores clicks on blank items", () => {
+  it("counts a dungeon's chests down from its overlay without touching the boss", () => {
     render(<App />);
+    const chestCounter = screen.getByTestId("chest-overlay-0");
 
-    // Find buttons with blank items
-    const buttons = screen.getAllByRole("button");
-    const blankButtons = buttons.filter(
-      (button) => button.getAttribute("data-item") === "blank",
-    );
+    expect(chestCounter.style.backgroundImage).toContain("chest3.png");
 
-    // In the current grid layout, all positions contain valid items
-    // Check that there are no blank buttons (as expected in current design)
-    expect(blankButtons).toHaveLength(0);
+    fireEvent.click(chestCounter);
 
-    // Verify that grid spacers are also not present (all positions filled)
-    const spacers = document.querySelectorAll(".grid-spacer");
-    expect(spacers).toHaveLength(0);
-
-    // Since there are no blank items to click, this test verifies the absence of blank elements
-    // This ensures all grid positions contain interactive items
-  });
-
-  it("displays correct background images for items", () => {
-    render(<App />);
-
-    // Check that items have background images set
-    const buttons = screen.getAllByRole("button");
-    const hookshotButtons = buttons.filter((button) =>
-      button.style.backgroundImage?.includes("hookshot"),
-    );
-    const hammerButtons = buttons.filter((button) =>
-      button.style.backgroundImage?.includes("hammer"),
-    );
-
-    expect(hookshotButtons.length).toBeGreaterThan(0);
-    expect(hammerButtons.length).toBeGreaterThan(0);
-  });
-
-  it("shows special overlay for boss items", () => {
-    render(<App />);
-
-    // Find buttons with boss background images
-    const buttons = screen.getAllByRole("button");
-    const bossButtons = buttons.filter((button) =>
-      button.style.backgroundImage?.includes("boss"),
-    );
-
-    expect(bossButtons.length).toBeGreaterThan(0);
-
-    if (bossButtons.length > 0) {
-      // Boss buttons should have overlays for medallions, chests, and rewards
-      const overlays = bossButtons[0].querySelectorAll("[class*='overlay']");
-      expect(overlays.length).toBeGreaterThanOrEqual(0);
-    }
-  });
-
-  it("handles right-click for reverse cycling on numeric items", () => {
-    render(<App />);
-
-    const buttons = screen.getAllByRole("button");
-    const bowButtons = buttons.filter((button) =>
-      button.style.backgroundImage?.includes("bow"),
-    );
-
-    if (bowButtons.length > 0) {
-      const bowButton = bowButtons[0];
-
-      // Right-click should cycle in reverse
-      fireEvent.contextMenu(bowButton);
-      // The opacity should change based on the value
-      const opacity = bowButton.style.opacity;
-      expect(opacity === "0.25" || opacity === "1").toBe(true);
-    }
-  });
-
-  it("maintains item state consistency", () => {
-    // Reset store state to initial values
-    useGameStore.getState().reset();
-
-    render(<App />);
-
-    // Test that clicking multiple times maintains consistent state
-    const buttons = screen.getAllByRole("button");
-    const hookshotButtons = buttons.filter((button) =>
-      button.style.backgroundImage?.includes("hookshot"),
-    );
-
-    if (hookshotButtons.length > 0) {
-      const hookshotButton = hookshotButtons[0];
-
-      // Start inactive
-      expect(hookshotButton).toHaveStyle("opacity: 0.25");
-
-      // Activate
-      fireEvent.click(hookshotButton);
-      expect(hookshotButton).toHaveStyle("opacity: 1");
-
-      // Deactivate
-      fireEvent.click(hookshotButton);
-      expect(hookshotButton).toHaveStyle("opacity: 0.25");
-    }
+    expect(chestCounter.style.backgroundImage).toContain("chest2.png");
+    expect(useGameStore.getState().items.boss0).toBe(1);
   });
 
   it("stacks the map when the stacked layout is selected", () => {
     useGameStore.getState().setMapLayout("side-by-side");
     render(<App />);
 
-    expect(document.getElementById("layoutdiv")).not.toHaveClass(
-      "layout--stacked",
-    );
+    expect(screen.getByTestId("layout")).not.toHaveClass("layout--stacked");
 
     act(() => {
       useGameStore.getState().setMapLayout("stacked");
     });
 
-    expect(document.getElementById("layoutdiv")).toHaveClass("layout--stacked");
+    expect(screen.getByTestId("layout")).toHaveClass("layout--stacked");
   });
 });

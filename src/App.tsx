@@ -33,6 +33,7 @@ function App() {
       <main className="main-content" id="main-content">
         <div
           className={mapLayout === "stacked" ? "layout--stacked" : undefined}
+          data-testid="layout"
           id="layoutdiv"
         >
           <TrackerGrid itemLayout={itemLayout} />
