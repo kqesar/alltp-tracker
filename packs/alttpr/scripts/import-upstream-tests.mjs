@@ -15,7 +15,8 @@
 //
 // Output, under test/upstream/ by default: one JSON file per test class,
 // mirroring its path (tests/NoGlitches/EasternPalaceTest.php becomes
-// NoGlitches/EasternPalace.json), plus a copy of the upstream LICENSE. Files
+// NoGlitches/EasternPalace.json), the item table of app/Item.php as
+// items.json, and a copy of the upstream LICENSE. Files
 // are deterministic: classes, cases (by line) and object keys are sorted, and
 // each case sits on one line so a re-import diffs case by case.
 
@@ -1340,11 +1341,14 @@ const FIXTURE_ORDER = [
   "generated",
   "upstream",
   "file",
+  "files",
   "class",
   "worlds",
   "setUp",
+  "english",
   "unsupported",
   "cases",
+  "items",
 ];
 
 /** @param {string} key */
@@ -1508,9 +1512,99 @@ export function importAll(checkout, out) {
     stale.delete(target);
     return { cases: fixture.cases, file, unsupported: fixture.unsupported };
   });
+
+  const items = importItems(
+    readFileSync(join(checkout, ITEMS_FILE), "utf8"),
+    readFileSync(join(checkout, ENGLISH_NAMES_FILE), "utf8"),
+    upstream,
+  );
+  const itemsTarget = join(out, "items.json");
+  mkdirSync(out, { recursive: true });
+  writeFileSync(itemsTarget, formatFixture(items));
+  stale.delete(itemsTarget);
+
   for (const path of stale) rmSync(path);
   copyFileSync(join(checkout, "LICENSE"), join(out, "LICENSE"));
-  return { summary, upstream };
+  return { items: items.items.length, summary, upstream };
+}
+
+export const ITEMS_FILE = "app/Item.php";
+export const ENGLISH_NAMES_FILE = "resources/lang/en/item.php";
+
+/** The item constructors of Item::all and the aliases added after them. */
+const ITEM_CONSTRUCTORS = [
+  { tokens: template("new Item($__str_name,") },
+  { tokens: template("new Item\\$__ident_class($__str_name,") },
+  { tokens: template("new Item\\$__ident_ns\\$__ident_class($__str_name,") },
+  { tokens: template("new ItemAlias($__str_name, $__str_alias,") },
+];
+
+/**
+ * The item table of app/Item.php: every item `Item::all` builds, in order,
+ * with its class (Bottle, Sword, Upgrade\Health…), and the aliases added
+ * after it (UncleSword…). Each English name from resources/lang/en/item.php
+ * comes along, since `Item::get` falls back to it (tests write 'Flute').
+ *
+ * @param {string} itemSource app/Item.php
+ * @param {string} namesSource resources/lang/en/item.php
+ * @param {UpstreamHeader} upstream
+ */
+export function importItems(itemSource, namesSource, upstream) {
+  const tokens = tokenize(itemSource);
+  /** @type {{ name: string, class: string, line: number, alias?: string }[]} */
+  const items = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (!isKeyword(tokens[i], "new")) continue;
+    for (const { tokens: pattern } of ITEM_CONSTRUCTORS) {
+      const match = matchAt(pattern, tokens, i);
+      if (match === undefined) continue;
+      const { alias, class: kind, name, ns } = match.captures;
+      items.push({
+        class:
+          alias !== undefined
+            ? "ItemAlias"
+            : [ns, kind ?? "Item"]
+                .filter((part) => part !== undefined)
+                .join("\\"),
+        line: /** @type {Token} */ (tokens[i]).line,
+        name: String(name),
+        ...(alias === undefined ? {} : { alias: String(alias) }),
+      });
+      break;
+    }
+  }
+  const seen = new Set();
+  for (const item of items) {
+    if (seen.has(item.name))
+      throw new Error(`Item ${item.name} is defined twice`);
+    seen.add(item.name);
+  }
+  if (items.length === 0) throw new Error(`No items found in ${ITEMS_FILE}`);
+
+  const names = tokenize(namesSource);
+  if (!isKeyword(names[0], "return")) {
+    throw new SyntaxError(`${ENGLISH_NAMES_FILE} does not return an array`);
+  }
+  const table = plain(parseLiteral(names, 1).node);
+  if (table === null || typeof table !== "object" || Array.isArray(table)) {
+    throw new SyntaxError(
+      `${ENGLISH_NAMES_FILE} does not return a keyed array`,
+    );
+  }
+  /** @type {Record<string, string>} */
+  const english = {};
+  for (const item of items) {
+    const label = table[item.name];
+    if (typeof label === "string") english[item.name] = label;
+  }
+  return {
+    english,
+    files: [ITEMS_FILE, ENGLISH_NAMES_FILE],
+    generated:
+      "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream item table. Re-import, never edit.",
+    items,
+    upstream,
+  };
 }
 
 /** @param {string[]} argv */
@@ -1529,7 +1623,8 @@ function main(argv) {
     );
     process.exit(2);
   }
-  const { summary, upstream } = importAll(resolve(checkout), out);
+  const { items, summary, upstream } = importAll(resolve(checkout), out);
+  process.stdout.write(`${ITEMS_FILE}: ${items} items and aliases\n`);
   /** @type {Record<string, number>} */
   const kinds = {};
   let unsupportedRows = 0;

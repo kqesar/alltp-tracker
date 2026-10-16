@@ -12,6 +12,7 @@ import {
   dataProviderOf,
   formatFixture,
   importAll,
+  importItems,
   importTestFile,
   matchAll,
   parseClass,
@@ -412,6 +413,72 @@ describe("importTestFile", () => {
   });
 });
 
+const ITEM_PHP = `<?php
+namespace ALttP;
+
+class Item
+{
+    protected $name;
+
+    public static function all(World $world)
+    {
+        static::$items[$world->id] = new ItemCollection([
+            new Item('Nothing', [0x5A], $world),
+            new Item\\Bottle('Bottle', [0x16], $world),
+            new Item\\Upgrade\\Health('PieceOfHeart', [0x17], $world, .25),
+        ]);
+        static::$items[$world->id]->addItem(new ItemAlias('UncleSword', 'ProgressiveSword', $world));
+        return new ItemAlias($this->getName(), $item->getName(), $this->world);
+    }
+}
+`;
+
+const ENGLISH_PHP = `<?php
+return [
+    'Nothing' => 'Nothing',
+    'Bottle' => 'Bottle (Empty)',
+    'Random' => 'Random',
+];
+`;
+
+describe("importItems", () => {
+  it("lists Item::all in order with each class, alias and English name", () => {
+    const table = importItems(ITEM_PHP, ENGLISH_PHP, HEADER);
+    expect(table.items).toEqual([
+      { class: "Item", line: 11, name: "Nothing" },
+      { class: "Bottle", line: 12, name: "Bottle" },
+      { class: "Upgrade\\Health", line: 13, name: "PieceOfHeart" },
+      {
+        alias: "ProgressiveSword",
+        class: "ItemAlias",
+        line: 15,
+        name: "UncleSword",
+      },
+    ]);
+    expect(table.english).toEqual({
+      Bottle: "Bottle (Empty)",
+      Nothing: "Nothing",
+    });
+    expect(table.upstream).toBe(HEADER);
+  });
+
+  it("refuses a table it cannot trust", () => {
+    const twice = ITEM_PHP.replace("'Nothing', [0x5A]", "'Bottle', [0x5A]");
+    expect(() => importItems(twice, ENGLISH_PHP, HEADER)).toThrow(
+      /Bottle is defined twice/,
+    );
+    expect(() =>
+      importItems("<?php class Item {}", ENGLISH_PHP, HEADER),
+    ).toThrow(/No items/);
+    expect(() => importItems(ITEM_PHP, "<?php $x = 1;", HEADER)).toThrow(
+      /does not return/,
+    );
+    expect(() => importItems(ITEM_PHP, "<?php return ['a'];", HEADER)).toThrow(
+      /keyed array/,
+    );
+  });
+});
+
 describe("formatFixture", () => {
   it("writes the header first, one case per line, keys sorted", () => {
     // Built from entries: Biome sorts the keys of object literals, and the
@@ -504,10 +571,16 @@ describe("the checkout", () => {
     write("app/Randomizer.php", "<?php class R { const LOGIC = 31; }");
     write("tests/NoGlitches/Dark/SampleTest.php", TEST_CLASS);
     write("tests/NoGlitches/TestCase.php", "<?php // not a test class");
+    write("app/Item.php", ITEM_PHP);
+    write("resources/lang/en/item.php", ENGLISH_PHP);
     write("out/NoGlitches/Removed.json", "{}");
 
     const out = join(root, "out");
-    const { summary, upstream } = importAll(root, out);
+    const { items, summary, upstream } = importAll(root, out);
+    expect(items).toBe(4);
+    expect(
+      JSON.parse(readFileSync(join(out, "items.json"), "utf8")).items,
+    ).toHaveLength(4);
     expect(upstream).toEqual({
       commit: SHA,
       copyright: "Copyright (c) 2016 sporchia",
