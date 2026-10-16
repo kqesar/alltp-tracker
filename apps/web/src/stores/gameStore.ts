@@ -3,6 +3,11 @@ import { devtools, persist } from "zustand/middleware";
 import { MEDALLION_VALUES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import { chests } from "@/data/chests";
 import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
+import {
+  DEFAULT_SHORTCUTS,
+  type Keymap,
+  restoreShortcuts,
+} from "@/data/keymap";
 import type { ItemState } from "@/data/logic";
 import { DEFAULT_PRESET_ID, getPreset } from "@/data/presets";
 import {
@@ -32,6 +37,9 @@ type GameState = Progress &
     toggleChest: (chestIndex: number) => void;
     setBigKeysVisible: (visible: boolean) => void;
     setMapLayout: (layout: MapLayout) => void;
+    /** The keyboard shortcuts' master switch */
+    setShortcutsEnabled: (enabled: boolean) => void;
+    setKeymap: (keymap: Keymap) => void;
 
     // Persistence helpers
     /** The run as the text of a save file */
@@ -75,6 +83,7 @@ const createProgress = (presetId: string = DEFAULT_PRESET_ID): Progress => {
 const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
   bigKeysVisible: getPreset(presetId).settings.keysanity,
   mapLayout: "auto",
+  shortcuts: DEFAULT_SHORTCUTS,
 });
 
 /** Lay saved progress over fresh progress; a missing field keeps its fresh value. */
@@ -106,6 +115,7 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
     saved.mapLayout === "stacked"
       ? saved.mapLayout
       : base.mapLayout,
+  shortcuts: restoreShortcuts(saved.shortcuts, base.shortcuts),
 });
 
 /** The run alone, as a save file carries it. */
@@ -133,6 +143,7 @@ const toPersisted = (state: GameState): PersistedState => ({
   ...progressOf(state),
   bigKeysVisible: state.bigKeysVisible,
   mapLayout: state.mapLayout,
+  shortcuts: state.shortcuts,
 });
 
 export const useGameStore = create<GameState>()(
@@ -234,7 +245,13 @@ export const useGameStore = create<GameState>()(
         setBigKeysVisible: (visible: boolean) =>
           set({ bigKeysVisible: visible }),
 
+        setKeymap: (keymap: Keymap) =>
+          set((state) => ({ shortcuts: { ...state.shortcuts, keymap } })),
+
         setMapLayout: (layout: MapLayout) => set({ mapLayout: layout }),
+
+        setShortcutsEnabled: (enabled: boolean) =>
+          set((state) => ({ shortcuts: { ...state.shortcuts, enabled } })),
 
         stepMedallion: (dungeonIndex: number, direction: Direction = 1) => {
           // Modulo keeps a malformed stored value inside the four states

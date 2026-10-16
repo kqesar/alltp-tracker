@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { chests } from "@/data/chests";
+import { DEFAULT_SHORTCUTS } from "@/data/keymap";
 import {
   migrate,
   PERSIST_VERSION,
@@ -118,13 +119,28 @@ describe("migrate", () => {
   it("moves a version 3 side-by-side layout, the old default, to auto", () => {
     expect(migrate({ mapLayout: "side-by-side" }, 3)).toEqual({
       mapLayout: "auto",
+      shortcuts: DEFAULT_SHORTCUTS,
     });
   });
 
   it("keeps a stacked layout, which was always a choice", () => {
     expect(migrate({ mapLayout: "stacked" }, 3)).toEqual({
       mapLayout: "stacked",
+      shortcuts: DEFAULT_SHORTCUTS,
     });
+  });
+
+  it("gives a version 4 save, which had no shortcuts, the default ones", () => {
+    expect(migrate({ mapLayout: "stacked" }, 4)).toEqual({
+      mapLayout: "stacked",
+      shortcuts: DEFAULT_SHORTCUTS,
+    });
+  });
+
+  it("keeps the shortcuts a version 4 save somehow already holds", () => {
+    const shortcuts = { enabled: false, keymap: {} };
+
+    expect(migrate({ shortcuts }, 4)).toEqual({ shortcuts });
   });
 
   it("leaves a current save alone", () => {

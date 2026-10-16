@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { chests } from "@/data/chests";
+import { DEFAULT_KEYMAP, DEFAULT_SHORTCUTS } from "@/data/keymap";
 import { useGameStore } from "@/stores/gameStore";
 import { PERSIST_VERSION, parseSave } from "@/stores/persistence";
 
@@ -412,6 +413,88 @@ describe("GameStore", () => {
       useGameStore.getState().setMapLayout("stacked");
 
       expect(useGameStore.getState().mapLayout).toBe("stacked");
+    });
+  });
+
+  describe("keyboard shortcuts", () => {
+    const keymap = { "advance:hookshot": "KeyK", "back:chest3": "Alt+KeyK" };
+
+    it("start with the default keymap, switched on", () => {
+      expect(useGameStore.getState().shortcuts).toEqual(DEFAULT_SHORTCUTS);
+    });
+
+    it("round-trip through localStorage", async () => {
+      useGameStore.getState().setKeymap(keymap);
+      useGameStore.getState().setShortcutsEnabled(false);
+      const saved = localStorage.getItem(STORAGE_KEY) ?? "{}";
+      expect(JSON.parse(saved).state.shortcuts).toEqual({
+        enabled: false,
+        keymap,
+      });
+
+      // A fresh page: default state, then what localStorage holds
+      useGameStore.setState(useGameStore.getInitialState(), true);
+      expect(useGameStore.getState().shortcuts).toEqual(DEFAULT_SHORTCUTS);
+      localStorage.setItem(STORAGE_KEY, saved);
+      await useGameStore.persist.rehydrate();
+
+      expect(useGameStore.getState().shortcuts).toEqual({
+        enabled: false,
+        keymap,
+      });
+    });
+
+    it("give a version 4 save the defaults and store it as version 5", async () => {
+      storeSave({ items: { flute: true }, mapLayout: "stacked" }, 4);
+
+      await useGameStore.persist.rehydrate();
+
+      const state = useGameStore.getState();
+      expect(state.items.flute).toBe(true);
+      expect(state.mapLayout).toBe("stacked");
+      expect(state.shortcuts).toEqual(DEFAULT_SHORTCUTS);
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+      expect(stored.version).toBe(5);
+      expect(stored.state.shortcuts.keymap).toEqual(DEFAULT_KEYMAP);
+    });
+
+    it("restore the valid part of a damaged keymap", async () => {
+      storeSave(
+        {
+          shortcuts: {
+            enabled: "yes",
+            keymap: { "advance:bow": "KeyA", "advance:nothing": "KeyB" },
+          },
+        },
+        PERSIST_VERSION,
+      );
+
+      await useGameStore.persist.rehydrate();
+
+      expect(useGameStore.getState().shortcuts).toEqual({
+        enabled: true,
+        keymap: { "advance:bow": "KeyA" },
+      });
+    });
+
+    it("survive a new game, a preset switch and an import", () => {
+      useGameStore.getState().setKeymap(keymap);
+
+      useGameStore.getState().reset();
+      useGameStore.getState().applyPreset("keysanity");
+      importSave(JSON.stringify({ items: { hammer: true } }));
+
+      expect(useGameStore.getState().shortcuts.keymap).toEqual(keymap);
+    });
+
+    it("stay out of the undo history and out of save files", () => {
+      useGameStore.getState().setKeymap(keymap);
+      useGameStore.getState().setShortcutsEnabled(false);
+
+      expect(useGameStore.getState().past).toEqual([]);
+      expect(
+        JSON.parse(useGameStore.getState().exportState()).progress,
+      ).not.toHaveProperty("shortcuts");
     });
   });
 });
