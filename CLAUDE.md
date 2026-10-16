@@ -4,12 +4,13 @@ A Link to the Past Tracker — a React 19 + TypeScript (Vite, Zustand, Biome, Vi
 
 ## Layout
 
-A pnpm workspace. Dependencies point one way: `apps/web` → packs → `packages/engine`, and the engine imports nothing.
+A pnpm workspace. Dependencies point one way: `apps/web` → packs → `packages/*`, and the packages import nothing of the app or the packs.
 
 - `apps/web` — the tracker app (`@alltp/web`); all React, Vite and Playwright code and configs.
 - `packages/engine` — `@alltp/engine`, the game-agnostic logic engine; its README is the design doc.
+- `packages/autotrack` — `@alltp/autotrack`, the game-agnostic autotracking link: the usb2snes protocol to SNI / QUsb2Snes, the session and its diagnostic codes, polling, Race Mode by construction, the setup-guide model. Packs supply every address, game probe and race profile; its README is the design doc.
 - `packs/*` — game packs (rules as data, items, map markers). `packs/alttpr` (`@alltp/pack-alttpr`) ports ALttPR v31 from the randomizer's source: `upstream.json` pins the upstream commit and maps each upstream file to its module, `test/upstream/` holds the official tests as generated fixtures, and the weekly Logic drift workflow opens a `logic-drift` issue when upstream moves.
-- Root — shared tooling only: Biome, TypeScript (a solution `tsconfig.json`), Vitest (`projects` + coverage over every workspace), husky, commitlint. The root `package.json` carries the product version, which release-please bumps. Commit scopes follow the workspace: `web`, `engine`, `alttpr`.
+- Root — shared tooling only: Biome, TypeScript (a solution `tsconfig.json`), Vitest (`projects` + coverage over every workspace), husky, commitlint. The root `package.json` carries the product version, which release-please bumps. Commit scopes follow the workspace: `web`, `engine`, `autotrack`, `alttpr`.
 
 Area rules live in `.claude/rules/` and load when you touch their files: `store.md` (state, persistence), `data.md` (game data and logic), `components.md` (UI, styles, a11y), `tests.md`, `engine.md` (the logic engine), `pack.md` (game packs).
 
