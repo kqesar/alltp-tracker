@@ -9,12 +9,11 @@
   image-rendering: pixelated;
 }
 
-/* Tracker controls: run type, new game, undo/redo, save files, map layout */
+/* Tracker controls: run type, new game, undo/redo, save files, map layout.
+   Its buttons join the toolbar row directly, so they wrap with the key-cells
+   toggle instead of as a separate block. */
 .tracker-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  align-items: center;
+  display: contents;
 }
 
 /* Shared look of every toolbar button */
@@ -45,6 +44,35 @@
   color: var(--color-accent);
   background: var(--surface-hover);
   border-color: var(--color-accent);
+}
+
+/* Toolbar icons, and labels that only show once the toolbar has room for
+   them: below that the text stays in the button, visually hidden, so it
+   still names it. */
+.toolbar-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 60rem) {
+  /* Icon buttons: square 40 px targets, so the toolbar fits two rows on a
+     phone */
+  .tracker-controls__button,
+  .bigkey-toggle {
+    justify-content: center;
+    min-width: 2.5rem;
+    padding-inline: var(--spacing-sm);
+  }
+
+  .toolbar-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
 }
 
 .tracker-controls__button:disabled {
@@ -131,6 +159,7 @@
 .bigkey-toggle__icon {
   position: relative;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 16px;
@@ -139,6 +168,7 @@
 
 .bigkey-toggle__key-icon {
   position: relative;
+  display: block;
   width: 12px;
   height: 12px;
   background: currentColor;
@@ -168,10 +198,6 @@
     currentColor 55%,
     transparent 60%
   );
-}
-
-.bigkey-toggle__text {
-  user-select: none;
 }
 
 /* Tooltip: one per page, anchored to the control it describes */

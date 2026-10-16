@@ -2,6 +2,12 @@ import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import { PresetSelector } from "@/components/ui/PresetSelector";
+import {
+  ExportIcon,
+  ImportIcon,
+  RedoIcon,
+  UndoIcon,
+} from "@/components/ui/ToolbarIcons";
 import { useGameStore } from "@/stores/gameStore";
 import { type Progress, parseSave } from "@/stores/persistence";
 import type { MapLayout } from "@/utils";
@@ -127,7 +133,8 @@ export const TrackerControls = () => {
         title="Undo the last change (Ctrl+Z)"
         type="button"
       >
-        Undo
+        <UndoIcon />
+        <span className="sr-only">Undo</span>
       </button>
       <button
         aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y"
@@ -138,7 +145,8 @@ export const TrackerControls = () => {
         title="Redo (Ctrl+Shift+Z)"
         type="button"
       >
-        Redo
+        <RedoIcon />
+        <span className="sr-only">Redo</span>
       </button>
       <button
         className="tracker-controls__button"
@@ -146,7 +154,8 @@ export const TrackerControls = () => {
         title="Export progress to a file"
         type="button"
       >
-        Export
+        <ExportIcon />
+        <span className="toolbar-label">Export</span>
       </button>
       <button
         className="tracker-controls__button"
@@ -154,7 +163,8 @@ export const TrackerControls = () => {
         title="Import progress from a file"
         type="button"
       >
-        Import
+        <ImportIcon />
+        <span className="toolbar-label">Import</span>
       </button>
       <fieldset className="segmented" data-testid="map-layout">
         <legend className="segmented__legend">Map</legend>

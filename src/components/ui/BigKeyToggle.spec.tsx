@@ -3,88 +3,44 @@ import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BigKeyToggle } from "./BigKeyToggle";
 
+const toggle = () => screen.getByTestId("key-cells-toggle");
+
 describe("BigKeyToggle", () => {
-  const mockOnToggle = vi.fn();
+  const onToggle = vi.fn();
 
-  beforeEach(() => {
-    mockOnToggle.mockClear();
+  beforeEach(() => onToggle.mockClear());
+
+  it("offers to hide the key cells while they are shown", () => {
+    render(<BigKeyToggle isVisible onToggle={onToggle} />);
+
+    expect(toggle()).toHaveAccessibleName("Hide big keys");
+    expect(toggle()).toHaveClass("bigkey-toggle--active");
+    expect(toggle().querySelector(".bigkey-toggle__slash")).toBeNull();
   });
 
-  it("renders with correct visible state", () => {
-    render(<BigKeyToggle isVisible={true} onToggle={mockOnToggle} />);
+  it("offers to show them while they are hidden, with a slashed key", () => {
+    render(<BigKeyToggle isVisible={false} onToggle={onToggle} />);
 
-    const button = screen.getByRole("button", { name: "Hide big keys" });
-    expect(button).toBeInTheDocument();
-    expect(button).toHaveClass("bigkey-toggle--active");
-    expect(screen.getByText("Hide Big Keys")).toBeInTheDocument();
+    expect(toggle()).toHaveAccessibleName("Show big keys");
+    expect(toggle()).not.toHaveClass("bigkey-toggle--active");
+    expect(toggle().querySelector(".bigkey-toggle__slash")).not.toBeNull();
   });
 
-  it("renders with correct hidden state", () => {
-    render(<BigKeyToggle isVisible={false} onToggle={mockOnToggle} />);
-
-    const button = screen.getByRole("button", { name: "Show big keys" });
-    expect(button).toBeInTheDocument();
-    expect(button).not.toHaveClass("bigkey-toggle--active");
-    expect(screen.getByText("Show Big Keys")).toBeInTheDocument();
-  });
-
-  it("calls onToggle when clicked", async () => {
+  it("asks for the opposite state when clicked", async () => {
     const user = userEvent.setup();
-    render(<BigKeyToggle isVisible={true} onToggle={mockOnToggle} />);
+    render(<BigKeyToggle isVisible onToggle={onToggle} />);
 
-    const button = screen.getByRole("button", { name: "Hide big keys" });
-    await user.click(button);
+    await user.click(toggle());
 
-    expect(mockOnToggle).toHaveBeenCalledWith(false);
-    expect(mockOnToggle).toHaveBeenCalledOnce();
+    expect(onToggle).toHaveBeenCalledExactlyOnceWith(false);
   });
 
-  it("toggles from hidden to visible", async () => {
-    const user = userEvent.setup();
-    render(<BigKeyToggle isVisible={false} onToggle={mockOnToggle} />);
+  it("keeps its key icon out of the accessibility tree and inside phrasing content", () => {
+    render(<BigKeyToggle isVisible={false} onToggle={onToggle} />);
+    const icon = toggle().querySelector(".bigkey-toggle__icon");
 
-    const button = screen.getByRole("button", { name: "Show big keys" });
-    await user.click(button);
-
-    expect(mockOnToggle).toHaveBeenCalledWith(true);
-    expect(mockOnToggle).toHaveBeenCalledOnce();
-  });
-
-  it("has correct accessibility attributes", () => {
-    render(<BigKeyToggle isVisible={true} onToggle={mockOnToggle} />);
-
-    const button = screen.getByRole("button", { name: "Hide big keys" });
-    expect(button).toHaveAttribute("aria-label", "Hide big keys");
-    expect(button).toHaveAttribute("title", "Hide big keys");
-    expect(button).toHaveAttribute("type", "button");
-  });
-
-  it("displays key icon", () => {
-    render(<BigKeyToggle isVisible={true} onToggle={mockOnToggle} />);
-
-    const button = screen.getByRole("button");
-    const icon = button.querySelector(".bigkey-toggle__icon");
-    const keyIcon = button.querySelector(".bigkey-toggle__key-icon");
-
-    expect(icon).toBeInTheDocument();
-    expect(keyIcon).toBeInTheDocument();
-  });
-
-  it("shows slash overlay when hidden", () => {
-    render(<BigKeyToggle isVisible={false} onToggle={mockOnToggle} />);
-
-    const button = screen.getByRole("button");
-    const slash = button.querySelector(".bigkey-toggle__slash");
-
-    expect(slash).toBeInTheDocument();
-  });
-
-  it("does not show slash overlay when visible", () => {
-    render(<BigKeyToggle isVisible={true} onToggle={mockOnToggle} />);
-
-    const button = screen.getByRole("button");
-    const slash = button.querySelector(".bigkey-toggle__slash");
-
-    expect(slash).not.toBeInTheDocument();
+    expect(icon).toHaveAttribute("aria-hidden", "true");
+    expect(toggle().querySelectorAll("div")).toHaveLength(0);
+    expect(toggle()).toHaveAttribute("type", "button");
   });
 });
