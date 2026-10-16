@@ -1,5 +1,20 @@
 // Public entry point of @alltp/pack-alttpr: the app imports the pack from
 // here only, as it does the engine.
+export {
+  CHECK_FLAGS,
+  type CheckEntry,
+  type CheckFlag,
+  dungeonOf,
+  UNMAPPED_LOCATIONS,
+  type UnmappedLocation,
+} from "./autotrack/check-flags";
+export {
+  type AlttprRange,
+  MEMORY_RANGE,
+  MEMORY_RANGES,
+  MEMORY_SOURCES,
+  type MemoryRangeId,
+} from "./autotrack/memory";
 export { ALTTPR_RACE_PROFILE } from "./autotrack/race-profile";
 export { BOSS_SLOTS, BOSSES } from "./bosses";
 export {
