@@ -434,6 +434,16 @@ test.describe("an update", () => {
           );
           expect(overflow).toBeLessThanOrEqual(0);
 
+          // The card fades in: contrast measured mid-fade reads as a failure
+          await page
+            .getByTestId("update-prompt")
+            .evaluate((notice) =>
+              Promise.all(
+                notice
+                  .getAnimations({ subtree: true })
+                  .map((run) => run.finished),
+              ),
+            );
           const { violations } = await new AxeBuilder({ page })
             .include('[data-testid="update-prompt"]')
             .withTags(WCAG_AA)
