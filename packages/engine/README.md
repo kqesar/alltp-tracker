@@ -734,5 +734,3 @@ a region belongs to.
 8. **"Why is this maybe?"** Done: `explain()` gives the route and the traced
    requirement (see [Explaining a location](#explaining-a-location)). Still
    open: how the UI words a trace for a player.
-9. **Wiring.** Done: the root `tsc -b` references this package, and the root
-   coverage run measures `packages/*/src` against the same floors as the app.
