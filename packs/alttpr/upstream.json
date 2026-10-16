@@ -173,19 +173,19 @@
       "file": "app/World/Standard.php",
       "module": "src/worlds/standard.ts",
       "role": "the regions of a Standard world",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/World/Open.php",
       "module": "src/worlds/open.ts",
       "role": "the regions of an Open world: Standard's, but its own escape",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region.php",
       "module": "src/world.ts",
       "role": "canEnter / canComplete, which region rules call on one another, and canFill, the dungeon item lock",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Location.php",

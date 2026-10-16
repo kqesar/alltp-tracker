@@ -29,6 +29,19 @@ export type LocationKind = (typeof LOCATION_KINDS)[number];
  */
 export type Source = `app/${string}.php:${number}` | "game";
 
+/**
+ * Where a location's contents can be seen before it can be collected: the
+ * engine's `Visibility`, with where it was read. Upstream does not model
+ * sight, so its source is usually `game`.
+ */
+export interface Visible {
+  /** The region id it is seen from; the location's own region when omitted. */
+  readonly from?: string;
+  /** What seeing it needs once there; `true` when omitted. */
+  readonly req?: string;
+  readonly source: Source;
+}
+
 /** One location: plain data, so a pack can be diffed and checked at load. */
 export interface LocationDef {
   /** locationId(name): unique, and the key save files use. */
@@ -36,12 +49,15 @@ export interface LocationDef {
   /** The official name, as upstream writes it. */
   readonly name: string;
   readonly kind: LocationKind;
-  /** The requirement once in its region, in the engine's rule language. */
+  /**
+   * The requirement once in its region, in the engine's rule language; it
+   * may `reach()` another region.
+   */
   readonly req: string;
-  /** The requirement to see what it holds without getting it. */
-  readonly visible?: string;
   /** Where `req` was read. */
   readonly source: Source;
+  /** When what it holds can be seen without getting it. */
+  readonly visible?: Visible;
 }
 
 /**

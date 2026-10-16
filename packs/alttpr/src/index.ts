@@ -20,7 +20,9 @@ export {
   locationId,
   locationKind,
   type Source,
+  type Visible,
 } from "./location";
+export { compile, regionModules, world } from "./pack";
 export { NAMED_RULES, RULES } from "./rules";
 export {
   type AlttprSettings,
@@ -31,3 +33,17 @@ export {
   UPSTREAM_TEST,
   type UpstreamConfig,
 } from "./settings";
+export {
+  buildWorld,
+  canFill,
+  type DungeonItemClass,
+  dungeonItemClass,
+  type Entrance,
+  type RegionDef,
+  type RegionItems,
+  type RegionModule,
+  regionId,
+  START,
+} from "./world";
+export { OPEN_REGIONS } from "./worlds/open";
+export { STANDARD_REGIONS } from "./worlds/standard";

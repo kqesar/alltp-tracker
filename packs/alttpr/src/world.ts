@@ -1,0 +1,168 @@
+// The world model: how upstream's regions become the engine's graph.
+//
+// Read from sporchia/alttp_vt_randomizer at 219fcafd (LOGIC 31),
+// app/Region.php. A region has a can_enter rule, which every access to its
+// locations starts with (Location.php:96-111) and which may call another
+// region's canEnter; a can_complete rule, which its prize location takes
+// (Region.php:125-141, 201-207); and the dungeon items it keeps (canFill,
+// 232-246). README.md, "The world model", explains the mapping.
+
+import type { Location, Region, World } from "@alltp/engine";
+import type { LocationDef, Source } from "./location";
+import type { AlttprSettings } from "./settings";
+
+/**
+ * The root of the graph. Upstream has no start region: a region whose
+ * can_enter calls no other region's is entered from anywhere, which is an
+ * entrance from here. The start holds no location.
+ */
+export const START = "start";
+
+/**
+ * One way into a region: a branch of its can_enter. A branch that calls
+ * another region's canEnter comes `from` that region; any other comes from
+ * START. An OR of several such branches is several entrances.
+ */
+export interface Entrance {
+  /** The region it is taken from: START, or a region id. */
+  readonly from: string;
+  /** What it needs beyond being in `from`. It cannot use `reach()`. */
+  readonly req: string;
+  readonly source: Source;
+}
+
+/** The dungeon items a region keeps: `Region::$region_items`. */
+export interface RegionItems {
+  /** Upstream item names, as the region lists them. */
+  readonly items: readonly string[];
+  readonly source: Source;
+}
+
+/** A region of the graph, which a region module defines. */
+export interface RegionDef {
+  /**
+   * The engine id: `regionId(name)` for a region upstream names, so other
+   * modules can come from it and `reach()` it; a camelCase id of the
+   * module's choosing for a part of one it splits off.
+   */
+  readonly id: string;
+  /**
+   * The upstream region's key in World/Standard.php ('Eastern Palace',
+   * 'Escape'), which getRegion() and the upstream tests use. A part split
+   * off a region has none.
+   */
+  readonly name?: string;
+  /** Its can_enter, as entrances. A region without any is unreachable. */
+  readonly entrances: readonly Entrance[];
+  readonly locations: readonly LocationDef[];
+  /**
+   * The id of its prize location, whose rule is the region's can_complete:
+   * the pendant or crystal of a dungeon, Zelda, Agahnim.
+   */
+  readonly prize?: string;
+  readonly regionItems?: RegionItems;
+}
+
+/**
+ * The port of one upstream region file: the regions it defines. A module
+ * still pending has its upstream regions with no entrance and no location,
+ * so that the worlds list every module and other modules can name its
+ * regions.
+ */
+export interface RegionModule {
+  readonly file: `app/Region/${string}.php`;
+  readonly regions: readonly RegionDef[];
+}
+
+/** 'North East Light World' is northEastLightWorld, 'Ganons Tower' ganonsTower. */
+export function regionId(name: string): string {
+  const words = name.split(/[^A-Za-z0-9]+/).filter((word) => word !== "");
+  return words
+    .map((word, i) =>
+      i === 0
+        ? word.toLowerCase()
+        : `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`,
+    )
+    .join("");
+}
+
+/**
+ * The engine's graph for a list of modules: START, then every region in
+ * order, each entrance an exit of the region it comes from.
+ */
+export function buildWorld(modules: readonly RegionModule[]): World {
+  const regions = modules.flatMap((module) => module.regions);
+  const exits = new Map<string, { req: string; to: string }[]>();
+  for (const region of regions) {
+    for (const { from, req } of region.entrances) {
+      const list = exits.get(from) ?? [];
+      list.push({ req, to: region.id });
+      exits.set(from, list);
+    }
+  }
+  const node = (id: string, locations: readonly LocationDef[]): Region => ({
+    exits: exits.get(id) ?? [],
+    id,
+    locations: locations.map(engineLocation),
+  });
+  return {
+    regions: [
+      node(START, []),
+      ...regions.map((region) => node(region.id, region.locations)),
+    ],
+    start: START,
+  };
+}
+
+function engineLocation({ id, req, visible }: LocationDef): Location {
+  if (visible === undefined) return { id, req };
+  const { from, req: seen } = visible;
+  return {
+    id,
+    req,
+    visible: {
+      ...(from === undefined ? {} : { from }),
+      ...(seen === undefined ? {} : { req: seen }),
+    },
+  };
+}
+
+/** The classes of dungeon item Region::canFill keeps in their dungeon. */
+export type DungeonItemClass = "bigKey" | "compass" | "key" | "map";
+
+/**
+ * The class of an upstream item, if it is a dungeon item: Key, KeyH2 and
+ * KeyGK are keys, BigKey and BigKeyP1 big keys, and so on (Item.php:129-253).
+ * The ShopKey alias is no Item\Key.
+ */
+export function dungeonItemClass(item: string): DungeonItemClass | undefined {
+  if (/^BigKey(?:[A-Z][A-Z0-9]*)?$/.test(item)) return "bigKey";
+  if (/^Key(?:[A-Z][A-Z0-9]*)?$/.test(item)) return "key";
+  if (/^Map(?:[A-Z][A-Z0-9]*)?$/.test(item)) return "map";
+  if (/^Compass(?:[A-Z][A-Z0-9]*)?$/.test(item)) return "compass";
+  return undefined;
+}
+
+/**
+ * Region::canFill (Region.php:232-246): whether the item may be placed in
+ * the region. A dungeon item stays in its own dungeon unless its class is
+ * wild, and the sewers key stays in the escape of a Standard world; a
+ * region's own items are always welcome. NoGlitches is the only logic
+ * modeled, so NoLogic's exception does not arise.
+ */
+export function canFill(
+  region: RegionDef,
+  item: string,
+  settings: AlttprSettings,
+): boolean {
+  const own = region.regionItems?.items ?? [];
+  if (own.includes(item)) return true;
+  const kind = dungeonItemClass(item);
+  return !(
+    (kind === "key" && !settings.wildKeys) ||
+    (kind === "bigKey" && !settings.wildBigKeys) ||
+    (item === "KeyH2" && settings.standardMode) ||
+    (kind === "map" && !settings.wildMaps) ||
+    (kind === "compass" && !settings.wildCompasses)
+  );
+}
