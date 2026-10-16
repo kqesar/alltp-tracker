@@ -8,10 +8,10 @@ A pnpm workspace. Dependencies point one way: `apps/web` → packs → `packages
 
 - `apps/web` — the tracker app (`@alltp/web`); all React, Vite and Playwright code and configs.
 - `packages/engine` — `@alltp/engine`, the game-agnostic logic engine; its README is the design doc.
-- `packs/*` — game packs (rules as data, items, map markers); `packs/alttpr` arrives with the v31 port.
+- `packs/*` — game packs (rules as data, items, map markers). `packs/alttpr` (`@alltp/pack-alttpr`) ports ALttPR v31 from the randomizer's source: `upstream.json` pins the upstream commit and maps each upstream file to its module, `test/upstream/` holds the official tests as generated fixtures, and the weekly Logic drift workflow opens a `logic-drift` issue when upstream moves.
 - Root — shared tooling only: Biome, TypeScript (a solution `tsconfig.json`), Vitest (`projects` + coverage over every workspace), husky, commitlint. The root `package.json` carries the product version, which release-please bumps. Commit scopes follow the workspace: `web`, `engine`, `alttpr`.
 
-Area rules live in `.claude/rules/` and load when you touch their files: `store.md` (state, persistence), `data.md` (game data and logic), `components.md` (UI, styles, a11y), `tests.md`, `engine.md` (the logic engine).
+Area rules live in `.claude/rules/` and load when you touch their files: `store.md` (state, persistence), `data.md` (game data and logic), `components.md` (UI, styles, a11y), `tests.md`, `engine.md` (the logic engine), `pack.md` (game packs).
 
 ## Quality bar
 
@@ -30,7 +30,7 @@ This tracker is meant to become the reference tracker for randomizer runs, so ev
 ```bash
 pnpm dev                     # Start dev server (vite)
 pnpm build                   # typecheck, then vite build of apps/web
-pnpm typecheck               # tsc over every workspace (app, its configs and e2e, engine)
+pnpm typecheck               # tsc over every workspace (app, its configs and e2e, engine, packs)
 pnpm lint                    # Biome check
 pnpm lint:fix                # Biome check --write
 pnpm test                    # Run tests once (vitest run)
@@ -38,6 +38,7 @@ pnpm test:coverage           # Run tests with coverage (enforces the floors)
 pnpm test:e2e                # Playwright + axe on the production build, 4 widths (~10 s)
                              # port 4173; another worktree at once: E2E_PORT=<free port>
 pnpm vitest run <file>       # One spec file; add -t "name" to filter by test name
+pnpm --filter @alltp/pack-alttpr import-upstream <checkout>  # Regenerate the upstream test fixtures
 ```
 
 `tsc -b` writes its build info and the config projects' output under `node_modules/.tmp`, never next to the sources: a stray `vite.config.js` would shadow `vite.config.ts`.
