@@ -132,7 +132,7 @@
     {
       "file": "app/Region/Standard/TurtleRock.php",
       "module": "src/regions/standard/turtle-rock.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Open/HyruleCastleEscape.php",
