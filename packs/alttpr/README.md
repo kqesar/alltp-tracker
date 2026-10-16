@@ -18,6 +18,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/keys.ts` | `app/Support/LocationCollection.php`: where a dungeon's items may sit (`itemInLocations`), and the key model |
 | `src/dungeons.ts` | the thirteen dungeons, the code of their items and their pool |
 | `src/tracker.ts` | `TrackerInput`, what the player records, and `toState`, the state it gives |
+| `src/legacy.ts` | the app's save format before the pack (version 5), mapped to the pack |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -130,6 +131,28 @@ closes it to a player holding Bombos only), so nothing carries over.
 - **The derived facts** (`src/derived.ts`), from the items it gives.
 - **Small keys**, per dungeon, only with wild keys. Outside keysanity the
   key model reads the dungeons without them.
+
+## The legacy format
+
+Before the pack, the app saved its own ids: items with their legacy values
+(the bow 1 for the silver arrows alone, 2 the bow, 3 both; a boss 2 once
+beaten; a reward 1 to 4), one flag per chest marker of its map by position,
+and per dungeon index a counter, a pad and a key count. `src/legacy.ts`
+keeps a frozen copy of that format (the app at 2.11.0) and maps it:
+
+- `legacyItem(id, value)`: what one legacy value records, as pack items, a
+  dungeon finished, its prize, or how many of its items were found, which
+  carries over though keysanity's counter now starts higher;
+- `LEGACY_CHESTS`: the 64 markers, by position, and the locations each
+  stands for. A cave of several chests stands for all of them;
+  "Fugitive under the bridge" is the Hobo; "Bridge", on Hyrule Castle's own
+  bridge, stands for nothing, since v31 has no check there;
+- `LEGACY_DUNGEONS`: the 10 dungeon indices;
+- `NOT_ON_THE_OLD_MAP`: every location outside those ten dungeons that no
+  marker stands for, and why: the Waterfall of Wishing, Castle Tower and
+  Ganon's Tower, and what is no check (trades, fountains, pads, events);
+- `fromLegacy(progress)`: a whole legacy run as a `TrackerInput`, its
+  checked locations and its counters.
 
 ## The key model
 
