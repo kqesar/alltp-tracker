@@ -1,21 +1,28 @@
 ---
 paths:
   - "apps/web/src/data/**"
+  - "apps/web/src/logic/**"
   - "apps/web/src/constants/**"
 ---
 
-# Game data and logic (`apps/web/src/data/`)
+# Game data and logic (`apps/web/src/data/`, `apps/web/src/logic/`)
 
-- `logic.ts` — the types (`ItemState`, `ChestItem`, `DungeonItem`, `Availability`) and the shared predicates (`canReachDarkWorld`, `canReachSouthDarkWorld`, `canReachDeathMountain`, `canReachEastDeathMountain`, `hasTitansMitt`, `checkMedallion`, `avail()`, `buildDungeonCaption`). Reuse a named predicate rather than re-spelling its expression.
-- `chests.ts` / `dungeons.ts` — the 64 chests and 10 dungeons, static: progress lives in the store. Position in the array *is* the identity — there is no `id` field — so the persisted `chestsOpened` follows that order; reordering or removing an entry needs a save migration (see `stores/persistence.ts`).
-- `items.ts` — one `[min, max, initial?]` range table from which `items`, `itemsMin` and `itemsMax` are derived, plus `itemLabels` for accessibility names. Do not reintroduce parallel tables.
-- `presets.ts` — run types (`getPreset`, `presets`, `describeSettings`). `logicSupported` must be false for any preset whose rules the logic does not actually model.
+The rules are the alltpr pack's (`packs/alttpr`, ALttPR v31): the app holds no predicate of its own. It reads the pack through `apps/web/src/logic/`:
+
+- `logic/settings.ts` — what the app's run types mean to the pack (`packSettings`: the site's default preset in the Open or Standard world, its goal, keysanity as `dungeonItems: 'full'`), the grid's dungeon indices (`dungeonAt`, `dungeonName`, by the pack's `LEGACY_DUNGEONS`) and where each dungeon counter starts (`counterMax`, from `dungeonItemCount`).
+- `logic/solution.ts` — the run solved: `trackerInput` reads the store's items (the tracker's ids, through the pack's legacy table), bosses, prizes, pads and keys as the pack's `TrackerInput`; `solutionOf` runs `toState` and the key model (`solveWithKeys`) in the world compiled once per settings, memoized on the four slices it reads, with no second store. Markers and dungeons read it through `markerStateOf`, `dungeonStateOf` (the pigeonhole rule over a counter), `bossStateOf` and the hooks `useLocationStatus`, `useMarkerStatus`, `useDungeonStatus`, `useBossStatus`, which return strings so a click re-renders only what it changed.
+
+`apps/web/src/data/`:
+
+- `items.ts` — `ItemState`, and one `[min, max, initial?]` range table from which `items`, `itemsMin` and `itemsMax` are derived, plus `itemLabels` for accessibility names. Do not reintroduce parallel tables. The ids are the tracker's own, which the pack's frozen legacy copy maps (`legacy.spec.ts` holds the two together): a dungeon counter's top follows the run's settings (`itemRange` in `stores/persistence.ts`), and `agahnim2` (Ganon's Tower's boss, on its map marker only) is the one id version 6 added.
+- `keymap.ts` — the keyboard shortcuts, as plain data.
+- `presets.ts` — run types (`getPreset`, `presets`, `describeSettings`). `logicSupported` must be false for any preset whose rules the pack does not actually model.
 - `apps/web/src/constants/index.ts` holds only values with game meaning.
 
 ## Rules are ported, not remembered
 
-The current predicates date from the 2017 tracker and are known to diverge from ALttPR v31. Rule changes are ported from the randomizer's own source (sporchia/alttp_vt_randomizer; v31 read at commit `219fcafd`), citing the file and function, and noting the item-placement variant (Advanced is the site default; Basic adds gates). Example: the Hammer beats most bosses, but not Helmasaur (needs a sword or bow) nor Agahnim 1 in swords mode.
+A rule changes in the pack, ported from the randomizer's own source (sporchia/alttp_vt_randomizer at the commit `packs/alttpr/upstream.json` pins) and held to its official tests: see `.claude/rules/pack.md`. The app maps settings and what the player records; it never re-spells a rule.
 
 ## Refactor guard
 
-`logic.characterization.spec.ts` encodes chest availability, dungeon chest access and beatability across 15 item states. If it moves without an intended rule change, the change is wrong — never update it to make the suite pass. An intended rule change updates it in the same commit, and the commit message names each rule that moved and its source.
+`logic/alttpr.snapshot.spec.ts` freezes what the map shows (every marker, every dungeon's counter and boss) across 15 item states, those the 2017 logic's characterization spec froze. If it moves without an intended rule change, the change is wrong — never update it to make the suite pass. An intended change (a rule ported from upstream, a pack fix) updates it in the same commit, and the commit message names each marker that moved and the upstream source of its rule.

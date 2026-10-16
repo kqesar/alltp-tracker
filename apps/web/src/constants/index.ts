@@ -19,11 +19,6 @@ export const MEDALLION_VALUES = {
   UNKNOWN: 0,
 };
 
-/** Glove (gauntlet) progression levels. */
-export const GLOVE_LEVELS = {
-  TITAN: 2, // Titan's Mitt
-} as const;
-
 /** Boss progression state stored in items.bossN. */
 export const BOSS_STATES = {
   BEATEN: 2,

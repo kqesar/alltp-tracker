@@ -1,11 +1,10 @@
 import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
-import { dungeons } from "@/data/dungeons";
 import { useControlShortcuts } from "@/hooks/useControlShortcuts";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
 import { useStepHandlers } from "@/hooks/useStepHandlers";
+import { dungeonName } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
-import { placeName } from "@/utils/caption";
 
 type KeyToggleProps = {
   /** Dungeon index (0-9) */
@@ -52,7 +51,7 @@ export const KeyToggle = ({
     if (isBigKey) handleItemClick(`bigkey${dungeonIndex}`, direction);
     else handleSmallKeyClick(dungeonIndex, direction);
   }, shortcuts.aria);
-  const dungeon = placeName(dungeons[dungeonIndex].name);
+  const dungeon = dungeonName(dungeonIndex);
   const maxKeys = SMALL_KEYS_MAX_BY_INDEX[dungeonIndex] || 0;
   const obtained = bigKey === 1;
 

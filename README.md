@@ -19,11 +19,11 @@ Originally forked from [TestRunnerSRL/lttp-tracker](https://github.com/TestRunne
 | | |
 |---|---|
 | 🟩 green | reachable now |
-| 🟨 yellow | reachable, but the logic is not certain |
+| 🟨 yellow | maybe reachable (a dark room, an unknown medallion, a key that may be anywhere), or only some of a marker's checks |
 | 🟥 red | out of logic |
 | ⬛ grey | already done |
 
-Each state also has a glyph (✓ ? ✕), so colour is never the only cue. Click a chest to mark it opened, or a boss to mark it beaten. Hover or focus anything to see its requirements in a tooltip; on a touch screen, press and hold. **Map: Auto / Side / Stack** sets how the two worlds sit: Auto keeps them side by side while there is room and stacks them on a narrow screen; the choice is remembered on this device.
+Each state also has a glyph (✓ ? ✕), so colour is never the only cue. Click a marker to check its locations (a cave's chests together), or a boss to mark it beaten. Hover or focus a marker to list its checks and their state in a tooltip, and a dungeon's items left; on a touch screen, press and hold. **Map: Auto / Side / Stack** sets how the two worlds sit: Auto keeps them side by side while there is room and stacks them on a narrow screen; the choice is remembered on this device.
 
 **Boss overlays** — each boss cell carries three corner buttons: the medallion requirement (top right, Misery Mire and Turtle Rock only), the remaining chest count (bottom left) and the reward, crystal or pendant (bottom right). Click steps them forward, right-click back.
 
@@ -94,12 +94,13 @@ In the app, the whole state lives in one Zustand store, `apps/web/src/stores/gam
 
 ```
 apps/web/src/
-├── data/         game data and rules
-│   ├── logic.ts     types + reachability predicates (canReachDarkWorld, …)
-│   ├── chests.ts    the 64 overworld chests
-│   ├── dungeons.ts  the 10 dungeons
+├── data/         game data
 │   ├── items.ts     item ranges, starting values and labels
+│   ├── keymap.ts    keyboard shortcuts
 │   └── presets.ts   run types
+├── logic/        the run read by the alltpr pack
+│   ├── settings.ts  run types as the pack's settings, dungeon counters
+│   └── solution.ts  the run solved, and the hooks the map reads it by
 ├── stores/       the Zustand store
 ├── components/   tracker/ (item grid), map/ (markers), ui/ (chrome)
 ├── hooks/        keyboard navigation
@@ -107,9 +108,9 @@ apps/web/src/
 └── utils/        asset paths and item styling
 ```
 
-Each chest and dungeon carries its own accessibility predicate, so adding a location means adding one entry to a table rather than touching the components.
+The rules are the alltpr pack's, ported from the randomizer's source and held to its official tests; the map draws the pack's markers. The app keeps no rule of its own.
 
-`apps/web/src/data/logic.characterization.spec.ts` snapshots what that logic answers across a range of item states. It exists to catch accidental rule changes during refactors: if it moves, the game logic moved with it.
+`apps/web/src/logic/alttpr.snapshot.spec.ts` snapshots what the map shows across a range of item states. It exists to catch accidental rule changes during refactors: if it moves, the game logic moved with it.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the commit and release conventions.
 

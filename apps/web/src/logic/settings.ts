@@ -67,6 +67,10 @@ export const dungeonAt = (index: number): DungeonId => {
   return id;
 };
 
+/** The name of the dungeon at a grid index (0-9): "Eastern Palace". */
+export const dungeonName = (index: number): string =>
+  dungeon(dungeonAt(index)).name;
+
 const counters = new WeakMap<AlttprSettings, readonly number[]>();
 
 /**

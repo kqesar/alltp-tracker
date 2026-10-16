@@ -4,15 +4,14 @@ import {
   RewardPicker,
 } from "@/components/tracker/overlays/BossOverlays";
 import { BOSS_STATES } from "@/constants";
-import { dungeons } from "@/data/dungeons";
 import { itemLabels } from "@/data/items";
 import { useControlShortcuts } from "@/hooks/useControlShortcuts";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
 import { useStepHandlers } from "@/hooks/useStepHandlers";
 import { useTooltip } from "@/hooks/useTooltip";
+import { dungeonName } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 import { getItemBackground, isItemDimmed } from "@/utils";
-import { placeName } from "@/utils/caption";
 import { mergeHandlers } from "@/utils/mergeHandlers";
 
 type BossCellProps = {
@@ -44,7 +43,7 @@ export const BossCell = ({ row, col, item }: BossCellProps) => {
 
   return (
     <fieldset
-      aria-label={placeName(dungeons[index].name)}
+      aria-label={dungeonName(index)}
       className="grid-item-base boss-cell"
     >
       <button

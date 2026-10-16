@@ -1,12 +1,12 @@
 import { DUNGEON_INDICES } from "@/constants";
-import { dungeons } from "@/data/dungeons";
 import type { ControlId } from "@/data/keymap";
 import { useControlShortcuts } from "@/hooks/useControlShortcuts";
 import { type GridPosition, useGridFocusable } from "@/hooks/useGridNavigation";
 import { useStepHandlers } from "@/hooks/useStepHandlers";
+import { dungeonAt, dungeonName } from "@/logic/settings";
+import { STATE_LABELS, useDungeonStatus } from "@/logic/solution";
 import { type Direction, useGameStore } from "@/stores/gameStore";
 import { getAssetPath } from "@/utils";
-import { placeName } from "@/utils/caption";
 
 /** Corner of the boss cell an overlay occupies. */
 type Corner = "top-right" | "bottom-left" | "bottom-right";
@@ -73,6 +73,7 @@ type CornerProps = {
  */
 export const ChestCounter = ({ index, row, col }: CornerProps) => {
   const remaining = useGameStore((state) => state.items[`chest${index}`]);
+  const status = useDungeonStatus(dungeonAt(index));
   const handleItemClick = useGameStore((state) => state.handleItemClick);
 
   return (
@@ -80,7 +81,7 @@ export const ChestCounter = ({ index, row, col }: CornerProps) => {
       asset={`chest${remaining}.png`}
       control={`chest${index}`}
       corner="bottom-left"
-      label={`${placeName(dungeons[index].name)} chests: ${remaining} left`}
+      label={`${dungeonName(index)} chests: ${remaining} left${remaining ? `, ${STATE_LABELS[status]}` : ""}`}
       position={{ col, row, slot: 2 }}
       step={(direction) => handleItemClick(`chest${index}`, direction)}
       testId={`chest-overlay-${index}`}
@@ -103,7 +104,7 @@ export const RewardPicker = ({ index, row, col }: CornerProps) => {
       asset={`dungeon${reward}.png`}
       control={`reward${index}`}
       corner="bottom-right"
-      label={`${placeName(dungeons[index].name)} reward: ${REWARD_LABELS[reward]}`}
+      label={`${dungeonName(index)} reward: ${REWARD_LABELS[reward]}`}
       position={{ col, row, slot: 3 }}
       step={(direction) => handleItemClick(`reward${index}`, direction)}
       testId={`reward-overlay-${index}`}
@@ -138,7 +139,7 @@ export const MedallionPicker = ({ index, row, col }: CornerProps) => {
       asset={`medallion${medallion}.png`}
       control={`medallion${index}`}
       corner="top-right"
-      label={`${placeName(dungeons[index].name)} medallion: ${MEDALLION_LABELS[medallion]}`}
+      label={`${dungeonName(index)} medallion: ${MEDALLION_LABELS[medallion]}`}
       position={{ col, row, slot: 1 }}
       step={(direction) => stepMedallion(index, direction)}
       testId={`medallion-overlay-${index}`}

@@ -7,20 +7,12 @@ import type { CSSProperties } from "react";
 import { useTooltip } from "@/hooks/useTooltip";
 import {
   dungeonCount,
-  type MarkerState,
+  STATE_LABELS,
   useBossStatus,
   useMarkerStatus,
 } from "@/logic/solution";
 import { useGameStore } from "@/stores/gameStore";
 import { getAssetPath, toWorldPosition } from "@/utils";
-
-/** The words a screen reader hears for each state; the glyph says it on screen. */
-export const STATE_LABELS: Record<MarkerState, string> = {
-  available: "available",
-  opened: "done",
-  possible: "maybe available",
-  unavailable: "out of logic",
-};
 
 /** The medallion each value of the store's `medallions` names. */
 const MEDALLION_NAMES = ["unknown", "Bombos", "Ether", "Quake"];

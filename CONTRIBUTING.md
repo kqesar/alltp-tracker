@@ -44,7 +44,7 @@ A `pre-commit` hook runs `lint-staged`, which applies Biome to the staged files,
 
 New behaviour needs a test, and a test should be able to fail: assert the value you expect, not that the result is one of the possible values.
 
-If you touch `apps/web/src/data/`, run the tests: `logic.characterization.spec.ts` encodes what the rules answer across 15 item states. An unchanged result is the evidence that a refactor left the game rules alone — if it moves and you did not intend a rule change, the refactor is wrong. Never update it just to make the suite pass.
+If you touch `apps/web/src/data/` or `apps/web/src/logic/`, run the tests: `logic/alttpr.snapshot.spec.ts` encodes what the map shows across 15 item states. An unchanged result is the evidence that a refactor left the game rules alone — if it moves and you did not intend a rule change, the refactor is wrong. Never update it just to make the suite pass.
 
 ```bash
 pnpm test

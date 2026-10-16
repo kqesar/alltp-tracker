@@ -1,8 +1,8 @@
+import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { type KeyboardEvent, type MouseEvent, useId, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { KeyChord } from "@/components/ui/KeyChord";
 import { Modal } from "@/components/ui/Modal";
-import { dungeons } from "@/data/dungeons";
 import { items, itemsMax, itemsMin } from "@/data/items";
 import {
   type ActionId,
@@ -24,10 +24,10 @@ import {
   type ShortcutDirection,
   unbind,
 } from "@/data/keymap";
+import { dungeonName } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 import { useKeyboardLayout } from "@/stores/keyboardLayoutStore";
 import { getAssetPath } from "@/utils";
-import { placeName } from "@/utils/caption";
 import { chordText } from "@/utils/keyLabels";
 import { altKey, commandKey } from "@/utils/platform";
 
@@ -327,15 +327,15 @@ export const ShortcutsDialog = ({ onClose }: { onClose: () => void }) => {
         )}
         <table aria-labelledby={dungeonsHeading} className="shortcuts-table">
           {header("Control")}
-          {dungeons.map((dungeon, index) => (
-            <tbody key={dungeon.name}>
+          {LEGACY_DUNGEONS.map((dungeon, index) => (
+            <tbody key={dungeon}>
               <tr>
                 <th
                   className="shortcuts-table__group"
                   colSpan={3}
                   scope="rowgroup"
                 >
-                  {placeName(dungeon.name)}
+                  {dungeonName(index)}
                 </th>
               </tr>
               {dungeonControls(index).map((control) =>
