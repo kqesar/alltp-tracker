@@ -70,10 +70,11 @@ requirement text ──parse──▶ AST ──loadRules / compileWorld──�
 | `printer.ts` | Canonical printing; `parse(print(ast))` gives `ast` back |
 | `rules.ts` | `loadRules`: helpers and groups, reference checks, helper cycle detection |
 | `settings.ts` | `Settings`, and `foldSettings`: settings to constants, at compile time |
-| `evaluate.ts` | Reference semantics: a direct tree walk over a `State` |
+| `evaluate.ts` | Reference semantics: a direct tree walk over a `State`; `trace` keeps every node's value |
 | `compile.ts` | Compiles ASTs to closures over item/helper indices (the hot path) |
 | `world.ts` | `World` types; `compileWorld` validates and lays the graph out as arrays |
 | `solve.ts` | The solver and `Solution` |
+| `explain.ts` | `explain`: the route to a location and its requirement, node by node |
 
 Choices that shape everything else:
 
@@ -363,6 +364,46 @@ non-monotone rule (for example "no sword", in swordless) is a setting:
 `!setting(swordless)` is folded to a constant before solving, so the compiled
 world stays monotone in items.
 
+## Explaining a location
+
+`explain(world, state, id)` answers "why is this maybe?":
+
+```ts
+explain(world, { hammer: true }, "treasure");
+// {
+//   path: [
+//     { region: "gate" },
+//     { region: "vault", exit: { from: "gate", req: "?lantern", value: "maybe" } },
+//   ],
+//   requirement: { expr, value: "yes", children: [/* one TraceNode per operand */] },
+// }
+```
+
+- **`path`** is a best route from the start to the location's region: the
+  start first, then each region with the exit that entered it, its
+  requirement (settings folded, printed) and that requirement's value. The
+  weakest exit value on the path is the region's level. The path is empty
+  when the region is out of reach.
+- **`requirement`** is the location's requirement as a `TraceNode` tree:
+  `{ expr, value, children }`, where the children are the operand of `?x`, the
+  arguments of `&` / `|` and the body of `@h`. `trace()` builds it. It is
+  `evaluate()` without short-circuits, so a branch that did not decide the
+  result still shows its value. The location is
+  `min(level(region), requirement.value)`.
+
+The path costs almost nothing to record. When the solver raises a region, it
+writes the exit index into `via: Int32Array`, so `via[r]` ends up being the
+exit that gave `r` its final level. That exit's source had its own final level
+when it was expanded, which happened before `r` was raised, so walking `via`
+back from any reached region goes strictly back in time and ends at the start.
+Explaining a location costs one solve, that walk and one traced evaluation.
+
+The settings are the ones the world was compiled with. Explanations show the
+folded requirements, which are what the solver ran: with `hard: true`,
+`!setting(hard) & bow | boots` is explained as `boots`. That is why `explain`
+takes no settings argument: a second settings object could only disagree with
+the compiled world.
+
 ## Performance
 
 A seeded synthetic world at randomizer scale (`test/synthetic.ts`): 300
@@ -396,7 +437,7 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
 
 ## Tests
 
-`pnpm vitest run --project engine` runs 281 tests in about 0.6 s:
+`pnpm vitest run --project engine` runs 291 tests in about 0.8 s:
 
 - **Kleene tables:** both truth tables written out in full, plus every lattice
   law on all combinations.
@@ -416,6 +457,9 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
   availability winning over visibility; `reach()` in a visible requirement;
   the snapshot; unknown `from` regions and parse errors, named. The sample
   pins the Bumper Cave ledge and the Ether tablet at every stage.
+- **Explain:** a chain of exits with their values, a maybe exit, the best of
+  two routes (bottleneck), the start, a region out of reach, exact traces
+  (helpers, branches past a short-circuit, `reach()`), folded settings.
 - **Rules:** helper and group loading, helper cycles (self, 2-, 3-cycles, a cycle
   not containing the starting helper, and a diamond that must *not* count as one),
   unknown references, invalid names.
@@ -432,13 +476,17 @@ solve uses about 4% of it under Vitest and under 1% from a bundle.
   tree gives an equivalent requirement; folding leaves no setting, keeps the
   meaning and the parser's shape, helpers included; compiled evaluation
   equals `evaluate`; the solver equals the literal fixpoint, visibles
-  included; `visible >= location`; and monotonicity in items, for
+  included; `visible >= location`; `trace` agrees with `evaluate` on every
+  node; `explain` gives every location of a random world a path of real
+  exits from the start whose weakest value is the region's level, and a
+  requirement that makes up the rest; and monotonicity in items, for
   requirements and for every region, location and visible of compiled
   worlds. Seeded mutations fail them with shrunk counterexamples: `>=` to
   `===` in compiled item tests fails three, a fold that ignores `!` three, a
   fold that skips the inside of `?x` four, a compiled `reach()` that drops
   `maybe` two, a visible channel started from zero two, an anti-monotone
-  visible requirement two.
+  visible requirement two, a `via` that keeps the first raise instead of the
+  last one, and a traced `?x` that does not soften, two each.
 
 ## How a game pack plugs in
 
@@ -509,8 +557,8 @@ a region belongs to.
 7. **Helper parameters.** `@canBeatBoss(moldorm)` would save dozens of helpers,
    at the cost of a substitution step and cycle checks per instantiation.
    Is it worth it?
-8. **"Why is this maybe?"** The UI will want explanations. `evaluate()` walks
-   the tree and can grow a trace mode, so keep it alongside the compiled path.
-9. **Wiring.** The app's `tsc -b` only type-checks the engine once the app
-   imports it. Until then, CI should run `pnpm --filter @alltp/engine typecheck`.
-   The engine also isn't in the app's coverage thresholds yet.
+8. **"Why is this maybe?"** Done: `explain()` gives the route and the traced
+   requirement (see [Explaining a location](#explaining-a-location)). Still
+   open: how the UI words a trace for a player.
+9. **Wiring.** Done: the root `tsc -b` references this package, and the root
+   coverage run measures `packages/*/src` against the same floors as the app.

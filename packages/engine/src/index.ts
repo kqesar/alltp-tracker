@@ -23,7 +23,10 @@ export {
   evaluate,
   itemValue,
   type State,
+  type TraceNode,
+  trace,
 } from "./evaluate";
+export { type Explanation, explain, type PathStep } from "./explain";
 export { ParseError, parse } from "./parser";
 export { print } from "./printer";
 export {

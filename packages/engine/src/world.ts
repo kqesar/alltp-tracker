@@ -84,9 +84,10 @@ export interface CompileOptions {
 
 /**
  * A world compiled for solving. `regionIds`, `locationIds` and `items` are
- * for consumers; the rest is the solver's internal layout (regions, exits and
- * locations as index arrays, exits and locations of region `r` at offsets
- * `[offsets[r], offsets[r + 1])`), not an API.
+ * for consumers; the rest is the internal layout of the solver, `explain()`
+ * and `analyze()` (regions, exits and locations as index arrays, exits and
+ * locations of region `r` at offsets `[offsets[r], offsets[r + 1])`), not an
+ * API.
  */
 export interface CompiledWorld {
   readonly regionIds: readonly string[];
@@ -98,11 +99,19 @@ export interface CompiledWorld {
   readonly helperCount: number;
   readonly regionIndex: ReadonlyMap<string, number>;
   readonly locationIndex: ReadonlyMap<string, number>;
+  /** The rules with the run's settings folded in. */
+  readonly rules: Rules;
   readonly exitOffsets: Int32Array;
+  readonly exitSources: Int32Array;
   readonly exitTargets: Int32Array;
   readonly exitReqs: readonly Compiled[];
+  /** Each exit's folded requirement (`true` where the world gave none). */
+  readonly exitExprs: readonly Expr[];
   readonly locationOffsets: Int32Array;
+  readonly locationRegions: Int32Array;
   readonly locationReqs: readonly Compiled[];
+  /** Each location's folded requirement (`true` where the world gave none). */
+  readonly locationExprs: readonly Expr[];
   /** Locations with a `visible` entry, by location index... */
   readonly visibleLocations: Int32Array;
   /** ...the region index each is seen from... */
@@ -111,7 +120,17 @@ export interface CompiledWorld {
   readonly visibleReqs: readonly Compiled[];
 }
 
-const ALWAYS: Compiled = () => YES;
+/** A requirement compiled once per distinct text. */
+interface Entry {
+  readonly compiled: Compiled;
+  /** The requirement with the settings folded in. */
+  readonly expr: Expr;
+}
+
+const ALWAYS: Entry = {
+  compiled: () => YES,
+  expr: { type: "const", value: "yes" },
+};
 
 /**
  * Checks and compiles a world once per game and settings; `solve` then runs
@@ -152,14 +171,14 @@ export function compileWorld(
   const compiler = new Compiler(foldedRules, regionIndex);
   // Packs repeat requirements a lot: each distinct text compiles once.
   const parsed = new Map<string, Expr>();
-  const cache = new Map<string, Compiled>();
+  const cache = new Map<string, Entry>();
   const reachMemo = new Map<string, readonly string[] | null>();
   const exitChecked = new Set<string>();
   const compileReq = (
     req: string | undefined,
     where: string,
     inExit = false,
-  ): Compiled => {
+  ): Entry => {
     if (req === undefined) return ALWAYS;
     let expr = parsed.get(req);
     if (expr === undefined) {
@@ -170,24 +189,26 @@ export function compileWorld(
       checkNoReach(expr, rules, where, reachMemo);
       exitChecked.add(req);
     }
-    let compiled = cache.get(req);
-    if (compiled === undefined) {
+    let entry = cache.get(req);
+    if (entry === undefined) {
       checkReferences(expr, rules, where, items, regionIndex);
-      compiled = compiler.compile(foldSettings(expr, settings, where));
-      cache.set(req, compiled);
+      const folded = foldSettings(expr, settings, where);
+      entry = { compiled: compiler.compile(folded), expr: folded };
+      cache.set(req, entry);
     }
-    return compiled;
+    return entry;
   };
 
   const regionCount = world.regions.length;
   const exitOffsets = new Int32Array(regionCount + 1);
+  const exitSources: number[] = [];
   const exitTargets: number[] = [];
-  const exitReqs: Compiled[] = [];
+  const exits: Entry[] = [];
   const locationOffsets = new Int32Array(regionCount + 1);
   const locationIds: string[] = [];
   const locationIndex = new Map<string, number>();
-  const locationReqs: Compiled[] = [];
-  const locationRegion: string[] = [];
+  const locationRegions: number[] = [];
+  const locations: Entry[] = [];
   const visibleLocations: number[] = [];
   const visibleFrom: number[] = [];
   const visibleReqs: Compiled[] = [];
@@ -200,8 +221,9 @@ export function compileWorld(
           `Region "${region.id}" has an exit to unknown region "${exit.to}"`,
         );
       }
+      exitSources.push(r);
       exitTargets.push(target);
-      exitReqs.push(
+      exits.push(
         compileReq(exit.req, `Exit "${region.id}" -> "${exit.to}"`, true),
       );
     }
@@ -210,15 +232,16 @@ export function compileWorld(
     for (const location of region.locations ?? []) {
       const seen = locationIndex.get(location.id);
       if (seen !== undefined) {
+        const first = world.regions[locationRegions[seen]].id;
         throw new DefinitionError(
-          `Duplicate location "${location.id}" (regions "${locationRegion[seen]}" and "${region.id}")`,
+          `Duplicate location "${location.id}" (regions "${first}" and "${region.id}")`,
         );
       }
       const where = `Location "${location.id}"`;
       locationIndex.set(location.id, locationIds.length);
       locationIds.push(location.id);
-      locationRegion.push(region.id);
-      locationReqs.push(compileReq(location.req, where));
+      locationRegions.push(r);
+      locations.push(compileReq(location.req, where));
 
       const visible = location.visible;
       if (visible === undefined) continue;
@@ -230,23 +253,28 @@ export function compileWorld(
       }
       visibleLocations.push(locationIds.length - 1);
       visibleFrom.push(from);
-      visibleReqs.push(compileReq(visible.req, `${where} (visible)`));
+      visibleReqs.push(compileReq(visible.req, `${where} (visible)`).compiled);
     }
     locationOffsets[r + 1] = locationIds.length;
   });
 
   return {
+    exitExprs: exits.map((exit) => exit.expr),
     exitOffsets,
-    exitReqs,
+    exitReqs: exits.map((exit) => exit.compiled),
+    exitSources: Int32Array.from(exitSources),
     exitTargets: Int32Array.from(exitTargets),
     helperCount: compiler.helperCount,
     items: compiler.items,
+    locationExprs: locations.map((location) => location.expr),
     locationIds,
     locationIndex,
     locationOffsets,
-    locationReqs,
+    locationRegions: Int32Array.from(locationRegions),
+    locationReqs: locations.map((location) => location.compiled),
     regionIds: world.regions.map((region) => region.id),
     regionIndex,
+    rules: foldedRules,
     start,
     visibleFrom: Int32Array.from(visibleFrom),
     visibleLocations: Int32Array.from(visibleLocations),
