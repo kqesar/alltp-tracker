@@ -78,7 +78,7 @@ describe("upstream.json", () => {
     }
   });
 
-  it("has a module for each ported file, and none yet for a pending one", () => {
+  it("has a module for each ported file, and none yet for a pending one but a region's", () => {
     const status = new Map<string, Set<string>>();
     for (const { module, status: s } of entries) {
       if (module === undefined) continue;
@@ -87,7 +87,11 @@ describe("upstream.json", () => {
     for (const [module, statuses] of status) {
       // Files that share a module are ported together
       expect([...statuses], module).toHaveLength(1);
-      expect(exists(module), module).toBe(statuses.has("ported"));
+      // A region module exists from the start, as a stub while it is pending
+      // (test/regions.spec.ts holds it to that), so the worlds can list it
+      expect(exists(module), module).toBe(
+        module.startsWith("src/regions/") || statuses.has("ported"),
+      );
     }
   });
 
