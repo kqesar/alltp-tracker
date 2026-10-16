@@ -54,10 +54,9 @@ jobs:
         id: lint
         run: pnpm lint
 
-      # The app's tsc -b (run by the build) covers only what the app imports;
-      # until the app imports the engine, check its types on their own.
-      - name: Type-check the engine
-        run: pnpm --filter @alltp/engine typecheck
+      # Every workspace: the web app, its config files and e2e suite, the engine
+      - name: Type-check
+        run: pnpm typecheck
 
       - name: Run tests with coverage
         id: test
@@ -229,5 +228,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
-          path: playwright-report/
+          path: apps/web/playwright-report/
           retention-days: 7

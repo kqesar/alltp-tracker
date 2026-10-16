@@ -1,16 +1,16 @@
 ---
 paths:
-  - "src/data/**"
-  - "src/constants/**"
+  - "apps/web/src/data/**"
+  - "apps/web/src/constants/**"
 ---
 
-# Game data and logic (`src/data/`)
+# Game data and logic (`apps/web/src/data/`)
 
 - `logic.ts` — the types (`ItemState`, `ChestItem`, `DungeonItem`, `Availability`) and the shared predicates (`canReachDarkWorld`, `canReachSouthDarkWorld`, `canReachDeathMountain`, `canReachEastDeathMountain`, `hasTitansMitt`, `checkMedallion`, `avail()`, `buildDungeonCaption`). Reuse a named predicate rather than re-spelling its expression.
 - `chests.ts` / `dungeons.ts` — the 64 chests and 10 dungeons, static: progress lives in the store. Position in the array *is* the identity — there is no `id` field — so the persisted `chestsOpened` follows that order; reordering or removing an entry needs a save migration (see `stores/persistence.ts`).
 - `items.ts` — one `[min, max, initial?]` range table from which `items`, `itemsMin` and `itemsMax` are derived, plus `itemLabels` for accessibility names. Do not reintroduce parallel tables.
 - `presets.ts` — run types (`getPreset`, `presets`, `describeSettings`). `logicSupported` must be false for any preset whose rules the logic does not actually model.
-- `src/constants/index.ts` holds only values with game meaning.
+- `apps/web/src/constants/index.ts` holds only values with game meaning.
 
 ## Rules are ported, not remembered
 

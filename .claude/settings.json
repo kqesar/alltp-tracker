@@ -16,21 +16,22 @@
   },
   "permissions": {
     "allow": [
+      "Bash(pnpm build)",
+      "Bash(pnpm exec biome check *)",
+      "Bash(pnpm exec tsc -b)",
       "Bash(pnpm lint)",
       "Bash(pnpm lint:fix)",
       "Bash(pnpm test)",
       "Bash(pnpm test:coverage)",
-      "Bash(pnpm test:e2e)",
       "Bash(pnpm test:e2e *)",
-      "Bash(pnpm build)",
-      "Bash(pnpm vitest run *)",
-      "Bash(pnpm exec tsc -b)",
-      "Bash(pnpm exec biome check *)"
+      "Bash(pnpm test:e2e)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm vitest run *)"
     ],
     "deny": [
-      "Read(./coverage/**)",
-      "Read(./dist/**)",
-      "Read(./**/*.tsbuildinfo)"
+      "Read(./**/*.tsbuildinfo)",
+      "Read(./**/dist/**)",
+      "Read(./coverage/**)"
     ]
   }
 }

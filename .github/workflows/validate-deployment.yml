@@ -46,12 +46,12 @@ jobs:
 
       - name: Verify build artifacts
         run: |
-          if [ ! -d "dist" ]; then
+          if [ ! -d "apps/web/dist" ]; then
             echo "❌ Build failed: dist directory not found"
             exit 1
           fi
           
-          if [ ! -f "dist/index.html" ]; then
+          if [ ! -f "apps/web/dist/index.html" ]; then
             echo "❌ Build failed: index.html not found in dist"
             exit 1
           fi

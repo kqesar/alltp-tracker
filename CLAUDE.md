@@ -20,7 +20,8 @@ This tracker is meant to become the reference tracker for randomizer runs, so ev
 
 ```bash
 pnpm dev                     # Start dev server (vite)
-pnpm build                   # tsc -b && vite build
+pnpm build                   # typecheck, then vite build of apps/web
+pnpm typecheck               # tsc over every workspace (app, its configs and e2e, engine)
 pnpm lint                    # Biome check
 pnpm lint:fix                # Biome check --write
 pnpm test                    # Run tests once (vitest run)
@@ -35,7 +36,7 @@ The `verifier` subagent runs lint, types, tests and build and returns only the f
 
 ## Conventions
 
-- Import via the `@/` alias (`@` → `src`). There are no barrel/`index.ts` re-export files — import from the file path.
+- In the app, import via the `@/` alias (`@` → `apps/web/src`). The app has no barrel/`index.ts` re-export files — import from the file path; a package exposes one `src/index.ts`.
 - Biome (not ESLint/Prettier) handles lint + format and sorts imports, JSX attributes and object keys. A hook runs it on every file you edit; fix what it reports.
 - Code and comments in English.
 

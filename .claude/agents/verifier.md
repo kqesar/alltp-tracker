@@ -8,7 +8,7 @@ model: haiku
 Run, from the repository root, each command below even if an earlier one fails:
 
 1. `pnpm lint`
-2. `pnpm exec tsc -b`
+2. `pnpm typecheck`
 3. `pnpm test:coverage`
 4. `pnpm build`
 5. `pnpm test:e2e`
