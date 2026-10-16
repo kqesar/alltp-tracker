@@ -1,7 +1,7 @@
 /** Availability states shown on the maps, with human-readable labels. */
 const LEGEND_ITEMS = [
   { className: "available", label: "Available now" },
-  { className: "possible", label: "Maybe (needs more items)" },
+  { className: "possible", label: "Maybe, or only some" },
   { className: "unavailable", label: "Out of logic" },
   { className: "opened", label: "Opened / cleared" },
 ] as const;

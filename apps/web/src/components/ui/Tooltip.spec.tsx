@@ -27,22 +27,79 @@ describe("Tooltip", () => {
 
   afterEach(() => vi.useRealTimers());
 
-  it("shows a chest's requirements, icons included, on mouse hover", () => {
+  /** The rows of the tooltip's list: each location's label and state. */
+  const rows = () =>
+    [
+      ...(screen.queryByTestId("tooltip-checks")?.querySelectorAll("li") ?? []),
+    ].map((row) => `${row.textContent} ${row.className.replace(/^.*--/, "")}`);
+
+  it("lists a marker's locations with their state on mouse hover", () => {
+    act(() => useGameStore.getState().toggleChecks(["kakariko-well/top"]));
     renderMap();
 
-    fireEvent.pointerEnter(screen.getByTestId("chest-marker-0"), {
+    fireEvent.pointerEnter(screen.getByTestId("marker-kakariko-well"), {
       pointerType: "mouse",
     });
 
-    expect(tooltip()).toHaveTextContent("King's Tomb");
-    expect(tooltip()?.querySelectorAll("img.mini")).toHaveLength(3);
-    // The text is in the marker's own name already: keep it out of the a11y tree
+    expect(tooltip()).toHaveTextContent(/^Kakariko Well/);
+    expect(rows()).toEqual([
+      "Top opened",
+      "Left available",
+      "Middle available",
+      "Right available",
+      "Bottom available",
+    ]);
+    // The marker's own name says its state: keep it out of the a11y tree
     expect(tooltip()).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("says a one-location marker's state beside its name", () => {
+    renderMap();
+
+    fireEvent.pointerEnter(screen.getByTestId("marker-kings-tomb"), {
+      pointerType: "mouse",
+    });
+
+    expect(rows()).toEqual(["Out of logic unavailable"]);
+  });
+
+  it("gives a dungeon's items left, those surely in logic, and each chest", () => {
+    renderMap();
+    fireEvent.pointerEnter(screen.getByTestId("boss-marker-eastern-palace"), {
+      pointerType: "mouse",
+    });
+
+    // Its big key chest is dark, its big chest and boss want that key: the
+    // three items left may all be there
+    expect(screen.getByTestId("tooltip-count")).toHaveTextContent(
+      /^3 items left$/,
+    );
+    expect(rows()).toEqual([
+      "Compass Chest available",
+      "Big Chest possible",
+      "Cannonball Chest available",
+      "Big Key Chest unavailable",
+      "Map Chest available",
+      "Boss unavailable",
+    ]);
+
+    act(() => {
+      const state = useGameStore.getState();
+      state.handleItemClick("bow");
+      state.handleItemClick("bow");
+      state.handleItemClick("lantern");
+      state.handleItemClick("chest0");
+    });
+
+    expect(screen.getByTestId("tooltip-count")).toHaveTextContent(
+      "2 items left, at least 2 in logic",
+    );
+    expect(rows().every((row) => row.endsWith(" available"))).toBe(true);
   });
 
   it("shows on keyboard focus and hides on blur", () => {
     renderMap();
-    const marker = screen.getByTestId("chest-marker-0");
+    const marker = screen.getByTestId("marker-kings-tomb");
 
     act(() => marker.focus());
     expect(tooltip()).toHaveTextContent("King's Tomb");
@@ -53,7 +110,7 @@ describe("Tooltip", () => {
 
   it("is dismissed with Escape", () => {
     renderMap();
-    act(() => screen.getByTestId("chest-marker-0").focus());
+    act(() => screen.getByTestId("marker-kings-tomb").focus());
 
     fireEvent.keyDown(document, { key: "Escape" });
 
@@ -70,7 +127,7 @@ describe("Tooltip", () => {
   it("stays while the pointer moves from its marker onto it", () => {
     vi.useFakeTimers();
     renderMap();
-    const marker = screen.getByTestId("chest-marker-0");
+    const marker = screen.getByTestId("marker-kings-tomb");
 
     fireEvent.pointerEnter(marker, { pointerType: "mouse" });
     placeTooltip();
@@ -84,8 +141,8 @@ describe("Tooltip", () => {
   it("is not taken over by a control it covers, until the pointer leaves it", () => {
     vi.useFakeTimers();
     renderMap();
-    const marker = screen.getByTestId("chest-marker-0");
-    const covered = screen.getByTestId("chest-marker-1");
+    const marker = screen.getByTestId("marker-kings-tomb");
+    const covered = screen.getByTestId("marker-dam");
     fireEvent.pointerEnter(marker, { pointerType: "mouse" });
     placeTooltip();
 
@@ -104,7 +161,7 @@ describe("Tooltip", () => {
   it("hides once the pointer leaves it for anything but its anchor", () => {
     vi.useFakeTimers();
     renderMap();
-    const marker = screen.getByTestId("chest-marker-0");
+    const marker = screen.getByTestId("marker-kings-tomb");
     fireEvent.pointerEnter(marker, { pointerType: "mouse" });
     placeTooltip();
     fireEvent.pointerLeave(marker, { pointerType: "mouse" });
@@ -118,19 +175,19 @@ describe("Tooltip", () => {
 
   it("hides on a press on it, which goes to the control it covers", () => {
     renderMap();
-    fireEvent.pointerEnter(screen.getByTestId("chest-marker-0"), {
+    fireEvent.pointerEnter(screen.getByTestId("marker-kings-tomb"), {
       pointerType: "mouse",
     });
 
     // The browser sends a press on the tooltip to what lies under it
-    fireEvent.pointerDown(screen.getByTestId("chest-marker-1"), mouse);
+    fireEvent.pointerDown(screen.getByTestId("marker-dam"), mouse);
 
     expect(tooltip()).toBeNull();
   });
 
   it("follows the medallion picked while a dungeon is shown", () => {
     renderMap();
-    fireEvent.pointerEnter(screen.getByTestId("boss-marker-8"), {
+    fireEvent.pointerEnter(screen.getByTestId("boss-marker-misery-mire"), {
       pointerType: "mouse",
     });
     const icon = () =>
@@ -145,7 +202,7 @@ describe("Tooltip", () => {
   it("shows on a touch long-press without toggling the chest, then a tap elsewhere hides it", () => {
     vi.useFakeTimers();
     renderMap();
-    const marker = screen.getByTestId("chest-marker-0");
+    const marker = screen.getByTestId("marker-kings-tomb");
 
     fireEvent.pointerDown(marker, { pointerType: "touch" });
     act(() => vi.advanceTimersByTime(LONG_PRESS_MS));
@@ -161,7 +218,7 @@ describe("Tooltip", () => {
 
   it("leaves a quick tap to the control", () => {
     renderMap();
-    const marker = screen.getByTestId("chest-marker-0");
+    const marker = screen.getByTestId("marker-kings-tomb");
 
     fireEvent.pointerDown(marker, { pointerType: "touch" });
     fireEvent.pointerUp(marker, { pointerType: "touch" });
