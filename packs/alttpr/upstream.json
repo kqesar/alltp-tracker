@@ -137,7 +137,7 @@
     {
       "file": "app/Region/Open/HyruleCastleEscape.php",
       "module": "src/regions/open/hyrule-castle-escape.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Boss.php",
@@ -302,7 +302,7 @@
     {
       "file": "tests/NoGlitches/OpenTest.php",
       "fixture": "test/upstream/NoGlitches/Open.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/PalaceOfDarknessTest.php",
