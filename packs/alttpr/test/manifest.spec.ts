@@ -137,8 +137,15 @@ describe("porting a test file", () => {
 
   it("is refused while a region its cases reach is pending", () => {
     expect(portedTooEarly(manifest, fixtures, index)).toEqual([]);
+    // Tower of Hera's test ported before its region, whatever upstream.json
+    // says of either today
     const early: Manifest = {
       ...manifest,
+      rules: manifest.rules.map((r) =>
+        r.file === "app/Region/Standard/TowerOfHera.php"
+          ? { ...r, status: "pending" }
+          : r,
+      ),
       tests: manifest.tests.map((t) =>
         t.file === hera?.file ? { ...t, status: "ported" } : t,
       ),
