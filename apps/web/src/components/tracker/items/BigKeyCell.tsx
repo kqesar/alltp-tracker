@@ -10,15 +10,18 @@ type BigKeyCellProps = {
 };
 
 /**
- * BigKeyCell renders the keysanity 2x2 cell for a dungeon: big key, small key,
- * and the small-key count. A dungeon without small keys (Eastern Palace in
- * v31) has neither the small key nor its count. When big keys are hidden it
- * renders an empty, non-interactive placeholder so the grid layout stays
- * stable.
+ * BigKeyCell renders a dungeon's key cell, 2x2. Outside keysanity: the big
+ * key top right, the small key and its count below. In keysanity, where its
+ * boss also wants them, the map and compass on top, the small key (its count
+ * as a badge on it) and the big key below. A dungeon without small keys
+ * (Eastern Palace in v31) has neither the small key nor its count. When the
+ * key cells are hidden it renders an empty, non-interactive placeholder so
+ * the grid layout stays stable.
  */
 export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
   const dungeonIndex = parseInt(item.replace("bigkey", ""), 10);
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
+  const keysanity = useGameStore((state) => state.settings.keysanity);
   const keyCount = useGameStore((state) => state.smallKeys[dungeonIndex] || 0);
 
   if (!bigKeysVisible) {
@@ -33,7 +36,23 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
   }
 
   const maxKeys = smallKeysMax(dungeonIndex);
-  const isMaxed = keyCount === maxKeys;
+  const toggle = (variant: "big-key" | "small-key" | "map" | "compass") => (
+    <KeyToggle
+      col={col}
+      dungeonIndex={dungeonIndex}
+      row={row}
+      variant={variant}
+    />
+  );
+  // The count, which the small key's own name also says
+  const count = (
+    <div
+      aria-hidden="true"
+      className={`bigkey-count${keysanity ? " bigkey-count--badge" : ""}${keyCount === maxKeys ? " bigkey-count--maxed" : ""}`}
+    >
+      {keyCount}
+    </div>
+  );
 
   return (
     <div
@@ -41,45 +60,30 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
       data-grid-col={col}
       data-grid-row={row}
     >
-      {/* 2x2 Grid Layout */}
-      <div className="bigkey-grid">
-        {/* Top Left - Empty */}
-        <div className="bigkey-quadrant bigkey-quadrant--top-left"></div>
-
-        {/* Top Right - Big Key */}
-        <div className="bigkey-quadrant bigkey-quadrant--top-right">
-          <KeyToggle
-            col={col}
-            dungeonIndex={dungeonIndex}
-            row={row}
-            variant="big-key"
-          />
+      {keysanity ? (
+        <div className="bigkey-grid">
+          <div className="bigkey-quadrant">{toggle("map")}</div>
+          <div className="bigkey-quadrant">{toggle("compass")}</div>
+          <div className="bigkey-quadrant">
+            {maxKeys > 0 && (
+              <>
+                {toggle("small-key")}
+                {count}
+              </>
+            )}
+          </div>
+          <div className="bigkey-quadrant">{toggle("big-key")}</div>
         </div>
-
-        {/* Bottom Left - Small Key, for a dungeon that has some */}
-        <div className="bigkey-quadrant bigkey-quadrant--bottom-left">
-          {maxKeys > 0 && (
-            <KeyToggle
-              col={col}
-              dungeonIndex={dungeonIndex}
-              row={row}
-              variant="small-key"
-            />
-          )}
+      ) : (
+        <div className="bigkey-grid">
+          <div className="bigkey-quadrant" />
+          <div className="bigkey-quadrant">{toggle("big-key")}</div>
+          <div className="bigkey-quadrant">
+            {maxKeys > 0 && toggle("small-key")}
+          </div>
+          <div className="bigkey-quadrant">{maxKeys > 0 && count}</div>
         </div>
-
-        {/* Bottom Right - Small Keys Count, which the key's name also says */}
-        <div className="bigkey-quadrant bigkey-quadrant--bottom-right">
-          {maxKeys > 0 && (
-            <div
-              aria-hidden="true"
-              className={`bigkey-count ${isMaxed ? "bigkey-count--maxed" : ""}`}
-            >
-              {keyCount}
-            </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

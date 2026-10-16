@@ -14,6 +14,8 @@ import {
   dungeonOf,
   ITEM_CONTROLS,
   isBindable,
+  isKeyControl,
+  isKeysanityControl,
   parseAction,
   parseChord,
   refusalOf,
@@ -48,13 +50,15 @@ describe("the controls", () => {
     expect(new Set(ITEM_CONTROLS).size).toBe(ITEM_CONTROLS.length);
   });
 
-  it("gives every dungeon its boss, chests, reward and keys, and a medallion to Mire and Turtle Rock", () => {
+  it("gives every dungeon its boss, chests, reward, keys, map and compass, and a medallion to Mire and Turtle Rock", () => {
     // Eastern Palace has no small key in v31
     expect(dungeonControls(0)).toEqual([
       "boss0",
       "chest0",
       "reward0",
       "bigkey0",
+      "map0",
+      "compass0",
     ]);
     expect(dungeonControls(1)).toContain("smallkey1");
     expect(dungeonControls(8)).toEqual([
@@ -64,9 +68,23 @@ describe("the controls", () => {
       "reward8",
       "bigkey8",
       "smallkey8",
+      "map8",
+      "compass8",
     ]);
-    expect(CONTROLS).toHaveLength(29 + 10 * 5 - 1 + 2);
+    expect(CONTROLS).toHaveLength(29 + 10 * 7 - 1 + 2);
     expect(ACTIONS).toHaveLength(CONTROLS.length * 2);
+  });
+
+  it("tells the key cell's controls, and those it shows in keysanity only", () => {
+    expect(
+      ["bigkey3", "smallkey3", "map3", "compass3", "chest3"].map(isKeyControl),
+    ).toEqual([true, true, true, true, false]);
+    expect(
+      ["bigkey3", "smallkey3", "map3", "compass3"].map(isKeysanityControl),
+    ).toEqual([false, false, true, true]);
+    expect(controlTitle("map3")).toBe("Palace of Darkness map");
+    expect(controlTitle("compass9")).toBe("Turtle Rock compass");
+    expect(dungeonOf("compass9")).toBe(9);
   });
 
   it("names a control within its dungeon and on its own", () => {

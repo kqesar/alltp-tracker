@@ -328,11 +328,21 @@ describe("ShortcutsDialog", () => {
   it("says when key cells are hidden that their keys wait for them", async () => {
     await openWithKeyboard();
     expect(dialog()).toHaveTextContent(
-      "Big and small key shortcuts work while the key cells are shown.",
+      "Key shortcuts work while the key cells are shown, map and compass ones in keysanity runs.",
     );
 
     act(() => useGameStore.getState().setBigKeysVisible(true));
     expect(dialog()).not.toHaveTextContent("while the key cells are shown");
+    expect(dialog()).toHaveTextContent(
+      "Map and compass shortcuts work in keysanity runs.",
+    );
+
+    act(() => useGameStore.getState().applyPreset("keysanity"));
+    expect(dialog()).not.toHaveTextContent("Map and compass shortcuts");
+    act(() => useGameStore.getState().setBigKeysVisible(false));
+    expect(dialog()).toHaveTextContent(
+      "Key, map and compass shortcuts work while the key cells are shown.",
+    );
   });
 
   it("names Cmd+Z and Option on a Mac", async () => {

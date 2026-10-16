@@ -8,8 +8,17 @@ import { describe, expect, it } from "vitest";
 import { MEDALLION_VALUES } from "@/constants";
 import { items, itemsMax, itemsMin } from "@/data/items";
 
-/** Items version 6 added, which no older save holds. */
-const ADDED = ["agahnim2"];
+/**
+ * Items added since version 5, which no older save holds: Agahnim 2
+ * (version 6), each dungeon's map and compass (version 7).
+ */
+const ADDED = [
+  "agahnim2",
+  ...Array.from({ length: 10 }, (_, index) => [
+    `compass${index}`,
+    `map${index}`,
+  ]).flat(),
+];
 
 /**
  * A save keeps the tracker's item ids, and the pack keeps a frozen copy of

@@ -5,6 +5,7 @@ import {
   chordOf,
   isBindable,
   isKeyControl,
+  isKeysanityControl,
   parseAction,
 } from "@/data/keymap";
 import { type Direction, useGameStore } from "@/stores/gameStore";
@@ -22,7 +23,7 @@ type Step = { control: ControlId; direction: Direction };
 export const shortcutStepFor = (event: KeyboardEvent): Step | null => {
   // keyCode 229: the key an IME is composing with, in older engines
   if (event.isComposing || event.keyCode === 229) return null;
-  const { bigKeysVisible, shortcuts } = useGameStore.getState();
+  const { bigKeysVisible, settings, shortcuts } = useGameStore.getState();
   if (!shortcuts.enabled || isAwayFromBoard(event)) return null;
 
   const chord = chordOf(event);
@@ -33,8 +34,10 @@ export const shortcutStepFor = (event: KeyboardEvent): Step | null => {
   if (!action) return null;
 
   const { control, direction } = parseAction(action);
-  // A key cell can only be clicked while it is shown; so it is with its keys
+  // A key cell can only be clicked while it is shown; so it is with its keys,
+  // and its map and compass, shown in keysanity runs only
   if (isKeyControl(control) && !bigKeysVisible) return null;
+  if (isKeysanityControl(control) && !settings.keysanity) return null;
   return { control, direction: direction === "back" ? -1 : 1 };
 };
 
