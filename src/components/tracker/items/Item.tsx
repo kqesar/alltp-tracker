@@ -48,6 +48,7 @@ export const Item = ({ row, col, item, onFocus }: ItemProps) => {
       className={`griditem grid-item-base${bossNumber === null ? "" : " grid-item-relative"}`}
       data-grid-col={col}
       data-grid-row={row}
+      data-testid={`item-${item}`}
       disabled={item === "blank"}
       onClick={() => handleItemClick(item)}
       onFocus={onFocus}

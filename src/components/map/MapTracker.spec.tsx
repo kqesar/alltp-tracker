@@ -1,54 +1,50 @@
-import { act, render } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MapTracker } from "@/components/map/MapTracker";
+import { chests } from "@/data/chests";
+import { dungeons } from "@/data/dungeons";
 import { useGameStore } from "@/stores/gameStore";
 
 describe("MapTracker", () => {
   beforeEach(() => {
-    // Reset store to initial state before each test
-    useGameStore.getState().reset();
+    act(() => useGameStore.getState().applyPreset("open"));
   });
 
-  it("renders without crashing", () => {
-    const { container } = render(<MapTracker />);
-    expect(container).toBeTruthy();
+  it("draws one marker per chest, and a boss and a chest marker per dungeon", () => {
+    render(<MapTracker />);
+
+    expect(screen.getAllByTestId(/^chest-marker-/)).toHaveLength(chests.length);
+    expect(screen.getAllByTestId(/^boss-marker-/)).toHaveLength(
+      dungeons.length,
+    );
+    expect(screen.getAllByTestId(/^dungeon-marker-/)).toHaveLength(
+      dungeons.length,
+    );
   });
 
-  it("uses store data for rendering", () => {
-    // Change something in the store
+  it("recolours markers when the items held change", () => {
+    render(<MapTracker />);
+    // King's Tomb needs boots and either Titan's Mitt or the Dark World route
+    const kingsTomb = screen.getByTestId("chest-marker-0");
+
+    expect(kingsTomb).toHaveClass("unavailable");
+
     act(() => {
-      useGameStore.getState().handleItemClick("hookshot");
+      const { handleItemClick } = useGameStore.getState();
+      handleItemClick("boots");
+      handleItemClick("glove");
+      handleItemClick("glove");
     });
 
-    const { container } = render(<MapTracker />);
-    expect(container).toBeTruthy();
-
-    // Verify hookshot is now true in store
-    const { items } = useGameStore.getState();
-    expect(items.hookshot).toBe(true);
+    expect(kingsTomb).toHaveClass("available");
   });
 
-  it("renders map spans", () => {
-    const { container } = render(<MapTracker />);
+  it("marks a chest opened when it is clicked", () => {
+    render(<MapTracker />);
 
-    // Check that mapspan elements exist
-    const mapElements = container.querySelectorAll(".mapspan");
-    expect(mapElements.length).toBeGreaterThan(0);
-  });
+    fireEvent.click(screen.getByTestId("chest-marker-0"));
 
-  it("responds to store changes", () => {
-    const { rerender } = render(<MapTracker />);
-
-    // Change store state
-    act(() => {
-      useGameStore.getState().toggleChest(0);
-    });
-
-    // Re-render to trigger update
-    rerender(<MapTracker />);
-
-    // Verify store was updated
-    const { chestsState } = useGameStore.getState();
-    expect(chestsState[0].isOpened).toBe(true);
+    expect(screen.getByTestId("chest-marker-0")).toHaveClass("opened");
+    expect(useGameStore.getState().chestsState[0].isOpened).toBe(true);
   });
 });

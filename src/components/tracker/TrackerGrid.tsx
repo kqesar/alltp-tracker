@@ -23,6 +23,7 @@ export const TrackerGrid = ({ itemLayout }: TrackerGridProps) => {
     <section
       aria-label="Item tracker grid"
       className="itemdiv"
+      data-testid="item-grid"
       id="itemdiv"
       ref={containerRef}
     >

@@ -52,7 +52,9 @@ All game state lives in `src/stores/gameStore.ts`, created with `zustand` + `dev
 ### Tests
 `src/data/logic.characterization.spec.ts` snapshots chest availability, dungeon chest access and beatability across 15 item states. **It is a refactor guard: if the snapshot moves without an intended rule change, the change is wrong. Never update it to make the suite pass.**
 
-Write assertions that can fail — this codebase previously carried tests asserting `expect([all four states]).toContain(result)` and "keyboard navigation" specs that pressed no keys.
+Write assertions that can fail — this codebase previously carried tests asserting `expect([all four states]).toContain(result)` and "keyboard navigation" specs that pressed no keys. Never guard an assertion with `if (found.length > 0)`: a query that finds nothing must fail the test.
+
+Locate elements with `data-testid` (`getByTestId`, `getAllByTestId(/^chest-marker-/)`), not by CSS class, inline style or array position in `getAllByRole("button")`. Test ids are kebab-case `<kind>-<id>`: `item-hookshot`, `chest-marker-3`, `boss-marker-0`, `chest-overlay-0`, `medallion-overlay-8`. Then assert accessibility on the element found — `toHaveAccessibleName`, its role — so the test still covers what a screen reader hears.
 
 ## Conventions
 

@@ -18,6 +18,8 @@ type MarkerProps = {
   y: string;
   /** Caption shown while the pointer rests on the marker */
   caption: string;
+  /** Test hook, e.g. "chest-marker-3" */
+  testId: string;
   onClick?: () => void;
 };
 
@@ -32,6 +34,7 @@ const Marker = ({
   x,
   y,
   caption,
+  testId,
   onClick,
 }: MarkerProps) => {
   const { mapLayout, setCaption } = useGameStore();
@@ -40,6 +43,7 @@ const Marker = ({
   return (
     <div
       className={`mapspan ${variant} map-element-base ${state}`}
+      data-testid={testId}
       onClick={onClick}
       onMouseOut={() => setCaption("")}
       onMouseOver={() => setCaption(caption)}
@@ -72,6 +76,7 @@ export const MapChest = ({
       caption={chest.name}
       onClick={() => toggleChest(index)}
       state={chest.isOpened ? "opened" : chest.isAvailable(items, medallions)}
+      testId={`chest-marker-${index}`}
       variant="chest map-chest"
       x={chest.x}
       y={chest.y}
@@ -108,6 +113,7 @@ export const DungeonBoss = ({
           ? "opened"
           : dungeon.isBeatable(items, medallions, bigKeysVisible)
       }
+      testId={`boss-marker-${index}`}
       variant="boss"
       x={dungeon.x}
       y={dungeon.y}
@@ -138,6 +144,7 @@ export const DungeonChest = ({
       state={
         remaining === 0 ? "opened" : dungeon.canGetChest(items, medallions)
       }
+      testId={`dungeon-marker-${index}`}
       variant="dungeon"
       x={dungeon.x}
       y={dungeon.y}
