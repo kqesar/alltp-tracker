@@ -1,6 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
+import {
+  focusedTestId,
+  focusRinged,
+  tabTo,
+  unreachableClickables,
+  WCAG_AA,
+  WIDTHS,
+} from "./support";
 
 /** Load the tracker with nothing tracked. */
 const openTracker = async (page: Page) => {
@@ -117,25 +124,6 @@ for (const [name, css] of [
     expect((await toolbarLayout(page)).more).toBe(false);
   });
 }
-
-/** Whether the focused element draws the focus ring. */
-const focusRinged = (page: Page) =>
-  page.evaluate(
-    () =>
-      getComputedStyle(document.activeElement as Element).boxShadow !== "none",
-  );
-
-const focusedTestId = (page: Page) =>
-  page.evaluate(() => document.activeElement?.getAttribute("data-testid"));
-
-/** Press Tab until the element `testId` has focus; fail if it never does. */
-const tabTo = async (page: Page, testId: string) => {
-  for (let press = 0; press < 60; press++) {
-    if ((await focusedTestId(page)) === testId) return;
-    await page.keyboard.press("Tab");
-  }
-  throw new Error(`Tab never reached ${testId}`);
-};
 
 for (const width of WIDTHS) {
   test.describe(`at ${width}px`, () => {

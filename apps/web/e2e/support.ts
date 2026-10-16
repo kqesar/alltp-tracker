@@ -22,6 +22,29 @@ export const clickToolbarAction = async (
   await page.getByTestId(item).click();
 };
 
+/** The data-testid of the element that has focus. */
+export const focusedTestId = (page: Page) =>
+  page.evaluate(() => document.activeElement?.getAttribute("data-testid"));
+
+/** Whether the focused element draws the focus ring. */
+export const focusRinged = (page: Page) =>
+  page.evaluate(
+    () =>
+      getComputedStyle(document.activeElement as Element).boxShadow !== "none",
+  );
+
+/**
+ * Press Tab until the element `testId` has focus; fail if it never does.
+ * @param presses - How many presses to try first
+ */
+export const tabTo = async (page: Page, testId: string, presses = 400) => {
+  for (let press = 0; press < presses; press++) {
+    if ((await focusedTestId(page)) === testId) return;
+    await page.keyboard.press("Tab");
+  }
+  throw new Error(`Tab never reached ${testId}`);
+};
+
 /**
  * Clickable-looking elements a keyboard can never reach.
  * @param within - Where to look: the page, or an open dialog
