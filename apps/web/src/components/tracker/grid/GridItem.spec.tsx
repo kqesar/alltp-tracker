@@ -78,6 +78,25 @@ describe("GridItem", () => {
     );
   });
 
+  it("greys a key until it is held, its name telling the same", () => {
+    useGameStore.getState().setBigKeysVisible(true);
+    render(<GridItem col={5} item="bigkey3" row={2} />);
+    const bigKey = screen.getByTestId("big-key-3");
+    const smallKey = screen.getByTestId("small-key-3");
+    expect(bigKey).toHaveClass("griditem--dimmed");
+    expect(smallKey).toHaveClass("griditem--dimmed");
+
+    fireEvent.click(bigKey);
+    fireEvent.click(smallKey);
+
+    expect(bigKey).toHaveAccessibleName("Palace of Darkness big key: obtained");
+    expect(bigKey).not.toHaveClass("griditem--dimmed");
+    expect(smallKey).toHaveAccessibleName(
+      "Palace of Darkness small keys: 1 of 6",
+    );
+    expect(smallKey).not.toHaveClass("griditem--dimmed");
+  });
+
   it("disables the blank slot", () => {
     render(<GridItem col={0} item="blank" row={0} />);
 

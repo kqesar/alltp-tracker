@@ -305,6 +305,30 @@ test.describe("a missing item", () => {
       .toBeGreaterThan(40);
   });
 
+  test("greys a key not found the same way, in colour once held", async ({
+    page,
+  }) => {
+    await page.getByTestId("key-cells-toggle").click();
+    await page.mouse.move(0, 0);
+    const key = page.getByTestId("big-key-0");
+    await expect(key).toHaveAccessibleName(
+      "Eastern Palace big key: not obtained",
+    );
+    const box = await key.boundingBox();
+    expect(box).toBeTruthy();
+    if (!box) return;
+
+    const missing = await drawnSpreads(page, box, 0.1);
+    expect(Math.max(...missing)).toBeLessThanOrEqual(3);
+
+    await key.click();
+    await page.mouse.move(0, 0);
+    await expect(key).toHaveAccessibleName("Eastern Palace big key: obtained");
+    await expect
+      .poll(async () => Math.max(...(await drawnSpreads(page, box, 0.1))))
+      .toBeGreaterThan(40);
+  });
+
   test("greys a boss not beaten the same way, its overlays in colour", async ({
     page,
   }) => {

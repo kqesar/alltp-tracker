@@ -7,6 +7,7 @@
 @import "./tracker.css";
 @import "./map.css";
 @import "./overlays.css";
+@import "./dimmed.css";
 @import "./ui.css";
 @import "./modal.css";
 @import "./shortcuts.css";

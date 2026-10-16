@@ -29,110 +29,12 @@
   bottom: 2px;
 }
 
-/* Big Key Overlay Styles */
-.big-key-overlay {
-  padding: 0;
-  margin: 0;
-
-  /* Reset button styles */
-  font: inherit;
-  cursor: pointer;
-  background-color: rgba(0, 0, 0, 0.7);
-  border: 1px solid transparent;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-/* Show border only when parent container is hovered */
-.bigkey-container:hover .big-key-overlay {
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.big-key-overlay:hover {
-  background-color: rgba(0, 0, 0, 0.9);
-  border-color: rgba(255, 255, 255, 0.6);
-  transform: scale(1.05);
-}
-
-.big-key-overlay--obtained {
-  background-color: rgba(0, 100, 0, 0.7);
-  border-color: rgba(0, 255, 0, 0.6);
-}
-
-.big-key-overlay--obtained:hover {
-  background-color: rgba(0, 120, 0, 0.9);
-  border-color: rgba(0, 255, 0, 0.8);
-}
-
-.big-key-icon {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 100%;
-  opacity: 0.9;
-}
-
-/* Small Key Overlay Styles */
-.small-key-overlay {
-  display: flex;
-  gap: 2px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 2px;
-  margin: 0;
-
-  /* Reset button styles */
-  font: inherit;
-  cursor: pointer;
-  background-color: rgba(0, 0, 0, 0.7);
-  border: 1px solid transparent;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-/* Show border only when parent container is hovered */
-.bigkey-container:hover .small-key-overlay {
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.small-key-overlay:hover {
-  background-color: rgba(0, 0, 0, 0.9);
-  border-color: rgba(255, 255, 255, 0.6);
-  transform: scale(1.05);
-}
-
-.small-key-overlay--maxed {
-  background-color: rgba(0, 100, 0, 0.7);
-  border-color: rgba(0, 255, 0, 0.6);
-}
-
-.small-key-overlay--maxed:hover {
-  background-color: rgba(0, 120, 0, 0.9);
-  border-color: rgba(0, 255, 0, 0.8);
-}
-
-.small-key-icon {
-  display: block;
-  flex-shrink: 0;
-  width: 100%;
-  height: 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 100%;
-  opacity: 0.9;
-}
-
-/* Big Key Container 2x2 Grid System */
+/* Keysanity cell: a 2x2 grid holding the big key (top right), the small key
+   (bottom left) and the count of small keys found (bottom right). No box and
+   no backdrop: a key not held yet is greyed by the shared dimmed rule
+   (dimmed.css), like any missing item. */
 .bigkey-container {
   position: relative;
-  background-color: rgba(0, 0, 0, 0.1);
-  transition: border-color 0.2s ease;
-}
-
-.bigkey-container:hover {
-  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .bigkey-grid {
@@ -149,40 +51,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.05);
 }
 
-.bigkey-quadrant--top-left {
-  border-radius: 4px 0 0 0;
+/* A key fills its quarter, positioned so the dimmed rule's pseudo-element
+   lies over it */
+.bigkey-quadrant .key-toggle {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
-.bigkey-quadrant--top-right {
-  border-radius: 0 4px 0 0;
-}
-
-.bigkey-quadrant--bottom-left {
-  border-radius: 0 0 0 4px;
-}
-
-.bigkey-quadrant--bottom-right {
-  border-radius: 0 0 4px 0;
-}
-
+/* Legible over stream footage too: a 1 px dark rim around the digits */
 .bigkey-count {
   font-size: calc(var(--cell) * 0.3);
   font-weight: bold;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text);
   text-align: center;
+  text-shadow:
+    1px 0 var(--color-bg),
+    -1px 0 var(--color-bg),
+    0 1px var(--color-bg),
+    0 -1px var(--color-bg);
 }
 
 .bigkey-count--maxed {
   color: var(--state-available);
-}
-
-/* Adjust overlay positioning for 2x2 grid */
-.bigkey-quadrant .overlay-base {
-  position: static;
-  width: 100%;
-  height: 100%;
-  border-radius: 4px;
 }

@@ -22,10 +22,8 @@
   left: var(--obs-left, 0);
 }
 
-/* The tints the app lays on its dark page would show as dark squares. Items
-   not obtained need nothing here: tracker.css greys the icon alone. */
-.obs-view .tracker,
-.obs-view .bigkey-container,
-.obs-view .bigkey-quadrant {
+/* The grid's page colour would show as a dark rectangle. Items not obtained
+   need nothing here: dimmed.css greys the icon alone. */
+.obs-view .tracker {
   background-color: transparent;
 }
