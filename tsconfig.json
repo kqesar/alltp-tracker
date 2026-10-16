@@ -4,6 +4,8 @@
   "files": [],
   "references": [
     { "path": "apps/web" },
+    // The web app's browser tests: they import workspace sources
+    { "path": "apps/web/e2e" },
     { "path": "packages/autotrack" },
     { "path": "packages/engine" },
     { "path": "packs/alttpr" }
