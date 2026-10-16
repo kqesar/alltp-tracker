@@ -1,4 +1,5 @@
-// Where the dungeons' items can sit.
+// Where the dungeons' items can sit, and the key model: what the tracker
+// shows for a location while the player does not track the keys.
 //
 // Read from sporchia/alttp_vt_randomizer at 219fcafd (LOGIC 31),
 // app/Support/LocationCollection.php:126-142. A rule that asks where an
@@ -9,11 +10,28 @@
 // (app/Filler/RandomAssumed.php:25-34, 59-135), and canFill only grows with
 // the items held. So an item never sits where canFill is `no` with every
 // other item held: `possibleLocations` lists the others.
-import { itemValue, type State, solve } from "@alltp/engine";
+//
+// The key model (solveWithKeys) builds on it; README.md, "The key model",
+// says why it is sound.
+import {
+  type CompiledWorld,
+  type Expr,
+  itemValue,
+  loadRules,
+  parse,
+  rank,
+  type Solution,
+  type State,
+  solve,
+  type Tri,
+} from "@alltp/engine";
 import { derivedFacts } from "./derived";
+import { DUNGEONS, type DungeonId, dungeonPool } from "./dungeons";
 import type { Filler } from "./fill";
 import { fromUpstream, ITEMS } from "./items";
 import { medallionFacts } from "./medallions";
+import { regionModules } from "./pack";
+import { RULES } from "./rules";
 import type { AlttprSettings } from "./settings";
 
 /** Every item at its count in the pool, as the derived facts read them. */
@@ -73,4 +91,295 @@ export function possibleLocations(filler: Filler, item: string): string[] {
   return filler.locations.filter(
     (location) => filler.canFill(location, item, state, solution) !== "no",
   );
+}
+
+/**
+ * A dungeon item the player does not track: a dungeon's small keys while
+ * keys are not wild, its big key while big keys are not. They stay in their
+ * dungeon, and the tracker does not ask for them.
+ */
+export interface UntrackedItem {
+  readonly dungeon: DungeonId;
+  /** Its state id: `keyD1`, `bigKeyD1`. */
+  readonly item: string;
+  /** How many the pool holds. */
+  readonly count: number;
+  /** Where the randomizer may have placed them: possibleLocations. */
+  readonly locations: readonly string[];
+}
+
+/** The items a run's player does not track, with where each may sit. */
+export function untrackedItems(filler: Filler): readonly UntrackedItem[] {
+  const { settings } = filler;
+  return DUNGEONS.flatMap((d) => {
+    const pool = dungeonPool(d);
+    const kinds = [
+      { count: settings.wildKeys ? 0 : pool.smallKeys, kind: "Key" },
+      { count: settings.wildBigKeys ? 0 : pool.bigKey, kind: "BigKey" },
+    ];
+    return kinds
+      .filter(({ count }) => count > 0)
+      .map(({ count, kind }) => ({
+        count,
+        dungeon: d.id,
+        item: `${kind.charAt(0).toLowerCase()}${kind.slice(1)}${d.code}`,
+        locations: possibleLocations(filler, `${kind}${d.code}`),
+      }));
+  });
+}
+
+/** What a filler's key model computes once: everything but the state. */
+interface Model {
+  readonly untracked: readonly UntrackedItem[];
+  /** The dungeons whose untracked items each location's rule reads. */
+  readonly dungeonsOf: ReadonlyMap<string, readonly DungeonId[]>;
+  /**
+   * Per such dungeon: how many small keys and big keys go untracked, and
+   * every location they may sit at.
+   */
+  readonly dungeons: ReadonlyMap<
+    DungeonId,
+    { readonly keys: number; readonly bigKey: number; readonly at: string[] }
+  >;
+  /** The most small keys a dungeon holds untracked; 1 if a big key is. */
+  readonly keys: number;
+  readonly bigKeys: number;
+  /** The world with everything held, its untracked items at a level. */
+  everything(keys: number, bigKeys: number): Solution;
+}
+
+/**
+ * `state` with every untracked item raised to a level: each dungeon's small
+ * keys to `keys` (at most its count), its big key if `bigKeys` is 1. A
+ * count already held is kept. No derived fact reads a key, so they stand.
+ */
+function raise(
+  state: State,
+  untracked: readonly UntrackedItem[],
+  keys: number,
+  bigKeys: number,
+): State {
+  const raised: Record<string, number> = {};
+  for (const { count, item } of untracked) {
+    const level = item.startsWith("bigKey") ? bigKeys * count : keys;
+    raised[item] = Math.max(itemValue(state, item), Math.min(level, count));
+  }
+  return { ...state, ...raised };
+}
+
+/** Memoized solves of one world, by level. */
+function levels(
+  world: CompiledWorld,
+  at: (keys: number, big: number) => State,
+) {
+  const solved = new Map<number, Solution>();
+  return (keys: number, big: number): Solution => {
+    const key = keys * 2 + big;
+    let found = solved.get(key);
+    if (found === undefined) {
+      found = solve(world, at(keys, big));
+      solved.set(key, found);
+    }
+    return found;
+  };
+}
+
+const rules = loadRules(RULES);
+
+/**
+ * The state names a rule reads under the settings, its helpers included,
+ * leaving out a branch the settings switch off or that needs a region no
+ * state reaches (`closed`): Tower of Hera's glitched way in from Misery
+ * Mire, which NoGlitches never opens, reads that palace's big key. `null`
+ * when the whole rule is such a branch.
+ */
+export function readsOf(
+  req: string,
+  settings: AlttprSettings,
+  closed: (region: string) => boolean = () => false,
+): readonly string[] | null {
+  const flags = settings as Readonly<Record<string, boolean | number>>;
+  const visit = (e: Expr): readonly string[] | null => {
+    switch (e.type) {
+      case "const":
+        return e.value === "no" ? null : [];
+      case "item":
+        return [e.name];
+      case "count":
+        return e.names;
+      case "setting":
+        return (flags[e.name] === true) !== e.negated ? [] : null;
+      case "reach":
+        return closed(e.region) ? null : [];
+      case "helper": {
+        const body = rules.helpers.get(e.name);
+        if (body === undefined) throw new RangeError(`No helper @${e.name}`);
+        return visit(body);
+      }
+      case "maybe":
+        return visit(e.expr) ?? [];
+      case "and": {
+        const parts = e.args.map(visit);
+        return parts.some((p) => p === null)
+          ? null
+          : (parts.flat() as string[]);
+      }
+      case "or": {
+        const parts = e.args.map(visit).filter((p) => p !== null);
+        return parts.length === 0 ? null : parts.flat();
+      }
+    }
+  };
+  return visit(parse(req));
+}
+
+const models = new WeakMap<Filler, Model>();
+
+function modelOf(filler: Filler): Model {
+  const cached = models.get(filler);
+  if (cached !== undefined) return cached;
+  const { settings } = filler;
+  const untracked = untrackedItems(filler);
+  const dungeons = new Map<
+    DungeonId,
+    { keys: number; bigKey: number; at: string[] }
+  >();
+  for (const u of untracked) {
+    const entry = dungeons.get(u.dungeon) ?? { at: [], bigKey: 0, keys: 0 };
+    if (u.item.startsWith("bigKey")) entry.bigKey = 1;
+    else entry.keys = u.count;
+    entry.at = [...new Set([...entry.at, ...u.locations])];
+    dungeons.set(u.dungeon, entry);
+  }
+  const keys = Math.max(0, ...[...dungeons.values()].map((d) => d.keys));
+  const bigKeys = Math.max(0, ...[...dungeons.values()].map((d) => d.bigKey));
+  // Everything held, but the untracked items, which the levels set
+  const none = Object.fromEntries(untracked.map((u) => [u.item, 0]));
+  const lowered = { ...everything(settings), ...none };
+  const all = levels(filler.world, (k, big) =>
+    raise(lowered, untracked, k, big),
+  );
+  // A location belongs to the dungeons whose untracked items its rule
+  // reads: its own, or Turtle Rock's for Mimic Cave, whose door is inside
+  const owner = new Map(untracked.map((u) => [u.item, u.dungeon]));
+  const closed = (region: string) => all(keys, bigKeys).region(region) === "no";
+  const dungeonsOf = new Map<string, readonly DungeonId[]>();
+  for (const region of regionModules(settings).flatMap((m) => m.regions)) {
+    for (const location of region.locations) {
+      const read = readsOf(location.req, settings, closed) ?? [];
+      const ids = [...new Set(read.flatMap((n) => owner.get(n) ?? []))];
+      if (ids.length > 0) dungeonsOf.set(location.id, ids);
+    }
+  }
+  const model: Model = {
+    bigKeys,
+    dungeons,
+    dungeonsOf,
+    everything: all,
+    keys,
+    untracked,
+  };
+  models.set(filler, model);
+  return model;
+}
+
+/** The tracker's view of one state, keys read by the key model. */
+export interface KeyedSolution {
+  /**
+   * The location as the tracker shows it. In a dungeon whose keys the
+   * player does not track: `yes` if it is with the keys surely in hand, or
+   * with all of them in a dungeon safe for keys; else `maybe` if it is
+   * possible with all of them, `no` if not even then. Anywhere else, the
+   * solver's answer. Throws a RangeError for an id the world lacks.
+   */
+  location(id: string): Tri;
+  /** Every location of the world, as `location` reads it. */
+  locations(): Record<string, Tri>;
+  /**
+   * The dungeons whose untracked items a location's rule reads: its own,
+   * and Turtle Rock's for Mimic Cave, whose door is inside. None outside.
+   */
+  dungeons(location: string): readonly DungeonId[];
+  /**
+   * Whether no untracked item of the dungeon can hide where the player
+   * cannot follow: at every count of them, each place they may sit is as
+   * available as with every item held. True of a dungeon with none.
+   */
+  safe(dungeon: DungeonId): boolean;
+  /** The state with the untracked items surely in hand added. */
+  readonly state: State;
+  /** That state's solution: regions, and what `explain` reads. */
+  readonly solution: Solution;
+}
+
+/**
+ * The key model over a state: what the tracker shows when the player does
+ * not track the dungeons' small keys and big keys (keysanity tracks them,
+ * and then this is the solver's answer). Pure: the same world and state
+ * always give the same answers; what it caches depends on the world only.
+ */
+export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
+  const model = modelOf(filler);
+  const { world } = filler;
+  // An untracked item is surely in hand once every place it may sit is in
+  // logic: wherever it is, Link gets there. Its count joins the state, which
+  // may let another follow.
+  let sure = state;
+  let solution = solve(world, sure);
+  for (;;) {
+    const found = model.untracked.filter(
+      (u) =>
+        itemValue(sure, u.item) < u.count &&
+        u.locations.every((l) => solution.location(l) === "yes"),
+    );
+    if (found.length === 0) break;
+    sure = {
+      ...sure,
+      ...Object.fromEntries(found.map((u) => [u.item, u.count])),
+    };
+    solution = solve(world, sure);
+  }
+  const at = levels(world, (keys, big) =>
+    raise(sure, model.untracked, keys, big),
+  );
+  const safety = new Map<DungeonId, boolean>();
+  const safe = (id: DungeonId): boolean => {
+    const entry = model.dungeons.get(id);
+    if (entry === undefined) return true;
+    let found = safety.get(id);
+    if (found === undefined) {
+      found = true;
+      check: for (let keys = entry.keys; keys >= 0; keys--) {
+        for (let big = entry.bigKey; big >= 0; big--) {
+          const mine = at(keys, big);
+          const theirs = model.everything(keys, big);
+          for (const l of entry.at) {
+            if (rank(mine.location(l)) < rank(theirs.location(l))) {
+              found = false;
+              break check;
+            }
+          }
+        }
+      }
+      safety.set(id, found);
+    }
+    return found;
+  };
+  const location = (id: string): Tri => {
+    const now = solution.location(id);
+    const ds = model.dungeonsOf.get(id);
+    if (now === "yes" || ds === undefined) return now;
+    const all = at(model.keys, model.bigKeys).location(id);
+    if (all === "yes" && ds.every(safe)) return "yes";
+    return all === "no" ? "no" : "maybe";
+  };
+  return {
+    dungeons: (id) => model.dungeonsOf.get(id) ?? [],
+    location,
+    locations: () =>
+      Object.fromEntries(filler.locations.map((id) => [id, location(id)])),
+    safe,
+    solution,
+    state: sure,
+  };
 }

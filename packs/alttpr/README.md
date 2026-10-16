@@ -15,7 +15,8 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/worlds/*.ts` | `app/World/Standard.php`, `app/World/Open.php`: the region modules of each world |
 | `src/regions/**` | one module per upstream region file |
 | `src/fill.ts` | `app/Location.php`: `canFill`, whether the randomizer may place an item somewhere |
-| `src/keys.ts` | `app/Support/LocationCollection.php`: where a dungeon's items may sit (`itemInLocations`) |
+| `src/keys.ts` | `app/Support/LocationCollection.php`: where a dungeon's items may sit (`itemInLocations`), and the key model |
+| `src/dungeons.ts` | the thirteen dungeons, the code of their items and their pool |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -102,3 +103,69 @@ engine's graph:
 - **Pending modules.** A region file not ported yet still has its module: its
   upstream regions with no entrance and no location. The worlds list every
   module from the start, so a port only fills its own module in.
+
+## The key model
+
+Outside keysanity the player does not track the dungeons' small keys, nor
+their big keys: the *untracked items* are each dungeon's small keys while
+`wildKeys` is off, its big key while `wildBigKeys` is off. Upstream's rules
+count them (`keyD1 >= 6`), so the tracker has to say something without
+them. `solveWithKeys(filler, state)` reads a location in three steps:
+
+1. **The keys surely in hand.** An untracked item sits at one of its
+   `possibleLocations`. When every one of them is `yes`, Link reaches it
+   wherever it is, so its whole count joins the state, which may bring
+   another in reach; this repeats until nothing more joins. Swamp Palace's
+   key, which only its entrance can hold, is in hand once Link is inside.
+2. A location `yes` with those keys is **yes**.
+3. A location `yes` with every untracked item of the dungeons its rule reads
+   is **yes** if those dungeons are all *safe for keys*; otherwise it is
+   **maybe** if it is possible with all of them, **no** if not even then.
+
+A dungeon is *safe for keys* when, at every count of its untracked items
+(none to all of its small keys, without and with its big key), each place
+they may sit is at least as available to the player as with every item
+held: no key can hide behind something the player lacks. The dungeons a
+location reads are those whose untracked items its rule reads, helpers
+included, once the settings are folded and the branches through a region
+no state reaches (glitched ways in) are left out: its own dungeon's, and
+Turtle Rock's for Mimic Cave, whose door is inside. Keysanity tracks every
+key, and the model is then the solver.
+
+**Why `yes` holds** (sketch; `src/key-model.spec.ts` checks each fact it
+rests on):
+
+- The randomizer places the dungeon items first, each where Location::canFill
+  holds with every item not placed yet assumed held
+  (`app/Filler/RandomAssumed.php:25-34, 59-135`), and canFill only grows with
+  the items held. So an item never sits where canFill is `no` with
+  everything else held: outside `possibleLocations`. Step 1 follows, and
+  step 2 is the solver on a state the player truly has.
+- The same assumed fill means that with every item held, Link collects all
+  of a dungeon's untracked items, opening at each count what that count
+  opens, except an item an always-allow rule lets lock itself in: Tower of
+  Hera's key in its Big Key Chest, the big keys of Swamp Palace and Skull
+  Woods in their Big Chests. No other location reads those (tested), so the
+  spot holds its own key and nothing a player wants.
+- No way in reads a key (tested): keys move locations, never regions. In a
+  safe dungeon the player's state is, at every count, at least as good as
+  everything on every place the items may sit, so collecting step by step
+  the player takes at least what everything takes, which is all of them. A
+  location `yes` with all of them is then reached.
+- Every placement a dungeon rule asks about (`hasItem`, `itemInLocations`)
+  is one `maybe` beside the branch it relaxes, so comparing yes, maybe and
+  no compares the same placements on both sides.
+
+**Its laws**, as fast-check properties over random states of the Open and
+Standard worlds: adding an item never lowers a location (near the top too,
+where one item turns a dungeon safe), and a location is never above the
+solver with every untracked item nor below it without them. With wild keys,
+Palace of Darkness's doors do want one key more once the hammer, a bow and
+the lamp are held, as upstream has it (`src/derived.ts`); the model is then
+the solver, so that drop stays.
+
+**Cost.** The first call of a world builds what does not depend on the
+state (where each item may sit, the world with everything held at each
+count): about 14 ms under Vitest. Each call after that takes a few solves:
+the keys in hand, all keys, and the counts a dungeon's safety asks about,
+about 0.2 to 0.5 ms under Vitest for every location of the world.
