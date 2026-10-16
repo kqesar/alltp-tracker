@@ -31,6 +31,14 @@ Each state also has a glyph (✓ ? ✕), so colour is never the only cue. Click 
 
 **Presets** — pick a run type to set the rules; keysanity adds the big and small key cells to the grid. Progress is saved to the browser automatically, and can be exported or imported as JSON.
 
+## Autotracking
+
+The tracker can read your game as you play, through [SNI](https://github.com/alttpo/sni/releases/latest) (or QUsb2Snes) running on your computer: RetroArch with the bsnes-mercury core, an FX Pak Pro, BizHawk or an NWA emulator, on Windows, macOS or Linux. The toolbar's **Autotracking** button opens the setup guide for your system, its steps ticked as the connection gets through them, the failing one opened with what to do. Its dot shows the status at a glance; connecting, losing SNI and reconnecting never interrupt the run with a dialog. **What I read** lists the items, checked locations and progress the tracker read, to compare with your game. Once connected, the tracker connects again each time it opens, on that device, until you disconnect. With OBS, autotrack in the dock: the stream view follows the dock and never connects to SNI itself.
+
+Races: on a race seed, or when its race flag cannot be read, the tracker reads only what [the race-legal autotracking specification](https://link.alttpr.com/autotracking) permits, and shows a **race-legal** badge.
+
+Safari, and every browser on iOS, cannot reach SNI from this secure site (it counts `ws://localhost` as mixed content): use Firefox, Chrome or Edge. The desktop app will cover Safari. The first time, Firefox and Chrome ask whether the site may reach apps on your device: allow it. SNI listening on another port than 23074? Add `?bridge=<port>` to the tracker's address.
+
 ## Streaming with OBS
 
 The stream view, [`?view=obs`](https://kqesar.github.io/alltp-tracker/?view=obs), is the item grid alone on a transparent background. It fills its source, centred, at a size that keeps the pixel art sharp, and follows the run live. The toolbar's **Stream view** button copies its address. In OBS 31 or newer:
@@ -78,6 +86,7 @@ The repository is a pnpm workspace:
 ```
 apps/web/          the tracker web app (Vite + React), deployed to GitHub Pages
 packages/engine/   @alltp/engine: a game-agnostic logic engine (rule language, three-valued solver)
+packages/autotrack/ @alltp/autotrack: the autotracking link to SNI / QUsb2Snes, its diagnostics and Race Mode
 packs/alttpr/      @alltp/pack-alttpr: ALttPR's items, and the official tests its v31 rules are held to
 ```
 
