@@ -11,8 +11,11 @@ import {
   settingsFromUpstream,
 } from "../../../../settings";
 
+const ETHER = "ether-tablet";
 const ROCK = "spectacle-rock";
 const NO_LAMP = settingsFromUpstream("open", { "item.require.Lamp": 0 });
+/** On the tablet's ledge, by the flute and the mirror, with the Book. */
+const LEDGE = { bookOfMudora: 1, flute: 1, magicMirror: 1, rescueZelda: 1 };
 
 const solved = (settings: AlttprSettings, state: State) =>
   solve(compile(settings), state);
@@ -37,7 +40,27 @@ describe("West Death Mountain", () => {
     expect(solved(NO_LAMP, up).location("old-man")).toBe("yes");
   });
 
-  it("shows Spectacle Rock from below", () => {
+  it("gives the Ether tablet to the hammer, swordless", () => {
+    const swordless = settingsFromUpstream("open", {
+      "mode.weapons": "swordless",
+    });
+    const hammer = { ...LEDGE, hammer: 1 };
+    expect(solved(swordless, hammer).location(ETHER)).toBe("yes");
+    expect(solved(swordless, LEDGE).location(ETHER)).toBe("no");
+    expect(solved(OPEN, hammer).location(ETHER)).toBe("no");
+    expect(solved(OPEN, { ...LEDGE, sword: 2 }).location(ETHER)).toBe("yes");
+  });
+
+  it("shows the Ether tablet to the Book on its ledge, and Spectacle Rock from below", () => {
+    expect(solved(OPEN, LEDGE).location(ETHER)).toBe("no");
+    expect(solved(OPEN, LEDGE).visible(ETHER)).toBe("yes");
+    // Without the Book, or below the ledge, the tablet says nothing
+    expect(solved(OPEN, { ...LEDGE, bookOfMudora: 0 }).visible(ETHER)).toBe(
+      "no",
+    );
+    expect(solved(OPEN, { ...LEDGE, magicMirror: 0 }).visible(ETHER)).toBe(
+      "no",
+    );
     const below = { flute: 1, rescueZelda: 1 };
     expect(solved(OPEN, below).location(ROCK)).toBe("no");
     expect(solved(OPEN, below).visible(ROCK)).toBe("yes");
