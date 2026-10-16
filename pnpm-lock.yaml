@@ -151,6 +151,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@alltp/autotrack':
+        specifier: workspace:*
+        version: link:../../packages/autotrack
+      '@alltp/pack-alttpr':
+        specifier: workspace:*
+        version: link:../../packs/alttpr
       react:
         specifier: ^19.2.8
         version: 19.2.8

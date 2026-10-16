@@ -8,6 +8,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { TrackerControls } from "@/components/ui/TrackerControls";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
 import { defaultItemGrid } from "@/data/items";
+import { useAutotrack } from "@/hooks/useAutotrack";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
@@ -20,6 +21,7 @@ import { useGameStore } from "@/stores/gameStore";
 function App() {
   useUndoShortcuts();
   useItemShortcuts();
+  useAutotrack();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
   const mapLayout = useGameStore((state) => state.mapLayout);

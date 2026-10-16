@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  bridgeUrl,
   fitObsGrid,
   isObsView,
   obsBackground,
@@ -67,6 +68,38 @@ describe("obsBackground", () => {
     window.history.replaceState(null, "", "/?view=obs&bg=123456");
     expect(obsBackground()).toBe("#123456");
     window.history.replaceState(null, "", "/");
+  });
+});
+
+describe("bridgeUrl", () => {
+  it("is SNI on this computer at the port named", () => {
+    expect(bridgeUrl("?bridge=23075")).toBe("ws://localhost:23075");
+    expect(bridgeUrl("?view=obs&bridge=1")).toBe("ws://localhost:1");
+    expect(bridgeUrl("?bridge=65535")).toBe("ws://localhost:65535");
+  });
+
+  it("takes nothing but a port: no host, no scheme, nothing out of range", () => {
+    for (const value of [
+      "",
+      "0",
+      "65536",
+      "123456",
+      "-1",
+      "23074.5",
+      "evil.example:23074",
+      "ws://evil.example:23074",
+      "localhost:23074",
+    ]) {
+      expect(bridgeUrl(`?bridge=${encodeURIComponent(value)}`)).toBeUndefined();
+    }
+    expect(bridgeUrl("")).toBeUndefined();
+  });
+
+  it("reads the page's own query string by default", () => {
+    window.history.replaceState(null, "", "/?bridge=8080");
+    expect(bridgeUrl()).toBe("ws://localhost:8080");
+    window.history.replaceState(null, "", "/");
+    expect(bridgeUrl()).toBeUndefined();
   });
 });
 
