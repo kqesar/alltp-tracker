@@ -556,20 +556,27 @@ slower.
   runner, which turns every imported binding into a getter (it warns about
   this). The solver's hot path reads imported constants on every node, which
   costs about 5×. So the Vitest column is an upper bound.
-- `test/performance.spec.ts` runs with `pnpm test`. It fails if the average of
-  2000 solves reaches 5 ms, after checking the world's size and its outcome mix,
-  so it can't pass by timing a trivial solve.
+- Both timing tests below run with `pnpm test` and are built not to flake on a
+  busy machine (`test/timing.ts`). They time the CPU of their own process,
+  not the wall clock: Vitest runs each test file in a process of its own, so
+  waiting for a core does not count. They keep the fastest of several runs,
+  and their Vitest timeout is two minutes, since load and coverage stretch
+  wall time many times over (a 6 s run once took 44 s) and must never be what
+  fails. With the load average at 30 on 8 cores, a solve still measured
+  0.13 ms, 0.28 ms under coverage.
+- `test/performance.spec.ts` fails if a solve takes 5 ms or more, averaged
+  over the fastest of 20 batches of 100 solves across 50 stages of the game,
+  after checking the world's size and its outcome mix, so it can't pass by
+  timing a trivial solve. The budget is the same under coverage.
 - `test/analyze.performance.spec.ts` asks for the blockers of every location,
   for both targets, at 20 stages of the game (10% to 90% of the items). It
-  fails if a stage takes 10 ms or more on average, after checking that an
-  early stage has real work: sets to list, locations already there, locations
-  out of reach. A few ms is easy to lose to a busy machine, so it times the
-  CPU time of its own process (Vitest runs each test file in one) and keeps
-  each stage's fastest of 7 runs: with the load average at 27 on 8 cores, it
-  still measured about 3 ms. Coverage instrumentation (`pnpm test:coverage`,
-  which CI runs) slows this code several times over; `vitest.config.ts` tells
-  the test, which then allows 8× the budget, enough to catch a blow-up but not
-  a slow drift. A plain `pnpm test` holds the real budget.
+  fails if a stage takes 10 ms or more on average, each stage timed by its
+  fastest of 7 runs (about 3 ms at that load), after checking that an early
+  stage has real work: sets to list, locations already there, locations out
+  of reach. Coverage instrumentation (`pnpm test:coverage`, which CI runs)
+  slows this code several times over; `vitest.config.ts` tells the test,
+  which then allows 8× the budget, enough to catch a blow-up but not a slow
+  drift. A plain `pnpm test` holds the real budget.
 
 ## Tests
 
