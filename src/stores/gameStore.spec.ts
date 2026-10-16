@@ -33,7 +33,7 @@ describe("GameStore", () => {
     expect(state.chestsOpened).toEqual(chests.map(() => false));
     expect(state.items.boss0).toBe(1);
     expect(state.bigKeysVisible).toBe(false);
-    expect(state.mapLayout).toBe("side-by-side");
+    expect(state.mapLayout).toBe("auto");
   });
 
   it("updates caption", () => {

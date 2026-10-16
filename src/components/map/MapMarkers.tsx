@@ -1,60 +1,38 @@
+import type { CSSProperties } from "react";
 import { BOSS_STATES } from "@/constants";
 import {
+  type Availability,
   buildDungeonCaption,
   type ChestItem,
   type DungeonItem,
 } from "@/data/logic";
 import { useGameStore } from "@/stores/gameStore";
-import { getAssetPath, transformMapCoordinates } from "@/utils";
+import { getAssetPath, toWorldPosition } from "@/utils";
+import { captionToText } from "@/utils/caption";
 
-type MarkerProps = {
-  /** Extra classes identifying the marker kind, e.g. "chest map-chest" */
-  variant: string;
-  /** Availability class: available / possible / unavailable / opened */
-  state: string;
-  /** Asset filename drawn as the marker icon */
-  asset: string;
-  x: string;
-  y: string;
-  /** Caption shown while the pointer rests on the marker */
-  caption: string;
-  /** Test hook, e.g. "chest-marker-3" */
-  testId: string;
-  onClick?: () => void;
+/** What a marker shows: an availability, or done. */
+type MarkerState = Availability | "opened";
+
+/** The words a screen reader hears for each state; the glyph says it on screen. */
+const STATE_LABELS: Record<MarkerState, string> = {
+  available: "available",
+  opened: "done",
+  possible: "maybe available",
+  unavailable: "out of logic",
 };
 
-/**
- * Shared presentation for every marker pinned on the map: position, icon and
- * the hover caption. Only the availability rules differ between kinds.
- */
-const Marker = ({
-  variant,
-  state,
-  asset,
-  x,
-  y,
-  caption,
-  testId,
-  onClick,
-}: MarkerProps) => {
-  const mapLayout = useGameStore((state) => state.mapLayout);
-  const setCaption = useGameStore((state) => state.setCaption);
-  const position = transformMapCoordinates(x, y, mapLayout);
-
-  return (
-    <div
-      className={`mapspan ${variant} map-element-base ${state}`}
-      data-testid={testId}
-      onClick={onClick}
-      onMouseOut={() => setCaption("")}
-      onMouseOver={() => setCaption(caption)}
-      style={{
-        backgroundImage: `url(${getAssetPath(asset)})`,
-        left: position.x,
-        top: position.y,
-      }}
-    />
-  );
+/** Position, icon and sizing variables shared by every marker. */
+const markerStyle = (
+  x: string,
+  y: string,
+  asset: string,
+): CSSProperties & Record<"--x" | "--y", string> => {
+  const position = toWorldPosition(x, y);
+  return {
+    "--x": `${position.x}%`,
+    "--y": `${position.y}%`,
+    backgroundImage: `url(${getAssetPath(asset)})`,
+  };
 };
 
 /**
@@ -73,28 +51,37 @@ export const MapChest = ({
   const medallions = useGameStore((state) => state.medallions);
   const opened = useGameStore((state) => state.chestsOpened[index]);
   const toggleChest = useGameStore((state) => state.toggleChest);
+  const setCaption = useGameStore((state) => state.setCaption);
+
+  const state: MarkerState = opened
+    ? "opened"
+    : chest.isAvailable(items, medallions);
 
   return (
-    <Marker
-      asset="poi.png"
-      caption={chest.name}
+    <button
+      aria-label={`${captionToText(chest.name)}: ${STATE_LABELS[state]}`}
+      aria-pressed={opened}
+      className={`mapspan chest state-glyph ${state}`}
+      data-testid={`chest-marker-${index}`}
+      onBlur={() => setCaption("")}
       onClick={() => toggleChest(index)}
-      state={opened ? "opened" : chest.isAvailable(items, medallions)}
-      testId={`chest-marker-${index}`}
-      variant="chest map-chest"
-      x={chest.x}
-      y={chest.y}
+      onFocus={() => setCaption(chest.name)}
+      onMouseEnter={() => setCaption(chest.name)}
+      onMouseLeave={() => setCaption("")}
+      style={markerStyle(chest.x, chest.y, "poi.png")}
+      type="button"
     />
   );
 };
 
 /**
- * A dungeon boss. Clicking it marks the boss beaten, the same flag as the
- * boss cell in the tracker grid.
+ * A dungeon: a square showing whether its chests can be reached, under the
+ * boss icon, the button, which shows whether the boss can be beaten.
+ * Clicking it marks the boss beaten, the same flag as the grid's boss cell.
  * @param dungeon - The dungeon data
  * @param index - The dungeon index
  */
-export const DungeonBoss = ({
+export const MapDungeon = ({
   dungeon,
   index,
 }: {
@@ -105,53 +92,44 @@ export const DungeonBoss = ({
   const medallions = useGameStore((state) => state.medallions);
   const keysanity = useGameStore((state) => state.settings.keysanity);
   const handleItemClick = useGameStore((state) => state.handleItemClick);
+  const setCaption = useGameStore((state) => state.setCaption);
 
   const beaten = (items[`boss${index}`] as number) === BOSS_STATES.BEATEN;
-
-  return (
-    <Marker
-      asset={dungeon.image}
-      caption={buildDungeonCaption(dungeon, index, medallions)}
-      onClick={() => handleItemClick(`boss${index}`)}
-      state={
-        beaten ? "opened" : dungeon.isBeatable(items, medallions, keysanity)
-      }
-      testId={`boss-marker-${index}`}
-      variant="boss"
-      x={dungeon.x}
-      y={dungeon.y}
-    />
-  );
-};
-
-/**
- * The remaining-chests indicator for a dungeon. Display only: the count is
- * changed from the tracker grid, not from the map.
- * @param dungeon - The dungeon data
- * @param index - The dungeon index
- */
-export const DungeonChest = ({
-  dungeon,
-  index,
-}: {
-  dungeon: DungeonItem;
-  index: number;
-}) => {
-  const items = useGameStore((state) => state.items);
-  const medallions = useGameStore((state) => state.medallions);
+  const bossState: MarkerState = beaten
+    ? "opened"
+    : dungeon.isBeatable(items, medallions, keysanity);
   const remaining = items[`chest${index}`] as number;
+  const chestState: MarkerState =
+    remaining === 0 ? "opened" : dungeon.canGetChest(items, medallions);
+
+  const caption = buildDungeonCaption(dungeon, index, medallions);
+  const chests = remaining === 1 ? "1 chest left" : `${remaining} chests left`;
+  const show = () => setCaption(caption);
+  const hide = () => setCaption("");
 
   return (
-    <Marker
-      asset="poi.png"
-      caption={buildDungeonCaption(dungeon, index, medallions)}
-      state={
-        remaining === 0 ? "opened" : dungeon.canGetChest(items, medallions)
-      }
-      testId={`dungeon-marker-${index}`}
-      variant="dungeon"
-      x={dungeon.x}
-      y={dungeon.y}
-    />
+    <>
+      <div
+        aria-hidden="true"
+        className={`mapspan dungeon state-glyph ${chestState}`}
+        data-testid={`dungeon-marker-${index}`}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        style={markerStyle(dungeon.x, dungeon.y, "poi.png")}
+      />
+      <button
+        aria-label={`${captionToText(caption)}: boss ${STATE_LABELS[bossState]}, ${chests} (${STATE_LABELS[chestState]})`}
+        aria-pressed={beaten}
+        className={`mapspan boss state-glyph ${bossState}`}
+        data-testid={`boss-marker-${index}`}
+        onBlur={hide}
+        onClick={() => handleItemClick(`boss${index}`)}
+        onFocus={show}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        style={markerStyle(dungeon.x, dungeon.y, dungeon.image)}
+        type="button"
+      />
+    </>
   );
 };

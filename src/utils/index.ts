@@ -45,39 +45,36 @@ export const isItemDimmed = (
 
 /**
  * How the two worlds are arranged on screen.
+ * - `auto`: side by side while each world gets enough width, stacked below
  * - `side-by-side`: as the map asset stores them, Light World left, Dark right
- * - `stacked`: Light World on top, Dark World below, for tall/narrow screens
+ * - `stacked`: Light World on top, Dark World below
  */
-export type MapLayout = "side-by-side" | "stacked";
+export type MapLayout = "auto" | "side-by-side" | "stacked";
+
+/** The two halves of the map asset. */
+export type World = "light" | "dark";
 
 /** Midpoint of the map asset, where the Light World ends and the Dark begins. */
-const WORLD_SPLIT = 0.5;
+const WORLD_SPLIT = 50;
 
 /**
- * Re-projects a marker's percentage coordinates for the current layout.
- *
- * Marker coordinates are authored against the side-by-side asset. Stacked,
- * each world spans the full width and half the height, so a marker's x doubles
- * within its own half while its y halves — shifted into the lower half for
- * Dark World markers.
- * @param x - Horizontal position as a percentage string (e.g. "46.8%")
- * @param y - Vertical position as a percentage string
- * @param layout - The arrangement currently on screen
- * @returns The percentage strings to position the marker with
+ * Places a marker in its own world. Coordinates are authored against the
+ * whole asset (both worlds side by side); each world is drawn as its own
+ * square, so a marker keeps its height and doubles its share of the width
+ * within its half.
+ * @param x - Horizontal position over the whole asset, e.g. "46.8%"
+ * @param y - Vertical position, e.g. "38.8%"
+ * @returns The world and the position inside it, in percent
  */
-export const transformMapCoordinates = (
+export const toWorldPosition = (
   x: string,
   y: string,
-  layout: MapLayout,
-): { x: string; y: string } => {
-  if (layout === "side-by-side") return { x, y };
-
-  const xFraction = Number.parseFloat(x) / 100;
-  const yFraction = Number.parseFloat(y) / 100;
-  const isDarkWorld = xFraction > WORLD_SPLIT;
-
-  const stackedX = (isDarkWorld ? xFraction - WORLD_SPLIT : xFraction) * 2;
-  const stackedY = yFraction / 2 + (isDarkWorld ? WORLD_SPLIT : 0);
-
-  return { x: `${stackedX * 100}%`, y: `${stackedY * 100}%` };
+): { world: World; x: number; y: number } => {
+  const left = Number.parseFloat(x);
+  const world: World = left > WORLD_SPLIT ? "dark" : "light";
+  return {
+    world,
+    x: (world === "dark" ? left - WORLD_SPLIT : left) * 2,
+    y: Number.parseFloat(y),
+  };
 };

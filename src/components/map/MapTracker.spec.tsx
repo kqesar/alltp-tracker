@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MapTracker } from "@/components/map/MapTracker";
 import { chests } from "@/data/chests";
@@ -86,5 +87,73 @@ describe("MapTracker", () => {
 
     expect(screen.getByTestId("chest-marker-0")).toHaveClass("opened");
     expect(useGameStore.getState().chestsOpened[0]).toBe(true);
+  });
+});
+
+describe("MapTracker worlds and markers", () => {
+  beforeEach(() => {
+    act(() => useGameStore.setState(useGameStore.getInitialState(), true));
+  });
+
+  it("splits the markers between a Light World and a Dark World", () => {
+    render(<MapTracker />);
+    const light = within(screen.getByTestId("map-world-light"));
+    const dark = within(screen.getByTestId("map-world-dark"));
+
+    expect(screen.getByTestId("map-world-light")).toHaveAccessibleName(
+      "Light World",
+    );
+    // Eastern Palace lies in the Light World, Palace of Darkness in the Dark
+    expect(light.getByTestId("boss-marker-0")).toBeInTheDocument();
+    expect(dark.getByTestId("boss-marker-3")).toBeInTheDocument();
+    expect(
+      light.queryAllByTestId(/^chest-marker-/).length +
+        dark.queryAllByTestId(/^chest-marker-/).length,
+    ).toBe(chests.length);
+  });
+
+  it("makes every chest and boss a button named by its place and state", () => {
+    render(<MapTracker />);
+
+    const kingsTomb = screen.getByTestId("chest-marker-0");
+    expect(kingsTomb.tagName).toBe("BUTTON");
+    expect(kingsTomb).toHaveAccessibleName(
+      "King's Tomb Pegasus Boots + Titan's Mitt/Magic Mirror: out of logic",
+    );
+    expect(kingsTomb).toHaveAttribute("aria-pressed", "false");
+
+    expect(screen.getByTestId("boss-marker-0")).toHaveAccessibleName(
+      /^Eastern Palace Bow: boss out of logic, 3 chests left \(maybe available\)$/,
+    );
+  });
+
+  it("keeps the dungeon square out of the accessibility tree", () => {
+    render(<MapTracker />);
+
+    expect(screen.getByTestId("dungeon-marker-0")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+  });
+
+  it("toggles a chest from the keyboard like any button", async () => {
+    const user = userEvent.setup();
+    render(<MapTracker />);
+    const kingsTomb = screen.getByTestId("chest-marker-0");
+
+    kingsTomb.focus();
+    await user.keyboard("{Enter}");
+
+    expect(kingsTomb).toHaveAttribute("aria-pressed", "true");
+    expect(kingsTomb).toHaveAccessibleName(/: done$/);
+  });
+
+  it("follows the chosen map layout", () => {
+    act(() => useGameStore.getState().setMapLayout("stacked"));
+    render(<MapTracker />);
+
+    expect(screen.getByTestId("map-tracker")).toHaveClass(
+      "map-worlds--stacked",
+    );
   });
 });

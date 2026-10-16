@@ -59,3 +59,8 @@
 .griditem:active {
   transform: scale(0.95);
 }
+
+/* Lift the focused cell so its neighbours do not paint over its focus ring */
+.griditem:focus-visible {
+  z-index: 1;
+}

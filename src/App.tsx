@@ -24,6 +24,9 @@ function App() {
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
+      <a className="skip-link" href="#map">
+        Skip to map
+      </a>
       <Header />
       <div className="toolbar" data-testid="toolbar">
         <TrackerControls />
@@ -35,10 +38,8 @@ function App() {
           data-testid="layout"
         >
           <TrackerGrid itemLayout={defaultItemGrid} />
-          <div className="map-panel">
-            <div className="mapdiv">
-              <MapTracker />
-            </div>
+          <div className="map-panel" id="map">
+            <MapTracker />
             <MapLegend />
           </div>
         </div>

@@ -4,12 +4,32 @@ import { Modal } from "@/components/ui/Modal";
 import { PresetSelector } from "@/components/ui/PresetSelector";
 import { useGameStore } from "@/stores/gameStore";
 import { type Progress, parseSave } from "@/stores/persistence";
+import type { MapLayout } from "@/utils";
 
 /** How long a status message such as "Save imported" stays on screen. */
 const STATUS_DURATION_MS = 4000;
 
 /** Time left for the browser to start a download before its URL is freed. */
 const DOWNLOAD_URL_LIFETIME_MS = 1000;
+
+/** The map layouts the player can pick, in the order they are offered. */
+const MAP_LAYOUTS: { value: MapLayout; label: string; hint: string }[] = [
+  {
+    hint: "Side by side while there is room, stacked below",
+    label: "Auto",
+    value: "auto",
+  },
+  {
+    hint: "Light World left, Dark World right",
+    label: "Side",
+    value: "side-by-side",
+  },
+  {
+    hint: "Dark World under the Light World",
+    label: "Stack",
+    value: "stacked",
+  },
+];
 
 /**
  * TrackerControls - floating controls to reset progress and export/import a
@@ -28,8 +48,6 @@ export const TrackerControls = () => {
   const mapLayout = useGameStore((state) => state.mapLayout);
   const setMapLayout = useGameStore((state) => state.setMapLayout);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const isStacked = mapLayout === "stacked";
 
   const [isResetOpen, setIsResetOpen] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
@@ -138,19 +156,26 @@ export const TrackerControls = () => {
       >
         Import
       </button>
-      <button
-        aria-pressed={isStacked}
-        className="tracker-controls__button"
-        onClick={() => setMapLayout(isStacked ? "side-by-side" : "stacked")}
-        title={
-          isStacked
-            ? "Show the two worlds side by side"
-            : "Stack the Dark World under the Light World"
-        }
-        type="button"
-      >
-        {isStacked ? "Side-by-side map" : "Stacked map"}
-      </button>
+      <fieldset className="segmented" data-testid="map-layout">
+        <legend className="segmented__legend">Map</legend>
+        {MAP_LAYOUTS.map((option) => (
+          <label
+            className="segmented__option"
+            key={option.value}
+            title={option.hint}
+          >
+            <input
+              checked={mapLayout === option.value}
+              className="segmented__input"
+              name="map-layout"
+              onChange={() => setMapLayout(option.value)}
+              type="radio"
+              value={option.value}
+            />
+            {option.label}
+          </label>
+        ))}
+      </fieldset>
       <input
         accept="application/json,.json"
         aria-hidden="true"

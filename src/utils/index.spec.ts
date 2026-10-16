@@ -1,50 +1,43 @@
 import { describe, expect, it } from "vitest";
-import { transformMapCoordinates } from "@/utils";
+import { toWorldPosition } from "@/utils";
 
-describe("transformMapCoordinates", () => {
-  it("leaves coordinates untouched side by side", () => {
-    expect(transformMapCoordinates("46.8%", "38.8%", "side-by-side")).toEqual({
-      x: "46.8%",
-      y: "38.8%",
+describe("toWorldPosition", () => {
+  it("spreads a Light World marker across its own square", () => {
+    expect(toWorldPosition("0%", "0%")).toEqual({ world: "light", x: 0, y: 0 });
+    expect(toWorldPosition("25%", "50%")).toEqual({
+      world: "light",
+      x: 50,
+      y: 50,
     });
   });
 
-  describe("stacked", () => {
-    const stack = (x: string, y: string) =>
-      transformMapCoordinates(x, y, "stacked");
-
-    it("spreads a Light World marker across the top half", () => {
-      // The left half of the asset becomes the full width of the top row.
-      expect(stack("0%", "0%")).toEqual({ x: "0%", y: "0%" });
-      expect(stack("25%", "50%")).toEqual({ x: "50%", y: "25%" });
-      expect(stack("50%", "100%")).toEqual({ x: "100%", y: "50%" });
+  it("counts the midpoint as Light World", () => {
+    expect(toWorldPosition("50%", "10%")).toEqual({
+      world: "light",
+      x: 100,
+      y: 10,
     });
+  });
 
-    it("spreads a Dark World marker across the bottom half", () => {
-      // Anything past the midpoint belongs to the Dark World and moves below.
-      expect(stack("50.1%", "0%").y).toBe("50%");
-      expect(stack("75%", "50%")).toEqual({ x: "50%", y: "75%" });
-      expect(stack("100%", "100%")).toEqual({ x: "100%", y: "100%" });
-    });
+  it("moves a marker past the midpoint into the Dark World", () => {
+    const eastern = toWorldPosition("97%", "40%");
 
-    it("keeps every marker inside the frame", () => {
-      const samples = ["0%", "12.5%", "49.9%", "50%", "50.1%", "87.3%", "100%"];
+    expect(eastern.world).toBe("dark");
+    expect(eastern.x).toBeCloseTo(94);
+    expect(eastern.y).toBe(40);
+  });
 
-      samples.forEach((x) => {
-        samples.forEach((y) => {
-          const { x: outX, y: outY } = stack(x, y);
+  it("keeps every marker inside its world", () => {
+    const samples = ["0%", "12.5%", "49.9%", "50%", "50.1%", "87.3%", "100%"];
 
-          expect(Number.parseFloat(outX)).toBeGreaterThanOrEqual(0);
-          expect(Number.parseFloat(outX)).toBeLessThanOrEqual(100);
-          expect(Number.parseFloat(outY)).toBeGreaterThanOrEqual(0);
-          expect(Number.parseFloat(outY)).toBeLessThanOrEqual(100);
-        });
-      });
-    });
-
-    it("never maps the two worlds onto the same spot", () => {
-      // A Light and a Dark marker at mirrored positions must stay apart.
-      expect(stack("20%", "40%")).not.toEqual(stack("70%", "40%"));
-    });
+    for (const x of samples) {
+      for (const y of samples) {
+        const position = toWorldPosition(x, y);
+        expect(position.x).toBeGreaterThanOrEqual(0);
+        expect(position.x).toBeLessThanOrEqual(100);
+        expect(position.y).toBeGreaterThanOrEqual(0);
+        expect(position.y).toBeLessThanOrEqual(100);
+      }
+    }
   });
 });

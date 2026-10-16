@@ -20,7 +20,7 @@ export const MapLegend = () => (
       <span className="map-legend__item" key={item.className}>
         <span
           aria-hidden="true"
-          className={`map-legend__swatch ${item.className}`}
+          className={`map-legend__swatch state-glyph ${item.className}`}
         />
         {item.label}
       </span>
