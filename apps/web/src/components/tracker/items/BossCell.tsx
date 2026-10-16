@@ -11,7 +11,7 @@ import { useGridFocusable } from "@/hooks/useGridNavigation";
 import { useStepHandlers } from "@/hooks/useStepHandlers";
 import { useTooltip } from "@/hooks/useTooltip";
 import { useGameStore } from "@/stores/gameStore";
-import { getItemBackground } from "@/utils";
+import { getItemBackground, isItemDimmed } from "@/utils";
 import { placeName } from "@/utils/caption";
 import { mergeHandlers } from "@/utils/mergeHandlers";
 
@@ -50,7 +50,7 @@ export const BossCell = ({ row, col, item }: BossCellProps) => {
       <button
         {...handlers}
         aria-label={`${itemLabels(item)}, ${beaten ? "defeated" : "not defeated"}. Click to change state.`}
-        className="griditem boss-cell__boss"
+        className={`griditem boss-cell__boss${isItemDimmed(item, value) ? " griditem--dimmed" : ""}`}
         data-testid={`item-${item}`}
         style={{ backgroundImage: getItemBackground(item, value) }}
         type="button"

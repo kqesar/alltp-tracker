@@ -1,3 +1,4 @@
+import { BOSS_STATES } from "@/constants";
 import { itemsMin } from "@/data/items";
 
 /**
@@ -22,12 +23,17 @@ export const getItemBackground = (
   if (!item || item === "blank") return "";
   // Big keys all share a single image
   if (item.startsWith("bigkey")) return `url(${getAssetPath("bigkey.png")})`;
+  // A boss has one portrait; dimming it (isItemDimmed) marks it not beaten
+  if (item.startsWith("boss")) {
+    return `url(${getAssetPath(`${item}${BOSS_STATES.BEATEN}.png`)})`;
+  }
   if (typeof value === "boolean") return `url(${getAssetPath(`${item}.png`)})`;
   return `url(${getAssetPath(`${item}${value}.png`)})`;
 };
 
 /**
- * Whether a tracker cell shows its item as not obtained (drawn dimmed).
+ * Whether a tracker cell shows its item as not obtained, or its boss as not
+ * beaten: drawn greyed (`griditem--dimmed`).
  * @param item - The item identifier
  * @param value - The item's current value in the store
  */
@@ -38,8 +44,7 @@ export const isItemDimmed = (
   if (!item || item === "blank") return true;
   if (item.startsWith("bigkey")) return value !== 1;
   if (typeof value === "boolean") return !value;
-  // A boss icon is always drawn at full strength; its overlays carry the state.
-  if (item.startsWith("boss")) return false;
+  // A boss starts at its minimum, 1 (alive), like any other counter
   return value <= (itemsMin[item] || 0);
 };
 

@@ -203,6 +203,33 @@ test.describe("a missing item", () => {
     );
     expect(Math.max(...held)).toBeGreaterThan(40);
   });
+
+  test("greys a boss not beaten the same way, its overlays in colour", async ({
+    page,
+  }) => {
+    const boss = page.getByTestId("item-boss0");
+    await expect(boss).toHaveAccessibleName(/not defeated\./);
+    const box = await boss.boundingBox();
+    const reward = await page.getByTestId("reward-overlay-0").boundingBox();
+    expect(box && reward).toBeTruthy();
+    if (!box || !reward) return;
+    /** The colour spread of the pixels drawn (brighter than the page). */
+    const drawnSpreads = (pixels: number[][]) =>
+      pixels
+        .filter(([red, green, blue]) => Math.max(red, green, blue) > 24)
+        .map(
+          (pixel) =>
+            Math.max(...pixel.slice(0, 3)) - Math.min(...pixel.slice(0, 3)),
+        );
+    const spreadOf = (pixels: number[][]) => Math.max(...drawnSpreads(pixels));
+
+    // The portrait's top half, clear of the corner overlays: drawn, and grey
+    const portrait = await pixelsIn(page, { ...box, height: box.height / 2 });
+    expect(drawnSpreads(portrait).length).toBeGreaterThan(portrait.length / 4);
+    expect(spreadOf(portrait)).toBeLessThanOrEqual(3);
+    // The reward overlay keeps its colours (the unknown reward's "?" glyph)
+    expect(spreadOf(await pixelsIn(page, reward))).toBeGreaterThan(40);
+  });
 });
 
 test.describe("a run", () => {
