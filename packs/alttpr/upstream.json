@@ -57,7 +57,7 @@
     {
       "file": "app/Region/Standard/HyruleCastleEscape.php",
       "module": "src/regions/standard/hyrule-castle-escape.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/HyruleCastleTower.php",
@@ -277,7 +277,7 @@
     {
       "file": "tests/NoGlitches/HyruleCastleEscapeTest.php",
       "fixture": "test/upstream/NoGlitches/HyruleCastleEscape.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/HyruleCastleTowerTest.php",
