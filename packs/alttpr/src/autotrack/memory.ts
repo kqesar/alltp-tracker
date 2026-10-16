@@ -124,6 +124,11 @@ export const DUNGEONS = [
 
 export type DungeonCode = (typeof DUNGEONS)[number]["code"];
 
+/** DUNGEONS by code. */
+export const DUNGEON = Object.fromEntries(
+  DUNGEONS.map((dungeon) => [dungeon.code, dungeon]),
+) as Readonly<Record<DungeonCode, (typeof DUNGEONS)[number]>>;
+
 /** The sewers' byte in DungeonKeys, kept in step with Hyrule Castle's. */
 export const SEWER_KEYS = 0;
 
