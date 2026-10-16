@@ -84,6 +84,19 @@ export {
   untrackedItems,
 } from "./keys";
 export {
+  type FromLegacy,
+  fromLegacy,
+  LEGACY_CHESTS,
+  LEGACY_DUNGEON_ITEMS,
+  LEGACY_DUNGEONS,
+  LEGACY_ITEM_RANGES,
+  type LegacyChest,
+  type LegacyEffect,
+  type LegacyProgress,
+  legacyItem,
+  NOT_ON_THE_OLD_MAP,
+} from "./legacy";
+export {
   type ItemMatch,
   LOCATION_KINDS,
   type LocationDef,
