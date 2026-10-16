@@ -6,7 +6,15 @@
 // the game shows. Nothing here names an item: a cell added to the table is
 // read from the game with no change here.
 
-import type { DungeonId, Prize } from "@alltp/pack-alttpr";
+import {
+  type DungeonId,
+  dungeon,
+  ITEMS,
+  type ItemId,
+  LEGACY_DUNGEONS,
+  PRIZES,
+  type Prize,
+} from "@alltp/pack-alttpr";
 import {
   items as freshItems,
   type ItemState,
@@ -151,4 +159,25 @@ export const joinValues = (
     default:
       return board;
   }
+};
+
+/**
+ * The pack items the board marks from the game: those its cells count, the
+ * pendants and crystals its prize cells stand for, and with keysanity the
+ * small keys of the grid's dungeons.
+ * @param keysanity - Whether the run's small keys are wild
+ */
+export const boardItems = (keysanity: boolean): ReadonlySet<ItemId> => {
+  const shown = new Set<string>(
+    keysanity ? LEGACY_DUNGEONS.map((id) => `key${dungeon(id).code}`) : [],
+  );
+  for (const [, entry] of ENTRIES) {
+    for (const item of countedBy(entry)) shown.add(item);
+  }
+  if (PRIZE_CELLS.length > 0) {
+    for (const items of Object.values(PRIZES)) {
+      for (const item of items) shown.add(item);
+    }
+  }
+  return new Set(ITEMS.map(({ id }) => id).filter((id) => shown.has(id)));
 };

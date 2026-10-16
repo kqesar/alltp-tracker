@@ -41,6 +41,33 @@ describe("describeReading", () => {
     expect(readout.withheld).toEqual([]);
   });
 
+  it("names what the board has no cell for, which it leaves alone", () => {
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x37b)] = 0x01; // Half Magic
+    // Eastern and Desert Palace's maps, and Hyrule Castle's: no cell
+    memory[SAVE(0x369)] = 0x20 | 0x10 | 0x40;
+    memory[SAVE(0x37c + 6)] = 2; // Palace of Darkness keys in hand
+    memory[SAVE(0x470)] = 3; // heart pieces
+    const reading = readMemory(viewOf(memory), false, 0);
+
+    expect(describeReading(reading).untracked).toEqual([
+      "Half Magic",
+      "Piece of Heart ×3",
+      "Maps",
+      "Small keys",
+    ]);
+    // The grid's dungeons' maps have their cells
+    memory[SAVE(0x369)] = 0x20 | 0x10;
+    expect(
+      describeReading(readMemory(viewOf(memory), false, 0)).untracked,
+    ).toEqual(["Half Magic", "Piece of Heart ×3", "Small keys"]);
+    // With keysanity, the board counts the small keys
+    expect(describeReading(reading, true).untracked).not.toContain(
+      "Small keys",
+    );
+    expect(describeSeed(seedMemory({ race: false })).untracked).toEqual([]);
+  });
+
   it("says what Race Mode leaves unread, and shows none of it", () => {
     const readout = describeSeed(seedMemory({ race: true }), true);
 

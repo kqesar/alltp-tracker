@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BEATEN_CELLS,
+  boardItems,
   cellsFromPack,
   joinValues,
   mostShown,
@@ -116,5 +117,36 @@ describe("the board's cells, read from the game through PACK_ITEMS", () => {
     expect(joinValues("reward0", 0, 4)).toBe(4);
     // A counter is no item: the board's stays
     expect(joinValues("chest0", 1, 3)).toBe(1);
+  });
+
+  it("names the pack items the board marks", () => {
+    const shown = boardItems(false);
+    for (const item of [
+      "hookshot",
+      "lamp",
+      "silverArrowUpgrade",
+      "redBoomerang",
+      "bigKeyD7",
+      "mapP1",
+      "compassD7",
+      "crystal5",
+      "pendantOfCourage",
+    ] as const) {
+      expect(shown.has(item)).toBe(true);
+    }
+    for (const item of [
+      "magic",
+      "tenBombs",
+      "heartContainer",
+      "keyD1",
+      "keyA2",
+      "mapH2",
+      "rescueZelda",
+    ] as const) {
+      expect(shown.has(item)).toBe(false);
+    }
+    // With keysanity the grid's dungeons count their small keys
+    expect(boardItems(true).has("keyD1")).toBe(true);
+    expect(boardItems(true).has("keyA2")).toBe(false);
   });
 });

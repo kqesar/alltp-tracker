@@ -5,6 +5,7 @@
 
 import { dungeonOf, type ItemId, type Unsettled } from "@alltp/pack-alttpr";
 import type { AutotrackReading } from "@/autotrack/reading";
+import { boardItems } from "@/autotrack/table";
 
 /** The dungeons, by the pack's codes. */
 const DUNGEON_NAMES = {
@@ -168,6 +169,16 @@ export type Readout = {
     readonly label: string;
     readonly why: Unsettled;
   }[];
+  /** What was read that the board has no cell for, so leaves alone. */
+  readonly untracked: readonly string[];
+};
+
+/** A dungeon's own items, named as a kind when the board has no cell for them. */
+const DUNGEON_ITEM_KINDS: Readonly<Record<string, string>> = {
+  bigKey: "Big keys",
+  compass: "Compasses",
+  key: "Small keys",
+  map: "Maps",
 };
 
 /** Words of location ids that a capital letter alone would get wrong. */
@@ -235,15 +246,28 @@ const add = <K>(map: Map<K, string[]>, key: K, entry: string) => {
 /**
  * The reading as the panel lists it.
  * @param reading - What the session decoded last
+ * @param keysanity - Whether the run's small keys are wild, which the board
+ * then counts
  */
-export const describeReading = (reading: AutotrackReading): Readout => {
+export const describeReading = (
+  reading: AutotrackReading,
+  keysanity = false,
+): Readout => {
   const { atLeast, counts, unsettled } = reading.items;
   const items: string[] = [];
   const prizes: string[] = [];
   const byDungeon = new Map<DungeonCode, string[]>();
   const withheld = new Map<string, Unsettled>();
+  const onBoard = boardItems(keysanity);
+  const untracked = new Set<string>();
+  const offBoard = (id: ItemId, count: number) => {
+    if (count === 0 || EVENTS.has(id) || onBoard.has(id)) return;
+    const kind = DUNGEON_ITEM.exec(id)?.[1];
+    untracked.add(kind ? DUNGEON_ITEM_KINDS[kind] : itemName(id, count));
+  };
 
   for (const [id, count] of Object.entries(counts) as [ItemId, number][]) {
+    offBoard(id, count);
     if (count === 0 || EVENTS.has(id)) continue;
     const own = DUNGEON_ITEM.exec(id);
     if (own) add(byDungeon, own[2] as DungeonCode, DUNGEON_ITEM_NAMES[own[1]]);
@@ -252,6 +276,7 @@ export const describeReading = (reading: AutotrackReading): Readout => {
   }
   // Memory holds the small keys in hand, which the keys found can exceed
   for (const [id, count] of Object.entries(atLeast) as [ItemId, number][]) {
+    offBoard(id, count);
     const code = DUNGEON_ITEM.exec(id)?.[2] as DungeonCode;
     if (count > 0)
       add(byDungeon, code, `${count} small key${count > 1 ? "s" : ""} in hand`);
@@ -316,6 +341,7 @@ export const describeReading = (reading: AutotrackReading): Readout => {
       { label: "Zelda rescued", value: rescueZelda },
       { label: "Triforce reached", value: goal },
     ],
+    untracked: [...untracked],
     withheld: [...withheld].map(([label, why]) => ({ label, why })),
   };
 };
