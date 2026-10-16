@@ -5,7 +5,7 @@ paths:
 
 # State: a single Zustand store
 
-All game state lives in `apps/web/src/stores/gameStore.ts`: `zustand` + `devtools` (development only) + `persist` (localStorage key `alltp-tracker-state`). The store holds only serializable data; the chest and dungeon tables with their predicates stay static in `apps/web/src/data/`. Its shape is `Progress & Prefs` plus the undo history, both types declared in `apps/web/src/stores/persistence.ts`. Transient UI state lives in its own stores: the tooltip in `tooltipStore.ts`, the keyboard layout map (what each key types, for labels) in `keyboardLayoutStore.ts`.
+All game state lives in `apps/web/src/stores/gameStore.ts`: `zustand` + `devtools` (development only) + `persist` (localStorage key `alltp-tracker-state`). The store holds only serializable data; the chest and dungeon tables with their predicates stay static in `apps/web/src/data/`. Its shape is `Progress & Prefs` plus the undo history, both types declared in `apps/web/src/stores/persistence.ts`. Transient UI state lives in its own stores, never saved or undone: the tooltip (`tooltipStore.ts`), the keyboard layout map (what each key types, for labels) in `keyboardLayoutStore.ts`, and a waiting new version (`updateStore.ts`, which also registers the service worker).
 
 - **`Progress`** — the run; "New game" (`reset`), `applyPreset` and `loadProgress` replace it.
   - `items` — keyed by item id; `boolean` (toggles) or `number` (progressive). `handleItemClick` steps `-1` for `chest*` counters and `+1` for everything else, wrapping between `itemsMin[item]` and `itemsMax[item]`. `bossN` (1 alive, 2 beaten) is the only "boss beaten" flag: the grid cell and the map marker both read and toggle it.
