@@ -252,7 +252,7 @@
     {
       "file": "tests/NoGlitches/DeathMountain/EastTest.php",
       "fixture": "test/upstream/NoGlitches/DeathMountain/East.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/DeathMountain/WestTest.php",
@@ -272,7 +272,7 @@
     {
       "file": "tests/NoGlitches/GanonsTowerTest.php",
       "fixture": "test/upstream/NoGlitches/GanonsTower.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/HyruleCastleEscapeTest.php",
@@ -297,7 +297,7 @@
     {
       "file": "tests/NoGlitches/MiseryMireTest.php",
       "fixture": "test/upstream/NoGlitches/MiseryMire.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/OpenTest.php",
@@ -332,7 +332,7 @@
     {
       "file": "tests/NoGlitches/TurtleRockTest.php",
       "fixture": "test/upstream/NoGlitches/TurtleRock.json",
-      "status": "pending"
+      "status": "ported"
     }
   ]
 }
