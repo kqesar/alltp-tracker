@@ -6,6 +6,7 @@ import { Header } from "@/components/ui/Header";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { TrackerControls } from "@/components/ui/TrackerControls";
 import { defaultItemGrid } from "@/data/items";
+import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -15,6 +16,7 @@ import { useGameStore } from "@/stores/gameStore";
  */
 function App() {
   useUndoShortcuts();
+  useItemShortcuts();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
   const mapLayout = useGameStore((state) => state.mapLayout);

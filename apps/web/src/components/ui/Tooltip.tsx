@@ -1,7 +1,17 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { KeyChord } from "@/components/ui/KeyChord";
 import { chests } from "@/data/chests";
 import { dungeons } from "@/data/dungeons";
 import { itemLabels } from "@/data/items";
+import {
+  type Chord,
+  type ControlId,
+  controlName,
+  dungeonControls,
+  isBindable,
+  isKeyControl,
+  type ShortcutPrefs,
+} from "@/data/keymap";
 import { buildDungeonCaption } from "@/data/logic";
 import { useGameStore } from "@/stores/gameStore";
 import {
@@ -32,6 +42,47 @@ const captionFor = (target: TooltipTarget, medallions: number[]): string => {
   }
 };
 
+/** The grid controls a target's tooltip lists the shortcuts of. */
+const controlsOf = (target: TooltipTarget): ControlId[] => {
+  switch (target.kind) {
+    case "chest":
+      return [];
+    case "dungeon":
+      // The boss cell's controls, the one the tooltip points at first
+      return dungeonControls(target.index).filter(
+        (control) => !isKeyControl(control),
+      );
+    case "item":
+      return [target.item];
+  }
+};
+
+type ShortcutLine = {
+  control: ControlId;
+  /** Said for a dungeon's controls, which share one tooltip */
+  name?: string;
+  forward?: Chord;
+  back?: Chord;
+};
+
+/** The bound shortcuts of a target's controls, while shortcuts are on. */
+const shortcutLines = (
+  target: TooltipTarget,
+  shortcuts: ShortcutPrefs,
+): ShortcutLine[] => {
+  if (!shortcuts.enabled) return [];
+  const usable = (chord?: Chord) =>
+    chord && isBindable(chord) ? chord : undefined;
+  return controlsOf(target)
+    .map((control) => ({
+      back: usable(shortcuts.keymap[`back:${control}`]),
+      control,
+      forward: usable(shortcuts.keymap[`advance:${control}`]),
+      name: target.kind === "dungeon" ? controlName(control) : undefined,
+    }))
+    .filter((line) => line.forward || line.back);
+};
+
 type Placement = { left: number; top: number; side: "above" | "below" };
 
 /**
@@ -45,13 +96,15 @@ export const Tooltip = () => {
   const target = useTooltipStore((state) => state.target);
   const anchor = useTooltipStore((state) => state.anchor);
   const medallions = useGameStore((state) => state.medallions);
+  const shortcuts = useGameStore((state) => state.shortcuts);
   const ref = useRef<HTMLDivElement>(null);
   const [placement, setPlacement] = useState<Placement | null>(null);
 
   const caption = target ? captionFor(target, medallions) : "";
+  const lines = target ? shortcutLines(target, shortcuts) : [];
 
   // Measure after rendering the new text, then place it before paint.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the caption changes the size to measure
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the caption and the keys change the size to measure
   useLayoutEffect(() => {
     const tooltip = ref.current;
     if (!anchor || !tooltip) {
@@ -67,7 +120,7 @@ export const Tooltip = () => {
       side: fitsAbove ? "above" : "below",
       top: fitsAbove ? box.top - height - GAP : box.bottom + GAP,
     });
-  }, [anchor, caption]);
+  }, [anchor, caption, lines.length]);
 
   // Dismiss on Escape, on a press elsewhere (touch has no hover to leave),
   // and when the page scrolls or resizes from under it.
@@ -122,6 +175,22 @@ export const Tooltip = () => {
             src={getAssetPath(`${part.icon}.png`)}
           />
         ),
+      )}
+      {lines.length > 0 && (
+        <span className="tooltip__keys" data-testid="tooltip-keys">
+          {lines.map(({ back, control, forward, name }) => (
+            <span className="tooltip__shortcut" key={control}>
+              {name && <span className="tooltip__key-name">{name}</span>}
+              {forward && <KeyChord chord={forward} />}
+              {back && (
+                <>
+                  <span className="tooltip__key-name">back</span>
+                  <KeyChord chord={back} />
+                </>
+              )}
+            </span>
+          ))}
+        </span>
       )}
     </div>
   );

@@ -129,7 +129,8 @@ test.describe("a tooltip", () => {
     await page.getByTestId("item-flute").focus();
     await page.keyboard.press("ArrowRight");
 
-    await expect(page.getByTestId("tooltip")).toHaveText("Hookshot");
+    // The item's name, then its keyboard shortcuts
+    await expect(page.getByTestId("tooltip")).toHaveText(/^Hookshot/);
 
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("tooltip")).toBeHidden();

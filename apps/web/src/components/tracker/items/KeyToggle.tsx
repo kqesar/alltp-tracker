@@ -1,5 +1,6 @@
 import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import { dungeons } from "@/data/dungeons";
+import { useControlShortcuts } from "@/hooks/useControlShortcuts";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
 import { useStepHandlers } from "@/hooks/useStepHandlers";
 import { useGameStore } from "@/stores/gameStore";
@@ -42,10 +43,13 @@ export const KeyToggle = ({
 
   const isBigKey = variant === "big-key";
   const focusable = useGridFocusable({ col, row, slot: isBigKey ? 0 : 1 });
+  const shortcuts = useControlShortcuts(
+    `${isBigKey ? "bigkey" : "smallkey"}${dungeonIndex}`,
+  );
   const steps = useStepHandlers((direction) => {
     if (isBigKey) handleItemClick(`bigkey${dungeonIndex}`, direction);
     else handleSmallKeyClick(dungeonIndex, direction);
-  });
+  }, shortcuts.aria);
   const dungeon = placeName(dungeons[dungeonIndex].name);
   const maxKeys = SMALL_KEYS_MAX_BY_INDEX[dungeonIndex] || 0;
   const obtained = bigKey === 1;
