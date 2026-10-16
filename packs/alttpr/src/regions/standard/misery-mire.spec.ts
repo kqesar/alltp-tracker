@@ -15,8 +15,8 @@ import {
   type Tri,
 } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
-import { ITEM_IDS } from "../../items";
-import { MEDALLION_FACTS, medallionFacts } from "../../medallions";
+import { medallionFacts } from "../../medallions";
+import { STATE_NAMES } from "../../pack";
 import { RULES } from "../../rules";
 import {
   type AlttprSettings,
@@ -44,7 +44,7 @@ const at = (settings: AlttprSettings, state: State, id: string): Tri => {
   let world = worlds.get(settings);
   if (world === undefined) {
     world = compileWorld(buildWorld([MIRE, MISERY_MIRE]), loadRules(RULES), {
-      items: [...ITEM_IDS, ...MEDALLION_FACTS],
+      items: STATE_NAMES,
       settings,
     });
     worlds.set(settings, world);
