@@ -17,7 +17,7 @@
     {
       "file": "app/Region/Standard/DarkWorld/Mire.php",
       "module": "src/regions/standard/dark-world/mire.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/DarkWorld/NorthEast.php",
@@ -232,7 +232,7 @@
     {
       "file": "tests/NoGlitches/DarkWorld/MireTest.php",
       "fixture": "test/upstream/NoGlitches/DarkWorld/Mire.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/DarkWorld/NorthEastTest.php",
