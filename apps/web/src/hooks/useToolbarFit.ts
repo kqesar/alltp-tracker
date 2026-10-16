@@ -1,51 +1,108 @@
 import { type RefObject, useLayoutEffect } from "react";
 
 /**
- * How much of the toolbar shows, richest first: every action with its label,
- * every action as an icon, or the actions of a run with the rest in More.
+ * The forms of the toolbar, richest first: what each folds away, and how
+ * many rows it may take. Past the full bar, the actions a player uses least
+ * during a run fold first:
+ *
+ * - `labels`: every action with its label, on one row.
+ * - `icons`: every action as an icon, on one row.
+ * - `more`: Export, Import, Stream view and Shortcuts move into More.
+ * - `more-map`: the map layout too, set once per device and the widest
+ *   control left.
+ * - `more-keys`: the key cells toggle too, which the run type mostly sets.
+ * - `compact`: New game shows as an icon; Mode keeps the run type's name,
+ *   and Undo and Redo, used all run long, never fold.
  */
-export type ToolbarFit = "labels" | "icons" | "more";
+export const FITS = [
+  { fit: "labels", fold: [], rows: 1 },
+  { fit: "icons", fold: ["labels"], rows: 1 },
+  { fit: "more", fold: ["labels", "secondary"], rows: 2 },
+  { fit: "more-map", fold: ["labels", "secondary", "map"], rows: 2 },
+  { fit: "more-keys", fold: ["labels", "secondary", "map", "keys"], rows: 2 },
+  {
+    fit: "compact",
+    fold: ["labels", "secondary", "map", "keys", "new-game"],
+    rows: 2,
+  },
+] as const;
 
-/** The width the toolbar needs to hold each full form on one row. */
-export type ToolbarNeeds = Record<Exclude<ToolbarFit, "more">, number>;
+export type ToolbarFit = (typeof FITS)[number]["fit"];
 
-const RANK: Record<ToolbarFit, number> = { icons: 1, labels: 2, more: 0 };
+/** What the toolbar can fold away, as `data-fold` tokens. */
+export type ToolbarFold = (typeof FITS)[number]["fold"][number];
+
+/** A form of the bar as laid out: its controls' widths, gap and padding. */
+export type FitLayout = { widths: number[]; gap: number; padding: number };
 
 /**
- * Room a richer form needs beyond its own width before the bar switches to
- * it. More than a classic scrollbar (15 to 17 px): one appearing as the bar
+ * Room a richer form needs beyond its own before the bar switches to it.
+ * More than a classic scrollbar (15 to 17 px): one appearing as the bar
  * grows or shrinks by a row cannot then flip the bar back.
  */
 export const HYSTERESIS_PX = 24;
 
 /**
- * The richest form that fits. Falling back happens as soon as a form no
- * longer fits; moving up needs HYSTERESIS_PX to spare, so a width at the edge
- * does not make the bar switch back and forth.
- * @param available - The toolbar's width
- * @param needs - The width each full form needs
- * @param current - The form shown now, if any
+ * How many rows a form takes in a bar of `width`, its controls broken into
+ * lines one after another, as flex-wrap does.
  */
-export const chooseFit = (
-  available: number,
-  needs: ToolbarNeeds,
-  current?: ToolbarFit,
-): ToolbarFit => {
-  for (const fit of ["labels", "icons"] as const) {
-    const margin = current && RANK[fit] > RANK[current] ? HYSTERESIS_PX : 0;
-    if (needs[fit] + margin <= available) return fit;
+export const rowsAt = ({ widths, gap, padding }: FitLayout, width: number) => {
+  const inner = width - padding;
+  let rows = 1;
+  let line = -1;
+  for (const item of widths) {
+    if (line < 0) line = item;
+    // Half a pixel of slack for sub-pixel widths
+    else if (line + gap + item <= inner + 0.5) line += gap + item;
+    else {
+      rows++;
+      line = item;
+    }
   }
-  return "more";
+  return rows;
 };
 
 /**
- * Measure the width each full form of the toolbar needs, whatever the fonts,
- * zoom or labels: a hidden copy of the bar, laid out on one row at its
- * content's width, in each form. The status line is left out: it is no
- * action, and may wrap below them.
- * @param toolbar - The toolbar element
+ * The richest form that fits in its rows. Falling back happens as soon as a
+ * form no longer fits; moving up needs HYSTERESIS_PX to spare, so a width at
+ * the edge does not make the bar switch back and forth. The last form is
+ * taken when nothing fits.
+ * @param width - The toolbar's width
+ * @param layoutOf - Lays a form out, asked for each form in turn until one fits
+ * @param current - The form shown now, if any
  */
-export const measureNeeds = (toolbar: HTMLElement): ToolbarNeeds => {
+export const chooseFit = (
+  width: number,
+  layoutOf: (fit: ToolbarFit) => FitLayout,
+  current?: ToolbarFit,
+): ToolbarFit => {
+  const shown = FITS.findIndex((form) => form.fit === current);
+  for (const [index, form] of FITS.entries()) {
+    const room = shown >= 0 && index < shown ? width - HYSTERESIS_PX : width;
+    if (rowsAt(layoutOf(form.fit), room) <= form.rows) return form.fit;
+  }
+  return FITS[FITS.length - 1].fit;
+};
+
+/** The flex items of a container, through `display: contents` wrappers. */
+const flexItems = (container: Element): Element[] =>
+  [...container.children].flatMap((child) => {
+    const style = getComputedStyle(child);
+    if (style.display === "contents") return flexItems(child);
+    if (style.display === "none") return [];
+    if (style.position === "absolute" || style.position === "fixed") return [];
+    return [child];
+  });
+
+/**
+ * A hidden copy of the toolbar to lay each form out in, whatever the fonts,
+ * zoom or labels: on one row at its content's width, in a zero-size, clipped,
+ * invisible stage, so it never shows nor widens the page. The status line is
+ * left out: it is no action, and may wrap under them.
+ * @param toolbar - The toolbar element
+ * @returns Lays a form out; then `dispose` removes the copy
+ */
+export const probeToolbar = (toolbar: HTMLElement) => {
   const probe = toolbar.cloneNode(true) as HTMLElement;
   for (const element of [
     probe,
@@ -66,7 +123,6 @@ export const measureNeeds = (toolbar: HTMLElement): ToolbarNeeds => {
     top: "0",
     width: "max-content",
   });
-  // A zero-size, clipped, invisible box: the copy never shows nor widens the page
   const stage = document.createElement("div");
   stage.setAttribute("aria-hidden", "true");
   stage.inert = true;
@@ -83,23 +139,34 @@ export const measureNeeds = (toolbar: HTMLElement): ToolbarNeeds => {
   stage.append(probe);
   document.body.append(stage);
 
-  const needs: ToolbarNeeds = { icons: 0, labels: 0 };
-  for (const fit of ["labels", "icons"] as const) {
-    probe.dataset.fit = fit;
-    needs[fit] = probe.getBoundingClientRect().width;
-  }
-  stage.remove();
-  return needs;
+  return {
+    dispose: () => stage.remove(),
+    layoutOf: (fit: ToolbarFit): FitLayout => {
+      const form = FITS.find((entry) => entry.fit === fit) ?? FITS[0];
+      probe.dataset.fit = fit;
+      probe.dataset.fold = form.fold.join(" ");
+      const style = getComputedStyle(probe);
+      return {
+        gap: Number.parseFloat(style.columnGap) || 0,
+        padding:
+          (Number.parseFloat(style.paddingLeft) || 0) +
+          (Number.parseFloat(style.paddingRight) || 0),
+        widths: flexItems(probe).map(
+          (item) => item.getBoundingClientRect().width,
+        ),
+      };
+    },
+  };
 };
 
 /**
- * Fold the toolbar to the richest form that fits on one row (a Priority+
- * toolbar), from the widths it really needs rather than a breakpoint: system
- * fonts differ between macOS, Windows and Linux, and so do zoom, the user's
- * font size and, later, translations. The form is written to the toolbar's
- * `data-fit` attribute, which its CSS follows, so resizing never re-renders
- * React. It is decided before paint, again whenever the toolbar resizes, its
- * content changes or fonts finish loading.
+ * Fold the toolbar to the richest form that fits (a Priority+ toolbar),
+ * from the widths it really needs rather than a breakpoint: system fonts
+ * differ between macOS, Windows and Linux, and so do zoom, the user's font
+ * size and, later, translations. The form goes to the toolbar's `data-fit`
+ * and what it folds to `data-fold`, which its CSS follows, so resizing never
+ * re-renders React. It is decided before paint, again whenever the toolbar
+ * resizes, its content changes or fonts finish loading.
  * @param ref - The toolbar element
  */
 export const useToolbarFit = (ref: RefObject<HTMLElement | null>) => {
@@ -111,12 +178,17 @@ export const useToolbarFit = (ref: RefObject<HTMLElement | null>) => {
     const update = () => {
       if (disposed) return;
       const current = toolbar.dataset.fit as ToolbarFit | undefined;
+      const probe = probeToolbar(toolbar);
       const next = chooseFit(
         toolbar.getBoundingClientRect().width,
-        measureNeeds(toolbar),
+        probe.layoutOf,
         current,
       );
-      if (next !== current) toolbar.dataset.fit = next;
+      probe.dispose();
+      if (next === current) return;
+      toolbar.dataset.fold =
+        FITS.find((form) => form.fit === next)?.fold.join(" ") ?? "";
+      toolbar.dataset.fit = next;
     };
     update();
 

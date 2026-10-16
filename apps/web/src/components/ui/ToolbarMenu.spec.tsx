@@ -112,31 +112,92 @@ describe("the toolbar's More menu", () => {
     expect(more()).toHaveFocus();
   });
 
-  it("closes when the toolbar unfolds and its button goes away", async () => {
-    const watched: ((entries: unknown[]) => void)[] = [];
-    vi.stubGlobal(
-      "ResizeObserver",
-      class {
-        constructor(callback: (entries: unknown[]) => void) {
-          watched.push(callback);
-        }
-        observe() {}
-        disconnect() {}
-      },
+  it("closes when the toolbar folds otherwise, its items no longer matching", async () => {
+    const user = userEvent.setup();
+    render(
+      <div data-fold="labels secondary" data-testid="bar">
+        <TrackerControls />
+      </div>,
     );
-    try {
-      await openMenu();
-      expect(menu()).toBeVisible();
+    await user.click(more());
+    expect(menu()).toBeVisible();
 
-      // Still shown: a resize that keeps the button changes nothing
-      act(() => watched.at(-1)?.([{ contentRect: { width: 40 } }]));
-      expect(menu()).toBeVisible();
-      act(() => watched.at(-1)?.([{ contentRect: { width: 0 } }]));
+    // The mutation observer runs as a microtask after the change
+    await act(async () => {
+      screen.getByTestId("bar").dataset.fold = "labels";
+    });
 
-      expect(screen.queryByRole("menu")).toBeNull();
-    } finally {
-      vi.unstubAllGlobals();
-    }
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
+
+  it("offers the map layout and key cells as choices once the bar folds them", async () => {
+    const user = userEvent.setup();
+    render(
+      <div data-fold="labels secondary map keys">
+        <TrackerControls />
+      </div>,
+    );
+    await user.click(more());
+
+    const map = within(menu()).getByRole("group", { name: "Map" });
+    const choices = within(map).getAllByRole("menuitemradio");
+    // Named by their label alone: the tick is for the eye
+    ["Auto", "Side", "Stack"].forEach((name, index) => {
+      expect(choices[index]).toHaveAccessibleName(name);
+    });
+    expect(
+      choices.map((choice) => choice.getAttribute("aria-checked")),
+    ).toEqual(["true", "false", "false"]);
+    const keys = within(menu()).getByRole("menuitemcheckbox", {
+      name: "Big keys",
+    });
+    expect(keys).toHaveAttribute("aria-checked", "false");
+    expect(within(menu()).getAllByRole("separator")).toHaveLength(2);
+
+    // Choosing closes the menu, as a command does, and the choice holds
+    await user.click(choices[2]);
+    expect(useGameStore.getState().mapLayout).toBe("stacked");
+    expect(screen.queryByRole("menu")).toBeNull();
+    await user.click(more());
+    expect(
+      within(menu()).getByRole("menuitemradio", { name: "Stack" }),
+    ).toHaveAttribute("aria-checked", "true");
+    await user.click(
+      within(menu()).getByRole("menuitemcheckbox", { name: "Big keys" }),
+    );
+    expect(useGameStore.getState().bigKeysVisible).toBe(true);
+  });
+
+  it("offers only the folded settings: the map layout alone", async () => {
+    const user = userEvent.setup();
+    render(
+      <div data-fold="labels secondary map">
+        <TrackerControls />
+      </div>,
+    );
+    await user.click(more());
+
+    expect(within(menu()).getAllByRole("menuitemradio")).toHaveLength(3);
+    expect(within(menu()).queryByRole("menuitemcheckbox")).toBeNull();
+  });
+
+  it("moves through choices and commands alike with the arrows", async () => {
+    const user = userEvent.setup();
+    render(
+      <div data-fold="labels secondary map keys">
+        <TrackerControls />
+      </div>,
+    );
+    await user.click(more());
+
+    await user.keyboard("{End}");
+    expect(
+      within(menu()).getByRole("menuitemcheckbox", { name: "Big keys" }),
+    ).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(
+      within(menu()).getByRole("menuitemradio", { name: "Stack" }),
+    ).toHaveFocus();
   });
 
   it("closes on a press anywhere else, or on its button again", async () => {
