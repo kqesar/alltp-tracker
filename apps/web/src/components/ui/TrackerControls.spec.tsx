@@ -8,9 +8,10 @@ vi.mock("@/stores/gameStore", () => ({ useGameStore: vi.fn() }));
 const reset = vi.fn();
 const setMapLayout = vi.fn();
 const fakeState = {
-  // PresetSelector is rendered inside TrackerControls, so its store fields
-  // are needed too.
+  // PresetSelector and StreamViewControl are rendered inside TrackerControls,
+  // so their store fields are needed too.
   applyPreset: vi.fn(),
+  bigKeysVisible: false,
   exportState: vi.fn(() => "{}"),
   future: [] as unknown[],
   loadProgress: vi.fn(),
