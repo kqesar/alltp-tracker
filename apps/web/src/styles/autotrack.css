@@ -221,6 +221,19 @@
   border-radius: var(--border-radius);
 }
 
+/* What the board does with what was read, and Sync from game */
+.autotrack-follow {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.autotrack-follow__text {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
 .autotrack-option {
   display: flex;
   gap: var(--spacing-sm);

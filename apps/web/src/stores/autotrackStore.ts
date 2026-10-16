@@ -7,6 +7,7 @@ import type {
 } from "@alltp/autotrack";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { Follower } from "@/autotrack/follow";
 import type { AutotrackReading } from "@/autotrack/reading";
 import type { Runtime, RuntimeSink } from "@/autotrack/runtime";
 import { shownStatus } from "@/autotrack/status";
@@ -78,6 +79,9 @@ const set = useAutotrackStore.setState;
 /** The one session of this page, once started. */
 let runtime: Runtime | null = null;
 
+/** The board's side of the session: what it read, laid on the run. */
+let follower: Follower | null = null;
+
 /**
  * Bumped by every connect and stop: a start that loses a race with a stop
  * (a double click, StrictMode's double effect) finds it changed and gives up.
@@ -114,7 +118,11 @@ export const preloadAutotrack = () => {
  */
 const sinkFor = (mine: number): RuntimeSink => ({
   // A stopped session never reads again: no reading outlives its session
-  reading: (reading) => set({ reading }),
+  reading: (reading) => {
+    if (mine !== generation) return;
+    set({ reading });
+    follower?.read(reading);
+  },
   status: (status, since, { bridge, devices }) => {
     if (mine !== generation) return;
     set((state) => ({
@@ -148,12 +156,14 @@ export const connectAutotrack = async () => {
     unavailable: false,
   });
   try {
-    const { detectEnvironment, startRuntime } = await loadRuntime();
+    const { createFollower, detectEnvironment, startRuntime } =
+      await loadRuntime();
     const environment =
       useAutotrackStore.getState().environment ?? (await detectEnvironment());
     if (mine !== generation) return;
     set({ environment });
     const url = bridgeUrl();
+    follower = createFollower();
     runtime = startRuntime(
       { environment, ...(url === undefined ? {} : { url }), ...overrides },
       sinkFor(mine),
@@ -171,6 +181,7 @@ export const stopAutotrack = () => {
   generation++;
   runtime?.stop();
   runtime = null;
+  follower = null;
   set({
     active: false,
     reading: null,
@@ -188,3 +199,10 @@ export const disconnectAutotrack = () => {
 
 /** Retry now rather than after the session's wait. */
 export const retryAutotrack = () => runtime?.retryNow();
+
+/**
+ * Set the board to what the game holds, the player's marks beyond it
+ * included: one undo step.
+ * @returns How many values changed, or null before any game in play was read
+ */
+export const syncFromGame = (): number | null => follower?.sync() ?? null;

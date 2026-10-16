@@ -22,9 +22,17 @@ import {
   disconnectAutotrack,
   preloadAutotrack,
   retryAutotrack,
+  syncFromGame,
   useAutotrackStore,
 } from "@/stores/autotrackStore";
 import { commandKey } from "@/utils/platform";
+
+/** What Sync from game did, in a few words. */
+const syncedText = (changed: number | null) => {
+  if (changed === null) return "No game in play read yet.";
+  if (changed === 0) return "The board already matches the game.";
+  return `${changed} ${changed === 1 ? "mark" : "marks"} set to the game's. Undo takes ${changed === 1 ? "it" : "them"} back.`;
+};
 
 const BRIDGE_NAMES: Record<BridgeInfo["kind"], string> = {
   qusb2snes: "QUsb2Snes",
@@ -76,8 +84,8 @@ const detailOf = (status: SessionStatus, active: boolean): string => {
 /**
  * The autotracking dialog: the status with the race-legal badge, Connect or
  * Disconnect, Retry now while the session waits, the diagnostic report to
- * copy, the setup guide ticked live, and what was read. It opens only on the
- * player's click; nothing in it pops up on its own.
+ * copy, Sync from game, the setup guide ticked live, and what was read. It
+ * opens only on the player's click; nothing in it pops up on its own.
  * @param onClose - Called to close the dialog
  */
 export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
@@ -91,9 +99,11 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
     (state) => state.setConnectOnStart,
   );
   const [copied, setCopied] = useState("");
+  const [synced, setSynced] = useState("");
   const [manualReport, setManualReport] = useState<string | null>(null);
   const reportRef = useRef<HTMLTextAreaElement>(null);
   const optionId = useId();
+  const followId = useId();
 
   // The session's code, so that Connect starts at once; the system, for the
   // guide's tabs and the report
@@ -115,10 +125,8 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
   const headline = unavailable
     ? "Autotracking could not be loaded"
     : headlineOf(shown, active);
-  const race =
-    active && shown.code === "connected" && shown.race.active
-      ? shown.race
-      : null;
+  const connected = active && shown.code === "connected";
+  const race = connected && shown.race.active ? shown.race : null;
   const canRetry = active && "retryInMs" in shown;
 
   const copyReport = async () => {
@@ -175,7 +183,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
                 ? "Reload the page to try again; your run is saved."
                 : detailOf(shown, active)}
             </p>
-            {active && shown.code === "connected" && (
+            {connected && (
               <p className="autotrack-status__detail" data-testid="race-mode">
                 {race
                   ? raceReason(race)
@@ -243,6 +251,34 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
             value={manualReport}
           />
         )}
+        {active && (
+          <div className="autotrack-follow" data-testid="autotrack-follow">
+            <p className="autotrack-follow__text" id={followId}>
+              The board follows your game as you play, and the marks you set
+              beyond it stay. Sync from game sets the board to the game,
+              clearing them.
+              {race &&
+                " In Race Mode, what races forbid tracking stays yours to mark: pendants and crystals, chests inside dungeons, bottles."}
+            </p>
+            <div className="autotrack-actions">
+              <button
+                aria-describedby={followId}
+                className="modal-btn modal-btn--ghost"
+                data-testid="autotrack-sync"
+                onClick={() => setSynced(syncedText(syncFromGame()))}
+                type="button"
+              >
+                Sync from game
+              </button>
+              <output
+                className="autotrack-actions__status"
+                data-testid="autotrack-sync-status"
+              >
+                {synced}
+              </output>
+            </div>
+          </div>
+        )}
         <div className="autotrack-option">
           <input
             checked={connectOnStart}
@@ -261,12 +297,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
           environment={environment ?? parseUserAgent(navigator.userAgent)}
           status={shown}
         />
-        {reading && (
-          <Readout
-            live={active && shown.code === "connected"}
-            reading={reading}
-          />
-        )}
+        {reading && <Readout live={connected} reading={reading} />}
       </div>
     </Modal>
   );
