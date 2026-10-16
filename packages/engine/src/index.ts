@@ -14,8 +14,16 @@ export {
   RESERVED_WORDS,
   walk,
 } from "./ast";
+export { evaluate, itemValue, type State } from "./evaluate";
 export { ParseError, parse } from "./parser";
 export { print } from "./printer";
+export {
+  DefinitionError,
+  loadRules,
+  NO_RULES,
+  type Rules,
+  type RulesSource,
+} from "./rules";
 export {
   and,
   compare,
