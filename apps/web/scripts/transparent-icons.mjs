@@ -17,6 +17,8 @@
 //   one the sprites have in the game. A gap of one or two game pixels between
 //   two parts of the sprite (inside the bow, between its string and its limb)
 //   stays open: an outline there would close it.
+// - A sprite listed in ADD_OUTLINE gets the same outline on its own pixel
+//   grid, although it never had one.
 // - Any other image loses the near-black region flooded in from its corners:
 //   a backdrop is a rectangle behind the sprite, so it holds the corners. The
 //   pixels of it touching a coloured one stay, as a 1 px black outline. Black
@@ -57,6 +59,14 @@ const BOUNDED_BY = {
   bottle4: "bottle0",
 };
 
+// Opt-in: sprites drawn on transparency, so nothing was ever cut from them,
+// that get the same 1-game-pixel black outline as the item icons although
+// their art never had one: the keysanity keys, gold on gold-ish grass, read
+// poorly on a bright stream without it. Their darkest pixels are dark grey,
+// never near-black, so the outline is told apart from the sprite and a
+// second run draws the same one.
+const ADD_OUTLINE = ["bigkey", "smallkey"];
+
 const check = process.argv.includes("--check");
 
 /** A PNG of the assets folder as a data URL. */
@@ -72,7 +82,7 @@ for (const name of ICONS) {
   const bound = BOUNDED_BY[name] ? dataUrlOf(BOUNDED_BY[name]) : null;
 
   const { changed, png } = await page.evaluate(
-    async ([dataUrl, boundUrl]) => {
+    async ([dataUrl, boundUrl, addOutline]) => {
       const pixelsOf = async (url) => {
         const image = new Image();
         image.src = url;
@@ -112,6 +122,25 @@ for (const name of ICONS) {
           }
         return list;
       };
+      // A game pixel off the sprite, in a run of at most two between the
+      // sprite on both sides along its row or its column, lies in a narrow
+      // gap, which an outline would close. Not along a diagonal: that is an
+      // inner corner, which the outline fills.
+      const inNarrowGap = (isSprite, x, y) =>
+        [
+          [1, 0],
+          [0, 1],
+        ].some(([dx, dy]) => {
+          const reach = (sign) => {
+            for (let step = 1; step <= 2; step++) {
+              if (isSprite(x + sign * step * dx, y + sign * step * dy)) {
+                return step - 1;
+              }
+            }
+            return Number.POSITIVE_INFINITY;
+          };
+          return reach(1) + reach(-1) + 1 <= 2;
+        });
 
       // ---- An item icon cut from a black backdrop: a 16 px sprite at 4x ----
       const GRID = 16;
@@ -168,38 +197,77 @@ for (const name of ICONS) {
         return inBackdrop;
       };
 
-      if (isSprite4x(data) && hasCutEdge(data)) {
+      if (addOutline) {
+        // ---- A sprite given an outline it never had (ADD_OUTLINE) ----
+        // Its colour, or nothing for transparency and black: the outline a
+        // previous run drew is not the sprite
+        const colourOf = (i) =>
+          alpha(data, i) === 0 || isOpaqueBlack(data, i)
+            ? ""
+            : data.slice(i * 4, i * 4 + 4).join();
+        // Its own pixel grid: the largest scale, at some offset, on which
+        // every block is one colour
+        const uniformAt = (scale, ox, oy) => {
+          const first = new Map();
+          for (let i = 0; i < width * height; i++) {
+            const x = i % width;
+            const y = (i - x) / width;
+            const cell = `${Math.floor((x - ox) / scale)},${Math.floor((y - oy) / scale)}`;
+            if (!first.has(cell)) first.set(cell, colourOf(i));
+            else if (first.get(cell) !== colourOf(i)) return false;
+          }
+          return true;
+        };
+        const findGrid = () => {
+          for (const scale of [4, 2]) {
+            for (let oy = 0; oy < scale; oy++)
+              for (let ox = 0; ox < scale; ox++) {
+                if (uniformAt(scale, ox, oy)) return { ox, oy, scale };
+              }
+          }
+          return { ox: 0, oy: 0, scale: 1 };
+        };
+        const { ox, oy, scale } = findGrid();
+        const cellOf = (x, y) => [
+          Math.floor((x - ox) / scale),
+          Math.floor((y - oy) / scale),
+        ];
+        const cells = new Set();
+        for (let i = 0; i < width * height; i++) {
+          const x = i % width;
+          if (colourOf(i)) cells.add(cellOf(x, (i - x) / width).join());
+        }
+        const sprite = (gx, gy) => cells.has(`${gx},${gy}`);
+        for (let i = 0; i < width * height; i++) {
+          if (colourOf(i)) continue; // the sprite stays as drawn
+          const x = i % width;
+          const [gx, gy] = cellOf(x, (i - x) / width);
+          let touches = false;
+          for (let dy = -1; dy <= 1; dy++)
+            for (let dx = -1; dx <= 1; dx++) {
+              if ((dx || dy) && sprite(gx + dx, gy + dy)) touches = true;
+            }
+          const outline = touches && !inNarrowGap(sprite, gx, gy);
+          data[i * 4] = 0;
+          data[i * 4 + 1] = 0;
+          data[i * 4 + 2] = 0;
+          data[i * 4 + 3] = outline ? 255 : 0;
+        }
+      } else if (isSprite4x(data) && hasCutEdge(data)) {
         const bounding = boundUrl
           ? backdropOf((await pixelsOf(boundUrl)).pixels.data)
           : null;
         const backdrop = backdropOf(data, bounding);
         const sprite = (x, y) =>
           x >= 0 && y >= 0 && x < GRID && y < GRID && !backdrop[y * GRID + x];
-        // A backdrop pixel in a run of at most two between the sprite on both
-        // sides, along its row or its column, lies in a narrow gap. Not along
-        // a diagonal: that is an inner corner, which the outline fills.
-        const inGap = (x, y) =>
-          [
-            [1, 0],
-            [0, 1],
-          ].some(([dx, dy]) => {
-            const reach = (sign) => {
-              for (let step = 1; step <= 2; step++) {
-                if (sprite(x + sign * step * dx, y + sign * step * dy)) {
-                  return step - 1;
-                }
-              }
-              return Number.POSITIVE_INFINITY;
-            };
-            return reach(1) + reach(-1) + 1 <= 2;
-          });
         const touchesSprite = (x, y) =>
           neighbours8(x, y, GRID, GRID).some((n) => !backdrop[n]);
 
         for (let by = 0; by < GRID; by++)
           for (let bx = 0; bx < GRID; bx++) {
             if (!backdrop[by * GRID + bx]) continue; // the sprite stays as drawn
-            const outline = touchesSprite(bx, by) && !inGap(bx, by);
+            const outline =
+              touchesSprite(bx, by) && !inNarrowGap(sprite, bx, by);
             for (let y = 0; y < SCALE; y++)
               for (let x = 0; x < SCALE; x++) {
                 const px = bx * SCALE + x;
@@ -269,7 +337,7 @@ for (const name of ICONS) {
       context.putImageData(pixels, 0, 0);
       return { changed, png: canvas.toDataURL("image/png") };
     },
-    [dataUrlOf(name), bound],
+    [dataUrlOf(name), bound, ADD_OUTLINE.includes(name)],
   );
 
   results.push({ changed, name });
