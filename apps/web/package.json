@@ -9,6 +9,7 @@
     "build": "vite build",
     "dev": "vite",
     "preview": "vite preview",
+    "pwa-icons": "node scripts/pwa-icons.mjs",
     "test:e2e": "playwright test",
     "transparent-icons": "node scripts/transparent-icons.mjs"
   },
