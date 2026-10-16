@@ -117,6 +117,8 @@ interface Attempt {
   device: DeviceDescriptor | null;
   info: DeviceInfo | null;
   connectedAt: number | null;
+  /** A poll read came back: the device's memory is readable. */
+  readOk: boolean;
 }
 
 export class AutotrackSession {
@@ -337,6 +339,7 @@ export class AutotrackSession {
       number,
       openedAt: this.clock.now(),
       openFailedAfter: 0,
+      readOk: false,
       stage: "open",
     };
     const alive = () => this.alive(generation);
@@ -420,7 +423,7 @@ export class AutotrackSession {
       attempt.stage = "poll";
       this.poller = poller;
       attempt.connectedAt = this.clock.now();
-      await this.poll(poller, info, bridge, generation);
+      await this.poll(poller, info, bridge, generation, attempt);
       return null;
     } catch (error) {
       if (!alive()) return null;
@@ -501,6 +504,7 @@ export class AutotrackSession {
     info: DeviceInfo,
     bridge: BridgeInfo,
     generation: number,
+    attempt: Attempt,
   ): Promise<void> {
     const connected = (race: RaceStatus): SessionStatus => ({
       bridge,
@@ -526,6 +530,7 @@ export class AutotrackSession {
       const started = this.clock.now();
       const update = await poller.tick();
       if (!this.alive(generation)) return;
+      attempt.readOk = true;
       if (update !== null)
         for (const listener of this.updateListeners) listener(update);
       const next = poller.race;
@@ -567,10 +572,13 @@ export class AutotrackSession {
     if (
       attempt.stage === "poll" &&
       attempt.connectedAt !== null &&
-      this.clock.now() - attempt.connectedAt >= this.stableAfterMs
+      (attempt.readOk ||
+        this.clock.now() - attempt.connectedAt >= this.stableAfterMs)
     ) {
       // A working connection dropped (the emulator closed, a cable): start
-      // over at once and let the next attempt diagnose what is left.
+      // over at once and let the next attempt diagnose what is left. Once a
+      // read came back the memory is readable, so a drop is never the "no
+      // memory map" that SNI's drop on a first read stands for.
       return IMMEDIATE;
     }
     if (attempt.stage === "open" && isOriginRefusal(failed)) {

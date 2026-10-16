@@ -473,6 +473,24 @@ describe("AutotrackSession", () => {
     h.session.stop();
   });
 
+  it("reconnects at once when a connection drops after a read came back", async () => {
+    // Under the stable window, but memory was read: not a missing memory map
+    const h = harness({ session: { stableAfterMs: 5000 } });
+    h.session.start();
+    await flush();
+    expect(h.last().code).toBe("connected");
+    let failures = 0;
+    h.script.read = () =>
+      failures++ === 0
+        ? new TransportError("closed", "read", "closed", { closeCode: 1006 })
+        : undefined;
+    await vi.advanceTimersByTimeAsync(250);
+    expect(h.codes()).not.toContain("memory-unreadable");
+    expect(h.transports).toHaveLength(2);
+    expect(h.last().code).toBe("connected");
+    h.session.stop();
+  });
+
   it("pauses while the page is hidden", async () => {
     const h = harness();
     h.session.start();
