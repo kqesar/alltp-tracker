@@ -107,7 +107,7 @@
     {
       "file": "app/Region/Standard/PalaceOfDarkness.php",
       "module": "src/regions/standard/palace-of-darkness.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/SkullWoods.php",
