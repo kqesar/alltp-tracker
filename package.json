@@ -34,11 +34,8 @@
     "typecheck": "tsc -b"
   },
   "lint-staged": {
-    "apps/web/{src,public,e2e,scripts}/**/*.{js,mjs,jsx,ts,tsx,json,css}": [
-      "biome check --write --no-errors-on-unmatched"
-    ],
-    "packages/**/*.{js,ts,json}": [
-      "biome check --write --no-errors-on-unmatched"
+    "*.{js,mjs,cjs,jsx,ts,tsx,json,jsonc,css}": [
+      "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
     ],
     "**/package.json": [
       "sort-package-json"
