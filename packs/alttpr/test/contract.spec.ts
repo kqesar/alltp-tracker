@@ -6,25 +6,67 @@ import {
   contractHolds,
   runUpstreamCases,
 } from "./contract";
-import { type Fixture, loadFixtures } from "./fixtures";
+import { type CaseKind, type Fixture, loadFixtures } from "./fixtures";
 import { loadManifest, type Manifest } from "./manifest";
+import { PACK } from "./pack-subject";
 
 const manifest = loadManifest();
 const fixtures = loadFixtures();
 
-/** No pack is wired in yet: being asked anything is a bug in the gating. */
-const NO_PACK: ContractSubject = {
-  location: () => {
-    throw new Error("No region is ported yet: no case should run");
-  },
-};
+const ported = new Set(
+  manifest.tests
+    .filter((test) => test.status === "ported")
+    .map((test) => test.file),
+);
+const portedCases = fixtures
+  .filter((fixture) => ported.has(fixture.file))
+  .flatMap((fixture) => fixture.cases);
+const count = (kind: CaseKind) =>
+  portedCases.filter((c) => c.kind === kind).length;
 
 describe("the upstream contract", () => {
-  it("runs the cases of ported test files only, and none is ported yet", () => {
-    const report = runUpstreamCases(fixtures, manifest, NO_PACK);
-    expect(report.files).toEqual([]);
-    expect(Object.values(report.ran).reduce((a, b) => a + b, 0)).toBe(0);
+  const report = runUpstreamCases(fixtures, manifest, PACK);
+
+  it("holds the pack to every case of the ported test files", () => {
     expect(report.failures).toEqual([]);
+  });
+
+  it("runs those files, and every case of theirs but the fills", () => {
+    expect(report.files).toEqual(
+      fixtures.filter((f) => ported.has(f.file)).map((f) => f.file),
+    );
+    expect(report.files).toContain("tests/NoGlitches/EasternPalaceTest.php");
+    // Location::canFill waits for src/fill.ts (see pack-subject.ts)
+    expect(report.skipped).toEqual({
+      fill: count("fill"),
+      location: 0,
+      regionComplete: 0,
+      regionEnter: 0,
+      regionFill: 0,
+    });
+    expect(report.ran).toEqual({
+      fill: 0,
+      location: count("location"),
+      regionComplete: count("regionComplete"),
+      regionEnter: count("regionEnter"),
+      regionFill: count("regionFill"),
+    });
+  });
+
+  it("would catch a pack that answers maybe, or yes, to everything", () => {
+    const always = (answer: Tri): ContractSubject => ({
+      location: () => answer,
+      regionComplete: () => answer,
+      regionEnter: () => answer,
+      regionFill: () => answer,
+    });
+    const answered = portedCases.filter((c) => c.kind !== "fill");
+    expect(
+      runUpstreamCases(fixtures, manifest, always("maybe")).failures,
+    ).toHaveLength(answered.filter((c) => c.expected).length);
+    expect(
+      runUpstreamCases(fixtures, manifest, always("yes")).failures,
+    ).toHaveLength(answered.filter((c) => !c.expected).length);
   });
 });
 
