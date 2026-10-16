@@ -4,6 +4,7 @@
   "files": [],
   "references": [
     { "path": "apps/web" },
+    { "path": "packages/autotrack" },
     { "path": "packages/engine" },
     { "path": "packs/alttpr" }
   ]
