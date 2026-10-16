@@ -127,7 +127,7 @@
     {
       "file": "app/Region/Standard/TowerOfHera.php",
       "module": "src/regions/standard/tower-of-hera.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/TurtleRock.php",
@@ -257,7 +257,7 @@
     {
       "file": "tests/NoGlitches/DeathMountain/WestTest.php",
       "fixture": "test/upstream/NoGlitches/DeathMountain/West.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/DesertPalaceTest.php",
@@ -327,7 +327,7 @@
     {
       "file": "tests/NoGlitches/TowerOfHeraTest.php",
       "fixture": "test/upstream/NoGlitches/TowerOfHera.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/TurtleRockTest.php",
