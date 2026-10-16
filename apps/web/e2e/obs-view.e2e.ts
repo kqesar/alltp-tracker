@@ -125,6 +125,24 @@ test.describe("the stream view", () => {
     expect(problems).toEqual([]);
   });
 
+  test("draws the key cells with no box behind their keys", async ({
+    context,
+    page,
+  }) => {
+    const tracker = await context.newPage();
+    await tracker.goto("./");
+    await tracker.getByTestId("key-cells-toggle").click();
+    await openObsView(page);
+
+    for (const id of ["big-key-0", "small-key-0"]) {
+      const key = await page.getByTestId(id).boundingBox();
+      expect(key, id).toBeTruthy();
+      if (!key) return;
+      // The key sprite's own transparent corner: the old box painted it
+      expect(await alphaAt(page, key.x + 1, key.y + 1), id).toBe(0);
+    }
+  });
+
   test("paints a valid bg colour, and ignores anything else", async ({
     page,
   }) => {

@@ -70,25 +70,3 @@
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
-
-/* Not obtained, or a boss not beaten: the icon alone is greyed and dimmed,
-   never the whole cell, so it reads on the app's page and over stream footage
-   alike, and a boss's overlays (siblings of its button) keep their colours.
-   The button hides its own copy of the icon and the pseudo-element redraws it
-   through the filter: the focus ring, drawn by the button, keeps its full
-   strength. Last in the file, so it overrides the cells' background-size. */
-.griditem--dimmed {
-  background-size: 0 0;
-}
-
-.griditem--dimmed::after {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  content: "";
-  background-image: inherit;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  border-radius: inherit;
-  filter: var(--missing-item-filter);
-}
