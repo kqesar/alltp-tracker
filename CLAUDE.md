@@ -51,7 +51,7 @@ The `verifier` subagent runs lint, types, tests and build and returns only the f
 - In the app, import via the `@/` alias (`@` → `apps/web/src`). The app has no barrel/`index.ts` re-export files — import from the file path; a package exposes one `src/index.ts`.
 - Biome (not ESLint/Prettier) handles lint + format and sorts imports, JSX attributes and object keys. A hook runs it on every file you edit; fix what it reports.
 - Code and comments in English.
-- Two entry views, picked in `main.tsx` by the query string: the tracker (`App`) and the OBS stream view (`?view=obs`, `ObsView`), which shows only the grid and takes new versions on its own.
+- Two entry views, picked in `main.tsx` by the query string: the tracker (`App`) and the OBS stream view (`?view=obs`, `ObsView`), which shows only the grid and takes new versions on its own. Only the tracker autotracks: the stream view follows it through storage and never opens a session. `?bridge=<port>` points autotracking at a bridge on another port (the browser tests' fake one).
 - The service worker (`apps/web/sw/`, production builds only) lists every built file with its content hash, so any release updates it: there is no version to bump.
 
 ## Commits
