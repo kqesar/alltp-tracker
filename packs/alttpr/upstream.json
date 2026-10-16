@@ -47,7 +47,7 @@
     {
       "file": "app/Region/Standard/Fountains.php",
       "module": "src/regions/standard/fountains.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/GanonsTower.php",
