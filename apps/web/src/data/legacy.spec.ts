@@ -21,16 +21,22 @@ import { captionToText, placeName } from "@/utils/caption";
  * they drift apart, a save migrated through the pack lands on the wrong
  * items, chests or dungeons.
  */
+/** Items version 6 added, which no older save holds. */
+const ADDED = ["agahnim2"];
+
 describe("the app's tables, against the pack's legacy copy", () => {
   it("track the same items, each with the same range", () => {
     const ranges = Object.fromEntries(
-      Object.entries(items).map(([id, initial]) => [
-        id,
-        typeof initial === "boolean" ? [0, 1] : [itemsMin[id], itemsMax[id]],
-      ]),
+      Object.entries(items)
+        .filter(([id]) => !ADDED.includes(id))
+        .map(([id, initial]) => [
+          id,
+          typeof initial === "boolean" ? [0, 1] : [itemsMin[id], itemsMax[id]],
+        ]),
     );
 
     expect(ranges).toEqual(LEGACY_ITEM_RANGES);
+    expect(ADDED.filter((id) => id in items)).toEqual(ADDED);
   });
 
   it("count each dungeon's chests down from the same number", () => {

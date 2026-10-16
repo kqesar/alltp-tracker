@@ -31,6 +31,8 @@ type Range = readonly [number, number] | readonly [number, number, number];
  */
 const NUMERIC_ITEMS: Record<string, Range> = {
   agahnim: [0, 1],
+  // Agahnim beaten again, atop Ganon's Tower: its map marker, not the grid
+  agahnim2: [0, 1],
   boomerang: [0, 3],
   bottle: [0, 4],
   bow: [0, 3],
@@ -115,6 +117,7 @@ const BOSS_NAMES = [
 
 /** Item ids whose readable name is not just the capitalised id. */
 const ITEM_NAMES: Record<string, string> = {
+  agahnim2: "Agahnim 2",
   bombos: "Bombos Medallion",
   book: "Book of Mudora",
   boots: "Pegasus Boots",
