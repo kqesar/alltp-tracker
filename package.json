@@ -1,7 +1,7 @@
 {
   "name": "alltp-tracker",
   "version": "2.10.0",
-  "private": false,
+  "private": true,
   "description": "A tracker for Zelda a Link to the Past Randomizer",
   "bugs": {
     "url": "https://github.com/kqesar/alltp-tracker/issues"
@@ -14,35 +14,33 @@
   "author": "KqesaR",
   "type": "module",
   "scripts": {
-    "build": "tsc -b && vite build",
+    "build": "pnpm typecheck && pnpm --filter @alltp/web build",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "changelog:all": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
     "commit": "git-cz",
     "coverage": "node scripts/show-coverage.js",
-    "dev": "vite",
+    "dev": "pnpm --filter @alltp/web dev",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "prepare": "husky",
-    "preview": "vite preview",
+    "preview": "pnpm --filter @alltp/web preview",
     "release": "standard-version",
     "release:dry": "standard-version --dry-run",
     "sort-package": "sort-package-json",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:coverage:show": "vitest run --coverage && node scripts/show-coverage.js",
-    "test:e2e": "playwright test"
+    "test:e2e": "pnpm --filter @alltp/web test:e2e",
+    "typecheck": "tsc -b apps/web && pnpm --filter @alltp/engine typecheck"
   },
   "lint-staged": {
-    "src/**/*.{js,jsx,ts,tsx,json,css}": [
-      "biome check --write --no-errors-on-unmatched"
-    ],
-    "public/**/*.{js,jsx,ts,tsx,json,css}": [
+    "apps/web/{src,public,e2e,scripts}/**/*.{js,mjs,jsx,ts,tsx,json,css}": [
       "biome check --write --no-errors-on-unmatched"
     ],
     "packages/**/*.{js,ts,json}": [
       "biome check --write --no-errors-on-unmatched"
     ],
-    "package.json": [
+    "**/package.json": [
       "sort-package-json"
     ]
   },
@@ -51,24 +49,11 @@
       "path": "cz-conventional-changelog"
     }
   },
-  "dependencies": {
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "zustand": "^5.0.15"
-  },
   "devDependencies": {
-    "@axe-core/playwright": "^4.13.0",
     "@biomejs/biome": "^2.5.12",
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
-    "@playwright/test": "^1.63.0",
-    "@testing-library/jest-dom": "^7.0.1",
-    "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.7",
     "@types/node": "^26.4.1",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.0",
     "commitizen": "^4.3.2",
     "conventional-changelog-cli": "^5.0.0",
@@ -80,7 +65,6 @@
     "sort-package-json": "^4.0.0",
     "standard-version": "^9.5.0",
     "typescript": "~7.0.2",
-    "vite": "^8.2.2",
     "vitest": "^5.0.0"
   },
   "packageManager": "pnpm@12.3.4",

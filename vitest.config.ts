@@ -1,28 +1,20 @@
-import path from "node:path";
-import react from "@vitejs/plugin-react";
-import { configDefaults, defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
-// https://vitejs.dev/config/
+// One run over every workspace: each project brings its own config (the web
+// app runs in jsdom, the engine in Node). Coverage is measured here, over all
+// of them, so the floors below hold for the whole repository.
 export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "src"),
-    },
-    mainFields: ["module"],
-  },
   test: {
     coverage: {
       // These are glob patterns: a bare directory name matches nothing, so
-      // both lists must spell out the extensions they mean. "src" alone used
-      // to drag every non-source file under src into the report at 0%.
+      // both lists must spell out the extensions they mean.
       exclude: [
-        "src/**/*.d.ts",
-        "src/**/*.spec.{ts,tsx}",
-        "src/main.tsx",
-        "src/test-setup.ts",
+        "**/*.d.ts",
+        "**/*.spec.{ts,tsx}",
+        "apps/web/src/main.tsx",
+        "apps/web/src/test-setup.ts",
       ],
-      include: ["src/**/*.{ts,tsx}"],
+      include: ["apps/web/src/**/*.{ts,tsx}", "packages/*/src/**/*.ts"],
       reporter: ["html", "json", "json-summary"],
       // Floors sit just under current coverage so a regression fails the build
       // without blocking day-to-day work. Raise them as coverage improves.
@@ -33,24 +25,7 @@ export default defineConfig({
         statements: 94,
       },
     },
-    environment: "jsdom",
-    // Agent worktrees live under .claude/worktrees and carry their own copy
-    // of every spec; browser tests run under Playwright, not here.
-    exclude: [...configDefaults.exclude, ".claude/**", "e2e/**"],
-    globals: true,
-    // The app keeps the options above; each workspace package brings its own
-    // config (packages/engine runs in Node, without the jsdom setup file).
-    projects: [
-      {
-        extends: true,
-        test: {
-          benchmark: { include: ["src/**/*.bench.{ts,tsx}"] },
-          include: ["src/**/*.spec.{ts,tsx}"],
-          name: "app",
-        },
-      },
-      "packages/*",
-    ],
-    setupFiles: ["src/test-setup.ts"],
+    // Listing the projects by path keeps agent worktrees under .claude out.
+    projects: ["apps/web", "packages/*"],
   },
 });

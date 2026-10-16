@@ -237,4 +237,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: dist-${{ steps.create-release-auto.outputs.version || steps.create-release-manual.outputs.version }}
-          path: dist/
+          path: apps/web/dist/
