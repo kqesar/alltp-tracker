@@ -15,8 +15,7 @@ import {
   type Tri,
 } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
-import { ITEM_IDS } from "../../items";
-import { MEDALLION_FACTS } from "../../medallions";
+import { STATE_NAMES } from "../../pack";
 import { RULES } from "../../rules";
 import {
   type AlttprSettings,
@@ -46,7 +45,7 @@ const at = (settings: AlttprSettings, state: State, id: string): Tri => {
     world = compileWorld(
       buildWorld([MOUNTAIN, GANONS_TOWER]),
       loadRules(RULES),
-      { items: [...ITEM_IDS, ...MEDALLION_FACTS], settings },
+      { items: STATE_NAMES, settings },
     );
     worlds.set(settings, world);
   }

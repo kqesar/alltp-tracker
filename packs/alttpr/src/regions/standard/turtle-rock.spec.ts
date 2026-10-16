@@ -15,8 +15,9 @@ import {
   solve,
 } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
-import { ITEM_IDS, ITEMS } from "../../items";
-import { MEDALLION_FACTS, medallionFacts } from "../../medallions";
+import { ITEMS } from "../../items";
+import { medallionFacts } from "../../medallions";
+import { STATE_NAMES } from "../../pack";
 import { RULES } from "../../rules";
 import {
   type AlttprSettings,
@@ -51,7 +52,7 @@ const solved = (settings: AlttprSettings, state: State): Solution => {
     world = compileWorld(
       buildWorld([...NEIGHBOURS, TURTLE_ROCK]),
       loadRules(RULES),
-      { items: [...ITEM_IDS, ...MEDALLION_FACTS], settings },
+      { items: STATE_NAMES, settings },
     );
     worlds.set(settings, world);
   }
