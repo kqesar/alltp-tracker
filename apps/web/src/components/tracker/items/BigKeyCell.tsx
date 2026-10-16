@@ -1,5 +1,5 @@
 import { KeyToggle } from "@/components/tracker/items/KeyToggle";
-import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { smallKeysMax } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 
 type BigKeyCellProps = {
@@ -11,8 +11,10 @@ type BigKeyCellProps = {
 
 /**
  * BigKeyCell renders the keysanity 2x2 cell for a dungeon: big key, small key,
- * and the small-key count. When big keys are hidden it renders an empty,
- * non-interactive placeholder so the grid layout stays stable.
+ * and the small-key count. A dungeon without small keys (Eastern Palace in
+ * v31) has neither the small key nor its count. When big keys are hidden it
+ * renders an empty, non-interactive placeholder so the grid layout stays
+ * stable.
  */
 export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
   const dungeonIndex = parseInt(item.replace("bigkey", ""), 10);
@@ -30,7 +32,8 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
     );
   }
 
-  const isMaxed = keyCount === SMALL_KEYS_MAX_BY_INDEX[dungeonIndex];
+  const maxKeys = smallKeysMax(dungeonIndex);
+  const isMaxed = keyCount === maxKeys;
 
   return (
     <div
@@ -53,23 +56,28 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
           />
         </div>
 
-        {/* Bottom Left - Small Key */}
+        {/* Bottom Left - Small Key, for a dungeon that has some */}
         <div className="bigkey-quadrant bigkey-quadrant--bottom-left">
-          <KeyToggle
-            col={col}
-            dungeonIndex={dungeonIndex}
-            row={row}
-            variant="small-key"
-          />
+          {maxKeys > 0 && (
+            <KeyToggle
+              col={col}
+              dungeonIndex={dungeonIndex}
+              row={row}
+              variant="small-key"
+            />
+          )}
         </div>
 
-        {/* Bottom Right - Small Keys Count Display */}
+        {/* Bottom Right - Small Keys Count, which the key's name also says */}
         <div className="bigkey-quadrant bigkey-quadrant--bottom-right">
-          <div
-            className={`bigkey-count ${isMaxed ? "bigkey-count--maxed" : ""}`}
-          >
-            {keyCount}
-          </div>
+          {maxKeys > 0 && (
+            <div
+              aria-hidden="true"
+              className={`bigkey-count ${isMaxed ? "bigkey-count--maxed" : ""}`}
+            >
+              {keyCount}
+            </div>
+          )}
         </div>
       </div>
     </div>

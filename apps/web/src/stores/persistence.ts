@@ -1,13 +1,10 @@
 import {
   LEGACY_CHESTS,
   LEGACY_DUNGEON_ITEMS,
+  LEGACY_DUNGEONS,
   MARKERS,
 } from "@alltp/pack-alttpr";
-import {
-  BOSS_STATES,
-  MEDALLION_VALUES,
-  SMALL_KEYS_MAX_BY_INDEX,
-} from "@/constants";
+import { BOSS_STATES, MEDALLION_VALUES } from "@/constants";
 import type { ItemState } from "@/data/items";
 import { items as freshItems, itemsMax, itemsMin } from "@/data/items";
 import { DEFAULT_SHORTCUTS, type ShortcutPrefs } from "@/data/keymap";
@@ -20,7 +17,7 @@ import {
   presets,
   type RunSettings,
 } from "@/data/presets";
-import { counterMax } from "@/logic/settings";
+import { counterMax, SMALL_KEYS_MAX } from "@/logic/settings";
 import type { MapLayout } from "@/utils";
 
 /**
@@ -70,7 +67,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Bumped whenever PersistedState changes shape; `migrate` upgrades older saves. */
-export const PERSIST_VERSION = 6;
+export const PERSIST_VERSION = 7;
 
 /** Length of the chest table before version 3. */
 const V2_CHEST_COUNT = 65;
@@ -166,6 +163,26 @@ const migrateV5 = (saved: Record<string, unknown>): Record<string, unknown> => {
   return migrated;
 };
 
+/** Eastern Palace's grid index, the one dungeon without a small key. */
+const EASTERN_PALACE = LEGACY_DUNGEONS.indexOf("eastern-palace");
+
+/**
+ * Version 7 takes each dungeon's small keys from the pack, where Eastern
+ * Palace has none: its count, which earlier versions let go up to 1, is
+ * now 0. Every other dungeon kept the same maximum, and the rest of the
+ * save keeps its shape. Without this step a save holding that 1 would fail
+ * validation, and the lenient load would drop every dungeon's keys with it.
+ */
+const migrateV6 = (saved: Record<string, unknown>): Record<string, unknown> => {
+  const { smallKeys } = saved;
+  if (!Array.isArray(smallKeys) || smallKeys[EASTERN_PALACE] !== 1) {
+    return saved;
+  }
+  const counts = [...smallKeys];
+  counts[EASTERN_PALACE] = 0;
+  return { ...saved, smallKeys: counts };
+};
+
 /**
  * Upgrade a save written by an earlier version to the current shape. Fields
  * are not validated here; restoring a save falls back field by field.
@@ -183,6 +200,7 @@ export const migrate = (
   if (version < 4) state = migrateV3(state);
   if (version < 5) state = migrateV4(state);
   if (version < 6) state = migrateV5(state);
+  if (version < 7) state = migrateV6(state);
   return state as Partial<PersistedState>;
 };
 
@@ -321,7 +339,7 @@ export const validateProgress = (
   if (saved.smallKeys !== undefined) {
     if (
       isArrayOf(saved.smallKeys, 10, (count, index) =>
-        isIntIn(count, 0, SMALL_KEYS_MAX_BY_INDEX[index]),
+        isIntIn(count, 0, SMALL_KEYS_MAX[index] ?? 0),
       )
     ) {
       value.smallKeys = saved.smallKeys as number[];

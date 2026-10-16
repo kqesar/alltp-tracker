@@ -49,13 +49,14 @@ describe("the controls", () => {
   });
 
   it("gives every dungeon its boss, chests, reward and keys, and a medallion to Mire and Turtle Rock", () => {
+    // Eastern Palace has no small key in v31
     expect(dungeonControls(0)).toEqual([
       "boss0",
       "chest0",
       "reward0",
       "bigkey0",
-      "smallkey0",
     ]);
+    expect(dungeonControls(1)).toContain("smallkey1");
     expect(dungeonControls(8)).toEqual([
       "boss8",
       "medallion8",
@@ -64,7 +65,7 @@ describe("the controls", () => {
       "bigkey8",
       "smallkey8",
     ]);
-    expect(CONTROLS).toHaveLength(29 + 10 * 5 + 2);
+    expect(CONTROLS).toHaveLength(29 + 10 * 5 - 1 + 2);
     expect(ACTIONS).toHaveLength(CONTROLS.length * 2);
   });
 

@@ -5,6 +5,7 @@ import {
   type DungeonId,
   dungeon,
   dungeonItemCount,
+  dungeonPool,
   LEGACY_DUNGEONS,
   settingsFromUpstream,
   type UpstreamConfig,
@@ -70,6 +71,21 @@ export const dungeonAt = (index: number): DungeonId => {
 /** The name of the dungeon at a grid index (0-9): "Eastern Palace". */
 export const dungeonName = (index: number): string =>
   dungeon(dungeonAt(index)).name;
+
+/**
+ * How many small keys each grid dungeon holds, by index: its pool's, as
+ * the pack reads config/item.php. Eastern Palace has none in v31.
+ */
+export const SMALL_KEYS_MAX: readonly number[] = LEGACY_DUNGEONS.map(
+  (id) => dungeonPool(dungeon(id)).smallKeys,
+);
+
+/** How many small keys the dungeon at a grid index (0-9) holds. */
+export const smallKeysMax = (index: number): number => {
+  const max = SMALL_KEYS_MAX[index];
+  if (max === undefined) throw new RangeError(`No dungeon at index ${index}`);
+  return max;
+};
 
 const counters = new WeakMap<AlttprSettings, readonly number[]>();
 

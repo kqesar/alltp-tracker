@@ -217,6 +217,21 @@ describe("migrate", () => {
     });
   });
 
+  it("takes back the small key a version 6 save gave Eastern Palace", () => {
+    const smallKeys = [1, 1, 0, 6, 0, 0, 0, 0, 0, 4];
+
+    const migrated = migrate({ smallKeys }, 6);
+
+    expect(migrated).toEqual({ smallKeys: [0, 1, 0, 6, 0, 0, 0, 0, 0, 4] });
+    expect(validateProgress(migrated).errors).toEqual([]);
+    // Unmigrated, the whole field fails, every dungeon's keys with it
+    expect(validateProgress({ smallKeys }).errors).toEqual([
+      "smallKeys must hold 10 counts within each dungeon's keys",
+    ]);
+    expect(migrate({ smallKeys: [0, 1] }, 6)).toEqual({ smallKeys: [0, 1] });
+    expect(migrate({ smallKeys: "none" }, 6)).toEqual({ smallKeys: "none" });
+  });
+
   it("leaves a current save alone", () => {
     expect(migrate({ mapLayout: "side-by-side" }, PERSIST_VERSION)).toEqual({
       mapLayout: "side-by-side",

@@ -139,7 +139,7 @@ test.describe("the stream view", () => {
     await tracker.getByTestId("key-cells-toggle").click();
     await openObsView(page);
 
-    for (const id of ["big-key-0", "small-key-0"]) {
+    for (const id of ["big-key-0", "small-key-1"]) {
       const key = await page.getByTestId(id).boundingBox();
       expect(key, id).toBeTruthy();
       if (!key) return;
