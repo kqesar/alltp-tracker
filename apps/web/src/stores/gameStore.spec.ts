@@ -156,9 +156,16 @@ describe("GameStore", () => {
 
   describe("Small Keys", () => {
     it("counts each dungeon's keys up to its maximum, then back to 0", () => {
-      const maxValues = [1, 1, 1, 6, 1, 3, 1, 2, 3, 4];
+      // Eastern Palace has none: its count stays 0, and nothing is recorded
+      const maxValues = [0, 1, 1, 6, 1, 3, 1, 2, 3, 4];
+
+      useGameStore.getState().handleSmallKeyClick(0);
+      useGameStore.getState().handleSmallKeyClick(0, -1);
+      expect(useGameStore.getState().smallKeys[0]).toBe(0);
+      expect(useGameStore.getState().past).toEqual([]);
 
       maxValues.forEach((max, dungeonIndex) => {
+        if (max === 0) return;
         for (let count = 1; count <= max; count++) {
           useGameStore.getState().handleSmallKeyClick(dungeonIndex);
           expect(useGameStore.getState().smallKeys[dungeonIndex]).toBe(count);
@@ -388,7 +395,7 @@ describe("GameStore", () => {
         keymap: { "advance:hookshot": "KeyH" },
       });
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
-      expect(stored.version).toBe(6);
+      expect(stored.version).toBe(PERSIST_VERSION);
       expect(stored.state.checked).toEqual(state.checked);
       expect(stored.state).not.toHaveProperty("chestsOpened");
     });

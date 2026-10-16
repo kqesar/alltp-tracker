@@ -1,7 +1,7 @@
 import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { MEDALLION_VALUES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
+import { MEDALLION_VALUES } from "@/constants";
 import type { ItemState } from "@/data/items";
 import { items as initialItems } from "@/data/items";
 import {
@@ -10,7 +10,7 @@ import {
   restoreShortcuts,
 } from "@/data/keymap";
 import { DEFAULT_PRESET_ID, getPreset, type RunSettings } from "@/data/presets";
-import { counterMax } from "@/logic/settings";
+import { counterMax, smallKeysMax } from "@/logic/settings";
 import {
   GAME,
   itemRange,
@@ -236,10 +236,10 @@ export const useGameStore = create<GameState>()(
           direction: Direction = 1,
         ) => {
           const state = get();
+          // A dungeon without small keys (Eastern Palace) has nothing to step
+          const maxForDungeon = smallKeysMax(dungeonIndex);
+          if (maxForDungeon === 0) return;
           const newSmallKeys = [...state.smallKeys];
-
-          // Maximum small keys per dungeon, indexed 0-9
-          const maxForDungeon = SMALL_KEYS_MAX_BY_INDEX[dungeonIndex] ?? 0;
 
           // Step the count, wrapping between 0 and the dungeon's maximum
           const next = newSmallKeys[dungeonIndex] + direction;

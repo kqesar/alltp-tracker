@@ -2,10 +2,10 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
-import { SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
 import { items, itemsMax, itemsMin } from "@/data/items";
 import { CONTROLS, type ControlId, dungeonOf } from "@/data/keymap";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
+import { smallKeysMax } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 
 /** The grid cell a control is drawn in: its own, its boss's or its key cell. */
@@ -24,7 +24,7 @@ const Board = ({ control }: { control: ControlId }) => {
 /** How many values a control cycles through. */
 const statesOf = (control: ControlId) => {
   const [, kind, index] = /^(smallkey|medallion)(\d)$/.exec(control) ?? [];
-  if (kind === "smallkey") return SMALL_KEYS_MAX_BY_INDEX[Number(index)] + 1;
+  if (kind === "smallkey") return smallKeysMax(Number(index)) + 1;
   if (kind === "medallion") return 4;
   if (typeof items[control] === "boolean") return 2;
   return itemsMax[control] - itemsMin[control] + 1;

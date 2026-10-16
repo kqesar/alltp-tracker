@@ -78,6 +78,19 @@ describe("GridItem", () => {
     );
   });
 
+  it("gives Eastern Palace, which has no small key, no small key cell", () => {
+    useGameStore.getState().setBigKeysVisible(true);
+
+    render(<GridItem col={5} item="bigkey0" row={2} />);
+
+    expect(screen.getByTestId("big-key-0")).toHaveAccessibleName(
+      "Eastern Palace big key: not obtained",
+    );
+    expect(screen.queryByTestId("small-key-0")).toBeNull();
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(document.querySelector(".bigkey-count")).toBeNull();
+  });
+
   it("greys a key until it is held, its name telling the same", () => {
     useGameStore.getState().setBigKeysVisible(true);
     render(<GridItem col={5} item="bigkey3" row={2} />);

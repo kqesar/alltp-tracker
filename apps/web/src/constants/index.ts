@@ -24,8 +24,5 @@ export const BOSS_STATES = {
   BEATEN: 2,
 } as const;
 
-/** Small keys available per dungeon, indexed by dungeon index 0-9. */
-export const SMALL_KEYS_MAX_BY_INDEX = [1, 1, 1, 6, 1, 3, 1, 2, 3, 4] as const;
-
 /** Columns rendered per tracker grid row. */
 export const ITEMS_PER_ROW = 7;

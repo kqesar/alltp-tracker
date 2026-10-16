@@ -1,7 +1,7 @@
 import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { DUNGEON_INDICES } from "@/constants";
 import { defaultItemGrid, itemLabels } from "@/data/items";
-import { dungeonName } from "@/logic/settings";
+import { dungeonName, smallKeysMax } from "@/logic/settings";
 
 /**
  * The keyboard shortcuts of the item grid, as plain data: which key steps
@@ -64,7 +64,8 @@ const hasMedallion = (index: number) =>
 
 /**
  * A dungeon's controls, in the reading order of its cells: the boss cell
- * (boss, medallion, chests, reward), then the key cell (big key, small keys).
+ * (boss, medallion, chests, reward), then the key cell (big key, small keys
+ * for a dungeon that has some: not Eastern Palace).
  * @param index - The dungeon index (0-9)
  */
 export const dungeonControls = (index: number): ControlId[] => [
@@ -73,7 +74,7 @@ export const dungeonControls = (index: number): ControlId[] => [
   `chest${index}`,
   `reward${index}`,
   `bigkey${index}`,
-  `smallkey${index}`,
+  ...(smallKeysMax(index) > 0 ? [`smallkey${index}`] : []),
 ];
 
 /** Every control a shortcut can step: the items, then dungeon by dungeon. */

@@ -1,7 +1,19 @@
-import { OPEN, STANDARD } from "@alltp/pack-alttpr";
+import {
+  dungeon,
+  dungeonPool,
+  LEGACY_DUNGEONS,
+  OPEN,
+  STANDARD,
+} from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import { getPreset, presets, type RunSettings } from "@/data/presets";
-import { counterMax, dungeonAt, packSettings } from "@/logic/settings";
+import {
+  counterMax,
+  dungeonAt,
+  packSettings,
+  SMALL_KEYS_MAX,
+  smallKeysMax,
+} from "@/logic/settings";
 
 const run = (overrides: Partial<RunSettings> = {}): RunSettings => ({
   entranceShuffle: "none",
@@ -85,5 +97,21 @@ describe("counterMax", () => {
     expect(() => counterMax(10, run())).toThrow(RangeError);
     expect(() => dungeonAt(-1)).toThrow(RangeError);
     expect(dungeonAt(9)).toBe("turtle-rock");
+  });
+});
+
+describe("smallKeysMax", () => {
+  it("gives each dungeon the small keys its pool holds (config/item.php:108-120)", () => {
+    // Eastern Palace has none in v31; the others kept the tracker's old count
+    expect(SMALL_KEYS_MAX).toEqual([0, 1, 1, 6, 1, 3, 1, 2, 3, 4]);
+    expect(
+      LEGACY_DUNGEONS.map((id) => dungeonPool(dungeon(id)).smallKeys),
+    ).toEqual(SMALL_KEYS_MAX);
+    expect(smallKeysMax(0)).toBe(0);
+    expect(smallKeysMax(3)).toBe(6);
+  });
+
+  it("refuses an index past the ten dungeons", () => {
+    expect(() => smallKeysMax(10)).toThrow(RangeError);
   });
 });
