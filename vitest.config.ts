@@ -1,6 +1,6 @@
 import path from "node:path";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -34,6 +34,9 @@ export default defineConfig({
       },
     },
     environment: "jsdom",
+    // Agent worktrees live under .claude/worktrees and carry their own copy
+    // of every spec; browser tests run under Playwright, not here.
+    exclude: [...configDefaults.exclude, ".claude/**", "e2e/**"],
     globals: true,
     setupFiles: ["src/test-setup.ts"],
   },
