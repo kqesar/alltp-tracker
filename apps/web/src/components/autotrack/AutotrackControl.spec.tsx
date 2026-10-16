@@ -78,6 +78,26 @@ describe("AutotrackControl", () => {
     expect(screen.queryByTestId("race-badge")).toBeNull();
   });
 
+  it("says when another tab of the tracker autotracks", () => {
+    render(<AutotrackControl />);
+
+    act(() =>
+      useAutotrackStore.setState({
+        active: true,
+        elsewhere: true,
+        shown: STATUSES.idle,
+      }),
+    );
+
+    expect(screen.getByTestId("autotrack-button")).toHaveAccessibleName(
+      "Autotracking, Running in another tab",
+    );
+    expect(screen.getByTestId("autotrack-dot")).toHaveAttribute(
+      "data-phase",
+      "off",
+    );
+  });
+
   it("says, when its code cannot load, to reload", () => {
     render(<AutotrackControl />);
 
@@ -209,5 +229,14 @@ describe("AutotrackLiveRegion", () => {
     );
     show(STATUSES.stopped, false);
     expect(live).toHaveTextContent("Autotracking: Off");
+    // Waiting for another tab is no mere passage
+    act(() =>
+      useAutotrackStore.setState({
+        active: true,
+        elsewhere: true,
+        shown: STATUSES.idle,
+      }),
+    );
+    expect(live).toHaveTextContent("Autotracking: Running in another tab");
   });
 });

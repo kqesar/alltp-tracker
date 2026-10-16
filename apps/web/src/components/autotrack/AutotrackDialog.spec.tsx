@@ -384,6 +384,33 @@ describe("AutotrackDialog's actions", () => {
     );
   });
 
+  it("waits while another tab autotracks, until the player stops it", async () => {
+    const user = userEvent.setup();
+    await open();
+    act(() =>
+      useAutotrackStore.setState({
+        active: true,
+        connectOnStart: true,
+        elsewhere: true,
+        shown: STATUSES.idle,
+      }),
+    );
+
+    expect(screen.getByTestId("autotrack-headline")).toHaveTextContent(
+      "Running in another tab",
+    );
+    expect(
+      screen.getByText(/This tab takes over when that one closes/),
+    ).toBeVisible();
+    expect(screen.queryByTestId("autotrack-follow")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Stop waiting" }));
+
+    expect(screen.getByTestId("autotrack-headline")).toHaveTextContent("Off");
+    // This tab only: the wish to connect on start stays
+    expect(useAutotrackStore.getState().connectOnStart).toBe(true);
+  });
+
   it("keeps the wish to connect on start in a checkbox", async () => {
     const user = userEvent.setup();
     await open();

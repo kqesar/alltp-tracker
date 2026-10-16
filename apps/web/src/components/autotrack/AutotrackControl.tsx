@@ -78,15 +78,18 @@ const AutotrackUnavailable = ({ onClose }: { onClose: () => void }) => (
 /** The status as the toolbar shows it: the dot's phase, its words, the race. */
 const useAutotrackSummary = () => {
   const active = useAutotrackStore((state) => state.active);
+  const elsewhere = useAutotrackStore((state) => state.elsewhere);
   const shown = useAutotrackStore((state) => state.shown);
   const unavailable = useAutotrackStore((state) => state.unavailable);
   return {
     headline: unavailable
       ? "Could not load: reload the page"
-      : headlineOf(shown, active),
-    phase: unavailable ? ("problem" as const) : phaseOf(shown, active),
+      : headlineOf(shown, active, elsewhere),
+    phase: unavailable
+      ? ("problem" as const)
+      : phaseOf(shown, active, elsewhere),
     race:
-      active && shown.code === "connected" && shown.race.active
+      active && !elsewhere && shown.code === "connected" && shown.race.active
         ? shown.race
         : null,
   };
@@ -186,16 +189,19 @@ export const AutotrackMoreBadge = () => {
 /**
  * Says the status to screen readers as it changes, politely: never while it
  * only passes through connecting or attaching, so a run is not narrated, but
- * when it connects, fails, needs the browser's prompt answered, or stops.
+ * when it connects, fails, needs the browser's prompt answered, waits for
+ * another tab, or stops.
  * Outside the control, so a folded control still speaks.
  */
 export const AutotrackLiveRegion = () => {
   const { headline, phase } = useAutotrackSummary();
   const shown = useAutotrackStore((state) => state.shown);
+  const elsewhere = useAutotrackStore((state) => state.elsewhere);
   const [said, setSaid] = useState("");
   const quiet =
-    shown.code === "idle" ||
-    (phase === "busy" && shown.code !== "local-network-prompt");
+    !elsewhere &&
+    (shown.code === "idle" ||
+      (phase === "busy" && shown.code !== "local-network-prompt"));
   const message = quiet ? said : `Autotracking: ${headline}`;
   if (message !== said) setSaid(message);
 

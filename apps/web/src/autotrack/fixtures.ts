@@ -278,6 +278,67 @@ export class FakeVisibility implements Visibility {
   }
 }
 
+/**
+ * The browser's Web Locks, shared by the tabs of one origin, for one lock
+ * at a time: granted to one holder until its callback's promise settles,
+ * the others queued in order unless they ask only if it is free. As in a
+ * browser, the callback runs a turn after the lock is granted.
+ */
+export class FakeLocks {
+  private held = false;
+  private readonly queue: (() => void)[] = [];
+
+  /** Whether a tab holds the lock. */
+  get isHeld() {
+    return this.held;
+  }
+
+  request(
+    _name: string,
+    options: LockOptions,
+    callback: (lock: Lock | null) => unknown,
+  ): Promise<unknown> {
+    if (this.held && options.ifAvailable) {
+      return Promise.resolve(callback(null));
+    }
+    return new Promise((resolve, reject) => {
+      const grant = () => {
+        this.held = true;
+        queueMicrotask(() => {
+          Promise.resolve(callback({ mode: "exclusive", name: _name }))
+            .then(resolve, reject)
+            .finally(() => {
+              this.held = false;
+              this.queue.shift()?.();
+            });
+        });
+      };
+      if (!this.held) {
+        grant();
+        return;
+      }
+      this.queue.push(grant);
+      options.signal?.addEventListener("abort", () => {
+        const at = this.queue.indexOf(grant);
+        if (at < 0) return;
+        this.queue.splice(at, 1);
+        reject(new DOMException("Aborted", "AbortError"));
+      });
+    });
+  }
+
+  /** Let the page see these locks, until the returned function is called. */
+  install(): () => void {
+    Object.defineProperty(navigator, "locks", {
+      configurable: true,
+      value: this,
+    });
+    return () => {
+      delete (navigator as { locks?: unknown }).locks;
+    };
+  }
+}
+
 /** A browser that lets the page reach the bridge. */
 export const GRANTED: LocalNetworkPermission = {
   query: () => Promise.resolve(PERMISSION),
