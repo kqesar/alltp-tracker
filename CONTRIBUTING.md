@@ -10,7 +10,7 @@ Branch off `master`, keep commits focused, open a pull request. Every PR runs li
 git switch -c feat/your-feature
 # ... work ...
 pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e
-pnpm commit          # commitizen, or write the message yourself
+pnpm commit          # prompts for each part, or write the message yourself
 git push -u origin feat/your-feature
 ```
 
