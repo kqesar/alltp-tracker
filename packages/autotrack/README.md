@@ -125,7 +125,7 @@ services/usb2snes/usb2snes.go at 77ba8ac44ec63fc1c5f41549b6da9851085790a2.
 - Replies carry no id, so the client keeps **one request in flight** and
   queues the rest. A reply that times out drops the socket: a late reply
   would be taken for the next request's.
-- `AppVersion` identifies the bridge (`SNI-0.0.103`, `QUsb2Snes-0.7.42`);
+- `AppVersion` identifies the bridge (`SNI-v0.0.103`, `QUsb2Snes-0.7.42`);
   `Name` names the client; `DeviceList`; `Attach` has no reply, so `Info`
   follows to confirm it (Protocol.md's advice).
 - `GetAddress` takes several `(address, size)` pairs. QUsb2Snes refuses a

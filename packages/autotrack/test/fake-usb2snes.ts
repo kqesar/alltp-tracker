@@ -70,7 +70,7 @@ export class FakeUsb2Snes {
     options: FakeOptions,
   ) {
     this.devices = options.devices ?? [SNI_RETROARCH];
-    this.appVersion = options.appVersion ?? "SNI-0.0.103";
+    this.appVersion = options.appVersion ?? "SNI-v0.0.103";
     this.refuseOrigin = options.refuseOrigin ?? false;
     this.chunk = options.chunk;
     this.replyDelayMs = options.replyDelayMs ?? 0;

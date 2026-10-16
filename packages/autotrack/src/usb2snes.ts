@@ -115,8 +115,10 @@ function bridgeOf(version: string): {
   kind: BridgeKind;
   version: string | null;
 } {
-  // SNI answers "SNI-0.0.103"; QUsb2Snes "QUsb2Snes-0.7.42".
-  const match = /^(SNI|QUsb2Snes)-(.+)$/i.exec(version.trim());
+  // SNI v0.0.103 answers "SNI-v0.0.103" (observed against a running SNI);
+  // QUsb2Snes "QUsb2Snes-0.7.42". The "v" is dropped so versions compare
+  // with SNI_LATEST_KNOWN.
+  const match = /^(SNI|QUsb2Snes)-v?(.+)$/i.exec(version.trim());
   if (match === null) return { kind: "unknown", version: version || null };
   return {
     kind: match[1].toLowerCase() === "sni" ? "sni" : "qusb2snes",
