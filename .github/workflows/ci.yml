@@ -21,6 +21,13 @@ on:
         description: "Lint execution status"
         value: ${{ jobs.ci.outputs.lint-status }}
 
+# A new push to a pull request makes its running checks obsolete: cancel them.
+# Pushes to master always run to the end. github.workflow differs when
+# validate-release calls this file, so those runs never cancel these.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
   checks: write
