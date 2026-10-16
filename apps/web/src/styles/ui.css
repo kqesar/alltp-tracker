@@ -200,7 +200,9 @@
   );
 }
 
-/* Tooltip: one per page, anchored to the control it describes */
+/* Tooltip: one per page, anchored to the control it describes. A press on
+   it goes through to the control it covers; Tooltip.tsx tells a hover on it
+   by position. */
 .tooltip {
   position: fixed;
   z-index: var(--z-tooltip);
@@ -214,6 +216,7 @@
   font-weight: 500;
   line-height: 1.4;
   color: var(--color-text);
+  pointer-events: none;
   background: var(--surface-3);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--border-radius);

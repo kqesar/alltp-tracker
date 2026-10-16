@@ -48,3 +48,29 @@ export const scheduleHide = (anchor: HTMLElement) => {
 
 /** Keep the tooltip open: the pointer is on it, or on a new anchor. */
 export const cancelHide = () => clearTimeout(hideTimer);
+
+/** The tooltip on screen, registered by the Tooltip component. */
+let tooltipElement: HTMLElement | null = null;
+
+export const setTooltipElement = (element: HTMLElement | null) => {
+  tooltipElement = element;
+};
+
+/**
+ * Whether a point lies on the tooltip shown. The tooltip takes no pointer
+ * events, so a press on it reaches the control it covers: hovering it is
+ * told by position instead.
+ * @param x - Client x of the pointer
+ * @param y - Client y of the pointer
+ */
+export const isOnTooltip = (x: number, y: number): boolean => {
+  const box = tooltipElement?.getBoundingClientRect();
+  return (
+    !!box &&
+    box.width > 0 &&
+    x >= box.left &&
+    x <= box.right &&
+    y >= box.top &&
+    y <= box.bottom
+  );
+};

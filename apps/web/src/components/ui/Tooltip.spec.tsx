@@ -60,17 +60,72 @@ describe("Tooltip", () => {
     expect(tooltip()).toBeNull();
   });
 
+  /** Lay the tooltip out at 100,100 – 300,140: jsdom does no layout. */
+  const placeTooltip = () =>
+    vi
+      .spyOn(tooltip() as HTMLElement, "getBoundingClientRect")
+      .mockReturnValue(new DOMRect(100, 100, 200, 40));
+  const mouse = { clientX: 150, clientY: 120, pointerType: "mouse" };
+
   it("stays while the pointer moves from its marker onto it", () => {
     vi.useFakeTimers();
     renderMap();
     const marker = screen.getByTestId("chest-marker-0");
 
     fireEvent.pointerEnter(marker, { pointerType: "mouse" });
+    placeTooltip();
     fireEvent.pointerLeave(marker, { pointerType: "mouse" });
-    fireEvent.pointerEnter(tooltip() as HTMLElement);
+    fireEvent.pointerMove(document.body, mouse);
     act(() => vi.advanceTimersByTime(500));
 
-    expect(tooltip()).not.toBeNull();
+    expect(tooltip()).toHaveTextContent("King's Tomb");
+  });
+
+  it("is not taken over by a control it covers, until the pointer leaves it", () => {
+    vi.useFakeTimers();
+    renderMap();
+    const marker = screen.getByTestId("chest-marker-0");
+    const covered = screen.getByTestId("chest-marker-1");
+    fireEvent.pointerEnter(marker, { pointerType: "mouse" });
+    placeTooltip();
+
+    // On the tooltip, over another marker: still the first one's
+    fireEvent.pointerLeave(marker, { pointerType: "mouse" });
+    fireEvent.pointerEnter(covered, mouse);
+    fireEvent.pointerMove(covered, mouse);
+    act(() => vi.advanceTimersByTime(500));
+    expect(tooltip()).toHaveTextContent("King's Tomb");
+
+    // Off the tooltip, still on that marker: now its own
+    fireEvent.pointerMove(covered, { ...mouse, clientY: 200 });
+    expect(tooltip()).not.toHaveTextContent("King's Tomb");
+  });
+
+  it("hides once the pointer leaves it for anything but its anchor", () => {
+    vi.useFakeTimers();
+    renderMap();
+    const marker = screen.getByTestId("chest-marker-0");
+    fireEvent.pointerEnter(marker, { pointerType: "mouse" });
+    placeTooltip();
+    fireEvent.pointerLeave(marker, { pointerType: "mouse" });
+    fireEvent.pointerMove(document.body, mouse);
+
+    fireEvent.pointerMove(document.body, { ...mouse, clientX: 400 });
+    act(() => vi.advanceTimersByTime(500));
+
+    expect(tooltip()).toBeNull();
+  });
+
+  it("hides on a press on it, which goes to the control it covers", () => {
+    renderMap();
+    fireEvent.pointerEnter(screen.getByTestId("chest-marker-0"), {
+      pointerType: "mouse",
+    });
+
+    // The browser sends a press on the tooltip to what lies under it
+    fireEvent.pointerDown(screen.getByTestId("chest-marker-1"), mouse);
+
+    expect(tooltip()).toBeNull();
   });
 
   it("follows the medallion picked while a dungeon is shown", () => {
