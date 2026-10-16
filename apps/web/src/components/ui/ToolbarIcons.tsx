@@ -26,6 +26,11 @@ export const RedoIcon = () => (
   <Icon path="m15 14 5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
 );
 
+/** A keyboard: three rows of keys, the space bar below. */
+export const KeyboardIcon = () => (
+  <Icon path="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8" />
+);
+
 export const ExportIcon = () => <Icon path="M12 3v12M7 10l5 5 5-5M5 21h14" />;
 
 export const ImportIcon = () => <Icon path="M12 15V3M7 8l5-5 5 5M5 21h14" />;

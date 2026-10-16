@@ -14,6 +14,22 @@ describe("Modal", () => {
       </Modal>,
     );
 
+  it("draws a wide dialog only when asked", () => {
+    const { rerender } = render(
+      <Modal isOpen onClose={vi.fn()} title="Test dialog" wide>
+        <p>Body content</p>
+      </Modal>,
+    );
+    expect(screen.getByRole("dialog")).toHaveClass("modal", "modal--wide");
+
+    rerender(
+      <Modal isOpen onClose={vi.fn()} title="Test dialog">
+        <p>Body content</p>
+      </Modal>,
+    );
+    expect(screen.getByRole("dialog")).not.toHaveClass("modal--wide");
+  });
+
   it("renders nothing when closed", () => {
     renderModal(false);
     expect(screen.queryByRole("dialog")).toBeNull();

@@ -12,6 +12,11 @@ type ModalProps = {
   children: ReactNode;
   /** Optional footer (e.g. action buttons) */
   footer?: ReactNode;
+  /**
+   * A wide dialog for long content: the body scrolls between a header and a
+   * footer that stay in view.
+   */
+  wide?: boolean;
 };
 
 /**
@@ -26,6 +31,7 @@ export const Modal = ({
   title,
   children,
   footer,
+  wide = false,
 }: ModalProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -60,7 +66,7 @@ export const Modal = ({
     // Keyboard users dismiss with Escape (the `cancel` event) instead.
     <dialog
       aria-labelledby={titleId}
-      className="modal"
+      className={wide ? "modal modal--wide" : "modal"}
       onCancel={(event) => {
         event.preventDefault();
         onCloseRef.current();
