@@ -87,6 +87,18 @@ describe("GameStore", () => {
 
       expect(useGameStore.getState().medallions[8]).toBe(2);
     });
+
+    it("steps a medallion through its four states both ways, wrapping", () => {
+      const { stepMedallion } = useGameStore.getState();
+      const seen = [1, 1, 1, 1].map(() => {
+        stepMedallion(9);
+        return useGameStore.getState().medallions[9];
+      });
+
+      expect(seen).toEqual([1, 2, 3, 0]);
+      useGameStore.getState().stepMedallion(9, -1);
+      expect(useGameStore.getState().medallions[9]).toBe(3);
+    });
   });
 
   it("toggles one chest and leaves the others alone", () => {

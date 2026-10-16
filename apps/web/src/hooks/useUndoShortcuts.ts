@@ -1,8 +1,6 @@
 import { useEffect } from "react";
 import { useGameStore } from "@/stores/gameStore";
-
-/** Elements whose own Ctrl+Z (text editing) must win over the tracker's. */
-const EDITABLE = "input, textarea, select, [contenteditable]";
+import { isAwayFromBoard } from "@/utils/keyboard";
 
 /**
  * Ctrl/Cmd+Z undoes the last change to the run; Ctrl/Cmd+Shift+Z and Ctrl+Y
@@ -13,10 +11,7 @@ export const useUndoShortcuts = () => {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
-      const target = event.target instanceof Element ? event.target : null;
-      if (target?.closest(EDITABLE) || document.querySelector("dialog[open]")) {
-        return;
-      }
+      if (isAwayFromBoard(event)) return;
 
       const key = event.key.toLowerCase();
       const { redo, undo } = useGameStore.getState();
