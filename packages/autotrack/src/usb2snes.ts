@@ -193,8 +193,13 @@ export class Usb2SnesTransport implements Transport {
         this.opened = true;
         resolve();
       };
-      // Browsers fire "error" then "close"; the close carries the code.
-      socket.onerror = () => {};
+      // A refused connection fires "error" then "close" in browsers, but
+      // "error" alone in Node 22's WebSocket: either one ends the attempt.
+      // Before the socket opens the close code is always 1006, so nothing
+      // is lost by not waiting for it. Once open, the close carries the code.
+      socket.onerror = () => {
+        if (!this.opened) this.shutdown(unreachable(undefined, "error"));
+      };
       socket.onclose = (event) => {
         if (this.opened) this.onSocketClose(event.code, event.reason);
         else this.shutdown(unreachable(event.code, event.reason));
