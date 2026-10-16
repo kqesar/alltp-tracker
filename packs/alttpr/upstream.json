@@ -307,22 +307,22 @@
     {
       "file": "tests/NoGlitches/PalaceOfDarknessTest.php",
       "fixture": "test/upstream/NoGlitches/PalaceOfDarkness.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/SkullWoodsTest.php",
       "fixture": "test/upstream/NoGlitches/SkullWoods.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/SwampPalaceTest.php",
       "fixture": "test/upstream/NoGlitches/SwampPalace.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/ThievesTownTest.php",
       "fixture": "test/upstream/NoGlitches/ThievesTown.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/NoGlitches/TowerOfHeraTest.php",
