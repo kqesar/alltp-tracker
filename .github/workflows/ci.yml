@@ -22,7 +22,7 @@ concurrency:
 
 permissions:
   contents: read
-  checks: write
+  # The coverage comment on pull requests
   pull-requests: write
 
 jobs:
@@ -52,6 +52,7 @@ jobs:
 
       # Every workspace: the web app, its config files and e2e suite, the engine
       - name: Type-check
+        id: typecheck
         run: pnpm typecheck
 
       - name: Run tests with coverage
@@ -85,8 +86,9 @@ jobs:
             echo "Coverage file not found"
           fi
 
+      # After a failure too, or the comment keeps the last green run's ✅
       - name: Comment PR with results
-        if: github.event_name == 'pull_request'
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         uses: actions/github-script@v9
         env:
           COVERAGE_AVAILABLE: ${{ env.COVERAGE_AVAILABLE }}
@@ -96,8 +98,11 @@ jobs:
           COVERAGE_BRANCHES: ${{ env.COVERAGE_BRANCHES }}
         with:
           script: |
-            const lintStatus = '${{ steps.lint.outcome }}' === 'success' ? '✅' : '❌';
-            const testStatus = '${{ steps.test.outcome }}' === 'success' ? '✅' : '❌';
+            // A step that never ran, because an earlier one failed, is skipped
+            const icon = (outcome) => ({ success: '✅', skipped: '⏭️' })[outcome] ?? '❌';
+            const lintStatus = icon('${{ steps.lint.outcome }}');
+            const typecheckStatus = icon('${{ steps.typecheck.outcome }}');
+            const testStatus = icon('${{ steps.test.outcome }}');
 
             // Coverage section
             let coverageSection = '';
@@ -135,13 +140,14 @@ jobs:
             `;
             }
 
-            const hasFailures = lintStatus === '❌' || testStatus === '❌';
+            const hasFailures = '${{ job.status }}' !== 'success';
 
             const comment = `## 🔍 CI Results
 
             | Check | Status |
             |-------|--------|
             | Linting | ${lintStatus} |
+            | Type-check | ${typecheckStatus} |
             | Tests | ${testStatus} |
             ${coverageSection}
             ${hasFailures ? '❌ Some checks failed. Please review the logs above.' : '✅ All checks passed!'}
