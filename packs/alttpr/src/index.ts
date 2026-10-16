@@ -51,9 +51,11 @@ export {
   type DungeonDef,
   type DungeonId,
   dungeon,
+  dungeonItemCount,
   dungeonLocations,
   dungeonPool,
   dungeonRegions,
+  dungeonStatus,
 } from "./dungeons";
 export {
   EVENT_LOCATIONS,

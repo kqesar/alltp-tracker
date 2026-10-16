@@ -178,6 +178,38 @@ location or several (a cave's chests), or for a dungeon's item locations.
 stands for: available when all are `yes`, possible when some are `yes` or
 `maybe`, unavailable otherwise.
 
+**Dungeon counters.** The player counts down a dungeon's items without
+saying which chests they opened. `dungeonItemCount(dungeon, settings)` is
+where the counter starts: the dungeon's item locations, less the dungeon
+items that stay in it (each class that is not wild), which are no items to
+the player. The pools of `config/item.php:94-147` give, for the standard,
+`mc`, `mcs` and `full` dungeon items:
+
+| Dungeon | standard | mc | mcs | full |
+| --- | --- | --- | --- | --- |
+| Hyrule Castle | 8 | 9 | 10 | 10 |
+| Eastern Palace | 3 | 5 | 5 | 6 |
+| Desert Palace | 2 | 4 | 5 | 6 |
+| Tower of Hera | 2 | 4 | 5 | 6 |
+| Castle Tower | 0 | 0 | 2 | 2 |
+| Palace of Darkness | 5 | 7 | 13 | 14 |
+| Swamp Palace | 6 | 8 | 9 | 10 |
+| Skull Woods | 2 | 4 | 7 | 8 |
+| Thieves' Town | 4 | 6 | 7 | 8 |
+| Ice Palace | 3 | 5 | 7 | 8 |
+| Misery Mire | 2 | 4 | 7 | 8 |
+| Turtle Rock | 5 | 7 | 11 | 12 |
+| Ganon's Tower | 20 | 22 | 26 | 27 |
+
+`dungeonStatus(remaining, tris)` reads a counter with R items left from the
+tris of all its item locations. The R items sit at distinct locations the
+player has not opened, so when R exceeds the `maybe` and `no` locations
+together, one item is surely at a `yes` one: available. Otherwise possible
+while some location is `yes` or `maybe`, else unavailable. "As many
+reachable locations as items left" would be wrong: with two `yes` and two
+`no` locations and two items left, the player may have opened the two
+`yes` ones. A property checks the rule against every way R items can sit.
+
 ## The key model
 
 Outside keysanity the player does not track the dungeons' small keys, nor
