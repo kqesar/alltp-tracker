@@ -21,5 +21,9 @@ export default defineProject({
     include: ["src/**/*.spec.{ts,tsx}"],
     name: "web",
     setupFiles: ["src/test-setup.ts"],
+    // A hung test, not a slow one: specs take ~200 ms, but parallel worktree
+    // runs under coverage slow them 25x past the 5 s default. Timing budgets
+    // are asserted by their own tests.
+    testTimeout: 20_000,
   },
 });
