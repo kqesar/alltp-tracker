@@ -14,6 +14,14 @@ let fetches = 0;
 /** A fresh copy of the button's module, its dialog not fetched yet. */
 const freshButton = () => import("@/components/ui/ShortcutsButton");
 
+/**
+ * How long to wait for the dialog's code: each test fetches its module graph
+ * afresh (resetModules), the alltpr pack included through the keymap's
+ * dungeon names, which a busy machine evaluates in well over the default
+ * second.
+ */
+const LOADED = { timeout: 10_000 };
+
 describe("ShortcutsButton's dialog code", () => {
   beforeEach(() => {
     fetches = 0;
@@ -39,7 +47,7 @@ describe("ShortcutsButton's dialog code", () => {
     await userEvent.click(button);
 
     expect(
-      await screen.findByRole("dialog", { name: "Keyboard shortcuts" }),
+      await screen.findByRole("dialog", { name: "Keyboard shortcuts" }, LOADED),
     ).toBeInTheDocument();
     expect(fetches).toBe(1);
   });
