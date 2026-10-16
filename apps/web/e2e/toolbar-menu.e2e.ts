@@ -10,19 +10,104 @@ const openTracker = async (page: Page) => {
   await expect(page.getByTestId("item-grid")).toBeVisible();
 };
 
-/** How many rows the toolbar's controls take. */
-const toolbarRows = (page: Page) =>
+/**
+ * Text metrics wider than macOS's system font, as Linux and Windows fonts
+ * can be: every toolbar label takes more room, on any machine.
+ */
+const WIDE_FONT = ".toolbar, .toolbar * { letter-spacing: 0.08em !important; }";
+
+/** Let the toolbar settle: its observers run before the next frames. */
+const settle = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      ),
+  );
+
+/**
+ * What the toolbar shows: whether the More menu is in use, how many rows the
+ * actions take, and how far anything sticks out sideways.
+ */
+const toolbarLayout = (page: Page) =>
   page.getByTestId("toolbar").evaluate((bar) => {
+    const visible = (element: Element) =>
+      element.getBoundingClientRect().width > 0;
     const controls = [
       ...bar.querySelectorAll("button:not(fieldset button), fieldset"),
-    ].filter((control) => control.getBoundingClientRect().width > 0);
+    ].filter((control) => visible(control) && !control.closest("[role=menu]"));
     // Controls of one row share their vertical centre (align-items: center)
-    const centres = controls.map((control) => {
-      const box = control.getBoundingClientRect();
-      return Math.round((box.top + box.bottom) / 2);
-    });
-    return new Set(centres).size;
+    const rows = new Set(
+      controls.map((control) => {
+        const box = control.getBoundingClientRect();
+        return Math.round((box.top + box.bottom) / 2);
+      }),
+    ).size;
+    const right = bar.getBoundingClientRect().right;
+    const more = bar.querySelector('[data-testid="toolbar-more"]');
+    return {
+      fit: (bar as HTMLElement).dataset.fit ?? "none",
+      more: Boolean(more && visible(more)),
+      overflow: Math.max(
+        document.documentElement.scrollWidth - window.innerWidth,
+        ...controls.map(
+          (control) => control.getBoundingClientRect().right - right,
+        ),
+      ),
+      rows,
+    };
   });
+
+/**
+ * Sweep the viewport from phone to wide desktop and check, at each width,
+ * what must hold on any machine whatever its fonts: the full bar on one row,
+ * the bar with its More menu on at most two, nothing sticking out, and no
+ * switching back and forth once settled.
+ */
+const sweep = async (page: Page) => {
+  const broken: string[] = [];
+  for (let width = 360; width <= 1920; width += 40) {
+    await page.setViewportSize({ height: 900, width });
+    await settle(page);
+    const layout = await toolbarLayout(page);
+    await settle(page);
+    const later = await toolbarLayout(page);
+    const problems = [
+      layout.more
+        ? layout.rows > 2 && "over 2 rows"
+        : layout.rows !== 1 && "full bar wraps",
+      layout.overflow > 0.5 &&
+        `${Math.round(layout.overflow)} px past the edge`,
+      later.fit !== layout.fit && `jitters ${layout.fit} → ${later.fit}`,
+    ].filter(Boolean);
+    if (problems.length > 0) broken.push(`${width}px: ${problems.join(", ")}`);
+  }
+  return broken;
+};
+
+for (const [name, css] of [
+  ["the system font", ""],
+  ["a wider font", WIDE_FONT],
+] as const) {
+  test(`the toolbar holds from 360 to 1920 px with ${name}`, async ({
+    page,
+  }) => {
+    await openTracker(page);
+    if (css) await page.addStyleTag({ content: css });
+
+    expect(await sweep(page)).toEqual([]);
+    // Measuring the bar never touches its state: a measured copy of a
+    // checked radio would uncheck the real one, in the same radio group
+    await expect(page.getByRole("radio", { name: "Auto" })).toBeChecked();
+    // Folded on a phone, everything in view on a wide desktop
+    await page.setViewportSize({ height: 844, width: 390 });
+    await settle(page);
+    expect((await toolbarLayout(page)).more).toBe(true);
+    await page.setViewportSize({ height: 900, width: 1920 });
+    await settle(page);
+    expect((await toolbarLayout(page)).more).toBe(false);
+  });
+}
 
 /** Whether the focused element draws the focus ring. */
 const focusRinged = (page: Page) =>
@@ -43,30 +128,6 @@ const tabTo = async (page: Page, testId: string) => {
   throw new Error(`Tab never reached ${testId}`);
 };
 
-test("the toolbar keeps to one row from 640 px, and to two on a phone", async ({
-  page,
-}) => {
-  await openTracker(page);
-  const rows: Record<number, number> = {};
-  for (const width of [360, 390, 640, 768, 820, 1024, 1200, 1280, 1440, 1920]) {
-    await page.setViewportSize({ height: 900, width });
-    rows[width] = await toolbarRows(page);
-  }
-
-  expect(rows).toEqual({
-    360: 2,
-    390: 2,
-    640: 1,
-    768: 1,
-    820: 1,
-    1024: 1,
-    1200: 1,
-    1280: 1,
-    1440: 1,
-    1920: 1,
-  });
-});
-
 for (const width of WIDTHS) {
   test.describe(`at ${width}px`, () => {
     const phone = width < 600;
@@ -76,29 +137,28 @@ for (const width of WIDTHS) {
       viewport: { height: phone ? 844 : 900, width },
     });
 
-    test(
-      phone
-        ? "folds the secondary actions into the More menu"
-        : "shows every action in the toolbar, with no More menu",
-      async ({ page }) => {
-        await openTracker(page);
-        const more = page.getByTestId("toolbar-more");
-        const secondary = [
-          page.getByRole("button", { name: "Export" }),
-          page.getByRole("button", { name: "Import" }),
-          page.getByTestId("stream-view-button"),
-          page.getByTestId("shortcuts-button"),
-        ];
+    test("offers every secondary action once: in the bar or in More", async ({
+      page,
+    }) => {
+      await openTracker(page);
+      const more = page.getByTestId("toolbar-more");
+      const secondary = [
+        page.getByRole("button", { name: "Export" }),
+        page.getByRole("button", { name: "Import" }),
+        page.getByTestId("stream-view-button"),
+        page.getByTestId("shortcuts-button"),
+      ];
 
-        if (phone) {
-          await expect(more).toBeVisible();
-          for (const button of secondary) await expect(button).toBeHidden();
-        } else {
-          await expect(more).toBeHidden();
-          for (const button of secondary) await expect(button).toBeVisible();
-        }
-      },
-    );
+      if (await more.isVisible()) {
+        for (const button of secondary) await expect(button).toBeHidden();
+        await more.click();
+        await expect(page.getByRole("menuitem")).toHaveCount(4);
+      } else {
+        for (const button of secondary) await expect(button).toBeVisible();
+      }
+      // A phone has no room for the full bar, whatever its font
+      if (phone) await expect(more).toBeVisible();
+    });
   });
 }
 

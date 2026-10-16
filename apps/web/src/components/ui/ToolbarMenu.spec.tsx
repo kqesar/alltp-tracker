@@ -112,6 +112,33 @@ describe("the toolbar's More menu", () => {
     expect(more()).toHaveFocus();
   });
 
+  it("closes when the toolbar unfolds and its button goes away", async () => {
+    const watched: ((entries: unknown[]) => void)[] = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: (entries: unknown[]) => void) {
+          watched.push(callback);
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    try {
+      await openMenu();
+      expect(menu()).toBeVisible();
+
+      // Still shown: a resize that keeps the button changes nothing
+      act(() => watched.at(-1)?.([{ contentRect: { width: 40 } }]));
+      expect(menu()).toBeVisible();
+      act(() => watched.at(-1)?.([{ contentRect: { width: 0 } }]));
+
+      expect(screen.queryByRole("menu")).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("closes on a press anywhere else, or on its button again", async () => {
     const user = await openMenu();
 
