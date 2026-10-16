@@ -99,6 +99,11 @@ test.describe("the stream view", () => {
     const cell = await cellOf(page);
     expect(await alphaAt(page, grid.x + cell / 4, grid.y + cell / 2)).toBe(0);
     expect(await alphaAt(page, hammer.x + 2, hammer.y + 2)).toBe(0);
+    // ...and of a boss not beaten, once drawn on an opaque black square
+    const boss = await page.getByTestId("item-boss0").boundingBox();
+    expect(boss).toBeTruthy();
+    if (!boss) return;
+    expect(await alphaAt(page, boss.x + 2, boss.y + 2)).toBe(0);
     // ...while the icon itself is drawn
     expect(
       await alphaAt(

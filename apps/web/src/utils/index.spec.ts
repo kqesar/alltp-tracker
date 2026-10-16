@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { defaultItemGrid } from "@/data/items";
-import { toWorldPosition, visibleRows } from "@/utils";
+import {
+  getItemBackground,
+  isItemDimmed,
+  toWorldPosition,
+  visibleRows,
+} from "@/utils";
 
 describe("toWorldPosition", () => {
   it("spreads a Light World marker across its own square", () => {
@@ -55,5 +60,17 @@ describe("visibleRows", () => {
     expect(rows.flat()).not.toContain("bigkey3");
     // A key cell sharing its row with other items keeps its place
     expect(rows.flat()).toContain("bigkey0");
+  });
+});
+
+describe("a boss cell", () => {
+  it("draws its one portrait whether beaten or not", () => {
+    expect(getItemBackground("boss3", 1)).toBe("url(/assets/boss32.png)");
+    expect(getItemBackground("boss3", 2)).toBe(getItemBackground("boss3", 1));
+  });
+
+  it("is dimmed until its boss is beaten", () => {
+    expect(isItemDimmed("boss3", 1)).toBe(true);
+    expect(isItemDimmed("boss3", 2)).toBe(false);
   });
 });

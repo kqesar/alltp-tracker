@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { GridItem } from "@/components/tracker/grid/GridItem";
 import { useGameStore } from "@/stores/gameStore";
@@ -35,6 +35,27 @@ describe("GridItem", () => {
     expect(screen.getByTestId("chest-overlay-8")).toBeInTheDocument();
     expect(screen.getByTestId("reward-overlay-8")).toBeInTheDocument();
     expect(screen.getByTestId("medallion-overlay-8")).toBeInTheDocument();
+  });
+
+  it("greys a boss not beaten, as a missing item, never its overlays", () => {
+    render(<GridItem col={6} item="boss8" row={5} />);
+    const boss = screen.getByTestId("item-boss8");
+    const overlays = [
+      "chest-overlay-8",
+      "reward-overlay-8",
+      "medallion-overlay-8",
+    ];
+
+    expect(boss).toHaveAccessibleName(/^Vitreous, not defeated\./);
+    expect(boss).toHaveClass("griditem--dimmed");
+    for (const id of overlays) {
+      expect(screen.getByTestId(id)).not.toHaveClass("griditem--dimmed");
+    }
+
+    fireEvent.click(boss);
+
+    expect(boss).toHaveAccessibleName(/^Vitreous, defeated\./);
+    expect(boss).not.toHaveClass("griditem--dimmed");
   });
 
   it("omits the medallion overlay for dungeons that are not gated", () => {
