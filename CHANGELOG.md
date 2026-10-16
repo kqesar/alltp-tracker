@@ -2,6 +2,113 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.11.0](https://github.com/kqesar/alltp-tracker/compare/v2.10.1...v2.11.0) (2026-10-16)
+
+
+### ✨ Features
+
+* **alttpr:** derive Palace of Darkness's key fact from the items ([b613dbb](https://github.com/kqesar/alltp-tracker/commit/b613dbba168b0efcd9e81919bb645b10d3f6a115))
+* **alttpr:** each boss's canBeat from Boss.php, and the boss of each dungeon ([3943403](https://github.com/kqesar/alltp-tracker/commit/394340397e20be3f3454b76c349e897ee6eeb737))
+* **alttpr:** medallion pads as knowledge in the state ([5eca633](https://github.com/kqesar/alltp-tracker/commit/5eca633d39b23e8993d5a076d0d127187d898363))
+* **alttpr:** model the items as the randomizer counts them ([3ac1e03](https://github.com/kqesar/alltp-tracker/commit/3ac1e035e623c0d6ea1046d57209f4779b77fa3f))
+* **alttpr:** port Desert Palace ([311cc72](https://github.com/kqesar/alltp-tracker/commit/311cc72ec2dcd03e0c90fb07475142bf1cabde7d))
+* **alttpr:** port East Death Mountain from LightWorld/DeathMountain/East.php ([2151427](https://github.com/kqesar/alltp-tracker/commit/2151427ec50b9047b3798ab9e5eadd7cb1476294))
+* **alttpr:** port Eastern Palace, the pilot region, against its upstream cases ([72435a3](https://github.com/kqesar/alltp-tracker/commit/72435a388420926882e8ebb9ddc927eeda3aeacb))
+* **alttpr:** port Ganon's Tower from GanonsTower.php ([445f222](https://github.com/kqesar/alltp-tracker/commit/445f222a480371a4cf01b69403a81b8fcfc26882))
+* **alttpr:** port Hyrule Castle Tower, held to HyruleCastleTowerTest ([acfdb28](https://github.com/kqesar/alltp-tracker/commit/acfdb286658985a3c4f646f20fa8cdfa4ff10480))
+* **alttpr:** port Ice Palace, against its upstream cases ([62eae68](https://github.com/kqesar/alltp-tracker/commit/62eae68c4c9fa50c803850bde184e5e8cd008bd6))
+* **alttpr:** port Misery Mire from MiseryMire.php ([b1d647c](https://github.com/kqesar/alltp-tracker/commit/b1d647c85288679eb1375699aa352a310198fc14))
+* **alttpr:** port North East Dark World and Ganon, from DarkWorld/NorthEast.php ([fea34ff](https://github.com/kqesar/alltp-tracker/commit/fea34ffc3b362d812ec9db60a0431cfb9c74b1ce))
+* **alttpr:** port North West Dark World, from DarkWorld/NorthWest.php ([2b71f15](https://github.com/kqesar/alltp-tracker/commit/2b71f15f0104cd84554098f1cd17bbf4c9de134c))
+* **alttpr:** port Open's escape, held to OpenTest ([ca42f6e](https://github.com/kqesar/alltp-tracker/commit/ca42f6e6d0754c578b1367a40d59b706aca982cc))
+* **alttpr:** port Palace of Darkness ([9c13684](https://github.com/kqesar/alltp-tracker/commit/9c1368439309d62b5dfb79191548b7fb65e90be8))
+* **alttpr:** port Skull Woods ([cf25b25](https://github.com/kqesar/alltp-tracker/commit/cf25b253cc4d2a5928c87aebe6c17d71defccf06))
+* **alttpr:** port South Dark World, from DarkWorld/South.php ([aa9bc1b](https://github.com/kqesar/alltp-tracker/commit/aa9bc1ba51ecdbe29dedf01945f54035c05423d3))
+* **alttpr:** port Swamp Palace ([8a6bf37](https://github.com/kqesar/alltp-tracker/commit/8a6bf37f5b0dfd5b200ff1e9a3c5a2c14cba9e87))
+* **alttpr:** port the Dark World's East Death Mountain, Hookshot and Superbunny caves ([4ef88d5](https://github.com/kqesar/alltp-tracker/commit/4ef88d5853bbe6c56eb88b87fe19ef6088da6bf8))
+* **alttpr:** port the Dark World's West Death Mountain, Spike Cave ([5611be8](https://github.com/kqesar/alltp-tracker/commit/5611be8c1a614781e2ad40da5be2e90df239747d))
+* **alttpr:** port the fairy fountains' prizes from Fountains.php ([5742ce2](https://github.com/kqesar/alltp-tracker/commit/5742ce215dc032098f6e1e9c1d50991ac83df56d))
+* **alttpr:** port the medallion pads from Medallions.php ([5c807be](https://github.com/kqesar/alltp-tracker/commit/5c807be862bc8b551bed8c6e77d1d36a98187289))
+* **alttpr:** port the Mire, from DarkWorld/Mire.php ([e43db30](https://github.com/kqesar/alltp-tracker/commit/e43db30ca99dce648bb230100e1e10f65ee33b86))
+* **alttpr:** port the North East Light World, Sahasrahla to Zora's waterfall ([d2110bf](https://github.com/kqesar/alltp-tracker/commit/d2110bf8e64ae2247da6a83950e3539a04ea872b))
+* **alttpr:** port the North West Light World, the Lost Woods to the graveyard ([3e72e4f](https://github.com/kqesar/alltp-tracker/commit/3e72e4f5fa37a796d423bb1875787f880ed8437d))
+* **alttpr:** port the South Light World, Link's House to the desert and the lake ([b178af5](https://github.com/kqesar/alltp-tracker/commit/b178af5dce4336c61d9bf09aae6daefe74648f17))
+* **alttpr:** port the Standard escape, held to HyruleCastleEscapeTest ([5f6f854](https://github.com/kqesar/alltp-tracker/commit/5f6f854289563ad4224051c9a0daad92be9b6b57))
+* **alttpr:** port Thieves' Town ([b39a4b1](https://github.com/kqesar/alltp-tracker/commit/b39a4b1292d391097e753041778ee283c3742ea5))
+* **alttpr:** port Tower of Hera, its two ways in as parts of the module ([9c42e34](https://github.com/kqesar/alltp-tracker/commit/9c42e348a95de3f7ae7e434f0a2be0a40d7bc76a))
+* **alttpr:** port Turtle Rock from TurtleRock.php, with its three ways in ([38f0ee3](https://github.com/kqesar/alltp-tracker/commit/38f0ee387568b2c30a0660449a995cf736d29d3d))
+* **alttpr:** port West Death Mountain from LightWorld/DeathMountain/West.php ([4c8e169](https://github.com/kqesar/alltp-tracker/commit/4c8e169eab2694a68d189d253aa423b7cc657c42))
+* **alttpr:** settings the rules compile with, from World.php ([94e363b](https://github.com/kqesar/alltp-tracker/commit/94e363b213c8a693d2d572759c54e4f876d38860))
+* **alttpr:** the item helpers of ItemCollection.php as named rules ([ee2317b](https://github.com/kqesar/alltp-tracker/commit/ee2317bb73863463088c7205cad43e9d64f21f0c))
+* **alttpr:** the world model, from Region.php and the two worlds ([208265b](https://github.com/kqesar/alltp-tracker/commit/208265bf669a94bf115d381ec2700b443f252af5))
+* **autotrack:** add the session state machine and its diagnostics ([6200cc4](https://github.com/kqesar/alltp-tracker/commit/6200cc4ceaaf78587f6755729745222457cadd0b))
+* **autotrack:** add the usb2snes transport and read planning ([a67c62a](https://github.com/kqesar/alltp-tracker/commit/a67c62a3d45ccf7da95b0718897c01ef19ae97ae))
+* **autotrack:** model the setup guide and a copyable diagnostic report ([313f1a4](https://github.com/kqesar/alltp-tracker/commit/313f1a48070f8efb4ddb1909d2c019dd1302ee79))
+* **autotrack:** poll a pack's ranges with Race Mode compliant by construction ([a3c7b4a](https://github.com/kqesar/alltp-tracker/commit/a3c7b4a8aac1b7fda6ddc90a731ce9e3fd03dca0))
+* **engine:** add compile-time settings to the requirement language ([a7edfe3](https://github.com/kqesar/alltp-tracker/commit/a7edfe3941e6eca375aa241551415f3a469b5d1b))
+* **engine:** explain a location's value with its route and a trace ([4d8ef66](https://github.com/kqesar/alltp-tracker/commit/4d8ef661405d0c66760be5ccdcf888b9530a4d10))
+* **engine:** let location requirements reach() another region ([7f744f2](https://github.com/kqesar/alltp-tracker/commit/7f744f2eaf2254656c2f6f70f3300179af371523))
+* **engine:** list what blocks a location with analyze().blockers ([3ad9050](https://github.com/kqesar/alltp-tracker/commit/3ad905080c0e8b032e5dc76fda89c22f8d5a13e7))
+* **engine:** solve what the player can see into a visible channel ([43d1666](https://github.com/kqesar/alltp-tracker/commit/43d1666364d14368cb7ff98efaed1386ec18f826))
+* **web:** add a stream view for OBS browser sources ([42f762c](https://github.com/kqesar/alltp-tracker/commit/42f762cad3f5ab94a9bec406aa047ef449cb795b))
+* **web:** draw missing items greyed in the app as on stream ([24c87b6](https://github.com/kqesar/alltp-tracker/commit/24c87b62d4a3b0b61577957049a1b1728f560f35))
+* **web:** draw the favicon and app icons as pixel-art Triforce ([d401303](https://github.com/kqesar/alltp-tracker/commit/d401303cd5ff1ac32dbff14775c3e7acd19f4605))
+* **web:** fold the secondary toolbar actions into a More menu ([eedba0d](https://github.com/kqesar/alltp-tracker/commit/eedba0d25ac360cbd578f10989dd1abe1e37d8d3))
+* **web:** give the item icons a 1-game-pixel black outline ([feb7eb5](https://github.com/kqesar/alltp-tracker/commit/feb7eb58d3f2e642ca41bf69ec7dd3508d9a2aa8))
+* **web:** give the keysanity keys the items' black outline ([2044642](https://github.com/kqesar/alltp-tracker/commit/2044642ea94a7b3d86731ffeb53042c44f6f90ad))
+* **web:** grey a boss not beaten like a missing item ([a6709b6](https://github.com/kqesar/alltp-tracker/commit/a6709b6297151334b76ed697bc1fa1d1c2ea15a2))
+* **web:** grey a key not found like a missing item, with no box ([5b86340](https://github.com/kqesar/alltp-tracker/commit/5b863405c8d36b6d327cf39a54056a22334a5fc0))
+* **web:** keep a keyboard shortcut keymap as a device preference ([ada6b80](https://github.com/kqesar/alltp-tracker/commit/ada6b80ab1e50ada6a95db637c156014c011e9dd))
+* **web:** let the stream view take new versions on its own ([b0cf5e4](https://github.com/kqesar/alltp-tracker/commit/b0cf5e48eddcd3cd31f630b46adca2a58a91f9b2))
+* **web:** open the stream view from the toolbar ([f0bd4ec](https://github.com/kqesar/alltp-tracker/commit/f0bd4ec222539450b55197bcd11cd1a82910d4f2))
+* **web:** rebind the keyboard shortcuts in a dialog ([c6f94e6](https://github.com/kqesar/alltp-tracker/commit/c6f94e613539a394d02399f260f1d18064e7c2e5))
+* **web:** show the latest version on reload, offer it to open tabs ([4f17246](https://github.com/kqesar/alltp-tracker/commit/4f1724652a026cd28dd3a99134a94f11fcbf5b9b))
+* **web:** step grid controls with keyboard shortcuts ([f3c7485](https://github.com/kqesar/alltp-tracker/commit/f3c748575e63b052a651077ac25d0ee60a9afe6a))
+* **web:** take the item shortcuts in the stream view too ([013d19e](https://github.com/kqesar/alltp-tracker/commit/013d19ec952ee70192e7216fa98c59aace7356af))
+* **web:** work offline and install as an app ([f724898](https://github.com/kqesar/alltp-tracker/commit/f72489892516abfcacacdb92d70bdc9a06af7f7b))
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** name the state's names once, for every compiled world ([4ea1827](https://github.com/kqesar/alltp-tracker/commit/4ea1827a57881438373652d0e7148218dd69d23e))
+* **autotrack:** end a refused connection on its error event too ([96398fe](https://github.com/kqesar/alltp-tracker/commit/96398fe65e2061c19c80cff59d5b10328bc62758))
+* **autotrack:** read the version SNI actually reports ([6166614](https://github.com/kqesar/alltp-tracker/commit/6166614039fc2b19c295a58a6dc29c0e2d69b54e))
+* **claude:** run the Biome hook in the worktree an agent edits ([f00727a](https://github.com/kqesar/alltp-tracker/commit/f00727ac3cbc7f37a204350f2f60d185e5462281))
+* **web:** check every image for a backdrop, not a hand-picked list ([1451082](https://github.com/kqesar/alltp-tracker/commit/14510822602dc9f5e89bcea43d2fc55660899a07))
+* **web:** draw the chest counts and the missing sword and shield opaque ([284fcc0](https://github.com/kqesar/alltp-tracker/commit/284fcc0abe732b12717c48508ba53530613fa3c9))
+* **web:** fold the toolbar by its measured fit, not by breakpoints ([ce604ec](https://github.com/kqesar/alltp-tracker/commit/ce604ec8f541057374a13434c4e2a6782fb53d64))
+* **web:** fold the toolbar further until it holds on two rows ([93b2afd](https://github.com/kqesar/alltp-tracker/commit/93b2afd690825a05cad4017e572978880ef55841))
+* **web:** give the bottle icons a transparent background ([3b77679](https://github.com/kqesar/alltp-tracker/commit/3b776799620f77374c525180ab8fd1b59633bec8))
+* **web:** keep the skip links hidden at any text size ([e62735c](https://github.com/kqesar/alltp-tracker/commit/e62735cb7b0e6f5f3344c38fe9c106ed97da55ec))
+* **web:** let a press on a tooltip reach the item it covers ([6d7c84c](https://github.com/kqesar/alltp-tracker/commit/6d7c84c39f9eb90c64e8f41ef643ae355f0b3bf5))
+* **web:** say Cmd+Z on a Mac ([648bcf0](https://github.com/kqesar/alltp-tracker/commit/648bcf08f785535fdec3ae40974cabd131d1fc81))
+* **web:** show the focus ring on the toolbar buttons ([c41a64d](https://github.com/kqesar/alltp-tracker/commit/c41a64da2d9b19b6cf9610251259517029c585a8))
+* **web:** show the toolbar labels only where they fit on one row ([86398fa](https://github.com/kqesar/alltp-tracker/commit/86398fa7b8cb2523232579386d1237d490e558c3))
+
+
+### ⚡ Performance Improvements
+
+* **web:** load the shortcuts dialog's code apart from the app ([d618569](https://github.com/kqesar/alltp-tracker/commit/d6185693ef30ac7017085cc17f0060f0877f6018))
+
+
+### 📚 Documentation
+
+* **autotrack:** cover the RetroArch AppImage in the Linux setup guide ([2727f10](https://github.com/kqesar/alltp-tracker/commit/2727f1089241411bcde66ecbeb21cd2ca8bb4dac))
+* **autotrack:** document the architecture, diagnostic codes and sources ([0181e1e](https://github.com/kqesar/alltp-tracker/commit/0181e1e9b3fc13ea157522dc81055d125688e707))
+* **autotrack:** record what a real SNI and RetroArch session showed ([76f3e24](https://github.com/kqesar/alltp-tracker/commit/76f3e24f9f8e9da503587d4f3414f183e5449f63))
+* **claude:** add the logic-drift skill ([8b5abda](https://github.com/kqesar/alltp-tracker/commit/8b5abdaa9214cdc9425ff0a0d7e3e4d8099502ae))
+* **claude:** list the autotrack workspace and its commit scope ([8acb2f7](https://github.com/kqesar/alltp-tracker/commit/8acb2f7524972d269276b00e5c11bfa5f854d944))
+* **claude:** note the stream view and the service worker ([681f1d4](https://github.com/kqesar/alltp-tracker/commit/681f1d48368a1043e5a386dc4510aca6915566f8))
+* describe the alttpr pack and add its area rule ([6b1a922](https://github.com/kqesar/alltp-tracker/commit/6b1a922672354f3c25e89e25d704255385209e7b))
+* **engine:** drop the settled wiring question ([f7146c4](https://github.com/kqesar/alltp-tracker/commit/f7146c416731449bbd9d6de1c5a4e4783547b395))
+* explain streaming with OBS ([952a47a](https://github.com/kqesar/alltp-tracker/commit/952a47abd0f0333aae511ae30c36fff5b15d6b2b))
+
+
+### 🔧 Code Refactoring
+
+* **web:** name the grid rows shown on screen ([d43eae4](https://github.com/kqesar/alltp-tracker/commit/d43eae43aef4975035ffff1a521d77284808e7cd))
+* **web:** share the board's key guard and the medallion step ([dc18acc](https://github.com/kqesar/alltp-tracker/commit/dc18acc6f1d2b5a77080d7eede644c03aeba91bd))
+
 ### [2.10.1](https://github.com/kqesar/alltp-tracker/compare/v2.10.0...v2.10.1) (2026-10-16)
 
 
