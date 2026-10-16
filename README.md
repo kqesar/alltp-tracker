@@ -1,6 +1,6 @@
 # A Link to the Past Tracker
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/kqesar/alltp-tracker/deploy-pages.yml?branch=master&label=build)
+![Build Status](https://img.shields.io/github/actions/workflow/status/kqesar/alltp-tracker/ci.yml?branch=master&label=build)
 ![Version](https://img.shields.io/github/v/release/kqesar/alltp-tracker?label=version)
 ![License](https://img.shields.io/github/license/kqesar/alltp-tracker?label=license)
 

@@ -6,9 +6,11 @@ on:
   push:
     branches: [master]
   pull_request:
+  # Run from the Actions tab on master to redeploy the site
+  workflow_dispatch:
 
 # A new push to a pull request makes its running checks obsolete: cancel them.
-# Pushes to master always run to the end.
+# Pushes to master always run to the end, so deployments never overlap.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -198,6 +200,14 @@ jobs:
       - name: Run browser tests
         run: pnpm test:e2e
 
+      # The production build the browser tests just served is the one that
+      # ships: the deploy job publishes it without building again.
+      - name: Upload the site for GitHub Pages
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: apps/web/dist/
+
       - name: Upload the report of a failed run
         if: failure()
         uses: actions/upload-artifact@v7
@@ -205,3 +215,22 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report/
           retention-days: 7
+
+  # Master only, once both test jobs pass: a pull request's ref is
+  # refs/pull/…, so this never runs for one.
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: [ci, e2e]
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy the site
+        id: deployment
+        uses: actions/deploy-pages@v5
