@@ -1,10 +1,11 @@
 name: CI
 
 on:
+  # "*" stops at a slash, so it never matched feat/… or dependabot/… branches:
+  # run on every pull request, whatever its branch, and on master once merged.
   push:
-    branches: ["*"]
+    branches: [master]
   pull_request:
-    branches: ["*"]
   workflow_call:
     inputs:
       build:
