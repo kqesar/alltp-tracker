@@ -36,6 +36,7 @@ pnpm lint:fix                # Biome check --write
 pnpm test                    # Run tests once (vitest run)
 pnpm test:coverage           # Run tests with coverage (enforces the floors)
 pnpm test:e2e                # Playwright + axe on the production build, 4 widths (~10 s)
+                             # port 4173; another worktree at once: E2E_PORT=<free port>
 pnpm vitest run <file>       # One spec file; add -t "name" to filter by test name
 ```
 
