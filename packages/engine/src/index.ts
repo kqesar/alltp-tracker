@@ -1,6 +1,22 @@
 // Public entry point of @alltp/engine. The app's no-barrel rule covers src/
 // of the app; a package needs one stable surface, and this is it.
 export {
+  type AndExpr,
+  type ConstExpr,
+  type CountExpr,
+  type Expr,
+  type HelperExpr,
+  IDENTIFIER,
+  type ItemExpr,
+  isIdentifier,
+  type MaybeExpr,
+  type OrExpr,
+  RESERVED_WORDS,
+  walk,
+} from "./ast";
+export { ParseError, parse } from "./parser";
+export { print } from "./printer";
+export {
   and,
   compare,
   fromRank,
