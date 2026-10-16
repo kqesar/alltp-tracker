@@ -12,6 +12,8 @@ import {
   type PersistedState,
   type Prefs,
   type Progress,
+  toSaveFile,
+  validateProgress,
 } from "@/stores/persistence";
 import type { MapLayout } from "@/utils";
 
@@ -31,8 +33,10 @@ type GameState = Progress &
     setMapLayout: (layout: MapLayout) => void;
 
     // Persistence helpers
+    /** The run as the text of a save file */
     exportState: () => string;
-    importState: (json: string) => boolean;
+    /** Replace the run with a save already read by `parseSave`; display prefs are kept */
+    loadProgress: (progress: Partial<Progress>) => void;
 
     /** Start a new game with the current preset; display prefs are kept */
     reset: () => void;
@@ -60,7 +64,7 @@ const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
 /** Lay saved progress over fresh progress; a missing field keeps its fresh value. */
 const restoreProgress = (
   base: Progress,
-  saved: Partial<PersistedState>,
+  saved: Partial<Progress>,
 ): Progress => ({
   chestsOpened: base.chestsOpened.map(
     (opened, index) => saved.chestsOpened?.[index] ?? opened,
@@ -75,24 +79,32 @@ const restoreProgress = (
 });
 
 /** Lay saved display preferences over the current ones. */
-const restorePrefs = (base: Prefs, saved: Partial<PersistedState>): Prefs => ({
+const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
   bigKeysVisible:
     typeof saved.bigKeysVisible === "boolean"
       ? saved.bigKeysVisible
       : base.bigKeysVisible,
-  mapLayout: saved.mapLayout ?? base.mapLayout,
+  mapLayout:
+    saved.mapLayout === "side-by-side" || saved.mapLayout === "stacked"
+      ? saved.mapLayout
+      : base.mapLayout,
 });
 
-/** Project the store onto its serializable form. */
-const toPersisted = (state: GameState): PersistedState => ({
-  bigKeysVisible: state.bigKeysVisible,
+/** The run alone, as a save file carries it. */
+const progressOf = (state: GameState): Progress => ({
   chestsOpened: state.chestsOpened,
   items: state.items,
-  mapLayout: state.mapLayout,
   medallions: state.medallions,
   presetId: state.presetId,
   settings: state.settings,
   smallKeys: state.smallKeys,
+});
+
+/** Project the store onto what localStorage keeps. */
+const toPersisted = (state: GameState): PersistedState => ({
+  ...progressOf(state),
+  bigKeysVisible: state.bigKeysVisible,
+  mapLayout: state.mapLayout,
 });
 
 export const useGameStore = create<GameState>()(
@@ -117,7 +129,8 @@ export const useGameStore = create<GameState>()(
           }),
         caption: "",
 
-        exportState: () => JSON.stringify(toPersisted(get()), null, 2),
+        exportState: () =>
+          JSON.stringify(toSaveFile(progressOf(get())), null, 2),
 
         handleItemClick: (item: string) => {
           if (!item || item === "blank") return;
@@ -189,19 +202,8 @@ export const useGameStore = create<GameState>()(
           set({ smallKeys: newSmallKeys });
         },
 
-        importState: (json: string) => {
-          try {
-            const parsed = JSON.parse(json);
-            if (typeof parsed !== "object" || parsed === null) return false;
-            // Export files carry no version yet: version 1 is the one with
-            // `dungeonsBeaten`, anything else was written by version 2.
-            const version = "dungeonsBeaten" in parsed ? 1 : 2;
-            set(restoreProgress(createProgress(), migrate(parsed, version)));
-            return true;
-          } catch {
-            return false;
-          }
-        },
+        loadProgress: (progress: Partial<Progress>) =>
+          set(restoreProgress(createProgress(), progress)),
 
         reset: () => set(createProgress(get().presetId)),
 
@@ -221,11 +223,13 @@ export const useGameStore = create<GameState>()(
       }),
       {
         merge: (persisted, current) => {
-          const saved = (persisted ?? {}) as Partial<PersistedState>;
+          const saved = (persisted ?? {}) as Record<string, unknown>;
+          // Lenient: a field that fails validation keeps its fresh value
+          // instead of discarding the whole save.
           return {
             ...current,
-            ...restoreProgress(current, saved),
-            ...restorePrefs(current, saved),
+            ...restoreProgress(current, validateProgress(saved).value),
+            ...restorePrefs(current, saved as Partial<Prefs>),
           };
         },
         migrate: (persisted, version) =>

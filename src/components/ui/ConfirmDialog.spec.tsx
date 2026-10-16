@@ -26,6 +26,12 @@ describe("ConfirmDialog", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
   });
 
+  it("opens with focus on Cancel, so Enter cannot confirm by accident", () => {
+    setup({ tone: "danger" });
+
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
+  });
+
   it("calls onConfirm when confirming", () => {
     const { onConfirm } = setup({ confirmLabel: "Delete", tone: "danger" });
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));

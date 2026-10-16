@@ -2,9 +2,16 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { chests } from "@/data/chests";
 import { dungeons } from "@/data/dungeons";
 import { useGameStore } from "@/stores/gameStore";
-import { PERSIST_VERSION } from "@/stores/persistence";
+import { PERSIST_VERSION, parseSave } from "@/stores/persistence";
 
 const STORAGE_KEY = "alltp-tracker-state";
+
+/** Read a save file and load it, as Import does once the player confirms. */
+const importSave = (json: string) => {
+  const save = parseSave(json);
+  if (!save.ok) throw new Error(save.reason);
+  useGameStore.getState().loadProgress(save.progress);
+};
 
 /** Write a save the way an older release left it in localStorage. */
 const storeSave = (state: object, version: number) =>
@@ -167,7 +174,7 @@ describe("GameStore", () => {
       reset();
       expect(useGameStore.getState().chestsOpened[2]).toBe(false);
 
-      expect(useGameStore.getState().importState(saved)).toBe(true);
+      importSave(saved);
 
       const state = useGameStore.getState();
       expect(state.items.hookshot).toBe(true);
@@ -181,7 +188,7 @@ describe("GameStore", () => {
       useGameStore.getState().setMapLayout("stacked");
       useGameStore.getState().setBigKeysVisible(true);
 
-      useGameStore.getState().importState(saved);
+      importSave(saved);
 
       expect(useGameStore.getState().mapLayout).toBe("stacked");
       expect(useGameStore.getState().bigKeysVisible).toBe(true);
@@ -189,12 +196,13 @@ describe("GameStore", () => {
 
     it("reads a version 1 export, whose map kept its own beaten flags", () => {
       const v1Export = JSON.stringify({
-        chestsOpened: [true],
+        // Version 1 tables had 65 chests
+        chestsOpened: [true, ...Array(64).fill(false)],
         dungeonsBeaten: [false, true],
         items: { boss0: 2, hookshot: true },
       });
 
-      expect(useGameStore.getState().importState(v1Export)).toBe(true);
+      importSave(v1Export);
 
       const { items, chestsOpened } = useGameStore.getState();
       expect(items.boss0).toBe(2);
@@ -211,7 +219,7 @@ describe("GameStore", () => {
       chestsOpened[20] = true; // the chest after it
       chestsOpened[64] = true; // the last chest
 
-      useGameStore.getState().importState(JSON.stringify({ chestsOpened }));
+      importSave(JSON.stringify({ chestsOpened }));
 
       const opened = useGameStore.getState().chestsOpened;
       expect(opened).toHaveLength(chests.length);
@@ -219,13 +227,6 @@ describe("GameStore", () => {
       expect(opened[19]).toBe(true);
       expect(opened[63]).toBe(true);
       expect(opened.filter(Boolean)).toHaveLength(3);
-    });
-
-    it("rejects input that is not a JSON object", () => {
-      const { importState } = useGameStore.getState();
-
-      expect(importState("not valid json")).toBe(false);
-      expect(importState("null")).toBe(false);
     });
   });
 
@@ -241,10 +242,25 @@ describe("GameStore", () => {
       expect(stored.state).not.toHaveProperty("caption");
     });
 
+    it("restores the valid fields of a damaged save and resets the rest", async () => {
+      storeSave(
+        { items: { flute: true }, medallions: "x", smallKeys: [99] },
+        PERSIST_VERSION,
+      );
+
+      await useGameStore.persist.rehydrate();
+
+      const state = useGameStore.getState();
+      expect(state.items.flute).toBe(true);
+      expect(state.medallions).toEqual(Array(10).fill(0));
+      expect(state.smallKeys).toEqual(Array(10).fill(0));
+    });
+
     it("upgrades a version 1 save, folding map-beaten bosses into the grid", async () => {
       storeSave(
         {
-          chestsOpened: [false, true],
+          // Version 1 tables had 65 chests
+          chestsOpened: Array.from({ length: 65 }, (_, index) => index === 1),
           dungeonsBeaten: [false, false, false, true],
           items: { boss5: 2 },
           mapLayout: "stacked",

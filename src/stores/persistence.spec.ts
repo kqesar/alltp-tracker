@@ -1,0 +1,114 @@
+import { describe, expect, it } from "vitest";
+import { chests } from "@/data/chests";
+import {
+  PERSIST_VERSION,
+  parseSave,
+  SAVE_FORMAT,
+  toSaveFile,
+  validateProgress,
+} from "@/stores/persistence";
+
+/** The reason a save was refused; fails the test if it was accepted. */
+const refusal = (json: string) => {
+  const save = parseSave(json);
+  if (save.ok) throw new Error("expected the save to be refused");
+  return save.reason;
+};
+
+/** A save file in the current format around the given progress fields. */
+const saveFile = (progress: object, version = PERSIST_VERSION) =>
+  JSON.stringify({ format: SAVE_FORMAT, progress, version });
+
+describe("parseSave", () => {
+  it("reads a file written by the current version", () => {
+    const save = parseSave(
+      saveFile({ items: { bow: 2, hookshot: true }, presetId: "keysanity" }),
+    );
+
+    expect(save).toEqual({
+      ok: true,
+      progress: { items: { bow: 2, hookshot: true }, presetId: "keysanity" },
+    });
+  });
+
+  it("round-trips what toSaveFile writes", () => {
+    const progress = {
+      chestsOpened: chests.map((_, index) => index === 5),
+      items: { boss2: 2, glove: 2 },
+      medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 3],
+      presetId: "open",
+      settings: {
+        entranceShuffle: "none",
+        goal: "ganon",
+        keysanity: false,
+        mode: "open",
+      },
+      smallKeys: [0, 1, 0, 6, 0, 0, 0, 0, 0, 0],
+    } as const;
+
+    const save = parseSave(JSON.stringify(toSaveFile(progress as never)));
+
+    expect(save).toEqual({ ok: true, progress });
+  });
+
+  it("refuses text that is not JSON", () => {
+    expect(refusal("not valid json")).toMatch(/not valid JSON/);
+  });
+
+  it.each([
+    ["null", "null"],
+    ["an array", "[]"],
+    ["an empty object", "{}"],
+    ["an unrelated object", '{"name":"package.json"}'],
+  ])("refuses %s as not a tracker save", (_, json) => {
+    expect(refusal(json)).toMatch(/not a tracker save/);
+  });
+
+  it("refuses a file from a newer version", () => {
+    expect(refusal(saveFile({}, PERSIST_VERSION + 1))).toMatch(/newer version/);
+  });
+
+  it("names the field that holds a value the tracker cannot show", () => {
+    expect(refusal(saveFile({ items: { flute: 1 } }))).toMatch(
+      /items\.flute must be true or false/,
+    );
+    expect(refusal(saveFile({ items: { bow: 9 } }))).toMatch(
+      /items\.bow must be a whole number from 0 to 3/,
+    );
+    expect(refusal(saveFile({ medallions: "x" }))).toMatch(/medallions/);
+    expect(refusal(saveFile({ presetId: "nope" }))).toMatch(/presetId "nope"/);
+  });
+
+  it("ignores items this version no longer tracks", () => {
+    const save = parseSave(saveFile({ items: { dungeon: 3, hookshot: true } }));
+
+    expect(save).toEqual({ ok: true, progress: { items: { hookshot: true } } });
+  });
+
+  it("migrates a bare version 1 export", () => {
+    const save = parseSave(
+      JSON.stringify({ dungeonsBeaten: [true], items: { hookshot: true } }),
+    );
+
+    expect(save).toEqual({
+      ok: true,
+      progress: { items: { boss0: 2, hookshot: true } },
+    });
+  });
+});
+
+describe("validateProgress", () => {
+  it("keeps the valid fields and reports each invalid one", () => {
+    const { value, errors } = validateProgress({
+      chestsOpened: [true],
+      items: { hookshot: true },
+      smallKeys: Array(10).fill(9),
+    });
+
+    expect(value).toEqual({ items: { hookshot: true } });
+    expect(errors).toEqual([
+      `chestsOpened must hold ${chests.length} true/false flags`,
+      "smallKeys must hold 10 counts within each dungeon's keys",
+    ]);
+  });
+});

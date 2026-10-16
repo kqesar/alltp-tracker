@@ -31,6 +31,8 @@ export const ConfirmDialog = ({
       <>
         <button
           className="modal-btn modal-btn--ghost"
+          // Start on the safe choice: Enter must not confirm by accident
+          data-autofocus
           onClick={onCancel}
           type="button"
         >

@@ -14,13 +14,11 @@ type ModalProps = {
   footer?: ReactNode;
 };
 
-const FOCUSABLE =
-  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-
 /**
- * Accessible modal dialog rendered in a portal. Handles Escape, backdrop
- * click, focus restoration and a simple focus trap so keyboard users stay
- * inside the dialog. Replaces the native window.confirm/alert dialogs.
+ * A modal dialog on the native `<dialog>` element. `showModal()` gives the
+ * focus trap, the inert page behind and the backdrop; Escape fires `cancel`
+ * on the topmost dialog only, so a confirmation stacked over a list closes on
+ * its own. Focus returns to whatever opened the dialog.
  */
 export const Modal = ({
   isOpen,
@@ -29,60 +27,50 @@ export const Modal = ({
   children,
   footer,
 }: ModalProps) => {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const previouslyFocused = useRef<HTMLElement | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
+  // Read the latest onClose without re-running the open effect: callers pass
+  // inline callbacks, and re-opening on every render would steal focus.
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    if (!isOpen) return;
-    previouslyFocused.current = document.activeElement as HTMLElement | null;
+    onCloseRef.current = onClose;
+  });
 
-    // Focus the first focusable element (or the dialog itself)
-    const focusables =
-      dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE);
-    (focusables?.[0] ?? dialogRef.current)?.focus();
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!isOpen || !dialog) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab" || !dialogRef.current) return;
-
-      const items = dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE);
-      if (items.length === 0) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
+    const opener = document.activeElement as HTMLElement | null;
+    dialog.showModal();
+    // showModal() focuses the first focusable element, the close button; a
+    // dialog can name a better starting point with data-autofocus.
+    dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      previouslyFocused.current?.focus?.();
+      dialog.close();
+      opener?.focus?.();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="modal-backdrop" onClick={onClose}>
-      <div
-        aria-labelledby={titleId}
-        aria-modal="true"
-        className="modal"
-        onClick={(event) => event.stopPropagation()}
-        ref={dialogRef}
-        role="dialog"
-        tabIndex={-1}
-      >
+    // The dialog's own box is the backdrop's hit area: its content fills the
+    // inner surface, so a click whose target is the dialog landed outside it.
+    // Keyboard users dismiss with Escape (the `cancel` event) instead.
+    <dialog
+      aria-labelledby={titleId}
+      className="modal"
+      onCancel={(event) => {
+        event.preventDefault();
+        onCloseRef.current();
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onCloseRef.current();
+      }}
+      ref={dialogRef}
+    >
+      <div className="modal__surface">
         <header className="modal__header">
           <h2 className="modal__title" id={titleId}>
             {title}
@@ -90,7 +78,7 @@ export const Modal = ({
           <button
             aria-label="Close dialog"
             className="modal__close"
-            onClick={onClose}
+            onClick={() => onCloseRef.current()}
             type="button"
           >
             ×
@@ -99,7 +87,7 @@ export const Modal = ({
         <div className="modal__body">{children}</div>
         {footer && <footer className="modal__footer">{footer}</footer>}
       </div>
-    </div>,
+    </dialog>,
     document.body,
   );
 };

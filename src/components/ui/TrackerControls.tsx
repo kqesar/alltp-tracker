@@ -1,18 +1,26 @@
-import { type ChangeEvent, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import { PresetSelector } from "@/components/ui/PresetSelector";
 import { useGameStore } from "@/stores/gameStore";
+import { type Progress, parseSave } from "@/stores/persistence";
+
+/** How long a status message such as "Save imported" stays on screen. */
+const STATUS_DURATION_MS = 4000;
+
+/** Time left for the browser to start a download before its URL is freed. */
+const DOWNLOAD_URL_LIFETIME_MS = 1000;
 
 /**
  * TrackerControls - floating controls to reset progress and export/import a
  * save file. Progress is persisted automatically; these give the user manual
- * control over starting fresh and moving a save between devices.
+ * control over starting fresh and moving a save between devices. An import is
+ * read and validated first, then applied only once the player confirms.
  */
 export const TrackerControls = () => {
   const reset = useGameStore((state) => state.reset);
   const exportState = useGameStore((state) => state.exportState);
-  const importState = useGameStore((state) => state.importState);
+  const loadProgress = useGameStore((state) => state.loadProgress);
   const mapLayout = useGameStore((state) => state.mapLayout);
   const setMapLayout = useGameStore((state) => state.setMapLayout);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,10 +29,28 @@ export const TrackerControls = () => {
 
   const [isResetOpen, setIsResetOpen] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  // A save that was read and validated, waiting for the player to confirm
+  const [pendingImport, setPendingImport] = useState<Partial<Progress> | null>(
+    null,
+  );
+  const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    if (!status) return;
+    const timer = setTimeout(() => setStatus(""), STATUS_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   const confirmReset = () => {
     reset();
     setIsResetOpen(false);
+    setStatus("New game started.");
+  };
+
+  const confirmImport = () => {
+    if (pendingImport) loadProgress(pendingImport);
+    setPendingImport(null);
+    setStatus("Save imported.");
   };
 
   const handleExport = () => {
@@ -32,9 +58,13 @@ export const TrackerControls = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "alltp-tracker-save.json";
+    link.download = `alltp-tracker-save-${new Date().toISOString().slice(0, 10)}.json`;
+    // Firefox only follows a download link that is in the document
+    document.body.append(link);
     link.click();
-    URL.revokeObjectURL(url);
+    link.remove();
+    // The download reads the blob after this handler returns
+    setTimeout(() => URL.revokeObjectURL(url), DOWNLOAD_URL_LIFETIME_MS);
   };
 
   const handleImportClick = () => fileInputRef.current?.click();
@@ -47,10 +77,11 @@ export const TrackerControls = () => {
 
     const reader = new FileReader();
     reader.onload = () => {
-      if (!importState(String(reader.result))) {
-        setImportError("This file is not a valid tracker save.");
-      }
+      const save = parseSave(String(reader.result));
+      if (save.ok) setPendingImport(save.progress);
+      else setImportError(save.reason);
     };
+    reader.onerror = () => setImportError("This file could not be read.");
     reader.readAsText(file);
   };
 
@@ -98,11 +129,18 @@ export const TrackerControls = () => {
         accept="application/json,.json"
         aria-hidden="true"
         className="sr-only"
+        data-testid="import-file"
         onChange={handleImportFile}
         ref={fileInputRef}
         tabIndex={-1}
         type="file"
       />
+      <output
+        className="tracker-controls__status"
+        data-testid="controls-status"
+      >
+        {status}
+      </output>
 
       <ConfirmDialog
         confirmLabel="New game"
@@ -111,6 +149,16 @@ export const TrackerControls = () => {
         onCancel={() => setIsResetOpen(false)}
         onConfirm={confirmReset}
         title="Start a new game?"
+        tone="danger"
+      />
+
+      <ConfirmDialog
+        confirmLabel="Replace progress"
+        isOpen={pendingImport !== null}
+        message="Importing this save replaces the progress tracked now."
+        onCancel={() => setPendingImport(null)}
+        onConfirm={confirmImport}
+        title="Import this save?"
         tone="danger"
       />
 

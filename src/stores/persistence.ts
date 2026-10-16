@@ -1,6 +1,18 @@
-import { BOSS_STATES } from "@/constants";
+import {
+  BOSS_STATES,
+  MEDALLION_VALUES,
+  SMALL_KEYS_MAX_BY_INDEX,
+} from "@/constants";
+import { chests } from "@/data/chests";
+import { items as freshItems, itemsMax, itemsMin } from "@/data/items";
 import type { ItemState } from "@/data/logic";
-import type { RunSettings } from "@/data/presets";
+import {
+  ENTRANCE_LABELS,
+  GOAL_LABELS,
+  MODE_LABELS,
+  presets,
+  type RunSettings,
+} from "@/data/presets";
 import type { MapLayout } from "@/utils";
 
 /** The run in progress: everything "New game" clears. */
@@ -26,6 +38,10 @@ export type Prefs = {
 
 /** What localStorage holds and what a save file carries. */
 export type PersistedState = Progress & Prefs;
+
+/** A plain object, as opposed to null, an array or a primitive. */
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Bumped whenever PersistedState changes shape; `migrate` upgrades older saves. */
 export const PERSIST_VERSION = 3;
@@ -81,11 +97,192 @@ export const migrate = (
   saved: unknown,
   version: number,
 ): Partial<PersistedState> => {
-  if (typeof saved !== "object" || saved === null || Array.isArray(saved)) {
-    return {};
-  }
-  let state = saved as Record<string, unknown>;
+  if (!isRecord(saved)) return {};
+  let state = saved;
   if (version < 2) state = migrateV1(state);
   if (version < 3) state = migrateV2(state);
   return state as Partial<PersistedState>;
+};
+
+/** An array of `length` entries that each pass `check`. */
+const isArrayOf = (
+  value: unknown,
+  length: number,
+  check: (entry: unknown, index: number) => boolean,
+): value is unknown[] =>
+  Array.isArray(value) && value.length === length && value.every(check);
+
+/** A whole number within [min, max]. */
+const isIntIn = (value: unknown, min: number, max: number): value is number =>
+  Number.isInteger(value) &&
+  (value as number) >= min &&
+  (value as number) <= max;
+
+/** Keep the saved items this version tracks and that hold a legal value. */
+const validateItems = (
+  saved: Record<string, unknown>,
+  errors: string[],
+): Partial<ItemState> => {
+  const valid: Record<string, number | boolean> = {};
+  for (const [id, value] of Object.entries(saved)) {
+    const fresh = freshItems[id];
+    // An item this version no longer tracks: ignore it rather than fail
+    if (fresh === undefined) continue;
+    if (typeof fresh === "boolean") {
+      if (typeof value === "boolean") valid[id] = value;
+      else errors.push(`items.${id} must be true or false`);
+    } else if (isIntIn(value, itemsMin[id], itemsMax[id])) {
+      valid[id] = value;
+    } else {
+      errors.push(
+        `items.${id} must be a whole number from ${itemsMin[id]} to ${itemsMax[id]}`,
+      );
+    }
+  }
+  return valid as Partial<ItemState>;
+};
+
+/** Run settings whose every field names a known option. */
+const isRunSettings = (value: unknown): value is RunSettings =>
+  isRecord(value) &&
+  typeof value.keysanity === "boolean" &&
+  typeof value.mode === "string" &&
+  value.mode in MODE_LABELS &&
+  typeof value.goal === "string" &&
+  value.goal in GOAL_LABELS &&
+  typeof value.entranceShuffle === "string" &&
+  value.entranceShuffle in ENTRANCE_LABELS;
+
+/**
+ * Check a saved run, already migrated to the current shape, field by field
+ * against the current tables.
+ * @returns The fields that passed, and one message per field that did not.
+ * Absent fields are neither: restoring falls back to a fresh value for them.
+ */
+export const validateProgress = (
+  saved: Record<string, unknown>,
+): { value: Partial<Progress>; errors: string[] } => {
+  const value: Partial<Progress> = {};
+  const errors: string[] = [];
+
+  if (saved.items !== undefined) {
+    if (isRecord(saved.items)) {
+      value.items = validateItems(saved.items, errors) as ItemState;
+    } else errors.push("items must be an object");
+  }
+
+  if (saved.chestsOpened !== undefined) {
+    if (
+      isArrayOf(
+        saved.chestsOpened,
+        chests.length,
+        (opened) => typeof opened === "boolean",
+      )
+    ) {
+      value.chestsOpened = saved.chestsOpened as boolean[];
+    } else
+      errors.push(`chestsOpened must hold ${chests.length} true/false flags`);
+  }
+
+  if (saved.medallions !== undefined) {
+    if (
+      isArrayOf(saved.medallions, 10, (medallion) =>
+        isIntIn(medallion, MEDALLION_VALUES.UNKNOWN, MEDALLION_VALUES.QUAKE),
+      )
+    ) {
+      value.medallions = saved.medallions as number[];
+    } else errors.push("medallions must hold 10 values from 0 to 3");
+  }
+
+  if (saved.smallKeys !== undefined) {
+    if (
+      isArrayOf(saved.smallKeys, 10, (count, index) =>
+        isIntIn(count, 0, SMALL_KEYS_MAX_BY_INDEX[index]),
+      )
+    ) {
+      value.smallKeys = saved.smallKeys as number[];
+    } else
+      errors.push("smallKeys must hold 10 counts within each dungeon's keys");
+  }
+
+  if (saved.presetId !== undefined) {
+    if (presets.some((preset) => preset.id === saved.presetId)) {
+      value.presetId = saved.presetId as string;
+    } else
+      errors.push(
+        `presetId "${String(saved.presetId)}" is not a known run type`,
+      );
+  }
+
+  if (saved.settings !== undefined) {
+    if (isRunSettings(saved.settings)) value.settings = saved.settings;
+    else
+      errors.push("settings must name a known mode, goal and entrance shuffle");
+  }
+
+  return { errors, value };
+};
+
+/** Marks a file written by exportState. */
+export const SAVE_FORMAT = "alltp-tracker-save";
+
+/** The contents of an exported save file. */
+export const toSaveFile = (progress: Progress) => ({
+  format: SAVE_FORMAT,
+  progress,
+  version: PERSIST_VERSION,
+});
+
+/** What reading a save file produced. */
+export type ParsedSave =
+  | { ok: true; progress: Partial<Progress> }
+  | { ok: false; reason: string };
+
+/**
+ * Read an exported save without applying it: unwrap, migrate and validate.
+ * Accepts the current file format and the bare objects older versions wrote.
+ * @param json - The file's text
+ */
+export const parseSave = (json: string): ParsedSave => {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    return { ok: false, reason: "This file is not valid JSON." };
+  }
+  const notASave = {
+    ok: false,
+    reason: "This file is not a tracker save.",
+  } as const;
+  if (!isRecord(parsed)) return notASave;
+
+  const isSaveFile = parsed.format === SAVE_FORMAT;
+  // Bare exports predate the file format: version 1 is the one that kept
+  // `dungeonsBeaten`, anything else was written by version 2.
+  const version = isSaveFile
+    ? parsed.version
+    : "dungeonsBeaten" in parsed
+      ? 1
+      : 2;
+  if (!Number.isInteger(version)) return notASave;
+  if ((version as number) > PERSIST_VERSION) {
+    return {
+      ok: false,
+      reason: "This save was written by a newer version of the tracker.",
+    };
+  }
+
+  const migrated = migrate(
+    isSaveFile ? parsed.progress : parsed,
+    version as number,
+  );
+  const { value, errors } = validateProgress(migrated);
+  if (errors.length > 0) {
+    return {
+      ok: false,
+      reason: `This save holds invalid data: ${errors.join("; ")}.`,
+    };
+  }
+  if (Object.keys(value).length === 0) return notASave;
+  return { ok: true, progress: value };
 };

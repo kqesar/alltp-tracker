@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { TrackerControls } from "@/components/ui/TrackerControls";
 import { useGameStore } from "@/stores/gameStore";
@@ -12,7 +12,7 @@ const fakeState = {
   // are needed too.
   applyPreset: vi.fn(),
   exportState: vi.fn(() => "{}"),
-  importState: vi.fn(() => true),
+  loadProgress: vi.fn(),
   mapLayout: "side-by-side" as "side-by-side" | "stacked",
   presetId: "open",
   reset,
@@ -91,5 +91,87 @@ describe("TrackerControls", () => {
     expect(setMapLayout).toHaveBeenCalledWith("side-by-side");
 
     fakeState.mapLayout = "side-by-side";
+  });
+});
+
+/** Choose a file in the hidden import input, as the file picker would. */
+const chooseFile = (text: string) =>
+  fireEvent.change(screen.getByTestId("import-file"), {
+    target: { files: [new File([text], "save.json")] },
+  });
+
+describe("TrackerControls import", () => {
+  it("asks before replacing progress, then loads the save and says so", async () => {
+    render(<TrackerControls />);
+
+    chooseFile(JSON.stringify({ items: { hookshot: true } }));
+
+    const confirm = await screen.findByRole("dialog", {
+      name: "Import this save?",
+    });
+    expect(fakeState.loadProgress).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      within(confirm).getByRole("button", { name: "Replace progress" }),
+    );
+
+    expect(fakeState.loadProgress).toHaveBeenCalledWith({
+      items: { hookshot: true },
+    });
+    expect(screen.getByTestId("controls-status")).toHaveTextContent(
+      "Save imported.",
+    );
+  });
+
+  it("keeps the progress when the import is cancelled", async () => {
+    render(<TrackerControls />);
+
+    chooseFile(JSON.stringify({ items: { hookshot: true } }));
+    await screen.findByRole("dialog", { name: "Import this save?" });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(fakeState.loadProgress).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("explains why a file was refused and loads nothing", async () => {
+    render(<TrackerControls />);
+
+    chooseFile("{}");
+
+    const dialog = await screen.findByRole("dialog", { name: "Import failed" });
+    expect(dialog).toHaveTextContent("This file is not a tracker save.");
+    expect(fakeState.loadProgress).not.toHaveBeenCalled();
+  });
+});
+
+describe("TrackerControls export", () => {
+  it("downloads through a link in the page and frees the file URL afterwards", () => {
+    vi.useFakeTimers();
+    const createObjectURL = vi.fn(() => "blob:save");
+    const revokeObjectURL = vi.fn();
+    Object.assign(URL, { createObjectURL, revokeObjectURL });
+    let linkWasInPage = false;
+    let fileName = "";
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        linkWasInPage = this.isConnected;
+        fileName = this.download;
+      });
+
+    render(<TrackerControls />);
+    fireEvent.click(screen.getByRole("button", { name: "Export" }));
+
+    expect(linkWasInPage).toBe(true);
+    expect(fileName).toMatch(/^alltp-tracker-save-\d{4}-\d{2}-\d{2}\.json$/);
+    expect(document.querySelector("a[download]")).toBeNull();
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+
+    vi.runAllTimers();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:save");
+
+    click.mockRestore();
+    vi.useRealTimers();
   });
 });
