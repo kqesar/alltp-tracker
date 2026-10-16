@@ -219,6 +219,23 @@ describe("what a dungeon shows", () => {
     expect(dungeonStateOf("ganons-tower", store())).toBe("unavailable");
   });
 
+  it("wants a dungeon's map and compass for its boss in keysanity", () => {
+    act(() => store().applyPreset("keysanity"));
+    give({ bigkey0: 1, bow: 2, lantern: true });
+    // Wild maps and compasses: the boss may hold them, so it is a maybe
+    expect(bossStateOf("eastern-palace", store())).toBe("possible");
+    expect(trackerInput(store()).items).toMatchObject({ bigKeyP1: 1 });
+
+    give({ map0: 1 });
+    expect(bossStateOf("eastern-palace", store())).toBe("possible");
+    give({ compass0: 1 });
+    expect(trackerInput(store()).items).toMatchObject({
+      compassP1: 1,
+      mapP1: 1,
+    });
+    expect(bossStateOf("eastern-palace", store())).toBe("available");
+  });
+
   it("shows a boss beaten as done, and else whether its rule holds", () => {
     expect(bossStateOf("eastern-palace", store())).toBe("unavailable");
     give({ bow: 2, lantern: true });

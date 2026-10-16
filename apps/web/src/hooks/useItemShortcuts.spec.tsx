@@ -326,6 +326,20 @@ describe("item shortcuts", () => {
     expect(state().smallKeys[3]).toBe(1);
   });
 
+  it("steps a map or a compass only in keysanity, where its key cell shows it", async () => {
+    const user = userEvent.setup();
+    render(<Board />);
+    act(() => useGameStore.getState().setBigKeysVisible(true));
+    setKeymap({ "advance:compass3": "KeyL", "advance:map3": "KeyK" });
+
+    await user.keyboard("kl");
+    expect([items().map3, items().compass3]).toEqual([0, 0]);
+
+    act(() => useGameStore.getState().applyPreset("keysanity"));
+    await user.keyboard("kl");
+    expect([items().map3, items().compass3]).toEqual([1, 1]);
+  });
+
   describe("and the focused cell's own '-'", () => {
     it("still steps the focused cell back when '-' is no shortcut", async () => {
       const user = userEvent.setup();

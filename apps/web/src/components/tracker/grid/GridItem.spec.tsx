@@ -91,6 +91,60 @@ describe("GridItem", () => {
     expect(document.querySelector(".bigkey-count")).toBeNull();
   });
 
+  it("adds the map and compass to a key cell in keysanity only", () => {
+    useGameStore.getState().setBigKeysVisible(true);
+    const { unmount } = render(<GridItem col={5} item="bigkey3" row={2} />);
+    expect(screen.queryByTestId("map-3")).toBeNull();
+    expect(screen.queryByTestId("compass-3")).toBeNull();
+    unmount();
+
+    useGameStore.getState().applyPreset("keysanity");
+    render(<GridItem col={5} item="bigkey3" row={2} />);
+
+    // Map and compass on top, the small key and the big key below
+    expect(
+      screen.getAllByRole("button").map((button) => button.dataset.testid),
+    ).toEqual(["map-3", "compass-3", "small-key-3", "big-key-3"]);
+    const map = screen.getByTestId("map-3");
+    const compass = screen.getByTestId("compass-3");
+    expect(map).toHaveAccessibleName("Palace of Darkness map: not obtained");
+    expect(compass).toHaveAccessibleName(
+      "Palace of Darkness compass: not obtained",
+    );
+    expect(map).toHaveClass("griditem--dimmed");
+    expect(compass).toHaveClass("griditem--dimmed");
+    // The small keys' count rides on the key, out of the accessibility tree
+    expect(document.querySelector(".bigkey-count--badge")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+
+    fireEvent.click(map);
+    fireEvent.click(compass);
+
+    expect(map).toHaveAccessibleName("Palace of Darkness map: obtained");
+    expect(compass).toHaveAccessibleName(
+      "Palace of Darkness compass: obtained",
+    );
+    expect(map).not.toHaveClass("griditem--dimmed");
+    expect(compass).not.toHaveClass("griditem--dimmed");
+    expect(useGameStore.getState().items).toMatchObject({
+      compass3: 1,
+      map3: 1,
+    });
+  });
+
+  it("gives Eastern Palace a map and compass but no small key in keysanity", () => {
+    useGameStore.getState().applyPreset("keysanity");
+
+    render(<GridItem col={5} item="bigkey0" row={2} />);
+
+    expect(
+      screen.getAllByRole("button").map((button) => button.dataset.testid),
+    ).toEqual(["map-0", "compass-0", "big-key-0"]);
+    expect(document.querySelector(".bigkey-count")).toBeNull();
+  });
+
   it("greys a key until it is held, its name telling the same", () => {
     useGameStore.getState().setBigKeysVisible(true);
     render(<GridItem col={5} item="bigkey3" row={2} />);

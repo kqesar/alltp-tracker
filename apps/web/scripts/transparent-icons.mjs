@@ -62,10 +62,13 @@ const BOUNDED_BY = {
 // Opt-in: sprites drawn on transparency, so nothing was ever cut from them,
 // that get the same 1-game-pixel black outline as the item icons although
 // their art never had one: the keysanity keys, gold on gold-ish grass, read
-// poorly on a bright stream without it. Their darkest pixels are dark grey,
-// never near-black, so the outline is told apart from the sprite and a
-// second run draws the same one.
-const ADD_OUTLINE = ["bigkey", "smallkey"];
+// poorly on a bright stream without it, and the dungeon map and compass
+// (the game's 16 px sprites at 4x, as hutchch/ALTTPR-Tracker ships them:
+// items/map1.png and items/compass1.png at 55a838e). Their darkest pixels
+// are dark grey, never near-black, so the outline is told apart from the
+// sprite and a second run draws the same one. Where a sprite touches its
+// 16 px frame (the map's scroll ends), the frame clips the outline.
+const ADD_OUTLINE = ["bigkey", "compass", "dungeonmap", "smallkey"];
 
 const check = process.argv.includes("--check");
 

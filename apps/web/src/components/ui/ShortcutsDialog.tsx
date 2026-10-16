@@ -41,8 +41,13 @@ const DIRECTION_NAMES: Record<ShortcutDirection, string> = {
 
 /** The art a control is listed with: an item as found, a dungeon control at rest. */
 const iconOf = (control: ControlId): string => {
-  const kind = /^(bigkey|smallkey|medallion|reward)\d$/.exec(control)?.[1];
-  if (kind === "bigkey" || kind === "smallkey") return `${kind}.png`;
+  const kind = /^(bigkey|smallkey|map|compass|medallion|reward)\d$/.exec(
+    control,
+  )?.[1];
+  if (kind === "bigkey" || kind === "smallkey" || kind === "compass") {
+    return `${kind}.png`;
+  }
+  if (kind === "map") return "dungeonmap.png";
   if (kind === "medallion") return "medallion0.png";
   if (kind === "reward") return "dungeon0.png";
 
@@ -74,6 +79,7 @@ type Conflict = { action: ActionId; chord: Chord; holder: ActionId };
 export const ShortcutsDialog = ({ onClose }: { onClose: () => void }) => {
   const shortcuts = useGameStore((state) => state.shortcuts);
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
+  const keysanity = useGameStore((state) => state.settings.keysanity);
   const setKeymap = useGameStore((state) => state.setKeymap);
   const setShortcutsEnabled = useGameStore(
     (state) => state.setShortcutsEnabled,
@@ -97,6 +103,15 @@ export const ShortcutsDialog = ({ onClose }: { onClose: () => void }) => {
     const chord = map[action];
     return `${describe(action)}: ${chord ? text(chord) : "no shortcut"}`;
   };
+  // Which key cell shortcuts wait: the cells hidden, or the map and compass
+  // outside keysanity, where the cells do not show them
+  const keyCellsHint = !bigKeysVisible
+    ? keysanity
+      ? "Key, map and compass shortcuts work while the key cells are shown."
+      : "Key shortcuts work while the key cells are shown, map and compass ones in keysanity runs."
+    : keysanity
+      ? null
+      : "Map and compass shortcuts work in keysanity runs.";
   const unchanged = (action: ActionId) =>
     `Change cancelled. ${bindingOf(action, keymap)}.`;
 
@@ -320,11 +335,7 @@ export const ShortcutsDialog = ({ onClose }: { onClose: () => void }) => {
         <h3 className="shortcuts__heading" id={dungeonsHeading}>
           Dungeons
         </h3>
-        {!bigKeysVisible && (
-          <p className="shortcuts__hint">
-            Big and small key shortcuts work while the key cells are shown.
-          </p>
-        )}
+        {keyCellsHint && <p className="shortcuts__hint">{keyCellsHint}</p>}
         <table aria-labelledby={dungeonsHeading} className="shortcuts-table">
           {header("Control")}
           {LEGACY_DUNGEONS.map((dungeon, index) => (

@@ -3,7 +3,14 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { items, itemsMax, itemsMin } from "@/data/items";
-import { CONTROLS, type ControlId, dungeonOf } from "@/data/keymap";
+import {
+  CONTROLS,
+  type ControlId,
+  dungeonOf,
+  isKeyControl,
+  isKeysanityControl,
+} from "@/data/keymap";
+import { getPreset } from "@/data/presets";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { smallKeysMax } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
@@ -12,7 +19,7 @@ import { useGameStore } from "@/stores/gameStore";
 const cellOf = (control: ControlId) => {
   const index = dungeonOf(control);
   if (index === null) return control;
-  return /^(bigkey|smallkey)/.test(control) ? `bigkey${index}` : `boss${index}`;
+  return isKeyControl(control) ? `bigkey${index}` : `boss${index}`;
 };
 
 /** The control's cell alone, with the shortcuts listening. */
@@ -33,12 +40,17 @@ const statesOf = (control: ControlId) => {
 /** The grid button a control is drawn as. */
 const testIdOf = (control: ControlId) => {
   const [, kind, index] =
-    /^(chest|reward|medallion|bigkey|smallkey)(\d)$/.exec(control) ?? [];
+    /^(chest|reward|medallion|bigkey|smallkey|map|compass)(\d)$/.exec(
+      control,
+    ) ?? [];
   switch (kind) {
     case "chest":
     case "reward":
     case "medallion":
       return `${kind}-overlay-${index}`;
+    case "map":
+    case "compass":
+      return `${kind}-${index}`;
     case "bigkey":
       return `big-key-${index}`;
     case "smallkey":
@@ -54,10 +66,19 @@ const snapshot = () => {
   return { items, medallions, smallKeys };
 };
 
-/** A fresh run, key cells shown, `control` alone bound to K and Shift+K. */
+/**
+ * A fresh run, key cells shown, `control` alone bound to K and Shift+K: a
+ * keysanity run for a map or a compass, which only it shows.
+ */
 const freshRun = (control: ControlId) =>
   act(() => {
     useGameStore.setState(useGameStore.getInitialState(), true);
+    if (isKeysanityControl(control)) {
+      useGameStore.setState({
+        presetId: "keysanity",
+        settings: getPreset("keysanity").settings,
+      });
+    }
     useGameStore.getState().setBigKeysVisible(true);
     useGameStore.getState().setKeymap({
       [`advance:${control}`]: "KeyK",

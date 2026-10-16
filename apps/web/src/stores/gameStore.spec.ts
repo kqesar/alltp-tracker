@@ -226,6 +226,31 @@ describe("GameStore", () => {
       expect(state.medallions[8]).toBe(2);
     });
 
+    it("carries a dungeon's map and compass, and reads a save without them", () => {
+      useGameStore.getState().applyPreset("keysanity");
+      useGameStore.getState().handleItemClick("map3");
+      useGameStore.getState().handleItemClick("compass9");
+      const saved = useGameStore.getState().exportState();
+      useGameStore.getState().reset();
+
+      importSave(saved);
+      expect(useGameStore.getState().items).toMatchObject({
+        compass3: 0,
+        compass9: 1,
+        map3: 1,
+      });
+
+      // A save from before them holds neither: they start not found
+      const older = JSON.parse(saved);
+      delete older.progress.items.compass9;
+      delete older.progress.items.map3;
+      importSave(JSON.stringify(older));
+      expect(useGameStore.getState().items).toMatchObject({
+        compass9: 0,
+        map3: 0,
+      });
+    });
+
     it("keeps this device's display preferences", () => {
       const saved = useGameStore.getState().exportState();
       useGameStore.getState().setMapLayout("stacked");

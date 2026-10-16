@@ -69,6 +69,9 @@ const NUMERIC_ITEMS: Record<string, Range> = {
 
   // Big keys for keysanity mode (0 = not obtained, 1 = obtained)
   ...perDungeon("bigkey", () => [0, 1]),
+  // Maps and compasses, whose boss wants them in keysanity (0 or 1)
+  ...perDungeon("map", () => [0, 1]),
+  ...perDungeon("compass", () => [0, 1]),
   // Boss state, starts at 1 (alive)
   ...perDungeon("boss", () => [1, 2]),
   // Remaining chests per dungeon, counted down from the dungeon's total

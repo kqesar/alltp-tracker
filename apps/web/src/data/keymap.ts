@@ -63,9 +63,9 @@ const hasMedallion = (index: number) =>
   index === DUNGEON_INDICES.TURTLE_ROCK;
 
 /**
- * A dungeon's controls, in the reading order of its cells: the boss cell
- * (boss, medallion, chests, reward), then the key cell (big key, small keys
- * for a dungeon that has some: not Eastern Palace).
+ * A dungeon's controls: the boss cell's (boss, medallion, chests, reward),
+ * then the key cell's (big key, small keys for a dungeon that has some: not
+ * Eastern Palace; map and compass, shown in keysanity runs).
  * @param index - The dungeon index (0-9)
  */
 export const dungeonControls = (index: number): ControlId[] => [
@@ -75,6 +75,8 @@ export const dungeonControls = (index: number): ControlId[] => [
   `reward${index}`,
   `bigkey${index}`,
   ...(smallKeysMax(index) > 0 ? [`smallkey${index}`] : []),
+  `map${index}`,
+  `compass${index}`,
 ];
 
 /** Every control a shortcut can step: the items, then dungeon by dungeon. */
@@ -104,19 +106,29 @@ export const parseAction = (
 
 /** A control of a key cell, which is on screen only while key cells are. */
 export const isKeyControl = (control: ControlId) =>
-  /^(bigkey|smallkey)\d$/.test(control);
+  /^(bigkey|smallkey|map|compass)\d$/.test(control);
+
+/**
+ * A control of a key cell drawn in keysanity runs only: a dungeon's map and
+ * compass, which its boss wants only when they are wild.
+ */
+export const isKeysanityControl = (control: ControlId) =>
+  /^(map|compass)\d$/.test(control);
 
 /** What each kind of dungeon control is called within its dungeon. */
 const DUNGEON_CONTROL_NAMES: Record<string, string> = {
   bigkey: "Big key",
   boss: "Boss",
   chest: "Chests",
+  compass: "Compass",
+  map: "Map",
   medallion: "Medallion",
   reward: "Reward",
   smallkey: "Small keys",
 };
 
-const DUNGEON_CONTROL = /^(bigkey|boss|chest|medallion|reward|smallkey)(\d)$/;
+const DUNGEON_CONTROL =
+  /^(bigkey|boss|chest|compass|map|medallion|reward|smallkey)(\d)$/;
 
 /** The index of the dungeon a control belongs to, or null for an item. */
 export const dungeonOf = (control: ControlId): number | null => {
