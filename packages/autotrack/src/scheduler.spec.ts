@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { ALTTPR_RACE_PROFILE } from "../test/alttpr-profile";
+import { ALTTPR_RACE_PROFILE } from "../../../packs/alttpr/src/autotrack/race-profile";
 import { bootGame, SAMPLE_PACK } from "../test/fixtures";
 import { MemoryTransport } from "../test/memory-transport";
 import { bus } from "./address";

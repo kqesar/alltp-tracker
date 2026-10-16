@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ALTTPR_RACE_PROFILE } from "../test/alttpr-profile";
+import { ALTTPR_RACE_PROFILE } from "../../../packs/alttpr/src/autotrack/race-profile";
 import { SAMPLE_PACK, SAMPLE_SOURCE } from "../test/fixtures";
 import { bus } from "./address";
 import { DefinitionError } from "./errors";

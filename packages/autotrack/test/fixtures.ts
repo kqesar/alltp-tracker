@@ -1,8 +1,9 @@
 // A small pack in the shape the ALttPR pack will take, under the real race
 // profile. Its addresses are test data, not the ALttPR memory map.
+
+import { ALTTPR_RACE_PROFILE } from "../../../packs/alttpr/src/autotrack/race-profile";
 import { bus } from "../src/address";
 import { type AutotrackPackSource, definePack } from "../src/pack";
-import { ALTTPR_RACE_PROFILE } from "./alttpr-profile";
 
 export const TITLE = "THE LEGEND OF ZELDA  ";
 

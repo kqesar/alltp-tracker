@@ -1,5 +1,6 @@
 // Public entry point of @alltp/pack-alttpr: the app imports the pack from
 // here only, as it does the engine.
+export { ALTTPR_RACE_PROFILE } from "./autotrack/race-profile";
 export { BOSS_SLOTS, BOSSES } from "./bosses";
 export {
   DERIVED,

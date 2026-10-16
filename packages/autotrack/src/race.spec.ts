@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ALTTPR_RACE_PROFILE } from "../test/alttpr-profile";
+import { ALTTPR_RACE_PROFILE } from "../../../packs/alttpr/src/autotrack/race-profile";
 import { DefinitionError, RaceViolationError } from "./errors";
 import { planReads, USB2SNES_LIMITS } from "./plan";
 import { assertRaceSafe, covers, defineRaceProfile } from "./race";
