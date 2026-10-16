@@ -2,10 +2,15 @@
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "composite": true,
+    // Vite's native config loader runs these files through Node's type
+    // stripping: relative imports name the .ts file, as Node requires, and
+    // only syntax that strips away (no enum, namespace, parameter property)
+    "erasableSyntaxOnly": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "outDir": "node_modules/.tmp/tsc-node",
+    "rewriteRelativeImportExtensions": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2022",
