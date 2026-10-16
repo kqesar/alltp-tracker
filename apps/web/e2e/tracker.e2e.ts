@@ -1,11 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-
-/** Phone, tablet, laptop and desktop: the widths every layout must hold at. */
-const WIDTHS = [390, 820, 1440, 1920] as const;
-
-/** The accessibility standard every page state is held to. */
-const WCAG_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
 
 /** Regions that must never cover one another, by data-testid. */
 const REGIONS = ["toolbar", "item-grid", "map-tracker", "map-legend"] as const;
@@ -17,21 +12,6 @@ const openTracker = async (page: Page) => {
   await page.reload();
   await expect(page.getByTestId("item-grid")).toBeVisible();
 };
-
-/** Clickable-looking elements a keyboard can never reach. */
-const unreachableClickables = (page: Page) =>
-  page.evaluate(() =>
-    [...document.querySelectorAll("body *")]
-      .filter(
-        (element) =>
-          getComputedStyle(element).cursor === "pointer" &&
-          (element as HTMLElement).tabIndex < 0 &&
-          !element.closest("button, a, label, summary, input, select"),
-      )
-      .map(
-        (element) => element.getAttribute("data-testid") ?? element.className,
-      ),
-  );
 
 for (const width of WIDTHS) {
   test.describe(`at ${width}px`, () => {
