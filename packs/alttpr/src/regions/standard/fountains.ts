@@ -1,11 +1,40 @@
-// Not ported yet: app/Region/Standard/Fountains.php.
-// Its region has no way in and no location, so that the worlds can list the
-// module and other modules can name the region.
+// app/Region/Standard/Fountains.php: the prizes of the two fairy fountains
+// (Location\Fountain), which upstream holds apart from the overworld and
+// gives no rule; the app decides how to show them.
+//
+// The region sets no can_enter, so Region::canEnter is true for it
+// (Region.php:217-224): an entrance from the start, cited at the class.
 import type { RegionModule } from "../../world";
 
 export const FOUNTAINS = {
   file: "app/Region/Standard/Fountains.php",
   regions: [
-    { entrances: [], id: "fountains", locations: [], name: "Fountains" },
+    {
+      entrances: [
+        {
+          from: "start",
+          req: "true",
+          source: "app/Region/Standard/Fountains.php:14",
+        },
+      ],
+      id: "fountains",
+      locations: [
+        {
+          id: "waterfall-bottle",
+          kind: "fountain",
+          name: "Waterfall Bottle",
+          req: "true",
+          source: "app/Region/Standard/Fountains.php:30",
+        },
+        {
+          id: "pyramid-bottle",
+          kind: "fountain",
+          name: "Pyramid Bottle",
+          req: "true",
+          source: "app/Region/Standard/Fountains.php:31",
+        },
+      ],
+      name: "Fountains",
+    },
   ],
 } as const satisfies RegionModule;
