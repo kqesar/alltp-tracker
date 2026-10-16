@@ -1,6 +1,14 @@
 // Public entry point of @alltp/engine. The app's no-barrel rule covers src/
 // of the app; a package needs one stable surface, and this is it.
 export {
+  type Analysis,
+  type AnalyzeOptions,
+  type Atom,
+  analyze,
+  type Blockers,
+  MAX_SETS,
+} from "./analyze";
+export {
   type AndExpr,
   type ConstExpr,
   type CountExpr,
