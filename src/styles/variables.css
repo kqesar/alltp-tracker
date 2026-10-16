@@ -71,19 +71,6 @@
   --z-overlay: 2;
   --z-header: 1000;
   --z-modal: 2000;
-
-  /* ---- Responsive breakpoints ---- */
-  --breakpoint-mobile: 480px;
-  --breakpoint-tablet: 768px;
-  --breakpoint-desktop: 1024px;
-
-  /* ---- Touch / mobile sizing ---- */
-  --touch-target-min: 44px;
-  --touch-target-spacing: 8px;
-  --mobile-item-size: 48px;
-  --mobile-grid-gap: 4px;
-  --mobile-padding: 1rem;
-  --mobile-header-height: 3.5rem;
 }
 
 /* High contrast mode support */

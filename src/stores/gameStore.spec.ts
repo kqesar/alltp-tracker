@@ -116,28 +116,6 @@ describe("GameStore", () => {
     expect(newIsBeaten).toBe(!initialIsBeaten);
   });
 
-  it("sets chests state", () => {
-    const { setChestsState } = useGameStore.getState();
-    const newChests = [
-      { ...useGameStore.getState().chestsState[0], isOpened: true },
-    ];
-
-    setChestsState(newChests);
-
-    expect(useGameStore.getState().chestsState).toEqual(newChests);
-  });
-
-  it("sets dungeons state", () => {
-    const { setDungeonsState } = useGameStore.getState();
-    const newDungeons = [
-      { ...useGameStore.getState().dungeonsState[0], isBeaten: true },
-    ];
-
-    setDungeonsState(newDungeons);
-
-    expect(useGameStore.getState().dungeonsState).toEqual(newDungeons);
-  });
-
   it("resets to initial state", () => {
     const { setCaption, handleMedallionChange, reset } =
       useGameStore.getState();

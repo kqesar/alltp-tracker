@@ -34,7 +34,6 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   boomerang: [0, 3],
   bottle: [0, 4],
   bow: [0, 3],
-  dungeon: [0, 4],
   glove: [0, 2],
   shield: [0, 3],
   sword: [0, 4],

@@ -17,15 +17,6 @@
   display: contents; /* Makes children participate in parent grid */
 }
 
-.tracker td {
-  width: 64px;
-  height: 64px;
-  padding: 0;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-}
-
 .tracker .halfcell {
   width: 32px;
   height: 64px;
@@ -79,22 +70,6 @@
   position: relative;
 }
 
-/* Item State Classes */
-.true {
-  opacity: 1;
-}
-
-.false {
-  opacity: 0.25;
-}
-
-/* Special Items */
-.stoops {
-  width: 128px;
-  height: 128px;
-  background-size: 200% 200%;
-}
-
 /* Layout Container Components */
 .itemdiv {
   left: 0;
@@ -113,11 +88,6 @@
 
   .tracker {
     grid-template-columns: 24px repeat(7, 48px) 24px; /* Responsive halfcell + items */
-  }
-
-  .tracker td {
-    width: 48px;
-    height: 48px;
   }
 
   .tracker .halfcell {

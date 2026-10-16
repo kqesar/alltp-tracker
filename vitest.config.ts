@@ -27,10 +27,10 @@ export default defineConfig({
       // Floors sit just under current coverage so a regression fails the build
       // without blocking day-to-day work. Raise them as coverage improves.
       thresholds: {
-        branches: 82,
-        functions: 89,
-        lines: 87,
-        statements: 85,
+        branches: 83,
+        functions: 93,
+        lines: 89,
+        statements: 87,
       },
     },
     environment: "jsdom",

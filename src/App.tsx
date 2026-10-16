@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { MapLegend } from "@/components/map/MapLegend";
 import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
@@ -18,9 +17,6 @@ function App() {
   const { caption, bigKeysVisible, setBigKeysVisible, mapLayout } =
     useGameStore();
 
-  // Layout state (keep local as it doesn't need to be shared)
-  const [itemLayout] = useState(defaultItemGrid);
-
   return (
     <>
       <a className="skip-link" href="#main-content">
@@ -36,7 +32,7 @@ function App() {
           data-testid="layout"
           id="layoutdiv"
         >
-          <TrackerGrid itemLayout={itemLayout} />
+          <TrackerGrid itemLayout={defaultItemGrid} />
           <aside aria-label="Map display" className="mapdiv" id="mapdiv">
             <MapTracker />
             <MapLegend />
