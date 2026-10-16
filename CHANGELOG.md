@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.10.1](https://github.com/kqesar/alltp-tracker/compare/v2.10.0...v2.10.1) (2026-10-16)
+
+
+### 🐛 Bug Fixes
+
+* **build:** run the pinned lint-staged and commitlint from the hooks ([f898cb2](https://github.com/kqesar/alltp-tracker/commit/f898cb222b035971d306c6bef4434e90b180424b))
+
+
+### 📚 Documentation
+
+* **claude:** add the engine's rules ([d1f647c](https://github.com/kqesar/alltp-tracker/commit/d1f647cb4d783af8aebb174bd6bdbd5985242700))
+* describe the workspace layout ([a19d71e](https://github.com/kqesar/alltp-tracker/commit/a19d71eed0378b0f3ecac767ba4c39b0529d8dc9))
+
 ## [2.10.0](https://github.com/kqesar/alltp-tracker/compare/v2.9.0...v2.10.0) (2026-10-16)
 
 
