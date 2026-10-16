@@ -14,7 +14,7 @@
 // swordless world holds no sword, so `@hasSword` is simply false there.
 
 import type { Rule } from "./helpers";
-import type { Source } from "./location";
+import type { LocationFill, Source } from "./location";
 
 const at = (line: number): Source => `app/Boss.php:${line}`;
 
@@ -134,3 +134,60 @@ export const BOSS_SLOTS = {
     source: region("TurtleRock", 57),
   },
 } as const satisfies Readonly<Record<string, Rule>>;
+
+/** Where a dungeon file writes the parts of its boss that dungeonBoss ports. */
+export interface BossLines {
+  /** The region file. */
+  readonly file: `app/Region/${string}.php`;
+  /** The rule's map and compass clauses (`hasItem` on the boss itself). */
+  readonly holding: number;
+  /** setFillRules. */
+  readonly fill: number;
+  /** setAlwaysAllow. */
+  readonly always: number;
+}
+
+/**
+ * A dungeon boss's rule and what Location::canFill reads of it, which every
+ * dungeon file writes alike (EasternPalace.php:84-105). With wild maps or
+ * compasses the boss wants its dungeon's, unless it holds that item itself:
+ * `req` reads that as `maybe`, `fill.holding` settles it. With
+ * region.bossNormalLocation, the default, the boss always takes its own
+ * compass and map; without, it takes no dungeon item at all.
+ *
+ * `base` is the rule without those clauses, `code` the dungeon's (`P1`).
+ */
+export function dungeonBoss(
+  base: string,
+  code: string,
+  lines: BossLines,
+): { readonly req: string; readonly fill: LocationFill } {
+  const compass = `(!setting(wildCompasses) | compass${code})`;
+  const map = `(!setting(wildMaps) | map${code})`;
+  const source = (line: number): Source => `${lines.file}:${line}`;
+  return {
+    fill: {
+      always: {
+        items: [`Compass${code}`, `Map${code}`],
+        req: "setting(bossNormalLocation)",
+        source: source(lines.always),
+      },
+      holding: {
+        items: {
+          [`Compass${code}`]: `${base} & ${map}`,
+          [`Map${code}`]: `${base} & ${compass}`,
+        },
+        otherwise: `${base} & ${compass} & ${map}`,
+        source: source(lines.holding),
+      },
+      refuse: [
+        {
+          refuse: { classes: ["bigKey", "compass", "key", "map"] },
+          source: source(lines.fill),
+          when: "!setting(bossNormalLocation)",
+        },
+      ],
+    },
+    req: `${base} & (!setting(wildCompasses) | compass${code} | maybe) & (!setting(wildMaps) | map${code} | maybe)`,
+  };
+}

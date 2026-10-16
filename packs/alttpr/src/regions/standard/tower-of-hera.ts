@@ -6,20 +6,24 @@
 // part of the module: `towerOfHeraMain`, from West Death Mountain, and
 // `towerOfHeraMire`, from Misery Mire with the one-frame clip, which
 // NoGlitches folds away. The tower is entered from either.
-//
-// Not ported here: the fill rules and always-allow of the Big Key Chest
-// (123-127) and of the boss (149-162), which Location::canFill reads when the
-// randomizer places an item; they wait for src/fill.ts.
+import { dungeonBoss } from "../../bosses";
 import type { RegionModule } from "../../world";
 
 /**
- * The boss (143-148), whose rule is the prize's too: can_complete is the
- * boss's canAccess (139-141). With wild maps or compasses the boss wants its
- * dungeon's, unless it holds that item itself (`hasItem`), which a tracker
- * cannot know: `maybe`.
+ * The boss (143-162), whose rule is the prize's too: can_complete is the
+ * boss's canAccess (139-141). With wild maps or compasses it wants its
+ * dungeon's (dungeonBoss).
  */
-const BOSS =
-  "reach(towerOfHeraMain) & @canBeatTowerOfHeraBoss & (bigKeyP3 | reach(towerOfHeraMire) & bigKeyD6) & (!setting(wildCompasses) | compassP3 | maybe) & (!setting(wildMaps) | mapP3 | maybe)";
+const BOSS = dungeonBoss(
+  "reach(towerOfHeraMain) & @canBeatTowerOfHeraBoss & (bigKeyP3 | reach(towerOfHeraMire) & bigKeyD6)",
+  "P3",
+  {
+    always: 159,
+    file: "app/Region/Standard/TowerOfHera.php",
+    fill: 149,
+    holding: 147,
+  },
+);
 
 export const TOWER_OF_HERA = {
   file: "app/Region/Standard/TowerOfHera.php",
@@ -40,6 +44,22 @@ export const TOWER_OF_HERA = {
       id: "towerOfHera",
       locations: [
         {
+          // The tower's key may lock itself in here, unless every location
+          // must be reachable: nothing else needs it
+          fill: {
+            always: {
+              items: ["KeyP3"],
+              req: "!setting(locationsAccessibility)",
+              source: "app/Region/Standard/TowerOfHera.php:123",
+            },
+            refuse: [
+              {
+                refuse: { items: ["KeyP3"] },
+                source: "app/Region/Standard/TowerOfHera.php:125",
+                when: "setting(locationsAccessibility)",
+              },
+            ],
+          },
           id: "tower-of-hera/big-key-chest",
           kind: "chest",
           name: "Tower of Hera - Big Key Chest",
@@ -75,17 +95,18 @@ export const TOWER_OF_HERA = {
           source: "app/Region/Standard/TowerOfHera.php:134",
         },
         {
+          fill: BOSS.fill,
           id: "tower-of-hera/boss",
           kind: "drop",
           name: "Tower of Hera - Boss",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/TowerOfHera.php:143",
         },
         {
           id: "tower-of-hera/prize",
           kind: "prize",
           name: "Tower of Hera - Prize",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/TowerOfHera.php:139",
         },
       ],

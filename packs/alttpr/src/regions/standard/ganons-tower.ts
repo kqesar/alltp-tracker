@@ -5,13 +5,19 @@
 // meets on the way up (`boss_bottom`, `boss_middle`, `boss_top`), each a
 // slot of bosses.ts. getBoss, setBoss and canPlaceBoss (94-184) are boss
 // shuffle's, which the pack does not model.
-//
-// Not ported here: the Map Chest's always-allow and fill rules (269-273),
-// and the fill rules of the Big Chest (278-280), the Mini Helmasaur Room
-// (358-368), the Pre-Moldorm Chest (374-376) and the Moldorm Chest
-// (384-386), which Location::canFill reads when the randomizer places an
-// item; they wait for src/fill.ts.
+import type { LocationFill } from "../../location";
 import type { RegionModule } from "../../world";
+
+/** A setFillRules that refuses these items here. */
+const REFUSE = (line: number, ...items: string[]) =>
+  ({
+    refuse: [
+      {
+        refuse: { items },
+        source: `app/Region/Standard/GanonsTower.php:${line}`,
+      },
+    ],
+  }) as const satisfies LocationFill;
 
 /**
  * can_enter (396-416): RescueZelda and the basic placement's health gate,
@@ -22,6 +28,10 @@ const GATE =
 
 /** The pearl, or with glitches a bottle (400), on both Death Mountain ways. */
 const PEARL = "(moonPearl | setting(canOWYBA) & @hasABottle)";
+
+/** The way to the Map Chest, before its keys (266). */
+const MAP_CHEST_WAY =
+  "hammer & (hookshot | !setting(basicPlacement) & pegasusBoots)";
 
 /** The four chests of the DMs room (198-212). */
 const DMS_ROOM = "hammer & hookshot";
@@ -140,6 +150,12 @@ export const GANONS_TOWER = {
           source: "app/Region/Standard/GanonsTower.php:244",
         },
         {
+          fill: {
+            holding: {
+              items: { KeyA2: "hammer & hookshot & keyA2 >= 2" },
+              source: "app/Region/Standard/GanonsTower.php:261",
+            },
+          },
           // Three keys, or two when the big key sits in the randomizer room
           // or a key in this chest (`itemInLocations`, `hasItem`): `maybe`
           id: "ganons-tower/firesnake-room",
@@ -149,15 +165,40 @@ export const GANONS_TOWER = {
           source: "app/Region/Standard/GanonsTower.php:254",
         },
         {
+          // A key may sit here once three others are found, unless every
+          // location must be reachable
+          fill: {
+            always: {
+              items: ["KeyA2"],
+              req: "!setting(locationsAccessibility) & keyA2 >= 3",
+              source: "app/Region/Standard/GanonsTower.php:269",
+            },
+            holding: {
+              items: {
+                BigKeyA2: `${MAP_CHEST_WAY} & keyA2 >= 3`,
+                KeyA2: `${MAP_CHEST_WAY} & keyA2 >= 3`,
+              },
+              otherwise: `${MAP_CHEST_WAY} & keyA2 >= 4`,
+              source: "app/Region/Standard/GanonsTower.php:267",
+            },
+            refuse: [
+              {
+                refuse: { items: ["KeyA2"] },
+                source: "app/Region/Standard/GanonsTower.php:271",
+                when: "setting(locationsAccessibility)",
+              },
+            ],
+          },
           // Four keys, or three when the chest holds a key or the big key
           // itself (`getItem`), which a tracker cannot know: `maybe`
           id: "ganons-tower/map-chest",
           kind: "chest",
           name: "Ganon's Tower - Map Chest",
-          req: "hammer & (hookshot | !setting(basicPlacement) & pegasusBoots) & (keyA2 >= 4 | maybe & keyA2 >= 3)",
+          req: `${MAP_CHEST_WAY} & (keyA2 >= 4 | maybe & keyA2 >= 3)`,
           source: "app/Region/Standard/GanonsTower.php:265",
         },
         {
+          fill: REFUSE(278, "BigKeyA2"),
           id: "ganons-tower/big-chest",
           kind: "bigChest",
           name: "Ganon's Tower - Big Chest",
@@ -242,6 +283,7 @@ export const GANONS_TOWER = {
           source: "app/Region/Standard/GanonsTower.php:347",
         },
         {
+          fill: REFUSE(358, "BigKeyA2"),
           id: "ganons-tower/mini-helmasaur-room/left",
           kind: "chest",
           name: "Ganon's Tower - Mini Helmasaur Room - Left",
@@ -249,6 +291,7 @@ export const GANONS_TOWER = {
           source: "app/Region/Standard/GanonsTower.php:354",
         },
         {
+          fill: REFUSE(366, "BigKeyA2"),
           id: "ganons-tower/mini-helmasaur-room/right",
           kind: "chest",
           name: "Ganon's Tower - Mini Helmasaur Room - Right",
@@ -256,6 +299,7 @@ export const GANONS_TOWER = {
           source: "app/Region/Standard/GanonsTower.php:362",
         },
         {
+          fill: REFUSE(374, "BigKeyA2"),
           id: "ganons-tower/pre-moldorm-chest",
           kind: "chest",
           name: "Ganon's Tower - Pre-Moldorm Chest",
@@ -263,6 +307,7 @@ export const GANONS_TOWER = {
           source: "app/Region/Standard/GanonsTower.php:370",
         },
         {
+          fill: REFUSE(384, "KeyA2", "BigKeyA2"),
           id: "ganons-tower/moldorm-chest",
           kind: "chest",
           name: "Ganon's Tower - Moldorm Chest",

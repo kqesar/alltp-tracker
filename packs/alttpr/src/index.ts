@@ -45,6 +45,13 @@ export {
   type DerivedFact,
   derivedFacts,
 } from "./derived";
+export {
+  EVENT_LOCATIONS,
+  type Filler,
+  filler,
+  matches,
+  PRIZE_ITEMS,
+} from "./fill";
 export { GROUPS, HELPERS, type Rule } from "./helpers";
 export {
   type Contribution,
@@ -57,12 +64,16 @@ export {
   UPSTREAM_ENGLISH_NAMES,
   UPSTREAM_ITEMS,
 } from "./items";
+export { everything, everythingBut, possibleLocations } from "./keys";
 export {
+  type ItemMatch,
   LOCATION_KINDS,
   type LocationDef,
+  type LocationFill,
   type LocationKind,
   locationId,
   locationKind,
+  type Refusal,
   type Source,
   type Visible,
 } from "./location";
@@ -97,6 +108,7 @@ export {
   type RegionDef,
   type RegionItems,
   type RegionModule,
+  refuseKeptDungeonItems,
   regionId,
   START,
 } from "./world";

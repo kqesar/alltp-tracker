@@ -9,11 +9,7 @@
 // way in reads `reach()` of its part. Only the upper way, by the medallion
 // pad, is NoGlitches: the middle and lower ways are glitch branches, which
 // NoGlitches folds away.
-//
-// Not ported here: the fill rules of the Big Chest (171-173), the Big Key
-// Chest's always-allow and fill rules (180-184), and the boss's (243-255),
-// which Location::canFill reads when the randomizer places an item; they
-// wait for src/fill.ts.
+import { dungeonBoss } from "../../bosses";
 import type { RegionModule } from "../../world";
 
 /**
@@ -49,14 +45,21 @@ const EYE_BRIDGE =
   "(reach(turtleRockLower) | (reach(turtleRockUpper) | reach(turtleRockMiddle)) & lamp >= setting(requireLamp) & caneOfSomaria & bigKeyD7 & keyD7 >= 3) & (!setting(basicPlacement) | cape | caneOfByrna | setting(mirrorShieldInPool) & @canBlockLasers)";
 
 /**
- * The boss (228-242), whose rule is the prize's too: can_complete is the
+ * The boss (228-255), whose rule is the prize's too: can_complete is the
  * boss's canAccess (224-226). Its glitch branch writes `$lower` out again
  * (231-237), which is reach(turtleRockLower). With wild maps or compasses
- * the boss wants its dungeon's, unless it holds that item itself
- * (`hasItem`): `maybe`.
+ * it wants its dungeon's (dungeonBoss).
  */
-const BOSS =
-  "keyD7 >= 4 & (reach(turtleRockLower) | lamp >= setting(requireLamp)) & bigKeyD7 & caneOfSomaria & @canBeatTurtleRockBoss & (!setting(wildCompasses) | compassD7 | maybe) & (!setting(wildMaps) | mapD7 | maybe)";
+const BOSS = dungeonBoss(
+  "keyD7 >= 4 & (reach(turtleRockLower) | lamp >= setting(requireLamp)) & bigKeyD7 & caneOfSomaria & @canBeatTurtleRockBoss",
+  "D7",
+  {
+    always: 252,
+    file: "app/Region/Standard/TurtleRock.php",
+    fill: 243,
+    holding: 241,
+  },
+);
 
 export const TURTLE_ROCK = {
   file: "app/Region/Standard/TurtleRock.php",
@@ -110,6 +113,14 @@ export const TURTLE_ROCK = {
           source: "app/Region/Standard/TurtleRock.php:144",
         },
         {
+          fill: {
+            refuse: [
+              {
+                refuse: { items: ["BigKeyD7"] },
+                source: "app/Region/Standard/TurtleRock.php:171",
+              },
+            ],
+          },
           id: "turtle-rock/big-chest",
           kind: "bigChest",
           name: "Turtle Rock - Big Chest",
@@ -117,6 +128,30 @@ export const TURTLE_ROCK = {
           source: "app/Region/Standard/TurtleRock.php:166",
         },
         {
+          // A key may sit here once three others are found, unless every
+          // location must be reachable
+          fill: {
+            always: {
+              items: ["KeyD7"],
+              req: "!setting(locationsAccessibility) & keyD7 >= 3",
+              source: "app/Region/Standard/TurtleRock.php:180",
+            },
+            holding: {
+              items: {
+                BigKeyD7: "keyD7 >= 2",
+                KeyD7: "keyD7 >= 3 | !setting(wildKeys) & keyD7 >= 2",
+              },
+              otherwise: "keyD7 >= 4 | !setting(wildKeys) & keyD7 >= 2",
+              source: "app/Region/Standard/TurtleRock.php:176",
+            },
+            refuse: [
+              {
+                refuse: { items: ["KeyD7"] },
+                source: "app/Region/Standard/TurtleRock.php:182",
+                when: "setting(locationsAccessibility)",
+              },
+            ],
+          },
           // Two keys; with wild keys four, three if the chest holds a key
           // and two if it holds the big key (`hasItem`), which a tracker
           // cannot know: `maybe`
@@ -162,17 +197,18 @@ export const TURTLE_ROCK = {
           source: "app/Region/Standard/TurtleRock.php:216",
         },
         {
+          fill: BOSS.fill,
           id: "turtle-rock/boss",
           kind: "drop",
           name: "Turtle Rock - Boss",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/TurtleRock.php:228",
         },
         {
           id: "turtle-rock/prize",
           kind: "prize",
           name: "Turtle Rock - Prize",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/TurtleRock.php:224",
         },
       ],

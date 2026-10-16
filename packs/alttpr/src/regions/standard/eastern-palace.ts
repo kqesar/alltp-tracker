@@ -1,19 +1,23 @@
 // app/Region/Standard/EasternPalace.php: Eastern Palace, its locations and
 // its prize.
-//
-// Not ported here: the boss's fill rules and always-allow (92-105), which
-// Location::canFill reads when the randomizer places an item; they wait for
-// src/fill.ts.
+import { dungeonBoss } from "../../bosses";
 import type { RegionModule } from "../../world";
 
 /**
- * The boss (84-91), whose rule is the prize's too: can_complete is the
- * boss's canAccess (80-82). With wild maps or compasses the boss wants its
- * dungeon's, unless it holds that item itself (`hasItem`), which a tracker
- * cannot know: `maybe`.
+ * The boss (84-105), whose rule is the prize's too: can_complete is the
+ * boss's canAccess (80-82). With wild maps or compasses it wants its
+ * dungeon's (dungeonBoss).
  */
-const BOSS =
-  "@canShootArrows & (lamp >= setting(requireLamp) | setting(advancedPlacement) & fireRod) & bigKeyP1 & @canBeatEasternPalaceBoss & (!setting(wildCompasses) | compassP1 | maybe) & (!setting(wildMaps) | mapP1 | maybe)";
+const BOSS = dungeonBoss(
+  "@canShootArrows & (lamp >= setting(requireLamp) | setting(advancedPlacement) & fireRod) & bigKeyP1 & @canBeatEasternPalaceBoss",
+  "P1",
+  {
+    always: 102,
+    file: "app/Region/Standard/EasternPalace.php",
+    fill: 92,
+    holding: 90,
+  },
+);
 
 export const EASTERN_PALACE = {
   file: "app/Region/Standard/EasternPalace.php",
@@ -64,17 +68,18 @@ export const EASTERN_PALACE = {
           source: "app/Region/Standard/EasternPalace.php:55",
         },
         {
+          fill: BOSS.fill,
           id: "eastern-palace/boss",
           kind: "drop",
           name: "Eastern Palace - Boss",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/EasternPalace.php:84",
         },
         {
           id: "eastern-palace/prize",
           kind: "prize",
           name: "Eastern Palace - Prize",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/EasternPalace.php:80",
         },
       ],

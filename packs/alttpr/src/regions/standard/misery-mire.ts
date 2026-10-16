@@ -1,9 +1,7 @@
 // app/Region/Standard/MiseryMire.php: Misery Mire, its locations and its
 // prize.
-//
-// Not ported here: the boss's fill rules and always-allow (117-130), which
-// Location::canFill reads when the randomizer places an item; they wait for
-// src/fill.ts.
+import { dungeonBoss } from "../../bosses";
+import type { LocationFill } from "../../location";
 import type { RegionModule } from "../../world";
 
 /**
@@ -13,13 +11,30 @@ import type { RegionModule } from "../../world";
  */
 const TORCH_ROOM = "@canLightTorches & (keyD6 >= 3 | maybe & keyD6 >= 2)";
 
+/** Either torch chest, holding the big key: two keys (92-93, 100-101). */
+const HOLDING_BIG_KEY = (line: number) =>
+  ({
+    holding: {
+      items: { BigKeyD6: "@canLightTorches & keyD6 >= 2" },
+      source: `app/Region/Standard/MiseryMire.php:${line}`,
+    },
+  }) as const satisfies LocationFill;
+
 /**
- * The boss (110-116), whose rule is the prize's too: can_complete is the
- * boss's canAccess (106-108). With wild maps or compasses the boss wants its
- * dungeon's, unless it holds that item itself (`hasItem`): `maybe`.
+ * The boss (110-130), whose rule is the prize's too: can_complete is the
+ * boss's canAccess (106-108). With wild maps or compasses it wants its
+ * dungeon's (dungeonBoss).
  */
-const BOSS =
-  "caneOfSomaria & lamp >= setting(requireLamp) & bigKeyD6 & @canBeatMiseryMireBoss & (!setting(wildCompasses) | compassD6 | maybe) & (!setting(wildMaps) | mapD6 | maybe)";
+const BOSS = dungeonBoss(
+  "caneOfSomaria & lamp >= setting(requireLamp) & bigKeyD6 & @canBeatMiseryMireBoss",
+  "D6",
+  {
+    always: 127,
+    file: "app/Region/Standard/MiseryMire.php",
+    fill: 117,
+    holding: 115,
+  },
+);
 
 export const MISERY_MIRE = {
   file: "app/Region/Standard/MiseryMire.php",
@@ -53,6 +68,7 @@ export const MISERY_MIRE = {
           source: "app/Region/Standard/MiseryMire.php:82",
         },
         {
+          fill: HOLDING_BIG_KEY(93),
           id: "misery-mire/big-key-chest",
           kind: "chest",
           name: "Misery Mire - Big Key Chest",
@@ -60,6 +76,7 @@ export const MISERY_MIRE = {
           source: "app/Region/Standard/MiseryMire.php:90",
         },
         {
+          fill: HOLDING_BIG_KEY(101),
           id: "misery-mire/compass-chest",
           kind: "chest",
           name: "Misery Mire - Compass Chest",
@@ -88,17 +105,18 @@ export const MISERY_MIRE = {
           source: "app/Region/Standard/MiseryMire.php:77",
         },
         {
+          fill: BOSS.fill,
           id: "misery-mire/boss",
           kind: "drop",
           name: "Misery Mire - Boss",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/MiseryMire.php:110",
         },
         {
           id: "misery-mire/prize",
           kind: "prize",
           name: "Misery Mire - Prize",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/MiseryMire.php:106",
         },
       ],

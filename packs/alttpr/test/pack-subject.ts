@@ -3,12 +3,9 @@
 // turns the case's items into a state (upstream-state.ts); this maps the
 // world: its mode and config become the pack's settings, and the world is
 // compiled once per distinct settings.
-//
-// `fill` (Location::canFill, with the always-allow and fill rules) is not
-// answered yet: it waits for src/fill.ts and the key model, since placing a
-// key is what it asks about. The runner counts those cases as skipped.
 import { type CompiledWorld, type State, solve, type Tri } from "@alltp/engine";
 import { derivedFacts } from "../src/derived";
+import { type Filler, filler } from "../src/fill";
 import { locationId } from "../src/location";
 import { medallionFacts, padsFromUpstream } from "../src/medallions";
 import { compile, regionModules } from "../src/pack";
@@ -16,22 +13,25 @@ import { type AlttprSettings, settingsFromUpstream } from "../src/settings";
 import { canFill, type RegionDef, regionId } from "../src/world";
 import type { CaseWorld, ContractSubject } from "./contract";
 
-const worlds = new Map<string, CompiledWorld>();
+const worlds = new Map<string, { compiled: CompiledWorld; filler: Filler }>();
 
 function settingsOf(world: CaseWorld): AlttprSettings {
   return settingsFromUpstream(world.mode, world.config);
 }
 
-function compiled(world: CaseWorld): CompiledWorld {
+function built(world: CaseWorld) {
   const settings = settingsOf(world);
   const key = JSON.stringify(settings);
   let found = worlds.get(key);
   if (found === undefined) {
-    found = compile(settings);
+    const world = compile(settings);
+    found = { compiled: world, filler: filler(world, settings) };
     worlds.set(key, found);
   }
   return found;
 }
+
+const compiled = (world: CaseWorld): CompiledWorld => built(world).compiled;
 
 /**
  * The case's state, with what its world placed at the medallion pads as the
@@ -54,6 +54,14 @@ function regionNamed(name: string, settings: AlttprSettings): RegionDef {
 }
 
 export const PACK: ContractSubject = {
+  // Location::fill: place the item, then Location::canFill (src/fill.ts)
+  fill: (name, item, state, world) =>
+    built(world).filler.canFill(
+      locationId(name),
+      item,
+      withFacts(state, world),
+    ),
+
   location: (name, state, world) =>
     solve(compiled(world), withFacts(state, world)).location(locationId(name)),
 

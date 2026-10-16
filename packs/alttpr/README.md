@@ -14,6 +14,8 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/world.ts` | `app/Region.php`: regions, entrances, prizes, `canFill` |
 | `src/worlds/*.ts` | `app/World/Standard.php`, `app/World/Open.php`: the region modules of each world |
 | `src/regions/**` | one module per upstream region file |
+| `src/fill.ts` | `app/Location.php`: `canFill`, whether the randomizer may place an item somewhere |
+| `src/keys.ts` | `app/Support/LocationCollection.php`: where a dungeon's items may sit (`itemInLocations`) |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -80,6 +82,23 @@ engine's graph:
   `!setting(wildCompasses) | compassP1 | maybe`.
 - **Dungeon items.** A region's `regionItems` is its `$region_items`, which
   `canFill` keeps in it unless the class is wild.
+- **Filling.** A location's `fill` is what its region file tells
+  Location::canFill: the items it always takes (`setAlwaysAllow`), those its
+  fill rules refuse (`setFillRules`, clause by clause), and its rule once it
+  holds an item that rule asks about (`holding`): placing the item settles
+  a `hasItem` the location's `req` reads as `maybe`. `filler(world,
+  settings).canFill(location, item, state)` reads them as upstream does:
+  always allowed, or kept by the region, not refused and reachable with the
+  item there. Every dungeon boss writes the same rules, which `dungeonBoss`
+  (`src/bosses.ts`) builds. The 135 `fill` cases of the upstream tests run
+  in the contract.
+- **Where dungeon items sit.** The randomizer places the dungeon items
+  first, each where canFill holds with every item not placed yet assumed
+  held, and canFill only grows with the items held. `possibleLocations`
+  lists where an item may sit at all: wherever canFill is not `no` with
+  everything else held (`everythingBut`). Swamp Palace's key can only be at
+  its entrance; Desert Palace's, in the Map Chest, the Torch or the Big
+  Chest.
 - **Pending modules.** A region file not ported yet still has its module: its
   upstream regions with no entrance and no location. The worlds list every
   module from the start, so a port only fills its own module in.

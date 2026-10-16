@@ -8,7 +8,7 @@
 // 232-246). README.md, "The world model", explains the mapping.
 
 import type { Location, Region, World } from "@alltp/engine";
-import type { LocationDef, Source } from "./location";
+import type { LocationDef, Refusal, Source } from "./location";
 import type { AlttprSettings } from "./settings";
 
 /**
@@ -141,6 +141,25 @@ export function dungeonItemClass(item: string): DungeonItemClass | undefined {
   if (/^Map(?:[A-Z][A-Z0-9]*)?$/.test(item)) return "map";
   if (/^Compass(?:[A-Z][A-Z0-9]*)?$/.test(item)) return "compass";
   return undefined;
+}
+
+/**
+ * The fill rules of a location outside the dungeons that refuses their items
+ * as Region::canFill does, class by class, unless the class is wild: Link's
+ * Uncle and the Secret Passage (Standard/HyruleCastleEscape.php:101-114,
+ * Open/HyruleCastleEscape.php:58-71). `source` is the rule's line.
+ */
+export function refuseKeptDungeonItems(source: Source): readonly Refusal[] {
+  return [
+    { refuse: { classes: ["key"] }, source, when: "!setting(wildKeys)" },
+    { refuse: { classes: ["bigKey"] }, source, when: "!setting(wildBigKeys)" },
+    { refuse: { classes: ["map"] }, source, when: "!setting(wildMaps)" },
+    {
+      refuse: { classes: ["compass"] },
+      source,
+      when: "!setting(wildCompasses)",
+    },
+  ];
 }
 
 /**

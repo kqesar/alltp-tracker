@@ -4,11 +4,7 @@
 // rules it sets apply. The Sanctuary, the Map Chest, Link's Uncle, the
 // Secret Passage and Zelda get none, so they are "true" at line 22, and the
 // region has no can_enter: it is entered from anywhere.
-//
-// Not ported here: the fill rules of the Secret Passage (58-63) and Link's
-// Uncle (65-71), which Location::canFill reads when the randomizer places an
-// item; they wait for src/fill.ts.
-import type { RegionModule } from "../../world";
+import { type RegionModule, refuseKeptDungeonItems } from "../../world";
 
 /** The sewers' secret room (24-43): a rock to lift, or the dark sewers. */
 const SECRET_ROOM =
@@ -87,6 +83,18 @@ export const OPEN_HYRULE_CASTLE_ESCAPE = {
           source: "app/Region/Open/HyruleCastleEscape.php:54",
         },
         {
+          // No dungeon item that is not wild, and the Sanctuary reachable
+          // with what the world already holds (65-71): that depends on the
+          // order the randomizer fills in, which a tracker cannot know
+          fill: {
+            refuse: refuseKeptDungeonItems(
+              "app/Region/Open/HyruleCastleEscape.php:67",
+            ),
+            requires: {
+              req: "maybe",
+              source: "app/Region/Open/HyruleCastleEscape.php:66",
+            },
+          },
           id: "links-uncle",
           kind: "npc",
           name: "Link's Uncle",
@@ -94,6 +102,12 @@ export const OPEN_HYRULE_CASTLE_ESCAPE = {
           source: "app/Region/Open/HyruleCastleEscape.php:22",
         },
         {
+          // No dungeon item that is not wild (58-63)
+          fill: {
+            refuse: refuseKeptDungeonItems(
+              "app/Region/Open/HyruleCastleEscape.php:59",
+            ),
+          },
           id: "secret-passage",
           kind: "chest",
           name: "Secret Passage",

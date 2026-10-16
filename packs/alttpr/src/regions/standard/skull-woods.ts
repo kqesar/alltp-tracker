@@ -1,11 +1,9 @@
 // app/Region/Standard/SkullWoods.php: Skull Woods, its locations and its
 // prize.
 //
-// Not ported here: the fill rules and always-allow of the Pinball Room
-// (106-108, the key basic placement forces there), the Big Chest (112-116)
-// and the boss (138-151), which Location::canFill reads when the randomizer
-// places an item; they wait for src/fill.ts. canPlaceBoss (81-96) is boss
-// shuffle's, which the pack does not model (bosses.ts).
+// Not ported here: canPlaceBoss (81-96), boss shuffle's, which the pack does
+// not model (bosses.ts).
+import { dungeonBoss } from "../../bosses";
 import type { RegionModule } from "../../world";
 
 /**
@@ -16,12 +14,20 @@ const BACK =
   "fireRod & (moonPearl | setting(canDungeonRevive) & pegasusBoots & (magicMirror | @hasABottle))";
 
 /**
- * The boss (128-137), whose rule is the prize's too: can_complete is the
- * boss's canAccess (124-126). With wild maps or compasses the boss wants its
- * dungeon's, unless it holds that item itself (`hasItem`), which a tracker
- * cannot know: `maybe`.
+ * The boss (128-151), whose rule is the prize's too: can_complete is the
+ * boss's canAccess (124-126). With wild maps or compasses it wants its
+ * dungeon's (dungeonBoss).
  */
-const BOSS = `${BACK} & (setting(swordless) | @hasSword) & keyD3 >= 3 & @canBeatSkullWoodsBoss & (!setting(wildCompasses) | compassD3 | maybe) & (!setting(wildMaps) | mapD3 | maybe)`;
+const BOSS = dungeonBoss(
+  `${BACK} & (setting(swordless) | @hasSword) & keyD3 >= 3 & @canBeatSkullWoodsBoss`,
+  "D3",
+  {
+    always: 148,
+    file: "app/Region/Standard/SkullWoods.php",
+    fill: 138,
+    holding: 136,
+  },
+);
 
 export const SKULL_WOODS = {
   file: "app/Region/Standard/SkullWoods.php",
@@ -37,6 +43,22 @@ export const SKULL_WOODS = {
       id: "skullWoods",
       locations: [
         {
+          // The big key may lock itself in here, unless every location must
+          // be reachable: nothing else needs it
+          fill: {
+            always: {
+              items: ["BigKeyD3"],
+              req: "!setting(locationsAccessibility)",
+              source: "app/Region/Standard/SkullWoods.php:112",
+            },
+            refuse: [
+              {
+                refuse: { items: ["BigKeyD3"] },
+                source: "app/Region/Standard/SkullWoods.php:114",
+                when: "setting(locationsAccessibility)",
+              },
+            ],
+          },
           id: "skull-woods/big-chest",
           kind: "bigChest",
           name: "Skull Woods - Big Chest",
@@ -79,6 +101,16 @@ export const SKULL_WOODS = {
           source: "app/Region/Standard/SkullWoods.php:62",
         },
         {
+          // The basic placement forces a key here (106-108)
+          fill: {
+            refuse: [
+              {
+                refuse: { allBut: ["KeyD3"] },
+                source: "app/Region/Standard/SkullWoods.php:106",
+                when: "setting(forceSkullWoodsKey)",
+              },
+            ],
+          },
           id: "skull-woods/pinball-room",
           kind: "chest",
           name: "Skull Woods - Pinball Room",
@@ -86,17 +118,18 @@ export const SKULL_WOODS = {
           source: "app/Region/Standard/SkullWoods.php:63",
         },
         {
+          fill: BOSS.fill,
           id: "skull-woods/boss",
           kind: "drop",
           name: "Skull Woods - Boss",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/SkullWoods.php:128",
         },
         {
           id: "skull-woods/prize",
           kind: "prize",
           name: "Skull Woods - Prize",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/SkullWoods.php:124",
         },
       ],
