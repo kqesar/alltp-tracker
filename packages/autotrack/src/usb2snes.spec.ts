@@ -250,6 +250,22 @@ describe("Usb2SnesTransport against a fake bridge", () => {
       operation: "open",
     });
   });
+
+  it("reaches a bridge again once it restarts on its port", async () => {
+    server = await FakeUsb2Snes.start();
+    const url = server.url;
+    await server.stop();
+    const down = new Usb2SnesTransport({ url });
+    transports.push(down);
+    expect(await rejection(down.open())).toMatchObject({ code: "unreachable" });
+
+    server = await FakeUsb2Snes.start({ port: Number(new URL(url).port) });
+    const up = new Usb2SnesTransport({ url });
+    transports.push(up);
+
+    expect(server.url).toBe(url);
+    expect(await up.open()).toMatchObject({ kind: "sni", url });
+  });
 });
 
 /** A WebSocket the test drives by hand. */
