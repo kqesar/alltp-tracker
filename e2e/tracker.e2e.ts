@@ -154,6 +154,26 @@ test.describe("a tooltip", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("tooltip")).toBeHidden();
   });
+
+  test("shows its item icons without a black backdrop", async ({ page }) => {
+    // King's Tomb: boots, Titan's Mitt and mirror, all once on black squares
+    await page.getByTestId("chest-marker-0").hover();
+    const icons = page.getByTestId("tooltip").locator("img");
+    await expect(icons).toHaveCount(3);
+
+    const cornerAlphas = await icons.evaluateAll((images) =>
+      (images as HTMLImageElement[]).map((image) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+        context.drawImage(image, 0, 0);
+        return context.getImageData(0, 0, 1, 1).data[3];
+      }),
+    );
+
+    expect(cornerAlphas).toEqual([0, 0, 0]);
+  });
 });
 
 test.describe("a run", () => {
