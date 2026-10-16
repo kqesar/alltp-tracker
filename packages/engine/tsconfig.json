@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "isolatedModules": true,
+    // No DOM: the engine runs anywhere (browser main thread, worker, Node).
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    // Only what is imported is typed: no ambient @types/* leak into sources.
+    "types": [],
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src", "examples", "test", "vitest.config.ts"]
+}

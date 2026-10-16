@@ -38,6 +38,15 @@ export default defineConfig({
     // of every spec; browser tests run under Playwright, not here.
     exclude: [...configDefaults.exclude, ".claude/**", "e2e/**"],
     globals: true,
+    // The app keeps the options above; each workspace package brings its own
+    // config (packages/engine runs in Node, without the jsdom setup file).
+    projects: [
+      {
+        extends: true,
+        test: { include: ["src/**/*.spec.{ts,tsx}"], name: "app" },
+      },
+      "packages/*",
+    ],
     setupFiles: ["src/test-setup.ts"],
   },
 });

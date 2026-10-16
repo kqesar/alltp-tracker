@@ -192,6 +192,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(@types/node@26.4.1)(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.2(@types/node@26.4.1)(esbuild@0.28.1)(jiti@2.6.1)(yaml@2.9.0))
 
+  packages/engine: {}
+
 packages:
 
   '@adobe/css-tools@4.5.0':

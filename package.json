@@ -39,6 +39,9 @@
     "public/**/*.{js,jsx,ts,tsx,json,css}": [
       "biome check --write --no-errors-on-unmatched"
     ],
+    "packages/**/*.{js,ts,json}": [
+      "biome check --write --no-errors-on-unmatched"
+    ],
     "package.json": [
       "sort-package-json"
     ]

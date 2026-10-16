@@ -1,3 +1,7 @@
+# Workspace packages: game-agnostic libraries the tracker app builds on.
+packages:
+  - "packages/*"
+
 # esbuild ships its platform binary through a postinstall script; pnpm skips
 # build scripts unless they are allowed explicitly.
 allowBuilds:

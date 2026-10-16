@@ -1,0 +1,17 @@
+{
+  "name": "@alltp/engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Game-agnostic randomizer logic engine: requirement DSL, Kleene evaluator, world solver",
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "bench": "vitest bench --run",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
