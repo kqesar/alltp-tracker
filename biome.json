@@ -35,7 +35,7 @@
       "!pnpm-lock.yaml",
       "!**/.git",
       "!**/.claude/settings.local.json",
-      "!**/.claude/worktrees"
+      "!.claude/worktrees"
     ]
   },
   "formatter": {
