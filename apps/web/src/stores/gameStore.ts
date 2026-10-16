@@ -1,16 +1,19 @@
+import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { MEDALLION_VALUES, SMALL_KEYS_MAX_BY_INDEX } from "@/constants";
-import { chests } from "@/data/chests";
-import { items as initialItems, itemsMax, itemsMin } from "@/data/items";
+import { items as initialItems } from "@/data/items";
 import {
   DEFAULT_SHORTCUTS,
   type Keymap,
   restoreShortcuts,
 } from "@/data/keymap";
 import type { ItemState } from "@/data/logic";
-import { DEFAULT_PRESET_ID, getPreset } from "@/data/presets";
+import { DEFAULT_PRESET_ID, getPreset, type RunSettings } from "@/data/presets";
+import { counterMax } from "@/logic/settings";
 import {
+  GAME,
+  itemRange,
   migrate,
   PERSIST_VERSION,
   type PersistedState,
@@ -34,7 +37,11 @@ type GameState = Progress &
     handleMedallionChange: (bossNumber: number, newValue: number) => void;
     /** Step a dungeon's medallion through unknown, Bombos, Ether, Quake */
     stepMedallion: (dungeonIndex: number, direction?: Direction) => void;
-    toggleChest: (chestIndex: number) => void;
+    /**
+     * Check locations together, as a map marker stands for them: all of
+     * them once any is left, none once all are checked.
+     */
+    toggleChecks: (locations: readonly string[]) => void;
     setBigKeysVisible: (visible: boolean) => void;
     setMapLayout: (layout: MapLayout) => void;
     /** The keyboard shortcuts' master switch */
@@ -66,12 +73,21 @@ const HISTORY_LIMIT = 200;
 /** Medallion states: unknown, then Bombos, Ether and Quake. */
 const MEDALLION_STATES = MEDALLION_VALUES.QUAKE + 1;
 
-/** A fresh run of the given preset: nothing found, nothing opened. */
+/** Every dungeon counter full, for a run of these settings. */
+const fullCounters = (run: RunSettings): Record<string, number> =>
+  Object.fromEntries(
+    LEGACY_DUNGEONS.map((_, index) => [
+      `chest${index}`,
+      counterMax(index, run),
+    ]),
+  );
+
+/** A fresh run of the given preset: nothing found, nothing checked. */
 const createProgress = (presetId: string = DEFAULT_PRESET_ID): Progress => {
   const preset = getPreset(presetId);
   return {
-    chestsOpened: chests.map(() => false),
-    items: { ...initialItems } as ItemState,
+    checked: {},
+    items: { ...initialItems, ...fullCounters(preset.settings) } as ItemState,
     medallions: Array(10).fill(0) as number[],
     presetId: preset.id,
     settings: preset.settings,
@@ -86,22 +102,33 @@ const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
   shortcuts: DEFAULT_SHORTCUTS,
 });
 
-/** Lay saved progress over fresh progress; a missing field keeps its fresh value. */
+/**
+ * Lay saved progress over fresh progress; a missing field keeps its fresh
+ * value. A dungeon counter the save lacks starts full for the run's
+ * settings, which may not be the fresh run's.
+ */
 const restoreProgress = (
   base: Progress,
   saved: Partial<Progress>,
-): Progress => ({
-  chestsOpened: base.chestsOpened.map(
-    (opened, index) => saved.chestsOpened?.[index] ?? opened,
-  ),
-  items: saved.items
-    ? ({ ...base.items, ...saved.items } as ItemState)
-    : base.items,
-  medallions: saved.medallions ?? base.medallions,
-  presetId: saved.presetId ?? base.presetId,
-  settings: saved.settings ?? base.settings,
-  smallKeys: saved.smallKeys ?? base.smallKeys,
-});
+): Progress => {
+  const settings = saved.settings ?? base.settings;
+  const items =
+    saved.items || settings !== base.settings
+      ? ({
+          ...base.items,
+          ...(settings === base.settings ? {} : fullCounters(settings)),
+          ...saved.items,
+        } as ItemState)
+      : base.items;
+  return {
+    checked: saved.checked ?? base.checked,
+    items,
+    medallions: saved.medallions ?? base.medallions,
+    presetId: saved.presetId ?? base.presetId,
+    settings,
+    smallKeys: saved.smallKeys ?? base.smallKeys,
+  };
+};
 
 /** Lay saved display preferences over the current ones. */
 const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
@@ -120,7 +147,7 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
 
 /** The run alone, as a save file carries it. */
 const progressOf = (state: GameState): Progress => ({
-  chestsOpened: state.chestsOpened,
+  checked: state.checked,
   items: state.items,
   medallions: state.medallions,
   presetId: state.presetId,
@@ -142,6 +169,7 @@ const record = (state: GameState, next: Partial<Progress>) => ({
 const toPersisted = (state: GameState): PersistedState => ({
   ...progressOf(state),
   bigKeysVisible: state.bigKeysVisible,
+  game: GAME,
   mapLayout: state.mapLayout,
   shortcuts: state.shortcuts,
 });
@@ -185,8 +213,7 @@ export const useGameStore = create<GameState>()(
             // Chest counters count down as chests are emptied; everything
             // else counts up. Both wrap round to the far end of their range.
             const step = (item.startsWith("chest") ? -1 : 1) * direction;
-            const min = itemsMin[item];
-            const max = itemsMax[item];
+            const [min, max] = itemRange(item, state.settings);
             const next = current + step;
             return record(state, {
               items: {
@@ -262,14 +289,17 @@ export const useGameStore = create<GameState>()(
           );
         },
 
-        toggleChest: (chestIndex: number) =>
-          set((state) =>
-            record(state, {
-              chestsOpened: state.chestsOpened.map((opened, index) =>
-                index === chestIndex ? !opened : opened,
-              ),
-            }),
-          ),
+        toggleChecks: (locations: readonly string[]) =>
+          set((state) => {
+            if (locations.length === 0) return state;
+            const done = locations.every((id) => state.checked[id]);
+            const checked = { ...state.checked };
+            for (const id of locations) {
+              if (done) delete checked[id];
+              else checked[id] = true;
+            }
+            return record(state, { checked });
+          }),
 
         undo: () =>
           set((state) => {
@@ -289,7 +319,10 @@ export const useGameStore = create<GameState>()(
           // instead of discarding the whole save.
           return {
             ...current,
-            ...restoreProgress(current, validateProgress(saved).value),
+            ...restoreProgress(
+              current,
+              validateProgress(saved, current.settings).value,
+            ),
             ...restorePrefs(current, saved as Partial<Prefs>),
             // The run was replaced from outside (first load, another tab):
             // undoing would now rewind someone else's changes.

@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { chests } from "@/data/chests";
 import { DEFAULT_KEYMAP, DEFAULT_SHORTCUTS } from "@/data/keymap";
+import v1Export from "@/stores/fixtures/v1-export.json";
+import v2Export from "@/stores/fixtures/v2-export.json";
+import v5KeysanityExport from "@/stores/fixtures/v5-keysanity-export.json";
+import v5LocalStorage from "@/stores/fixtures/v5-local-storage.json";
 import { useGameStore } from "@/stores/gameStore";
 import { PERSIST_VERSION, parseSave } from "@/stores/persistence";
 
@@ -29,8 +32,11 @@ describe("GameStore", () => {
     expect(state.presetId).toBe("open");
     expect(state.medallions).toEqual(Array(10).fill(0));
     expect(state.smallKeys).toEqual(Array(10).fill(0));
-    expect(state.chestsOpened).toEqual(chests.map(() => false));
+    expect(state.checked).toEqual({});
     expect(state.items.boss0).toBe(1);
+    expect(
+      Array.from({ length: 10 }, (_, index) => state.items[`chest${index}`]),
+    ).toEqual([3, 2, 2, 5, 6, 2, 4, 3, 2, 5]);
     expect(state.bigKeysVisible).toBe(false);
     expect(state.mapLayout).toBe("auto");
   });
@@ -62,6 +68,16 @@ describe("GameStore", () => {
 
       handleItemClick("chest0");
       expect(useGameStore.getState().items.chest0).toBe(3);
+    });
+
+    it("counts every location of a keysanity dungeon", () => {
+      useGameStore.getState().applyPreset("keysanity");
+      expect(useGameStore.getState().items.chest3).toBe(14);
+
+      useGameStore.getState().handleItemClick("chest3", -1);
+      expect(useGameStore.getState().items.chest3).toBe(0);
+      useGameStore.getState().handleItemClick("chest3", -1);
+      expect(useGameStore.getState().items.chest3).toBe(1);
     });
 
     it("toggles a boss between alive and beaten", () => {
@@ -102,15 +118,40 @@ describe("GameStore", () => {
     });
   });
 
-  it("toggles one chest and leaves the others alone", () => {
-    useGameStore.getState().toggleChest(2);
+  describe("checked locations", () => {
+    const SHED = ["mire-shed/left", "mire-shed/right"];
 
-    const opened = useGameStore.getState().chestsOpened;
-    expect(opened[2]).toBe(true);
-    expect(opened.filter(Boolean)).toHaveLength(1);
+    it("checks a marker's locations together, then none of them", () => {
+      useGameStore.getState().toggleChecks(SHED);
+      expect(useGameStore.getState().checked).toEqual({
+        "mire-shed/left": true,
+        "mire-shed/right": true,
+      });
 
-    useGameStore.getState().toggleChest(2);
-    expect(useGameStore.getState().chestsOpened[2]).toBe(false);
+      useGameStore.getState().toggleChecks(SHED);
+      expect(useGameStore.getState().checked).toEqual({});
+    });
+
+    it("checks them all while any is left, and leaves the rest alone", () => {
+      useGameStore.getState().toggleChecks(["kings-tomb"]);
+      useGameStore.getState().toggleChecks(["mire-shed/left"]);
+
+      useGameStore.getState().toggleChecks(SHED);
+
+      expect(Object.keys(useGameStore.getState().checked).sort()).toEqual([
+        "kings-tomb",
+        "mire-shed/left",
+        "mire-shed/right",
+      ]);
+    });
+
+    it("records nothing for a marker that stands for no location", () => {
+      const before = useGameStore.getState();
+
+      before.toggleChecks([]);
+
+      expect(useGameStore.getState()).toBe(before);
+    });
   });
 
   describe("Small Keys", () => {
@@ -135,7 +176,7 @@ describe("GameStore", () => {
       state.applyPreset("keysanity");
       state.setMapLayout("stacked");
       state.setBigKeysVisible(false);
-      state.toggleChest(0);
+      state.toggleChecks(["kings-tomb"]);
       state.handleItemClick("boss0");
       state.handleItemClick("hookshot");
       state.handleSmallKeyClick(3);
@@ -144,8 +185,9 @@ describe("GameStore", () => {
       useGameStore.getState().reset();
 
       const after = useGameStore.getState();
-      expect(after.chestsOpened[0]).toBe(false);
+      expect(after.checked).toEqual({});
       expect(after.items.boss0).toBe(1);
+      expect(after.items.chest3).toBe(14);
       expect(after.items.hookshot).toBe(false);
       expect(after.smallKeys[3]).toBe(0);
       expect(after.medallions[8]).toBe(0);
@@ -157,23 +199,23 @@ describe("GameStore", () => {
 
   describe("export and import", () => {
     it("round-trips the progress of a run", () => {
-      const { handleItemClick, toggleChest, handleMedallionChange, reset } =
+      const { handleItemClick, toggleChecks, handleMedallionChange, reset } =
         useGameStore.getState();
       handleItemClick("hookshot");
       handleItemClick("boss3");
-      toggleChest(2);
+      toggleChecks(["links-house"]);
       handleMedallionChange(8, 2);
       const saved = useGameStore.getState().exportState();
 
       reset();
-      expect(useGameStore.getState().chestsOpened[2]).toBe(false);
+      expect(useGameStore.getState().checked).toEqual({});
 
       importSave(saved);
 
       const state = useGameStore.getState();
       expect(state.items.hookshot).toBe(true);
       expect(state.items.boss3).toBe(2);
-      expect(state.chestsOpened[2]).toBe(true);
+      expect(state.checked).toEqual({ "links-house": true });
       expect(state.medallions[8]).toBe(2);
     });
 
@@ -189,21 +231,42 @@ describe("GameStore", () => {
     });
 
     it("reads a version 1 export, whose map kept its own beaten flags", () => {
-      const v1Export = JSON.stringify({
-        // Version 1 tables had 65 chests
-        chestsOpened: [true, ...Array(64).fill(false)],
-        dungeonsBeaten: [false, true],
-        items: { boss0: 2, hookshot: true },
-      });
+      importSave(JSON.stringify(v1Export));
 
-      importSave(v1Export);
-
-      const { items, chestsOpened } = useGameStore.getState();
+      const { checked, items, medallions } = useGameStore.getState();
+      // dungeonsBeaten[0] from the map, boss2 from the grid
       expect(items.boss0).toBe(2);
-      expect(items.boss1).toBe(2);
-      expect(items.boss2).toBe(1);
-      expect(items.hookshot).toBe(true);
-      expect(chestsOpened[0]).toBe(true);
+      expect(items.boss2).toBe(2);
+      expect(items.boss1).toBe(1);
+      expect(items).toMatchObject({ bow: 3, chest3: 2, hookshot: true });
+      expect(items).not.toHaveProperty("dungeon");
+      expect(medallions[8]).toBe(2);
+      // 65 flags: King's Tomb, Light World Swamp, Kakariko Well, the second
+      // West of Sanctuary (folded into the first) and Bridge, which stands
+      // for no location
+      expect(Object.keys(checked).sort()).toEqual([
+        "floodgate-chest",
+        "kakariko-well/bottom",
+        "kakariko-well/left",
+        "kakariko-well/middle",
+        "kakariko-well/right",
+        "kakariko-well/top",
+        "kings-tomb",
+        "pegasus-rocks",
+        "sunken-treasure",
+      ]);
+    });
+
+    it("reads a version 2 export the same way", () => {
+      importSave(JSON.stringify(v2Export));
+
+      const state = useGameStore.getState();
+      expect(state.checked).toEqual(
+        expect.objectContaining({ "kings-tomb": true, "pegasus-rocks": true }),
+      );
+      expect(Object.keys(state.checked)).toHaveLength(9);
+      expect(state.items).toMatchObject({ boss0: 2, glove: 1 });
+      expect(state.presetId).toBe("open");
     });
 
     it("moves an older export's chest flags past the removed duplicate chest", () => {
@@ -211,16 +274,37 @@ describe("GameStore", () => {
       const chestsOpened = Array(65).fill(false);
       chestsOpened[19] = true; // the duplicate West of Sanctuary
       chestsOpened[20] = true; // the chest after it
-      chestsOpened[64] = true; // the last chest
+      chestsOpened[64] = true; // the last chest, Bridge
 
       importSave(JSON.stringify({ chestsOpened }));
 
-      const opened = useGameStore.getState().chestsOpened;
-      expect(opened).toHaveLength(chests.length);
-      expect(opened[18]).toBe(true);
-      expect(opened[19]).toBe(true);
-      expect(opened[63]).toBe(true);
-      expect(opened.filter(Boolean)).toHaveLength(3);
+      expect(Object.keys(useGameStore.getState().checked).sort()).toEqual([
+        "mini-moldorm-cave/far-left",
+        "mini-moldorm-cave/far-right",
+        "mini-moldorm-cave/left",
+        "mini-moldorm-cave/npc",
+        "mini-moldorm-cave/right",
+        "pegasus-rocks",
+      ]);
+    });
+
+    it("reads a version 5 keysanity file, its counters by the items found", () => {
+      importSave(JSON.stringify(v5KeysanityExport));
+
+      const state = useGameStore.getState();
+      expect(state.presetId).toBe("keysanity");
+      // Found 3 of Eastern Palace's 3 and 3 of Palace of Darkness's 5; the
+      // counters now count every location, 6 and 14
+      expect(state.items.chest0).toBe(3);
+      expect(state.items.chest3).toBe(11);
+      expect(state.items.chest4).toBe(10);
+      expect(state.smallKeys[3]).toBe(2);
+      // King's Tomb and Paradox Cave's 7 chests; Bridge stands for none
+      expect(Object.keys(state.checked)).toHaveLength(8);
+      expect(state.checked).toMatchObject({
+        "kings-tomb": true,
+        "paradox-cave-upper/right": true,
+      });
     });
   });
 
@@ -232,6 +316,8 @@ describe("GameStore", () => {
       expect(stored.version).toBe(PERSIST_VERSION);
       expect(stored.state.items.flute).toBe(true);
       expect(stored.state).toHaveProperty("mapLayout");
+      expect(stored.state.game).toBe("alttpr");
+      expect(stored.state).not.toHaveProperty("chestsOpened");
     });
 
     it("restores the valid fields of a damaged save and resets the rest", async () => {
@@ -266,18 +352,51 @@ describe("GameStore", () => {
       expect(state.items.boss3).toBe(2);
       expect(state.items.boss5).toBe(2);
       expect(state.items.boss4).toBe(1);
-      expect(state.chestsOpened[1]).toBe(true);
+      // Light World Swamp: the Floodgate Chest and the Sunken Treasure
+      expect(state.checked).toEqual({
+        "floodgate-chest": true,
+        "sunken-treasure": true,
+      });
       expect(state.mapLayout).toBe("stacked");
 
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
       expect(stored.version).toBe(PERSIST_VERSION);
       expect(stored.state).not.toHaveProperty("dungeonsBeaten");
     });
+
+    it("upgrades the version 5 save a player left, keeping its preferences", async () => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(v5LocalStorage));
+
+      await useGameStore.persist.rehydrate();
+
+      const state = useGameStore.getState();
+      // Link's House, Sahasrahla's Hut (3), Hyrule Castle (4)
+      expect(Object.keys(state.checked).sort()).toEqual([
+        "hyrule-castle/boomerang-chest",
+        "hyrule-castle/map-chest",
+        "hyrule-castle/zeldas-cell",
+        "links-house",
+        "sahasrahlas-hut/left",
+        "sahasrahlas-hut/middle",
+        "sahasrahlas-hut/right",
+        "sewers/dark-cross",
+      ]);
+      expect(state.items).toMatchObject({ chest0: 0, hammer: true });
+      expect(state.mapLayout).toBe("stacked");
+      expect(state.shortcuts).toEqual({
+        enabled: false,
+        keymap: { "advance:hookshot": "KeyH" },
+      });
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+      expect(stored.version).toBe(6);
+      expect(stored.state.checked).toEqual(state.checked);
+      expect(stored.state).not.toHaveProperty("chestsOpened");
+    });
   });
 
   describe("Run-type presets", () => {
     it("switches preset, turns key cells on for keysanity and clears the board", () => {
-      useGameStore.getState().toggleChest(0);
+      useGameStore.getState().toggleChecks(["kings-tomb"]);
 
       useGameStore.getState().applyPreset("keysanity");
 
@@ -285,7 +404,7 @@ describe("GameStore", () => {
       expect(state.presetId).toBe("keysanity");
       expect(state.settings.keysanity).toBe(true);
       expect(state.bigKeysVisible).toBe(true);
-      expect(state.chestsOpened[0]).toBe(false);
+      expect(state.checked).toEqual({});
     });
 
     it("turns key cells off when leaving keysanity", () => {
@@ -333,7 +452,7 @@ describe("GameStore", () => {
 
     it("records every kind of progress change", () => {
       const state = useGameStore.getState();
-      state.toggleChest(4);
+      state.toggleChecks(["mimic-cave"]);
       state.handleSmallKeyClick(3);
       state.handleMedallionChange(9, 2);
 
@@ -342,7 +461,7 @@ describe("GameStore", () => {
       useGameStore.getState().undo();
       expect(useGameStore.getState().smallKeys[3]).toBe(0);
       useGameStore.getState().undo();
-      expect(useGameStore.getState().chestsOpened[4]).toBe(false);
+      expect(useGameStore.getState().checked).toEqual({});
     });
 
     it("can take back a new game, a preset switch and an import", () => {
@@ -444,7 +563,7 @@ describe("GameStore", () => {
       });
     });
 
-    it("give a version 4 save the defaults and store it as version 5", async () => {
+    it("give a version 4 save the defaults and store it as the current version", async () => {
       storeSave({ items: { flute: true }, mapLayout: "stacked" }, 4);
 
       await useGameStore.persist.rehydrate();
@@ -454,7 +573,7 @@ describe("GameStore", () => {
       expect(state.mapLayout).toBe("stacked");
       expect(state.shortcuts).toEqual(DEFAULT_SHORTCUTS);
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
-      expect(stored.version).toBe(5);
+      expect(stored.version).toBe(PERSIST_VERSION);
       expect(stored.state.shortcuts.keymap).toEqual(DEFAULT_KEYMAP);
     });
 

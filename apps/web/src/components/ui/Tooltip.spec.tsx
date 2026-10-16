@@ -153,7 +153,7 @@ describe("Tooltip", () => {
     fireEvent.click(marker);
 
     expect(tooltip()).toHaveTextContent("King's Tomb");
-    expect(useGameStore.getState().chestsOpened[0]).toBe(false);
+    expect(useGameStore.getState().checked).toEqual({});
 
     fireEvent.pointerDown(document.body);
     expect(tooltip()).toBeNull();
@@ -167,7 +167,7 @@ describe("Tooltip", () => {
     fireEvent.pointerUp(marker, { pointerType: "touch" });
     fireEvent.click(marker);
 
-    expect(useGameStore.getState().chestsOpened[0]).toBe(true);
+    expect(useGameStore.getState().checked).toEqual({ "kings-tomb": true });
     expect(tooltip()).toBeNull();
   });
 
