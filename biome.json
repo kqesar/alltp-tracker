@@ -29,6 +29,8 @@
       "!**/build",
       "!**/coverage",
       "!**/coverage_backup",
+      "!**/playwright-report",
+      "!**/test-results",
       "!package.json",
       "!pnpm-lock.yaml",
       "!**/.git",

@@ -31,7 +31,7 @@ pnpm vitest run <file>       # One spec file; add -t "name" to filter by test na
 
 `tsc -b` writes its build info and the config projects' output under `node_modules/.tmp`, never next to the sources: a stray `vite.config.js` would shadow `vite.config.ts`.
 
-The `verifier` subagent runs lint, types, tests and build and returns only the failures; use it instead of reading full command output.
+The `verifier` subagent runs lint, types, tests and build and returns only the failures; use it instead of reading full command output. When running a check yourself, judge it by its exit code, never by the last line of its output: Biome prints its error count before a trailing blank line.
 
 ## Conventions
 
