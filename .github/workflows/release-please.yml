@@ -1,0 +1,26 @@
+name: Release
+
+# release-please keeps one pull request open that bumps the version and
+# writes the changelog from the commit messages merged since the last release
+# (release-please-config.json says which types are listed). Merging that pull
+# request tags the release and publishes it on GitHub. The workflow token
+# opens it, so no check runs on it: it only touches the version and changelog.
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+# Two quick merges must not race on the release pull request
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v5

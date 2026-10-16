@@ -53,4 +53,4 @@ pnpm test:coverage:show
 
 ## Releases
 
-Pushing to `master` triggers an automatic patch release; minor and major releases go through the *Release and Changelog* workflow dispatch. The changelog is generated from the commit messages, which is why the conventions above matter. `pnpm release:dry` shows what a release would produce.
+[release-please](https://github.com/googleapis/release-please) keeps a pull request titled `chore(master): release x.y.z` open on `master`, and each merge updates it from the commit messages, which is why the conventions above matter. The bump follows the commit types: `feat` is minor, a breaking change is major, anything else listed in the changelog (`fix`, `perf`, `revert`, `docs`, `refactor`) is patch. Merging that pull request tags the release and publishes it on GitHub. The site itself is deployed on every merge to `master`, release or not.

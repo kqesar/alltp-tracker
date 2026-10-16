@@ -6,24 +6,9 @@ on:
   push:
     branches: [master]
   pull_request:
-  workflow_call:
-    inputs:
-      build:
-        description: 'Run build step'
-        required: false
-        type: boolean
-        default: false
-    outputs:
-      test-status:
-        description: "Test execution status"
-        value: ${{ jobs.ci.outputs.test-status }}
-      lint-status:
-        description: "Lint execution status"
-        value: ${{ jobs.ci.outputs.lint-status }}
 
 # A new push to a pull request makes its running checks obsolete: cancel them.
-# Pushes to master always run to the end. github.workflow differs when
-# validate-release calls this file, so those runs never cancel these.
+# Pushes to master always run to the end.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -36,10 +21,7 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    outputs:
-      test-status: ${{ steps.test.outcome }}
-      lint-status: ${{ steps.lint.outcome }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -96,11 +78,6 @@ jobs:
             echo "Coverage file not found"
           fi
 
-      - name: Build project
-        id: build
-        if: inputs.build == true
-        run: pnpm build
-
       - name: Comment PR with results
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v9
@@ -114,13 +91,6 @@ jobs:
           script: |
             const lintStatus = '${{ steps.lint.outcome }}' === 'success' ? '✅' : '❌';
             const testStatus = '${{ steps.test.outcome }}' === 'success' ? '✅' : '❌';
-            
-            let buildRow = '';
-            if ('${{ inputs.build }}' === 'true') {
-              const buildOutcome = '${{ steps.build.outcome }}';
-              const buildStatus = buildOutcome === 'success' ? '✅' : buildOutcome === 'skipped' ? '⏭️' : '❌';
-              buildRow = `| Build | ${buildStatus} |`;
-            }
 
             // Coverage section
             let coverageSection = '';
@@ -158,8 +128,7 @@ jobs:
             `;
             }
 
-            const hasFailures = lintStatus === '❌' || testStatus === '❌' || 
-              ('${{ inputs.build }}' === 'true' && '${{ steps.build.outcome }}' === 'failure');
+            const hasFailures = lintStatus === '❌' || testStatus === '❌';
 
             const comment = `## 🔍 CI Results
 
@@ -167,7 +136,6 @@ jobs:
             |-------|--------|
             | Linting | ${lintStatus} |
             | Tests | ${testStatus} |
-            ${buildRow}
             ${coverageSection}
             ${hasFailures ? '❌ Some checks failed. Please review the logs above.' : '✅ All checks passed!'}
 
