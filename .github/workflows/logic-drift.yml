@@ -1,0 +1,48 @@
+name: Logic drift
+
+# Once a week, and on demand, compare the head of the randomizer's default
+# branch with the commit packs/alttpr/upstream.json pins. When a file it
+# lists changed, or LOGIC moved, open or update the one open issue labelled
+# logic-drift; the logic-drift skill (.claude/skills/logic-drift) ports the
+# change from there. Nothing changed: nothing happens.
+# Upstream is read through the GitHub API only: this workflow checks out
+# none of it and runs none of its code. packs/alttpr/scripts/logic-drift.mjs
+# holds the logic, with its tests.
+on:
+  schedule:
+    - cron: '43 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+# Two runs at once could both open the issue
+concurrency:
+  group: logic-drift
+  cancel-in-progress: false
+
+jobs:
+  logic-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      # The manifest and the script that reads it, nothing else
+      - name: Checkout the manifest
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            packs/alttpr/upstream.json
+            packs/alttpr/scripts/logic-drift.mjs
+          sparse-checkout-cone-mode: false
+
+      - name: Compare upstream with the pinned commit
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { checkDrift } = await import(
+              `${process.env.GITHUB_WORKSPACE}/packs/alttpr/scripts/logic-drift.mjs`
+            );
+            await checkDrift({ context, core, github });
