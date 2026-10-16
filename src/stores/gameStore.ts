@@ -40,7 +40,19 @@ type GameState = Progress &
 
     /** Start a new game with the current preset; display prefs are kept */
     reset: () => void;
+
+    /** Earlier states of the run, most recent last; never persisted */
+    past: Progress[];
+    /** States undone and not yet redone, next first */
+    future: Progress[];
+    /** Step the run back to before its last change */
+    undo: () => void;
+    /** Re-apply the change most recently undone */
+    redo: () => void;
   };
+
+/** Undo depth: far more than a run needs, and each step is a few KB. */
+const HISTORY_LIMIT = 200;
 
 /** A fresh run of the given preset: nothing found, nothing opened. */
 const createProgress = (presetId: string = DEFAULT_PRESET_ID): Progress => {
@@ -100,6 +112,16 @@ const progressOf = (state: GameState): Progress => ({
   smallKeys: state.smallKeys,
 });
 
+/**
+ * A progress change that can be undone: remember the run it replaces and drop
+ * the redo stack, as any editor does once a new change is made.
+ */
+const record = (state: GameState, next: Partial<Progress>) => ({
+  ...next,
+  future: [],
+  past: [...state.past, progressOf(state)].slice(-HISTORY_LIMIT),
+});
+
 /** Project the store onto what localStorage keeps. */
 const toPersisted = (state: GameState): PersistedState => ({
   ...progressOf(state),
@@ -118,7 +140,7 @@ export const useGameStore = create<GameState>()(
           set((state) => {
             const progress = createProgress(presetId);
             return {
-              ...progress,
+              ...record(state, progress),
               // Key cells follow the run type when it turns keysanity on or
               // off; otherwise the player's own choice stands.
               bigKeysVisible:
@@ -131,35 +153,37 @@ export const useGameStore = create<GameState>()(
 
         exportState: () =>
           JSON.stringify(toSaveFile(progressOf(get())), null, 2),
+        future: [],
 
         handleItemClick: (item: string) => {
           if (!item || item === "blank") return;
 
-          const { items } = get();
-          const current = items[item];
+          set((state) => {
+            const current = state.items[item];
+            if (typeof current === "boolean") {
+              return record(state, {
+                items: { ...state.items, [item]: !current },
+              });
+            }
 
-          if (typeof current === "boolean") {
-            set({ items: { ...items, [item]: !current } });
-            return;
-          }
-
-          // Chest counters count down as chests are emptied; everything else
-          // counts up. Both wrap round to the far end of their range.
-          const step = item.startsWith("chest") ? -1 : 1;
-          const min = itemsMin[item];
-          const max = itemsMax[item];
-          const next = current + step;
-
-          set({
-            items: {
-              ...items,
-              [item]: next < min ? max : next > max ? min : next,
-            },
+            // Chest counters count down as chests are emptied; everything
+            // else counts up. Both wrap round to the far end of their range.
+            const step = item.startsWith("chest") ? -1 : 1;
+            const min = itemsMin[item];
+            const max = itemsMax[item];
+            const next = current + step;
+            return record(state, {
+              items: {
+                ...state.items,
+                [item]: next < min ? max : next > max ? min : next,
+              },
+            });
           });
         },
 
         handleMedallionChange: (bossNumber: number, newValue: number) => {
-          const { medallions, caption } = get();
+          const state = get();
+          const { medallions, caption } = state;
           const newMedallions = [...medallions];
           newMedallions[bossNumber] = newValue;
 
@@ -181,14 +205,14 @@ export const useGameStore = create<GameState>()(
           }
 
           set({
+            ...record(state, { medallions: newMedallions }),
             caption: updatedCaption,
-            medallions: newMedallions,
           });
         },
 
         handleSmallKeyClick: (dungeonIndex: number) => {
-          const { smallKeys } = get();
-          const newSmallKeys = [...smallKeys];
+          const state = get();
+          const newSmallKeys = [...state.smallKeys];
 
           // Maximum small keys per dungeon, indexed 0-9
           const maxForDungeon = SMALL_KEYS_MAX_BY_INDEX[dungeonIndex] ?? 0;
@@ -199,13 +223,28 @@ export const useGameStore = create<GameState>()(
               ? 0
               : newSmallKeys[dungeonIndex] + 1;
 
-          set({ smallKeys: newSmallKeys });
+          set(record(state, { smallKeys: newSmallKeys }));
         },
 
         loadProgress: (progress: Partial<Progress>) =>
-          set(restoreProgress(createProgress(), progress)),
+          set((state) =>
+            record(state, restoreProgress(createProgress(), progress)),
+          ),
+        past: [],
 
-        reset: () => set(createProgress(get().presetId)),
+        redo: () =>
+          set((state) => {
+            const [next, ...later] = state.future;
+            if (!next) return state;
+            return {
+              ...next,
+              future: later,
+              past: [...state.past, progressOf(state)],
+            };
+          }),
+
+        reset: () =>
+          set((state) => record(state, createProgress(state.presetId))),
 
         setBigKeysVisible: (visible: boolean) =>
           set({ bigKeysVisible: visible }),
@@ -215,11 +254,24 @@ export const useGameStore = create<GameState>()(
         setMapLayout: (layout: MapLayout) => set({ mapLayout: layout }),
 
         toggleChest: (chestIndex: number) =>
-          set((state) => ({
-            chestsOpened: state.chestsOpened.map((opened, index) =>
-              index === chestIndex ? !opened : opened,
-            ),
-          })),
+          set((state) =>
+            record(state, {
+              chestsOpened: state.chestsOpened.map((opened, index) =>
+                index === chestIndex ? !opened : opened,
+              ),
+            }),
+          ),
+
+        undo: () =>
+          set((state) => {
+            const previous = state.past.at(-1);
+            if (!previous) return state;
+            return {
+              ...previous,
+              future: [progressOf(state), ...state.future],
+              past: state.past.slice(0, -1),
+            };
+          }),
       }),
       {
         merge: (persisted, current) => {
@@ -230,12 +282,16 @@ export const useGameStore = create<GameState>()(
             ...current,
             ...restoreProgress(current, validateProgress(saved).value),
             ...restorePrefs(current, saved as Partial<Prefs>),
+            // The run was replaced from outside (first load, another tab):
+            // undoing would now rewind someone else's changes.
+            future: [],
+            past: [],
           };
         },
         migrate: (persisted, version) =>
           migrate(persisted, version) as PersistedState,
         name: "alltp-tracker-state",
-        // Only persist progress and prefs; the caption is transient.
+        // Only persist progress and prefs; caption and history are transient.
         partialize: (state) => toPersisted(state),
         version: PERSIST_VERSION,
       },

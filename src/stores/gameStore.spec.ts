@@ -320,6 +320,103 @@ describe("GameStore", () => {
     });
   });
 
+  describe("undo and redo", () => {
+    it("steps back through changes and forward again", () => {
+      const { handleItemClick } = useGameStore.getState();
+      handleItemClick("bow");
+      handleItemClick("hookshot");
+
+      useGameStore.getState().undo();
+      expect(useGameStore.getState().items.hookshot).toBe(false);
+      expect(useGameStore.getState().items.bow).toBe(1);
+
+      useGameStore.getState().undo();
+      expect(useGameStore.getState().items.bow).toBe(0);
+
+      useGameStore.getState().redo();
+      useGameStore.getState().redo();
+      expect(useGameStore.getState().items.bow).toBe(1);
+      expect(useGameStore.getState().items.hookshot).toBe(true);
+    });
+
+    it("records every kind of progress change", () => {
+      const state = useGameStore.getState();
+      state.toggleChest(4);
+      state.handleSmallKeyClick(3);
+      state.handleMedallionChange(9, 2);
+
+      useGameStore.getState().undo();
+      expect(useGameStore.getState().medallions[9]).toBe(0);
+      useGameStore.getState().undo();
+      expect(useGameStore.getState().smallKeys[3]).toBe(0);
+      useGameStore.getState().undo();
+      expect(useGameStore.getState().chestsOpened[4]).toBe(false);
+    });
+
+    it("can take back a new game, a preset switch and an import", () => {
+      useGameStore.getState().handleItemClick("flute");
+
+      useGameStore.getState().reset();
+      useGameStore.getState().undo();
+      expect(useGameStore.getState().items.flute).toBe(true);
+
+      useGameStore.getState().applyPreset("keysanity");
+      useGameStore.getState().undo();
+      expect(useGameStore.getState().presetId).toBe("open");
+      expect(useGameStore.getState().items.flute).toBe(true);
+
+      importSave(JSON.stringify({ items: { hammer: true } }));
+      useGameStore.getState().undo();
+      expect(useGameStore.getState().items.hammer).toBe(false);
+      expect(useGameStore.getState().items.flute).toBe(true);
+    });
+
+    it("forgets the undone branch once a new change is made", () => {
+      useGameStore.getState().handleItemClick("bow");
+      useGameStore.getState().undo();
+
+      useGameStore.getState().handleItemClick("hammer");
+
+      expect(useGameStore.getState().future).toEqual([]);
+      useGameStore.getState().redo();
+      expect(useGameStore.getState().items.bow).toBe(0);
+    });
+
+    it("leaves display preferences and the caption out of the history", () => {
+      const state = useGameStore.getState();
+      state.setCaption("hovered");
+      state.setMapLayout("stacked");
+      state.setBigKeysVisible(true);
+
+      expect(useGameStore.getState().past).toEqual([]);
+    });
+
+    it("does nothing with an empty history", () => {
+      const before = useGameStore.getState();
+
+      before.undo();
+      before.redo();
+
+      expect(useGameStore.getState()).toBe(before);
+    });
+
+    it("keeps the last 200 steps", () => {
+      for (let click = 0; click < 210; click++) {
+        useGameStore.getState().handleItemClick("hookshot");
+      }
+
+      expect(useGameStore.getState().past).toHaveLength(200);
+    });
+
+    it("never saves the history", () => {
+      useGameStore.getState().handleItemClick("flute");
+
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+      expect(stored.state).not.toHaveProperty("past");
+      expect(stored.state).not.toHaveProperty("future");
+    });
+  });
+
   describe("map layout", () => {
     it("switches to the stacked layout", () => {
       useGameStore.getState().setMapLayout("stacked");

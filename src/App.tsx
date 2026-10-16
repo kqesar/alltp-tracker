@@ -6,6 +6,7 @@ import { LiveCaption } from "@/components/ui/Caption";
 import { Header } from "@/components/ui/Header";
 import { TrackerControls } from "@/components/ui/TrackerControls";
 import { defaultItemGrid } from "@/data/items";
+import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
 import { useGameStore } from "@/stores/gameStore";
 
 /**
@@ -13,6 +14,7 @@ import { useGameStore } from "@/stores/gameStore";
  * Manages the overall state of items, layout, settings, and game state
  */
 function App() {
+  useUndoShortcuts();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
   const mapLayout = useGameStore((state) => state.mapLayout);

@@ -45,13 +45,18 @@
   transition: all var(--transition);
 }
 
+.tracker-controls__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .tracker-controls__status {
   align-self: center;
   font-size: var(--font-size-sm);
   color: var(--color-success);
 }
 
-.tracker-controls__button:hover {
+.tracker-controls__button:hover:not(:disabled) {
   color: var(--color-accent);
   background: rgba(255, 255, 255, 0.12);
   border-color: var(--color-accent);
