@@ -3,6 +3,7 @@ import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
 import { Header } from "@/components/ui/Header";
+import { ShortcutsButton } from "@/components/ui/ShortcutsButton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { TrackerControls } from "@/components/ui/TrackerControls";
 import { defaultItemGrid } from "@/data/items";
@@ -32,6 +33,7 @@ function App() {
       <Header />
       <div className="toolbar" data-testid="toolbar">
         <TrackerControls />
+        <ShortcutsButton />
         <BigKeyToggle isVisible={bigKeysVisible} onToggle={setBigKeysVisible} />
       </div>
       <main className="main-content" id="main-content">
