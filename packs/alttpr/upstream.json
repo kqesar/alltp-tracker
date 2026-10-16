@@ -122,7 +122,7 @@
     {
       "file": "app/Region/Standard/ThievesTown.php",
       "module": "src/regions/standard/thieves-town.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Standard/TowerOfHera.php",
