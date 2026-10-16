@@ -85,6 +85,7 @@ export {
   type RaceStatus,
   raceStatus,
 } from "./race-mode";
+export { describeStatus, diagnosticReport, type ReportInput } from "./report";
 export type { MemorySnapshot, PollUpdate } from "./scheduler";
 export {
   AutotrackSession,
@@ -93,6 +94,23 @@ export {
   DEFAULT_BACKOFF,
   type SessionOptions,
 } from "./session";
+export {
+  SETUP_STEPS,
+  type SetupCondition,
+  type SetupLink,
+  type SetupProgress,
+  type SetupStep,
+  type SetupStepId,
+  type SetupVariant,
+  SNI_ASSETS,
+  SNI_LATEST_KNOWN,
+  SNI_RELEASES,
+  type StepProgress,
+  type StepState,
+  setupProgress,
+  sniAssets,
+  statusKeys,
+} from "./setup";
 export type {
   BridgeInfo,
   BridgeKind,
@@ -107,3 +125,4 @@ export {
   type Usb2SnesOptions,
   Usb2SnesTransport,
 } from "./usb2snes";
+export { AUTOTRACK_VERSION } from "./version";
