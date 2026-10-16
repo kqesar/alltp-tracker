@@ -136,6 +136,46 @@ test.describe("item shortcuts", () => {
     );
     await expect(hookshot).toHaveAttribute("aria-keyshortcuts", "Z Shift+Z -");
   });
+
+  test("fetch their dialog's code after the page loads, before any click", async ({
+    page,
+  }) => {
+    const chunk = /\/ShortcutsDialog-[\w-]+\.js$/;
+    // Fetched when the page is idle (or sooner, on hover or focus)
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (source) =>
+            performance
+              .getEntriesByType("resource")
+              .some((entry) => new RegExp(source).test(entry.name)),
+          chunk.source,
+        ),
+      )
+      .toBe(true);
+    const timing = await page.evaluate((source) => {
+      const [navigation] = performance.getEntriesByType(
+        "navigation",
+      ) as PerformanceNavigationTiming[];
+      const entry = performance
+        .getEntriesByType("resource")
+        .find((resource) => new RegExp(source).test(resource.name));
+      return { chunk: entry?.startTime ?? 0, loaded: navigation.loadEventEnd };
+    }, chunk.source);
+    // Not part of the first load: the page was done before it was asked for
+    expect(timing.chunk).toBeGreaterThanOrEqual(timing.loaded);
+
+    const refetches: string[] = [];
+    page.on("request", (request) => {
+      if (chunk.test(request.url())) refetches.push(request.url());
+    });
+    await page.getByTestId("shortcuts-button").click();
+
+    await expect(
+      page.getByRole("dialog", { name: "Keyboard shortcuts" }),
+    ).toBeVisible();
+    expect(refetches).toEqual([]);
+  });
 });
 
 for (const width of WIDTHS) {

@@ -22,6 +22,8 @@ const openWithKeyboard = async () => {
   await user.tab();
   expect(screen.getByTestId("shortcuts-button")).toHaveFocus();
   await user.keyboard("{Enter}");
+  // The dialog's code is a chunk of its own, loaded on first use
+  await screen.findByRole("dialog", { name: "Keyboard shortcuts" });
   return user;
 };
 
@@ -50,7 +52,9 @@ describe("ShortcutsDialog", () => {
     expect(button.tagName).toBe("BUTTON");
     await user.click(button);
 
-    expect(dialog()).toBeInTheDocument();
+    expect(
+      await screen.findByRole("dialog", { name: "Keyboard shortcuts" }),
+    ).toBeInTheDocument();
   });
 
   it("lists every control with its icon, its name and both of its keys", async () => {
