@@ -32,6 +32,7 @@ const LAYOUTS: Record<ToolbarFit, FitLayout> = {
   icons: { gap: 8, padding: 0, widths: [300, 300] },
   labels: { gap: 8, padding: 0, widths: [500, 500] },
   more: { gap: 8, padding: 0, widths: [200, 200, 200] },
+  "more-autotrack": { gap: 0, padding: 0, widths: [50, 50, 50] },
   "more-keys": { gap: 0, padding: 0, widths: [100, 100, 100, 100] },
   "more-map": { gap: 8, padding: 0, widths: [150, 150, 150] },
 };
@@ -50,7 +51,11 @@ describe("chooseFit", () => {
     [307, "more-keys"],
     [200, "more-keys"],
     [199, "compact"],
-    [50, "compact"],
+    [120, "compact"],
+    [119, "more-autotrack"],
+    [75, "more-autotrack"],
+    // Nothing fits: the last form, the narrowest
+    [50, "more-autotrack"],
   ] as const)("at %i px with nothing shown yet, picks %s", (width, fit) => {
     expect(chooseFit(width, layoutOf)).toBe(fit);
   });
@@ -104,6 +109,7 @@ beforeEach(() => {
     icons: 200,
     labels: 400,
     more: 150,
+    "more-autotrack": 40,
     "more-keys": 80,
     "more-map": 100,
   };
@@ -230,13 +236,14 @@ describe("useToolbarFit", () => {
     render(<Toolbar />);
     const folds: Record<number, [string?, string?]> = {};
 
-    for (const width of [700, 400, 250, 170, 100]) {
+    for (const width of [700, 400, 250, 170, 130, 100]) {
       resizeTo(width);
       folds[width] = [toolbar().dataset.fit, toolbar().dataset.fold];
     }
 
     expect(folds).toEqual({
-      100: ["compact", "labels secondary map keys new-game"],
+      100: ["more-autotrack", "labels secondary map keys new-game autotrack"],
+      130: ["compact", "labels secondary map keys new-game"],
       170: ["more-keys", "labels secondary map keys"],
       250: ["more-map", "labels secondary map"],
       400: ["more", "labels secondary"],

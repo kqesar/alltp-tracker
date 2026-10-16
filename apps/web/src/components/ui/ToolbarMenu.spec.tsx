@@ -168,6 +168,25 @@ describe("the toolbar's More menu", () => {
     expect(useGameStore.getState().bigKeysVisible).toBe(true);
   });
 
+  it("leads with Autotracking and its status once the bar folds it last", async () => {
+    const user = userEvent.setup();
+    render(
+      <div data-fold="labels secondary map keys new-game autotrack">
+        <TrackerControls />
+      </div>,
+    );
+    await user.click(more());
+
+    expect(items()[0]).toHaveAccessibleName("Autotracking, Off");
+    expect(items()[0]).toHaveFocus();
+    // The button's dot is for the eye: its name stays "More"
+    expect(more()).toHaveAccessibleName("More");
+    expect(within(more()).getByTestId("autotrack-dot")).toHaveAttribute(
+      "data-phase",
+      "off",
+    );
+  });
+
   it("offers only the folded settings: the map layout alone", async () => {
     const user = userEvent.setup();
     render(

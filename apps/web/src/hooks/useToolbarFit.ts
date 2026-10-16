@@ -13,6 +13,10 @@ import { type RefObject, useLayoutEffect } from "react";
  * - `more-keys`: the key cells toggle too, which the run type mostly sets.
  * - `compact`: New game shows as an icon; Mode keeps the run type's name,
  *   and Undo and Redo, used all run long, never fold.
+ * - `more-autotrack`: last of all, the Autotracking control, whose dot is
+ *   the run's live status and whose race-legal badge a race wants in view:
+ *   it stays in the bar while anything else can give way, and in More, the
+ *   More button carries its dot.
  */
 export const FITS = [
   { fit: "labels", fold: [], rows: 1 },
@@ -23,6 +27,11 @@ export const FITS = [
   {
     fit: "compact",
     fold: ["labels", "secondary", "map", "keys", "new-game"],
+    rows: 2,
+  },
+  {
+    fit: "more-autotrack",
+    fold: ["labels", "secondary", "map", "keys", "new-game", "autotrack"],
     rows: 2,
   },
 ] as const;

@@ -44,10 +44,14 @@ export type Folded = ReadonlySet<string>;
  * then returns focus to.
  * @param children - The menu's items, or a function of what the toolbar has
  * folded, read as the menu opens, that returns them
+ * @param badge - Drawn on the button, for a status folded into the menu; its
+ * CSS shows it only while that control is folded
  */
 export const ToolbarMenu = ({
+  badge,
   children,
 }: {
+  badge?: ReactNode;
   children: ReactNode | ((folded: Folded) => ReactNode);
 }) => {
   const [landing, setLanding] = useState<Landing | null>(null);
@@ -194,6 +198,7 @@ export const ToolbarMenu = ({
       >
         <MoreIcon />
         <span className="sr-only">More</span>
+        {badge}
       </button>
       <div
         aria-labelledby={buttonId}
@@ -213,6 +218,8 @@ export const ToolbarMenu = ({
 };
 
 type ToolbarMenuItemProps = {
+  /** A state shown after the label, in quieter text, and named with it */
+  detail?: string;
   icon: ReactNode;
   label: string;
   onSelect: () => void;
@@ -227,6 +234,7 @@ type ToolbarMenuItemProps = {
  * keys rather than Tab.
  */
 export const ToolbarMenuItem = ({
+  detail,
   icon,
   label,
   onSelect,
@@ -235,6 +243,9 @@ export const ToolbarMenuItem = ({
 }: ToolbarMenuItemProps) => (
   <button
     {...handlers}
+    // The item lays its parts out as flex items, which browsers name with
+    // spaces of their own between them: one name, label then state
+    aria-label={detail ? `${label}, ${detail}` : undefined}
     className="toolbar-menu__item"
     data-testid={testId}
     onClick={onSelect}
@@ -244,6 +255,7 @@ export const ToolbarMenuItem = ({
   >
     {icon}
     {label}
+    {detail && <span className="toolbar-menu__detail">{detail}</span>}
   </button>
 );
 
