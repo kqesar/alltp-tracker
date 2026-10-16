@@ -46,6 +46,16 @@ export {
   derivedFacts,
 } from "./derived";
 export {
+  DUNGEON_IDS,
+  DUNGEONS,
+  type DungeonDef,
+  type DungeonId,
+  dungeon,
+  dungeonLocations,
+  dungeonPool,
+  dungeonRegions,
+} from "./dungeons";
+export {
   EVENT_LOCATIONS,
   type Filler,
   filler,
@@ -64,7 +74,15 @@ export {
   UPSTREAM_ENGLISH_NAMES,
   UPSTREAM_ITEMS,
 } from "./items";
-export { everything, everythingBut, possibleLocations } from "./keys";
+export {
+  everything,
+  everythingBut,
+  type KeyedSolution,
+  possibleLocations,
+  solveWithKeys,
+  type UntrackedItem,
+  untrackedItems,
+} from "./keys";
 export {
   type ItemMatch,
   LOCATION_KINDS,
