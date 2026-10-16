@@ -11,3 +11,11 @@ export {
   UPSTREAM_ENGLISH_NAMES,
   UPSTREAM_ITEMS,
 } from "./items";
+export {
+  LOCATION_KINDS,
+  type LocationDef,
+  type LocationKind,
+  locationId,
+  locationKind,
+  type Source,
+} from "./location";

@@ -1,0 +1,223 @@
+import type { State, Tri } from "@alltp/engine";
+import { describe, expect, it } from "vitest";
+import {
+  type CaseWorld,
+  type ContractSubject,
+  contractHolds,
+  runUpstreamCases,
+} from "./contract";
+import { type Fixture, loadFixtures } from "./fixtures";
+import { loadManifest, type Manifest } from "./manifest";
+
+const manifest = loadManifest();
+const fixtures = loadFixtures();
+
+/** No pack is wired in yet: being asked anything is a bug in the gating. */
+const NO_PACK: ContractSubject = {
+  location: () => {
+    throw new Error("No region is ported yet: no case should run");
+  },
+};
+
+describe("the upstream contract", () => {
+  it("runs the cases of ported test files only, and none is ported yet", () => {
+    const report = runUpstreamCases(fixtures, manifest, NO_PACK);
+    expect(report.files).toEqual([]);
+    expect(Object.values(report.ran).reduce((a, b) => a + b, 0)).toBe(0);
+    expect(report.failures).toEqual([]);
+  });
+});
+
+describe("contractHolds", () => {
+  it.each([
+    [true, "yes", true],
+    [true, "maybe", false],
+    [true, "no", false],
+    [false, "yes", false],
+    [false, "maybe", true],
+    [false, "no", true],
+  ] as [boolean, Tri, boolean][])(
+    "upstream %s, ours %s: %s",
+    (expected, got, holds) => {
+      expect(contractHolds(expected, got)).toBe(holds);
+    },
+  );
+});
+
+describe("runUpstreamCases", () => {
+  const FILE = "tests/NoGlitches/SampleTest.php";
+  const header = fixtures[0]?.upstream;
+  const fixture: Fixture = {
+    cases: [
+      {
+        dataSet: 0,
+        expected: true,
+        file: FILE,
+        items: { add: ["Lamp"], base: "setUp" },
+        kind: "location",
+        line: 10,
+        location: "Lit Room",
+        method: "testLocation",
+      },
+      {
+        dataSet: 1,
+        expected: false,
+        file: FILE,
+        items: { add: [], base: "allItems", except: ["Lamp"] },
+        kind: "location",
+        line: 11,
+        location: "Lit Room",
+        locationItems: { "Turtle Rock Medallion": "Quake" },
+        method: "testLocation",
+      },
+      {
+        dataSet: 0,
+        expected: true,
+        file: FILE,
+        item: "BigKeyP3",
+        items: { add: [], base: "allItems", except: ["BigKeyP3"] },
+        kind: "fill",
+        line: 20,
+        location: "Lit Room",
+        method: "testFillLocation",
+      },
+      {
+        expected: true,
+        file: FILE,
+        items: { add: [], base: "setUp" },
+        kind: "regionEnter",
+        line: 30,
+        method: "testEnter",
+        region: "Tower of Hera",
+      },
+      {
+        config: { "region.wildMaps": true },
+        dataSet: 0,
+        expected: false,
+        file: FILE,
+        item: "MapH2",
+        kind: "regionFill",
+        line: 40,
+        method: "testRegionLockedItems",
+        region: "Tower of Hera",
+      },
+    ],
+    class: "NoGlitches\\SampleTest",
+    file: FILE,
+    generated: "by hand, for this spec",
+    path: "NoGlitches/Sample.json",
+    setUp: {
+      collected: ["RescueZelda"],
+      line: 5,
+      locationItems: { "Misery Mire Medallion": "Ether" },
+    },
+    unsupported: [],
+    upstream: header ?? {
+      commit: "",
+      copyright: "",
+      license: "",
+      logic: 0,
+      repo: "",
+    },
+    worlds: {
+      world: { config: { logic: "NoGlitches" }, line: 6, mode: "open" },
+    },
+  };
+  const ported = (status: "pending" | "ported"): Manifest => ({
+    ...manifest,
+    tests: [
+      { file: FILE, fixture: "test/upstream/NoGlitches/Sample.json", status },
+    ],
+  });
+
+  // Answers yes exactly when the lamp is held: right for the location cases
+  const calls: { kind: string; state?: State; world: CaseWorld }[] = [];
+  const lampSubject: ContractSubject = {
+    fill: (_, __, state, world) => {
+      calls.push({ kind: "fill", state, world });
+      return "maybe";
+    },
+    location: (_, state, world) => {
+      calls.push({ kind: "location", state, world });
+      return state.lamp ? "yes" : "no";
+    },
+    regionFill: (_, __, world) => {
+      calls.push({ kind: "regionFill", world });
+      return "yes";
+    },
+  };
+
+  it("checks each case of a ported file and reports the ones that break the contract", () => {
+    calls.length = 0;
+    const report = runUpstreamCases([fixture], ported("ported"), lampSubject);
+    expect(report.files).toEqual([FILE]);
+    expect(report.ran).toEqual({
+      fill: 1,
+      location: 2,
+      regionComplete: 0,
+      regionEnter: 0,
+      regionFill: 1,
+    });
+    // The subject answers no region entry
+    expect(report.skipped.regionEnter).toBe(1);
+    // The fill wanted yes and got maybe; the region fill wanted no, got yes
+    expect(report.failures).toEqual([
+      {
+        expected: true,
+        file: FILE,
+        got: "maybe",
+        kind: "fill",
+        line: 20,
+        subject: "Lit Room <- BigKeyP3",
+      },
+      {
+        expected: false,
+        file: FILE,
+        got: "yes",
+        kind: "regionFill",
+        line: 40,
+        subject: "Tower of Hera <- MapH2",
+      },
+    ]);
+  });
+
+  it("builds each case's items and world as its test class does", () => {
+    calls.length = 0;
+    runUpstreamCases([fixture], ported("ported"), lampSubject);
+    const [setUp, except, fill, regionFill] = calls;
+    // setUp's RescueZelda, then the case's Lamp
+    expect(setUp?.state).toEqual({ lamp: 1, rescueZelda: 1 });
+    expect(setUp?.world).toEqual({
+      config: { logic: "NoGlitches" },
+      locationItems: { "Misery Mire Medallion": "Ether" },
+      mode: "open",
+    });
+    // Everything but the lamp, with the case's medallion on top of setUp's
+    expect(except?.state).not.toHaveProperty("lamp");
+    expect(except?.state).toMatchObject({ hammer: 1, sword: 4 });
+    expect(except?.world.locationItems).toEqual({
+      "Misery Mire Medallion": "Ether",
+      "Turtle Rock Medallion": "Quake",
+    });
+    expect(fill?.state).not.toHaveProperty("bigKeyP3");
+    expect(regionFill?.world.config).toEqual({
+      logic: "NoGlitches",
+      "region.wildMaps": true,
+    });
+  });
+
+  it("leaves the cases of a pending file alone", () => {
+    calls.length = 0;
+    const report = runUpstreamCases([fixture], ported("pending"), lampSubject);
+    expect(report.files).toEqual([]);
+    expect(calls).toEqual([]);
+    expect(report.failures).toEqual([]);
+  });
+
+  it("needs the world the cases run in", () => {
+    const noWorld = { ...fixture, worlds: {} };
+    expect(() =>
+      runUpstreamCases([noWorld], ported("ported"), lampSubject),
+    ).toThrow(/no \$this->world/);
+  });
+});
