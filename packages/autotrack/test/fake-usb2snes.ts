@@ -41,6 +41,8 @@ export interface FakeOptions {
   readonly chunk?: number;
   /** Delay before each reply. */
   readonly replyDelayMs?: number;
+  /** The port to listen on; by default, one the system picks. */
+  readonly port?: number;
 }
 
 export const SNI_RETROARCH: FakeDevice = {
@@ -79,7 +81,8 @@ export class FakeUsb2Snes {
 
   static start(options: FakeOptions = {}): Promise<FakeUsb2Snes> {
     return new Promise((resolve) => {
-      const server = new WebSocketServer({ host: "127.0.0.1", port: 0 }, () => {
+      const port = options.port ?? 0;
+      const server = new WebSocketServer({ host: "127.0.0.1", port }, () => {
         resolve(new FakeUsb2Snes(server, options));
       });
     });
