@@ -44,6 +44,8 @@ describe("parse: valid requirements", () => {
       "count(crystal) >= setting(crystalsTower)",
       { min: { setting: "crystalsTower" }, names: ["crystal"], type: "count" },
     ],
+    ["reach(turtleRock)", { region: "turtleRock", type: "reach" }],
+    ["?reach ( ledge )", maybe({ region: "ledge", type: "reach" })],
   ])("%j", (source, expected) => {
     expect(parse(source)).toEqual(expected);
   });
@@ -123,6 +125,11 @@ describe("parse: invalid requirements name the position", () => {
     ["!setting", 8, 'Expected "(" after "setting"'],
     ["a >= setting", 12, 'Expected "(" after "setting"'],
     ["a >= setting(2)", 13, 'Expected a setting name but found "2"'],
+    ["reach", 5, 'Expected "(" after "reach" but found end of input'],
+    ["reach(@h)", 6, 'Expected a region name but found "@h"'],
+    ["reach(count)", 6, 'Expected a region name but found "count"'],
+    ["reach(r) >= 1", 9, 'but found ">="'],
+    ["!reach(r)", 0, "only a setting can be negated"],
     ["a < 2", 2, 'only ">=" comparisons exist'],
     ["a == 2", 2, 'only ">=" comparisons exist'],
     ["a > 2", 2, 'only ">=" comparisons exist'],

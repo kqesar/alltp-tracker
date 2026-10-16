@@ -70,14 +70,17 @@ export function solve(world: CompiledWorld, state: State): Solution {
   const items = world.items;
   const values = new Float64Array(items.length);
   for (let i = 0; i < items.length; i++) values[i] = itemValue(state, items[i]);
+  const regionCount = world.regionIds.length;
+  const levels = new Uint8Array(regionCount);
+  // Exits cannot use reach() (compileWorld rejects it), so `levels` is read
+  // only by location requirements, once the regions below are all final.
   const ctx: Context = {
     helpers: new Int8Array(world.helperCount).fill(UNKNOWN),
+    regions: levels,
     values,
   };
 
   const { exitOffsets, exitReqs, exitTargets } = world;
-  const regionCount = world.regionIds.length;
-  const levels = new Uint8Array(regionCount);
   // A region is raised to each level at most once, so neither stack can
   // hold more than every region.
   const yesStack = new Int32Array(regionCount);

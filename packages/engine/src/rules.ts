@@ -99,13 +99,15 @@ export function parseIn(text: string, where: string): Expr {
 
 /**
  * Checks what `expr` refers to: helpers must exist, a group may only appear
- * inside `count()`, and with `items` given every item must be one of them.
+ * inside `count()`, with `items` given every item must be one of them, and
+ * with `regions` given every `reach()` must name one of them.
  */
 export function checkReferences(
   expr: Expr,
   rules: Rules,
   where: string,
   items?: ReadonlySet<string>,
+  regions?: ReadonlyMap<string, unknown>,
 ): void {
   const checkItem = (name: string) => {
     if (items !== undefined && !items.has(name)) {
@@ -134,10 +136,55 @@ export function checkReferences(
           if (!rules.groups.has(name)) checkItem(name);
         }
         break;
+      case "reach":
+        if (regions !== undefined && !regions.has(node.region)) {
+          throw new DefinitionError(
+            `${where} uses reach() of unknown region "${node.region}"`,
+          );
+        }
+        break;
       default:
         break;
     }
   });
+}
+
+/**
+ * The first `reach()` in `expr`, directly or through helpers, as the chain
+ * that leads to it: `["reach(r)"]`, or `["@a", "@b", "reach(r)"]` when `@a`
+ * uses `@b`, which uses `reach(r)`. `memo` caches each helper's answer
+ * (`null` for none) across calls; it also stops a hand-built helper cycle.
+ */
+export function findReach(
+  expr: Expr,
+  rules: Rules,
+  memo: Map<string, readonly string[] | null>,
+): readonly string[] | undefined {
+  switch (expr.type) {
+    case "reach":
+      return [`reach(${expr.region})`];
+    case "helper": {
+      if (!memo.has(expr.name)) {
+        memo.set(expr.name, null);
+        const body = rules.helpers.get(expr.name);
+        const found = body && findReach(body, rules, memo);
+        if (found !== undefined) memo.set(expr.name, found);
+      }
+      const chain = memo.get(expr.name);
+      return chain ? [`@${expr.name}`, ...chain] : undefined;
+    }
+    case "maybe":
+      return findReach(expr.expr, rules, memo);
+    case "and":
+    case "or":
+      for (const arg of expr.args) {
+        const found = findReach(arg, rules, memo);
+        if (found !== undefined) return found;
+      }
+      return undefined;
+    default:
+      return undefined;
+  }
 }
 
 /** The distinct items `count(names)` sums, groups expanded. */

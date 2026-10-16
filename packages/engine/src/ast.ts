@@ -13,6 +13,7 @@ export type Expr =
   | CountExpr
   | HelperExpr
   | SettingExpr
+  | ReachExpr
   | MaybeExpr
   | AndExpr
   | OrExpr;
@@ -67,6 +68,16 @@ export interface SettingExpr {
   readonly negated: boolean;
 }
 
+/**
+ * `reach(region)`: the level of `region` in the solved world. Allowed only
+ * where every region level is already known: location requirements (and
+ * helpers used only there). `compileWorld` rejects it in exits.
+ */
+export interface ReachExpr {
+  readonly type: "reach";
+  readonly region: string;
+}
+
 /** `maybe(x)` or `?x`: "no" becomes "maybe" (see `soften`). */
 export interface MaybeExpr {
   readonly type: "maybe";
@@ -83,7 +94,7 @@ export interface OrExpr {
   readonly args: readonly Expr[];
 }
 
-/** Item, helper, group and setting names. */
+/** Item, helper, group, setting and (inside `reach()`) region names. */
 export const IDENTIFIER = /^[a-z][a-zA-Z0-9_]*$/;
 
 /** Words the grammar claims; none of them can name an item or a group. */
@@ -91,6 +102,7 @@ export const RESERVED_WORDS: ReadonlySet<string> = new Set([
   "count",
   "false",
   "maybe",
+  "reach",
   "setting",
   "true",
 ]);

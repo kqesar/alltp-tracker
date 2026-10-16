@@ -18,6 +18,8 @@ export function itemValue(state: State, name: string): number {
 export interface EvaluateOptions {
   /** The run's settings, for `setting(name)` and `>= setting(name)`. */
   readonly settings?: Settings;
+  /** The level of every region, for `reach(region)`. */
+  readonly regions?: Readonly<Record<string, Tri>>;
 }
 
 const NO_SETTINGS: Settings = {};
@@ -59,6 +61,15 @@ export function evaluate(
         return settingFlag(settings, node.name, WHERE) !== node.negated
           ? YES
           : NO;
+      case "reach": {
+        const regions = options.regions;
+        if (regions === undefined || !Object.hasOwn(regions, node.region)) {
+          throw new DefinitionError(
+            `${WHERE} uses reach(${node.region}), but no level is known for that region`,
+          );
+        }
+        return rank(regions[node.region] as Tri);
+      }
       case "helper": {
         const known = memo.get(node.name);
         if (known !== undefined) return known;
