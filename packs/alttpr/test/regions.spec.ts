@@ -6,8 +6,9 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { foldSettings, parse, walk } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
+import { UPSTREAM_ITEMS } from "../src/items";
 import { type LocationDef, locationId, locationKind } from "../src/location";
-import { compile } from "../src/pack";
+import { compile, STATE_NAMES } from "../src/pack";
 import { RULES } from "../src/rules";
 import {
   type AlttprSettings,
@@ -66,6 +67,65 @@ const builder = new Map(
 const inFile = (source: string, file: string) =>
   source.startsWith(`${file}:`) && /:\d+$/.test(source);
 
+/** Where each part of a location's fill rules was read. */
+function fillSources({ fill }: LocationDef): string[] {
+  if (fill === undefined) return [];
+  return [
+    ...(fill.always ? [fill.always.source] : []),
+    ...(fill.holding ? [fill.holding.source] : []),
+    ...(fill.requires ? [fill.requires.source] : []),
+    ...(fill.refuse ?? []).map((r) => r.source),
+  ];
+}
+
+/**
+ * What a location's fill rules get wrong: an upstream item that does not
+ * exist, or a requirement that reads a name the pack does not have.
+ */
+function fillErrors({ fill, name }: LocationDef): string[] {
+  if (fill === undefined) return [];
+  const errors: string[] = [];
+  const items = [
+    ...(fill.always?.items ?? []),
+    ...Object.keys(fill.holding?.items ?? {}),
+    ...(fill.refuse ?? []).flatMap(({ refuse }) =>
+      "classes" in refuse
+        ? []
+        : "items" in refuse
+          ? refuse.items
+          : refuse.allBut,
+    ),
+  ];
+  for (const item of items) {
+    if (!UPSTREAM_ITEMS.has(item)) errors.push(`${name}: no item ${item}`);
+  }
+  const reqs = [
+    ...(fill.always ? [fill.always.req] : []),
+    ...(fill.requires ? [fill.requires.req] : []),
+    ...Object.values(fill.holding?.items ?? {}),
+    ...(fill.holding?.otherwise ? [fill.holding.otherwise] : []),
+    ...(fill.refuse ?? []).flatMap((r) => (r.when ? [r.when] : [])),
+  ];
+  const names = new Set(STATE_NAMES);
+  for (const req of reqs) {
+    for (const settings of [OPEN, STANDARD, UPSTREAM_TEST]) {
+      try {
+        walk(foldSettings(parse(req), settings, name), (node) => {
+          if (node.type === "item" && !names.has(node.name)) {
+            errors.push(`${name}: ${req} reads ${node.name}`);
+          }
+          if (node.type === "helper" && !RULES.helpers?.[node.name]) {
+            errors.push(`${name}: ${req} calls @${node.name}`);
+          }
+        });
+      } catch (error) {
+        errors.push(`${name}: ${(error as Error).message}`);
+      }
+    }
+  }
+  return [...new Set(errors)];
+}
+
 /** What a ported module gets wrong against upstream's location index. */
 function portErrors(module: RegionModule): string[] {
   const errors: string[] = [];
@@ -99,6 +159,11 @@ function portErrors(module: RegionModule): string[] {
     const seen = location.visible?.source;
     if (seen !== undefined && seen !== "game" && !inFile(seen, module.file)) {
       errors.push(`${where}: visible source ${seen}`);
+    }
+    for (const source of fillSources(location)) {
+      if (!inFile(source, module.file)) {
+        errors.push(`${where}: fill source ${source}`);
+      }
     }
   }
   for (const region of module.regions) {
@@ -196,6 +261,14 @@ describe("the region modules", () => {
           ],
           locations: [
             {
+              fill: {
+                refuse: [
+                  {
+                    refuse: { items: ["KeyP1"] },
+                    source: "app/Region/Standard/Elsewhere.php:3",
+                  },
+                ],
+              },
               id: "eastern-palace/compass",
               kind: "bigChest",
               name: "Eastern Palace - Compass Chest",
@@ -213,8 +286,34 @@ describe("the region modules", () => {
       "Eastern Palace - Compass Chest: id eastern-palace/compass, not eastern-palace/compass-chest",
       "Eastern Palace - Compass Chest: kind bigChest, not chest",
       "Eastern Palace - Compass Chest: visible source app/Region/Standard/Elsewhere.php:2",
+      "Eastern Palace - Compass Chest: fill source app/Region/Standard/Elsewhere.php:3",
       "easternPalace: entrance source app/Region/Standard/Nowhere.php:1",
       "easternPalace: prize eastern-palace/compass is no prize",
+    ]);
+  });
+
+  it("write their fill rules over upstream's items and the pack's names", () => {
+    const errors = [...modules.values()].flatMap((module) =>
+      module.regions.flatMap((r) => r.locations.flatMap(fillErrors)),
+    );
+    expect(errors).toEqual([]);
+    const broken: LocationDef = {
+      ...chest("x", "true"),
+      fill: {
+        always: { items: ["KeyZ9"], req: "keyZ9", source: "game" as never },
+        refuse: [
+          {
+            refuse: { items: ["Hammer"] },
+            source: "game" as never,
+            when: "setting(nowhere)",
+          },
+        ],
+      },
+    };
+    expect(fillErrors(broken)).toEqual([
+      "x: no item KeyZ9",
+      "x: keyZ9 reads keyZ9",
+      expect.stringMatching(/^x: .*nowhere/),
     ]);
   });
 

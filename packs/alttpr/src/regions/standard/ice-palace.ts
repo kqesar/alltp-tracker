@@ -1,9 +1,7 @@
 // app/Region/Standard/IcePalace.php: Ice Palace, its locations and its
 // prize.
-//
-// Not ported here: the boss's fill rules and always-allow (118-130), which
-// Location::canFill reads when the randomizer places an item; they wait for
-// src/fill.ts.
+import { dungeonBoss } from "../../bosses";
+import type { LocationFill } from "../../location";
 import type { RegionModule } from "../../world";
 
 /** The spikes, unless Link can take damage (75-76, 82-83, 88-89). */
@@ -17,14 +15,36 @@ const SPIKES = "(!setting(cantTakeDamage) | caneOfByrna | cape | hookshot)";
  */
 const SPIKE_ROOM = `${SPIKES} & (hookshot | maybe & keyD5)`;
 
+/** The Big Key Chest and the Map Chest, past the Spike Room (73-85). */
+const PAST_SPIKES = `hammer & @canLiftRocks & ${SPIKES}`;
+
 /**
- * The boss (108-117), whose rule is the prize's too: can_complete is the
- * boss's canAccess (104-106). With wild maps or compasses the boss wants its
- * dungeon's, unless it holds that item itself (`hasItem`), which a tracker
- * cannot know: `maybe`.
+ * The three locations the Spike Room's `itemInLocations` names: holding the
+ * big key, the one being filled settles it (92).
  */
-const BOSS =
-  "hammer & @canLiftRocks & @canBeatIcePalaceBoss & bigKeyD5 & (!setting(basicPlacement) & (caneOfSomaria & keyD5 | keyD5 >= 2) | setting(basicPlacement) & keyD5 >= 2) & (!setting(wildCompasses) | compassD5 | maybe) & (!setting(wildMaps) | mapD5 | maybe)";
+const HOLDING_BIG_KEY = (before: string) =>
+  ({
+    holding: {
+      items: { BigKeyD5: `${before}${SPIKES} & (hookshot | keyD5)` },
+      source: "app/Region/Standard/IcePalace.php:92",
+    },
+  }) as const satisfies LocationFill;
+
+/**
+ * The boss (108-130), whose rule is the prize's too: can_complete is the
+ * boss's canAccess (104-106). With wild maps or compasses it wants its
+ * dungeon's (dungeonBoss).
+ */
+const BOSS = dungeonBoss(
+  "hammer & @canLiftRocks & @canBeatIcePalaceBoss & bigKeyD5 & (!setting(basicPlacement) & (caneOfSomaria & keyD5 | keyD5 >= 2) | setting(basicPlacement) & keyD5 >= 2)",
+  "D5",
+  {
+    always: 127,
+    file: "app/Region/Standard/IcePalace.php",
+    fill: 118,
+    holding: 116,
+  },
+);
 
 /**
  * can_enter's gate before its branches (133-136): Zelda rescued, with the
@@ -57,10 +77,11 @@ export const ICE_PALACE = {
       id: "icePalace",
       locations: [
         {
+          fill: HOLDING_BIG_KEY(`${PAST_SPIKES} & `),
           id: "ice-palace/big-key-chest",
           kind: "chest",
           name: "Ice Palace - Big Key Chest",
-          req: `hammer & @canLiftRocks & ${SPIKES} & ${SPIKE_ROOM}`,
+          req: `${PAST_SPIKES} & ${SPIKE_ROOM}`,
           source: "app/Region/Standard/IcePalace.php:73",
         },
         {
@@ -71,13 +92,15 @@ export const ICE_PALACE = {
           source: "app/Region/Standard/IcePalace.php:51",
         },
         {
+          fill: HOLDING_BIG_KEY(`${PAST_SPIKES} & `),
           id: "ice-palace/map-chest",
           kind: "chest",
           name: "Ice Palace - Map Chest",
-          req: `hammer & @canLiftRocks & ${SPIKES} & ${SPIKE_ROOM}`,
+          req: `${PAST_SPIKES} & ${SPIKE_ROOM}`,
           source: "app/Region/Standard/IcePalace.php:80",
         },
         {
+          fill: HOLDING_BIG_KEY(""),
           id: "ice-palace/spike-room",
           kind: "chest",
           name: "Ice Palace - Spike Room",
@@ -106,17 +129,18 @@ export const ICE_PALACE = {
           source: "app/Region/Standard/IcePalace.php:100",
         },
         {
+          fill: BOSS.fill,
           id: "ice-palace/boss",
           kind: "drop",
           name: "Ice Palace - Boss",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/IcePalace.php:108",
         },
         {
           id: "ice-palace/prize",
           kind: "prize",
           name: "Ice Palace - Prize",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/IcePalace.php:104",
         },
       ],

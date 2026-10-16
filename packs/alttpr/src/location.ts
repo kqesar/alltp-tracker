@@ -1,5 +1,6 @@
 // What a location of the pack is: a check on the map, with the rule that
 // opens it and where that rule was read upstream.
+import type { DungeonItemClass } from "./world";
 
 /**
  * The kinds of location: the upstream Location classes (app/Location/*.php),
@@ -58,6 +59,64 @@ export interface LocationDef {
   readonly source: Source;
   /** When what it holds can be seen without getting it. */
   readonly visible?: Visible;
+  /** What the randomizer checks before it places an item here. */
+  readonly fill?: LocationFill;
+}
+
+/**
+ * Some upstream items: listed by name (`KeyD1`), every item of some dungeon
+ * classes (Item\Key, Item\BigKey…: any dungeon's), or every item but some.
+ */
+export type ItemMatch =
+  | { readonly items: readonly string[] }
+  | { readonly classes: readonly DungeonItemClass[] }
+  | { readonly allBut: readonly string[] };
+
+/** A setFillRules clause: items the location refuses. */
+export interface Refusal {
+  readonly refuse: ItemMatch;
+  /** The settings it applies under, as `!setting(x)`; always when omitted. */
+  readonly when?: string;
+  readonly source: Source;
+}
+
+/**
+ * What a region file tells Location::canFill (app/Location.php:72-85) about
+ * one location, beyond its region's dungeon items and its rule: an item may
+ * be placed when it is always allowed, or when the region keeps it, no
+ * refusal names it, `requires` holds and the location is reachable with it
+ * there. Item names are upstream's (`KeyD1`, `BigKeyP3`).
+ */
+export interface LocationFill {
+  /**
+   * setAlwaysAllow: these items go here whatever the region keeps and
+   * whether Link can get them, when `req` holds over the items held and
+   * the settings.
+   */
+  readonly always?: {
+    readonly items: readonly string[];
+    readonly req: string;
+    readonly source: Source;
+  };
+  /** setFillRules, clause by clause. */
+  readonly refuse?: readonly Refusal[];
+  /**
+   * The part of setFillRules that reads more than the item and the
+   * settings, as a requirement over the items held.
+   */
+  readonly requires?: { readonly req: string; readonly source: Source };
+  /**
+   * Its rule once it holds an item that rule asks about (`hasItem` on
+   * itself, or `itemInLocations` over a list that names it): the item's
+   * entry while it holds that item, `otherwise` (`req` when omitted) while
+   * it holds another. `req` reads such a placement as `maybe`, since a
+   * tracker does not know it; placing the item settles it.
+   */
+  readonly holding?: {
+    readonly items: Readonly<Record<string, string>>;
+    readonly otherwise?: string;
+    readonly source: Source;
+  };
 }
 
 /**

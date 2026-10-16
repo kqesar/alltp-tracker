@@ -2,11 +2,7 @@
 // world, from Link's Uncle to the Sanctuary, its locations and its prize,
 // Zelda. Open's escape builds the same locations under other rules
 // (regions/open/hyrule-castle-escape.ts).
-//
-// Not ported here: the fill rules of the Secret Passage (101-106) and Link's
-// Uncle (108-114), which Location::canFill reads when the randomizer places
-// an item; they wait for src/fill.ts.
-import type { RegionModule } from "../../world";
+import { type RegionModule, refuseKeptDungeonItems } from "../../world";
 
 /**
  * The Sanctuary (67-69), whose rule is the prize's too: can_complete is the
@@ -85,6 +81,18 @@ export const HYRULE_CASTLE_ESCAPE = {
           source: "app/Region/Standard/HyruleCastleEscape.php:95",
         },
         {
+          // No dungeon item that is not wild, and the Sanctuary reachable
+          // with what the world already holds (109-113): that depends on
+          // the order the randomizer fills in, which a tracker cannot know
+          fill: {
+            refuse: refuseKeptDungeonItems(
+              "app/Region/Standard/HyruleCastleEscape.php:110",
+            ),
+            requires: {
+              req: "maybe",
+              source: "app/Region/Standard/HyruleCastleEscape.php:109",
+            },
+          },
           id: "links-uncle",
           kind: "npc",
           name: "Link's Uncle",
@@ -92,6 +100,12 @@ export const HYRULE_CASTLE_ESCAPE = {
           source: "app/Region/Standard/HyruleCastleEscape.php:49",
         },
         {
+          // No dungeon item that is not wild (101-106)
+          fill: {
+            refuse: refuseKeptDungeonItems(
+              "app/Region/Standard/HyruleCastleEscape.php:102",
+            ),
+          },
           id: "secret-passage",
           kind: "chest",
           name: "Secret Passage",

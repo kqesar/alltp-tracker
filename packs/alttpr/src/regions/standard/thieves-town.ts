@@ -1,19 +1,19 @@
 // app/Region/Standard/ThievesTown.php: Thieves' Town, its locations and its
 // prize.
-//
-// Not ported here: the fill rules and always-allow of the Big Chest (83-87)
-// and the boss (103-116), which Location::canFill reads when the randomizer
-// places an item; they wait for src/fill.ts.
+import { dungeonBoss } from "../../bosses";
 import type { RegionModule } from "../../world";
 
 /**
- * The boss (97-102), whose rule is the prize's too: can_complete is the
- * boss's canAccess (93-95). With wild maps or compasses the boss wants its
- * dungeon's, unless it holds that item itself (`hasItem`), which a tracker
- * cannot know: `maybe`.
+ * The boss (97-116), whose rule is the prize's too: can_complete is the
+ * boss's canAccess (93-95). With wild maps or compasses it wants its
+ * dungeon's (dungeonBoss).
  */
-const BOSS =
-  "keyD4 & bigKeyD4 & @canBeatThievesTownBoss & (!setting(wildCompasses) | compassD4 | maybe) & (!setting(wildMaps) | mapD4 | maybe)";
+const BOSS = dungeonBoss("keyD4 & bigKeyD4 & @canBeatThievesTownBoss", "D4", {
+  always: 113,
+  file: "app/Region/Standard/ThievesTown.php",
+  fill: 103,
+  holding: 101,
+});
 
 export const THIEVES_TOWN = {
   file: "app/Region/Standard/ThievesTown.php",
@@ -64,6 +64,27 @@ export const THIEVES_TOWN = {
           source: "app/Region/Standard/ThievesTown.php:54",
         },
         {
+          // The key may sit here once the hammer is assumed, unless every
+          // location must be reachable
+          fill: {
+            always: {
+              items: ["KeyD4"],
+              req: "!setting(locationsAccessibility) & hammer",
+              source: "app/Region/Standard/ThievesTown.php:83",
+            },
+            holding: {
+              items: { KeyD4: "hammer & bigKeyD4" },
+              otherwise: "hammer & keyD4 & bigKeyD4",
+              source: "app/Region/Standard/ThievesTown.php:78",
+            },
+            refuse: [
+              {
+                refuse: { items: ["KeyD4"] },
+                source: "app/Region/Standard/ThievesTown.php:85",
+                when: "setting(locationsAccessibility)",
+              },
+            ],
+          },
           id: "thieves-town/big-chest",
           kind: "bigChest",
           name: "Thieves' Town - Big Chest",
@@ -80,17 +101,18 @@ export const THIEVES_TOWN = {
           source: "app/Region/Standard/ThievesTown.php:89",
         },
         {
+          fill: BOSS.fill,
           id: "thieves-town/boss",
           kind: "drop",
           name: "Thieves' Town - Boss",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/ThievesTown.php:97",
         },
         {
           id: "thieves-town/prize",
           kind: "prize",
           name: "Thieves' Town - Prize",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/ThievesTown.php:93",
         },
       ],

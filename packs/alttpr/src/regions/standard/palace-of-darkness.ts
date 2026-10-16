@@ -5,11 +5,8 @@
 // lamp (88, 102, 108, 113, 116, 131, 137, 145, 151), which no monotone rule
 // can say: the rules read `podFewerKeysSuffice`, a fact the state derives
 // from the items (src/derived.ts).
-//
-// Not ported here: the fill rules and always-allow of the Big Key Chest
-// (89-93), Harmless Hellway (117-121), Big Chest (103-105), the Dark Maze
-// (146-148, 152-154) and the boss (167-180), which Location::canFill reads
-// when the randomizer places an item; they wait for src/fill.ts.
+import { dungeonBoss } from "../../bosses";
+import type { LocationFill } from "../../location";
 import type { RegionModule } from "../../world";
 
 /**
@@ -39,12 +36,50 @@ const DARK_BASEMENT = `(${LAMP} | setting(advancedPlacement) & fireRod) & (${FOU
 const DARK_MAZE = `${LAMP} & (${SIX_KEYS})`;
 
 /**
- * The boss (160-166), whose rule is the prize's too: can_complete is the
- * boss's canAccess (156-158). With wild maps or compasses the boss wants its
- * dungeon's, unless it holds that item itself (`hasItem`), which a tracker
- * cannot know: `maybe`.
+ * The boss (160-180), whose rule is the prize's too: can_complete is the
+ * boss's canAccess (156-158). With wild maps or compasses it wants its
+ * dungeon's (dungeonBoss).
  */
-const BOSS = `@canBeatPalaceOfDarknessBoss & hammer & ${LAMP} & @canShootArrows & bigKeyD1 & keyD1 >= 6 & (!setting(wildCompasses) | compassD1 | maybe) & (!setting(wildMaps) | mapD1 | maybe)`;
+const BOSS = dungeonBoss(
+  `@canBeatPalaceOfDarknessBoss & hammer & ${LAMP} & @canShootArrows & bigKeyD1 & keyD1 >= 6`,
+  "D1",
+  {
+    always: 177,
+    file: "app/Region/Standard/PalaceOfDarkness.php",
+    fill: 167,
+    holding: 165,
+  },
+);
+
+const at = (line: number) =>
+  `app/Region/Standard/PalaceOfDarkness.php:${line}` as const;
+
+/**
+ * The Big Key Chest and Harmless Hellway (89-93, 117-121): a key may lock
+ * itself in either once five others are found, unless every location must
+ * be reachable.
+ */
+const KEY_MAY_SIT_HERE = (always: number, fill: number) =>
+  ({
+    always: {
+      items: ["KeyD1"],
+      req: "!setting(locationsAccessibility) & keyD1 >= 5",
+      source: at(always),
+    },
+    refuse: [
+      {
+        refuse: { items: ["KeyD1"] },
+        source: at(fill),
+        when: "setting(locationsAccessibility)",
+      },
+    ],
+  }) as const satisfies LocationFill;
+
+/** Big Chest and the Dark Maze (103-105, 146-148, 152-154): no key here. */
+const NO_KEY = (line: number) =>
+  ({
+    refuse: [{ refuse: { items: ["KeyD1"] }, source: at(line) }],
+  }) as const satisfies LocationFill;
 
 /**
  * can_enter's gate before its branches (183-185): Zelda rescued, and with
@@ -79,6 +114,14 @@ export const PALACE_OF_DARKNESS = {
           source: "app/Region/Standard/PalaceOfDarkness.php:50",
         },
         {
+          fill: {
+            ...KEY_MAY_SIT_HERE(89, 91),
+            holding: {
+              items: { KeyD1: "keyD1" },
+              otherwise: SIX_KEYS,
+              source: at(84),
+            },
+          },
           id: "palace-of-darkness/big-key-chest",
           kind: "chest",
           name: "Palace of Darkness - Big Key Chest",
@@ -116,6 +159,7 @@ export const PALACE_OF_DARKNESS = {
           source: "app/Region/Standard/PalaceOfDarkness.php:140",
         },
         {
+          fill: NO_KEY(103),
           id: "palace-of-darkness/big-chest",
           kind: "bigChest",
           name: "Palace of Darkness - Big Chest",
@@ -132,6 +176,14 @@ export const PALACE_OF_DARKNESS = {
           source: "app/Region/Standard/PalaceOfDarkness.php:107",
         },
         {
+          fill: {
+            ...KEY_MAY_SIT_HERE(117, 119),
+            holding: {
+              items: { KeyD1: FOUR_KEYS },
+              otherwise: SIX_KEYS,
+              source: at(112),
+            },
+          },
           id: "palace-of-darkness/harmless-hellway",
           kind: "chest",
           name: "Palace of Darkness - Harmless Hellway",
@@ -154,6 +206,7 @@ export const PALACE_OF_DARKNESS = {
           source: "app/Region/Standard/PalaceOfDarkness.php:134",
         },
         {
+          fill: NO_KEY(146),
           id: "palace-of-darkness/dark-maze/top",
           kind: "chest",
           name: "Palace of Darkness - Dark Maze - Top",
@@ -161,6 +214,7 @@ export const PALACE_OF_DARKNESS = {
           source: "app/Region/Standard/PalaceOfDarkness.php:144",
         },
         {
+          fill: NO_KEY(152),
           id: "palace-of-darkness/dark-maze/bottom",
           kind: "chest",
           name: "Palace of Darkness - Dark Maze - Bottom",
@@ -168,17 +222,18 @@ export const PALACE_OF_DARKNESS = {
           source: "app/Region/Standard/PalaceOfDarkness.php:150",
         },
         {
+          fill: BOSS.fill,
           id: "palace-of-darkness/boss",
           kind: "drop",
           name: "Palace of Darkness - Boss",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/PalaceOfDarkness.php:160",
         },
         {
           id: "palace-of-darkness/prize",
           kind: "prize",
           name: "Palace of Darkness - Prize",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/PalaceOfDarkness.php:156",
         },
       ],

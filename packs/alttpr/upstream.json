@@ -154,8 +154,8 @@
     {
       "file": "app/Support/LocationCollection.php",
       "module": "src/keys.ts",
-      "role": "itemInLocations: the dungeon key rules ask where a key or big key sits",
-      "status": "pending"
+      "role": "itemInLocations: the dungeon key rules ask where a key or big key sits, which a tracker reads as where it may sit at all",
+      "status": "ported"
     },
     {
       "file": "app/World.php",
@@ -191,7 +191,7 @@
       "file": "app/Location.php",
       "module": "src/fill.ts",
       "role": "canAccess (region, then location rule) and canFill / fill (always-allow and fill rules)",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Item.php",

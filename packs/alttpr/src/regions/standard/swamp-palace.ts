@@ -1,14 +1,11 @@
 // app/Region/Standard/SwampPalace.php: Swamp Palace, its locations and its
 // prize.
 //
-// Not ported here:
-// - the glitched branch of can_enter (185-192: canOneFrameClipUW with
-//   canBootsClip, canSuperSpeed or canOneFrameClipOW), which needs Misery
-//   Mire (`$mire`) and the Old Man's location (West Death Mountain) besides
-//   South Dark World: an entrance comes from one region only;
-// - the fill rules and always-allow of the Entrance (87-91), the Big Chest
-//   (100-104) and the boss (162-175), which Location::canFill reads when the
-//   randomizer places an item; they wait for src/fill.ts.
+// Not ported here: the glitched branch of can_enter (185-192:
+// canOneFrameClipUW with canBootsClip, canSuperSpeed or canOneFrameClipOW),
+// which needs Misery Mire (`$mire`) and the Old Man's location (West Death
+// Mountain) besides South Dark World: an entrance comes from one region only.
+import { dungeonBoss } from "../../bosses";
 import type { RegionModule } from "../../world";
 
 /** `$mire` (75-79): one-frame clipping in from Misery Mire, with its keys. */
@@ -21,12 +18,20 @@ const HERA = "setting(canOneFrameClipUW) & reach(towerOfHera) & bigKeyP3";
 const PAST_PEGS = `(keyD2 | ${MIRE}) & (hammer | ${MIRE} | ${HERA})`;
 
 /**
- * The boss (154-161), whose rule is the prize's too: can_complete is the
- * boss's canAccess (150-152). With wild maps or compasses the boss wants its
- * dungeon's, unless it holds that item itself (`hasItem`), which a tracker
- * cannot know: `maybe`.
+ * The boss (154-175), whose rule is the prize's too: can_complete is the
+ * boss's canAccess (150-152). With wild maps or compasses it wants its
+ * dungeon's (dungeonBoss).
  */
-const BOSS = `hookshot & ${PAST_PEGS} & @canBeatSwampPalaceBoss & (!setting(wildCompasses) | compassD2 | maybe) & (!setting(wildMaps) | mapD2 | maybe)`;
+const BOSS = dungeonBoss(
+  `hookshot & ${PAST_PEGS} & @canBeatSwampPalaceBoss`,
+  "D2",
+  {
+    always: 172,
+    file: "app/Region/Standard/SwampPalace.php",
+    fill: 162,
+    holding: 160,
+  },
+);
 
 export const SWAMP_PALACE = {
   file: "app/Region/Standard/SwampPalace.php",
@@ -42,6 +47,17 @@ export const SWAMP_PALACE = {
       id: "swampPalace",
       locations: [
         {
+          // The palace's key and nothing else, unless keys are wild: the
+          // first door needs it (87-91)
+          fill: {
+            refuse: [
+              {
+                refuse: { allBut: ["KeyD2"] },
+                source: "app/Region/Standard/SwampPalace.php:87",
+                when: "!setting(canOneFrameClipUW) & !setting(wildKeys)",
+              },
+            ],
+          },
           id: "swamp-palace/entrance",
           kind: "chest",
           name: "Swamp Palace - Entrance",
@@ -49,6 +65,22 @@ export const SWAMP_PALACE = {
           source: "app/Region/Standard/SwampPalace.php:50",
         },
         {
+          // The big key may lock itself in here, unless every location must
+          // be reachable: nothing else needs it
+          fill: {
+            always: {
+              items: ["BigKeyD2"],
+              req: "!setting(locationsAccessibility)",
+              source: "app/Region/Standard/SwampPalace.php:100",
+            },
+            refuse: [
+              {
+                refuse: { items: ["BigKeyD2"] },
+                source: "app/Region/Standard/SwampPalace.php:102",
+                when: "setting(locationsAccessibility)",
+              },
+            ],
+          },
           id: "swamp-palace/big-chest",
           kind: "bigChest",
           name: "Swamp Palace - Big Chest",
@@ -105,17 +137,18 @@ export const SWAMP_PALACE = {
           source: "app/Region/Standard/SwampPalace.php:143",
         },
         {
+          fill: BOSS.fill,
           id: "swamp-palace/boss",
           kind: "drop",
           name: "Swamp Palace - Boss",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/SwampPalace.php:154",
         },
         {
           id: "swamp-palace/prize",
           kind: "prize",
           name: "Swamp Palace - Prize",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/SwampPalace.php:150",
         },
       ],

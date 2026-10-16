@@ -1,21 +1,25 @@
 // app/Region/Standard/DesertPalace.php: Desert Palace, its locations and its
 // prize.
-//
-// Not ported here: the boss's fill rules and always-allow (108-120), which
-// Location::canFill reads when the randomizer places an item; they wait for
-// src/fill.ts.
+import { dungeonBoss } from "../../bosses";
 import type { RegionModule } from "../../world";
 
 /**
- * The boss (96-107), whose rule is the prize's too: can_complete is the
+ * The boss (96-120), whose rule is the prize's too: can_complete is the
  * boss's canAccess (92-94). Its room is past the palace's back door, on the
  * ledge above the desert: a glove for the rocks there, or the mirror from
- * the Mire. With wild maps or compasses the boss wants its dungeon's, unless
- * it holds that item itself (`hasItem`), which a tracker cannot know:
- * `maybe`.
+ * the Mire. With wild maps or compasses it wants its dungeon's
+ * (dungeonBoss).
  */
-const BOSS =
-  "(@canLiftRocks | setting(canBootsClip) & pegasusBoots | setting(canSuperSpeed) & @canSpinSpeed | setting(canOneFrameClipOW) | magicMirror & reach(mire)) & @canLightTorches & bigKeyP2 & keyP2 & @canBeatDesertPalaceBoss & (!setting(wildCompasses) | compassP2 | maybe) & (!setting(wildMaps) | mapP2 | maybe)";
+const BOSS = dungeonBoss(
+  "(@canLiftRocks | setting(canBootsClip) & pegasusBoots | setting(canSuperSpeed) & @canSpinSpeed | setting(canOneFrameClipOW) | magicMirror & reach(mire)) & @canLightTorches & bigKeyP2 & keyP2 & @canBeatDesertPalaceBoss",
+  "P2",
+  {
+    always: 117,
+    file: "app/Region/Standard/DesertPalace.php",
+    fill: 108,
+    holding: 106,
+  },
+);
 
 export const DESERT_PALACE = {
   file: "app/Region/Standard/DesertPalace.php",
@@ -82,17 +86,28 @@ export const DESERT_PALACE = {
           source: "app/Region/Standard/DesertPalace.php:84",
         },
         {
+          fill: {
+            ...BOSS.fill,
+            // Nor the palace's own key and big key, which it needs (116)
+            refuse: [
+              ...(BOSS.fill.refuse ?? []),
+              {
+                refuse: { items: ["KeyP2", "BigKeyP2"] },
+                source: "app/Region/Standard/DesertPalace.php:116",
+              },
+            ],
+          },
           id: "desert-palace/boss",
           kind: "drop",
           name: "Desert Palace - Boss",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/DesertPalace.php:96",
         },
         {
           id: "desert-palace/prize",
           kind: "prize",
           name: "Desert Palace - Prize",
-          req: BOSS,
+          req: BOSS.req,
           source: "app/Region/Standard/DesertPalace.php:92",
         },
       ],

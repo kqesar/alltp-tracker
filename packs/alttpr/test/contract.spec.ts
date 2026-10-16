@@ -31,36 +31,38 @@ describe("the upstream contract", () => {
     expect(report.failures).toEqual([]);
   });
 
-  it("runs those files, and every case of theirs but the fills", () => {
+  it("runs those files, and every case of theirs", () => {
     expect(report.files).toEqual(
       fixtures.filter((f) => ported.has(f.file)).map((f) => f.file),
     );
     expect(report.files).toContain("tests/NoGlitches/EasternPalaceTest.php");
-    // Location::canFill waits for src/fill.ts (see pack-subject.ts)
     expect(report.skipped).toEqual({
-      fill: count("fill"),
+      fill: 0,
       location: 0,
       regionComplete: 0,
       regionEnter: 0,
       regionFill: 0,
     });
     expect(report.ran).toEqual({
-      fill: 0,
+      fill: count("fill"),
       location: count("location"),
       regionComplete: count("regionComplete"),
       regionEnter: count("regionEnter"),
       regionFill: count("regionFill"),
     });
+    // Location::canFill's cases: one per placement the tests try
+    expect(report.ran.fill).toBe(135);
   });
 
   it("would catch a pack that answers maybe, or yes, to everything", () => {
     const always = (answer: Tri): ContractSubject => ({
+      fill: () => answer,
       location: () => answer,
       regionComplete: () => answer,
       regionEnter: () => answer,
       regionFill: () => answer,
     });
-    const answered = portedCases.filter((c) => c.kind !== "fill");
+    const answered = portedCases;
     expect(
       runUpstreamCases(fixtures, manifest, always("maybe")).failures,
     ).toHaveLength(answered.filter((c) => c.expected).length);
