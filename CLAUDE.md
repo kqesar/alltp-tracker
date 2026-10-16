@@ -11,7 +11,7 @@ A pnpm workspace. Dependencies point one way: `apps/web` → packs → `packages
 - `packs/*` — game packs (rules as data, items, map markers); `packs/alttpr` arrives with the v31 port.
 - Root — shared tooling only: Biome, TypeScript (a solution `tsconfig.json`), Vitest (`projects` + coverage over every workspace), husky, commitlint, standard-version (bumps the root `package.json`, the product version). Commit scopes follow the workspace: `web`, `engine`, `alttpr`.
 
-Area rules live in `.claude/rules/` and load when you touch their files: `store.md` (state, persistence), `data.md` (game data and logic), `components.md` (UI, styles, a11y), `tests.md`.
+Area rules live in `.claude/rules/` and load when you touch their files: `store.md` (state, persistence), `data.md` (game data and logic), `components.md` (UI, styles, a11y), `tests.md`, `engine.md` (the logic engine).
 
 ## Quality bar
 
