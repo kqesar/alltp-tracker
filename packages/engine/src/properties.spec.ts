@@ -11,7 +11,8 @@ import {
   world,
 } from "../test/arbitraries";
 import { type Expr, walk } from "./ast";
-import { evaluate, type State } from "./evaluate";
+import { evaluate, type State, type TraceNode, trace } from "./evaluate";
+import { explain } from "./explain";
 import { parse } from "./parser";
 import { print } from "./printer";
 import type { Rules } from "./rules";
@@ -203,6 +204,79 @@ describe("solver", () => {
             compare(solution.location(id), solution.visible(id)),
             `location ${id}`,
           ).toBeLessThanOrEqual(0);
+        }
+      }),
+      RUNS,
+    );
+  });
+});
+
+describe("trace and explain", () => {
+  it("trace gives every node the value evaluate() gives it", () => {
+    fc.assert(
+      fc.property(
+        anyExpr,
+        state,
+        settings,
+        regionLevels,
+        (expr, s, set, regions) => {
+          const options = { regions, settings: set };
+          const check = (node: TraceNode) => {
+            expect(node.value, print(node.expr)).toBe(
+              evaluate(node.expr, s, rules, options),
+            );
+            for (const child of node.children) check(child);
+          };
+          const root = trace(expr, s, rules, options);
+          expect(root.expr).toBe(expr);
+          check(root);
+        },
+      ),
+      RUNS,
+    );
+  });
+
+  it("explains every location: a real best path, and its requirement", () => {
+    fc.assert(
+      fc.property(world, state, settings, (w, s, set) => {
+        const compiled = compileWorld(w, rules, { settings: set });
+        const solution = solve(compiled, s);
+        const folded = (req: string | undefined) =>
+          print(foldSettings(parse(req ?? "true"), set, "Exit"));
+        for (const region of w.regions) {
+          for (const { id } of region.locations ?? []) {
+            const { path, requirement } = explain(compiled, s, id);
+            const level = solution.region(region.id);
+            expect(and(level, requirement.value), id).toBe(
+              solution.location(id),
+            );
+            if (level === "no") {
+              expect(path).toEqual([]);
+              continue;
+            }
+            expect(path[0]).toEqual({ region: w.start });
+            expect(path.at(-1)?.region).toBe(region.id);
+            expect(new Set(path.map((step) => step.region)).size).toBe(
+              path.length,
+            );
+            const values: Tri[] = [];
+            for (let i = 1; i < path.length; i++) {
+              const { exit, region: to } = path[i] ?? { region: "" };
+              const from = path[i - 1]?.region;
+              expect(exit?.from).toBe(from);
+              // The step is an exit of the world, requirement and all.
+              const exits = w.regions.find((r) => r.id === from)?.exits ?? [];
+              expect(
+                exits.some((e) => e.to === to && folded(e.req) === exit?.req),
+              ).toBe(true);
+              expect(exit?.value).toBe(
+                evaluate(parse(exit?.req ?? ""), s, compiled.rules),
+              );
+              values.push(exit?.value ?? "no");
+            }
+            // The weakest exit on the path is the region's level.
+            expect(and(...values)).toBe(level);
+          }
         }
       }),
       RUNS,

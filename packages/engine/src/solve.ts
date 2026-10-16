@@ -99,6 +99,26 @@ function snapshot(
  * requirements actually evaluated; regions out of reach cost nothing.
  */
 export function solve(world: CompiledWorld, state: State): Solution {
+  const { levels, locations, visibles } = run(world, state);
+  return new Solution(world, levels, locations, visibles);
+}
+
+/** Everything one solve computes, as the solver's own arrays. */
+export interface Solved {
+  /** Region levels by region index. */
+  readonly levels: Uint8Array;
+  readonly locations: Uint8Array;
+  readonly visibles: Uint8Array;
+  /**
+   * For each region, the exit that last raised it, so the one that gave its
+   * final level; -1 for the start and for regions out of reach. Following it
+   * back from a region walks a best path from the start.
+   */
+  readonly via: Int32Array;
+}
+
+/** The solver behind `solve` and `explain` (see `solve`). */
+export function run(world: CompiledWorld, state: State): Solved {
   const items = world.items;
   const values = new Float64Array(items.length);
   for (let i = 0; i < items.length; i++) values[i] = itemValue(state, items[i]);
@@ -113,6 +133,7 @@ export function solve(world: CompiledWorld, state: State): Solution {
   };
 
   const { exitOffsets, exitReqs, exitTargets } = world;
+  const via = new Int32Array(regionCount).fill(-1);
   // A region is raised to each level at most once, so neither stack can
   // hold more than every region.
   const yesStack = new Int32Array(regionCount);
@@ -128,6 +149,7 @@ export function solve(world: CompiledWorld, state: State): Solution {
       const reached = req < level ? req : level;
       if (reached > levels[target]) {
         levels[target] = reached;
+        via[target] = e;
         if (reached === YES) yesStack[yesTop++] = target;
         else maybeStack[maybeTop++] = target;
       }
@@ -167,5 +189,5 @@ export function solve(world: CompiledWorld, state: State): Solution {
     if (seen > visibles[l]) visibles[l] = seen;
   }
 
-  return new Solution(world, levels, locations, visibles);
+  return { levels, locations, via, visibles };
 }
