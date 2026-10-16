@@ -86,7 +86,7 @@ describe("MapTracker", () => {
     fireEvent.click(screen.getByTestId("chest-marker-0"));
 
     expect(screen.getByTestId("chest-marker-0")).toHaveClass("opened");
-    expect(useGameStore.getState().chestsOpened[0]).toBe(true);
+    expect(useGameStore.getState().checked).toEqual({ "kings-tomb": true });
   });
 });
 

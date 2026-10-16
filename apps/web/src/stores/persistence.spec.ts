@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { chests } from "@/data/chests";
 import { DEFAULT_SHORTCUTS } from "@/data/keymap";
 import {
   migrate,
@@ -35,7 +34,7 @@ describe("parseSave", () => {
 
   it("round-trips what toSaveFile writes", () => {
     const progress = {
-      chestsOpened: chests.map((_, index) => index === 5),
+      checked: { "kakariko-tavern": true, "mire-shed/left": true },
       items: { boss2: 2, glove: 2 },
       medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 3],
       presetId: "open",
@@ -70,6 +69,34 @@ describe("parseSave", () => {
     expect(refusal(saveFile({}, PERSIST_VERSION + 1))).toMatch(/newer version/);
   });
 
+  it("names its game, and refuses a file of another game", () => {
+    const file = JSON.parse(saveFile({ items: { bow: 2 } }));
+    expect(toSaveFile({} as never).game).toBe("alttpr");
+
+    expect(
+      parseSave(JSON.stringify({ ...file, game: "alttpr" })),
+    ).toMatchObject({ ok: true });
+    expect(refusal(JSON.stringify({ ...file, game: "smz3" }))).toMatch(
+      /game this tracker does not track/,
+    );
+  });
+
+  it("checks a dungeon counter against the run's settings", () => {
+    const keysanity = {
+      entranceShuffle: "none",
+      goal: "ganon",
+      keysanity: true,
+      mode: "open",
+    };
+
+    expect(
+      parseSave(saveFile({ items: { chest3: 14 }, settings: keysanity })),
+    ).toMatchObject({ ok: true });
+    expect(refusal(saveFile({ items: { chest3: 14 } }))).toMatch(
+      /items\.chest3 must be a whole number from 0 to 5/,
+    );
+  });
+
   it("names the field that holds a value the tracker cannot show", () => {
     expect(refusal(saveFile({ items: { flute: 1 } }))).toMatch(
       /items\.flute must be true or false/,
@@ -102,15 +129,27 @@ describe("parseSave", () => {
 describe("validateProgress", () => {
   it("keeps the valid fields and reports each invalid one", () => {
     const { value, errors } = validateProgress({
-      chestsOpened: [true],
+      checked: { "kings-tomb": "yes", "links-house": true },
       items: { hookshot: true },
       smallKeys: Array(10).fill(9),
     });
 
-    expect(value).toEqual({ items: { hookshot: true } });
+    expect(value).toEqual({
+      checked: { "links-house": true },
+      items: { hookshot: true },
+    });
     expect(errors).toEqual([
-      `chestsOpened must hold ${chests.length} true/false flags`,
+      'checked["kings-tomb"] must be true',
       "smallKeys must hold 10 counts within each dungeon's keys",
+    ]);
+  });
+
+  it("drops the checked locations it does not know, as it does items", () => {
+    expect(
+      validateProgress({ checked: { "kings-tomb": true, nowhere: true } }),
+    ).toEqual({ errors: [], value: { checked: { "kings-tomb": true } } });
+    expect(validateProgress({ checked: [] }).errors).toEqual([
+      "checked must be an object",
     ]);
   });
 });
@@ -141,6 +180,41 @@ describe("migrate", () => {
     const shortcuts = { enabled: false, keymap: {} };
 
     expect(migrate({ shortcuts }, 4)).toEqual({ shortcuts });
+  });
+
+  it("checks every location an opened version 5 marker stood for", () => {
+    const chestsOpened = Array(64).fill(false);
+    chestsOpened[11] = true; // DW Death Mountain (2): Superbunny Cave
+    chestsOpened[30] = "yes"; // not a flag: Ether Tablet stays unchecked
+    chestsOpened[63] = true; // Bridge, where v31 has no check
+
+    expect(migrate({ chestsOpened }, 5)).toEqual({
+      checked: {
+        "superbunny-cave/bottom": true,
+        "superbunny-cave/top": true,
+      },
+    });
+  });
+
+  it("carries a keysanity counter's items found, not its items left", () => {
+    const run = (keysanity: boolean) => ({
+      entranceShuffle: "none",
+      goal: "ganon",
+      keysanity,
+      mode: "standard",
+    });
+    const items = { chest0: 1, chest3: 5, chest9: -1, hookshot: true };
+
+    expect(migrate({ items, settings: run(true) }, 5)).toEqual({
+      // 2 of 3 found in Eastern Palace, none in Palace of Darkness; a value
+      // out of the legacy range is left for validation to refuse
+      items: { chest0: 4, chest3: 14, chest9: -1, hookshot: true },
+      settings: run(true),
+    });
+    expect(migrate({ items, settings: run(false) }, 5)).toEqual({
+      items,
+      settings: run(false),
+    });
   });
 
   it("leaves a current save alone", () => {

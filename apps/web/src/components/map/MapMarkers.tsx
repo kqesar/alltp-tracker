@@ -1,3 +1,4 @@
+import { LEGACY_CHESTS } from "@alltp/pack-alttpr";
 import type { CSSProperties } from "react";
 import { BOSS_STATES } from "@/constants";
 import {
@@ -50,8 +51,12 @@ export const MapChest = ({
 }) => {
   const items = useGameStore((state) => state.items);
   const medallions = useGameStore((state) => state.medallions);
-  const opened = useGameStore((state) => state.chestsOpened[index]);
-  const toggleChest = useGameStore((state) => state.toggleChest);
+  const locations = LEGACY_CHESTS[index]?.locations ?? [];
+  const opened = useGameStore(
+    (state) =>
+      locations.length > 0 && locations.every((id) => state.checked[id]),
+  );
+  const toggleChecks = useGameStore((state) => state.toggleChecks);
   const tooltip = useTooltip({ index, kind: "chest" });
 
   const state: MarkerState = opened
@@ -65,7 +70,7 @@ export const MapChest = ({
       aria-pressed={opened}
       className={`mapspan chest state-glyph ${state}`}
       data-testid={`chest-marker-${index}`}
-      onClick={() => toggleChest(index)}
+      onClick={() => toggleChecks(locations)}
       style={markerStyle(chest.x, chest.y, "poi.png")}
       type="button"
     />
