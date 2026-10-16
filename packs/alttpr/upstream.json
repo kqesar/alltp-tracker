@@ -161,13 +161,13 @@
       "file": "app/World.php",
       "module": "src/settings.ts",
       "role": "config() defaults and the settings it derives (requireBetterBow and Sword, wild dungeon items) that rules read",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "config/logic.php",
       "module": "src/settings.ts",
       "role": "the glitch flags World::config falls back to for each logic (all off for NoGlitches)",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/World/Standard.php",

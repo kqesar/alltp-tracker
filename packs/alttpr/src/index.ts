@@ -19,3 +19,12 @@ export {
   locationKind,
   type Source,
 } from "./location";
+export {
+  type AlttprSettings,
+  type Mode,
+  OPEN,
+  STANDARD,
+  settingsFromUpstream,
+  UPSTREAM_TEST,
+  type UpstreamConfig,
+} from "./settings";

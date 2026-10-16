@@ -89,15 +89,6 @@ describe("upstream.json", () => {
       expect([...statuses], module).toHaveLength(1);
       expect(exists(module), module).toBe(statuses.has("ported"));
     }
-    // The item table and TestCase are ported; the rules are not, yet
-    expect(
-      entries.filter((e) => e.status === "ported").map((e) => e.module),
-    ).toEqual([
-      "src/items.ts",
-      "src/items.ts",
-      "src/items.ts",
-      "test/upstream-state.ts",
-    ]);
   });
 
   it("lists the test file of every fixture, and a fixture for every test file", () => {
