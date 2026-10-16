@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ObsView } from "@/ObsView";
 import { useGameStore } from "@/stores/gameStore";
+import { useUpdateStore } from "@/stores/updateStore";
 
 /** Resize jsdom's viewport and tell the page, as a resized OBS source would. */
 const resizeTo = (width: number, height: number) =>
@@ -20,6 +21,7 @@ describe("ObsView", () => {
 
   beforeEach(() => {
     act(() => useGameStore.setState(useGameStore.getInitialState(), true));
+    act(() => useUpdateStore.setState(useUpdateStore.getInitialState(), true));
   });
 
   afterEach(() => {
@@ -124,6 +126,17 @@ describe("ObsView", () => {
     // Seven rows in 420 px: 60 of room, too far above 48 to snap
     expect(cssVar("--cell")).toBe("60px");
     expect(screen.getAllByTestId("grid-row")).toHaveLength(7);
+  });
+
+  it("takes a new version at once instead of offering it", () => {
+    const apply = vi.fn();
+    render(<ObsView background={null} />);
+    expect(apply).not.toHaveBeenCalled();
+
+    act(() => useUpdateStore.setState({ apply }));
+
+    expect(apply).toHaveBeenCalledOnce();
+    expect(screen.queryByTestId("update-prompt")).not.toBeInTheDocument();
   });
 
   it("stops following the viewport once unmounted", () => {
