@@ -138,4 +138,37 @@ describe("following the game", () => {
 
     expect(store().smallKeys[3]).toBe(3);
   });
+
+  it("switches the run type with the game laid on it, as one undo step", () => {
+    const follower = createFollower();
+    follower.read(readingOf(seedMemory({ race: false })));
+    store().handleItemClick("flute");
+
+    follower.switchRun("keysanity", {
+      ...store().settings,
+      keysanity: true,
+    });
+
+    expect(store().presetId).toBe("keysanity");
+    // The game's marks on the fresh run, the player's own gone
+    expect(store().items).toMatchObject({
+      flute: false,
+      hookshot: true,
+      sword: 2,
+    });
+    expect(store().checked).toMatchObject({ "links-house": true });
+    store().undo();
+    expect(store().presetId).toBe("open");
+    expect(store().items).toMatchObject({ flute: true, hookshot: true });
+  });
+
+  it("switches to a bare run before any game in play was read", () => {
+    createFollower().switchRun("keysanity", {
+      ...store().settings,
+      keysanity: true,
+    });
+
+    expect(store().presetId).toBe("keysanity");
+    expect(store().items.hookshot).toBe(false);
+  });
 });

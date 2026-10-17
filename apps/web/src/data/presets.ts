@@ -7,6 +7,10 @@
  * (mode = inverted/retro, entranceShuffle = crossed, ...) are stored and shown,
  * but the per-mode logic is implemented in later iterations — `logicSupported`
  * flags whether the tracker's accessibility logic fully models the preset.
+ *
+ * A run's settings need not be its preset's own: autotracking reads a seed's
+ * from its ROM (autotrack/seed.ts) and switches to the run type that names
+ * them best, under the seed's exact crystals and swords.
  */
 
 type RunMode = "open" | "standard" | "inverted" | "retro";

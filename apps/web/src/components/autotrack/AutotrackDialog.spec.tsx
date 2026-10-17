@@ -27,6 +27,7 @@ import {
 } from "@/stores/autotrackStore";
 import { useGameStore } from "@/stores/gameStore";
 import { MemoryTransport } from "../../../../../packages/autotrack/test/memory-transport";
+import { writeSeedSettings } from "../../../../../packs/alttpr/test/seed-rom";
 
 const FIREFOX_LINUX = parseUserAgent(
   "Mozilla/5.0 (X11; Linux x86_64; rv:158.0) Gecko/20100101 Firefox/158.0",
@@ -218,6 +219,39 @@ describe("AutotrackDialog's status", () => {
     expect(screen.getByTestId("race-badge")).toBeVisible();
     expect(screen.getByTestId("race-mode")).toHaveTextContent(
       "The race flag could not be read, so the tracker reads only what races permit.",
+    );
+  });
+
+  it("says what the seed's settings mean for the run type", async () => {
+    await open();
+    show(STATUSES.connected);
+    expect(screen.queryByTestId("autotrack-seed")).toBeNull();
+
+    act(() =>
+      useAutotrackStore.setState({
+        reading: readingOf(
+          writeSeedSettings(seedMemory({ race: false }), {
+            dungeonItems: "full",
+          }),
+        ),
+      }),
+    );
+    expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
+      "This seed is Keysanity (Open, Ganon, 7/7). The tracker is set to Open.",
+    );
+
+    act(() => useGameStore.getState().applyPreset("keysanity"));
+    expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
+      "The run type matches this seed: Keysanity (Open, Ganon, 7/7).",
+    );
+
+    act(() =>
+      useAutotrackStore.setState({
+        reading: readingOf(seedMemory({ race: true }), { race: true }),
+      }),
+    );
+    expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
+      "Settings not read in Race Mode: the run type stays yours.",
     );
   });
 

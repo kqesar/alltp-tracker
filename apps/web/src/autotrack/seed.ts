@@ -250,3 +250,24 @@ export const promptText = (check: Extract<SeedCheck, { kind: "differs" }>) =>
 /** What the live region says once the tracker switched to the seed's. */
 export const switchedText = (check: Extract<SeedCheck, { kind: "differs" }>) =>
   `This seed is ${check.seedText}: the tracker switched to it.`;
+
+/** What the dialog says of the seed's run type, for each check. */
+export const seedLineText = (check: SeedCheck, kept: boolean): string => {
+  switch (check.kind) {
+    case "unread":
+      if (check.why === "race-mode") {
+        return "Settings not read in Race Mode: the run type stays yours.";
+      }
+      return check.why === "not-read"
+        ? "Seed settings not read yet."
+        : "This seed's settings are not ones the tracker reads: the run type stays yours.";
+    case "unsupported":
+      return `No run type here holds this seed (${check.reasons.join("; ")}): the run type stays yours.`;
+    case "same":
+      return `The run type matches this seed: ${check.text}.`;
+    case "differs":
+      return kept
+        ? `This seed is ${check.seedText}. You kept ${check.runText}.`
+        : `This seed is ${check.seedText}. The tracker is set to ${check.runText}.`;
+  }
+};

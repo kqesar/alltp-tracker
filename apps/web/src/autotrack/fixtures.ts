@@ -145,10 +145,17 @@ export const SAVE = (offset: number) => WRAM + 0xf000 + offset;
  * few items, Link's House and Eastern Palace's compass chest checked, the
  * Armos Knights beaten.
  * @param race - A race seed (its race flag set) or an open one
+ * @param name - The seed's name in the header, after "VT "
  */
-export const seedMemory = ({ race }: { race: boolean }) => {
+export const seedMemory = ({
+  name,
+  race,
+}: {
+  name?: string;
+  race: boolean;
+}) => {
   const memory = new Uint8Array(0x100_0000);
-  const title = (race ? "VT RACE" : "VT OPEN").padEnd(21, " ");
+  const title = `VT ${name ?? (race ? "RACE" : "OPEN")}`.padEnd(21, " ");
   for (let i = 0; i < title.length; i++) {
     memory[ROM_HEADER + i] = title.charCodeAt(i);
   }
