@@ -1,0 +1,158 @@
+import { describe, expect, it } from "vitest";
+import { readingOf, seedMemory } from "@/autotrack/fixtures";
+import {
+  checkSeed,
+  describeRun,
+  promptText,
+  switchedText,
+} from "@/autotrack/seed";
+import { getPreset } from "@/data/presets";
+import {
+  type SeedRom,
+  writeSeedSettings,
+} from "../../../../packs/alttpr/test/seed-rom";
+
+/** The settings a seed's ROM holds, as the session decodes them. */
+const seedOf = (rom: SeedRom, { race = false } = {}) =>
+  readingOf(writeSeedSettings(seedMemory({ race }), rom), { race }).seed;
+
+/** The tracker's run, on a run type's own settings. */
+const run = (presetId: string) => ({
+  presetId,
+  settings: getPreset(presetId).settings,
+});
+
+describe("checkSeed", () => {
+  it("names the seed's run type when the tracker's differs", () => {
+    const check = checkSeed(seedOf({ dungeonItems: "full" }), run("open"));
+
+    expect(check).toMatchObject({
+      kind: "differs",
+      presetId: "keysanity",
+      runText: "Open",
+      seed: "OPEN",
+      seedText: "Keysanity (Open, Ganon, 7/7)",
+      settings: getPreset("keysanity").settings,
+    });
+    if (check.kind !== "differs") throw new Error("expected differs");
+    expect(promptText(check)).toBe(
+      "This seed is Keysanity (Open, Ganon, 7/7). The tracker is set to Open. Switch?",
+    );
+    expect(switchedText(check)).toBe(
+      "This seed is Keysanity (Open, Ganon, 7/7): the tracker switched to it.",
+    );
+  });
+
+  it("finds the same run type, and says so", () => {
+    expect(checkSeed(seedOf({}), run("open"))).toEqual({
+      kind: "same",
+      seed: "OPEN",
+      text: "Open (Open, Ganon, 7/7)",
+    });
+    expect(
+      checkSeed(seedOf({ swordless: true }), run("swordless")),
+    ).toMatchObject({ kind: "same" });
+  });
+
+  it("carries the seed's crystals, and tells two runs of one name apart", () => {
+    const check = checkSeed(
+      seedOf({ crystalsGanon: 6, crystalsTower: 5 }),
+      run("open"),
+    );
+
+    expect(check).toMatchObject({
+      kind: "differs",
+      presetId: "open",
+      runText: "Open (Open, Ganon, 7/7)",
+      seedText: "Open (Open, Ganon, 5/6)",
+      settings: { crystalsGanon: 6, crystalsTower: 5 },
+    });
+  });
+
+  it("names a mix no run type holds by the nearest, with what differs", () => {
+    const check = checkSeed(
+      seedOf({ dungeonItems: "full", mode: "standard" }),
+      run("open"),
+    );
+    expect(check).toMatchObject({
+      kind: "differs",
+      presetId: "standard",
+      seedText: "Standard (Standard, Ganon, 7/7, Keysanity)",
+      settings: { keysanity: true, mode: "standard" },
+    });
+    // The tracker's own run type wins a tie
+    expect(
+      checkSeed(
+        seedOf({ dungeonItems: "full", mode: "standard" }),
+        run("keysanity"),
+      ),
+    ).toMatchObject({ presetId: "keysanity" });
+  });
+
+  it("keeps the entrance shuffle the ROM does not state", () => {
+    const check = checkSeed(seedOf({ goal: "fast_ganon" }), run("crosskeys"));
+    expect(check).toMatchObject({
+      kind: "differs",
+      settings: { entranceShuffle: "crossed", goal: "fast-ganon" },
+    });
+  });
+
+  it("never rounds a seed the tracker cannot hold to a run type", () => {
+    expect(checkSeed(seedOf({ dungeonItems: "mc" }), run("open"))).toEqual({
+      kind: "unsupported",
+      reasons: ["only its compasses, maps outside their dungeons"],
+      seed: "OPEN",
+    });
+    expect(checkSeed(seedOf({ goal: "ganonhunt" }), run("open"))).toEqual({
+      kind: "unsupported",
+      reasons: ["the Ganonhunt goal"],
+      seed: "OPEN",
+    });
+  });
+
+  it("leaves the run type to the player in Race Mode", () => {
+    expect(
+      checkSeed(seedOf({ dungeonItems: "full" }, { race: true }), run("open")),
+    ).toEqual({ kind: "unread", why: "race-mode" });
+  });
+
+  it("waits for settings not read yet, and refuses values no seed has", () => {
+    const memory = writeSeedSettings(seedMemory({ race: false }), {});
+    expect(
+      checkSeed(
+        readingOf(memory, { unread: ["tower-crystals"] }).seed,
+        run("open"),
+      ),
+    ).toEqual({ kind: "unread", why: "not-read" });
+    expect(
+      checkSeed(readingOf(seedMemory({ race: false })).seed, run("open")),
+    ).toEqual({
+      kind: "unread",
+      why: "unrecognized",
+    });
+    expect(
+      checkSeed(
+        readingOf(memory, { unread: ["rom-header"] }).seed,
+        run("open"),
+      ),
+    ).toEqual({ kind: "unread", why: "not-read" });
+  });
+});
+
+describe("describeRun", () => {
+  it("says a swordless or keyless departure from the run type", () => {
+    expect(
+      describeRun("keysanity", {
+        ...getPreset("keysanity").settings,
+        keysanity: false,
+        swordless: true,
+      }),
+    ).toBe("Keysanity (Open, Ganon, 7/7, no Keysanity, Swordless)");
+    expect(
+      describeRun("swordless", {
+        ...getPreset("swordless").settings,
+        swordless: false,
+      }),
+    ).toBe("Swordless (Open, Ganon, 7/7, swords)");
+  });
+});
