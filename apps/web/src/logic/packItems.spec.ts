@@ -5,7 +5,12 @@ import {
 } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import { items, itemsMax, itemsMin } from "@/data/items";
-import { itemsFromPack, PACK_ITEMS, packReading } from "@/logic/packItems";
+import {
+  itemsFromPack,
+  PACK_ITEMS,
+  packReading,
+  RECORDED_LEVELS,
+} from "@/logic/packItems";
 
 /** Every value an item takes in the tracker, as the store holds it. */
 const valuesOf = (id: string): (number | boolean)[] => {
@@ -112,5 +117,40 @@ describe("the app's one table of the pack's items", () => {
       flute: true,
       sword: 4,
     });
+  });
+});
+
+describe("RECORDED_LEVELS", () => {
+  it("holds each pack item a cell records, at the most it can say", () => {
+    expect(Object.fromEntries(RECORDED_LEVELS)).toMatchObject({
+      armor: 2,
+      bigKeyD1: 1,
+      bottle: 4,
+      bow: 1,
+      crystal5: 1,
+      defeatAgahnim: 1,
+      defeatAgahnim2: 1,
+      flute: 1,
+      glove: 2,
+      hammer: 1,
+      pendantOfCourage: 1,
+      redBoomerang: 1,
+      shield: 3,
+      silverArrowUpgrade: 1,
+      sword: 4,
+    });
+  });
+
+  it("leaves out what no cell records", () => {
+    for (const item of [
+      "heartContainer",
+      "keyD1",
+      "magic",
+      "pieceOfHeart",
+      "rescueZelda",
+      "tenBombs",
+    ]) {
+      expect(RECORDED_LEVELS.has(item), item).toBe(false);
+    }
   });
 });
