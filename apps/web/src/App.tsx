@@ -1,5 +1,6 @@
 import { type MouseEvent, useRef } from "react";
 import { flushSync } from "react-dom";
+import { SeedPrompt } from "@/components/autotrack/SeedPrompt";
 import { MAP_VIEW_ID, MapPanel } from "@/components/map/MapPanel";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
@@ -54,6 +55,7 @@ function App() {
       </a>
       <div className="notices">
         <UpdatePrompt />
+        <SeedPrompt />
       </div>
       <Header />
       <div className="toolbar" data-testid="toolbar" ref={toolbarRef}>

@@ -4,7 +4,7 @@ import v1Export from "@/stores/fixtures/v1-export.json";
 import v2Export from "@/stores/fixtures/v2-export.json";
 import v5KeysanityExport from "@/stores/fixtures/v5-keysanity-export.json";
 import v5LocalStorage from "@/stores/fixtures/v5-local-storage.json";
-import { useGameStore } from "@/stores/gameStore";
+import { isFreshRun, useGameStore } from "@/stores/gameStore";
 import {
   PERSIST_VERSION,
   type Progress,
@@ -215,13 +215,61 @@ describe("GameStore", () => {
       crystalsTower: 5,
     };
 
+    it("starts a run of other settings as one undo step, laying the game on it", () => {
+      const state = useGameStore.getState();
+      state.handleItemClick("hookshot");
+
+      state.applyRun(
+        "keysanity",
+        { ...FIVE_FIVE, keysanity: true },
+        (fresh) => ({
+          items: { ...fresh.items, flute: true },
+        }),
+      );
+
+      const after = useGameStore.getState();
+      expect(after.presetId).toBe("keysanity");
+      expect(after.settings.crystalsTower).toBe(5);
+      expect(after.items).toMatchObject({
+        chest3: 14,
+        flute: true,
+        hookshot: false,
+      });
+      expect(after.bigKeysVisible).toBe(true);
+
+      after.undo();
+      const back = useGameStore.getState();
+      expect(back.presetId).toBe("open");
+      expect(back.items).toMatchObject({ flute: false, hookshot: true });
+    });
+
     it("keeps a run's settings through a new game", () => {
-      useGameStore.setState({ settings: FIVE_FIVE });
+      useGameStore.getState().applyRun("open", FIVE_FIVE);
       useGameStore.getState().handleItemClick("hookshot");
 
       useGameStore.getState().reset();
 
       expect(useGameStore.getState().settings).toEqual(FIVE_FIVE);
+    });
+
+    it("tells a fresh run from one with anything noted", () => {
+      expect(isFreshRun(useGameStore.getState())).toBe(true);
+      useGameStore
+        .getState()
+        .applyRun("keysanity", useGameStore.getState().settings);
+      expect(isFreshRun(useGameStore.getState())).toBe(true);
+
+      for (const note of [
+        () => useGameStore.getState().handleItemClick("hookshot"),
+        () => useGameStore.getState().handleItemClick("chest0"),
+        () => useGameStore.getState().toggleChecks(["library"]),
+        () => useGameStore.getState().handleSmallKeyClick(3),
+        () => useGameStore.getState().handleMedallionChange(8, 1),
+      ]) {
+        useGameStore.getState().reset();
+        note();
+        expect(isFreshRun(useGameStore.getState())).toBe(false);
+      }
     });
   });
 
