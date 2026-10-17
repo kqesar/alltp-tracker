@@ -7,9 +7,11 @@
 // Nothing here comes from memory. The sources (MEMORY_SOURCES), read as
 // data and never run:
 // - z3: z3randomizer, the base patch alttpr.com builds seeds on: its SRAM
-//   map (sram.asm), WRAM labels (ram.asm), ROM tables (tables.asm) and item
-//   handlers (newitems.asm, events.asm, dungeondrops.asm, heartpieces.asm);
-// - vt: the randomizer's front end, for what it writes into the ROM;
+//   map (sram.asm), WRAM labels (ram.asm), ROM tables (tables.asm,
+//   initsramtable.asm) and item handlers (newitems.asm, events.asm,
+//   dungeondrops.asm, heartpieces.asm);
+// - vt: the randomizer's front end, for what it writes into the ROM: the
+//   seed's name, its race flag and its settings (seed-settings.ts);
 // - spec: the official race spec v1.2, for the categories, through
 //   ALTTPR_RACE_PROFILE;
 // - ap: Archipelago's ALttP client, for the location flags of
@@ -20,6 +22,7 @@
 // which is live and lies in the spec's permitted $7E:F000-$7E:F500.
 
 import { bus, type RangeSpec } from "@alltp/autotrack";
+import { SEED_SETTINGS_RANGES } from "./seed-settings";
 
 /** The sources this map was read from. */
 export const MEMORY_SOURCES = {
@@ -234,10 +237,11 @@ function save<const Id extends string>(
 }
 
 /**
- * Every range, in address order. Categories are ALTTPR_RACE_PROFILE's. A
- * range without `everyMs` is never polled: the game check reads the header,
- * and the two HUD bytes inside the equipment are declared so that Race Mode
- * never reads them while it merges their neighbours.
+ * Every range, in address order. Categories are ALTTPR_RACE_PROFILE's: the
+ * seed's settings outside the race windows are `other`, which no race
+ * permits. A range without `everyMs` is never polled: the game check reads
+ * the header, and the two HUD bytes inside the equipment are declared so
+ * that Race Mode never reads them while it merges their neighbours.
  */
 export const MEMORY_RANGES = [
   // The header's last 32 bytes: the 21-byte title, which alttpr.com sets to
@@ -250,6 +254,9 @@ export const MEMORY_RANGES = [
     size: 0x20,
     source: "z3:LTTP_RND_GeneralBugfixes.asm:14-27",
   }),
+  // The seed's settings in the base patch's tables, bank $30: read slowly,
+  // and outside Race Mode only but for the seed type (seed-settings.ts).
+  ...SEED_SETTINGS_RANGES,
   range({
     at: 0x7e_0010,
     category: "game-start",

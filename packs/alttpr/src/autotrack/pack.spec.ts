@@ -9,6 +9,7 @@ import {
   USB2SNES_LIMITS,
 } from "@alltp/autotrack";
 import { describe, expect, it } from "vitest";
+import { writeSeedSettings } from "../../test/seed-rom";
 import { CHECK_FLAGS } from "./check-flags";
 import {
   decodeChecks,
@@ -18,6 +19,7 @@ import {
 } from "./decode";
 import { MEMORY_RANGES } from "./memory";
 import { ALTTPR_AUTOTRACK } from "./pack";
+import { decodeSeedSettings } from "./seed-settings";
 
 // A console behind a usb2snes bridge, in FX Pak Pro space: ROM from $00_0000
 // (LoROM, headerless), WRAM from $F5_0000. The transport records every piece
@@ -138,6 +140,7 @@ function decodeAll(
     items: decodeItems(snapshot, { race }),
     progress: decodeProgress(snapshot, { race }),
     race,
+    seed: decodeSeedSettings(snapshot, { race }),
   };
 }
 
@@ -218,6 +221,32 @@ describe("ALTTPR_AUTOTRACK", () => {
     ]);
     expect(decoded?.checks.unsettled.size).toBe(0);
     expect(CHECK_FLAGS.length).toBeGreaterThan(4);
+  });
+
+  it("reads a seed's settings outside Race Mode only", async () => {
+    const race = new Console().seed("VT RACE", [0x01, 0x00]).play();
+    writeSeedSettings(race.memory, { dungeonItems: "full" });
+    const raced = await attach(race);
+    expect(readForbidden(race)).toEqual([]);
+    expect(raced.decoded?.seed).toMatchObject({
+      goal: { known: false, why: "race-mode" },
+      logic: { known: true, value: "NoGlitches" },
+      mode: { known: false, why: "race-mode" },
+      seed: "RACE",
+      wildKeys: { known: false, why: "race-mode" },
+    });
+
+    const open = new Console().seed("VT OPEN", [0x00, 0x01]).play();
+    writeSeedSettings(open.memory, { dungeonItems: "full" });
+    const opened = await attach(open);
+    expect(readForbidden(open)).toContain("dungeon-item-menu");
+    expect(opened.decoded?.seed).toMatchObject({
+      crystalsTower: { known: true, value: 7 },
+      goal: { known: true, value: "ganon" },
+      mode: { known: true, value: "open" },
+      seed: "OPEN",
+      wildKeys: { known: true, value: true },
+    });
   });
 
   it("keeps Race Mode on when the race flag reads as zero fill", async () => {
