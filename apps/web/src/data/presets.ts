@@ -174,6 +174,9 @@ export const ENTRANCE_LABELS: Record<EntranceShuffle, string> = {
   simple: "Simple",
 };
 
+/** A crystal count in words: "1 crystal", "7 crystals". */
+const crystals = (count: number) => `${count} crystal${count === 1 ? "" : "s"}`;
+
 /** A labeled summary of a run's settings, for display. */
 export const describeSettings = (
   settings: RunSettings,
@@ -182,9 +185,7 @@ export const describeSettings = (
   { label: "Goal", value: GOAL_LABELS[settings.goal] },
   { label: "Keysanity", value: settings.keysanity ? "On" : "Off" },
   { label: "Swordless", value: settings.swordless ? "On" : "Off" },
-  {
-    label: "Crystals",
-    value: `${settings.crystalsTower} for Ganon's Tower, ${settings.crystalsGanon} for Ganon`,
-  },
+  { label: "Ganon's Tower", value: crystals(settings.crystalsTower) },
+  { label: "Ganon", value: crystals(settings.crystalsGanon) },
   { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
 ];

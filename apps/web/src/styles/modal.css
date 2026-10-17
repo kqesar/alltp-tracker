@@ -234,7 +234,8 @@
 /* Current-run settings summary */
 .run-settings {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Two columns where both hold their longest value, else one */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
   gap: var(--spacing-xs) var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
   margin: 0 0 var(--spacing-md);
