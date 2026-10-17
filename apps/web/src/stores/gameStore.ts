@@ -55,7 +55,7 @@ type GameState = Progress &
     /** Replace the run with a save already read by `parseSave`; display prefs are kept */
     loadProgress: (progress: Partial<Progress>) => void;
 
-    /** Start a new game with the current preset; display prefs are kept */
+    /** Start a new game of the same run type and settings; display prefs are kept */
     reset: () => void;
 
     /** Earlier states of the run, most recent last; never persisted */
@@ -96,18 +96,21 @@ const fullCounters = (run: RunSettings): Record<string, number> =>
     ]),
   );
 
-/** A fresh run of the given preset: nothing found, nothing checked. */
-const createProgress = (presetId: string = DEFAULT_PRESET_ID): Progress => {
-  const preset = getPreset(presetId);
-  return {
-    checked: {},
-    items: { ...initialItems, ...fullCounters(preset.settings) } as ItemState,
-    medallions: Array(10).fill(0) as number[],
-    presetId: preset.id,
-    settings: preset.settings,
-    smallKeys: Array(10).fill(0) as number[], // 10 dungeons, all start at 0
-  };
-};
+/**
+ * A fresh run of the given preset, under its settings or others: nothing
+ * found, nothing checked.
+ */
+const createProgress = (
+  presetId: string = DEFAULT_PRESET_ID,
+  settings: RunSettings = getPreset(presetId).settings,
+): Progress => ({
+  checked: {},
+  items: { ...initialItems, ...fullCounters(settings) } as ItemState,
+  medallions: Array(10).fill(0) as number[],
+  presetId: getPreset(presetId).id,
+  settings,
+  smallKeys: Array(10).fill(0) as number[], // 10 dungeons, all start at 0
+});
 
 /** Display preferences for a first visit. */
 const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
@@ -304,7 +307,9 @@ export const useGameStore = create<GameState>()(
           }),
 
         reset: () =>
-          set((state) => record(state, createProgress(state.presetId))),
+          set((state) =>
+            record(state, createProgress(state.presetId, state.settings)),
+          ),
 
         setBigKeysVisible: (visible: boolean) =>
           set({ bigKeysVisible: visible }),

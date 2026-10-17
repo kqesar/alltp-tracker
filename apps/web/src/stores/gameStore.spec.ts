@@ -208,6 +208,23 @@ describe("GameStore", () => {
     });
   });
 
+  describe("a run's type and settings", () => {
+    const FIVE_FIVE = {
+      ...useGameStore.getInitialState().settings,
+      crystalsGanon: 5,
+      crystalsTower: 5,
+    };
+
+    it("keeps a run's settings through a new game", () => {
+      useGameStore.setState({ settings: FIVE_FIVE });
+      useGameStore.getState().handleItemClick("hookshot");
+
+      useGameStore.getState().reset();
+
+      expect(useGameStore.getState().settings).toEqual(FIVE_FIVE);
+    });
+  });
+
   describe("export and import", () => {
     it("round-trips the progress of a run", () => {
       const { handleItemClick, toggleChecks, handleMedallionChange, reset } =
