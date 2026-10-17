@@ -3,10 +3,12 @@ import {
   CHECK_FLAGS,
   MEMORY_RANGE,
   MEMORY_RANGES,
+  SEED_SETTINGS_RANGES,
 } from "@alltp/pack-alttpr";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
+import { writeSeedSettings } from "../../../packs/alttpr/test/seed-rom";
 import {
   clickToolbarAction,
   focusedTestId,
@@ -523,6 +525,120 @@ test("the stream view never connects, even when the tracker does", async ({
   await stream.waitForTimeout(1_000);
   expect(bridge.accepted).toBe(1);
   expect(bridge.connections).toBe(1);
+});
+
+test.describe("the seed's run type", () => {
+  /** A keysanity seed: every dungeon item outside its dungeon. */
+  const bootKeysanity = ({ race = false } = {}) => {
+    bootSeed(bridge, { race });
+    writeSeedSettings(bridge.memory, { dungeonItems: "full" });
+  };
+
+  const mode = (page: Page) => page.getByRole("button", { name: /^Mode/ });
+
+  test("switches a fresh board to it, and says so", async ({ page }) => {
+    bootKeysanity();
+    await openTracker(page);
+    await expect(mode(page)).toHaveAccessibleName("Mode Open");
+
+    await connect(page);
+
+    await expect(mode(page)).toHaveAccessibleName("Mode Keysanity");
+    await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+      cell("Hookshot", "obtained"),
+    );
+    await expect(page.getByTestId("autotrack-live")).toContainText(
+      "This seed is Keysanity (Open, Ganon, 7/7): the tracker switched to it.",
+    );
+    await expect(page.getByTestId("seed-prompt")).toBeEmpty();
+    await openDialog(page);
+    await expect(dialog(page).getByTestId("autotrack-seed")).toHaveText(
+      "The run type matches this seed: Keysanity (Open, Ganon, 7/7).",
+    );
+    await expect(dialog(page).getByTestId("readout-seed")).toContainText(
+      "maps, compasses, small keys, big keys",
+    );
+  });
+
+  test("asks before switching a run, and one undo takes the switch back", async ({
+    page,
+  }) => {
+    bootKeysanity();
+    await openTracker(page);
+    await page.getByTestId("item-flute").click();
+
+    await connect(page);
+
+    const prompt = page.getByTestId("seed-prompt");
+    await expect(prompt).toContainText(
+      "This seed is Keysanity (Open, Ganon, 7/7). The tracker is set to Open. Switch?",
+    );
+    await expect(mode(page)).toHaveAccessibleName("Mode Open");
+    const { violations } = await new AxeBuilder({ page })
+      .include('[data-testid="seed-prompt"]')
+      .withTags(WCAG_AA)
+      .analyze();
+    expect(violations.map(({ id }) => id)).toEqual([]);
+
+    await page.getByTestId("seed-switch").click();
+
+    await expect(mode(page)).toHaveAccessibleName("Mode Keysanity");
+    await expect(prompt).toBeEmpty();
+    await expect(page.getByTestId("item-flute")).toHaveAccessibleName(
+      cell("Flute", "not obtained"),
+    );
+    await page.getByTestId("undo").click();
+    await expect(mode(page)).toHaveAccessibleName("Mode Open");
+    await expect(page.getByTestId("item-flute")).toHaveAccessibleName(
+      cell("Flute", "obtained"),
+    );
+  });
+
+  test("keeps the player's run type for the seed, after a reload too", async ({
+    page,
+  }) => {
+    bootKeysanity();
+    await openTracker(page);
+    await page.getByTestId("item-flute").click();
+    await connect(page);
+
+    await page.getByTestId("seed-keep").click();
+    await expect(page.getByTestId("seed-prompt")).toBeEmpty();
+    await page.reload();
+
+    // It connects again on its own, and asks nothing
+    await openDialog(page);
+    await expect(dialog(page).getByTestId("autotrack-seed")).toHaveText(
+      "This seed is Keysanity (Open, Ganon, 7/7). You kept Open.",
+    );
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("seed-prompt")).toBeEmpty();
+    await expect(mode(page)).toHaveAccessibleName("Mode Open");
+  });
+
+  test("reads only the seed type of a race seed: the run type stays the player's", async ({
+    page,
+  }) => {
+    bootKeysanity({ race: true });
+    await openTracker(page);
+
+    await connect(page);
+    await openDialog(page);
+
+    await expect(dialog(page).getByTestId("autotrack-seed")).toHaveText(
+      "Settings not read in Race Mode: the run type stays yours.",
+    );
+    await expect(mode(page)).toHaveAccessibleName("Mode Open");
+    const settingsRead = SEED_SETTINGS_RANGES.filter((range) =>
+      bridge.reads.some(
+        ([address, size]) =>
+          address < range.address + range.size &&
+          range.address < address + size,
+      ),
+    ).map((range) => range.id);
+    expect(settingsRead).toEqual(["seed-type"]);
+    expect(forbiddenReads(bridge)).toEqual([]);
+  });
 });
 
 for (const width of WIDTHS) {

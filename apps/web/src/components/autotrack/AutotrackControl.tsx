@@ -190,7 +190,8 @@ export const AutotrackMoreBadge = () => {
  * Says the status to screen readers as it changes, politely: never while it
  * only passes through connecting or attaching, so a run is not narrated, but
  * when it connects, fails, needs the browser's prompt answered, waits for
- * another tab, or stops.
+ * another tab, or stops. What autotracking did of its own (a switch to the
+ * seed's run type) follows the status it came with, and the next one.
  * Outside the control, so a folded control still speaks.
  */
 export const AutotrackLiveRegion = () => {
@@ -202,12 +203,13 @@ export const AutotrackLiveRegion = () => {
     !elsewhere &&
     (shown.code === "idle" ||
       (phase === "busy" && shown.code !== "local-network-prompt"));
+  const news = useAutotrackStore((state) => state.news);
   const message = quiet ? said : `Autotracking: ${headline}`;
   if (message !== said) setSaid(message);
 
   return (
     <span className="sr-only" data-testid="autotrack-live" role="status">
-      {message}
+      {[message, news?.text].filter(Boolean).join(". ")}
     </span>
   );
 };

@@ -4,6 +4,7 @@ import {
   checkSeed,
   describeRun,
   promptText,
+  seedLineText,
   switchedText,
 } from "@/autotrack/seed";
 import { getPreset } from "@/data/presets";
@@ -154,5 +155,38 @@ describe("describeRun", () => {
         swordless: false,
       }),
     ).toBe("Swordless (Open, Ganon, 7/7, swords)");
+  });
+});
+
+describe("seedLineText", () => {
+  it("says what the seed means for the run type, whatever its check", () => {
+    const keysanity = checkSeed(seedOf({ dungeonItems: "full" }), run("open"));
+
+    expect(seedLineText(keysanity, false)).toBe(
+      "This seed is Keysanity (Open, Ganon, 7/7). The tracker is set to Open.",
+    );
+    expect(seedLineText(keysanity, true)).toBe(
+      "This seed is Keysanity (Open, Ganon, 7/7). You kept Open.",
+    );
+    expect(seedLineText(checkSeed(seedOf({}), run("open")), false)).toBe(
+      "The run type matches this seed: Open (Open, Ganon, 7/7).",
+    );
+    expect(
+      seedLineText(
+        checkSeed(seedOf({ goal: "ganonhunt" }), run("open")),
+        false,
+      ),
+    ).toBe(
+      "No run type here holds this seed (the Ganonhunt goal): the run type stays yours.",
+    );
+    expect(
+      seedLineText(checkSeed(seedOf({}, { race: true }), run("open")), false),
+    ).toBe("Settings not read in Race Mode: the run type stays yours.");
+    expect(seedLineText({ kind: "unread", why: "not-read" }, false)).toBe(
+      "Seed settings not read yet.",
+    );
+    expect(seedLineText({ kind: "unread", why: "unrecognized" }, false)).toBe(
+      "This seed's settings are not ones the tracker reads: the run type stays yours.",
+    );
   });
 });

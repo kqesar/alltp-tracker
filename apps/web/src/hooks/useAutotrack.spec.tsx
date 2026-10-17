@@ -113,7 +113,7 @@ describe("useAutotrack", () => {
 
     expect(h.transports).toHaveLength(1);
     expect(state().status.code).toBe("connected");
-    expect(saved()).toEqual({ connectOnStart: true });
+    expect(saved()).toEqual({ connectOnStart: true, keptSeed: null });
 
     // The tracker closes: the session stops, the wish stays
     first.unmount();
@@ -251,7 +251,7 @@ describe("useAutotrack", () => {
       connectOnStart: false,
       reading: null,
     });
-    expect(saved()).toEqual({ connectOnStart: false });
+    expect(saved()).toEqual({ connectOnStart: false, keptSeed: null });
     render(<Tracker />);
     await h.advance(0);
     expect(h.transports).toHaveLength(1);

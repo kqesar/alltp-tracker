@@ -156,6 +156,16 @@ export const Readout = ({
         >
           <Chips entries={readout.completed} />
         </Group>
+        <Group count={1} testId="readout-seed" title="Seed settings">
+          <dl className="readout__pairs">
+            {readout.seed.map(({ label, value }) => (
+              <div className="readout__pair" key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </Group>
         <Group
           count={readout.checkedCount}
           testId="readout-checked"

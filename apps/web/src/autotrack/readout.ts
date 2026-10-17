@@ -3,9 +3,19 @@
 // map. Item names follow the game's (Master Sword, Titan's Mitt); location
 // names are upstream's, rebuilt from the pack's ids.
 
-import { dungeonOf, type ItemId, type Unsettled } from "@alltp/pack-alttpr";
+import {
+  dungeonOf,
+  type ItemId,
+  type SeedGoal,
+  type SeedLogic,
+  type SeedSetting,
+  type SeedSettingsReading,
+  type SeedUnknown,
+  type Unsettled,
+} from "@alltp/pack-alttpr";
 import type { AutotrackReading } from "@/autotrack/reading";
 import { boardItems } from "@/autotrack/table";
+import { MODE_LABELS } from "@/data/presets";
 
 /** The dungeons, by the pack's codes. */
 const DUNGEON_NAMES = {
@@ -171,6 +181,78 @@ export type Readout = {
   }[];
   /** What was read that the board has no cell for, so leaves alone. */
   readonly untracked: readonly string[];
+  /** The seed's name and settings, each in words or why it is unknown. */
+  readonly seed: readonly { readonly label: string; readonly value: string }[];
+};
+
+/** Why a seed's setting is unknown, in words. */
+const SETTING_UNKNOWN: Readonly<Record<SeedUnknown, string>> = {
+  "not-read": "not read yet",
+  "race-mode": "not read in Race Mode",
+  unrecognized: "not recognized",
+};
+
+const LOGIC_NAMES: Readonly<Record<SeedLogic, string>> = {
+  MajorGlitches: "Major Glitches",
+  NoGlitches: "No Glitches",
+  OverworldGlitches: "Overworld Glitches",
+};
+
+const GOAL_NAMES: Readonly<Record<SeedGoal, string>> = {
+  completionist: "Completionist",
+  dungeons: "All Dungeons",
+  fast_ganon: "Fast Ganon",
+  ganon: "Defeat Ganon",
+  ganonhunt: "Ganonhunt",
+  pedestal: "Master Sword Pedestal",
+  "triforce-hunt": "Triforce Hunt",
+};
+
+/** A setting in words, or why it is unknown. */
+const settingText = <T>(
+  setting: SeedSetting<T>,
+  words: (value: T) => string,
+): string =>
+  setting.known ? words(setting.value) : SETTING_UNKNOWN[setting.why];
+
+/** The dungeon items a seed lets out of their dungeons, by setting. */
+const WILD_ITEMS = [
+  ["wildMaps", "maps"],
+  ["wildCompasses", "compasses"],
+  ["wildKeys", "small keys"],
+  ["wildBigKeys", "big keys"],
+] as const;
+
+/** A seed's name and settings, as the panel lists them. */
+export const describeSeed = (seed: SeedSettingsReading): Readout["seed"] => {
+  const wild = WILD_ITEMS.map(([key]) => seed[key]);
+  const unknown = wild.find((setting) => !setting.known);
+  const crystals = (count: number) =>
+    `${count} crystal${count === 1 ? "" : "s"}`;
+  return [
+    { label: "Seed", value: seed.seed ?? "not an alttpr.com seed" },
+    { label: "Logic", value: settingText(seed.logic, (v) => LOGIC_NAMES[v]) },
+    { label: "World", value: settingText(seed.mode, (v) => MODE_LABELS[v]) },
+    {
+      label: "Swordless",
+      value: settingText(seed.swordless, (v) => (v ? "yes" : "no")),
+    },
+    { label: "Goal", value: settingText(seed.goal, (v) => GOAL_NAMES[v]) },
+    {
+      label: "Ganon's Tower",
+      value: settingText(seed.crystalsTower, crystals),
+    },
+    { label: "Ganon", value: settingText(seed.crystalsGanon, crystals) },
+    {
+      label: "Outside their dungeons",
+      value:
+        unknown !== undefined && !unknown.known
+          ? SETTING_UNKNOWN[unknown.why]
+          : WILD_ITEMS.filter(([key]) => seed[key].known && seed[key].value)
+              .map(([, name]) => name)
+              .join(", ") || "none",
+    },
+  ];
 };
 
 /** A dungeon's own items, named as a kind when the board has no cell for them. */
@@ -341,6 +423,7 @@ export const describeReading = (
       { label: "Zelda rescued", value: rescueZelda },
       { label: "Triforce reached", value: goal },
     ],
+    seed: describeSeed(reading.seed),
     untracked: [...untracked],
     withheld: [...withheld].map(([label, why]) => ({ label, why })),
   };

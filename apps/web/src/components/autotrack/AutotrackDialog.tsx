@@ -8,6 +8,7 @@ import {
   type SessionStatus,
 } from "@alltp/autotrack";
 import { useEffect, useId, useRef, useState } from "react";
+import { seedLineText } from "@/autotrack/seed";
 import { headlineOf, phaseOf } from "@/autotrack/status";
 import { Readout } from "@/components/autotrack/Readout";
 import { SetupGuide } from "@/components/autotrack/SetupGuide";
@@ -25,6 +26,7 @@ import {
   stopAutotrack,
   syncFromGame,
   useAutotrackStore,
+  useSeedCheck,
 } from "@/stores/autotrackStore";
 import { commandKey } from "@/utils/platform";
 
@@ -137,6 +139,8 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
   const connected = active && !elsewhere && shown.code === "connected";
   const race = connected && shown.race.active ? shown.race : null;
   const canRetry = active && "retryInMs" in shown;
+  const seedCheck = useSeedCheck();
+  const keptSeed = useAutotrackStore((state) => state.keptSeed);
 
   const copyReport = async () => {
     const state = useAutotrackStore.getState();
@@ -197,6 +201,17 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
                 {race
                   ? raceReason(race)
                   : "Race Mode is off: this seed is not a race seed."}
+              </p>
+            )}
+            {connected && seedCheck && (
+              <p
+                className="autotrack-status__detail"
+                data-testid="autotrack-seed"
+              >
+                {seedLineText(
+                  seedCheck,
+                  "seed" in seedCheck && seedCheck.seed === keptSeed,
+                )}
               </p>
             )}
           </div>

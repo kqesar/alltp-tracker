@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { SAVE, seedMemory } from "@/autotrack/fixtures";
 import { readMemory } from "@/autotrack/reading";
 import { describeReading, locationName } from "@/autotrack/readout";
+import { writeSeedSettings } from "../../../../packs/alttpr/test/seed-rom";
 
 /** The pack's ranges over a memory image, as a session's snapshot is. */
 const viewOf = (memory: Uint8Array, unread: readonly MemoryRangeId[] = []) => ({
@@ -200,5 +201,45 @@ describe("locationName", () => {
     );
     expect(locationName("sewers/dark-cross", true)).toBe("Sewers - Dark Cross");
     expect(locationName("sanctuary", true)).toBe("Sanctuary");
+  });
+});
+
+describe("the seed's settings", () => {
+  it("names each setting the ROM holds", () => {
+    const memory = writeSeedSettings(seedMemory({ race: false }), {
+      crystalsGanon: 5,
+      dungeonItems: "full",
+      goal: "fast_ganon",
+    });
+
+    expect(describeSeed(memory).seed).toEqual([
+      { label: "Seed", value: "OPEN" },
+      { label: "Logic", value: "No Glitches" },
+      { label: "World", value: "Open" },
+      { label: "Swordless", value: "no" },
+      { label: "Goal", value: "Fast Ganon" },
+      { label: "Ganon's Tower", value: "7 crystals" },
+      { label: "Ganon", value: "5 crystals" },
+      {
+        label: "Outside their dungeons",
+        value: "maps, compasses, small keys, big keys",
+      },
+    ]);
+  });
+
+  it("says why a race seed's settings are not read, its logic aside", () => {
+    const memory = writeSeedSettings(seedMemory({ race: true }), {});
+    const seed = Object.fromEntries(
+      describeSeed(memory, true).seed.map(({ label, value }) => [label, value]),
+    );
+
+    expect(seed).toMatchObject({
+      Ganon: "not read in Race Mode",
+      Goal: "not read in Race Mode",
+      Logic: "No Glitches",
+      "Outside their dungeons": "not read in Race Mode",
+      Seed: "RACE",
+      World: "not read in Race Mode",
+    });
   });
 });

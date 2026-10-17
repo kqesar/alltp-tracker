@@ -31,6 +31,16 @@ type GameState = Progress &
   Prefs & {
     // Actions
     applyPreset: (presetId: string) => void;
+    /**
+     * Start a new run of a run type with these settings, as one undo step:
+     * the fresh run, then what `lay` sets on it (the game, while
+     * autotracking). Key cells follow the run when its keysanity changes.
+     */
+    applyRun: (
+      presetId: string,
+      settings: RunSettings,
+      lay?: (fresh: Progress) => Partial<Progress> | null,
+    ) => void;
     /** Step an item by one: forward on click, back (`-1`) on right-click */
     handleItemClick: (item: string, direction?: Direction) => void;
     handleSmallKeyClick: (dungeonIndex: number, direction?: Direction) => void;
@@ -55,7 +65,7 @@ type GameState = Progress &
     /** Replace the run with a save already read by `parseSave`; display prefs are kept */
     loadProgress: (progress: Partial<Progress>) => void;
 
-    /** Start a new game with the current preset; display prefs are kept */
+    /** Start a new game of the same run type and settings; display prefs are kept */
     reset: () => void;
 
     /** Earlier states of the run, most recent last; never persisted */
@@ -96,17 +106,36 @@ const fullCounters = (run: RunSettings): Record<string, number> =>
     ]),
   );
 
-/** A fresh run of the given preset: nothing found, nothing checked. */
-const createProgress = (presetId: string = DEFAULT_PRESET_ID): Progress => {
-  const preset = getPreset(presetId);
-  return {
-    checked: {},
-    items: { ...initialItems, ...fullCounters(preset.settings) } as ItemState,
-    medallions: Array(10).fill(0) as number[],
-    presetId: preset.id,
-    settings: preset.settings,
-    smallKeys: Array(10).fill(0) as number[], // 10 dungeons, all start at 0
-  };
+/**
+ * A fresh run of the given preset, under its settings or others: nothing
+ * found, nothing checked.
+ */
+const createProgress = (
+  presetId: string = DEFAULT_PRESET_ID,
+  settings: RunSettings = getPreset(presetId).settings,
+): Progress => ({
+  checked: {},
+  items: { ...initialItems, ...fullCounters(settings) } as ItemState,
+  medallions: Array(10).fill(0) as number[],
+  presetId: getPreset(presetId).id,
+  settings,
+  smallKeys: Array(10).fill(0) as number[], // 10 dungeons, all start at 0
+});
+
+/**
+ * Whether a run is as it started: nothing found, nothing checked, nothing
+ * noted. Switching its run type then loses nothing.
+ */
+export const isFreshRun = (progress: Progress): boolean => {
+  const fresh = createProgress(progress.presetId, progress.settings);
+  return (
+    Object.keys(progress.checked).length === 0 &&
+    progress.medallions.every((value) => value === 0) &&
+    progress.smallKeys.every((value) => value === 0) &&
+    Object.entries(fresh.items).every(
+      ([id, value]) => progress.items[id] === value,
+    )
+  );
 };
 
 /** Display preferences for a first visit. */
@@ -219,16 +248,19 @@ export const useGameStore = create<GameState>()(
         },
 
         applyPreset: (presetId: string) =>
+          get().applyRun(presetId, getPreset(presetId).settings),
+
+        applyRun: (presetId, settings, lay) =>
           set((state) => {
-            const progress = createProgress(presetId);
+            const fresh = createProgress(presetId, settings);
             return {
-              ...record(state, progress),
+              ...record(state, { ...fresh, ...lay?.(fresh) }),
               // Key cells follow the run type when it turns keysanity on or
               // off; otherwise the player's own choice stands.
               bigKeysVisible:
-                progress.settings.keysanity === state.settings.keysanity
+                settings.keysanity === state.settings.keysanity
                   ? state.bigKeysVisible
-                  : progress.settings.keysanity,
+                  : settings.keysanity,
             };
           }),
 
@@ -304,7 +336,9 @@ export const useGameStore = create<GameState>()(
           }),
 
         reset: () =>
-          set((state) => record(state, createProgress(state.presetId))),
+          set((state) =>
+            record(state, createProgress(state.presetId, state.settings)),
+          ),
 
         setBigKeysVisible: (visible: boolean) =>
           set({ bigKeysVisible: visible }),
