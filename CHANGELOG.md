@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.14.0](https://github.com/kqesar/alltp-tracker/compare/v2.13.0...v2.14.0) (2026-10-17)
+
+
+### ✨ Features
+
+* **alttpr:** read a seed's settings from its file on alttpr.com ([36960e9](https://github.com/kqesar/alltp-tracker/commit/36960e9e4acf126a7f2cb6d32b582c6cb3e87f16))
+* **web:** start a run from a seed's alttpr.com link ([23e75e1](https://github.com/kqesar/alltp-tracker/commit/23e75e1c1855318b7c0ca2bae18fd4fd56f1d559))
+* **web:** take a race seed's settings from its file on alttpr.com ([06cef95](https://github.com/kqesar/alltp-tracker/commit/06cef95697a97494be1441cabf6250933f0d4d68))
+
+
+### 🐛 Bug Fixes
+
+* **web:** give each crystal count its own row in the run's settings ([adc472b](https://github.com/kqesar/alltp-tracker/commit/adc472b9a01505ddeef65c4dbde2d7f38fbee952))
+
+
+### 📚 Documentation
+
+* describe seeds read from their file on alttpr.com ([b5aac64](https://github.com/kqesar/alltp-tracker/commit/b5aac64bffc902c878cf1cb6866607f394eb850f))
+
 ## [2.13.0](https://github.com/kqesar/alltp-tracker/compare/v2.12.0...v2.13.0) (2026-10-17)
 
 
