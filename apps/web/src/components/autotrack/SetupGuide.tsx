@@ -9,18 +9,19 @@ import {
   setupProgress,
   sniAssets,
 } from "@alltp/autotrack";
-import { type KeyboardEvent, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import { deviceInUse, type Fix, fixFor } from "@/autotrack/guide";
 import { headlineOf } from "@/autotrack/status";
+import { type Tab, Tabs, tabId } from "@/components/ui/Tabs";
 
 /** The systems the guide covers, as its tabs. */
 const SYSTEMS = [
-  { label: "Windows", os: "windows" },
-  { label: "macOS", os: "macos" },
-  { label: "Linux", os: "linux" },
-] as const satisfies readonly { label: string; os: OperatingSystem }[];
+  { label: "Windows", value: "windows" },
+  { label: "macOS", value: "macos" },
+  { label: "Linux", value: "linux" },
+] as const satisfies readonly Tab<OperatingSystem>[];
 
-type System = (typeof SYSTEMS)[number]["os"];
+type System = (typeof SYSTEMS)[number]["value"];
 
 /** The emulators and consoles the guide has instructions for. */
 const DEVICES = [
@@ -128,7 +129,7 @@ export const SetupGuide = ({
   environment: Environment;
   status: SessionStatus;
 }) => {
-  const detected: System = SYSTEMS.some((s) => s.os === environment.os)
+  const detected: System = SYSTEMS.some((s) => s.value === environment.os)
     ? (environment.os as System)
     : "windows";
   const [system, setSystem] = useState<System>(detected);
@@ -164,21 +165,6 @@ export const SetupGuide = ({
     });
 
   const baseId = useId();
-  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
-  // Automatic activation: the arrow keys, Home and End select a tab
-  const onTabKeyDown = (event: KeyboardEvent, index: number) => {
-    const moves: Record<string, number> = {
-      ArrowLeft: index - 1,
-      ArrowRight: index + 1,
-      End: SYSTEMS.length - 1,
-      Home: 0,
-    };
-    if (!(event.key in moves)) return;
-    event.preventDefault();
-    const next = (moves[event.key] + SYSTEMS.length) % SYSTEMS.length;
-    setSystem(SYSTEMS[next].os);
-    tabs.current[next]?.focus();
-  };
   const done = progress.steps.filter((s) => s.state === "done").length;
 
   return (
@@ -192,33 +178,15 @@ export const SetupGuide = ({
         </p>
       </div>
       <div className="setup__choices">
-        <div
-          aria-label="Your system"
-          className="setup-tabs"
-          data-testid="setup-tabs"
-          role="tablist"
-        >
-          {SYSTEMS.map(({ label, os }, index) => (
-            <button
-              aria-controls={`${baseId}-panel`}
-              aria-selected={os === system}
-              className="setup-tabs__tab"
-              data-testid={`setup-tab-${os}`}
-              id={`${baseId}-tab-${os}`}
-              key={os}
-              onClick={() => setSystem(os)}
-              onKeyDown={(event) => onTabKeyDown(event, index)}
-              ref={(element) => {
-                tabs.current[index] = element;
-              }}
-              role="tab"
-              tabIndex={os === system ? 0 : -1}
-              type="button"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          baseId={baseId}
+          label="Your system"
+          onSelect={setSystem}
+          panelId={`${baseId}-panel`}
+          selected={system}
+          tabs={SYSTEMS}
+          testId="setup-tab"
+        />
         <label className="setup-device">
           <span className="setup-device__label">Emulator or console</span>
           <select
@@ -237,7 +205,7 @@ export const SetupGuide = ({
         </label>
       </div>
       <div
-        aria-labelledby={`${baseId}-tab-${system}`}
+        aria-labelledby={tabId(baseId, system)}
         className="setup__panel"
         id={`${baseId}-panel`}
         role="tabpanel"
