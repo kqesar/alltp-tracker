@@ -16,10 +16,13 @@ import {
 } from "@/logic/settings";
 
 const run = (overrides: Partial<RunSettings> = {}): RunSettings => ({
+  crystalsGanon: 7,
+  crystalsTower: 7,
   entranceShuffle: "none",
   goal: "ganon",
   keysanity: false,
   mode: "open",
+  swordless: false,
   ...overrides,
 });
 
@@ -54,6 +57,20 @@ describe("packSettings", () => {
     ["triforce-hunt", { ganonGoal: true }],
   ] as const)("gives the %s goal its pack goal", (goal, expected) => {
     expect(packSettings(run({ goal }))).toMatchObject(expected);
+  });
+
+  it("gives the pack a seed's crystal counts and its swords", () => {
+    expect(
+      packSettings(run({ crystalsGanon: 6, crystalsTower: 5 })),
+    ).toMatchObject({ crystalsGanon: 6, crystalsTower: 5, swordless: false });
+    // Swordless asks for the better bow (World.php:261-273)
+    expect(packSettings(getPreset("swordless").settings)).toMatchObject({
+      requireBetterBow: true,
+      swordless: true,
+    });
+    expect(packSettings(run({ crystalsGanon: 6 }))).not.toBe(
+      packSettings(run({ crystalsTower: 6 })),
+    );
   });
 
   it("reads the worlds the pack does not model as Open", () => {

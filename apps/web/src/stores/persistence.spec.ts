@@ -39,10 +39,13 @@ describe("parseSave", () => {
       medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 3],
       presetId: "open",
       settings: {
+        crystalsGanon: 6,
+        crystalsTower: 5,
         entranceShuffle: "none",
         goal: "ganon",
         keysanity: false,
         mode: "open",
+        swordless: true,
       },
       smallKeys: [0, 1, 0, 6, 0, 0, 0, 0, 0, 0],
     } as const;
@@ -83,10 +86,13 @@ describe("parseSave", () => {
 
   it("checks a dungeon counter against the run's settings", () => {
     const keysanity = {
+      crystalsGanon: 7,
+      crystalsTower: 7,
       entranceShuffle: "none",
       goal: "ganon",
       keysanity: true,
       mode: "open",
+      swordless: false,
     };
 
     expect(
@@ -204,16 +210,18 @@ describe("migrate", () => {
       mode: "standard",
     });
     const items = { chest0: 1, chest3: 5, chest9: -1, hookshot: true };
+    // What version 8 adds to every earlier run's settings
+    const v8 = { crystalsGanon: 7, crystalsTower: 7, swordless: false };
 
     expect(migrate({ items, settings: run(true) }, 5)).toEqual({
       // 2 of 3 found in Eastern Palace, none in Palace of Darkness; a value
       // out of the legacy range is left for validation to refuse
       items: { chest0: 4, chest3: 14, chest9: -1, hookshot: true },
-      settings: run(true),
+      settings: { ...run(true), ...v8 },
     });
     expect(migrate({ items, settings: run(false) }, 5)).toEqual({
       items,
-      settings: run(false),
+      settings: { ...run(false), ...v8 },
     });
   });
 
@@ -230,6 +238,50 @@ describe("migrate", () => {
     ]);
     expect(migrate({ smallKeys: [0, 1] }, 6)).toEqual({ smallKeys: [0, 1] });
     expect(migrate({ smallKeys: "none" }, 6)).toEqual({ smallKeys: "none" });
+  });
+
+  it("gives a version 7 run swords and 7 crystals for the tower and Ganon", () => {
+    const settings = {
+      entranceShuffle: "none",
+      goal: "fast-ganon",
+      keysanity: true,
+      mode: "standard",
+    };
+
+    const migrated = migrate({ presetId: "keysanity", settings }, 7);
+
+    expect(migrated).toEqual({
+      presetId: "keysanity",
+      settings: {
+        ...settings,
+        crystalsGanon: 7,
+        crystalsTower: 7,
+        swordless: false,
+      },
+    });
+    expect(validateProgress(migrated).errors).toEqual([]);
+    // Unmigrated, the settings fail
+    expect(validateProgress({ settings }).errors).toHaveLength(1);
+    expect(migrate({ settings: "none" }, 7)).toEqual({ settings: "none" });
+  });
+
+  it("refuses crystal counts beyond the seven crystals", () => {
+    const settings = {
+      crystalsGanon: 8,
+      crystalsTower: 7,
+      entranceShuffle: "none",
+      goal: "ganon",
+      keysanity: false,
+      mode: "open",
+      swordless: false,
+    };
+
+    expect(refusal(saveFile({ settings }))).toMatch(
+      /crystal counts from 0 to 7/,
+    );
+    expect(
+      parseSave(saveFile({ settings: { ...settings, crystalsGanon: 0 } })),
+    ).toMatchObject({ ok: true });
   });
 
   it("leaves a current save alone", () => {

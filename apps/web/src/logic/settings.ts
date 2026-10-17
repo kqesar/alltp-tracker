@@ -29,31 +29,38 @@ const cache = new Map<string, AlttprSettings>();
 
 /**
  * The pack's settings for a run: the site's default preset (advanced item
- * placement, randomized weapons, 7 crystals for the tower and for Ganon,
- * NoGlitches, as config/alttp.php:78-96 has it) in the run's world, with
- * its goal, and every dungeon item wild for keysanity (dungeonItems 'full':
- * keys, big keys, maps and compasses). The pack models the Open and
- * Standard worlds only: an inverted or retro run, whose preset says its logic
- * is not supported, reads as Open. The entrance shuffle is not modeled
- * either. The same run settings always give the same object, so a world
- * compiled for it can be kept.
- * @param run - The run's settings, as its preset holds them
+ * placement, randomized weapons, NoGlitches, as config/alttp.php:78-96 has
+ * it) in the run's world, with its goal, its crystal counts, swordless
+ * weapons when it has no sword, and every dungeon item wild for keysanity
+ * (dungeonItems 'full': keys, big keys, maps and compasses). The pack models
+ * the Open and Standard worlds only: an inverted or retro run, whose preset
+ * says its logic is not supported, reads as Open. The entrance shuffle is
+ * not modeled either. The same run settings always give the same object, so
+ * a world compiled for it can be kept.
+ * @param run - The run's settings: its preset's, or the seed's
  */
 export const packSettings = (run: RunSettings): AlttprSettings => {
-  const key = `${run.mode}/${run.goal}/${run.keysanity}`;
+  const key = [
+    run.mode,
+    run.goal,
+    run.keysanity,
+    run.swordless,
+    run.crystalsTower,
+    run.crystalsGanon,
+  ].join("/");
   let settings = cache.get(key);
   if (settings === undefined) {
     settings = settingsFromUpstream(
       run.mode === "standard" ? "standard" : "open",
       {
         accessibility: "items",
-        "crystals.ganon": 7,
-        "crystals.tower": 7,
+        "crystals.ganon": run.crystalsGanon,
+        "crystals.tower": run.crystalsTower,
         dungeonItems: run.keysanity ? "full" : "standard",
         goal: GOALS[run.goal],
         itemPlacement: "advanced",
         logic: "NoGlitches",
-        "mode.weapons": "randomized",
+        "mode.weapons": run.swordless ? "swordless" : "randomized",
       },
     );
     cache.set(key, settings);

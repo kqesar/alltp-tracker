@@ -10,10 +10,13 @@ const fakeState = {
   applyPreset,
   presetId: "open",
   settings: {
+    crystalsGanon: 6,
+    crystalsTower: 5,
     entranceShuffle: "none" as const,
     goal: "ganon" as const,
     keysanity: false,
     mode: "open" as const,
+    swordless: false,
   },
 };
 
@@ -45,6 +48,10 @@ describe("PresetSelector", () => {
     // Current-run settings summary is shown
     expect(within(dialog).getByText("Goal")).toBeInTheDocument();
     expect(within(dialog).getByText("Defeat Ganon")).toBeInTheDocument();
+    // A seed's own crystal counts, which no preset names
+    expect(
+      within(dialog).getByText("5 for Ganon's Tower, 6 for Ganon"),
+    ).toBeInTheDocument();
   });
 
   it("asks for confirmation before switching, then applies the preset", () => {
