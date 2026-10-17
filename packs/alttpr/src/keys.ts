@@ -283,6 +283,17 @@ function modelOf(filler: Filler): Model {
   return model;
 }
 
+/**
+ * `state` with every item the player does not track at its full count:
+ * what the rules want beyond the keys, as asking for blockers needs it
+ * (a key the player cannot mark is never one to collect). The key model
+ * reads a location there to tell `yes` from `maybe`.
+ */
+export function withUntracked(filler: Filler, state: State): State {
+  const model = modelOf(filler);
+  return raise(state, model.untracked, model.keys, model.bigKeys);
+}
+
 /** The tracker's view of one state, keys read by the key model. */
 export interface KeyedSolution {
   /**

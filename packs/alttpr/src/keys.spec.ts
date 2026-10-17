@@ -3,7 +3,12 @@
 import { describe, expect, it } from "vitest";
 import { filler } from "./fill";
 import { ITEMS } from "./items";
-import { everything, everythingBut, possibleLocations } from "./keys";
+import {
+  everything,
+  everythingBut,
+  possibleLocations,
+  withUntracked,
+} from "./keys";
 import { compile, regionModules } from "./pack";
 import {
   type AlttprSettings,
@@ -14,13 +19,16 @@ import {
 } from "./settings";
 
 const fillers = new Map<AlttprSettings, ReturnType<typeof filler>>();
-function where(item: string, settings: AlttprSettings = OPEN): string[] {
+function fillerOf(settings: AlttprSettings) {
   let found = fillers.get(settings);
   if (found === undefined) {
     found = filler(compile(settings), settings);
     fillers.set(settings, found);
   }
-  return possibleLocations(found, item);
+  return found;
+}
+function where(item: string, settings: AlttprSettings = OPEN): string[] {
+  return possibleLocations(fillerOf(settings), item);
 }
 
 describe("everything", () => {
@@ -114,5 +122,26 @@ describe("possibleLocations", () => {
     const wild = settingsFromUpstream("open", { dungeonItems: "full" });
     expect(where("KeyD1", wild)).toContain("kings-tomb");
     expect(where("BigKeyD1", wild)).toContain("kings-tomb");
+  });
+});
+
+describe("withUntracked", () => {
+  it("holds every key and big key the player does not track, at its count", () => {
+    const held = withUntracked(fillerOf(OPEN), { hammer: 1, keyD1: 2 });
+    expect(held).toMatchObject({
+      bigKeyA2: 1,
+      bigKeyD1: 1,
+      hammer: 1,
+      keyA2: 4,
+      keyD1: 6,
+      keyH2: 1,
+    });
+    // Maps and compasses stay in their dungeons and no rule wants them
+    expect(held).not.toHaveProperty("mapD1");
+  });
+
+  it("adds nothing in keysanity, where the player tracks them all", () => {
+    const wild = settingsFromUpstream("open", { dungeonItems: "full" });
+    expect(withUntracked(fillerOf(wild), { keyD1: 2 })).toEqual({ keyD1: 2 });
   });
 });
