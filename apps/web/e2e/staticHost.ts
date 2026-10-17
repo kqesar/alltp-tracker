@@ -46,7 +46,14 @@ export const hostBuild = async (base: string) => {
   const { port } = server.address() as AddressInfo;
 
   return {
-    close: () => new Promise((resolve) => server.close(resolve)),
+    // close() alone waits for every open connection: a page still loading
+    // (its service worker caching the build) would hold the test past its
+    // timeout
+    close: () =>
+      new Promise((resolve) => {
+        server.close(resolve);
+        server.closeAllConnections();
+      }),
     /** Serve new contents for these files, by path under `base`. */
     deploy: (files: Record<string, string>) => {
       for (const [file, body] of Object.entries(files))
