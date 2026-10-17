@@ -253,6 +253,24 @@ describe("AutotrackDialog's status", () => {
     expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
       "Settings not read in Race Mode: the run type stays yours.",
     );
+
+    // A race seed's settings come from its file on alttpr.com, once in
+    act(() =>
+      useAutotrackStore.setState({
+        seedFile: { hash: "RACE", result: "loading" },
+      }),
+    );
+    expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
+      "Settings not read in Race Mode: asking alttpr.com for them…",
+    );
+    act(() =>
+      useAutotrackStore.setState({
+        seedFile: { hash: "RACE", result: "offline" },
+      }),
+    );
+    expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
+      "Settings not read in Race Mode, and alttpr.com could not be reached: the run type stays yours.",
+    );
   });
 
   it("says what happens next while it waits", async () => {
@@ -571,6 +589,28 @@ describe("AutotrackDialog's readout", () => {
     expect(within(readout).getByTestId("readout-progress")).toHaveTextContent(
       "✓Game startedyes✓Zelda rescuedyes–Triforce reachedno",
     );
+  });
+
+  it("says a race seed's settings came from its file on alttpr.com", async () => {
+    await open();
+    const raced = reading(true);
+    act(() =>
+      useAutotrackStore.setState({
+        active: true,
+        reading: raced,
+        shown: STATUSES.connected,
+      }),
+    );
+    const title = () =>
+      within(screen.getByTestId("readout-seed")).getByRole("heading");
+    expect(title()).toHaveTextContent(/^Seed settings$/);
+
+    act(() =>
+      useAutotrackStore.setState({
+        seedFile: { hash: "RACE", result: raced.seed },
+      }),
+    );
+    expect(title()).toHaveTextContent(/^Seed settings, from alttpr\.com$/);
   });
 
   it("names what it read that the board has no cell for", async () => {

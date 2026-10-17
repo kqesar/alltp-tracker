@@ -15,6 +15,7 @@ import type {
   SeedSettingsReading,
   SeedUnknown,
 } from "@alltp/pack-alttpr";
+import type { SeedFileError } from "@/autotrack/seedFile";
 import {
   getPreset,
   MODE_LABELS,
@@ -251,12 +252,34 @@ export const promptText = (check: Extract<SeedCheck, { kind: "differs" }>) =>
 export const switchedText = (check: Extract<SeedCheck, { kind: "differs" }>) =>
   `This seed is ${check.seedText}: the tracker switched to it.`;
 
-/** What the dialog says of the seed's run type, for each check. */
-export const seedLineText = (check: SeedCheck, kept: boolean): string => {
+/** What the dialog says of a race seed while its file gives no settings. */
+const RACE_FILE_LINES: Readonly<Record<"loading" | SeedFileError, string>> = {
+  loading: "Settings not read in Race Mode: asking alttpr.com for them…",
+  "not-found":
+    "Settings not read in Race Mode, and alttpr.com has no file for this seed: the run type stays yours.",
+  offline:
+    "Settings not read in Race Mode, and alttpr.com could not be reached: the run type stays yours.",
+  unrecognized:
+    "Settings not read in Race Mode, and this seed's file on alttpr.com is not one the tracker reads: the run type stays yours.",
+};
+
+/**
+ * What the dialog says of the seed's run type, for each check.
+ * @param check - What the seed says of the run type
+ * @param kept - Whether the player kept their run type for this seed
+ * @param file - Where a race seed's file stands, while it gives no settings
+ */
+export const seedLineText = (
+  check: SeedCheck,
+  kept: boolean,
+  file?: "loading" | SeedFileError,
+): string => {
   switch (check.kind) {
     case "unread":
       if (check.why === "race-mode") {
-        return "Settings not read in Race Mode: the run type stays yours.";
+        return file === undefined
+          ? "Settings not read in Race Mode: the run type stays yours."
+          : RACE_FILE_LINES[file];
       }
       return check.why === "not-read"
         ? "Seed settings not read yet."

@@ -19,7 +19,7 @@ import {
 } from "@/autotrack/apply";
 import type { AutotrackReading } from "@/autotrack/reading";
 import type { RunSettings } from "@/data/presets";
-import { useGameStore } from "@/stores/gameStore";
+import { createProgress, useGameStore } from "@/stores/gameStore";
 
 /** The board's side of a session. */
 export type Follower = {
@@ -35,6 +35,22 @@ export type Follower = {
    * it, as one undo step: undoing it brings the board back as it was.
    */
   switchRun: (presetId: string, settings: RunSettings) => void;
+  /**
+   * Whether the board holds the game alone: a new run of its run type with
+   * what the game holds laid on it, nothing the player marked beyond.
+   */
+  holdsGameOnly: () => boolean;
+};
+
+/** Two records or arrays with the same values under the same keys. */
+const sameValues = (a: object, b: object) => {
+  const entries = Object.entries(a);
+  return (
+    entries.length === Object.keys(b).length &&
+    entries.every(
+      ([key, value]) => (b as Record<string, unknown>)[key] === value,
+    )
+  );
 };
 
 /** Start following the game, for a new session. */
@@ -66,6 +82,21 @@ export const createFollower = (): Follower => {
   };
 
   return {
+    holdsGameOnly: () => {
+      const store = useGameStore.getState();
+      const fresh = createProgress(store.presetId, store.settings);
+      const game =
+        last === null
+          ? null
+          : syncView(fresh, gameView(last, fresh, found))?.next;
+      const run = { ...fresh, ...game };
+      return (
+        sameValues(run.items, store.items) &&
+        sameValues(run.checked, store.checked) &&
+        sameValues(run.medallions, store.medallions) &&
+        sameValues(run.smallKeys, store.smallKeys)
+      );
+    },
     read: (reading) => {
       if (reading.progress.started !== true) {
         hand = null;

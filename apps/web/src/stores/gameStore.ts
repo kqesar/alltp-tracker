@@ -110,7 +110,7 @@ const fullCounters = (run: RunSettings): Record<string, number> =>
  * A fresh run of the given preset, under its settings or others: nothing
  * found, nothing checked.
  */
-const createProgress = (
+export const createProgress = (
   presetId: string = DEFAULT_PRESET_ID,
   settings: RunSettings = getPreset(presetId).settings,
 ): Progress => ({

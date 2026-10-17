@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import {
   ALTTPR_RACE_PROFILE,
   CHECK_FLAGS,
@@ -30,9 +31,12 @@ const WRAM = 0xf5_0000;
 const SAVE = (offset: number) => WRAM + 0xf000 + offset;
 
 /** Writes a seed in play: a few items and checks, on the overworld. */
-const bootSeed = (bridge: FakeUsb2Snes, { race }: { race: boolean }) => {
+const bootSeed = (
+  bridge: FakeUsb2Snes,
+  { name, race }: { name?: string; race: boolean },
+) => {
   const { memory } = bridge;
-  const title = (race ? "VT RACE" : "VT OPEN").padEnd(21, " ");
+  const title = `VT ${name ?? (race ? "RACE" : "OPEN")}`.padEnd(21, " ");
   for (let i = 0; i < title.length; i++) {
     memory[ROM_HEADER + i] = title.charCodeAt(i);
   }
@@ -637,6 +641,51 @@ test.describe("the seed's run type", () => {
       ),
     ).map((range) => range.id);
     expect(settingsRead).toEqual(["seed-type"]);
+    expect(forbiddenReads(bridge)).toEqual([]);
+  });
+
+  test("takes a race seed's settings from its file on alttpr.com", async ({
+    page,
+  }) => {
+    const asked: string[] = [];
+    await page.route(
+      "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/*",
+      (route) => {
+        asked.push(route.request().url());
+        return route.fulfill({
+          body: readFileSync(
+            new URL(
+              "../../../packs/alttpr/test/seed-files/eM43RgZ4Gj.json",
+              import.meta.url,
+            ),
+            "utf8",
+          ),
+          contentType: "application/json",
+          headers: { "Access-Control-Allow-Origin": "*" },
+        });
+      },
+    );
+    bootSeed(bridge, { name: "eM43RgZ4Gj", race: true });
+    await openTracker(page);
+
+    await connect(page);
+
+    await expect(mode(page)).toHaveAccessibleName("Mode Inverted");
+    await expect(page.getByTestId("autotrack-live")).toContainText(
+      "This seed is Inverted (Inverted, Fast Ganon, 4/7): the tracker switched to it.",
+    );
+    await openDialog(page);
+    await expect(dialog(page).getByTestId("autotrack-seed")).toHaveText(
+      "The run type matches this seed: Inverted (Inverted, Fast Ganon, 4/7).",
+    );
+    await expect(
+      dialog(page).getByRole("heading", {
+        name: "Seed settings, from alttpr.com",
+      }),
+    ).toBeVisible();
+    expect(asked).toEqual([
+      "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/eM43RgZ4Gj.json",
+    ]);
     expect(forbiddenReads(bridge)).toEqual([]);
   });
 });

@@ -141,6 +141,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
   const canRetry = active && "retryInMs" in shown;
   const seedCheck = useSeedCheck();
   const keptSeed = useAutotrackStore((state) => state.keptSeed);
+  const seedFile = useAutotrackStore((state) => state.seedFile?.result);
 
   const copyReport = async () => {
     const state = useAutotrackStore.getState();
@@ -211,6 +212,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
                 {seedLineText(
                   seedCheck,
                   "seed" in seedCheck && seedCheck.seed === keptSeed,
+                  typeof seedFile === "string" ? seedFile : undefined,
                 )}
               </p>
             )}

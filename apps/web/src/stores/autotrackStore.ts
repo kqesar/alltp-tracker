@@ -5,6 +5,7 @@ import type {
   SessionOptions,
   SessionStatus,
 } from "@alltp/autotrack";
+import { seedHashOf } from "@alltp/pack-alttpr";
 import { useMemo } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -12,6 +13,11 @@ import type { Follower } from "@/autotrack/follow";
 import type { AutotrackReading } from "@/autotrack/reading";
 import type { Runtime, RuntimeSink } from "@/autotrack/runtime";
 import { checkSeed, type SeedCheck, switchedText } from "@/autotrack/seed";
+import {
+  loadSeedFile,
+  type SeedFileResult,
+  withSeedFile,
+} from "@/autotrack/seedFile";
 import { shownStatus } from "@/autotrack/status";
 import { isFreshRun, useGameStore } from "@/stores/gameStore";
 import { bridgeUrl, isObsView } from "@/utils/view";
@@ -41,8 +47,20 @@ type AutotrackState = {
   devices: readonly DeviceDescriptor[];
   /** The system and browser, once detected. */
   environment: Environment | null;
-  /** The game as last read, or null before the first read. */
+  /**
+   * The game as last read, or null before the first read. A race seed's
+   * settings, which Race Mode keeps from the tracker, are its file's once
+   * `seedFile` holds them.
+   */
   reading: AutotrackReading | null;
+  /**
+   * A race seed's file on alttpr.com, asked once per connection: its
+   * settings, or why there are none, or "loading" while asked.
+   */
+  seedFile: {
+    readonly hash: string;
+    readonly result: SeedFileResult | "loading";
+  } | null;
   /**
    * The seed whose run type the player chose to keep theirs for: no prompt
    * for it, now or at the next visit. Saved.
@@ -82,6 +100,7 @@ export const useAutotrackStore = create<AutotrackState>()(
       keptSeed: null,
       news: null,
       reading: null,
+      seedFile: null,
       setConnectOnStart: (connectOnStart) => set({ connectOnStart }),
       shown: IDLE,
       since: 0,
@@ -152,19 +171,63 @@ const switchRun = (check: Extract<SeedCheck, { kind: "differs" }>) => {
  * of another run type switches it at once, and the live region says so;
  * else SeedPrompt asks the player (useSeedCheck), unless they kept their run
  * type for this seed or the page already switched to it once.
+ * @param reading - The reading, its seed's file laid on it
+ * @param fresh - Whether the board holds nothing of the player's: fresh,
+ * before the reading is laid on it
  */
-const followSeed = (reading: AutotrackReading) => {
-  const game = useGameStore.getState();
-  const check = checkSeed(reading.seed, game);
+const followSeed = (
+  reading: AutotrackReading,
+  fresh = isFreshRun(useGameStore.getState()),
+) => {
+  const check = checkSeed(reading.seed, useGameStore.getState());
   if (
     check.kind === "differs" &&
     check.seed !== switched &&
     check.seed !== useAutotrackStore.getState().keptSeed &&
-    isFreshRun(game)
+    fresh
   ) {
     switchRun(check);
     set({ news: { repeated: false, text: switchedText(check) } });
   }
+};
+
+/** A reading with its seed's file laid on it, once the file is in. */
+const withFile = (reading: AutotrackReading): AutotrackReading => {
+  const file = useAutotrackStore.getState().seedFile;
+  return file === null || typeof file.result === "string"
+    ? reading
+    : { ...reading, seed: withSeedFile(reading.seed, file.result) };
+};
+
+/**
+ * Ask alttpr.com for a race seed's settings, which its ROM keeps from the
+ * tracker: once per connection. When they come, the seed's run type is
+ * held against the board's again.
+ */
+const askSeedFile = (reading: AutotrackReading, mine: number) => {
+  const hash = reading.seed.seed;
+  if (
+    !reading.race ||
+    hash === null ||
+    // A name of another generator's, not an alttpr.com hash
+    seedHashOf(hash) !== hash ||
+    useAutotrackStore.getState().seedFile?.hash === hash
+  ) {
+    return;
+  }
+  set({ seedFile: { hash, result: "loading" } });
+  void loadSeedFile(hash).then((result) => {
+    // Another seed may have been loaded since
+    const asked = useAutotrackStore.getState().seedFile?.hash === hash;
+    if (mine !== generation || !asked) return;
+    set({ seedFile: { hash, result } });
+    const last = useAutotrackStore.getState().reading;
+    if (last === null || typeof result === "string") return;
+    const reading = withFile(last);
+    set({ reading });
+    // The game is on the board by now: it is fresh if it holds nothing else
+    followSeed(reading, follower?.holdsGameOnly() ?? false);
+  });
 };
 
 /**
@@ -173,11 +236,13 @@ const followSeed = (reading: AutotrackReading) => {
  */
 const sinkFor = (mine: number): RuntimeSink => ({
   // A stopped session never reads again: no reading outlives its session
-  reading: (reading) => {
+  reading: (read) => {
     if (mine !== generation) return;
+    const reading = withFile(read);
     followSeed(reading);
     set({ reading });
     follower?.read(reading);
+    askSeedFile(reading, mine);
   },
   status: (status, since, { bridge, devices }) => {
     if (mine !== generation) return;
@@ -262,6 +327,7 @@ export const connectAutotrack = async () => {
     elsewhere: false,
     news: null,
     reading: null,
+    seedFile: null,
     shown: IDLE,
     status: IDLE,
     unavailable: false,
@@ -305,6 +371,7 @@ export const stopAutotrack = () => {
     elsewhere: false,
     news: null,
     reading: null,
+    seedFile: null,
     shown: STOPPED,
     since: Date.now(),
     status: STOPPED,

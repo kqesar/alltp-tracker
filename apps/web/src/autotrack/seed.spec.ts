@@ -189,4 +189,15 @@ describe("seedLineText", () => {
       "This seed's settings are not ones the tracker reads: the run type stays yours.",
     );
   });
+
+  it("says why a race seed's file on alttpr.com gave no settings", () => {
+    const raced = checkSeed(seedOf({}, { race: true }), run("open"));
+
+    expect(seedLineText(raced, false, "not-found")).toBe(
+      "Settings not read in Race Mode, and alttpr.com has no file for this seed: the run type stays yours.",
+    );
+    expect(seedLineText(raced, false, "unrecognized")).toBe(
+      "Settings not read in Race Mode, and this seed's file on alttpr.com is not one the tracker reads: the run type stays yours.",
+    );
+  });
 });
