@@ -6,9 +6,11 @@ import {
   decodeChecks,
   decodeItems,
   decodeProgress,
+  decodeSeedSettings,
   type ItemReading,
   type MemoryView,
   type ProgressReading,
+  type SeedSettingsReading,
   type Unsettled,
 } from "@alltp/pack-alttpr";
 
@@ -23,6 +25,8 @@ export type AutotrackReading = {
   /** The locations memory could not settle, with why. */
   readonly unsettled: readonly (readonly [id: string, why: Unsettled])[];
   readonly progress: ProgressReading;
+  /** The seed's name and settings, from its ROM. */
+  readonly seed: SeedSettingsReading;
 };
 
 /**
@@ -45,6 +49,7 @@ export const readMemory = (
     items: decodeItems(memory, options),
     progress: decodeProgress(memory, options),
     race,
+    seed: decodeSeedSettings(memory, options),
     unsettled: [...checks.unsettled],
   };
 };
