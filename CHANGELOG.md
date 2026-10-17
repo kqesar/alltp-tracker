@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.13.0](https://github.com/kqesar/alltp-tracker/compare/v2.12.0...v2.13.0) (2026-10-17)
+
+
+### ✨ Features
+
+* **alttpr:** define go mode per goal from upstream's win condition ([91da1bd](https://github.com/kqesar/alltp-tracker/commit/91da1bd5c5ead119ddfeb826ed1b70765c6c7a8b))
+* **alttpr:** read a seed's settings from its ROM ([f03c442](https://github.com/kqesar/alltp-tracker/commit/f03c4425184537e871d83cc8cfa7f1894f1d0d93))
+* **web:** carry swordless and the crystal counts in a run's settings ([50b2b37](https://github.com/kqesar/alltp-tracker/commit/50b2b372782360f73a288ec2a87702f913a025b2))
+* **web:** say in the tooltip what a check is missing ([43b04ad](https://github.com/kqesar/alltp-tracker/commit/43b04add5bccd4ba8d14fb93d07f8c1ec73d4e00))
+* **web:** say what a seed's settings mean for the run type ([13c360a](https://github.com/kqesar/alltp-tracker/commit/13c360ac3fec51676d059cee7554480506e86917))
+* **web:** work out what each check is missing, off the click's path ([1097943](https://github.com/kqesar/alltp-tracker/commit/10979432fffb76ce0527f8cfc9e28294be169a59))
+
+
+### 🔧 Code Refactoring
+
+* **web:** stack the page's notices ([23be02d](https://github.com/kqesar/alltp-tracker/commit/23be02dbd0cbe8a5b00d4c7b17caa79776c4593e))
+
 ## [2.12.0](https://github.com/kqesar/alltp-tracker/compare/v2.11.0...v2.12.0) (2026-10-16)
 
 
