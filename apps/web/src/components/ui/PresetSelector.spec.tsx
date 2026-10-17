@@ -49,9 +49,10 @@ describe("PresetSelector", () => {
     expect(within(dialog).getByText("Goal")).toBeInTheDocument();
     expect(within(dialog).getByText("Defeat Ganon")).toBeInTheDocument();
     // A seed's own crystal counts, which no preset names
-    expect(
-      within(dialog).getByText("5 for Ganon's Tower, 6 for Ganon"),
-    ).toBeInTheDocument();
+    const row = (label: string) =>
+      within(dialog).getByText(label, { selector: "dt" }).nextElementSibling;
+    expect(row("Ganon's Tower")).toHaveTextContent("5 crystals");
+    expect(row("Ganon")).toHaveTextContent("6 crystals");
   });
 
   it("asks for confirmation before switching, then applies the preset", () => {
