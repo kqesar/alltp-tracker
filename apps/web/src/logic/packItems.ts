@@ -8,6 +8,7 @@ import {
   dungeon,
   type InventoryItemId,
   LEGACY_DUNGEONS,
+  PRIZES,
   type Prize,
   type TrackerInput,
 } from "@alltp/pack-alttpr";
@@ -127,6 +128,32 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   ...perDungeon("chest", () => NONE),
   ...perDungeon("reward", (id) => ({ dungeon: id, kind: "prize" })),
 };
+
+/**
+ * Every pack item the tracker's cells can record, at the highest level they
+ * reach: a count's top less its base (the tunic's 3 is armor 2), each bit's
+ * item, the event a dungeon beaten gives (Agahnim, Agahnim 2), and the
+ * prizes a boss drops. What the cells cannot say (magic, bombs, hearts,
+ * the bow's second level) is left out: no player could mark it collected.
+ */
+export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
+  const levels = new Map<string, number>();
+  const reach = (item: string, level: number) =>
+    levels.set(item, Math.max(levels.get(item) ?? 0, level));
+  for (const [id, entry] of Object.entries(PACK_ITEMS)) {
+    if (entry.kind === "count") {
+      const top = typeof freshItems[id] === "boolean" ? 1 : (itemsMax[id] ?? 1);
+      reach(entry.item, top - (entry.base ?? 0));
+    } else if (entry.kind === "bits") {
+      for (const item of entry.items) reach(item, 1);
+    } else if (entry.kind === "beaten") {
+      const { event } = dungeon(entry.dungeon);
+      if (event) reach(event.item, 1);
+    }
+  }
+  for (const item of Object.values(PRIZES).flat()) reach(item, 1);
+  return levels;
+})();
 
 /** What the tracker's items record: TrackerInput's items, beaten, prizes. */
 export type PackReading = Pick<TrackerInput, "beaten" | "items" | "prizes">;

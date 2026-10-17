@@ -20,6 +20,7 @@ import {
   dungeonStatus,
   type Filler,
   filler,
+  type KeyedSolution,
   LEGACY_DUNGEONS,
   MARKERS,
   type MapMarker,
@@ -122,7 +123,7 @@ export const trackerInput = ({
 const fillers = new WeakMap<AlttprSettings, Filler>();
 
 /** The run's world, compiled once per settings, with its key model. */
-const fillerOf = (settings: AlttprSettings): Filler => {
+export const fillerOf = (settings: AlttprSettings): Filler => {
   let found = fillers.get(settings);
   if (found === undefined) {
     found = filler(compile(settings), settings);
@@ -142,6 +143,11 @@ export interface Solution {
    * tri itself for a location that cannot be seen from afar.
    */
   readonly visibles: Readonly<Record<string, Tri>>;
+  /**
+   * The key model's view of the state: the keys surely in hand, which
+   * dungeons' keys a location reads, whether each dungeon is safe for keys.
+   */
+  readonly keyed: KeyedSolution;
 }
 
 let last: { inputs: Inputs; solution: Solution } | undefined;
@@ -169,6 +175,7 @@ export const solutionOf = (state: Inputs): Solution => {
     toState(trackerInput(state), settings),
   );
   const solution = {
+    keyed,
     settings,
     tris: keyed.locations(),
     visibles: keyed.solution.visibles(),
@@ -298,7 +305,7 @@ export const isBeaten = (id: DungeonId, items: Progress["items"]): boolean => {
 };
 
 /** The location of a dungeon's prize, whose rule is its boss's. */
-const prizeOf = (id: DungeonId, settings: AlttprSettings): string => {
+export const prizeOf = (id: DungeonId, settings: AlttprSettings): string => {
   const prize = dungeonRegions(dungeon(id), settings).find(
     (region) => region.prize !== undefined,
   )?.prize;
@@ -327,6 +334,9 @@ const NAMES: ReadonlyMap<string, string> = new Map(
     ),
   ),
 );
+
+/** A location's official name: "Kakariko Well - Top". */
+export const locationName = (id: string): string => NAMES.get(id) ?? id;
 
 /**
  * A location's name under its marker: its official name, without the
