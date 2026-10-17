@@ -356,6 +356,20 @@ describe("GameStore", () => {
       expect(stored.state).not.toHaveProperty("chestsOpened");
     });
 
+    it("keeps the map panel's view, which a save without a valid one leaves on the map", async () => {
+      useGameStore.getState().setMapView("checks");
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+      expect(stored.state.mapView).toBe("checks");
+
+      await useGameStore.persist.rehydrate();
+      expect(useGameStore.getState().mapView).toBe("checks");
+
+      useGameStore.setState(useGameStore.getInitialState(), true);
+      storeSave({ mapView: "list" }, PERSIST_VERSION);
+      await useGameStore.persist.rehydrate();
+      expect(useGameStore.getState().mapView).toBe("map");
+    });
+
     it("restores the valid fields of a damaged save and resets the rest", async () => {
       storeSave(
         { items: { flute: true }, medallions: "x", smallKeys: [99] },

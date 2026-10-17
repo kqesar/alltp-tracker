@@ -18,7 +18,7 @@ import {
   type RunSettings,
 } from "@/data/presets";
 import { counterMax, SMALL_KEYS_MAX } from "@/logic/settings";
-import type { MapLayout } from "@/utils";
+import type { MapLayout, MapView } from "@/utils";
 
 /**
  * The locations the player checked on the map, by the alttpr pack's ids
@@ -49,6 +49,8 @@ export type Progress = {
 export type Prefs = {
   bigKeysVisible: boolean;
   mapLayout: MapLayout;
+  /** The map panel's tab: the map, or the Checks list. */
+  mapView: MapView;
   /**
    * Keyboard shortcuts: one self-contained object, apart from the run, so a
    * later save format (or the desktop app) can carry it as it is.

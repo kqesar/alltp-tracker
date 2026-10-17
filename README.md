@@ -20,14 +20,19 @@ Originally forked from [TestRunnerSRL/lttp-tracker](https://github.com/TestRunne
 |---|---|
 | 🟩 green | reachable now |
 | 🟨 yellow | maybe reachable (a dark room, an unknown medallion, a key that may be anywhere), or only some of a marker's checks |
+| 🟦 light blue | seen but not reachable yet (the Book reads the Pedestal, a ledge item shows from below) |
 | 🟥 red | out of logic |
 | ⬛ grey | already done |
 
-Each state also has a glyph (✓ ? ✕), so colour is never the only cue. Click a marker to check its locations (a cave's chests together), or a boss to mark it beaten. Hover or focus a marker to list its checks and their state in a tooltip, and a dungeon's items left; on a touch screen, press and hold. **Map: Auto / Side / Stack** sets how the two worlds sit: Auto keeps them side by side while there is room and stacks them on a narrow screen; the choice is remembered on this device.
+Each state also has a glyph (✓, ?, an eye, ✕), so colour is never the only cue. Click a marker to check its locations (a cave's chests together), or a boss to mark it beaten. Hover or focus a marker to list its checks and their state in a tooltip, and a dungeon's items left; a check not in logic says what it is missing ("Missing: Hammer, or Moon Pearl + Power Glove") and why one is only maybe reachable. On a touch screen, press and hold. **Map: Auto / Side / Stack** sets how the two worlds sit: Auto keeps them side by side while there is room and stacks them on a narrow screen; the choice is remembered on this device.
+
+**Checks** — the **Checks** tab beside **Map** lists every check of the map as a list, by zone, in the same states. It shows what is available or maybe at first; the filters (with their counts), a zone and a search narrow it. Tick a check to mark it done, as a click on its marker does; **Why?** says what a check not available is missing. A dungeon whose counter reaches 0 shows its checks done. The tab you leave open is remembered on this device.
+
+**Go mode** — beside the tabs, ☆ **Go mode: not yet**, ★? **possible** or ★ **in logic** tells whether every step to the run's goal (Ganon, fast Ganon or the Pedestal) is in logic; click it to see what is missing. Goals that end with everything (all dungeons, triforce hunt) have none.
 
 **Boss overlays** — each boss cell carries three corner buttons: the medallion requirement (top right, Misery Mire and Turtle Rock only), the remaining chest count (bottom left) and the reward, crystal or pendant (bottom right). Click steps them forward, right-click back.
 
-**Keyboard** — the item grid is a single Tab stop: arrow keys move inside it (through a boss's overlays too) and wrap, Home / End jump to the ends of a row, Ctrl+Home / End to the ends of the grid. Space and Enter step the focused control forward, "-" steps it back. Every map marker is a button Tab can reach; "Skip to map" jumps there.
+**Keyboard** — the item grid is a single Tab stop: arrow keys move inside it (through a boss's overlays too) and wrap, Home / End jump to the ends of a row, Ctrl+Home / End to the ends of the grid. Space and Enter step the focused control forward, "-" steps it back. Every map marker is a button Tab can reach; "Skip to map" and "Skip to checks" jump to either view.
 
 **Presets** — pick a run type to set the rules; keysanity adds the big and small key cells to the grid. Progress is saved to the browser automatically, and can be exported or imported as JSON.
 
@@ -102,9 +107,12 @@ apps/web/src/
 │   └── presets.ts   run types
 ├── logic/        the run read by the alltpr pack
 │   ├── settings.ts  run types as the pack's settings, dungeon counters
-│   └── solution.ts  the run solved, and the hooks the map reads it by
+│   ├── solution.ts  the run solved, and the hooks the map reads it by
+│   ├── checks.ts    the Checks list: the map's checks by zone, their states
+│   ├── missing.ts   what each check and the go mode are missing, at idle
+│   └── needs.ts     the engine's blockers in the tracker's words and icons
 ├── stores/       the Zustand store
-├── components/   tracker/ (item grid), map/ (markers), ui/ (chrome)
+├── components/   tracker/ (item grid), map/ (markers, Checks, go mode), ui/ (chrome)
 ├── hooks/        keyboard navigation
 ├── styles/       CSS modules, all imported by styles/index.css
 └── utils/        asset paths and item styling

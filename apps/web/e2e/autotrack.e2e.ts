@@ -562,6 +562,7 @@ for (const width of WIDTHS) {
       // The system tabs: Tab reaches the selected one (the system detected),
       // the arrow keys and Home and End select another
       const selected = await page
+        .getByTestId("setup-tabs")
         .getByRole("tab", { selected: true })
         .getAttribute("data-testid");
       await tabTo(page, selected ?? "", 20);

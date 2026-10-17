@@ -1,0 +1,310 @@
+/*
+ * The map panel's tabs, go mode and the Checks list (components/map/MapPanel.tsx,
+ * ChecksPanel.tsx). Beside the grid, the list scrolls inside the viewport's
+ * height; under the grid it grows with the page.
+ */
+.map-panel__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Go mode (GoMode.tsx): its star in the state's colour beside its words,
+   and what it is missing in a panel under it */
+.go-mode {
+  display: inline-flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 var(--spacing-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: var(--surface-glass);
+  border: 1px solid var(--color-border-glass);
+  border-radius: var(--border-radius);
+  transition:
+    color var(--transition),
+    border-color var(--transition);
+}
+
+.go-mode:hover {
+  color: var(--color-accent);
+}
+
+.go-mode:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.go-mode__glyph {
+  font-size: var(--font-size-base);
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.go-mode--yes {
+  color: var(--color-text);
+  border-color: var(--state-available);
+}
+
+.go-mode--yes .go-mode__glyph {
+  color: var(--state-available);
+}
+
+.go-mode--maybe .go-mode__glyph {
+  color: var(--state-possible);
+}
+
+.go-mode--no .go-mode__glyph {
+  color: var(--color-text-muted);
+}
+
+.go-mode-panel {
+  position: fixed;
+  inset: auto;
+  max-width: min(24rem, calc(100vw - 2 * var(--spacing-sm)));
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: var(--surface-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-elevated);
+}
+
+.map-view {
+  display: grid;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.map-view:focus {
+  outline: none;
+}
+
+.map-view:focus-visible {
+  border-radius: var(--border-radius);
+  box-shadow: var(--focus-ring);
+}
+
+/* Beside the grid, down to the viewport's bottom (the room layout.css gives
+   the grid, less the tabs) and never shorter than the grid */
+.checks {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: var(--spacing-sm);
+  min-width: 0;
+  height: max(calc(var(--cell) * 7), calc(100dvh - 16rem));
+}
+
+@container app (width < 70rem) {
+  .checks {
+    height: auto;
+  }
+}
+
+.checks__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.checks__filters {
+  flex-wrap: wrap;
+}
+
+.checks-filter {
+  gap: var(--spacing-xs);
+}
+
+.checks-filter__count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+.checks__field {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.checks__input {
+  min-height: 2.25rem;
+  padding: 0 var(--spacing-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: var(--surface-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.checks__input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.checks__summary {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.checks__zones {
+  display: grid;
+  gap: var(--spacing-md);
+  align-content: start;
+  min-height: 0;
+  padding-inline-end: var(--spacing-xs);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.checks__zones:focus {
+  outline: none;
+}
+
+/* Kept in view while its zone scrolls by */
+.checks-zone__title {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-sm);
+  align-items: center;
+  padding: var(--spacing-xs) 0;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.checks-zone__count {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.checks-zone__list {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* One check: its box and name, its state, then "Why?"; what it is missing
+   opens on a line of its own under them */
+.check-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0 var(--spacing-sm);
+  align-items: center;
+  padding: 0 var(--spacing-sm);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.check-row__check {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  min-height: 2.5rem;
+  cursor: pointer;
+}
+
+.check-row__input {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  accent-color: var(--color-accent);
+  cursor: inherit;
+}
+
+.check-row__input:disabled {
+  cursor: default;
+}
+
+.check-row__input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.check-row__name {
+  overflow-wrap: anywhere;
+}
+
+.check-row__state {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* Rows without "Why?" keep their state in the same column */
+.check-row__state:last-child {
+  grid-column: 2 / -1;
+}
+
+.check-why {
+  min-height: 2rem;
+  padding: 0 var(--spacing-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-accent);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-sm);
+}
+
+.check-why:hover,
+.check-why[aria-expanded="true"] {
+  border-color: var(--color-border-strong);
+}
+
+.check-why:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.check-why__body {
+  grid-column: 1 / -1;
+  padding: 0 0 var(--spacing-sm) calc(1.125rem + var(--spacing-sm));
+  font-size: var(--font-size-sm);
+}
+
+.check-why__body[hidden] {
+  display: none;
+}
+
+.check-swatch {
+  --marker: 16px;
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
