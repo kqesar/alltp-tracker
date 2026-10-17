@@ -194,12 +194,14 @@ const LOGICS: Readonly<Record<number, SeedLogic>> = {
   2: "OverworldGlitches",
 };
 
-const known = <T>(value: T): SeedSetting<T> => ({ known: true, value });
+/** A setting that is known. */
+export const known = <T>(value: T): SeedSetting<T> => ({ known: true, value });
 const unknown = <T>(why: SeedUnknown): SeedSetting<T> => ({
   known: false,
   why,
 });
-const UNRECOGNIZED = unknown<never>("unrecognized");
+/** A setting whose value is none vt writes. */
+export const UNRECOGNIZED = unknown<never>("unrecognized");
 
 /** Whether Race Mode reads a range of this decoder's. */
 const racePermits = (id: SeedSettingsRangeId) =>

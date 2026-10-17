@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@alltp/autotrack": "workspace:*",
-    "@alltp/engine": "workspace:*"
+    "@alltp/engine": "workspace:*",
+    "zod": "^4.6.7"
   }
 }

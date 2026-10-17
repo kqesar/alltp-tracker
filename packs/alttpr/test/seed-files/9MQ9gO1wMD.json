@@ -1,0 +1,36 @@
+{
+  "generated": "2026-10-16T16:17:42+00:00",
+  "hash": "9MQ9gO1wMD",
+  "logic": 31,
+  "size": 2,
+  "spoiler": {
+    "meta": {
+      "accessibility": "items",
+      "allow_quickswap": true,
+      "build": "2023-09-22",
+      "dungeon_items": "standard",
+      "enemizer.boss_shuffle": "none",
+      "enemizer.enemy_damage": "default",
+      "enemizer.enemy_health": "default",
+      "enemizer.enemy_shuffle": "none",
+      "enemizer.pot_shuffle": "off",
+      "entry_crystals_ganon": "7",
+      "entry_crystals_tower": "7",
+      "goal": "ganon",
+      "hints": "on",
+      "item_functionality": "normal",
+      "item_placement": "advanced",
+      "item_pool": "normal",
+      "logic": "NoGlitches",
+      "mode": "open",
+      "pseudoboots": false,
+      "rom_mode": "NoGlitches",
+      "size": 2,
+      "spoilers": "on",
+      "tournament": false,
+      "weapons": "randomized",
+      "world_id": 1,
+      "worlds": 1
+    }
+  }
+}
