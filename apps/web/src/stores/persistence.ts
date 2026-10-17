@@ -67,7 +67,17 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Bumped whenever PersistedState changes shape; `migrate` upgrades older saves. */
-export const PERSIST_VERSION = 7;
+export const PERSIST_VERSION = 8;
+
+/**
+ * What every run before version 8 was: swords in the pool, 7 crystals for
+ * Ganon's Tower and for Ganon, the site's default the tracker assumed.
+ */
+const SITE_DEFAULTS = {
+  crystalsGanon: 7,
+  crystalsTower: 7,
+  swordless: false,
+} as const satisfies Partial<RunSettings>;
 
 /** Length of the chest table before version 3. */
 const V2_CHEST_COUNT = 65;
@@ -147,7 +157,9 @@ const migrateV5 = (saved: Record<string, unknown>): Record<string, unknown> => {
     });
     migrated.checked = checked;
   }
-  const run = isRunSettings(rest.settings) ? rest.settings : undefined;
+  const run = hasRunType(rest.settings)
+    ? { ...SITE_DEFAULTS, ...rest.settings }
+    : undefined;
   if (run?.keysanity && isRecord(rest.items)) {
     const items = { ...rest.items };
     LEGACY_DUNGEON_ITEMS.forEach((legacyMax, index) => {
@@ -184,6 +196,17 @@ const migrateV6 = (saved: Record<string, unknown>): Record<string, unknown> => {
 };
 
 /**
+ * Version 8 adds to a run's settings what a seed can set and the pack
+ * models: swordless, and the crystals Ganon's Tower and Ganon ask for.
+ * Every earlier run gets SITE_DEFAULTS; the rest of the save keeps its
+ * shape.
+ */
+const migrateV7 = (saved: Record<string, unknown>): Record<string, unknown> =>
+  isRecord(saved.settings)
+    ? { ...saved, settings: { ...SITE_DEFAULTS, ...saved.settings } }
+    : saved;
+
+/**
  * Upgrade a save written by an earlier version to the current shape. Fields
  * are not validated here; restoring a save falls back field by field.
  * @param saved - The stored or imported object
@@ -201,6 +224,7 @@ export const migrate = (
   if (version < 5) state = migrateV4(state);
   if (version < 6) state = migrateV5(state);
   if (version < 7) state = migrateV6(state);
+  if (version < 8) state = migrateV7(state);
   return state as Partial<PersistedState>;
 };
 
@@ -278,8 +302,13 @@ const validateChecked = (
   return valid;
 };
 
-/** Run settings whose every field names a known option. */
-const isRunSettings = (value: unknown): value is RunSettings =>
+/** The run type's fields, every version's: a known world, goal and shuffle. */
+const hasRunType = (
+  value: unknown,
+): value is Pick<
+  RunSettings,
+  "entranceShuffle" | "goal" | "keysanity" | "mode"
+> =>
   isRecord(value) &&
   typeof value.keysanity === "boolean" &&
   typeof value.mode === "string" &&
@@ -288,6 +317,20 @@ const isRunSettings = (value: unknown): value is RunSettings =>
   value.goal in GOAL_LABELS &&
   typeof value.entranceShuffle === "string" &&
   value.entranceShuffle in ENTRANCE_LABELS;
+
+/** Run settings whose every field names a known option. */
+const isRunSettings = (value: unknown): value is RunSettings => {
+  if (!hasRunType(value)) return false;
+  const { crystalsGanon, crystalsTower, swordless } = value as Record<
+    string,
+    unknown
+  >;
+  return (
+    typeof swordless === "boolean" &&
+    isIntIn(crystalsTower, 0, 7) &&
+    isIntIn(crystalsGanon, 0, 7)
+  );
+};
 
 /**
  * Check a saved run, already migrated to the current shape, field by field
@@ -307,7 +350,9 @@ export const validateProgress = (
   if (saved.settings !== undefined) {
     if (isRunSettings(saved.settings)) value.settings = saved.settings;
     else
-      errors.push("settings must name a known mode, goal and entrance shuffle");
+      errors.push(
+        "settings must name a known mode, goal and entrance shuffle, and crystal counts from 0 to 7",
+      );
   }
 
   if (saved.items !== undefined) {

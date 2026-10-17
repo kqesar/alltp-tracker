@@ -32,6 +32,12 @@ export type RunSettings = {
   /** Small/big keys, maps and compasses shuffled into the world */
   keysanity: boolean;
   entranceShuffle: EntranceShuffle;
+  /** No sword in the item pool: alttpr.com's weapons "swordless" */
+  swordless: boolean;
+  /** The crystals that open Ganon's Tower, 0 to 7 */
+  crystalsTower: number;
+  /** The crystals Ganon asks for, 0 to 7 */
+  crystalsGanon: number;
 };
 
 type Preset = {
@@ -44,10 +50,13 @@ type Preset = {
 };
 
 const baseSettings: RunSettings = {
+  crystalsGanon: 7,
+  crystalsTower: 7,
   entranceShuffle: "none",
   goal: "ganon",
   keysanity: false,
   mode: "open",
+  swordless: false,
 };
 
 export const presets: Preset[] = [
@@ -78,6 +87,15 @@ export const presets: Preset[] = [
     logicSupported: true,
     name: "All Dungeons",
     settings: { ...baseSettings, goal: "all-dungeons" },
+  },
+  {
+    // alttpr.com's weapons "swordless" (vt app/Rom.php:2065-2073)
+    description:
+      "No swords: medallions work on their pads, the hammer reads tablets and hurts Ganon.",
+    id: "swordless",
+    logicSupported: true,
+    name: "Swordless",
+    settings: { ...baseSettings, swordless: true },
   },
   {
     description: "Collect the required Triforce pieces to win.",
@@ -159,5 +177,10 @@ export const describeSettings = (
   { label: "Mode", value: MODE_LABELS[settings.mode] },
   { label: "Goal", value: GOAL_LABELS[settings.goal] },
   { label: "Keysanity", value: settings.keysanity ? "On" : "Off" },
+  { label: "Swordless", value: settings.swordless ? "On" : "Off" },
+  {
+    label: "Crystals",
+    value: `${settings.crystalsTower} for Ganon's Tower, ${settings.crystalsGanon} for Ganon`,
+  },
   { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
 ];

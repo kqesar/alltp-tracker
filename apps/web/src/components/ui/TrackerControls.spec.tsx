@@ -32,10 +32,13 @@ const fakeState = {
   setBigKeysVisible: vi.fn(),
   setMapLayout,
   settings: {
+    crystalsGanon: 7,
+    crystalsTower: 7,
     entranceShuffle: "none" as const,
     goal: "ganon" as const,
     keysanity: false,
     mode: "open" as const,
+    swordless: false,
   },
   undo: vi.fn(),
 };
