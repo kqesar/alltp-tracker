@@ -2,6 +2,38 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.13.0](https://github.com/kqesar/alltp-tracker/compare/v2.12.0...v2.13.0) (2026-10-17)
+
+
+### ✨ Features
+
+* **alttpr:** define go mode per goal from upstream's win condition ([91da1bd](https://github.com/kqesar/alltp-tracker/commit/91da1bd5c5ead119ddfeb826ed1b70765c6c7a8b))
+* **alttpr:** read a seed's settings from its ROM ([f03c442](https://github.com/kqesar/alltp-tracker/commit/f03c4425184537e871d83cc8cfa7f1894f1d0d93))
+* **web:** carry swordless and the crystal counts in a run's settings ([50b2b37](https://github.com/kqesar/alltp-tracker/commit/50b2b372782360f73a288ec2a87702f913a025b2))
+* **web:** list every check in a Checks tab beside the map ([2af9e0b](https://github.com/kqesar/alltp-tracker/commit/2af9e0b1670302073dc9d7021b3c83ac185b4285))
+* **web:** say in the tooltip what a check is missing ([43b04ad](https://github.com/kqesar/alltp-tracker/commit/43b04add5bccd4ba8d14fb93d07f8c1ec73d4e00))
+* **web:** say what a seed's settings mean for the run type ([13c360a](https://github.com/kqesar/alltp-tracker/commit/13c360ac3fec51676d059cee7554480506e86917))
+* **web:** show the run's go mode beside the map's tabs ([1dbf4b6](https://github.com/kqesar/alltp-tracker/commit/1dbf4b6e0e758d9fa6e40786c40fbee40b309c92))
+* **web:** switch the run type to the seed's, read from its ROM ([4f9d102](https://github.com/kqesar/alltp-tracker/commit/4f9d102c9cd2deceab5d3e60723cb82c3d77c594))
+* **web:** work out what each check is missing, off the click's path ([1097943](https://github.com/kqesar/alltp-tracker/commit/10979432fffb76ce0527f8cfc9e28294be169a59))
+
+
+### 🐛 Bug Fixes
+
+* **web:** keep a run's settings through a new game ([0db8f1c](https://github.com/kqesar/alltp-tracker/commit/0db8f1c2f72a6d62d6d3bf25a4d6d298316e209a))
+
+
+### 📚 Documentation
+
+* describe how the seed sets the run type ([352e81b](https://github.com/kqesar/alltp-tracker/commit/352e81b9399450282f8cb23459b5ba304a9c3f3f))
+* describe the Checks list, go mode and the run's analysis ([8d9d1ed](https://github.com/kqesar/alltp-tracker/commit/8d9d1ede655a27511117fade12b6a7ae33401b26))
+
+
+### 🔧 Code Refactoring
+
+* **web:** share the setup guide's tabs ([93888c8](https://github.com/kqesar/alltp-tracker/commit/93888c89766e6a2a3892cd613af080bfbe861eb9))
+* **web:** stack the page's notices ([23be02d](https://github.com/kqesar/alltp-tracker/commit/23be02dbd0cbe8a5b00d4c7b17caa79776c4593e))
+
 ## [2.12.0](https://github.com/kqesar/alltp-tracker/compare/v2.11.0...v2.12.0) (2026-10-16)
 
 
