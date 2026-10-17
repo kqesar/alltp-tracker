@@ -38,7 +38,9 @@ function App() {
       <a className="skip-link" href="#map">
         Skip to map
       </a>
-      <UpdatePrompt />
+      <div className="notices">
+        <UpdatePrompt />
+      </div>
       <Header />
       <div className="toolbar" data-testid="toolbar" ref={toolbarRef}>
         <TrackerControls />
