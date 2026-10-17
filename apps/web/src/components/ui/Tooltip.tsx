@@ -2,6 +2,7 @@ import { LEGACY_DUNGEONS, type MapMarker } from "@alltp/pack-alttpr";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { KeyChord } from "@/components/ui/KeyChord";
+import { MissingLines } from "@/components/ui/Missing";
 import { itemLabels } from "@/data/items";
 import {
   type Chord,
@@ -12,13 +13,17 @@ import {
   isKeyControl,
   type ShortcutPrefs,
 } from "@/data/keymap";
+import { useCurrentAnalysis } from "@/hooks/useRunAnalysis";
+import type { Missing, RunAnalysis } from "@/logic/missing";
 import {
+  bossStateOf,
   dungeonCount,
   itemsSurelyInLogic,
   locationLabel,
   type MarkerState,
   markerById,
   markerDetail,
+  prizeOf,
 } from "@/logic/solution";
 import { useGameStore } from "@/stores/gameStore";
 import {
@@ -67,6 +72,56 @@ const markerOf = (target: TooltipTarget | null): MapMarker | undefined => {
 
 const NO_DETAIL: MarkerState[] = [];
 
+/** The id of the tooltip's detail, which describes the control it is for. */
+export const TOOLTIP_DETAIL_ID = "tooltip-detail";
+
+/** What some of a marker's checks are missing, the same for each. */
+type MissingEntry = {
+  key: string;
+  /** Which checks, when the marker's others miss something else */
+  label?: string;
+  missing: Missing;
+};
+
+/**
+ * What a marker's checks left are missing: for a dungeon, its boss's (the
+ * prize's rule) until beaten; for a cave, each location's, those missing the
+ * same thing together, named when not all its checks left miss it.
+ */
+const missingOf = (
+  marker: MapMarker,
+  rows: readonly { id: string; label: string; state: MarkerState }[],
+  analysis: RunAnalysis,
+  boss: MarkerState | undefined,
+): MissingEntry[] => {
+  if (marker.dungeon !== undefined) {
+    if (boss === "opened" || boss === "available") return [];
+    const missing = analysis.missing.get(
+      prizeOf(marker.dungeon, analysis.solution.settings),
+    );
+    return missing ? [{ key: "boss", label: "Boss", missing }] : [];
+  }
+  const left = rows.filter((row) => row.state !== "opened");
+  const groups = new Map<string, { labels: string[]; missing: Missing }>();
+  for (const row of left) {
+    const missing = analysis.missing.get(row.id);
+    if (missing === undefined) continue;
+    const same = JSON.stringify(missing);
+    const group = groups.get(same) ?? { labels: [], missing };
+    group.labels.push(row.label);
+    groups.set(same, group);
+  }
+  // Unnamed when every check left misses the same thing
+  const named = [...groups.values()].some(
+    (group) => group.labels.length !== left.length,
+  );
+  return [...groups.entries()].map(([key, { labels, missing }]) => ({
+    key,
+    label: named ? labels.join(", ") : undefined,
+    missing,
+  }));
+};
+
 /** The grid controls a target's tooltip lists the shortcuts of. */
 const controlsOf = (target: TooltipTarget): ControlId[] => {
   switch (target.kind) {
@@ -113,10 +168,14 @@ type Placement = { left: number; top: number; side: "above" | "below" };
 /**
  * The page's single tooltip, anchored to the control it describes: above it
  * when there is room, below otherwise, kept inside the viewport. A map
- * marker's lists each location it stands for with its state, and a
- * dungeon's says how many items its counter has left and how many of those
- * are surely in logic. The marker's accessible name says its state, so the
- * tooltip is hidden from assistive technology. It follows WCAG 1.4.13:
+ * marker's lists each location it stands for with its state and what those
+ * not in logic are missing, and a dungeon's says how many items its counter
+ * has left, how many of those are surely in logic, and what its boss is
+ * missing. The marker's accessible name says its state, so its title is
+ * hidden from assistive technology; the rest, which the name does not say,
+ * is a `role="tooltip"` detail that describes the marker (aria-describedby)
+ * while shown. What is missing comes from the run's analysis, worked out
+ * when the browser was idle: hovering solves nothing. It follows WCAG 1.4.13:
  * Escape dismisses it, the pointer can move onto it, and it stays until
  * the pointer or focus leaves. It takes no pointer events itself, so it
  * never swallows a press meant for the control it covers (a boss's tooltip
@@ -144,6 +203,11 @@ export const Tooltip = () => {
     const slot = dungeon === undefined ? undefined : PAD_SLOTS[dungeon];
     return slot === undefined ? undefined : (state.medallions[slot] ?? 0) % 4;
   });
+  const boss = useGameStore((state) =>
+    dungeon === undefined ? undefined : bossStateOf(dungeon, state),
+  );
+  // Worked out when the browser was idle: a hover only reads it
+  const analysis = useCurrentAnalysis();
   const ref = useRef<HTMLDivElement>(null);
   const [placement, setPlacement] = useState<Placement | null>(null);
 
@@ -169,7 +233,27 @@ export const Tooltip = () => {
           };
         });
   const wide = rows.length >= COLUMNS_FROM;
-  const size = `${title}|${left}|${sure}|${pad}|${detail.join()}|${lines.length}`;
+  const missing =
+    marker === undefined || analysis === undefined
+      ? []
+      : missingOf(marker, rows, analysis, boss);
+  // The marker's name says the state of a one-location marker: its row
+  // stays out of the description
+  const single = rows.length === 1 && dungeon === undefined;
+  const described = left !== undefined || !single || missing.length > 0;
+  const hasDetail = marker !== undefined && described;
+  const size = `${title}|${left}|${sure}|${pad}|${detail.join()}|${lines.length}|${missing.map((entry) => entry.key).join()}`;
+
+  // The detail is what the anchor's name does not say: it describes it
+  useLayoutEffect(() => {
+    if (!anchor || !hasDetail) return;
+    const before = anchor.getAttribute("aria-describedby");
+    anchor.setAttribute("aria-describedby", TOOLTIP_DETAIL_ID);
+    return () => {
+      if (before === null) anchor.removeAttribute("aria-describedby");
+      else anchor.setAttribute("aria-describedby", before);
+    };
+  }, [anchor, hasDetail]);
 
   // Measure after rendering the new text, then place it before paint.
   // biome-ignore lint/correctness/useExhaustiveDependencies: the text and the keys change the size to measure
@@ -232,9 +316,23 @@ export const Tooltip = () => {
 
   if (!target || !anchor) return null;
 
+  const checks = rows.length > 0 && (
+    <ul
+      aria-hidden={single || undefined}
+      className={`tooltip__checks${wide ? " tooltip__checks--columns" : ""}`}
+      data-testid="tooltip-checks"
+    >
+      {rows.map(({ id, label, state }) => (
+        <li className={`tooltip__check tooltip__check--${state}`} key={id}>
+          <span className={`tooltip__glyph state-glyph ${state}`} />
+          <span className="tooltip__label">{label}</span>
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <div
-      aria-hidden="true"
       className={`tooltip tooltip--${placement?.side ?? "above"}${wide ? " tooltip--wide" : ""}`}
       data-testid="tooltip"
       ref={(element) => {
@@ -247,9 +345,12 @@ export const Tooltip = () => {
           : { visibility: "hidden" }
       }
     >
-      <span className="tooltip__title">{title}</span>
+      {/* What the control's own name says stays out of the a11y tree */}
+      <span aria-hidden="true" className="tooltip__title">
+        {title}
+      </span>
       {pad !== undefined && (
-        <span className="tooltip__pad">
+        <span aria-hidden="true" className="tooltip__pad">
           <img
             alt=""
             className="mini"
@@ -258,31 +359,45 @@ export const Tooltip = () => {
           {MEDALLION_NAMES[pad]}
         </span>
       )}
-      {left !== undefined && (
-        <span className="tooltip__count" data-testid="tooltip-count">
-          {left === 0
-            ? "No item left"
-            : left === 1
-              ? "1 item left"
-              : `${left} items left`}
-          {sure > 0 && `, at least ${sure} in logic`}
-        </span>
-      )}
-      {rows.length > 0 && (
-        <ul
-          className={`tooltip__checks${wide ? " tooltip__checks--columns" : ""}`}
-          data-testid="tooltip-checks"
+      {single && checks}
+      {hasDetail && (
+        <div
+          className="tooltip__detail"
+          data-testid="tooltip-detail"
+          id={TOOLTIP_DETAIL_ID}
+          role="tooltip"
         >
-          {rows.map(({ id, label, state }) => (
-            <li className={`tooltip__check tooltip__check--${state}`} key={id}>
-              <span className={`tooltip__glyph state-glyph ${state}`} />
-              <span className="tooltip__label">{label}</span>
-            </li>
+          {left !== undefined && (
+            <span className="tooltip__count" data-testid="tooltip-count">
+              {left === 0
+                ? "No item left"
+                : left === 1
+                  ? "1 item left"
+                  : `${left} items left`}
+              {sure > 0 && `, at least ${sure} in logic`}
+            </span>
+          )}
+          {!single && checks}
+          {missing.map((entry) => (
+            <div
+              className="tooltip__missing"
+              data-testid="tooltip-missing"
+              key={entry.key}
+            >
+              {entry.label && (
+                <span className="tooltip__missing-for">{entry.label}</span>
+              )}
+              <MissingLines missing={entry.missing} />
+            </div>
           ))}
-        </ul>
+        </div>
       )}
       {lines.length > 0 && (
-        <span className="tooltip__keys" data-testid="tooltip-keys">
+        <span
+          aria-hidden="true"
+          className="tooltip__keys"
+          data-testid="tooltip-keys"
+        >
           {lines.map(({ back, control, forward, name }) => (
             <span className="tooltip__shortcut" key={control}>
               {name && <span className="tooltip__key-name">{name}</span>}

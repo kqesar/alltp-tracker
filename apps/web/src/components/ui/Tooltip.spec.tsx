@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MapTracker } from "@/components/map/MapTracker";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { analyzeNow } from "@/hooks/useRunAnalysis";
 import { LONG_PRESS_MS } from "@/hooks/useTooltip";
+import { useAnalysisStore } from "@/stores/analysisStore";
 import { useGameStore } from "@/stores/gameStore";
 import { useTooltipStore } from "@/stores/tooltipStore";
 
@@ -22,6 +24,7 @@ describe("Tooltip", () => {
     act(() => {
       useGameStore.setState(useGameStore.getInitialState(), true);
       useTooltipStore.getState().hide();
+      useAnalysisStore.setState({ analysis: null });
     });
   });
 
@@ -49,18 +52,150 @@ describe("Tooltip", () => {
       "Right available",
       "Bottom available",
     ]);
-    // The marker's own name says its state: keep it out of the a11y tree
-    expect(tooltip()).toHaveAttribute("aria-hidden", "true");
+    // The marker's own name says its name and state: only the rest, each
+    // location's state, describes it
+    const detail = screen.getByRole("tooltip");
+    expect(detail).toBe(screen.getByTestId("tooltip-detail"));
+    expect(detail).toContainElement(screen.getByTestId("tooltip-checks"));
+    expect(
+      screen.getByTestId("marker-kakariko-well"),
+    ).toHaveAccessibleDescription(/^Top Left Middle Right Bottom$/);
+    expect(
+      tooltip()?.querySelector(".tooltip__title")?.getAttribute("aria-hidden"),
+    ).toBe("true");
   });
 
-  it("says a one-location marker's state beside its name", () => {
+  it("says a one-location marker's state beside its name, out of its description", () => {
+    act(() => analyzeNow());
     renderMap();
+    const marker = screen.getByTestId("marker-links-house");
 
+    fireEvent.pointerEnter(marker, { pointerType: "mouse" });
+
+    expect(rows()).toEqual(["Available available"]);
+    // Nothing the name does not say: no description
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    expect(marker).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("says what a check out of logic is missing, and describes its marker with it", () => {
+    act(() => analyzeNow());
+    renderMap();
+    const marker = screen.getByTestId("marker-kings-tomb");
+
+    fireEvent.pointerEnter(marker, { pointerType: "mouse" });
+
+    expect(rows()).toEqual(["Out of logic unavailable"]);
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      /^Missing: Titan's Mitt \+ Pegasus Boots$/,
+    );
+    expect(marker).toHaveAccessibleDescription(
+      "Missing: Titan's Mitt + Pegasus Boots",
+    );
+    // Each thing with its cell's icon
+    expect(
+      [...screen.getByRole("tooltip").querySelectorAll("img")].map((img) =>
+        img.getAttribute("src")?.split("/").at(-1),
+      ),
+    ).toEqual(["glove2.png", "boots.png"]);
+
+    fireEvent.pointerLeave(marker, { pointerType: "mouse" });
+    act(() => useTooltipStore.getState().hide());
+    expect(marker).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("waits for the run's analysis, and never shows another run's", () => {
+    renderMap();
     fireEvent.pointerEnter(screen.getByTestId("marker-kings-tomb"), {
       pointerType: "mouse",
     });
+    expect(screen.queryByTestId("tooltip-missing")).toBeNull();
 
-    expect(rows()).toEqual(["Out of logic unavailable"]);
+    act(() => analyzeNow());
+    expect(screen.getByTestId("tooltip-missing")).toHaveTextContent(
+      "Titan's Mitt + Pegasus Boots",
+    );
+
+    // Boots found: the analysis waits for the browser's idle time
+    act(() => useGameStore.getState().handleItemClick("boots"));
+    expect(screen.queryByTestId("tooltip-missing")).toBeNull();
+    act(() => analyzeNow());
+    expect(screen.getByTestId("tooltip-missing")).toHaveTextContent(
+      /^Missing: Titan's Mitt$/,
+    );
+  });
+
+  it("names the checks of a cave that miss different things", () => {
+    act(() => analyzeNow());
+    renderMap();
+
+    fireEvent.pointerEnter(screen.getByTestId("marker-hyrule-castle"), {
+      pointerType: "mouse",
+    });
+
+    expect(
+      screen
+        .getAllByTestId("tooltip-missing")
+        .map((entry) => entry.textContent),
+    ).toEqual([
+      // The escape's key may wait in a room the castle's other checks
+      // need no more for
+      "Boomerang Chest, Zelda's CellMaybe: Hyrule Castle's small key may be behind Sewers - Secret Room - Left, Sewers - Secret Room - Middle, Sewers - Secret Room - Right or Sewers - Dark Cross",
+      "Sewers - Dark CrossMissing: Fire Rod, or Lantern",
+    ]);
+  });
+
+  it("says what a dungeon's boss is missing, until beaten", () => {
+    act(() => analyzeNow());
+    renderMap();
+    fireEvent.pointerEnter(screen.getByTestId("boss-marker-tower-of-hera"), {
+      pointerType: "mouse",
+    });
+
+    expect(screen.getByTestId("tooltip-missing")).toHaveTextContent(
+      /^BossMissing: Flute \+ Hammer \+ Hookshot, or /,
+    );
+    act(() => {
+      useGameStore.getState().handleItemClick("boss2");
+      analyzeNow();
+    });
+    expect(screen.queryByTestId("tooltip-missing")).toBeNull();
+  });
+
+  it("says why a check is only possible", () => {
+    act(() => {
+      const state = useGameStore.getState();
+      for (const item of [
+        "bombos",
+        "flute",
+        "hookshot",
+        "lantern",
+        "moonpearl",
+      ]) {
+        state.handleItemClick(item);
+      }
+      state.handleItemClick("glove");
+      state.handleItemClick("glove");
+      state.handleItemClick("sword");
+      analyzeNow();
+    });
+    renderMap();
+
+    fireEvent.pointerEnter(screen.getByTestId("boss-marker-misery-mire"), {
+      pointerType: "mouse",
+    });
+    // The boss wants the Cane of Somaria too: out of logic
+    expect(screen.getByTestId("tooltip-missing")).toHaveTextContent(
+      "Possible with: Cane of Somaria",
+    );
+    act(() => {
+      useGameStore.getState().handleItemClick("somaria");
+      analyzeNow();
+    });
+    expect(screen.getByTestId("tooltip-missing")).toHaveTextContent(
+      "In logic with: Ether Medallion + Quake Medallion" +
+        "Maybe: Misery Mire's medallion is not noted yet",
+    );
   });
 
   it("says a location seen from afar is visible, not reachable yet", () => {

@@ -256,8 +256,65 @@
 
 /* A map marker's detail: each line on a row of its own under the name */
 .tooltip__count,
-.tooltip__checks {
+.tooltip__checks,
+.tooltip__detail {
   flex-basis: 100%;
+}
+
+.tooltip__detail {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* What its checks are missing, under the list, set off by a rule */
+.tooltip__missing {
+  display: grid;
+  gap: 2px;
+  padding-top: var(--spacing-xs);
+  margin-top: 2px;
+  border-top: 1px solid var(--color-border);
+}
+
+.tooltip__missing-for {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* What a check is missing: "Missing: Hammer, or Moon Pearl + Power Glove",
+   each thing with its icon, wrapping between things, never inside one */
+.missing {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.missing__lead {
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.missing--pending,
+.ways__far {
+  color: var(--color-text-muted);
+}
+
+.need {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.need__icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
 }
 
 .tooltip__count {
