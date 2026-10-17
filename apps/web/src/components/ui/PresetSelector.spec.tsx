@@ -1,13 +1,24 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type Mock,
+  vi,
+} from "vitest";
+import { forgetSeedFiles } from "@/autotrack/seedFile";
 import { PresetSelector } from "@/components/ui/PresetSelector";
+import { getPreset } from "@/data/presets";
 import { useGameStore } from "@/stores/gameStore";
+import daily from "../../../../../packs/alttpr/test/seed-files/eM43RgZ4Gj.json";
 
 vi.mock("@/stores/gameStore", () => ({ useGameStore: vi.fn() }));
 
-const applyPreset = vi.fn();
+const applyRun = vi.fn();
 const fakeState = {
-  applyPreset,
+  applyRun,
   presetId: "open",
   settings: {
     crystalsGanon: 6,
@@ -20,8 +31,13 @@ const fakeState = {
   },
 };
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
+  forgetSeedFiles();
   (useGameStore as unknown as Mock).mockImplementation(
     (selector: (state: typeof fakeState) => unknown) => selector(fakeState),
   );
@@ -65,16 +81,50 @@ describe("PresetSelector", () => {
     expect(
       screen.getByRole("dialog", { name: /switch run type/i }),
     ).toBeInTheDocument();
-    expect(applyPreset).not.toHaveBeenCalled();
+    expect(applyRun).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: /switch & reset/i }));
-    expect(applyPreset).toHaveBeenCalledWith("keysanity");
+    expect(applyRun).toHaveBeenCalledWith(
+      "keysanity",
+      getPreset("keysanity").settings,
+    );
+  });
+
+  it("starts from a seed's link: its run type, once confirmed, under its settings", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify(daily))),
+    );
+    render(<PresetSelector />);
+    const dialog = openList();
+
+    fireEvent.change(within(dialog).getByTestId("seed-import-input"), {
+      target: { value: "https://alttpr.com/en/h/eM43RgZ4Gj" },
+    });
+    fireEvent.click(within(dialog).getByTestId("seed-import-load"));
+
+    const confirm = await screen.findByRole("dialog", {
+      name: /switch run type/i,
+    });
+    expect(confirm).toHaveTextContent(
+      'Switching to "Inverted (Inverted, Fast Ganon, 4/7)"',
+    );
+    expect(applyRun).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: /switch & reset/i }));
+    expect(applyRun).toHaveBeenCalledWith("inverted", {
+      ...fakeState.settings,
+      crystalsGanon: 7,
+      crystalsTower: 4,
+      goal: "fast-ganon",
+      mode: "inverted",
+    });
   });
 
   it("does not switch when picking the already-active preset", () => {
     render(<PresetSelector />);
     const dialog = openList();
     fireEvent.click(within(dialog).getByRole("button", { name: /^open/i }));
-    expect(applyPreset).not.toHaveBeenCalled();
+    expect(applyRun).not.toHaveBeenCalled();
   });
 });

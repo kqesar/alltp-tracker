@@ -266,6 +266,53 @@
   color: var(--color-text-primary);
 }
 
+/* Start from a seed: its alttpr.com link or hash */
+.seed-import {
+  display: grid;
+  gap: var(--spacing-xs);
+  margin: 0 0 var(--spacing-md);
+}
+
+.seed-import__label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.seed-import__row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.seed-import__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: 0 var(--spacing-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: var(--surface-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.seed-import__input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.seed-import__status {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.seed-import__status:empty {
+  display: none;
+}
+
 .preset-list {
   display: flex;
   flex-direction: column;

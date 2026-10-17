@@ -1,21 +1,35 @@
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
-import { describeSettings, getPreset, presets } from "@/data/presets";
+import { SeedImport } from "@/components/ui/SeedImport";
+import {
+  describeSettings,
+  getPreset,
+  presets,
+  type RunSettings,
+} from "@/data/presets";
 import { useGameStore } from "@/stores/gameStore";
+
+/** A run type the player picked, waiting for their confirmation. */
+type PendingRun = {
+  readonly name: string;
+  readonly presetId: string;
+  readonly settings: RunSettings;
+};
 
 /**
  * PresetSelector - lets the player pick a run-type preset (Open, Keysanity,
- * Inverted, ...). Picking a different preset asks for confirmation because it
- * resets the board, then applies the preset's settings.
+ * Inverted, ...), or a seed of alttpr.com's, whose settings name one.
+ * Picking a different run type asks for confirmation because it resets the
+ * board, then applies its settings.
  */
 export const PresetSelector = () => {
   const presetId = useGameStore((state) => state.presetId);
   const settings = useGameStore((state) => state.settings);
-  const applyPreset = useGameStore((state) => state.applyPreset);
+  const applyRun = useGameStore((state) => state.applyRun);
 
   const [isListOpen, setIsListOpen] = useState(false);
-  const [pendingPresetId, setPendingPresetId] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingRun | null>(null);
 
   const current = getPreset(presetId);
 
@@ -24,16 +38,15 @@ export const PresetSelector = () => {
       setIsListOpen(false);
       return;
     }
-    setPendingPresetId(id);
+    const preset = getPreset(id);
+    setPending({ name: preset.name, presetId: id, settings: preset.settings });
   };
 
   const confirmSwitch = () => {
-    if (pendingPresetId) applyPreset(pendingPresetId);
-    setPendingPresetId(null);
+    if (pending) applyRun(pending.presetId, pending.settings);
+    setPending(null);
     setIsListOpen(false);
   };
-
-  const pending = pendingPresetId ? getPreset(pendingPresetId) : null;
 
   return (
     <>
@@ -60,6 +73,16 @@ export const PresetSelector = () => {
             </div>
           ))}
         </dl>
+        <SeedImport
+          onSwitch={(seed) =>
+            setPending({
+              name: seed.seedText,
+              presetId: seed.presetId,
+              settings: seed.settings,
+            })
+          }
+          run={{ presetId, settings }}
+        />
         <ul className="preset-list">
           {presets.map((preset) => (
             <li key={preset.id}>
@@ -93,7 +116,7 @@ export const PresetSelector = () => {
         confirmLabel="Switch & reset"
         isOpen={pending !== null}
         message={`Switching to "${pending?.name}" will reset your current progress.`}
-        onCancel={() => setPendingPresetId(null)}
+        onCancel={() => setPending(null)}
         onConfirm={confirmSwitch}
         title="Switch run type?"
         tone="danger"
