@@ -154,6 +154,8 @@ export {
 } from "./medallions";
 export { compile, regionModules, STATE_NAMES, world } from "./pack";
 export { NAMED_RULES, RULES } from "./rules";
+export { seedFileReading } from "./seed-file";
+export { seedFileUrl, seedHashOf } from "./seed-link";
 export {
   type AlttprSettings,
   type Mode,
