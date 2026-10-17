@@ -85,20 +85,35 @@ describe("MEMORY_RANGES", () => {
       address: 0xf5_f472,
       size: 2,
     });
+    // ROM folds each LoROM bank's upper half onto 32 KiB: bank $30's
+    // $8045 is ROM offset $18_0045, where vt writes it (Rom.php:2053).
+    expect(MEMORY_RANGE["dungeon-item-menu"].address).toBe(0x18_0045);
+    expect(MEMORY_RANGE["initial-progress"].address).toBe(0x18_33c5);
     for (const range of MEMORY_RANGES) {
       expect(range.address, range.id).toBe(
         range.bus < 0x40_0000
-          ? range.bus - 0x8000
+          ? (range.bus >>> 16) * 0x8000 + (range.bus & 0x7fff)
           : range.bus - 0x7e_0000 + 0xf5_0000,
       );
     }
   });
 
-  it("forbids exactly the dungeon rooms, the prizes and the HUD", () => {
+  it("forbids exactly the seed's settings, the dungeon rooms, the prizes and the HUD", () => {
     const forbidden = MEMORY_RANGES.filter((range) => !permitted(range.id)).map(
       (range) => `${range.id}:${range.category}`,
     );
     expect(forbidden).toEqual([
+      // Outside the spec's windows: anything else, which races forbid
+      "swordless-mode:other",
+      "dungeon-item-menu:other",
+      "inverted-mode:other",
+      "goal-items:other",
+      "generic-keys:other",
+      "tower-crystals:other",
+      "ganon-crystals:other",
+      "ganon-vulnerable:other",
+      "initial-pyramid:other",
+      "initial-progress:other",
       "dungeon-rooms:dungeon-checks",
       "bomb-count:hud",
       "bottle-index:hud",
@@ -180,7 +195,9 @@ describe("MEMORY_RANGES", () => {
   });
 
   it("reads this many bytes on a full tick", () => {
-    // Without the two race flag bytes, which the race phase adds.
+    // Without the two race flag bytes, which the race phase adds. The seed's
+    // settings count in: every range falls due on the first tick, and the
+    // settings every 20th after (SETTINGS_MS).
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -191,9 +208,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 463, pieces: 6 },
-      race: { bytes: 363, pieces: 24 },
-      ranges: { casual: 6, race: 32 },
+      casual: { bytes: 504, pieces: 11 },
+      race: { bytes: 364, pieces: 25 },
+      ranges: { casual: 16, race: 33 },
     });
   });
 });

@@ -38,6 +38,17 @@ export {
   type RaceFlagProbeResult,
 } from "./autotrack/probes";
 export { ALTTPR_RACE_PROFILE } from "./autotrack/race-profile";
+export {
+  decodeSeedSettings,
+  SEED_SETTINGS_RANGES,
+  type SeedGoal,
+  type SeedLogic,
+  type SeedMode,
+  type SeedSetting,
+  type SeedSettingsRangeId,
+  type SeedSettingsReading,
+  type SeedUnknown,
+} from "./autotrack/seed-settings";
 export { BOSS_SLOTS, BOSSES } from "./bosses";
 export {
   DERIVED,
