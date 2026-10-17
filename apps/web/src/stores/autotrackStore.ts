@@ -5,12 +5,15 @@ import type {
   SessionOptions,
   SessionStatus,
 } from "@alltp/autotrack";
+import { useMemo } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Follower } from "@/autotrack/follow";
 import type { AutotrackReading } from "@/autotrack/reading";
 import type { Runtime, RuntimeSink } from "@/autotrack/runtime";
+import { checkSeed, type SeedCheck, switchedText } from "@/autotrack/seed";
 import { shownStatus } from "@/autotrack/status";
+import { isFreshRun, useGameStore } from "@/stores/gameStore";
 import { bridgeUrl, isObsView } from "@/utils/view";
 
 type AutotrackState = {
@@ -41,6 +44,17 @@ type AutotrackState = {
   /** The game as last read, or null before the first read. */
   reading: AutotrackReading | null;
   /**
+   * The seed whose run type the player chose to keep theirs for: no prompt
+   * for it, now or at the next visit. Saved.
+   */
+  keptSeed: string | null;
+  /**
+   * What autotracking did of its own, which the live region says with the
+   * status, then once more with the next one (a status that comes right
+   * after would otherwise silence it), then drops.
+   */
+  news: { readonly text: string; readonly repeated: boolean } | null;
+  /**
    * The session's code could not be fetched: offline before it was ever
    * cached, or a release since this page loaded replaced it.
    */
@@ -65,6 +79,8 @@ export const useAutotrackStore = create<AutotrackState>()(
       devices: [],
       elsewhere: false,
       environment: null,
+      keptSeed: null,
+      news: null,
       reading: null,
       setConnectOnStart: (connectOnStart) => set({ connectOnStart }),
       shown: IDLE,
@@ -74,7 +90,10 @@ export const useAutotrackStore = create<AutotrackState>()(
     }),
     {
       name: "alltp-tracker-autotrack",
-      partialize: ({ connectOnStart }) => ({ connectOnStart }),
+      partialize: ({ connectOnStart, keptSeed }) => ({
+        connectOnStart,
+        keptSeed,
+      }),
       version: 1,
     },
   ),
@@ -118,6 +137,36 @@ export const preloadAutotrack = () => {
   loadRuntime().catch(() => {});
 };
 
+/** The seed this page switched the run type to, which it never does twice. */
+let switched: string | null = null;
+
+/** Start the seed's run type, the game laid on it, as one undo step. */
+const switchRun = (check: Extract<SeedCheck, { kind: "differs" }>) => {
+  switched = check.seed;
+  if (follower) follower.switchRun(check.presetId, check.settings);
+  else useGameStore.getState().applyRun(check.presetId, check.settings);
+};
+
+/**
+ * Hold the seed read against the board's run type: on a fresh board, a seed
+ * of another run type switches it at once, and the live region says so;
+ * else SeedPrompt asks the player (useSeedCheck), unless they kept their run
+ * type for this seed or the page already switched to it once.
+ */
+const followSeed = (reading: AutotrackReading) => {
+  const game = useGameStore.getState();
+  const check = checkSeed(reading.seed, game);
+  if (
+    check.kind === "differs" &&
+    check.seed !== switched &&
+    check.seed !== useAutotrackStore.getState().keptSeed &&
+    isFreshRun(game)
+  ) {
+    switchRun(check);
+    set({ news: { repeated: false, text: switchedText(check) } });
+  }
+};
+
 /**
  * Reports from the runtime of `mine`. A status from one since stopped (the
  * "stopped" its stop() reports) is dropped: what replaced it decides.
@@ -126,12 +175,19 @@ const sinkFor = (mine: number): RuntimeSink => ({
   // A stopped session never reads again: no reading outlives its session
   reading: (reading) => {
     if (mine !== generation) return;
+    followSeed(reading);
     set({ reading });
     follower?.read(reading);
   },
   status: (status, since, { bridge, devices }) => {
     if (mine !== generation) return;
     set((state) => ({
+      ...(status.code !== state.status.code && {
+        news:
+          state.news === null || state.news.repeated
+            ? null
+            : { ...state.news, repeated: true },
+      }),
       // The session stops itself on a bug only (a read Race Mode refused)
       ...(status.code === "stopped" && { active: false }),
       bridge,
@@ -204,6 +260,7 @@ export const connectAutotrack = async () => {
     active: true,
     connectOnStart: true,
     elsewhere: false,
+    news: null,
     reading: null,
     shown: IDLE,
     status: IDLE,
@@ -246,6 +303,7 @@ export const stopAutotrack = () => {
   set({
     active: false,
     elsewhere: false,
+    news: null,
     reading: null,
     shown: STOPPED,
     since: Date.now(),
@@ -268,3 +326,42 @@ export const retryAutotrack = () => runtime?.retryNow();
  * @returns How many values changed, or null before any game in play was read
  */
 export const syncFromGame = (): number | null => follower?.sync() ?? null;
+
+/**
+ * What the seed last read says of the board's run type, kept in step with
+ * both: null before a reading.
+ */
+export const useSeedCheck = (): SeedCheck | null => {
+  const seed = useAutotrackStore((state) => state.reading?.seed ?? null);
+  const presetId = useGameStore((state) => state.presetId);
+  const settings = useGameStore((state) => state.settings);
+  return useMemo(
+    () => (seed === null ? null : checkSeed(seed, { presetId, settings })),
+    [seed, presetId, settings],
+  );
+};
+
+/** The seed's check now, for an action. */
+const seedCheckNow = (): SeedCheck | null => {
+  const { reading } = useAutotrackStore.getState();
+  return reading === null
+    ? null
+    : checkSeed(reading.seed, useGameStore.getState());
+};
+
+/**
+ * Switch the run type to the seed's, the player's answer to SeedPrompt: a
+ * new run with what the game holds laid on it, one undo step.
+ */
+export const switchToSeed = () => {
+  const check = seedCheckNow();
+  if (check?.kind !== "differs") return;
+  switchRun(check);
+  set({ news: { repeated: false, text: switchedText(check) } });
+};
+
+/** Keep the player's run type for this seed: no prompt for it again. */
+export const keepRunType = () => {
+  const check = seedCheckNow();
+  if (check?.kind === "differs") set({ keptSeed: check.seed });
+};

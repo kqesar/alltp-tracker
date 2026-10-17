@@ -18,6 +18,7 @@ import {
   syncView,
 } from "@/autotrack/apply";
 import type { AutotrackReading } from "@/autotrack/reading";
+import type { RunSettings } from "@/data/presets";
 import { useGameStore } from "@/stores/gameStore";
 
 /** The board's side of a session. */
@@ -29,6 +30,11 @@ export type Follower = {
    * @returns How many values changed, or null before any game in play was read
    */
   sync: () => number | null;
+  /**
+   * Start a new run of the seed's run type with what the game holds laid on
+   * it, as one undo step: undoing it brings the board back as it was.
+   */
+  switchRun: (presetId: string, settings: RunSettings) => void;
 };
 
 /** Start following the game, for a new session. */
@@ -73,6 +79,16 @@ export const createFollower = (): Follower => {
       shown = view;
       if (isEmptyView(news)) return;
       store.applyGameNews((board) => mergeView(board, news)?.next ?? null);
+    },
+    switchRun: (presetId, settings) => {
+      const reading = last;
+      useGameStore
+        .getState()
+        .applyRun(presetId, settings, (fresh) =>
+          reading === null
+            ? null
+            : (syncView(fresh, gameView(reading, fresh, found))?.next ?? null),
+        );
     },
     sync: () => {
       if (last === null) return null;

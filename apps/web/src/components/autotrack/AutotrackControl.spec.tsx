@@ -204,6 +204,21 @@ describe("AutotrackMoreBadge", () => {
 });
 
 describe("AutotrackLiveRegion", () => {
+  it("says what autotracking did of its own after the status", () => {
+    render(<AutotrackLiveRegion />);
+    show(STATUSES.connected);
+
+    act(() =>
+      useAutotrackStore.setState({
+        news: { repeated: false, text: "This seed is Keysanity: switched." },
+      }),
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Autotracking: Connected. This seed is Keysanity: switched.",
+    );
+  });
+
   it("says when it connects, fails or stops, and keeps quiet in between", () => {
     render(<AutotrackLiveRegion />);
     const live = screen.getByRole("status");
