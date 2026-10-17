@@ -452,8 +452,8 @@ test.describe("an update", () => {
             violations.map(({ id, nodes }) => `${id} ×${nodes.length}`),
           ).toEqual([]);
 
-          // From the top of the page: the two skip links, then the notice
-          for (let press = 0; press < 3; press++) {
+          // From the top of the page: the three skip links, then the notice
+          for (let press = 0; press < 4; press++) {
             await page.keyboard.press("Tab");
           }
           await expect(reload).toBeFocused();

@@ -27,6 +27,20 @@ describe("App", () => {
     expect(screen.getByTestId("map-tracker")).toBeInTheDocument();
   });
 
+  it("skips to the checks: the view switches, then its panel takes the focus", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("link", { name: "Skip to checks" }));
+
+    expect(useGameStore.getState().mapView).toBe("checks");
+    expect(screen.getByRole("tabpanel")).toHaveFocus();
+    expect(screen.getByTestId("checks-panel")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("link", { name: "Skip to map" }));
+    expect(screen.getByTestId("map-tracker")).toBeInTheDocument();
+    expect(screen.getByRole("tabpanel")).toHaveFocus();
+  });
+
   it("toggles a boolean item on and off", () => {
     render(<App />);
     const hookshot = screen.getByTestId("item-hookshot");

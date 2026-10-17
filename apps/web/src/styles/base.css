@@ -3,7 +3,13 @@ body {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   color: var(--color-text);
-  /* Subtle depth instead of a flat black background */
+}
+
+/* Subtle depth instead of a flat black background, fixed to the viewport:
+   what must hide the page scrolling under it (a sticky heading) takes it
+   too, and stays seamless */
+body,
+.page-background {
   background-color: var(--color-bg);
   background-image:
     radial-gradient(

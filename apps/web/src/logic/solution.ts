@@ -85,7 +85,7 @@ export type Inputs = Pick<
 >;
 
 /** The slices a marker's status reads: the solution's, and what is checked. */
-type MarkerInputs = Inputs & Pick<Progress, "checked">;
+export type MarkerInputs = Inputs & Pick<Progress, "checked">;
 
 /** The medallion each value of the store's `medallions` names. */
 const PAD_VALUES: readonly (Medallion | "unknown")[] = [
@@ -357,12 +357,14 @@ export const locationLabel = (marker: MapMarker, id: string): string => {
 export const markerDetail = (
   marker: MapMarker,
   state: MarkerInputs,
-): MarkerState[] => {
-  const solution = solutionOf(state);
-  return marker.locations.map((id) =>
-    state.checked[id] ? "opened" : statusOf(solution, [id]),
-  );
-};
+): MarkerState[] => marker.locations.map((id) => locationStateOf(id, state));
+
+/** What one location shows: done once checked, else its own status. */
+export const locationStateOf = (
+  id: string,
+  state: MarkerInputs,
+): MarkerState =>
+  state.checked[id] ? "opened" : statusOf(solutionOf(state), [id]);
 
 /** A location's tri as the tracker shows it, stable between changes. */
 export const useLocationStatus = (id: string): Tri =>

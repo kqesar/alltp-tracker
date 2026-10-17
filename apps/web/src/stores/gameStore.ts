@@ -22,7 +22,7 @@ import {
   toSaveFile,
   validateProgress,
 } from "@/stores/persistence";
-import type { MapLayout } from "@/utils";
+import type { MapLayout, MapView } from "@/utils";
 
 /** Which way a click moves a counter or a progressive item. */
 export type Direction = 1 | -1;
@@ -44,6 +44,7 @@ type GameState = Progress &
     toggleChecks: (locations: readonly string[]) => void;
     setBigKeysVisible: (visible: boolean) => void;
     setMapLayout: (layout: MapLayout) => void;
+    setMapView: (view: MapView) => void;
     /** The keyboard shortcuts' master switch */
     setShortcutsEnabled: (enabled: boolean) => void;
     setKeymap: (keymap: Keymap) => void;
@@ -112,6 +113,7 @@ const createProgress = (presetId: string = DEFAULT_PRESET_ID): Progress => {
 const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
   bigKeysVisible: getPreset(presetId).settings.keysanity,
   mapLayout: "auto",
+  mapView: "map",
   shortcuts: DEFAULT_SHORTCUTS,
 });
 
@@ -155,6 +157,10 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
     saved.mapLayout === "stacked"
       ? saved.mapLayout
       : base.mapLayout,
+  mapView:
+    saved.mapView === "map" || saved.mapView === "checks"
+      ? saved.mapView
+      : base.mapView,
   shortcuts: restoreShortcuts(saved.shortcuts, base.shortcuts),
 });
 
@@ -184,6 +190,7 @@ const toPersisted = (state: GameState): PersistedState => ({
   bigKeysVisible: state.bigKeysVisible,
   game: GAME,
   mapLayout: state.mapLayout,
+  mapView: state.mapView,
   shortcuts: state.shortcuts,
 });
 
@@ -306,6 +313,8 @@ export const useGameStore = create<GameState>()(
           set((state) => ({ shortcuts: { ...state.shortcuts, keymap } })),
 
         setMapLayout: (layout: MapLayout) => set({ mapLayout: layout }),
+
+        setMapView: (view: MapView) => set({ mapView: view }),
 
         setShortcutsEnabled: (enabled: boolean) =>
           set((state) => ({ shortcuts: { ...state.shortcuts, enabled } })),
