@@ -1,6 +1,6 @@
-import { useRef } from "react";
-import { MapLegend } from "@/components/map/MapLegend";
-import { MapTracker } from "@/components/map/MapTracker";
+import { type MouseEvent, useRef } from "react";
+import { flushSync } from "react-dom";
+import { MAP_VIEW_ID, MapPanel } from "@/components/map/MapPanel";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { BigKeyToggle } from "@/components/ui/BigKeyToggle";
 import { Header } from "@/components/ui/Header";
@@ -14,6 +14,7 @@ import { useRunAnalysis } from "@/hooks/useRunAnalysis";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
 import { useGameStore } from "@/stores/gameStore";
+import type { MapView } from "@/utils";
 
 /**
  * Main application component for the LttP Item Tracker
@@ -27,16 +28,29 @@ function App() {
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
   const mapLayout = useGameStore((state) => state.mapLayout);
+  const setMapView = useGameStore((state) => state.setMapView);
   const toolbarRef = useRef<HTMLDivElement>(null);
   useToolbarFit(toolbarRef);
+
+  // Render the chosen view before its panel takes the focus
+  const skipTo = (view: MapView) => (event: MouseEvent) => {
+    event.preventDefault();
+    flushSync(() => setMapView(view));
+    document.getElementById(MAP_VIEW_ID)?.focus();
+  };
 
   return (
     <>
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
-      <a className="skip-link" href="#map">
+      {/* biome-ignore lint/a11y/useValidAnchor: a skip link navigates; its href holds without script */}
+      <a className="skip-link" href="#map" onClick={skipTo("map")}>
         Skip to map
+      </a>
+      {/* biome-ignore lint/a11y/useValidAnchor: a skip link navigates; its href holds without script */}
+      <a className="skip-link" href="#map" onClick={skipTo("checks")}>
+        Skip to checks
       </a>
       <div className="notices">
         <UpdatePrompt />
@@ -52,10 +66,7 @@ function App() {
           data-testid="layout"
         >
           <TrackerGrid itemLayout={defaultItemGrid} />
-          <div className="map-panel" id="map">
-            <MapTracker />
-            <MapLegend />
-          </div>
+          <MapPanel />
         </div>
       </main>
       <Tooltip />

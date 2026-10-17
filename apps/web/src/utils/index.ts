@@ -70,6 +70,9 @@ export const visibleRows = (
  */
 export type MapLayout = "auto" | "side-by-side" | "stacked";
 
+/** What the map panel shows: the two worlds, or every check as a list. */
+export type MapView = "map" | "checks";
+
 /** The two halves of the map asset. */
 export type World = "light" | "dark";
 
