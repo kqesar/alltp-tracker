@@ -8,7 +8,11 @@ import {
 import { describe, expect, it } from "vitest";
 import { GROUPS, HELPERS } from "./helpers";
 import { ITEM_IDS, stateFromUpstream } from "./items";
-import { type AlttprSettings, UPSTREAM_TEST } from "./settings";
+import {
+  type AlttprSettings,
+  settingsFromUpstream,
+  UPSTREAM_TEST,
+} from "./settings";
 
 const rules = loadRules({
   groups: GROUPS,
@@ -321,6 +325,36 @@ describe("the item helpers", () => {
       { items: ITEM_IDS, settings: UPSTREAM_TEST },
     );
     expect(world.locationIds).toHaveLength(Object.keys(HELPERS).length);
+  });
+
+  it("extend magic as upstream reckons it, for every bottle refill", () => {
+    // ItemCollection.php:513-526, with rom.BottleFill.Magic per item
+    // functionality (World.php:216-259)
+    const REFILL = { expert: 0.25, hard: 0.5, normal: 1, superexpert: 0 };
+    const MAGIC = [[], ["HalfMagic"], ["QuarterMagic"]];
+    const BARS = {
+      canExtendMagic: 2,
+      canExtendMagic3: 3,
+      canExtendMagic4: 4,
+    } as const;
+    for (const [functionality, refill] of Object.entries(REFILL)) {
+      const settings = settingsFromUpstream("standard", {
+        "item.functionality": functionality,
+      });
+      for (const [level, magic] of MAGIC.entries()) {
+        for (let bottles = 0; bottles <= 4; bottles++) {
+          const items = [...magic, ...Array(bottles).fill("Bottle")];
+          const base = [1, 2, 4][level] as number;
+          for (const [name, bars] of Object.entries(BARS)) {
+            const expected = base + base * bottles * refill >= bars;
+            expect(
+              helper(name as keyof typeof HELPERS, items, settings),
+              `${name}, ${functionality}, ${label(items)}`,
+            ).toBe(expected ? "yes" : "no");
+          }
+        }
+      }
+    }
   });
 
   it("list every way to the health a rule asks for", () => {

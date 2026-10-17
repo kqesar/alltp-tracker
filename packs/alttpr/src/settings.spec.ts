@@ -255,6 +255,40 @@ describe("settingsFromUpstream", () => {
     ).toBe(true);
   });
 
+  it("takes the shields from the item pool, over any count the config gave", () => {
+    const shields = (config: Record<string, unknown>) =>
+      settingsFromUpstream("open", config).mirrorShieldInPool;
+
+    expect(shields({ "item.pool": "normal" })).toBe(true);
+    for (const pool of ["hard", "expert", "superexpert", "crowd_control"]) {
+      expect(shields({ "item.pool": pool }), pool).toBe(false);
+    }
+    expect(
+      shields({ "item.overflow.count.Shield": 3, "item.pool": "hard" }),
+    ).toBe(false);
+  });
+
+  it("takes fairies and a bottle's magic refill from the item functionality", () => {
+    const of = (functionality: string) => {
+      const settings = settingsFromUpstream("open", {
+        "item.functionality": functionality,
+        "rom.CatchableFairies": true,
+      });
+      return [
+        settings.catchableFairies,
+        settings.fullBottleMagic,
+        settings.halfBottleMagic,
+        settings.quarterBottleMagic,
+      ];
+    };
+
+    expect(of("normal")).toEqual([true, true, false, false]);
+    expect(of("hard")).toEqual([false, false, true, false]);
+    expect(of("expert")).toEqual([false, false, false, true]);
+    expect(of("superexpert")).toEqual([false, false, false, false]);
+    expect(OPEN.fullBottleMagic).toBe(true);
+  });
+
   it("refuses what the pack does not model, where upstream would read it", () => {
     expect(() => settingsFromUpstream("inverted")).toThrow(
       /mode "inverted" is not modeled/,

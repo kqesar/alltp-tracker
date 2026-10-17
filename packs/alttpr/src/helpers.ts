@@ -66,17 +66,23 @@ export const HELPERS = {
   },
   /**
    * canExtendMagic($world, $bars) (513-526): a base of 4 with quarter
-   * magic, 2 with half magic, else 1, and as much again per bottle, at
-   * least `bars`. One bar is always there.
+   * magic, 2 with half magic, else 1, and the base again per bottle times
+   * what a bottle refills (all of it, half, a quarter or none, by the item
+   * functionality), at least `bars`. One bar is always there. Each branch
+   * is the fewest bottles that reach `bars` from a base, of the 4 a pool
+   * holds: from a base of 1 a half refill never reaches 4 bars.
    */
-  canExtendMagic: { req: "magic | bottle", source: at(513) },
+  canExtendMagic: {
+    req: "magic | setting(fullBottleMagic) & bottle | setting(halfBottleMagic) & bottle >= 2 | setting(quarterBottleMagic) & bottle >= 4",
+    source: at(513),
+  },
   canExtendMagic1: { req: "true", source: at(513) },
   canExtendMagic3: {
-    req: "magic >= 2 | magic & bottle | bottle >= 2",
+    req: "magic >= 2 | magic & (setting(fullBottleMagic) & bottle | setting(halfBottleMagic) & bottle | setting(quarterBottleMagic) & bottle >= 2) | setting(fullBottleMagic) & bottle >= 2 | setting(halfBottleMagic) & bottle >= 4",
     source: at(513),
   },
   canExtendMagic4: {
-    req: "magic >= 2 | magic & bottle | bottle >= 3",
+    req: "magic >= 2 | magic & (setting(fullBottleMagic) & bottle | setting(halfBottleMagic) & bottle >= 2 | setting(quarterBottleMagic) & bottle >= 4) | setting(fullBottleMagic) & bottle >= 3",
     source: at(513),
   },
   canFly: {
