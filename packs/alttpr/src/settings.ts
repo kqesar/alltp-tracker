@@ -6,17 +6,15 @@
 // Read from sporchia/alttp_vt_randomizer at 219fcafd (LOGIC 31):
 // - app/World.php: config() (445-461), which falls back to the call's own
 //   default, and the values the constructor derives from the options
-//   (dungeonItems 111-129, requireBetterBow and Sword 261-273,
+//   (dungeonItems 111-129, the item pool's overflow counts 171-214, the item
+//   functionality's ROM values 216-259, requireBetterBow and Sword 261-273,
 //   forceSkullWoodsKey 275-277); factory() sets mode.state (288-292);
 // - config/logic.php: the glitch flags each logic turns on, none for
 //   NoGlitches (line 4);
 // - config/alttp.php: the site's presets (randomizer.item.presets, 57-173).
 //
-// Left out, because a flat flag cannot say them or the pack does not model
-// the mode: rom.BottleFill.Magic, a fraction canExtendMagic multiplies by
-// (ItemCollection.php:517; hard and expert item functionality,
-// World.php:216-259), so canExtendMagic assumes the normal full refill;
-// rom.rupeeBow and rom.genericKeys (the retro world); boss shuffle (each
+// Left out, because the pack does not model the mode: rom.rupeeBow and
+// rom.genericKeys (the retro world); boss shuffle (each
 // dungeon keeps the boss its region names, see bosses.ts); the triforce-hunt
 // and ganonhunt goals (triforce pieces are not items of this pack).
 
@@ -128,8 +126,19 @@ export type AlttprSettings = {
   /** ignoreCanKillEscapeThings, false by default (ItemCollection.php:573). */
   readonly ignoreCanKillEscapeThings: boolean;
   /**
-   * rom.CatchableFairies, true by default; hard and expert item
-   * functionality turn it off (World.php:225; ItemCollection.php:446).
+   * rom.BottleFill.Magic, what a bottle of magic refills, which
+   * canExtendMagic multiplies a bottle's magic by (ItemCollection.php:517-
+   * 524): all of it by default (0x80), half with hard item functionality
+   * (0x40), a quarter with expert (0x20), none with superexpert
+   * (World.php:216-259). One flag per fraction; none set is no refill.
+   */
+  readonly fullBottleMagic: boolean;
+  readonly halfBottleMagic: boolean;
+  readonly quarterBottleMagic: boolean;
+  /**
+   * rom.CatchableFairies, true by default; hard, expert and superexpert
+   * item functionality turn it off (World.php:216-259; ItemCollection.php:
+   * 446).
    */
   readonly catchableFairies: boolean;
 
@@ -164,6 +173,34 @@ const GOALS = [
   "pedestal",
 ] as const;
 
+/** The item pools (config/alttp.php's item_pool, World.php:171-214). */
+const POOLS = [
+  "crowd_control",
+  "expert",
+  "hard",
+  "normal",
+  "superexpert",
+] as const;
+
+/** The item functionalities (World.php:216-259). */
+const FUNCTIONALITIES = ["expert", "hard", "normal", "superexpert"] as const;
+
+/**
+ * The shields an item pool puts in, its `item.overflow.count.Shield`
+ * (World.php:171-214): the normal pool keeps all three.
+ */
+const POOL_SHIELDS: Readonly<Record<(typeof POOLS)[number], number>> = {
+  crowd_control: 0,
+  expert: 1,
+  hard: 2,
+  normal: 3,
+  superexpert: 0,
+};
+
+/** A bottle's magic refill, rom.BottleFill.Magic, per item functionality. */
+const BOTTLE_MAGIC: Readonly<Record<(typeof FUNCTIONALITIES)[number], number>> =
+  { expert: 0x20, hard: 0x40, normal: 0x80, superexpert: 0x00 };
+
 /**
  * A world's config, under upstream's own keys (`World::factory`'s second
  * argument). Every key is optional and takes the default the rules read it
@@ -180,7 +217,9 @@ export type UpstreamConfig = {
   readonly "enemizer.enemyHealth"?: string;
   readonly goal?: (typeof GOALS)[number];
   readonly ignoreCanKillEscapeThings?: boolean;
+  readonly "item.functionality"?: (typeof FUNCTIONALITIES)[number];
   readonly "item.overflow.count.Shield"?: number;
+  readonly "item.pool"?: (typeof POOLS)[number];
   readonly "item.require.Lamp"?: number;
   readonly itemPlacement?: "advanced" | "basic";
   readonly logic?: "NoGlitches";
@@ -216,7 +255,9 @@ const KEYS: Readonly<Record<keyof UpstreamConfig, Check>> = {
   "enemizer.enemyHealth": isString,
   goal: oneOf(...GOALS),
   ignoreCanKillEscapeThings: isBoolean,
+  "item.functionality": oneOf(...FUNCTIONALITIES),
   "item.overflow.count.Shield": isCount,
+  "item.pool": oneOf(...POOLS),
   "item.require.Lamp": isCount,
   itemPlacement: oneOf("advanced", "basic"),
   logic: oneOf("NoGlitches"),
@@ -271,6 +312,14 @@ export function settingsFromUpstream(
   // turns its flags on whatever the config said
   const mc = dungeonItems !== "standard";
   const mcs = dungeonItems === "mcs" || dungeonItems === "full";
+  // World.php:171-259: the pool and the functionality set these over any
+  // value the config gave
+  const functionality = c["item.functionality"] ?? "normal";
+  const shields =
+    c["item.pool"] === undefined
+      ? (c["item.overflow.count.Shield"] ?? 3)
+      : POOL_SHIELDS[c["item.pool"]];
+  const bottleMagic = BOTTLE_MAGIC[functionality];
   return {
     advancedPlacement: c.itemPlacement === "advanced",
     basicPlacement: basic,
@@ -290,7 +339,8 @@ export function settingsFromUpstream(
     canTransitionWrapped: false,
     cantTakeDamage: c["region.cantTakeDamage"] ?? false,
     canWaterWalk: false,
-    catchableFairies: c["rom.CatchableFairies"] ?? true,
+    catchableFairies:
+      functionality === "normal" && (c["rom.CatchableFairies"] ?? true),
     completionistGoal: goal === "completionist",
     crystalsGanon: c["crystals.ganon"] ?? 7,
     crystalsTower: c["crystals.tower"] ?? 7,
@@ -298,11 +348,14 @@ export function settingsFromUpstream(
     dungeonsGoal: goal === "dungeons",
     fastGanonGoal: goal === "fast_ganon",
     forceSkullWoodsKey: basic,
+    fullBottleMagic: bottleMagic === 0x80,
     ganonGoal: goal === "ganon",
+    halfBottleMagic: bottleMagic === 0x40,
     ignoreCanKillEscapeThings: c.ignoreCanKillEscapeThings ?? false,
     locationsAccessibility: c.accessibility === "locations",
-    mirrorShieldInPool: (c["item.overflow.count.Shield"] ?? 3) >= 3,
+    mirrorShieldInPool: shields >= 3,
     pedestalGoal: goal === "pedestal",
+    quarterBottleMagic: bottleMagic === 0x20,
     requireBetterBow: basic || swordless,
     requireBetterSword: basic,
     requireLamp: c["item.require.Lamp"] ?? 1,
