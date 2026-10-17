@@ -60,7 +60,7 @@ export const useRunAnalysis = () => {
 };
 
 /** The analysis, if it is for the solution on screen. */
-const useCurrentAnalysis = () => {
+export const useCurrentAnalysis = () => {
   const solution: Solution = useGameStore(solutionOf);
   const analysis = useAnalysisStore((state) => state.analysis);
   return analysis?.solution === solution ? analysis : undefined;
