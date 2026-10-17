@@ -5,7 +5,7 @@
 
 version: 2
 
-# A multi-ecosystem group collapses npm, Docker and GitHub Actions into a
+# A multi-ecosystem group collapses npm and GitHub Actions into a
 # single pull request instead of one per ecosystem. Everything that shapes that
 # shared pull request — schedule, commit message — belongs to the group and is
 # rejected on the individual entries; each entry only declares which ecosystem
@@ -30,18 +30,11 @@ updates:
     multi-ecosystem-group: all-dependencies
     patterns: ['*']
 
-  # --------------------------------------------------------------------------
-  # Base images
-  # --------------------------------------------------------------------------
-  # A major here needs a human: Dependabot has no idea which Node releases are
-  # LTS, and this project is LTS-only. `node:25-alpine` is a valid bump and a
-  # wrong one. Check the release line before merging.
-  # Nothing to update yet — the repo has no Dockerfile — but the entry is kept
-  # so image bumps join the group from the day one lands.
-  - package-ecosystem: docker
-    directory: '/'
-    multi-ecosystem-group: all-dependencies
-    patterns: ['*']
+  # A `docker` entry comes with the first Dockerfile, not before: with no image
+  # to scan, its job failed every week from 2026-09 to 2026-10, and the group's
+  # pull request never opened although the npm job found updates each time.
+  # Once it lands, a major needs a human: Dependabot has no idea which Node
+  # releases are LTS, and this project is LTS-only.
 
   # --------------------------------------------------------------------------
   # GitHub Actions
