@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import {
@@ -6,6 +8,15 @@ import {
   WCAG_AA,
   WIDTHS,
 } from "./support";
+
+/**
+ * A run at its end: every item, the ten dungeons and Agahnim beaten, their
+ * prizes and both medallions known (END_GAME in packs/alttpr's goals.spec).
+ */
+const END_GAME = readFileSync(
+  join(import.meta.dirname, "fixtures/end-game.json"),
+  "utf8",
+);
 
 /** Load the tracker with nothing tracked, or with a localStorage save. */
 const openTracker = async (page: Page, saved?: string) => {
@@ -121,6 +132,36 @@ test.describe("the Checks panel", () => {
   });
 });
 
+test.describe("go mode", () => {
+  test("is not yet on a fresh run, and says what it misses", async ({
+    page,
+  }) => {
+    await openTracker(page);
+    const goMode = page.getByTestId("go-mode");
+    await expect(goMode).toHaveAccessibleName("Go mode: not yet");
+
+    await goMode.click();
+
+    const panel = page.getByTestId("go-mode-panel");
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText("In logic with:");
+    await page.keyboard.press("Escape");
+    await expect(panel).toBeHidden();
+  });
+
+  test("is on at the end of a run", async ({ page }) => {
+    await openTracker(page, END_GAME);
+
+    await expect(page.getByTestId("go-mode")).toHaveAccessibleName(
+      "Go mode: in logic",
+    );
+    await page.getByTestId("go-mode").click();
+    await expect(page.getByTestId("go-mode-panel")).toContainText(
+      "Every step to the goal is in logic.",
+    );
+  });
+});
+
 for (const width of WIDTHS) {
   test.describe(`at ${width}px`, () => {
     const phone = width < 600;
@@ -134,6 +175,7 @@ for (const width of WIDTHS) {
       await openTracker(page);
       await showAllChecks(page);
       await page.getByTestId("check-why-library").click();
+      await page.getByTestId("go-mode").click();
 
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - window.innerWidth,

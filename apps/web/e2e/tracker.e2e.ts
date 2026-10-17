@@ -386,7 +386,7 @@ test.describe("a run", () => {
   });
 
   test("closes only the topmost dialog on Escape", async ({ page }) => {
-    await page.getByRole("button", { name: /mode/i }).click();
+    await page.getByRole("button", { name: /^Mode/ }).click();
     await page.getByRole("button", { name: /^Keysanity/ }).click();
     const confirm = page.getByRole("dialog", { name: "Switch run type?" });
     await expect(confirm).toBeVisible();
