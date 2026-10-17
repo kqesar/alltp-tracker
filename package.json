@@ -38,19 +38,19 @@
     ]
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.12",
+    "@biomejs/biome": "^2.5.15",
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@commitlint/prompt-cli": "^21.2.3",
-    "@types/node": "^26.4.1",
-    "@vitest/coverage-v8": "^5.0.0",
+    "@types/node": "^26.6.5",
+    "@vitest/coverage-v8": "^5.0.4",
     "fast-check": "4.10.2",
     "husky": "^9.1.7",
-    "jsdom": "^30.0.1",
-    "lint-staged": "^17.5.0",
+    "jsdom": "^30.1.2",
+    "lint-staged": "^17.6.0",
     "sort-package-json": "^4.0.0",
     "typescript": "~7.0.2",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.4"
   },
   "packageManager": "pnpm@12.3.4",
   "engines": {
