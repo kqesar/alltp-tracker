@@ -64,6 +64,16 @@ export {
   matches,
   PRIZE_ITEMS,
 } from "./fill";
+export {
+  GO_MODES,
+  type GoMode,
+  type GoModeStatus,
+  type GoStep,
+  goModeBlockers,
+  goModeOf,
+  goModeStatus,
+  joinBlockers,
+} from "./goals";
 export { GROUPS, HELPERS, type Rule } from "./helpers";
 export {
   type Contribution,
@@ -84,6 +94,7 @@ export {
   solveWithKeys,
   type UntrackedItem,
   untrackedItems,
+  withUntracked,
 } from "./keys";
 export {
   type FromLegacy,

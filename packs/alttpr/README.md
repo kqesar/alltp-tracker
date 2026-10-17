@@ -20,6 +20,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/tracker.ts` | `TrackerInput`, what the player records, and `toState`, the state it gives |
 | `src/legacy.ts` | the app's save format before the pack (version 5), mapped to the pack |
 | `src/markers.ts` | the map markers, and what a marker shows |
+| `src/goals.ts` | `app/Randomizer.php`: where each goal puts the Triforce, and its go mode |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -275,3 +276,33 @@ state (where each item may sit, the world with everything held at each
 count): about 14 ms under Vitest. Each call after that takes a few solves:
 the keys in hand, all keys, and the counts a dungeon's safety asks about,
 about 0.2 to 0.5 ms under Vitest for every location of the world.
+
+## Go mode
+
+A run is won once Link holds the Triforce (`app/World.php:101-106`), which
+`prepareWorld` puts at the Master Sword Pedestal for the pedestal goal and
+at Ganon for the others (`app/Randomizer.php:103-114`). Go mode is that
+location in logic. `GO_MODES` lists, per goal, the locations to reach in
+order, each with its upstream line:
+
+| Goal | Steps |
+| --- | --- |
+| `ganon` | Agahnim 2, the prize of Ganon's Tower (`GanonsTower.php:388`), then Ganon (`DarkWorld/NorthEast.php:186`), whose rule wants Agahnim 2 beaten |
+| `fast_ganon` | Ganon, who wants the crystals and the pyramid but not Agahnim 2 (`DarkWorld/NorthEast.php:226`) |
+| `pedestal` | the Master Sword Pedestal (`LightWorld/NorthWest.php:86`) |
+
+The solver computes no event, so a step that gives one (Agahnim 2 gives
+`defeatAgahnim2`) is solved first, and the steps after it in a state that
+holds it; once the player holds it, the step is done. The dungeons goal
+(Ganon wants every dungeon) and completionist (every location) have no go
+mode before their end, and the triforce hunts count pieces this pack does
+not have.
+
+- `goModeOf(settings)`: the run's go mode, if its goal has one.
+- `goModeStatus(filler, state, mode)`: each step in the key model, and the
+  lowest of them: `yes` is go mode, `maybe` go mode only possibly.
+- `goModeBlockers(world, state, mode, options)`: what is missing, as the
+  engine's blockers: each step's minimal sets (`blockers(step, "yes")`),
+  joined with `joinBlockers`. Ask it of `withUntracked(filler, state)`, the
+  state with every key the player does not track held: a key is never
+  something to collect, and the key model says the rest.

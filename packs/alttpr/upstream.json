@@ -158,6 +158,12 @@
       "status": "ported"
     },
     {
+      "file": "app/Randomizer.php",
+      "module": "src/goals.ts",
+      "role": "prepareWorld: where each goal puts the Triforce, which go mode reaches",
+      "status": "ported"
+    },
+    {
       "file": "app/World.php",
       "module": "src/settings.ts",
       "role": "config() defaults and the settings it derives (requireBetterBow and Sword, wild dungeon items) that rules read",
