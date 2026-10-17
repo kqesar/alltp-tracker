@@ -29,6 +29,21 @@ describe("following the game", () => {
     expect(store().past).toEqual([]);
   });
 
+  it("tells a board holding the game alone from one the player marked", () => {
+    const follower = createFollower();
+    expect(follower.holdsGameOnly()).toBe(true);
+
+    follower.read(readingOf(seedMemory({ race: false })));
+    expect(store().items.hookshot).toBe(true);
+    expect(follower.holdsGameOnly()).toBe(true);
+
+    store().handleItemClick("flute");
+    expect(follower.holdsGameOnly()).toBe(false);
+    store().undo();
+    store().toggleChecks(["library"]);
+    expect(follower.holdsGameOnly()).toBe(false);
+  });
+
   it("lays nothing while no game is in play", () => {
     const memory = seedMemory({ race: false });
     memory[0xf5_0010] = 0x00; // the title screen

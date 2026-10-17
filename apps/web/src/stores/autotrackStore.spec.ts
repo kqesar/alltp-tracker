@@ -1,6 +1,6 @@
 import { parseUserAgent } from "@alltp/autotrack";
 import { act } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   FakeVisibility,
   GRANTED,
@@ -9,6 +9,7 @@ import {
   seedMemory,
 } from "@/autotrack/fixtures";
 import { checkSeed } from "@/autotrack/seed";
+import { forgetSeedFiles } from "@/autotrack/seedFile";
 import {
   connectAutotrack,
   keepRunType,
@@ -20,6 +21,7 @@ import {
 } from "@/stores/autotrackStore";
 import { useGameStore } from "@/stores/gameStore";
 import { MemoryTransport } from "../../../../packages/autotrack/test/memory-transport";
+import openSeedFile from "../../../../packs/alttpr/test/seed-files/9MQ9gO1wMD.json";
 import { writeSeedSettings } from "../../../../packs/alttpr/test/seed-rom";
 
 /** A console holding a seed in play, behind an in-memory bridge. */
@@ -60,6 +62,8 @@ beforeEach(() => {
 afterEach(() => {
   act(() => stopAutotrack());
   setAutotrackOptions({});
+  forgetSeedFiles();
+  vi.unstubAllGlobals();
 });
 
 describe("autotracking and the board", () => {
@@ -203,5 +207,86 @@ describe("following the seed's run type", () => {
 
     expect(game().presetId).toBe("open");
     expect(seedCheck()).toEqual({ kind: "unread", why: "race-mode" });
+  });
+
+  describe("a race seed's settings, from its file on alttpr.com", () => {
+    /** alttpr.com answering with a keysanity seed's file for `hash`. */
+    const fileOnline = (hash: string) => {
+      const file = {
+        ...openSeedFile,
+        hash,
+        spoiler: {
+          meta: { ...openSeedFile.spoiler.meta, dungeon_items: "full" },
+        },
+      };
+      const fetch = vi.fn(async () => new Response(JSON.stringify(file)));
+      vi.stubGlobal("fetch", fetch);
+      return fetch;
+    };
+
+    it("switches a fresh board once the file is in, asked once", async () => {
+      const fetch = fileOnline("RaceFresh1");
+      const h = harness({ name: "RaceFresh1", race: true });
+      await act(() => connectAutotrack());
+      await h.advance(0);
+
+      await vi.waitFor(() => expect(game().presetId).toBe("keysanity"));
+      expect(useAutotrackStore.getState().news?.text).toBe(
+        "This seed is Keysanity (Open, Ganon, 7/7): the tracker switched to it.",
+      );
+      expect(seedCheck()?.kind).toBe("same");
+
+      h.memory[SAVE(0x357)] = 0x01; // the game moves on: a new reading
+      await h.advance(1000);
+      expect(game().items.moonpearl).toBe(true);
+      expect(seedCheck()?.kind).toBe("same");
+      expect(fetch).toHaveBeenCalledOnce();
+    });
+
+    it("asks before switching a board with a run on it", async () => {
+      fileOnline("RaceAsked1");
+      const h = harness({ name: "RaceAsked1", race: true });
+      act(() => game().handleItemClick("flute"));
+      await act(() => connectAutotrack());
+      await h.advance(0);
+
+      await vi.waitFor(() =>
+        expect(seedCheck()).toMatchObject({
+          kind: "differs",
+          presetId: "keysanity",
+        }),
+      );
+      expect(game().presetId).toBe("open");
+    });
+
+    it("leaves the run type the player's when alttpr.com has no file", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => new Response("", { status: 403 })),
+      );
+      const h = harness({ name: "RaceGone01", race: true });
+      await act(() => connectAutotrack());
+      await h.advance(0);
+
+      await vi.waitFor(() =>
+        expect(useAutotrackStore.getState().seedFile).toEqual({
+          hash: "RaceGone01",
+          result: "not-found",
+        }),
+      );
+      expect(seedCheck()).toEqual({ kind: "unread", why: "race-mode" });
+      expect(game().presetId).toBe("open");
+    });
+
+    it("asks for no file when the ROM gives the settings", async () => {
+      const fetch = fileOnline("NotRaced01");
+      const h = keysanitySeed("NotRaced01");
+      await act(() => connectAutotrack());
+      await h.advance(0);
+
+      expect(game().presetId).toBe("keysanity");
+      expect(fetch).not.toHaveBeenCalled();
+      expect(useAutotrackStore.getState().seedFile).toBeNull();
+    });
   });
 });

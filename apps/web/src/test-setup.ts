@@ -13,3 +13,9 @@ if (typeof HTMLDialogElement.prototype.showModal !== "function") {
     this.removeAttribute("open");
   };
 }
+
+// No unit test reaches the network: alttpr.com's seed files are asked for
+// with a stub (vi.stubGlobal), which vi.unstubAllGlobals sets back to this.
+globalThis.fetch = async () => {
+  throw new TypeError("No network in unit tests");
+};

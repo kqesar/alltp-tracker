@@ -1,6 +1,7 @@
 import { type ReactNode, useId } from "react";
 import type { AutotrackReading } from "@/autotrack/reading";
 import { describeReading } from "@/autotrack/readout";
+import { useAutotrackStore } from "@/stores/autotrackStore";
 import { useGameStore } from "@/stores/gameStore";
 
 /** One group of the readout: a heading and its entries, or why it has none. */
@@ -69,6 +70,13 @@ export const Readout = ({
   const titleId = useId();
   const keysanity = useGameStore((state) => state.settings.keysanity);
   const readout = describeReading(reading, keysanity);
+  // A race seed's settings come from its file once it is in
+  const fromFile = useAutotrackStore(
+    (state) =>
+      reading.race &&
+      state.seedFile?.hash === reading.seed.seed &&
+      typeof state.seedFile.result === "object",
+  );
   const time = new Date(reading.at).toLocaleTimeString();
 
   return (
@@ -156,7 +164,11 @@ export const Readout = ({
         >
           <Chips entries={readout.completed} />
         </Group>
-        <Group count={1} testId="readout-seed" title="Seed settings">
+        <Group
+          count={1}
+          testId="readout-seed"
+          title={fromFile ? "Seed settings, from alttpr.com" : "Seed settings"}
+        >
           <dl className="readout__pairs">
             {readout.seed.map(({ label, value }) => (
               <div className="readout__pair" key={label}>
