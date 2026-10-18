@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { StreamTimer } from "@/components/ui/StreamTimer";
 import { itemGridFor } from "@/data/items";
+import { useCrossedLogic } from "@/hooks/useCrossedLogic";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
 import { useGameStore } from "@/stores/gameStore";
@@ -31,6 +32,7 @@ type ObsViewProps = {
 export const ObsView = ({ background, timer = false }: ObsViewProps) => {
   useUndoShortcuts();
   useItemShortcuts();
+  useCrossedLogic();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const grid = useGameStore((state) => itemGridFor(state.settings));
   const rows = visibleRows(grid, bigKeysVisible).length;

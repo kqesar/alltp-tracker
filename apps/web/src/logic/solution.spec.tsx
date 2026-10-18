@@ -8,9 +8,12 @@ import {
 } from "@alltp/pack-alttpr";
 import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
+import { items as freshItems, type ItemState, itemsMax } from "@/data/items";
+import { analyzeRun, goModeStatusOf } from "@/logic/missing";
 import { KEY_DUNGEONS, packSettings } from "@/logic/settings";
 import {
   bossStateOf,
+  crossedSolverLoaded,
   dungeonCount,
   dungeonStateOf,
   locationName,
@@ -18,6 +21,7 @@ import {
   markerById,
   markerDetail,
   markerStateOf,
+  setCrossedSolver,
   solutionOf,
   trackerInput,
   useBossStatus,
@@ -144,6 +148,50 @@ describe("solutionOf", () => {
 
     act(() => store().toggleChecks(["links-house"]));
     expect(solutionOf(store())).toBe(bought);
+  });
+});
+
+describe("a run with shuffled entrances", () => {
+  it("is maybe until its solver loads, then in logic by the doors noted", async () => {
+    act(() => store().applyPreset("crosskeys"));
+    const blinds = "blinds-hideout/top";
+    expect(crossedSolverLoaded()).toBe(false);
+    expect(solutionOf(store())).toMatchObject({ modelled: false });
+    expect(solutionOf(store()).tris[blinds]).toBe("maybe");
+
+    const { solver } = await import("@/logic/crossed");
+    act(() => setCrossedSolver(solver));
+    // Behind a door not noted: out of logic
+    expect(solutionOf(store())).toMatchObject({ modelled: true });
+    expect(solutionOf(store()).tris[blinds]).toBe("no");
+    // Outdoors, from Link's House
+    expect(solutionOf(store()).tris.mushroom).toBe("yes");
+
+    act(() => store().noteEntrance("kakariko-shop", "blinds-hideout"));
+    expect(solutionOf(store()).tris[blinds]).toBe("yes");
+    // The same entrances, the same solution
+    expect(solutionOf(store())).toBe(solutionOf(store()));
+  });
+
+  it("goes by the entrance randomizer's world for the go mode", async () => {
+    const { solver } = await import("@/logic/crossed");
+    act(() => {
+      setCrossedSolver(solver);
+      store().applyPreset("crosskeys");
+      useGameStore.setState({
+        items: Object.fromEntries(
+          Object.entries(freshItems).map(([id, value]) => [
+            id,
+            typeof value === "boolean" ? true : itemsMax[id],
+          ]),
+        ) as unknown as ItemState,
+      });
+    });
+    // Everything held, but Ganon's Tower's door not noted
+    expect(goModeStatusOf(store())).toMatchObject({ tri: "no" });
+    expect(analyzeRun(solutionOf(store()), store().settings).missing.size).toBe(
+      0,
+    );
   });
 });
 

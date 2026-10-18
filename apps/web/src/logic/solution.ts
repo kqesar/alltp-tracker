@@ -8,7 +8,7 @@
 // on a map marker, which only checks locations, solves nothing. Each hook
 // returns a string, which Zustand compares by value, so a change re-renders
 // only the markers whose status it changed.
-import type { Tri } from "@alltp/engine";
+import type { Solution as EngineSolution, Tri } from "@alltp/engine";
 import {
   type AlttprSettings,
   compile,
@@ -37,7 +37,8 @@ import {
   toState,
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES, DUNGEON_INDICES } from "@/constants";
-import { logicModelled } from "@/data/presets";
+import { crossedLogic, logicModelled } from "@/data/presets";
+import type { CrossedSolver } from "@/logic/crossed";
 import { packReading } from "@/logic/packItems";
 import { KEY_DUNGEONS, packSettings, worldOf } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
@@ -83,13 +84,14 @@ export const locationStatus = (
 
 /**
  * The slices of the run the solution reads; of what is checked, only the
- * events (EVENT_CHECKS), so checking any other location solves nothing.
+ * events (EVENT_CHECKS), so checking any other location solves nothing; the
+ * entrances noted, in a run whose logic reads them (crossedLogic).
  */
 export type Inputs = Pick<
   Progress,
   "items" | "medallions" | "settings" | "smallKeys"
 > &
-  Partial<Pick<Progress, "checked">>;
+  Partial<Pick<Progress, "checked" | "entrances">>;
 
 /** The slices a marker's status reads: the solution's, and what is checked. */
 export type MarkerInputs = Inputs & Pick<Progress, "checked">;
@@ -174,9 +176,40 @@ export interface Solution {
    * dungeons' keys a location reads, whether each dungeon is safe for keys.
    */
   readonly keyed: KeyedSolution;
+  /**
+   * A run with shuffled entrances (crossedLogic): the entrance randomizer's
+   * world solved for the entrances noted, whose tris the tracker shows.
+   */
+  readonly crossed?: {
+    readonly solver: CrossedSolver;
+    readonly entrances: Readonly<Record<string, string>>;
+    readonly solution: EngineSolution;
+  };
 }
 
-let last: { events: string; inputs: Inputs; solution: Solution } | undefined;
+/** The solver of runs with shuffled entrances, once its chunk is loaded. */
+let crossed: CrossedSolver | undefined;
+
+/** Whether the solver of runs with shuffled entrances is loaded. */
+export const crossedSolverLoaded = (): boolean => crossed !== undefined;
+
+/**
+ * Takes up the solver of runs with shuffled entrances (useCrossedLogic): the
+ * store is set again as it was, so every selector solves the run anew.
+ */
+export const setCrossedSolver = (solver: CrossedSolver): void => {
+  crossed = solver;
+  useGameStore.setState({});
+};
+
+let last:
+  | {
+      crossed?: CrossedSolver;
+      events: string;
+      inputs: Inputs;
+      solution: Solution;
+    }
+  | undefined;
 
 /**
  * The run solved: the pack's key model over the state of what the player
@@ -188,9 +221,12 @@ let last: { events: string; inputs: Inputs; solution: Solution } | undefined;
  */
 export const solutionOf = (state: Inputs): Solution => {
   const events = eventsOf(state);
+  const entrances = crossedLogic(state.settings) ? state.entrances : undefined;
   if (
     last !== undefined &&
     last.events === events &&
+    last.crossed === crossed &&
+    last.inputs.entrances === entrances &&
     last.inputs.items === state.items &&
     last.inputs.medallions === state.medallions &&
     last.inputs.settings === state.settings &&
@@ -203,12 +239,25 @@ export const solutionOf = (state: Inputs): Solution => {
     fillerOf(settings),
     toState(trackerInput(state), settings),
   );
-  const modelled = logicModelled(state.settings);
+  // Shuffled entrances: the entrance randomizer's world once its solver is
+  // loaded, every check maybe until then
+  const solved =
+    entrances === undefined || crossed === undefined
+      ? undefined
+      : {
+          entrances,
+          solution: crossed.solve(settings, entrances, keyed.state),
+          solver: crossed,
+        };
+  const modelled =
+    logicModelled(state.settings) &&
+    (!crossedLogic(state.settings) || solved !== undefined);
   const unknown = (tris: Readonly<Record<string, Tri>>) =>
     Object.fromEntries(Object.keys(tris).map((id) => [id, "maybe" as const]));
-  const tris = keyed.locations();
-  const visibles = keyed.solution.visibles();
+  const tris = solved?.solution.locations() ?? keyed.locations();
+  const visibles = solved?.solution.visibles() ?? keyed.solution.visibles();
   const solution = {
+    ...(solved === undefined ? {} : { crossed: solved }),
     keyed,
     modelled,
     settings,
@@ -216,8 +265,10 @@ export const solutionOf = (state: Inputs): Solution => {
     visibles: modelled ? visibles : unknown(visibles),
   };
   last = {
+    crossed,
     events,
     inputs: {
+      ...(entrances === undefined ? {} : { entrances }),
       items: state.items,
       medallions: state.medallions,
       settings: state.settings,

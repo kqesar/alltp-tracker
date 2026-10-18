@@ -87,6 +87,29 @@ test("moves a place's checks to its door, and notes a hole with its cave's door"
   ).toHaveAccessibleName("Kakariko Well Cave: not known yet");
 });
 
+test("puts a check in logic through the doors noted", async ({ page }) => {
+  await openCrosskeys(page);
+  await expect(page.getByTestId("logic-note")).toHaveText(
+    "The logic follows the entrances you noted: a check behind a door you have not noted stays out of logic.",
+  );
+  // Blind's Hideout behind Kakariko's shop, in the Light World: in logic
+  // with nothing held
+  await page.getByTestId("entrance-kakariko-shop").click();
+  await page.keyboard.type("blind");
+  await page.getByTestId("entrance-option-blinds-hideout").click();
+  await expect(page.getByTestId("marker-blinds-hideout")).toHaveAccessibleName(
+    "Blind's Hideout (5 checks): available",
+  );
+  // Behind the Big Bomb Shop, in the Dark World: out of logic. A target
+  // leads from one entrance only, so it moves there
+  await page.getByTestId("entrance-big-bomb-shop").click();
+  await page.keyboard.type("blind");
+  await page.getByTestId("entrance-option-blinds-hideout").click();
+  await expect(page.getByTestId("marker-blinds-hideout")).toHaveAccessibleName(
+    "Blind's Hideout (5 checks): out of logic",
+  );
+});
+
 for (const width of WIDTHS) {
   test(`the entrances fit, pass axe and are keyboard-reachable at ${width}px`, async ({
     page,

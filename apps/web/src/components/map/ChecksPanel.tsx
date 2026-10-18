@@ -3,7 +3,7 @@ import { memo, useCallback, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useShallow } from "zustand/react/shallow";
 import { MissingLines } from "@/components/ui/Missing";
-import { logicModelled } from "@/data/presets";
+import { crossedLogic, logicModelled } from "@/data/presets";
 import { useMissing } from "@/hooks/useRunAnalysis";
 import {
   type Check,
@@ -181,7 +181,10 @@ export const ChecksPanel = () => {
   const zones = useGameStore(runZones);
   const states = useGameStore(useShallow(checkStates));
   // Under logic the pack does not model, no check has a why (LogicNote)
-  const explained = useGameStore((state) => logicModelled(state.settings));
+  // What a check is missing is worked out on vt's world only, so far
+  const explained = useGameStore(
+    (state) => logicModelled(state.settings) && !crossedLogic(state.settings),
+  );
   const cleared = useGameStore(
     useShallow((state) =>
       runZones(state).map((zone) => isCleared(zone, state)),

@@ -116,19 +116,26 @@ export interface GoModeStatus {
   }[];
 }
 
+/** A run solved: each location's tri. */
+export interface LocationSolution {
+  location(id: string): Tri;
+}
+
 /**
- * Where a run stands against its go mode, in the key model: each step
- * solved in the state the steps before it gave, until one is out of logic.
- * @param keyed - The key model's solution of `state`, if at hand
+ * Where a run stands against its go mode: each step solved in the state the
+ * steps before it gave, until one is out of logic.
+ * @param solveAt - How a state is solved: the key model, or another world's
+ *   solver (the entrance randomizer's)
+ * @param first - `state` solved, if at hand
  */
-export function goModeStatus(
-  filler: Filler,
+export function goModeStatusBy(
+  solveAt: (state: State) => LocationSolution,
   state: State,
   mode: GoMode,
-  keyed: KeyedSolution = solveWithKeys(filler, state),
+  first: LocationSolution = solveAt(state),
 ): GoModeStatus {
   let current = state;
-  let solved: KeyedSolution | undefined = keyed;
+  let solved: LocationSolution | undefined = first;
   let lowest = 2;
   const steps: { location: string; tri?: Tri; done: boolean }[] = [];
   for (const step of mode.steps) {
@@ -141,7 +148,7 @@ export function goModeStatus(
       steps.push({ done: false, location });
       continue;
     }
-    solved ??= solveWithKeys(filler, current);
+    solved ??= solveAt(current);
     const tri = solved.location(location);
     steps.push({ done: false, location, tri });
     lowest = Math.min(lowest, rank(tri));
@@ -151,6 +158,19 @@ export function goModeStatus(
     }
   }
   return { steps, tri: lowest === 2 ? "yes" : lowest === 1 ? "maybe" : "no" };
+}
+
+/**
+ * Where a run stands against its go mode, in the key model.
+ * @param keyed - The key model's solution of `state`, if at hand
+ */
+export function goModeStatus(
+  filler: Filler,
+  state: State,
+  mode: GoMode,
+  keyed: KeyedSolution = solveWithKeys(filler, state),
+): GoModeStatus {
+  return goModeStatusBy((s) => solveWithKeys(filler, s), state, mode, keyed);
 }
 
 const atomKey = (atom: Atom): string =>
