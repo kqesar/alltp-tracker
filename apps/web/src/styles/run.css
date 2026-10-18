@@ -1,0 +1,238 @@
+/*
+ * The Run tab (RunPanel.tsx): the run at a glance, then its splits and the
+ * ROM's stats beside its timeline when the panel is wide, under one another
+ * when it is not. Beside the grid it fills the viewport's height and each
+ * column scrolls; under the grid it grows with the page, as the Checks list
+ * does.
+ */
+.run {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--spacing-md);
+  min-width: 0;
+  height: max(calc(var(--cell) * 7), calc(100dvh - 16rem));
+}
+
+@container app (width < 70rem) {
+  .run {
+    height: auto;
+  }
+}
+
+.run-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+  margin: 0;
+}
+
+.run-summary__item {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.run-summary dt {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.run-summary dd {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-summary__of {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.run__columns {
+  display: grid;
+  gap: var(--spacing-md);
+  min-height: 0;
+}
+
+.run__side {
+  display: grid;
+  gap: var(--spacing-md);
+  align-content: start;
+  min-height: 0;
+}
+
+@container map (width >= 40rem) {
+  .run__columns {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  }
+
+  .run__side,
+  .run-finds {
+    overflow-y: auto;
+  }
+}
+
+.run-section {
+  display: grid;
+  gap: var(--spacing-xs);
+  align-content: start;
+  min-width: 0;
+}
+
+.run-section__title {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.run-section__count {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.run-section__empty {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.run-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.run-time--none {
+  color: var(--color-text-muted);
+}
+
+/* Splits: tabular data, laid out as a speedrun timer's */
+.run-splits {
+  width: 100%;
+  font-size: var(--font-size-sm);
+  border-spacing: 0 2px;
+  border-collapse: separate;
+}
+
+.run-splits th,
+.run-splits td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  text-align: start;
+}
+
+.run-splits td {
+  font-variant-numeric: tabular-nums;
+}
+
+.run-splits thead th {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.run-splits tbody th,
+.run-splits tbody td {
+  background: var(--surface-1);
+}
+
+.run-splits tbody th {
+  font-weight: 600;
+  border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+}
+
+.run-splits tbody td:last-child {
+  color: var(--color-text-secondary);
+  border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+}
+
+.run-splits tbody .run-splits__goal th {
+  color: var(--color-accent);
+}
+
+/* The timeline: newest first, each find with its time and image */
+.run-finds__list {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.run-find {
+  display: grid;
+  grid-template-columns: 4.5rem 1.5rem minmax(0, 1fr);
+  gap: var(--spacing-sm);
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.run-find .run-time {
+  color: var(--color-text-secondary);
+  text-align: end;
+}
+
+.run-find__icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  image-rendering: pixelated;
+}
+
+.run-find__check {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-inline: auto;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--state-ink);
+  background: var(--state-opened);
+  border-radius: var(--border-radius-sm);
+}
+
+.run-find__name {
+  overflow-wrap: anywhere;
+}
+
+/* The ROM's stats, as its end credits list them */
+.run-stats {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.run-stats__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--spacing-md);
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.run-stats dt {
+  color: var(--color-text-secondary);
+}
+
+.run-stats dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}

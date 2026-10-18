@@ -11,6 +11,22 @@
   justify-content: space-between;
 }
 
+/* A narrow panel: the view tabs span its width in equal shares, as a
+   phone's segmented control does, so that three of them never push the
+   page wider, even at a large text size */
+@container map (width < 30rem) {
+  .map-panel__bar .tabs {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .map-panel__bar .tabs__tab {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: var(--spacing-xs);
+  }
+}
+
 /* The run timer and go mode, together at the bar's end */
 .map-panel__status {
   display: flex;

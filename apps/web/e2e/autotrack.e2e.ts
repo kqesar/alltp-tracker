@@ -218,6 +218,14 @@ test("starts the run timer as the game starts, and stops it at the goal", async 
     "In-game time: 1:00:00",
   );
   await page.keyboard.press("Escape");
+  // The Run tab gives the ROM's own counts, as its end credits do
+  bridge.memory[SAVE(0x449)] = 2; // DeathCounter
+  await page.getByTestId("map-view-tab-run").click();
+  const stats = page.getByTestId("run-rom-stats");
+  await expect(stats.getByText("Deaths").locator("..")).toHaveText("Deaths2");
+  await expect(stats.getByText("Play time").locator("..")).toHaveText(
+    "Play time1:00:00",
+  );
 
   bridge.memory[WRAM + 0x10] = 0x19; // the Triforce room
   await expect(timer).toHaveAccessibleName("Run timer: stopped at the goal");
@@ -457,6 +465,11 @@ test("a race seed shows the race-legal badge and is never read where races forbi
   await expect(
     page.getByTestId("autotrack-button").getByTestId("race-badge"),
   ).toBeVisible();
+  // Nor are the ROM's own counts, which races forbid
+  await page.getByTestId("map-view-tab-run").click();
+  await expect(page.getByTestId("run-rom-stats")).toContainText(
+    "Not read in races",
+  );
 });
 
 test("losing the bridge says so without a dialog, then reconnects on its own", async ({

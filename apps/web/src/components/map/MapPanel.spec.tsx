@@ -19,7 +19,7 @@ describe("MapPanel", () => {
     });
   });
 
-  it("shows the map, or the checks, as the player's tab says", async () => {
+  it("shows the map, the checks or the run, as the player's tab says", async () => {
     const user = userEvent.setup();
     render(<MapPanel />);
     const mapTab = screen.getByRole("tab", { name: "Map" });
@@ -36,6 +36,11 @@ describe("MapPanel", () => {
     expect(screen.getByRole("tabpanel")).toHaveAccessibleName("Checks");
 
     // Automatic activation, wrapping round
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "Run" })).toHaveFocus();
+    expect(useGameStore.getState().mapView).toBe("run");
+    expect(screen.getByTestId("run-panel")).toBeInTheDocument();
+    expect(screen.getByRole("tabpanel")).toHaveAccessibleName("Run");
     await user.keyboard("{ArrowRight}");
     expect(mapTab).toHaveFocus();
     expect(mapTab).toHaveAttribute("aria-selected", "true");

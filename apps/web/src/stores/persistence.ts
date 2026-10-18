@@ -61,7 +61,7 @@ export type Progress = {
 export type Prefs = {
   bigKeysVisible: boolean;
   mapLayout: MapLayout;
-  /** The map panel's tab: the map, or the Checks list. */
+  /** The map panel's tab: the map, the Checks list or the Run tab. */
   mapView: MapView;
   /**
    * Keyboard shortcuts: one self-contained object, apart from the run, so a
