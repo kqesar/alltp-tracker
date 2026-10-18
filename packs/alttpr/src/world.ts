@@ -78,10 +78,14 @@ export interface RegionModule {
 export interface RegionChanges {
   /** Its new can_enter, which replaces the parent's whole. */
   readonly entrances?: readonly Entrance[];
-  /** By location id: the parts of a location it sets again. */
-  readonly locations?: Readonly<
-    Record<string, Pick<LocationDef, "req" | "source"> & Partial<LocationDef>>
-  >;
+  /**
+   * By location id: the parts of a location it sets again. Its `fill` is
+   * merged into the parent's, part by part: a new rule changes `holding`,
+   * while setFillRules and setAlwaysAllow stay the parent's unless set
+   * again. A prize whose can_complete reads its boss takes the boss's new
+   * `req` and keeps its source.
+   */
+  readonly locations?: Readonly<Record<string, Partial<LocationDef>>>;
 }
 
 /**
@@ -111,10 +115,15 @@ export function extendModule(
     return {
       ...region,
       entrances: change.entrances ?? region.entrances,
-      locations: region.locations.map((location) => ({
-        ...location,
-        ...located[location.id],
-      })),
+      locations: region.locations.map((location) => {
+        const change = located[location.id];
+        if (change === undefined) return location;
+        const fill =
+          change.fill === undefined
+            ? location.fill
+            : { ...location.fill, ...change.fill };
+        return { ...location, ...change, ...(fill ? { fill } : {}) };
+      }),
     };
   });
   return { file, regions };

@@ -148,23 +148,47 @@ export interface BossLines {
 }
 
 /**
- * A dungeon boss's rule and what Location::canFill reads of it, which every
- * dungeon file writes alike (EasternPalace.php:84-105). With wild maps or
- * compasses the boss wants its dungeon's, unless it holds that item itself:
- * `req` reads that as `maybe`, `fill.holding` settles it. With
+ * A dungeon boss's rule: `base`, plus its dungeon's map and compass with
+ * wild maps or compasses, unless it holds that item itself, which `req`
+ * reads as `maybe` and `holding` settles. `code` is the dungeon's (`P1`),
+ * `source` the line of the rule's map and compass clauses.
+ */
+export function bossRule(
+  base: string,
+  code: string,
+  source: Source,
+): {
+  readonly holding: NonNullable<LocationFill["holding"]>;
+  readonly req: string;
+} {
+  const compass = `(!setting(wildCompasses) | compass${code})`;
+  const map = `(!setting(wildMaps) | map${code})`;
+  return {
+    holding: {
+      items: {
+        [`Compass${code}`]: `${base} & ${map}`,
+        [`Map${code}`]: `${base} & ${compass}`,
+      },
+      otherwise: `${base} & ${compass} & ${map}`,
+      source,
+    },
+    req: `${base} & (!setting(wildCompasses) | compass${code} | maybe) & (!setting(wildMaps) | map${code} | maybe)`,
+  };
+}
+
+/**
+ * A dungeon boss's rule (bossRule) and what Location::canFill reads of it,
+ * which every dungeon file writes alike (EasternPalace.php:84-105). With
  * region.bossNormalLocation, the default, the boss always takes its own
  * compass and map; without, it takes no dungeon item at all.
- *
- * `base` is the rule without those clauses, `code` the dungeon's (`P1`).
  */
 export function dungeonBoss(
   base: string,
   code: string,
   lines: BossLines,
 ): { readonly req: string; readonly fill: LocationFill } {
-  const compass = `(!setting(wildCompasses) | compass${code})`;
-  const map = `(!setting(wildMaps) | map${code})`;
   const source = (line: number): Source => `${lines.file}:${line}`;
+  const { holding, req } = bossRule(base, code, source(lines.holding));
   return {
     fill: {
       always: {
@@ -172,14 +196,7 @@ export function dungeonBoss(
         req: "setting(bossNormalLocation)",
         source: source(lines.always),
       },
-      holding: {
-        items: {
-          [`Compass${code}`]: `${base} & ${map}`,
-          [`Map${code}`]: `${base} & ${compass}`,
-        },
-        otherwise: `${base} & ${compass} & ${map}`,
-        source: source(lines.holding),
-      },
+      holding,
       refuse: [
         {
           refuse: { classes: ["bigKey", "compass", "key", "map"] },
@@ -188,6 +205,6 @@ export function dungeonBoss(
         },
       ],
     },
-    req: `${base} & (!setting(wildCompasses) | compass${code} | maybe) & (!setting(wildMaps) | map${code} | maybe)`,
+    req,
   };
 }

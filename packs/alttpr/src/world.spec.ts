@@ -161,10 +161,21 @@ describe("extendModule", () => {
             visible: { source: "game" },
           },
           {
+            fill: {
+              always: {
+                items: ["KeyX1"],
+                req: "true",
+                source: "app/Region/Standard/Cave.php:16",
+              },
+              holding: {
+                items: { KeyX1: "true" },
+                source: "app/Region/Standard/Cave.php:15",
+              },
+            },
             id: "cave/right",
             kind: "chest",
             name: "Cave - Right",
-            req: "hookshot",
+            req: "hookshot & (keyX1 | maybe)",
             source: "app/Region/Standard/Cave.php:14",
           },
         ],
@@ -197,6 +208,28 @@ describe("extendModule", () => {
       parent.regions[0]?.locations[1],
     ]);
     expect(child.regions[1]).toBe(parent.regions[1]);
+  });
+
+  it("merges the fill rules a class sets into its parent's", () => {
+    const holding = {
+      items: { KeyX1: "moonPearl" },
+      source: `${FILE}:26` as const,
+    };
+    const child = extendModule(parent, FILE, {
+      cave: {
+        locations: {
+          "cave/right": {
+            fill: { holding },
+            req: "moonPearl & (keyX1 | maybe)",
+            source: `${FILE}:25`,
+          },
+        },
+      },
+    });
+    expect(child.regions[0]?.locations[1]?.fill).toEqual({
+      always: parent.regions[0]?.locations[1]?.fill?.always,
+      holding,
+    });
   });
 
   it("keeps the parent's can_enter when the class sets none", () => {
