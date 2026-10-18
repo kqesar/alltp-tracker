@@ -16,9 +16,11 @@ export {
   decodeItems,
   decodeProgress,
   type Fact,
+  FRAMES_PER_SECOND,
   type ItemReading,
   type MemoryView,
   type ProgressReading,
+  playTimeMs,
   type Unsettled,
 } from "./autotrack/decode";
 export {

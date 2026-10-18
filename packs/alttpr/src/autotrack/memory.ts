@@ -160,9 +160,13 @@ export const CRYSTAL_BITS = {
 /**
  * Game modes ($7E:0010, ram.asm:41). In play: dungeon $07, overworld $09,
  * special overworld $0B (ap Client.py:29). Goal: $19, the Triforce room, as
- * the spec's goal rule says (7.1), then $1A (ap Client.py:30).
+ * the spec's goal rule says (7.1), then $1A (ap Client.py:30). Before play:
+ * the title ($00), the file select and its copy, erase and name screens
+ * ($01-$04), the game loading ($05) and the randomizer's spawn select ($1B,
+ * seen on a real game going from the file select to play, 2026-10-17).
  */
 export const GAME_MODES = {
+  beforePlay: [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x1b],
   goal: [0x19, 0x1a],
   playing: [0x07, 0x09, 0x0b],
 } as const;
@@ -342,6 +346,10 @@ export const MEMORY_RANGES = [
   save("agahnim-2", 0x40f, 1, "boss-kills", "z3:events.asm:104-106"),
   // The randomizer's NPC item flags.
   save("npc-flags", 0x410, 2, "outside-checks", "z3:sram.asm:240-247"),
+  // Frames played, which the NMI hook counts until StatsLocked stops the
+  // count at the goal (framehook.asm:24-26): the game's own play time. No
+  // race permits it, so it is `other`.
+  save("play-frames", 0x43e, 4, "other", "z3:sram.asm:295"),
   // $01 from the Triforce room on (sram.asm:297): StatsFinalPrep sets it
   // (stats.asm:322-326) where the game enters mode $19 (hooks.asm:551-552).
   save("stats-locked", 0x443, 1, "goal", "z3:stats.asm:322-326"),
