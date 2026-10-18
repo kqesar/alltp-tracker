@@ -9,6 +9,8 @@ import { collectionState } from "./upstream-state";
 
 /** The world a case runs in, as its test class set it up. */
 export interface CaseWorld {
+  /** Bosses the test class sets in a region by name (`setBoss`). */
+  readonly bosses?: Readonly<Record<string, string>>;
   /** `World::factory`'s config, with the case's overrides on top. */
   readonly config: Readonly<Record<string, unknown>>;
   /** Items placed at locations: the medallions of Misery Mire and Turtle Rock. */
@@ -125,6 +127,9 @@ export function runUpstreamCases(
       throw new Error(`${fixture.file}: no $this->world to run the cases in`);
     }
     const base: CaseWorld = {
+      ...(fixture.setUp.bosses === undefined
+        ? {}
+        : { bosses: fixture.setUp.bosses }),
       config: world.config,
       locationItems: fixture.setUp.locationItems,
       mode: world.mode,

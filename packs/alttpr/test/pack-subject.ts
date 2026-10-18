@@ -3,12 +3,21 @@
 // turns the case's items into a state (upstream-state.ts); this maps the
 // world: its mode and config become the pack's settings, and the world is
 // compiled once per distinct settings.
-import { type CompiledWorld, type State, solve, type Tri } from "@alltp/engine";
+import {
+  type CompiledWorld,
+  compileWorld,
+  loadRules,
+  type RulesSource,
+  type State,
+  solve,
+  type Tri,
+} from "@alltp/engine";
 import { derivedFacts } from "../src/derived";
 import { type Filler, filler } from "../src/fill";
 import { locationId } from "../src/location";
 import { medallionFacts, padsFromUpstream } from "../src/medallions";
-import { compile, regionModules } from "../src/pack";
+import { regionModules, STATE_NAMES, world as worldOf } from "../src/pack";
+import { RULES } from "../src/rules";
 import { type AlttprSettings, settingsFromUpstream } from "../src/settings";
 import { canFill, type RegionDef, regionId } from "../src/world";
 import type { CaseWorld, ContractSubject } from "./contract";
@@ -19,13 +28,39 @@ function settingsOf(world: CaseWorld): AlttprSettings {
   return settingsFromUpstream(world.mode, world.config);
 }
 
+/**
+ * The pack's rules, with the bosses a test class sets: "Dummy Boss" has no
+ * rule, so it is always beaten (Boss.php:142-146, 177-184), and its
+ * region's boss slot (bosses.ts) is `true`. No other swap is modeled.
+ */
+function rulesWith(bosses: Readonly<Record<string, string>>): RulesSource {
+  const helpers = { ...RULES.helpers };
+  for (const [region, boss] of Object.entries(bosses)) {
+    const id = regionId(region);
+    const slot = `canBeat${id.charAt(0).toUpperCase()}${id.slice(1)}Boss`;
+    if (boss !== "Dummy Boss" || helpers[slot] === undefined) {
+      throw new RangeError(`No ${boss} in ${region}`);
+    }
+    helpers[slot] = "true";
+  }
+  return { ...RULES, helpers };
+}
+
 function built(world: CaseWorld) {
   const settings = settingsOf(world);
-  const key = JSON.stringify(settings);
+  const bosses = world.bosses ?? {};
+  const key = JSON.stringify([settings, bosses]);
   let found = worlds.get(key);
   if (found === undefined) {
-    const world = compile(settings);
-    found = { compiled: world, filler: filler(world, settings) };
+    const compiled = compileWorld(
+      worldOf(settings),
+      loadRules(rulesWith(bosses)),
+      {
+        items: STATE_NAMES,
+        settings,
+      },
+    );
+    found = { compiled, filler: filler(compiled, settings) };
     worlds.set(key, found);
   }
   return found;

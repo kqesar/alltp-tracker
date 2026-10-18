@@ -1,7 +1,7 @@
 # @alltp/pack-alttpr
 
-The A Link to the Past Randomizer game pack: the v31 rules (Standard and Open
-worlds, Inverted being ported, NoGlitches) as plain data over `@alltp/engine`, read from
+The A Link to the Past Randomizer game pack: the v31 rules (Standard, Open and
+Inverted worlds, NoGlitches) as plain data over `@alltp/engine`, read from
 [sporchia/alttp_vt_randomizer](https://github.com/sporchia/alttp_vt_randomizer)
 at the commit `upstream.json` pins, and held to upstream's own test cases.
 
@@ -77,7 +77,7 @@ engine's graph:
   escape: `regions/open/hyrule-castle-escape.ts` replaces Standard's, as
   `app/Region/Open/HyruleCastleEscape.php` does. Open gives RescueZelda at the
   start (`Randomizer.php:133`), which the tracker's state does.
-- **Inverted (being ported).** `app/World/Inverted.php` lists its own region
+- **Inverted.** `app/World/Inverted.php` lists its own region
   classes (`regions/inverted/**`) and Standard's Medallions and Fountains.
   Each class extends Standard's (the escape, Open's), in one of two ways. A
   class whose `initalize` does not call its parent's (the overworld, Turtle
@@ -90,9 +90,9 @@ engine's graph:
   Dark World, Ether Tablet and Spectacle Rock to East Death Mountain, Ganon
   to the Light World; and it adds the Bomb Merchant, an event holding the
   Big Red Bomb that its Pyramid Fairy wants. The importer reads each world's
-  locations through its class chain and the `removeItem`s on it. The
-  overworld and the escape are ported; until the dungeons are, their
-  modules are pending (below), and the app reads an Inverted run as Open.
+  locations through its class chain and the `removeItem`s on it. Every
+  Inverted file is ported and its 22 test files run in the contract; the
+  app reads an Inverted run as Open until it lays the Inverted map out.
 - **Settings.** A config read is a setting, folded at compile time:
   `config('itemPlacement') === 'advanced'` is `setting(advancedPlacement)`,
   `!== 'basic'` is `!setting(basicPlacement)`, `has('Lamp',
@@ -113,7 +113,7 @@ engine's graph:
   settings).canFill(location, item, state)` reads them as upstream does:
   always allowed, or kept by the region, not refused and reachable with the
   item there. Every dungeon boss writes the same rules, which `dungeonBoss`
-  (`src/bosses.ts`) builds. The 143 `fill` cases of the upstream tests run
+  (`src/bosses.ts`) builds. The 262 `fill` cases of the upstream tests run
   in the contract.
 - **Where dungeon items sit.** The randomizer places the dungeon items
   first, each where canFill holds with every item not placed yet assumed

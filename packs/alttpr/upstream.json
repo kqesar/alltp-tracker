@@ -172,17 +172,17 @@
     {
       "file": "app/Region/Inverted/DesertPalace.php",
       "module": "src/regions/inverted/desert-palace.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/EasternPalace.php",
       "module": "src/regions/inverted/eastern-palace.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/GanonsTower.php",
       "module": "src/regions/inverted/ganons-tower.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/HyruleCastleEscape.php",
@@ -192,12 +192,12 @@
     {
       "file": "app/Region/Inverted/HyruleCastleTower.php",
       "module": "src/regions/inverted/hyrule-castle-tower.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/IcePalace.php",
       "module": "src/regions/inverted/ice-palace.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/LightWorld/DeathMountain/East.php",
@@ -227,37 +227,37 @@
     {
       "file": "app/Region/Inverted/MiseryMire.php",
       "module": "src/regions/inverted/misery-mire.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/PalaceOfDarkness.php",
       "module": "src/regions/inverted/palace-of-darkness.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/SkullWoods.php",
       "module": "src/regions/inverted/skull-woods.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/SwampPalace.php",
       "module": "src/regions/inverted/swamp-palace.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/ThievesTown.php",
       "module": "src/regions/inverted/thieves-town.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/TowerOfHera.php",
       "module": "src/regions/inverted/tower-of-hera.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/TurtleRock.php",
       "module": "src/regions/inverted/turtle-rock.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Boss.php",
@@ -509,17 +509,17 @@
     {
       "file": "tests/Inverted/DesertPalaceTest.php",
       "fixture": "test/upstream/Inverted/DesertPalace.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/EasternPalaceTest.php",
       "fixture": "test/upstream/Inverted/EasternPalace.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/GanonsTowerTest.php",
       "fixture": "test/upstream/Inverted/GanonsTower.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/HyruleCastleEscapeTest.php",
@@ -529,52 +529,52 @@
     {
       "file": "tests/Inverted/HyruleCastleTowerTest.php",
       "fixture": "test/upstream/Inverted/HyruleCastleTower.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/IcePalaceTest.php",
       "fixture": "test/upstream/Inverted/IcePalace.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/LightWorldTest.php",
       "fixture": "test/upstream/Inverted/LightWorld.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/MiseryMireTest.php",
       "fixture": "test/upstream/Inverted/MiseryMire.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/PalaceOfDarknessTest.php",
       "fixture": "test/upstream/Inverted/PalaceOfDarkness.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/SkullWoodsTest.php",
       "fixture": "test/upstream/Inverted/SkullWoods.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/SwampPalaceTest.php",
       "fixture": "test/upstream/Inverted/SwampPalace.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/ThievesTownTest.php",
       "fixture": "test/upstream/Inverted/ThievesTown.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/TowerOfHeraTest.php",
       "fixture": "test/upstream/Inverted/TowerOfHera.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/TurtleRockTest.php",
       "fixture": "test/upstream/Inverted/TurtleRock.json",
-      "status": "pending"
+      "status": "ported"
     }
   ]
 }
