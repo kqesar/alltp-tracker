@@ -10,6 +10,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "import-er": "node scripts/import-er.mjs",
     "import-upstream": "node scripts/import-upstream-tests.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"

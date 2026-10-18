@@ -23,6 +23,14 @@ export interface ManifestEntry {
 
 export interface Manifest {
   readonly commit: string;
+  /** The entrance randomizer vt hands shuffled entrances to, pinned too. */
+  readonly entranceRandomizer: {
+    readonly commit: string;
+    readonly data: string;
+    readonly license: string;
+    readonly pinnedBy: string;
+    readonly repo: string;
+  };
   readonly license: string;
   readonly logic: number;
   readonly repo: string;
