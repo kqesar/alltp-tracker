@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.21.0](https://github.com/kqesar/alltp-tracker/compare/v2.20.0...v2.21.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **web:** mark finds by voice, recognized on the device ([848f59d](https://github.com/kqesar/alltp-tracker/commit/848f59dc4eaa55ba6c8753babd8ff5434c3e8edf))
+* **web:** the voice commands' words, grammar and meaning ([54d94b1](https://github.com/kqesar/alltp-tracker/commit/54d94b123d673126b0637b636b158ddadf83813a))
+
 ## [2.20.0](https://github.com/kqesar/alltp-tracker/compare/v2.19.0...v2.20.0) (2026-10-18)
 
 
