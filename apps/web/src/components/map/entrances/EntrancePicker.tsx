@@ -1,9 +1,15 @@
-import type { EntranceTarget, OverworldEntrance } from "@alltp/pack-alttpr";
+import type {
+  CrossedPool,
+  EntranceTarget,
+  OverworldEntrance,
+} from "@alltp/pack-alttpr";
 import { useId, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import {
   entranceById,
   KIND_HEADINGS,
+  notesFor,
+  poolOf,
   targetsFor,
   targetText,
 } from "@/logic/entrances";
@@ -28,10 +34,17 @@ const matches = (target: EntranceTarget, words: readonly string[]) => {
  * Where an entrance may lead, searchable and grouped by kind. A target
  * another entrance leads to says which: choosing it moves it here.
  */
-const PickerBody = ({ entrance }: { entrance: OverworldEntrance }) => {
+const PickerBody = ({
+  entrance,
+  pool,
+}: {
+  entrance: OverworldEntrance;
+  pool: CrossedPool;
+}) => {
   const close = useEntrancePicker((state) => state.close);
   const entrances = useGameStore((state) => state.entrances);
   const noteEntrance = useGameStore((state) => state.noteEntrance);
+  const noteEntrances = useGameStore((state) => state.noteEntrances);
   const [query, setQuery] = useState("");
   const searchId = useId();
   const headingId = useId();
@@ -47,9 +60,11 @@ const PickerBody = ({ entrance }: { entrance: OverworldEntrance }) => {
     }),
   );
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  const options = targetsFor(entrance).filter((t) => matches(t, words));
+  const options = targetsFor(pool, entrance).filter((t) => matches(t, words));
   const note = (target: string | null) => {
-    noteEntrance(entrance.id, target);
+    // A hole and its cave's door are settled together, as one step
+    if (target === null) noteEntrance(entrance.id, null);
+    else noteEntrances(notesFor(pool, entrance.id, target));
     close();
   };
 
@@ -150,10 +165,11 @@ const PickerBody = ({ entrance }: { entrance: OverworldEntrance }) => {
  */
 const EntrancePicker = () => {
   const picking = useEntrancePicker((state) => state.picking);
+  const pool = useGameStore((state) => poolOf(state.settings));
   const entrance = picking === null ? undefined : entranceById(picking);
   // A fresh body, its search empty, for each entrance
-  return entrance === undefined ? null : (
-    <PickerBody entrance={entrance} key={entrance.id} />
+  return entrance === undefined || pool === null ? null : (
+    <PickerBody entrance={entrance} key={entrance.id} pool={pool} />
   );
 };
 

@@ -37,19 +37,30 @@ const byWorld = (markers: readonly MapMarker[]): ByWorld => {
   return found;
 };
 
+/** A world's markers: a location's (or a cave's), or a dungeon's. */
+const Markers = ({ markers }: { markers: readonly MapMarker[] }) =>
+  markers.map((marker) =>
+    marker.dungeon === undefined ? (
+      <MapLocation key={marker.id} marker={marker} />
+    ) : (
+      <MapDungeon dungeon={marker.dungeon} key={marker.id} marker={marker} />
+    ),
+  );
+
 /**
  * The two worlds, each drawn as its own square with the markers of the
  * run's world that lie in it: a location's (or a cave's), or a dungeon's.
  * An Inverted run moves some doors (the pack's markersOf); a run with
- * shuffled entrances adds them, loaded on demand. Side by side or
+ * shuffled entrances draws them too, and the checks inside each place
+ * above the door noted to lead there (EntranceLayer, loaded on demand).
+ * Side by side or
  * stacked, per the player's map layout; on "auto" the map stacks itself
  * when it gets too narrow (see map.css).
  */
 export const MapTracker = () => {
   const mapLayout = useGameStore((state) => state.mapLayout);
-  const markers = useGameStore((state) =>
-    byWorld(markersOf(packSettings(state.settings))),
-  );
+  const all = useGameStore((state) => markersOf(packSettings(state.settings)));
+  const markers = byWorld(all);
   const shuffled = useGameStore(
     (state) => state.settings.entranceShuffle !== "none",
   );
@@ -68,21 +79,13 @@ export const MapTracker = () => {
           data-testid={`map-world-${world.id}`}
           key={world.id}
         >
-          {markers[world.id].map((marker) =>
-            marker.dungeon === undefined ? (
-              <MapLocation key={marker.id} marker={marker} />
-            ) : (
-              <MapDungeon
-                dungeon={marker.dungeon}
-                key={marker.id}
-                marker={marker}
-              />
-            ),
-          )}
-          {shuffled && (
-            <Suspense fallback={null}>
-              <EntranceLayer world={world.id} />
+          {shuffled ? (
+            // Until the entrance tables are in, the markers as they are
+            <Suspense fallback={<Markers markers={markers[world.id]} />}>
+              <EntranceLayer markers={all} world={world.id} />
             </Suspense>
+          ) : (
+            <Markers markers={markers[world.id]} />
           )}
         </section>
       ))}

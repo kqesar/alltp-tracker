@@ -108,6 +108,11 @@ type GameState = Progress &
      */
     noteEntrance: (entrance: string, target: string | null) => void;
     /**
+     * Note several entrances as one step: a hole and its cave's door, which
+     * the same cave settles.
+     */
+    noteEntrances: (notes: Readonly<Record<string, string | null>>) => void;
+    /**
      * Change settings in the run going, its progress kept (`retune`): what
      * a Mystery run discovers, and the dungeon items, whose counters keep
      * the items found. A setting changed is no longer hidden. One undo
@@ -502,14 +507,30 @@ export const useGameStore = create<GameState>()(
           })),
 
         noteEntrance: (entrance: string, target: string | null) =>
+          get().noteEntrances({ [entrance]: target }),
+
+        noteEntrances: (notes: Readonly<Record<string, string | null>>) =>
           set((state) => {
-            if ((state.entrances[entrance] ?? null) === target) return state;
+            const changes = Object.entries(notes).filter(
+              ([entrance, target]) =>
+                (state.entrances[entrance] ?? null) !== target,
+            );
+            if (changes.length === 0) return state;
+            // A target leads from one entrance only: noted here, gone there
+            const taken = new Set(changes.map(([, target]) => target));
             const entrances = Object.fromEntries(
               Object.entries(state.entrances).filter(
-                ([id, to]) => id !== entrance && to !== target,
+                ([id, to]) => !(id in notes) && !taken.has(to),
               ),
             );
-            if (target !== null) entrances[entrance] = target;
+            for (const [entrance, target] of changes) {
+              if (target !== null) entrances[entrance] = target;
+            }
+            // An unchanged note of a call keeps its target
+            for (const [entrance, target] of Object.entries(notes)) {
+              if (target !== null && entrances[entrance] === undefined)
+                entrances[entrance] = target;
+            }
             return record(state, { entrances });
           }),
         past: [],
