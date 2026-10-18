@@ -1,7 +1,12 @@
 import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { DUNGEON_INDICES } from "@/constants";
-import { defaultItemGrid, itemLabels } from "@/data/items";
-import { dungeonName, smallKeysMax } from "@/logic/settings";
+import { defaultItemGrid, isKeyCell, itemLabels } from "@/data/items";
+import {
+  dungeonName,
+  KEY_DUNGEONS,
+  ownItems,
+  smallKeysMax,
+} from "@/logic/settings";
 
 /**
  * The keyboard shortcuts of the item grid, as plain data: which key steps
@@ -47,10 +52,7 @@ export type Modifier = (typeof MODIFIERS)[number];
 
 /** Every grid cell holding an item, as opposed to a dungeon or an empty cell. */
 const isItemCell = (id: string) =>
-  Boolean(id) &&
-  id !== "blank" &&
-  !id.startsWith("boss") &&
-  !id.startsWith("bigkey");
+  Boolean(id) && id !== "blank" && !id.startsWith("boss") && !isKeyCell(id);
 
 /** The grid's items, in reading order. */
 export const ITEM_CONTROLS: readonly ControlId[] = defaultItemGrid
@@ -64,25 +66,33 @@ const hasMedallion = (index: number) =>
 
 /**
  * A dungeon's controls: the boss cell's (boss, medallion, chests, reward),
- * then the key cell's (big key, small keys for a dungeon that has some: not
- * Eastern Palace; map and compass, shown while they leave their dungeons).
- * @param index - The dungeon index (0-9)
+ * for the grid's ten, then the key cell's, as its pool holds them (big key,
+ * small keys: not Eastern Palace's; map and compass, shown while they leave
+ * their dungeons). The castle dungeons (10-12) have a key cell only.
+ * @param index - The key dungeon index (0-12, KEY_DUNGEONS)
  */
-export const dungeonControls = (index: number): ControlId[] => [
-  `boss${index}`,
-  ...(hasMedallion(index) ? [`medallion${index}`] : []),
-  `chest${index}`,
-  `reward${index}`,
-  `bigkey${index}`,
-  ...(smallKeysMax(index) > 0 ? [`smallkey${index}`] : []),
-  `map${index}`,
-  `compass${index}`,
-];
+export const dungeonControls = (index: number): ControlId[] => {
+  const own = ownItems(index);
+  return [
+    ...(index < LEGACY_DUNGEONS.length
+      ? [
+          `boss${index}`,
+          ...(hasMedallion(index) ? [`medallion${index}`] : []),
+          `chest${index}`,
+          `reward${index}`,
+        ]
+      : []),
+    ...(own.bigKey ? [`bigkey${index}`] : []),
+    ...(smallKeysMax(index) > 0 ? [`smallkey${index}`] : []),
+    ...(own.map ? [`map${index}`] : []),
+    ...(own.compass ? [`compass${index}`] : []),
+  ];
+};
 
 /** Every control a shortcut can step: the items, then dungeon by dungeon. */
 export const CONTROLS: readonly ControlId[] = [
   ...ITEM_CONTROLS,
-  ...LEGACY_DUNGEONS.flatMap((_, index) => dungeonControls(index)),
+  ...KEY_DUNGEONS.flatMap((_, index) => dungeonControls(index)),
 ];
 
 /** Every action, forward then back for each control. */
@@ -106,14 +116,14 @@ export const parseAction = (
 
 /** A control of a key cell, which is on screen only while key cells are. */
 export const isKeyControl = (control: ControlId) =>
-  /^(bigkey|smallkey|map|compass)\d$/.test(control);
+  /^(bigkey|smallkey|map|compass)\d+$/.test(control);
 
 /**
  * A control of a key cell drawn only when maps and compasses lie outside
  * their dungeons: a dungeon's map and compass, which its boss wants then.
  */
 export const isMapCompassControl = (control: ControlId) =>
-  /^(map|compass)\d$/.test(control);
+  /^(map|compass)\d+$/.test(control);
 
 /** What each kind of dungeon control is called within its dungeon. */
 const DUNGEON_CONTROL_NAMES: Record<string, string> = {
@@ -128,7 +138,7 @@ const DUNGEON_CONTROL_NAMES: Record<string, string> = {
 };
 
 const DUNGEON_CONTROL =
-  /^(bigkey|boss|chest|compass|map|medallion|reward|smallkey)(\d)$/;
+  /^(bigkey|boss|chest|compass|map|medallion|reward|smallkey)(\d+)$/;
 
 /** The index of the dungeon a control belongs to, or null for an item. */
 export const dungeonOf = (control: ControlId): number | null => {

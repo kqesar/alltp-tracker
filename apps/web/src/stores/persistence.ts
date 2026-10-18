@@ -74,7 +74,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Bumped whenever PersistedState changes shape; `migrate` upgrades older saves. */
-export const PERSIST_VERSION = 10;
+export const PERSIST_VERSION = 11;
 
 /**
  * What every run before version 8 was: swords in the pool, 7 crystals for
@@ -255,6 +255,15 @@ const migrateV9 = (saved: Record<string, unknown>): Record<string, unknown> => {
 };
 
 /**
+ * Version 11 counts the small keys of Hyrule Castle, Castle Tower and
+ * Ganon's Tower too, after the grid's ten (KEY_DUNGEONS): none found yet.
+ */
+const migrateV10 = (saved: Record<string, unknown>): Record<string, unknown> =>
+  Array.isArray(saved.smallKeys) && saved.smallKeys.length === 10
+    ? { ...saved, smallKeys: [...saved.smallKeys, 0, 0, 0] }
+    : saved;
+
+/**
  * Upgrade a save written by an earlier version to the current shape. Fields
  * are not validated here; restoring a save falls back field by field.
  * @param saved - The stored or imported object
@@ -275,6 +284,7 @@ export const migrate = (
   if (version < 8) state = migrateV7(state);
   if (version < 9) state = migrateV8(state);
   if (version < 10) state = migrateV9(state);
+  if (version < 11) state = migrateV10(state);
   return state as Partial<PersistedState>;
 };
 
@@ -456,13 +466,15 @@ export const validateProgress = (
 
   if (saved.smallKeys !== undefined) {
     if (
-      isArrayOf(saved.smallKeys, 10, (count, index) =>
+      isArrayOf(saved.smallKeys, SMALL_KEYS_MAX.length, (count, index) =>
         isIntIn(count, 0, SMALL_KEYS_MAX[index] ?? 0),
       )
     ) {
       value.smallKeys = saved.smallKeys as number[];
     } else
-      errors.push("smallKeys must hold 10 counts within each dungeon's keys");
+      errors.push(
+        `smallKeys must hold ${SMALL_KEYS_MAX.length} counts within each dungeon's keys`,
+      );
   }
 
   if (saved.presetId !== undefined) {

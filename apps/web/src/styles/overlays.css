@@ -91,3 +91,19 @@
 .bigkey-count--maxed {
   color: var(--state-available);
 }
+
+/* A castle dungeon's short name beside its key cell, lettered like the
+   key counts so it reads over stream footage too */
+.key-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--cell) * 0.3);
+  font-weight: bold;
+  color: var(--color-text);
+  text-shadow:
+    1px 0 var(--color-bg),
+    -1px 0 var(--color-bg),
+    0 1px var(--color-bg),
+    0 -1px var(--color-bg);
+}

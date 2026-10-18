@@ -24,16 +24,28 @@ export interface ItemState {
   sword: number;
 }
 
-// Default item grid layout
+/**
+ * The item grid, row by row. Each id is an item's cell, but for the key
+ * cells: `keysN`, the key cell of key dungeon N (logic/settings.ts
+ * KEY_DUNGEONS), holding its big key, small keys, map and compass, and
+ * `keylabelN`, the short name of a castle dungeon, which has no boss cell
+ * above its key cell to tell it. The last two rows show only with the key
+ * cells.
+ */
 export const defaultItemGrid: string[][] = [
   ["flute", "hookshot", "hammer", "firerod", "icerod", "boomerang", "net"],
   ["bow", "lantern", "shield", "sword", "tunic", "agahnim", "boots"],
-  ["shovel", "book", "quake", "bombos", "ether", "bigkey0", "boss0"],
-  ["powder", "glove", "bottle", "somaria", "byrna", "bigkey1", "boss1"],
-  ["mushroom", "cape", "mirror", "moonpearl", "flippers", "bigkey2", "boss2"],
+  ["shovel", "book", "quake", "bombos", "ether", "keys0", "boss0"],
+  ["powder", "glove", "bottle", "somaria", "byrna", "keys1", "boss1"],
+  ["mushroom", "cape", "mirror", "moonpearl", "flippers", "keys2", "boss2"],
   ["boss3", "boss4", "boss5", "boss6", "boss7", "boss8", "boss9"],
-  ["bigkey3", "bigkey4", "bigkey5", "bigkey6", "bigkey7", "bigkey8", "bigkey9"],
+  ["keys3", "keys4", "keys5", "keys6", "keys7", "keys8", "keys9"],
+  ["keylabel10", "keys10", "keylabel11", "keys11", "keylabel12", "keys12", ""],
 ];
+
+/** Whether a grid id is a key cell's or a castle dungeon's label. */
+export const isKeyCell = (id: string): boolean =>
+  id.startsWith("keys") || id.startsWith("keylabel");
 
 /** Chests each dungeon contains, indexed by dungeon index 0-9. */
 const DUNGEON_CHEST_COUNTS = [3, 2, 2, 5, 6, 2, 4, 3, 2, 5];
@@ -73,6 +85,13 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   // (MC Shuffle and up; 0 or 1)
   ...perDungeon("map", () => [0, 1]),
   ...perDungeon("compass", () => [0, 1]),
+  // The castle dungeons' own items, on key cells 10-12 (logic/settings.ts
+  // KEY_DUNGEONS), as their pools hold them: Hyrule Castle's map, Ganon's
+  // Tower's big key, map and compass. Castle Tower holds none.
+  bigkey12: [0, 1],
+  compass12: [0, 1],
+  map10: [0, 1],
+  map12: [0, 1],
   // Boss state, starts at 1 (alive)
   ...perDungeon("boss", () => [1, 2]),
   // Remaining chests per dungeon, counted down from the dungeon's total

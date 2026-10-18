@@ -1,4 +1,3 @@
-import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { type KeyboardEvent, type MouseEvent, useId, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { KeyChord } from "@/components/ui/KeyChord";
@@ -25,7 +24,7 @@ import {
   unbind,
 } from "@/data/keymap";
 import { wildItems } from "@/data/presets";
-import { dungeonName } from "@/logic/settings";
+import { dungeonName, KEY_DUNGEONS } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 import { useKeyboardLayout } from "@/stores/keyboardLayoutStore";
 import { getAssetPath } from "@/utils";
@@ -341,7 +340,7 @@ export const ShortcutsDialog = ({ onClose }: { onClose: () => void }) => {
         {keyCellsHint && <p className="shortcuts__hint">{keyCellsHint}</p>}
         <table aria-labelledby={dungeonsHeading} className="shortcuts-table">
           {header("Control")}
-          {LEGACY_DUNGEONS.map((dungeon, index) => (
+          {KEY_DUNGEONS.map((dungeon, index) => (
             <tbody key={dungeon}>
               <tr>
                 <th

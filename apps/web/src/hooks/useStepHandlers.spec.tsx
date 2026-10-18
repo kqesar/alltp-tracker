@@ -57,7 +57,7 @@ describe("stepping back with right-click and '-'", () => {
 
   it("steps small keys back from zero to the dungeon's maximum", () => {
     act(() => useGameStore.getState().setBigKeysVisible(true));
-    render(<TrackerGrid itemLayout={[["bigkey3"]]} />);
+    render(<TrackerGrid itemLayout={[["keys3"]]} />);
 
     fireEvent.contextMenu(screen.getByTestId("small-key-3"));
 

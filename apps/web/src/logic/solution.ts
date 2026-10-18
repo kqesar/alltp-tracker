@@ -37,7 +37,7 @@ import {
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES, DUNGEON_INDICES } from "@/constants";
 import { packReading } from "@/logic/packItems";
-import { packSettings, worldOf } from "@/logic/settings";
+import { KEY_DUNGEONS, packSettings, worldOf } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 import type { Progress } from "@/stores/persistence";
 
@@ -129,7 +129,7 @@ export const trackerInput = (inputs: Inputs): TrackerInput => {
           ),
         }),
     keys: Object.fromEntries(
-      LEGACY_DUNGEONS.map((id, index) => [id, smallKeys[index] ?? 0]),
+      KEY_DUNGEONS.map((id, index) => [id, smallKeys[index] ?? 0]),
     ),
     medallions: {
       mire: padOf(medallions[DUNGEON_INDICES.MISERY_MIRE]),

@@ -95,6 +95,45 @@ test.describe("a keysanity run", () => {
     );
   });
 
+  test("records the castle dungeons' keys on their own row", async ({
+    page,
+  }) => {
+    for (const [id, short] of [
+      ["hyrule-castle", "HC"],
+      ["castle-tower", "CT"],
+      ["ganons-tower", "GT"],
+    ]) {
+      await expect(page.getByTestId(`key-label-${id}`)).toHaveText(short);
+    }
+    await expect(page.getByTestId("big-key-12")).toHaveAccessibleName(
+      "Ganon's Tower big key: not obtained",
+    );
+    await expect(page.getByTestId("big-key-10")).toHaveCount(0);
+
+    // Through the barrier with the cape, a sword for Agahnim, the lamp for
+    // the dark maze: Agahnim wants Castle Tower's two keys too
+    await page.getByTestId("item-cape").click();
+    await page.getByTestId("item-sword").click();
+    await page.getByTestId("item-lantern").click();
+    const agahnim = page.getByTestId("boss-marker-castle-tower");
+    await expect(agahnim).toHaveAccessibleName(
+      /^Castle Tower: boss out of logic,/,
+    );
+
+    const keys = page.getByTestId("small-key-11");
+    await keys.click();
+    await keys.click();
+    await expect(keys).toHaveAccessibleName("Castle Tower small keys: 2 of 2");
+    await expect(agahnim).toHaveAccessibleName(
+      /^Castle Tower: boss available,/,
+    );
+
+    // The row goes with the key cells
+    await page.getByTestId("key-cells-toggle").click();
+    await expect(page.getByTestId("key-label-castle-tower")).toHaveCount(0);
+    await expect(page.getByTestId("small-key-11")).toHaveCount(0);
+  });
+
   test("turns a boss from maybe to yes with its dungeon's map and compass", async ({
     page,
   }) => {

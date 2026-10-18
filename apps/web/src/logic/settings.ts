@@ -83,30 +83,63 @@ export const worldOf = (
   return settings.standardMode ? "standard" : "open";
 };
 
-/** The dungeon a grid index (0-9) stands for, in the game's order. */
+/**
+ * The dungeons with a key cell, by key index: the grid's ten (0-9, the
+ * pack's LEGACY_DUNGEONS, in the game's order), then Hyrule Castle (10),
+ * Castle Tower (11) and Ganon's Tower (12), which have no boss cell or
+ * counter on the grid but keys to record.
+ */
+export const KEY_DUNGEONS: readonly DungeonId[] = [
+  ...LEGACY_DUNGEONS,
+  "hyrule-castle",
+  "castle-tower",
+  "ganons-tower",
+];
+
+/** The dungeon a key index (0-12) stands for; 0-9 are the grid's ten. */
 export const dungeonAt = (index: number): DungeonId => {
-  const id = LEGACY_DUNGEONS[index];
+  const id = KEY_DUNGEONS[index];
   if (id === undefined) throw new RangeError(`No dungeon at index ${index}`);
   return id;
 };
 
-/** The name of the dungeon at a grid index (0-9): "Eastern Palace". */
+/** The name of the dungeon at a key index (0-12): "Eastern Palace". */
 export const dungeonName = (index: number): string =>
   dungeon(dungeonAt(index)).name;
 
 /**
- * How many small keys each grid dungeon holds, by index: its pool's, as
- * the pack reads config/item.php. Eastern Palace has none in v31.
+ * How many small keys each key dungeon holds, by index: its pool's, as the
+ * pack reads config/item.php. Eastern Palace has none in v31.
  */
-export const SMALL_KEYS_MAX: readonly number[] = LEGACY_DUNGEONS.map(
+export const SMALL_KEYS_MAX: readonly number[] = KEY_DUNGEONS.map(
   (id) => dungeonPool(dungeon(id)).smallKeys,
 );
 
-/** How many small keys the dungeon at a grid index (0-9) holds. */
+/** How many small keys the dungeon at a key index (0-12) holds. */
 export const smallKeysMax = (index: number): number => {
   const max = SMALL_KEYS_MAX[index];
   if (max === undefined) throw new RangeError(`No dungeon at index ${index}`);
   return max;
+};
+
+/**
+ * Which of its own big key, map and compass a key dungeon's pool holds:
+ * all three for the grid's ten, the map alone for Hyrule Castle, none for
+ * Castle Tower, all three for Ganon's Tower.
+ */
+export const ownItems = (
+  index: number,
+): {
+  readonly bigKey: boolean;
+  readonly compass: boolean;
+  readonly map: boolean;
+} => {
+  const pool = dungeonPool(dungeon(dungeonAt(index)));
+  return {
+    bigKey: pool.bigKey > 0,
+    compass: pool.compass > 0,
+    map: pool.map > 0,
+  };
 };
 
 const counters = new WeakMap<AlttprSettings, readonly number[]>();

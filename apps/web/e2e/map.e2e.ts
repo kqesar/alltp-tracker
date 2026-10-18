@@ -147,7 +147,7 @@ test.describe("the map", () => {
     const stored = await page.evaluate(() =>
       JSON.parse(localStorage.getItem("alltp-tracker-state") ?? "{}"),
     );
-    expect(stored.version).toBe(10);
+    expect(stored.version).toBe(11);
     expect(stored.state.game).toBe("alttpr");
   });
 
@@ -191,7 +191,7 @@ test.describe("the map", () => {
     const file = testInfo.outputPath("save.json");
     await (await downloading).saveAs(file);
     const saved = JSON.parse(readFileSync(file, "utf8"));
-    expect(saved).toMatchObject({ game: "alttpr", version: 10 });
+    expect(saved).toMatchObject({ game: "alttpr", version: 11 });
     expect(Object.keys(saved.progress.checked)).toHaveLength(5);
 
     await page.getByTestId("marker-kakariko-well").click();

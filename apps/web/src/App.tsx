@@ -64,7 +64,7 @@ function App() {
       </div>
       <main className="main-content" id="main-content">
         <div
-          className={`layout${mapLayout === "stacked" ? " layout--stacked" : ""}`}
+          className={`layout${mapLayout === "stacked" ? " layout--stacked" : ""}${bigKeysVisible ? " layout--key-rows" : ""}`}
           data-testid="layout"
         >
           <TrackerGrid itemLayout={defaultItemGrid} />

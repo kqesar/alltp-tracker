@@ -99,7 +99,7 @@ describe("grid keyboard navigation", () => {
 
   it("reaches both keys of a keysanity cell", () => {
     act(() => useGameStore.getState().setBigKeysVisible(true));
-    render(<TrackerGrid itemLayout={[["bigkey3", "bow"]]} />);
+    render(<TrackerGrid itemLayout={[["keys3", "bow"]]} />);
     act(() => screen.getByTestId("big-key-3").focus());
 
     press("ArrowRight");
@@ -110,7 +110,7 @@ describe("grid keyboard navigation", () => {
 
   it("keeps a Tab stop when the control holding it disappears", () => {
     act(() => useGameStore.getState().setBigKeysVisible(true));
-    render(<TrackerGrid itemLayout={[["bigkey3", "bow"]]} />);
+    render(<TrackerGrid itemLayout={[["keys3", "bow"]]} />);
     act(() => screen.getByTestId("small-key-3").focus());
 
     act(() => useGameStore.getState().setBigKeysVisible(false));
