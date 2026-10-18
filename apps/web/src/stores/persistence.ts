@@ -9,11 +9,15 @@ import type { ItemState } from "@/data/items";
 import { items as freshItems, itemsMax, itemsMin } from "@/data/items";
 import { DEFAULT_SHORTCUTS, type ShortcutPrefs } from "@/data/keymap";
 import {
+  ACCESSIBILITY_LABELS,
   DEFAULT_PRESET_ID,
   ENTRANCE_LABELS,
+  FUNCTIONALITY_LABELS,
   GOAL_LABELS,
   getPreset,
   MODE_LABELS,
+  PLACEMENT_LABELS,
+  POOL_LABELS,
   presets,
   type RunSettings,
 } from "@/data/presets";
@@ -69,7 +73,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Bumped whenever PersistedState changes shape; `migrate` upgrades older saves. */
-export const PERSIST_VERSION = 8;
+export const PERSIST_VERSION = 9;
 
 /**
  * What every run before version 8 was: swords in the pool, 7 crystals for
@@ -79,6 +83,18 @@ const SITE_DEFAULTS = {
   crystalsGanon: 7,
   crystalsTower: 7,
   swordless: false,
+} as const satisfies Partial<RunSettings>;
+
+/**
+ * What every run before version 9 was: advanced item placement, 100%
+ * inventory, the normal item pool and functionality, the site's default the
+ * tracker assumed.
+ */
+const LOGIC_DEFAULTS = {
+  accessibility: "items",
+  itemFunctionality: "normal",
+  itemPlacement: "advanced",
+  itemPool: "normal",
 } as const satisfies Partial<RunSettings>;
 
 /** Length of the chest table before version 3. */
@@ -160,7 +176,7 @@ const migrateV5 = (saved: Record<string, unknown>): Record<string, unknown> => {
     migrated.checked = checked;
   }
   const run = hasRunType(rest.settings)
-    ? { ...SITE_DEFAULTS, ...rest.settings }
+    ? { ...SITE_DEFAULTS, ...LOGIC_DEFAULTS, ...rest.settings }
     : undefined;
   if (run?.keysanity && isRecord(rest.items)) {
     const items = { ...rest.items };
@@ -209,6 +225,16 @@ const migrateV7 = (saved: Record<string, unknown>): Record<string, unknown> =>
     : saved;
 
 /**
+ * Version 9 adds to a run's settings the logic settings a seed sets and the
+ * pack models: item placement, accessibility, item pool and functionality.
+ * Every earlier run gets LOGIC_DEFAULTS.
+ */
+const migrateV8 = (saved: Record<string, unknown>): Record<string, unknown> =>
+  isRecord(saved.settings)
+    ? { ...saved, settings: { ...LOGIC_DEFAULTS, ...saved.settings } }
+    : saved;
+
+/**
  * Upgrade a save written by an earlier version to the current shape. Fields
  * are not validated here; restoring a save falls back field by field.
  * @param saved - The stored or imported object
@@ -227,6 +253,7 @@ export const migrate = (
   if (version < 6) state = migrateV5(state);
   if (version < 7) state = migrateV6(state);
   if (version < 8) state = migrateV7(state);
+  if (version < 9) state = migrateV8(state);
   return state as Partial<PersistedState>;
 };
 
@@ -323,14 +350,25 @@ const hasRunType = (
 /** Run settings whose every field names a known option. */
 const isRunSettings = (value: unknown): value is RunSettings => {
   if (!hasRunType(value)) return false;
-  const { crystalsGanon, crystalsTower, swordless } = value as Record<
-    string,
-    unknown
-  >;
+  const {
+    accessibility,
+    crystalsGanon,
+    crystalsTower,
+    itemFunctionality,
+    itemPlacement,
+    itemPool,
+    swordless,
+  } = value as Record<string, unknown>;
+  const named = (option: unknown, labels: Readonly<Record<string, string>>) =>
+    typeof option === "string" && Object.hasOwn(labels, option);
   return (
     typeof swordless === "boolean" &&
     isIntIn(crystalsTower, 0, 7) &&
-    isIntIn(crystalsGanon, 0, 7)
+    isIntIn(crystalsGanon, 0, 7) &&
+    named(itemPlacement, PLACEMENT_LABELS) &&
+    named(accessibility, ACCESSIBILITY_LABELS) &&
+    named(itemPool, POOL_LABELS) &&
+    named(itemFunctionality, FUNCTIONALITY_LABELS)
   );
 };
 
@@ -353,7 +391,7 @@ export const validateProgress = (
     if (isRunSettings(saved.settings)) value.settings = saved.settings;
     else
       errors.push(
-        "settings must name a known mode, goal and entrance shuffle, and crystal counts from 0 to 7",
+        "settings must name a known mode, goal, entrance shuffle, item placement, accessibility, item pool and functionality, and crystal counts from 0 to 7",
       );
   }
 

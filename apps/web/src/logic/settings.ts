@@ -28,15 +28,16 @@ const GOALS: Record<
 const cache = new Map<string, AlttprSettings>();
 
 /**
- * The pack's settings for a run: the site's default preset (advanced item
- * placement, randomized weapons, NoGlitches, as config/alttp.php:78-96 has
- * it) in the run's world, with its goal, its crystal counts, swordless
- * weapons when it has no sword, and every dungeon item wild for keysanity
- * (dungeonItems 'full': keys, big keys, maps and compasses). The pack models
- * the Open and Standard worlds only: an inverted or retro run, whose preset
- * says its logic is not supported, reads as Open. The entrance shuffle is
- * not modeled either. The same run settings always give the same object, so
- * a world compiled for it can be kept.
+ * The pack's settings for a run: the run's world, goal, crystal counts, item
+ * placement, accessibility, item pool and functionality, swordless weapons
+ * when it has no sword, and every dungeon item wild for keysanity
+ * (dungeonItems 'full': keys, big keys, maps and compasses), in NoGlitches
+ * logic with randomized weapons, as the site's default preset has them
+ * (config/alttp.php:78-96). The pack models the Open and Standard worlds
+ * only: an inverted or retro run, whose preset says its logic is not
+ * supported, reads as Open. The entrance shuffle is not modeled either. The
+ * same run settings always give the same object, so a world compiled for it
+ * can be kept.
  * @param run - The run's settings: its preset's, or the seed's
  */
 export const packSettings = (run: RunSettings): AlttprSettings => {
@@ -47,18 +48,24 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
     run.swordless,
     run.crystalsTower,
     run.crystalsGanon,
+    run.itemPlacement,
+    run.accessibility,
+    run.itemPool,
+    run.itemFunctionality,
   ].join("/");
   let settings = cache.get(key);
   if (settings === undefined) {
     settings = settingsFromUpstream(
       run.mode === "standard" ? "standard" : "open",
       {
-        accessibility: "items",
+        accessibility: run.accessibility,
         "crystals.ganon": run.crystalsGanon,
         "crystals.tower": run.crystalsTower,
         dungeonItems: run.keysanity ? "full" : "standard",
         goal: GOALS[run.goal],
-        itemPlacement: "advanced",
+        "item.functionality": run.itemFunctionality,
+        "item.pool": run.itemPool,
+        itemPlacement: run.itemPlacement,
         logic: "NoGlitches",
         "mode.weapons": run.swordless ? "swordless" : "randomized",
       },
