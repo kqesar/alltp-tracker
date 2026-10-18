@@ -23,6 +23,7 @@ import {
   type RunSettings,
 } from "@/data/presets";
 import { counterMax, SMALL_KEYS_MAX } from "@/logic/settings";
+import { isStamp, isTimelineKey, type Timeline } from "@/logic/timeline";
 import type { RunTimer } from "@/logic/timer";
 import type { MapLayout, MapView } from "@/utils";
 
@@ -45,6 +46,11 @@ export type Progress = {
   smallKeys: number[];
   presetId: string;
   settings: RunSettings;
+  /**
+   * When each thing held was found (logic/timeline.ts). A save without it,
+   * from before it was kept, restores none: no version needed.
+   */
+  timeline: Timeline;
 };
 
 /**
@@ -365,6 +371,22 @@ const validateChecked = (
   return valid;
 };
 
+/**
+ * Keep the timeline's entries this version knows. A stamp that is not one
+ * fails the field; a key it does not know is ignored, as a location is.
+ */
+const validateTimeline = (
+  saved: Record<string, unknown>,
+  errors: string[],
+): Timeline => {
+  const valid: Record<string, Timeline[string]> = {};
+  for (const [key, stamp] of Object.entries(saved)) {
+    if (!isStamp(stamp)) errors.push(`timeline["${key}"] must be a time`);
+    else if (isTimelineKey(key)) valid[key] = { at: stamp.at, ms: stamp.ms };
+  }
+  return valid;
+};
+
 type Rec = Record<string, unknown>;
 
 /** The fields every version's run type has: a known world, goal and shuffle. */
@@ -482,6 +504,12 @@ export const validateProgress = (
       errors.push(
         `smallKeys must hold ${SMALL_KEYS_MAX.length} counts within each dungeon's keys`,
       );
+  }
+
+  if (saved.timeline !== undefined) {
+    if (isRecord(saved.timeline)) {
+      value.timeline = validateTimeline(saved.timeline, errors);
+    } else errors.push("timeline must be an object");
   }
 
   if (saved.presetId !== undefined) {
