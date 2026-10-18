@@ -222,17 +222,22 @@ to the rupee bow.
 vt hands a seed with shuffled entrances to the entrance randomizer, a Python
 program at the commit vt's composer.json pins (`upstream.json`,
 `entranceRandomizer`). `scripts/import-er.mjs` reads its tables into
-`src/entrances/er.json`:
+`src/entrances/er.json`, and its rules into `src/entrances/rules.json`
+(below); the repository's Biome then formats both, so a re-import of the
+same commit changes nothing:
 
 ```bash
 pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
 ```
 
-- **Read, never run.** A small tokenizer reads the Python literals the
-  source assigns or passes (`Cave_Exits_Base = [...]`, its later `+=`,
-  `scramble_holes`' lists, `skull_woods_shuffle`'s calls, the
-  `create_*_region` calls of `Regions.py`). Anything else there stops the
-  import with the file and line.
+- **Read, never run.** A small Python reader (`scripts/python.mjs`) reads
+  the literals the source assigns or passes (`Cave_Exits_Base = [...]`,
+  its later `+=`, `scramble_holes`' lists, `skull_woods_shuffle`'s calls,
+  the `create_*_region` calls of `Regions.py`). Anything else there stops
+  the import with the file and line.
+- **A region's engine id** is its name in lowerCamel case
+  (`regionId`: "Ganons Tower (Tile Room)" is `ganonsTowerTileRoom`), what
+  the rules' `reach()` names.
 - **A door's position** is where Link comes out of it (`door_addresses`: its
   area and his coordinates in the world, 4096 pixels a side).
 - **A hole's position** comes from the base ROM's hole table, whose entry
@@ -263,6 +268,73 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
 `test/er-seeds/0yAObedRMV.json` is a real Crosskeys seed's spoiler: its
 shuffled entrances are exactly the pool, and every one leads to a target
 the model knows.
+
+### Its rules
+
+A seed with shuffled entrances is filled by the entrance randomizer, under
+its own rules (`Rules.py`, `Bosses.py`), dungeons included: not vt's, which
+the regions of this pack port. The same run of `import-er` translates them
+into the engine's language, `src/entrances/rules.json`
+(`scripts/er-rules.mjs`, over the Python reader `scripts/python.mjs`).
+
+```mermaid
+flowchart LR
+  rules["Rules.py<br/>set_rules, on vt's path"] --> walk["walk the statements<br/>if on a setting → setting()<br/>for → each name"]
+  walk --> lambda["each lambda, as a tree"]
+  lambda --> tr["translate<br/>ITEMS, METHODS, bosses,<br/>WORLD settings"]
+  tr --> fold["fold a spot's rules:<br/>set under W: W & new | !W & old<br/>add under W: old & (!W | new)"]
+  fold --> json["rules.json<br/>entrances, locations, helpers"]
+  walk --> code["unported: code, with its line"]
+  walk --> fill["fill: placement-only lines"]
+```
+
+- **vt's path.** `set_rules` is walked as vt calls the randomizer
+  (`app/EntranceRandomizer.php`): No Glitches, the Open or Standard world,
+  no retro, no boss shuffle. A branch on another value (No Logic,
+  Inverted, the triforce goals) is `false` and is never read; one on a
+  setting the pack has becomes `setting()`: the mode `standardMode`, the
+  goals, `swordless`, `locationsAccessibility`, `cantTakeDamage`. The
+  randomizer's keysanity is vt's `--keysanity`, which only `full` dungeon
+  items pass, so it reads `wildBigKeys`.
+- **One rule per spot.** Each `set_rule` replaces an entrance's or a
+  location's rule, each `add_rule` ands one to it, in call order. Under a
+  branch on the settings W, a set is `W & new | !W & old` and an add
+  `old & (!W | new)`, so the settings still fold at compile time. Each spot
+  lists the lines that make its rule.
+- **Items** map to the pack's (`ITEMS`): `Master Sword` is `sword >= 2`,
+  as `collect` grants the levels in order; `Silver Arrows` is `bow >= 2 |
+  silverArrowUpgrade`; keys are the pack's by dungeon. A name no item of
+  `Items.py` bears is never held: `Rules.py:181` asks for `'Mirror'`,
+  which No Glitches sets to `false` anyway.
+- **Methods** of the collection state are helpers named after them
+  (`has_Boots` is `@erHasBoots`, `can_kill_most_things(player, 8)`
+  `@erCanKillMostThings8`), each citing its `BaseClasses.py` line. A rule
+  stands as it is written, even where a seed's fill never meets it: hearts
+  and bombs are no advancement items, so the fill never counts them, but
+  the randomizer's own tests do (`TestMiseryMire.py:72` opens the Spike
+  Chest with a heart container), so `has_hearts(4)` is `heartContainer |
+  pieceOfHeart >= 4`. `can_extend_magic` counts the bottles a potion shop
+  refills, by the pack's bottle magic settings.
+- **Bosses**: each `Bosses.py` rule is a helper (`@erDefeatArmosKnights`),
+  each dungeon's the one `Dungeons.py` gives it.
+- **Placements** (`item_name`, `item_in_locations`) are `maybe`, as the
+  pack's own rules read vt's: a tracker does not know them.
+- **Events** (`Open Floodgate`, `Get Frog`, `Return Smith`, `Pick Up
+  Purple Chest`) are items of their own, held once their location is
+  reached (`events`, from `ItemList.py`). Agahnim's are the pack's
+  `defeatAgahnim`, which the player marks.
+- **What is code** stays out, listed in `unported` with its line, and is
+  ported by hand in the world built from the noted entrances: the
+  save-and-quit points, Turtle Rock's key doors (they hang on which of its
+  doors are reached), the big bomb's route (where the Big Bomb Shop's door
+  is), the swamp patch (whether Swamp Palace and the Dam keep their doors)
+  and the bunny's paths (which regions the entrances make dark). A
+  `can_reach` in an entrance's rule (Turtle Rock's, the castle's exits in
+  Standard) is that world's to resolve too: the engine reads `reach()` in
+  locations only.
+- **Placement-only rules** (`forbid_item`, `add_item_rule`,
+  `set_always_allow`) decide where an item may go, not what Link can
+  reach: their lines are listed in `fill`.
 
 ## The legacy format
 
