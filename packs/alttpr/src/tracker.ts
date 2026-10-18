@@ -98,7 +98,8 @@ export interface TrackerInput {
   /**
    * The small keys found in each dungeon, with wild keys (keysanity). The
    * player does not track them otherwise, and they are not read then: the
-   * key model (keys.ts) stands in for them.
+   * key model (keys.ts) stands in for them. Nor are they with generic keys
+   * (the retro world), which no dungeon owns.
    */
   readonly keys?: Readonly<Partial<Record<DungeonId, number>>>;
   /**
@@ -132,7 +133,8 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
  * gives the next item of its class in dungeon order: two red crystals are
  * crystals 5 and 6, whichever dungeons dropped them; a prize the pool has
  * no item left for is a mistake, and gives nothing. The pads' facts read
- * an unknown pad as unknown. The keys count only with wild keys. A checked
+ * an unknown pad as unknown. The keys count only with wild keys that are
+ * not generic. A checked
  * event gives its item (EVENT_CHECKS).
  *
  * Pure: a new state on every call, nothing kept between calls. Throws a
@@ -170,7 +172,7 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
     const item = prize === undefined ? undefined : free[prize].shift();
     if (item !== undefined) state[item] = 1;
   }
-  if (settings.wildKeys) {
+  if (settings.wildKeys && !settings.genericKeys) {
     for (const d of DUNGEONS) {
       const found = count(
         `key${d.code}`,
