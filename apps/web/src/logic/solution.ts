@@ -18,11 +18,12 @@ import {
   dungeonLocations,
   dungeonRegions,
   dungeonStatus,
+  EVENT_CHECKS,
   type Filler,
   filler,
+  INVERTED_MARKERS,
   type KeyedSolution,
   LEGACY_DUNGEONS,
-  MARKERS,
   type MapMarker,
   type MarkerStatus,
   type Medallion,
@@ -36,7 +37,7 @@ import {
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES, DUNGEON_INDICES } from "@/constants";
 import { packReading } from "@/logic/packItems";
-import { packSettings } from "@/logic/settings";
+import { packSettings, worldOf } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 import type { Progress } from "@/stores/persistence";
 
@@ -78,14 +79,24 @@ export const locationStatus = (
     : status;
 };
 
-/** The slices of the run the solution reads. */
+/**
+ * The slices of the run the solution reads; of what is checked, only the
+ * events (EVENT_CHECKS), so checking any other location solves nothing.
+ */
 export type Inputs = Pick<
   Progress,
   "items" | "medallions" | "settings" | "smallKeys"
->;
+> &
+  Partial<Pick<Progress, "checked">>;
 
 /** The slices a marker's status reads: the solution's, and what is checked. */
 export type MarkerInputs = Inputs & Pick<Progress, "checked">;
+
+const EVENT_IDS = Object.keys(EVENT_CHECKS);
+
+/** The events checked, as one comparable value: "bomb-merchant" or "". */
+const eventsOf = ({ checked }: Inputs): string =>
+  EVENT_IDS.filter((id) => checked?.[id] === true).join(",");
 
 /** The medallion each value of the store's `medallions` names. */
 const PAD_VALUES: readonly (Medallion | "unknown")[] = [
@@ -103,22 +114,29 @@ const padOf = (value: number | undefined): Medallion | "unknown" =>
  * What the player recorded, as the pack's TrackerInput: the items, bosses
  * beaten and prizes through the app's one table (packReading), the
  * medallion pads (Misery Mire's slot 8, Turtle Rock's 9), the small keys
- * by grid dungeon.
+ * by grid dungeon, and the events checked on the map.
  */
-export const trackerInput = ({
-  items,
-  medallions,
-  smallKeys,
-}: Inputs): TrackerInput => ({
-  ...packReading(items),
-  keys: Object.fromEntries(
-    LEGACY_DUNGEONS.map((id, index) => [id, smallKeys[index] ?? 0]),
-  ),
-  medallions: {
-    mire: padOf(medallions[DUNGEON_INDICES.MISERY_MIRE]),
-    turtleRock: padOf(medallions[DUNGEON_INDICES.TURTLE_ROCK]),
-  },
-});
+export const trackerInput = (inputs: Inputs): TrackerInput => {
+  const { items, medallions, smallKeys } = inputs;
+  const events = eventsOf(inputs);
+  return {
+    ...packReading(items),
+    ...(events === ""
+      ? {}
+      : {
+          checked: Object.fromEntries(
+            events.split(",").map((id) => [id, true]),
+          ),
+        }),
+    keys: Object.fromEntries(
+      LEGACY_DUNGEONS.map((id, index) => [id, smallKeys[index] ?? 0]),
+    ),
+    medallions: {
+      mire: padOf(medallions[DUNGEON_INDICES.MISERY_MIRE]),
+      turtleRock: padOf(medallions[DUNGEON_INDICES.TURTLE_ROCK]),
+    },
+  };
+};
 
 const fillers = new WeakMap<AlttprSettings, Filler>();
 
@@ -150,18 +168,21 @@ export interface Solution {
   readonly keyed: KeyedSolution;
 }
 
-let last: { inputs: Inputs; solution: Solution } | undefined;
+let last: { events: string; inputs: Inputs; solution: Solution } | undefined;
 
 /**
  * The run solved: the pack's key model over the state of what the player
  * recorded. Memoized on the slices it reads, so every component asking
  * after one change gets the one solution computed for it, and a change to
- * anything else (a checked location, a preference) computes nothing.
+ * anything else (a checked location but an event, a preference) computes
+ * nothing.
  * @param state - The game store's state, or any object with those slices
  */
 export const solutionOf = (state: Inputs): Solution => {
+  const events = eventsOf(state);
   if (
     last !== undefined &&
+    last.events === events &&
     last.inputs.items === state.items &&
     last.inputs.medallions === state.medallions &&
     last.inputs.settings === state.settings &&
@@ -181,6 +202,7 @@ export const solutionOf = (state: Inputs): Solution => {
     visibles: keyed.solution.visibles(),
   };
   last = {
+    events,
     inputs: {
       items: state.items,
       medallions: state.medallions,
@@ -192,8 +214,12 @@ export const solutionOf = (state: Inputs): Solution => {
   return solution;
 };
 
+/**
+ * Every marker of any world by id: Inverted's lists each of Open's and
+ * Standard's, which differ from it by place alone, and the Bomb Merchant.
+ */
 const MARKER_BY_ID: ReadonlyMap<string, MapMarker> = new Map(
-  MARKERS.map((marker) => [marker.id, marker]),
+  INVERTED_MARKERS.map((marker) => [marker.id, marker]),
 );
 
 /** A marker by id; throws a RangeError for an id the map does not have. */
@@ -235,7 +261,7 @@ const itemLocationsOf = (
   id: DungeonId,
   settings: AlttprSettings,
 ): readonly string[] => {
-  const key = `${settings.standardMode}/${id}`;
+  const key = `${worldOf(settings)}/${id}`;
   let found = itemLocations.get(key);
   if (found === undefined) {
     found = dungeonLocations(dungeon(id), settings);

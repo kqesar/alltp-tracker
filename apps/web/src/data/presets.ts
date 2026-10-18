@@ -3,10 +3,10 @@
  *
  * A preset is a named bundle of settings. The tracker reacts to the settings
  * it can model today (notably `dungeonItems`, which drives the key cells and
- * the dungeon counters). Settings that change the accessibility *logic*
- * (mode = inverted/retro, entranceShuffle = crossed, ...) are stored and shown,
- * but the per-mode logic is implemented in later iterations — `logicSupported`
- * flags whether the tracker's accessibility logic fully models the preset.
+ * the dungeon counters). Settings that change the accessibility *logic* the
+ * pack does not model yet (mode = retro, entranceShuffle = crossed, ...) are
+ * stored and shown — `logicSupported` flags whether the tracker's
+ * accessibility logic fully models the preset.
  *
  * A run's settings need not be its preset's own: autotracking reads a seed's
  * from its ROM (autotrack/seed.ts) and switches to the run type that names
@@ -144,10 +144,9 @@ export const presets: Preset[] = [
     settings: { ...baseSettings, goal: "triforce-hunt" },
   },
   {
-    description:
-      "Link starts in the Dark World; the mirror is inverted. (Logic support coming soon.)",
+    description: "Link starts in the Dark World; the mirror is inverted.",
     id: "inverted",
-    logicSupported: false,
+    logicSupported: true,
     name: "Inverted",
     settings: { ...baseSettings, mode: "inverted" },
   },

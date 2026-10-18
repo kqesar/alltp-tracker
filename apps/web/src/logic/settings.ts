@@ -33,11 +33,11 @@ const cache = new Map<string, AlttprSettings>();
  * when it has no sword, and its dungeon items (dungeonItems: which of them
  * may lie outside their dungeons), in NoGlitches
  * logic with randomized weapons, as the site's default preset has them
- * (config/alttp.php:78-96). The pack models the Open and Standard worlds
- * only: an inverted or retro run, whose preset says its logic is not
- * supported, reads as Open. The entrance shuffle is not modeled either. The
- * same run settings always give the same object, so a world compiled for it
- * can be kept.
+ * (config/alttp.php:78-96). The pack models the Open, Standard and Inverted
+ * worlds: a retro run, whose preset says its logic is not supported, reads
+ * as Open. The entrance shuffle is not modeled either. The same run
+ * settings always give the same object, so a world compiled for it can be
+ * kept.
  * @param run - The run's settings: its preset's, or the seed's
  */
 export const packSettings = (run: RunSettings): AlttprSettings => {
@@ -56,7 +56,7 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
   let settings = cache.get(key);
   if (settings === undefined) {
     settings = settingsFromUpstream(
-      run.mode === "standard" ? "standard" : "open",
+      run.mode === "standard" || run.mode === "inverted" ? run.mode : "open",
       {
         accessibility: run.accessibility,
         "crystals.ganon": run.crystalsGanon,
@@ -73,6 +73,14 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
     cache.set(key, settings);
   }
   return settings;
+};
+
+/** The world a run's settings build: what is kept per world is keyed by it. */
+export const worldOf = (
+  settings: AlttprSettings,
+): "inverted" | "open" | "standard" => {
+  if (settings.invertedMode) return "inverted";
+  return settings.standardMode ? "standard" : "open";
 };
 
 /** The dungeon a grid index (0-9) stands for, in the game's order. */

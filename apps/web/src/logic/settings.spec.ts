@@ -13,6 +13,7 @@ import {
   packSettings,
   SMALL_KEYS_MAX,
   smallKeysMax,
+  worldOf,
 } from "@/logic/settings";
 
 const run = (overrides: Partial<RunSettings> = {}): RunSettings => ({
@@ -116,10 +117,11 @@ describe("packSettings", () => {
     }
   });
 
-  it("reads the worlds the pack does not model as Open", () => {
-    expect(packSettings(run({ mode: "inverted" })).standardMode).toBe(false);
-    expect(packSettings(run({ mode: "retro" })).standardMode).toBe(false);
-    expect(packSettings(run({ mode: "standard" })).standardMode).toBe(true);
+  it("reads each world the pack models, and retro, which it does not, as Open", () => {
+    expect(worldOf(packSettings(run({ mode: "inverted" })))).toBe("inverted");
+    expect(worldOf(packSettings(run({ mode: "retro" })))).toBe("open");
+    expect(worldOf(packSettings(run({ mode: "standard" })))).toBe("standard");
+    expect(worldOf(packSettings(run()))).toBe("open");
   });
 
   it("gives equal run settings the same object, so its world is kept", () => {
