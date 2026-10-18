@@ -12,6 +12,7 @@ import { KEY_DUNGEONS, packSettings } from "@/logic/settings";
 import {
   bossStateOf,
   dungeonStateOf,
+  locationName,
   locationStatus,
   markerById,
   markerDetail,
@@ -203,6 +204,11 @@ describe("what a marker shows", () => {
 
     act(() => store().toggleChecks(["mire-shed/right"]));
     expect(show("mire-shed")).toBe("opened");
+  });
+
+  it("names every world's locations, the Inverted Bomb Merchant too", () => {
+    expect(locationName("kings-tomb")).toBe("King's Tomb");
+    expect(locationName("bomb-merchant")).toBe("Bomb Merchant");
   });
 
   it("throws for a marker the map does not have", () => {
