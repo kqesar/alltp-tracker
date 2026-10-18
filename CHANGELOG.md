@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.15.0](https://github.com/kqesar/alltp-tracker/compare/v2.14.0...v2.15.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **alttpr:** model the item pool and the item functionality ([a92850d](https://github.com/kqesar/alltp-tracker/commit/a92850d3b221306bc7ec2679aa5d81fa75a95d95))
+* **alttpr:** read a seed's item placement, pool, functionality and accessibility ([08ca235](https://github.com/kqesar/alltp-tracker/commit/08ca2358165d9b7a0e9f7add8a8e164b06bd94ae))
+* **web:** make item placement, pool, functionality and accessibility run settings ([00d642a](https://github.com/kqesar/alltp-tracker/commit/00d642ac890a66b92f64d8b5ac40e998018e145e))
+* **web:** take a seed's logic settings from its file on alttpr.com ([f89dce0](https://github.com/kqesar/alltp-tracker/commit/f89dce0bab0d80919b5724ddabbd06bf6da36dd8))
+* **web:** track maps, compasses and small keys outside their dungeons apart ([7e7cfc6](https://github.com/kqesar/alltp-tracker/commit/7e7cfc6049c3aea62492fc37e49cc8712d53e693))
+* **web:** tune a run's crystals and logic settings in place ([0593dd8](https://github.com/kqesar/alltp-tracker/commit/0593dd81fec26234ef76842cbc71ad01475ef295))
+
+
+### 📚 Documentation
+
+* describe dungeon items by alttpr.com's levels ([5298ac1](https://github.com/kqesar/alltp-tracker/commit/5298ac148efae9f5060505eb2148b8e6c14a4ffa))
+* describe the logic settings a seed's file brings ([bd15461](https://github.com/kqesar/alltp-tracker/commit/bd154616083b2e58c2918f761972ee025b863590))
+* describe tuning a run's settings in place ([80a9a08](https://github.com/kqesar/alltp-tracker/commit/80a9a08457cce2d98f21a76bc68d55a50d2988be))
+
 ## [2.14.0](https://github.com/kqesar/alltp-tracker/compare/v2.13.0...v2.14.0) (2026-10-17)
 
 
