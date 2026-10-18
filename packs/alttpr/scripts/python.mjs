@@ -620,6 +620,13 @@ export function functionBody(source, name, file) {
 }
 
 /**
+ * The statements of a whole file, in blocks by indent: a class holds its
+ * methods, a method its body.
+ * @param {string} source
+ */
+export const statementsOf = (source) => blocks(logicalLines(source, 1));
+
+/**
  * Nests logical lines into statements by their indent.
  * @param {{ text: string, line: number, indent: number }[]} lines
  * @returns {Statement[]}

@@ -1,0 +1,162 @@
+{
+  "file": "test/dungeons/TestSkullWoods.py",
+  "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
+  "harness": {
+    "bombShop": "Big Bomb Shop",
+    "connections": "mandatory",
+    "marked": false,
+    "pool": true,
+    "source": "test/dungeons/TestDungeon.py:13",
+    "swampPatch": true
+  },
+  "tests": [
+    {
+      "cases": [
+        ["Skull Woods - Big Chest", false, []],
+        ["Skull Woods - Big Chest", false, [], ["Big Key (Skull Woods)"]],
+        ["Skull Woods - Big Chest", true, ["Big Key (Skull Woods)"]],
+        ["Skull Woods - Compass Chest", true, []],
+        ["Skull Woods - Map Chest", true, []],
+        ["Skull Woods - Pot Prison", true, []],
+        ["Skull Woods - Pinball Room", true, []]
+      ],
+      "line": 6,
+      "name": "testSkullWoodsFrontAllEntrances",
+      "startingRegions": [
+        "Skull Woods First Section",
+        "Skull Woods First Section (Left)",
+        "Skull Woods First Section (Top)"
+      ]
+    },
+    {
+      "cases": [
+        ["Skull Woods - Big Chest", false, []],
+        ["Skull Woods - Big Chest", false, [], ["Never in logic"]],
+        ["Skull Woods - Compass Chest", false, []],
+        [
+          "Skull Woods - Compass Chest",
+          false,
+          ["Small Key (Skull Woods)"],
+          ["Small Key (Skull Woods)"]
+        ],
+        [
+          "Skull Woods - Compass Chest",
+          true,
+          ["Small Key (Skull Woods)", "Small Key (Skull Woods)"]
+        ],
+        ["Skull Woods - Map Chest", true, []],
+        ["Skull Woods - Pot Prison", false, []],
+        [
+          "Skull Woods - Pot Prison",
+          false,
+          ["Small Key (Skull Woods)"],
+          ["Small Key (Skull Woods)"]
+        ],
+        [
+          "Skull Woods - Pot Prison",
+          true,
+          ["Small Key (Skull Woods)", "Small Key (Skull Woods)"]
+        ],
+        ["Skull Woods - Pinball Room", false, []],
+        ["Skull Woods - Pinball Room", false, [], ["Small Key (Skull Woods)"]],
+        ["Skull Woods - Pinball Room", true, ["Small Key (Skull Woods)"]]
+      ],
+      "line": 22,
+      "name": "testSkullWoodsFrontOnly",
+      "startingRegions": ["Skull Woods First Section"]
+    },
+    {
+      "cases": [
+        ["Skull Woods - Big Chest", false, []],
+        ["Skull Woods - Big Chest", false, [], ["Never in logic"]],
+        ["Skull Woods - Compass Chest", true, []],
+        ["Skull Woods - Map Chest", false, []],
+        ["Skull Woods - Map Chest", false, [], ["Small Key (Skull Woods)"]],
+        ["Skull Woods - Map Chest", true, ["Small Key (Skull Woods)"]],
+        ["Skull Woods - Pot Prison", true, []],
+        ["Skull Woods - Pinball Room", true, []]
+      ],
+      "line": 43,
+      "name": "testSkullWoodsLeftOnly",
+      "startingRegions": ["Skull Woods First Section (Left)"]
+    },
+    {
+      "cases": [
+        ["Skull Woods - Big Chest", false, []],
+        ["Skull Woods - Big Chest", false, [], ["Big Key (Skull Woods)"]],
+        ["Skull Woods - Big Chest", true, ["Big Key (Skull Woods)"]],
+        ["Skull Woods - Compass Chest", false, []],
+        [
+          "Skull Woods - Compass Chest",
+          false,
+          ["Small Key (Skull Woods)"],
+          ["Small Key (Skull Woods)"]
+        ],
+        [
+          "Skull Woods - Compass Chest",
+          true,
+          ["Small Key (Skull Woods)", "Small Key (Skull Woods)"]
+        ],
+        ["Skull Woods - Map Chest", true, []],
+        ["Skull Woods - Pot Prison", false, []],
+        [
+          "Skull Woods - Pot Prison",
+          false,
+          ["Small Key (Skull Woods)"],
+          ["Small Key (Skull Woods)"]
+        ],
+        [
+          "Skull Woods - Pot Prison",
+          true,
+          ["Small Key (Skull Woods)", "Small Key (Skull Woods)"]
+        ],
+        ["Skull Woods - Pinball Room", false, []],
+        ["Skull Woods - Pinball Room", false, [], ["Small Key (Skull Woods)"]],
+        ["Skull Woods - Pinball Room", true, ["Small Key (Skull Woods)"]]
+      ],
+      "line": 60,
+      "name": "testSkullWoodsBackOnly",
+      "startingRegions": ["Skull Woods First Section (Top)"]
+    },
+    {
+      "cases": [["Skull Woods - Big Key Chest", true, []]],
+      "line": 82,
+      "name": "testSkullWoodsMiddle",
+      "startingRegions": ["Skull Woods Second Section"]
+    },
+    {
+      "cases": [
+        ["Skull Woods - Bridge Room", true, []],
+        ["Skull Woods - Boss", false, []],
+        ["Skull Woods - Boss", false, [], ["Fire Rod"]],
+        ["Skull Woods - Boss", false, [], ["Progressive Sword"]],
+        [
+          "Skull Woods - Boss",
+          false,
+          ["Small Key (Skull Woods)", "Small Key (Skull Woods)"],
+          ["Small Key (Skull Woods)"]
+        ],
+        [
+          "Skull Woods - Boss",
+          true,
+          [
+            "Small Key (Skull Woods)",
+            "Small Key (Skull Woods)",
+            "Small Key (Skull Woods)",
+            "Fire Rod",
+            "Progressive Sword"
+          ]
+        ]
+      ],
+      "line": 86,
+      "name": "testSkullWoodsBack",
+      "startingRegions": ["Skull Woods Final Section (Entrance)"]
+    }
+  ],
+  "upstream": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "copyright": "Copyright (c) 2017 LLCoolDave",
+    "license": "MIT",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  }
+}

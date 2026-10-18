@@ -1,4 +1,325 @@
 {
+  "allItemsReach": {
+    "Agahnim 1": "setting(swordless) & (hammer | fireRod | @erCanShootArrows | caneOfSomaria) & keyA1 >= 2 | !setting(swordless) & @erHasSword & keyA1 >= 2",
+    "Dark Lake Hylia Drop (East)": "@erHasPearl & flippers | @erHasMirror",
+    "Dark Lake Hylia Ledge Drop": "true",
+    "Dark Lake Hylia Teleporter": "@erHasPearl & (hammer | @erCanLiftRocks)",
+    "Death Mountain Return Cave Exit (East)": "true",
+    "Death Mountain Return Cave Exit (West)": "true",
+    "East Dark World River Pier": "@erHasPearl",
+    "Ganons Tower": "false",
+    "Ganons Tower (Double Switch Room)": "keyA2 >= 2",
+    "Ganons Tower (Hookshot Room)": "hammer",
+    "Hobo Bridge": "true",
+    "Hyrule Castle Exit (East)": "true",
+    "Hyrule Castle Exit (West)": "true",
+    "Lake Hylia Central Island Pier": "true",
+    "Misery Mire (Vitreous)": "caneOfSomaria",
+    "Old Man Cave Exit (East)": "true",
+    "Old Man House Back to Front": "true",
+    "Old Man House Front to Back": "true",
+    "Palace of Darkness Big Key Door": "keyD1 >= 6 & bigKeyD1 & @erCanShootArrows & hammer",
+    "Palace of Darkness Maze Door": "keyD1 >= 6",
+    "Paradox Cave Bomb Jump": "true",
+    "Pyramid Fairy": "true",
+    "Sewers Back Door": "keyH2",
+    "Sewers Door": "keyH2",
+    "Skull Woods First Section Bomb Jump": "true",
+    "Swamp Palace Moat": "flippers & openFloodgate",
+    "Throne Room": "true",
+    "Turtle Rock (Chain Chomp Room) (North)": "false",
+    "Turtle Rock (Chain Chomp Room) (South)": "false",
+    "Turtle Rock (Dark Room) (North)": "caneOfSomaria",
+    "Turtle Rock (Dark Room) (South)": "caneOfSomaria",
+    "Turtle Rock Dark Room Staircase": "false",
+    "Turtle Rock Pokey Room": "false",
+    "Zoras River": "true"
+  },
+  "bombShop": {
+    "cases": [
+      {
+        "doors": [
+          "Blinds Hideout",
+          "Bonk Fairy (Light)",
+          "Lake Hylia Fairy",
+          "Light Hype Fairy",
+          "Desert Fairy",
+          "Chicken House",
+          "Aginahs Cave",
+          "Sahasrahlas Hut",
+          "Cave Shop (Lake Hylia)",
+          "Blacksmiths Hut",
+          "Sick Kids House",
+          "Lost Woods Gamble",
+          "Fortune Teller (Light)",
+          "Snitch Lady (East)",
+          "Snitch Lady (West)",
+          "Bush Covered House",
+          "Tavern (Front)",
+          "Light World Bomb Hut",
+          "Kakariko Shop",
+          "Mini Moldorm Cave",
+          "Long Fairy Cave",
+          "Good Bee Cave",
+          "20 Rupee Cave",
+          "50 Rupee Cave",
+          "Ice Rod Cave",
+          "Bonk Rock Cave",
+          "Library",
+          "Potion Shop",
+          "Waterfall of Wishing",
+          "Dam",
+          "Lumberjack House",
+          "Lake Hylia Fortune Teller",
+          "Eastern Palace",
+          "Kakariko Gamble Game",
+          "Kakariko Well Cave",
+          "Bat Cave Cave",
+          "Elder House (East)",
+          "Elder House (West)",
+          "North Fairy Cave",
+          "Lost Woods Hideout Stump",
+          "Lumberjack Tree Cave",
+          "Two Brothers House (East)",
+          "Sanctuary",
+          "Hyrule Castle Entrance (South)",
+          "Hyrule Castle Secret Entrance Stairs"
+        ],
+        "req": "@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid | @erHasMirror",
+        "source": "Rules.py:1246"
+      },
+      {
+        "doors": [
+          "Dark Lake Hylia Ledge Fairy",
+          "Dark Lake Hylia Ledge Spike Cave",
+          "Dark Lake Hylia Ledge Hint",
+          "Red Shield Shop",
+          "Mire Shed",
+          "Dark Desert Hint",
+          "Dark Desert Fairy",
+          "Misery Mire"
+        ],
+        "req": "@erHasMirror & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1250"
+      },
+      {
+        "doors": [
+          "Brewery",
+          "C-Shaped House",
+          "Chest Game",
+          "Dark World Hammer Peg Cave",
+          "Dark Sanctuary Hint",
+          "Fortune Teller (Dark)",
+          "Dark World Shop",
+          "Dark World Lumberjack Shop",
+          "Thieves Town",
+          "Skull Woods First Section Door",
+          "Skull Woods Second Section Door (East)"
+        ],
+        "req": "@erCanLiftHeavyRocks & hammer & @erHasPearl | @erHasMirror & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1255"
+      },
+      {
+        "doors": ["Bumper Cave (Bottom)"],
+        "req": "@erCanLiftHeavyRocks & hammer & @erHasPearl | (@erCanLiftRocks | flute) & @erHasMirror & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1261"
+      },
+      {
+        "doors": [
+          "Hype Cave",
+          "Bonk Fairy (Dark)",
+          "Archery Game",
+          "Big Bomb Shop",
+          "Dark Lake Hylia Shop",
+          "Swamp Palace"
+        ],
+        "req": "hammer & @erHasPearl | @erHasMirror & @erThroughTopOfPyramid",
+        "source": "Rules.py:1266"
+      },
+      {
+        "doors": [
+          "Spike Cave",
+          "Cave Shop (Dark Death Mountain)",
+          "Dark Death Mountain Fairy",
+          "Mimic Cave",
+          "Skull Woods Second Section Door (West)",
+          "Skull Woods Final Section",
+          "Ice Palace",
+          "Turtle Rock",
+          "Dark Death Mountain Ledge (West)",
+          "Dark Death Mountain Ledge (East)",
+          "Bumper Cave (Top)",
+          "Superbunny Cave (Top)",
+          "Superbunny Cave (Bottom)",
+          "Hookshot Cave",
+          "Ganons Tower",
+          "Turtle Rock Isolated Ledge Entrance",
+          "Hookshot Cave Back Entrance"
+        ],
+        "req": "@erHasMirror & flute & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1270"
+      },
+      {
+        "doors": [
+          "Capacity Upgrade",
+          "Tower of Hera",
+          "Death Mountain Return Cave (West)",
+          "Paradox Cave (Top)",
+          "Fairy Ascension Cave (Top)",
+          "Spiral Cave",
+          "Desert Palace Entrance (East)"
+        ],
+        "req": "flute & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1275"
+      },
+      {
+        "doors": [
+          "Old Man Cave (East)",
+          "Old Man House (Bottom)",
+          "Old Man House (Top)",
+          "Death Mountain Return Cave (East)",
+          "Spectacle Rock Cave Peak",
+          "Spectacle Rock Cave",
+          "Spectacle Rock Cave (Bottom)"
+        ],
+        "req": "flute & (@erHasMirror | @erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1280"
+      },
+      {
+        "doors": [
+          "Paradox Cave (Bottom)",
+          "Paradox Cave (Middle)",
+          "Hookshot Fairy",
+          "Spiral Cave (Bottom)"
+        ],
+        "req": "flute & (@erHasMirror & hookshot | @erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1285"
+      },
+      {
+        "doors": ["Fairy Ascension Cave (Bottom)"],
+        "req": "flute & (@erHasMirror & hookshot & @erCanLiftHeavyRocks | @erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1289"
+      },
+      {
+        "doors": [
+          "Hyrule Castle Entrance (West)",
+          "Hyrule Castle Entrance (East)",
+          "Agahnims Tower"
+        ],
+        "req": "@erHasMirror | flute & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1294"
+      },
+      {
+        "doors": [
+          "Desert Palace Entrance (West)",
+          "Desert Palace Entrance (North)",
+          "Desert Palace Entrance (South)",
+          "Checkerboard Cave"
+        ],
+        "req": "(reach(darkDesert) & @erHasMirror | flute) & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1300"
+      },
+      {
+        "doors": ["Old Man Cave (West)"],
+        "req": "(flute | @erCanLiftRocks) & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1305"
+      },
+      {
+        "doors": ["Graveyard Cave"],
+        "req": "(flute | reach(westDarkWorld) & @erHasPearl & @erHasMirror) & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1310"
+      },
+      {
+        "doors": ["Two Brothers House (West)", "Cave 45"],
+        "req": "(flute | reach(southDarkWorld) & @erHasMirror) & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1315"
+      },
+      {
+        "doors": ["Dark World Potion Shop"],
+        "req": "@erHasPearl & (hammer | @erCanLiftRocks) | @erHasMirror & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1321"
+      },
+      {
+        "doors": ["Kings Grave"],
+        "req": "@erCanLiftHeavyRocks & @erHasMirror | (@erCanLiftHeavyRocks | flute | reach(westDarkWorld) & @erHasPearl & @erHasMirror) & (@erCanLiftRocks & hammer & @erHasPearl | @erThroughTopOfPyramid)",
+        "source": "Rules.py:1327"
+      }
+    ],
+    "spot": "Pyramid Fairy"
+  },
+  "bunny": {
+    "accessibleLocations": {
+      "line": 1527,
+      "value": [
+        "Link's Uncle",
+        "Sahasrahla",
+        "Sick Kid",
+        "Lost Woods Hideout",
+        "Lumberjack Tree",
+        "Checkerboard Cave",
+        "Potion Shop",
+        "Spectacle Rock Cave",
+        "Pyramid",
+        "Hype Cave - Generous Guy",
+        "Peg Cave",
+        "Bumper Cave Ledge",
+        "Dark Blacksmith Ruins",
+        "Bombos Tablet"
+      ]
+    },
+    "impassableCaves": {
+      "line": 1524,
+      "value": [
+        "Bumper Cave",
+        "Two Brothers House",
+        "Hookshot Cave",
+        "Skull Woods First Section (Right)",
+        "Skull Woods First Section (Left)",
+        "Skull Woods First Section (Top)",
+        "Turtle Rock (Entrance)",
+        "Turtle Rock (Second Section)",
+        "Turtle Rock (Big Chest)",
+        "Skull Woods Second Section (Drop)",
+        "Turtle Rock (Eye Bridge)",
+        "Sewers",
+        "Pyramid",
+        "Spiral Cave (Top)",
+        "Desert Palace Main (Inner)",
+        "Fairy Ascension Cave (Drop)"
+      ]
+    }
+  },
+  "derived": {
+    "allItemsReach_turtleRockBigChest": {
+      "kind": "allItemsReach",
+      "region": "Turtle Rock (Big Chest)",
+      "source": "Rules.py:1014"
+    },
+    "allItemsReach_turtleRockEntrance": {
+      "kind": "allItemsReach",
+      "region": "Turtle Rock (Entrance)",
+      "source": "Rules.py:1012"
+    },
+    "allItemsReach_turtleRockEyeBridge": {
+      "kind": "allItemsReach",
+      "region": "Turtle Rock (Eye Bridge)",
+      "source": "Rules.py:1010"
+    },
+    "allItemsReach_turtleRockSecondSection": {
+      "kind": "allItemsReach",
+      "region": "Turtle Rock (Second Section)",
+      "source": "Rules.py:1016"
+    },
+    "lightWorld_goodBeeCave": {
+      "kind": "lightWorld",
+      "region": "Good Bee Cave",
+      "source": "BaseClasses.py:494"
+    },
+    "swampPatch": {
+      "kind": "swampPatch",
+      "source": "EntranceShuffle.py"
+    }
+  },
   "entrances": {
     "20 Rupee Cave": {
       "req": "@erCanLiftRocks",
@@ -444,6 +765,10 @@
       "req": "@erHasPearl & @erCanLiftHeavyRocks",
       "source": ["Rules.py:220"]
     },
+    "Pyramid Fairy": {
+      "req": "reach(eastDarkWorld) & reach(bigBombShop) & crystal5 & crystal6",
+      "source": ["Rules.py:1219"]
+    },
     "Pyramid Hole": {
       "req": "defeatAgahnim2",
       "source": ["Rules.py:446"]
@@ -525,8 +850,8 @@
       "source": ["Rules.py:302"]
     },
     "Swamp Palace Moat": {
-      "req": "flippers & openFloodgate",
-      "source": ["Rules.py:294"]
+      "req": "flippers & openFloodgate & (setting(swampPatch) | @erHasMirror)",
+      "source": ["Rules.py:294", "Rules.py:57"]
     },
     "Swamp Palace Small Key Door": {
       "req": "keyD2",
@@ -564,6 +889,14 @@
       "req": "caneOfSomaria | hookshot",
       "source": ["Rules.py:370"]
     },
+    "Turtle Rock (Chain Chomp Room) (North)": {
+      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & keyD7 >= 2 | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockSecondSection) | !setting(allItemsReach_turtleRockEntrance)) & keyD7 >= 4",
+      "source": ["Rules.py:1024", "Rules.py:1059"]
+    },
+    "Turtle Rock (Chain Chomp Room) (South)": {
+      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & !setting(allItemsReach_turtleRockBigChest) & (keyD7 >= 4 | keyD7 >= 2 & maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | setting(allItemsReach_turtleRockBigChest)) & (!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockBigChest) & (keyD7 >= 4 | keyD7 >= 2 & maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | !setting(allItemsReach_turtleRockBigChest)) & keyD7 >= 4)",
+      "source": ["Rules.py:1023", "Rules.py:1070", "Rules.py:1082"]
+    },
     "Turtle Rock (Dark Room) (North)": {
       "req": "caneOfSomaria & lamp",
       "source": ["Rules.py:372", "Rules.py:914"]
@@ -580,6 +913,10 @@
       "req": "bigKeyD7",
       "source": ["Rules.py:371"]
     },
+    "Turtle Rock Dark Room Staircase": {
+      "req": "setting(allItemsReach_turtleRockEyeBridge) & keyD7 >= 4 | !setting(allItemsReach_turtleRockEyeBridge) & keyD7 >= 3",
+      "source": ["Rules.py:1020", "Rules.py:1044"]
+    },
     "Turtle Rock Entrance Gap": {
       "req": "caneOfSomaria",
       "source": ["Rules.py:364"]
@@ -587,6 +924,10 @@
     "Turtle Rock Entrance Gap Reverse": {
       "req": "caneOfSomaria",
       "source": ["Rules.py:365"]
+    },
+    "Turtle Rock Pokey Room": {
+      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & keyD7 | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockSecondSection) | !setting(allItemsReach_turtleRockEntrance)) & keyD7 >= 4",
+      "source": ["Rules.py:1025", "Rules.py:1060"]
     },
     "Turtle Rock Teleporter": {
       "req": "@erCanLiftHeavyRocks & hammer",
@@ -641,7 +982,8 @@
   },
   "fill": [
     114, 266, 274, 277, 288, 292, 301, 306, 314, 317, 319, 327, 332, 343, 362,
-    391, 393, 397, 399, 415, 449, 944, 945, 987
+    391, 393, 397, 399, 415, 449, 1001, 1046, 1048, 1052, 1054, 1063, 1065,
+    1073, 1075, 1085, 1094, 1098, 944, 945, 987
   ],
   "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
   "helpers": {
@@ -788,6 +1130,10 @@
     "erHasSword": {
       "req": "sword",
       "source": "BaseClasses.py:463"
+    },
+    "erThroughTopOfPyramid": {
+      "req": "reach(lightWorld) & defeatAgahnim",
+      "source": "Rules.py:175"
     }
   },
   "locations": {
@@ -1155,6 +1501,16 @@
       "req": "bigKeyD7 & (caneOfSomaria | hookshot)",
       "source": ["Rules.py:369"]
     },
+    "Turtle Rock - Big Key Chest": {
+      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & !setting(allItemsReach_turtleRockBigChest) & (keyD7 >= 4 | maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | setting(allItemsReach_turtleRockBigChest)) & (!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockBigChest) & (keyD7 >= 4 | maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | !setting(allItemsReach_turtleRockBigChest)) & (!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & (maybe | keyD7 >= 4) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockSecondSection) | !setting(allItemsReach_turtleRockEntrance)) & (!setting(allItemsReach_turtleRockEyeBridge) & setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockSecondSection) & (maybe | keyD7 >= 4) | (setting(allItemsReach_turtleRockEyeBridge) | !setting(allItemsReach_turtleRockEntrance) | !setting(allItemsReach_turtleRockSecondSection)) & (keyD7 >= 4 | maybe | !setting(allItemsReach_turtleRockEyeBridge)))))",
+      "source": [
+        "Rules.py:1043",
+        "Rules.py:1050",
+        "Rules.py:1061",
+        "Rules.py:1071",
+        "Rules.py:1083"
+      ]
+    },
     "Turtle Rock - Boss": {
       "req": "@erDefeatTrinexx",
       "source": ["Rules.py:379"]
@@ -1231,21 +1587,6 @@
       "code": "world.get_region('Old Man House', player).can_reach_private = lambda state: state.can_reach('Old Ma…",
       "line": 127,
       "why": "a save-and-quit point: what reaches a region"
-    },
-    {
-      "code": "set_trock_key_rules(world, player)",
-      "line": 463,
-      "why": "Turtle Rock's key doors, by which of its doors are reached"
-    },
-    {
-      "code": "set_big_bomb_rules(world, player)",
-      "line": 51,
-      "why": "the big bomb's route, by where the Big Bomb Shop's door is connected"
-    },
-    {
-      "code": "if not world.swamp_patch_required[player]",
-      "line": 56,
-      "why": "whether Swamp Palace and the Dam keep their doors (EntranceShuffle.py)"
     },
     {
       "code": "set_bunny_rules(world, player)",

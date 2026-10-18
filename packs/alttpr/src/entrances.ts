@@ -416,7 +416,9 @@ const REGION_PLACES: Readonly<Record<string, string>> = {
  * the pack's location ids are the slugs of.
  */
 const VT_NAMES: Readonly<Record<string, string>> = {
+  "Agahnim 1": "Agahnim",
   "Bonk Rock Cave": "Pegasus Rocks",
+  "Bumper Cave Ledge": "Bumper Cave",
   "Ganons Tower - Validation Chest": "Ganon's Tower - Moldorm Chest",
   "Graveyard Cave": "Graveyard Ledge",
   "Hype Cave - Generous Guy": "Hype Cave - NPC",
@@ -424,6 +426,13 @@ const VT_NAMES: Readonly<Record<string, string>> = {
   "Mini Moldorm Cave - Generous Guy": "Mini Moldorm Cave - NPC",
   "Peg Cave": "Hammer Pegs",
 };
+
+/**
+ * The pack's id of a check the entrance randomizer names: the slug of its
+ * name, or of vt's where they differ (`VT_NAMES`).
+ */
+export const erLocationId = (name: string): string =>
+  slug(VT_NAMES[name] ?? name);
 
 type Region = {
   readonly kind: string;
@@ -456,7 +465,7 @@ export const PLACE_OF_LOCATION: ReadonlyMap<string, string> = (() => {
       places.find((p) => label === p || label.startsWith(`${p} `));
     if (place === undefined) continue;
     for (const location of region.locations) {
-      const id = slug(VT_NAMES[location] ?? location);
+      const id = erLocationId(location);
       if (MAP_LOCATIONS.has(id)) found.set(id, place);
     }
   }

@@ -1,0 +1,212 @@
+{
+  "file": "test/dungeons/TestIcePalace.py",
+  "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
+  "harness": {
+    "bombShop": "Big Bomb Shop",
+    "connections": "mandatory",
+    "marked": false,
+    "pool": true,
+    "source": "test/dungeons/TestDungeon.py:13",
+    "swampPatch": true
+  },
+  "tests": [
+    {
+      "cases": [
+        ["Ice Palace - Big Key Chest", false, []],
+        ["Ice Palace - Big Key Chest", false, [], ["Hammer"]],
+        ["Ice Palace - Big Key Chest", false, [], ["Progressive Glove"]],
+        ["Ice Palace - Big Key Chest", false, [], ["Fire Rod", "Bombos"]],
+        [
+          "Ice Palace - Big Key Chest",
+          false,
+          [],
+          ["Fire Rod", "Progressive Sword"]
+        ],
+        [
+          "Ice Palace - Big Key Chest",
+          true,
+          [
+            "Progressive Glove",
+            "Fire Rod",
+            "Hammer",
+            "Hookshot",
+            "Small Key (Ice Palace)"
+          ]
+        ],
+        [
+          "Ice Palace - Big Key Chest",
+          true,
+          [
+            "Progressive Glove",
+            "Bombos",
+            "Progressive Sword",
+            "Hammer",
+            "Hookshot",
+            "Small Key (Ice Palace)"
+          ]
+        ],
+        ["Ice Palace - Compass Chest", false, []],
+        ["Ice Palace - Compass Chest", false, [], ["Fire Rod", "Bombos"]],
+        [
+          "Ice Palace - Compass Chest",
+          false,
+          [],
+          ["Fire Rod", "Progressive Sword"]
+        ],
+        ["Ice Palace - Compass Chest", true, ["Fire Rod"]],
+        ["Ice Palace - Compass Chest", true, ["Bombos", "Progressive Sword"]],
+        ["Ice Palace - Map Chest", false, []],
+        ["Ice Palace - Map Chest", false, [], ["Hammer"]],
+        ["Ice Palace - Map Chest", false, [], ["Progressive Glove"]],
+        ["Ice Palace - Map Chest", false, [], ["Fire Rod", "Bombos"]],
+        [
+          "Ice Palace - Map Chest",
+          false,
+          [],
+          ["Fire Rod", "Progressive Sword"]
+        ],
+        [
+          "Ice Palace - Map Chest",
+          true,
+          [
+            "Progressive Glove",
+            "Fire Rod",
+            "Hammer",
+            "Hookshot",
+            "Small Key (Ice Palace)"
+          ]
+        ],
+        [
+          "Ice Palace - Map Chest",
+          true,
+          [
+            "Progressive Glove",
+            "Bombos",
+            "Progressive Sword",
+            "Hammer",
+            "Hookshot",
+            "Small Key (Ice Palace)"
+          ]
+        ],
+        ["Ice Palace - Spike Room", false, []],
+        ["Ice Palace - Spike Room", false, [], ["Fire Rod", "Bombos"]],
+        [
+          "Ice Palace - Spike Room",
+          false,
+          [],
+          ["Fire Rod", "Progressive Sword"]
+        ],
+        [
+          "Ice Palace - Spike Room",
+          true,
+          ["Fire Rod", "Hookshot", "Small Key (Ice Palace)"]
+        ],
+        [
+          "Ice Palace - Spike Room",
+          true,
+          ["Bombos", "Progressive Sword", "Hookshot", "Small Key (Ice Palace)"]
+        ],
+        ["Ice Palace - Freezor Chest", false, []],
+        ["Ice Palace - Freezor Chest", false, [], ["Fire Rod", "Bombos"]],
+        [
+          "Ice Palace - Freezor Chest",
+          false,
+          [],
+          ["Fire Rod", "Progressive Sword"]
+        ],
+        ["Ice Palace - Freezor Chest", true, ["Fire Rod"]],
+        ["Ice Palace - Freezor Chest", true, ["Bombos", "Progressive Sword"]],
+        ["Ice Palace - Iced T Room", false, []],
+        ["Ice Palace - Iced T Room", false, [], ["Fire Rod", "Bombos"]],
+        [
+          "Ice Palace - Iced T Room",
+          false,
+          [],
+          ["Fire Rod", "Progressive Sword"]
+        ],
+        ["Ice Palace - Iced T Room", true, ["Fire Rod"]],
+        ["Ice Palace - Iced T Room", true, ["Bombos", "Progressive Sword"]],
+        ["Ice Palace - Big Chest", false, []],
+        ["Ice Palace - Big Chest", false, [], ["Big Key (Ice Palace)"]],
+        ["Ice Palace - Big Chest", false, [], ["Fire Rod", "Bombos"]],
+        [
+          "Ice Palace - Big Chest",
+          false,
+          [],
+          ["Fire Rod", "Progressive Sword"]
+        ],
+        ["Ice Palace - Big Chest", true, ["Big Key (Ice Palace)", "Fire Rod"]],
+        [
+          "Ice Palace - Big Chest",
+          true,
+          ["Big Key (Ice Palace)", "Bombos", "Progressive Sword"]
+        ],
+        ["Ice Palace - Boss", false, []],
+        ["Ice Palace - Boss", false, [], ["Hammer"]],
+        ["Ice Palace - Boss", false, [], ["Progressive Glove"]],
+        ["Ice Palace - Boss", false, [], ["Big Key (Ice Palace)"]],
+        ["Ice Palace - Boss", false, [], ["Fire Rod", "Bombos"]],
+        ["Ice Palace - Boss", false, [], ["Fire Rod", "Progressive Sword"]],
+        [
+          "Ice Palace - Boss",
+          true,
+          [
+            "Progressive Glove",
+            "Big Key (Ice Palace)",
+            "Fire Rod",
+            "Hammer",
+            "Small Key (Ice Palace)",
+            "Small Key (Ice Palace)"
+          ]
+        ],
+        [
+          "Ice Palace - Boss",
+          true,
+          [
+            "Progressive Glove",
+            "Big Key (Ice Palace)",
+            "Fire Rod",
+            "Hammer",
+            "Cane of Somaria",
+            "Small Key (Ice Palace)"
+          ]
+        ],
+        [
+          "Ice Palace - Boss",
+          true,
+          [
+            "Progressive Glove",
+            "Big Key (Ice Palace)",
+            "Bombos",
+            "Progressive Sword",
+            "Hammer",
+            "Small Key (Ice Palace)",
+            "Small Key (Ice Palace)"
+          ]
+        ],
+        [
+          "Ice Palace - Boss",
+          true,
+          [
+            "Progressive Glove",
+            "Big Key (Ice Palace)",
+            "Bombos",
+            "Progressive Sword",
+            "Hammer",
+            "Cane of Somaria",
+            "Small Key (Ice Palace)"
+          ]
+        ]
+      ],
+      "line": 6,
+      "name": "testIcePalace",
+      "startingRegions": ["Ice Palace (Entrance)"]
+    }
+  ],
+  "upstream": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "copyright": "Copyright (c) 2017 LLCoolDave",
+    "license": "MIT",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  }
+}

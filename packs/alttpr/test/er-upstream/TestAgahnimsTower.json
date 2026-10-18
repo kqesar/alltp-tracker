@@ -1,0 +1,84 @@
+{
+  "file": "test/dungeons/TestAgahnimsTower.py",
+  "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
+  "harness": {
+    "bombShop": "Big Bomb Shop",
+    "connections": "mandatory",
+    "marked": false,
+    "pool": true,
+    "source": "test/dungeons/TestDungeon.py:13",
+    "swampPatch": true
+  },
+  "tests": [
+    {
+      "cases": [
+        ["Castle Tower - Room 03", false, []],
+        [
+          "Castle Tower - Room 03",
+          false,
+          [],
+          [
+            "Progressive Sword",
+            "Hammer",
+            "Progressive Bow",
+            "Fire Rod",
+            "Ice Rod",
+            "Cane of Somaria",
+            "Cane of Byrna"
+          ]
+        ],
+        ["Castle Tower - Room 03", true, ["Progressive Sword"]],
+        ["Castle Tower - Dark Maze", false, []],
+        ["Castle Tower - Dark Maze", false, [], ["Small Key (Agahnims Tower)"]],
+        ["Castle Tower - Dark Maze", false, [], ["Lamp"]],
+        [
+          "Castle Tower - Dark Maze",
+          false,
+          [],
+          [
+            "Progressive Sword",
+            "Hammer",
+            "Progressive Bow",
+            "Fire Rod",
+            "Ice Rod",
+            "Cane of Somaria",
+            "Cane of Byrna"
+          ]
+        ],
+        [
+          "Castle Tower - Dark Maze",
+          true,
+          ["Progressive Sword", "Small Key (Agahnims Tower)", "Lamp"]
+        ],
+        ["Agahnim 1", false, []],
+        [
+          "Agahnim 1",
+          false,
+          ["Small Key (Agahnims Tower)"],
+          ["Small Key (Agahnims Tower)"]
+        ],
+        ["Agahnim 1", false, [], ["Progressive Sword"]],
+        ["Agahnim 1", false, [], ["Lamp"]],
+        [
+          "Agahnim 1",
+          true,
+          [
+            "Small Key (Agahnims Tower)",
+            "Small Key (Agahnims Tower)",
+            "Lamp",
+            "Progressive Sword"
+          ]
+        ]
+      ],
+      "line": 6,
+      "name": "testTower",
+      "startingRegions": ["Agahnims Tower"]
+    }
+  ],
+  "upstream": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "copyright": "Copyright (c) 2017 LLCoolDave",
+    "license": "MIT",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  }
+}

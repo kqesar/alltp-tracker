@@ -1,0 +1,180 @@
+{
+  "file": "test/dungeons/TestSwampPalace.py",
+  "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
+  "harness": {
+    "bombShop": "Big Bomb Shop",
+    "connections": "mandatory",
+    "marked": false,
+    "pool": true,
+    "source": "test/dungeons/TestDungeon.py:13",
+    "swampPatch": true
+  },
+  "tests": [
+    {
+      "cases": [
+        ["Swamp Palace - Entrance", false, []],
+        ["Swamp Palace - Entrance", false, [], ["Flippers"]],
+        ["Swamp Palace - Entrance", false, [], ["Open Floodgate"]],
+        ["Swamp Palace - Entrance", true, ["Open Floodgate", "Flippers"]],
+        ["Swamp Palace - Big Chest", false, []],
+        ["Swamp Palace - Big Chest", false, [], ["Flippers"]],
+        ["Swamp Palace - Big Chest", false, [], ["Open Floodgate"]],
+        ["Swamp Palace - Big Chest", false, [], ["Hammer"]],
+        ["Swamp Palace - Big Chest", false, [], ["Big Key (Swamp Palace)"]],
+        ["Swamp Palace - Big Chest", false, [], ["Small Key (Swamp Palace)"]],
+        [
+          "Swamp Palace - Big Chest",
+          true,
+          [
+            "Open Floodgate",
+            "Big Key (Swamp Palace)",
+            "Small Key (Swamp Palace)",
+            "Flippers",
+            "Hammer"
+          ]
+        ],
+        ["Swamp Palace - Big Key Chest", false, []],
+        ["Swamp Palace - Big Key Chest", false, [], ["Flippers"]],
+        ["Swamp Palace - Big Key Chest", false, [], ["Open Floodgate"]],
+        ["Swamp Palace - Big Key Chest", false, [], ["Hammer"]],
+        [
+          "Swamp Palace - Big Key Chest",
+          false,
+          [],
+          ["Small Key (Swamp Palace)"]
+        ],
+        [
+          "Swamp Palace - Big Key Chest",
+          true,
+          ["Open Floodgate", "Small Key (Swamp Palace)", "Flippers", "Hammer"]
+        ],
+        ["Swamp Palace - Map Chest", false, []],
+        ["Swamp Palace - Map Chest", false, [], ["Flippers"]],
+        ["Swamp Palace - Map Chest", false, [], ["Open Floodgate"]],
+        ["Swamp Palace - Map Chest", false, [], ["Small Key (Swamp Palace)"]],
+        [
+          "Swamp Palace - Map Chest",
+          true,
+          ["Open Floodgate", "Small Key (Swamp Palace)", "Flippers"]
+        ],
+        ["Swamp Palace - West Chest", false, []],
+        ["Swamp Palace - West Chest", false, [], ["Flippers"]],
+        ["Swamp Palace - West Chest", false, [], ["Open Floodgate"]],
+        ["Swamp Palace - West Chest", false, [], ["Hammer"]],
+        ["Swamp Palace - West Chest", false, [], ["Small Key (Swamp Palace)"]],
+        [
+          "Swamp Palace - West Chest",
+          true,
+          ["Open Floodgate", "Small Key (Swamp Palace)", "Flippers", "Hammer"]
+        ],
+        ["Swamp Palace - Compass Chest", false, []],
+        ["Swamp Palace - Compass Chest", false, [], ["Flippers"]],
+        ["Swamp Palace - Compass Chest", false, [], ["Open Floodgate"]],
+        ["Swamp Palace - Compass Chest", false, [], ["Hammer"]],
+        [
+          "Swamp Palace - Compass Chest",
+          false,
+          [],
+          ["Small Key (Swamp Palace)"]
+        ],
+        [
+          "Swamp Palace - Compass Chest",
+          true,
+          ["Open Floodgate", "Small Key (Swamp Palace)", "Flippers", "Hammer"]
+        ],
+        ["Swamp Palace - Flooded Room - Left", false, []],
+        ["Swamp Palace - Flooded Room - Left", false, [], ["Flippers"]],
+        ["Swamp Palace - Flooded Room - Left", false, [], ["Open Floodgate"]],
+        ["Swamp Palace - Flooded Room - Left", false, [], ["Hammer"]],
+        ["Swamp Palace - Flooded Room - Left", false, [], ["Hookshot"]],
+        [
+          "Swamp Palace - Flooded Room - Left",
+          false,
+          [],
+          ["Small Key (Swamp Palace)"]
+        ],
+        [
+          "Swamp Palace - Flooded Room - Left",
+          true,
+          [
+            "Open Floodgate",
+            "Small Key (Swamp Palace)",
+            "Flippers",
+            "Hammer",
+            "Hookshot"
+          ]
+        ],
+        ["Swamp Palace - Flooded Room - Right", false, []],
+        ["Swamp Palace - Flooded Room - Right", false, [], ["Flippers"]],
+        ["Swamp Palace - Flooded Room - Right", false, [], ["Open Floodgate"]],
+        ["Swamp Palace - Flooded Room - Right", false, [], ["Hammer"]],
+        ["Swamp Palace - Flooded Room - Right", false, [], ["Hookshot"]],
+        [
+          "Swamp Palace - Flooded Room - Right",
+          false,
+          [],
+          ["Small Key (Swamp Palace)"]
+        ],
+        [
+          "Swamp Palace - Flooded Room - Right",
+          true,
+          [
+            "Open Floodgate",
+            "Small Key (Swamp Palace)",
+            "Flippers",
+            "Hammer",
+            "Hookshot"
+          ]
+        ],
+        ["Swamp Palace - Waterfall Room", false, []],
+        ["Swamp Palace - Waterfall Room", false, [], ["Flippers"]],
+        ["Swamp Palace - Waterfall Room", false, [], ["Open Floodgate"]],
+        ["Swamp Palace - Waterfall Room", false, [], ["Hammer"]],
+        ["Swamp Palace - Waterfall Room", false, [], ["Hookshot"]],
+        [
+          "Swamp Palace - Waterfall Room",
+          false,
+          [],
+          ["Small Key (Swamp Palace)"]
+        ],
+        [
+          "Swamp Palace - Waterfall Room",
+          true,
+          [
+            "Open Floodgate",
+            "Small Key (Swamp Palace)",
+            "Flippers",
+            "Hammer",
+            "Hookshot"
+          ]
+        ],
+        ["Swamp Palace - Boss", false, []],
+        ["Swamp Palace - Boss", false, [], ["Flippers"]],
+        ["Swamp Palace - Boss", false, [], ["Open Floodgate"]],
+        ["Swamp Palace - Boss", false, [], ["Hammer"]],
+        ["Swamp Palace - Boss", false, [], ["Hookshot"]],
+        ["Swamp Palace - Boss", false, [], ["Small Key (Swamp Palace)"]],
+        [
+          "Swamp Palace - Boss",
+          true,
+          [
+            "Open Floodgate",
+            "Small Key (Swamp Palace)",
+            "Flippers",
+            "Hammer",
+            "Hookshot"
+          ]
+        ]
+      ],
+      "line": 6,
+      "name": "testSwampPalace",
+      "startingRegions": ["Swamp Palace (Entrance)"]
+    }
+  ],
+  "upstream": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "copyright": "Copyright (c) 2017 LLCoolDave",
+    "license": "MIT",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  }
+}

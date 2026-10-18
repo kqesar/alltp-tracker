@@ -323,18 +323,80 @@ flowchart LR
   Purple Chest`) are items of their own, held once their location is
   reached (`events`, from `ItemList.py`). Agahnim's are the pack's
   `defeatAgahnim`, which the player marks.
+- **What reads the connections** becomes data the world fills in:
+  - the big bomb's route, one case per list of doors the Big Bomb Shop may
+    be entered by (`bombShop`: `set_big_bomb_rules` tests
+    `bombshop_entrance.name`);
+  - Turtle Rock's key doors, by what everything held reaches
+    (`set_trock_key_rules`): each such region a derived setting,
+    `allItemsReach_<region>`, read with the entrances' rules as they stood
+    at that line (`allItemsReach`: two bomb jumps were still open);
+  - the swamp patch, a derived setting (`swampPatch`), and whether a region
+    lies in the light world (`lightWorld_<region>`).
+
+  `derived` lists each derived setting and what it reads. A count a local
+  function gives by what a location holds (Turtle Rock's
+  `tr_big_key_chest_keys_needed`) reads each placed count as `maybe`.
 - **What is code** stays out, listed in `unported` with its line, and is
-  ported by hand in the world built from the noted entrances: the
-  save-and-quit points, Turtle Rock's key doors (they hang on which of its
-  doors are reached), the big bomb's route (where the Big Bomb Shop's door
-  is), the swamp patch (whether Swamp Palace and the Dam keep their doors)
-  and the bunny's paths (which regions the entrances make dark). A
-  `can_reach` in an entrance's rule (Turtle Rock's, the castle's exits in
-  Standard) is that world's to resolve too: the engine reads `reach()` in
-  locations only.
+  ported by hand in the world: the save-and-quit points and the bunny's
+  paths (which regions the entrances make dark, `bunny` holding its two
+  lists).
 - **Placement-only rules** (`forbid_item`, `add_item_rule`,
   `set_always_allow`) decide where an item may go, not what Link can
   reach: their lines are listed in `fill`.
+
+### Its world
+
+`src/er-world.ts` builds the world the randomizer fills a seed in, for a
+run's settings and its connections, and compiles it with the engine.
+
+```mermaid
+flowchart LR
+  noted["entrances noted<br/>(entrance id → target id)"] --> conn["crossedConnections<br/>kept doors, mandatory,<br/>two-way caves, one-way doors"]
+  conn --> mark["mark light / dark<br/>(mark_light_world_regions)"]
+  conn --> spots["rules.json per spot<br/>+ the bomb shop's case"]
+  mark --> bunny["bunny's rules<br/>(set_bunny_rules)"]
+  spots --> bunny
+  conn --> derived["derived settings<br/>swampPatch, lightWorld_*,<br/>allItemsReach_* (a first solve)"]
+  bunny --> graph["graph: start → save-and-quit points,<br/>reach() in exits as facts"]
+  derived --> compile["compileWorld"]
+  graph --> compile
+  compile --> solve["solveFacts: solve until<br/>no event or reach fact is gained"]
+```
+
+- **Connections** (`ErConnections`: an entrance's name to the region it
+  opens on). `crossedConnections(mode, noted)` makes what
+  `link_entrances` keeps (Link's House, the Tavern's back door, in
+  Standard the escape's doors) and the mandatory ones, then each noted
+  entrance: a dungeon's or a connector cave's exit both ways
+  (`connect_two_way`), a single cave or a hole one way. An entrance not
+  noted leads nowhere, so a check is in logic only through doors the
+  player knows. `vanillaConnections` and `mandatoryConnections` are the
+  randomizer's tests' worlds.
+- **Save-and-quit points**: the start reaches Link's House and Sanctuary
+  (Standard: the uncle's passage, then Link's House once Sanctuary is),
+  and the Old Man's house once his location is reached.
+- **Facts.** The engine reads `reach()` in locations only. A rule of an
+  exit or of a helper that asks for a region reads the fact
+  `reached_<region>` instead, and an event item (the floodgate, the frog)
+  is held once its location is: `solveFacts` solves, adds what was surely
+  reached, and solves again until nothing is gained, as the randomizer
+  sweeps for events. A fact needs `yes`: a region or event only `maybe`
+  reached gives nothing, which reads its rules as `no`, never wrongly
+  `yes`.
+- **Derived settings**: whether Swamp Palace needs its patch (its door
+  and the Dam's not both vanilla), each region's light world mark, and
+  Turtle Rock's `allItemsReach_*`, from a first world with the entrances'
+  rules of that moment, solved with everything held.
+- **Cost**: building a world takes about 6 to 8 ms (two compiles), done
+  once per entrance noted; a solve about 0.2 ms.
+
+The randomizer's own tests hold it: `test/er-upstream/` (510 cases of its
+dungeon and Death Mountain tests, imported by `scripts/er-tests.mjs` with
+the world each `setUp` builds) run in `test/er-contract.spec.ts` under the
+pack's contract, upstream `true` our `yes` and `false` never `yes`. And on
+the real Crosskeys seed `0yAObedRMV`, every entrance noted from its
+spoiler, everything held reaches all its 233 locations.
 
 ## The legacy format
 

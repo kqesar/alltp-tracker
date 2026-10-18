@@ -1,0 +1,127 @@
+{
+  "file": "test/dungeons/TestDesertPalace.py",
+  "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
+  "harness": {
+    "bombShop": "Big Bomb Shop",
+    "connections": "mandatory",
+    "marked": false,
+    "pool": true,
+    "source": "test/dungeons/TestDungeon.py:13",
+    "swampPatch": true
+  },
+  "tests": [
+    {
+      "cases": [
+        ["Desert Palace - Map Chest", true, []],
+        ["Desert Palace - Big Chest", false, []],
+        ["Desert Palace - Big Chest", false, [], ["Big Key (Desert Palace)"]],
+        ["Desert Palace - Big Chest", true, ["Big Key (Desert Palace)"]],
+        ["Desert Palace - Torch", false, []],
+        ["Desert Palace - Torch", false, [], ["Pegasus Boots"]],
+        ["Desert Palace - Torch", true, ["Pegasus Boots"]],
+        ["Desert Palace - Compass Chest", false, []],
+        [
+          "Desert Palace - Compass Chest",
+          false,
+          [],
+          ["Small Key (Desert Palace)"]
+        ],
+        ["Desert Palace - Compass Chest", true, ["Small Key (Desert Palace)"]],
+        ["Desert Palace - Big Key Chest", false, []],
+        [
+          "Desert Palace - Big Key Chest",
+          false,
+          [],
+          ["Small Key (Desert Palace)"]
+        ],
+        ["Desert Palace - Big Key Chest", true, ["Small Key (Desert Palace)"]],
+        ["Desert Palace - Boss", false, []],
+        ["Desert Palace - Boss", false, [], ["Small Key (Desert Palace)"]],
+        ["Desert Palace - Boss", false, [], ["Big Key (Desert Palace)"]],
+        ["Desert Palace - Boss", false, [], ["Lamp", "Fire Rod"]],
+        [
+          "Desert Palace - Boss",
+          false,
+          [],
+          [
+            "Progressive Sword",
+            "Hammer",
+            "Fire Rod",
+            "Ice Rod",
+            "Progressive Bow",
+            "Cane of Somaria",
+            "Cane of Byrna"
+          ]
+        ],
+        [
+          "Desert Palace - Boss",
+          true,
+          ["Small Key (Desert Palace)", "Big Key (Desert Palace)", "Fire Rod"]
+        ],
+        [
+          "Desert Palace - Boss",
+          true,
+          [
+            "Small Key (Desert Palace)",
+            "Big Key (Desert Palace)",
+            "Lamp",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Desert Palace - Boss",
+          true,
+          [
+            "Small Key (Desert Palace)",
+            "Big Key (Desert Palace)",
+            "Lamp",
+            "Hammer"
+          ]
+        ],
+        [
+          "Desert Palace - Boss",
+          true,
+          [
+            "Small Key (Desert Palace)",
+            "Big Key (Desert Palace)",
+            "Lamp",
+            "Ice Rod"
+          ]
+        ],
+        [
+          "Desert Palace - Boss",
+          true,
+          [
+            "Small Key (Desert Palace)",
+            "Big Key (Desert Palace)",
+            "Lamp",
+            "Cane of Somaria"
+          ]
+        ],
+        [
+          "Desert Palace - Boss",
+          true,
+          [
+            "Small Key (Desert Palace)",
+            "Big Key (Desert Palace)",
+            "Lamp",
+            "Cane of Byrna"
+          ]
+        ]
+      ],
+      "line": 6,
+      "name": "testDesertPalace",
+      "startingRegions": [
+        "Desert Palace North",
+        "Desert Palace Main (Inner)",
+        "Desert Palace Main (Outer)"
+      ]
+    }
+  ],
+  "upstream": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "copyright": "Copyright (c) 2017 LLCoolDave",
+    "license": "MIT",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  }
+}

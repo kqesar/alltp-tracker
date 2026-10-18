@@ -1,0 +1,45 @@
+{
+  "file": "test/dungeons/TestEasternPalace.py",
+  "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
+  "harness": {
+    "bombShop": "Big Bomb Shop",
+    "connections": "mandatory",
+    "marked": false,
+    "pool": true,
+    "source": "test/dungeons/TestDungeon.py:13",
+    "swampPatch": true
+  },
+  "tests": [
+    {
+      "cases": [
+        ["Eastern Palace - Compass Chest", true, []],
+        ["Eastern Palace - Cannonball Chest", true, []],
+        ["Eastern Palace - Big Chest", false, []],
+        ["Eastern Palace - Big Chest", false, [], ["Big Key (Eastern Palace)"]],
+        ["Eastern Palace - Big Chest", true, ["Big Key (Eastern Palace)"]],
+        ["Eastern Palace - Map Chest", true, []],
+        ["Eastern Palace - Big Key Chest", false, []],
+        ["Eastern Palace - Big Key Chest", false, [], ["Lamp"]],
+        ["Eastern Palace - Big Key Chest", true, ["Lamp"]],
+        ["Eastern Palace - Boss", false, []],
+        ["Eastern Palace - Boss", false, [], ["Lamp"]],
+        ["Eastern Palace - Boss", false, [], ["Progressive Bow"]],
+        ["Eastern Palace - Boss", false, [], ["Big Key (Eastern Palace)"]],
+        [
+          "Eastern Palace - Boss",
+          true,
+          ["Lamp", "Progressive Bow", "Big Key (Eastern Palace)"]
+        ]
+      ],
+      "line": 6,
+      "name": "testEastern",
+      "startingRegions": ["Eastern Palace"]
+    }
+  ],
+  "upstream": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "copyright": "Copyright (c) 2017 LLCoolDave",
+    "license": "MIT",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  }
+}

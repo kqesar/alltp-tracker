@@ -3518,6 +3518,84 @@
         ["Pyramid Entrance", "Bottom of Pyramid"]
       ]
     },
+    "default_dungeon_connections": {
+      "line": 3583,
+      "value": [
+        ["Desert Palace Entrance (South)", "Desert Palace Main (Inner)"],
+        ["Desert Palace Entrance (West)", "Desert Palace Main (Outer)"],
+        ["Desert Palace Entrance (North)", "Desert Palace North"],
+        ["Desert Palace Entrance (East)", "Desert Palace Main (Outer)"],
+        ["Desert Palace Exit (South)", "Desert Palace Stairs"],
+        ["Desert Palace Exit (West)", "Desert Ledge"],
+        ["Desert Palace Exit (East)", "Desert Palace Lone Stairs"],
+        ["Desert Palace Exit (North)", "Desert Palace Entrance (North) Spot"],
+        ["Eastern Palace", "Eastern Palace"],
+        ["Eastern Palace Exit", "Light World"],
+        ["Tower of Hera", "Tower of Hera (Bottom)"],
+        ["Tower of Hera Exit", "Death Mountain (Top)"],
+        ["Hyrule Castle Entrance (South)", "Hyrule Castle"],
+        ["Hyrule Castle Entrance (West)", "Hyrule Castle"],
+        ["Hyrule Castle Entrance (East)", "Hyrule Castle"],
+        ["Hyrule Castle Exit (South)", "Hyrule Castle Courtyard"],
+        ["Hyrule Castle Exit (West)", "Hyrule Castle Ledge"],
+        ["Hyrule Castle Exit (East)", "Hyrule Castle Ledge"],
+        ["Agahnims Tower", "Agahnims Tower"],
+        ["Agahnims Tower Exit", "Hyrule Castle Ledge"],
+        ["Thieves Town", "Thieves Town (Entrance)"],
+        ["Thieves Town Exit", "West Dark World"],
+        [
+          "Skull Woods First Section Hole (East)",
+          "Skull Woods First Section (Right)"
+        ],
+        [
+          "Skull Woods First Section Hole (West)",
+          "Skull Woods First Section (Left)"
+        ],
+        [
+          "Skull Woods First Section Hole (North)",
+          "Skull Woods First Section (Top)"
+        ],
+        ["Skull Woods First Section Door", "Skull Woods First Section"],
+        ["Skull Woods First Section Exit", "Skull Woods Forest"],
+        [
+          "Skull Woods Second Section Hole",
+          "Skull Woods Second Section (Drop)"
+        ],
+        [
+          "Skull Woods Second Section Door (East)",
+          "Skull Woods Second Section"
+        ],
+        [
+          "Skull Woods Second Section Door (West)",
+          "Skull Woods Second Section"
+        ],
+        ["Skull Woods Second Section Exit (East)", "Skull Woods Forest"],
+        ["Skull Woods Second Section Exit (West)", "Skull Woods Forest (West)"],
+        ["Skull Woods Final Section", "Skull Woods Final Section (Entrance)"],
+        ["Skull Woods Final Section Exit", "Skull Woods Forest (West)"],
+        ["Ice Palace", "Ice Palace (Entrance)"],
+        ["Ice Palace Exit", "Dark Lake Hylia Central Island"],
+        ["Misery Mire", "Misery Mire (Entrance)"],
+        ["Misery Mire Exit", "Dark Desert"],
+        ["Palace of Darkness", "Palace of Darkness (Entrance)"],
+        ["Palace of Darkness Exit", "East Dark World"],
+        ["Swamp Palace", "Swamp Palace (Entrance)"],
+        ["Swamp Palace Exit", "South Dark World"],
+        ["Turtle Rock", "Turtle Rock (Entrance)"],
+        ["Turtle Rock Exit (Front)", "Dark Death Mountain (Top)"],
+        ["Turtle Rock Ledge Exit (West)", "Dark Death Mountain Ledge"],
+        ["Turtle Rock Ledge Exit (East)", "Dark Death Mountain Ledge"],
+        ["Dark Death Mountain Ledge (West)", "Turtle Rock (Second Section)"],
+        ["Dark Death Mountain Ledge (East)", "Turtle Rock (Big Chest)"],
+        [
+          "Turtle Rock Isolated Ledge Exit",
+          "Dark Death Mountain Isolated Ledge"
+        ],
+        ["Turtle Rock Isolated Ledge Entrance", "Turtle Rock (Eye Bridge)"],
+        ["Ganons Tower", "Ganons Tower (Entrance)"],
+        ["Ganons Tower Exit", "Dark Death Mountain (Top)"]
+      ]
+    },
     "LW_Dungeon_Entrances": {
       "line": 2200,
       "value": [
@@ -3597,6 +3675,238 @@
         "Bonk Fairy (Light)",
         "Hookshot Fairy",
         "Mimic Cave"
+      ]
+    },
+    "mandatory_connections": {
+      "line": 2888,
+      "value": [
+        ["Lake Hylia Central Island Pier", "Lake Hylia Central Island"],
+        [
+          "Lake Hylia Central Island Teleporter",
+          "Dark Lake Hylia Central Island"
+        ],
+        ["Zoras River", "Zoras River"],
+        ["Kings Grave Outer Rocks", "Kings Grave Area"],
+        ["Kings Grave Inner Rocks", "Light World"],
+        ["Kings Grave Mirror Spot", "Kings Grave Area"],
+        ["Kakariko Well (top to bottom)", "Kakariko Well (bottom)"],
+        ["Master Sword Meadow", "Master Sword Meadow"],
+        ["Hobo Bridge", "Hobo Bridge"],
+        ["Desert Palace East Wing", "Desert Palace East"],
+        ["Bat Cave Drop Ledge", "Bat Cave Drop Ledge"],
+        ["Bat Cave Door", "Bat Cave (left)"],
+        ["Lost Woods Hideout (top to bottom)", "Lost Woods Hideout (bottom)"],
+        ["Lumberjack Tree (top to bottom)", "Lumberjack Tree (bottom)"],
+        ["Desert Palace Stairs", "Desert Palace Stairs"],
+        ["Desert Palace Stairs Drop", "Light World"],
+        [
+          "Desert Palace Entrance (North) Rocks",
+          "Desert Palace Entrance (North) Spot"
+        ],
+        ["Desert Ledge Return Rocks", "Desert Ledge"],
+        ["Hyrule Castle Ledge Courtyard Drop", "Hyrule Castle Courtyard"],
+        ["Hyrule Castle Main Gate", "Hyrule Castle Courtyard"],
+        ["Throne Room", "Sewers (Dark)"],
+        ["Sewers Door", "Sewers"],
+        ["Sanctuary Push Door", "Sanctuary"],
+        ["Sewer Drop", "Sewers"],
+        ["Sewers Back Door", "Sewers (Dark)"],
+        ["Agahnim 1", "Agahnim 1"],
+        ["Flute Spot 1", "Death Mountain"],
+        ["Death Mountain Entrance Rock", "Death Mountain Entrance"],
+        ["Death Mountain Entrance Drop", "Light World"],
+        ["Spectacle Rock Cave Drop", "Spectacle Rock Cave (Bottom)"],
+        ["Spectacle Rock Cave Peak Drop", "Spectacle Rock Cave (Bottom)"],
+        ["Death Mountain Return Ledge Drop", "Light World"],
+        ["Old Man House Front to Back", "Old Man House Back"],
+        ["Old Man House Back to Front", "Old Man House"],
+        ["Broken Bridge (West)", "East Death Mountain (Bottom)"],
+        ["Broken Bridge (East)", "Death Mountain"],
+        ["East Death Mountain Drop", "East Death Mountain (Bottom)"],
+        ["Spiral Cave Ledge Access", "Spiral Cave Ledge"],
+        ["Spiral Cave Ledge Drop", "East Death Mountain (Bottom)"],
+        ["Spiral Cave (top to bottom)", "Spiral Cave (Bottom)"],
+        ["East Death Mountain (Top)", "East Death Mountain (Top)"],
+        ["Death Mountain (Top)", "Death Mountain (Top)"],
+        ["Death Mountain Drop", "Death Mountain"],
+        ["Spectacle Rock Drop", "Death Mountain (Top)"],
+        ["Tower of Hera Small Key Door", "Tower of Hera (Basement)"],
+        ["Tower of Hera Big Key Door", "Tower of Hera (Top)"],
+        ["Top of Pyramid", "East Dark World"],
+        ["Dark Lake Hylia Drop (East)", "Dark Lake Hylia"],
+        ["Dark Lake Hylia Drop (South)", "Dark Lake Hylia"],
+        ["Dark Lake Hylia Teleporter", "Dark Lake Hylia"],
+        ["Dark Lake Hylia Ledge", "Dark Lake Hylia Ledge"],
+        ["Dark Lake Hylia Ledge Drop", "Dark Lake Hylia"],
+        ["East Dark World Pier", "East Dark World"],
+        ["Lake Hylia Island Mirror Spot", "Lake Hylia Island"],
+        ["Lake Hylia Central Island Mirror Spot", "Lake Hylia Central Island"],
+        ["Hyrule Castle Ledge Mirror Spot", "Hyrule Castle Ledge"],
+        ["South Dark World Bridge", "South Dark World"],
+        ["East Dark World Bridge", "East Dark World"],
+        ["Maze Race Mirror Spot", "Maze Race Ledge"],
+        ["Village of Outcasts Heavy Rock", "West Dark World"],
+        ["Village of Outcasts Drop", "South Dark World"],
+        ["Village of Outcasts Eastern Rocks", "Hammer Peg Area"],
+        ["Village of Outcasts Pegs", "Dark Grassy Lawn"],
+        ["Peg Area Rocks", "West Dark World"],
+        ["Grassy Lawn Pegs", "West Dark World"],
+        ["Bat Cave Drop Ledge Mirror Spot", "Bat Cave Drop Ledge"],
+        ["East Dark World River Pier", "East Dark World"],
+        ["West Dark World Gap", "West Dark World"],
+        ["East Dark World Broken Bridge Pass", "East Dark World"],
+        ["Northeast Dark World Broken Bridge Pass", "Northeast Dark World"],
+        ["Bumper Cave Entrance Rock", "Bumper Cave Entrance"],
+        ["Bumper Cave Entrance Drop", "West Dark World"],
+        ["Bumper Cave Entrance Mirror Spot", "Death Mountain Entrance"],
+        ["Bumper Cave Ledge Drop", "West Dark World"],
+        ["Bumper Cave Ledge Mirror Spot", "Death Mountain Return Ledge"],
+        ["Skull Woods Forest", "Skull Woods Forest"],
+        ["Desert Ledge Mirror Spot", "Desert Ledge"],
+        ["Desert Ledge (Northeast) Mirror Spot", "Desert Ledge (Northeast)"],
+        [
+          "Desert Palace Entrance (North) Mirror Spot",
+          "Desert Palace Entrance (North) Spot"
+        ],
+        ["Dark Desert Teleporter", "Dark Desert"],
+        ["Desert Palace Stairs Mirror Spot", "Desert Palace Stairs"],
+        ["East Hyrule Teleporter", "East Dark World"],
+        ["South Hyrule Teleporter", "South Dark World"],
+        ["Kakariko Teleporter", "West Dark World"],
+        ["Death Mountain Teleporter", "Dark Death Mountain (West Bottom)"],
+        ["Paradox Cave Push Block Reverse", "Paradox Cave Chest Area"],
+        ["Paradox Cave Push Block", "Paradox Cave Front"],
+        ["Paradox Cave Bomb Jump", "Paradox Cave"],
+        ["Paradox Cave Drop", "Paradox Cave Chest Area"],
+        ["Light World Death Mountain Shop", "Light World Death Mountain Shop"],
+        ["Fairy Ascension Rocks", "Fairy Ascension Plateau"],
+        ["Fairy Ascension Mirror Spot", "Fairy Ascension Plateau"],
+        ["Fairy Ascension Drop", "East Death Mountain (Bottom)"],
+        ["Fairy Ascension Ledge Drop", "Fairy Ascension Plateau"],
+        ["Fairy Ascension Ledge", "Fairy Ascension Ledge"],
+        ["Fairy Ascension Cave Climb", "Fairy Ascension Cave (Top)"],
+        ["Fairy Ascension Cave Pots", "Fairy Ascension Cave (Bottom)"],
+        ["Fairy Ascension Cave Drop", "Fairy Ascension Cave (Drop)"],
+        ["Spectacle Rock Mirror Spot", "Spectacle Rock"],
+        [
+          "Dark Death Mountain Drop (East)",
+          "Dark Death Mountain (East Bottom)"
+        ],
+        [
+          "Dark Death Mountain Drop (West)",
+          "Dark Death Mountain (West Bottom)"
+        ],
+        ["East Death Mountain (Top) Mirror Spot", "East Death Mountain (Top)"],
+        ["Turtle Rock Teleporter", "Turtle Rock (Top)"],
+        ["Turtle Rock Drop", "Dark Death Mountain (Top)"],
+        ["Floating Island Drop", "Dark Death Mountain (Top)"],
+        [
+          "Floating Island Mirror Spot",
+          "Death Mountain Floating Island (Light World)"
+        ],
+        ["East Death Mountain Teleporter", "Dark Death Mountain (East Bottom)"],
+        ["Isolated Ledge Mirror Spot", "Fairy Ascension Ledge"],
+        ["Spiral Cave Mirror Spot", "Spiral Cave Ledge"],
+        ["Mimic Cave Mirror Spot", "Mimic Cave Ledge"],
+        ["Cave 45 Mirror Spot", "Cave 45 Ledge"],
+        ["Graveyard Ledge Mirror Spot", "Graveyard Ledge"],
+        ["Swamp Palace Moat", "Swamp Palace (First Room)"],
+        ["Swamp Palace Small Key Door", "Swamp Palace (Starting Area)"],
+        ["Swamp Palace (Center)", "Swamp Palace (Center)"],
+        ["Swamp Palace (North)", "Swamp Palace (North)"],
+        ["Thieves Town Big Key Door", "Thieves Town (Deep)"],
+        ["Skull Woods Torch Room", "Skull Woods Final Section (Mothula)"],
+        [
+          "Skull Woods First Section Bomb Jump",
+          "Skull Woods First Section (Top)"
+        ],
+        [
+          "Skull Woods First Section South Door",
+          "Skull Woods First Section (Right)"
+        ],
+        [
+          "Skull Woods First Section West Door",
+          "Skull Woods First Section (Left)"
+        ],
+        [
+          "Skull Woods First Section (Right) North Door",
+          "Skull Woods First Section"
+        ],
+        [
+          "Skull Woods First Section (Left) Door to Right",
+          "Skull Woods First Section (Right)"
+        ],
+        [
+          "Skull Woods First Section (Left) Door to Exit",
+          "Skull Woods First Section"
+        ],
+        [
+          "Skull Woods First Section (Top) One-Way Path",
+          "Skull Woods First Section"
+        ],
+        ["Skull Woods Second Section (Drop)", "Skull Woods Second Section"],
+        ["Blind Fight", "Blind Fight"],
+        ["Desert Palace Pots (Outer)", "Desert Palace Main (Inner)"],
+        ["Desert Palace Pots (Inner)", "Desert Palace Main (Outer)"],
+        ["Ice Palace Entrance Room", "Ice Palace (Main)"],
+        ["Ice Palace (East)", "Ice Palace (East)"],
+        ["Ice Palace (East Top)", "Ice Palace (East Top)"],
+        ["Ice Palace (Kholdstare)", "Ice Palace (Kholdstare)"],
+        ["Misery Mire Entrance Gap", "Misery Mire (Main)"],
+        ["Misery Mire (West)", "Misery Mire (West)"],
+        ["Misery Mire Big Key Door", "Misery Mire (Final Area)"],
+        ["Misery Mire (Vitreous)", "Misery Mire (Vitreous)"],
+        ["Turtle Rock Entrance Gap", "Turtle Rock (First Section)"],
+        ["Turtle Rock Entrance Gap Reverse", "Turtle Rock (Entrance)"],
+        ["Turtle Rock Pokey Room", "Turtle Rock (Chain Chomp Room)"],
+        [
+          "Turtle Rock (Chain Chomp Room) (North)",
+          "Turtle Rock (Second Section)"
+        ],
+        [
+          "Turtle Rock (Chain Chomp Room) (South)",
+          "Turtle Rock (First Section)"
+        ],
+        ["Turtle Rock Chain Chomp Staircase", "Turtle Rock (Chain Chomp Room)"],
+        ["Turtle Rock (Big Chest) (North)", "Turtle Rock (Second Section)"],
+        ["Turtle Rock Big Key Door", "Turtle Rock (Crystaroller Room)"],
+        ["Turtle Rock Big Key Door Reverse", "Turtle Rock (Second Section)"],
+        ["Turtle Rock Dark Room Staircase", "Turtle Rock (Dark Room)"],
+        ["Turtle Rock (Dark Room) (North)", "Turtle Rock (Crystaroller Room)"],
+        ["Turtle Rock (Dark Room) (South)", "Turtle Rock (Eye Bridge)"],
+        ["Turtle Rock Dark Room (South)", "Turtle Rock (Dark Room)"],
+        ["Turtle Rock (Trinexx)", "Turtle Rock (Trinexx)"],
+        ["Palace of Darkness Bridge Room", "Palace of Darkness (Center)"],
+        ["Palace of Darkness Bonk Wall", "Palace of Darkness (Bonk Section)"],
+        [
+          "Palace of Darkness Big Key Chest Staircase",
+          "Palace of Darkness (Big Key Chest)"
+        ],
+        ["Palace of Darkness (North)", "Palace of Darkness (North)"],
+        [
+          "Palace of Darkness Big Key Door",
+          "Palace of Darkness (Final Section)"
+        ],
+        ["Palace of Darkness Hammer Peg Drop", "Palace of Darkness (Center)"],
+        [
+          "Palace of Darkness Spike Statue Room Door",
+          "Palace of Darkness (Harmless Hellway)"
+        ],
+        ["Palace of Darkness Maze Door", "Palace of Darkness (Maze)"],
+        ["Ganons Tower (Tile Room)", "Ganons Tower (Tile Room)"],
+        ["Ganons Tower (Tile Room) Key Door", "Ganons Tower (Compass Room)"],
+        ["Ganons Tower (Bottom) (East)", "Ganons Tower (Bottom)"],
+        ["Ganons Tower (Hookshot Room)", "Ganons Tower (Hookshot Room)"],
+        ["Ganons Tower (Map Room)", "Ganons Tower (Map Room)"],
+        ["Ganons Tower (Double Switch Room)", "Ganons Tower (Firesnake Room)"],
+        ["Ganons Tower (Firesnake Room)", "Ganons Tower (Teleport Room)"],
+        ["Ganons Tower (Bottom) (West)", "Ganons Tower (Bottom)"],
+        ["Ganons Tower Big Key Door", "Ganons Tower (Top)"],
+        ["Ganons Tower Torch Rooms", "Ganons Tower (Before Moldorm)"],
+        ["Ganons Tower Moldorm Door", "Ganons Tower (Moldorm)"],
+        ["Ganons Tower Moldorm Gap", "Agahnim 2"],
+        ["Ganon Drop", "Bottom of Pyramid"],
+        ["Pyramid Drop", "East Dark World"]
       ]
     },
     "Old_Man_Entrances": {

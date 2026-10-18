@@ -1,0 +1,67 @@
+{
+  "file": "test/dungeons/TestTowerOfHera.py",
+  "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
+  "harness": {
+    "bombShop": "Big Bomb Shop",
+    "connections": "mandatory",
+    "marked": false,
+    "pool": true,
+    "source": "test/dungeons/TestDungeon.py:13",
+    "swampPatch": true
+  },
+  "tests": [
+    {
+      "cases": [
+        ["Tower of Hera - Big Key Chest", false, []],
+        [
+          "Tower of Hera - Big Key Chest",
+          false,
+          [],
+          ["Small Key (Tower of Hera)"]
+        ],
+        ["Tower of Hera - Big Key Chest", false, [], ["Lamp", "Fire Rod"]],
+        [
+          "Tower of Hera - Big Key Chest",
+          true,
+          ["Small Key (Tower of Hera)", "Lamp"]
+        ],
+        [
+          "Tower of Hera - Big Key Chest",
+          true,
+          ["Small Key (Tower of Hera)", "Fire Rod"]
+        ],
+        ["Tower of Hera - Basement Cage", true, []],
+        ["Tower of Hera - Map Chest", true, []],
+        ["Tower of Hera - Compass Chest", false, []],
+        [
+          "Tower of Hera - Compass Chest",
+          false,
+          [],
+          ["Big Key (Tower of Hera)"]
+        ],
+        ["Tower of Hera - Compass Chest", true, ["Big Key (Tower of Hera)"]],
+        ["Tower of Hera - Big Chest", false, []],
+        ["Tower of Hera - Big Chest", false, [], ["Big Key (Tower of Hera)"]],
+        ["Tower of Hera - Big Chest", true, ["Big Key (Tower of Hera)"]],
+        ["Tower of Hera - Boss", false, []],
+        ["Tower of Hera - Boss", false, [], ["Big Key (Tower of Hera)"]],
+        ["Tower of Hera - Boss", false, [], ["Progressive Sword", "Hammer"]],
+        [
+          "Tower of Hera - Boss",
+          true,
+          ["Progressive Sword", "Big Key (Tower of Hera)"]
+        ],
+        ["Tower of Hera - Boss", true, ["Hammer", "Big Key (Tower of Hera)"]]
+      ],
+      "line": 6,
+      "name": "testTowerOfHera",
+      "startingRegions": ["Tower of Hera (Bottom)"]
+    }
+  ],
+  "upstream": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "copyright": "Copyright (c) 2017 LLCoolDave",
+    "license": "MIT",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  }
+}

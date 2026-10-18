@@ -5,7 +5,9 @@
     "data": "src/entrances/er.json",
     "license": "MIT, Copyright (c) 2017 LLCoolDave",
     "pinnedBy": "the commit vt's composer.json requires for its entrance shuffle",
-    "repo": "cassidoxa/ALttPEntranceRandomizer"
+    "repo": "cassidoxa/ALttPEntranceRandomizer",
+    "rules": "src/entrances/rules.json",
+    "tests": "test/er-upstream"
   },
   "license": "MIT, Copyright (c) 2016 sporchia",
   "logic": 31,

@@ -2,7 +2,7 @@
 /// <reference types="node" />
 // Imports the entrance randomizer's tables as JSON.
 //
-//   node scripts/import-er.mjs <er-checkout> --rom <base.sfc> [--out <dir>]
+//   node scripts/import-er.mjs <er-checkout> --rom <base.sfc>
 //
 // vt hands a seed with shuffled entrances to the entrance randomizer
 // (cassidoxa/ALttPEntranceRandomizer, MIT, (c) 2017 LLCoolDave), at the
@@ -13,8 +13,10 @@
 // source assigns or passes them; anything else there stops the import with
 // the file and line.
 //
-// Two files come out: er.json, the tables below, and rules.json, the
-// randomizer's access rules in the engine's language (er-rules.mjs).
+// What comes out: src/entrances/er.json, the tables below;
+// src/entrances/rules.json, the randomizer's access rules in the engine's
+// language (er-rules.mjs); test/er-upstream/, its own tests' cases
+// (er-tests.mjs).
 //
 // From EntranceShuffle.py: the module's entrance tables, the holes and their
 // targets of scramble_holes, Skull Woods' of skull_woods_shuffle, and each
@@ -33,10 +35,11 @@
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { importErRules, regionId } from "./er-rules.mjs";
+import { importErTests } from "./er-tests.mjs";
 import { readCommit } from "./import-upstream-tests.mjs";
 import { assigned, body, calls } from "./python.mjs";
 
@@ -66,7 +69,9 @@ export const TABLES = [
   "Bomb_Shop_Single_Cave_Doors",
   "Single_Cave_Doors",
   "Single_Cave_Targets",
+  "mandatory_connections",
   "default_connections",
+  "default_dungeon_connections",
 ];
 
 const REGION_KINDS = { cave: "cave", dungeon: "dungeon", dw: "dw", lw: "lw" };
@@ -240,40 +245,46 @@ function main(argv) {
   const args = [...argv];
   const romAt = args.indexOf("--rom");
   const romFile = romAt < 0 ? undefined : args.splice(romAt, 2)[1];
-  const outAt = args.indexOf("--out");
-  const here = dirname(fileURLToPath(import.meta.url));
-  const out =
-    outAt < 0
-      ? join(here, "../src/entrances")
-      : resolve(args.splice(outAt, 2)[1] ?? "");
+  const pack = join(dirname(fileURLToPath(import.meta.url)), "..");
   const checkout = args[0];
   if (checkout === undefined || romFile === undefined || args.length !== 1) {
     process.stderr.write(
-      "Usage: import-er.mjs <er-checkout> --rom <base.sfc> [--out <dir>]\n",
+      "Usage: import-er.mjs <er-checkout> --rom <base.sfc>\n",
     );
     process.exit(2);
   }
+  /** @param {string} file */
+  const read = (file) => readFileSync(join(resolve(checkout), file), "utf8");
   const er = importEr(resolve(checkout), resolve(romFile));
   const { regions, upstream } = er;
   const rules = {
     generated: er.generated,
     upstream,
-    ...importErRules(
-      (file) => readFileSync(join(resolve(checkout), file), "utf8"),
-      regions,
-    ),
+    ...importErRules(read, regions),
   };
-  const files = [join(out, "er.json"), join(out, "rules.json")];
-  writeFileSync(files[0] ?? "", `${JSON.stringify(er, null, 1)}\n`);
-  writeFileSync(files[1] ?? "", `${JSON.stringify(rules, null, 1)}\n`);
+  /** @type {[string, unknown][]} */
+  const outputs = [
+    ["src/entrances/er.json", er],
+    ["src/entrances/rules.json", rules],
+    ...importErTests(read).map(
+      (fixture) =>
+        /** @type {[string, unknown]} */ ([
+          `test/er-upstream/${basename(fixture.file, ".py")}.json`,
+          { generated: er.generated, upstream, ...fixture },
+        ]),
+    ),
+  ];
+  mkdirSync(join(pack, "test/er-upstream"), { recursive: true });
+  for (const [file, data] of outputs)
+    writeFileSync(join(pack, file), `${JSON.stringify(data, null, 1)}\n`);
   // As the repository checks them: keys sorted, Biome's format
-  execFileSync(join(here, "../../../node_modules/.bin/biome"), [
+  execFileSync(join(pack, "../../node_modules/.bin/biome"), [
     "check",
     "--write",
-    ...files,
+    ...outputs.map(([file]) => join(pack, file)),
   ]);
   process.stdout.write(
-    `${upstream.repo}@${upstream.commit}: ${Object.keys(er.tables).length} tables, ${Object.keys(er.doors.value).length} doors, ${regions.length} regions; ${Object.keys(rules.entrances).length + Object.keys(rules.locations).length} rules, ${rules.unported.length} unported\n`,
+    `${upstream.repo}@${upstream.commit}: ${Object.keys(er.tables).length} tables, ${Object.keys(er.doors.value).length} doors, ${regions.length} regions; ${Object.keys(rules.entrances).length + Object.keys(rules.locations).length} rules, ${rules.unported.length} unported; ${outputs.length - 2} test files\n`,
   );
 }
 
