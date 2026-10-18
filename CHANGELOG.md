@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.22.0](https://github.com/kqesar/alltp-tracker/compare/v2.21.0...v2.22.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **alttpr:** a Mystery run's settings, hidden until found ([2beb3a9](https://github.com/kqesar/alltp-tracker/commit/2beb3a90759152e283f73286da84e3d76c7b7e3c))
+* **engine:** settings not known yet, read both ways ([e19ca68](https://github.com/kqesar/alltp-tracker/commit/e19ca68be5669a322cac36bd23c0a7efcbfbfd04))
+* **web:** a Mystery run type, its settings found as the run goes ([022d5ec](https://github.com/kqesar/alltp-tracker/commit/022d5ec954c3327f11b8c56a2935b99baf63e6e4))
+
+
+### 🐛 Bug Fixes
+
+* **web:** know a Mystery race seed by its file ([3813ccd](https://github.com/kqesar/alltp-tracker/commit/3813ccd9a274da903ffaaa6dc34efa011774776f))
+* **web:** tell a seed with shuffled entrances from one without ([486e2f7](https://github.com/kqesar/alltp-tracker/commit/486e2f7267acb62bcfa9e6588d844a5527a13cd5))
+
 ## [2.21.0](https://github.com/kqesar/alltp-tracker/compare/v2.20.0...v2.21.0) (2026-10-18)
 
 
