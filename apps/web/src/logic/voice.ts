@@ -176,6 +176,22 @@ const RUN: readonly (readonly [readonly string[], VoiceAction])[] = [
   [["pause timer", "stop timer", "pause"], { kind: "pauseTimer" }],
 ];
 
+/**
+ * What to say, for the player: each item's phrases, the dungeons' names,
+ * what may follow a dungeon's name, and the run's commands. The first
+ * phrase of each is the one to show first.
+ */
+export const VOICE_GUIDE = {
+  dungeons: DUNGEONS,
+  items: ITEMS.map(([phrases, control, change]) => ({
+    change,
+    control,
+    phrases,
+  })),
+  parts: PARTS.map(([phrases]) => phrases),
+  run: RUN.map(([phrases]) => phrases),
+} as const;
+
 const KNOWN_CONTROLS = new Set(CONTROLS);
 
 /** Every phrase, without the wake word, and its action. */

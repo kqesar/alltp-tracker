@@ -40,6 +40,7 @@ pnpm test:e2e                # Playwright + axe on the production build, 4 width
                              # port 4173; another worktree at once: E2E_PORT=<free port>
 pnpm vitest run <file>       # One spec file; add -t "name" to filter by test name
 pnpm --filter @alltp/pack-alttpr import-upstream <checkout>  # Regenerate the upstream test fixtures
+pnpm --filter @alltp/web fetch-voice-model  # The speech model (40 MB, gitignored), before test:e2e
 ```
 
 `tsc -b` writes its build info and the config projects' output under `node_modules/.tmp`, never next to the sources: a stray `vite.config.js` would shadow `vite.config.ts`.

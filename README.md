@@ -58,6 +58,28 @@ Races: on a race seed, or when its race flag cannot be read, the tracker reads o
 
 Safari, and every browser on iOS, cannot reach SNI from this secure site (it counts `ws://localhost` as mixed content): use Firefox, Chrome or Edge. The desktop app will cover Safari. The first time, Firefox and Chrome ask whether the site may reach apps on your device: allow it. SNI listening on another port than 23074? Add `?bridge=<port>` to the tracker's address.
 
+## Voice commands
+
+Mark what you find without leaving the game: say **"tracker"**, then the find. For example, "tracker hook shot", "tracker master sword", "tracker eastern boss", "tracker mire ether", "tracker eastern crystal" or "tracker undo". Open **Voice** beside the run timer and choose **Start listening**.
+
+- **What a command does.** It says what you found, not a click:
+  - saying the hookshot again keeps it;
+  - "sword" is one level up and never wraps round to none;
+  - "eastern chest" takes one item from the count.
+  - Each command is one step of Undo, as a click is. The Voice button shows it for a moment, and a screen reader hears it.
+- **Talking is safe.** Without "tracker" first, nothing is marked, so talking about an item on stream changes nothing.
+- **Private.** Speech is recognized in your browser, by [Vosk](https://alphacephei.com/vosk/), and no sound leaves your computer.
+  - The first start downloads the speech model, 40 MB, kept for next time (about 60 MB of the browser's storage; **Remove the speech model** in the dialog frees it).
+  - Nothing is downloaded until you turn voice commands on.
+  - While listening, the recognizer uses about 15 % of one CPU core.
+- **Words the model knows.** It is English only, and its dictionary lacks a few of the game's names, so they are said as words it has. The dialog's **What to say** lists every command:
+  - "bom boss" for Bombos (saying "bombos" works);
+  - "samaria" for Somaria;
+  - "burner" or "blue cane" for Byrna;
+  - "aga" for Agahnim;
+  - "gannon tower" or "g t" for Ganon's Tower.
+- **Where it works.** In Firefox, Chrome and Edge, in a browser tab: an OBS dock has no microphone. Once on, the tracker listens again each time it opens, on that device, until you stop it. Only one tab listens at a time.
+
 ## Streaming with OBS
 
 The stream view, [`?view=obs`](https://kqesar.github.io/alltp-tracker/?view=obs), is the item grid alone on a transparent background. It fills its source, centred, at a size that keeps the pixel art sharp, and follows the run live. The toolbar's **Stream view** button copies its address. In OBS 31 or newer:
@@ -97,6 +119,7 @@ pnpm dev          # http://localhost:5173
 | `pnpm typecheck` | type-check every workspace |
 | `pnpm test` | run the unit tests (app, engine and game packs) |
 | `pnpm test:e2e` | browser tests: Playwright + axe on the production build |
+| `pnpm --filter @alltp/web fetch-voice-model` | fetch the speech model voice commands use (40 MB, not in git; the voice browser tests need it) |
 | `pnpm test:coverage:show` | tests with a coverage table |
 | `pnpm lint` / `pnpm lint:fix` | Biome check / autofix |
 

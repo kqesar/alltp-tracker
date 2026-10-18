@@ -11,6 +11,8 @@ node_modules
 coverage*
 dist
 dist-ssr
+# The speech model, fetched by apps/web/scripts/fetch-voice-model.mjs
+apps/web/public/models/
 *.local
 
 # TypeScript

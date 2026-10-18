@@ -1,0 +1,193 @@
+/*
+ * Voice commands (components/map/VoiceControl.tsx): the button beside the
+ * run timer, which says in words whether the tracker listens and shows each
+ * command it hears; then its dialog.
+ */
+.voice-button {
+  display: inline-flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 var(--spacing-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: var(--surface-glass);
+  border: 1px solid var(--color-border-glass);
+  border-radius: var(--border-radius);
+  transition:
+    color var(--transition),
+    border-color var(--transition);
+}
+
+.voice-button:hover {
+  color: var(--color-accent);
+}
+
+.voice-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* The microphone open: in sight for as long as it is */
+.voice-button--listening {
+  color: var(--color-text);
+  border-color: var(--color-success);
+}
+
+.voice-button--listening .toolbar-icon {
+  color: var(--color-success);
+}
+
+.voice-button--opening .toolbar-icon,
+.voice-button--loading .toolbar-icon {
+  animation: autotrack-busy 0.8s ease-in-out infinite alternate;
+}
+
+.voice-button--failed .toolbar-icon {
+  color: var(--color-danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-button--opening .toolbar-icon,
+  .voice-button--loading .toolbar-icon {
+    animation: none;
+  }
+}
+
+.voice {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.voice-say {
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.voice__status {
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: 0;
+  font-weight: 600;
+  background: var(--surface-1);
+  border-left: 3px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.voice__status--listening {
+  border-left-color: var(--color-success);
+}
+
+.voice__status--failed {
+  border-left-color: var(--color-danger);
+}
+
+.voice__note {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.voice__field {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.voice__label {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.voice__select {
+  min-height: 2.5rem;
+  padding: 0 var(--spacing-sm);
+  font: inherit;
+  color: var(--color-text);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+}
+
+.voice__select:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.voice__guide summary {
+  min-height: 2.5rem;
+  font-weight: 600;
+  line-height: 2.5rem;
+  cursor: pointer;
+}
+
+.voice__guide summary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.voice-guide {
+  display: grid;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.voice-guide__title {
+  margin: 0 0 var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.voice-guide__list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.voice-guide__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--spacing-md);
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.voice-guide__row dt {
+  color: var(--color-text-secondary);
+}
+
+.voice-guide__row dd {
+  margin: 0;
+}
+
+.voice-guide__note {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.voice-guide__names {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 2px var(--spacing-md);
+  padding: 0;
+  margin: var(--spacing-xs) 0 0;
+  list-style: none;
+}
+
+.voice__remove {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-md);
+  align-items: center;
+}
