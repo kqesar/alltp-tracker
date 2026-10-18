@@ -52,6 +52,20 @@ export const defaultItemGrid: string[][] = [
   ],
 ];
 
+/**
+ * The item grid of a run: a retro run's last row holds the shops that sell
+ * arrows and keys where Hyrule Castle's and Castle Tower's key cells stand,
+ * which have nothing to show there (no big key, no small key of their own).
+ * @param run - The run's world
+ */
+export const itemGridFor = (run: { readonly mode: string }): string[][] =>
+  run.mode === "retro" ? RETRO_ITEM_GRID : defaultItemGrid;
+
+const RETRO_ITEM_GRID: string[][] = [
+  ...defaultItemGrid.slice(0, -1),
+  ["shoparrow", "shopkey", "", "", "keylabel12", "keys12", "boss12"],
+];
+
 /** Whether a grid id is a key cell's or a castle dungeon's label. */
 export const isKeyCell = (id: string): boolean =>
   id.startsWith("keys") || id.startsWith("keylabel");
@@ -138,6 +152,9 @@ const BOOLEAN_ITEMS = [
   "net",
   "powder",
   "quake",
+  // The retro world's shops: one found that sells arrows, or keys
+  "shoparrow",
+  "shopkey",
   "shovel",
   "somaria",
 ];
@@ -194,6 +211,8 @@ const ITEM_NAMES: Record<string, string> = {
   net: "Bug Net",
   powder: "Magic Powder",
   quake: "Quake Medallion",
+  shoparrow: "Arrow shop",
+  shopkey: "Key shop",
   somaria: "Cane of Somaria",
 };
 

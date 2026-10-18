@@ -65,6 +65,16 @@ describe("applyVoice", () => {
     expect(store().smallKeys[1]).toBe(1);
   });
 
+  it("marks a shop found in a retro run only, whose board shows the shops", () => {
+    expect(say("key shop")).toEqual({ changed: false, words: "Key shop" });
+    expect(store().items.shopkey).toBe(false);
+
+    store().applyPreset("retro");
+    expect(say("key shop")).toEqual({ changed: true, words: "Key shop" });
+    expect(say("arrow shop").changed).toBe(true);
+    expect(store().items).toMatchObject({ shoparrow: true, shopkey: true });
+  });
+
   it("undoes, redoes and drives the timer, saying when there was nothing to do", () => {
     expect(say("undo").changed).toBe(false);
     say("hammer");

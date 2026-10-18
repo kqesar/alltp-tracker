@@ -8,7 +8,7 @@ import { Header } from "@/components/ui/Header";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { TrackerControls } from "@/components/ui/TrackerControls";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
-import { defaultItemGrid } from "@/data/items";
+import { itemGridFor } from "@/data/items";
 import { useAutotrack } from "@/hooks/useAutotrack";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { useRunAnalysis } from "@/hooks/useRunAnalysis";
@@ -29,6 +29,7 @@ function App() {
   useVoice();
   useRunAnalysis();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
+  const grid = useGameStore((state) => itemGridFor(state.settings));
   const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
   const mapLayout = useGameStore((state) => state.mapLayout);
   const setMapView = useGameStore((state) => state.setMapView);
@@ -69,7 +70,7 @@ function App() {
           className={`layout${mapLayout === "stacked" ? " layout--stacked" : ""}${bigKeysVisible ? " layout--key-rows" : ""}`}
           data-testid="layout"
         >
-          <TrackerGrid itemLayout={defaultItemGrid} />
+          <TrackerGrid itemLayout={grid} />
           <MapPanel />
         </div>
       </main>

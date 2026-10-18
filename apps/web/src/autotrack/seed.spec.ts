@@ -162,6 +162,14 @@ describe("checkSeed", () => {
     ).toMatchObject({ presetId: "keysanity" });
   });
 
+  it("knows a retro seed by its generic keys: the Retro run type", () => {
+    expect(checkSeed(seedOf({ mode: "retro" }), run("open"))).toMatchObject({
+      kind: "differs",
+      presetId: "retro",
+      seedText: "Retro (Retro, Ganon, 7/7)",
+    });
+  });
+
   it("keeps the entrance shuffle the ROM does not state", () => {
     const check = checkSeed(seedOf({ goal: "fast_ganon" }), run("crosskeys"));
     expect(check).toMatchObject({

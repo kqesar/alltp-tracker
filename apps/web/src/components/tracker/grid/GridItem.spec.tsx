@@ -92,6 +92,27 @@ describe("GridItem", () => {
     expect(document.querySelector(".bigkey-count")).toBeNull();
   });
 
+  it("shows a retro run's big keys alone: its small keys are no dungeon's", () => {
+    useGameStore.getState().applyPreset("retro");
+    useGameStore.getState().setBigKeysVisible(true);
+
+    render(<GridItem col={5} item="keys3" row={2} />);
+
+    expect(screen.getByTestId("big-key-3")).toBeInTheDocument();
+    expect(screen.queryByTestId("small-key-3")).toBeNull();
+    expect(document.querySelector(".bigkey-count")).toBeNull();
+  });
+
+  it("names a retro shop found or not, never obtained", () => {
+    render(<GridItem col={0} item="shopkey" row={7} />);
+    const shop = screen.getByRole("button");
+    expect(shop).toHaveAccessibleName(/^Key shop, not found\./);
+
+    fireEvent.click(shop);
+    expect(shop).toHaveAccessibleName(/^Key shop, found\./);
+    expect(useGameStore.getState().items.shopkey).toBe(true);
+  });
+
   it("gives each castle dungeon's key cell what its pool holds, in keysanity", () => {
     useGameStore.getState().applyPreset("keysanity");
     const buttonsOf = (item: string) => {

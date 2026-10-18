@@ -62,6 +62,31 @@ const MIDGAME = inputsOf({
   sword: 2,
 });
 
+describe("a retro run", () => {
+  it("shoots once an arrow shop is found, and opens every door once a key shop is", () => {
+    // Agahnim beaten, the hammer, a bow without silvers, the lamp
+    const retro = (items: Partial<ItemState>) =>
+      solutionOf(inputsOf({ ...MIDGAME.items, ...items }, { preset: "retro" }));
+    const tri = (items: Partial<ItemState>, id: string) =>
+      retro(items).tris[id];
+
+    expect(retro({}).modelled).toBe(true);
+    // The rupee bow shoots nothing until an arrow is bought
+    expect(tri({}, "eastern-palace/boss")).toBe("no");
+    expect(tri({ shoparrow: true }, "eastern-palace/boss")).not.toBe("no");
+    // A generic key may open another dungeon's door: maybe, until keys sell
+    expect(tri({ shoparrow: true }, "palace-of-darkness/compass-chest")).toBe(
+      "maybe",
+    );
+    expect(
+      tri(
+        { shoparrow: true, shopkey: true },
+        "palace-of-darkness/compass-chest",
+      ),
+    ).toBe("yes");
+  });
+});
+
 describe("analyzeRun", () => {
   it("lists what a check out of logic is missing, and nothing in logic", () => {
     const { missing } = analysisOf(FRESH);

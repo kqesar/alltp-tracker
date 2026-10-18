@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   defaultItemGrid,
   isKeyCell,
+  itemGridFor,
   itemLabels,
   items,
   itemsMax,
@@ -98,6 +99,24 @@ describe("defaultItemGrid", () => {
       "keys12",
       "boss12",
     ]);
+  });
+});
+
+describe("itemGridFor", () => {
+  it("lays a retro run's shops where the castles' key cells stand", () => {
+    expect(itemGridFor({ mode: "open" })).toBe(defaultItemGrid);
+    const retro = itemGridFor({ mode: "retro" });
+    expect(retro.slice(0, -1)).toEqual(defaultItemGrid.slice(0, -1));
+    expect(retro.at(-1)).toEqual([
+      "shoparrow",
+      "shopkey",
+      "",
+      "",
+      "keylabel12",
+      "keys12",
+      "boss12",
+    ]);
+    expect(items).toMatchObject({ shoparrow: false, shopkey: false });
   });
 });
 

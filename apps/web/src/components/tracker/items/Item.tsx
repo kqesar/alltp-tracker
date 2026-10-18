@@ -20,6 +20,8 @@ type ItemProps = {
  */
 const describeState = (item: string, value: number | boolean): string => {
   if (!item || item === "blank") return "empty";
+  // A shop is found, not obtained
+  if (item.startsWith("shop")) return value ? "found" : "not found";
   if (typeof value === "boolean") return value ? "obtained" : "not obtained";
   if (typeof value !== "number") return "unknown state";
   return value > (itemsMin[item] ?? 0) ? `level ${value}` : "not obtained";
