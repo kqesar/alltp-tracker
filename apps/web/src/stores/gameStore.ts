@@ -22,6 +22,14 @@ import {
   smallKeysMax,
 } from "@/logic/settings";
 import {
+  finishTimer,
+  IDLE_TIMER,
+  pauseTimer,
+  type RunTimer,
+  restoreTimer,
+  startTimer,
+} from "@/logic/timer";
+import {
   GAME,
   itemRange,
   migrate,
@@ -39,6 +47,21 @@ export type Direction = 1 | -1;
 
 type GameState = Progress &
   Prefs & {
+    /**
+     * The run's timer: kept apart from the run's history, so undoing a
+     * change never moves it and starting it is no undo step.
+     */
+    timer: RunTimer;
+    /** Start the run timer, or go on from its pause, at `at` (now). */
+    startTimer: (at?: number) => void;
+    /** Pause the run timer at `at` (now). */
+    pauseTimer: (at?: number) => void;
+    /** Stop the run timer for good, the goal reached, at `at` (now). */
+    finishTimer: (at?: number) => void;
+    /** Set the run timer back to 0, stopped. */
+    resetTimer: () => void;
+    setAutoTimer: (on: boolean) => void;
+
     // Actions
     applyPreset: (presetId: string) => void;
     /**
@@ -51,6 +74,11 @@ type GameState = Progress &
       presetId: string,
       settings: RunSettings,
       lay?: (fresh: Progress) => Partial<Progress> | null,
+      /**
+       * Keep the timer: autotracking switching to the seed's run type as
+       * the game starts. A run type the player picks starts it over.
+       */
+      keepTimer?: boolean,
     ) => void;
     /** Step an item by one: forward on click, back (`-1`) on right-click */
     handleItemClick: (item: string, direction?: Direction) => void;
@@ -157,6 +185,7 @@ export const isFreshRun = (progress: Progress): boolean => {
 
 /** Display preferences for a first visit. */
 const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
+  autoTimer: true,
   bigKeysVisible: wildItems(getPreset(presetId).settings).mapsAndCompasses,
   mapLayout: "auto",
   mapView: "map",
@@ -193,6 +222,8 @@ const restoreProgress = (
 
 /** Lay saved display preferences over the current ones. */
 const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
+  autoTimer:
+    typeof saved.autoTimer === "boolean" ? saved.autoTimer : base.autoTimer,
   bigKeysVisible:
     typeof saved.bigKeysVisible === "boolean"
       ? saved.bigKeysVisible
@@ -233,11 +264,13 @@ const record = (state: GameState, next: Partial<Progress>) => ({
 /** Project the store onto what localStorage keeps. */
 const toPersisted = (state: GameState): PersistedState => ({
   ...progressOf(state),
+  autoTimer: state.autoTimer,
   bigKeysVisible: state.bigKeysVisible,
   game: GAME,
   mapLayout: state.mapLayout,
   mapView: state.mapView,
   shortcuts: state.shortcuts,
+  timer: state.timer,
 });
 
 export const useGameStore = create<GameState>()(
@@ -267,7 +300,7 @@ export const useGameStore = create<GameState>()(
         applyPreset: (presetId: string) =>
           get().applyRun(presetId, getPreset(presetId).settings),
 
-        applyRun: (presetId, settings, lay) =>
+        applyRun: (presetId, settings, lay, keepTimer = false) =>
           set((state) => {
             const fresh = createProgress(presetId, settings);
             return {
@@ -280,11 +313,15 @@ export const useGameStore = create<GameState>()(
                 wildItems(state.settings).mapsAndCompasses
                   ? state.bigKeysVisible
                   : wildItems(settings).mapsAndCompasses,
+              timer: keepTimer ? state.timer : IDLE_TIMER,
             };
           }),
 
         exportState: () =>
           JSON.stringify(toSaveFile(progressOf(get())), null, 2),
+
+        finishTimer: (at = Date.now()) =>
+          set((state) => ({ timer: finishTimer(state.timer, at) })),
         future: [],
 
         handleItemClick: (item: string, direction: Direction = 1) => {
@@ -338,10 +375,13 @@ export const useGameStore = create<GameState>()(
         },
 
         loadProgress: (progress: Partial<Progress>) =>
-          set((state) =>
-            record(state, restoreProgress(createProgress(), progress)),
-          ),
+          set((state) => ({
+            ...record(state, restoreProgress(createProgress(), progress)),
+            timer: IDLE_TIMER,
+          })),
         past: [],
+        pauseTimer: (at = Date.now()) =>
+          set((state) => ({ timer: pauseTimer(state.timer, at) })),
 
         redo: () =>
           set((state) => {
@@ -355,9 +395,12 @@ export const useGameStore = create<GameState>()(
           }),
 
         reset: () =>
-          set((state) =>
-            record(state, createProgress(state.presetId, state.settings)),
-          ),
+          set((state) => ({
+            ...record(state, createProgress(state.presetId, state.settings)),
+            timer: IDLE_TIMER,
+          })),
+        resetTimer: () => set({ timer: IDLE_TIMER }),
+        setAutoTimer: (on: boolean) => set({ autoTimer: on }),
 
         setBigKeysVisible: (visible: boolean) =>
           set({ bigKeysVisible: visible }),
@@ -371,6 +414,8 @@ export const useGameStore = create<GameState>()(
 
         setShortcutsEnabled: (enabled: boolean) =>
           set((state) => ({ shortcuts: { ...state.shortcuts, enabled } })),
+        startTimer: (at = Date.now()) =>
+          set((state) => ({ timer: startTimer(state.timer, at) })),
 
         stepMedallion: (dungeonIndex: number, direction: Direction = 1) => {
           // Modulo keeps a malformed stored value inside the four states
@@ -383,6 +428,7 @@ export const useGameStore = create<GameState>()(
 
         syncWithGame: (next: Partial<Progress>) =>
           set((state) => record(state, next)),
+        timer: IDLE_TIMER,
 
         toggleChecks: (locations: readonly string[]) =>
           set((state) => {
@@ -432,6 +478,7 @@ export const useGameStore = create<GameState>()(
             // undoing would now rewind someone else's changes.
             future: [],
             past: [],
+            timer: restoreTimer(saved.timer),
           };
         },
         migrate: (persisted, version) =>

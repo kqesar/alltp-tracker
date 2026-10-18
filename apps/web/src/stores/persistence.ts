@@ -23,6 +23,7 @@ import {
   type RunSettings,
 } from "@/data/presets";
 import { counterMax, SMALL_KEYS_MAX } from "@/logic/settings";
+import type { RunTimer } from "@/logic/timer";
 import type { MapLayout, MapView } from "@/utils";
 
 /**
@@ -61,13 +62,19 @@ export type Prefs = {
    * later save format (or the desktop app) can carry it as it is.
    */
   shortcuts: ShortcutPrefs;
+  /** Whether the run timer starts and stops with the game, autotracking. */
+  autoTimer: boolean;
 };
 
 /** The game a save is for: the one game pack the tracker has today. */
 export const GAME = "alttpr";
 
-/** What localStorage holds: the run, this device's preferences, the game. */
-export type PersistedState = Progress & Prefs & { game: typeof GAME };
+/**
+ * What localStorage holds: the run, its timer, this device's preferences,
+ * the game.
+ */
+export type PersistedState = Progress &
+  Prefs & { game: typeof GAME; timer: RunTimer };
 
 /** A plain object, as opposed to null, an array or a primitive. */
 const isRecord = (value: unknown): value is Record<string, unknown> =>

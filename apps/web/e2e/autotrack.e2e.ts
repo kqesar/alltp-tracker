@@ -195,6 +195,37 @@ test("marks the board and the map from the game as it changes", async ({
   await expect(page.getByTestId("undo")).toBeDisabled();
 });
 
+test("starts the run timer as the game starts, and stops it at the goal", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  bridge.memory[WRAM + 0x10] = 0x01; // the file select
+  // An hour of frames played, which the game counts itself
+  const frames = Math.round(3600 * 60.0988);
+  bridge.memory.set(
+    [frames & 0xff, (frames >> 8) & 0xff, (frames >> 16) & 0xff, 0],
+    SAVE(0x43e),
+  );
+  await openTracker(page);
+  await connect(page);
+  const timer = page.getByTestId("run-timer");
+  await expect(timer).toHaveAccessibleName("Run timer: not started");
+
+  bridge.memory[WRAM + 0x10] = 0x07; // into the game
+  await expect(timer).toHaveAccessibleName("Run timer: running");
+  await timer.click();
+  await expect(page.getByTestId("run-timer-igt")).toHaveText(
+    "In-game time: 1:00:00",
+  );
+  await page.keyboard.press("Escape");
+
+  bridge.memory[WRAM + 0x10] = 0x19; // the Triforce room
+  await expect(timer).toHaveAccessibleName("Run timer: stopped at the goal");
+  await expect(page.getByTestId("run-timer-status")).toHaveText(
+    /^Run timer stopped at the goal: /,
+  );
+});
+
 test("keeps the player's marks beyond the game until Sync from game", async ({
   page,
 }) => {

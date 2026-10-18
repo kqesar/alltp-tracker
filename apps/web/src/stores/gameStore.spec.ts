@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { DEFAULT_KEYMAP, DEFAULT_SHORTCUTS } from "@/data/keymap";
+import { getPreset } from "@/data/presets";
 import v1Export from "@/stores/fixtures/v1-export.json";
 import v2Export from "@/stores/fixtures/v2-export.json";
 import v5KeysanityExport from "@/stores/fixtures/v5-keysanity-export.json";
@@ -726,6 +727,109 @@ describe("GameStore", () => {
       useGameStore.getState().undo();
       expect(useGameStore.getState().items.sword).toBe(1);
       expect(useGameStore.getState().past).toHaveLength(1);
+    });
+  });
+
+  describe("the run timer", () => {
+    const T0 = Date.UTC(2026, 9, 18, 12, 0, 0);
+    const store = () => useGameStore.getState();
+
+    it("starts, pauses and finishes outside the run's history", () => {
+      store().handleItemClick("flute");
+      store().startTimer(T0);
+      store().pauseTimer(T0 + 5000);
+      expect(store().timer).toEqual({
+        elapsedMs: 5000,
+        finished: false,
+        startedAt: null,
+      });
+      expect(store().past).toHaveLength(1);
+
+      // Undoing the flute leaves the timer as it is
+      store().undo();
+      expect(store().items.flute).toBe(false);
+      expect(store().timer.elapsedMs).toBe(5000);
+
+      store().startTimer(T0 + 6000);
+      store().finishTimer(T0 + 9000);
+      expect(store().timer).toEqual({
+        elapsedMs: 8000,
+        finished: true,
+        startedAt: null,
+      });
+    });
+
+    it("starts over with a new game, an import or a run type the player picks", () => {
+      const counted = () => {
+        store().startTimer(T0);
+        store().pauseTimer(T0 + 1000);
+      };
+      counted();
+      store().reset();
+      expect(store().timer.elapsedMs).toBe(0);
+
+      counted();
+      store().loadProgress({});
+      expect(store().timer.elapsedMs).toBe(0);
+
+      counted();
+      store().applyPreset("standard");
+      expect(store().timer.elapsedMs).toBe(0);
+    });
+
+    it("goes on through autotracking's switch to the seed's run type", () => {
+      store().startTimer(T0);
+      const running = store().timer;
+      store().applyRun(
+        "keysanity",
+        getPreset("keysanity").settings,
+        undefined,
+        true,
+      );
+      expect(store().timer).toBe(running);
+    });
+
+    it("is saved with the run, and the auto setting with the preferences", async () => {
+      store().startTimer(T0);
+      store().setAutoTimer(false);
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+      expect(stored.state.timer).toEqual({
+        elapsedMs: 0,
+        finished: false,
+        startedAt: T0,
+      });
+      expect(stored.state.autoTimer).toBe(false);
+
+      storeSave(
+        {
+          autoTimer: false,
+          timer: { elapsedMs: 7000, finished: true, startedAt: null },
+        },
+        PERSIST_VERSION,
+      );
+      await useGameStore.persist.rehydrate();
+      expect(store().timer).toEqual({
+        elapsedMs: 7000,
+        finished: true,
+        startedAt: null,
+      });
+      expect(store().autoTimer).toBe(false);
+
+      // A damaged one reads as no timer
+      storeSave({ timer: { elapsedMs: "1:00" } }, PERSIST_VERSION);
+      await useGameStore.persist.rehydrate();
+      expect(store().timer).toEqual({
+        elapsedMs: 0,
+        finished: false,
+        startedAt: null,
+      });
+    });
+
+    it("stays out of save files", () => {
+      store().startTimer(T0);
+      expect(JSON.parse(store().exportState()).progress).not.toHaveProperty(
+        "timer",
+      );
     });
   });
 

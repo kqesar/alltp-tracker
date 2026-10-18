@@ -1,37 +1,16 @@
 import type { Tri } from "@alltp/engine";
-import { type MouseEvent, useId } from "react";
+import { useId } from "react";
 import { WaysList } from "@/components/ui/Missing";
 import { useGoModeMissing } from "@/hooks/useRunAnalysis";
 import { goModeStatusOf } from "@/logic/missing";
 import { useGameStore } from "@/stores/gameStore";
+import { placeUnder } from "@/utils/popover";
 
 /** Each state's glyph and words, after "Go mode". */
 const STATES: Record<Tri, { glyph: string; words: string }> = {
   maybe: { glyph: "★?", words: "possible" },
   no: { glyph: "☆", words: "not yet" },
   yes: { glyph: "★", words: "in logic" },
-};
-
-/** The least room the panel keeps from the viewport's edge. */
-const SCREEN_MARGIN_PX = 8;
-
-/**
- * Put the panel under its button, from the button's left edge, or from its
- * right edge when the button sits in the right half of the screen. The
- * panel is in the top layer, out of the page's flow.
- */
-const placeUnder = (event: MouseEvent<HTMLButtonElement>, panelId: string) => {
-  const panel = document.getElementById(panelId);
-  if (!panel) return;
-  const box = event.currentTarget.getBoundingClientRect();
-  const fromRight = box.left + box.width / 2 > window.innerWidth / 2;
-  panel.style.top = `${box.bottom + SCREEN_MARGIN_PX / 2}px`;
-  panel.style.left = fromRight
-    ? "auto"
-    : `${Math.max(box.left, SCREEN_MARGIN_PX)}px`;
-  panel.style.right = fromRight
-    ? `${Math.max(window.innerWidth - box.right, SCREEN_MARGIN_PX)}px`
-    : "auto";
 };
 
 /** What the go mode is missing, or that every step is in logic. */

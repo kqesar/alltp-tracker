@@ -19,6 +19,7 @@ import {
 } from "@/autotrack/apply";
 import type { AutotrackReading } from "@/autotrack/reading";
 import type { RunSettings } from "@/data/presets";
+import { timerNews } from "@/logic/timer";
 import { createProgress, useGameStore } from "@/stores/gameStore";
 
 /** The board's side of a session. */
@@ -58,6 +59,12 @@ export const createFollower = (): Follower => {
   /** The last reading of a game in play, and the view taken of it. */
   let last: AutotrackReading | null = null;
   let shown: GameView | null = null;
+  /**
+   * Whether the reading before was before play (the title, the file select,
+   * the spawn select), for the timer to see a game start; undefined until a
+   * reading says.
+   */
+  let beforePlay: boolean | undefined;
   /** The small keys in hand at the last reading, or null out of play. */
   let hand: Record<number, number> | null = null;
   /** The least small keys found, by grid dungeon index. */
@@ -98,6 +105,15 @@ export const createFollower = (): Follower => {
       );
     },
     read: (reading) => {
+      // The run timer starts and stops with the game, if the player lets it
+      const game = useGameStore.getState();
+      if (game.autoTimer) {
+        const news = timerNews(beforePlay, reading.progress, game.timer);
+        if (news === "start") game.startTimer(reading.at);
+        if (news === "finish") game.finishTimer(reading.at);
+      }
+      const { beforePlay: now } = reading.progress;
+      if (typeof now === "boolean") beforePlay = now;
       if (reading.progress.started !== true) {
         hand = null;
         return;
@@ -113,13 +129,16 @@ export const createFollower = (): Follower => {
     },
     switchRun: (presetId, settings) => {
       const reading = last;
-      useGameStore
-        .getState()
-        .applyRun(presetId, settings, (fresh) =>
+      useGameStore.getState().applyRun(
+        presetId,
+        settings,
+        (fresh) =>
           reading === null
             ? null
             : (syncView(fresh, gameView(reading, fresh, found))?.next ?? null),
-        );
+        // The timer the game just started goes on in the seed's run
+        true,
+      );
     },
     sync: () => {
       if (last === null) return null;
