@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.20.0](https://github.com/kqesar/alltp-tracker/compare/v2.19.0...v2.20.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **alttpr:** read the ROM's own stats outside races ([8f88899](https://github.com/kqesar/alltp-tracker/commit/8f8889979b3a5719200dfa04ba1c9159f066e9f6))
+* **web:** keep when each find of the run happened ([57fbd1b](https://github.com/kqesar/alltp-tracker/commit/57fbd1be13dc84fed74632020dfcf943ec60147d))
+* **web:** show the run's splits, timeline and the ROM's stats in a Run tab ([65c8f29](https://github.com/kqesar/alltp-tracker/commit/65c8f2960f8bd09f9cb0745e1c4f221a9d2c3840))
+
 ## [2.19.0](https://github.com/kqesar/alltp-tracker/compare/v2.18.0...v2.19.0) (2026-10-18)
 
 
