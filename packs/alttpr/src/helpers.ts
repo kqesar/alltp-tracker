@@ -56,8 +56,14 @@ export const HELPERS = {
    * canBunnyRevive always does (444-450, 462).
    */
   canAcquireFairy: { req: "setting(catchableFairies)", source: at(444) },
-  /** Inverted's way to wake the bird is not this world's (420-428). */
-  canActivateOcarina: { req: "true", source: at(420) },
+  /**
+   * Waking the bird (420-428): anywhere but in Inverted, where it needs Link
+   * in the Light World's north east, with the pearl.
+   */
+  canActivateOcarina: {
+    req: "!setting(invertedMode) | moonPearl & (defeatAgahnim | hammer & @canLiftRocks | @canLiftDarkRocks)",
+    source: at(420),
+  },
   canBlockLasers: { req: "shield >= 3", source: at(500) },
   canBombThings: { req: "true", source: at(602) },
   canBunnyRevive: {

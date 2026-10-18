@@ -74,6 +74,52 @@ export interface RegionModule {
   readonly regions: readonly RegionDef[];
 }
 
+/** What a region class sets again after its parent's initalize. */
+export interface RegionChanges {
+  /** Its new can_enter, which replaces the parent's whole. */
+  readonly entrances?: readonly Entrance[];
+  /** By location id: the parts of a location it sets again. */
+  readonly locations?: Readonly<
+    Record<string, Pick<LocationDef, "req" | "source"> & Partial<LocationDef>>
+  >;
+}
+
+/**
+ * The module of a region class that calls `parent::initalize()`, then sets
+ * some rules again: its parent's regions, by id, with those changes. What it
+ * does not set keeps the parent's rule and source, the parent's file. A
+ * change for a region or location the parent lacks throws, so a typo cannot
+ * pass for a port.
+ */
+export function extendModule(
+  parent: RegionModule,
+  file: RegionModule["file"],
+  changes: Readonly<Record<string, RegionChanges>>,
+): RegionModule {
+  const ids = new Set(parent.regions.map((region) => region.id));
+  for (const id of Object.keys(changes)) {
+    if (!ids.has(id)) throw new RangeError(`${file}: no region ${id}`);
+  }
+  const regions = parent.regions.map((region) => {
+    const change = changes[region.id];
+    if (change === undefined) return region;
+    const located = change.locations ?? {};
+    const held = new Set(region.locations.map((location) => location.id));
+    for (const id of Object.keys(located)) {
+      if (!held.has(id)) throw new RangeError(`${file}: no location ${id}`);
+    }
+    return {
+      ...region,
+      entrances: change.entrances ?? region.entrances,
+      locations: region.locations.map((location) => ({
+        ...location,
+        ...located[location.id],
+      })),
+    };
+  });
+  return { file, regions };
+}
+
 /** 'North East Light World' is northEastLightWorld, 'Ganons Tower' ganonsTower. */
 export function regionId(name: string): string {
   const words = name.split(/[^A-Za-z0-9]+/).filter((word) => word !== "");

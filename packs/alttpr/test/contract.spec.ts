@@ -51,7 +51,7 @@ describe("the upstream contract", () => {
       regionFill: count("regionFill"),
     });
     // Location::canFill's cases: one per placement the tests try
-    expect(report.ran.fill).toBe(135);
+    expect(report.ran.fill).toBe(143);
   });
 
   it("would catch a pack that answers maybe, or yes, to everything", () => {

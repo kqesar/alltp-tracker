@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { foldSettings, parse, walk } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
+import { locationsOf } from "../scripts/import-upstream-tests.mjs";
 import { UPSTREAM_ITEMS } from "../src/items";
 import { type LocationDef, locationId, locationKind } from "../src/location";
 import { compile, STATE_NAMES } from "../src/pack";
@@ -64,13 +65,34 @@ const WORLDS = {
   standard: STANDARD_REGIONS,
 } as const;
 
-/** The file whose constructor builds a region file's locations. */
-const builder = new Map(
-  index.regions.map((r) => [r.file, r.extends ?? r.file] as const),
+/** The class each region file extends. */
+const parents = new Map(
+  index.regions.flatMap((r) =>
+    r.extends === undefined ? [] : [[r.file, r.extends] as const],
+  ),
 );
+
+/**
+ * A region file and the classes it extends, its own first: a rule a class
+ * keeps of its parent's (`parent::initalize()`) is read in the parent's file.
+ */
+function chainOf(file: string): string[] {
+  const chain: string[] = [];
+  for (
+    let at: string | undefined = file;
+    at !== undefined;
+    at = parents.get(at)
+  ) {
+    chain.push(at);
+  }
+  return chain;
+}
 
 const inFile = (source: string, file: string) =>
   source.startsWith(`${file}:`) && /:\d+$/.test(source);
+
+const inChain = (source: string, chain: readonly string[]) =>
+  chain.some((file) => inFile(source, file));
 
 /** Where each part of a location's fill rules was read. */
 function fillSources({ fill }: LocationDef): string[] {
@@ -134,23 +156,26 @@ function fillErrors({ fill, name }: LocationDef): string[] {
 /** What a ported module gets wrong against upstream's location index. */
 function portErrors(module: RegionModule): string[] {
   const errors: string[] = [];
-  const upstream = index.locations.filter(
-    (l) => l.file === builder.get(module.file),
+  const chain = chainOf(module.file);
+  const held = locationsOf(
+    module.file,
+    parents,
+    index.locations,
+    index.removals,
   );
+  // Each location's class, as the last class of the chain to build it says
+  const kinds = new Map<string, string>();
+  for (const file of [...chain].reverse()) {
+    for (const l of index.locations)
+      if (l.file === file) kinds.set(l.name, l.kind);
+  }
   const ours = module.regions.flatMap((region) => region.locations);
   const names = new Set(ours.map((l) => l.name));
-  const missing = upstream.filter((l) => !names.has(l.name));
-  if (missing.length > 0) {
-    errors.push(
-      `missing ${missing
-        .map((l) => l.name)
-        .sort()
-        .join(", ")}`,
-    );
-  }
+  const missing = [...held].filter((name) => !names.has(name));
+  if (missing.length > 0) errors.push(`missing ${missing.sort().join(", ")}`);
   for (const location of ours) {
     const where = location.name;
-    const kind = upstream.find((l) => l.name === location.name)?.kind;
+    const kind = held.has(where) ? kinds.get(where) : undefined;
     if (kind === undefined) errors.push(`${where}: not in ${module.file}`);
     if (location.id !== locationId(location.name)) {
       errors.push(`${where}: id ${location.id}, not ${locationId(where)}`);
@@ -158,22 +183,22 @@ function portErrors(module: RegionModule): string[] {
     if (kind !== undefined && location.kind !== locationKind(kind)) {
       errors.push(`${where}: kind ${location.kind}, not ${locationKind(kind)}`);
     }
-    if (!inFile(location.source, module.file)) {
+    if (!inChain(location.source, chain)) {
       errors.push(`${where}: source ${location.source}`);
     }
     const seen = location.visible?.source;
-    if (seen !== undefined && seen !== "game" && !inFile(seen, module.file)) {
+    if (seen !== undefined && seen !== "game" && !inChain(seen, chain)) {
       errors.push(`${where}: visible source ${seen}`);
     }
     for (const source of fillSources(location)) {
-      if (!inFile(source, module.file)) {
+      if (!inChain(source, chain)) {
         errors.push(`${where}: fill source ${source}`);
       }
     }
   }
   for (const region of module.regions) {
     for (const { source } of region.entrances) {
-      if (!inFile(source, module.file)) {
+      if (!inChain(source, chain)) {
         errors.push(`${region.id}: entrance source ${source}`);
       }
     }
