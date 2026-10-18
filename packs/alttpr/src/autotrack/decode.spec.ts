@@ -485,10 +485,72 @@ describe("decodeProgress", () => {
         P3: false,
       },
       goal: false,
-      playFrames: 0,
       rescueZelda: false,
+      romStats: {
+        bonks: 0,
+        bossKills: {
+          fighter: 0,
+          gold: 0,
+          master: 0,
+          swordless: 0,
+          tempered: 0,
+        },
+        damageTaken: 0,
+        deaths: 0,
+        faerieRevivals: 0,
+        found: { boots: 0, flute: 0, mirror: 0, sword: 0 },
+        itemsCollected: 0,
+        lagFrames: 0,
+        magicUsed: 0,
+        menuFrames: 0,
+        playFrames: 0,
+        saveAndQuits: 0,
+      },
       started: true,
     });
+  });
+
+  it("reads the stats the ROM's credits show, at sram.asm's addresses", () => {
+    const image = new Image()
+      .set(SAVE(0x420), 7) // BonkCounter
+      .set(SAVE(0x423), 0x2c, 0x01) // TotalItemCounter: 300
+      .set(SAVE(0x425), 0x21, 0x43) // SwordBossKills: t4 g3 f2 m1
+      .set(SAVE(0x42d), 2) // SaveQuitCounter
+      .set(SAVE(0x42e), 0x00, 0x10, 0x00, 0x00) // LoopFrames: 4096
+      .set(SAVE(0x43e), 0x80, 0x10, 0x00, 0x00) // NMIFrames: 4224
+      .set(SAVE(0x444), 0x58, 0x02, 0x00, 0x00) // MenuFrames: 600
+      .set(SAVE(0x449), 3) // DeathCounter
+      .set(SAVE(0x452), 1) // SwordlessBossKills
+      .set(SAVE(0x453), 4) // FaerieRevivalCounter
+      .set(SAVE(0x458), 0x10, 0x0e, 0x00, 0x00) // SwordTime: 3600
+      .set(SAVE(0x45c), 0x20, 0x1c, 0x00, 0x00) // BootsTime: 7200
+      .set(SAVE(0x460), 0x30, 0x2a, 0x00, 0x00) // FluteTime: 10800
+      .set(SAVE(0x464), 0x40, 0x38, 0x00, 0x00) // MirrorTime: 14400
+      .set(SAVE(0x46a), 0xe8, 0x03) // DamageCounter: 1000
+      .set(SAVE(0x46c), 0x00, 0x02); // MagicCounter: 512
+    expect(decodeProgress(image.view(), { race: false }).romStats).toEqual({
+      bonks: 7,
+      bossKills: { fighter: 2, gold: 3, master: 1, swordless: 1, tempered: 4 },
+      damageTaken: 1000,
+      deaths: 3,
+      faerieRevivals: 4,
+      found: { boots: 7200, flute: 10800, mirror: 14400, sword: 3600 },
+      itemsCollected: 300,
+      lagFrames: 128,
+      magicUsed: 512,
+      menuFrames: 600,
+      playFrames: 4224,
+      saveAndQuits: 2,
+    });
+  });
+
+  it("says the stats are not read until all three of their ranges are", () => {
+    for (const range of ["stats", "menu-frames", "stats-finds"]) {
+      const view = new Image().view({ read: (id) => id !== range });
+      expect(decodeProgress(view, { race: false }).romStats, range).toBe(
+        "not-read",
+      );
+    }
   });
 
   it("tells the screens before play from play, menus included", () => {
@@ -511,18 +573,15 @@ describe("decodeProgress", () => {
   });
 
   it("reads the frames played, 32 bits, and turns them into time", () => {
-    const image = new Image().set(SAVE(0x43e), 0x78, 0x56, 0x34, 0x12);
-    expect(decodeProgress(image.view(), { race: false }).playFrames).toBe(
-      0x1234_5678,
-    );
-    expect(
-      decodeProgress(
-        new Image().set(SAVE(0x43e), 0xff, 0xff, 0xff, 0xff).view(),
-        {
-          race: false,
-        },
-      ).playFrames,
-    ).toBe(0xffff_ffff);
+    const frames = (...bytes: number[]) => {
+      const { romStats } = decodeProgress(
+        new Image().set(SAVE(0x43e), ...bytes).view(),
+        { race: false },
+      );
+      return typeof romStats === "string" ? romStats : romStats.playFrames;
+    };
+    expect(frames(0x78, 0x56, 0x34, 0x12)).toBe(0x1234_5678);
+    expect(frames(0xff, 0xff, 0xff, 0xff)).toBe(0xffff_ffff);
     // An hour of NTSC frames is an hour, within a frame
     expect(FRAMES_PER_SECOND).toBeCloseTo(60.0988, 4);
     const hour = playTimeMs(Math.round(FRAMES_PER_SECOND * 3600));
@@ -651,18 +710,18 @@ describe("Race Mode", () => {
     expect(OUTSIDE_IDS.length).toBeGreaterThan(80);
   });
 
-  it("reads the bosses and events as outside Race Mode, not the play time", () => {
+  it("reads the bosses and events as outside Race Mode, not the ROM's stats", () => {
     const image = endGame().set(SAVE(0x43e), 0x10, 0x0e);
-    const { playFrames: raced, ...race } = decodeProgress(
+    const { romStats: raced, ...race } = decodeProgress(
       image.view({ strict: true }),
       { race: true },
     );
-    const { playFrames, ...casual } = decodeProgress(image.view(), {
+    const { romStats, ...casual } = decodeProgress(image.view(), {
       race: false,
     });
     expect(race).toEqual(casual);
     expect(raced).toBe("race-mode");
-    expect(playFrames).toBe(0x0e10);
+    expect(romStats).toMatchObject({ playFrames: 0x0e10 });
   });
 
   it("says not-read before the first poll, in either mode", () => {

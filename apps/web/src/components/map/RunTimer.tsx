@@ -42,10 +42,10 @@ const usePlayTime = (): number | undefined =>
   useAutotrackStore((state) => {
     const reading = state.reading;
     if (reading === null || reading.race) return undefined;
-    const { playFrames, started, goal } = reading.progress;
-    if (typeof playFrames !== "number") return undefined;
+    const { romStats, started, goal } = reading.progress;
+    if (typeof romStats === "string") return undefined;
     return started === true || goal === true
-      ? playTimeMs(playFrames)
+      ? playTimeMs(romStats.playFrames)
       : undefined;
   });
 
