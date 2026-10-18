@@ -4,14 +4,19 @@ import type { Tri } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { LEGACY_CHESTS, LEGACY_DUNGEONS } from "./legacy";
 import {
+  INVERTED_MARKERS,
   LEGACY_CHEST_POSITIONS,
   LEGACY_DUNGEON_POSITIONS,
+  MAP_LOCATIONS,
   MARKED_DUNGEONS,
   MARKERS,
   markerStatus,
+  markersOf,
 } from "./markers";
 import { regionModules } from "./pack";
-import { OPEN, STANDARD } from "./settings";
+import { OPEN, STANDARD, settingsFromUpstream } from "./settings";
+
+const INVERTED = settingsFromUpstream("inverted", {});
 
 /** Not checks: upstream places no item there (World::getTotalItemCount). */
 const NO_CHECK = new Set(["fountain", "medallion", "prize", "trade"]);
@@ -94,6 +99,67 @@ describe("the markers", () => {
     }
     expect(MARKED_DUNGEONS).not.toContain("hyrule-castle");
     expect(MARKED_DUNGEONS).toHaveLength(12);
+  });
+});
+
+describe("the Inverted markers", () => {
+  const byId = (markers: typeof MARKERS) =>
+    new Map(markers.map((m) => [m.id, m]));
+  const inverted = byId(INVERTED_MARKERS);
+  const open = byId(MARKERS);
+
+  it("are a run's markers in an Inverted world only", () => {
+    expect(markersOf(INVERTED)).toBe(INVERTED_MARKERS);
+    expect(markersOf(OPEN)).toBe(MARKERS);
+    expect(markersOf(STANDARD)).toBe(MARKERS);
+  });
+
+  it("put every check on exactly one marker, and the Bomb Merchant on its own", () => {
+    const checks = regionModules(INVERTED).flatMap((mod) =>
+      mod.regions.flatMap((r) =>
+        r.locations.filter((l) => !NO_CHECK.has(l.kind)).map((l) => l.id),
+      ),
+    );
+    const placed = INVERTED_MARKERS.flatMap((m) => m.locations);
+    expect([...placed].sort()).toEqual([...checks, "bomb-merchant"].sort());
+    expect(new Set(INVERTED_MARKERS.map((m) => m.id)).size).toBe(
+      INVERTED_MARKERS.length,
+    );
+  });
+
+  it("move only the doors Inverted moves, each with where it was read", () => {
+    const moved = INVERTED_MARKERS.filter((m) => {
+      const was = open.get(m.id);
+      return was === undefined || was.x !== m.x || was.y !== m.y;
+    });
+    expect(moved.map((m) => m.id)).toEqual([
+      "links-house",
+      "bomb-merchant",
+      "castle-tower",
+      "ganons-tower",
+    ]);
+    const at = (map: typeof inverted, id: string) => {
+      const m = map.get(id);
+      return [m?.x, m?.y];
+    };
+    const [x, y] = at(open, "links-house");
+    expect(at(inverted, "links-house")).toEqual([(x ?? 0) + 50, y]);
+    expect(at(inverted, "bomb-merchant")).toEqual([x, y]);
+    expect(at(inverted, "castle-tower")).toEqual(at(open, "ganons-tower"));
+    expect(at(inverted, "ganons-tower")).toEqual(at(open, "castle-tower"));
+    for (const m of moved) {
+      expect(m.position, m.id).toMatchObject({
+        source: expect.stringMatching(/^app\/Region\/Inverted\//),
+        why: expect.any(String),
+      });
+    }
+  });
+
+  it("let a save of any run keep what it checked", () => {
+    expect([...MAP_LOCATIONS].sort()).toEqual(
+      [...new Set(INVERTED_MARKERS.flatMap((m) => m.locations))].sort(),
+    );
+    expect(MAP_LOCATIONS.has("bomb-merchant")).toBe(true);
   });
 });
 

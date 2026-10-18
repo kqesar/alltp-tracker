@@ -67,6 +67,19 @@ describe("toState", () => {
     expect(toState(EMPTY_INPUT, OPEN)).not.toHaveProperty("defeatAgahnim");
   });
 
+  it("sells the big bomb once the Bomb Merchant is checked", () => {
+    const inverted = settingsFromUpstream("inverted", {});
+    const bought = input({
+      checked: { "bomb-merchant": true, sanctuary: true },
+    });
+    expect(toState(bought, inverted)).toMatchObject({ bigRedBomb: 1 });
+    expect(toState(bought, inverted)).not.toHaveProperty("sanctuary");
+    expect(
+      toState(input({ checked: { "bomb-merchant": false } }), inverted),
+    ).not.toHaveProperty("bigRedBomb");
+    expect(toState(EMPTY_INPUT, inverted)).not.toHaveProperty("bigRedBomb");
+  });
+
   it("gives a finished dungeon's known prize, the next of its class", () => {
     const state = toState(
       input({
@@ -231,7 +244,12 @@ describe("toState over any input", () => {
     for (const items of Object.values(PRIZES)) {
       for (const item of items) expect(marked.has(item), item).toBe(false);
     }
-    for (const id of ["rescueZelda", "defeatAgahnim", "defeatAgahnim2"]) {
+    for (const id of [
+      "rescueZelda",
+      "defeatAgahnim",
+      "defeatAgahnim2",
+      "bigRedBomb",
+    ]) {
       expect(marked.has(id), id).toBe(false);
     }
     expect([...marked].filter((id) => id.startsWith("key"))).toEqual([]);

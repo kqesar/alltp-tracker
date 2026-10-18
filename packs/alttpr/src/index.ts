@@ -137,13 +137,16 @@ export {
   type Visible,
 } from "./location";
 export {
+  INVERTED_MARKERS,
   LEGACY_CHEST_POSITIONS,
   LEGACY_DUNGEON_POSITIONS,
+  MAP_LOCATIONS,
   MARKED_DUNGEONS,
   MARKERS,
   type MapMarker,
   type MarkerStatus,
   markerStatus,
+  markersOf,
 } from "./markers";
 export {
   MEDALLION_FACTS,
@@ -171,6 +174,7 @@ export {
 } from "./settings";
 export {
   EMPTY_INPUT,
+  EVENT_CHECKS,
   INVENTORY_ITEM_IDS,
   type InventoryItemId,
   PRIZES,

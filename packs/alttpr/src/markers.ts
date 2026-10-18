@@ -15,7 +15,7 @@ import {
 } from "./dungeons";
 import { LEGACY_CHESTS, LEGACY_DUNGEONS } from "./legacy";
 import { locationId, type Source } from "./location";
-import { STANDARD } from "./settings";
+import { type AlttprSettings, STANDARD } from "./settings";
 
 /** One marker on the map. */
 export interface MapMarker {
@@ -265,6 +265,85 @@ export const MARKERS: readonly MapMarker[] = [
   ),
   ...NEW_MARKERS,
 ];
+
+/** One of MARKERS, by id. */
+const markerAt = (id: string): MapMarker => {
+  const found = MARKERS.find((marker) => marker.id === id);
+  if (found === undefined) throw new RangeError(`No marker "${id}"`);
+  return found;
+};
+
+/** A marker moved to another's place, with where that place was read. */
+const movedTo = (
+  marker: MapMarker,
+  [x, y]: readonly [number, number],
+  position: MapMarker["position"],
+): MapMarker => ({ ...marker, position, x, y });
+
+/**
+ * An Inverted world's markers: Open's and Standard's, but for the doors the
+ * Inverted world moves. Link's House is the Dark World's Bomb Shop
+ * (Inverted/DarkWorld/South.php:31), which sits where Link's House does in
+ * the Light World, and the Bomb Merchant, the event that sells the big bomb,
+ * takes Link's House (Inverted/LightWorld/South.php:27). Castle Tower and
+ * Ganon's Tower trade doors: Castle Tower opens atop the Dark World's Death
+ * Mountain (Inverted/HyruleCastleTower.php:24), Ganon's Tower at Hyrule
+ * Castle (Inverted/GanonsTower.php:490).
+ */
+export const INVERTED_MARKERS: readonly MapMarker[] = MARKERS.flatMap(
+  (marker): MapMarker[] => {
+    const castle = markerAt("castle-tower");
+    const tower = markerAt("ganons-tower");
+    switch (marker.id) {
+      case "links-house": {
+        const home = movedTo(marker, [marker.x + 50, marker.y], {
+          source: "app/Region/Inverted/DarkWorld/South.php:31",
+          why: "the Dark World's Bomb Shop, where Link's House is in the Light World",
+        });
+        const merchant: MapMarker = {
+          id: "bomb-merchant",
+          locations: ["bomb-merchant"],
+          name: "Bomb Merchant",
+          position: {
+            source: "app/Region/Inverted/LightWorld/South.php:27",
+            why: "Link's House, which the Bomb Shop takes in Inverted",
+          },
+          x: marker.x,
+          y: marker.y,
+        };
+        return [home, merchant];
+      }
+      case "castle-tower":
+        return [
+          movedTo(marker, [tower.x, tower.y], {
+            source: "app/Region/Inverted/HyruleCastleTower.php:24",
+            why: "Ganon's Tower's door atop the Dark World's Death Mountain",
+          }),
+        ];
+      case "ganons-tower":
+        return [
+          movedTo(marker, [castle.x, castle.y], {
+            source: "app/Region/Inverted/GanonsTower.php:490",
+            why: "Castle Tower's door at Hyrule Castle",
+          }),
+        ];
+      default:
+        return [marker];
+    }
+  },
+);
+
+/** The markers of a run's world. */
+export const markersOf = (settings: AlttprSettings): readonly MapMarker[] =>
+  settings.invertedMode ? INVERTED_MARKERS : MARKERS;
+
+/**
+ * Every location a marker of some world stands for: what the player may
+ * check, in a save of any run.
+ */
+export const MAP_LOCATIONS: ReadonlySet<string> = new Set(
+  [...MARKERS, ...INVERTED_MARKERS].flatMap((marker) => marker.locations),
+);
 
 /** The dungeons with a marker: every one but Hyrule Castle's escape. */
 export const MARKED_DUNGEONS: readonly DungeonId[] = DUNGEONS.map(
