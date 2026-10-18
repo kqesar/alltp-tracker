@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-A Link to the Past Tracker — a React 19 + TypeScript (Vite, Zustand, Biome, Vitest) web app tracking items, chests and dungeons in ALttP Randomizer runs. Package manager is **pnpm**, pinned to one exact version by both `packageManager` and `devEngines.packageManager` in `package.json`, which a bump changes together (pnpm switches to that version itself and records its binaries' sha512 in `pnpm-lock.yaml`; CI reads it too); Node `>=22.0.0`. Build scripts are denied by default, so a dependency that needs one (esbuild) is listed under `allowBuilds` in `pnpm-workspace.yaml`.
+A Link to the Past Tracker — a React 19 + TypeScript (Vite, Zustand, Biome, Vitest) web app tracking items, chests and dungeons in ALttP Randomizer runs. Package manager is **pnpm**, pinned to one exact version by both `packageManager` and `devEngines.packageManager` in `package.json`, which a bump changes together (pnpm switches to that version itself and records its binaries' sha512 in `pnpm-lock.yaml`; CI reads it too). Node is pinned the same way by `devEngines.runtime`: `pnpm install` fetches that Node (exact version and checksum in the lockfile) and every `pnpm` script runs with it, whatever Node the shell has; CI sets up pnpm, that Node and the frozen install in one step (`pnpm/setup`). Build scripts are denied by default, so a dependency that needs one (esbuild) is listed under `allowBuilds` in `pnpm-workspace.yaml`.
 
 ## Layout
 
