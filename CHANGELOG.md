@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.25.0](https://github.com/kqesar/alltp-tracker/compare/v2.24.0...v2.25.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **alttpr:** the entrance randomizer's rules in the engine's language ([9bb4c26](https://github.com/kqesar/alltp-tracker/commit/9bb4c26037d229dd56ef25ba2c38fe662163bc14))
+* **alttpr:** the entrance randomizer's world, held to its own tests ([ef34c4d](https://github.com/kqesar/alltp-tracker/commit/ef34c4d33491310aa7451bcd2e3a3d26d7de099d))
+* **web:** Crosskeys checks follow the entrance randomizer's logic ([39fa377](https://github.com/kqesar/alltp-tracker/commit/39fa3776356ab90cfcbe3cd7ea4792b026b3bbf0))
+* **web:** say what a Crosskeys check misses, through the doors noted ([9fafe44](https://github.com/kqesar/alltp-tracker/commit/9fafe44ccd2cb6d4e9bc2c560d912909cd5fb744))
+
 ## [2.24.0](https://github.com/kqesar/alltp-tracker/compare/v2.23.0...v2.24.0) (2026-10-18)
 
 
