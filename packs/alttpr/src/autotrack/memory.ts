@@ -346,16 +346,27 @@ export const MEMORY_RANGES = [
   save("agahnim-2", 0x40f, 1, "boss-kills", "z3:events.asm:104-106"),
   // The randomizer's NPC item flags.
   save("npc-flags", 0x410, 2, "outside-checks", "z3:sram.asm:240-247"),
-  // Frames played, which the NMI hook counts until StatsLocked stops the
-  // count at the goal (framehook.asm:24-26): the game's own play time. No
-  // race permits it, so it is `other`.
-  save("play-frames", 0x43e, 4, "other", "z3:sram.asm:295"),
+  // The ROM's own stats, which its end credits show (stats/statConfig.asm:
+  // 50-68) and the game stops counting once StatsLocked is set. No race
+  // permits them, so they are `other`, in three ranges around the two bytes
+  // races do read. From BonkCounter to NMIFrames, the frames played, which
+  // the NMI hook counts (framehook.asm:24-26): the game's play time.
+  save("stats", 0x420, 0x22, "other", "z3:sram.asm:269-295"),
   // $01 from the Triforce room on (sram.asm:297): StatsFinalPrep sets it
   // (stats.asm:322-326) where the game enters mode $19 (hooks.asm:551-552).
   save("stats-locked", 0x443, 1, "goal", "z3:stats.asm:322-326"),
+  // MenuFrames, counted once a frame while the item menu is open, mode $0E
+  // submode $01 (framehook.asm:14-16). Measured on bsnes-mercury: +558 over
+  // the ~9.3 s the menu stayed open. The credits' shift of 8 bits
+  // (stats/statConfig.asm:65) is not its unit.
+  save("menu-frames", 0x444, 4, "other", "z3:sram.asm:298"),
   // Heart containers collected, boss and Sanctuary hearts (sram.asm:299,
   // itemdatatables.asm:756-757). The HUD shows the hearts they add.
   save("heart-containers", 0x448, 1, "hud", "z3:sram.asm:299"),
+  // From DeathCounter to MagicCounter: deaths, faerie revivals, boss kills
+  // without a sword, when the first sword, the boots, the flute and the
+  // mirror were found, damage taken and magic used.
+  save("stats-finds", 0x449, 0x25, "other", "z3:sram.asm:300-315"),
   // Heart pieces collected (itemdatatables.asm:717): the spec's "heart
   // piece counts".
   save("heart-pieces", 0x470, 1, "hud", "z3:sram.asm:318"),

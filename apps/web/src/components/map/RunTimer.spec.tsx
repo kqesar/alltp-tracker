@@ -136,7 +136,7 @@ describe("RunTimer", () => {
     memory[GAME_MODE] = 0x09;
     act(() =>
       useAutotrackStore.setState({
-        reading: readingOf(memory, { unread: ["play-frames"] }),
+        reading: readingOf(memory, { unread: ["stats"] }),
       }),
     );
     render(<RunTimer />);

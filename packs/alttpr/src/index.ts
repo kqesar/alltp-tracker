@@ -21,6 +21,7 @@ export {
   type MemoryView,
   type ProgressReading,
   playTimeMs,
+  type RomStats,
   type Unsettled,
 } from "./autotrack/decode";
 export {

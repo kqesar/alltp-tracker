@@ -399,15 +399,96 @@ export interface ProgressReading {
    * also turns false in menus and text boxes.
    */
   readonly beforePlay: Fact;
-  /**
-   * The frames played (NMIFrames), outside Race Mode only: no race permits
-   * it. playTimeMs turns it into time.
-   */
-  readonly playFrames: number | Unsettled;
+  /** The ROM's own stats, outside Race Mode only: no race permits them. */
+  readonly romStats: RomStats | Unsettled;
   /** The Triforce room reached: game mode $19 or $1A, or StatsLocked. */
   readonly goal: Fact;
   /** Zelda rescued: ProgressIndicator $02, where Open starts. */
   readonly rescueZelda: Fact;
+}
+
+/**
+ * The ROM's own stats, those its end credits show (stats/statConfig.asm:
+ * 50-68), which the game stops counting at the goal (StatsLocked). Frames
+ * are frames played: playTimeMs turns them into time. They read 0 before a
+ * file is loaded: the title and the file select clear the save data in
+ * WRAM (seen on a real game after a save and quit).
+ */
+export interface RomStats {
+  /** Frames played (NMIFrames): the game's play time. */
+  readonly playFrames: number;
+  /** Frames the item menu was open (MenuFrames). */
+  readonly menuFrames: number;
+  /**
+   * Frames the game lagged: NMI frames its main loop missed, NMIFrames less
+   * LoopFrames, as StatsFinalPrep works it out (stats.asm:334-337).
+   */
+  readonly lagFrames: number;
+  /**
+   * When the first sword, the boots, the flute and the mirror were found,
+   * in frames played; 0 until then.
+   */
+  readonly found: Readonly<
+    Record<"boots" | "flute" | "mirror" | "sword", number>
+  >;
+  /** Bosses killed without a sword, and with each sword. */
+  readonly bossKills: Readonly<
+    Record<"fighter" | "gold" | "master" | "swordless" | "tempered", number>
+  >;
+  readonly bonks: number;
+  readonly damageTaken: number;
+  readonly deaths: number;
+  readonly faerieRevivals: number;
+  /** Items collected, the credits' collection rate (TotalItemCounter). */
+  readonly itemsCollected: number;
+  readonly magicUsed: number;
+  readonly saveAndQuits: number;
+}
+
+/** A 32-bit little-endian count at save data `offset`. */
+const long = (bytes: Bytes, offset: number): number =>
+  (bytes.word(SAVE(offset)) | (bytes.word(SAVE(offset + 2)) << 16)) >>> 0;
+
+/**
+ * The ROM's stats, at the addresses sram.asm asserts (sram.asm:560-596).
+ * Unsettled when any of their three ranges is.
+ */
+function romStats(reader: Reader): RomStats | Unsettled {
+  const stats = reader.range("stats");
+  if (typeof stats === "string") return stats;
+  const menu = reader.range("menu-frames");
+  if (typeof menu === "string") return menu;
+  const finds = reader.range("stats-finds");
+  if (typeof finds === "string") return finds;
+  // t t t t g g g g f f f f m m m m: kills with the tempered, gold, fighter
+  // and master swords (sram.asm:274-276)
+  const kills = stats.word(SAVE(0x425));
+  const playFrames = long(stats, 0x43e);
+  return {
+    bonks: stats.byte(SAVE(0x420)),
+    bossKills: {
+      fighter: (kills >> 4) & 0xf,
+      gold: (kills >> 8) & 0xf,
+      master: kills & 0xf,
+      swordless: finds.byte(SAVE(0x452)),
+      tempered: (kills >> 12) & 0xf,
+    },
+    damageTaken: finds.word(SAVE(0x46a)),
+    deaths: finds.byte(SAVE(0x449)),
+    faerieRevivals: finds.byte(SAVE(0x453)),
+    found: {
+      boots: long(finds, 0x45c),
+      flute: long(finds, 0x460),
+      mirror: long(finds, 0x464),
+      sword: long(finds, 0x458),
+    },
+    itemsCollected: stats.word(SAVE(0x423)),
+    lagFrames: Math.max(0, playFrames - long(stats, 0x42e)),
+    magicUsed: finds.word(SAVE(0x46c)),
+    menuFrames: long(menu, 0x444),
+    playFrames,
+    saveAndQuits: stats.byte(SAVE(0x42d)),
+  };
 }
 
 /** The bosses' flags: CHECK_FLAGS' boss drops and the two Agahnims. */
@@ -461,19 +542,13 @@ export function decodeProgress(
   // not (the credits end).
   const mode = inGoal(reader);
   const locked = statsLocked(reader);
-  const frames = reader.range("play-frames");
   return {
     beforePlay: preGame(reader),
     bosses,
     completed,
     goal: mode === true || locked === true ? true : locked,
-    playFrames:
-      typeof frames === "string"
-        ? frames
-        : (frames.word() |
-            (frames.word(MEMORY_RANGE["play-frames"].bus + 2) << 16)) >>>
-          0,
     rescueZelda: zelda(reader),
+    romStats: romStats(reader),
     started: inPlay(reader),
   };
 }
