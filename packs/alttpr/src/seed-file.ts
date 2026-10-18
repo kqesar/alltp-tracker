@@ -9,8 +9,9 @@
 // (SendPatchToDisk.php:46-67); a "mystery" one keeps not even its world or
 // goal, which then read as unrecognized.
 //
-// What meta says (World.php:991-1017): `mode`, `goal`, `weapons`, `logic` and
-// `dungeon_items` are the world's config; `entry_crystals_tower` and
+// What meta says (World.php:991-1017): `mode`, `goal`, `weapons`, `logic`,
+// `dungeon_items`, `item_placement`, `accessibility`, `item_pool` and
+// `item_functionality` are the world's config; `entry_crystals_tower` and
 // `entry_crystals_ganon` are the options the seed was asked for, as strings
 // ("random" when it was asked for random crystals, whose counts the file
 // drops: SendPatchToDisk.php:41-44). A value vt never writes leaves that
@@ -39,6 +40,8 @@ const SEED_FILE = z.object({
   hash: z.string().check(z.regex(SEED_HASH)),
   spoiler: z.object({
     meta: z.object({
+      // config/alttp.php:191-195
+      accessibility: oneOf(["items", "locations", "none"]),
       // config/alttp.php:185-190
       dungeon_items: oneOf(["standard", "mc", "mcs", "full"]),
       // config/alttp.php:205-226
@@ -53,6 +56,18 @@ const SEED_FILE = z.object({
         "triforce-hunt",
         "ganonhunt",
         "completionist",
+      ]),
+      // World.php:216-259
+      item_functionality: oneOf(["normal", "hard", "expert", "superexpert"]),
+      // config/alttp.php:181-184
+      item_placement: oneOf(["advanced", "basic"]),
+      // World.php:171-214
+      item_pool: oneOf([
+        "normal",
+        "hard",
+        "expert",
+        "superexpert",
+        "crowd_control",
       ]),
       // World.php:1292-1324, the logics with a seed type
       logic: oneOf(["NoGlitches", "OverworldGlitches", "MajorGlitches"]),
@@ -89,9 +104,13 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
   const crystals = (count: string | null) =>
     setting(count === null ? null : Number(count));
   return {
+    accessibility: setting(meta.accessibility),
     crystalsGanon: crystals(meta.entry_crystals_ganon),
     crystalsTower: crystals(meta.entry_crystals_tower),
     goal: setting(meta.goal),
+    itemFunctionality: setting(meta.item_functionality),
+    itemPlacement: setting(meta.item_placement),
+    itemPool: setting(meta.item_pool),
     logic: setting(meta.logic),
     mode: setting(meta.mode),
     seed: file.data.hash,

@@ -41,7 +41,11 @@ export { ALTTPR_RACE_PROFILE } from "./autotrack/race-profile";
 export {
   decodeSeedSettings,
   SEED_SETTINGS_RANGES,
+  type SeedAccessibility,
   type SeedGoal,
+  type SeedItemFunctionality,
+  type SeedItemPlacement,
+  type SeedItemPool,
   type SeedLogic,
   type SeedMode,
   type SeedSetting,

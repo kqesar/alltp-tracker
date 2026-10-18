@@ -139,7 +139,31 @@ export type SeedGoal =
   | "ganonhunt"
   | "completionist";
 
-/** What the ROM says of the seed's settings. */
+/** upstream's itemPlacement (config/alttp.php:181-184). */
+export type SeedItemPlacement = "advanced" | "basic";
+
+/** upstream's accessibility (config/alttp.php:191-195). */
+export type SeedAccessibility = "items" | "locations" | "none";
+
+/** upstream's item.pool (World.php:171-214). */
+export type SeedItemPool =
+  | "normal"
+  | "hard"
+  | "expert"
+  | "superexpert"
+  | "crowd_control";
+
+/** upstream's item.functionality (World.php:216-259). */
+export type SeedItemFunctionality =
+  | "normal"
+  | "hard"
+  | "expert"
+  | "superexpert";
+
+/**
+ * What a seed says of its settings: its ROM, or its file on alttpr.com
+ * (seed-file.ts), which alone states the last four.
+ */
 export interface SeedSettingsReading {
   /**
    * The seed's name in the header, after "VT " (World.php:1090, 1350):
@@ -165,6 +189,14 @@ export interface SeedSettingsReading {
   readonly wildKeys: SeedSetting<boolean>;
   /** region.wildBigKeys. */
   readonly wildBigKeys: SeedSetting<boolean>;
+  /** itemPlacement: no ROM table holds it, so the ROM leaves it out. */
+  readonly itemPlacement?: SeedSetting<SeedItemPlacement>;
+  /** accessibility, like itemPlacement. */
+  readonly accessibility?: SeedSetting<SeedAccessibility>;
+  /** item.pool, like itemPlacement. */
+  readonly itemPool?: SeedSetting<SeedItemPool>;
+  /** item.functionality, like itemPlacement. */
+  readonly itemFunctionality?: SeedSetting<SeedItemFunctionality>;
 }
 
 /** HUDDungeonItems' bits (tables.asm:161; vt CustomizerController.php:157-162). */
