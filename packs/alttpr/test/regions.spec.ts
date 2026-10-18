@@ -23,6 +23,7 @@ import {
   regionId,
   START,
 } from "../src/world";
+import { INVERTED_REGIONS } from "../src/worlds/inverted";
 import { OPEN_REGIONS } from "../src/worlds/open";
 import { STANDARD_REGIONS } from "../src/worlds/standard";
 import { loadFixtures, loadLocationIndex } from "./fixtures";
@@ -57,7 +58,11 @@ const isPending = (module: RegionModule) =>
     (region) => region.entrances.length === 0 && region.locations.length === 0,
   );
 
-const WORLDS = { open: OPEN_REGIONS, standard: STANDARD_REGIONS } as const;
+const WORLDS = {
+  inverted: INVERTED_REGIONS,
+  open: OPEN_REGIONS,
+  standard: STANDARD_REGIONS,
+} as const;
 
 /** The file whose constructor builds a region file's locations. */
 const builder = new Map(
@@ -184,7 +189,7 @@ function portErrors(module: RegionModule): string[] {
 
 describe("the region modules", () => {
   it("are one per region file, at the path upstream.json gives", () => {
-    expect(modules.size).toBe(27);
+    expect(modules.size).toBe(51);
     for (const [file, module] of modules) {
       expect(module.file, file).toBe(file);
     }

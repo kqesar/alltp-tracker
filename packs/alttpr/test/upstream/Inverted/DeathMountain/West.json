@@ -1,0 +1,53 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/Inverted/DeathMountain/WestTest.php",
+  "class": "Inverted\\WestTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "NoGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Old Man","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":52,"location":"Old Man","method":"testLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"location","line":53,"location":"Old Man","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp"],"base":"setUp"},"kind":"location","line":54,"location":"Old Man","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp"],"base":"setUp"},"kind":"location","line":55,"location":"Old Man","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp"],"base":"setUp"},"kind":"location","line":56,"location":"Old Man","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["OcarinaActive","Lamp"],"base":"setUp"},"kind":"location","line":57,"location":"Old Man","method":"testLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":59,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":8,"expected":false,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":60,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Lamp","Flute"]},"kind":"location","line":61,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["Flute","ProgressiveGlove","Hammer"],"base":"setUp"},"kind":"location","line":62,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["Flute","PowerGlove","Hammer"],"base":"setUp"},"kind":"location","line":63,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["Flute","ProgressiveGlove","ProgressiveGlove","Hammer"],"base":"setUp"},"kind":"location","line":64,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["Flute","TitansMitt"],"base":"setUp"},"kind":"location","line":65,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":14,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["Flute","MoonPearl","ProgressiveGlove","Hammer"],"base":"setUp"},"kind":"location","line":66,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["Flute","MoonPearl","PowerGlove","Hammer"],"base":"setUp"},"kind":"location","line":67,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["Flute","MoonPearl","ProgressiveGlove","ProgressiveGlove","Hammer"],"base":"setUp"},"kind":"location","line":68,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["Flute","MoonPearl","TitansMitt"],"base":"setUp"},"kind":"location","line":69,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["ProgressiveGlove","Lamp"],"base":"setUp"},"kind":"location","line":70,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["PowerGlove","Lamp"],"base":"setUp"},"kind":"location","line":71,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":20,"expected":true,"file":"tests/Inverted/DeathMountain/WestTest.php","items":{"add":["TitansMitt","Lamp"],"base":"setUp"},"kind":"location","line":72,"location":"Spectacle Rock Cave","method":"testLocation"}
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/Inverted/DarkWorld/SouthTest.php",
+  "class": "Inverted\\DarkWorld\\SouthTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "NoGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":true,"file":"tests/Inverted/DarkWorld/SouthTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Hype Cave - Top","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/Inverted/DarkWorld/SouthTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":53,"location":"Hype Cave - Middle Right","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/Inverted/DarkWorld/SouthTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":55,"location":"Hype Cave - Middle Left","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/Inverted/DarkWorld/SouthTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":57,"location":"Hype Cave - Bottom","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/Inverted/DarkWorld/SouthTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":59,"location":"Hype Cave - NPC","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/Inverted/DarkWorld/SouthTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":61,"location":"Stumpy","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/Inverted/DarkWorld/SouthTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":63,"location":"Digging Game","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/Inverted/DarkWorld/SouthTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":65,"location":"Link's House","method":"testLocation"}
+  ]
+}

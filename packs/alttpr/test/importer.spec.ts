@@ -481,6 +481,36 @@ describe("importItems", () => {
 });
 
 const WORLDS: Record<string, string> = {
+  // Inverted moves the medallion from the escape to the south
+  "app/Region/Inverted/Escape.php": `<?php
+namespace ALttP\\Region\\Inverted;
+
+use ALttP\\Region;
+
+class Escape extends Region\\Standard\\Escape
+{
+    public function __construct(World $world)
+    {
+        parent::__construct($world);
+        $this->locations->removeItem("Some Medallion");
+        $this->shops->removeItem("Some Shop");
+    }
+}
+`,
+  "app/Region/Inverted/South.php": `<?php
+namespace ALttP\\Region\\Inverted;
+
+use ALttP\\Location;
+use ALttP\\Region;
+
+class South extends Region
+{
+    public function __construct(World $world)
+    {
+        $this->locations->addItem(new Location\\Medallion("Some Medallion", [null], null, $this));
+    }
+}
+`,
   "app/Region/Open/Escape.php": `<?php
 namespace ALttP\\Region\\Open;
 
@@ -508,6 +538,22 @@ class Escape extends Region
             new Pad("Some Medallion", [null, 't0' => 0x5020], null, $this),
         ]);
         $this->shops = new ShopCollection;
+    }
+}
+`,
+  "app/World/Inverted.php": `<?php
+namespace ALttP\\World;
+
+use ALttP\\Region;
+
+class Inverted extends World
+{
+    public function __construct(int $id = 0, array $config = [])
+    {
+        $this->regions = [
+            'Escape' => new Region\\Inverted\\Escape($this),
+            'South' => new Region\\Inverted\\South($this),
+        ];
     }
 }
 `,
@@ -555,6 +601,19 @@ describe("importLocations", () => {
     expect(index.regions).toEqual([
       {
         extends: "app/Region/Standard/Escape.php",
+        file: "app/Region/Inverted/Escape.php",
+        line: 11,
+        mode: "inverted",
+        name: "Escape",
+      },
+      {
+        file: "app/Region/Inverted/South.php",
+        line: 12,
+        mode: "inverted",
+        name: "South",
+      },
+      {
+        extends: "app/Region/Standard/Escape.php",
         file: "app/Region/Open/Escape.php",
         line: 11,
         mode: "open",
@@ -570,6 +629,12 @@ describe("importLocations", () => {
     // Through `use` and its alias; the collection and the shops are not
     // locations
     expect(index.locations).toEqual([
+      {
+        file: "app/Region/Inverted/South.php",
+        kind: "Medallion",
+        line: 11,
+        name: "Some Medallion",
+      },
       {
         file: "app/Region/Standard/Escape.php",
         kind: "Chest",
@@ -589,13 +654,32 @@ describe("importLocations", () => {
         name: "Some Medallion",
       },
     ]);
+    // What a subclass drops of its parent's locations; shops are none
+    expect(index.removals).toEqual([
+      {
+        file: "app/Region/Inverted/Escape.php",
+        line: 11,
+        name: "Some Medallion",
+      },
+    ]);
   });
 
   it("refuses names it cannot read and locations built twice", () => {
     const twice = (file: string) =>
-      readWorld(file).replace('"Some Medallion"', '"Sanctuary"');
+      file === "app/Region/Standard/Escape.php"
+        ? readWorld(file).replace('"Some Medallion"', '"Sanctuary"')
+        : readWorld(file);
     expect(() => importLocations(twice, HEADER)).toThrow(
-      /"Sanctuary" is built twice/,
+      /"Sanctuary" is built twice in app\/Region\/Standard\/Escape.php/,
+    );
+    // A world holds a location once: kept in the escape and built in the south
+    const kept = (file: string) =>
+      readWorld(file).replace(
+        'removeItem("Some Medallion")',
+        'removeItem("Other")',
+      );
+    expect(() => importLocations(kept, HEADER)).toThrow(
+      /"Some Medallion" is in two regions of the inverted world/,
     );
     const computed = (file: string) =>
       readWorld(file).replace('"Sanctuary"', "$name");
@@ -702,6 +786,7 @@ describe("the checkout", () => {
     write("app/Randomizer.php", "<?php class R { const LOGIC = 31; }");
     write("tests/NoGlitches/Dark/SampleTest.php", TEST_CLASS);
     write("tests/NoGlitches/TestCase.php", "<?php // not a test class");
+    write("tests/Inverted/TestCase.php", "<?php // not a test class");
     write("app/Item.php", ITEM_PHP);
     write("resources/lang/en/item.php", ENGLISH_PHP);
     for (const [file, text] of Object.entries(WORLDS)) write(file, text);
@@ -710,7 +795,7 @@ describe("the checkout", () => {
     const out = join(root, "out");
     const { items, locations, summary, upstream } = importAll(root, out);
     expect(items).toBe(4);
-    expect(locations).toBe(3);
+    expect(locations).toBe(4);
     expect(
       JSON.parse(readFileSync(join(out, "items.json"), "utf8")).items,
     ).toHaveLength(4);

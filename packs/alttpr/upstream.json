@@ -140,6 +140,126 @@
       "status": "ported"
     },
     {
+      "file": "app/Region/Inverted/DarkWorld/DeathMountain/East.php",
+      "module": "src/regions/inverted/dark-world/death-mountain/east.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/DarkWorld/DeathMountain/West.php",
+      "module": "src/regions/inverted/dark-world/death-mountain/west.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/DarkWorld/Mire.php",
+      "module": "src/regions/inverted/dark-world/mire.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/DarkWorld/NorthEast.php",
+      "module": "src/regions/inverted/dark-world/north-east.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/DarkWorld/NorthWest.php",
+      "module": "src/regions/inverted/dark-world/north-west.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/DarkWorld/South.php",
+      "module": "src/regions/inverted/dark-world/south.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/DesertPalace.php",
+      "module": "src/regions/inverted/desert-palace.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/EasternPalace.php",
+      "module": "src/regions/inverted/eastern-palace.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/GanonsTower.php",
+      "module": "src/regions/inverted/ganons-tower.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/HyruleCastleEscape.php",
+      "module": "src/regions/inverted/hyrule-castle-escape.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/HyruleCastleTower.php",
+      "module": "src/regions/inverted/hyrule-castle-tower.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/IcePalace.php",
+      "module": "src/regions/inverted/ice-palace.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/LightWorld/DeathMountain/East.php",
+      "module": "src/regions/inverted/light-world/death-mountain/east.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/LightWorld/DeathMountain/West.php",
+      "module": "src/regions/inverted/light-world/death-mountain/west.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/LightWorld/NorthEast.php",
+      "module": "src/regions/inverted/light-world/north-east.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/LightWorld/NorthWest.php",
+      "module": "src/regions/inverted/light-world/north-west.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/LightWorld/South.php",
+      "module": "src/regions/inverted/light-world/south.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/MiseryMire.php",
+      "module": "src/regions/inverted/misery-mire.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/PalaceOfDarkness.php",
+      "module": "src/regions/inverted/palace-of-darkness.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/SkullWoods.php",
+      "module": "src/regions/inverted/skull-woods.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/SwampPalace.php",
+      "module": "src/regions/inverted/swamp-palace.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/ThievesTown.php",
+      "module": "src/regions/inverted/thieves-town.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/TowerOfHera.php",
+      "module": "src/regions/inverted/tower-of-hera.ts",
+      "status": "pending"
+    },
+    {
+      "file": "app/Region/Inverted/TurtleRock.php",
+      "module": "src/regions/inverted/turtle-rock.ts",
+      "status": "pending"
+    },
+    {
       "file": "app/Boss.php",
       "module": "src/bosses.ts",
       "role": "Boss::canBeat: every boss location and the GT and Ganon fights call it",
@@ -185,6 +305,12 @@
       "file": "app/World/Open.php",
       "module": "src/worlds/open.ts",
       "role": "the regions of an Open world: Standard's, but its own escape",
+      "status": "ported"
+    },
+    {
+      "file": "app/World/Inverted.php",
+      "module": "src/worlds/inverted.ts",
+      "role": "the regions of an Inverted world: its own region classes, and Standard's Medallions and Fountains",
       "status": "ported"
     },
     {
@@ -339,6 +465,116 @@
       "file": "tests/NoGlitches/TurtleRockTest.php",
       "fixture": "test/upstream/NoGlitches/TurtleRock.json",
       "status": "ported"
+    },
+    {
+      "file": "tests/Inverted/DarkWorld/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/Inverted/DarkWorld/DeathMountain/East.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/DarkWorld/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/Inverted/DarkWorld/DeathMountain/West.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/DarkWorld/MireTest.php",
+      "fixture": "test/upstream/Inverted/DarkWorld/Mire.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/DarkWorld/NorthEastTest.php",
+      "fixture": "test/upstream/Inverted/DarkWorld/NorthEast.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/DarkWorld/NorthWestTest.php",
+      "fixture": "test/upstream/Inverted/DarkWorld/NorthWest.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/DarkWorld/SouthTest.php",
+      "fixture": "test/upstream/Inverted/DarkWorld/South.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/Inverted/DeathMountain/East.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/Inverted/DeathMountain/West.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/DesertPalaceTest.php",
+      "fixture": "test/upstream/Inverted/DesertPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/EasternPalaceTest.php",
+      "fixture": "test/upstream/Inverted/EasternPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/GanonsTowerTest.php",
+      "fixture": "test/upstream/Inverted/GanonsTower.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/HyruleCastleEscapeTest.php",
+      "fixture": "test/upstream/Inverted/HyruleCastleEscape.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/HyruleCastleTowerTest.php",
+      "fixture": "test/upstream/Inverted/HyruleCastleTower.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/IcePalaceTest.php",
+      "fixture": "test/upstream/Inverted/IcePalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/LightWorldTest.php",
+      "fixture": "test/upstream/Inverted/LightWorld.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/MiseryMireTest.php",
+      "fixture": "test/upstream/Inverted/MiseryMire.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/PalaceOfDarknessTest.php",
+      "fixture": "test/upstream/Inverted/PalaceOfDarkness.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/SkullWoodsTest.php",
+      "fixture": "test/upstream/Inverted/SkullWoods.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/SwampPalaceTest.php",
+      "fixture": "test/upstream/Inverted/SwampPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/ThievesTownTest.php",
+      "fixture": "test/upstream/Inverted/ThievesTown.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/TowerOfHeraTest.php",
+      "fixture": "test/upstream/Inverted/TowerOfHera.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/Inverted/TurtleRockTest.php",
+      "fixture": "test/upstream/Inverted/TurtleRock.json",
+      "status": "pending"
     }
   ]
 }

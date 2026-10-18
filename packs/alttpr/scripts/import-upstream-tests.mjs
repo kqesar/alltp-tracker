@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /// <reference types="node" />
-// Imports the official randomizer's NoGlitches tests as JSON fixtures.
+// Imports the official randomizer's NoGlitches and Inverted tests as JSON
+// fixtures.
 //
 //   node scripts/import-upstream-tests.mjs <upstream-checkout> [--out <dir>]
 //
@@ -16,8 +17,9 @@
 // Output, under test/upstream/ by default: one JSON file per test class,
 // mirroring its path (tests/NoGlitches/EasternPalaceTest.php becomes
 // NoGlitches/EasternPalace.json), the item table of app/Item.php as
-// items.json, the regions and locations of the Standard and Open worlds as
-// locations.json, and a copy of the upstream LICENSE. Files
+// items.json, the regions and locations of the Standard, Open and Inverted
+// worlds as locations.json (with the locations a subclass removes: Inverted
+// moves some), and a copy of the upstream LICENSE. Files
 // are deterministic: classes, cases (by line) and object keys are sorted, and
 // each case sits on one line so a re-import diffs case by case.
 
@@ -37,7 +39,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 export const UPSTREAM_REPO = "sporchia/alttp_vt_randomizer";
 
 /** Test directories imported, relative to the checkout. */
-export const TEST_ROOTS = ["tests/NoGlitches"];
+export const TEST_ROOTS = ["tests/NoGlitches", "tests/Inverted"];
 
 // ---------------------------------------------------------------------------
 // Tokenizer
@@ -976,6 +978,20 @@ export const KINDS = [
         ->canFill(Item::get($item_name, $this->world)));`),
   },
   {
+    // Region::canComplete with a collection (Inverted's Hyrule Castle Tower)
+    build: (args, captures) => ({
+      expected: boolean(args.access, "access"),
+      items: providerCollection(args),
+      region: String(captures.region),
+    }),
+    kind: "regionComplete",
+    params: ["access", "items", "except"],
+    provider: true,
+    tokens: template(`${EXCEPT_OR_SETUP}
+      $this->assertEquals($access, $this->world->getRegion($__str_region)
+        ->canComplete($this->world->getLocations(), $this->collected));`),
+  },
+  {
     // One assertion: Region::canEnter
     build: (_, captures) => ({
       expected: Boolean(captures.assert),
@@ -1017,7 +1033,7 @@ export const KINDS = [
 
 /**
  * @typedef {{ mode: string, config: PlainValue, line: number }} WorldSetup
- * @typedef {{ collected: string[], locationItems: Record<string, string>, line: number }} SetUp
+ * @typedef {{ bosses?: Record<string, string>, collected: string[], locationItems: Record<string, string>, line: number }} SetUp
  * @typedef {{ method: string, line: number, reason: string, rows?: { dataSet: number, line: number, args: PlainValue }[] }} Unsupported
  */
 
@@ -1052,6 +1068,19 @@ const SETUP_STATEMENTS = [
   {
     apply: () => {},
     tokens: template("$this->collected->setChecksForWorld($this->world->id);"),
+  },
+  // A boss set in a region by name: "Dummy Boss" has no rule, so it is
+  // always beaten (Boss.php:142-146, 177-184)
+  {
+    apply: (/** @type {Captures} */ c, /** @type {{ setUp: SetUp }} */ out) => {
+      out.setUp.bosses = {
+        ...out.setUp.bosses,
+        [String(c.region)]: String(c.boss),
+      };
+    },
+    tokens: template(
+      "$this->world->getRegion($__str_region)->setBoss(new Boss($__str_boss));",
+    ),
   },
   {
     apply: (/** @type {Captures} */ c, /** @type {{ setUp: SetUp }} */ out) => {
@@ -1546,6 +1575,7 @@ export function importAll(checkout, out) {
 
 /** The worlds this pack covers, each the class that lists its regions. */
 export const WORLD_FILES = /** @type {const} */ ({
+  inverted: "app/World/Inverted.php",
   open: "app/World/Open.php",
   standard: "app/World/Standard.php",
 });
@@ -1680,6 +1710,8 @@ export function importLocations(read, upstream) {
 
   /** @type {{ file: string, kind: string, line: number, name: string }[]} */
   const locations = [];
+  /** @type {{ file: string, line: number, name: string }[]} */
+  const removals = [];
   // The region files, and the classes they extend, which build locations too
   const files = [...new Set(regions.map((region) => region.file))].sort();
   /** @type {Map<string, string>} */
@@ -1699,6 +1731,26 @@ export function importLocations(read, upstream) {
       if (parent !== "ALttP\\Region") {
         parents.set(file, classFile(parent));
         if (!files.includes(classFile(parent))) files.push(classFile(parent));
+      }
+    }
+    // `$this->locations->removeItem("Link's House")`: a subclass drops a
+    // location its parent built (Inverted's South Light World)
+    for (let i = 0; i + 6 < tokens.length; i++) {
+      if (
+        tokens[i]?.type === "var" &&
+        tokens[i]?.value === "this" &&
+        isPunct(tokens[i + 1], "->") &&
+        tokens[i + 2]?.value === "locations" &&
+        isPunct(tokens[i + 3], "->") &&
+        tokens[i + 4]?.value === "removeItem" &&
+        isPunct(tokens[i + 5], "(") &&
+        tokens[i + 6]?.type === "string"
+      ) {
+        removals.push({
+          file,
+          line: /** @type {Token} */ (tokens[i]).line,
+          name: String(tokens[i + 6]?.value),
+        });
       }
     }
     for (const { fqn, line, open } of constructions(tokens)) {
@@ -1721,12 +1773,39 @@ export function importLocations(read, upstream) {
     const parent = parents.get(region.file);
     if (parent !== undefined) region.extends = parent;
   }
-  const names = new Set();
+  // A file builds each name once; across files a name may come back, as
+  // Inverted moves Ganon, Link's House and two Death Mountain spots
+  const builds = new Set();
   for (const location of locations) {
-    if (names.has(location.name)) {
-      throw new Error(`Location "${location.name}" is built twice`);
+    const key = `${location.file}\u0000${location.name}`;
+    if (builds.has(key)) {
+      throw new Error(
+        `Location "${location.name}" is built twice in ${location.file}`,
+      );
     }
-    names.add(location.name);
+    builds.add(key);
+  }
+  // Each world holds a location once: a region's are its class chain's, each
+  // level dropping what it removes from its parent's, then adding its own
+  for (const mode of Object.keys(WORLD_FILES)) {
+    /** @type {Map<string, string>} */
+    const holder = new Map();
+    for (const region of regions.filter((r) => r.mode === mode)) {
+      for (const name of locationsOf(
+        region.file,
+        parents,
+        locations,
+        removals,
+      )) {
+        const other = holder.get(name);
+        if (other !== undefined) {
+          throw new Error(
+            `Location "${name}" is in two regions of the ${mode} world: ${other}, ${region.file}`,
+          );
+        }
+        holder.set(name, region.file);
+      }
+    }
   }
   return {
     files: Object.values(WORLD_FILES),
@@ -1734,8 +1813,35 @@ export function importLocations(read, upstream) {
       "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream worlds and regions. Re-import, never edit.",
     locations,
     regions,
+    removals: removals.sort(
+      (a, b) => a.file.localeCompare(b.file) || a.line - b.line,
+    ),
     upstream,
   };
+}
+
+/**
+ * The names of the locations a region file's class holds: its chain of
+ * classes from the base up, each level dropping what it removes, then
+ * adding what it builds, as PHP constructors run.
+ *
+ * @param {string} file the region's class file
+ * @param {Map<string, string>} parents each class file's parent class file
+ * @param {readonly { file: string, name: string }[]} locations every build
+ * @param {readonly { file: string, name: string }[]} removals every removal
+ * @returns {Set<string>}
+ */
+export function locationsOf(file, parents, locations, removals) {
+  const chain = [file];
+  for (let up = parents.get(file); up !== undefined; up = parents.get(up)) {
+    chain.unshift(up);
+  }
+  const held = new Set();
+  for (const level of chain) {
+    for (const r of removals) if (r.file === level) held.delete(r.name);
+    for (const l of locations) if (l.file === level) held.add(l.name);
+  }
+  return held;
 }
 
 export const ITEMS_FILE = "app/Item.php";

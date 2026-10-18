@@ -1,7 +1,7 @@
 # @alltp/pack-alttpr
 
 The A Link to the Past Randomizer game pack: the v31 rules (Standard and Open
-worlds, NoGlitches) as plain data over `@alltp/engine`, read from
+worlds, Inverted being ported, NoGlitches) as plain data over `@alltp/engine`, read from
 [sporchia/alttp_vt_randomizer](https://github.com/sporchia/alttp_vt_randomizer)
 at the commit `upstream.json` pins, and held to upstream's own test cases.
 
@@ -12,7 +12,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/helpers.ts` | `app/Support/ItemCollection.php`: `@canLiftRocks`, `@hasSword2`… |
 | `src/bosses.ts` | `app/Boss.php`: each boss's `canBeat`, and the boss each dungeon fights |
 | `src/world.ts` | `app/Region.php`: regions, entrances, prizes, `canFill` |
-| `src/worlds/*.ts` | `app/World/Standard.php`, `app/World/Open.php`: the region modules of each world |
+| `src/worlds/*.ts` | `app/World/Standard.php`, `app/World/Open.php`, `app/World/Inverted.php`: the region modules of each world |
 | `src/regions/**` | one module per upstream region file |
 | `src/fill.ts` | `app/Location.php`: `canFill`, whether the randomizer may place an item somewhere |
 | `src/keys.ts` | `app/Support/LocationCollection.php`: where a dungeon's items may sit (`itemInLocations`), and the key model |
@@ -77,6 +77,16 @@ engine's graph:
   escape: `regions/open/hyrule-castle-escape.ts` replaces Standard's, as
   `app/Region/Open/HyruleCastleEscape.php` does. Open gives RescueZelda at the
   start (`Randomizer.php:133`), which the tracker's state does.
+- **Inverted (being ported).** `app/World/Inverted.php` lists its own region
+  classes (`regions/inverted/**`) and Standard's Medallions and Fountains. Each
+  class extends Standard's (the escape, Open's); some keep their parent's
+  rules (`parent::initalize()`) and set a few, others replace them all. It
+  moves locations: Link's House to the south of the Dark World, Ether Tablet
+  and Spectacle Rock to East Death Mountain, Ganon to the Light World, and it
+  adds the Bomb Merchant (an event). The importer reads each world's
+  locations through its class chain and the `removeItem`s on it; until a file
+  is ported its module is pending (below), and the app reads an Inverted run
+  as Open.
 - **Settings.** A config read is a setting, folded at compile time:
   `config('itemPlacement') === 'advanced'` is `setting(advancedPlacement)`,
   `!== 'basic'` is `!setting(basicPlacement)`, `has('Lamp',

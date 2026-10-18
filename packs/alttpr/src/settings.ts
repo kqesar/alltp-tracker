@@ -31,6 +31,12 @@ export type AlttprSettings = {
    */
   readonly standardMode: boolean;
   /**
+   * mode.state is 'inverted' (World.php:297-298): the world of
+   * app/World/Inverted.php, its own region classes. Like Open, it gives
+   * RescueZelda at the start (Randomizer.php:133).
+   */
+  readonly invertedMode: boolean;
+  /**
    * mode.weapons is 'swordless' (ItemCollection.php:405). 'randomized',
    * 'assured' and 'vanilla' only place the swords differently.
    */
@@ -163,7 +169,7 @@ export type AlttprSettings = {
 };
 
 /** The worlds this pack builds: `World::factory`'s type. */
-export type Mode = "open" | "standard";
+export type Mode = "open" | "standard" | "inverted";
 
 const GOALS = [
   "completionist",
@@ -300,7 +306,7 @@ export function settingsFromUpstream(
   mode: string,
   config: Readonly<Record<string, unknown>> = {},
 ): AlttprSettings {
-  if (mode !== "open" && mode !== "standard") {
+  if (mode !== "open" && mode !== "standard" && mode !== "inverted") {
     throw new RangeError(`Upstream mode "${mode}" is not modeled`);
   }
   const c = checked(config);
@@ -352,6 +358,7 @@ export function settingsFromUpstream(
     ganonGoal: goal === "ganon",
     halfBottleMagic: bottleMagic === 0x40,
     ignoreCanKillEscapeThings: c.ignoreCanKillEscapeThings ?? false,
+    invertedMode: mode === "inverted",
     locationsAccessibility: c.accessibility === "locations",
     mirrorShieldInPool: shields >= 3,
     pedestalGoal: goal === "pedestal",

@@ -3,6 +3,7 @@
 // whose cases the contract runner checks once they are ported.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { locationsOf } from "../scripts/import-upstream-tests.mjs";
 import type { Fixture, LocationIndex } from "./fixtures";
 
 export const PACK_DIR = fileURLToPath(new URL("..", import.meta.url));
@@ -54,9 +55,11 @@ export function regionModule(file: string): string | undefined {
 /**
  * The region files a test class's cases reach, in its world's mode: the
  * region holding each location it checks (or places a medallion at) and
- * each region it enters. A region is its file and, when it extends another
- * region class, that class's file too: Open's escape sets the rules of
- * locations Standard's builds. Throws on a name the index lacks.
+ * each region it enters. A region is its file and every region class it
+ * extends: Open's escape sets the rules of locations Standard's builds, and
+ * Inverted's classes keep their parent's rules but those they set. A
+ * location is the one its world holds: Inverted moves some. Throws on a
+ * name the index lacks.
  */
 export function rulesOfTest(
   fixture: Fixture,
@@ -65,18 +68,33 @@ export function rulesOfTest(
   const mode = fixture.worlds.world?.mode;
   const regions = index.regions.filter((r) => r.mode === mode);
   const byName = new Map(regions.map((r) => [r.name, r]));
-  const locations = new Map(index.locations.map((l) => [l.name, l.file]));
+  const parents = new Map<string, string>();
+  for (const r of index.regions) {
+    if (r.extends !== undefined) parents.set(r.file, r.extends);
+  }
+  const holder = new Map<string, (typeof regions)[number]>();
+  for (const region of regions) {
+    for (const name of locationsOf(
+      region.file,
+      parents,
+      index.locations,
+      index.removals,
+    )) {
+      holder.set(name, region);
+    }
+  }
   const files = new Set<string>();
   const add = (region: (typeof regions)[number]) => {
-    files.add(region.file);
-    if (region.extends !== undefined) files.add(region.extends);
+    for (
+      let file: string | undefined = region.file;
+      file !== undefined;
+      file = parents.get(file)
+    ) {
+      files.add(file);
+    }
   };
   const location = (name: string) => {
-    const file = locations.get(name);
-    const owner =
-      file === undefined
-        ? undefined
-        : regions.find((r) => r.file === file || r.extends === file);
+    const owner = holder.get(name);
     if (owner === undefined) {
       throw new RangeError(`${fixture.file}: no location "${name}" in ${mode}`);
     }

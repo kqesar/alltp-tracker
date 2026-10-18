@@ -204,6 +204,7 @@ describe("the item classes setItem takes", () => {
     const events = loadLocationIndex()
       .locations.filter((l) => l.kind === "Prize\\Event")
       .map((l) => locationId(l.name));
-    expect([...EVENT_LOCATIONS].sort()).toEqual(events.sort());
+    // Inverted builds Ganon again, in its own file
+    expect([...EVENT_LOCATIONS].sort()).toEqual([...new Set(events)].sort());
   });
 });
