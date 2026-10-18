@@ -19,12 +19,14 @@ type Step = { control: ControlId; direction: Direction };
  * Whether the board shows a control, so that a shortcut or a voice command
  * may change it: a key cell can only be clicked while it is shown; so it is
  * with its keys, and its map and compass, shown only when they lie outside
- * their dungeons.
+ * their dungeons; and the shops, a retro run's.
  * @param control - The control
  */
 export const isControlShown = (control: ControlId): boolean => {
   const { bigKeysVisible, settings } = useGameStore.getState();
   if (isKeyControl(control) && !bigKeysVisible) return false;
+  // The shops' cells are a retro run's alone
+  if (control.startsWith("shop") && settings.mode !== "retro") return false;
   return !(
     isMapCompassControl(control) && !wildItems(settings).mapsAndCompasses
   );

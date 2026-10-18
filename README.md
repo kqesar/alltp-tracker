@@ -45,6 +45,10 @@ The timeline is saved with the run, in exports too.
 - **The world and the dungeon items** are not hidden: you see the world on the first screen, and the dungeon items count each dungeon's items, so the run assumes them until you set them. A change of dungeon items keeps each counter's items found.
 - **With autotracking outside races**, the seed's settings are set on their own as it is read. A race seed's are not read, so they stay yours to find.
 
+**Retro** — the bow shoots rupees once you buy an arrow, and a small key opens any dungeon's door. The grid's last row holds an **Arrow shop** and a **Key shop**: mark each when you find a shop that sells it (voice: "tracker arrow shop", "tracker key shop"). Until then the bow shoots only with the silver arrows, and a door behind a small key is *maybe*: the tracker cannot tell which dungeon a key you found was meant for. Once a key shop is found, every key door is in logic, as the randomizer has it.
+
+**Logic not modelled yet** — Crosskeys shuffles the entrances, which the tracker does not model yet. Rather than show the Open world's logic, every check of such a run shows as *maybe*, and a note over the map says why.
+
 **Boss overlays** — each boss cell carries three corner buttons: the medallion requirement (top right, Misery Mire and Turtle Rock only), the remaining chest count (bottom left) and the reward, crystal or pendant (bottom right). Click steps them forward, right-click back.
 
 **Keyboard** — the item grid is a single Tab stop: arrow keys move inside it (through a boss's overlays too) and wrap, Home / End jump to the ends of a row, Ctrl+Home / End to the ends of the grid. Space and Enter step the focused control forward, "-" steps it back. Every map marker is a button Tab can reach; "Skip to map" and "Skip to checks" jump to either view.

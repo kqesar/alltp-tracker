@@ -17,7 +17,9 @@ type BigKeyCellProps = {
  * also wants them, the map and compass on top, the small key (its count as a
  * badge on it) and the big key below. It shows only what the dungeon's pool
  * holds (ownItems, smallKeysMax): Eastern Palace has no small key, Hyrule
- * Castle no big key or compass, Castle Tower small keys alone. When the key
+ * Castle no big key or compass, Castle Tower small keys alone. A retro
+ * run's small keys are generic, no dungeon's: no key cell shows them. When
+ * the key
  * cells are hidden it renders an empty, non-interactive placeholder so the
  * grid layout stays stable.
  */
@@ -28,6 +30,7 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
     (state) => wildItems(state.settings).mapsAndCompasses,
   );
   const keyCount = useGameStore((state) => state.smallKeys[dungeonIndex] || 0);
+  const genericKeys = useGameStore((state) => state.settings.mode === "retro");
 
   if (!bigKeysVisible) {
     return (
@@ -40,7 +43,7 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
     );
   }
 
-  const maxKeys = smallKeysMax(dungeonIndex);
+  const maxKeys = genericKeys ? 0 : smallKeysMax(dungeonIndex);
   const own = ownItems(dungeonIndex);
   const toggle = (variant: "big-key" | "small-key" | "map" | "compass") => (
     <KeyToggle

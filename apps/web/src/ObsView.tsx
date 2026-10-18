@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { TrackerGrid } from "@/components/tracker/TrackerGrid";
 import { StreamTimer } from "@/components/ui/StreamTimer";
-import { defaultItemGrid } from "@/data/items";
+import { itemGridFor } from "@/data/items";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
 import { useGameStore } from "@/stores/gameStore";
@@ -32,7 +32,8 @@ export const ObsView = ({ background, timer = false }: ObsViewProps) => {
   useUndoShortcuts();
   useItemShortcuts();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
-  const rows = visibleRows(defaultItemGrid, bigKeysVisible).length;
+  const grid = useGameStore((state) => itemGridFor(state.settings));
+  const rows = visibleRows(grid, bigKeysVisible).length;
   const stageRef = useRef<HTMLElement>(null);
   const applyUpdate = useUpdateStore((state) => state.apply);
 
@@ -81,7 +82,7 @@ export const ObsView = ({ background, timer = false }: ObsViewProps) => {
       ref={stageRef}
       style={background ? { backgroundColor: background } : undefined}
     >
-      <TrackerGrid itemLayout={defaultItemGrid} />
+      <TrackerGrid itemLayout={grid} />
       {timer && <StreamTimer />}
     </main>
   );

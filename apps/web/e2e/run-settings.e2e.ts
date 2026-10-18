@@ -81,6 +81,37 @@ test("a Mystery run finds its settings as it goes, the run kept", async ({
   expect(saved.settings.hidden).toContain("crystalsTower");
 });
 
+test("a Retro run lays its shops on the grid, and buying arrows lets the bow shoot", async ({
+  page,
+}) => {
+  await openTracker(page);
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const retro = runTypes(page).getByRole("button", { name: /^Retro/ });
+  // Its logic is modelled: no "logic soon" badge
+  await expect(retro).not.toContainText("logic soon");
+  await retro.click();
+  await page.getByRole("button", { name: "Switch & reset" }).click();
+
+  await expect(page.getByTestId("logic-note")).toHaveCount(0);
+  const arrows = page.getByTestId("item-shoparrow");
+  await expect(arrows).toHaveAccessibleName(/^Arrow shop, not found\./);
+  await expect(page.getByTestId("item-shopkey")).toBeVisible();
+  // A bow without arrows bought: Eastern Palace's boss is out of logic
+  await page.getByTestId("item-bow").click();
+  await page.getByTestId("item-bow").click();
+  await page.getByTestId("item-lantern").click();
+  const boss = page.getByTestId("boss-marker-eastern-palace");
+  await expect(boss).toHaveAccessibleName(/boss out of logic/);
+  await arrows.click();
+  await expect(arrows).toHaveAccessibleName(/^Arrow shop, found\./);
+  await expect(boss).not.toHaveAccessibleName(/boss out of logic/);
+  const { violations } = await new AxeBuilder({ page })
+    .include("[data-testid=item-grid]")
+    .withTags(WCAG_AA)
+    .analyze();
+  expect(violations.map(({ id }) => id)).toEqual([]);
+});
+
 test("a run type whose logic is not modelled says so, every check maybe", async ({
   page,
 }) => {

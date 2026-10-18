@@ -35,8 +35,9 @@ const press = (code: string, held: Partial<KeyboardEvent> = {}) => ({
 });
 
 describe("the controls", () => {
-  it("lists every grid item once, in reading order", () => {
-    expect(ITEM_CONTROLS).toHaveLength(29);
+  it("lists every grid item once, in reading order, then the retro shops", () => {
+    expect(ITEM_CONTROLS).toHaveLength(31);
+    expect(ITEM_CONTROLS.slice(-2)).toEqual(["shoparrow", "shopkey"]);
     expect(ITEM_CONTROLS.slice(0, 8)).toEqual([
       "flute",
       "hookshot",
@@ -82,7 +83,7 @@ describe("the controls", () => {
       "map12",
       "compass12",
     ]);
-    expect(CONTROLS).toHaveLength(29 + 10 * 7 - 1 + 2 + 2 + 1 + 6);
+    expect(CONTROLS).toHaveLength(31 + 10 * 7 - 1 + 2 + 2 + 1 + 6);
     expect(ACTIONS).toHaveLength(CONTROLS.length * 2);
   });
 

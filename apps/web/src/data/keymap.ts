@@ -1,6 +1,11 @@
 import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { DUNGEON_INDICES } from "@/constants";
-import { defaultItemGrid, isKeyCell, itemLabels } from "@/data/items";
+import {
+  defaultItemGrid,
+  isKeyCell,
+  itemGridFor,
+  itemLabels,
+} from "@/data/items";
 import {
   dungeonName,
   KEY_DUNGEONS,
@@ -54,10 +59,13 @@ export type Modifier = (typeof MODIFIERS)[number];
 const isItemCell = (id: string) =>
   Boolean(id) && id !== "blank" && !id.startsWith("boss") && !isKeyCell(id);
 
-/** The grid's items, in reading order. */
-export const ITEM_CONTROLS: readonly ControlId[] = defaultItemGrid
-  .flat()
-  .filter(isItemCell);
+/** The grid's items, in reading order, then the retro world's shops. */
+export const ITEM_CONTROLS: readonly ControlId[] = [
+  ...new Set([
+    ...defaultItemGrid.flat(),
+    ...itemGridFor({ mode: "retro" }).flat(),
+  ]),
+].filter(isItemCell);
 
 /** Whether a dungeon's boss cell carries a medallion picker. */
 const hasMedallion = (index: number) =>

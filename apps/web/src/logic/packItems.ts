@@ -110,6 +110,9 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   powder: count("powder"),
   quake: count("quake"),
   shield: count("shield"),
+  // The retro world's shops: what a shop found sells (ItemCollection.php)
+  shoparrow: count("shopArrow"),
+  shopkey: count("shopKey"),
   shovel: count("shovel"),
   somaria: count("caneOfSomaria"),
   sword: count("sword"),

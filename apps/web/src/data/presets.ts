@@ -4,7 +4,7 @@
  * A preset is a named bundle of settings. The tracker reacts to the settings
  * it can model today (notably `dungeonItems`, which drives the key cells and
  * the dungeon counters). Settings that change the accessibility *logic* the
- * pack does not model yet (mode = retro, entranceShuffle = crossed, ...) are
+ * pack does not model yet (entranceShuffle = crossed, ...) are
  * stored and shown, and `logicModelled` says whether a run's are: when they
  * are not, the map shows every check as maybe rather than the Open logic.
  *
@@ -166,7 +166,8 @@ export const presets: Preset[] = [
     settings: { ...baseSettings, mode: "inverted" },
   },
   {
-    description: "Bow uses arrows, take-any caves, rupee bow.",
+    description:
+      "The bow shoots rupees and a key opens any dungeon: arrows and keys are bought in shops.",
     id: "retro",
     name: "Retro",
     settings: { ...baseSettings, mode: "retro" },
@@ -191,11 +192,11 @@ export const presets: Preset[] = [
 ];
 
 /**
- * Whether the pack models a run's logic: not the retro world, nor shuffled
- * entrances, which the pack does not model yet.
+ * Whether the pack models a run's logic: not with shuffled entrances, which
+ * the pack does not model yet.
  */
 export const logicModelled = (settings: RunSettings): boolean =>
-  settings.mode !== "retro" && settings.entranceShuffle === "none";
+  settings.entranceShuffle === "none";
 
 /** The preset selected by default. */
 export const DEFAULT_PRESET_ID = "open";

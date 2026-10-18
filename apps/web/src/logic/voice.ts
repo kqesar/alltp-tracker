@@ -94,6 +94,9 @@ const ITEMS: readonly (readonly [
   [["mirror"], "mirror", ON],
   [["moon pearl", "pearl"], "moonpearl", ON],
   [["flippers"], "flippers", ON],
+  // The retro world's shops, found
+  [["arrow shop"], "shoparrow", ON],
+  [["key shop"], "shopkey", ON],
 ];
 
 /**

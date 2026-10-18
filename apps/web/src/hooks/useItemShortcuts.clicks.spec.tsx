@@ -68,15 +68,21 @@ const snapshot = () => {
 
 /**
  * A fresh run, key cells shown, `control` alone bound to K and Shift+K: a
- * keysanity run for a map or a compass, which only it shows.
+ * keysanity run for a map or a compass, which only it shows, and a retro
+ * run for a shop.
  */
 const freshRun = (control: ControlId) =>
   act(() => {
     useGameStore.setState(useGameStore.getInitialState(), true);
-    if (isMapCompassControl(control)) {
+    const presetId = isMapCompassControl(control)
+      ? "keysanity"
+      : control.startsWith("shop")
+        ? "retro"
+        : null;
+    if (presetId !== null) {
       useGameStore.setState({
-        presetId: "keysanity",
-        settings: getPreset("keysanity").settings,
+        presetId,
+        settings: getPreset(presetId).settings,
       });
     }
     useGameStore.getState().setBigKeysVisible(true);

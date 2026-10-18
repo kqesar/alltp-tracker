@@ -18,12 +18,12 @@ describe("presets", () => {
     }
   });
 
-  it("models every run type's logic but Retro's and Crosskeys'", () => {
+  it("models every run type's logic but Crosskeys'", () => {
     expect(
       presets
         .filter((preset) => !logicModelled(preset.settings))
         .map((preset) => preset.id),
-    ).toEqual(["retro", "crosskeys"]);
+    ).toEqual(["crosskeys"]);
     // Shuffled entrances on any run type are not modelled either
     expect(
       logicModelled({ ...getPreset("open").settings, entranceShuffle: "full" }),
