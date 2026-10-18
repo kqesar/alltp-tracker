@@ -31,6 +31,7 @@ import {
   OPEN,
   regionModules,
   STANDARD,
+  settingsFromUpstream,
   solveWithKeys,
   type TrackerInput,
   toState,
@@ -351,9 +352,9 @@ export const bossStateOf = (id: DungeonId, state: Inputs): MarkerState => {
   return markerStatus([tri(solution, prizeOf(id, solution.settings))]);
 };
 
-/** Every location's official name, Open's and Standard's worlds together. */
+/** Every location's official name, every world's together. */
 const NAMES: ReadonlyMap<string, string> = new Map(
-  [OPEN, STANDARD].flatMap((settings) =>
+  [OPEN, STANDARD, settingsFromUpstream("inverted", {})].flatMap((settings) =>
     regionModules(settings).flatMap((module) =>
       module.regions.flatMap((region) =>
         region.locations.map((location) => [location.id, location.name]),
