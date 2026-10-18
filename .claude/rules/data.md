@@ -18,7 +18,7 @@ The rules are the alltpr pack's (`packs/alttpr`, ALttPR v31): the app holds no p
 
 `apps/web/src/data/`:
 
-- `items.ts` — `ItemState`, and one `[min, max, initial?]` range table from which `items`, `itemsMin` and `itemsMax` are derived, plus `itemLabels` for accessibility names. Do not reintroduce parallel tables. The ids are the tracker's own, which `logic/packItems.ts` maps to the pack's (old saves go through the pack's frozen legacy copy, which `legacy.spec.ts` holds the table to): a dungeon counter's top follows the run's settings (`itemRange` in `stores/persistence.ts`), and `agahnim2` (Ganon's Tower's boss, on its map marker only) is the one id version 6 added.
+- `items.ts` — `ItemState`, and one `[min, max, initial?]` range table from which `items`, `itemsMin` and `itemsMax` are derived, plus `itemLabels` for accessibility names. Do not reintroduce parallel tables. The ids are the tracker's own, which `logic/packItems.ts` maps to the pack's (old saves go through the pack's frozen legacy copy, which `legacy.spec.ts` holds the table to): a dungeon counter's top follows the run's settings (`itemRange` in `stores/persistence.ts`), and `agahnim2` (Ganon's Tower's boss, on its map marker and its grid cell) is the one id version 6 added; `chest12` (Ganon's Tower's items left) came with its cell.
 - `keymap.ts` — the keyboard shortcuts, as plain data.
 - `presets.ts` — run types (`getPreset`, `presets`, `describeSettings`). `logicSupported` must be false for any preset whose rules the pack does not actually model.
 - `apps/web/src/constants/index.ts` holds only values with game meaning.

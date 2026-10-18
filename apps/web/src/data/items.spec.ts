@@ -73,7 +73,8 @@ describe("defaultItemGrid", () => {
   it("only places items the store knows about, and key cells", () => {
     defaultItemGrid
       .flat()
-      .filter((id) => id !== "" && !isKeyCell(id))
+      // Ganon's Tower's boss cell steps Agahnim 2 (agahnim2)
+      .filter((id) => id !== "" && !isKeyCell(id) && id !== "boss12")
       .forEach((item) => {
         expect(items).toHaveProperty(item);
       });
@@ -95,7 +96,7 @@ describe("defaultItemGrid", () => {
       "keys11",
       "keylabel12",
       "keys12",
-      "",
+      "boss12",
     ]);
   });
 });

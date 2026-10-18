@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { KEY_DUNGEONS, packSettings } from "@/logic/settings";
 import {
   bossStateOf,
+  dungeonCount,
   dungeonStateOf,
   locationName,
   locationStatus,
@@ -268,6 +269,13 @@ describe("what a dungeon shows", () => {
 
   it("shows Ganon's Tower out of logic without the crystals", () => {
     expect(dungeonStateOf("ganons-tower", store())).toBe("unavailable");
+  });
+
+  it("counts Ganon's Tower down on its own cell, done at 0", () => {
+    expect(dungeonCount("ganons-tower", store())).toBe(20);
+    expect(dungeonCount("castle-tower", store())).toBeUndefined();
+    give({ chest12: 0 });
+    expect(dungeonStateOf("ganons-tower", store())).toBe("opened");
   });
 
   it("wants a dungeon's map and compass for its boss in keysanity", () => {

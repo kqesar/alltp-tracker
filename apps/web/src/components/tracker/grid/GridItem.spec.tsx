@@ -122,6 +122,32 @@ describe("GridItem", () => {
     );
   });
 
+  it("gives Ganon's Tower a boss cell: Agahnim 2 and its items left, no reward", () => {
+    render(<GridItem col={6} item="boss12" row={6} />);
+
+    expect(screen.getByRole("group")).toHaveAccessibleName("Ganon's Tower");
+    const boss = screen.getByTestId("item-boss12");
+    expect(boss).toHaveAccessibleName(
+      "Agahnim 2, not defeated. Click to change state.",
+    );
+    const chests = screen.getByTestId("chest-overlay-12");
+    expect(chests).toHaveAccessibleName(
+      "Ganon's Tower chests: 20 left, out of logic",
+    );
+    expect(screen.queryByTestId("reward-overlay-12")).toBeNull();
+    expect(screen.queryByTestId("medallion-overlay-12")).toBeNull();
+
+    fireEvent.click(boss);
+    fireEvent.click(chests);
+    expect(useGameStore.getState().items).toMatchObject({
+      agahnim2: 1,
+      chest12: 19,
+    });
+    expect(boss).toHaveAccessibleName(
+      "Agahnim 2, defeated. Click to change state.",
+    );
+  });
+
   it("names a castle dungeon beside its key cell, while the key cells show", () => {
     const { unmount } = render(<GridItem col={0} item="keylabel10" row={7} />);
     expect(screen.getByTestId("key-label-hyrule-castle")).toHaveClass(

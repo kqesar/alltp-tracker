@@ -75,12 +75,14 @@ describe("the controls", () => {
     expect(dungeonControls(10)).toEqual(["smallkey10", "map10"]);
     expect(dungeonControls(11)).toEqual(["smallkey11"]);
     expect(dungeonControls(12)).toEqual([
+      "agahnim2",
+      "chest12",
       "bigkey12",
       "smallkey12",
       "map12",
       "compass12",
     ]);
-    expect(CONTROLS).toHaveLength(29 + 10 * 7 - 1 + 2 + 2 + 1 + 4);
+    expect(CONTROLS).toHaveLength(29 + 10 * 7 - 1 + 2 + 2 + 1 + 6);
     expect(ACTIONS).toHaveLength(CONTROLS.length * 2);
   });
 

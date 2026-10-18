@@ -128,10 +128,11 @@ test.describe("a keysanity run", () => {
       /^Castle Tower: boss available,/,
     );
 
-    // The row goes with the key cells
+    // The keys and labels go with the key cells; Ganon's Tower's cell stays
     await page.getByTestId("key-cells-toggle").click();
-    await expect(page.getByTestId("key-label-castle-tower")).toHaveCount(0);
+    await expect(page.getByTestId("key-label-castle-tower")).toBeEmpty();
     await expect(page.getByTestId("small-key-11")).toHaveCount(0);
+    await expect(page.getByTestId("item-boss12")).toBeVisible();
   });
 
   test("turns a boss from maybe to yes with its dungeon's map and compass", async ({

@@ -25,12 +25,13 @@ export interface ItemState {
 }
 
 /**
- * The item grid, row by row. Each id is an item's cell, but for the key
- * cells: `keysN`, the key cell of key dungeon N (logic/settings.ts
- * KEY_DUNGEONS), holding its big key, small keys, map and compass, and
- * `keylabelN`, the short name of a castle dungeon, which has no boss cell
- * above its key cell to tell it. The last two rows show only with the key
- * cells.
+ * The item grid, row by row. Each id is an item's cell, but for the
+ * dungeons' cells: `bossN`, the boss cell of key dungeon N (logic/settings.ts
+ * KEY_DUNGEONS: the grid's ten, and Ganon's Tower's, 12); `keysN`, its key
+ * cell, holding its big key, small keys, map and compass; and `keylabelN`,
+ * the short name of a castle dungeon, which has no boss cell above its key
+ * cell to tell it. The key cells and labels show only with the key cells, a
+ * row of nothing else with them.
  */
 export const defaultItemGrid: string[][] = [
   ["flute", "hookshot", "hammer", "firerod", "icerod", "boomerang", "net"],
@@ -40,7 +41,15 @@ export const defaultItemGrid: string[][] = [
   ["mushroom", "cape", "mirror", "moonpearl", "flippers", "keys2", "boss2"],
   ["boss3", "boss4", "boss5", "boss6", "boss7", "boss8", "boss9"],
   ["keys3", "keys4", "keys5", "keys6", "keys7", "keys8", "keys9"],
-  ["keylabel10", "keys10", "keylabel11", "keys11", "keylabel12", "keys12", ""],
+  [
+    "keylabel10",
+    "keys10",
+    "keylabel11",
+    "keys11",
+    "keylabel12",
+    "keys12",
+    "boss12",
+  ],
 ];
 
 /** Whether a grid id is a key cell's or a castle dungeon's label. */
@@ -100,6 +109,9 @@ const NUMERIC_ITEMS: Record<string, Range> = {
     DUNGEON_CHEST_COUNTS[index],
     DUNGEON_CHEST_COUNTS[index],
   ]),
+  // Ganon's Tower's items left, on its own cell (key index 12): its 20 items
+  // in v31, its 27 locations in Full Shuffle (logic/settings.ts counterMax)
+  chest12: [0, 27, 20],
   // Boss reward icon (dungeon0.png to dungeon4.png)
   ...perDungeon("reward", () => [0, 4]),
 };

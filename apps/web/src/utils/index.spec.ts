@@ -56,9 +56,10 @@ describe("visibleRows", () => {
   it("drops a row of nothing but key cells, labels and gaps while they are hidden", () => {
     const rows = visibleRows(defaultItemGrid, false);
 
-    expect(rows).toHaveLength(defaultItemGrid.length - 2);
+    expect(rows).toHaveLength(defaultItemGrid.length - 1);
     expect(rows.flat()).not.toContain("keys3");
-    expect(rows.flat()).not.toContain("keylabel12");
+    // Ganon's Tower's boss cell keeps the castles' row
+    expect(rows.at(-1)).toContain("boss12");
     // A key cell sharing its row with other items keeps its place
     expect(rows.flat()).toContain("keys0");
   });

@@ -106,12 +106,12 @@ describe("ObsView", () => {
     resizeTo(1920, 1080);
     render(<ObsView background={null} />);
 
-    // Six rows while the key cells are hidden: 1080 / 6 = 180 → 176
-    expect(cssVar("--cell")).toBe("176px");
-    expect(cssVar("--obs-left")).toBe("256px");
-    expect(cssVar("--obs-top")).toBe("12px");
+    // Seven rows while the key cells are hidden: 1080 / 7 = 154 → 144
+    expect(cssVar("--cell")).toBe("144px");
+    expect(cssVar("--obs-left")).toBe("384px");
+    expect(cssVar("--obs-top")).toBe("36px");
 
-    resizeTo(512, 384);
+    resizeTo(512, 448);
     expect(cssVar("--cell")).toBe("64px");
     expect(cssVar("--obs-left")).toBe("0px");
   });
@@ -140,7 +140,7 @@ describe("ObsView", () => {
   });
 
   it("stops following the viewport once unmounted", () => {
-    resizeTo(512, 384);
+    resizeTo(512, 448);
     const { unmount } = render(<ObsView background={null} />);
     const stage = screen.getByTestId("obs-view");
     unmount();

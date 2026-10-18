@@ -130,6 +130,8 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   // The castle dungeons' own items, on key cells 10-12 (KEY_DUNGEONS), as
   // their pools hold them
   bigkey12: dungeonItem("bigKey")("ganons-tower"),
+  // Ganon's Tower's items left, which the rules do not read either
+  chest12: NONE,
   compass12: dungeonItem("compass")("ganons-tower"),
   map10: dungeonItem("map")("hyrule-castle"),
   map12: dungeonItem("map")("ganons-tower"),
