@@ -22,7 +22,7 @@ import {
   dungeonLocations,
   dungeonPool,
   LEGACY_DUNGEONS,
-  MARKERS,
+  MAP_LOCATIONS,
   PRIZES,
   type Prize,
 } from "@alltp/pack-alttpr";
@@ -37,7 +37,12 @@ import {
   prizeOf,
 } from "@/autotrack/table";
 import { wildItems } from "@/data/presets";
-import { counterMax, packSettings, smallKeysMax } from "@/logic/settings";
+import {
+  counterMax,
+  packSettings,
+  smallKeysMax,
+  worldOf,
+} from "@/logic/settings";
 import type { Progress } from "@/stores/persistence";
 
 /** The slices of the run the game's view is laid on. */
@@ -66,14 +71,9 @@ export type GameView = {
   readonly smallKeys: Readonly<Record<number, number>>;
 };
 
-/** Every location the map can check. */
-const LOCATIONS: ReadonlySet<string> = new Set(
-  MARKERS.flatMap((marker) => marker.locations),
-);
-
 /** The locations whose flag the game keeps, on the map. */
 const FLAGGED = CHECK_FLAGS.map(({ id }) => id).filter((id) =>
-  LOCATIONS.has(id),
+  MAP_LOCATIONS.has(id),
 );
 
 /** The grid's dungeons, by index, with their item code. */
@@ -205,7 +205,7 @@ const dungeonLocationsOf = (
   id: DungeonId,
   settings: GameView["settings"],
 ): readonly string[] => {
-  const key = `${settings.standardMode}/${id}`;
+  const key = `${worldOf(settings)}/${id}`;
   let found = locationsOf.get(key);
   if (found === undefined) {
     found = dungeonLocations(dungeon(id), settings);

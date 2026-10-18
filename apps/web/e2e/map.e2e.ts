@@ -82,6 +82,46 @@ test.describe("the map", () => {
     );
   });
 
+  test("lays an Inverted run's doors where Inverted moves them, and sells its bomb", async ({
+    page,
+  }) => {
+    await openTracker(page);
+    await page.getByRole("button", { name: /^Mode/ }).click();
+    await page
+      .getByRole("dialog", { name: "Choose a run type" })
+      .getByRole("button", { name: /^Inverted/ })
+      .click();
+    await page.getByRole("button", { name: "Switch & reset" }).click();
+    await expect(
+      page.getByRole("button", { name: /^Mode/ }),
+    ).toHaveAccessibleName("Mode Inverted");
+
+    const light = page.getByTestId("map-world-light");
+    const dark = page.getByTestId("map-world-dark");
+    await expect(dark.getByTestId("marker-links-house")).toBeVisible();
+    await expect(light.getByTestId("marker-bomb-merchant")).toBeVisible();
+    await expect(dark.getByTestId("boss-marker-castle-tower")).toBeVisible();
+    await expect(light.getByTestId("boss-marker-ganons-tower")).toBeVisible();
+    await expect(light.getByTestId("marker-links-house")).toHaveCount(0);
+
+    // The fairy's chests want the bomb and the mirror; the hammer is the way
+    await page.getByTestId("item-hammer").click();
+    await page.getByTestId("item-mirror").click();
+    const fairy = page.getByTestId("marker-pyramid-fairy");
+    await expect(fairy).toHaveAccessibleName(
+      "Pyramid Fairy (2 checks): out of logic",
+    );
+
+    await light.getByTestId("marker-bomb-merchant").click();
+
+    await expect(
+      light.getByTestId("marker-bomb-merchant"),
+    ).toHaveAccessibleName("Bomb Merchant: done");
+    await expect(fairy).toHaveAccessibleName(
+      "Pyramid Fairy (2 checks): available",
+    );
+  });
+
   test("restores the checks of a version 5 save left in localStorage", async ({
     page,
   }) => {

@@ -2,7 +2,7 @@ import {
   LEGACY_CHESTS,
   LEGACY_DUNGEON_ITEMS,
   LEGACY_DUNGEONS,
-  MARKERS,
+  MAP_LOCATIONS,
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES, MEDALLION_VALUES } from "@/constants";
 import type { ItemState } from "@/data/items";
@@ -334,11 +334,6 @@ const validateItems = (
   return valid as Partial<ItemState>;
 };
 
-/** Every location the map can check: every check of the world. */
-const LOCATIONS: ReadonlySet<string> = new Set(
-  MARKERS.flatMap((marker) => marker.locations),
-);
-
 /** Keep the checked locations this version knows, each marked `true`. */
 const validateChecked = (
   saved: Record<string, unknown>,
@@ -348,7 +343,7 @@ const validateChecked = (
   for (const [id, value] of Object.entries(saved)) {
     if (value !== true) errors.push(`checked["${id}"] must be true`);
     // A location this version does not know: ignore it rather than fail
-    else if (LOCATIONS.has(id)) valid[id] = true;
+    else if (MAP_LOCATIONS.has(id)) valid[id] = true;
   }
   return valid;
 };

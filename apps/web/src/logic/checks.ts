@@ -6,9 +6,10 @@ import {
   DUNGEONS,
   type DungeonId,
   dungeonLocations,
-  MARKERS,
+  MAP_LOCATIONS,
   regionModules,
 } from "@alltp/pack-alttpr";
+import { worldOf } from "@/logic/settings";
 import {
   dungeonCount,
   locationName,
@@ -34,20 +35,17 @@ export type Zone = {
   readonly checks: readonly Check[];
 };
 
-const ON_MAP: ReadonlySet<string> = new Set(
-  MARKERS.flatMap((marker) => marker.locations),
-);
-
-const zones = new Map<boolean, readonly Zone[]>();
+const zones = new Map<string, readonly Zone[]>();
 
 /**
  * The map's checks by zone, in upstream's world order: a dungeon's under the
  * dungeon's name (Hyrule Castle for upstream's Escape), any other under its
  * upstream region's, or the module's last named region for a part split off
- * one. Memoized per world: Open's and Standard's.
+ * one. Memoized per world.
  */
 export const zonesOf = (settings: AlttprSettings): readonly Zone[] => {
-  const found = zones.get(settings.standardMode);
+  const world = worldOf(settings);
+  const found = zones.get(world);
   if (found !== undefined) return found;
   const dungeonOf = new Map<string, (typeof DUNGEONS)[number]>(
     DUNGEONS.flatMap((d) => dungeonLocations(d, settings).map((id) => [id, d])),
@@ -58,7 +56,7 @@ export const zonesOf = (settings: AlttprSettings): readonly Zone[] => {
     for (const region of module.regions) {
       regionName = region.name ?? regionName;
       for (const { id } of region.locations) {
-        if (!ON_MAP.has(id)) continue;
+        if (!MAP_LOCATIONS.has(id)) continue;
         const d = dungeonOf.get(id);
         const name = d?.name ?? regionName;
         const zone = byName.get(name) ?? { dungeon: d?.id, ids: [] };
@@ -80,11 +78,11 @@ export const zonesOf = (settings: AlttprSettings): readonly Zone[] => {
     dungeon,
     name,
   }));
-  zones.set(settings.standardMode, made);
+  zones.set(world, made);
   return made;
 };
 
-/** The run's zones: Open's or Standard's world. */
+/** The run's zones, in its world. */
 export const runZones = (state: MarkerInputs): readonly Zone[] =>
   zonesOf(solutionOf(state).settings);
 

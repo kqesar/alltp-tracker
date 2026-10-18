@@ -127,6 +127,23 @@ describe("solutionOf", () => {
 
     expect(solutionOf(store()).settings.standardMode).toBe(true);
   });
+
+  it("solves again once an event is checked: the Bomb Merchant sells the bomb", () => {
+    act(() => store().applyPreset("inverted"));
+    give({ hammer: true, mirror: true, sword: 1 });
+    const before = solutionOf(store());
+    expect(before.settings.invertedMode).toBe(true);
+    expect(before.tris["pyramid-fairy/sword"]).toBe("no");
+
+    act(() => store().toggleChecks(["bomb-merchant"]));
+    const bought = solutionOf(store());
+    expect(bought).not.toBe(before);
+    expect(trackerInput(store()).checked).toEqual({ "bomb-merchant": true });
+    expect(bought.tris["pyramid-fairy/sword"]).toBe("yes");
+
+    act(() => store().toggleChecks(["links-house"]));
+    expect(solutionOf(store())).toBe(bought);
+  });
 });
 
 describe("locationStatus", () => {

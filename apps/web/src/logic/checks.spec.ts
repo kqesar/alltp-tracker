@@ -1,4 +1,10 @@
-import { MARKERS, OPEN, STANDARD } from "@alltp/pack-alttpr";
+import {
+  INVERTED_MARKERS,
+  MARKERS,
+  OPEN,
+  STANDARD,
+  settingsFromUpstream,
+} from "@alltp/pack-alttpr";
 import { beforeEach, describe, expect, it } from "vitest";
 import { checkStates, isCleared, runZones, zonesOf } from "@/logic/checks";
 import { useGameStore } from "@/stores/gameStore";
@@ -49,8 +55,25 @@ describe("zonesOf", () => {
     });
   });
 
+  it("lists an Inverted world's checks where Inverted puts them", () => {
+    const inverted = zonesOf(settingsFromUpstream("inverted", {}));
+    const ids = inverted.flatMap((zone) =>
+      zone.checks.map((check) => check.id),
+    );
+    expect(new Set(ids)).toEqual(
+      new Set(INVERTED_MARKERS.flatMap((marker) => marker.locations)),
+    );
+    expect(ids).toHaveLength(ON_MAP.length + 1);
+    const zoneOf = (id: string) =>
+      inverted.find((zone) => zone.checks.some((check) => check.id === id))
+        ?.name;
+    expect(zoneOf("bomb-merchant")).toBe("South Light World");
+    expect(zoneOf("links-house")).toBe("South Dark World");
+  });
+
   it("is worked out once per world", () => {
     expect(zonesOf({ ...OPEN })).toBe(zonesOf(OPEN));
+    expect(zonesOf(STANDARD)).not.toBe(zonesOf(OPEN));
   });
 });
 
