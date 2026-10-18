@@ -1,4 +1,5 @@
 import { KeyToggle } from "@/components/tracker/items/KeyToggle";
+import { wildItems } from "@/data/presets";
 import { smallKeysMax } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -10,10 +11,11 @@ type BigKeyCellProps = {
 };
 
 /**
- * BigKeyCell renders a dungeon's key cell, 2x2. Outside keysanity: the big
- * key top right, the small key and its count below. In keysanity, where its
- * boss also wants them, the map and compass on top, the small key (its count
- * as a badge on it) and the big key below. A dungeon without small keys
+ * BigKeyCell renders a dungeon's key cell, 2x2. With the dungeon items in
+ * their dungeon: the big key top right, the small key and its count below.
+ * With maps and compasses outside (MC, MCS and Full Shuffle), where its boss
+ * also wants them, the map and compass on top, the small key (its count as a
+ * badge on it) and the big key below. A dungeon without small keys
  * (Eastern Palace in v31) has neither the small key nor its count. When the
  * key cells are hidden it renders an empty, non-interactive placeholder so
  * the grid layout stays stable.
@@ -21,7 +23,9 @@ type BigKeyCellProps = {
 export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
   const dungeonIndex = parseInt(item.replace("bigkey", ""), 10);
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
-  const keysanity = useGameStore((state) => state.settings.keysanity);
+  const withMaps = useGameStore(
+    (state) => wildItems(state.settings).mapsAndCompasses,
+  );
   const keyCount = useGameStore((state) => state.smallKeys[dungeonIndex] || 0);
 
   if (!bigKeysVisible) {
@@ -48,7 +52,7 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
   const count = (
     <div
       aria-hidden="true"
-      className={`bigkey-count${keysanity ? " bigkey-count--badge" : ""}${keyCount === maxKeys ? " bigkey-count--maxed" : ""}`}
+      className={`bigkey-count${withMaps ? " bigkey-count--badge" : ""}${keyCount === maxKeys ? " bigkey-count--maxed" : ""}`}
     >
       {keyCount}
     </div>
@@ -60,7 +64,7 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
       data-grid-col={col}
       data-grid-row={row}
     >
-      {keysanity ? (
+      {withMaps ? (
         <div className="bigkey-grid">
           <div className="bigkey-quadrant">{toggle("map")}</div>
           <div className="bigkey-quadrant">{toggle("compass")}</div>

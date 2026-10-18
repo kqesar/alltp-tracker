@@ -212,6 +212,16 @@ describe("gameView", () => {
       4: 1,
     });
     expect(gameView(reading, fresh(), { 3: 2 }).smallKeys).toEqual({});
+    // Small keys leave their dungeons from MCS Shuffle up, not MC
+    const level = (dungeonItems: "mc" | "mcs") => {
+      useGameStore.getState().applyRun("open", { ...OPEN, dungeonItems });
+      const { checked, items, settings, smallKeys } = useGameStore.getState();
+      return { checked, items, settings, smallKeys };
+    };
+    expect(gameView(reading, level("mcs"), { 3: 2 }).smallKeys).toEqual({
+      3: 2,
+    });
+    expect(gameView(reading, level("mc"), { 3: 2 }).smallKeys).toEqual({});
   });
 });
 

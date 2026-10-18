@@ -22,7 +22,7 @@ describe("presets", () => {
   });
 
   it("the keysanity preset enables keysanity", () => {
-    expect(getPreset("keysanity").settings.keysanity).toBe(true);
+    expect(getPreset("keysanity").settings.dungeonItems).toBe("full");
   });
 
   it("the default preset exists", () => {

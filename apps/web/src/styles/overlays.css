@@ -30,9 +30,9 @@
 }
 
 /* Key cell: a 2x2 grid holding the big key (top right), the small key
-   (bottom left) and the count of small keys found (bottom right); in
-   keysanity the map and compass on top, the small key with its count and
-   the big key below. No box and no backdrop: an item not held yet is greyed
+   (bottom left) and the count of small keys found (bottom right); with maps
+   and compasses outside their dungeons (MC Shuffle and up) the map and
+   compass on top, the small key with its count and the big key below. No box and no backdrop: an item not held yet is greyed
    by the shared dimmed rule (dimmed.css), like any missing item. */
 .bigkey-container {
   position: relative;
@@ -75,8 +75,9 @@
     0 -1px var(--color-bg);
 }
 
-/* In keysanity the count rides on the small key, in its bottom right
-   corner, as keysanity trackers show it; the key under it takes the clicks */
+/* With maps and compasses out the count rides on the small key, in its
+   bottom right corner, as keysanity trackers show it; the key under it takes
+   the clicks */
 .bigkey-count--badge {
   position: absolute;
   right: 0;

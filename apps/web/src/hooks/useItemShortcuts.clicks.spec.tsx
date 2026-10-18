@@ -8,7 +8,7 @@ import {
   type ControlId,
   dungeonOf,
   isKeyControl,
-  isKeysanityControl,
+  isMapCompassControl,
 } from "@/data/keymap";
 import { getPreset } from "@/data/presets";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
@@ -73,7 +73,7 @@ const snapshot = () => {
 const freshRun = (control: ControlId) =>
   act(() => {
     useGameStore.setState(useGameStore.getInitialState(), true);
-    if (isKeysanityControl(control)) {
+    if (isMapCompassControl(control)) {
       useGameStore.setState({
         presetId: "keysanity",
         settings: getPreset("keysanity").settings,

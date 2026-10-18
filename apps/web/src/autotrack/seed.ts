@@ -7,8 +7,8 @@
 // settings are not read at all (the pack's seed-settings.ts): without the
 // seed's file the run type then stays the player's. Item placement,
 // accessibility and the item pool and functionality only the file states:
-// without it the run's own stay. A seed the tracker cannot hold (some
-// dungeon items shuffled and not others, the Ganonhunt and Completionist
+// without it the run's own stay. A seed the tracker cannot hold (dungeon
+// items let out in a mix vt never writes, the Ganonhunt and Completionist
 // goals) is said, never rounded to the nearest run type.
 
 import type {
@@ -20,6 +20,7 @@ import type {
 import type { SeedFileError } from "@/autotrack/seedFile";
 import {
   ACCESSIBILITY_LABELS,
+  DUNGEON_ITEM_LABELS,
   FUNCTIONALITY_LABELS,
   getPreset,
   MODE_LABELS,
@@ -87,7 +88,7 @@ const GOAL_NAMES: Readonly<Record<RunSettings["goal"], string>> = {
 const COMPARED = [
   "mode",
   "goal",
-  "keysanity",
+  "dungeonItems",
   "swordless",
   "crystalsTower",
   "crystalsGanon",
@@ -112,6 +113,15 @@ const firstUnknown = (
   }
   return null;
 };
+
+/**
+ * The dungeon items levels vt writes, by the maps, compasses, small keys and
+ * big keys they let out (1) or keep (0): each lets out the ones before it
+ * (World.php:111-129). Any other mix is no seed of vt's.
+ */
+const DUNGEON_ITEM_LEVELS: Readonly<
+  Partial<Record<string, RunSettings["dungeonItems"]>>
+> = { "0000": "standard", "1100": "mc", "1110": "mcs", "1111": "full" };
 
 /** The dungeon items a seed shuffles, named, when only some are. */
 const WILD_NAMES = {
@@ -147,7 +157,7 @@ const presetFor = (settings: RunSettings, currentId: string): string => {
 /**
  * A run type in words: its name, then its world, goal and crystals, and what
  * its settings change from the run type's own: "Keysanity (Open, Ganon,
- * 7/7)", "Standard (Standard, Ganon, 7/7, Keysanity)", "Inverted (Inverted,
+ * 7/7)", "Standard (Standard, Ganon, 7/7, Full Shuffle)", "Inverted (Inverted,
  * Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality)".
  */
 export const describeRun = (presetId: string, settings: RunSettings) => {
@@ -157,14 +167,18 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
     GOAL_NAMES[settings.goal],
     `${settings.crystalsTower}/${settings.crystalsGanon}`,
   ];
-  if (settings.keysanity !== preset.settings.keysanity) {
-    parts.push(settings.keysanity ? "Keysanity" : "no Keysanity");
-  }
-  if (settings.swordless !== preset.settings.swordless) {
-    parts.push(settings.swordless ? "Swordless" : "swords");
-  }
   const differs = (key: keyof RunSettings) =>
     settings[key] !== preset.settings[key];
+  if (differs("dungeonItems")) {
+    parts.push(
+      settings.dungeonItems === "standard"
+        ? "Standard dungeon items"
+        : DUNGEON_ITEM_LABELS[settings.dungeonItems],
+    );
+  }
+  if (differs("swordless")) {
+    parts.push(settings.swordless ? "Swordless" : "swords");
+  }
   if (differs("itemPlacement")) {
     parts.push(`${PLACEMENT_LABELS[settings.itemPlacement]} placement`);
   }
@@ -231,15 +245,25 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   if (runGoal === undefined)
     reasons.push(OTHER_GOALS[goal.value] ?? goal.value);
   const wild = { wildBigKeys, wildCompasses, wildKeys, wildMaps };
-  const shuffled = (Object.keys(wild) as (keyof typeof wild)[]).filter(
-    (key) => wild[key].value,
-  );
-  if (shuffled.length > 0 && shuffled.length < 4) {
+  const dungeonItems =
+    DUNGEON_ITEM_LEVELS[
+      [wildMaps, wildCompasses, wildKeys, wildBigKeys]
+        .map((setting) => (setting.value ? 1 : 0))
+        .join("")
+    ];
+  if (dungeonItems === undefined) {
+    const shuffled = (Object.keys(wild) as (keyof typeof wild)[]).filter(
+      (key) => wild[key].value,
+    );
     reasons.push(
       `only its ${shuffled.map((key) => WILD_NAMES[key]).join(", ")} outside their dungeons`,
     );
   }
-  if (runGoal === undefined || reasons.length > 0) {
+  if (
+    runGoal === undefined ||
+    dungeonItems === undefined ||
+    reasons.length > 0
+  ) {
     return { kind: "unsupported", reasons, seed: seed.seed };
   }
 
@@ -248,6 +272,7 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     accessibility: fromFile(seed.accessibility, run.settings.accessibility),
     crystalsGanon: crystalsGanon.value,
     crystalsTower: crystalsTower.value,
+    dungeonItems,
     goal: runGoal,
     itemFunctionality: fromFile(
       seed.itemFunctionality,
@@ -255,7 +280,6 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     ),
     itemPlacement: fromFile(seed.itemPlacement, run.settings.itemPlacement),
     itemPool: fromFile(seed.itemPool, run.settings.itemPool),
-    keysanity: shuffled.length === 4,
     mode: mode.value,
     swordless: swordless.value,
   };

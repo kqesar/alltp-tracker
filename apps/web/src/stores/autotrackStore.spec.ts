@@ -294,10 +294,10 @@ describe("following the seed's run type", () => {
 
       await vi.waitFor(() => expect(game().presetId).toBe("keysanity"));
       expect(game().settings).toMatchObject({
+        dungeonItems: "full",
         itemFunctionality: "hard",
         itemPlacement: "basic",
         itemPool: "hard",
-        keysanity: true,
       });
       expect(useAutotrackStore.getState().news?.text).toBe(
         "This seed is Keysanity (Open, Ganon, 7/7, Basic placement, Hard pool, Hard functionality): the tracker switched to it.",
