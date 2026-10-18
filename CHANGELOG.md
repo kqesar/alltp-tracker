@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.24.0](https://github.com/kqesar/alltp-tracker/compare/v2.23.0...v2.24.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **alttpr:** the entrance randomizer's entrances and targets ([643aa43](https://github.com/kqesar/alltp-tracker/commit/643aa437cb4d42e033edb8956684460971daaf2b))
+* **alttpr:** what each shuffled entrance may lead to ([f444b74](https://github.com/kqesar/alltp-tracker/commit/f444b746fb7f549b8daa21c1103deef3c08e4378))
+* **web:** checks follow the entrance noted to their place ([df45086](https://github.com/kqesar/alltp-tracker/commit/df45086220736154a29dab7644708e5ed3a5b97b))
+* **web:** note where each shuffled entrance leads ([c61daed](https://github.com/kqesar/alltp-tracker/commit/c61daed71a1504c1ca8f7b4b76dcce19163e8128))
+
+
+### 🐛 Bug Fixes
+
+* **web:** no entrance marker hidden behind its neighbour ([2d54cd0](https://github.com/kqesar/alltp-tracker/commit/2d54cd0ef631cb8a7b4f77fc95ad0aefd1591af7))
+
 ## [2.23.0](https://github.com/kqesar/alltp-tracker/compare/v2.22.0...v2.23.0) (2026-10-18)
 
 
