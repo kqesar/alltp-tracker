@@ -22,7 +22,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/markers.ts` | the map markers, and what a marker shows |
 | `src/goals.ts` | `app/Randomizer.php`: where each goal puts the Triforce, and its go mode |
 | `src/seed-link.ts` | `app/Seed.php`, `routes/web.php`: a seed's hash, from a link to its page, and where its file lies |
-| `src/seed-file.ts` | `app/Jobs/SendPatchToDisk.php`, `World.php`: a seed's settings from its file, through a Zod schema of `spoiler.meta` |
+| `src/seed-file.ts` | `app/Jobs/SendPatchToDisk.php`, `World.php`, `EntranceRandomizer.php`: a seed's settings from its file (its entrance shuffle included), through a Zod schema of `spoiler.meta` |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;

@@ -145,6 +145,18 @@ export type SeedGoal =
 /** upstream's itemPlacement (config/alttp.php:181-184). */
 export type SeedItemPlacement = "advanced" | "basic";
 
+/**
+ * upstream's entrances (config/alttp.php:233-240): none, or the entrance
+ * randomizer's shuffle, which vt hands such seeds to (EntranceRandomizer.php).
+ */
+export type SeedEntrances =
+  | "none"
+  | "simple"
+  | "restricted"
+  | "full"
+  | "crossed"
+  | "insanity";
+
 /** upstream's accessibility (config/alttp.php:191-195). */
 export type SeedAccessibility = "items" | "locations" | "none";
 
@@ -200,6 +212,8 @@ export interface SeedSettingsReading {
   readonly itemPool?: SeedSetting<SeedItemPool>;
   /** item.functionality, like itemPlacement. */
   readonly itemFunctionality?: SeedSetting<SeedItemFunctionality>;
+  /** entrances, like itemPlacement. */
+  readonly entrances?: SeedSetting<SeedEntrances>;
 }
 
 /** HUDDungeonItems' bits (tables.asm:161; vt CustomizerController.php:157-162). */

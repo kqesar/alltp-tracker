@@ -23,6 +23,8 @@ describe("seedFileReading", () => {
       accessibility: { known: true, value: "items" },
       crystalsGanon: { known: true, value: 7 },
       crystalsTower: { known: true, value: 7 },
+      // vt randomized it itself: its entrances are vanilla
+      entrances: { known: true, value: "none" },
       goal: { known: true, value: "ganon" },
       itemFunctionality: { known: true, value: "normal" },
       itemPlacement: { known: true, value: "advanced" },
@@ -92,6 +94,16 @@ describe("seedFileReading", () => {
     expect(reading?.goal).toEqual({ known: true, value: "ganon" });
   });
 
+  it("reads a Crosskeys seed's entrances, which the entrance randomizer shuffled", () => {
+    expect(seedFileReading(seedFile("0yAObedRMV"))).toMatchObject({
+      entrances: { known: true, value: "crossed" },
+      wildBigKeys: { known: true, value: true },
+    });
+    expect(
+      seedFileReading(withMeta({ shuffle: "madness" }))?.entrances,
+    ).toEqual({ known: false, why: "unrecognized" });
+  });
+
   it("reads a Mystery race seed's settings as hidden by the seed", () => {
     const reading = seedFileReading(seedFile("xvJo0drkyJ"));
 
@@ -100,6 +112,7 @@ describe("seedFileReading", () => {
       accessibility: hidden,
       crystalsGanon: hidden,
       crystalsTower: hidden,
+      entrances: hidden,
       goal: hidden,
       itemFunctionality: hidden,
       itemPlacement: hidden,

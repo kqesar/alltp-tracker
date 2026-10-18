@@ -215,6 +215,7 @@ describe("the seed's settings", () => {
       { label: "Seed", value: "OPEN" },
       { label: "Logic", value: "No Glitches" },
       { label: "World", value: "Open" },
+      { label: "Entrances", value: "not in the ROM" },
       { label: "Swordless", value: "no" },
       { label: "Goal", value: "Fast Ganon" },
       { label: "Ganon's Tower", value: "7 crystals" },
@@ -239,6 +240,7 @@ describe("the seed's settings", () => {
         seed: {
           ...reading.seed,
           accessibility: known("locations"),
+          entrances: known("crossed"),
           goal: { known: false, why: "mystery" },
           itemFunctionality: known("expert"),
           itemPlacement: known("basic"),
@@ -249,6 +251,7 @@ describe("the seed's settings", () => {
 
     expect(seed).toMatchObject({
       Accessibility: "100% Locations",
+      Entrances: "Crossworld",
       Goal: "hidden: a Mystery seed",
       "Item functionality": "Expert",
       "Item placement": "Basic",

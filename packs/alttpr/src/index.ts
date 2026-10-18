@@ -45,6 +45,7 @@ export {
   decodeSeedSettings,
   SEED_SETTINGS_RANGES,
   type SeedAccessibility,
+  type SeedEntrances,
   type SeedGoal,
   type SeedItemFunctionality,
   type SeedItemPlacement,

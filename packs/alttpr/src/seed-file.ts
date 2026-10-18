@@ -15,7 +15,10 @@
 // `item_functionality` are the world's config; `entry_crystals_tower` and
 // `entry_crystals_ganon` are the options the seed was asked for, as strings
 // ("random" when it was asked for random crystals, whose counts the file
-// drops: SendPatchToDisk.php:41-44). A value vt never writes leaves that
+// drops: SendPatchToDisk.php:41-44). `shuffle` is the entrance
+// randomizer's, which vt hands a seed with shuffled entrances to
+// (RandomizerController.php:172-176, EntranceRandomizer.php:131): a seed vt
+// randomizes itself has none. A value vt never writes leaves that
 // setting unrecognized, as the ROM decoder does (autotrack/seed-settings.ts):
 // nothing is guessed.
 //
@@ -75,6 +78,22 @@ const SEED_FILE = z.object({
       logic: oneOf(["NoGlitches", "OverworldGlitches", "MajorGlitches"]),
       // config/alttp.php:227-232
       mode: oneOf(["open", "standard", "inverted", "retro"]),
+      // config/alttp.php:233-240; absent when the entrances are vanilla
+      shuffle: z.catch(
+        z.optional(
+          z.nullable(
+            z.enum([
+              "none",
+              "simple",
+              "restricted",
+              "full",
+              "crossed",
+              "insanity",
+            ]),
+          ),
+        ),
+        null,
+      ),
       // RandomizerController.php:118-123
       spoilers: oneOf(["on", "off", "generate", "mystery"]),
       tournament: z.catch(z.boolean(), false),
@@ -111,6 +130,7 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
       accessibility: MYSTERY,
       crystalsGanon: MYSTERY,
       crystalsTower: MYSTERY,
+      entrances: MYSTERY,
       goal: MYSTERY,
       itemFunctionality: MYSTERY,
       itemPlacement: MYSTERY,
@@ -132,6 +152,8 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
     accessibility: setting(meta.accessibility),
     crystalsGanon: crystals(meta.entry_crystals_ganon),
     crystalsTower: crystals(meta.entry_crystals_tower),
+    entrances:
+      meta.shuffle === undefined ? known("none") : setting(meta.shuffle),
     goal: setting(meta.goal),
     itemFunctionality: setting(meta.item_functionality),
     itemPlacement: setting(meta.item_placement),

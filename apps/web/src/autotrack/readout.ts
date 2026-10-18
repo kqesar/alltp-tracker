@@ -17,6 +17,7 @@ import type { AutotrackReading } from "@/autotrack/reading";
 import { boardItems } from "@/autotrack/table";
 import {
   ACCESSIBILITY_LABELS,
+  ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
   MODE_LABELS,
   PLACEMENT_LABELS,
@@ -253,6 +254,10 @@ export const describeSeed = (seed: SeedSettingsReading): Readout["seed"] => {
     { label: "Seed", value: seed.seed ?? "not an alttpr.com seed" },
     { label: "Logic", value: settingText(seed.logic, (v) => LOGIC_NAMES[v]) },
     { label: "World", value: settingText(seed.mode, (v) => MODE_LABELS[v]) },
+    {
+      label: "Entrances",
+      value: settingText(seed.entrances, labelled(ENTRANCE_LABELS)),
+    },
     {
       label: "Swordless",
       value: settingText(seed.swordless, (v) => (v ? "yes" : "no")),
