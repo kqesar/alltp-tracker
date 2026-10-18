@@ -51,7 +51,7 @@ describe("the upstream contract", () => {
       regionFill: count("regionFill"),
     });
     // Location::canFill's cases: one per placement the tests try
-    expect(report.ran.fill).toBe(143);
+    expect(report.ran.fill).toBe(262);
   });
 
   it("would catch a pack that answers maybe, or yes, to everything", () => {
@@ -151,6 +151,7 @@ describe("runUpstreamCases", () => {
     generated: "by hand, for this spec",
     path: "NoGlitches/Sample.json",
     setUp: {
+      bosses: { "Thieves Town": "Dummy Boss" },
       collected: ["RescueZelda"],
       line: 5,
       locationItems: { "Misery Mire Medallion": "Ether" },
@@ -232,6 +233,7 @@ describe("runUpstreamCases", () => {
     // setUp's RescueZelda, then the case's Lamp
     expect(setUp?.state).toEqual({ lamp: 1, rescueZelda: 1 });
     expect(setUp?.world).toEqual({
+      bosses: { "Thieves Town": "Dummy Boss" },
       config: { logic: "NoGlitches" },
       locationItems: { "Misery Mire Medallion": "Ether" },
       mode: "open",

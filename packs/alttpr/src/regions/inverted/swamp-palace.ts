@@ -1,15 +1,113 @@
-// app/Region/Inverted/SwampPalace.php: pending. Its regions are listed, with no entrance and no
-// location, so the Inverted world holds together until the file is ported.
-import type { RegionModule } from "../../world";
+// app/Region/Inverted/SwampPalace.php: Swamp Palace, whose door is in the
+// Light World in Inverted. It keeps Standard's rules (parent::initalize(),
+// 21) and sets every location's again, with new ways to clip in (`$mire`,
+// 23-31; `$hera`, 33-38), and a new can_enter.
+//
+// Not ported here: the glitched branch of can_enter (147-153), which needs
+// Misery Mire (`$mire`) and the Old Man's location (West Death Mountain)
+// besides South Light World: an entrance comes from one region only.
+import { dungeonBoss } from "../../bosses";
+import { extendModule } from "../../world";
+import { SWAMP_PALACE } from "../standard/swamp-palace";
 
-export const INVERTED_SWAMP_PALACE = {
-  file: "app/Region/Inverted/SwampPalace.php",
-  regions: [
-    {
-      entrances: [],
-      id: "swampPalace",
-      locations: [],
-      name: "Swamp Palace",
+const FILE = "app/Region/Inverted/SwampPalace.php";
+
+/**
+ * `$mire` (23-31): one-frame clipping in from Misery Mire, with its keys.
+ * Two do if its big key sits in its Compass or Big Key Chest
+ * (`itemInLocations`), which a tracker cannot know: `maybe`.
+ */
+const MIRE =
+  "setting(canOneFrameClipUW) & (keyD6 >= 3 | maybe & keyD6 >= 2) & reach(miseryMire)";
+
+/** `$hera` (33-38): one-frame clipping in from Tower of Hera. */
+const HERA = `setting(canOneFrameClipUW) & reach(towerOfHera) & (bigKeyP3 | ${MIRE} & bigKeyD6)`;
+
+/** The first key door, then the hammer's pegs, as most chests want them. */
+const PAST_PEGS = `(keyD2 | ${MIRE}) & (hammer | ${MIRE} | ${HERA})`;
+
+/**
+ * The boss (102-126), whose rule is the prize's too: Standard's
+ * can_complete reads the boss's canAccess. It sets its fill rules again, as
+ * Standard writes them.
+ */
+const BOSS = dungeonBoss(
+  `hookshot & ${PAST_PEGS} & @canBeatSwampPalaceBoss`,
+  "D2",
+  { always: 123, file: FILE, fill: 113, holding: 108 },
+);
+
+export const INVERTED_SWAMP_PALACE = extendModule(SWAMP_PALACE, FILE, {
+  swampPalace: {
+    entrances: [
+      {
+        // can_enter (132-155): the flippers, the basic placement's gate
+        // (hasBottle(), one bottle), Link or a Super Bunny, and the mirror
+        from: "southLightWorld",
+        req: "flippers & (!setting(basicPlacement) | (setting(swordless) | @hasSword) & @hasHealth7 & @hasABottle) & (moonPearl | setting(canOWYBA) & @hasABottle | setting(canBunnyRevive) & @canBunnyRevive | setting(canSuperBunny) & magicMirror) & magicMirror",
+        source: `${FILE}:133`,
+      },
+    ],
+    locations: {
+      "swamp-palace/big-chest": {
+        // The big key may lock itself in here, unless every location must
+        // be reachable: nothing else needs it
+        fill: {
+          always: {
+            items: ["BigKeyD2"],
+            req: "!setting(locationsAccessibility)",
+            source: `${FILE}:52`,
+          },
+          refuse: [
+            {
+              refuse: { items: ["BigKeyD2"] },
+              source: `${FILE}:54`,
+              when: "setting(locationsAccessibility)",
+            },
+          ],
+        },
+        req: `${PAST_PEGS} & (bigKeyD2 | ${MIRE} & bigKeyD6 | ${HERA} & bigKeyP3)`,
+        source: `${FILE}:45`,
+      },
+      "swamp-palace/big-key-chest": { req: PAST_PEGS, source: `${FILE}:58` },
+      "swamp-palace/boss": {
+        fill: BOSS.fill,
+        req: BOSS.req,
+        source: `${FILE}:102`,
+      },
+      "swamp-palace/compass-chest": { req: PAST_PEGS, source: `${FILE}:75` },
+      // The palace's key and nothing else, unless keys are wild: the first
+      // door needs it (40-43). `$mire` lifts that only under the one-frame
+      // clip, which NoGlitches never has: the clip lifts it, as in Standard
+      "swamp-palace/entrance": {
+        fill: {
+          refuse: [
+            {
+              refuse: { allBut: ["KeyD2"] },
+              source: `${FILE}:40`,
+              when: "!setting(canOneFrameClipUW) & !setting(wildKeys)",
+            },
+          ],
+        },
+      },
+      "swamp-palace/flooded-room/left": {
+        req: `hookshot & ${PAST_PEGS}`,
+        source: `${FILE}:81`,
+      },
+      "swamp-palace/flooded-room/right": {
+        req: `hookshot & ${PAST_PEGS}`,
+        source: `${FILE}:88`,
+      },
+      "swamp-palace/map-chest": {
+        req: `@canBombThings & (keyD2 | ${MIRE})`,
+        source: `${FILE}:64`,
+      },
+      "swamp-palace/prize": { req: BOSS.req },
+      "swamp-palace/waterfall-room": {
+        req: `hookshot & ${PAST_PEGS}`,
+        source: `${FILE}:95`,
+      },
+      "swamp-palace/west-chest": { req: PAST_PEGS, source: `${FILE}:69` },
     },
-  ],
-} as const satisfies RegionModule;
+  },
+});
