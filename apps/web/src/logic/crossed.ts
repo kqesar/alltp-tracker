@@ -3,22 +3,39 @@
 // entrances the player noted. A door not noted leads nowhere, so a check is
 // in logic only through doors the player knows. Loaded on demand for such a
 // run (hooks/useCrossedLogic.ts), with the randomizer's rules: no other run
-// downloads them.
+// downloads them, so whatever reads that world goes through this module.
 
-import type { Solution as EngineSolution, State } from "@alltp/engine";
+import type {
+  Analysis,
+  AnalyzeOptions,
+  Solution as EngineSolution,
+  State,
+} from "@alltp/engine";
 import {
   type AlttprSettings,
+  analyzeFacts,
   crossedConnections,
   type ErWorld,
   erWorld,
+  everything,
   type GoMode,
   type GoModeStatus,
   goModeStatusBy,
   solveFacts,
+  solveFactsState,
 } from "@alltp/pack-alttpr";
 
 /** The entrances noted: an entrance id to its target's (the store's). */
 type Noted = Readonly<Record<string, string>>;
+
+/** A run with shuffled entrances, solved. */
+export interface CrossedRun {
+  /** Its world, for the settings and the entrances noted. */
+  readonly world: ErWorld;
+  /** The state solved: the player's, with the facts gained. */
+  readonly state: State;
+  readonly solution: EngineSolution;
+}
 
 let built:
   | { entrances: Noted; settings: AlttprSettings; world: ErWorld }
@@ -40,26 +57,38 @@ const worldOf = (settings: AlttprSettings, entrances: Noted): ErWorld => {
 /** What the tracker asks of a run with shuffled entrances. */
 export interface CrossedSolver {
   /** The run solved: every location of its world. */
-  solve(
-    settings: AlttprSettings,
-    entrances: Noted,
-    state: State,
-  ): EngineSolution;
+  solve(settings: AlttprSettings, entrances: Noted, state: State): CrossedRun;
   /** Where the run stands against its go mode, step by step. */
-  goMode(
-    settings: AlttprSettings,
-    entrances: Noted,
-    state: State,
-    mode: GoMode,
-    first: EngineSolution,
-  ): GoModeStatus;
+  goMode(run: CrossedRun, mode: GoMode): GoModeStatus;
+  /**
+   * The engine's analysis of a state of the run's world, its facts read
+   * through (`analyzeFacts`): what brings each location, in items.
+   */
+  analyze(run: CrossedRun, state: State, options: AnalyzeOptions): Analysis;
+  /**
+   * The run's world solved with everything held: what is not reached then
+   * waits on a door not noted, whatever the player finds.
+   */
+  everything(run: CrossedRun, settings: AlttprSettings): EngineSolution;
 }
 
+const solvedWithAll = new WeakMap<ErWorld, EngineSolution>();
+
 export const solver: CrossedSolver = {
-  goMode: (settings, entrances, state, mode, first) => {
-    const world = worldOf(settings, entrances);
-    return goModeStatusBy((s) => solveFacts(world, s), state, mode, first);
+  analyze: ({ world }, state, options) =>
+    analyzeFacts(world, solveFactsState(world, state).state, options),
+  everything: ({ world }, settings) => {
+    let found = solvedWithAll.get(world);
+    if (found === undefined) {
+      found = solveFacts(world, everything(settings));
+      solvedWithAll.set(world, found);
+    }
+    return found;
   },
-  solve: (settings, entrances, state) =>
-    solveFacts(worldOf(settings, entrances), state),
+  goMode: ({ solution, state, world }, mode) =>
+    goModeStatusBy((s) => solveFacts(world, s), state, mode, solution),
+  solve: (settings, entrances, state) => {
+    const world = worldOf(settings, entrances);
+    return { ...solveFactsState(world, state), world };
+  },
 };

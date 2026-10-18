@@ -108,6 +108,19 @@ test("puts a check in logic through the doors noted", async ({ page }) => {
   await expect(page.getByTestId("marker-blinds-hideout")).toHaveAccessibleName(
     "Blind's Hideout (5 checks): out of logic",
   );
+  // And the Checks list says what reaches it, in items
+  await page.getByTestId("map-view-tab-checks").click();
+  await page.getByTestId("checks-filter-unavailable").check();
+  const why = page.getByTestId("check-why-blinds-hideout/top");
+  await why.click();
+  await expect(page.getByTestId("check-row-blinds-hideout/top")).toContainText(
+    "Missing: Titan's Mitt + Moon Pearl, or Agahnim + Hammer + Moon Pearl, or Power Glove + Hammer + Moon Pearl",
+  );
+  // No item reaches the smith's house through the doors noted: a door does
+  await page.getByTestId("check-why-blacksmith").click();
+  await expect(page.getByTestId("check-row-blacksmith")).toContainText(
+    "Missing: a door you have not noted",
+  );
 });
 
 for (const width of WIDTHS) {

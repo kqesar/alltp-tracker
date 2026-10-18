@@ -90,6 +90,7 @@ export {
   targetNamed,
 } from "./entrances";
 export {
+  analyzeFacts,
   crossedConnections,
   type ErConnections,
   type ErOptions,
@@ -97,6 +98,7 @@ export {
   erWorld,
   mandatoryConnections,
   solveFacts,
+  solveFactsState,
   vanillaConnections,
 } from "./er-world";
 export {

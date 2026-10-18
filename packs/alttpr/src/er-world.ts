@@ -10,6 +10,11 @@
 // bunny's paths (set_bunny_rules, 1520-1589) and what the derived settings
 // read of the connections.
 import {
+  type Analysis,
+  type AnalyzeOptions,
+  type Atom,
+  analyze,
+  type Blockers,
   type CompiledWorld,
   compileWorld,
   type Exit,
@@ -30,6 +35,7 @@ import {
 } from "./entrances";
 import er from "./entrances/er.json" with { type: "json" };
 import ruleTables from "./entrances/rules.json" with { type: "json" };
+import { joinBlockers } from "./goals";
 import { everything } from "./keys";
 import { STATE_NAMES } from "./pack";
 import { RULES } from "./rules";
@@ -246,15 +252,17 @@ export interface ErOptions {
 export interface ErWorld {
   readonly compiled: CompiledWorld;
   /**
-   * What the solver holds once reached, as the randomizer collects events
-   * (sweep_for_events): an item by the location (pack id) that gives it,
-   * and `reached_x` by region x, read by a rule that asks for the region
-   * where the engine allows no reach().
+   * What the solver holds once a location (pack id) is reached, as the
+   * randomizer collects events (sweep_for_events): an event's item by the
+   * location that gives it, and `reached_x` by a location of its own in
+   * region x, read by a rule that asks for the region where the engine
+   * allows no reach().
    */
-  readonly facts: readonly { readonly item: string; readonly from: Fact }[];
+  readonly facts: readonly {
+    readonly item: string;
+    readonly location: string;
+  }[];
 }
-
-type Fact = { readonly location: string } | { readonly region: string };
 
 /** The engine's id of the start, which no region of the randomizer has. */
 const START = "start";
@@ -455,7 +463,9 @@ function graph(
   locations: ReadonlyMap<string, string>,
   mode: "open" | "standard",
   start: readonly string[],
+  reached: readonly string[],
 ): World {
+  const factRegions = new Set(reached);
   const saveAndQuit: Exit[] = (
     mode === "open"
       ? // Rules.py:121-123: always reached
@@ -485,6 +495,8 @@ function graph(
       id: erLocationId(name),
       req: locations.get(name) ?? "true",
     }));
+    // A region's fact, given as it is reached
+    if (factRegions.has(r.id)) located.push({ id: factOf(r.id) });
     return { exits: out, id: r.id, locations: located };
   });
   return {
@@ -500,14 +512,14 @@ function eventFacts(
 ): ErWorld["facts"] {
   return [
     ...Object.entries(RULE_TABLES.events).map(([item, { location }]) => ({
-      from: { location: erLocationId(location) },
       item,
+      location: erLocationId(location),
     })),
     ...Object.entries(events).map(([item, location]) => ({
-      from: { location: erLocationId(location) },
       item,
+      location: erLocationId(location),
     })),
-    ...reached.map((id) => ({ from: { region: id }, item: factOf(id) })),
+    ...reached.map((id) => ({ item: factOf(id), location: factOf(id) })),
   ];
 }
 
@@ -550,7 +562,7 @@ function derivedSettings(
   );
   const reached = reachedBy(exits, locations);
   const then = compileWorld(
-    graph(connections, exits, locations, mode, []),
+    graph(connections, exits, locations, mode, [], reached),
     LOADED_RULES,
     {
       items: itemsOf(events, reached),
@@ -608,7 +620,7 @@ export function erWorld(
     addBunnyRules(connections, marked, exits, locations);
   const reached = reachedBy(exits, locations);
   const compiled = compileWorld(
-    graph(connections, exits, locations, mode, options.start ?? []),
+    graph(connections, exits, locations, mode, options.start ?? [], reached),
     LOADED_RULES,
     {
       items: itemsOf(events, reached),
@@ -625,22 +637,97 @@ export function erWorld(
  * Solves a world, holding each fact once what gives it is surely reached,
  * as the randomizer sweeps for events, until nothing more is gained. Each
  * pass can only add facts, so this ends within a pass per fact.
+ * @returns The solution, and the state with the facts gained
  */
-export function solveFacts(world: ErWorld, state: State): Solution {
+export function solveFactsState(
+  world: ErWorld,
+  state: State,
+): { readonly solution: Solution; readonly state: State } {
   let current: State = state;
   for (;;) {
     const solution = solve(world.compiled, current);
     const gained = world.facts.filter(
-      ({ from, item }) =>
-        !current[item] &&
-        ("region" in from
-          ? solution.region(from.region) === "yes"
-          : solution.location(from.location) === "yes"),
+      ({ item, location }) =>
+        !current[item] && solution.location(location) === "yes",
     );
-    if (gained.length === 0) return solution;
+    if (gained.length === 0) return { solution, state: current };
     current = {
       ...current,
       ...Object.fromEntries(gained.map(({ item }) => [item, 1])),
     };
   }
+}
+
+/** solveFactsState's solution. */
+export const solveFacts = (world: ErWorld, state: State): Solution =>
+  solveFactsState(world, state).solution;
+
+/**
+ * The engine's analysis of a world, its facts read through: a fact is no
+ * item to get, so the analysis proposes it, then each set that holds one
+ * takes, in its place, what brings the location that gives it (`yes`, the
+ * level a fact asks), every way of it, at most `maxAtoms` atoms in all. A
+ * fact that needs itself again gives nothing.
+ * @param state - The state with its facts gained (solveFactsState)
+ */
+export function analyzeFacts(
+  world: ErWorld,
+  state: State,
+  options: AnalyzeOptions = {},
+): Analysis {
+  const sources = new Map(world.facts.map((f) => [f.item, f.location]));
+  const inner = analyze(world.compiled, state, {
+    ...options,
+    acquirable: (item) =>
+      sources.has(item) || (options.acquirable?.(item) ?? true),
+  });
+  const memo = new Map<string, Blockers>();
+  const expand = (
+    location: string,
+    target: "yes" | "maybe",
+    seen: ReadonlySet<string>,
+  ): Blockers => {
+    const key = `${location}/${target}`;
+    const known = memo.get(key);
+    if (known !== undefined) return known;
+    const raw = inner.blockers(location, target);
+    let sets: (readonly Atom[])[] = [];
+    let truncated = raw.truncated;
+    for (const set of raw.sets) {
+      let ways: Blockers = {
+        sets: [
+          set.filter((atom) => !("item" in atom && sources.has(atom.item))),
+        ],
+        truncated: false,
+      };
+      for (const atom of set) {
+        const from = "item" in atom ? sources.get(atom.item) : undefined;
+        if (from === undefined) continue;
+        if (seen.has(from)) {
+          ways = { sets: [], truncated: ways.truncated };
+          break;
+        }
+        ways = joinBlockers(
+          ways,
+          expand(from, "yes", new Set([...seen, from])),
+          options.maxAtoms,
+        );
+      }
+      sets = [...sets, ...ways.sets];
+      truncated ||= ways.truncated;
+    }
+    // Each way once, the minimal ones
+    const found = joinBlockers(
+      { sets: [[]], truncated: false },
+      { sets, truncated },
+      options.maxAtoms,
+    );
+    memo.set(key, found);
+    return found;
+  };
+  return {
+    blockers: (location, target) =>
+      expand(location, target, new Set([location])),
+    doableNow: () => inner.doableNow(),
+  };
 }

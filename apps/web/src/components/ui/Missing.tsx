@@ -23,10 +23,13 @@ export const doubtText = (doubt: Doubt): string => {
 
 /**
  * The ways to get somewhere, each thing with its icon: "Hammer, or Moon
- * Pearl + Power Glove". None within three things says so; a list the
- * engine cut short ends with "and more".
+ * Pearl + Power Glove". None within three things says so, and one behind
+ * a door not noted that; a list the engine cut short ends with "and more".
  */
 export const WaysList = ({ ways }: { ways: Ways }) => {
+  if (ways.door) {
+    return <span className="ways__far">a door you have not noted</span>;
+  }
   if (ways.sets.length === 0) {
     return <span className="ways__far">more than three items away</span>;
   }
