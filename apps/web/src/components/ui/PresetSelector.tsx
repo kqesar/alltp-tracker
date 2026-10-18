@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import { SeedImport } from "@/components/ui/SeedImport";
@@ -7,6 +7,8 @@ import {
   getPreset,
   presets,
   type RunSettings,
+  TUNING,
+  type TunableSetting,
 } from "@/data/presets";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -18,10 +20,49 @@ type PendingRun = {
 };
 
 /**
+ * A tunable setting's select: a change applies at once, the run's progress
+ * kept, as one undo step (`updateSettings`).
+ */
+const SettingSelect = ({
+  id,
+  setting,
+}: {
+  id: string;
+  setting: TunableSetting;
+}) => {
+  const value = useGameStore((state) => state.settings[setting]);
+  const updateSettings = useGameStore((state) => state.updateSettings);
+  const options: readonly (readonly [string | number, string])[] =
+    TUNING[setting];
+  return (
+    <select
+      className="run-settings__select"
+      data-testid={`run-setting-${setting}`}
+      id={id}
+      onChange={(event) => {
+        const picked = options.find(
+          ([option]) => String(option) === event.target.value,
+        );
+        if (picked) updateSettings({ [setting]: picked[0] });
+      }}
+      value={String(value)}
+    >
+      {options.map(([option, words]) => (
+        <option key={option} value={String(option)}>
+          {words}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+/**
  * PresetSelector - lets the player pick a run-type preset (Open, Keysanity,
  * Inverted, ...), or a seed of alttpr.com's, whose settings name one.
  * Picking a different run type asks for confirmation because it resets the
- * board, then applies its settings.
+ * board, then applies its settings. The settings that move no dungeon
+ * counter (crystals, item placement, pool, functionality, accessibility)
+ * change in place from the summary, the run kept.
  */
 export const PresetSelector = () => {
   const presetId = useGameStore((state) => state.presetId);
@@ -32,6 +73,7 @@ export const PresetSelector = () => {
   const [pending, setPending] = useState<PendingRun | null>(null);
 
   const current = getPreset(presetId);
+  const idPrefix = useId();
 
   const handlePick = (id: string) => {
     if (id === presetId) {
@@ -68,8 +110,25 @@ export const PresetSelector = () => {
         <dl aria-label="Current run settings" className="run-settings">
           {describeSettings(settings).map((row) => (
             <div className="run-settings__row" key={row.label}>
-              <dt className="run-settings__label">{row.label}</dt>
-              <dd className="run-settings__value">{row.value}</dd>
+              <dt className="run-settings__label">
+                {row.setting ? (
+                  <label htmlFor={`${idPrefix}-${row.setting}`}>
+                    {row.label}
+                  </label>
+                ) : (
+                  row.label
+                )}
+              </dt>
+              <dd className="run-settings__value">
+                {row.setting ? (
+                  <SettingSelect
+                    id={`${idPrefix}-${row.setting}`}
+                    setting={row.setting}
+                  />
+                ) : (
+                  row.value
+                )}
+              </dd>
             </div>
           ))}
         </dl>

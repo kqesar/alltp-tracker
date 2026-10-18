@@ -252,6 +252,34 @@ describe("GameStore", () => {
       expect(useGameStore.getState().settings).toEqual(FIVE_FIVE);
     });
 
+    it("tunes a run's settings in place, as one undo step", () => {
+      const store = () => useGameStore.getState();
+      store().handleItemClick("hookshot");
+      store().handleItemClick("chest3");
+      const before = store().settings;
+
+      store().updateSettings({ crystalsTower: 4, itemPool: "hard" });
+
+      expect(store().settings).toEqual({
+        ...before,
+        crystalsTower: 4,
+        itemPool: "hard",
+      });
+      expect(store().items).toMatchObject({ chest3: 4, hookshot: true });
+      expect(store().presetId).toBe("open");
+      store().undo();
+      expect(store().settings).toEqual(before);
+      expect(store().items.hookshot).toBe(true);
+    });
+
+    it("records no step for settings that change nothing", () => {
+      const past = useGameStore.getState().past;
+
+      useGameStore.getState().updateSettings({ itemPlacement: "advanced" });
+
+      expect(useGameStore.getState().past).toBe(past);
+    });
+
     it("tells a fresh run from one with anything noted", () => {
       expect(isFreshRun(useGameStore.getState())).toBe(true);
       useGameStore

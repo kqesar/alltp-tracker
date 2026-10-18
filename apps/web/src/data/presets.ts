@@ -230,24 +230,92 @@ export const ENTRANCE_LABELS: Record<EntranceShuffle, string> = {
 /** A crystal count in words: "1 crystal", "7 crystals". */
 const crystals = (count: number) => `${count} crystal${count === 1 ? "" : "s"}`;
 
+/**
+ * The settings a player may change in a run already going: none moves a
+ * dungeon counter, so the run's progress stands (the store's
+ * `updateSettings`). The rest name a run type, which a new run changes.
+ */
+export type TunableSetting =
+  | "crystalsTower"
+  | "crystalsGanon"
+  | "itemPlacement"
+  | "itemPool"
+  | "itemFunctionality"
+  | "accessibility";
+
+/** Options in the order alttpr.com lists them, each with its words. */
+const ordered = <T extends string>(
+  order: readonly T[],
+  labels: Readonly<Record<T, string>>,
+) => order.map((value) => [value, labels[value]] as const);
+
+const CRYSTAL_COUNTS = Array.from(
+  { length: 8 },
+  (_, count) => [count, crystals(count)] as const,
+);
+
+/** Each tunable setting's options, as [value, words]. */
+export const TUNING = {
+  accessibility: ordered(["items", "locations", "none"], ACCESSIBILITY_LABELS),
+  crystalsGanon: CRYSTAL_COUNTS,
+  crystalsTower: CRYSTAL_COUNTS,
+  itemFunctionality: ordered(
+    ["normal", "hard", "expert", "superexpert"],
+    FUNCTIONALITY_LABELS,
+  ),
+  itemPlacement: ordered(["advanced", "basic"], PLACEMENT_LABELS),
+  itemPool: ordered(
+    ["normal", "hard", "expert", "superexpert", "crowd_control"],
+    POOL_LABELS,
+  ),
+} as const satisfies {
+  readonly [K in TunableSetting]: readonly (readonly [
+    RunSettings[K],
+    string,
+  ])[];
+};
+
+/** One row of a run's summary: its words, and the setting when tunable. */
+export type SettingRow = {
+  readonly label: string;
+  readonly value: string;
+  readonly setting?: TunableSetting;
+};
+
 /** A labeled summary of a run's settings, for display. */
-export const describeSettings = (
-  settings: RunSettings,
-): { label: string; value: string }[] => [
+export const describeSettings = (settings: RunSettings): SettingRow[] => [
   { label: "Mode", value: MODE_LABELS[settings.mode] },
   { label: "Goal", value: GOAL_LABELS[settings.goal] },
   { label: "Keysanity", value: settings.keysanity ? "On" : "Off" },
   { label: "Swordless", value: settings.swordless ? "On" : "Off" },
-  { label: "Ganon's Tower", value: crystals(settings.crystalsTower) },
-  { label: "Ganon", value: crystals(settings.crystalsGanon) },
-  { label: "Item placement", value: PLACEMENT_LABELS[settings.itemPlacement] },
-  { label: "Item pool", value: POOL_LABELS[settings.itemPool] },
+  {
+    label: "Ganon's Tower",
+    setting: "crystalsTower",
+    value: crystals(settings.crystalsTower),
+  },
+  {
+    label: "Ganon",
+    setting: "crystalsGanon",
+    value: crystals(settings.crystalsGanon),
+  },
+  {
+    label: "Item placement",
+    setting: "itemPlacement",
+    value: PLACEMENT_LABELS[settings.itemPlacement],
+  },
+  {
+    label: "Item pool",
+    setting: "itemPool",
+    value: POOL_LABELS[settings.itemPool],
+  },
   {
     label: "Item functionality",
+    setting: "itemFunctionality",
     value: FUNCTIONALITY_LABELS[settings.itemFunctionality],
   },
   {
     label: "Accessibility",
+    setting: "accessibility",
     value: ACCESSIBILITY_LABELS[settings.accessibility],
   },
   { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
