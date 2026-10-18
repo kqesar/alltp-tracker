@@ -249,8 +249,16 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
   door's place, or where a hole drops, grouped by the place a player knows
   (`place`, `side`);
 - `crossedPool(mode)`: what alttpr.com's crossed shuffle mixes. It
-  shuffles Ganon's Tower by default (`EntranceRandomizer.py:228`). Each hole
-  is paired with the door of the cave it drops into.
+  shuffles Ganon's Tower by default (`EntranceRandomizer.py:228`).
+  - `targetsOf`: what the shuffle may give each entrance. A hole gets a
+    drop, a hole's cave door gets such a cave's exit, Skull Woods' doors and
+    holes get their own, and any other door the rest.
+  - `partner`: what one note settles, since a hole and its cave's door
+    lead into the same cave.
+- `PLACE_OF_LOCATION`: the place a check inside lies in, by the region the
+  randomizer puts it in. A few of its names are vt's under other words
+  (`VT_NAMES`), and its bosses' and sewers' regions are told by hand
+  (`REGION_PLACES`).
 
 `test/er-seeds/0yAObedRMV.json` is a real Crosskeys seed's spoiler: its
 shuffled entrances are exactly the pool, and every one leads to a target

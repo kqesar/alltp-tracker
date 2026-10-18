@@ -6,6 +6,7 @@ import {
   ENTRANCES,
   entranceNamed,
   labelOf,
+  PLACE_OF_LOCATION,
   TARGETS,
   targetNamed,
 } from "./entrances";
@@ -148,6 +149,42 @@ describe("the targets", () => {
   });
 });
 
+describe("the checks inside", () => {
+  it("lie in the place a shuffled entrance names", () => {
+    expect(PLACE_OF_LOCATION.get("blinds-hideout/top")).toBe("Blind's Hideout");
+    expect(PLACE_OF_LOCATION.get("sanctuary")).toBe("Hyrule Castle");
+    expect(PLACE_OF_LOCATION.get("sewers/secret-room/left")).toBe(
+      "Hyrule Castle",
+    );
+    expect(PLACE_OF_LOCATION.get("thieves-town/boss")).toBe("Thieves Town");
+    expect(PLACE_OF_LOCATION.get("kings-tomb")).toBe("King's Grave");
+    expect(PLACE_OF_LOCATION.get("paradox-cave-upper/left")).toBe(
+      "Paradox Cave",
+    );
+    // Behind a door the shuffle keeps, or outdoors: none
+    expect(PLACE_OF_LOCATION.has("links-house")).toBe(false);
+    expect(PLACE_OF_LOCATION.has("lake-hylia-island")).toBe(false);
+  });
+
+  it("cover every check of the map behind a shuffled door, under vt's names", () => {
+    // The randomizer's "Peg Cave" is vt's Hammer Pegs
+    expect(PLACE_OF_LOCATION.get("hammer-pegs")).toBe(
+      "Dark World Hammer Peg Cave",
+    );
+    expect(PLACE_OF_LOCATION.get("mini-moldorm-cave/npc")).toBe(
+      "Mini Moldorm Cave",
+    );
+    // Every marker inside is wholly inside one place, but the Dam's: its
+    // floodgate chest is inside, its sunken treasure outdoors
+    const mixed = MARKERS.filter(
+      (marker) =>
+        new Set(marker.locations.map((id) => PLACE_OF_LOCATION.get(id))).size >
+        1,
+    );
+    expect(mixed.map((marker) => marker.id)).toEqual(["dam"]);
+  });
+});
+
 describe("the crossed shuffle", () => {
   const open = crossedPool("open");
 
@@ -169,6 +206,37 @@ describe("the crossed shuffle", () => {
     );
   });
 
+  it("gives each entrance the targets the shuffle may give it", () => {
+    const kinds = (id: string) =>
+      new Set(open.targetsOf.get(id)?.map((t) => t.kind));
+    expect(open.targetsOf.get("kakariko-well-drop")).toHaveLength(8);
+    expect(kinds("kakariko-well-drop")).toEqual(new Set(["drop"]));
+    // A hole's cave's door leads to such a cave's door only
+    expect(
+      open.targetsOf.get("kakariko-well-cave")?.map((t) => t.place),
+    ).toContain("Bat Cave");
+    expect(open.targetsOf.get("kakariko-well-cave")).toHaveLength(8);
+    expect(
+      open.targetsOf.get("skull-woods-first-section-hole-east"),
+    ).toHaveLength(4);
+    const shop = open.targetsOf.get("kakariko-shop")?.map((t) => t.id) ?? [];
+    expect(shop).not.toContain("bat-cave-exit");
+    expect(shop).not.toContain("skull-woods-first-section-exit");
+    expect(kinds("kakariko-shop").has("drop")).toBe(false);
+  });
+
+  it("settles a hole and its cave's door together", () => {
+    expect(open.partner("kakariko-well-drop", "bat-cave-right")).toEqual([
+      "kakariko-well-cave",
+      "bat-cave-exit",
+    ]);
+    expect(open.partner("kakariko-well-cave", "bat-cave-exit")).toEqual([
+      "kakariko-well-drop",
+      "bat-cave-right",
+    ]);
+    expect(open.partner("kakariko-shop", "blinds-hideout")).toBeUndefined();
+  });
+
   it("holds a real Crosskeys seed: every entrance it shuffled, every target", () => {
     expect(seed.meta.shuffle).toBe("crossed");
     const pool = new Set(open.entrances.map((e) => e.name));
@@ -184,5 +252,19 @@ describe("the crossed shuffle", () => {
     }
     // And the seed shuffled every entrance of the pool
     expect(new Set(mapped.map((m) => m.entrance))).toEqual(pool);
+    // Each within what the shuffle may give it, and each hole's door its
+    // partner's
+    const noted = new Map(
+      mapped.map((m) => [entranceNamed(m.entrance).id, targetNamed(m.exit).id]),
+    );
+    for (const [entrance, target] of noted) {
+      expect(
+        open.targetsOf.get(entrance)?.map((t) => t.id),
+        entrance,
+      ).toContain(target);
+      const partner = open.partner(entrance, target);
+      if (partner !== undefined)
+        expect(noted.get(partner[0]), entrance).toBe(partner[1]);
+    }
   });
 });

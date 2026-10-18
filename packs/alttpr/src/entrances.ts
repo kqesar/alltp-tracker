@@ -22,6 +22,7 @@
 
 import er from "./entrances/er.json" with { type: "json" };
 import { locationId } from "./location";
+import { MAP_LOCATIONS } from "./markers";
 
 /** Where a table, a hole list or a door's position was read in the source. */
 const at = (line: number) => `EntranceShuffle.py:${line}`;
@@ -246,6 +247,19 @@ export const targetNamed = (name: string): EntranceTarget => {
   return found;
 };
 
+/**
+ * The caves a hole drops into, by their door's exit and the hole's drop:
+ * scramble_holes shuffles each pair as one (EntranceShuffle.py:1814-1849),
+ * with Sanctuary's in the crossed shuffle (:1838-1839) and the Pyramid's as
+ * Ganon's Tower is shuffled (:1820-1825).
+ */
+const HOLE_CAVES: readonly (readonly [exit: string, drop: string])[] = [
+  ...holeTargets,
+  ["Hyrule Castle Secret Entrance Exit", "Hyrule Castle Secret Entrance"],
+  ["Sanctuary Exit", "Sewer Drop"],
+  ["Pyramid Exit", "Pyramid"],
+];
+
 /** What the crossed shuffle mixes, for a run's world. */
 export interface CrossedPool {
   /** The entrances it shuffles: doors, then holes. */
@@ -255,6 +269,21 @@ export interface CrossedPool {
    * one known tells the other.
    */
   readonly holeDoors: ReadonlyMap<string, string>;
+  /**
+   * What each entrance may lead to, by id: a hole to a drop, the door of a
+   * cave a hole drops into to such a cave's exit, Skull Woods' doors and
+   * holes among their own, any other door to the rest.
+   */
+  readonly targetsOf: ReadonlyMap<string, readonly EntranceTarget[]>;
+  /**
+   * The other entrance a note settles, and its target: a hole and its
+   * cave's door lead into the same cave, the one by its drop, the other by
+   * its exit. Undefined for any other entrance.
+   */
+  partner(
+    entrance: string,
+    target: string,
+  ): readonly [entrance: string, target: string] | undefined;
 }
 
 /**
@@ -303,8 +332,133 @@ export function crossedPool(mode: "open" | "standard"): CrossedPool {
       ["Pyramid Hole", "Pyramid Entrance"] as const,
     ].map(([hole, door]) => [slug(hole), slug(door)]),
   );
+  const entrances = [...new Set([...doors, ...holes])].map(entranceNamed);
+
+  // The pairs of holes and doors this world shuffles, and their caves
+  const caves = HOLE_CAVES.filter(
+    ([exit]) =>
+      mode === "open" || exit !== "Hyrule Castle Secret Entrance Exit",
+  );
+  const exitOfDrop = new Map(
+    caves.map(([exit, drop]) => [slug(drop), slug(exit)]),
+  );
+  const dropOfExit = new Map(
+    caves.map(([exit, drop]) => [slug(exit), slug(drop)]),
+  );
+  const doorOfHole = holeDoors;
+  const holeOfDoor = new Map(
+    [...holeDoors].map(([hole, door]) => [door, hole]),
+  );
+  const ids = (names: readonly string[]) => new Set(names.map(slug));
+  const skullHoleIds = ids(skullHoles);
+  const skullDoorIds = ids(skullDoors);
+  const groups = [
+    { from: new Set(doorOfHole.keys()), to: ids(caves.map(([, d]) => d)) },
+    { from: new Set(holeOfDoor.keys()), to: ids(caves.map(([e]) => e)) },
+    { from: skullHoleIds, to: ids(skullHoleTargets) },
+    { from: skullDoorIds, to: ids(skullDoorTargets) },
+  ];
+  const grouped = new Set(groups.flatMap(({ to }) => [...to]));
+  // Not this world's: the escape's doors Standard keeps
+  const kept = new Set(
+    mode === "open"
+      ? []
+      : [
+          "Hyrule Castle Exit (South)",
+          "Hyrule Castle Secret Entrance Exit",
+          "Hyrule Castle Secret Entrance",
+        ].map(slug),
+  );
+  const targetsOf = new Map(
+    entrances.map((entrance) => {
+      const group = groups.find(({ from }) => from.has(entrance.id));
+      return [
+        entrance.id,
+        TARGETS.filter((t) =>
+          group === undefined
+            ? t.kind !== "drop" && !grouped.has(t.id) && !kept.has(t.id)
+            : group.to.has(t.id),
+        ),
+      ];
+    }),
+  );
+
   return {
-    entrances: [...new Set([...doors, ...holes])].map(entranceNamed),
+    entrances,
     holeDoors,
+    partner: (entrance, target) => {
+      const door = doorOfHole.get(entrance);
+      const exit = exitOfDrop.get(target);
+      if (door !== undefined && exit !== undefined) return [door, exit];
+      const hole = holeOfDoor.get(entrance);
+      const drop = dropOfExit.get(target);
+      if (hole !== undefined && drop !== undefined) return [hole, drop];
+      return undefined;
+    },
+    targetsOf,
   };
 }
+
+/**
+ * The dungeon a region of it belongs to, where its name does not say:
+ * Regions.py's bosses and the escape's sewers (:111-116, 227, 290).
+ */
+const REGION_PLACES: Readonly<Record<string, string>> = {
+  "Agahnim 1": "Agahnims Tower",
+  "Agahnim 2": "Ganons Tower",
+  "Blind Fight": "Thieves Town",
+  Sewers: "Hyrule Castle",
+  "Sewers (Dark)": "Hyrule Castle",
+};
+
+/**
+ * The checks the entrance randomizer names otherwise than vt, whose names
+ * the pack's location ids are the slugs of.
+ */
+const VT_NAMES: Readonly<Record<string, string>> = {
+  "Bonk Rock Cave": "Pegasus Rocks",
+  "Ganons Tower - Validation Chest": "Ganon's Tower - Moldorm Chest",
+  "Graveyard Cave": "Graveyard Ledge",
+  "Hype Cave - Generous Guy": "Hype Cave - NPC",
+  "Hyrule Castle - Zelda's Chest": "Hyrule Castle - Zelda's Cell",
+  "Mini Moldorm Cave - Generous Guy": "Mini Moldorm Cave - NPC",
+  "Peg Cave": "Hammer Pegs",
+};
+
+type Region = {
+  readonly kind: string;
+  readonly name: string;
+  readonly locations: readonly string[];
+  readonly exits: readonly string[];
+};
+
+/**
+ * The place a check inside a cave, a house or a dungeon lies in, by the
+ * pack's location id: the place a shuffled entrance's target names. Its
+ * region's own exit or name tells it, else the place its name starts with.
+ * A check behind a door the shuffle keeps (Link's House, the Tavern's back
+ * room) has none: it stays where it is. Only the map's checks are kept: a
+ * prize or an event (Agahnim, the floodgate) is none.
+ */
+export const PLACE_OF_LOCATION: ReadonlyMap<string, string> = (() => {
+  const places = [...new Set(TARGETS.map((t) => t.place))].sort(
+    (a, b) => b.length - a.length,
+  );
+  const found = new Map<string, string>();
+  for (const region of er.regions as readonly Region[]) {
+    if (region.kind !== "cave" && region.kind !== "dungeon") continue;
+    const label = labelOf(REGION_PLACES[region.name] ?? region.name);
+    const place =
+      region.exits
+        .map((exit) => TARGET_BY_NAME.get(exit)?.place)
+        .find(Boolean) ??
+      TARGET_BY_NAME.get(region.name)?.place ??
+      places.find((p) => label === p || label.startsWith(`${p} `));
+    if (place === undefined) continue;
+    for (const location of region.locations) {
+      const id = slug(VT_NAMES[location] ?? location);
+      if (MAP_LOCATIONS.has(id)) found.set(id, place);
+    }
+  }
+  return found;
+})();
