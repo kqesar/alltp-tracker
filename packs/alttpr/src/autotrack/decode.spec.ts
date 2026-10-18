@@ -6,6 +6,7 @@ import {
   decodeChecks,
   decodeItems,
   decodeProgress,
+  ITEM_SOURCES,
   type MemoryView,
   racePermitted,
 } from "./decode";
@@ -225,7 +226,10 @@ function values(view: MemoryView, race = false): Record<string, number> {
   return { ...counts, ...atLeast };
 }
 
-const zeros = () => Object.fromEntries(ITEM_IDS.map((id) => [id, 0]));
+/** The items memory holds: the Big Bomb it does not (ITEM_SOURCES). */
+const READ = ITEMS.filter(({ id }) => ITEM_SOURCES[id] !== null);
+
+const zeros = () => Object.fromEntries(READ.map(({ id }) => [id, 0]));
 
 const DUNGEON_IDS = CHECK_FLAGS.filter(({ dungeon }) => dungeon !== null).map(
   ({ id }) => id,
@@ -247,7 +251,7 @@ function everyFlag(image: Image): Image {
 /** The end of a run: everything found, every flag set, the goal reached. */
 function endGame(): Image {
   const image = everyFlag(new Image());
-  for (const { id, max } of ITEMS) writeItem(image, id, max);
+  for (const { id, max } of READ) writeItem(image, id, max);
   // Both Agahnims fall in their dungeons, which marks them completed too
   // (events.asm:98-108).
   image.orWord(SAVE(0x472), 0x0800 | 0x0004);
@@ -260,7 +264,7 @@ function endGame(): Image {
  * upgrade, which the second progressive bow's own silver bit hides.
  */
 const END_GAME_ITEMS: Record<string, number> = {
-  ...Object.fromEntries(ITEMS.map(({ id, max }) => [id, max])),
+  ...Object.fromEntries(READ.map(({ id, max }) => [id, max])),
   silverArrowUpgrade: 0,
 };
 
@@ -275,8 +279,11 @@ describe("decodeItems", () => {
     expect(values(freshFile("standard").view())).toEqual(zeros());
   });
 
-  it("reads every item at every level, alone", () => {
-    for (const { id, max } of ITEMS) {
+  it("reads every item memory holds at every level, alone, and never the Big Bomb", () => {
+    expect(ITEMS.filter(({ id }) => ITEM_SOURCES[id] === null)).toEqual([
+      { id: "bigRedBomb", max: 1 },
+    ]);
+    for (const { id, max } of READ) {
       for (let level = 0; level <= max; level++) {
         const image = new Image();
         writeItem(image, id, level);
@@ -613,7 +620,7 @@ describe("Race Mode", () => {
     for (const race of [false, true]) {
       const items = decodeItems(view, { race });
       expect(Object.keys(items.counts)).toEqual([]);
-      expect(Object.keys(items.unsettled)).toHaveLength(ITEMS.length);
+      expect(Object.keys(items.unsettled)).toHaveLength(READ.length);
       expect(decodeChecks(view, { race }).checked.size).toBe(0);
       expect(decodeProgress(view, { race }).goal).toBe("not-read");
     }
@@ -655,7 +662,8 @@ describe("the decoders on random bytes", () => {
           const where = [items.counts, items.atLeast, items.unsettled].filter(
             (part) => id in part,
           );
-          expect(where, id).toHaveLength(1);
+          // An item memory does not hold is in none
+          expect(where, id).toHaveLength(ITEM_SOURCES[id] === null ? 0 : 1);
           const value = items.counts[id] ?? items.atLeast[id];
           if (value !== undefined) {
             expect(value).toBeGreaterThanOrEqual(0);

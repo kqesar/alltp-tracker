@@ -87,6 +87,9 @@ export const ITEMS = [
   { id: "rescueZelda", max: 1 },
   { id: "defeatAgahnim", max: 1 },
   { id: "defeatAgahnim2", max: 1 },
+  // Inverted's Bomb Merchant gives it (Inverted/LightWorld/South.php:27-30),
+  // its pyramid fairy wants it (Inverted/DarkWorld/NorthEast.php:67)
+  { id: "bigRedBomb", max: 1 },
 
   // Small keys (config/item.php:108-120)
   { id: "keyH2", max: 1 },
@@ -360,8 +363,8 @@ export const UPSTREAM_ITEMS: ReadonlyMap<string, Contribution | null> = new Map<
   ["Crystal7", add("crystal7")],
   ["RescueZelda", add("rescueZelda")],
   ["DefeatAgahnim", add("defeatAgahnim")],
-  // An event no rule reads: the pyramid fairy checks crystals 5 and 6
-  ["BigRedBomb", null],
+  // Standard's pyramid fairy checks crystals 5 and 6; Inverted's reads it
+  ["BigRedBomb", add("bigRedBomb")],
   ["DefeatAgahnim2", add("defeatAgahnim2")],
   ["DefeatGanon", null],
   // Aliases (Item.php:269-271). UncleSword counts as one more progressive

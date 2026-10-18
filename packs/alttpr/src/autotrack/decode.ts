@@ -166,7 +166,7 @@ function count(range: "heart-containers" | "heart-pieces"): ItemSource {
  * Every pack item and where memory keeps it, counted as upstream counts it
  * (items.ts): the progressive items found, or the level reached.
  */
-export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource>> = {
+export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource | null>> = {
   armor: equipmentLevel(0x35b, 2),
   bigKeyA2: dungeonItem("big-keys", "A2"),
   bigKeyD1: dungeonItem("big-keys", "D1"),
@@ -179,6 +179,12 @@ export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource>> = {
   bigKeyP1: dungeonItem("big-keys", "P1"),
   bigKeyP2: dungeonItem("big-keys", "P2"),
   bigKeyP3: dungeonItem("big-keys", "P3"),
+  // Bought from Inverted's Bomb Merchant. sram.asm:281-283 documents a "Big
+  // Bomb Acquired" bit in PreGTBKLocations ($7EF42A), but no code sets it at
+  // this commit (inventory.asm:228 only counts Ganon's Tower's checks), and
+  // FollowerIndicator $0D (sram.asm:211) holds only while Link carries it:
+  // memory does not tell, so the board keeps what the player says.
+  bigRedBomb: null,
   bombos: equipment("equipment-b", 0x347),
   bookOfMudora: equipment("equipment-b", 0x34e),
   boomerang: tracked(0x80),
@@ -328,6 +334,7 @@ export function decodeItems(
   const unsettled: Partial<Record<ItemId, Unsettled>> = {};
   for (const { id, max } of ITEMS) {
     const source = ITEM_SOURCES[id];
+    if (source === null) continue;
     const bytes = reader.range(source.range);
     if (typeof bytes === "string") {
       unsettled[id] = bytes;
