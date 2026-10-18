@@ -14,6 +14,7 @@ const BUILD_META = "alltp-tracker-build";
 
 /** Identifiers in sw.ts that the build fills in. */
 const PRECACHE_PLACEHOLDER = "__PRECACHE__";
+const ON_DEMAND_PLACEHOLDER = "__ON_DEMAND__";
 const BUILD_PLACEHOLDER = "__BUILD__";
 
 /** Hex digits of SHA-256 kept as a file's revision: 64 bits. */
@@ -43,8 +44,20 @@ const filesIn = (directory: string) =>
  * worker and into index.html, it tells a page whether a waiting worker is a
  * version it does not run yet. Production builds only; the dev server runs
  * without a worker.
+ *
+ * Files only some players use stay out of what every install downloads:
+ * those `onDemand` matches are cached the first time a page fetches them
+ * (voice commands' engine), those `uncached` matches never (the speech
+ * model, which the engine keeps itself).
+ * @param options - Paths relative to the output, as patterns
  */
-export const serviceWorker = (): Plugin => {
+export const serviceWorker = ({
+  onDemand,
+  uncached,
+}: {
+  onDemand?: RegExp;
+  uncached?: RegExp;
+} = {}): Plugin => {
   let base = "/";
   let publicDir: string | false = false;
   let log: (message: string) => void = () => {};
@@ -106,23 +119,35 @@ export const serviceWorker = (): Plugin => {
         page.source = marked;
         files.set(PAGE_FILE, marked);
 
-        const precache = revisions([...files.keys()].sort()).map(
-          ([name, revision]) => [`${base}${name}`, revision],
-        );
+        const listed = (names: string[]) =>
+          revisions(names).map(([name, revision]) => [
+            `${base}${name}`,
+            revision,
+          ]);
+        const names = [...files.keys()]
+          .filter((name) => !uncached?.test(name))
+          .sort();
+        const precache = listed(names.filter((name) => !onDemand?.test(name)));
+        const lazy = listed(names.filter((name) => onDemand?.test(name)));
         const worker = bundle[SW_FILE];
         if (worker?.type !== "chunk") this.error(`${SW_FILE} was not built`);
         worker.code = fill(
-          fill(worker.code, PRECACHE_PLACEHOLDER, JSON.stringify(precache)),
+          fill(
+            fill(worker.code, PRECACHE_PLACEHOLDER, JSON.stringify(precache)),
+            ON_DEMAND_PLACEHOLDER,
+            JSON.stringify(lazy),
+          ),
           BUILD_PLACEHOLDER,
           JSON.stringify(build),
         );
 
-        const bytes = [...files.values()].reduce(
-          (total, content) => total + Buffer.byteLength(content),
+        const bytes = precache.reduce(
+          (total, [path]) =>
+            total + Buffer.byteLength(files.get(path.slice(base.length)) ?? ""),
           0,
         );
         log(
-          `${SW_FILE}: build ${build}, precaches ${precache.length} files, ${(bytes / 1000).toFixed(0)} kB`,
+          `${SW_FILE}: build ${build}, precaches ${precache.length} files, ${(bytes / 1000).toFixed(0)} kB; ${lazy.length} on demand`,
         );
       },
       // After Vite has written index.html into the bundle

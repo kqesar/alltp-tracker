@@ -833,6 +833,32 @@ describe("GameStore", () => {
     });
   });
 
+  describe("setItem and setSmallKeys", () => {
+    const store = () => useGameStore.getState();
+
+    it("set a value as one undo step, and nothing when it is already so", () => {
+      store().setItem("sword", 3);
+      expect(store().items.sword).toBe(3);
+      expect(store().past).toHaveLength(1);
+      store().setItem("sword", 3);
+      expect(store().past).toHaveLength(1);
+
+      store().setSmallKeys(1, 1);
+      expect(store().smallKeys[1]).toBe(1);
+      expect(store().past).toHaveLength(2);
+    });
+
+    it("refuse a value the control cannot hold", () => {
+      store().setItem("sword", 5);
+      store().setItem("hookshot", 1);
+      store().setItem("nothing", true);
+      // Eastern Palace has no small key
+      store().setSmallKeys(0, 1);
+      store().setSmallKeys(1, -1);
+      expect(store().past).toHaveLength(0);
+    });
+  });
+
   describe("the timeline", () => {
     const T0 = Date.UTC(2026, 9, 18, 12, 0, 0);
     const store = () => useGameStore.getState();

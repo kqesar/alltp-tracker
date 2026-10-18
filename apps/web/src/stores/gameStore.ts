@@ -85,6 +85,14 @@ type GameState = Progress &
     handleItemClick: (item: string, direction?: Direction) => void;
     handleSmallKeyClick: (dungeonIndex: number, direction?: Direction) => void;
     handleMedallionChange: (bossNumber: number, newValue: number) => void;
+    /**
+     * Set an item to a value, as one undo step: what a voice command does,
+     * which says a find rather than a click. Nothing when it holds it
+     * already, or for a value outside the item's range.
+     */
+    setItem: (item: string, value: boolean | number) => void;
+    /** Set a key dungeon's small keys, as one undo step; nothing if equal. */
+    setSmallKeys: (dungeonIndex: number, count: number) => void;
     /** Step a dungeon's medallion through unknown, Bombos, Ether, Quake */
     stepMedallion: (dungeonIndex: number, direction?: Direction) => void;
     /**
@@ -444,6 +452,18 @@ export const useGameStore = create<GameState>()(
         setBigKeysVisible: (visible: boolean) =>
           set({ bigKeysVisible: visible }),
 
+        setItem: (item: string, value: boolean | number) =>
+          set((state) => {
+            const current = state.items[item];
+            if (current === undefined || current === value) return state;
+            if (typeof current !== typeof value) return state;
+            if (typeof value === "number") {
+              const [min, max] = itemRange(item, state.settings);
+              if (value < min || value > max) return state;
+            }
+            return record(state, { items: { ...state.items, [item]: value } });
+          }),
+
         setKeymap: (keymap: Keymap) =>
           set((state) => ({ shortcuts: { ...state.shortcuts, keymap } })),
 
@@ -453,6 +473,14 @@ export const useGameStore = create<GameState>()(
 
         setShortcutsEnabled: (enabled: boolean) =>
           set((state) => ({ shortcuts: { ...state.shortcuts, enabled } })),
+        setSmallKeys: (dungeonIndex: number, count: number) =>
+          set((state) => {
+            if (state.smallKeys[dungeonIndex] === count) return state;
+            if (count < 0 || count > smallKeysMax(dungeonIndex)) return state;
+            const smallKeys = [...state.smallKeys];
+            smallKeys[dungeonIndex] = count;
+            return record(state, { smallKeys });
+          }),
         startTimer: (at = Date.now()) =>
           set((state) => ({ timer: startTimer(state.timer, at) })),
 

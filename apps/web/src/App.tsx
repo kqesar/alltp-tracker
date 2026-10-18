@@ -14,6 +14,7 @@ import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { useRunAnalysis } from "@/hooks/useRunAnalysis";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
 import { useUndoShortcuts } from "@/hooks/useUndoShortcuts";
+import { useVoice } from "@/hooks/useVoice";
 import { useGameStore } from "@/stores/gameStore";
 import type { MapView } from "@/utils";
 
@@ -25,6 +26,7 @@ function App() {
   useUndoShortcuts();
   useItemShortcuts();
   useAutotrack();
+  useVoice();
   useRunAnalysis();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);

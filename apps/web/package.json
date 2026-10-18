@@ -8,6 +8,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "fetch-voice-model": "node scripts/fetch-voice-model.mjs",
     "preview": "vite preview",
     "pwa-icons": "node scripts/pwa-icons.mjs",
     "test:e2e": "playwright test",
@@ -17,6 +18,7 @@
     "@alltp/autotrack": "workspace:*",
     "@alltp/engine": "workspace:*",
     "@alltp/pack-alttpr": "workspace:*",
+    "@lichess-org/vosk-browser": "0.0.3",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "zustand": "^5.0.15"

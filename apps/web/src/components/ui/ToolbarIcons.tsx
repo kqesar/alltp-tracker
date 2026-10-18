@@ -58,3 +58,8 @@ export const ReloadIcon = () => (
 );
 
 export const CloseIcon = () => <Icon path="M6 6l12 12M18 6 6 18" />;
+
+/** A microphone on its stand: voice commands. */
+export const MicIcon = () => (
+  <Icon path="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" />
+);

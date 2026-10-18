@@ -8,7 +8,9 @@
  * - activate: drop the files no longer in the build, then control the pages.
  * - fetch: the page itself from the network first, so a reload shows the
  *   latest release; the cached copy when the network fails or is slow. Every
- *   other file from the cache, falling back to the network.
+ *   other file from the cache, falling back to the network. A file only some
+ *   players use (voice commands' engine) is cached the first time a page
+ *   asks for it, not at install.
  *
  * A new version waits until a page asks it to take over (see
  * src/stores/updateStore.ts): the player picks the moment, never mid-run.
@@ -23,6 +25,12 @@ const scope = self as unknown as ServiceWorkerGlobalScope;
  * the browser knows a new version exists.
  */
 declare const __PRECACHE__: [path: string, revision: string][];
+
+/**
+ * The files of the build cached on first use rather than at install, as
+ * [path, revision] (sw/plugin.ts).
+ */
+declare const __ON_DEMAND__: [path: string, revision: string][];
 
 /** This build's id, also in its index.html (sw/plugin.ts). */
 declare const __BUILD__: string;
@@ -40,9 +48,9 @@ const CACHE = "alltp-tracker-precache";
 /** How long a page load waits for the network before taking the cache. */
 const NETWORK_TIMEOUT_MS = 3000;
 
-/** Each precached file by its path, with the revision it must have. */
-const files = new Map(
-  __PRECACHE__.map(([path, revision]) => [
+/** The cache key of a file's revision, and the revision. */
+const entryOf = ([path, revision]: [string, string]) =>
+  [
     path,
     {
       // The cache key carries the revision: a file is fetched again only when
@@ -51,8 +59,13 @@ const files = new Map(
       key: new URL(`${path}?__rev=${revision}`, scope.location.origin).href,
       revision,
     },
-  ]),
-);
+  ] as const;
+
+/** Each file cached on first use, by its path. */
+const onDemand = new Map(__ON_DEMAND__.map(entryOf));
+
+/** Each precached file by its path, with the revision it must have. */
+const files = new Map(__PRECACHE__.map(entryOf));
 
 /** The start of the SHA-256 of a body, as the plugin computed it. */
 const revisionOf = async (response: Response, length: number) => {
@@ -88,7 +101,9 @@ const precache = async () => {
 
 const dropStaleFiles = async () => {
   const cache = await caches.open(CACHE);
-  const current = new Set([...files.values()].map(({ key }) => key));
+  const current = new Set(
+    [...files.values(), ...onDemand.values()].map(({ key }) => key),
+  );
   const stale = (await cache.keys()).filter(
     (request) => !current.has(request.url),
   );
@@ -118,6 +133,22 @@ const loadPage = async (url: string, key: string) => {
   );
 };
 
+/**
+ * A file cached on first use: from the cache once there, else from the
+ * network, kept for next time. Its name changes with its content (a Vite
+ * asset), so a cached copy is never stale.
+ */
+const cacheOnFirstUse = async (request: Request, key: string) => {
+  const cached = await caches.match(key, { cacheName: CACHE });
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok) {
+    const cache = await caches.open(CACHE);
+    await cache.put(key, response.clone());
+  }
+  return response;
+};
+
 scope.addEventListener("install", (event) => {
   event.waitUntil(precache());
 });
@@ -143,6 +174,11 @@ scope.addEventListener("fetch", (event) => {
   const path = url.pathname.endsWith("/")
     ? `${url.pathname}index.html`
     : url.pathname;
+  const lazy = onDemand.get(path);
+  if (lazy) {
+    event.respondWith(cacheOnFirstUse(request, lazy.key));
+    return;
+  }
   const file = files.get(path);
   if (!file) return;
   if (request.mode === "navigate" && path.endsWith("/index.html")) {

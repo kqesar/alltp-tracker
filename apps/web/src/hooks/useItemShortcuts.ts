@@ -16,6 +16,21 @@ import { isAwayFromBoard } from "@/utils/keyboard";
 type Step = { control: ControlId; direction: Direction };
 
 /**
+ * Whether the board shows a control, so that a shortcut or a voice command
+ * may change it: a key cell can only be clicked while it is shown; so it is
+ * with its keys, and its map and compass, shown only when they lie outside
+ * their dungeons.
+ * @param control - The control
+ */
+export const isControlShown = (control: ControlId): boolean => {
+  const { bigKeysVisible, settings } = useGameStore.getState();
+  if (isKeyControl(control) && !bigKeysVisible) return false;
+  return !(
+    isMapCompassControl(control) && !wildItems(settings).mapsAndCompasses
+  );
+};
+
+/**
  * The step a key press asks for, or null when the press is not a tracker
  * shortcut: shortcuts are off, the key is unbound, the player is typing in a
  * field or composing with an IME, or a dialog covers the board.
@@ -24,7 +39,7 @@ type Step = { control: ControlId; direction: Direction };
 export const shortcutStepFor = (event: KeyboardEvent): Step | null => {
   // keyCode 229: the key an IME is composing with, in older engines
   if (event.isComposing || event.keyCode === 229) return null;
-  const { bigKeysVisible, settings, shortcuts } = useGameStore.getState();
+  const { shortcuts } = useGameStore.getState();
   if (!shortcuts.enabled || isAwayFromBoard(event)) return null;
 
   const chord = chordOf(event);
@@ -35,12 +50,7 @@ export const shortcutStepFor = (event: KeyboardEvent): Step | null => {
   if (!action) return null;
 
   const { control, direction } = parseAction(action);
-  // A key cell can only be clicked while it is shown; so it is with its keys,
-  // and its map and compass, shown only when they lie outside their dungeons
-  if (isKeyControl(control) && !bigKeysVisible) return null;
-  if (isMapCompassControl(control) && !wildItems(settings).mapsAndCompasses) {
-    return null;
-  }
+  if (!isControlShown(control)) return null;
   return { control, direction: direction === "back" ? -1 : 1 };
 };
 
