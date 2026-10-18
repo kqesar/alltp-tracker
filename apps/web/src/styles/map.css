@@ -154,6 +154,16 @@
 }
 
 /* Map availability legend */
+.logic-note {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--border-radius);
+}
+
 .map-legend {
   display: flex;
   flex-wrap: wrap;

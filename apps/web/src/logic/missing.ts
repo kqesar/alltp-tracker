@@ -231,6 +231,8 @@ export const analyzeRun = (
   run: RunSettings,
 ): RunAnalysis => {
   const { keyed, settings, tris } = solution;
+  // Nothing to say of a check under logic the pack does not model
+  if (!solution.modelled) return { missing: new Map(), solution };
   const fill = fillerOf(settings);
   const state = withUntracked(fill, keyed.state);
   const settingsOptions = optionsOf(settings);
@@ -286,8 +288,9 @@ export const goModeStatusOf = (inputs: Inputs): GoModeStatus | undefined => {
   const solution = solutionOf(inputs);
   if (lastStatus?.solution === solution) return lastStatus.status;
   const mode = goModeOfRun(inputs.settings, solution.settings);
+  // A run whose logic the pack does not model has no go mode to speak of
   const status =
-    mode === undefined
+    mode === undefined || !solution.modelled
       ? undefined
       : goModeStatus(
           fillerOf(solution.settings),

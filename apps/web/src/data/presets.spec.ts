@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_PRESET_ID, getPreset, presets } from "@/data/presets";
+import {
+  DEFAULT_PRESET_ID,
+  getPreset,
+  logicModelled,
+  presets,
+} from "@/data/presets";
 
 describe("presets", () => {
   it("each preset has a unique id and the required fields", () => {
@@ -11,6 +16,18 @@ describe("presets", () => {
       expect(ids.has(preset.id)).toBe(false);
       ids.add(preset.id);
     }
+  });
+
+  it("models every run type's logic but Retro's and Crosskeys'", () => {
+    expect(
+      presets
+        .filter((preset) => !logicModelled(preset.settings))
+        .map((preset) => preset.id),
+    ).toEqual(["retro", "crosskeys"]);
+    // Shuffled entrances on any run type are not modelled either
+    expect(
+      logicModelled({ ...getPreset("open").settings, entranceShuffle: "full" }),
+    ).toBe(false);
   });
 
   it("getPreset returns the matching preset", () => {

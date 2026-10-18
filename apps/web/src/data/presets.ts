@@ -5,8 +5,8 @@
  * it can model today (notably `dungeonItems`, which drives the key cells and
  * the dungeon counters). Settings that change the accessibility *logic* the
  * pack does not model yet (mode = retro, entranceShuffle = crossed, ...) are
- * stored and shown — `logicSupported` flags whether the tracker's
- * accessibility logic fully models the preset.
+ * stored and shown, and `logicModelled` says whether a run's are: when they
+ * are not, the map shows every check as maybe rather than the Open logic.
  *
  * A run's settings need not be its preset's own: autotracking reads a seed's
  * from its ROM (autotrack/seed.ts) and switches to the run type that names
@@ -104,8 +104,6 @@ type Preset = {
   name: string;
   description: string;
   settings: RunSettings;
-  /** True when the tracker's accessibility logic fully models this preset. */
-  logicSupported: boolean;
 };
 
 const baseSettings: RunSettings = {
@@ -126,28 +124,24 @@ export const presets: Preset[] = [
   {
     description: "The default weekly: open world, defeat Ganon.",
     id: "open",
-    logicSupported: true,
     name: "Open",
     settings: { ...baseSettings, mode: "open" },
   },
   {
     description: "Begins with the Hyrule Castle escape before opening up.",
     id: "standard",
-    logicSupported: true,
     name: "Standard",
     settings: { ...baseSettings, mode: "standard" },
   },
   {
     description: "Keys, maps and compasses are shuffled into the world.",
     id: "keysanity",
-    logicSupported: true,
     name: "Keysanity",
     settings: { ...baseSettings, dungeonItems: "full" },
   },
   {
     description: "All dungeon bosses must be defeated before Ganon.",
     id: "all-dungeons",
-    logicSupported: true,
     name: "All Dungeons",
     settings: { ...baseSettings, goal: "all-dungeons" },
   },
@@ -156,37 +150,30 @@ export const presets: Preset[] = [
     description:
       "No swords: medallions work on their pads, the hammer reads tablets and hurts Ganon.",
     id: "swordless",
-    logicSupported: true,
     name: "Swordless",
     settings: { ...baseSettings, swordless: true },
   },
   {
     description: "Collect the required Triforce pieces to win.",
     id: "triforce-hunt",
-    logicSupported: true,
     name: "Triforce Hunt",
     settings: { ...baseSettings, goal: "triforce-hunt" },
   },
   {
     description: "Link starts in the Dark World; the mirror is inverted.",
     id: "inverted",
-    logicSupported: true,
     name: "Inverted",
     settings: { ...baseSettings, mode: "inverted" },
   },
   {
-    description:
-      "Bow uses arrows, take-any caves, rupee bow. (Logic support coming soon.)",
+    description: "Bow uses arrows, take-any caves, rupee bow.",
     id: "retro",
-    logicSupported: false,
     name: "Retro",
     settings: { ...baseSettings, mode: "retro" },
   },
   {
-    description:
-      "Crossworld entrance rando + keysanity. (Logic support coming soon.)",
+    description: "Crossworld entrance rando + keysanity.",
     id: "crosskeys",
-    logicSupported: false,
     name: "Crosskeys",
     settings: {
       ...baseSettings,
@@ -198,11 +185,17 @@ export const presets: Preset[] = [
     description:
       "Settings hidden until you find them: set each one as you learn it, the run kept.",
     id: "mystery",
-    logicSupported: true,
     name: "Mystery",
     settings: { ...baseSettings, hidden: HIDEABLE },
   },
 ];
+
+/**
+ * Whether the pack models a run's logic: not the retro world, nor shuffled
+ * entrances, which the pack does not model yet.
+ */
+export const logicModelled = (settings: RunSettings): boolean =>
+  settings.mode !== "retro" && settings.entranceShuffle === "none";
 
 /** The preset selected by default. */
 export const DEFAULT_PRESET_ID = "open";
