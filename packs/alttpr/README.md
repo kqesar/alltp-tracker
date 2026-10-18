@@ -8,7 +8,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | Module | Ports |
 | --- | --- |
 | `src/items.ts` | `app/Item.php`, `config/item.php`: item ids, ranges, and how upstream counts them |
-| `src/settings.ts` | `app/World.php`, `config/logic.php`: every config value a rule reads, and the presets |
+| `src/settings.ts` | `app/World.php`, `config/logic.php`: every config value a rule reads, `UNKNOWN` for those a Mystery run hides, and the presets |
 | `src/helpers.ts` | `app/Support/ItemCollection.php`: `@canLiftRocks`, `@hasSword2`… |
 | `src/bosses.ts` | `app/Boss.php`: each boss's `canBeat`, and the boss each dungeon fights |
 | `src/world.ts` | `app/Region.php`: regions, entrances, prizes, `canFill` |
@@ -151,6 +151,35 @@ closes it to a player holding Bombos only), so nothing carries over.
 - **The derived facts** (`src/derived.ts`), from the items it gives.
 - **Small keys**, per dungeon, only with wild keys. Outside keysanity the
   key model reads the dungeons without them.
+
+## A Mystery run
+
+A Mystery seed hides its settings: its file on alttpr.com keeps only its
+logic and build (`SendPatchToDisk.php:46-67`), its intro text is masked
+(`Rom.php:2117`), and as a tournament seed its ROM settings are not read in
+Race Mode. The player learns them as the run goes.
+
+`settingsFromUpstream(mode, config)` takes `UNKNOWN` for each config value
+a player discovers: `mode.weapons`, `goal`, `crystals.tower`,
+`crystals.ganon`, `itemPlacement`, `accessibility`, `item.pool` and
+`item.functionality`.
+- **Derived settings follow Kleene's logic.** A setting derived from an
+  unknown value is unknown (`Flag`), unless the known ones settle it:
+  - `requireBetterBow` is basic placement *or* swordless, true as soon as
+    either is known true;
+  - `catchableFairies` is false with any functionality but normal.
+  - A crystal count is a range, 0 to 7 (`Count`).
+- **The engine reads them** (its README, Settings not known yet): an unknown
+  flag is read both ways and the readings met, an unknown threshold is yes
+  at its top and maybe from its bottom.
+- **The world and the dungeon items stay known.** The world shows on the
+  first screen. The dungeon items decide the key model and the counters,
+  which no `maybe` can stand for: a Mystery run assumes them until the
+  player sets them.
+
+`mystery.spec.ts` holds a hidden world to soundness against random
+completions of its settings, in each world: nothing it says yes or no to
+turns out otherwise.
 
 ## The legacy format
 
@@ -316,7 +345,8 @@ holds it; once the player holds it, the step is done. The dungeons goal
 mode before their end, and the triforce hunts count pieces this pack does
 not have.
 
-- `goModeOf(settings)`: the run's go mode, if its goal has one.
+- `goModeOf(settings)`: the run's go mode, if its goal has one and is
+  known (a Mystery run's hidden goal has none yet).
 - `goModeStatus(filler, state, mode)`: each step in the key model, and the
   lowest of them: `yes` is go mode, `maybe` go mode only possibly.
 - `goModeBlockers(world, state, mode, options)`: what is missing, as the

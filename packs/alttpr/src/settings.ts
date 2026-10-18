@@ -13,15 +13,30 @@
 //   NoGlitches (line 4);
 // - config/alttp.php: the site's presets (randomizer.item.presets, 57-173).
 //
+// A Mystery seed hides its settings, which the player learns as the run goes:
+// the values a player discovers may be UNKNOWN in the config, and every
+// setting derived from one is then unknown to the engine, which folds it to
+// maybe (a flag either way, a number in its range).
+//
 // Left out, because the pack does not model the mode: rom.rupeeBow and
 // rom.genericKeys (the retro world); boss shuffle (each
 // dungeon keeps the boss its region names, see bosses.ts); the triforce-hunt
 // and ganonhunt goals (triforce pieces are not items of this pack).
 
+/** A config value the player has not discovered yet. */
+export const UNKNOWN = { unknown: true } as const;
+
+/** A flag a rule reads, or one not known yet (the engine folds it to maybe). */
+export type Flag = boolean | typeof UNKNOWN;
+
+/** A number a rule reads, or the range of one not known yet. */
+export type Count = number | { readonly between: readonly [number, number] };
+
 /**
  * Every setting a rule of the pack reads. Each field says the upstream
  * config value it stands for and a place a rule reads it. A type, not an
- * interface, so it is the engine's `Settings` as it is.
+ * interface, so it is the engine's `Settings` as it is. Those a player
+ * discovers in a Mystery run may be unknown (`Flag`, `Count`).
  */
 export type AlttprSettings = {
   /**
@@ -40,44 +55,44 @@ export type AlttprSettings = {
    * mode.weapons is 'swordless' (ItemCollection.php:405). 'randomized',
    * 'assured' and 'vanilla' only place the swords differently.
    */
-  readonly swordless: boolean;
+  readonly swordless: Flag;
   /** itemPlacement is 'basic' (Boss.php:89). */
-  readonly basicPlacement: boolean;
+  readonly basicPlacement: Flag;
   /**
    * itemPlacement is 'advanced' (EasternPalace.php:87). The upstream tests
    * leave itemPlacement unset, so both flags are false there.
    */
-  readonly advancedPlacement: boolean;
+  readonly advancedPlacement: Flag;
   /**
    * region.requireBetterBow: Ganon needs silvers, with basic placement or
    * swordless (World.php:261-273; DarkWorld/NorthEast.php:227).
    */
-  readonly requireBetterBow: boolean;
+  readonly requireBetterBow: Flag;
   /**
    * region.requireBetterSword, with basic placement (World.php:262-267;
    * DarkWorld/NorthEast.php:232).
    */
-  readonly requireBetterSword: boolean;
+  readonly requireBetterSword: Flag;
   /**
    * region.forceSkullWoodsKey, with basic placement (World.php:275-277); a
    * fill rule reads it (SkullWoods.php:107).
    */
-  readonly forceSkullWoodsKey: boolean;
+  readonly forceSkullWoodsKey: Flag;
 
   /** goal is 'ganon', the default (World.php:67; DarkWorld/NorthEast.php:213). */
-  readonly ganonGoal: boolean;
+  readonly ganonGoal: Flag;
   /** goal is 'fast_ganon' (DarkWorld/NorthEast.php:213, 226). */
-  readonly fastGanonGoal: boolean;
+  readonly fastGanonGoal: Flag;
   /** goal is 'dungeons' (DarkWorld/NorthEast.php:195). */
-  readonly dungeonsGoal: boolean;
+  readonly dungeonsGoal: Flag;
   /** goal is 'pedestal': no rule reads it, the tracker's go mode will. */
-  readonly pedestalGoal: boolean;
+  readonly pedestalGoal: Flag;
   /** goal is 'completionist': no rule reads it, the tracker's go mode will. */
-  readonly completionistGoal: boolean;
+  readonly completionistGoal: Flag;
   /** crystals.tower, 7 by default (GanonsTower.php:407). */
-  readonly crystalsTower: number;
+  readonly crystalsTower: Count;
   /** crystals.ganon, 7 by default (DarkWorld/NorthEast.php:220). */
-  readonly crystalsGanon: number;
+  readonly crystalsGanon: Count;
 
   /**
    * item.require.Lamp: the lamps a dark room needs, 1 by default
@@ -110,7 +125,7 @@ export type AlttprSettings = {
    * accessibility is 'locations' (fill rules, PalaceOfDarkness.php:92).
    * 'items' and 'none', and the upstream tests' unset value, read the same.
    */
-  readonly locationsAccessibility: boolean;
+  readonly locationsAccessibility: Flag;
   /** region.cantTakeDamage, false by default (IcePalace.php:75). */
   readonly cantTakeDamage: boolean;
   /**
@@ -123,7 +138,7 @@ export type AlttprSettings = {
    * third shield, the mirror shield. It is 3 unless the item pool lowers it
    * (World.php:171-214).
    */
-  readonly mirrorShieldInPool: boolean;
+  readonly mirrorShieldInPool: Flag;
   /**
    * enemizer.enemyHealth is 'default', as without the enemizer
    * (ItemCollection.php:567, 589).
@@ -138,15 +153,15 @@ export type AlttprSettings = {
    * (0x40), a quarter with expert (0x20), none with superexpert
    * (World.php:216-259). One flag per fraction; none set is no refill.
    */
-  readonly fullBottleMagic: boolean;
-  readonly halfBottleMagic: boolean;
-  readonly quarterBottleMagic: boolean;
+  readonly fullBottleMagic: Flag;
+  readonly halfBottleMagic: Flag;
+  readonly quarterBottleMagic: Flag;
   /**
    * rom.CatchableFairies, true by default; hard, expert and superexpert
    * item functionality turn it off (World.php:216-259; ItemCollection.php:
    * 446).
    */
-  readonly catchableFairies: boolean;
+  readonly catchableFairies: Flag;
 
   // The glitch flags of config/logic.php, and two the region rules read that
   // no logic sets. NoGlitches sets none (logic.php:4), and it is the only
@@ -207,29 +222,35 @@ const POOL_SHIELDS: Readonly<Record<(typeof POOLS)[number], number>> = {
 const BOTTLE_MAGIC: Readonly<Record<(typeof FUNCTIONALITIES)[number], number>> =
   { expert: 0x20, hard: 0x40, normal: 0x80, superexpert: 0x00 };
 
+/** A config value, or UNKNOWN where a player may not know it yet. */
+type Discovered<T> = T | typeof UNKNOWN;
+
 /**
  * A world's config, under upstream's own keys (`World::factory`'s second
  * argument). Every key is optional and takes the default the rules read it
  * with. `settingsFromUpstream` checks the values too, so a fixture's raw
- * config can be passed as it is.
+ * config can be passed as it is. What a Mystery run lets the player
+ * discover may be UNKNOWN.
  */
 export type UpstreamConfig = {
-  readonly accessibility?: "items" | "locations" | "none";
+  readonly accessibility?: Discovered<"items" | "locations" | "none">;
   /** Read by no rule (the tests set 'test_rules'). */
   readonly difficulty?: string;
   readonly dungeonItems?: "full" | "mc" | "mcs" | "standard";
-  readonly "crystals.ganon"?: number;
-  readonly "crystals.tower"?: number;
+  readonly "crystals.ganon"?: Discovered<number>;
+  readonly "crystals.tower"?: Discovered<number>;
   readonly "enemizer.enemyHealth"?: string;
-  readonly goal?: (typeof GOALS)[number];
+  readonly goal?: Discovered<(typeof GOALS)[number]>;
   readonly ignoreCanKillEscapeThings?: boolean;
-  readonly "item.functionality"?: (typeof FUNCTIONALITIES)[number];
+  readonly "item.functionality"?: Discovered<(typeof FUNCTIONALITIES)[number]>;
   readonly "item.overflow.count.Shield"?: number;
-  readonly "item.pool"?: (typeof POOLS)[number];
+  readonly "item.pool"?: Discovered<(typeof POOLS)[number]>;
   readonly "item.require.Lamp"?: number;
-  readonly itemPlacement?: "advanced" | "basic";
+  readonly itemPlacement?: Discovered<"advanced" | "basic">;
   readonly logic?: "NoGlitches";
-  readonly "mode.weapons"?: "assured" | "randomized" | "swordless" | "vanilla";
+  readonly "mode.weapons"?: Discovered<
+    "assured" | "randomized" | "swordless" | "vanilla"
+  >;
   readonly "region.bossNormalLocation"?: boolean;
   readonly "region.cantTakeDamage"?: boolean;
   readonly "region.swordsInPool"?: boolean;
@@ -251,23 +272,38 @@ const oneOf =
   (value) =>
     typeof value === "string" && values.includes(value);
 
+const isUnknown = (value: unknown): value is typeof UNKNOWN =>
+  typeof value === "object" &&
+  value !== null &&
+  (value as { unknown?: unknown }).unknown === true;
+
+/** A check that also takes UNKNOWN: a value a player discovers. */
+const orUnknown =
+  (check: Check): Check =>
+  (value) =>
+    isUnknown(value) || check(value);
+
+const isCrystals: Check = (value) => isCount(value) && (value as number) <= 7;
+
 /** What each key accepts. A key missing here is one the pack does not model. */
 const KEYS: Readonly<Record<keyof UpstreamConfig, Check>> = {
-  accessibility: oneOf("items", "locations", "none"),
-  "crystals.ganon": (value) => isCount(value) && (value as number) <= 7,
-  "crystals.tower": (value) => isCount(value) && (value as number) <= 7,
+  accessibility: orUnknown(oneOf("items", "locations", "none")),
+  "crystals.ganon": orUnknown(isCrystals),
+  "crystals.tower": orUnknown(isCrystals),
   difficulty: isString,
   dungeonItems: oneOf("full", "mc", "mcs", "standard"),
   "enemizer.enemyHealth": isString,
-  goal: oneOf(...GOALS),
+  goal: orUnknown(oneOf(...GOALS)),
   ignoreCanKillEscapeThings: isBoolean,
-  "item.functionality": oneOf(...FUNCTIONALITIES),
+  "item.functionality": orUnknown(oneOf(...FUNCTIONALITIES)),
   "item.overflow.count.Shield": isCount,
-  "item.pool": oneOf(...POOLS),
+  "item.pool": orUnknown(oneOf(...POOLS)),
   "item.require.Lamp": isCount,
-  itemPlacement: oneOf("advanced", "basic"),
+  itemPlacement: orUnknown(oneOf("advanced", "basic")),
   logic: oneOf("NoGlitches"),
-  "mode.weapons": oneOf("assured", "randomized", "swordless", "vanilla"),
+  "mode.weapons": orUnknown(
+    oneOf("assured", "randomized", "swordless", "vanilla"),
+  ),
   "region.bossNormalLocation": isBoolean,
   "region.cantTakeDamage": isBoolean,
   "region.swordsInPool": isBoolean,
@@ -295,6 +331,26 @@ function checked(
   return config as UpstreamConfig;
 }
 
+/** Whether a config value is `x`: unknown while the value is. */
+const is = (value: unknown, x: unknown): Flag =>
+  isUnknown(value) ? UNKNOWN : value === x;
+
+/** Kleene's or: true if any is, false if all are, else unknown. */
+const any = (...flags: readonly Flag[]): Flag => {
+  if (flags.includes(true)) return true;
+  return flags.some(isUnknown) ? UNKNOWN : false;
+};
+
+/** Kleene's and: false if any is, true if all are, else unknown. */
+const all = (...flags: readonly Flag[]): Flag => {
+  if (flags.includes(false)) return false;
+  return flags.some(isUnknown) ? UNKNOWN : true;
+};
+
+/** A crystal count, its range 0 to 7 while not known. */
+const crystalsOf = (value: number | typeof UNKNOWN | undefined): Count =>
+  isUnknown(value) ? { between: [0, 7] } : (value ?? 7);
+
 /**
  * The settings of a world `World::factory(mode, config)` builds, as its
  * constructor derives them: dungeonItems turns the wild flags on, basic
@@ -312,8 +368,8 @@ export function settingsFromUpstream(
   const c = checked(config);
   const goal = c.goal ?? "ganon";
   const dungeonItems = c.dungeonItems ?? "standard";
-  const basic = c.itemPlacement === "basic";
-  const swordless = c["mode.weapons"] === "swordless";
+  const basic = is(c.itemPlacement, "basic");
+  const swordless = is(c["mode.weapons"], "swordless");
   // World.php:111-129: each level falls through to the ones below it, and
   // turns its flags on whatever the config said
   const mc = dungeonItems !== "standard";
@@ -321,13 +377,17 @@ export function settingsFromUpstream(
   // World.php:171-259: the pool and the functionality set these over any
   // value the config gave
   const functionality = c["item.functionality"] ?? "normal";
-  const shields =
-    c["item.pool"] === undefined
-      ? (c["item.overflow.count.Shield"] ?? 3)
-      : POOL_SHIELDS[c["item.pool"]];
-  const bottleMagic = BOTTLE_MAGIC[functionality];
+  const pool = c["item.pool"];
+  const shields: Flag = isUnknown(pool)
+    ? UNKNOWN
+    : (pool === undefined
+        ? (c["item.overflow.count.Shield"] ?? 3)
+        : POOL_SHIELDS[pool]) >= 3;
+  const bottleMagic = isUnknown(functionality)
+    ? UNKNOWN
+    : BOTTLE_MAGIC[functionality];
   return {
-    advancedPlacement: c.itemPlacement === "advanced",
+    advancedPlacement: is(c.itemPlacement, "advanced"),
     basicPlacement: basic,
     bossNormalLocation: c["region.bossNormalLocation"] ?? true,
     canBootsClip: false,
@@ -345,25 +405,27 @@ export function settingsFromUpstream(
     canTransitionWrapped: false,
     cantTakeDamage: c["region.cantTakeDamage"] ?? false,
     canWaterWalk: false,
-    catchableFairies:
-      functionality === "normal" && (c["rom.CatchableFairies"] ?? true),
-    completionistGoal: goal === "completionist",
-    crystalsGanon: c["crystals.ganon"] ?? 7,
-    crystalsTower: c["crystals.tower"] ?? 7,
+    catchableFairies: all(
+      is(functionality, "normal"),
+      c["rom.CatchableFairies"] ?? true,
+    ),
+    completionistGoal: is(goal, "completionist"),
+    crystalsGanon: crystalsOf(c["crystals.ganon"]),
+    crystalsTower: crystalsOf(c["crystals.tower"]),
     defaultEnemyHealth: (c["enemizer.enemyHealth"] ?? "default") === "default",
-    dungeonsGoal: goal === "dungeons",
-    fastGanonGoal: goal === "fast_ganon",
+    dungeonsGoal: is(goal, "dungeons"),
+    fastGanonGoal: is(goal, "fast_ganon"),
     forceSkullWoodsKey: basic,
-    fullBottleMagic: bottleMagic === 0x80,
-    ganonGoal: goal === "ganon",
-    halfBottleMagic: bottleMagic === 0x40,
+    fullBottleMagic: is(bottleMagic, 0x80),
+    ganonGoal: is(goal, "ganon"),
+    halfBottleMagic: is(bottleMagic, 0x40),
     ignoreCanKillEscapeThings: c.ignoreCanKillEscapeThings ?? false,
     invertedMode: mode === "inverted",
-    locationsAccessibility: c.accessibility === "locations",
-    mirrorShieldInPool: shields >= 3,
-    pedestalGoal: goal === "pedestal",
-    quarterBottleMagic: bottleMagic === 0x20,
-    requireBetterBow: basic || swordless,
+    locationsAccessibility: is(c.accessibility, "locations"),
+    mirrorShieldInPool: shields,
+    pedestalGoal: is(goal, "pedestal"),
+    quarterBottleMagic: is(bottleMagic, 0x20),
+    requireBetterBow: any(basic, swordless),
     requireBetterSword: basic,
     requireLamp: c["item.require.Lamp"] ?? 1,
     standardMode: mode === "standard",

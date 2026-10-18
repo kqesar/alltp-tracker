@@ -172,6 +172,7 @@ export {
   OPEN,
   STANDARD,
   settingsFromUpstream,
+  UNKNOWN,
   UPSTREAM_TEST,
   type UpstreamConfig,
 } from "./settings";
