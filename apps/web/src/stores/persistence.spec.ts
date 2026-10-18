@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SHORTCUTS } from "@/data/keymap";
+import { getPreset } from "@/data/presets";
 import {
   migrate,
   PERSIST_VERSION,
@@ -20,6 +21,14 @@ const refusal = (json: string) => {
 const saveFile = (progress: object, version = PERSIST_VERSION) =>
   JSON.stringify({ format: SAVE_FORMAT, progress, version });
 
+/** What version 9 adds to every earlier run's settings. */
+const LOGIC_DEFAULTS = {
+  accessibility: "items",
+  itemFunctionality: "normal",
+  itemPlacement: "advanced",
+  itemPool: "normal",
+};
+
 describe("parseSave", () => {
   it("reads a file written by the current version", () => {
     const save = parseSave(
@@ -39,10 +48,14 @@ describe("parseSave", () => {
       medallions: [0, 0, 0, 0, 0, 0, 0, 0, 1, 3],
       presetId: "open",
       settings: {
+        accessibility: "locations",
         crystalsGanon: 6,
         crystalsTower: 5,
         entranceShuffle: "none",
         goal: "ganon",
+        itemFunctionality: "hard",
+        itemPlacement: "basic",
+        itemPool: "expert",
         keysanity: false,
         mode: "open",
         swordless: true,
@@ -85,15 +98,7 @@ describe("parseSave", () => {
   });
 
   it("checks a dungeon counter against the run's settings", () => {
-    const keysanity = {
-      crystalsGanon: 7,
-      crystalsTower: 7,
-      entranceShuffle: "none",
-      goal: "ganon",
-      keysanity: true,
-      mode: "open",
-      swordless: false,
-    };
+    const keysanity = { ...getPreset("keysanity").settings };
 
     expect(
       parseSave(saveFile({ items: { chest3: 14 }, settings: keysanity })),
@@ -210,8 +215,16 @@ describe("migrate", () => {
       mode: "standard",
     });
     const items = { chest0: 1, chest3: 5, chest9: -1, hookshot: true };
-    // What version 8 adds to every earlier run's settings
-    const v8 = { crystalsGanon: 7, crystalsTower: 7, swordless: false };
+    // What versions 8 and 9 add to every earlier run's settings
+    const v8 = {
+      accessibility: "items",
+      crystalsGanon: 7,
+      crystalsTower: 7,
+      itemFunctionality: "normal",
+      itemPlacement: "advanced",
+      itemPool: "normal",
+      swordless: false,
+    };
 
     expect(migrate({ items, settings: run(true) }, 5)).toEqual({
       // 2 of 3 found in Eastern Palace, none in Palace of Darkness; a value
@@ -254,6 +267,7 @@ describe("migrate", () => {
       presetId: "keysanity",
       settings: {
         ...settings,
+        ...LOGIC_DEFAULTS,
         crystalsGanon: 7,
         crystalsTower: 7,
         swordless: false,
@@ -265,16 +279,36 @@ describe("migrate", () => {
     expect(migrate({ settings: "none" }, 7)).toEqual({ settings: "none" });
   });
 
+  it("gives a version 8 run the site's item placement, pool, functionality and accessibility", () => {
+    const { accessibility, itemFunctionality, itemPlacement, itemPool, ...v8 } =
+      getPreset("swordless").settings;
+
+    const migrated = migrate({ settings: v8 }, 8);
+
+    expect(migrated).toEqual({ settings: { ...v8, ...LOGIC_DEFAULTS } });
+    expect(validateProgress(migrated).errors).toEqual([]);
+    // Unmigrated, the settings fail
+    expect(validateProgress({ settings: v8 }).errors).toHaveLength(1);
+  });
+
+  it("refuses a logic setting alttpr.com has no option for", () => {
+    const settings = getPreset("open").settings;
+
+    for (const wrong of [
+      { itemPlacement: "random" },
+      { accessibility: "all" },
+      { itemPool: "toString" },
+      { itemFunctionality: 3 },
+    ]) {
+      expect(
+        refusal(saveFile({ settings: { ...settings, ...wrong } })),
+        JSON.stringify(wrong),
+      ).toMatch(/item placement, accessibility, item pool and functionality/);
+    }
+  });
+
   it("refuses crystal counts beyond the seven crystals", () => {
-    const settings = {
-      crystalsGanon: 8,
-      crystalsTower: 7,
-      entranceShuffle: "none",
-      goal: "ganon",
-      keysanity: false,
-      mode: "open",
-      swordless: false,
-    };
+    const settings = { ...getPreset("open").settings, crystalsGanon: 8 };
 
     expect(refusal(saveFile({ settings }))).toMatch(
       /crystal counts from 0 to 7/,

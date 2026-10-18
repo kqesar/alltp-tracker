@@ -30,6 +30,21 @@ type EntranceShuffle =
   | "crossed"
   | "insanity";
 
+/** alttpr.com's item placement (config/alttp.php:181-184). */
+type ItemPlacement = "advanced" | "basic";
+
+/** alttpr.com's accessibility (config/alttp.php:191-195). */
+type Accessibility = "items" | "locations" | "none";
+
+/**
+ * alttpr.com's item pool (config/alttp.php:266-271), and the superexpert one
+ * the randomizer also builds (World.php:171-214).
+ */
+type ItemPool = "normal" | "hard" | "expert" | "superexpert" | "crowd_control";
+
+/** alttpr.com's item functionality (config/alttp.php:272-276, World.php:216). */
+type ItemFunctionality = "normal" | "hard" | "expert" | "superexpert";
+
 export type RunSettings = {
   mode: RunMode;
   goal: RunGoal;
@@ -42,6 +57,14 @@ export type RunSettings = {
   crystalsTower: number;
   /** The crystals Ganon asks for, 0 to 7 */
   crystalsGanon: number;
+  /** Basic placement asks for better bows and swords, Advanced for none */
+  itemPlacement: ItemPlacement;
+  /** What the seed guarantees can be reached */
+  accessibility: Accessibility;
+  /** Fewer shields (and so no mirror shield) beyond the normal pool */
+  itemPool: ItemPool;
+  /** Beyond normal: fairies cannot be caught, a bottle refills less magic */
+  itemFunctionality: ItemFunctionality;
 };
 
 type Preset = {
@@ -54,10 +77,14 @@ type Preset = {
 };
 
 const baseSettings: RunSettings = {
+  accessibility: "items",
   crystalsGanon: 7,
   crystalsTower: 7,
   entranceShuffle: "none",
   goal: "ganon",
+  itemFunctionality: "normal",
+  itemPlacement: "advanced",
+  itemPool: "normal",
   keysanity: false,
   mode: "open",
   swordless: false,
@@ -165,6 +192,32 @@ export const GOAL_LABELS: Record<RunGoal, string> = {
   "triforce-hunt": "Triforce Hunt",
 };
 
+export const PLACEMENT_LABELS: Record<ItemPlacement, string> = {
+  advanced: "Advanced",
+  basic: "Basic",
+};
+
+export const ACCESSIBILITY_LABELS: Record<Accessibility, string> = {
+  items: "100% Inventory",
+  locations: "100% Locations",
+  none: "Not Guaranteed",
+};
+
+export const POOL_LABELS: Record<ItemPool, string> = {
+  crowd_control: "Crowd Control",
+  expert: "Expert",
+  hard: "Hard",
+  normal: "Normal",
+  superexpert: "Super Expert",
+};
+
+export const FUNCTIONALITY_LABELS: Record<ItemFunctionality, string> = {
+  expert: "Expert",
+  hard: "Hard",
+  normal: "Normal",
+  superexpert: "Super Expert",
+};
+
 export const ENTRANCE_LABELS: Record<EntranceShuffle, string> = {
   crossed: "Crossworld",
   full: "Full",
@@ -187,5 +240,15 @@ export const describeSettings = (
   { label: "Swordless", value: settings.swordless ? "On" : "Off" },
   { label: "Ganon's Tower", value: crystals(settings.crystalsTower) },
   { label: "Ganon", value: crystals(settings.crystalsGanon) },
+  { label: "Item placement", value: PLACEMENT_LABELS[settings.itemPlacement] },
+  { label: "Item pool", value: POOL_LABELS[settings.itemPool] },
+  {
+    label: "Item functionality",
+    value: FUNCTIONALITY_LABELS[settings.itemFunctionality],
+  },
+  {
+    label: "Accessibility",
+    value: ACCESSIBILITY_LABELS[settings.accessibility],
+  },
   { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
 ];

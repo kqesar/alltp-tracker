@@ -16,10 +16,14 @@ import {
 } from "@/logic/settings";
 
 const run = (overrides: Partial<RunSettings> = {}): RunSettings => ({
+  accessibility: "items",
   crystalsGanon: 7,
   crystalsTower: 7,
   entranceShuffle: "none",
   goal: "ganon",
+  itemFunctionality: "normal",
+  itemPlacement: "advanced",
+  itemPool: "normal",
   keysanity: false,
   mode: "open",
   swordless: false,
@@ -71,6 +75,45 @@ describe("packSettings", () => {
     expect(packSettings(run({ crystalsGanon: 6 }))).not.toBe(
       packSettings(run({ crystalsTower: 6 })),
     );
+  });
+
+  it("gives the pack a seed's item placement, accessibility, pool and functionality", () => {
+    const hard = packSettings(
+      run({
+        accessibility: "locations",
+        itemFunctionality: "hard",
+        itemPlacement: "basic",
+        itemPool: "hard",
+      }),
+    );
+
+    expect(hard).toMatchObject({
+      // Basic placement asks for the better bow and sword (World.php:261-277)
+      basicPlacement: true,
+      catchableFairies: false,
+      forceSkullWoodsKey: true,
+      fullBottleMagic: false,
+      halfBottleMagic: true,
+      locationsAccessibility: true,
+      mirrorShieldInPool: false,
+      requireBetterBow: true,
+      requireBetterSword: true,
+    });
+    expect(packSettings(run())).toMatchObject({
+      advancedPlacement: true,
+      catchableFairies: true,
+      fullBottleMagic: true,
+      locationsAccessibility: false,
+      mirrorShieldInPool: true,
+    });
+    for (const change of [
+      { itemPlacement: "basic" },
+      { accessibility: "none" },
+      { itemPool: "expert" },
+      { itemFunctionality: "expert" },
+    ] as const) {
+      expect(packSettings(run(change))).not.toBe(packSettings(run()));
+    }
   });
 
   it("reads the worlds the pack does not model as Open", () => {
