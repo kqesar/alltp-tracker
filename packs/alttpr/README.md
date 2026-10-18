@@ -78,15 +78,21 @@ engine's graph:
   `app/Region/Open/HyruleCastleEscape.php` does. Open gives RescueZelda at the
   start (`Randomizer.php:133`), which the tracker's state does.
 - **Inverted (being ported).** `app/World/Inverted.php` lists its own region
-  classes (`regions/inverted/**`) and Standard's Medallions and Fountains. Each
-  class extends Standard's (the escape, Open's); some keep their parent's
-  rules (`parent::initalize()`) and set a few, others replace them all. It
-  moves locations: Link's House to the south of the Dark World, Ether Tablet
-  and Spectacle Rock to East Death Mountain, Ganon to the Light World, and it
-  adds the Bomb Merchant (an event). The importer reads each world's
-  locations through its class chain and the `removeItem`s on it; until a file
-  is ported its module is pending (below), and the app reads an Inverted run
-  as Open.
+  classes (`regions/inverted/**`) and Standard's Medallions and Fountains.
+  Each class extends Standard's (the escape, Open's), in one of two ways. A
+  class whose `initalize` does not call its parent's (the overworld, Turtle
+  Rock) replaces every rule: its module stands alone, and a location it sets
+  no rule for is `true`, cited at its `initalize` line. A class that calls
+  `parent::initalize()` and sets a few rules again (the escape, the other
+  dungeons) is `extendModule(parent, file, changes)` (`src/world.ts`): the
+  parent's regions with those rules replaced, the others still cited in the
+  parent's file. Inverted moves locations: Link's House to the south of the
+  Dark World, Ether Tablet and Spectacle Rock to East Death Mountain, Ganon
+  to the Light World; and it adds the Bomb Merchant, an event holding the
+  Big Red Bomb that its Pyramid Fairy wants. The importer reads each world's
+  locations through its class chain and the `removeItem`s on it. The
+  overworld and the escape are ported; until the dungeons are, their
+  modules are pending (below), and the app reads an Inverted run as Open.
 - **Settings.** A config read is a setting, folded at compile time:
   `config('itemPlacement') === 'advanced'` is `setting(advancedPlacement)`,
   `!== 'basic'` is `!setting(basicPlacement)`, `has('Lamp',
@@ -107,7 +113,7 @@ engine's graph:
   settings).canFill(location, item, state)` reads them as upstream does:
   always allowed, or kept by the region, not refused and reachable with the
   item there. Every dungeon boss writes the same rules, which `dungeonBoss`
-  (`src/bosses.ts`) builds. The 135 `fill` cases of the upstream tests run
+  (`src/bosses.ts`) builds. The 143 `fill` cases of the upstream tests run
   in the contract.
 - **Where dungeon items sit.** The randomizer places the dungeon items
   first, each where canFill holds with every item not placed yet assumed

@@ -47,7 +47,21 @@ const TABLES: Readonly<Partial<Record<keyof typeof HELPERS, readonly Row[]>>> =
       [[], "yes"],
       [[], "no", { catchableFairies: false }],
     ],
-    canActivateOcarina: [[[], "yes"]],
+    canActivateOcarina: [
+      [[], "yes"],
+      [[], "no", { invertedMode: true }],
+      [["MoonPearl"], "no", { invertedMode: true }],
+      [["DefeatAgahnim"], "no", { invertedMode: true }],
+      [["MoonPearl", "DefeatAgahnim"], "yes", { invertedMode: true }],
+      [["MoonPearl", "Hammer"], "no", { invertedMode: true }],
+      [
+        ["MoonPearl", "Hammer", "ProgressiveGlove"],
+        "yes",
+        { invertedMode: true },
+      ],
+      [["MoonPearl", "ProgressiveGlove"], "no", { invertedMode: true }],
+      [["MoonPearl", "TitansMitt"], "yes", { invertedMode: true }],
+    ],
     canBlockLasers: [
       [["ProgressiveShield", "ProgressiveShield"], "no"],
       [["ProgressiveShield", "ProgressiveShield", "ProgressiveShield"], "yes"],

@@ -142,32 +142,32 @@
     {
       "file": "app/Region/Inverted/DarkWorld/DeathMountain/East.php",
       "module": "src/regions/inverted/dark-world/death-mountain/east.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/DarkWorld/DeathMountain/West.php",
       "module": "src/regions/inverted/dark-world/death-mountain/west.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/DarkWorld/Mire.php",
       "module": "src/regions/inverted/dark-world/mire.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/DarkWorld/NorthEast.php",
       "module": "src/regions/inverted/dark-world/north-east.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/DarkWorld/NorthWest.php",
       "module": "src/regions/inverted/dark-world/north-west.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/DarkWorld/South.php",
       "module": "src/regions/inverted/dark-world/south.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/DesertPalace.php",
@@ -187,7 +187,7 @@
     {
       "file": "app/Region/Inverted/HyruleCastleEscape.php",
       "module": "src/regions/inverted/hyrule-castle-escape.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/HyruleCastleTower.php",
@@ -202,27 +202,27 @@
     {
       "file": "app/Region/Inverted/LightWorld/DeathMountain/East.php",
       "module": "src/regions/inverted/light-world/death-mountain/east.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/LightWorld/DeathMountain/West.php",
       "module": "src/regions/inverted/light-world/death-mountain/west.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/LightWorld/NorthEast.php",
       "module": "src/regions/inverted/light-world/north-east.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/LightWorld/NorthWest.php",
       "module": "src/regions/inverted/light-world/north-west.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/LightWorld/South.php",
       "module": "src/regions/inverted/light-world/south.ts",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "app/Region/Inverted/MiseryMire.php",
@@ -469,42 +469,42 @@
     {
       "file": "tests/Inverted/DarkWorld/DeathMountain/EastTest.php",
       "fixture": "test/upstream/Inverted/DarkWorld/DeathMountain/East.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/DarkWorld/DeathMountain/WestTest.php",
       "fixture": "test/upstream/Inverted/DarkWorld/DeathMountain/West.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/DarkWorld/MireTest.php",
       "fixture": "test/upstream/Inverted/DarkWorld/Mire.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/DarkWorld/NorthEastTest.php",
       "fixture": "test/upstream/Inverted/DarkWorld/NorthEast.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/DarkWorld/NorthWestTest.php",
       "fixture": "test/upstream/Inverted/DarkWorld/NorthWest.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/DarkWorld/SouthTest.php",
       "fixture": "test/upstream/Inverted/DarkWorld/South.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/DeathMountain/EastTest.php",
       "fixture": "test/upstream/Inverted/DeathMountain/East.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/DeathMountain/WestTest.php",
       "fixture": "test/upstream/Inverted/DeathMountain/West.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/DesertPalaceTest.php",
@@ -524,7 +524,7 @@
     {
       "file": "tests/Inverted/HyruleCastleEscapeTest.php",
       "fixture": "test/upstream/Inverted/HyruleCastleEscape.json",
-      "status": "pending"
+      "status": "ported"
     },
     {
       "file": "tests/Inverted/HyruleCastleTowerTest.php",

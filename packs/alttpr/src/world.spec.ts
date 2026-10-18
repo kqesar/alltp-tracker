@@ -6,6 +6,7 @@ import {
   buildWorld,
   canFill,
   dungeonItemClass,
+  extendModule,
   type RegionDef,
   type RegionModule,
   regionId,
@@ -134,6 +135,90 @@ describe("buildWorld", () => {
       "field/stone": "yes",
       "ledge/chest": "yes",
     });
+  });
+});
+
+describe("extendModule", () => {
+  const parent: RegionModule = {
+    file: "app/Region/Standard/Cave.php",
+    regions: [
+      {
+        entrances: [
+          {
+            from: START,
+            req: "lamp",
+            source: "app/Region/Standard/Cave.php:20",
+          },
+        ],
+        id: "cave",
+        locations: [
+          {
+            id: "cave/left",
+            kind: "chest",
+            name: "Cave - Left",
+            req: "hammer",
+            source: "app/Region/Standard/Cave.php:11",
+            visible: { source: "game" },
+          },
+          {
+            id: "cave/right",
+            kind: "chest",
+            name: "Cave - Right",
+            req: "hookshot",
+            source: "app/Region/Standard/Cave.php:14",
+          },
+        ],
+        name: "Cave",
+      },
+      { entrances: [], id: "nook", locations: [], name: "Nook" },
+    ],
+  };
+  const FILE = "app/Region/Inverted/Cave.php";
+
+  it("keeps the parent's rules but those the class sets again", () => {
+    const child = extendModule(parent, FILE, {
+      cave: {
+        entrances: [{ from: "nook", req: "true", source: `${FILE}:30` }],
+        locations: {
+          "cave/left": { req: "moonPearl & hammer", source: `${FILE}:24` },
+        },
+      },
+    });
+    expect(child.file).toBe(FILE);
+    expect(child.regions[0]?.entrances).toEqual([
+      { from: "nook", req: "true", source: `${FILE}:30` },
+    ]);
+    expect(child.regions[0]?.locations).toEqual([
+      {
+        ...parent.regions[0]?.locations[0],
+        req: "moonPearl & hammer",
+        source: `${FILE}:24`,
+      },
+      parent.regions[0]?.locations[1],
+    ]);
+    expect(child.regions[1]).toBe(parent.regions[1]);
+  });
+
+  it("keeps the parent's can_enter when the class sets none", () => {
+    const child = extendModule(parent, FILE, {
+      cave: {
+        locations: { "cave/right": { req: "true", source: `${FILE}:9` } },
+      },
+    });
+    expect(child.regions[0]?.entrances).toBe(parent.regions[0]?.entrances);
+  });
+
+  it("refuses a change for a region or a location the parent lacks", () => {
+    expect(() => extendModule(parent, FILE, { attic: {} })).toThrow(
+      `${FILE}: no region attic`,
+    );
+    expect(() =>
+      extendModule(parent, FILE, {
+        cave: {
+          locations: { "cave/middle": { req: "true", source: `${FILE}:9` } },
+        },
+      }),
+    ).toThrow(`${FILE}: no location cave/middle`);
   });
 });
 
