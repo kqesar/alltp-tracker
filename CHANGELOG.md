@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.17.0](https://github.com/kqesar/alltp-tracker/compare/v2.16.0...v2.17.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **web:** record the castle dungeons' keys on the grid ([dca8c5b](https://github.com/kqesar/alltp-tracker/commit/dca8c5b41de5f7010878efcdf6a6d279a3ff0d29))
+
 ## [2.16.0](https://github.com/kqesar/alltp-tracker/compare/v2.15.0...v2.16.0) (2026-10-18)
 
 
