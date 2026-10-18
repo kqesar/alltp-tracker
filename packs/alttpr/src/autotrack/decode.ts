@@ -297,6 +297,11 @@ export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource | null>> = {
   // ProgressIndicator $02 (zelda.asm:11-13), where Open starts.
   rescueZelda: { range: "progress", read: ({ byte }) => (byte() >= 2 ? 1 : 0) },
   shield: equipmentLevel(0x35a, 3),
+  // The retro world's shops: a key for sale is a place the player found, no
+  // memory says it; an arrow bought is CurrentArrows in the rupee bow mode
+  // alone (z3 newitems.asm:428-433), which the decoder does not know
+  shopArrow: null,
+  shopKey: null,
   shovel: tracked(0x04),
   // s, with fewer than two progressive bows: the second sets s itself.
   silverArrowUpgrade: {

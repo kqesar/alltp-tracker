@@ -38,8 +38,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const UPSTREAM_REPO = "sporchia/alttp_vt_randomizer";
 
-/** Test directories imported, relative to the checkout. */
-export const TEST_ROOTS = ["tests/NoGlitches", "tests/Inverted"];
+/** Test directories and files imported, relative to the checkout. */
+export const TEST_ROOTS = [
+  "tests/NoGlitches",
+  "tests/Inverted",
+  // The retro world's rupee bow (World::factory('retro', ...))
+  "tests/RetroBowTest.php",
+];
 
 // ---------------------------------------------------------------------------
 // Tokenizer
@@ -1487,6 +1492,7 @@ export function readLogic(checkout) {
  * @returns {string[]} every file under `dir`, recursively
  */
 function walk(dir) {
+  if (!statSync(dir).isDirectory()) return [dir];
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     return entry.isDirectory() ? walk(path) : [path];

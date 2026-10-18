@@ -185,6 +185,37 @@ tournament seed's file is stripped; any other keeps its spoiler whole.
 completions of its settings, in each world: nothing it says yes or no to
 turns out otherwise.
 
+## The retro world
+
+`settingsFromUpstream("retro")` builds `app/World/Retro.php`: the Open world
+with four things forced over the config (`Retro.php:18-23`).
+
+- **The rupee bow** (`rupeeBow`). The bow shoots rupees once an arrow is
+  bought in a shop (`shopArrow`), or with the silver arrows
+  (`canShootArrows`, `ItemCollection.php:476-492`).
+- **Generic keys** (`genericKeys`). A small key opens any dungeon's doors.
+  Once a key is for sale (`shopKey`), `ItemCollection::has` holds any count
+  of any small key (`ItemCollection.php:269-272`). The pack says so as a
+  derived fact (`derived.ts`): every small key joins the state at its count
+  in the pool. Ice Palace's Spike Room reads `hookshot | shopKey` itself
+  (`IcePalace.php:90`).
+- **Wild keys** (`wildKeys`): the keys leave their dungeons.
+- **Take-any caves** (`region.takeAnys`): a heart container, a blue potion
+  and the old man's sword in caves. No rule reads them.
+
+`shopArrow` and `shopKey` are what the player marks on finding a shop that
+sells them: five shops drawn at random sell both, and the Dark World's
+Forest Shop always sells arrows (`Randomizer.php:716-760`). No other world
+sells them, so `everything` holds them in the retro world alone.
+
+**The key model** cannot tell whose a generic key is, so it never vouches
+for one. A retro dungeon's small keys go untracked even though they are
+wild, and they are never surely in hand. Their dungeon is never safe for
+keys: a key door is `maybe` until a key is for sale, and `yes` after.
+
+`test/upstream/RetroBow.json` holds the official `RetroBowTest` (32 cases)
+to the rupee bow.
+
 ## The legacy format
 
 Before the pack, the app saved its own ids: items with their legacy values

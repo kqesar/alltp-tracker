@@ -283,6 +283,8 @@ describe("decodeItems", () => {
 
   it("reads every item memory holds at every level, alone, and never the Big Bomb", () => {
     expect(ITEMS.filter(({ id }) => ITEM_SOURCES[id] === null)).toEqual([
+      { id: "shopArrow", max: 1 },
+      { id: "shopKey", max: 1 },
       { id: "bigRedBomb", max: 1 },
     ]);
     for (const { id, max } of READ) {

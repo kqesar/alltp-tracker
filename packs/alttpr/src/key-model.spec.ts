@@ -183,6 +183,36 @@ describe("the key model on real dungeons", () => {
     expect(keyed.dungeons("palace-of-darkness/boss")).toEqual([]);
   });
 
+  it("never vouches for the retro world's generic keys, but a key for sale opens all", () => {
+    const RETRO = settingsFromUpstream("retro");
+    // Everything a player may hold, an arrow bought, but the keys
+    const late = {
+      bigKeyD1: 1,
+      bow: 2,
+      flute: 2,
+      glove: 2,
+      hammer: 1,
+      hookshot: 1,
+      lamp: 1,
+      magicMirror: 1,
+      moonPearl: 1,
+      shopArrow: 1,
+      sword: 2,
+    };
+    const without = model(late, RETRO);
+    // A key found may open another dungeon's door: maybe, never yes
+    expect(without.location("palace-of-darkness/boss")).toBe("maybe");
+    expect(without.safe("palace-of-darkness")).toBe(false);
+    expect(
+      untrackedItems(fillerOf(RETRO)).every(
+        (u) => u.generic === u.item.startsWith("key"),
+      ),
+    ).toBe(true);
+    // Keys for sale: every door opens (ItemCollection.php:269-272)
+    const shop = model({ ...late, shopKey: 1 }, RETRO);
+    expect(shop.location("palace-of-darkness/boss")).toBe("yes");
+  });
+
   it("is the solver's answer where every key is tracked", () => {
     const items = { glove: 1, hammer: 1, keyD1: 2, lamp: 1, moonPearl: 1 };
     const state = tracked(items, KEYSANITY);
