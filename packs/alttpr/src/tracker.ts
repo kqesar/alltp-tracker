@@ -39,17 +39,30 @@ type PrizeItem = (typeof PRIZES)[Prize][number];
 type EventItem = NonNullable<DungeonDef["event"]>["item"];
 
 /**
+ * The events the player checks on the map, by location id, and the item
+ * each gives: the Bomb Merchant sells the big bomb
+ * (Inverted/LightWorld/South.php:29), which Inverted's Pyramid Fairy wants.
+ */
+export const EVENT_CHECKS = {
+  "bomb-merchant": "bigRedBomb",
+} as const satisfies Readonly<Record<string, ItemId>>;
+
+type CheckedItem = (typeof EVENT_CHECKS)[keyof typeof EVENT_CHECKS];
+
+/**
  * The items the player marks by hand: every item but the prizes and the
- * events, which the dungeons give, and the small keys, which `keys` counts.
+ * events, which the dungeons give, those an event checked on the map gives,
+ * and the small keys, which `keys` counts.
  */
 export type InventoryItemId = Exclude<
   ItemId,
-  PrizeItem | EventItem | `key${string}`
+  PrizeItem | EventItem | CheckedItem | `key${string}`
 >;
 
 const DERIVED_ITEMS: ReadonlySet<string> = new Set([
   ...Object.values(PRIZES).flat(),
   ...DUNGEONS.flatMap((d) => ("event" in d ? [d.event.item] : [])),
+  ...Object.values(EVENT_CHECKS),
 ]);
 
 /** The inventory item ids, in the order of ITEMS. */
@@ -88,6 +101,11 @@ export interface TrackerInput {
    * key model (keys.ts) stands in for them.
    */
   readonly keys?: Readonly<Partial<Record<DungeonId, number>>>;
+  /**
+   * The locations checked on the map, by id. Only the events of
+   * EVENT_CHECKS are read: an item location tells nothing of what it held.
+   */
+  readonly checked?: Readonly<Record<string, boolean>>;
 }
 
 /** A new run: nothing held, nothing finished, nothing known. */
@@ -114,7 +132,8 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
  * gives the next item of its class in dungeon order: two red crystals are
  * crystals 5 and 6, whichever dungeons dropped them; a prize the pool has
  * no item left for is a mistake, and gives nothing. The pads' facts read
- * an unknown pad as unknown. The keys count only with wild keys.
+ * an unknown pad as unknown. The keys count only with wild keys. A checked
+ * event gives its item (EVENT_CHECKS).
  *
  * Pure: a new state on every call, nothing kept between calls. Throws a
  * RangeError for an item id the pack does not have.
@@ -131,6 +150,9 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
   const finished = (d: DungeonId) => input.beaten[d] === true;
   if (!settings.standardMode || finished("hyrule-castle")) {
     state.rescueZelda = 1;
+  }
+  for (const [id, item] of Object.entries(EVENT_CHECKS)) {
+    if (input.checked?.[id] === true) state[item] = 1;
   }
   const free: Record<Prize, string[]> = {
     crystal: [...PRIZES.crystal],
