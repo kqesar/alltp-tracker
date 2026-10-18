@@ -1,8 +1,14 @@
 import { type MapMarker, markersOf } from "@alltp/pack-alttpr";
+import { lazy, Suspense } from "react";
 import { MapDungeon, MapLocation } from "@/components/map/MapMarkers";
 import { packSettings } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 import { toWorldPosition, type World } from "@/utils";
+
+/** A world's shuffled entrances, loaded with their tables on demand. */
+const EntranceLayer = lazy(
+  () => import("@/components/map/entrances/EntranceLayer"),
+);
 
 const WORLDS: { id: World; label: string }[] = [
   { id: "light", label: "Light World" },
@@ -34,7 +40,8 @@ const byWorld = (markers: readonly MapMarker[]): ByWorld => {
 /**
  * The two worlds, each drawn as its own square with the markers of the
  * run's world that lie in it: a location's (or a cave's), or a dungeon's.
- * An Inverted run moves some doors (the pack's markersOf). Side by side or
+ * An Inverted run moves some doors (the pack's markersOf); a run with
+ * shuffled entrances adds them, loaded on demand. Side by side or
  * stacked, per the player's map layout; on "auto" the map stacks itself
  * when it gets too narrow (see map.css).
  */
@@ -42,6 +49,9 @@ export const MapTracker = () => {
   const mapLayout = useGameStore((state) => state.mapLayout);
   const markers = useGameStore((state) =>
     byWorld(markersOf(packSettings(state.settings))),
+  );
+  const shuffled = useGameStore(
+    (state) => state.settings.entranceShuffle !== "none",
   );
 
   return (
@@ -68,6 +78,11 @@ export const MapTracker = () => {
                 marker={marker}
               />
             ),
+          )}
+          {shuffled && (
+            <Suspense fallback={null}>
+              <EntranceLayer world={world.id} />
+            </Suspense>
           )}
         </section>
       ))}

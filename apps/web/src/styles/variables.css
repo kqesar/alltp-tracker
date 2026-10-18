@@ -46,6 +46,13 @@
   --state-opened: #7f7f7f;
   --state-ink: #0b0b0f; /* glyph colour on a state swatch */
 
+  /* ---- Where a shuffled entrance leads, by kind of place: each with a
+     glyph too ---- */
+  --entrance-dungeon: #e6c34a;
+  --entrance-connector: #5aa9f0;
+  --entrance-single: #d8dbe6;
+  --entrance-drop: #e08a4a;
+
   /* ---- Item not obtained: greyed, at the brightness where every missing
      icon stays below every held one in contrast with the page (2.2:1
      median against 4.3:1) yet keeps its shape; the same over stream

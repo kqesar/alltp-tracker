@@ -165,6 +165,21 @@ describe("validateProgress", () => {
   });
 });
 
+describe("a save's entrances", () => {
+  it("keeps entrance and target ids, and refuses anything else", () => {
+    const entrances = { "kakariko-shop": "elder-house-exit-east" };
+    expect(validateProgress({ entrances })).toEqual({
+      errors: [],
+      value: { entrances },
+    });
+    for (const bad of [[], { "kakariko-shop": 3 }, { "Kakariko Shop": "x" }]) {
+      expect(validateProgress({ entrances: bad }).errors).toEqual([
+        "entrances must map entrance ids to target ids",
+      ]);
+    }
+  });
+});
+
 describe("migrate", () => {
   it("moves a version 3 side-by-side layout, the old default, to auto", () => {
     expect(migrate({ mapLayout: "side-by-side" }, 3)).toEqual({

@@ -52,6 +52,12 @@ export type Progress = {
    * from before it was kept, restores none: no version needed.
    */
   timeline: Timeline;
+  /**
+   * Where each shuffled entrance leads, as the player noted it: the pack's
+   * entrance id to its target's (`entrances.ts`). A save without it, from
+   * before it was kept, notes none: no version needed.
+   */
+  entrances: Readonly<Record<string, string>>;
 };
 
 /**
@@ -62,7 +68,10 @@ export type Progress = {
 export type Prefs = {
   bigKeysVisible: boolean;
   mapLayout: MapLayout;
-  /** The map panel's tab: the map, the Checks list or the Run tab. */
+  /**
+   * The map panel's tab: the map, the Checks list, the Entrances list (a
+   * run with shuffled entrances) or the Run tab.
+   */
   mapView: MapView;
   /**
    * Keyboard shortcuts: one self-contained object, apart from the run, so a
@@ -523,6 +532,21 @@ export const validateProgress = (
     } else errors.push("timeline must be an object");
   }
 
+  if (saved.entrances !== undefined) {
+    // Ids only: what they name is the pack's, which loads with the assistant
+    if (
+      isRecord(saved.entrances) &&
+      Object.entries(saved.entrances).every(
+        ([entrance, target]) =>
+          ENTRANCE_ID.test(entrance) &&
+          typeof target === "string" &&
+          ENTRANCE_ID.test(target),
+      )
+    ) {
+      value.entrances = saved.entrances as Record<string, string>;
+    } else errors.push("entrances must map entrance ids to target ids");
+  }
+
   if (saved.presetId !== undefined) {
     // Ambrosia, the placeholder for weighted settings, became Mystery
     const presetId = saved.presetId === "ambrosia" ? "mystery" : saved.presetId;
@@ -536,6 +560,9 @@ export const validateProgress = (
 
   return { errors, value };
 };
+
+/** An entrance's or a target's id: a slug, as the pack makes them. */
+const ENTRANCE_ID = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
 
 /** Marks a file written by exportState. */
 export const SAVE_FORMAT = "alltp-tracker-save";

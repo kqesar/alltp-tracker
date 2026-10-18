@@ -833,6 +833,50 @@ describe("GameStore", () => {
     });
   });
 
+  describe("the entrances noted", () => {
+    const store = () => useGameStore.getState();
+
+    it("notes where an entrance leads, as one undo step", () => {
+      store().noteEntrance("kakariko-shop", "elder-house-exit-east");
+      expect(store().entrances).toEqual({
+        "kakariko-shop": "elder-house-exit-east",
+      });
+      expect(store().past).toHaveLength(1);
+      expect(isFreshRun(store())).toBe(false);
+
+      // The same again records nothing
+      store().noteEntrance("kakariko-shop", "elder-house-exit-east");
+      expect(store().past).toHaveLength(1);
+
+      store().undo();
+      expect(store().entrances).toEqual({});
+    });
+
+    it("moves a target noted at another entrance, and forgets one", () => {
+      store().noteEntrance("kakariko-shop", "elder-house-exit-east");
+      store().noteEntrance("blinds-hideout", "elder-house-exit-east");
+      expect(store().entrances).toEqual({
+        "blinds-hideout": "elder-house-exit-east",
+      });
+      store().noteEntrance("blinds-hideout", null);
+      expect(store().entrances).toEqual({});
+    });
+
+    it("starts each run with none, and saves them with the run", () => {
+      store().noteEntrance("kakariko-shop", "elder-house-exit-east");
+      const file = JSON.parse(store().exportState());
+      expect(file.progress.entrances).toEqual({
+        "kakariko-shop": "elder-house-exit-east",
+      });
+      store().reset();
+      expect(store().entrances).toEqual({});
+      importSave(JSON.stringify(file));
+      expect(store().entrances).toEqual({
+        "kakariko-shop": "elder-house-exit-east",
+      });
+    });
+  });
+
   describe("a Mystery run's settings", () => {
     const store = () => useGameStore.getState();
 

@@ -6,7 +6,12 @@ export type TooltipTarget =
   | { kind: "marker"; id: string }
   /** A dungeon's grid cell, by its index (0-9) */
   | { kind: "dungeon"; index: number }
-  | { kind: "item"; item: string };
+  | { kind: "item"; item: string }
+  /**
+   * Any control that says what it shows itself (a shuffled entrance's
+   * marker): a title and a line, already in words
+   */
+  | { kind: "text"; title: string; text: string };
 
 type TooltipState = {
   target: TooltipTarget | null;

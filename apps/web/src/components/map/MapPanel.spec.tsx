@@ -55,6 +55,21 @@ describe("MapPanel", () => {
     expect(screen.getByTestId("checks-panel")).toBeInTheDocument();
   });
 
+  it("has an Entrances tab only while entrances are shuffled", async () => {
+    act(() => useGameStore.getState().setMapView("entrances"));
+    render(<MapPanel />);
+    // A run without shuffled entrances shows the map instead
+    expect(screen.queryByRole("tab", { name: "Entrances" })).toBeNull();
+    expect(screen.getByTestId("map-tracker")).toBeInTheDocument();
+
+    act(() => useGameStore.getState().applyPreset("crosskeys"));
+    expect(screen.getByRole("tab", { name: "Entrances" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(await screen.findByTestId("entrances-panel")).toBeInTheDocument();
+  });
+
   it("says why every check is maybe in a run whose logic is not modelled", () => {
     render(<MapPanel />);
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
