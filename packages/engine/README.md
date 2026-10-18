@@ -238,8 +238,10 @@ the language allows. Settings and modes that need more than a constant (a
 different world for inverted) still belong in the pack's choice of world and
 rules.
 
-A setting that is missing, or of the wrong type, is a `DefinitionError` naming
-it and where it is used. So is one used in a branch the fold drops. A boolean
+A setting that is missing, or of the wrong type (a range where a flag is
+read, an unknown flag where a number is, a range whose ends are not
+non-negative integers, the low one first), is a `DefinitionError` naming it
+and where it is used. So is one used in a branch the fold drops. A boolean
 is expected for `setting(s)`, and a non-negative safe integer (like the
 integers the grammar accepts) for `>= setting(s)`:
 
@@ -252,6 +254,55 @@ Exit "r" -> "s" compares with setting "n", but it is true, not a non-negative in
 `evaluate(expr, state, rules, { settings })` reads settings as it meets them,
 with the same errors. It is the reference the folded, compiled path is tested
 against.
+
+#### Settings not known yet
+
+A Mystery seed hides its settings: the player learns them as the run goes. A
+setting may then be unknown, a flag `{ unknown: true }` or a number somewhere
+in a range `{ between: [low, high] }`:
+
+```ts
+compileWorld(world, rules, {
+  items,
+  settings: { crystalsTower: { between: [0, 7] }, swordless: { unknown: true } },
+});
+// "setting(swordless) & hammer | !setting(swordless) & sword"
+//                                   as  hammer & sword | maybe & (hammer | sword)
+// "count(crystal) >= setting(crystalsTower)"
+//                                   as  count(crystal) >= 7 | count(crystal) >= 0 & maybe
+```
+
+- **An unknown flag** is read both ways: the requirement folds with the flag
+  true and with it false, and the two are met, `(t & f) | maybe & (t | f)`:
+  the same where they agree, `maybe` where they differ. That is exact for
+  the flag: a requirement it does not change keeps its value. Folding the
+  flag alone to `maybe` would make `setting(s) & hammer | !setting(s) &
+  sword` a `maybe` even with both held. Each requirement, and each helper's
+  body, is read both ways on its own, for the flags it reads itself;
+  `evaluate()` does the same, and `trace()` values each node on its own
+  while a flag is unknown.
+- **A flag read once** folds to `maybe` as it is: for a formula that reads
+  each value once, Kleene's operators already give the meet of its two
+  readings. Only a flag read twice or more is read both ways, which keeps a
+  world of hidden settings as fast to compile as a known one (about 2 ms
+  for the alttpr pack, against 40 ms reading every flag both ways).
+  `evaluate()` reads every flag both ways, the slow reference the property
+  tests hold the fold to.
+- **An unknown threshold** is yes where the high end holds (every value of
+  the range does), maybe where only the low end does, and no below it. A
+  range of one value is that value.
+
+This is **sound**, which is what the tracker needs: a `yes` or a `no` under
+unknown settings is the same for every value they may turn out to have, and
+anything that depends on them is `maybe`. It holds because Kleene's `and`,
+`or` and `soften` are monotone in the information order, where `maybe` sits
+below both `yes` and `no`. A property test checks it, on requirements and on
+solved worlds (`settings not known yet` in `properties.spec.ts`).
+
+Thresholds are folded on their own, not both ways: two comparisons with the
+same unknown number may be less precise than the truth, which packs do not
+write. The language stays monotone in items, so the solver and its single
+pass are unchanged.
 
 ### Errors
 

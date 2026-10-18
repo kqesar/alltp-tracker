@@ -103,6 +103,81 @@ describe("foldSettings", () => {
   });
 });
 
+describe("settings not known yet", () => {
+  const HIDDEN: Settings = {
+    crystalsTower: { between: [0, 7] },
+    minSword: { between: [2, 2] },
+    open: true,
+    swordless: { unknown: true },
+  };
+
+  it.each<[string, string]>([
+    // A flag either way: maybe however it is read
+    ["setting(swordless)", "maybe"],
+    ["!setting(swordless)", "maybe"],
+    // Read both ways and met: yes with both held, maybe with one
+    [
+      "setting(swordless) & hammer | !setting(swordless) & sword",
+      "hammer & sword | maybe & (hammer | sword)",
+    ],
+    // A number in a range: yes at its top, maybe from its bottom
+    [
+      "count(crystal) >= setting(crystalsTower)",
+      "count(crystal) >= 7 | count(crystal) >= 0 & maybe",
+    ],
+    // A range of one value is that value
+    ["sword >= setting(minSword)", "sword >= 2"],
+  ])("folds %j to %j", (source, expected) => {
+    expect(fold(source, HIDDEN)).toBe(expected);
+  });
+
+  it.each<[number, string]>([
+    [7, "yes"],
+    [5, "maybe"],
+    [3, "maybe"],
+    [2, "no"],
+  ])("needs 3 to 7 crystals: %i of them are %s", (crystals, level) => {
+    const rules = loadRules({
+      groups: { crystal: ["c1", "c2", "c3", "c4", "c5", "c6", "c7"] },
+    });
+    const state = Object.fromEntries(
+      Array.from({ length: crystals }, (_, i) => [`c${i + 1}`, true]),
+    );
+    const settings = { ...HIDDEN, crystalsTower: { between: [3, 7] } } as const;
+    const met = parse("count(crystal) >= setting(crystalsTower)");
+    expect(evaluate(met, state, rules, { settings })).toBe(level);
+    // The folded requirement, which the solver runs, says the same
+    expect(
+      evaluate(foldSettings(met, settings, "Requirement"), state, rules),
+    ).toBe(level);
+  });
+
+  it.each<[string, Settings, RegExp]>([
+    [
+      "sword >= setting(minSword)",
+      { minSword: { between: [3, 1] } },
+      /compares with setting "minSword"/,
+    ],
+    [
+      "sword >= setting(minSword)",
+      { minSword: { unknown: true } },
+      /compares with setting "minSword"/,
+    ],
+    [
+      "setting(open)",
+      { open: { between: [0, 1] } },
+      /uses setting "open" as a condition/,
+    ],
+  ])(
+    "refuses %j with a setting of the wrong kind",
+    (source, settings, message) => {
+      expect(definitionError(() => fold(source, settings)).message).toMatch(
+        message,
+      );
+    },
+  );
+});
+
 describe("evaluate with settings", () => {
   it("reads settings as it meets them", () => {
     const check = (source: string, state = {}) =>

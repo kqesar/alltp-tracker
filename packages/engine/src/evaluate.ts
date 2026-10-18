@@ -7,7 +7,13 @@ import type {
   SettingExpr,
 } from "./ast";
 import { countedItems, DefinitionError, NO_RULES, type Rules } from "./rules";
-import { type Settings, settingFlag, thresholdValue } from "./settings";
+import {
+  hasUnknownFlag,
+  type Settings,
+  settingFlag,
+  thresholdValue,
+  unknownFlags,
+} from "./settings";
 import { fromRank, type Level, MAYBE, NO, rank, type Tri, YES } from "./tri";
 
 /**
@@ -34,6 +40,19 @@ const WHERE = "Requirement";
 
 type Atom = ConstExpr | ItemExpr | CountExpr | SettingExpr | ReachExpr;
 
+/**
+ * Whether `value` reaches a threshold: for one not known yet, yes when it
+ * reaches the whole range, maybe when only its low end.
+ */
+const atLeast = (
+  value: number,
+  min: number | readonly [number, number],
+): Level => {
+  if (typeof min === "number") return value >= min ? YES : NO;
+  if (value >= min[1]) return YES;
+  return value >= min[0] ? MAYBE : NO;
+};
+
 /** The value of a node without operands: one table for both walks below. */
 function atom(
   node: Atom,
@@ -45,21 +64,23 @@ function atom(
   switch (node.type) {
     case "const":
       return rank(node.value);
-    case "item": {
-      const min = thresholdValue(settings, node.min, WHERE);
-      return itemValue(state, node.name) >= min ? YES : NO;
-    }
+    case "item":
+      return atLeast(
+        itemValue(state, node.name),
+        thresholdValue(settings, node.min, WHERE),
+      );
     case "count": {
       let total = 0;
       for (const name of countedItems(node.names, rules.groups)) {
         total += itemValue(state, name);
       }
-      return total >= thresholdValue(settings, node.min, WHERE) ? YES : NO;
+      return atLeast(total, thresholdValue(settings, node.min, WHERE));
     }
-    case "setting":
-      return settingFlag(settings, node.name, WHERE) !== node.negated
-        ? YES
-        : NO;
+    case "setting": {
+      const flag = settingFlag(settings, node.name, WHERE);
+      if (flag === "unknown") return MAYBE;
+      return flag !== node.negated ? YES : NO;
+    }
     case "reach": {
       const regions = options.regions;
       if (regions === undefined || !Object.hasOwn(regions, node.region)) {
@@ -97,29 +118,43 @@ export function evaluate(
   rules: Rules = NO_RULES,
   options: EvaluateOptions = {},
 ): Tri {
+  const settings = options.settings ?? NO_SETTINGS;
   const memo = new Map<string, Level>();
   const pending = new Set<string>();
 
-  const run = (node: Expr): Level => {
+  /**
+   * A requirement or a helper's body: each flag not known yet that it reads
+   * itself, read both ways, the two values met (the same, or maybe), as
+   * `foldSettings` folds it. Its helpers have the run's own settings.
+   */
+  const scope = (node: Expr, set: Settings): Level => {
+    const [flag] = unknownFlags(node, set);
+    if (flag === undefined) return run(node, set);
+    const whenTrue = scope(node, { ...set, [flag]: true });
+    const whenFalse = scope(node, { ...set, [flag]: false });
+    return whenTrue === whenFalse ? whenTrue : MAYBE;
+  };
+
+  const run = (node: Expr, set: Settings): Level => {
     switch (node.type) {
       case "helper": {
         const known = memo.get(node.name);
         if (known !== undefined) return known;
         const body = helperBody(node.name, rules, pending);
         pending.add(node.name);
-        const level = run(body);
+        const level = scope(body, settings);
         pending.delete(node.name);
         memo.set(node.name, level);
         return level;
       }
       case "maybe": {
-        const level = run(node.expr);
+        const level = run(node.expr, set);
         return level === NO ? MAYBE : level;
       }
       case "and": {
         let level: Level = YES;
         for (const arg of node.args) {
-          const next = run(arg);
+          const next = run(arg, set);
           if (next === NO) return NO;
           if (next < level) level = next;
         }
@@ -128,18 +163,18 @@ export function evaluate(
       case "or": {
         let level: Level = NO;
         for (const arg of node.args) {
-          const next = run(arg);
+          const next = run(arg, set);
           if (next === YES) return YES;
           if (next > level) level = next;
         }
         return level;
       }
       default:
-        return atom(node, state, rules, options);
+        return atom(node, state, rules, { ...options, settings: set });
     }
   };
 
-  return fromRank(run(expr));
+  return fromRank(scope(expr, settings));
 }
 
 /**
@@ -170,6 +205,20 @@ export function trace(
   // Each helper body's trace, built once.
   const bodies = new Map<string, TraceNode>();
   const pending = new Set<string>();
+  // A flag not known yet makes a node's value its own (a requirement read
+  // both ways, then met), not its children's: each node is then evaluated
+  // on its own. Explaining a compiled world never meets one, its settings
+  // folded already.
+  const own = hasUnknownFlag(options.settings ?? NO_SETTINGS);
+  const valued = (
+    node: Expr,
+    children: TraceNode[],
+    value: Tri,
+  ): TraceNode => ({
+    children,
+    expr: node,
+    value: own ? evaluate(node, state, rules, options) : value,
+  });
 
   const run = (node: Expr): TraceNode => {
     switch (node.type) {
@@ -186,8 +235,11 @@ export function trace(
       }
       case "maybe": {
         const inner = run(node.expr);
-        const value = inner.value === "no" ? "maybe" : inner.value;
-        return { children: [inner], expr: node, value };
+        return valued(
+          node,
+          [inner],
+          inner.value === "no" ? "maybe" : inner.value,
+        );
       }
       case "and":
       case "or": {
@@ -197,14 +249,10 @@ export function trace(
           const next = rank(child.value);
           if (node.type === "and" ? next < level : next > level) level = next;
         }
-        return { children, expr: node, value: fromRank(level) };
+        return valued(node, children, fromRank(level));
       }
       default:
-        return {
-          children: [],
-          expr: node,
-          value: fromRank(atom(node, state, rules, options)),
-        };
+        return valued(node, [], fromRank(atom(node, state, rules, options)));
     }
   };
 

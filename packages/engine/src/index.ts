@@ -44,7 +44,7 @@ export {
   type Rules,
   type RulesSource,
 } from "./rules";
-export { foldSettings, type Settings } from "./settings";
+export { foldSettings, type Settings, type UnknownSetting } from "./settings";
 export { Solution, solve } from "./solve";
 export {
   and,
