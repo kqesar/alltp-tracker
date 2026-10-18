@@ -316,10 +316,10 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
             </div>
           </div>
         )}
-        <div className="autotrack-option">
+        <div className="check-option">
           <input
             checked={connectOnStart}
-            className="autotrack-option__input"
+            className="check-option__input"
             data-testid="autotrack-connect-on-start"
             id={optionId}
             onChange={(event) => setConnectOnStart(event.target.checked)}

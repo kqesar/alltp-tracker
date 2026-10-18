@@ -58,6 +58,8 @@ The stream view, [`?view=obs`](https://kqesar.github.io/alltp-tracker/?view=obs)
 2. **Show the grid**: add a *Browser Source* with the stream view's address. At 512 × 448 (512 × 512 with the key cells shown) every icon pixel is drawn whole; double it for a larger grid, or pick any size. Set the size in the source's properties: dragging its handles resamples the image and blurs it.
 3. **Check the sync on your first run**: the dock and the source share OBS's browser storage, so the source is expected to follow every click in the dock. Items can also be clicked through the source's *Interact* window.
 
+**Show the run timer**: tick *Show the run timer under the grid* in the **Stream view** dialog, and the address ends in `&timer=1`: the run timer sits under the grid, drawn in the chest counters' pixel font, white while it runs, grey while paused, gold once the goal stopped it. It takes a row of its own, so the sizes become 512 × 512 (512 × 576 with the key cells).
+
 Capturing a browser window instead? Window capture has no transparency: add `&bg=00ff00` (any 3, 4, 6 or 8-digit hex colour) for a solid background to key out with a *Chroma Key* filter. In a browser source, eight digits make a translucent backdrop instead, e.g. `&bg=000000a0`, for busy footage.
 
 Items not yet obtained are greyed in the icon alone, as in the app, so they stay legible over bright and dark scenes alike. Nobody clicks in a browser source, so the stream view takes a new version of the tracker on its own as soon as it is ready.

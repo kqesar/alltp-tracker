@@ -36,6 +36,16 @@ export const obsBackground = (
   return digits ? `#${digits.toLowerCase()}` : null;
 };
 
+/** `&timer=1` draws the run timer under the stream view's grid. */
+const TIMER_PARAM = "timer";
+
+/**
+ * Whether the stream view draws the run timer under its grid (`&timer=1`).
+ * @param search - The query string, `window.location.search` by default
+ */
+export const obsTimer = (search: string = window.location.search): boolean =>
+  new URLSearchParams(search).get(TIMER_PARAM) === "1";
+
 /** `&bridge=` names the port SNI listens on, when it is not the usual one. */
 const BRIDGE_PARAM = "bridge";
 
@@ -66,11 +76,16 @@ export const trackerUrl = (page: string = window.location.href): string =>
 
 /**
  * The address of the stream view for this deployment of the tracker.
+ * @param options - Whether it draws the run timer under the grid
  * @param page - The address of the current page
  */
-export const obsViewUrl = (page: string = window.location.href): string => {
+export const obsViewUrl = (
+  { timer = false }: { timer?: boolean } = {},
+  page: string = window.location.href,
+): string => {
   const url = new URL(trackerUrl(page));
   url.searchParams.set(VIEW_PARAM, OBS_VIEW);
+  if (timer) url.searchParams.set(TIMER_PARAM, "1");
   return url.href;
 };
 

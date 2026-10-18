@@ -146,6 +146,31 @@ describe("StreamViewControl", () => {
     expect(dialog.textContent).toMatch(/512 × 512 for the crispest/);
   });
 
+  it("asks the view for the run timer, a row more, when ticked", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    setClipboard({ writeText });
+    const dialog = openDialog();
+    const timer = within(dialog).getByLabelText(
+      "Show the run timer under the grid",
+    );
+    expect(timer).not.toBeChecked();
+
+    fireEvent.click(timer);
+
+    const url = `${obsUrl}&timer=1`;
+    expect(screen.getByTestId("stream-view-url")).toHaveValue(url);
+    expect(screen.getByTestId("stream-view-open")).toHaveAttribute("href", url);
+    expect(dialog.textContent).toMatch(/512 × 512 for the crispest/);
+    fireEvent.click(screen.getByTestId("stream-view-copy"));
+    await screen.findByText("Copied.");
+    expect(writeText).toHaveBeenCalledWith(url);
+
+    // A copy was of the address before: its word goes with it
+    fireEvent.click(timer);
+    expect(screen.getByTestId("stream-view-status")).toHaveTextContent("");
+    expect(screen.getByTestId("stream-view-url")).toHaveValue(obsUrl);
+  });
+
   it("names the tracker's own address for the dock and the bg option", () => {
     const dialog = openDialog();
 

@@ -234,25 +234,6 @@
   color: var(--color-text-secondary);
 }
 
-.autotrack-option {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.autotrack-option__input {
-  width: 1.25rem;
-  height: 1.25rem;
-  margin: 0;
-  accent-color: var(--color-accent);
-}
-
-.autotrack-option label {
-  cursor: pointer;
-}
-
 /* ---- Setup guide ---- */
 .setup {
   display: grid;
@@ -282,8 +263,7 @@
 
 /* The system tabs: a segmented row, as the map layout's */
 .setup-step__toggle:focus-visible,
-.setup-device__select:focus-visible,
-.autotrack-option__input:focus-visible {
+.setup-device__select:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }

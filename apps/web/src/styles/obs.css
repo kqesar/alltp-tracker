@@ -27,3 +27,30 @@
 .obs-view .tracker {
   background-color: transparent;
 }
+
+/* The run timer (&timer=1), on the row ObsView keeps under the grid, as
+   wide as the grid's eight columns: its drawing centres in that box. */
+.obs-view .stream-timer {
+  position: absolute;
+  top: var(--obs-timer-top, 0);
+  left: var(--obs-left, 0);
+  width: calc(var(--cell) * 8);
+  height: var(--cell);
+}
+
+.stream-timer__edge {
+  fill: var(--sprite-ink);
+}
+
+.stream-timer__digits {
+  fill: var(--sprite-white);
+}
+
+.stream-timer__line,
+.stream-timer--finished .stream-timer__digits {
+  fill: var(--sprite-gold);
+}
+
+.stream-timer--paused .stream-timer__digits {
+  fill: var(--sprite-grey);
+}

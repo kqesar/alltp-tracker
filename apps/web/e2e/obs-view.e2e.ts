@@ -220,6 +220,57 @@ test.describe("the stream view", () => {
     }
   });
 
+  test("draws the run timer under the grid, whole-pixel, as the tracker runs it", async ({
+    context,
+    page,
+  }) => {
+    await page.setViewportSize({ height: 512, width: 512 });
+    await page.goto("./?view=obs&timer=1");
+    const timer = page.getByTestId("stream-timer");
+    await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
+
+    const tracker = await context.newPage();
+    await tracker.goto("./");
+    await tracker.getByTestId("run-timer").click();
+    await tracker.getByTestId("run-timer-start").click();
+    await expect(timer).toHaveAccessibleName(/^Run timer: 0:0\d, running$/);
+    await tracker.getByTestId("run-timer-pause").click();
+    await expect(timer).toHaveAccessibleName(/^Run timer: 0:0\d, paused$/);
+
+    // Seven rows and the timer's fill 512 px at the icons' own 64 px
+    const cell = await cellOf(page);
+    const grid = await page.getByTestId("item-grid").boundingBox();
+    const box = await timer.boundingBox();
+    expect(cell).toBe(64);
+    expect(grid && box).toBeTruthy();
+    if (!grid || !box) return;
+    expect(box).toEqual({
+      height: cell,
+      width: 8 * cell,
+      x: grid.x,
+      y: grid.y + grid.height,
+    });
+    // "0:0N" is 32 game pixels wide, 4 px each, centred: the frame is drawn
+    // from x 192 to 320 and nothing around it
+    const middle = box.y + cell / 2;
+    expect(await alphaAt(page, 192, middle)).toBe(255);
+    expect(await alphaAt(page, 319, middle)).toBe(255);
+    expect(await alphaAt(page, 191, middle)).toBe(0);
+    expect(await alphaAt(page, 320, middle)).toBe(0);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollHeight - window.innerHeight,
+      ),
+    ).toBe(0);
+
+    const { violations } = await new AxeBuilder({ page })
+      .withTags(WCAG_AA)
+      .analyze();
+    expect(violations.map(({ id, nodes }) => `${id} ×${nodes.length}`)).toEqual(
+      [],
+    );
+  });
+
   test("follows the tracker live, and the tracker follows it", async ({
     context,
     page,

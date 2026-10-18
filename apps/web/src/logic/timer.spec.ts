@@ -10,6 +10,7 @@ import {
   startTimer,
   timerMs,
   timerNews,
+  timerState,
 } from "@/logic/timer";
 
 const T0 = Date.UTC(2026, 9, 18, 12, 0, 0);
@@ -46,6 +47,14 @@ describe("the run timer", () => {
     });
     expect(startTimer(finished, T0 + 9 * SECOND)).toBe(finished);
     expect(timerMs(finished, T0 + 9 * SECOND)).toBe(5 * SECOND);
+  });
+
+  it("names where it stands", () => {
+    const running = startTimer(IDLE_TIMER, T0);
+    expect(timerState(IDLE_TIMER)).toBe("idle");
+    expect(timerState(running)).toBe("running");
+    expect(timerState(pauseTimer(running, T0 + SECOND))).toBe("paused");
+    expect(timerState(finishTimer(running, T0 + SECOND))).toBe("finished");
   });
 
   it("never counts back when the clock does", () => {
