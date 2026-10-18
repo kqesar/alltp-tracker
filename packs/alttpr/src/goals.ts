@@ -88,12 +88,13 @@ export const GO_MODES = {
 
 /**
  * The go mode of a run's goal: none for the dungeons and completionist
- * goals, whose end is every dungeon or every location.
+ * goals, whose end is every dungeon or every location, nor for a goal not
+ * known yet.
  */
 export function goModeOf(settings: AlttprSettings): GoMode | undefined {
-  if (settings.ganonGoal) return GO_MODES.ganon;
-  if (settings.fastGanonGoal) return GO_MODES.fastGanon;
-  if (settings.pedestalGoal) return GO_MODES.pedestal;
+  if (settings.ganonGoal === true) return GO_MODES.ganon;
+  if (settings.fastGanonGoal === true) return GO_MODES.fastGanon;
+  if (settings.pedestalGoal === true) return GO_MODES.pedestal;
   return undefined;
 }
 
