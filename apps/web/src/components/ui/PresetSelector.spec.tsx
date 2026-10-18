@@ -21,13 +21,9 @@ const fakeState = {
   applyRun,
   presetId: "open",
   settings: {
+    ...getPreset("open").settings,
     crystalsGanon: 6,
     crystalsTower: 5,
-    entranceShuffle: "none" as const,
-    goal: "ganon" as const,
-    keysanity: false,
-    mode: "open" as const,
-    swordless: false,
   },
 };
 
@@ -107,7 +103,7 @@ describe("PresetSelector", () => {
       name: /switch run type/i,
     });
     expect(confirm).toHaveTextContent(
-      'Switching to "Inverted (Inverted, Fast Ganon, 4/7)"',
+      'Switching to "Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality)"',
     );
     expect(applyRun).not.toHaveBeenCalled();
 
@@ -117,6 +113,9 @@ describe("PresetSelector", () => {
       crystalsGanon: 7,
       crystalsTower: 4,
       goal: "fast-ganon",
+      itemFunctionality: "hard",
+      itemPlacement: "basic",
+      itemPool: "hard",
       mode: "inverted",
     });
   });

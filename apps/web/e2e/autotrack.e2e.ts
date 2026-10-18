@@ -672,11 +672,11 @@ test.describe("the seed's run type", () => {
 
     await expect(mode(page)).toHaveAccessibleName("Mode Inverted");
     await expect(page.getByTestId("autotrack-live")).toContainText(
-      "This seed is Inverted (Inverted, Fast Ganon, 4/7): the tracker switched to it.",
+      "This seed is Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality): the tracker switched to it.",
     );
     await openDialog(page);
     await expect(dialog(page).getByTestId("autotrack-seed")).toHaveText(
-      "The run type matches this seed: Inverted (Inverted, Fast Ganon, 4/7).",
+      "The run type matches this seed: Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality).",
     );
     await expect(
       dialog(page).getByRole("heading", {

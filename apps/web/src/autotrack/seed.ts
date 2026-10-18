@@ -1,13 +1,15 @@
-// The seed's run type: what the settings autotracking read from the ROM say
-// of the tracker's run type, and the words for it. Pure: the store decides
-// when to switch (stores/autotrackStore.ts), the follower switches
-// (autotrack/follow.ts).
+// The seed's run type: what a seed's settings, from its ROM or its file on
+// alttpr.com, say of the tracker's run type, and the words for it. Pure: the
+// store decides when to switch (stores/autotrackStore.ts), the follower
+// switches (autotrack/follow.ts).
 //
-// A setting the ROM does not state is never guessed. In Race Mode the
-// settings are not read at all (the pack's seed-settings.ts): the run type
-// then stays the player's. One the tracker cannot hold (some dungeon items
-// shuffled and not others, the Ganonhunt and Completionist goals) is said,
-// never rounded to the nearest run type.
+// A setting the seed does not state is never guessed. In Race Mode the ROM's
+// settings are not read at all (the pack's seed-settings.ts): without the
+// seed's file the run type then stays the player's. Item placement,
+// accessibility and the item pool and functionality only the file states:
+// without it the run's own stay. A seed the tracker cannot hold (some
+// dungeon items shuffled and not others, the Ganonhunt and Completionist
+// goals) is said, never rounded to the nearest run type.
 
 import type {
   SeedGoal,
@@ -17,8 +19,12 @@ import type {
 } from "@alltp/pack-alttpr";
 import type { SeedFileError } from "@/autotrack/seedFile";
 import {
+  ACCESSIBILITY_LABELS,
+  FUNCTIONALITY_LABELS,
   getPreset,
   MODE_LABELS,
+  PLACEMENT_LABELS,
+  POOL_LABELS,
   presets,
   type RunSettings,
 } from "@/data/presets";
@@ -85,7 +91,15 @@ const COMPARED = [
   "swordless",
   "crystalsTower",
   "crystalsGanon",
+  "itemPlacement",
+  "accessibility",
+  "itemPool",
+  "itemFunctionality",
 ] as const satisfies readonly (keyof RunSettings)[];
+
+/** A setting only the seed's file states: the seed's when known, else `own`. */
+const fromFile = <T>(setting: SeedSetting<T> | undefined, own: T): T =>
+  setting?.known ? setting.value : own;
 
 /** Why a set of settings is not known: Race Mode, then a value no seed has. */
 const firstUnknown = (
@@ -133,7 +147,8 @@ const presetFor = (settings: RunSettings, currentId: string): string => {
 /**
  * A run type in words: its name, then its world, goal and crystals, and what
  * its settings change from the run type's own: "Keysanity (Open, Ganon,
- * 7/7)", "Standard (Standard, Ganon, 7/7, Keysanity)".
+ * 7/7)", "Standard (Standard, Ganon, 7/7, Keysanity)", "Inverted (Inverted,
+ * Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality)".
  */
 export const describeRun = (presetId: string, settings: RunSettings) => {
   const preset = getPreset(presetId);
@@ -148,12 +163,28 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
   if (settings.swordless !== preset.settings.swordless) {
     parts.push(settings.swordless ? "Swordless" : "swords");
   }
+  const differs = (key: keyof RunSettings) =>
+    settings[key] !== preset.settings[key];
+  if (differs("itemPlacement")) {
+    parts.push(`${PLACEMENT_LABELS[settings.itemPlacement]} placement`);
+  }
+  if (differs("itemPool")) {
+    parts.push(`${POOL_LABELS[settings.itemPool]} pool`);
+  }
+  if (differs("itemFunctionality")) {
+    parts.push(
+      `${FUNCTIONALITY_LABELS[settings.itemFunctionality]} functionality`,
+    );
+  }
+  if (differs("accessibility")) {
+    parts.push(ACCESSIBILITY_LABELS[settings.accessibility]);
+  }
   return `${preset.name} (${parts.join(", ")})`;
 };
 
 /**
  * What a seed's settings say of the tracker's run type.
- * @param seed - The settings read from the ROM
+ * @param seed - The seed's settings: its ROM's, its file's laid on them
  * @param run - The run type and settings the tracker holds
  */
 export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
@@ -214,9 +245,16 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
 
   const settings: RunSettings = {
     ...run.settings,
+    accessibility: fromFile(seed.accessibility, run.settings.accessibility),
     crystalsGanon: crystalsGanon.value,
     crystalsTower: crystalsTower.value,
     goal: runGoal,
+    itemFunctionality: fromFile(
+      seed.itemFunctionality,
+      run.settings.itemFunctionality,
+    ),
+    itemPlacement: fromFile(seed.itemPlacement, run.settings.itemPlacement),
+    itemPool: fromFile(seed.itemPool, run.settings.itemPool),
     keysanity: shuffled.length === 4,
     mode: mode.value,
     swordless: swordless.value,

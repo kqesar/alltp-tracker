@@ -224,7 +224,35 @@ describe("the seed's settings", () => {
         label: "Outside their dungeons",
         value: "maps, compasses, small keys, big keys",
       },
+      { label: "Item placement", value: "not in the ROM" },
+      { label: "Item pool", value: "not in the ROM" },
+      { label: "Item functionality", value: "not in the ROM" },
+      { label: "Accessibility", value: "not in the ROM" },
     ]);
+  });
+
+  it("names the settings only a seed's file on alttpr.com states", () => {
+    const reading = readMemory(viewOf(seedMemory({ race: false })), false, 0);
+    const known = <T>(value: T) => ({ known: true as const, value });
+    const seed = Object.fromEntries(
+      describeReading({
+        ...reading,
+        seed: {
+          ...reading.seed,
+          accessibility: known("locations"),
+          itemFunctionality: known("expert"),
+          itemPlacement: known("basic"),
+          itemPool: { known: false, why: "unrecognized" },
+        },
+      }).seed.map(({ label, value }) => [label, value]),
+    );
+
+    expect(seed).toMatchObject({
+      Accessibility: "100% Locations",
+      "Item functionality": "Expert",
+      "Item placement": "Basic",
+      "Item pool": "not recognized",
+    });
   });
 
   it("says why a race seed's settings are not read, its logic aside", () => {
