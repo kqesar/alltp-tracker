@@ -82,12 +82,23 @@ export {
   ENTRANCES,
   type EntranceTarget,
   entranceNamed,
+  erLocationId,
   labelOf,
   type OverworldEntrance,
   PLACE_OF_LOCATION,
   TARGETS,
   targetNamed,
 } from "./entrances";
+export {
+  crossedConnections,
+  type ErConnections,
+  type ErOptions,
+  type ErWorld,
+  erWorld,
+  mandatoryConnections,
+  solveFacts,
+  vanillaConnections,
+} from "./er-world";
 export {
   EVENT_LOCATIONS,
   type Filler,

@@ -1,0 +1,92 @@
+{
+  "file": "test/dungeons/TestThievesTown.py",
+  "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
+  "harness": {
+    "bombShop": "Big Bomb Shop",
+    "connections": "mandatory",
+    "marked": false,
+    "pool": true,
+    "source": "test/dungeons/TestDungeon.py:13",
+    "swampPatch": true
+  },
+  "tests": [
+    {
+      "cases": [
+        ["Thieves' Town - Attic", false, []],
+        ["Thieves' Town - Attic", false, [], ["Big Key (Thieves Town)"]],
+        ["Thieves' Town - Attic", false, [], ["Small Key (Thieves Town)"]],
+        [
+          "Thieves' Town - Attic",
+          true,
+          ["Big Key (Thieves Town)", "Small Key (Thieves Town)"]
+        ],
+        ["Thieves' Town - Big Key Chest", true, []],
+        ["Thieves' Town - Map Chest", true, []],
+        ["Thieves' Town - Compass Chest", true, []],
+        ["Thieves' Town - Ambush Chest", true, []],
+        ["Thieves' Town - Big Chest", false, []],
+        ["Thieves' Town - Big Chest", false, [], ["Big Key (Thieves Town)"]],
+        ["Thieves' Town - Big Chest", false, [], ["Small Key (Thieves Town)"]],
+        ["Thieves' Town - Big Chest", false, [], ["Hammer"]],
+        [
+          "Thieves' Town - Big Chest",
+          true,
+          ["Hammer", "Small Key (Thieves Town)", "Big Key (Thieves Town)"]
+        ],
+        ["Thieves' Town - Blind's Cell", false, []],
+        ["Thieves' Town - Blind's Cell", false, [], ["Big Key (Thieves Town)"]],
+        ["Thieves' Town - Blind's Cell", true, ["Big Key (Thieves Town)"]],
+        ["Thieves' Town - Boss", false, []],
+        ["Thieves' Town - Boss", false, [], ["Big Key (Thieves Town)"]],
+        ["Thieves' Town - Boss", false, [], ["Small Key (Thieves Town)"]],
+        [
+          "Thieves' Town - Boss",
+          false,
+          [],
+          ["Hammer", "Progressive Sword", "Cane of Somaria", "Cane of Byrna"]
+        ],
+        [
+          "Thieves' Town - Boss",
+          true,
+          ["Small Key (Thieves Town)", "Big Key (Thieves Town)", "Hammer"]
+        ],
+        [
+          "Thieves' Town - Boss",
+          true,
+          [
+            "Small Key (Thieves Town)",
+            "Big Key (Thieves Town)",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Thieves' Town - Boss",
+          true,
+          [
+            "Small Key (Thieves Town)",
+            "Big Key (Thieves Town)",
+            "Cane of Somaria"
+          ]
+        ],
+        [
+          "Thieves' Town - Boss",
+          true,
+          [
+            "Small Key (Thieves Town)",
+            "Big Key (Thieves Town)",
+            "Cane of Byrna"
+          ]
+        ]
+      ],
+      "line": 6,
+      "name": "testThievesTown",
+      "startingRegions": ["Thieves Town (Entrance)"]
+    }
+  ],
+  "upstream": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "copyright": "Copyright (c) 2017 LLCoolDave",
+    "license": "MIT",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  }
+}

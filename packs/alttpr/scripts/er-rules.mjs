@@ -267,7 +267,7 @@ const pascal = (name) => {
  * sword.
  * @type {Readonly<Record<string, readonly [string, number?]>>}
  */
-const ITEMS = {
+export const ITEMS = {
   "Beat Agahnim 1": ["defeatAgahnim"],
   "Beat Agahnim 2": ["defeatAgahnim2"],
   "Blue Boomerang": ["boomerang"],
@@ -318,7 +318,7 @@ const ITEMS = {
 };
 
 /** The dungeons' codes in the pack's key ids (items.ts): keyP2, bigKeyD1. */
-const DUNGEON_CODES = {
+export const DUNGEON_CODES = {
   "Agahnims Tower": "A1",
   "Desert Palace": "P2",
   "Eastern Palace": "P1",
@@ -466,9 +466,30 @@ function numberOf(expr, otherwise) {
  *   methodLine: (name: string) => number,
  *   helpers: Map<string, { req: string, source: string }>,
  *   reachedLocations: Set<string>,
+ *   reachedEntrances: Set<string>,
+ *   derived: Map<string, Derived>,
  * }} Context
- * @typedef {{ env: ReadonlyMap<string, unknown>, when: Rule }} Scope
+ * @typedef {{ env: ReadonlyMap<string, unknown>, when: Rule, doors?: readonly string[] }} Scope
+ *   What a statement is read under: the names its function bound, the
+ *   settings its branches ask for, and the bomb shop's doors of a case.
+ * A setting the world built from the entrances gives, by what it reads of
+ * them: whether a region lies in the light world (mark_light_world_regions),
+ * whether everything held reaches it as Turtle Rock's key rules ask
+ * (set_trock_key_rules), whether Swamp Palace needs the patch.
+ * @typedef {{ kind: "lightWorld" | "allItemsReach", region: string, source: string }
+ *   | { kind: "swampPatch", source: string }} Derived
  */
+
+/**
+ * A derived setting, recorded with what it reads.
+ * @param {Context} ctx
+ * @param {string} name
+ * @param {Derived} derived
+ */
+function derive(ctx, name, derived) {
+  ctx.derived.set(name, derived);
+  return setting(name);
+}
 
 /**
  * A named rule of the translation, `@name`, defined once.
@@ -524,7 +545,14 @@ const METHODS = {
           all(METHODS.has_sword?.(ctx, []) ?? FALSE, atom("quake")),
         ),
         atom(`reach(${cave})`),
-        any(atom("moonPearl"), setting(`lightWorld_${cave}`)),
+        any(
+          atom("moonPearl"),
+          derive(ctx, `lightWorld_${cave}`, {
+            kind: "lightWorld",
+            region: "Good Bee Cave",
+            source: `BaseClasses.py:${ctx.methodLine("is_not_bunny")}`,
+          }),
+        ),
       );
     }),
   can_kill_most_things: (ctx, [, enemies]) => {
@@ -797,11 +825,20 @@ function translate(ctx, expr, scope) {
     }
     case "call":
       return call(ctx, expr, scope);
+    case "name": {
+      // A name the function bound to a setting (Turtle Rock's reach)
+      const value = scope.env.get(expr.name);
+      if (value !== null && typeof value === "object" && "k" in value)
+        return /** @type {Rule} */ (value);
+      throw new Untranslatable(`the name ${expr.name}`);
+    }
     case "index":
+      // Whether Swamp Palace and the Dam left their doors (EntranceShuffle.py)
       if (worldAttribute(expr.of) === "swamp_patch_required")
-        throw new Untranslatable(
-          "whether Swamp Palace and the Dam keep their doors (EntranceShuffle.py)",
-        );
+        return derive(ctx, "swampPatch", {
+          kind: "swampPatch",
+          source: "EntranceShuffle.py",
+        });
       throw new Untranslatable("a subscript");
     default:
       throw new Untranslatable(`an expression (${expr.t})`);
@@ -866,6 +903,14 @@ function comparison(expr, scope) {
 function call(ctx, expr, scope) {
   const { args, fn } = expr;
   if (fn.t === "name" && fn.name === "item_in_locations") return MAYBE;
+  // A function the rule function defines: `return` its rule
+  const local = fn.t === "name" ? localFunction(fn.name, scope) : undefined;
+  if (local !== undefined) {
+    const [only] = local.body;
+    if (local.body.length !== 1 || !only?.text.startsWith("return "))
+      throw new Untranslatable(`${local.text}, more than a return`);
+    return translate(ctx, parse(only, only.text.slice(7)).found, scope);
+  }
   if (fn.t !== "attr") throw new Untranslatable("a call of a function");
   if (fn.name === "can_defeat") return bossRule(ctx, fn.of, scope);
   // state.world.get_region('X', 1).can_reach(state)
@@ -881,9 +926,21 @@ function call(ctx, expr, scope) {
   switch (fn.name) {
     case "has":
     case "has_key": {
-      const count = numberOf(args[2], 1);
+      const item = stringOf(args[0], scope);
+      const counted = args[2];
+      // A count a local function gives by what a location holds
+      if (counted?.t === "call" && counted.fn.t === "name") {
+        const fn = localFunction(counted.fn.name, scope);
+        if (fn !== undefined)
+          return any(
+            ...placedCounts(fn).map(({ count, placed }) =>
+              all(placed ? MAYBE : TRUE, holding(ctx, item, count)),
+            ),
+          );
+      }
+      const count = numberOf(counted, 1);
       if (typeof count !== "number") throw new Untranslatable("a count");
-      return holding(ctx, stringOf(args[0], scope), count);
+      return holding(ctx, item, count);
     }
     case "can_reach": {
       const target = stringOf(args[0], scope);
@@ -892,6 +949,10 @@ function call(ctx, expr, scope) {
       if (hint === "Location") {
         ctx.reachedLocations.add(target);
         return atom(`@erAt${pascal(target)}`);
+      }
+      if (hint === "Entrance") {
+        ctx.reachedEntrances.add(target);
+        return atom(`@erThrough${pascal(target)}`);
       }
       throw new Untranslatable(`can_reach of an ${hint}`);
     }
@@ -904,17 +965,62 @@ function call(ctx, expr, scope) {
   }
 }
 
+/**
+ * The local function a rule function defined under `name`, if any.
+ * @param {string} name
+ * @param {Scope} scope
+ * @returns {Statement | undefined}
+ */
+function localFunction(name, scope) {
+  const value = scope.env.get(name);
+  return value !== null &&
+    typeof value === "object" &&
+    "text" in value &&
+    "body" in value
+    ? /** @type {Statement} */ (value)
+    : undefined;
+}
+
+/**
+ * The counts a local function returns (Turtle Rock's
+ * tr_big_key_chest_keys_needed): each `if` on what a location holds gives
+ * its count only maybe, the last `return` otherwise.
+ * @param {Statement} fn
+ * @returns {{ count: number, placed: boolean }[]}
+ */
+function placedCounts(fn) {
+  /** @param {Statement} s */
+  const returned = (s) => {
+    const count = Number(/^return (\d+)$/.exec(s.text)?.[1] ?? Number.NaN);
+    if (Number.isNaN(count))
+      throw new Untranslatable(`${fn.text}: a return of no number`);
+    return count;
+  };
+  /** @type {{ count: number, placed: boolean }[]} */
+  const counts = [];
+  for (const statement of fn.body) {
+    // item = item_name(state, …): what the location holds, not known
+    if (/^\w+ = item_name\(/.test(statement.text)) continue;
+    const [only] = statement.body;
+    if (statement.text.startsWith("if ") && only !== undefined)
+      counts.push({ count: returned(only), placed: true });
+    else counts.push({ count: returned(statement), placed: false });
+  }
+  return counts;
+}
+
 // ---------------------------------------------------------------------------
 // The statements of Rules.py
 
+/** What `all_state` names: the state that holds everything. */
+const ALL_STATE = Symbol("all_state");
+/** What `bombshop_entrance` names: the door into the Big Bomb Shop. */
+const BOMB_SHOP_DOOR = Symbol("bombshop_entrance");
+
 /** Rule functions that are code rather than rules, by what they do. */
 const CODE = {
-  set_big_bomb_rules:
-    "the big bomb's route, by where the Big Bomb Shop's door is connected",
   set_bunny_rules:
     "the bunny's paths, by which regions the entrances make dark",
-  set_trock_key_rules:
-    "Turtle Rock's key doors, by which of its doors are reached",
 };
 
 /**
@@ -941,6 +1047,18 @@ function walkRules(source, ctx) {
   const unported = [];
   /** @type {number[]} */
   const fill = [];
+  /**
+   * The rule added by where the Big Bomb Shop's door is (set_big_bomb_rules):
+   * one case per list of doors, the first that holds the door applies.
+   * @type {{ spot: string, cases: { doors: readonly string[], req: string, source: string }[] } | undefined}
+   */
+  let bombShop;
+  /**
+   * The entrances' rules when Turtle Rock's key rules ask what everything
+   * held reaches (`world.get_all_state`), by name.
+   * @type {Map<string, string> | undefined}
+   */
+  let allItemsRules;
 
   /**
    * A rule set or added at `line`, under `when`.
@@ -949,10 +1067,27 @@ function walkRules(source, ctx) {
    * @param {Rule} rule
    * @param {Rule} when
    * @param {number} line
+   * @param {readonly string[]} [doors] - The bomb shop's doors it is for
    */
-  const apply = (op, spot, rule, when, line) => {
+  const apply = (op, spot, rule, when, line, doors = undefined) => {
     const id = `${spot.kind}:${spot.name}`;
     regionOf(ctx, spot);
+    if (doors !== undefined) {
+      // A case of the bomb shop's door: an entrance's rule, added
+      if (op !== "and" || spot.kind !== "entrance")
+        throw new Untranslatable("a bomb shop case other than an added rule");
+      if (key(when) !== "true")
+        throw new Untranslatable("a bomb shop case under a setting");
+      if (bombShop !== undefined && bombShop.spot !== spot.name)
+        throw new Untranslatable("bomb shop cases on two entrances");
+      bombShop ??= { cases: [], spot: spot.name };
+      bombShop.cases.push({
+        doors,
+        req: print(rule),
+        source: `Rules.py:${line}`,
+      });
+      return;
+    }
     const was = spots.get(id) ?? { ...spot, rule: TRUE, source: [] };
     const always = key(when) === "true";
     const next =
@@ -993,14 +1128,21 @@ function walkRules(source, ctx) {
           }
           let before = TRUE;
           for (const branch of chain) {
-            const test =
+            const condition =
               branch.text === "else"
-                ? TRUE
-                : translate(
-                    ctx,
-                    parse(branch, branch.text.replace(/^(el)?if /, "")).found,
-                    scope,
-                  );
+                ? undefined
+                : parse(branch, branch.text.replace(/^(el)?if /, "")).found;
+            // On where the bomb shop's door is: a case of its own
+            const doors =
+              condition === undefined
+                ? undefined
+                : bombShopDoors(condition, scope);
+            if (doors !== undefined) {
+              walk(branch.body, { ...scope, doors });
+              continue;
+            }
+            const test =
+              condition === undefined ? TRUE : translate(ctx, condition, scope);
             if (!settingsOnly(test))
               throw new Untranslatable("a branch on more than the settings");
             const when = all(scope.when, before, test);
@@ -1018,6 +1160,8 @@ function walkRules(source, ctx) {
             });
         } else if (text.startsWith("def ")) {
           // A local function: read where it is called
+          const name = /^def (\w+)\(/.exec(text)?.[1] ?? "";
+          scope.env = new Map([...scope.env, [name, statement]]);
         } else if (statement.block) {
           throw new Untranslatable("a block");
         } else simple(statement, scope);
@@ -1049,6 +1193,102 @@ function walkRules(source, ctx) {
   };
 
   /**
+   * The doors a test on where the bomb shop's door is names
+   * (`bombshop_entrance.name in Normal_LW_entrances`, `== 'Kings Grave'`),
+   * or undefined for any other test.
+   * @param {Expr} test
+   * @param {Scope} scope
+   */
+  const bombShopDoors = (test, scope) => {
+    if (
+      test.t !== "compare" ||
+      test.left.t !== "attr" ||
+      test.left.name !== "name" ||
+      test.left.of.t !== "name" ||
+      scope.env.get(test.left.of.name) !== BOMB_SHOP_DOOR
+    )
+      return undefined;
+    if (test.op === "in") return listOf(test.right, scope);
+    if (test.op === "==") return [stringOf(test.right, scope)];
+    throw new Untranslatable(`the bomb shop's door ${test.op} …`);
+  };
+
+  /**
+   * An assignment: a list kept for the loops, a name for what the world
+   * built from the entrances gives (Turtle Rock's reach with everything
+   * held, the bomb shop's door), or code.
+   * @param {Expr} target
+   * @param {string} sign
+   * @param {Expr} value
+   * @param {Scope} scope
+   * @param {number} line
+   */
+  const assign = (target, sign, value, scope, line) => {
+    if (target.t === "attr" && target.name === "can_reach_private")
+      throw new Untranslatable("a save-and-quit point: what reaches a region");
+    // world.can_access_trock_eyebridge = can_reach_back: a cache
+    if (
+      target.t === "attr" &&
+      worldAttribute(target) !== undefined &&
+      value.t === "name"
+    )
+      return;
+    if (target.t !== "name") throw new Untranslatable("an assignment");
+    /** @param {unknown} bound */
+    const bind = (bound) => {
+      scope.env = new Map([...scope.env, [target.name, bound]]);
+    };
+    if (sign === "+=")
+      return bind([...listOf(target, scope), ...listOf(value, scope)]);
+    if (sign !== "=") throw new Untranslatable(`an assignment with ${sign}`);
+    if (value.t === "seq") return bind(listOf(value, scope));
+    // all_state = world.get_all_state(…): read through the settings below
+    if (
+      value.t === "call" &&
+      value.fn.t === "attr" &&
+      value.fn.name === "get_all_state"
+    ) {
+      allItemsRules = new Map(
+        [...spots.values()]
+          .filter((spot) => spot.kind === "entrance")
+          .map((spot) => [spot.name, print(spot.rule)]),
+      );
+      return bind(ALL_STATE);
+    }
+    // all_state.can_reach(world.get_region('X', player)) if … else …
+    const reached = value.t === "ifelse" ? value.then : value;
+    if (
+      reached.t === "call" &&
+      reached.fn.t === "attr" &&
+      reached.fn.name === "can_reach" &&
+      reached.fn.of.t === "name" &&
+      scope.env.get(reached.fn.of.name) === ALL_STATE &&
+      reached.args[0]?.t === "call"
+    ) {
+      const region = stringOf(reached.args[0].args[0], scope);
+      return bind(
+        derive(ctx, `allItemsReach_${regionId(region)}`, {
+          kind: "allItemsReach",
+          region,
+          source: `Rules.py:${line}`,
+        }),
+      );
+    }
+    // bombshop_entrance = world.get_region('Big Bomb Shop', player).entrances[0]
+    if (
+      value.t === "index" &&
+      value.of.t === "attr" &&
+      value.of.name === "entrances"
+    )
+      return bind(BOMB_SHOP_DOOR);
+    throw new Untranslatable(
+      value.t === "attr" && value.name === "can_reach_private"
+        ? "a save-and-quit point: what reaches a region"
+        : "an assignment",
+    );
+  };
+
+  /**
    * One simple statement.
    * @param {Statement} statement
    * @param {Scope} scope
@@ -1058,23 +1298,8 @@ function walkRules(source, ctx) {
     if (text === "pass") return;
     const { found, stream } = parse(statement, text);
     if (!stream.done()) {
-      // An assignment: a list kept for the loops, or code
-      const sign = stream.next();
-      if (sign.value !== "=" || found.t !== "name")
-        throw new Untranslatable(
-          found.t === "attr" && found.name === "can_reach_private"
-            ? "a save-and-quit point: what reaches a region"
-            : "an assignment",
-        );
-      const value = expression(stream);
-      if (value.t !== "seq")
-        throw new Untranslatable(
-          value.t === "attr" && value.name === "can_reach_private"
-            ? "a save-and-quit point: what reaches a region"
-            : "an assignment",
-        );
-      scope.env = new Map([...scope.env, [found.name, listOf(value, scope)]]);
-      return;
+      const sign = String(stream.next().value);
+      return assign(found, sign, expression(stream), scope, line);
     }
     if (found.t !== "call" || found.fn.t !== "name")
       throw new Untranslatable("a statement");
@@ -1095,6 +1320,7 @@ function walkRules(source, ctx) {
           lambda(1),
           scope.when,
           line,
+          scope.doors,
         );
       case "add_rule": {
         const combine = found.keywords.combine ?? args[2];
@@ -1105,6 +1331,7 @@ function walkRules(source, ctx) {
           lambda(1),
           scope.when,
           line,
+          scope.doors,
         );
       }
       case "set_defeat_dungeon_boss_rule": {
@@ -1160,7 +1387,7 @@ function walkRules(source, ctx) {
     env: new Map(),
     when: TRUE,
   });
-  return { fill, spots, unported };
+  return { allItemsRules, bombShop, fill, spots, unported };
 }
 
 /**
@@ -1331,6 +1558,7 @@ export function importErRules(read, regions) {
         throw new Untranslatable(`no boss in ${region}`);
       return boss;
     },
+    derived: new Map(),
     events,
     heldEvents: new Set(),
     helpers: new Map(),
@@ -1343,6 +1571,7 @@ export function importErRules(read, regions) {
     ),
     methodLine,
     potionShops,
+    reachedEntrances: new Set(),
     reachedLocations: new Set(),
     regionOfEntrance,
     regionOfLocation,
@@ -1360,17 +1589,25 @@ export function importErRules(read, regions) {
     });
   }
 
-  const { fill, spots, unported } = walkRules(rulesSource, ctx);
+  const { allItemsRules, bombShop, fill, spots, unported } = walkRules(
+    rulesSource,
+    ctx,
+  );
 
-  // A location reached (can_reach(…, 'Location')): its region, and its rule
-  for (const name of ctx.reachedLocations) {
-    const spot = spots.get(`location:${name}`);
-    const region = regionOfLocation.get(name);
-    if (region === undefined) throw new Error(`Rules.py: no location ${name}`);
-    ctx.helpers.set(`erAt${pascal(name)}`, {
-      req: print(all(atom(`reach(${regionId(region)})`), spot?.rule ?? TRUE)),
-      source: `Rules.py:${spot?.source.at(-1) ?? 0}`,
-    });
+  // A spot reached (can_reach(…, 'Location' or 'Entrance')): its region,
+  // and its rule
+  for (const [kind, names, prefix] of /** @type {const} */ ([
+    ["location", ctx.reachedLocations, "erAt"],
+    ["entrance", ctx.reachedEntrances, "erThrough"],
+  ])) {
+    for (const name of names) {
+      const spot = spots.get(`${kind}:${name}`);
+      const region = regionOf(ctx, { kind, name });
+      ctx.helpers.set(`${prefix}${pascal(name)}`, {
+        req: print(all(atom(`reach(${regionId(region)})`), spot?.rule ?? TRUE)),
+        source: `Rules.py:${spot?.source.at(-1) ?? 0}`,
+      });
+    }
   }
 
   /** @param {"entrance" | "location"} kind */
@@ -1387,8 +1624,36 @@ export function importErRules(read, regions) {
         ]),
     );
 
+  // The entrances whose rule differs, then, from what it ends as
+  const final = rulesOf("entrance");
+  const allItemsReach = Object.fromEntries(
+    Object.entries(final).flatMap(([name, { req }]) => {
+      const then = allItemsRules?.get(name) ?? "true";
+      return then === req ? [] : [[name, then]];
+    }),
+  );
+
+  // The bunny's lists (set_bunny_rules), which the world ports
+  const bunny = body(rulesSource, "set_bunny_rules", "Rules.py");
+  const bunnySource = rulesSource.slice(bunny.start + 1, bunny.end);
+  const bunnyLine = rulesSource.slice(0, bunny.start + 1).split("\n").length;
+  /** @param {string} name */
+  const bunnyList = (name) => {
+    const { line, value } = assigned(bunnySource, name, "Rules.py", "\\s+");
+    return { line: bunnyLine + line - 1, value };
+  };
+
   return {
-    entrances: rulesOf("entrance"),
+    allItemsReach,
+    bombShop,
+    bunny: {
+      accessibleLocations: bunnyList("bunny_accessible_locations"),
+      impassableCaves: bunnyList("bunny_impassable_caves"),
+    },
+    derived: Object.fromEntries(
+      [...ctx.derived.entries()].sort(([a], [b]) => a.localeCompare(b)),
+    ),
+    entrances: final,
     events: Object.fromEntries(
       [...placed.values()]
         .filter(({ item }) => ctx.heldEvents.has(item))

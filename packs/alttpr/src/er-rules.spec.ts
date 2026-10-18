@@ -1,6 +1,7 @@
 import { compileWorld, loadRules, type World } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { importErRules, regionId } from "../scripts/er-rules.mjs";
+import { importErTests } from "../scripts/er-tests.mjs";
 import { functionBody, pythonExpression } from "../scripts/python.mjs";
 import er from "./entrances/er.json" with { type: "json" };
 import rules from "./entrances/rules.json" with { type: "json" };
@@ -156,6 +157,10 @@ const CHECKOUT: Readonly<Record<string, string>> = {
     "    else:",
     "        raise NotImplementedError('Not implemented yet')",
     "    set_bunny_rules(world, player)",
+    "    set_big_bomb_rules(world, player)",
+    "    set_trock_key_rules(world, player)",
+    "    if not world.swamp_patch_required[player]:",
+    "        add_rule(world.get_entrance('Swamp Palace Moat', player), lambda state: state.has('Hammer', player))",
     "",
     "def global_rules(world, player):",
     "    world.get_region('Links House', player).can_reach_private = lambda state: True",
@@ -177,12 +182,51 @@ const CHECKOUT: Readonly<Record<string, string>> = {
     "",
     "def open_rules(world, player):",
     "    add_rule(world.get_entrance('Kings Grave', player), lambda state: state.can_reach('Potion Shop', 'Location', player))",
+    "",
+    "def set_big_bomb_rules(world, player):",
+    "    bombshop_entrance = world.get_region('Big Bomb Shop', player).entrances[0]",
+    "    Normal_LW_entrances = ['Kakariko Shop']",
+    "    set_rule(world.get_entrance('Pyramid Fairy', player), lambda state: state.can_reach('Dam', 'Region', player))",
+    "    def cross_peg_bridge(state):",
+    "        return state.has('Hammer', player)",
+    "    if bombshop_entrance.name in Normal_LW_entrances:",
+    "        add_rule(world.get_entrance('Pyramid Fairy', player), lambda state: cross_peg_bridge(state) or state.can_reach('Top of Pyramid', 'Entrance', player))",
+    "    elif bombshop_entrance.name == 'Kings Grave':",
+    "        add_rule(world.get_entrance('Pyramid Fairy', player), lambda state: state.has('Fire Rod', player))",
+    "",
+    "def set_trock_key_rules(world, player):",
+    "    set_rule(world.get_entrance('Top of Pyramid', player), lambda state: False)",
+    "    all_state = world.get_all_state(True)",
+    "    can_reach_back = all_state.can_reach(world.get_region('Dam', player)) if world.can_access_trock_eyebridge is None else world.can_access_trock_eyebridge",
+    "    world.can_access_trock_eyebridge = can_reach_back",
+    "    set_rule(world.get_entrance('Top of Pyramid', player), lambda state: state.has('Hammer', player))",
+    "    def keys_needed(state):",
+    "        item = item_name(state, 'Swamp Palace - Big Chest', player)",
+    "        if item in [('Small Key (Swamp Palace)', player)]:",
+    "            return 0",
+    "        return 2",
+    "    non_big_key_locations = ['Swamp Palace - Boss']",
+    "    if can_reach_back:",
+    "        set_rule(world.get_location('Swamp Palace - Boss', player), lambda state: state.has_key('Small Key (Swamp Palace)', player, keys_needed(state)))",
+    "        non_big_key_locations += ['Swamp Palace - Big Chest']",
+    "    for location in non_big_key_locations:",
+    "        forbid_item(world.get_location(location, player), 'Hammer', player)",
+    "",
+    "def set_bunny_rules(world, player):",
+    "    bunny_impassable_caves = ['Dam']",
+    "    bunny_accessible_locations = ['Potion Shop']",
   ].join("\n"),
 };
 
 const REGIONS = [
   {
-    exits: ["Kings Grave", "Ganon Drop"],
+    exits: [
+      "Kings Grave",
+      "Ganon Drop",
+      "Pyramid Fairy",
+      "Top of Pyramid",
+      "Swamp Palace Moat",
+    ],
     locations: ["Sunken Treasure", "Potion Shop", "Ganon"],
     name: "Light World",
   },
@@ -214,7 +258,7 @@ describe("the translation of the entrance randomizer's rules", () => {
     // when swordless; Open adds the Potion Shop reached
     expect(entrances["Kings Grave"]).toEqual({
       req: "(setting(swordless) & fireRod | !setting(swordless) & @erHasBoots & hammer) & (setting(standardMode) | @erAtPotionShop)",
-      source: ["Rules.py:15", "Rules.py:16", "Rules.py:25", "Rules.py:32"],
+      source: ["Rules.py:19", "Rules.py:20", "Rules.py:29", "Rules.py:36"],
     });
     expect(locations["Sunken Treasure"]?.req).toBe(
       "openFloodgate & reach(dam)",
@@ -232,7 +276,11 @@ describe("the translation of the entrance randomizer's rules", () => {
       "keyD2 >= 2 | maybe",
     );
     expect(locations["Tower of Hera - Boss"]?.req).toBe("@erDefeatMoldorm");
-    expect(locations["Swamp Palace - Boss"]?.req).toBe("@erDefeatArrghus");
+    // (set_trock_key_rules sets it again, where everything held reaches
+    // the Dam)
+    expect(locations["Swamp Palace - Boss"]?.req).toMatch(
+      / \| !setting\(allItemsReach_dam\) & @erDefeatArrghus$/,
+    );
     // if not x: return False is x & …; if y: return True is y | …
     expect(helpers.erDefeatArrghus).toEqual({
       req: "hookshot & (hammer | fireRod & @erCanExtendMagic12)",
@@ -256,12 +304,12 @@ describe("the translation of the entrance randomizer's rules", () => {
     expect(unported).toEqual([
       {
         code: "world.get_region('Links House', player).can_reach_private = lambda state: True",
-        line: 14,
+        line: 18,
         why: "a save-and-quit point: what reaches a region",
       },
       {
         code: "set_rule(world.get_entrance('Ganon Drop', player), lambda state: not state.has('Hammer', player))",
-        line: 27,
+        line: 31,
         why: "negates hammer, an item",
       },
       {
@@ -270,7 +318,7 @@ describe("the translation of the entrance randomizer's rules", () => {
         why: "the bunny's paths, by which regions the entrances make dark",
       },
     ]);
-    expect(fill).toEqual([23]);
+    expect(fill).toEqual([27, 65]);
     // Only the events a rule reads; Agahnim is the pack's own item
     expect(events).toEqual({
       openFloodgate: {
@@ -278,6 +326,61 @@ describe("the translation of the entrance randomizer's rules", () => {
         location: "Floodgate",
         source: "ItemList.py:2",
       },
+    });
+  });
+
+  it("reads what hangs on the entrances as cases and derived settings", () => {
+    const {
+      allItemsReach,
+      bombShop,
+      bunny,
+      derived,
+      entrances,
+      helpers,
+      locations,
+    } = translate();
+    // One case per list of doors the Big Bomb Shop may be entered by
+    expect(bombShop).toEqual({
+      cases: [
+        {
+          doors: ["Kakariko Shop"],
+          req: "hammer | @erThroughTopOfPyramid",
+          source: "Rules.py:45",
+        },
+        { doors: ["Kings Grave"], req: "fireRod", source: "Rules.py:47" },
+      ],
+      spot: "Pyramid Fairy",
+    });
+    expect(entrances["Pyramid Fairy"]?.req).toBe("reach(dam)");
+    // An entrance reached: its region, and its rule as it ends
+    expect(helpers.erThroughTopOfPyramid).toEqual({
+      req: "reach(lightWorld) & hammer",
+      source: "Rules.py:54",
+    });
+    // Turtle Rock's: what everything held reaches, a setting, read with
+    // the entrances' rules as they were then
+    expect(derived).toEqual({
+      allItemsReach_dam: {
+        kind: "allItemsReach",
+        region: "Dam",
+        source: "Rules.py:52",
+      },
+      swampPatch: { kind: "swampPatch", source: "EntranceShuffle.py" },
+    });
+    expect(allItemsReach).toEqual({
+      "Swamp Palace Moat": "true",
+      "Top of Pyramid": "false",
+    });
+    // A count by what a location holds: 0 with the key in it, else 2
+    expect(locations["Swamp Palace - Boss"]?.req).toBe(
+      "setting(allItemsReach_dam) & (maybe | keyD2 >= 2) | !setting(allItemsReach_dam) & @erDefeatArrghus",
+    );
+    expect(entrances["Swamp Palace Moat"]?.req).toBe(
+      "setting(swampPatch) | hammer",
+    );
+    expect(bunny).toEqual({
+      accessibleLocations: { line: 69, value: ["Potion Shop"] },
+      impassableCaves: { line: 68, value: ["Dam"] },
     });
   });
 
@@ -346,11 +449,9 @@ describe("the entrance randomizer's rules (rules.json)", () => {
         ),
       },
     });
-    // Which regions lie in the light world hangs on the entrances
+    // What hangs on the entrances, the world built from them gives
     const lightWorld = Object.fromEntries(
-      [...JSON.stringify(rules).matchAll(/setting\((lightWorld_\w+)\)/g)].map(
-        ([, name]) => [name, false],
-      ),
+      Object.keys(rules.derived).map((name) => [name, false]),
     );
     for (const settings of [OPEN, STANDARD]) {
       const compiled = compileWorld(world, helpers, {
@@ -385,16 +486,91 @@ describe("the entrance randomizer's rules (rules.json)", () => {
       [123, "a save-and-quit point: what reaches a region"],
       [126, "a save-and-quit point: what reaches a region"],
       [127, "a save-and-quit point: what reaches a region"],
-      [463, "Turtle Rock's key doors, by which of its doors are reached"],
-      [
-        51,
-        "the big bomb's route, by where the Big Bomb Shop's door is connected",
-      ],
-      [
-        56,
-        "whether Swamp Palace and the Dam keep their doors (EntranceShuffle.py)",
-      ],
       [60, "the bunny's paths, by which regions the entrances make dark"],
     ]);
+  });
+});
+
+describe("the import of the randomizer's own tests", () => {
+  /** A checkout holding two test files and the base class one inherits. */
+  const files: Readonly<Record<string, string>> = {
+    "test/dungeons/TestDungeon.py": [
+      "class TestDungeon(unittest.TestCase):",
+      "    def setUp(self):",
+      "        for exitname, regionname in mandatory_connections:",
+      "            connect_simple(self.world, exitname, regionname, 1)",
+      "        connect_simple(self.world, self.world.get_entrance('Big Bomb Shop', 1), self.world.get_region('Big Bomb Shop', 1), 1)",
+      "        self.world.swamp_patch_required[1] = True",
+      "        generate_itempool(self.world, 1)",
+    ].join("\n"),
+    "test/TestDeathMountain.py": [
+      "class TestDeathMountain(TestVanilla):",
+      "    def setUp(self):",
+      "        create_regions(self.world, 1)",
+      "        link_entrances(self.world, 1)",
+      "        set_rules(self.world, 1)",
+      "",
+      "    def testWest(self):",
+      "        self.run_tests([",
+      "            ['Old Man', True, ['Ocarina', 'Lamp']],  # a comment",
+      "        ])",
+    ].join("\n"),
+  };
+  const read = (file: string) => {
+    const source =
+      files[file] ??
+      (file.startsWith("test/dungeons/Test")
+        ? [
+            "class TestOne(TestDungeon):",
+            "    def testOne(self):",
+            "        self.starting_regions = ['Eastern Palace']",
+            "        key = 'Small Key (Desert Palace)'",
+            "        self.run_tests([",
+            "            ['Eastern Palace - Boss', False, [key] * 2, ['Lamp']],",
+            "            ['Eastern Palace - Boss', True, ['Lamp'] + [key]],",
+            "        ])",
+          ].join("\n")
+        : undefined);
+    if (source === undefined) throw new Error(`no ${file}`);
+    return source;
+  };
+
+  it("reads each test's cases and the harness its setUp builds", () => {
+    const fixtures = importErTests(read);
+    expect(fixtures).toHaveLength(12);
+    const dungeon = fixtures[0];
+    expect(dungeon?.harness).toEqual({
+      bombShop: "Big Bomb Shop",
+      connections: "mandatory",
+      marked: false,
+      pool: true,
+      source: "test/dungeons/TestDungeon.py:2",
+      swampPatch: true,
+    });
+    // A name the method binds, a list repeated or joined
+    expect(dungeon?.tests).toEqual([
+      {
+        cases: [
+          [
+            "Eastern Palace - Boss",
+            false,
+            ["Small Key (Desert Palace)", "Small Key (Desert Palace)"],
+            ["Lamp"],
+          ],
+          [
+            "Eastern Palace - Boss",
+            true,
+            ["Lamp", "Small Key (Desert Palace)"],
+          ],
+        ],
+        line: 2,
+        name: "testOne",
+        startingRegions: ["Eastern Palace"],
+      },
+    ]);
+    expect(fixtures.at(-1)).toMatchObject({
+      harness: { connections: "vanilla", marked: false, pool: false },
+      tests: [{ cases: [["Old Man", true, ["Ocarina", "Lamp"]]] }],
+    });
   });
 });

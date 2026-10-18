@@ -30,6 +30,10 @@ export interface Manifest {
     readonly license: string;
     readonly pinnedBy: string;
     readonly repo: string;
+    /** Its rules, translated (scripts/er-rules.mjs). */
+    readonly rules: string;
+    /** Its own tests' cases, imported (scripts/er-tests.mjs). */
+    readonly tests: string;
   };
   readonly license: string;
   readonly logic: number;

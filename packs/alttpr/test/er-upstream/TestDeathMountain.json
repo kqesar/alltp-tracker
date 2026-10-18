@@ -1,0 +1,98 @@
+{
+  "file": "test/TestDeathMountain.py",
+  "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
+  "harness": {
+    "bombShop": null,
+    "connections": "vanilla",
+    "marked": false,
+    "pool": false,
+    "source": "test/TestDeathMountain.py:11",
+    "swampPatch": null
+  },
+  "tests": [
+    {
+      "cases": [
+        ["Ether Tablet", false, []],
+        ["Ether Tablet", false, [], ["Progressive Glove", "Ocarina"]],
+        ["Ether Tablet", false, [], ["Lamp", "Ocarina"]],
+        ["Ether Tablet", false, [], ["Magic Mirror", "Hookshot"]],
+        ["Ether Tablet", false, [], ["Magic Mirror", "Hammer"]],
+        ["Ether Tablet", false, ["Progressive Sword"], ["Progressive Sword"]],
+        ["Ether Tablet", false, [], ["Book of Mudora"]],
+        [
+          "Ether Tablet",
+          true,
+          [
+            "Ocarina",
+            "Magic Mirror",
+            "Book of Mudora",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Ether Tablet",
+          true,
+          [
+            "Progressive Glove",
+            "Lamp",
+            "Magic Mirror",
+            "Book of Mudora",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Ether Tablet",
+          true,
+          [
+            "Ocarina",
+            "Hammer",
+            "Hookshot",
+            "Book of Mudora",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Ether Tablet",
+          true,
+          [
+            "Progressive Glove",
+            "Lamp",
+            "Hammer",
+            "Hookshot",
+            "Book of Mudora",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        ["Old Man", false, []],
+        ["Old Man", false, [], ["Progressive Glove", "Ocarina"]],
+        ["Old Man", false, [], ["Lamp"]],
+        ["Old Man", true, ["Ocarina", "Lamp"]],
+        ["Old Man", true, ["Progressive Glove", "Lamp"]],
+        ["Spectacle Rock Cave", false, []],
+        ["Spectacle Rock Cave", false, [], ["Progressive Glove", "Ocarina"]],
+        ["Spectacle Rock Cave", false, [], ["Lamp", "Ocarina"]],
+        ["Spectacle Rock Cave", true, ["Ocarina"]],
+        ["Spectacle Rock Cave", true, ["Progressive Glove", "Lamp"]],
+        ["Spectacle Rock", false, []],
+        ["Spectacle Rock", false, [], ["Progressive Glove", "Ocarina"]],
+        ["Spectacle Rock", false, [], ["Lamp", "Ocarina"]],
+        ["Spectacle Rock", false, [], ["Magic Mirror"]],
+        ["Spectacle Rock", true, ["Ocarina", "Magic Mirror"]],
+        ["Spectacle Rock", true, ["Progressive Glove", "Lamp", "Magic Mirror"]]
+      ],
+      "line": 21,
+      "name": "testWestDeathMountain",
+      "startingRegions": []
+    }
+  ],
+  "upstream": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "copyright": "Copyright (c) 2017 LLCoolDave",
+    "license": "MIT",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  }
+}
