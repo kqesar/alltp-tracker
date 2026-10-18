@@ -84,6 +84,7 @@ export {
   entranceNamed,
   labelOf,
   type OverworldEntrance,
+  PLACE_OF_LOCATION,
   TARGETS,
   targetNamed,
 } from "./entrances";
