@@ -4,6 +4,7 @@ import { getPreset } from "@/data/presets";
 import {
   entranceById,
   entranceText,
+  layoutOf,
   notesFor,
   placeMarkers,
   poolOf,
@@ -62,13 +63,34 @@ describe("the entrance assistant's model", () => {
       { "big-bomb-shop": "blinds-hideout" },
       markers,
     );
-    const shop = entranceById("big-bomb-shop");
+    const shop = layoutOf(pool).get("big-bomb-shop");
     expect(placed).toHaveLength(2);
     expect(placed[0]).toMatchObject({
       id: "blinds-hideout",
       x: shop?.x,
       y: (shop?.y ?? 0) - 2.6,
     });
+  });
+
+  it("draws doors side by side clear of one another, near their spot", () => {
+    const layout = layoutOf(pool);
+    const at = (id: string) => {
+      const found = layout.get(id);
+      if (found === undefined) throw new RangeError(id);
+      return found;
+    };
+    // In world percents: a step across as long as one down
+    const apart = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+      Math.hypot((a.x - b.x) * 2, a.y - b.y);
+    // Good Bee Cave hid behind Ice Rod Cave, its neighbour in one cliff
+    const bee = entranceById("good-bee-cave");
+    const ice = entranceById("ice-rod-cave");
+    if (bee === undefined || ice === undefined) throw new Error("missing");
+    expect(apart(bee, ice)).toBeLessThan(3.5);
+    expect(apart(at("good-bee-cave"), at("ice-rod-cave"))).toBeGreaterThan(3.5);
+    for (const entrance of pool.entrances) {
+      expect(apart(at(entrance.id), entrance)).toBeLessThanOrEqual(3.5001);
+    }
   });
 
   it("says an entrance and where it leads", () => {

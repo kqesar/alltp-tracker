@@ -4,6 +4,7 @@ import { MapDungeon, MapLocation } from "@/components/map/MapMarkers";
 import { useTooltip } from "@/hooks/useTooltip";
 import {
   entranceText,
+  layoutOf,
   placeMarkers,
   poolOf,
   targetById,
@@ -19,51 +20,60 @@ import { mergeHandlers } from "@/utils/mergeHandlers";
  * leads is not known, filled by the kind of place once noted. A click opens
  * the destination picker.
  */
-const EntranceMarker = memo(({ entrance }: { entrance: OverworldEntrance }) => {
-  const target = useGameStore((state) => {
-    const id = state.entrances[entrance.id];
-    return id === undefined ? undefined : targetById(id);
-  });
-  const pick = useEntrancePicker((state) => state.pick);
-  const link = useEntrancePicker((state) => state.link);
-  const place = target?.place;
-  const linked = useEntrancePicker(
-    (state) => place !== undefined && state.linked === place,
-  );
-  const tooltip = useTooltip({
-    kind: "text",
-    text:
-      target === undefined
-        ? "Not known yet: click to note where it leads"
-        : `Leads to ${targetText(target)}`,
-    title: `${entrance.label}${entrance.kind === "hole" ? " (hole)" : ""}`,
-  });
-  const position = toWorldPosition(`${entrance.x}%`, `${entrance.y}%`);
-  const style = {
-    "--x": `${position.x}%`,
-    "--y": `${position.y}%`,
-  } as CSSProperties;
+const EntranceMarker = memo(
+  ({
+    at,
+    entrance,
+  }: {
+    at: { x: number; y: number };
+    entrance: OverworldEntrance;
+  }) => {
+    const target = useGameStore((state) => {
+      const id = state.entrances[entrance.id];
+      return id === undefined ? undefined : targetById(id);
+    });
+    const pick = useEntrancePicker((state) => state.pick);
+    const link = useEntrancePicker((state) => state.link);
+    const place = target?.place;
+    const linked = useEntrancePicker(
+      (state) => place !== undefined && state.linked === place,
+    );
+    const tooltip = useTooltip({
+      kind: "text",
+      text:
+        target === undefined
+          ? "Not known yet: click to note where it leads"
+          : `Leads to ${targetText(target)}`,
+      title: `${entrance.label}${entrance.kind === "hole" ? " (hole)" : ""}`,
+    });
+    // Where layoutEntrances draws it: by its door, clear of its neighbours
+    const position = toWorldPosition(`${at.x}%`, `${at.y}%`);
+    const style = {
+      "--x": `${position.x}%`,
+      "--y": `${position.y}%`,
+    } as CSSProperties;
 
-  // Pointing at a noted entrance shows the others into the same place
-  const handlers = mergeHandlers(tooltip, {
-    onBlur: () => link(null),
-    onFocus: () => link(place ?? null),
-    onPointerEnter: () => link(place ?? null),
-    onPointerLeave: () => link(null),
-  });
+    // Pointing at a noted entrance shows the others into the same place
+    const handlers = mergeHandlers(tooltip, {
+      onBlur: () => link(null),
+      onFocus: () => link(place ?? null),
+      onPointerEnter: () => link(place ?? null),
+      onPointerLeave: () => link(null),
+    });
 
-  return (
-    <button
-      {...handlers}
-      aria-label={entranceText(entrance, target)}
-      className={`mapspan entrance-marker entrance-marker--${entrance.kind} entrance-marker--${target?.kind ?? "unknown"}${linked ? " entrance-marker--linked" : ""}`}
-      data-testid={`entrance-${entrance.id}`}
-      onClick={() => pick(entrance.id)}
-      style={style}
-      type="button"
-    />
-  );
-});
+    return (
+      <button
+        {...handlers}
+        aria-label={entranceText(entrance, target)}
+        className={`mapspan entrance-marker entrance-marker--${entrance.kind} entrance-marker--${target?.kind ?? "unknown"}${linked ? " entrance-marker--linked" : ""}`}
+        data-testid={`entrance-${entrance.id}`}
+        onClick={() => pick(entrance.id)}
+        style={style}
+        type="button"
+      />
+    );
+  },
+);
 
 /** A marker as the map draws it: a location's (or a cave's), or a dungeon's. */
 const Marker = ({ marker }: { marker: MapMarker }) =>
@@ -107,7 +117,11 @@ const EntranceLayer = ({
       {pool?.entrances
         .filter((entrance) => entrance.world === world)
         .map((entrance) => (
-          <EntranceMarker entrance={entrance} key={entrance.id} />
+          <EntranceMarker
+            at={layoutOf(pool).get(entrance.id) ?? entrance}
+            entrance={entrance}
+            key={entrance.id}
+          />
         ))}
     </>
   );

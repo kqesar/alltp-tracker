@@ -66,6 +66,79 @@ export const notesFor = (
     : { [entrance]: target, [partner[0]]: partner[1] };
 };
 
+/** How far apart two entrance markers stand, in percent of their world. */
+const GAP = 4.5;
+/** How far a marker may move from its door, likewise. */
+const DRIFT = 3.5;
+
+/**
+ * Where each entrance's marker is drawn: its door's spot, but pushed away
+ * from the markers it would cover. Doors side by side in one cliff (Good
+ * Bee Cave and Ice Rod Cave, a hole beside its cave's door) would hide one
+ * another. Neighbours too close push each other apart, a few rounds, none
+ * drifting more than DRIFT from its door. Worked out once per pool.
+ */
+export const layoutEntrances = (
+  entrances: readonly OverworldEntrance[],
+): ReadonlyMap<string, { readonly x: number; readonly y: number }> => {
+  // In each world's own percents, so a step is as long across as down
+  const points = entrances.map((e) => {
+    const left = e.world === "dark" ? 50 : 0;
+    const x = (e.x - left) * 2;
+    return { e, home: { x, y: e.y }, left, x, y: e.y };
+  });
+  for (let round = 0; round < 40; round++) {
+    let moved = false;
+    for (let i = 0; i < points.length; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const a = points[i];
+        const b = points[j];
+        if (a === undefined || b === undefined || a.e.world !== b.e.world)
+          continue;
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const d = Math.hypot(dx, dy);
+        if (d >= GAP) continue;
+        // Apart along the line between them, sideways when on one spot
+        const [ux, uy] = d === 0 ? [1, 0] : [dx / d, dy / d];
+        const push = (GAP - d) / 2;
+        a.x -= ux * push;
+        a.y -= uy * push;
+        b.x += ux * push;
+        b.y += uy * push;
+        moved = true;
+      }
+    }
+    for (const p of points) {
+      const dx = p.x - p.home.x;
+      const dy = p.y - p.home.y;
+      const drift = Math.hypot(dx, dy);
+      if (drift > DRIFT) {
+        p.x = p.home.x + (dx * DRIFT) / drift;
+        p.y = p.home.y + (dy * DRIFT) / drift;
+      }
+      p.x = Math.min(99, Math.max(1, p.x));
+      p.y = Math.min(99, Math.max(1, p.y));
+    }
+    if (!moved) break;
+  }
+  return new Map(
+    points.map((p) => [p.e.id, { x: p.left + p.x / 2, y: p.y }] as const),
+  );
+};
+
+const layouts = new WeakMap<CrossedPool, ReturnType<typeof layoutEntrances>>();
+
+/** layoutEntrances of a pool, worked out once. */
+export const layoutOf = (pool: CrossedPool) => {
+  let layout = layouts.get(pool);
+  if (layout === undefined) {
+    layout = layoutEntrances(pool.entrances);
+    layouts.set(pool, layout);
+  }
+  return layout;
+};
+
 /** A marker's place: the one place every check of it lies in, if any. */
 const placeOf = (marker: MapMarker): string | undefined => {
   const [first, ...rest] = marker.locations.map((id) =>
@@ -112,12 +185,13 @@ export const placeMarkers = (
     if (door === undefined) continue;
     const index = count.get(place) ?? 0;
     count.set(place, index + 1);
-    // Above the door, the place's markers side by side, in its world
+    // Above the door's marker, the place's side by side, in its world
+    const at = layoutOf(pool).get(door.id) ?? door;
     const left = door.world === "dark" ? 51 : 1;
     placed.push({
       ...marker,
-      x: Math.min(left + 48, Math.max(left, door.x + index * SPREAD)),
-      y: Math.max(1, door.y - SPREAD),
+      x: Math.min(left + 48, Math.max(left, at.x + index * SPREAD)),
+      y: Math.max(1, at.y - SPREAD),
     });
   }
   return placed;
