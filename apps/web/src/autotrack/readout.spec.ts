@@ -230,7 +230,7 @@ describe("the seed's settings", () => {
     ]);
   });
 
-  it("names the settings only a seed's file on alttpr.com states", () => {
+  it("names the settings only a seed's file on alttpr.com states, or hides", () => {
     const reading = readMemory(viewOf(seedMemory({ race: false })), false, 0);
     const known = <T>(value: T) => ({ known: true as const, value });
     const seed = Object.fromEntries(
@@ -239,6 +239,7 @@ describe("the seed's settings", () => {
         seed: {
           ...reading.seed,
           accessibility: known("locations"),
+          goal: { known: false, why: "mystery" },
           itemFunctionality: known("expert"),
           itemPlacement: known("basic"),
           itemPool: { known: false, why: "unrecognized" },
@@ -248,6 +249,7 @@ describe("the seed's settings", () => {
 
     expect(seed).toMatchObject({
       Accessibility: "100% Locations",
+      Goal: "hidden: a Mystery seed",
       "Item functionality": "Expert",
       "Item placement": "Basic",
       "Item pool": "not recognized",

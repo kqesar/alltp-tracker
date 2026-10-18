@@ -1,0 +1,16 @@
+{
+  "generated": "2026-10-18T14:54:40+00:00",
+  "hash": "xvJo0drkyJ",
+  "logic": 31,
+  "size": 2,
+  "spoiler": {
+    "meta": {
+      "allow_quickswap": true,
+      "build": "2023-09-22",
+      "logic": "NoGlitches",
+      "size": 2,
+      "spoilers": "mystery",
+      "tournament": true
+    }
+  }
+}

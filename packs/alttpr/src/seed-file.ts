@@ -6,8 +6,9 @@
 // The file holds the seed's patch beside its spoiler. The tracker downloads
 // the whole file and reads `hash` and `spoiler.meta` alone: no schema here
 // names the patch. A tournament seed's spoiler keeps only its meta
-// (SendPatchToDisk.php:46-67); a "mystery" one keeps not even its world or
-// goal, which then read as unrecognized.
+// (SendPatchToDisk.php:46-67); a Mystery one (`spoilers` "mystery") keeps
+// none of its settings but the logic (:51-62), and each one then reads as
+// hidden by the seed, "mystery", never as a value vt does not write.
 //
 // What meta says (World.php:991-1017): `mode`, `goal`, `weapons`, `logic`,
 // `dungeon_items`, `item_placement`, `accessibility`, `item_pool` and
@@ -24,6 +25,7 @@
 import * as z from "zod/mini";
 import {
   known,
+  MYSTERY,
   type SeedSetting,
   type SeedSettingsReading,
   UNRECOGNIZED,
@@ -73,6 +75,9 @@ const SEED_FILE = z.object({
       logic: oneOf(["NoGlitches", "OverworldGlitches", "MajorGlitches"]),
       // config/alttp.php:227-232
       mode: oneOf(["open", "standard", "inverted", "retro"]),
+      // RandomizerController.php:118-123
+      spoilers: oneOf(["on", "off", "generate", "mystery"]),
+      tournament: z.catch(z.boolean(), false),
       // config/alttp.php:260-265
       weapons: oneOf(["randomized", "assured", "vanilla", "swordless"]),
     }),
@@ -100,6 +105,26 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
   const file = SEED_FILE.safeParse(json);
   if (!file.success) return null;
   const { meta } = file.data.spoiler;
+  // A Mystery seed's file hides every setting but the logic
+  if (meta.tournament && meta.spoilers === "mystery") {
+    return {
+      accessibility: MYSTERY,
+      crystalsGanon: MYSTERY,
+      crystalsTower: MYSTERY,
+      goal: MYSTERY,
+      itemFunctionality: MYSTERY,
+      itemPlacement: MYSTERY,
+      itemPool: MYSTERY,
+      logic: setting(meta.logic),
+      mode: MYSTERY,
+      seed: file.data.hash,
+      swordless: MYSTERY,
+      wildBigKeys: MYSTERY,
+      wildCompasses: MYSTERY,
+      wildKeys: MYSTERY,
+      wildMaps: MYSTERY,
+    };
+  }
   const wild = meta.dungeon_items === null ? null : WILD[meta.dungeon_items];
   const crystals = (count: string | null) =>
     setting(count === null ? null : Number(count));

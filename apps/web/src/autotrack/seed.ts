@@ -9,7 +9,8 @@
 // accessibility and the item pool and functionality only the file states:
 // without it the run's own stay. A seed the tracker cannot hold (dungeon
 // items let out in a mix vt never writes, the Ganonhunt and Completionist
-// goals) is said, never rounded to the nearest run type.
+// goals) is said, never rounded to the nearest run type. A Mystery seed's
+// file hides its settings: its run type is Mystery, in the run's world.
 
 import type {
   SeedGoal,
@@ -115,13 +116,21 @@ const COMPARED = [
 const fromFile = <T>(setting: SeedSetting<T> | undefined, own: T): T =>
   setting?.known ? setting.value : own;
 
-/** Why a set of settings is not known: Race Mode, then a value no seed has. */
+/**
+ * Why a set of settings is not known: a Mystery seed, Race Mode, then a
+ * value no seed has.
+ */
 const firstUnknown = (
   settings: readonly SeedSetting<unknown>[],
 ): SeedUnknown | null => {
   const whys = new Set<SeedUnknown>();
   for (const setting of settings) if (!setting.known) whys.add(setting.why);
-  for (const why of ["race-mode", "unrecognized", "not-read"] as const) {
+  for (const why of [
+    "mystery",
+    "race-mode",
+    "unrecognized",
+    "not-read",
+  ] as const) {
     if (whys.has(why)) return why;
   }
   return null;
@@ -175,13 +184,17 @@ const presetFor = (settings: RunSettings, currentId: string): string => {
  */
 export const describeRun = (presetId: string, settings: RunSettings) => {
   const preset = getPreset(presetId);
-  const parts = [
-    MODE_LABELS[settings.mode],
-    GOAL_NAMES[settings.goal],
-    `${settings.crystalsTower}/${settings.crystalsGanon}`,
-  ];
-  const differs = (key: keyof RunSettings) =>
-    settings[key] !== preset.settings[key];
+  // A Mystery run's hidden settings are left out: "Mystery (Open)"
+  const shown = (key: TunableSetting) => !isHidden(settings, key);
+  const crystals = (key: "crystalsGanon" | "crystalsTower") =>
+    shown(key) ? settings[key] : "?";
+  const parts = [MODE_LABELS[settings.mode]];
+  if (shown("goal")) parts.push(GOAL_NAMES[settings.goal]);
+  if (shown("crystalsTower") || shown("crystalsGanon")) {
+    parts.push(`${crystals("crystalsTower")}/${crystals("crystalsGanon")}`);
+  }
+  const differs = (key: TunableSetting) =>
+    shown(key) && settings[key] !== preset.settings[key];
   if (differs("dungeonItems")) {
     parts.push(
       settings.dungeonItems === "standard"
@@ -207,6 +220,26 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
     parts.push(ACCESSIBILITY_LABELS[settings.accessibility]);
   }
   return `${preset.name} (${parts.join(", ")})`;
+};
+
+/**
+ * A Mystery seed, which hides its settings: a Mystery run is its run type,
+ * in the run's world, which the player sees on the first screen.
+ */
+const mysterySeed = (seed: string, run: Run): SeedCheck => {
+  if (run.presetId === "mystery") return { kind: "unread", why: "mystery" };
+  const settings = {
+    ...getPreset("mystery").settings,
+    mode: run.settings.mode,
+  };
+  return {
+    kind: "differs",
+    presetId: "mystery",
+    runText: getPreset(run.presetId).name,
+    seed,
+    seedText: describeRun("mystery", settings),
+    settings,
+  };
 };
 
 /**
@@ -238,6 +271,7 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     wildMaps,
   ]);
   if (seed.seed === null) return { kind: "unread", why: why ?? "not-read" };
+  if (why === "mystery") return mysterySeed(seed.seed, run);
   if (
     why !== null ||
     !crystalsGanon.known ||
@@ -398,6 +432,9 @@ export const seedLineText = (
         return file === undefined
           ? "Settings not read in Race Mode: the run type stays yours."
           : RACE_FILE_LINES[file];
+      }
+      if (check.why === "mystery") {
+        return "A Mystery seed: its settings stay hidden until you find them in game.";
       }
       return check.why === "not-read"
         ? "Seed settings not read yet."

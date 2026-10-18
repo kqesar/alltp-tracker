@@ -177,6 +177,10 @@ a player discovers: `mode.weapons`, `goal`, `crystals.tower`,
   which no `maybe` can stand for: a Mystery run assumes them until the
   player sets them.
 
+`seedFileReading` reads such a file's settings as `mystery`, a reason of
+its own: hidden by the seed, not a value vt never writes. Only a
+tournament seed's file is stripped; any other keeps its spoiler whole.
+
 `mystery.spec.ts` holds a hidden world to soundness against random
 completions of its settings, in each world: nothing it says yes or no to
 turns out otherwise.
