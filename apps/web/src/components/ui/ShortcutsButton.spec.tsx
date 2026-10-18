@@ -11,8 +11,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 /** How many times the dialog's module was fetched (evaluated) */
 let fetches = 0;
 
+/** The button's module of the running test, once imported. */
+let button: typeof import("@/components/ui/ShortcutsButton") | undefined;
+
 /** A fresh copy of the button's module, its dialog not fetched yet. */
-const freshButton = () => import("@/components/ui/ShortcutsButton");
+const freshButton = async () => {
+  button = await import("@/components/ui/ShortcutsButton");
+  return button;
+};
 
 /**
  * How long to wait for the dialog's code: each test fetches its module graph
@@ -32,7 +38,13 @@ describe("ShortcutsButton's dialog code", () => {
     });
   });
 
-  afterEach(() => vi.doUnmock("@/components/ui/ShortcutsDialog"));
+  afterEach(async () => {
+    // A fetch the test started lands before the next test mocks the dialog
+    // afresh: landing late, it would answer that test's own fetches
+    await button?.preloadShortcutsDialog().catch(() => {});
+    button = undefined;
+    vi.doUnmock("@/components/ui/ShortcutsDialog");
+  });
 
   it("is fetched once, as soon as a pointer or focus reaches the button", async () => {
     const { ShortcutsButton } = await freshButton();
