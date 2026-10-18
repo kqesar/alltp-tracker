@@ -4,9 +4,10 @@
  * A preset is a named bundle of settings. The tracker reacts to the settings
  * it can model today (notably `dungeonItems`, which drives the key cells and
  * the dungeon counters). Settings that change the accessibility *logic* the
- * pack does not model yet (entranceShuffle = crossed, ...) are
- * stored and shown, and `logicModelled` says whether a run's are: when they
- * are not, the map shows every check as maybe rather than the Open logic.
+ * pack does not model yet (an entrance shuffle other than Crosskeys', ...)
+ * are stored and shown, and `logicModelled` says whether a run's are: when
+ * they are not, the map shows every check as maybe rather than the Open
+ * logic.
  *
  * A run's settings need not be its preset's own: autotracking reads a seed's
  * from its ROM (autotrack/seed.ts) and switches to the run type that names
@@ -192,11 +193,24 @@ export const presets: Preset[] = [
 ];
 
 /**
- * Whether the pack models a run's logic: not with shuffled entrances, which
- * the pack does not model yet.
+ * Whether a run's entrances are shuffled as the pack's port of the entrance
+ * randomizer models them (packs/alttpr/src/er-world.ts): alttpr.com's
+ * crossed shuffle, in the Open or Standard world, every dungeon item wild.
+ * vt hands the randomizer --keysanity for `full` dungeon items alone
+ * (app/EntranceRandomizer.php:69-71); under any other, the randomizer keeps
+ * the keys in their dungeons, which the tracker does not track.
+ */
+export const crossedLogic = (settings: RunSettings): boolean =>
+  settings.entranceShuffle === "crossed" &&
+  (settings.mode === "open" || settings.mode === "standard") &&
+  settings.dungeonItems === "full";
+
+/**
+ * Whether the pack models a run's logic: vt's without shuffled entrances,
+ * the entrance randomizer's for a crossed shuffle it models (crossedLogic).
  */
 export const logicModelled = (settings: RunSettings): boolean =>
-  settings.entranceShuffle === "none";
+  settings.entranceShuffle === "none" || crossedLogic(settings);
 
 /** The preset selected by default. */
 export const DEFAULT_PRESET_ID = "open";

@@ -114,7 +114,9 @@ export {
   goModeBlockers,
   goModeOf,
   goModeStatus,
+  goModeStatusBy,
   joinBlockers,
+  type LocationSolution,
 } from "./goals";
 export { GROUPS, HELPERS, type Rule } from "./helpers";
 export {

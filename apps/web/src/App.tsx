@@ -10,6 +10,7 @@ import { TrackerControls } from "@/components/ui/TrackerControls";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
 import { itemGridFor } from "@/data/items";
 import { useAutotrack } from "@/hooks/useAutotrack";
+import { useCrossedLogic } from "@/hooks/useCrossedLogic";
 import { useItemShortcuts } from "@/hooks/useItemShortcuts";
 import { useRunAnalysis } from "@/hooks/useRunAnalysis";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
@@ -28,6 +29,7 @@ function App() {
   useAutotrack();
   useVoice();
   useRunAnalysis();
+  useCrossedLogic();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const grid = useGameStore((state) => itemGridFor(state.settings));
   const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);

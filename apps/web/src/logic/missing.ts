@@ -231,8 +231,10 @@ export const analyzeRun = (
   run: RunSettings,
 ): RunAnalysis => {
   const { keyed, settings, tris } = solution;
-  // Nothing to say of a check under logic the pack does not model
-  if (!solution.modelled) return { missing: new Map(), solution };
+  // Nothing to say of a check under logic the pack does not model, nor yet
+  // under the entrance randomizer's
+  if (!solution.modelled || solution.crossed !== undefined)
+    return { missing: new Map(), solution };
   const fill = fillerOf(settings);
   const state = withUntracked(fill, keyed.state);
   const settingsOptions = optionsOf(settings);
@@ -288,16 +290,26 @@ export const goModeStatusOf = (inputs: Inputs): GoModeStatus | undefined => {
   const solution = solutionOf(inputs);
   if (lastStatus?.solution === solution) return lastStatus.status;
   const mode = goModeOfRun(inputs.settings, solution.settings);
-  // A run whose logic the pack does not model has no go mode to speak of
+  // A run whose logic the pack does not model has no go mode to speak of;
+  // one with shuffled entrances takes the entrance randomizer's world
+  const { crossed } = solution;
   const status =
     mode === undefined || !solution.modelled
       ? undefined
-      : goModeStatus(
-          fillerOf(solution.settings),
-          solution.keyed.state,
-          mode,
-          solution.keyed,
-        );
+      : crossed !== undefined
+        ? crossed.solver.goMode(
+            solution.settings,
+            crossed.entrances,
+            solution.keyed.state,
+            mode,
+            crossed.solution,
+          )
+        : goModeStatus(
+            fillerOf(solution.settings),
+            solution.keyed.state,
+            mode,
+            solution.keyed,
+          );
   lastStatus = { solution, status };
   return status;
 };

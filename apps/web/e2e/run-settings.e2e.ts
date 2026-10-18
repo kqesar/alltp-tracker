@@ -121,6 +121,13 @@ test("a run type whose logic is not modelled says so, every check maybe", async 
     .getByRole("button", { name: /^Crosskeys/ })
     .click();
   await page.getByRole("button", { name: "Switch & reset" }).click();
+  // Its keys kept in their dungeons: the entrance randomizer keeps them
+  // there, which the tracker does not track
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await runTypes(page)
+    .getByRole("combobox", { name: "Dungeon items" })
+    .selectOption("mcs");
+  await runTypes(page).getByRole("button", { name: "Close" }).click();
 
   await expect(page.getByTestId("logic-note")).toHaveText(
     "The tracker has no logic for Crosskeys runs yet: every check shows as maybe.",

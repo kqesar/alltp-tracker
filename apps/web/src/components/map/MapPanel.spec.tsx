@@ -74,11 +74,24 @@ describe("MapPanel", () => {
     render(<MapPanel />);
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
 
-    act(() => useGameStore.getState().applyPreset("crosskeys"));
+    // Crosskeys with its keys in their dungeons: the entrance randomizer
+    // keeps them there, which the tracker does not track
+    act(() => {
+      useGameStore.getState().applyPreset("crosskeys");
+      useGameStore.getState().updateSettings({ dungeonItems: "mcs" });
+    });
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
       "The tracker has no logic for Crosskeys runs yet: every check shows as maybe.",
     );
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
+  });
+
+  it("says a Crosskeys run's logic follows the entrances noted", () => {
+    act(() => useGameStore.getState().applyPreset("crosskeys"));
+    render(<MapPanel />);
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The logic follows the entrances you noted: a check behind a door you have not noted stays out of logic.",
+    );
   });
 
   describe("go mode", () => {
