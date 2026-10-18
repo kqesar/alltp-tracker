@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.23.0](https://github.com/kqesar/alltp-tracker/compare/v2.22.0...v2.23.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **alttpr:** the retro world, its rupee bow and generic keys ([d2eb13b](https://github.com/kqesar/alltp-tracker/commit/d2eb13bc11b625852995842caaac1c0160ecaa0e))
+* **web:** Retro runs in logic, with their arrow and key shops ([6180ed7](https://github.com/kqesar/alltp-tracker/commit/6180ed775adc94ea697ddb7a25825ab84f52b38b))
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** read no dungeon's small keys with generic keys ([084421c](https://github.com/kqesar/alltp-tracker/commit/084421ce2eb850b2677130fbdff5395175b451ce))
+* **web:** no Open logic on a run type the pack does not model ([4295370](https://github.com/kqesar/alltp-tracker/commit/4295370437c83de24689937883e94a417a3edda6))
+
 ## [2.22.0](https://github.com/kqesar/alltp-tracker/compare/v2.21.0...v2.22.0) (2026-10-18)
 
 
