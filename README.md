@@ -30,6 +30,8 @@ Each state also has a glyph (✓, ?, an eye, ✕), so colour is never the only c
 
 **Go mode** — beside the tabs, ☆ **Go mode: not yet**, ★? **possible** or ★ **in logic** tells whether every step to the run's goal (Ganon, fast Ganon or the Pedestal) is in logic; click it to see what is missing. Goals that end with everything (all dungeons, triforce hunt) have none.
 
+**Run timer** — beside go mode, the run's time: click it to start, pause, resume or reset it. While autotracking reads your game, it starts as you leave the file select for the game and stops at the goal on its own (**Start and stop with the game**, on by default; connecting mid-run starts nothing). It keeps counting through a reload, and outside races it also shows the game's own play time, counted by the ROM frame by frame.
+
 **Boss overlays** — each boss cell carries three corner buttons: the medallion requirement (top right, Misery Mire and Turtle Rock only), the remaining chest count (bottom left) and the reward, crystal or pendant (bottom right). Click steps them forward, right-click back.
 
 **Keyboard** — the item grid is a single Tab stop: arrow keys move inside it (through a boss's overlays too) and wrap, Home / End jump to the ends of a row, Ctrl+Home / End to the ends of the grid. Space and Enter step the focused control forward, "-" steps it back. Every map marker is a button Tab can reach; "Skip to map" and "Skip to checks" jump to either view.
@@ -112,9 +114,10 @@ apps/web/src/
 │   ├── solution.ts  the run solved, and the hooks the map reads it by
 │   ├── checks.ts    the Checks list: the map's checks by zone, their states
 │   ├── missing.ts   what each check and the go mode are missing, at idle
-│   └── needs.ts     the engine's blockers in the tracker's words and icons
+│   ├── needs.ts     the engine's blockers in the tracker's words and icons
+│   └── timer.ts     the run timer, and what the game's progress does to it
 ├── stores/       the Zustand store
-├── components/   tracker/ (item grid), map/ (markers, Checks, go mode), ui/ (chrome)
+├── components/   tracker/ (item grid), map/ (markers, Checks, go mode, run timer), ui/ (chrome)
 ├── hooks/        keyboard navigation
 ├── styles/       CSS modules, all imported by styles/index.css
 └── utils/        asset paths and item styling

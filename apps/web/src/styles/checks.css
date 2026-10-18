@@ -11,6 +11,92 @@
   justify-content: space-between;
 }
 
+/* The run timer and go mode, together at the bar's end */
+.map-panel__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+/* The run timer (RunTimer.tsx): go mode's button, its time in fixed-width
+   digits so it never shifts as it runs, and its controls in a panel */
+.run-timer {
+  display: inline-flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 var(--spacing-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: var(--surface-glass);
+  border: 1px solid var(--color-border-glass);
+  border-radius: var(--border-radius);
+  transition:
+    color var(--transition),
+    border-color var(--transition);
+}
+
+.run-timer:hover {
+  color: var(--color-accent);
+}
+
+.run-timer:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.run-timer__glyph {
+  font-size: var(--font-size-xs);
+  line-height: 1;
+}
+
+.run-timer--running {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.run-timer--running .run-timer__glyph {
+  color: var(--color-accent);
+}
+
+.run-timer--finished {
+  color: var(--color-text);
+  border-color: var(--state-available);
+}
+
+.run-timer--finished .run-timer__glyph {
+  color: var(--state-available);
+}
+
+/* Grid only while open: a closed popover keeps the UA's display: none */
+.run-timer-panel:popover-open {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.run-timer-panel__time {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-timer-panel__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.run-timer-panel__igt {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
 /* Go mode (GoMode.tsx): its star in the state's colour beside its words,
    and what it is missing in a panel under it */
 .go-mode {

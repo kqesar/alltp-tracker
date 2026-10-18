@@ -139,6 +139,8 @@ const ROM_HEADER = 0x00_7fc0;
 const RACE_FLAG = 0x18_0213;
 const WRAM = 0xf5_0000;
 export const SAVE = (offset: number) => WRAM + 0xf000 + offset;
+/** The game mode's byte ($7E:0010): $01 the file select, $07 a dungeon. */
+export const GAME_MODE = WRAM + 0x10;
 
 /**
  * A 16 MiB memory image with an alttpr.com seed in play on the overworld: a

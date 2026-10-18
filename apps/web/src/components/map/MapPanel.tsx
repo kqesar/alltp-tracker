@@ -3,6 +3,7 @@ import { ChecksPanel } from "@/components/map/ChecksPanel";
 import { GoMode } from "@/components/map/GoMode";
 import { MapLegend } from "@/components/map/MapLegend";
 import { MapTracker } from "@/components/map/MapTracker";
+import { RunTimer } from "@/components/map/RunTimer";
 import { type Tab, Tabs, tabId } from "@/components/ui/Tabs";
 import { useGameStore } from "@/stores/gameStore";
 import type { MapView } from "@/utils";
@@ -38,7 +39,10 @@ export const MapPanel = () => {
           tabs={VIEWS}
           testId="map-view-tab"
         />
-        <GoMode />
+        <div className="map-panel__status">
+          <RunTimer />
+          <GoMode />
+        </div>
       </div>
       <div
         aria-labelledby={tabId(baseId, view)}

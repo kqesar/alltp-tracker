@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { clickToolbarAction } from "./support";
+import { clickToolbarAction, WCAG_AA } from "./support";
 
 /** The old saves the store's migration tests read, as a player kept them. */
 const FIXTURES = join(import.meta.dirname, "../src/stores/fixtures");
@@ -146,6 +147,36 @@ test.describe("the map", () => {
     // Agahnim 2's cell and his map marker are one flag
     await page.getByTestId("item-boss12").click();
     await expect(tower).toHaveAccessibleName(/^Ganon's Tower: boss done,/);
+  });
+
+  test("runs the timer the player starts, which a reload keeps", async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date("2026-10-18T12:00:00Z") });
+    await openTracker(page);
+    const timer = page.getByTestId("run-timer");
+    await expect(timer).toHaveAccessibleName("Run timer: not started");
+
+    await timer.click();
+    const panel = page.getByTestId("run-timer-panel");
+    await expect(panel).toBeVisible();
+    const { violations } = await new AxeBuilder({ page })
+      .include("[data-testid='run-timer-panel']")
+      .withTags(WCAG_AA)
+      .analyze();
+    expect(violations.map(({ id }) => id)).toEqual([]);
+
+    await page.getByTestId("run-timer-start").click();
+    await page.clock.fastForward("01:05");
+    await expect(timer).toHaveText(/1:05/);
+    await page.getByTestId("run-timer-pause").click();
+    await expect(timer).toHaveAccessibleName("Run timer: paused");
+
+    await page.reload();
+    await expect(page.getByTestId("run-timer")).toHaveText(/1:05/);
+    await expect(page.getByTestId("run-timer")).toHaveAccessibleName(
+      "Run timer: paused",
+    );
   });
 
   test("restores the checks of a version 5 save left in localStorage", async ({
