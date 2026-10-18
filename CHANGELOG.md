@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.19.0](https://github.com/kqesar/alltp-tracker/compare/v2.18.0...v2.19.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **alttpr:** read when a game starts, and its play time outside races ([0b1b9d8](https://github.com/kqesar/alltp-tracker/commit/0b1b9d80db0d1bfacff1d2bf699bc8093e8dd196))
+* **web:** show the run timer on stream, in the counters' pixel font ([6889913](https://github.com/kqesar/alltp-tracker/commit/68899131ee4ee56aa49faa9999b55f743cbfc81d))
+* **web:** time the run, started and stopped with the game ([dbf869b](https://github.com/kqesar/alltp-tracker/commit/dbf869b2cbcf3b88676ac246ab57b514174e6716))
+
+
+### 📚 Documentation
+
+* give the stream view's source sizes with Ganon's Tower's row ([d5195c2](https://github.com/kqesar/alltp-tracker/commit/d5195c271fb87b2deebcaec284f710c379d011d4))
+
 ## [2.18.0](https://github.com/kqesar/alltp-tracker/compare/v2.17.0...v2.18.0) (2026-10-18)
 
 
