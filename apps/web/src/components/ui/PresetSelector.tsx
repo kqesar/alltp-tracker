@@ -5,6 +5,9 @@ import { SeedImport } from "@/components/ui/SeedImport";
 import {
   describeSettings,
   getPreset,
+  HIDEABLE,
+  type HiddenSetting,
+  isHidden,
   presets,
   type RunSettings,
   TUNING,
@@ -19,9 +22,13 @@ type PendingRun = {
   readonly settings: RunSettings;
 };
 
+/** The option of a setting not known yet, a Mystery run's. */
+const HIDDEN = "?";
+
 /**
  * A tunable setting's select: a change applies at once, the run's progress
- * kept, as one undo step (`updateSettings`).
+ * kept, as one undo step (`updateSettings`). A setting a Mystery run may
+ * hide offers "?", not known yet, while it is hidden or in a Mystery run.
  */
 const SettingSelect = ({
   id,
@@ -30,25 +37,36 @@ const SettingSelect = ({
   id: string;
   setting: TunableSetting;
 }) => {
-  const value = useGameStore((state) => state.settings[setting]);
+  const settings = useGameStore((state) => state.settings);
+  const presetId = useGameStore((state) => state.presetId);
   const updateSettings = useGameStore((state) => state.updateSettings);
-  const options: readonly (readonly [string | number, string])[] =
+  const hideSetting = useGameStore((state) => state.hideSetting);
+  const options: readonly (readonly [boolean | number | string, string])[] =
     TUNING[setting];
+  const hidden = isHidden(settings, setting);
+  const hideable =
+    (HIDEABLE as readonly TunableSetting[]).includes(setting) &&
+    (hidden || presetId === "mystery");
   return (
     <select
       className="run-settings__select"
       data-testid={`run-setting-${setting}`}
       id={id}
       onChange={(event) => {
+        if (event.target.value === HIDDEN) {
+          hideSetting(setting as HiddenSetting);
+          return;
+        }
         const picked = options.find(
           ([option]) => String(option) === event.target.value,
         );
         if (picked) updateSettings({ [setting]: picked[0] });
       }}
-      value={String(value)}
+      value={hidden ? HIDDEN : String(settings[setting])}
     >
+      {hideable && <option value={HIDDEN}>? Unknown</option>}
       {options.map(([option, words]) => (
-        <option key={option} value={String(option)}>
+        <option key={String(option)} value={String(option)}>
           {words}
         </option>
       ))}

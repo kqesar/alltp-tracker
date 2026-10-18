@@ -16,6 +16,7 @@ import {
   FUNCTIONALITY_LABELS,
   GOAL_LABELS,
   getPreset,
+  HIDEABLE,
   MODE_LABELS,
   PLACEMENT_LABELS,
   POOL_LABELS,
@@ -426,6 +427,7 @@ const isRunSettings = (value: unknown): value is RunSettings => {
     accessibility,
     crystalsGanon,
     crystalsTower,
+    hidden,
     itemFunctionality,
     itemPlacement,
     itemPool,
@@ -433,7 +435,16 @@ const isRunSettings = (value: unknown): value is RunSettings => {
   } = value as Record<string, unknown>;
   const named = (option: unknown, labels: Readonly<Record<string, string>>) =>
     typeof option === "string" && Object.hasOwn(labels, option);
+  // A Mystery run's settings not known yet: each a hideable one, once
+  const hiddenOk =
+    hidden === undefined ||
+    (Array.isArray(hidden) &&
+      new Set(hidden).size === hidden.length &&
+      hidden.every((setting) =>
+        (HIDEABLE as readonly unknown[]).includes(setting),
+      ));
   return (
+    hiddenOk &&
     typeof swordless === "boolean" &&
     isIntIn(crystalsTower, 0, 7) &&
     isIntIn(crystalsGanon, 0, 7) &&
@@ -513,8 +524,10 @@ export const validateProgress = (
   }
 
   if (saved.presetId !== undefined) {
-    if (presets.some((preset) => preset.id === saved.presetId)) {
-      value.presetId = saved.presetId as string;
+    // Ambrosia, the placeholder for weighted settings, became Mystery
+    const presetId = saved.presetId === "ambrosia" ? "mystery" : saved.presetId;
+    if (presets.some((preset) => preset.id === presetId)) {
+      value.presetId = presetId as string;
     } else
       errors.push(
         `presetId "${String(saved.presetId)}" is not a known run type`,

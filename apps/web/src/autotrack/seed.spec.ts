@@ -70,6 +70,57 @@ describe("checkSeed", () => {
     });
   });
 
+  it("reveals a Mystery run's settings in place, in its own world", () => {
+    const check = checkSeed(
+      seedOf({ crystalsTower: 5, dungeonItems: "mc", swordless: true }),
+      run("mystery"),
+    );
+    expect(check).toMatchObject({
+      change: {
+        crystalsGanon: 7,
+        crystalsTower: 5,
+        dungeonItems: "mc",
+        goal: "ganon",
+        swordless: true,
+      },
+      kind: "reveals",
+      seed: "OPEN",
+    });
+    if (check.kind !== "reveals") throw new Error("expected reveals");
+    // What only the seed's file states stays hidden: no file here
+    expect(check.change).not.toHaveProperty("itemPlacement");
+    expect(seedLineText(check, false)).toBe(
+      "This seed is Mystery (Open, Ganon, 5/7, MC Shuffle, Swordless): its settings are laid on your Mystery run.",
+    );
+
+    // Once laid, the seed and the run agree
+    const settings = {
+      ...getPreset("mystery").settings,
+      ...check.change,
+      hidden: [
+        "itemPlacement",
+        "itemPool",
+        "itemFunctionality",
+        "accessibility",
+      ],
+    } as const;
+    expect(
+      checkSeed(
+        seedOf({ crystalsTower: 5, dungeonItems: "mc", swordless: true }),
+        {
+          presetId: "mystery",
+          settings,
+        },
+      ),
+    ).toMatchObject({ kind: "same" });
+  });
+
+  it("switches a Mystery run of another world, as any run type", () => {
+    expect(
+      checkSeed(seedOf({ mode: "inverted" }), run("mystery")),
+    ).toMatchObject({ kind: "differs", presetId: "inverted" });
+  });
+
   it("names a mix no run type holds by the nearest, with what differs", () => {
     const check = checkSeed(
       seedOf({ dungeonItems: "full", mode: "standard" }),
