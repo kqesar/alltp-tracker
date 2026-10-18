@@ -846,6 +846,7 @@
         "Kakariko Gamble Game",
         "Top of Pyramid"
       ],
+      "id": "lightWorld",
       "kind": "lw",
       "line": 8,
       "locations": [
@@ -859,6 +860,7 @@
     },
     {
       "exits": ["Old Man Cave (West)", "Death Mountain Entrance Drop"],
+      "id": "deathMountainEntrance",
       "kind": "lw",
       "line": 18,
       "locations": [],
@@ -866,6 +868,7 @@
     },
     {
       "exits": ["Capacity Upgrade", "Lake Hylia Central Island Teleporter"],
+      "id": "lakeHyliaCentralIsland",
       "kind": "lw",
       "line": 19,
       "locations": [],
@@ -873,6 +876,7 @@
     },
     {
       "exits": [],
+      "id": "blindsHideout",
       "kind": "cave",
       "line": 20,
       "locations": [
@@ -886,6 +890,7 @@
     },
     {
       "exits": ["Hyrule Castle Secret Entrance Exit"],
+      "id": "hyruleCastleSecretEntrance",
       "kind": "cave",
       "line": 25,
       "locations": ["Link's Uncle", "Secret Passage"],
@@ -893,6 +898,7 @@
     },
     {
       "exits": [],
+      "id": "zorasRiver",
       "kind": "lw",
       "line": 26,
       "locations": ["King Zora", "Zora's Ledge"],
@@ -900,6 +906,7 @@
     },
     {
       "exits": [],
+      "id": "waterfallOfWishing",
       "kind": "cave",
       "line": 27,
       "locations": ["Waterfall Fairy - Left", "Waterfall Fairy - Right"],
@@ -907,6 +914,7 @@
     },
     {
       "exits": ["Kings Grave", "Kings Grave Inner Rocks"],
+      "id": "kingsGraveArea",
       "kind": "lw",
       "line": 28,
       "locations": [],
@@ -914,6 +922,7 @@
     },
     {
       "exits": [],
+      "id": "kingsGrave",
       "kind": "cave",
       "line": 29,
       "locations": ["King's Tomb"],
@@ -921,6 +930,7 @@
     },
     {
       "exits": ["North Fairy Cave Exit"],
+      "id": "northFairyCave",
       "kind": "cave",
       "line": 30,
       "locations": [],
@@ -928,6 +938,7 @@
     },
     {
       "exits": [],
+      "id": "dam",
       "kind": "cave",
       "line": 31,
       "locations": ["Floodgate", "Floodgate Chest"],
@@ -935,6 +946,7 @@
     },
     {
       "exits": ["Links House Exit"],
+      "id": "linksHouse",
       "kind": "cave",
       "line": 32,
       "locations": ["Link's House"],
@@ -942,6 +954,7 @@
     },
     {
       "exits": ["Chris Houlihan Room Exit"],
+      "id": "chrisHoulihanRoom",
       "kind": "cave",
       "line": 33,
       "locations": [],
@@ -949,6 +962,7 @@
     },
     {
       "exits": [],
+      "id": "tavern",
       "kind": "cave",
       "line": 34,
       "locations": ["Kakariko Tavern"],
@@ -956,6 +970,7 @@
     },
     {
       "exits": ["Elder House Exit (East)", "Elder House Exit (West)"],
+      "id": "elderHouse",
       "kind": "cave",
       "line": 35,
       "locations": [],
@@ -963,6 +978,7 @@
     },
     {
       "exits": [],
+      "id": "snitchLadyEast",
       "kind": "cave",
       "line": 36,
       "locations": [],
@@ -970,6 +986,7 @@
     },
     {
       "exits": [],
+      "id": "snitchLadyWest",
       "kind": "cave",
       "line": 37,
       "locations": [],
@@ -977,6 +994,7 @@
     },
     {
       "exits": [],
+      "id": "bushCoveredHouse",
       "kind": "cave",
       "line": 38,
       "locations": [],
@@ -984,6 +1002,7 @@
     },
     {
       "exits": [],
+      "id": "tavernFront",
       "kind": "cave",
       "line": 39,
       "locations": [],
@@ -991,6 +1010,7 @@
     },
     {
       "exits": [],
+      "id": "lightWorldBombHut",
       "kind": "cave",
       "line": 40,
       "locations": [],
@@ -998,6 +1018,7 @@
     },
     {
       "exits": [],
+      "id": "kakarikoShop",
       "kind": "cave",
       "line": 41,
       "locations": [],
@@ -1005,6 +1026,7 @@
     },
     {
       "exits": [],
+      "id": "fortuneTellerLight",
       "kind": "cave",
       "line": 42,
       "locations": [],
@@ -1012,6 +1034,7 @@
     },
     {
       "exits": [],
+      "id": "lakeHyliaFortuneTeller",
       "kind": "cave",
       "line": 43,
       "locations": [],
@@ -1019,6 +1042,7 @@
     },
     {
       "exits": [],
+      "id": "lumberjackHouse",
       "kind": "cave",
       "line": 44,
       "locations": [],
@@ -1026,6 +1050,7 @@
     },
     {
       "exits": [],
+      "id": "bonkFairyLight",
       "kind": "cave",
       "line": 45,
       "locations": [],
@@ -1033,6 +1058,7 @@
     },
     {
       "exits": [],
+      "id": "bonkFairyDark",
       "kind": "cave",
       "line": 46,
       "locations": [],
@@ -1040,6 +1066,7 @@
     },
     {
       "exits": [],
+      "id": "lakeHyliaHealerFairy",
       "kind": "cave",
       "line": 47,
       "locations": [],
@@ -1047,6 +1074,7 @@
     },
     {
       "exits": [],
+      "id": "swampHealerFairy",
       "kind": "cave",
       "line": 48,
       "locations": [],
@@ -1054,6 +1082,7 @@
     },
     {
       "exits": [],
+      "id": "desertHealerFairy",
       "kind": "cave",
       "line": 49,
       "locations": [],
@@ -1061,6 +1090,7 @@
     },
     {
       "exits": [],
+      "id": "darkLakeHyliaHealerFairy",
       "kind": "cave",
       "line": 50,
       "locations": [],
@@ -1068,6 +1098,7 @@
     },
     {
       "exits": [],
+      "id": "darkLakeHyliaLedgeHealerFairy",
       "kind": "cave",
       "line": 51,
       "locations": [],
@@ -1075,6 +1106,7 @@
     },
     {
       "exits": [],
+      "id": "darkDesertHealerFairy",
       "kind": "cave",
       "line": 52,
       "locations": [],
@@ -1082,6 +1114,7 @@
     },
     {
       "exits": [],
+      "id": "darkDeathMountainHealerFairy",
       "kind": "cave",
       "line": 53,
       "locations": [],
@@ -1089,6 +1122,7 @@
     },
     {
       "exits": [],
+      "id": "chickenHouse",
       "kind": "cave",
       "line": 54,
       "locations": ["Chicken House"],
@@ -1096,6 +1130,7 @@
     },
     {
       "exits": [],
+      "id": "aginahsCave",
       "kind": "cave",
       "line": 55,
       "locations": ["Aginah's Cave"],
@@ -1103,6 +1138,7 @@
     },
     {
       "exits": [],
+      "id": "sahasrahlasHut",
       "kind": "cave",
       "line": 56,
       "locations": [
@@ -1115,6 +1151,7 @@
     },
     {
       "exits": ["Kakariko Well (top to bottom)"],
+      "id": "kakarikoWellTop",
       "kind": "cave",
       "line": 57,
       "locations": [
@@ -1128,6 +1165,7 @@
     },
     {
       "exits": ["Kakariko Well Exit"],
+      "id": "kakarikoWellBottom",
       "kind": "cave",
       "line": 59,
       "locations": [],
@@ -1135,6 +1173,7 @@
     },
     {
       "exits": [],
+      "id": "blacksmithsHut",
       "kind": "cave",
       "line": 60,
       "locations": ["Blacksmith", "Missing Smith"],
@@ -1142,6 +1181,7 @@
     },
     {
       "exits": ["Bat Cave Drop"],
+      "id": "batCaveDropLedge",
       "kind": "lw",
       "line": 61,
       "locations": [],
@@ -1149,6 +1189,7 @@
     },
     {
       "exits": ["Bat Cave Door"],
+      "id": "batCaveRight",
       "kind": "cave",
       "line": 62,
       "locations": ["Magic Bat"],
@@ -1156,6 +1197,7 @@
     },
     {
       "exits": ["Bat Cave Exit"],
+      "id": "batCaveLeft",
       "kind": "cave",
       "line": 63,
       "locations": [],
@@ -1163,6 +1205,7 @@
     },
     {
       "exits": [],
+      "id": "sickKidsHouse",
       "kind": "cave",
       "line": 64,
       "locations": ["Sick Kid"],
@@ -1170,6 +1213,7 @@
     },
     {
       "exits": [],
+      "id": "hoboBridge",
       "kind": "lw",
       "line": 65,
       "locations": ["Hobo"],
@@ -1177,6 +1221,7 @@
     },
     {
       "exits": ["Lost Woods Hideout (top to bottom)"],
+      "id": "lostWoodsHideoutTop",
       "kind": "cave",
       "line": 66,
       "locations": ["Lost Woods Hideout"],
@@ -1184,6 +1229,7 @@
     },
     {
       "exits": ["Lost Woods Hideout Exit"],
+      "id": "lostWoodsHideoutBottom",
       "kind": "cave",
       "line": 67,
       "locations": [],
@@ -1191,6 +1237,7 @@
     },
     {
       "exits": ["Lumberjack Tree (top to bottom)"],
+      "id": "lumberjackTreeTop",
       "kind": "cave",
       "line": 68,
       "locations": ["Lumberjack Tree"],
@@ -1198,6 +1245,7 @@
     },
     {
       "exits": ["Lumberjack Tree Exit"],
+      "id": "lumberjackTreeBottom",
       "kind": "cave",
       "line": 69,
       "locations": [],
@@ -1205,6 +1253,7 @@
     },
     {
       "exits": ["Cave 45"],
+      "id": "cave45Ledge",
       "kind": "lw",
       "line": 70,
       "locations": [],
@@ -1212,6 +1261,7 @@
     },
     {
       "exits": [],
+      "id": "cave45",
       "kind": "cave",
       "line": 71,
       "locations": ["Cave 45"],
@@ -1219,6 +1269,7 @@
     },
     {
       "exits": ["Graveyard Cave"],
+      "id": "graveyardLedge",
       "kind": "lw",
       "line": 72,
       "locations": [],
@@ -1226,6 +1277,7 @@
     },
     {
       "exits": [],
+      "id": "graveyardCave",
       "kind": "cave",
       "line": 73,
       "locations": ["Graveyard Cave"],
@@ -1233,6 +1285,7 @@
     },
     {
       "exits": [],
+      "id": "checkerboardCave",
       "kind": "cave",
       "line": 74,
       "locations": ["Checkerboard Cave"],
@@ -1240,6 +1293,7 @@
     },
     {
       "exits": [],
+      "id": "longFairyCave",
       "kind": "cave",
       "line": 75,
       "locations": [],
@@ -1247,6 +1301,7 @@
     },
     {
       "exits": [],
+      "id": "miniMoldormCave",
       "kind": "cave",
       "line": 76,
       "locations": [
@@ -1260,6 +1315,7 @@
     },
     {
       "exits": [],
+      "id": "iceRodCave",
       "kind": "cave",
       "line": 78,
       "locations": ["Ice Rod Cave"],
@@ -1267,6 +1323,7 @@
     },
     {
       "exits": [],
+      "id": "goodBeeCave",
       "kind": "cave",
       "line": 79,
       "locations": [],
@@ -1274,6 +1331,7 @@
     },
     {
       "exits": [],
+      "id": "20RupeeCave",
       "kind": "cave",
       "line": 80,
       "locations": [],
@@ -1281,6 +1339,7 @@
     },
     {
       "exits": [],
+      "id": "caveShopLakeHylia",
       "kind": "cave",
       "line": 81,
       "locations": [],
@@ -1288,6 +1347,7 @@
     },
     {
       "exits": [],
+      "id": "caveShopDarkDeathMountain",
       "kind": "cave",
       "line": 82,
       "locations": [],
@@ -1295,6 +1355,7 @@
     },
     {
       "exits": [],
+      "id": "bonkRockCave",
       "kind": "cave",
       "line": 83,
       "locations": ["Bonk Rock Cave"],
@@ -1302,6 +1363,7 @@
     },
     {
       "exits": [],
+      "id": "library",
       "kind": "cave",
       "line": 84,
       "locations": ["Library"],
@@ -1309,6 +1371,7 @@
     },
     {
       "exits": [],
+      "id": "kakarikoGambleGame",
       "kind": "cave",
       "line": 85,
       "locations": [],
@@ -1316,6 +1379,7 @@
     },
     {
       "exits": [],
+      "id": "potionShop",
       "kind": "cave",
       "line": 86,
       "locations": ["Potion Shop"],
@@ -1323,6 +1387,7 @@
     },
     {
       "exits": [],
+      "id": "lakeHyliaIsland",
       "kind": "lw",
       "line": 87,
       "locations": ["Lake Hylia Island"],
@@ -1330,6 +1395,7 @@
     },
     {
       "exits": [],
+      "id": "capacityUpgrade",
       "kind": "cave",
       "line": 88,
       "locations": [],
@@ -1340,6 +1406,7 @@
         "Two Brothers House Exit (East)",
         "Two Brothers House Exit (West)"
       ],
+      "id": "twoBrothersHouse",
       "kind": "cave",
       "line": 89,
       "locations": [],
@@ -1347,6 +1414,7 @@
     },
     {
       "exits": ["Two Brothers House (West)"],
+      "id": "mazeRaceLedge",
       "kind": "lw",
       "line": 90,
       "locations": ["Maze Race"],
@@ -1354,6 +1422,7 @@
     },
     {
       "exits": [],
+      "id": "50RupeeCave",
       "kind": "cave",
       "line": 91,
       "locations": [],
@@ -1364,6 +1433,7 @@
         "Desert Palace Entrance (North) Rocks",
         "Desert Palace Entrance (West)"
       ],
+      "id": "desertLedge",
       "kind": "lw",
       "line": 92,
       "locations": ["Desert Ledge"],
@@ -1371,6 +1441,7 @@
     },
     {
       "exits": ["Checkerboard Cave"],
+      "id": "desertLedgeNortheast",
       "kind": "lw",
       "line": 93,
       "locations": [],
@@ -1378,6 +1449,7 @@
     },
     {
       "exits": ["Desert Palace Entrance (South)"],
+      "id": "desertPalaceStairs",
       "kind": "lw",
       "line": 94,
       "locations": [],
@@ -1385,6 +1457,7 @@
     },
     {
       "exits": ["Desert Palace Stairs Drop", "Desert Palace Entrance (East)"],
+      "id": "desertPalaceLoneStairs",
       "kind": "lw",
       "line": 95,
       "locations": [],
@@ -1392,6 +1465,7 @@
     },
     {
       "exits": ["Desert Palace Entrance (North)", "Desert Ledge Return Rocks"],
+      "id": "desertPalaceEntranceNorthSpot",
       "kind": "lw",
       "line": 96,
       "locations": [],
@@ -1404,6 +1478,7 @@
         "Desert Palace Exit (East)",
         "Desert Palace East Wing"
       ],
+      "id": "desertPalaceMainOuter",
       "kind": "dungeon",
       "line": 97,
       "locations": [
@@ -1415,6 +1490,7 @@
     },
     {
       "exits": ["Desert Palace Exit (South)", "Desert Palace Pots (Inner)"],
+      "id": "desertPalaceMainInner",
       "kind": "dungeon",
       "line": 99,
       "locations": [],
@@ -1422,6 +1498,7 @@
     },
     {
       "exits": [],
+      "id": "desertPalaceEast",
       "kind": "dungeon",
       "line": 100,
       "locations": [
@@ -1432,6 +1509,7 @@
     },
     {
       "exits": ["Desert Palace Exit (North)"],
+      "id": "desertPalaceNorth",
       "kind": "dungeon",
       "line": 101,
       "locations": ["Desert Palace - Boss", "Desert Palace - Prize"],
@@ -1439,6 +1517,7 @@
     },
     {
       "exits": ["Eastern Palace Exit"],
+      "id": "easternPalace",
       "kind": "dungeon",
       "line": 102,
       "locations": [
@@ -1454,6 +1533,7 @@
     },
     {
       "exits": [],
+      "id": "masterSwordMeadow",
       "kind": "lw",
       "line": 104,
       "locations": ["Master Sword Pedestal"],
@@ -1461,6 +1541,7 @@
     },
     {
       "exits": [],
+      "id": "lostWoodsGamble",
       "kind": "cave",
       "line": 105,
       "locations": [],
@@ -1471,6 +1552,7 @@
         "Hyrule Castle Secret Entrance Stairs",
         "Hyrule Castle Entrance (South)"
       ],
+      "id": "hyruleCastleCourtyard",
       "kind": "lw",
       "line": 106,
       "locations": [],
@@ -1483,6 +1565,7 @@
         "Agahnims Tower",
         "Hyrule Castle Ledge Courtyard Drop"
       ],
+      "id": "hyruleCastleLedge",
       "kind": "lw",
       "line": 107,
       "locations": [],
@@ -1495,6 +1578,7 @@
         "Hyrule Castle Exit (South)",
         "Throne Room"
       ],
+      "id": "hyruleCastle",
       "kind": "dungeon",
       "line": 108,
       "locations": [
@@ -1506,6 +1590,7 @@
     },
     {
       "exits": ["Sewer Drop"],
+      "id": "sewerDrop",
       "kind": "dungeon",
       "line": 110,
       "locations": [],
@@ -1513,6 +1598,7 @@
     },
     {
       "exits": ["Sewers Door"],
+      "id": "sewersDark",
       "kind": "dungeon",
       "line": 111,
       "locations": ["Sewers - Dark Cross"],
@@ -1520,6 +1606,7 @@
     },
     {
       "exits": ["Sanctuary Push Door", "Sewers Back Door"],
+      "id": "sewers",
       "kind": "dungeon",
       "line": 112,
       "locations": [
@@ -1531,6 +1618,7 @@
     },
     {
       "exits": ["Sanctuary Exit"],
+      "id": "sanctuary",
       "kind": "dungeon",
       "line": 114,
       "locations": ["Sanctuary"],
@@ -1538,6 +1626,7 @@
     },
     {
       "exits": ["Agahnim 1", "Agahnims Tower Exit"],
+      "id": "agahnimsTower",
       "kind": "dungeon",
       "line": 115,
       "locations": ["Castle Tower - Room 03", "Castle Tower - Dark Maze"],
@@ -1545,6 +1634,7 @@
     },
     {
       "exits": [],
+      "id": "agahnim1",
       "kind": "dungeon",
       "line": 116,
       "locations": ["Agahnim 1"],
@@ -1552,6 +1642,7 @@
     },
     {
       "exits": ["Old Man Cave Exit (East)", "Old Man Cave Exit (West)"],
+      "id": "oldManCave",
       "kind": "cave",
       "line": 117,
       "locations": ["Old Man"],
@@ -1559,6 +1650,7 @@
     },
     {
       "exits": ["Old Man House Exit (Bottom)", "Old Man House Front to Back"],
+      "id": "oldManHouse",
       "kind": "cave",
       "line": 118,
       "locations": [],
@@ -1566,6 +1658,7 @@
     },
     {
       "exits": ["Old Man House Exit (Top)", "Old Man House Back to Front"],
+      "id": "oldManHouseBack",
       "kind": "cave",
       "line": 119,
       "locations": [],
@@ -1583,6 +1676,7 @@
         "Broken Bridge (West)",
         "Death Mountain Teleporter"
       ],
+      "id": "deathMountain",
       "kind": "lw",
       "line": 120,
       "locations": [],
@@ -1593,6 +1687,7 @@
         "Death Mountain Return Cave Exit (West)",
         "Death Mountain Return Cave Exit (East)"
       ],
+      "id": "deathMountainReturnCave",
       "kind": "cave",
       "line": 121,
       "locations": [],
@@ -1603,6 +1698,7 @@
         "Death Mountain Return Ledge Drop",
         "Death Mountain Return Cave (West)"
       ],
+      "id": "deathMountainReturnLedge",
       "kind": "lw",
       "line": 122,
       "locations": [],
@@ -1610,6 +1706,7 @@
     },
     {
       "exits": ["Spectacle Rock Cave Drop", "Spectacle Rock Cave Exit (Top)"],
+      "id": "spectacleRockCaveTop",
       "kind": "cave",
       "line": 123,
       "locations": ["Spectacle Rock Cave"],
@@ -1617,6 +1714,7 @@
     },
     {
       "exits": ["Spectacle Rock Cave Exit"],
+      "id": "spectacleRockCaveBottom",
       "kind": "cave",
       "line": 124,
       "locations": [],
@@ -1627,6 +1725,7 @@
         "Spectacle Rock Cave Peak Drop",
         "Spectacle Rock Cave Exit (Peak)"
       ],
+      "id": "spectacleRockCavePeak",
       "kind": "cave",
       "line": 125,
       "locations": [],
@@ -1642,6 +1741,7 @@
         "Fairy Ascension Rocks",
         "Spiral Cave (Bottom)"
       ],
+      "id": "eastDeathMountainBottom",
       "kind": "lw",
       "line": 126,
       "locations": [],
@@ -1649,6 +1749,7 @@
     },
     {
       "exits": [],
+      "id": "hookshotFairy",
       "kind": "cave",
       "line": 127,
       "locations": [],
@@ -1660,6 +1761,7 @@
         "Paradox Cave Exit (Bottom)",
         "Light World Death Mountain Shop"
       ],
+      "id": "paradoxCaveFront",
       "kind": "cave",
       "line": 128,
       "locations": [],
@@ -1667,6 +1769,7 @@
     },
     {
       "exits": ["Paradox Cave Push Block", "Paradox Cave Bomb Jump"],
+      "id": "paradoxCaveChestArea",
       "kind": "cave",
       "line": 129,
       "locations": [
@@ -1686,6 +1789,7 @@
         "Paradox Cave Exit (Top)",
         "Paradox Cave Drop"
       ],
+      "id": "paradoxCave",
       "kind": "cave",
       "line": 137,
       "locations": [],
@@ -1693,6 +1797,7 @@
     },
     {
       "exits": [],
+      "id": "lightWorldDeathMountainShop",
       "kind": "cave",
       "line": 138,
       "locations": [],
@@ -1707,6 +1812,7 @@
         "Turtle Rock Teleporter",
         "Fairy Ascension Ledge"
       ],
+      "id": "eastDeathMountainTop",
       "kind": "lw",
       "line": 139,
       "locations": [],
@@ -1714,6 +1820,7 @@
     },
     {
       "exits": ["Spiral Cave", "Spiral Cave Ledge Drop"],
+      "id": "spiralCaveLedge",
       "kind": "lw",
       "line": 140,
       "locations": [],
@@ -1721,6 +1828,7 @@
     },
     {
       "exits": ["Spiral Cave (top to bottom)", "Spiral Cave Exit (Top)"],
+      "id": "spiralCaveTop",
       "kind": "cave",
       "line": 141,
       "locations": ["Spiral Cave"],
@@ -1728,6 +1836,7 @@
     },
     {
       "exits": ["Spiral Cave Exit"],
+      "id": "spiralCaveBottom",
       "kind": "cave",
       "line": 142,
       "locations": [],
@@ -1735,6 +1844,7 @@
     },
     {
       "exits": ["Fairy Ascension Drop", "Fairy Ascension Cave (Bottom)"],
+      "id": "fairyAscensionPlateau",
       "kind": "lw",
       "line": 143,
       "locations": [],
@@ -1745,6 +1855,7 @@
         "Fairy Ascension Cave Climb",
         "Fairy Ascension Cave Exit (Bottom)"
       ],
+      "id": "fairyAscensionCaveBottom",
       "kind": "cave",
       "line": 144,
       "locations": [],
@@ -1752,6 +1863,7 @@
     },
     {
       "exits": ["Fairy Ascension Cave Pots"],
+      "id": "fairyAscensionCaveDrop",
       "kind": "cave",
       "line": 145,
       "locations": [],
@@ -1759,6 +1871,7 @@
     },
     {
       "exits": ["Fairy Ascension Cave Exit (Top)", "Fairy Ascension Cave Drop"],
+      "id": "fairyAscensionCaveTop",
       "kind": "cave",
       "line": 146,
       "locations": [],
@@ -1766,6 +1879,7 @@
     },
     {
       "exits": ["Fairy Ascension Ledge Drop", "Fairy Ascension Cave (Top)"],
+      "id": "fairyAscensionLedge",
       "kind": "lw",
       "line": 147,
       "locations": [],
@@ -1777,6 +1891,7 @@
         "Tower of Hera",
         "Death Mountain Drop"
       ],
+      "id": "deathMountainTop",
       "kind": "lw",
       "line": 148,
       "locations": ["Ether Tablet"],
@@ -1784,6 +1899,7 @@
     },
     {
       "exits": ["Spectacle Rock Drop"],
+      "id": "spectacleRock",
       "kind": "lw",
       "line": 149,
       "locations": ["Spectacle Rock"],
@@ -1795,6 +1911,7 @@
         "Tower of Hera Big Key Door",
         "Tower of Hera Exit"
       ],
+      "id": "towerOfHeraBottom",
       "kind": "dungeon",
       "line": 150,
       "locations": [
@@ -1805,6 +1922,7 @@
     },
     {
       "exits": [],
+      "id": "towerOfHeraBasement",
       "kind": "dungeon",
       "line": 151,
       "locations": ["Tower of Hera - Big Key Chest"],
@@ -1812,6 +1930,7 @@
     },
     {
       "exits": [],
+      "id": "towerOfHeraTop",
       "kind": "dungeon",
       "line": 152,
       "locations": [
@@ -1836,6 +1955,7 @@
         "Pyramid Hole",
         "Northeast Dark World Broken Bridge Pass"
       ],
+      "id": "eastDarkWorld",
       "kind": "dw",
       "line": 154,
       "locations": ["Pyramid"],
@@ -1847,6 +1967,7 @@
         "Dark World Potion Shop",
         "East Dark World Broken Bridge Pass"
       ],
+      "id": "northeastDarkWorld",
       "kind": "dw",
       "line": 156,
       "locations": ["Catfish"],
@@ -1854,6 +1975,7 @@
     },
     {
       "exits": [],
+      "id": "palaceOfDarknessHint",
       "kind": "cave",
       "line": 157,
       "locations": [],
@@ -1861,6 +1983,7 @@
     },
     {
       "exits": [],
+      "id": "eastDarkWorldHint",
       "kind": "cave",
       "line": 158,
       "locations": [],
@@ -1880,6 +2003,7 @@
         "Bonk Fairy (Dark)",
         "Dark Lake Hylia Shop"
       ],
+      "id": "southDarkWorld",
       "kind": "dw",
       "line": 159,
       "locations": ["Stumpy", "Digging Game", "Bombos Tablet"],
@@ -1887,6 +2011,7 @@
     },
     {
       "exits": [],
+      "id": "bigBombShop",
       "kind": "cave",
       "line": 161,
       "locations": [],
@@ -1894,6 +2019,7 @@
     },
     {
       "exits": [],
+      "id": "archeryGame",
       "kind": "cave",
       "line": 162,
       "locations": [],
@@ -1905,6 +2031,7 @@
         "East Dark World Pier",
         "Dark Lake Hylia Ledge"
       ],
+      "id": "darkLakeHylia",
       "kind": "dw",
       "line": 163,
       "locations": [],
@@ -1912,6 +2039,7 @@
     },
     {
       "exits": ["Ice Palace", "Lake Hylia Central Island Mirror Spot"],
+      "id": "darkLakeHyliaCentralIsland",
       "kind": "dw",
       "line": 164,
       "locations": [],
@@ -1924,6 +2052,7 @@
         "Dark Lake Hylia Ledge Hint",
         "Dark Lake Hylia Ledge Spike Cave"
       ],
+      "id": "darkLakeHyliaLedge",
       "kind": "dw",
       "line": 165,
       "locations": [],
@@ -1931,6 +2060,7 @@
     },
     {
       "exits": [],
+      "id": "darkLakeHyliaLedgeHint",
       "kind": "cave",
       "line": 166,
       "locations": [],
@@ -1938,6 +2068,7 @@
     },
     {
       "exits": [],
+      "id": "darkLakeHyliaLedgeSpikeCave",
       "kind": "cave",
       "line": 167,
       "locations": [],
@@ -1945,6 +2076,7 @@
     },
     {
       "exits": [],
+      "id": "hypeCave",
       "kind": "cave",
       "line": 168,
       "locations": [
@@ -1975,6 +2107,7 @@
         "Fortune Teller (Dark)",
         "Dark World Lumberjack Shop"
       ],
+      "id": "westDarkWorld",
       "kind": "dw",
       "line": 170,
       "locations": ["Frog"],
@@ -1982,6 +2115,7 @@
     },
     {
       "exits": ["Grassy Lawn Pegs", "Dark World Shop"],
+      "id": "darkGrassyLawn",
       "kind": "dw",
       "line": 172,
       "locations": [],
@@ -1993,6 +2127,7 @@
         "Dark World Hammer Peg Cave",
         "Peg Area Rocks"
       ],
+      "id": "hammerPegArea",
       "kind": "dw",
       "line": 173,
       "locations": ["Dark Blacksmith Ruins"],
@@ -2004,6 +2139,7 @@
         "Bumper Cave Entrance Mirror Spot",
         "Bumper Cave Entrance Drop"
       ],
+      "id": "bumperCaveEntrance",
       "kind": "dw",
       "line": 174,
       "locations": [],
@@ -2011,6 +2147,7 @@
     },
     {
       "exits": [],
+      "id": "fortuneTellerDark",
       "kind": "cave",
       "line": 175,
       "locations": [],
@@ -2018,6 +2155,7 @@
     },
     {
       "exits": [],
+      "id": "villageOfOutcastsShop",
       "kind": "cave",
       "line": 176,
       "locations": [],
@@ -2025,6 +2163,7 @@
     },
     {
       "exits": [],
+      "id": "darkLakeHyliaShop",
       "kind": "cave",
       "line": 177,
       "locations": [],
@@ -2032,6 +2171,7 @@
     },
     {
       "exits": [],
+      "id": "darkWorldLumberjackShop",
       "kind": "cave",
       "line": 178,
       "locations": [],
@@ -2039,6 +2179,7 @@
     },
     {
       "exits": [],
+      "id": "darkWorldPotionShop",
       "kind": "cave",
       "line": 179,
       "locations": [],
@@ -2046,6 +2187,7 @@
     },
     {
       "exits": [],
+      "id": "darkWorldHammerPegCave",
       "kind": "cave",
       "line": 180,
       "locations": ["Peg Cave"],
@@ -2053,6 +2195,7 @@
     },
     {
       "exits": [],
+      "id": "pyramidFairy",
       "kind": "cave",
       "line": 181,
       "locations": ["Pyramid Fairy - Left", "Pyramid Fairy - Right"],
@@ -2060,6 +2203,7 @@
     },
     {
       "exits": [],
+      "id": "brewery",
       "kind": "cave",
       "line": 182,
       "locations": ["Brewery"],
@@ -2067,6 +2211,7 @@
     },
     {
       "exits": [],
+      "id": "cShapedHouse",
       "kind": "cave",
       "line": 183,
       "locations": ["C-Shaped House"],
@@ -2074,6 +2219,7 @@
     },
     {
       "exits": [],
+      "id": "chestGame",
       "kind": "cave",
       "line": 184,
       "locations": ["Chest Game"],
@@ -2081,6 +2227,7 @@
     },
     {
       "exits": [],
+      "id": "redShieldShop",
       "kind": "cave",
       "line": 185,
       "locations": [],
@@ -2088,6 +2235,7 @@
     },
     {
       "exits": [],
+      "id": "darkSanctuaryHint",
       "kind": "cave",
       "line": 186,
       "locations": [],
@@ -2095,6 +2243,7 @@
     },
     {
       "exits": ["Bumper Cave Exit (Bottom)", "Bumper Cave Exit (Top)"],
+      "id": "bumperCave",
       "kind": "cave",
       "line": 187,
       "locations": [],
@@ -2106,6 +2255,7 @@
         "Bumper Cave (Top)",
         "Bumper Cave Ledge Mirror Spot"
       ],
+      "id": "bumperCaveLedge",
       "kind": "dw",
       "line": 188,
       "locations": ["Bumper Cave Ledge"],
@@ -2119,6 +2269,7 @@
         "Skull Woods First Section Door",
         "Skull Woods Second Section Door (East)"
       ],
+      "id": "skullWoodsForest",
       "kind": "dw",
       "line": 189,
       "locations": [],
@@ -2130,6 +2281,7 @@
         "Skull Woods Second Section Door (West)",
         "Skull Woods Final Section"
       ],
+      "id": "skullWoodsForestWest",
       "kind": "dw",
       "line": 191,
       "locations": [],
@@ -2146,6 +2298,7 @@
         "Dark Desert Hint",
         "Dark Desert Fairy"
       ],
+      "id": "darkDesert",
       "kind": "dw",
       "line": 192,
       "locations": [],
@@ -2153,6 +2306,7 @@
     },
     {
       "exits": [],
+      "id": "mireShed",
       "kind": "cave",
       "line": 194,
       "locations": ["Mire Shed - Left", "Mire Shed - Right"],
@@ -2160,6 +2314,7 @@
     },
     {
       "exits": [],
+      "id": "darkDesertHint",
       "kind": "cave",
       "line": 195,
       "locations": [],
@@ -2171,6 +2326,7 @@
         "Spectacle Rock Mirror Spot",
         "Dark Death Mountain Fairy"
       ],
+      "id": "darkDeathMountainWestBottom",
       "kind": "dw",
       "line": 196,
       "locations": [],
@@ -2186,6 +2342,7 @@
         "East Death Mountain (Top) Mirror Spot",
         "Turtle Rock"
       ],
+      "id": "darkDeathMountainTop",
       "kind": "dw",
       "line": 197,
       "locations": [],
@@ -2198,6 +2355,7 @@
         "Mimic Cave Mirror Spot",
         "Spiral Cave Mirror Spot"
       ],
+      "id": "darkDeathMountainLedge",
       "kind": "dw",
       "line": 199,
       "locations": [],
@@ -2208,6 +2366,7 @@
         "Isolated Ledge Mirror Spot",
         "Turtle Rock Isolated Ledge Entrance"
       ],
+      "id": "darkDeathMountainIsolatedLedge",
       "kind": "dw",
       "line": 200,
       "locations": [],
@@ -2219,6 +2378,7 @@
         "Cave Shop (Dark Death Mountain)",
         "Fairy Ascension Mirror Spot"
       ],
+      "id": "darkDeathMountainEastBottom",
       "kind": "dw",
       "line": 201,
       "locations": [],
@@ -2226,6 +2386,7 @@
     },
     {
       "exits": ["Superbunny Cave Exit (Top)", "Superbunny Cave Exit (Bottom)"],
+      "id": "superbunnyCave",
       "kind": "cave",
       "line": 202,
       "locations": ["Superbunny Cave - Top", "Superbunny Cave - Bottom"],
@@ -2233,6 +2394,7 @@
     },
     {
       "exits": [],
+      "id": "spikeCave",
       "kind": "cave",
       "line": 204,
       "locations": ["Spike Cave"],
@@ -2240,6 +2402,7 @@
     },
     {
       "exits": ["Hookshot Cave Exit (South)", "Hookshot Cave Exit (North)"],
+      "id": "hookshotCave",
       "kind": "cave",
       "line": 205,
       "locations": [
@@ -2256,6 +2419,7 @@
         "Hookshot Cave Back Entrance",
         "Floating Island Mirror Spot"
       ],
+      "id": "deathMountainFloatingIslandDarkWorld",
       "kind": "dw",
       "line": 207,
       "locations": [],
@@ -2263,6 +2427,7 @@
     },
     {
       "exits": [],
+      "id": "deathMountainFloatingIslandLightWorld",
       "kind": "lw",
       "line": 208,
       "locations": ["Floating Island"],
@@ -2270,6 +2435,7 @@
     },
     {
       "exits": ["Turtle Rock Drop"],
+      "id": "turtleRockTop",
       "kind": "dw",
       "line": 209,
       "locations": [],
@@ -2277,6 +2443,7 @@
     },
     {
       "exits": ["Mimic Cave"],
+      "id": "mimicCaveLedge",
       "kind": "lw",
       "line": 210,
       "locations": [],
@@ -2284,6 +2451,7 @@
     },
     {
       "exits": [],
+      "id": "mimicCave",
       "kind": "cave",
       "line": 211,
       "locations": ["Mimic Cave"],
@@ -2291,6 +2459,7 @@
     },
     {
       "exits": ["Swamp Palace Moat", "Swamp Palace Exit"],
+      "id": "swampPalaceEntrance",
       "kind": "dungeon",
       "line": 213,
       "locations": [],
@@ -2298,6 +2467,7 @@
     },
     {
       "exits": ["Swamp Palace Small Key Door"],
+      "id": "swampPalaceFirstRoom",
       "kind": "dungeon",
       "line": 214,
       "locations": ["Swamp Palace - Entrance"],
@@ -2305,6 +2475,7 @@
     },
     {
       "exits": ["Swamp Palace (Center)"],
+      "id": "swampPalaceStartingArea",
       "kind": "dungeon",
       "line": 215,
       "locations": ["Swamp Palace - Map Chest"],
@@ -2312,6 +2483,7 @@
     },
     {
       "exits": ["Swamp Palace (North)"],
+      "id": "swampPalaceCenter",
       "kind": "dungeon",
       "line": 216,
       "locations": [
@@ -2324,6 +2496,7 @@
     },
     {
       "exits": [],
+      "id": "swampPalaceNorth",
       "kind": "dungeon",
       "line": 218,
       "locations": [
@@ -2337,6 +2510,7 @@
     },
     {
       "exits": ["Thieves Town Big Key Door", "Thieves Town Exit"],
+      "id": "thievesTownEntrance",
       "kind": "dungeon",
       "line": 220,
       "locations": [
@@ -2349,6 +2523,7 @@
     },
     {
       "exits": ["Blind Fight"],
+      "id": "thievesTownDeep",
       "kind": "dungeon",
       "line": 224,
       "locations": [
@@ -2360,6 +2535,7 @@
     },
     {
       "exits": [],
+      "id": "blindFight",
       "kind": "dungeon",
       "line": 227,
       "locations": ["Thieves' Town - Boss", "Thieves' Town - Prize"],
@@ -2372,6 +2548,7 @@
         "Skull Woods First Section South Door",
         "Skull Woods First Section West Door"
       ],
+      "id": "skullWoodsFirstSection",
       "kind": "dungeon",
       "line": 228,
       "locations": ["Skull Woods - Map Chest"],
@@ -2379,6 +2556,7 @@
     },
     {
       "exits": ["Skull Woods First Section (Right) North Door"],
+      "id": "skullWoodsFirstSectionRight",
       "kind": "dungeon",
       "line": 229,
       "locations": ["Skull Woods - Pinball Room"],
@@ -2389,6 +2567,7 @@
         "Skull Woods First Section (Left) Door to Exit",
         "Skull Woods First Section (Left) Door to Right"
       ],
+      "id": "skullWoodsFirstSectionLeft",
       "kind": "dungeon",
       "line": 230,
       "locations": ["Skull Woods - Compass Chest", "Skull Woods - Pot Prison"],
@@ -2396,6 +2575,7 @@
     },
     {
       "exits": ["Skull Woods First Section (Top) One-Way Path"],
+      "id": "skullWoodsFirstSectionTop",
       "kind": "dungeon",
       "line": 231,
       "locations": ["Skull Woods - Big Chest"],
@@ -2403,6 +2583,7 @@
     },
     {
       "exits": ["Skull Woods Second Section (Drop)"],
+      "id": "skullWoodsSecondSectionDrop",
       "kind": "dungeon",
       "line": 232,
       "locations": [],
@@ -2413,6 +2594,7 @@
         "Skull Woods Second Section Exit (East)",
         "Skull Woods Second Section Exit (West)"
       ],
+      "id": "skullWoodsSecondSection",
       "kind": "dungeon",
       "line": 233,
       "locations": ["Skull Woods - Big Key Chest"],
@@ -2420,6 +2602,7 @@
     },
     {
       "exits": ["Skull Woods Torch Room", "Skull Woods Final Section Exit"],
+      "id": "skullWoodsFinalSectionEntrance",
       "kind": "dungeon",
       "line": 234,
       "locations": ["Skull Woods - Bridge Room"],
@@ -2427,6 +2610,7 @@
     },
     {
       "exits": [],
+      "id": "skullWoodsFinalSectionMothula",
       "kind": "dungeon",
       "line": 235,
       "locations": ["Skull Woods - Boss", "Skull Woods - Prize"],
@@ -2434,6 +2618,7 @@
     },
     {
       "exits": ["Ice Palace Entrance Room", "Ice Palace Exit"],
+      "id": "icePalaceEntrance",
       "kind": "dungeon",
       "line": 236,
       "locations": [],
@@ -2441,6 +2626,7 @@
     },
     {
       "exits": ["Ice Palace (East)", "Ice Palace (Kholdstare)"],
+      "id": "icePalaceMain",
       "kind": "dungeon",
       "line": 237,
       "locations": [
@@ -2453,6 +2639,7 @@
     },
     {
       "exits": ["Ice Palace (East Top)"],
+      "id": "icePalaceEast",
       "kind": "dungeon",
       "line": 239,
       "locations": ["Ice Palace - Spike Room"],
@@ -2460,6 +2647,7 @@
     },
     {
       "exits": [],
+      "id": "icePalaceEastTop",
       "kind": "dungeon",
       "line": 240,
       "locations": ["Ice Palace - Big Key Chest", "Ice Palace - Map Chest"],
@@ -2467,6 +2655,7 @@
     },
     {
       "exits": [],
+      "id": "icePalaceKholdstare",
       "kind": "dungeon",
       "line": 241,
       "locations": ["Ice Palace - Boss", "Ice Palace - Prize"],
@@ -2474,6 +2663,7 @@
     },
     {
       "exits": ["Misery Mire Entrance Gap", "Misery Mire Exit"],
+      "id": "miseryMireEntrance",
       "kind": "dungeon",
       "line": 242,
       "locations": [],
@@ -2481,6 +2671,7 @@
     },
     {
       "exits": ["Misery Mire (West)", "Misery Mire Big Key Door"],
+      "id": "miseryMireMain",
       "kind": "dungeon",
       "line": 243,
       "locations": [
@@ -2494,6 +2685,7 @@
     },
     {
       "exits": [],
+      "id": "miseryMireWest",
       "kind": "dungeon",
       "line": 245,
       "locations": [
@@ -2504,6 +2696,7 @@
     },
     {
       "exits": ["Misery Mire (Vitreous)"],
+      "id": "miseryMireFinalArea",
       "kind": "dungeon",
       "line": 246,
       "locations": [],
@@ -2511,6 +2704,7 @@
     },
     {
       "exits": [],
+      "id": "miseryMireVitreous",
       "kind": "dungeon",
       "line": 247,
       "locations": ["Misery Mire - Boss", "Misery Mire - Prize"],
@@ -2518,6 +2712,7 @@
     },
     {
       "exits": ["Turtle Rock Entrance Gap", "Turtle Rock Exit (Front)"],
+      "id": "turtleRockEntrance",
       "kind": "dungeon",
       "line": 248,
       "locations": [],
@@ -2525,6 +2720,7 @@
     },
     {
       "exits": ["Turtle Rock Pokey Room", "Turtle Rock Entrance Gap Reverse"],
+      "id": "turtleRockFirstSection",
       "kind": "dungeon",
       "line": 249,
       "locations": [
@@ -2539,6 +2735,7 @@
         "Turtle Rock (Chain Chomp Room) (North)",
         "Turtle Rock (Chain Chomp Room) (South)"
       ],
+      "id": "turtleRockChainChompRoom",
       "kind": "dungeon",
       "line": 251,
       "locations": ["Turtle Rock - Chain Chomps"],
@@ -2550,6 +2747,7 @@
         "Turtle Rock Chain Chomp Staircase",
         "Turtle Rock Big Key Door"
       ],
+      "id": "turtleRockSecondSection",
       "kind": "dungeon",
       "line": 252,
       "locations": ["Turtle Rock - Big Key Chest"],
@@ -2560,6 +2758,7 @@
         "Turtle Rock (Big Chest) (North)",
         "Turtle Rock Ledge Exit (East)"
       ],
+      "id": "turtleRockBigChest",
       "kind": "dungeon",
       "line": 253,
       "locations": ["Turtle Rock - Big Chest"],
@@ -2570,6 +2769,7 @@
         "Turtle Rock Dark Room Staircase",
         "Turtle Rock Big Key Door Reverse"
       ],
+      "id": "turtleRockCrystarollerRoom",
       "kind": "dungeon",
       "line": 254,
       "locations": ["Turtle Rock - Crystaroller Room"],
@@ -2580,6 +2780,7 @@
         "Turtle Rock (Dark Room) (North)",
         "Turtle Rock (Dark Room) (South)"
       ],
+      "id": "turtleRockDarkRoom",
       "kind": "dungeon",
       "line": 255,
       "locations": [],
@@ -2591,6 +2792,7 @@
         "Turtle Rock (Trinexx)",
         "Turtle Rock Isolated Ledge Exit"
       ],
+      "id": "turtleRockEyeBridge",
       "kind": "dungeon",
       "line": 256,
       "locations": [
@@ -2603,6 +2805,7 @@
     },
     {
       "exits": [],
+      "id": "turtleRockTrinexx",
       "kind": "dungeon",
       "line": 259,
       "locations": ["Turtle Rock - Boss", "Turtle Rock - Prize"],
@@ -2614,6 +2817,7 @@
         "Palace of Darkness Bonk Wall",
         "Palace of Darkness Exit"
       ],
+      "id": "palaceOfDarknessEntrance",
       "kind": "dungeon",
       "line": 260,
       "locations": ["Palace of Darkness - Shooter Room"],
@@ -2625,6 +2829,7 @@
         "Palace of Darkness (North)",
         "Palace of Darkness Big Key Door"
       ],
+      "id": "palaceOfDarknessCenter",
       "kind": "dungeon",
       "line": 261,
       "locations": [
@@ -2635,6 +2840,7 @@
     },
     {
       "exits": [],
+      "id": "palaceOfDarknessBigKeyChest",
       "kind": "dungeon",
       "line": 263,
       "locations": ["Palace of Darkness - Big Key Chest"],
@@ -2642,6 +2848,7 @@
     },
     {
       "exits": ["Palace of Darkness Hammer Peg Drop"],
+      "id": "palaceOfDarknessBonkSection",
       "kind": "dungeon",
       "line": 264,
       "locations": [
@@ -2655,6 +2862,7 @@
         "Palace of Darkness Spike Statue Room Door",
         "Palace of Darkness Maze Door"
       ],
+      "id": "palaceOfDarknessNorth",
       "kind": "dungeon",
       "line": 265,
       "locations": [
@@ -2666,6 +2874,7 @@
     },
     {
       "exits": [],
+      "id": "palaceOfDarknessMaze",
       "kind": "dungeon",
       "line": 267,
       "locations": [
@@ -2677,6 +2886,7 @@
     },
     {
       "exits": [],
+      "id": "palaceOfDarknessHarmlessHellway",
       "kind": "dungeon",
       "line": 268,
       "locations": ["Palace of Darkness - Harmless Hellway"],
@@ -2684,6 +2894,7 @@
     },
     {
       "exits": [],
+      "id": "palaceOfDarknessFinalSection",
       "kind": "dungeon",
       "line": 269,
       "locations": ["Palace of Darkness - Boss", "Palace of Darkness - Prize"],
@@ -2696,6 +2907,7 @@
         "Ganons Tower Big Key Door",
         "Ganons Tower Exit"
       ],
+      "id": "ganonsTowerEntrance",
       "kind": "dungeon",
       "line": 270,
       "locations": [
@@ -2707,6 +2919,7 @@
     },
     {
       "exits": ["Ganons Tower (Tile Room) Key Door"],
+      "id": "ganonsTowerTileRoom",
       "kind": "dungeon",
       "line": 272,
       "locations": ["Ganons Tower - Tile Room"],
@@ -2714,6 +2927,7 @@
     },
     {
       "exits": ["Ganons Tower (Bottom) (East)"],
+      "id": "ganonsTowerCompassRoom",
       "kind": "dungeon",
       "line": 273,
       "locations": [
@@ -2726,6 +2940,7 @@
     },
     {
       "exits": ["Ganons Tower (Map Room)", "Ganons Tower (Double Switch Room)"],
+      "id": "ganonsTowerHookshotRoom",
       "kind": "dungeon",
       "line": 276,
       "locations": [
@@ -2738,6 +2953,7 @@
     },
     {
       "exits": [],
+      "id": "ganonsTowerMapRoom",
       "kind": "dungeon",
       "line": 279,
       "locations": ["Ganons Tower - Map Chest"],
@@ -2745,6 +2961,7 @@
     },
     {
       "exits": ["Ganons Tower (Firesnake Room)"],
+      "id": "ganonsTowerFiresnakeRoom",
       "kind": "dungeon",
       "line": 280,
       "locations": ["Ganons Tower - Firesnake Room"],
@@ -2752,6 +2969,7 @@
     },
     {
       "exits": ["Ganons Tower (Bottom) (West)"],
+      "id": "ganonsTowerTeleportRoom",
       "kind": "dungeon",
       "line": 281,
       "locations": [
@@ -2764,6 +2982,7 @@
     },
     {
       "exits": [],
+      "id": "ganonsTowerBottom",
       "kind": "dungeon",
       "line": 284,
       "locations": [
@@ -2777,6 +2996,7 @@
     },
     {
       "exits": ["Ganons Tower Torch Rooms"],
+      "id": "ganonsTowerTop",
       "kind": "dungeon",
       "line": 286,
       "locations": [],
@@ -2784,6 +3004,7 @@
     },
     {
       "exits": ["Ganons Tower Moldorm Door"],
+      "id": "ganonsTowerBeforeMoldorm",
       "kind": "dungeon",
       "line": 287,
       "locations": [
@@ -2795,6 +3016,7 @@
     },
     {
       "exits": ["Ganons Tower Moldorm Gap"],
+      "id": "ganonsTowerMoldorm",
       "kind": "dungeon",
       "line": 289,
       "locations": [],
@@ -2802,6 +3024,7 @@
     },
     {
       "exits": [],
+      "id": "agahnim2",
       "kind": "dungeon",
       "line": 290,
       "locations": ["Ganons Tower - Validation Chest", "Agahnim 2"],
@@ -2809,6 +3032,7 @@
     },
     {
       "exits": ["Ganon Drop"],
+      "id": "pyramid",
       "kind": "cave",
       "line": 291,
       "locations": ["Ganon"],
@@ -2816,6 +3040,7 @@
     },
     {
       "exits": ["Pyramid Exit"],
+      "id": "bottomOfPyramid",
       "kind": "cave",
       "line": 292,
       "locations": [],
@@ -2823,6 +3048,7 @@
     },
     {
       "exits": ["Pyramid Entrance", "Pyramid Drop"],
+      "id": "pyramidLedge",
       "kind": "dw",
       "line": 293,
       "locations": [],

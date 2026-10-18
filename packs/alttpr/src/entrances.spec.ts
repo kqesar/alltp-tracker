@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { holeAt, pythonLiteral } from "../scripts/import-er.mjs";
+import { holeAt } from "../scripts/import-er.mjs";
+import { pythonLiteral } from "../scripts/python.mjs";
 import {
   crossedPool,
   ENTRANCES,
@@ -42,7 +43,7 @@ describe("the importer", () => {
     ).toEqual([["a", "b"], ["c"], { k: [31, null] }, ["x", "y"], -2, true]);
     // Adjacent strings join, escapes unescape, (x) is x
     expect(pythonLiteral("('Blind\\'s' ' Hideout')")).toBe("Blind's Hideout");
-    expect(() => pythonLiteral("[a + b]")).toThrow(/<text>:1: unexpected "\+"/);
+    expect(() => pythonLiteral("[a + b]")).toThrow(/<text>:1: expected , or ]/);
   });
 
   it("finds a hole in the game's table, rows 7 above where it is drawn", () => {

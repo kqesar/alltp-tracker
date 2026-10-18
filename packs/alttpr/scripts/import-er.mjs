@@ -2,22 +2,27 @@
 /// <reference types="node" />
 // Imports the entrance randomizer's tables as JSON.
 //
-//   node scripts/import-er.mjs <er-checkout> [--out <file>]
+//   node scripts/import-er.mjs <er-checkout> --rom <base.sfc> [--out <dir>]
 //
 // vt hands a seed with shuffled entrances to the entrance randomizer
 // (cassidoxa/ALttPEntranceRandomizer, MIT, (c) 2017 LLCoolDave), at the
 // commit vt's composer.json pins. The checkout is untrusted data: this
-// script only reads two of its files, and never runs Python or anything else
-// from it. It reads the Python literals it needs (lists, tuples, dicts, sets,
-// strings, numbers) with a small tokenizer, from where the source assigns or
-// passes them; anything else there stops the import with the file and line.
+// script only reads its files, and never runs Python or anything else from
+// it. It reads the Python literals it needs (lists, tuples, dicts, sets,
+// strings, numbers) with a small tokenizer (python.mjs), from where the
+// source assigns or passes them; anything else there stops the import with
+// the file and line.
+//
+// Two files come out: er.json, the tables below, and rules.json, the
+// randomizer's access rules in the engine's language (er-rules.mjs).
 //
 // From EntranceShuffle.py: the module's entrance tables, the holes and their
 // targets of scramble_holes, Skull Woods' of skull_woods_shuffle, and each
 // door's exit position in door_addresses (its overworld area and where Link
 // stands outside it). From Regions.py: every region create_regions makes,
-// with its kind, locations and exits. The output is deterministic, its keys
-// in source order.
+// with its kind, locations and exits, and its engine id (regionId). The
+// output is deterministic; the repository's Biome then sorts its keys and
+// formats it, as the checks want it.
 //
 // A hole has no position in door_addresses, only the addresses where the
 // randomizer writes its entrance: one byte of the game's hole table, whose
@@ -26,11 +31,14 @@
 // Japanese 1.0 one alttpr.com asks for, given with --rom and checked by its
 // MD5. The ROM is read, never copied: three small tables of it.
 
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { importErRules, regionId } from "./er-rules.mjs";
 import { readCommit } from "./import-upstream-tests.mjs";
+import { assigned, body, calls } from "./python.mjs";
 
 export const ER_REPO = "cassidoxa/ALttPEntranceRandomizer";
 
@@ -60,232 +68,6 @@ export const TABLES = [
   "Single_Cave_Targets",
   "default_connections",
 ];
-
-// ---------------------------------------------------------------------------
-// Tokenizer: the Python a literal is written in
-
-/**
- * @typedef {{ type: "string" | "number" | "name" | "punct", value: string | number, line: number }} Token
- * @typedef {{ fail: (what: string) => never, line: () => number, next: () => Token, peek: () => Token }} Stream
- * @typedef {string | number | boolean | null | { name: string } | Literal[] | { [key: string]: Literal }} Literal
- */
-
-/**
- * A token stream over `source` from `start`, read as it is asked for.
- * @param {string} source
- * @param {number} start
- * @param {string} file
- * @returns {Stream}
- */
-function tokens(source, start, file) {
-  let at = start;
-  let line = source.slice(0, start).split("\n").length;
-  /** @param {string} what @returns {never} */
-  const fail = (what) => {
-    throw new Error(`${file}:${line}: ${what}`);
-  };
-  /** @returns {Token} */
-  const next = () => {
-    for (;;) {
-      const c = source[at];
-      if (c === undefined) fail("unexpected end of file");
-      if (c === "\n") {
-        line++;
-        at++;
-      } else if (c === " " || c === "\t" || c === "\r" || c === "\\") {
-        at++;
-      } else if (c === "#") {
-        while (source[at] !== undefined && source[at] !== "\n") at++;
-      } else break;
-    }
-    const c = /** @type {string} */ (source[at]);
-    if (c === '"' || c === "'") {
-      const triple = source.startsWith(c.repeat(3), at);
-      const quote = triple ? c.repeat(3) : c;
-      at += quote.length;
-      let value = "";
-      for (;;) {
-        if (source.startsWith(quote, at)) {
-          at += quote.length;
-          return { line, type: "string", value };
-        }
-        const d = source[at];
-        if (d === undefined || (!triple && d === "\n"))
-          fail("unterminated string");
-        if (d === "\\") {
-          const e = source[at + 1];
-          value += e === "n" ? "\n" : e === "t" ? "\t" : (e ?? "");
-          at += 2;
-        } else {
-          if (d === "\n") line++;
-          value += d;
-          at++;
-        }
-      }
-    }
-    const number = /^(0x[0-9a-fA-F]+|\d+)/.exec(source.slice(at, at + 32));
-    if (number) {
-      at += number[0].length;
-      return { line, type: "number", value: Number(number[0]) };
-    }
-    const name = /^[A-Za-z_]\w*/.exec(source.slice(at, at + 64));
-    if (name) {
-      at += name[0].length;
-      return { line, type: "name", value: name[0] };
-    }
-    if ("[](){},:-".includes(c)) {
-      at++;
-      return { line, type: "punct", value: c };
-    }
-    return fail(`unexpected ${JSON.stringify(c)}`);
-  };
-  /** @type {Token[]} */
-  const ahead = [];
-  return {
-    fail,
-    line: () => line,
-    next: () => ahead.shift() ?? next(),
-    peek: () => {
-      if (ahead.length === 0) ahead.push(next());
-      return /** @type {Token} */ (ahead[0]);
-    },
-  };
-}
-
-/**
- * One literal: a list, tuple or set as an array, a dict as an object, a
- * string (adjacent ones joined, as Python does), a number, true, false,
- * null, or a bare name as `{ name }`.
- * @param {Stream} stream
- * @returns {Literal}
- */
-function literal(stream) {
-  const token = stream.next();
-  if (token.type === "string") {
-    let value = String(token.value);
-    while (stream.peek().type === "string") value += stream.next().value;
-    return value;
-  }
-  if (token.type === "number") return token.value;
-  if (token.type === "punct" && token.value === "-") {
-    const n = stream.next();
-    if (n.type !== "number") stream.fail("a number after -");
-    return -Number(n.value);
-  }
-  if (token.type === "name") {
-    if (token.value === "True") return true;
-    if (token.value === "False") return false;
-    if (token.value === "None") return null;
-    return { name: String(token.value) };
-  }
-  /** @type {Record<string, string>} */
-  const closing = { "(": ")", "[": "]", "{": "}" };
-  const close = closing[String(token.value)];
-  if (close === undefined) return stream.fail(`unexpected ${token.value}`);
-  /** @type {Literal[]} */
-  const items = [];
-  /** @type {[string, Literal][]} */
-  const entries = [];
-  let dict = false;
-  let comma = false;
-  for (;;) {
-    if (stream.peek().value === close) {
-      stream.next();
-      break;
-    }
-    /** @type {Literal} */
-    const key = literal(stream);
-    if (token.value === "{" && stream.peek().value === ":") {
-      stream.next();
-      dict = true;
-      entries.push([String(key), literal(stream)]);
-    } else items.push(key);
-    const after = stream.next();
-    if (after.value === close) break;
-    if (after.value !== ",") stream.fail(`expected , or ${close}`);
-    comma = true;
-  }
-  // (x) is x; (x,) is a tuple
-  if (token.value === "(" && items.length === 1 && !comma)
-    return /** @type {Literal} */ (items[0]);
-  return dict ? Object.fromEntries(entries) : items;
-}
-
-/**
- * The Python literal `text` starts with.
- * @param {string} text
- */
-export const pythonLiteral = (text) => literal(tokens(text, 0, "<text>"));
-
-/**
- * The literal assigned to `name` at the start of a line, and its line.
- * @param {string} source
- * @param {string} name
- * @param {string} file
- * @param {string} indent - A pattern for the line's indent
- */
-function assigned(source, name, file, indent = "") {
-  const match = new RegExp(`^${indent}${name} = `, "m").exec(source);
-  if (match === null) throw new Error(`${file}: no ${name} = …`);
-  const stream = tokens(source, match.index + match[0].length, file);
-  const line = stream.peek().line;
-  let value = literal(stream);
-  // A list the module extends further down: Cave_Exits_Base += [...]
-  const extended = new RegExp(`^${indent}${name} \\+= `, "gm");
-  for (let m = extended.exec(source); m; m = extended.exec(source)) {
-    const more = literal(tokens(source, m.index + m[0].length, file));
-    if (!Array.isArray(value) || !Array.isArray(more))
-      throw new Error(`${file}: ${name} += a list to a list`);
-    value = [...value, ...more];
-  }
-  return { line, value };
-}
-
-/**
- * The arguments of each call to `callee` in `source`, with its line.
- * @param {string} source
- * @param {string} callee
- * @param {string} file
- * @param {number} from
- * @param {number} to
- */
-function calls(source, callee, file, from = 0, to = source.length) {
-  /** @type {{ args: Literal[], line: number }[]} */
-  const found = [];
-  const pattern = new RegExp(`\\b${callee}\\(`, "g");
-  pattern.lastIndex = from;
-  for (
-    let m = pattern.exec(source);
-    m && m.index < to;
-    m = pattern.exec(source)
-  ) {
-    const stream = tokens(source, m.index + m[0].length, file);
-    const line = stream.peek().line;
-    /** @type {Literal[]} */
-    const args = [];
-    while (stream.peek().value !== ")") {
-      args.push(literal(stream));
-      if (stream.peek().value === ",") stream.next();
-    }
-    found.push({ args, line });
-  }
-  return found;
-}
-
-/**
- * The body of the function `name`: from its def to the next top-level line.
- * @param {string} source
- * @param {string} name
- * @param {string} file
- */
-function body(source, name, file) {
-  const start = source.indexOf(`\ndef ${name}(`);
-  if (start < 0) throw new Error(`${file}: no def ${name}`);
-  const end = /\n\S/g;
-  end.lastIndex = start + 1;
-  const next = end.exec(source);
-  return { end: next ? next.index : source.length, start };
-}
 
 const REGION_KINDS = { cave: "cave", dungeon: "dungeon", dw: "dw", lw: "lw" };
 
@@ -408,16 +190,32 @@ export function importEr(checkout, romFile) {
       const [, name, ...rest] = args;
       const [locations, exits] =
         kind === "cave" || kind === "dungeon" ? rest.slice(1) : rest;
+      if (
+        typeof name !== "string" ||
+        !Array.isArray(locations ?? []) ||
+        !Array.isArray(exits ?? [])
+      )
+        throw new Error(`${regionsFile}:${line}: a region of no literals`);
       regions.push({
-        exits: exits ?? [],
+        exits: /** @type {string[]} */ (exits ?? []),
+        id: regionId(name),
         kind,
         line,
-        locations: locations ?? [],
+        locations: /** @type {string[]} */ (locations ?? []),
         name,
       });
     }
   }
   regions.sort((a, b) => a.line - b.line);
+  const ids = new Set(regions.map((region) => region.id));
+  if (ids.size !== regions.length)
+    throw new Error(`${regionsFile}: two regions share an engine id`);
+  const upstream = {
+    commit: readCommit(checkout),
+    copyright,
+    license: "MIT",
+    repo: ER_REPO,
+  };
 
   return {
     doors: { line: addresses.line, value: doors },
@@ -433,12 +231,7 @@ export function importEr(checkout, romFile) {
       holes: { line: skullHoles.line, value: skullHoles.args.slice(1, 3) },
     },
     tables,
-    upstream: {
-      commit: readCommit(checkout),
-      copyright,
-      license: "MIT",
-      repo: ER_REPO,
-    },
+    upstream,
   };
 }
 
@@ -451,19 +244,36 @@ function main(argv) {
   const here = dirname(fileURLToPath(import.meta.url));
   const out =
     outAt < 0
-      ? join(here, "../src/entrances/er.json")
+      ? join(here, "../src/entrances")
       : resolve(args.splice(outAt, 2)[1] ?? "");
   const checkout = args[0];
   if (checkout === undefined || romFile === undefined || args.length !== 1) {
     process.stderr.write(
-      "Usage: import-er.mjs <er-checkout> --rom <base.sfc> [--out <file>]\n",
+      "Usage: import-er.mjs <er-checkout> --rom <base.sfc> [--out <dir>]\n",
     );
     process.exit(2);
   }
   const er = importEr(resolve(checkout), resolve(romFile));
-  writeFileSync(out, `${JSON.stringify(er, null, 1)}\n`);
+  const { regions, upstream } = er;
+  const rules = {
+    generated: er.generated,
+    upstream,
+    ...importErRules(
+      (file) => readFileSync(join(resolve(checkout), file), "utf8"),
+      regions,
+    ),
+  };
+  const files = [join(out, "er.json"), join(out, "rules.json")];
+  writeFileSync(files[0] ?? "", `${JSON.stringify(er, null, 1)}\n`);
+  writeFileSync(files[1] ?? "", `${JSON.stringify(rules, null, 1)}\n`);
+  // As the repository checks them: keys sorted, Biome's format
+  execFileSync(join(here, "../../../node_modules/.bin/biome"), [
+    "check",
+    "--write",
+    ...files,
+  ]);
   process.stdout.write(
-    `${er.upstream.repo}@${er.upstream.commit}: ${Object.keys(er.tables).length} tables, ${Object.keys(er.doors.value).length} doors, ${er.regions.length} regions\n`,
+    `${upstream.repo}@${upstream.commit}: ${Object.keys(er.tables).length} tables, ${Object.keys(er.doors.value).length} doors, ${regions.length} regions; ${Object.keys(rules.entrances).length + Object.keys(rules.locations).length} rules, ${rules.unported.length} unported\n`,
   );
 }
 

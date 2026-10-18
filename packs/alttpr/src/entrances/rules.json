@@ -1,0 +1,1262 @@
+{
+  "entrances": {
+    "20 Rupee Cave": {
+      "req": "@erCanLiftRocks",
+      "source": ["Rules.py:142"]
+    },
+    "50 Rupee Cave": {
+      "req": "@erCanLiftRocks",
+      "source": ["Rules.py:143"]
+    },
+    "Agahnim 1": {
+      "req": "(setting(swordless) & (hammer | fireRod | @erCanShootArrows | caneOfSomaria) & keyA1 >= 2 | !setting(swordless) & @erHasSword & keyA1 >= 2) & lamp",
+      "source": ["Rules.py:171", "Rules.py:953", "Rules.py:921"]
+    },
+    "Agahnims Tower": {
+      "req": "setting(swordless) & (cape | hammer | defeatAgahnim) | !setting(swordless) & (cape | @erHasBeamSword | defeatAgahnim)",
+      "source": ["Rules.py:170", "Rules.py:961"]
+    },
+    "Bat Cave Drop Ledge": {
+      "req": "hammer",
+      "source": ["Rules.py:137"]
+    },
+    "Bat Cave Drop Ledge Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:217"]
+    },
+    "Blind Fight": {
+      "req": "keyD4",
+      "source": ["Rules.py:309"]
+    },
+    "Bonk Fairy (Dark)": {
+      "req": "@erHasPearl & @erHasBoots",
+      "source": ["Rules.py:191"]
+    },
+    "Bonk Fairy (Light)": {
+      "req": "@erHasBoots",
+      "source": ["Rules.py:135"]
+    },
+    "Bonk Rock Cave": {
+      "req": "@erHasBoots",
+      "source": ["Rules.py:139"]
+    },
+    "Brewery": {
+      "req": "@erHasPearl",
+      "source": ["Rules.py:204"]
+    },
+    "Broken Bridge (East)": {
+      "req": "hookshot",
+      "source": ["Rules.py:178"]
+    },
+    "Broken Bridge (West)": {
+      "req": "hookshot",
+      "source": ["Rules.py:177"]
+    },
+    "Bumper Cave Entrance Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:145"]
+    },
+    "Bumper Cave Entrance Rock": {
+      "req": "@erHasPearl & @erCanLiftRocks",
+      "source": ["Rules.py:215"]
+    },
+    "Bumper Cave Exit (Bottom)": {
+      "req": "cape | hookshot",
+      "source": ["Rules.py:224"]
+    },
+    "Bumper Cave Exit (Top)": {
+      "req": "cape",
+      "source": ["Rules.py:223"]
+    },
+    "Bumper Cave Ledge Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:216"]
+    },
+    "Cave 45 Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:209"]
+    },
+    "Checkerboard Cave": {
+      "req": "@erCanLiftRocks",
+      "source": ["Rules.py:167"]
+    },
+    "Dark Desert Teleporter": {
+      "req": "flute & @erCanLiftHeavyRocks",
+      "source": ["Rules.py:148"]
+    },
+    "Dark Lake Hylia Drop (East)": {
+      "req": "@erHasPearl & flippers",
+      "source": ["Rules.py:868"]
+    },
+    "Dark Lake Hylia Drop (South)": {
+      "req": "@erHasPearl & flippers",
+      "source": ["Rules.py:198"]
+    },
+    "Dark Lake Hylia Ledge Drop": {
+      "req": "@erHasPearl & flippers",
+      "source": ["Rules.py:870"]
+    },
+    "Dark Lake Hylia Ledge Fairy": {
+      "req": "@erHasPearl",
+      "source": ["Rules.py:199"]
+    },
+    "Dark Lake Hylia Ledge Spike Cave": {
+      "req": "@erCanLiftRocks & @erHasPearl",
+      "source": ["Rules.py:200"]
+    },
+    "Dark Lake Hylia Teleporter": {
+      "req": "@erHasPearl & flippers & (hammer | @erCanLiftRocks)",
+      "source": ["Rules.py:869"]
+    },
+    "Dark World Hammer Peg Cave": {
+      "req": "@erHasPearl & hammer",
+      "source": ["Rules.py:218"]
+    },
+    "Death Mountain (Top)": {
+      "req": "hammer",
+      "source": ["Rules.py:182"]
+    },
+    "Death Mountain Entrance Rock": {
+      "req": "@erCanLiftRocks",
+      "source": ["Rules.py:144"]
+    },
+    "Death Mountain Return Cave Exit (East)": {
+      "req": "lamp",
+      "source": ["Rules.py:928"]
+    },
+    "Death Mountain Return Cave Exit (West)": {
+      "req": "lamp",
+      "source": ["Rules.py:929"]
+    },
+    "Desert Ledge (Northeast) Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:228"]
+    },
+    "Desert Ledge Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:230"]
+    },
+    "Desert Ledge Return Rocks": {
+      "req": "@erCanLiftRocks",
+      "source": ["Rules.py:166"]
+    },
+    "Desert Palace East Wing": {
+      "req": "keyP2",
+      "source": ["Rules.py:270"]
+    },
+    "Desert Palace Entrance (North) Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:232"]
+    },
+    "Desert Palace Entrance (North) Rocks": {
+      "req": "@erCanLiftRocks",
+      "source": ["Rules.py:165"]
+    },
+    "Desert Palace Stairs": {
+      "req": "bookOfMudora",
+      "source": ["Rules.py:140"]
+    },
+    "Desert Palace Stairs Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:231"]
+    },
+    "East Dark World Bridge": {
+      "req": "@erHasPearl & hammer",
+      "source": ["Rules.py:210"]
+    },
+    "East Dark World Broken Bridge Pass": {
+      "req": "@erHasPearl & (@erCanLiftRocks | hammer)",
+      "source": ["Rules.py:189"]
+    },
+    "East Dark World River Pier": {
+      "req": "@erHasPearl & flippers",
+      "source": ["Rules.py:213", "Rules.py:871"]
+    },
+    "East Death Mountain (Top)": {
+      "req": "hammer",
+      "source": ["Rules.py:185"]
+    },
+    "East Death Mountain (Top) Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:236"]
+    },
+    "East Death Mountain Teleporter": {
+      "req": "@erCanLiftHeavyRocks",
+      "source": ["Rules.py:179"]
+    },
+    "East Hyrule Teleporter": {
+      "req": "hammer & @erCanLiftRocks & @erHasPearl",
+      "source": ["Rules.py:149"]
+    },
+    "Fairy Ascension Mirror Spot": {
+      "req": "@erHasMirror & @erHasPearl",
+      "source": ["Rules.py:239"]
+    },
+    "Fairy Ascension Rocks": {
+      "req": "@erCanLiftHeavyRocks",
+      "source": ["Rules.py:180"]
+    },
+    "Floating Island Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:255"]
+    },
+    "Flute Spot 1": {
+      "req": "flute",
+      "source": ["Rules.py:146"]
+    },
+    "Ganon Drop": {
+      "req": "setting(swordless) & hammer | !setting(swordless) & @erHasBeamSword",
+      "source": ["Rules.py:456", "Rules.py:958"]
+    },
+    "Ganons Tower": {
+      "req": "count(crystal) >= setting(crystalsTower)",
+      "source": ["Rules.py:465"]
+    },
+    "Ganons Tower (Double Switch Room)": {
+      "req": "keyA2 >= 2 & hookshot",
+      "source": ["Rules.py:419", "Rules.py:886"]
+    },
+    "Ganons Tower (Firesnake Room)": {
+      "req": "keyA2 >= 3",
+      "source": ["Rules.py:421"]
+    },
+    "Ganons Tower (Hookshot Room)": {
+      "req": "hammer & (hookshot | @erHasBoots)",
+      "source": ["Rules.py:411", "Rules.py:885"]
+    },
+    "Ganons Tower (Map Room)": {
+      "req": "keyA2 >= 4 | maybe & keyA2 >= 3",
+      "source": ["Rules.py:413"]
+    },
+    "Ganons Tower (Tile Room)": {
+      "req": "caneOfSomaria",
+      "source": ["Rules.py:410"]
+    },
+    "Ganons Tower (Tile Room) Key Door": {
+      "req": "keyA2 >= 3 & fireRod",
+      "source": ["Rules.py:429"]
+    },
+    "Ganons Tower Big Key Door": {
+      "req": "bigKeyA2 & @erCanShootArrows",
+      "source": ["Rules.py:440"]
+    },
+    "Ganons Tower Moldorm Door": {
+      "req": "keyA2 >= 4",
+      "source": ["Rules.py:443"]
+    },
+    "Ganons Tower Moldorm Gap": {
+      "req": "hookshot & @erDefeatMoldorm",
+      "source": ["Rules.py:444"]
+    },
+    "Ganons Tower Torch Rooms": {
+      "req": "@erHasFireSource & @erDefeatLanmolas",
+      "source": ["Rules.py:441"]
+    },
+    "Grassy Lawn Pegs": {
+      "req": "@erHasPearl & hammer",
+      "source": ["Rules.py:222"]
+    },
+    "Graveyard Ledge Mirror Spot": {
+      "req": "@erHasPearl & @erHasMirror",
+      "source": ["Rules.py:214"]
+    },
+    "Hobo Bridge": {
+      "req": "flippers",
+      "source": ["Rules.py:867"]
+    },
+    "Hookshot Cave": {
+      "req": "@erCanLiftRocks & @erHasPearl",
+      "source": ["Rules.py:234"]
+    },
+    "Hype Cave": {
+      "req": "@erHasPearl",
+      "source": ["Rules.py:203"]
+    },
+    "Hyrule Castle Exit (East)": {
+      "req": "reach(sanctuary) | !setting(standardMode)",
+      "source": ["Rules.py:974"]
+    },
+    "Hyrule Castle Exit (West)": {
+      "req": "reach(sanctuary) | !setting(standardMode)",
+      "source": ["Rules.py:975"]
+    },
+    "Hyrule Castle Ledge Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:194"]
+    },
+    "Hyrule Castle Main Gate": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:195"]
+    },
+    "Ice Palace (East Top)": {
+      "req": "@erCanLiftRocks & hammer",
+      "source": ["Rules.py:339"]
+    },
+    "Ice Palace (East)": {
+      "req": "(hookshot | maybe & keyD5) & (!setting(cantTakeDamage) | hookshot | cape | caneOfByrna)",
+      "source": ["Rules.py:338"]
+    },
+    "Ice Palace (Kholdstare)": {
+      "req": "@erCanLiftRocks & hammer & bigKeyD5 & (keyD5 >= 2 | caneOfSomaria & keyD5)",
+      "source": ["Rules.py:336"]
+    },
+    "Ice Palace Entrance Room": {
+      "req": "setting(swordless) & (fireRod | bombos) | !setting(swordless) & @erCanMeltThings",
+      "source": ["Rules.py:334", "Rules.py:956"]
+    },
+    "Isolated Ledge Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:240"]
+    },
+    "Kakariko Teleporter": {
+      "req": "(hammer & @erCanLiftRocks | @erCanLiftHeavyRocks) & @erHasPearl",
+      "source": ["Rules.py:151"]
+    },
+    "Kings Grave": {
+      "req": "@erHasBoots",
+      "source": ["Rules.py:130"]
+    },
+    "Kings Grave Inner Rocks": {
+      "req": "@erCanLiftHeavyRocks",
+      "source": ["Rules.py:132"]
+    },
+    "Kings Grave Mirror Spot": {
+      "req": "@erHasPearl & @erHasMirror",
+      "source": ["Rules.py:133"]
+    },
+    "Kings Grave Outer Rocks": {
+      "req": "@erCanLiftHeavyRocks",
+      "source": ["Rules.py:131"]
+    },
+    "Lake Hylia Central Island Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:212"]
+    },
+    "Lake Hylia Central Island Pier": {
+      "req": "flippers",
+      "source": ["Rules.py:866"]
+    },
+    "Lake Hylia Central Island Teleporter": {
+      "req": "@erCanLiftHeavyRocks",
+      "source": ["Rules.py:147"]
+    },
+    "Lake Hylia Island Mirror Spot": {
+      "req": "@erHasPearl & @erHasMirror & flippers",
+      "source": ["Rules.py:211"]
+    },
+    "Lumberjack Tree Tree": {
+      "req": "@erHasBoots & defeatAgahnim",
+      "source": ["Rules.py:138"]
+    },
+    "Maze Race Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:208"]
+    },
+    "Mimic Cave Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:237"]
+    },
+    "Misery Mire": {
+      "req": "setting(swordless) & @erHasPearl & @hasMireMedallion | !setting(swordless) & @erHasPearl & @erHasSword & @hasMireMedallion",
+      "source": ["Rules.py:227", "Rules.py:963"]
+    },
+    "Misery Mire (Vitreous)": {
+      "req": "caneOfSomaria & lamp",
+      "source": ["Rules.py:358", "Rules.py:913"]
+    },
+    "Misery Mire (West)": {
+      "req": "keyD6 >= 3 | keyD6 >= 2 & maybe",
+      "source": ["Rules.py:354"]
+    },
+    "Misery Mire Big Key Door": {
+      "req": "bigKeyD6",
+      "source": ["Rules.py:348"]
+    },
+    "Misery Mire Entrance Gap": {
+      "req": "(@erHasBoots | hookshot) & (@erHasSword | fireRod | iceRod | hammer | caneOfSomaria | @erCanShootArrows)",
+      "source": ["Rules.py:345"]
+    },
+    "Northeast Dark World Broken Bridge Pass": {
+      "req": "@erHasPearl & (@erCanLiftRocks | hammer | flippers)",
+      "source": ["Rules.py:188"]
+    },
+    "Old Man Cave Exit (East)": {
+      "req": "lamp",
+      "source": ["Rules.py:927"]
+    },
+    "Old Man Cave Exit (West)": {
+      "req": "false",
+      "source": ["Rules.py:176"]
+    },
+    "Old Man House Back to Front": {
+      "req": "lamp",
+      "source": ["Rules.py:931"]
+    },
+    "Old Man House Front to Back": {
+      "req": "lamp",
+      "source": ["Rules.py:930"]
+    },
+    "Palace of Darkness": {
+      "req": "@erHasPearl",
+      "source": ["Rules.py:193"]
+    },
+    "Palace of Darkness (North)": {
+      "req": "keyD1 >= 4",
+      "source": ["Rules.py:386"]
+    },
+    "Palace of Darkness Big Key Chest Staircase": {
+      "req": "keyD1 >= 6 | maybe & keyD1 >= 3",
+      "source": ["Rules.py:389"]
+    },
+    "Palace of Darkness Big Key Door": {
+      "req": "keyD1 >= 6 & bigKeyD1 & @erCanShootArrows & hammer & lamp",
+      "source": ["Rules.py:385", "Rules.py:916"]
+    },
+    "Palace of Darkness Bonk Wall": {
+      "req": "@erCanShootArrows",
+      "source": ["Rules.py:382"]
+    },
+    "Palace of Darkness Bridge Room": {
+      "req": "keyD1",
+      "source": ["Rules.py:384"]
+    },
+    "Palace of Darkness Hammer Peg Drop": {
+      "req": "hammer",
+      "source": ["Rules.py:383"]
+    },
+    "Palace of Darkness Maze Door": {
+      "req": "keyD1 >= 6 & lamp",
+      "source": ["Rules.py:401", "Rules.py:917"]
+    },
+    "Palace of Darkness Spike Statue Room Door": {
+      "req": "keyD1 >= 6 | maybe & keyD1 >= 4",
+      "source": ["Rules.py:395"]
+    },
+    "Paradox Cave Bomb Jump": {
+      "req": "false",
+      "source": ["Rules.py:891"]
+    },
+    "Paradox Cave Push Block Reverse": {
+      "req": "false",
+      "source": ["Rules.py:890"]
+    },
+    "Peg Area Rocks": {
+      "req": "@erHasPearl & @erCanLiftHeavyRocks",
+      "source": ["Rules.py:220"]
+    },
+    "Pyramid Hole": {
+      "req": "defeatAgahnim2",
+      "source": ["Rules.py:446"]
+    },
+    "Sanctuary Grave": {
+      "req": "@erCanLiftRocks",
+      "source": ["Rules.py:141"]
+    },
+    "Sewers Back Door": {
+      "req": "keyH2 & (setting(standardMode) | lamp)",
+      "source": ["Rules.py:260", "Rules.py:938"]
+    },
+    "Sewers Door": {
+      "req": "keyH2 & (!setting(standardMode) | @erCanKillMostThings)",
+      "source": ["Rules.py:259", "Rules.py:972"]
+    },
+    "Skull Woods Final Section": {
+      "req": "fireRod & @erHasPearl",
+      "source": ["Rules.py:226"]
+    },
+    "Skull Woods First Section (Left) Door to Exit": {
+      "req": "keyD3 >= 2",
+      "source": ["Rules.py:324"]
+    },
+    "Skull Woods First Section (Right) North Door": {
+      "req": "keyD3",
+      "source": ["Rules.py:322"]
+    },
+    "Skull Woods First Section Bomb Jump": {
+      "req": "false",
+      "source": ["Rules.py:892"]
+    },
+    "Skull Woods First Section Hole (North)": {
+      "req": "@erHasPearl",
+      "source": ["Rules.py:206"]
+    },
+    "Skull Woods First Section South Door": {
+      "req": "keyD3",
+      "source": ["Rules.py:321"]
+    },
+    "Skull Woods First Section West Door": {
+      "req": "keyD3 >= 2",
+      "source": ["Rules.py:323"]
+    },
+    "Skull Woods Second Section Hole": {
+      "req": "@erHasPearl",
+      "source": ["Rules.py:207"]
+    },
+    "Skull Woods Torch Room": {
+      "req": "setting(swordless) & keyD3 >= 3 & fireRod | !setting(swordless) & keyD3 >= 3 & fireRod & @erHasSword",
+      "source": ["Rules.py:328", "Rules.py:955"]
+    },
+    "South Dark World Bridge": {
+      "req": "hammer & @erHasPearl",
+      "source": ["Rules.py:190"]
+    },
+    "South Hyrule Teleporter": {
+      "req": "hammer & @erCanLiftRocks & @erHasPearl",
+      "source": ["Rules.py:150"]
+    },
+    "Spectacle Rock Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:233"]
+    },
+    "Spiral Cave Mirror Spot": {
+      "req": "@erHasMirror",
+      "source": ["Rules.py:238"]
+    },
+    "Superbunny Cave Exit (Bottom)": {
+      "req": "false",
+      "source": ["Rules.py:241"]
+    },
+    "Swamp Palace (Center)": {
+      "req": "hammer",
+      "source": ["Rules.py:298"]
+    },
+    "Swamp Palace (North)": {
+      "req": "hookshot",
+      "source": ["Rules.py:302"]
+    },
+    "Swamp Palace Moat": {
+      "req": "flippers & openFloodgate",
+      "source": ["Rules.py:294"]
+    },
+    "Swamp Palace Small Key Door": {
+      "req": "keyD2",
+      "source": ["Rules.py:297"]
+    },
+    "Thieves Town": {
+      "req": "@erHasPearl",
+      "source": ["Rules.py:205"]
+    },
+    "Thieves Town Big Key Door": {
+      "req": "bigKeyD4",
+      "source": ["Rules.py:308"]
+    },
+    "Throne Room": {
+      "req": "setting(standardMode) | lamp",
+      "source": ["Rules.py:939"]
+    },
+    "Top of Pyramid": {
+      "req": "defeatAgahnim",
+      "source": ["Rules.py:175"]
+    },
+    "Tower of Hera Big Key Door": {
+      "req": "bigKeyP3",
+      "source": ["Rules.py:284"]
+    },
+    "Tower of Hera Small Key Door": {
+      "req": "keyP3 | maybe",
+      "source": ["Rules.py:283"]
+    },
+    "Turtle Rock": {
+      "req": "setting(swordless) & @erHasPearl & @hasTurtleRockMedallion & reach(turtleRockTop) | !setting(swordless) & @erHasPearl & @erHasSword & @hasTurtleRockMedallion & reach(turtleRockTop)",
+      "source": ["Rules.py:256", "Rules.py:962"]
+    },
+    "Turtle Rock (Big Chest) (North)": {
+      "req": "caneOfSomaria | hookshot",
+      "source": ["Rules.py:370"]
+    },
+    "Turtle Rock (Dark Room) (North)": {
+      "req": "caneOfSomaria & lamp",
+      "source": ["Rules.py:372", "Rules.py:914"]
+    },
+    "Turtle Rock (Dark Room) (South)": {
+      "req": "caneOfSomaria & lamp",
+      "source": ["Rules.py:373", "Rules.py:915"]
+    },
+    "Turtle Rock (Trinexx)": {
+      "req": "keyD7 >= 4 & bigKeyD7 & caneOfSomaria",
+      "source": ["Rules.py:378"]
+    },
+    "Turtle Rock Big Key Door": {
+      "req": "bigKeyD7",
+      "source": ["Rules.py:371"]
+    },
+    "Turtle Rock Entrance Gap": {
+      "req": "caneOfSomaria",
+      "source": ["Rules.py:364"]
+    },
+    "Turtle Rock Entrance Gap Reverse": {
+      "req": "caneOfSomaria",
+      "source": ["Rules.py:365"]
+    },
+    "Turtle Rock Teleporter": {
+      "req": "@erCanLiftHeavyRocks & hammer",
+      "source": ["Rules.py:183"]
+    },
+    "Village of Outcasts Eastern Rocks": {
+      "req": "@erHasPearl & @erCanLiftHeavyRocks",
+      "source": ["Rules.py:219"]
+    },
+    "Village of Outcasts Heavy Rock": {
+      "req": "@erHasPearl & @erCanLiftHeavyRocks",
+      "source": ["Rules.py:202"]
+    },
+    "Village of Outcasts Pegs": {
+      "req": "@erHasPearl & hammer",
+      "source": ["Rules.py:221"]
+    },
+    "Waterfall of Wishing": {
+      "req": "flippers",
+      "source": ["Rules.py:157"]
+    },
+    "West Dark World Gap": {
+      "req": "@erHasPearl & hookshot",
+      "source": ["Rules.py:192"]
+    },
+    "Zoras River": {
+      "req": "flippers | @erCanLiftRocks",
+      "source": ["Rules.py:865"]
+    }
+  },
+  "events": {
+    "getFrog": {
+      "item": "Get Frog",
+      "location": "Frog",
+      "source": "ItemList.py:176"
+    },
+    "openFloodgate": {
+      "item": "Open Floodgate",
+      "location": "Floodgate",
+      "source": "ItemList.py:182"
+    },
+    "pickUpPurpleChest": {
+      "item": "Pick Up Purple Chest",
+      "location": "Dark Blacksmith Ruins",
+      "source": "ItemList.py:173"
+    },
+    "returnSmith": {
+      "item": "Return Smith",
+      "location": "Missing Smith",
+      "source": "ItemList.py:179"
+    }
+  },
+  "fill": [
+    114, 266, 274, 277, 288, 292, 301, 306, 314, 317, 319, 327, 332, 343, 362,
+    391, 393, 397, 399, 415, 449, 944, 945, 987
+  ],
+  "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
+  "helpers": {
+    "erAtMasterSwordPedestal": {
+      "req": "reach(masterSwordMeadow) & pendantOfWisdom & pendantOfPower & pendantOfCourage",
+      "source": "Rules.py:168"
+    },
+    "erCanExtendMagic10": {
+      "req": "reach(potionShop) & bottle | magic",
+      "source": "BaseClasses.py:424"
+    },
+    "erCanExtendMagic12": {
+      "req": "setting(halfBottleMagic) & (reach(potionShop) & bottle | magic) | !setting(halfBottleMagic) & setting(quarterBottleMagic) & (reach(potionShop) & bottle >= 2 | magic) | !setting(halfBottleMagic) & !setting(quarterBottleMagic) & (reach(potionShop) & bottle | magic)",
+      "source": "BaseClasses.py:424"
+    },
+    "erCanExtendMagic12Full": {
+      "req": "reach(potionShop) & bottle | magic",
+      "source": "BaseClasses.py:424"
+    },
+    "erCanExtendMagic16": {
+      "req": "setting(halfBottleMagic) & (reach(potionShop) & bottle >= 2 | magic) | !setting(halfBottleMagic) & setting(quarterBottleMagic) & (reach(potionShop) & bottle >= 4 | magic) | !setting(halfBottleMagic) & !setting(quarterBottleMagic) & (reach(potionShop) & bottle | magic)",
+      "source": "BaseClasses.py:424"
+    },
+    "erCanExtendMagic16Full": {
+      "req": "reach(potionShop) & bottle | magic",
+      "source": "BaseClasses.py:424"
+    },
+    "erCanExtendMagic20": {
+      "req": "setting(halfBottleMagic) & (reach(potionShop) & bottle >= 3 | magic & reach(potionShop) & bottle | magic >= 2) | !setting(halfBottleMagic) & setting(quarterBottleMagic) & (magic & reach(potionShop) & bottle | magic >= 2) | !setting(halfBottleMagic) & !setting(quarterBottleMagic) & (reach(potionShop) & bottle >= 2 | magic & reach(potionShop) & bottle | magic >= 2)",
+      "source": "BaseClasses.py:424"
+    },
+    "erCanExtendMagic32": {
+      "req": "setting(halfBottleMagic) & (magic & reach(potionShop) & bottle >= 2 | magic >= 2) | !setting(halfBottleMagic) & setting(quarterBottleMagic) & (magic & reach(potionShop) & bottle >= 4 | magic >= 2) | !setting(halfBottleMagic) & !setting(quarterBottleMagic) & (reach(potionShop) & bottle >= 3 | magic & reach(potionShop) & bottle | magic >= 2)",
+      "source": "BaseClasses.py:424"
+    },
+    "erCanGetGoodBee": {
+      "req": "@erHasBottle & bugCatchingNet & (pegasusBoots | @erHasSword & quake) & reach(goodBeeCave) & (moonPearl | setting(lightWorld_goodBeeCave))",
+      "source": "BaseClasses.py:453"
+    },
+    "erCanKillMostThings": {
+      "req": "@erHasBluntWeapon | caneOfSomaria | caneOfByrna | @erCanShootArrows | fireRod | tenBombs",
+      "source": "BaseClasses.py:439"
+    },
+    "erCanKillMostThings8": {
+      "req": "@erHasBluntWeapon | caneOfSomaria | caneOfByrna & @erCanExtendMagic16 | @erCanShootArrows | fireRod",
+      "source": "BaseClasses.py:439"
+    },
+    "erCanLiftHeavyRocks": {
+      "req": "glove >= 2",
+      "source": "BaseClasses.py:421"
+    },
+    "erCanLiftRocks": {
+      "req": "glove",
+      "source": "BaseClasses.py:398"
+    },
+    "erCanMeltThings": {
+      "req": "fireRod | bombos & @erHasSword",
+      "source": "BaseClasses.py:488"
+    },
+    "erCanShootArrows": {
+      "req": "bow",
+      "source": "BaseClasses.py:447"
+    },
+    "erDefeatAgahnim": {
+      "req": "@erHasSword | hammer | bugCatchingNet",
+      "source": "Bosses.py:105"
+    },
+    "erDefeatAgahnim2": {
+      "req": "@erHasSword | hammer | bugCatchingNet",
+      "source": "Bosses.py:105"
+    },
+    "erDefeatArmosKnights": {
+      "req": "@erHasBluntWeapon | @erCanShootArrows | caneOfSomaria & @erCanExtendMagic10 | caneOfByrna & @erCanExtendMagic16 | iceRod & @erCanExtendMagic32 | fireRod & @erCanExtendMagic32 | boomerang | redBoomerang",
+      "source": "Bosses.py:17"
+    },
+    "erDefeatArrghus": {
+      "req": "hookshot & (@erHasBluntWeapon | fireRod & (@erCanShootArrows | @erCanExtendMagic12) | iceRod & (@erCanShootArrows | @erCanExtendMagic16))",
+      "source": "Bosses.py:45"
+    },
+    "erDefeatBlind": {
+      "req": "@erHasBluntWeapon | caneOfSomaria | caneOfByrna",
+      "source": "Bosses.py:69"
+    },
+    "erDefeatHelmasaurKing": {
+      "req": "@erHasSword | @erCanShootArrows",
+      "source": "Bosses.py:41"
+    },
+    "erDefeatKholdstare": {
+      "req": "(fireRod | bombos & (@erHasSword | setting(swordless))) & (@erHasBluntWeapon | fireRod & @erCanExtendMagic20 | fireRod & bombos & setting(swordless) & @erCanExtendMagic16)",
+      "source": "Bosses.py:72"
+    },
+    "erDefeatLanmolas": {
+      "req": "@erHasBluntWeapon | fireRod | iceRod | caneOfSomaria | caneOfByrna | @erCanShootArrows",
+      "source": "Bosses.py:29"
+    },
+    "erDefeatMoldorm": {
+      "req": "@erHasBluntWeapon",
+      "source": "Bosses.py:38"
+    },
+    "erDefeatMothula": {
+      "req": "@erHasBluntWeapon | fireRod & @erCanExtendMagic10 | caneOfSomaria & @erCanExtendMagic16 | caneOfByrna & @erCanExtendMagic16 | @erCanGetGoodBee",
+      "source": "Bosses.py:58"
+    },
+    "erDefeatTrinexx": {
+      "req": "fireRod & iceRod & (hammer | sword >= 3 | sword >= 2 & @erCanExtendMagic16 | @erHasSword & @erCanExtendMagic32)",
+      "source": "Bosses.py:98"
+    },
+    "erDefeatVitreous": {
+      "req": "@erCanShootArrows | @erHasBluntWeapon",
+      "source": "Bosses.py:95"
+    },
+    "erHasBeamSword": {
+      "req": "sword >= 2",
+      "source": "BaseClasses.py:466"
+    },
+    "erHasBluntWeapon": {
+      "req": "@erHasSword | hammer",
+      "source": "BaseClasses.py:469"
+    },
+    "erHasBoots": {
+      "req": "pegasusBoots",
+      "source": "BaseClasses.py:475"
+    },
+    "erHasBottle": {
+      "req": "bottle",
+      "source": "BaseClasses.py:401"
+    },
+    "erHasFireSource": {
+      "req": "fireRod | lamp",
+      "source": "BaseClasses.py:481"
+    },
+    "erHasHearts4": {
+      "req": "heartContainer | pieceOfHeart >= 4",
+      "source": "BaseClasses.py:407"
+    },
+    "erHasMirror": {
+      "req": "magicMirror",
+      "source": "BaseClasses.py:472"
+    },
+    "erHasPearl": {
+      "req": "moonPearl",
+      "source": "BaseClasses.py:478"
+    },
+    "erHasSword": {
+      "req": "sword",
+      "source": "BaseClasses.py:463"
+    }
+  },
+  "locations": {
+    "Agahnim 1": {
+      "req": "@erDefeatAgahnim",
+      "source": ["Rules.py:172"]
+    },
+    "Agahnim 2": {
+      "req": "@erDefeatAgahnim2",
+      "source": ["Rules.py:445"]
+    },
+    "Blacksmith": {
+      "req": "returnSmith",
+      "source": ["Rules.py:160"]
+    },
+    "Bombos Tablet": {
+      "req": "setting(swordless) & bookOfMudora & hammer & @erHasMirror | !setting(swordless) & bookOfMudora & @erHasBeamSword & @erHasMirror",
+      "source": ["Rules.py:197", "Rules.py:964"]
+    },
+    "Castle Tower - Dark Maze": {
+      "req": "@erCanKillMostThings8 & keyA1 & lamp",
+      "source": ["Rules.py:174", "Rules.py:922"]
+    },
+    "Castle Tower - Room 03": {
+      "req": "@erCanKillMostThings8",
+      "source": ["Rules.py:173"]
+    },
+    "Catfish": {
+      "req": "@erCanLiftRocks",
+      "source": ["Rules.py:187"]
+    },
+    "Dark Blacksmith Ruins": {
+      "req": "returnSmith",
+      "source": ["Rules.py:153"]
+    },
+    "Desert Palace - Big Chest": {
+      "req": "bigKeyP2",
+      "source": ["Rules.py:268"]
+    },
+    "Desert Palace - Boss": {
+      "req": "keyP2 & bigKeyP2 & @erHasFireSource & @erDefeatLanmolas",
+      "source": ["Rules.py:272"]
+    },
+    "Desert Palace - Prize": {
+      "req": "keyP2 & bigKeyP2 & @erHasFireSource & @erDefeatLanmolas & (setting(wildBigKeys) | reach(desertPalaceMainOuter))",
+      "source": ["Rules.py:271", "Rules.py:281"]
+    },
+    "Desert Palace - Torch": {
+      "req": "@erHasBoots",
+      "source": ["Rules.py:269"]
+    },
+    "Eastern Palace - Big Chest": {
+      "req": "bigKeyP1",
+      "source": ["Rules.py:262"]
+    },
+    "Eastern Palace - Big Key Chest": {
+      "req": "lamp",
+      "source": ["Rules.py:932"]
+    },
+    "Eastern Palace - Boss": {
+      "req": "@erCanShootArrows & bigKeyP1 & @erDefeatArmosKnights & lamp",
+      "source": ["Rules.py:263", "Rules.py:933"]
+    },
+    "Eastern Palace - Prize": {
+      "req": "@erCanShootArrows & bigKeyP1 & @erDefeatArmosKnights & lamp",
+      "source": ["Rules.py:264", "Rules.py:934"]
+    },
+    "Ether Tablet": {
+      "req": "setting(swordless) & bookOfMudora & hammer | !setting(swordless) & bookOfMudora & @erHasBeamSword",
+      "source": ["Rules.py:184", "Rules.py:954"]
+    },
+    "Flute Spot": {
+      "req": "shovel",
+      "source": ["Rules.py:152"]
+    },
+    "Frog": {
+      "req": "@erCanLiftHeavyRocks",
+      "source": ["Rules.py:158"]
+    },
+    "Ganon": {
+      "req": "(setting(swordless) & hammer & @erHasFireSource & (bow >= 2 | silverArrowUpgrade) & @erCanShootArrows & count(crystal) >= setting(crystalsGanon) | !setting(swordless) & @erHasBeamSword & @erHasFireSource & count(crystal) >= setting(crystalsGanon) & (sword >= 3 | (bow >= 2 | silverArrowUpgrade) & @erCanShootArrows | lamp | @erCanExtendMagic12) & (!setting(completionistGoal) | setting(locationsAccessibility))) & (!setting(dungeonsGoal) | @erAtMasterSwordPedestal & defeatAgahnim & defeatAgahnim2 & count(crystal) >= 7) & (setting(dungeonsGoal) | !setting(ganonGoal) | defeatAgahnim2)",
+      "source": ["Rules.py:451", "Rules.py:957", "Rules.py:45", "Rules.py:48"]
+    },
+    "Ganons Tower - Big Chest": {
+      "req": "bigKeyA2",
+      "source": ["Rules.py:434"]
+    },
+    "Ganons Tower - Big Key Chest": {
+      "req": "@erDefeatArmosKnights",
+      "source": ["Rules.py:437"]
+    },
+    "Ganons Tower - Big Key Room - Left": {
+      "req": "@erDefeatArmosKnights",
+      "source": ["Rules.py:436"]
+    },
+    "Ganons Tower - Big Key Room - Right": {
+      "req": "@erDefeatArmosKnights",
+      "source": ["Rules.py:438"]
+    },
+    "Ganons Tower - Bob's Torch": {
+      "req": "@erHasBoots",
+      "source": ["Rules.py:409"]
+    },
+    "Ganons Tower - Compass Room - Bottom Left": {
+      "req": "fireRod & (keyA2 >= 4 | maybe & keyA2 >= 3)",
+      "source": ["Rules.py:432"]
+    },
+    "Ganons Tower - Compass Room - Bottom Right": {
+      "req": "fireRod & (keyA2 >= 4 | maybe & keyA2 >= 3)",
+      "source": ["Rules.py:432"]
+    },
+    "Ganons Tower - Compass Room - Top Left": {
+      "req": "fireRod & (keyA2 >= 4 | maybe & keyA2 >= 3)",
+      "source": ["Rules.py:432"]
+    },
+    "Ganons Tower - Compass Room - Top Right": {
+      "req": "fireRod & (keyA2 >= 4 | maybe & keyA2 >= 3)",
+      "source": ["Rules.py:432"]
+    },
+    "Ganons Tower - DMs Room - Bottom Left": {
+      "req": "hookshot",
+      "source": ["Rules.py:889"]
+    },
+    "Ganons Tower - DMs Room - Bottom Right": {
+      "req": "hookshot",
+      "source": ["Rules.py:889"]
+    },
+    "Ganons Tower - DMs Room - Top Left": {
+      "req": "hookshot",
+      "source": ["Rules.py:889"]
+    },
+    "Ganons Tower - DMs Room - Top Right": {
+      "req": "hookshot",
+      "source": ["Rules.py:889"]
+    },
+    "Ganons Tower - Firesnake Room": {
+      "req": "keyA2 >= 3 | maybe & keyA2 >= 2",
+      "source": ["Rules.py:424"]
+    },
+    "Ganons Tower - Pre-Moldorm Chest": {
+      "req": "keyA2 >= 3",
+      "source": ["Rules.py:442"]
+    },
+    "Ganons Tower - Randomizer Room - Bottom Left": {
+      "req": "keyA2 >= 4 | maybe & keyA2 >= 3",
+      "source": ["Rules.py:426"]
+    },
+    "Ganons Tower - Randomizer Room - Bottom Right": {
+      "req": "keyA2 >= 4 | maybe & keyA2 >= 3",
+      "source": ["Rules.py:426"]
+    },
+    "Ganons Tower - Randomizer Room - Top Left": {
+      "req": "keyA2 >= 4 | maybe & keyA2 >= 3",
+      "source": ["Rules.py:426"]
+    },
+    "Ganons Tower - Randomizer Room - Top Right": {
+      "req": "keyA2 >= 4 | maybe & keyA2 >= 3",
+      "source": ["Rules.py:426"]
+    },
+    "Hookshot Cave - Bottom Left": {
+      "req": "hookshot",
+      "source": ["Rules.py:254"]
+    },
+    "Hookshot Cave - Bottom Right": {
+      "req": "hookshot | pegasusBoots",
+      "source": ["Rules.py:253"]
+    },
+    "Hookshot Cave - Top Left": {
+      "req": "hookshot",
+      "source": ["Rules.py:252"]
+    },
+    "Hookshot Cave - Top Right": {
+      "req": "hookshot",
+      "source": ["Rules.py:251"]
+    },
+    "Hyrule Castle - Boomerang Chest": {
+      "req": "setting(standardMode) & @erCanKillMostThings | !setting(standardMode) & keyH2",
+      "source": ["Rules.py:947", "Rules.py:992"]
+    },
+    "Hyrule Castle - Map Chest": {
+      "req": "!setting(standardMode) | @erCanKillMostThings",
+      "source": ["Rules.py:979"]
+    },
+    "Hyrule Castle - Zelda's Chest": {
+      "req": "setting(standardMode) & @erCanKillMostThings | !setting(standardMode) & keyH2",
+      "source": ["Rules.py:948", "Rules.py:993"]
+    },
+    "Ice Palace - Big Chest": {
+      "req": "bigKeyD5",
+      "source": ["Rules.py:335"]
+    },
+    "Ice Palace - Boss": {
+      "req": "@erDefeatKholdstare",
+      "source": ["Rules.py:340"]
+    },
+    "Ice Palace - Prize": {
+      "req": "@erDefeatKholdstare",
+      "source": ["Rules.py:341"]
+    },
+    "Library": {
+      "req": "@erHasBoots",
+      "source": ["Rules.py:163"]
+    },
+    "Magic Bat": {
+      "req": "powder",
+      "source": ["Rules.py:161"]
+    },
+    "Master Sword Pedestal": {
+      "req": "pendantOfWisdom & pendantOfPower & pendantOfCourage",
+      "source": ["Rules.py:168"]
+    },
+    "Mimic Cave": {
+      "req": "hammer",
+      "source": ["Rules.py:257"]
+    },
+    "Misery Mire - Big Chest": {
+      "req": "bigKeyD6",
+      "source": ["Rules.py:346"]
+    },
+    "Misery Mire - Big Key Chest": {
+      "req": "@erHasFireSource",
+      "source": ["Rules.py:357"]
+    },
+    "Misery Mire - Boss": {
+      "req": "@erDefeatVitreous",
+      "source": ["Rules.py:359"]
+    },
+    "Misery Mire - Compass Chest": {
+      "req": "@erHasFireSource",
+      "source": ["Rules.py:356"]
+    },
+    "Misery Mire - Main Lobby": {
+      "req": "keyD6 | bigKeyD6",
+      "source": ["Rules.py:352"]
+    },
+    "Misery Mire - Map Chest": {
+      "req": "keyD6 | bigKeyD6",
+      "source": ["Rules.py:351"]
+    },
+    "Misery Mire - Prize": {
+      "req": "@erDefeatVitreous",
+      "source": ["Rules.py:360"]
+    },
+    "Misery Mire - Spike Chest": {
+      "req": "!setting(cantTakeDamage) & @erHasHearts4 | caneOfByrna | cape",
+      "source": ["Rules.py:347"]
+    },
+    "Missing Smith": {
+      "req": "getFrog",
+      "source": ["Rules.py:159"]
+    },
+    "Old Man": {
+      "req": "lamp",
+      "source": ["Rules.py:926"]
+    },
+    "Palace of Darkness - Big Chest": {
+      "req": "bigKeyD1",
+      "source": ["Rules.py:387"]
+    },
+    "Palace of Darkness - Boss": {
+      "req": "@erDefeatHelmasaurKing",
+      "source": ["Rules.py:402"]
+    },
+    "Palace of Darkness - Dark Basement - Left": {
+      "req": "lamp",
+      "source": ["Rules.py:918"]
+    },
+    "Palace of Darkness - Dark Basement - Right": {
+      "req": "lamp",
+      "source": ["Rules.py:919"]
+    },
+    "Palace of Darkness - Prize": {
+      "req": "@erDefeatHelmasaurKing",
+      "source": ["Rules.py:403"]
+    },
+    "Potion Shop": {
+      "req": "mushroom",
+      "source": ["Rules.py:164"]
+    },
+    "Purple Chest": {
+      "req": "pickUpPurpleChest",
+      "source": ["Rules.py:154"]
+    },
+    "Sahasrahla": {
+      "req": "pendantOfCourage",
+      "source": ["Rules.py:169"]
+    },
+    "Secret Passage": {
+      "req": "!setting(standardMode) | @erCanKillMostThings",
+      "source": ["Rules.py:978"]
+    },
+    "Sewers - Dark Cross": {
+      "req": "(@erCanKillMostThings | !setting(standardMode)) & (setting(standardMode) | lamp)",
+      "source": ["Rules.py:990", "Rules.py:937"]
+    },
+    "Sick Kid": {
+      "req": "@erHasBottle",
+      "source": ["Rules.py:162"]
+    },
+    "Skull Woods - Big Chest": {
+      "req": "bigKeyD3 | maybe",
+      "source": ["Rules.py:325"]
+    },
+    "Skull Woods - Boss": {
+      "req": "@erDefeatMothula",
+      "source": ["Rules.py:329"]
+    },
+    "Skull Woods - Prize": {
+      "req": "@erDefeatMothula",
+      "source": ["Rules.py:330"]
+    },
+    "Spike Cave": {
+      "req": "hammer & @erCanLiftRocks & (cape & @erCanExtendMagic16Full | caneOfByrna & (@erCanExtendMagic12Full | !setting(cantTakeDamage) & (@erHasBoots | @erHasHearts4)))",
+      "source": ["Rules.py:243"]
+    },
+    "Sunken Treasure": {
+      "req": "reach(dam) & openFloodgate",
+      "source": ["Rules.py:136", "Rules.py:295"]
+    },
+    "Swamp Palace - Big Chest": {
+      "req": "bigKeyD2 | maybe",
+      "source": ["Rules.py:299"]
+    },
+    "Swamp Palace - Boss": {
+      "req": "@erDefeatArrghus",
+      "source": ["Rules.py:303"]
+    },
+    "Swamp Palace - Prize": {
+      "req": "@erDefeatArrghus",
+      "source": ["Rules.py:304"]
+    },
+    "Thieves' Town - Attic": {
+      "req": "keyD4",
+      "source": ["Rules.py:315"]
+    },
+    "Thieves' Town - Big Chest": {
+      "req": "(keyD4 | maybe) & hammer",
+      "source": ["Rules.py:312"]
+    },
+    "Thieves' Town - Boss": {
+      "req": "@erDefeatBlind",
+      "source": ["Rules.py:310"]
+    },
+    "Thieves' Town - Prize": {
+      "req": "@erDefeatBlind",
+      "source": ["Rules.py:311"]
+    },
+    "Tower of Hera - Big Chest": {
+      "req": "bigKeyP3",
+      "source": ["Rules.py:285"]
+    },
+    "Tower of Hera - Big Key Chest": {
+      "req": "@erHasFireSource",
+      "source": ["Rules.py:286"]
+    },
+    "Tower of Hera - Boss": {
+      "req": "@erDefeatMoldorm",
+      "source": ["Rules.py:289"]
+    },
+    "Tower of Hera - Prize": {
+      "req": "@erDefeatMoldorm",
+      "source": ["Rules.py:290"]
+    },
+    "Turtle Rock - Big Chest": {
+      "req": "bigKeyD7 & (caneOfSomaria | hookshot)",
+      "source": ["Rules.py:369"]
+    },
+    "Turtle Rock - Boss": {
+      "req": "@erDefeatTrinexx",
+      "source": ["Rules.py:379"]
+    },
+    "Turtle Rock - Compass Chest": {
+      "req": "caneOfSomaria",
+      "source": ["Rules.py:366"]
+    },
+    "Turtle Rock - Eye Bridge - Bottom Left": {
+      "req": "caneOfByrna | cape | shield >= 3",
+      "source": ["Rules.py:374"]
+    },
+    "Turtle Rock - Eye Bridge - Bottom Right": {
+      "req": "caneOfByrna | cape | shield >= 3",
+      "source": ["Rules.py:375"]
+    },
+    "Turtle Rock - Eye Bridge - Top Left": {
+      "req": "caneOfByrna | cape | shield >= 3",
+      "source": ["Rules.py:376"]
+    },
+    "Turtle Rock - Eye Bridge - Top Right": {
+      "req": "caneOfByrna | cape | shield >= 3",
+      "source": ["Rules.py:377"]
+    },
+    "Turtle Rock - Prize": {
+      "req": "@erDefeatTrinexx",
+      "source": ["Rules.py:380"]
+    },
+    "Turtle Rock - Roller Room - Left": {
+      "req": "caneOfSomaria & fireRod",
+      "source": ["Rules.py:367"]
+    },
+    "Turtle Rock - Roller Room - Right": {
+      "req": "caneOfSomaria & fireRod",
+      "source": ["Rules.py:368"]
+    },
+    "Zora's Ledge": {
+      "req": "flippers",
+      "source": ["Rules.py:156"]
+    }
+  },
+  "unported": [
+    {
+      "code": "world.get_region('Hyrule Castle Secret Entrance', player).can_reach_private = lambda state: True",
+      "line": 117,
+      "why": "a save-and-quit point: what reaches a region"
+    },
+    {
+      "code": "old_rule = world.get_region('Links House', player).can_reach_private",
+      "line": 118,
+      "why": "a save-and-quit point: what reaches a region"
+    },
+    {
+      "code": "world.get_region('Links House', player).can_reach_private = lambda state: state.can_reach('Sanctuar…",
+      "line": 119,
+      "why": "a save-and-quit point: what reaches a region"
+    },
+    {
+      "code": "world.get_region('Links House', player).can_reach_private = lambda state: True",
+      "line": 122,
+      "why": "a save-and-quit point: what reaches a region"
+    },
+    {
+      "code": "world.get_region('Sanctuary', player).can_reach_private = lambda state: True",
+      "line": 123,
+      "why": "a save-and-quit point: what reaches a region"
+    },
+    {
+      "code": "old_rule = world.get_region('Old Man House', player).can_reach_private",
+      "line": 126,
+      "why": "a save-and-quit point: what reaches a region"
+    },
+    {
+      "code": "world.get_region('Old Man House', player).can_reach_private = lambda state: state.can_reach('Old Ma…",
+      "line": 127,
+      "why": "a save-and-quit point: what reaches a region"
+    },
+    {
+      "code": "set_trock_key_rules(world, player)",
+      "line": 463,
+      "why": "Turtle Rock's key doors, by which of its doors are reached"
+    },
+    {
+      "code": "set_big_bomb_rules(world, player)",
+      "line": 51,
+      "why": "the big bomb's route, by where the Big Bomb Shop's door is connected"
+    },
+    {
+      "code": "if not world.swamp_patch_required[player]",
+      "line": 56,
+      "why": "whether Swamp Palace and the Dam keep their doors (EntranceShuffle.py)"
+    },
+    {
+      "code": "set_bunny_rules(world, player)",
+      "line": 60,
+      "why": "the bunny's paths, by which regions the entrances make dark"
+    }
+  ],
+  "upstream": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "copyright": "Copyright (c) 2017 LLCoolDave",
+    "license": "MIT",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  }
+}
