@@ -115,8 +115,11 @@ const RANGE = Object.fromEntries(
 const HEADER = "rom-header";
 const TITLE_LENGTH = 21;
 
-/** Why a setting is not known: unread, or a value vt never writes. */
-export type SeedUnknown = Unsettled | "unrecognized";
+/**
+ * Why a setting is not known: unread, a value vt never writes, or a Mystery
+ * seed that hides it.
+ */
+export type SeedUnknown = Unsettled | "unrecognized" | "mystery";
 
 /** A setting the ROM states, or why it is not known. */
 export type SeedSetting<T> =
@@ -234,6 +237,8 @@ const unknown = <T>(why: SeedUnknown): SeedSetting<T> => ({
 });
 /** A setting whose value is none vt writes. */
 export const UNRECOGNIZED = unknown<never>("unrecognized");
+/** A setting a Mystery seed hides until the player finds it in game. */
+export const MYSTERY = unknown<never>("mystery");
 
 /** Whether Race Mode reads a range of this decoder's. */
 const racePermits = (id: SeedSettingsRangeId) =>

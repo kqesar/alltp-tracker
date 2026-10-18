@@ -17,6 +17,27 @@ import {
 const seedOf = (rom: SeedRom, { race = false } = {}) =>
   readingOf(writeSeedSettings(seedMemory({ race }), rom), { race }).seed;
 
+/** A Mystery race seed: its ROM in Race Mode, its file hiding the rest. */
+const mysterySeed = () => {
+  const hidden = { known: false, why: "mystery" } as const;
+  return {
+    ...seedOf({}, { race: true }),
+    accessibility: hidden,
+    crystalsGanon: hidden,
+    crystalsTower: hidden,
+    goal: hidden,
+    itemFunctionality: hidden,
+    itemPlacement: hidden,
+    itemPool: hidden,
+    mode: hidden,
+    swordless: hidden,
+    wildBigKeys: hidden,
+    wildCompasses: hidden,
+    wildKeys: hidden,
+    wildMaps: hidden,
+  };
+};
+
 /** The tracker's run, on a run type's own settings. */
 const run = (presetId: string) => ({
   presetId,
@@ -187,6 +208,32 @@ describe("checkSeed", () => {
     ).toEqual({ kind: "unread", why: "race-mode" });
   });
 
+  it("offers a Mystery run for a Mystery seed, in the run's world", () => {
+    const check = checkSeed(mysterySeed(), run("inverted"));
+
+    expect(check).toEqual({
+      kind: "differs",
+      presetId: "mystery",
+      runText: "Inverted",
+      seed: "RACE",
+      seedText: "Mystery (Inverted)",
+      settings: { ...getPreset("mystery").settings, mode: "inverted" },
+    });
+    if (check.kind !== "differs") throw new Error("expected differs");
+    expect(promptText(check)).toBe(
+      "This seed is Mystery (Inverted). The tracker is set to Inverted. Switch?",
+    );
+  });
+
+  it("leaves a Mystery run as it is for a Mystery seed", () => {
+    const check = checkSeed(mysterySeed(), run("mystery"));
+
+    expect(check).toEqual({ kind: "unread", why: "mystery" });
+    expect(seedLineText(check, false)).toBe(
+      "A Mystery seed: its settings stay hidden until you find them in game.",
+    );
+  });
+
   it("waits for settings not read yet, and refuses values no seed has", () => {
     const memory = writeSeedSettings(seedMemory({ race: false }), {});
     expect(
@@ -225,6 +272,20 @@ describe("describeRun", () => {
         swordless: false,
       }),
     ).toBe("Swordless (Open, Ganon, 7/7, swords)");
+  });
+
+  it("leaves out what a Mystery run has not found", () => {
+    const mystery = getPreset("mystery").settings;
+    expect(describeRun("mystery", mystery)).toBe("Mystery (Open)");
+    expect(
+      describeRun("mystery", {
+        ...mystery,
+        hidden: (mystery.hidden ?? []).filter(
+          (setting) => setting !== "goal" && setting !== "crystalsGanon",
+        ),
+        swordless: true,
+      }),
+    ).toBe("Mystery (Open, Ganon, ?/7)");
   });
 });
 

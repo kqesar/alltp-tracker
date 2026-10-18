@@ -92,17 +92,35 @@ describe("seedFileReading", () => {
     expect(reading?.goal).toEqual({ known: true, value: "ganon" });
   });
 
-  it("reads a mystery seed's world and goal as unrecognized: its file drops them", () => {
-    const reading = seedFileReading({
-      hash: "eM43RgZ4Gj",
-      spoiler: {
-        meta: { logic: "NoGlitches", spoilers: "mystery", tournament: true },
-      },
-    });
+  it("reads a Mystery race seed's settings as hidden by the seed", () => {
+    const reading = seedFileReading(seedFile("xvJo0drkyJ"));
 
-    expect(reading?.logic).toEqual({ known: true, value: "NoGlitches" });
-    expect(reading?.mode).toEqual({ known: false, why: "unrecognized" });
-    expect(reading?.wildKeys).toEqual({ known: false, why: "unrecognized" });
+    const hidden = { known: false, why: "mystery" };
+    expect(reading).toEqual({
+      accessibility: hidden,
+      crystalsGanon: hidden,
+      crystalsTower: hidden,
+      goal: hidden,
+      itemFunctionality: hidden,
+      itemPlacement: hidden,
+      itemPool: hidden,
+      logic: { known: true, value: "NoGlitches" },
+      mode: hidden,
+      seed: "xvJo0drkyJ",
+      swordless: hidden,
+      wildBigKeys: hidden,
+      wildCompasses: hidden,
+      wildKeys: hidden,
+      wildMaps: hidden,
+    });
+  });
+
+  it("reads a seed outside a race as it is, whatever its spoilers", () => {
+    // vt strips a Mystery seed's file in tournaments only
+    const reading = seedFileReading(
+      withMeta({ spoilers: "mystery", tournament: false }),
+    );
+    expect(reading?.mode).toEqual({ known: true, value: "open" });
   });
 
   it("refuses what is not a seed file", () => {

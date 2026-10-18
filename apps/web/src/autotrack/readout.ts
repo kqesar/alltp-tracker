@@ -193,6 +193,7 @@ export type Readout = {
 
 /** Why a seed's setting is unknown, in words. */
 const SETTING_UNKNOWN: Readonly<Record<SeedUnknown, string>> = {
+  mystery: "hidden: a Mystery seed",
   "not-read": "not read yet",
   "race-mode": "not read in Race Mode",
   unrecognized: "not recognized",
