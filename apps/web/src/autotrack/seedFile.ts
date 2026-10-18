@@ -101,6 +101,7 @@ export const withSeedFile = (
         accessibility: take(rom.accessibility, file.accessibility),
         crystalsGanon: take(rom.crystalsGanon, file.crystalsGanon),
         crystalsTower: take(rom.crystalsTower, file.crystalsTower),
+        entrances: take(rom.entrances, file.entrances),
         goal: take(rom.goal, file.goal),
         itemFunctionality: take(rom.itemFunctionality, file.itemFunctionality),
         itemPlacement: take(rom.itemPlacement, file.itemPlacement),

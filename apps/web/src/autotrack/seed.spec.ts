@@ -170,6 +170,28 @@ describe("checkSeed", () => {
     });
   });
 
+  it("takes the entrances a seed's file states: a Crosskeys seed is no Keysanity one", () => {
+    const crosskeys = {
+      ...seedOf({ dungeonItems: "full" }),
+      entrances: { known: true, value: "crossed" },
+    } as const;
+    expect(checkSeed(crosskeys, run("keysanity"))).toMatchObject({
+      kind: "differs",
+      presetId: "crosskeys",
+      runText: "Keysanity",
+      seedText: "Crosskeys (Open, Ganon, 7/7)",
+    });
+    // Nor does a Mystery run take a seed of other entrances in place
+    const vanilla = {
+      ...seedOf({}),
+      entrances: { known: true, value: "none" },
+    } as const;
+    expect(
+      checkSeed({ ...vanilla, entrances: crosskeys.entrances }, run("mystery")),
+    ).toMatchObject({ kind: "differs", seedText: /Crossworld entrances/ });
+    expect(checkSeed(vanilla, run("open"))).toMatchObject({ kind: "same" });
+  });
+
   it("holds a seed's maps and compasses, or its small keys too, outside their dungeons", () => {
     expect(
       checkSeed(seedOf({ dungeonItems: "mc" }), run("open")),

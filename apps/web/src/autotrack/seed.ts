@@ -22,6 +22,7 @@ import type { SeedFileError } from "@/autotrack/seedFile";
 import {
   ACCESSIBILITY_LABELS,
   DUNGEON_ITEM_LABELS,
+  ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
   getPreset,
   isHidden,
@@ -101,6 +102,7 @@ const GOAL_NAMES: Readonly<Record<RunSettings["goal"], string>> = {
 /** The settings a run type holds, which a seed's must match. */
 const COMPARED = [
   "mode",
+  "entranceShuffle",
   "goal",
   "dungeonItems",
   "swordless",
@@ -195,6 +197,13 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
   }
   const differs = (key: TunableSetting) =>
     shown(key) && settings[key] !== preset.settings[key];
+  if (settings.entranceShuffle !== preset.settings.entranceShuffle) {
+    parts.push(
+      settings.entranceShuffle === "none"
+        ? "vanilla entrances"
+        : `${ENTRANCE_LABELS[settings.entranceShuffle]} entrances`,
+    );
+  }
   if (differs("dungeonItems")) {
     parts.push(
       settings.dungeonItems === "standard"
@@ -320,6 +329,7 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     crystalsGanon: crystalsGanon.value,
     crystalsTower: crystalsTower.value,
     dungeonItems,
+    entranceShuffle: fromFile(seed.entrances, run.settings.entranceShuffle),
     goal: runGoal,
     itemFunctionality: fromFile(
       seed.itemFunctionality,
@@ -333,7 +343,11 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   // The seed's settings hide nothing: a Mystery run's hidden list is its own
   delete settings.hidden;
   // A Mystery run takes what the seed reveals, in place, in its own world
-  if (run.presetId === "mystery" && settings.mode === run.settings.mode) {
+  if (
+    run.presetId === "mystery" &&
+    settings.mode === run.settings.mode &&
+    settings.entranceShuffle === run.settings.entranceShuffle
+  ) {
     const said: Partial<Pick<RunSettings, TunableSetting>> = {
       crystalsGanon: settings.crystalsGanon,
       crystalsTower: settings.crystalsTower,
