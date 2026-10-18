@@ -9,7 +9,12 @@ import {
   type Keymap,
   restoreShortcuts,
 } from "@/data/keymap";
-import { DEFAULT_PRESET_ID, getPreset, type RunSettings } from "@/data/presets";
+import {
+  DEFAULT_PRESET_ID,
+  getPreset,
+  type RunSettings,
+  type TunableSetting,
+} from "@/data/presets";
 import { counterMax, smallKeysMax } from "@/logic/settings";
 import {
   GAME,
@@ -52,6 +57,14 @@ type GameState = Progress &
      * them once any is left, none once all are checked.
      */
     toggleChecks: (locations: readonly string[]) => void;
+    /**
+     * Change settings that move no dungeon counter (crystals, item placement,
+     * pool, functionality, accessibility) in the run going: its progress
+     * stands. One undo step; none when nothing changes.
+     */
+    updateSettings: (
+      change: Partial<Pick<RunSettings, TunableSetting>>,
+    ) => void;
     setBigKeysVisible: (visible: boolean) => void;
     setMapLayout: (layout: MapLayout) => void;
     setMapView: (view: MapView) => void;
@@ -386,6 +399,15 @@ export const useGameStore = create<GameState>()(
               future: [progressOf(state), ...state.future],
               past: state.past.slice(0, -1),
             };
+          }),
+
+        updateSettings: (change) =>
+          set((state) => {
+            const settings = { ...state.settings, ...change };
+            const same = (Object.keys(change) as TunableSetting[]).every(
+              (key) => settings[key] === state.settings[key],
+            );
+            return same ? state : record(state, { settings });
           }),
       }),
       {

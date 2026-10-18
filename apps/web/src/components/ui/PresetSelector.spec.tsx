@@ -17,6 +17,7 @@ import daily from "../../../../../packs/alttpr/test/seed-files/eM43RgZ4Gj.json";
 vi.mock("@/stores/gameStore", () => ({ useGameStore: vi.fn() }));
 
 const applyRun = vi.fn();
+const updateSettings = vi.fn();
 const fakeState = {
   applyRun,
   presetId: "open",
@@ -25,6 +26,7 @@ const fakeState = {
     crystalsGanon: 6,
     crystalsTower: 5,
   },
+  updateSettings,
 };
 
 afterEach(() => {
@@ -61,10 +63,12 @@ describe("PresetSelector", () => {
     expect(within(dialog).getByText("Goal")).toBeInTheDocument();
     expect(within(dialog).getByText("Defeat Ganon")).toBeInTheDocument();
     // A seed's own crystal counts, which no preset names
-    const row = (label: string) =>
-      within(dialog).getByText(label, { selector: "dt" }).nextElementSibling;
-    expect(row("Ganon's Tower")).toHaveTextContent("5 crystals");
-    expect(row("Ganon")).toHaveTextContent("6 crystals");
+    expect(
+      within(dialog).getByRole("combobox", { name: "Ganon's Tower" }),
+    ).toHaveDisplayValue("5 crystals");
+    expect(
+      within(dialog).getByRole("combobox", { name: "Ganon" }),
+    ).toHaveDisplayValue("6 crystals");
   });
 
   it("asks for confirmation before switching, then applies the preset", () => {
@@ -118,6 +122,28 @@ describe("PresetSelector", () => {
       itemPool: "hard",
       mode: "inverted",
     });
+  });
+
+  it("tunes the settings that move no counter in place, the run kept", () => {
+    render(<PresetSelector />);
+    const dialog = openList();
+
+    fireEvent.change(
+      within(dialog).getByRole("combobox", { name: "Item pool" }),
+      { target: { value: "hard" } },
+    );
+    fireEvent.change(
+      within(dialog).getByRole("combobox", { name: "Ganon's Tower" }),
+      { target: { value: "0" } },
+    );
+
+    expect(updateSettings.mock.calls).toEqual([
+      [{ itemPool: "hard" }],
+      [{ crystalsTower: 0 }],
+    ]);
+    expect(applyRun).not.toHaveBeenCalled();
+    // A setting that names the run type is no field
+    expect(within(dialog).getAllByRole("combobox")).toHaveLength(6);
   });
 
   it("does not switch when picking the already-active preset", () => {
