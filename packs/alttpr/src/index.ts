@@ -191,5 +191,6 @@ export {
   regionId,
   START,
 } from "./world";
+export { INVERTED_REGIONS } from "./worlds/inverted";
 export { OPEN_REGIONS } from "./worlds/open";
 export { STANDARD_REGIONS } from "./worlds/standard";

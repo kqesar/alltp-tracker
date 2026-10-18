@@ -1,0 +1,60 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/Inverted/HyruleCastleTowerTest.php",
+  "class": "Inverted\\HyruleCastleTowerTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "NoGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":[],"base":"setUp"},"kind":"regionEnter","line":50,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":1,"expected":false,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":[],"base":"allItems","except":["Flute","Gloves"]},"kind":"regionEnter","line":51,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":2,"expected":false,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":[],"base":"allItems","except":["Flute","Lamp"]},"kind":"regionEnter","line":52,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":3,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["Flute","MoonPearl","ProgressiveGlove","Hammer"],"base":"setUp"},"kind":"regionEnter","line":53,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":4,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["Flute","MoonPearl","PowerGlove","Hammer"],"base":"setUp"},"kind":"regionEnter","line":54,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":5,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["Flute","MoonPearl","ProgressiveGlove","ProgressiveGlove","UncleSword"],"base":"setUp"},"kind":"regionEnter","line":55,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":6,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["Flute","MoonPearl","TitansMitt","UncleSword"],"base":"setUp"},"kind":"regionEnter","line":56,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":7,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["ProgressiveGlove","Lamp","UncleSword"],"base":"setUp"},"kind":"regionEnter","line":57,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":8,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["PowerGlove","Lamp","UncleSword"],"base":"setUp"},"kind":"regionEnter","line":58,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":9,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["TitansMitt","Lamp","UncleSword"],"base":"setUp"},"kind":"regionEnter","line":59,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":0,"expected":false,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":[],"base":"setUp"},"kind":"regionComplete","line":85,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":1,"expected":false,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"regionComplete","line":86,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":2,"expected":false,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":[],"base":"allItems","except":["AnySword"]},"kind":"regionComplete","line":87,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":3,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","ProgressiveGlove","Lamp","UncleSword"],"base":"setUp"},"kind":"regionComplete","line":88,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":4,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","PowerGlove","Lamp","UncleSword"],"base":"setUp"},"kind":"regionComplete","line":89,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":5,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","TitansMitt","Lamp","UncleSword"],"base":"setUp"},"kind":"regionComplete","line":90,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":6,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","ProgressiveGlove","Lamp","ProgressiveSword"],"base":"setUp"},"kind":"regionComplete","line":91,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":7,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","PowerGlove","Lamp","ProgressiveSword"],"base":"setUp"},"kind":"regionComplete","line":92,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":8,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","TitansMitt","Lamp","ProgressiveSword"],"base":"setUp"},"kind":"regionComplete","line":93,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":9,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","ProgressiveGlove","Lamp","MasterSword"],"base":"setUp"},"kind":"regionComplete","line":94,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":10,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","PowerGlove","Lamp","MasterSword"],"base":"setUp"},"kind":"regionComplete","line":95,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":11,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","TitansMitt","Lamp","MasterSword"],"base":"setUp"},"kind":"regionComplete","line":96,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":12,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","ProgressiveGlove","Lamp","L3Sword"],"base":"setUp"},"kind":"regionComplete","line":97,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":13,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","PowerGlove","Lamp","L3Sword"],"base":"setUp"},"kind":"regionComplete","line":98,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":14,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","TitansMitt","Lamp","L3Sword"],"base":"setUp"},"kind":"regionComplete","line":99,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":15,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","ProgressiveGlove","Lamp","L4Sword"],"base":"setUp"},"kind":"regionComplete","line":100,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":16,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","PowerGlove","Lamp","L4Sword"],"base":"setUp"},"kind":"regionComplete","line":101,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":17,"expected":true,"file":"tests/Inverted/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","TitansMitt","Lamp","L4Sword"],"base":"setUp"},"kind":"regionComplete","line":102,"method":"testComplete","region":"Hyrule Castle Tower"}
+  ]
+}

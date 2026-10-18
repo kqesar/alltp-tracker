@@ -70,13 +70,15 @@ export const PRIZE_ITEMS = {
 /**
  * The prize locations that are Location\Prize\Event, which take events
  * only: Zelda (Standard/HyruleCastleEscape.php:51), Agahnim
- * (HyruleCastleTower.php:43), Agahnim 2 (GanonsTower.php:80) and Ganon
- * (DarkWorld/NorthEast.php:36). The dungeons' prizes take a pendant or a
- * crystal.
+ * (HyruleCastleTower.php:43), Agahnim 2 (GanonsTower.php:80), Ganon
+ * (DarkWorld/NorthEast.php:36; Inverted/LightWorld/NorthEast.php:19) and,
+ * in an Inverted world, the Bomb Merchant (Inverted/LightWorld/South.php:27).
+ * The dungeons' prizes take a pendant or a crystal.
  */
 export const EVENT_LOCATIONS: readonly string[] = [
   "agahnim",
   "agahnim-2",
+  "bomb-merchant",
   "ganon",
   "zelda",
 ];

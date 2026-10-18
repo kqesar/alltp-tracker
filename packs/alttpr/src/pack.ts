@@ -12,6 +12,7 @@ import { MEDALLION_FACTS } from "./medallions";
 import { RULES } from "./rules";
 import type { AlttprSettings } from "./settings";
 import { buildWorld, type RegionModule } from "./world";
+import { INVERTED_REGIONS } from "./worlds/inverted";
 import { OPEN_REGIONS } from "./worlds/open";
 import { STANDARD_REGIONS } from "./worlds/standard";
 
@@ -26,10 +27,11 @@ export const STATE_NAMES: readonly string[] = [
   ...DERIVED_FACTS,
 ];
 
-/** The region modules of the run's world: Standard's or Open's. */
+/** The region modules of the run's world: Standard's, Open's or Inverted's. */
 export function regionModules(
   settings: AlttprSettings,
 ): readonly RegionModule[] {
+  if (settings.invertedMode) return INVERTED_REGIONS;
   return settings.standardMode ? STANDARD_REGIONS : OPEN_REGIONS;
 }
 

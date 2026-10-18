@@ -1,0 +1,69 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/Inverted/DarkWorld/DeathMountain/EastTest.php",
+  "class": "Inverted\\DarkWorld\\DeathMountain\\EastTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "NoGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Superbunny Cave - Top","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":52,"location":"Superbunny Cave - Top","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Lamp"],"base":"setUp"},"kind":"location","line":53,"location":"Superbunny Cave - Top","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","ProgressiveGlove","MoonPearl","Flute"],"base":"setUp"},"kind":"location","line":54,"location":"Superbunny Cave - Top","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hammer","ProgressiveGlove","MoonPearl","Flute"],"base":"setUp"},"kind":"location","line":55,"location":"Superbunny Cave - Top","method":"testLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":57,"location":"Superbunny Cave - Bottom","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":58,"location":"Superbunny Cave - Bottom","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Lamp"],"base":"setUp"},"kind":"location","line":59,"location":"Superbunny Cave - Bottom","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","ProgressiveGlove","MoonPearl","Flute"],"base":"setUp"},"kind":"location","line":60,"location":"Superbunny Cave - Bottom","method":"testLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hammer","ProgressiveGlove","MoonPearl","Flute"],"base":"setUp"},"kind":"location","line":61,"location":"Superbunny Cave - Bottom","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":63,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":64,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["PegasusBoots","Hookshot"]},"kind":"location","line":65,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":13,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Lamp","PegasusBoots"],"base":"setUp"},"kind":"location","line":66,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":14,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","ProgressiveGlove","MoonPearl","Flute","PegasusBoots"],"base":"setUp"},"kind":"location","line":67,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Hammer","MoonPearl","Flute","PegasusBoots"],"base":"setUp"},"kind":"location","line":68,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Lamp","Hookshot"],"base":"setUp"},"kind":"location","line":69,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","ProgressiveGlove","MoonPearl","Flute","Hookshot"],"base":"setUp"},"kind":"location","line":70,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Hammer","MoonPearl","Flute","Hookshot"],"base":"setUp"},"kind":"location","line":71,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":19,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":73,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":20,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":74,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":21,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["PegasusBoots","Hookshot"]},"kind":"location","line":75,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":22,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Lamp","Hookshot"],"base":"setUp"},"kind":"location","line":76,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":23,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","ProgressiveGlove","MoonPearl","Flute","Hookshot"],"base":"setUp"},"kind":"location","line":77,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":24,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Hammer","MoonPearl","Flute","Hookshot"],"base":"setUp"},"kind":"location","line":78,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":25,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":80,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":26,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":81,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":27,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["PegasusBoots","Hookshot"]},"kind":"location","line":82,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":28,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Lamp","Hookshot"],"base":"setUp"},"kind":"location","line":83,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":29,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","ProgressiveGlove","MoonPearl","Flute","Hookshot"],"base":"setUp"},"kind":"location","line":84,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":30,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Hammer","MoonPearl","Flute","Hookshot"],"base":"setUp"},"kind":"location","line":85,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":31,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":87,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":32,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["Gloves","Flute"]},"kind":"location","line":88,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":33,"expected":false,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["PegasusBoots","Hookshot"]},"kind":"location","line":89,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":34,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Lamp","Hookshot"],"base":"setUp"},"kind":"location","line":90,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":35,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","ProgressiveGlove","MoonPearl","Flute","Hookshot"],"base":"setUp"},"kind":"location","line":91,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":36,"expected":true,"file":"tests/Inverted/DarkWorld/DeathMountain/EastTest.php","items":{"add":["ProgressiveGlove","Hammer","MoonPearl","Flute","Hookshot"],"base":"setUp"},"kind":"location","line":92,"location":"Hookshot Cave - Top Right","method":"testLocation"}
+  ]
+}

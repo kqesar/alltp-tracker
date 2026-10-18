@@ -13,11 +13,33 @@ const fixtures = loadFixtures();
 const cases = fixtures.flatMap((fixture) => fixture.cases);
 
 describe("the upstream fixtures", () => {
-  it("hold the cases of every NoGlitches test class, file by file", () => {
+  it("hold the cases of every NoGlitches and Inverted test class, file by file", () => {
     const counts = Object.fromEntries(
       fixtures.map((f) => [f.path, f.cases.length]),
     );
     expect(counts).toEqual({
+      "Inverted/DarkWorld/DeathMountain/East.json": 37,
+      "Inverted/DarkWorld/DeathMountain/West.json": 40,
+      "Inverted/DarkWorld/Mire.json": 12,
+      "Inverted/DarkWorld/NorthEast.json": 50,
+      "Inverted/DarkWorld/NorthWest.json": 33,
+      "Inverted/DarkWorld/South.json": 8,
+      "Inverted/DeathMountain/East.json": 182,
+      "Inverted/DeathMountain/West.json": 21,
+      "Inverted/DesertPalace.json": 167,
+      "Inverted/EasternPalace.json": 143,
+      "Inverted/GanonsTower.json": 489,
+      "Inverted/HyruleCastleEscape.json": 73,
+      "Inverted/HyruleCastleTower.json": 28,
+      "Inverted/IcePalace.json": 234,
+      "Inverted/LightWorld.json": 469,
+      "Inverted/MiseryMire.json": 830,
+      "Inverted/PalaceOfDarkness.json": 168,
+      "Inverted/SkullWoods.json": 117,
+      "Inverted/SwampPalace.json": 197,
+      "Inverted/ThievesTown.json": 30,
+      "Inverted/TowerOfHera.json": 78,
+      "Inverted/TurtleRock.json": 165,
       "NoGlitches/DarkWorld/DeathMountain/East.json": 54,
       "NoGlitches/DarkWorld/DeathMountain/West.json": 41,
       "NoGlitches/DarkWorld/Mire.json": 12,
@@ -48,11 +70,11 @@ describe("the upstream fixtures", () => {
     const kinds: Partial<Record<CaseKind, number>> = {};
     for (const c of cases) kinds[c.kind] = (kinds[c.kind] ?? 0) + 1;
     expect(kinds).toEqual({
-      fill: 135,
-      location: 2464,
-      regionComplete: 1,
-      regionEnter: 9,
-      regionFill: 360,
+      fill: 262,
+      location: 5504,
+      regionComplete: 19,
+      regionEnter: 35,
+      regionFill: 720,
     });
   });
 
@@ -61,6 +83,7 @@ describe("the upstream fixtures", () => {
       f.unsupported.map((u) => [f.file, u.method, u.rows?.length ?? 0]),
     );
     expect(unsupported).toEqual([
+      ["tests/Inverted/DesertPalaceTest.php", "testDungeonItemWrite", 8],
       ["tests/NoGlitches/DesertPalaceTest.php", "testDungeonItemWrite", 8],
     ]);
   });
@@ -84,10 +107,12 @@ describe("the upstream fixtures", () => {
     }
   });
 
-  it("run in a Standard or Open world with the test rules", () => {
+  it("run in a Standard, Open or Inverted world with the test rules", () => {
     for (const fixture of fixtures) {
       const world = fixture.worlds.world;
-      expect(["open", "standard"], fixture.path).toContain(world?.mode);
+      expect(["inverted", "open", "standard"], fixture.path).toContain(
+        world?.mode,
+      );
       expect(world?.config, fixture.path).toEqual({
         difficulty: "test_rules",
         logic: "NoGlitches",
@@ -98,6 +123,12 @@ describe("the upstream fixtures", () => {
         .filter((f) => f.worlds.world?.mode === "open")
         .map((f) => f.file),
     ).toEqual(["tests/NoGlitches/OpenTest.php"]);
+    // Every Inverted test class, and only they, build an Inverted world
+    for (const fixture of fixtures) {
+      expect(fixture.worlds.world?.mode === "inverted", fixture.path).toBe(
+        fixture.path.startsWith("Inverted/"),
+      );
+    }
   });
 
   it("override only the dungeon item settings of the world", () => {
@@ -145,7 +176,9 @@ describe("the upstream fixtures", () => {
         ? [["location" in c ? c.location : c.region, c.expected, c.items]]
         : [];
     });
+    // Sick Kid with no bottle, once per world it is tested in
     expect(removing).toEqual([
+      ["Sick Kid", false, { add: [], base: "allItems", except: ["AnyBottle"] }],
       ["Sick Kid", false, { add: [], base: "allItems", except: ["AnyBottle"] }],
     ]);
   });

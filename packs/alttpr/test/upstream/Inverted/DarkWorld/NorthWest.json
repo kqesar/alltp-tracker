@@ -1,0 +1,65 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/Inverted/DarkWorld/NorthWestTest.php",
+  "class": "Inverted\\DarkWorld\\NorthWestTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "NoGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Brewery","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":53,"location":"C-Shaped House","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":55,"location":"Chest Game","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":57,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["Hammer"]},"kind":"location","line":58,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["Gloves","MagicMirror"]},"kind":"location","line":59,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["Hammer","ProgressiveGlove","ProgressiveGlove"],"base":"setUp"},"kind":"location","line":60,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["Hammer","TitansMitt"],"base":"setUp"},"kind":"location","line":61,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["Hammer","ProgressiveGlove","MagicMirror","MoonPearl"],"base":"setUp"},"kind":"location","line":62,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["Hammer","DefeatAgahnim","MagicMirror"],"base":"setUp"},"kind":"location","line":63,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":65,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":66,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["Cape"]},"kind":"location","line":67,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["Gloves"]},"kind":"location","line":68,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":14,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["MagicMirror"]},"kind":"location","line":69,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","Cape","MagicMirror","ProgressiveGlove","ProgressiveGlove"],"base":"setUp"},"kind":"location","line":70,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","Cape","MagicMirror","ProgressiveGlove","Hammer"],"base":"setUp"},"kind":"location","line":71,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","Cape","MagicMirror","TitansMitt"],"base":"setUp"},"kind":"location","line":72,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","Cape","MagicMirror","PowerGlove","Hammer"],"base":"setUp"},"kind":"location","line":73,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","Cape","MagicMirror","DefeatAgahnim","ProgressiveGlove"],"base":"setUp"},"kind":"location","line":74,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":20,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","Cape","MagicMirror","DefeatAgahnim","PowerGlove"],"base":"setUp"},"kind":"location","line":75,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":21,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":77,"location":"Blacksmith","method":"testLocation"},
+    {"dataSet":22,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["Gloves","MagicMirror"]},"kind":"location","line":78,"location":"Blacksmith","method":"testLocation"},
+    {"dataSet":23,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["ProgressiveGlove","ProgressiveGlove","MoonPearl"],"base":"setUp"},"kind":"location","line":79,"location":"Blacksmith","method":"testLocation"},
+    {"dataSet":24,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["TitansMitt","MoonPearl"],"base":"setUp"},"kind":"location","line":80,"location":"Blacksmith","method":"testLocation"},
+    {"dataSet":25,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["DefeatAgahnim","MagicMirror"],"base":"setUp"},"kind":"location","line":81,"location":"Blacksmith","method":"testLocation"},
+    {"dataSet":26,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["ProgressiveGlove","Hammer","MagicMirror","MoonPearl"],"base":"setUp"},"kind":"location","line":82,"location":"Blacksmith","method":"testLocation"},
+    {"dataSet":27,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":84,"location":"Purple Chest","method":"testLocation"},
+    {"dataSet":28,"expected":false,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["Gloves","MagicMirror"]},"kind":"location","line":85,"location":"Purple Chest","method":"testLocation"},
+    {"dataSet":29,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["ProgressiveGlove","ProgressiveGlove","MoonPearl"],"base":"setUp"},"kind":"location","line":86,"location":"Purple Chest","method":"testLocation"},
+    {"dataSet":30,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["TitansMitt","MoonPearl"],"base":"setUp"},"kind":"location","line":87,"location":"Purple Chest","method":"testLocation"},
+    {"dataSet":31,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["DefeatAgahnim","MagicMirror"],"base":"setUp"},"kind":"location","line":88,"location":"Purple Chest","method":"testLocation"},
+    {"dataSet":32,"expected":true,"file":"tests/Inverted/DarkWorld/NorthWestTest.php","items":{"add":["ProgressiveGlove","Hammer","MagicMirror","MoonPearl"],"base":"setUp"},"kind":"location","line":89,"location":"Purple Chest","method":"testLocation"}
+  ]
+}

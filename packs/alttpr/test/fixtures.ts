@@ -91,6 +91,11 @@ export interface Fixture {
   /** The fixture's own path, relative to FIXTURES_DIR. */
   readonly path: string;
   readonly setUp: {
+    /**
+     * Bosses the test sets in a region by name: "Dummy Boss" has no rule,
+     * so it is always beaten (Boss.php:142-146, 177-184).
+     */
+    readonly bosses?: Readonly<Record<string, string>>;
     readonly collected: readonly string[];
     readonly line: number;
     readonly locationItems: Readonly<Record<string, string>>;
@@ -126,8 +131,11 @@ function walk(dir: string): string[] {
 }
 
 /** Every test class fixture, sorted by path. */
+/** The test directories imported, as the importer's TEST_ROOTS mirror them. */
+const FIXTURE_ROOTS = ["NoGlitches", "Inverted"];
+
 export function loadFixtures(): Fixture[] {
-  return walk(join(FIXTURES_DIR, "NoGlitches"))
+  return FIXTURE_ROOTS.flatMap((root) => walk(join(FIXTURES_DIR, root)))
     .filter((path) => path.endsWith(".json"))
     .sort()
     .map((path) => ({
@@ -142,13 +150,19 @@ export function loadItemTable(): ItemTable {
   ) as ItemTable;
 }
 
-/** The regions of the Standard and Open worlds and their locations. */
+/** The regions of the Standard, Open and Inverted worlds and their locations. */
 export interface LocationIndex {
   readonly files: readonly string[];
   readonly locations: readonly {
     readonly file: string;
     /** The upstream Location class: Chest, BigChest, Prize\Crystal… */
     readonly kind: string;
+    readonly line: number;
+    readonly name: string;
+  }[];
+  /** A location a subclass drops of its parent's (`removeItem`). */
+  readonly removals: readonly {
+    readonly file: string;
     readonly line: number;
     readonly name: string;
   }[];

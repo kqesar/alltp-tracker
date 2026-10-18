@@ -131,10 +131,16 @@ describe("the presets", () => {
     });
     expect(configs.length).toBeGreaterThan(23);
     const worlds = new Set(configs.map((settings) => JSON.stringify(settings)));
-    // Standard and Open, and the four ways the cases set maps and compasses
-    expect(worlds.size).toBe(4);
+    // Standard, Open and Inverted, and the ways the cases set maps and
+    // compasses in Standard's and Inverted's
+    expect(worlds.size).toBe(7);
     expect(configs).toContainEqual(UPSTREAM_TEST);
     expect(configs).toContainEqual({ ...UPSTREAM_TEST, standardMode: false });
+    expect(configs).toContainEqual({
+      ...UPSTREAM_TEST,
+      invertedMode: true,
+      standardMode: false,
+    });
     expect(configs).toContainEqual({ ...UPSTREAM_TEST, wildMaps: true });
     expect(configs).toContainEqual({ ...UPSTREAM_TEST, wildCompasses: true });
   });
@@ -290,8 +296,8 @@ describe("settingsFromUpstream", () => {
   });
 
   it("refuses what the pack does not model, where upstream would read it", () => {
-    expect(() => settingsFromUpstream("inverted")).toThrow(
-      /mode "inverted" is not modeled/,
+    expect(() => settingsFromUpstream("retro")).toThrow(
+      /mode "retro" is not modeled/,
     );
     expect(() =>
       settingsFromUpstream("open", { "rom.rupeeBow": true }),

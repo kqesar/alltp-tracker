@@ -27,7 +27,7 @@ describe("upstream.json", () => {
       ["items.json", loadItemTable().upstream] as const,
       ["locations.json", index.upstream] as const,
     ];
-    expect(headers).toHaveLength(25);
+    expect(headers).toHaveLength(47);
     for (const [path, upstream] of headers) {
       expect(
         [upstream.repo, upstream.commit, upstream.logic],
@@ -47,7 +47,7 @@ describe("upstream.json", () => {
     }
   });
 
-  it("lists exactly the region files of the Standard and Open worlds", () => {
+  it("lists exactly the region files of the Standard, Open and Inverted worlds", () => {
     const worlds = new Set(
       index.regions.flatMap((r) =>
         r.extends ? [r.file, r.extends] : [r.file],
@@ -56,8 +56,8 @@ describe("upstream.json", () => {
     const listed = manifest.rules
       .map((entry) => entry.file)
       .filter((file) => file.startsWith("app/Region/"));
-    // 26 Standard regions and Open's own escape
-    expect(listed).toHaveLength(27);
+    // 26 Standard regions, Open's own escape and Inverted's 24 own
+    expect(listed).toHaveLength(51);
     expect(new Set(listed)).toEqual(worlds);
   });
 
@@ -97,7 +97,7 @@ describe("upstream.json", () => {
 
   it("lists the test file of every fixture, and a fixture for every test file", () => {
     const tests = new Map(manifest.tests.map((t) => [t.file, t]));
-    expect(fixtures).toHaveLength(23);
+    expect(fixtures).toHaveLength(45);
     for (const fixture of fixtures) {
       expect(tests.get(fixture.file)?.fixture, fixture.file).toBe(
         `test/upstream/${fixture.path}`,
