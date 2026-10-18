@@ -37,6 +37,7 @@ import {
   toState,
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES, DUNGEON_INDICES } from "@/constants";
+import { logicModelled } from "@/data/presets";
 import { packReading } from "@/logic/packItems";
 import { KEY_DUNGEONS, packSettings, worldOf } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
@@ -155,6 +156,12 @@ export const fillerOf = (settings: AlttprSettings): Filler => {
 export interface Solution {
   /** The pack's settings it was solved under. */
   readonly settings: AlttprSettings;
+  /**
+   * Whether the pack models the run's logic (`logicModelled`). When it does
+   * not, every location is maybe: the Open logic it was solved under would
+   * be wrong for it.
+   */
+  readonly modelled: boolean;
   /** Every location of the run's world, as the tracker shows it. */
   readonly tris: Readonly<Record<string, Tri>>;
   /**
@@ -196,11 +203,17 @@ export const solutionOf = (state: Inputs): Solution => {
     fillerOf(settings),
     toState(trackerInput(state), settings),
   );
+  const modelled = logicModelled(state.settings);
+  const unknown = (tris: Readonly<Record<string, Tri>>) =>
+    Object.fromEntries(Object.keys(tris).map((id) => [id, "maybe" as const]));
+  const tris = keyed.locations();
+  const visibles = keyed.solution.visibles();
   const solution = {
     keyed,
+    modelled,
     settings,
-    tris: keyed.locations(),
-    visibles: keyed.solution.visibles(),
+    tris: modelled ? tris : unknown(tris),
+    visibles: modelled ? visibles : unknown(visibles),
   };
   last = {
     events,

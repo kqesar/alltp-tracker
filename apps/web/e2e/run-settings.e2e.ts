@@ -81,6 +81,37 @@ test("a Mystery run finds its settings as it goes, the run kept", async ({
   expect(saved.settings.hidden).toContain("crystalsTower");
 });
 
+test("a run type whose logic is not modelled says so, every check maybe", async ({
+  page,
+}) => {
+  await openTracker(page);
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await runTypes(page)
+    .getByRole("button", { name: /^Crosskeys/ })
+    .click();
+  await page.getByRole("button", { name: "Switch & reset" }).click();
+
+  await expect(page.getByTestId("logic-note")).toHaveText(
+    "The tracker has no logic for Crosskeys runs yet: every check shows as maybe.",
+  );
+  // No marker says available or out of logic: the Open logic would be wrong
+  const markers = page.getByTestId(/^marker-/);
+  await expect(markers.first()).toBeVisible();
+  for (const name of await markers.evaluateAll((all) =>
+    all.map((marker) => marker.getAttribute("aria-label") ?? ""),
+  )) {
+    expect(name).not.toMatch(/(: |boss )available|out of logic|not reachable/);
+  }
+  await expect(page.getByTestId("go-mode")).toHaveCount(0);
+  // Map pins sit closer than 24 px: WCAG 2.5.8's exception (tracker.e2e.ts)
+  const { violations } = await new AxeBuilder({ page })
+    .include(".map-panel")
+    .exclude(".mapspan")
+    .withTags(WCAG_AA)
+    .analyze();
+  expect(violations.map(({ id }) => id)).toEqual([]);
+});
+
 for (const width of WIDTHS) {
   test(`the run's tunable settings pass axe and fit at ${width}px`, async ({
     page,

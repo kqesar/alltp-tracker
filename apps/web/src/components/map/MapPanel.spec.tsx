@@ -55,6 +55,17 @@ describe("MapPanel", () => {
     expect(screen.getByTestId("checks-panel")).toBeInTheDocument();
   });
 
+  it("says why every check is maybe in a run whose logic is not modelled", () => {
+    render(<MapPanel />);
+    expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
+
+    act(() => useGameStore.getState().applyPreset("crosskeys"));
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The tracker has no logic for Crosskeys runs yet: every check shows as maybe.",
+    );
+    expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
+  });
+
   describe("go mode", () => {
     it("says a Mystery run's goal is not known yet, and nothing to open", () => {
       act(() => useGameStore.getState().applyPreset("mystery"));

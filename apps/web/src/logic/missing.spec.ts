@@ -197,6 +197,21 @@ describe("goModeStatusOf", () => {
     expect(goModeStatusOf(withGoal("triforce-hunt"))).toBe(undefined);
   });
 
+  it("has none, nor any analysis, under logic the pack does not model", () => {
+    const crosskeys = inputsOf({}, { preset: "crosskeys" });
+    const solution = solutionOf(crosskeys);
+
+    expect(solution.modelled).toBe(false);
+    // Every check is maybe, the Open logic's yes and no alike
+    expect(new Set(Object.values(solution.tris))).toEqual(new Set(["maybe"]));
+    expect(new Set(Object.values(solution.visibles))).toEqual(
+      new Set(["maybe"]),
+    );
+    expect(goModeStatusOf(crosskeys)).toBe(undefined);
+    expect(analysisOf(crosskeys)).toEqual({ missing: new Map(), solution });
+    expect(solutionOf(FRESH).modelled).toBe(true);
+  });
+
   it("follows the pedestal and fast Ganon goals", () => {
     const steps = (goal: RunSettings["goal"]) =>
       goModeStatusOf(withGoal(goal))?.steps.map((step) => step.location);

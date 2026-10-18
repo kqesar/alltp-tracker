@@ -3,6 +3,7 @@ import { memo, useCallback, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useShallow } from "zustand/react/shallow";
 import { MissingLines } from "@/components/ui/Missing";
+import { logicModelled } from "@/data/presets";
 import { useMissing } from "@/hooks/useRunAnalysis";
 import {
   type Check,
@@ -78,16 +79,19 @@ const Why = ({ check }: { check: Check }) => {
  * One check: a checkbox that checks it, its state in words beside the
  * map's glyph, and for one not available, why.
  * @param cleared - Its dungeon's counter is 0: done, and not to be changed
+ * @param explained - The run's logic is modelled, so a state has a why
  */
 const CheckRow = memo(
   ({
     check,
     cleared,
+    explained,
     onToggle,
     state,
   }: {
     check: Check;
     cleared: boolean;
+    explained: boolean;
     onToggle: (id: string, input: HTMLInputElement) => void;
     state: MarkerState;
   }) => (
@@ -106,7 +110,9 @@ const CheckRow = memo(
         <Swatch state={state} />
         {LABELS[state]}
       </span>
-      {state !== "available" && state !== "opened" && <Why check={check} />}
+      {explained && state !== "available" && state !== "opened" && (
+        <Why check={check} />
+      )}
     </li>
   ),
 );
@@ -130,12 +136,14 @@ const DungeonCount = ({ dungeon }: { dungeon: DungeonId }) => {
 const ZoneList = ({
   checks,
   cleared,
+  explained,
   onToggle,
   states,
   zone,
 }: {
   checks: readonly Check[];
   cleared: boolean;
+  explained: boolean;
   onToggle: (id: string, input: HTMLInputElement) => void;
   states: Record<string, MarkerState>;
   zone: Zone;
@@ -152,6 +160,7 @@ const ZoneList = ({
           <CheckRow
             check={check}
             cleared={cleared}
+            explained={explained}
             key={check.id}
             onToggle={onToggle}
             state={states[check.id] ?? "unavailable"}
@@ -171,6 +180,8 @@ const ZoneList = ({
 export const ChecksPanel = () => {
   const zones = useGameStore(runZones);
   const states = useGameStore(useShallow(checkStates));
+  // Under logic the pack does not model, no check has a why (LogicNote)
+  const explained = useGameStore((state) => logicModelled(state.settings));
   const cleared = useGameStore(
     useShallow((state) =>
       runZones(state).map((zone) => isCleared(zone, state)),
@@ -289,6 +300,7 @@ export const ChecksPanel = () => {
             <ZoneList
               checks={lists[index]}
               cleared={cleared[index] ?? false}
+              explained={explained}
               key={zone.name}
               onToggle={onToggle}
               states={states}

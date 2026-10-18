@@ -127,4 +127,15 @@ describe("ChecksPanel", () => {
     act(() => analyzeNow());
     expect(row("library")).toHaveTextContent("Missing: Pegasus Boots");
   });
+
+  it("offers no why under logic it does not model, every check maybe", () => {
+    act(() => useGameStore.getState().applyPreset("crosskeys"));
+    render(<ChecksPanel />);
+
+    expect(row("library")).toHaveTextContent("Maybe");
+    expect(screen.queryByTestId("check-why-library")).toBeNull();
+    expect(filter("unavailable").closest("label")).toHaveTextContent(
+      "Out of logic0",
+    );
+  });
 });

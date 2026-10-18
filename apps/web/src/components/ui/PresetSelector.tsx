@@ -8,6 +8,7 @@ import {
   HIDEABLE,
   type HiddenSetting,
   isHidden,
+  logicModelled,
   presets,
   type RunSettings,
   TUNING,
@@ -171,7 +172,7 @@ export const PresetSelector = () => {
               >
                 <span className="preset-card__header">
                   <span className="preset-card__name">{preset.name}</span>
-                  {!preset.logicSupported && (
+                  {!logicModelled(preset.settings) && (
                     <span
                       className="preset-card__badge"
                       title="Selectable now; accessibility logic for this mode is coming soon"

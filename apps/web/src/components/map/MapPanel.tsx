@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { ChecksPanel } from "@/components/map/ChecksPanel";
 import { GoMode } from "@/components/map/GoMode";
+import { LogicNote } from "@/components/map/LogicNote";
 import { MapLegend } from "@/components/map/MapLegend";
 import { MapTracker } from "@/components/map/MapTracker";
 import { RunPanel } from "@/components/map/RunPanel";
@@ -57,6 +58,7 @@ export const MapPanel = () => {
         role="tabpanel"
         tabIndex={-1}
       >
+        {view !== "run" && <LogicNote />}
         {view === "map" && (
           <>
             <MapTracker />
