@@ -141,9 +141,9 @@ describe("StreamViewControl", () => {
     expect(dialog.textContent).toMatch(/512 × 384 for the crispest/);
     expect(dialog.textContent).toMatch(/or 1024 × 768\./);
 
-    // The key cells add a row
+    // The key cells add two rows
     act(() => useGameStore.getState().setBigKeysVisible(true));
-    expect(dialog.textContent).toMatch(/512 × 448 for the crispest/);
+    expect(dialog.textContent).toMatch(/512 × 512 for the crispest/);
   });
 
   it("names the tracker's own address for the dock and the bg option", () => {

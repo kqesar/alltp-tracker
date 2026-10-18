@@ -34,7 +34,6 @@ import {
   goModeBlockers,
   goModeOf,
   goModeStatus,
-  LEGACY_DUNGEONS,
   type UntrackedItem,
   untrackedItems,
   withUntracked,
@@ -42,7 +41,7 @@ import {
 import type { RunSettings } from "@/data/presets";
 import { sameWays, type Ways, waysOf } from "@/logic/needs";
 import { RECORDED_LEVELS } from "@/logic/packItems";
-import { SMALL_KEYS_MAX } from "@/logic/settings";
+import { KEY_DUNGEONS, SMALL_KEYS_MAX } from "@/logic/settings";
 import {
   fillerOf,
   type Inputs,
@@ -101,14 +100,14 @@ const options = new WeakMap<AlttprSettings, AnalyzeOptions>();
 /**
  * What the blockers may propose: what the tracker's cells can record, up to
  * the level they reach, and with wild keys the small keys of the dungeons
- * the grid counts them for.
+ * the grid counts them for (KEY_DUNGEONS).
  */
 const optionsOf = (settings: AlttprSettings): AnalyzeOptions => {
   let found = options.get(settings);
   if (found === undefined) {
     const levels = new Map(RECORDED_LEVELS);
     if (settings.wildKeys) {
-      LEGACY_DUNGEONS.forEach((id, index) => {
+      KEY_DUNGEONS.forEach((id, index) => {
         const keys = SMALL_KEYS_MAX[index] ?? 0;
         if (keys > 0) levels.set(`key${dungeon(id).code}`, keys);
       });

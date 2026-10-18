@@ -10,6 +10,9 @@ import { getPreset, presets, type RunSettings } from "@/data/presets";
 import {
   counterMax,
   dungeonAt,
+  dungeonName,
+  KEY_DUNGEONS,
+  ownItems,
   packSettings,
   SMALL_KEYS_MAX,
   smallKeysMax,
@@ -175,16 +178,32 @@ describe("counterMax", () => {
 
 describe("smallKeysMax", () => {
   it("gives each dungeon the small keys its pool holds (config/item.php:108-120)", () => {
-    // Eastern Palace has none in v31; the others kept the tracker's old count
-    expect(SMALL_KEYS_MAX).toEqual([0, 1, 1, 6, 1, 3, 1, 2, 3, 4]);
+    // Eastern Palace has none in v31; the others kept the tracker's old
+    // count; then Hyrule Castle, Castle Tower and Ganon's Tower
+    expect(SMALL_KEYS_MAX).toEqual([0, 1, 1, 6, 1, 3, 1, 2, 3, 4, 1, 2, 4]);
     expect(
-      LEGACY_DUNGEONS.map((id) => dungeonPool(dungeon(id)).smallKeys),
+      KEY_DUNGEONS.map((id) => dungeonPool(dungeon(id)).smallKeys),
     ).toEqual(SMALL_KEYS_MAX);
+    expect(KEY_DUNGEONS.slice(0, 10)).toEqual(LEGACY_DUNGEONS);
     expect(smallKeysMax(0)).toBe(0);
     expect(smallKeysMax(3)).toBe(6);
+    expect(smallKeysMax(12)).toBe(4);
   });
 
-  it("refuses an index past the ten dungeons", () => {
-    expect(() => smallKeysMax(10)).toThrow(RangeError);
+  it("refuses an index past the thirteen key dungeons", () => {
+    expect(() => smallKeysMax(13)).toThrow(RangeError);
+    expect(() => dungeonName(13)).toThrow(RangeError);
+  });
+});
+
+describe("ownItems", () => {
+  it("says which of its big key, map and compass each pool holds", () => {
+    const all = { bigKey: true, compass: true, map: true };
+    for (let index = 0; index < 10; index++)
+      expect(ownItems(index)).toEqual(all);
+    expect(ownItems(10)).toEqual({ bigKey: false, compass: false, map: true });
+    expect(ownItems(11)).toEqual({ bigKey: false, compass: false, map: false });
+    expect(ownItems(12)).toEqual(all);
+    expect(dungeonName(11)).toBe("Castle Tower");
   });
 });

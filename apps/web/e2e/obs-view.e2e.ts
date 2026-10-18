@@ -239,10 +239,10 @@ test.describe("the stream view", () => {
       /^Hookshot, obtained\./,
     );
 
-    // The key cells add a row: the view refits to keep it on screen
+    // The key cells add two rows: the view refits to keep them on screen
     const before = await cellOf(page);
     await tracker.getByTestId("key-cells-toggle").click();
-    await expect(page.getByTestId("grid-row")).toHaveCount(7);
+    await expect(page.getByTestId("grid-row")).toHaveCount(8);
     const after = await cellOf(page);
     const grid = await page.getByTestId("item-grid").boundingBox();
     const height = page.viewportSize()?.height ?? 0;

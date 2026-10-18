@@ -19,7 +19,7 @@ import { useGameStore } from "@/stores/gameStore";
 const cellOf = (control: ControlId) => {
   const index = dungeonOf(control);
   if (index === null) return control;
-  return isKeyControl(control) ? `bigkey${index}` : `boss${index}`;
+  return isKeyControl(control) ? `keys${index}` : `boss${index}`;
 };
 
 /** The control's cell alone, with the shortcuts listening. */
@@ -30,7 +30,7 @@ const Board = ({ control }: { control: ControlId }) => {
 
 /** How many values a control cycles through. */
 const statesOf = (control: ControlId) => {
-  const [, kind, index] = /^(smallkey|medallion)(\d)$/.exec(control) ?? [];
+  const [, kind, index] = /^(smallkey|medallion)(\d+)$/.exec(control) ?? [];
   if (kind === "smallkey") return smallKeysMax(Number(index)) + 1;
   if (kind === "medallion") return 4;
   if (typeof items[control] === "boolean") return 2;
@@ -40,7 +40,7 @@ const statesOf = (control: ControlId) => {
 /** The grid button a control is drawn as. */
 const testIdOf = (control: ControlId) => {
   const [, kind, index] =
-    /^(chest|reward|medallion|bigkey|smallkey|map|compass)(\d)$/.exec(
+    /^(chest|reward|medallion|bigkey|smallkey|map|compass)(\d+)$/.exec(
       control,
     ) ?? [];
   switch (kind) {

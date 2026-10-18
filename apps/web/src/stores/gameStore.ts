@@ -16,7 +16,7 @@ import {
   type TunableSetting,
   wildItems,
 } from "@/data/presets";
-import { counterMax, smallKeysMax } from "@/logic/settings";
+import { counterMax, SMALL_KEYS_MAX, smallKeysMax } from "@/logic/settings";
 import {
   GAME,
   itemRange,
@@ -134,7 +134,8 @@ export const createProgress = (
   medallions: Array(10).fill(0) as number[],
   presetId: getPreset(presetId).id,
   settings,
-  smallKeys: Array(10).fill(0) as number[], // 10 dungeons, all start at 0
+  // One per key dungeon (KEY_DUNGEONS), none found yet
+  smallKeys: Array(SMALL_KEYS_MAX.length).fill(0) as number[],
 });
 
 /**
@@ -328,7 +329,7 @@ export const useGameStore = create<GameState>()(
           const newSmallKeys = [...state.smallKeys];
 
           // Step the count, wrapping between 0 and the dungeon's maximum
-          const next = newSmallKeys[dungeonIndex] + direction;
+          const next = (newSmallKeys[dungeonIndex] ?? 0) + direction;
           newSmallKeys[dungeonIndex] =
             next > maxForDungeon ? 0 : next < 0 ? maxForDungeon : next;
 

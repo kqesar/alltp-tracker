@@ -51,7 +51,7 @@ export const shortcutStepFor = (event: KeyboardEvent): Step | null => {
  */
 export const stepControl = (control: ControlId, direction: Direction) => {
   const state = useGameStore.getState();
-  const [, kind, index] = /^(smallkey|medallion)(\d)$/.exec(control) ?? [];
+  const [, kind, index] = /^(smallkey|medallion)(\d+)$/.exec(control) ?? [];
   if (kind === "smallkey") state.handleSmallKeyClick(Number(index), direction);
   else if (kind === "medallion") state.stepMedallion(Number(index), direction);
   else state.handleItemClick(control, direction);

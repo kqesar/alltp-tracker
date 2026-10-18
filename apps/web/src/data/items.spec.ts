@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultItemGrid,
+  isKeyCell,
   itemLabels,
   items,
   itemsMax,
@@ -62,26 +63,40 @@ describe("item ranges", () => {
 });
 
 describe("defaultItemGrid", () => {
-  it("is a 7x7 grid", () => {
-    expect(defaultItemGrid).toHaveLength(7);
+  it("is 7 wide, 8 rows with the castle dungeons' keys", () => {
+    expect(defaultItemGrid).toHaveLength(8);
     defaultItemGrid.forEach((row) => {
       expect(row).toHaveLength(7);
     });
   });
 
-  it("only places items the store knows about", () => {
-    defaultItemGrid.flat().forEach((item) => {
-      expect(items).toHaveProperty(item);
-    });
+  it("only places items the store knows about, and key cells", () => {
+    defaultItemGrid
+      .flat()
+      .filter((id) => id !== "" && !isKeyCell(id))
+      .forEach((item) => {
+        expect(items).toHaveProperty(item);
+      });
   });
 
-  it("lays out all ten bosses and all ten big keys", () => {
+  it("lays out the ten bosses, thirteen key cells and the castles' labels", () => {
     const flat = defaultItemGrid.flat();
 
     dungeonIndices.forEach((index) => {
       expect(flat).toContain(`boss${index}`);
-      expect(flat).toContain(`bigkey${index}`);
     });
+    for (let index = 0; index < 13; index++) {
+      expect(flat).toContain(`keys${index}`);
+    }
+    expect(defaultItemGrid.at(-1)).toEqual([
+      "keylabel10",
+      "keys10",
+      "keylabel11",
+      "keys11",
+      "keylabel12",
+      "keys12",
+      "",
+    ]);
   });
 });
 

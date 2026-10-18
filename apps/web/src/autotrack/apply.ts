@@ -39,6 +39,7 @@ import {
 import { wildItems } from "@/data/presets";
 import {
   counterMax,
+  KEY_DUNGEONS,
   packSettings,
   smallKeysMax,
   worldOf,
@@ -184,17 +185,17 @@ export const gameCells = (
   ...prizeCells(reading, board),
 });
 
-/** The small keys in hand, by grid dungeon index, where memory tells. */
+/** The small keys in hand, by key dungeon index, where memory tells. */
 export const keysInHand = (
   reading: AutotrackReading,
 ): Record<number, number> => {
   const hand: Record<number, number> = {};
-  for (const { code, index } of GRID) {
+  KEY_DUNGEONS.forEach((id, index) => {
     const count = (reading.items.atLeast as Readonly<Record<string, number>>)[
-      `key${code}`
+      `key${dungeon(id).code}`
     ];
     if (count !== undefined) hand[index] = count;
-  }
+  });
   return hand;
 };
 

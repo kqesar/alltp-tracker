@@ -45,7 +45,7 @@ describe("describeReading", () => {
   it("names what the board has no cell for, which it leaves alone", () => {
     const memory = seedMemory({ race: false });
     memory[SAVE(0x37b)] = 0x01; // Half Magic
-    // Eastern and Desert Palace's maps, and Hyrule Castle's: no cell
+    // Eastern and Desert Palace's maps, and Hyrule Castle's: each its cell
     memory[SAVE(0x369)] = 0x20 | 0x10 | 0x40;
     memory[SAVE(0x37c + 6)] = 2; // Palace of Darkness keys in hand
     memory[SAVE(0x470)] = 3; // heart pieces
@@ -54,7 +54,6 @@ describe("describeReading", () => {
     expect(describeReading(reading).untracked).toEqual([
       "Half Magic",
       "Piece of Heart ×3",
-      "Maps",
       "Small keys",
     ]);
     // The grid's dungeons' maps have their cells

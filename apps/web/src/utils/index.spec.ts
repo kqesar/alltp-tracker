@@ -53,13 +53,14 @@ describe("visibleRows", () => {
     expect(visibleRows(defaultItemGrid, true)).toBe(defaultItemGrid);
   });
 
-  it("drops a row of nothing but key cells while they are hidden", () => {
+  it("drops a row of nothing but key cells, labels and gaps while they are hidden", () => {
     const rows = visibleRows(defaultItemGrid, false);
 
-    expect(rows).toHaveLength(defaultItemGrid.length - 1);
-    expect(rows.flat()).not.toContain("bigkey3");
+    expect(rows).toHaveLength(defaultItemGrid.length - 2);
+    expect(rows.flat()).not.toContain("keys3");
+    expect(rows.flat()).not.toContain("keylabel12");
     // A key cell sharing its row with other items keeps its place
-    expect(rows.flat()).toContain("bigkey0");
+    expect(rows.flat()).toContain("keys0");
   });
 });
 

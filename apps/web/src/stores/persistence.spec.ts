@@ -60,7 +60,7 @@ describe("parseSave", () => {
         mode: "open",
         swordless: true,
       },
-      smallKeys: [0, 1, 0, 6, 0, 0, 0, 0, 0, 0],
+      smallKeys: [0, 1, 0, 6, 0, 0, 0, 0, 0, 0, 0, 2, 4],
     } as const;
 
     const save = parseSave(JSON.stringify(toSaveFile(progress as never)));
@@ -142,7 +142,7 @@ describe("validateProgress", () => {
     const { value, errors } = validateProgress({
       checked: { "kings-tomb": "yes", "links-house": true },
       items: { hookshot: true },
-      smallKeys: Array(10).fill(9),
+      smallKeys: Array(13).fill(9),
     });
 
     expect(value).toEqual({
@@ -151,7 +151,7 @@ describe("validateProgress", () => {
     });
     expect(errors).toEqual([
       'checked["kings-tomb"] must be true',
-      "smallKeys must hold 10 counts within each dungeon's keys",
+      "smallKeys must hold 13 counts within each dungeon's keys",
     ]);
   });
 
@@ -249,14 +249,29 @@ describe("migrate", () => {
 
     const migrated = migrate({ smallKeys }, 6);
 
-    expect(migrated).toEqual({ smallKeys: [0, 1, 0, 6, 0, 0, 0, 0, 0, 4] });
+    // Version 11 adds the castles' counts after
+    expect(migrated).toEqual({
+      smallKeys: [0, 1, 0, 6, 0, 0, 0, 0, 0, 4, 0, 0, 0],
+    });
     expect(validateProgress(migrated).errors).toEqual([]);
     // Unmigrated, the whole field fails, every dungeon's keys with it
     expect(validateProgress({ smallKeys }).errors).toEqual([
-      "smallKeys must hold 10 counts within each dungeon's keys",
+      "smallKeys must hold 13 counts within each dungeon's keys",
     ]);
     expect(migrate({ smallKeys: [0, 1] }, 6)).toEqual({ smallKeys: [0, 1] });
     expect(migrate({ smallKeys: "none" }, 6)).toEqual({ smallKeys: "none" });
+  });
+
+  it("gives a version 10 run the castles' small keys, none found", () => {
+    const smallKeys = [0, 1, 0, 6, 0, 0, 0, 0, 0, 4];
+
+    expect(migrate({ smallKeys }, 10)).toEqual({
+      smallKeys: [...smallKeys, 0, 0, 0],
+    });
+    // A version 11 array, or no array, is left as it is
+    const eleven = [...smallKeys, 1, 2, 3];
+    expect(migrate({ smallKeys: eleven }, 11)).toEqual({ smallKeys: eleven });
+    expect(migrate({ smallKeys: "none" }, 10)).toEqual({ smallKeys: "none" });
   });
 
   it("gives a version 7 run swords and 7 crystals for the tower and Ganon", () => {

@@ -39,7 +39,7 @@ const VARIANTS: Record<
 };
 
 type KeyToggleProps = {
-  /** Dungeon index (0-9) */
+  /** Key dungeon index (0-12, KEY_DUNGEONS) */
   dungeonIndex: number;
   /** Grid row index for positioning */
   row: number;
@@ -55,7 +55,7 @@ type KeyToggleProps = {
  * compass) step their item in the store; the small keys step their count.
  * An item not held yet is greyed, as any missing item; the cell's count says
  * how many small keys are found.
- * @param dungeonIndex - The dungeon index (0-9)
+ * @param dungeonIndex - The key dungeon index (0-12, KEY_DUNGEONS)
  * @param row - Grid row for positioning
  * @param col - Grid column for positioning
  * @param variant - The item the button drives

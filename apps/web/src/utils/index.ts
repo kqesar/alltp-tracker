@@ -1,5 +1,5 @@
 import { BOSS_STATES } from "@/constants";
-import { itemsMin } from "@/data/items";
+import { isKeyCell, itemsMin } from "@/data/items";
 
 /**
  * Gets the correct asset path with base URL support
@@ -50,7 +50,8 @@ export const isItemDimmed = (
 
 /**
  * The rows of the item grid on screen: while the key cells are hidden, a row
- * of nothing but key cells is left out, since it would be empty.
+ * of nothing but key cells, castle labels and gaps is left out, since it
+ * would be empty.
  * @param layout - The grid layout, one array of item identifiers per row
  * @param bigKeysVisible - Whether the key cells are shown
  */
@@ -60,7 +61,9 @@ export const visibleRows = (
 ): string[][] =>
   bigKeysVisible
     ? layout
-    : layout.filter((row) => !row.every((item) => item.startsWith("bigkey")));
+    : layout.filter(
+        (row) => !row.every((item) => item === "" || isKeyCell(item)),
+      );
 
 /**
  * How the two worlds are arranged on screen.

@@ -71,7 +71,16 @@ describe("the controls", () => {
       "map8",
       "compass8",
     ]);
-    expect(CONTROLS).toHaveLength(29 + 10 * 7 - 1 + 2);
+    // The castles' key cells hold what their pools do
+    expect(dungeonControls(10)).toEqual(["smallkey10", "map10"]);
+    expect(dungeonControls(11)).toEqual(["smallkey11"]);
+    expect(dungeonControls(12)).toEqual([
+      "bigkey12",
+      "smallkey12",
+      "map12",
+      "compass12",
+    ]);
+    expect(CONTROLS).toHaveLength(29 + 10 * 7 - 1 + 2 + 2 + 1 + 4);
     expect(ACTIONS).toHaveLength(CONTROLS.length * 2);
   });
 

@@ -127,6 +127,12 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   // The items a dungeon has left: the map counts them, the rules do not
   ...perDungeon("chest", () => NONE),
   ...perDungeon("reward", (id) => ({ dungeon: id, kind: "prize" })),
+  // The castle dungeons' own items, on key cells 10-12 (KEY_DUNGEONS), as
+  // their pools hold them
+  bigkey12: dungeonItem("bigKey")("ganons-tower"),
+  compass12: dungeonItem("compass")("ganons-tower"),
+  map10: dungeonItem("map")("hyrule-castle"),
+  map12: dungeonItem("map")("ganons-tower"),
 };
 
 /**

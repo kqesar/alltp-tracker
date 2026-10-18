@@ -116,16 +116,16 @@ describe("ObsView", () => {
     expect(cssVar("--obs-left")).toBe("0px");
   });
 
-  it("refits when the key cells add their row", () => {
-    resizeTo(512, 420);
+  it("refits when the key cells add their rows", () => {
+    resizeTo(512, 480);
     render(<ObsView background={null} />);
     expect(cssVar("--cell")).toBe("64px");
 
     act(() => useGameStore.getState().setBigKeysVisible(true));
 
-    // Seven rows in 420 px: 60 of room, too far above 48 to snap
+    // Eight rows in 480 px: 60 of room, too far above 48 to snap
     expect(cssVar("--cell")).toBe("60px");
-    expect(screen.getAllByTestId("grid-row")).toHaveLength(7);
+    expect(screen.getAllByTestId("grid-row")).toHaveLength(8);
   });
 
   it("takes a new version at once instead of offering it", () => {

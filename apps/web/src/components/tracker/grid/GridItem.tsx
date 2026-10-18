@@ -1,6 +1,7 @@
 import { BigKeyCell } from "@/components/tracker/items/BigKeyCell";
 import { BossCell } from "@/components/tracker/items/BossCell";
 import { Item } from "@/components/tracker/items/Item";
+import { KeyLabel } from "@/components/tracker/items/KeyLabel";
 
 type GridItemProps = {
   /** Grid row index */
@@ -21,7 +22,11 @@ type GridItemProps = {
 export const GridItem = ({ row, col, item }: GridItemProps) => {
   if (!item) return <div aria-hidden="true" className="grid-spacer" />;
 
-  if (item.startsWith("bigkey")) {
+  if (item.startsWith("keylabel")) {
+    return <KeyLabel col={col} item={item} row={row} />;
+  }
+
+  if (item.startsWith("keys")) {
     return <BigKeyCell col={col} item={item} row={row} />;
   }
 

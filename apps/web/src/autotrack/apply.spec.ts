@@ -326,9 +326,14 @@ describe("mergeView", () => {
     const reading = readingOf(seedMemory({ race: false }));
     const laid = mergeView(board, gameView(reading, board, { 3: 2, 9: 0 }));
 
-    expect(laid?.next.smallKeys).toEqual([0, 0, 0, 2, 0, 0, 0, 0, 0, 0]);
+    expect(laid?.next.smallKeys).toEqual([
+      0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ]);
     // A count the player set higher stays
-    const higher = { ...board, smallKeys: [0, 0, 0, 4, 0, 0, 0, 0, 0, 0] };
+    const higher = {
+      ...board,
+      smallKeys: [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    };
     expect(
       mergeView(higher, gameView(reading, higher, { 3: 2 }))?.next.smallKeys,
     ).toBeUndefined();

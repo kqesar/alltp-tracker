@@ -11,7 +11,6 @@ import {
   dungeon,
   ITEMS,
   type ItemId,
-  LEGACY_DUNGEONS,
   PRIZES,
   type Prize,
 } from "@alltp/pack-alttpr";
@@ -27,6 +26,7 @@ import {
   type PackItem,
   packReading,
 } from "@/logic/packItems";
+import { KEY_DUNGEONS } from "@/logic/settings";
 
 /** A cell's value: held or not, or a level, a count, a boss's state. */
 export type CellValue = number | boolean;
@@ -164,12 +164,13 @@ export const joinValues = (
 /**
  * The pack items the board marks from the game: those its cells count, the
  * pendants and crystals its prize cells stand for, and with small keys
- * outside their dungeons (MCS and Full Shuffle) the grid's dungeons' keys.
+ * outside their dungeons (MCS and Full Shuffle) the key cells' dungeons'
+ * keys (KEY_DUNGEONS).
  * @param wildKeys - Whether the run's small keys leave their dungeons
  */
 export const boardItems = (wildKeys: boolean): ReadonlySet<ItemId> => {
   const shown = new Set<string>(
-    wildKeys ? LEGACY_DUNGEONS.map((id) => `key${dungeon(id).code}`) : [],
+    wildKeys ? KEY_DUNGEONS.map((id) => `key${dungeon(id).code}`) : [],
   );
   for (const [, entry] of ENTRIES) {
     for (const item of countedBy(entry)) shown.add(item);

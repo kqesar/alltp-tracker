@@ -2,14 +2,13 @@ import {
   compile,
   type DungeonId,
   filler,
-  LEGACY_DUNGEONS,
   MARKERS,
   solveWithKeys,
   toState,
 } from "@alltp/pack-alttpr";
 import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { packSettings } from "@/logic/settings";
+import { KEY_DUNGEONS, packSettings } from "@/logic/settings";
 import {
   bossStateOf,
   dungeonStateOf,
@@ -43,7 +42,7 @@ describe("trackerInput", () => {
     expect(trackerInput(store())).toEqual({
       beaten: { "hyrule-castle": true },
       items: {},
-      keys: Object.fromEntries(LEGACY_DUNGEONS.map((id) => [id, 0])),
+      keys: Object.fromEntries(KEY_DUNGEONS.map((id) => [id, 0])),
       medallions: { mire: "unknown", turtleRock: "unknown" },
       prizes: {},
     });
@@ -230,6 +229,35 @@ describe("what a dungeon shows", () => {
 
     act(() => store().applyPreset("keysanity"));
     expect(dungeonStateOf("castle-tower", store())).not.toBe("opened");
+  });
+
+  it("reads the castle dungeons' keys from their key cells in keysanity", () => {
+    act(() => store().applyPreset("keysanity"));
+    give({ cape: true, lantern: true, sword: 1 });
+    // Castle Tower's dark maze wants a key, Agahnim both
+    expect(solutionOf(store()).tris["castle-tower/dark-maze"]).toBe("no");
+
+    act(() =>
+      useGameStore.setState({
+        smallKeys: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 4],
+      }),
+    );
+    give({ bigkey12: 1, compass12: 1, map10: 1, map12: 1 });
+
+    expect(solutionOf(store()).tris["castle-tower/dark-maze"]).toBe("yes");
+    expect(solutionOf(store()).tris.agahnim).toBe("yes");
+    const input = trackerInput(store());
+    expect(input.keys).toMatchObject({
+      "castle-tower": 2,
+      "ganons-tower": 4,
+      "hyrule-castle": 1,
+    });
+    expect(input.items).toMatchObject({
+      bigKeyA2: 1,
+      compassA2: 1,
+      mapA2: 1,
+      mapH2: 1,
+    });
   });
 
   it("shows Ganon's Tower out of logic without the crystals", () => {

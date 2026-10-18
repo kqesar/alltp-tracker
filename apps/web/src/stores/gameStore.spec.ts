@@ -35,7 +35,7 @@ describe("GameStore", () => {
 
     expect(state.presetId).toBe("open");
     expect(state.medallions).toEqual(Array(10).fill(0));
-    expect(state.smallKeys).toEqual(Array(10).fill(0));
+    expect(state.smallKeys).toEqual(Array(13).fill(0));
     expect(state.checked).toEqual({});
     expect(state.items.boss0).toBe(1);
     expect(
@@ -474,7 +474,7 @@ describe("GameStore", () => {
       const state = useGameStore.getState();
       expect(state.items.flute).toBe(true);
       expect(state.medallions).toEqual(Array(10).fill(0));
-      expect(state.smallKeys).toEqual(Array(10).fill(0));
+      expect(state.smallKeys).toEqual(Array(13).fill(0));
     });
 
     it("upgrades a version 1 save, folding map-beaten bosses into the grid", async () => {

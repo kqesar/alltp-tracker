@@ -129,6 +129,8 @@ describe("the board's cells, read from the game through PACK_ITEMS", () => {
       "bigKeyD7",
       "mapP1",
       "compassD7",
+      "mapH2",
+      "bigKeyA2",
       "crystal5",
       "pendantOfCourage",
     ] as const) {
@@ -140,13 +142,14 @@ describe("the board's cells, read from the game through PACK_ITEMS", () => {
       "heartContainer",
       "keyD1",
       "keyA2",
-      "mapH2",
       "rescueZelda",
     ] as const) {
       expect(shown.has(item)).toBe(false);
     }
-    // With keysanity the grid's dungeons count their small keys
+    // With keysanity the key cells count their dungeons' small keys, the
+    // castles' included
     expect(boardItems(true).has("keyD1")).toBe(true);
-    expect(boardItems(true).has("keyA2")).toBe(false);
+    expect(boardItems(true).has("keyA2")).toBe(true);
+    expect(boardItems(true).has("keyH2")).toBe(true);
   });
 });

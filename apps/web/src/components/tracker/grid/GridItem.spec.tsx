@@ -69,7 +69,7 @@ describe("GridItem", () => {
   it("routes a big key to the keysanity cell", () => {
     useGameStore.getState().setBigKeysVisible(true);
 
-    render(<GridItem col={5} item="bigkey3" row={2} />);
+    render(<GridItem col={5} item="keys3" row={2} />);
 
     expect(screen.getByTestId("big-key-3")).toHaveAccessibleName(
       "Palace of Darkness big key: not obtained",
@@ -82,7 +82,7 @@ describe("GridItem", () => {
   it("gives Eastern Palace, which has no small key, no small key cell", () => {
     useGameStore.getState().setBigKeysVisible(true);
 
-    render(<GridItem col={5} item="bigkey0" row={2} />);
+    render(<GridItem col={5} item="keys0" row={2} />);
 
     expect(screen.getByTestId("big-key-0")).toHaveAccessibleName(
       "Eastern Palace big key: not obtained",
@@ -92,6 +92,53 @@ describe("GridItem", () => {
     expect(document.querySelector(".bigkey-count")).toBeNull();
   });
 
+  it("gives each castle dungeon's key cell what its pool holds, in keysanity", () => {
+    useGameStore.getState().applyPreset("keysanity");
+    const buttonsOf = (item: string) => {
+      const { unmount } = render(<GridItem col={1} item={item} row={7} />);
+      const ids = screen
+        .getAllByRole("button")
+        .map((button) => button.dataset.testid);
+      unmount();
+      return ids;
+    };
+
+    // Hyrule Castle: a small key and its map; Castle Tower: two small keys;
+    // Ganon's Tower: everything
+    expect(buttonsOf("keys10")).toEqual(["map-10", "small-key-10"]);
+    expect(buttonsOf("keys11")).toEqual(["small-key-11"]);
+    expect(buttonsOf("keys12")).toEqual([
+      "map-12",
+      "compass-12",
+      "small-key-12",
+      "big-key-12",
+    ]);
+    render(<GridItem col={5} item="keys12" row={7} />);
+    expect(screen.getByTestId("small-key-12")).toHaveAccessibleName(
+      "Ganon's Tower small keys: 0 of 4",
+    );
+    expect(screen.getByTestId("big-key-12")).toHaveAccessibleName(
+      "Ganon's Tower big key: not obtained",
+    );
+  });
+
+  it("names a castle dungeon beside its key cell, while the key cells show", () => {
+    const { unmount } = render(<GridItem col={0} item="keylabel10" row={7} />);
+    expect(screen.getByTestId("key-label-hyrule-castle")).toHaveClass(
+      "grid-spacer",
+    );
+    expect(screen.getByTestId("key-label-hyrule-castle")).toBeEmptyDOMElement();
+    unmount();
+
+    useGameStore.getState().setBigKeysVisible(true);
+    render(<GridItem col={2} item="keylabel11" row={7} />);
+
+    const label = screen.getByTestId("key-label-castle-tower");
+    expect(label).toHaveTextContent("CT");
+    expect(label).toHaveAttribute("aria-hidden", "true");
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+
   it("shows the map and compass whenever they leave their dungeons, from MC Shuffle up", () => {
     useGameStore
       .getState()
@@ -99,7 +146,7 @@ describe("GridItem", () => {
     // Key cells come on with the maps and compasses
     expect(useGameStore.getState().bigKeysVisible).toBe(true);
 
-    render(<GridItem col={5} item="bigkey3" row={2} />);
+    render(<GridItem col={5} item="keys3" row={2} />);
 
     expect(
       screen.getAllByRole("button").map((button) => button.dataset.testid),
@@ -108,13 +155,13 @@ describe("GridItem", () => {
 
   it("adds the map and compass to a key cell in keysanity only", () => {
     useGameStore.getState().setBigKeysVisible(true);
-    const { unmount } = render(<GridItem col={5} item="bigkey3" row={2} />);
+    const { unmount } = render(<GridItem col={5} item="keys3" row={2} />);
     expect(screen.queryByTestId("map-3")).toBeNull();
     expect(screen.queryByTestId("compass-3")).toBeNull();
     unmount();
 
     useGameStore.getState().applyPreset("keysanity");
-    render(<GridItem col={5} item="bigkey3" row={2} />);
+    render(<GridItem col={5} item="keys3" row={2} />);
 
     // Map and compass on top, the small key and the big key below
     expect(
@@ -152,7 +199,7 @@ describe("GridItem", () => {
   it("gives Eastern Palace a map and compass but no small key in keysanity", () => {
     useGameStore.getState().applyPreset("keysanity");
 
-    render(<GridItem col={5} item="bigkey0" row={2} />);
+    render(<GridItem col={5} item="keys0" row={2} />);
 
     expect(
       screen.getAllByRole("button").map((button) => button.dataset.testid),
@@ -162,7 +209,7 @@ describe("GridItem", () => {
 
   it("greys a key until it is held, its name telling the same", () => {
     useGameStore.getState().setBigKeysVisible(true);
-    render(<GridItem col={5} item="bigkey3" row={2} />);
+    render(<GridItem col={5} item="keys3" row={2} />);
     const bigKey = screen.getByTestId("big-key-3");
     const smallKey = screen.getByTestId("small-key-3");
     expect(bigKey).toHaveClass("griditem--dimmed");
