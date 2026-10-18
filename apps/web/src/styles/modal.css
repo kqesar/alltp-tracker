@@ -471,3 +471,28 @@ a.modal-btn {
   display: inline-flex;
   align-items: center;
 }
+
+/* A checkbox and its label, as dialogs and popovers set an option */
+.check-option {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.check-option__input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.check-option__input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.check-option label {
+  cursor: pointer;
+}

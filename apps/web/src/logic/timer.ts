@@ -34,6 +34,23 @@ export const isRunning = (timer: RunTimer): boolean => timer.startedAt !== null;
 export const isIdle = (timer: RunTimer): boolean =>
   timer.startedAt === null && timer.elapsedMs === 0 && !timer.finished;
 
+/** Where a timer stands, as the player sees it. */
+export type TimerState = "finished" | "idle" | "paused" | "running";
+
+/** Each state in words, for a screen reader. */
+export const TIMER_WORDS: Readonly<Record<TimerState, string>> = {
+  finished: "stopped at the goal",
+  idle: "not started",
+  paused: "paused",
+  running: "running",
+};
+
+export const timerState = (timer: RunTimer): TimerState => {
+  if (timer.finished) return "finished";
+  if (isRunning(timer)) return "running";
+  return isIdle(timer) ? "idle" : "paused";
+};
+
 /** Start a timer, or go on from its pause; a finished one stays so. */
 export const startTimer = (timer: RunTimer, at: number): RunTimer =>
   isRunning(timer) || timer.finished ? timer : { ...timer, startedAt: at };

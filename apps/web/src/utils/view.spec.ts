@@ -4,6 +4,7 @@ import {
   fitObsGrid,
   isObsView,
   obsBackground,
+  obsTimer,
   obsViewUrl,
   trackerUrl,
 } from "@/utils/view";
@@ -109,11 +110,34 @@ describe("trackerUrl and obsViewUrl", () => {
 
     // Vitest serves the app from "/", GitHub Pages from "/alltp-tracker/"
     expect(trackerUrl(page)).toBe("https://example.org/");
-    expect(obsViewUrl(page)).toBe("https://example.org/?view=obs");
+    expect(obsViewUrl({}, page)).toBe("https://example.org/?view=obs");
   });
 
   it("build from the current page by default", () => {
     expect(obsViewUrl()).toBe(`${window.location.origin}/?view=obs`);
+  });
+
+  it("asks the stream view for the run timer, which obsTimer reads", () => {
+    const url = obsViewUrl({ timer: true }, "https://example.org/");
+    expect(url).toBe("https://example.org/?view=obs&timer=1");
+    expect(obsTimer(new URL(url).search)).toBe(true);
+    expect(obsTimer(new URL(obsViewUrl({}, url)).search)).toBe(false);
+  });
+});
+
+describe("obsTimer", () => {
+  it("draws the timer for timer=1 only", () => {
+    expect(obsTimer("?view=obs&timer=1")).toBe(true);
+    expect(obsTimer("?view=obs")).toBe(false);
+    expect(obsTimer("?view=obs&timer=0")).toBe(false);
+    expect(obsTimer("?view=obs&timer")).toBe(false);
+  });
+
+  it("reads the page's own query string by default", () => {
+    window.history.replaceState(null, "", "/?view=obs&timer=1");
+    expect(obsTimer()).toBe(true);
+    window.history.replaceState(null, "", "/");
+    expect(obsTimer()).toBe(false);
   });
 });
 

@@ -4,7 +4,7 @@ import "@/styles/index.css";
 import { ObsView } from "@/ObsView";
 import { syncAcrossTabs } from "@/stores/crossTabSync";
 import { checkForUpdates, registerServiceWorker } from "@/stores/updateStore";
-import { isObsView, obsBackground } from "@/utils/view";
+import { isObsView, obsBackground, obsTimer } from "@/utils/view";
 import App from "./App.tsx";
 
 syncAcrossTabs();
@@ -37,7 +37,11 @@ const rootElement = document.getElementById("root");
 if (rootElement) {
   createRoot(rootElement).render(
     <StrictMode>
-      {isObsView() ? <ObsView background={obsBackground()} /> : <App />}
+      {isObsView() ? (
+        <ObsView background={obsBackground()} timer={obsTimer()} />
+      ) : (
+        <App />
+      )}
     </StrictMode>,
   );
 } else {

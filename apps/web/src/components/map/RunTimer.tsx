@@ -3,29 +3,21 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useNow } from "@/hooks/useNow";
 import {
   formatTime,
-  isIdle,
-  isRunning,
-  type RunTimer as Timer,
+  TIMER_WORDS,
+  type TimerState,
   timerMs,
+  timerState,
 } from "@/logic/timer";
 import { useAutotrackStore } from "@/stores/autotrackStore";
 import { useGameStore } from "@/stores/gameStore";
 import { placeUnder } from "@/utils/popover";
 
-type TimerState = "finished" | "idle" | "paused" | "running";
-
-/** Each state's glyph on the button, and its words for a screen reader. */
-const STATES: Record<TimerState, { glyph: string; words: string }> = {
-  finished: { glyph: "✓", words: "stopped at the goal" },
-  idle: { glyph: "▷", words: "not started" },
-  paused: { glyph: "❚❚", words: "paused" },
-  running: { glyph: "▶", words: "running" },
-};
-
-const stateOf = (timer: Timer): TimerState => {
-  if (timer.finished) return "finished";
-  if (isRunning(timer)) return "running";
-  return isIdle(timer) ? "idle" : "paused";
+/** Each state's glyph on the button. */
+const GLYPHS: Record<TimerState, string> = {
+  finished: "✓",
+  idle: "▷",
+  paused: "❚❚",
+  running: "▶",
 };
 
 /** What changed, said once as it happens. */
@@ -74,7 +66,7 @@ export const RunTimer = () => {
   const playTime = usePlayTime();
   const panelId = useId();
   const autoId = useId();
-  const state = stateOf(timer);
+  const state = timerState(timer);
   const now = useNow(state === "running");
   const time = formatTime(timerMs(timer, now));
 
@@ -87,12 +79,10 @@ export const RunTimer = () => {
     setNews(announce(state, formatTime(timerMs(timer, Date.now()))));
   }, [state, timer]);
 
-  const { glyph, words } = STATES[state];
-
   return (
     <>
       <button
-        aria-label={`Run timer: ${words}`}
+        aria-label={`Run timer: ${TIMER_WORDS[state]}`}
         className={`run-timer run-timer--${state}`}
         data-testid="run-timer"
         onClick={(event) => placeUnder(event, panelId)}
@@ -101,7 +91,7 @@ export const RunTimer = () => {
         type="button"
       >
         <span aria-hidden="true" className="run-timer__glyph">
-          {glyph}
+          {GLYPHS[state]}
         </span>
         <span aria-hidden="true" className="run-timer__time">
           {time}
@@ -147,10 +137,10 @@ export const RunTimer = () => {
             Reset
           </button>
         </div>
-        <div className="autotrack-option">
+        <div className="check-option">
           <input
             checked={autoTimer}
-            className="autotrack-option__input"
+            className="check-option__input"
             data-testid="run-timer-auto"
             id={autoId}
             onChange={(event) => setAutoTimer(event.target.checked)}

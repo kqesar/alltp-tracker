@@ -52,6 +52,13 @@
      footage ---- */
   --missing-item-filter: grayscale(1) brightness(0.55);
 
+  /* ---- The chest counters' sprite palette, which the stream view's run
+     timer is drawn in ---- */
+  --sprite-ink: #212121;
+  --sprite-gold: #d7b028;
+  --sprite-white: #f8f8f8;
+  --sprite-grey: #9a9a9a;
+
   /* ---- Focus: a dark gap then a gold ring, visible on any background,
      the busy map included ---- */
   --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);

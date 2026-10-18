@@ -128,6 +128,24 @@ describe("ObsView", () => {
     expect(screen.getAllByTestId("grid-row")).toHaveLength(8);
   });
 
+  it("keeps a row under the grid for the run timer, when asked", () => {
+    resizeTo(512, 512);
+    const { unmount } = render(<ObsView background={null} />);
+    // Seven rows: the grid centres in the room, and no timer is drawn
+    expect(cssVar("--obs-top")).toBe("32px");
+    expect(screen.queryByTestId("stream-timer")).toBeNull();
+    unmount();
+
+    render(<ObsView background={null} timer />);
+    // Eight: the grid's seven and the timer's, right under them
+    expect(cssVar("--cell")).toBe("64px");
+    expect(cssVar("--obs-top")).toBe("0px");
+    expect(cssVar("--obs-timer-top")).toBe("448px");
+    expect(screen.getByTestId("stream-timer")).toHaveAccessibleName(
+      "Run timer: 0:00, not started",
+    );
+  });
+
   it("takes a new version at once instead of offering it", () => {
     const apply = vi.fn();
     render(<ObsView background={null} />);

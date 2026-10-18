@@ -14,7 +14,8 @@ const NATIVE_CELL = 64;
 
 /**
  * The toolbar's Stream button and its dialog: the address of the stream view
- * (`?view=obs`) to paste into an OBS browser source, and how to set it up.
+ * (`?view=obs`) to paste into an OBS browser source, with the run timer under
+ * the grid if the player asks (`&timer=1`), and how to set it up.
  * @param variant - A toolbar button, or an item of the toolbar's More menu
  */
 export const StreamViewControl = ({
@@ -25,13 +26,16 @@ export const StreamViewControl = ({
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState("");
+  const [timer, setTimer] = useState(false);
   const urlRef = useRef<HTMLInputElement>(null);
   const urlId = useId();
+  const timerId = useId();
 
-  const url = obsViewUrl();
+  const url = obsViewUrl({ timer });
   const width = (ITEMS_PER_ROW + 1) * NATIVE_CELL;
-  const height =
-    visibleRows(defaultItemGrid, bigKeysVisible).length * NATIVE_CELL;
+  const rows = visibleRows(defaultItemGrid, bigKeysVisible).length;
+  // The timer takes a row of its own under the grid
+  const height = (timer ? rows + 1 : rows) * NATIVE_CELL;
   // A size never wraps between its two numbers
   const size = (scale: number) => `${width * scale} × ${height * scale}`;
 
@@ -141,6 +145,20 @@ export const StreamViewControl = ({
                 Copy
               </button>
             </div>
+          </div>
+          <div className="check-option">
+            <input
+              checked={timer}
+              className="check-option__input"
+              data-testid="stream-view-timer"
+              id={timerId}
+              onChange={(event) => {
+                setTimer(event.target.checked);
+                setStatus("");
+              }}
+              type="checkbox"
+            />
+            <label htmlFor={timerId}>Show the run timer under the grid</label>
           </div>
           <ol className="stream-view__steps">
             <li>
