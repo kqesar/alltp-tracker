@@ -1,3 +1,4 @@
+import { MARKERS } from "@alltp/pack-alttpr";
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -11,12 +12,12 @@ describe("the entrance assistant", () => {
   beforeEach(() => {
     act(() => {
       useGameStore.setState(useGameStore.getInitialState(), true);
-      useEntrancePicker.setState({ picking: null });
+      useEntrancePicker.setState({ linked: null, picking: null });
     });
   });
 
   it("draws no entrance where none is shuffled", () => {
-    render(<EntranceLayer world="light" />);
+    render(<EntranceLayer markers={MARKERS} world="light" />);
     expect(screen.queryAllByTestId(/^entrance-/)).toHaveLength(0);
   });
 
@@ -25,7 +26,7 @@ describe("the entrance assistant", () => {
     act(() => useGameStore.getState().applyPreset("crosskeys"));
     render(
       <>
-        <EntranceLayer world="light" />
+        <EntranceLayer markers={MARKERS} world="light" />
         <EntrancePicker />
       </>,
     );
@@ -52,6 +53,58 @@ describe("the entrance assistant", () => {
     expect(screen.getByTestId("entrance-kakariko-shop")).toHaveAccessibleName(
       "Kakariko Shop: leads to Elder House (East)",
     );
+  });
+
+  it("moves the checks inside a place above the door noted to lead there", () => {
+    act(() => useGameStore.getState().applyPreset("crosskeys"));
+    const { rerender } = render(
+      <EntranceLayer markers={MARKERS} world="dark" />,
+    );
+    // Blind's Hideout waits for a door; an outdoor check stays
+    expect(screen.queryByTestId("marker-blinds-hideout")).toBeNull();
+    expect(screen.getByTestId("marker-bumper-cave")).toBeInTheDocument();
+
+    act(() =>
+      useGameStore.getState().noteEntrance("big-bomb-shop", "blinds-hideout"),
+    );
+    rerender(<EntranceLayer markers={MARKERS} world="dark" />);
+    const blinds = screen.getByTestId("marker-blinds-hideout");
+    expect(blinds).toHaveAccessibleName(/^Blind's Hideout \(5 checks\)/);
+  });
+
+  it("rings every entrance into the place the one pointed at leads to", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useGameStore.getState().applyPreset("crosskeys");
+      useGameStore.getState().noteEntrances({
+        "blinds-hideout": "elder-house-exit-east",
+        "kakariko-shop": "elder-house-exit-west",
+      });
+    });
+    render(<EntranceLayer markers={MARKERS} world="light" />);
+    const other = screen.getByTestId("entrance-blinds-hideout");
+    expect(other).not.toHaveClass("entrance-marker--linked");
+
+    await user.hover(screen.getByTestId("entrance-kakariko-shop"));
+    expect(other).toHaveClass("entrance-marker--linked");
+    await user.unhover(screen.getByTestId("entrance-kakariko-shop"));
+    expect(other).not.toHaveClass("entrance-marker--linked");
+  });
+
+  it("notes a hole and its cave's door together, as one step", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useGameStore.getState().applyPreset("crosskeys");
+      useEntrancePicker.getState().pick("kakariko-well-drop");
+    });
+    render(<EntrancePicker />);
+    await user.click(screen.getByTestId("entrance-option-bat-cave-right"));
+    expect(useGameStore.getState().entrances).toEqual({
+      "kakariko-well-cave": "bat-cave-exit",
+      "kakariko-well-drop": "bat-cave-right",
+    });
+    act(() => useGameStore.getState().undo());
+    expect(useGameStore.getState().entrances).toEqual({});
   });
 
   it("says which entrance a target is noted at, and forgets one", async () => {

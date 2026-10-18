@@ -56,6 +56,15 @@
   --glyph: "▼";
 }
 
+/* Every entrance into the place the one pointed at leads to: a cave's
+   other sides, ringed in the accent colour */
+.entrance-marker--linked {
+  z-index: 2;
+  box-shadow:
+    0 0 0 2px var(--color-bg),
+    0 0 0 4px var(--color-accent);
+}
+
 /* The picker: a search, then each kind's places as buttons in columns */
 .entrance-picker {
   display: grid;

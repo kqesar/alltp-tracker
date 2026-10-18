@@ -61,6 +61,32 @@ test("notes where an entrance leads, from the map and from the list", async ({
   );
 });
 
+test("moves a place's checks to its door, and notes a hole with its cave's door", async ({
+  page,
+}) => {
+  await openCrosskeys(page);
+  // Nothing noted: Blind's Hideout's checks wait for their door
+  await expect(page.getByTestId("marker-blinds-hideout")).toHaveCount(0);
+  await page.getByTestId("entrance-big-bomb-shop").click();
+  await page.keyboard.type("blind");
+  await page.getByTestId("entrance-option-blinds-hideout").click();
+  // Now above the Big Bomb Shop's door, in the Dark World
+  await expect(
+    page.getByTestId("map-world-dark").getByTestId("marker-blinds-hideout"),
+  ).toBeVisible();
+
+  await page.getByTestId("entrance-kakariko-well-drop").click();
+  await page.getByTestId("entrance-option-bat-cave-right").click();
+  await expect(
+    page.getByTestId("entrance-kakariko-well-cave"),
+  ).toHaveAccessibleName("Kakariko Well Cave: leads to Bat Cave");
+  // One step for both
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(
+    page.getByTestId("entrance-kakariko-well-cave"),
+  ).toHaveAccessibleName("Kakariko Well Cave: not known yet");
+});
+
 for (const width of WIDTHS) {
   test(`the entrances fit, pass axe and are keyboard-reachable at ${width}px`, async ({
     page,

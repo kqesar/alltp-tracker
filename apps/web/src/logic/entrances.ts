@@ -7,7 +7,9 @@ import {
   type CrossedPool,
   crossedPool,
   type EntranceTarget,
+  type MapMarker,
   type OverworldEntrance,
+  PLACE_OF_LOCATION,
   TARGETS,
 } from "@alltp/pack-alttpr";
 import type { RunSettings } from "@/data/presets";
@@ -43,11 +45,83 @@ export const entranceById = (id: string): OverworldEntrance | undefined =>
 export const targetById = (id: string): EntranceTarget | undefined =>
   TARGET_BY_ID.get(id);
 
-/** What an entrance may lead to: a hole drops, a door opens on the rest. */
+/** What an entrance may lead to, as the shuffle has it (`targetsOf`). */
 export const targetsFor = (
+  pool: CrossedPool,
   entrance: OverworldEntrance,
-): readonly EntranceTarget[] =>
-  TARGETS.filter((t) => (t.kind === "drop") === (entrance.kind === "hole"));
+): readonly EntranceTarget[] => pool.targetsOf.get(entrance.id) ?? [];
+
+/**
+ * What noting `target` at `entrance` notes: it, and the other way into the
+ * same cave when it is a hole or a hole's door (`partner`). One step.
+ */
+export const notesFor = (
+  pool: CrossedPool,
+  entrance: string,
+  target: string,
+): Record<string, string> => {
+  const partner = pool.partner(entrance, target);
+  return partner === undefined
+    ? { [entrance]: target }
+    : { [entrance]: target, [partner[0]]: partner[1] };
+};
+
+/** A marker's place: the one place every check of it lies in, if any. */
+const placeOf = (marker: MapMarker): string | undefined => {
+  const [first, ...rest] = marker.locations.map((id) =>
+    PLACE_OF_LOCATION.get(id),
+  );
+  return first !== undefined && rest.every((place) => place === first)
+    ? first
+    : undefined;
+};
+
+/** How far apart the checks of one place stand, in percent of the map. */
+const SPREAD = 2.6;
+
+/**
+ * The map's markers in a run with shuffled entrances. A marker whose checks
+ * all lie inside one place the shuffle mixes leaves its vanilla spot: it
+ * stands just above the first entrance noted to lead into that place (in
+ * the pool's order), beside the place's other markers, or nowhere until
+ * one is. Any other marker stays.
+ * @param pool - The run's shuffle
+ * @param noted - The entrances noted: entrance id to target id
+ * @param markers - The run's world's markers
+ */
+export const placeMarkers = (
+  pool: CrossedPool,
+  noted: Readonly<Record<string, string>>,
+  markers: readonly MapMarker[],
+): MapMarker[] => {
+  const doorOf = new Map<string, OverworldEntrance>();
+  for (const entrance of pool.entrances) {
+    const target = targetById(noted[entrance.id] ?? "");
+    if (target !== undefined && !doorOf.has(target.place))
+      doorOf.set(target.place, entrance);
+  }
+  const placed: MapMarker[] = [];
+  const count = new Map<string, number>();
+  for (const marker of markers) {
+    const place = placeOf(marker);
+    if (place === undefined) {
+      placed.push(marker);
+      continue;
+    }
+    const door = doorOf.get(place);
+    if (door === undefined) continue;
+    const index = count.get(place) ?? 0;
+    count.set(place, index + 1);
+    // Above the door, the place's markers side by side, in its world
+    const left = door.world === "dark" ? 51 : 1;
+    placed.push({
+      ...marker,
+      x: Math.min(left + 48, Math.max(left, door.x + index * SPREAD)),
+      y: Math.max(1, door.y - SPREAD),
+    });
+  }
+  return placed;
+};
 
 /** A target in words: "Elder House (East)", "Blind's Hideout". */
 export const targetText = (target: EntranceTarget): string =>
