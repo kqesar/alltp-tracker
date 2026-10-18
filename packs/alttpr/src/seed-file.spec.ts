@@ -20,9 +20,13 @@ const withMeta = (meta: Record<string, unknown>) => {
 describe("seedFileReading", () => {
   it("reads an Open seed's settings", () => {
     expect(seedFileReading(seedFile("9MQ9gO1wMD"))).toEqual({
+      accessibility: { known: true, value: "items" },
       crystalsGanon: { known: true, value: 7 },
       crystalsTower: { known: true, value: 7 },
       goal: { known: true, value: "ganon" },
+      itemFunctionality: { known: true, value: "normal" },
+      itemPlacement: { known: true, value: "advanced" },
+      itemPool: { known: true, value: "normal" },
       logic: { known: true, value: "NoGlitches" },
       mode: { known: true, value: "open" },
       seed: "9MQ9gO1wMD",
@@ -41,6 +45,9 @@ describe("seedFileReading", () => {
       crystalsGanon: { value: 7 },
       crystalsTower: { value: 4 },
       goal: { value: "fast_ganon" },
+      itemFunctionality: { value: "hard" },
+      itemPlacement: { value: "basic" },
+      itemPool: { value: "hard" },
       mode: { value: "inverted" },
       seed: "eM43RgZ4Gj",
     });
