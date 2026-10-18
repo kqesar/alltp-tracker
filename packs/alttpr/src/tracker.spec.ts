@@ -153,6 +153,10 @@ describe("toState", () => {
     // Eastern Palace has no small key to find
     expect(toState(keys, KEYSANITY)).not.toHaveProperty("keyP1");
     expect(toState(keys, OPEN)).not.toHaveProperty("keyD1");
+    // Generic keys belong to no dungeon: the key model reads them
+    expect(toState(keys, settingsFromUpstream("retro"))).not.toHaveProperty(
+      "keyD1",
+    );
   });
 
   it("recomputes everything: learning the pad can close it", () => {
