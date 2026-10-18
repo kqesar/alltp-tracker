@@ -160,13 +160,53 @@ export const canonicalExpr: fc.Arbitrary<Expr> = free.canonical;
 /** Any requirement tree that may reach REGIONS. */
 export const anyExpr: fc.Arbitrary<Expr> = free.any;
 
-/** A value for every setting the generated requirements can use. */
+/** A flag, or one not known yet. */
+const flagArb = fc.oneof(fc.boolean(), fc.constant({ unknown: true } as const));
+
+/** A number up to `max`, or a range of them not known yet. */
+const numberArb = (max: number) =>
+  fc.oneof(
+    fc.integer({ max, min: 0 }),
+    fc
+      .tuple(fc.integer({ max, min: 0 }), fc.integer({ max, min: 0 }))
+      .map(([a, b]) => ({
+        between: [Math.min(a, b), Math.max(a, b)] as const,
+      })),
+  );
+
+/**
+ * A value for every setting the generated requirements can use: known, or
+ * not known yet (a flag either way, a number in a range).
+ */
 export const settings: fc.Arbitrary<Settings> = fc.record({
-  crystals: fc.integer({ max: 4, min: 0 }),
-  minSword: fc.integer({ max: 3, min: 0 }),
-  open: fc.boolean(),
-  swordless: fc.boolean(),
+  crystals: numberArb(4),
+  minSword: numberArb(3),
+  open: flagArb,
+  swordless: flagArb,
 });
+
+/**
+ * Settings, and the same ones with every setting not known yet given one of
+ * its values: what the run turns out to be.
+ */
+export const settingsAndKnown: fc.Arbitrary<[Settings, Settings]> =
+  settings.chain((set) =>
+    fc.tuple(
+      fc.constant(set),
+      fc.record(
+        Object.fromEntries(
+          Object.entries(set).map(([name, value]) => [
+            name,
+            typeof value !== "object"
+              ? fc.constant(value)
+              : "unknown" in value
+                ? fc.boolean()
+                : fc.integer({ max: value.between[1], min: value.between[0] }),
+          ]),
+        ),
+      ) as fc.Arbitrary<Settings>,
+    ),
+  );
 
 /** A level for every region in REGIONS, for evaluating `reach()`. */
 export const regionLevels: fc.Arbitrary<Record<string, Tri>> = fc.record(

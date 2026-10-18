@@ -6,6 +6,7 @@ import {
   regionLevels,
   rules,
   settings,
+  settingsAndKnown,
   state,
   stateAndMore,
   world,
@@ -109,6 +110,43 @@ describe("printer/parser round trip", () => {
           );
         },
       ),
+      RUNS,
+    );
+  });
+});
+
+describe("settings not known yet", () => {
+  it("are sound: a yes or a no holds whatever they turn out to be", () => {
+    fc.assert(
+      fc.property(
+        canonicalExpr,
+        state,
+        settingsAndKnown,
+        regionLevels,
+        (expr, s, [set, known], regions) => {
+          const hidden = evaluate(expr, s, rules, { regions, settings: set });
+          if (hidden === "maybe") return;
+          expect(evaluate(expr, s, rules, { regions, settings: known })).toBe(
+            hidden,
+          );
+        },
+      ),
+      RUNS,
+    );
+  });
+
+  it("are sound in a solved world: no region or location is surer than the run", () => {
+    fc.assert(
+      fc.property(world, state, settingsAndKnown, (w, s, [set, known]) => {
+        const hidden = solve(compileWorld(w, rules, { settings: set }), s);
+        const run = solve(compileWorld(w, rules, { settings: known }), s);
+        for (const [id, level] of Object.entries(hidden.regions())) {
+          if (level !== "maybe") expect(run.region(id)).toBe(level);
+        }
+        for (const [id, level] of Object.entries(hidden.locations())) {
+          if (level !== "maybe") expect(run.location(id)).toBe(level);
+        }
+      }),
       RUNS,
     );
   });
