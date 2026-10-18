@@ -209,14 +209,18 @@ describe("following the seed's run type", () => {
     expect(seedCheck()).toEqual({ kind: "unread", why: "race-mode" });
   });
 
-  describe("a race seed's settings, from its file on alttpr.com", () => {
+  describe("a seed's file on alttpr.com", () => {
     /** alttpr.com answering with a keysanity seed's file for `hash`. */
-    const fileOnline = (hash: string) => {
+    const fileOnline = (hash: string, meta: Record<string, string> = {}) => {
       const file = {
         ...openSeedFile,
         hash,
         spoiler: {
-          meta: { ...openSeedFile.spoiler.meta, dungeon_items: "full" },
+          meta: {
+            ...openSeedFile.spoiler.meta,
+            dungeon_items: "full",
+            ...meta,
+          },
         },
       };
       const fetch = vi.fn(async () => new Response(JSON.stringify(file)));
@@ -278,15 +282,47 @@ describe("following the seed's run type", () => {
       expect(game().presetId).toBe("open");
     });
 
-    it("asks for no file when the ROM gives the settings", async () => {
-      const fetch = fileOnline("NotRaced01");
+    it("takes what a ROM never states from the file, then switches once", async () => {
+      const fetch = fileOnline("NotRaced01", {
+        item_functionality: "hard",
+        item_placement: "basic",
+        item_pool: "hard",
+      });
       const h = keysanitySeed("NotRaced01");
       await act(() => connectAutotrack());
       await h.advance(0);
 
-      expect(game().presetId).toBe("keysanity");
-      expect(fetch).not.toHaveBeenCalled();
-      expect(useAutotrackStore.getState().seedFile).toBeNull();
+      await vi.waitFor(() => expect(game().presetId).toBe("keysanity"));
+      expect(game().settings).toMatchObject({
+        itemFunctionality: "hard",
+        itemPlacement: "basic",
+        itemPool: "hard",
+        keysanity: true,
+      });
+      expect(useAutotrackStore.getState().news?.text).toBe(
+        "This seed is Keysanity (Open, Ganon, 7/7, Basic placement, Hard pool, Hard functionality): the tracker switched to it.",
+      );
+      // One switch, one undo step
+      act(() => game().undo());
+      expect(game().presetId).toBe("open");
+      expect(fetch).toHaveBeenCalledOnce();
+    });
+
+    it("decides on the ROM's settings when alttpr.com cannot be reached", async () => {
+      const fetch = vi.fn(async () => {
+        throw new TypeError("Failed to fetch");
+      });
+      vi.stubGlobal("fetch", fetch);
+      const h = keysanitySeed("Offline001");
+      await act(() => connectAutotrack());
+      await h.advance(0);
+
+      await vi.waitFor(() => expect(game().presetId).toBe("keysanity"));
+      expect(game().settings.itemPlacement).toBe("advanced");
+      expect(useAutotrackStore.getState().seedFile).toEqual({
+        hash: "Offline001",
+        result: "offline",
+      });
     });
   });
 });

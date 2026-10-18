@@ -591,7 +591,7 @@ describe("AutotrackDialog's readout", () => {
     );
   });
 
-  it("says a race seed's settings came from its file on alttpr.com", async () => {
+  it("says which of a seed's settings came from its file on alttpr.com", async () => {
     await open();
     const raced = reading(true);
     act(() =>
@@ -611,6 +611,18 @@ describe("AutotrackDialog's readout", () => {
       }),
     );
     expect(title()).toHaveTextContent(/^Seed settings, from alttpr\.com$/);
+
+    // A seed out of Race Mode: the ROM's settings, and the file's beside
+    const unraced = reading(false);
+    act(() =>
+      useAutotrackStore.setState({
+        reading: unraced,
+        seedFile: { hash: "OPEN", result: unraced.seed },
+      }),
+    );
+    expect(title()).toHaveTextContent(
+      /^Seed settings, from the ROM and alttpr\.com$/,
+    );
   });
 
   it("names what it read that the board has no cell for", async () => {

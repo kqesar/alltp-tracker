@@ -15,7 +15,13 @@ import {
 } from "@alltp/pack-alttpr";
 import type { AutotrackReading } from "@/autotrack/reading";
 import { boardItems } from "@/autotrack/table";
-import { MODE_LABELS } from "@/data/presets";
+import {
+  ACCESSIBILITY_LABELS,
+  FUNCTIONALITY_LABELS,
+  MODE_LABELS,
+  PLACEMENT_LABELS,
+  POOL_LABELS,
+} from "@/data/presets";
 
 /** The dungeons, by the pack's codes. */
 const DUNGEON_NAMES = {
@@ -208,12 +214,25 @@ const GOAL_NAMES: Readonly<Record<SeedGoal, string>> = {
   "triforce-hunt": "Triforce Hunt",
 };
 
-/** A setting in words, or why it is unknown. */
+/**
+ * A setting in words, or why it is unknown; one only a seed's file states
+ * is "not in the ROM" without the file.
+ */
 const settingText = <T>(
-  setting: SeedSetting<T>,
+  setting: SeedSetting<T> | undefined,
   words: (value: T) => string,
 ): string =>
-  setting.known ? words(setting.value) : SETTING_UNKNOWN[setting.why];
+  setting === undefined
+    ? "not in the ROM"
+    : setting.known
+      ? words(setting.value)
+      : SETTING_UNKNOWN[setting.why];
+
+/** A label table as words for a setting's value. */
+const labelled =
+  <T extends string>(labels: Readonly<Record<T, string>>) =>
+  (value: T) =>
+    labels[value];
 
 /** The dungeon items a seed lets out of their dungeons, by setting. */
 const WILD_ITEMS = [
@@ -251,6 +270,25 @@ export const describeSeed = (seed: SeedSettingsReading): Readout["seed"] => {
           : WILD_ITEMS.filter(([key]) => seed[key].known && seed[key].value)
               .map(([, name]) => name)
               .join(", ") || "none",
+    },
+    {
+      label: "Item placement",
+      value: settingText(seed.itemPlacement, labelled(PLACEMENT_LABELS)),
+    },
+    {
+      label: "Item pool",
+      value: settingText(seed.itemPool, labelled(POOL_LABELS)),
+    },
+    {
+      label: "Item functionality",
+      value: settingText(
+        seed.itemFunctionality,
+        labelled(FUNCTIONALITY_LABELS),
+      ),
+    },
+    {
+      label: "Accessibility",
+      value: settingText(seed.accessibility, labelled(ACCESSIBILITY_LABELS)),
     },
   ];
 };

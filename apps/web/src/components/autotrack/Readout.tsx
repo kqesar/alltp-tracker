@@ -70,13 +70,18 @@ export const Readout = ({
   const titleId = useId();
   const keysanity = useGameStore((state) => state.settings.keysanity);
   const readout = describeReading(reading, keysanity);
-  // A race seed's settings come from its file once it is in
-  const fromFile = useAutotrackStore(
+  // What the ROM does not state comes from the seed's file once it is in:
+  // all of a race seed's settings but its logic
+  const fileIn = useAutotrackStore(
     (state) =>
-      reading.race &&
       state.seedFile?.hash === reading.seed.seed &&
       typeof state.seedFile.result === "object",
   );
+  const seedTitle = !fileIn
+    ? "Seed settings"
+    : reading.race
+      ? "Seed settings, from alttpr.com"
+      : "Seed settings, from the ROM and alttpr.com";
   const time = new Date(reading.at).toLocaleTimeString();
 
   return (
@@ -164,11 +169,7 @@ export const Readout = ({
         >
           <Chips entries={readout.completed} />
         </Group>
-        <Group
-          count={1}
-          testId="readout-seed"
-          title={fromFile ? "Seed settings, from alttpr.com" : "Seed settings"}
-        >
+        <Group count={1} testId="readout-seed" title={seedTitle}>
           <dl className="readout__pairs">
             {readout.seed.map(({ label, value }) => (
               <div className="readout__pair" key={label}>

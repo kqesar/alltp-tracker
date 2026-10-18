@@ -104,13 +104,22 @@ describe("withSeedFile", () => {
   };
   const file = seedFileReading(daily) as SeedSettingsReading;
 
-  it("takes from the file what Race Mode kept from the tracker, and only that", () => {
+  it("takes from the file every setting the ROM does not state, and only those", () => {
     const rom = {
       ...raceRom,
-      logic: { known: false, why: "not-read" },
+      // A setting the ROM states stands, whatever the file says
+      logic: { known: true, value: "MajorGlitches" },
+      mode: { known: false, why: "not-read" },
+      swordless: { known: false, why: "unrecognized" },
     } as const;
 
     expect(withSeedFile(rom, file)).toEqual({ ...file, logic: rom.logic });
+    // The settings only the file states come with it
+    expect(withSeedFile(rom, file)).toMatchObject({
+      itemFunctionality: { known: true, value: "hard" },
+      itemPlacement: { known: true, value: "basic" },
+      itemPool: { known: true, value: "hard" },
+    });
   });
 
   it("keeps the ROM's when the file is another seed's", () => {

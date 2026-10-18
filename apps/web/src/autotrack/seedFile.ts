@@ -1,6 +1,8 @@
 // A seed's settings from the file alttpr.com keeps for it (the pack's
-// seed-file.ts reads it): for a race seed, whose ROM the tracker may not read
-// them from, and for a seed the player names by its link.
+// seed-file.ts reads it): for a seed autotracking reads, the settings its ROM
+// does not state (all but its name and logic for a race seed; item placement,
+// accessibility and the item pool and functionality for any), and for a seed
+// the player names by its link.
 //
 // The file comes from alttpr.com's bucket, which any origin may read. It
 // holds the seed's patch too, downloaded with the rest and never read.
@@ -76,13 +78,16 @@ export const loadSeedFile = (hash: string): Promise<SeedFileResult> => {
 /** Forget the files asked. For tests. */
 export const forgetSeedFiles = () => files.clear();
 
-/** The ROM's setting, or the file's when Race Mode kept it from the tracker. */
-const take = <T>(rom: SeedSetting<T>, file: SeedSetting<T>): SeedSetting<T> =>
-  !rom.known && rom.why === "race-mode" ? file : rom;
+/** The ROM's setting when it states one, else the file's. */
+const take = <S extends SeedSetting<unknown> | undefined>(
+  rom: S,
+  file: S,
+): S => (rom?.known || file === undefined ? rom : file);
 
 /**
- * The ROM's settings, each one Race Mode kept from the tracker taken from
- * the seed's file instead. The ROM's stand when the file is another seed's.
+ * The ROM's settings, each one it does not state (Race Mode kept it, it was
+ * not read, no ROM table holds it) taken from the seed's file. The ROM's
+ * stand when the file is another seed's.
  * @param rom - What the ROM said
  * @param file - What the seed's file says
  */
@@ -93,9 +98,13 @@ export const withSeedFile = (
   file.seed !== rom.seed
     ? rom
     : {
+        accessibility: take(rom.accessibility, file.accessibility),
         crystalsGanon: take(rom.crystalsGanon, file.crystalsGanon),
         crystalsTower: take(rom.crystalsTower, file.crystalsTower),
         goal: take(rom.goal, file.goal),
+        itemFunctionality: take(rom.itemFunctionality, file.itemFunctionality),
+        itemPlacement: take(rom.itemPlacement, file.itemPlacement),
+        itemPool: take(rom.itemPool, file.itemPool),
         logic: take(rom.logic, file.logic),
         mode: take(rom.mode, file.mode),
         seed: rom.seed,

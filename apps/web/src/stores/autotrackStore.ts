@@ -48,14 +48,14 @@ type AutotrackState = {
   /** The system and browser, once detected. */
   environment: Environment | null;
   /**
-   * The game as last read, or null before the first read. A race seed's
-   * settings, which Race Mode keeps from the tracker, are its file's once
-   * `seedFile` holds them.
+   * The game as last read, or null before the first read. The settings its
+   * ROM does not state are the seed's file's once `seedFile` holds them.
    */
   reading: AutotrackReading | null;
   /**
-   * A race seed's file on alttpr.com, asked once per connection: its
-   * settings, or why there are none, or "loading" while asked.
+   * The seed's file on alttpr.com, asked once per connection for a seed
+   * whose name is a hash: its settings, or why there are none, or "loading"
+   * while asked.
    */
   seedFile: {
     readonly hash: string;
@@ -199,20 +199,29 @@ const withFile = (reading: AutotrackReading): AutotrackReading => {
     : { ...reading, seed: withSeedFile(reading.seed, file.result) };
 };
 
+/** The seed's hash, when alttpr.com keeps a file for it. */
+const hashOf = (reading: AutotrackReading): string | null => {
+  const name = reading.seed.seed;
+  // A name of another generator's is no alttpr.com hash
+  return name !== null && seedHashOf(name) === name ? name : null;
+};
+
+/** Whether the seed's run type waits for its file, still on its way. */
+const awaitsFile = (reading: AutotrackReading): boolean => {
+  const hash = hashOf(reading);
+  const file = useAutotrackStore.getState().seedFile;
+  return hash !== null && (file?.hash !== hash || file.result === "loading");
+};
+
 /**
- * Ask alttpr.com for a race seed's settings, which its ROM keeps from the
- * tracker: once per connection. When they come, the seed's run type is
- * held against the board's again.
+ * Ask alttpr.com for the seed's file, once per connection: it states what
+ * the ROM does not (a race seed's settings; any seed's item placement,
+ * accessibility, item pool and functionality). When it comes, or cannot,
+ * the seed's run type is held against the board's.
  */
 const askSeedFile = (reading: AutotrackReading, mine: number) => {
-  const hash = reading.seed.seed;
-  if (
-    !reading.race ||
-    hash === null ||
-    // A name of another generator's, not an alttpr.com hash
-    seedHashOf(hash) !== hash ||
-    useAutotrackStore.getState().seedFile?.hash === hash
-  ) {
+  const hash = hashOf(reading);
+  if (hash === null || useAutotrackStore.getState().seedFile?.hash === hash) {
     return;
   }
   set({ seedFile: { hash, result: "loading" } });
@@ -222,9 +231,9 @@ const askSeedFile = (reading: AutotrackReading, mine: number) => {
     if (mine !== generation || !asked) return;
     set({ seedFile: { hash, result } });
     const last = useAutotrackStore.getState().reading;
-    if (last === null || typeof result === "string") return;
+    if (last === null) return;
     const reading = withFile(last);
-    set({ reading });
+    if (reading !== last) set({ reading });
     // The game is on the board by now: it is fresh if it holds nothing else
     followSeed(reading, follower?.holdsGameOnly() ?? false);
   });
@@ -239,7 +248,9 @@ const sinkFor = (mine: number): RuntimeSink => ({
   reading: (read) => {
     if (mine !== generation) return;
     const reading = withFile(read);
-    followSeed(reading);
+    // A seed with a file on alttpr.com is held against the board once the
+    // file has settled (askSeedFile): the two never switch it twice
+    if (!awaitsFile(reading)) followSeed(reading);
     set({ reading });
     follower?.read(reading);
     askSeedFile(reading, mine);
