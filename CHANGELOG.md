@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.16.0](https://github.com/kqesar/alltp-tracker/compare/v2.15.0...v2.16.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **alttpr:** count the Big Red Bomb as an item ([ecd84e6](https://github.com/kqesar/alltp-tracker/commit/ecd84e68cac012b699ab751cf82ad38b2fe2fcc5))
+* **alttpr:** lay out Inverted's map and sell its bomb ([12f3fda](https://github.com/kqesar/alltp-tracker/commit/12f3fda929ab39845763b035666ad6894d4ce6f8))
+* **alttpr:** lay out the Inverted world and import its tests ([7a1f00e](https://github.com/kqesar/alltp-tracker/commit/7a1f00e353b3db0aabb1a7215b754e3d0ee20dd1))
+* **alttpr:** port the Inverted dungeons ([876622e](https://github.com/kqesar/alltp-tracker/commit/876622ec1a1a15a9eeda2d08c53be2c44c777448))
+* **alttpr:** port the Inverted overworld and escape ([a674cf5](https://github.com/kqesar/alltp-tracker/commit/a674cf5c9d0fb652d9561542200689db949a9151))
+* **web:** track Inverted runs ([4536280](https://github.com/kqesar/alltp-tracker/commit/45362800a9975fdea50b7c09dd6b6a41ff821931))
+
+
+### 🔧 Code Refactoring
+
+* **alttpr:** let a derived module set a boss's rule again ([efe20d0](https://github.com/kqesar/alltp-tracker/commit/efe20d03ee5bbe2d0034b783d473cbc1aa140259))
+
 ## [2.15.0](https://github.com/kqesar/alltp-tracker/compare/v2.14.0...v2.15.0) (2026-10-18)
 
 
