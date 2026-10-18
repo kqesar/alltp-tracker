@@ -102,6 +102,12 @@ type GameState = Progress &
      */
     toggleChecks: (locations: readonly string[]) => void;
     /**
+     * Note where a shuffled entrance leads, or that it is not known
+     * (`null`): one undo step. A target leads from one entrance only, so
+     * noting it at one forgets it at another.
+     */
+    noteEntrance: (entrance: string, target: string | null) => void;
+    /**
      * Change settings in the run going, its progress kept (`retune`): what
      * a Mystery run discovers, and the dungeon items, whose counters keep
      * the items found. A setting changed is no longer hidden. One undo
@@ -180,6 +186,7 @@ export const createProgress = (
   settings: RunSettings = getPreset(presetId).settings,
 ): Progress => ({
   checked: {},
+  entrances: {},
   items: { ...initialItems, ...fullCounters(settings) } as ItemState,
   medallions: Array(10).fill(0) as number[],
   presetId: getPreset(presetId).id,
@@ -199,6 +206,7 @@ export const isFreshRun = (progress: Progress): boolean => {
     Object.keys(progress.checked).length === 0 &&
     progress.medallions.every((value) => value === 0) &&
     progress.smallKeys.every((value) => value === 0) &&
+    Object.keys(progress.entrances).length === 0 &&
     Object.entries(fresh.items).every(
       ([id, value]) => progress.items[id] === value,
     )
@@ -234,6 +242,7 @@ const restoreProgress = (
       : base.items;
   return {
     checked: saved.checked ?? base.checked,
+    entrances: saved.entrances ?? base.entrances,
     items,
     medallions: saved.medallions ?? base.medallions,
     presetId: saved.presetId ?? base.presetId,
@@ -260,6 +269,7 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
   mapView:
     saved.mapView === "map" ||
     saved.mapView === "checks" ||
+    saved.mapView === "entrances" ||
     saved.mapView === "run"
       ? saved.mapView
       : base.mapView,
@@ -269,6 +279,7 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
 /** The run alone, as a save file carries it. */
 const progressOf = (state: GameState): Progress => ({
   checked: state.checked,
+  entrances: state.entrances,
   items: state.items,
   medallions: state.medallions,
   presetId: state.presetId,
@@ -489,6 +500,18 @@ export const useGameStore = create<GameState>()(
             ...record(state, restoreProgress(createProgress(), progress)),
             timer: IDLE_TIMER,
           })),
+
+        noteEntrance: (entrance: string, target: string | null) =>
+          set((state) => {
+            if ((state.entrances[entrance] ?? null) === target) return state;
+            const entrances = Object.fromEntries(
+              Object.entries(state.entrances).filter(
+                ([id, to]) => id !== entrance && to !== target,
+              ),
+            );
+            if (target !== null) entrances[entrance] = target;
+            return record(state, { entrances });
+          }),
         past: [],
         pauseTimer: (at = Date.now()) =>
           set((state) => ({ timer: pauseTimer(state.timer, at) })),

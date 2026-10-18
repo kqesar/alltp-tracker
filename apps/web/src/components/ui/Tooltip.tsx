@@ -135,6 +135,8 @@ const controlsOf = (target: TooltipTarget): ControlId[] => {
       );
     case "item":
       return [target.item];
+    case "text":
+      return [];
   }
 };
 
@@ -213,7 +215,13 @@ export const Tooltip = () => {
   const [placement, setPlacement] = useState<Placement | null>(null);
 
   const title =
-    marker?.name ?? (target?.kind === "item" ? itemLabels(target.item) : "");
+    marker?.name ??
+    (target?.kind === "item"
+      ? itemLabels(target.item)
+      : target?.kind === "text"
+        ? target.title
+        : "");
+  const text = target?.kind === "text" ? target.text : "";
   const lines = target ? shortcutLines(target, shortcuts) : [];
   // One row per location, but for a marker that stands for one only: its
   // state then follows its name
@@ -243,7 +251,7 @@ export const Tooltip = () => {
   const single = rows.length === 1 && dungeon === undefined;
   const described = left !== undefined || !single || missing.length > 0;
   const hasDetail = marker !== undefined && described;
-  const size = `${title}|${left}|${sure}|${pad}|${detail.join()}|${lines.length}|${missing.map((entry) => entry.key).join()}`;
+  const size = `${title}|${text}|${left}|${sure}|${pad}|${detail.join()}|${lines.length}|${missing.map((entry) => entry.key).join()}`;
 
   // The detail is what the anchor's name does not say: it describes it
   useLayoutEffect(() => {
@@ -358,6 +366,11 @@ export const Tooltip = () => {
             src={getAssetPath(`medallion${pad}.png`)}
           />
           {MEDALLION_NAMES[pad]}
+        </span>
+      )}
+      {text !== "" && (
+        <span aria-hidden="true" className="tooltip__text">
+          {text}
         </span>
       )}
       {single && checks}

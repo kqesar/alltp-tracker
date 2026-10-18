@@ -247,6 +247,12 @@
   font-weight: 700;
 }
 
+/* What a control shows, in words: a shuffled entrance's destination */
+.tooltip__text {
+  flex-basis: 100%;
+  color: var(--color-text-secondary);
+}
+
 .tooltip__pad {
   display: inline-flex;
   gap: 2px;

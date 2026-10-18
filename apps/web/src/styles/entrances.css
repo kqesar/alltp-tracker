@@ -1,0 +1,199 @@
+/* The entrance assistant: shuffled entrances on the map, the destination
+   picker and the Entrances list */
+
+/* A round marker, smaller than a check's: an empty dashed ring while where
+   it leads is not known (no "?", which a check's maybe says), filled by the
+   kind of place once noted, with a glyph for each so colour is never the
+   only cue. A hole's is squarer. */
+.entrance-marker {
+  --marker: clamp(18px, 4cqw, 26px);
+  --entrance: rgba(10, 12, 20, 0.75);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--marker) * 0.6);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--state-ink);
+  background-color: var(--entrance);
+  border: 2px solid var(--state-ink);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--color-text);
+}
+
+.entrance-marker::after {
+  content: var(--glyph, "");
+}
+
+.entrance-marker--hole {
+  border-radius: 30%;
+}
+
+.entrance-marker--unknown {
+  --entrance: rgba(10, 12, 20, 0.45);
+  border-color: var(--color-text);
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.entrance-marker--dungeon {
+  --entrance: var(--entrance-dungeon);
+  --glyph: "D";
+}
+
+.entrance-marker--connector {
+  --entrance: var(--entrance-connector);
+  --glyph: "↔";
+}
+
+.entrance-marker--single {
+  --entrance: var(--entrance-single);
+  --glyph: "•";
+}
+
+.entrance-marker--drop {
+  --entrance: var(--entrance-drop);
+  --glyph: "▼";
+}
+
+/* The picker: a search, then each kind's places as buttons in columns */
+.entrance-picker {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+/* The search fields are the Checks list's (checks__field), stretched */
+.entrance-picker .checks__field,
+.entrances .checks__field {
+  display: flex;
+}
+
+.entrance-picker .checks__input,
+.entrances .checks__input {
+  flex: 1;
+  min-width: 0;
+}
+
+.entrance-picker__heading {
+  margin: 0 0 var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.entrance-picker__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(14rem, 100%), 1fr));
+  gap: var(--spacing-xs);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.entrance-option {
+  display: grid;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--color-text);
+  text-align: start;
+  cursor: pointer;
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-inline-start: 4px solid var(--entrance, var(--color-border));
+  border-radius: var(--border-radius-sm);
+}
+
+.entrance-option:hover {
+  border-color: var(--color-text-secondary);
+  border-inline-start-color: var(--entrance, var(--color-text-secondary));
+}
+
+.entrance-option[aria-pressed="true"] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+  background: var(--surface-2, var(--surface-1));
+}
+
+.entrance-option--dungeon {
+  --entrance: var(--entrance-dungeon);
+}
+
+.entrance-option--connector {
+  --entrance: var(--entrance-connector);
+}
+
+.entrance-option--single {
+  --entrance: var(--entrance-single);
+}
+
+.entrance-option--drop {
+  --entrance: var(--entrance-drop);
+}
+
+.entrance-option__at {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* The Entrances list, by world, each row its name and where it leads */
+.entrances {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.entrances__summary {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.entrances__heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--spacing-xs) 0;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.entrances__list {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.entrance-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--spacing-sm);
+  align-items: center;
+  padding: 0 var(--spacing-sm);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.entrance-row__name {
+  min-height: 44px;
+  padding: 0;
+  color: var(--color-text);
+  text-align: start;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.entrance-row__name:hover {
+  text-decoration: underline;
+}
+
+.entrance-row__hole,
+.entrance-row__target--unknown {
+  color: var(--color-text-secondary);
+}

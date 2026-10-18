@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { lazy, Suspense, useId } from "react";
 import { ChecksPanel } from "@/components/map/ChecksPanel";
 import { GoMode } from "@/components/map/GoMode";
 import { LogicNote } from "@/components/map/LogicNote";
@@ -11,12 +11,26 @@ import { type Tab, Tabs, tabId } from "@/components/ui/Tabs";
 import { useGameStore } from "@/stores/gameStore";
 import type { MapView } from "@/utils";
 
-/** The panel's views, as its tabs. */
+/** The panel's views, as its tabs; the Entrances list with shuffled ones. */
 const VIEWS = [
   { label: "Map", value: "map" },
   { label: "Checks", value: "checks" },
   { label: "Run", value: "run" },
 ] as const satisfies readonly Tab<MapView>[];
+const VIEWS_WITH_ENTRANCES = [
+  { label: "Map", value: "map" },
+  { label: "Checks", value: "checks" },
+  { label: "Entrances", value: "entrances" },
+  { label: "Run", value: "run" },
+] as const satisfies readonly Tab<MapView>[];
+
+/** The entrance assistant's list and picker, loaded with their tables. */
+const EntrancesPanel = lazy(
+  () => import("@/components/map/entrances/EntrancesPanel"),
+);
+const EntrancePicker = lazy(
+  () => import("@/components/map/entrances/EntrancePicker"),
+);
 
 /** The id of the view's panel, which the skip links focus. */
 export const MAP_VIEW_ID = "map-view";
@@ -28,7 +42,12 @@ export const MAP_VIEW_ID = "map-view";
  * preference of the device, kept across runs.
  */
 export const MapPanel = () => {
-  const view = useGameStore((state) => state.mapView);
+  const shuffled = useGameStore(
+    (state) => state.settings.entranceShuffle !== "none",
+  );
+  const saved = useGameStore((state) => state.mapView);
+  // A run without shuffled entrances has no Entrances tab: the map instead
+  const view = saved === "entrances" && !shuffled ? "map" : saved;
   const setMapView = useGameStore((state) => state.setMapView);
   const baseId = useId();
 
@@ -41,7 +60,7 @@ export const MapPanel = () => {
           onSelect={setMapView}
           panelId={MAP_VIEW_ID}
           selected={view}
-          tabs={VIEWS}
+          tabs={shuffled ? VIEWS_WITH_ENTRANCES : VIEWS}
           testId="map-view-tab"
         />
         <div className="map-panel__status">
@@ -66,8 +85,18 @@ export const MapPanel = () => {
           </>
         )}
         {view === "checks" && <ChecksPanel />}
+        {view === "entrances" && (
+          <Suspense fallback={null}>
+            <EntrancesPanel />
+          </Suspense>
+        )}
         {view === "run" && <RunPanel />}
       </div>
+      {shuffled && (
+        <Suspense fallback={null}>
+          <EntrancePicker />
+        </Suspense>
+      )}
     </div>
   );
 };
