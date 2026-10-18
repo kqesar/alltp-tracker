@@ -22,6 +22,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/markers.ts` | the map markers, and what a marker shows |
 | `src/goals.ts` | `app/Randomizer.php`: where each goal puts the Triforce, and its go mode |
 | `src/seed-link.ts` | `app/Seed.php`, `routes/web.php`: a seed's hash, from a link to its page, and where its file lies |
+| `src/entrances.ts` | `cassidoxa/ALttPEntranceRandomizer` (`EntranceShuffle.py`, `Regions.py`), at the commit vt pins: the overworld's entrances and where the crossed shuffle may lead them (`src/entrances/er.json`, imported) |
 | `src/seed-file.ts` | `app/Jobs/SendPatchToDisk.php`, `World.php`, `EntranceRandomizer.php`: a seed's settings from its file (its entrance shuffle included), through a Zod schema of `spoiler.meta` |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
@@ -215,6 +216,45 @@ keys: a key door is `maybe` until a key is for sale, and `yes` after.
 
 `test/upstream/RetroBow.json` holds the official `RetroBowTest` (32 cases)
 to the rupee bow.
+
+## The entrance randomizer's tables
+
+vt hands a seed with shuffled entrances to the entrance randomizer, a Python
+program at the commit vt's composer.json pins (`upstream.json`,
+`entranceRandomizer`). `scripts/import-er.mjs` reads its tables into
+`src/entrances/er.json`:
+
+```bash
+pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
+```
+
+- **Read, never run.** A small tokenizer reads the Python literals the
+  source assigns or passes (`Cave_Exits_Base = [...]`, its later `+=`,
+  `scramble_holes`' lists, `skull_woods_shuffle`'s calls, the
+  `create_*_region` calls of `Regions.py`). Anything else there stops the
+  import with the file and line.
+- **A door's position** is where Link comes out of it (`door_addresses`: its
+  area and his coordinates in the world, 4096 pixels a side).
+- **A hole's position** comes from the base ROM's hole table, whose entry
+  `door_addresses` gives. The ROM is the Japanese 1.0 one alttpr.com asks
+  for, checked by its MD5. The table's rows run 7 above the tiles the
+  overworld draws: `CreatePyramidHole` draws the Pyramid's at rows 7 to 9,
+  where the table says 0. With them, every hole lands within a point of the
+  legacy map's marker of what lies under it.
+
+`src/entrances.ts` reads it:
+
+- `ENTRANCES`, each with its position on the map, door or hole;
+- `TARGETS`: a side of a dungeon or connector cave (its exit), a single
+  door's place, or where a hole drops, grouped by the place a player knows
+  (`place`, `side`);
+- `crossedPool(mode)`: what alttpr.com's crossed shuffle mixes. It
+  shuffles Ganon's Tower by default (`EntranceRandomizer.py:228`). Each hole
+  is paired with the door of the cave it drops into.
+
+`test/er-seeds/0yAObedRMV.json` is a real Crosskeys seed's spoiler: its
+shuffled entrances are exactly the pool, and every one leads to a target
+the model knows.
 
 ## The legacy format
 

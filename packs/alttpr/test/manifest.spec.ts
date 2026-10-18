@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadFixtures, loadItemTable, loadLocationIndex } from "./fixtures";
@@ -34,6 +34,19 @@ describe("upstream.json", () => {
         `${path}: re-import it at the commit upstream.json pins`,
       ).toEqual([manifest.repo, manifest.commit, manifest.logic]);
     }
+  });
+
+  it("pins the entrance randomizer's commit, which its tables were imported from", () => {
+    const er = JSON.parse(
+      readFileSync(
+        new URL("../src/entrances/er.json", import.meta.url),
+        "utf8",
+      ),
+    ) as { upstream: { commit: string; repo: string } };
+    expect(manifest.entranceRandomizer).toMatchObject({
+      commit: er.upstream.commit,
+      repo: er.upstream.repo,
+    });
   });
 
   it("lists each file once, with a known status", () => {

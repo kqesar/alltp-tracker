@@ -77,6 +77,17 @@ export {
   dungeonStatus,
 } from "./dungeons";
 export {
+  type CrossedPool,
+  crossedPool,
+  ENTRANCES,
+  type EntranceTarget,
+  entranceNamed,
+  labelOf,
+  type OverworldEntrance,
+  TARGETS,
+  targetNamed,
+} from "./entrances";
+export {
   EVENT_LOCATIONS,
   type Filler,
   filler,

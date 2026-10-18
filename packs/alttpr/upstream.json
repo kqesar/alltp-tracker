@@ -1,5 +1,12 @@
 {
   "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+  "entranceRandomizer": {
+    "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    "data": "src/entrances/er.json",
+    "license": "MIT, Copyright (c) 2017 LLCoolDave",
+    "pinnedBy": "the commit vt's composer.json requires for its entrance shuffle",
+    "repo": "cassidoxa/ALttPEntranceRandomizer"
+  },
   "license": "MIT, Copyright (c) 2016 sporchia",
   "logic": 31,
   "repo": "sporchia/alttp_vt_randomizer",
