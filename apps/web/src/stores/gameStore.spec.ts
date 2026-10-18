@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_KEYMAP, DEFAULT_SHORTCUTS } from "@/data/keymap";
 import { getPreset } from "@/data/presets";
 import v1Export from "@/stores/fixtures/v1-export.json";
@@ -830,6 +830,148 @@ describe("GameStore", () => {
       expect(JSON.parse(store().exportState()).progress).not.toHaveProperty(
         "timer",
       );
+    });
+  });
+
+  describe("the timeline", () => {
+    const T0 = Date.UTC(2026, 9, 18, 12, 0, 0);
+    const store = () => useGameStore.getState();
+    const at = (ms: number) => vi.setSystemTime(T0 + ms);
+
+    beforeEach(() => {
+      vi.useFakeTimers({ now: T0 });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("stamps the player's finds with the timer's time, none before it starts", () => {
+      store().handleItemClick("hammer");
+      expect(store().timeline).toEqual({
+        "item:hammer": { at: T0, ms: null },
+      });
+
+      store().startTimer(T0);
+      at(30_000);
+      store().toggleChecks(["kings-tomb"]);
+      store().handleItemClick("sword");
+      expect(store().timeline).toEqual({
+        "check:kings-tomb": { at: T0 + 30_000, ms: 30_000 },
+        "item:hammer": { at: T0, ms: null },
+        "item:sword:1": { at: T0 + 30_000, ms: 30_000 },
+      });
+    });
+
+    it("loses a find's time with an undo, and finds the very same with a redo", () => {
+      store().startTimer(T0);
+      at(10_000);
+      store().handleItemClick("hookshot");
+      const found = store().timeline["item:hookshot"];
+
+      at(20_000);
+      store().undo();
+      expect(store().timeline).toEqual({});
+      at(30_000);
+      store().redo();
+      expect(store().timeline["item:hookshot"]).toBe(found);
+    });
+
+    it("stamps the game's finds now, on the run and every step of its history", () => {
+      const hookshot = (progress: Progress) =>
+        progress.items.hookshot
+          ? null
+          : { items: { ...progress.items, hookshot: true } };
+      store().handleItemClick("bow");
+      store().handleItemClick("hammer");
+      const hammer = store().timeline["item:hammer"];
+      store().undo();
+
+      store().startTimer(T0);
+      at(45_000);
+      store().applyGameNews(hookshot);
+
+      const stamp = { at: T0 + 45_000, ms: 45_000 };
+      expect(store().timeline["item:hookshot"]).toEqual(stamp);
+      expect(store().past[0].timeline).toEqual({ "item:hookshot": stamp });
+      expect(store().future[0].timeline).toEqual({
+        "item:bow:1": { at: T0, ms: null },
+        "item:hammer": hammer,
+        "item:hookshot": stamp,
+      });
+    });
+
+    it("starts empty with a new game or a run type, and keeps an import's", () => {
+      store().handleItemClick("hammer");
+      store().reset();
+      expect(store().timeline).toEqual({});
+
+      store().handleItemClick("hammer");
+      store().applyPreset("standard");
+      expect(store().timeline).toEqual({});
+
+      const timeline = { "item:hammer": { at: T0 - 5000, ms: 1000 } };
+      store().loadProgress({
+        items: { ...store().items, hammer: true },
+        timeline,
+      });
+      expect(store().timeline).toEqual(timeline);
+      // An older save, which kept none, dates nothing it held
+      store().loadProgress({ items: { ...store().items, flute: true } });
+      expect(store().timeline).toEqual({});
+    });
+
+    it("is saved and exported with the run, and read back", async () => {
+      store().startTimer(T0);
+      at(2000);
+      store().handleItemClick("hammer");
+      const stamp = { at: T0 + 2000, ms: 2000 };
+      expect(JSON.parse(store().exportState()).progress.timeline).toEqual({
+        "item:hammer": stamp,
+      });
+
+      importSave(store().exportState());
+      expect(store().timeline).toEqual({ "item:hammer": stamp });
+
+      // localStorage keeps the valid entries of a damaged one
+      storeSave(
+        {
+          timeline: {
+            "check:kings-tomb": { at: T0, ms: 0 },
+            "item:hammer": { at: "noon" },
+          },
+        },
+        PERSIST_VERSION,
+      );
+      await useGameStore.persist.rehydrate();
+      expect(store().timeline).toEqual({
+        "check:kings-tomb": { at: T0, ms: 0 },
+      });
+    });
+
+    it("refuses a save file whose timeline holds what is not a time", () => {
+      const file = JSON.parse(store().exportState());
+      file.progress.timeline = { "item:hammer": { at: T0, ms: "1:00" } };
+      expect(parseSave(JSON.stringify(file))).toEqual({
+        ok: false,
+        reason:
+          'This save holds invalid data: timeline["item:hammer"] must be a time.',
+      });
+
+      file.progress.timeline = [];
+      expect(parseSave(JSON.stringify(file))).toMatchObject({
+        reason: "This save holds invalid data: timeline must be an object.",
+      });
+
+      // A key this version does not know is dropped, as a location is
+      file.progress.timeline = {
+        "check:nowhere": { at: T0, ms: null },
+        "item:hammer": { at: T0, ms: null },
+      };
+      const save = parseSave(JSON.stringify(file));
+      expect(save.ok && save.progress.timeline).toEqual({
+        "item:hammer": { at: T0, ms: null },
+      });
     });
   });
 

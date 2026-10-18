@@ -21,6 +21,7 @@ import {
   SMALL_KEYS_MAX,
   smallKeysMax,
 } from "@/logic/settings";
+import { type Stamp, stampOf, stampTimeline } from "@/logic/timeline";
 import {
   finishTimer,
   IDLE_TIMER,
@@ -165,6 +166,7 @@ export const createProgress = (
   settings,
   // One per key dungeon (KEY_DUNGEONS), none found yet
   smallKeys: Array(SMALL_KEYS_MAX.length).fill(0) as number[],
+  timeline: {},
 });
 
 /**
@@ -217,6 +219,7 @@ const restoreProgress = (
     presetId: saved.presetId ?? base.presetId,
     settings,
     smallKeys: saved.smallKeys ?? base.smallKeys,
+    timeline: saved.timeline ?? base.timeline,
   };
 };
 
@@ -249,14 +252,41 @@ const progressOf = (state: GameState): Progress => ({
   presetId: state.presetId,
   settings: state.settings,
   smallKeys: state.smallKeys,
+  timeline: state.timeline,
 });
 
 /**
+ * `change` laid on `progress`, its finds stamped on the timeline: what a
+ * change of the run's own items or checks sets. A change that brings a
+ * timeline (a new run, an import) replaces it instead.
+ */
+const dated = (
+  progress: Progress,
+  change: Partial<Progress>,
+  stamp: Stamp,
+): Partial<Progress> =>
+  change.timeline !== undefined || (!change.items && !change.checked)
+    ? change
+    : {
+        ...change,
+        timeline: stampTimeline(
+          progress.timeline,
+          progress,
+          {
+            checked: change.checked ?? progress.checked,
+            items: change.items ?? progress.items,
+          },
+          stamp,
+        ),
+      };
+
+/**
  * A progress change that can be undone: remember the run it replaces and drop
- * the redo stack, as any editor does once a new change is made.
+ * the redo stack, as any editor does once a new change is made. What it
+ * finds is stamped now.
  */
 const record = (state: GameState, next: Partial<Progress>) => ({
-  ...next,
+  ...dated(progressOf(state), next, stampOf(state.timer, Date.now())),
   future: [],
   past: [...state.past, progressOf(state)].slice(-HISTORY_LIMIT),
 });
@@ -282,19 +312,26 @@ export const useGameStore = create<GameState>()(
 
         applyGameNews: (change) => {
           const state = get();
-          const now = change(progressOf(state));
+          // The game's finds are stamped now, on the run and on every step
+          // of its history alike
+          const stamp = stampOf(state.timer, Date.now());
+          const current = progressOf(state);
+          const now = change(current);
           let moved = false;
           const rebase = (history: Progress[]) =>
             history.map((progress) => {
               const changed = change(progress);
               if (changed === null) return progress;
               moved = true;
-              return { ...progress, ...changed };
+              return { ...progress, ...dated(progress, changed, stamp) };
             });
           const past = rebase(state.past);
           const future = rebase(state.future);
           if (now === null && !moved) return;
-          set({ ...now, ...(moved ? { future, past } : {}) });
+          set({
+            ...(now === null ? {} : dated(current, now, stamp)),
+            ...(moved ? { future, past } : {}),
+          });
         },
 
         applyPreset: (presetId: string) =>
