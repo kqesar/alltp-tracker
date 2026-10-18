@@ -161,7 +161,7 @@ describe("following the game", () => {
 
     follower.switchRun("keysanity", {
       ...store().settings,
-      keysanity: true,
+      dungeonItems: "full",
     });
 
     expect(store().presetId).toBe("keysanity");
@@ -180,7 +180,7 @@ describe("following the game", () => {
   it("switches to a bare run before any game in play was read", () => {
     createFollower().switchRun("keysanity", {
       ...store().settings,
-      keysanity: true,
+      dungeonItems: "full",
     });
 
     expect(store().presetId).toBe("keysanity");

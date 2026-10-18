@@ -116,7 +116,7 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   // 1 the green tunic, which every run starts with: no armor yet
   tunic: count("armor", 1),
   ...perDungeon("bigkey", dungeonItem("bigKey")),
-  // With wild maps and compasses (keysanity) a boss wants its dungeon's
+  // With wild maps and compasses (MC Shuffle and up) a boss wants its dungeon's
   ...perDungeon("map", dungeonItem("map")),
   ...perDungeon("compass", dungeonItem("compass")),
   ...perDungeon("boss", (id) => ({

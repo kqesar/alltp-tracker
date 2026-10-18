@@ -67,9 +67,10 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   sword: [0, 4],
   tunic: [1, 3],
 
-  // Big keys for keysanity mode (0 = not obtained, 1 = obtained)
+  // Big keys (0 = not obtained, 1 = obtained)
   ...perDungeon("bigkey", () => [0, 1]),
-  // Maps and compasses, whose boss wants them in keysanity (0 or 1)
+  // Maps and compasses, whose boss wants them once they leave their dungeons
+  // (MC Shuffle and up; 0 or 1)
   ...perDungeon("map", () => [0, 1]),
   ...perDungeon("compass", () => [0, 1]),
   // Boss state, starts at 1 (alive)

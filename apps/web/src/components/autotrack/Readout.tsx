@@ -1,6 +1,7 @@
 import { type ReactNode, useId } from "react";
 import type { AutotrackReading } from "@/autotrack/reading";
 import { describeReading } from "@/autotrack/readout";
+import { wildItems } from "@/data/presets";
 import { useAutotrackStore } from "@/stores/autotrackStore";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -68,8 +69,8 @@ export const Readout = ({
   reading: AutotrackReading;
 }) => {
   const titleId = useId();
-  const keysanity = useGameStore((state) => state.settings.keysanity);
-  const readout = describeReading(reading, keysanity);
+  const wildKeys = useGameStore((state) => wildItems(state.settings).keys);
+  const readout = describeReading(reading, wildKeys);
   // What the ROM does not state comes from the seed's file once it is in:
   // all of a race seed's settings but its logic
   const fileIn = useAutotrackStore(

@@ -266,7 +266,8 @@ export const dungeonCount = (
  * locations, from the items left. Castle Tower and Ganon's Tower have no
  * counter, so what is left is unknown: they show markerStatus of all their
  * item locations, and Castle Tower is done when it holds nothing for the
- * player (its two chests keep their keys outside keysanity).
+ * player (its two chests keep their keys while small keys stay in their
+ * dungeons).
  */
 export const dungeonStateOf = (id: DungeonId, state: Inputs): MarkerState => {
   const solution = solutionOf(state);

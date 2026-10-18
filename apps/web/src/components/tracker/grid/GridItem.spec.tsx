@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { GridItem } from "@/components/tracker/grid/GridItem";
+import { getPreset } from "@/data/presets";
 import { useGameStore } from "@/stores/gameStore";
 
 describe("GridItem", () => {
@@ -89,6 +90,20 @@ describe("GridItem", () => {
     expect(screen.queryByTestId("small-key-0")).toBeNull();
     expect(screen.getAllByRole("button")).toHaveLength(1);
     expect(document.querySelector(".bigkey-count")).toBeNull();
+  });
+
+  it("shows the map and compass whenever they leave their dungeons, from MC Shuffle up", () => {
+    useGameStore
+      .getState()
+      .applyRun("open", { ...getPreset("open").settings, dungeonItems: "mc" });
+    // Key cells come on with the maps and compasses
+    expect(useGameStore.getState().bigKeysVisible).toBe(true);
+
+    render(<GridItem col={5} item="bigkey3" row={2} />);
+
+    expect(
+      screen.getAllByRole("button").map((button) => button.dataset.testid),
+    ).toEqual(["map-3", "compass-3", "small-key-3", "big-key-3"]);
   });
 
   it("adds the map and compass to a key cell in keysanity only", () => {

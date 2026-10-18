@@ -5,9 +5,10 @@ import {
   chordOf,
   isBindable,
   isKeyControl,
-  isKeysanityControl,
+  isMapCompassControl,
   parseAction,
 } from "@/data/keymap";
+import { wildItems } from "@/data/presets";
 import { type Direction, useGameStore } from "@/stores/gameStore";
 import { isAwayFromBoard } from "@/utils/keyboard";
 
@@ -35,9 +36,11 @@ export const shortcutStepFor = (event: KeyboardEvent): Step | null => {
 
   const { control, direction } = parseAction(action);
   // A key cell can only be clicked while it is shown; so it is with its keys,
-  // and its map and compass, shown in keysanity runs only
+  // and its map and compass, shown only when they lie outside their dungeons
   if (isKeyControl(control) && !bigKeysVisible) return null;
-  if (isKeysanityControl(control) && !settings.keysanity) return null;
+  if (isMapCompassControl(control) && !wildItems(settings).mapsAndCompasses) {
+    return null;
+  }
   return { control, direction: direction === "back" ? -1 : 1 };
 };
 

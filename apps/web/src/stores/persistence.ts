@@ -11,6 +11,7 @@ import { DEFAULT_SHORTCUTS, type ShortcutPrefs } from "@/data/keymap";
 import {
   ACCESSIBILITY_LABELS,
   DEFAULT_PRESET_ID,
+  DUNGEON_ITEM_LABELS,
   ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
   GOAL_LABELS,
@@ -73,7 +74,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Bumped whenever PersistedState changes shape; `migrate` upgrades older saves. */
-export const PERSIST_VERSION = 9;
+export const PERSIST_VERSION = 10;
 
 /**
  * What every run before version 8 was: swords in the pool, 7 crystals for
@@ -175,10 +176,14 @@ const migrateV5 = (saved: Record<string, unknown>): Record<string, unknown> => {
     });
     migrated.checked = checked;
   }
-  const run = hasRunType(rest.settings)
-    ? { ...SITE_DEFAULTS, ...LOGIC_DEFAULTS, ...rest.settings }
-    : undefined;
-  if (run?.keysanity && isRecord(rest.items)) {
+  const legacy = hasLegacyRunType(rest.settings) ? rest.settings : undefined;
+  if (legacy?.keysanity && isRecord(rest.items)) {
+    const run: RunSettings = {
+      ...SITE_DEFAULTS,
+      ...LOGIC_DEFAULTS,
+      ...legacy,
+      dungeonItems: "full",
+    };
     const items = { ...rest.items };
     LEGACY_DUNGEON_ITEMS.forEach((legacyMax, index) => {
       const left = items[`chest${index}`];
@@ -235,6 +240,21 @@ const migrateV8 = (saved: Record<string, unknown>): Record<string, unknown> =>
     : saved;
 
 /**
+ * Version 10 names a run's dungeon items as alttpr.com does (`dungeonItems`),
+ * where earlier versions said keysanity, every dungeon item outside its
+ * dungeon, or none.
+ */
+const migrateV9 = (saved: Record<string, unknown>): Record<string, unknown> => {
+  if (!isRecord(saved.settings)) return saved;
+  const { keysanity, ...settings } = saved.settings;
+  if (typeof keysanity !== "boolean") return saved;
+  return {
+    ...saved,
+    settings: { ...settings, dungeonItems: keysanity ? "full" : "standard" },
+  };
+};
+
+/**
  * Upgrade a save written by an earlier version to the current shape. Fields
  * are not validated here; restoring a save falls back field by field.
  * @param saved - The stored or imported object
@@ -254,6 +274,7 @@ export const migrate = (
   if (version < 7) state = migrateV6(state);
   if (version < 8) state = migrateV7(state);
   if (version < 9) state = migrateV8(state);
+  if (version < 10) state = migrateV9(state);
   return state as Partial<PersistedState>;
 };
 
@@ -276,7 +297,8 @@ const COUNTER = /^chest(\d)$/;
 
 /**
  * The range of an item's values in a run: a dungeon counter's top depends
- * on the run's settings (keysanity counts more), the rest is fixed.
+ * on the run's settings (dungeon items outside their dungeons count too),
+ * the rest is fixed.
  */
 export const itemRange = (
   id: string,
@@ -331,21 +353,37 @@ const validateChecked = (
   return valid;
 };
 
-/** The run type's fields, every version's: a known world, goal and shuffle. */
-const hasRunType = (
+type Rec = Record<string, unknown>;
+
+/** The fields every version's run type has: a known world, goal and shuffle. */
+const hasWorld = (
   value: unknown,
-): value is Pick<
-  RunSettings,
-  "entranceShuffle" | "goal" | "keysanity" | "mode"
-> =>
+): value is Pick<RunSettings, "entranceShuffle" | "goal" | "mode"> =>
   isRecord(value) &&
-  typeof value.keysanity === "boolean" &&
   typeof value.mode === "string" &&
   value.mode in MODE_LABELS &&
   typeof value.goal === "string" &&
   value.goal in GOAL_LABELS &&
   typeof value.entranceShuffle === "string" &&
   value.entranceShuffle in ENTRANCE_LABELS;
+
+/** A run type before version 10, which said keysanity on or off. */
+const hasLegacyRunType = (
+  value: unknown,
+): value is Pick<RunSettings, "entranceShuffle" | "goal" | "mode"> & {
+  keysanity: boolean;
+} => hasWorld(value) && typeof (value as Rec).keysanity === "boolean";
+
+/** A run type: a known world, goal, shuffle and dungeon items. */
+const hasRunType = (
+  value: unknown,
+): value is Pick<
+  RunSettings,
+  "dungeonItems" | "entranceShuffle" | "goal" | "mode"
+> =>
+  hasWorld(value) &&
+  typeof (value as Rec).dungeonItems === "string" &&
+  Object.hasOwn(DUNGEON_ITEM_LABELS, (value as Rec).dungeonItems as string);
 
 /** Run settings whose every field names a known option. */
 const isRunSettings = (value: unknown): value is RunSettings => {
@@ -391,7 +429,7 @@ export const validateProgress = (
     if (isRunSettings(saved.settings)) value.settings = saved.settings;
     else
       errors.push(
-        "settings must name a known mode, goal, entrance shuffle, item placement, accessibility, item pool and functionality, and crystal counts from 0 to 7",
+        "settings must name a known mode, goal, entrance shuffle, dungeon items, item placement, accessibility, item pool and functionality, and crystal counts from 0 to 7",
       );
   }
 

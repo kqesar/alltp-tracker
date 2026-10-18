@@ -36,6 +36,7 @@ import {
   PRIZE_CELLS,
   prizeOf,
 } from "@/autotrack/table";
+import { wildItems } from "@/data/presets";
 import { counterMax, packSettings, smallKeysMax } from "@/logic/settings";
 import type { Progress } from "@/stores/persistence";
 
@@ -53,12 +54,15 @@ export type GameView = {
   readonly items: Readonly<Record<string, CellValue>>;
   /**
    * The items a dungeon's counter (`chest3`) can have left, from the least
-   * to the most: the same with keysanity, where each location counts.
+   * to the most: the same in Full Shuffle, where each location counts.
    */
   readonly counters: Readonly<Record<string, readonly [number, number]>>;
   /** Whether each location the game settles is checked, by pack id. */
   readonly checked: Readonly<Record<string, boolean>>;
-  /** The least small keys found, by grid dungeon index: keysanity only. */
+  /**
+   * The least small keys found, by grid dungeon index: only while small keys
+   * leave their dungeons (MCS and Full Shuffle).
+   */
   readonly smallKeys: Readonly<Record<number, number>>;
 };
 
@@ -212,10 +216,11 @@ const dungeonLocationsOf = (
 
 /**
  * The items each dungeon counter can have left, from its checked locations
- * and the dungeon's own items the player holds. With keysanity each
- * location counts: the counter is exact. Otherwise its map, compass, big
- * key and small keys stay inside and are no items to the player: memory
- * tells the first three, not how many small keys came from chests (keys
+ * and the dungeon's own items the player holds. In Full Shuffle each
+ * location counts: the counter is exact. Otherwise the dungeon items that
+ * stay inside (its map, compass, big key and small keys, as the run's
+ * dungeon items leave them) are no items to the player: memory tells the
+ * first three, not how many small keys came from chests (keys
  * also drop from enemies, and are spent on doors). The counter then lies
  * between the chests' keys all found and none: it never shows a dungeon
  * done that may hold an item.
@@ -273,7 +278,7 @@ export const gameView = (
     if (!unsettled.has(id)) checked[id] = isChecked.has(id);
   }
   const smallKeys: Record<number, number> = {};
-  if (board.settings.keysanity) {
+  if (wildItems(board.settings).keys) {
     for (const [index, found] of Object.entries(keysFound)) {
       smallKeys[Number(index)] = Math.min(found, smallKeysMax(Number(index)));
     }

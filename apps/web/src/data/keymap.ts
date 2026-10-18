@@ -65,7 +65,7 @@ const hasMedallion = (index: number) =>
 /**
  * A dungeon's controls: the boss cell's (boss, medallion, chests, reward),
  * then the key cell's (big key, small keys for a dungeon that has some: not
- * Eastern Palace; map and compass, shown in keysanity runs).
+ * Eastern Palace; map and compass, shown while they leave their dungeons).
  * @param index - The dungeon index (0-9)
  */
 export const dungeonControls = (index: number): ControlId[] => [
@@ -109,10 +109,10 @@ export const isKeyControl = (control: ControlId) =>
   /^(bigkey|smallkey|map|compass)\d$/.test(control);
 
 /**
- * A control of a key cell drawn in keysanity runs only: a dungeon's map and
- * compass, which its boss wants only when they are wild.
+ * A control of a key cell drawn only when maps and compasses lie outside
+ * their dungeons: a dungeon's map and compass, which its boss wants then.
  */
-export const isKeysanityControl = (control: ControlId) =>
+export const isMapCompassControl = (control: ControlId) =>
   /^(map|compass)\d$/.test(control);
 
 /** What each kind of dungeon control is called within its dungeon. */

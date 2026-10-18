@@ -30,8 +30,8 @@ const cache = new Map<string, AlttprSettings>();
 /**
  * The pack's settings for a run: the run's world, goal, crystal counts, item
  * placement, accessibility, item pool and functionality, swordless weapons
- * when it has no sword, and every dungeon item wild for keysanity
- * (dungeonItems 'full': keys, big keys, maps and compasses), in NoGlitches
+ * when it has no sword, and its dungeon items (dungeonItems: which of them
+ * may lie outside their dungeons), in NoGlitches
  * logic with randomized weapons, as the site's default preset has them
  * (config/alttp.php:78-96). The pack models the Open and Standard worlds
  * only: an inverted or retro run, whose preset says its logic is not
@@ -44,7 +44,7 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
   const key = [
     run.mode,
     run.goal,
-    run.keysanity,
+    run.dungeonItems,
     run.swordless,
     run.crystalsTower,
     run.crystalsGanon,
@@ -61,7 +61,7 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
         accessibility: run.accessibility,
         "crystals.ganon": run.crystalsGanon,
         "crystals.tower": run.crystalsTower,
-        dungeonItems: run.keysanity ? "full" : "standard",
+        dungeonItems: run.dungeonItems,
         goal: GOALS[run.goal],
         "item.functionality": run.itemFunctionality,
         "item.pool": run.itemPool,

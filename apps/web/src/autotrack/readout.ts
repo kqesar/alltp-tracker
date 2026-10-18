@@ -366,19 +366,19 @@ const add = <K>(map: Map<K, string[]>, key: K, entry: string) => {
 /**
  * The reading as the panel lists it.
  * @param reading - What the session decoded last
- * @param keysanity - Whether the run's small keys are wild, which the board
+ * @param wildKeys - Whether the run's small keys are wild, which the board
  * then counts
  */
 export const describeReading = (
   reading: AutotrackReading,
-  keysanity = false,
+  wildKeys = false,
 ): Readout => {
   const { atLeast, counts, unsettled } = reading.items;
   const items: string[] = [];
   const prizes: string[] = [];
   const byDungeon = new Map<DungeonCode, string[]>();
   const withheld = new Map<string, Unsettled>();
-  const onBoard = boardItems(keysanity);
+  const onBoard = boardItems(wildKeys);
   const untracked = new Set<string>();
   const offBoard = (id: ItemId, count: number) => {
     if (count === 0 || EVENTS.has(id) || onBoard.has(id)) return;

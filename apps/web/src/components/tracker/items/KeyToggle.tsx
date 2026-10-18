@@ -50,8 +50,8 @@ type KeyToggleProps = {
 };
 
 /**
- * A button of a dungeon's key cell: its big key, its small keys, and in
- * keysanity its map and compass. The held-or-not items (big key, map,
+ * A button of a dungeon's key cell: its big key, its small keys, and its map
+ * and compass while they leave their dungeons (MC Shuffle and up). The held-or-not items (big key, map,
  * compass) step their item in the store; the small keys step their count.
  * An item not held yet is greyed, as any missing item; the cell's count says
  * how many small keys are found.

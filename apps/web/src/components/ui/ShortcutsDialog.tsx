@@ -24,6 +24,7 @@ import {
   type ShortcutDirection,
   unbind,
 } from "@/data/keymap";
+import { wildItems } from "@/data/presets";
 import { dungeonName } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
 import { useKeyboardLayout } from "@/stores/keyboardLayoutStore";
@@ -79,7 +80,9 @@ type Conflict = { action: ActionId; chord: Chord; holder: ActionId };
 export const ShortcutsDialog = ({ onClose }: { onClose: () => void }) => {
   const shortcuts = useGameStore((state) => state.shortcuts);
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
-  const keysanity = useGameStore((state) => state.settings.keysanity);
+  const withMaps = useGameStore(
+    (state) => wildItems(state.settings).mapsAndCompasses,
+  );
   const setKeymap = useGameStore((state) => state.setKeymap);
   const setShortcutsEnabled = useGameStore(
     (state) => state.setShortcutsEnabled,
@@ -104,14 +107,14 @@ export const ShortcutsDialog = ({ onClose }: { onClose: () => void }) => {
     return `${describe(action)}: ${chord ? text(chord) : "no shortcut"}`;
   };
   // Which key cell shortcuts wait: the cells hidden, or the map and compass
-  // outside keysanity, where the cells do not show them
+  // while they stay in their dungeons, where the cells do not show them
   const keyCellsHint = !bigKeysVisible
-    ? keysanity
+    ? withMaps
       ? "Key, map and compass shortcuts work while the key cells are shown."
-      : "Key shortcuts work while the key cells are shown, map and compass ones in keysanity runs."
-    : keysanity
+      : "Key shortcuts work while the key cells are shown, map and compass ones when maps and compasses are shuffled."
+    : withMaps
       ? null
-      : "Map and compass shortcuts work in keysanity runs.";
+      : "Map and compass shortcuts work when maps and compasses are shuffled.";
   const unchanged = (action: ActionId) =>
     `Change cancelled. ${bindingOf(action, keymap)}.`;
 

@@ -19,12 +19,12 @@ const run = (overrides: Partial<RunSettings> = {}): RunSettings => ({
   accessibility: "items",
   crystalsGanon: 7,
   crystalsTower: 7,
+  dungeonItems: "standard",
   entranceShuffle: "none",
   goal: "ganon",
   itemFunctionality: "normal",
   itemPlacement: "advanced",
   itemPool: "normal",
-  keysanity: false,
   mode: "open",
   swordless: false,
   ...overrides,
@@ -123,7 +123,7 @@ describe("packSettings", () => {
   });
 
   it("gives equal run settings the same object, so its world is kept", () => {
-    expect(packSettings(run({ keysanity: true }))).toBe(
+    expect(packSettings(run({ dungeonItems: "full" }))).toBe(
       packSettings(getPreset("keysanity").settings),
     );
     expect(packSettings(run())).not.toBe(
@@ -148,9 +148,20 @@ describe("counterMax", () => {
   it("counts every location with keysanity (config/item.php:94-147)", () => {
     expect(
       Array.from({ length: 10 }, (_, index) =>
-        counterMax(index, run({ keysanity: true })),
+        counterMax(index, run({ dungeonItems: "full" })),
       ),
     ).toEqual([6, 6, 6, 14, 10, 8, 8, 8, 8, 12]);
+  });
+
+  it("counts the maps and compasses from MC Shuffle, the small keys from MCS", () => {
+    const counters = (dungeonItems: "mc" | "mcs") =>
+      Array.from({ length: 10 }, (_, index) =>
+        counterMax(index, run({ dungeonItems })),
+      );
+    // Standard's, and each dungeon's map and compass
+    expect(counters("mc")).toEqual([5, 4, 4, 7, 8, 4, 6, 5, 4, 7]);
+    // Full Shuffle's, but the big key
+    expect(counters("mcs")).toEqual([5, 5, 5, 13, 9, 7, 7, 7, 7, 11]);
   });
 
   it("refuses an index past the ten dungeons", () => {

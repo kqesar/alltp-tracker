@@ -221,7 +221,7 @@ describe("GameStore", () => {
 
       state.applyRun(
         "keysanity",
-        { ...FIVE_FIVE, keysanity: true },
+        { ...FIVE_FIVE, dungeonItems: "full" },
         (fresh) => ({
           items: { ...fresh.items, flute: true },
         }),
@@ -545,7 +545,7 @@ describe("GameStore", () => {
 
       const state = useGameStore.getState();
       expect(state.presetId).toBe("keysanity");
-      expect(state.settings.keysanity).toBe(true);
+      expect(state.settings.dungeonItems).toBe("full");
       expect(state.bigKeysVisible).toBe(true);
       expect(state.checked).toEqual({});
     });

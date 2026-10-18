@@ -2,8 +2,8 @@
  * Run-type presets for the ALttP Randomizer.
  *
  * A preset is a named bundle of settings. The tracker reacts to the settings
- * it can model today (notably `keysanity`, which drives small/big key display
- * via the existing logic). Settings that change the accessibility *logic*
+ * it can model today (notably `dungeonItems`, which drives the key cells and
+ * the dungeon counters). Settings that change the accessibility *logic*
  * (mode = inverted/retro, entranceShuffle = crossed, ...) are stored and shown,
  * but the per-mode logic is implemented in later iterations — `logicSupported`
  * flags whether the tracker's accessibility logic fully models the preset.
@@ -30,6 +30,14 @@ type EntranceShuffle =
   | "crossed"
   | "insanity";
 
+/**
+ * alttpr.com's dungeon items (config/alttp.php:185-190): which of a
+ * dungeon's own items may lie outside it. Each level lets out the ones below
+ * it too (World.php:111-129): maps and compasses (mc), then small keys
+ * (mcs), then big keys (full, keysanity).
+ */
+export type DungeonItems = "standard" | "mc" | "mcs" | "full";
+
 /** alttpr.com's item placement (config/alttp.php:181-184). */
 type ItemPlacement = "advanced" | "basic";
 
@@ -48,8 +56,8 @@ type ItemFunctionality = "normal" | "hard" | "expert" | "superexpert";
 export type RunSettings = {
   mode: RunMode;
   goal: RunGoal;
-  /** Small/big keys, maps and compasses shuffled into the world */
-  keysanity: boolean;
+  /** The dungeon items that may lie outside their dungeons */
+  dungeonItems: DungeonItems;
   entranceShuffle: EntranceShuffle;
   /** No sword in the item pool: alttpr.com's weapons "swordless" */
   swordless: boolean;
@@ -80,12 +88,12 @@ const baseSettings: RunSettings = {
   accessibility: "items",
   crystalsGanon: 7,
   crystalsTower: 7,
+  dungeonItems: "standard",
   entranceShuffle: "none",
   goal: "ganon",
   itemFunctionality: "normal",
   itemPlacement: "advanced",
   itemPool: "normal",
-  keysanity: false,
   mode: "open",
   swordless: false,
 };
@@ -110,7 +118,7 @@ export const presets: Preset[] = [
     id: "keysanity",
     logicSupported: true,
     name: "Keysanity",
-    settings: { ...baseSettings, keysanity: true },
+    settings: { ...baseSettings, dungeonItems: "full" },
   },
   {
     description: "All dungeon bosses must be defeated before Ganon.",
@@ -157,7 +165,11 @@ export const presets: Preset[] = [
     id: "crosskeys",
     logicSupported: false,
     name: "Crosskeys",
-    settings: { ...baseSettings, entranceShuffle: "crossed", keysanity: true },
+    settings: {
+      ...baseSettings,
+      dungeonItems: "full",
+      entranceShuffle: "crossed",
+    },
   },
   {
     description:
@@ -191,6 +203,25 @@ export const GOAL_LABELS: Record<RunGoal, string> = {
   pedestal: "Pedestal",
   "triforce-hunt": "Triforce Hunt",
 };
+
+export const DUNGEON_ITEM_LABELS: Record<DungeonItems, string> = {
+  full: "Full Shuffle",
+  mc: "MC Shuffle",
+  mcs: "MCS Shuffle",
+  standard: "Standard",
+};
+
+/** What a run's dungeon items let out of their dungeons (World.php:111-129). */
+export const wildItems = ({
+  dungeonItems,
+}: Pick<RunSettings, "dungeonItems">) => ({
+  /** Big keys: full shuffle only. */
+  bigKeys: dungeonItems === "full",
+  /** Small keys: mcs and full. */
+  keys: dungeonItems === "mcs" || dungeonItems === "full",
+  /** Maps and compasses, which always go together: every level but standard. */
+  mapsAndCompasses: dungeonItems !== "standard",
+});
 
 export const PLACEMENT_LABELS: Record<ItemPlacement, string> = {
   advanced: "Advanced",
@@ -286,7 +317,7 @@ export type SettingRow = {
 export const describeSettings = (settings: RunSettings): SettingRow[] => [
   { label: "Mode", value: MODE_LABELS[settings.mode] },
   { label: "Goal", value: GOAL_LABELS[settings.goal] },
-  { label: "Keysanity", value: settings.keysanity ? "On" : "Off" },
+  { label: "Dungeon items", value: DUNGEON_ITEM_LABELS[settings.dungeonItems] },
   { label: "Swordless", value: settings.swordless ? "On" : "Off" },
   {
     label: "Ganon's Tower",

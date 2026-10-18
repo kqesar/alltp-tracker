@@ -14,6 +14,7 @@ import {
   getPreset,
   type RunSettings,
   type TunableSetting,
+  wildItems,
 } from "@/data/presets";
 import { counterMax, smallKeysMax } from "@/logic/settings";
 import {
@@ -39,7 +40,8 @@ type GameState = Progress &
     /**
      * Start a new run of a run type with these settings, as one undo step:
      * the fresh run, then what `lay` sets on it (the game, while
-     * autotracking). Key cells follow the run when its keysanity changes.
+     * autotracking). Key cells follow the run when its dungeon items start
+     * or stop leaving their dungeons.
      */
     applyRun: (
       presetId: string,
@@ -153,7 +155,7 @@ export const isFreshRun = (progress: Progress): boolean => {
 
 /** Display preferences for a first visit. */
 const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
-  bigKeysVisible: getPreset(presetId).settings.keysanity,
+  bigKeysVisible: wildItems(getPreset(presetId).settings).mapsAndCompasses,
   mapLayout: "auto",
   mapView: "map",
   shortcuts: DEFAULT_SHORTCUTS,
@@ -268,12 +270,14 @@ export const useGameStore = create<GameState>()(
             const fresh = createProgress(presetId, settings);
             return {
               ...record(state, { ...fresh, ...lay?.(fresh) }),
-              // Key cells follow the run type when it turns keysanity on or
-              // off; otherwise the player's own choice stands.
+              // Key cells follow the run type when its dungeon items start
+              // or stop leaving their dungeons; otherwise the player's own
+              // choice stands.
               bigKeysVisible:
-                settings.keysanity === state.settings.keysanity
+                wildItems(settings).mapsAndCompasses ===
+                wildItems(state.settings).mapsAndCompasses
                   ? state.bigKeysVisible
-                  : settings.keysanity,
+                  : wildItems(settings).mapsAndCompasses,
             };
           }),
 

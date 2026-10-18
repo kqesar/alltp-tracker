@@ -15,7 +15,7 @@ import {
   ITEM_CONTROLS,
   isBindable,
   isKeyControl,
-  isKeysanityControl,
+  isMapCompassControl,
   parseAction,
   parseChord,
   refusalOf,
@@ -80,7 +80,7 @@ describe("the controls", () => {
       ["bigkey3", "smallkey3", "map3", "compass3", "chest3"].map(isKeyControl),
     ).toEqual([true, true, true, true, false]);
     expect(
-      ["bigkey3", "smallkey3", "map3", "compass3"].map(isKeysanityControl),
+      ["bigkey3", "smallkey3", "map3", "compass3"].map(isMapCompassControl),
     ).toEqual([false, false, true, true]);
     expect(controlTitle("map3")).toBe("Palace of Darkness map");
     expect(controlTitle("compass9")).toBe("Turtle Rock compass");

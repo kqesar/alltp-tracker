@@ -51,12 +51,12 @@ describe("parseSave", () => {
         accessibility: "locations",
         crystalsGanon: 6,
         crystalsTower: 5,
+        dungeonItems: "mcs",
         entranceShuffle: "none",
         goal: "ganon",
         itemFunctionality: "hard",
         itemPlacement: "basic",
         itemPool: "expert",
-        keysanity: false,
         mode: "open",
         swordless: true,
       },
@@ -226,15 +226,21 @@ describe("migrate", () => {
       swordless: false,
     };
 
+    // Version 10 then names the dungeon items
+    const named = (keysanity: boolean) => {
+      const { keysanity: _, ...rest } = run(keysanity);
+      return { ...rest, dungeonItems: keysanity ? "full" : "standard" };
+    };
+
     expect(migrate({ items, settings: run(true) }, 5)).toEqual({
       // 2 of 3 found in Eastern Palace, none in Palace of Darkness; a value
       // out of the legacy range is left for validation to refuse
       items: { chest0: 4, chest3: 14, chest9: -1, hookshot: true },
-      settings: { ...run(true), ...v8 },
+      settings: { ...named(true), ...v8 },
     });
     expect(migrate({ items, settings: run(false) }, 5)).toEqual({
       items,
-      settings: { ...run(false), ...v8 },
+      settings: { ...named(false), ...v8 },
     });
   });
 
@@ -263,13 +269,15 @@ describe("migrate", () => {
 
     const migrated = migrate({ presetId: "keysanity", settings }, 7);
 
+    const { keysanity: _, ...named } = settings;
     expect(migrated).toEqual({
       presetId: "keysanity",
       settings: {
-        ...settings,
+        ...named,
         ...LOGIC_DEFAULTS,
         crystalsGanon: 7,
         crystalsTower: 7,
+        dungeonItems: "full",
         swordless: false,
       },
     });
@@ -280,15 +288,38 @@ describe("migrate", () => {
   });
 
   it("gives a version 8 run the site's item placement, pool, functionality and accessibility", () => {
-    const { accessibility, itemFunctionality, itemPlacement, itemPool, ...v8 } =
-      getPreset("swordless").settings;
+    const {
+      accessibility,
+      dungeonItems,
+      itemFunctionality,
+      itemPlacement,
+      itemPool,
+      ...current
+    } = getPreset("swordless").settings;
+    const v8 = { ...current, keysanity: false };
 
     const migrated = migrate({ settings: v8 }, 8);
 
-    expect(migrated).toEqual({ settings: { ...v8, ...LOGIC_DEFAULTS } });
+    expect(migrated).toEqual({
+      settings: { ...current, ...LOGIC_DEFAULTS, dungeonItems: "standard" },
+    });
     expect(validateProgress(migrated).errors).toEqual([]);
     // Unmigrated, the settings fail
     expect(validateProgress({ settings: v8 }).errors).toHaveLength(1);
+  });
+
+  it("names a version 9 run's dungeon items as alttpr.com does", () => {
+    const { dungeonItems, ...v9 } = getPreset("open").settings;
+
+    expect(migrate({ settings: { ...v9, keysanity: true } }, 9)).toEqual({
+      settings: { ...v9, dungeonItems: "full" },
+    });
+    expect(migrate({ settings: { ...v9, keysanity: false } }, 9)).toEqual({
+      settings: { ...v9, dungeonItems: "standard" },
+    });
+    // A keysanity that is no flag is left for validation to refuse
+    const odd = migrate({ settings: { ...v9, keysanity: "yes" } }, 9);
+    expect(validateProgress(odd).errors).toHaveLength(1);
   });
 
   it("refuses a logic setting alttpr.com has no option for", () => {

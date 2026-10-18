@@ -7,7 +7,8 @@ type BigKeyToggleProps = {
 
 /**
  * BigKeyToggle component - A floating toggle button to show/hide big keys
- * Positioned over the tracker grid for easy access during keysanity mode
+ * Positioned over the tracker grid for easy access in runs whose dungeon
+ * items leave their dungeons
  */
 export const BigKeyToggle = ({ isVisible, onToggle }: BigKeyToggleProps) => {
   const handleClick = () => {

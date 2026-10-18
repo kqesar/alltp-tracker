@@ -34,9 +34,9 @@ const fakeState = {
   settings: {
     crystalsGanon: 7,
     crystalsTower: 7,
+    dungeonItems: "standard",
     entranceShuffle: "none" as const,
     goal: "ganon" as const,
-    keysanity: false,
     mode: "open" as const,
     swordless: false,
   },

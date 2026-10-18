@@ -163,13 +163,13 @@ export const joinValues = (
 
 /**
  * The pack items the board marks from the game: those its cells count, the
- * pendants and crystals its prize cells stand for, and with keysanity the
- * small keys of the grid's dungeons.
- * @param keysanity - Whether the run's small keys are wild
+ * pendants and crystals its prize cells stand for, and with small keys
+ * outside their dungeons (MCS and Full Shuffle) the grid's dungeons' keys.
+ * @param wildKeys - Whether the run's small keys leave their dungeons
  */
-export const boardItems = (keysanity: boolean): ReadonlySet<ItemId> => {
+export const boardItems = (wildKeys: boolean): ReadonlySet<ItemId> => {
   const shown = new Set<string>(
-    keysanity ? LEGACY_DUNGEONS.map((id) => `key${dungeon(id).code}`) : [],
+    wildKeys ? LEGACY_DUNGEONS.map((id) => `key${dungeon(id).code}`) : [],
   );
   for (const [, entry] of ENTRIES) {
     for (const item of countedBy(entry)) shown.add(item);

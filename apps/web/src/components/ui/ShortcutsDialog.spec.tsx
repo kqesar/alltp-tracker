@@ -328,13 +328,13 @@ describe("ShortcutsDialog", () => {
   it("says when key cells are hidden that their keys wait for them", async () => {
     await openWithKeyboard();
     expect(dialog()).toHaveTextContent(
-      "Key shortcuts work while the key cells are shown, map and compass ones in keysanity runs.",
+      "Key shortcuts work while the key cells are shown, map and compass ones when maps and compasses are shuffled.",
     );
 
     act(() => useGameStore.getState().setBigKeysVisible(true));
     expect(dialog()).not.toHaveTextContent("while the key cells are shown");
     expect(dialog()).toHaveTextContent(
-      "Map and compass shortcuts work in keysanity runs.",
+      "Map and compass shortcuts work when maps and compasses are shuffled.",
     );
 
     act(() => useGameStore.getState().applyPreset("keysanity"));

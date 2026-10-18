@@ -101,16 +101,16 @@
       "accessibility": "items",
       "crystalsGanon": 7,
       "crystalsTower": 7,
+      "dungeonItems": "standard",
       "entranceShuffle": "none",
       "goal": "ganon",
       "itemFunctionality": "normal",
       "itemPlacement": "advanced",
       "itemPool": "normal",
-      "keysanity": false,
       "mode": "open",
       "swordless": false
     },
     "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   },
-  "version": 9
+  "version": 10
 }

@@ -78,8 +78,8 @@ describe("checkSeed", () => {
     expect(check).toMatchObject({
       kind: "differs",
       presetId: "standard",
-      seedText: "Standard (Standard, Ganon, 7/7, Keysanity)",
-      settings: { keysanity: true, mode: "standard" },
+      seedText: "Standard (Standard, Ganon, 7/7, Full Shuffle)",
+      settings: { dungeonItems: "full", mode: "standard" },
     });
     // The tracker's own run type wins a tie
     expect(
@@ -98,10 +98,29 @@ describe("checkSeed", () => {
     });
   });
 
+  it("holds a seed's maps and compasses, or its small keys too, outside their dungeons", () => {
+    expect(
+      checkSeed(seedOf({ dungeonItems: "mc" }), run("open")),
+    ).toMatchObject({
+      kind: "differs",
+      presetId: "open",
+      seedText: "Open (Open, Ganon, 7/7, MC Shuffle)",
+      settings: { dungeonItems: "mc" },
+    });
+    expect(
+      checkSeed(seedOf({ dungeonItems: "mcs" }), run("open")),
+    ).toMatchObject({ settings: { dungeonItems: "mcs" } });
+  });
+
   it("never rounds a seed the tracker cannot hold to a run type", () => {
-    expect(checkSeed(seedOf({ dungeonItems: "mc" }), run("open"))).toEqual({
+    // Small keys out and maps in: a mix vt never writes (World.php:111-129)
+    const keysOnly = {
+      ...seedOf({}),
+      wildKeys: { known: true, value: true },
+    } as const;
+    expect(checkSeed(keysOnly, run("open"))).toEqual({
       kind: "unsupported",
-      reasons: ["only its compasses, maps outside their dungeons"],
+      reasons: ["only its small keys outside their dungeons"],
       seed: "OPEN",
     });
     expect(checkSeed(seedOf({ goal: "ganonhunt" }), run("open"))).toEqual({
@@ -145,10 +164,10 @@ describe("describeRun", () => {
     expect(
       describeRun("keysanity", {
         ...getPreset("keysanity").settings,
-        keysanity: false,
+        dungeonItems: "standard",
         swordless: true,
       }),
-    ).toBe("Keysanity (Open, Ganon, 7/7, no Keysanity, Swordless)");
+    ).toBe("Keysanity (Open, Ganon, 7/7, Standard dungeon items, Swordless)");
     expect(
       describeRun("swordless", {
         ...getPreset("swordless").settings,
