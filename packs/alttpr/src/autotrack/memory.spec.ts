@@ -120,6 +120,8 @@ describe("MEMORY_RANGES", () => {
       "bottles:hud",
       "pendants:prizes",
       "crystals:prizes",
+      // The game's own play time, which no category of the spec permits
+      "play-frames:other",
       "heart-containers:hud",
       "heart-pieces:hud",
     ]);
@@ -208,9 +210,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 504, pieces: 11 },
+      casual: { bytes: 514, pieces: 11 },
       race: { bytes: 364, pieces: 25 },
-      ranges: { casual: 16, race: 33 },
+      ranges: { casual: 17, race: 33 },
     });
   });
 });

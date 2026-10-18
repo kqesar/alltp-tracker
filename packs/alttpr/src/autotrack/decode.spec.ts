@@ -6,8 +6,10 @@ import {
   decodeChecks,
   decodeItems,
   decodeProgress,
+  FRAMES_PER_SECOND,
   ITEM_SOURCES,
   type MemoryView,
+  playTimeMs,
   racePermitted,
 } from "./decode";
 import { MEMORY_RANGES, type MemoryRangeId } from "./memory";
@@ -453,6 +455,7 @@ describe("decodeProgress", () => {
       race: false,
     });
     expect(decoded).toEqual({
+      beforePlay: false,
       bosses: {
         A1: false,
         A2: false,
@@ -482,9 +485,49 @@ describe("decodeProgress", () => {
         P3: false,
       },
       goal: false,
+      playFrames: 0,
       rescueZelda: false,
       started: true,
     });
+  });
+
+  it("tells the screens before play from play, menus included", () => {
+    const at = (mode: number) =>
+      decodeProgress(new Image().set(0x7e_0010, mode).view(), {
+        race: false,
+      });
+    // The title, the file select, its name screen, the loading and the
+    // spawn select come before play
+    for (const mode of [0x00, 0x01, 0x04, 0x05, 0x1b]) {
+      expect(at(mode), `$${mode.toString(16)}`).toMatchObject({
+        beforePlay: true,
+        started: false,
+      });
+    }
+    // In play, and in a menu or a text box (mode $0E) during play, neither
+    // says the game is before play: a menu is no new start
+    expect(at(0x07)).toMatchObject({ beforePlay: false, started: true });
+    expect(at(0x0e)).toMatchObject({ beforePlay: false, started: false });
+  });
+
+  it("reads the frames played, 32 bits, and turns them into time", () => {
+    const image = new Image().set(SAVE(0x43e), 0x78, 0x56, 0x34, 0x12);
+    expect(decodeProgress(image.view(), { race: false }).playFrames).toBe(
+      0x1234_5678,
+    );
+    expect(
+      decodeProgress(
+        new Image().set(SAVE(0x43e), 0xff, 0xff, 0xff, 0xff).view(),
+        {
+          race: false,
+        },
+      ).playFrames,
+    ).toBe(0xffff_ffff);
+    // An hour of NTSC frames is an hour, within a frame
+    expect(FRAMES_PER_SECOND).toBeCloseTo(60.0988, 4);
+    const hour = playTimeMs(Math.round(FRAMES_PER_SECOND * 3600));
+    expect(Math.abs(hour - 3_600_000)).toBeLessThan(1000 / 60);
+    expect(playTimeMs(0)).toBe(0);
   });
 
   it("reads each boss from its own flag", () => {
@@ -608,11 +651,18 @@ describe("Race Mode", () => {
     expect(OUTSIDE_IDS.length).toBeGreaterThan(80);
   });
 
-  it("reads the bosses and events as outside Race Mode", () => {
-    const image = endGame();
-    expect(
-      decodeProgress(image.view({ strict: true }), { race: true }),
-    ).toEqual(decodeProgress(image.view(), { race: false }));
+  it("reads the bosses and events as outside Race Mode, not the play time", () => {
+    const image = endGame().set(SAVE(0x43e), 0x10, 0x0e);
+    const { playFrames: raced, ...race } = decodeProgress(
+      image.view({ strict: true }),
+      { race: true },
+    );
+    const { playFrames, ...casual } = decodeProgress(image.view(), {
+      race: false,
+    });
+    expect(race).toEqual(casual);
+    expect(raced).toBe("race-mode");
+    expect(playFrames).toBe(0x0e10);
   });
 
   it("says not-read before the first poll, in either mode", () => {

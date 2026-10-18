@@ -393,6 +393,17 @@ export interface ProgressReading {
   readonly completed: Readonly<Record<BossDungeon, Fact>>;
   /** In play: the game mode is a dungeon, the overworld or the goal. */
   readonly started: Fact;
+  /**
+   * Before play: the title, the file select or the spawn select. A game
+   * starts when a reading in play follows one before play; `started` alone
+   * also turns false in menus and text boxes.
+   */
+  readonly beforePlay: Fact;
+  /**
+   * The frames played (NMIFrames), outside Race Mode only: no race permits
+   * it. playTimeMs turns it into time.
+   */
+  readonly playFrames: number | Unsettled;
   /** The Triforce room reached: game mode $19 or $1A, or StatsLocked. */
   readonly goal: Fact;
   /** Zelda rescued: ProgressIndicator $02, where Open starts. */
@@ -405,6 +416,7 @@ const BOSS_FLAGS = CHECK_FLAGS.filter(
 );
 
 const IN_PLAY: readonly number[] = [...GAME_MODES.playing, ...GAME_MODES.goal];
+const BEFORE_PLAY: readonly number[] = GAME_MODES.beforePlay;
 const GOAL: readonly number[] = GAME_MODES.goal;
 
 function byteFlag(
@@ -419,6 +431,7 @@ function byteFlag(
 
 const inPlay = byteFlag("game-mode", (mode) => IN_PLAY.includes(mode));
 const inGoal = byteFlag("game-mode", (mode) => GOAL.includes(mode));
+const preGame = byteFlag("game-mode", (mode) => BEFORE_PLAY.includes(mode));
 const statsLocked = byteFlag("stats-locked", (value) => value !== 0);
 const zelda = byteFlag("progress", (value) => value >= 2);
 
@@ -448,11 +461,29 @@ export function decodeProgress(
   // not (the credits end).
   const mode = inGoal(reader);
   const locked = statsLocked(reader);
+  const frames = reader.range("play-frames");
   return {
+    beforePlay: preGame(reader),
     bosses,
     completed,
     goal: mode === true || locked === true ? true : locked,
+    playFrames:
+      typeof frames === "string"
+        ? frames
+        : (frames.word() |
+            (frames.word(MEMORY_RANGE["play-frames"].bus + 2) << 16)) >>>
+          0,
     rescueZelda: zelda(reader),
     started: inPlay(reader),
   };
 }
+
+/**
+ * The SNES's NTSC frame rate: its 21.47727 MHz master clock over the 262 ×
+ * 1364 − 2 master cycles of a frame (fabiensanglard.net/snes_hearts).
+ */
+export const FRAMES_PER_SECOND = 21_477_270 / (262 * 1364 - 2);
+
+/** How long `frames` of play last, in milliseconds. */
+export const playTimeMs = (frames: number): number =>
+  Math.round((frames * 1000) / FRAMES_PER_SECOND);
