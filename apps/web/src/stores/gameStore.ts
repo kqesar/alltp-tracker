@@ -11,6 +11,7 @@ import {
 import {
   DEFAULT_PRESET_ID,
   getPreset,
+  type HiddenSetting,
   type RunSettings,
   type TunableSetting,
   wildItems,
@@ -101,11 +102,22 @@ type GameState = Progress &
      */
     toggleChecks: (locations: readonly string[]) => void;
     /**
-     * Change settings that move no dungeon counter (crystals, item placement,
-     * pool, functionality, accessibility) in the run going: its progress
-     * stands. One undo step; none when nothing changes.
+     * Change settings in the run going, its progress kept (`retune`): what
+     * a Mystery run discovers, and the dungeon items, whose counters keep
+     * the items found. A setting changed is no longer hidden. One undo
+     * step; none when nothing changes.
      */
     updateSettings: (
+      change: Partial<Pick<RunSettings, TunableSetting>>,
+    ) => void;
+    /** Hide a setting again, as not known yet: one undo step. */
+    hideSetting: (setting: HiddenSetting) => void;
+    /**
+     * Lay settings the game revealed (a seed's, read by autotracking) on
+     * the run, its progress kept, as no step: on every snapshot of the
+     * history too, like the game's other news.
+     */
+    revealSettings: (
       change: Partial<Pick<RunSettings, TunableSetting>>,
     ) => void;
     setBigKeysVisible: (visible: boolean) => void;
@@ -291,6 +303,57 @@ const dated = (
       };
 
 /**
+ * A run with some of its settings changed, its progress kept: a setting
+ * changed is no longer hidden, and a change of dungeon items keeps each
+ * counter's items found (its top less what it has left), counted again
+ * against the new top. Null when nothing changes.
+ */
+export const retune = (
+  progress: Progress,
+  change: Partial<Pick<RunSettings, TunableSetting>>,
+): { items?: ItemState; settings: RunSettings } | null => {
+  const changed = (Object.keys(change) as TunableSetting[]).filter(
+    (key) =>
+      change[key] !== progress.settings[key] ||
+      progress.settings.hidden?.includes(key as HiddenSetting),
+  );
+  if (changed.length === 0) return null;
+  const hidden = progress.settings.hidden?.filter(
+    (key) => !changed.includes(key),
+  );
+  const settings: RunSettings = {
+    ...progress.settings,
+    ...change,
+    ...(hidden === undefined ? {} : { hidden }),
+  };
+  if (hidden?.length === 0) delete settings.hidden;
+  if (settings.dungeonItems === progress.settings.dungeonItems) {
+    return { settings };
+  }
+  const items = { ...progress.items } as Record<string, boolean | number>;
+  for (const index of COUNTER_INDICES) {
+    const id = `chest${index}`;
+    const found =
+      counterMax(index, progress.settings) - Number(progress.items[id] ?? 0);
+    const max = counterMax(index, settings);
+    items[id] = Math.min(max, Math.max(0, max - found));
+  }
+  return { items: items as ItemState, settings };
+};
+
+/**
+ * The key cells, following the run when its dungeon items start or stop
+ * leaving their dungeons; otherwise the player's own choice stands.
+ */
+const keyCellsFor = (state: GameState, settings: RunSettings) => ({
+  bigKeysVisible:
+    wildItems(settings).mapsAndCompasses ===
+    wildItems(state.settings).mapsAndCompasses
+      ? state.bigKeysVisible
+      : wildItems(settings).mapsAndCompasses,
+});
+
+/**
  * A progress change that can be undone: remember the run it replaces and drop
  * the redo stack, as any editor does once a new change is made. What it
  * finds is stamped now.
@@ -352,14 +415,7 @@ export const useGameStore = create<GameState>()(
             const fresh = createProgress(presetId, settings);
             return {
               ...record(state, { ...fresh, ...lay?.(fresh) }),
-              // Key cells follow the run type when its dungeon items start
-              // or stop leaving their dungeons; otherwise the player's own
-              // choice stands.
-              bigKeysVisible:
-                wildItems(settings).mapsAndCompasses ===
-                wildItems(state.settings).mapsAndCompasses
-                  ? state.bigKeysVisible
-                  : wildItems(settings).mapsAndCompasses,
+              ...keyCellsFor(state, settings),
               timer: keepTimer ? state.timer : IDLE_TIMER,
             };
           }),
@@ -421,6 +477,13 @@ export const useGameStore = create<GameState>()(
           set(record(state, { smallKeys: newSmallKeys }));
         },
 
+        hideSetting: (setting) =>
+          set((state) => {
+            if (state.settings.hidden?.includes(setting)) return state;
+            const hidden = [...(state.settings.hidden ?? []), setting];
+            return record(state, { settings: { ...state.settings, hidden } });
+          }),
+
         loadProgress: (progress: Partial<Progress>) =>
           set((state) => ({
             ...record(state, restoreProgress(createProgress(), progress)),
@@ -447,6 +510,11 @@ export const useGameStore = create<GameState>()(
             timer: IDLE_TIMER,
           })),
         resetTimer: () => set({ timer: IDLE_TIMER }),
+        revealSettings: (change) => {
+          const settings = retune(progressOf(get()), change)?.settings;
+          get().applyGameNews((progress) => retune(progress, change));
+          if (settings) set((state) => keyCellsFor(state, settings));
+        },
         setAutoTimer: (on: boolean) => set({ autoTimer: on }),
 
         setBigKeysVisible: (visible: boolean) =>
@@ -522,11 +590,12 @@ export const useGameStore = create<GameState>()(
 
         updateSettings: (change) =>
           set((state) => {
-            const settings = { ...state.settings, ...change };
-            const same = (Object.keys(change) as TunableSetting[]).every(
-              (key) => settings[key] === state.settings[key],
-            );
-            return same ? state : record(state, { settings });
+            const next = retune(progressOf(state), change);
+            if (next === null) return state;
+            return {
+              ...record(state, next),
+              ...keyCellsFor(state, next.settings),
+            };
           }),
       }),
       {

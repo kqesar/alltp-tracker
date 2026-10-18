@@ -8,9 +8,10 @@ import {
   dungeonPool,
   LEGACY_DUNGEONS,
   settingsFromUpstream,
+  UNKNOWN,
   type UpstreamConfig,
 } from "@alltp/pack-alttpr";
-import type { RunSettings } from "@/data/presets";
+import { type HiddenSetting, isHidden, type RunSettings } from "@/data/presets";
 
 /** The pack's goal for each of the app's. */
 const GOALS: Record<
@@ -41,6 +42,10 @@ const cache = new Map<string, AlttprSettings>();
  * @param run - The run's settings: its preset's, or the seed's
  */
 export const packSettings = (run: RunSettings): AlttprSettings => {
+  // A setting the run has not discovered is unknown to the pack, whatever
+  // value stands in for it
+  const known = <T>(setting: HiddenSetting, value: T) =>
+    isHidden(run, setting) ? UNKNOWN : value;
   const key = [
     run.mode,
     run.goal,
@@ -52,22 +57,26 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
     run.accessibility,
     run.itemPool,
     run.itemFunctionality,
+    ...(run.hidden ?? []),
   ].join("/");
   let settings = cache.get(key);
   if (settings === undefined) {
     settings = settingsFromUpstream(
       run.mode === "standard" || run.mode === "inverted" ? run.mode : "open",
       {
-        accessibility: run.accessibility,
-        "crystals.ganon": run.crystalsGanon,
-        "crystals.tower": run.crystalsTower,
+        accessibility: known("accessibility", run.accessibility),
+        "crystals.ganon": known("crystalsGanon", run.crystalsGanon),
+        "crystals.tower": known("crystalsTower", run.crystalsTower),
         dungeonItems: run.dungeonItems,
-        goal: GOALS[run.goal],
-        "item.functionality": run.itemFunctionality,
-        "item.pool": run.itemPool,
-        itemPlacement: run.itemPlacement,
+        goal: known("goal", GOALS[run.goal]),
+        "item.functionality": known("itemFunctionality", run.itemFunctionality),
+        "item.pool": known("itemPool", run.itemPool),
+        itemPlacement: known("itemPlacement", run.itemPlacement),
         logic: "NoGlitches",
-        "mode.weapons": run.swordless ? "swordless" : "randomized",
+        "mode.weapons": known(
+          "swordless",
+          run.swordless ? "swordless" : "randomized",
+        ),
       },
     );
     cache.set(key, settings);

@@ -4,6 +4,7 @@ import {
   LEGACY_DUNGEONS,
   OPEN,
   STANDARD,
+  UNKNOWN,
 } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import { getPreset, presets, type RunSettings } from "@/data/presets";
@@ -139,8 +140,21 @@ describe("packSettings", () => {
 
   it("maps every preset without throwing", () => {
     for (const preset of presets) {
-      expect(packSettings(preset.settings).crystalsTower, preset.id).toBe(7);
+      // A Mystery run's crystals are not known yet: 0 to 7
+      expect(packSettings(preset.settings).crystalsTower, preset.id).toEqual(
+        preset.id === "mystery" ? { between: [0, 7] } : 7,
+      );
     }
+  });
+
+  it("passes a hidden setting to the pack as unknown, whatever stands in", () => {
+    const hidden = packSettings({ ...run(), hidden: ["swordless", "goal"] });
+    expect(hidden).toMatchObject({
+      ganonGoal: UNKNOWN,
+      swordless: UNKNOWN,
+    });
+    // Hiding gives another object: a world compiled for each is kept apart
+    expect(hidden).not.toBe(packSettings(run()));
   });
 });
 

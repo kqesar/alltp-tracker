@@ -23,11 +23,13 @@ import {
   DUNGEON_ITEM_LABELS,
   FUNCTIONALITY_LABELS,
   getPreset,
+  isHidden,
   MODE_LABELS,
   PLACEMENT_LABELS,
   POOL_LABELS,
   presets,
   type RunSettings,
+  type TunableSetting,
 } from "@/data/presets";
 
 /** The run the tracker holds: its run type and settings. */
@@ -48,6 +50,17 @@ export type SeedCheck =
     }
   /** The tracker's run type is the seed's. */
   | { readonly kind: "same"; readonly seed: string; readonly text: string }
+  /**
+   * A Mystery run in the seed's world: the settings the seed reveals, to
+   * lay on the run, its progress kept.
+   */
+  | {
+      readonly kind: "reveals";
+      readonly seed: string;
+      readonly change: Partial<Pick<RunSettings, TunableSetting>>;
+      /** "Mystery (Open, Ganon, 7/7)" */
+      readonly seedText: string;
+    }
   /** The seed's run type differs: the run type and settings to switch to. */
   | {
       readonly kind: "differs";
@@ -283,6 +296,45 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     mode: mode.value,
     swordless: swordless.value,
   };
+  // The seed's settings hide nothing: a Mystery run's hidden list is its own
+  delete settings.hidden;
+  // A Mystery run takes what the seed reveals, in place, in its own world
+  if (run.presetId === "mystery" && settings.mode === run.settings.mode) {
+    const said: Partial<Pick<RunSettings, TunableSetting>> = {
+      crystalsGanon: settings.crystalsGanon,
+      crystalsTower: settings.crystalsTower,
+      dungeonItems: settings.dungeonItems,
+      goal: settings.goal,
+      swordless: settings.swordless,
+      // Only what the seed's file states: the rest stays hidden
+      ...(seed.accessibility?.known && {
+        accessibility: settings.accessibility,
+      }),
+      ...(seed.itemFunctionality?.known && {
+        itemFunctionality: settings.itemFunctionality,
+      }),
+      ...(seed.itemPlacement?.known && {
+        itemPlacement: settings.itemPlacement,
+      }),
+      ...(seed.itemPool?.known && { itemPool: settings.itemPool }),
+    };
+    const change = Object.fromEntries(
+      (Object.keys(said) as TunableSetting[])
+        .filter(
+          (key) =>
+            said[key] !== run.settings[key] || isHidden(run.settings, key),
+        )
+        .map((key) => [key, said[key]]),
+    );
+    if (Object.keys(change).length > 0) {
+      return {
+        change,
+        kind: "reveals",
+        seed: seed.seed,
+        seedText: describeRun(run.presetId, settings),
+      };
+    }
+  }
   if (COMPARED.every((key) => settings[key] === run.settings[key])) {
     return {
       kind: "same",
@@ -305,6 +357,10 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     settings,
   };
 };
+
+/** What the live region says once a seed's settings are laid on a Mystery run. */
+export const revealedText = (check: Extract<SeedCheck, { kind: "reveals" }>) =>
+  `Mystery settings from the seed: ${check.seedText}.`;
 
 /** The prompt's question, from a seed that differs. */
 export const promptText = (check: Extract<SeedCheck, { kind: "differs" }>) =>
@@ -350,6 +406,8 @@ export const seedLineText = (
       return `No run type here holds this seed (${check.reasons.join("; ")}): the run type stays yours.`;
     case "same":
       return `The run type matches this seed: ${check.text}.`;
+    case "reveals":
+      return `This seed is ${check.seedText}: its settings are laid on your Mystery run.`;
     case "differs":
       return kept
         ? `This seed is ${check.seedText}. You kept ${check.runText}.`

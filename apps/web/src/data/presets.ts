@@ -53,6 +53,25 @@ type ItemPool = "normal" | "hard" | "expert" | "superexpert" | "crowd_control";
 /** alttpr.com's item functionality (config/alttp.php:272-276, World.php:216). */
 type ItemFunctionality = "normal" | "hard" | "expert" | "superexpert";
 
+/**
+ * The settings a Mystery run hides until the player finds them: those the
+ * pack can leave unknown (packs/alttpr, settingsFromUpstream's UNKNOWN). The
+ * world shows on the first screen, and the dungeon items are assumed until
+ * set: the key model and the counters rest on them.
+ */
+export const HIDEABLE = [
+  "goal",
+  "swordless",
+  "crystalsTower",
+  "crystalsGanon",
+  "itemPlacement",
+  "itemPool",
+  "itemFunctionality",
+  "accessibility",
+] as const;
+
+export type HiddenSetting = (typeof HIDEABLE)[number];
+
 export type RunSettings = {
   mode: RunMode;
   goal: RunGoal;
@@ -73,6 +92,11 @@ export type RunSettings = {
   itemPool: ItemPool;
   /** Beyond normal: fairies cannot be caught, a bottle refills less magic */
   itemFunctionality: ItemFunctionality;
+  /**
+   * The settings not known yet, a Mystery run's: their values above only
+   * stand in, and the logic reads them as unknown. Absent when all are known.
+   */
+  hidden?: readonly HiddenSetting[];
 };
 
 type Preset = {
@@ -172,11 +196,11 @@ export const presets: Preset[] = [
   },
   {
     description:
-      "Weighted/mystery community settings — rules vary per seed. (Logic support coming soon.)",
-    id: "ambrosia",
-    logicSupported: false,
-    name: "Ambrosia",
-    settings: { ...baseSettings },
+      "Settings hidden until you find them: set each one as you learn it, the run kept.",
+    id: "mystery",
+    logicSupported: true,
+    name: "Mystery",
+    settings: { ...baseSettings, hidden: HIDEABLE },
   },
 ];
 
@@ -261,17 +285,12 @@ export const ENTRANCE_LABELS: Record<EntranceShuffle, string> = {
 const crystals = (count: number) => `${count} crystal${count === 1 ? "" : "s"}`;
 
 /**
- * The settings a player may change in a run already going: none moves a
- * dungeon counter, so the run's progress stands (the store's
- * `updateSettings`). The rest name a run type, which a new run changes.
+ * The settings a player may change in a run already going, its progress
+ * kept (the store's `updateSettings`): what a Mystery run lets them
+ * discover, and its dungeon items, whose counters keep the items found. The
+ * world names a run type, which a new run changes.
  */
-export type TunableSetting =
-  | "crystalsTower"
-  | "crystalsGanon"
-  | "itemPlacement"
-  | "itemPool"
-  | "itemFunctionality"
-  | "accessibility";
+export type TunableSetting = HiddenSetting | "dungeonItems";
 
 /** Options in the order alttpr.com lists them, each with its words. */
 const ordered = <T extends string>(
@@ -289,6 +308,12 @@ export const TUNING = {
   accessibility: ordered(["items", "locations", "none"], ACCESSIBILITY_LABELS),
   crystalsGanon: CRYSTAL_COUNTS,
   crystalsTower: CRYSTAL_COUNTS,
+  dungeonItems: ordered(["standard", "mc", "mcs", "full"], DUNGEON_ITEM_LABELS),
+  // Triforce Hunt is a run type of its own: the pack has no pieces
+  goal: ordered(
+    ["ganon", "fast-ganon", "all-dungeons", "pedestal"],
+    GOAL_LABELS,
+  ),
   itemFunctionality: ordered(
     ["normal", "hard", "expert", "superexpert"],
     FUNCTIONALITY_LABELS,
@@ -298,6 +323,10 @@ export const TUNING = {
     ["normal", "hard", "expert", "superexpert", "crowd_control"],
     POOL_LABELS,
   ),
+  swordless: [
+    [false, "With swords"],
+    [true, "Swordless"],
+  ],
 } as const satisfies {
   readonly [K in TunableSetting]: readonly (readonly [
     RunSettings[K],
@@ -312,41 +341,54 @@ export type SettingRow = {
   readonly setting?: TunableSetting;
 };
 
-/** A labeled summary of a run's settings, for display. */
-export const describeSettings = (settings: RunSettings): SettingRow[] => [
-  { label: "Mode", value: MODE_LABELS[settings.mode] },
-  { label: "Goal", value: GOAL_LABELS[settings.goal] },
-  { label: "Dungeon items", value: DUNGEON_ITEM_LABELS[settings.dungeonItems] },
-  { label: "Swordless", value: settings.swordless ? "On" : "Off" },
-  {
-    label: "Ganon's Tower",
-    setting: "crystalsTower",
-    value: crystals(settings.crystalsTower),
-  },
-  {
-    label: "Ganon",
-    setting: "crystalsGanon",
-    value: crystals(settings.crystalsGanon),
-  },
-  {
-    label: "Item placement",
-    setting: "itemPlacement",
-    value: PLACEMENT_LABELS[settings.itemPlacement],
-  },
-  {
-    label: "Item pool",
-    setting: "itemPool",
-    value: POOL_LABELS[settings.itemPool],
-  },
-  {
-    label: "Item functionality",
-    setting: "itemFunctionality",
-    value: FUNCTIONALITY_LABELS[settings.itemFunctionality],
-  },
-  {
-    label: "Accessibility",
-    setting: "accessibility",
-    value: ACCESSIBILITY_LABELS[settings.accessibility],
-  },
-  { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
-];
+/** Whether a run's setting is one it has not discovered yet. */
+export const isHidden = (settings: RunSettings, setting: TunableSetting) =>
+  (settings.hidden as readonly TunableSetting[] | undefined)?.includes(
+    setting,
+  ) === true;
+
+/** A labeled summary of a run's settings, for display: "?" for a hidden one. */
+export const describeSettings = (settings: RunSettings): SettingRow[] => {
+  const row = (
+    label: string,
+    setting: TunableSetting,
+    value: string,
+  ): SettingRow => ({
+    label,
+    setting,
+    value: isHidden(settings, setting) ? "?" : value,
+  });
+  return [
+    { label: "Mode", value: MODE_LABELS[settings.mode] },
+    row("Goal", "goal", GOAL_LABELS[settings.goal]),
+    row(
+      "Dungeon items",
+      "dungeonItems",
+      DUNGEON_ITEM_LABELS[settings.dungeonItems],
+    ),
+    row(
+      "Swords",
+      "swordless",
+      settings.swordless ? "Swordless" : "With swords",
+    ),
+    row("Ganon's Tower", "crystalsTower", crystals(settings.crystalsTower)),
+    row("Ganon", "crystalsGanon", crystals(settings.crystalsGanon)),
+    row(
+      "Item placement",
+      "itemPlacement",
+      PLACEMENT_LABELS[settings.itemPlacement],
+    ),
+    row("Item pool", "itemPool", POOL_LABELS[settings.itemPool]),
+    row(
+      "Item functionality",
+      "itemFunctionality",
+      FUNCTIONALITY_LABELS[settings.itemFunctionality],
+    ),
+    row(
+      "Accessibility",
+      "accessibility",
+      ACCESSIBILITY_LABELS[settings.accessibility],
+    ),
+    { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
+  ];
+};

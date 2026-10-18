@@ -56,6 +56,19 @@ describe("MapPanel", () => {
   });
 
   describe("go mode", () => {
+    it("says a Mystery run's goal is not known yet, and nothing to open", () => {
+      act(() => useGameStore.getState().applyPreset("mystery"));
+      render(<MapPanel />);
+      const goMode = screen.getByTestId("go-mode");
+      expect(goMode).toHaveTextContent("Go mode: goal unknown");
+      expect(goMode.tagName).toBe("SPAN");
+
+      act(() => useGameStore.getState().updateSettings({ goal: "ganon" }));
+      expect(screen.getByTestId("go-mode")).toHaveAccessibleName(
+        "Go mode: not yet",
+      );
+    });
+
     it("is not yet on a fresh run, and says what it misses", async () => {
       const user = userEvent.setup();
       render(<MapPanel />);

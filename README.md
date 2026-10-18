@@ -40,6 +40,11 @@ The timeline is saved with the run, in exports too.
 
 **Run timer** — beside go mode, the run's time: click it to start, pause, resume or reset it. While autotracking reads your game, it starts as you leave the file select for the game and stops at the goal on its own (**Start and stop with the game**, on by default; connecting mid-run starts nothing). It keeps counting through a reload, and outside races it also shows the game's own play time, counted by the ROM frame by frame.
 
+**Mystery** — the Mystery run type starts with its settings hidden: the goal, the swords, the crystals for Ganon's Tower and for Ganon, the item placement, pool and functionality, and the accessibility. Set each one in the run type dialog's summary as you learn it (a sign, Uncle's gift, the first key found outside its dungeon…), your progress kept, and pick "? Unknown" to hide one again.
+- **Until a setting is known**, the map is cautious. A check that depends on it is *maybe*, never *available*, and anything shown available or out of logic is so whatever it turns out to be. The go mode says "goal unknown" until the goal is set.
+- **The world and the dungeon items** are not hidden: you see the world on the first screen, and the dungeon items count each dungeon's items, so the run assumes them until you set them. A change of dungeon items keeps each counter's items found.
+- **With autotracking outside races**, the seed's settings are set on their own as it is read. A race seed's are not read, so they stay yours to find.
+
 **Boss overlays** — each boss cell carries three corner buttons: the medallion requirement (top right, Misery Mire and Turtle Rock only), the remaining chest count (bottom left) and the reward, crystal or pendant (bottom right). Click steps them forward, right-click back.
 
 **Keyboard** — the item grid is a single Tab stop: arrow keys move inside it (through a boss's overlays too) and wrap, Home / End jump to the ends of a row, Ctrl+Home / End to the ends of the grid. Space and Enter step the focused control forward, "-" steps it back. Every map marker is a button Tab can reach; "Skip to map" and "Skip to checks" jump to either view.

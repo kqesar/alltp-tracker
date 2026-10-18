@@ -150,6 +150,14 @@
   white-space: nowrap;
 }
 
+/* A Mystery run's goal not known yet: a plain label, nothing to open */
+.go-mode--unknown,
+.go-mode--unknown:hover {
+  color: var(--color-text-muted);
+  cursor: default;
+  border-style: dashed;
+}
+
 .go-mode--yes {
   color: var(--color-text);
   border-color: var(--state-available);

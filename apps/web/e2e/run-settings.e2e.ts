@@ -37,6 +37,50 @@ test("tunes a setting in place: the run stays, one undo takes it back", async ({
   await expect(hookshot).toHaveAccessibleName(/^Hookshot, obtained\./);
 });
 
+test("a Mystery run finds its settings as it goes, the run kept", async ({
+  page,
+}) => {
+  await openTracker(page);
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await runTypes(page)
+    .getByRole("button", { name: /^Mystery/ })
+    .click();
+  await page.getByRole("button", { name: "Switch & reset" }).click();
+
+  // Nothing known yet: the go mode cannot say, Ganon's Tower may only be open
+  await expect(page.getByTestId("go-mode")).toHaveText(/Go mode: goal unknown/);
+  // Eastern Palace: 2 of its 3 items found
+  const eastern = page.getByTestId("chest-overlay-0");
+  await eastern.click();
+  await eastern.click();
+  await page.getByTestId("item-hookshot").click();
+
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const summary = runTypes(page);
+  await expect(summary.getByRole("combobox", { name: "Goal" })).toHaveValue(
+    "?",
+  );
+  await summary.getByRole("combobox", { name: "Goal" }).selectOption("ganon");
+  await summary
+    .getByRole("combobox", { name: "Dungeon items" })
+    .selectOption("full");
+  await summary.getByRole("button", { name: "Close" }).click();
+
+  // The run kept, Eastern Palace's 2 items found out of its 6 locations now
+  await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+    /^Hookshot, obtained\./,
+  );
+  await expect(eastern).toHaveAccessibleName(/chests: 4 left/);
+  await expect(page.getByTestId("go-mode")).toHaveAccessibleName(
+    "Go mode: not yet",
+  );
+  const saved = await page.evaluate(
+    () => JSON.parse(localStorage.getItem("alltp-tracker-state") ?? "{}").state,
+  );
+  expect(saved.settings.hidden).not.toContain("goal");
+  expect(saved.settings.hidden).toContain("crystalsTower");
+});
+
 for (const width of WIDTHS) {
   test(`the run's tunable settings pass axe and fit at ${width}px`, async ({
     page,
@@ -45,7 +89,7 @@ for (const width of WIDTHS) {
     await openTracker(page);
     await page.getByRole("button", { name: /^Mode/ }).click();
     const dialog = runTypes(page);
-    await expect(dialog.getByRole("combobox")).toHaveCount(6);
+    await expect(dialog.getByRole("combobox")).toHaveCount(9);
 
     const { violations } = await new AxeBuilder({ page })
       .include(".run-settings")

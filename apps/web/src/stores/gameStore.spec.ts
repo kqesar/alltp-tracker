@@ -833,6 +833,91 @@ describe("GameStore", () => {
     });
   });
 
+  describe("a Mystery run's settings", () => {
+    const store = () => useGameStore.getState();
+
+    it("start hidden, and a setting set is no longer, as one undo step", () => {
+      store().applyPreset("mystery");
+      expect(store().settings.hidden).toContain("crystalsTower");
+      const steps = store().past.length;
+
+      store().updateSettings({ crystalsTower: 5 });
+      expect(store().settings.crystalsTower).toBe(5);
+      expect(store().settings.hidden).not.toContain("crystalsTower");
+      expect(store().past).toHaveLength(steps + 1);
+      // Setting it to the value that stood in still reveals it
+      store().updateSettings({ goal: "ganon" });
+      expect(store().settings.hidden).not.toContain("goal");
+
+      store().undo();
+      store().undo();
+      expect(store().settings.hidden).toContain("crystalsTower");
+    });
+
+    it("hide a setting again, and forget the list once all are known", () => {
+      store().updateSettings({ swordless: true });
+      expect(store().settings).not.toHaveProperty("hidden");
+      store().hideSetting("swordless");
+      expect(store().settings.hidden).toEqual(["swordless"]);
+      store().hideSetting("swordless");
+      expect(store().settings.hidden).toEqual(["swordless"]);
+      store().updateSettings({ swordless: false });
+      expect(store().settings).not.toHaveProperty("hidden");
+    });
+
+    it("keep each counter's items found when the dungeon items change", () => {
+      // Eastern Palace's 3 items, 2 found
+      store().handleItemClick("chest0");
+      store().handleItemClick("chest0");
+      expect(store().items.chest0).toBe(1);
+
+      store().updateSettings({ dungeonItems: "full" });
+      // Its 6 locations in Full Shuffle, the same 2 found
+      expect(store().items.chest0).toBe(4);
+      // Its maps and compasses now leave their dungeons: the key cells show
+      expect(store().bigKeysVisible).toBe(true);
+      store().updateSettings({ dungeonItems: "standard" });
+      expect(store().items.chest0).toBe(1);
+    });
+
+    it("take what the game reveals as no step, the history too", () => {
+      store().applyPreset("mystery");
+      store().handleItemClick("hookshot");
+      const steps = store().past.length;
+
+      store().revealSettings({ crystalsTower: 3, dungeonItems: "mc" });
+      expect(store().past).toHaveLength(steps);
+      expect(store().settings).toMatchObject({
+        crystalsTower: 3,
+        dungeonItems: "mc",
+      });
+      // Undoing the hookshot keeps what the game revealed
+      store().undo();
+      expect(store().items.hookshot).toBe(false);
+      expect(store().settings.crystalsTower).toBe(3);
+      expect(store().settings.hidden).not.toContain("crystalsTower");
+    });
+
+    it("are saved and read back, and a damaged list is refused", () => {
+      store().applyPreset("mystery");
+      importSave(store().exportState());
+      expect(store().settings.hidden).toContain("goal");
+
+      const file = JSON.parse(store().exportState());
+      file.progress.settings.hidden = ["mode"];
+      expect(parseSave(JSON.stringify(file))).toMatchObject({ ok: false });
+      file.progress.settings.hidden = ["goal", "goal"];
+      expect(parseSave(JSON.stringify(file))).toMatchObject({ ok: false });
+    });
+
+    it("read an Ambrosia run, the placeholder it replaced, as Mystery", () => {
+      const file = JSON.parse(store().exportState());
+      file.progress.presetId = "ambrosia";
+      const save = parseSave(JSON.stringify(file));
+      expect(save.ok && save.progress.presetId).toBe("mystery");
+    });
+  });
+
   describe("setItem and setSmallKeys", () => {
     const store = () => useGameStore.getState();
 

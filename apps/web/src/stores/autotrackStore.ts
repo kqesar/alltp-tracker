@@ -12,7 +12,12 @@ import { persist } from "zustand/middleware";
 import type { Follower } from "@/autotrack/follow";
 import type { AutotrackReading } from "@/autotrack/reading";
 import type { Runtime, RuntimeSink } from "@/autotrack/runtime";
-import { checkSeed, type SeedCheck, switchedText } from "@/autotrack/seed";
+import {
+  checkSeed,
+  revealedText,
+  type SeedCheck,
+  switchedText,
+} from "@/autotrack/seed";
 import {
   loadSeedFile,
   type SeedFileResult,
@@ -180,6 +185,12 @@ const followSeed = (
   fresh = isFreshRun(useGameStore.getState()),
 ) => {
   const check = checkSeed(reading.seed, useGameStore.getState());
+  // A Mystery run takes what the seed reveals at once, as the game's news
+  if (check.kind === "reveals") {
+    useGameStore.getState().revealSettings(check.change);
+    set({ news: { repeated: false, text: revealedText(check) } });
+    return;
+  }
   if (
     check.kind === "differs" &&
     check.seed !== switched &&
