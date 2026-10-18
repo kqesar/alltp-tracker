@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.18.0](https://github.com/kqesar/alltp-tracker/compare/v2.17.0...v2.18.0) (2026-10-18)
+
+
+### ✨ Features
+
+* **web:** count Ganon's Tower's items on its own cell ([490d4de](https://github.com/kqesar/alltp-tracker/commit/490d4de4d013239045009684631d9b107d8c9bec))
+
+
+### 🐛 Bug Fixes
+
+* **web:** name the locations only an Inverted world has ([723be38](https://github.com/kqesar/alltp-tracker/commit/723be3895aeb0f337a1714daf5136337f778721d))
+
 ## [2.17.0](https://github.com/kqesar/alltp-tracker/compare/v2.16.0...v2.17.0) (2026-10-18)
 
 
