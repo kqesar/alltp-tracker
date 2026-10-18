@@ -64,11 +64,15 @@ const hasMedallion = (index: number) =>
   index === DUNGEON_INDICES.MISERY_MIRE ||
   index === DUNGEON_INDICES.TURTLE_ROCK;
 
+/** Ganon's Tower's key index, whose boss cell holds Agahnim 2. */
+const TOWER = KEY_DUNGEONS.indexOf("ganons-tower");
+
 /**
  * A dungeon's controls: the boss cell's (boss, medallion, chests, reward),
- * for the grid's ten, then the key cell's, as its pool holds them (big key,
- * small keys: not Eastern Palace's; map and compass, shown while they leave
- * their dungeons). The castle dungeons (10-12) have a key cell only.
+ * for the grid's ten; Ganon's Tower's (Agahnim 2 and its chests); then the
+ * key cell's, as its pool holds them (big key, small keys: not Eastern
+ * Palace's; map and compass, shown while they leave their dungeons).
+ * Hyrule Castle and Castle Tower have a key cell only.
  * @param index - The key dungeon index (0-12, KEY_DUNGEONS)
  */
 export const dungeonControls = (index: number): ControlId[] => {
@@ -82,6 +86,7 @@ export const dungeonControls = (index: number): ControlId[] => {
           `reward${index}`,
         ]
       : []),
+    ...(index === TOWER ? ["agahnim2", `chest${index}`] : []),
     ...(own.bigKey ? [`bigkey${index}`] : []),
     ...(smallKeysMax(index) > 0 ? [`smallkey${index}`] : []),
     ...(own.map ? [`map${index}`] : []),

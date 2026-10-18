@@ -1,4 +1,3 @@
-import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { MEDALLION_VALUES } from "@/constants";
@@ -16,7 +15,12 @@ import {
   type TunableSetting,
   wildItems,
 } from "@/data/presets";
-import { counterMax, SMALL_KEYS_MAX, smallKeysMax } from "@/logic/settings";
+import {
+  COUNTER_INDICES,
+  counterMax,
+  SMALL_KEYS_MAX,
+  smallKeysMax,
+} from "@/logic/settings";
 import {
   GAME,
   itemRange,
@@ -115,10 +119,7 @@ const MEDALLION_STATES = MEDALLION_VALUES.QUAKE + 1;
 /** Every dungeon counter full, for a run of these settings. */
 const fullCounters = (run: RunSettings): Record<string, number> =>
   Object.fromEntries(
-    LEGACY_DUNGEONS.map((_, index) => [
-      `chest${index}`,
-      counterMax(index, run),
-    ]),
+    COUNTER_INDICES.map((index) => [`chest${index}`, counterMax(index, run)]),
   );
 
 /**

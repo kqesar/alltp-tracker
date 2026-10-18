@@ -283,18 +283,17 @@ export const dungeonCount = (
   id: DungeonId,
   state: Pick<Progress, "items">,
 ): number | undefined => {
-  const index = gridIndex(id);
-  return index >= 0 ? Number(state.items[`chest${index}`]) : undefined;
+  const value = state.items[`chest${KEY_DUNGEONS.indexOf(id)}`];
+  return value === undefined ? undefined : Number(value);
 };
 
 /**
  * What a dungeon's square shows. With a counter (the ten dungeons of the
- * grid), done at 0, else dungeonStatus: the pigeonhole rule over its item
- * locations, from the items left. Castle Tower and Ganon's Tower have no
- * counter, so what is left is unknown: they show markerStatus of all their
- * item locations, and Castle Tower is done when it holds nothing for the
- * player (its two chests keep their keys while small keys stay in their
- * dungeons).
+ * grid and Ganon's Tower), done at 0, else dungeonStatus: the pigeonhole
+ * rule over its item locations, from the items left. Castle Tower has no
+ * counter, so what is left is unknown: it shows markerStatus of its item
+ * locations, and is done when it holds nothing for the player (its two
+ * chests keep their keys while small keys stay in their dungeons).
  */
 export const dungeonStateOf = (id: DungeonId, state: Inputs): MarkerState => {
   const solution = solutionOf(state);

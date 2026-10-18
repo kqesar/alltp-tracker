@@ -38,7 +38,9 @@ import {
 } from "@/autotrack/table";
 import { wildItems } from "@/data/presets";
 import {
+  COUNTER_INDICES,
   counterMax,
+  dungeonAt,
   KEY_DUNGEONS,
   packSettings,
   smallKeysMax,
@@ -84,6 +86,15 @@ const GRID = LEGACY_DUNGEONS.map((id, index) => ({
   id,
   index,
 }));
+
+/**
+ * The dungeons with a counter (COUNTER_INDICES): the grid's ten and Ganon's
+ * Tower, by key index, with their item code.
+ */
+const COUNTED = COUNTER_INDICES.map((index) => {
+  const id = dungeonAt(index);
+  return { code: dungeon(id).code, id, index };
+});
 
 /** The prize classes, as the pack's PRIZES lists them. */
 const PRIZE_CLASSES = Object.keys(PRIZES) as Prize[];
@@ -234,7 +245,7 @@ const counterRanges = (
 ): Record<string, readonly [number, number]> => {
   const settings = packSettings(board.settings);
   const ranges: Record<string, readonly [number, number]> = {};
-  for (const { code, id, index } of GRID) {
+  for (const { code, id, index } of COUNTED) {
     const locations = dungeonLocationsOf(id, settings);
     if (!locations.every((location) => settled.has(location))) continue;
     const opened = locations.filter((location) => checked.has(location)).length;

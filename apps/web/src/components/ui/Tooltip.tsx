@@ -1,4 +1,4 @@
-import { LEGACY_DUNGEONS, type MapMarker } from "@alltp/pack-alttpr";
+import type { MapMarker } from "@alltp/pack-alttpr";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { KeyChord } from "@/components/ui/KeyChord";
@@ -15,6 +15,7 @@ import {
 } from "@/data/keymap";
 import { useCurrentAnalysis } from "@/hooks/useRunAnalysis";
 import type { Missing, RunAnalysis } from "@/logic/missing";
+import { KEY_DUNGEONS } from "@/logic/settings";
 import {
   bossStateOf,
   dungeonCount,
@@ -64,7 +65,7 @@ const PAD_SLOTS: Partial<Record<string, number>> = {
 const markerOf = (target: TooltipTarget | null): MapMarker | undefined => {
   if (target?.kind === "marker") return markerById(target.id);
   if (target?.kind === "dungeon") {
-    const id = LEGACY_DUNGEONS[target.index];
+    const id = KEY_DUNGEONS[target.index];
     return id === undefined ? undefined : markerById(id);
   }
   return undefined;

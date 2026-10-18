@@ -303,7 +303,7 @@ const isIntIn = (value: unknown, min: number, max: number): value is number =>
   (value as number) <= max;
 
 /** A dungeon counter's item id, and its dungeon index. */
-const COUNTER = /^chest(\d)$/;
+const COUNTER = /^chest(\d+)$/;
 
 /**
  * The range of an item's values in a run: a dungeon counter's top depends

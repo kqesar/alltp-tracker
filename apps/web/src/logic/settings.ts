@@ -96,6 +96,17 @@ export const KEY_DUNGEONS: readonly DungeonId[] = [
   "ganons-tower",
 ];
 
+/**
+ * The key dungeons with a chest counter, by index: the grid's ten, on their
+ * boss cells, and Ganon's Tower (12), on its own cell. Hyrule Castle's
+ * checks each have their map marker, and Castle Tower's two hold no item
+ * outside keysanity.
+ */
+export const COUNTER_INDICES: readonly number[] = [
+  ...LEGACY_DUNGEONS.map((_, index) => index),
+  12,
+];
+
 /** The dungeon a key index (0-12) stands for; 0-9 are the grid's ten. */
 export const dungeonAt = (index: number): DungeonId => {
   const id = KEY_DUNGEONS[index];
@@ -148,16 +159,14 @@ const counters = new WeakMap<AlttprSettings, readonly number[]>();
  * How many items a dungeon's counter starts from in a run: its item
  * locations less the dungeon items that stay inside, which are no items to
  * the player. Keysanity counts every location, since each may hold a key.
- * @param index - The dungeon's grid index (0-9)
+ * @param index - The dungeon's key index (COUNTER_INDICES: 0-9, or 12)
  * @param run - The run's settings
  */
 export const counterMax = (index: number, run: RunSettings): number => {
   const settings = packSettings(run);
   let maxima = counters.get(settings);
   if (maxima === undefined) {
-    maxima = LEGACY_DUNGEONS.map((id) =>
-      dungeonItemCount(dungeon(id), settings),
-    );
+    maxima = KEY_DUNGEONS.map((id) => dungeonItemCount(dungeon(id), settings));
     counters.set(settings, maxima);
   }
   const max = maxima[index];

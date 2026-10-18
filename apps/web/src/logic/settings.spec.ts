@@ -8,6 +8,7 @@ import {
 import { describe, expect, it } from "vitest";
 import { getPreset, presets, type RunSettings } from "@/data/presets";
 import {
+  COUNTER_INDICES,
   counterMax,
   dungeonAt,
   dungeonName,
@@ -169,10 +170,17 @@ describe("counterMax", () => {
     expect(counters("mcs")).toEqual([5, 5, 5, 13, 9, 7, 7, 7, 7, 11]);
   });
 
-  it("refuses an index past the ten dungeons", () => {
-    expect(() => counterMax(10, run())).toThrow(RangeError);
+  it("counts Ganon's Tower's items: 20 in v31, its 27 locations in Full Shuffle", () => {
+    expect(COUNTER_INDICES).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12]);
+    expect(counterMax(12, run())).toBe(20);
+    expect(counterMax(12, run({ dungeonItems: "full" }))).toBe(27);
+  });
+
+  it("refuses an index past the thirteen key dungeons", () => {
+    expect(() => counterMax(13, run())).toThrow(RangeError);
     expect(() => dungeonAt(-1)).toThrow(RangeError);
     expect(dungeonAt(9)).toBe("turtle-rock");
+    expect(dungeonAt(12)).toBe("ganons-tower");
   });
 });
 

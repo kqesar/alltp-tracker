@@ -107,6 +107,20 @@ describe("gameView", () => {
     ]);
   });
 
+  it("counts Ganon's Tower's items left too, on its own cell", () => {
+    const memory = seedMemory({ race: false });
+    const keysanity = fresh("keysanity");
+    expect(gameView(readingOf(memory), keysanity).counters.chest12).toEqual([
+      27, 27,
+    ]);
+
+    checkIn(memory, "ganons-tower/bobs-torch");
+    checkIn(memory, "ganons-tower/tile-room");
+    expect(gameView(readingOf(memory), keysanity).counters.chest12).toEqual([
+      25, 25,
+    ]);
+  });
+
   it("counts every location with keysanity", () => {
     const view = gameView(
       readingOf(seedMemory({ race: false })),

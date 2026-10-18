@@ -21,6 +21,9 @@ export const getItemBackground = (
   value: number | boolean,
 ): string => {
   if (!item || item === "blank") return "";
+  // Agahnim 2, atop Ganon's Tower, is drawn as Agahnim (agahnim0, agahnim1)
+  if (item === "agahnim2")
+    return `url(${getAssetPath(`agahnim${value ? 1 : 0}.png`)})`;
   // Big keys all share a single image
   if (item.startsWith("bigkey")) return `url(${getAssetPath("bigkey.png")})`;
   // A boss has one portrait; dimming it (isItemDimmed) marks it not beaten

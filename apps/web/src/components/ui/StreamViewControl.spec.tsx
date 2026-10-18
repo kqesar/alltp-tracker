@@ -138,10 +138,10 @@ describe("StreamViewControl", () => {
   it("recommends a source the grid fills at the icons' own size", () => {
     // Raw text: toHaveTextContent would fold the no-break spaces
     const dialog = openDialog();
-    expect(dialog.textContent).toMatch(/512 × 384 for the crispest/);
-    expect(dialog.textContent).toMatch(/or 1024 × 768\./);
+    expect(dialog.textContent).toMatch(/512 × 448 for the crispest/);
+    expect(dialog.textContent).toMatch(/or 1024 × 896\./);
 
-    // The key cells add two rows
+    // The key cells add a row
     act(() => useGameStore.getState().setBigKeysVisible(true));
     expect(dialog.textContent).toMatch(/512 × 512 for the crispest/);
   });

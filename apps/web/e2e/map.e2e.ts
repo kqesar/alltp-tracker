@@ -122,6 +122,32 @@ test.describe("the map", () => {
     );
   });
 
+  test("counts Ganon's Tower down on its own cell, which its map square follows", async ({
+    page,
+  }) => {
+    await openTracker(page);
+    const chests = page.getByTestId("chest-overlay-12");
+    const tower = page.getByTestId("boss-marker-ganons-tower");
+    await expect(chests).toHaveAccessibleName(
+      "Ganon's Tower chests: 20 left, out of logic",
+    );
+    await expect(tower).toHaveAccessibleName(
+      "Ganon's Tower: boss out of logic, 20 chests left (out of logic)",
+    );
+
+    await chests.click();
+
+    await expect(chests).toHaveAccessibleName(
+      "Ganon's Tower chests: 19 left, out of logic",
+    );
+    await expect(tower).toHaveAccessibleName(
+      "Ganon's Tower: boss out of logic, 19 chests left (out of logic)",
+    );
+    // Agahnim 2's cell and his map marker are one flag
+    await page.getByTestId("item-boss12").click();
+    await expect(tower).toHaveAccessibleName(/^Ganon's Tower: boss done,/);
+  });
+
   test("restores the checks of a version 5 save left in localStorage", async ({
     page,
   }) => {
