@@ -189,9 +189,12 @@ describe("a run with shuffled entrances", () => {
     });
     // Everything held, but Ganon's Tower's door not noted
     expect(goModeStatusOf(store())).toMatchObject({ tri: "no" });
-    expect(analyzeRun(solutionOf(store()), store().settings).missing.size).toBe(
-      0,
-    );
+    // Nothing to get brings it: only a door noted would
+    expect(analyzeRun(solutionOf(store()), store().settings).goMode).toEqual({
+      door: true,
+      sets: [],
+      truncated: false,
+    });
   });
 });
 

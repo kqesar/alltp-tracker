@@ -22,6 +22,11 @@ export type Ways = {
    * Some ways were left out: the engine keeps the cheapest 32 per node.
    */
   readonly truncated: boolean;
+  /**
+   * No item brings it, everything held: in a run with shuffled entrances,
+   * it is behind a door not noted yet.
+   */
+  readonly door?: true;
 };
 
 /** The names of an item's levels, from 1, where they differ. */

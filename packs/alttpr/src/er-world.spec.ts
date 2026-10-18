@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import seed from "../test/er-seeds/0yAObedRMV.json" with { type: "json" };
 import { entranceNamed, erLocationId, targetNamed } from "./entrances";
 import {
+  analyzeFacts,
   crossedConnections,
   type ErConnections,
   erWorld,
   solveFacts,
+  solveFactsState,
   vanillaConnections,
 } from "./er-world";
 import { everything } from "./keys";
@@ -115,6 +117,25 @@ describe("the entrance randomizer's world", () => {
     const keys = (n: number) => ({ ...everything(OPEN), keyD7: n });
     expect(at(vanilla, keys(3), "Turtle Rock - Big Key Chest")).not.toBe("yes");
     expect(at(vanilla, keys(4), "Turtle Rock - Big Key Chest")).toBe("yes");
+  });
+
+  it("says what a check misses through its facts, in items", () => {
+    // The Blacksmith wants the smith back (an event), who wants the frog
+    // (another), whom only the Titan's Mitt and the pearl reach
+    const world = erWorld(OPEN, vanilla);
+    const { state } = solveFactsState(world, {});
+    expect(state.openFloodgate).toBe(1);
+    const analysis = analyzeFacts(world, state, { maxAtoms: 3 });
+    expect(analysis.blockers("blacksmith", "yes")).toEqual({
+      sets: [
+        [
+          { item: "glove", min: 2 },
+          { item: "moonPearl", min: 1 },
+        ],
+      ],
+      truncated: false,
+    });
+    expect(analysis.blockers("sunken-treasure", "yes").sets).toEqual([[]]);
   });
 
   it("starts Standard by the uncle", () => {

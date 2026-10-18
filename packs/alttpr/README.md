@@ -378,12 +378,17 @@ flowchart LR
   and the Old Man's house once his location is reached.
 - **Facts.** The engine reads `reach()` in locations only. A rule of an
   exit or of a helper that asks for a region reads the fact
-  `reached_<region>` instead, and an event item (the floodgate, the frog)
-  is held once its location is: `solveFacts` solves, adds what was surely
-  reached, and solves again until nothing is gained, as the randomizer
-  sweeps for events. A fact needs `yes`: a region or event only `maybe`
-  reached gives nothing, which reads its rules as `no`, never wrongly
-  `yes`.
+  `reached_<region>` instead, given by a location of its own in that
+  region, and an event item (the floodgate, the frog) is held once its
+  location is: `solveFactsState` solves, adds what was surely reached, and
+  solves again until nothing is gained, as the randomizer sweeps for
+  events. A fact needs `yes`: a region or event only `maybe` reached gives
+  nothing, which reads its rules as `no`, never wrongly `yes`.
+- **What a check misses.** `analyzeFacts` asks the engine's blockers with
+  the facts acquirable, then puts in place of each fact what brings its
+  location in logic, every way of it within `maxAtoms`: the Blacksmith
+  wants the smith back, who wants the frog, so it misses the Titan's Mitt
+  and the pearl.
 - **Derived settings**: whether Swamp Palace needs its patch (its door
   and the Dam's not both vanilla), each region's light world mark, and
   Turtle Rock's `allItemsReach_*`, from a first world with the entrances'

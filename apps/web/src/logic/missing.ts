@@ -16,6 +16,7 @@
 import {
   type AnalyzeOptions,
   analyze,
+  type CompiledWorld,
   explain,
   parse,
   type Solution as Solved,
@@ -201,12 +202,24 @@ const doubtsOf = (
           .filter((doubt) => doubt.spots.length > 0);
       });
   }
-  const { path, requirement } = explain(fill.world, state, id);
+  return rulesDoubts(fill.world, state, id);
+};
+
+/**
+ * Why a location is `maybe` by its rules, which `explain` says: where an
+ * item sits, or a medallion pad not noted.
+ */
+const rulesDoubts = (
+  world: CompiledWorld,
+  state: State,
+  id: string,
+): Doubt[] => {
+  const { path, requirement } = explain(world, state, id);
   const found = new Set<string>();
   doubtsIn(requirement, found);
   for (const step of path) {
     if (step.exit?.value !== "maybe") continue;
-    doubtsIn(trace(parse(step.exit.req), state, fill.world.rules), found);
+    doubtsIn(trace(parse(step.exit.req), state, world.rules), found);
   }
   return [...found].sort().map((doubt) =>
     doubt === "placement"
@@ -231,10 +244,9 @@ export const analyzeRun = (
   run: RunSettings,
 ): RunAnalysis => {
   const { keyed, settings, tris } = solution;
-  // Nothing to say of a check under logic the pack does not model, nor yet
-  // under the entrance randomizer's
-  if (!solution.modelled || solution.crossed !== undefined)
-    return { missing: new Map(), solution };
+  // Nothing to say of a check under logic the pack does not model
+  if (!solution.modelled) return { missing: new Map(), solution };
+  if (solution.crossed !== undefined) return analyzeCrossed(solution, run);
   const fill = fillerOf(settings);
   const state = withUntracked(fill, keyed.state);
   const settingsOptions = optionsOf(settings);
@@ -272,6 +284,75 @@ export const analyzeRun = (
 };
 
 /**
+ * analyzeRun for a run with shuffled entrances: the same, over the entrance
+ * randomizer's world solved for the entrances noted, its facts (an event, a
+ * region reached) read through as the items that bring them. It has no key
+ * the player does not track (crossedLogic), so a `maybe` is by its rules.
+ */
+const analyzeCrossed = (solution: Solution, run: RunSettings): RunAnalysis => {
+  const { crossed, settings, tris } = solution;
+  if (crossed === undefined) return { missing: new Map(), solution };
+  const settingsOptions = optionsOf(settings);
+  const analysis = crossed.solver.analyze(
+    crossed,
+    crossed.state,
+    settingsOptions,
+  );
+  // A fact's own location is no check
+  const facts = new Set(crossed.world.facts.map(({ location }) => location));
+  // The world solved with everything held
+  const all = crossed.solver.everything(crossed, settings);
+  const door = { door: true, sets: [], truncated: false } as const;
+  const missing = new Map<string, Missing>();
+  for (const [id, tri] of Object.entries(tris)) {
+    if (tri === "yes" || facts.has(id)) continue;
+    // Out of reach with everything held: no item brings it, a door does
+    const behind = all.location(id) === "no";
+    const inLogic = behind ? door : waysOf(analysis.blockers(id, "yes"));
+    const possible =
+      tri !== "no"
+        ? undefined
+        : behind
+          ? door
+          : waysOf(analysis.blockers(id, "maybe"));
+    missing.set(id, {
+      doubts:
+        tri === "maybe"
+          ? rulesDoubts(crossed.world.compiled, crossed.state, id)
+          : [],
+      inLogic,
+      possible:
+        possible === undefined || sameWays(possible, inLogic)
+          ? undefined
+          : possible,
+      tri,
+    });
+  }
+  const mode = goModeOfRun(run, settings);
+  return {
+    goMode:
+      mode === undefined
+        ? undefined
+        : mode.steps.some(({ location }) => all.location(location) === "no")
+          ? door
+          : waysOf(
+              goModeBlockers(
+                crossed.world.compiled,
+                crossed.state,
+                mode,
+                settingsOptions,
+                (s) =>
+                  s === crossed.state
+                    ? analysis
+                    : crossed.solver.analyze(crossed, s, settingsOptions),
+              ),
+            ),
+    missing,
+    solution,
+  };
+};
+
+/**
  * The run's go mode, from the pack's goal; none for a triforce hunt, which
  * the pack reads as Ganon though its end is the pieces it does not count.
  */
@@ -297,13 +378,7 @@ export const goModeStatusOf = (inputs: Inputs): GoModeStatus | undefined => {
     mode === undefined || !solution.modelled
       ? undefined
       : crossed !== undefined
-        ? crossed.solver.goMode(
-            solution.settings,
-            crossed.entrances,
-            solution.keyed.state,
-            mode,
-            crossed.solution,
-          )
+        ? crossed.solver.goMode(crossed, mode)
         : goModeStatus(
             fillerOf(solution.settings),
             solution.keyed.state,

@@ -129,7 +129,11 @@ describe("ChecksPanel", () => {
   });
 
   it("offers no why under logic it does not model, every check maybe", () => {
-    act(() => useGameStore.getState().applyPreset("crosskeys"));
+    // Crosskeys with its keys kept in their dungeons
+    act(() => {
+      useGameStore.getState().applyPreset("crosskeys");
+      useGameStore.getState().updateSettings({ dungeonItems: "mcs" });
+    });
     render(<ChecksPanel />);
 
     expect(row("library")).toHaveTextContent("Maybe");

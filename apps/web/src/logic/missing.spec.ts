@@ -5,7 +5,7 @@ import { items as freshItems, type ItemState } from "@/data/items";
 import { getPreset, type RunSettings } from "@/data/presets";
 import { analyzeRun, goModeStatusOf, type Missing } from "@/logic/missing";
 import { type Ways, waysText } from "@/logic/needs";
-import { type Inputs, solutionOf } from "@/logic/solution";
+import { type Inputs, setCrossedSolver, solutionOf } from "@/logic/solution";
 
 /** A run of a preset with these cells set. */
 const inputsOf = (
@@ -242,5 +242,32 @@ describe("goModeStatusOf", () => {
       goModeStatusOf(withGoal(goal))?.steps.map((step) => step.location);
     expect(steps("pedestal")).toEqual(["master-sword-pedestal"]);
     expect(steps("fast-ganon")).toEqual(["ganon"]);
+  });
+});
+
+describe("a run with shuffled entrances", () => {
+  it("says what a check behind a noted door misses, in items", async () => {
+    const { solver } = await import("@/logic/crossed");
+    setCrossedSolver(solver);
+    const inputs: Inputs = {
+      ...inputsOf({}, { preset: "crosskeys" }),
+      // Blind's Hideout behind the Big Bomb Shop's door, in the Dark World
+      entrances: { "big-bomb-shop": "blinds-hideout" },
+    };
+    const { missing } = analysisOf(inputs);
+    // Behind a door not noted, everything held would not bring it
+    expect(missing.get("blacksmith")?.inLogic).toEqual({
+      door: true,
+      sets: [],
+      truncated: false,
+    });
+    expect(words(missing.get("blinds-hideout/top"))).toMatchInlineSnapshot(`
+      {
+        "doubts": [],
+        "inLogic": "Titan's Mitt + Moon Pearl, or Agahnim + Hammer + Moon Pearl, or Power Glove + Hammer + Moon Pearl",
+        "possible": undefined,
+        "tri": "no",
+      }
+    `);
   });
 });

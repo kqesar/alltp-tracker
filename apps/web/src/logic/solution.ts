@@ -8,7 +8,7 @@
 // on a map marker, which only checks locations, solves nothing. Each hook
 // returns a string, which Zustand compares by value, so a change re-renders
 // only the markers whose status it changed.
-import type { Solution as EngineSolution, Tri } from "@alltp/engine";
+import type { Tri } from "@alltp/engine";
 import {
   type AlttprSettings,
   compile,
@@ -38,7 +38,7 @@ import {
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES, DUNGEON_INDICES } from "@/constants";
 import { crossedLogic, logicModelled } from "@/data/presets";
-import type { CrossedSolver } from "@/logic/crossed";
+import type { CrossedRun, CrossedSolver } from "@/logic/crossed";
 import { packReading } from "@/logic/packItems";
 import { KEY_DUNGEONS, packSettings, worldOf } from "@/logic/settings";
 import { useGameStore } from "@/stores/gameStore";
@@ -180,10 +180,9 @@ export interface Solution {
    * A run with shuffled entrances (crossedLogic): the entrance randomizer's
    * world solved for the entrances noted, whose tris the tracker shows.
    */
-  readonly crossed?: {
+  readonly crossed?: CrossedRun & {
     readonly solver: CrossedSolver;
     readonly entrances: Readonly<Record<string, string>>;
-    readonly solution: EngineSolution;
   };
 }
 
@@ -245,8 +244,8 @@ export const solutionOf = (state: Inputs): Solution => {
     entrances === undefined || crossed === undefined
       ? undefined
       : {
+          ...crossed.solve(settings, entrances, keyed.state),
           entrances,
-          solution: crossed.solve(settings, entrances, keyed.state),
           solver: crossed,
         };
   const modelled =
