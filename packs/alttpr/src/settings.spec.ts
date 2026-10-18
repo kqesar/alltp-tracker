@@ -131,11 +131,18 @@ describe("the presets", () => {
     });
     expect(configs.length).toBeGreaterThan(23);
     const worlds = new Set(configs.map((settings) => JSON.stringify(settings)));
-    // Standard, Open and Inverted, and the ways the cases set maps and
-    // compasses in Standard's and Inverted's
-    expect(worlds.size).toBe(7);
+    // Standard, Open, Inverted and retro, and the ways the cases set maps
+    // and compasses in Standard's and Inverted's
+    expect(worlds.size).toBe(8);
     expect(configs).toContainEqual(UPSTREAM_TEST);
     expect(configs).toContainEqual({ ...UPSTREAM_TEST, standardMode: false });
+    expect(configs).toContainEqual({
+      ...UPSTREAM_TEST,
+      genericKeys: true,
+      rupeeBow: true,
+      standardMode: false,
+      wildKeys: true,
+    });
     expect(configs).toContainEqual({
       ...UPSTREAM_TEST,
       invertedMode: true,
@@ -295,13 +302,32 @@ describe("settingsFromUpstream", () => {
     expect(OPEN.fullBottleMagic).toBe(true);
   });
 
+  it("builds the retro world: Open, with its rupee bow, generic and wild keys", () => {
+    const retro = settingsFromUpstream("retro");
+    expect(retro).toMatchObject({
+      genericKeys: true,
+      invertedMode: false,
+      rupeeBow: true,
+      standardMode: false,
+      wildKeys: true,
+    });
+    // Over any value the config gave (World/Retro.php:18-23)
+    expect(
+      settingsFromUpstream("retro", { "region.wildKeys": false }).wildKeys,
+    ).toBe(true);
+    expect(settingsFromUpstream("open")).toMatchObject({
+      genericKeys: false,
+      rupeeBow: false,
+    });
+  });
+
   it("refuses what the pack does not model, where upstream would read it", () => {
-    expect(() => settingsFromUpstream("retro")).toThrow(
-      /mode "retro" is not modeled/,
+    expect(() => settingsFromUpstream("crossed")).toThrow(
+      /mode "crossed" is not modeled/,
     );
     expect(() =>
-      settingsFromUpstream("open", { "rom.rupeeBow": true }),
-    ).toThrow(/"rom.rupeeBow" is not modeled/);
+      settingsFromUpstream("open", { "rom.rupeeBow": "yes" }),
+    ).toThrow(/"rom.rupeeBow" cannot be "yes"/);
     expect(() =>
       settingsFromUpstream("open", { goal: "triforce-hunt" }),
     ).toThrow(/"goal" cannot be "triforce-hunt"/);

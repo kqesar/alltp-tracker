@@ -787,6 +787,8 @@ describe("the checkout", () => {
     write("tests/NoGlitches/Dark/SampleTest.php", TEST_CLASS);
     write("tests/NoGlitches/TestCase.php", "<?php // not a test class");
     write("tests/Inverted/TestCase.php", "<?php // not a test class");
+    // A test file of its own, at the top of tests/
+    write("tests/RetroBowTest.php", TEST_CLASS);
     write("app/Item.php", ITEM_PHP);
     write("resources/lang/en/item.php", ENGLISH_PHP);
     for (const [file, text] of Object.entries(WORLDS)) write(file, text);
@@ -808,7 +810,11 @@ describe("the checkout", () => {
     });
     expect(summary.map((s) => [s.file, s.cases.length])).toEqual([
       ["tests/NoGlitches/Dark/SampleTest.php", 5],
+      ["tests/RetroBowTest.php", 5],
     ]);
+    expect(
+      JSON.parse(readFileSync(join(out, "RetroBow.json"), "utf8")).file,
+    ).toBe("tests/RetroBowTest.php");
     const written = join(out, "NoGlitches/Dark/Sample.json");
     const first = readFileSync(written, "utf8");
     expect(JSON.parse(first).cases).toHaveLength(5);

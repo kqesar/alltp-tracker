@@ -18,8 +18,7 @@
 // setting derived from one is then unknown to the engine, which folds it to
 // maybe (a flag either way, a number in its range).
 //
-// Left out, because the pack does not model the mode: rom.rupeeBow and
-// rom.genericKeys (the retro world); boss shuffle (each
+// Left out: boss shuffle (each
 // dungeon keeps the boss its region names, see bosses.ts); the triforce-hunt
 // and ganonhunt goals (triforce pieces are not items of this pack).
 
@@ -42,7 +41,8 @@ export type AlttprSettings = {
   /**
    * mode.state is 'standard' (World.php:290): the run starts with the
    * escape, and RescueZelda is not given at the start (Randomizer.php:133).
-   * Otherwise 'open'. Inverted and retro are other worlds, not modeled.
+   * Otherwise 'open', the retro world included (app/World/Retro.php
+   * extends Open). Inverted is a world of its own.
    */
   readonly standardMode: boolean;
   /**
@@ -103,9 +103,23 @@ export type AlttprSettings = {
 
   /**
    * region.wildKeys: small keys leave their dungeon (keysanity), set by
-   * dungeonItems 'mcs' and 'full' (World.php:117-121; Region.php:235).
+   * dungeonItems 'mcs' and 'full' (World.php:117-121; Region.php:235), and
+   * by the retro world (World/Retro.php:22).
    */
   readonly wildKeys: boolean;
+  /**
+   * rom.rupeeBow, the retro world's (World/Retro.php:19): the bow shoots
+   * rupees, once an arrow is bought in a shop (`shopArrow`) or with the
+   * silver arrows (ItemCollection.php:476-492).
+   */
+  readonly rupeeBow: boolean;
+  /**
+   * rom.genericKeys, the retro world's (World/Retro.php:20): a small key
+   * opens any dungeon's doors, and once one can be bought (`shopKey`) every
+   * small key a rule asks for is held (ItemCollection.php:269-272; the
+   * derived facts, derived.ts).
+   */
+  readonly genericKeys: boolean;
   /** region.wildBigKeys, set by dungeonItems 'full' (World.php:112-116). */
   readonly wildBigKeys: boolean;
   /**
@@ -257,6 +271,8 @@ export type UpstreamConfig = {
   readonly "region.wildBigKeys"?: boolean;
   readonly "region.wildCompasses"?: boolean;
   readonly "region.wildKeys"?: boolean;
+  readonly "rom.genericKeys"?: boolean;
+  readonly "rom.rupeeBow"?: boolean;
   readonly "region.wildMaps"?: boolean;
   readonly "rom.CatchableFairies"?: boolean;
 };
@@ -312,6 +328,8 @@ const KEYS: Readonly<Record<keyof UpstreamConfig, Check>> = {
   "region.wildKeys": isBoolean,
   "region.wildMaps": isBoolean,
   "rom.CatchableFairies": isBoolean,
+  "rom.genericKeys": isBoolean,
+  "rom.rupeeBow": isBoolean,
 };
 
 function checked(
@@ -362,9 +380,17 @@ export function settingsFromUpstream(
   mode: string,
   config: Readonly<Record<string, unknown>> = {},
 ): AlttprSettings {
-  if (mode !== "open" && mode !== "standard" && mode !== "inverted") {
+  if (
+    mode !== "open" &&
+    mode !== "standard" &&
+    mode !== "inverted" &&
+    mode !== "retro"
+  ) {
     throw new RangeError(`Upstream mode "${mode}" is not modeled`);
   }
+  // The retro world forces these over any value the config gave
+  // (World/Retro.php:18-23)
+  const retro = mode === "retro";
   const c = checked(config);
   const goal = c.goal ?? "ganon";
   const dungeonItems = c.dungeonItems ?? "standard";
@@ -418,6 +444,7 @@ export function settingsFromUpstream(
     forceSkullWoodsKey: basic,
     fullBottleMagic: is(bottleMagic, 0x80),
     ganonGoal: is(goal, "ganon"),
+    genericKeys: retro || (c["rom.genericKeys"] ?? false),
     halfBottleMagic: is(bottleMagic, 0x40),
     ignoreCanKillEscapeThings: c.ignoreCanKillEscapeThings ?? false,
     invertedMode: mode === "inverted",
@@ -428,12 +455,13 @@ export function settingsFromUpstream(
     requireBetterBow: any(basic, swordless),
     requireBetterSword: basic,
     requireLamp: c["item.require.Lamp"] ?? 1,
+    rupeeBow: retro || (c["rom.rupeeBow"] ?? false),
     standardMode: mode === "standard",
     swordless,
     swordsInPool: c["region.swordsInPool"] ?? true,
     wildBigKeys: dungeonItems === "full" || (c["region.wildBigKeys"] ?? false),
     wildCompasses: mc || (c["region.wildCompasses"] ?? false),
-    wildKeys: mcs || (c["region.wildKeys"] ?? false),
+    wildKeys: retro || mcs || (c["region.wildKeys"] ?? false),
     wildMaps: mc || (c["region.wildMaps"] ?? false),
   };
 }

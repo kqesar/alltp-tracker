@@ -125,13 +125,19 @@ export const HELPERS = {
     source: at(402),
   },
   /**
-   * Level 1. Retro's rupee bow (rom.rupeeBow), which also wants a bought
-   * arrow, is not modeled: any bow shoots.
+   * Level 1: any bow, which the retro world's rupee bow (rom.rupeeBow) lets
+   * shoot once an arrow is bought or with the silver arrows.
    */
-  canShootArrows: { req: "bow", source: at(486) },
-  /** Silver arrows: the bow that has them, or the upgrade with any bow. */
+  canShootArrows: {
+    req: "bow & (!setting(rupeeBow) | shopArrow | silverArrowUpgrade)",
+    source: at(486),
+  },
+  /**
+   * Silver arrows: the bow that has them (the rupee bow, once an arrow is
+   * bought), or the upgrade with any bow.
+   */
   canShootArrows2: {
-    req: "bow >= 2 | silverArrowUpgrade & bow",
+    req: "bow >= 2 & (!setting(rupeeBow) | shopArrow) | silverArrowUpgrade & bow",
     source: at(479),
   },
   canSpinSpeed: {

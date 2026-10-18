@@ -16,7 +16,19 @@
 // A state recomputes the facts from its items each time they change
 // (derivedFacts), so within one state every rule stays monotone; across
 // states, getting the hammer may lower a key rule, as upstream has it.
-import { evaluate, loadRules, parse, type State } from "@alltp/engine";
+//
+// The retro world's key for sale is a fact of the same kind: once a ShopKey
+// is in, ItemCollection::has holds any count of any small key
+// (ItemCollection.php:269-272), so the state holds every small key at its
+// count in the pool, and the rules read them as they are.
+import {
+  evaluate,
+  itemValue,
+  loadRules,
+  parse,
+  type State,
+} from "@alltp/engine";
+import { ITEMS } from "./items";
 import type { Source } from "./location";
 import { RULES } from "./rules";
 import type { AlttprSettings } from "./settings";
@@ -49,12 +61,16 @@ const conditions = Object.entries(DERIVED).map(
   ([fact, { unless }]) => [fact, parse(unless)] as const,
 );
 
+/** The small keys, each with its count in the pool. */
+const SMALL_KEYS = ITEMS.filter(({ id }) => /^key[A-Z]/.test(id));
+
 /**
  * The derived facts of a state's items, each 1 or 0, under the run's
  * settings: spread them over the items (`{ ...items, ...derivedFacts(items,
  * settings) }`) every time the items change, so a stale fact is overwritten.
  * A fact holds only where its condition is `no`: a condition that might
- * hold asks for the higher count.
+ * hold asks for the higher count. With generic keys and a key for sale,
+ * every small key joins them, at its count in the pool.
  */
 export function derivedFacts(
   items: State,
@@ -64,6 +80,9 @@ export function derivedFacts(
   for (const [fact, condition] of conditions) {
     facts[fact] =
       evaluate(condition, items, rules, { settings }) === "no" ? 1 : 0;
+  }
+  if (settings.genericKeys && itemValue(items, "shopKey") >= 1) {
+    for (const { id, max } of SMALL_KEYS) facts[id] = max;
   }
   return facts;
 }

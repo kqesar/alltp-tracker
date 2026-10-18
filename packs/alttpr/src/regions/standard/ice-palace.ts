@@ -8,12 +8,12 @@ import type { RegionModule } from "../../world";
 const SPIKES = "(!setting(cantTakeDamage) | caneOfByrna | cape | hookshot)";
 
 /**
- * The Spike Room (87-94): the hookshot, or a key while the big key sits in
- * the Spike Room, the Big Key Chest or the Map Chest (`itemInLocations`),
- * which a tracker cannot know: `maybe`. Retro's ShopKey (90) is not
- * modeled.
+ * The Spike Room (87-94): the hookshot or a key for sale in the retro
+ * world's shops (90), or a key while the big key sits in the Spike Room, the
+ * Big Key Chest or the Map Chest (`itemInLocations`), which a tracker cannot
+ * know: `maybe`.
  */
-const SPIKE_ROOM = `${SPIKES} & (hookshot | maybe & keyD5)`;
+const SPIKE_ROOM = `${SPIKES} & (hookshot | shopKey | maybe & keyD5)`;
 
 /** The Big Key Chest and the Map Chest, past the Spike Room (73-85). */
 const PAST_SPIKES = `hammer & @canLiftRocks & ${SPIKES}`;
@@ -25,7 +25,7 @@ const PAST_SPIKES = `hammer & @canLiftRocks & ${SPIKES}`;
 const HOLDING_BIG_KEY = (before: string) =>
   ({
     holding: {
-      items: { BigKeyD5: `${before}${SPIKES} & (hookshot | keyD5)` },
+      items: { BigKeyD5: `${before}${SPIKES} & (hookshot | shopKey | keyD5)` },
       source: "app/Region/Standard/IcePalace.php:92",
     },
   }) as const satisfies LocationFill;

@@ -68,6 +68,11 @@ export const ITEMS = [
   { id: "shovel", max: 1 },
   // canKillEscapeThings reads it
   { id: "tenBombs", max: 1 },
+  // The retro world's shops (Randomizer.php:740-760): an arrow bought lets
+  // the rupee bow shoot (canShootArrows); a key for sale holds every small
+  // key a rule asks for (ItemCollection.php:269-272, derived.ts)
+  { id: "shopArrow", max: 1 },
+  { id: "shopKey", max: 1 },
 
   // hasHealth sums them: a piece is a quarter heart (Item.php:116, 131-156)
   { id: "heartContainer", max: 11 },
@@ -370,10 +375,10 @@ export const UPSTREAM_ITEMS: ReadonlyMap<string, Contribution | null> = new Map<
   // Aliases (Item.php:269-271). UncleSword counts as one more progressive
   // sword: hasSword(2) is ProgressiveSword >= 2 or UncleSword with one.
   ["UncleSword", add("sword")],
-  // Retro mode: any ShopKey opens every door (ItemCollection::has), and
-  // the rupee bow needs ShopArrow (canShootArrows)
-  ["ShopKey", null],
-  ["ShopArrow", null],
+  // The retro world: any ShopKey opens every door (ItemCollection::has),
+  // and the rupee bow needs ShopArrow (canShootArrows)
+  ["ShopKey", add("shopKey")],
+  ["ShopArrow", add("shopArrow")],
 ]);
 
 /**

@@ -52,12 +52,24 @@ const POOL: Readonly<Record<string, number>> = Object.fromEntries(
 );
 
 /**
- * Everything a world holds: every item at its count in the pool, every
+ * A world's pool: the shops sell an arrow and a key in the retro world
+ * alone (Randomizer.php:740-750), so no other world holds them.
+ */
+const poolOf = (
+  settings: AlttprSettings,
+): Readonly<Record<string, number>> => ({
+  ...POOL,
+  shopArrow: settings.rupeeBow ? 1 : 0,
+  shopKey: settings.genericKeys ? 1 : 0,
+});
+
+/**
+ * Everything a world holds: every item at its count in its pool, every
  * prize and event, both medallion pads open. What the randomizer assumes
  * held before it places the first item.
  */
 export function everything(settings: AlttprSettings): State {
-  return withFacts(POOL, settings);
+  return withFacts(poolOf(settings), settings);
 }
 
 /**
@@ -68,10 +80,11 @@ export function everythingBut(item: string, settings: AlttprSettings): State {
   const contribution = fromUpstream(item);
   if (contribution === null) return everything(settings);
   const { atLeast, count, item: id } = contribution;
-  const held = itemValue(POOL, id);
+  const pool = poolOf(settings);
+  const held = itemValue(pool, id);
   return withFacts(
     {
-      ...POOL,
+      ...pool,
       // A level (TitansMitt) goes below itself; a count loses its share
       [id]: atLeast ? Math.min(held, count - 1) : Math.max(0, held - count),
     },
@@ -96,7 +109,9 @@ export function possibleLocations(filler: Filler, item: string): string[] {
 /**
  * A dungeon item the player does not track: a dungeon's small keys while
  * keys are not wild, its big key while big keys are not. They stay in their
- * dungeon, and the tracker does not ask for them.
+ * dungeon, and the tracker does not ask for them. The retro world's generic
+ * keys go untracked too, wild as they are: any dungeon's door takes one, so
+ * the player cannot tell whose a key is.
  */
 export interface UntrackedItem {
   readonly dungeon: DungeonId;
@@ -106,6 +121,11 @@ export interface UntrackedItem {
   readonly count: number;
   /** Where the randomizer may have placed them: possibleLocations. */
   readonly locations: readonly string[];
+  /**
+   * A generic key (rom.genericKeys): never surely in hand, nor its dungeon
+   * safe for keys, since a key found may open another dungeon's door.
+   */
+  readonly generic: boolean;
 }
 
 /** The items a run's player does not track, with where each may sit. */
@@ -114,14 +134,23 @@ export function untrackedItems(filler: Filler): readonly UntrackedItem[] {
   return DUNGEONS.flatMap((d) => {
     const pool = dungeonPool(d);
     const kinds = [
-      { count: settings.wildKeys ? 0 : pool.smallKeys, kind: "Key" },
-      { count: settings.wildBigKeys ? 0 : pool.bigKey, kind: "BigKey" },
+      {
+        count: settings.wildKeys && !settings.genericKeys ? 0 : pool.smallKeys,
+        generic: settings.genericKeys,
+        kind: "Key",
+      },
+      {
+        count: settings.wildBigKeys ? 0 : pool.bigKey,
+        generic: false,
+        kind: "BigKey",
+      },
     ];
     return kinds
       .filter(({ count }) => count > 0)
-      .map(({ count, kind }) => ({
+      .map(({ count, generic, kind }) => ({
         count,
         dungeon: d.id,
+        generic,
         item: `${kind.charAt(0).toLowerCase()}${kind.slice(1)}${d.code}`,
         locations: possibleLocations(filler, `${kind}${d.code}`),
       }));
@@ -139,7 +168,13 @@ interface Model {
    */
   readonly dungeons: ReadonlyMap<
     DungeonId,
-    { readonly keys: number; readonly bigKey: number; readonly at: string[] }
+    {
+      readonly keys: number;
+      readonly bigKey: number;
+      readonly at: string[];
+      /** Its small keys are generic keys: never safe. */
+      readonly generic: boolean;
+    }
   >;
   /** The most small keys a dungeon holds untracked; 1 if a big key is. */
   readonly keys: number;
@@ -242,12 +277,18 @@ function modelOf(filler: Filler): Model {
   const untracked = untrackedItems(filler);
   const dungeons = new Map<
     DungeonId,
-    { keys: number; bigKey: number; at: string[] }
+    { keys: number; bigKey: number; at: string[]; generic: boolean }
   >();
   for (const u of untracked) {
-    const entry = dungeons.get(u.dungeon) ?? { at: [], bigKey: 0, keys: 0 };
+    const entry = dungeons.get(u.dungeon) ?? {
+      at: [],
+      bigKey: 0,
+      generic: false,
+      keys: 0,
+    };
     if (u.item.startsWith("bigKey")) entry.bigKey = 1;
     else entry.keys = u.count;
+    entry.generic ||= u.generic;
     entry.at = [...new Set([...entry.at, ...u.locations])];
     dungeons.set(u.dungeon, entry);
   }
@@ -340,6 +381,7 @@ export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
   for (;;) {
     const found = model.untracked.filter(
       (u) =>
+        !u.generic &&
         itemValue(sure, u.item) < u.count &&
         u.locations.every((l) => solution.location(l) === "yes"),
     );
@@ -357,6 +399,8 @@ export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
   const safe = (id: DungeonId): boolean => {
     const entry = model.dungeons.get(id);
     if (entry === undefined) return true;
+    // A generic key found may open another dungeon's door
+    if (entry.generic) return false;
     let found = safety.get(id);
     if (found === undefined) {
       found = true;

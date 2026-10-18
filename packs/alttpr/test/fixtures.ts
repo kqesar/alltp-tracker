@@ -1,6 +1,6 @@
 // Loads the fixtures scripts/import-upstream-tests.mjs writes under
 // test/upstream/: the upstream NoGlitches test cases and item table.
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -124,6 +124,7 @@ export interface ItemTable {
 }
 
 function walk(dir: string): string[] {
+  if (!statSync(dir).isDirectory()) return [dir];
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     return entry.isDirectory() ? walk(path) : [path];
@@ -131,8 +132,8 @@ function walk(dir: string): string[] {
 }
 
 /** Every test class fixture, sorted by path. */
-/** The test directories imported, as the importer's TEST_ROOTS mirror them. */
-const FIXTURE_ROOTS = ["NoGlitches", "Inverted"];
+/** The tests imported, as the importer's TEST_ROOTS mirror them. */
+const FIXTURE_ROOTS = ["NoGlitches", "Inverted", "RetroBow.json"];
 
 export function loadFixtures(): Fixture[] {
   return FIXTURE_ROOTS.flatMap((root) => walk(join(FIXTURES_DIR, root)))

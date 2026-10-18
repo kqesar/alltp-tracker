@@ -13,7 +13,7 @@ const fixtures = loadFixtures();
 const cases = fixtures.flatMap((fixture) => fixture.cases);
 
 describe("the upstream fixtures", () => {
-  it("hold the cases of every NoGlitches and Inverted test class, file by file", () => {
+  it("hold the cases of every NoGlitches and Inverted test class and the retro bow's, file by file", () => {
     const counts = Object.fromEntries(
       fixtures.map((f) => [f.path, f.cases.length]),
     );
@@ -63,6 +63,7 @@ describe("the upstream fixtures", () => {
       "NoGlitches/ThievesTown.json": 124,
       "NoGlitches/TowerOfHera.json": 81,
       "NoGlitches/TurtleRock.json": 213,
+      "RetroBow.json": 32,
     });
   });
 
@@ -71,7 +72,7 @@ describe("the upstream fixtures", () => {
     for (const c of cases) kinds[c.kind] = (kinds[c.kind] ?? 0) + 1;
     expect(kinds).toEqual({
       fill: 262,
-      location: 5504,
+      location: 5536,
       regionComplete: 19,
       regionEnter: 35,
       regionFill: 720,
@@ -107,10 +108,10 @@ describe("the upstream fixtures", () => {
     }
   });
 
-  it("run in a Standard, Open or Inverted world with the test rules", () => {
+  it("run in a Standard, Open, Inverted or retro world with the test rules", () => {
     for (const fixture of fixtures) {
       const world = fixture.worlds.world;
-      expect(["inverted", "open", "standard"], fixture.path).toContain(
+      expect(["inverted", "open", "retro", "standard"], fixture.path).toContain(
         world?.mode,
       );
       expect(world?.config, fixture.path).toEqual({
@@ -123,6 +124,11 @@ describe("the upstream fixtures", () => {
         .filter((f) => f.worlds.world?.mode === "open")
         .map((f) => f.file),
     ).toEqual(["tests/NoGlitches/OpenTest.php"]);
+    expect(
+      fixtures
+        .filter((f) => f.worlds.world?.mode === "retro")
+        .map((f) => f.file),
+    ).toEqual(["tests/RetroBowTest.php"]);
     // Every Inverted test class, and only they, build an Inverted world
     for (const fixture of fixtures) {
       expect(fixture.worlds.world?.mode === "inverted", fixture.path).toBe(

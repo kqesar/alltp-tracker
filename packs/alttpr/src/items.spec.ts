@@ -145,8 +145,8 @@ describe("UPSTREAM_ITEMS", () => {
         .map((item) => [item.name, item.alias, fromUpstream(item.name)]),
     ).toEqual([
       ["UncleSword", "ProgressiveSword", { count: 1, item: "sword" }],
-      ["ShopKey", "KeyGK", null],
-      ["ShopArrow", "Arrow", null],
+      ["ShopKey", "KeyGK", { count: 1, item: "shopKey" }],
+      ["ShopArrow", "Arrow", { count: 1, item: "shopArrow" }],
     ]);
   });
 });
@@ -226,7 +226,9 @@ describe("stateFromUpstream", () => {
   // canBlockLasers, hasArmor, canExtendMagic, bottleCount, canFly).
   const table: [string[], Partial<Record<ItemId, number>>][] = [
     [[], {}],
-    [["TwentyRupees", "Nothing", "Bee", "ShopKey"], {}],
+    [["TwentyRupees", "Nothing", "Bee"], {}],
+    // The retro world's shops: what can be bought, as a rule reads it
+    [["ShopKey", "ShopArrow"], { shopArrow: 1, shopKey: 1 }],
     [["ProgressiveSword"], { sword: 1 }],
     // hasSword(3) is false: a progressive sword does not upgrade a fixed one
     [["ProgressiveSword", "MasterSword"], { sword: 2 }],
@@ -345,7 +347,10 @@ describe("allItemsExcept (tests/TestCase.php)", () => {
 
   it("holds everything, every small key the dungeon has, but no generic key", () => {
     const all = state([]);
-    expect(Object.keys(all).sort()).toEqual([...ITEM_IDS].sort());
+    // Upstream leaves the key for sale out, always (TestCase.php:63, 69)
+    expect(Object.keys(all).sort()).toEqual(
+      ITEM_IDS.filter((id) => id !== "shopKey").sort(),
+    );
     expect(all).toMatchObject({
       bottle: 4,
       bow: 2,

@@ -34,7 +34,14 @@ function where(item: string, settings: AlttprSettings = OPEN): string[] {
 describe("everything", () => {
   it("holds every item at its count in the pool, and opens both pads", () => {
     const all = everything(UPSTREAM_TEST);
-    for (const { id, max } of ITEMS) expect(all[id], id).toBe(max);
+    // No shop sells an arrow or a key outside the retro world
+    const shop = (id: string) => id === "shopArrow" || id === "shopKey";
+    for (const { id, max } of ITEMS)
+      expect(all[id], id).toBe(shop(id) ? 0 : max);
+    expect(everything(settingsFromUpstream("retro"))).toMatchObject({
+      shopArrow: 1,
+      shopKey: 1,
+    });
     expect(all).toMatchObject({ mireUnknown: 1, turtleRockUnknown: 1 });
     // With the hammer, a bow and the lamp, Palace of Darkness wants six keys
     expect(all.podFewerKeysSuffice).toBe(0);

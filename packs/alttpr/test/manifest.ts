@@ -66,7 +66,9 @@ export function rulesOfTest(
   index: LocationIndex,
 ): Set<string> {
   const mode = fixture.worlds.world?.mode;
-  const regions = index.regions.filter((r) => r.mode === mode);
+  // The retro world is Open's, its regions and all (app/World/Retro.php:5)
+  const world = mode === "retro" ? "open" : mode;
+  const regions = index.regions.filter((r) => r.mode === world);
   const byName = new Map(regions.map((r) => [r.name, r]));
   const parents = new Map<string, string>();
   for (const r of index.regions) {

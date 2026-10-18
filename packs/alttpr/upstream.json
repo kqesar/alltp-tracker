@@ -575,6 +575,11 @@
       "file": "tests/Inverted/TurtleRockTest.php",
       "fixture": "test/upstream/Inverted/TurtleRock.json",
       "status": "ported"
+    },
+    {
+      "file": "tests/RetroBowTest.php",
+      "fixture": "test/upstream/RetroBow.json",
+      "status": "ported"
     }
   ]
 }
