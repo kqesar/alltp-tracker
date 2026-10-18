@@ -28,6 +28,14 @@ Each state also has a glyph (✓, ?, an eye, ✕), so colour is never the only c
 
 **Checks** — the **Checks** tab beside **Map** lists every check of the map as a list, by zone, in the same states. It shows what is available or maybe at first; the filters (with their counts), a zone and a search narrow it. Tick a check to mark it done, as a click on its marker does; **Why?** says what a check not available is missing. A dungeon whose counter reaches 0 shows its checks done. The tab you leave open is remembered on this device.
 
+**Run** — the **Run** tab beside **Checks** follows the run as it goes:
+- **At a glance**: the run timer's time, the checks done and the bosses beaten.
+- **Splits**: each boss in the order it fell, with the time since the last, as a speedrun timer splits a run.
+- **Timeline**: every item found and location checked, newest first, timed by the run timer. Whatever you or autotracking marks is timed. Undo takes a time away with its mark, and Redo brings the same time back.
+- **From the game**: outside races, while autotracking reads your game, the counts its ROM keeps, as its end credits list them: when the first sword, the boots, the flute and the mirror were found, deaths, save and quits, menu and lag time, and more.
+
+The timeline is saved with the run, in exports too.
+
 **Go mode** — beside the tabs, ☆ **Go mode: not yet**, ★? **possible** or ★ **in logic** tells whether every step to the run's goal (Ganon, fast Ganon or the Pedestal) is in logic; click it to see what is missing. Goals that end with everything (all dungeons, triforce hunt) have none.
 
 **Run timer** — beside go mode, the run's time: click it to start, pause, resume or reset it. While autotracking reads your game, it starts as you leave the file select for the game and stops at the goal on its own (**Start and stop with the game**, on by default; connecting mid-run starts nothing). It keeps counting through a reload, and outside races it also shows the game's own play time, counted by the ROM frame by frame.
@@ -117,9 +125,11 @@ apps/web/src/
 │   ├── checks.ts    the Checks list: the map's checks by zone, their states
 │   ├── missing.ts   what each check and the go mode are missing, at idle
 │   ├── needs.ts     the engine's blockers in the tracker's words and icons
-│   └── timer.ts     the run timer, and what the game's progress does to it
+│   ├── timer.ts     the run timer, and what the game's progress does to it
+│   ├── timeline.ts  when each find of the run happened
+│   └── runLog.ts    the Run tab's timeline and splits
 ├── stores/       the Zustand store
-├── components/   tracker/ (item grid), map/ (markers, Checks, go mode, run timer), ui/ (chrome)
+├── components/   tracker/ (item grid), map/ (markers, Checks, Run, go mode, run timer), ui/ (chrome)
 ├── hooks/        keyboard navigation
 ├── styles/       CSS modules, all imported by styles/index.css
 └── utils/        asset paths and item styling

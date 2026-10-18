@@ -3,6 +3,7 @@ import { ChecksPanel } from "@/components/map/ChecksPanel";
 import { GoMode } from "@/components/map/GoMode";
 import { MapLegend } from "@/components/map/MapLegend";
 import { MapTracker } from "@/components/map/MapTracker";
+import { RunPanel } from "@/components/map/RunPanel";
 import { RunTimer } from "@/components/map/RunTimer";
 import { type Tab, Tabs, tabId } from "@/components/ui/Tabs";
 import { useGameStore } from "@/stores/gameStore";
@@ -12,15 +13,17 @@ import type { MapView } from "@/utils";
 const VIEWS = [
   { label: "Map", value: "map" },
   { label: "Checks", value: "checks" },
+  { label: "Run", value: "run" },
 ] as const satisfies readonly Tab<MapView>[];
 
 /** The id of the view's panel, which the skip links focus. */
 export const MAP_VIEW_ID = "map-view";
 
 /**
- * The map panel: the two worlds with their legend, or every check as a list
- * (ChecksPanel), behind ARIA tabs, with the run's go mode beside them. The
- * view is a preference of the device, kept across runs.
+ * The map panel: the two worlds with their legend, every check as a list
+ * (ChecksPanel) or the run's splits, timeline and stats (RunPanel), behind
+ * ARIA tabs, with the run timer and go mode beside them. The view is a
+ * preference of the device, kept across runs.
  */
 export const MapPanel = () => {
   const view = useGameStore((state) => state.mapView);
@@ -51,14 +54,14 @@ export const MapPanel = () => {
         role="tabpanel"
         tabIndex={-1}
       >
-        {view === "map" ? (
+        {view === "map" && (
           <>
             <MapTracker />
             <MapLegend />
           </>
-        ) : (
-          <ChecksPanel />
         )}
+        {view === "checks" && <ChecksPanel />}
+        {view === "run" && <RunPanel />}
       </div>
     </div>
   );

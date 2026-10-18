@@ -238,7 +238,9 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
       ? saved.mapLayout
       : base.mapLayout,
   mapView:
-    saved.mapView === "map" || saved.mapView === "checks"
+    saved.mapView === "map" ||
+    saved.mapView === "checks" ||
+    saved.mapView === "run"
       ? saved.mapView
       : base.mapView,
   shortcuts: restoreShortcuts(saved.shortcuts, base.shortcuts),
