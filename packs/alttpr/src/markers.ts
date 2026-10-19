@@ -6,7 +6,6 @@
 // height, the Light World on its left half (x 0 to 50), the Dark World on
 // its right half (50 to 100). The legacy chests.ts and dungeons.ts wrote
 // them as "30.8%"; here they are numbers.
-import type { Tri } from "@alltp/engine";
 import {
   DUNGEONS,
   type DungeonId,
@@ -349,17 +348,3 @@ export const MAP_LOCATIONS: ReadonlySet<string> = new Set(
 export const MARKED_DUNGEONS: readonly DungeonId[] = DUNGEONS.map(
   (d) => d.id,
 ).filter((id) => MARKERS.some((m) => m.dungeon === id));
-
-/** What a marker shows. */
-export type MarkerStatus = "available" | "possible" | "unavailable";
-
-/**
- * What a marker shows for the tris of the locations it still stands for
- * (those not checked yet): available when all are `yes`, possible when
- * some are `yes` or `maybe`, unavailable when none is. With none left the
- * marker is done, which the app shows on its own: unavailable here.
- */
-export function markerStatus(tris: readonly Tri[]): MarkerStatus {
-  if (tris.length > 0 && tris.every((t) => t === "yes")) return "available";
-  return tris.some((t) => t !== "no") ? "possible" : "unavailable";
-}

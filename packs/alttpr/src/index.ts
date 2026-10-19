@@ -172,6 +172,7 @@ export {
   type Source,
   type Visible,
 } from "./location";
+export { type MarkerStatus, markerStatus } from "./marker-status";
 export {
   INVERTED_MARKERS,
   LEGACY_CHEST_POSITIONS,
@@ -180,8 +181,6 @@ export {
   MARKED_DUNGEONS,
   MARKERS,
   type MapMarker,
-  type MarkerStatus,
-  markerStatus,
   markersOf,
 } from "./markers";
 export {
