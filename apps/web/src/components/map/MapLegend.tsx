@@ -10,21 +10,25 @@ const LEGEND_ITEMS = [
 /**
  * MapLegend - explains the colour coding of the map markers so the states are
  * understandable without relying on colour alone (accessibility).
+ * @param seen - Whether the map draws locations seen but not reachable (a
+ *   game whose logic has no such channel leaves it out)
  */
-export const MapLegend = () => (
+export const MapLegend = ({ seen = true }: { seen?: boolean }) => (
   <section
     aria-label="Map availability legend"
     className="map-legend"
     data-testid="map-legend"
   >
-    {LEGEND_ITEMS.map((item) => (
-      <span className="map-legend__item" key={item.className}>
-        <span
-          aria-hidden="true"
-          className={`map-legend__swatch state-glyph ${item.className}`}
-        />
-        {item.label}
-      </span>
-    ))}
+    {LEGEND_ITEMS.filter((item) => seen || item.className !== "seen").map(
+      (item) => (
+        <span className="map-legend__item" key={item.className}>
+          <span
+            aria-hidden="true"
+            className={`map-legend__swatch state-glyph ${item.className}`}
+          />
+          {item.label}
+        </span>
+      ),
+    )}
   </section>
 );

@@ -171,7 +171,8 @@ apps/web/src/
 │                    autotrack/ (the session, its store and what follows the game)
 ├── autotrack/    shared autotracking words (status, guide), the cross-tab Web Lock
 ├── components/   ui/ (shared chrome: dialogs, toolbar menu, game picker, header),
-│                 autotrack/ (the setup guide, the status dot, the lazy dialog loader)
+│                 autotrack/ (the setup guide, the status dot, the lazy dialog loader),
+│                 map/ (the map legend)
 ├── hooks/        keyboard navigation, the toolbar's fit
 ├── styles/       shared CSS, all imported by styles/index.css
 └── utils/        the stream view's address and fit, keyboard and platform helpers
