@@ -4,39 +4,16 @@
 
 import {
   AutotrackSession,
-  type BridgeInfo,
-  type DeviceDescriptor,
   type Environment,
   type SessionOptions,
-  type SessionStatus,
 } from "@alltp/autotrack";
 import { MAP_RANDO_AUTOTRACK } from "@alltp/pack-sm";
+import type { GameRuntime, GameRuntimeSink } from "@/autotrack/gameSession";
 import { readSm, type SmReading } from "@/games/sm/autotrack/reading";
 
 export { detectEnvironment } from "@alltp/autotrack";
 // What lays the readings on the run: needed only once a session runs
 export { createSmFollower } from "@/games/sm/autotrack/follow";
-
-/** Where the runtime reports to. */
-export type SmRuntimeSink = {
-  /** Every status change, with when it began and what the bridge listed. */
-  status: (
-    status: SessionStatus,
-    since: number,
-    seen: {
-      readonly bridge: BridgeInfo | null;
-      readonly devices: readonly DeviceDescriptor[];
-    },
-  ) => void;
-  /** The game, decoded again after every read that changed memory. */
-  reading: (reading: SmReading) => void;
-};
-
-/** A running session, as the store drives it. */
-export type SmRuntime = {
-  retryNow: () => void;
-  stop: () => void;
-};
 
 /**
  * Start a Map Rando session. Races restrict no tracking (the pack's race
@@ -46,8 +23,8 @@ export type SmRuntime = {
  */
 export const startSmRuntime = (
   options: Omit<SessionOptions, "pack"> & { readonly environment: Environment },
-  sink: SmRuntimeSink,
-): SmRuntime => {
+  sink: GameRuntimeSink<SmReading>,
+): GameRuntime => {
   const session = new AutotrackSession({
     ...options,
     pack: MAP_RANDO_AUTOTRACK,
