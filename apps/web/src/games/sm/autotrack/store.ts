@@ -11,6 +11,7 @@ export const smAutotrack = createGameAutotrack<SmReading>({
       detectEnvironment: runtime.detectEnvironment,
       start: runtime.startSmRuntime,
     })),
+  seed: "a Map Rando seed",
   storageKey: "alltp-tracker-sm-autotrack",
 });
 

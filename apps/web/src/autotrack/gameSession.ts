@@ -80,12 +80,15 @@ const STOPPED: SessionStatus = { code: "stopped" };
  * A game's autotracking store and its actions.
  * @param storageKey - Where the wish to connect on start is saved
  * @param load - Imports the game's runtime chunk
+ * @param seed - What the board tracks, as headlines name it: "a Map Rando seed"
  */
 export const createGameAutotrack = <Reading>({
   load,
+  seed,
   storageKey,
 }: {
   load: () => Promise<GameRuntimeModule<Reading>>;
+  seed: string;
   storageKey: string;
 }) => {
   const useStore = create<GameAutotrackState<Reading>>()(
@@ -202,6 +205,7 @@ export const createGameAutotrack = <Reading>({
     },
     /** Retry now rather than after the session's wait. */
     retry: () => runtime?.retryNow(),
+    seed,
     /** For tests: what the next sessions are started with. */
     setOptions: (options: Partial<SessionOptions>) => {
       overrides = options;

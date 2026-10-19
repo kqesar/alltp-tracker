@@ -82,11 +82,14 @@ const deviceName = (kind: DeviceKind) => DEVICE_NAMES[kind];
  * @param status - The status shown
  * @param active - Whether a session runs or is starting
  * @param elsewhere - Whether another tab of the tracker holds the session
+ * @param seed - What the board tracks, as the headline names it when another
+ * game runs: "an ALttPR seed", "a Map Rando seed"
  */
 export const headlineOf = (
   status: SessionStatus,
   active: boolean,
   elsewhere = false,
+  seed = "an ALttPR seed",
 ): string => {
   if (!active) return "Off";
   if (elsewhere) return "Running in another tab";
@@ -121,7 +124,7 @@ export const headlineOf = (
     case "game-mismatch":
       return status.check.code === "zero-filled"
         ? "The ROM reads as zeros"
-        : "This is not an ALttPR seed";
+        : `This is not ${seed}`;
     case "connected":
       return status.paused ? "Connected, paused while hidden" : "Connected";
   }

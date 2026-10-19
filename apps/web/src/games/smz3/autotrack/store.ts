@@ -11,5 +11,6 @@ export const smz3Autotrack = createGameAutotrack<Smz3Reading>({
       detectEnvironment: runtime.detectEnvironment,
       start: runtime.startSmz3Runtime,
     })),
+  seed: "an SMZ3 seed",
   storageKey: "alltp-tracker-smz3-autotrack",
 });
