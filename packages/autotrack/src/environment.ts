@@ -199,14 +199,17 @@ function architectureOf(
 
 /**
  * The environment of `navigator` (globalThis.navigator by default), with the
- * page's protocol deciding whether loopback is gated at all.
+ * page's protocol deciding whether loopback is gated at all: only an https
+ * page is. The desktop app's pages, `tauri://localhost` on macOS and Linux
+ * and `http://tauri.localhost` on Windows, are not mixed content's concern,
+ * though their WebKit reads as Safari.
  */
 export async function detectEnvironment(
   navigator: NavigatorLike | undefined = (
     globalThis as { navigator?: NavigatorLike }
   ).navigator,
   pageIsHttps = (globalThis as { location?: { protocol?: string } }).location
-    ?.protocol !== "http:",
+    ?.protocol === "https:",
 ): Promise<Environment> {
   const parsed = parseUserAgent(navigator?.userAgent ?? "");
   const data = navigator?.userAgentData;
