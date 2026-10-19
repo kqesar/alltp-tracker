@@ -11,13 +11,11 @@ import {
   FakeVisibility,
   GRANTED,
   ManualClock,
-  readingOf,
-  SAVE,
   STATUSES,
-  seedMemory,
   settle,
   statusOf,
-} from "@/games/alttpr/autotrack/fixtures";
+} from "@/autotrack/fixtures";
+import { readingOf, SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
 import { readMemory } from "@/games/alttpr/autotrack/reading";
 import { AutotrackDialog } from "@/games/alttpr/components/autotrack/AutotrackDialog";
 import {

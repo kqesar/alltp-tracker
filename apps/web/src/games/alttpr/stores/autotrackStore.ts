@@ -9,6 +9,7 @@ import { seedHashOf } from "@alltp/pack-alttpr";
 import { useMemo } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { createAutotrackLock } from "@/autotrack/lock";
 import { shownStatus } from "@/autotrack/status";
 import type { Follower } from "@/games/alttpr/autotrack/follow";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
@@ -287,49 +288,7 @@ const sinkFor = (mine: number): RuntimeSink => ({
 });
 
 /** The Web Lock one tab of the tracker holds while it autotracks. */
-const LOCK = "alltp-tracker-autotrack";
-
-/** Lets the lock go, while this page holds it. */
-let releaseLock: (() => void) | null = null;
-
-/** Stops waiting for the lock, while this page waits. */
-let stopWaiting: AbortController | null = null;
-
-/**
- * Take the autotracking lock: at once when no other tab of the tracker holds
- * it, else when that tab lets it go (it closes, or disconnects), saying so
- * meanwhile. Two tabs never both read the game and lay it on the run. A
- * browser without Web Locks goes ahead, as before them.
- * @param mine - The connect taking it
- * @returns Whether it holds the lock; false once stopped
- */
-const takeLock = async (mine: number): Promise<boolean> => {
-  const locks = (navigator as { locks?: LockManager }).locks;
-  if (locks === undefined) return true;
-  const request = (options: LockOptions) =>
-    new Promise<boolean>((resolve) => {
-      locks
-        .request(LOCK, options, (lock) => {
-          // Not free, or no longer wanted: let it go at once
-          if (lock === null || mine !== generation) {
-            resolve(false);
-            return;
-          }
-          resolve(true);
-          return new Promise<void>((release) => {
-            releaseLock = release;
-          });
-        })
-        .catch(() => resolve(false));
-    });
-  if (await request({ ifAvailable: true })) return true;
-  if (mine !== generation) return false;
-  set({ elsewhere: true });
-  stopWaiting = new AbortController();
-  const held = await request({ signal: stopWaiting.signal });
-  if (mine === generation) set({ elsewhere: false });
-  return held;
-};
+const lock = createAutotrackLock();
 
 /**
  * Start autotracking: load the session's code if needed, then connect, and
@@ -358,7 +317,11 @@ export const connectAutotrack = async () => {
     const loading = loadRuntime();
     // Waiting for another tab must not leave a failed fetch unhandled
     loading.catch(() => {});
-    if (!(await takeLock(mine))) return;
+    const held = await lock.take(
+      () => mine === generation,
+      (elsewhere) => set({ elsewhere }),
+    );
+    if (!held) return;
     const { createFollower, detectEnvironment, startRuntime } = await loading;
     const environment =
       useAutotrackStore.getState().environment ?? (await detectEnvironment());
@@ -384,10 +347,7 @@ export const stopAutotrack = () => {
   runtime?.stop();
   runtime = null;
   follower = null;
-  stopWaiting?.abort();
-  stopWaiting = null;
-  releaseLock?.();
-  releaseLock = null;
+  lock.release();
   set({
     active: false,
     elsewhere: false,
