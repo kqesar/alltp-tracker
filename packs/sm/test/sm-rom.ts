@@ -7,6 +7,7 @@
 import { MEMORY_RANGE, type MemoryRangeId } from "../src/autotrack/memory";
 import { MAP_RANDO_TITLE } from "../src/autotrack/probes";
 import { OBJECTIVES } from "../src/objectives";
+import { SETTING_FLAGS } from "../src/settings";
 
 /** Where an A-bus address of a range lies in a memory image. */
 const at = (id: MemoryRangeId, bus: number) =>
@@ -21,6 +22,9 @@ const word = (memory: Uint8Array, address: number, value: number) => {
 export type MapRandoGame = {
   /** The seed's name in bank $DF. */
   readonly name?: string;
+  /** The seed's settings flags in bank $DF: the Wall Jump Boots, the split Speed Booster. */
+  readonly wallJump?: boolean;
+  readonly splitSpeed?: boolean;
   /** Item bits collected ($09A4) and beam bits ($09A8). */
   readonly items?: number;
   readonly beams?: number;
@@ -51,6 +55,8 @@ export const writeMapRando = (
   memory: Uint8Array,
   {
     name = "abcDEF123",
+    wallJump = false,
+    splitSpeed = false,
     items = 0,
     beams = 0,
     maxEnergy = 99,
@@ -76,6 +82,12 @@ export const writeMapRando = (
   memory.set(
     [...name].map((c) => c.charCodeAt(0)),
     seed,
+  );
+  word(
+    memory,
+    at("seed", 0xdf_ff05),
+    (wallJump ? SETTING_FLAGS.wallJump : 0) |
+      (splitSpeed ? SETTING_FLAGS.splitSpeed : 0),
   );
   // The item sizes, the game's 100, 5, 5, 5 and 100 unless set
   word(memory, at("pack-sizes", 0x84_e0b8), sizes.energy ?? 100);

@@ -1,10 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
+import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
+import { writeMapRando } from "../../../packs/sm/test/sm-rom";
 import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
 
 /** The tracker with nothing saved, then Super Metroid picked in its dialog. */
-const openSuperMetroid = async (page: Page) => {
-  await page.goto("./");
+const openSuperMetroid = async (page: Page, query = "") => {
+  await page.goto(`./${query}`);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.getByRole("button", { name: /^Mode/ }).click();
@@ -58,6 +60,78 @@ test("switches to Super Metroid and back, each game keeping its run", async ({
   await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
     /^Hookshot, obtained/,
   );
+});
+
+test("autotracks a Map Rando seed through SNI", async ({ page }) => {
+  // A fake usb2snes bridge (SNI on RetroArch) over a real WebSocket, its
+  // memory holding a Map Rando seed in play
+  const bridge = await FakeUsb2Snes.start();
+  try {
+    const MORPH = 0x0004;
+    const BOMBS = 0x1000;
+    const game = {
+      done: ["kraid"],
+      items: MORPH,
+      maxMissiles: 10,
+      name: "Zebes42",
+      objectives: ["kraid", "phantoon", "draygon", "ridley"],
+    };
+    writeMapRando(bridge.memory, game);
+    await openSuperMetroid(page, `?bridge=${new URL(bridge.url).port}`);
+
+    await page.getByTestId("autotrack-button").click();
+    const dialog = page.getByRole("dialog", { name: "Autotracking" });
+    await dialog.getByTestId("autotrack-connect").click();
+    await expect(dialog.getByTestId("autotrack-headline")).toHaveText(
+      "Connected",
+    );
+    const seedLink = dialog.getByRole("link", { name: /Zebes42/ });
+    await expect(seedLink).toHaveAttribute(
+      "href",
+      "https://maprando.com/seed/Zebes42/",
+    );
+    // A link in running text says so by more than its colour
+    await expect(seedLink).toHaveCSS("text-decoration-line", "underline");
+    // The dialog, connected, once its opening animation has ended
+    await dialog.evaluate((element) =>
+      Promise.all(
+        element.getAnimations({ subtree: true }).map((a) => a.finished),
+      ),
+    );
+    const axe = await new AxeBuilder({ page })
+      .include("dialog[open]")
+      .withTags(WCAG_AA)
+      .analyze();
+    expect(axe.violations.map(({ id }) => id)).toEqual([]);
+    await page.keyboard.press("Escape");
+
+    // The board follows the game
+    await expect(page.getByTestId("sm-item-morph")).toHaveAccessibleName(
+      /^Morphing Ball, obtained/,
+    );
+    await expect(page.getByTestId("sm-item-missile")).toHaveAccessibleName(
+      /^Missile, 2 of 46/,
+    );
+    await expect(page.getByTestId("sm-objectives-summary")).toHaveText(
+      "1 of 4 done.",
+    );
+    writeMapRando(bridge.memory, {
+      ...game,
+      done: ["kraid", "ridley"],
+      items: MORPH | BOMBS,
+    });
+    await expect(page.getByTestId("sm-item-bombs")).toHaveAccessibleName(
+      /^Bombs, obtained/,
+    );
+    await expect(page.getByTestId("sm-objectives-summary")).toHaveText(
+      "2 of 4 done.",
+    );
+    await expect(page.getByTestId("autotrack-button")).toHaveAccessibleName(
+      "Autotracking, Connected",
+    );
+  } finally {
+    await bridge.stop();
+  }
 });
 
 test("the stream view follows the Super Metroid tracker", async ({

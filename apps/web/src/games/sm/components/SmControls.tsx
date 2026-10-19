@@ -11,6 +11,7 @@ import {
   StreamIcon,
   UndoIcon,
 } from "@/components/ui/ToolbarIcons";
+import { SmAutotrack } from "@/games/sm/components/SmAutotrack";
 import {
   OBJECTIVE_PRESET_NAMES,
   OBJECTIVE_PRESETS,
@@ -248,6 +249,7 @@ export const SmControls = () => {
         <RedoIcon />
         <span className="sr-only">Redo</span>
       </button>
+      <SmAutotrack />
       <button
         className="tracker-controls__button"
         onClick={handleExport}
