@@ -1,0 +1,17 @@
+{
+  "mapRando": {
+    "commit": "6966ea37a5315095d90ef81f89fd8c5583804049",
+    "files": {
+      "patches/rom_map/Bank DF.txt": "src/autotrack/memory.ts, src/settings.ts: bank $DF's seed data for autotrackers",
+      "patches/src/disableable_etanks.asm": "src/autotrack/decode.ts: energy tanks disabled from the pause menu",
+      "patches/src/fast_reload.asm": "src/autotrack/memory.ts: the game states",
+      "patches/src/new_game.asm": "src/autotrack/memory.ts: the equipment and event addresses",
+      "rust/maprando-game/src/lib.rs": "src/items.ts: the items",
+      "rust/maprando/src/patch.rs": "src/objectives.ts, src/autotrack/decode.ts: objectives, item bits and sizes, the cartridge name",
+      "rust/maprando/src/settings.rs": "src/settings.ts: the presets autotrackers read"
+    },
+    "license": "MIT, Copyright (c) 2023 maddo, kyleb",
+    "repo": "blkerby/MapRandomizer",
+    "why": "Map Rando is the Super Metroid randomizer the community races: about 99 % of racetime.gg's smr races of August to October 2026 link maprando.com"
+  }
+}

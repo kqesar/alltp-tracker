@@ -1,0 +1,19 @@
+{
+  "name": "@alltp/pack-sm",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Super Metroid pack: Map Rando's items, objectives and memory, read from its source",
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@alltp/autotrack": "workspace:*"
+  }
+}
