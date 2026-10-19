@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.29.0](https://github.com/kqesar/alltp-tracker/compare/v2.28.0...v2.29.0) (2026-10-19)
+
+
+### ✨ Features
+
+* **smz3:** autotrack SMZ3 seeds, both games at once ([8bd720d](https://github.com/kqesar/alltp-tracker/commit/8bd720d4f26633f8f8bfc2064b280e5707dc66cd))
+* **web:** autotrack SMZ3 seeds ([84a58a0](https://github.com/kqesar/alltp-tracker/commit/84a58a072baba042e488d5c47176b8451fe147a5))
+
+
+### 🐛 Bug Fixes
+
+* **autotrack:** forget a mode's bytes when the game switches ([4d865e0](https://github.com/kqesar/alltp-tracker/commit/4d865e0c30ac001e98855b57d2c54b342c2677b7))
+* **sm:** read the game state with the items ([64f6d4b](https://github.com/kqesar/alltp-tracker/commit/64f6d4bf1a736fa486450f8ad4dc234481f27e71))
+
+
+### 🔧 Code Refactoring
+
+* **autotrack:** export ModeProbe with the pack contract ([9195e8d](https://github.com/kqesar/alltp-tracker/commit/9195e8db24e8c429d5a52a118d7104d704fe5716))
+* **web:** share a game's autotracking session, control and dialog ([2ca88df](https://github.com/kqesar/alltp-tracker/commit/2ca88dfc8d103f8125a62b76de88823d5c6bed72))
+
 ## [2.28.0](https://github.com/kqesar/alltp-tracker/compare/v2.27.0...v2.28.0) (2026-10-19)
 
 
