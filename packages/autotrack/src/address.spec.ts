@@ -36,6 +36,17 @@ describe("busToPak", () => {
     [0x20_6000, "hirom", 0xe0_0000], // HiROM SRAM window
     [0xa1_6005, "hirom", 0xe0_2005],
     [0x7e_0000, "hirom", 0xf5_0000],
+    // ExHiROM, as the SMZ3 combined ROM uses it (alttp_sm_combo_randomizer_rom)
+    [0xc0_ffc0, "exhirom", 0x00_ffc0],
+    [0x80_ff50, "exhirom", 0x00_ff50], // samus.link's seed block
+    [0x00_ffc0, "exhirom", 0x40_ffc0], // the header, in the second 4 MiB
+    [0x40_003e, "exhirom", 0x40_003e],
+    [0x7d_ffff, "exhirom", 0x7d_ffff],
+    [0xa1_73fe, "exhirom", 0xe0_33fe], // which game runs, in SRAM
+    [0xa0_6000, "exhirom", 0xe0_0000],
+    [0xbf_7fff, "exhirom", 0xe3_ffff],
+    [0x7e_d870, "exhirom", 0xf5_d870],
+    [0x80_1fff, "exhirom", 0xf5_1fff],
   ] as const)("$%s under %s is $%s", (address, mapping, pak) => {
     expect(busToPak(address, mapping)).toBe(pak);
   });
@@ -45,6 +56,10 @@ describe("busToPak", () => {
     [0x80_4200, "lorom"],
     [0x00_6000, "lorom"],
     [0x80_6000, "hirom"], // no SRAM in $80-$9F
+    [0x80_6000, "exhirom"],
+    [0x3e_8000, "exhirom"], // ROM SNI sends elsewhere
+    [0x3f_ffff, "exhirom"],
+    [0x00_2100, "exhirom"],
     [0x1_000000, "lorom"],
     [-1, "lorom"],
     [1.5, "hirom"],
@@ -61,6 +76,15 @@ describe("pakToBus", () => {
     [0xe0_8005, "lorom", 0x71_0005],
     [0x00_ffb0, "hirom", 0xc0_ffb0],
     [0xe0_2005, "hirom", 0xa1_6005],
+    // alttpo/snes mapping/exhirom/mapping_test.go
+    [0x00_7fc0, "exhirom", 0xc0_7fc0],
+    [0x80_7fc0, "exhirom", 0x00_ffc0],
+    [0x80_0000, "exhirom", 0x00_8000],
+    [0x9f_ffff, "exhirom", 0x3f_ffff],
+    [0xbf_0000, "exhirom", 0xfe_8000], // past WRAM's banks
+    [0x40_ffc0, "exhirom", 0x40_ffc0],
+    [0x7e_0000, "exhirom", 0x3e_8000],
+    [0xe0_33fe, "exhirom", 0xa1_73fe],
   ] as const)("$%s under %s is $%s", (pak, mapping, address) => {
     expect(pakToBus(pak, mapping)).toBe(address);
   });
@@ -73,15 +97,18 @@ describe("pakToBus", () => {
 
   it("round-trips ROM, SRAM and WRAM through the bus", () => {
     const pak = fc.oneof(
-      fc.integer({ max: 0x3f_ffff, min: 0 }),
+      fc.integer({ max: 0x7d_ffff, min: 0 }),
       fc.integer({ max: 0xed_ffff, min: 0xe0_0000 }),
       fc.integer({ max: 0xf6_ffff, min: 0xf5_0000 }),
     );
     fc.assert(
       fc.property(
         pak,
-        fc.constantFrom("lorom", "hirom" as const),
+        fc.constantFrom("lorom", "hirom", "exhirom" as const),
         (address, mapping) => {
+          // ROM past 4 MiB is ExHiROM's alone
+          if (mapping !== "exhirom")
+            fc.pre(address < 0x40_0000 || address >= 0xe0_0000);
           // LoROM SRAM banks $70-$7D hold 448 KiB; $7E is WRAM.
           if (
             mapping === "lorom" &&
@@ -92,7 +119,7 @@ describe("pakToBus", () => {
           }
           // HiROM SRAM windows ($A0-$BF:6000-7FFF) hold 256 KiB.
           if (
-            mapping === "hirom" &&
+            mapping !== "lorom" &&
             address >= 0xe0_0000 &&
             address < 0xf0_0000
           ) {
@@ -135,7 +162,7 @@ const cartridgeRom = (
 };
 
 describe("the bytes SNI reads back", () => {
-  it.each(["lorom", "hirom"] as const)(
+  it.each(["lorom", "hirom", "exhirom"] as const)(
     "are the cartridge's own under %s, through every ROM mirror",
     (mapping) => {
       fc.assert(

@@ -166,8 +166,8 @@ What each bridge does with it:
 
 `bus(address, mapping)` translates a pack's A-bus address once, at load;
 `busRange(first, last)` refuses a range that is not one block (a LoROM bank
-crossing). The code ports alttpo/snes mapping/{lorom,hirom}/mapping.go at
-644082b79cd30cc28a8f02ed545da286b9c4984a, the library SNI uses, but for one
+crossing). The code ports alttpo/snes mapping/{lorom,hirom,exhirom}/mapping.go
+at 644082b79cd30cc28a8f02ed545da286b9c4984a, the library SNI uses, but for one
 limit: alttpo/snes masks LoROM banks with `$3F` (2 MiB of ROM, enough for
 A Link to the Past), which folds Super Metroid's banks `$C0-$DF` onto `$80`.
 Here LoROM covers 4 MiB (banks masked with `$7F`): Map Rando's seed name at
@@ -179,6 +179,14 @@ is ROM `$00_FFC0`): alttpo/snes folds them onto 32 KiB pages, an address
 its own `PakAddressToBus` then sends to another byte. A property spec holds
 every mapping to a model of the hardware: the address SNI sends back reads
 the same ROM byte as the pack's.
+
+ExHiROM (`"exhirom"`, the SMZ3 combined ROM's) is HiROM over 8 MiB: the
+first 4 MiB in banks `$C0-$FF` and the upper halves of `$80-$BF`, the second
+in `$40-$7D` and the upper halves of `$00-$3F`; its SRAM is HiROM's, banks
+`$A0-$BF:6000-7FFF`. samus.link's seed block at `$80:FF50` is ROM `$00_FF50`,
+the header at `$00:FFC0` ROM `$40_FFC0`, and which game runs, `$A1:73FE`, SRAM
+`$E0_33FE`. The upper halves of `$3E-$3F` (ROM `$7E_8000-$7F_FFFF`) stay
+unmapped: SNI sends `$7E_0000` to `$3E:8000`, 32 KiB short of that byte.
 
 Example: the ALttPR race flag at A-bus `$30:8213` (LoROM) is ROM offset
 `$18_0213`; WRAM `$7E:F340` is `$F5_F340`.

@@ -5,13 +5,17 @@
 // `bus()` translates them once, when the pack is defined.
 //
 // The translation is ported from alttpo/snes (the library SNI itself uses),
-// mapping/lorom/mapping.go and mapping/hirom/mapping.go at commit
+// mapping/{lorom,hirom,exhirom}/mapping.go at commit
 // 644082b79cd30cc28a8f02ed545da286b9c4984a. See README "Address spaces".
 
 import { DefinitionError } from "./errors";
 
-/** The cartridge memory mapping an A-bus address is read under. */
-export type MemoryMapping = "lorom" | "hirom";
+/**
+ * The cartridge memory mapping an A-bus address is read under. ExHiROM is
+ * HiROM over 8 MiB, the second 4 MiB in banks $40-$7D and $00-$3F: the
+ * SMZ3 combined ROM's.
+ */
+export type MemoryMapping = "lorom" | "hirom" | "exhirom";
 
 /** A named, linearly mapped block of the FX Pak Pro address space. */
 export interface PakRegion {
@@ -124,6 +128,28 @@ function hiromBusToPak(bus: number): number | undefined {
 }
 
 /**
+ * ExHiROM: the first 4 MiB of ROM in banks $C0-$FF and the upper halves of
+ * $80-$BF, the second in $40-$7D and the upper halves of $00-$3F, each byte
+ * at the address SNI's PakAddressToBus sends back. alttpo/snes folds the
+ * upper halves onto 32 KiB pages, as for HiROM. $3E-$3F's upper halves
+ * reach ROM $7E_8000-$7F_FFFF, which PakAddressToBus sends elsewhere (it
+ * maps $7E_0000 to $3E:8000): unmapped here.
+ */
+function exhiromBusToPak(bus: number): number | undefined {
+  const bank = bus >>> 16;
+  const low = bus & 0xffff;
+  if (bank === 0x7e || bank === 0x7f) return bus - 0x7e_0000 + 0xf5_0000;
+  if (bank & 0x40 || low >= 0x8000) {
+    if (bank === 0x3e || bank === 0x3f) return undefined;
+    return (bank & 0x80 ? 0 : 0x40_0000) | (bus & 0x3f_ffff);
+  }
+  if (bank >= 0xa0 && low >= 0x6000) {
+    return (bank - 0xa0) * 0x2000 + (bus & 0x1fff) + 0xe0_0000;
+  }
+  return low < 0x2000 ? (bus & 0x1fff) + 0xf5_0000 : undefined;
+}
+
+/**
  * Translates an SNES A-bus address to the FX Pak Pro space, or undefined for
  * an address no memory answers (an I/O register, an open-bus page). Mirrors
  * fold onto one address: $00:0010, $80:0010 and $7E:0010 all give $F50010.
@@ -133,13 +159,15 @@ export function busToPak(
   mapping: MemoryMapping,
 ): number | undefined {
   if (!Number.isInteger(bus) || bus < 0 || bus > 0xff_ffff) return undefined;
-  return mapping === "lorom" ? loromBusToPak(bus) : hiromBusToPak(bus);
+  if (mapping === "lorom") return loromBusToPak(bus);
+  return mapping === "hirom" ? hiromBusToPak(bus) : exhiromBusToPak(bus);
 }
 
 /**
  * Translates an FX Pak Pro address to the A-bus address SNI sends to
- * RetroArch, a Lua bridge or an NWA emulator (lorom/hirom PakAddressToBus).
- * ROM goes to the FastROM banks ($80+ LoROM, $C0+ HiROM), WRAM to $7E/$7F.
+ * RetroArch, a Lua bridge or an NWA emulator ({lorom,hirom,exhirom}
+ * PakAddressToBus). ROM goes to the FastROM banks ($80+ LoROM, $C0+ HiROM
+ * and ExHiROM's first 4 MiB, $40+ its second), WRAM to $7E/$7F.
  */
 export function pakToBus(
   pak: number,
@@ -164,8 +192,22 @@ export function pakToBus(
     const bank = 0xa0 + ((linear >>> 13) & 0x1f);
     return bank * 0x1_0000 + (linear & 0x1fff) + 0x6000;
   }
-  if (pak < 0xe0_0000) return 0xc0_0000 + (pak & 0x3f_ffff);
-  return undefined;
+  if (pak >= 0xe0_0000) return undefined;
+  if (mapping === "hirom") return 0xc0_0000 + (pak & 0x3f_ffff);
+  if (pak >= 0x80_0000) {
+    // The SlowROM banks $00-$3F, past WRAM's banks
+    const linear = (pak - 0x80_0000) & 0x3f_ffff;
+    const bank = linear >>> 15;
+    return (
+      (bank >= 0x7e ? bank + 0x80 : bank) * 0x1_0000 +
+      ((linear & 0x7fff) | 0x8000)
+    );
+  }
+  if (pak >= 0x7e_0000) {
+    const linear = pak - 0x7e_0000;
+    return (0x3e + (linear >>> 15)) * 0x1_0000 + ((linear & 0x7fff) | 0x8000);
+  }
+  return (pak >= 0x40_0000 ? 0x40_0000 : 0xc0_0000) + (pak & 0x3f_ffff);
 }
 
 /**
