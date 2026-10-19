@@ -40,7 +40,7 @@ export const GameAutotrackControl = <Reading,>({
   const phase = unavailable ? "problem" : phaseOf(shown, active, elsewhere);
   const headline = unavailable
     ? "Could not load: reload the page"
-    : headlineOf(shown, active, elsewhere);
+    : headlineOf(shown, active, elsewhere, session.seed);
   const [said, setSaid] = useState("");
   const quiet =
     !elsewhere &&

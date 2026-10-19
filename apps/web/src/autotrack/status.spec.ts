@@ -110,6 +110,9 @@ describe("headlineOf", () => {
       ),
     ).toBe("The ROM reads as zeros");
     expect(
+      headlineOf(statusOf("game-mismatch"), true, false, "a Map Rando seed"),
+    ).toBe("This is not a Map Rando seed");
+    expect(
       headlineOf(
         statusOf("attaching", {
           device: { id: "SD2SNES COM3", kind: "fxpakpro" },

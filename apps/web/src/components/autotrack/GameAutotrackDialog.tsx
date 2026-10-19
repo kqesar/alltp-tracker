@@ -38,7 +38,7 @@ export const GameAutotrackDialog = <Reading,>({
   const phase = unavailable ? "problem" : phaseOf(shown, active, elsewhere);
   const headline = unavailable
     ? "Autotracking could not be loaded"
-    : headlineOf(shown, active, elsewhere);
+    : headlineOf(shown, active, elsewhere, session.seed);
   const canRetry = active && !elsewhere && "retryInMs" in shown;
 
   // The setup guide, before any connection: the system, once, as it opens

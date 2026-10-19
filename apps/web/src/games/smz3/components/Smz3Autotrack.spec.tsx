@@ -2,6 +2,7 @@ import { parseUserAgent } from "@alltp/autotrack";
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
+import { STATUSES } from "@/autotrack/fixtures";
 import { readSmz3 } from "@/games/smz3/autotrack/reading";
 import { smz3Autotrack } from "@/games/smz3/autotrack/store";
 import { Smz3Autotrack } from "@/games/smz3/components/Smz3Autotrack";
@@ -95,6 +96,22 @@ describe("SMZ3's autotracking dialog", () => {
     const dialog = await openDialog();
     expect(within(dialog).getByTestId("smz3-readout")).toHaveTextContent(
       "Your emulator does not serve the part of the ROM that holds its requirements and medallions: set them yourself.",
+    );
+  });
+
+  it("names SMZ3 when another game runs", async () => {
+    act(() =>
+      smz3Autotrack.useStore.setState({
+        active: true,
+        shown: STATUSES["game-mismatch"],
+      }),
+    );
+    const dialog = await openDialog();
+    expect(screen.getByTestId("autotrack-button")).toHaveAccessibleName(
+      "Autotracking, This is not an SMZ3 seed",
+    );
+    expect(within(dialog).getByTestId("autotrack-headline")).toHaveTextContent(
+      "This is not an SMZ3 seed",
     );
   });
 
