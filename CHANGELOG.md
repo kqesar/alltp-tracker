@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.27.0](https://github.com/kqesar/alltp-tracker/compare/v2.26.1...v2.27.0) (2026-10-19)
+
+
+### ✨ Features
+
+* **sm:** Super Metroid as Map Rando seeds play it ([c80911a](https://github.com/kqesar/alltp-tracker/commit/c80911acdd5047462956f516f6e089e2d9b34a8d))
+* **web:** autotrack Super Metroid's Map Rando seeds ([88abf2c](https://github.com/kqesar/alltp-tracker/commit/88abf2c5e07b057ddcb00b1ec4d834b58b3664b6))
+* **web:** track Super Metroid as Map Rando seeds play it ([dc0708e](https://github.com/kqesar/alltp-tracker/commit/dc0708e0f32566ca0b9f7954e29d47c41899a1ea))
+
+
+### 🐛 Bug Fixes
+
+* **autotrack:** map LoROM ROM over 4 MiB, not 2 ([da9db27](https://github.com/kqesar/alltp-tracker/commit/da9db27989042bbe6f0f9fd3fb736dd3fd811077))
+* **web:** keep a wide dialog's header in view ([84fd817](https://github.com/kqesar/alltp-tracker/commit/84fd81782e5d75f2f93c38c48c781393eda0081a))
+
+
+### 🔧 Code Refactoring
+
+* **web:** share autotracking's lock, dialog loader and fixtures ([e05f406](https://github.com/kqesar/alltp-tracker/commit/e05f406866526404d71a24130a3fbc5ef494f236))
+
 ## [2.26.1](https://github.com/kqesar/alltp-tracker/compare/v2.26.0...v2.26.1) (2026-10-19)
 
 
