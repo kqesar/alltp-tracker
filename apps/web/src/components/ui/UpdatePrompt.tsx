@@ -12,6 +12,7 @@ import { useUpdateStore } from "@/stores/updateStore";
 export const UpdatePrompt = () => {
   const apply = useUpdateStore((state) => state.apply);
   const dismiss = useUpdateStore((state) => state.dismiss);
+  const label = useUpdateStore((state) => state.label);
 
   return (
     <div className="notice" data-testid="update-prompt" role="status">
@@ -26,7 +27,7 @@ export const UpdatePrompt = () => {
               type="button"
             >
               <ReloadIcon />
-              Reload
+              {label}
             </button>
             <button
               aria-label="Dismiss"

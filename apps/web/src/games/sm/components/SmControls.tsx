@@ -24,7 +24,8 @@ import {
   type SmProgress,
   useSmStore,
 } from "@/games/sm/store";
-import { commandKey } from "@/utils/platform";
+import { commandKey, isDesktopApp } from "@/utils/platform";
+import { saveFile } from "@/utils/saveFile";
 import { obsViewUrl } from "@/utils/view";
 
 /** How long a status line stays, as ALttPR's toolbar keeps it. */
@@ -177,19 +178,11 @@ export const SmControls = () => {
     return () => clearTimeout(timer);
   }, [status]);
 
-  const handleExport = () => {
-    const blob = new Blob([exportSave(useSmStore.getState())], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `alltp-tracker-sm-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
+  const handleExport = () =>
+    saveFile(
+      `alltp-tracker-sm-${new Date().toISOString().slice(0, 10)}.json`,
+      exportSave(useSmStore.getState()),
+    );
 
   const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
     const [file] = event.target.files ?? [];
@@ -268,16 +261,19 @@ export const SmControls = () => {
         <ImportIcon />
         <span className="toolbar-label">Import</span>
       </button>
-      <button
-        className="tracker-controls__button"
-        data-testid="sm-stream-view"
-        onClick={() => setDialog("stream")}
-        title="The stream view, for OBS"
-        type="button"
-      >
-        <StreamIcon />
-        <span className="toolbar-label">Stream view</span>
-      </button>
+      {/* OBS cannot load the desktop app's page nor follow its storage */}
+      {!isDesktopApp && (
+        <button
+          className="tracker-controls__button"
+          data-testid="sm-stream-view"
+          onClick={() => setDialog("stream")}
+          title="The stream view, for OBS"
+          type="button"
+        >
+          <StreamIcon />
+          <span className="toolbar-label">Stream view</span>
+        </button>
+      )}
       <input
         accept="application/json,.json"
         aria-label="Import a save file"

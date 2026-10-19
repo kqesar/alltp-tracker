@@ -1,0 +1,19 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "description": "What the tracker's window may ask of the app: open an https link in the system browser, check for and install an update, then restart",
+  "identifier": "default",
+  "permissions": [
+    "core:default",
+    {
+      "allow": [
+        {
+          "url": "https://*"
+        }
+      ],
+      "identifier": "opener:allow-open-url"
+    },
+    "process:allow-restart",
+    "updater:default"
+  ],
+  "windows": ["main"]
+}

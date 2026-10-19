@@ -1,0 +1,26 @@
+[package]
+name = "alltp-tracker"
+# The app's version is the product's: tauri.conf.json reads the root package.json
+version = "0.0.0"
+description = "ALLTP Tracker, the desktop app"
+license = "MIT"
+repository = "https://github.com/kqesar/alltp-tracker"
+edition = "2024"
+rust-version = "1.90"
+publish = false
+
+[lib]
+name = "alltp_tracker_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.3", features = [] }
+
+[dependencies]
+# tauri::generate_context! writes the plugins' config as serde_json values
+serde_json = "1"
+tauri = { version = "2.12.4", features = [] }
+tauri-plugin-dialog = "2.8.3"
+tauri-plugin-opener = "2.7.2"
+tauri-plugin-process = "2.4.0"
+tauri-plugin-updater = "2.14.0"

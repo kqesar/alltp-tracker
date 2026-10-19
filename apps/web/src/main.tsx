@@ -5,10 +5,14 @@ import { activeGame, loadGame } from "@/games/registry";
 import { checkForUpdates, registerServiceWorker } from "@/stores/updateStore";
 import { isObsView, obsBackground, obsTimer } from "@/utils/view";
 
-// Production builds only: the dev server has no worker (sw/plugin.ts). After
+// The desktop app serves its own files and updates itself (desktop/start.ts):
+// tested inline, so the site's build drops that import. The site, in
+// production builds only: the dev server has no worker (sw/plugin.ts). After
 // the page has loaded, so caching the build never competes with the page's
 // own downloads.
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
+if (import.meta.env.MODE === "desktop") {
+  void import("@/desktop/start").then(({ startDesktop }) => startDesktop());
+} else if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener(
     "load",
     () => {

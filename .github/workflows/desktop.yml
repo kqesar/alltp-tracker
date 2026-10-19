@@ -1,0 +1,73 @@
+name: Desktop
+
+# The desktop app's Rust side (apps/desktop/src-tauri): lint, format and
+# tests, on a pull request or a push that touches it only. Its web side is
+# apps/web's, which the CI workflow tests; its installers are built for each
+# OS when a release is cut (release-please.yml).
+on:
+  pull_request:
+    paths:
+      - "apps/desktop/**"
+      - ".github/workflows/desktop.yml"
+  push:
+    branches: [master]
+    paths:
+      - "apps/desktop/**"
+      - ".github/workflows/desktop.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: apps/desktop/src-tauri
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Tauri's system libraries on Linux: WebKitGTK and its kin
+      - name: Install system libraries
+        working-directory: .
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup pnpm, Node.js and dependencies
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        with:
+          cache: true
+          require-lockfile: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+
+      # The crates and their build artifacts, saved from master only
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: "apps/desktop/src-tauri -> target"
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+
+      # tauri::generate_context! embeds the pages: they must exist to compile
+      - name: Build the app's pages
+        working-directory: .
+        run: pnpm --filter @alltp/web exec vite build --mode desktop
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Lint
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --locked
