@@ -428,8 +428,9 @@ export const MEMORY_RANGES = [
   save("dungeons-completed", 0x472, 2, "items", "z3:dungeondrops.asm:323-329"),
   // The overworld door Link last went in by, its slot of the door table plus
   // one, which the base patch keeps as the game loads its entrance
-  // (doorframefixes.asm:8-12, hooks.asm:2081-2082); 0 after a respawn
-  // (entrances.asm:126-127, StartingAreaOverworldDoor all 0).
+  // (doorframefixes.asm:8-12, hooks.asm:2081-2082). A respawn keeps it
+  // while it loads entrance 0 (seen on a real game after a save and quit,
+  // 2026-10-19), so the slot alone says nothing: the door table must agree.
   range({
     at: 0x7f_5099,
     category: "entrances",
