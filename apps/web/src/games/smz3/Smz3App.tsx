@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Header } from "@/components/ui/Header";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
+import { useSmz3Autotrack } from "@/games/smz3/components/Smz3Autotrack";
 import { Smz3Controls } from "@/games/smz3/components/Smz3Controls";
 import { Smz3Grid } from "@/games/smz3/components/Smz3Grid";
 import { Smz3Keycards } from "@/games/smz3/components/Smz3Keycards";
@@ -38,6 +39,7 @@ const useSmz3UndoShortcuts = () => {
  */
 const Smz3App = () => {
   useSmz3UndoShortcuts();
+  useSmz3Autotrack();
   // Its actions show as icons once their labels no longer fit on one row:
   // it has no More menu, so the label fold is the one it takes
   const toolbarRef = useRef<HTMLDivElement>(null);
