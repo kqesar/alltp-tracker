@@ -223,7 +223,7 @@ describe("a region file", () => {
     expect(readRegionFile(source, "F.cs")).toEqual({
       canEnter: 4,
       file: "F.cs",
-      locations: [{ line: 3, name: "Energy Tank, Terminator" }],
+      locations: [{ id: 8, line: 3, name: "Energy Tank, Terminator" }],
       name: "Crateria West",
     });
     expect(
@@ -232,6 +232,14 @@ describe("a region file", () => {
     expect(() => readRegionFile("class X {}", "F.cs")).toThrow(
       /No region name/,
     );
+    // Zelda's ids are written 256+n
+    expect(
+      readRegionFile(source.replace("this, 8,", "this, 256+117,"), "F.cs")
+        .locations[0]?.id,
+    ).toBe(373);
+    expect(() =>
+      readRegionFile(source.replace("this, 8,", "this, n,"), "F.cs"),
+    ).toThrow(/Unread location id n in F.cs/);
   });
 });
 

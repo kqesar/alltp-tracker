@@ -62,6 +62,8 @@ export interface UpstreamRegion {
   /** The line of its CanEnter; none when it keeps Region's. */
   readonly canEnter?: number;
   readonly locations: readonly {
+    /** Upstream's id: a Super Metroid item's bit, Zelda's 256 and up. */
+    readonly id: number;
     readonly line: number;
     readonly name: string;
   }[];
