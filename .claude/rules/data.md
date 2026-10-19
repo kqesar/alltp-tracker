@@ -1,13 +1,15 @@
 ---
 paths:
-  - "apps/web/src/data/**"
-  - "apps/web/src/logic/**"
-  - "apps/web/src/constants/**"
+  - "apps/web/src/games/*/data/**"
+  - "apps/web/src/games/*/logic/**"
+  - "apps/web/src/games/*/constants/**"
 ---
 
-# Game data and logic (`apps/web/src/data/`, `apps/web/src/logic/`)
+# Game data and logic (`apps/web/src/games/alttpr/data/`, `apps/web/src/games/alttpr/logic/`)
 
-The rules are the alltpr pack's (`packs/alttpr`, ALttPR v31): the app holds no predicate of its own. It reads the pack through `apps/web/src/logic/`:
+ALttPR's modules live under `apps/web/src/games/alttpr/`: a short path below (`logic/…`, `stores/gameStore.ts`, `map/…`, `autotrack/follow.ts`) is relative to it, unless it names one of the shared modules (`components/ui/` Modal, Tabs, ConfirmDialog, ToolbarMenu, ToolbarIcons, UpdatePrompt, Header; `autotrack/guide.ts`, `autotrack/status.ts`; `hooks/` useGridNavigation, useNow, useToolbarFit, useTooltip; `stores/` tooltipStore, updateStore; `utils/`; `styles/`).
+
+The rules are the alltpr pack's (`packs/alttpr`, ALttPR v31): the app holds no predicate of its own. It reads the pack through `apps/web/src/games/alttpr/logic/`:
 
 - `logic/settings.ts` — what the app's run types mean to the pack (`packSettings`, a hidden setting passed as the pack's `UNKNOWN`: NoGlitches and randomized weapons in the Open, Standard or Inverted world (`worldOf` names it, the key of what is kept per world), with the run's goal, crystals, swords, item placement, accessibility, item pool and functionality, its dungeon items (`dungeonItems`: standard, mc, mcs or full, which of them may leave their dungeons)), the grid's dungeon indices (`dungeonAt`, `dungeonName`, by the pack's `LEGACY_DUNGEONS`) and where each dungeon counter starts (`counterMax`, from `dungeonItemCount`).
 - `logic/packItems.ts` — `PACK_ITEMS`, the one table from each of the tracker's item ids to what its value records for the pack (an item and how it counts, a dungeon beaten, a prize, nothing). `packReading` reads a run through it and `itemsFromPack` turns pack item counts (an autotracker's reading) back into the tracker's values. `RECORDED_LEVELS` lists every pack item the cells can record, at the highest level they reach: what the blockers may propose. An item added to `data/items.ts` gets its entry here, and every reader picks it up; its spec holds the table to the pack's legacy copy for the version 5 ids.
@@ -20,12 +22,12 @@ The rules are the alltpr pack's (`packs/alttpr`, ALttPR v31): the app holds no p
 - `logic/entrances.ts` — the entrance assistant's model over the pack's entrance tables (`entrances.ts`): the run's shuffled pool (`poolOf`: Open or Standard crossed; none for Inverted, whose tables are not ported), what an entrance may lead to (`targetsFor`, the pack's `targetsOf`), what noting one notes (`notesFor`: a hole with its cave's door), what the doors autotracking shows Link went through note (`gameNotes`: the pack's `linksOf` within `targetsOf`, of rooms alike the one noted there or else one noted nowhere), where each entrance's marker is drawn (`layoutEntrances`, `layoutOf`: its door's spot, pushed clear of neighbours that would hide it, at most 3.5% of its world away), where the map's markers stand (`placeMarkers`: a marker wholly inside one place, by the pack's `PLACE_OF_LOCATION`, above the first door noted to lead there, nowhere until one is) and their words. Only the assistant's lazy components and autotracking's follower (`autotrack/follow.ts`, in a run whose entrances it knows) import it, on demand, so a run without shuffled entrances never loads the tables.
 - `logic/needs.ts` — the engine's blockers in the tracker's words: each atom as the name and icon the player knows (`waysOf`, `sameWays`).
 
-`apps/web/src/data/`:
+`apps/web/src/games/alttpr/data/`:
 
 - `items.ts` — `ItemState`, `itemGridFor` (the grid of a run: a retro run's last row holds the shops, `shoparrow` and `shopkey`, where Hyrule Castle's and Castle Tower's key cells stand), and one `[min, max, initial?]` range table from which `items`, `itemsMin` and `itemsMax` are derived, plus `itemLabels` for accessibility names. Do not reintroduce parallel tables. The ids are the tracker's own, which `logic/packItems.ts` maps to the pack's (old saves go through the pack's frozen legacy copy, which `legacy.spec.ts` holds the table to): a dungeon counter's top follows the run's settings (`itemRange` in `stores/persistence.ts`), and `agahnim2` (Ganon's Tower's boss, on its map marker and its grid cell) is the one id version 6 added; `chest12` (Ganon's Tower's items left) came with its cell.
 - `keymap.ts` — the keyboard shortcuts, as plain data.
 - `presets.ts` — run types (`getPreset`, `presets`, `describeSettings`, which says "?" for a hidden setting). `entrancesKnown(settings)` says whether the assistant knows a run's shuffled entrances (Open or Standard), without loading the tables. `logicModelled(settings)` says whether the pack models a run's rules: vt's without shuffled entrances, the entrance randomizer's for `crossedLogic` runs (the crossed shuffle in the Open or Standard world with `full` dungeon items, Crosskeys'); when it does not, `solutionOf` makes every location maybe, the go mode and the analysis say nothing, and the picker marks the run type "logic soon". Mystery starts with every `HIDEABLE` setting hidden: the goal, the swords, the crystals, the item placement, pool and functionality, and the accessibility, those the pack can leave unknown. The world names a run type, and the dungeon items are assumed until set, since the key model and the counters rest on them. `TUNING` gives each `TunableSetting`'s options, the dungeon items and the goal (but Triforce Hunt, a run type of its own) included.
-- `apps/web/src/constants/index.ts` holds only values with game meaning.
+- `apps/web/src/games/alttpr/constants/index.ts` holds only values with game meaning.
 
 ## Rules are ported, not remembered
 

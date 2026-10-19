@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultItemGrid } from "@/data/items";
+import { defaultItemGrid } from "@/games/alttpr/data/items";
 import {
   getItemBackground,
   isItemDimmed,

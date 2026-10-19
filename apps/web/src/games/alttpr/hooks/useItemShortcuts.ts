@@ -1,0 +1,95 @@
+import { useEffect } from "react";
+import {
+  actionFor,
+  type ControlId,
+  chordOf,
+  isBindable,
+  isKeyControl,
+  isMapCompassControl,
+  parseAction,
+} from "@/games/alttpr/data/keymap";
+import { wildItems } from "@/games/alttpr/data/presets";
+import { type Direction, useGameStore } from "@/games/alttpr/stores/gameStore";
+import { isAwayFromBoard } from "@/utils/keyboard";
+
+/** A grid control to step, and which way. */
+type Step = { control: ControlId; direction: Direction };
+
+/**
+ * Whether the board shows a control, so that a shortcut or a voice command
+ * may change it: a key cell can only be clicked while it is shown; so it is
+ * with its keys, and its map and compass, shown only when they lie outside
+ * their dungeons; and the shops, a retro run's.
+ * @param control - The control
+ */
+export const isControlShown = (control: ControlId): boolean => {
+  const { bigKeysVisible, settings } = useGameStore.getState();
+  if (isKeyControl(control) && !bigKeysVisible) return false;
+  // The shops' cells are a retro run's alone
+  if (control.startsWith("shop") && settings.mode !== "retro") return false;
+  return !(
+    isMapCompassControl(control) && !wildItems(settings).mapsAndCompasses
+  );
+};
+
+/**
+ * The step a key press asks for, or null when the press is not a tracker
+ * shortcut: shortcuts are off, the key is unbound, the player is typing in a
+ * field or composing with an IME, or a dialog covers the board.
+ * @param event - The keydown event
+ */
+export const shortcutStepFor = (event: KeyboardEvent): Step | null => {
+  // keyCode 229: the key an IME is composing with, in older engines
+  if (event.isComposing || event.keyCode === 229) return null;
+  const { shortcuts } = useGameStore.getState();
+  if (!shortcuts.enabled || isAwayFromBoard(event)) return null;
+
+  const chord = chordOf(event);
+  // A chord the browser or the system owns is never taken, whatever the
+  // keymap holds (one written by the desktop app, say)
+  if (!chord || !isBindable(chord)) return null;
+  const action = actionFor(shortcuts.keymap, chord);
+  if (!action) return null;
+
+  const { control, direction } = parseAction(action);
+  if (!isControlShown(control)) return null;
+  return { control, direction: direction === "back" ? -1 : 1 };
+};
+
+/**
+ * Step a control exactly as its click (forward) or right-click (back) does.
+ * @param control - The control, e.g. "hookshot", "chest3" or "smallkey3"
+ * @param direction - 1 forward, -1 back
+ */
+export const stepControl = (control: ControlId, direction: Direction) => {
+  const state = useGameStore.getState();
+  const [, kind, index] = /^(smallkey|medallion)(\d+)$/.exec(control) ?? [];
+  if (kind === "smallkey") state.handleSmallKeyClick(Number(index), direction);
+  else if (kind === "medallion") state.stepMedallion(Number(index), direction);
+  else state.handleItemClick(control, direction);
+};
+
+/**
+ * The item shortcuts: a key bound in the keymap steps its grid control, one
+ * undoable step per press, as a click would. A key held down claims its
+ * repeats without stepping again. The listener leaves alone a key press
+ * another handler already took (the focused cell's "-", the undo shortcuts)
+ * and every chord it cannot bind, so Tab, Ctrl/Cmd+R and the like keep their
+ * job.
+ */
+export const useItemShortcuts = () => {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      const step = shortcutStepFor(event);
+      if (!step) return;
+
+      event.preventDefault();
+      if (event.repeat) return;
+      stepControl(step.control, step.direction);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+};

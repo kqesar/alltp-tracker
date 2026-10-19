@@ -1,4 +1,4 @@
-import { ITEMS_PER_ROW } from "@/constants";
+import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
 
 /**
  * Which page the tracker shows, picked by the query string so it works on

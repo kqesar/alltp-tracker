@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { STATUSES, statusOf } from "@/autotrack/fixtures";
 import { headlineOf, phaseOf, shownStatus } from "@/autotrack/status";
+import { STATUSES, statusOf } from "@/games/alttpr/autotrack/fixtures";
 
 describe("phaseOf", () => {
   it("is off while nothing runs, whatever the last status", () => {

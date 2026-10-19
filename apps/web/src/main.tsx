@@ -1,11 +1,11 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@/styles/index.css";
-import { ObsView } from "@/ObsView";
-import { syncAcrossTabs } from "@/stores/crossTabSync";
+import { ObsView } from "@/games/alttpr/ObsView";
+import { syncAcrossTabs } from "@/games/alttpr/stores/crossTabSync";
 import { checkForUpdates, registerServiceWorker } from "@/stores/updateStore";
 import { isObsView, obsBackground, obsTimer } from "@/utils/view";
-import App from "./App.tsx";
+import App from "./games/alttpr/App.tsx";
 
 syncAcrossTabs();
 

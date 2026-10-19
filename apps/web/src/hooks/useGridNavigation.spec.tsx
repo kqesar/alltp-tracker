@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { TrackerGrid } from "@/components/tracker/TrackerGrid";
-import { useGameStore } from "@/stores/gameStore";
+import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
+import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 /**
  * Drives the arrow keys against a real rendered grid: keys go to the focused
