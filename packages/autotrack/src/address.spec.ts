@@ -4,6 +4,7 @@ import {
   bus,
   busRange,
   busToPak,
+  type MemoryMapping,
   PAK_REGIONS,
   pakRegion,
   pakToBus,
@@ -30,7 +31,8 @@ describe("busToPak", () => {
     [0xf0_0010, "lorom", 0xe0_0010],
     [0xc0_ffb0, "hirom", 0x00_ffb0],
     [0x40_1234, "hirom", 0x00_1234],
-    [0x00_8000, "hirom", 0x00_0000],
+    [0x00_8000, "hirom", 0x00_8000], // the upper half mirrors $C0:8000
+    [0x80_ffc0, "hirom", 0x00_ffc0], // the header's FastROM mirror
     [0x20_6000, "hirom", 0xe0_0000], // HiROM SRAM window
     [0xa1_6005, "hirom", 0xe0_2005],
     [0x7e_0000, "hirom", 0xf5_0000],
@@ -103,6 +105,52 @@ describe("pakToBus", () => {
       ),
     );
   });
+});
+
+/**
+ * The ROM byte a cartridge answers at an A-bus address, from the hardware's
+ * memory maps rather than address.ts: where SNI's translation must land.
+ * WRAM banks and the lower halves of LoROM banks hold no ROM here.
+ */
+const cartridgeRom = (
+  address: number,
+  mapping: MemoryMapping,
+): number | undefined => {
+  const bank = address >>> 16;
+  const offset = address & 0xffff;
+  if (bank === 0x7e || bank === 0x7f) return undefined;
+  if (mapping === "lorom") {
+    return offset >= 0x8000
+      ? ((bank & 0x7f) << 15) | (offset & 0x7fff)
+      : undefined;
+  }
+  // HiROM: banks $40-$7D and $C0-$FF whole, the others' upper halves
+  const rom =
+    bank & 0x40 || offset >= 0x8000
+      ? ((bank & 0x3f) << 16) | offset
+      : undefined;
+  if (rom === undefined || mapping === "hirom") return rom;
+  // ExHiROM: banks $00-$7D are the second 4 MiB
+  return bank & 0x80 ? rom : rom | 0x40_0000;
+};
+
+describe("the bytes SNI reads back", () => {
+  it.each(["lorom", "hirom"] as const)(
+    "are the cartridge's own under %s, through every ROM mirror",
+    (mapping) => {
+      fc.assert(
+        fc.property(fc.integer({ max: 0xff_ffff, min: 0 }), (address) => {
+          const rom = cartridgeRom(address, mapping);
+          const pak = busToPak(address, mapping);
+          fc.pre(rom !== undefined && pak !== undefined && pak < 0xe0_0000);
+          // SNI sends RetroArch the A-bus address of the Pak one
+          const sent = pakToBus(pak as number, mapping) as number;
+          expect(cartridgeRom(sent, mapping)).toBe(rom);
+        }),
+        { numRuns: 2000 },
+      );
+    },
+  );
 });
 
 describe("bus and busRange", () => {
