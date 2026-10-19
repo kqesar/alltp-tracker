@@ -58,6 +58,8 @@ function fakeGitHub({
   }[],
   label = true,
   logic = 31 as number | undefined,
+  pack = undefined as string | undefined,
+  path = manifestPath,
 } = {}) {
   const calls: { args: Record<string, unknown>; method: string }[] = [];
   const record =
@@ -113,7 +115,14 @@ function fakeGitHub({
     warning: (message: string) => logs.push(message),
   };
   const context = { repo: { owner: "kqesar", repo: "alltp-tracker" } };
-  const run = () => checkDrift({ context, core, github, manifestPath });
+  const run = () =>
+    checkDrift({
+      context,
+      core,
+      github,
+      manifestPath: path,
+      ...(pack === undefined ? {} : { pack }),
+    });
   const methods = () => calls.map((call) => call.method);
   return { calls, logs, methods, run };
 }
@@ -227,6 +236,50 @@ describe("checkDrift", () => {
       gh.calls.find((c) => c.method === "issues.create")?.args.body,
     );
     expect(body).toContain(`stopped at ${COMPARE_FILE_LIMIT} files`);
+  });
+});
+
+describe("checkDrift for another pack", () => {
+  const smz3Path = join(dir, "smz3.json");
+  writeFileSync(
+    smz3Path,
+    JSON.stringify({
+      commit: BASE,
+      repo: "tewtal/SMZ3Randomizer",
+      rules: [{ file: "Randomizer.SMZ3/Regions/Zelda/TowerOfHera.cs" }],
+      tests: [],
+    }),
+  );
+  const smz3 = (issues: { number: number; title: string }[] = []) =>
+    fakeGitHub({
+      files: [file("Randomizer.SMZ3/Regions/Zelda/TowerOfHera.cs")],
+      issues,
+      pack: "smz3",
+      path: smz3Path,
+    });
+
+  it("opens the pack's own issue, without LOGIC, which only ALttPR pins", async () => {
+    const h = smz3([{ number: 3, title: issueTitle(BASE, HEAD) }]);
+    expect(await h.run()).toEqual({ action: "created", issue: 7 });
+    expect(h.methods()).not.toContain("repos.getContent");
+    const created = h.calls.find((c) => c.method === "issues.create")?.args;
+    expect(created?.title).toBe(issueTitle(BASE, HEAD, "smz3"));
+    expect(created?.body).toContain("`packs/smz3/upstream.json`");
+    expect(created?.body).toContain("`packs/smz3/README.md`");
+    expect(created?.body).not.toContain("LOGIC");
+  });
+
+  it("updates the pack's issue, and leaves ALttPR's alone", async () => {
+    const h = smz3([
+      { number: 3, title: issueTitle(BASE, HEAD) },
+      { number: 5, title: issueTitle(BASE, "b".repeat(40), "smz3") },
+    ]);
+    expect(await h.run()).toEqual({ action: "updated", issue: 5 });
+  });
+
+  it("does nothing while no listed file changed", async () => {
+    const h = fakeGitHub({ pack: "smz3", path: smz3Path });
+    expect(await h.run()).toEqual({ action: "none" });
   });
 });
 

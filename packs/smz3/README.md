@@ -56,3 +56,14 @@ pnpm --filter @alltp/pack-smz3 import-upstream <SMZ3Randomizer checkout>
 
 - **Ganon and Mother Brain.** Upstream's logic has no region for them: the game checks the goal (crystals for Ganon, bosses for Tourian), which the tracker counts from the rewards found.
 - **The filler's rules** (`.Allow`, `.AlwaysAllow`, `CanFill`): they say where the randomizer may place an item, not what reaches a location.
+
+## When upstream moves
+
+The weekly Logic drift workflow compares `tewtal/SMZ3Randomizer`'s default branch with `commit` in `upstream.json`. When a file `upstream.json` lists has changed, it opens or updates the issue "Upstream logic drift (smz3): ...".
+
+To port the change:
+
+1. Read the upstream diff the issue links.
+2. Port each changed rule into the module of its file: keep the rule as upstream writes it, and set `source` to its new line. Lines shift, so recheck every location of a changed file.
+3. Check out the new commit, run the importer, then set `commit` here to it.
+4. Hold the pack to the new fixtures. A case that breaks is a rule to port, never a fixture to edit; an entry of `STALE` that no longer breaks leaves the list.

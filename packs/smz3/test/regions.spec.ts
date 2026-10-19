@@ -43,3 +43,12 @@ describe("the region modules", () => {
     expect(new Set(REGION_MODULES.map((m) => m.region.id)).size).toBe(40);
   });
 });
+
+describe("upstream.json", () => {
+  it("lists every region file, for the weekly drift watch", async () => {
+    const { default: manifest } = await import("../upstream.json");
+    const listed = new Set(manifest.rules.map((r: { file: string }) => r.file));
+    for (const module of REGION_MODULES) expect(listed).toContain(module.file);
+    expect(manifest.tests).toHaveLength(7);
+  });
+});
