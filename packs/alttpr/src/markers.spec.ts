@@ -1,6 +1,5 @@
 // The map markers: every check on exactly one, in the right world's half,
 // at the legacy map's positions where it had a marker.
-import type { Tri } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { LEGACY_CHESTS, LEGACY_DUNGEONS } from "./legacy";
 import {
@@ -10,7 +9,6 @@ import {
   MAP_LOCATIONS,
   MARKED_DUNGEONS,
   MARKERS,
-  markerStatus,
   markersOf,
 } from "./markers";
 import { regionModules } from "./pack";
@@ -160,19 +158,5 @@ describe("the Inverted markers", () => {
       [...new Set(INVERTED_MARKERS.flatMap((m) => m.locations))].sort(),
     );
     expect(MAP_LOCATIONS.has("bomb-merchant")).toBe(true);
-  });
-});
-
-describe("markerStatus", () => {
-  it.each([
-    [["yes"], "available"],
-    [["yes", "yes"], "available"],
-    [["yes", "maybe"], "possible"],
-    [["yes", "no"], "possible"],
-    [["maybe", "no"], "possible"],
-    [["no", "no"], "unavailable"],
-    [[], "unavailable"],
-  ] as [Tri[], string][])("%j shows %s", (tris, status) => {
-    expect(markerStatus(tris)).toBe(status);
   });
 });

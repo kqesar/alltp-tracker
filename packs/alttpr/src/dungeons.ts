@@ -8,7 +8,7 @@
 import type { Tri } from "@alltp/engine";
 import { ITEMS } from "./items";
 import type { Source } from "./location";
-import type { MarkerStatus } from "./markers";
+import type { MarkerStatus } from "./marker-status";
 import { regionModules } from "./pack";
 import type { AlttprSettings } from "./settings";
 import type { RegionDef } from "./world";
