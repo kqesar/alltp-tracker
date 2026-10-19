@@ -176,6 +176,9 @@ for (const width of WIDTHS) {
     });
 
     test("passes axe and works from the keyboard alone", async ({ page }) => {
+      // Three axe audits of the dialog's long table and dozens of Tab
+      // presses, each a round trip: on CI's four workers it runs past 30 s
+      test.slow();
       await openTracker(page);
       const dialog = await openShortcuts(page);
       const binding = page.getByTestId("shortcut-advance-hookshot");
