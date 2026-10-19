@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.26.1](https://github.com/kqesar/alltp-tracker/compare/v2.26.0...v2.26.1) (2026-10-19)
+
+
+### 🔧 Code Refactoring
+
+* **web:** load the tracked game's module on demand ([922c2fb](https://github.com/kqesar/alltp-tracker/commit/922c2fbe0486b7d152c7045f7f3bf917cc066e64))
+* **web:** move ALttPR's modules under games/alttpr ([7a153c8](https://github.com/kqesar/alltp-tracker/commit/7a153c8ff37384cec18b7ac15bf3157f928e3cd5))
+
 ## [2.26.0](https://github.com/kqesar/alltp-tracker/compare/v2.25.0...v2.26.0) (2026-10-19)
 
 
