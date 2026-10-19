@@ -46,6 +46,7 @@ export {
   definePack,
   type GameCheck,
   type GameCheckResult,
+  type ModeProbe,
   type RaceFlagProbe,
   type RaceFlagReading,
   type RangeSpec,
