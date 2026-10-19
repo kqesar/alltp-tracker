@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.30.0](https://github.com/kqesar/alltp-tracker/compare/v2.29.1...v2.30.0) (2026-10-19)
+
+
+### ✨ Features
+
+* **desktop:** the tracker as a desktop app for Windows, macOS and Linux ([b736eb1](https://github.com/kqesar/alltp-tracker/commit/b736eb1ea435695a2e042d16c8d1947836d46688))
+
+
+### 🐛 Bug Fixes
+
+* **autotrack:** gate loopback on https pages only ([50c2d61](https://github.com/kqesar/alltp-tracker/commit/50c2d614198edb0b7666f76e1b614edd07636e59))
+
 ## [2.29.1](https://github.com/kqesar/alltp-tracker/compare/v2.29.0...v2.29.1) (2026-10-19)
 
 
