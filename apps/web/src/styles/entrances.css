@@ -152,7 +152,8 @@
   gap: var(--spacing-sm);
 }
 
-.entrances__summary {
+.entrances__summary,
+.entrances__hint {
   margin: 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);

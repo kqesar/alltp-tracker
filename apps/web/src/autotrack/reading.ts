@@ -4,9 +4,11 @@
 
 import {
   decodeChecks,
+  decodeEntrances,
   decodeItems,
   decodeProgress,
   decodeSeedSettings,
+  type EntranceReading,
   type ItemReading,
   type MemoryView,
   type ProgressReading,
@@ -25,6 +27,12 @@ export type AutotrackReading = {
   /** The locations memory could not settle, with why. */
   readonly unsettled: readonly (readonly [id: string, why: Unsettled])[];
   readonly progress: ProgressReading;
+  /**
+   * The door or hole Link last went in by and the door he last came out
+   * by, outside Race Mode: the game's numbers, which the entrance tables
+   * name (`linksOf`).
+   */
+  readonly entrances: EntranceReading;
   /** The seed's name and settings, from its ROM. */
   readonly seed: SeedSettingsReading;
 };
@@ -46,6 +54,7 @@ export const readMemory = (
   return {
     at,
     checked: [...checks.checked],
+    entrances: decodeEntrances(memory, options),
     items: decodeItems(memory, options),
     progress: decodeProgress(memory, options),
     race,

@@ -1,18 +1,21 @@
 // The entrance assistant's model: what the pack's entrance randomizer tables
 // (packs/alttpr/src/entrances.ts) mean for a run with shuffled entrances.
-// Only the assistant's own components import it, each loaded on demand: a
-// run without shuffled entrances never downloads the tables.
+// Only the assistant's own components and autotracking's follower import
+// it, each on demand: a run without shuffled entrances never downloads the
+// tables.
 
 import {
   type CrossedPool,
   crossedPool,
+  type EntranceLink,
   type EntranceTarget,
+  linksOf,
   type MapMarker,
   type OverworldEntrance,
   PLACE_OF_LOCATION,
   TARGETS,
 } from "@alltp/pack-alttpr";
-import type { RunSettings } from "@/data/presets";
+import { entrancesKnown, type RunSettings } from "@/data/presets";
 
 const pools = {
   open: crossedPool("open"),
@@ -24,13 +27,11 @@ const pools = {
  * world: Inverted's crossed shuffle runs tables of its own, not ported yet.
  */
 export const poolOf = (settings: RunSettings): CrossedPool | null =>
-  settings.entranceShuffle === "none"
+  !entrancesKnown(settings)
     ? null
     : settings.mode === "standard"
       ? pools.standard
-      : settings.mode === "inverted"
-        ? null
-        : pools.open;
+      : pools.open;
 
 const ENTRANCE_BY_ID = new Map(
   [...pools.open.entrances, ...pools.standard.entrances].map((e) => [e.id, e]),
@@ -64,6 +65,37 @@ export const notesFor = (
   return partner === undefined
     ? { [entrance]: target }
     : { [entrance]: target, [partner[0]]: partner[1] };
+};
+
+/**
+ * What the game shows Link went through notes (autotracking, outside Race
+ * Mode): each door or hole to its target, with its partner (`notesFor`),
+ * when the shuffle may give it that target. Of targets alike, which the
+ * game loads by one entrance, it keeps the one noted there, else takes the
+ * first noted nowhere. The game wins over a note it contradicts.
+ */
+export const gameNotes = (
+  pool: CrossedPool,
+  noted: Readonly<Record<string, string>>,
+  links: readonly EntranceLink[],
+): Record<string, string> => {
+  const notes: Record<string, string> = {};
+  for (const { entrance, targets } of linksOf(links)) {
+    const may = new Set(pool.targetsOf.get(entrance)?.map((t) => t.id));
+    const fits = targets.filter((target) => may.has(target));
+    const elsewhere = new Set(
+      Object.entries(noted).flatMap(([id, to]) =>
+        id === entrance ? [] : [to],
+      ),
+    );
+    const target =
+      fits.find((t) => t === noted[entrance]) ??
+      fits.find((t) => !elsewhere.has(t)) ??
+      fits[0];
+    if (target !== undefined)
+      Object.assign(notes, notesFor(pool, entrance, target));
+  }
+  return notes;
 };
 
 /** How far apart two entrance markers stand, in percent of their world. */

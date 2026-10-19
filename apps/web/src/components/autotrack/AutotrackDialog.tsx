@@ -28,6 +28,7 @@ import {
   useAutotrackStore,
   useSeedCheck,
 } from "@/stores/autotrackStore";
+import { useGameStore } from "@/stores/gameStore";
 import { commandKey } from "@/utils/platform";
 
 /** What Sync from game did, in a few words. */
@@ -138,6 +139,9 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
     : headlineOf(shown, active, elsewhere);
   const connected = active && !elsewhere && shown.code === "connected";
   const race = connected && shown.race.active ? shown.race : null;
+  const shuffled = useGameStore(
+    (state) => state.settings.entranceShuffle !== "none",
+  );
   const canRetry = active && "retryInMs" in shown;
   const seedCheck = useSeedCheck();
   const keptSeed = useAutotrackStore((state) => state.keptSeed);
@@ -295,7 +299,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
               beyond it stay. Sync from game sets the board to the game,
               clearing them.
               {race &&
-                " In Race Mode, what races forbid tracking stays yours to mark: pendants and crystals, chests inside dungeons, bottles."}
+                ` In Race Mode, what races forbid tracking stays yours to mark: pendants and crystals, chests inside dungeons, bottles${shuffled ? ", where entrances lead" : ""}.`}
             </p>
             <div className="autotrack-actions">
               <button

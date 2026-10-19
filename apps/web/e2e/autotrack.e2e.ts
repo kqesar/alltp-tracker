@@ -9,6 +9,7 @@ import {
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
+import { comeOut, goIn, leadTo } from "../../../packs/alttpr/test/entrance-rom";
 import { writeSeedSettings } from "../../../packs/alttpr/test/seed-rom";
 import {
   clickToolbarAction,
@@ -193,6 +194,38 @@ test("marks the board and the map from the game as it changes", async ({
   await expect(tomb).toHaveAccessibleName("King's Tomb: done");
   // None of it is a step of the player's undo history
   await expect(page.getByTestId("undo")).toBeDisabled();
+});
+
+test("notes the doors Link goes through in a Crosskeys run", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  writeSeedSettings(bridge.memory, { dungeonItems: "full" });
+  // The seed's ROM, then where Link is: in Blind's Hideout
+  leadTo(bridge.memory, "Kakariko Shop", "Elder House Exit (East)");
+  goIn(bridge.memory, "Light Hype Fairy", "Blinds Hideout");
+  await openTracker(page);
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await page
+    .getByRole("dialog", { name: "Choose a run type" })
+    .getByRole("button", { name: /^Crosskeys/ })
+    .click();
+  await page.getByRole("button", { name: "Switch & reset" }).click();
+
+  await connect(page);
+
+  await expect(
+    page.getByTestId("entrance-light-hype-fairy"),
+  ).toHaveAccessibleName("Light Hype Fairy: leads to Blind's Hideout");
+  // Link goes on, and comes out of Elder House's east side by Kakariko Shop
+  comeOut(bridge.memory, "Kakariko Shop", "Elder House Exit (East)");
+  await expect(page.getByTestId("entrance-kakariko-shop")).toHaveAccessibleName(
+    "Kakariko Shop: leads to Elder House (East)",
+  );
+  await page.getByRole("tab", { name: "Entrances" }).click();
+  await expect(page.getByTestId("entrances-summary")).toHaveText(
+    "2 of 138 entrances noted",
+  );
 });
 
 test("starts the run timer as the game starts, and stops it at the goal", async ({

@@ -1,13 +1,15 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   checkIn,
   GAME_MODE,
   readingOf,
   SAVE,
   seedMemory,
+  settle,
 } from "@/autotrack/fixtures";
 import { createFollower } from "@/autotrack/follow";
 import { useGameStore } from "@/stores/gameStore";
+import { comeOut, goIn } from "../../../../packs/alttpr/test/entrance-rom";
 
 const store = () => useGameStore.getState();
 
@@ -265,5 +267,108 @@ describe("following the game", () => {
 
     expect(store().presetId).toBe("keysanity");
     expect(store().items.hookshot).toBe(false);
+  });
+});
+
+describe("the doors Link goes through", () => {
+  /** A Crosskeys board following the game, with a seed in play. */
+  const crosskeys = () => {
+    store().applyPreset("crosskeys");
+    return { follower: createFollower(), memory: seedMemory({ race: false }) };
+  };
+  const notes = () => store().entrances;
+
+  it("notes a door Link went in by, as the game's news", async () => {
+    const { follower, memory } = crosskeys();
+    const steps = store().past.length;
+    follower.read(
+      readingOf(goIn(memory, "Light Hype Fairy", "Blinds Hideout")),
+    );
+    await vi.waitFor(() =>
+      expect(notes()).toEqual({ "light-hype-fairy": "blinds-hideout" }),
+    );
+    // News, not a step of the player's
+    expect(store().past).toHaveLength(steps);
+  });
+
+  it("notes a hole Link fell in by, with its cave's door", async () => {
+    const { follower, memory } = crosskeys();
+    follower.read(
+      readingOf(goIn(memory, "Kakariko Well Drop", "Bat Cave (right)")),
+    );
+    await vi.waitFor(() =>
+      expect(notes()).toEqual({
+        "kakariko-well-cave": "bat-cave-exit",
+        "kakariko-well-drop": "bat-cave-right",
+      }),
+    );
+  });
+
+  it("notes the door Link came out by", async () => {
+    const { follower, memory } = crosskeys();
+    goIn(memory, "Light Hype Fairy", "Blinds Hideout");
+    follower.read(
+      readingOf(comeOut(memory, "Kakariko Shop", "Elder House Exit (East)")),
+    );
+    await vi.waitFor(() =>
+      expect(notes()).toEqual({
+        "kakariko-shop": "elder-house-exit-east",
+        "light-hype-fairy": "blinds-hideout",
+      }),
+    );
+  });
+
+  it("takes, of rooms alike, the one noted there or else one noted nowhere", async () => {
+    const { follower, memory } = crosskeys();
+    store().noteEntrance("bonk-fairy-light", "lake-hylia-healer-fairy");
+    follower.read(
+      readingOf(goIn(memory, "Light Hype Fairy", "Lake Hylia Healer Fairy")),
+    );
+    await vi.waitFor(() =>
+      expect(notes()["light-hype-fairy"]).toBe("swamp-healer-fairy"),
+    );
+    expect(notes()["bonk-fairy-light"]).toBe("lake-hylia-healer-fairy");
+  });
+
+  it("wins over a note the game contradicts", async () => {
+    const { follower, memory } = crosskeys();
+    store().noteEntrances({
+      "kakariko-shop": "blinds-hideout",
+      "light-hype-fairy": "chicken-house",
+    });
+    follower.read(
+      readingOf(goIn(memory, "Light Hype Fairy", "Blinds Hideout")),
+    );
+    await vi.waitFor(() =>
+      expect(notes()).toEqual({ "light-hype-fairy": "blinds-hideout" }),
+    );
+  });
+
+  it("notes again only what the game shows anew", async () => {
+    const { follower, memory } = crosskeys();
+    goIn(memory, "Light Hype Fairy", "Blinds Hideout");
+    follower.read(readingOf(memory));
+    await vi.waitFor(() => expect(notes()).not.toEqual({}));
+    // The player forgets it: the same door read again leaves it forgotten
+    store().noteEntrance("light-hype-fairy", null);
+    follower.read(readingOf(memory));
+    await settle();
+    expect(notes()).toEqual({});
+    follower.read(readingOf(goIn(memory, "Kakariko Shop", "Chicken House")));
+    await vi.waitFor(() =>
+      expect(notes()).toEqual({ "kakariko-shop": "chicken-house" }),
+    );
+  });
+
+  it("notes nothing in Race Mode, or in a run whose entrances stay put", async () => {
+    const raced = crosskeys();
+    goIn(raced.memory, "Light Hype Fairy", "Blinds Hideout");
+    raced.follower.read(readingOf(raced.memory, { race: true }));
+    store().applyPreset("open");
+    const open = createFollower();
+    open.read(readingOf(raced.memory));
+    await settle();
+    expect(notes()).toEqual({});
+    for (const progress of store().past) expect(progress.entrances).toEqual({});
   });
 });

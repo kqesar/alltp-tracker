@@ -87,6 +87,9 @@ const EntrancesPanel = () => {
         {noted} of {pool.entrances.length} entrances noted
         {words.length > 0 && `, ${shown.length} shown`}
       </p>
+      <p className="entrances__hint">
+        Autotracking notes each door you go through, outside Race Mode.
+      </p>
       {WORLDS.map((world) => {
         const list = shown.filter((entrance) => entrance.world === world.id);
         if (list.length === 0) return null;

@@ -7,7 +7,12 @@
 // again. The first reading of a session lays everything, towards progress
 // only. Nothing is laid while no game is in play (the title screen, the file
 // select): memory there is not the run's.
+//
+// Outside Race Mode, the doors and holes Link goes through are noted in a run
+// whose shuffled entrances the assistant knows: the entrance tables load on
+// demand, as for the assistant, and the notes land as the game's news.
 
+import type { EntranceReading } from "@alltp/pack-alttpr";
 import {
   type GameView,
   gameView,
@@ -18,9 +23,9 @@ import {
   syncView,
 } from "@/autotrack/apply";
 import type { AutotrackReading } from "@/autotrack/reading";
-import type { RunSettings } from "@/data/presets";
+import { entrancesKnown, type RunSettings } from "@/data/presets";
 import { timerNews } from "@/logic/timer";
-import { createProgress, useGameStore } from "@/stores/gameStore";
+import { createProgress, useGameStore, withNotes } from "@/stores/gameStore";
 
 /** The board's side of a session. */
 export type Follower = {
@@ -69,6 +74,29 @@ export const createFollower = (): Follower => {
   let hand: Record<number, number> | null = null;
   /** The least small keys found, by grid dungeon index. */
   const found: Record<number, number> = {};
+  /** The doors and holes last noted, to note only what the game shows anew. */
+  let noted: string | null = null;
+
+  /**
+   * Note where the game shows Link went, once per change, in a run whose
+   * entrances the assistant knows. A note it contradicts gives way.
+   */
+  const noteEntrances = (links: EntranceReading) => {
+    if (typeof links === "string" || links.length === 0) return;
+    if (!entrancesKnown(useGameStore.getState().settings)) return;
+    const key = JSON.stringify(links);
+    if (key === noted) return;
+    noted = key;
+    void import("@/logic/entrances").then(({ gameNotes, poolOf }) =>
+      useGameStore.getState().applyGameNews((board) => {
+        const pool = poolOf(board.settings);
+        if (pool === null) return null;
+        const notes = gameNotes(pool, board.entrances, links);
+        const entrances = withNotes(board.entrances, notes);
+        return entrances === null ? null : { entrances };
+      }),
+    );
+  };
 
   /**
    * Count the small keys found: memory holds those in hand, which a door
@@ -118,6 +146,7 @@ export const createFollower = (): Follower => {
         hand = null;
         return;
       }
+      noteEntrances(reading.entrances);
       const store = useGameStore.getState();
       countKeys(reading, store.smallKeys);
       const view = gameView(reading, store, found);
