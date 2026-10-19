@@ -179,17 +179,16 @@ export const GAME_MODES = {
   playing: [0x07, 0x09, 0x0b],
 } as const;
 
-/** The game mode moves fastest: the start and the goal show there first. */
-export const GAME_MODE_MS = 500;
-/** Items, keys and events. */
-export const ITEMS_MS = 1000;
-/** Room, overworld and NPC flags. */
-export const CHECKS_MS = 1000;
 /**
- * Where Link went in and came out. Memory keeps the last door until the
- * next, so a slower read loses only a door left again within it.
+ * The game mode, items, keys, events, room, overworld and NPC flags, and
+ * the doors Link went through: one cadence, so a reading's game mode and
+ * saves are read in the same tick. With the mode read twice as often, the
+ * first reading in play could carry saves read before the file's load (the
+ * title's WRAM, another file's), as SMZ3's did on a real game (packs/smz3
+ * memory.ts, 2026-10-19). Every 500 ms: the start and the goal show in the
+ * game mode first, and the timer stops on it.
  */
-export const ENTRANCES_MS = 1000;
+export const GAME_MS = 500;
 
 interface RangeSource<Id extends string> {
   readonly id: Id;
@@ -219,7 +218,7 @@ function rooms<const Id extends string>(
   return range({
     at: roomAddress(first),
     category,
-    everyMs: CHECKS_MS,
+    everyMs: GAME_MS,
     id,
     size: (last - first + 1) * 2,
     source,
@@ -241,7 +240,7 @@ function save<const Id extends string>(
   size: number,
   category: string,
   source: SourceRef,
-  everyMs: number | null = ITEMS_MS,
+  everyMs: number | null = GAME_MS,
 ): AlttprRange & { readonly id: Id } {
   return range({
     at: SAVE_DATA + offset,
@@ -297,7 +296,7 @@ export const MEMORY_RANGES = [
   range({
     at: 0x7e_0010,
     category: "game-start",
-    everyMs: GAME_MODE_MS,
+    everyMs: GAME_MS,
     id: "game-mode",
     size: 1,
     source: "z3:ram.asm:41",
@@ -306,7 +305,7 @@ export const MEMORY_RANGES = [
   range({
     at: 0x7e_00a0,
     category: "entrances",
-    everyMs: ENTRANCES_MS,
+    everyMs: GAME_MS,
     id: "room",
     size: 2,
     source: "z3:ram.asm:107",
@@ -315,7 +314,7 @@ export const MEMORY_RANGES = [
   range({
     at: 0x7e_010e,
     category: "entrances",
-    everyMs: ENTRANCES_MS,
+    everyMs: GAME_MS,
     id: "entrance",
     size: 2,
     source: "z3:ram.asm:158",
@@ -362,7 +361,7 @@ export const MEMORY_RANGES = [
     0x82,
     "outside-checks",
     "z3:sram.asm:54-69",
-    CHECKS_MS,
+    GAME_MS,
   ),
   // Bow, boomerang, hookshot.
   save("equipment-a", 0x340, 3, "items", "z3:sram.asm:80-85"),
@@ -434,7 +433,7 @@ export const MEMORY_RANGES = [
   range({
     at: 0x7f_5099,
     category: "entrances",
-    everyMs: ENTRANCES_MS,
+    everyMs: GAME_MS,
     id: "overworld-door",
     size: 1,
     source: "z3:ram.asm:554",
