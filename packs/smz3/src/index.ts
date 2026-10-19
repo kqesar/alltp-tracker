@@ -11,6 +11,12 @@ export {
   stateFromUpstream,
 } from "./items";
 export {
+  HYRULE_MARKERS,
+  type Smz3Marker,
+  ZEBES_MARKERS,
+  ZELDA_ALIASES,
+} from "./markers";
+export {
   MEDALLION_FACTS,
   MEDALLIONS,
   type Medallion,

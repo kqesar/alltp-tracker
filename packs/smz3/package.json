@@ -16,5 +16,8 @@
   },
   "dependencies": {
     "@alltp/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@alltp/pack-alttpr": "workspace:*"
   }
 }

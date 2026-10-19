@@ -31,6 +31,7 @@
       "!**/coverage_backup",
       "!**/package.json",
       "!packs/*/test/upstream",
+      "!packs/smz3/src/markers-hyrule.json",
       "!**/playwright-report",
       "!**/test-results",
       "!pnpm-lock.yaml",
