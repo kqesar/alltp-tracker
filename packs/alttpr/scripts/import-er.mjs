@@ -19,19 +19,25 @@
 // (er-tests.mjs).
 //
 // From EntranceShuffle.py: the module's entrance tables, the holes and their
-// targets of scramble_holes, Skull Woods' of skull_woods_shuffle, and each
-// door's exit position in door_addresses (its overworld area and where Link
-// stands outside it). From Regions.py: every region create_regions makes,
-// with its kind, locations and exits, and its engine id (regionId). The
-// output is deterministic; the repository's Biome then sorts its keys and
-// formats it, as the checks want it.
+// targets of scramble_holes, Skull Woods' of skull_woods_shuffle, each
+// door's slot in the game's door table and its exit position in
+// door_addresses (its overworld area and where Link stands outside it), and
+// the entrance and exit numbers of exit_ids. From Regions.py: every region
+// create_regions makes, with its kind, locations and exits, and its engine
+// id (regionId). The output is deterministic; the repository's Biome then
+// sorts its keys and formats it, as the checks want it.
 //
 // A hole has no position in door_addresses, only the addresses where the
 // randomizer writes its entrance: one byte of the game's hole table, whose
 // positions and areas sit beside it (zelda3 overworld.c,
 // Overworld_GetPitDestination). Those are read from the base ROM, the
 // Japanese 1.0 one alttpr.com asks for, given with --rom and checked by its
-// MD5. The ROM is read, never copied: three small tables of it.
+// MD5, as is the room each exit of the game leaves from. The ROM is read,
+// never copied: four small tables of it.
+//
+// Autotracking reads which door Link went through from memory as numbers
+// (src/autotrack/entrances.ts): src/autotrack/entrance-tables.json is what
+// it needs of these tables, small enough to load with the session.
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -92,7 +98,33 @@ const HOLE_ROWS_ABOVE = 7;
 const HOLE_POSITIONS = 0xdb800;
 const HOLE_AREAS = 0xdb826;
 const HOLE_ENTRANCES = 0xdb84c;
-const HOLES = 19;
+export const HOLES = 19;
+
+/**
+ * The game's door table: the entrance each overworld door loads, by its
+ * slot (Rom.py:539, z3randomizer doorframefixes.asm:11).
+ */
+const DOOR_TABLE = 0xdbb73;
+
+/**
+ * The room each of the game's 79 exits leaves from, words (zelda3
+ * overworld.c:1788-1789, kExitDataRooms): the exit's area follows them, the
+ * table Rom.py:500 writes at 0x15B8C. The randomizer leaves them as they
+ * are ("room id is deliberately not written", Rom.py:497).
+ */
+const EXIT_ROOMS = 0x15aee;
+const EXITS = 79;
+
+/**
+ * Rooms the game leaves without its exit table: a cave of one door brings
+ * Link back to the door he came in by, but Link's House (zelda3
+ * overworld.c:1784-1785, LoadCachedEntranceProperties).
+ * @param {number} room
+ */
+const leftByCache = (room) => room >= 0x100 && room < 0x180 && room !== 0x104;
+
+/** Entries of exit_ids for the Inverted world, whose tables are not ported. */
+const INVERTED = /^Inverted /;
 
 /**
  * Where a hole lies, by the first address door_addresses gives for it: its
@@ -117,6 +149,61 @@ export function holeAt(rom, address) {
     x: (screen & 7) * 512 + ((pos & 0x7e) >> 1) * 16 + 8,
     y: (screen >> 3) * 512 + ((pos >> 7) + HOLE_ROWS_ABOVE) * 16 + 8,
   };
+}
+
+/**
+ * What autotracking needs to tell the door Link came out by: the door
+ * table's size, and the entrance each room's exit is, for the rooms the game
+ * looks up in its exit table (the last exit of the room, as zelda3
+ * overworld.c:1788-1789 searches). Cross-checked against the base ROM: each
+ * door's slot of the door table loads a target whose exit leaves from the
+ * room door_addresses gives that door, so slots, exit numbers and rooms all
+ * agree with the game.
+ * @param {Uint8Array} rom - The base ROM
+ * @param {[string, [number | number[], number[] | null]][]} doorAddresses
+ * @param {Record<string, { entrance: number | null, exit?: number }>} exits
+ */
+export function autotrackTables(rom, doorAddresses, exits) {
+  /** @param {number} at */
+  const word = (at) => (rom[at] ?? 0) | ((rom[at + 1] ?? 0) << 8);
+  const rooms = Array.from({ length: EXITS }, (_, k) =>
+    word(EXIT_ROOMS + 2 * k),
+  );
+  /** The entrance of each exit number, of the worlds ported. */
+  const entranceOfExit = new Map();
+  /** The exit numbers of each entrance. */
+  const exitsOf = new Map();
+  for (const [name, { entrance, exit }] of Object.entries(exits)) {
+    if (INVERTED.test(name) || entrance === null || exit === undefined)
+      continue;
+    const known = entranceOfExit.get(exit);
+    if (known !== undefined && known !== entrance)
+      throw new Error(`exit_ids: exit ${exit} loads two entrances`);
+    entranceOfExit.set(exit, entrance);
+    exitsOf.set(entrance, [...(exitsOf.get(entrance) ?? []), exit]);
+  }
+  let slots = 0;
+  for (const [name, [slot, exit]] of doorAddresses) {
+    if (exit === null || INVERTED.test(name)) continue;
+    const door = /** @type {number} */ (slot);
+    slots = Math.max(slots, door + 1);
+    for (const k of exitsOf.get(rom[DOOR_TABLE + door] ?? -1) ?? []) {
+      if (rooms[k] !== exit[0])
+        throw new Error(
+          `${name}: the base ROM's exit ${k} leaves room ${rooms[k]?.toString(16)}, door_addresses says ${exit[0]?.toString(16)}`,
+        );
+    }
+  }
+  /** @type {Record<number, number>} */
+  const exitRooms = {};
+  rooms.forEach((room, k) => {
+    if (leftByCache(room)) return;
+    // The room's last exit is the game's, even one no door loads
+    const entrance = entranceOfExit.get(k);
+    if (entrance === undefined) delete exitRooms[room];
+    else exitRooms[room] = entrance;
+  });
+  return { doors: slots, exitRooms, holes: HOLES };
 }
 
 /**
@@ -161,24 +248,52 @@ export function importEr(checkout, romFile) {
   if (skullHoles === undefined || skullDoors === undefined)
     throw new Error(`${shuffleFile}: skull_woods_shuffle's two calls`);
 
-  // door_addresses: name -> (entrance, (room, area, vram, scroll y, scroll x,
+  // door_addresses: name -> (slot, (room, area, vram, scroll y, scroll x,
   // link y, link x, …)) for a door; (addresses, None) for a hole
   const addresses = assigned(shuffle, "door_addresses", shuffleFile);
+  const doorAddresses = Object.entries(
+    /** @type {Record<string, [number | number[], number[] | null]>} */ (
+      addresses.value
+    ),
+  );
   const doors = Object.fromEntries(
+    doorAddresses.map(([name, [slot, exit]]) => {
+      if (exit !== null) {
+        return [name, { area: exit[1], slot, x: exit[6], y: exit[5] }];
+      }
+      const bytes = /** @type {number[]} */ (slot);
+      return [
+        name,
+        {
+          ...holeAt(rom, bytes[0] ?? 0),
+          hole: true,
+          // Its bytes of the hole table; the Inverted Pyramid's last lies
+          // elsewhere (Rom.py writes it for the Inverted world only)
+          slots: bytes
+            .map((address) => address - HOLE_ENTRANCES)
+            .filter((slot) => slot >= 0 && slot < HOLES),
+        },
+      ];
+    }),
+  );
+
+  // exit_ids: name -> entrance for a place of one door, (entrance, exit)
+  // for the side of a cave or a dungeon; the entrance is None for an exit no
+  // door loads
+  const exitIds = assigned(shuffle, "exit_ids", shuffleFile);
+  const exits = Object.fromEntries(
     Object.entries(
-      /** @type {Record<string, [number | number[], number[] | null]>} */ (
-        addresses.value
+      /** @type {Record<string, number | [number | null, number]>} */ (
+        exitIds.value
       ),
-    ).map(([name, [entrance, exit]]) => [
+    ).map(([name, value]) => [
       name,
-      exit !== null
-        ? { area: exit[1], x: exit[6], y: exit[5] }
-        : {
-            ...holeAt(rom, /** @type {number[]} */ (entrance)[0] ?? 0),
-            hole: true,
-          },
+      typeof value === "number"
+        ? { entrance: value }
+        : { entrance: value[0], exit: value[1] },
     ]),
   );
+  const autotrack = autotrackTables(rom, doorAddresses, exits);
 
   const regions = [];
   const create = body(regionsSource, "create_regions", regionsFile);
@@ -223,7 +338,10 @@ export function importEr(checkout, romFile) {
   };
 
   return {
+    // Written apart, for autotracking (main)
+    autotrack,
     doors: { line: addresses.line, value: doors },
+    exits: { line: exitIds.line, value: exits },
     generated:
       "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
     holes: {
@@ -255,7 +373,7 @@ function main(argv) {
   }
   /** @param {string} file */
   const read = (file) => readFileSync(join(resolve(checkout), file), "utf8");
-  const er = importEr(resolve(checkout), resolve(romFile));
+  const { autotrack, ...er } = importEr(resolve(checkout), resolve(romFile));
   const { regions, upstream } = er;
   const rules = {
     generated: er.generated,
@@ -266,6 +384,10 @@ function main(argv) {
   const outputs = [
     ["src/entrances/er.json", er],
     ["src/entrances/rules.json", rules],
+    [
+      "src/autotrack/entrance-tables.json",
+      { generated: er.generated, upstream, ...autotrack },
+    ],
     ...importErTests(read).map(
       (fixture) =>
         /** @type {[string, unknown]} */ ([
@@ -284,7 +406,7 @@ function main(argv) {
     ...outputs.map(([file]) => join(pack, file)),
   ]);
   process.stdout.write(
-    `${upstream.repo}@${upstream.commit}: ${Object.keys(er.tables).length} tables, ${Object.keys(er.doors.value).length} doors, ${regions.length} regions; ${Object.keys(rules.entrances).length + Object.keys(rules.locations).length} rules, ${rules.unported.length} unported; ${outputs.length - 2} test files\n`,
+    `${upstream.repo}@${upstream.commit}: ${Object.keys(er.tables).length} tables, ${Object.keys(er.doors.value).length} doors, ${regions.length} regions; ${Object.keys(rules.entrances).length + Object.keys(rules.locations).length} rules, ${rules.unported.length} unported; ${outputs.length - 3} test files; door table of ${autotrack.doors} slots, ${Object.keys(autotrack.exitRooms).length} exit rooms\n`,
   );
 }
 

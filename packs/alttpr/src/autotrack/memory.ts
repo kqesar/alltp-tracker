@@ -15,14 +15,17 @@
 // - spec: the official race spec v1.2, for the categories, through
 //   ALTTPR_RACE_PROFILE;
 // - ap: Archipelago's ALttP client, for the location flags of
-//   check-flags.ts, which its spec holds to z3randomizer's own layout.
+//   check-flags.ts, which its spec holds to z3randomizer's own layout;
+// - er: the entrance randomizer vt hands shuffled entrances to, for where it
+//   writes them into the ROM (entrances.ts).
 //
 // Save data: the game keeps the save file in WRAM at $7E:F000-$7E:F4FF and
 // copies it to SRAM on save (sram.asm:7-9). The tracker reads the WRAM copy,
 // which is live and lies in the spec's permitted $7E:F000-$7E:F500.
 
 import { bus, type RangeSpec } from "@alltp/autotrack";
-import { SEED_SETTINGS_RANGES } from "./seed-settings";
+import tables from "./entrance-tables.json" with { type: "json" };
+import { SEED_SETTINGS_RANGES, SETTINGS_MS } from "./seed-settings";
 
 /** The sources this map was read from. */
 export const MEMORY_SOURCES = {
@@ -31,6 +34,11 @@ export const MEMORY_SOURCES = {
     file: "worlds/alttp/Client.py",
     license: "MIT",
     repo: "https://github.com/ArchipelagoMW/Archipelago",
+  },
+  er: {
+    commit: "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
+    license: "MIT",
+    repo: "https://github.com/cassidoxa/ALttPEntranceRandomizer",
   },
   spec: {
     title: "The Official ALTTPR Race-legal Auto-tracker Specification",
@@ -177,6 +185,11 @@ export const GAME_MODE_MS = 500;
 export const ITEMS_MS = 1000;
 /** Room, overworld and NPC flags. */
 export const CHECKS_MS = 1000;
+/**
+ * Where Link went in and came out. Memory keeps the last door until the
+ * next, so a slower read loses only a door left again within it.
+ */
+export const ENTRANCES_MS = 1000;
 
 interface RangeSource<Id extends string> {
   readonly id: Id;
@@ -258,6 +271,26 @@ export const MEMORY_RANGES = [
     size: 0x20,
     source: "z3:LTTP_RND_GeneralBugfixes.asm:14-27",
   }),
+  // Where each hole and each overworld door leads: the entrance it loads,
+  // which the entrance randomizer writes into the game's tables (Rom.py:
+  // 533-539). Read as the seed's settings are: ROM does not change while a
+  // seed runs. No race permits tracking entrances.
+  range({
+    at: 0x1b_b84c,
+    category: "entrances",
+    everyMs: SETTINGS_MS,
+    id: "hole-table",
+    size: tables.holes,
+    source: "er:Rom.py:533-536",
+  }),
+  range({
+    at: 0x1b_bb73,
+    category: "entrances",
+    everyMs: SETTINGS_MS,
+    id: "door-table",
+    size: tables.doors,
+    source: "z3:doorframefixes.asm:11",
+  }),
   // The seed's settings in the base patch's tables, bank $30: read slowly,
   // and outside Race Mode only but for the seed type (seed-settings.ts).
   ...SEED_SETTINGS_RANGES,
@@ -268,6 +301,24 @@ export const MEMORY_RANGES = [
     id: "game-mode",
     size: 1,
     source: "z3:ram.asm:41",
+  }),
+  // The room Link is in, or last was once outdoors: the one he came out of.
+  range({
+    at: 0x7e_00a0,
+    category: "entrances",
+    everyMs: ENTRANCES_MS,
+    id: "room",
+    size: 2,
+    source: "z3:ram.asm:107",
+  }),
+  // The entrance the last door or hole loaded.
+  range({
+    at: 0x7e_010e,
+    category: "entrances",
+    everyMs: ENTRANCES_MS,
+    id: "entrance",
+    size: 2,
+    source: "z3:ram.asm:158",
   }),
   // Dungeon rooms $00-$E0: every dungeon location's room lies there, the
   // last being Castle Tower's Room 03 ($E0). The boss rooms and the three
@@ -375,6 +426,18 @@ export const MEMORY_RANGES = [
   // fall sets Castle Tower's bit, Agahnim 2's Ganon's Tower's (events.asm:
   // 89-109).
   save("dungeons-completed", 0x472, 2, "items", "z3:dungeondrops.asm:323-329"),
+  // The overworld door Link last went in by, its slot of the door table plus
+  // one, which the base patch keeps as the game loads its entrance
+  // (doorframefixes.asm:8-12, hooks.asm:2081-2082); 0 after a respawn
+  // (entrances.asm:126-127, StartingAreaOverworldDoor all 0).
+  range({
+    at: 0x7f_5099,
+    category: "entrances",
+    everyMs: ENTRANCES_MS,
+    id: "overworld-door",
+    size: 1,
+    source: "z3:ram.asm:554",
+  }),
 ] as const;
 
 export type MemoryRangeId = (typeof MEMORY_RANGES)[number]["id"];

@@ -20,6 +20,7 @@
 // and which targets it shuffles them with (EntranceShuffle.py:365-460,
 // scramble_holes, skull_woods_shuffle).
 
+import type { EntranceLink } from "./autotrack/decode";
 import er from "./entrances/er.json" with { type: "json" };
 import { locationId } from "./location";
 import { MAP_LOCATIONS } from "./markers";
@@ -58,12 +59,18 @@ export interface EntranceTarget {
   readonly kind: "dungeon" | "connector" | "single" | "drop";
 }
 
-/** A door's or hole's position, in the world's pixels. */
+/**
+ * A door's or hole's position, in the world's pixels, and where the game
+ * keeps what it loads: a door's slot of its door table, a hole's bytes of
+ * its hole table.
+ */
 type Position = {
   readonly area: number;
   readonly x: number;
   readonly y: number;
   readonly hole?: boolean;
+  readonly slot?: number;
+  readonly slots?: readonly number[];
 };
 
 const DOORS = er.doors.value as Readonly<Record<string, Position>>;
@@ -246,6 +253,66 @@ export const targetNamed = (name: string): EntranceTarget => {
   if (found === undefined) throw new RangeError(`No target "${name}"`);
   return found;
 };
+
+/** The randomizer's names for the Inverted world, whose tables are not ported. */
+const INVERTED = /^Inverted /;
+
+/** Each door by its slot of the game's door table. */
+const DOOR_OF_SLOT = new Map(
+  Object.entries(DOORS).flatMap(([name, { hole, slot }]) =>
+    hole || slot === undefined || INVERTED.test(name)
+      ? []
+      : [[slot, slug(name)] as const],
+  ),
+);
+
+/** Each hole by its bytes of the game's hole table. */
+const HOLE_OF_SLOT = new Map(
+  Object.entries(DOORS).flatMap(([name, { slots = [] }]) =>
+    INVERTED.test(name) ? [] : slots.map((slot) => [slot, slug(name)] as const),
+  ),
+);
+
+/**
+ * The targets each of the game's entrances is, by id (exit_ids), in the
+ * order of TARGETS: one, or a few places whose rooms are alike (the healer
+ * fairies', some shops' and the fortune tellers'), which the game loads by
+ * one entrance.
+ */
+const TARGETS_OF_ENTRANCE = (() => {
+  const exits = er.exits.value as Readonly<
+    Record<string, { readonly entrance: number | null }>
+  >;
+  const found = new Map<number, string[]>();
+  for (const { id, name } of TARGETS) {
+    const entrance = exits[name]?.entrance;
+    if (typeof entrance === "number")
+      found.set(entrance, [...(found.get(entrance) ?? []), id]);
+  }
+  return found;
+})();
+
+/** A door or hole the game shows Link went through, and where it leads. */
+export interface GameLink {
+  /** The entrance's id. */
+  readonly entrance: string;
+  /** What it leads to, by id: one target, or a few alike. */
+  readonly targets: readonly string[];
+}
+
+/**
+ * Where the game shows Link went (the autotracker's `decodeEntrances`), in
+ * the shuffle's ids. A slot or an entrance the tables do not know gives
+ * nothing.
+ */
+export const linksOf = (links: readonly EntranceLink[]): GameLink[] =>
+  links.flatMap(({ entrance, kind, slot }) => {
+    const id = (kind === "door" ? DOOR_OF_SLOT : HOLE_OF_SLOT).get(slot);
+    const targets = TARGETS_OF_ENTRANCE.get(entrance);
+    return id === undefined || targets === undefined
+      ? []
+      : [{ entrance: id, targets }];
+  });
 
 /**
  * The caves a hole drops into, by their door's exit and the hole's drop:
