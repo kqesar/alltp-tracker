@@ -11,6 +11,7 @@ import {
   StreamIcon,
   UndoIcon,
 } from "@/components/ui/ToolbarIcons";
+import { Smz3Autotrack } from "@/games/smz3/components/Smz3Autotrack";
 import { PRESETS } from "@/games/smz3/data";
 import {
   exportSave,
@@ -328,6 +329,7 @@ export const Smz3Controls = () => {
         <RedoIcon />
         <span className="sr-only">Redo</span>
       </button>
+      <Smz3Autotrack />
       <button
         className="tracker-controls__button"
         onClick={handleExport}

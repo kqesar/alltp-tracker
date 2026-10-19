@@ -97,6 +97,13 @@ type Smz3State = Smz3Progress & {
   redo: () => void;
   /** Replace the run with a save's: one undo step. */
   load: (progress: Smz3Progress) => void;
+  /**
+   * Lay what the game says on the run and on every snapshot of its history:
+   * no step, so undoing the player's change never undoes the game's.
+   */
+  applyGameNews: (
+    change: (run: Smz3Progress) => Partial<Smz3Progress> | null,
+  ) => void;
 };
 
 const progressOf = (state: Smz3Progress): Smz3Progress => ({
@@ -118,6 +125,20 @@ export const useSmz3Store = create<Smz3State>()(
         }));
       return {
         ...freshProgress(),
+        applyGameNews: (change) => {
+          const state = get();
+          const now = change(progressOf(state));
+          const rebase = (history: Smz3Progress[]) =>
+            history.map((run) => {
+              const changed = change(run);
+              return changed === null ? run : { ...run, ...changed };
+            });
+          set({
+            ...(now ?? {}),
+            future: rebase(state.future),
+            past: rebase(state.past),
+          });
+        },
         future: [],
         load: (progress) => record(progress),
         past: [],
