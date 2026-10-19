@@ -89,7 +89,9 @@
    that stay in view */
 .modal--wide {
   max-width: 42rem;
-  overflow: hidden;
+  /* Clip, not hidden: a hidden overflow still scrolls when focus or
+     scrollIntoView reaches into it, sliding the header out of view */
+  overflow: clip;
 }
 
 .modal--wide .modal__surface {
