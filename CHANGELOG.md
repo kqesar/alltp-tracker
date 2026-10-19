@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.28.0](https://github.com/kqesar/alltp-tracker/compare/v2.27.0...v2.28.0) (2026-10-19)
+
+
+### ✨ Features
+
+* **autotrack:** read ExHiROM games, as the SMZ3 combined ROM ([aa36ddb](https://github.com/kqesar/alltp-tracker/commit/aa36ddb5b733899e54716abe2d0028a7a65534c7))
+* **smz3:** place every location on the maps of Hyrule and Zebes ([15ef9fe](https://github.com/kqesar/alltp-tracker/commit/15ef9fe775cb688ba4279c5840baf28afd6ef79f))
+* **smz3:** port SMZ3's logic, held to its upstream tests ([030703f](https://github.com/kqesar/alltp-tracker/commit/030703ff23ada21584145ecaca05ec8101f4d31e))
+* **web:** track SMZ3 runs ([e3559fb](https://github.com/kqesar/alltp-tracker/commit/e3559fbf7d4199b22075858e546a871575b48471))
+
+
+### 🐛 Bug Fixes
+
+* **autotrack:** read HiROM's ROM mirrors at the cartridge's bytes ([a2de539](https://github.com/kqesar/alltp-tracker/commit/a2de539d88ee9413e6da23ae1a49130c62aea4c8))
+
+
+### 🔧 Code Refactoring
+
+* **alttpr:** give markerStatus a module of its own ([384c301](https://github.com/kqesar/alltp-tracker/commit/384c3012c03d917e9afeb2ac0806821ea9cdbc5c))
+* **web:** share the map legend between the games ([6ad7b0b](https://github.com/kqesar/alltp-tracker/commit/6ad7b0b98373446b1849966db57bb0e370cf8d99))
+
 ## [2.27.0](https://github.com/kqesar/alltp-tracker/compare/v2.26.1...v2.27.0) (2026-10-19)
 
 
