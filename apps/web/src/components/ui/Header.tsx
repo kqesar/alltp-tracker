@@ -1,8 +1,15 @@
+import type { GameId } from "@/games/registry";
+
+type HeaderProps = {
+  /** The game tracked: its randomizer's link, and ALttP's original tracker. */
+  game?: GameId;
+};
+
 /**
  * Header component with branding, navigation, and external links
  * Features a fixed position with backdrop blur and smooth interactions
  */
-export const Header = () => {
+export const Header = ({ game = "alttpr" }: HeaderProps) => {
   return (
     <header className="header">
       <div className="header__brand">
@@ -29,42 +36,69 @@ export const Header = () => {
           <span className="sr-only">(source code, opens in a new tab)</span>
         </a>
 
-        <a
-          className="header__link"
-          data-testid="link-alttpr"
-          href="https://alttpr.com/"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <img
-            alt=""
-            className="header__icon header__icon--pixel"
-            src={`${import.meta.env.BASE_URL}zelda-triforce.ico`}
-          />
-          <span className="header__label">ALttPR</span>{" "}
-          <span className="sr-only">(the randomizer, opens in a new tab)</span>
-        </a>
-
-        <a
-          className="header__link"
-          data-testid="link-original"
-          href="https://github.com/TestRunnerSRL/lttp-tracker"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <svg
-            aria-hidden="true"
-            className="header__icon"
-            focusable="false"
-            viewBox="0 0 24 24"
+        {game === "sm" ? (
+          <a
+            className="header__link"
+            data-testid="link-maprando"
+            href="https://maprando.com/"
+            rel="noopener noreferrer"
+            target="_blank"
           >
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
-          <span className="header__label">Original</span>{" "}
-          <span className="sr-only">
-            (the tracker this one started from, opens in a new tab)
-          </span>
-        </a>
+            <svg
+              aria-hidden="true"
+              className="header__icon"
+              focusable="false"
+              viewBox="0 0 24 24"
+            >
+              <path d="M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2V5zm6 0v14l6 2V7L9 5z" />
+            </svg>
+            <span className="header__label">Map Rando</span>{" "}
+            <span className="sr-only">
+              (the randomizer, opens in a new tab)
+            </span>
+          </a>
+        ) : (
+          <>
+            <a
+              className="header__link"
+              data-testid="link-alttpr"
+              href="https://alttpr.com/"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <img
+                alt=""
+                className="header__icon header__icon--pixel"
+                src={`${import.meta.env.BASE_URL}zelda-triforce.ico`}
+              />
+              <span className="header__label">ALttPR</span>{" "}
+              <span className="sr-only">
+                (the randomizer, opens in a new tab)
+              </span>
+            </a>
+
+            <a
+              className="header__link"
+              data-testid="link-original"
+              href="https://github.com/TestRunnerSRL/lttp-tracker"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <svg
+                aria-hidden="true"
+                className="header__icon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <span className="header__label">Original</span>{" "}
+              <span className="sr-only">
+                (the tracker this one started from, opens in a new tab)
+              </span>
+            </a>
+          </>
+        )}
       </nav>
     </header>
   );
