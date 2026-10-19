@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.26.0](https://github.com/kqesar/alltp-tracker/compare/v2.25.0...v2.26.0) (2026-10-19)
+
+
+### ✨ Features
+
+* **alttpr:** read from memory the doors and holes Link goes through ([800f941](https://github.com/kqesar/alltp-tracker/commit/800f941b9ce548216f7a760ebb119a7be89f4b3f))
+* **web:** note the doors Link goes through in a Crosskeys run ([7276e65](https://github.com/kqesar/alltp-tracker/commit/7276e6538c42994c26836fab0de9ef63d0b7c3de))
+
+
+### 📚 Documentation
+
+* **alttpr:** a respawn keeps the last door's slot, loading entrance 0 ([9dc9bc6](https://github.com/kqesar/alltp-tracker/commit/9dc9bc6ed3b1b343821246c8f26eb46cefbbaf7d))
+
 ## [2.25.0](https://github.com/kqesar/alltp-tracker/compare/v2.24.0...v2.25.0) (2026-10-18)
 
 
