@@ -1,0 +1,1298 @@
+[
+ {
+  "id": "castle-tower/foyer",
+  "mask": 16,
+  "offset": 448,
+  "size": 2
+ },
+ {
+  "id": "castle-tower/dark-maze",
+  "mask": 16,
+  "offset": 416,
+  "size": 2
+ },
+ {
+  "id": "eastern-palace/cannonball-chest",
+  "mask": 16,
+  "offset": 370,
+  "size": 2
+ },
+ {
+  "id": "eastern-palace/map-chest",
+  "mask": 16,
+  "offset": 340,
+  "size": 2
+ },
+ {
+  "id": "eastern-palace/compass-chest",
+  "mask": 16,
+  "offset": 336,
+  "size": 2
+ },
+ {
+  "id": "eastern-palace/big-chest",
+  "mask": 16,
+  "offset": 338,
+  "size": 2
+ },
+ {
+  "id": "eastern-palace/big-key-chest",
+  "mask": 16,
+  "offset": 368,
+  "size": 2
+ },
+ {
+  "id": "eastern-palace/armos-knights",
+  "mask": 2048,
+  "offset": 400,
+  "size": 2
+ },
+ {
+  "id": "desert-palace/big-chest",
+  "mask": 16,
+  "offset": 230,
+  "size": 2
+ },
+ {
+  "id": "desert-palace/torch",
+  "mask": 1024,
+  "offset": 230,
+  "size": 2
+ },
+ {
+  "id": "desert-palace/map-chest",
+  "mask": 16,
+  "offset": 232,
+  "size": 2
+ },
+ {
+  "id": "desert-palace/big-key-chest",
+  "mask": 16,
+  "offset": 234,
+  "size": 2
+ },
+ {
+  "id": "desert-palace/compass-chest",
+  "mask": 16,
+  "offset": 266,
+  "size": 2
+ },
+ {
+  "id": "desert-palace/lanmolas",
+  "mask": 2048,
+  "offset": 102,
+  "size": 2
+ },
+ {
+  "id": "tower-of-hera/basement-cage",
+  "mask": 1024,
+  "offset": 270,
+  "size": 2
+ },
+ {
+  "id": "tower-of-hera/map-chest",
+  "mask": 16,
+  "offset": 238,
+  "size": 2
+ },
+ {
+  "id": "tower-of-hera/big-key-chest",
+  "mask": 16,
+  "offset": 270,
+  "size": 2
+ },
+ {
+  "id": "tower-of-hera/compass-chest",
+  "mask": 32,
+  "offset": 78,
+  "size": 2
+ },
+ {
+  "id": "tower-of-hera/big-chest",
+  "mask": 16,
+  "offset": 78,
+  "size": 2
+ },
+ {
+  "id": "tower-of-hera/moldorm",
+  "mask": 2048,
+  "offset": 14,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/shooter-room",
+  "mask": 16,
+  "offset": 18,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/big-key-chest",
+  "mask": 16,
+  "offset": 116,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/stalfos-basement",
+  "mask": 16,
+  "offset": 20,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/the-arena/bridge",
+  "mask": 32,
+  "offset": 84,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/the-arena/ledge",
+  "mask": 16,
+  "offset": 84,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/map-chest",
+  "mask": 16,
+  "offset": 86,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/compass-chest",
+  "mask": 32,
+  "offset": 52,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/harmless-hellway",
+  "mask": 64,
+  "offset": 52,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/dark-basement/left",
+  "mask": 16,
+  "offset": 212,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/dark-basement/right",
+  "mask": 32,
+  "offset": 212,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/dark-maze/top",
+  "mask": 16,
+  "offset": 50,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/dark-maze/bottom",
+  "mask": 32,
+  "offset": 50,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/big-chest",
+  "mask": 16,
+  "offset": 52,
+  "size": 2
+ },
+ {
+  "id": "palace-of-darkness/helmasaur-king",
+  "mask": 2048,
+  "offset": 180,
+  "size": 2
+ },
+ {
+  "id": "swamp-palace/entrance",
+  "mask": 16,
+  "offset": 80,
+  "size": 2
+ },
+ {
+  "id": "swamp-palace/map-chest",
+  "mask": 16,
+  "offset": 110,
+  "size": 2
+ },
+ {
+  "id": "swamp-palace/big-chest",
+  "mask": 16,
+  "offset": 108,
+  "size": 2
+ },
+ {
+  "id": "swamp-palace/compass-chest",
+  "mask": 16,
+  "offset": 140,
+  "size": 2
+ },
+ {
+  "id": "swamp-palace/west-chest",
+  "mask": 16,
+  "offset": 104,
+  "size": 2
+ },
+ {
+  "id": "swamp-palace/big-key-chest",
+  "mask": 16,
+  "offset": 106,
+  "size": 2
+ },
+ {
+  "id": "swamp-palace/flooded-room/left",
+  "mask": 16,
+  "offset": 236,
+  "size": 2
+ },
+ {
+  "id": "swamp-palace/flooded-room/right",
+  "mask": 32,
+  "offset": 236,
+  "size": 2
+ },
+ {
+  "id": "swamp-palace/waterfall-room",
+  "mask": 16,
+  "offset": 204,
+  "size": 2
+ },
+ {
+  "id": "swamp-palace/arrghus",
+  "mask": 2048,
+  "offset": 12,
+  "size": 2
+ },
+ {
+  "id": "skull-woods/pot-prison",
+  "mask": 32,
+  "offset": 174,
+  "size": 2
+ },
+ {
+  "id": "skull-woods/compass-chest",
+  "mask": 16,
+  "offset": 206,
+  "size": 2
+ },
+ {
+  "id": "skull-woods/big-chest",
+  "mask": 16,
+  "offset": 176,
+  "size": 2
+ },
+ {
+  "id": "skull-woods/map-chest",
+  "mask": 32,
+  "offset": 176,
+  "size": 2
+ },
+ {
+  "id": "skull-woods/pinball-room",
+  "mask": 16,
+  "offset": 208,
+  "size": 2
+ },
+ {
+  "id": "skull-woods/big-key-chest",
+  "mask": 16,
+  "offset": 174,
+  "size": 2
+ },
+ {
+  "id": "skull-woods/bridge-room",
+  "mask": 16,
+  "offset": 178,
+  "size": 2
+ },
+ {
+  "id": "skull-woods/mothula",
+  "mask": 2048,
+  "offset": 82,
+  "size": 2
+ },
+ {
+  "id": "thieves-town/map-chest",
+  "mask": 16,
+  "offset": 438,
+  "size": 2
+ },
+ {
+  "id": "thieves-town/ambush-chest",
+  "mask": 16,
+  "offset": 406,
+  "size": 2
+ },
+ {
+  "id": "thieves-town/compass-chest",
+  "mask": 16,
+  "offset": 440,
+  "size": 2
+ },
+ {
+  "id": "thieves-town/big-key-chest",
+  "mask": 32,
+  "offset": 438,
+  "size": 2
+ },
+ {
+  "id": "thieves-town/attic",
+  "mask": 16,
+  "offset": 202,
+  "size": 2
+ },
+ {
+  "id": "thieves-town/blinds-cell",
+  "mask": 16,
+  "offset": 138,
+  "size": 2
+ },
+ {
+  "id": "thieves-town/big-chest",
+  "mask": 16,
+  "offset": 136,
+  "size": 2
+ },
+ {
+  "id": "thieves-town/blind",
+  "mask": 2048,
+  "offset": 344,
+  "size": 2
+ },
+ {
+  "id": "ice-palace/compass-chest",
+  "mask": 16,
+  "offset": 92,
+  "size": 2
+ },
+ {
+  "id": "ice-palace/spike-room",
+  "mask": 16,
+  "offset": 190,
+  "size": 2
+ },
+ {
+  "id": "ice-palace/map-chest",
+  "mask": 16,
+  "offset": 126,
+  "size": 2
+ },
+ {
+  "id": "ice-palace/big-key-chest",
+  "mask": 16,
+  "offset": 62,
+  "size": 2
+ },
+ {
+  "id": "ice-palace/iced-t-room",
+  "mask": 16,
+  "offset": 348,
+  "size": 2
+ },
+ {
+  "id": "ice-palace/freezor-chest",
+  "mask": 16,
+  "offset": 252,
+  "size": 2
+ },
+ {
+  "id": "ice-palace/big-chest",
+  "mask": 16,
+  "offset": 316,
+  "size": 2
+ },
+ {
+  "id": "ice-palace/kholdstare",
+  "mask": 2048,
+  "offset": 444,
+  "size": 2
+ },
+ {
+  "id": "misery-mire/main-lobby",
+  "mask": 16,
+  "offset": 388,
+  "size": 2
+ },
+ {
+  "id": "misery-mire/map-chest",
+  "mask": 32,
+  "offset": 390,
+  "size": 2
+ },
+ {
+  "id": "misery-mire/bridge-chest",
+  "mask": 16,
+  "offset": 324,
+  "size": 2
+ },
+ {
+  "id": "misery-mire/spike-chest",
+  "mask": 16,
+  "offset": 358,
+  "size": 2
+ },
+ {
+  "id": "misery-mire/compass-chest",
+  "mask": 16,
+  "offset": 386,
+  "size": 2
+ },
+ {
+  "id": "misery-mire/big-key-chest",
+  "mask": 16,
+  "offset": 418,
+  "size": 2
+ },
+ {
+  "id": "misery-mire/big-chest",
+  "mask": 16,
+  "offset": 390,
+  "size": 2
+ },
+ {
+  "id": "misery-mire/vitreous",
+  "mask": 2048,
+  "offset": 288,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/compass-chest",
+  "mask": 16,
+  "offset": 428,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/roller-room/left",
+  "mask": 16,
+  "offset": 366,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/roller-room/right",
+  "mask": 32,
+  "offset": 366,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/chain-chomps",
+  "mask": 16,
+  "offset": 364,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/big-key-chest",
+  "mask": 16,
+  "offset": 40,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/big-chest",
+  "mask": 16,
+  "offset": 72,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/crystaroller-room",
+  "mask": 16,
+  "offset": 8,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/eye-bridge/top-right",
+  "mask": 16,
+  "offset": 426,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/eye-bridge/top-left",
+  "mask": 32,
+  "offset": 426,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/eye-bridge/bottom-right",
+  "mask": 64,
+  "offset": 426,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/eye-bridge/bottom-left",
+  "mask": 128,
+  "offset": 426,
+  "size": 2
+ },
+ {
+  "id": "turtle-rock/trinexx",
+  "mask": 2048,
+  "offset": 328,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/bobs-torch",
+  "mask": 1024,
+  "offset": 280,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/dms-room/top-left",
+  "mask": 16,
+  "offset": 246,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/dms-room/top-right",
+  "mask": 32,
+  "offset": 246,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/dms-room/bottom-left",
+  "mask": 64,
+  "offset": 246,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/dms-room/bottom-right",
+  "mask": 128,
+  "offset": 246,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/map-chest",
+  "mask": 16,
+  "offset": 278,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/firesnake-room",
+  "mask": 16,
+  "offset": 250,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/randomizer-room/top-left",
+  "mask": 16,
+  "offset": 248,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/randomizer-room/top-right",
+  "mask": 32,
+  "offset": 248,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/randomizer-room/bottom-left",
+  "mask": 64,
+  "offset": 248,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/randomizer-room/bottom-right",
+  "mask": 128,
+  "offset": 248,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/hope-room/left",
+  "mask": 32,
+  "offset": 280,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/hope-room/right",
+  "mask": 64,
+  "offset": 280,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/tile-room",
+  "mask": 16,
+  "offset": 282,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/compass-room/top-left",
+  "mask": 16,
+  "offset": 314,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/compass-room/top-right",
+  "mask": 32,
+  "offset": 314,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/compass-room/bottom-left",
+  "mask": 64,
+  "offset": 314,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/compass-room/bottom-right",
+  "mask": 128,
+  "offset": 314,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/bobs-chest",
+  "mask": 128,
+  "offset": 280,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/big-chest",
+  "mask": 16,
+  "offset": 280,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/big-key-chest",
+  "mask": 16,
+  "offset": 56,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/big-key-room/left",
+  "mask": 32,
+  "offset": 56,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/big-key-room/right",
+  "mask": 64,
+  "offset": 56,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/mini-helmasaur-room/left",
+  "mask": 16,
+  "offset": 122,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/mini-helmasaur-room/right",
+  "mask": 32,
+  "offset": 122,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/pre-moldorm-chest",
+  "mask": 64,
+  "offset": 122,
+  "size": 2
+ },
+ {
+  "id": "ganons-tower/moldorm-chest",
+  "mask": 16,
+  "offset": 154,
+  "size": 2
+ },
+ {
+  "id": "ether-tablet",
+  "mask": 256,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "spectacle-rock",
+  "mask": 64,
+  "offset": 643,
+  "size": 1
+ },
+ {
+  "id": "spectacle-rock-cave",
+  "mask": 1024,
+  "offset": 468,
+  "size": 2
+ },
+ {
+  "id": "old-man",
+  "mask": 1,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "floating-island",
+  "mask": 64,
+  "offset": 645,
+  "size": 1
+ },
+ {
+  "id": "spiral-cave",
+  "mask": 16,
+  "offset": 508,
+  "size": 2
+ },
+ {
+  "id": "paradox-cave-upper/left",
+  "mask": 16,
+  "offset": 510,
+  "size": 2
+ },
+ {
+  "id": "paradox-cave-upper/right",
+  "mask": 32,
+  "offset": 510,
+  "size": 2
+ },
+ {
+  "id": "paradox-cave-lower/far-left",
+  "mask": 16,
+  "offset": 478,
+  "size": 2
+ },
+ {
+  "id": "paradox-cave-lower/left",
+  "mask": 32,
+  "offset": 478,
+  "size": 2
+ },
+ {
+  "id": "paradox-cave-lower/middle",
+  "mask": 256,
+  "offset": 478,
+  "size": 2
+ },
+ {
+  "id": "paradox-cave-lower/right",
+  "mask": 64,
+  "offset": 478,
+  "size": 2
+ },
+ {
+  "id": "paradox-cave-lower/far-right",
+  "mask": 128,
+  "offset": 478,
+  "size": 2
+ },
+ {
+  "id": "mimic-cave",
+  "mask": 16,
+  "offset": 536,
+  "size": 2
+ },
+ {
+  "id": "master-sword-pedestal",
+  "mask": 64,
+  "offset": 768,
+  "size": 1
+ },
+ {
+  "id": "mushroom",
+  "mask": 4096,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "lost-woods-hideout",
+  "mask": 512,
+  "offset": 450,
+  "size": 2
+ },
+ {
+  "id": "lumberjack-tree",
+  "mask": 512,
+  "offset": 452,
+  "size": 2
+ },
+ {
+  "id": "pegasus-rocks",
+  "mask": 16,
+  "offset": 584,
+  "size": 2
+ },
+ {
+  "id": "graveyard-ledge",
+  "mask": 512,
+  "offset": 566,
+  "size": 2
+ },
+ {
+  "id": "kings-tomb",
+  "mask": 16,
+  "offset": 550,
+  "size": 2
+ },
+ {
+  "id": "kakariko-well/top",
+  "mask": 16,
+  "offset": 94,
+  "size": 2
+ },
+ {
+  "id": "kakariko-well/left",
+  "mask": 32,
+  "offset": 94,
+  "size": 2
+ },
+ {
+  "id": "kakariko-well/middle",
+  "mask": 64,
+  "offset": 94,
+  "size": 2
+ },
+ {
+  "id": "kakariko-well/right",
+  "mask": 128,
+  "offset": 94,
+  "size": 2
+ },
+ {
+  "id": "kakariko-well/bottom",
+  "mask": 256,
+  "offset": 94,
+  "size": 2
+ },
+ {
+  "id": "blinds-hideout/top",
+  "mask": 16,
+  "offset": 570,
+  "size": 2
+ },
+ {
+  "id": "blinds-hideout/far-left",
+  "mask": 128,
+  "offset": 570,
+  "size": 2
+ },
+ {
+  "id": "blinds-hideout/left",
+  "mask": 32,
+  "offset": 570,
+  "size": 2
+ },
+ {
+  "id": "blinds-hideout/right",
+  "mask": 64,
+  "offset": 570,
+  "size": 2
+ },
+ {
+  "id": "blinds-hideout/far-right",
+  "mask": 256,
+  "offset": 570,
+  "size": 2
+ },
+ {
+  "id": "bottle-merchant",
+  "mask": 2,
+  "offset": 969,
+  "size": 1
+ },
+ {
+  "id": "chicken-house",
+  "mask": 16,
+  "offset": 528,
+  "size": 2
+ },
+ {
+  "id": "sick-kid",
+  "mask": 4,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "kakariko-tavern",
+  "mask": 16,
+  "offset": 518,
+  "size": 2
+ },
+ {
+  "id": "magic-bat",
+  "mask": 32768,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "king-zora",
+  "mask": 2,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "zoras-ledge",
+  "mask": 64,
+  "offset": 769,
+  "size": 1
+ },
+ {
+  "id": "waterfall-fairy/left",
+  "mask": 16,
+  "offset": 552,
+  "size": 2
+ },
+ {
+  "id": "waterfall-fairy/right",
+  "mask": 32,
+  "offset": 552,
+  "size": 2
+ },
+ {
+  "id": "potion-shop",
+  "mask": 8192,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "sahasrahlas-hut/left",
+  "mask": 16,
+  "offset": 522,
+  "size": 2
+ },
+ {
+  "id": "sahasrahlas-hut/middle",
+  "mask": 32,
+  "offset": 522,
+  "size": 2
+ },
+ {
+  "id": "sahasrahlas-hut/right",
+  "mask": 64,
+  "offset": 522,
+  "size": 2
+ },
+ {
+  "id": "sahasrahla",
+  "mask": 16,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "maze-race",
+  "mask": 64,
+  "offset": 680,
+  "size": 1
+ },
+ {
+  "id": "library",
+  "mask": 128,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "flute-spot",
+  "mask": 64,
+  "offset": 682,
+  "size": 1
+ },
+ {
+  "id": "south-of-grove",
+  "mask": 1024,
+  "offset": 566,
+  "size": 2
+ },
+ {
+  "id": "links-house",
+  "mask": 16,
+  "offset": 520,
+  "size": 2
+ },
+ {
+  "id": "aginahs-cave",
+  "mask": 16,
+  "offset": 532,
+  "size": 2
+ },
+ {
+  "id": "mini-moldorm-cave/far-left",
+  "mask": 16,
+  "offset": 582,
+  "size": 2
+ },
+ {
+  "id": "mini-moldorm-cave/left",
+  "mask": 32,
+  "offset": 582,
+  "size": 2
+ },
+ {
+  "id": "mini-moldorm-cave/npc",
+  "mask": 1024,
+  "offset": 582,
+  "size": 2
+ },
+ {
+  "id": "mini-moldorm-cave/right",
+  "mask": 64,
+  "offset": 582,
+  "size": 2
+ },
+ {
+  "id": "mini-moldorm-cave/far-right",
+  "mask": 128,
+  "offset": 582,
+  "size": 2
+ },
+ {
+  "id": "desert-ledge",
+  "mask": 64,
+  "offset": 688,
+  "size": 1
+ },
+ {
+  "id": "checkerboard-cave",
+  "mask": 512,
+  "offset": 588,
+  "size": 2
+ },
+ {
+  "id": "bombos-tablet",
+  "mask": 512,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "floodgate-chest",
+  "mask": 16,
+  "offset": 534,
+  "size": 2
+ },
+ {
+  "id": "sunken-treasure",
+  "mask": 64,
+  "offset": 699,
+  "size": 1
+ },
+ {
+  "id": "lake-hylia-island",
+  "mask": 64,
+  "offset": 693,
+  "size": 1
+ },
+ {
+  "id": "hobo",
+  "mask": 1,
+  "offset": 969,
+  "size": 1
+ },
+ {
+  "id": "ice-rod-cave",
+  "mask": 16,
+  "offset": 576,
+  "size": 2
+ },
+ {
+  "id": "sanctuary",
+  "mask": 16,
+  "offset": 36,
+  "size": 2
+ },
+ {
+  "id": "sewers/secret-room/left",
+  "mask": 16,
+  "offset": 34,
+  "size": 2
+ },
+ {
+  "id": "sewers/secret-room/middle",
+  "mask": 32,
+  "offset": 34,
+  "size": 2
+ },
+ {
+  "id": "sewers/secret-room/right",
+  "mask": 64,
+  "offset": 34,
+  "size": 2
+ },
+ {
+  "id": "sewers/dark-cross",
+  "mask": 16,
+  "offset": 100,
+  "size": 2
+ },
+ {
+  "id": "hyrule-castle/map-chest",
+  "mask": 16,
+  "offset": 228,
+  "size": 2
+ },
+ {
+  "id": "hyrule-castle/boomerang-chest",
+  "mask": 16,
+  "offset": 226,
+  "size": 2
+ },
+ {
+  "id": "hyrule-castle/zeldas-cell",
+  "mask": 16,
+  "offset": 256,
+  "size": 2
+ },
+ {
+  "id": "links-uncle",
+  "mask": 1,
+  "offset": 966,
+  "size": 1
+ },
+ {
+  "id": "secret-passage",
+  "mask": 16,
+  "offset": 170,
+  "size": 2
+ },
+ {
+  "id": "spike-cave",
+  "mask": 16,
+  "offset": 558,
+  "size": 2
+ },
+ {
+  "id": "hookshot-cave/top-right",
+  "mask": 16,
+  "offset": 120,
+  "size": 2
+ },
+ {
+  "id": "hookshot-cave/top-left",
+  "mask": 32,
+  "offset": 120,
+  "size": 2
+ },
+ {
+  "id": "hookshot-cave/bottom-left",
+  "mask": 64,
+  "offset": 120,
+  "size": 2
+ },
+ {
+  "id": "hookshot-cave/bottom-right",
+  "mask": 128,
+  "offset": 120,
+  "size": 2
+ },
+ {
+  "id": "superbunny-cave/top",
+  "mask": 16,
+  "offset": 496,
+  "size": 2
+ },
+ {
+  "id": "superbunny-cave/bottom",
+  "mask": 32,
+  "offset": 496,
+  "size": 2
+ },
+ {
+  "id": "bumper-cave",
+  "mask": 64,
+  "offset": 714,
+  "size": 1
+ },
+ {
+  "id": "chest-game",
+  "mask": 1024,
+  "offset": 524,
+  "size": 2
+ },
+ {
+  "id": "c-shaped-house",
+  "mask": 16,
+  "offset": 568,
+  "size": 2
+ },
+ {
+  "id": "brewery",
+  "mask": 16,
+  "offset": 524,
+  "size": 2
+ },
+ {
+  "id": "hammer-pegs",
+  "mask": 1024,
+  "offset": 590,
+  "size": 2
+ },
+ {
+  "id": "blacksmith",
+  "mask": 1024,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "purple-chest",
+  "mask": 16,
+  "offset": 969,
+  "size": 1
+ },
+ {
+  "id": "catfish",
+  "mask": 32,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "pyramid",
+  "mask": 64,
+  "offset": 731,
+  "size": 1
+ },
+ {
+  "id": "pyramid-fairy/left",
+  "mask": 16,
+  "offset": 556,
+  "size": 2
+ },
+ {
+  "id": "pyramid-fairy/right",
+  "mask": 32,
+  "offset": 556,
+  "size": 2
+ },
+ {
+  "id": "digging-game",
+  "mask": 64,
+  "offset": 744,
+  "size": 1
+ },
+ {
+  "id": "stumpy",
+  "mask": 8,
+  "offset": 1040,
+  "size": 2
+ },
+ {
+  "id": "hype-cave/top",
+  "mask": 16,
+  "offset": 572,
+  "size": 2
+ },
+ {
+  "id": "hype-cave/middle-right",
+  "mask": 32,
+  "offset": 572,
+  "size": 2
+ },
+ {
+  "id": "hype-cave/middle-left",
+  "mask": 64,
+  "offset": 572,
+  "size": 2
+ },
+ {
+  "id": "hype-cave/bottom",
+  "mask": 128,
+  "offset": 572,
+  "size": 2
+ },
+ {
+  "id": "hype-cave/npc",
+  "mask": 1024,
+  "offset": 572,
+  "size": 2
+ },
+ {
+  "id": "mire-shed/left",
+  "mask": 16,
+  "offset": 538,
+  "size": 2
+ },
+ {
+  "id": "mire-shed/right",
+  "mask": 32,
+  "offset": 538,
+  "size": 2
+ }
+]

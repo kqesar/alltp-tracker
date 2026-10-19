@@ -14,6 +14,7 @@ Read from [`tewtal/SMZ3Randomizer`](https://github.com/tewtal/SMZ3Randomizer) (M
 | `src/world.ts`, `src/pack.ts` | the graph, compiled for a run | `Region.cs`, `Location.cs` |
 | `scripts/import-upstream-tests.mjs` | upstream's tests as JSON fixtures | `Randomizer.SMZ3.Tests/Logic/**` |
 | `src/markers.ts` | where the maps draw each location: Zebes's markers, Hyrule's by world, `ZELDA_ALIASES` | VARIA's map (`theonlydude/RandomMetroidSolver`, MIT), `@alltp/pack-alttpr`'s markers |
+| `src/autotrack/*.ts` | autotracking: the memory map, its modes, the race profile, the decoders | `tewtal/alttp_sm_combo_randomizer_rom` (the combo ROM's ASM), `Patch.cs` |
 
 Hyrule's markers are the ALttPR pack's, by alias, kept as data (`src/markers-hyrule.json`): `src/markers.spec.ts` derives them from `@alltp/pack-alttpr`, a dev dependency only, and holds the file to them. When ALttPR's markers move, that spec fails; `pnpm vitest run -u packs/smz3/src/markers.spec.ts` writes the file again. Importing them instead would make every SMZ3 board download ALttPR's world, 140 kB, for their coordinates.
 
@@ -54,6 +55,30 @@ Both games are one graph, as the engine's README plans for SMZ3. A region's `Can
 # Regenerate the fixtures from a checkout of the pinned commit
 pnpm --filter @alltp/pack-smz3 import-upstream <SMZ3Randomizer checkout>
 ```
+
+## Autotracking
+
+`SMZ3_AUTOTRACK` is the pack `@alltp/autotrack` reads an SMZ3 seed with. Its facts come from the combo ROM's ASM, `tewtal/alttp_sm_combo_randomizer_rom` at `5f9eaf6` (the submodule `d53be76` pins; MIT), and from what `Patch.cs` writes into the ROM; each range in `src/autotrack/memory.ts` cites its file and lines.
+
+**One ROM, two homes per game.** The running game's state is in WRAM; the other's is in SRAM. The game byte at `$A1:73FE` says which runs: `$00` Zelda, negative Super Metroid, `$11` the credits (`common.asm`). The pack declares these as modes, and each range is read only in its mode. Each game is saved before a portal (`z3/teleport.asm:48`, `sm/teleport.asm:58-61`), so the SRAM of the game not running is current, but for what is found for it in the other game: that goes to a buffer, written back on the next save.
+
+| | While Zelda runs | While Super Metroid runs |
+| --- | --- | --- |
+| Zelda's save (`$7E:F000`, 0x500 bytes) | WRAM | SRAM `$A0:6000`, with the buffers laid over: `$A1:7B00` (offsets `$300-$3FF`, the items) and `$A1:7F50` (`$4E0-$4EF`, the keys found) |
+| Super Metroid's save (offset n: `$7E:09A2+n` below `$60`, `$7E:D7C0+n` above) | buffer `$A1:7900` (offsets `$00-$7F`) and its SRAM save's items collected (`$A1:60C0`, offsets `$B0-$CF`) | WRAM: `$7E:09A2` (equipment) and `$7E:D830` (keycards, boss tokens, items collected) |
+
+The decoders read each game through one view of its save, whichever game runs, so the same game gives the same items and checks in either mode (`decode.spec.ts`). After a switch, `@alltp/autotrack` counts a mode's ranges unread until read again: a decoder never takes an earlier visit's bytes for the current one.
+
+**What is read.**
+- The items held in both games: Zelda's equipment and tracking bits, its keys found (`DungeonCollectedKeys`, which no door takes back) and big keys; Super Metroid's items, beams, and each pack's or tank's maximum over what one gives; the keycards (bit n of save offset `$70` is item `$D0+n`) and the boss tokens.
+- The rewards found: the pendants' and crystals' bits, as `Patch.cs` writes them (the green pendant `$04`; crystals 5 and 6, the red ones, `$04` and `$01`).
+- The locations checked. Zelda's by the flags the ALttPR pack's `CHECK_FLAGS` gives the same location (by `ZELDA_ALIASES`), kept as data in `src/autotrack/zelda-flags.json`, which `flags.spec.ts` derives and writes again with `vitest -u` when those flags move. Super Metroid's by its item's bit in the items collected: upstream's location id is that bit (the item PLM's argument, checked against the vanilla ROM for 99 of the 100 locations; the patch moves the Morphing Ball's PLM, whose bit stays `$1A`), and `flags.spec.ts` holds the table to the ids `regions.json` records.
+- The seed: its title (`ZSM…`, the game check), its race bit, keysanity and Super Metroid's logic from the seed block's first word.
+- Outside races, its requirements: the thresholds and medallions, in Zelda's config bank, which `Snes()` places at bus `$40:0000` (ROM `$400000`, ExHiROM's second half). A bridge must serve that half: bsnes-mercury's memory map through RetroArch does not, and answers with first-half bytes, a plausible but wrong medallion among them (seen on 2026-10-19). Two bytes of the block are foretold by the seed block, Ganon's vulnerability by the goal and the save-and-quit flag: when they differ, the requirements decode as `unreadable` and stay the player's.
+
+The game state and both saves are read at one cadence, in the same tick. With the state read twice as often, the first reading in play carried saves read during the new file's load, when the buffers were still blank SRAM: the board took every item for found. A save that was never written (Zelda's equipment all `$FF`, Super Metroid's items word `$FFFF`) decodes to nothing besides.
+
+**Races.** No SMZ3 autotracking specification exists; racetime.gg's smz3 category allows autotracking and bans ROM or RAM inspection otherwise. The race profile (`race-profile.ts`) therefore reads what the player sees and the settings a race announces. It forbids, in a race seed, the requirements a seed may draw at random (the crystals Ganon's Tower and Ganon ask for, the bosses Tourian asks for) and the medallions opening Misery Mire and Turtle Rock. The dungeons' and bosses' rewards are never read at all: a reward counts once found.
 
 ## Not modelled
 

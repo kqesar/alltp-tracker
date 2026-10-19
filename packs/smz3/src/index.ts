@@ -1,5 +1,27 @@
 // @alltp/pack-smz3: SMZ3 as samus.link generates it, both games' logic as
-// data over the engine, held to upstream's logic tests (README.md).
+// data over the engine, held to upstream's logic tests, and its autotracking
+// (README.md).
+export {
+  decodeChecks,
+  decodeInPlay,
+  decodeItems,
+  decodeMode,
+  decodeRequirements,
+  decodeSeed,
+  type MemoryView,
+  type RequirementsReading,
+  type SeedReading,
+  type Unsettled,
+} from "./autotrack/decode";
+export {
+  MEMORY_RANGE,
+  MEMORY_RANGES,
+  MODES,
+  type Smz3Mode,
+} from "./autotrack/memory";
+export { SMZ3_AUTOTRACK } from "./autotrack/pack";
+export { checkGame, SMZ3_TITLE_PREFIX } from "./autotrack/probes";
+export { SMZ3_RACE_PROFILE } from "./autotrack/race-profile";
 export { DERIVED_FACTS, derivedFacts } from "./derived";
 export { HELPERS } from "./helpers";
 export {

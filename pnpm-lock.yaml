@@ -301,6 +301,9 @@ importers:
 
   packs/smz3:
     dependencies:
+      '@alltp/autotrack':
+        specifier: workspace:*
+        version: link:../../packages/autotrack
       '@alltp/engine':
         specifier: workspace:*
         version: link:../../packages/engine

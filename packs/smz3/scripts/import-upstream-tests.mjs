@@ -511,11 +511,24 @@ function regionFiles(dir) {
 /**
  * A region file's regions as the pack mirrors them: the region's name, the
  * line of its CanEnter (none when it keeps Region's, open to all), and each
- * location's name and line, in file order.
+ * location's name, line and id, in file order. A Super Metroid location's id
+ * is its item's bit in the game's collected items, which autotracking reads.
  * @param {string} source
  * @param {string} file
  */
 export function readRegionFile(source, file) {
+  /**
+   * A location's id: a number, or Zelda's `256+n`.
+   * @param {string} text
+   * @param {string} where
+   */
+  const idOf = (text, where) => {
+    const match = /^(?:(\d+)\s*\+\s*)?(\d+)$/.exec(text.trim());
+    if (match === null) {
+      throw new Error(`Unread location id ${text} in ${where}`);
+    }
+    return Number(match[1] ?? 0) + Number(match[2]);
+  };
   const lines = source.split("\n");
   /** @param {RegExp} pattern */
   const lineOf = (pattern) => {
@@ -524,14 +537,20 @@ export function readRegionFile(source, file) {
   };
   const name = /public override string Name => "([^"]+)";/.exec(source);
   if (name === null) throw new Error(`No region name in ${file}`);
-  /** @type {{ line: number, name: string }[]} */
+  /** @type {{ id: number, line: number, name: string }[]} */
   const locations = [];
   lines.forEach((line, i) => {
     const match =
-      /new Location\(this, [^,]+, 0x[0-9A-Fa-f]+, LocationType\.\w+, "([^"]+)"/.exec(
+      /new Location\(this, ([^,]+), 0x[0-9A-Fa-f]+, LocationType\.\w+, "([^"]+)"/.exec(
         line,
       );
-    if (match) locations.push({ line: i + 1, name: match[1] });
+    if (match) {
+      locations.push({
+        id: idOf(match[1], file),
+        line: i + 1,
+        name: match[2],
+      });
+    }
   });
   const canEnter = lineOf(/public override bool CanEnter\(/);
   return {
