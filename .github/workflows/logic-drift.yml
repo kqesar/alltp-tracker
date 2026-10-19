@@ -1,10 +1,11 @@
 name: Logic drift
 
-# Once a week, and on demand, compare the head of the randomizer's default
-# branch with the commit packs/alttpr/upstream.json pins. When a file it
-# lists changed, or LOGIC moved, open or update the one open issue labelled
-# logic-drift; the logic-drift skill (.claude/skills/logic-drift) ports the
-# change from there. Nothing changed: nothing happens.
+# Once a week, and on demand, compare the head of each randomizer's default
+# branch with the commit its pack's upstream.json pins (packs/alttpr,
+# packs/smz3). When a file it lists changed, or ALttPR's LOGIC moved, open or
+# update that pack's open issue labelled logic-drift; the logic-drift skill
+# (.claude/skills/logic-drift) ports ALttPR's change from there, the pack's
+# README SMZ3's. Nothing changed: nothing happens.
 # Upstream is read through the GitHub API only: this workflow checks out
 # none of it and runs none of its code. packs/alttpr/scripts/logic-drift.mjs
 # holds the logic, with its tests.
@@ -36,6 +37,7 @@ jobs:
           sparse-checkout: |
             packs/alttpr/upstream.json
             packs/alttpr/scripts/logic-drift.mjs
+            packs/smz3/upstream.json
           sparse-checkout-cone-mode: false
 
       - name: Compare upstream with the pinned commit
@@ -46,3 +48,10 @@ jobs:
               `${process.env.GITHUB_WORKSPACE}/packs/alttpr/scripts/logic-drift.mjs`
             );
             await checkDrift({ context, core, github });
+            await checkDrift({
+              context,
+              core,
+              github,
+              manifestPath: `${process.env.GITHUB_WORKSPACE}/packs/smz3/upstream.json`,
+              pack: "smz3",
+            });

@@ -3,6 +3,169 @@
   "commit": "d53be76dc18c3d89d560f7912757b9d068762ac9",
   "license": "MIT",
   "repo": "tewtal/SMZ3Randomizer",
+  "rules": [
+    {
+      "file": "Randomizer.SMZ3/Item.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/World.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/WorldState.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Region.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Location.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Config.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/Brinstar/Blue.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/Brinstar/Green.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/Brinstar/Kraid.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/Brinstar/Pink.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/Brinstar/Red.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/Crateria/Central.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/Crateria/East.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/Crateria/West.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/Maridia/Inner.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/Maridia/Outer.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/NorfairLower/East.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/NorfairLower/West.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/NorfairUpper/Crocomire.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/NorfairUpper/East.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/NorfairUpper/West.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/SuperMetroid/WreckedShip.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/CastleTower.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/DarkWorld/DeathMountain/East.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/DarkWorld/DeathMountain/West.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/DarkWorld/Mire.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/DarkWorld/NorthEast.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/DarkWorld/NorthWest.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/DarkWorld/South.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/DesertPalace.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/EasternPalace.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/GanonsTower.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/HyruleCastle.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/IcePalace.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/LightWorld/DeathMountain/East.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/LightWorld/DeathMountain/West.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/LightWorld/NorthEast.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/LightWorld/NorthWest.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/LightWorld/South.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/MiseryMire.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/PalaceOfDarkness.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/SkullWoods.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/SwampPalace.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/ThievesTown.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/TowerOfHera.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3/Regions/Zelda/TurtleRock.cs"
+    }
+  ],
+  "tests": [
+    {
+      "file": "Randomizer.SMZ3.Tests/Logic/Case.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3.Tests/Logic/LogicCases.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3.Tests/Logic/LogicTests.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3.Tests/Logic/SMNormal.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3.Tests/Logic/SMHard.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3.Tests/Logic/SMNormalKeysanity.cs"
+    },
+    {
+      "file": "Randomizer.SMZ3.Tests/Logic/SMHardKeysanity.cs"
+    }
+  ],
   "version": "11.3.2",
   "why": "samus.link and beta.samus.link run this commit (11.3.2): about 97 % of racetime.gg's SMZ3 races, 2025-2026"
 }

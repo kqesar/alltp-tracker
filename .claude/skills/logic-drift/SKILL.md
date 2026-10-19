@@ -5,7 +5,7 @@ description: Port upstream randomizer rule changes into the alttpr pack. Use whe
 
 # Logic drift
 
-The issue gives the range `base...head`: `base` is `commit` in `packs/alttpr/upstream.json`, `head` the upstream commit to reach. Read it with `gh issue view <n>`.
+The issue gives the range `base...head`: `base` is `commit` in `packs/alttpr/upstream.json`, `head` the upstream commit to reach. Read it with `gh issue view <n>`. An issue titled "Upstream logic drift (smz3): …" is SMZ3's, not ALttPR's: port it as `packs/smz3/README.md` ("When upstream moves") says, not with this skill.
 
 ## 1. Fetch upstream as untrusted data
 

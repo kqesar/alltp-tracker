@@ -1,10 +1,11 @@
 /// <reference types="node" />
-// Logic drift: has the randomizer changed a file the pack ports since the
-// commit packs/alttpr/upstream.json pins? Run weekly by
+// Logic drift: has a randomizer changed a file a game pack ports since the
+// commit the pack's upstream.json pins? Run weekly by
 // .github/workflows/logic-drift.yml through actions/github-script, which
-// passes its authenticated client. It keeps one open issue labelled
-// `logic-drift` up to date, and does nothing while no listed file changed
-// and LOGIC did not move. Upstream is only read through the GitHub API:
+// passes its authenticated client, once per pack. It keeps one open issue
+// labelled `logic-drift` per pack up to date (told apart by its title), and
+// does nothing while no listed file changed and, for a manifest that pins
+// one, LOGIC did not move. Upstream is only read through the GitHub API:
 // nothing of it is checked out or run.
 
 import { readFileSync } from "node:fs";
@@ -44,7 +45,7 @@ const PER_PAGE = 100;
  *   },
  * }} GitHub
  * @typedef {{ info(message: string): void, warning(message: string): void }} Core
- * @typedef {{ repo: string, commit: string, logic: number, rules: { file: string }[], tests: { file: string }[] }} Manifest
+ * @typedef {{ repo: string, commit: string, logic?: number, rules: { file: string }[], tests: { file: string }[] }} Manifest
  */
 
 /**
@@ -87,11 +88,22 @@ export function logicOf(text) {
 const short = (sha) => sha.slice(0, 7);
 
 /**
+ * The start of a pack's issue titles: ALttPR's as it always was, another
+ * pack's with its name.
+ * @param {string} pack
+ */
+export const titlePrefix = (pack) =>
+  pack === "alttpr"
+    ? "Upstream logic drift: "
+    : `Upstream logic drift (${pack}): `;
+
+/**
  * @param {string} base
  * @param {string} head
+ * @param {string} [pack]
  */
-export function issueTitle(base, head) {
-  return `Upstream logic drift: ${short(base)}...${short(head)}`;
+export function issueTitle(base, head, pack = "alttpr") {
+  return `${titlePrefix(pack)}${short(base)}...${short(head)}`;
 }
 
 /**
@@ -102,6 +114,7 @@ export function issueTitle(base, head) {
  *   changes: readonly ChangedFile[],
  *   logic: number | undefined,
  *   truncated: boolean,
+ *   pack?: string,
  * }} drift
  */
 export function issueBody({
@@ -110,6 +123,7 @@ export function issueBody({
   head,
   logic,
   manifest,
+  pack = "alttpr",
   truncated,
 }) {
   const site = `https://github.com/${manifest.repo}`;
@@ -129,18 +143,22 @@ export function issueBody({
     return `| ${file}${renamed} | ${change.status} | +${change.additions} -${change.deletions} |`;
   });
   const logicLine =
-    logic === undefined
-      ? "**LOGIC could not be read** from `app/Randomizer.php` at the new commit: treat it as structural."
-      : logic === manifest.logic
-        ? `LOGIC is unchanged: ${logic}.`
-        : `**LOGIC changed: ${manifest.logic} → ${logic}.** This is structural: plan before porting.`;
+    manifest.logic === undefined
+      ? []
+      : [
+          logic === undefined
+            ? "**LOGIC could not be read** from `app/Randomizer.php` at the new commit: treat it as structural."
+            : logic === manifest.logic
+              ? `LOGIC is unchanged: ${logic}.`
+              : `**LOGIC changed: ${manifest.logic} → ${logic}.** This is structural: plan before porting.`,
+          "",
+        ];
   return [
-    `\`${manifest.repo}\` moved past the commit \`packs/alttpr/upstream.json\` pins: ` +
+    `\`${manifest.repo}\` moved past the commit \`packs/${pack}/upstream.json\` pins: ` +
       `[\`${short(base)}...${short(head)}\`](${site}/compare/${base}...${head}) ` +
       `(${commits} commit${commits === 1 ? "" : "s"}).`,
     "",
-    logicLine,
-    "",
+    ...logicLine,
     changes.length === 0
       ? "None of the files `upstream.json` lists changed."
       : `${changes.length} of the files \`upstream.json\` lists changed:`,
@@ -155,8 +173,11 @@ export function issueBody({
         ]
       : []),
     "",
-    "Port the change with the `logic-drift` skill (`.claude/skills/logic-drift/SKILL.md`), " +
-      "then close this issue from the pull request.",
+    pack === "alttpr"
+      ? "Port the change with the `logic-drift` skill (`.claude/skills/logic-drift/SKILL.md`), " +
+        "then close this issue from the pull request."
+      : `Port the change as \`packs/${pack}/README.md\` says, ` +
+        "then close this issue from the pull request.",
     "",
     `<!-- logic-drift base=${base} head=${head} -->`,
   ].join("\n");
@@ -215,6 +236,7 @@ async function logicAt(github, upstream, ref) {
  *   context: { repo: Repo },
  *   core: Core,
  *   manifestPath?: string,
+ *   pack?: string,
  * }} options
  * @returns {Promise<{ action: "none" | "created" | "updated" | "unchanged", issue?: number }>}
  */
@@ -223,6 +245,7 @@ export async function checkDrift({
   core,
   github,
   manifestPath = "packs/alttpr/upstream.json",
+  pack = "alttpr",
 }) {
   /** @type {Manifest} */
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
@@ -247,7 +270,10 @@ export async function checkDrift({
     head,
   );
   const changes = listedChanges(manifest, files);
-  const logic = await logicAt(github, upstream, head);
+  const logic =
+    manifest.logic === undefined
+      ? undefined
+      : await logicAt(github, upstream, head);
   if (changes.length === 0 && logic === manifest.logic && !truncated) {
     core.info(
       `${commits} upstream commit(s) since ${short(manifest.commit)}, none in a listed file.`,
@@ -255,13 +281,14 @@ export async function checkDrift({
     return { action: "none" };
   }
 
-  const title = issueTitle(manifest.commit, head);
+  const title = issueTitle(manifest.commit, head, pack);
   const body = issueBody({
     changes,
     commits,
     head,
     logic,
     manifest,
+    pack,
     truncated,
   });
   const here = context.repo;
@@ -271,7 +298,11 @@ export async function checkDrift({
     per_page: 100,
     state: "open",
   });
-  const existing = open.find((issue) => issue.pull_request === undefined);
+  const existing = open.find(
+    (issue) =>
+      issue.pull_request === undefined &&
+      issue.title.startsWith(titlePrefix(pack)),
+  );
   if (existing !== undefined) {
     if (existing.title === title && existing.body === body) {
       core.info(`Issue #${existing.number} already says so.`);
@@ -293,7 +324,7 @@ export async function checkDrift({
     await github.rest.issues.createLabel({
       ...here,
       color: "d93f0b",
-      description: "The randomizer changed a file the alttpr pack ports",
+      description: "A randomizer changed a file a game pack ports",
       name: LABEL,
     });
   }
