@@ -23,7 +23,7 @@ export type GameModule = {
   ObsView: ComponentType<ObsViewProps>;
 };
 
-export const GAME_IDS = ["alttpr", "sm"] as const;
+export const GAME_IDS = ["alttpr", "sm", "smz3"] as const;
 export type GameId = (typeof GAME_IDS)[number];
 
 /** Each game's name, and the randomizer the tracker follows for it. */
@@ -32,11 +32,13 @@ export const GAMES: Readonly<
 > = {
   alttpr: { name: "A Link to the Past", randomizer: "alttpr.com" },
   sm: { name: "Super Metroid", randomizer: "Map Rando" },
+  smz3: { name: "SMZ3", randomizer: "samus.link" },
 };
 
 const LOADERS: Readonly<Record<GameId, () => Promise<GameModule>>> = {
   alttpr: () => import("@/games/alttpr/module").then(({ alttpr }) => alttpr),
   sm: () => import("@/games/sm/module").then(({ sm }) => sm),
+  smz3: () => import("@/games/smz3/module").then(({ smz3 }) => smz3),
 };
 
 /** Where this device keeps the game it tracks. */

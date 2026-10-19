@@ -1,0 +1,19 @@
+// SMZ3 (samus.link) as a game module: what the shell loads for a device that
+// tracks it (games/registry.ts). Its stylesheet comes with it.
+
+import "@/games/smz3/smz3.css";
+import type { GameModule } from "@/games/registry";
+import Smz3App from "@/games/smz3/Smz3App";
+import { Smz3ObsView } from "@/games/smz3/Smz3ObsView";
+import { SMZ3_STORAGE_KEY, useSmz3Store } from "@/games/smz3/store";
+
+export const smz3: GameModule = {
+  App: Smz3App,
+  ObsView: Smz3ObsView,
+  // The run follows the other tabs and the stream view through storage
+  start: () => {
+    window.addEventListener("storage", (event) => {
+      if (event.key === SMZ3_STORAGE_KEY) void useSmz3Store.persist.rehydrate();
+    });
+  },
+};

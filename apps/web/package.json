@@ -19,6 +19,7 @@
     "@alltp/engine": "workspace:*",
     "@alltp/pack-alttpr": "workspace:*",
     "@alltp/pack-sm": "workspace:*",
+    "@alltp/pack-smz3": "workspace:*",
     "@lichess-org/vosk-browser": "0.0.3",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

@@ -223,6 +223,9 @@ importers:
       '@alltp/pack-sm':
         specifier: workspace:*
         version: link:../../packs/sm
+      '@alltp/pack-smz3':
+        specifier: workspace:*
+        version: link:../../packs/smz3
       '@lichess-org/vosk-browser':
         specifier: 0.0.3
         version: 0.0.3

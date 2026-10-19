@@ -4,7 +4,7 @@
 ![Version](https://img.shields.io/github/v/release/kqesar/alltp-tracker?label=version)
 ![License](https://img.shields.io/github/license/kqesar/alltp-tracker?label=license)
 
-An item and progress tracker for **The Legend of Zelda: A Link to the Past** randomizer runs. It keeps track of the items you have found and works out, in real time, which chests you can reach and which dungeons you can clear. It tracks **Super Metroid** too, as **Map Rando** seeds play it.
+An item and progress tracker for **The Legend of Zelda: A Link to the Past** randomizer runs. It keeps track of the items you have found and works out, in real time, which chests you can reach and which dungeons you can clear. It tracks **Super Metroid** too, as **Map Rando** seeds play it, and **SMZ3**, the two games combined, as **samus.link** generates it.
 
 **→ [kqesar.github.io/alltp-tracker](https://kqesar.github.io/alltp-tracker/)**
 
@@ -66,6 +66,16 @@ Pick **Super Metroid** under **Game** in the run type dialog (Mode); A Link to t
 - **The items a seed adds**: the Wall Jump Boots and the split Speed Booster (the Spark and Blue Boosters) take their cells when you turn them on.
 - **No map and no logic**: Map Rando reconnects the game's rooms, so follow the game's own map. Export, Import, Undo, Redo and the stream view work as for A Link to the Past.
 - **Autotracking**: connected as for A Link to the Past (below), the tracker recognises a Map Rando ROM and follows it: the items you hold (a pack or tank counts from the maximum it raised, so the seed's own pack sizes count right, and an energy tank you disabled from the pause menu still counts), the seed's objectives from its ROM and those done, and whether it adds the Wall Jump Boots or the split Speed Booster. **What I read** names the seed, linked to its maprando.com page, and its settings presets. Map Rando races allow autotracking, so nothing is held back. Like A Link to the Past's, it changes a cell only when the game does and never undoes a mark you set beyond it, and lays nothing outside a game in play (the title screen still holds the last file's items).
+
+## SMZ3 (samus.link)
+
+Pick **SMZ3** under **Game** in the run type dialog. The tracker follows **samus.link**, the randomizer the community races SMZ3 with: 456 of racetime.gg's 475 SMZ3 races of 2025 and 2026 were samus.link seeds, its beta included.
+
+- **Items**: both games' items. Click a cell to add one, right-click or "-" to take one away; the sword, shield, gloves and bottles show their level on the sprite, the packs and tanks their count. Under them, the pendants and crystals found, and Super Metroid's boss tokens with how many Tourian asks for.
+- **Two maps, one logic**: Hyrule (its two worlds, as for A Link to the Past) and Zebes. Every location takes the state SMZ3's own logic gives it, ported from the randomizer's source (`tewtal/SMZ3Randomizer`) and held to its official logic tests: available, maybe (it depends on what the tracker cannot know yet, such as a medallion or where an item sits), or out of logic. Click a marker to check its locations.
+- **Run type**: a preset (Normal 7/7/4, the weeklies' Normal 7/5/3, Hard, Normal keysanity) or each setting: Super Metroid's logic (Normal or Hard), keysanity, the crystals Ganon's Tower and Ganon ask for, and the bosses Tourian asks for. Set Misery Mire's and Turtle Rock's medallions once you know them, and their dungeons' checks stop being maybes.
+- **Keysanity**: each dungeon's big key and small keys take two rows of the grid, as on A Link to the Past's keysanity board, and Super Metroid's keycards a table under the tokens; the logic reads them.
+- Export, Import, Undo, Redo and the stream view work as for the other games. Autotracking does not read SMZ3 yet.
 
 ## Autotracking
 
@@ -157,7 +167,7 @@ packs/sm/          @alltp/pack-sm: Super Metroid as Map Rando plays it: items, o
 packs/smz3/        @alltp/pack-smz3: SMZ3 as samus.link generates it: both games' logic, held to its tests
 ```
 
-The app loads one game's module at a time (`apps/web/src/games/registry.ts`), each a chunk of its own. A game's run lives in its own Zustand store, persisted to localStorage under its own key: A Link to the Past's in `games/alttpr/stores/gameStore.ts`, Super Metroid's in `games/sm/store.ts`.
+The app loads one game's module at a time (`apps/web/src/games/registry.ts`), each a chunk of its own. A game's run lives in its own Zustand store, persisted to localStorage under its own key: A Link to the Past's in `games/alttpr/stores/gameStore.ts`, Super Metroid's in `games/sm/store.ts`, SMZ3's in `games/smz3/store.ts`.
 
 ```
 apps/web/src/
@@ -167,8 +177,10 @@ apps/web/src/
 │   ├── alttpr/      A Link to the Past: data/, logic/ (the run read by the alltpr
 │   │                pack), stores/, components/ (grid, map, Checks, Run, go mode),
 │   │                autotrack/, voice/, hooks/
-│   └── sm/          Super Metroid (Map Rando): its grid, objectives, store, styles,
-│                    autotrack/ (the session, its store and what follows the game)
+│   ├── sm/          Super Metroid (Map Rando): its grid, objectives, store, styles,
+│   │                autotrack/ (the session, its store and what follows the game)
+│   └── smz3/        SMZ3 (samus.link): its grid, keys, maps of Hyrule and Zebes, the
+│                    run read by the smz3 pack, store, styles
 ├── autotrack/    shared autotracking words (status, guide), the cross-tab Web Lock
 ├── components/   ui/ (shared chrome: dialogs, toolbar menu, game picker, header),
 │                 autotrack/ (the setup guide, the status dot, the lazy dialog loader),
@@ -178,7 +190,7 @@ apps/web/src/
 └── utils/        the stream view's address and fit, keyboard and platform helpers
 ```
 
-The rules are the alltpr pack's, ported from the randomizer's source and held to its official tests; the map draws the pack's markers. The app keeps no rule of its own.
+The rules are the packs', ported from each randomizer's source and held to its official tests; the maps draw the packs' markers. The app keeps no rule of its own.
 
 `apps/web/src/games/alttpr/logic/alttpr.snapshot.spec.ts` snapshots what the map shows across a range of item states. It exists to catch accidental rule changes during refactors: if it moves, the game logic moved with it.
 
@@ -188,4 +200,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the commit and release conventions.
 
 MIT — see [LICENSE](LICENSE).
 
-Super Metroid's item sprites are Map Rando's item sheet (`blkerby/MapRandomizer`, MIT, its visualizer's `items.png`); the game's art belongs to Nintendo, as A Link to the Past's does.
+Super Metroid's item sprites are Map Rando's item sheet (`blkerby/MapRandomizer`, MIT, its visualizer's `items.png`). SMZ3's map of Zebes is composed from VARIA's area maps, its locations placed as VARIA's autotracker places them (`theonlydude/RandomMetroidSolver`, MIT). Each ships with its licence beside it. The games' art belongs to Nintendo.

@@ -5,6 +5,55 @@ type HeaderProps = {
   game?: GameId;
 };
 
+/** A game's randomizer, as its map-style link names it. */
+const MAP_RANDOMIZERS: Readonly<
+  Record<
+    Exclude<GameId, "alttpr">,
+    { href: string; label: string; testId: string }
+  >
+> = {
+  sm: {
+    href: "https://maprando.com/",
+    label: "Map Rando",
+    testId: "link-maprando",
+  },
+  smz3: {
+    href: "https://samus.link/",
+    label: "samus.link",
+    testId: "link-samus",
+  },
+};
+
+/** The link to the randomizer of a game other than ALttPR. */
+const RandomizerLink = ({
+  href,
+  label,
+  testId,
+}: {
+  href: string;
+  label: string;
+  testId: string;
+}) => (
+  <a
+    className="header__link"
+    data-testid={testId}
+    href={href}
+    rel="noopener noreferrer"
+    target="_blank"
+  >
+    <svg
+      aria-hidden="true"
+      className="header__icon"
+      focusable="false"
+      viewBox="0 0 24 24"
+    >
+      <path d="M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2V5zm6 0v14l6 2V7L9 5z" />
+    </svg>
+    <span className="header__label">{label}</span>{" "}
+    <span className="sr-only">(the randomizer, opens in a new tab)</span>
+  </a>
+);
+
 /**
  * Header component with branding, navigation, and external links
  * Features a fixed position with backdrop blur and smooth interactions
@@ -36,27 +85,8 @@ export const Header = ({ game = "alttpr" }: HeaderProps) => {
           <span className="sr-only">(source code, opens in a new tab)</span>
         </a>
 
-        {game === "sm" ? (
-          <a
-            className="header__link"
-            data-testid="link-maprando"
-            href="https://maprando.com/"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <svg
-              aria-hidden="true"
-              className="header__icon"
-              focusable="false"
-              viewBox="0 0 24 24"
-            >
-              <path d="M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2V5zm6 0v14l6 2V7L9 5z" />
-            </svg>
-            <span className="header__label">Map Rando</span>{" "}
-            <span className="sr-only">
-              (the randomizer, opens in a new tab)
-            </span>
-          </a>
+        {game !== "alttpr" ? (
+          <RandomizerLink {...MAP_RANDOMIZERS[game]} />
         ) : (
           <>
             <a
