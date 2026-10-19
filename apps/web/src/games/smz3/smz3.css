@@ -1,0 +1,280 @@
+/*
+ * SMZ3's board, loaded with its module only. The grid's cells reuse the
+ * shared item cell (griditem, grid-item-base, griditem--dimmed): A Link to
+ * the Past's icons are the app's assets, set by --sprite on each cell, Super
+ * Metroid's frames of Map Rando's item sheet (games/sm), set by --frame;
+ * keysanity's key cells are ALttPR's (overlays.css). The maps reuse the
+ * shared markers (map.css): Hyrule is ALttPR's map, Zebes VARIA's area maps
+ * composed (packs/smz3 markers.ts).
+ */
+.smz3-layout {
+  --cell: clamp(40px, min(100cqi / 18, (100dvh - 14rem) / 9), 64px);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+/* Keysanity adds two rows of key cells, and the keycards under the tokens */
+.smz3-layout[data-keys] {
+  --cell: clamp(40px, min(100cqi / 18, (100dvh - 14rem) / 12), 64px);
+}
+
+@container app (width < 60rem) {
+  .smz3-layout,
+  .smz3-layout[data-keys] {
+    --cell: clamp(36px, 100cqi / 7.5, 64px);
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  .smz3-maps {
+    width: 100%;
+  }
+}
+
+.smz3-board {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.smz3-grid__cells {
+  display: grid;
+  grid-template-columns: repeat(7, var(--cell));
+  grid-auto-rows: var(--cell);
+  background-color: var(--color-bg);
+}
+
+.smz3-cell--zelda,
+.smz3-cell--zelda.griditem--dimmed::after {
+  background-image: var(--sprite);
+  background-size: 100% 100%;
+}
+
+.smz3-cell--sm,
+.smz3-cell--sm.griditem--dimmed::after {
+  background-image: url("../sm/assets/items.png");
+  background-position: calc(var(--frame, 0) * 100% / 25) 0;
+  background-size: 2600% 100%;
+}
+
+/* Not held: the cell hides its own icon, which its pseudo-element redraws
+   through the grey filter (dimmed.css) */
+.smz3-cell--zelda.griditem--dimmed,
+.smz3-cell--sm.griditem--dimmed {
+  background-size: 0 0;
+}
+
+/* How many packs, tanks or rewards: game-like digits in the lower right */
+.smz3-cell__count {
+  position: absolute;
+  right: 4%;
+  bottom: 2%;
+  font-family: var(--font-mono, monospace);
+  font-size: calc(var(--cell) * 0.3);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--sprite-white);
+  text-shadow:
+    1px 0 var(--sprite-ink),
+    -1px 0 var(--sprite-ink),
+    0 1px var(--sprite-ink),
+    0 -1px var(--sprite-ink);
+  pointer-events: none;
+}
+
+/* The boss tokens */
+.smz3-tokens {
+  display: grid;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+}
+
+.smz3-tokens__heading {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.smz3-tokens__summary {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.smz3-tokens__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: var(--spacing-xs);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.smz3-token {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.smz3-token:hover {
+  border-color: var(--color-accent);
+}
+
+.smz3-token[aria-pressed="true"] {
+  border-color: var(--color-success);
+}
+
+.smz3-token__check {
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-weight: 700;
+  color: var(--color-success);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+/* Super Metroid's keycards: an area a row, a level a column */
+.smz3-keycards {
+  font-size: var(--font-size-sm);
+  border-collapse: collapse;
+}
+
+.smz3-keycards th {
+  padding: 2px var(--spacing-md) 2px 0;
+  font-weight: 400;
+  text-align: left;
+}
+
+.smz3-keycards thead th {
+  padding-inline: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.smz3-keycards td {
+  padding: 2px var(--spacing-xs);
+  text-align: center;
+}
+
+.smz3-keycard {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-weight: 700;
+  color: var(--color-success);
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.smz3-keycard:hover {
+  border-color: var(--color-accent);
+}
+
+.smz3-keycard[aria-pressed="true"] {
+  border-color: var(--color-success);
+}
+
+/* The maps */
+.smz3-maps {
+  display: grid;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+/* The maps' container, as ALttPR's map panel: Hyrule's worlds stack once
+   side by side they would be too narrow (map.css) */
+.smz3-maps__panel {
+  container: map / inline-size;
+}
+
+.smz3-zebes {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1065 / 921;
+  container-type: inline-size;
+  background-color: #000;
+  background-image: url("/assets/smz3/zebes.png");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border-radius: var(--border-radius);
+}
+
+/* Zebes's rooms are a sixth of Hyrule's squares: its markers are smaller,
+   under the map-pin exception of WCAG 2.5.8 the e2e target check skips */
+.smz3-zebes .mapspan {
+  --marker: clamp(14px, 2.4cqw, 28px);
+}
+
+/* The run type dialog's fields */
+.smz3-mode__field {
+  display: grid;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.smz3-mode__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: var(--spacing-xs) var(--spacing-md);
+  padding: var(--spacing-sm) 0 0;
+  margin: 0 0 var(--spacing-md);
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.smz3-mode__options legend {
+  padding: 0;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.smz3-mode__check {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  min-height: 2rem;
+}
+
+.smz3-stream__url {
+  padding: var(--spacing-sm);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+  background: var(--surface-2);
+  border-radius: var(--border-radius-sm);
+}
+
+.smz3-stream__status {
+  min-height: 1.5em;
+  margin: var(--spacing-xs) 0 0;
+}
+
+/* The stream view: the grid alone, placed by Smz3ObsView, nothing painted */
+.smz3-obs .smz3-grid {
+  position: absolute;
+  top: var(--obs-top, 0);
+  left: var(--obs-left, 0);
+}
+
+.smz3-obs .smz3-grid__cells {
+  background-color: transparent;
+}
