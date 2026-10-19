@@ -64,6 +64,14 @@ export function pakRegion(address: number): PakRegion | undefined {
   return undefined;
 }
 
+/**
+ * LoROM ROM banks: alttpo/snes masks them with $3F, 2 MiB of ROM, enough for
+ * A Link to the Past. A 3 or 4 MiB LoROM game (Super Metroid, Map Rando's
+ * bank $DF) needs $7F: banks $00-$7F (and their $80-$FF mirrors) are 128
+ * pages of 32 KiB. SNI's own Pak-to-bus side already covers 4 MiB.
+ */
+const LOROM_ROM = 0x7f_7fff;
+
 // util.BankToLinear: a bank:offset address folded onto 32 KiB pages.
 function bankToLinear(address: number): number {
   return (address >>> 16) * 0x8000 + (address & 0x7fff);
@@ -73,20 +81,20 @@ function loromBusToPak(bus: number): number | undefined {
   const low = bus & 0xffff;
   if (bus >= 0xf0_0000) {
     return bus & 0x8000
-      ? bankToLinear(bus & 0x3f_7fff)
+      ? bankToLinear(bus & LOROM_ROM)
       : bankToLinear(bus - 0xf0_0000) + 0xe0_0000;
   }
   if (bus >= 0x80_0000) {
-    if (bus & 0x8000) return bankToLinear(bus & 0x3f_7fff);
+    if (bus & 0x8000) return bankToLinear(bus & LOROM_ROM);
     return low < 0x2000 ? (bus & 0x1fff) + 0xf5_0000 : undefined;
   }
   if (bus >= 0x7e_0000) return bus - 0x7e_0000 + 0xf5_0000;
   if (bus >= 0x70_0000) {
     return bus & 0x8000
-      ? bankToLinear(bus & 0x3f_7fff)
+      ? bankToLinear(bus & LOROM_ROM)
       : bankToLinear(bus - 0x70_0000) + 0xe0_0000;
   }
-  if (bus & 0x8000) return bankToLinear(bus & 0x3f_7fff);
+  if (bus & 0x8000) return bankToLinear(bus & LOROM_ROM);
   return low < 0x2000 ? (bus & 0x1fff) + 0xf5_0000 : undefined;
 }
 

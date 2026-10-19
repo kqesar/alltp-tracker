@@ -167,8 +167,13 @@ What each bridge does with it:
 `bus(address, mapping)` translates a pack's A-bus address once, at load;
 `busRange(first, last)` refuses a range that is not one block (a LoROM bank
 crossing). The code ports alttpo/snes mapping/{lorom,hirom}/mapping.go at
-644082b79cd30cc28a8f02ed545da286b9c4984a, the library SNI uses, limits
-included: LoROM covers 2 MiB of ROM (banks are masked with `$3F`).
+644082b79cd30cc28a8f02ed545da286b9c4984a, the library SNI uses, but for one
+limit: alttpo/snes masks LoROM banks with `$3F` (2 MiB of ROM, enough for
+A Link to the Past), which folds Super Metroid's banks `$C0-$DF` onto `$80`.
+Here LoROM covers 4 MiB (banks masked with `$7F`): Map Rando's seed name at
+`$DF:FEF0` is ROM offset `$2F_FEF0`. SNI's own Pak-to-bus side
+(`PakAddressToBus`) already covers 4 MiB, so the addresses it is sent come
+back to the right bank.
 
 Example: the ALttPR race flag at A-bus `$30:8213` (LoROM) is ROM offset
 `$18_0213`; WRAM `$7E:F340` is `$F5_F340`.
