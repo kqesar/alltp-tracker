@@ -11,11 +11,16 @@ import {
 import { DefinitionError } from "./errors";
 
 describe("busToPak", () => {
-  // Expected values follow alttpo/snes mapping/{lorom,hirom}/mapping.go.
+  // Expected values follow alttpo/snes mapping/{lorom,hirom}/mapping.go,
+  // but LoROM ROM spans 4 MiB here (address.ts, LOROM_ROM).
   it.each([
     [0x30_8213, "lorom", 0x18_0213], // the ALttPR race flag
     [0xb0_8213, "lorom", 0x18_0213], // its FastROM mirror
     [0x00_ffb0, "lorom", 0x00_7fb0], // internal header
+    [0xdf_fef0, "lorom", 0x2f_fef0], // Map Rando's seed name, past 2 MiB
+    [0x5f_fef0, "lorom", 0x2f_fef0],
+    [0xc0_8000, "lorom", 0x20_0000],
+    [0xff_ffff, "lorom", 0x3f_ffff], // the last byte of a 4 MiB LoROM
     [0x7e_f340, "lorom", 0xf5_f340], // WRAM
     [0x7f_ffff, "lorom", 0xf6_ffff],
     [0x00_0010, "lorom", 0xf5_0010], // low WRAM mirror
@@ -75,9 +80,6 @@ describe("pakToBus", () => {
         pak,
         fc.constantFrom("lorom", "hirom" as const),
         (address, mapping) => {
-          // alttpo/snes's LoROM bus side masks banks with $3F: 2 MiB of ROM.
-          if (mapping === "lorom" && address < 0xe0_0000)
-            fc.pre(address < 0x20_0000);
           // LoROM SRAM banks $70-$7D hold 448 KiB; $7E is WRAM.
           if (
             mapping === "lorom" &&
