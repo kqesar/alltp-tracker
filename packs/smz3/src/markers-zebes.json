@@ -1,0 +1,590 @@
+[
+  {
+    "locations": ["missile-outside-wrecked-ship-top"],
+    "names": ["Missile (outside Wrecked Ship top)"],
+    "x": 56.714,
+    "y": 1.357
+  },
+  {
+    "locations": ["missile-wrecked-ship-top"],
+    "names": ["Missile (Wrecked Ship top)"],
+    "x": 80.751,
+    "y": 1.357
+  },
+  {
+    "locations": ["power-bomb-crateria-surface"],
+    "names": ["Power Bomb (Crateria surface)"],
+    "x": 47.7,
+    "y": 3.094
+  },
+  {
+    "locations": ["reserve-tank-wrecked-ship"],
+    "names": ["Reserve Tank, Wrecked Ship"],
+    "x": 71.737,
+    "y": 3.094
+  },
+  {
+    "locations": ["energy-tank-gauntlet"],
+    "names": ["Energy Tank, Gauntlet"],
+    "x": 23.662,
+    "y": 4.832
+  },
+  {
+    "locations": ["missile-outside-wrecked-ship-middle"],
+    "names": ["Missile (outside Wrecked Ship middle)"],
+    "x": 55.211,
+    "y": 4.832
+  },
+  {
+    "locations": [
+      "missile-crateria-gauntlet-right",
+      "missile-crateria-gauntlet-left"
+    ],
+    "names": [
+      "Missile (Crateria gauntlet right)",
+      "Missile (Crateria gauntlet left)"
+    ],
+    "x": 14.648,
+    "y": 6.569
+  },
+  {
+    "locations": ["gravity-suit"],
+    "names": ["Gravity Suit"],
+    "x": 64.225,
+    "y": 6.569
+  },
+  {
+    "locations": ["missile-gravity-suit"],
+    "names": ["Missile (Gravity Suit)"],
+    "x": 68.732,
+    "y": 6.569
+  },
+  {
+    "locations": ["energy-tank-wrecked-ship"],
+    "names": ["Energy Tank, Wrecked Ship"],
+    "x": 76.244,
+    "y": 6.569
+  },
+  {
+    "locations": ["missile-crateria-moat"],
+    "names": ["Missile (Crateria moat)"],
+    "x": 52.207,
+    "y": 8.306
+  },
+  {
+    "locations": ["missile-outside-wrecked-ship-bottom"],
+    "names": ["Missile (outside Wrecked Ship bottom)"],
+    "x": 55.211,
+    "y": 10.043
+  },
+  {
+    "locations": ["energy-tank-terminator"],
+    "names": ["Energy Tank, Terminator"],
+    "x": 16.15,
+    "y": 11.781
+  },
+  {
+    "locations": ["bombs"],
+    "names": ["Bombs"],
+    "x": 35.681,
+    "y": 11.781
+  },
+  {
+    "locations": ["missile-wrecked-ship-middle"],
+    "names": ["Missile (Wrecked Ship middle)"],
+    "x": 67.23,
+    "y": 11.781
+  },
+  {
+    "locations": ["missile-crateria-middle"],
+    "names": ["Missile (Crateria middle)"],
+    "x": 22.16,
+    "y": 13.518
+  },
+  {
+    "locations": ["super-missile-wrecked-ship-left"],
+    "names": ["Super Missile (Wrecked Ship left)"],
+    "x": 71.737,
+    "y": 13.518
+  },
+  {
+    "locations": ["right-super-wrecked-ship"],
+    "names": ["Right Super, Wrecked Ship"],
+    "x": 80.751,
+    "y": 13.518
+  },
+  {
+    "locations": ["super-missile-crateria"],
+    "names": ["Super Missile (Crateria)"],
+    "x": 34.178,
+    "y": 16.992
+  },
+  {
+    "locations": ["missile-crateria-bottom"],
+    "names": ["Missile (Crateria bottom)"],
+    "x": 28.169,
+    "y": 32.628
+  },
+  {
+    "locations": ["plasma-beam"],
+    "names": ["Plasma Beam"],
+    "x": 77.746,
+    "y": 37.839
+  },
+  {
+    "locations": ["super-missile-green-brinstar-top"],
+    "names": ["Super Missile (green Brinstar top)"],
+    "x": 8.685,
+    "y": 39.577
+  },
+  {
+    "locations": ["missile-green-brinstar-below-super-missile"],
+    "names": ["Missile (green Brinstar below super missile)"],
+    "x": 10.188,
+    "y": 41.314
+  },
+  {
+    "locations": ["reserve-tank-brinstar"],
+    "names": ["Reserve Tank, Brinstar"],
+    "x": 13.192,
+    "y": 41.314
+  },
+  {
+    "locations": [
+      "missile-green-brinstar-behind-missile",
+      "missile-green-brinstar-behind-reserve-tank"
+    ],
+    "names": [
+      "Missile (green Brinstar behind missile)",
+      "Missile (green Brinstar behind reserve tank)"
+    ],
+    "x": 14.695,
+    "y": 41.314
+  },
+  {
+    "locations": [
+      "super-missile-yellow-maridia",
+      "missile-yellow-maridia-super-missile"
+    ],
+    "names": [
+      "Super Missile (yellow Maridia)",
+      "Missile (yellow Maridia super missile)"
+    ],
+    "x": 53.709,
+    "y": 44.788
+  },
+  {
+    "locations": ["missile-yellow-maridia-false-wall"],
+    "names": ["Missile (yellow Maridia false wall)"],
+    "x": 65.728,
+    "y": 44.788
+  },
+  {
+    "locations": ["power-bomb-green-brinstar-bottom"],
+    "names": ["Power Bomb (green Brinstar bottom)"],
+    "x": 11.69,
+    "y": 46.526
+  },
+  {
+    "locations": ["missile-pink-brinstar-top"],
+    "names": ["Missile (pink Brinstar top)"],
+    "x": 19.202,
+    "y": 46.526
+  },
+  {
+    "locations": ["missile-draygon"],
+    "names": ["Missile (Draygon)"],
+    "x": 98.779,
+    "y": 46.526
+  },
+  {
+    "locations": ["power-bomb-pink-brinstar"],
+    "names": ["Power Bomb (pink Brinstar)"],
+    "x": 16.197,
+    "y": 48.263
+  },
+  {
+    "locations": ["energy-tank-brinstar-gate"],
+    "names": ["Energy Tank, Brinstar Gate"],
+    "x": 25.211,
+    "y": 48.263
+  },
+  {
+    "locations": [
+      "missile-blue-brinstar-top",
+      "missile-blue-brinstar-behind-missile"
+    ],
+    "names": [
+      "Missile (blue Brinstar top)",
+      "Missile (blue Brinstar behind missile)"
+    ],
+    "x": 37.183,
+    "y": 48.263
+  },
+  {
+    "locations": ["power-bomb-red-brinstar-sidehopper-room"],
+    "names": ["Power Bomb (red Brinstar sidehopper room)"],
+    "x": 46.197,
+    "y": 48.263
+  },
+  {
+    "locations": ["energy-tank-botwoon"],
+    "names": ["Energy Tank, Botwoon"],
+    "x": 79.249,
+    "y": 48.263
+  },
+  {
+    "locations": ["super-missile-pink-brinstar"],
+    "names": ["Super Missile (pink Brinstar)"],
+    "x": 29.718,
+    "y": 50.0
+  },
+  {
+    "locations": ["missile-pink-maridia"],
+    "names": ["Missile (pink Maridia)"],
+    "x": 71.737,
+    "y": 50.0
+  },
+  {
+    "locations": ["super-missile-pink-maridia"],
+    "names": ["Super Missile (pink Maridia)"],
+    "x": 73.239,
+    "y": 50.0
+  },
+  {
+    "locations": ["super-missile-green-brinstar-bottom"],
+    "names": ["Super Missile (green Brinstar bottom)"],
+    "x": 1.174,
+    "y": 51.737
+  },
+  {
+    "locations": ["energy-tank-etecoons"],
+    "names": ["Energy Tank, Etecoons"],
+    "x": 2.676,
+    "y": 51.737
+  },
+  {
+    "locations": ["missile-pink-brinstar-bottom"],
+    "names": ["Missile (pink Brinstar bottom)"],
+    "x": 19.202,
+    "y": 51.737
+  },
+  {
+    "locations": ["power-bomb-blue-brinstar"],
+    "names": ["Power Bomb (blue Brinstar)"],
+    "x": 28.169,
+    "y": 51.737
+  },
+  {
+    "locations": ["morphing-ball"],
+    "names": ["Morphing Ball"],
+    "x": 31.174,
+    "y": 51.737
+  },
+  {
+    "locations": ["energy-tank-brinstar-ceiling"],
+    "names": ["Energy Tank, Brinstar Ceiling"],
+    "x": 40.188,
+    "y": 51.737
+  },
+  {
+    "locations": ["missile-blue-brinstar-middle"],
+    "names": ["Missile (blue Brinstar middle)"],
+    "x": 41.69,
+    "y": 51.737
+  },
+  {
+    "locations": ["space-jump"],
+    "names": ["Space Jump"],
+    "x": 92.77,
+    "y": 51.737
+  },
+  {
+    "locations": ["charge-beam"],
+    "names": ["Charge Beam"],
+    "x": 19.202,
+    "y": 53.474
+  },
+  {
+    "locations": ["missile-green-brinstar-pipe"],
+    "names": ["Missile (green Brinstar pipe)"],
+    "x": 26.714,
+    "y": 53.474
+  },
+  {
+    "locations": ["missile-blue-brinstar-bottom"],
+    "names": ["Missile (blue Brinstar bottom)"],
+    "x": 35.681,
+    "y": 53.474
+  },
+  {
+    "locations": ["missile-red-brinstar-spike-room"],
+    "names": ["Missile (red Brinstar spike room)"],
+    "x": 44.695,
+    "y": 53.474
+  },
+  {
+    "locations": ["power-bomb-red-brinstar-spike-room"],
+    "names": ["Power Bomb (red Brinstar spike room)"],
+    "x": 46.197,
+    "y": 53.474
+  },
+  {
+    "locations": ["super-missile-green-maridia"],
+    "names": ["Super Missile (green Maridia)"],
+    "x": 52.207,
+    "y": 53.474
+  },
+  {
+    "locations": ["missile-green-maridia-shinespark"],
+    "names": ["Missile (green Maridia shinespark)"],
+    "x": 50.704,
+    "y": 55.212
+  },
+  {
+    "locations": ["energy-tank-mama-turtle"],
+    "names": ["Energy Tank, Mama turtle"],
+    "x": 62.723,
+    "y": 55.212
+  },
+  {
+    "locations": ["energy-tank-waterway"],
+    "names": ["Energy Tank, Waterway"],
+    "x": 5.681,
+    "y": 56.949
+  },
+  {
+    "locations": ["missile-green-maridia-tatori"],
+    "names": ["Missile (green Maridia tatori)"],
+    "x": 64.225,
+    "y": 56.949
+  },
+  {
+    "locations": ["missile-left-maridia-sand-pit-room", "reserve-tank-maridia"],
+    "names": ["Missile (left Maridia sand pit room)", "Reserve Tank, Maridia"],
+    "x": 65.728,
+    "y": 58.686
+  },
+  {
+    "locations": ["missile-right-maridia-sand-pit-room"],
+    "names": ["Missile (right Maridia sand pit room)"],
+    "x": 70.235,
+    "y": 58.686
+  },
+  {
+    "locations": ["x-ray-scope"],
+    "names": ["X-Ray Scope"],
+    "x": 28.169,
+    "y": 60.423
+  },
+  {
+    "locations": ["power-bomb-right-maridia-sand-pit-room"],
+    "names": ["Power Bomb (right Maridia sand pit room)"],
+    "x": 71.737,
+    "y": 60.423
+  },
+  {
+    "locations": ["spring-ball"],
+    "names": ["Spring Ball"],
+    "x": 85.258,
+    "y": 62.161
+  },
+  {
+    "locations": ["spazer"],
+    "names": ["Spazer"],
+    "x": 50.704,
+    "y": 63.898
+  },
+  {
+    "locations": ["missile-kraid"],
+    "names": ["Missile (Kraid)"],
+    "x": 64.225,
+    "y": 65.635
+  },
+  {
+    "locations": ["energy-tank-kraid"],
+    "names": ["Energy Tank, Kraid"],
+    "x": 58.216,
+    "y": 67.372
+  },
+  {
+    "locations": ["varia-suit"],
+    "names": ["Varia Suit"],
+    "x": 79.249,
+    "y": 67.372
+  },
+  {
+    "locations": ["ice-beam"],
+    "names": ["Ice Beam"],
+    "x": 47.7,
+    "y": 72.584
+  },
+  {
+    "locations": ["reserve-tank-norfair", "missile-norfair-reserve-tank"],
+    "names": ["Reserve Tank, Norfair", "Missile (Norfair Reserve Tank)"],
+    "x": 67.23,
+    "y": 72.584
+  },
+  {
+    "locations": ["missile-bubble-norfair-green-door"],
+    "names": ["Missile (bubble Norfair green door)"],
+    "x": 71.737,
+    "y": 72.584
+  },
+  {
+    "locations": ["missile-speed-booster"],
+    "names": ["Missile (Speed Booster)"],
+    "x": 94.272,
+    "y": 72.584
+  },
+  {
+    "locations": ["speed-booster"],
+    "names": ["Speed Booster"],
+    "x": 95.775,
+    "y": 72.584
+  },
+  {
+    "locations": ["missile-below-ice-beam"],
+    "names": ["Missile (below Ice Beam)"],
+    "x": 43.192,
+    "y": 76.059
+  },
+  {
+    "locations": ["missile-lava-room"],
+    "names": ["Missile (lava room)"],
+    "x": 64.225,
+    "y": 76.059
+  },
+  {
+    "locations": ["missile-wave-beam"],
+    "names": ["Missile (Wave Beam)"],
+    "x": 79.249,
+    "y": 76.059
+  },
+  {
+    "locations": ["wave-beam"],
+    "names": ["Wave Beam"],
+    "x": 83.756,
+    "y": 76.059
+  },
+  {
+    "locations": ["missile-hi-jump-boots"],
+    "names": ["Missile (Hi-Jump Boots)"],
+    "x": 52.207,
+    "y": 77.796
+  },
+  {
+    "locations": ["energy-tank-hi-jump-boots"],
+    "names": ["Energy Tank (Hi-Jump Boots)"],
+    "x": 53.709,
+    "y": 77.796
+  },
+  {
+    "locations": ["missile-bubble-norfair"],
+    "names": ["Missile (bubble Norfair)"],
+    "x": 74.742,
+    "y": 77.796
+  },
+  {
+    "locations": ["missile-lower-norfair-near-wave-beam"],
+    "names": ["Missile (lower Norfair near Wave Beam)"],
+    "x": 83.756,
+    "y": 77.796
+  },
+  {
+    "locations": ["missile-lower-norfair-above-fire-flea-room"],
+    "names": ["Missile (lower Norfair above fire flea room)"],
+    "x": 92.77,
+    "y": 77.796
+  },
+  {
+    "locations": ["hi-jump-boots"],
+    "names": ["Hi-Jump Boots"],
+    "x": 50.704,
+    "y": 79.533
+  },
+  {
+    "locations": ["missile-above-crocomire"],
+    "names": ["Missile (above Crocomire)"],
+    "x": 56.714,
+    "y": 79.533
+  },
+  {
+    "locations": ["power-bomb-lower-norfair-above-fire-flea-room"],
+    "names": ["Power Bomb (lower Norfair above fire flea room)"],
+    "x": 95.775,
+    "y": 79.533
+  },
+  {
+    "locations": ["power-bomb-crocomire"],
+    "names": ["Power Bomb (Crocomire)"],
+    "x": 53.709,
+    "y": 86.482
+  },
+  {
+    "locations": ["energy-tank-crocomire"],
+    "names": ["Energy Tank, Crocomire"],
+    "x": 68.732,
+    "y": 86.482
+  },
+  {
+    "locations": ["missile-mickey-mouse-room"],
+    "names": ["Missile (Mickey Mouse room)"],
+    "x": 82.254,
+    "y": 86.482
+  },
+  {
+    "locations": ["energy-tank-firefleas"],
+    "names": ["Energy Tank, Firefleas"],
+    "x": 95.775,
+    "y": 88.219
+  },
+  {
+    "locations": ["power-bomb-power-bombs-of-shame"],
+    "names": ["Power Bomb (Power Bombs of shame)"],
+    "x": 88.263,
+    "y": 93.431
+  },
+  {
+    "locations": ["missile-grappling-beam"],
+    "names": ["Missile (Grappling Beam)"],
+    "x": 52.207,
+    "y": 95.168
+  },
+  {
+    "locations": ["missile-below-crocomire"],
+    "names": ["Missile (below Crocomire)"],
+    "x": 61.221,
+    "y": 95.168
+  },
+  {
+    "locations": ["missile-gold-torizo"],
+    "names": ["Missile (Gold Torizo)"],
+    "x": 67.23,
+    "y": 95.168
+  },
+  {
+    "locations": ["super-missile-gold-torizo"],
+    "names": ["Super Missile (Gold Torizo)"],
+    "x": 68.732,
+    "y": 95.168
+  },
+  {
+    "locations": ["grappling-beam"],
+    "names": ["Grappling Beam"],
+    "x": 44.695,
+    "y": 96.906
+  },
+  {
+    "locations": ["screw-attack"],
+    "names": ["Screw Attack"],
+    "x": 70.235,
+    "y": 96.906
+  },
+  {
+    "locations": ["energy-tank-ridley"],
+    "names": ["Energy Tank, Ridley"],
+    "x": 73.239,
+    "y": 98.643
+  }
+]

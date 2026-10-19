@@ -1,0 +1,830 @@
+{
+ "dark": [
+  {
+   "id": "brewery",
+   "locations": [
+    "brewery"
+   ],
+   "name": "Brewery",
+   "x": 10.8,
+   "y": 57.8
+  },
+  {
+   "id": "c-shaped-house",
+   "locations": [
+    "c-shaped-house"
+   ],
+   "name": "C-Shaped House",
+   "x": 21.6,
+   "y": 47.9
+  },
+  {
+   "id": "mire-shed",
+   "locations": [
+    "mire-shed/left",
+    "mire-shed/right"
+   ],
+   "name": "Mire Shed",
+   "x": 3.4,
+   "y": 79.5
+  },
+  {
+   "id": "superbunny-cave",
+   "locations": [
+    "superbunny-cave/top",
+    "superbunny-cave/bottom"
+   ],
+   "name": "Superbunny Cave",
+   "x": 85.6,
+   "y": 14.7
+  },
+  {
+   "id": "spike-cave",
+   "locations": [
+    "spike-cave"
+   ],
+   "name": "Spike Cave",
+   "x": 57.2,
+   "y": 14.9
+  },
+  {
+   "id": "hype-cave",
+   "locations": [
+    "hype-cave/top",
+    "hype-cave/middle-right",
+    "hype-cave/middle-left",
+    "hype-cave/bottom",
+    "hype-cave/npc"
+   ],
+   "name": "Hype Cave",
+   "x": 60,
+   "y": 77.1
+  },
+  {
+   "id": "hookshot-cave-bottom-right",
+   "locations": [
+    "hookshot-cave/bottom-right"
+   ],
+   "name": "Hookshot Cave Bottom Right",
+   "x": 83.2,
+   "y": 8.6
+  },
+  {
+   "id": "hookshot-cave",
+   "locations": [
+    "hookshot-cave/top-right",
+    "hookshot-cave/top-left",
+    "hookshot-cave/bottom-left"
+   ],
+   "name": "Hookshot Cave",
+   "x": 83.2,
+   "y": 3.4
+  },
+  {
+   "id": "chest-game",
+   "locations": [
+    "chest-game"
+   ],
+   "name": "Chest Game",
+   "x": 4.2,
+   "y": 46.4
+  },
+  {
+   "id": "stumpy",
+   "locations": [
+    "stumpy"
+   ],
+   "name": "Stumpy",
+   "x": 31,
+   "y": 68.6
+  },
+  {
+   "id": "purple-chest",
+   "locations": [
+    "purple-chest"
+   ],
+   "name": "Purple Chest",
+   "x": 30.4,
+   "y": 52.2
+  },
+  {
+   "id": "catfish",
+   "locations": [
+    "catfish"
+   ],
+   "name": "Catfish",
+   "x": 92,
+   "y": 17.2
+  },
+  {
+   "id": "hammer-pegs",
+   "locations": [
+    "hammer-pegs"
+   ],
+   "name": "Hammer Pegs",
+   "x": 31.6,
+   "y": 60.1
+  },
+  {
+   "id": "bumper-cave",
+   "locations": [
+    "bumper-cave"
+   ],
+   "name": "Bumper Cave",
+   "x": 34.2,
+   "y": 15.2
+  },
+  {
+   "id": "pyramid",
+   "locations": [
+    "pyramid"
+   ],
+   "name": "Pyramid",
+   "x": 58,
+   "y": 43.5
+  },
+  {
+   "id": "digging-game",
+   "locations": [
+    "digging-game"
+   ],
+   "name": "Digging Game",
+   "x": 5.8,
+   "y": 69.2
+  },
+  {
+   "id": "pyramid-fairy",
+   "locations": [
+    "pyramid-fairy/left",
+    "pyramid-fairy/right"
+   ],
+   "name": "Pyramid Fairy",
+   "x": 47,
+   "y": 48.5
+  },
+  {
+   "id": "palace-of-darkness",
+   "locations": [
+    "palace-of-darkness/shooter-room",
+    "palace-of-darkness/big-key-chest",
+    "palace-of-darkness/the-arena/ledge",
+    "palace-of-darkness/the-arena/bridge",
+    "palace-of-darkness/stalfos-basement",
+    "palace-of-darkness/map-chest",
+    "palace-of-darkness/big-chest",
+    "palace-of-darkness/compass-chest",
+    "palace-of-darkness/harmless-hellway",
+    "palace-of-darkness/dark-basement/left",
+    "palace-of-darkness/dark-basement/right",
+    "palace-of-darkness/dark-maze/top",
+    "palace-of-darkness/dark-maze/bottom",
+    "palace-of-darkness/helmasaur-king"
+   ],
+   "name": "Palace of Darkness",
+   "x": 94,
+   "y": 40
+  },
+  {
+   "id": "swamp-palace",
+   "locations": [
+    "swamp-palace/entrance",
+    "swamp-palace/big-chest",
+    "swamp-palace/big-key-chest",
+    "swamp-palace/map-chest",
+    "swamp-palace/west-chest",
+    "swamp-palace/compass-chest",
+    "swamp-palace/flooded-room/left",
+    "swamp-palace/flooded-room/right",
+    "swamp-palace/waterfall-room",
+    "swamp-palace/arrghus"
+   ],
+   "name": "Swamp Palace",
+   "x": 47,
+   "y": 91
+  },
+  {
+   "id": "skull-woods",
+   "locations": [
+    "skull-woods/big-chest",
+    "skull-woods/big-key-chest",
+    "skull-woods/compass-chest",
+    "skull-woods/map-chest",
+    "skull-woods/bridge-room",
+    "skull-woods/pot-prison",
+    "skull-woods/pinball-room",
+    "skull-woods/mothula"
+   ],
+   "name": "Skull Woods",
+   "x": 6.6,
+   "y": 5.4
+  },
+  {
+   "id": "thieves-town",
+   "locations": [
+    "thieves-town/attic",
+    "thieves-town/big-key-chest",
+    "thieves-town/map-chest",
+    "thieves-town/compass-chest",
+    "thieves-town/ambush-chest",
+    "thieves-town/big-chest",
+    "thieves-town/blinds-cell",
+    "thieves-town/blind"
+   ],
+   "name": "Thieves' Town",
+   "x": 12.8,
+   "y": 47.9
+  },
+  {
+   "id": "ice-palace",
+   "locations": [
+    "ice-palace/big-key-chest",
+    "ice-palace/compass-chest",
+    "ice-palace/map-chest",
+    "ice-palace/spike-room",
+    "ice-palace/freezor-chest",
+    "ice-palace/iced-t-room",
+    "ice-palace/big-chest",
+    "ice-palace/kholdstare"
+   ],
+   "name": "Ice Palace",
+   "x": 79.6,
+   "y": 85.8
+  },
+  {
+   "id": "misery-mire",
+   "locations": [
+    "misery-mire/big-chest",
+    "misery-mire/main-lobby",
+    "misery-mire/big-key-chest",
+    "misery-mire/compass-chest",
+    "misery-mire/bridge-chest",
+    "misery-mire/map-chest",
+    "misery-mire/spike-chest",
+    "misery-mire/vitreous"
+   ],
+   "name": "Misery Mire",
+   "x": 11.6,
+   "y": 82.9
+  },
+  {
+   "id": "turtle-rock",
+   "locations": [
+    "turtle-rock/chain-chomps",
+    "turtle-rock/compass-chest",
+    "turtle-rock/roller-room/left",
+    "turtle-rock/roller-room/right",
+    "turtle-rock/big-chest",
+    "turtle-rock/big-key-chest",
+    "turtle-rock/crystaroller-room",
+    "turtle-rock/eye-bridge/bottom-left",
+    "turtle-rock/eye-bridge/bottom-right",
+    "turtle-rock/eye-bridge/top-left",
+    "turtle-rock/eye-bridge/top-right",
+    "turtle-rock/trinexx"
+   ],
+   "name": "Turtle Rock",
+   "x": 93.8,
+   "y": 7
+  },
+  {
+   "id": "ganons-tower",
+   "locations": [
+    "ganons-tower/bobs-torch",
+    "ganons-tower/dms-room/top-left",
+    "ganons-tower/dms-room/top-right",
+    "ganons-tower/dms-room/bottom-left",
+    "ganons-tower/dms-room/bottom-right",
+    "ganons-tower/randomizer-room/top-left",
+    "ganons-tower/randomizer-room/top-right",
+    "ganons-tower/randomizer-room/bottom-left",
+    "ganons-tower/randomizer-room/bottom-right",
+    "ganons-tower/firesnake-room",
+    "ganons-tower/map-chest",
+    "ganons-tower/big-chest",
+    "ganons-tower/hope-room/left",
+    "ganons-tower/hope-room/right",
+    "ganons-tower/bobs-chest",
+    "ganons-tower/tile-room",
+    "ganons-tower/compass-room/top-left",
+    "ganons-tower/compass-room/top-right",
+    "ganons-tower/compass-room/bottom-left",
+    "ganons-tower/compass-room/bottom-right",
+    "ganons-tower/big-key-chest",
+    "ganons-tower/big-key-room/left",
+    "ganons-tower/big-key-room/right",
+    "ganons-tower/mini-helmasaur-room/left",
+    "ganons-tower/mini-helmasaur-room/right",
+    "ganons-tower/pre-moldorm-chest",
+    "ganons-tower/moldorm-chest"
+   ],
+   "name": "Ganon's Tower",
+   "x": 56.4,
+   "y": 4
+  }
+ ],
+ "light": [
+  {
+   "id": "kings-tomb",
+   "locations": [
+    "kings-tomb"
+   ],
+   "name": "King's Tomb",
+   "x": 61.6,
+   "y": 29.6
+  },
+  {
+   "id": "dam",
+   "locations": [
+    "floodgate-chest",
+    "sunken-treasure"
+   ],
+   "name": "Dam",
+   "x": 46.8,
+   "y": 93.4
+  },
+  {
+   "id": "links-house",
+   "locations": [
+    "links-house"
+   ],
+   "name": "Link's House",
+   "x": 54.8,
+   "y": 67.9
+  },
+  {
+   "id": "spiral-cave",
+   "locations": [
+    "spiral-cave"
+   ],
+   "name": "Spiral Cave",
+   "x": 79.8,
+   "y": 9.3
+  },
+  {
+   "id": "mimic-cave",
+   "locations": [
+    "mimic-cave"
+   ],
+   "name": "Mimic Cave",
+   "x": 85.2,
+   "y": 9.3
+  },
+  {
+   "id": "kakariko-tavern",
+   "locations": [
+    "kakariko-tavern"
+   ],
+   "name": "Kakariko Tavern",
+   "x": 16.2,
+   "y": 57.8
+  },
+  {
+   "id": "chicken-house",
+   "locations": [
+    "chicken-house"
+   ],
+   "name": "Chicken House",
+   "x": 8.8,
+   "y": 54.2
+  },
+  {
+   "id": "aginahs-cave",
+   "locations": [
+    "aginahs-cave"
+   ],
+   "name": "Aginah's Cave",
+   "x": 20,
+   "y": 82.6
+  },
+  {
+   "id": "sahasrahlas-hut",
+   "locations": [
+    "sahasrahlas-hut/left",
+    "sahasrahlas-hut/middle",
+    "sahasrahlas-hut/right"
+   ],
+   "name": "Sahasrahla's Hut",
+   "x": 81.4,
+   "y": 41.4
+  },
+  {
+   "id": "kakariko-well",
+   "locations": [
+    "kakariko-well/top",
+    "kakariko-well/left",
+    "kakariko-well/middle",
+    "kakariko-well/right",
+    "kakariko-well/bottom"
+   ],
+   "name": "Kakariko Well",
+   "x": 3.4,
+   "y": 41
+  },
+  {
+   "id": "blinds-hideout",
+   "locations": [
+    "blinds-hideout/top",
+    "blinds-hideout/left",
+    "blinds-hideout/right",
+    "blinds-hideout/far-left",
+    "blinds-hideout/far-right"
+   ],
+   "name": "Blind's Hideout",
+   "x": 12.8,
+   "y": 41
+  },
+  {
+   "id": "paradox-cave",
+   "locations": [
+    "paradox-cave-lower/far-left",
+    "paradox-cave-lower/left",
+    "paradox-cave-lower/right",
+    "paradox-cave-lower/far-right",
+    "paradox-cave-lower/middle",
+    "paradox-cave-upper/left",
+    "paradox-cave-upper/right"
+   ],
+   "name": "Paradox Cave",
+   "x": 82.8,
+   "y": 17.1
+  },
+  {
+   "id": "pegasus-rocks",
+   "locations": [
+    "pegasus-rocks"
+   ],
+   "name": "Pegasus Rocks",
+   "x": 39,
+   "y": 29.3
+  },
+  {
+   "id": "mini-moldorm-cave",
+   "locations": [
+    "mini-moldorm-cave/far-left",
+    "mini-moldorm-cave/left",
+    "mini-moldorm-cave/right",
+    "mini-moldorm-cave/far-right",
+    "mini-moldorm-cave/npc"
+   ],
+   "name": "Mini Moldorm Cave",
+   "x": 65.2,
+   "y": 93.4
+  },
+  {
+   "id": "ice-rod-cave",
+   "locations": [
+    "ice-rod-cave"
+   ],
+   "name": "Ice Rod Cave",
+   "x": 89.4,
+   "y": 76.9
+  },
+  {
+   "id": "bottle-merchant",
+   "locations": [
+    "bottle-merchant"
+   ],
+   "name": "Bottle Merchant",
+   "x": 9,
+   "y": 46.8
+  },
+  {
+   "id": "sahasrahla",
+   "locations": [
+    "sahasrahla"
+   ],
+   "name": "Sahasrahla",
+   "x": 81.4,
+   "y": 46.7
+  },
+  {
+   "id": "sick-kid",
+   "locations": [
+    "sick-kid"
+   ],
+   "name": "Sick Kid",
+   "x": 15.6,
+   "y": 52.1
+  },
+  {
+   "id": "hobo",
+   "locations": [
+    "hobo"
+   ],
+   "name": "Hobo",
+   "x": 70.8,
+   "y": 69.7
+  },
+  {
+   "id": "ether-tablet",
+   "locations": [
+    "ether-tablet"
+   ],
+   "name": "Ether Tablet",
+   "x": 42,
+   "y": 3
+  },
+  {
+   "id": "bombos-tablet",
+   "locations": [
+    "bombos-tablet"
+   ],
+   "name": "Bombos Tablet",
+   "x": 22,
+   "y": 92.2
+  },
+  {
+   "id": "king-zora",
+   "locations": [
+    "king-zora"
+   ],
+   "name": "King Zora",
+   "x": 95,
+   "y": 12.1
+  },
+  {
+   "id": "old-man",
+   "locations": [
+    "old-man"
+   ],
+   "name": "Old Man",
+   "x": 41.6,
+   "y": 20.4
+  },
+  {
+   "id": "potion-shop",
+   "locations": [
+    "potion-shop"
+   ],
+   "name": "Potion Shop",
+   "x": 81.6,
+   "y": 32.5
+  },
+  {
+   "id": "lost-woods-hideout",
+   "locations": [
+    "lost-woods-hideout"
+   ],
+   "name": "Lost Woods Hideout",
+   "x": 18.8,
+   "y": 13
+  },
+  {
+   "id": "lumberjack-tree",
+   "locations": [
+    "lumberjack-tree"
+   ],
+   "name": "Lumberjack Tree",
+   "x": 30.2,
+   "y": 7.6
+  },
+  {
+   "id": "spectacle-rock-cave",
+   "locations": [
+    "spectacle-rock-cave"
+   ],
+   "name": "Spectacle Rock Cave",
+   "x": 48.6,
+   "y": 14.8
+  },
+  {
+   "id": "cave-45",
+   "locations": [
+    "south-of-grove"
+   ],
+   "name": "Cave 45",
+   "x": 28.2,
+   "y": 84.1
+  },
+  {
+   "id": "graveyard-ledge",
+   "locations": [
+    "graveyard-ledge"
+   ],
+   "name": "Graveyard Ledge",
+   "x": 56.2,
+   "y": 27
+  },
+  {
+   "id": "checkerboard-cave",
+   "locations": [
+    "checkerboard-cave"
+   ],
+   "name": "Checkerboard Cave",
+   "x": 17.6,
+   "y": 77.3
+  },
+  {
+   "id": "library",
+   "locations": [
+    "library"
+   ],
+   "name": "Library",
+   "x": 15.4,
+   "y": 65.9
+  },
+  {
+   "id": "mushroom",
+   "locations": [
+    "mushroom"
+   ],
+   "name": "Mushroom",
+   "x": 12.4,
+   "y": 8.6
+  },
+  {
+   "id": "spectacle-rock",
+   "locations": [
+    "spectacle-rock"
+   ],
+   "name": "Spectacle Rock",
+   "x": 50.8,
+   "y": 8.5
+  },
+  {
+   "id": "floating-island",
+   "locations": [
+    "floating-island"
+   ],
+   "name": "Floating Island",
+   "x": 80.4,
+   "y": 3
+  },
+  {
+   "id": "maze-race",
+   "locations": [
+    "maze-race"
+   ],
+   "name": "Maze Race",
+   "x": 3.6,
+   "y": 69.8
+  },
+  {
+   "id": "desert-ledge",
+   "locations": [
+    "desert-ledge"
+   ],
+   "name": "Desert Ledge",
+   "x": 3,
+   "y": 91
+  },
+  {
+   "id": "lake-hylia-island",
+   "locations": [
+    "lake-hylia-island"
+   ],
+   "name": "Lake Hylia Island",
+   "x": 72.2,
+   "y": 82.9
+  },
+  {
+   "id": "zoras-ledge",
+   "locations": [
+    "zoras-ledge"
+   ],
+   "name": "Zora's Ledge",
+   "x": 95,
+   "y": 17.3
+  },
+  {
+   "id": "flute-spot",
+   "locations": [
+    "flute-spot"
+   ],
+   "name": "Flute Spot",
+   "x": 28.8,
+   "y": 66.2
+  },
+  {
+   "id": "sewers-secret-room",
+   "locations": [
+    "sewers/secret-room/left",
+    "sewers/secret-room/middle",
+    "sewers/secret-room/right"
+   ],
+   "name": "Sewers Secret Room",
+   "x": 53.6,
+   "y": 32.4
+  },
+  {
+   "id": "secret-passage",
+   "locations": [
+    "links-uncle",
+    "secret-passage"
+   ],
+   "name": "Secret Passage",
+   "x": 59.6,
+   "y": 41.8
+  },
+  {
+   "id": "hyrule-castle",
+   "locations": [
+    "hyrule-castle/boomerang-chest",
+    "hyrule-castle/map-chest",
+    "hyrule-castle/zeldas-cell",
+    "sewers/dark-cross"
+   ],
+   "name": "Hyrule Castle",
+   "x": 49.8,
+   "y": 44.1
+  },
+  {
+   "id": "sanctuary",
+   "locations": [
+    "sanctuary"
+   ],
+   "name": "Sanctuary",
+   "x": 46,
+   "y": 28
+  },
+  {
+   "id": "magic-bat",
+   "locations": [
+    "magic-bat"
+   ],
+   "name": "Magic Bat",
+   "x": 32,
+   "y": 58
+  },
+  {
+   "id": "blacksmith",
+   "locations": [
+    "blacksmith"
+   ],
+   "name": "Blacksmith",
+   "x": 30.4,
+   "y": 51.8
+  },
+  {
+   "id": "master-sword-pedestal",
+   "locations": [
+    "master-sword-pedestal"
+   ],
+   "name": "Master Sword Pedestal",
+   "x": 5,
+   "y": 3.2
+  },
+  {
+   "id": "eastern-palace",
+   "locations": [
+    "eastern-palace/compass-chest",
+    "eastern-palace/big-chest",
+    "eastern-palace/cannonball-chest",
+    "eastern-palace/big-key-chest",
+    "eastern-palace/map-chest",
+    "eastern-palace/armos-knights"
+   ],
+   "name": "Eastern Palace",
+   "x": 93.6,
+   "y": 38.8
+  },
+  {
+   "id": "desert-palace",
+   "locations": [
+    "desert-palace/big-chest",
+    "desert-palace/map-chest",
+    "desert-palace/torch",
+    "desert-palace/big-key-chest",
+    "desert-palace/compass-chest",
+    "desert-palace/lanmolas"
+   ],
+   "name": "Desert Palace",
+   "x": 7.6,
+   "y": 78.4
+  },
+  {
+   "id": "tower-of-hera",
+   "locations": [
+    "tower-of-hera/big-key-chest",
+    "tower-of-hera/basement-cage",
+    "tower-of-hera/map-chest",
+    "tower-of-hera/compass-chest",
+    "tower-of-hera/big-chest",
+    "tower-of-hera/moldorm"
+   ],
+   "name": "Tower of Hera",
+   "x": 62,
+   "y": 5.5
+  },
+  {
+   "id": "waterfall-fairy",
+   "locations": [
+    "waterfall-fairy/left",
+    "waterfall-fairy/right"
+   ],
+   "name": "Waterfall Fairy",
+   "x": 89.8,
+   "y": 14.7
+  },
+  {
+   "id": "castle-tower",
+   "locations": [
+    "castle-tower/foyer",
+    "castle-tower/dark-maze"
+   ],
+   "name": "Castle Tower",
+   "x": 50,
+   "y": 52.6
+  }
+ ]
+}

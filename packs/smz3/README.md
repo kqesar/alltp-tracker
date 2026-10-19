@@ -13,6 +13,9 @@ Read from [`tewtal/SMZ3Randomizer`](https://github.com/tewtal/SMZ3Randomizer) (M
 | `src/medallions.ts`, `src/derived.ts` | the facts a state carries beside the items | `MiseryMire.cs`, `TurtleRock.cs`, `PalaceOfDarkness.cs`, `IcePalace.cs` |
 | `src/world.ts`, `src/pack.ts` | the graph, compiled for a run | `Region.cs`, `Location.cs` |
 | `scripts/import-upstream-tests.mjs` | upstream's tests as JSON fixtures | `Randomizer.SMZ3.Tests/Logic/**` |
+| `src/markers.ts` | where the maps draw each location: Zebes's markers, Hyrule's by world, `ZELDA_ALIASES` | VARIA's map (`theonlydude/RandomMetroidSolver`, MIT), `@alltp/pack-alttpr`'s markers |
+
+Hyrule's markers are the ALttPR pack's, by alias, kept as data (`src/markers-hyrule.json`): `src/markers.spec.ts` derives them from `@alltp/pack-alttpr`, a dev dependency only, and holds the file to them. When ALttPR's markers move, that spec fails; `pnpm vitest run -u packs/smz3/src/markers.spec.ts` writes the file again. Importing them instead would make every SMZ3 board download ALttPR's world, 140 kB, for their coordinates.
 
 ## The world model
 

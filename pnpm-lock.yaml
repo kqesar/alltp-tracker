@@ -301,6 +301,10 @@ importers:
       '@alltp/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+    devDependencies:
+      '@alltp/pack-alttpr':
+        specifier: workspace:*
+        version: link:../alttpr
 
 packages:
 
