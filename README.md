@@ -65,6 +65,7 @@ Pick **Super Metroid** under **Game** in the run type dialog (Mode); A Link to t
 - **The seed's objectives**: pick its preset in the run type dialog (Bosses, Minibosses, Chozos, Pirates, Metroids, None) or, for a Random seed, tick the ones its pause screen lists. Tick each as you finish it; once all are done, the barriers before Mother Brain are down.
 - **The items a seed adds**: the Wall Jump Boots and the split Speed Booster (the Spark and Blue Boosters) take their cells when you turn them on.
 - **No map and no logic**: Map Rando reconnects the game's rooms, so follow the game's own map. Export, Import, Undo, Redo and the stream view work as for A Link to the Past.
+- **Autotracking**: connected as for A Link to the Past (below), the tracker recognises a Map Rando ROM and follows it: the items you hold (a pack or tank counts from the maximum it raised, so the seed's own pack sizes count right, and an energy tank you disabled from the pause menu still counts), the seed's objectives from its ROM and those done, and whether it adds the Wall Jump Boots or the split Speed Booster. **What I read** names the seed, linked to its maprando.com page, and its settings presets. Map Rando races allow autotracking, so nothing is held back. Like A Link to the Past's, it changes a cell only when the game does and never undoes a mark you set beyond it, and lays nothing outside a game in play (the title screen still holds the last file's items).
 
 ## Autotracking
 
@@ -165,8 +166,11 @@ apps/web/src/
 │   ├── alttpr/      A Link to the Past: data/, logic/ (the run read by the alltpr
 │   │                pack), stores/, components/ (grid, map, Checks, Run, go mode),
 │   │                autotrack/, voice/, hooks/
-│   └── sm/          Super Metroid (Map Rando): its grid, objectives, store, styles
-├── components/   ui/ (shared chrome: dialogs, toolbar menu, game picker, header)
+│   └── sm/          Super Metroid (Map Rando): its grid, objectives, store, styles,
+│                    autotrack/ (the session, its store and what follows the game)
+├── autotrack/    shared autotracking words (status, guide), the cross-tab Web Lock
+├── components/   ui/ (shared chrome: dialogs, toolbar menu, game picker, header),
+│                 autotrack/ (the setup guide, the status dot, the lazy dialog loader)
 ├── hooks/        keyboard navigation, the toolbar's fit
 ├── styles/       shared CSS, all imported by styles/index.css
 └── utils/        the stream view's address and fit, keyboard and platform helpers

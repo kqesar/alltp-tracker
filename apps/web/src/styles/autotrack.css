@@ -487,6 +487,17 @@
   color: var(--color-text-secondary);
 }
 
+/* A link in running text: its colour and an underline, never colour alone */
+.readout__meta a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.readout__meta a:hover {
+  color: var(--color-accent-strong);
+}
+
 .readout__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
