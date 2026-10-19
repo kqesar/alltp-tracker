@@ -145,7 +145,7 @@ packages/autotrack/ @alltp/autotrack: the autotracking link to SNI / QUsb2Snes, 
 packs/alttpr/      @alltp/pack-alttpr: ALttPR's items, and the official tests its v31 rules are held to
 ```
 
-In the app, the whole state lives in one Zustand store, `apps/web/src/stores/gameStore.ts`, persisted to localStorage. Everything else reads from it.
+In the app, the whole state lives in one Zustand store, `apps/web/src/games/alttpr/stores/gameStore.ts`, persisted to localStorage. Everything else reads from it.
 
 ```
 apps/web/src/
@@ -171,7 +171,7 @@ apps/web/src/
 
 The rules are the alltpr pack's, ported from the randomizer's source and held to its official tests; the map draws the pack's markers. The app keeps no rule of its own.
 
-`apps/web/src/logic/alttpr.snapshot.spec.ts` snapshots what the map shows across a range of item states. It exists to catch accidental rule changes during refactors: if it moves, the game logic moved with it.
+`apps/web/src/games/alttpr/logic/alttpr.snapshot.spec.ts` snapshots what the map shows across a range of item states. It exists to catch accidental rule changes during refactors: if it moves, the game logic moved with it.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the commit and release conventions.
 

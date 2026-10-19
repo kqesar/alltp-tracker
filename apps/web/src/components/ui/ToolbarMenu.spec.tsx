@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { TrackerControls } from "@/components/ui/TrackerControls";
-import { useGameStore } from "@/stores/gameStore";
+import { TrackerControls } from "@/games/alttpr/components/ui/TrackerControls";
+import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 const more = () => screen.getByTestId("toolbar-more");
 const menu = () => screen.getByRole("menu", { name: "More" });

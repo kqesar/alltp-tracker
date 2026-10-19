@@ -1,0 +1,185 @@
+// The board following the game, for one autotracking session: each reading
+// laid on the run as it comes, and the player's "Sync from game".
+//
+// A reading lays only its news, what the game says that it did not at the
+// last reading: the board changes when the game does, and a mark the player
+// changed by hand stays as they left it until the game changes that value
+// again. The first reading of a session lays everything, towards progress
+// only. Nothing is laid while no game is in play (the title screen, the file
+// select): memory there is not the run's.
+//
+// Outside Race Mode, the doors and holes Link goes through are noted in a run
+// whose shuffled entrances the assistant knows: the entrance tables load on
+// demand, as for the assistant, and the notes land as the game's news.
+
+import type { EntranceReading } from "@alltp/pack-alttpr";
+import {
+  type GameView,
+  gameView,
+  isEmptyView,
+  keysInHand,
+  mergeView,
+  newsOf,
+  syncView,
+} from "@/games/alttpr/autotrack/apply";
+import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
+import { entrancesKnown, type RunSettings } from "@/games/alttpr/data/presets";
+import { timerNews } from "@/games/alttpr/logic/timer";
+import {
+  createProgress,
+  useGameStore,
+  withNotes,
+} from "@/games/alttpr/stores/gameStore";
+
+/** The board's side of a session. */
+export type Follower = {
+  /** Lay a reading's news on the board. */
+  read: (reading: AutotrackReading) => void;
+  /**
+   * Set the board to all the game holds, as one undo step.
+   * @returns How many values changed, or null before any game in play was read
+   */
+  sync: () => number | null;
+  /**
+   * Start a new run of the seed's run type with what the game holds laid on
+   * it, as one undo step: undoing it brings the board back as it was.
+   */
+  switchRun: (presetId: string, settings: RunSettings) => void;
+  /**
+   * Whether the board holds the game alone: a new run of its run type with
+   * what the game holds laid on it, nothing the player marked beyond.
+   */
+  holdsGameOnly: () => boolean;
+};
+
+/** Two records or arrays with the same values under the same keys. */
+const sameValues = (a: object, b: object) => {
+  const entries = Object.entries(a);
+  return (
+    entries.length === Object.keys(b).length &&
+    entries.every(
+      ([key, value]) => (b as Record<string, unknown>)[key] === value,
+    )
+  );
+};
+
+/** Start following the game, for a new session. */
+export const createFollower = (): Follower => {
+  /** The last reading of a game in play, and the view taken of it. */
+  let last: AutotrackReading | null = null;
+  let shown: GameView | null = null;
+  /**
+   * Whether the reading before was before play (the title, the file select,
+   * the spawn select), for the timer to see a game start; undefined until a
+   * reading says.
+   */
+  let beforePlay: boolean | undefined;
+  /** The small keys in hand at the last reading, or null out of play. */
+  let hand: Record<number, number> | null = null;
+  /** The least small keys found, by grid dungeon index. */
+  const found: Record<number, number> = {};
+  /** The doors and holes last noted, to note only what the game shows anew. */
+  let noted: string | null = null;
+
+  /**
+   * Note where the game shows Link went, once per change, in a run whose
+   * entrances the assistant knows. A note it contradicts gives way.
+   */
+  const noteEntrances = (links: EntranceReading) => {
+    if (typeof links === "string" || links.length === 0) return;
+    if (!entrancesKnown(useGameStore.getState().settings)) return;
+    const key = JSON.stringify(links);
+    if (key === noted) return;
+    noted = key;
+    void import("@/games/alttpr/logic/entrances").then(
+      ({ gameNotes, poolOf }) =>
+        useGameStore.getState().applyGameNews((board) => {
+          const pool = poolOf(board.settings);
+          if (pool === null) return null;
+          const notes = gameNotes(pool, board.entrances, links);
+          const entrances = withNotes(board.entrances, notes);
+          return entrances === null ? null : { entrances };
+        }),
+    );
+  };
+
+  /**
+   * Count the small keys found: memory holds those in hand, which a door
+   * spends, so every rise between two readings is a key found. A stretch of
+   * play starts from the board's count, or the keys in hand if more.
+   */
+  const countKeys = (reading: AutotrackReading, smallKeys: number[]) => {
+    const now = keysInHand(reading);
+    for (const [index, held] of Object.entries(now)) {
+      const i = Number(index);
+      const before = hand?.[i];
+      found[i] =
+        before === undefined || found[i] === undefined
+          ? Math.max(smallKeys[i] ?? 0, held)
+          : found[i] + Math.max(0, held - before);
+    }
+    hand = now;
+  };
+
+  return {
+    holdsGameOnly: () => {
+      const store = useGameStore.getState();
+      const fresh = createProgress(store.presetId, store.settings);
+      const game =
+        last === null
+          ? null
+          : syncView(fresh, gameView(last, fresh, found))?.next;
+      const run = { ...fresh, ...game };
+      return (
+        sameValues(run.items, store.items) &&
+        sameValues(run.checked, store.checked) &&
+        sameValues(run.medallions, store.medallions) &&
+        sameValues(run.smallKeys, store.smallKeys)
+      );
+    },
+    read: (reading) => {
+      // The run timer starts and stops with the game, if the player lets it
+      const game = useGameStore.getState();
+      if (game.autoTimer) {
+        const news = timerNews(beforePlay, reading.progress, game.timer);
+        if (news === "start") game.startTimer(reading.at);
+        if (news === "finish") game.finishTimer(reading.at);
+      }
+      const { beforePlay: now } = reading.progress;
+      if (typeof now === "boolean") beforePlay = now;
+      if (reading.progress.started !== true) {
+        hand = null;
+        return;
+      }
+      noteEntrances(reading.entrances);
+      const store = useGameStore.getState();
+      countKeys(reading, store.smallKeys);
+      const view = gameView(reading, store, found);
+      const news = shown === null ? view : newsOf(shown, view);
+      last = reading;
+      shown = view;
+      if (isEmptyView(news)) return;
+      store.applyGameNews((board) => mergeView(board, news)?.next ?? null);
+    },
+    switchRun: (presetId, settings) => {
+      const reading = last;
+      useGameStore.getState().applyRun(
+        presetId,
+        settings,
+        (fresh) =>
+          reading === null
+            ? null
+            : (syncView(fresh, gameView(reading, fresh, found))?.next ?? null),
+        // The timer the game just started goes on in the seed's run
+        true,
+      );
+    },
+    sync: () => {
+      if (last === null) return null;
+      const store = useGameStore.getState();
+      const laid = syncView(store, gameView(last, store, found));
+      if (laid !== null) store.syncWithGame(laid.next);
+      return laid?.count ?? 0;
+    },
+  };
+};

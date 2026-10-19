@@ -1,4 +1,8 @@
-import { type Chord, type Modifier, parseChord } from "@/data/keymap";
+import {
+  type Chord,
+  type Modifier,
+  parseChord,
+} from "@/games/alttpr/data/keymap";
 import { altKey, isApplePlatform } from "@/utils/platform";
 
 /**

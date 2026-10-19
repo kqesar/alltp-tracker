@@ -1,5 +1,5 @@
-import { BOSS_STATES } from "@/constants";
-import { isKeyCell, itemsMin } from "@/data/items";
+import { BOSS_STATES } from "@/games/alttpr/constants";
+import { isKeyCell, itemsMin } from "@/games/alttpr/data/items";
 
 /**
  * Gets the correct asset path with base URL support

@@ -5,7 +5,10 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { clickToolbarAction, WCAG_AA } from "./support";
 
 /** The old saves the store's migration tests read, as a player kept them. */
-const FIXTURES = join(import.meta.dirname, "../src/stores/fixtures");
+const FIXTURES = join(
+  import.meta.dirname,
+  "../src/games/alttpr/stores/fixtures",
+);
 
 /** Load the tracker with nothing tracked, or with an old localStorage save. */
 const openTracker = async (page: Page, saved?: string) => {
