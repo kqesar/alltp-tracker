@@ -1,16 +1,19 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { holeAt } from "../scripts/import-er.mjs";
+import { HOLES, holeAt } from "../scripts/import-er.mjs";
 import { pythonLiteral } from "../scripts/python.mjs";
+import tables from "./autotrack/entrance-tables.json" with { type: "json" };
 import {
   crossedPool,
   ENTRANCES,
   entranceNamed,
   labelOf,
+  linksOf,
   PLACE_OF_LOCATION,
   TARGETS,
   targetNamed,
 } from "./entrances";
+import er from "./entrances/er.json" with { type: "json" };
 import { MARKERS } from "./markers";
 
 /** A real Crosskeys seed's entrances, from its spoiler (test/er-seeds). */
@@ -267,5 +270,95 @@ describe("the crossed shuffle", () => {
       if (partner !== undefined)
         expect(noted.get(partner[0]), entrance).toBe(partner[1]);
     }
+  });
+});
+
+describe("where the game shows Link went", () => {
+  const open = crossedPool("open");
+  type Door = { hole?: boolean; slot?: number; slots?: number[] };
+  const doors = er.doors.value as Record<string, Door>;
+  const exits = er.exits.value as Record<string, { entrance: number | null }>;
+  /** A door's or hole's link to `target`, as the game's numbers say it. */
+  const link = (entrance: string, target: string) => {
+    const { hole, slot, slots } = doors[entrance] ?? {};
+    const loads = exits[target]?.entrance ?? -1;
+    return hole
+      ? { entrance: loads, kind: "hole" as const, slot: slots?.[0] ?? -1 }
+      : { entrance: loads, kind: "door" as const, slot: slot ?? -1 };
+  };
+
+  it("knows every door and hole the crossed shuffle mixes by its slot", () => {
+    const slots = new Set<number>();
+    for (const entrance of open.entrances) {
+      const { hole, slot, slots: bytes } = doors[entrance.name] ?? {};
+      if (hole) {
+        expect(bytes?.length, entrance.name).toBeGreaterThan(0);
+        for (const at of bytes ?? []) expect(at).toBeLessThan(HOLES);
+      } else {
+        expect(slot, entrance.name).toBeLessThan(tables.doors);
+        expect(slots.has(slot ?? -1), entrance.name).toBe(false);
+        slots.add(slot ?? -1);
+      }
+    }
+    expect(tables.holes).toBe(HOLES);
+  });
+
+  it("knows every target by the entrance the game loads, a few alike by one", () => {
+    const byEntrance = new Map<number, string[]>();
+    for (const target of TARGETS) {
+      const loads = exits[target.name]?.entrance;
+      expect(typeof loads, target.name).toBe("number");
+      byEntrance.set(loads ?? -1, [
+        ...(byEntrance.get(loads ?? -1) ?? []),
+        target.name,
+      ]);
+    }
+    // Rooms alike, which the game loads by one entrance (exit_ids)
+    expect(
+      [...byEntrance.values()].filter((names) => names.length > 1),
+    ).toEqual([
+      ["Bonk Fairy (Light)", "Bonk Fairy (Dark)"],
+      [
+        "Lake Hylia Healer Fairy",
+        "Swamp Healer Fairy",
+        "Desert Healer Fairy",
+        "Dark Lake Hylia Healer Fairy",
+        "Dark Lake Hylia Ledge Healer Fairy",
+        "Dark Desert Healer Fairy",
+        "Dark Death Mountain Healer Fairy",
+      ],
+      ["Cave Shop (Lake Hylia)", "Cave Shop (Dark Death Mountain)"],
+      ["Fortune Teller (Light)", "Lake Hylia Fortune Teller"],
+      [
+        "Village of Outcasts Shop",
+        "Dark Lake Hylia Shop",
+        "Dark World Lumberjack Shop",
+        "Dark World Potion Shop",
+      ],
+    ]);
+  });
+
+  it("names a real seed's doors and holes as its spoiler", () => {
+    const mapped = seed.entrances.filter(
+      (m) =>
+        m.direction !== "exit" &&
+        open.targetsOf.has(entranceNamed(m.entrance).id),
+    );
+    expect(mapped.length).toBeGreaterThan(130);
+    for (const { entrance, exit } of mapped) {
+      const [found] = linksOf([link(entrance, exit)]);
+      expect(found?.entrance, entrance).toBe(entranceNamed(entrance).id);
+      expect(found?.targets, entrance).toContain(targetNamed(exit).id);
+    }
+  });
+
+  it("names nothing for a slot or an entrance the tables do not know", () => {
+    expect(
+      linksOf([
+        { entrance: 0x01, kind: "door", slot: tables.doors },
+        { entrance: 0x01, kind: "hole", slot: HOLES },
+        { entrance: 0xff, kind: "door", slot: 0 },
+      ]),
+    ).toEqual([]);
   });
 });

@@ -22,7 +22,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/markers.ts` | the map markers, and what a marker shows |
 | `src/goals.ts` | `app/Randomizer.php`: where each goal puts the Triforce, and its go mode |
 | `src/seed-link.ts` | `app/Seed.php`, `routes/web.php`: a seed's hash, from a link to its page, and where its file lies |
-| `src/entrances.ts` | `cassidoxa/ALttPEntranceRandomizer` (`EntranceShuffle.py`, `Regions.py`), at the commit vt pins: the overworld's entrances and where the crossed shuffle may lead them (`src/entrances/er.json`, imported) |
+| `src/entrances.ts` | `cassidoxa/ALttPEntranceRandomizer` (`EntranceShuffle.py`, `Regions.py`), at the commit vt pins: the overworld's entrances and where the crossed shuffle may lead them (`src/entrances/er.json`, imported), and the doors and holes autotracking shows Link went through (`linksOf`) |
 | `src/seed-file.ts` | `app/Jobs/SendPatchToDisk.php`, `World.php`, `EntranceRandomizer.php`: a seed's settings from its file (its entrance shuffle included), through a Zod schema of `spoiler.meta` |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
@@ -268,6 +268,58 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
 `test/er-seeds/0yAObedRMV.json` is a real Crosskeys seed's spoiler: its
 shuffled entrances are exactly the pool, and every one leads to a target
 the model knows.
+
+### Where Link went: autotracking the entrances
+
+Outside races, autotracking notes each door or hole Link goes through. The
+race spec forbids it ("Record or track any entrance locations, or where they
+lead"), so its ranges are the `entrances` category of the race profile:
+Race Mode never reads them.
+
+The randomizer writes where each entrance leads into the ROM (`Rom.py:
+490-539`): a door's slot of the game's door table (PC `0xDBB73`) and a
+hole's bytes of its hole table (`0xDB84C`) get the entrance number of their
+target (`exit_ids`); a cave's exit gets the position of the door it is
+coupled with, its room left as the game has it. The base patch keeps the
+slot of the last overworld door Link took (`PreviousOverworldDoor`,
+`$7F:5099`, plus one) as the game loads its entrance (`$7E:010E`)
+(z3randomizer `doorframefixes.asm:8-12`), and clears it on a respawn.
+`decodeEntrances` reads three facts, each "this slot loads this entrance",
+which the seed's ROM itself states:
+
+```mermaid
+flowchart LR
+  door["$7F:5099 − 1<br/>(last door's slot)"] --> chk{"door table[slot]<br/>= $7E:010E ?"}
+  chk -- yes --> in["went in by that door"]
+  chk -- no --> hole{"hole table holds<br/>$7E:010E ?"}
+  hole -- yes --> fell["fell in by that hole"]
+  room["outdoors ($7E:0010 = $09/$0B):<br/>$7E:00A0, the room left"] --> exit["its exit's entrance<br/>(entrance-tables.json)"]
+  exit --> one{"one door slot<br/>loads it?"}
+  one -- yes --> out["came out by that door"]
+```
+
+- **In by a door**: the slot counts only when the door table agrees with
+  the entrance loaded. A fall leaves the last door behind a hole's entrance,
+  and a respawn clears the slot.
+- **In by a hole**: the hole table holds the entrance loaded.
+- **Out by a door**: the game finds the exit by the room Link leaves (zelda3
+  `overworld.c:1784-1789`, its last exit of that room), and the crossed
+  shuffle couples every cave's exit with the door that loads it
+  (`connect_two_way`). A cave of one door brings Link back where he came in
+  (rooms `$100-$17F` but Link's House), so it has no exit to read; several
+  doors loading one entrance (the healer fairies' alike rooms) tell none.
+
+The importer reads the base ROM's exit rooms (79 words at `0x15AEE`, before
+the exits' areas `Rom.py:500` writes) and cross-checks every door's slot of
+the base ROM's door table against `door_addresses`' room for it, so slots,
+exit numbers and rooms agree with the game. `src/autotrack/entrance-tables.json`
+keeps what the decoder needs (the door table's size, each room's exit
+entrance), a few hundred bytes: the session's chunk never loads `er.json`.
+`linksOf` (in `src/entrances.ts`, loaded with the entrance tables) names the
+facts: the entrance's id, and its target's, or a few alike that the game
+loads by one entrance (the healer fairies, some shops, the fortune
+tellers). Memory keeps only the last door each way: a door taken while the
+tracker is not connected is not caught up, but the last.
 
 ### Its rules
 

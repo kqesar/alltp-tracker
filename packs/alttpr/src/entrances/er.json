@@ -4,751 +4,1404 @@
     "value": {
       "20 Rupee Cave": {
         "area": 55,
+        "slot": 122,
         "x": 3688,
         "y": 3206
       },
       "50 Rupee Cave": {
         "area": 58,
+        "slot": 120,
         "x": 1272,
         "y": 3911
       },
       "Agahnims Tower": {
         "area": 27,
+        "slot": 35,
         "x": 2040,
         "y": 1588
       },
       "Aginahs Cave": {
         "area": 48,
+        "slot": 112,
         "x": 808,
         "y": 3352
       },
       "Archery Game": {
         "area": 105,
+        "slot": 88,
         "x": 872,
         "y": 2840
       },
       "Bat Cave Cave": {
         "area": 34,
+        "slot": 16,
         "x": 1288,
         "y": 2248
       },
       "Bat Cave Drop": {
         "area": 34,
         "hole": true,
+        "slots": [13, 14],
         "x": 1320,
         "y": 2280
       },
       "Big Bomb Shop": {
         "area": 108,
+        "slot": 82,
         "x": 2232,
         "y": 2791
       },
       "Blacksmiths Hut": {
         "area": 34,
+        "slot": 99,
         "x": 1240,
         "y": 2152
       },
       "Blinds Hideout": {
         "area": 24,
+        "slot": 96,
         "x": 520,
         "y": 1687
       },
       "Bonk Fairy (Dark)": {
         "area": 107,
+        "slot": 119,
         "x": 1928,
         "y": 2662
       },
       "Bonk Fairy (Light)": {
         "area": 43,
+        "slot": 118,
         "x": 1928,
         "y": 2663
       },
       "Bonk Rock Cave": {
         "area": 19,
+        "slot": 121,
         "x": 1592,
         "y": 1191
       },
       "Brewery": {
         "area": 88,
+        "slot": 71,
         "x": 440,
         "y": 2360
       },
       "Bumper Cave (Bottom)": {
         "area": 74,
+        "slot": 21,
         "x": 1448,
         "y": 695
       },
       "Bumper Cave (Top)": {
         "area": 74,
+        "slot": 22,
         "x": 1464,
         "y": 600
       },
       "Bush Covered House": {
         "area": 24,
+        "slot": 67,
         "x": 824,
         "y": 2152
       },
       "C-Shaped House": {
         "area": 88,
+        "slot": 83,
         "x": 840,
         "y": 1943
       },
       "Capacity Upgrade": {
         "area": 53,
+        "slot": 92,
         "x": 3240,
         "y": 3464
       },
       "Cave 45": {
         "area": 50,
+        "slot": 80,
         "x": 1080,
         "y": 3350
       },
       "Cave Shop (Dark Death Mountain)": {
         "area": 69,
+        "slot": 109,
         "x": 3498,
         "y": 566
       },
       "Cave Shop (Lake Hylia)": {
         "area": 53,
+        "slot": 87,
         "x": 2968,
         "y": 3110
       },
       "Checkerboard Cave": {
         "area": 48,
+        "slot": 125,
         "x": 712,
         "y": 3175
       },
       "Chest Game": {
         "area": 88,
+        "slot": 70,
         "x": 200,
         "y": 1880
       },
       "Chicken House": {
         "area": 24,
+        "slot": 74,
         "x": 392,
         "y": 2184
       },
       "Dam": {
         "area": 59,
+        "slot": 77,
         "x": 1912,
         "y": 3800
       },
       "Dark Death Mountain Fairy": {
         "area": 67,
+        "slot": 111,
         "x": 1656,
         "y": 744
       },
       "Dark Death Mountain Ledge (East)": {
         "area": 69,
+        "slot": 24,
         "x": 3448,
         "y": 343
       },
       "Dark Death Mountain Ledge (West)": {
         "area": 69,
+        "slot": 20,
         "x": 3256,
         "y": 343
       },
       "Dark Desert Fairy": {
         "area": 112,
+        "slot": 85,
         "x": 440,
         "y": 3255
       },
       "Dark Desert Hint": {
         "area": 112,
+        "slot": 97,
         "x": 808,
         "y": 3350
       },
       "Dark Lake Hylia Fairy": {
         "area": 110,
+        "slot": 108,
         "x": 3368,
         "y": 2614
       },
       "Dark Lake Hylia Ledge Fairy": {
         "area": 119,
+        "slot": 128,
         "x": 3656,
         "y": 3127
       },
       "Dark Lake Hylia Ledge Hint": {
         "area": 119,
+        "slot": 105,
         "x": 3736,
         "y": 3126
       },
       "Dark Lake Hylia Ledge Spike Cave": {
         "area": 119,
+        "slot": 123,
         "x": 3688,
         "y": 3206
       },
       "Dark Lake Hylia Shop": {
         "area": 117,
+        "slot": 115,
         "x": 2648,
         "y": 3256
       },
       "Dark Sanctuary Hint": {
         "area": 83,
+        "slot": 89,
         "x": 1880,
         "y": 1094
       },
       "Dark World Hammer Peg Cave": {
         "area": 98,
+        "slot": 126,
         "x": 1288,
         "y": 2470
       },
       "Dark World Lumberjack Shop": {
         "area": 66,
+        "slot": 86,
         "x": 1368,
         "y": 199
       },
       "Dark World Potion Shop": {
         "area": 86,
+        "slot": 110,
         "x": 3288,
         "y": 1352
       },
       "Dark World Shop": {
         "area": 88,
+        "slot": 95,
         "x": 824,
         "y": 2152
       },
       "Death Mountain Return Cave (East)": {
         "area": 3,
+        "slot": 46,
         "x": 1608,
         "y": 536
       },
       "Death Mountain Return Cave (West)": {
         "area": 10,
+        "slot": 45,
         "x": 1464,
         "y": 599
       },
       "Desert Fairy": {
         "area": 58,
+        "slot": 113,
         "x": 1128,
         "y": 3622
       },
       "Desert Palace Entrance (East)": {
         "area": 48,
+        "slot": 9,
         "x": 456,
         "y": 3224
       },
       "Desert Palace Entrance (North)": {
         "area": 48,
+        "slot": 11,
         "x": 296,
         "y": 3112
       },
       "Desert Palace Entrance (South)": {
         "area": 48,
+        "slot": 8,
         "x": 296,
         "y": 3240
       },
       "Desert Palace Entrance (West)": {
         "area": 48,
+        "slot": 10,
         "x": 136,
         "y": 3224
       },
       "East Dark World Hint": {
         "area": 111,
+        "slot": 104,
         "x": 4008,
         "y": 2840
       },
       "Eastern Palace": {
         "area": 30,
+        "slot": 7,
         "x": 3920,
         "y": 1560
       },
       "Elder House (East)": {
         "area": 24,
+        "slot": 13,
         "x": 680,
         "y": 1688
       },
       "Elder House (West)": {
         "area": 24,
+        "slot": 12,
         "x": 616,
         "y": 1688
       },
       "Fairy Ascension Cave (Bottom)": {
         "area": 5,
+        "slot": 25,
         "x": 3352,
         "y": 536
       },
       "Fairy Ascension Cave (Top)": {
         "area": 5,
+        "slot": 26,
         "x": 3352,
         "y": 439
       },
       "Fortune Teller (Dark)": {
         "area": 81,
+        "slot": 101,
         "x": 760,
         "y": 1287
       },
       "Fortune Teller (Light)": {
         "area": 17,
+        "slot": 100,
         "x": 760,
         "y": 1288
       },
       "Ganons Tower": {
         "area": 67,
+        "slot": 54,
         "x": 2296,
         "y": 40
       },
       "Good Bee Cave": {
         "area": 55,
+        "slot": 106,
         "x": 3736,
         "y": 3126
       },
       "Graveyard Cave": {
         "area": 20,
+        "slot": 81,
         "x": 2328,
         "y": 1094
       },
       "Hookshot Cave": {
         "area": 69,
+        "slot": 57,
         "x": 3400,
         "y": 263
       },
       "Hookshot Cave Back Entrance": {
         "area": 69,
+        "slot": 58,
         "x": 3272,
         "y": 56
       },
       "Hookshot Fairy": {
         "area": 5,
+        "slot": 79,
         "x": 3448,
         "y": 566
       },
       "Hype Cave": {
         "area": 116,
+        "slot": 60,
         "x": 2440,
         "y": 3160
       },
       "Hyrule Castle Entrance (East)": {
         "area": 27,
+        "slot": 4,
         "x": 2248,
         "y": 1540
       },
       "Hyrule Castle Entrance (South)": {
         "area": 27,
+        "slot": 3,
         "x": 2040,
         "y": 1740
       },
       "Hyrule Castle Entrance (West)": {
         "area": 27,
+        "slot": 2,
         "x": 1832,
         "y": 1540
       },
       "Hyrule Castle Secret Entrance Drop": {
         "area": 27,
         "hole": true,
+        "slots": [12],
         "x": 2440,
         "y": 1688
       },
       "Hyrule Castle Secret Entrance Stairs": {
         "area": 27,
+        "slot": 49,
         "x": 2248,
         "y": 1736
       },
       "Ice Palace": {
         "area": 117,
+        "slot": 44,
         "x": 3256,
         "y": 3512
       },
       "Ice Rod Cave": {
         "area": 55,
+        "slot": 127,
         "x": 3656,
         "y": 3127
       },
       "Inverted Agahnims Tower": {
         "area": 67,
+        "slot": 54,
         "x": 2296,
         "y": 40
       },
       "Inverted Big Bomb Shop": {
         "area": 44,
+        "slot": 0,
         "x": 2232,
         "y": 2792
       },
       "Inverted Dark Sanctuary": {
         "area": 83,
+        "slot": 89,
         "x": 1880,
         "y": 1094
       },
       "Inverted Ganons Tower": {
         "area": 27,
+        "slot": 35,
         "x": 2040,
         "y": 1588
       },
       "Inverted Links House": {
         "area": 108,
+        "slot": 82,
         "x": 2232,
         "y": 2791
       },
       "Inverted Pyramid Entrance": {
         "area": 27,
+        "slot": 53,
         "x": 1832,
         "y": 1734
       },
       "Inverted Pyramid Hole": {
         "area": 91,
         "hole": true,
+        "slots": [8, 9, 10],
         "x": 2024,
         "y": 1656
       },
       "Kakariko Gamble Game": {
         "area": 41,
+        "slot": 102,
         "x": 872,
         "y": 2840
       },
       "Kakariko Shop": {
         "area": 24,
+        "slot": 69,
         "x": 440,
         "y": 2359
       },
       "Kakariko Well Cave": {
         "area": 24,
+        "slot": 56,
         "x": 184,
         "y": 1719
       },
       "Kakariko Well Drop": {
         "area": 24,
         "hole": true,
+        "slots": [16, 17],
         "x": 88,
         "y": 1736
       },
       "Kings Grave": {
         "area": 20,
+        "slot": 90,
         "x": 2456,
         "y": 1190
       },
       "Lake Hylia Fairy": {
         "area": 46,
+        "slot": 93,
         "x": 3368,
         "y": 2615
       },
       "Lake Hylia Fortune Teller": {
         "area": 53,
+        "slot": 114,
         "x": 2648,
         "y": 3256
       },
       "Library": {
         "area": 41,
+        "slot": 72,
         "x": 632,
         "y": 2663
       },
       "Light Hype Fairy": {
         "area": 52,
+        "slot": 107,
         "x": 2440,
         "y": 3160
       },
       "Light World Bomb Hut": {
         "area": 24,
+        "slot": 73,
         "x": 104,
         "y": 2407
       },
       "Links House": {
         "area": 44,
+        "slot": 0,
         "x": 2232,
         "y": 2792
       },
       "Long Fairy Cave": {
         "area": 47,
+        "slot": 84,
         "x": 4008,
         "y": 2840
       },
       "Lost Woods Gamble": {
         "area": 0,
+        "slot": 59,
         "x": 752,
         "y": 8
       },
       "Lost Woods Hideout Drop": {
         "area": 0,
         "hole": true,
+        "slots": [7],
         "x": 776,
         "y": 520
       },
       "Lost Woods Hideout Stump": {
         "area": 0,
+        "slot": 43,
         "x": 744,
         "y": 584
       },
       "Lumberjack House": {
         "area": 2,
+        "slot": 117,
         "x": 1368,
         "y": 216
       },
       "Lumberjack Tree Cave": {
         "area": 2,
+        "slot": 17,
         "x": 1352,
         "y": 103
       },
       "Lumberjack Tree Tree": {
         "area": 2,
         "hole": true,
+        "slots": [15],
         "x": 1224,
         "y": 280
       },
       "Mimic Cave": {
         "area": 5,
+        "slot": 78,
         "x": 3448,
         "y": 342
       },
       "Mini Moldorm Cave": {
         "area": 53,
+        "slot": 124,
         "x": 2664,
         "y": 3816
       },
       "Mire Shed": {
         "area": 112,
+        "slot": 94,
         "x": 152,
         "y": 3254
       },
       "Misery Mire": {
         "area": 112,
+        "slot": 38,
         "x": 296,
         "y": 3271
       },
       "North Fairy Cave": {
         "area": 21,
+        "slot": 55,
         "x": 2728,
         "y": 1096
       },
       "North Fairy Cave Drop": {
         "area": 21,
         "hole": true,
+        "slots": [11],
         "x": 2632,
         "y": 1256
       },
       "Old Man Cave (East)": {
         "area": 3,
+        "slot": 6,
         "x": 1656,
         "y": 744
       },
       "Old Man Cave (West)": {
         "area": 10,
+        "slot": 5,
         "x": 1448,
         "y": 696
       },
       "Old Man House (Bottom)": {
         "area": 3,
+        "slot": 47,
         "x": 1832,
         "y": 935
       },
       "Old Man House (Top)": {
         "area": 3,
+        "slot": 48,
         "x": 2184,
         "y": 632
       },
       "Palace of Darkness": {
         "area": 94,
+        "slot": 37,
         "x": 3920,
         "y": 1576
       },
       "Palace of Darkness Hint": {
         "area": 94,
+        "slot": 103,
         "x": 3472,
         "y": 2024
       },
       "Paradox Cave (Bottom)": {
         "area": 5,
+        "slot": 29,
         "x": 3496,
         "y": 567
       },
       "Paradox Cave (Middle)": {
         "area": 5,
+        "slot": 30,
         "x": 3528,
         "y": 856
       },
       "Paradox Cave (Top)": {
         "area": 5,
+        "slot": 31,
         "x": 3512,
         "y": 231
       },
       "Potion Shop": {
         "area": 22,
+        "slot": 75,
         "x": 3272,
         "y": 1336
       },
       "Pyramid Entrance": {
         "area": 91,
+        "slot": 53,
         "x": 1768,
         "y": 1960
       },
       "Pyramid Fairy": {
         "area": 91,
+        "slot": 98,
         "x": 1912,
         "y": 1959
       },
       "Pyramid Hole": {
         "area": 91,
         "hole": true,
+        "slots": [8, 9, 10],
         "x": 2024,
         "y": 1656
       },
       "Red Shield Shop": {
         "area": 90,
+        "slot": 116,
         "x": 1352,
         "y": 1848
       },
       "Sahasrahlas Hut": {
         "area": 30,
+        "slot": 68,
         "x": 3312,
         "y": 1831
       },
       "Sanctuary": {
         "area": 19,
+        "slot": 1,
         "x": 1880,
         "y": 1044
       },
       "Sanctuary Grave": {
         "area": 20,
         "hole": true,
+        "slots": [18],
         "x": 2120,
         "y": 1176
       },
       "Sick Kids House": {
         "area": 24,
+        "slot": 63,
         "x": 632,
         "y": 2167
       },
       "Skull Woods Final Section": {
         "area": 64,
+        "slot": 42,
         "x": 152,
         "y": 184
       },
       "Skull Woods First Section Door": {
         "area": 64,
+        "slot": 41,
         "x": 744,
         "y": 584
       },
       "Skull Woods First Section Hole (East)": {
         "area": 64,
         "hole": true,
+        "slots": [3, 4],
         "x": 792,
         "y": 664
       },
       "Skull Woods First Section Hole (North)": {
         "area": 64,
         "hole": true,
+        "slots": [0],
         "x": 776,
         "y": 520
       },
       "Skull Woods First Section Hole (West)": {
         "area": 64,
         "hole": true,
+        "slots": [1, 2],
         "x": 632,
         "y": 696
       },
       "Skull Woods Second Section Door (East)": {
         "area": 64,
+        "slot": 40,
         "x": 584,
         "y": 568
       },
       "Skull Woods Second Section Door (West)": {
         "area": 64,
+        "slot": 39,
         "x": 232,
         "y": 504
       },
       "Skull Woods Second Section Hole": {
         "area": 64,
         "hole": true,
+        "slots": [5, 6],
         "x": 488,
         "y": 344
       },
       "Snitch Lady (East)": {
         "area": 24,
+        "slot": 61,
         "x": 840,
         "y": 1944
       },
       "Snitch Lady (West)": {
         "area": 24,
+        "slot": 62,
         "x": 200,
         "y": 1880
       },
       "Spectacle Rock Cave": {
         "area": 3,
+        "slot": 33,
         "x": 1992,
         "y": 567
       },
       "Spectacle Rock Cave (Bottom)": {
         "area": 3,
+        "slot": 32,
         "x": 1864,
         "y": 535
       },
       "Spectacle Rock Cave Peak": {
         "area": 3,
+        "slot": 34,
         "x": 1992,
         "y": 391
       },
       "Spike Cave": {
         "area": 67,
+        "slot": 64,
         "x": 2344,
         "y": 566
       },
       "Spiral Cave": {
         "area": 5,
+        "slot": 28,
         "x": 3256,
         "y": 344
       },
       "Spiral Cave (Bottom)": {
         "area": 5,
+        "slot": 27,
         "x": 3272,
         "y": 503
       },
       "Superbunny Cave (Bottom)": {
         "area": 69,
+        "slot": 18,
         "x": 3448,
         "y": 568
       },
       "Superbunny Cave (Top)": {
         "area": 69,
+        "slot": 19,
         "x": 3512,
         "y": 231
       },
       "Swamp Palace": {
         "area": 123,
+        "slot": 36,
         "x": 1912,
         "y": 3800
       },
       "Tavern (Front)": {
         "area": 24,
+        "slot": 65,
         "x": 648,
         "y": 2407
       },
       "Tavern North": {
         "area": 24,
+        "slot": 66,
         "x": 648,
         "y": 2297
       },
       "Thieves Town": {
         "area": 88,
+        "slot": 51,
         "x": 504,
         "y": 1960
       },
       "Tower of Hera": {
         "area": 3,
+        "slot": 50,
         "x": 2288,
         "y": 104
       },
       "Turtle Rock": {
         "area": 71,
+        "slot": 52,
         "x": 3848,
         "y": 296
       },
       "Turtle Rock Isolated Ledge Entrance": {
         "area": 69,
+        "slot": 23,
         "x": 3352,
         "y": 440
       },
       "Two Brothers House (East)": {
         "area": 41,
+        "slot": 15,
         "x": 568,
         "y": 2904
       },
       "Two Brothers House (West)": {
         "area": 40,
+        "slot": 14,
         "x": 440,
         "y": 2904
       },
       "Waterfall of Wishing": {
         "area": 15,
+        "slot": 91,
         "x": 3680,
         "y": 519
+      }
+    }
+  },
+  "exits": {
+    "line": 3854,
+    "value": {
+      "20 Rupee Cave": {
+        "entrance": 111
+      },
+      "50 Rupee Cave": {
+        "entrance": 109
+      },
+      "Agahnims Tower Exit": {
+        "entrance": 36,
+        "exit": 37
+      },
+      "Aginahs Cave": {
+        "entrance": 77
+      },
+      "Archery Game": {
+        "entrance": 89
+      },
+      "Bat Cave (right)": {
+        "entrance": 126
+      },
+      "Bat Cave Exit": {
+        "entrance": 17,
+        "exit": 18
+      },
+      "Big Bomb Shop": {
+        "entrance": 83
+      },
+      "Blacksmiths Hut": {
+        "entrance": 100
+      },
+      "Blinds Hideout": {
+        "entrance": 97
+      },
+      "Bonk Fairy (Dark)": {
+        "entrance": 113
+      },
+      "Bonk Fairy (Light)": {
+        "entrance": 113
+      },
+      "Bonk Rock Cave": {
+        "entrance": 110
+      },
+      "Brewery": {
+        "entrance": 72
+      },
+      "Bumper Cave Exit (Bottom)": {
+        "entrance": 22,
+        "exit": 23
+      },
+      "Bumper Cave Exit (Top)": {
+        "entrance": 23,
+        "exit": 24
+      },
+      "Bush Covered House": {
+        "entrance": 68
+      },
+      "C-Shaped House": {
+        "entrance": 84
+      },
+      "Capacity Upgrade": {
+        "entrance": 93
+      },
+      "Cave 45": {
+        "entrance": 81
+      },
+      "Cave Shop (Dark Death Mountain)": {
+        "entrance": 88
+      },
+      "Cave Shop (Lake Hylia)": {
+        "entrance": 88
+      },
+      "Checkerboard Cave": {
+        "entrance": 114
+      },
+      "Chest Game": {
+        "entrance": 71
+      },
+      "Chicken House": {
+        "entrance": 75
+      },
+      "Chris Houlihan Room Exit": {
+        "entrance": null,
+        "exit": 61
+      },
+      "Dam": {
+        "entrance": 78
+      },
+      "Dark Death Mountain Healer Fairy": {
+        "entrance": 94
+      },
+      "Dark Desert Healer Fairy": {
+        "entrance": 94
+      },
+      "Dark Desert Hint": {
+        "entrance": 98
+      },
+      "Dark Lake Hylia Healer Fairy": {
+        "entrance": 94
+      },
+      "Dark Lake Hylia Ledge Healer Fairy": {
+        "entrance": 94
+      },
+      "Dark Lake Hylia Ledge Hint": {
+        "entrance": 106
+      },
+      "Dark Lake Hylia Ledge Spike Cave": {
+        "entrance": 112
+      },
+      "Dark Lake Hylia Shop": {
+        "entrance": 96
+      },
+      "Dark Sanctuary Hint": {
+        "entrance": 90
+      },
+      "Dark World Hammer Peg Cave": {
+        "entrance": 131
+      },
+      "Dark World Lumberjack Shop": {
+        "entrance": 96
+      },
+      "Dark World Potion Shop": {
+        "entrance": 96
+      },
+      "Death Mountain Return Cave Exit (East)": {
+        "entrance": 47,
+        "exit": 48
+      },
+      "Death Mountain Return Cave Exit (West)": {
+        "entrance": 46,
+        "exit": 47
+      },
+      "Desert Healer Fairy": {
+        "entrance": 94
+      },
+      "Desert Palace Exit (East)": {
+        "entrance": 10,
+        "exit": 11
+      },
+      "Desert Palace Exit (North)": {
+        "entrance": 12,
+        "exit": 13
+      },
+      "Desert Palace Exit (South)": {
+        "entrance": 9,
+        "exit": 10
+      },
+      "Desert Palace Exit (West)": {
+        "entrance": 11,
+        "exit": 12
+      },
+      "East Dark World Hint": {
+        "entrance": 105
+      },
+      "Eastern Palace Exit": {
+        "entrance": 8,
+        "exit": 9
+      },
+      "Elder House Exit (East)": {
+        "entrance": 14,
+        "exit": 15
+      },
+      "Elder House Exit (West)": {
+        "entrance": 13,
+        "exit": 14
+      },
+      "Fairy Ascension Cave Exit (Bottom)": {
+        "entrance": 26,
+        "exit": 27
+      },
+      "Fairy Ascension Cave Exit (Top)": {
+        "entrance": 27,
+        "exit": 28
+      },
+      "Fortune Teller (Dark)": {
+        "entrance": 102
+      },
+      "Fortune Teller (Light)": {
+        "entrance": 101
+      },
+      "Ganons Tower Exit": {
+        "entrance": 55,
+        "exit": 56
+      },
+      "Good Bee Cave": {
+        "entrance": 86
+      },
+      "Graveyard Cave": {
+        "entrance": 82
+      },
+      "Hookshot Cave Exit (North)": {
+        "entrance": 59,
+        "exit": 60
+      },
+      "Hookshot Cave Exit (South)": {
+        "entrance": 58,
+        "exit": 59
+      },
+      "Hookshot Fairy": {
+        "entrance": 80
+      },
+      "Hype Cave": {
+        "entrance": 61
+      },
+      "Hyrule Castle Exit (East)": {
+        "entrance": 5,
+        "exit": 4
+      },
+      "Hyrule Castle Exit (South)": {
+        "entrance": 4,
+        "exit": 3
+      },
+      "Hyrule Castle Exit (West)": {
+        "entrance": 3,
+        "exit": 2
+      },
+      "Hyrule Castle Secret Entrance": {
+        "entrance": 125
+      },
+      "Hyrule Castle Secret Entrance Exit": {
+        "entrance": 50,
+        "exit": 51
+      },
+      "Ice Palace Exit": {
+        "entrance": 45,
+        "exit": 46
+      },
+      "Ice Rod Cave": {
+        "entrance": 132
+      },
+      "Inverted Agahnims Tower Exit": {
+        "entrance": 36,
+        "exit": 37
+      },
+      "Inverted Big Bomb Shop": {
+        "entrance": 83
+      },
+      "Inverted Dark Sanctuary": {
+        "entrance": 90
+      },
+      "Inverted Ganons Tower Exit": {
+        "entrance": 55,
+        "exit": 56
+      },
+      "Inverted Links House Exit": {
+        "entrance": 1,
+        "exit": 0
+      },
+      "Kakariko Gamble Game": {
+        "entrance": 103
+      },
+      "Kakariko Shop": {
+        "entrance": 70
+      },
+      "Kakariko Well (top)": {
+        "entrance": 128
+      },
+      "Kakariko Well Exit": {
+        "entrance": 57,
+        "exit": 58
+      },
+      "Kings Grave": {
+        "entrance": 91
+      },
+      "Lake Hylia Fortune Teller": {
+        "entrance": 101
+      },
+      "Lake Hylia Healer Fairy": {
+        "entrance": 94
+      },
+      "Library": {
+        "entrance": 73
+      },
+      "Light World Bomb Hut": {
+        "entrance": 74
+      },
+      "Links House Exit": {
+        "entrance": 1,
+        "exit": 0
+      },
+      "Long Fairy Cave": {
+        "entrance": 85
+      },
+      "Lost Woods Gamble": {
+        "entrance": 60
+      },
+      "Lost Woods Hideout (top)": {
+        "entrance": 122
+      },
+      "Lost Woods Hideout Exit": {
+        "entrance": 44,
+        "exit": 54
+      },
+      "Lumberjack House": {
+        "entrance": 107
+      },
+      "Lumberjack Tree (top)": {
+        "entrance": 127
+      },
+      "Lumberjack Tree Exit": {
+        "entrance": 18,
+        "exit": 19
+      },
+      "Mimic Cave": {
+        "entrance": 79
+      },
+      "Mini Moldorm Cave": {
+        "entrance": 108
+      },
+      "Mire Shed": {
+        "entrance": 95
+      },
+      "Misery Mire Exit": {
+        "entrance": 39,
+        "exit": 40
+      },
+      "North Fairy Cave": {
+        "entrance": 124
+      },
+      "North Fairy Cave Exit": {
+        "entrance": 56,
+        "exit": 57
+      },
+      "Old Man Cave Exit (East)": {
+        "entrance": 7,
+        "exit": 8
+      },
+      "Old Man Cave Exit (West)": {
+        "entrance": 6,
+        "exit": 7
+      },
+      "Old Man House Exit (Bottom)": {
+        "entrance": 48,
+        "exit": 49
+      },
+      "Old Man House Exit (Top)": {
+        "entrance": 49,
+        "exit": 50
+      },
+      "Palace of Darkness Exit": {
+        "entrance": 38,
+        "exit": 39
+      },
+      "Palace of Darkness Hint": {
+        "entrance": 104
+      },
+      "Paradox Cave Exit (Bottom)": {
+        "entrance": 30,
+        "exit": 31
+      },
+      "Paradox Cave Exit (Middle)": {
+        "entrance": 31,
+        "exit": 32
+      },
+      "Paradox Cave Exit (Top)": {
+        "entrance": 32,
+        "exit": 33
+      },
+      "Potion Shop": {
+        "entrance": 76
+      },
+      "Pyramid": {
+        "entrance": 123
+      },
+      "Pyramid Exit": {
+        "entrance": 54,
+        "exit": 55
+      },
+      "Pyramid Fairy": {
+        "entrance": 99
+      },
+      "Red Shield Shop": {
+        "entrance": 87
+      },
+      "Sahasrahlas Hut": {
+        "entrance": 69
+      },
+      "Sanctuary Exit": {
+        "entrance": 2,
+        "exit": 1
+      },
+      "Sewer Drop": {
+        "entrance": 129
+      },
+      "Sick Kids House": {
+        "entrance": 64
+      },
+      "Skull Woods Final Section Exit": {
+        "entrance": 43,
+        "exit": 44
+      },
+      "Skull Woods First Section (Left)": {
+        "entrance": 119
+      },
+      "Skull Woods First Section (Right)": {
+        "entrance": 120
+      },
+      "Skull Woods First Section (Top)": {
+        "entrance": 118
+      },
+      "Skull Woods First Section Exit": {
+        "entrance": 42,
+        "exit": 43
+      },
+      "Skull Woods Second Section (Drop)": {
+        "entrance": 121
+      },
+      "Skull Woods Second Section Exit (East)": {
+        "entrance": 41,
+        "exit": 42
+      },
+      "Skull Woods Second Section Exit (West)": {
+        "entrance": 40,
+        "exit": 41
+      },
+      "Snitch Lady (East)": {
+        "entrance": 62
+      },
+      "Snitch Lady (West)": {
+        "entrance": 63
+      },
+      "Spectacle Rock Cave Exit": {
+        "entrance": 33,
+        "exit": 34
+      },
+      "Spectacle Rock Cave Exit (Peak)": {
+        "entrance": 35,
+        "exit": 36
+      },
+      "Spectacle Rock Cave Exit (Top)": {
+        "entrance": 34,
+        "exit": 35
+      },
+      "Spike Cave": {
+        "entrance": 65
+      },
+      "Spiral Cave Exit": {
+        "entrance": 28,
+        "exit": 29
+      },
+      "Spiral Cave Exit (Top)": {
+        "entrance": 29,
+        "exit": 30
+      },
+      "Superbunny Cave Exit (Bottom)": {
+        "entrance": 19,
+        "exit": 20
+      },
+      "Superbunny Cave Exit (Top)": {
+        "entrance": 20,
+        "exit": 21
+      },
+      "Swamp Healer Fairy": {
+        "entrance": 94
+      },
+      "Swamp Palace Exit": {
+        "entrance": 37,
+        "exit": 38
+      },
+      "Tavern": {
+        "entrance": 67
+      },
+      "Tavern (Front)": {
+        "entrance": 66
+      },
+      "Thieves Town Exit": {
+        "entrance": 52,
+        "exit": 53
+      },
+      "Tower of Hera Exit": {
+        "entrance": 51,
+        "exit": 45
+      },
+      "Turtle Rock Exit (Front)": {
+        "entrance": 53,
+        "exit": 52
+      },
+      "Turtle Rock Isolated Ledge Exit": {
+        "entrance": 24,
+        "exit": 25
+      },
+      "Turtle Rock Ledge Exit (East)": {
+        "entrance": 25,
+        "exit": 26
+      },
+      "Turtle Rock Ledge Exit (West)": {
+        "entrance": 21,
+        "exit": 22
+      },
+      "Two Brothers House Exit (East)": {
+        "entrance": 16,
+        "exit": 17
+      },
+      "Two Brothers House Exit (West)": {
+        "entrance": 15,
+        "exit": 16
+      },
+      "Village of Outcasts Shop": {
+        "entrance": 96
+      },
+      "Waterfall of Wishing": {
+        "entrance": 92
       }
     }
   },

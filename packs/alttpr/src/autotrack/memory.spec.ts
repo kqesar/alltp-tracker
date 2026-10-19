@@ -98,11 +98,14 @@ describe("MEMORY_RANGES", () => {
     }
   });
 
-  it("forbids exactly the seed's settings, the dungeon rooms, the prizes and the HUD", () => {
+  it("forbids exactly the seed's settings, the entrances, the dungeon rooms, the prizes and the HUD", () => {
     const forbidden = MEMORY_RANGES.filter((range) => !permitted(range.id)).map(
       (range) => `${range.id}:${range.category}`,
     );
     expect(forbidden).toEqual([
+      // Where the seed's doors and holes lead, and where Link went through
+      "hole-table:entrances",
+      "door-table:entrances",
       // Outside the spec's windows: anything else, which races forbid
       "swordless-mode:other",
       "dungeon-item-menu:other",
@@ -114,6 +117,8 @@ describe("MEMORY_RANGES", () => {
       "ganon-vulnerable:other",
       "initial-pyramid:other",
       "initial-progress:other",
+      "room:entrances",
+      "entrance:entrances",
       "dungeon-rooms:dungeon-checks",
       "bomb-count:hud",
       "bottle-index:hud",
@@ -126,6 +131,7 @@ describe("MEMORY_RANGES", () => {
       "heart-containers:hud",
       "stats-finds:other",
       "heart-pieces:hud",
+      "overworld-door:entrances",
     ]);
   });
 
@@ -201,7 +207,9 @@ describe("MEMORY_RANGES", () => {
   it("reads this many bytes on a full tick", () => {
     // Without the two race flag bytes, which the race phase adds. The seed's
     // settings count in: every range falls due on the first tick, and the
-    // settings every 20th after (SETTINGS_MS).
+    // settings every 20th after (SETTINGS_MS). Outside races, where Link
+    // went adds three pieces a second, and the ROM's door and hole tables
+    // two with the settings.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -212,9 +220,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 583, pieces: 10 },
+      casual: { bytes: 736, pieces: 15 },
       race: { bytes: 364, pieces: 25 },
-      ranges: { casual: 19, race: 33 },
+      ranges: { casual: 24, race: 33 },
     });
   });
 });

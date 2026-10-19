@@ -9,6 +9,7 @@
 
 import { ITEMS, type ItemId } from "../items";
 import { CHECK_FLAGS, type CheckFlag } from "./check-flags";
+import ENTRANCE_TABLES from "./entrance-tables.json" with { type: "json" };
 import {
   CRYSTAL_BITS,
   DUNGEON,
@@ -567,3 +568,92 @@ export const FRAMES_PER_SECOND = 21_477_270 / (262 * 1364 - 2);
 /** How long `frames` of play last, in milliseconds. */
 export const playTimeMs = (frames: number): number =>
   Math.round((frames * 1000) / FRAMES_PER_SECOND);
+
+/** An overworld door or hole, and the entrance it loads: where it leads. */
+export interface EntranceLink {
+  readonly kind: "door" | "hole";
+  /** Its slot in the game's door table, or one of its bytes in the hole table. */
+  readonly slot: number;
+  /** The entrance it loads, by the game's number for it. */
+  readonly entrance: number;
+}
+
+/**
+ * Where memory shows Link went: the door or hole he last went in by, then
+ * the door he last came out by, when another; or why it cannot tell. Every
+ * link is what the seed's ROM says that door or hole loads.
+ */
+export type EntranceReading = readonly EntranceLink[] | Unsettled;
+
+/** The ranges decodeEntrances reads, all outside races but the game mode. */
+const ENTRANCE_RANGES = [
+  "hole-table",
+  "door-table",
+  "game-mode",
+  "room",
+  "entrance",
+  "overworld-door",
+] as const satisfies readonly MemoryRangeId[];
+
+/** The overworld's game modes, plain and special (ram.asm:41). */
+const OUTDOORS: readonly number[] = [0x09, 0x0b];
+
+/** The entrance each room's exit is, for a room the game leaves by its exit table. */
+const EXIT_ROOMS: Readonly<Record<string, number>> = ENTRANCE_TABLES.exitRooms;
+
+/**
+ * Where Link went in and came out, from memory. Outside races only: the
+ * spec forbids tracking entrances or where they lead.
+ *
+ * - In by a door: the base patch keeps its slot as it loads its entrance
+ *   (overworld-door), which the door table must say that slot loads: a
+ *   respawn clears the slot, and a fall leaves it behind the entrance.
+ * - In by a hole: the entrance loaded is one the hole table holds.
+ * - Out by a door: outdoors, the room Link left is the one he came out of;
+ *   its exit is an entrance one door loads, unless several do (the fairies
+ *   and shops whose rooms are alike).
+ *
+ * Entrance 0 is none: the tables hold no door or hole that loads it.
+ */
+export function decodeEntrances(
+  memory: MemoryView,
+  options: DecodeOptions,
+): EntranceReading {
+  if (options.race) return "race-mode";
+  const reader = new Reader(memory, false);
+  const read = ENTRANCE_RANGES.map((id) => reader.range(id));
+  const unsettled = read.find((bytes) => typeof bytes === "string");
+  if (unsettled !== undefined) return unsettled as Unsettled;
+  const [holes, doors, mode, room, entrance, overworldDoor] = read as Bytes[];
+  const table = (bytes: Bytes, id: MemoryRangeId) =>
+    Array.from({ length: MEMORY_RANGE[id].size }, (_, i) =>
+      bytes.byte(MEMORY_RANGE[id].bus + i),
+    );
+  const holeTable = table(holes, "hole-table");
+  const doorTable = table(doors, "door-table");
+  const loaded = entrance.byte();
+  const links: EntranceLink[] = [];
+  const door = overworldDoor.byte() - 1;
+  const hole = holeTable.indexOf(loaded);
+  if (loaded !== 0 && door >= 0 && doorTable[door] === loaded) {
+    links.push({ entrance: loaded, kind: "door", slot: door });
+  } else if (loaded !== 0 && hole >= 0) {
+    links.push({ entrance: loaded, kind: "hole", slot: hole });
+  }
+  const outdoors = OUTDOORS.includes(mode.byte());
+  const exit = outdoors ? EXIT_ROOMS[room.word()] : undefined;
+  if (exit !== undefined) {
+    const slots = doorTable.flatMap((loads, slot) =>
+      loads === exit ? [slot] : [],
+    );
+    const [out] = slots;
+    if (
+      out !== undefined &&
+      slots.length === 1 &&
+      !links.some((link) => link.kind === "door" && link.slot === out)
+    ) {
+      links.push({ entrance: exit, kind: "door", slot: out });
+    }
+  }
+  return links;
+}

@@ -4,6 +4,7 @@ import { ITEM_IDS, ITEMS, type ItemId } from "../items";
 import { CHECK_FLAGS } from "./check-flags";
 import {
   decodeChecks,
+  decodeEntrances,
   decodeItems,
   decodeProgress,
   FRAMES_PER_SECOND,
@@ -12,7 +13,8 @@ import {
   playTimeMs,
   racePermitted,
 } from "./decode";
-import { MEMORY_RANGES, type MemoryRangeId } from "./memory";
+import tables from "./entrance-tables.json" with { type: "json" };
+import { MEMORY_RANGE, MEMORY_RANGES, type MemoryRangeId } from "./memory";
 
 // A fake console: WRAM as the game lays it out, written byte by byte at the
 // documented addresses (z3randomizer sram.asm), and a view over it that
@@ -656,6 +658,139 @@ describe("decodeProgress", () => {
   });
 });
 
+describe("decodeEntrances", () => {
+  // The rooms of two exits, as the base ROM's exit table leaves them: Old
+  // Man Cave's west side ($F0) and Elder House's east one ($F2)
+  const OLD_MAN_WEST = 0xf0;
+  const ELDER_EAST = 0xf2;
+  const exitOf = (room: number) =>
+    (tables.exitRooms as Record<string, number>)[room] ?? -1;
+
+  /** A console's entrance ranges: ROM tables, then where Link is. */
+  const game = ({
+    doors = {},
+    holes = {},
+    mode = 0x07,
+    room = 0,
+    entrance = 0,
+    door = 0,
+  }: {
+    doors?: Record<number, number>;
+    holes?: Record<number, number>;
+    mode?: number;
+    room?: number;
+    entrance?: number;
+    door?: number;
+  }): MemoryView => {
+    const table = (id: MemoryRangeId, set: Record<number, number>) => {
+      const bytes = new Uint8Array(MEMORY_RANGE[id].size);
+      for (const [slot, value] of Object.entries(set)) bytes[+slot] = value;
+      return bytes;
+    };
+    const ranges: Partial<Record<MemoryRangeId, Uint8Array>> = {
+      "door-table": table("door-table", doors),
+      entrance: Uint8Array.of(entrance, 0),
+      "game-mode": Uint8Array.of(mode),
+      "hole-table": table("hole-table", holes),
+      "overworld-door": Uint8Array.of(door),
+      room: Uint8Array.of(room & 0xff, room >> 8),
+    };
+    return {
+      bytes: (id) => ranges[id as MemoryRangeId] ?? new Uint8Array(0),
+      has: (id) => ranges[id as MemoryRangeId] !== undefined,
+    };
+  };
+  const casual = { race: false };
+
+  it("reads the door Link went in by, as the door table says it loads", () => {
+    const view = game({ door: 0x11, doors: { 16: 0x2a }, entrance: 0x2a });
+    expect(decodeEntrances(view, casual)).toEqual([
+      { entrance: 0x2a, kind: "door", slot: 0x10 },
+    ]);
+  });
+
+  it("reads a hole once Link fell, the door before left behind", () => {
+    // The base patch keeps the last door; the fall loads the hole's entrance
+    const view = game({
+      door: 0x11,
+      doors: { 16: 0x2a },
+      entrance: 0x79,
+      holes: { 5: 0x79, 6: 0x79 },
+    });
+    expect(decodeEntrances(view, casual)).toEqual([
+      { entrance: 0x79, kind: "hole", slot: 5 },
+    ]);
+  });
+
+  it("reads nothing after a respawn, which clears the door", () => {
+    const view = game({ door: 0, doors: { 0: 0x01 }, entrance: 0x01 });
+    expect(decodeEntrances(view, casual)).toEqual([]);
+  });
+
+  it("reads the door Link came out by, from the room he left", () => {
+    expect(exitOf(OLD_MAN_WEST)).toBeGreaterThan(0);
+    const outdoors = {
+      door: 0x11,
+      doors: { 16: 0x2a, 64: exitOf(OLD_MAN_WEST) },
+      entrance: 0x2a,
+      mode: 0x09,
+      room: OLD_MAN_WEST,
+    };
+    expect(decodeEntrances(game(outdoors), casual)).toEqual([
+      { entrance: 0x2a, kind: "door", slot: 0x10 },
+      { entrance: exitOf(OLD_MAN_WEST), kind: "door", slot: 0x40 },
+    ]);
+    // Indoors, the room is where Link is, not where he came out; in the
+    // special overworld (the grove), he came out all the same
+    expect(decodeEntrances(game({ ...outdoors, mode: 0x07 }), casual)).toEqual([
+      { entrance: 0x2a, kind: "door", slot: 0x10 },
+    ]);
+    expect(
+      decodeEntrances(game({ ...outdoors, mode: 0x0b }), casual),
+    ).toHaveLength(2);
+  });
+
+  it("reads the way in and out by one door once", () => {
+    const exit = exitOf(ELDER_EAST);
+    const view = game({
+      door: 0x31,
+      doors: { 48: exit },
+      entrance: exit,
+      mode: 0x09,
+      room: ELDER_EAST,
+    });
+    expect(decodeEntrances(view, casual)).toEqual([
+      { entrance: exit, kind: "door", slot: 0x30 },
+    ]);
+  });
+
+  it("reads no way out of a room no exit leaves, or that several doors load", () => {
+    // Agahnim's room: Link warps out, by no exit of the table
+    expect(exitOf(0x20)).toBe(-1);
+    const out = (room: number, doors: Record<number, number>) =>
+      decodeEntrances(game({ doors, mode: 0x09, room }), casual);
+    expect(out(0x20, { 64: 0x20 })).toEqual([]);
+    // A cave of one door brings Link back where he came in: no table entry
+    expect(exitOf(0x112)).toBe(-1);
+    const exit = exitOf(OLD_MAN_WEST);
+    expect(out(OLD_MAN_WEST, { 64: exit, 65: exit })).toEqual([]);
+    expect(out(OLD_MAN_WEST, { 64: exit })).toHaveLength(1);
+  });
+
+  it("never reads in Race Mode, and waits for every range", () => {
+    expect(
+      decodeEntrances(new Image().view({ strict: true }), { race: true }),
+    ).toBe("race-mode");
+    const view = new Image().view({ read: (id) => id !== "door-table" });
+    expect(decodeEntrances(view, casual)).toBe("not-read");
+  });
+
+  it("sizes its tables as the importer found them", () => {
+    expect(MEMORY_RANGE["door-table"].size).toBe(tables.doors);
+    expect(MEMORY_RANGE["hole-table"].size).toBe(tables.holes);
+  });
+});
+
 describe("Race Mode", () => {
   const forbidden = MEMORY_RANGES.filter((r) => !racePermitted(r.id)).map(
     (r) => r.id,
@@ -789,6 +924,15 @@ describe("the decoders on random bytes", () => {
         expect(checks.checked.size + checks.unsettled.size).toBeLessThanOrEqual(
           mapped.size,
         );
+        const entrances = decodeEntrances(view(ranges), { race });
+        if (typeof entrances !== "string") {
+          expect(race).toBe(false);
+          expect(entrances.length).toBeLessThanOrEqual(2);
+          for (const { kind, slot } of entrances) {
+            const table = kind === "door" ? tables.doors : tables.holes;
+            expect(slot).toBeLessThan(table);
+          }
+        }
         const progress = decodeProgress(view(ranges), { race });
         for (const fact of [
           ...Object.values(progress.bosses),
