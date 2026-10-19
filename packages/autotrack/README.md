@@ -327,7 +327,10 @@ in WRAM, the other's in SRAM. A pack declares `modes: { range, names,
 decode }`: the probe range is read on every tick, first, and ranges with
 `modes: [...]` are read only in those modes. Plans follow the last mode the
 probe gave; a tick that sees a new mode keeps only the shared ranges and
-skips the casual phase, and the next tick reads the new layout. Categories
+skips the casual phase, and the next tick reads the new layout. From the
+switch on, every mode-bound range counts as unread (`has` is false) until
+read in the new mode: a decoder never takes an earlier stint's bytes, which
+still sit in the snapshot, for the current one. Categories
 stay per range, and the profile per community.
 
 ## Setup guide and environment

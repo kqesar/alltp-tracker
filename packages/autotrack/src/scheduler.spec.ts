@@ -378,12 +378,30 @@ describe("modes (a combined ROM such as SMZ3)", () => {
     expect(portal?.changed).toEqual(["game"]);
     expect(poller.mode).toBe("metroid");
     expect(Array.from(poller.bytes("zelda-items"))).toEqual([1, 2, 3, 4]);
+    // Every mode-bound range counts as unread: WRAM holds the other game now
+    expect(poller.has("zelda-items")).toBe(false);
+    expect(poller.has("metroid-saved")).toBe(false);
 
     transport.pieces.length = 0;
     await poller.tick();
     expect(addresses()).toEqual(new Set([PROBE, ZELDA_SRAM, METROID_WRAM]));
     expect(Array.from(poller.bytes("zelda-saved"))).toEqual([1, 2, 3, 5]);
     expect(Array.from(poller.bytes("metroid-items"))).toEqual([7, 7, 7, 7]);
+
+    // Back in ALttP, then in Super Metroid again: its ranges hold the last
+    // stint's bytes until this stint reads them, which counts as a change
+    memory[PROBE] = 0;
+    await poller.tick();
+    await poller.tick();
+    memory[PROBE] = 1;
+    memory.set([1, 2, 3, 6], ZELDA_SRAM);
+    await poller.tick();
+    expect(poller.has("zelda-saved")).toBe(false);
+    expect((await poller.tick())?.changed).toEqual([
+      "zelda-saved",
+      "metroid-items",
+    ]);
+    expect(Array.from(poller.bytes("zelda-saved"))).toEqual([1, 2, 3, 6]);
   });
 
   it("falls back to the shared ranges while the probe cannot tell", async () => {
