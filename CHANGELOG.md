@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.29.1](https://github.com/kqesar/alltp-tracker/compare/v2.29.0...v2.29.1) (2026-10-19)
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** read the game's saves with its game mode ([cf68a5c](https://github.com/kqesar/alltp-tracker/commit/cf68a5ca8d4766eed3b9f24fffa622d6e76a8e84))
+
 ## [2.29.0](https://github.com/kqesar/alltp-tracker/compare/v2.28.0...v2.29.0) (2026-10-19)
 
 
