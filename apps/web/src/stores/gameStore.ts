@@ -183,6 +183,37 @@ const fullCounters = (run: RunSettings): Record<string, number> =>
   );
 
 /**
+ * Where entrances lead once `notes` are noted (a target, or null to forget
+ * one), or null when they change nothing. A target leads from one entrance
+ * only: noted at one, it is forgotten at another. The player's notes and
+ * the game's go through it alike.
+ */
+export const withNotes = (
+  entrances: Readonly<Record<string, string>>,
+  notes: Readonly<Record<string, string | null>>,
+): Record<string, string> | null => {
+  const changes = Object.entries(notes).filter(
+    ([entrance, target]) => (entrances[entrance] ?? null) !== target,
+  );
+  if (changes.length === 0) return null;
+  const taken = new Set(changes.map(([, target]) => target));
+  const next = Object.fromEntries(
+    Object.entries(entrances).filter(
+      ([id, to]) => !(id in notes) && !taken.has(to),
+    ),
+  );
+  for (const [entrance, target] of changes) {
+    if (target !== null) next[entrance] = target;
+  }
+  // An unchanged note of a call keeps its target
+  for (const [entrance, target] of Object.entries(notes)) {
+    if (target !== null && next[entrance] === undefined)
+      next[entrance] = target;
+  }
+  return next;
+};
+
+/**
  * A fresh run of the given preset, under its settings or others: nothing
  * found, nothing checked.
  */
@@ -511,27 +542,8 @@ export const useGameStore = create<GameState>()(
 
         noteEntrances: (notes: Readonly<Record<string, string | null>>) =>
           set((state) => {
-            const changes = Object.entries(notes).filter(
-              ([entrance, target]) =>
-                (state.entrances[entrance] ?? null) !== target,
-            );
-            if (changes.length === 0) return state;
-            // A target leads from one entrance only: noted here, gone there
-            const taken = new Set(changes.map(([, target]) => target));
-            const entrances = Object.fromEntries(
-              Object.entries(state.entrances).filter(
-                ([id, to]) => !(id in notes) && !taken.has(to),
-              ),
-            );
-            for (const [entrance, target] of changes) {
-              if (target !== null) entrances[entrance] = target;
-            }
-            // An unchanged note of a call keeps its target
-            for (const [entrance, target] of Object.entries(notes)) {
-              if (target !== null && entrances[entrance] === undefined)
-                entrances[entrance] = target;
-            }
-            return record(state, { entrances });
+            const entrances = withNotes(state.entrances, notes);
+            return entrances === null ? state : record(state, { entrances });
           }),
         past: [],
         pauseTimer: (at = Date.now()) =>

@@ -147,6 +147,11 @@ describe("the entrance assistant", () => {
     expect(screen.getByTestId("entrances-summary")).toHaveTextContent(
       "1 of 138 entrances noted",
     );
+    expect(
+      screen.getByText(
+        "Autotracking notes each door you go through, outside Race Mode.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("entrance-row-kakariko-shop")).toHaveTextContent(
       "Kakariko ShopElder House (East)",
     );

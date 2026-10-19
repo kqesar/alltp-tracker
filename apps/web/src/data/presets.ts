@@ -206,6 +206,14 @@ export const crossedLogic = (settings: RunSettings): boolean =>
   settings.dungeonItems === "full";
 
 /**
+ * Whether the entrance assistant knows a run's shuffled entrances
+ * (`logic/entrances.ts`, `poolOf`): those of the Open or Standard world.
+ * Inverted's crossed shuffle runs tables of its own, not ported yet.
+ */
+export const entrancesKnown = (settings: RunSettings): boolean =>
+  settings.entranceShuffle !== "none" && settings.mode !== "inverted";
+
+/**
  * Whether the pack models a run's logic: vt's without shuffled entrances,
  * the entrance randomizer's for a crossed shuffle it models (crossedLogic).
  */
