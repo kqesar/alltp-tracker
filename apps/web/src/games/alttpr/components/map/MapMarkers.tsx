@@ -11,8 +11,8 @@ import {
   useMarkerStatus,
 } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { getAssetPath, toWorldPosition } from "@/games/alttpr/utils";
 import { useTooltip } from "@/hooks/useTooltip";
-import { getAssetPath, toWorldPosition } from "@/utils";
 
 /** The medallion each value of the store's `medallions` names. */
 const MEDALLION_NAMES = ["unknown", "Bombos", "Ether", "Quake"];

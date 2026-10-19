@@ -141,10 +141,13 @@ describe("obsTimer", () => {
   });
 });
 
+/** ALttPR's grid: seven cells and the two half cells at its sides. */
+const ALTTPR_COLUMNS = 8;
+
 describe("fitObsGrid", () => {
   /** The grid's size and margins for a fit, to check it is whole and centred. */
   const layout = (width: number, height: number, rows: number) => {
-    const fit = fitObsGrid({ height, rows, width });
+    const fit = fitObsGrid({ columns: ALTTPR_COLUMNS, height, rows, width });
     return {
       ...fit,
       bottom: height - fit.top - rows * fit.cell,
@@ -154,31 +157,55 @@ describe("fitObsGrid", () => {
 
   it("snaps the cell to a multiple of 16 when that costs under an eighth", () => {
     // 1080 / 6 rows = 180 px of room: 176 keeps 98 % of it
-    expect(fitObsGrid({ height: 1080, rows: 6, width: 1920 })).toEqual({
+    expect(
+      fitObsGrid({
+        columns: ALTTPR_COLUMNS,
+        height: 1080,
+        rows: 6,
+        width: 1920,
+      }),
+    ).toEqual({
       cell: 176,
       left: 256,
       top: 12,
     });
     // 700 / 7 = 100: 96
-    expect(fitObsGrid({ height: 700, rows: 7, width: 800 }).cell).toBe(96);
+    expect(
+      fitObsGrid({ columns: ALTTPR_COLUMNS, height: 700, rows: 7, width: 800 })
+        .cell,
+    ).toBe(96);
     // 400 / 8 = 50: 48
-    expect(fitObsGrid({ height: 350, rows: 7, width: 400 }).cell).toBe(48);
+    expect(
+      fitObsGrid({ columns: ALTTPR_COLUMNS, height: 350, rows: 7, width: 400 })
+        .cell,
+    ).toBe(48);
   });
 
   it("falls back to an even size when the crisp one would shrink the grid too much", () => {
     // 260 / 7 = 37.1: 32 would give up 14 %, so 36
-    expect(fitObsGrid({ height: 260, rows: 7, width: 300 }).cell).toBe(36);
+    expect(
+      fitObsGrid({ columns: ALTTPR_COLUMNS, height: 260, rows: 7, width: 300 })
+        .cell,
+    ).toBe(36);
     // A strip 200 px tall: 28.6 of room, 16 would halve it
-    expect(fitObsGrid({ height: 200, rows: 7, width: 1920 }).cell).toBe(28);
+    expect(
+      fitObsGrid({ columns: ALTTPR_COLUMNS, height: 200, rows: 7, width: 1920 })
+        .cell,
+    ).toBe(28);
   });
 
   it("matches the icons' own 64 px at the recommended source sizes", () => {
-    expect(fitObsGrid({ height: 384, rows: 6, width: 512 })).toEqual({
+    expect(
+      fitObsGrid({ columns: ALTTPR_COLUMNS, height: 384, rows: 6, width: 512 }),
+    ).toEqual({
       cell: 64,
       left: 0,
       top: 0,
     });
-    expect(fitObsGrid({ height: 896, rows: 7, width: 1024 }).cell).toBe(128);
+    expect(
+      fitObsGrid({ columns: ALTTPR_COLUMNS, height: 896, rows: 7, width: 1024 })
+        .cell,
+    ).toBe(128);
   });
 
   it.each([
@@ -208,6 +235,7 @@ describe("fitObsGrid", () => {
   it("works in device pixels on a scaled screen", () => {
     // At 125 %, 1536×864 CSS px are 1920×1080 device px: 1080 / 6 = 180 → 176
     const fit = fitObsGrid({
+      columns: ALTTPR_COLUMNS,
       height: 864,
       pixelRatio: 1.25,
       rows: 6,
@@ -220,7 +248,9 @@ describe("fitObsGrid", () => {
   });
 
   it("keeps a usable cell in a viewport too small for the grid", () => {
-    expect(fitObsGrid({ height: 0, rows: 7, width: 0 })).toEqual({
+    expect(
+      fitObsGrid({ columns: ALTTPR_COLUMNS, height: 0, rows: 7, width: 0 }),
+    ).toEqual({
       cell: 2,
       left: 0,
       top: 0,

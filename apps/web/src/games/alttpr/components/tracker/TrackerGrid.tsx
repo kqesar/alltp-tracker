@@ -1,11 +1,11 @@
 import { GridItem } from "@/games/alttpr/components/tracker/grid/GridItem";
 import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { visibleRows } from "@/games/alttpr/utils";
 import {
   GridFocusProvider,
   useGridNavigation,
 } from "@/hooks/useGridNavigation";
-import { visibleRows } from "@/utils";
 
 type TrackerGridProps = {
   /** Grid layout data - array of rows containing item identifiers */

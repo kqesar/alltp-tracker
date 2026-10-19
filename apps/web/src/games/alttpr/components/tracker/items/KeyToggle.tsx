@@ -2,8 +2,8 @@ import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
 import { dungeonName, smallKeysMax } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { getAssetPath } from "@/games/alttpr/utils";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
-import { getAssetPath } from "@/utils";
 
 /** Which of a dungeon's own items a key cell button drives. */
 export type KeyVariant = "big-key" | "small-key" | "map" | "compass";

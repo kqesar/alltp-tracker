@@ -5,8 +5,8 @@ import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
 import { dungeonAt, dungeonName } from "@/games/alttpr/logic/settings";
 import { STATE_LABELS, useDungeonStatus } from "@/games/alttpr/logic/solution";
 import { type Direction, useGameStore } from "@/games/alttpr/stores/gameStore";
+import { getAssetPath } from "@/games/alttpr/utils";
 import { type GridPosition, useGridFocusable } from "@/hooks/useGridNavigation";
-import { getAssetPath } from "@/utils";
 
 /** Corner of the boss cell an overlay occupies. */
 type Corner = "top-right" | "bottom-left" | "bottom-right";

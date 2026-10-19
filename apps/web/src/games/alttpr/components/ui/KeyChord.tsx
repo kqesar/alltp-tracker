@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import type { Chord } from "@/games/alttpr/data/keymap";
 import { useKeyboardLayout } from "@/games/alttpr/stores/keyboardLayoutStore";
-import { chordKeys } from "@/utils/keyLabels";
+import { chordKeys } from "@/games/alttpr/utils/keyLabels";
 
 /**
  * A chord drawn as the keys to press, labelled for the player's keyboard

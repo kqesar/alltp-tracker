@@ -16,8 +16,8 @@ import { useRunAnalysis } from "@/games/alttpr/hooks/useRunAnalysis";
 import { useUndoShortcuts } from "@/games/alttpr/hooks/useUndoShortcuts";
 import { useVoice } from "@/games/alttpr/hooks/useVoice";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import type { MapView } from "@/games/alttpr/utils";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
-import type { MapView } from "@/utils";
 
 /**
  * Main application component for the LttP Item Tracker

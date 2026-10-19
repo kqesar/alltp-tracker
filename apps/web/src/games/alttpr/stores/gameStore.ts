@@ -46,7 +46,7 @@ import {
   toSaveFile,
   validateProgress,
 } from "@/games/alttpr/stores/persistence";
-import type { MapLayout, MapView } from "@/utils";
+import type { MapLayout, MapView } from "@/games/alttpr/utils";
 
 /** Which way a click moves a counter or a progressive item. */
 export type Direction = 1 | -1;

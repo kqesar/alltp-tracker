@@ -5,7 +5,7 @@ import { ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
 import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
 import { defaultItemGrid } from "@/games/alttpr/data/items";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-import { visibleRows } from "@/utils";
+import { visibleRows } from "@/games/alttpr/utils";
 import { commandKey } from "@/utils/platform";
 import { obsViewUrl, trackerUrl } from "@/utils/view";
 

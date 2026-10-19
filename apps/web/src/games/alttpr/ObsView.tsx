@@ -1,21 +1,19 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
 import { StreamTimer } from "@/games/alttpr/components/ui/StreamTimer";
+import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
 import { itemGridFor } from "@/games/alttpr/data/items";
 import { useCrossedLogic } from "@/games/alttpr/hooks/useCrossedLogic";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
 import { useUndoShortcuts } from "@/games/alttpr/hooks/useUndoShortcuts";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { visibleRows } from "@/games/alttpr/utils";
+import type { ObsViewProps } from "@/games/registry";
 import { useUpdateStore } from "@/stores/updateStore";
-import { visibleRows } from "@/utils";
 import { fitObsGrid } from "@/utils/view";
 
-type ObsViewProps = {
-  /** A solid background, already validated by `obsBackground`; none when null */
-  background: string | null;
-  /** Whether to draw the run timer under the grid (`&timer=1`) */
-  timer?: boolean;
-};
+/** Grid columns: seven cells and the two half cells at its sides. */
+const GRID_COLUMNS = ITEMS_PER_ROW + 1;
 
 /**
  * The stream view (`?view=obs`): the item grid alone, on a transparent page,
@@ -62,6 +60,7 @@ export const ObsView = ({ background, timer = false }: ObsViewProps) => {
     if (!stage) return;
     const fit = () => {
       const { cell, left, top } = fitObsGrid({
+        columns: GRID_COLUMNS,
         height: window.innerHeight,
         pixelRatio: window.devicePixelRatio || 1,
         rows: timer ? rows + 1 : rows,
