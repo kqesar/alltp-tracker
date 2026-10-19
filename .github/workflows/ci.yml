@@ -180,11 +180,18 @@ jobs:
             }
 
   # Browser tests run beside the unit tests, not after them, so the pipeline
-  # takes as long as the slower of the two.
+  # takes as long as the slower of the two. They are split over two runners:
+  # a runner's cores are saturated by two browsers already (four workers ran
+  # no faster than two), so only another runner shortens the wait.
   e2e:
-    name: E2E (Playwright + axe)
+    name: E2E (Playwright + axe, ${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      # One shard failing still lets the other report its own failures
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
 
     steps:
       - name: Checkout code
@@ -213,12 +220,13 @@ jobs:
       # Uses the runner's preinstalled Google Chrome (playwright.config.ts),
       # so no browser is downloaded.
       - name: Run browser tests
-        run: pnpm test:e2e
+        run: pnpm test:e2e --shard=${{ matrix.shard }}/2
 
       # The production build the browser tests just served is the one that
-      # ships: the deploy job publishes it without building again.
+      # ships: the deploy job publishes it without building again, from the
+      # first shard (both build the same commit).
       - name: Upload the site for GitHub Pages
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && matrix.shard == 1
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: apps/web/dist/
@@ -227,7 +235,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: apps/web/playwright-report/
           retention-days: 7
 
