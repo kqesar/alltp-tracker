@@ -9,6 +9,7 @@
     { "path": "packages/autotrack" },
     { "path": "packages/engine" },
     { "path": "packs/alttpr" },
-    { "path": "packs/sm" }
+    { "path": "packs/sm" },
+    { "path": "packs/smz3" }
   ]
 }

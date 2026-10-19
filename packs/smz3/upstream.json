@@ -1,0 +1,8 @@
+{
+  "branch": "production",
+  "commit": "d53be76dc18c3d89d560f7912757b9d068762ac9",
+  "license": "MIT",
+  "repo": "tewtal/SMZ3Randomizer",
+  "version": "11.3.2",
+  "why": "samus.link and beta.samus.link run this commit (11.3.2): about 97 % of racetime.gg's SMZ3 races, 2025-2026"
+}
