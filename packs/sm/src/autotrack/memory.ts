@@ -21,9 +21,13 @@ export interface SmRange extends RangeSpec {
   readonly source: string;
 }
 
-/** How often the game state is read: in play or not, the first news. */
-export const STATE_MS = 500;
-/** Items and objectives. */
+/**
+ * The game state, items and objectives: one cadence, so a reading's in-play
+ * state and items are read in the same tick. Loading a file fills WRAM
+ * from SRAM: with the state read twice as often, the first reading in play
+ * could carry items read before the load (the title's, another file's), as
+ * SMZ3's did on a real game (packs/smz3 memory.ts, 2026-10-19).
+ */
 export const ITEMS_MS = 1000;
 /**
  * ROM does not change while a seed runs: read once, and slowly after, to
@@ -112,7 +116,7 @@ export const MEMORY_RANGES = [
   range({
     at: 0x7e_0998,
     category: "game-state",
-    everyMs: STATE_MS,
+    everyMs: ITEMS_MS,
     id: "game-state",
     size: 2,
     source: "fast_reload.asm:134-136",
