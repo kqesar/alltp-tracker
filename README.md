@@ -154,6 +154,7 @@ packages/engine/   @alltp/engine: a game-agnostic logic engine (rule language, t
 packages/autotrack/ @alltp/autotrack: the autotracking link to SNI / QUsb2Snes, its diagnostics and Race Mode
 packs/alttpr/      @alltp/pack-alttpr: ALttPR's items, and the official tests its v31 rules are held to
 packs/sm/          @alltp/pack-sm: Super Metroid as Map Rando plays it: items, objectives, memory map
+packs/smz3/        @alltp/pack-smz3: SMZ3 as samus.link generates it: both games' logic, held to its tests
 ```
 
 The app loads one game's module at a time (`apps/web/src/games/registry.ts`), each a chunk of its own. A game's run lives in its own Zustand store, persisted to localStorage under its own key: A Link to the Past's in `games/alttpr/stores/gameStore.ts`, Super Metroid's in `games/sm/store.ts`.

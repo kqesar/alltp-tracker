@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    // The importer is plain JavaScript, so Node runs it without a build step;
+    // its JSDoc types are checked like the TypeScript sources.
+    "allowJs": true,
+    "checkJs": true,
+    "isolatedModules": true,
+    // No DOM: a pack is data and pure functions, run wherever the engine runs.
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // The upstream fixtures, imported as data by the tests
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    // Only what is imported is typed: no ambient @types/* leak into sources.
+    "types": [],
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src", "test", "scripts", "vitest.config.ts"]
+}
