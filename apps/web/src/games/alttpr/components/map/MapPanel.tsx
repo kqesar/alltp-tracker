@@ -1,9 +1,9 @@
 import { lazy, Suspense, useId } from "react";
+import { MapLegend } from "@/components/map/MapLegend";
 import { type Tab, Tabs, tabId } from "@/components/ui/Tabs";
 import { ChecksPanel } from "@/games/alttpr/components/map/ChecksPanel";
 import { GoMode } from "@/games/alttpr/components/map/GoMode";
 import { LogicNote } from "@/games/alttpr/components/map/LogicNote";
-import { MapLegend } from "@/games/alttpr/components/map/MapLegend";
 import { MapTracker } from "@/games/alttpr/components/map/MapTracker";
 import { RunPanel } from "@/games/alttpr/components/map/RunPanel";
 import { RunTimer } from "@/games/alttpr/components/map/RunTimer";
