@@ -173,7 +173,12 @@ A Link to the Past), which folds Super Metroid's banks `$C0-$DF` onto `$80`.
 Here LoROM covers 4 MiB (banks masked with `$7F`): Map Rando's seed name at
 `$DF:FEF0` is ROM offset `$2F_FEF0`. SNI's own Pak-to-bus side
 (`PakAddressToBus`) already covers 4 MiB, so the addresses it is sent come
-back to the right bank.
+back to the right bank. HiROM's ROM mirrors in the upper halves of banks
+`$00-$3F` and `$80-$BF` map to the bytes the cartridge puts there (`$00:FFC0`
+is ROM `$00_FFC0`): alttpo/snes folds them onto 32 KiB pages, an address
+its own `PakAddressToBus` then sends to another byte. A property spec holds
+every mapping to a model of the hardware: the address SNI sends back reads
+the same ROM byte as the pack's.
 
 Example: the ALttPR race flag at A-bus `$30:8213` (LoROM) is ROM offset
 `$18_0213`; WRAM `$7E:F340` is `$F5_F340`.

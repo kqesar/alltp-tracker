@@ -102,7 +102,11 @@ function hiromBusToPak(bus: number): number | undefined {
   const low = bus & 0xffff;
   if (bus >= 0xc0_0000) return bus & 0x3f_ffff;
   if (bus >= 0x80_0000 || (bus >= 0x00_0000 && bus < 0x40_0000)) {
-    if (bus & 0x8000) return bankToLinear(bus & 0x3f_7fff);
+    // The upper half of banks $00-$3F and $80-$BF mirrors that of $C0-$FF:
+    // $00:FFC0 is the header at ROM $00_FFC0. alttpo/snes folds it onto 32
+    // KiB pages ($00_7FC0), a byte SNI's own PakAddressToBus then reads at
+    // $C0:7FC0, another one.
+    if (bus & 0x8000) return bus & 0x3f_ffff;
     const bank = bus >>> 16;
     const sramBank =
       bank >= 0xa0 && bank < 0xc0
