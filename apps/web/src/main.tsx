@@ -1,13 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@/styles/index.css";
-import { ObsView } from "@/games/alttpr/ObsView";
-import { syncAcrossTabs } from "@/games/alttpr/stores/crossTabSync";
+import { activeGame, loadGame } from "@/games/registry";
 import { checkForUpdates, registerServiceWorker } from "@/stores/updateStore";
 import { isObsView, obsBackground, obsTimer } from "@/utils/view";
-import App from "./games/alttpr/App.tsx";
-
-syncAcrossTabs();
 
 // Production builds only: the dev server has no worker (sw/plugin.ts). After
 // the page has loaded, so caching the build never competes with the page's
@@ -34,16 +30,26 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 }
 
 const rootElement = document.getElementById("root");
-if (rootElement) {
-  createRoot(rootElement).render(
-    <StrictMode>
-      {isObsView() ? (
-        <ObsView background={obsBackground()} timer={obsTimer()} />
-      ) : (
-        <App />
-      )}
-    </StrictMode>,
-  );
-} else {
-  throw new Error("Root element not found");
-}
+if (!rootElement) throw new Error("Root element not found");
+
+// The game this device tracks, its chunk alone: the tracker, or the stream
+// view of it
+loadGame(activeGame()).then(
+  (game) => {
+    game.start();
+    createRoot(rootElement).render(
+      <StrictMode>
+        {isObsView() ? (
+          <game.ObsView background={obsBackground()} timer={obsTimer()} />
+        ) : (
+          <game.App />
+        )}
+      </StrictMode>,
+    );
+  },
+  (error: unknown) => {
+    console.error("The tracker could not load:", error);
+    rootElement.textContent =
+      "The tracker could not load. Check your connection, then reload the page.";
+  },
+);

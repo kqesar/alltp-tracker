@@ -13,8 +13,8 @@ import {
 import { formatTime, isRunning, timerMs } from "@/games/alttpr/logic/timer";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { getAssetPath } from "@/games/alttpr/utils";
 import { useNow } from "@/hooks/useNow";
-import { getAssetPath } from "@/utils";
 
 /** The bosses a run beats: the grid's ten and the two Agahnims. */
 const BOSS_COUNT = 12;

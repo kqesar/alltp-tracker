@@ -14,8 +14,8 @@ import {
 } from "@/games/alttpr/logic/entrances";
 import { useEntrancePicker } from "@/games/alttpr/stores/entrancePickerStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { toWorldPosition, type World } from "@/games/alttpr/utils";
 import { useTooltip } from "@/hooks/useTooltip";
-import { toWorldPosition, type World } from "@/utils";
 import { mergeHandlers } from "@/utils/mergeHandlers";
 
 /**

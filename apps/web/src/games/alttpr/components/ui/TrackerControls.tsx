@@ -25,7 +25,7 @@ import { ShortcutsButton } from "@/games/alttpr/components/ui/ShortcutsButton";
 import { StreamViewControl } from "@/games/alttpr/components/ui/StreamViewControl";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { type Progress, parseSave } from "@/games/alttpr/stores/persistence";
-import type { MapLayout } from "@/utils";
+import type { MapLayout } from "@/games/alttpr/utils";
 import { commandKey } from "@/utils/platform";
 
 /** How long a status message such as "Save imported" stays on screen. */

@@ -27,8 +27,8 @@ import { wildItems } from "@/games/alttpr/data/presets";
 import { dungeonName, KEY_DUNGEONS } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { useKeyboardLayout } from "@/games/alttpr/stores/keyboardLayoutStore";
-import { getAssetPath } from "@/utils";
-import { chordText } from "@/utils/keyLabels";
+import { getAssetPath } from "@/games/alttpr/utils";
+import { chordText } from "@/games/alttpr/utils/keyLabels";
 import { altKey, commandKey } from "@/utils/platform";
 
 const DIRECTIONS: ShortcutDirection[] = ["advance", "back"];

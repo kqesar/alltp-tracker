@@ -2,9 +2,9 @@ import { itemLabels, itemsMin } from "@/games/alttpr/data/items";
 import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { getItemBackground, isItemDimmed } from "@/games/alttpr/utils";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
 import { useTooltip } from "@/hooks/useTooltip";
-import { getItemBackground, isItemDimmed } from "@/utils";
 import { mergeHandlers } from "@/utils/mergeHandlers";
 
 type ItemProps = {

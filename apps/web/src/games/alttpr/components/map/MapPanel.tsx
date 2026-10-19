@@ -12,7 +12,7 @@ import {
   VoiceLiveRegion,
 } from "@/games/alttpr/components/map/VoiceControl";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-import type { MapView } from "@/utils";
+import type { MapView } from "@/games/alttpr/utils";
 
 /** The panel's views, as its tabs; the Entrances list with shuffled ones. */
 const VIEWS = [

@@ -6,7 +6,7 @@ import {
 } from "@/games/alttpr/components/map/MapMarkers";
 import { packSettings } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-import { toWorldPosition, type World } from "@/utils";
+import { toWorldPosition, type World } from "@/games/alttpr/utils";
 
 /** A world's shuffled entrances, loaded with their tables on demand. */
 const EntranceLayer = lazy(

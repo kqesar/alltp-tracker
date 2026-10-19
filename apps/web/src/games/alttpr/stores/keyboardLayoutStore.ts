@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { create } from "zustand";
-import type { LayoutMap } from "@/utils/keyLabels";
+import type { LayoutMap } from "@/games/alttpr/utils/keyLabels";
 
 /** `navigator.keyboard`, which only Chromium browsers implement. */
 type KeyboardApi = { getLayoutMap?: () => Promise<LayoutMap> };

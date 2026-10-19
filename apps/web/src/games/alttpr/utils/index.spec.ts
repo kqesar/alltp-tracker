@@ -5,7 +5,7 @@ import {
   isItemDimmed,
   toWorldPosition,
   visibleRows,
-} from "@/utils";
+} from "@/games/alttpr/utils";
 
 describe("toWorldPosition", () => {
   it("spreads a Light World marker across its own square", () => {

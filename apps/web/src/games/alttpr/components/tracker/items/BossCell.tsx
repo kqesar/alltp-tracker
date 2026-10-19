@@ -10,9 +10,9 @@ import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
 import { dungeonName } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { getItemBackground, isItemDimmed } from "@/games/alttpr/utils";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
 import { useTooltip } from "@/hooks/useTooltip";
-import { getItemBackground, isItemDimmed } from "@/utils";
 import { mergeHandlers } from "@/utils/mergeHandlers";
 
 type BossCellProps = {

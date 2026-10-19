@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ariaChord, chordKeys, chordText, keyLabel } from "@/utils/keyLabels";
+import {
+  ariaChord,
+  chordKeys,
+  chordText,
+  keyLabel,
+} from "@/games/alttpr/utils/keyLabels";
 
 /** What Chromium reports for a French AZERTY keyboard, in part. */
 const AZERTY = new Map([

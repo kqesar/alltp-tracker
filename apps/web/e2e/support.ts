@@ -17,6 +17,9 @@ export const clickToolbarAction = async (
   button: Locator,
   item: string,
 ) => {
+  // The game renders once its chunk has loaded, its toolbar fitted as it
+  // mounts: only then does the button's visibility say where it went
+  await page.getByTestId("toolbar").waitFor();
   if (await button.isVisible()) return button.click();
   await page.getByTestId("toolbar-more").click();
   await page.getByTestId(item).click();

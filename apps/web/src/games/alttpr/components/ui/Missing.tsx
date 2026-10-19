@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import type { Doubt, Missing } from "@/games/alttpr/logic/missing";
 import type { Ways } from "@/games/alttpr/logic/needs";
-import { getAssetPath } from "@/utils";
+import { getAssetPath } from "@/games/alttpr/utils";
 
 /** "a, b or c" */
 const listed = (words: readonly string[]): string =>

@@ -27,6 +27,7 @@ import {
   prizeOf,
 } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { getAssetPath } from "@/games/alttpr/utils";
 import {
   cancelHide,
   isOnTooltip,
@@ -35,7 +36,6 @@ import {
   type TooltipTarget,
   useTooltipStore,
 } from "@/stores/tooltipStore";
-import { getAssetPath } from "@/utils";
 
 /** Gap between the tooltip and its anchor, and the tooltip and the viewport edge. */
 const GAP = 8;

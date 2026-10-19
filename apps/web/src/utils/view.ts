@@ -1,5 +1,3 @@
-import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
-
 /**
  * Which page the tracker shows, picked by the query string so it works on
  * static hosting: `?view=obs` is the stream view, the item grid alone for an
@@ -89,9 +87,6 @@ export const obsViewUrl = (
   return url.href;
 };
 
-/** Grid columns: seven cells and the two half cells at its sides. */
-const GRID_COLUMNS = ITEMS_PER_ROW + 1;
-
 /**
  * Game pixels across a cell. The item icons are 16 px sprites stored at 4×
  * (64 px files): a cell that is a multiple of 16 device pixels draws every
@@ -112,21 +107,24 @@ export type GridFit = { cell: number; left: number; top: number };
  * then it is the largest even number of pixels (even, so the half cells end
  * on a whole pixel too). Computed in device pixels, which are the ones that
  * must be whole, and returned in CSS pixels.
- * @param viewport - Its size in CSS px, the grid's row count, and the device pixel ratio
+ * @param viewport - Its size in CSS px, the grid's columns (a half cell
+ *   counting half) and rows, and the device pixel ratio
  */
 export const fitObsGrid = ({
   width,
   height,
+  columns,
   rows,
   pixelRatio = 1,
 }: {
   width: number;
   height: number;
+  columns: number;
   rows: number;
   pixelRatio?: number;
 }): GridFit => {
   const room =
-    Math.min(width / GRID_COLUMNS, height / Math.max(rows, 1)) * pixelRatio;
+    Math.min(width / columns, height / Math.max(rows, 1)) * pixelRatio;
   const crisp = Math.floor(room / SPRITE_PIXELS) * SPRITE_PIXELS;
   const even = Math.floor(room / 2) * 2;
   const cell = Math.max(2, crisp >= room * (1 - MAX_CRISP_LOSS) ? crisp : even);
@@ -136,7 +134,7 @@ export const fitObsGrid = ({
 
   return {
     cell: cell / pixelRatio,
-    left: offset(width, GRID_COLUMNS),
+    left: offset(width, columns),
     top: offset(height, rows),
   };
 };

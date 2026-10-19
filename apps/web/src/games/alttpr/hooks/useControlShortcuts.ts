@@ -5,7 +5,7 @@ import {
 } from "@/games/alttpr/data/keymap";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { useKeyboardLayout } from "@/games/alttpr/stores/keyboardLayoutStore";
-import { ariaChord } from "@/utils/keyLabels";
+import { ariaChord } from "@/games/alttpr/utils/keyLabels";
 
 /** A chord the browser listener acts on, or nothing. */
 const usable = (chord: Chord | undefined) =>
