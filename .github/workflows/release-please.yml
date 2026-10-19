@@ -22,5 +22,79 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      created: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+
+  # The desktop app (apps/desktop), built for each OS once a release is cut:
+  # its installers, their updater signatures and the updater's latest.json
+  # are attached to the release, where the installed apps look for updates.
+  # The release's own commit is built, the version read from package.json.
+  desktop:
+    needs: release-please
+    if: needs.release-please.outputs.created == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Apple Silicon, and Intel cross-built on the same runner
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          # The oldest glibc the AppImage should run on
+          - os: ubuntu-22.04
+            target: ""
+          - os: windows-latest
+            target: ""
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout the release
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.tag }}
+
+      - name: Install system libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup pnpm, Node.js and dependencies
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        with:
+          cache: true
+          require-lockfile: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: "apps/desktop/src-tauri -> target"
+          key: ${{ matrix.target }}
+
+      # The updater's key signs each installer: the installed apps refuse an
+      # update it did not sign. It lives in the repository's secrets only.
+      - name: Build and attach to the release
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          tauriScript: pnpm tauri
+          tagName: ${{ needs.release-please.outputs.tag }}
+          args: ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+          uploadUpdaterJson: true
+          updaterJsonPreferNsis: true

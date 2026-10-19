@@ -13,6 +13,8 @@ export const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 type UpdateState = {
   /** Set while a new version is ready: switches to it and reloads the page. */
   apply: (() => void) | null;
+  /** What applying it does, on its button: the site reloads, the app restarts. */
+  label: "Reload" | "Restart";
   /** Hide the notice. The new version still waits, for the next visit. */
   dismiss: () => void;
 };
@@ -24,6 +26,7 @@ type UpdateState = {
 export const useUpdateStore = create<UpdateState>()((set) => ({
   apply: null,
   dismiss: () => set({ apply: null }),
+  label: "Reload",
 }));
 
 const offer = (apply: () => void) => useUpdateStore.setState({ apply });

@@ -134,6 +134,18 @@ Reloading the page (F5) while online always shows the latest version. A tracker 
 
 For development: the service worker (`apps/web/sw/sw.ts`) exists in production builds only, so `pnpm dev` runs without it and `pnpm preview` with it. A small Vite plugin (`apps/web/sw/plugin.ts`) writes into it every file of the build with a hash of its content; any change to a shipped file changes the worker, which is how browsers find a new version, so there is no version number to bump. The page itself comes from the network first (3 s at most, then the cached copy), everything else from the cache. The plugin also gives each build an id, in the worker and in `index.html`: a page already running the version a new worker holds lets it take over without asking. The favicon and the install icons are drawn from one 16 px pixel-art Triforce, written in `apps/web/scripts/pwa-icons.mjs`, by `pnpm --filter @alltp/web pwa-icons` (`-- --check` verifies them).
 
+## The desktop app
+
+The tracker also comes as an app for Windows, macOS and Linux, from the [latest release](https://github.com/kqesar/alltp-tracker/releases/latest). It is the same tracker in a window of its own: autotracking reaches SNI from it on every system, Safari's Macs included, and it updates itself (a notice, "A new version is available", offers **Restart**, never in the middle of a run). It keeps its own run, apart from the browser's: **Export** (which asks where to save, as any desktop app does) and **Import** move a run between them.
+
+| System | Download | The first time |
+|---|---|---|
+| Windows | `…_x64-setup.exe` | The app is not signed yet: Windows SmartScreen says "Windows protected your PC". Choose **More info**, then **Run anyway**. |
+| macOS | `…_aarch64.dmg` (Apple silicon) or `…_x64.dmg` (Intel) | The app is not notarized (that needs a paid Apple account): macOS refuses to open it once. Open **System Settings → Privacy & Security**, choose **Open Anyway**, then **Open**. |
+| Linux | `….AppImage` (any distribution), `….deb` or `….rpm` | An AppImage runs once made executable: `chmod +x` it, or tick "Allow executing" in its properties. |
+
+Not in the app yet: the stream view for OBS, since OBS can neither load the app's pages nor follow its storage; stream with the web tracker in an OBS dock, as above. Coming: reading RetroArch without SNI, and shortcuts that work while the emulator has the focus. How the app is built and updated: [docs/desktop.md](docs/desktop.md).
+
 ## Development
 
 Requires Node ≥ 22 and pnpm (the exact version is pinned in `package.json` and selected automatically).
@@ -154,6 +166,8 @@ pnpm dev          # http://localhost:5173
 | `pnpm --filter @alltp/web fetch-voice-model` | fetch the speech model voice commands use (40 MB, not in git; the voice browser tests need it) |
 | `pnpm test:coverage:show` | tests with a coverage table |
 | `pnpm lint` / `pnpm lint:fix` | Biome check / autofix |
+| `pnpm --filter @alltp/desktop dev` | the desktop app, on the development server (needs Rust ≥ 1.90 and [Tauri's system libraries](https://v2.tauri.app/start/prerequisites/)) |
+| `pnpm --filter @alltp/desktop build` | the desktop app's installers for this system |
 
 ## How it fits together
 
@@ -161,6 +175,7 @@ The repository is a pnpm workspace:
 
 ```
 apps/web/          the tracker web app (Vite + React), deployed to GitHub Pages
+apps/desktop/      the desktop app (Tauri): apps/web in a native window, for Windows, macOS and Linux
 packages/engine/   @alltp/engine: a game-agnostic logic engine (rule language, three-valued solver)
 packages/autotrack/ @alltp/autotrack: the autotracking link to SNI / QUsb2Snes, its diagnostics and Race Mode
 packs/alttpr/      @alltp/pack-alttpr: ALttPR's items, and the official tests its v31 rules are held to

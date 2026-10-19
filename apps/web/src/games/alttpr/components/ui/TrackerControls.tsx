@@ -26,13 +26,13 @@ import { StreamViewControl } from "@/games/alttpr/components/ui/StreamViewContro
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { type Progress, parseSave } from "@/games/alttpr/stores/persistence";
 import type { MapLayout } from "@/games/alttpr/utils";
-import { commandKey } from "@/utils/platform";
+import { commandKey, isDesktopApp } from "@/utils/platform";
+import { saveFile } from "@/utils/saveFile";
 
 /** How long a status message such as "Save imported" stays on screen. */
 const STATUS_DURATION_MS = 4000;
 
 /** Time left for the browser to start a download before its URL is freed. */
-const DOWNLOAD_URL_LIFETIME_MS = 1000;
 
 /** The map layouts the player can pick, in the order they are offered. */
 const MAP_LAYOUTS: { value: MapLayout; label: string; hint: string }[] = [
@@ -99,19 +99,11 @@ export const TrackerControls = () => {
     setStatus("Save imported.");
   };
 
-  const handleExport = () => {
-    const blob = new Blob([exportState()], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `alltp-tracker-save-${new Date().toISOString().slice(0, 10)}.json`;
-    // Firefox only follows a download link that is in the document
-    document.body.append(link);
-    link.click();
-    link.remove();
-    // The download reads the blob after this handler returns
-    setTimeout(() => URL.revokeObjectURL(url), DOWNLOAD_URL_LIFETIME_MS);
-  };
+  const handleExport = () =>
+    saveFile(
+      `alltp-tracker-save-${new Date().toISOString().slice(0, 10)}.json`,
+      exportState(),
+    );
 
   const handleImportClick = () => fileInputRef.current?.click();
 
@@ -196,7 +188,8 @@ export const TrackerControls = () => {
           <ImportIcon />
           <span className="toolbar-label">Import</span>
         </button>
-        <StreamViewControl />
+        {/* OBS cannot load the desktop app's page nor follow its storage */}
+        {!isDesktopApp && <StreamViewControl />}
         <ShortcutsButton />
       </span>
       <ToolbarMenu badge={<AutotrackMoreBadge />}>
@@ -215,7 +208,7 @@ export const TrackerControls = () => {
               onSelect={handleImportClick}
               testId="toolbar-more-import"
             />
-            <StreamViewControl variant="menu" />
+            {!isDesktopApp && <StreamViewControl variant="menu" />}
             <ShortcutsButton variant="menu" />
             {/* Settings the narrowest bars fold away, as menu choices */}
             {folded.has("map") && (

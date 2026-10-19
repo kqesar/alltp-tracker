@@ -7,10 +7,11 @@ A Link to the Past Tracker — a React 19 + TypeScript (Vite, Zustand, Biome, Vi
 A pnpm workspace. Dependencies point one way: `apps/web` → packs → `packages/*`, and the packages import nothing of the app or the packs.
 
 - `apps/web` — the tracker app (`@alltp/web`); all React, Vite and Playwright code and configs. It holds no game rule: `apps/web/src/games/alttpr/logic/` reads the run through `packs/alttpr`. Each game's modules live under `apps/web/src/games/<id>/` (ALttPR's: its board, map, logic, store, autotracking, voice); `src/` itself keeps what every game shares (the entry point, the dialogs and toolbar menu, the update notice, the setup guide's model, the map legend, utils, styles).
+- `apps/desktop` — `@alltp/desktop`, the desktop app (Tauri 2, Rust in `src-tauri/`): `apps/web` built in Vite's `desktop` mode in a native window, updated from GitHub Releases. Desktop-only code in the app sits behind `isDesktopApp` (`utils/platform.ts`), which the site's build folds away; `docs/desktop.md` is the design doc.
 - `packages/engine` — `@alltp/engine`, the game-agnostic logic engine; its README is the design doc.
 - `packages/autotrack` — `@alltp/autotrack`, the game-agnostic autotracking link: the usb2snes protocol to SNI / QUsb2Snes, the session and its diagnostic codes, polling, Race Mode by construction, the setup-guide model. Packs supply every address, game probe and race profile; its README is the design doc.
 - `packs/*` — game packs (rules as data, items, map markers). `packs/alttpr` (`@alltp/pack-alttpr`) ports ALttPR v31 from the randomizer's source: `upstream.json` pins the upstream commit and maps each upstream file to its module, `test/upstream/` holds the official tests as generated fixtures, and the weekly Logic drift workflow opens a `logic-drift` issue when upstream moves. `packs/sm` (`@alltp/pack-sm`) is Super Metroid as Map Rando seeds play it: items, objectives and the autotracking memory map, read from Map Rando's source (its README; no logic, the rooms being reconnected). `packs/smz3` (`@alltp/pack-smz3`) is SMZ3 as samus.link generates it: both games' logic ported from `tewtal/SMZ3Randomizer`'s C#, held to its logic tests as fixtures its importer writes (its README); its Hyrule markers and Zelda location flags are the alttpr pack's kept as data, that pack a dev dependency only; it carries SMZ3's autotracking pack too (one ROM, a mode per running game).
-- Root — shared tooling only: Biome, TypeScript (a solution `tsconfig.json`), Vitest (`projects` + coverage over every workspace), husky, commitlint. The root `package.json` carries the product version, which release-please bumps. Commit scopes follow the workspace: `web`, `engine`, `autotrack`, `alttpr`, `sm`, `smz3`.
+- Root — shared tooling only: Biome, TypeScript (a solution `tsconfig.json`), Vitest (`projects` + coverage over every workspace), husky, commitlint. The root `package.json` carries the product version, which release-please bumps. Commit scopes follow the workspace: `web`, `desktop`, `engine`, `autotrack`, `alttpr`, `sm`, `smz3`.
 
 Area rules live in `.claude/rules/` and load when you touch their files: `store.md` (state, persistence), `data.md` (game data and logic), `components.md` (UI, styles, a11y), `tests.md`, `engine.md` (the logic engine), `pack.md` (game packs).
 
@@ -42,6 +43,7 @@ pnpm vitest run <file>       # One spec file; add -t "name" to filter by test na
 pnpm --filter @alltp/pack-alttpr import-upstream <checkout>  # Regenerate the upstream test fixtures
 pnpm --filter @alltp/pack-alttpr import-er <checkout> --rom <base.sfc>  # Re-import the entrance randomizer's tables and rules
 pnpm --filter @alltp/web fetch-voice-model  # The speech model (40 MB, gitignored), before test:e2e
+pnpm --filter @alltp/desktop dev    # The desktop app on the dev server (Rust ≥ 1.90, ~/.cargo/bin)
 ```
 
 `tsc -b` writes its build info and the config projects' output under `node_modules/.tmp`, never next to the sources: a stray `vite.config.js` would shadow `vite.config.ts`.

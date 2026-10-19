@@ -1,4 +1,10 @@
 /**
+ * Whether this is the desktop app's build (apps/desktop, Vite's "desktop"
+ * mode): a constant, so the web build drops every branch it guards.
+ */
+export const isDesktopApp = import.meta.env.MODE === "desktop";
+
+/**
  * Whether the tracker runs on an Apple device, whose keyboards say Cmd and
  * Option where others say Ctrl and Alt. `navigator.userAgentData` names the
  * platform in Chromium ("macOS"); elsewhere `navigator.platform` still does
