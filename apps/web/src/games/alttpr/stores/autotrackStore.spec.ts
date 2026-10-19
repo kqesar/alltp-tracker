@@ -1,13 +1,8 @@
 import { parseUserAgent } from "@alltp/autotrack";
 import { act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  FakeVisibility,
-  GRANTED,
-  ManualClock,
-  SAVE,
-  seedMemory,
-} from "@/games/alttpr/autotrack/fixtures";
+import { FakeVisibility, GRANTED, ManualClock } from "@/autotrack/fixtures";
+import { SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
 import { forgetSeedFiles } from "@/games/alttpr/autotrack/seedFile";
 import {

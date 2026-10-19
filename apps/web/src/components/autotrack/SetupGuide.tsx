@@ -36,7 +36,7 @@ type Device = (typeof DEVICES)[number]["kind"];
 const isDevice = (kind: DeviceKind | null): kind is Device =>
   DEVICES.some((device) => device.kind === kind);
 
-/** The name the guide's text gives the game. */
+/** The name the guide's text gives the game, unless the guide is told another. */
 const GAME = "ALttPR";
 
 const STATE_NAMES: Record<StepState, string> = {
@@ -124,9 +124,12 @@ const SniFiles = ({ env }: { env: Pick<Environment, "os" | "arch"> }) => {
  */
 export const SetupGuide = ({
   environment,
+  game = GAME,
   status,
 }: {
   environment: Environment;
+  /** The game's name in the steps' words: "ALttPR", "Map Rando". */
+  game?: string;
   status: SessionStatus;
 }) => {
   const detected: System = SYSTEMS.some((s) => s.value === environment.os)
@@ -142,7 +145,7 @@ export const SetupGuide = ({
     arch: system === environment.os ? environment.arch : "unknown",
     os: system,
   };
-  const progress = setupProgress(status, shownEnv, { device, game: GAME });
+  const progress = setupProgress(status, shownEnv, { device, game });
   const allow = progress.steps
     .filter(({ step }) => step.id === "permission")
     .flatMap(({ variants }) => variants);

@@ -1,7 +1,7 @@
 import type { SessionStatus, SetupVariant } from "@alltp/autotrack";
 import { describe, expect, it } from "vitest";
+import { STATUSES, statusOf } from "@/autotrack/fixtures";
 import { deviceInUse, fixFor } from "@/autotrack/guide";
-import { STATUSES, statusOf } from "@/games/alttpr/autotrack/fixtures";
 
 /** The browser's own permission instructions, as the setup guide has them. */
 const ALLOW: SetupVariant[] = [

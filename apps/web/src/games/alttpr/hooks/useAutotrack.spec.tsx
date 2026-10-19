@@ -12,10 +12,9 @@ import {
   FakeVisibility,
   GRANTED,
   ManualClock,
-  SAVE,
-  seedMemory,
   settle,
-} from "@/games/alttpr/autotrack/fixtures";
+} from "@/autotrack/fixtures";
+import { SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
 import { useAutotrack } from "@/games/alttpr/hooks/useAutotrack";
 import { ObsView } from "@/games/alttpr/ObsView";
 import {

@@ -4,7 +4,12 @@
 // "Diagnostic codes"); this module only words them. It is part of the main
 // bundle, so it imports types alone.
 
-import type { DeviceKind, SessionStatus } from "@alltp/autotrack";
+import type {
+  BridgeInfo,
+  DeviceInfo,
+  DeviceKind,
+  SessionStatus,
+} from "@alltp/autotrack";
 
 /**
  * The status dot: off; busy (starting, connecting, attaching, or the
@@ -119,5 +124,65 @@ export const headlineOf = (
         : "This is not an ALttPR seed";
     case "connected":
       return status.paused ? "Connected, paused while hidden" : "Connected";
+  }
+};
+
+const BRIDGE_NAMES: Record<BridgeInfo["kind"], string> = {
+  qusb2snes: "QUsb2Snes",
+  sni: "SNI",
+  unknown: "The bridge",
+};
+
+const DEVICE_TITLES: Partial<Record<DeviceKind, string>> = {
+  emunwa: "NWA emulator",
+  fxpakpro: "FX Pak Pro",
+  luabridge: "BizHawk",
+  retroarch: "RetroArch",
+  "snes-classic": "SNES Classic",
+};
+
+const bridgeName = (bridge: BridgeInfo) =>
+  [BRIDGE_NAMES[bridge.kind], bridge.version].filter(Boolean).join(" ");
+
+/** "RetroArch 1.22.2", from the kind of device and what Info reported. */
+const deviceTitle = (info: DeviceInfo) =>
+  [DEVICE_TITLES[info.device.kind] ?? info.name, info.version]
+    .filter(Boolean)
+    .join(" ");
+
+/**
+ * The line under the dialog's headline: what is connected, or what happens
+ * next.
+ * @param status - The status shown
+ * @param active - Whether a session runs or is starting
+ * @param elsewhere - Whether another tab of the tracker holds the session
+ */
+export const detailOf = (
+  status: SessionStatus,
+  active: boolean,
+  elsewhere: boolean,
+): string => {
+  if (!active) {
+    return "Reads your game through SNI or QUsb2Snes as you play. Set it up below, then connect.";
+  }
+  if (elsewhere) {
+    return "Another tab of the tracker reads your game and marks it on the board. This tab takes over when that one closes or disconnects.";
+  }
+  switch (status.code) {
+    case "connected":
+      return [
+        bridgeName(status.bridge),
+        deviceTitle(status.device),
+        status.device.device.id,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    case "attaching":
+      return `${bridgeName(status.bridge)} · ${status.device.id}`;
+    default:
+      if (!("retryInMs" in status)) return "";
+      return status.retryInMs === null
+        ? "Waiting for you: see the step below, then click Retry now."
+        : "Trying again on its own: see the step below.";
   }
 };

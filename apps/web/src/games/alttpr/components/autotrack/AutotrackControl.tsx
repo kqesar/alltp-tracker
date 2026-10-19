@@ -1,81 +1,19 @@
-import { type ComponentType, useState } from "react";
+import { useState } from "react";
 import { headlineOf, phaseOf } from "@/autotrack/status";
+import { lazyDialog } from "@/components/autotrack/lazyDialog";
 import { RaceBadge, StatusDot } from "@/components/autotrack/StatusDot";
-import { Modal } from "@/components/ui/Modal";
 import { PlugIcon } from "@/components/ui/ToolbarIcons";
 import { ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 
-type Dialog = ComponentType<{ onClose: () => void }>;
-
-let loading: Promise<Dialog> | undefined;
-
-/** The dialog, once its code has arrived. */
-let loaded: Dialog | undefined;
-
-/**
- * Fetch the autotracking dialog's code, once: a chunk of its own (the setup
- * guide's text and the readout), asked for as soon as a pointer or focus
- * reaches a control that opens it. A failed fetch is forgotten, for the next
- * try.
- */
-export const preloadAutotrackDialog = () => {
-  loading ??= import(
-    "@/games/alttpr/components/autotrack/AutotrackDialog"
-  ).then(
-    (module) => {
-      loaded = module.AutotrackDialog;
-      return loaded;
-    },
-    (error) => {
-      loading = undefined;
-      throw error;
-    },
-  );
-  return loading;
-};
-
-const preload = {
-  onFocus: () => void preloadAutotrackDialog().catch(() => {}),
-  onPointerDown: () => void preloadAutotrackDialog().catch(() => {}),
-  onPointerEnter: () => void preloadAutotrackDialog().catch(() => {}),
-};
-
-/**
- * Shown when the dialog's code cannot be fetched: offline before it was ever
- * cached, or a release since this page loaded has replaced it.
- */
-const AutotrackUnavailable = ({ onClose }: { onClose: () => void }) => (
-  <Modal
-    footer={
-      <>
-        <button
-          className="modal-btn modal-btn--ghost"
-          onClick={onClose}
-          type="button"
-        >
-          Close
-        </button>
-        <button
-          className="modal-btn modal-btn--primary"
-          data-autofocus
-          onClick={() => window.location.reload()}
-          type="button"
-        >
-          Reload
-        </button>
-      </>
-    }
-    isOpen
-    onClose={onClose}
-    title="Autotracking"
-  >
-    <p className="modal__message">
-      Autotracking could not be loaded. Reload the page to try again; your run
-      is saved.
-    </p>
-  </Modal>
+const dialog = lazyDialog(() =>
+  import("@/games/alttpr/components/autotrack/AutotrackDialog").then(
+    (module) => module.AutotrackDialog,
+  ),
 );
+
+/** Fetch the autotracking dialog's code, once (see `lazyDialog`). */
+export const preloadAutotrackDialog = dialog.preload;
 
 /** The status as the toolbar shows it: the dot's phase, its words, the race. */
 const useAutotrackSummary = () => {
@@ -111,23 +49,7 @@ export const AutotrackControl = ({
   variant?: "toolbar" | "menu";
 }) => {
   const { headline, phase, race } = useAutotrackSummary();
-  const [isOpen, setIsOpen] = useState(false);
-  // Not React.lazy: a dialog whose code has arrived opens in the same frame
-  // as the click (see ShortcutsButton)
-  const [dialog, setDialog] = useState<{ Component: Dialog } | null>(null);
-
-  const open = () => {
-    setIsOpen(true);
-    if (loaded) {
-      setDialog({ Component: loaded });
-      return;
-    }
-    preloadAutotrackDialog().then(
-      (Component) => setDialog({ Component }),
-      () => setDialog({ Component: AutotrackUnavailable }),
-    );
-  };
-  const Shown = isOpen ? dialog?.Component : undefined;
+  const { open, shown } = dialog.useDialog();
   const icon = (
     <span className="autotrack-icon">
       <PlugIcon />
@@ -139,7 +61,7 @@ export const AutotrackControl = ({
     <>
       {variant === "menu" ? (
         <ToolbarMenuItem
-          {...preload}
+          {...dialog.handlers}
           detail={race ? `${headline}, race-legal` : headline}
           icon={icon}
           label="Autotracking"
@@ -148,7 +70,7 @@ export const AutotrackControl = ({
         />
       ) : (
         <button
-          {...preload}
+          {...dialog.handlers}
           // Its words and badge are flex items, which browsers name with
           // spaces between them: one name, in the order they show
           aria-label={`Autotracking, ${headline}${race ? ", race-legal" : ""}`}
@@ -164,7 +86,7 @@ export const AutotrackControl = ({
           {race && <RaceBadge race={race} />}
         </button>
       )}
-      {Shown && <Shown onClose={() => setIsOpen(false)} />}
+      {shown}
     </>
   );
 };

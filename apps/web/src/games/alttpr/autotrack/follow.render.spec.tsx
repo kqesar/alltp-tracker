@@ -2,13 +2,8 @@ import { parseUserAgent } from "@alltp/autotrack";
 import { act, render, screen } from "@testing-library/react";
 import { Profiler } from "react";
 import { afterEach, beforeEach, expect, it } from "vitest";
-import {
-  FakeVisibility,
-  GRANTED,
-  ManualClock,
-  SAVE,
-  seedMemory,
-} from "@/games/alttpr/autotrack/fixtures";
+import { FakeVisibility, GRANTED, ManualClock } from "@/autotrack/fixtures";
+import { SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
 import { MapTracker } from "@/games/alttpr/components/map/MapTracker";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
 import { defaultItemGrid } from "@/games/alttpr/data/items";

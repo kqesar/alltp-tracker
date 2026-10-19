@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { settle } from "@/autotrack/fixtures";
 import {
   checkIn,
   GAME_MODE,
   readingOf,
   SAVE,
   seedMemory,
-  settle,
 } from "@/games/alttpr/autotrack/fixtures";
 import { createFollower } from "@/games/alttpr/autotrack/follow";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";

@@ -8,7 +8,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { STATUSES, statusOf } from "@/games/alttpr/autotrack/fixtures";
+import { STATUSES, statusOf } from "@/autotrack/fixtures";
 import {
   AutotrackControl,
   AutotrackLiveRegion,
