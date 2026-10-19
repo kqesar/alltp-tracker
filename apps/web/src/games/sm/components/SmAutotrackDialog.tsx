@@ -1,16 +1,6 @@
-import { detectEnvironment, parseUserAgent } from "@alltp/autotrack";
-import { useEffect, useId } from "react";
-import { detailOf, headlineOf, phaseOf } from "@/autotrack/status";
-import { SetupGuide } from "@/components/autotrack/SetupGuide";
-import { StatusDot } from "@/components/autotrack/StatusDot";
-import { Modal } from "@/components/ui/Modal";
-import {
-  connectSmAutotrack,
-  disconnectSmAutotrack,
-  retrySmAutotrack,
-  stopSmAutotrack,
-  useSmAutotrackStore,
-} from "@/games/sm/autotrack/store";
+import { useId } from "react";
+import { GameAutotrackDialog } from "@/components/autotrack/GameAutotrackDialog";
+import { smAutotrack, useSmAutotrackStore } from "@/games/sm/autotrack/store";
 
 /** What the last reading said of the seed, in words. */
 const SeedRead = () => {
@@ -90,125 +80,17 @@ const SeedRead = () => {
 };
 
 /**
- * Super Metroid's autotracking dialog, as ALttPR's: the status, Connect or
- * Disconnect, Retry now while the session waits, Stop waiting while another
- * tab autotracks, the setup guide ticked live, and what was read of the
- * seed. It opens only on the player's click.
+ * Super Metroid's autotracking dialog: the shared one (GameAutotrackDialog),
+ * with what was read of the seed.
  * @param onClose - Called to close the dialog
  */
-export const SmAutotrackDialog = ({ onClose }: { onClose: () => void }) => {
-  const active = useSmAutotrackStore((state) => state.active);
-  const elsewhere = useSmAutotrackStore((state) => state.elsewhere);
-  const shown = useSmAutotrackStore((state) => state.shown);
-  const environment = useSmAutotrackStore((state) => state.environment);
-  const unavailable = useSmAutotrackStore((state) => state.unavailable);
-  const phase = unavailable ? "problem" : phaseOf(shown, active, elsewhere);
-  const headline = unavailable
-    ? "Autotracking could not be loaded"
-    : headlineOf(shown, active, elsewhere);
-  const canRetry = active && !elsewhere && "retryInMs" in shown;
-
-  // The setup guide, before any connection: the system, once, as it opens
-  useEffect(() => {
-    if (useSmAutotrackStore.getState().environment !== null) return;
-    void detectEnvironment().then((found) =>
-      useSmAutotrackStore.setState({ environment: found }),
-    );
-  }, []);
-
-  return (
-    <Modal
-      footer={
-        <button
-          className="modal-btn modal-btn--ghost"
-          onClick={onClose}
-          type="button"
-        >
-          Done
-        </button>
-      }
-      isOpen
-      onClose={onClose}
-      title="Autotracking"
-      wide
-    >
-      <div className="autotrack" data-testid="autotrack-dialog">
-        <div className="autotrack-status" data-phase={phase}>
-          <StatusDot large phase={phase} />
-          <div className="autotrack-status__text">
-            <div className="autotrack-status__title">
-              <p
-                className="autotrack-status__headline"
-                data-testid="autotrack-headline"
-              >
-                {headline}
-              </p>
-            </div>
-            <p className="autotrack-status__detail">
-              {unavailable
-                ? "Reload the page to try again; your run is saved."
-                : detailOf(shown, active, elsewhere)}
-            </p>
-          </div>
-        </div>
-
-        <div className="autotrack-actions">
-          {elsewhere ? (
-            // Stops waiting here only: the other tab, and the wish to
-            // connect on start, stay as they are
-            <button
-              className="modal-btn modal-btn--ghost"
-              data-testid="autotrack-stop-waiting"
-              onClick={stopSmAutotrack}
-              type="button"
-            >
-              Stop waiting
-            </button>
-          ) : active ? (
-            <button
-              className="modal-btn modal-btn--ghost"
-              data-testid="autotrack-disconnect"
-              onClick={disconnectSmAutotrack}
-              type="button"
-            >
-              Disconnect
-            </button>
-          ) : (
-            <button
-              className="modal-btn modal-btn--primary"
-              data-autofocus
-              data-testid="autotrack-connect"
-              onClick={() => void connectSmAutotrack()}
-              type="button"
-            >
-              Connect
-            </button>
-          )}
-          {canRetry && (
-            <button
-              className="modal-btn modal-btn--primary"
-              data-autofocus
-              data-testid="autotrack-retry"
-              onClick={retrySmAutotrack}
-              type="button"
-            >
-              Retry now
-            </button>
-          )}
-        </div>
-        <p className="autotrack-follow__text">
-          The board follows your Map Rando game as you play: the items you hold,
-          the seed's objectives and those done. The marks you set beyond it
-          stay. Races allow autotracking.
-        </p>
-
-        <SetupGuide
-          environment={environment ?? parseUserAgent(navigator.userAgent)}
-          game="Map Rando"
-          status={shown}
-        />
-        <SeedRead />
-      </div>
-    </Modal>
-  );
-};
+export const SmAutotrackDialog = ({ onClose }: { onClose: () => void }) => (
+  <GameAutotrackDialog
+    follows="The board follows your Map Rando game as you play: the items you hold, the seed's objectives and those done. The marks you set beyond it stay. Races allow autotracking."
+    game="Map Rando"
+    onClose={onClose}
+    session={smAutotrack}
+  >
+    <SeedRead />
+  </GameAutotrackDialog>
+);
