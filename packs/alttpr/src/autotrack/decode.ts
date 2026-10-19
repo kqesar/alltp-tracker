@@ -606,8 +606,8 @@ const EXIT_ROOMS: Readonly<Record<string, number>> = ENTRANCE_TABLES.exitRooms;
  * spec forbids tracking entrances or where they lead.
  *
  * - In by a door: the base patch keeps its slot as it loads its entrance
- *   (overworld-door), which the door table must say that slot loads: a
- *   respawn clears the slot, and a fall leaves it behind the entrance.
+ *   (overworld-door), which the door table must say that slot loads: a fall
+ *   or a respawn leaves the slot behind the entrance loaded.
  * - In by a hole: the entrance loaded is one the hole table holds.
  * - Out by a door: outdoors, the room Link left is the one he came out of;
  *   its exit is an entrance one door loads, unless several do (the fairies

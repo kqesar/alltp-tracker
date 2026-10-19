@@ -283,7 +283,9 @@ target (`exit_ids`); a cave's exit gets the position of the door it is
 coupled with, its room left as the game has it. The base patch keeps the
 slot of the last overworld door Link took (`PreviousOverworldDoor`,
 `$7F:5099`, plus one) as the game loads its entrance (`$7E:010E`)
-(z3randomizer `doorframefixes.asm:8-12`), and clears it on a respawn.
+(z3randomizer `doorframefixes.asm:8-12`). A respawn keeps that slot and
+loads entrance 0, which no door or hole loads (seen on a real game after a
+save and quit, 2026-10-19).
 `decodeEntrances` reads three facts, each "this slot loads this entrance",
 which the seed's ROM itself states:
 
@@ -300,7 +302,7 @@ flowchart LR
 
 - **In by a door**: the slot counts only when the door table agrees with
   the entrance loaded. A fall leaves the last door behind a hole's entrance,
-  and a respawn clears the slot.
+  and a respawn behind entrance 0.
 - **In by a hole**: the hole table holds the entrance loaded.
 - **Out by a door**: the game finds the exit by the room Link leaves (zelda3
   `overworld.c:1784-1789`, its last exit of that room), and the crossed

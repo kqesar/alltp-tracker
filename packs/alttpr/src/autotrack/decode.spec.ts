@@ -722,9 +722,15 @@ describe("decodeEntrances", () => {
     ]);
   });
 
-  it("reads nothing after a respawn, which clears the door", () => {
-    const view = game({ door: 0, doors: { 0: 0x01 }, entrance: 0x01 });
+  it("reads nothing after a respawn, which keeps the door but loads entrance 0", () => {
+    // As a real game showed after a save and quit: the slot stays, the
+    // entrance loaded is 0 (2026-10-19)
+    const view = game({ door: 0x58, doors: { 87: 0x0d }, entrance: 0 });
     expect(decodeEntrances(view, casual)).toEqual([]);
+    // A fresh file has no slot yet
+    expect(
+      decodeEntrances(game({ doors: { 0: 0x01 }, entrance: 0x01 }), casual),
+    ).toEqual([]);
   });
 
   it("reads the door Link came out by, from the room he left", () => {
