@@ -4,7 +4,7 @@
 ![Version](https://img.shields.io/github/v/release/kqesar/alltp-tracker?label=version)
 ![License](https://img.shields.io/github/license/kqesar/alltp-tracker?label=license)
 
-An item and progress tracker for **The Legend of Zelda: A Link to the Past** randomizer runs. It keeps track of the items you have found and works out, in real time, which chests you can reach and which dungeons you can clear.
+An item and progress tracker for **The Legend of Zelda: A Link to the Past** randomizer runs. It keeps track of the items you have found and works out, in real time, which chests you can reach and which dungeons you can clear. It tracks **Super Metroid** too, as **Map Rando** seeds play it.
 
 **→ [kqesar.github.io/alltp-tracker](https://kqesar.github.io/alltp-tracker/)**
 
@@ -56,6 +56,15 @@ The timeline is saved with the run, in exports too.
 **Keyboard** — the item grid is a single Tab stop: arrow keys move inside it (through a boss's overlays too) and wrap, Home / End jump to the ends of a row, Ctrl+Home / End to the ends of the grid. Space and Enter step the focused control forward, "-" steps it back. Every map marker is a button Tab can reach; "Skip to map" and "Skip to checks" jump to either view.
 
 **Presets** — pick a run type to set the rules. When a run's dungeon items leave their dungeons (alttpr.com's MC, MCS and Full Shuffle, the last one keysanity), the grid shows each dungeon's map and compass beside its keys, and its counter counts the items those leave room for. Or start from a seed: paste its alttpr.com link (or hash) under **Start from a seed**, and the tracker reads its settings (world, goal, swords, crystals, dungeon items, item placement, item pool and functionality, accessibility) from alttpr.com and offers the run type that holds them. Basic placement, a hard item pool or functionality change what is in logic as the randomizer has it: Ganon wants the silver arrows, no mirror shield, a bottle refills half the magic. The crystals, item placement, pool, functionality and accessibility change in the run type dialog's summary at any time, the run kept (one Undo takes a change back). Progress is saved to the browser automatically, and can be exported or imported as JSON.
+
+## Super Metroid (Map Rando)
+
+Pick **Super Metroid** under **Game** in the run type dialog (Mode); A Link to the Past is the other choice there. Each game keeps its own run on the device: switching and coming back finds it as it was, and the page loads only the game you track. The tracker follows **Map Rando** (maprando.com), the randomizer the community races: about 99 % of racetime.gg's Super Metroid Randomizer races of August to October 2026 were Map Rando seeds.
+
+- **Items**: the beams, the morph ball and suits, the movement items, and how many missile, super missile and power bomb packs and energy and reserve tanks you hold. Click a cell to add one, right-click or "-" to take one away; a cell greys while you hold none.
+- **The seed's objectives**: pick its preset in the run type dialog (Bosses, Minibosses, Chozos, Pirates, Metroids, None) or, for a Random seed, tick the ones its pause screen lists. Tick each as you finish it; once all are done, the barriers before Mother Brain are down.
+- **The items a seed adds**: the Wall Jump Boots and the split Speed Booster (the Spark and Blue Boosters) take their cells when you turn them on.
+- **No map and no logic**: Map Rando reconnects the game's rooms, so follow the game's own map. Export, Import, Undo, Redo and the stream view work as for A Link to the Past.
 
 ## Autotracking
 
@@ -143,30 +152,24 @@ apps/web/          the tracker web app (Vite + React), deployed to GitHub Pages
 packages/engine/   @alltp/engine: a game-agnostic logic engine (rule language, three-valued solver)
 packages/autotrack/ @alltp/autotrack: the autotracking link to SNI / QUsb2Snes, its diagnostics and Race Mode
 packs/alttpr/      @alltp/pack-alttpr: ALttPR's items, and the official tests its v31 rules are held to
+packs/sm/          @alltp/pack-sm: Super Metroid as Map Rando plays it: items, objectives, memory map
 ```
 
-In the app, the whole state lives in one Zustand store, `apps/web/src/games/alttpr/stores/gameStore.ts`, persisted to localStorage. Everything else reads from it.
+The app loads one game's module at a time (`apps/web/src/games/registry.ts`), each a chunk of its own. A game's run lives in its own Zustand store, persisted to localStorage under its own key: A Link to the Past's in `games/alttpr/stores/gameStore.ts`, Super Metroid's in `games/sm/store.ts`.
 
 ```
 apps/web/src/
-├── data/         game data
-│   ├── items.ts     item ranges, starting values and labels
-│   ├── keymap.ts    keyboard shortcuts
-│   └── presets.ts   run types
-├── logic/        the run read by the alltpr pack
-│   ├── settings.ts  run types as the pack's settings, dungeon counters
-│   ├── solution.ts  the run solved, and the hooks the map reads it by
-│   ├── checks.ts    the Checks list: the map's checks by zone, their states
-│   ├── missing.ts   what each check and the go mode are missing, at idle
-│   ├── needs.ts     the engine's blockers in the tracker's words and icons
-│   ├── timer.ts     the run timer, and what the game's progress does to it
-│   ├── timeline.ts  when each find of the run happened
-│   └── runLog.ts    the Run tab's timeline and splits
-├── stores/       the Zustand store
-├── components/   tracker/ (item grid), map/ (markers, Checks, Run, go mode, run timer), ui/ (chrome)
-├── hooks/        keyboard navigation
-├── styles/       CSS modules, all imported by styles/index.css
-└── utils/        asset paths and item styling
+├── main.tsx      the shell: loads the module of the game this device tracks
+├── games/
+│   ├── registry.ts  the games, the device's choice, loading a game's module
+│   ├── alttpr/      A Link to the Past: data/, logic/ (the run read by the alltpr
+│   │                pack), stores/, components/ (grid, map, Checks, Run, go mode),
+│   │                autotrack/, voice/, hooks/
+│   └── sm/          Super Metroid (Map Rando): its grid, objectives, store, styles
+├── components/   ui/ (shared chrome: dialogs, toolbar menu, game picker, header)
+├── hooks/        keyboard navigation, the toolbar's fit
+├── styles/       shared CSS, all imported by styles/index.css
+└── utils/        the stream view's address and fit, keyboard and platform helpers
 ```
 
 The rules are the alltpr pack's, ported from the randomizer's source and held to its official tests; the map draws the pack's markers. The app keeps no rule of its own.
@@ -178,3 +181,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the commit and release conventions.
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
+
+Super Metroid's item sprites are Map Rando's item sheet (`blkerby/MapRandomizer`, MIT, its visualizer's `items.png`); the game's art belongs to Nintendo, as A Link to the Past's does.

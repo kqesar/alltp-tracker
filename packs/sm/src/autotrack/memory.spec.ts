@@ -7,7 +7,7 @@ import {
 import { describe, expect, it } from "vitest";
 import { MEMORY_RANGE, MEMORY_RANGES } from "./memory";
 import { MAP_RANDO_AUTOTRACK } from "./pack";
-import { checkGame, MAP_RANDO_TITLE } from "./probes";
+import { checkGame, MAP_RANDO_GAME_CHECK, MAP_RANDO_TITLE } from "./probes";
 import { MAP_RANDO_RACE_PROFILE } from "./race-profile";
 
 describe("MEMORY_RANGES", () => {
@@ -58,6 +58,21 @@ describe("checkGame", () => {
 
   it("takes a Map Rando seed by its cartridge name", () => {
     expect(checkGame(header(MAP_RANDO_TITLE))).toEqual({ ok: true });
+    expect(MAP_RANDO_GAME_CHECK.ranges).toEqual(["rom-header"]);
+    expect(
+      MAP_RANDO_GAME_CHECK.verify(
+        (id) =>
+          id === "rom-header" ? header(MAP_RANDO_TITLE) : new Uint8Array(0),
+        {
+          device: { id: "ra://127.0.0.1:55355", kind: "retroarch" },
+          flags: [],
+          name: "retroarch",
+          rom: "sm",
+          romReadable: true,
+          version: "1.22.2",
+        },
+      ),
+    ).toEqual({ ok: true });
   });
 
   it("refuses the original game, another ROM, or a header read as zeros", () => {

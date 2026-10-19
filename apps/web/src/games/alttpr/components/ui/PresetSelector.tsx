@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { GamePicker } from "@/components/ui/GamePicker";
 import { Modal } from "@/components/ui/Modal";
 import { SeedImport } from "@/games/alttpr/components/ui/SeedImport";
 import {
@@ -126,6 +127,7 @@ export const PresetSelector = () => {
         onClose={() => setIsListOpen(false)}
         title="Choose a run type"
       >
+        <GamePicker current="alttpr" />
         <dl aria-label="Current run settings" className="run-settings">
           {describeSettings(settings).map((row) => (
             <div className="run-settings__row" key={row.label}>

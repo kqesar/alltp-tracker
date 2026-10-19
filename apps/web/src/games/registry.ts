@@ -23,11 +23,20 @@ export type GameModule = {
   ObsView: ComponentType<ObsViewProps>;
 };
 
-export const GAME_IDS = ["alttpr"] as const;
+export const GAME_IDS = ["alttpr", "sm"] as const;
 export type GameId = (typeof GAME_IDS)[number];
+
+/** Each game's name, and the randomizer the tracker follows for it. */
+export const GAMES: Readonly<
+  Record<GameId, { readonly name: string; readonly randomizer: string }>
+> = {
+  alttpr: { name: "A Link to the Past", randomizer: "alttpr.com" },
+  sm: { name: "Super Metroid", randomizer: "Map Rando" },
+};
 
 const LOADERS: Readonly<Record<GameId, () => Promise<GameModule>>> = {
   alttpr: () => import("@/games/alttpr/module").then(({ alttpr }) => alttpr),
+  sm: () => import("@/games/sm/module").then(({ sm }) => sm),
 };
 
 /** Where this device keeps the game it tracks. */
@@ -52,3 +61,20 @@ export const activeGame = (storage?: Pick<Storage, "getItem">): GameId => {
 
 /** Load a game's module. */
 export const loadGame = (id: GameId): Promise<GameModule> => LOADERS[id]();
+
+/**
+ * Track another game on this device: saved, then the page loads again with
+ * that game's module alone. Each game keeps its own run, so coming back
+ * finds it as it was.
+ */
+export const switchGame = (
+  id: GameId,
+  reload: () => void = () => window.location.reload(),
+): void => {
+  try {
+    localStorage.setItem(ACTIVE_GAME_KEY, id);
+  } catch {
+    // Storage refused: the page loads again on the game it had
+  }
+  reload();
+};
