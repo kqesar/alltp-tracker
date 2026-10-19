@@ -248,6 +248,13 @@ export class Poller implements MemorySnapshot {
     this.readControls(plans.race);
     const switched = this.modeIndex !== planned;
     this.scatter(plans.race, switched);
+    // A new mode: every mode-bound range holds another stint's bytes, unread
+    // until read again in this one
+    if (switched) {
+      this.pack.modeMasks.forEach((mask, index) => {
+        if (mask !== ALL_MODES) this.seen[index] = 0;
+      });
+    }
     // Decided after the race phase, on the flag it just read; a new mode
     // means this tick's casual plan was for the old layout.
     if (!switched && !this.raceActive()) {
