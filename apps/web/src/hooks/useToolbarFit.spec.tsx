@@ -35,6 +35,7 @@ const LAYOUTS: Record<ToolbarFit, FitLayout> = {
   "more-autotrack": { gap: 0, padding: 0, widths: [50, 50, 50] },
   "more-keys": { gap: 0, padding: 0, widths: [100, 100, 100, 100] },
   "more-map": { gap: 8, padding: 0, widths: [150, 150, 150] },
+  "secondary-icons": { gap: 8, padding: 0, widths: [400, 400] },
 };
 const layoutOf = (fit: ToolbarFit) => LAYOUTS[fit];
 
@@ -42,7 +43,9 @@ describe("chooseFit", () => {
   it.each([
     [1100, "labels"],
     [1008, "labels"],
-    [1007, "icons"],
+    [1007, "secondary-icons"],
+    [808, "secondary-icons"],
+    [807, "icons"],
     [608, "icons"],
     [607, "more"],
     [408, "more"],
@@ -71,13 +74,18 @@ describe("chooseFit", () => {
 
     chooseFit(700, asked);
 
-    expect(asked.mock.calls.map(([fit]) => fit)).toEqual(["labels", "icons"]);
+    expect(asked.mock.calls.map(([fit]) => fit)).toEqual([
+      "labels",
+      "secondary-icons",
+      "icons",
+    ]);
   });
 
   it("keeps a form while it fits, and falls back as soon as it no longer does", () => {
     expect(chooseFit(1008, layoutOf, "labels")).toBe("labels");
     expect(chooseFit(408, layoutOf, "more")).toBe("more");
-    expect(chooseFit(1007, layoutOf, "labels")).toBe("icons");
+    expect(chooseFit(1007, layoutOf, "labels")).toBe("secondary-icons");
+    expect(chooseFit(807, layoutOf, "secondary-icons")).toBe("icons");
     expect(chooseFit(407, layoutOf, "more")).toBe("more-map");
     expect(chooseFit(250, layoutOf, "labels")).toBe("more-keys");
   });
@@ -87,10 +95,16 @@ describe("chooseFit", () => {
       "more-map",
     );
     expect(chooseFit(408 + HYSTERESIS_PX, layoutOf, "more-map")).toBe("more");
-    expect(chooseFit(1008 + HYSTERESIS_PX - 1, layoutOf, "icons")).toBe(
-      "icons",
+    expect(
+      chooseFit(1008 + HYSTERESIS_PX - 1, layoutOf, "secondary-icons"),
+    ).toBe("secondary-icons");
+    expect(chooseFit(1008 + HYSTERESIS_PX, layoutOf, "secondary-icons")).toBe(
+      "labels",
     );
-    expect(chooseFit(1008 + HYSTERESIS_PX, layoutOf, "icons")).toBe("labels");
+    expect(chooseFit(808 + HYSTERESIS_PX - 1, layoutOf, "icons")).toBe("icons");
+    expect(chooseFit(808 + HYSTERESIS_PX, layoutOf, "icons")).toBe(
+      "secondary-icons",
+    );
     // Without the margin, a scrollbar's width could undo each switch
     expect(HYSTERESIS_PX).toBeGreaterThan(17);
   });
@@ -112,6 +126,7 @@ beforeEach(() => {
     "more-autotrack": 40,
     "more-keys": 80,
     "more-map": 100,
+    "secondary-icons": 300,
   };
   seen.length = 0;
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
@@ -236,7 +251,7 @@ describe("useToolbarFit", () => {
     render(<Toolbar />);
     const folds: Record<number, [string?, string?]> = {};
 
-    for (const width of [700, 400, 250, 170, 130, 100]) {
+    for (const width of [900, 700, 400, 250, 170, 130, 100]) {
       resizeTo(width);
       folds[width] = [toolbar().dataset.fit, toolbar().dataset.fold];
     }
@@ -248,6 +263,7 @@ describe("useToolbarFit", () => {
       250: ["more-map", "labels secondary map"],
       400: ["more", "labels secondary"],
       700: ["icons", "labels"],
+      900: ["secondary-icons", "secondary-labels"],
     });
   });
 
