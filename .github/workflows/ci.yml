@@ -13,11 +13,18 @@ on:
     paths-ignore: *docs-only
   # Run from the Actions tab on master to redeploy the site
   workflow_dispatch:
+  # Every night, the full suite on master, if master moved since the last green
+  # full run (plan): fresh property-test seeds and the runner's latest Chrome,
+  # on trees master deployed without testing again (docs/ci.md).
+  schedule:
+    - cron: '17 3 * * *'
 
 # A new push to a pull request makes its running checks obsolete: cancel them.
-# Pushes to master always run to the end, so deployments never overlap.
+# Pushes to master always run to the end, so deployments never overlap. The
+# nightly run deploys nothing: it has a group of its own and never holds a
+# push back.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'schedule' && 'nightly' || github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -26,11 +33,16 @@ permissions:
   pull-requests: write
 
 jobs:
-  # A push to master that only releases (release-please's commit: version and
-  # changelog) changes nothing the tests or the site can see: the jobs below
-  # skip it. Pull requests have no plan, and without one everything runs.
+  # What a push to master, or the nightly run, has to do (mode, docs/ci.md):
+  #   skip     nothing: a release commit (version and changelog only), or a
+  #            nightly run with master unchanged since its last green full run;
+  #   promote  build and deploy only: a pull request of this repository
+  #            already tested this exact tree;
+  #   full     tests, then deploy.
+  # Pull requests have no plan, and without one everything runs. If the plan
+  # itself fails its mode is empty, and everything runs too.
   plan:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'schedule'
     permissions:
       actions: read
       contents: read
@@ -38,7 +50,7 @@ jobs:
 
   ci:
     needs: plan
-    if: ${{ !cancelled() && needs.plan.outputs.release != 'true' }}
+    if: ${{ !cancelled() && needs.plan.outputs.mode != 'skip' && needs.plan.outputs.mode != 'promote' }}
     runs-on: ubuntu-latest
     # `actions: read` lets the store check below list the repository's caches
     permissions:
@@ -229,7 +241,7 @@ jobs:
   e2e:
     name: E2E (Playwright + axe, ${{ matrix.shard }}/${{ strategy.job-total }})
     needs: plan
-    if: ${{ !cancelled() && needs.plan.outputs.release != 'true' }}
+    if: ${{ !cancelled() && needs.plan.outputs.mode != 'skip' && needs.plan.outputs.mode != 'promote' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -271,9 +283,9 @@ jobs:
 
       # The production build the browser tests just served is the one that
       # ships: the deploy job publishes it without building again, from the
-      # first shard (all build the same commit).
+      # first shard (all build the same commit). The nightly run deploys nothing.
       - name: Upload the site for GitHub Pages
-        if: github.ref == 'refs/heads/master' && matrix.shard == 1
+        if: github.ref == 'refs/heads/master' && github.event_name != 'schedule' && matrix.shard == 1
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: apps/web/dist/
@@ -286,12 +298,105 @@ jobs:
           path: apps/web/playwright-report/
           retention-days: 7
 
-  # Master only, once both test jobs pass: a pull request's ref is
+  # Pull requests of this repository only, once every test job has passed:
+  # records that this tree was tested, as the artifact `tested-<tree>`. Master
+  # looks for it (plan, find-tested-tree.sh) and, if it trusts the run that
+  # holds it, builds and deploys without testing again. The artifact is the
+  # name and nothing else; what makes it trustworthy is the run it belongs to,
+  # which master checks (docs/ci.md, "Promoting a tested tree"). A fork's pull
+  # request records nothing, and master would not believe it.
+  #
+  # The tree is the one of the merge commit the jobs above tested
+  # (refs/pull/N/merge, GITHUB_SHA). A rebase merge pushes that same tree when
+  # master has not moved since; if it has, the tree differs and master tests.
+  tested:
+    name: Record the tested tree
+    needs: [ci, e2e]
+    # Not the implicit success(): a pull request has no plan, a skipped job
+    # that ci and e2e wait for, and that would skip this one too
+    if: >-
+      ${{ !cancelled() && github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && needs.ci.result == 'success' && needs.e2e.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    # Reads the commit through the API: no checkout, nothing of the pull
+    # request is run here
+    permissions:
+      contents: read
+
+    steps:
+      - name: Find the tested tree
+        id: tree
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tree=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" --jq .tree.sha)
+          [[ "$tree" =~ ^[0-9a-f]{40}$ ]] || { echo "Unexpected tree id: $tree" >&2; exit 1; }
+          echo "tree=$tree" >> "$GITHUB_OUTPUT"
+          printf 'tree %s\nmerge commit %s\nrun %s\n' "$tree" "$GITHUB_SHA" "$GITHUB_RUN_ID" \
+            > "$RUNNER_TEMP/tested.txt"
+
+      # A re-run of the workflow uploads again: overwrite, or it conflicts
+      - name: Upload the record
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tested-${{ steps.tree.outputs.tree }}
+          path: ${{ runner.temp }}/tested.txt
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 30
+
+  # Master, when plan found the tree tested already: the site the browser
+  # tests exercised, built again from the same tree (the build is
+  # reproducible), for the deploy job. Otherwise the e2e job uploads it.
+  build:
+    name: Build the site
+    needs: plan
+    if: needs.plan.outputs.mode == 'promote'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup pnpm, Node.js and dependencies
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        with:
+          cache: true
+          save-cache: false
+          require-lockfile: true
+
+      # The same model, cache and check as the e2e job: it is built into the site
+      - name: Cache the speech model
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: apps/web/public/models
+          key: voice-model-${{ hashFiles('apps/web/scripts/fetch-voice-model.mjs') }}
+
+      - name: Fetch the speech model
+        run: pnpm --filter @alltp/web fetch-voice-model
+
+      - name: Build the site
+        run: pnpm --filter @alltp/web build
+
+      - name: Upload the site for GitHub Pages
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: apps/web/dist/
+
+  # Master only, never the nightly run, once the site is ready: tested by the
+  # jobs above (full), or by a pull request (promote). A pull request's ref is
   # refs/pull/…, so this never runs for one.
   deploy:
     name: Deploy to GitHub Pages
-    needs: [ci, e2e]
-    if: github.ref == 'refs/heads/master'
+    needs: [ci, e2e, build]
+    if: >-
+      ${{ !cancelled() && github.ref == 'refs/heads/master' && github.event_name != 'schedule'
+      && (needs.build.result == 'success' || (needs.ci.result == 'success' && needs.e2e.result == 'success')) }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -304,3 +409,37 @@ jobs:
       - name: Deploy the site
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  # The nightly run found something: one open issue at most, which a later
+  # failure comments on instead of opening another. Close it once fixed.
+  nightly-report:
+    name: Report a failed nightly run
+    needs: [ci, e2e]
+    if: ${{ !cancelled() && github.event_name == 'schedule' && (needs.ci.result == 'failure' || needs.e2e.result == 'failure') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      issues: write
+
+    steps:
+      - name: Open the issue, or comment on the open one
+        env:
+          CI_RESULT: ${{ needs.ci.result }}
+          E2E_RESULT: ${{ needs.e2e.result }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          LABEL: nightly-ci
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          body=$(printf 'The nightly full run of `%s` failed: unit tests job `%s`, browser tests `%s`.\n\n%s\n\nIt runs when master moved since the last green full run (docs/ci.md). Close this issue once fixed.' \
+            "$GITHUB_SHA" "$CI_RESULT" "$E2E_RESULT" "$RUN_URL")
+          # Pull requests are issues too, for this endpoint
+          open=$(gh api "repos/$GH_REPO/issues?labels=$LABEL&state=open&per_page=100" \
+            --jq '[.[] | select(.pull_request | not)][0].number // empty')
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body "$body"
+          else
+            # The API creates the label when it does not exist yet
+            gh api "repos/$GH_REPO/issues" -f title='The nightly CI run failed on master' \
+              -f body="$body" -f "labels[]=$LABEL" --jq '.html_url'
+          fi

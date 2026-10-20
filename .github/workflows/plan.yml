@@ -1,15 +1,16 @@
 name: Plan
 
-# Decides, for a push to master, whether the pipeline has anything to do. It
-# is called by the workflows that would otherwise run for nothing (CI,
-# CodeQL), so the rule is written once. docs/ci.md says what it recognises
-# and why.
+# Decides, for a push to master or the nightly run, what the pipeline has to
+# do: nothing (`skip`), only build and deploy a tree a pull request already
+# tested (`promote`), or everything (`full`). It is called by the workflows
+# that would otherwise run for nothing (CI, CodeQL), so the rule is written
+# once. docs/ci.md says what it recognises and why.
 on:
   workflow_call:
     outputs:
-      release:
-        description: "'true' when the push is only a release-please release commit"
-        value: ${{ jobs.plan.outputs.release }}
+      mode:
+        description: "'skip', 'promote' or 'full'"
+        value: ${{ jobs.plan.outputs.mode }}
 
 jobs:
   plan:
@@ -20,22 +21,23 @@ jobs:
       actions: read
       contents: read
     outputs:
-      release: ${{ steps.release.outputs.release }}
+      mode: ${{ steps.plan.outputs.mode }}
 
     steps:
-      # The script and nothing else
-      - name: Checkout the script
+      # The scripts and nothing else
+      - name: Checkout the scripts
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
 
-      - name: Is it a release commit?
-        id: release
+      - name: Decide what to run
+        id: plan
         env:
           AFTER: ${{ github.sha }}
           BEFORE: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-        run: bash .github/scripts/is-release-commit.sh
+        run: bash .github/scripts/plan.sh
