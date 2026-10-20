@@ -20,8 +20,7 @@ mod keys;
 mod portal;
 
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, VecDeque};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use tauri::webview::PageLoadEvent;
 use tauri::{AppHandle, Emitter, Manager, State, Webview};
@@ -268,8 +267,8 @@ pub struct GlobalShortcuts {
     /// (one queued behind another, or a portal bind waiting on the player) is
     /// dropped: the next page must not queue behind a dialog nobody reads.
     page: tokio::sync::watch::Sender<u64>,
-    ready: AtomicBool,
-    pending: Mutex<VecDeque<String>>,
+    /// The steps from outside, and whether a page listens for them
+    steps: Mutex<crate::cli::StepQueue>,
 }
 
 impl GlobalShortcuts {
@@ -284,21 +283,15 @@ impl GlobalShortcuts {
             }),
             page: tokio::sync::watch::channel(0).0,
             mechanism: Mutex::new(None),
-            pending: Mutex::new(VecDeque::new()),
-            ready: AtomicBool::new(false),
+            steps: Mutex::new(crate::cli::StepQueue::default()),
         };
-        state.queue(first);
+        state.offer(first);
         state
     }
 
-    /// Whether the page is listening for `global-step` events.
-    pub fn is_ready(&self) -> bool {
-        self.ready.load(Ordering::SeqCst)
-    }
-
-    /// Keeps steps for a page that is not listening yet.
-    pub fn queue(&self, steps: Vec<String>) {
-        crate::cli::push_bounded(&mut self.pending.lock().unwrap(), steps);
+    /// Offers steps from outside: run now, kept for the first page, or dropped.
+    pub fn offer(&self, steps: Vec<String>) -> crate::cli::Fate {
+        self.steps.lock().unwrap().offer(steps)
     }
 
     /// The mechanism, worked out on first use under the state's lock.
@@ -310,10 +303,6 @@ impl GlobalShortcuts {
         let mechanism = inner.detect(app).await;
         *self.mechanism.lock().unwrap() = Some(mechanism.clone());
         mechanism
-    }
-
-    fn drain(&self) -> Vec<String> {
-        self.pending.lock().unwrap().drain(..).collect()
     }
 
     /// Releases every key and closes the portal session: the page that asked
@@ -345,8 +334,10 @@ pub fn on_page_load(webview: &Webview, payload: &tauri::webview::PageLoadPayload
     }
     let app = webview.app_handle().clone();
     app.state::<GlobalShortcuts>()
-        .ready
-        .store(false, Ordering::SeqCst);
+        .steps
+        .lock()
+        .unwrap()
+        .page_started();
     tauri::async_runtime::spawn(async move {
         app.state::<GlobalShortcuts>().clear(&app).await;
     });
@@ -367,11 +358,8 @@ pub async fn global_shortcuts_ready(
             state.mechanism_in(&app, &mut inner).await
         }
     };
-    state.ready.store(true, Ordering::SeqCst);
-    Ok(Ready {
-        mechanism,
-        pending: state.drain(),
-    })
+    let pending = state.steps.lock().unwrap().page_ready();
+    Ok(Ready { mechanism, pending })
 }
 
 /// Makes the registered shortcuts equal to `bindings`. An empty set releases
@@ -568,7 +556,7 @@ mod tests {
     #[test]
     fn keeps_the_valid_bindings_and_reports_the_rest() {
         let (valid, refused) = validate(vec![
-            binding("advance:bow", "Control+Alt+KeyQ"),
+            binding("advance:bow", "Control+Shift+KeyQ"),
             binding("back:bow", "Shift+KeyQ"),
             binding("rm -rf", "Control+KeyQ"),
             binding("advance:bow", "Control+KeyW"),
