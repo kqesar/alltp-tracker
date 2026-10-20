@@ -447,6 +447,25 @@ jobs:
       tag: ${{ steps.release.outputs.tag_name }}
 
     steps:
+      # The scripts and nothing else; the job's write token is not kept
+      - name: Checkout the scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
+      # release-please tags a merged release pull request at ITS merge commit,
+      # whichever commit this run is on. A release that waited (a red master, a
+      # replaced run) must not be tagged on a tree no run verified: refuse, and
+      # let a person decide (release-guard.sh, docs/ci.md "Releases").
+      - name: Refuse a release no run verified
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_SHA: ${{ github.sha }}
+        run: bash .github/scripts/release-guard.sh
+
       - id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
 
