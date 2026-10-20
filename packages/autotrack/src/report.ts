@@ -68,7 +68,7 @@ export interface ReportInput {
 export function diagnosticReport(input: ReportInput): string {
   const { bridge, environment: env, status } = input;
   const lines = [
-    "ALttP tracker autotracking report",
+    "Rando Atlas autotracking report",
     `package: @alltp/autotrack ${AUTOTRACK_VERSION}`,
     `time: ${new Date(input.now).toISOString()}`,
     env === null

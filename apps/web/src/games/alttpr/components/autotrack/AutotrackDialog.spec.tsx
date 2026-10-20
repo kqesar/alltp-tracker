@@ -513,7 +513,7 @@ describe("AutotrackDialog's actions", () => {
     const report = screen.getByRole<HTMLTextAreaElement>("textbox", {
       name: "Diagnostic report",
     });
-    expect(report.value).toMatch(/^ALttP tracker autotracking report\n/);
+    expect(report.value).toMatch(/^Rando Atlas autotracking report\n/);
     // Selected, for Ctrl+C
     await waitFor(() =>
       expect(report.selectionEnd - report.selectionStart).toBe(
