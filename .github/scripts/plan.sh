@@ -3,9 +3,10 @@
 # run? Prints `mode=skip`, `mode=promote` or `mode=full` (and appends it to
 # $GITHUB_OUTPUT when set). docs/ci.md has the decision diagram.
 #
-#   skip     nothing: a release commit changes nothing the tests or the site
-#            can see, and a nightly run finds master unchanged since the last
-#            green full run;
+#   skip     nothing to test or deploy: a release commit changes nothing the
+#            tests or the site can see (release-please still runs on it, to tag
+#            the release: ci.yml), and a nightly run finds master unchanged
+#            since the last green full run;
 #   promote  no tests, only the site's build and deploy: a pull request of
 #            this repository already tested this exact tree;
 #   full     tests, then deploy (the nightly run does not deploy).
