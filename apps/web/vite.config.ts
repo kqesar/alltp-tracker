@@ -44,7 +44,11 @@ export default defineConfig(({ mode }) => {
             // fetched the first time a page asks, so players of another
             // game never do
             onDemand: /^assets\/(vosk[.-]|smz3\/)/,
-            uncached: /^models\//,
+            // The speech model, and the PNG of the ALttPR map that the
+            // share cards (og:image in index.html) point at: link previews
+            // read PNG everywhere, WebP not, and the page draws the
+            // lossless WebP of the same pixels
+            uncached: /^(models\/|assets\/map\.png$)/,
           }),
     ],
     resolve: {
