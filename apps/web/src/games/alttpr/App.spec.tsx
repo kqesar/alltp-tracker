@@ -19,7 +19,7 @@ describe("App", () => {
   it("renders the header, the item grid and the map", () => {
     render(<App />);
 
-    expect(screen.getByText("ALLTP Tracker")).toBeInTheDocument();
+    expect(screen.getByText("Rando Atlas")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /github/i })).toBeInTheDocument();
     expect(screen.getByTestId("item-grid")).toHaveAccessibleName(
       "Item tracker grid",

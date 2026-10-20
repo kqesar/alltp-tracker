@@ -21,8 +21,18 @@ describe("Header", () => {
     render(<Header />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "ALLTP Tracker" }),
+      screen.getByRole("heading", { level: 1, name: "Rando Atlas" }),
     ).toBeInTheDocument();
+  });
+
+  it.each([
+    ["alttpr", "A Link to the Past"],
+    ["sm", "Super Metroid"],
+    ["smz3", "SMZ3"],
+  ] as const)("names the game tracked: %s", (game, name) => {
+    render(<Header game={game} />);
+
+    expect(screen.getByTestId("header-game")).toHaveTextContent(name);
   });
 
   it.each(LINKS)("opens $visible in a new, isolated tab", ({ href, id }) => {

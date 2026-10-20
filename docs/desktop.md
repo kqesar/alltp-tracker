@@ -254,7 +254,7 @@ The icons are the bundle's own PNGs (`src-tauri/icons/`, 32, 128 and 256 px, emb
 
 ### The page
 
-- **Once**, on the first launch as an AppImage: a notice among the page's notices, styled as the update notice, "Add ALLTP Tracker to your application menu?" with **Add** and **Not now** (`desktop/AppMenuPrompt.tsx`, in every game). An answer, either one, is remembered in the webview's `localStorage` (`alltp-tracker-app-menu-asked`) and the notice is never shown again. Ignoring it is no answer: it comes back at the next launch. Changing the entry from More counts as an answer too.
+- **Once**, on the first launch as an AppImage: a notice among the page's notices, styled as the update notice, "Add Rando Atlas to your application menu?" with **Add** and **Not now** (`desktop/AppMenuPrompt.tsx`, in every game). An answer, either one, is remembered in the webview's `localStorage` (`alltp-tracker-app-menu-asked`) and the notice is never shown again. Ignoring it is no answer: it comes back at the next launch. Changing the entry from More counts as an answer too.
 - **Always**, in the toolbar's **More** menu of A Link to the Past (Super Metroid and SMZ3 have no More menu): "Add to application menu" or "Remove from application menu", by the file's state (`desktop/AppMenuItem.tsx`). More is on the toolbar only while it has folded actions away. In the app it shows at every width while this item is there (`desktop/appMenu.css`, a `:has` rule), and then holds this item alone: Export, Import and Shortcuts stay on the bar until it folds them.
 - The page sends no path: `app_menu_set` takes a boolean, and the entry always names the running AppImage.
 - The site gets none of it: the notice and the item are lazy chunks behind inline `import.meta.env.MODE === "desktop"` tests, the site's build keeping a `null` where each would stand.
@@ -304,6 +304,7 @@ flowchart LR
 
 - The `desktop` job of `.github/workflows/desktop-release.yml` (dispatched by `ci.yml` once release-please cuts a release, after the site's deploy; it can also be started by hand for a tag, see `docs/ci.md`) runs only then: about five minutes per system, in parallel. Pull requests that touch `apps/desktop` run `.github/workflows/desktop.yml` instead (Linux: `cargo fmt`, `clippy`, tests); the web side is tested by the CI workflow as always.
 - The app's version is the product's: `tauri.conf.json` reads the root `package.json`, which release-please bumps.
+- **Display name versus technical ids.** The product is called Rando Atlas: the window title, the menu entry's `Name=` and the page say so (an existing entry takes the name at the next launch, `refresh_at_launch` rewriting it). What installed apps rest on keeps the old name, `alltp-tracker`: the Tauri `identifier` (it fixes the webview's data folder, so changing it loses the run), `productName` (NSIS keys its install folder and uninstall entry on it: a new one installs a second copy beside the old), the updater endpoint (it survives a repository rename only through GitHub's redirect) and the storage keys.
 - Linux is built on Ubuntu 22.04, the oldest glibc the AppImage should run on.
 
 | System | Installers | Code signing |

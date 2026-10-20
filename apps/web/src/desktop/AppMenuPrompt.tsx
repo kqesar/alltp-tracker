@@ -29,7 +29,7 @@ const AppMenuPrompt = () => {
       {shown && (
         <div className="notice__card">
           <p className="notice__message">
-            Add ALLTP Tracker to your application menu?
+            Add Rando Atlas to your application menu?
             {error && ` It could not be added: ${error}`}
           </p>
           <div className="notice__actions">
