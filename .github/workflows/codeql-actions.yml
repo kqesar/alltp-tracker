@@ -2,7 +2,8 @@ name: "CodeQL Actions"
 
 # The analysis of the workflows themselves (.github/). Nothing else feeds it,
 # so it runs when .github/ changes, and weekly in case CodeQL's queries did.
-# The TypeScript has its own workflow (codeql-analysis.yml).
+# The TypeScript has its own workflow (codeql-analysis.yml), which skips
+# Markdown-only changes.
 on:
   push:
     branches: [ "master" ]
