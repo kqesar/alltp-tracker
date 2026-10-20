@@ -4,6 +4,8 @@ import type {
   Report,
 } from "@/games/alttpr/desktop/globalShortcutsStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { useKeyboardLayoutStore } from "@/games/alttpr/stores/keyboardLayoutStore";
+import { chordText, keyLabel } from "@/games/alttpr/utils/keyLabels";
 
 const tauri = vi.hoisted(() => ({
   handlers: new Map<string, (event: { payload: unknown }) => void>(),
@@ -18,6 +20,7 @@ const { useGlobalShortcutsStore, DEFAULT_GLOBAL } = await import(
 );
 const {
   APPLY_DELAY_MS,
+  loadSystemKeyLabels,
   openDesktopSettings,
   runGlobalStep,
   startGlobalShortcuts,
@@ -402,6 +405,56 @@ describe("when the app fails", () => {
     answer(mechanism("hotkeys"));
     await syncGlobalShortcuts();
     expect(useGlobalShortcutsStore.getState().failure).toBeNull();
+  });
+});
+
+describe("the key labels of a Linux layout", () => {
+  const layoutOf = () => useKeyboardLayoutStore.getState().layout;
+
+  beforeEach(() => {
+    useKeyboardLayoutStore.setState({ layout: null });
+  });
+
+  it("show what AZERTY prints on the physical Q key", async () => {
+    tauri.invoke.mockImplementation((command: string) =>
+      Promise.resolve(
+        command === "key_labels"
+          ? { KeyA: "q", KeyQ: "a", Semicolon: "m" }
+          : command === "global_shortcuts_ready"
+            ? { mechanism: mechanism("hotkeys"), pending: [] }
+            : reportOf(mechanism("hotkeys")),
+      ),
+    );
+    await startGlobalShortcuts();
+    await vi.waitFor(() => expect(layoutOf()).not.toBeNull());
+
+    expect(layoutOf()?.get("KeyQ")).toBe("a");
+    expect(keyLabel("KeyQ", layoutOf())).toBe("A");
+    expect(chordText("Control+Alt+Shift+KeyQ", layoutOf())).toBe(
+      "Ctrl+Alt+Shift+A",
+    );
+  });
+
+  it("stay the fallback where the webview reads the layout itself, as on macOS and Windows", async () => {
+    answer(mechanism("hotkeys"));
+    tauri.invoke.mockImplementation((command: string) =>
+      Promise.resolve(
+        command === "key_labels"
+          ? {}
+          : command === "global_shortcuts_ready"
+            ? { mechanism: mechanism("hotkeys"), pending: [] }
+            : reportOf(mechanism("hotkeys")),
+      ),
+    );
+    await startGlobalShortcuts();
+    await loadSystemKeyLabels();
+    expect(layoutOf()).toBeNull();
+  });
+
+  it("stay the fallback when the app cannot say", async () => {
+    tauri.invoke.mockRejectedValue("no display");
+    await loadSystemKeyLabels();
+    expect(layoutOf()).toBeNull();
   });
 });
 
