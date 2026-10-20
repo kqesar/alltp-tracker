@@ -1,5 +1,7 @@
 name: "CodeQL Advanced"
 
+# The TypeScript. The workflows have their own analysis (codeql-actions.yml),
+# which only runs when .github/ changes.
 on:
   push:
     branches: [ "master" ]
@@ -15,9 +17,16 @@ on:
   # Allow manually re-running the analysis from the Actions tab
   workflow_dispatch:
 
+# A new push to a pull request makes its running analysis obsolete: cancel it.
+# Every other run has a group of its own (the commit), so a push to master is
+# never cancelled and no scan is dropped from the queue.
+concurrency:
+  group: codeql-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   analyze:
-    name: Analyze (${{ matrix.language }})
+    name: Analyze (javascript-typescript)
     runs-on: ubuntu-latest
     # Public repository, no private query packs: uploading results is all
     # it needs beyond reading the code.
@@ -25,28 +34,18 @@ jobs:
       contents: read
       security-events: write
 
-    strategy:
-      fail-fast: false
-      matrix:
-        # Both are interpreted languages: CodeQL reads the sources, no build.
-        # `actions` covers the workflows in .github/workflows.
-        include:
-          - language: actions
-            build-mode: none
-          - language: javascript-typescript
-            build-mode: none
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # An interpreted language: CodeQL reads the sources, no build
       - name: Initialize CodeQL
         uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
+          languages: javascript-typescript
+          build-mode: none
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
-          category: "/language:${{matrix.language}}"
+          category: "/language:javascript-typescript"

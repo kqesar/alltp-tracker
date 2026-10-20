@@ -5,6 +5,11 @@ on:
     branches:
       - master
 
+# A new push to a pull request makes the check on its older commits obsolete
+concurrency:
+  group: validate-commits-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 # Least-privilege default: this workflow only needs to read the repository
 permissions:
   contents: read
