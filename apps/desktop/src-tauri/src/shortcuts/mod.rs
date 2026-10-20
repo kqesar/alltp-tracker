@@ -210,46 +210,44 @@ fn command_path() -> String {
         .unwrap_or_else(|| "alltp-tracker".to_owned())
 }
 
-struct Inner {
-    hotkeys: Arc<Mutex<hotkeys::Hotkeys>>,
-    #[cfg(target_os = "linux")]
-    portal: Option<portal::Portal>,
-}
-
-impl Inner {
-    /// Works out the mechanism (probing the portal on Wayland).
-    async fn detect(&mut self, app: &AppHandle) -> Mechanism {
-        let os = Os::current();
-        let env = Env::current();
-        let command = command_path();
-        #[cfg_attr(not(target_os = "linux"), allow(unused_mut))]
-        let mut portal_version = None;
-        let mut reason = None;
-        #[cfg(target_os = "linux")]
-        {
-            let away = matches!(env.forced.as_deref(), Some("hotkeys" | "command"));
-            if (env.is_wayland() || env.forced.as_deref() == Some("portal")) && !away {
-                self.portal = portal::Portal::probe(app, &command).await;
-                portal_version = self.portal.as_ref().map(portal::Portal::version);
-            }
-        }
-        #[cfg(not(target_os = "linux"))]
-        let _ = app;
-        let mut kind = detect::pick(os, &env, portal_version);
-        if kind == Kind::Portal && portal_version.is_none() {
-            kind = Kind::Command;
-            reason = Some("the desktop has no global shortcut service".to_owned());
-        }
+impl Mechanism {
+    /// What this system can do, from its session alone: nothing is probed or
+    /// written here, so a launch with the feature off touches nothing. On
+    /// Wayland the portal is assumed (`portal_version` unknown until the first
+    /// binding probes it).
+    fn of(os: Os, env: &Env, command: String) -> Mechanism {
         Mechanism {
             command,
-            configurable: kind == Kind::Portal && portal_version.is_some_and(|v| v >= 2),
-            kind,
+            configurable: false,
+            kind: detect::pick(os, env),
             os: os.name(),
-            portal_version,
-            reason,
+            portal_version: None,
+            reason: None,
             session: (os == Os::Linux).then(|| if env.is_wayland() { "wayland" } else { "x11" }),
         }
     }
+
+    /// The portal turned out unusable here: the command line, for the rest of
+    /// the process.
+    fn give_way(&mut self, reason: String) {
+        self.kind = Kind::Command;
+        self.configurable = false;
+        self.reason = Some(reason);
+    }
+
+    /// The probe found the portal.
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+    fn found_portal(&mut self, version: u32) {
+        self.portal_version = Some(version);
+        self.configurable = version >= 2;
+    }
+}
+
+struct Inner {
+    hotkeys: Arc<Mutex<hotkeys::Hotkeys>>,
+    /// Probed at the first binding on a portal system
+    #[cfg(target_os = "linux")]
+    portal: Option<portal::Portal>,
 }
 
 /// What a request from a page that has gone is answered with.
@@ -294,15 +292,13 @@ impl GlobalShortcuts {
         self.steps.lock().unwrap().offer(steps)
     }
 
-    /// The mechanism, worked out on first use under the state's lock.
-    async fn mechanism_in(&self, app: &AppHandle, inner: &mut Inner) -> Mechanism {
-        let known = self.mechanism.lock().unwrap().clone();
-        if let Some(mechanism) = known {
-            return mechanism;
-        }
-        let mechanism = inner.detect(app).await;
-        *self.mechanism.lock().unwrap() = Some(mechanism.clone());
-        mechanism
+    /// The mechanism, worked out on first use.
+    fn mechanism(&self) -> Mechanism {
+        self.mechanism
+            .lock()
+            .unwrap()
+            .get_or_insert_with(|| Mechanism::of(Os::current(), &Env::current(), command_path()))
+            .clone()
     }
 
     /// Releases every key and closes the portal session: the page that asked
@@ -346,18 +342,8 @@ pub fn on_page_load(webview: &Webview, payload: &tauri::webview::PageLoadPayload
 /// The page is listening: tells it what this system can do and hands over the
 /// steps that came before it (a `--step` the app was started with).
 #[tauri::command]
-pub async fn global_shortcuts_ready(
-    app: AppHandle,
-    state: State<'_, GlobalShortcuts>,
-) -> Result<Ready, String> {
-    let known = state.mechanism.lock().unwrap().clone();
-    let mechanism = match known {
-        Some(mechanism) => mechanism,
-        None => {
-            let mut inner = state.inner.lock().await;
-            state.mechanism_in(&app, &mut inner).await
-        }
-    };
+pub async fn global_shortcuts_ready(state: State<'_, GlobalShortcuts>) -> Result<Ready, String> {
+    let mechanism = state.mechanism();
     let pending = state.steps.lock().unwrap().page_ready();
     Ok(Ready { mechanism, pending })
 }
@@ -395,7 +381,7 @@ pub async fn global_shortcuts_apply(
         return Err(GONE.into());
     }
     #[cfg_attr(not(target_os = "linux"), allow(unused_mut))]
-    let mut mechanism = state.mechanism_in(&app, &mut inner).await;
+    let mut mechanism = state.mechanism();
     let (valid, mut reports) = validate(bindings);
     #[cfg_attr(not(target_os = "linux"), allow(unused_mut))]
     let mut forced_state = None;
@@ -414,22 +400,32 @@ pub async fn global_shortcuts_apply(
         }
         #[cfg(target_os = "linux")]
         Kind::Portal => {
-            let Some(portal) = inner.portal.as_mut() else {
-                return Err("the desktop's shortcut service is gone".into());
-            };
-            let outcome = tokio::select! {
-                outcome = portal.apply(&app, valid, rebind) => outcome,
-                _ = page.changed() => return Err(GONE.into()),
-            };
-            reports.extend(outcome.bindings);
-            forced_state = outcome.state;
-            if let Some(reason) = outcome.downgrade {
-                // Not the desktop's fault the player can fix: the command line
-                inner.portal = None;
-                mechanism.kind = Kind::Command;
-                mechanism.configurable = false;
-                mechanism.reason = Some(reason);
+            // First binding: look for the portal now (it writes a file and
+            // registers with the desktop, so never at launch). An empty set
+            // asks the desktop for nothing and has nothing to release
+            if inner.portal.is_none() && !valid.is_empty() {
+                match portal::Portal::probe(&app, &mechanism.command).await {
+                    Some(found) => {
+                        mechanism.found_portal(found.version());
+                        inner.portal = Some(found);
+                    }
+                    None => mechanism.give_way("the desktop has no global shortcut service".into()),
+                }
                 *state.mechanism.lock().unwrap() = Some(mechanism.clone());
+            }
+            if let Some(portal) = inner.portal.as_mut() {
+                let outcome = tokio::select! {
+                    outcome = portal.apply(&app, valid, rebind) => outcome,
+                    _ = page.changed() => return Err(GONE.into()),
+                };
+                reports.extend(outcome.bindings);
+                forced_state = outcome.state;
+                if let Some(reason) = outcome.downgrade {
+                    // Not the desktop's fault the player can fix: the command line
+                    inner.portal = None;
+                    mechanism.give_way(reason);
+                    *state.mechanism.lock().unwrap() = Some(mechanism.clone());
+                }
             }
         }
         #[cfg(not(target_os = "linux"))]
@@ -536,6 +532,36 @@ mod tests {
             chord: chord.into(),
             description: "Bow forward".into(),
         }
+    }
+
+    fn wayland() -> Env {
+        Env {
+            display: true,
+            forced: None,
+            session_type: Some("wayland".into()),
+            wayland_display: true,
+        }
+    }
+
+    #[test]
+    fn a_wayland_launch_is_the_portal_with_nothing_probed() {
+        let mechanism = Mechanism::of(Os::Linux, &wayland(), "/opt/alltp-tracker".into());
+        assert_eq!(mechanism.kind, Kind::Portal);
+        assert_eq!(mechanism.portal_version, None);
+        assert!(!mechanism.configurable);
+        assert_eq!(mechanism.reason, None);
+        assert_eq!(mechanism.session, Some("wayland"));
+    }
+
+    #[test]
+    fn the_portal_gives_way_to_the_command_with_its_reason() {
+        let mut mechanism = Mechanism::of(Os::Linux, &wayland(), String::new());
+        mechanism.found_portal(2);
+        assert!(mechanism.configurable);
+        mechanism.give_way("no service".into());
+        assert_eq!(mechanism.kind, Kind::Command);
+        assert!(!mechanism.configurable);
+        assert_eq!(mechanism.reason.as_deref(), Some("no service"));
     }
 
     #[test]

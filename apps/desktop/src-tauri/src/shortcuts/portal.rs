@@ -146,6 +146,11 @@ pub struct Portal {
 /// backend behind it does exactly that).
 const SESSION_WAIT: Duration = Duration::from_secs(20);
 
+/// How long the whole probe (Register, then the interface) may take. Each D-Bus
+/// call waits up to 25 s by default, so a portal frontend that hangs would hold
+/// the shared state, and with it every later request, for a minute.
+const PROBE_WAIT: Duration = Duration::from_secs(10);
+
 /// How long the player gets to answer the desktop's dialog.
 const BIND_WAIT: Duration = Duration::from_secs(5 * 60);
 
@@ -159,6 +164,11 @@ fn app_info_missing(error: &Error) -> bool {
     error.to_string().contains("App info not found")
 }
 
+/// `future`'s answer, or `None` when it takes longer than `limit`.
+async fn within<T>(limit: Duration, future: impl std::future::Future<Output = T>) -> Option<T> {
+    tokio::time::timeout(limit, future).await.ok()
+}
+
 impl Portal {
     pub fn version(&self) -> u32 {
         self.version
@@ -169,6 +179,15 @@ impl Portal {
     /// a Wayland session, before any other portal call (Register refuses to
     /// come late).
     pub async fn probe(app: &AppHandle, command: &str) -> Option<Portal> {
+        within(PROBE_WAIT, Self::look(app, command))
+            .await
+            .unwrap_or_else(|| {
+                eprintln!("alltp-tracker: the portal did not answer in time");
+                None
+            })
+    }
+
+    async fn look(app: &AppHandle, command: &str) -> Option<Portal> {
         if let Err(error) = ensure_desktop_file(command) {
             eprintln!("alltp-tracker: could not write the desktop file: {error}");
         }
@@ -451,6 +470,14 @@ fn listen(app: AppHandle, gs: Arc<GlobalShortcuts>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn gives_up_on_a_portal_that_never_answers() {
+        let hung = within(Duration::from_millis(20), std::future::pending::<u32>()).await;
+        assert_eq!(hung, None);
+        let quick = within(Duration::from_millis(500), async { 7 }).await;
+        assert_eq!(quick, Some(7));
+    }
 
     #[test]
     fn writes_a_hidden_desktop_entry_for_the_command() {

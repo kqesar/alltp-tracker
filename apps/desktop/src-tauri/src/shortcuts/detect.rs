@@ -84,18 +84,18 @@ fn forced(os: Os, name: &str) -> Option<Kind> {
     }
 }
 
-/// The mechanism for this system. `portal` is the GlobalShortcuts portal's
-/// version when the desktop has one (probed only on a Wayland session).
-pub fn pick(os: Os, env: &Env, portal: Option<u32>) -> Kind {
+/// The mechanism for this system. A Wayland session is `Portal` on the
+/// session's word alone: whether the desktop really has the GlobalShortcuts
+/// portal is probed at the first binding, never at launch (the probe writes a
+/// file and registers with the desktop), and a probe that finds none gives the
+/// mechanism up to `Command`.
+pub fn pick(os: Os, env: &Env) -> Kind {
     if let Some(kind) = env.forced.as_deref().and_then(|name| forced(os, name)) {
         return kind;
     }
     match os {
         Os::Windows | Os::Macos => Kind::Hotkeys,
-        Os::Linux if env.is_wayland() => match portal {
-            Some(version) if version >= 1 => Kind::Portal,
-            _ => Kind::Command,
-        },
+        Os::Linux if env.is_wayland() => Kind::Portal,
         Os::Linux if env.display => Kind::Hotkeys,
         Os::Linux => Kind::Command,
     }
@@ -117,58 +117,40 @@ mod tests {
     #[test]
     fn windows_and_macos_use_the_systems_hotkeys() {
         let env = Env::default();
-        assert_eq!(pick(Os::Windows, &env, None), Kind::Hotkeys);
-        assert_eq!(pick(Os::Macos, &env, Some(2)), Kind::Hotkeys);
+        assert_eq!(pick(Os::Windows, &env), Kind::Hotkeys);
+        assert_eq!(pick(Os::Macos, &env), Kind::Hotkeys);
     }
 
     #[test]
-    fn a_wayland_session_with_a_portal_uses_it() {
+    fn a_wayland_session_is_the_portals_before_anything_is_probed() {
         let env = linux(Some("wayland"), true, true);
-        assert_eq!(pick(Os::Linux, &env, Some(1)), Kind::Portal);
-        assert_eq!(pick(Os::Linux, &env, Some(2)), Kind::Portal);
-    }
-
-    #[test]
-    fn a_wayland_session_without_a_portal_falls_to_the_command() {
-        let env = linux(Some("wayland"), true, true);
-        assert_eq!(pick(Os::Linux, &env, None), Kind::Command);
-        assert_eq!(pick(Os::Linux, &env, Some(0)), Kind::Command);
+        assert_eq!(pick(Os::Linux, &env), Kind::Portal);
     }
 
     #[test]
     fn the_session_decides_not_the_display_variable() {
         // XWayland leaves DISPLAY set: X11 grabs would miss a Wayland emulator
         assert_eq!(
-            pick(Os::Linux, &linux(Some("wayland"), false, true), None),
-            Kind::Command
-        );
-        assert_eq!(
-            pick(Os::Linux, &linux(None, true, true), None),
-            Kind::Command
-        );
-        assert_eq!(
-            pick(Os::Linux, &linux(Some("wayland"), false, true), Some(1)),
+            pick(Os::Linux, &linux(Some("wayland"), false, true)),
             Kind::Portal
         );
+        assert_eq!(pick(Os::Linux, &linux(None, true, true)), Kind::Portal);
     }
 
     #[test]
     fn an_x11_session_uses_hotkeys() {
         assert_eq!(
-            pick(Os::Linux, &linux(Some("x11"), false, true), None),
+            pick(Os::Linux, &linux(Some("x11"), false, true)),
             Kind::Hotkeys
         );
         // No session type told, only a display
-        assert_eq!(
-            pick(Os::Linux, &linux(None, false, true), Some(2)),
-            Kind::Hotkeys
-        );
+        assert_eq!(pick(Os::Linux, &linux(None, false, true)), Kind::Hotkeys);
     }
 
     #[test]
     fn a_session_with_no_display_has_only_the_command() {
         assert_eq!(
-            pick(Os::Linux, &linux(Some("tty"), false, false), None),
+            pick(Os::Linux, &linux(Some("tty"), false, false)),
             Kind::Command
         );
     }
@@ -177,20 +159,20 @@ mod tests {
     fn the_override_wins() {
         let mut env = linux(Some("wayland"), true, true);
         env.forced = Some("hotkeys".into());
-        assert_eq!(pick(Os::Linux, &env, Some(2)), Kind::Hotkeys);
+        assert_eq!(pick(Os::Linux, &env), Kind::Hotkeys);
         env.forced = Some("command".into());
-        assert_eq!(pick(Os::Linux, &env, Some(2)), Kind::Command);
+        assert_eq!(pick(Os::Linux, &env), Kind::Command);
         env.forced = Some("portal".into());
-        assert_eq!(pick(Os::Linux, &env, None), Kind::Portal);
+        assert_eq!(pick(Os::Linux, &env), Kind::Portal);
 
         // The portal is Linux's: elsewhere that override means nothing
         let mut windows = Env {
             forced: Some("portal".into()),
             ..Env::default()
         };
-        assert_eq!(pick(Os::Windows, &windows, None), Kind::Hotkeys);
+        assert_eq!(pick(Os::Windows, &windows), Kind::Hotkeys);
         // An unknown override is ignored
         windows.forced = Some("telepathy".into());
-        assert_eq!(pick(Os::Windows, &windows, None), Kind::Hotkeys);
+        assert_eq!(pick(Os::Windows, &windows), Kind::Hotkeys);
     }
 }

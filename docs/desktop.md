@@ -99,9 +99,8 @@ flowchart TD
   forced -- "unset" --> os{"system"}
   os -- "Windows, macOS" --> hotkeys["hotkeys<br/>RegisterHotKey, Carbon"]
   os -- "Linux" --> wayland{"Wayland session?<br/>XDG_SESSION_TYPE or WAYLAND_DISPLAY"}
-  wayland -- "yes" --> probe{"the GlobalShortcuts portal<br/>answers?"}
-  probe -- "yes" --> portal["portal<br/>the desktop asks the player"]
-  probe -- "no" --> command["command<br/>--step, bound in the window manager"]
+  wayland -- "yes" --> portal["portal<br/>the desktop asks the player"]
+  portal -. "the first binding probes the portal;<br/>none answers" .-> command["command<br/>--step, bound in the window manager"]
   wayland -- "no" --> display{"DISPLAY set?"}
   display -- "yes" --> x11["hotkeys<br/>XGrabKey"]
   display -- "no" --> command
@@ -162,9 +161,9 @@ sequenceDiagram
   participant XDP as xdg-desktop-portal
   participant DE as The desktop (KDE, GNOME...)
   Page->>App: global_shortcuts_ready
-  Note over App: probe, once: write the hidden desktop file,<br/>Registry.Register(app id), find GlobalShortcuts
-  App-->>Page: mechanism: portal
+  App-->>Page: mechanism: portal (the session's word, nothing probed)
   Page->>App: global_shortcuts_apply(bindings)
+  Note over App: the first non-empty set probes, once (10 s at most):<br/>write the hidden desktop file,<br/>Registry.Register(app id), find GlobalShortcuts
   App->>XDP: CreateSession
   App->>XDP: BindShortcuts(ids, descriptions, preferred triggers)
   XDP->>DE: ask the player
@@ -177,11 +176,12 @@ sequenceDiagram
   Page->>Page: isControlShown, stepControl
 ```
 
-- **A host app has no app id**, and the portal refuses a session without one ("An app id is required"). A non-sandboxed process gets one from its systemd scope or from `org.freedesktop.host.portal.Registry.Register`, which must come before any other portal call and wants a `<app id>.desktop` file GIO can find. Tauri's bundler names its desktop file `ALLTP Tracker.desktop` (a space is no app id), so the app writes a hidden one at runtime: `$XDG_DATA_HOME/applications/io.github.kqesar.alltp-tracker.desktop`, `NoDisplay=true` (the package's own menu entry stays the only one), for every package (AppImage, `.deb`, `.rpm`, dev). It is rewritten when its `Exec` differs (the AppImage moved), and `Register` is retried three times at 200 ms while GIO notices a new file. A small file stays in the home after uninstalling: the price of one code path.
+- **A host app has no app id**, and the portal refuses a session without one ("An app id is required"). A non-sandboxed process gets one from its systemd scope or from `org.freedesktop.host.portal.Registry.Register`, which must come before any other portal call and wants a `<app id>.desktop` file GIO can find. Tauri's bundler names its desktop file `ALLTP Tracker.desktop` (a space is no app id), so the app writes a hidden one at runtime: `$XDG_DATA_HOME/applications/io.github.kqesar.alltp-tracker.desktop`, `NoDisplay=true` (the package's own menu entry stays the only one), for every package (AppImage, `.deb`, `.rpm`, dev). It is rewritten when its `Exec` differs (the AppImage moved), and `Register` is retried three times at 200 ms while GIO notices a new file. A small file stays in the home after uninstalling: the price of one code path. **Future Flathub caveat:** Flathub requires this exact id for the app's own desktop file. A user-level copy with the same id overrides a system or Flatpak one, and with `NoDisplay=true` it would hide the app from the menu. If a package ever ships `io.github.kqesar.alltp-tracker.desktop`, stop writing this one (or delete it when another with that id exists in `$XDG_DATA_DIRS`). The `Exec` line escapes `%` as `%%` and the file is not written when the path holds a control character.
+- **Lazy start.** A launch with the feature off touches nothing: no desktop file, no `Register`, no listener. On a Wayland session the mechanism is the portal on the session's word alone, and the first non-empty apply probes it, bounded to 10 s so a hanging portal frontend cannot hold the shared state. A probe that finds no portal gives the mechanism up to `command` for the process, with the reason shown (the Global tab shows the commands then, which a sway or i3 player sees after the first binding rather than at launch).
 - **Ids** replace the action's colon with a dot (`advance.hookshot`): Hyprland's `global` dispatcher splits `appid:id` on the colon.
 - **Always bind at the start of a session.** Plasma 6.7.4 and later keep a shortcut dead until `BindShortcuts` is called in the current session (KDE bug 523063, the lesson of KeePassXC's PR 13579).
 - **Never per keystroke.** Each bind may pop the desktop's dialog, so the page applies at the moments the player expects it: when the Global tab or the dialog closes, on **Send to desktop**, on **Ask again** (a new session), and at start-up. Turning the switch off closes the session at once.
-- **A refusal** is a state, not an error: the tab says the approval was declined and offers Ask again. A portal that cannot create a session at all (no backend answers within 20 s, "An app id is required") downgrades the mechanism to `command` for the rest of the process, with the reason shown. The player gets 5 minutes to answer the desktop's dialog.
+- **A refusal** is a state, not an error, and it is remembered (saved with the Global prefs): the tab says the approval was declined, marks the keys "Not approved" and offers **Ask again**. The tracker never asks again by itself at the next launch, as a browser does not ask again for a permission the person denied; turning the switch off and on also clears it. A portal that cannot create a session at all (no backend answers within 20 s, "An app id is required") downgrades the mechanism to `command` for the rest of the process, with the reason shown. The player gets 5 minutes to answer the desktop's dialog.
 - **A page that goes away** (a reload, a switch to another game) drops its portal request and closes its session: the next page never queues behind a dialog nobody reads. Requests are counted per page, so one that arrives from the old page after it left is dropped.
 
 ### The hotkeys backend
@@ -191,6 +191,7 @@ sequenceDiagram
 - **Nothing is unregistered at quit**: the unregistration would wait for the main thread, which is running the exit. The system frees the grabs with the process (the X connection closes, Windows hotkeys belong to the plugin's window, Carbon's to the process).
 - **A page load releases the old page's keys** (`on_page_load`, spawned, never inline). Switching to Super Metroid or SMZ3 reloads the page without re-applying, and the global feature is A Link to the Past's alone (only it has a keymap).
 - **Ungrabs are buffered.** global-hotkey 0.8's X11 thread sends its "ungrab" requests with the next request that waits for an answer, which only a registration is. Without one, the last keys released stay grabbed in every app: found on the bench, where switching game left one of two keys swallowed. A registration of a key nobody presses (`Control+Alt+Shift+Super+Escape`) after each release flushes them.
+- **Releases are one request.** `unregister_multiple` sends every key to release in one message: one by one, each waits for the X thread's 50 ms loop, so a long set stayed grabbed for seconds and the key pressed to capture a new one was eaten. A refused registration is followed by a flush too: global-hotkey grabs a key's lock variants one at a time, and when a later one is refused its first variant could stay grabbed if nothing else followed.
 - **A taken key** is reported per binding (`taken`, "In use by another app or the system"): one taken key never hides the others. Detection must not rely on registration errors alone: if the X connection fails the thread dies silently and later registrations answer `Ok`.
 
 ### Single instance
