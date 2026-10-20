@@ -60,6 +60,8 @@ pub enum Status {
     Active,
     Invalid,
     Taken,
+    /// Asked of the desktop and not approved: the portal's alone
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     Unbound,
 }
 
@@ -69,6 +71,8 @@ pub enum Phase {
     Idle,
     Active,
     Partial,
+    /// The player declined the desktop's dialog: the portal's alone
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     Refused,
     Unavailable,
 }
