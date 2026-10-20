@@ -24,3 +24,5 @@ tauri-plugin-dialog = "2.8.3"
 tauri-plugin-opener = "2.7.2"
 tauri-plugin-process = "2.4.0"
 tauri-plugin-updater = "2.14.0"
+# RetroArch's network commands: UDP, with a timeout (Tauri runs on tokio already)
+tokio = { version = "1.54.0", features = ["net", "time"] }

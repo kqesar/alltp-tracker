@@ -18,9 +18,10 @@ import type {
 } from "@alltp/autotrack";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { bridgeOptions } from "@/autotrack/bridge";
 import { createAutotrackLock } from "@/autotrack/lock";
 import { shownStatus } from "@/autotrack/status";
-import { bridgeUrl, isObsView } from "@/utils/view";
+import { isObsView } from "@/utils/view";
 
 /** What a bridge listed, as the session last saw it. */
 export type SessionSeen = {
@@ -150,12 +151,12 @@ export const createGameAutotrack = <Reading>({
       const { createFollower, detectEnvironment, start } = await loading;
       const environment =
         useStore.getState().environment ?? (await detectEnvironment());
+      const bridge = await bridgeOptions();
       if (mine !== generation) return;
       set({ environment });
-      const url = bridgeUrl();
       const follower = createFollower();
       runtime = start(
-        { environment, ...(url === undefined ? {} : { url }), ...overrides },
+        { environment, ...bridge, ...overrides },
         {
           reading: (reading) => {
             if (mine !== generation) return;

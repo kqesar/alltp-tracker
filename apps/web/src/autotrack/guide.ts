@@ -3,6 +3,7 @@
 // The headline (status.ts) says what is wrong; this says how to fix it.
 
 import type { DeviceKind, SessionStatus, SetupVariant } from "@alltp/autotrack";
+import { isDesktopApp } from "@/utils/platform";
 
 export type Fix = {
   /** What to do, a sentence each. */
@@ -72,6 +73,14 @@ export const fixFor = (
         "Use Firefox, Chrome or Edge on a computer, or the desktop app, which reaches SNI from any Mac.",
       ]);
     case "bridge-unreachable":
+      // The desktop app tries RetroArch, then SNI; no browser can block it
+      if (isDesktopApp) {
+        return fix([
+          "Start RetroArch with its network commands on, as below, and load your seed.",
+          "An FX Pak Pro, BizHawk or an NWA emulator goes through SNI: start SNI and leave it running.",
+          next(status),
+        ]);
+      }
       return fix(
         [
           "Start SNI and leave it running.",
@@ -87,7 +96,14 @@ export const fixFor = (
       ]);
     case "no-device":
       return fix([
-        "Start the emulator with its network access on, as below, or plug in the FX Pak Pro and power the console on.",
+        ...(isDesktopApp
+          ? [
+              "Start RetroArch with its network commands on, as below, and load your seed.",
+              "SNI is running: another emulator needs its network access on, an FX Pak Pro the console powered on.",
+            ]
+          : [
+              "Start the emulator with its network access on, as below, or plug in the FX Pak Pro and power the console on.",
+            ]),
         next(status),
       ]);
     case "attach-failed":
@@ -109,11 +125,15 @@ export const fixFor = (
 const memoryFix = (
   status: Extract<SessionStatus, { code: "memory-unreadable" }>,
 ): string[] => {
+  // The desktop app reads RetroArch itself: no bridge, no bridge's log
+  const direct = isDesktopApp && status.bridge.kind === "retroarch";
   switch (status.remedy.action) {
     case "switch-core":
       return [
         status.cause === "zero-filled"
-          ? "Every byte came back as zero: SNI's sign that RetroArch refused the read."
+          ? direct
+            ? "Every byte came back as zero: this core gives RetroArch no memory to read."
+            : "Every byte came back as zero: SNI's sign that RetroArch refused the read."
           : status.cause === "address-unmapped"
             ? "This core does not map the memory the tracker reads."
             : "This RetroArch core gives the tracker no memory to read.",
@@ -129,7 +149,9 @@ const memoryFix = (
     case "check-bridge-log":
       return [
         ...said(status.detail),
-        "SNI's log says why: step 2 says where it is.",
+        direct
+          ? "Restart RetroArch if this goes on."
+          : "SNI's log says why: step 2 says where it is.",
         next(status),
       ];
   }

@@ -9,6 +9,7 @@ import { seedHashOf } from "@alltp/pack-alttpr";
 import { useMemo } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { bridgeOptions } from "@/autotrack/bridge";
 import { createAutotrackLock } from "@/autotrack/lock";
 import { shownStatus } from "@/autotrack/status";
 import type { Follower } from "@/games/alttpr/autotrack/follow";
@@ -26,7 +27,7 @@ import {
   withSeedFile,
 } from "@/games/alttpr/autotrack/seedFile";
 import { isFreshRun, useGameStore } from "@/games/alttpr/stores/gameStore";
-import { bridgeUrl, isObsView } from "@/utils/view";
+import { isObsView } from "@/utils/view";
 
 type AutotrackState = {
   /**
@@ -325,12 +326,12 @@ export const connectAutotrack = async () => {
     const { createFollower, detectEnvironment, startRuntime } = await loading;
     const environment =
       useAutotrackStore.getState().environment ?? (await detectEnvironment());
+    const bridge = await bridgeOptions();
     if (mine !== generation) return;
     set({ environment });
-    const url = bridgeUrl();
     follower = createFollower();
     runtime = startRuntime(
-      { environment, ...(url === undefined ? {} : { url }), ...overrides },
+      { environment, ...bridge, ...overrides },
       sinkFor(mine),
     );
   } catch {

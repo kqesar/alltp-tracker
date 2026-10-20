@@ -2,7 +2,8 @@
 // dot's phase and a short headline, for the toolbar, its live region and the
 // dialog. The session's diagnostic codes are @alltp/autotrack's (its README,
 // "Diagnostic codes"); this module only words them. It is part of the main
-// bundle, so it imports types alone.
+// bundle, so it imports types alone. The desktop app words what differs
+// there: it reads RetroArch itself, and no browser stands in between.
 
 import type {
   BridgeInfo,
@@ -10,6 +11,7 @@ import type {
   DeviceKind,
   SessionStatus,
 } from "@alltp/autotrack";
+import { isDesktopApp } from "@/utils/platform";
 
 /**
  * The status dot: off; busy (starting, connecting, attaching, or the
@@ -108,11 +110,16 @@ export const headlineOf = (
     case "bridge-unreachable":
       // A browser that denies the connection reports it as a closed port:
       // the two cannot be told apart, so both are named.
-      return "SNI isn't running, or the browser is blocking it";
+      return isDesktopApp
+        ? "Neither RetroArch nor SNI is answering"
+        : "SNI isn't running, or the browser is blocking it";
     case "bridge-refused":
       return "The bridge refused this site";
     case "no-device":
-      return "SNI sees no emulator or console";
+      // In the app, RetroArch did not answer either
+      return isDesktopApp
+        ? "Neither RetroArch nor SNI sees a game"
+        : "SNI sees no emulator or console";
     case "attaching":
       return `Attaching to ${deviceName(status.device.kind)}…`;
     case "attach-failed":
@@ -132,6 +139,8 @@ export const headlineOf = (
 
 const BRIDGE_NAMES: Record<BridgeInfo["kind"], string> = {
   qusb2snes: "QUsb2Snes",
+  // No bridge: RetroArch read directly, which the device's title names
+  retroarch: "",
   sni: "SNI",
   unknown: "The bridge",
 };
@@ -144,7 +153,9 @@ const DEVICE_TITLES: Partial<Record<DeviceKind, string>> = {
   "snes-classic": "SNES Classic",
 };
 
+/** "SNI 0.0.103"; nothing for RetroArch read directly. */
 const bridgeName = (bridge: BridgeInfo) =>
+  BRIDGE_NAMES[bridge.kind] &&
   [BRIDGE_NAMES[bridge.kind], bridge.version].filter(Boolean).join(" ");
 
 /** "RetroArch 1.22.2", from the kind of device and what Info reported. */
@@ -166,7 +177,9 @@ export const detailOf = (
   elsewhere: boolean,
 ): string => {
   if (!active) {
-    return "Reads your game through SNI or QUsb2Snes as you play. Set it up below, then connect.";
+    return isDesktopApp
+      ? "Reads your game from RetroArch itself, or through SNI for other emulators and consoles, as you play. Set it up below, then connect."
+      : "Reads your game through SNI or QUsb2Snes as you play. Set it up below, then connect.";
   }
   if (elsewhere) {
     return "Another tab of the tracker reads your game and marks it on the board. This tab takes over when that one closes or disconnects.";
@@ -181,7 +194,9 @@ export const detailOf = (
         .filter(Boolean)
         .join(" · ");
     case "attaching":
-      return `${bridgeName(status.bridge)} · ${status.device.id}`;
+      return [bridgeName(status.bridge), status.device.id]
+        .filter(Boolean)
+        .join(" · ");
     default:
       if (!("retryInMs" in status)) return "";
       return status.retryInMs === null
