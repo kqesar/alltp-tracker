@@ -3,10 +3,14 @@
 // Autotracking reads RetroArch through its network commands, links open in
 // the system browser, exports go through the system's Save dialog, global
 // shortcuts work while the emulator has the focus (shortcuts/, and the
-// command line in cli.rs), and new versions come from GitHub Releases, signed
-// with the project's updater key (docs/desktop.md).
+// command line in cli.rs), an AppImage can add itself to the application menu
+// (app_menu.rs, launcher.rs), and new versions come from GitHub Releases,
+// signed with the project's updater key (docs/desktop.md).
 
+mod app_menu;
 mod cli;
+#[cfg(target_os = "linux")]
+mod launcher;
 mod retroarch;
 mod shortcuts;
 
@@ -45,6 +49,21 @@ async fn save_file(app: tauri::AppHandle, name: String, contents: String) -> Res
     Ok(true)
 }
 
+/// Whether the AppImage can be added to the application menu, and whether it
+/// is (see `launcher.rs`). Async, so the file reads run off the main thread.
+#[tauri::command]
+async fn app_menu_state() -> app_menu::State {
+    app_menu::state()
+}
+
+/// Adds the AppImage to the application menu, or removes it, and returns how
+/// it stands. Takes no path from the page: the entry always names the running
+/// AppImage.
+#[tauri::command]
+async fn app_menu_set(added: bool) -> Result<app_menu::State, String> {
+    app_menu::set_added(added)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -57,8 +76,15 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         // A `--step` this launch was started with waits for the page to load
         .manage(shortcuts::GlobalShortcuts::new(cli::own_steps()))
+        // An existing menu entry follows the AppImage if it moved
+        .setup(|_| {
+            app_menu::refresh_at_launch();
+            Ok(())
+        })
         .on_page_load(shortcuts::on_page_load)
         .invoke_handler(tauri::generate_handler![
+            app_menu_set,
+            app_menu_state,
             retroarch,
             save_file,
             shortcuts::global_shortcuts_ready,

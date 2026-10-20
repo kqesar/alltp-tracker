@@ -1,11 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useAppMenuStore } from "@/desktop/appMenu";
 import { useUpdateStore } from "@/stores/updateStore";
 
 const tauri = vi.hoisted(() => ({
   check: vi.fn(),
+  invoke: vi.fn().mockResolvedValue({ added: false, available: false }),
   openUrl: vi.fn().mockResolvedValue(undefined),
   relaunch: vi.fn(),
 }));
+vi.mock("@tauri-apps/api/core", () => ({ invoke: tauri.invoke }));
 vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: tauri.openUrl }));
 vi.mock("@tauri-apps/plugin-process", () => ({ relaunch: tauri.relaunch }));
 vi.mock("@tauri-apps/plugin-updater", () => ({ check: tauri.check }));
@@ -47,6 +50,21 @@ describe("the desktop app's updates", () => {
     expect(useUpdateStore.getState().apply).toBeNull();
     expect(warn).toHaveBeenCalledOnce();
     warn.mockRestore();
+  });
+});
+
+describe("the desktop app's application menu entry", () => {
+  it("asks the app, at start, whether an AppImage can add itself", async () => {
+    tauri.invoke.mockResolvedValueOnce({ added: false, available: true });
+    startDesktop();
+    document.removeEventListener("click", openLinksOutside);
+    await vi.waitFor(() =>
+      expect(useAppMenuStore.getState().state).toEqual({
+        added: false,
+        available: true,
+      }),
+    );
+    expect(tauri.invoke).toHaveBeenCalledWith("app_menu_state");
   });
 });
 

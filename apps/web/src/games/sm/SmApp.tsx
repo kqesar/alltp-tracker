@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { Header } from "@/components/ui/Header";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
 import { useSmAutotrack } from "@/games/sm/components/SmAutotrack";
@@ -8,6 +8,13 @@ import { SmObjectives } from "@/games/sm/components/SmObjectives";
 import { useSmStore } from "@/games/sm/store";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
 import { isAwayFromBoard } from "@/utils/keyboard";
+
+// The desktop app's notice, a chunk of its own: the test is inline so the
+// site's build drops the import and its chunk (docs/desktop.md)
+const AppMenuPrompt =
+  import.meta.env.MODE === "desktop"
+    ? lazy(() => import("@/desktop/AppMenuPrompt"))
+    : null;
 
 /**
  * Undo and redo from the keyboard, as ALttPR's board takes them: Ctrl or ⌘+Z,
@@ -49,6 +56,11 @@ const SmApp = () => {
       </a>
       <div className="notices">
         <UpdatePrompt />
+        {AppMenuPrompt && (
+          <Suspense fallback={null}>
+            <AppMenuPrompt />
+          </Suspense>
+        )}
       </div>
       <Header game="sm" />
       <div className="toolbar" data-testid="toolbar" ref={toolbarRef}>

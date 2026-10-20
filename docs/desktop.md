@@ -5,6 +5,7 @@
 - **Reach SNI from Safari's Macs.** WebKit treats `ws://localhost` from an https page as mixed content (WebKit bug 171934), so the site cannot autotrack in Safari or on iOS. The app's pages are not https: the restriction does not apply.
 - **Talk to RetroArch directly** over UDP, without SNI (below, "Autotracking").
 - **Global shortcuts** that work while the emulator has the focus (below, "Global shortcuts").
+- **A menu entry for a downloaded AppImage**, which installs none (below, "Application menu").
 
 The site stays the main product. The app adds no byte to it, and costs nothing: no store, no paid signing, builds on GitHub's free runners, updates served by GitHub Releases.
 
@@ -44,6 +45,7 @@ flowchart TB
     single["plugin: single-instance"]
     hotkeys["plugin: global-shortcut<br/>(started on the first binding)"]
     portal["ashpd (Linux, Wayland)"]
+    launcher["launcher.rs (Linux, AppImage)"]
   end
   subgraph Webview["Webview: the tracker's pages"]
     page["apps/web, desktop mode"]
@@ -64,10 +66,13 @@ flowchart TB
   start -- "invoke: check, install" --> updater -- "latest.json, installers" --> releases["GitHub Releases"]
   start -- "invoke: restart" --> process
   page -- "invoke: save_file" --> dialog["save_file command:<br/>the system's Save dialog"]
+  start -- "invoke: app_menu_state, app_menu_set" --> launcher
+  launcher -- "desktop file, icons" --> menu["~/.local/share/<br/>applications, icons"]
+  portal -. "needs the same file" .-> launcher
 ```
 
 - **The webview** is each system's own: WebView2 on Windows (pages at `http://tauri.localhost`), WKWebView on macOS and WebKitGTK on Linux (pages at `tauri://localhost`). None of these origins is https, so autotracking's WebSocket to SNI is not mixed content. `detectEnvironment` (`packages/autotrack/src/environment.ts`) gates loopback on https pages only, else the WebKit of macOS and Linux would read as a blocked Safari.
-- **What the pages may ask of the app** is listed in `src-tauri/capabilities/default.json`: open an https URL (`opener:allow-open-url` scoped to `https://*`: without a scope the permission grants the command but no URL), check for and install an update, restart, and the app's own commands, `save_file`, `retroarch` and the `global_shortcuts_*` ones (an app's own commands need no permission entry). Nothing else: in particular no `global-shortcut:*` permission, so the page cannot register a key through the plugin itself, only through the app's command, which checks it.
+- **What the pages may ask of the app** is listed in `src-tauri/capabilities/default.json`: open an https URL (`opener:allow-open-url` scoped to `https://*`: without a scope the permission grants the command but no URL), check for and install an update, restart, and the app's own commands, `save_file`, `retroarch`, `app_menu_*` and the `global_shortcuts_*` ones (an app's own commands need no permission entry). Nothing else: in particular no `global-shortcut:*` permission, so the page cannot register a key through the plugin itself, only through the app's command, which checks it.
 - **Links** to other sites open in the system browser (`openLinksOutside` in `apps/web/src/desktop/start.ts`). In the app's window they would replace the tracker.
 - **Exports** go through the system's Save dialog: `saveFile` (`apps/web/src/utils/saveFile.ts`) calls the app's `save_file` command (`src-tauri/src/lib.rs`), which asks where and writes there. A webview handles a download link its own way (WebKitGTK writes it, unasked, into the process's working directory), and the page gets no file-system access at all: it can write only where the player picks.
 - **The run** is saved in the webview's `localStorage`, apart from any browser's. Export and Import move it.
@@ -176,7 +181,7 @@ sequenceDiagram
   Page->>Page: isControlShown, stepControl
 ```
 
-- **A host app has no app id**, and the portal refuses a session without one ("An app id is required"). A non-sandboxed process gets one from its systemd scope or from `org.freedesktop.host.portal.Registry.Register`, which must come before any other portal call and wants a `<app id>.desktop` file GIO can find. Tauri's bundler names its desktop file `ALLTP Tracker.desktop` (a space is no app id), so the app writes a hidden one at runtime: `$XDG_DATA_HOME/applications/io.github.kqesar.alltp-tracker.desktop`, `NoDisplay=true` (the package's own menu entry stays the only one), for every package (AppImage, `.deb`, `.rpm`, dev). It is rewritten when its `Exec` differs (the AppImage moved), and `Register` is retried three times at 200 ms while GIO notices a new file. A small file stays in the home after uninstalling: the price of one code path. **Future Flathub caveat:** Flathub requires this exact id for the app's own desktop file. A user-level copy with the same id overrides a system or Flatpak one, and with `NoDisplay=true` it would hide the app from the menu. If a package ever ships `io.github.kqesar.alltp-tracker.desktop`, stop writing this one (or delete it when another with that id exists in `$XDG_DATA_DIRS`). The `Exec` line escapes `%` as `%%` and the file is not written when the path holds a control character.
+- **A host app has no app id**, and the portal refuses a session without one ("An app id is required"). A non-sandboxed process gets one from its systemd scope or from `org.freedesktop.host.portal.Registry.Register`, which must come before any other portal call and wants a `<app id>.desktop` file GIO can find. Tauri's bundler names its desktop file `ALLTP Tracker.desktop` (a space is no app id), so the app writes one at runtime: `$XDG_DATA_HOME/applications/io.github.kqesar.alltp-tracker.desktop`, for every package (AppImage, `.deb`, `.rpm`, dev). It is `NoDisplay=true` (the package's own menu entry stays the only one), unless the player added the AppImage to the application menu (below): the file is the same one, and the portal keeps the visibility it finds. `launcher.rs` is its one writer. It rewrites the file when its `Exec` or `Icon` differs (the AppImage moved), and `Register` is retried three times at 200 ms while GIO notices a new file. A small file and the icons stay in the home after uninstalling: the price of one code path. **Future Flathub caveat:** Flathub requires this exact id for the app's own desktop file. A user-level copy with the same id overrides a system or Flatpak one, and with `NoDisplay=true` it would hide the app from the menu. If a package ever ships `io.github.kqesar.alltp-tracker.desktop`, stop writing this one (or delete it when another with that id exists in `$XDG_DATA_DIRS`).
 - **Lazy start.** A launch with the feature off touches nothing: no desktop file, no `Register`, no listener. On a Wayland session the mechanism is the portal on the session's word alone, and the first non-empty apply probes it, bounded to 10 s so a hanging portal frontend cannot hold the shared state. A probe that finds no portal gives the mechanism up to `command` for the process, with the reason shown (the Global tab shows the commands then, which a sway or i3 player sees after the first binding rather than at launch).
 - **Ids** replace the action's colon with a dot (`advance.hookshot`): Hyprland's `global` dispatcher splits `appid:id` on the colon.
 - **Always bind at the start of a session.** Plasma 6.7.4 and later keep a shortcut dead until `BindShortcuts` is called in the current session (KDE bug 523063, the lesson of KeePassXC's PR 13579).
@@ -205,18 +210,69 @@ Proved on a private Xvfb display (its own session bus and home), with a window s
 - an X11 grab fires while another window has the focus, the key does not reach that window, and one press is one step (also for a key held for 0.75 s and 0.9 s, where the sink saw an even number of auto-repeats);
 - AZERTY (above), a key another client holds (the row says so), the game switch (keys released, probed from a second client), `--step` through single-instance (running, closed, repeated, invalid, a plain relaunch), the command mechanism (forced, and an unanswering portal), the tabs at 1440 and 390 px.
 
-**Unverified until someone runs it** (nothing here has a KDE Wayland session to run on):
+**Verified by the owner on KDE Wayland** (CachyOS, the v2.32.0 AppImage downloaded from GitHub, 2026-10-20), points 1 to 6 of the checklist: KDE's registration dialog shows our descriptions and keys, a key steps the tracker while a native-Wayland RetroArch has the focus, a relaunch asks nothing again, declining then **Ask again** works, System Settings opens on the tracker's entry and a key changed there shows in the tab, and on AZERTY the trigger the desktop suggests is the key pressed. Point 7 (the hidden desktop file) found two defects: a downloaded AppImage had no entry in the application menu, and the file's `Icon=alltp-tracker` named a file nothing provides, so KDE showed a generic icon. Both are what the application menu below fixes: it installs the icons and names them.
 
-1. The first launch with a binding: KDE asks to register shortcuts with our descriptions and suggested keys.
-2. A native-Wayland RetroArch focused: the key steps the tracker once per press.
-3. Quit and relaunch: the shortcuts work again **without** a second dialog (the claim for KDE 6.4 and later, from KeePassXC's notes). If a dialog appears at each launch, call `ListShortcuts` first and skip the bind when unchanged, knowing that 6.7.4 and later need the bind.
-4. Declining the dialog: the tab says so; Ask again brings it back.
-5. Open shortcut settings: System Settings › Shortcuts opens on the tracker's entry; changing a key there shows in the tab (`ShortcutsChanged`).
-6. AZERTY: the trigger the desktop suggests is the key the player pressed.
-7. The hidden desktop file exists and stays out of the menu.
-8. The updater's Restart relaunches the app.
+**Unverified until someone runs it:**
+
+1. The application menu on a real desktop (below): the entry shows in KDE's and GNOME's menus with the app's icon, and the shortcut settings page shows that icon too.
+2. The updater's Restart relaunches the app, from a version that already holds the single-instance D-Bus name (the next release).
 
 GNOME 48 and later, Hyprland, Windows and macOS are built in CI and untested here (the Windows and macOS code is linted on their own runners, `desktop.yml`). Feedback from players is welcome.
+
+## Application menu (Linux AppImage)
+
+A downloaded AppImage installs no menu entry: it is a file the player runs, while the `.deb`, the `.rpm` and the Windows and macOS installers add their own. So the AppImage offers to add itself, on request, and only the AppImage (`$APPIMAGE` set, an absolute path to an existing file): anywhere else the app shows nothing.
+
+### One file, two features
+
+The entry is the file the portal already needs (above): `$XDG_DATA_HOME/applications/io.github.kqesar.alltp-tracker.desktop`. A second file would be a duplicate in the menu, and two writers of one file overwrite each other's intent, so `src-tauri/src/launcher.rs` is its only writer. The file itself is the record of the player's choice (`NoDisplay=false` is "in the menu"): there is no second state to keep in step with it.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Missing
+  Missing --> Hidden: the portal's first bind
+  Missing --> InMenu: Add
+  Hidden --> InMenu: Add
+  InMenu --> Hidden: Remove, in a process that used the portal
+  InMenu --> Missing: Remove, otherwise (file and icons deleted)
+  Hidden --> Hidden: a launch, or the portal: Exec follows the AppImage
+  InMenu --> InMenu: a launch, or the portal: Exec follows the AppImage
+```
+
+| Who | What it does to the file |
+|---|---|
+| **Add** (the notice, or More) | Writes it visible. |
+| **Remove** | Hides it when this process used the portal (`Register` still wants the file), deletes it and the icons otherwise. The portal writes it again, hidden, at its next first binding. |
+| **The portal** (first binding of a process) | Writes it hidden when missing. Keeps the visibility it finds, except outside an AppImage, where it is always hidden: a package's own entry is the only one. |
+| **A launch as an AppImage** | If the file exists and its `Exec` names another path (the AppImage was moved or renamed, or a newer one downloaded), rewrites it with the running `$APPIMAGE`, visibility unchanged. Never creates it, and never touches a file that already names the running AppImage (the updater replaces the AppImage in place, so its path stays valid). |
+
+The `Exec` line is quoted as the Desktop Entry specification asks: `"`, `` ` ``, `$` and `\` escaped, `%` doubled, and a path with a control character refused (a newline would start another key of the file). A write goes through a temporary file and a rename, so a desktop watching the directory never reads half a file. The entry carries `Categories=Game;`: without one KDE files it under "Lost & Found".
+
+### The icon
+
+The icons are the bundle's own PNGs (`src-tauri/icons/`, 32, 128 and 256 px, embedded with `include_bytes!`, about 8 kB of the binary), installed to `$XDG_DATA_HOME/icons/hicolor/<size>x<size>/apps/io.github.kqesar.alltp-tracker.png`. Every file written says `Icon=io.github.kqesar.alltp-tracker`, the portal's hidden one included, so the icon shows in the menu and in KDE's shortcut settings. They are written before the file (whenever the file exists, its icon does) and deleted with it.
+
+### The page
+
+- **Once**, on the first launch as an AppImage: a notice among the page's notices, styled as the update notice, "Add ALLTP Tracker to your application menu?" with **Add** and **Not now** (`desktop/AppMenuPrompt.tsx`, in every game). An answer, either one, is remembered in the webview's `localStorage` (`alltp-tracker-app-menu-asked`) and the notice is never shown again. Ignoring it is no answer: it comes back at the next launch. Changing the entry from More counts as an answer too.
+- **Always**, in the toolbar's **More** menu of A Link to the Past (Super Metroid and SMZ3 have no More menu): "Add to application menu" or "Remove from application menu", by the file's state (`desktop/AppMenuItem.tsx`). More is on the toolbar only while it has folded actions away. In the app it shows at every width while this item is there (`desktop/appMenu.css`, a `:has` rule), and then holds this item alone: Export, Import and Shortcuts stay on the bar until it folds them.
+- The page sends no path: `app_menu_set` takes a boolean, and the entry always names the running AppImage.
+- The site gets none of it: the notice and the item are lazy chunks behind inline `import.meta.env.MODE === "desktop"` tests, the site's build keeping a `null` where each would stand.
+
+### Does the desktop need a refresh?
+
+No command is run. KDE (KSycoca, which watches the applications directory) and GNOME (GIO's app info monitor, an inotify watch) pick up a new file in `$XDG_DATA_HOME/applications` by themselves. `update-desktop-database` only rebuilds `mimeinfo.cache` for the files that declare a `MimeType`, which this one does not. That is how the desktops are documented to behave, not measured on a real one here (see "Unverified"); the one case that needs a new login is a session that began while `~/.local/share/applications` did not exist yet.
+
+### Proved
+
+In the private Xvfb bench (a temporary home and session bus, the AppImage built from this branch, the owner's own directories untouched):
+
+- the notice shows on the first launch, and neither after Add, nor after Not now, nor after a change from More, at the next launch; nothing is written before the player asks;
+- Add writes the visible file and the three icons, Remove deletes them (the portal not being used there);
+- an AppImage renamed after Add gets its `Exec` fixed at the next launch with the visibility kept, a launch that finds it already right leaves the file untouched (same inode and modification time), and a name with a space, a quote, a `$` and a backtick is read back by GLib's parser (`Gio.DesktopAppInfo`) as the real file, with `desktop-file-validate` clean, `should_show` true and the icon named;
+- the toolbar holds at 1440, 1180, 1000 and 760 px with More showing.
+
+The state machine (with the portal flag), the escaping and the icon paths are Rust unit tests (`launcher.rs`) over temporary directories.
 
 ## Updates
 
@@ -260,9 +316,10 @@ flowchart LR
 
 - **Size.** The AppImage weighs about 86 MB (v2.30.0's): it carries WebKitGTK. The `.deb` and `.rpm` (about 8 MB) use the system's, the Windows installer 5.4 MB, each macOS `.dmg` about 7 MB.
 - **Tested here on Linux only**: the release build in a private display (Xvfb, its own session bus and home), driven by xdotool. It renders the tracker, autotracks through SNI with RetroArch (the seed's run type read from alttpr.com), opens links in the system browser, saves an export through the Save dialog, copies the diagnostic report. The macOS and Windows builds come from CI, unproven until someone runs them.
+- **The application menu entry** (below) is the AppImage's alone, and Linux's. A player who also runs AppImageLauncher or appimaged gets that tool's own entry too, hence two: this one can be removed from **More**. A path holding a `%` is written escaped as the specification asks (`%%`), which GLib refuses to load (it looks the executable up before unescaping, measured on the bench): GNOME would not list the entry and the portal's `Register` would fail, the shortcuts then falling to the command mechanism. Left as is for a path nobody has.
 - **No stream view** (above). A future version could serve it to OBS from the app over local HTTP.
 - **Global shortcuts** (above):
-  - Unverified on the systems listed there: KDE Wayland (the checklist), GNOME 48+, Hyprland, Windows, macOS.
+  - Unverified on the systems listed there: GNOME 48+, Hyprland, Windows, macOS (KDE Wayland passed the checklist, above).
   - A Link to the Past's only: the other games have no keymap.
   - One keyboard layout is read: the first group on Linux, the process's default on Windows (a layout picked per window is not seen), punctuation keys best-effort on layouts that move them.
   - Changing the layout while the app runs leaves grabs made under the old one until the app restarts (global-hotkey's X11 backend finds the keycode again when it ungrabs).

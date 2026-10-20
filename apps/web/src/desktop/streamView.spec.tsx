@@ -20,7 +20,12 @@ beforeEach(() => {
 describe("the desktop app", () => {
   it("offers no stream view, which OBS could not load nor keep in step", async () => {
     const user = userEvent.setup();
-    const { unmount } = render(<TrackerControls />);
+    // The bar has folded its secondary actions into More, as on a narrow window
+    const { unmount } = render(
+      <div data-fold="secondary">
+        <TrackerControls />
+      </div>,
+    );
     expect(screen.queryByTestId("stream-view-button")).toBeNull();
     await user.click(screen.getByTestId("toolbar-more"));
     expect(screen.queryByTestId("toolbar-more-stream-view")).toBeNull();
@@ -31,5 +36,14 @@ describe("the desktop app", () => {
     expect(screen.queryByTestId("sm-stream-view")).toBeNull();
     render(<Smz3Controls />);
     expect(screen.queryByTestId("smz3-stream-view")).toBeNull();
+  });
+
+  it("leaves the bar's own buttons out of More until the bar folds them", async () => {
+    const user = userEvent.setup();
+    render(<TrackerControls />);
+    await user.click(screen.getByTestId("toolbar-more"));
+    expect(screen.queryByTestId("toolbar-more-export")).toBeNull();
+    expect(screen.queryByTestId("toolbar-more-import")).toBeNull();
+    expect(screen.queryByTestId("toolbar-more-shortcuts")).toBeNull();
   });
 });
