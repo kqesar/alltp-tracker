@@ -1,6 +1,6 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
-  "description": "What the tracker's window may ask of the app: open an https link in the system browser, check for and install an update, then restart",
+  "description": "What the tracker's window may ask of the app: open an https link in the system browser, check for and install an update, then restart. The app's own commands (autotracking, saving a file, global shortcuts) need no entry here; the global-shortcut plugin's own commands are deliberately not granted, so the page can register a key only through the app's checked command",
   "identifier": "default",
   "permissions": [
     "core:default",
