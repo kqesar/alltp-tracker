@@ -1,31 +1,65 @@
 name: Desktop release
 
-# The desktop app (apps/desktop), built for each OS once a release is cut: its
-# installers, their updater signatures and the updater's latest.json are
-# attached to the release, where the installed apps look for updates. Called by
-# ci.yml, from the `desktop` job that follows release-please, and by nothing
-# else (docs/ci.md, "Releases"). The release's own commit is built, the version
-# read from package.json.
+# The desktop app (apps/desktop), built for each OS for a release that exists:
+# its installers, their updater signatures and the updater's latest.json are
+# attached to that release, where the installed apps look for updates. The tag's
+# own commit is built, the version read from package.json.
+#
+# Started by the `desktop` job of ci.yml once release-please cuts a release (a
+# token-made dispatch is the one event that job may start), or by hand, to build
+# the installers of a tag again:
+#   gh workflow run desktop-release.yml --ref master -f tag=v1.2.3
+# It runs apart from the master pipeline, so it neither holds the master queue
+# nor turns master red (docs/ci.md, "Releases").
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       tag:
         description: "The release's tag (v1.2.3): the commit built, and the release the files are attached to"
         type: string
         required: true
-    # Named one by one, never `secrets: inherit`: this workflow gets the updater's
-    # signing key and nothing else of the repository's secrets.
-    secrets:
-      TAURI_SIGNING_PRIVATE_KEY:
-        description: "The updater's key: installed apps refuse an update it did not sign"
-        required: true
-      TAURI_SIGNING_PRIVATE_KEY_PASSWORD:
-        description: "The passphrase of that key"
-        required: true
+
+permissions:
+  contents: read
+
+# One build per tag at a time; a second one for the same tag waits, never cancels
+concurrency:
+  group: desktop-release-${{ inputs.tag }}
+  cancel-in-progress: false
 
 jobs:
+  # Anyone with write access can dispatch this workflow from any branch, with
+  # that branch's copy of it, and the signing key is a repository secret: the
+  # copy that matters is master's. What is built must also be a release.
+  check:
+    name: Check the tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check the ref and the tag
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ github.ref }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          fail() { echo "::error::$1"; exit 1; }
+          [ "$REF" = refs/heads/master ] || fail "Run this workflow from master (--ref master), not from $REF."
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "The tag must look like v1.2.3."
+          gh release view "$TAG" > /dev/null || fail "No release has the tag $TAG."
+          # The tag is an ancestor of master: master is ahead of it, or at it
+          status=$(gh api "repos/$GH_REPO/compare/$TAG...master" --jq .status) \
+            || fail "Could not compare $TAG with master."
+          case "$status" in
+            ahead | identical) ;;
+            *) fail "The tag $TAG is not on master (status: $status)." ;;
+          esac
+
+  # The job id stays `desktop`: Swatinem/rust-cache puts it in its cache keys
+  # (v0-rust-desktop-<os>-...), and a new id would start from a cold cache
   desktop:
     name: Desktop (${{ matrix.os }}${{ matrix.target && format(', {0}', matrix.target) || '' }})
+    needs: check
     strategy:
       fail-fast: false
       matrix:
@@ -41,8 +75,7 @@ jobs:
           - os: windows-latest
             target: ""
     runs-on: ${{ matrix.os }}
-    # Attaches the files to the release. The calling job grants the same: a
-    # called workflow cannot ask for more.
+    # Attaches the files to the release
     permissions:
       contents: write
     steps:

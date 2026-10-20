@@ -469,9 +469,13 @@ jobs:
       - id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
 
-  # The installers of a release that was just cut (desktop-release.yml)
+  # Starts the build of the installers of a release that was just cut, as a run
+  # of its own (desktop-release.yml): it does not hold the master queue for the
+  # 4 to 8 minutes of the build, and a failed build does not turn master red. A
+  # dispatch is the one event a job's GITHUB_TOKEN may start; the tag and the
+  # release that token creates start nothing.
   desktop:
-    name: Desktop installers
+    name: Start the desktop installers
     needs: release-please
     # A status function: without one the condition gets an implicit success(),
     # which looks at every ancestor job and skips this one as soon as any of
@@ -480,16 +484,21 @@ jobs:
     if: >-
       ${{ !cancelled() && needs.release-please.result == 'success'
       && needs.release-please.outputs.created == 'true' }}
-    # Attaches the files to the release
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    # Lets the job start a workflow, and also cancel or re-run one: it holds no
+    # other permission and runs the one command below
     permissions:
-      contents: write
-    uses: ./.github/workflows/desktop-release.yml
-    with:
-      tag: ${{ needs.release-please.outputs.tag }}
-    # Named, not `secrets: inherit`: the installers' key and nothing else
-    secrets:
-      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      actions: write
+    steps:
+      # `--ref master`: the workflow file that runs is master's own. By hand:
+      # gh workflow run desktop-release.yml --ref master -f tag=vX.Y.Z
+      - name: Start the build
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release-please.outputs.tag }}
+        run: gh workflow run desktop-release.yml --ref master -f tag="$TAG"
 
   # The nightly run found something: one open issue at most, which a later
   # failure comments on instead of opening another. Close it once fixed.
