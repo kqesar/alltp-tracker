@@ -19,6 +19,8 @@ describe("findName", () => {
     ["item:moonpearl", "Moon Pearl"],
     ["item:sword:2", "Master Sword"],
     ["item:glove:2", "Titan's Mitt"],
+    ["item:magic:1", "Half Magic"],
+    ["item:magic:2", "Quarter Magic"],
     ["item:tunic:3", "Red Mail"],
     ["item:bottle:2", "Second Bottle"],
     ["item:bow:1", "Silver Arrows"],
@@ -46,6 +48,8 @@ describe("findIcon", () => {
     ["item:agahnim2:1", "agahnim1.png"],
     ["item:bigkey4:1", "bigkey.png"],
     ["item:map10:1", "map.png"],
+    ["item:magic:1", "magic.png"],
+    ["item:magic:2", "magic.png"],
   ])("draws %s as %s", (key, icon) => {
     expect(findIcon(key)).toBe(icon);
   });

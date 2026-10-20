@@ -1,7 +1,7 @@
 // What the Run tab shows of a run's timeline: each find named and drawn as
 // the board draws it, newest first, and the splits, the bosses in the order
 // they fell, as a speedrun timer splits a run.
-import { itemLabels } from "@/games/alttpr/data/items";
+import { itemLabels, TOGGLE_ITEMS } from "@/games/alttpr/data/items";
 import { dungeonName } from "@/games/alttpr/logic/settings";
 import { locationName } from "@/games/alttpr/logic/solution";
 import type { Stamp, Timeline } from "@/games/alttpr/logic/timeline";
@@ -24,6 +24,7 @@ export interface Split {
 const LEVELS: Readonly<Record<string, readonly string[]>> = {
   bottle: ["Bottle", "Second Bottle", "Third Bottle", "Fourth Bottle"],
   glove: ["Power Glove", "Titan's Mitt"],
+  magic: ["Half Magic", "Quarter Magic"],
   shield: ["Fighter's Shield", "Fire Shield", "Mirror Shield"],
   sword: ["Fighter's Sword", "Master Sword", "Tempered Sword", "Golden Sword"],
   // The tunic's 1 is the green mail every run starts with
@@ -81,6 +82,8 @@ export const findIcon = (key: string): string | null => {
   if (dungeonItem) return `${dungeonItem[1]}.png`;
   // Agahnim 2 is drawn as Agahnim, as on the board
   if (id.startsWith("agahnim")) return "agahnim1.png";
+  // The half magic and the quarter share the cell's picture
+  if (TOGGLE_ITEMS.has(id)) return `${id}.png`;
   return level === undefined ? `${id}.png` : `${id}${level}.png`;
 };
 

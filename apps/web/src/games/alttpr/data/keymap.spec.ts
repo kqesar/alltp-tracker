@@ -36,7 +36,7 @@ const press = (code: string, held: Partial<KeyboardEvent> = {}) => ({
 
 describe("the controls", () => {
   it("lists every grid item once, in reading order, then the retro shops", () => {
-    expect(ITEM_CONTROLS).toHaveLength(31);
+    expect(ITEM_CONTROLS).toHaveLength(32);
     expect(ITEM_CONTROLS.slice(-2)).toEqual(["shoparrow", "shopkey"]);
     expect(ITEM_CONTROLS.slice(0, 8)).toEqual([
       "flute",
@@ -83,7 +83,7 @@ describe("the controls", () => {
       "map12",
       "compass12",
     ]);
-    expect(CONTROLS).toHaveLength(31 + 10 * 7 - 1 + 2 + 2 + 1 + 6);
+    expect(CONTROLS).toHaveLength(32 + 10 * 7 - 1 + 2 + 2 + 1 + 6);
     expect(ACTIONS).toHaveLength(CONTROLS.length * 2);
   });
 
@@ -132,12 +132,19 @@ describe("the default keymap", () => {
     expect(
       defaultItemGrid.slice(0, 5).map((row) => row.slice(0, 5).map(keyOf)),
     ).toEqual(keyRows);
-    expect(["boomerang", "net", "agahnim", "boots"].map(keyOf)).toEqual([
-      "KeyN",
-      "KeyM",
-      "Comma",
-      "Period",
-    ]);
+    expect(
+      ["boomerang", "net", "agahnim", "boots", "magic"].map(keyOf),
+    ).toEqual(["KeyN", "KeyM", "Comma", "Period", "Slash"]);
+  });
+
+  it("keeps each key it ever gave, whatever place the grid gives the item", () => {
+    // Agahnim moved to the castles' row and the half magic took its cell:
+    // Agahnim stays on the comma, the half magic is on the slash
+    expect(DEFAULT_KEYMAP["advance:agahnim"]).toBe("Comma");
+    expect(DEFAULT_KEYMAP["back:agahnim"]).toBe("Shift+Comma");
+    expect(DEFAULT_KEYMAP["advance:magic"]).toBe("Slash");
+    expect(DEFAULT_KEYMAP["back:magic"]).toBe("Shift+Slash");
+    expect(DEFAULT_KEYMAP["advance:boots"]).toBe("Period");
   });
 
   it("puts each dungeon's chests on its number, Turtle Rock on 0", () => {
@@ -154,7 +161,7 @@ describe("the default keymap", () => {
   it("binds known actions only, each to a usable chord no other action has", () => {
     const entries = Object.entries(DEFAULT_KEYMAP);
 
-    expect(entries).toHaveLength(2 * (29 + 10));
+    expect(entries).toHaveLength(2 * (30 + 10));
     for (const [action, chord] of entries) {
       expect(ACTIONS).toContain(action);
       expect(isBindable(chord as string)).toBe(true);

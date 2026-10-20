@@ -1,5 +1,5 @@
 import { BOSS_STATES } from "@/games/alttpr/constants";
-import { isKeyCell, itemsMin } from "@/games/alttpr/data/items";
+import { isKeyCell, itemsMin, TOGGLE_ITEMS } from "@/games/alttpr/data/items";
 
 /**
  * Gets the correct asset path with base URL support
@@ -30,7 +30,10 @@ export const getItemBackground = (
   if (item.startsWith("boss")) {
     return `url(${getAssetPath(`${item}${BOSS_STATES.BEATEN}.png`)})`;
   }
-  if (typeof value === "boolean") return `url(${getAssetPath(`${item}.png`)})`;
+  // One picture for a toggle that counts levels: the half magic, or the quarter
+  if (typeof value === "boolean" || TOGGLE_ITEMS.has(item)) {
+    return `url(${getAssetPath(`${item}.png`)})`;
+  }
   return `url(${getAssetPath(`${item}${value}.png`)})`;
 };
 

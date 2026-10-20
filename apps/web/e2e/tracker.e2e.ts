@@ -146,6 +146,36 @@ for (const width of WIDTHS) {
   });
 }
 
+test.describe("the half magic cell", () => {
+  test.beforeEach(({ page }) => openTracker(page));
+
+  test("sits between the tunic and the boots, and toggles by click and by its key", async ({
+    page,
+  }) => {
+    const magic = page.getByTestId("item-magic");
+    const [tunic, cell, boots] = await Promise.all(
+      ["item-tunic", "item-magic", "item-boots"].map((id) =>
+        page.getByTestId(id).boundingBox(),
+      ),
+    );
+    expect(tunic && cell && boots).toBeTruthy();
+    if (!(tunic && cell && boots)) return;
+    expect(tunic.y).toBe(cell.y);
+    expect(cell.y).toBe(boots.y);
+    expect(tunic.x).toBeLessThan(cell.x);
+    expect(cell.x).toBeLessThan(boots.x);
+
+    await expect(magic).toHaveAccessibleName(/^Half Magic, not obtained\./);
+    await magic.click();
+    await expect(magic).toHaveAccessibleName(/^Half Magic, obtained\./);
+    // Slash steps it, as a click does
+    await page.keyboard.press("Slash");
+    await expect(magic).toHaveAccessibleName(/^Half Magic, not obtained\./);
+    await page.keyboard.press("Slash");
+    await expect(magic).toHaveAccessibleName(/^Half Magic, obtained\./);
+  });
+});
+
 test.describe("a tooltip", () => {
   test.beforeEach(({ page }) => openTracker(page));
 

@@ -10,7 +10,12 @@ import {
 } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { KeyChord } from "@/games/alttpr/components/ui/KeyChord";
-import { items, itemsMax, itemsMin } from "@/games/alttpr/data/items";
+import {
+  items,
+  itemsMax,
+  itemsMin,
+  TOGGLE_ITEMS,
+} from "@/games/alttpr/data/items";
 import {
   type ActionId,
   bind,
@@ -56,7 +61,9 @@ const iconOf = (control: ControlId): string => {
   if (kind === "reward") return "dungeon0.png";
 
   const value = items[control];
-  if (typeof value === "boolean") return `${control}.png`;
+  if (typeof value === "boolean" || TOGGLE_ITEMS.has(control)) {
+    return `${control}.png`;
+  }
   // A dungeon's chests all there, its boss alive: their starting art
   if (control.startsWith("chest")) return `chest${value}.png`;
   if (control.startsWith("boss")) return `${control}${value}.png`;

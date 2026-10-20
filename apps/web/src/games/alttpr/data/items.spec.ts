@@ -7,6 +7,7 @@ import {
   items,
   itemsMax,
   itemsMin,
+  TOGGLE_ITEMS,
 } from "@/games/alttpr/data/items";
 
 const dungeonIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -63,6 +64,31 @@ describe("item ranges", () => {
   });
 });
 
+describe("the half magic", () => {
+  it("is a cell of the equipment row, between the tunic and the boots", () => {
+    expect(defaultItemGrid[1]).toEqual([
+      "bow",
+      "lantern",
+      "shield",
+      "sword",
+      "tunic",
+      "magic",
+      "boots",
+    ]);
+    // Agahnim stands with Castle Tower's keys, in every run
+    for (const grid of [defaultItemGrid, itemGridFor({ mode: "retro" })]) {
+      expect(grid.flat().filter((id) => id === "agahnim")).toHaveLength(1);
+      expect(grid.at(-1)?.[2]).toBe("agahnim");
+    }
+  });
+
+  it("counts a half and a quarter, a plain toggle on the board", () => {
+    expect([itemsMin.magic, itemsMax.magic, items.magic]).toEqual([0, 2, 0]);
+    expect(TOGGLE_ITEMS.has("magic")).toBe(true);
+    expect(itemLabels("magic")).toBe("Half Magic");
+  });
+});
+
 describe("defaultItemGrid", () => {
   it("is 7 wide, 8 rows with the castle dungeons' keys", () => {
     expect(defaultItemGrid).toHaveLength(8);
@@ -93,7 +119,7 @@ describe("defaultItemGrid", () => {
     expect(defaultItemGrid.at(-1)).toEqual([
       "keylabel10",
       "keys10",
-      "keylabel11",
+      "agahnim",
       "keys11",
       "keylabel12",
       "keys12",
@@ -110,7 +136,7 @@ describe("itemGridFor", () => {
     expect(retro.at(-1)).toEqual([
       "shoparrow",
       "shopkey",
-      "",
+      "agahnim",
       "",
       "keylabel12",
       "keys12",

@@ -100,11 +100,12 @@ test.describe("a keysanity run", () => {
   }) => {
     for (const [id, short] of [
       ["hyrule-castle", "HC"],
-      ["castle-tower", "CT"],
       ["ganons-tower", "GT"],
     ]) {
       await expect(page.getByTestId(`key-label-${id}`)).toHaveText(short);
     }
+    // Castle Tower's keys are headed by Agahnim, where its label would be
+    await expect(page.getByTestId("item-agahnim")).toBeVisible();
     await expect(page.getByTestId("big-key-12")).toHaveAccessibleName(
       "Ganon's Tower big key: not obtained",
     );
@@ -128,9 +129,11 @@ test.describe("a keysanity run", () => {
       /^Castle Tower: boss available,/,
     );
 
-    // The keys and labels go with the key cells; Ganon's Tower's cell stays
+    // The keys and labels go with the key cells; Agahnim and Ganon's Tower's
+    // cell stay
     await page.getByTestId("key-cells-toggle").click();
-    await expect(page.getByTestId("key-label-castle-tower")).toBeEmpty();
+    await expect(page.getByTestId("key-label-hyrule-castle")).toBeEmpty();
+    await expect(page.getByTestId("item-agahnim")).toBeVisible();
     await expect(page.getByTestId("small-key-11")).toHaveCount(0);
     await expect(page.getByTestId("item-boss12")).toBeVisible();
   });

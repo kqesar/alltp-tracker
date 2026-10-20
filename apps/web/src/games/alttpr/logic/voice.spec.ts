@@ -38,6 +38,7 @@ describe("the voice commands", () => {
     ["master sword", set("sword", { atLeast: 2 })],
     ["silvers", set("bow", { bit: 1 })],
     ["bow", set("bow", { bit: 2 })],
+    ["half magic", set("magic", { atLeast: 1 })],
     ["bom boss", set("bombos", { to: "on" })],
     ["samaria", set("somaria", { to: "on" })],
     ["eastern boss", set("boss0", { to: "on" })],
@@ -113,6 +114,11 @@ describe("commandsOf", () => {
 });
 
 describe("changedValue", () => {
+  it("finds the half magic, and keeps a quarter magic already held", () => {
+    expect(changedValue({ atLeast: 1 }, 0, 0, 2)).toBe(1);
+    expect(changedValue({ atLeast: 1 }, 2, 0, 2)).toBe(2);
+  });
+
   it("holds a toggle, whatever it was", () => {
     expect(changedValue({ to: "on" }, false, 0, 1)).toBe(true);
     expect(changedValue({ to: "on" }, true, 0, 1)).toBe(true);

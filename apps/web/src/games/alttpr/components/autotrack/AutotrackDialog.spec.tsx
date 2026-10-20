@@ -631,7 +631,7 @@ describe("AutotrackDialog's readout", () => {
   it("names what it read that the board has no cell for", async () => {
     await open();
     const memory = seedMemory({ race: false });
-    memory[SAVE(0x37b)] = 0x02; // Quarter Magic
+    memory[SAVE(0x470)] = 3; // heart pieces
     act(() =>
       useAutotrackStore.setState({
         active: true,
@@ -641,7 +641,7 @@ describe("AutotrackDialog's readout", () => {
     );
 
     expect(screen.getByTestId("readout-untracked")).toHaveTextContent(
-      "Not on the boardQuarter Magic",
+      "Not on the boardPiece of Heart ×3",
     );
     // The board then counts small keys: not with keysanity
     memory[SAVE(0x37c + 6)] = 1;

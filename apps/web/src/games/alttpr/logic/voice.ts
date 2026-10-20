@@ -83,6 +83,8 @@ const ITEMS: readonly (readonly [
   [["bom boss"], "bombos", ON],
   [["ether"], "ether", ON],
   [["powder", "magic powder"], "powder", ON],
+  // A quarter magic already held stays: the half is a find, never a step back
+  [["half magic"], "magic", { atLeast: 1 }],
   [["glove", "gloves", "power glove"], "glove", NEXT],
   [["mitts", "titan mitt"], "glove", { atLeast: 2 }],
   [["bottle"], "bottle", NEXT],

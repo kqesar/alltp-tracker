@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { GridItem } from "@/games/alttpr/components/tracker/grid/GridItem";
 import { getPreset } from "@/games/alttpr/data/presets";
@@ -169,6 +169,47 @@ describe("GridItem", () => {
     );
   });
 
+  it("toggles the half magic, which a quarter magic from the game shows as the half", () => {
+    render(<GridItem col={5} item="magic" row={1} />);
+    const cell = screen.getByTestId("item-magic");
+    expect(cell).toHaveAccessibleName(
+      "Half Magic, not obtained. Click to change state.",
+    );
+    expect(cell).toHaveClass("griditem--dimmed");
+
+    fireEvent.click(cell);
+    expect(useGameStore.getState().items.magic).toBe(1);
+    expect(cell).toHaveAccessibleName(
+      "Half Magic, obtained. Click to change state.",
+    );
+    expect(cell).not.toHaveClass("griditem--dimmed");
+    expect(cell.style.backgroundImage).toContain("magic.png");
+
+    fireEvent.click(cell);
+    expect(useGameStore.getState().items.magic).toBe(0);
+
+    // The game says quarter magic: the board keeps it for the logic, and
+    // shows the half; a click (either way) takes it off
+    act(() => useGameStore.getState().setItem("magic", 2));
+    expect(cell).toHaveAccessibleName(
+      "Half Magic, obtained. Click to change state.",
+    );
+    expect(cell.style.backgroundImage).toContain("magic.png");
+    fireEvent.contextMenu(cell);
+    expect(useGameStore.getState().items.magic).toBe(0);
+    fireEvent.contextMenu(cell);
+    expect(useGameStore.getState().items.magic).toBe(1);
+  });
+
+  it("puts Agahnim on the castles' row, among their key cells", () => {
+    render(<GridItem col={2} item="agahnim" row={7} />);
+
+    const cell = screen.getByTestId("item-agahnim");
+    expect(cell).toHaveAccessibleName(
+      "Agahnim, not obtained. Click to change state.",
+    );
+  });
+
   it("names a castle dungeon beside its key cell, while the key cells show", () => {
     const { unmount } = render(<GridItem col={0} item="keylabel10" row={7} />);
     expect(screen.getByTestId("key-label-hyrule-castle")).toHaveClass(
@@ -178,10 +219,10 @@ describe("GridItem", () => {
     unmount();
 
     useGameStore.getState().setBigKeysVisible(true);
-    render(<GridItem col={2} item="keylabel11" row={7} />);
+    render(<GridItem col={4} item="keylabel12" row={7} />);
 
-    const label = screen.getByTestId("key-label-castle-tower");
-    expect(label).toHaveTextContent("CT");
+    const label = screen.getByTestId("key-label-ganons-tower");
+    expect(label).toHaveTextContent("GT");
     expect(label).toHaveAttribute("aria-hidden", "true");
     expect(screen.queryByRole("button")).toBeNull();
   });

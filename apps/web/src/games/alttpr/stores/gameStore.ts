@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
 import type { ItemState } from "@/games/alttpr/data/items";
-import { items as initialItems } from "@/games/alttpr/data/items";
+import { items as initialItems, TOGGLE_ITEMS } from "@/games/alttpr/data/items";
 import {
   DEFAULT_SHORTCUTS,
   type Keymap,
@@ -486,6 +486,13 @@ export const useGameStore = create<GameState>()(
             if (typeof current === "boolean") {
               return record(state, {
                 items: { ...state.items, [item]: !current },
+              });
+            }
+            // A toggle counting levels (the half magic): held, or not, a
+            // quarter magic that autotracking read turned off as the half
+            if (TOGGLE_ITEMS.has(item)) {
+              return record(state, {
+                items: { ...state.items, [item]: current > 0 ? 0 : 1 },
               });
             }
 

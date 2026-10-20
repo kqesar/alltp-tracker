@@ -183,8 +183,10 @@ export const controlTitle = (control: ControlId): string => {
  * grid's item block is five columns wide, as is each hand on the letter
  * keys; its five rows run down the left hand (the Q, A and Z rows) and go on
  * at the top of the right hand (the Y and H rows), column for column, like
- * text in two newspaper columns. The four items beside the block take the
- * right hand's bottom row, in reading order.
+ * text in two newspaper columns. The items beside the block take the right
+ * hand's bottom row, each the key it has had since it was added: the grid's
+ * order does not choose them (Agahnim left the block's row for the castles'
+ * when the half magic took its cell), and no key changes hands.
  */
 const ITEM_BLOCK_KEYS = [
   ["KeyQ", "KeyW", "KeyE", "KeyR", "KeyT"],
@@ -193,27 +195,29 @@ const ITEM_BLOCK_KEYS = [
   ["KeyY", "KeyU", "KeyI", "KeyO", "KeyP"],
   ["KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon"],
 ];
-const BESIDE_BLOCK_KEYS = ["KeyN", "KeyM", "Comma", "Period"];
+const BESIDE_BLOCK_KEYS: Readonly<Record<ControlId, string>> = {
+  agahnim: "Comma",
+  boomerang: "KeyN",
+  boots: "Period",
+  magic: "Slash",
+  net: "KeyM",
+};
 const ITEM_BLOCK_WIDTH = 5;
 
 /** Each grid item's default key, by the newspaper-column rule above. */
 const itemKeys = (): [ControlId, string][] => {
-  const block: [ControlId, string][] = [];
-  const beside: ControlId[] = [];
+  const keys: [ControlId, string][] = [];
   defaultItemGrid.forEach((row, rowIndex) => {
     row.forEach((id, colIndex) => {
       if (!isItemCell(id)) return;
-      const code = ITEM_BLOCK_KEYS[rowIndex]?.[colIndex];
-      if (colIndex < ITEM_BLOCK_WIDTH && code) block.push([id, code]);
-      else beside.push(id);
+      const code =
+        (colIndex < ITEM_BLOCK_WIDTH &&
+          ITEM_BLOCK_KEYS[rowIndex]?.[colIndex]) ||
+        BESIDE_BLOCK_KEYS[id];
+      if (code) keys.push([id, code]);
     });
   });
-  return [
-    ...block,
-    ...beside.flatMap((id, index): [ControlId, string][] =>
-      BESIDE_BLOCK_KEYS[index] ? [[id, BESIDE_BLOCK_KEYS[index]]] : [],
-    ),
-  ];
+  return keys;
 };
 
 /**
