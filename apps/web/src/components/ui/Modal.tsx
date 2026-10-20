@@ -69,6 +69,9 @@ export const Modal = ({
       className={wide ? "modal modal--wide" : "modal"}
       onCancel={(event) => {
         event.preventDefault();
+        // A dialog rendered inside another's React tree (a portal) must not
+        // close its parent: Escape belongs to the topmost one
+        event.stopPropagation();
         onCloseRef.current();
       }}
       onClick={(event) => {
