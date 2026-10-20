@@ -4,7 +4,7 @@ name: Desktop
 # tests on Linux, and the lint again on Windows and macOS (their own code),
 # on a pull request or a push that touches it only. Its web side is
 # apps/web's, which the CI workflow tests; its installers are built for each
-# OS when a release is cut (desktop-release.yml, called by ci.yml).
+# OS when a release is cut (desktop-release.yml, started by ci.yml).
 on:
   pull_request:
     paths:
