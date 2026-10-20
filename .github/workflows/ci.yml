@@ -221,20 +221,22 @@ jobs:
             }
 
   # Browser tests run beside the unit tests, not after them, so the pipeline
-  # takes as long as the slower of the two. They are split over two runners:
+  # takes as long as the slower of the two. They are split over three runners:
   # a runner's cores are saturated by two browsers already (four workers ran
-  # no faster than two), so only another runner shortens the wait.
+  # no faster than two), so only another runner shortens the wait. A fourth
+  # would save about 35 s more and come close to the limit of 20 concurrent
+  # jobs. The count lives in the matrix: everything else reads it from there.
   e2e:
-    name: E2E (Playwright + axe, ${{ matrix.shard }}/2)
+    name: E2E (Playwright + axe, ${{ matrix.shard }}/${{ strategy.job-total }})
     needs: plan
     if: ${{ !cancelled() && needs.plan.outputs.release != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
-      # One shard failing still lets the other report its own failures
+      # One shard failing still lets the others report their own failures
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3]
 
     steps:
       - name: Checkout code
@@ -265,11 +267,11 @@ jobs:
       # Uses the runner's preinstalled Google Chrome (playwright.config.ts),
       # so no browser is downloaded.
       - name: Run browser tests
-        run: pnpm test:e2e --shard=${{ matrix.shard }}/2
+        run: pnpm test:e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }}
 
       # The production build the browser tests just served is the one that
       # ships: the deploy job publishes it without building again, from the
-      # first shard (both build the same commit).
+      # first shard (all build the same commit).
       - name: Upload the site for GitHub Pages
         if: github.ref == 'refs/heads/master' && matrix.shard == 1
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
