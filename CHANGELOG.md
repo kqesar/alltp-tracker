@@ -2,6 +2,35 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.34.0](https://github.com/kqesar/alltp-tracker/compare/v2.33.0...v2.34.0) (2026-10-20)
+
+
+### ✨ Features
+
+* **web:** call the tracker Rando Atlas ([7cf6a8e](https://github.com/kqesar/alltp-tracker/commit/7cf6a8ee40bab7c353d339954bdacdfc9fb2e005))
+* **web:** count visits with GoatCounter ([9a0eef8](https://github.com/kqesar/alltp-tracker/commit/9a0eef82935c008e5409553a64cbf93090e24866))
+* **web:** describe each game to search engines and link previews ([6b9bbbc](https://github.com/kqesar/alltp-tracker/commit/6b9bbbc4f7c87902a10c3b9e8cc02c32f728bacf))
+* **web:** share a run through its URL ([97936be](https://github.com/kqesar/alltp-tracker/commit/97936be14ffd5439e41d43ab7e853e0fa3468af2))
+* **web:** the Rando Atlas icon ([9fb545d](https://github.com/kqesar/alltp-tracker/commit/9fb545d982e4b5c7311bb50d3a06ea768ccfb9e3))
+
+
+### 🐛 Bug Fixes
+
+* **autotrack:** head the diagnostic report with the Rando Atlas name ([abecc61](https://github.com/kqesar/alltp-tracker/commit/abecc614d87261c8d5dbdfb1382d380b84cf4641))
+* **web:** export a Super Metroid or SMZ3 run without its undo history ([88246da](https://github.com/kqesar/alltp-tracker/commit/88246da0c12b471208f2011c8dcb482cef46fdfc))
+
+
+### ⚡ Performance Improvements
+
+* **web:** precache only the active game ([fe44989](https://github.com/kqesar/alltp-tracker/commit/fe449894dcb4f015bff95ba108abf79434dab87a))
+* **web:** serve the maps as lossless WebP ([bed98f6](https://github.com/kqesar/alltp-tracker/commit/bed98f645802bd6fc85e75a1d2b43bb5d876c5c1))
+
+
+### 📚 Documentation
+
+* a short README with screenshots, the guide and dev notes under docs ([03832e2](https://github.com/kqesar/alltp-tracker/commit/03832e2330c9d3a22f45db9a23e95d92cec05fed))
+* tighten CONTRIBUTING and add a security policy ([b8292fa](https://github.com/kqesar/alltp-tracker/commit/b8292fa1bd90f6eef9206646715ab2eba649af54))
+
 ## [2.33.0](https://github.com/kqesar/alltp-tracker/compare/v2.32.0...v2.33.0) (2026-10-20)
 
 
