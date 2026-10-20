@@ -454,7 +454,13 @@ jobs:
   desktop:
     name: Desktop installers
     needs: release-please
-    if: needs.release-please.outputs.created == 'true'
+    # A status function: without one the condition gets an implicit success(),
+    # which looks at every ancestor job and skips this one as soon as any of
+    # them was skipped (`build` in a full run, `ci` in a promoted one, `deploy`
+    # on a release commit: always one) -- actions/runner#491.
+    if: >-
+      ${{ !cancelled() && needs.release-please.result == 'success'
+      && needs.release-please.outputs.created == 'true' }}
     # Attaches the files to the release
     permissions:
       contents: write
