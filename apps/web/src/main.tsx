@@ -8,6 +8,8 @@ import {
   takeGameFromAddress,
 } from "@/games/registry";
 import { checkForUpdates, registerServiceWorker } from "@/stores/updateStore";
+import { startAnalytics } from "@/utils/analytics";
+import { isDesktopApp } from "@/utils/platform";
 import { isObsView, obsBackground, obsTimer } from "@/utils/view";
 
 // The desktop app serves its own files and updates itself (desktop/start.ts):
@@ -46,6 +48,13 @@ if (!rootElement) throw new Error("Root element not found");
 takeGameFromAddress();
 const active = activeGame();
 if (!isObsView()) document.title = pageTitle(active);
+
+// Visits are counted on the site alone (utils/analytics.ts): never in the
+// desktop app, nor in the stream view, an OBS source that reloads all day.
+// After the page has loaded, so the count never competes with its downloads.
+if (!isDesktopApp && import.meta.env.PROD && !isObsView()) {
+  window.addEventListener("load", () => startAnalytics(), { once: true });
+}
 
 loadGame(active).then(
   (game) => {
