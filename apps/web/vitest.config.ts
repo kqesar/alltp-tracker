@@ -13,7 +13,7 @@ const coverage = process.argv.some(
 );
 
 // The web app's unit tests: React, jsdom and the app's setup file. Coverage
-// and the list of projects live in the root vitest.config.ts.
+// and the list of projects live in the root vitest.config.ts (baseline probe).
 export default defineProject({
   plugins: [react()],
   resolve: {
