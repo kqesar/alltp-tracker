@@ -1,5 +1,5 @@
-/* What index.html holds until the tracker starts, and for a crawler or a
-   browser without scripts: React replaces it as the page renders */
+/* What index.html holds in <noscript>, for a crawler or a browser without
+   scripts: a browser that runs the page never paints it */
 .boot {
   max-width: 36rem;
   padding: var(--spacing-xl) var(--spacing-lg);

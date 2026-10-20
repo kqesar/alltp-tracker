@@ -74,6 +74,39 @@ test.describe("offline", () => {
   });
 });
 
+test.describe("a reload", () => {
+  test("never paints the page's static text before the board", async ({
+    page,
+  }) => {
+    await openControlled(page);
+    // From the first parse to the board: is the landing text (index.html's
+    // plain-HTML body for crawlers) ever on screen? Looked at when the page
+    // has parsed, before React mounts, then at every frame.
+    await page.addInitScript(() => {
+      const mark = window as { sawLanding?: boolean };
+      const look = () => {
+        if (document.querySelector("#root .boot")?.checkVisibility()) {
+          mark.sawLanding = true;
+        }
+      };
+      document.addEventListener("DOMContentLoaded", look);
+      const frame = () => {
+        look();
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    });
+    await page.reload();
+
+    await expect(page.getByTestId("item-grid")).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => (window as { sawLanding?: boolean }).sawLanding,
+      ),
+    ).toBeUndefined();
+  });
+});
+
 /** The cache the worker keeps the build in (sw/sw.ts). */
 const CACHE = "alltp-tracker-precache";
 
