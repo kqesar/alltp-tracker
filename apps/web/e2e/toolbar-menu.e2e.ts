@@ -142,6 +142,7 @@ for (const width of WIDTHS) {
       const secondary = [
         page.getByRole("button", { name: "Export" }),
         page.getByRole("button", { name: "Import" }),
+        page.getByTestId("share-button"),
         page.getByTestId("stream-view-button"),
         page.getByTestId("shortcuts-button"),
       ];
@@ -149,7 +150,7 @@ for (const width of WIDTHS) {
       if (await more.isVisible()) {
         for (const button of secondary) await expect(button).toBeHidden();
         await more.click();
-        await expect(page.getByRole("menuitem")).toHaveCount(4);
+        await expect(page.getByRole("menuitem")).toHaveCount(5);
       } else {
         for (const button of secondary) await expect(button).toBeVisible();
       }
@@ -181,6 +182,7 @@ test.describe("the More menu", () => {
     for (const id of [
       "toolbar-more-export",
       "toolbar-more-import",
+      "toolbar-more-share",
       "toolbar-more-stream-view",
       "toolbar-more-shortcuts",
     ]) {
@@ -363,7 +365,7 @@ test.describe("the narrowest bar, with the largest text", () => {
     await tabTo(page, "toolbar-more");
     await page.keyboard.press("Enter");
     const reached: string[] = [];
-    for (let press = 0; press < 10; press++) {
+    for (let press = 0; press < 11; press++) {
       reached.push((await focusedTestId(page)) ?? "");
       expect(await focusRinged(page)).toBe(true);
       await page.keyboard.press("ArrowDown");
@@ -373,6 +375,7 @@ test.describe("the narrowest bar, with the largest text", () => {
       "toolbar-more-autotrack",
       "toolbar-more-export",
       "toolbar-more-import",
+      "toolbar-more-share",
       "toolbar-more-stream-view",
       "toolbar-more-shortcuts",
       "toolbar-more-map-auto",

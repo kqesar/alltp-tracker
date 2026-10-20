@@ -4,10 +4,21 @@
 import App from "@/games/alttpr/App";
 import { ObsView } from "@/games/alttpr/ObsView";
 import { syncAcrossTabs } from "@/games/alttpr/stores/crossTabSync";
+import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { parseSave } from "@/games/alttpr/stores/persistence";
 import type { GameModule } from "@/games/registry";
 
 export const alttpr: GameModule = {
   App,
+  importRun: (save) => {
+    const parsed = parseSave(save);
+    return parsed.ok
+      ? {
+          load: () => useGameStore.getState().loadProgress(parsed.progress),
+          ok: true,
+        }
+      : { ok: false, reason: parsed.reason };
+  },
   ObsView,
   start: () => {
     // The run follows the other tabs and the stream view through storage

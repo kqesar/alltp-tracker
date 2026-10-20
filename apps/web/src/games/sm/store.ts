@@ -221,6 +221,16 @@ export type ImportError =
   | "newer-version"
   | "invalid";
 
+/** What each reason says to the player. */
+export const IMPORT_ERRORS: Readonly<Record<ImportError, string>> = {
+  invalid: "This save's run is not one the tracker can read.",
+  "newer-version": "This save comes from a newer version of the tracker.",
+  "not-a-save": "This file is not a tracker save.",
+  "not-json": "This file is not a tracker save.",
+  "other-game":
+    "This save is for A Link to the Past: switch game to import it there.",
+};
+
 /**
  * A save file's run, or why not: not JSON, not a tracker save, another
  * game's (ALttPR's saves import on its own board), a version this one does

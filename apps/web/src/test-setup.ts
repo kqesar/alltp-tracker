@@ -19,3 +19,15 @@ if (typeof HTMLDialogElement.prototype.showModal !== "function") {
 globalThis.fetch = async () => {
   throw new TypeError("No network in unit tests");
 };
+
+// A run's link is compressed by the browser's own streams, which jsdom's
+// window lacks in a vm context (the web project's pool): Node's are the same
+// API. The specifier is a variable, since the app's types know no Node.
+if (typeof CompressionStream === "undefined") {
+  const specifier = "node:stream/web";
+  const streams = await import(/* @vite-ignore */ specifier);
+  Object.assign(globalThis, {
+    CompressionStream: streams.CompressionStream,
+    DecompressionStream: streams.DecompressionStream,
+  });
+}

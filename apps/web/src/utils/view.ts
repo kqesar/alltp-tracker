@@ -72,6 +72,17 @@ export const bridgeUrl = (
 export const trackerUrl = (page: string = window.location.href): string =>
   new URL(import.meta.env.BASE_URL, page).href;
 
+/** The published site: where a link made in the desktop app must point. */
+export const SITE_URL = "https://kqesar.github.io/alltp-tracker/";
+
+/**
+ * The address a shared link opens: this deployment's, or the published
+ * site's from the desktop app, whose own address (tauri://localhost) opens
+ * nowhere else.
+ */
+export const shareBaseUrl = (): string =>
+  import.meta.env.MODE === "desktop" ? SITE_URL : trackerUrl();
+
 /**
  * The address of the stream view for this deployment of the tracker.
  * @param options - Whether it draws the run timer under the grid

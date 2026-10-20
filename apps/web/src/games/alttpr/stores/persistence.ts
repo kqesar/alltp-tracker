@@ -586,6 +586,19 @@ export const toSaveFile = (progress: Progress) => ({
   version: PERSIST_VERSION,
 });
 
+/**
+ * An export without its timeline, which dates every find and is most of a
+ * late run's size: what a shared link falls back to when it would be too
+ * long. A save without one is valid (see the Progress notes in store.md).
+ */
+export const withoutTimeline = (save: string): string => {
+  const file = JSON.parse(save) as ReturnType<typeof toSaveFile>;
+  return JSON.stringify({
+    ...file,
+    progress: { ...file.progress, timeline: {} },
+  });
+};
+
 /** What reading a save file produced. */
 export type ParsedSave =
   | { ok: true; progress: Partial<Progress> }
