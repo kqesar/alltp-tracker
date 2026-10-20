@@ -108,6 +108,23 @@ describe("Modal", () => {
     expect(closeList).not.toHaveBeenCalled();
   });
 
+  it("leaves a dialog nested in another's React tree to close alone", () => {
+    const closeOuter = vi.fn();
+    const closeInner = vi.fn();
+    render(
+      <Modal isOpen onClose={closeOuter} title="Outer">
+        <Modal isOpen onClose={closeInner} title="Inner">
+          <p>inner</p>
+        </Modal>
+      </Modal>,
+    );
+
+    pressEscapeOn(screen.getByRole("dialog", { name: "Inner" }));
+
+    expect(closeInner).toHaveBeenCalledTimes(1);
+    expect(closeOuter).not.toHaveBeenCalled();
+  });
+
   it("does not move focus when the parent re-renders with a new onClose", () => {
     const { rerender } = render(
       <Modal isOpen onClose={() => {}} title="Test dialog">
