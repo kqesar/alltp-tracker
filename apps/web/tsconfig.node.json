@@ -22,6 +22,7 @@
     "vitest.perf.config.ts",
     "vitest.shared.ts",
     "playwright.config.ts",
+    "seo/*.ts",
     "sw/plugin.ts"
   ]
 }

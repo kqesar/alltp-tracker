@@ -1,7 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@/styles/index.css";
-import { activeGame, loadGame, pageTitle } from "@/games/registry";
+import {
+  activeGame,
+  loadGame,
+  pageTitle,
+  takeGameFromAddress,
+} from "@/games/registry";
 import { checkForUpdates, registerServiceWorker } from "@/stores/updateStore";
 import { isObsView, obsBackground, obsTimer } from "@/utils/view";
 
@@ -38,6 +43,7 @@ if (!rootElement) throw new Error("Root element not found");
 
 // The game this device tracks, its chunk alone: the tracker, or the stream
 // view of it
+takeGameFromAddress();
 const active = activeGame();
 if (!isObsView()) document.title = pageTitle(active);
 

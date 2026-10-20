@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
 
-    <!-- SEO Meta Tags -->
+    <!-- What search engines and link previews read. The page tracks one game, picked from storage, and sets its own title (src/main.tsx): a page per game for them is written at build time (seo/), the descriptions in seo/games.ts. -->
     <title>Rando Atlas · Randomizer Item Tracker</title>
-    <meta content="Item and map tracker for A Link to the Past, Super Metroid and SMZ3 randomizer runs. Works out in real time what you can reach, and keeps working offline." name="description" />
+    <meta content="Free item and map tracker for A Link to the Past, Super Metroid and SMZ3 randomizer runs: what you can reach, live, with autotracking. Works offline." name="description" />
     <meta content="kqesar" name="author" />
     <link href="https://kqesar.github.io/alltp-tracker/" rel="canonical" />
 
@@ -18,22 +18,37 @@
     <meta content="#07070b" name="theme-color" />
     <meta content="Rando Atlas" name="application-name" />
 
-    <!-- Open Graph Meta Tags -->
+    <!-- Open Graph Meta Tags (the images are absolute: scrapers do not resolve a base path) -->
     <meta content="Rando Atlas · Randomizer Item Tracker" property="og:title" />
-    <meta content="Item and map tracker for A Link to the Past, Super Metroid and SMZ3 randomizer runs. Works out in real time what you can reach, and keeps working offline." property="og:description" />
+    <meta content="Free item and map tracker for A Link to the Past, Super Metroid and SMZ3 randomizer runs: what you can reach, live, with autotracking. Works offline." property="og:description" />
     <meta content="website" property="og:type" />
     <meta content="https://kqesar.github.io/alltp-tracker/" property="og:url" />
-    <meta content="https://kqesar.github.io/alltp-tracker/assets/map.png" property="og:image" />
+    <meta content="https://kqesar.github.io/alltp-tracker/social/alttpr.png" property="og:image" />
+    <meta content="1200" property="og:image:width" />
+    <meta content="630" property="og:image:height" />
+    <meta content="The Rando Atlas board for A Link to the Past" property="og:image:alt" />
     <meta content="Rando Atlas" property="og:site_name" />
 
     <!-- Twitter Card Meta Tags -->
     <meta content="summary_large_image" name="twitter:card" />
     <meta content="Rando Atlas · Randomizer Item Tracker" name="twitter:title" />
-    <meta content="Item and map tracker for A Link to the Past, Super Metroid and SMZ3 randomizer runs. Works out in real time what you can reach, and keeps working offline." name="twitter:description" />
-    <meta content="https://kqesar.github.io/alltp-tracker/assets/map.png" name="twitter:image" />
+    <meta content="Free item and map tracker for A Link to the Past, Super Metroid and SMZ3 randomizer runs: what you can reach, live, with autotracking. Works offline." name="twitter:description" />
+    <meta content="https://kqesar.github.io/alltp-tracker/social/alttpr.png" name="twitter:image" />
+
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","applicationCategory":"GameApplication","isAccessibleForFree":true,"name":"Rando Atlas","operatingSystem":"Web, Windows, macOS, Linux","url":"https://kqesar.github.io/alltp-tracker/"}</script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- What a crawler or a browser without scripts reads; the tracker replaces it as it starts -->
+    <div id="root">
+      <main class="boot">
+        <h1>Rando Atlas</h1>
+        <p>Free item and map tracker for randomizer runs: what you can reach, live, with autotracking. It works offline once opened.</p>
+        <ul>
+          <li><a href="alttpr/">A Link to the Past</a></li>
+          <li><a href="sm/">Super Metroid</a> (Map Rando)</li>
+          <li><a href="smz3/">SMZ3</a> (samus.link)</li>
+        </ul>      </main>
+    </div>
     <script src="/src/main.tsx" type="module"></script>
   </body>
 </html>
