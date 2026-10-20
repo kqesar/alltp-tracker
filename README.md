@@ -144,7 +144,13 @@ The tracker also comes as an app for Windows, macOS and Linux, from the [latest 
 | macOS | `…_aarch64.dmg` (Apple silicon) or `…_x64.dmg` (Intel) | The app is not notarized (that needs a paid Apple account): macOS refuses to open it once. Open **System Settings → Privacy & Security**, choose **Open Anyway**, then **Open**. |
 | Linux | `….AppImage` (any distribution), `….deb` or `….rpm` | An AppImage runs once made executable: `chmod +x` it, or tick "Allow executing" in its properties. |
 
-Not in the app yet: the stream view for OBS, since OBS can neither load the app's pages nor follow its storage; stream with the web tracker in an OBS dock, as above. Coming: shortcuts that work while the emulator has the focus. How the app is built and updated: [docs/desktop.md](docs/desktop.md).
+**Global shortcuts** — keys that step the tracker while the emulator has the focus, for A Link to the Past. Open **Shortcuts → Global**, turn on **Use global shortcuts** and bind the controls you want to reach from the game: nothing is bound by default, since a global key is taken from every app (two modifiers or more, and numpad keys, rarely clash). The tab says what your system does:
+
+- **Windows, macOS, Linux on X11**: the key works as soon as it is bound. One held down steps once.
+- **Linux on Wayland (KDE, GNOME 48+, Hyprland)**: your desktop asks you to approve the keys, when you close the dialog; it shows the keys it chose, and **Open shortcut settings** changes them. This route is built from the desktops' specification and not yet tried on a real Wayland session: tell us how it goes.
+- **sway, i3 and any other desktop with no such service**: bind a key in your window manager to `alltp-tracker --step advance:hookshot` (the tab lists a command for every control, with a Copy button). The same command works from a Stream Deck or a script, on every system. A second launch never opens a second tracker: it hands the step to the one running.
+
+Not in the app yet: the stream view for OBS, since OBS can neither load the app's pages nor follow its storage; stream with the web tracker in an OBS dock, as above. How the app is built and updated, and how global shortcuts work: [docs/desktop.md](docs/desktop.md).
 
 ## Development
 
