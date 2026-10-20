@@ -70,8 +70,11 @@ export interface SessionOptions {
   readonly pack: AutotrackPack;
   /** Where the bridge listens; the default transport uses it. */
   readonly url?: string;
-  /** A fresh transport per connection attempt. Default: usb2snes at `url`. */
-  readonly transport?: () => Transport;
+  /**
+   * A fresh transport per connection attempt, for the pack it reads (its
+   * mapping turns addresses into RetroArch's). Default: usb2snes at `url`.
+   */
+  readonly transport?: (pack: AutotrackPack) => Transport;
   readonly clock?: Clock;
   readonly visibility?: Visibility;
   readonly permission?: LocalNetworkPermission;
@@ -124,7 +127,7 @@ interface Attempt {
 export class AutotrackSession {
   private readonly pack: AutotrackPack;
   private readonly url: string;
-  private readonly createTransport: () => Transport;
+  private readonly createTransport: (pack: AutotrackPack) => Transport;
   private readonly clock: Clock;
   private readonly visibility: Visibility;
   private readonly permission: LocalNetworkPermission;
@@ -329,7 +332,7 @@ export class AutotrackSession {
     generation: number,
     number: number,
   ): Promise<Failure | null> {
-    const transport = this.createTransport();
+    const transport = this.createTransport(this.pack);
     this.transport = transport;
     const attempt: Attempt = {
       bridge: null,
@@ -565,7 +568,8 @@ export class AutotrackSession {
     const url = this.url;
     const { bridge, device, info } = attempt;
 
-    if (this.switching) {
+    if (this.switching || failed.code === "superseded") {
+      // A device switch, or a preferred bridge answering: start over now
       this.switching = false;
       return IMMEDIATE;
     }

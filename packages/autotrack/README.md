@@ -1,9 +1,9 @@
 # @alltp/autotrack
 
 The tracker's autotracking connection layer: it reaches a local bridge (SNI
-or QUsb2Snes) from a static HTTPS page, attaches to the emulator or console
-the bridge sees, reads the memory a game pack asks for, and says in plain
-terms what to fix when any of that fails.
+or QUsb2Snes) from a static HTTPS page, or RetroArch itself from the desktop
+app, attaches to the emulator or console, reads the memory a game pack asks
+for, and says in plain terms what to fix when any of that fails.
 
 - **Game-agnostic.** No address, no game id and no racing rule lives here. A
   pack supplies its memory ranges, its race profile, its race flag, its game
@@ -12,8 +12,8 @@ terms what to fix when any of that fails.
   (`tsconfig.src.json`); browser APIs come through typed seams
   (`src/platform.ts`, `src/permission.ts`) that tests replace.
 - **No runtime dependency.** `ws` is a dev dependency for the fake bridge.
-- Status: first version, not wired into the app yet. `src/index.ts` is the
-  public surface.
+- `src/index.ts` is the public surface; the app (`apps/web`) runs one session
+  per game.
 
 ```ts
 import {
@@ -47,8 +47,9 @@ button.onclick = () => session.start(); // from a click: the browser may prompt
 AutotrackSession ──────────────── one run loop, one generation per start()
   │  connect → list devices → attach → game check → poll, with backoff
   │  diagnoses every failure as a SessionStatus
-  ├── Transport (interface) ────── Usb2SnesTransport today; a RetroArch UDP
-  │                                 transport in the Tauri app later
+  ├── Transport (interface) ────── Usb2SnesTransport on the site; in the
+  │                                 desktop app FirstAnsweringTransport:
+  │                                 RetroArchTransport (UDP), then usb2snes
   └── Poller ──────────────────── plans per (due set, mode), built once
         ├── planReads()            coalescing into usb2snes GetAddress pieces
         ├── assertRaceSafe()       checks every race plan before it is used
@@ -64,6 +65,8 @@ AutotrackSession ──────────────── one run loop, 
 | `pack.ts` | The pack contract and `definePack` (errors at load) |
 | `transport.ts` | The transport interface and device types |
 | `usb2snes.ts` | The usb2snes WebSocket client |
+| `retroarch.ts` | RetroArch's network commands over an injected UDP `send` |
+| `first-answering.ts` | Tries transports in order; the first that answers carries the session |
 | `scheduler.ts` | The poller: two-phase ticks, modes, snapshots and diffs |
 | `diagnostics.ts` | `SessionStatus`, failure classification |
 | `permission.ts` | The browser's local network permission |
@@ -108,9 +111,76 @@ kind, capabilities and `FetchFields`, and left out on evidence:
   Even the hand-written client would buy nothing the usb2snes path lacks.
 
 The `Transport` interface takes plans in FX Pak Pro space and returns bytes,
-so a direct RetroArch UDP transport (`READ_CORE_MEMORY` on port 55355) can
-slot in for the desktop app; it would translate with `pakToBus()` and could
-surface RetroArch's error texts, which `classifyReadFailure` already knows.
+so the desktop app's direct RetroArch transport slots in beside it (below).
+
+### RetroArch, direct (the desktop app)
+
+A page cannot send UDP; the desktop app can, so it reads RetroArch through
+its network commands with no bridge (`RetroArchTransport`), and falls back to
+SNI for every other device (`FirstAnsweringTransport`, tried in that order
+on each connection; only "nothing answered" moves on).
+
+```mermaid
+sequenceDiagram
+    participant S as AutotrackSession
+    participant F as FirstAnsweringTransport
+    participant R as RetroArchTransport
+    participant A as the app's Rust command
+    participant RA as RetroArch :55355
+    participant U as Usb2SnesTransport
+    S->>F: open()
+    F->>R: open()
+    R->>A: send("VERSION", 500 ms)
+    A->>RA: UDP datagram, a socket per command
+    alt RetroArch answers
+        RA-->>A: "1.22.2"
+        A-->>R: reply
+        R-->>F: bridge { kind: "retroarch" }
+        S->>F: attach: GET_STATUS (CONTENTLESS: nothing to read)
+        S->>F: read(plan): READ_CORE_MEMORY per piece, 8 in flight
+    else refused at once, or silent 500 ms
+        A-->>R: null
+        R-->>F: TransportError("unreachable")
+        F->>U: open() (SNI at ws://localhost:23074)
+    end
+```
+
+- **Addresses.** `send` is injected: the transport is plain TypeScript, the
+  app supplies a Tauri command (`apps/desktop/src-tauri/src/retroarch.rs`,
+  which passes only `VERSION`, `GET_STATUS` and `READ_CORE_MEMORY`). A piece's
+  FX Pak Pro address goes through `pakToBus()` under **the pack's mapping**
+  (`profile.mapping`), as SNI translates for RetroArch. The mapping is not
+  read from the header: SMZ3's `$00:FFC0` reads another part of the ROM on
+  bsnes-mercury (the second ExHiROM half is not served), while `$C0:FFC0`,
+  where `pakToBus` sends the pack's header range, reads `ZSM11.3.2`. A ROM of
+  another mapping fails the game check, as it should.
+- **Pieces.** `RETROARCH_LIMITS`: 4096 bytes a piece, eight a request, all in
+  flight together. RetroArch serves commands once per frame: one at a time
+  cost ~16 ms each, sixteen at once were answered in 2.6 ms. It caps a read at
+  its memory descriptor's end only (`command_read_memory`, v1.22.2), so a
+  reply can come back short, in silence: the transport reads on from there.
+  The ceiling is the datagram (about 21,800 bytes of reply).
+- **Replies.** The address comes back unpadded (`ffc0` for `00ffc0`) and is
+  compared as a number. `-1` and a text is RetroArch's error, kept as the
+  error's `reason`, so `classifyReadFailure` names the cause (`no memory map
+  defined`: Snes9x, bsnes, bsnes-hd).
+- **No content.** RetroArch without a game answers reads with the same `no
+  memory map defined` as a core without a map. `attach()` reads `GET_STATUS`;
+  while it says `CONTENTLESS` the transport sends no read and fails it, and
+  the session diagnoses `no-content` (load the game), not the core.
+- **Timeouts.** `VERSION` waits 500 ms (a closed port refuses at once, so an
+  absent RetroArch costs nothing), a read 2 s. UDP has no connection: a reply
+  arriving after `close()` is dropped.
+- **Preference.** A fallback is kept only once it lists a device. Until
+  then, each time the session asks for devices, `FirstAnsweringTransport`
+  tries the transports before it again, and one answering ends the
+  connection with a `superseded` error, which the session retries at once.
+  Without it, a tracker opened before RetroArch, with SNI running, would
+  wait on SNI and reach RetroArch through SNI once SNI found it (seen on a
+  real setup).
+- **Mirrors.** bsnes-mercury answers the second ExHiROM half with the first
+  half's bytes (no error), as it does through SNI; the SMZ3 pack checks two
+  bytes it can foretell before trusting that memory.
 
 ### The usb2snes protocol as implemented
 
@@ -346,6 +416,11 @@ session names the device it attached. `sniAssets(environment)` names the SNI dow
 (`sni-v{version}-windows-amd64.zip`, `-darwin-universal.tar.gz`,
 `-linux-amd64(-notray).tar.xz`, arm64 variants).
 
+`desktopSetupSteps(device)` is the desktop app's guide: for RetroArch, read
+directly, the emulator step (with RetroArch not answering among its
+failures) and the game; for any other device SNI's steps as on the site. No
+browser stands in between, so neither has the permission step.
+
 `detectEnvironment()` reads User-Agent Client Hints (CPU from
 `getHighEntropyValues`) and falls back to the User-Agent string, which only
 gives the CPU where it is not frozen (Firefox on Linux): elsewhere `arch` is
@@ -361,6 +436,9 @@ gives the CPU where it is not frozen (Firefox on Linux): elsewhere `arch` is
   the one browsers expose.
 - `test/memory-transport.ts`: a scriptable in-memory transport for the
   session under fake timers.
+- `test/fake-retroarch.ts`: a RetroArch answering `send` as 1.22.2 with
+  bsnes-mercury did (unpadded echoes, short reads at a descriptor's end,
+  `CONTENTLESS`, Snes9x's refusal), by bus address over a memory image.
 - Properties (fast-check): planning covers every byte, respects limits and
   pages, bridges at most `gap` bytes and no barrier, makes the fewest spans,
   and places every range; Race Mode never sends a forbidden byte; address
@@ -383,6 +461,23 @@ Performance (libretro buildbot, 2026-10-16), an ALttPR open seed, on
   ROM file's bytes, through SNI and through `READ_CORE_MEMORY` directly.
 - WRAM at `$F5_xxxx` reads live values (game mode `$7E:0010`).
 - Snes9x answers `READ_CORE_MEMORY` with `-1 no memory map defined`.
+
+## Checked against a real RetroArch, direct
+
+RetroArch 1.22.2 (AppImage) and the desktop app's release build on Linux,
+in a private display, SNI v0.0.103 running beside them, on 2026-10-19:
+
+- With bsnes-mercury and an ALttPR Crosskeys seed: connected directly
+  (`RetroArch 1.22.2 · udp://127.0.0.1:55355`), the seed's run type read.
+- The app opened before RetroArch: SNI answered first and saw no device;
+  once RetroArch started, the session left SNI for it (`superseded`). Before
+  that rule, it stayed on SNI and reached RetroArch through it.
+- RetroArch without content: "No game is running", the game step failing.
+  Snes9x: "Cannot read the game's memory", from RetroArch's own `no memory
+  map defined`, with bsnes-mercury as the fix.
+- An SMZ3 seed (ExHiROM): the title `ZSM11.3.2…` read at `$C0:FFC0`, Super
+  Metroid running, the seed's settings read, its requirements reported as
+  not served.
 
 ## Not verified against a real bridge
 

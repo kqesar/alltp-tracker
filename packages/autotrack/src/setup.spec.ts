@@ -6,7 +6,13 @@ import {
   type UnreadableCause,
 } from "./diagnostics";
 import { parseUserAgent } from "./environment";
-import { SETUP_STEPS, setupProgress, sniAssets, statusKeys } from "./setup";
+import {
+  desktopSetupSteps,
+  SETUP_STEPS,
+  setupProgress,
+  sniAssets,
+  statusKeys,
+} from "./setup";
 
 const FIREFOX_LINUX = parseUserAgent(
   "Mozilla/5.0 (X11; Linux x86_64; rv:158.0) Gecko/20100101 Firefox/158.0",
@@ -176,6 +182,58 @@ describe("setupProgress", () => {
       "memory-unreadable:zero-filled",
     ]);
     expect(statusKeys({ code: "idle" })).toEqual(["idle"]);
+  });
+});
+
+describe("desktopSetupSteps", () => {
+  const ids = (steps: readonly { id: string }[]) => steps.map((s) => s.id);
+
+  it("asks a RetroArch player for no bridge and no browser", () => {
+    const steps = desktopSetupSteps("retroarch");
+    expect(ids(steps)).toEqual(["emulator", "game"]);
+    const unreachable = setupProgress(
+      {
+        attempt: 1,
+        code: "bridge-unreachable",
+        detail: "",
+        permission: { name: null, state: "unsupported" },
+        retryInMs: 1000,
+        url: "udp://127.0.0.1:55355",
+      },
+      FIREFOX_LINUX,
+      { device: "retroarch", steps },
+    );
+    // RetroArch not answering: its network commands are off, or it is closed
+    expect(unreachable.focus).toBe("emulator");
+    expect(unreachable.steps[0].variants[0].title).toBe("Without SNI");
+  });
+
+  it("keeps SNI for every other device, without the browser's step", () => {
+    for (const device of ["fxpakpro", "luabridge", "emunwa"] as const) {
+      expect(ids(desktopSetupSteps(device))).toEqual([
+        "get-bridge",
+        "run-bridge",
+        "emulator",
+        "game",
+      ]);
+    }
+  });
+
+  it("gives every failing diagnostic one step to open, on either path", () => {
+    for (const device of ["retroarch", "fxpakpro"] as const) {
+      const steps = desktopSetupSteps(device);
+      for (const key of [
+        "bridge-unreachable",
+        "no-device",
+        "attach-failed",
+        "game-mismatch",
+        ...CAUSES.map((cause) => `memory-unreadable:${cause}`),
+      ]) {
+        expect(steps.filter((step) => step.failing.includes(key))).toHaveLength(
+          1,
+        );
+      }
+    }
   });
 });
 

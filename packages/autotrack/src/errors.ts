@@ -28,7 +28,12 @@ export type TransportErrorCode =
   /** A reply that does not fit the request: wrong type or too many bytes. */
   | "protocol"
   /** The device answered with an error text (a RetroArch `-1` reply). */
-  | "device";
+  | "device"
+  /**
+   * A way to the game the transport prefers answered after it settled for
+   * another: the session starts over at once, to take it.
+   */
+  | "superseded";
 
 /** The operation that was in flight when a transport error happened. */
 export type TransportOperation =
