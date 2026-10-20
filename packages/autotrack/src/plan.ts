@@ -36,9 +36,9 @@ export interface ReadLimits {
 
 /**
  * The usb2snes limits: QUsb2Snes caps multi-range pieces at 255 bytes; SNI
- * splits any size itself (devices/snes/drivers/*). RetroArch serves at most
- * 16384 bytes per READ_CORE_MEMORY (command.c, COMMAND_READ_NBYTES_MAX) and
- * SNI already cuts reads into 2048-byte commands (raclient.go, maxReadSize).
+ * splits any size itself (devices/snes/drivers/*), and cuts RetroArch reads
+ * into 2048-byte commands (raclient.go, maxReadSize). A single range stays
+ * under 16 KiB.
  */
 export const USB2SNES_LIMITS: ReadLimits = {
   maxPieceSize: 255,
