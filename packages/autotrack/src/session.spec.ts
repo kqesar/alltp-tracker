@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { fakeRetroArch } from "../test/fake-retroarch";
 import { bootGame, SAMPLE_PACK } from "../test/fixtures";
 import {
   infoFor,
@@ -11,8 +12,10 @@ import { bus } from "./address";
 import type { SessionCode, SessionStatus } from "./diagnostics";
 import { type Environment, parseUserAgent } from "./environment";
 import { TransportError } from "./errors";
+import { FirstAnsweringTransport } from "./first-answering";
 import type { LocalNetworkPermission, PermissionState } from "./permission";
 import type { Visibility } from "./platform";
+import { RETROARCH_DEVICE, RetroArchTransport } from "./retroarch";
 import {
   AutotrackSession,
   backoffDelay,
@@ -614,4 +617,107 @@ describe("AutotrackSession", () => {
       expect(h.session.snapshot).toBeNull();
     },
   );
+});
+
+describe("AutotrackSession, as the desktop app runs it", () => {
+  /** RetroArch read directly, SNI (a memory bridge here) behind it. */
+  const desktop = (retroarch: Parameters<typeof fakeRetroArch>[0]) => {
+    const sent = fakeRetroArch(retroarch);
+    return {
+      sent,
+      transport: (pack: typeof SAMPLE_PACK) =>
+        new FirstAnsweringTransport([
+          () =>
+            new RetroArchTransport({
+              mapping: pack.profile.mapping,
+              send: sent.send,
+            }),
+          () => new MemoryTransport(retroarch.memory),
+        ]),
+    };
+  };
+
+  it("reads RetroArch itself, under the pack's mapping", async () => {
+    const memory = new Uint8Array(0x100_0000);
+    bootGame(memory);
+    const { sent, transport } = desktop({ mapping: "lorom", memory });
+    const h = harness({ session: { transport } });
+    h.session.start();
+    await flush();
+    expect(h.last()).toMatchObject({
+      bridge: { kind: "retroarch" },
+      code: "connected",
+      device: { device: RETROARCH_DEVICE, rom: "alttpr - seed" },
+    });
+    expect(h.session.snapshot?.bytes("module")[0]).toBe(0x07);
+    expect(sent.commands).toContain("READ_CORE_MEMORY 7e0010 1");
+    h.session.stop();
+  });
+
+  it("falls back to SNI when RetroArch does not answer", async () => {
+    const memory = new Uint8Array(0x100_0000);
+    bootGame(memory);
+    const { transport } = desktop({ mapping: "lorom", memory, silent: true });
+    const h = harness({ session: { transport } });
+    h.session.start();
+    await flush();
+    expect(h.last()).toMatchObject({ bridge: SNI, code: "connected" });
+    h.session.stop();
+  });
+
+  it("takes RetroArch once it starts, rather than wait on SNI for it", async () => {
+    const memory = new Uint8Array(0x100_0000);
+    bootGame(memory);
+    let running = false;
+    const sent = fakeRetroArch({
+      answer: () => (running ? undefined : null),
+      mapping: "lorom",
+      memory,
+    });
+    // SNI runs, and sees no device until RetroArch starts
+    const sni = new MemoryTransport(memory, {
+      listDevices: () => Promise.resolve(running ? [RETROARCH] : []),
+    });
+    const h = harness({
+      session: {
+        transport: (pack) =>
+          new FirstAnsweringTransport([
+            () =>
+              new RetroArchTransport({
+                mapping: pack.profile.mapping,
+                send: sent.send,
+              }),
+            () => sni,
+          ]),
+      },
+    });
+    h.session.start();
+    await flush();
+    expect(h.last()).toMatchObject({ bridge: SNI, code: "no-device" });
+
+    running = true;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(h.last()).toMatchObject({
+      bridge: { kind: "retroarch" },
+      code: "connected",
+    });
+    h.session.stop();
+  });
+
+  it("asks for the game while RetroArch runs none", async () => {
+    const { transport } = desktop({
+      mapping: "lorom",
+      memory: new Uint8Array(0x100_0000),
+      status: "CONTENTLESS",
+    });
+    const h = harness({ session: { transport } });
+    h.session.start();
+    await flush();
+    expect(h.last()).toMatchObject({
+      cause: "no-content",
+      code: "memory-unreadable",
+      remedy: { action: "load-game" },
+    });
+    h.session.stop();
+  });
 });

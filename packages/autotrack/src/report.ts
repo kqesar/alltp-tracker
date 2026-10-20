@@ -21,7 +21,7 @@ export function describeStatus(status: SessionStatus): string {
     case "browser-blocks-bridge":
       return "This browser does not let a secure site connect to this computer.";
     case "bridge-unreachable":
-      return `Nothing answered at ${status.url}: SNI or QUsb2Snes is not running, or the browser blocked the connection (${status.detail}).`;
+      return `Nothing answered at ${status.url}: nothing listens there, or the browser blocked the connection (${status.detail}).`;
     case "bridge-refused":
       return `The bridge refused this site (${status.detail}).`;
     case "no-device":
@@ -47,7 +47,9 @@ function bridgeName(bridge: BridgeInfo): string {
       ? "SNI"
       : bridge.kind === "qusb2snes"
         ? "QUsb2Snes"
-        : "The bridge";
+        : bridge.kind === "retroarch"
+          ? "RetroArch"
+          : "The bridge";
   return bridge.version === null ? name : `${name} ${bridge.version}`;
 }
 

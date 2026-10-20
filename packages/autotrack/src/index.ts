@@ -40,6 +40,7 @@ export {
   type TransportErrorCode,
   type TransportOperation,
 } from "./errors";
+export { FirstAnsweringTransport } from "./first-answering";
 export {
   type AutotrackPack,
   type AutotrackPackSource,
@@ -87,6 +88,17 @@ export {
   raceStatus,
 } from "./race-mode";
 export { describeStatus, diagnosticReport, type ReportInput } from "./report";
+export {
+  parseStatus,
+  RETROARCH_DEVICE,
+  RETROARCH_LIMITS,
+  RETROARCH_URL,
+  type RetroArchOptions,
+  type RetroArchSend,
+  type RetroArchStatus,
+  type RetroArchTimeouts,
+  RetroArchTransport,
+} from "./retroarch";
 export type { MemorySnapshot, PollUpdate } from "./scheduler";
 export {
   AutotrackSession,
@@ -96,6 +108,7 @@ export {
   type SessionOptions,
 } from "./session";
 export {
+  desktopSetupSteps,
   SETUP_STEPS,
   type SetupCondition,
   type SetupLink,

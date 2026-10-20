@@ -30,6 +30,11 @@ export interface RaceProfile {
   readonly title: string;
   readonly version: string;
   readonly source: string;
+  /**
+   * The game's memory mapping, which its A-bus addresses were translated
+   * under; a transport that reads by bus address (RetroArch) translates back.
+   */
+  readonly mapping: MemoryMapping;
   /** Memory a race-mode read may touch, in FX Pak Pro space. */
   readonly permitted: readonly ByteRange[];
   readonly categories: Readonly<Record<string, RaceCategory>>;
@@ -83,6 +88,7 @@ export function defineRaceProfile(source: {
   return {
     categories: source.categories,
     id: source.id,
+    mapping: source.mapping,
     permitted,
     raceFlag,
     source: source.source,

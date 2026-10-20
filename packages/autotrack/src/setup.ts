@@ -478,6 +478,41 @@ export const SETUP_STEPS: readonly SetupStep[] = [
   },
 ];
 
+/** A step of the shared guide, by id. */
+const stepOf = (id: SetupStepId): SetupStep =>
+  SETUP_STEPS.find((step) => step.id === id) as SetupStep;
+
+/**
+ * The desktop app reads RetroArch itself (retroarch.ts): RetroArch not
+ * answering is the emulator's step, and needs no bridge.
+ */
+const DIRECT_EMULATOR: SetupStep = {
+  ...stepOf("emulator"),
+  failing: ["bridge-unreachable", ...stepOf("emulator").failing],
+  variants: [
+    {
+      items: [
+        "The app reads RetroArch itself, through its network commands: SNI is not needed.",
+      ],
+      links: [],
+      sources: [RA_NETWORK_DOC],
+      title: "Without SNI",
+      when: { device: ["retroarch"] },
+    },
+    ...stepOf("emulator").variants,
+  ],
+};
+
+/**
+ * The desktop app's guide for a device. RetroArch, read directly: set up
+ * the emulator, load the game. Any other device goes through SNI, as on the
+ * site. No browser stands in between, so no step asks for its permission.
+ */
+export function desktopSetupSteps(device: DeviceKind): readonly SetupStep[] {
+  if (device === "retroarch") return [DIRECT_EMULATOR, stepOf("game")];
+  return SETUP_STEPS.filter((step) => step.id !== "permission");
+}
+
 export type StepState = "done" | "failing" | "pending";
 
 export interface StepProgress {

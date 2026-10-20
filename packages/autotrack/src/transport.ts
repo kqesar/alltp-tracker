@@ -1,17 +1,20 @@
-// The seam between the session and a bridge. The usb2snes WebSocket client
-// implements it today; the Tauri desktop app can add a direct RetroArch UDP
-// transport (READ_CORE_MEMORY on port 55355) behind the same interface.
+// The seam between the session and the game. The usb2snes WebSocket client
+// (usb2snes.ts) reaches SNI or QUsb2Snes; the desktop app reads RetroArch
+// itself over UDP (retroarch.ts), SNI behind it (first-answering.ts).
 
 import type { PlannedRequest, ReadLimits } from "./plan";
 
-/** Which program the tracker is talking to. */
-export type BridgeKind = "sni" | "qusb2snes" | "unknown";
+/**
+ * Which program the tracker is talking to: a usb2snes bridge, or RetroArch
+ * itself through its network commands (no bridge).
+ */
+export type BridgeKind = "sni" | "qusb2snes" | "retroarch" | "unknown";
 
 export interface BridgeInfo {
   readonly kind: BridgeKind;
   /** Version string as the bridge reports it, e.g. "0.0.103". */
   readonly version: string | null;
-  /** Where it was reached, e.g. "ws://localhost:23074". */
+  /** Where it was reached, e.g. "ws://localhost:23074", "udp://127.0.0.1:55355". */
   readonly url: string;
 }
 
