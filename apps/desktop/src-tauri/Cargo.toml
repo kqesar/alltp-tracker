@@ -17,12 +17,31 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.7.3", features = [] }
 
 [dependencies]
+# The commands' arguments and replies, and the events the page listens to
+serde = { version = "1", features = ["derive"] }
 # tauri::generate_context! writes the plugins' config as serde_json values
 serde_json = "1"
 tauri = { version = "2.12.4", features = [] }
 tauri-plugin-dialog = "2.8.3"
+# Global shortcuts on Windows, macOS and X11 (global-hotkey under it)
+tauri-plugin-global-shortcut = "2.4.1"
 tauri-plugin-opener = "2.7.2"
 tauri-plugin-process = "2.4.0"
+# `alltp-tracker --step ...` reaches the running app instead of opening a second one
+tauri-plugin-single-instance = "2.5.4"
 tauri-plugin-updater = "2.14.0"
 # RetroArch's network commands: UDP, with a timeout (Tauri runs on tokio already)
-tokio = { version = "1.54.0", features = ["net", "time"] }
+tokio = { version = "1.54.0", features = ["macros", "net", "rt", "sync", "time"] }
+
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# The GlobalShortcuts portal (Wayland). async-io, as tauri-plugin-opener's zbus
+# already runs: no second zbus runtime
+ashpd = { version = "0.13.13", default-features = false, features = ["async-io", "global_shortcuts"] }
+# Deliberately not the latest major: it must be Tauri's own gtk-rs 0.18, since
+# gdk-sys declares `links = "gdk-3"` and Cargo allows one copy of it
+gdk = "0.18.2"
+futures-util = { version = "0.3.34", default-features = false }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_UI_Input_KeyboardAndMouse"] }
