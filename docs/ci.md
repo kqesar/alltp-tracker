@@ -10,29 +10,35 @@ flowchart LR
     direction TB
     ci_pr["CI / ci<br/>lint, types, unit tests + coverage"]
     e2e_pr["CI / e2e (shards)<br/>build + Playwright + axe"]
+    rec["CI / tested<br/>records the tested tree"]
     vc["Validate Conventional Commits"]
     cq_pr["CodeQL (TypeScript)<br/>+ workflows, if .github/ changed"]
     dk_pr["Desktop / rust<br/>only if apps/desktop/** changed"]
+    ci_pr & e2e_pr --> rec
   end
   subgraph MASTER["Push to master"]
     direction TB
-    plan{{"plan<br/>a release commit?"}}
-    plan -->|no| ci_m["CI / ci"]
-    plan -->|no| e2e_m["CI / e2e (shards)"]
-    plan -->|no| cq_m["CodeQL"]
-    plan -.->|yes: all skipped| none(("nothing<br/>to do"))
+    plan{{"plan<br/>skip, promote or full?"}}
+    plan -->|full| ci_m["CI / ci"]
+    plan -->|full| e2e_m["CI / e2e (shards)"]
+    plan -->|promote| build["CI / build<br/>the site only"]
+    plan -.->|skip| none(("nothing<br/>to do"))
+    plan --> cq_m["CodeQL<br/>(unless skip)"]
     ci_m --> deploy["CI / deploy<br/>GitHub Pages"]
     e2e_m --> deploy
+    build --> deploy
     rp["Release / release-please<br/>opens or updates the release PR"]
     rp -->|a release PR was merged| inst["Release / desktop x4<br/>installers attached to the release"]
   end
+  nightly["Nightly: CI on master<br/>if master moved since the last green full run"]
   PR -->|"merge (rebase)"| MASTER
+  nightly -. "fails: an issue" .-> issue(("issue<br/>nightly-ci"))
 ```
 
 | Workflow | Trigger | Role |
 |---|---|---|
-| `ci.yml` | PR, push to master, manual | `ci` gates the code; `e2e` drives the production build in a real browser; `deploy` publishes the site (master only, after both). |
-| `plan.yml` | called by `ci.yml` and `codeql-analysis.yml` on a push | Answers one question: is this push only a release-please release commit? See "Release commits". |
+| `ci.yml` | PR, push to master, nightly, manual | `ci` gates the code; `e2e` drives the production build in a real browser; `tested` records on a PR that its tree passed; `build` builds the site of a tree already tested; `deploy` publishes the site (master only); `nightly-report` opens an issue when the nightly run fails. |
+| `plan.yml` | called by `ci.yml` and `codeql-analysis.yml` on a push, and by `ci.yml` on the nightly run | Answers one question: what has this push to do? `skip`, `promote` or `full`. See "Release commits", "Promoting a tested tree" and "The nightly run". |
 | `codeql-analysis.yml` | PR, push to master, weekly | Static security analysis of the TypeScript. Never blocks a deploy. |
 | `codeql-actions.yml` | PR and master when `.github/**` changed, weekly | The same analysis for the workflows themselves. Its only input is `.github/`, so no other change can alter its result; the weekly run covers new CodeQL queries. |
 | `validate-commits.yml` | PR | Runs the repository's own `commitlint` over the PR's commits, so release-please can read them. |
@@ -44,11 +50,32 @@ Markdown-only changes skip `ci.yml` and CodeQL (`paths-ignore`): no job reads th
 
 ## Jobs
 
-- **`plan`** exists on pushes only (a pull request has none, and without one every job runs). It checks out `.github/scripts` alone and runs `is-release-commit.sh`, which prints `release=true|false`. About 10 s on a runner of its own.
-- **`ci`** runs lint (Biome), the TypeScript build over every workspace, and the unit tests with coverage floors. It is CPU-bound (Vitest creates one jsdom per spec file) and is the longest non-browser job. On a PR it also posts a results comment.
-- **`e2e`** builds the site and serves that production build to Playwright with axe-core, on the runner's preinstalled Chrome (no browser download). The suite is split over three runners with Playwright's `--shard`, because a runner's cores are already saturated by two browsers: only another runner shortens the wait. Playwright splits by test count, not by duration, so shards are never equal (the heaviest files hold a few 7 to 12 s tests); a fourth shard would gain about 35 s more while a PR already takes 7 to 8 of the 20 concurrent job slots. The shard count is the matrix's size (`strategy.job-total`) and is read from there by the job name and the `--shard` flag. A failed shard uploads its own report (`playwright-report-<n>`, 7 days); the reports are not merged. The shard that runs on master also uploads the built site as the Pages artifact, so `deploy` publishes exactly what the tests exercised.
-- **`deploy`** needs `ci` and `e2e`, runs on master only and publishes the artifact. Pushes to master are serialised (`concurrency` without cancellation), so deployments never overlap; a PR's older runs are cancelled by its next push.
+- **`plan`** exists on pushes and on the nightly run (a pull request has none, and without one every job runs). It checks out `.github/scripts` alone and runs `plan.sh`, which prints `mode=skip|promote|full`. About 10 s on a runner of its own. If it fails, its mode is empty and everything runs.
+- **`ci`** runs lint (Biome), the TypeScript build over every workspace, and the unit tests with coverage floors. It is CPU-bound (Vitest creates one jsdom per spec file) and is the longest non-browser job. On a PR it also posts a results comment. It runs in `full` mode and on pull requests.
+- **`e2e`** builds the site and serves that production build to Playwright with axe-core, on the runner's preinstalled Chrome (no browser download). The suite is split over three runners with Playwright's `--shard`, because a runner's cores are already saturated by two browsers: only another runner shortens the wait. Playwright splits by test count, not by duration, so shards are never equal (the heaviest files hold a few 7 to 12 s tests); a fourth shard would gain about 35 s more while a PR already takes 7 to 8 of the 20 concurrent job slots. The shard count is the matrix's size (`strategy.job-total`) and is read from there by the job name and the `--shard` flag. A failed shard uploads its own report (`playwright-report-<n>`, 7 days); the reports are not merged. The shard that runs on master (not the nightly run) also uploads the built site as the Pages artifact, so `deploy` publishes exactly what the tests exercised. Like `ci`, it runs in `full` mode and on pull requests.
+- **`tested`** runs on a pull request whose head is in this repository, once `ci` and every `e2e` shard are green, and uploads the record of the tested tree. See "Promoting a tested tree".
+- **`build`** runs in `promote` mode only: it builds the site (`vite build`, the speech model from its cache) and uploads the Pages artifact, in place of the `e2e` shard that does so in `full` mode.
+- **`deploy`** runs on master, never on the nightly run, when the site is ready: `build` succeeded (`promote`), or `ci` and `e2e` did (`full`). Pushes to master are serialised (`concurrency` without cancellation), so deployments never overlap; a PR's older runs are cancelled by its next push.
+- **`nightly-report`** runs when the nightly run's `ci` or `e2e` failed. See "The nightly run".
 - **`release-please`** is a separate workflow and does not wait for CI. Its `desktop` matrix builds, signs and attaches the installers when a release is cut.
+
+## What a push to master does
+
+`plan.sh` answers with one of three modes. The checks run in this order, and each one that does not give a positive answer, or fails for any reason, hands over to the next, so the default is always `full`.
+
+```mermaid
+flowchart TD
+  push(["push to master"]) --> rel{"release commit?<br/>is-release-commit.sh"}
+  rel -->|"yes, and its parent has a green CI run"| skip["skip<br/>nothing runs but release-please"]
+  rel -->|"no, or any doubt"| tree{"tree already tested?<br/>find-tested-tree.sh"}
+  tree -->|"a trusted pull-request run<br/>recorded this exact tree"| promote["promote<br/>build + deploy, about 1 min"]
+  tree -->|"no record, or not trusted,<br/>or any doubt"| full["full<br/>ci + e2e, then deploy"]
+  sched(["nightly schedule"]) --> moved{"master moved since the<br/>last green full run?<br/>nightly-needed.sh"}
+  moved -->|"no"| skip2["skip"]
+  moved -->|"yes, or any doubt"| full2["full, without deploy<br/>a failure opens or updates an issue"]
+```
+
+Manual runs (`workflow_dispatch`) and pull requests have no plan: everything runs, and the manual run on master redeploys.
 
 ## Release commits
 
@@ -63,11 +90,63 @@ When the release PR that release-please keeps open is merged, master receives `c
 | In the manifest and `package.json`, one line out and one line in, both the version | `package.json` also holds scripts and dependencies |
 | The previous commit has a green `ci.yml` run on a push | see below |
 
-The last condition closes a hole. Pushes to master queue in one concurrency group, and a queued run is **replaced** by a newer queued one. If a feature is merged and the release PR right after it, the release commit replaces the feature's pending run: until now that was harmless, because the release run built the whole tree and deployed the feature with it. Skipping the release run unconditionally would leave that feature undeployed. The release run therefore checks that its parent was built and deployed; if its parent's run was replaced, it has no green run, and the release run does everything.
+The last condition closes a hole. Pushes to master queue in one concurrency group, and a queued run is **replaced** by a newer queued one. If a feature is merged and the release PR right after it, the release commit replaces the feature's pending run: until now that was harmless, because the release run built the whole tree and deployed the feature with it. Skipping the release run unconditionally would leave that feature undeployed. The release run therefore checks that its parent was built and deployed; if its parent's run was replaced, it has no green run, and the release run does everything. A parent that was promoted counts: its run is green only if its `deploy` succeeded.
 
-What is skipped on a release commit: `ci`, `e2e`, `deploy` and CodeQL. What is not: `release-please.yml` (it tags the release and starts the installers). `codeql-actions.yml` is path-filtered to `.github/**`, which a release never touches.
+What is skipped on a release commit: `ci`, `e2e`, `build`, `deploy` and CodeQL. What is not: `release-please.yml` (it tags the release and starts the installers). `codeql-actions.yml` is path-filtered to `.github/**`, which a release never touches.
+
+The release check comes **first** in `plan.sh`, so a release commit is never promoted. The two rules do not overlap anyway: a release commit changes `package.json`, so its tree cannot be the tree of a pull request's test run.
 
 The script is `.github/scripts/is-release-commit.sh`. It reads the push through the compare API (`BEFORE...AFTER`), so it needs no deep checkout.
+
+## Promoting a tested tree
+
+Pull requests are merged by rebase. When master has not moved since the pull request's last test run, the commits it pushes hold **the very tree the PR's CI tested** (measured over 109 pushes before this rule: 77 were identical to a green PR). Testing it again on master repeated about 9.5 runner-minutes and 5 minutes of waiting for nothing. The principle is content addressing, as in Bazel or Turborepo caches: a git *tree* is a hash of the content of every file, so the same hash means the same sources, hence the same test outcome (up to the randomness of property-based tests and the runner image, which the nightly run covers).
+
+### The record
+
+When `ci` and every `e2e` shard of a pull request are green, the `tested` job uploads the artifact `tested-<tree>` (a few bytes, 30 days). `<tree>` is the tree of the merge commit the jobs tested (`refs/pull/N/merge`, `GITHUB_SHA`), read through the API: the job checks nothing out and runs no code of the pull request.
+
+On master, `find-tested-tree.sh` reads the tree of the pushed commit, lists the artifacts with that name, and examines the runs that hold them, newest first (ten at most).
+
+### The trust rule
+
+A pull request runs **its own copy** of the workflows. Anyone can write a `ci.yml` that uploads `tested-<tree>` without testing anything, so the artifact proves nothing by itself: it is believed only because of the run that holds it. Every condition must hold, or the record is ignored and master tests (fail-safe):
+
+| Condition | What it rules out |
+|---|---|
+| The artifact is not expired, and its run's head repository is the repository itself (`head_repository_id == repository_id`) | a fork's run: its workflow is the fork author's code |
+| The run is on the `pull_request` event | a `workflow_dispatch` or branch run started by hand |
+| The run is `.github/workflows/ci.yml` | another workflow file added by a branch |
+| The run's head repository has this repository's name and id, and is not a fork | a renamed or forked head |
+| The run is completed and its conclusion is `success` | a failed, cancelled or still running run |
+| Its jobs include a successful `ci`, no job that is neither successful nor skipped, and every shard `k/n` of the browser tests for the `n` the job names announce | a run missing a half of the suite, or one that failed and was re-run partially |
+| The tree is the pushed commit's own | a record for another content |
+
+What remains trusted is a collaborator with write access to the repository, who can push a branch and so change `ci.yml`; such a person can already push to master, so the rule does not try to defend against them. Fork pull requests, and anything the script does not recognise, take the full run.
+
+**Dependabot.** Its pull requests come from branches of this repository (observed on #206: run on the `pull_request` event, head repository `kqesar/alltp-tracker`), so their runs meet the rule and can promote. What their runs can do is limited by GitHub: the secret source is Dependabot's (this repository defines none there), and the repository secrets, among them the desktop signing key, are not exposed. The `GITHUB_TOKEN` had `contents: read` and the `pull-requests: write` the workflow asks for. A dependency update's code does run (Vitest, the Vite build) with those limits, as it did before this rule; promotion adds nothing the later master run would not have had. The `tested` job needs no more than `contents: read`; it is not yet confirmed that a Dependabot run can upload an artifact, and if it cannot, the pull request simply takes the full run on master.
+
+### What it costs and what it cannot see
+
+| Limit | Consequence |
+|---|---|
+| The record expires after 30 days | an old, untouched pull request is tested again on master |
+| Master moved after the pull request was tested | the rebased tree differs: full run |
+| The pull request was merged before its run finished | no record yet: full run |
+| Random inputs (property-based tests draw a new seed each run) and the runner's Chrome are not part of the tree | the nightly run explores them |
+| A promoted site is **built** on master, not carried over from the pull request | the build is reproducible (two builds are identical bit for bit); a changed build tool or a non-deterministic step would show only as a difference between the two, never as a wrong site, since the tree is the same |
+
+The promoted site is built with `pnpm --filter @alltp/web build`, the same `vite build` the browser tests serve, and deployed by the same `deploy` job and Pages artifact as in a full run.
+
+## The nightly run
+
+`ci.yml` runs every night (`17 3 * * *` UTC, on master) so that what master deployed without testing again is still checked against new property-test seeds and the runner's current Chrome.
+
+It is **not unconditional**: `plan` runs `nightly-needed.sh`, which finds the newest green run of `ci.yml` on master whose `ci` job really ran (a promoted or skipped push is green too, but is not a full run) and compares its commit with master's head. Same commit: `skip`, nothing runs. Different, or anything unreadable: `full`. Development that slows to Dependabot patches still moves master, so those nights run. A release commit after the last full run also counts as a change (the script does not look at what changed), costing one extra run at most.
+
+The nightly run tests and **deploys nothing** (the Pages upload and `deploy` are skipped on `schedule`), and has a concurrency group of its own so it neither waits for a push nor holds one back.
+
+When `ci` or `e2e` fails, `nightly-report` looks for an open issue labelled `nightly-ci`. If there is one it comments on it; otherwise it opens one (the API creates the label on first use). At most one is open at a time. It is not closed automatically: close it once fixed. While master stays red, each night adds a comment.
 
 ## Concurrency
 
@@ -75,17 +154,17 @@ A push makes the checks of the previous push obsolete, but only on a pull reques
 
 | Workflow | Group | Cancelled by a newer run |
 |---|---|---|
-| `ci.yml` | PR number, or the ref | PR only; pushes to master queue, so deployments never overlap |
+| `ci.yml` | PR number, `nightly` for the schedule, or the ref | PR only; pushes to master queue, so deployments never overlap |
 | `codeql-analysis.yml`, `codeql-actions.yml` | PR number, or the commit SHA | PR only; each master run has a group of its own, so none is cancelled |
 | `validate-commits.yml` | PR number | always (it only runs on PRs) |
 | `desktop.yml` | ref | always, as it already was |
 | `release-please.yml` | fixed | never: two quick merges must not race on the release PR |
 
-Within a group, a queued run is replaced by a newer pending one. That is why master's CodeQL groups are keyed by commit rather than by ref: with the ref, a burst of merges would silently skip the scans of the middle commits.
+Within a group, a queued run is replaced by a newer pending one. That is why master's CodeQL groups are keyed by commit rather than by ref: with the ref, a burst of merges would silently skip the scans of the middle commits. Promoted runs stay in the master group: a deploy never starts before the previous one ends, and the newest pending push is the one that runs after it.
 
 ## Caches
 
-Three kinds of cache exist, with three different policies.
+Three kinds of cache exist, with three different policies. (The `tested-<tree>` records are artifacts, not caches: a few bytes each, 30 days.)
 
 | Cache | Key | Written by | Policy |
 |---|---|---|---|
@@ -108,4 +187,5 @@ The restore uses prefix fallbacks, so a PR that changes a dependency starts from
 Consequences and limits:
 
 - The macOS and Windows jobs of the release matrix no longer keep their own pnpm store (66 and 79 MB): they download the dependencies at each release, a few seconds. Saving one copy per release from each would have re-created the duplicates.
+- A promoted push runs no `ci`, so it saves no store. After a dependency update merged that way, the new store is saved by the next full run on master, at the latest the nightly one; until then pull requests restore the older store and install the difference.
 - Cache entries of a deleted branch or closed PR are evicted after 7 days without access, or earlier by LRU. `gh cache list` and `gh api repos/<owner>/<repo>/actions/cache/usage` show the state; `gh cache delete <key>` removes an entry.

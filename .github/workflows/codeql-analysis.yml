@@ -36,7 +36,7 @@ jobs:
   analyze:
     name: Analyze (javascript-typescript)
     needs: plan
-    if: ${{ !cancelled() && needs.plan.outputs.release != 'true' }}
+    if: ${{ !cancelled() && needs.plan.outputs.mode != 'skip' }}
     runs-on: ubuntu-latest
     # Public repository, no private query packs: uploading results is all
     # it needs beyond reading the code.
