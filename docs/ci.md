@@ -37,8 +37,8 @@ flowchart LR
 
 | Workflow | Trigger | Role |
 |---|---|---|
-| `ci.yml` | PR, push to master, nightly, manual | `ci` gates the code; `e2e` drives the production build in a real browser; `tested` records on a PR that its tree passed; `build` builds the site of a tree already tested; `deploy` publishes the site (master only); `nightly-report` opens an issue when the nightly run fails. |
-| `plan.yml` | called by `ci.yml` and `codeql-analysis.yml` on a push, and by `ci.yml` on the nightly run | Answers one question: what has this push to do? `skip`, `promote` or `full`. See "Release commits", "Promoting a tested tree" and "The nightly run". |
+| `ci.yml` | PR, push to master, nightly, manual | `ci` gates the code; `e2e` drives the production build in a real browser; `tested` records on a PR that its tree passed; `build` builds the site of a tree already tested; `deploy` publishes the site (master only); `nightly-report` opens an issue when the nightly run does not pass. |
+| `plan.yml` | called by `ci.yml` and `codeql-analysis.yml` on a push, and by `ci.yml` on the nightly run | Answers one question: what has this push to do? `skip`, `promote` or `full`. CodeQL calls it with `deploys: false`: it is never told to promote, and a release commit is skipped without waiting for a deployed parent (each commit has a scan of its own). See "Release commits", "Promoting a tested tree" and "The nightly run". |
 | `codeql-analysis.yml` | PR, push to master, weekly | Static security analysis of the TypeScript. Never blocks a deploy. |
 | `codeql-actions.yml` | PR and master when `.github/**` changed, weekly | The same analysis for the workflows themselves. Its only input is `.github/`, so no other change can alter its result; the weekly run covers new CodeQL queries. |
 | `validate-commits.yml` | PR | Runs the repository's own `commitlint` over the PR's commits, so release-please can read them. |
@@ -53,10 +53,10 @@ Markdown-only changes skip `ci.yml` and CodeQL (`paths-ignore`): no job reads th
 - **`plan`** exists on pushes and on the nightly run (a pull request has none, and without one every job runs). It checks out `.github/scripts` alone and runs `plan.sh`, which prints `mode=skip|promote|full`. About 10 s on a runner of its own. If it fails, its mode is empty and everything runs.
 - **`ci`** runs lint (Biome), the TypeScript build over every workspace, and the unit tests with coverage floors. It is CPU-bound (Vitest creates one jsdom per spec file) and is the longest non-browser job. On a PR it also posts a results comment. It runs in `full` mode and on pull requests.
 - **`e2e`** builds the site and serves that production build to Playwright with axe-core, on the runner's preinstalled Chrome (no browser download). The suite is split over three runners with Playwright's `--shard`, because a runner's cores are already saturated by two browsers: only another runner shortens the wait. Playwright splits by test count, not by duration, so shards are never equal (the heaviest files hold a few 7 to 12 s tests); a fourth shard would gain about 35 s more while a PR already takes 7 to 8 of the 20 concurrent job slots. The shard count is the matrix's size (`strategy.job-total`) and is read from there by the job name and the `--shard` flag. A failed shard uploads its own report (`playwright-report-<n>`, 7 days); the reports are not merged. The shard that runs on master (not the nightly run) also uploads the built site as the Pages artifact, so `deploy` publishes exactly what the tests exercised. Like `ci`, it runs in `full` mode and on pull requests.
-- **`tested`** runs on a pull request whose head is in this repository, once `ci` and every `e2e` shard are green, and uploads the record of the tested tree. See "Promoting a tested tree".
+- **`tested`** runs on a pull request whose head is in this repository, once `ci` and every `e2e` shard are green, and uploads the record of the tested tree. See "Promoting a tested tree". Its condition tests `needs.*.result` instead of the implicit `success()`: a pull request has no `plan`, a skipped job that `ci` and `e2e` wait for, and an implicit `success()` would count it against this job too. It is `continue-on-error`: a failing lookup must not turn a green pull request red; master just tests.
 - **`build`** runs in `promote` mode only: it builds the site (`vite build`, the speech model from its cache) and uploads the Pages artifact, in place of the `e2e` shard that does so in `full` mode.
 - **`deploy`** runs on master, never on the nightly run, when the site is ready: `build` succeeded (`promote`), or `ci` and `e2e` did (`full`). Pushes to master are serialised (`concurrency` without cancellation), so deployments never overlap; a PR's older runs are cancelled by its next push.
-- **`nightly-report`** runs when the nightly run's `ci` or `e2e` failed. See "The nightly run".
+- **`nightly-report`** runs when the nightly run's `ci` or `e2e` did anything but succeed (a timeout or a cancelled shard included), unless `plan` skipped the run. See "The nightly run".
 - **`release-please`** is a separate workflow and does not wait for CI. Its `desktop` matrix builds, signs and attaches the installers when a release is cut.
 
 ## What a push to master does
@@ -94,7 +94,7 @@ The last condition closes a hole. Pushes to master queue in one concurrency grou
 
 What is skipped on a release commit: `ci`, `e2e`, `build`, `deploy` and CodeQL. What is not: `release-please.yml` (it tags the release and starts the installers). `codeql-actions.yml` is path-filtered to `.github/**`, which a release never touches.
 
-The release check comes **first** in `plan.sh`, so a release commit is never promoted. The two rules do not overlap anyway: a release commit changes `package.json`, so its tree cannot be the tree of a pull request's test run.
+The release check comes **first** in `plan.sh`, so a release commit is never promoted. The two rules would rarely overlap anyway, since a release commit's tree is not one a feature pull request tested. The release pull request itself has that tree, but the bot token that opens it starts no checks, so nothing records it today; with a GitHub App token (item 9 of the plan) it would, which is harmless: the release is checked first, and the site is identical.
 
 The script is `.github/scripts/is-release-commit.sh`. It reads the push through the compare API (`BEFORE...AFTER`), so it needs no deep checkout.
 
@@ -104,9 +104,11 @@ Pull requests are merged by rebase. When master has not moved since the pull req
 
 ### The record
 
-When `ci` and every `e2e` shard of a pull request are green, the `tested` job uploads the artifact `tested-<tree>` (a few bytes, 30 days). `<tree>` is the tree of the merge commit the jobs tested (`refs/pull/N/merge`, `GITHUB_SHA`), read through the API: the job checks nothing out and runs no code of the pull request.
+When `ci` and every `e2e` shard of a pull request are green, the `tested` job uploads the artifact `tested-<tree>` (a few bytes, 7 days). `<tree>` is the tree of the merge commit the jobs tested (`refs/pull/N/merge`, `GITHUB_SHA`), read through the API: the job checks nothing out and runs no code of the pull request.
 
 On master, `find-tested-tree.sh` reads the tree of the pushed commit, lists the artifacts with that name, and examines the runs that hold them, newest first (ten at most).
+
+The record holds the tree, the test merge commit and the run id. It is only a name that any run could upload, so master checks what it claims, not that it exists (next section).
 
 ### The trust rule
 
@@ -119,18 +121,20 @@ A pull request runs **its own copy** of the workflows. Anyone can write a `ci.ym
 | The run is `.github/workflows/ci.yml` | another workflow file added by a branch |
 | The run's head repository has this repository's name and id, and is not a fork | a renamed or forked head |
 | The run is completed and its conclusion is `success` | a failed, cancelled or still running run |
-| Its jobs include a successful `ci`, no job that is neither successful nor skipped, and every shard `k/n` of the browser tests for the `n` the job names announce | a run missing a half of the suite, or one that failed and was re-run partially |
+| Its jobs include a successful `ci`, no job that is neither successful nor skipped, and every shard `k/n` of the browser tests for the `n` the job names announce | a run missing part of the suite. A run that failed and was re-run to success is accepted (its jobs are the latest attempt's); a last attempt that is red or incomplete is not |
+| The record, downloaded, names the run's own test merge commit: that commit's tree is the recorded one and its parents hold the run's head commit | a trusted run publishing `tested-<some other tree>` |
+| It is the newest *completed* run holding this tree (a run still going is ignored), and no newer run of the same commit failed | an older green run outvoting a newer red one: no "retry until green", even on identical content |
 | The tree is the pushed commit's own | a record for another content |
 
 What remains trusted is a collaborator with write access to the repository, who can push a branch and so change `ci.yml`; such a person can already push to master, so the rule does not try to defend against them. Fork pull requests, and anything the script does not recognise, take the full run.
 
-**Dependabot.** Its pull requests come from branches of this repository (observed on #206: run on the `pull_request` event, head repository `kqesar/alltp-tracker`), so their runs meet the rule and can promote. What their runs can do is limited by GitHub: the secret source is Dependabot's (this repository defines none there), and the repository secrets, among them the desktop signing key, are not exposed. The `GITHUB_TOKEN` had `contents: read` and the `pull-requests: write` the workflow asks for. A dependency update's code does run (Vitest, the Vite build) with those limits, as it did before this rule; promotion adds nothing the later master run would not have had. The `tested` job needs no more than `contents: read`; it is not yet confirmed that a Dependabot run can upload an artifact, and if it cannot, the pull request simply takes the full run on master.
+**Dependabot.** Its pull requests come from branches of this repository (observed on #206: run on the `pull_request` event, head repository `kqesar/alltp-tracker`), so their runs meet the rule and can promote. What their runs can do is limited by GitHub: the secret source is Dependabot's (this repository defines none there), and the repository secrets, among them the desktop signing key, are not exposed. The `GITHUB_TOKEN` had `contents: read` and the `pull-requests: write` the workflow asks for. A dependency update's code does run (Vitest, the Vite build) with those limits, as it did before this rule; promotion adds nothing the later master run would not have had. The `tested` job needs no more than `contents: read`: `actions/upload-artifact` authenticates with the runner's own runtime token, not `GITHUB_TOKEN`, so a Dependabot run can upload (this is also why a fork's run can, and why the rule above exists).
 
 ### What it costs and what it cannot see
 
 | Limit | Consequence |
 |---|---|
-| The record expires after 30 days | an old, untouched pull request is tested again on master |
+| The record expires after 7 days | an old, untouched pull request is tested again on master; promotions normally follow the pull request's run within hours |
 | Master moved after the pull request was tested | the rebased tree differs: full run |
 | The pull request was merged before its run finished | no record yet: full run |
 | Random inputs (property-based tests draw a new seed each run) and the runner's Chrome are not part of the tree | the nightly run explores them |
@@ -142,11 +146,11 @@ The promoted site is built with `pnpm --filter @alltp/web build`, the same `vite
 
 `ci.yml` runs every night (`17 3 * * *` UTC, on master) so that what master deployed without testing again is still checked against new property-test seeds and the runner's current Chrome.
 
-It is **not unconditional**: `plan` runs `nightly-needed.sh`, which finds the newest green run of `ci.yml` on master whose `ci` job really ran (a promoted or skipped push is green too, but is not a full run) and compares its commit with master's head. Same commit: `skip`, nothing runs. Different, or anything unreadable: `full`. Development that slows to Dependabot patches still moves master, so those nights run. A release commit after the last full run also counts as a change (the script does not look at what changed), costing one extra run at most.
+It is **not unconditional**: `plan` runs `nightly-needed.sh`, which finds the newest green run of `ci.yml` on master whose `ci` job really ran (a promoted or skipped push is green too, but is not a full run) and compares its commit with master's head. Same commit: `skip`, nothing runs. Different, or anything unreadable: `full`. Development that slows to Dependabot patches still moves master, so those nights run. Master only counts as moved if something the tests or the site can see changed: release commits and Markdown-only commits between that run and the head are ignored (each is checked: release by the same file-set rule as above, without requiring a deployed parent; Markdown by its file names). More than 30 commits, a merge commit or any doubt: `full`.
 
 The nightly run tests and **deploys nothing** (the Pages upload and `deploy` are skipped on `schedule`), and has a concurrency group of its own so it neither waits for a push nor holds one back.
 
-When `ci` or `e2e` fails, `nightly-report` looks for an open issue labelled `nightly-ci`. If there is one it comments on it; otherwise it opens one (the API creates the label on first use). At most one is open at a time. It is not closed automatically: close it once fixed. While master stays red, each night adds a comment.
+When `ci` or `e2e` does not succeed, `nightly-report` creates the `nightly-ci` label if needed (`gh label create --force`, idempotent: an issue created with a missing label silently loses it), then looks for an open issue with that label **or** that title. If there is one it comments on it; otherwise it opens one. At most one is open at a time, even if the label is lost. It is not closed automatically: close it once fixed. While master stays red, each night adds a comment.
 
 ## Concurrency
 
@@ -164,7 +168,7 @@ Within a group, a queued run is replaced by a newer pending one. That is why mas
 
 ## Caches
 
-Three kinds of cache exist, with three different policies. (The `tested-<tree>` records are artifacts, not caches: a few bytes each, 30 days.)
+Three kinds of cache exist, with three different policies. (The `tested-<tree>` records are artifacts, not caches: a few bytes each, 7 days.)
 
 | Cache | Key | Written by | Policy |
 |---|---|---|---|
