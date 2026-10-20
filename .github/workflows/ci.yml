@@ -412,10 +412,15 @@ jobs:
 
   # The nightly run found something: one open issue at most, which a later
   # failure comments on instead of opening another. Close it once fixed.
+  # Anything but a success counts, a timeout or a cancelled shard included
+  # (a stuck Chrome is what the nightly run is there to catch); a run that
+  # plan skipped has nothing to report, and a cancelled workflow no report.
   nightly-report:
     name: Report a failed nightly run
-    needs: [ci, e2e]
-    if: ${{ !cancelled() && github.event_name == 'schedule' && (needs.ci.result == 'failure' || needs.e2e.result == 'failure') }}
+    needs: [plan, ci, e2e]
+    if: >-
+      ${{ !cancelled() && github.event_name == 'schedule' && needs.plan.outputs.mode != 'skip'
+      && (needs.ci.result != 'success' || needs.e2e.result != 'success') }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions:
@@ -430,16 +435,23 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LABEL: nightly-ci
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TITLE: The nightly CI run failed on master
         run: |
-          body=$(printf 'The nightly full run of `%s` failed: unit tests job `%s`, browser tests `%s`.\n\n%s\n\nIt runs when master moved since the last green full run (docs/ci.md). Close this issue once fixed.' \
+          body=$(printf 'The nightly full run of `%s` did not pass: unit tests job `%s`, browser tests `%s`.\n\n%s\n\nIt runs when master moved since the last green full run (docs/ci.md). Close this issue once fixed.' \
             "$GITHUB_SHA" "$CI_RESULT" "$E2E_RESULT" "$RUN_URL")
+          # The label first, and idempotently: an issue created with a label that
+          # does not exist loses it silently, and the next night would not find
+          # this one. The title is the second key, in case it is lost anyway.
+          gh label create "$LABEL" --force --color d93f0b \
+            --description 'The nightly CI run failed on master' \
+            || echo "::warning::could not create the $LABEL label"
           # Pull requests are issues too, for this endpoint
-          open=$(gh api "repos/$GH_REPO/issues?labels=$LABEL&state=open&per_page=100" \
-            --jq '[.[] | select(.pull_request | not)][0].number // empty')
+          open=$(gh api "repos/$GH_REPO/issues?state=open&per_page=100" --jq \
+            '[.[] | select(.pull_request | not)
+              | select(.title == env.TITLE or any(.labels[]; .name == env.LABEL))][0].number // empty')
           if [ -n "$open" ]; then
             gh issue comment "$open" --body "$body"
           else
-            # The API creates the label when it does not exist yet
-            gh api "repos/$GH_REPO/issues" -f title='The nightly CI run failed on master' \
-              -f body="$body" -f "labels[]=$LABEL" --jq '.html_url'
+            gh api "repos/$GH_REPO/issues" -f title="$TITLE" -f body="$body" \
+              -f "labels[]=$LABEL" --jq '.html_url'
           fi
