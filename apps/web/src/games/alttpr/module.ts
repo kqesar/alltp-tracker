@@ -3,6 +3,7 @@
 
 import App from "@/games/alttpr/App";
 import { ObsView } from "@/games/alttpr/ObsView";
+import { unpackLink } from "@/games/alttpr/share";
 import { syncAcrossTabs } from "@/games/alttpr/stores/crossTabSync";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { parseSave } from "@/games/alttpr/stores/persistence";
@@ -10,8 +11,10 @@ import type { GameModule } from "@/games/registry";
 
 export const alttpr: GameModule = {
   App,
-  importRun: (save) => {
-    const parsed = parseSave(save);
+  importRun: (text) => {
+    const unpacked = unpackLink(text);
+    if (!unpacked.ok) return unpacked;
+    const parsed = parseSave(unpacked.save);
     return parsed.ok
       ? {
           load: () => useGameStore.getState().loadProgress(parsed.progress),

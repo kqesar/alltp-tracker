@@ -2,9 +2,11 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SharedRunPrompt } from "@/components/ui/SharedRunPrompt";
+import { packLink as packAlttpr } from "@/games/alttpr/share";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { switchGame } from "@/games/registry";
 import { exportSave as exportSm, useSmStore } from "@/games/sm/store";
+import { packLink as packSmz3 } from "@/games/smz3/share";
 import { exportSave as exportSmz3, useSmz3Store } from "@/games/smz3/store";
 import { encodeRun } from "@/share/runLink";
 
@@ -183,6 +185,66 @@ describe("the shared run notice", () => {
     expect(await screen.findByTestId("shared-run-refused")).toBeInTheDocument();
     expect(useGameStore.getState().checked).toEqual({});
     expect(document.querySelector("img")).toBeNull();
+  });
+
+  it("opens a packed ALttPR link, its timeline and checks included", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(1_760_000_000_000);
+    const store = useGameStore.getState();
+    store.startTimer(Date.now());
+    vi.setSystemTime(Date.now() + 61_000);
+    store.handleItemClick("hookshot");
+    vi.setSystemTime(Date.now() + 42_500);
+    store.toggleChecks(["kings-tomb"]);
+    const save = useGameStore.getState().exportState();
+    vi.useRealTimers();
+    const link = packAlttpr(save);
+    expect(JSON.parse(link).format).toBe("alltp-tracker-link");
+    useGameStore.setState(useGameStore.getInitialState(), true);
+    openLink(await encodeRun(link));
+    render(<SharedRunPrompt game="alttpr" />);
+
+    await userEvent.click(await screen.findByTestId("shared-run-open"));
+
+    const run = useGameStore.getState();
+    expect(run.items.hookshot).toBe(true);
+    expect(run.checked).toEqual({ "kings-tomb": true });
+    expect(run.timeline["item:hookshot"]).toEqual({
+      at: 1_760_000_061_000,
+      ms: 61_000,
+    });
+    expect(run.timeline["check:kings-tomb"]?.ms).toBe(103_500);
+  });
+
+  it("opens a packed SMZ3 link in its own store, then switches to it", async () => {
+    useSmz3Store.getState().step("flute", 1);
+    useSmz3Store.getState().toggleChecks(["castle-tower/foyer"]);
+    const link = packSmz3(exportSmz3(useSmz3Store.getState()));
+    useSmz3Store.setState(useSmz3Store.getInitialState(), true);
+    openLink(await encodeRun(link));
+    render(<SharedRunPrompt game="alttpr" />);
+
+    await userEvent.click(await screen.findByTestId("shared-run-open"));
+
+    expect(useSmz3Store.getState().items.flute).toBe(1);
+    expect(useSmz3Store.getState().checked).toEqual(["castle-tower/foyer"]);
+    expect(switchGame).toHaveBeenCalledWith("smz3");
+  });
+
+  it("says a link comes from another version, and changes nothing", async () => {
+    useGameStore.getState().handleItemClick("hookshot");
+    const link = JSON.parse(packAlttpr(useGameStore.getState().exportState()));
+    useGameStore.setState(useGameStore.getInitialState(), true);
+    useGameStore.getState().handleItemClick("lantern");
+    link.table = "AAAAAA";
+    openLink(await encodeRun(JSON.stringify(link)));
+    render(<SharedRunPrompt game="alttpr" />);
+
+    expect(await screen.findByTestId("shared-run-refused")).toHaveTextContent(
+      "This link comes from another version of the tracker. Nothing was changed.",
+    );
+    expect(screen.queryByTestId("shared-run-open")).not.toBeInTheDocument();
+    expect(useGameStore.getState().items.lantern).toBe(true);
   });
 
   it("asks again when a link is opened in a tab already on the tracker", async () => {

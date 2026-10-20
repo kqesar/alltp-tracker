@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/ToolbarIcons";
 import { Smz3Autotrack } from "@/games/smz3/components/Smz3Autotrack";
 import { PRESETS } from "@/games/smz3/data";
+import { packLink } from "@/games/smz3/share";
 import {
   exportSave,
   IMPORT_ERRORS,
@@ -258,7 +259,9 @@ export const Smz3Controls = () => {
     );
 
   const handleShare = () =>
-    void shareRun([exportSave(useSmz3Store.getState())]).then(setStatus);
+    void shareRun([packLink(exportSave(useSmz3Store.getState()))]).then(
+      setStatus,
+    );
 
   const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
     const [file] = event.target.files ?? [];

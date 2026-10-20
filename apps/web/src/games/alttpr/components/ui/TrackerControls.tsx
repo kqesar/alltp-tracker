@@ -31,6 +31,7 @@ import {
 import { PresetSelector } from "@/games/alttpr/components/ui/PresetSelector";
 import { ShortcutsButton } from "@/games/alttpr/components/ui/ShortcutsButton";
 import { StreamViewControl } from "@/games/alttpr/components/ui/StreamViewControl";
+import { packLink } from "@/games/alttpr/share";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import {
   type Progress,
@@ -126,7 +127,7 @@ export const TrackerControls = () => {
   // The timeline is what a link drops first when it would be too long
   const handleShare = () => {
     const save = exportState();
-    void shareRun([save, withoutTimeline(save)]).then(setStatus);
+    void shareRun([save, withoutTimeline(save)].map(packLink)).then(setStatus);
   };
 
   const handleImportClick = () => fileInputRef.current?.click();

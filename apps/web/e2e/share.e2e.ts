@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { deflateRawSync } from "node:zlib";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { clickToolbarAction, WCAG_AA } from "./support";
@@ -21,12 +24,14 @@ const pick = async (page: Page, game: "sm" | "smz3") => {
 /** What differs from one game to the next: its board, its mark, its status. */
 const GAMES = {
   alttpr: {
+    format: "alltp-tracker-link",
     item: "item-hookshot",
     name: "A Link to the Past",
     open: fresh,
     status: "controls-status",
   },
   sm: {
+    format: "alltp-tracker-save",
     item: "sm-item-morph",
     name: "Super Metroid",
     open: async (page: Page) => {
@@ -36,6 +41,7 @@ const GAMES = {
     status: "sm-status",
   },
   smz3: {
+    format: "alltp-tracker-link",
     item: "smz3-item-hammer",
     name: "SMZ3",
     open: async (page: Page) => {
@@ -45,6 +51,33 @@ const GAMES = {
     status: "smz3-status",
   },
 } as const;
+
+/**
+ * What a link of the first format holds, rebuilt here with no help from the
+ * app: a real export (`fixtures/`, as version 2.33 wrote it) minified,
+ * deflated and base64url'd, which is all that format ever was.
+ */
+const plainLink = (fixture: string) => {
+  const save = JSON.stringify(
+    JSON.parse(
+      readFileSync(join(import.meta.dirname, "fixtures", fixture), "utf8"),
+    ),
+  );
+  return `./#run=${deflateRawSync(save).toString("base64url")}`;
+};
+
+/** The JSON a link's payload inflates to, read in the page like the app does. */
+const inflated = (page: Page, payload: string) =>
+  page.evaluate(async (text) => {
+    const bytes = Uint8Array.from(
+      atob(text.replace(/-/g, "+").replace(/_/g, "/")),
+      (char) => char.charCodeAt(0),
+    );
+    const stream = new Blob([bytes])
+      .stream()
+      .pipeThrough(new DecompressionStream("deflate-raw"));
+    return new Response(stream).text();
+  }, payload);
 
 const OBTAINED = /, obtained/;
 const NOT_OBTAINED = /, not obtained/;
@@ -71,6 +104,10 @@ for (const [id, game] of Object.entries(GAMES)) {
     );
     const link = await page.evaluate(() => navigator.clipboard.readText());
     expect(link).toMatch(/\/alltp-tracker\/#run=[A-Za-z0-9_-]+$/);
+    // ALttPR and SMZ3 write the packed format, Super Metroid the plain one
+    expect(
+      JSON.parse(await inflated(page, link.split("#run=")[1])).format,
+    ).toBe(game.format);
     // Sharing changed neither the run nor the address
     await expect(page.getByTestId(game.item)).toHaveAccessibleName(OBTAINED);
     expect(page.url()).not.toContain("#run=");
@@ -113,6 +150,62 @@ for (const [id, game] of Object.entries(GAMES)) {
     await theirs.close();
   });
 }
+
+test("a link of the first format still opens, ALttPR's and SMZ3's", async ({
+  page,
+}) => {
+  await fresh(page);
+  await page.goto(plainLink("share-v1-alttpr.json"));
+  await expect(page.getByTestId("shared-run-prompt")).toContainText(
+    "Open this shared run?",
+  );
+  await page.getByTestId("shared-run-open").click();
+  await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+    OBTAINED,
+  );
+  await expect(page.getByTestId("item-lantern")).toHaveAccessibleName(
+    NOT_OBTAINED,
+  );
+
+  // A SMZ3 run, laid in its own store, then the page loads again on it
+  await page.goto(plainLink("share-v1-smz3.json"));
+  await expect(page.getByTestId("shared-run-prompt")).toContainText(
+    "It switches to SMZ3.",
+  );
+  await page.getByTestId("shared-run-open").click();
+  await expect(page.getByTestId("smz3-item-hammer")).toHaveAccessibleName(
+    OBTAINED,
+  );
+});
+
+test("a link from another version of the tracker says so and changes nothing", async ({
+  page,
+}) => {
+  await fresh(page);
+  await page.getByTestId("item-hookshot").click();
+  const save = JSON.parse(
+    readFileSync(
+      join(import.meta.dirname, "fixtures", "share-v1-alttpr.json"),
+      "utf8",
+    ),
+  );
+  // The packed format against a table digest this build does not have
+  const link = JSON.stringify({
+    ...save,
+    format: "alltp-tracker-link",
+    link: 2,
+    table: "AAAAAA",
+  });
+  await page.goto(`./#run=${deflateRawSync(link).toString("base64url")}`);
+
+  await expect(page.getByTestId("shared-run-refused")).toHaveText(
+    "This link comes from another version of the tracker. Nothing was changed.",
+  );
+  await expect(page.getByTestId("shared-run-open")).toHaveCount(0);
+  await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+    OBTAINED,
+  );
+});
 
 test("Keep mine leaves the run untouched, and a link opened on the board asks", async ({
   browser,

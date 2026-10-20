@@ -1,18 +1,11 @@
-import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
-import { SM_ITEMS } from "@alltp/pack-sm";
-import { ITEMS } from "@alltp/pack-smz3";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { packLink as packAlttpr } from "@/games/alttpr/share";
 import {
   parseSave as parseAlttpr,
   withoutTimeline,
 } from "@/games/alttpr/stores/persistence";
-import { exportSave as exportSm, useSmStore } from "@/games/sm/store";
-import {
-  exportSave as exportSmz3,
-  LOCATION_IDS,
-  useSmz3Store,
-} from "@/games/smz3/store";
+import { packLink as packSmz3 } from "@/games/smz3/share";
+import { play, randoms, STAGES } from "@/share/playedRuns";
 import {
   clearSharedRun,
   decodeRun,
@@ -41,69 +34,6 @@ const deflated = async (bytes: Uint8Array<ArrayBuffer>) => {
     .replace(/=+$/, "");
 };
 
-/** A reproducible stream of numbers in [0, 1): runs differ by their seed only. */
-const randoms = () => {
-  let seed = 7;
-  return () => {
-    seed = (seed * 1_664_525 + 1_013_904_223) % 4_294_967_296;
-    return seed / 4_294_967_296;
-  };
-};
-
-/**
- * Play a game's store as a player does, a click or a check every 20 to 100
- * seconds: `share` of what there is to find gets found. The clock moves, so
- * the ALttPR timeline's stamps are as unpredictable as a real run's.
- */
-const play = {
-  alttpr: (share: number, random: () => number) => {
-    useGameStore.setState(useGameStore.getInitialState(), true);
-    const store = useGameStore.getState();
-    store.startTimer(Date.now());
-    const tick = () =>
-      vi.setSystemTime(Date.now() + 20_000 + Math.floor(random() * 80_000));
-    const items = Object.keys(store.items).filter(
-      (id) => !id.startsWith("chest") && !id.startsWith("boss"),
-    );
-    for (const id of items) {
-      for (let click = 0; click < 4; click++) {
-        if (random() >= share) continue;
-        tick();
-        store.handleItemClick(id);
-      }
-    }
-    for (const id of MAP_LOCATIONS) {
-      if (random() >= share) continue;
-      tick();
-      store.toggleChecks([id]);
-    }
-    return useGameStore.getState().exportState();
-  },
-  sm: (share: number, random: () => number) => {
-    useSmStore.setState(useSmStore.getInitialState(), true);
-    for (const item of SM_ITEMS) {
-      for (let n = 0; n < item.max; n++) {
-        if (random() < share) useSmStore.getState().step(item.id, 1);
-      }
-    }
-    return exportSm(useSmStore.getState());
-  },
-  smz3: (share: number, random: () => number) => {
-    useSmz3Store.setState(useSmz3Store.getInitialState(), true);
-    for (const item of ITEMS) {
-      for (let n = 0; n < item.max; n++) {
-        if (random() < share) useSmz3Store.getState().step(item.id, 1);
-      }
-    }
-    for (const id of LOCATION_IDS) {
-      if (random() < share) useSmz3Store.getState().toggleChecks([id]);
-    }
-    return exportSmz3(useSmz3Store.getState());
-  },
-};
-
-const STAGES = { early: 0.15, late: 0.95, mid: 0.5 } as const;
-
 describe("a run in a link", () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -128,42 +58,33 @@ describe("a run in a link", () => {
 
   // The lengths of the whole link on the site, measured on runs played as
   // above (the numbers in docs/share.md): what a chat app has to take
-  it("keeps a link within a browser's limits, and a chat's where it can", async () => {
+  it("keeps a link within a chat message's limit through a whole run", async () => {
     const lengths: Record<string, number> = {};
+    const link = async (save: string) =>
+      runLinkUrl(
+        "https://kqesar.github.io/alltp-tracker/",
+        await encodeRun(save),
+      ).length;
     for (const [stage, share] of Object.entries(STAGES)) {
-      const save = play.alttpr(share, randoms());
-      for (const [form, text] of [
-        ["full", save],
-        ["slim", withoutTimeline(save)],
-      ] as const) {
-        const url = runLinkUrl(
-          "https://kqesar.github.io/alltp-tracker/",
-          await encodeRun(text),
-        );
-        lengths[`alttpr ${stage} ${form}`] = url.length;
-      }
-      for (const game of ["sm", "smz3"] as const) {
-        const url = runLinkUrl(
-          "https://kqesar.github.io/alltp-tracker/",
-          await encodeRun(play[game](share, randoms())),
-        );
-        lengths[`${game} ${stage}`] = url.length;
-      }
+      const alttpr = play.alttpr(share, randoms());
+      const smz3 = play.smz3(share, randoms());
+      lengths[`alttpr ${stage} full`] = await link(packAlttpr(alttpr));
+      lengths[`alttpr ${stage} slim`] = await link(
+        packAlttpr(withoutTimeline(alttpr)),
+      );
+      lengths[`smz3 ${stage}`] = await link(packSmz3(smz3));
+      lengths[`sm ${stage}`] = await link(play.sm(share, randoms()));
+      // What packing saves: the plain forms the first version wrote
+      expect(lengths[`alttpr ${stage} full`]).toBeLessThan(
+        (await link(alttpr)) * 0.6,
+      );
+      expect(lengths[`smz3 ${stage}`]).toBeLessThan((await link(smz3)) * 0.7);
     }
 
-    // Everything fits what browsers take (Chrome 2 MB, Firefox 1 MB, Safari 80 KB)
-    for (const length of Object.values(lengths)) {
-      expect(length).toBeLessThan(25_000);
+    // Every run, at every stage, with its timeline, fits a chat message
+    for (const [name, length] of Object.entries(lengths)) {
+      expect(length, name).toBeLessThan(CHAT_LINK_CHARS);
     }
-    // Super Metroid's runs are tiny; ALttPR's without its timeline and SMZ3's
-    // fit a chat message early in the run, and grow past it after
-    expect(lengths["sm late"]).toBeLessThan(CHAT_LINK_CHARS);
-    expect(lengths["alttpr early slim"]).toBeLessThan(CHAT_LINK_CHARS);
-    expect(lengths["smz3 early"]).toBeLessThan(CHAT_LINK_CHARS);
-    // The timeline is most of an ALttPR run, which is why it is what goes
-    expect(lengths["alttpr late full"]).toBeGreaterThan(
-      lengths["alttpr late slim"] * 2,
-    );
   });
 
   it("drops the timeline but keeps the run, which still imports", async () => {
@@ -230,6 +151,8 @@ describe("a link that is not a run", () => {
       JSON.stringify({ format, game, progress: {}, version: 1 });
 
     expect(gameOfSave(envelope("sm"))).toBe("sm");
+    // A packed link names its game in the same place
+    expect(gameOfSave(envelope("smz3", "alltp-tracker-link"))).toBe("smz3");
     expect(gameOfSave(envelope("zelda1"))).toBeNull();
     expect(gameOfSave(envelope(undefined))).toBeNull();
     expect(gameOfSave(envelope("sm", "something-else"))).toBeNull();
