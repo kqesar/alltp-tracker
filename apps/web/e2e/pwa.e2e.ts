@@ -435,6 +435,31 @@ const controllerBuild = (page: Page) =>
       }),
   );
 
+/**
+ * Start watching, in the pages loaded from now on, for another worker to take
+ * over (see `tookOver`). Called before the navigation, so that no takeover
+ * can happen unseen on a loaded machine.
+ */
+const watchTakeover = (page: Page) =>
+  page.addInitScript(() => {
+    (window as { tookOver?: Promise<void> }).tookOver = new Promise((resolve) =>
+      navigator.serviceWorker.addEventListener(
+        "controllerchange",
+        () => resolve(),
+        { once: true },
+      ),
+    );
+  });
+
+/**
+ * Wait for the takeover `watchTakeover` set up, sending no message to the
+ * worker in charge: polling it for its build every 100 ms left the waiting
+ * worker unactivated for good now and then (8 runs in 100 with an update
+ * forced on top, none in 100 without the poll).
+ */
+const tookOver = (page: Page) =>
+  page.evaluate(() => (window as { tookOver?: Promise<void> }).tookOver);
+
 /** Ask the browser to check for a new version; how its install ended. */
 const checkForUpdate = (page: Page) =>
   page.evaluate(async () => {
@@ -478,6 +503,7 @@ test.describe("an update", () => {
       await page.getByTestId("item-hammer").click();
 
       host.deploy(await nextRelease());
+      await watchTakeover(page);
       await page.reload();
 
       await expect(nextMark(page)).toHaveCount(1);
@@ -485,7 +511,8 @@ test.describe("an update", () => {
         /^Hammer, obtained\./,
       );
       // The worker of that same version takes over, with nothing to offer
-      await expect.poll(() => controllerBuild(page)).toBe(NEXT_BUILD);
+      await tookOver(page);
+      expect(await controllerBuild(page)).toBe(NEXT_BUILD);
       await expect(page.getByTestId("update-prompt")).toBeEmpty();
     },
   );
