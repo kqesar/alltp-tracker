@@ -118,6 +118,12 @@ describe("the app's one table of the pack's items", () => {
       sword: 4,
     });
   });
+
+  it("keeps the magic the game holds, a quarter as it is", () => {
+    expect(itemsFromPack({ magic: 1 })).toMatchObject({ magic: 1 });
+    expect(itemsFromPack({ magic: 2 })).toMatchObject({ magic: 2 });
+    expect(packReading({ magic: 2 } as never).items).toEqual({ magic: 2 });
+  });
 });
 
 describe("RECORDED_LEVELS", () => {
@@ -133,6 +139,7 @@ describe("RECORDED_LEVELS", () => {
       flute: 1,
       glove: 2,
       hammer: 1,
+      magic: 2,
       pendantOfCourage: 1,
       redBoomerang: 1,
       shield: 3,
@@ -145,7 +152,6 @@ describe("RECORDED_LEVELS", () => {
     for (const item of [
       "heartContainer",
       "keyD1",
-      "magic",
       "pieceOfHeart",
       "rescueZelda",
       "tenBombs",

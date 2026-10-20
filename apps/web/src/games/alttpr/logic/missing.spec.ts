@@ -1,7 +1,11 @@
 // What each check is missing and why one is only possible, worked out from
 // the pack's blockers and explanations over real runs.
 import { describe, expect, it } from "vitest";
-import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
+import {
+  items as freshItems,
+  type ItemState,
+  itemsMax,
+} from "@/games/alttpr/data/items";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import {
   analyzeRun,
@@ -95,6 +99,61 @@ describe("a retro run", () => {
   });
 });
 
+/**
+ * Every item held but the weapons that would make magic redundant, medallions
+ * and keys all there: what is left to decide is the magic.
+ */
+const unarmed = (
+  preset: string,
+  items: Partial<ItemState>,
+): ReturnType<typeof inputsOf> => ({
+  ...inputsOf(
+    {
+      ...Object.fromEntries(
+        Object.entries(freshItems)
+          .filter(([id]) => !/^(boss|chest|magic$)/.test(id))
+          .map(([id, fresh]) => [
+            id,
+            typeof fresh === "boolean" ? true : itemsMax[id],
+          ]),
+      ),
+      boomerang: 0,
+      bottle: 0,
+      bow: 0,
+      hammer: false,
+      net: false,
+      sword: 0,
+      ...items,
+    },
+    { preset, smallKeys: Array(10).fill(9) },
+  ),
+  medallions: Array(10).fill(1),
+});
+
+describe("half magic", () => {
+  it("lets a rod or a cane do what no sword, bow, hammer or bottle does", () => {
+    // Mothula, in a swordless run, falls to the Fire Rod with magic to spare
+    const mothula = (items: Partial<ItemState>) =>
+      solutionOf(unarmed("swordless", items)).tris["skull-woods/boss"];
+
+    expect(mothula({})).toBe("no");
+    expect(mothula({ magic: 1 })).toBe("yes");
+  });
+
+  it("tells a quarter magic from a half, which wants a bottle for what a quarter does alone", () => {
+    // Trinexx wants four bars of magic for a Fighter's Sword
+    const trinexx = (items: Partial<ItemState>) =>
+      solutionOf(unarmed("inverted", { sword: 1, ...items })).tris[
+        "turtle-rock/boss"
+      ];
+
+    expect(trinexx({})).toBe("no");
+    expect(trinexx({ magic: 1 })).toBe("no");
+    expect(trinexx({ magic: 2 })).toBe("yes");
+    expect(trinexx({ bottle: 1, magic: 1 })).toBe("yes");
+  });
+});
+
 describe("analyzeRun", () => {
   it("lists what a check out of logic is missing, and nothing in logic", () => {
     const { missing } = analysisOf(FRESH);
@@ -121,12 +180,10 @@ describe("analyzeRun", () => {
     const named = [...missing.values()].flatMap((m) =>
       m.inLogic.sets.flat().map((need) => need.key),
     );
-    // Keys stay in their dungeons outside keysanity; magic, bombs and
-    // hearts have no cell
+    // Keys stay in their dungeons outside keysanity; bombs and hearts have
+    // no cell
     expect(
-      named.filter((key) =>
-        /^(key[A-Z]|bigKey|magic>|tenBombs|heart)/.test(key),
-      ),
+      named.filter((key) => /^(key[A-Z]|bigKey|tenBombs|heart)/.test(key)),
     ).toEqual([]);
     expect(named).toContain("pegasusBoots>=1");
   });
