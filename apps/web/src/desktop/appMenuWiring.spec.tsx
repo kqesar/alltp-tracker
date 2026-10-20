@@ -78,7 +78,7 @@ describe("the first-launch notice, in each game", () => {
     render(<Game />);
 
     expect(await screen.findByTestId("app-menu-prompt")).toHaveTextContent(
-      "Add ALLTP Tracker to your application menu?",
+      "Add Rando Atlas to your application menu?",
     );
   });
 });

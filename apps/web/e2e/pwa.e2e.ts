@@ -91,9 +91,9 @@ test.describe("installation", () => {
     const manifest = await response.json();
     expect(manifest).toMatchObject({
       display: "standalone",
-      name: "A Link to the Past Tracker",
+      name: "Rando Atlas",
       scope: BASE,
-      short_name: "ALLTP Tracker",
+      short_name: "Rando Atlas",
       start_url: BASE,
     });
     expect(new URL(page.url()).pathname).toBe(manifest.start_url);
@@ -164,8 +164,15 @@ test.describe("installation", () => {
   });
 });
 
-/** The title the next version's index.html carries, to tell it apart. */
-const NEXT_TITLE = "ALLTP Tracker (next version)";
+/**
+ * The application name the next version's index.html carries, to tell it
+ * apart (the title is no marker: the page sets it for the game it tracks).
+ */
+const NEXT_NAME = "Rando Atlas (next version)";
+
+/** The marker on a page: present once it shows the next version. */
+const nextMark = (page: Page) =>
+  page.locator(`meta[name="application-name"][content="${NEXT_NAME}"]`);
 
 /** The id of that next build. */
 const NEXT_BUILD = "0123456789abcdef";
@@ -175,7 +182,7 @@ const BUILD_META =
   /(<meta content=")([0-9a-f]{16})(" name="alltp-tracker-build")/;
 
 /**
- * The next release of the build: its index.html changed (its title), so it
+ * The next release of the build: its index.html changed (its application name), so it
  * has a new build id, and its sw.js lists that id and a new revision for the
  * page, exactly as the Vite plugin writes them. Every other file stays as it
  * is, as in most releases.
@@ -184,7 +191,10 @@ const nextRelease = async () => {
   const built = await readFile(join(DIST, "index.html"), "utf8");
   const build = BUILD_META.exec(built)?.[2] ?? "";
   const html = built
-    .replace(/<title>[^<]*<\/title>/, `<title>${NEXT_TITLE}</title>`)
+    .replace(
+      /(<meta content=")[^"]*(" name="application-name")/,
+      `$1${NEXT_NAME}$2`,
+    )
     .replace(BUILD_META, `$1${NEXT_BUILD}$3`);
   const revision = createHash("sha256").update(html).digest("hex").slice(0, 16);
   const worker = (await readFile(join(DIST, "sw.js"), "utf8"))
@@ -283,7 +293,7 @@ test.describe("an update", () => {
       host.deploy(await nextRelease());
       await page.reload();
 
-      await expect(page).toHaveTitle(NEXT_TITLE);
+      await expect(nextMark(page)).toHaveCount(1);
       await expect(page.getByTestId("item-hammer")).toHaveAccessibleName(
         /^Hammer, obtained\./,
       );
@@ -304,11 +314,11 @@ test.describe("an update", () => {
       await expect(prompt).toHaveRole("status");
       await expect(prompt).toContainText(AVAILABLE);
       // Still the version that was running: nothing reloaded on its own
-      await expect(page).not.toHaveTitle(NEXT_TITLE);
+      await expect(nextMark(page)).toHaveCount(0);
 
       await page.getByTestId("update-reload").click();
 
-      await expect(page).toHaveTitle(NEXT_TITLE);
+      await expect(nextMark(page)).toHaveCount(1);
       await expect(prompt).toBeEmpty();
       await expect(page.getByTestId("item-hammer")).toHaveAccessibleName(
         /^Hammer, obtained\./,
@@ -326,7 +336,7 @@ test.describe("an update", () => {
       await page.clock.fastForward("01:00:00");
 
       await expect(page.getByTestId("update-prompt")).toContainText(AVAILABLE);
-      await expect(page).not.toHaveTitle(NEXT_TITLE);
+      await expect(nextMark(page)).toHaveCount(0);
     },
   );
 
@@ -343,10 +353,10 @@ test.describe("an update", () => {
 
       // The cached copy, behind the version its worker already holds
       await expect(page.getByTestId("item-grid")).toBeVisible();
-      await expect(page).not.toHaveTitle(NEXT_TITLE);
+      await expect(nextMark(page)).toHaveCount(0);
       await expect(page.getByTestId("update-prompt")).toContainText(AVAILABLE);
       await page.getByTestId("update-reload").click();
-      await expect(page).toHaveTitle(NEXT_TITLE);
+      await expect(nextMark(page)).toHaveCount(1);
     },
   );
 
@@ -380,11 +390,11 @@ test.describe("an update", () => {
       await expect(other.getByTestId("update-prompt")).toContainText(AVAILABLE);
       await page.getByTestId("update-reload").click();
 
-      await expect(page).toHaveTitle(NEXT_TITLE);
+      await expect(nextMark(page)).toHaveCount(1);
       // The other tab still runs, offered a reload of its own
       await expect(other.getByTestId("update-prompt")).toContainText(AVAILABLE);
       expect(await stillMarked(other)).toBe(true);
-      await expect(other).not.toHaveTitle(NEXT_TITLE);
+      await expect(nextMark(other)).toHaveCount(0);
     },
   );
 
@@ -402,7 +412,7 @@ test.describe("an update", () => {
       await expect(stream.getByTestId("item-grid")).toBeVisible();
       await expect(page.getByTestId("update-prompt")).toContainText(AVAILABLE);
       expect(await stillMarked(page)).toBe(true);
-      await expect(page).not.toHaveTitle(NEXT_TITLE);
+      await expect(nextMark(page)).toHaveCount(0);
     },
   );
 

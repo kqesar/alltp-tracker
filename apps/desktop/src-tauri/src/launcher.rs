@@ -84,7 +84,7 @@ fn entry(command: &str, in_menu: bool) -> Option<String> {
     Some(format!(
         "[Desktop Entry]\n\
          Type=Application\n\
-         Name=ALLTP Tracker\n\
+         Name=Rando Atlas\n\
          Comment=Item and map tracker for randomizer runs\n\
          Exec={} %U\n\
          Icon={APP_ID}\n\
@@ -512,7 +512,7 @@ mod tests {
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(
             &path,
-            "[Desktop Entry]\nType=Application\nName=ALLTP Tracker\n\
+            "[Desktop Entry]\nType=Application\nName=Rando Atlas\n\
              Exec=\"/old\" %U\nIcon=alltp-tracker\nNoDisplay=true\n",
         )
         .unwrap();
@@ -520,6 +520,7 @@ mod tests {
         scratch.0.ensure_for_portal("/old", true).unwrap();
 
         let text = scratch.file().unwrap();
+        assert!(text.contains("Name=Rando Atlas\n"));
         assert!(text.contains("Icon=io.github.kqesar.alltp-tracker\n"));
         assert!(!shows_in_menu(&text));
         assert_eq!(scratch.icons(), ICONS.len());

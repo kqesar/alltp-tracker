@@ -1,7 +1,7 @@
 {
   "background_color": "#07070b",
   "categories": ["games", "utilities"],
-  "description": "Item and progress tracker for The Legend of Zelda: A Link to the Past randomizer runs. Works offline.",
+  "description": "Item and map tracker for A Link to the Past, Super Metroid and SMZ3 randomizer runs. Works offline.",
   "display": "standalone",
   "icons": [
     {
@@ -23,9 +23,9 @@
   ],
   "id": "/alltp-tracker/",
   "lang": "en",
-  "name": "A Link to the Past Tracker",
+  "name": "Rando Atlas",
   "scope": "/alltp-tracker/",
-  "short_name": "ALLTP Tracker",
+  "short_name": "Rando Atlas",
   "start_url": "/alltp-tracker/",
   "theme_color": "#07070b"
 }

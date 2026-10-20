@@ -1,12 +1,14 @@
-# A Link to the Past Tracker
+# Rando Atlas
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/kqesar/alltp-tracker/ci.yml?branch=master&label=build)
 ![Version](https://img.shields.io/github/v/release/kqesar/alltp-tracker?label=version)
 ![License](https://img.shields.io/github/license/kqesar/alltp-tracker?label=license)
 
-An item and progress tracker for **The Legend of Zelda: A Link to the Past** randomizer runs. It keeps track of the items you have found and works out, in real time, which chests you can reach and which dungeons you can clear. It tracks **Super Metroid** too, as **Map Rando** seeds play it, and **SMZ3**, the two games combined, as **samus.link** generates it.
+An item and map tracker for randomizer runs of **The Legend of Zelda: A Link to the Past**. It keeps track of the items you have found and works out, in real time, which chests you can reach and which dungeons you can clear. It tracks **Super Metroid** too, as **Map Rando** seeds play it, and **SMZ3**, the two games combined, as **samus.link** generates it.
 
 **→ [kqesar.github.io/alltp-tracker](https://kqesar.github.io/alltp-tracker/)**
+
+Rando Atlas is the display name. The repository, the URL, the storage keys and the desktop app's identifier keep `alltp-tracker`, which links, saved runs and installed apps rest on.
 
 Originally forked from [TestRunnerSRL/lttp-tracker](https://github.com/TestRunnerSRL/lttp-tracker) and since rewritten in React 19 and TypeScript. The game logic remains inspired by the original.
 

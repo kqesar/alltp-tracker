@@ -85,7 +85,7 @@ describe("ObsView", () => {
     const { unmount } = render(<ObsView background={null} />);
 
     expect(document.documentElement.dataset.view).toBe("obs");
-    expect(document.title).toBe("ALLTP Tracker stream view");
+    expect(document.title).toBe("Rando Atlas stream view");
 
     unmount();
     expect(document.documentElement.dataset.view).toBeUndefined();

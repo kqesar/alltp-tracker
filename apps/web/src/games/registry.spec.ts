@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ACTIVE_GAME_KEY, activeGame, loadGame } from "@/games/registry";
+import {
+  ACTIVE_GAME_KEY,
+  activeGame,
+  loadGame,
+  pageTitle,
+} from "@/games/registry";
 
 const storage = (saved: string | null) => ({ getItem: () => saved });
 
@@ -30,6 +35,16 @@ describe("activeGame", () => {
     } finally {
       localStorage.removeItem(ACTIVE_GAME_KEY);
     }
+  });
+});
+
+describe("pageTitle", () => {
+  it("names the product, then the game", () => {
+    expect(pageTitle("alttpr")).toBe(
+      "Rando Atlas \u00b7 A Link to the Past Randomizer",
+    );
+    expect(pageTitle("sm")).toBe("Rando Atlas \u00b7 Super Metroid Randomizer");
+    expect(pageTitle("smz3")).toBe("Rando Atlas \u00b7 SMZ3 Randomizer");
   });
 });
 

@@ -35,11 +35,22 @@ export const GAMES: Readonly<
   smz3: { name: "SMZ3", randomizer: "samus.link" },
 };
 
+/**
+ * What players and search engines call the tracker. A display name only: the
+ * repository, the URL, the storage keys and the desktop app's identifier keep
+ * the original `alltp-tracker`, which people's saved runs and installs rest on.
+ */
+export const PRODUCT_NAME = "Rando Atlas";
+
 const LOADERS: Readonly<Record<GameId, () => Promise<GameModule>>> = {
   alttpr: () => import("@/games/alttpr/module").then(({ alttpr }) => alttpr),
   sm: () => import("@/games/sm/module").then(({ sm }) => sm),
   smz3: () => import("@/games/smz3/module").then(({ smz3 }) => smz3),
 };
+
+/** The page's title for a game: the product's name, then the game's. */
+export const pageTitle = (id: GameId): string =>
+  `${PRODUCT_NAME} \u00b7 ${GAMES[id].name} Randomizer`;
 
 /** Where this device keeps the game it tracks. */
 export const ACTIVE_GAME_KEY = "alltp-tracker-game";

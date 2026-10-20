@@ -2,7 +2,7 @@
 name = "alltp-tracker"
 # The app's version is the product's: tauri.conf.json reads the root package.json
 version = "0.0.0"
-description = "ALLTP Tracker, the desktop app"
+description = "Rando Atlas, the desktop app"
 license = "MIT"
 repository = "https://github.com/kqesar/alltp-tracker"
 edition = "2024"

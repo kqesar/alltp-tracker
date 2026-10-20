@@ -10,6 +10,17 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.header__brand {
+  display: flex;
+  gap: 0 var(--spacing-sm);
+  align-items: baseline;
+}
+
+.header__game {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
 .header__title {
   font-size: var(--font-size-xl);
   font-weight: 700;
@@ -84,5 +95,10 @@
 
   .header__title {
     font-size: var(--font-size-lg);
+  }
+
+  /* No room for it beside the name and the icons */
+  .header__game {
+    display: none;
   }
 }

@@ -50,7 +50,7 @@ describe("AppMenuPrompt", () => {
     act(() => useAppMenuStore.setState({ state: available }));
 
     expect(prompt()).toHaveTextContent(
-      "Add ALLTP Tracker to your application menu?",
+      "Add Rando Atlas to your application menu?",
     );
     expect(add()).toHaveRole("button");
     expect(add()).toHaveAccessibleName("Add");

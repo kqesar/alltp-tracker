@@ -1,4 +1,4 @@
-import type { GameId } from "@/games/registry";
+import { GAMES, type GameId, PRODUCT_NAME } from "@/games/registry";
 
 type HeaderProps = {
   /** The game tracked: its randomizer's link, and ALttP's original tracker. */
@@ -62,7 +62,10 @@ export const Header = ({ game = "alttpr" }: HeaderProps) => {
   return (
     <header className="header">
       <div className="header__brand">
-        <h1 className="header__title">ALLTP Tracker</h1>
+        <h1 className="header__title">{PRODUCT_NAME}</h1>
+        <p className="header__game" data-testid="header-game">
+          {GAMES[game].name}
+        </p>
       </div>
 
       <nav aria-label="Navigation and external links" className="header__nav">

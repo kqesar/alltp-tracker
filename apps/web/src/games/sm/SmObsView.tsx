@@ -28,7 +28,7 @@ export const SmObsView = ({ background }: ObsViewProps) => {
     const root = document.documentElement;
     const title = document.title;
     root.dataset.view = "obs";
-    document.title = "ALLTP Tracker stream view";
+    document.title = "Rando Atlas stream view";
     return () => {
       delete root.dataset.view;
       document.title = title;
