@@ -37,9 +37,14 @@ pub const APP_ID: &str = "io.github.kqesar.alltp-tracker";
 const REGISTER_TRIES: u32 = 3;
 
 /// A quoted Exec argument, per the Desktop Entry specification: `"`, `` ` ``,
-/// `$` and `\` are escaped with a backslash, and the backslashes themselves
-/// doubled by the file's own string escaping.
-fn exec_quoted(command: &str) -> String {
+/// `$` and `\` are escaped with a backslash (the backslashes themselves
+/// doubled by the file's own string escaping), and `%` is doubled, or GIO
+/// would read `%r` in a path as a field code and drop it. `None` for a path
+/// with a control character: a newline would start another key of the file.
+fn exec_quoted(command: &str) -> Option<String> {
+    if command.chars().any(char::is_control) {
+        return None;
+    }
     let mut quoted = String::from("\"");
     for c in command.chars() {
         match c {
@@ -48,16 +53,18 @@ fn exec_quoted(command: &str) -> String {
                 quoted.push_str("\\\\");
                 quoted.push(c);
             }
+            '%' => quoted.push_str("%%"),
             _ => quoted.push(c),
         }
     }
     quoted.push('"');
-    quoted
+    Some(quoted)
 }
 
-/// The hidden desktop file the portal's Register looks up.
-pub fn desktop_entry(command: &str) -> String {
-    format!(
+/// The hidden desktop file the portal's Register looks up, or `None` when
+/// the command cannot be written safely.
+pub fn desktop_entry(command: &str) -> Option<String> {
+    Some(format!(
         "[Desktop Entry]\n\
          Type=Application\n\
          Name=ALLTP Tracker\n\
@@ -65,8 +72,8 @@ pub fn desktop_entry(command: &str) -> String {
          Exec={} %U\n\
          Icon=alltp-tracker\n\
          NoDisplay=true\n",
-        exec_quoted(command)
-    )
+        exec_quoted(command)?
+    ))
 }
 
 fn applications_dir() -> Option<PathBuf> {
@@ -84,7 +91,11 @@ pub fn ensure_desktop_file(command: &str) -> std::io::Result<()> {
         return Err(std::io::Error::other("no home directory"));
     };
     let path = dir.join(format!("{APP_ID}.desktop"));
-    let wanted = desktop_entry(command);
+    let Some(wanted) = desktop_entry(command) else {
+        return Err(std::io::Error::other(
+            "the command holds a control character, which a desktop file cannot carry",
+        ));
+    };
     if std::fs::read_to_string(&path).is_ok_and(|current| current == wanted) {
         return Ok(());
     }
@@ -443,7 +454,7 @@ mod tests {
 
     #[test]
     fn writes_a_hidden_desktop_entry_for_the_command() {
-        let entry = desktop_entry("/opt/ALLTP Tracker/alltp-tracker");
+        let entry = desktop_entry("/opt/ALLTP Tracker/alltp-tracker").unwrap();
         assert!(entry.starts_with("[Desktop Entry]\nType=Application\n"));
         assert!(entry.contains("NoDisplay=true\n"));
         assert!(entry.contains("Exec=\"/opt/ALLTP Tracker/alltp-tracker\" %U\n"));
@@ -453,9 +464,31 @@ mod tests {
     fn quotes_what_the_exec_line_would_otherwise_read_as_syntax() {
         // The specification asks for a backslash before ", `, $ and \ inside the
         // quotes, and the file's string escaping doubles every backslash
-        assert_eq!(exec_quoted("/a b/c"), "\"/a b/c\"");
-        assert_eq!(exec_quoted("/a\"b"), "\"/a\\\\\"b\"");
-        assert_eq!(exec_quoted("/a$b`c"), "\"/a\\\\$b\\\\`c\"");
-        assert_eq!(exec_quoted("/a\\b"), "\"/a\\\\\\\\b\"");
+        let quoted = |command| exec_quoted(command).unwrap();
+        assert_eq!(quoted("/a b/c"), "\"/a b/c\"");
+        assert_eq!(quoted("/a\"b"), "\"/a\\\\\"b\"");
+        assert_eq!(quoted("/a$b`c"), "\"/a\\\\$b\\\\`c\"");
+        assert_eq!(quoted("/a\\b"), "\"/a\\\\\\\\b\"");
+    }
+
+    #[test]
+    fn doubles_a_percent_so_it_is_not_read_as_a_field_code() {
+        assert_eq!(exec_quoted("/100%real/app").unwrap(), "\"/100%%real/app\"");
+        let entry = desktop_entry("/100%real/app").unwrap();
+        assert!(entry.contains("Exec=\"/100%%real/app\" %U\n"));
+    }
+
+    #[test]
+    fn refuses_a_path_that_would_inject_keys_into_the_file() {
+        for command in [
+            "/a\nExec=/bin/evil",
+            "/a\rb",
+            "/a\tb",
+            "/a\u{7}b",
+            "/a\u{0}b",
+        ] {
+            assert_eq!(exec_quoted(command), None, "{command:?}");
+            assert_eq!(desktop_entry(command), None, "{command:?}");
+        }
     }
 }
