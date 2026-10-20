@@ -1,7 +1,8 @@
 name: Desktop
 
 # The desktop app's Rust side (apps/desktop/src-tauri): lint, format and
-# tests, on a pull request or a push that touches it only. Its web side is
+# tests on Linux, and the lint again on Windows and macOS (their own code),
+# on a pull request or a push that touches it only. Its web side is
 # apps/web's, which the CI workflow tests; its installers are built for each
 # OS when a release is cut (release-please.yml).
 on:
@@ -72,3 +73,47 @@ jobs:
 
       - name: Test
         run: cargo test --locked
+
+  # The code that compiles on one system only (cfg(windows), macOS) is linted
+  # where it compiles: otherwise a mistake there fails the release matrix,
+  # after the merge, instead of the pull request.
+  platforms:
+    name: Lint (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: apps/desktop/src-tauri
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup pnpm, Node.js and dependencies
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        with:
+          cache: true
+          require-lockfile: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          components: clippy
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: "apps/desktop/src-tauri -> target"
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+
+      # tauri::generate_context! embeds the pages: they must exist to compile
+      - name: Build the app's pages
+        working-directory: .
+        run: pnpm --filter @alltp/web exec vite build --mode desktop
+
+      - name: Lint
+        run: cargo clippy --locked --all-targets -- -D warnings
