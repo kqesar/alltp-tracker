@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.35.0](https://github.com/kqesar/alltp-tracker/compare/v2.34.0...v2.35.0) (2026-10-20)
+
+
+### ✨ Features
+
+* **web:** a Half Magic cell on the ALttPR board ([0c0a6fa](https://github.com/kqesar/alltp-tracker/commit/0c0a6fa66334fc7df9425cc5b1375e17df9afa94))
+* **web:** shorter share links for ALttPR and SMZ3 ([9dea59f](https://github.com/kqesar/alltp-tracker/commit/9dea59fba534d99dfd8042ee658f03bb9c47eb95))
+
+
+### 🐛 Bug Fixes
+
+* **web:** keep shared links opening when the tracker's tables grow ([bf68c83](https://github.com/kqesar/alltp-tracker/commit/bf68c83531e807979d79fda859f1296360dedf4f))
+* **web:** let the logic see half magic ([6f19cda](https://github.com/kqesar/alltp-tracker/commit/6f19cda09e33c087c898b03aa5e2afc157e9f4fe))
+* **web:** stop flashing the landing text before the board on reload ([f1b9349](https://github.com/kqesar/alltp-tracker/commit/f1b934997bba437b09013a41e12343fdf7433d51))
+
+
+### 📚 Documentation
+
+* state the Map Rando race rule as its source has it ([15b92af](https://github.com/kqesar/alltp-tracker/commit/15b92af4f3506377763a5c95978018bf132031a2))
+
 ## [2.34.0](https://github.com/kqesar/alltp-tracker/compare/v2.33.0...v2.34.0) (2026-10-20)
 
 
