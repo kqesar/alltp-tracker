@@ -61,6 +61,57 @@ function uncovered(
 const overlaps = (a: ByteRange, b: ByteRange) =>
   a.address < b.address + b.size && b.address < a.address + a.size;
 
+/** Checks `planReads` against a sorted sweep that counts the spans it must produce. */
+function expectFewestSpans(
+  input: readonly ByteRange[],
+  gapSize: number,
+  bars: readonly ByteRange[],
+) {
+  const plan = planReads(input, {
+    barriers: bars,
+    gap: gapSize,
+    limits: { ...limits, maxPieceSize: 0x1_0000, maxPieces: 1 },
+  });
+  // Reference: a sorted sweep counting where a new span must start.
+  const sorted = [...input].sort((a, b) => a.address - b.address);
+  let spans = 1;
+  let end = sorted[0].address + sorted[0].size;
+  let start = sorted[0].address;
+  for (const r of sorted.slice(1)) {
+    const sameRegion = pakRegion(start) === pakRegion(r.address);
+    const blocked = bars.some(
+      (bar) => bar.address < r.address && bar.address + bar.size > end,
+    );
+    if (
+      sameRegion &&
+      (r.address <= end || (r.address - end <= gapSize && !blocked))
+    ) {
+      end = Math.max(end, r.address + r.size);
+    } else {
+      spans++;
+      start = r.address;
+      end = r.address + r.size;
+    }
+  }
+  // With one piece per request and no size cap, requests count pages.
+  const pieces = planPieces(plan);
+  expect(pieces.length).toBeGreaterThanOrEqual(spans);
+  // A span break is a hole between pieces, or a change of region: pieces
+  // that touch across a region boundary (WRAM to VRAM) are still two spans.
+  let breaks = 1;
+  for (let i = 1; i < pieces.length; i++) {
+    const previousEnd = pieces[i - 1].address + pieces[i - 1].size;
+    if (
+      pieces[i].address !== previousEnd ||
+      !sameRegionOf(pieces[i - 1].address, pieces[i].address)
+    )
+      breaks++;
+  }
+  expect(breaks).toBe(spans);
+}
+
+const sameRegionOf = (a: number, b: number) => pakRegion(a) === pakRegion(b);
+
 describe("planReads", () => {
   it("reads every byte of every range, each once, in order", () => {
     fc.assert(
@@ -137,43 +188,21 @@ describe("planReads", () => {
   it("merges into the fewest spans the gap and barriers allow", () => {
     fc.assert(
       fc.property(ranges, gap, barriers, (input, gapSize, bars) => {
-        const plan = planReads(input, {
-          barriers: bars,
-          gap: gapSize,
-          limits: { ...limits, maxPieceSize: 0x1_0000, maxPieces: 1 },
-        });
-        // Reference: a sorted sweep counting where a new span must start.
-        const sorted = [...input].sort((a, b) => a.address - b.address);
-        let spans = 1;
-        let end = sorted[0].address + sorted[0].size;
-        let start = sorted[0].address;
-        for (const r of sorted.slice(1)) {
-          const sameRegion = pakRegion(start) === pakRegion(r.address);
-          const blocked = bars.some(
-            (bar) => bar.address < r.address && bar.address + bar.size > end,
-          );
-          if (
-            sameRegion &&
-            (r.address <= end || (r.address - end <= gapSize && !blocked))
-          ) {
-            end = Math.max(end, r.address + r.size);
-          } else {
-            spans++;
-            start = r.address;
-            end = r.address + r.size;
-          }
-        }
-        // With one piece per request and no size cap, requests count pages.
-        const pages = planPieces(plan).length;
-        expect(pages).toBeGreaterThanOrEqual(spans);
-        let breaks = 1;
-        const pieces = planPieces(plan);
-        for (let i = 1; i < pieces.length; i++) {
-          if (pieces[i].address !== pieces[i - 1].address + pieces[i - 1].size)
-            breaks++;
-        }
-        expect(breaks).toBe(spans);
+        expectFewestSpans(input, gapSize, bars);
       }),
+    );
+  });
+
+  it("splits ranges contiguous across WRAM and VRAM into two spans", () => {
+    // Seed -1517002536 found it: 0xF6FF00 + 256 = 0xF70000, no gap between them,
+    // yet the FX Pak Pro regions differ, so merging them would be wrong.
+    expectFewestSpans(
+      [
+        { address: 0xf6_ff00, size: 256 },
+        { address: 0xf7_0000, size: 16 },
+      ],
+      0,
+      [],
     );
   });
 
