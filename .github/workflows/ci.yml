@@ -426,7 +426,8 @@ jobs:
   #     deployed already (is-release-commit.sh).
   # A release run replaced in the master queue by a newer one tags nothing; the
   # next run does, as release-please acts on every merged release pull request
-  # still labelled `autorelease: pending` (docs/ci.md, "Releases").
+  # still labelled `autorelease: pending`, if the guard below accepts its commit
+  # (docs/ci.md, "Releases").
   # The workflow token opens the pull request, so no check runs on it.
   release-please:
     name: Release

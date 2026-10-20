@@ -302,7 +302,7 @@ flowchart LR
   assets --> rel["the same release"]
 ```
 
-- The `desktop` job of `.github/workflows/desktop-release.yml` (called by `ci.yml` once release-please cuts a release, after the site's deploy) runs only then: about five minutes per system, in parallel. Pull requests that touch `apps/desktop` run `.github/workflows/desktop.yml` instead (Linux: `cargo fmt`, `clippy`, tests); the web side is tested by the CI workflow as always.
+- The `desktop` job of `.github/workflows/desktop-release.yml` (dispatched by `ci.yml` once release-please cuts a release, after the site's deploy; it can also be started by hand for a tag, see `docs/ci.md`) runs only then: about five minutes per system, in parallel. Pull requests that touch `apps/desktop` run `.github/workflows/desktop.yml` instead (Linux: `cargo fmt`, `clippy`, tests); the web side is tested by the CI workflow as always.
 - The app's version is the product's: `tauri.conf.json` reads the root `package.json`, which release-please bumps.
 - Linux is built on Ubuntu 22.04, the oldest glibc the AppImage should run on.
 
