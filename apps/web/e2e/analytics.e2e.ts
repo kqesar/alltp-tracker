@@ -22,6 +22,13 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
+// The page keeps asking for files (images, chunks) after the assertions are
+// done: a request this route is still answering when the test ends fails the
+// test with "route.fetch: Test ended". Let the page go quiet first.
+test.afterEach(async ({ page }) => {
+  await page.waitForLoadState("networkidle");
+});
+
 /** Count what the page asks GoatCounter's script host for, the script stubbed. */
 const watchCounter = async (page: Page) => {
   const asked: string[] = [];
