@@ -229,6 +229,7 @@ impl Mechanism {
 
     /// The portal turned out unusable here: the command line, for the rest of
     /// the process.
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     fn give_way(&mut self, reason: String) {
         self.kind = Kind::Command;
         self.configurable = false;
