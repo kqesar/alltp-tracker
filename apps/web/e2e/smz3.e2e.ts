@@ -17,6 +17,19 @@ const openSmz3 = async (page: Page) => {
   await expect(page.getByTestId("smz3-item-morph")).toBeVisible();
 };
 
+/**
+ * The tracker on SMZ3 in one page load: the game this device tracks is saved
+ * before the page starts, where `openSmz3` loads the page three times to reach
+ * it through the dialog.
+ */
+const openOnSmz3 = async (page: Page) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("alltp-tracker-game", "smz3"),
+  );
+  await page.goto("./");
+  await expect(page.getByTestId("smz3-item-morph")).toBeVisible();
+};
+
 test("tracks SMZ3: items, both maps by the logic, a reload keeping the run", async ({
   page,
 }) => {
@@ -163,16 +176,27 @@ const auditBoard = async (page: Page) => {
   expect(await unreachableClickables(page)).toEqual([]);
 };
 
+// Two tests per width, not one: each opens the tracker and runs several axe
+// analyses of a board with hundreds of markers, which is CPU the browser
+// shares with the other workers. One test doing it all spent 5 s of the 30 s
+// it has, so a loaded machine ran it out of time.
 for (const width of WIDTHS) {
-  test(`the SMZ3 board fits, passes axe and is keyboard-reachable at ${width}px`, async ({
+  test(`the SMZ3 maps fit, pass axe and are keyboard-reachable at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ height: 900, width });
-    await openSmz3(page);
+    await openOnSmz3(page);
     for (const map of ["Hyrule", "Zebes"]) {
       await page.getByRole("tab", { name: map }).click();
       await auditBoard(page);
     }
+  });
+
+  test(`the SMZ3 run type dialog and keysanity board pass axe and fit at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ height: 900, width });
+    await openOnSmz3(page);
 
     // The run type dialog
     await page.getByRole("button", { name: /^Mode/ }).click();
