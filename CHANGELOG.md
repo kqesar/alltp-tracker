@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.31.0](https://github.com/kqesar/alltp-tracker/compare/v2.30.0...v2.31.0) (2026-10-20)
+
+
+### ✨ Features
+
+* **autotrack:** read RetroArch directly over its network commands ([7eb94e4](https://github.com/kqesar/alltp-tracker/commit/7eb94e43c9b9e44cb2cbf46498d467be79163250))
+* **desktop:** read RetroArch without SNI ([fcfd63e](https://github.com/kqesar/alltp-tracker/commit/fcfd63eee72ef9b32a3b6e383b951fb0af84733d))
+
+
+### 🐛 Bug Fixes
+
+* **web:** name the game a wrong ROM is checked against ([172f71b](https://github.com/kqesar/alltp-tracker/commit/172f71b0c8183a93a68c45dc7e5729d7e7bb649e))
+* **web:** point Safari players at the desktop app ([2c705be](https://github.com/kqesar/alltp-tracker/commit/2c705bee881e121673ebe2325b681895390e74ff))
+
+
+### 📚 Documentation
+
+* **autotrack:** RetroArch caps a read at its descriptor's end only ([9895155](https://github.com/kqesar/alltp-tracker/commit/98951559d87c3906f370e1a7925605799ea7bf24))
+
 ## [2.30.0](https://github.com/kqesar/alltp-tracker/compare/v2.29.1...v2.30.0) (2026-10-19)
 
 
