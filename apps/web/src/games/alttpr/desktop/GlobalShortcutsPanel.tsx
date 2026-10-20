@@ -16,6 +16,7 @@ import {
   windowHolderOf,
 } from "@/games/alttpr/desktop/globalKeymap";
 import {
+  hasUnsentChanges,
   openDesktopSettings,
   syncGlobalShortcuts,
   syncIfChanged,
@@ -53,9 +54,13 @@ export const statusText = (
   report: Report | null,
   pending: boolean,
   failure: string | null,
+  declined = false,
 ): string => {
   if (failure) {
-    return `The app could not register global shortcuts (${failure}). Bind keys in your window manager to the commands below instead.`;
+    // The commands show in command mode only: don't point at them elsewhere
+    return mechanism.kind === "command"
+      ? `The app could not register global shortcuts (${failure}). Bind keys in your window manager to the commands below instead.`
+      : `The app could not register global shortcuts (${failure}).`;
   }
   if (mechanism.reason && mechanism.kind === "command") {
     return `Your desktop could not register global shortcuts (${mechanism.reason}). Bind keys in its settings to the commands below instead.`;
@@ -67,11 +72,11 @@ export const statusText = (
       return "Your desktop has no global shortcut service the tracker can use. Bind keys in your window manager to commands like these:";
     case "portal": {
       if (pending) return "Waiting for your desktop's approval…";
-      if (report?.state === "refused") {
-        return "Your desktop's approval was declined.";
+      if (declined || report?.state === "refused") {
+        return "Your desktop's approval was declined. The tracker won't ask again by itself.";
       }
       if (report?.state === "unavailable") {
-        return `Your desktop could not register global shortcuts (${report.bindings.find((binding) => binding.message)?.message ?? "no reason given"}). Bind keys in its settings to the commands below instead.`;
+        return `Your desktop could not register global shortcuts (${report.bindings.find((binding) => binding.message)?.message ?? "no reason given"}).`;
       }
       if (report?.state === "active" || report?.state === "partial") {
         const approved = report.bindings.filter(
@@ -85,8 +90,10 @@ export const statusText = (
 };
 
 /** A numpad key with no Ctrl, Alt or Meta: the one kind the floor lets through. */
-const isBareNumpad = (chord: Chord) =>
-  /(^|\+)Numpad[^+]*$/.test(chord) && !/(^|\+)(Control|Alt|Meta)\+/.test(chord);
+const isBareNumpad = (chord: Chord | undefined) =>
+  chord !== undefined &&
+  /(^|\+)Numpad[^+]*$/.test(chord) &&
+  !/(^|\+)(Control|Alt|Meta)\+/.test(chord);
 
 /** The note under a key: what the system said about it. */
 const noteOf = (binding: BindingReport | undefined) => {
@@ -128,6 +135,8 @@ const GlobalShortcutsPanel = ({
   const report = useGlobalShortcutsStore((state) => state.report);
   const pending = useGlobalShortcutsStore((state) => state.pending);
   const failure = useGlobalShortcutsStore((state) => state.failure);
+  const declined = useGlobalShortcutsStore((state) => state.declined);
+  const settingsError = useGlobalShortcutsStore((state) => state.settingsError);
   const windowKeymap = useGameStore((state) => state.shortcuts.keymap);
   const { setGlobalEnabled, setGlobalKeymap } =
     useGlobalShortcutsStore.getState();
@@ -177,6 +186,18 @@ const GlobalShortcutsPanel = ({
     );
   };
 
+  // After a refusal the desktop holds none of the keys, whatever the last report says
+  const refused =
+    kind === "portal" && (declined || report?.state === "refused");
+  const noteFor = (action: ActionId) => {
+    if (!keymap[action]) return null;
+    return refused
+      ? { text: "Not approved", warn: true }
+      : noteOf(bindingOf(action));
+  };
+  const noteIdOf = (action: ActionId) =>
+    `global-note-${action.replace(":", "-")}`;
+
   const rowExtra = (action: ActionId) => {
     if (kind === "command") {
       const { control, direction } = parseAction(action);
@@ -192,13 +213,13 @@ const GlobalShortcutsPanel = ({
         </button>
       );
     }
-    if (!keymap[action]) return null;
-    const note = noteOf(bindingOf(action));
+    const note = noteFor(action);
     if (!note) return null;
     return (
       <span
         className={`shortcut-note${note.warn ? " shortcut-note--warn" : ""}`}
         data-testid={`shortcut-note-${action.replace(":", "-")}`}
+        id={noteIdOf(action)}
       >
         {note.warn && <span aria-hidden="true">⚠ </span>}
         {note.text}
@@ -208,8 +229,14 @@ const GlobalShortcutsPanel = ({
 
   const bound = Object.keys(keymap).length;
   const bareNumpad = Object.values(keymap).some(isBareNumpad);
+  // Sent once the desktop has the same keys: nothing left to send
   const unsent =
-    kind === "portal" && enabled && wantedBindings().length > 0 && !pending;
+    kind === "portal" &&
+    enabled &&
+    !refused &&
+    !pending &&
+    wantedBindings().length > 0 &&
+    hasUnsentChanges();
 
   return (
     <div className="global-panel">
@@ -236,7 +263,7 @@ const GlobalShortcutsPanel = ({
           data-testid="global-shortcuts-status"
           role="status"
         >
-          {statusText(mechanism, report, pending, failure)}
+          {statusText(mechanism, report, pending, failure, declined)}
         </p>
         {kind === "command" && (
           <pre className="global-command" data-testid="global-command-example">
@@ -264,7 +291,7 @@ const GlobalShortcutsPanel = ({
                 Send to desktop
               </button>
             )}
-            {report?.state === "refused" && (
+            {refused && (
               <button
                 className="modal-btn modal-btn--primary"
                 data-testid="global-shortcuts-again"
@@ -287,6 +314,15 @@ const GlobalShortcutsPanel = ({
               )}
           </div>
         )}
+        {kind === "portal" && settingsError && (
+          <p
+            className="shortcuts__hint"
+            data-testid="global-shortcuts-settings-error"
+            role="status"
+          >
+            {`Could not open your desktop's shortcut settings (${settingsError}).`}
+          </p>
+        )}
         {enabled && bound === 0 && kind !== "command" && (
           <p className="shortcuts__hint" data-testid="global-shortcuts-hint">
             Pick a key for each control you want to reach from the emulator.
@@ -306,6 +342,7 @@ const GlobalShortcutsPanel = ({
 
       <ShortcutTable
         keymap={keymap}
+        noteId={(action) => (noteFor(action) ? noteIdOf(action) : undefined)}
         onCapturingChange={setCapturing}
         onChange={setGlobalKeymap}
         onStatus={onStatus}

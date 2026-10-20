@@ -55,6 +55,14 @@ export const DEFAULT_GLOBAL: Readonly<ShortcutPrefs> = Object.freeze({
 });
 
 type GlobalState = ShortcutPrefs & {
+  /**
+   * The player declined the desktop's dialog (portal). Saved: the dialog must
+   * not come back on its own at the next launch, as a browser does not ask
+   * again for a permission the person denied. Ask again clears it.
+   */
+  declined: boolean;
+  /** Why the desktop's own shortcut settings did not open (not saved) */
+  settingsError: string | null;
   setGlobalEnabled: (enabled: boolean) => void;
   setGlobalKeymap: (keymap: Keymap) => void;
   /** What the app can do on this system, once it has said (not saved) */
@@ -81,12 +89,15 @@ export const useGlobalShortcutsStore = create<GlobalState>()(
     (set): GlobalState => ({
       ...DEFAULT_GLOBAL,
       capturing: false,
+      declined: false,
       failure: null,
       mechanism: null,
       pending: false,
       report: null,
-      setGlobalEnabled: (enabled) => set({ enabled }),
+      // Switching it on or off is the player's own call: a refusal does not outlive it
+      setGlobalEnabled: (enabled) => set({ declined: false, enabled }),
       setGlobalKeymap: (keymap) => set({ keymap }),
+      settingsError: null,
     }),
     {
       // Leniently, as the window shortcuts are: a malformed chord or an
@@ -94,9 +105,17 @@ export const useGlobalShortcutsStore = create<GlobalState>()(
       merge: (saved, current) => ({
         ...current,
         ...restoreShortcuts(saved, DEFAULT_GLOBAL),
+        declined:
+          typeof saved === "object" &&
+          saved !== null &&
+          (saved as { declined?: unknown }).declined === true,
       }),
       name: "alltp-tracker-global-shortcuts",
-      partialize: ({ enabled, keymap }) => ({ enabled, keymap }),
+      partialize: ({ declined, enabled, keymap }) => ({
+        declined,
+        enabled,
+        keymap,
+      }),
       version: 1,
     },
   ),
