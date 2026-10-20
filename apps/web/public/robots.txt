@@ -1,0 +1,7 @@
+# Crawlers read robots.txt at the root of a host only. This site is served
+# under /alltp-tracker/ on kqesar.github.io, so they never fetch this file:
+# without one, everything is allowed. It takes effect on a domain of its own.
+User-agent: *
+Allow: /
+
+Sitemap: https://kqesar.github.io/alltp-tracker/sitemap.xml

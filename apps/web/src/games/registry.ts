@@ -72,6 +72,30 @@ export const activeGame = (storage?: Pick<Storage, "getItem">): GameId => {
   }
 };
 
+/**
+ * Takes the game a link asks for (`?game=sm`: the button of the game pages
+ * search engines index, a link someone shares) as this device's, saved as a
+ * switch is, then drops the parameter from the address so a reload or a
+ * bookmark does not ask again. Anything but a game's id is dropped unread.
+ */
+export const takeGameFromAddress = (): void => {
+  const address = new URL(window.location.href);
+  const asked = address.searchParams.get("game");
+  if (asked === null) return;
+  address.searchParams.delete("game");
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${address.pathname}${address.search}${address.hash}`,
+  );
+  if (!isGameId(asked)) return;
+  try {
+    localStorage.setItem(ACTIVE_GAME_KEY, asked);
+  } catch {
+    // Storage refused: the page tracks the game it would have
+  }
+};
+
 /** Load a game's module. */
 export const loadGame = (id: GameId): Promise<GameModule> => LOADERS[id]();
 

@@ -1,0 +1,24 @@
+/* What index.html holds until the tracker starts, and for a crawler or a
+   browser without scripts: React replaces it as the page renders */
+.boot {
+  max-width: 36rem;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  color: var(--color-text-secondary);
+}
+
+.boot h1 {
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-xl);
+  color: var(--color-accent);
+}
+
+.boot ul {
+  padding-left: var(--spacing-lg);
+  margin: var(--spacing-md) 0;
+  list-style: disc;
+}
+
+.boot a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}

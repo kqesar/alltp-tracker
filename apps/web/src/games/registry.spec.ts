@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   ACTIVE_GAME_KEY,
   activeGame,
   loadGame,
   pageTitle,
+  takeGameFromAddress,
 } from "@/games/registry";
 
 const storage = (saved: string | null) => ({ getItem: () => saved });
@@ -35,6 +36,47 @@ describe("activeGame", () => {
     } finally {
       localStorage.removeItem(ACTIVE_GAME_KEY);
     }
+  });
+});
+
+describe("takeGameFromAddress", () => {
+  const open = (address: string) =>
+    window.history.replaceState(null, "", address);
+
+  afterEach(() => {
+    localStorage.clear();
+    open("/");
+  });
+
+  it("makes the game a link asks for this device's, and drops the parameter", () => {
+    open("/alltp-tracker/?game=sm&view=obs#top");
+
+    takeGameFromAddress();
+
+    expect(localStorage.getItem(ACTIVE_GAME_KEY)).toBe("sm");
+    expect(window.location.pathname + window.location.search).toBe(
+      "/alltp-tracker/?view=obs",
+    );
+    expect(window.location.hash).toBe("#top");
+  });
+
+  it("drops a game it does not know, keeping the device's", () => {
+    localStorage.setItem(ACTIVE_GAME_KEY, "smz3");
+    open("/?game=zelda1");
+
+    takeGameFromAddress();
+
+    expect(localStorage.getItem(ACTIVE_GAME_KEY)).toBe("smz3");
+    expect(window.location.search).toBe("");
+  });
+
+  it("leaves an address without the parameter as it is", () => {
+    open("/?view=obs");
+
+    takeGameFromAddress();
+
+    expect(localStorage.getItem(ACTIVE_GAME_KEY)).toBeNull();
+    expect(window.location.search).toBe("?view=obs");
   });
 });
 
