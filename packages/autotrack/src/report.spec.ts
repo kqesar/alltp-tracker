@@ -121,7 +121,7 @@ describe("diagnosticReport", () => {
     });
     expect(report).toBe(
       [
-        "ALttP tracker autotracking report",
+        "Rando Atlas autotracking report",
         `package: @alltp/autotrack ${AUTOTRACK_VERSION}`,
         "time: 2026-10-16T12:00:05.000Z",
         "environment: linux x86_64, Firefox 158, loopback prompt",
