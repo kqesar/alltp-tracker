@@ -320,6 +320,9 @@ jobs:
       && needs.ci.result == 'success' && needs.e2e.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    # A record is a shortcut for master, never a requirement: if this job fails
+    # (an API hiccup), the pull request stays green and master simply tests.
+    continue-on-error: true
     # Reads the commit through the API: no checkout, nothing of the pull
     # request is run here
     permissions:
@@ -345,7 +348,7 @@ jobs:
           path: ${{ runner.temp }}/tested.txt
           if-no-files-found: error
           overwrite: true
-          retention-days: 30
+          retention-days: 7
 
   # Master, when plan found the tree tested already: the site the browser
   # tests exercised, built again from the same tree (the build is
