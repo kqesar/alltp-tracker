@@ -3,9 +3,12 @@
 // instants of a timeline. A game's *codec* swaps those fields for bytes
 // indexed by the pack's ordered tables (a bitset, varints), written as
 // base64url inside the same JSON, which deflate then carries at about the
-// size of the bytes. The link names a digest of the tables it was indexed
-// by: a link from a tracker whose tables differ would put the bits on the
-// wrong locations, so it is refused instead of read.
+// size of the bytes. The link names the sizes of the tables it was indexed
+// by and a digest of their contents: the tables only ever grow at the end, so
+// a link made against a prefix of today's tables still reads (what the link
+// does not hold stays as a fresh run has it), while one made against tables
+// that were reordered or cut would put its bits on the wrong places, and is
+// refused instead of read.
 
 import * as z from "zod/mini";
 import type { GameId } from "@/games/registry";
@@ -34,17 +37,38 @@ export interface FieldCodec {
   unpack: (bytes: Uint8Array) => unknown;
 }
 
+/** Ordered tables of ids: what a field's indices and bits stand for. */
+export type Tables = readonly (readonly string[])[];
+
+/** A codec's fields over some tables, and the tables a digest is made of. */
+export interface Layout {
+  /** The fields of `progress` that travel as bytes, by name. */
+  readonly fields: Readonly<Record<string, FieldCodec>>;
+  /**
+   * What the link's digest covers: the tables the layout was made over and
+   * any table derived from them, which the fields index too.
+   */
+  readonly digested: Tables;
+}
+
 /** How a game's links are packed. */
 export interface PackCodec {
   readonly game: GameId;
   /**
-   * The ordered tables the fields index (locations, items…). Their digest
-   * goes in the link: reordering one, or adding to it, changes what an index
-   * means, and a link made before must not be read after.
+   * The ordered tables the fields index (locations, items…), as this version
+   * has them. They are append-only: a new entry goes at the end, never in
+   * the middle, and none is removed or moved. The link carries their sizes
+   * and the digest of their contents, so a link made against a prefix of
+   * these still reads, and one made against any other order is refused.
    */
-  readonly tables: readonly (readonly string[])[];
-  /** The fields of `progress` that travel as bytes, by name. */
-  readonly fields: Readonly<Record<string, FieldCodec>>;
+  readonly tables: Tables;
+  /**
+   * The sizes the tables had when links carried none, which the first
+   * version of the packed form did not write.
+   */
+  readonly legacySizes: readonly number[];
+  /** The fields over `tables`, or over a prefix of each: an older link's. */
+  readonly at: (tables: Tables) => Layout;
 }
 
 /**
@@ -52,7 +76,7 @@ export interface PackCodec {
  * against a mismatch by accident, not by malice: a link opens nothing
  * unchecked anyway, the game's own import validates the run afterwards.
  */
-export const digestOf = (tables: PackCodec["tables"]): string => {
+export const digestOf = (tables: Tables): string => {
   const text = JSON.stringify(tables);
   let hash = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) {
@@ -81,8 +105,9 @@ export const packRun = (save: string, codec: PackCodec): string => {
   const file: unknown = JSON.parse(save);
   if (!isRecord(file) || file.format !== SAVE_FORMAT) return save;
   if (file.game !== codec.game || !isRecord(file.progress)) return save;
+  const layout = codec.at(codec.tables);
   const progress: Record<string, unknown> = { ...file.progress };
-  for (const [name, field] of Object.entries(codec.fields)) {
+  for (const [name, field] of Object.entries(layout.fields)) {
     if (!(name in progress)) continue;
     const bytes = field.pack(progress[name]);
     if (bytes === null) return save;
@@ -93,7 +118,8 @@ export const packRun = (save: string, codec: PackCodec): string => {
     format: LINK_FORMAT,
     link: LINK_VERSION,
     progress,
-    table: digestOf(codec.tables),
+    sizes: codec.tables.map((table) => table.length),
+    table: digestOf(layout.digested),
   });
 };
 
@@ -103,8 +129,23 @@ const linkSchema = z.looseObject({
   game: z.string(),
   link: z.number(),
   progress: z.record(z.string(), z.unknown()),
+  sizes: z.optional(z.array(z.number())),
   table: z.string(),
 });
+
+/**
+ * The tables as a link was made against them, or null when this version
+ * cannot have them: a link of a newer tracker, whose tables are longer, or
+ * one that names another number of tables.
+ */
+const prefixes = (codec: PackCodec, sizes: readonly number[]): Tables | null =>
+  sizes.length === codec.tables.length &&
+  sizes.every(
+    (size, at) =>
+      Number.isInteger(size) && size >= 0 && size <= codec.tables[at].length,
+  )
+    ? codec.tables.map((table, at) => table.slice(0, sizes[at]))
+    : null;
 
 /** A link read back: the save it stands for, or why it cannot be one. */
 export type Unpacked =
@@ -131,12 +172,25 @@ export const unpackRun = (text: string, codec: PackCodec): Unpacked => {
   if (!link.success || link.data.game !== codec.game) {
     return { ok: false, reason: MALFORMED };
   }
-  const { format: _, link: version, progress, table, ...rest } = link.data;
-  if (version !== LINK_VERSION || table !== digestOf(codec.tables)) {
+  const {
+    format: _,
+    link: version,
+    progress,
+    sizes,
+    table,
+    ...rest
+  } = link.data;
+  const made = prefixes(codec, sizes ?? codec.legacySizes);
+  const layout = made && codec.at(made);
+  if (
+    version !== LINK_VERSION ||
+    layout === null ||
+    table !== digestOf(layout.digested)
+  ) {
     return { ok: false, reason: OTHER_VERSION };
   }
   const unpacked: Record<string, unknown> = { ...progress };
-  for (const [name, field] of Object.entries(codec.fields)) {
+  for (const [name, field] of Object.entries(layout.fields)) {
     if (!(name in unpacked)) continue;
     const packed = unpacked[name];
     if (typeof packed !== "string" || !BASE64URL.test(packed)) {

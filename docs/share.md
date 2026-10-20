@@ -11,7 +11,7 @@ https://<site>/alltp-tracker/#run=<base64url( deflate-raw( JSON ) )>
 The JSON is one of two forms, told apart by its `format`:
 
 - **Plain** (`alltp-tracker-save`, the first version's, and still what Super Metroid writes): what **Export** writes, `{ format, game, version, progress }`. The receiving game reads it with the validation and migrations it already has for a file; a save carries its version, and `migrate` upgrades an old one.
-- **Packed** (`alltp-tracker-link`, `link: 2`; ALttPR and SMZ3): the same object with the fields that dominate its size swapped for bytes indexed by the pack's ordered tables (below), plus a `table` digest. It is expanded back to a plain save before the game's import sees it, so the validation, the migrations and the undo step are the plain form's.
+- **Packed** (`alltp-tracker-link`, `link: 2`; ALttPR and SMZ3): the same object with the fields that dominate its size swapped for bytes indexed by the pack's ordered tables (below), plus the `sizes` of those tables and a `table` digest of their contents. It is expanded back to a plain save before the game's import sees it, so the validation, the migrations and the undo step are the plain form's.
 
 The decoder accepts both; the encoder writes the packed form where a game has one. A link made by any earlier version still opens as it did (`unpackLink` passes a plain save through untouched).
 
@@ -28,7 +28,23 @@ The decoder accepts both; the encoder writes the packed form where a game has on
 | `items` | ALttPR | Varints over the item table's order (a flag is 0 or 1, a counter its signed value). The key names were the second weight after `checked`. |
 | `timeline` | ALttPR | See below. |
 
-**The table digest.** A bit or an index means whatever the table's order says it means: a pack that gains a location shifts every index after it. The link therefore carries `table`, a 32-bit FNV-1a of the ordered tables it was indexed by (six base64url characters). A link whose digest is not the running tracker's, or whose `link` is not 2, is refused with "This link comes from another version of the tracker" and nothing is changed. The digest guards against an accident, not against malice: a hostile link can claim any digest, and the game's own validation still judges what comes out. ALttPR's tables are the locations, the item ids, and the timeline keys (derived from the items and locations through `isTimelineKey`, so the key table cannot drift from what an import accepts).
+**The tables, their sizes and their digest.** A bit or an index means whatever the table's order says it means: a table that gains an entry in the middle shifts every index after it. So the tables are **append-only**: a new location or item goes at the end, and none is moved or removed. The link carries `sizes`, how long each table was when it was made, and `table`, a 32-bit FNV-1a of those prefixes' contents (six base64url characters). The reader cuts its own tables to the link's sizes, rebuilds what depends on them, and compares the digest:
+
+- the digest matches: the link reads against the prefix it was made with. What the link does not hold (an item added since) is left to the game's own import, which gives it the value a fresh run has;
+- it does not match (a table reordered, an entry changed or removed), a size is longer than the tracker's table (a newer tracker made it), or `link` is not 2: the link is refused with "This link comes from another version of the tracker" and nothing is changed.
+
+This is what keeps old links alive when the tracker grows: adding the half magic cell, or a location, no longer breaks a link made before. A table that is reordered or cut still refuses every link made against it, which is the point of the digest. The digest guards against an accident, not against malice: a hostile link can claim any digest, and the game's own validation still judges what comes out.
+
+Where each table's order comes from:
+
+| Table | Order |
+|---|---|
+| ALttPR locations | The pack's (`MAP_LOCATIONS`). A new location must come after the existing ones; a spec holds the link made before the sizes to it. |
+| ALttPR items | `SHARE_ITEMS` in `games/alttpr/share.ts`, written out: the order links first shipped with, which neither the grid nor `data/items.ts` moves. A new item is appended; a spec fails until it is. |
+| ALttPR timeline keys | Derived from the items and locations the link was made against, through `isTimelineKey`, so the key table cannot drift from what an import accepts, and an older link's key indices (and the bits each takes) are the ones it was written with. The digest covers them too. |
+| SMZ3 locations | The pack's regions' order (`LOCATION_IDS`), appended to as above. |
+
+A link written before `sizes` existed (the first packed links) carries none: it is read as the tables had the sizes `legacySizes` names, and its digest still has to match.
 
 **The timeline** (`timelineField`) is the heaviest field, a find's key and instant being close to noise. It is written as varints (count, first instant, a Rice parameter, then the timer readings as runs) followed by a bit block: each find's key in a fixed number of bits (an index in the key table), then the time since the previous find as a Rice code, which costs a bit or two over the gap's magnitude and so takes a long wait without making every gap pay. The finds are ordered by instant. A timer reading is stored as its *drift* from the clock (`at - ms`): a timer running straight keeps one drift, so a stretch of finds is a single run; a pause or a stop starts another; `null` (timer not started) is a run of its own. Bits rather than bytes because a varint's continuation bits make deflate's job harder: measured on a late run, byte-aligned varints cost about 1470 characters of the link, the bit block about 1110.
 
@@ -37,7 +53,7 @@ A save the codec cannot hold exactly (an id the pack does not list, an instant t
 **Bounds.** Everything below is checked at the boundary, before the game's own validation sees the run:
 
 - the payload and inflation bounds above are unchanged: 64 K characters, 1 MiB inflated, and a deflate bomb stops at the limit;
-- the envelope is validated with Zod (`format`, `game`, `link`, `table`, `progress` an object);
+- the envelope is validated with Zod (`format`, `game`, `link`, `table`, `sizes` when present, `progress` an object); sizes are whole numbers, one per table, none longer than the table;
 - a packed field is base64url, and its bytes are checked against the table: a bitset is exactly `ceil(n / 8)` bytes with no bit past the table's end; items are exactly one value per table entry, a flag 0 or 1; a timeline has at most one find per key, keys inside the table, no number above 2^50, runs that cover exactly the finds, a Rice parameter of at most 40, and no byte or bit left over. Each read returns "not a tracker run" on any failure, never a partial value.
 
 ```mermaid
@@ -70,7 +86,7 @@ sequenceDiagram
 
 1. It reads `#run=` when the page loads and on `hashchange`, so a link opened in a tab already on the tracker asks too.
 2. `decodeRun` bounds the payload: at most 64 K characters, and at most 1 MiB once inflated. The inflation is read chunk by chunk and stops at the limit, so a deflate bomb (a few hundred bytes that inflate to gigabytes) costs one megabyte at most.
-3. The envelope is checked with Zod (`format`, plain or packed, and a `game` among the known ones). The **game's own import** (`importRun` in `games/<id>/module.ts`) then expands a packed link (a table digest that is not this tracker's is refused here) and checks the run with the `parseSave` of Import: ALttPR's `validateProgress` against its tables, Super Metroid's and SMZ3's Zod schemas, counts within their pools.
+3. The envelope is checked with Zod (`format`, plain or packed, and a `game` among the known ones). The **game's own import** (`importRun` in `games/<id>/module.ts`) then expands a packed link (a link whose tables are not a prefix of this tracker's is refused here) and checks the run with the `parseSave` of Import: ALttPR's `validateProgress` against its tables, Super Metroid's and SMZ3's Zod schemas, counts within their pools.
 4. Only then does the notice ask. **Open** loads the run exactly as Import does (one undo step; ALttPR's timer goes idle) and clears the fragment. **Keep mine** only clears the fragment.
 5. A payload that does not decode, is not a tracker save, or fails a game's validation shows its reason and "Nothing was changed". Nothing is applied before Open, and the text of a refusal is cut short, since a hostile link controls it.
 
@@ -85,11 +101,11 @@ Measured on runs played through the real stores, a click or a check every 20 to 
 | Run | Early (~15 %) | Mid (~50 %) | Late (~95 %) |
 |---|---|---|---|
 | Super Metroid (plain) | 414 | 427 | 418 |
-| ALttPR, with its timeline | 895 (2580) | 1294 (4922) | 1630 (7135) |
-| ALttPR, without its timeline | 536 (1403) | 552 (1943) | 520 (2603) |
-| SMZ3 | 980 (1512) | 1015 (2522) | 982 (3402) |
+| ALttPR, with its timeline | 898 (2580) | 1322 (4922) | 1651 (7135) |
+| ALttPR, without its timeline | 548 (1403) | 571 (1943) | 543 (2603) |
+| SMZ3 | 998 (1512) | 1031 (2522) | 999 (3402) |
 
-Every case is under 2000, the timeline included: a late ALttPR run is 1630, and a late SMZ3 run costs the same as an early one, since its checked locations are now a constant 40 bytes. Super Metroid stays plain: its link is about 420 characters, nothing the packing could shorten enough to be worth tying it to a table.
+Every case is under 2000, the timeline included: a late ALttPR run is 1651, and a late SMZ3 run costs the same as an early one, since its checked locations are now a constant 40 bytes. Super Metroid stays plain: its link is about 420 characters, nothing the packing could shorten enough to be worth tying it to a table.
 
 The synthetic runs are a floor on the timeline's cost, not a ceiling: their gaps are uniform between 20 and 100 seconds, about 16 bits of noise a find. A real run has pauses and bursts (a dungeon cleared in a minute, then ten minutes of travel), which the Rice code takes at no more than the bits their magnitude says. What would break the target is a run of about 300 finds or more (a late ALttPR run has about 220), each costing about 5 characters of the link.
 
@@ -111,9 +127,9 @@ What the tracker does about it:
 | File | Role |
 |---|---|
 | `apps/web/src/share/runLink.ts` | Encode, decode under the bounds, envelope, fragment helpers |
-| `apps/web/src/share/packed.ts` | The packed form: codec framework, table digest, bitset field, pack and unpack |
+| `apps/web/src/share/packed.ts` | The packed form: codec framework, table sizes and digest, bitset field, pack and unpack |
 | `apps/web/src/share/bytes.ts` | Base64url, varints, bit writer and reader (Rice codes) |
-| `apps/web/src/games/alttpr/share.ts`, `games/smz3/share.ts` | A game's codec: its fields and the tables they index |
+| `apps/web/src/games/alttpr/share.ts`, `games/smz3/share.ts` | A game's codec: its fields and the append-only tables they index |
 | `apps/web/src/share/shareRun.ts` | Share's action: tiers, clipboard, the status line |
 | `apps/web/src/components/ui/SharedRunPrompt.tsx` | The notice that asks, opens or keeps |
 | `apps/web/src/games/*/module.ts` | `importRun`, the game's own validation |
