@@ -98,6 +98,18 @@ describe("Super Metroid saves", () => {
     expect(parseSave(exportSave(run))).toEqual({ ok: true, progress: run });
   });
 
+  it("export the run, never the undo history held beside it", () => {
+    store().step("morph", 1);
+    store().step("bombs", 1);
+    expect(store().past).toHaveLength(2);
+
+    const { progress } = JSON.parse(exportSave(store()));
+
+    expect(Object.keys(progress).sort()).toEqual(
+      Object.keys(freshProgress()).sort(),
+    );
+  });
+
   it("refuse what is not a Super Metroid run, saying why", () => {
     expect(parseSave("{")).toEqual({ error: "not-json", ok: false });
     expect(parseSave("{}")).toEqual({ error: "not-a-save", ok: false });

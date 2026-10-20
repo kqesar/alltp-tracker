@@ -119,6 +119,18 @@ describe("a save file", () => {
     if (parsed.ok) expect(parsed.progress.items.flute).toBe(1);
   });
 
+  it("exports the run, never the undo history held beside it", () => {
+    store().step("flute", 1);
+    store().step("bow", 1);
+    expect(store().past).toHaveLength(2);
+
+    const { progress } = JSON.parse(exportSave(store()));
+
+    expect(Object.keys(progress).sort()).toEqual(
+      Object.keys(freshProgress()).sort(),
+    );
+  });
+
   it.each([
     ["not JSON", "{", "not-json"],
     ["not a save", "{}", "not-a-save"],
