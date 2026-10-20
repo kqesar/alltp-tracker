@@ -103,6 +103,8 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   hookshot: count("hookshot"),
   icerod: count("iceRod"),
   lantern: count("lamp"),
+  // 1 the half magic, 2 the quarter: the pack's `magic` counts the same
+  magic: count("magic"),
   mirror: count("magicMirror"),
   moonpearl: count("moonPearl"),
   mushroom: count("mushroom"),
@@ -144,8 +146,8 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
  * Every pack item the tracker's cells can record, at the highest level they
  * reach: a count's top less its base (the tunic's 3 is armor 2), each bit's
  * item, the event a dungeon beaten gives (Agahnim, Agahnim 2), and the
- * prizes a boss drops. What the cells cannot say (magic, bombs, hearts,
- * the bow's second level) is left out: no player could mark it collected.
+ * prizes a boss drops. What the cells cannot say (bombs, hearts, the bow's
+ * second level) is left out: no player could mark it collected.
  */
 export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
   const levels = new Map<string, number>();

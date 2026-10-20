@@ -47,7 +47,6 @@ describe("describeReading", () => {
 
   it("names what the board has no cell for, which it leaves alone", () => {
     const memory = seedMemory({ race: false });
-    memory[SAVE(0x37b)] = 0x01; // Half Magic
     // Eastern and Desert Palace's maps, and Hyrule Castle's: each its cell
     memory[SAVE(0x369)] = 0x20 | 0x10 | 0x40;
     memory[SAVE(0x37c + 6)] = 2; // Palace of Darkness keys in hand
@@ -55,7 +54,6 @@ describe("describeReading", () => {
     const reading = readMemory(viewOf(memory), false, 0);
 
     expect(describeReading(reading).untracked).toEqual([
-      "Half Magic",
       "Piece of Heart ×3",
       "Small keys",
     ]);
@@ -63,7 +61,7 @@ describe("describeReading", () => {
     memory[SAVE(0x369)] = 0x20 | 0x10;
     expect(
       describeReading(readMemory(viewOf(memory), false, 0)).untracked,
-    ).toEqual(["Half Magic", "Piece of Heart ×3", "Small keys"]);
+    ).toEqual(["Piece of Heart ×3", "Small keys"]);
     // With keysanity, the board counts the small keys
     expect(describeReading(reading, true).untracked).not.toContain(
       "Small keys",

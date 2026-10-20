@@ -72,7 +72,7 @@ describe("the board's cells, read from the game through PACK_ITEMS", () => {
     expect(mostShown("bow")).toBe(1);
     expect(mostShown("sword")).toBe(4);
     expect(mostShown("armor")).toBe(2);
-    expect(mostShown("magic")).toBe(0);
+    expect(mostShown("magic")).toBe(2);
   });
 
   it("finds the cells that say a boss is beaten, and their values", () => {
@@ -133,11 +133,11 @@ describe("the board's cells, read from the game through PACK_ITEMS", () => {
       "bigKeyA2",
       "crystal5",
       "pendantOfCourage",
+      "magic",
     ] as const) {
       expect(shown.has(item)).toBe(true);
     }
     for (const item of [
-      "magic",
       "tenBombs",
       "heartContainer",
       "keyD1",

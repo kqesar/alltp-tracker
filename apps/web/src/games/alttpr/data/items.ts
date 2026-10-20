@@ -98,6 +98,8 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   bottle: [0, 4],
   bow: [0, 3],
   glove: [0, 2],
+  // 1 the half magic, 2 the quarter, which only a customized seed gives
+  magic: [0, 2],
   shield: [0, 3],
   sword: [0, 4],
   tunic: [1, 3],
@@ -206,6 +208,7 @@ const ITEM_NAMES: Record<string, string> = {
   flippers: "Zora's Flippers",
   glove: "Power Glove",
   icerod: "Ice Rod",
+  magic: "Half Magic",
   mirror: "Magic Mirror",
   moonpearl: "Moon Pearl",
   net: "Bug Net",

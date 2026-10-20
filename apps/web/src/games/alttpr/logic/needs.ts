@@ -33,6 +33,7 @@ export type Ways = {
 const LEVELS: Readonly<Record<string, readonly string[]>> = {
   armor: ["Blue Mail", "Red Mail"],
   glove: ["Power Glove", "Titan's Mitt"],
+  magic: ["Half Magic", "Quarter Magic"],
   shield: ["Fighter's Shield", "Fire Shield", "Mirror Shield"],
   sword: ["Fighter's Sword", "Master Sword", "Tempered Sword", "Golden Sword"],
 };
@@ -69,6 +70,8 @@ const ICONS: Readonly<Record<string, string>> = {
   crystal7: "dungeon3.png",
   defeatAgahnim: "agahnim0.png",
   defeatAgahnim2: "agahnim0.png",
+  // One picture for the half and the quarter, as the cell shows it
+  magic: "magic.png",
   pendantOfCourage: "dungeon1.png",
   pendantOfPower: "dungeon2.png",
   pendantOfWisdom: "dungeon2.png",
