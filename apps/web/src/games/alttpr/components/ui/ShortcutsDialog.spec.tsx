@@ -57,6 +57,13 @@ describe("ShortcutsDialog", () => {
     ).toBeInTheDocument();
   });
 
+  it("has no Global tab on the site: that is the desktop app's", async () => {
+    await openWithKeyboard();
+
+    expect(within(dialog()).queryByRole("tablist")).toBeNull();
+    expect(within(dialog()).queryByTestId("shortcuts-tab-global")).toBeNull();
+  });
+
   it("lists every control with its icon, its name and both of its keys", async () => {
     await openWithKeyboard();
 
