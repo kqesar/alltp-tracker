@@ -8,16 +8,19 @@
 #   - its diff is exactly three files: the changelog, release-please's
 #     manifest, and package.json;
 #   - in the manifest and package.json, the only change is the version line;
-#   - the commit before it was built and deployed by the CI workflow, so
-#     skipping the release commit cannot leave an earlier change undeployed.
-#     (A run waiting in the master queue is replaced by a newer one: if the
-#     release commit replaced its parent's run, the parent has no green run.)
+#   - unless REQUIRE_PARENT_DEPLOYED is `false`: the commit before it was built
+#     and deployed by the CI workflow, so skipping the release commit cannot
+#     leave an earlier change undeployed. (A run waiting in the master queue
+#     is replaced by a newer one: if the release commit replaced its parent's
+#     run, the parent has no green run.) Only a caller that deploys needs it:
+#     CodeQL scans every commit in a run of its own, and the nightly run
+#     deploys nothing.
 #
 # Any doubt, or any error, answers `false`: the full pipeline runs.
 #
 # Environment: GH_TOKEN, REPO (owner/name), BEFORE and AFTER (the push's
 # commits). CI_WORKFLOW (default ci.yml) is the workflow whose run on BEFORE
-# must be green.
+# must be green, unless REQUIRE_PARENT_DEPLOYED is `false` (default `true`).
 set -uo pipefail
 
 CI_WORKFLOW="${CI_WORKFLOW:-ci.yml}"
@@ -65,6 +68,11 @@ verdict=$(jq -r --arg version "$VERSION" '
   else "ok" end
 ' <<< "$compare") || refuse "the comparison could not be read"
 [ "$verdict" = ok ] || refuse "$verdict"
+
+if [ "${REQUIRE_PARENT_DEPLOYED:-true}" = false ]; then
+  echo "Release commit $AFTER: nothing to test or scan." >&2
+  answer true
+fi
 
 # The parent was built and deployed, or this commit is the only thing left
 # that would deploy it
