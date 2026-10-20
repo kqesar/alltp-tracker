@@ -27,8 +27,9 @@ flowchart LR
     ci_m --> deploy["CI / deploy<br/>GitHub Pages"]
     e2e_m --> deploy
     build --> deploy
-    rp["Release / release-please<br/>opens or updates the release PR"]
-    rp -->|a release PR was merged| inst["Release / desktop x4<br/>installers attached to the release"]
+    deploy --> rp["CI / release-please<br/>opens or updates the release PR,<br/>tags a merged one"]
+    plan -.->|"skip: a release commit"| rp
+    rp -->|a release was cut| inst["CI / desktop x4<br/>installers attached to the release<br/>(desktop-release.yml)"]
   end
   nightly["Nightly: CI on master<br/>if master moved since the last green full run"]
   PR -->|"merge (rebase)"| MASTER
@@ -37,13 +38,13 @@ flowchart LR
 
 | Workflow | Trigger | Role |
 |---|---|---|
-| `ci.yml` | PR, push to master, nightly, manual | `ci` gates the code; `e2e` drives the production build in a real browser; `tested` records on a PR that its tree passed; `build` builds the site of a tree already tested; `deploy` publishes the site (master only); `nightly-report` opens an issue when the nightly run does not pass. |
+| `ci.yml` | PR, push to master, nightly, manual | `ci` gates the code; `e2e` drives the production build in a real browser; `tested` records on a PR that its tree passed; `build` builds the site of a tree already tested; `deploy` publishes the site (master only); `release-please` then opens or updates the release PR, and tags a merged one; `desktop` builds the installers of a release just cut; `nightly-report` opens an issue when the nightly run does not pass. |
 | `plan.yml` | called by `ci.yml` and `codeql-analysis.yml` on a push, and by `ci.yml` on the nightly run | Answers one question: what has this push to do? `skip`, `promote` or `full`. CodeQL calls it with `deploys: false`: it is never told to promote, and a release commit is skipped without waiting for a deployed parent (each commit has a scan of its own). See "Release commits", "Promoting a tested tree" and "The nightly run". |
 | `codeql-analysis.yml` | PR, push to master, weekly | Static security analysis of the TypeScript. Never blocks a deploy. |
 | `codeql-actions.yml` | PR and master when `.github/**` changed, weekly | The same analysis for the workflows themselves. Its only input is `.github/`, so no other change can alter its result; the weekly run covers new CodeQL queries. |
 | `validate-commits.yml` | PR | Runs the repository's own `commitlint` over the PR's commits, so release-please can read them. |
 | `desktop.yml` | PR and master, `apps/desktop/**` only | Rust side of the desktop app: `fmt`, `clippy`, tests. |
-| `release-please.yml` | push to master | Keeps the release PR up to date; when that PR is merged, tags the release and builds the installers for 4 targets. |
+| `desktop-release.yml` | called by `ci.yml` (`workflow_call`), never on its own | The desktop installers for 4 targets, built from the release's tag and attached to it. See "Releases". |
 | `logic-drift.yml` | weekly, manual | Compares the pinned randomizer commit with upstream and opens an issue on drift. |
 
 Markdown-only changes skip `ci.yml` and CodeQL (`paths-ignore`): no job reads them.
@@ -57,7 +58,8 @@ Markdown-only changes skip `ci.yml` and CodeQL (`paths-ignore`): no job reads th
 - **`build`** runs in `promote` mode only: it builds the site (`vite build`, the speech model from its cache) and uploads the Pages artifact, in place of the `e2e` shard that does so in `full` mode.
 - **`deploy`** runs on master, never on the nightly run, when the site is ready: `build` succeeded (`promote`), or `ci` and `e2e` did (`full`). Pushes to master are serialised (`concurrency` without cancellation), so deployments never overlap; a PR's older runs are cancelled by its next push.
 - **`nightly-report`** runs when the nightly run's `ci` or `e2e` did anything but succeed (a timeout or a cancelled shard included), unless `plan` skipped the run. See "The nightly run".
-- **`release-please`** is a separate workflow and does not wait for CI. Its `desktop` matrix builds, signs and attaches the installers when a release is cut.
+- **`release-please`** (job name `Release`) runs after `deploy` succeeded, or on a release commit that `plan` skipped. It is the only job with write access to the repository. See "Releases".
+- **`desktop`** calls `desktop-release.yml` when `release-please` reports that it cut a release: it builds, signs and attaches the installers for 4 targets. See "Releases".
 
 ## What a push to master does
 
@@ -88,11 +90,11 @@ When the release PR that release-please keeps open is merged, master receives `c
 | The push only adds commits and every title is `chore(master): release <version>` | the commit list is complete and is release-please's |
 | The diff is exactly `CHANGELOG.md`, `.release-please-manifest.json` and `package.json` | a release that also touched code is a normal push |
 | In the manifest and `package.json`, one line out and one line in, both the version | `package.json` also holds scripts and dependencies |
-| The previous commit has a green `ci.yml` run on a push | see below |
+| The previous commit has a green `ci.yml` run on a push | see below. A run counts only when every job is green, `release-please` and `desktop` included: a parent whose release job failed sends its release commit through the full pipeline, which is safe, only slower |
 
 The last condition closes a hole. Pushes to master queue in one concurrency group, and a queued run is **replaced** by a newer queued one. If a feature is merged and the release PR right after it, the release commit replaces the feature's pending run: until now that was harmless, because the release run built the whole tree and deployed the feature with it. Skipping the release run unconditionally would leave that feature undeployed. The release run therefore checks that its parent was built and deployed; if its parent's run was replaced, it has no green run, and the release run does everything. A parent that was promoted counts: its run is green only if its `deploy` succeeded.
 
-What is skipped on a release commit: `ci`, `e2e`, `build`, `deploy` and CodeQL. What is not: `release-please.yml` (it tags the release and starts the installers). `codeql-actions.yml` is path-filtered to `.github/**`, which a release never touches.
+What is skipped on a release commit: `ci`, `e2e`, `build`, `deploy` and CodeQL. What is not: the `release-please` job of the same run (it tags the release), and so the `desktop` job after it (see "Releases"). `codeql-actions.yml` is path-filtered to `.github/**`, which a release never touches.
 
 The release check comes **first** in `plan.sh`, so a release commit is never promoted. The two rules would rarely overlap anyway, since a release commit's tree is not one a feature pull request tested. The release pull request itself has that tree, but the bot token that opens it starts no checks, so nothing records it today; with a GitHub App token (item 9 of the plan) it would, which is harmless: the release is checked first, and the site is identical.
 
@@ -152,6 +154,77 @@ The nightly run tests and **deploys nothing** (the Pages upload and `deploy` are
 
 When `ci` or `e2e` does not succeed, `nightly-report` creates the `nightly-ci` label if needed (`gh label create --force`, idempotent: an issue created with a missing label silently loses it), then looks for an open issue with that label **or** that title. If there is one it comments on it; otherwise it opens one. At most one is open at a time, even if the label is lost. It is not closed automatically: close it once fixed. While master stays red, each night adds a comment.
 
+## Releases
+
+A release is cut **by the master pipeline, after the deploy**, never beside it. Before, `release-please.yml` was a workflow of its own that started on the same push as CI and waited for nothing: release 2.30.0 was tagged and published while the CI run of the commit it contained had just failed on master. Now a red master cuts nothing.
+
+```mermaid
+sequenceDiagram
+  participant M as master
+  participant CI as ci.yml (one run, serialised)
+  participant RP as release-please job
+  participant D as desktop job (desktop-release.yml)
+  M->>CI: feature push
+  CI->>CI: plan, tests or promotion, deploy
+  CI->>RP: needs deploy (success)
+  RP->>M: opens or updates the release PR (chore(master): release x.y.z)
+  M->>CI: release PR merged: release commit
+  CI->>CI: plan = skip (nothing to test, scan or deploy)
+  CI->>RP: plan skipped it: runs anyway
+  RP->>M: tag + GitHub release, label autorelease: tagged
+  RP->>D: release_created, tag_name
+  D->>D: 4 builds from the tag, attached to the release
+```
+
+### When the `release-please` job runs
+
+```yaml
+if: !cancelled() && (needs.deploy.result == 'success'
+      || (github.event_name == 'push' && needs.plan.outputs.mode == 'skip'))
+```
+
+| Run | `deploy` | `plan` | `release-please` |
+|---|---|---|---|
+| Push, `full` (tests green) | success | `full` | runs |
+| Push, `promote` (a tested tree) | success | `promote` | runs |
+| Push, red (`ci`, `e2e` or `build` failed) | skipped | `full` or `promote` | **skipped**: nothing is released from a master that was not verified |
+| Release commit | skipped | `skip` | runs: the tag is what remains to do |
+| Manual run on master | success | none | runs (a way to unstick a release) |
+| Pull request, nightly run | skipped | none or `skip` on `schedule` | skipped |
+
+`plan` answers `skip` on a push only for a release commit whose parent was built and deployed (see "Release commits"). Any doubt makes it `full`, and then `deploy` is what lets the job run. If `deploy` fails, the release waits: the next green deploy runs `release-please` again, which finds the merged release PR still to tag (next section).
+
+Checked against the 60 latest master runs of `ci.yml` (2026-10-20), with the mode of `plan` inferred from the jobs the API lists (its outputs are not exposed): 58 would run the job (every deployed run, and the release commit `dcc8926`, 2.32.0, the one run `plan` skipped); the 2 others would not, a cancelled run and the red run of `b736eb1`, the commit whose failing CI did not stop the 2.30.0 release.
+
+### A release run that is replaced
+
+Pushes to master queue in one concurrency group, and a queued run is replaced by a newer queued one. If the run of a release commit is replaced, **no job of it runs, and nothing is tagged**. The next run tags it, because `release-please` does not look at the commit it runs on but at the merged pull requests (release-please 17.6, the version in `release-please-action` v5.0.0, `Manifest.findMergedReleasePullRequests`, read in the action's `dist/index.js`):
+
+- it lists the merged pull requests of the target branch, newest first, up to 200, and keeps those that carry **all** the labels `autorelease: pending`;
+- for each one it builds the release from the pull request's body and **its merge commit** (`target_commitish` is that SHA, not the commit the run is on), creates the GitHub release and the tag, comments on the pull request, then swaps the label for `autorelease: tagged`;
+- if creating the release fails (an API error), the label is not swapped and the next run retries; if the tag already exists (a duplicate), the labels are swapped anyway and nothing is released twice;
+- `createReleases()` runs first, then `createPullRequests()`: a run that tags also brings the next release PR up to date.
+
+So a release is **late, never lost**: the next run of `ci.yml` on master that gets to deploy tags it, the installers are built from the tag (the release commit), and the site served is the newer commit's. The same holds if the `release-please` job fails (re-run it, or wait for the next push). A docs-only push does not start `ci.yml` (`paths-ignore`), so it does not either: the release PR lists it at the next code push.
+
+Nothing runs twice: `release-please.yml` is gone, so the release commit gets one `ci.yml` run, whose `plan` skips the tests, the build, the deploy and CodeQL as before, and whose `release-please` job tags it. The `release-please` action's own tag is created with the workflow token and starts no workflow.
+
+### The installers
+
+`desktop-release.yml` is the former `desktop` matrix of `release-please.yml`, unchanged in what it builds: 4 targets (macOS arm64 and x64 on one runner each, Ubuntu 22.04, Windows), `tauri-action` with the updater's `latest.json`, the commit of the tag checked out. It is a reusable workflow (`workflow_call`) so that `ci.yml` does not grow by 80 lines of matrix, and it has no trigger of its own.
+
+- **Pins.** Every action stays pinned by commit SHA (checkout, `pnpm/setup`, `rust-toolchain`, `rust-cache`, `tauri-action`), and pnpm still saves no cache (`save-cache: false`).
+- **Rust cache.** `Swatinem/rust-cache` puts the job id in its key (`v0-rust-desktop-<os>-…`, plus the target as `key`). The job is still called `desktop` in the called workflow, so the keys of the caches the previous release saved are the ones it restores (`gh cache list --key v0-rust` shows them). Renaming that job would start from a cold cache (7.2 min instead of 3.4).
+- **Secrets.** Passed one by one in `ci.yml` (`TAURI_SIGNING_PRIVATE_KEY` and its password) and declared in `on.workflow_call.secrets`; never `secrets: inherit`, which would hand the called workflow every secret of the repository. The `GITHUB_TOKEN` that attaches the files is the run's own (`github.token`), not a secret to pass.
+- **Permissions.** Per job, least privilege. The workflow default stays `contents: read` (and `pull-requests: write`, for the coverage comment of the `ci` job). `release-please` alone has `contents: write` (tag, release), `issues: write` (its labels) and `pull-requests: write` (the release PR). `desktop` has `contents: write` only, to attach files to the release, and the called workflow's job asks for the same: a called workflow can never exceed its caller.
+- **Failures.** A failed matrix leg is retried with "Re-run failed jobs" of the run: the job results and outputs of `release-please` are kept, so it builds the same tag again without cutting anything twice.
+
+### What it costs
+
+- A master run that cuts a release lasts until the installers are built, 4 to 8 minutes, and holds the concurrency group meanwhile (see "Concurrency"): the pushes that arrive in that window wait, and only the newest of them runs afterwards. About 5 releases a day.
+- The release PR is updated after the deploy (about a minute later than before), and a Pages incident delays the release as it delays the site. Both are accepted: waiting is better than releasing a master that was not verified.
+- A `release-please` or `desktop` failure turns the run red. The next release commit then does not find a green parent and runs the full pipeline (safe, slower), and the nightly run counts a red run as not green.
+
 ## Concurrency
 
 A push makes the checks of the previous push obsolete, but only on a pull request: its older runs are cancelled, which frees runners and keeps the check list about the latest commit.
@@ -162,7 +235,8 @@ A push makes the checks of the previous push obsolete, but only on a pull reques
 | `codeql-analysis.yml`, `codeql-actions.yml` | PR number, or the commit SHA | PR only; each master run has a group of its own, so none is cancelled |
 | `validate-commits.yml` | PR number | always (it only runs on PRs) |
 | `desktop.yml` | ref | always, as it already was |
-| `release-please.yml` | fixed | never: two quick merges must not race on the release PR |
+
+A master run lasts as long as its last job: the one that cuts a release holds the group until the installers are built (about 4 to 8 minutes), and the pushes that arrive meanwhile wait behind it, the newest alone surviving. That is the price of one pipeline (see "Releases"); `release-please` itself no longer needs a group of its own, since the master runs are already serialised.
 
 Within a group, a queued run is replaced by a newer pending one. That is why master's CodeQL groups are keyed by commit rather than by ref: with the ref, a burst of merges would silently skip the scans of the middle commits. Promoted runs stay in the master group: a deploy never starts before the previous one ends, and the newest pending push is the one that runs after it.
 

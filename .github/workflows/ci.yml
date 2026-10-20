@@ -34,8 +34,9 @@ permissions:
 
 jobs:
   # What a push to master, or the nightly run, has to do (mode, docs/ci.md):
-  #   skip     nothing: a release commit (version and changelog only), or a
-  #            nightly run with master unchanged since its last green full run;
+  #   skip     nothing to test or deploy: a release commit (version and
+  #            changelog only; release-please still tags it), or a nightly run
+  #            with master unchanged since its last green full run;
   #   promote  build and deploy only: a pull request of this repository
   #            already tested this exact tree;
   #   full     tests, then deploy.
@@ -412,6 +413,58 @@ jobs:
       - name: Deploy the site
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  # Releases follow the deploy, never precede it: a master that did not build,
+  # test or deploy (a red run) cuts nothing. release-please keeps one pull
+  # request open that bumps the version and writes the changelog from the commit
+  # messages merged since the last release (release-please-config.json lists
+  # which types are shown); merging that pull request tags the release and
+  # publishes it on GitHub. It runs:
+  #   - after a deploy, full or promoted, to bring that pull request up to date;
+  #   - on a release commit, which plan skips: nothing is deployed, and the
+  #     tag is what remains to do. plan only skips one whose parent was
+  #     deployed already (is-release-commit.sh).
+  # A release run replaced in the master queue by a newer one tags nothing; the
+  # next run does, as release-please acts on every merged release pull request
+  # still labelled `autorelease: pending` (docs/ci.md, "Releases").
+  # The workflow token opens the pull request, so no check runs on it.
+  release-please:
+    name: Release
+    needs: [plan, deploy]
+    if: >-
+      ${{ !cancelled() && (needs.deploy.result == 'success'
+      || (github.event_name == 'push' && needs.plan.outputs.mode == 'skip')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # The only job that writes to the repository: the release pull request and
+    # its labels (issues), the tag and the release (contents)
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      created: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
+
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+
+  # The installers of a release that was just cut (desktop-release.yml)
+  desktop:
+    name: Desktop installers
+    needs: release-please
+    if: needs.release-please.outputs.created == 'true'
+    # Attaches the files to the release
+    permissions:
+      contents: write
+    uses: ./.github/workflows/desktop-release.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag }}
+    # Named, not `secrets: inherit`: the installers' key and nothing else
+    secrets:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
   # The nightly run found something: one open issue at most, which a later
   # failure comments on instead of opening another. Close it once fixed.

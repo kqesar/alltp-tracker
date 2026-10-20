@@ -1,41 +1,31 @@
-name: Release
+name: Desktop release
 
-# release-please keeps one pull request open that bumps the version and
-# writes the changelog from the commit messages merged since the last release
-# (release-please-config.json says which types are listed). Merging that pull
-# request tags the release and publishes it on GitHub. The workflow token
-# opens it, so no check runs on it: it only touches the version and changelog.
+# The desktop app (apps/desktop), built for each OS once a release is cut: its
+# installers, their updater signatures and the updater's latest.json are
+# attached to the release, where the installed apps look for updates. Called by
+# ci.yml, from the `desktop` job that follows release-please, and by nothing
+# else (docs/ci.md, "Releases"). The release's own commit is built, the version
+# read from package.json.
 on:
-  push:
-    branches: [master]
-
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-
-# Two quick merges must not race on the release pull request
-concurrency:
-  group: release-please
-  cancel-in-progress: false
+  workflow_call:
+    inputs:
+      tag:
+        description: "The release's tag (v1.2.3): the commit built, and the release the files are attached to"
+        type: string
+        required: true
+    # Named one by one, never `secrets: inherit`: this workflow gets the updater's
+    # signing key and nothing else of the repository's secrets.
+    secrets:
+      TAURI_SIGNING_PRIVATE_KEY:
+        description: "The updater's key: installed apps refuse an update it did not sign"
+        required: true
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD:
+        description: "The passphrase of that key"
+        required: true
 
 jobs:
-  release-please:
-    runs-on: ubuntu-latest
-    outputs:
-      created: ${{ steps.release.outputs.release_created }}
-      tag: ${{ steps.release.outputs.tag_name }}
-    steps:
-      - id: release
-        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
-
-  # The desktop app (apps/desktop), built for each OS once a release is cut:
-  # its installers, their updater signatures and the updater's latest.json
-  # are attached to the release, where the installed apps look for updates.
-  # The release's own commit is built, the version read from package.json.
   desktop:
-    needs: release-please
-    if: needs.release-please.outputs.created == 'true'
+    name: Desktop (${{ matrix.os }}${{ matrix.target && format(', {0}', matrix.target) || '' }})
     strategy:
       fail-fast: false
       matrix:
@@ -51,13 +41,15 @@ jobs:
           - os: windows-latest
             target: ""
     runs-on: ${{ matrix.os }}
+    # Attaches the files to the release. The calling job grants the same: a
+    # called workflow cannot ask for more.
     permissions:
       contents: write
     steps:
       - name: Checkout the release
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.release-please.outputs.tag }}
+          ref: ${{ inputs.tag }}
 
       - name: Install system libraries
         if: runner.os == 'Linux'
@@ -89,13 +81,13 @@ jobs:
       - name: Build and attach to the release
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: apps/desktop
           tauriScript: pnpm tauri
-          tagName: ${{ needs.release-please.outputs.tag }}
+          tagName: ${{ inputs.tag }}
           args: ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
           uploadUpdaterJson: true
           updaterJsonPreferNsis: true
