@@ -4,8 +4,11 @@
 // names the desktop's portal knows them by. Pure functions, no system call.
 //
 // The floor below is the one rule that lives in Rust on purpose. Whatever the
-// page sends, even a compromised one, the app never grabs a bare or
-// Shift-only typing key in every app, which would make it a keylogger.
+// page sends, even a compromised one, the app never grabs a key the player
+// types characters with in every app, which would make it a keylogger: a bare
+// or Shift-only character key; on Windows, Ctrl+Alt (AltGr) with one; on
+// macOS, Option with one. It covers character keys only: a bare numpad key
+// is allowed (see `types_a_character`).
 
 // The portal's names are read by the Linux backend alone (the tests read them
 // everywhere).
@@ -126,9 +129,34 @@ pub fn supported(code: &str) -> bool {
     CODES.contains(&code)
 }
 
+/// The system whose typing habits the floor follows.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum System {
+    /// Ctrl+Alt is AltGr, which types `@ # { [` on AZERTY and QWERTZ
+    Windows,
+    /// Option types characters (accents, symbols): it is no shield
+    Mac,
+    Other,
+}
+
+impl System {
+    pub const fn current() -> Self {
+        if cfg!(windows) {
+            System::Windows
+        } else if cfg!(target_os = "macos") {
+            System::Mac
+        } else {
+            System::Other
+        }
+    }
+}
+
 /// Keys that type a character (or F1 to F12, which programs claim): the floor
-/// asks a Control, Alt or Meta with them. The numpad and F13 to F24 type
-/// nothing and are free.
+/// asks modifiers with them (below). The numpad and F13 to F24 are free, on
+/// purpose and knowingly: with NumLock on, a numpad key does type a digit, so
+/// a bound one is taken from every app while the shortcut is on. Binding is
+/// opt-in per action, and LiveSplit's default global hotkeys are numpad keys:
+/// the precedent that settled it. The docs and the UI say so.
 fn types_a_character(code: &str) -> bool {
     if code.starts_with("Numpad") {
         return false;
@@ -140,8 +168,13 @@ fn types_a_character(code: &str) -> bool {
 }
 
 /// A chord's parts, or why it cannot be grabbed: written wrongly, a key that
-/// cannot be grabbed, or under the floor.
+/// cannot be grabbed, or under the floor (this system's).
 pub fn parse(chord: &str) -> Result<Chord, &'static str> {
+    parse_on(chord, System::current())
+}
+
+/// `parse` with the floor of `system`.
+pub fn parse_on(chord: &str, system: System) -> Result<Chord, &'static str> {
     let mut parts: Vec<&str> = chord.split('+').collect();
     let code = parts.pop().unwrap_or_default();
     let mut held = [false; 4];
@@ -161,10 +194,23 @@ pub fn parse(chord: &str) -> Result<Chord, &'static str> {
         return Err("not a key that can be a global shortcut");
     }
     let [control, alt, shift, meta] = held;
-    if types_a_character(code) && !(control || alt || meta) {
-        return Err(
-            "needs Ctrl, Alt or Win/Cmd with it, or it would stop you typing it everywhere",
-        );
+    if types_a_character(code) {
+        if system == System::Mac {
+            if !(control || meta) {
+                return Err(
+                    "needs Ctrl or Cmd with it (Option types characters), or it would stop you typing it everywhere",
+                );
+            }
+        } else if !(control || alt || meta) {
+            return Err(
+                "needs Ctrl, Alt or Win/Cmd with it, or it would stop you typing it everywhere",
+            );
+        }
+        if system == System::Windows && control && alt && !shift && !meta {
+            return Err(
+                "Ctrl+Alt is AltGr on Windows: it would stop you typing @ # { [ everywhere",
+            );
+        }
     }
     Ok(Chord {
         alt,
@@ -268,7 +314,7 @@ mod tests {
 
     #[test]
     fn parses_a_chord_in_the_pages_order() {
-        let chord = parse("Alt+Shift+KeyQ").unwrap();
+        let chord = parse_on("Alt+Shift+KeyQ", System::Other).unwrap();
         assert_eq!(
             chord,
             Chord {
@@ -321,15 +367,76 @@ mod tests {
 
     #[test]
     fn the_floor_keeps_typing_keys_out_of_bare_and_shift_only_grabs() {
-        assert!(parse("KeyQ").is_err());
-        assert!(parse("Shift+KeyQ").is_err());
-        assert!(parse("Digit1").is_err());
-        assert!(parse("F5").is_err());
-        assert!(parse("Shift+Semicolon").is_err());
-        assert!(parse("Control+KeyQ").is_ok());
-        assert!(parse("Alt+KeyQ").is_ok());
-        assert!(parse("Meta+KeyQ").is_ok());
-        assert!(parse("Control+Alt+KeyQ").is_ok());
+        for system in [System::Windows, System::Mac, System::Other] {
+            assert!(parse_on("KeyQ", system).is_err());
+            assert!(parse_on("Shift+KeyQ", system).is_err());
+            assert!(parse_on("Digit1", system).is_err());
+            assert!(parse_on("F5", system).is_err());
+            assert!(parse_on("Shift+Semicolon", system).is_err());
+            assert!(parse_on("Control+KeyQ", system).is_ok());
+            assert!(parse_on("Meta+KeyQ", system).is_ok());
+        }
+        assert!(parse_on("Alt+KeyQ", System::Other).is_ok());
+        assert!(parse_on("Control+Alt+KeyQ", System::Other).is_ok());
+    }
+
+    #[test]
+    fn windows_refuses_ctrl_alt_on_a_character_key_it_reads_as_altgr() {
+        for chord in [
+            "Control+Alt+KeyE",
+            "Control+Alt+Digit0",
+            "Control+Alt+Digit3",
+            "Control+Alt+Semicolon",
+            "Control+Alt+F5",
+        ] {
+            assert!(parse_on(chord, System::Windows).is_err(), "{chord}");
+            assert!(parse_on(chord, System::Other).is_ok(), "{chord}");
+            assert!(parse_on(chord, System::Mac).is_ok(), "{chord}");
+        }
+        // Exactly Ctrl+Alt: a third modifier is no AltGr, and the numpad types no AltGr
+        for chord in [
+            "Control+Alt+Shift+KeyE",
+            "Control+Alt+Meta+KeyE",
+            "Control+KeyE",
+            "Alt+Shift+KeyE",
+            "Control+Alt+Numpad1",
+        ] {
+            assert!(parse_on(chord, System::Windows).is_ok(), "{chord}");
+        }
+    }
+
+    #[test]
+    fn macos_asks_ctrl_or_cmd_on_a_character_key_because_option_types() {
+        for chord in [
+            "Alt+KeyE",
+            "Alt+KeyU",
+            "Alt+Backquote",
+            "Alt+Shift+KeyQ",
+            "Alt+Digit1",
+            "Shift+KeyQ",
+        ] {
+            assert!(parse_on(chord, System::Mac).is_err(), "{chord}");
+        }
+        for chord in [
+            "Control+KeyQ",
+            "Meta+KeyQ",
+            "Control+Alt+KeyQ",
+            "Alt+Meta+KeyE",
+        ] {
+            assert!(parse_on(chord, System::Mac).is_ok(), "{chord}");
+        }
+        // Elsewhere Alt alone is still enough: it types nothing there
+        assert!(parse_on("Alt+KeyE", System::Windows).is_ok());
+        assert!(parse_on("Alt+KeyE", System::Other).is_ok());
+    }
+
+    #[test]
+    fn a_bare_numpad_key_is_allowed_on_every_system_on_purpose() {
+        for system in [System::Windows, System::Mac, System::Other] {
+            for chord in ["Numpad0", "Numpad9", "NumpadDecimal", "NumpadAdd"] {
+                assert!(parse_on(chord, system).is_ok(), "{chord}");
+            }
+        }
     }
 
     #[test]
@@ -367,7 +474,7 @@ mod tests {
         let chord = parse("Control+Alt+Shift+Meta+KeyQ").unwrap();
         assert_eq!(accelerator(&chord, "KeyA"), "Control+Alt+Shift+Super+KeyA");
         assert_eq!(
-            accelerator(&parse("Alt+Digit1").unwrap(), "Digit1"),
+            accelerator(&parse_on("Alt+Digit1", System::Other).unwrap(), "Digit1"),
             "Alt+Digit1"
         );
     }

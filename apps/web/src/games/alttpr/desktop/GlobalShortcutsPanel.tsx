@@ -10,6 +10,7 @@ import {
   parseAction,
 } from "@/games/alttpr/data/keymap";
 import {
+  type DesktopOs,
   type GlobalRefusal,
   globalRefusalOf,
   windowHolderOf,
@@ -35,13 +36,15 @@ export const commandFor = (mechanism: Mechanism, action: string) =>
 /** The words for a key a global shortcut cannot be. */
 const REFUSALS: Record<
   Exclude<GlobalRefusal, "window">,
-  (label: string) => string
+  (label: string, os: DesktopOs) => string
 > = {
   altgr: () => "On Windows, Ctrl+Alt is AltGr: add Shift, or pick another key.",
   key: (label) =>
     `${label} can't be a global shortcut. Pick a letter, digit, numpad or function key.`,
-  typing: (label) =>
-    `${label} would stop you typing it in every app. Add a second modifier, e.g. Ctrl+Alt+Shift.`,
+  typing: (label, os) =>
+    os === "macos"
+      ? `${label} would stop you typing it in every app (Option types characters). Add Ctrl or Cmd.`
+      : `${label} would stop you typing it in every app. Add a second modifier, e.g. Ctrl+Alt+Shift.`,
 };
 
 /** What the Global tab says about the mechanism and how it stands. */
@@ -80,6 +83,10 @@ export const statusText = (
     }
   }
 };
+
+/** A numpad key with no Ctrl, Alt or Meta: the one kind the floor lets through. */
+const isBareNumpad = (chord: Chord) =>
+  /(^|\+)Numpad[^+]*$/.test(chord) && !/(^|\+)(Control|Alt|Meta)\+/.test(chord);
 
 /** The note under a key: what the system said about it. */
 const noteOf = (binding: BindingReport | undefined) => {
@@ -155,7 +162,7 @@ const GlobalShortcutsPanel = ({
     label: string,
     chord: Chord,
   ) => {
-    if (refusal !== "window") return REFUSALS[refusal](label);
+    if (refusal !== "window") return REFUSALS[refusal](label, os);
     const holder = windowHolderOf(windowKeymap, chord);
     return `${label} already steps ${holder ? controlTitle(parseAction(holder).control) : "a control"} in the tracker window. Pick another key.`;
   };
@@ -200,6 +207,7 @@ const GlobalShortcutsPanel = ({
   };
 
   const bound = Object.keys(keymap).length;
+  const bareNumpad = Object.values(keymap).some(isBareNumpad);
   const unsent =
     kind === "portal" && enabled && wantedBindings().length > 0 && !pending;
 
@@ -282,8 +290,16 @@ const GlobalShortcutsPanel = ({
         {enabled && bound === 0 && kind !== "command" && (
           <p className="shortcuts__hint" data-testid="global-shortcuts-hint">
             Pick a key for each control you want to reach from the emulator.
-            Numpad keys, and Ctrl+Alt+Shift combinations, rarely clash with
-            other apps.
+            Ctrl+Alt+Shift combinations rarely clash with other apps. Numpad
+            keys don't either, but see the note that appears once one is bound.
+          </p>
+        )}
+        {enabled && kind !== "command" && bareNumpad && (
+          <p className="shortcuts__hint" data-testid="global-shortcuts-numpad">
+            A numpad key bound on its own is taken from every app while global
+            shortcuts are on: with NumLock on, that digit can't be typed
+            anywhere else. Turn the switch off, or add a modifier, to get it
+            back.
           </p>
         )}
       </div>
