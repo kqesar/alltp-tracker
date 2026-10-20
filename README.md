@@ -88,7 +88,7 @@ The tracker can read your game as you play, through [SNI](https://github.com/alt
 
 Races: on a race seed, or when its race flag cannot be read, the tracker reads only what [the race-legal autotracking specification](https://link.alttpr.com/autotracking) permits, and shows a **race-legal** badge. Pendants and crystals, the chests inside dungeons, bottles and where entrances lead then stay yours to mark, Sync from game included. A race seed's settings lie outside what races permit, so the tracker reads only the seed's name and logic from the ROM, then asks alttpr.com for the seed's settings by that name, as **Start from a seed** does: they lead to the run type as a ROM's do, and What I read says where they came from. The file alttpr.com keeps for a seed holds its patch too: the tracker downloads it with the rest and reads only the settings. Offline, or for a seed alttpr.com does not have, the run type stays yours to choose.
 
-Safari, and every browser on iOS, cannot reach SNI from this secure site (it counts `ws://localhost` as mixed content): use Firefox, Chrome or Edge. The desktop app will cover Safari. The first time, Firefox and Chrome ask whether the site may reach apps on your device: allow it. SNI listening on another port than 23074? Add `?bridge=<port>` to the tracker's address.
+Safari, and every browser on iOS, cannot reach SNI from this secure site (it counts `ws://localhost` as mixed content): use Firefox, Chrome or Edge, or the [desktop app](#the-desktop-app), which reaches SNI from any Mac. The first time, Firefox and Chrome ask whether the site may reach apps on your device: allow it. SNI listening on another port than 23074? Add `?bridge=<port>` to the tracker's address.
 
 ## Voice commands
 

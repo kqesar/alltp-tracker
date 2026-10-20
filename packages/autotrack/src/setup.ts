@@ -136,6 +136,8 @@ const FIREFOX_LNA =
   "https://support.mozilla.org/en-US/kb/control-personal-device-local-network-permissions-firefox";
 const FIREFOX_154 = "https://www.firefox.com/en-US/firefox/154.0/releasenotes/";
 const WEBKIT_171934 = "https://bugs.webkit.org/show_bug.cgi?id=171934";
+const DESKTOP_RELEASES =
+  "https://github.com/kqesar/alltp-tracker/releases/latest";
 
 const UNREADABLE_EMULATOR = [
   "memory-unreadable:no-memory-map",
@@ -429,9 +431,12 @@ export const SETUP_STEPS: readonly SetupStep[] = [
       },
       {
         items: [
-          "Safari and every iOS browser refuse connections from a secure site to this computer (ws://localhost counts as mixed content). Use Firefox, Chrome or Edge on a computer.",
+          "Safari and every iOS browser refuse connections from a secure site to this computer (ws://localhost counts as mixed content). Use Firefox, Chrome or Edge on a computer, or the tracker's desktop app.",
         ],
-        links: [{ label: "WebKit bug 171934", url: WEBKIT_171934 }],
+        links: [
+          { label: "The desktop app", url: DESKTOP_RELEASES },
+          { label: "WebKit bug 171934", url: WEBKIT_171934 },
+        ],
         sources: [WEBKIT_171934],
         title: "Safari",
         when: { browser: ["safari"] },
