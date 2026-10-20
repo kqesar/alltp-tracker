@@ -1,40 +1,13 @@
-import path from "node:path";
-import react from "@vitejs/plugin-react";
-import { configDefaults, defineProject } from "vitest/config";
+import { PERFORMANCE_SPECS, webProject } from "./vitest.shared.ts";
 
-// `vitest --coverage` instruments every block, which slows the solver's hot
-// loops several times over: the timing tests read this to know whether they
-// time the code or the instrumentation (as the engine's do).
-const coverage = process.argv.some(
-  (arg) =>
-    arg === "--coverage" ||
-    arg === "--coverage.enabled" ||
-    arg === "--coverage.enabled=true",
-);
-
-// The web app's unit tests: React, jsdom and the app's setup file. Coverage
-// and the list of projects live in the root vitest.config.ts.
-export default defineProject({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "src"),
-    },
-    mainFields: ["module"],
-  },
-  test: {
-    benchmark: { include: ["src/**/*.bench.{ts,tsx}"] },
-    environment: "jsdom",
-    // Browser tests run under Playwright, not here.
-    exclude: [...configDefaults.exclude, "e2e/**"],
-    globals: true,
-    include: ["src/**/*.spec.{ts,tsx}"],
-    name: "web",
-    provide: { coverage },
-    setupFiles: ["src/test-setup.ts"],
-    // A hung test, not a slow one: specs take ~200 ms, but parallel worktree
-    // runs under coverage slow them 25x past the 5 s default. Timing budgets
-    // are asserted by their own tests.
-    testTimeout: 20_000,
-  },
+// The web app's unit tests. jsdom is the heavy part of setting a spec up, so
+// the specs share one per worker, each in a context of its own (`vmThreads`:
+// isolation per file kept, about a third of the CPU saved). Code runs slower
+// inside a vm context, which the timing specs cannot take: they run in the
+// `forks` project of vitest.perf.config.ts.
+export default webProject({
+  exclude: [PERFORMANCE_SPECS],
+  include: ["src/**/*.spec.{ts,tsx}"],
+  name: "web",
+  pool: "vmThreads",
 });

@@ -172,12 +172,13 @@ describe("AutotrackControl's dialog", () => {
     vi.doMock("@/games/alttpr/components/autotrack/AutotrackDialog", () => {
       throw new Error("offline");
     });
-    const reload = vi.fn();
-    vi.stubGlobal("location", { ...window.location, reload });
+    const control = await import(
+      "@/games/alttpr/components/autotrack/AutotrackControl"
+    );
+    // The page of the modules this test loaded afresh, not the one imported above
+    const { page } = await import("@/components/autotrack/lazyDialog");
+    const reload = vi.spyOn(page, "reload").mockImplementation(() => {});
     try {
-      const control = await import(
-        "@/games/alttpr/components/autotrack/AutotrackControl"
-      );
       render(<control.AutotrackControl variant="menu" />);
 
       await userEvent.click(screen.getByRole("menuitem"));
@@ -191,7 +192,7 @@ describe("AutotrackControl's dialog", () => {
       await userEvent.click(screen.getByRole("button", { name: "Close" }));
       expect(screen.queryByRole("dialog")).toBeNull();
     } finally {
-      vi.unstubAllGlobals();
+      reload.mockRestore();
     }
   });
 });

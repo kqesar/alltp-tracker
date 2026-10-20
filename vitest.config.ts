@@ -31,6 +31,13 @@ export default defineConfig({
       },
     },
     // Listing the projects by path keeps agent worktrees under .claude out.
-    projects: ["apps/web", "packages/*", "packs/*"],
+    // (the web app's timing specs are a project of their own: see its
+    // vitest.perf.config.ts)
+    projects: [
+      "apps/web",
+      "apps/web/vitest.perf.config.ts",
+      "packages/*",
+      "packs/*",
+    ],
   },
 });

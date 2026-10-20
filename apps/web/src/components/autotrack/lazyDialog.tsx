@@ -5,6 +5,12 @@ import { Modal } from "@/components/ui/Modal";
 export type Dialog = ComponentType<{ onClose: () => void }>;
 
 /**
+ * How the page reloads. An object a test can spy on: `window.location` is
+ * unforgeable, in jsdom as in a browser, so it cannot be replaced.
+ */
+export const page = { reload: () => window.location.reload() };
+
+/**
  * Shown when a dialog's code cannot be fetched: offline before it was ever
  * cached, or a release since this page loaded has replaced it.
  */
@@ -22,7 +28,7 @@ const AutotrackUnavailable: Dialog = ({ onClose }) => (
         <button
           className="modal-btn modal-btn--primary"
           data-autofocus
-          onClick={() => window.location.reload()}
+          onClick={() => page.reload()}
           type="button"
         >
           Reload
