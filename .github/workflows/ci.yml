@@ -26,7 +26,19 @@ permissions:
   pull-requests: write
 
 jobs:
+  # A push to master that only releases (release-please's commit: version and
+  # changelog) changes nothing the tests or the site can see: the jobs below
+  # skip it. Pull requests have no plan, and without one everything runs.
+  plan:
+    if: github.event_name == 'push'
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/plan.yml
+
   ci:
+    needs: plan
+    if: ${{ !cancelled() && needs.plan.outputs.release != 'true' }}
     runs-on: ubuntu-latest
     # `actions: read` lets the store check below list the repository's caches
     permissions:
@@ -214,6 +226,8 @@ jobs:
   # no faster than two), so only another runner shortens the wait.
   e2e:
     name: E2E (Playwright + axe, ${{ matrix.shard }}/2)
+    needs: plan
+    if: ${{ !cancelled() && needs.plan.outputs.release != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:

@@ -25,8 +25,18 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # A release commit changes no code (see ci.yml): nothing to scan
+  plan:
+    if: github.event_name == 'push'
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/plan.yml
+
   analyze:
     name: Analyze (javascript-typescript)
+    needs: plan
+    if: ${{ !cancelled() && needs.plan.outputs.release != 'true' }}
     runs-on: ubuntu-latest
     # Public repository, no private query packs: uploading results is all
     # it needs beyond reading the code.

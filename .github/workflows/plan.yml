@@ -1,0 +1,41 @@
+name: Plan
+
+# Decides, for a push to master, whether the pipeline has anything to do. It
+# is called by the workflows that would otherwise run for nothing (CI,
+# CodeQL), so the rule is written once. docs/ci.md says what it recognises
+# and why.
+on:
+  workflow_call:
+    outputs:
+      release:
+        description: "'true' when the push is only a release-please release commit"
+        value: ${{ jobs.plan.outputs.release }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    # The calling job grants the same: a called workflow cannot ask for more
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      release: ${{ steps.release.outputs.release }}
+
+    steps:
+      # The script and nothing else
+      - name: Checkout the script
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - name: Is it a release commit?
+        id: release
+        env:
+          AFTER: ${{ github.sha }}
+          BEFORE: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: bash .github/scripts/is-release-commit.sh
