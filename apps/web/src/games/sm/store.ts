@@ -190,13 +190,16 @@ export const useSmStore = create<SmState>()(
   ),
 );
 
-/** The file an export writes. */
+/**
+ * The file an export writes: the run alone. It takes the store's state as it
+ * is, so the run is picked out of it, never the undo history beside it.
+ */
 export const exportSave = (progress: SmProgress): string =>
   `${JSON.stringify(
     {
       format: "alltp-tracker-save",
       game: "sm",
-      progress,
+      progress: progressOf(progress),
       version: SM_SAVE_VERSION,
     },
     null,

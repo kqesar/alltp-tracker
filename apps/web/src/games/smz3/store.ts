@@ -209,13 +209,16 @@ export const useSmz3Store = create<Smz3State>()(
   ),
 );
 
-/** The file an export writes. */
+/**
+ * The file an export writes: the run alone. It takes the store's state as it
+ * is, so the run is picked out of it, never the undo history beside it.
+ */
 export const exportSave = (progress: Smz3Progress): string =>
   `${JSON.stringify(
     {
       format: "alltp-tracker-save",
       game: "smz3",
-      progress,
+      progress: progressOf(progress),
       version: SMZ3_SAVE_VERSION,
     },
     null,
