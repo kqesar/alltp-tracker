@@ -6,7 +6,7 @@ The tracker is a single-page app: one `index.html`, and the game it shows is pic
 
 ```mermaid
 flowchart LR
-  crawler["crawler / link preview bot"] -->|GET| root["/alltp-tracker/<br/>index.html: the app + a plain-HTML body"]
+  crawler["crawler / link preview bot"] -->|GET| root["/alltp-tracker/<br/>index.html: the app + a noscript body"]
   crawler -->|GET| pages["/alltp-tracker/{alttpr,sm,smz3}/<br/>static page per game, no script"]
   pages -->|"og:image"| cards["/alltp-tracker/social/{game}.png<br/>1200 x 630"]
   player["player"] -->|"button: ../?game=sm"| root
@@ -15,7 +15,7 @@ flowchart LR
 
 | Address | What it is | Canonical |
 |---|---|---|
-| `/alltp-tracker/` | The app. Its static `<head>` is generic (the three games); its static body is a short text with a link to each game's page, replaced by React as the app starts. The title is then set for the game tracked (`pageTitle`, `src/games/registry.ts`). | itself |
+| `/alltp-tracker/` | The app. Its static `<head>` is generic (the three games); its static body is a short text with a link to each game's page, inside a `<noscript>` (see below). The title is then set for the game tracked (`pageTitle`, `src/games/registry.ts`). | itself |
 | `/alltp-tracker/<id>/` | A static page per game, written at build time by `seo/plugin.ts` from `seo/games.ts` (`landing.ts` is the template). No script: what a crawler reads is what a player sees. Its button opens the tracker on that game. | itself |
 | `/alltp-tracker/social/<id>.png` | The link preview image (Open Graph and X's large card): a real screenshot of the board. | |
 | `/alltp-tracker/sitemap.xml`, `robots.txt` | The four addresses above; allow everything. | |
@@ -25,6 +25,8 @@ Why a page per game rather than the app at three addresses: the app picks its ga
 `?game=<id>` (`takeGameFromAddress`) is the link between the two: it saves the game as a switch in the run type dialog does (each game keeps its own run, so nothing is lost), then removes the parameter from the address. It also works as a shareable link to the tracker on a given game.
 
 ## Constraints
+
+- **The body of `index.html` is in `<noscript>`, never painted by a browser that runs scripts.** It was a plain `<main>` in `#root` until the tracker mounted, which a reload showed for 100 to 300 ms (more on a slow device) before the board: a flash of other content, and a late-feeling load. A crawler that runs no script, or a browser with scripts off, reads and sees exactly the same text, as `<noscript>` is meant for; one that runs scripts gets the tracker itself, so nothing is hidden from a person to be shown to a robot. `e2e/pwa.e2e.ts` fails if the text is visible at any point of a reload.
 
 - **`robots.txt` is inert on `kqesar.github.io`.** Crawlers read it at the root of a host only; this site lives under `/alltp-tracker/` and there is no `kqesar.github.io` user-site repository to hold one. Without a `robots.txt`, everything is allowed, which is what the file says. The sitemap is valid under the project path (it only lists addresses below it); submit it in the search engines' consoles. The files take effect if the site moves to a domain of its own.
 - **Absolute URLs in the tags.** `rel="canonical"`, `og:url`, `og:image` and `twitter:image` carry the full address (`SITE` in `seo/games.ts`): scrapers do not resolve the base path, and the canonical must not depend on how the page was reached. A move to another host changes that one constant, `index.html`, and `public/sitemap.xml`; `e2e/seo.e2e.ts` fails until they agree.
