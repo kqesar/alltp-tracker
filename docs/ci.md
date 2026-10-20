@@ -16,9 +16,13 @@ flowchart LR
   end
   subgraph MASTER["Push to master"]
     direction TB
-    ci_m["CI / ci"] --> deploy["CI / deploy<br/>GitHub Pages"]
-    e2e_m["CI / e2e (shards)"] --> deploy
-    cq_m["CodeQL"]
+    plan{{"plan<br/>a release commit?"}}
+    plan -->|no| ci_m["CI / ci"]
+    plan -->|no| e2e_m["CI / e2e (shards)"]
+    plan -->|no| cq_m["CodeQL"]
+    plan -.->|yes: all skipped| none(("nothing<br/>to do"))
+    ci_m --> deploy["CI / deploy<br/>GitHub Pages"]
+    e2e_m --> deploy
     rp["Release / release-please<br/>opens or updates the release PR"]
     rp -->|a release PR was merged| inst["Release / desktop x4<br/>installers attached to the release"]
   end
@@ -28,6 +32,7 @@ flowchart LR
 | Workflow | Trigger | Role |
 |---|---|---|
 | `ci.yml` | PR, push to master, manual | `ci` gates the code; `e2e` drives the production build in a real browser; `deploy` publishes the site (master only, after both). |
+| `plan.yml` | called by `ci.yml` and `codeql-analysis.yml` on a push | Answers one question: is this push only a release-please release commit? See "Release commits". |
 | `codeql-analysis.yml` | PR, push to master, weekly | Static security analysis of the TypeScript. Never blocks a deploy. |
 | `codeql-actions.yml` | PR and master when `.github/**` changed, weekly | The same analysis for the workflows themselves. Its only input is `.github/`, so no other change can alter its result; the weekly run covers new CodeQL queries. |
 | `validate-commits.yml` | PR | Runs the repository's own `commitlint` over the PR's commits, so release-please can read them. |
@@ -39,10 +44,30 @@ Markdown-only changes skip `ci.yml` and CodeQL (`paths-ignore`): no job reads th
 
 ## Jobs
 
+- **`plan`** exists on pushes only (a pull request has none, and without one every job runs). It checks out `.github/scripts` alone and runs `is-release-commit.sh`, which prints `release=true|false`. About 10 s on a runner of its own.
 - **`ci`** runs lint (Biome), the TypeScript build over every workspace, and the unit tests with coverage floors. It is CPU-bound (Vitest creates one jsdom per spec file) and is the longest non-browser job. On a PR it also posts a results comment.
 - **`e2e`** builds the site and serves that production build to Playwright with axe-core, on the runner's preinstalled Chrome (no browser download). The suite is split over runners with Playwright's `--shard`, because a runner's cores are already saturated by two browsers: only another runner shortens the wait. The shard that runs on master also uploads the built site as the Pages artifact, so `deploy` publishes exactly what the tests exercised.
 - **`deploy`** needs `ci` and `e2e`, runs on master only and publishes the artifact. Pushes to master are serialised (`concurrency` without cancellation), so deployments never overlap; a PR's older runs are cancelled by its next push.
 - **`release-please`** is a separate workflow and does not wait for CI. Its `desktop` matrix builds, signs and attaches the installers when a release is cut.
+
+## Release commits
+
+When the release PR that release-please keeps open is merged, master receives `chore(master): release x.y.z`. It changes the version in `package.json`, the manifest and the changelog, and nothing the site is built from: the web app never reads the version, and the desktop installers are built by the release workflow, from the tag. Running CI, the browser tests, the deploy and CodeQL on it repeated about 12 runner-minutes, for an identical site, and the run waited for the previous one in the master queue (19 of the 23 queued runs measured over four days were release commits).
+
+`plan` recognises it by **what it changes**, never by what its title claims; every condition must hold, and any doubt or error runs everything (fail-safe):
+
+| Condition | Why |
+|---|---|
+| The push only adds commits and every title is `chore(master): release <version>` | the commit list is complete and is release-please's |
+| The diff is exactly `CHANGELOG.md`, `.release-please-manifest.json` and `package.json` | a release that also touched code is a normal push |
+| In the manifest and `package.json`, one line out and one line in, both the version | `package.json` also holds scripts and dependencies |
+| The previous commit has a green `ci.yml` run on a push | see below |
+
+The last condition closes a hole. Pushes to master queue in one concurrency group, and a queued run is **replaced** by a newer queued one. If a feature is merged and the release PR right after it, the release commit replaces the feature's pending run: until now that was harmless, because the release run built the whole tree and deployed the feature with it. Skipping the release run unconditionally would leave that feature undeployed. The release run therefore checks that its parent was built and deployed; if its parent's run was replaced, it has no green run, and the release run does everything.
+
+What is skipped on a release commit: `ci`, `e2e`, `deploy` and CodeQL. What is not: `release-please.yml` (it tags the release and starts the installers). `codeql-actions.yml` is path-filtered to `.github/**`, which a release never touches.
+
+The script is `.github/scripts/is-release-commit.sh`. It reads the push through the compare API (`BEFORE...AFTER`), so it needs no deep checkout.
 
 ## Concurrency
 
