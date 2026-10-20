@@ -11,7 +11,7 @@ flowchart LR
     ci_pr["CI / ci<br/>lint, types, unit tests + coverage"]
     e2e_pr["CI / e2e (shards)<br/>build + Playwright + axe"]
     vc["Validate Conventional Commits"]
-    cq_pr["CodeQL"]
+    cq_pr["CodeQL (TypeScript)<br/>+ workflows, if .github/ changed"]
     dk_pr["Desktop / rust<br/>only if apps/desktop/** changed"]
   end
   subgraph MASTER["Push to master"]
@@ -28,7 +28,8 @@ flowchart LR
 | Workflow | Trigger | Role |
 |---|---|---|
 | `ci.yml` | PR, push to master, manual | `ci` gates the code; `e2e` drives the production build in a real browser; `deploy` publishes the site (master only, after both). |
-| `codeql-analysis.yml` | PR, push to master, weekly | Static security analysis of the workflows and of the TypeScript. Never blocks a deploy. |
+| `codeql-analysis.yml` | PR, push to master, weekly | Static security analysis of the TypeScript. Never blocks a deploy. |
+| `codeql-actions.yml` | PR and master when `.github/**` changed, weekly | The same analysis for the workflows themselves. Its only input is `.github/`, so no other change can alter its result; the weekly run covers new CodeQL queries. |
 | `validate-commits.yml` | PR | Runs the repository's own `commitlint` over the PR's commits, so release-please can read them. |
 | `desktop.yml` | PR and master, `apps/desktop/**` only | Rust side of the desktop app: `fmt`, `clippy`, tests. |
 | `release-please.yml` | push to master | Keeps the release PR up to date; when that PR is merged, tags the release and builds the installers for 4 targets. |
@@ -42,6 +43,20 @@ Markdown-only changes skip `ci.yml` and CodeQL (`paths-ignore`): no job reads th
 - **`e2e`** builds the site and serves that production build to Playwright with axe-core, on the runner's preinstalled Chrome (no browser download). The suite is split over runners with Playwright's `--shard`, because a runner's cores are already saturated by two browsers: only another runner shortens the wait. The shard that runs on master also uploads the built site as the Pages artifact, so `deploy` publishes exactly what the tests exercised.
 - **`deploy`** needs `ci` and `e2e`, runs on master only and publishes the artifact. Pushes to master are serialised (`concurrency` without cancellation), so deployments never overlap; a PR's older runs are cancelled by its next push.
 - **`release-please`** is a separate workflow and does not wait for CI. Its `desktop` matrix builds, signs and attaches the installers when a release is cut.
+
+## Concurrency
+
+A push makes the checks of the previous push obsolete, but only on a pull request: its older runs are cancelled, which frees runners and keeps the check list about the latest commit.
+
+| Workflow | Group | Cancelled by a newer run |
+|---|---|---|
+| `ci.yml` | PR number, or the ref | PR only; pushes to master queue, so deployments never overlap |
+| `codeql-analysis.yml`, `codeql-actions.yml` | PR number, or the commit SHA | PR only; each master run has a group of its own, so none is cancelled |
+| `validate-commits.yml` | PR number | always (it only runs on PRs) |
+| `desktop.yml` | ref | always, as it already was |
+| `release-please.yml` | fixed | never: two quick merges must not race on the release PR |
+
+Within a group, a queued run is replaced by a newer pending one. That is why master's CodeQL groups are keyed by commit rather than by ref: with the ref, a burst of merges would silently skip the scans of the middle commits.
 
 ## Caches
 
