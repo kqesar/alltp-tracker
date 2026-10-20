@@ -68,7 +68,7 @@ describe("fixFor", () => {
   it("words each failure's fix", () => {
     expect(linesOf(STATUSES["local-network-prompt"])).toContain("click Allow");
     expect(linesOf(STATUSES["browser-blocks-bridge"])).toContain(
-      "The desktop app will cover Safari.",
+      "or the desktop app, which reaches SNI from any Mac.",
     );
     expect(linesOf(STATUSES["bridge-refused"])).toContain("click Yes there");
     expect(linesOf(STATUSES["no-device"])).toContain("FX Pak Pro");

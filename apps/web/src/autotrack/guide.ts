@@ -69,7 +69,7 @@ export const fixFor = (
     case "browser-blocks-bridge":
       return fix([
         "Safari and every browser on iOS refuse a secure site's connection to this computer.",
-        "Use Firefox, Chrome or Edge on a computer. The desktop app will cover Safari.",
+        "Use Firefox, Chrome or Edge on a computer, or the desktop app, which reaches SNI from any Mac.",
       ]);
     case "bridge-unreachable":
       return fix(
