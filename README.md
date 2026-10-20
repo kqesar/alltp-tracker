@@ -220,6 +220,10 @@ The rules are the packs', ported from each randomizer's source and held to its o
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the commit and release conventions.
 
+## Privacy
+
+Visits to the site are counted with [GoatCounter](https://www.goatcounter.com/): no cookies, no personal data, no stored IP address. The desktop app and the stream view never count, nor do browsers that send Do Not Track or Global Privacy Control. Your runs stay on your device.
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
