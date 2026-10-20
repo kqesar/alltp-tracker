@@ -33,7 +33,9 @@ export default defineConfig({
     // Listing the projects by path keeps agent worktrees under .claude out.
     // (the web app's timing specs are a project of their own: see its
     // vitest.perf.config.ts)
+    // (the CI's own scripts are one too: .github/scripts)
     projects: [
+      ".github/scripts",
       "apps/web",
       "apps/web/vitest.perf.config.ts",
       "packages/*",

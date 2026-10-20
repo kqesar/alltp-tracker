@@ -8,9 +8,9 @@ How a change travels from a pull request to the site, and from a release to the 
 flowchart LR
   subgraph PR["Pull request"]
     direction TB
-    ci_pr["CI / ci<br/>lint, types, unit tests + coverage"]
-    e2e_pr["CI / e2e (shards)<br/>build + Playwright + axe"]
-    rec["CI / tested<br/>records the tested tree"]
+    ci_pr["CI / ci<br/>lint, types, then unit tests:<br/>the specs the changes reach + diff coverage,<br/>or the full suite (see 'What a pull request tests')"]
+    e2e_pr["CI / e2e (3 shards)<br/>build + Playwright + axe, always in full"]
+    rec["CI / tested<br/>records tested-full-tree<br/>only if the unit suite ran in full"]
     vc["Validate Conventional Commits"]
     cq_pr["CodeQL (TypeScript)<br/>+ workflows, if .github/ changed"]
     dk_pr["Desktop / rust<br/>only if apps/desktop/** changed"]
@@ -39,7 +39,7 @@ flowchart LR
 
 | Workflow | Trigger | Role |
 |---|---|---|
-| `ci.yml` | PR, push to master, nightly, manual | `ci` gates the code; `e2e` drives the production build in a real browser; `tested` records on a PR that its tree passed; `build` builds the site of a tree already tested; `deploy` publishes the site (master only); `release-please` then opens or updates the release PR, and tags a merged one; `desktop` starts the build of the installers of a release just cut; `nightly-report` opens an issue when the nightly run does not pass. |
+| `ci.yml` | PR, push to master, nightly, manual | `ci` gates the code (on a PR, the unit tests are the affected ones or the full suite); `e2e` drives the production build in a real browser; `tested` records on a PR that its tree passed in full; `build` builds the site of a tree already tested; `deploy` publishes the site (master only); `release-please` then opens or updates the release PR, and tags a merged one; `desktop` starts the build of the installers of a release just cut; `nightly-report` opens an issue when the nightly run does not pass. |
 | `plan.yml` | called by `ci.yml` and `codeql-analysis.yml` on a push, and by `ci.yml` on the nightly run | Answers one question: what has this push to do? `skip`, `promote` or `full`. CodeQL calls it with `deploys: false`: it is never told to promote, and a release commit is skipped without waiting for a deployed parent (each commit has a scan of its own). See "Release commits", "Promoting a tested tree" and "The nightly run". |
 | `codeql-analysis.yml` | PR, push to master, weekly | Static security analysis of the TypeScript. Never blocks a deploy. |
 | `codeql-actions.yml` | PR and master when `.github/**` changed, weekly | The same analysis for the workflows themselves. Its only input is `.github/`, so no other change can alter its result; the weekly run covers new CodeQL queries. |
@@ -53,14 +53,91 @@ Markdown-only changes skip `ci.yml` and CodeQL (`paths-ignore`): no job reads th
 ## Jobs
 
 - **`plan`** exists on pushes and on the nightly run (a pull request has none, and without one every job runs). It checks out `.github/scripts` alone and runs `plan.sh`, which prints `mode=skip|promote|full`. About 10 s on a runner of its own. If it fails, its mode is empty and everything runs.
-- **`ci`** runs lint (Biome), the TypeScript build over every workspace, and the unit tests with coverage floors. It is CPU-bound (Vitest creates one jsdom per spec file) and is the longest non-browser job. On a PR it also posts a results comment. It runs in `full` mode and on pull requests.
+- **`ci`** runs lint (Biome), the TypeScript build over every workspace, and the unit tests. It is CPU-bound (Vitest creates one jsdom per spec file) and is the longest non-browser job. On a push to master and on the nightly run the unit tests are the whole suite with the repository-wide coverage floors. On a PR the step `Choose the unit tests` picks, from the diff, either that same full suite or only the specs the changes reach, with a coverage check of the changed lines: see "What a pull request tests". It posts a results comment on a PR, and its output `full` says whether the whole suite ran. It runs in `full` mode and on pull requests.
 - **`e2e`** builds the site and serves that production build to Playwright with axe-core, on the runner's preinstalled Chrome (no browser download). The suite is split over three runners with Playwright's `--shard`, because a runner's cores are already saturated by two browsers: only another runner shortens the wait. Playwright splits by test count, not by duration, so shards are never equal (the heaviest files hold a few 7 to 12 s tests); a fourth shard would gain about 35 s more while a PR already takes 7 to 8 of the 20 concurrent job slots. The shard count is the matrix's size (`strategy.job-total`) and is read from there by the job name and the `--shard` flag. A failed shard uploads its own report (`playwright-report-<n>`, 7 days); the reports are not merged. The shard that runs on master (not the nightly run) also uploads the built site as the Pages artifact, so `deploy` publishes exactly what the tests exercised. Like `ci`, it runs in `full` mode and on pull requests.
-- **`tested`** runs on a pull request whose head is in this repository, once `ci` and every `e2e` shard are green, and uploads the record of the tested tree. See "Promoting a tested tree". Its condition tests `needs.*.result` instead of the implicit `success()`: a pull request has no `plan`, a skipped job that `ci` and `e2e` wait for, and an implicit `success()` would count it against this job too. It is `continue-on-error`: a failing lookup must not turn a green pull request red; master just tests.
+- **`tested`** runs on a pull request whose head is in this repository, once every `e2e` shard is green and `ci` is green **with the whole unit suite run** (`needs.ci.outputs.full`), and uploads the record of the tested tree, `tested-full-<tree>`. A pull request whose unit tests were only the affected ones records nothing. See "Promoting a tested tree". Its condition tests `needs.*.result` instead of the implicit `success()`: a pull request has no `plan`, a skipped job that `ci` and `e2e` wait for, and an implicit `success()` would count it against this job too. It is `continue-on-error`: a failing lookup must not turn a green pull request red; master just tests.
 - **`build`** runs in `promote` mode only: it builds the site (`vite build`, the speech model from its cache) and uploads the Pages artifact, in place of the `e2e` shard that does so in `full` mode.
 - **`deploy`** runs on master, never on the nightly run, when the site is ready: `build` succeeded (`promote`), or `ci` and `e2e` did (`full`). Pushes to master are serialised (`concurrency` without cancellation), so deployments never overlap; a PR's older runs are cancelled by its next push.
 - **`nightly-report`** runs when the nightly run's `ci` or `e2e` did anything but succeed (a timeout or a cancelled shard included), unless `plan` skipped the run. See "The nightly run".
 - **`release-please`** (job name `Release`) runs after `deploy` succeeded, or on a release commit that `plan` skipped. A guard step first refuses to tag a release no run verified. It is the only job with write access to the repository. See "Releases".
 - **`desktop`** runs when `release-please` reports that it cut a release, and only dispatches `desktop-release.yml` for the new tag (`actions: write`, nothing else). The installers are built, signed and attached by that run. See "Releases".
+
+## What a pull request tests
+
+The unit suite is CPU-bound: about 3 000 tests in 200 spec files, one jsdom per file. Most pull requests change a few files, so a pull request runs **the specs its changes reach** and a coverage check of the lines it changed. Anything the selection cannot judge runs the whole suite.
+
+```mermaid
+flowchart TD
+  pr(["pull request"]) --> scope{"unit-scope.mjs<br/>reads the diff<br/>HEAD^1..HEAD"}
+  scope -->|"a trigger below,<br/>or any doubt"| full["Run the unit tests in full<br/>repository-wide coverage floors"]
+  scope -->|"only code, styles, docs, Rust"| aff["vitest run --changed HEAD^1<br/>the specs the import graph relates"]
+  aff --> dc{"diff-coverage.mjs"}
+  dc -->|"a changed source file<br/>no selected spec loaded"| full
+  dc -->|"below the floor"| red(["red"])
+  dc -->|"at or above the floor"| ok["unit step green<br/>no record for master"]
+  full --> e2e["E2E, 3 shards, always in full"]
+  ok --> e2e
+  e2e -->|"unit suite was full, all green"| rec["tested-full-tree<br/>master may promote"]
+  e2e -->|"unit step was affected-only"| nothing["nothing recorded:<br/>master runs the full pipeline"]
+```
+
+Pushes to master and the nightly run have no selection: `Choose the unit tests` answers `full` for any event but a pull request.
+
+### The selection
+
+The base is `HEAD^1`: a pull request is checked out as GitHub's test merge commit, whose first parent is the tip of the base branch, so `git diff HEAD^1 HEAD` is exactly what the pull request changes (the checkout is two commits deep, no more). `vitest --changed HEAD^1` lists the changed files and runs every spec that imports one of them, directly or through other modules (the import graph). Added, edited and deleted code is handled; a deleted file selects its importers.
+
+The import graph sees what a spec **imports**. It does not see what a spec reads from disk, lists with a glob, or what changes how every spec is built or run. `unit-scope.mjs` (unit-tested, `unit-scope.spec.mjs`) therefore answers `full` when the diff holds any of these, and `affected` only when every changed file is recognised as harmless:
+
+| Changed file | Scope | Why |
+|---|---|---|
+| `pnpm-lock.yaml`, `pnpm-workspace.yaml`, any `package.json` | full | a dependency, or a version a spec reads (`report.spec.ts` reads its package's), changes under every spec |
+| `tsconfig*.json`, `biome.json`, `vite*.{ts,js}` and `vitest*.{ts,mjs}` (configs and `vitest.shared.ts`), `apps/web/src/test-setup.ts` | full | how every spec is compiled, resolved, set up or run |
+| anything under `.github/` | full | the CI itself, including this rule |
+| any other `.json` (fixtures under `packs/*/test/upstream`, `er-upstream`, `er-seeds`, `seed-files`, pack data such as `er.json`, `upstream.json`, e2e fixtures) | full | specs read them with `readFileSync`/`readdirSync` or import them as data, and `manifest.spec.ts` checks `upstream.json` against the files on disk: the graph cannot say which specs |
+| an asset under `apps/web/public/` added or deleted | full | `needs.spec.ts` lists `public/assets/*.png` with `import.meta.glob`. An asset only *modified* is inert: no spec reads its content |
+| a file no rule recognises | full | fail safe: a new kind of file must be added to the rule by whoever introduces it |
+| `*.ts`, `*.tsx`, `*.js`, `*.mjs`, `*.css` | affected | the graph follows imports into them |
+| `*.md`, `LICENSE`, `.claude/`, `.vscode/`, `.husky/`, dotfiles, release-please files, `apps/desktop/` (Rust, tested by `desktop.yml`), `apps/web/index.html` | affected | no spec can read them; they select nothing |
+
+One file in the first six rows is enough: the order of the list does not matter. If the rule itself fails, or git lists no change, the answer is `full`. The step prints the scope and the file that decided it.
+
+**Known blind spot.** The graph does not follow a *dynamic* `import()` with a computed specifier. Measured: touching a region module under `packs/alttpr/src/regions` selects 117 specs, `test/regions.spec.ts` included, because `world.ts` imports the modules statically, so the graph covers what is needed today. A spec that reached code only through a computed import would be missed by the selection, and master's full run (the pull request records nothing) and the nightly run are the net.
+
+### Diff coverage
+
+A partial run cannot meet the repository-wide floors (98 % lines, 97 % statements, 98 % functions, 92 % branches): they measure files no selected spec loads. With `--changed`, Vitest already restricts its report to the changed files, and the four floors are switched off for that run. In their place `diff-coverage.mjs` asks a narrower question: **of the executable lines the pull request adds or edits in source files, how many did the selected specs execute?**
+
+- A *source file* is one `vitest.config.ts` measures (`coverage.include` minus `coverage.exclude`); `diff-coverage.spec.mjs` fails when that config and the script's copy drift apart.
+- Changed lines come from `git diff -U0`. Each is judged by the **innermost statement that spans it** in Vitest's `coverage-final.json` (Istanbul format, from V8): executed or not. A line no statement spans (a comment, a type, a blank) is not executable and counts for nothing.
+- **Floor: 90 %** of the changed executable lines (`FLOOR`, or `DIFF_COVERAGE_FLOOR` for a trial). Over the 11 recent pull requests that the rule would have run affected-only (see "Measured"), diff coverage was 95.8 % to 100 % (median 100 %; three of them under 99 %: 98.9, 96.2 and 95.8). Measured from the full suite's report instead, the two lowest cases come out the same (95.8 % and 95.9 %): the selection loses no coverage. The repository-wide line floor is 98 %, so about 2 % of the lines in the repository are uncovered anyway (defensive branches, platform code); a measure over a pull request's few lines is noisier than one over 40 000, where a single uncovered line in a 7-line change is already 86 %. 90 % leaves room for one such line in ten and still fails a pull request that adds code with no test, which is the regression the floor exists to catch. Raise it as the measured values allow, as for the global floors.
+- **Escalation.** A changed source file missing from the report was loaded by no selected spec: either it is reached only through a dynamic import, or nothing imports it at runtime (a file of types only, whose imports are erased). That run proves nothing about it, so the job runs the whole suite (`Run the unit tests in full`) instead, and the global floors judge. The pull request then counts as full, and may record.
+
+Tool choice. Vitest's own `--coverage.changed` thresholds apply the global floors to the whole changed files, so a 5-line change to a 600-line file is judged by that file's old coverage: it punishes untouched debt and hides new gaps. `diff-cover` is a Python tool in a pnpm-only repository, fed by a format conversion. Codecov or Coveralls patch coverage is an external service and token for a public repository. A 150-line script over a report Vitest already writes and `git diff` costs nothing at run time, adds no dependency, and is unit-tested (`diff-coverage.spec.mjs`, including a run against a real temporary repository).
+
+Not checked: branch coverage of changed lines (the global branch floor is the loosest, 92 %), and the coverage of *unchanged* files a pull request weakens by deleting a test. Master's full run catches the second.
+
+### Browser tests
+
+**E2E stays the full 3 shards on every pull request.** The browser tests exercise the production build, which the unit tests' import graph does not describe, and their result is half of what a record vouches for. Selecting among them was not attempted: 80 of the 82 non-release pushes measured touched code shipped in the site.
+
+### The record
+
+Only a pull request whose unit suite **ran in full**, with every E2E shard green, records `tested-full-<tree>` (see "Promoting a tested tree"). The `ci` job's output `full` is true when the step `Run the unit tests in full` succeeded, which is the case when the rule answered `full` or when diff coverage escalated. An affected-only pull request records nothing: its tree has not been tested as a whole, so master runs the full pipeline for it, and that run is the verification the saving was traded against. `find-tested-tree.sh` re-checks the step's conclusion in the run's job list, so a record uploaded under the full name by an affected-only run is refused.
+
+### Measured
+
+Measured on the last 30 merged non-release pull requests, each against its own base: 11 would have run affected-only, 19 the full suite (10 touched `.github/`, which is typical of the CI work of that period; of the 20 that did not, 11 were affected-only and 9 changed a `package.json`, a config, a JSON file or an asset). For the three below, `vitest run --coverage` over the selection against the whole suite, 16 cores under a heavy shared load, so the CPU time (user plus system, all processes) is the stable figure:
+
+| Pull request | Selected | CPU, affected / full | Wall, affected / full | Diff coverage |
+|---|---|---|---|---|
+| #273 fix (1 file) | 79 of 198 specs | 222 s / 335 s (-34 %) | 22 s / 32 s | 100 % (7/7) |
+| #257 feature (21 files) | 73 of 171 | 202 s / 285 s (-29 %) | 23 s / 25 s | 98.9 % (87/88) |
+| #277 desktop (40 files) | 111 of 207 | 252 s / 343 s (-26 %) | 22 s / 28 s | 96.2 % (326/339) |
+
+Two more selected little: #293 (a rename of the app's display name) ran 17 of 215 specs in 50 CPU seconds and #265 28 of 182 in 75 s (the full suite takes 285 to 343); a test-only change (#279, #255) ran its one spec in 4 s. The wall-clock figure of the unit step is only a part of a pull request's wait, which the three E2E shards (about 3 minutes) bound; the saving is mostly runner CPU, and a shorter `ci` job.
+
+The gain depends on where the change sits: touching a module most of the app imports (a store, a pack's world) selects half the suite, a leaf component or a file only the app's shell imports selects a few percent. The nightly run stays as it is: it is the full net, and runs when master moved since the last green full run.
 
 ## What a push to master does
 
@@ -103,11 +180,11 @@ The script is `.github/scripts/is-release-commit.sh`. It reads the push through 
 
 ## Promoting a tested tree
 
-Pull requests are merged by rebase. When master has not moved since the pull request's last test run, the commits it pushes hold **the very tree the PR's CI tested** (measured over 109 pushes before this rule: 77 were identical to a green PR). Testing it again on master repeated about 9.5 runner-minutes and 5 minutes of waiting for nothing. The principle is content addressing, as in Bazel or Turborepo caches: a git *tree* is a hash of the content of every file, so the same hash means the same sources, hence the same test outcome (up to the randomness of property-based tests and the runner image, which the nightly run covers).
+Pull requests are merged by rebase. When master has not moved since the pull request's last test run, the commits it pushes hold **the very tree the PR's CI tested** (measured over 109 pushes before this rule: 77 were identical to a green PR). "Tested" means **in full**: the whole unit suite and every browser-test shard. A pull request that ran only the specs its changes reach (see "What a pull request tests") records nothing, and master runs the full pipeline for its tree. Testing it again on master repeated about 9.5 runner-minutes and 5 minutes of waiting for nothing. The principle is content addressing, as in Bazel or Turborepo caches: a git *tree* is a hash of the content of every file, so the same hash means the same sources, hence the same test outcome (up to the randomness of property-based tests and the runner image, which the nightly run covers).
 
 ### The record
 
-When `ci` and every `e2e` shard of a pull request are green, the `tested` job uploads the artifact `tested-<tree>` (a few bytes, 7 days). `<tree>` is the tree of the merge commit the jobs tested (`refs/pull/N/merge`, `GITHUB_SHA`), read through the API: the job checks nothing out and runs no code of the pull request.
+When `ci` is green **with the unit suite run in full** and every `e2e` shard is green, the `tested` job uploads the artifact `tested-full-<tree>` (a few bytes, 7 days). The name is the contract: it used to be `tested-<tree>`, a record that did not say which unit tests ran, and master no longer looks that name up (a legacy record, still within its 7 days at the time of the change, promotes nothing). `<tree>` is the tree of the merge commit the jobs tested (`refs/pull/N/merge`, `GITHUB_SHA`), read through the API: the job checks nothing out and runs no code of the pull request.
 
 On master, `find-tested-tree.sh` reads the tree of the pushed commit, lists the artifacts with that name, and examines the runs that hold them, newest first (ten at most).
 
@@ -115,7 +192,7 @@ The record holds the tree, the test merge commit and the run id. It is only a na
 
 ### The trust rule
 
-A pull request runs **its own copy** of the workflows. Anyone can write a `ci.yml` that uploads `tested-<tree>` without testing anything, so the artifact proves nothing by itself: it is believed only because of the run that holds it. Every condition must hold, or the record is ignored and master tests (fail-safe):
+A pull request runs **its own copy** of the workflows. Anyone can write a `ci.yml` that uploads `tested-full-<tree>` without testing anything, so the artifact proves nothing by itself: it is believed only because of the run that holds it. Every condition must hold, or the record is ignored and master tests (fail-safe):
 
 | Condition | What it rules out |
 |---|---|
@@ -124,8 +201,8 @@ A pull request runs **its own copy** of the workflows. Anyone can write a `ci.ym
 | The run is `.github/workflows/ci.yml` | another workflow file added by a branch |
 | The run's head repository has this repository's name and id, and is not a fork | a renamed or forked head |
 | The run is completed and its conclusion is `success` | a failed, cancelled or still running run |
-| Its jobs include a successful `ci`, no job that is neither successful nor skipped, and every shard `k/n` of the browser tests for the `n` the job names announce | a run missing part of the suite. A run that failed and was re-run to success is accepted (its jobs are the latest attempt's); a last attempt that is red or incomplete is not |
-| The record, downloaded, names the run's own test merge commit: that commit's tree is the recorded one and its parents hold the run's head commit | a trusted run publishing `tested-<some other tree>` |
+| Its jobs include a successful `ci` whose step `Run the unit tests in full` succeeded (not skipped), no job that is neither successful nor skipped, and every shard `k/n` of the browser tests for the `n` the job names announce | a run missing part of the suite, an affected-only unit run included: the step is skipped there, so even a record uploaded by mistake under the full name is refused. A run that failed and was re-run to success is accepted (its jobs are the latest attempt's); a last attempt that is red or incomplete is not |
+| The record, downloaded, names the run's own test merge commit: that commit's tree is the recorded one and its parents hold the run's head commit | a trusted run publishing `tested-full-<some other tree>` |
 | It is the newest *completed* run holding this tree (a run still going is ignored), and no newer run of the same commit failed | an older green run outvoting a newer red one: no "retry until green", even on identical content |
 | The tree is the pushed commit's own | a record for another content |
 
@@ -140,6 +217,7 @@ What remains trusted is a collaborator with write access to the repository, who 
 | The record expires after 7 days | an old, untouched pull request is tested again on master; promotions normally follow the pull request's run within hours |
 | Master moved after the pull request was tested | the rebased tree differs: full run |
 | The pull request was merged before its run finished | no record yet: full run |
+| The pull request ran only the affected unit specs | no record by design: full run on master. The saving moves from master to the pull request's own wait, and master's full run is the net that catches what the selection missed |
 | Random inputs (property-based tests draw a new seed each run) and the runner's Chrome are not part of the tree | the nightly run explores them |
 | A promoted site is **built** on master, not carried over from the pull request | the build is reproducible (two builds are identical bit for bit); a changed build tool or a non-deterministic step would show only as a difference between the two, never as a wrong site, since the tree is the same |
 
@@ -292,7 +370,7 @@ Within a group, a queued run is replaced by a newer pending one. That is why mas
 
 ## Caches
 
-Three kinds of cache exist, with three different policies. (The `tested-<tree>` records are artifacts, not caches: a few bytes each, 7 days.)
+Three kinds of cache exist, with three different policies. (The `tested-full-<tree>` records are artifacts, not caches: a few bytes each, 7 days.)
 
 | Cache | Key | Written by | Policy |
 |---|---|---|---|

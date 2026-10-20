@@ -2,7 +2,7 @@ name: Plan
 
 # Decides, for a push to master or the nightly run, what the pipeline has to
 # do: nothing (`skip`), only build and deploy a tree a pull request already
-# tested (`promote`), or everything (`full`). It is called by the workflows
+# tested in full (`promote`), or everything (`full`). It is called by the workflows
 # that would otherwise run for nothing (CI, CodeQL), so the rule is written
 # once. docs/ci.md says what it recognises and why.
 on:

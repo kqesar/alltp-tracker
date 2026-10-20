@@ -58,10 +58,18 @@ jobs:
       actions: read
       contents: read
       pull-requests: write
+    outputs:
+      # Whether the whole unit suite ran: only then may the `tested` job record
+      # the tree for master (docs/ci.md, "Promoting a tested tree")
+      full: ${{ steps.full.outcome == 'success' }}
 
     steps:
+      # A pull request is checked out as its test merge commit: depth 2 keeps
+      # both its parents, so HEAD^1 (the base branch) and the diff are there
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 1 }}
 
       # The pnpm store is saved by this job, on master, once per lockfile: every
       # other job in the repository only restores it (docs/ci.md, "Caches").
@@ -105,15 +113,56 @@ jobs:
         id: typecheck
         run: pnpm typecheck
 
-      - name: Run tests with coverage
-        id: test
+      # A pull request runs the specs its changes reach and checks the coverage
+      # of the lines it changed. What the import graph cannot see (a lockfile,
+      # a config, the CI, a data file) takes the whole suite, as does every push
+      # to master and the nightly run (docs/ci.md, "What a pull request tests").
+      # The rule is unit-scope.mjs.
+      - name: Choose the unit tests
+        id: scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = pull_request ]; then
+            # If the rule itself fails, the whole suite runs
+            git diff --name-status -z --no-renames HEAD^1 HEAD | node .github/scripts/unit-scope.mjs \
+              || printf 'scope=full\nreason=the rule failed\n' | tee -a "$GITHUB_OUTPUT"
+          else
+            printf 'scope=full\nreason=not a pull request\n' | tee -a "$GITHUB_OUTPUT"
+          fi
+
+      # Given --changed, Vitest reports only the changed files and would hold
+      # those few to its repository-wide floors: they are off here, and
+      # diff-coverage.mjs applies the floor that fits.
+      - name: Run the unit tests the changes reach
+        id: affected
+        if: steps.scope.outputs.scope == 'affected'
+        run: >-
+          pnpm vitest run --changed HEAD^1 --passWithNoTests --coverage
+          --coverage.reporter=json
+          --coverage.thresholds.lines=0 --coverage.thresholds.functions=0
+          --coverage.thresholds.branches=0 --coverage.thresholds.statements=0
+
+      # Exits 1 below the floor. `escalate` means a changed source file was
+      # loaded by no selected spec: this run proves nothing about it.
+      - name: Check the coverage of the changed lines
+        id: diffcov
+        if: steps.scope.outputs.scope == 'affected'
+        run: node .github/scripts/diff-coverage.mjs HEAD^1
+
+      # find-tested-tree.sh reads this step's name: keep them in step
+      - name: Run the unit tests in full
+        id: full
+        if: steps.scope.outputs.scope == 'full' || steps.diffcov.outputs.escalate == 'true'
         run: pnpm test:coverage
 
       - name: Generate coverage summary
         id: coverage
         if: always()
+        env:
+          FULL: ${{ steps.full.outcome }}
         run: |
-          if [ -f coverage/coverage-summary.json ]; then
+          if [ "$FULL" = success ] && [ -f coverage/coverage-summary.json ]; then
             echo "Coverage file found, processing..."
             # Extract coverage data using node
             node -e "
@@ -146,17 +195,39 @@ jobs:
           COVERAGE_STATEMENTS: ${{ env.COVERAGE_STATEMENTS }}
           COVERAGE_FUNCTIONS: ${{ env.COVERAGE_FUNCTIONS }}
           COVERAGE_BRANCHES: ${{ env.COVERAGE_BRANCHES }}
+          DIFF_PCT: ${{ steps.diffcov.outputs.pct }}
+          DIFF_LINES: ${{ steps.diffcov.outputs.lines }}
+          FULL_OUTCOME: ${{ steps.full.outcome }}
+          SCOPE: ${{ steps.scope.outputs.scope }}
+          SCOPE_REASON: ${{ steps.scope.outputs.reason }}
+          # Every unit-test step that ran: the specs the changes reach, the
+          # coverage of the changed lines, the whole suite
+          TEST_OUTCOMES: ${{ steps.affected.outcome }} ${{ steps.diffcov.outcome }} ${{ steps.full.outcome }}
         with:
           script: |
             // A step that never ran, because an earlier one failed, is skipped
             const icon = (outcome) => ({ success: '✅', skipped: '⏭️' })[outcome] ?? '❌';
             const lintStatus = icon('${{ steps.lint.outcome }}');
             const typecheckStatus = icon('${{ steps.typecheck.outcome }}');
-            const testStatus = icon('${{ steps.test.outcome }}');
+            // The test steps that did not run are skipped: the others decide
+            const ran = process.env.TEST_OUTCOMES.split(' ').filter((o) => o !== 'skipped');
+            const testStatus = ran.length === 0 ? icon('skipped') : icon(ran.every((o) => o === 'success') ? 'success' : 'failure');
+            const full = process.env.FULL_OUTCOME !== 'skipped';
+            // Paths in the reason are the pull request's own: never in code
+            const unitTests = full
+              ? `all (${process.env.SCOPE_REASON})`
+              : 'only what the changes reach (diff coverage below)';
 
             // Coverage section
             let coverageSection = '';
-            if (process.env.COVERAGE_AVAILABLE === 'true') {
+            if (!full && process.env.DIFF_LINES) {
+              coverageSection = `
+            ## 📊 Test Coverage
+
+            Changed lines: ${process.env.DIFF_PCT}% covered (${process.env.DIFF_LINES})
+
+            `;
+            } else if (process.env.COVERAGE_AVAILABLE === 'true') {
               const lines = process.env.COVERAGE_LINES;
               const statements = process.env.COVERAGE_STATEMENTS;
               const functions = process.env.COVERAGE_FUNCTIONS;
@@ -181,7 +252,7 @@ jobs:
             | Branches | ${branches}% | ${getCoverageEmoji(branches)} |
 
             `;
-            } else if ('${{ steps.test.outcome }}' === 'success') {
+            } else if (ran.length > 0 && testStatus === '✅') {
               coverageSection = `
             ## 📊 Test Coverage
             
@@ -199,6 +270,7 @@ jobs:
             | Linting | ${lintStatus} |
             | Type-check | ${typecheckStatus} |
             | Tests | ${testStatus} |
+            | Specs run | ${unitTests} |
             ${coverageSection}
             ${hasFailures ? '❌ Some checks failed. Please review the logs above.' : '✅ All checks passed!'}
 
@@ -239,6 +311,9 @@ jobs:
   # no faster than two), so only another runner shortens the wait. A fourth
   # would save about 35 s more and come close to the limit of 20 concurrent
   # jobs. The count lives in the matrix: everything else reads it from there.
+  # They always run in full, even for a pull request whose unit tests are
+  # selected: the production build and the browser are not mapped by the unit
+  # tests' import graph, and they are what a record for master vouches for.
   e2e:
     name: E2E (Playwright + axe, ${{ matrix.shard }}/${{ strategy.job-total }})
     needs: plan
@@ -299,13 +374,15 @@ jobs:
           path: apps/web/playwright-report/
           retention-days: 7
 
-  # Pull requests of this repository only, once every test job has passed:
-  # records that this tree was tested, as the artifact `tested-<tree>`. Master
-  # looks for it (plan, find-tested-tree.sh) and, if it trusts the run that
-  # holds it, builds and deploys without testing again. The artifact is the
-  # name and nothing else; what makes it trustworthy is the run it belongs to,
-  # which master checks (docs/ci.md, "Promoting a tested tree"). A fork's pull
-  # request records nothing, and master would not believe it.
+  # Pull requests of this repository only, once every test job has passed AND
+  # the unit suite ran in full: records that this tree was tested, as the
+  # artifact `tested-full-<tree>`. A pull request that ran only the specs its
+  # changes reach (unit-scope.mjs) records nothing, and master tests its tree.
+  # Master looks for the record (plan, find-tested-tree.sh) and, if it trusts
+  # the run that holds it, builds and deploys without testing again. The
+  # artifact is the name and nothing else; what makes it trustworthy is the run
+  # it belongs to, which master checks (docs/ci.md, "Promoting a tested tree").
+  # A fork's pull request records nothing, and master would not believe it.
   #
   # The tree is the one of the merge commit the jobs above tested
   # (refs/pull/N/merge, GITHUB_SHA). A rebase merge pushes that same tree when
@@ -318,7 +395,8 @@ jobs:
     if: >-
       ${{ !cancelled() && github.event_name == 'pull_request'
       && github.event.pull_request.head.repo.full_name == github.repository
-      && needs.ci.result == 'success' && needs.e2e.result == 'success' }}
+      && needs.ci.result == 'success' && needs.ci.outputs.full == 'true'
+      && needs.e2e.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
     # A record is a shortcut for master, never a requirement: if this job fails
@@ -345,7 +423,7 @@ jobs:
       - name: Upload the record
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: tested-${{ steps.tree.outputs.tree }}
+          name: tested-full-${{ steps.tree.outputs.tree }}
           path: ${{ runner.temp }}/tested.txt
           if-no-files-found: error
           overwrite: true

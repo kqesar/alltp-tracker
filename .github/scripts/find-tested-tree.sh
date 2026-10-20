@@ -4,15 +4,19 @@
 # $GITHUB_OUTPUT when set). docs/ci.md says why, and what makes a record
 # trustworthy.
 #
-# The record is the artifact `tested-<tree>` that the `tested` job of ci.yml
-# uploads once every test job of a pull request has passed. An artifact
-# proves nothing by itself: any run can upload one under any name, and a pull
-# request runs its own copy of the workflows. So a record counts only if the
-# run that holds it:
+# The record is the artifact `tested-full-<tree>` that the `tested` job of
+# ci.yml uploads once every test job of a pull request has passed AND its unit
+# tests ran in full: a pull request that ran only the specs its changes reach
+# records nothing, and master tests its tree. (The name is the contract: an
+# earlier `tested-<tree>` record meant no such thing and is never looked up.)
+# An artifact proves nothing by itself: any run can upload one under any name,
+# and a pull request runs its own copy of the workflows. So a record counts
+# only if the run that holds it:
 #   - belongs to a pull request whose head is in this repository, never a fork
 #     (a fork's workflows are the fork author's code);
 #   - is ci.yml, on the `pull_request` event, completed and successful;
-#   - has a successful `ci` job and every browser-test shard (all of the n in
+#   - has a successful `ci` job whose step FULL_STEP (ci.yml) succeeded, so
+#     the whole unit suite ran, and every browser-test shard (all of the n in
 #     "k/n"), and no job that failed;
 #   - recorded the tree of the commit it tested: the record names that commit
 #     (the pull request's test merge), whose tree must be this one and whose
@@ -24,6 +28,10 @@
 #
 # Environment: GH_TOKEN, REPO (owner/name), AFTER (the pushed commit).
 set -uo pipefail
+
+# The step of the `ci` job that runs the whole unit suite: keep its name in
+# step with ci.yml. A rename there only stops promotions, never allows one.
+FULL_STEP="Run the unit tests in full"
 
 # How many runs holding a record are listed: newest first, but only the
 # newest completed one decides, so this only bounds the runs still going
@@ -48,14 +56,14 @@ echo "Tree of $AFTER: $tree" >&2
 
 # Artifacts of a fork's run are listed too, with that fork as head repository.
 # One line per run, newest first: run id, artifact id
-candidates=$(gh api "repos/$REPO/actions/artifacts?name=tested-$tree&per_page=100" --jq "
+candidates=$(gh api "repos/$REPO/actions/artifacts?name=tested-full-$tree&per_page=100" --jq "
   [.artifacts[]
    | select(.expired | not)
    | select(.workflow_run.head_repository_id == .workflow_run.repository_id)
    | {run: .workflow_run.id, artifact: .id}]
   | unique_by(.run) | reverse | .[0:$MAX_RUNS] | .[] | \"\\(.run) \\(.artifact)\"") \
   || refuse "the artifacts could not be listed"
-[ -n "$candidates" ] || refuse "no pull request has recorded this tree"
+[ -n "$candidates" ] || refuse "no pull request has recorded this tree in full"
 
 # The run must be what the record claims; only exact answers pass. A run
 # still going is not an answer yet.
@@ -72,12 +80,14 @@ run_verdict() {
 
 # The jobs must be what a complete run holds
 jobs_verdict() {
-  jq -r '
+  jq -r --arg step "$FULL_STEP" '
     if .total_count != (.jobs | length) then "the job list is truncated"
     elif [.jobs[] | select(.conclusion != "success" and .conclusion != "skipped")] | length > 0
       then "a job did not succeed"
     elif [.jobs[] | select(.name == "ci" and .conclusion == "success")] | length != 1
       then "the ci job did not succeed"
+    elif [.jobs[] | select(.name == "ci") | (.steps // [])[] | select(.name == $step and .conclusion == "success")]
+      | length != 1 then "the unit tests did not run in full"
     else
       [.jobs[] | select(.conclusion == "success" and (.name | test("^E2E \\(.*, [0-9]+/[0-9]+\\)$")))
        | .name | capture(", (?<k>[0-9]+)/(?<n>[0-9]+)\\)$")] as $shards

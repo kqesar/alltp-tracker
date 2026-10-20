@@ -8,7 +8,10 @@
 #            the release: ci.yml), and a nightly run finds master unchanged
 #            since the last green full run;
 #   promote  no tests, only the site's build and deploy: a pull request of
-#            this repository already tested this exact tree;
+#            this repository already tested this exact tree IN FULL (its
+#            whole unit suite and every browser-test shard). A pull request
+#            that ran only the unit specs its changes reach (unit-scope.mjs)
+#            records nothing, so its push is `full`;
 #   full     tests, then deploy (the nightly run does not deploy).
 #
 # Anything else, and any failure of a script below, is `full`. A release
