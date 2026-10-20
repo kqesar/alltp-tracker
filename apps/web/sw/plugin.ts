@@ -14,6 +14,7 @@ const BUILD_META = "alltp-tracker-build";
 
 /** Identifiers in sw.ts that the build fills in. */
 const PRECACHE_PLACEHOLDER = "__PRECACHE__";
+const GAMES_PLACEHOLDER = "__GAMES__";
 const ON_DEMAND_PLACEHOLDER = "__ON_DEMAND__";
 const BUILD_PLACEHOLDER = "__BUILD__";
 
@@ -49,12 +50,24 @@ const filesIn = (directory: string) =>
  * those `onDemand` matches are cached the first time a page fetches them
  * (voice commands' engine), those `uncached` matches never (the speech
  * model, which the engine keeps itself).
+ *
+ * Each game is a chunk of its own that a player of another game never loads
+ * (src/games/registry.ts), so its files stay out of the shared shell too: the
+ * worker caches the shell, and the games a device tracks. A game's files are
+ * what its module reaches (its imports, its lazy chunks, its styles, what
+ * they reference) that the shell does not need anyway, plus the public files
+ * its `files` pattern claims. A file two games share is listed under both.
+ * Whatever no game claims is shell: a file that escapes these rules is
+ * downloaded for everyone, never missing for a player.
  * @param options - Paths relative to the output, as patterns
  */
 export const serviceWorker = ({
+  games = {},
   onDemand,
   uncached,
 }: {
+  /** Each game by id: its module's source path and its public files */
+  games?: Record<string, { files?: RegExp; module: string }>;
   onDemand?: RegExp;
   uncached?: RegExp;
 } = {}): Plugin => {
@@ -95,9 +108,11 @@ export const serviceWorker = ({
             output.type === "chunk" ? output.code : output.source,
           );
         }
+        const published = new Set<string>();
         if (publicDir) {
           for (const { name, path } of filesIn(publicDir)) {
             files.set(name, readFileSync(path));
+            published.add(name);
           }
         }
         const page = bundle[PAGE_FILE];
@@ -127,28 +142,106 @@ export const serviceWorker = ({
         const names = [...files.keys()]
           .filter((name) => !uncached?.test(name))
           .sort();
-        const precache = listed(names.filter((name) => !onDemand?.test(name)));
-        const lazy = listed(names.filter((name) => onDemand?.test(name)));
+
+        // The files each game alone needs: everything its module reaches
+        // that the shell, the page's own closure, does not
+        const neighbours = (name: string) => {
+          const output = bundle[name];
+          if (output?.type !== "chunk") return [];
+          return [
+            ...output.imports,
+            ...output.dynamicImports,
+            ...(output.viteMetadata?.importedCss ?? []),
+            ...(output.viteMetadata?.importedAssets ?? []),
+          ];
+        };
+        const reach = (roots: string[], outside: ReadonlySet<string>) => {
+          const reached = new Set<string>();
+          const pending = [...roots];
+          for (let name = pending.pop(); name; name = pending.pop()) {
+            if (reached.has(name) || outside.has(name)) continue;
+            reached.add(name);
+            pending.push(...neighbours(name));
+          }
+          return reached;
+        };
+        const moduleOf = new Map(
+          Object.entries(games).map(([id, { module }]) => {
+            const chunk = Object.values(bundle).find(
+              (output) =>
+                output.type === "chunk" &&
+                output.facadeModuleId?.split(sep).join("/").endsWith(module),
+            );
+            if (!chunk) this.error(`game ${id}: no chunk for ${module}`);
+            return [id, chunk.fileName];
+          }),
+        );
+        const entries = Object.values(bundle)
+          .filter(
+            (output) =>
+              output.type === "chunk" &&
+              output.isEntry &&
+              output.fileName !== SW_FILE,
+          )
+          .map((output) => output.fileName);
+        const shell = reach(entries, new Set(moduleOf.values()));
+        const ofGame = new Map(
+          Object.entries(games).map(([id, { files: publicFiles }]) => [
+            id,
+            new Set([
+              ...reach([moduleOf.get(id) ?? ""], shell),
+              ...names.filter(
+                (name) =>
+                  published.has(name) &&
+                  publicFiles?.test(name) &&
+                  !shell.has(name),
+              ),
+            ]),
+          ]),
+        );
+        const claimed = new Set(
+          [...ofGame.values()].flatMap((set) => [...set]),
+        );
+        const cached = (name: string) => !onDemand?.test(name);
+        const precache = listed(
+          names.filter((name) => cached(name) && !claimed.has(name)),
+        );
+        const gameFiles = Object.fromEntries(
+          [...ofGame].map(([id, set]) => [
+            id,
+            listed(names.filter((name) => cached(name) && set.has(name))),
+          ]),
+        );
+        const lazy = listed(names.filter((name) => !cached(name)));
         const worker = bundle[SW_FILE];
         if (worker?.type !== "chunk") this.error(`${SW_FILE} was not built`);
-        worker.code = fill(
-          fill(
-            fill(worker.code, PRECACHE_PLACEHOLDER, JSON.stringify(precache)),
-            ON_DEMAND_PLACEHOLDER,
-            JSON.stringify(lazy),
-          ),
-          BUILD_PLACEHOLDER,
-          JSON.stringify(build),
-        );
+        const values: [string, unknown][] = [
+          [PRECACHE_PLACEHOLDER, precache],
+          [GAMES_PLACEHOLDER, gameFiles],
+          [ON_DEMAND_PLACEHOLDER, lazy],
+          [BUILD_PLACEHOLDER, build],
+        ];
+        for (const [placeholder, value] of values) {
+          worker.code = fill(worker.code, placeholder, JSON.stringify(value));
+        }
 
-        const bytes = precache.reduce(
-          (total, [path]) =>
-            total + Buffer.byteLength(files.get(path.slice(base.length)) ?? ""),
-          0,
-        );
+        const kilobytes = (list: string[][]) =>
+          (
+            list.reduce(
+              (total, [path]) =>
+                total +
+                Buffer.byteLength(files.get(path.slice(base.length)) ?? ""),
+              0,
+            ) / 1000
+          ).toFixed(0);
         log(
-          `${SW_FILE}: build ${build}, precaches ${precache.length} files, ${(bytes / 1000).toFixed(0)} kB; ${lazy.length} on demand`,
+          `${SW_FILE}: build ${build}, shell ${precache.length} files, ${kilobytes(precache)} kB; ${lazy.length} on demand`,
         );
+        for (const [id, list] of Object.entries(gameFiles)) {
+          log(
+            `${SW_FILE}: game ${id} adds ${list.length} files, ${kilobytes(list)} kB`,
+          );
+        }
       },
       // After Vite has written index.html into the bundle
       order: "post",

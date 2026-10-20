@@ -7,7 +7,11 @@ import {
   pageTitle,
   takeGameFromAddress,
 } from "@/games/registry";
-import { checkForUpdates, registerServiceWorker } from "@/stores/updateStore";
+import {
+  checkForUpdates,
+  holdGame,
+  registerServiceWorker,
+} from "@/stores/updateStore";
 import { startAnalytics } from "@/utils/analytics";
 import { isDesktopApp } from "@/utils/platform";
 import { isObsView, obsBackground, obsTimer } from "@/utils/view";
@@ -28,6 +32,7 @@ if (import.meta.env.MODE === "desktop") {
       );
       registerServiceWorker(navigator.serviceWorker, {
         build: build?.content ?? "",
+        hold: () => holdGame(activeGame(), import.meta.env.BASE_URL),
         reload: () => window.location.reload(),
         url: `${import.meta.env.BASE_URL}sw.js`,
       })
