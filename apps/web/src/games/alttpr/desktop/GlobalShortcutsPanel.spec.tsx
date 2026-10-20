@@ -1,7 +1,7 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   BindingReport,
   Mechanism,
@@ -18,6 +18,9 @@ const {
   commandFor,
   statusText,
 } = await import("@/games/alttpr/desktop/GlobalShortcutsPanel");
+const { stopGlobalShortcuts } = await import(
+  "@/games/alttpr/desktop/globalShortcuts"
+);
 const { DEFAULT_GLOBAL, useGlobalShortcutsStore } = await import(
   "@/games/alttpr/desktop/globalShortcutsStore"
 );
@@ -66,6 +69,14 @@ const show = (
 
 const status = () => screen.getByTestId("global-shortcuts-status");
 
+// Unmounting the panel sends what is unsent (the dialog closing): let that
+// finish before the next test, then forget what the app was last given
+afterEach(async () => {
+  cleanup();
+  await act(async () => {});
+  stopGlobalShortcuts();
+});
+
 beforeEach(() => {
   localStorage.clear();
   tauri.invoke.mockReset();
@@ -76,10 +87,12 @@ beforeEach(() => {
     {
       ...DEFAULT_GLOBAL,
       capturing: false,
+      declined: false,
       failure: null,
       mechanism: null,
       pending: false,
       report: null,
+      settingsError: null,
     },
     false,
   );
@@ -151,7 +164,12 @@ describe("what it says of each mechanism and state", () => {
     [
       "a declined portal",
       () => statusText(portal, report(portal, "refused"), false, null),
-      "Your desktop's approval was declined.",
+      "Your desktop's approval was declined. The tracker won't ask again by itself.",
+    ],
+    [
+      "a decline remembered from an earlier launch",
+      () => statusText(portal, null, false, null, true),
+      "Your desktop's approval was declined. The tracker won't ask again by itself.",
     ],
     [
       "a portal that failed",
@@ -164,7 +182,7 @@ describe("what it says of each mechanism and state", () => {
           false,
           null,
         ),
-      "Your desktop could not register global shortcuts (D-Bus said no). Bind keys in its settings to the commands below instead.",
+      "Your desktop could not register global shortcuts (D-Bus said no).",
     ],
     [
       "a portal that gave way to the command line",
@@ -183,8 +201,13 @@ describe("what it says of each mechanism and state", () => {
       "Your desktop has no global shortcut service the tracker can use. Bind keys in your window manager to commands like these:",
     ],
     [
-      "an app that failed to answer",
+      "an app that failed to answer, where no command shows",
       () => statusText(mechanism("hotkeys"), null, false, "channel closed"),
+      "The app could not register global shortcuts (channel closed).",
+    ],
+    [
+      "an app that failed to answer, where the commands show",
+      () => statusText(mechanism("command"), null, false, "channel closed"),
       "The app could not register global shortcuts (channel closed). Bind keys in your window manager to the commands below instead.",
     ],
   ])("%s", (_name, text, expected) => {
@@ -224,6 +247,66 @@ describe("what it says of each mechanism and state", () => {
       enabled: true,
       report: report(portal, "active", active.slice(0, 1)),
     });
+    expect(screen.queryByTestId("global-shortcuts-again")).toBeNull();
+  });
+
+  it("never points at commands the tab does not show", () => {
+    for (const text of [
+      statusText(portal, report(portal, "unavailable"), false, null),
+      statusText(portal, null, false, "boom"),
+      statusText(mechanism("hotkeys"), null, false, "boom"),
+    ]) {
+      expect(text).not.toContain("commands below");
+    }
+  });
+
+  it("hides Send to desktop once the desktop holds the keys", async () => {
+    show(portal, {
+      enabled: true,
+      keymap: { "advance:hookshot": "Control+Alt+Shift+KeyH" },
+    });
+    tauri.invoke.mockResolvedValue(report(portal, "active"));
+    await userEvent.click(screen.getByTestId("global-shortcuts-send"));
+    expect(screen.queryByTestId("global-shortcuts-send")).toBeNull();
+  });
+
+  it("gives a failed Open shortcut settings its own message, not the registration's", async () => {
+    const approved = report(portal, "active", active.slice(0, 1));
+    show(portal, { enabled: true, report: approved });
+    tauri.invoke.mockRejectedValue("no session");
+
+    await userEvent.click(screen.getByTestId("global-shortcuts-settings"));
+
+    expect(
+      screen.getByTestId("global-shortcuts-settings-error"),
+    ).toHaveTextContent(
+      "Could not open your desktop's shortcut settings (no session).",
+    );
+    expect(status()).toHaveTextContent(/approved 1 of 1/);
+    expect(useGlobalShortcutsStore.getState().failure).toBeNull();
+  });
+
+  it("shows a remembered decline as Not approved with Ask again, nothing asked", async () => {
+    show(portal, {
+      declined: true,
+      enabled: true,
+      keymap: { "advance:hookshot": "Control+Alt+Shift+KeyH" },
+    });
+    expect(status()).toHaveTextContent("declined");
+    expect(
+      screen.getByTestId("shortcut-note-advance-hookshot"),
+    ).toHaveTextContent("Not approved");
+    expect(screen.queryByTestId("global-shortcuts-send")).toBeNull();
+    expect(tauri.invoke).not.toHaveBeenCalled();
+
+    tauri.invoke.mockResolvedValue(report(portal, "active"));
+    await userEvent.click(screen.getByTestId("global-shortcuts-again"));
+
+    expect(tauri.invoke).toHaveBeenCalledWith(
+      "global_shortcuts_apply",
+      expect.objectContaining({ rebind: true }),
+    );
+    expect(useGlobalShortcutsStore.getState().declined).toBe(false);
     expect(screen.queryByTestId("global-shortcuts-again")).toBeNull();
   });
 
@@ -284,6 +367,32 @@ describe("what it says of each key", () => {
     expect(
       screen.getByTestId("shortcut-note-advance-hookshot"),
     ).toHaveTextContent("Not approved");
+  });
+
+  it("ties each note to its key button, so a screen reader reads both", () => {
+    const m = mechanism("portal");
+    show(m, {
+      enabled: true,
+      keymap: {
+        "advance:bow": "Control+Alt+Shift+KeyB",
+        "advance:hookshot": "Control+Alt+Shift+KeyH",
+      },
+      report: report(m, "partial", [
+        binding("advance:hookshot", "unbound"),
+        binding("advance:bow", "active"),
+      ]),
+    });
+    const key = screen.getByTestId("shortcut-advance-hookshot");
+    const note = screen.getByTestId("shortcut-note-advance-hookshot");
+    expect(key).toHaveAttribute("aria-describedby", note.id);
+    expect(key).toHaveAccessibleDescription("Not approved");
+    // No note, nothing to describe by
+    expect(screen.getByTestId("shortcut-advance-bow")).not.toHaveAttribute(
+      "aria-describedby",
+    );
+    expect(screen.getByTestId("shortcut-back-hookshot")).not.toHaveAttribute(
+      "aria-describedby",
+    );
   });
 
   it("says nothing under a key that has none", () => {

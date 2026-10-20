@@ -90,7 +90,15 @@ beforeEach(() => {
   );
   useGameStore.setState(useGameStore.getInitialState(), true);
   useGlobalShortcutsStore.setState(
-    { ...DEFAULT_GLOBAL, capturing: false, failure: null, mechanism: null },
+    {
+      ...DEFAULT_GLOBAL,
+      capturing: false,
+      declined: false,
+      failure: null,
+      mechanism: null,
+      report: null,
+      settingsError: null,
+    },
     false,
   );
 });
@@ -365,7 +373,50 @@ describe("with the desktop's portal", () => {
 
     tauri.invoke.mockRejectedValueOnce("no session");
     await openDesktopSettings();
-    expect(useGlobalShortcutsStore.getState().failure).toBe("no session");
+    expect(useGlobalShortcutsStore.getState().settingsError).toBe("no session");
+    expect(useGlobalShortcutsStore.getState().failure).toBeNull();
+  });
+
+  it("remembers a refusal and does not ask the desktop again by itself", async () => {
+    answer(mechanism("portal"));
+    await startGlobalShortcuts();
+    bindHookshot();
+    tauri.invoke.mockResolvedValue({
+      ...reportOf(mechanism("portal")),
+      state: "refused",
+    });
+    await syncGlobalShortcuts();
+    expect(useGlobalShortcutsStore.getState().declined).toBe(true);
+    tauri.invoke.mockClear();
+
+    // Closing the dialog, the next launch's start-up sync: nothing is asked
+    syncIfChanged();
+    await syncGlobalShortcuts();
+    await vi.advanceTimersByTimeAsync(APPLY_DELAY_MS * 3);
+    expect(applies()).toHaveLength(0);
+
+    // The player's own Ask again does
+    answer(mechanism("portal"));
+    await syncGlobalShortcuts(true);
+    expect(applies()).toHaveLength(1);
+    expect(useGlobalShortcutsStore.getState().declined).toBe(false);
+  });
+
+  it("does not ask at the next launch when the saved state says declined", async () => {
+    useGlobalShortcutsStore.setState({
+      declined: true,
+      enabled: true,
+      keymap: { "advance:hookshot": "Control+Alt+Shift+KeyH" },
+    });
+    answer(mechanism("portal"));
+    await startGlobalShortcuts();
+    expect(applies()).toHaveLength(0);
+  });
+
+  it("forgets a refusal when the switch is turned off and on again", () => {
+    useGlobalShortcutsStore.setState({ declined: true, enabled: true });
+    useGlobalShortcutsStore.getState().setGlobalEnabled(false);
+    expect(useGlobalShortcutsStore.getState().declined).toBe(false);
   });
 });
 
@@ -470,12 +521,19 @@ describe("what is saved", () => {
       localStorage.getItem("alltp-tracker-global-shortcuts") ?? "{}",
     );
     expect(saved.state).toEqual({
+      declined: false,
       enabled: true,
       keymap: { "advance:hookshot": "Control+Alt+KeyH" },
     });
     expect(localStorage.getItem("alltp-tracker-state")).not.toContain(
       "Control+Alt+KeyH",
     );
+  });
+
+  it("keeps a refusal across a restart", async () => {
+    useGlobalShortcutsStore.setState({ declined: true });
+    await useGlobalShortcutsStore.persist.rehydrate();
+    expect(useGlobalShortcutsStore.getState().declined).toBe(true);
   });
 
   it("restores leniently: an unknown action or a malformed chord is dropped", async () => {

@@ -97,6 +97,8 @@ export const syncGlobalShortcuts = async (rebind = false) => {
   const store = useGlobalShortcutsStore;
   const bindings = wantedBindings();
   const asksPlayer = store.getState().mechanism?.kind === "portal";
+  // The player declined the desktop's dialog: only Ask again asks it again
+  if (asksPlayer && store.getState().declined && !rebind) return;
   if (asksPlayer && bindings.length > 0) store.setState({ pending: true });
   try {
     const report = await invoke<Report>("global_shortcuts_apply", {
@@ -105,6 +107,8 @@ export const syncGlobalShortcuts = async (rebind = false) => {
     });
     applied = fingerprint(bindings);
     store.setState({
+      // A refusal is remembered; any other answer to a question lifts it
+      declined: report.state === "refused",
       failure: null,
       mechanism: report.mechanism,
       pending: false,
@@ -123,17 +127,20 @@ export const hasUnsentChanges = () => fingerprint(wantedBindings()) !== applied;
  * the dialog closes). The system's own hotkeys apply as the player edits.
  */
 export const syncIfChanged = () => {
-  const portal =
-    useGlobalShortcutsStore.getState().mechanism?.kind === "portal";
-  if (portal && hasUnsentChanges()) void syncGlobalShortcuts();
+  const { declined, mechanism } = useGlobalShortcutsStore.getState();
+  if (mechanism?.kind === "portal" && !declined && hasUnsentChanges()) {
+    void syncGlobalShortcuts();
+  }
 };
 
 /** Portal: open the desktop's own settings for the tracker's shortcuts. */
 export const openDesktopSettings = async () => {
+  useGlobalShortcutsStore.setState({ settingsError: null });
   try {
     await invoke("global_shortcuts_configure");
   } catch (error) {
-    useGlobalShortcutsStore.setState({ failure: String(error) });
+    // Its own message: the shortcuts themselves are registered fine
+    useGlobalShortcutsStore.setState({ settingsError: String(error) });
   }
 };
 
@@ -167,6 +174,7 @@ const onChange = (
 export const stopGlobalShortcuts = () => {
   clearTimeout(timer);
   timer = undefined;
+  applied = fingerprint([]);
 };
 
 /**

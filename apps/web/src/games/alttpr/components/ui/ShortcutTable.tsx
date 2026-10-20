@@ -83,6 +83,9 @@ export type ShortcutTableHandle = {
  * @param refusalMessage - The words for a refusal, given the chord's label
  * and the chord itself
  * @param rowExtra - What to show under an action's key, if anything
+ * @param noteId - The id of the element in `rowExtra` that explains an
+ * action's key, which the key button is then described by (screen readers
+ * read it with the key)
  * @param onCapturingChange - Told when a key capture starts and ends
  */
 export const ShortcutTable = <Refusal extends string>({
@@ -93,6 +96,7 @@ export const ShortcutTable = <Refusal extends string>({
   ref,
   refusalMessage,
   refusalOf,
+  noteId,
   rowExtra,
 }: {
   keymap: Keymap;
@@ -102,6 +106,7 @@ export const ShortcutTable = <Refusal extends string>({
   ref?: Ref<ShortcutTableHandle>;
   refusalMessage: (refusal: Refusal, label: string, chord: Chord) => string;
   refusalOf: (chord: Chord) => Refusal | null;
+  noteId?: (action: ActionId) => string | undefined;
   rowExtra?: (action: ActionId) => ReactNode;
 }) => {
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
@@ -233,6 +238,7 @@ export const ShortcutTable = <Refusal extends string>({
     };
     return (
       <button
+        aria-describedby={noteId?.(action)}
         aria-label={`${describe(action)}: ${
           isCapturing ? "press a key" : chord ? text(chord) : "no shortcut"
         }`}
