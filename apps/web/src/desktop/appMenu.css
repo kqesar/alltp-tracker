@@ -1,0 +1,13 @@
+/*
+ * The desktop app's application-menu item (AppMenuItem), which loads with it.
+ * The More button shows only once the toolbar folds its secondary actions;
+ * with this item in the menu it shows at every width. The wrapper adds no box
+ * of its own to the menu's grid.
+ */
+.toolbar:has(.app-menu-entry) .toolbar-more {
+  display: inline-flex;
+}
+
+.app-menu-entry {
+  display: contents;
+}

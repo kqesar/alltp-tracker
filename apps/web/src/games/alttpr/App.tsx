@@ -1,4 +1,4 @@
-import { type MouseEvent, useRef } from "react";
+import { lazy, type MouseEvent, Suspense, useRef } from "react";
 import { flushSync } from "react-dom";
 import { Header } from "@/components/ui/Header";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
@@ -18,6 +18,13 @@ import { useVoice } from "@/games/alttpr/hooks/useVoice";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type { MapView } from "@/games/alttpr/utils";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
+
+// The desktop app's notice, a chunk of its own: the test is inline so the
+// site's build drops the import and its chunk (docs/desktop.md)
+const AppMenuPrompt =
+  import.meta.env.MODE === "desktop"
+    ? lazy(() => import("@/desktop/AppMenuPrompt"))
+    : null;
 
 /**
  * Main application component for the LttP Item Tracker
@@ -61,6 +68,11 @@ function App() {
       <div className="notices">
         <UpdatePrompt />
         <SeedPrompt />
+        {AppMenuPrompt && (
+          <Suspense fallback={null}>
+            <AppMenuPrompt />
+          </Suspense>
+        )}
       </div>
       <Header />
       <div className="toolbar" data-testid="toolbar" ref={toolbarRef}>

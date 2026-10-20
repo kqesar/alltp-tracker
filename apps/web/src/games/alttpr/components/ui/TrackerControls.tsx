@@ -1,4 +1,11 @@
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import {
@@ -32,7 +39,12 @@ import { saveFile } from "@/utils/saveFile";
 /** How long a status message such as "Save imported" stays on screen. */
 const STATUS_DURATION_MS = 4000;
 
-/** Time left for the browser to start a download before its URL is freed. */
+// The desktop app's "Add to application menu" item, a chunk of its own: the
+// test is inline so the site's build drops the import (docs/desktop.md)
+const AppMenuItem =
+  import.meta.env.MODE === "desktop"
+    ? lazy(() => import("@/desktop/AppMenuItem"))
+    : null;
 
 /** The map layouts the player can pick, in the order they are offered. */
 const MAP_LAYOUTS: { value: MapLayout; label: string; hint: string }[] = [
@@ -193,55 +205,69 @@ export const TrackerControls = () => {
         <ShortcutsButton />
       </span>
       <ToolbarMenu badge={<AutotrackMoreBadge />}>
-        {(folded) => (
-          <>
-            {folded.has("autotrack") && <AutotrackControl variant="menu" />}
-            <ToolbarMenuItem
-              icon={<ExportIcon />}
-              label="Export"
-              onSelect={handleExport}
-              testId="toolbar-more-export"
-            />
-            <ToolbarMenuItem
-              icon={<ImportIcon />}
-              label="Import"
-              onSelect={handleImportClick}
-              testId="toolbar-more-import"
-            />
-            {!isDesktopApp && <StreamViewControl variant="menu" />}
-            <ShortcutsButton variant="menu" />
-            {/* Settings the narrowest bars fold away, as menu choices */}
-            {folded.has("map") && (
-              <>
-                <ToolbarMenuSeparator />
-                <ToolbarMenuGroup label="Map">
-                  {MAP_LAYOUTS.map((option) => (
-                    <ToolbarMenuChoice
-                      checked={mapLayout === option.value}
-                      key={option.value}
-                      kind="radio"
-                      label={option.label}
-                      onSelect={() => setMapLayout(option.value)}
-                      testId={`toolbar-more-map-${option.value}`}
-                    />
-                  ))}
-                </ToolbarMenuGroup>
-              </>
-            )}
-            {folded.has("keys") && (
-              <>
-                <ToolbarMenuSeparator />
-                <ToolbarMenuChoice
-                  checked={bigKeysVisible}
-                  kind="checkbox"
-                  label="Big keys"
-                  onSelect={() => setBigKeysVisible(!bigKeysVisible)}
-                  testId="toolbar-more-big-keys"
+        {(folded) => {
+          // The desktop app shows More at every width, for its own item: the
+          // secondary actions repeat the bar's only once it folds them away
+          const onBar = isDesktopApp && !folded.has("secondary");
+          return (
+            <>
+              {folded.has("autotrack") && <AutotrackControl variant="menu" />}
+              {!onBar && (
+                <ToolbarMenuItem
+                  icon={<ExportIcon />}
+                  label="Export"
+                  onSelect={handleExport}
+                  testId="toolbar-more-export"
                 />
-              </>
-            )}
-          </>
-        )}
+              )}
+              {!onBar && (
+                <ToolbarMenuItem
+                  icon={<ImportIcon />}
+                  label="Import"
+                  onSelect={handleImportClick}
+                  testId="toolbar-more-import"
+                />
+              )}
+              {!isDesktopApp && <StreamViewControl variant="menu" />}
+              {!onBar && <ShortcutsButton variant="menu" />}
+              {AppMenuItem && (
+                <Suspense fallback={null}>
+                  <AppMenuItem onStatus={setStatus} />
+                </Suspense>
+              )}
+              {/* Settings the narrowest bars fold away, as menu choices */}
+              {folded.has("map") && (
+                <>
+                  <ToolbarMenuSeparator />
+                  <ToolbarMenuGroup label="Map">
+                    {MAP_LAYOUTS.map((option) => (
+                      <ToolbarMenuChoice
+                        checked={mapLayout === option.value}
+                        key={option.value}
+                        kind="radio"
+                        label={option.label}
+                        onSelect={() => setMapLayout(option.value)}
+                        testId={`toolbar-more-map-${option.value}`}
+                      />
+                    ))}
+                  </ToolbarMenuGroup>
+                </>
+              )}
+              {folded.has("keys") && (
+                <>
+                  <ToolbarMenuSeparator />
+                  <ToolbarMenuChoice
+                    checked={bigKeysVisible}
+                    kind="checkbox"
+                    label="Big keys"
+                    onSelect={() => setBigKeysVisible(!bigKeysVisible)}
+                    testId="toolbar-more-big-keys"
+                  />
+                </>
+              )}
+            </>
+          );
+        }}
       </ToolbarMenu>
       <fieldset className="segmented toolbar-map" data-testid="map-layout">
         <legend className="segmented__legend">Map</legend>

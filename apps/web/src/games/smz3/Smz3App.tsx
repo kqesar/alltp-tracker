@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { Header } from "@/components/ui/Header";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
 import { useSmz3Autotrack } from "@/games/smz3/components/Smz3Autotrack";
@@ -10,6 +10,13 @@ import { Smz3Tokens } from "@/games/smz3/components/Smz3Tokens";
 import { useSmz3Store } from "@/games/smz3/store";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
 import { isAwayFromBoard } from "@/utils/keyboard";
+
+// The desktop app's notice, a chunk of its own: the test is inline so the
+// site's build drops the import and its chunk (docs/desktop.md)
+const AppMenuPrompt =
+  import.meta.env.MODE === "desktop"
+    ? lazy(() => import("@/desktop/AppMenuPrompt"))
+    : null;
 
 /**
  * Undo and redo from the keyboard, as the other boards take them: Ctrl or
@@ -52,6 +59,11 @@ const Smz3App = () => {
       </a>
       <div className="notices">
         <UpdatePrompt />
+        {AppMenuPrompt && (
+          <Suspense fallback={null}>
+            <AppMenuPrompt />
+          </Suspense>
+        )}
       </div>
       <Header game="smz3" />
       <div className="toolbar" data-testid="toolbar" ref={toolbarRef}>

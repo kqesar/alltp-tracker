@@ -8,8 +8,10 @@
 // A host (non-sandboxed) app has no app id for the portal, which refuses a
 // session without one ("An app id is required"). So the app registers one
 // with org.freedesktop.host.portal.Registry before any other portal call, and
-// that needs a `<app id>.desktop` file GIO can find: the hidden one written
-// below (`NoDisplay`: the package's own menu entry stays the only one).
+// that needs a `<app id>.desktop` file GIO can find: the one `launcher.rs`
+// writes, hidden (`NoDisplay`: the package's own menu entry stays the only
+// one) unless the player added the AppImage to the menu, which that file
+// carries too.
 //
 // Plasma 6.7.4 and later ask for BindShortcuts in every new session or the
 // shortcuts stay dead (KDE bug 523063), so every start binds again.
@@ -21,7 +23,6 @@ use ashpd::{AppID, Error};
 use futures_util::StreamExt;
 use serde::Serialize;
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -29,79 +30,10 @@ use tauri::{AppHandle, Emitter};
 
 use super::chord;
 use super::{BindingReport, Phase, Status, Valid, emit_step, keys};
-
-/// The portal's id for this app: the bundle identifier, as the desktop file's name.
-pub const APP_ID: &str = "io.github.kqesar.alltp-tracker";
+use crate::launcher::{self, APP_ID};
 
 /// How often `Register` is retried while GIO has not seen the new desktop file.
 const REGISTER_TRIES: u32 = 3;
-
-/// A quoted Exec argument, per the Desktop Entry specification: `"`, `` ` ``,
-/// `$` and `\` are escaped with a backslash (the backslashes themselves
-/// doubled by the file's own string escaping), and `%` is doubled, or GIO
-/// would read `%r` in a path as a field code and drop it. `None` for a path
-/// with a control character: a newline would start another key of the file.
-fn exec_quoted(command: &str) -> Option<String> {
-    if command.chars().any(char::is_control) {
-        return None;
-    }
-    let mut quoted = String::from("\"");
-    for c in command.chars() {
-        match c {
-            '\\' => quoted.push_str("\\\\\\\\"),
-            '"' | '`' | '$' => {
-                quoted.push_str("\\\\");
-                quoted.push(c);
-            }
-            '%' => quoted.push_str("%%"),
-            _ => quoted.push(c),
-        }
-    }
-    quoted.push('"');
-    Some(quoted)
-}
-
-/// The hidden desktop file the portal's Register looks up, or `None` when
-/// the command cannot be written safely.
-pub fn desktop_entry(command: &str) -> Option<String> {
-    Some(format!(
-        "[Desktop Entry]\n\
-         Type=Application\n\
-         Name=ALLTP Tracker\n\
-         Comment=Item and map tracker for randomizer runs\n\
-         Exec={} %U\n\
-         Icon=alltp-tracker\n\
-         NoDisplay=true\n",
-        exec_quoted(command)?
-    ))
-}
-
-fn applications_dir() -> Option<PathBuf> {
-    std::env::var_os("XDG_DATA_HOME")
-        .filter(|path| !path.is_empty())
-        .map(PathBuf::from)
-        .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/share")))
-        .map(|dir| dir.join("applications"))
-}
-
-/// Writes the desktop file when it is missing or points at another command
-/// (the AppImage moved, the app was reinstalled elsewhere).
-pub fn ensure_desktop_file(command: &str) -> std::io::Result<()> {
-    let Some(dir) = applications_dir() else {
-        return Err(std::io::Error::other("no home directory"));
-    };
-    let path = dir.join(format!("{APP_ID}.desktop"));
-    let Some(wanted) = desktop_entry(command) else {
-        return Err(std::io::Error::other(
-            "the command holds a control character, which a desktop file cannot carry",
-        ));
-    };
-    if std::fs::read_to_string(&path).is_ok_and(|current| current == wanted) {
-        return Ok(());
-    }
-    std::fs::create_dir_all(&dir)?;
-    std::fs::write(path, wanted)
-}
 
 /// What a bind asks the desktop for, by action.
 pub struct Wanted {
@@ -188,7 +120,7 @@ impl Portal {
     }
 
     async fn look(app: &AppHandle, command: &str) -> Option<Portal> {
-        if let Err(error) = ensure_desktop_file(command) {
+        if let Err(error) = launcher::ensure_for_portal(command) {
             eprintln!("alltp-tracker: could not write the desktop file: {error}");
         }
         match AppID::from_str(APP_ID) {
@@ -477,45 +409,5 @@ mod tests {
         assert_eq!(hung, None);
         let quick = within(Duration::from_millis(500), async { 7 }).await;
         assert_eq!(quick, Some(7));
-    }
-
-    #[test]
-    fn writes_a_hidden_desktop_entry_for_the_command() {
-        let entry = desktop_entry("/opt/ALLTP Tracker/alltp-tracker").unwrap();
-        assert!(entry.starts_with("[Desktop Entry]\nType=Application\n"));
-        assert!(entry.contains("NoDisplay=true\n"));
-        assert!(entry.contains("Exec=\"/opt/ALLTP Tracker/alltp-tracker\" %U\n"));
-    }
-
-    #[test]
-    fn quotes_what_the_exec_line_would_otherwise_read_as_syntax() {
-        // The specification asks for a backslash before ", `, $ and \ inside the
-        // quotes, and the file's string escaping doubles every backslash
-        let quoted = |command| exec_quoted(command).unwrap();
-        assert_eq!(quoted("/a b/c"), "\"/a b/c\"");
-        assert_eq!(quoted("/a\"b"), "\"/a\\\\\"b\"");
-        assert_eq!(quoted("/a$b`c"), "\"/a\\\\$b\\\\`c\"");
-        assert_eq!(quoted("/a\\b"), "\"/a\\\\\\\\b\"");
-    }
-
-    #[test]
-    fn doubles_a_percent_so_it_is_not_read_as_a_field_code() {
-        assert_eq!(exec_quoted("/100%real/app").unwrap(), "\"/100%%real/app\"");
-        let entry = desktop_entry("/100%real/app").unwrap();
-        assert!(entry.contains("Exec=\"/100%%real/app\" %U\n"));
-    }
-
-    #[test]
-    fn refuses_a_path_that_would_inject_keys_into_the_file() {
-        for command in [
-            "/a\nExec=/bin/evil",
-            "/a\rb",
-            "/a\tb",
-            "/a\u{7}b",
-            "/a\u{0}b",
-        ] {
-            assert_eq!(exec_quoted(command), None, "{command:?}");
-            assert_eq!(desktop_entry(command), None, "{command:?}");
-        }
     }
 }

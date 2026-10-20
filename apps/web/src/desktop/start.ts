@@ -1,10 +1,11 @@
 // What the desktop app adds to the tracker's page, once, as it opens: its
-// updates and its links. Imported only in the desktop build (main.tsx, behind
+// updates, its links and the state of its application menu entry. Imported only in the desktop build (main.tsx, behind
 // isDesktopApp), so the site never downloads it.
 
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
+import { useAppMenuStore } from "@/desktop/appMenu";
 import { UPDATE_CHECK_INTERVAL_MS, useUpdateStore } from "@/stores/updateStore";
 
 /**
@@ -44,6 +45,9 @@ export const openLinksOutside = (event: MouseEvent) => {
 
 export const startDesktop = () => {
   document.addEventListener("click", openLinksOutside);
+  // Whether an AppImage can add itself to the application menu: the notice
+  // and the More menu's item wait for the answer (desktop/appMenu.ts)
+  void useAppMenuStore.getState().load();
   // The dev server is no release: nothing to update
   if (import.meta.env.DEV) return;
   void offerUpdate();
