@@ -6,6 +6,8 @@
 
 import * as z from "zod/mini";
 import { GAME_IDS, type GameId } from "@/games/registry";
+import { BASE64URL, fromBase64Url, toBase64Url } from "@/share/bytes";
+import { LINK_FORMAT, SAVE_FORMAT } from "@/share/packed";
 
 /** The fragment's key: `#run=<base64url of the deflated export>`. */
 const FRAGMENT_KEY = "run";
@@ -77,24 +79,6 @@ const pipe = async (
   return out;
 };
 
-const toBase64Url = (bytes: Uint8Array): string => {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += 0x2000) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 0x2000));
-  }
-  return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-};
-
-const BASE64URL = /^[A-Za-z0-9_-]+$/;
-
-const fromBase64Url = (text: string): Uint8Array<ArrayBuffer> => {
-  const binary = atob(text.replace(/-/g, "+").replace(/_/g, "/"));
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
-};
-
 /**
  * A run's export, as a link's payload: minified, deflated, base64url.
  * @param save - What the game's export writes (JSON)
@@ -133,7 +117,7 @@ export const decodeRun = async (payload: string): Promise<string> => {
 };
 
 const envelope = z.object({
-  format: z.literal("alltp-tracker-save"),
+  format: z.literal([SAVE_FORMAT, LINK_FORMAT]),
   game: z.enum(GAME_IDS),
 });
 
