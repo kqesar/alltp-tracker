@@ -71,6 +71,15 @@ pub fn classify(message: &str) -> Failure {
     }
 }
 
+/// Takes the keys of the actions to release out of `current`, in the plan's
+/// order, so they can be released in one request.
+fn take_released(current: &mut BTreeMap<String, String>, actions: &[String]) -> Vec<String> {
+    actions
+        .iter()
+        .filter_map(|action| current.remove(action))
+        .collect()
+}
+
 #[derive(Default)]
 pub struct Hotkeys {
     started: bool,
@@ -110,15 +119,17 @@ impl Hotkeys {
         self.start(app)?;
         let plan = plan(&self.current, desired);
         let shortcuts = app.global_shortcut();
-        for action in &plan.unregister {
-            if let Some(accelerator) = self.current.remove(action)
-                && let Ok(shortcut) = Shortcut::from_str(&accelerator)
-                && let Err(error) = shortcuts.unregister(shortcut)
-            {
-                eprintln!("alltp-tracker: could not release {action}: {error}");
+        // One request for every key: on X11 each one waits for the X thread's
+        // 50 ms loop, so one by one a long set stayed grabbed for seconds, and
+        // the key pressed to capture a new one was eaten
+        let released: Vec<Shortcut> = take_released(&mut self.current, &plan.unregister)
+            .iter()
+            .filter_map(|accelerator| Shortcut::from_str(accelerator).ok())
+            .collect();
+        if !released.is_empty() {
+            if let Err(error) = shortcuts.unregister_multiple(released) {
+                eprintln!("alltp-tracker: could not release the shortcuts: {error}");
             }
-        }
-        if !plan.unregister.is_empty() {
             flush(app);
         }
         let mut outcome = BTreeMap::new();
@@ -145,6 +156,13 @@ impl Hotkeys {
                 self.current.insert(action.clone(), accelerator.clone());
             }
             outcome.insert(action.clone(), result);
+        }
+        // A refused grab can leave half of itself behind: global-hotkey grabs
+        // the key's lock variants one at a time, and when a later one is
+        // refused it buffers the ungrab of the first, which nothing sends if
+        // this was the last registration
+        if outcome.values().any(Result::is_err) {
+            flush(app);
         }
         Ok(outcome)
     }
@@ -199,6 +217,22 @@ mod tests {
             .iter()
             .map(|(action, key)| ((*action).to_owned(), (*key).to_owned()))
             .collect()
+    }
+
+    #[test]
+    fn releases_every_key_of_the_plan_in_one_list() {
+        let mut current = map(&[
+            ("advance:bow", "Alt+KeyQ"),
+            ("back:bow", "Alt+KeyW"),
+            ("advance:hookshot", "Alt+KeyE"),
+        ]);
+        let released = take_released(
+            &mut current,
+            &["advance:bow".to_owned(), "advance:hookshot".to_owned()],
+        );
+        assert_eq!(released, ["Alt+KeyQ", "Alt+KeyE"]);
+        assert_eq!(current, map(&[("back:bow", "Alt+KeyW")]));
+        assert!(take_released(&mut current, &["back:nothing".to_owned()]).is_empty());
     }
 
     #[test]
