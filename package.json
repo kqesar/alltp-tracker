@@ -2,7 +2,7 @@
   "name": "alltp-tracker",
   "version": "2.33.0",
   "private": true,
-  "description": "A tracker for Zelda a Link to the Past Randomizer",
+  "description": "Rando Atlas, an item and map tracker for A Link to the Past, Super Metroid and SMZ3 randomizers",
   "bugs": {
     "url": "https://github.com/kqesar/alltp-tracker/issues"
   },
