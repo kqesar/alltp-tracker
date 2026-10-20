@@ -7,6 +7,11 @@ name: Plan
 # once. docs/ci.md says what it recognises and why.
 on:
   workflow_call:
+    inputs:
+      deploys:
+        description: "false for a caller that deploys nothing: it is never told to promote"
+        type: boolean
+        default: true
     outputs:
       mode:
         description: "'skip', 'promote' or 'full'"
@@ -37,6 +42,7 @@ jobs:
         env:
           AFTER: ${{ github.sha }}
           BEFORE: ${{ github.event.before }}
+          DEPLOYS: ${{ inputs.deploys }}
           EVENT_NAME: ${{ github.event_name }}
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}

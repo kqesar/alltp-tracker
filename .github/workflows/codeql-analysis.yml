@@ -32,6 +32,10 @@ jobs:
       actions: read
       contents: read
     uses: ./.github/workflows/plan.yml
+    # It deploys nothing: no tree to promote, and a release commit is skipped
+    # whether or not its parent was deployed (each commit has its own scan)
+    with:
+      deploys: false
 
   analyze:
     name: Analyze (javascript-typescript)

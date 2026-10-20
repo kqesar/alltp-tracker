@@ -14,10 +14,13 @@
 # commit is checked first: it is never promoted.
 #
 # Environment: EVENT_NAME (push or schedule; the other events have no plan),
-# plus the inputs of the scripts below: GH_TOKEN, REPO, BEFORE, AFTER.
+# DEPLOYS (`false` for a caller that deploys nothing, CodeQL: no promotion to
+# look for, and a release commit needs no deployed parent), plus the inputs of
+# the scripts below: GH_TOKEN, REPO, BEFORE, AFTER.
 set -uo pipefail
 
 here=$(dirname "${BASH_SOURCE[0]}")
+export REQUIRE_PARENT_DEPLOYED="${DEPLOYS:-true}"
 
 answer() {
   echo "mode=$1"
@@ -33,6 +36,7 @@ ask() {
 case "${EVENT_NAME:-}" in
   push)
     [ "$(ask is-release-commit.sh release)" = true ] && answer skip
+    [ "${DEPLOYS:-true}" = false ] && answer full
     [ "$(ask find-tested-tree.sh tested)" = true ] && answer promote
     answer full
     ;;
