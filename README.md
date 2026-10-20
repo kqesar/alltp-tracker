@@ -136,7 +136,7 @@ For development: the service worker (`apps/web/sw/sw.ts`) exists in production b
 
 ## The desktop app
 
-The tracker also comes as an app for Windows, macOS and Linux, from the [latest release](https://github.com/kqesar/alltp-tracker/releases/latest). It is the same tracker in a window of its own: autotracking reaches SNI from it on every system, Safari's Macs included, and it updates itself (a notice, "A new version is available", offers **Restart**, never in the middle of a run). It keeps its own run, apart from the browser's: **Export** (which asks where to save, as any desktop app does) and **Import** move a run between them.
+The tracker also comes as an app for Windows, macOS and Linux, from the [latest release](https://github.com/kqesar/alltp-tracker/releases/latest). It is the same tracker in a window of its own: it reads RetroArch itself, without SNI (turn on RetroArch's Network Commands and use the bsnes-mercury core, as the setup guide says), reaches SNI for an FX Pak Pro, BizHawk or an NWA emulator on every system, Safari's Macs included, and updates itself (a notice, "A new version is available", offers **Restart**, never in the middle of a run). It keeps its own run, apart from the browser's: **Export** (which asks where to save, as any desktop app does) and **Import** move a run between them.
 
 | System | Download | The first time |
 |---|---|---|
@@ -144,7 +144,7 @@ The tracker also comes as an app for Windows, macOS and Linux, from the [latest 
 | macOS | `…_aarch64.dmg` (Apple silicon) or `…_x64.dmg` (Intel) | The app is not notarized (that needs a paid Apple account): macOS refuses to open it once. Open **System Settings → Privacy & Security**, choose **Open Anyway**, then **Open**. |
 | Linux | `….AppImage` (any distribution), `….deb` or `….rpm` | An AppImage runs once made executable: `chmod +x` it, or tick "Allow executing" in its properties. |
 
-Not in the app yet: the stream view for OBS, since OBS can neither load the app's pages nor follow its storage; stream with the web tracker in an OBS dock, as above. Coming: reading RetroArch without SNI, and shortcuts that work while the emulator has the focus. How the app is built and updated: [docs/desktop.md](docs/desktop.md).
+Not in the app yet: the stream view for OBS, since OBS can neither load the app's pages nor follow its storage; stream with the web tracker in an OBS dock, as above. Coming: shortcuts that work while the emulator has the focus. How the app is built and updated: [docs/desktop.md](docs/desktop.md).
 
 ## Development
 
@@ -177,7 +177,7 @@ The repository is a pnpm workspace:
 apps/web/          the tracker web app (Vite + React), deployed to GitHub Pages
 apps/desktop/      the desktop app (Tauri): apps/web in a native window, for Windows, macOS and Linux
 packages/engine/   @alltp/engine: a game-agnostic logic engine (rule language, three-valued solver)
-packages/autotrack/ @alltp/autotrack: the autotracking link to SNI / QUsb2Snes, its diagnostics and Race Mode
+packages/autotrack/ @alltp/autotrack: the autotracking link to SNI / QUsb2Snes, or to RetroArch directly in the app; its diagnostics and Race Mode
 packs/alttpr/      @alltp/pack-alttpr: ALttPR's items, and the official tests its v31 rules are held to
 packs/sm/          @alltp/pack-sm: Super Metroid as Map Rando plays it: items, objectives, memory map
 packs/smz3/        @alltp/pack-smz3: SMZ3 as samus.link generates it: both games' logic, held to its tests

@@ -1,5 +1,6 @@
 import {
   type DeviceKind,
+  desktopSetupSteps,
   type Environment,
   type OperatingSystem,
   type SessionStatus,
@@ -13,6 +14,7 @@ import { useId, useState } from "react";
 import { deviceInUse, type Fix, fixFor } from "@/autotrack/guide";
 import { headlineOf } from "@/autotrack/status";
 import { type Tab, Tabs, tabId } from "@/components/ui/Tabs";
+import { isDesktopApp } from "@/utils/platform";
 
 /** The systems the guide covers, as its tabs. */
 const SYSTEMS = [
@@ -145,7 +147,12 @@ export const SetupGuide = ({
     arch: system === environment.os ? environment.arch : "unknown",
     os: system,
   };
-  const progress = setupProgress(status, shownEnv, { device, game });
+  // The desktop app reads RetroArch itself, and has no browser to allow
+  const progress = setupProgress(status, shownEnv, {
+    device,
+    game,
+    ...(isDesktopApp ? { steps: desktopSetupSteps(device) } : {}),
+  });
   const allow = progress.steps
     .filter(({ step }) => step.id === "permission")
     .flatMap(({ variants }) => variants);
