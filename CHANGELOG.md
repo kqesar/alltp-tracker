@@ -2,6 +2,38 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.32.0](https://github.com/kqesar/alltp-tracker/compare/v2.31.0...v2.32.0) (2026-10-20)
+
+
+### ✨ Features
+
+* **desktop:** global shortcuts through the system's own service ([470af21](https://github.com/kqesar/alltp-tracker/commit/470af21f8fceb7c2f45ff08fc7f35e96814b09fc))
+* **desktop:** key labels from the system keymap on Linux ([44b0cac](https://github.com/kqesar/alltp-tracker/commit/44b0cac89dc5ef14b22abcfb254ed5cd2cf08e04))
+* **web:** a Global tab for the desktop app's shortcuts ([914d89d](https://github.com/kqesar/alltp-tracker/commit/914d89d71748343add0319810cc673f87760b9e9))
+
+
+### 🐛 Bug Fixes
+
+* **desktop:** allow the portal's give-way as dead code off Linux ([1c5e889](https://github.com/kqesar/alltp-tracker/commit/1c5e8899d50c82a25eb4093631b5a8e7c96bfee3))
+* **desktop:** compile the shortcuts' report types without the portal ([2500747](https://github.com/kqesar/alltp-tracker/commit/25007478a61069a40b1edf41d618c888e102e174))
+* **desktop:** drop a --step that finds no page listening ([3f0bbea](https://github.com/kqesar/alltp-tracker/commit/3f0bbea7c702701e96a2437382e9dedd10ae6655))
+* **desktop:** escape % and refuse control characters in the desktop file's Exec ([6dbac53](https://github.com/kqesar/alltp-tracker/commit/6dbac53dd241a8a847a49c58ee57a079fd7323a6))
+* **desktop:** keep the keylogger floor on AltGr, Option and say what the numpad costs ([4134e73](https://github.com/kqesar/alltp-tracker/commit/4134e735067d4a24a8016dfe2da4e398b212a4ff))
+* **desktop:** release X11 keys in one request and flush after a refused grab ([c7b99ff](https://github.com/kqesar/alltp-tracker/commit/c7b99ffe65c1c2b7a2ca5edb33a604f79aacbb98))
+* **desktop:** touch nothing on Wayland until the first binding, and bound the probe ([2e5108b](https://github.com/kqesar/alltp-tracker/commit/2e5108b8e93c4669832da08d7b062ac78c132d10))
+* **web:** a Global tab that says only what it shows, and remembers a refusal ([2c51064](https://github.com/kqesar/alltp-tracker/commit/2c510644138d8024be079aff516adb16302cad70))
+
+
+### 📚 Documentation
+
+* **desktop:** global shortcuts ([72cd2d0](https://github.com/kqesar/alltp-tracker/commit/72cd2d09f2d46d7dd2ded60830167bae75d70ad5))
+* **desktop:** state the real floor, the numpad choice and the step queue policy ([9a39587](https://github.com/kqesar/alltp-tracker/commit/9a395878a1b88110270134f25e4f9b25c547c229))
+
+
+### 🔧 Code Refactoring
+
+* **web:** the shortcuts table as a component of its own ([239a800](https://github.com/kqesar/alltp-tracker/commit/239a800e903aebb75ab013393d3f769a0451b429))
+
 ## [2.31.0](https://github.com/kqesar/alltp-tracker/compare/v2.30.0...v2.31.0) (2026-10-20)
 
 
