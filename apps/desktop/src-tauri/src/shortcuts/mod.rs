@@ -497,6 +497,24 @@ fn apply_hotkeys(
     Ok(reports)
 }
 
+/// What each key of the layout types, by `KeyboardEvent.code` (`KeyQ` → `a`
+/// on AZERTY), for the page's key labels. Linux only: macOS and Windows
+/// webviews read the layout themselves, so the answer there is empty.
+#[tauri::command]
+pub async fn key_labels(app: AppHandle) -> Result<BTreeMap<String, String>, String> {
+    #[cfg(target_os = "linux")]
+    {
+        tauri::async_runtime::spawn_blocking(move || keys::labels(&app))
+            .await
+            .map_err(|error| error.to_string())
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = app;
+        Ok(BTreeMap::new())
+    }
+}
+
 /// Opens the desktop's own shortcut settings (portal version 2).
 #[tauri::command]
 pub async fn global_shortcuts_configure(state: State<'_, GlobalShortcuts>) -> Result<(), String> {

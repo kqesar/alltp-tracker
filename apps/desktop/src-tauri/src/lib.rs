@@ -63,7 +63,8 @@ pub fn run() {
             save_file,
             shortcuts::global_shortcuts_ready,
             shortcuts::global_shortcuts_apply,
-            shortcuts::global_shortcuts_configure
+            shortcuts::global_shortcuts_configure,
+            shortcuts::key_labels
         ])
         .run(tauri::generate_context!())
         .expect("error while running the tracker");

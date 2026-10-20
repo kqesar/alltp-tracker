@@ -29,6 +29,7 @@ import {
   isControlShown,
   stepControl,
 } from "@/games/alttpr/hooks/useItemShortcuts";
+import { useKeyboardLayoutStore } from "@/games/alttpr/stores/keyboardLayoutStore";
 
 /** One global binding, as the app's `global_shortcuts_apply` takes it. */
 export type Binding = { action: ActionId; chord: string; description: string };
@@ -169,10 +170,29 @@ export const stopGlobalShortcuts = () => {
 };
 
 /**
+ * Labels for the keys as the system's layout prints them (`KeyQ` → "a" on
+ * AZERTY), asked of the app on Linux, where WebKitGTK has no
+ * `navigator.keyboard` to say it. Elsewhere the answer is empty and the
+ * webview reads the layout itself. A failure leaves the QWERTY fallback.
+ */
+export const loadSystemKeyLabels = async () => {
+  try {
+    const labels = await invoke<Record<string, string>>("key_labels");
+    if (Object.keys(labels).length === 0) return;
+    useKeyboardLayoutStore.setState({
+      layout: new Map(Object.entries(labels)),
+    });
+  } catch {
+    // The labels keep their fallback: what a US keyboard prints
+  }
+};
+
+/**
  * Start the global shortcuts: listen for key presses, learn what the app can
  * do, run the steps that waited for the page, then register the saved keys.
  */
 export const startGlobalShortcuts = async () => {
+  void loadSystemKeyLabels();
   await listen<{ action: string }>("global-step", ({ payload }) =>
     runGlobalStep(payload.action),
   );

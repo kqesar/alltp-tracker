@@ -234,6 +234,23 @@ mod platform {
             .collect()
     }
 
+    /// What each key that follows the layout types at level 0, as the
+    /// character on its keycap (`a` for the Q key on AZERTY): the page's key
+    /// labels, which WebKitGTK cannot read itself (it has no
+    /// `navigator.keyboard`). A key that types no character is left out.
+    pub fn labels<R: Runtime>(app: &AppHandle<R>) -> std::collections::BTreeMap<String, String> {
+        let codes: Vec<String> = LAYOUT_KEYS.iter().map(|key| key.code.to_owned()).collect();
+        let layout = keyvals(app, &codes);
+        codes
+            .into_iter()
+            .zip(layout)
+            .filter_map(|(code, keyvals)| {
+                let typed = gdk::keys::Key::from(*keyvals.first()?).to_unicode()?;
+                Some((code, typed.to_string()))
+            })
+            .collect()
+    }
+
     /// The keysym name of what each physical key types at level 0 of the
     /// layout (`a` for the Q key on AZERTY), for the portal's triggers.
     pub fn keysym_names<R: Runtime>(app: &AppHandle<R>, codes: &[String]) -> Vec<Option<String>> {
@@ -300,7 +317,7 @@ mod platform {
 
 pub use platform::grabs;
 #[cfg(target_os = "linux")]
-pub use platform::keysym_names;
+pub use platform::{keysym_names, labels};
 
 #[cfg(test)]
 mod tests {
