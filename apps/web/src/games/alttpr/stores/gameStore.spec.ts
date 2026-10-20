@@ -527,9 +527,14 @@ describe("GameStore", () => {
       ]);
       expect(state.items).toMatchObject({ chest0: 0, hammer: true });
       expect(state.mapLayout).toBe("stacked");
+      // Its keymap gets the half magic's keys, which it left free
       expect(state.shortcuts).toEqual({
         enabled: false,
-        keymap: { "advance:hookshot": "KeyH" },
+        keymap: {
+          "advance:hookshot": "KeyH",
+          "advance:magic": "Slash",
+          "back:magic": "Shift+Slash",
+        },
       });
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
       expect(stored.version).toBe(PERSIST_VERSION);

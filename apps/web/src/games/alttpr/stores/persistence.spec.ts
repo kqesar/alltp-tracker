@@ -379,6 +379,62 @@ describe("migrate", () => {
     ).toMatchObject({ ok: true });
   });
 
+  describe("version 12, the half magic's keys", () => {
+    const keymapOf = (keymap: Record<string, unknown>) => ({
+      shortcuts: { enabled: true, keymap },
+    });
+    const migratedKeymap = (keymap: Record<string, unknown>) =>
+      (migrate(keymapOf(keymap), 11) as ReturnType<typeof keymapOf>).shortcuts
+        .keymap;
+
+    it("gives a keymap that has none the slash, and Shift with it for back", () => {
+      expect(migratedKeymap({ "advance:hookshot": "KeyW" })).toEqual({
+        "advance:hookshot": "KeyW",
+        "advance:magic": "Slash",
+        "back:magic": "Shift+Slash",
+      });
+    });
+
+    it("never moves a chord the player set: a key held stays held", () => {
+      // The slash is somebody's: the half magic goes without forward
+      expect(
+        migratedKeymap({ "advance:hookshot": "Slash", "back:net": "KeyW" }),
+      ).toEqual({
+        "advance:hookshot": "Slash",
+        "back:magic": "Shift+Slash",
+        "back:net": "KeyW",
+      });
+      expect(
+        migratedKeymap({
+          "advance:hammer": "Slash",
+          "back:hammer": "Shift+Slash",
+        }),
+      ).toEqual({ "advance:hammer": "Slash", "back:hammer": "Shift+Slash" });
+      // A key set on the half magic itself, however it was set, is kept
+      expect(migratedKeymap({ "advance:magic": "KeyQ" })).toEqual({
+        "advance:magic": "KeyQ",
+        "back:magic": "Shift+Slash",
+      });
+    });
+
+    it("leaves a keymap with nothing bound, and a save without one, as they are", () => {
+      expect(migratedKeymap({})).toEqual({});
+      const none = { mapLayout: "stacked" };
+      expect(migrate(none, 11)).toEqual(none);
+      expect(migrate({ shortcuts: { enabled: false } }, 11)).toEqual({
+        shortcuts: { enabled: false },
+      });
+      expect(migrate({ shortcuts: { keymap: [] } }, 11)).toEqual({
+        shortcuts: { keymap: [] },
+      });
+    });
+
+    it("is done once: a save of this version is left alone", () => {
+      const saved = keymapOf({ "advance:hookshot": "KeyW" });
+      expect(migrate(saved, 12)).toEqual(saved);
+    });
+  });
+
   it("leaves a current save alone", () => {
     expect(migrate({ mapLayout: "side-by-side" }, PERSIST_VERSION)).toEqual({
       mapLayout: "side-by-side",

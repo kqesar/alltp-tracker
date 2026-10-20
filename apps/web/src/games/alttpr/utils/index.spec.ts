@@ -65,6 +65,17 @@ describe("visibleRows", () => {
   });
 });
 
+describe("the half magic cell", () => {
+  it("draws one picture, dimmed until held, a quarter magic as the half", () => {
+    for (const value of [0, 1, 2]) {
+      expect(getItemBackground("magic", value)).toBe("url(/assets/magic.png)");
+    }
+    expect(isItemDimmed("magic", 0)).toBe(true);
+    expect(isItemDimmed("magic", 1)).toBe(false);
+    expect(isItemDimmed("magic", 2)).toBe(false);
+  });
+});
+
 describe("a boss cell", () => {
   it("draws its one portrait whether beaten or not", () => {
     expect(getItemBackground("boss3", 1)).toBe("url(/assets/boss32.png)");

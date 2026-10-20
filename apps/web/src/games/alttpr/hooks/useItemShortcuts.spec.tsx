@@ -93,7 +93,7 @@ describe("item shortcuts", () => {
       render(<Board />);
       const claims = watchClaims();
 
-      await user.keyboard("w[Slash][Equal]");
+      await user.keyboard("w[Backslash][Equal]");
 
       expect(claims.map(({ claimed }) => claimed)).toEqual([
         true,

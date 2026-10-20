@@ -1,4 +1,4 @@
-import { itemLabels, itemsMin } from "@/games/alttpr/data/items";
+import { itemLabels, itemsMin, TOGGLE_ITEMS } from "@/games/alttpr/data/items";
 import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -24,6 +24,7 @@ const describeState = (item: string, value: number | boolean): string => {
   if (item.startsWith("shop")) return value ? "found" : "not found";
   if (typeof value === "boolean") return value ? "obtained" : "not obtained";
   if (typeof value !== "number") return "unknown state";
+  if (TOGGLE_ITEMS.has(item)) return value > 0 ? "obtained" : "not obtained";
   return value > (itemsMin[item] ?? 0) ? `level ${value}` : "not obtained";
 };
 

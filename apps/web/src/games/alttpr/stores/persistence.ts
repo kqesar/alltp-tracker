@@ -108,7 +108,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Bumped whenever PersistedState changes shape; `migrate` upgrades older saves. */
-export const PERSIST_VERSION = 11;
+export const PERSIST_VERSION = 12;
 
 /**
  * What every run before version 8 was: swords in the pool, 7 crystals for
@@ -298,6 +298,30 @@ const migrateV10 = (saved: Record<string, unknown>): Record<string, unknown> =>
     : saved;
 
 /**
+ * Version 12 gives the half magic cell its default keys, Slash and
+ * Shift+Slash, to a keymap saved before the cell existed. A key already
+ * holding a chord is never moved: each chord is added only where it is free,
+ * and a keymap with nothing bound (every shortcut taken off on purpose) stays
+ * as it is. The keymap is kept whole otherwise.
+ */
+const migrateV11 = (
+  saved: Record<string, unknown>,
+): Record<string, unknown> => {
+  const { shortcuts } = saved;
+  if (!isRecord(shortcuts) || !isRecord(shortcuts.keymap)) return saved;
+  const keymap: Record<string, unknown> = { ...shortcuts.keymap };
+  if (Object.keys(keymap).length === 0) return saved;
+  const bound = new Set(Object.values(keymap));
+  for (const [action, chord] of [
+    ["advance:magic", "Slash"],
+    ["back:magic", "Shift+Slash"],
+  ]) {
+    if (!(action in keymap) && !bound.has(chord)) keymap[action] = chord;
+  }
+  return { ...saved, shortcuts: { ...shortcuts, keymap } };
+};
+
+/**
  * Upgrade a save written by an earlier version to the current shape. Fields
  * are not validated here; restoring a save falls back field by field.
  * @param saved - The stored or imported object
@@ -319,6 +343,7 @@ export const migrate = (
   if (version < 9) state = migrateV8(state);
   if (version < 10) state = migrateV9(state);
   if (version < 11) state = migrateV10(state);
+  if (version < 12) state = migrateV11(state);
   return state as Partial<PersistedState>;
 };
 

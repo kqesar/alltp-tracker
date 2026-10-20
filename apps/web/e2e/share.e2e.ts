@@ -178,6 +178,43 @@ test("a link of the first format still opens, ALttPR's and SMZ3's", async ({
   );
 });
 
+test("a short link made before the tables grew still opens", async ({
+  page,
+}) => {
+  // Written by the tracker before the half magic cell, as it wrote links then
+  // (src/share/fixtures/): its item table was one shorter, its link no sizes
+  const packed = (fixture: string) =>
+    `./#run=${deflateRawSync(
+      JSON.stringify(
+        JSON.parse(
+          readFileSync(
+            join(import.meta.dirname, "../src/share/fixtures", fixture),
+            "utf8",
+          ),
+        ),
+      ),
+    ).toString("base64url")}`;
+  await fresh(page);
+  await page.goto(packed("link-alttpr-before-sizes.json"));
+  await expect(page.getByTestId("shared-run-prompt")).toContainText(
+    "Open this shared run?",
+  );
+  await page.getByTestId("shared-run-open").click();
+  await expect(page.getByTestId("item-lantern")).toHaveAccessibleName(OBTAINED);
+  await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+    OBTAINED,
+  );
+  // The item added since is as a fresh run has it
+  await expect(page.getByTestId("item-magic")).toHaveAccessibleName(
+    NOT_OBTAINED,
+  );
+
+  await page.goto(packed("link-smz3-before-sizes.json"));
+  await expect(page.getByTestId("shared-run-prompt")).toContainText(
+    "It switches to SMZ3.",
+  );
+});
+
 test("a link from another version of the tracker says so and changes nothing", async ({
   page,
 }) => {

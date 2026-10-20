@@ -31,11 +31,12 @@ export interface ItemState {
  * cell, holding its big key, small keys, map and compass; and `keylabelN`,
  * the short name of a castle dungeon, which has no boss cell above its key
  * cell to tell it. The key cells and labels show only with the key cells, a
- * row of nothing else with them.
+ * row of nothing else with them. On that row Agahnim stands where Castle
+ * Tower's label would, as the head of its keys.
  */
 export const defaultItemGrid: string[][] = [
   ["flute", "hookshot", "hammer", "firerod", "icerod", "boomerang", "net"],
-  ["bow", "lantern", "shield", "sword", "tunic", "agahnim", "boots"],
+  ["bow", "lantern", "shield", "sword", "tunic", "magic", "boots"],
   ["shovel", "book", "quake", "bombos", "ether", "keys0", "boss0"],
   ["powder", "glove", "bottle", "somaria", "byrna", "keys1", "boss1"],
   ["mushroom", "cape", "mirror", "moonpearl", "flippers", "keys2", "boss2"],
@@ -44,7 +45,7 @@ export const defaultItemGrid: string[][] = [
   [
     "keylabel10",
     "keys10",
-    "keylabel11",
+    "agahnim",
     "keys11",
     "keylabel12",
     "keys12",
@@ -55,7 +56,8 @@ export const defaultItemGrid: string[][] = [
 /**
  * The item grid of a run: a retro run's last row holds the shops that sell
  * arrows and keys where Hyrule Castle's and Castle Tower's key cells stand,
- * which have nothing to show there (no big key, no small key of their own).
+ * which have nothing to show there (no big key, no small key of their own);
+ * Agahnim keeps the place between them.
  * @param run - The run's world
  */
 export const itemGridFor = (run: { readonly mode: string }): string[][] =>
@@ -63,8 +65,15 @@ export const itemGridFor = (run: { readonly mode: string }): string[][] =>
 
 const RETRO_ITEM_GRID: string[][] = [
   ...defaultItemGrid.slice(0, -1),
-  ["shoparrow", "shopkey", "", "", "keylabel12", "keys12", "boss12"],
+  ["shoparrow", "shopkey", "agahnim", "", "keylabel12", "keys12", "boss12"],
 ];
+
+/**
+ * The items that count levels but whose cell is a plain toggle: the half magic
+ * (1) is held or not. A quarter magic (2), which only a customized seed gives
+ * and autotracking reads, is kept as it is for the logic and drawn as the half.
+ */
+export const TOGGLE_ITEMS: ReadonlySet<string> = new Set(["magic"]);
 
 /** Whether a grid id is a key cell's or a castle dungeon's label. */
 export const isKeyCell = (id: string): boolean =>
