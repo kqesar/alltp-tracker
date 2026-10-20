@@ -10,6 +10,8 @@
 - [Development](development.md): setup, commands, the repository's layout, the service worker.
 - [CI and releases](ci.md): what runs on a pull request, on `master` and at night, and how a
   release is cut.
+- [Sharing a run](share.md): the link format, its bounds, how it is opened and validated, and its
+  measured lengths.
 - [Desktop app](desktop.md): the Tauri app, its updates, global shortcuts and application menu.
 - [Search engines and link previews](seo.md): the per-game pages, their tags and preview
   images.

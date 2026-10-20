@@ -13,10 +13,20 @@ export type ObsViewProps = {
   timer?: boolean;
 };
 
+/**
+ * A save read and checked by a game's own import, not yet applied: `load`
+ * replaces the run with it, as Import does once the player confirms.
+ */
+export type RunImport =
+  | { ok: true; load: () => void }
+  | { ok: false; reason: string };
+
 /** A game, as the shell runs it. */
 export type GameModule = {
   /** Start what the game runs once per page, before it renders. */
   start: () => void;
+  /** Read an export, as a file or a shared link brings it: untrusted text. */
+  importRun: (save: string) => RunImport;
   /** The tracker. */
   App: ComponentType;
   /** The stream view (`?view=obs`). */

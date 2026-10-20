@@ -1,6 +1,7 @@
 import { lazy, type MouseEvent, Suspense, useRef } from "react";
 import { flushSync } from "react-dom";
 import { Header } from "@/components/ui/Header";
+import { SharedRunPrompt } from "@/components/ui/SharedRunPrompt";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
 import { SeedPrompt } from "@/games/alttpr/components/autotrack/SeedPrompt";
 import { MAP_VIEW_ID, MapPanel } from "@/games/alttpr/components/map/MapPanel";
@@ -67,6 +68,7 @@ function App() {
       </a>
       <div className="notices">
         <UpdatePrompt />
+        <SharedRunPrompt game="alttpr" />
         <SeedPrompt />
         {AppMenuPrompt && (
           <Suspense fallback={null}>

@@ -8,6 +8,7 @@ import {
   ImportIcon,
   NewGameIcon,
   RedoIcon,
+  ShareIcon,
   StreamIcon,
   UndoIcon,
 } from "@/components/ui/ToolbarIcons";
@@ -19,26 +20,18 @@ import {
 } from "@/games/sm/data";
 import {
   exportSave,
-  type ImportError,
+  IMPORT_ERRORS,
   parseSave,
   type SmProgress,
   useSmStore,
 } from "@/games/sm/store";
+import { SHARE_HELP, shareRun } from "@/share/shareRun";
 import { commandKey, isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
 import { obsViewUrl } from "@/utils/view";
 
 /** How long a status line stays, as ALttPR's toolbar keeps it. */
 const STATUS_MS = 4000;
-
-const IMPORT_ERRORS: Readonly<Record<ImportError, string>> = {
-  invalid: "This save's run is not one the tracker can read.",
-  "newer-version": "This save comes from a newer version of the tracker.",
-  "not-a-save": "This file is not a tracker save.",
-  "not-json": "This file is not a tracker save.",
-  "other-game":
-    "This save is for A Link to the Past: switch game to import it there.",
-};
 
 /** The preset a list of objectives is, or "custom". */
 const presetOf = (objectives: readonly string[]): ObjectivePreset | "custom" =>
@@ -184,6 +177,9 @@ export const SmControls = () => {
       exportSave(useSmStore.getState()),
     );
 
+  const handleShare = () =>
+    void shareRun([exportSave(useSmStore.getState())]).then(setStatus);
+
   const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
     const [file] = event.target.files ?? [];
     event.target.value = "";
@@ -260,6 +256,16 @@ export const SmControls = () => {
       >
         <ImportIcon />
         <span className="toolbar-label">Import</span>
+      </button>
+      <button
+        className="tracker-controls__button"
+        data-testid="share-button"
+        onClick={handleShare}
+        title={SHARE_HELP}
+        type="button"
+      >
+        <ShareIcon />
+        <span className="toolbar-label">Share</span>
       </button>
       {/* OBS cannot load the desktop app's page nor follow its storage */}
       {!isDesktopApp && (

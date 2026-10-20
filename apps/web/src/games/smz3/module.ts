@@ -5,10 +5,21 @@ import "@/games/smz3/smz3.css";
 import type { GameModule } from "@/games/registry";
 import Smz3App from "@/games/smz3/Smz3App";
 import { Smz3ObsView } from "@/games/smz3/Smz3ObsView";
-import { SMZ3_STORAGE_KEY, useSmz3Store } from "@/games/smz3/store";
+import {
+  IMPORT_ERRORS,
+  parseSave,
+  SMZ3_STORAGE_KEY,
+  useSmz3Store,
+} from "@/games/smz3/store";
 
 export const smz3: GameModule = {
   App: Smz3App,
+  importRun: (save) => {
+    const parsed = parseSave(save);
+    return parsed.ok
+      ? { load: () => useSmz3Store.getState().load(parsed.progress), ok: true }
+      : { ok: false, reason: IMPORT_ERRORS[parsed.error] };
+  },
   ObsView: Smz3ObsView,
   // The run follows the other tabs and the stream view through storage
   start: () => {

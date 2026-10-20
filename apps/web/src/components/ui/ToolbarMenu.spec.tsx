@@ -1,4 +1,11 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TrackerControls } from "@/games/alttpr/components/ui/TrackerControls";
@@ -44,6 +51,7 @@ describe("the toolbar's More menu", () => {
     expect(items().map((entry) => entry.textContent)).toEqual([
       "Export",
       "Import",
+      "Share",
       "Stream view",
       "Shortcuts",
     ]);
@@ -244,6 +252,19 @@ describe("the toolbar's More menu", () => {
     expect(more()).toHaveFocus();
   });
 
+  it("shares the run: a link to the clipboard, and the menu closes", async () => {
+    const user = await openMenu();
+    // After the setup: user-event installs a clipboard of its own
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+
+    await user.click(item("Share"));
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+    const [link] = writeText.mock.calls[0];
+    expect(new URL(link).hash).toMatch(/^#run=/);
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
+
   it("imports through the same file picker as the toolbar's Import", async () => {
     const picked: HTMLInputElement[] = [];
     vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(function (
@@ -267,7 +288,9 @@ describe("the toolbar's More menu", () => {
       const user = await openMenu();
 
       await user.keyboard(
-        name === "Shortcuts" ? "{End}{Enter}" : "{ArrowDown}{ArrowDown}{Enter}",
+        name === "Shortcuts"
+          ? "{End}{Enter}"
+          : "{ArrowDown}{ArrowDown}{ArrowDown}{Enter}",
       );
 
       const dialog = await screen.findByRole("dialog", { name: title });

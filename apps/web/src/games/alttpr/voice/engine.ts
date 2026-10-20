@@ -12,6 +12,7 @@ import wasmUrl from "@lichess-org/vosk-browser/dist/vosk.wasm?url";
 import workerUrl from "@lichess-org/vosk-browser/dist/vosk.worker.js?url";
 import { GRAMMAR } from "@/games/alttpr/logic/voice";
 import { isDesktopApp } from "@/utils/platform";
+import { SITE_URL } from "@/utils/view";
 
 /**
  * The speech model, served beside the app (scripts/fetch-voice-model.mjs puts
@@ -20,9 +21,7 @@ import { isDesktopApp } from "@/utils/platform";
  */
 export const MODEL_URL = `${
   // The desktop app takes it from the site, which serves it to any origin
-  isDesktopApp
-    ? "https://kqesar.github.io/alltp-tracker/"
-    : import.meta.env.BASE_URL
+  isDesktopApp ? SITE_URL : import.meta.env.BASE_URL
 }models/vosk-model-small-en-us-0.15.tar.gz`;
 
 /** Why listening could not start. */

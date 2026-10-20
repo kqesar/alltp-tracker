@@ -30,6 +30,7 @@ What the `desktop` mode changes (`apps/web/vite.config.ts`):
 | Service worker | yes, for offline use and updates | none: the files are local, updates come from the app |
 | Speech model (40 MB) | `models/` on the site, fetched on demand | the site's copy, fetched on demand (GitHub Pages sends `access-control-allow-origin: *`); never in an installer |
 | Stream view (OBS) | yes | hidden: OBS can neither load the app's pages nor follow its `localStorage` |
+| Share a run | a link to this deployment | a link to the published site (`SITE_URL`): the app's own address, `tauri://localhost`, opens nowhere else. A viewer opens it in a browser, where it keeps a run apart from the app's own |
 
 The code reads the mode through `isDesktopApp` (`apps/web/src/utils/platform.ts`), a constant the site's build folds to `false`. One exception: `main.tsx` tests `import.meta.env.MODE === "desktop"` inline, because Rollup does not fold a constant imported from another module far enough to drop a dynamic `import()`. With the inline test, the site's build emits no chunk of the desktop code (checked in the build output: no `start-*.js`).
 

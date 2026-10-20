@@ -114,6 +114,10 @@ Mark what you find without leaving the game: say **"tracker"**, then the find. F
   - "gannon tower" or "g t" for Ganon's Tower.
 - **Where it works.** In Firefox, Chrome and Edge, in a browser tab: an OBS dock has no microphone. Once on, the tracker listens again each time it opens, on that device, until you stop it. Only one tab listens at a time.
 
+## Sharing a run
+
+The toolbar's **Share** button copies a link that holds your run, whatever the game: the run is compressed into the address's fragment (`#run=…`), which the browser never sends to any server. Whoever opens it is asked "Open this shared run?" and chooses **Open** (loaded as an Import is, **Undo** takes it back) or **Keep mine**; nothing is replaced without that answer. A late ALttPR run is too long for a Discord message with its timeline, so the link then leaves the timeline out and says so. [Sharing a run through its URL](share.md) has the format and the measured lengths.
+
 ## Streaming with OBS
 
 The stream view, [`?view=obs`](https://kqesar.github.io/alltp-tracker/?view=obs), is the item grid alone on a transparent background. It fills its source, centred, at a size that keeps the pixel art sharp, and follows the run live. The toolbar's **Stream view** button copies its address. In OBS 31 or newer:

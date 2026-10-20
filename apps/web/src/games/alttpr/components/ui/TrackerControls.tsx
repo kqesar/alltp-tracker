@@ -13,6 +13,7 @@ import {
   ImportIcon,
   NewGameIcon,
   RedoIcon,
+  ShareIcon,
   UndoIcon,
 } from "@/components/ui/ToolbarIcons";
 import {
@@ -31,8 +32,13 @@ import { PresetSelector } from "@/games/alttpr/components/ui/PresetSelector";
 import { ShortcutsButton } from "@/games/alttpr/components/ui/ShortcutsButton";
 import { StreamViewControl } from "@/games/alttpr/components/ui/StreamViewControl";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-import { type Progress, parseSave } from "@/games/alttpr/stores/persistence";
+import {
+  type Progress,
+  parseSave,
+  withoutTimeline,
+} from "@/games/alttpr/stores/persistence";
 import type { MapLayout } from "@/games/alttpr/utils";
+import { SHARE_HELP, shareRun } from "@/share/shareRun";
 import { commandKey, isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
 
@@ -117,6 +123,12 @@ export const TrackerControls = () => {
       exportState(),
     );
 
+  // The timeline is what a link drops first when it would be too long
+  const handleShare = () => {
+    const save = exportState();
+    void shareRun([save, withoutTimeline(save)]).then(setStatus);
+  };
+
   const handleImportClick = () => fileInputRef.current?.click();
 
   const handleImportFile = (event: ChangeEvent<HTMLInputElement>) => {
@@ -200,6 +212,16 @@ export const TrackerControls = () => {
           <ImportIcon />
           <span className="toolbar-label">Import</span>
         </button>
+        <button
+          className="tracker-controls__button"
+          data-testid="share-button"
+          onClick={handleShare}
+          title={SHARE_HELP}
+          type="button"
+        >
+          <ShareIcon />
+          <span className="toolbar-label">Share</span>
+        </button>
         {/* OBS cannot load the desktop app's page nor follow its storage */}
         {!isDesktopApp && <StreamViewControl />}
         <ShortcutsButton />
@@ -226,6 +248,14 @@ export const TrackerControls = () => {
                   label="Import"
                   onSelect={handleImportClick}
                   testId="toolbar-more-import"
+                />
+              )}
+              {!onBar && (
+                <ToolbarMenuItem
+                  icon={<ShareIcon />}
+                  label="Share"
+                  onSelect={handleShare}
+                  testId="toolbar-more-share"
                 />
               )}
               {!isDesktopApp && <StreamViewControl variant="menu" />}

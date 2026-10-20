@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { Header } from "@/components/ui/Header";
+import { SharedRunPrompt } from "@/components/ui/SharedRunPrompt";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
 import { useSmAutotrack } from "@/games/sm/components/SmAutotrack";
 import { SmControls } from "@/games/sm/components/SmControls";
@@ -56,6 +57,7 @@ const SmApp = () => {
       </a>
       <div className="notices">
         <UpdatePrompt />
+        <SharedRunPrompt game="sm" />
         {AppMenuPrompt && (
           <Suspense fallback={null}>
             <AppMenuPrompt />

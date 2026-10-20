@@ -41,6 +41,11 @@ export const KeyboardIcon = () => (
 
 export const ExportIcon = () => <Icon path="M12 3v12M7 10l5 5 5-5M5 21h14" />;
 
+/** A chain link: share the run through an address. */
+export const ShareIcon = () => (
+  <Icon path="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+);
+
 export const ImportIcon = () => <Icon path="M12 15V3M7 8l5-5 5 5M5 21h14" />;
 
 /** A screen casting from its corner: the stream view. */

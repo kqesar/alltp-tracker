@@ -8,6 +8,7 @@ import {
   ImportIcon,
   NewGameIcon,
   RedoIcon,
+  ShareIcon,
   StreamIcon,
   UndoIcon,
 } from "@/components/ui/ToolbarIcons";
@@ -15,27 +16,19 @@ import { Smz3Autotrack } from "@/games/smz3/components/Smz3Autotrack";
 import { PRESETS } from "@/games/smz3/data";
 import {
   exportSave,
-  type ImportError,
+  IMPORT_ERRORS,
   parseSave,
   type Smz3Pads,
   type Smz3Progress,
   useSmz3Store,
 } from "@/games/smz3/store";
+import { SHARE_HELP, shareRun } from "@/share/shareRun";
 import { commandKey, isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
 import { obsViewUrl } from "@/utils/view";
 
 /** How long a status line stays, as the other boards' toolbars keep it. */
 const STATUS_MS = 4000;
-
-const IMPORT_ERRORS: Readonly<Record<ImportError, string>> = {
-  invalid: "This save's run is not one the tracker can read.",
-  "newer-version": "This save comes from a newer version of the tracker.",
-  "not-a-save": "This file is not a tracker save.",
-  "not-json": "This file is not a tracker save.",
-  "other-game":
-    "This save is for another game: switch game to import it there.",
-};
 
 const MEDALLION_NAMES: Readonly<Record<Smz3Pads["mire"], string>> = {
   bombos: "Bombos",
@@ -264,6 +257,9 @@ export const Smz3Controls = () => {
       exportSave(useSmz3Store.getState()),
     );
 
+  const handleShare = () =>
+    void shareRun([exportSave(useSmz3Store.getState())]).then(setStatus);
+
   const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
     const [file] = event.target.files ?? [];
     event.target.value = "";
@@ -340,6 +336,16 @@ export const Smz3Controls = () => {
       >
         <ImportIcon />
         <span className="toolbar-label">Import</span>
+      </button>
+      <button
+        className="tracker-controls__button"
+        data-testid="share-button"
+        onClick={handleShare}
+        title={SHARE_HELP}
+        type="button"
+      >
+        <ShareIcon />
+        <span className="toolbar-label">Share</span>
       </button>
       {/* OBS cannot load the desktop app's page nor follow its storage */}
       {!isDesktopApp && (
