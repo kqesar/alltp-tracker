@@ -9,7 +9,7 @@ use tauri::{AppHandle, Manager};
 
 use crate::shortcuts::{GlobalShortcuts, emit_step};
 
-/// How many steps wait for a page that is not listening: the last ones win.
+/// How many steps wait for the first page to listen: the last ones win.
 const MAX_PENDING: usize = 32;
 
 /// The steps in `args` (`--step <action>` or `--step=<action>`, repeated, in
@@ -51,10 +51,63 @@ pub fn own_steps() -> Vec<String> {
 }
 
 /// Adds `steps` to a queue that keeps the last `MAX_PENDING`.
-pub fn push_bounded(queue: &mut VecDeque<String>, steps: Vec<String>) {
+fn push_bounded(queue: &mut VecDeque<String>, steps: Vec<String>) {
     queue.extend(steps);
     while queue.len() > MAX_PENDING {
         queue.pop_front();
+    }
+}
+
+/// What became of the steps offered to a `StepQueue`.
+#[derive(Debug, PartialEq, Eq)]
+pub enum Fate {
+    /// A page is listening: run them now
+    Run,
+    /// The first page has not listened yet: they wait for it
+    Kept,
+    /// No page is listening: they are lost
+    Dropped,
+}
+
+/// The steps that come from outside (the command line) and the page that
+/// runs them. They wait only until the process's first `ready`: a step that
+/// finds no page listening after that (Super Metroid and SMZ3 never listen)
+/// is dropped, so it can never replay into another game's run hours later.
+#[derive(Debug, Default)]
+pub struct StepQueue {
+    listening: bool,
+    /// A page has listened at least once in this process
+    seen_listening: bool,
+    waiting: VecDeque<String>,
+}
+
+impl StepQueue {
+    /// Offers `steps`: run, kept for the first page, or dropped.
+    pub fn offer(&mut self, steps: Vec<String>) -> Fate {
+        if self.listening {
+            Fate::Run
+        } else if self.seen_listening {
+            Fate::Dropped
+        } else {
+            push_bounded(&mut self.waiting, steps);
+            Fate::Kept
+        }
+    }
+
+    /// A page listens: the steps that waited for it, once.
+    pub fn page_ready(&mut self) -> Vec<String> {
+        self.listening = true;
+        self.seen_listening = true;
+        self.waiting.drain(..).collect()
+    }
+
+    /// A page starts loading: it listens no more. Before the first `ready`
+    /// the queue stays: the first page is the one it waits for.
+    pub fn page_started(&mut self) {
+        self.listening = false;
+        if self.seen_listening {
+            self.waiting.clear();
+        }
     }
 }
 
@@ -71,12 +124,14 @@ pub fn on_second_instance(app: &AppHandle, argv: Vec<String>, _cwd: String) {
         return;
     }
     let state = app.state::<GlobalShortcuts>();
-    if state.is_ready() {
-        for step in steps {
-            emit_step(app, &step);
+    match state.offer(steps.clone()) {
+        Fate::Run => {
+            for step in steps {
+                emit_step(app, &step);
+            }
         }
-    } else {
-        state.queue(steps);
+        Fate::Kept => {}
+        Fate::Dropped => eprintln!("alltp-tracker: no page listens, --step dropped"),
     }
 }
 
@@ -135,18 +190,56 @@ mod tests {
         assert!(steps.is_empty() && refused.is_empty());
     }
 
+    fn one(step: &str) -> Vec<String> {
+        vec![step.to_owned()]
+    }
+
     #[test]
-    fn keeps_the_last_thirty_two_steps() {
-        let mut queue = VecDeque::new();
-        push_bounded(
-            &mut queue,
-            (0..40).map(|n| format!("advance:item{n}")).collect(),
-        );
-        assert_eq!(queue.len(), MAX_PENDING);
-        assert_eq!(queue.front().map(String::as_str), Some("advance:item8"));
-        assert_eq!(queue.back().map(String::as_str), Some("advance:item39"));
-        push_bounded(&mut queue, vec!["back:bow".into()]);
-        assert_eq!(queue.len(), MAX_PENDING);
-        assert_eq!(queue.back().map(String::as_str), Some("back:bow"));
+    fn keeps_the_last_thirty_two_steps_for_the_first_page() {
+        let mut queue = StepQueue::default();
+        let many = (0..40).map(|n| format!("advance:item{n}")).collect();
+        assert_eq!(queue.offer(many), Fate::Kept);
+        assert_eq!(queue.offer(one("back:bow")), Fate::Kept);
+        let steps = queue.page_ready();
+        assert_eq!(steps.len(), MAX_PENDING);
+        assert_eq!(steps.first().map(String::as_str), Some("advance:item9"));
+        assert_eq!(steps.last().map(String::as_str), Some("back:bow"));
+        assert!(queue.page_ready().is_empty());
+    }
+
+    #[test]
+    fn the_first_page_still_gets_what_waited_through_its_own_load() {
+        let mut queue = StepQueue::default();
+        queue.offer(one("advance:bow"));
+        queue.page_started();
+        assert_eq!(queue.page_ready(), ["advance:bow"]);
+    }
+
+    #[test]
+    fn runs_the_steps_while_a_page_listens() {
+        let mut queue = StepQueue::default();
+        queue.page_ready();
+        assert_eq!(queue.offer(one("advance:bow")), Fate::Run);
+    }
+
+    #[test]
+    fn drops_the_steps_once_a_page_has_listened_and_none_does_now() {
+        let mut queue = StepQueue::default();
+        queue.page_ready();
+        // A switch to Super Metroid: its page never says ready
+        queue.page_started();
+        assert_eq!(queue.offer(one("advance:bow")), Fate::Dropped);
+        assert_eq!(queue.offer(one("back:bow")), Fate::Dropped);
+        // Back to A Link to the Past: nothing replays into the run
+        assert!(queue.page_ready().is_empty());
+    }
+
+    #[test]
+    fn a_page_that_starts_loading_empties_what_somehow_waited() {
+        let mut queue = StepQueue::default();
+        queue.page_ready();
+        queue.waiting.push_back("advance:bow".into());
+        queue.page_started();
+        assert!(queue.page_ready().is_empty());
     }
 }
