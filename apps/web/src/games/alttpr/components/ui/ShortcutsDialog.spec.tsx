@@ -1,7 +1,10 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
-import { ShortcutsButton } from "@/games/alttpr/components/ui/ShortcutsButton";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  preloadShortcutsDialog,
+  ShortcutsButton,
+} from "@/games/alttpr/components/ui/ShortcutsButton";
 import { CONTROLS, DEFAULT_KEYMAP } from "@/games/alttpr/data/keymap";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -38,6 +41,13 @@ const capture = async (
 };
 
 describe("ShortcutsDialog", () => {
+  // The dialog is a chunk of its own, imported on first use. Under load that
+  // cold import outlasts the one second `findByRole` waits, and the first
+  // test of the file failed for a dialog that was still on its way.
+  beforeAll(async () => {
+    await preloadShortcutsDialog();
+  });
+
   beforeEach(() => {
     localStorage.clear();
     act(() => useGameStore.setState(useGameStore.getInitialState(), true));
