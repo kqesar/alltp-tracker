@@ -250,7 +250,7 @@ The `Exec` line is quoted as the Desktop Entry specification asks: `"`, `` ` ``,
 
 ### The icon
 
-The icons are the bundle's own PNGs (`src-tauri/icons/`, 32, 128 and 256 px, embedded with `include_bytes!`, about 8 kB of the binary), installed to `$XDG_DATA_HOME/icons/hicolor/<size>x<size>/apps/io.github.kqesar.alltp-tracker.png`. Every file written says `Icon=io.github.kqesar.alltp-tracker`, the portal's hidden one included, so the icon shows in the menu and in KDE's shortcut settings. They are written before the file (whenever the file exists, its icon does) and deleted with it.
+The icons are the bundle's own PNGs (`src-tauri/icons/`, 32, 128 and 256 px, drawn by `apps/web/scripts/pwa-icons.mjs`, embedded with `include_bytes!`, about 6 kB of the binary), installed to `$XDG_DATA_HOME/icons/hicolor/<size>x<size>/apps/io.github.kqesar.alltp-tracker.png`. Every file written says `Icon=io.github.kqesar.alltp-tracker`, the portal's hidden one included, so the icon shows in the menu and in KDE's shortcut settings. They are written before the file (whenever the file exists, its icon does) and deleted with it.
 
 ### The page
 
