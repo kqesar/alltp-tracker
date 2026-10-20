@@ -6,6 +6,10 @@ import { type RefObject, useLayoutEffect } from "react";
  * during a run fold first:
  *
  * - `labels`: every action with its label, on one row.
+ * - `secondary-icons`: Export, Import, Share, Stream view and Shortcuts show
+ *   as icons while the primary controls (Mode, New game, Autotracking, the
+ *   map layout, the key cells toggle) keep their labels. A button added to
+ *   the bar later costs this step its few pixels, never every label at once.
  * - `icons`: every action as an icon, on one row.
  * - `more`: Export, Import, Stream view and Shortcuts move into More.
  * - `more-map`: the map layout too, set once per device and the widest
@@ -20,6 +24,7 @@ import { type RefObject, useLayoutEffect } from "react";
  */
 export const FITS = [
   { fit: "labels", fold: [], rows: 1 },
+  { fit: "secondary-icons", fold: ["secondary-labels"], rows: 1 },
   { fit: "icons", fold: ["labels"], rows: 1 },
   { fit: "more", fold: ["labels", "secondary"], rows: 2 },
   { fit: "more-map", fold: ["labels", "secondary", "map"], rows: 2 },

@@ -1,11 +1,15 @@
 /*
  * How the toolbar folds, by the tokens useToolbarFit writes to its data-fold
  * from the widths it measures (see FITS there for the order): the secondary
- * actions, then the map layout, then the key cells toggle move into the More
- * menu, then New game shows as an icon, and last Autotracking moves into More
+ * actions lose their labels, then every button does (ui.css); then the
+ * secondary actions, the map layout and the key cells toggle move into the
+ * More menu, New game shows as an icon, and last Autotracking moves into More
  * too, so the bar holds on one or two rows down to the narrowest phone.
+ * .toolbar-actions groups the secondary actions of a bar with no More menu
+ * (Super Metroid, SMZ3): their labels fold as ALttPR's, they never move.
  */
 .toolbar-secondary,
+.toolbar-actions,
 .toolbar-autotrack {
   display: contents;
 }

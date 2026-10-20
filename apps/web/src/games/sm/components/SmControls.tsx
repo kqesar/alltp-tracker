@@ -239,47 +239,51 @@ export const SmControls = () => {
         <span className="sr-only">Redo</span>
       </button>
       <SmAutotrack />
-      <button
-        className="tracker-controls__button"
-        onClick={handleExport}
-        title="Export progress to a file"
-        type="button"
-      >
-        <ExportIcon />
-        <span className="toolbar-label">Export</span>
-      </button>
-      <button
-        className="tracker-controls__button"
-        onClick={() => fileRef.current?.click()}
-        title="Import progress from a file"
-        type="button"
-      >
-        <ImportIcon />
-        <span className="toolbar-label">Import</span>
-      </button>
-      <button
-        className="tracker-controls__button"
-        data-testid="share-button"
-        onClick={handleShare}
-        title={SHARE_HELP}
-        type="button"
-      >
-        <ShareIcon />
-        <span className="toolbar-label">Share</span>
-      </button>
-      {/* OBS cannot load the desktop app's page nor follow its storage */}
-      {!isDesktopApp && (
+      {/* The secondary actions lose their labels before the primary controls
+          do (ui.css); with no More menu they never move */}
+      <span className="toolbar-actions">
         <button
           className="tracker-controls__button"
-          data-testid="sm-stream-view"
-          onClick={() => setDialog("stream")}
-          title="The stream view, for OBS"
+          onClick={handleExport}
+          title="Export progress to a file"
           type="button"
         >
-          <StreamIcon />
-          <span className="toolbar-label">Stream view</span>
+          <ExportIcon />
+          <span className="toolbar-label">Export</span>
         </button>
-      )}
+        <button
+          className="tracker-controls__button"
+          onClick={() => fileRef.current?.click()}
+          title="Import progress from a file"
+          type="button"
+        >
+          <ImportIcon />
+          <span className="toolbar-label">Import</span>
+        </button>
+        <button
+          className="tracker-controls__button"
+          data-testid="share-button"
+          onClick={handleShare}
+          title={SHARE_HELP}
+          type="button"
+        >
+          <ShareIcon />
+          <span className="toolbar-label">Share</span>
+        </button>
+        {/* OBS cannot load the desktop app's page nor follow its storage */}
+        {!isDesktopApp && (
+          <button
+            className="tracker-controls__button"
+            data-testid="sm-stream-view"
+            onClick={() => setDialog("stream")}
+            title="The stream view, for OBS"
+            type="button"
+          >
+            <StreamIcon />
+            <span className="toolbar-label">Stream view</span>
+          </button>
+        )}
+      </span>
       <input
         accept="application/json,.json"
         aria-label="Import a save file"

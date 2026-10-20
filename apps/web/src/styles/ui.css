@@ -65,15 +65,23 @@
 }
 
 /* Unless the labelled bar fits on one row (data-fold, set by useToolbarFit
-   from the widths it measures), its buttons are icons, square 40 px targets */
+   from the widths it measures), its buttons are icons, square 40 px targets:
+   first the secondary actions only ("secondary-labels", inside
+   .toolbar-secondary or .toolbar-actions), then every button ("labels") */
 .toolbar[data-fold~="labels"] .tracker-controls__button,
-.toolbar[data-fold~="labels"] .bigkey-toggle {
+.toolbar[data-fold~="labels"] .bigkey-toggle,
+.toolbar[data-fold~="secondary-labels"]
+  :is(.toolbar-secondary, .toolbar-actions)
+  .tracker-controls__button {
   justify-content: center;
   min-width: 2.5rem;
   padding-inline: var(--spacing-sm);
 }
 
 .toolbar[data-fold~="labels"] .toolbar-label,
+.toolbar[data-fold~="secondary-labels"]
+  :is(.toolbar-secondary, .toolbar-actions)
+  .toolbar-label,
 .toolbar[data-fold~="new-game"] .new-game__label {
   position: absolute;
   width: 1px;
