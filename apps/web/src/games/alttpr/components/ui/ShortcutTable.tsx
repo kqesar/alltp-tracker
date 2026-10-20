@@ -1,7 +1,9 @@
 import {
   type KeyboardEvent,
   type MouseEvent,
+  type ReactNode,
   type Ref,
+  useEffect,
   useId,
   useImperativeHandle,
   useState,
@@ -79,21 +81,28 @@ export type ShortcutTableHandle = {
  * line.
  * @param refusalOf - Why a chord cannot be bound here, or null
  * @param refusalMessage - The words for a refusal, given the chord's label
+ * and the chord itself
+ * @param rowExtra - What to show under an action's key, if anything
+ * @param onCapturingChange - Told when a key capture starts and ends
  */
 export const ShortcutTable = <Refusal extends string>({
   keymap,
+  onCapturingChange,
   onChange,
   onStatus,
   ref,
   refusalMessage,
   refusalOf,
+  rowExtra,
 }: {
   keymap: Keymap;
+  onCapturingChange?: (capturing: boolean) => void;
   onChange: (next: Keymap) => void;
   onStatus: (message: string) => void;
   ref?: Ref<ShortcutTableHandle>;
-  refusalMessage: (refusal: Refusal, chord: string) => string;
+  refusalMessage: (refusal: Refusal, label: string, chord: Chord) => string;
   refusalOf: (chord: Chord) => Refusal | null;
+  rowExtra?: (action: ActionId) => ReactNode;
 }) => {
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const withMaps = useGameStore(
@@ -105,6 +114,10 @@ export const ShortcutTable = <Refusal extends string>({
 
   const [capturing, setCapturing] = useState<ActionId | null>(null);
   const [conflict, setConflict] = useState<Conflict | null>(null);
+
+  useEffect(() => {
+    onCapturingChange?.(capturing !== null);
+  }, [capturing, onCapturingChange]);
 
   const text = (chord: Chord) => chordText(chord, layout);
   const describe = (action: ActionId) => {
@@ -187,7 +200,7 @@ export const ShortcutTable = <Refusal extends string>({
       if (!chord) return;
       const refusal = refusalOf(chord);
       if (refusal) {
-        onStatus(refusalMessage(refusal, text(chord)));
+        onStatus(refusalMessage(refusal, text(chord), chord));
         return;
       }
       if (keymap[action] === chord) {
@@ -258,6 +271,7 @@ export const ShortcutTable = <Refusal extends string>({
       {DIRECTIONS.map((direction) => (
         <td className="shortcuts-table__key" key={direction}>
           {renderBinding(`${direction}:${control}`)}
+          {rowExtra?.(`${direction}:${control}`)}
         </td>
       ))}
     </tr>

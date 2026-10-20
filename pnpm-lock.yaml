@@ -284,6 +284,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.1.2
         version: 6.1.2(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.1)(jiti@2.6.1)(yaml@2.9.1))
+      axe-core:
+        specifier: ^4.13.0
+        version: 4.13.0
       vite:
         specifier: ^8.3.4
         version: 8.3.4(@types/node@26.6.5)(esbuild@0.28.1)(jiti@2.6.1)(yaml@2.9.1)

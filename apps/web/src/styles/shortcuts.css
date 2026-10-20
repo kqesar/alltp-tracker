@@ -274,3 +274,70 @@
     width: 5.75rem;
   }
 }
+
+/* The desktop app's Global tab: what the system said about a key, the
+   command to bind in a window manager, the actions beside the status */
+.shortcuts__actions--start {
+  flex-wrap: wrap;
+  margin-inline-start: 0;
+}
+
+.shortcut-note {
+  display: block;
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  line-height: 1.3;
+  color: var(--color-text-secondary);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.shortcut-note--warn {
+  color: var(--color-text-primary);
+}
+
+.shortcut-copy {
+  display: block;
+  width: 100%;
+  min-height: 1.75rem;
+  padding: 0 var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.shortcut-copy:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+.global-command {
+  padding: var(--spacing-sm);
+  margin: 0;
+  font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  user-select: all;
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+/* A global chord can hold four modifiers: on a narrow screen the columns keep
+   their width and the keys wrap inside them */
+@media (max-width: 40rem) {
+  .global-panel .shortcuts-table {
+    table-layout: fixed;
+  }
+
+  .global-panel .key-chord {
+    flex-wrap: wrap;
+    justify-content: center;
+    white-space: normal;
+  }
+}
