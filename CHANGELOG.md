@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.33.0](https://github.com/kqesar/alltp-tracker/compare/v2.32.0...v2.33.0) (2026-10-20)
+
+
+### ✨ Features
+
+* **desktop:** add the AppImage to the application menu ([9343373](https://github.com/kqesar/alltp-tracker/commit/934337396a126115eb762441b2496ec987a251a5))
+
 ## [2.32.0](https://github.com/kqesar/alltp-tracker/compare/v2.31.0...v2.32.0) (2026-10-20)
 
 
