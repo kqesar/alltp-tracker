@@ -14,13 +14,7 @@ const DESKTOP_OUT = "dist-desktop";
  * (a copy downloaded into public/ would ship), and what search engines and
  * link previews read.
  */
-const SITE_ONLY = [
-  "models",
-  "social",
-  "assets/map.png",
-  "robots.txt",
-  "sitemap.xml",
-];
+const SITE_ONLY = ["models", "social", "robots.txt", "sitemap.xml"];
 
 const withoutSiteOnlyFiles = (): Plugin => ({
   apply: "build",
@@ -57,6 +51,22 @@ export default defineConfig(({ mode }) => {
             // Voice commands' engine is cached once a player turns them on;
             // the speech model, which the engine keeps in IndexedDB, never
             serviceWorker({
+              // Each game's own files, which the worker caches only for the
+              // games a device tracks. Super Metroid draws from the one sheet
+              // its own stylesheet names; ALttPR's item art and map are in
+              // public/assets, which ALttPR and SMZ3 both draw (SMZ3's board
+              // takes its ALttPR items and its Hyrule map from them)
+              games: {
+                alttpr: {
+                  files: /^assets\/[^/]+\.(png|webp)$/,
+                  module: "src/games/alttpr/module.ts",
+                },
+                sm: { module: "src/games/sm/module.ts" },
+                smz3: {
+                  files: /^assets\/[^/]+\.(png|webp)$/,
+                  module: "src/games/smz3/module.ts",
+                },
+              },
               // Voice commands' engine, and the SMZ3 board's map of Zebes:
               // fetched the first time a page asks, so players of another
               // game never do
@@ -64,10 +74,9 @@ export default defineConfig(({ mode }) => {
               // Never at install: the speech model, and what only crawlers
               // and link previews read (the link preview images, the game
               // pages, robots.txt and the sitemap), which no player's install
-              // needs. assets/map.png is the old share card, no longer
-              // referenced: delete it and this clause.
+              // needs
               uncached:
-                /^(models\/|social\/|assets\/map\.png$|(alttpr|sm|smz3)\/index\.html$|robots\.txt$|sitemap\.xml$)/,
+                /^(models\/|social\/|(alttpr|sm|smz3)\/index\.html$|robots\.txt$|sitemap\.xml$)/,
             }),
           ],
     ],

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   BUILD_REPLY_TIMEOUT_MS,
   checkForUpdates,
+  holdGame,
   registerServiceWorker,
   UPDATE_CHECK_INTERVAL_MS,
   useUpdateStore,
@@ -54,6 +55,7 @@ class FakeWorker extends EventTarget {
 }
 
 class FakeRegistration extends EventTarget {
+  active: FakeWorker | null = null;
   installing: FakeWorker | null = null;
   waiting: FakeWorker | null = null;
   update = vi.fn(async () => undefined);
@@ -68,6 +70,7 @@ class FakeRegistration extends EventTarget {
 class FakeContainer extends EventTarget {
   registration = new FakeRegistration();
   register = vi.fn(async () => this.registration);
+  ready = Promise.resolve(this.registration);
 
   constructor(public controller: FakeWorker | null) {
     super();
@@ -82,9 +85,14 @@ class FakeContainer extends EventTarget {
 
 const SCRIPT = "/alltp-tracker/sw.js";
 
-const register = async (container: FakeContainer, reload = vi.fn()) => {
+const register = async (
+  container: FakeContainer,
+  reload = vi.fn(),
+  hold: () => Promise<void> = async () => undefined,
+) => {
   await registerServiceWorker(container as unknown as ServiceWorkerContainer, {
     build: PAGE_BUILD,
+    hold,
     reload,
     url: SCRIPT,
   });
@@ -117,6 +125,41 @@ describe("registerServiceWorker", () => {
     await register(container);
 
     expect(container.register).toHaveBeenCalledExactlyOnceWith(SCRIPT);
+  });
+
+  it("marks the page's game before it registers the worker", async () => {
+    const container = new FakeContainer(null);
+    const order: string[] = [];
+    container.register.mockImplementation(async () => {
+      order.push("register");
+      return container.registration;
+    });
+
+    await register(container, vi.fn(), async () => {
+      order.push("hold");
+    });
+
+    expect(order).toEqual(["hold", "register"]);
+  });
+
+  it("still registers when the game cannot be marked", async () => {
+    const container = new FakeContainer(null);
+
+    await register(container, vi.fn(), () => Promise.reject(new Error("no")));
+
+    expect(container.register).toHaveBeenCalledOnce();
+  });
+
+  it("asks the running worker to fetch what the marked game still needs", async () => {
+    const container = controlledPage();
+    container.registration.active = container.controller;
+
+    await register(container);
+    await settle();
+
+    expect(container.controller?.postMessage).toHaveBeenCalledWith(
+      "sync-games",
+    );
   });
 
   it("offers nothing on a first visit, when the worker installs and takes over", async () => {
@@ -343,5 +386,45 @@ describe("checkForUpdates", () => {
     showPage(true);
 
     expect(registration.update).not.toHaveBeenCalled();
+  });
+});
+
+/** The part of the Cache API `holdGame` uses: a Map by URL. */
+const fakeCaches = () => {
+  const stored = new Map<string, Response>();
+  vi.stubGlobal("caches", {
+    open: vi.fn(async (name: string) => ({
+      match: async (key: string) => stored.get(key),
+      name,
+      put: async (key: string, response: Response) => {
+        stored.set(key, response);
+      },
+    })),
+  });
+  return stored;
+};
+
+describe("holdGame", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("leaves a key under the app's base path, in the worker's cache", async () => {
+    const stored = fakeCaches();
+
+    await holdGame("sm", "/alltp-tracker/");
+
+    expect([...stored.keys()]).toEqual([
+      `${window.location.origin}/alltp-tracker/__games__/sm`,
+    ]);
+    expect(caches.open).toHaveBeenCalledWith("alltp-tracker-precache");
+  });
+
+  it("marks each game once, several games side by side", async () => {
+    const stored = fakeCaches();
+
+    await holdGame("alttpr", "/alltp-tracker/");
+    await holdGame("alttpr", "/alltp-tracker/");
+    await holdGame("smz3", "/alltp-tracker/");
+
+    expect(stored.size).toBe(2);
   });
 });

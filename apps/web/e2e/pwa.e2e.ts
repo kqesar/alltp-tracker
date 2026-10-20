@@ -74,6 +74,129 @@ test.describe("offline", () => {
   });
 });
 
+/** The cache the worker keeps the build in (sw/sw.ts). */
+const CACHE = "alltp-tracker-precache";
+
+/** Every path of the worker's cache: the files and the games it holds. */
+const cachedPaths = (page: Page) =>
+  page.evaluate(
+    async (name) =>
+      (await (await caches.open(name)).keys()).map(
+        (request) => new URL(request.url).pathname,
+      ),
+    CACHE,
+  );
+
+/** Whether a cached path matches, for polling the worker's downloads. */
+const hasCached = async (page: Page, file: RegExp) =>
+  (await cachedPaths(page)).some((path) => file.test(path));
+
+/** Super Metroid's own sheet, which no other game's files include. */
+const SM_FILE = /\/assets\/items-[\w-]+\.png$/;
+/** ALttPR's item art and map, which Super Metroid never draws. */
+const ALTTPR_FILE = /\/assets\/(boots\.png|map\.webp)$/;
+/** SMZ3's board code, which only its players load. */
+const SMZ3_FILE = /\/assets\/Smz3AutotrackDialog-[\w-]+\.js$/;
+
+/** Pick a game in the run type dialog: the page loads again on it. */
+const pickGame = async (page: Page, game: "alttpr" | "sm") => {
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await page
+    .getByRole("dialog", { name: "Choose a run type" })
+    .getByTestId(`game-${game}`)
+    .click();
+};
+
+/** Watch a page for what an offline reload must show: all from the cache. */
+const watchOffline = (page: Page) => {
+  const served: Response[] = [];
+  const problems: string[] = [];
+  page.on("response", (response) => served.push(response));
+  page.on("requestfailed", (request) => problems.push(request.url()));
+  page.on("console", (message) => {
+    if (message.type() === "error") problems.push(message.text());
+  });
+  return () => {
+    expect(served.length).toBeGreaterThan(0);
+    expect(
+      served
+        .filter((response) => !response.fromServiceWorker())
+        .map((response) => response.url()),
+    ).toEqual([]);
+    expect(problems).toEqual([]);
+  };
+};
+
+test.describe("offline, game by game", () => {
+  test("a Super Metroid player caches the shell and Super Metroid alone", async ({
+    context,
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      if (!localStorage.getItem("alltp-tracker-game")) {
+        localStorage.setItem("alltp-tracker-game", "sm");
+      }
+    });
+    await openControlled(page);
+    const morph = page.getByTestId("sm-item-morph");
+    await morph.click();
+    await expect(morph).toHaveAccessibleName(/^Morphing Ball, obtained\./);
+
+    // The first install already holds the game the page marked: no wait
+    const paths = await cachedPaths(page);
+    expect(paths.some((path) => SM_FILE.test(path))).toBe(true);
+    expect(paths.some((path) => ALTTPR_FILE.test(path))).toBe(false);
+    expect(paths.some((path) => SMZ3_FILE.test(path))).toBe(false);
+
+    await context.setOffline(true);
+    const check = watchOffline(page);
+    await page.reload();
+
+    await expect(page.getByTestId("item-grid")).toBeVisible();
+    await expect(morph).toHaveAccessibleName(/^Morphing Ball, obtained\./);
+    check();
+  });
+
+  test("a game switched to online is cached and loads offline, the first one still does", async ({
+    context,
+    page,
+  }) => {
+    await openControlled(page);
+    await page.getByTestId("item-hookshot").click();
+    expect(await hasCached(page, SM_FILE)).toBe(false);
+
+    await pickGame(page, "sm");
+    await expect(page.getByTestId("sm-item-morph")).toBeVisible();
+    // The page marked it, the worker then fetches it
+    await expect.poll(() => hasCached(page, SM_FILE)).toBe(true);
+    // ALttPR's files stay, for the way back; SMZ3's were never wanted
+    expect(await hasCached(page, ALTTPR_FILE)).toBe(true);
+    expect(await hasCached(page, SMZ3_FILE)).toBe(false);
+
+    await context.setOffline(true);
+    const check = watchOffline(page);
+    await page.reload();
+    await expect(page.getByTestId("sm-item-morph")).toBeVisible();
+    check();
+
+    // Back to ALttPR, offline: its files were kept
+    await page.evaluate(() =>
+      localStorage.setItem("alltp-tracker-game", "alttpr"),
+    );
+    await page.reload();
+    await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+      /^Hookshot, obtained\./,
+    );
+
+    // A game this device never opened online cannot start, and says so
+    await page.evaluate(() =>
+      localStorage.setItem("alltp-tracker-game", "smz3"),
+    );
+    await page.reload();
+    await expect(page.locator("#root")).toHaveText(/could not load/);
+  });
+});
+
 test.describe("installation", () => {
   test("serves a valid manifest Chrome can install from", async ({ page }) => {
     await openControlled(page);
@@ -210,6 +333,33 @@ const nextRelease = async () => {
   return { "index.html": html, "sw.js": worker };
 };
 
+/** A file only ALttPR's players load, and the line the next release adds. */
+const ALTTPR_CHUNK =
+  /"(\/alltp-tracker\/assets\/legacy-[\w-]+\.js)","([0-9a-f]{16})"/;
+const NEXT_CODE = "\n// the next release\n";
+
+/**
+ * The next release, with a change to a file of ALttPR too: the game a
+ * Super Metroid tab does not show.
+ */
+const nextReleaseWithGameFile = async () => {
+  const release = await nextRelease();
+  const [, path = "", revision = ""] =
+    ALTTPR_CHUNK.exec(release["sw.js"]) ?? [];
+  expect(path).not.toBe("");
+  const file = path.slice(BASE.length);
+  const body = `${await readFile(join(DIST, file), "utf8")}${NEXT_CODE}`;
+  const next = createHash("sha256").update(body).digest("hex").slice(0, 16);
+  return {
+    ...release,
+    "sw.js": release["sw.js"].replace(
+      `"${path}","${revision}"`,
+      `"${path}","${next}"`,
+    ),
+    [file]: body,
+  };
+};
+
 type Host = Awaited<ReturnType<typeof hostBuild>>;
 
 /**
@@ -229,9 +379,13 @@ const hosted = test.extend<{ host: Host }>({
  * Release the next version while the tracker stays open, the network gone
  * for a moment: its return is one of the moments the page checks again.
  */
-const releaseWhileOpen = async (context: BrowserContext, host: Host) => {
+const releaseWhileOpen = async (
+  context: BrowserContext,
+  host: Host,
+  release: () => ReturnType<typeof nextRelease> = nextRelease,
+) => {
   await context.setOffline(true);
-  host.deploy(await nextRelease());
+  host.deploy(await release());
   await context.setOffline(false);
 };
 
@@ -323,6 +477,45 @@ test.describe("an update", () => {
       await expect(page.getByTestId("item-hammer")).toHaveAccessibleName(
         /^Hammer, obtained\./,
       );
+    },
+  );
+
+  hosted(
+    "reaches every game the device holds, the one on screen or not, and no other",
+    async ({ context, host, page }) => {
+      // ALttPR first, then Super Metroid: both held, the tab on Super Metroid
+      await openControlled(page, host.url);
+      await pickGame(page, "sm");
+      await expect(page.getByTestId("sm-item-morph")).toBeVisible();
+      await expect.poll(() => hasCached(page, SM_FILE)).toBe(true);
+      expect(await hasCached(page, ALTTPR_FILE)).toBe(true);
+      await page.getByTestId("sm-item-morph").click();
+
+      // A release that changes a file of ALttPR, which that stale tab never runs
+      await releaseWhileOpen(context, host, nextReleaseWithGameFile);
+      await expect(page.getByTestId("update-prompt")).toContainText(AVAILABLE);
+      await page.getByTestId("update-reload").click();
+      await expect(nextMark(page)).toHaveCount(1);
+      await expect.poll(() => controllerBuild(page)).toBe(NEXT_BUILD);
+
+      // The new revision of that file is cached, the old one dropped
+      const chunk = (await cachedPaths(page)).filter((path) =>
+        /\/assets\/legacy-[\w-]+\.js$/.test(path),
+      );
+      expect(chunk).toHaveLength(1);
+      expect(await hasCached(page, SMZ3_FILE)).toBe(false);
+
+      await context.setOffline(true);
+      await page.reload();
+      await expect(nextMark(page)).toHaveCount(1);
+      await expect(page.getByTestId("sm-item-morph")).toHaveAccessibleName(
+        /^Morphing Ball, obtained\./,
+      );
+      const served = await page.evaluate(
+        async (path) => (await fetch(path)).text(),
+        chunk[0] ?? "",
+      );
+      expect(served).toContain(NEXT_CODE.trim());
     },
   );
 

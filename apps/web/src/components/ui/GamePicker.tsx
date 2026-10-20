@@ -39,6 +39,9 @@ export const GamePicker = ({
         </button>
       ))}
     </div>
-    <p className="game-picker__note">Each game keeps its own run.</p>
+    <p className="game-picker__note">
+      Each game keeps its own run, and works offline once you have opened it
+      online.
+    </p>
   </fieldset>
 );
