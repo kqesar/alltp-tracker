@@ -75,6 +75,29 @@ describe("what a global chord may be", () => {
     expect(globalRefusalOf("Control+Alt+Numpad1", "windows", {})).toBeNull();
   });
 
+  it("asks Ctrl or Cmd on a character key on macOS, where Option types characters", () => {
+    for (const chord of [
+      "Alt+Shift+KeyQ",
+      "Alt+Shift+Digit1",
+      "Alt+Shift+Backquote",
+    ]) {
+      expect(globalRefusalOf(chord, "macos", {})).toBe("typing");
+      expect(globalRefusalOf(chord, "linux", {})).toBeNull();
+      expect(globalRefusalOf(chord, "windows", {})).toBeNull();
+    }
+    for (const chord of [
+      "Control+Shift+KeyQ",
+      "Shift+Meta+KeyQ",
+      "Control+Alt+KeyQ",
+      "Alt+Meta+KeyE",
+    ]) {
+      expect(globalRefusalOf(chord, "macos", {})).toBeNull();
+    }
+    // The numpad and F13+ stay free, with Option or alone
+    expect(globalRefusalOf("Alt+Numpad1", "macos", {})).toBeNull();
+    expect(globalRefusalOf("F13", "macos", {})).toBeNull();
+  });
+
   it("refuses a chord the tracker window already uses", () => {
     const windowKeymap = { "advance:hookshot": "Alt+Shift+KeyW" };
     expect(globalRefusalOf("Alt+Shift+KeyW", "linux", windowKeymap)).toBe(

@@ -343,6 +343,38 @@ describe("the command line", () => {
   });
 });
 
+describe("a numpad key bound on its own", () => {
+  it("says it is taken from every app while the shortcuts are on", () => {
+    show(mechanism("hotkeys"), {
+      enabled: true,
+      keymap: { "advance:hookshot": "Numpad1" },
+    });
+    expect(screen.getByTestId("global-shortcuts-numpad").textContent).toContain(
+      "taken from every app",
+    );
+  });
+
+  it("stays quiet with a modifier, with no numpad key, or with the switch off", () => {
+    const { unmount } = show(mechanism("hotkeys"), {
+      enabled: true,
+      keymap: {
+        "advance:bow": "Alt+KeyH",
+        "advance:hookshot": "Control+Numpad1",
+      },
+    });
+    expect(screen.queryByTestId("global-shortcuts-numpad")).toBeNull();
+    unmount();
+    act(() =>
+      useGlobalShortcutsStore.setState({
+        enabled: false,
+        keymap: { "advance:hookshot": "Numpad1" },
+      }),
+    );
+    render(<GlobalShortcutsPanel onStatus={vi.fn()} />);
+    expect(screen.queryByTestId("global-shortcuts-numpad")).toBeNull();
+  });
+});
+
 describe("capturing a global key", () => {
   const capture = async (testId: string) => {
     const user = userEvent.setup();
@@ -359,6 +391,20 @@ describe("capturing a global key", () => {
 
     expect(onStatus).toHaveBeenLastCalledWith(
       "Shift+Q would stop you typing it in every app. Add a second modifier, e.g. Ctrl+Alt+Shift.",
+    );
+    expect(useGlobalShortcutsStore.getState().keymap).toEqual({});
+  });
+
+  it("tells a macOS player that Option types characters", async () => {
+    const { onStatus } = show(mechanism("hotkeys", { os: "macos" }), {
+      enabled: true,
+    });
+    const user = await capture("shortcut-advance-hookshot");
+
+    await user.keyboard("{Alt>}{Shift>}h{/Shift}{/Alt}");
+
+    expect(onStatus).toHaveBeenLastCalledWith(
+      expect.stringContaining("Option types characters"),
     );
     expect(useGlobalShortcutsStore.getState().keymap).toEqual({});
   });

@@ -36,7 +36,12 @@ export type DesktopOs = "linux" | "macos" | "windows";
 const GLOBAL_CODE =
   /^(Key[A-Z]|Digit\d|Minus|Equal|BracketLeft|BracketRight|Backslash|Semicolon|Quote|Backquote|Comma|Period|Slash|Numpad(\d|Add|Subtract|Multiply|Divide|Decimal)|F([1-9]|1\d|2[0-4]))$/;
 
-/** Keys that type nothing: the numpad and F13 to F24 may stand alone. */
+/**
+ * The numpad and F13 to F24 may stand alone. The numpad is not free of typing
+ * (NumLock on, it types digits): it is allowed because binding is opt-in per
+ * action and the precedent (LiveSplit's default global hotkeys are numpad
+ * keys) shows players want it. The Global tab says what it costs.
+ */
 const FREE_CODE = /^(Numpad.+|F(1[3-9]|2[0-4]))$/;
 
 /**
@@ -56,8 +61,17 @@ export const globalRefusalOf = (
   const free = FREE_CODE.test(code);
 
   // Two modifiers (so never Shift alone): a key that types a character must
-  // not be taken from every other app by a single press
+  // not be taken from every other app by a single press. On macOS Option types
+  // characters too (Option+E is the acute accent), so Ctrl or Cmd is needed
   if (!free && modifiers.length < 2) return "typing";
+  if (
+    !free &&
+    os === "macos" &&
+    !modifiers.includes("Control") &&
+    !modifiers.includes("Meta")
+  ) {
+    return "typing";
+  }
   if (
     !free &&
     os === "windows" &&
