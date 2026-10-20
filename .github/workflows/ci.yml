@@ -28,10 +28,38 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # `actions: read` lets the store check below list the repository's caches
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The pnpm store is saved by this job, on master, once per lockfile: every
+      # other job in the repository only restores it (docs/ci.md, "Caches").
+      # pnpm/setup would otherwise save a new copy (about 120 MB, under a key
+      # unique to the run) at the end of every job, and the copies pushed the
+      # Rust caches towards eviction. A pull request reads master's copy.
+      # If the listing fails, `save` stays true: a spare copy beats none.
+      - name: Is the pnpm store already cached for this lockfile?
+        id: store
+        if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LOCKFILE_HASH: ${{ hashFiles('pnpm-lock.yaml') }}
+        run: |
+          keys=$(gh cache list --ref refs/heads/master --key pnpm-cache-Linux --limit 100 \
+            --json key --jq '.[].key') || keys=""
+          if grep -q -- "-${LOCKFILE_HASH}-" <<< "$keys"; then
+            echo "save=false" >> "$GITHUB_OUTPUT"
+            echo "A store for this lockfile is cached already."
+          else
+            echo "save=true" >> "$GITHUB_OUTPUT"
+            echo "No store for this lockfile yet: this job saves it."
+          fi
 
       # pnpm, the Node.js package.json pins (devEngines.runtime), then the
       # dependencies as the lockfile has them, from a cached store
@@ -39,6 +67,7 @@ jobs:
         uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           cache: true
+          save-cache: ${{ steps.store.outputs.save == 'true' }}
           require-lockfile: true
 
       - name: Run linter
@@ -198,11 +227,13 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # pnpm, the Node.js package.json pins (devEngines.runtime), then the
-      # dependencies as the lockfile has them, from a cached store
+      # dependencies as the lockfile has them, from a cached store (saved by
+      # the ci job, not here)
       - name: Setup pnpm, Node.js and dependencies
         uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           cache: true
+          save-cache: false
           require-lockfile: true
 
       # Voice commands' speech model, 40 MB and not in git: fetched from
