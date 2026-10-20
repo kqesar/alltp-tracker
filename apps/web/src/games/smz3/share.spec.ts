@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { packLink, unpackLink } from "@/games/smz3/share";
 import { LOCATION_IDS, parseSave } from "@/games/smz3/store";
 import { toBase64Url } from "@/share/bytes";
+import legacyLink from "@/share/fixtures/link-smz3-before-sizes.json";
 import { LINK_FORMAT, OTHER_VERSION } from "@/share/packed";
 import { play, randoms, STAGES } from "@/share/playedRuns";
 
@@ -31,6 +32,18 @@ describe("an SMZ3 run in a packed link", () => {
       expect(expected.checked.length).toBeGreaterThan(0);
     },
   );
+
+  // Made as links were written before they carried the table's size
+  // (fixtures/): three locations checked, the first, the 101st and the last
+  it("opens a link made before the links carried sizes", () => {
+    const unpacked = unpackLink(JSON.stringify(legacyLink));
+
+    expect(unpacked.ok).toBe(true);
+    if (!unpacked.ok) return;
+    expect([...runOf(unpacked.save).checked].sort()).toEqual(
+      [LOCATION_IDS[0], LOCATION_IDS[100], LOCATION_IDS[315]].sort(),
+    );
+  });
 
   it("holds the locations as bits: a late run's list is a few dozen bytes", () => {
     const save = play.smz3(0.95, randoms());

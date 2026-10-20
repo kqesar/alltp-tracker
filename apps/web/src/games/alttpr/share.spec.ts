@@ -1,9 +1,16 @@
 import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { items as freshItems } from "@/games/alttpr/data/items";
-import { packLink, TIMELINE_KEYS, unpackLink } from "@/games/alttpr/share";
+import {
+  packLink,
+  SHARE_ITEMS,
+  TIMELINE_KEYS,
+  unpackLink,
+} from "@/games/alttpr/share";
+import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { parseSave } from "@/games/alttpr/stores/persistence";
 import { BitWriter, ByteWriter, toBase64Url } from "@/share/bytes";
+import legacyLink from "@/share/fixtures/link-alttpr-before-sizes.json";
 import { LINK_FORMAT, OTHER_VERSION } from "@/share/packed";
 import { play, randoms, STAGES } from "@/share/playedRuns";
 
@@ -158,6 +165,69 @@ describe("an ALttPR run in a packed link", () => {
     }
   });
 
+  it("indexes the items by a table of its own, which the grid does not reorder", () => {
+    // A new item is appended to SHARE_ITEMS: moving one breaks every link
+    expect(new Set(SHARE_ITEMS)).toEqual(new Set(Object.keys(freshItems)));
+    expect(SHARE_ITEMS).toHaveLength(new Set(SHARE_ITEMS).size);
+    expect(SHARE_ITEMS.at(-1)).toBe("magic");
+    expect(JSON.parse(packLink(play.alttpr(0.5, randoms()))).sizes).toEqual([
+      MAP_LOCATIONS.size,
+      SHARE_ITEMS.length,
+    ]);
+  });
+
+  // Made by the tracker before the half magic cell, as it wrote links then:
+  // the item table one shorter, no sizes in the link (fixtures/).
+  it("opens a link made before an item was added, the new item as a fresh run has it", () => {
+    const unpacked = unpackLink(JSON.stringify(legacyLink));
+
+    expect(unpacked.ok).toBe(true);
+    if (!unpacked.ok) return;
+    const run = runOf(unpacked.save);
+    expect(run.items).toMatchObject({
+      boots: true,
+      hookshot: true,
+      lantern: true,
+      sword: 2,
+    });
+    expect(run.items).not.toHaveProperty("magic");
+    // Laid on the board, the item the link lacks starts as in a fresh run
+    useGameStore.setState(useGameStore.getInitialState(), true);
+    useGameStore.getState().loadProgress(run);
+    expect(useGameStore.getState().items).toMatchObject({
+      lantern: true,
+      magic: 0,
+    });
+    expect(Object.keys(run.checked ?? {})).toHaveLength(4);
+    // The timeline's keys are the old table's, whatever the new one holds
+    expect(Object.keys(run.timeline ?? {}).sort()).toEqual(
+      [
+        "item:boots",
+        "item:bow:1",
+        "item:hookshot",
+        "item:lantern",
+        "item:sword:1",
+        "item:sword:2",
+        ...Object.keys(run.checked ?? {}).map((id) => `check:${id}`),
+      ].sort(),
+    );
+  });
+
+  it("opens that link with its sizes written, as the tracker now writes them", () => {
+    const { sizes: _, ...bare } = legacyLink as typeof legacyLink & {
+      sizes?: number[];
+    };
+
+    expect(
+      unpackLink(JSON.stringify({ ...bare, sizes: [217, 98] })),
+    ).toMatchObject({ ok: true });
+    // Sizes that do not fit the digest it carries are another tracker's
+    expect(unpackLink(JSON.stringify({ ...bare, sizes: [217, 97] }))).toEqual({
+      ok: false,
+      reason: OTHER_VERSION,
+    });
+  });
+
   it("refuses a link made against other tables", () => {
     const link = JSON.parse(packLink(play.alttpr(0.5, randoms())));
 
@@ -189,8 +259,8 @@ describe("an ALttPR run in a packed link", () => {
 
   it("refuses item values that are not the table's", () => {
     const link = packLink(play.alttpr(0.5, randoms()));
-    const flags = Object.values(freshItems).map((fresh) =>
-      typeof fresh === "boolean" ? 1 : 0,
+    const flags = SHARE_ITEMS.map((id) =>
+      typeof freshItems[id] === "boolean" ? 1 : 0,
     );
 
     for (const bytes of [

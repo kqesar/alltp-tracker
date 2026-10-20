@@ -23,12 +23,22 @@ import {
 const MALFORMED = "This link does not hold a tracker run.";
 const PLACES = ["a/one", "a/two", "b/one", "b/two", "b/three"];
 
-/** A codec over five places, the checked ones as a list. */
-const codec: PackCodec = {
-  fields: { checked: bitsetField(PLACES, "list") },
+/** A codec over a table of places, the checked ones kept as `form`. */
+const codecOver = (
+  places: readonly string[],
+  form: "list" | "record" = "list",
+): PackCodec => ({
+  at: ([prefix]) => ({
+    digested: [prefix],
+    fields: { checked: bitsetField(prefix, form) },
+  }),
   game: "smz3",
-  tables: [PLACES],
-};
+  legacySizes: [PLACES.length],
+  tables: [places],
+});
+
+/** A codec over five places, the checked ones as a list. */
+const codec = codecOver(PLACES);
 
 const save = (checked: unknown) =>
   JSON.stringify({
@@ -116,6 +126,7 @@ describe("a packed link", () => {
     expect(file.format).toBe(LINK_FORMAT);
     expect(file.link).toBe(LINK_VERSION);
     expect(file.table).toBe(digestOf(codec.tables));
+    expect(file.sizes).toEqual([5]);
     expect(file.progress.checked).toBe(toBase64Url(Uint8Array.of(0b00000110)));
     expect(file.progress.other).toBe(1);
   });
@@ -158,23 +169,53 @@ describe("a packed link", () => {
     }
   });
 
-  it("refuses a link made against other tables, whatever it holds", () => {
-    const link = packRun(save(["a/one"]), codec);
-    const other: PackCodec = { ...codec, tables: [[...PLACES, "c/one"]] };
+  it("reads a link made before the tables grew, the places it lacks unchecked", () => {
+    const link = packRun(save(["b/one", "a/two"]), codec);
+    const grown = codecOver([...PLACES, "c/one", "c/two"]);
 
-    expect(unpackRun(link, other)).toEqual({
-      ok: false,
-      reason: OTHER_VERSION,
-    });
-    // The same places in another order mean other bits
-    const reordered: PackCodec = {
-      ...codec,
-      tables: [[...PLACES].reverse()],
-    };
-    expect(unpackRun(link, reordered)).toEqual({
-      ok: false,
-      reason: OTHER_VERSION,
-    });
+    const unpacked = unpackRun(link, grown);
+
+    expect(unpacked.ok && JSON.parse(unpacked.save).progress.checked).toEqual([
+      "a/two",
+      "b/one",
+    ]);
+    // And the grown tracker's own link reads back whole, in a bitset of its size
+    const own = packRun(save(["c/two", "a/one"]), grown);
+    expect(JSON.parse(own).sizes).toEqual([7]);
+    const back = unpackRun(own, grown);
+    expect(back.ok && JSON.parse(back.save).progress.checked).toEqual([
+      "a/one",
+      "c/two",
+    ]);
+  });
+
+  it("refuses a link made against tables that were reordered, cut or changed", () => {
+    const link = packRun(save(["a/one"]), codec);
+
+    for (const places of [
+      // The same places in another order mean other bits
+      [...PLACES].reverse(),
+      // A place moved, one put in the middle, one renamed
+      [PLACES[1], PLACES[0], ...PLACES.slice(2), "c/one"],
+      ["a/one", "a/two", "x/new", ...PLACES.slice(2)],
+      [...PLACES.slice(0, 4), "b/renamed"],
+      // Cut: the link holds a place the table no longer has
+      PLACES.slice(0, 4),
+      [],
+    ]) {
+      expect(unpackRun(link, codecOver(places))).toEqual({
+        ok: false,
+        reason: OTHER_VERSION,
+      });
+    }
+    expect(
+      unpackRun(
+        tampered(link, (file) => {
+          file.sizes = [6];
+        }),
+        codec,
+      ),
+    ).toEqual({ ok: false, reason: OTHER_VERSION });
     expect(
       unpackRun(
         tampered(link, (file) => {
@@ -183,6 +224,35 @@ describe("a packed link", () => {
         codec,
       ),
     ).toEqual({ ok: false, reason: OTHER_VERSION });
+  });
+
+  it("reads a link that carries no sizes as the tables the first version had", () => {
+    const link = tampered(packRun(save(["b/one"]), codec), (file) => {
+      delete file.sizes;
+    });
+
+    expect(unpackRun(link, codec).ok).toBe(true);
+    // Its digest was of those five places: against a grown table it still reads
+    expect(unpackRun(link, codecOver([...PLACES, "c/one"])).ok).toBe(true);
+    // Against a table that has since been reordered it does not
+    expect(unpackRun(link, codecOver([...PLACES].reverse()))).toEqual({
+      ok: false,
+      reason: OTHER_VERSION,
+    });
+  });
+
+  it("refuses sizes that name no tables of this tracker's", () => {
+    const link = packRun(save(["a/one"]), codec);
+
+    for (const sizes of [[], [5, 5], [-1], [2.5], ["5"], "5", null]) {
+      const unpacked = unpackRun(
+        tampered(link, (file) => {
+          file.sizes = sizes;
+        }),
+        codec,
+      );
+      expect(unpacked.ok).toBe(false);
+    }
   });
 
   it("refuses a bitset of the wrong length, or with a bit past the table", () => {
@@ -244,10 +314,7 @@ describe("a packed link", () => {
   });
 
   it("packs a field kept as `{ id: true }` as the list's bits", () => {
-    const record: PackCodec = {
-      ...codec,
-      fields: { checked: bitsetField(PLACES, "record") },
-    };
+    const record = codecOver(PLACES, "record");
 
     const link = packRun(save({ "a/two": true, "b/one": true }), record);
     const unpacked = unpackRun(link, record);

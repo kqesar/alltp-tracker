@@ -1,19 +1,26 @@
 // How an SMZ3 run is packed into a shared link (share/packed.ts): its
 // checked locations, each a distinct string deflate cannot predict and most
 // of a late link, as a bitset over the pack's ordered locations. The link
-// carries a digest of that order.
+// carries the table's size and a digest of its order, and a link made before
+// the pack gained a location still reads.
 
 import { LOCATION_IDS } from "@/games/smz3/store";
 import {
   bitsetField,
   type PackCodec,
   packRun,
+  type Tables,
   unpackRun,
 } from "@/share/packed";
 
 const CODEC: PackCodec = {
-  fields: { checked: bitsetField(LOCATION_IDS, "list") },
+  at: ([locations]: Tables) => ({
+    digested: [locations],
+    fields: { checked: bitsetField(locations, "list") },
+  }),
   game: "smz3",
+  // What the table held when links carried no sizes
+  legacySizes: [316],
   tables: [LOCATION_IDS],
 };
 
