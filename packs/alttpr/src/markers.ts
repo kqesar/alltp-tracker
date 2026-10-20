@@ -1,7 +1,7 @@
 // The map markers: where each check sits on the tracker's map, and what a
 // marker shows for the locations it stands for.
 //
-// The coordinate space is the legacy map's (apps/web/public/assets/map.png,
+// The coordinate space is the legacy map's (apps/web/public/assets/map.webp,
 // 884 x 442): `x` and `y` are percents of the whole image's width and
 // height, the Light World on its left half (x 0 to 50), the Dark World on
 // its right half (50 to 100). The legacy chests.ts and dungeons.ts wrote

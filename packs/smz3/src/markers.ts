@@ -8,7 +8,7 @@
 // it again when ALttPR's markers move: data rather than an import, so the
 // SMZ3 board never downloads ALttPR's world.
 //
-// The Zebes map (apps/web/public/assets/smz3/zebes.png) is VARIA's vanilla
+// The Zebes map (apps/web/public/assets/smz3/zebes.webp) is VARIA's vanilla
 // area maps (theonlydude/RandomMetroidSolver, MIT, its licence in
 // markers-zebes.LICENSE; tools/autotracker/vanilla at 5ce97e1) composed as
 // its full map places them, cropped and halved. Each location sits on its

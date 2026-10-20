@@ -482,7 +482,7 @@ keeps a frozen copy of that format (the app at 2.11.0) and maps it:
 ## The map
 
 `MARKERS` places every check of the world on exactly one marker, in the
-legacy map's coordinate space (`apps/web/public/assets/map.png`, 884 x 442):
+legacy map's coordinate space (`apps/web/public/assets/map.webp`, 884 x 442):
 `x` and `y` are percents of the whole image, the Light World on its left
 half (x 0 to 50), the Dark World on its right half. A marker stands for one
 location or several (a cave's chests), or for a dungeon's item locations.

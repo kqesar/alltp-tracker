@@ -46,7 +46,7 @@ test("tracks SMZ3: items, both maps by the logic, a reload keeping the run", asy
     await page
       .getByTestId("map-zebes")
       .evaluate((map) => getComputedStyle(map).backgroundImage),
-  ).toContain("smz3/zebes.png");
+  ).toContain("smz3/zebes.webp");
 
   await page.reload();
   await expect(page.getByTestId("smz3-item-hammer")).toHaveAccessibleName(
