@@ -23,6 +23,10 @@ axum = { version = "0.8.9", default-features = false, features = ["http1", "toki
 # The follow token, base64url: both already built for Tauri and its updater
 base64 = "0.23.1"
 getrandom = "0.4.3"
+# The relay's own accept loop (follow.rs): HTTP/1 with a header timeout and a
+# small read buffer, which axum::serve does not set. Both already under axum
+hyper = { version = "1.12.0", features = ["http1", "server"] }
+hyper-util = { version = "0.1.21", features = ["service", "tokio"] }
 # The commands' arguments and replies, and the events the page listens to
 serde = { version = "1", features = ["derive"] }
 # tauri::generate_context! writes the plugins' config as serde_json values
