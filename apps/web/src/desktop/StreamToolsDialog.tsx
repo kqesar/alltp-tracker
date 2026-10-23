@@ -3,6 +3,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import type { StreamSize } from "@/components/ui/StreamTools";
 import { useStreamStore } from "@/desktop/streamTools";
+import { overlayUrl } from "@/overlay/protocol";
 import { copyStatus, copyText } from "@/utils/clipboard";
 import { obsViewUrl } from "@/utils/view";
 
@@ -116,6 +117,10 @@ const StreamToolsDialog = ({
     session ? obsViewUrl({ base, timer, token: session.token }) : "";
   const url = session ? urlOn(session.address) : "";
   const lanUrl = session?.lanAddress ? urlOn(session.lanAddress) : "";
+  const apiUrl = session ? overlayUrl(session.address, session.apiToken) : "";
+  const lanApiUrl = session?.lanAddress
+    ? overlayUrl(session.lanAddress, session.apiToken)
+    : "";
   const sizes = (scale: number) => {
     if (!sizeOf) return "";
     const { height, width } = sizeOf(timer);
@@ -254,6 +259,20 @@ const StreamToolsDialog = ({
                 <code>&amp;bg=00ff00</code> to the URL for a solid colour to key
                 out.
               </p>
+              <AddressRow
+                key={apiUrl}
+                label="Overlay API address (WebSocket)"
+                testId="stream-tools-api"
+                url={apiUrl}
+              />
+              <p
+                className="stream-view__note"
+                data-testid="stream-tools-api-note"
+              >
+                For overlays and tools such as Streamer.bot: the items held, the
+                bosses beaten, the run timer and the go mode, never the checks.
+                Keep the address as secret as the one above.
+              </p>
               <div className="check-option">
                 <input
                   checked={session.lan}
@@ -284,6 +303,14 @@ const StreamToolsDialog = ({
                       This computer is on no network: only it can open the
                       address.
                     </p>
+                  )}
+                  {lanApiUrl && (
+                    <AddressRow
+                      key={lanApiUrl}
+                      label="Overlay API for another computer or device"
+                      testId="stream-tools-lan-api"
+                      url={lanApiUrl}
+                    />
                   )}
                   <p
                     className="stream-view__note"

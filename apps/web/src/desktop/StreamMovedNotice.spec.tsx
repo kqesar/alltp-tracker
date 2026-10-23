@@ -12,6 +12,7 @@ const { default: StreamMovedNotice } = await import(
 
 const SESSION = {
   address: "http://127.0.0.1:44897/",
+  apiToken: "ABCDEFGHIJKLMNOPQRSTUV",
   lan: false,
   lanAddress: null,
   moved: true,
