@@ -13,7 +13,7 @@ flowchart LR
     rec["CI / tested<br/>records the tested tree"]
     vc["Validate Conventional Commits"]
     cq_pr["CodeQL (TypeScript)<br/>+ workflows, if .github/ changed"]
-    dk_pr["Desktop / rust<br/>only if apps/desktop/** changed"]
+    dk_pr["Desktop / rust + platforms<br/>only if apps/desktop/** changed"]
     ci_pr & e2e_pr --> rec
   end
   subgraph MASTER["Push to master"]
@@ -44,7 +44,7 @@ flowchart LR
 | `codeql-analysis.yml` | PR, push to master, weekly | Static security analysis of the TypeScript. Never blocks a deploy. |
 | `codeql-actions.yml` | PR and master when `.github/**` changed, weekly | The same analysis for the workflows themselves. Its only input is `.github/`, so no other change can alter its result; the weekly run covers new CodeQL queries. |
 | `validate-commits.yml` | PR | Runs the repository's own `commitlint` over the PR's commits, so release-please can read them. |
-| `desktop.yml` | PR and master, `apps/desktop/**` only | Rust side of the desktop app: `fmt`, `clippy`, tests. |
+| `desktop.yml` | PR and master, `apps/desktop/**` only | Rust side of the desktop app: `fmt`, `clippy` and tests on Linux, and `clippy` again on Windows and macOS (the code that compiles on one system only). |
 | `desktop-release.yml` | `workflow_dispatch`, started by the `desktop` job of `ci.yml` or by hand | The desktop installers for 4 targets, built from the release's tag and attached to it, after a check of the tag. A run of its own, so it neither holds the master queue nor turns master red. See "Releases". |
 | `logic-drift.yml` | weekly, manual | Compares the pinned randomizer commit with upstream and opens an issue on drift. |
 
@@ -97,7 +97,7 @@ The last condition closes a hole. Pushes to master queue in one concurrency grou
 
 What is skipped on a release commit: `ci`, `e2e`, `build`, `deploy` and CodeQL. What is not: the `release-please` job of the same run (it tags the release), and so the `desktop` job after it (see "Releases"). `codeql-actions.yml` is path-filtered to `.github/**`, which a release never touches.
 
-The release check comes **first** in `plan.sh`, so a release commit is never promoted. The two rules would rarely overlap anyway, since a release commit's tree is not one a feature pull request tested. The release pull request itself has that tree, but the bot token that opens it starts no checks, so nothing records it today; with a GitHub App token (item 9 of the plan) it would, which is harmless: the release is checked first, and the site is identical.
+The release check comes **first** in `plan.sh`, so a release commit is never promoted. The two rules would rarely overlap anyway, since a release commit's tree is not one a feature pull request tested. The release pull request itself has that tree, but the bot token that opens it starts no checks, so nothing records it today; with a GitHub App token in place of the bot token it would, which is harmless: the release is checked first, and the site is identical.
 
 The script is `.github/scripts/is-release-commit.sh`. It reads the push through the compare API (`BEFORE...AFTER`), so it needs no deep checkout.
 
