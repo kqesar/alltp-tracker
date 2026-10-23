@@ -38,6 +38,14 @@ export default defineConfig({
       "apps/web/vitest.perf.config.ts",
       "packages/*",
       "packs/*",
+      // The repository's own scripts (plain Node, no config of their own)
+      {
+        test: {
+          environment: "node",
+          include: ["scripts/**/*.spec.mjs"],
+          name: "scripts",
+        },
+      },
     ],
   },
 });

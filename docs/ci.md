@@ -44,16 +44,18 @@ flowchart LR
 | `codeql-analysis.yml` | PR, push to master, weekly | Static security analysis of the TypeScript. Never blocks a deploy. |
 | `codeql-actions.yml` | PR and master when `.github/**` changed, weekly | The same analysis for the workflows themselves. Its only input is `.github/`, so no other change can alter its result; the weekly run covers new CodeQL queries. |
 | `validate-commits.yml` | PR | Runs the repository's own `commitlint` over the PR's commits, so release-please can read them. |
+| `docs.yml` | PR and push to master, every path | `scripts/check-docs.mjs` over the tracked Markdown: each relative link and its `#anchor`, and each repository path quoted in backticks, must exist. See "The docs check". |
 | `desktop.yml` | PR and master, `apps/desktop/**` only | Rust side of the desktop app: `fmt`, `clippy` and tests on Linux, and `clippy` again on Windows and macOS (the code that compiles on one system only). |
 | `desktop-release.yml` | `workflow_dispatch`, started by the `desktop` job of `ci.yml` or by hand | The desktop installers for 4 targets, built from the release's tag and attached to it, after a check of the tag. A run of its own, so it neither holds the master queue nor turns master red. See "Releases". |
 | `logic-drift.yml` | weekly, manual | Compares the pinned randomizer commit with upstream and opens an issue on drift. |
 
-Markdown-only changes skip `ci.yml` and CodeQL (`paths-ignore`): no job reads them.
+Markdown-only changes skip `ci.yml` and CodeQL (`paths-ignore`): no job reads them, but `docs.yml` has no path filter and still checks their links.
 
 ## Jobs
 
 - **`plan`** exists on pushes and on the nightly run (a pull request has none, and without one every job runs). It checks out `.github/scripts` alone and runs `plan.sh`, which prints `mode=skip|promote|full`. About 10 s on a runner of its own. If it fails, its mode is empty and everything runs.
 - **`ci`** runs lint (Biome), the TypeScript build over every workspace, and the unit tests with coverage floors. It is CPU-bound (Vitest creates one jsdom per spec file) and is the longest non-browser job. On a PR it also posts a results comment. It runs in `full` mode and on pull requests.
+- **`docs`** (`docs.yml`, job `check-docs`) runs `node scripts/check-docs.mjs` on every pull request and push to master, on the runner's own Node, with no install. See "The docs check".
 - **`e2e`** builds the site and serves that production build to Playwright with axe-core, on the runner's preinstalled Chrome (no browser download). The suite is split over three runners with Playwright's `--shard`, because a runner's cores are already saturated by two browsers: only another runner shortens the wait. Playwright splits by test count, not by duration, so shards are never equal (the heaviest files hold a few 7 to 12 s tests); a fourth shard would gain about 35 s more while a PR already takes 7 to 8 of the 20 concurrent job slots. The shard count is the matrix's size (`strategy.job-total`) and is read from there by the job name and the `--shard` flag. A failed shard uploads its own report (`playwright-report-<n>`, 7 days); the reports are not merged. The shard that runs on master (not the nightly run) also uploads the built site as the Pages artifact, so `deploy` publishes exactly what the tests exercised. Like `ci`, it runs in `full` mode and on pull requests.
 - **`tested`** runs on a pull request whose head is in this repository, once `ci` and every `e2e` shard are green, and uploads the record of the tested tree. See "Promoting a tested tree". Its condition tests `needs.*.result` instead of the implicit `success()`: a pull request has no `plan`, a skipped job that `ci` and `e2e` wait for, and an implicit `success()` would count it against this job too. It is `continue-on-error`: a failing lookup must not turn a green pull request red; master just tests.
 - **`build`** runs in `promote` mode only: it builds the site (`vite build`, the speech model from its cache) and uploads the Pages artifact, in place of the `e2e` shard that does so in `full` mode.
@@ -319,3 +321,13 @@ Consequences and limits:
 - The macOS and Windows jobs of the installers' matrix no longer keep their own pnpm store (66 and 79 MB): they download the dependencies at each release, a few seconds. Saving one copy per release from each would have re-created the duplicates.
 - A promoted push runs no `ci`, so it saves no store. After a dependency update merged that way, the new store is saved by the next full run on master, at the latest the nightly one; until then pull requests restore the older store and install the difference.
 - Cache entries of a deleted branch or closed PR are evicted after 7 days without access, or earlier by LRU. `gh cache list` and `gh api repos/<owner>/<repo>/actions/cache/usage` show the state; `gh cache delete <key>` removes an entry.
+
+## The docs check
+
+`scripts/check-docs.mjs` (plain Node, no dependency; `pnpm check:docs` locally) reads every git-tracked `.md` file except `CHANGELOG.md` and reports `file:line message`, exiting 1 on any failure:
+
+- **Links.** Each relative Markdown link (inline, image, reference definition, `href` / `src`) must point at an existing file or folder, and its `#anchor` at a heading of the target file, slugged as GitHub does (`github-slugger`: lowercase, punctuation dropped, spaces to `-`, repeated headings numbered `-1`, `-2`). External URLs are not fetched.
+- **Quoted paths.** Each code span that starts with `apps/`, `packages/`, `packs/`, `docs/`, `.github/`, `scripts/` or `.claude/` must exist. A trailing `:line` is dropped; a span with a glob or a placeholder (`*`, `<id>`, `{a,b}`) is no path; a path that git ignores (a build output) passes. Spell a path from the repository root, not from the package that holds it: that is what the check resolves.
+- Fenced code blocks are skipped: they hold trees and commands, not claims.
+
+It runs in `docs.yml` rather than in the `ci` job because `ci.yml` ignores Markdown-only changes (`paths-ignore`, see above), the changes most likely to break a link; a workflow with no path filter also catches a code change that renames a file a doc quotes. It catches the commonest cause of a false doc, a moved or deleted file, and nothing else: a description that stopped being true still passes, which is why `CLAUDE.md` asks for the doc to change in the same pull request as the behaviour. The slug and parsing logic is unit-tested in `scripts/check-docs.spec.mjs` (the `scripts` Vitest project).

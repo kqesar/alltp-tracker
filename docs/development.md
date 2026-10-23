@@ -21,6 +21,7 @@ pnpm dev          # http://localhost:5173
 | `pnpm preview` | serve the production build |
 | `pnpm typecheck` | type-check every workspace |
 | `pnpm lint` / `pnpm lint:fix` | Biome check / autofix |
+| `pnpm check:docs` | every Markdown link, anchor and quoted repository path resolves (CI: `docs.yml`) |
 | `pnpm test` | unit tests (app, engine, autotracking and game packs) |
 | `pnpm test:coverage` | unit tests with the coverage floors CI enforces |
 | `pnpm test:coverage:show` | the same, with a coverage table |
