@@ -1,8 +1,9 @@
 import { solve } from "@alltp/engine";
+import { MEDALLION_RULES } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import { derivedFacts } from "./derived";
 import { fromUpstream, ITEMS, stateFromUpstream } from "./items";
-import { medallionFacts } from "./medallions";
+import { MEDALLION_HELPERS, medallionFacts } from "./medallions";
 import { compile, rules, toState, world } from "./pack";
 import {
   DEFAULT_SETTINGS,
@@ -106,6 +107,17 @@ describe("the state's facts", () => {
       turtleRockUnknown: 1,
     });
     expect(medallionFacts({})).toEqual({});
+  });
+
+  it("open a pad by the same rule as A Link to the Past's", () => {
+    // The two packs model one game fact; a rule that moved in one only would
+    // make the same pad open differently (alttpr is a dev dependency)
+    expect(MEDALLION_HELPERS.hasMireMedallion).toBe(
+      MEDALLION_RULES.hasMireMedallion.req,
+    );
+    expect(MEDALLION_HELPERS.hasTurtleRockMedallion).toBe(
+      MEDALLION_RULES.hasTurtleRockMedallion.req,
+    );
   });
 });
 
