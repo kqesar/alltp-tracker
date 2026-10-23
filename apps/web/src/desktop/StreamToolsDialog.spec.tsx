@@ -281,6 +281,29 @@ describe("StreamToolsDialog", () => {
     });
   });
 
+  it("asks the app again when it opens on a running stream", async () => {
+    act(() => useStreamStore.setState({ session: { ...SESSION } }));
+    tauri.invoke.mockImplementation(async (command: string) =>
+      command === "stream_state"
+        ? { ...SESSION, lan: true, lanAddress: "http://10.0.0.5:23076/" }
+        : undefined,
+    );
+
+    show();
+
+    expect(
+      await screen.findByTestId("stream-tools-lan-address-url"),
+    ).toHaveValue(
+      "http://10.0.0.5:23076/?view=obs&token=abcdefghijklmnopqrstuv",
+    );
+  });
+
+  it("does not ask the app when it opens on a stream that is off", () => {
+    show();
+
+    expect(tauri.invoke).not.toHaveBeenCalled();
+  });
+
   it("tells a player to start the app before OBS, or refresh the source", () => {
     show();
     running();

@@ -357,4 +357,65 @@ describe("the stream view in the desktop app", () => {
       expect(useStreamStore.getState().session?.viewers).toBe(2);
     });
   });
+
+  describe("a failed command", () => {
+    const warn = vi.spyOn(console, "warn");
+    beforeEach(() => warn.mockImplementation(() => {}));
+    afterEach(() => warn.mockReset());
+
+    it("holds every other command until the app has said how the stream stands", async () => {
+      let say: (session: typeof SESSION | null) => void = () => {};
+      tauri.invoke.mockImplementation(async (command: string) => {
+        if (command === "stream_start") throw "could not open the port";
+        if (command === "stream_state") {
+          return new Promise((resolve) => {
+            say = resolve;
+          });
+        }
+        return undefined;
+      });
+
+      const starting = useStreamStore.getState().start();
+      await vi.waitFor(() => expect(say).not.toBe(undefined));
+      // The answer is not in yet: still pending, and a new command waits its turn
+      expect(useStreamStore.getState().pending).toBe(true);
+      await useStreamStore.getState().setLan(true);
+      expect(calls("stream_set_lan")).toEqual([]);
+
+      say(null);
+      await starting;
+
+      expect(useStreamStore.getState()).toMatchObject({
+        error: "could not open the port",
+        pending: false,
+        session: null,
+      });
+    });
+  });
+
+  it("stops publishing when a change answers that the stream is off", async () => {
+    await useStreamStore.getState().start();
+    expect(listeners.size).toBe(1);
+    tauri.invoke.mockImplementation(async () => null);
+
+    await useStreamStore.getState().setLan(true);
+
+    expect(useStreamStore.getState().session).toBeNull();
+    expect(listeners.size).toBe(0);
+  });
+
+  it("asks the app again on demand, for an address that may have changed", async () => {
+    await useStreamStore.getState().start();
+    tauri.invoke.mockImplementation(async (command: string) =>
+      command === "stream_state"
+        ? { ...SESSION, lan: true, lanAddress: "http://10.0.0.5:23076/" }
+        : undefined,
+    );
+
+    await useStreamStore.getState().refresh();
+
+    expect(useStreamStore.getState().session?.lanAddress).toBe(
+      "http://10.0.0.5:23076/",
+    );
+  });
 });

@@ -49,6 +49,11 @@ type StreamStore = {
   stop: () => Promise<void>;
   /** Replace the addresses: the sources holding the old ones are closed */
   newTokens: () => Promise<void>;
+  /**
+   * Ask the app how the stream stands: what the dialog does when it opens on
+   * a running stream, since the network address can have changed since.
+   */
+  refresh: () => Promise<void>;
   /** Allow other devices on the network, or take that back */
   setLan: (lan: boolean) => Promise<void>;
   dismissMovedNotice: () => void;
@@ -78,6 +83,26 @@ const resync = async (
   }
 };
 
+/**
+ * A command failed: say why, and ask the app how the stream stands. `pending`
+ * stays on until it answers, so no other command runs meanwhile and the
+ * answer is never older than the next command's result.
+ */
+const failed = async (
+  set: (state: Partial<StreamStore>) => void,
+  error: unknown,
+): Promise<void> => {
+  set({ error: String(error) });
+  await resync(set);
+  set({ pending: false });
+};
+
+/** The run is published while a session runs, and only then. */
+const publishWhile = (session: StreamSession | null) => {
+  if (session) holdRun(OWNER);
+  else releaseRun(OWNER);
+};
+
 export const useStreamStore = create<StreamStore>()((set, get) => ({
   dismissMovedNotice: () => set({ movedNotice: false }),
   error: null,
@@ -88,13 +113,17 @@ export const useStreamStore = create<StreamStore>()((set, get) => ({
     try {
       const session = await invoke<StreamSession | null>("stream_new_tokens");
       set({ pending: false, session });
+      publishWhile(session);
     } catch (error) {
       console.warn("Could not make new addresses:", error);
-      set({ error: String(error), pending: false });
-      await resync(set);
+      await failed(set, error);
     }
   },
   pending: false,
+  refresh: async () => {
+    if (get().pending) return;
+    await resync(set);
+  },
   session: null,
   setLan: async (lan) => {
     if (get().pending) return;
@@ -104,10 +133,10 @@ export const useStreamStore = create<StreamStore>()((set, get) => ({
         lan,
       });
       set({ pending: false, session });
+      publishWhile(session);
     } catch (error) {
       console.warn("Could not change who can reach the stream:", error);
-      set({ error: String(error), pending: false });
-      await resync(set);
+      await failed(set, error);
     }
   },
   start: async () => {
@@ -124,8 +153,7 @@ export const useStreamStore = create<StreamStore>()((set, get) => ({
       holdRun(OWNER);
     } catch (error) {
       console.warn("Could not start the stream:", error);
-      set({ error: String(error), pending: false });
-      await resync(set);
+      await failed(set, error);
     } finally {
       heardViewers = null;
     }
@@ -140,8 +168,7 @@ export const useStreamStore = create<StreamStore>()((set, get) => ({
       set({ movedNotice: false, pending: false, session: null });
     } catch (error) {
       console.warn("Could not stop the stream:", error);
-      set({ error: String(error), pending: false });
-      await resync(set);
+      await failed(set, error);
     }
   },
 }));

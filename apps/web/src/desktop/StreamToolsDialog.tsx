@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import type { StreamSize } from "@/components/ui/StreamTools";
@@ -104,6 +104,14 @@ const StreamToolsDialog = ({
   const timerId = useId();
   const lanId = useId();
   const on = session !== null;
+
+  // Opened on a running stream: its network address may have changed
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once, on open
+  useEffect(() => {
+    if (useStreamStore.getState().session) {
+      void useStreamStore.getState().refresh();
+    }
+  }, []);
 
   const urlOn = (base: string) =>
     session ? obsViewUrl({ base, timer, token: session.token }) : "";
