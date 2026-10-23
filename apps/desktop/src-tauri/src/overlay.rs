@@ -155,6 +155,15 @@ impl OverlayFeed {
         Ok(())
     }
 
+    /// Forgets the latest state, so a client that connects before the page
+    /// publishes again gets none rather than a run that may be gone: what the
+    /// stream does when it is turned off. The numbers go on.
+    pub fn clear(&self) {
+        if let Ok(_seq) = self.inner.seq.lock() {
+            self.inner.latest.send_replace(None);
+        }
+    }
+
     /// A client's source. Subscribed to the updates here, and the state read
     /// on its first frame: an update published between the two is in both
     /// and skipped by its number, none is lost.
@@ -401,6 +410,20 @@ mod tests {
             .unwrap()
             .as_millis() as u64;
         assert!(beat["now"].as_u64().unwrap().abs_diff(now) < 5_000);
+    }
+
+    #[tokio::test]
+    async fn a_cleared_feed_gives_a_new_client_nothing_and_goes_on_numbering() {
+        let feed = OverlayFeed::new();
+        feed.publish(r#"{"n":1}"#, "[]").unwrap();
+        feed.clear();
+        let mut source = feed.source();
+        assert!(quiet(&mut source).await);
+        feed.publish(r#"{"n":2}"#, "[]").unwrap();
+        let frame = next(&mut source).await;
+        assert_eq!(frame["type"], "update");
+        assert_eq!(frame["seq"], 2);
+        assert_eq!(frame["state"]["n"], 2);
     }
 
     #[test]

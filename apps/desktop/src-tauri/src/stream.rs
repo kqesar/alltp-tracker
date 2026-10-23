@@ -411,6 +411,9 @@ impl Stream {
         if let Some(running) = inner.running.take() {
             running.session.stop().await;
         }
+        // The page publishes only while the stream is on: what it last said
+        // may be of a run that is gone by the next start
+        self.overlay.clear();
         let Ok(mut config) = self.config(&mut inner) else {
             return;
         };
@@ -1372,7 +1375,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn stopping_closes_the_clients_and_the_last_state_outlives_the_session() {
+    async fn stopping_closes_the_clients_and_forgets_the_state_it_held() {
         let dir = Scratch::new();
         let overlay = OverlayFeed::new();
         let (stream, _) = stream_over(&dir, free_port().await, &RunFeed::new(), &overlay);
@@ -1384,13 +1387,26 @@ mod tests {
         stream.stop().await;
         assert_eq!(close_code(&mut client).await, close::STOPPED);
 
-        // Published while off, kept: the next session serves it at once
-        overlay.publish(r#"{"n":2}"#, "[]").unwrap();
+        // The run may have changed while it was off: a client that connects
+        // before the page has published again gets no state, not the old one
         let again = stream.start().await.unwrap();
         let mut late = api(&again, &dir).await;
-        let state = frame(&mut late).await;
+        let nothing = tokio::time::timeout(Duration::from_millis(300), next(&mut late)).await;
+        assert!(nothing.is_err(), "the old run was served");
+        overlay.publish(r#"{"n":2}"#, "[]").unwrap();
+        let update = frame(&mut late).await;
+        assert_eq!(update["type"], "update");
+        assert_eq!(update["seq"], 2);
+        assert_eq!(update["state"]["n"], 2);
+        stream.stop().await;
+
+        // What the page publishes after the stop is the newest: kept
+        overlay.publish(r#"{"n":3}"#, "[]").unwrap();
+        let third = stream.start().await.unwrap();
+        let mut last = api(&third, &dir).await;
+        let state = frame(&mut last).await;
         assert_eq!(state["type"], "state");
-        assert_eq!(state["state"]["n"], 2);
+        assert_eq!(state["state"]["n"], 3);
         stream.stop().await;
     }
 
