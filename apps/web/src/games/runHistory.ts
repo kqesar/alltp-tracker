@@ -14,8 +14,12 @@ export type History<P> = {
   past: P[];
 };
 
-/** What an action changes in the store: the run, its history, or both. */
-type Changes<P> = Partial<P> & Partial<History<P>>;
+/**
+ * What an action changes in the store: some of the run and of its history, or
+ * the history alone (TypeScript cannot tell that `{ future, past }` is no
+ * change to a generic run `P`).
+ */
+type Changes<P> = (Partial<P> & Partial<History<P>>) | History<P>;
 
 /**
  * The actions of a store whose state is a run `P` and its `History<P>`, over
@@ -44,15 +48,11 @@ export const historyActions = <P extends object>({
         const changed = change(run);
         return changed === null ? run : { ...run, ...changed };
       });
-    // TypeScript cannot tell that a run `P` leaves `future` and `past` alone
-    set(
-      () =>
-        ({
-          ...now,
-          future: rebase(state.future),
-          past: rebase(state.past),
-        }) as Changes<P>,
-    );
+    set(() => ({
+      ...now,
+      future: rebase(state.future),
+      past: rebase(state.past),
+    }));
   },
   /** A change of the player's: one step of the history. */
   record: (change: Partial<P>) =>
