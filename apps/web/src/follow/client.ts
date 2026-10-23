@@ -5,7 +5,7 @@
 
 import { type GameId, isGameId, type RunStore } from "@/games/registry";
 
-/** The largest run the relay passes on (`MAX_VALUE` in follow.rs). */
+/** The largest run the relay passes on (`MAX_VALUE` in feed.rs). */
 const MAX_VALUE = 1 << 20;
 
 /**
@@ -17,9 +17,12 @@ export const STALE_AFTER = 35_000;
 
 /** What the relay's close codes mean (relay.rs, `close`). */
 export const CLOSE = {
-  /** Eight devices already follow: retry later */
+  /** Every seat is taken (8 for live follow, 16 for the stream): retry later */
   FULL: 4503,
-  /** The player turned live follow off, or quit the app: no retry */
+  /**
+   * The player turned the server off, or quit the app. Ends a phone's view
+   * (`endOnStop`); a browser source retries, to be there when it is back.
+   */
   STOPPED: 4410,
   /** The token is not the running session's: the link is out of date */
   TOKEN: 4401,
