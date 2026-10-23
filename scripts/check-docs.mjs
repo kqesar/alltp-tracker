@@ -107,13 +107,13 @@ const maskSpans = (text) => {
  * The anchor GitHub gives a heading: lowercased, anything but letters,
  * marks, numbers, `_`, `-` and spaces dropped, spaces turned into `-`
  * (github-slugger). Markup is rendered first: a link keeps its text, a code
- * span its content, emphasis marks and HTML tags go.
+ * span its content, emphasis marks go. Inline HTML in a heading is not
+ * rendered (no heading uses any).
  * @param {string} heading - A heading's Markdown
  */
 export const slugify = (heading) =>
   heading
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/<[^>]+>/g, "")
     .replace(/(`+)(.+?)\1/g, "$2")
     .replace(/\*+/g, "")
     .replace(/(^|[\s(])_+([^_]+?)_+(?=$|[\s).,:;!?])/g, "$1$2")
