@@ -225,7 +225,7 @@ to the rupee bow.
 
 vt hands a seed with shuffled entrances to the entrance randomizer, a Python
 program at the commit vt's composer.json pins (`upstream.json`,
-`entranceRandomizer`). `scripts/import-er.mjs` reads its tables into
+`entranceRandomizer`). `packs/alttpr/scripts/import-er.mjs` reads its tables into
 `src/entrances/er.json`, and its rules into `src/entrances/rules.json`
 (below); the repository's Biome then formats both, so a re-import of the
 same commit changes nothing:
@@ -234,7 +234,7 @@ same commit changes nothing:
 pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
 ```
 
-- **Read, never run.** A small Python reader (`scripts/python.mjs`) reads
+- **Read, never run.** A small Python reader (`packs/alttpr/scripts/python.mjs`) reads
   the literals the source assigns or passes (`Cave_Exits_Base = [...]`,
   its later `+=`, `scramble_holes`' lists, `skull_woods_shuffle`'s calls,
   the `create_*_region` calls of `Regions.py`). Anything else there stops
@@ -333,7 +333,7 @@ A seed with shuffled entrances is filled by the entrance randomizer, under
 its own rules (`Rules.py`, `Bosses.py`), dungeons included: not vt's, which
 the regions of this pack port. The same run of `import-er` translates them
 into the engine's language, `src/entrances/rules.json`
-(`scripts/er-rules.mjs`, over the Python reader `scripts/python.mjs`).
+(`packs/alttpr/scripts/er-rules.mjs`, over the Python reader `packs/alttpr/scripts/python.mjs`).
 
 ```mermaid
 flowchart LR
@@ -455,7 +455,7 @@ flowchart LR
   once per entrance noted; a solve about 0.2 ms.
 
 The randomizer's own tests hold it: `test/er-upstream/` (510 cases of its
-dungeon and Death Mountain tests, imported by `scripts/er-tests.mjs` with
+dungeon and Death Mountain tests, imported by `packs/alttpr/scripts/er-tests.mjs` with
 the world each `setUp` builds) run in `test/er-contract.spec.ts` under the
 pack's contract, upstream `true` our `yes` and `false` never `yes`. And on
 the real Crosskeys seed `0yAObedRMV`, every entrance noted from its

@@ -12,7 +12,7 @@ Read from [`tewtal/SMZ3Randomizer`](https://github.com/tewtal/SMZ3Randomizer) (M
 | `src/settings.ts` | a run's settings, and the item placements rules ask about | `Config.cs`, `RandomizerOptions.cs` |
 | `src/medallions.ts`, `src/derived.ts` | the facts a state carries beside the items | `MiseryMire.cs`, `TurtleRock.cs`, `PalaceOfDarkness.cs`, `IcePalace.cs` |
 | `src/world.ts`, `src/pack.ts` | the graph, compiled for a run | `Region.cs`, `Location.cs` |
-| `scripts/import-upstream-tests.mjs` | upstream's tests as JSON fixtures | `Randomizer.SMZ3.Tests/Logic/**` |
+| `packs/smz3/scripts/import-upstream-tests.mjs` | upstream's tests as JSON fixtures | `Randomizer.SMZ3.Tests/Logic/**` |
 | `src/markers.ts` | where the maps draw each location: Zebes's markers, Hyrule's by world, `ZELDA_ALIASES` | VARIA's map (`theonlydude/RandomMetroidSolver`, MIT), `@alltp/pack-alttpr`'s markers |
 | `src/autotrack/*.ts` | autotracking: the memory map, its modes, the race profile, the decoders | `tewtal/alttp_sm_combo_randomizer_rom` (the combo ROM's ASM), `Patch.cs` |
 
