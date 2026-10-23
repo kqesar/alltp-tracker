@@ -97,7 +97,7 @@ A link for another game is laid in that game's store, then the page loads again 
 Share does two things in one click, the same in the three games (`components/ui/ShareDialog.tsx`, on the shared `Modal`):
 
 1. **It copies the link at once.** `shareRun` starts the copy before its first `await`: the text goes to the browser as a promise inside a `ClipboardItem` (Safari wants the copy to start in the click and accepts the text a moment later), with `writeText` as the fallback. It returns `{ link, message }`: the link made and the line to tell the player.
-2. **It opens the dialog** "Share this run": the line in a `role="status"` region ("Copying…" while the link is made, then copied, copied without the timeline, long-link warning, clipboard refused, or the `RunLinkError` message), the QR code of that very link (same tier, same fallback rule), a line of help (scan it to open the run on another device; a snapshot that does not follow the game) and **Copy again**, a `writeText` inside its own click that updates the line. The toolbar's status no longer announces Share.
+2. **It opens the dialog** "Share this run": the line in a `role="status"` region ("Copying…" while the link is made, then copied, copied without the timeline, long-link warning, clipboard refused, or the `RunLinkError` message), the QR code of that very link (same tier, same fallback rule), a line of help (scan it to open the run on another device; a snapshot that does not follow the game) and **Copy the snapshot link** (named after what it copies: in the desktop app it sits under live follow's own link), a `writeText` inside its own click that updates the line. The toolbar's status no longer announces Share.
 
 A clipboard refusal still shows the QR code: it is the way out then. No link at all (`RunLinkError`, a browser that cannot compress) shows only the reason.
 
@@ -114,7 +114,7 @@ sequenceDiagram
   S-->>D: { link, message }
   D->>Q: lazy import, once, on first display
   Q-->>D: SVG of the link
-  P->>D: Copy again (writeText in the click)
+  P->>D: Copy the snapshot link (writeText in the click)
 ```
 
 ### The code
@@ -172,8 +172,8 @@ What the tracker does about it:
 | `apps/web/src/share/packed.ts` | The packed form: codec framework, table sizes and digest, bitset field, pack and unpack |
 | `apps/web/src/share/bytes.ts` | Base64url, varints, bit writer and reader (Rice codes) |
 | `apps/web/src/games/alttpr/share.ts`, `games/smz3/share.ts` | A game's codec: its fields and the append-only tables they index |
-| `apps/web/src/share/shareRun.ts` | Share's action: tiers, clipboard, the line for the dialog; `copyLink` for Copy again |
-| `apps/web/src/components/ui/ShareDialog.tsx` | The dialog Share opens: outcome line, QR code, Copy again |
+| `apps/web/src/share/shareRun.ts` | Share's action: tiers, clipboard, the line for the dialog; `copyLink` for the footer's copy |
+| `apps/web/src/components/ui/ShareDialog.tsx` | The dialog Share opens: outcome line, QR code, Copy the snapshot link |
 | `apps/web/src/components/ui/QrCode.tsx` | The QR code as one SVG path (lazy chunk with `lean-qr`) |
 | `apps/web/src/components/ui/SharedRunPrompt.tsx` | The notice that asks, opens or keeps |
 | `apps/web/src/games/*/module.ts` | `importRun`, the game's own validation |

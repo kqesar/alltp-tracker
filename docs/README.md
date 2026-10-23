@@ -12,7 +12,8 @@
   release is cut.
 - [Sharing a run](share.md): the link format, its bounds, how it is opened and validated, its
   measured lengths, and the Share dialog's QR code.
-- [Desktop app](desktop.md): the Tauri app, its updates, global shortcuts and application menu.
+- [Desktop app](desktop.md): the Tauri app, its updates, global shortcuts, application menu and
+  live follow on the LAN.
 - [Search engines and link previews](seo.md): the per-game pages, their tags and preview
   images.
 - [Logic engine](../packages/engine/README.md): the rule language and the three-valued solver.
