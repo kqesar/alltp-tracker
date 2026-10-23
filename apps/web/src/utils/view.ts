@@ -23,8 +23,11 @@ export const isFollowView = (
 /**
  * The address of the run's stream for the followed view and the relayed
  * stream view: `/follow` on the host that served the page (the desktop app's
- * relay), with the link's token. Only the token is taken from the address, so
- * a link can never point the page at another host.
+ * relay). The address names no token, and nothing else of the page's is
+ * taken, so a link can never point the page at another host; the token goes
+ * in `followProtocol`. A failed WebSocket connection is logged with its
+ * address (OBS writes a browser source's console errors to its log, which
+ * streamers share), so the token must not be in it.
  * @param page - The address of the current page
  */
 export const followSocketUrl = (
@@ -33,8 +36,19 @@ export const followSocketUrl = (
   const address = new URL(page);
   const url = new URL("/follow", address);
   url.protocol = address.protocol === "https:" ? "wss:" : "ws:";
-  url.searchParams.set("token", address.searchParams.get("token") ?? "");
   return url.href;
+};
+
+/**
+ * The WebSocket subprotocol that carries the link's token to the relay:
+ * `alltp.<token>` (relay.rs, `Gate::admit`). A subprotocol is an HTTP token,
+ * so anything else is dropped from the link's value: such a link is not a
+ * valid one, and the relay refuses it (4401) as it would any wrong token.
+ * @param page - The address of the current page
+ */
+export const followProtocol = (page: string = window.location.href): string => {
+  const token = new URL(page).searchParams.get("token") ?? "";
+  return `alltp.${token.replace(/[^A-Za-z0-9_-]/g, "")}`;
 };
 
 /** `&token=` names the desktop app's stream the view is served by. */

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   bridgeUrl,
   fitObsGrid,
+  followProtocol,
+  followSocketUrl,
   isObsView,
   isRelayedObsView,
   obsBackground,
@@ -102,6 +104,26 @@ describe("bridgeUrl", () => {
     expect(bridgeUrl()).toBe("ws://localhost:8080");
     window.history.replaceState(null, "", "/");
     expect(bridgeUrl()).toBeUndefined();
+  });
+});
+
+describe("followSocketUrl and followProtocol", () => {
+  const page = "http://192.168.1.20:23076/?view=obs&token=abc-DEF_123&timer=1";
+
+  it("point at /follow on the page's host, with no token in the address", () => {
+    expect(followSocketUrl(page)).toBe("ws://192.168.1.20:23076/follow");
+    expect(followSocketUrl("https://example.org/x?token=t")).toBe(
+      "wss://example.org/follow",
+    );
+  });
+
+  it("carry the link's token as a subprotocol instead", () => {
+    expect(followProtocol(page)).toBe("alltp.abc-DEF_123");
+    expect(followProtocol("http://h/?view=obs")).toBe("alltp.");
+  });
+
+  it("leave out what a subprotocol cannot hold, so the relay refuses the link", () => {
+    expect(followProtocol("http://h/?token=a%20b,c%3Bd")).toBe("alltp.abcd");
   });
 });
 

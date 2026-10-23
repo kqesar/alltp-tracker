@@ -5,6 +5,7 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 /** The app's side of the socket the view opens. */
 class FakeSocket {
+  protocols?: string[];
   onmessage: ((event: MessageEvent) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
   close() {}
@@ -17,8 +18,9 @@ class FakeSocket {
 }
 
 let sockets: FakeSocket[];
-const open = () => {
+const open = (_url: string, protocols?: string[]) => {
   const socket = new FakeSocket();
+  socket.protocols = protocols;
   sockets.push(socket);
   return socket as unknown as WebSocket;
 };
@@ -65,6 +67,12 @@ describe("StreamSourceView", () => {
     expect(document.documentElement.dataset.view).toBe("obs");
     expect(document.title).toBe("Rando Atlas stream view");
     expect(screen.queryByTestId("stream-timer")).not.toBeInTheDocument();
+  });
+
+  it("sends its token as a subprotocol, not in the address a failure would log", () => {
+    render(<StreamSourceView open={open} />);
+
+    expect(sockets[0].protocols).toEqual(["alltp.abc"]);
   });
 
   it("takes the timer and the background from its address, as the site's does", async () => {

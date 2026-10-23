@@ -16,7 +16,10 @@ class FakeSocket {
   onmessage: ((event: MessageEvent) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
   closed = false;
-  constructor(readonly url: string) {}
+  constructor(
+    readonly url: string,
+    readonly protocols?: string[],
+  ) {}
   receive(data: unknown) {
     this.onmessage?.({ data } as MessageEvent);
   }
@@ -312,6 +315,51 @@ describe("follow", () => {
     const count = statuses.length;
     second.drop();
     expect(statuses).toHaveLength(count);
+  });
+});
+
+describe("follow, with the token in a subprotocol", () => {
+  it("offers it on every connection, and the address names none", () => {
+    vi.useFakeTimers();
+    const sockets: FakeSocket[] = [];
+    const stop = follow({
+      onSnapshot: () => {},
+      onStatus: () => {},
+      open: (url, protocols) => {
+        const socket = new FakeSocket(url, protocols);
+        sockets.push(socket);
+        return socket as unknown as WebSocket;
+      },
+      protocol: "alltp.abc",
+      url: "ws://127.0.0.1:23076/follow",
+    });
+    sockets[0].drop();
+    vi.advanceTimersByTime(1000);
+    stop();
+    vi.useRealTimers();
+
+    expect(sockets.map((socket) => socket.protocols)).toEqual([
+      ["alltp.abc"],
+      ["alltp.abc"],
+    ]);
+    expect(sockets.every((socket) => !socket.url.includes("abc"))).toBe(true);
+  });
+
+  it("offers none when it has no token to carry", () => {
+    const sockets: FakeSocket[] = [];
+    const stop = follow({
+      onSnapshot: () => {},
+      onStatus: () => {},
+      open: (url, protocols) => {
+        const socket = new FakeSocket(url, protocols);
+        sockets.push(socket);
+        return socket as unknown as WebSocket;
+      },
+      url: "ws://host/follow?token=abc",
+    });
+    stop();
+
+    expect(sockets[0].protocols).toBeUndefined();
   });
 });
 
