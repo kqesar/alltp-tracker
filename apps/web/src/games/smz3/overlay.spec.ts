@@ -58,12 +58,9 @@ describe("SMZ3's overlay reading", () => {
   it("names exactly the items the API may show: Hyrule's, then Zebes's", () => {
     const { state } = overlayReadingOf(freshProgress());
     expect(state.items.map(({ id }) => id)).toEqual([...ZELDA_IDS, ...SM_IDS]);
-    expect(state.objectives.map(({ id }) => id)).toEqual([
-      "tokenKraid",
-      "tokenPhantoon",
-      "tokenDraygon",
-      "tokenRidley",
-    ]);
+    // The boss tokens are rewards, found when picked up and no boss beaten:
+    // not sent, and no other objective is recorded for this game
+    expect(state.objectives).toEqual([]);
   });
 
   it("shares its Zelda ids with A Link to the Past's wherever the item is shared", () => {
@@ -91,15 +88,13 @@ describe("SMZ3's overlay reading", () => {
     expect(item("hookshot")).toMatchObject({ level: 0, max: 1 });
   });
 
-  it("reads the boss tokens as objectives, named by their boss", () => {
+  it("never reads the boss tokens, which a boss's reward is", () => {
     const run = freshProgress();
     run.items.tokenDraygon = 1;
-    expect(overlayReadingOf(run).state.objectives).toEqual([
-      { done: false, id: "tokenKraid", ms: null, name: "Kraid" },
-      { done: false, id: "tokenPhantoon", ms: null, name: "Phantoon" },
-      { done: true, id: "tokenDraygon", ms: null, name: "Draygon" },
-      { done: false, id: "tokenRidley", ms: null, name: "Ridley" },
-    ]);
+    const { fresh, state } = overlayReadingOf(run);
+    expect(state.objectives).toEqual([]);
+    expect(JSON.stringify(state)).not.toMatch(/token/i);
+    expect(fresh).toBe(true);
   });
 
   it("has no timer nor go mode, and is fresh until something is held", () => {
@@ -109,7 +104,7 @@ describe("SMZ3's overlay reading", () => {
     expect(state.goMode).toBeNull();
     expect(fresh).toBe(true);
     const held = freshProgress();
-    held.items.tokenKraid = 1;
+    held.items.hookshot = 1;
     expect(overlayReadingOf(held).fresh).toBe(false);
   });
 
