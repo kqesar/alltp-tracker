@@ -1,10 +1,4 @@
-/** A persisted Zustand store, as far as following other tabs needs it. */
-interface PersistedStore {
-  persist: {
-    getOptions: () => { name?: string };
-    rehydrate: () => Promise<void> | void;
-  };
-}
+import type { RunStore } from "@/games/registry";
 
 /**
  * Follow the run when another tab or window of the tracker changes it — a
@@ -14,7 +8,7 @@ interface PersistedStore {
  * starts it with its own store.
  * @returns A function that stops listening
  */
-export const syncAcrossTabs = (store: PersistedStore): (() => void) => {
+export const syncAcrossTabs = (store: RunStore): (() => void) => {
   const key = store.persist.getOptions().name;
 
   const onStorage = (event: StorageEvent) => {

@@ -10,11 +10,15 @@ import { useObsStage } from "@/hooks/useObsStage";
  * through storage. It takes new versions at once: nobody clicks in a source.
  * No run timer yet: `&timer=1` draws nothing more here.
  */
-export const SmObsView = ({ background }: ObsViewProps) => {
+export const SmObsView = ({ background, followed }: ObsViewProps) => {
   const wallJump = useSmStore((state) => state.wallJump);
   const splitSpeed = useSmStore((state) => state.splitSpeed);
   const rows = smGrid({ splitSpeed, wallJump }).length;
-  const stageRef = useObsStage({ columns: SM_COLUMNS, rows });
+  const stageRef = useObsStage({
+    columns: SM_COLUMNS,
+    rows,
+    view: followed ? "follow" : "obs",
+  });
 
   return (
     <main

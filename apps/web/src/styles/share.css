@@ -19,3 +19,45 @@
   margin-top: var(--spacing-md);
   font-size: var(--font-size-sm);
 }
+
+/* Live follow, the desktop app's section under the run's link
+   (desktop/LiveFollowSection.tsx) */
+.live-follow {
+  display: grid;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.live-follow__heading {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+.live-follow .share-qr,
+.live-follow .share-dialog__help {
+  margin-top: 0;
+}
+
+.live-follow__url {
+  padding: var(--spacing-sm);
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+  background: var(--surface-2);
+  border-radius: var(--border-radius-sm);
+}
+
+.live-follow__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.live-follow__error {
+  margin: 0;
+  color: var(--color-danger);
+}

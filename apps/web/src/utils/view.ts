@@ -6,6 +6,37 @@
 const VIEW_PARAM = "view";
 const OBS_VIEW = "obs";
 
+/**
+ * `?view=follow&token=…`: a device following the desktop app's run live on
+ * the local network, the page and its stream both served by the app.
+ */
+const FOLLOW_VIEW = "follow";
+
+/**
+ * Whether the page was opened to follow a run live (`?view=follow`).
+ * @param search - The query string, `window.location.search` by default
+ */
+export const isFollowView = (
+  search: string = window.location.search,
+): boolean => new URLSearchParams(search).get(VIEW_PARAM) === FOLLOW_VIEW;
+
+/**
+ * The address of the run's stream for the followed view: `/follow` on the
+ * host that served the page (the desktop app's relay), with the link's
+ * token. Only the token is taken from the address, so a link can never point
+ * the page at another host.
+ * @param page - The address of the current page
+ */
+export const followSocketUrl = (
+  page: string = window.location.href,
+): string => {
+  const address = new URL(page);
+  const url = new URL("/follow", address);
+  url.protocol = address.protocol === "https:" ? "wss:" : "ws:";
+  url.searchParams.set("token", address.searchParams.get("token") ?? "");
+  return url.href;
+};
+
 /** `&bg=` paints the stream view a solid colour, for window capture. */
 const BACKGROUND_PARAM = "bg";
 
