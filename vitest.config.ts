@@ -12,6 +12,7 @@ export default defineConfig({
       exclude: [
         "**/*.d.ts",
         "**/*.spec.{ts,tsx}",
+        "**/performance.fixtures.ts",
         "apps/web/src/main.tsx",
         "apps/web/src/test-setup.ts",
       ],
