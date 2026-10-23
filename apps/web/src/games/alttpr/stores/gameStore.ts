@@ -47,6 +47,7 @@ import {
   validateProgress,
 } from "@/games/alttpr/stores/persistence";
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
+import { HISTORY_LIMIT } from "@/games/runHistory";
 
 /** Which way a click moves a counter or a progressive item. */
 export type Direction = 1 | -1;
@@ -173,9 +174,6 @@ type GameState = Progress &
     /** Set the run to what the game holds: one undo step, as the player's. */
     syncWithGame: (next: Partial<Progress>) => void;
   };
-
-/** Undo depth: far more than a run needs, and each step is a few KB. */
-const HISTORY_LIMIT = 200;
 
 /** Medallion states: unknown, then Bombos, Ether and Quake. */
 const MEDALLION_STATES = MEDALLION_VALUES.QUAKE + 1;

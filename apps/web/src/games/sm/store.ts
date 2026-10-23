@@ -7,6 +7,8 @@ import { OBJECTIVES, SM_ITEMS, type SmItemId } from "@alltp/pack-sm";
 import * as z from "zod/mini";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { type History, historyActions } from "@/games/runHistory";
+import { createSaveFormat } from "@/games/saveFormat";
 
 /** Where the run is saved: apart from ALttPR's, so each game keeps its own. */
 export const SM_STORAGE_KEY = "alltp-tracker-sm";
@@ -55,33 +57,35 @@ const completed = (progress: SmProgress): SmProgress => ({
   items: { ...freshProgress().items, ...progress.items },
 });
 
-/** Undo depth, as ALttPR's. */
-const HISTORY_LIMIT = 200;
+type SmState = SmProgress &
+  History<SmProgress> & {
+    /** Step an item: +1 or -1, wrapping within 0 and its pool. */
+    step: (id: SmItemId, direction: 1 | -1) => void;
+    /** Mark an objective done, or not. */
+    toggleDone: (id: string) => void;
+    /** Set the seed's objectives; those no longer asked for are no longer done. */
+    setObjectives: (ids: readonly string[]) => void;
+    setOption: (option: "wallJump" | "splitSpeed", on: boolean) => void;
+    /** A new game: nothing held or done, the seed's objectives and settings kept. */
+    reset: () => void;
+    undo: () => void;
+    redo: () => void;
+    /** Replace the run with a save's: one undo step. */
+    load: (progress: SmProgress) => void;
+    /**
+     * Lay what the game says on the run and on every snapshot of its history:
+     * no step, so undoing the player's change never undoes the game's.
+     */
+    applyGameNews: (
+      change: (run: SmProgress) => Partial<SmProgress> | null,
+    ) => void;
+  };
 
-type SmState = SmProgress & {
-  past: SmProgress[];
-  future: SmProgress[];
-  /** Step an item: +1 or -1, wrapping within 0 and its pool. */
-  step: (id: SmItemId, direction: 1 | -1) => void;
-  /** Mark an objective done, or not. */
-  toggleDone: (id: string) => void;
-  /** Set the seed's objectives; those no longer asked for are no longer done. */
-  setObjectives: (ids: readonly string[]) => void;
-  setOption: (option: "wallJump" | "splitSpeed", on: boolean) => void;
-  /** A new game: nothing held or done, the seed's objectives and settings kept. */
-  reset: () => void;
-  undo: () => void;
-  redo: () => void;
-  /** Replace the run with a save's: one undo step. */
-  load: (progress: SmProgress) => void;
-  /**
-   * Lay what the game says on the run and on every snapshot of its history:
-   * no step, so undoing the player's change never undoes the game's.
-   */
-  applyGameNews: (
-    change: (run: SmProgress) => Partial<SmProgress> | null,
-  ) => void;
-};
+/** Whether every count is within its item's pool. */
+const withinPools = (progress: SmProgress) =>
+  Object.entries(progress.items).every(
+    ([id, count]) => (count ?? 0) <= (MAX.get(id as SmItemId) ?? 0),
+  );
 
 const progressOf = (state: SmProgress): SmProgress => ({
   done: state.done,
@@ -94,42 +98,18 @@ const progressOf = (state: SmProgress): SmProgress => ({
 export const useSmStore = create<SmState>()(
   persist<SmState, [], [], SmProgress>(
     (set, get) => {
-      /** A change of the player's: one step of the history. */
-      const record = (change: Partial<SmProgress>) =>
-        set((state) => ({
-          ...change,
-          future: [],
-          past: [...state.past, progressOf(state)].slice(-HISTORY_LIMIT),
-        }));
+      const { applyGameNews, record, redo, undo } = historyActions({
+        get,
+        progressOf,
+        set,
+      });
       return {
         ...freshProgress(),
-        applyGameNews: (change) => {
-          const state = get();
-          const now = change(progressOf(state));
-          const rebase = (history: SmProgress[]) =>
-            history.map((run) => {
-              const changed = change(run);
-              return changed === null ? run : { ...run, ...changed };
-            });
-          set({
-            ...(now ?? {}),
-            future: rebase(state.future),
-            past: rebase(state.past),
-          });
-        },
+        applyGameNews,
         future: [],
         load: (progress) => record(progress),
         past: [],
-        redo: () =>
-          set((state) => {
-            const [next, ...future] = state.future;
-            if (next === undefined) return state;
-            return {
-              ...next,
-              future,
-              past: [...state.past, progressOf(state)],
-            };
-          }),
+        redo,
         reset: () => {
           const { objectives, splitSpeed, wallJump } = get();
           record({ ...freshProgress(), objectives, splitSpeed, wallJump });
@@ -161,16 +141,7 @@ export const useSmStore = create<SmState>()(
               : [...done, id],
           });
         },
-        undo: () =>
-          set((state) => {
-            const previous = state.past.at(-1);
-            if (previous === undefined) return state;
-            return {
-              ...previous,
-              future: [progressOf(state), ...state.future],
-              past: state.past.slice(0, -1),
-            };
-          }),
+        undo,
       };
     },
     {
@@ -190,73 +161,12 @@ export const useSmStore = create<SmState>()(
   ),
 );
 
-/**
- * The file an export writes: the run alone. It takes the store's state as it
- * is, so the run is picked out of it, never the undo history beside it.
- */
-export const exportSave = (progress: SmProgress): string =>
-  `${JSON.stringify(
-    {
-      format: "alltp-tracker-save",
-      game: "sm",
-      progress: progressOf(progress),
-      version: SM_SAVE_VERSION,
-    },
-    null,
-    2,
-  )}\n`;
-
-const saveSchema = z.object({
-  format: z.literal("alltp-tracker-save"),
-  game: z.string(),
-  progress: z.unknown(),
-  version: z.number(),
+export const { exportSave, IMPORT_ERRORS, parseSave } = createSaveFormat({
+  complete: completed,
+  game: "sm",
+  otherGame: "A Link to the Past",
+  progressOf,
+  schema: progressSchema,
+  version: SM_SAVE_VERSION,
+  within: withinPools,
 });
-
-/** Why a file cannot be imported, in words the player can act on. */
-export type ImportError =
-  | "not-json"
-  | "not-a-save"
-  | "other-game"
-  | "newer-version"
-  | "invalid";
-
-/** What each reason says to the player. */
-export const IMPORT_ERRORS: Readonly<Record<ImportError, string>> = {
-  invalid: "This save's run is not one the tracker can read.",
-  "newer-version": "This save comes from a newer version of the tracker.",
-  "not-a-save": "This file is not a tracker save.",
-  "not-json": "This file is not a tracker save.",
-  "other-game":
-    "This save is for A Link to the Past: switch game to import it there.",
-};
-
-/**
- * A save file's run, or why not: not JSON, not a tracker save, another
- * game's (ALttPR's saves import on its own board), a version this one does
- * not know, or a run that is not one.
- */
-export const parseSave = (
-  text: string,
-): { ok: true; progress: SmProgress } | { ok: false; error: ImportError } => {
-  let json: unknown;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    return { error: "not-json", ok: false };
-  }
-  const save = saveSchema.safeParse(json);
-  if (!save.success) return { error: "not-a-save", ok: false };
-  if (save.data.game !== "sm") return { error: "other-game", ok: false };
-  if (save.data.version > SM_SAVE_VERSION) {
-    return { error: "newer-version", ok: false };
-  }
-  const progress = progressSchema.safeParse(save.data.progress);
-  if (!progress.success) return { error: "invalid", ok: false };
-  const items = Object.entries(progress.data.items).every(
-    ([id, count]) => (count ?? 0) <= (MAX.get(id as SmItemId) ?? 0),
-  );
-  return items
-    ? { ok: true, progress: completed(progress.data) }
-    : { error: "invalid", ok: false };
-};
