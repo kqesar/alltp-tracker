@@ -8,6 +8,7 @@ import {
 } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
+import { ShareDialog } from "@/components/ui/ShareDialog";
 import {
   ExportIcon,
   ImportIcon,
@@ -39,7 +40,7 @@ import {
   withoutTimeline,
 } from "@/games/alttpr/stores/persistence";
 import type { MapLayout } from "@/games/alttpr/utils";
-import { SHARE_HELP, shareRun } from "@/share/shareRun";
+import { SHARE_HELP, type ShareResult, shareRun } from "@/share/shareRun";
 import { commandKey, isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
 
@@ -93,6 +94,7 @@ export const TrackerControls = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isResetOpen, setIsResetOpen] = useState(false);
+  const [share, setShare] = useState<Promise<ShareResult> | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   // A save that was read and validated, waiting for the player to confirm
   const [pendingImport, setPendingImport] = useState<Partial<Progress> | null>(
@@ -127,7 +129,7 @@ export const TrackerControls = () => {
   // The timeline is what a link drops first when it would be too long
   const handleShare = () => {
     const save = exportState();
-    void shareRun([save, withoutTimeline(save)].map(packLink)).then(setStatus);
+    setShare(shareRun([save, withoutTimeline(save)].map(packLink)));
   };
 
   const handleImportClick = () => fileInputRef.current?.click();
@@ -337,6 +339,7 @@ export const TrackerControls = () => {
         {status}
       </output>
 
+      <ShareDialog onClose={() => setShare(null)} share={share} />
       <ConfirmDialog
         confirmLabel="New game"
         isOpen={isResetOpen}

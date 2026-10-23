@@ -1,6 +1,6 @@
 # Sharing a run through its URL
 
-The toolbar's **Share** button copies a link that holds the player's run. There is no server: the run travels in the address's **fragment** (`#run=…`), the part after the `#`, which the browser keeps to itself and never puts in a request. Opening the link asks before replacing anything.
+The toolbar's **Share** button copies a link that holds the player's run and opens a dialog that shows the same link as a QR code. There is no server: the run travels in the address's **fragment** (`#run=…`), the part after the `#`, which the browser keeps to itself and never puts in a request. Opening the link asks before replacing anything.
 
 ## Format
 
@@ -92,6 +92,48 @@ sequenceDiagram
 
 A link for another game is laid in that game's store, then the page loads again on it, as the game picker does (`switchGame`). The undo point does not survive that reload.
 
+## The Share dialog and its QR code
+
+Share does two things in one click, the same in the three games (`components/ui/ShareDialog.tsx`, on the shared `Modal`):
+
+1. **It copies the link at once.** `shareRun` starts the copy before its first `await`: the text goes to the browser as a promise inside a `ClipboardItem` (Safari wants the copy to start in the click and accepts the text a moment later), with `writeText` as the fallback. It returns `{ link, message }`: the link made and the line to tell the player.
+2. **It opens the dialog** "Share this run": the line in a `role="status"` region ("Copying…" while the link is made, then copied, copied without the timeline, long-link warning, clipboard refused, or the `RunLinkError` message), the QR code of that very link (same tier, same fallback rule), a line of help (scan it to open the run on another device; a snapshot that does not follow the game) and **Copy again**, a `writeText` inside its own click that updates the line. The toolbar's status no longer announces Share.
+
+A clipboard refusal still shows the QR code: it is the way out then. No link at all (`RunLinkError`, a browser that cannot compress) shows only the reason.
+
+```mermaid
+sequenceDiagram
+  actor P as Player
+  participant B as Share button
+  participant S as shareRun
+  participant D as ShareDialog
+  participant Q as QrCode chunk
+  P->>B: click
+  B->>S: shareRun(saves): the copy starts here
+  B->>D: share promise, dialog opens ("Copying...")
+  S-->>D: { link, message }
+  D->>Q: lazy import, once, on first display
+  Q-->>D: SVG of the link
+  P->>D: Copy again (writeText in the click)
+```
+
+### The code
+
+- **Library: `lean-qr`** (MIT, no dependencies, about 3.6 KB gzipped for `generate`, actively maintained). It picks the smallest version that holds the text and the highest error correction that fits that version, and segments the text into the cheapest modes. Called with `minCorrectionLevel: correction.L`, so correction never costs a bigger version than needed. The alternatives: `uqr` (about 3.9 KB gzipped, comparable, less active), `qrcode-generator` (about 7.6 KB gzipped) and `qrcode` (heavier, with dependencies, aimed at Node and canvas).
+- **Zero bytes on page load.** `ShareDialog` loads `QrCode` with `lazy(() => import(...))`, so `lean-qr` sits in a chunk of its own (about 3.9 KB gzipped) fetched the first time the dialog shows a link; the entry chunk and the games' chunks do not change.
+- **Drawing.** One inline SVG `<path>`: each horizontal run of dark modules is one `M x y h n v1 h-n z` rectangle (`modulesPath`), the `viewBox` holds the 4-module quiet zone, `shape-rendering="crispEdges"`. Dark modules are black on a white ground in every theme, because a scanner needs dark on light. `role="img"` with an `aria-label`. The square is `min(100%, 320px)` wide, so it never overflows the dialog on a phone.
+- **A link a QR code cannot hold** (past version 40, about 2.9 KB: `generate` throws) shows a sentence in place of the code. No case in the table above gets there.
+
+Sizes measured on real links (all decoded with `zbarimg`, at 2 and at 3 pixels per module):
+
+| Link | Characters | Version | Modules |
+|---|---|---|---|
+| Super Metroid | ~420 | 13 | 69 |
+| ALttPR without its timeline | ~550 | 16 | 81 |
+| SMZ3 | ~1030 | 23 | 109 |
+| ALttPR, late, with its timeline | ~1650 | 30 | 137 |
+| 2000 characters | 2000 | 33 | 149 |
+
 ## Length
 
 A link goes through chat apps, so its length matters. Browsers take hundreds of kilobytes (Chrome 2 MB, Firefox 1 MB, Safari 80 KB); Discord cuts a message at 2000 characters, the strictest of the common ones.
@@ -114,13 +156,13 @@ What the tracker does about it:
 - **The timeline is kept when it fits.** If a full link still passes 2000 characters, ALttPR drops its timeline and says so ("Link copied without the timeline, to keep it short"); the shared run still imports, only "when" is lost. After packing this is a safety net, not the usual case.
 - **Past 2000 characters anyway**, the link is copied all the same and the status warns that some chat apps will cut it. It works wherever it is pasted whole: browsers, most messengers, a message edited by hand.
 - **Where the rest of a link goes.** The remainder (about 500 characters for ALttPR with nothing else in it) is the run's settings and fixed keys, the envelope, the site's address and deflate's header. It does not grow with the run, which is what keeps the late cases flat.
-- A QR code holds about 2.9 KB in binary: every case above fits one.
+- A QR code holds about 2.9 KB in binary: every case above fits one (see below).
 
 ## What it does not do
 
-- **No live following.** A link is a snapshot. Following a player (a restream, a second screen) needs a relay; the options are in the project's evolution notes (LAN through the desktop app, or a Cloudflare Durable Object).
+- **No live following.** A link is a snapshot. Following a player (a restream, a second screen) needs a relay. It is planned through the desktop app, which will relay the run on the local network (no hosted server).
 - **The desktop app cannot open a link itself.** Its webview has no address bar and no `#run=` to read: a viewer opens the link in a browser, where the run lives apart from the app's own.
-- **The clipboard is the only output.** `shareRun` hands the copy to the browser as a promise inside the click (Safari wants the copy there) and falls back to `writeText`; if the browser refuses, the status says so.
+- **No account, no server-side short link.** The link and its QR code are all there is: the code is drawn in the page from the same address, and nothing is stored anywhere.
 
 ## Files
 
@@ -130,8 +172,10 @@ What the tracker does about it:
 | `apps/web/src/share/packed.ts` | The packed form: codec framework, table sizes and digest, bitset field, pack and unpack |
 | `apps/web/src/share/bytes.ts` | Base64url, varints, bit writer and reader (Rice codes) |
 | `apps/web/src/games/alttpr/share.ts`, `games/smz3/share.ts` | A game's codec: its fields and the append-only tables they index |
-| `apps/web/src/share/shareRun.ts` | Share's action: tiers, clipboard, the status line |
+| `apps/web/src/share/shareRun.ts` | Share's action: tiers, clipboard, the line for the dialog; `copyLink` for Copy again |
+| `apps/web/src/components/ui/ShareDialog.tsx` | The dialog Share opens: outcome line, QR code, Copy again |
+| `apps/web/src/components/ui/QrCode.tsx` | The QR code as one SVG path (lazy chunk with `lean-qr`) |
 | `apps/web/src/components/ui/SharedRunPrompt.tsx` | The notice that asks, opens or keeps |
 | `apps/web/src/games/*/module.ts` | `importRun`, the game's own validation |
-| `apps/web/e2e/share.e2e.ts` | Share, open in a fresh browser (packed and plain), Keep mine, another version's link, hostile links, axe |
+| `apps/web/e2e/share.e2e.ts` | Share and its dialog (keyboard, axe), open in a fresh browser (packed and plain), Keep mine, another version's link, hostile links, axe |
 | `apps/web/e2e/fixtures/share-v1-*.json` | Real exports, made into the first version's links by the e2e test |
