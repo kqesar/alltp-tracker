@@ -108,6 +108,12 @@ describe("retryDelay", () => {
     expect(retryDelay(0, true)).toBe(5000);
     expect(retryDelay(4, true)).toBe(16_000);
   });
+
+  it("never waits longer than a cap it is given", () => {
+    expect([0, 1, 2, 3, 4].map((n) => retryDelay(n, false, 5000))).toEqual([
+      1000, 2000, 4000, 5000, 5000,
+    ]);
+  });
 });
 
 describe("follow", () => {
@@ -306,5 +312,66 @@ describe("follow", () => {
     const count = statuses.length;
     second.drop();
     expect(statuses).toHaveLength(count);
+  });
+});
+
+describe("follow, as a browser source in OBS", () => {
+  let sockets: FakeSocket[];
+  let statuses: FollowStatus[];
+  let stop: () => void;
+
+  const latest = () => sockets[sockets.length - 1];
+
+  beforeEach(() => {
+    vi.useFakeTimers({ now: 1_000_000 });
+    sockets = [];
+    statuses = [];
+    stop = follow({
+      endOnStop: false,
+      maxDelay: 5000,
+      onSnapshot: () => {},
+      onStatus: (status) => statuses.push(status),
+      open: (url) => {
+        const socket = new FakeSocket(url);
+        sockets.push(socket);
+        return socket as unknown as WebSocket;
+      },
+      url: "ws://127.0.0.1:23076/follow?token=abc",
+    });
+  });
+
+  afterEach(() => {
+    stop();
+    vi.useRealTimers();
+  });
+
+  it("keeps trying when the player turns the stream off, and comes back", () => {
+    latest().receive(frame());
+    latest().drop(CLOSE.STOPPED);
+
+    expect(statuses.at(-1)).toBe("reconnecting");
+    vi.advanceTimersByTime(1000);
+    expect(sockets).toHaveLength(2);
+
+    // Off for a while: refused connections, never longer than 5 s apart
+    for (const wait of [2000, 4000, 5000, 5000, 5000]) {
+      latest().drop(1006);
+      const before = sockets.length;
+      vi.advanceTimersByTime(wait - 1);
+      expect(sockets).toHaveLength(before);
+      vi.advanceTimersByTime(1);
+      expect(sockets).toHaveLength(before + 1);
+    }
+
+    latest().receive(frame());
+    expect(statuses.at(-1)).toBe("live");
+  });
+
+  it("still ends on a token the app refuses: the address is out of date", () => {
+    latest().drop(CLOSE.TOKEN);
+
+    expect(statuses.at(-1)).toBe("expired");
+    vi.advanceTimersByTime(60_000);
+    expect(sockets).toHaveLength(1);
   });
 });

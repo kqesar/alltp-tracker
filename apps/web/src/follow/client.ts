@@ -90,14 +90,23 @@ export const applySnapshot = (value: string, store: RunStore): boolean => {
 };
 
 /**
- * The wait before the next attempt: 1 s, doubling, at most 30 s; at least
- * 5 s while the relay is full, which frees a seat only when a device leaves.
+ * The wait before the next attempt: 1 s, doubling, at most `cap` (30 s); at
+ * least 5 s while the relay is full, which frees a seat only when a device
+ * leaves.
  * @param attempt - How many attempts failed in a row, from 0
+ * @param cap - The longest wait, in ms
  */
-export const retryDelay = (attempt: number, full = false): number => {
-  const delay = Math.min(30_000, 1000 * 2 ** attempt);
+export const retryDelay = (
+  attempt: number,
+  full = false,
+  cap = MAX_RETRY_DELAY,
+): number => {
+  const delay = Math.min(cap, 1000 * 2 ** attempt);
   return full ? Math.max(5000, delay) : delay;
 };
+
+/** The longest wait between two attempts, unless the caller caps it lower. */
+const MAX_RETRY_DELAY = 30_000;
 
 export type FollowOptions = {
   /** The relay's stream, `followSocketUrl()` */
@@ -110,6 +119,19 @@ export type FollowOptions = {
   onStatus: (status: FollowStatus) => void;
   /** Opens a socket; the browser's WebSocket by default */
   open?: (url: string) => WebSocket;
+  /**
+   * Whether the relay stopping (4410) ends it, as for a phone the player
+   * stopped sharing with. False for a browser source in OBS, which nobody
+   * restarts: the player turns the stream off and on again, and the source
+   * must come back by itself, so a stop is a drop like any other.
+   * True by default.
+   */
+  endOnStop?: boolean;
+  /**
+   * The longest wait between two attempts, in ms (30 s by default). A
+   * browser source that waits for the app to come back keeps it short.
+   */
+  maxDelay?: number;
 };
 
 /**
@@ -117,7 +139,8 @@ export type FollowOptions = {
  * after `retryDelay`, at once when the device comes back online or the page
  * comes back into view (a phone that slept). A connection silent for
  * `STALE_AFTER` (no run, no beat) counts as a drop: closed and tried again.
- * The token refused or the relay stopped ends it.
+ * The token refused ends it, and so does the relay stopping unless
+ * `endOnStop` is false.
  *
  * The clock offset is the largest `sentAt − arrival` seen: latency only makes
  * a sample smaller, so the largest is the closest. The run sent on connecting
@@ -126,6 +149,8 @@ export type FollowOptions = {
  * @returns A function that stops following
  */
 export const follow = ({
+  endOnStop = true,
+  maxDelay = MAX_RETRY_DELAY,
   onSnapshot,
   onStatus,
   open = (url) => new WebSocket(url),
@@ -142,7 +167,7 @@ export const follow = ({
 
   const retryLater = (full: boolean) => {
     onStatus(full ? "full" : "reconnecting");
-    retry = setTimeout(connect, retryDelay(attempt, full));
+    retry = setTimeout(connect, retryDelay(attempt, full, maxDelay));
     attempt += 1;
   };
 
@@ -183,7 +208,10 @@ export const follow = ({
       if (socket !== current || ended) return;
       socket = null;
       clearTimeout(watchdog);
-      if (event.code === CLOSE.TOKEN || event.code === CLOSE.STOPPED) {
+      if (
+        event.code === CLOSE.TOKEN ||
+        (event.code === CLOSE.STOPPED && endOnStop)
+      ) {
         ended = true;
         stopListening();
         onStatus(event.code === CLOSE.TOKEN ? "expired" : "stopped");
