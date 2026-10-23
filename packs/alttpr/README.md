@@ -19,11 +19,15 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/dungeons.ts` | the thirteen dungeons, the code of their items and their pool |
 | `src/tracker.ts` | `TrackerInput`, what the player records, and `toState`, the state it gives |
 | `src/legacy.ts` | the app's save format before the pack (version 5), mapped to the pack |
-| `src/markers.ts` | the map markers, and what a marker shows |
+| `src/markers.ts`, `src/marker-status.ts` | the map markers, and what a marker shows (`markerStatus`, which any game's map takes) |
 | `src/goals.ts` | `app/Randomizer.php`: where each goal puts the Triforce, and its go mode |
 | `src/seed-link.ts` | `app/Seed.php`, `routes/web.php`: a seed's hash, from a link to its page, and where its file lies |
 | `src/entrances.ts` | `cassidoxa/ALttPEntranceRandomizer` (`EntranceShuffle.py`, `Regions.py`), at the commit vt pins: the overworld's entrances and where the crossed shuffle may lead them (`src/entrances/er.json`, imported), and the doors and holes autotracking shows Link went through (`linksOf`) |
 | `src/seed-file.ts` | `app/Jobs/SendPatchToDisk.php`, `World.php`, `EntranceRandomizer.php`: a seed's settings from its file (its entrance shuffle included), through a Zod schema of `spoiler.meta` |
+| `src/er-world.ts` | `cassidoxa/ALttPEntranceRandomizer` (`Regions.py`, `Rules.py`): the world a seed with shuffled entrances is filled in, for the doors noted (see "The entrance randomizer's world") |
+| `src/derived.ts`, `src/medallions.ts` | facts the state derives before solving, for the rules that are not monotone in the items (Palace of Darkness's keys; what a medallion pad wants) |
+| `src/location.ts`, `src/rules.ts` | what a location is (its kinds, its rule and upstream source); every named rule, as the engine loads them |
+| `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags and seed settings, from the `z3randomizer` ASM and the race spec |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -92,8 +96,7 @@ engine's graph:
   to the Light World; and it adds the Bomb Merchant, an event holding the
   Big Red Bomb that its Pyramid Fairy wants. The importer reads each world's
   locations through its class chain and the `removeItem`s on it. Every
-  Inverted file is ported and its 22 test files run in the contract; the
-  app reads an Inverted run as Open until it lays the Inverted map out.
+  Inverted file is ported and its test files run in the contract.
 - **Settings.** A config read is a setting, folded at compile time:
   `config('itemPlacement') === 'advanced'` is `setting(advancedPlacement)`,
   `!== 'basic'` is `!setting(basicPlacement)`, `has('Lamp',
@@ -123,9 +126,10 @@ engine's graph:
   everything else held (`everythingBut`). Swamp Palace's key can only be at
   its entrance; Desert Palace's, in the Map Chest, the Torch or the Big
   Chest.
-- **Pending modules.** A region file not ported yet still has its module: its
-  upstream regions with no entrance and no location. The worlds list every
-  module from the start, so a port only fills its own module in.
+- **Pending modules.** A region file not ported yet would still have its
+  module: its upstream regions with no entrance and no location. The worlds
+  list every module from the start, so a port only fills its own module in.
+  Today `upstream.json` marks every file ported.
 
 ## What the player records
 
@@ -455,7 +459,7 @@ dungeon and Death Mountain tests, imported by `scripts/er-tests.mjs` with
 the world each `setUp` builds) run in `test/er-contract.spec.ts` under the
 pack's contract, upstream `true` our `yes` and `false` never `yes`. And on
 the real Crosskeys seed `0yAObedRMV`, every entrance noted from its
-spoiler, everything held reaches all its 233 locations.
+spoiler, everything held reaches all its locations.
 
 ## The legacy format
 
@@ -611,7 +615,7 @@ order, each with its upstream line:
 | Goal | Steps |
 | --- | --- |
 | `ganon` | Agahnim 2, the prize of Ganon's Tower (`GanonsTower.php:388`), then Ganon (`DarkWorld/NorthEast.php:186`), whose rule wants Agahnim 2 beaten |
-| `fast_ganon` | Ganon, who wants the crystals and the pyramid but not Agahnim 2 (`DarkWorld/NorthEast.php:226`) |
+| `fastGanon` (upstream `fast_ganon`) | Ganon, who wants the crystals and the pyramid but not Agahnim 2 (`DarkWorld/NorthEast.php:226`) |
 | `pedestal` | the Master Sword Pedestal (`LightWorld/NorthWest.php:86`) |
 
 The solver computes no event, so a step that gives one (Agahnim 2 gives

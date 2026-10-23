@@ -74,6 +74,9 @@ AutotrackSession ──────────────── one run loop, 
 | `session.ts` | `AutotrackSession`: the state machine |
 | `setup.ts` | The setup guide as data, and `setupProgress()` |
 | `report.ts` | `describeStatus()`, `diagnosticReport()` |
+| `platform.ts` | Typed seams over the host's globals (WebSocket and the like), so the sources compile against ES2022 only |
+| `errors.ts` | The error classes: `DefinitionError`, `RaceViolationError`, `TransportError` |
+| `version.ts` | `AUTOTRACK_VERSION`, printed in the diagnostic report |
 
 ### Transports: usb2snes, and why not gRPC-web
 
