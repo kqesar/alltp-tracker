@@ -45,7 +45,7 @@ flowchart LR
 | `codeql-actions.yml` | PR and master when `.github/**` changed, weekly | The same analysis for the workflows themselves. Its only input is `.github/`, so no other change can alter its result; the weekly run covers new CodeQL queries. |
 | `validate-commits.yml` | PR | Runs the repository's own `commitlint` over the PR's commits, so release-please can read them. |
 | `docs.yml` | PR and push to master, every path | `scripts/check-docs.mjs` over the tracked Markdown: each relative link and its `#anchor`, and each repository path quoted in backticks, must exist. See "The docs check". |
-| `desktop.yml` | PR and master, `apps/desktop/**` only | Rust side of the desktop app: `fmt`, `clippy` and tests on Linux, and `clippy` again on Windows and macOS (the code that compiles on one system only). |
+| `desktop.yml` | PR and master, `apps/desktop/**` only | Rust side of the desktop app: `fmt`, `clippy` and tests on Linux, and `clippy` again on Windows and macOS (the code that compiles on one system only), plus the tests of the two servers (`stream::`, `relay::`) on Windows, where an exclusive bind and a restart behave differently. |
 | `desktop-release.yml` | `workflow_dispatch`, started by the `desktop` job of `ci.yml` or by hand | The desktop installers for 4 targets, built from the release's tag and attached to it, after a check of the tag. A run of its own, so it neither holds the master queue nor turns master red. See "Releases". |
 | `logic-drift.yml` | weekly, manual | Compares the pinned randomizer commit with upstream and opens an issue on drift. |
 
