@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.36.0](https://github.com/kqesar/alltp-tracker/compare/v2.35.0...v2.36.0) (2026-10-23)
+
+
+### ✨ Features
+
+* **web:** show the share link as a QR code ([19de4f8](https://github.com/kqesar/alltp-tracker/commit/19de4f8430a937fb4f1b6d5b3ee5cbea9aecdcf2))
+
+
+### 🐛 Bug Fixes
+
+* **web:** fold the secondary toolbar actions to icons before every label ([0fcf48a](https://github.com/kqesar/alltp-tracker/commit/0fcf48a1400c35569bcbd1ed290befb176344c79))
+
+
+### 📚 Documentation
+
+* mention the share link's QR code in the README ([be55de9](https://github.com/kqesar/alltp-tracker/commit/be55de960865c4f764dcf3f6f75fb451d2a69d19))
+* refresh the README screenshots for the Half Magic cell ([83ba8fc](https://github.com/kqesar/alltp-tracker/commit/83ba8fc7762597038ec029caa4d8812f2b98295a))
+* refresh the README screenshots for the staged toolbar fold ([ca1377b](https://github.com/kqesar/alltp-tracker/commit/ca1377b31cc27b5f0574b27a239a5b0e3a5d66c3))
+
 ## [2.35.0](https://github.com/kqesar/alltp-tracker/compare/v2.34.0...v2.35.0) (2026-10-20)
 
 
