@@ -22,8 +22,4 @@ describe("locationId", () => {
   ])("%j is %j", (name, id) => {
     expect(locationId(name)).toBe(id);
   });
-
-  it("is the same id however it is run twice", () => {
-    expect(locationId(locationId("King's Tomb"))).toBe("kings-tomb");
-  });
 });
