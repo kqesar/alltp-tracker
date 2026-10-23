@@ -47,7 +47,8 @@ Zebes, and SMZ3's own logic, ported from
   Speech is recognized in the browser by [Vosk](https://alphacephei.com/vosk/), in English;
   no audio leaves your computer.
 - **Share.** The **Share** button copies a link that holds your run in its address (never sent
-  to a server). Whoever opens it is asked before their own run is replaced.
+  to a server) and shows it as a QR code, to open the run on a phone. Whoever opens it is asked
+  before their own run is replaced.
 - **Stream view.** `?view=obs` shows the item grid alone on a transparent background, for an
   OBS browser source.
 - **Offline.** A game opened once online then works without a network, and the site can be
