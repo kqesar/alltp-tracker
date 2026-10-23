@@ -22,7 +22,6 @@ export const GamePicker = ({
     <div className="game-picker__games">
       {GAME_IDS.map((id) => (
         <button
-          aria-label={`${GAMES[id].name}, ${GAMES[id].randomizer}`}
           aria-pressed={id === current}
           className="game-picker__game"
           data-testid={`game-${id}`}
@@ -32,7 +31,7 @@ export const GamePicker = ({
           }}
           type="button"
         >
-          <span className="game-picker__name">{GAMES[id].name}</span>
+          <span className="game-picker__name">{GAMES[id].name}</span>{" "}
           <span className="game-picker__randomizer">
             {GAMES[id].randomizer}
           </span>

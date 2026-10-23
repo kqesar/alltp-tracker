@@ -28,12 +28,12 @@ const button = () => screen.getByTestId("run-timer");
 describe("RunTimer", () => {
   it("starts at 0, then runs, redrawing each second", () => {
     render(<RunTimer />);
-    expect(button()).toHaveAccessibleName("Run timer: not started");
+    expect(button()).toHaveAccessibleName("Run timer: 0:00, not started");
     expect(button()).toHaveTextContent("0:00");
     expect(screen.getByTestId("run-timer-reset")).toBeDisabled();
 
     fireEvent.click(screen.getByTestId("run-timer-start"));
-    expect(button()).toHaveAccessibleName("Run timer: running");
+    expect(button()).toHaveAccessibleName("Run timer: 0:00, running");
     expect(screen.getByTestId("run-timer-status")).toHaveTextContent(
       "Run timer started",
     );
@@ -52,7 +52,7 @@ describe("RunTimer", () => {
     act(() => vi.advanceTimersByTime(30_000));
 
     fireEvent.click(screen.getByTestId("run-timer-pause"));
-    expect(button()).toHaveAccessibleName("Run timer: paused");
+    expect(button()).toHaveAccessibleName("Run timer: 0:30, paused");
     expect(screen.getByTestId("run-timer-status")).toHaveTextContent(
       "Run timer paused at 0:30",
     );
@@ -65,7 +65,7 @@ describe("RunTimer", () => {
     expect(button()).toHaveTextContent("0:35");
 
     fireEvent.click(screen.getByTestId("run-timer-reset"));
-    expect(button()).toHaveAccessibleName("Run timer: not started");
+    expect(button()).toHaveAccessibleName("Run timer: 0:00, not started");
     expect(button()).toHaveTextContent("0:00");
   });
 
@@ -76,7 +76,9 @@ describe("RunTimer", () => {
     });
     render(<RunTimer />);
 
-    expect(button()).toHaveAccessibleName("Run timer: stopped at the goal");
+    expect(button()).toHaveAccessibleName(
+      "Run timer: 1:23:45, stopped at the goal",
+    );
     expect(button()).toHaveTextContent("1:23:45");
     expect(screen.getByTestId("run-timer-start")).toBeDisabled();
   });

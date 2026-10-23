@@ -72,8 +72,9 @@ export const AutotrackControl = ({
         <button
           {...dialog.handlers}
           // Its words and badge are flex items, which browsers name with
-          // spaces between them: one name, in the order they show
-          aria-label={`Autotracking, ${headline}${race ? ", race-legal" : ""}`}
+          // spaces between them: one name, the visible text first, in the
+          // order it shows, then the status the dot stands for
+          aria-label={`Autotracking${race ? " Race-legal" : ""}, ${headline}`}
           className="tracker-controls__button autotrack-button"
           data-phase={phase}
           data-testid="autotrack-button"
@@ -83,7 +84,12 @@ export const AutotrackControl = ({
         >
           {icon}
           <span className="toolbar-label">Autotracking</span>
-          {race && <RaceBadge race={race} />}
+          {race && (
+            <>
+              {" "}
+              <RaceBadge race={race} />
+            </>
+          )}
         </button>
       )}
       {shown}

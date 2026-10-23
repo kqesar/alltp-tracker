@@ -71,7 +71,7 @@ describe("AutotrackControl", () => {
       "This is a race seed: the tracker reads only what races permit.",
     );
     expect(screen.getByTestId("autotrack-button")).toHaveAccessibleName(
-      "Autotracking, Connected, race-legal",
+      "Autotracking Race-legal, Connected",
     );
     // Not once it stops
     show(RACE, false);
@@ -118,7 +118,7 @@ describe("AutotrackControl", () => {
     show(RACE);
 
     const item = screen.getByRole("menuitem");
-    expect(item).toHaveAccessibleName("Autotracking, Connected, race-legal");
+    expect(item).toHaveAccessibleName("Autotracking Connected, race-legal");
     expect(item).toHaveAttribute("data-testid", "toolbar-more-autotrack");
   });
 });

@@ -120,7 +120,7 @@ test.describe("item shortcuts", () => {
     await hookshot.hover();
 
     await expect(page.getByTestId("tooltip-keys")).toHaveText(
-      /^Z\s*back\s*Shift\+Z$/,
+      /^Z\s*back\s*Shift\s*\+\s*Z$/,
     );
     await expect(hookshot).toHaveAttribute("aria-keyshortcuts", "Z Shift+Z -");
   });

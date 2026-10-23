@@ -158,7 +158,7 @@ test.describe("the map", () => {
     await page.clock.install({ time: new Date("2026-10-18T12:00:00Z") });
     await openTracker(page);
     const timer = page.getByTestId("run-timer");
-    await expect(timer).toHaveAccessibleName("Run timer: not started");
+    await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
 
     await timer.click();
     const panel = page.getByTestId("run-timer-panel");
@@ -173,12 +173,12 @@ test.describe("the map", () => {
     await page.clock.fastForward("01:05");
     await expect(timer).toHaveText(/1:05/);
     await page.getByTestId("run-timer-pause").click();
-    await expect(timer).toHaveAccessibleName("Run timer: paused");
+    await expect(timer).toHaveAccessibleName("Run timer: 1:05, paused");
 
     await page.reload();
     await expect(page.getByTestId("run-timer")).toHaveText(/1:05/);
     await expect(page.getByTestId("run-timer")).toHaveAccessibleName(
-      "Run timer: paused",
+      "Run timer: 1:05, paused",
     );
   });
 
