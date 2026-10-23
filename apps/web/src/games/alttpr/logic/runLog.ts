@@ -94,7 +94,7 @@ export const findsOf = (timeline: Timeline): Find[] =>
     .sort((a, b) => b.stamp.at - a.stamp.at || a.key.localeCompare(b.key));
 
 /** A boss's split name: its dungeon's. */
-const splitName = (key: string): string => {
+export const splitName = (key: string): string => {
   const [, index, agahnim] = BOSS.exec(key) ?? [];
   if (agahnim === "agahnim") return "Castle Tower";
   if (agahnim === "agahnim2") return "Ganon's Tower";
