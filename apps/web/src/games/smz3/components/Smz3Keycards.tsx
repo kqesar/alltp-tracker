@@ -46,11 +46,11 @@ export const Smz3Keycards = () => {
   return (
     <section
       aria-labelledby="smz3-keycards-heading"
-      className="smz3-tokens"
+      className="board-panel smz3-tokens"
       data-testid="smz3-keycards"
       ref={containerRef}
     >
-      <h2 className="smz3-tokens__heading" id="smz3-keycards-heading">
+      <h2 className="board-panel__heading" id="smz3-keycards-heading">
         Keycards
       </h2>
       <GridFocusProvider value={focus}>

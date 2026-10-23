@@ -26,10 +26,7 @@
 }
 
 .sm-grid__cells {
-  display: grid;
   grid-template-columns: repeat(6, var(--cell));
-  grid-auto-rows: var(--cell);
-  background-color: var(--color-bg);
 }
 
 .sm-cell,
@@ -45,142 +42,7 @@
   background-size: 0 0;
 }
 
-/* How many packs or tanks: game-like digits in the lower right corner */
-.sm-cell__count {
-  position: absolute;
-  right: 4%;
-  bottom: 2%;
-  font-family: var(--font-mono, monospace);
-  font-size: calc(var(--cell) * 0.3);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--sprite-white);
-  text-shadow:
-    1px 0 var(--sprite-ink),
-    -1px 0 var(--sprite-ink),
-    0 1px var(--sprite-ink),
-    0 -1px var(--sprite-ink);
-  pointer-events: none;
-}
-
-/* The seed's objectives */
-.sm-objectives {
-  display: grid;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background: var(--surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
-}
-
-.sm-objectives__heading {
-  margin: 0;
-  font-size: var(--font-size-lg);
-}
-
-.sm-objectives__summary {
-  margin: 0;
-  font-size: var(--font-size-sm);
+/* The seed's objectives, a board panel whose done toggles dim their words */
+.sm-objectives .toggle-chip[aria-pressed="true"] {
   color: var(--color-text-secondary);
-}
-
-.sm-objectives__list {
-  display: grid;
-  gap: var(--spacing-xs);
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.sm-objective {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-  width: 100%;
-  min-height: 2.75rem;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  color: var(--color-text);
-  text-align: left;
-  cursor: pointer;
-  background: var(--surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-}
-
-.sm-objective:hover {
-  border-color: var(--color-accent);
-}
-
-.sm-objective[aria-pressed="true"] {
-  color: var(--color-text-secondary);
-  border-color: var(--color-success);
-}
-
-.sm-objective__check {
-  display: inline-grid;
-  place-items: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  font-weight: 700;
-  color: var(--color-success);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--border-radius-sm);
-}
-
-/* The run type dialog's fields */
-.sm-mode__field {
-  display: grid;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-md);
-}
-
-.sm-mode__objectives,
-.sm-mode__options {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
-  gap: var(--spacing-xs) var(--spacing-md);
-  padding: var(--spacing-sm) 0 0;
-  margin: 0 0 var(--spacing-md);
-  border: 0;
-  border-top: 1px solid var(--color-border);
-}
-
-.sm-mode__objectives legend,
-.sm-mode__options legend {
-  padding: 0;
-  margin-bottom: var(--spacing-xs);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.sm-mode__check {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-  min-height: 2rem;
-}
-
-.sm-stream__url {
-  padding: var(--spacing-sm);
-  font-family: var(--font-mono, monospace);
-  font-size: var(--font-size-sm);
-  overflow-wrap: anywhere;
-  background: var(--surface-2);
-  border-radius: var(--border-radius-sm);
-}
-
-.sm-stream__status {
-  min-height: 1.5em;
-  margin: var(--spacing-xs) 0 0;
-}
-
-/* The stream view: the grid alone, placed by SmObsView, nothing painted */
-.sm-obs .sm-grid {
-  position: absolute;
-  top: var(--obs-top, 0);
-  left: var(--obs-left, 0);
-}
-
-.sm-obs .sm-grid__cells {
-  background-color: transparent;
 }

@@ -39,10 +39,7 @@
 }
 
 .smz3-grid__cells {
-  display: grid;
   grid-template-columns: repeat(7, var(--cell));
-  grid-auto-rows: var(--cell);
-  background-color: var(--color-bg);
 }
 
 .smz3-cell--zelda,
@@ -65,86 +62,14 @@
   background-size: 0 0;
 }
 
-/* How many packs, tanks or rewards: game-like digits in the lower right */
-.smz3-cell__count {
-  position: absolute;
-  right: 4%;
-  bottom: 2%;
-  font-family: var(--font-mono, monospace);
-  font-size: calc(var(--cell) * 0.3);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--sprite-white);
-  text-shadow:
-    1px 0 var(--sprite-ink),
-    -1px 0 var(--sprite-ink),
-    0 1px var(--sprite-ink),
-    0 -1px var(--sprite-ink);
-  pointer-events: none;
-}
-
-/* The boss tokens */
-.smz3-tokens {
-  display: grid;
+/* The boss tokens, a board panel of closer rows, its toggles in columns
+   (two classes, so the shared sheet's order never matters) */
+.board-panel.smz3-tokens {
   gap: var(--spacing-xs);
-  padding: var(--spacing-md);
-  background: var(--surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
 }
 
-.smz3-tokens__heading {
-  margin: 0;
-  font-size: var(--font-size-lg);
-}
-
-.smz3-tokens__summary {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.smz3-tokens__list {
-  display: grid;
+.smz3-tokens .board-panel__list {
   grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
-  gap: var(--spacing-xs);
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.smz3-token {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-  width: 100%;
-  min-height: 2.75rem;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  color: var(--color-text);
-  text-align: left;
-  cursor: pointer;
-  background: var(--surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-}
-
-.smz3-token:hover {
-  border-color: var(--color-accent);
-}
-
-.smz3-token[aria-pressed="true"] {
-  border-color: var(--color-success);
-}
-
-.smz3-token__check {
-  display: inline-grid;
-  place-items: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  font-weight: 700;
-  color: var(--color-success);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--border-radius-sm);
 }
 
 /* Super Metroid's keycards: an area a row, a level a column */
@@ -221,60 +146,4 @@
    under the map-pin exception of WCAG 2.5.8 the e2e target check skips */
 .smz3-zebes .mapspan {
   --marker: clamp(14px, 2.4cqw, 28px);
-}
-
-/* The run type dialog's fields */
-.smz3-mode__field {
-  display: grid;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-md);
-}
-
-.smz3-mode__options {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
-  gap: var(--spacing-xs) var(--spacing-md);
-  padding: var(--spacing-sm) 0 0;
-  margin: 0 0 var(--spacing-md);
-  border: 0;
-  border-top: 1px solid var(--color-border);
-}
-
-.smz3-mode__options legend {
-  padding: 0;
-  margin-bottom: var(--spacing-xs);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.smz3-mode__check {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-  min-height: 2rem;
-}
-
-.smz3-stream__url {
-  padding: var(--spacing-sm);
-  font-family: var(--font-mono, monospace);
-  font-size: var(--font-size-sm);
-  overflow-wrap: anywhere;
-  background: var(--surface-2);
-  border-radius: var(--border-radius-sm);
-}
-
-.smz3-stream__status {
-  min-height: 1.5em;
-  margin: var(--spacing-xs) 0 0;
-}
-
-/* The stream view: the grid alone, placed by Smz3ObsView, nothing painted */
-.smz3-obs .smz3-grid {
-  position: absolute;
-  top: var(--obs-top, 0);
-  left: var(--obs-left, 0);
-}
-
-.smz3-obs .smz3-grid__cells {
-  background-color: transparent;
 }

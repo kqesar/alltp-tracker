@@ -50,7 +50,7 @@ ALttPR's modules live under `apps/web/src/games/alttpr/`: a short path below (`l
 
 ## CSS
 
-- Shared styles live in `apps/web/src/styles/`, all imported by `styles/index.css`, which `main.tsx` alone imports. A game's own sheet (`games/sm/sm.css`, `games/smz3/smz3.css`) is imported by its `module.ts`, so it loads with the game; the application menu's (`desktop/appMenu.css`) by `desktop/AppMenuItem.tsx`. `reset.css` stays first in that list.
+- Shared styles live in `apps/web/src/styles/`, all imported by `styles/index.css`, which `main.tsx` alone imports. A game's own sheet (`games/sm/sm.css`, `games/smz3/smz3.css`) is imported by its `module.ts`, so it loads with the game, and so is `games/board.css`, what those two boards share (the panels of toggles `board-panel` and `toggle-chip`, the run type dialog's `mode-*` fields, `stream-url`, the grid cells' `board-grid__cells` and `board-cell__count`; the stream view's placement of `board-grid` is in `styles/obs.css`); the application menu's (`desktop/appMenu.css`) by `desktop/AppMenuItem.tsx`. `reset.css` stays first in that list.
 - Class names are written literally in the JSX; there is no `CSS_CLASSES` map.
 - CSS Grid for layout, never tables; a `<table>` is for tabular data only (the shortcuts list). Empty grid cells render a spacer rather than `null`.
 - Colours, spacing and sizes come from the tokens in `variables.css`; respect `prefers-reduced-motion`.

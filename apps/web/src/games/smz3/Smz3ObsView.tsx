@@ -56,7 +56,7 @@ export const Smz3ObsView = ({ background }: ObsViewProps) => {
 
   return (
     <main
-      className="obs-view smz3-obs"
+      className="obs-view"
       data-testid="obs-view"
       ref={stageRef}
       style={background ? { backgroundColor: background } : undefined}

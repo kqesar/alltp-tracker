@@ -58,7 +58,7 @@ export const SmObsView = ({ background }: ObsViewProps) => {
 
   return (
     <main
-      className="obs-view sm-obs"
+      className="obs-view"
       data-testid="obs-view"
       ref={stageRef}
       style={background ? { backgroundColor: background } : undefined}
