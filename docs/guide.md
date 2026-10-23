@@ -1,13 +1,14 @@
 # User guide
 
 How to use Rando Atlas, game by game, then the features they share: autotracking, voice
-commands, the stream view for OBS, offline use and the desktop app.
+commands, sharing a run, the stream view for OBS, offline use and the desktop app.
 
 - [A Link to the Past](#a-link-to-the-past)
 - [Super Metroid (Map Rando)](#super-metroid-map-rando)
 - [SMZ3 (samus.link)](#smz3-samuslink)
 - [Autotracking](#autotracking)
 - [Voice commands](#voice-commands)
+- [Sharing a run](#sharing-a-run)
 - [Streaming with OBS](#streaming-with-obs)
 - [Offline and install](#offline-and-install)
 - [The desktop app](#the-desktop-app)
@@ -59,6 +60,10 @@ The timeline is saved with the run, in exports too.
 
 **Keyboard.** The item grid is a single Tab stop: arrow keys move inside it (through a boss's overlays too) and wrap, Home / End jump to the ends of a row, Ctrl+Home / End to the ends of the grid. Space and Enter step the focused control forward, "-" steps it back. Every map marker is a button Tab can reach; "Skip to map" and "Skip to checks" jump to either view.
 
+**Shortcuts.** Keys step the board without the mouse. While the tracker has the focus (and no field or dialog does), a key steps its control forward as a click does, and Shift with the same key steps it back as a right-click does; a held key steps once. The defaults mirror the grid on the keyboard: the item block runs down the left hand's Q, A and Z rows and on across the right hand's Y and H rows, and the dungeon chests are the digits 1 to 0. The toolbar's **Shortcuts** button opens the dialog: **Use keyboard shortcuts** turns every key off at once, the table lists each control with its keys (activate one and press its new key; Delete removes it, Escape cancels), and **Reset to defaults** brings the original layout back. A key the browser or the system keeps for itself is refused. The desktop app adds a **Global** tab (see below).
+
+**New game and big keys.** **New game** asks first, then clears what you found and checked, keeping the run type and its settings; **Undo** takes it back. **Show big keys** / **Hide big keys** (a **Big keys** entry in the **More** menu on a narrow bar) toggles the key cells under the grid: each dungeon's big key and small keys, and its map and compass in a run that moves those out of their dungeons.
+
 **Presets.** Pick a run type to set the rules. When a run's dungeon items leave their dungeons (alttpr.com's MC, MCS and Full Shuffle, the last one keysanity), the grid shows each dungeon's map and compass beside its keys, and its counter counts the items those leave room for. Or start from a seed: paste its alttpr.com link (or hash) under **Start from a seed**, and the tracker reads its settings (world, goal, swords, crystals, dungeon items, item placement, item pool and functionality, accessibility) from alttpr.com and offers the run type that holds them. Basic placement, a hard item pool or functionality change what is in logic as the randomizer has it: Ganon wants the silver arrows, no mirror shield, a bottle refills half the magic. The crystals, item placement, pool, functionality and accessibility change in the run type dialog's summary at any time, the run kept (one Undo takes a change back). Progress is saved to the browser automatically, and can be exported or imported as JSON.
 
 ## Super Metroid (Map Rando)
@@ -108,7 +113,7 @@ Mark what you find without leaving the game: say **"tracker"**, then the find. F
 - **Private.** Speech is recognized in your browser, by [Vosk](https://alphacephei.com/vosk/), and no sound leaves your computer.
   - The first start downloads the speech model, 40 MB, kept for next time (about 60 MB of the browser's storage; **Remove the speech model** in the dialog frees it).
   - Nothing is downloaded until you turn voice commands on.
-  - While listening, the recognizer uses about 15 % of one CPU core.
+  - Recognition runs in a Web Worker, so it does not block the page.
 - **Words the model knows.** It is English only, and its dictionary lacks a few of the game's names, so they are said as words it has. The dialog's **What to say** lists every command:
   - "bom boss" for Bombos (saying "bombos" works);
   - "samaria" for Somaria;
@@ -137,7 +142,7 @@ Items not yet obtained are greyed in the icon alone, as in the app, so they stay
 
 ## Offline and install
 
-After its first visit, the tracker loads and works with no network at all: the browser keeps every file it needs (the code, the item art, the map), and the run stays saved on the device as always. It keeps the games you have opened and no others: a Super Metroid player downloads about 0.45 MB for offline use, an A Link to the Past player about 1.4 MB. Switch to another game while online once, and it works offline from then on; a game never opened online cannot start offline. To give it a window of its own, install it: the install button in the address bar of Chrome or Edge, or **Share → Add to Home Screen** in Safari on iOS.
+After its first visit, the tracker loads and works with no network at all: the browser keeps every file it needs (the code, the item art, the map), and the run stays saved on the device as always. It keeps the games you have opened and no others: a Super Metroid player downloads about 0.5 MB for offline use, an A Link to the Past player about 1.4 MB. Switch to another game while online once, and it works offline from then on; a game never opened online cannot start offline. To give it a window of its own, install it: the install button in the address bar of Chrome or Edge, or **Share → Add to Home Screen** in Safari on iOS.
 
 Reloading the page (F5) while online always shows the latest version. A tracker left open checks for one every hour, when its tab comes back into view and when the network returns, and never reloads in the middle of a run: a notice, "A new version is available", waits for you. **Reload** switches to it and keeps your progress; dismissing it leaves the new version for the next time you open the tracker. A copy started offline is offered the new version too, once the browser has it.
 
