@@ -106,7 +106,6 @@ const StreamToolsDialog = ({
   const on = session !== null;
 
   // Opened on a running stream: its network address may have changed
-  // biome-ignore lint/correctness/useExhaustiveDependencies: once, on open
   useEffect(() => {
     if (useStreamStore.getState().session) {
       void useStreamStore.getState().refresh();
