@@ -3,6 +3,7 @@ import { type ChangeEvent, useEffect, useId, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { GamePicker } from "@/components/ui/GamePicker";
 import { Modal } from "@/components/ui/Modal";
+import { ShareDialog } from "@/components/ui/ShareDialog";
 import {
   ExportIcon,
   ImportIcon,
@@ -25,7 +26,7 @@ import {
   type SmProgress,
   useSmStore,
 } from "@/games/sm/store";
-import { SHARE_HELP, shareRun } from "@/share/shareRun";
+import { SHARE_HELP, type ShareResult, shareRun } from "@/share/shareRun";
 import { commandKey, isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
 import { obsViewUrl } from "@/utils/view";
@@ -163,6 +164,7 @@ export const SmControls = () => {
   );
   const [pendingImport, setPendingImport] = useState<SmProgress | null>(null);
   const [status, setStatus] = useState("");
+  const [share, setShare] = useState<Promise<ShareResult> | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -178,7 +180,7 @@ export const SmControls = () => {
     );
 
   const handleShare = () =>
-    void shareRun([exportSave(useSmStore.getState())]).then(setStatus);
+    setShare(shareRun([exportSave(useSmStore.getState())]));
 
   const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
     const [file] = event.target.files ?? [];
@@ -305,6 +307,7 @@ export const SmControls = () => {
       {dialog === "stream" && (
         <SmStreamDialog onClose={() => setDialog(null)} />
       )}
+      <ShareDialog onClose={() => setShare(null)} share={share} />
       <ConfirmDialog
         confirmLabel="New game"
         isOpen={dialog === "reset"}

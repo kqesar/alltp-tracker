@@ -256,6 +256,7 @@ test.describe("the More menu", () => {
     await picking;
 
     for (const [item, title] of [
+      ["toolbar-more-share", "Share this run"],
       ["toolbar-more-stream-view", "Stream view"],
       ["toolbar-more-shortcuts", "Keyboard shortcuts"],
     ]) {

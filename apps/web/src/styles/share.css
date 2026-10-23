@@ -1,0 +1,21 @@
+/* The share dialog: the link's QR code under the line that says it was copied */
+.share-qr {
+  display: block;
+  width: min(100%, 320px);
+  aspect-ratio: 1;
+  margin: var(--spacing-md) auto 0;
+  /* A scanner needs dark on light, in every theme */
+  background: #fff;
+  border-radius: var(--border-radius);
+}
+
+.share-qr__none {
+  margin: var(--spacing-md) 0 0;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.share-dialog__help {
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-sm);
+}

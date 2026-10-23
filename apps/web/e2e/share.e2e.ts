@@ -3,7 +3,13 @@ import { join } from "node:path";
 import { deflateRawSync } from "node:zlib";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { clickToolbarAction, WCAG_AA } from "./support";
+import {
+  clickToolbarAction,
+  focusedTestId,
+  tabTo,
+  unreachableClickables,
+  WCAG_AA,
+} from "./support";
 
 /** The tracker with nothing saved. */
 const fresh = async (page: Page) => {
@@ -99,9 +105,13 @@ for (const [id, game] of Object.entries(GAMES)) {
       page.getByTestId("share-button"),
       "toolbar-more-share",
     );
-    await expect(page.getByTestId(game.status)).toHaveText(
+    const dialog = page.getByRole("dialog", { name: "Share this run" });
+    await expect(dialog.getByRole("status")).toHaveText(
       /^Link copied\. The run stays in the link, never sent to a server\.$/,
     );
+    await expect(dialog.getByTestId("share-qr")).toBeVisible();
+    // Sharing says nothing in the toolbar's status
+    await expect(page.getByTestId(game.status)).toBeEmpty();
     const link = await page.evaluate(() => navigator.clipboard.readText());
     expect(link).toMatch(/\/alltp-tracker\/#run=[A-Za-z0-9_-]+$/);
     // ALttPR and SMZ3 write the packed format, Super Metroid the plain one
@@ -111,6 +121,13 @@ for (const [id, game] of Object.entries(GAMES)) {
     // Sharing changed neither the run nor the address
     await expect(page.getByTestId(game.item)).toHaveAccessibleName(OBTAINED);
     expect(page.url()).not.toContain("#run=");
+    // Copy again puts the same link back
+    await page.evaluate(() => navigator.clipboard.writeText("elsewhere"));
+    await dialog.getByTestId("share-copy-again").click();
+    await expect(dialog.getByRole("status")).toContainText("Link copied");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      link,
+    );
     await mine.close();
 
     // Someone else, nothing saved on their device, whatever game they track
@@ -150,6 +167,46 @@ for (const [id, game] of Object.entries(GAMES)) {
     await theirs.close();
   });
 }
+
+test("the share dialog is keyboard-driven and accessible", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    permissions: ["clipboard-read", "clipboard-write"],
+  });
+  const page = await context.newPage();
+  await fresh(page);
+  await page.getByTestId("toolbar").waitFor();
+  const viaMore = !(await page.getByTestId("share-button").isVisible());
+  const opener = viaMore ? "toolbar-more" : "share-button";
+
+  await tabTo(page, opener);
+  await page.keyboard.press("Enter");
+  if (viaMore) {
+    await page.getByTestId("toolbar-more-share").focus();
+    await page.keyboard.press("Enter");
+  }
+  const dialog = page.getByRole("dialog", { name: "Share this run" });
+  await expect(dialog.getByTestId("share-qr")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => !!document.activeElement?.closest("dialog[open]"),
+    ),
+  ).toBe(true);
+  expect(await unreachableClickables(page, "dialog[open]")).toEqual([]);
+
+  const axe = await new AxeBuilder({ page })
+    .include("dialog[open]")
+    .withTags(WCAG_AA)
+    .analyze();
+  expect(axe.violations.map(({ id }) => id)).toEqual([]);
+
+  // Escape closes it and focus goes back to what opened it
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  expect(await focusedTestId(page)).toBe(opener);
+  await context.close();
+});
 
 test("a link of the first format still opens, ALttPR's and SMZ3's", async ({
   page,
@@ -258,7 +315,7 @@ test("Keep mine leaves the run untouched, and a link opened on the board asks", 
     sharer.getByTestId("share-button"),
     "toolbar-more-share",
   );
-  await expect(sharer.getByTestId("controls-status")).toContainText(
+  await expect(sharer.getByRole("dialog").getByRole("status")).toContainText(
     "Link copied",
   );
   const link = await sharer.evaluate(() => navigator.clipboard.readText());

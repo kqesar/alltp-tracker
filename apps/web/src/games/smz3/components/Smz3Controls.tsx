@@ -3,6 +3,7 @@ import { type ChangeEvent, useEffect, useId, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { GamePicker } from "@/components/ui/GamePicker";
 import { Modal } from "@/components/ui/Modal";
+import { ShareDialog } from "@/components/ui/ShareDialog";
 import {
   ExportIcon,
   ImportIcon,
@@ -23,7 +24,7 @@ import {
   type Smz3Progress,
   useSmz3Store,
 } from "@/games/smz3/store";
-import { SHARE_HELP, shareRun } from "@/share/shareRun";
+import { SHARE_HELP, type ShareResult, shareRun } from "@/share/shareRun";
 import { commandKey, isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
 import { obsViewUrl } from "@/utils/view";
@@ -243,6 +244,7 @@ export const Smz3Controls = () => {
     null,
   );
   const [pendingImport, setPendingImport] = useState<Smz3Progress | null>(null);
+  const [share, setShare] = useState<Promise<ShareResult> | null>(null);
   const [status, setStatus] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -259,9 +261,7 @@ export const Smz3Controls = () => {
     );
 
   const handleShare = () =>
-    void shareRun([packLink(exportSave(useSmz3Store.getState()))]).then(
-      setStatus,
-    );
+    setShare(shareRun([packLink(exportSave(useSmz3Store.getState()))]));
 
   const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
     const [file] = event.target.files ?? [];
@@ -388,6 +388,7 @@ export const Smz3Controls = () => {
       {dialog === "stream" && (
         <Smz3StreamDialog onClose={() => setDialog(null)} />
       )}
+      <ShareDialog onClose={() => setShare(null)} share={share} />
       <ConfirmDialog
         confirmLabel="New game"
         isOpen={dialog === "reset"}
