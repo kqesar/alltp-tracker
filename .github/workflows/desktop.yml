@@ -124,4 +124,4 @@ jobs:
       # "Stream tools"): only their tests run here, the rest is Linux's
       - name: Test the servers
         if: matrix.os == 'windows-latest'
-        run: cargo test --locked stream:: relay::
+        run: "cargo test --locked -- stream:: relay::"
