@@ -1,3 +1,4 @@
+import { ToggleList } from "@/components/ui/ToggleList";
 import { BOSS_TOKENS } from "@/games/smz3/data";
 import { useSmz3Store } from "@/games/smz3/store";
 
@@ -9,46 +10,25 @@ export const Smz3Tokens = () => {
   const items = useSmz3Store((state) => state.items);
   const needed = useSmz3Store((state) => state.settings.tourianBosses);
   const step = useSmz3Store((state) => state.step);
-  const found = BOSS_TOKENS.filter(({ id }) => (items[id] ?? 0) > 0).length;
+  const tokens = BOSS_TOKENS.map(({ id, name }) => ({
+    id,
+    name,
+    on: (items[id] ?? 0) > 0,
+    testId: `smz3-${id}`,
+  }));
+  const found = tokens.filter(({ on }) => on).length;
   return (
-    <section
-      aria-labelledby="smz3-tokens-heading"
-      className="board-panel smz3-tokens"
-      data-testid="smz3-tokens"
-    >
-      <h2 className="board-panel__heading" id="smz3-tokens-heading">
-        Boss tokens
-      </h2>
-      <p
-        aria-live="polite"
-        className="board-panel__summary"
-        data-testid="smz3-tokens-summary"
-      >
-        {found >= needed
+    <ToggleList
+      className="smz3-tokens"
+      items={tokens}
+      onToggle={({ id, on }) => step(id, on ? -1 : 1)}
+      summary={
+        found >= needed
           ? `${found} found: Tourian is open.`
-          : `${found} of the ${needed} Tourian asks for.`}
-      </p>
-      <ul className="board-panel__list">
-        {BOSS_TOKENS.map(({ id, name }) => {
-          const held = (items[id] ?? 0) > 0;
-          return (
-            <li key={id}>
-              <button
-                aria-pressed={held}
-                className="toggle-chip"
-                data-testid={`smz3-${id}`}
-                onClick={() => step(id, held ? -1 : 1)}
-                type="button"
-              >
-                <span aria-hidden="true" className="toggle-chip__check">
-                  {held ? "✓" : ""}
-                </span>
-                {name}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
+          : `${found} of the ${needed} Tourian asks for.`
+      }
+      testId="smz3-tokens"
+      title="Boss tokens"
+    />
   );
 };
