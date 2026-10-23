@@ -13,6 +13,7 @@
 use crate::relay::{Gate, relay_to};
 use axum::extract::ws::{Utf8Bytes, WebSocketUpgrade};
 use axum::extract::{RawQuery, State};
+use axum::http::{HeaderMap, header::SEC_WEBSOCKET_PROTOCOL};
 use axum::response::Response;
 use serde::Serialize;
 use std::sync::Arc;
@@ -99,6 +100,7 @@ impl Follow {
 pub async fn follow(
     State(follow): State<Follow>,
     RawQuery(query): RawQuery,
+    headers: HeaderMap,
     upgrade: WebSocketUpgrade,
 ) -> Response {
     let Follow {
@@ -107,9 +109,16 @@ pub async fn follow(
         token,
     } = follow;
     let pump = gate.clone();
-    gate.admit(upgrade, query.as_deref(), &token, move |socket| {
-        relay_to(socket, latest, pump)
-    })
+    let protocols = headers
+        .get(SEC_WEBSOCKET_PROTOCOL)
+        .and_then(|value| value.to_str().ok());
+    gate.admit(
+        upgrade,
+        query.as_deref(),
+        protocols,
+        &token,
+        move |socket| relay_to(socket, latest, pump),
+    )
 }
 
 #[cfg(test)]

@@ -278,14 +278,25 @@ impl Gate {
 
     /// Upgrades a request to a WebSocket and hands the socket to `pump`; the
     /// seat is held here until `pump` ends, whatever it does with the socket
-    /// (a pump is usually `relay_to`, or `pump` over a `Source`). A refused viewer gets a socket closed at once with a code
-    /// that says why: a browser sees no HTTP status on a refused WebSocket.
-    /// A request that reaches a stopped session (it was sent before the
-    /// stop) takes no seat, whatever its token.
+    /// (a pump is usually `relay_to`, or `pump` over a `Source`). A refused
+    /// viewer gets a socket closed at once with a code that says why: a
+    /// browser sees no HTTP status on a refused WebSocket. A request that
+    /// reaches a stopped session (it was sent before the stop) takes no seat,
+    /// whatever its token.
+    ///
+    /// The token comes in the query (`?token=`) or as a WebSocket
+    /// subprotocol (`alltp.<token>`, the `Sec-WebSocket-Protocol` header
+    /// `protocols`): the page uses the latter so that a failed connection,
+    /// which a browser source's host may log with its address, does not carry
+    /// the token. The offered subprotocol is echoed back, right or wrong: a
+    /// browser drops a connection whose answer names none of the protocols it
+    /// offered, which would hide the 4401 of a wrong token behind a plain
+    /// failure.
     pub fn admit<F, Fut>(
         &self,
         upgrade: WebSocketUpgrade,
         query: Option<&str>,
+        protocols: Option<&str>,
         token: &str,
         pump: F,
     ) -> Response
@@ -293,13 +304,19 @@ impl Gate {
         F: FnOnce(WebSocket) -> Fut + Send + 'static,
         Fut: Future<Output = ()> + Send + 'static,
     {
-        let upgrade = upgrade
+        let mut upgrade = upgrade
             .max_frame_size(MAX_INCOMING)
             .max_message_size(MAX_INCOMING);
+        if let Some(offered) = offered_protocol(protocols) {
+            upgrade = upgrade.protocols([offered.to_owned()]);
+        }
         if *self.stop.borrow() {
             return upgrade.on_upgrade(|socket| close_with(socket, close::STOPPED, "stopped"));
         }
-        if !token_matches(query, token) {
+        // Both read, so the time taken does not say which one was right
+        let by_query = token_matches(query, token);
+        let by_protocol = protocol_matches(protocols, token);
+        if !(by_query | by_protocol) {
             return upgrade.on_upgrade(|socket| close_with(socket, close::TOKEN, "token"));
         }
         let Some(seat) = self.take_seat() else {
@@ -574,6 +591,10 @@ pub fn token() -> io::Result<String> {
     Ok(URL_SAFE_NO_PAD.encode(bits))
 }
 
+/// What the page puts before the token in a WebSocket subprotocol:
+/// `alltp.<token>`.
+pub const PROTOCOL_PREFIX: &str = "alltp.";
+
 /// Whether the query carries this token, compared in constant time.
 pub fn token_matches(query: Option<&str>, token: &str) -> bool {
     let given = query
@@ -581,6 +602,39 @@ pub fn token_matches(query: Option<&str>, token: &str) -> bool {
         .split('&')
         .find_map(|pair| pair.strip_prefix("token="))
         .unwrap_or_default();
+    same(given, token)
+}
+
+/// Whether one of the subprotocols offered (the `Sec-WebSocket-Protocol`
+/// header: a comma-separated list) is `alltp.` and this token, compared in
+/// constant time.
+pub fn protocol_matches(protocols: Option<&str>, token: &str) -> bool {
+    let mut matched = false;
+    for given in protocols.unwrap_or_default().split(',') {
+        if let Some(given) = given.trim().strip_prefix(PROTOCOL_PREFIX) {
+            matched |= same(given, token);
+        }
+    }
+    matched
+}
+
+/// The subprotocol to echo: the one that carries a token, else the first.
+fn offered_protocol(protocols: Option<&str>) -> Option<&str> {
+    let mut offered = protocols?
+        .split(',')
+        .map(str::trim)
+        .filter(|p| !p.is_empty());
+    let first = offered.next()?;
+    Some(
+        std::iter::once(first)
+            .chain(offered)
+            .find(|protocol| protocol.starts_with(PROTOCOL_PREFIX))
+            .unwrap_or(first),
+    )
+}
+
+/// Equal, in time that depends on the length alone.
+fn same(given: &str, token: &str) -> bool {
     if given.len() != token.len() {
         return false;
     }
@@ -653,7 +707,7 @@ mod tests {
     ) -> Response {
         let Shared { gate, latest } = shared;
         let pump = gate.clone();
-        gate.admit(upgrade, query.as_deref(), TOKEN, move |socket| {
+        gate.admit(upgrade, query.as_deref(), None, TOKEN, move |socket| {
             relay_to(socket, latest, pump)
         })
     }
@@ -880,7 +934,7 @@ mod tests {
                 "/once",
                 get(move |upgrade: WebSocketUpgrade| async move {
                     let pump = gate.clone();
-                    gate.admit(upgrade, Some("token=t"), "t", move |socket| {
+                    gate.admit(upgrade, Some("token=t"), None, "t", move |socket| {
                         super::pump(socket, pump, Once(Some("hello")))
                     })
                 }),
@@ -914,6 +968,25 @@ mod tests {
         assert!(!token_matches(Some("token=abcd"), "abc"));
         assert!(!token_matches(Some("xtoken=abc"), "abc"));
         assert!(!token_matches(None, "abc"));
+    }
+
+    #[test]
+    fn reads_the_token_from_a_subprotocol_too() {
+        assert!(protocol_matches(Some("alltp.abc"), "abc"));
+        assert!(protocol_matches(Some("other, alltp.abc"), "abc"));
+        assert!(!protocol_matches(Some("alltp.abd"), "abc"));
+        assert!(!protocol_matches(Some("alltp."), "abc"));
+        assert!(!protocol_matches(Some("abc"), "abc"));
+        assert!(!protocol_matches(Some("xalltp.abc"), "abc"));
+        assert!(!protocol_matches(None, "abc"));
+        // The one echoed is the one that carries a token, else the first
+        assert_eq!(
+            offered_protocol(Some("other, alltp.abc")),
+            Some("alltp.abc")
+        );
+        assert_eq!(offered_protocol(Some("other, more")), Some("other"));
+        assert_eq!(offered_protocol(Some("")), None);
+        assert_eq!(offered_protocol(None), None);
         assert_ne!(token().unwrap(), token().unwrap());
     }
 }

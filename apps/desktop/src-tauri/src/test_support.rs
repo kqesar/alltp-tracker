@@ -35,6 +35,20 @@ pub async fn connect(port: u16, query: &str) -> Viewer {
     connect_async(url).await.unwrap().0
 }
 
+/// Connects to `/follow` on `port` with no token in the address, offering
+/// `protocol` as the WebSocket subprotocol (`alltp.<token>`): the handshake's
+/// answer must name it, or tungstenite refuses the connection.
+pub async fn connect_with_protocol(port: u16, protocol: &str) -> Viewer {
+    use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+    let mut request = format!("ws://127.0.0.1:{port}/follow")
+        .into_client_request()
+        .unwrap();
+    request
+        .headers_mut()
+        .insert("Sec-WebSocket-Protocol", protocol.parse().unwrap());
+    connect_async(request).await.unwrap().0
+}
+
 /// The next message, pings, pongs and beats included.
 pub async fn next_any(viewer: &mut Viewer) -> WsMessage {
     tokio::time::timeout(WAIT, viewer.next())

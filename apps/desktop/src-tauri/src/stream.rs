@@ -41,6 +41,7 @@ use std::io;
 use std::net::Ipv4Addr;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
 
@@ -52,6 +53,10 @@ pub const PORT: u16 = 23076;
 
 /// How many ports after the preferred one are tried before any free one.
 const FALLBACK_PORTS: u16 = 9;
+
+/// How long a restart waits for its own port, and how often it tries.
+const RESTART_WAIT: Duration = Duration::from_secs(2);
+const RESTART_STEP: Duration = Duration::from_millis(50);
 
 /// The most sources at once: OBS, its preview, a second scene, a dock, a
 /// second computer, with room to spare. Each one costs a socket and a task.
@@ -251,7 +256,26 @@ impl Stream {
     /// else any free one: a source's address should stay on a port a player
     /// can recognise and open in the firewall. The error of the last attempt
     /// is the one reported.
-    async fn bind(&self, address: Ipv4Addr, saved: u16) -> io::Result<TcpListener> {
+    ///
+    /// A `restart` (the same server reopened for the network switch or new
+    /// addresses) first waits for the saved port to come free, `RESTART_STEP`
+    /// at a time for up to `RESTART_WAIT`: on Windows an exclusive bind fails
+    /// while a connection the old listener accepted is still closing
+    /// (FIN_WAIT, LAST_ACK), which takes the source a moment to finish, and
+    /// the port must not move for that.
+    async fn bind(&self, address: Ipv4Addr, saved: u16, restart: bool) -> io::Result<TcpListener> {
+        if restart {
+            let deadline = tokio::time::Instant::now() + RESTART_WAIT;
+            loop {
+                match relay::bind_exclusive(address, saved).await {
+                    Ok(listener) => return Ok(listener),
+                    Err(_) if tokio::time::Instant::now() < deadline => {
+                        tokio::time::sleep(RESTART_STEP).await;
+                    }
+                    Err(_) => break,
+                }
+            }
+        }
         let after =
             self.preferred.saturating_add(1)..=self.preferred.saturating_add(FALLBACK_PORTS);
         let mut tried = Vec::new();
@@ -276,7 +300,7 @@ impl Stream {
             return Ok(running.now());
         }
         let config = self.config(&mut inner)?;
-        self.open(&mut inner, config).await
+        self.open(&mut inner, config, false).await
     }
 
     /// Opens the server at launch if the switch was left on. Does nothing
@@ -290,7 +314,7 @@ impl Stream {
         if !config.enabled {
             return Ok(None);
         }
-        self.open(&mut inner, config).await.map(Some)
+        self.open(&mut inner, config, false).await.map(Some)
     }
 
     /// The config in memory, read on first use.
@@ -305,7 +329,7 @@ impl Stream {
     /// with the port actually held. A config that cannot be written closes
     /// the session again, so what is running is always what the next launch
     /// will start.
-    async fn open(&self, inner: &mut Inner, config: Config) -> io::Result<Started> {
+    async fn open(&self, inner: &mut Inner, config: Config, restart: bool) -> io::Result<Started> {
         // Loopback unless the player allowed the network: a source on this
         // computer needs nothing more, and nothing else can reach the port
         let address = if config.lan {
@@ -313,7 +337,7 @@ impl Stream {
         } else {
             Ipv4Addr::LOCALHOST
         };
-        let listener = self.bind(address, config.port).await?;
+        let listener = self.bind(address, config.port, restart).await?;
         let session = Session::open_on(
             listener,
             MAX_VIEWERS,
@@ -405,7 +429,7 @@ impl Stream {
             return Ok(None);
         };
         running.session.stop().await;
-        self.open(&mut inner, config).await.map(Some)
+        self.open(&mut inner, config, true).await.map(Some)
     }
 
     /// Replaces both tokens. The sources holding the old address are closed
@@ -426,7 +450,7 @@ impl Stream {
             return Ok(None);
         };
         running.session.stop().await;
-        self.open(&mut inner, config).await.map(Some)
+        self.open(&mut inner, config, true).await.map(Some)
     }
 }
 
@@ -434,9 +458,12 @@ impl Stream {
 mod tests {
     use super::*;
     use crate::relay::close;
-    use crate::test_support::{Viewer, assets, close_code, connect, request, snapshot};
+    use crate::test_support::{
+        Viewer, assets, close_code, connect, connect_with_protocol, request, snapshot,
+    };
     use std::sync::Mutex as StdMutex;
     use std::sync::atomic::{AtomicU32, Ordering};
+    use std::time::Instant;
     use tokio::net::TcpListener;
     use tokio::net::TcpStream;
 
@@ -1139,5 +1166,56 @@ mod tests {
         assert_eq!(std::fs::read_to_string(&bad).unwrap(), "first damage");
         assert_eq!(dir.saved().view_token, started.token);
         second.stop().await;
+    }
+
+    #[tokio::test]
+    async fn a_restart_waits_for_its_own_port_instead_of_moving() {
+        let dir = Scratch::new();
+        let (stream, _) = stream(&dir, free_port().await, &RunFeed::new());
+        let port = free_port().await;
+        // Held, then let go 300 ms later: a connection still closing
+        let holder = TcpListener::bind(("127.0.0.1", port)).await.unwrap();
+        let release = tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            drop(holder);
+        });
+
+        let listener = stream.bind(Ipv4Addr::LOCALHOST, port, true).await.unwrap();
+
+        assert_eq!(listener.local_addr().unwrap().port(), port);
+        release.await.unwrap();
+        // A first start does not wait: it takes the next port at once
+        drop(listener);
+        let held = hold(&[port]).await;
+        let started = Instant::now();
+        let other = stream.bind(Ipv4Addr::LOCALHOST, port, false).await.unwrap();
+        assert_ne!(other.local_addr().unwrap().port(), port);
+        assert!(started.elapsed() < Duration::from_millis(250));
+        drop(held);
+    }
+
+    #[tokio::test]
+    async fn takes_the_token_as_a_subprotocol_so_the_address_carries_none() {
+        let dir = Scratch::new();
+        let feed = RunFeed::new();
+        let (stream, counts) = stream(&dir, free_port().await, &feed);
+        let started = stream.start().await.unwrap();
+        feed.publish("alttpr", "k", "1", 1).unwrap();
+
+        let mut source =
+            connect_with_protocol(started.port, &format!("alltp.{}", started.token)).await;
+        assert_eq!(snapshot(&mut source).await["value"], "1");
+
+        // A wrong token is still answered, with the protocol echoed so a
+        // browser reads the 4401 rather than a bare failure
+        let mut wrong = connect_with_protocol(started.port, "alltp.nope").await;
+        assert_eq!(close_code(&mut wrong).await, close::TOKEN);
+        let mut none = connect_with_protocol(started.port, "other").await;
+        assert_eq!(close_code(&mut none).await, close::TOKEN);
+        // The query form still works
+        let mut query = watch_with(&started).await;
+        assert_eq!(snapshot(&mut query).await["value"], "1");
+        assert_eq!(*counts.lock().unwrap(), [1, 2]);
+        stream.stop().await;
     }
 }
