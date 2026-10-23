@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAppMenuStore } from "@/desktop/appMenu";
+import { useLiveFollowStore } from "@/desktop/liveFollow";
 import { useUpdateStore } from "@/stores/updateStore";
 
 const tauri = vi.hoisted(() => ({
@@ -19,7 +20,11 @@ const { offerUpdate, openLinksOutside, startDesktop } = await import(
 
 beforeEach(() => {
   useUpdateStore.setState(useUpdateStore.getInitialState(), true);
+  useLiveFollowStore.setState(useLiveFollowStore.getInitialState(), true);
   vi.clearAllMocks();
+  tauri.invoke
+    .mockReset()
+    .mockResolvedValue({ added: false, available: false });
 });
 
 afterEach(() => {
@@ -29,15 +34,58 @@ afterEach(() => {
 
 describe("the desktop app's updates", () => {
   it("offer a new release as a restart, installed only when the player asks", async () => {
-    const downloadAndInstall = vi.fn().mockResolvedValue(undefined);
-    tauri.check.mockResolvedValue({ downloadAndInstall });
+    const download = vi.fn().mockResolvedValue(undefined);
+    const install = vi.fn().mockResolvedValue(undefined);
+    tauri.check.mockResolvedValue({ download, install });
     await offerUpdate();
     const { apply, label } = useUpdateStore.getState();
     expect(label).toBe("Restart");
-    expect(downloadAndInstall).not.toHaveBeenCalled();
+    expect(download).not.toHaveBeenCalled();
     apply?.();
     await vi.waitFor(() => expect(tauri.relaunch).toHaveBeenCalledOnce());
-    expect(downloadAndInstall).toHaveBeenCalledOnce();
+    expect(download).toHaveBeenCalledOnce();
+    expect(install).toHaveBeenCalledOnce();
+    // Live follow is off: nothing to stop
+    expect(tauri.invoke).not.toHaveBeenCalledWith("follow_stop");
+  });
+
+  it("stop live follow once the update is downloaded, before it installs", async () => {
+    const order: string[] = [];
+    const download = vi.fn(async () => {
+      order.push("download");
+    });
+    const install = vi.fn(async () => {
+      order.push("install");
+    });
+    tauri.invoke.mockImplementation(async (command: string) => {
+      order.push(command);
+    });
+    useLiveFollowStore.setState({
+      session: { lanFound: true, port: 23075, url: "http://x", viewers: 1 },
+    });
+    tauri.check.mockResolvedValue({ download, install });
+    await offerUpdate();
+    useUpdateStore.getState().apply?.();
+    await vi.waitFor(() => expect(tauri.relaunch).toHaveBeenCalledOnce());
+    expect(order).toEqual(["download", "follow_stop", "install"]);
+    expect(useLiveFollowStore.getState().session).toBeNull();
+  });
+
+  it("leave live follow running when the download fails", async () => {
+    const download = vi.fn().mockRejectedValue(new Error("offline"));
+    const install = vi.fn();
+    useLiveFollowStore.setState({
+      session: { lanFound: true, port: 23075, url: "http://x", viewers: 1 },
+    });
+    tauri.check.mockResolvedValue({ download, install });
+    await offerUpdate();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    useUpdateStore.getState().apply?.();
+    await vi.waitFor(() => expect(warn).toHaveBeenCalledOnce());
+    warn.mockRestore();
+    expect(install).not.toHaveBeenCalled();
+    expect(tauri.invoke).not.toHaveBeenCalledWith("follow_stop");
+    expect(useLiveFollowStore.getState().session).not.toBeNull();
   });
 
   it("offer nothing when the app is up to date, or the check fails", async () => {
