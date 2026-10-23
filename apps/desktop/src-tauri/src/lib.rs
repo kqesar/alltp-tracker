@@ -5,8 +5,9 @@
 // shortcuts work while the emulator has the focus (shortcuts/, and the
 // command line in cli.rs), an AppImage can add itself to the application menu
 // (app_menu.rs, launcher.rs), the run can be followed live from another
-// device on the local network (follow.rs, relay.rs), and new versions come
-// from GitHub Releases, signed with the project's updater key (docs/desktop.md).
+// device on the local network (follow.rs) and shown to OBS (stream.rs), both
+// served over relay.rs and feed.rs, and new versions come from GitHub
+// Releases, signed with the project's updater key (docs/desktop.md).
 
 mod app_menu;
 mod cli;
@@ -18,6 +19,7 @@ mod launcher;
 mod relay;
 mod retroarch;
 mod shortcuts;
+mod stream;
 #[cfg(test)]
 mod test_support;
 
@@ -98,8 +100,9 @@ async fn follow_stop(relay: State<'_, follow::Relay>) -> Result<(), String> {
 }
 
 /// Hands the servers the run the page just saved: `value` is the game's
-/// persisted state, `sent_at` the page's clock (ms). Every server streams it
-/// (live follow today). Async, so a large run is copied off the main thread.
+/// persisted state, `sent_at` the page's clock (ms). Live follow and the
+/// stream view both send it on. Async, so a large run is copied off the main
+/// thread.
 #[tauri::command]
 async fn run_publish(
     feed: State<'_, feed::RunFeed>,
@@ -109,6 +112,37 @@ async fn run_publish(
     sent_at: u64,
 ) -> Result<(), String> {
     feed.publish(&game, &key, &value, sent_at)
+}
+
+/// Turns the stream view for OBS on, or hands back the running one (see
+/// `stream.rs`). The switch is kept: the stream starts by itself at launch.
+#[tauri::command]
+async fn stream_start(stream: State<'_, stream::Stream>) -> Result<stream::Started, String> {
+    stream.start().await.map_err(|error| error.to_string())
+}
+
+/// The running stream, or nothing while it is off.
+#[tauri::command]
+async fn stream_state(
+    stream: State<'_, stream::Stream>,
+) -> Result<Option<stream::Started>, String> {
+    Ok(stream.running().await)
+}
+
+/// Turns the stream off until the player turns it on again.
+#[tauri::command]
+async fn stream_stop(stream: State<'_, stream::Stream>) -> Result<(), String> {
+    stream.stop().await;
+    Ok(())
+}
+
+/// Replaces the stream's tokens, which closes the sources that hold the old
+/// address: the new session, or nothing while the stream is off.
+#[tauri::command]
+async fn stream_new_tokens(
+    stream: State<'_, stream::Stream>,
+) -> Result<Option<stream::Started>, String> {
+    stream.new_tokens().await.map_err(|error| error.to_string())
 }
 
 #[derive(Clone, Serialize)]
@@ -131,17 +165,36 @@ pub fn run() {
         // An existing menu entry follows the AppImage if it moved
         .setup(|app| {
             app_menu::refresh_at_launch();
-            let handle = app.handle().clone();
-            let on_viewers = Arc::new(move |count| {
-                let _ = handle.emit("follow-viewers", ViewersPayload { count });
-            });
             let feed = feed::RunFeed::new();
             app.manage(feed.clone());
+            let assets = follow::tauri_assets(app.handle().clone());
+            let handle = app.handle().clone();
+            let on_followers = Arc::new(move |count| {
+                let _ = handle.emit("follow-viewers", ViewersPayload { count });
+            });
             app.manage(follow::Relay::new(
-                feed,
-                follow::tauri_assets(app.handle().clone()),
-                on_viewers,
+                feed.clone(),
+                Arc::clone(&assets),
+                on_followers,
             ));
+            let handle = app.handle().clone();
+            let on_sources = Arc::new(move |count| {
+                let _ = handle.emit("stream-viewers", ViewersPayload { count });
+            });
+            app.manage(stream::Stream::new(
+                app.path().app_config_dir()?,
+                stream::PORT,
+                feed,
+                assets,
+                on_sources,
+            ));
+            // A stream left on opens by itself: the address in OBS keeps working
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                if let Err(error) = handle.state::<stream::Stream>().resume().await {
+                    eprintln!("could not start the stream: {error}");
+                }
+            });
             Ok(())
         })
         .on_page_load(shortcuts::on_page_load)
@@ -157,14 +210,20 @@ pub fn run() {
             shortcuts::global_shortcuts_ready,
             shortcuts::global_shortcuts_apply,
             shortcuts::global_shortcuts_configure,
-            shortcuts::key_labels
+            shortcuts::key_labels,
+            stream_new_tokens,
+            stream_start,
+            stream_state,
+            stream_stop
         ])
         .build(tauri::generate_context!())
         .expect("error while building the tracker")
         .run(|app, event| {
-            // Viewers are told the relay stopped, rather than left to retry
+            // Viewers are told the servers stopped, rather than left to retry.
+            // The stream's switch stays on: it opens again at the next launch
             if let tauri::RunEvent::Exit = event {
                 tauri::async_runtime::block_on(app.state::<follow::Relay>().stop());
+                tauri::async_runtime::block_on(app.state::<stream::Stream>().shutdown());
             }
         });
 }
