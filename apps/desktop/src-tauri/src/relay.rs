@@ -3,7 +3,8 @@
 // its own routes, port, seat limit and token policy, and this module brings
 // what they share:
 //
-//   Session   the lifecycle: bind the preferred port on every interface (a
+//   Session   the lifecycle: bind the preferred port on an address, every
+//             interface or loopback as the server chooses (a
 //             free one when it fails), serve, stop within STOP_WAIT
 //   Gate      what a session's routes read: the stop flag, the seats, the beat
 //   Seat      one viewer's place, counted while it is held
@@ -131,11 +132,14 @@ pub struct Gate {
 }
 
 impl Session {
-    /// Opens a server on `port`, or on a free port when that one fails
-    /// (taken, or refused: Windows answers "access denied" for a port in a
-    /// range Hyper-V, WSL or Docker reserved). `routes` builds the router
-    /// from the session's gate. At most `limit` viewers hold a seat at once.
+    /// Opens a server on `address` and `port` (`Ipv4Addr::UNSPECIFIED` for
+    /// every interface, `LOCALHOST` for this computer alone), or on a free
+    /// port when that one fails (taken, or refused: Windows answers "access
+    /// denied" for a port in a range Hyper-V, WSL or Docker reserved).
+    /// `routes` builds the router from the session's gate. At most `limit`
+    /// viewers hold a seat at once.
     pub async fn open(
+        address: Ipv4Addr,
         port: u16,
         limit: usize,
         timing: Timing,
@@ -144,10 +148,23 @@ impl Session {
     ) -> io::Result<Session> {
         // A fault that is not the port's (no descriptor left) fails the free
         // port the same way, and that error is the one reported
-        let listener = match TcpListener::bind((Ipv4Addr::UNSPECIFIED, port)).await {
-            Err(_) if port != 0 => TcpListener::bind((Ipv4Addr::UNSPECIFIED, 0)).await?,
+        let listener = match TcpListener::bind((address, port)).await {
+            Err(_) if port != 0 => TcpListener::bind((address, 0)).await?,
             bound => bound?,
         };
+        Session::open_on(listener, limit, timing, on_viewers, routes)
+    }
+
+    /// Serves on a listener the caller bound: for a server that picks its
+    /// port from its own list (the stream view's), where `open` would only
+    /// try one and then any.
+    pub fn open_on(
+        listener: TcpListener,
+        limit: usize,
+        timing: Timing,
+        on_viewers: OnViewers,
+        routes: impl FnOnce(Gate) -> Router,
+    ) -> io::Result<Session> {
         let port = listener.local_addr()?.port();
         let (stop, stop_rx) = watch::channel(false);
         let (viewers, viewers_rx) = watch::channel(0);
@@ -612,13 +629,20 @@ mod tests {
             })
         });
         let (latest, receiver) = watch::channel(None);
-        let session = Session::open(port, LIMIT, timing, on_viewers, |gate| {
-            let shared = Shared {
-                gate,
-                latest: receiver,
-            };
-            with_assets(Router::new().route("/stream", get(stream)), assets).with_state(shared)
-        })
+        let session = Session::open(
+            Ipv4Addr::UNSPECIFIED,
+            port,
+            LIMIT,
+            timing,
+            on_viewers,
+            |gate| {
+                let shared = Shared {
+                    gate,
+                    latest: receiver,
+                };
+                with_assets(Router::new().route("/stream", get(stream)), assets).with_state(shared)
+            },
+        )
         .await
         .unwrap();
         Server {
@@ -806,7 +830,7 @@ mod tests {
     #[tokio::test]
     async fn a_pump_over_its_own_source_keeps_the_seat_and_beats_its_own_frame() {
         let (on_viewers, counts) = counter();
-        let session = Session::open(0, 1, FAST, on_viewers, |gate| {
+        let session = Session::open(Ipv4Addr::UNSPECIFIED, 0, 1, FAST, on_viewers, |gate| {
             Router::new().route(
                 "/once",
                 get(move |upgrade: WebSocketUpgrade| async move {

@@ -136,6 +136,17 @@ async fn stream_stop(stream: State<'_, stream::Stream>) -> Result<(), String> {
     Ok(())
 }
 
+/// Allows other devices on the network to reach the stream, or takes that
+/// back (loopback only). A running stream opens again on the same port with
+/// the same tokens: its new session, or nothing while the stream is off.
+#[tauri::command]
+async fn stream_set_lan(
+    stream: State<'_, stream::Stream>,
+    lan: bool,
+) -> Result<Option<stream::Started>, String> {
+    stream.set_lan(lan).await.map_err(|error| error.to_string())
+}
+
 /// Replaces the stream's tokens, which closes the sources that hold the old
 /// address: the new session, or nothing while the stream is off.
 #[tauri::command]
@@ -181,18 +192,31 @@ pub fn run() {
             let on_sources = Arc::new(move |count| {
                 let _ = handle.emit("stream-viewers", ViewersPayload { count });
             });
+            // Without a config directory nothing could be kept: the stream
+            // is unavailable (it refuses to start) rather than the app
+            let config_dir = app
+                .path()
+                .app_config_dir()
+                .inspect_err(|error| eprintln!("the stream is unavailable: {error}"))
+                .ok();
             app.manage(stream::Stream::new(
-                app.path().app_config_dir()?,
+                config_dir,
                 stream::PORT,
                 feed,
                 assets,
                 on_sources,
             ));
-            // A stream left on opens by itself: the address in OBS keeps working
+            // A stream left on opens by itself: the address in OBS keeps
+            // working. The page may load before or after it: it asks for the
+            // stream when it loads, and hears this event if that was too early
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
-                if let Err(error) = handle.state::<stream::Stream>().resume().await {
-                    eprintln!("could not start the stream: {error}");
+                match handle.state::<stream::Stream>().resume().await {
+                    Ok(Some(started)) => {
+                        let _ = handle.emit("stream-started", started);
+                    }
+                    Ok(None) => {}
+                    Err(error) => eprintln!("could not start the stream: {error}"),
                 }
             });
             Ok(())
@@ -212,6 +236,7 @@ pub fn run() {
             shortcuts::global_shortcuts_configure,
             shortcuts::key_labels,
             stream_new_tokens,
+            stream_set_lan,
             stream_start,
             stream_state,
             stream_stop
@@ -222,8 +247,12 @@ pub fn run() {
             // Viewers are told the servers stopped, rather than left to retry.
             // The stream's switch stays on: it opens again at the next launch
             if let tauri::RunEvent::Exit = event {
-                tauri::async_runtime::block_on(app.state::<follow::Relay>().stop());
-                tauri::async_runtime::block_on(app.state::<stream::Stream>().shutdown());
+                // Both at once: each waits up to 2 s for its viewers to leave
+                let relay = app.state::<follow::Relay>();
+                let stream = app.state::<stream::Stream>();
+                tauri::async_runtime::block_on(async {
+                    tokio::join!(relay.stop(), stream.shutdown())
+                });
             }
         });
 }
