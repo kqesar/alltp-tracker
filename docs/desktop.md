@@ -7,8 +7,9 @@
 - **Global shortcuts** that work while the emulator has the focus (below, "Global shortcuts").
 - **A menu entry for a downloaded AppImage**, which installs none (below, "Application menu").
 - **Live follow on the local network**: a phone or a second screen watches the run update, served by the app itself (below, "Live follow on the LAN").
+- **The stream view for OBS**: a Browser Source shows the item grid, served by the app, which OBS could otherwise neither load nor follow (below, "Stream tools").
 
-The site stays the main product. The app adds none of its code to it but the followed view, a small chunk loaded only for `?view=follow` (below, "Live follow on the LAN"), and costs nothing: no store, no paid signing, builds on GitHub's free runners, updates served by GitHub Releases.
+The site stays the main product. The app adds none of its code to it but two small view chunks, the followed view (`?view=follow`) and the relayed stream view (`?view=obs&token=…`), each loaded only for its own address (below, "Live follow on the LAN" and "Stream tools"), and costs nothing: no store, no paid signing, builds on GitHub's free runners, updates served by GitHub Releases.
 
 ## One codebase, two builds
 
@@ -30,10 +31,10 @@ What the `desktop` mode changes (`apps/web/vite.config.ts`):
 | Base path | `/alltp-tracker/` | `/` (the app serves its own files) |
 | Service worker | yes, for offline use and updates | none: the files are local, updates come from the app |
 | Speech model (40 MB) | `models/` on the site, fetched on demand | the site's copy, fetched on demand (GitHub Pages sends `access-control-allow-origin: *`); never in an installer |
-| Stream view (OBS) | yes | hidden: OBS can neither load the app's pages nor follow its `localStorage` |
+| Stream view (OBS) | `?view=obs`, an address to paste: the source follows the tracker through its `localStorage`, so the tracker runs in an OBS dock | the **Stream view** button opens the stream tools: the app serves `?view=obs&token=…` to the source itself (below, "Stream tools"), since OBS can neither load the app's pages nor follow its `localStorage` |
 | Share a run | a link to this deployment | a link to the published site (`SITE_URL`): the app's own address, `tauri://localhost`, opens nowhere else. A viewer opens it in a browser, where it keeps a run apart from the app's own |
 
-The code reads the mode through `isDesktopApp` (`apps/web/src/utils/platform.ts`), a constant the site's build folds to `false`. Every lazy `import()` of desktop-only code is the exception: it sits behind an inline `import.meta.env.MODE === "desktop"` test (`main.tsx`'s start-up and live follow, `ShareDialog`'s live follow section, `GameShell`'s and `TrackerControls`' application menu chunks, ALttPR's global shortcuts, and the rest), because Rollup does not fold a constant imported from another module far enough to drop a dynamic `import()`. With the inline test, the site's build emits no chunk of the desktop code (checked in the build output: no `start-*.js`).
+The code reads the mode through `isDesktopApp` (`apps/web/src/utils/platform.ts`), a constant the site's build folds to `false`. Every lazy `import()` of desktop-only code is the exception: it sits behind an inline `import.meta.env.MODE === "desktop"` test (`main.tsx`'s start-up and run feed, `ShareDialog`'s live follow section, `StreamTools`' dialog, `GameShell`'s and `TrackerControls`' application menu chunks, ALttPR's global shortcuts, and the rest), because Rollup does not fold a constant imported from another module far enough to drop a dynamic `import()`. With the inline test, the site's build emits no chunk of the desktop code (checked in the build output: no `start-*.js`).
 
 ## At runtime
 
@@ -74,7 +75,7 @@ flowchart TB
 ```
 
 - **The webview** is each system's own: WebView2 on Windows (pages at `http://tauri.localhost`), WKWebView on macOS and WebKitGTK on Linux (pages at `tauri://localhost`). None of these origins is https, so autotracking's WebSocket to SNI is not mixed content. `detectEnvironment` (`packages/autotrack/src/environment.ts`) gates loopback on https pages only, else the WebKit of macOS and Linux would read as a blocked Safari.
-- **What the pages may ask of the app** is listed in `src-tauri/capabilities/default.json`: open an https URL (`opener:allow-open-url` scoped to `https://*`: without a scope the permission grants the command but no URL), check for and install an update, restart, and the app's own commands, `save_file`, `retroarch`, `app_menu_*`, `follow_*` and the `global_shortcuts_*` ones (an app's own commands need no permission entry). Nothing else: in particular no `global-shortcut:*` permission, so the page cannot register a key through the plugin itself, only through the app's command, which checks it.
+- **What the pages may ask of the app** is listed in `src-tauri/capabilities/default.json`: open an https URL (`opener:allow-open-url` scoped to `https://*`: without a scope the permission grants the command but no URL), check for and install an update, restart, and the app's own commands, `save_file`, `retroarch`, `app_menu_*`, `follow_*`, `stream_*`, `run_publish` and the `global_shortcuts_*` ones (an app's own commands need no permission entry). Nothing else: in particular no `global-shortcut:*` permission, so the page cannot register a key through the plugin itself, only through the app's command, which checks it.
 - **Links** to other sites open in the system browser (`openLinksOutside` in `apps/web/src/desktop/start.ts`). In the app's window they would replace the tracker.
 - **Exports** go through the system's Save dialog: `saveFile` (`apps/web/src/utils/saveFile.ts`) calls the app's `save_file` command (`src-tauri/src/lib.rs`), which asks where and writes there. A webview handles a download link its own way (WebKitGTK writes it, unasked, into the process's working directory), and the page gets no file-system access at all: it can write only where the player picks.
 - **The run** is saved in the webview's `localStorage`, apart from any browser's. Export and Import move it.
@@ -280,24 +281,24 @@ The state machine (with the portal flag), the escaping and the icon paths are Ru
 
 A player wants a second screen (a phone on the desk, a laptop for a co-commentator) to show the tracker as it updates. A page cannot open a server, so the site cannot do it; the app can. While the player has it on, the app serves its own page and a WebSocket that relays the run to devices on the same network. Nothing leaves the network: no relay service, no account, no cost.
 
-The Rust side is `apps/desktop/src-tauri/src/follow.rs` (live follow's port, seat limit, token and route) over `relay.rs`, the building blocks any server the app runs for the network is made of: the lifecycle (preferred port, free fallback, stop), the accept loop and its limits, the seats, the snapshot pump with its beat, the file routes and the token check. The page side is the publisher (`apps/web/src/follow/publish.ts`, driven by `apps/web/src/desktop/liveFollow.ts`), the switch in the Share dialog (`apps/web/src/desktop/LiveFollowSection.tsx`) and the followed view (`apps/web/src/follow/`), below the relay's contract.
+The Rust side is `apps/desktop/src-tauri/src/follow.rs` (live follow's port, seat limit, token and session) over `feed.rs` (the run the page published, and the `/follow` route that streams it) and `relay.rs`, the building blocks any server the app runs for the network is made of: the lifecycle (preferred port, free fallback, stop), the accept loop and its limits, the seats, the snapshot pump with its beat, the file routes and the token check. A second server, the stream view for OBS (`stream.rs`, below, "Stream tools"), is built from the same blocks and reads the same run. The page side is the publisher (`apps/web/src/follow/publish.ts`, run by `apps/web/src/desktop/runFeed.ts` and started by `apps/web/src/desktop/liveFollow.ts`), the switch in the Share dialog (`apps/web/src/desktop/LiveFollowSection.tsx`) and the followed view (`apps/web/src/follow/`), below the relay's contract.
 
 ```mermaid
 sequenceDiagram
   participant Page as Tracker page (webview)
-  participant Relay as follow.rs, relay.rs (axum on tokio)
+  participant Relay as follow.rs, feed.rs, relay.rs (axum on tokio)
   participant Viewer as Phone's browser
   Page->>Relay: invoke follow_start
   Note over Relay: bind 0.0.0.0:23075 (a free port if taken),<br/>new 128-bit token
   Relay-->>Page: { url, port, lanFound, viewers }
-  Page->>Relay: invoke follow_publish { game, key, value, sentAt }
+  Page->>Relay: invoke run_publish { game, key, value, sentAt }
   Note over Relay: kept in a watch channel,<br/>serialized once
   Viewer->>Relay: GET /?view=follow&token=… (from the QR code)
   Relay-->>Viewer: index.html, then the hashed assets
   Viewer->>Relay: GET /follow?token=… (WebSocket upgrade)
   Relay-->>Page: event follow-viewers { count }
   Relay-->>Viewer: the latest snapshot, at once
-  Page->>Relay: follow_publish (next change)
+  Page->>Relay: run_publish (next change)
   Relay-->>Viewer: snapshot (a slow viewer skips intermediate ones)
   loop every 15 s
     Relay->>Viewer: ping, and a beat {"beat":true}
@@ -324,7 +325,7 @@ The files are the app's own, through Tauri's asset resolver (`tauri_assets`): em
 ### The stream
 
 - **Message**: a text frame, `{"game","key","value","sentAt"}`, or the beat (below). `value` is the game's persisted state exactly as the page stored it (a JSON string, opaque to Rust: each game's own validation and migration read it on the viewer's side); `sentAt` is the page's `Date.now()`, so the viewer can correct its timer for clock skew.
-- **Semantics**: a `tokio::sync::watch` holds the latest snapshot. A viewer gets it at once on connect, then each change; a viewer slower than the updates skips the states it had no time for, never queues them. The snapshot survives `follow_stop`, so a session started later serves the run at once.
+- **Semantics**: the `RunFeed` (`feed.rs`, a `tokio::sync::watch` shared by both servers) holds the latest snapshot. A viewer gets it at once on connect, then each change; a viewer slower than the updates skips the states it had no time for, never queues them. The snapshot survives `follow_stop` (and the stream's stop), so a session started later serves the run at once.
 - **Read-only**: what a viewer sends is read only to answer pings, to hear that it is there and to see it leave, never acted on; incoming frames are capped at 4 KiB.
 - **Liveness, both ways**: every 15 s the relay pings each viewer (the browser answers with a pong on its own, even while the page's timers are throttled) and sends it a beat, the text frame `{"beat":true}`, which the page can see where it cannot see a ping. A viewer that has not answered the last ping by the next one has vanished (out of range, battery dead: no FIN ever comes) and loses its seat, 15 to 30 s after it went. A followed view that hears no frame for 35 s, two beats, drops its connection and opens a new one (below).
 - **Close codes.** A browser cannot read the HTTP status of a refused WebSocket (it only sees the socket close), so a refusal is an accepted socket closed at once with a code that says why:
@@ -342,7 +343,7 @@ The files are the app's own, through Tauri's asset resolver (`tauri_assets`): em
 | `follow_start` | none | `{ url, port, lanFound, viewers }`; while running, the running session (same token) |
 | `follow_state` | none | the running session as `follow_start` describes it, or `null` while off: what a page that loaded again (a game switch reloads it) reads to pick the relay up |
 | `follow_stop` | none | nothing; idempotent. Closes the port and every connection still in HTTP at once, and waits up to 2 s for the viewers' sockets to close |
-| `follow_publish` | `{ game, key, value, sentAt }` (`sentAt` an integer, ms) | nothing; an error when `value` is over 1 MiB or `game`/`key` over 64 bytes |
+| `run_publish` | `{ game, key, value, sentAt }` (`sentAt` an integer, ms) | nothing; an error when `value` is over 1 MiB or `game`/`key` over 64 bytes. Feeds every server (live follow and the stream view alike): it was `follow_publish` before the stream view shared the feed |
 | event `follow-viewers` | | `{ count }`, each time a viewer joins or leaves; never once its session has stopped (the event names no session: a late one would overwrite the next session's count) |
 
 `url` is `http://<lan-address>:<port>/?view=follow&token=<token>`. The address is the one the default route leaves from: a UDP socket "connected" to a documentation address (192.0.2.1) sends nothing but makes the system pick the route, and its local address is read back, without a crate. With no route (offline), `lanFound` is `false` and the URL is on 127.0.0.1, which only this machine can open. On a machine whose default route is a VPN, the address is the VPN's.
@@ -354,7 +355,7 @@ The files are the app's own, through Tauri's asset resolver (`tauri_assets`): em
 - **Nothing is writable**: no route but the files and the stream, no method but GET, no incoming message acted on.
 - **Bounded before the token is read**: the relay runs its own accept loop on hyper's HTTP/1 (`axum::serve` sets no timer, so hyper's header timeout would never run). At most 32 connections still in HTTP at once (eight viewers loading the page together); one more is closed as soon as it is accepted. A connection that takes over 10 s to send a request's headers, or stays idle that long between two, is closed; its read buffer is 16 KiB (hyper's default allows about 400 KiB). An upgraded viewer leaves that count for the seats below.
 - **Bounded after**: eight viewers at most (each costs a socket, a task and a write buffer), 1 MiB per snapshot, 4 KiB per incoming frame. A viewer that takes more than 10 s to accept a frame is dropped (a stalled device), and one that stops answering pings is dropped by the next one (a vanished device, above), so neither holds a seat. A refused socket (4401, 4503) is closed within about a second, a close frame being given 1 s at most.
-- **No port open while it is off**: `follow_start` starts the server; `follow_stop` and the app's exit close the listener and every socket: a viewer's with a close frame first, a connection still in HTTP at once. A Windows update ends the app without its exit event (the updater runs the installer, then exits the process), so the page stops live follow itself between the download and the install (`desktop/start.ts`); a failed download leaves it running.
+- **No port open while it is off**: `follow_start` starts the server; `follow_stop` and the app's exit close the listener and every socket: a viewer's with a close frame first, a connection still in HTTP at once. A Windows update ends the app without its exit event (the updater runs the installer, then exits the process), so the page stops live follow itself between the download and the install (`desktop/start.ts`); a failed download leaves it running. The stream view is left running on purpose: a browser source that loses its connection keeps retrying and comes back with the relaunched app (below, "Stream tools").
 - **Plain `http://`**: the token crosses the network in clear, visible to anything on it. Acceptable for a read-only view of a run; TLS on a LAN address would need a certificate no phone trusts.
 
 ### Firewalls
@@ -367,16 +368,16 @@ The relay listens on all interfaces, port 23075, or a free one, shown in the URL
 
 ### Budget
 
-- **Off**: nothing runs, no port, no task; the managed state is one channel holding the last published snapshot (empty until live follow is first turned on): the run, at most 1 MiB, and its envelope.
+- **Off**: nothing runs, no port, no task; the managed state is one channel holding the last published snapshot (empty until the page first publishes it, which it does only while live follow or the stream is on): the run, at most 1 MiB, and its envelope.
 - **On**: one accept-loop task; per connection still in HTTP (32 at most) one task, a socket and a read buffer of 16 KiB at most; per viewer one task and one socket. A publish serializes the snapshot once, and the viewers' frames share it (reference-counted) until each viewer's socket copies it into its own write buffer, which keeps its size: count one copy per viewer at worst, 8 × 1 MiB at the size cap, a few kB for a real run. The beat costs each viewer two small frames every 15 s.
 - **Binary**: axum 0.8 (HTTP/1 and WebSocket only, no default features) on the hyper, hyper-util, tokio and tower the app already carries for the updater, plus tungstenite: +745 KiB on the stripped Linux x86-64 release binary (15.0 → 15.7 MiB), measured before the relay ran its own accept loop.
 
 ### The player's side: publishing
 
 - **The switch**: the Share dialog's "Follow live on this network" section, in the desktop app only (`LiveFollowSection`, a lazy chunk behind the inline desktop test, so the site never downloads it). Off at every launch: no port opens unless the player asks. On, it shows the live link as a QR code and an address to copy, how many devices follow (the `follow-viewers` event) and what the other device needs (the same network, the firewall, auto-lock off).
-- **What is published** (`publishRun`): the game's run as its store saved it in `localStorage`, read rather than taken from the state, because it is exactly what the viewer's store reads, through the same validation and migration. The page subscribes to the active game's store (`GameModule.store`); a change starts a 250 ms wait, the changes during it ride along, and the saved run is read when it ends (the store saves after it tells its subscribers), so a burst (a sync from the game, an undo held down) costs one `follow_publish` and the last state always goes out. A run unchanged since the last one is not sent; a run never saved is saved first.
-- **On**: the run is published at once, then after each change. **Off**: the publisher unsubscribes before `follow_stop`, so nothing more is sent.
-- **A device joins**: the page publishes the run again at once, freshly stamped, for that device's clock (below).
+- **What is published** (`publishRun`): the game's run as its store saved it in `localStorage`, read rather than taken from the state, because it is exactly what the viewer's store reads, through the same validation and migration. The page subscribes to the active game's store (`GameModule.store`); a change starts a 250 ms wait, the changes during it ride along, and the saved run is read when it ends (the store saves after it tells its subscribers), so a burst (a sync from the game, an undo held down) costs one `run_publish` and the last state always goes out. There is one publisher for the page, `desktop/runFeed.ts`: live follow and the stream view each hold it while they run (a set of holders), it works while any does, and it stops when the last lets go, so both running costs one publication per change, not two. A run unchanged since the last one is not sent; a run never saved is saved first.
+- **On**: the run is published at once, then after each change. **Off**: live follow lets go of the publisher before `follow_stop`; it unsubscribes unless the stream still needs it.
+- **A device joins**: the page publishes the run again at once, freshly stamped, for that device's clock (below). The same goes for a browser source that connects to the stream.
 - **The page loads again** (a game switch reloads it) while the relay runs: `follow_state` says so, the switch shows on and the new game's run is published; the viewers switch game with it.
 
 ### The viewer's side: the followed view
@@ -403,7 +404,7 @@ The diagram shows the usual path. `follow/client.ts` reads a close the same way 
 - **Connection** (`follow/client.ts`): `ws://<the page's host>/follow?token=<the link's>`; only the token is read from the address, so a link cannot point the page at another host. A drop retries after 1 s, doubling to 30 s, at once when the device comes back online or the page back into view (a phone that slept); a full relay is retried after 5 s at least. A connection can die without a close reaching the phone (it slept with its Wi-Fi off, the computer left the network or lost power): the browser still calls it open and fires no `close`. So every frame, a run or a beat, re-arms a 35 s timer; when it runs out the socket is closed (its late `close` ignored) and the view says "reconnecting" and tries again. Coming back online or into view checks the same deadline at once, since a sleeping page's timers do not run; a socket still heard from is left alone. 4401 and 4410 end it: a new session has a new token, so retrying the old link is pointless. The banner (a polite `role="status"`, with autotracking's status dot shapes) says each state and what to do.
 - **Applying a run**: each frame is checked (a known game, a value that is JSON and at most 1 MiB, a finite `sentAt`); the frame's `key` is never used: the run is written under the loaded game's own storage key, then `persist.rehydrate()` reloads the store. Each game's `merge` judges the data as it judges another tab's change: validation, migration, the undo history cleared.
 - **The game**: nothing renders until the first run; its game is loaded and saved as the device's, as a `?game=` link does. A run of another game later (the player switched) loads the page again on that game.
-- **Read-only**: the grid is the game's stream view (`ObsView` with `followed`: no keyboard shortcut hooks, `data-view="follow"`, an opaque page, the grid fitted to the room under the banner), inside an `inert` container: no click, tap or key reaches it. The cost: `inert` also hides the grid from screen readers, who hear the banner only.
+- **Read-only**: the grid is the game's stream view (`ObsView` with `relay="follow"`: no keyboard shortcut hooks, `data-view="follow"`, an opaque page, the grid fitted to the room under the banner), inside an `inert` container: no click, tap or key reaches it. The cost: `inert` also hides the grid from screen readers, who hear the banner only.
 - **The timer's clock**: a running timer counts from `startedAt`, stamped on the player's computer. The view keeps the largest `sentAt − arrival` seen as the offset between the two clocks (network latency only makes a sample smaller, so the largest is the closest; the stale run the relay sends on connecting is discounted the same way, and the fresh one the page sends as the device joins wins) and draws the timer on `Date.now() + offset` (`utils/clock.ts`, read by `useNow`). A clock set back on the player's computer while the view is open keeps the old offset until the view reloads.
 
 ### Known limits
@@ -413,6 +414,109 @@ The diagram shows the usual path. `follow/client.ts` reads a close the same way 
 - On `http://`, a phone's browser cannot keep its screen awake (the Wake Lock API needs a secure context): the viewer turns auto-lock off while watching.
 - The site has no live follow: a browser cannot open a server. Its build carries the followed view (a 3.5 kB chunk loaded only for `?view=follow`), which the browser tests drive against a fake relay (`apps/web/e2e/follow.e2e.ts`).
 - Proved on Linux only. The Rust tests run the real server (`follow.rs` for live follow's own route and limits, `relay.rs` for the generic server: seats, header timeout, connection cap, beats, port fallback): token refused, snapshot then update, incoming messages ignored, the viewer limit, stop closing the sockets and freeing the port, the file routes, `follow_state`, a connection that never finishes its headers (or sends nothing, or idles after a request) closed by the timeout, the connection cap, a half-sent request closed by the stop and never reaching the next session, and a viewer that stops answering pings losing its seat while one that answers keeps it and gets beats. On a real machine (KDE Plasma, Wayland, the app in development under XWayland): the relay served the page to a headless Chromium on the same machine through its LAN address, the followed grid showed the app's run and followed a `--step` from the command line in under 300 ms, the app counted the device, a reload of the app's page picked the running relay up, and turning it off showed "Stopped" and closed the port. The limits, against the app in development on a private X display (Xvfb), from a client on the same machine: of 40 connections that sent nothing, alongside one with half its headers, 31 were held and 9 closed at once (32 in all), and every held one was closed 10 s after it opened; a viewer that answered pings got a ping and a beat every 15 s and kept its seat, one that never read was closed within 40 s and the dialog's count went from "1 device follows." back to "No device follows yet."; turning the switch off closed a half-sent upgrade within 1 s and the listener, and turning it on again took 23075 again with the closed connections still in TIME-WAIT. All of that traffic stayed on the loopback interface, so it exercised neither the Wi-Fi nor the firewall (that machine's ufw drops inbound connections, and would need `ufw allow 23075/tcp` for a phone). No second device has followed yet: a phone (Safari on iOS, Chrome on Android) opening the QR code over the Wi-Fi is not yet tried.
+
+## Stream tools
+
+A streamer runs the tracker in the app and wants OBS to show it. On the site, the stream view (`?view=obs`) works because OBS's Browser Source and a Custom Dock share one browser storage: the dock is the tracker, the source follows its `localStorage`. The app breaks both halves: OBS cannot load the app's pages (`tauri://localhost`) and cannot read the webview's storage. So the app serves the stream view itself, to a Browser Source on the same computer, over a second server built from the blocks live follow uses.
+
+The Rust side is `apps/desktop/src-tauri/src/stream.rs`. The page side is `apps/web/src/desktop/streamTools.ts` (the store), `StreamToolsDialog.tsx` (the dialog, lazy behind `components/ui/StreamTools.tsx`'s inline desktop test) and, in the source, `apps/web/src/follow/StreamSourceView.tsx`.
+
+```mermaid
+flowchart LR
+  subgraph App["The app"]
+    page["tracker page<br/>(webview)"]
+    feed["RunFeed<br/>(latest run)"]
+    follow["follow.rs<br/>:23075, 8 seats<br/>new token per start"]
+    stream["stream.rs<br/>:23076, 16 seats<br/>remembered"]
+    cfg[("stream.json<br/>app config dir")]
+  end
+  page -- "run_publish" --> feed
+  feed --> follow
+  feed --> stream
+  stream <--> cfg
+  stream -- "GET /?view=obs&token=…<br/>then /follow (WebSocket)" --> obs["OBS Browser Source"]
+  follow -- "GET /?view=follow&token=…" --> phone["phone"]
+```
+
+### Why a second server, and why it remembers
+
+A phone watches for a moment the player starts: a new token and a free port each time are fine (and safer), since the player scans a fresh QR code. A Browser Source is set up once and left for weeks; its address is pasted into OBS and must survive a restart of the app, a reboot and an update. The two lifetimes differ, hence two servers with their own port, seats, token policy and switch, sharing the run (`RunFeed`) and the building blocks (`relay.rs`). Folding the stream into live follow's server would have tied OBS to a switch that is off at every launch and a token that changes at every start. The alternative, one server with two route sets and two policies, was rejected for the same reason: the lifecycle is what differs, and it is the lifecycle `Session` owns.
+
+### What is remembered
+
+`<app config dir>/stream.json` (`~/.config/io.github.kqesar.alltp-tracker/` on Linux; Tauri's `app_config_dir`), written whole or not at all (`files.rs`: a temporary file and a rename, created 0600 on Unix):
+
+| Field | Meaning |
+|---|---|
+| `enabled` | the player's switch, kept across launches. The stream starts by itself at launch when it was on |
+| `port` | the port the source's address names: 23076 first. If it cannot be bound (taken, or refused as Windows does for a reserved range), the server takes a free port and **saves that one**, so the new address keeps working at the next launch; the dialog says the port moved and the source's address must be pasted again |
+| `viewToken` | gates the page's stream (128 bits, base64url, 22 characters) |
+| `apiToken` | generated and kept now, for the overlay API (not served yet: nothing answers to it) |
+
+A missing, unparsable or tampered file (a token that is empty, not 22 characters of `[A-Za-z0-9_-]`, or a port of 0: an empty token would match a missing one) is replaced by a fresh config with the switch **off**, tokens new: a damaged file never opens a port by itself. Saving fails loudly: a start or new addresses that cannot be written start nothing (and close what was opened), so what runs is always what the next launch will start; turning the switch off cannot fail from the page's side (a save that fails is logged, the server is stopped regardless).
+
+### Routes
+
+The same as live follow's (`GET /follow?token=…` as a WebSocket, the app's files for any other GET, 405 for any other method; see "Routes" above) on 16 seats. A source loads `/?view=obs&token=…`, which the app serves its own page for, and the page opens `/follow` on the host it came from. A live follow token does not open the stream and the other way round (each server has its own, and the check is the same constant-time one). The two servers on the same machine count their seats apart.
+
+### Commands and event
+
+| Name | Arguments | Returns |
+|---|---|---|
+| `stream_start` | none | `{ address, port, moved, token, viewers }`; turns the switch on and saves it. While running, the running session (same token) |
+| `stream_state` | none | the same, or `null` while off: what a page that loaded again, or that opened after the launch's auto-start, reads |
+| `stream_stop` | none | nothing; turns the switch off, saves it, closes the port and every connection (the sources with 4410) |
+| `stream_new_tokens` | none | the new session, or `null` while off. Replaces both tokens (saved first: a failure leaves the old address working), then closes the sources and opens the server again on the same port. The old address now gets 4401 |
+| event `stream-viewers` | | `{ count }`, as `follow-viewers` |
+
+`address` is `http://127.0.0.1:<port>/`: the loopback address, where an OBS on the same computer reaches the app whatever the network does (no network, a VPN). The page adds `?view=obs&token=<token>` and, if asked, `&timer=1` (`obsViewUrl`). The server listens on every interface, like live follow's: another computer's OBS can reach it at the machine's address with the same token, which the dialog does not offer (it would need the LAN address and a firewall rule).
+
+### Lifecycle
+
+```mermaid
+stateDiagram-v2
+  [*] --> off: config missing, damaged, or enabled=false
+  [*] --> on: launch with enabled=true (resume)
+  off --> on: stream_start (saves enabled=true, port)
+  on --> off: stream_stop (saves enabled=false)
+  on --> on: stream_new_tokens (same port, new tokens)
+  on --> closed: the app quits (shutdown)
+  closed --> [*]: enabled stays true: it opens at the next launch
+```
+
+- **Quitting the app** stops the server (sources are closed with 4410) without turning the switch off: the next launch opens it again.
+- **An update does not stop it.** Live follow is stopped before an install because its phones would retry forever instead of saying "Stopped". A browser source never gives up, so there is nothing to tell: it sees the connection drop, retries, and finds the app again when it has relaunched.
+- **The page publishes the run only while the stream or live follow is on** (`runFeed.ts`, above). A stream that is on while no page has published yet (the app just launched) shows nothing until the page loads and publishes: the source draws nothing, not a stale run.
+
+### The source's side: the relayed stream view
+
+`?view=obs&token=…` is routed in `main.tsx` before anything else starts, as `?view=follow` is (the app serves its own build, which believes it runs in the app: no start-up, no service worker, no visit counted). Without a token, `?view=obs` is the site's stream view and follows the tracker through storage; with one, it follows the app's relay. Both builds carry it.
+
+It reuses the followed view's machinery (`follow/useFollowedRun.ts`, extracted from `FollowView`: the socket, the checked snapshot written under the game's own storage key, the game switch, the clock offset), with what a browser source needs instead of a phone's banner:
+
+- **Transparent, no banner**, the game's own `ObsView` (`relay="obs"`: no keyboard shortcuts, the page transparent as the site's stream view is), in an `inert` container, `&timer=1` and `&bg=` read from the address as on the site. Nothing shows until the first run.
+- **It never gives up.** `follow()` is called with `endOnStop: false`: a 4410 (the player turned the stream off, or quit the app) is a drop like any other, retried with the usual backoff **capped at 5 s**, not 30. A source in OBS has no one to reload it; it must come back by itself when the player turns the stream on again. The last grid stays through every drop.
+- **4401 is the one thing it says**: "This address is out of date…", on a panel that reads over any scene, and no grid (a stale grid would pass for the run). It then stops asking: the token will not become valid.
+- **A stale build reloads itself.** After a drop, once it is live again, the page fetches `/` fresh and compares the entry script's address (a content hash) with the one it runs (`follow/staleBuild.ts`). Different means the app updated while OBS kept the page open: its lazy chunks no longer exist, so it loads the page again. Unreachable or unclear is not stale: a reload would only lose the grid.
+
+### Security
+
+- **Same model as live follow, with a longer-lived secret.** Plain `http://` on the local network, a 128-bit token compared in constant time, read-only, bounded before and after the token, nothing writable (see "Security" above). The token outlives a session, so it is stored: `stream.json` is 0600 on Unix and under the user's profile elsewhere.
+- **The address is a secret.** OBS shows a source's URL in its properties window: keep it off screen. **New addresses** (behind a confirmation) replaces both tokens and closes every source holding the old ones; use it if the address leaked.
+- **The listener is on every interface**, like live follow's. On this computer a firewall is no obstacle (loopback); another computer's OBS needs the port allowed. The dialog says so, with the port.
+
+### The dialog
+
+The toolbar's **Stream view** button, back in the desktop build (it was hidden while OBS could not be served), opens **Stream tools** (`components/ui/StreamTools.tsx`, a lazy chunk behind the inline desktop test, so the site's build has none of it; the site keeps its own **Stream view** dialog, an address to paste). In the More menu it appears only once the bar folds it away, like the other secondary actions the desktop's always-visible More menu would otherwise repeat.
+
+A `role="switch"` ("Serve the stream view to OBS", `aria-disabled` while a change is under way so it keeps the focus, failures as a `role="alert"`), then, while on: the Browser Source URL with Copy, for ALttPR the run timer checkbox and the source size (512 × 448, or 1024 × 896, a row more with the timer), a notice when the port moved, how many sources are connected (`role="status"`), the `&bg=` note, the network disclosure with the firewall hint and the port, and **New addresses**. The switch, address and counts come from `useStreamStore` (`streamTools.ts`), which keeps nothing itself: the app is asked at every page load (`attachStream`), since it may have started the stream at launch.
+
+### Known limits
+
+- **A stream left on while the page has not loaded** shows nothing (above). In practice the page loads in well under a second.
+- **A port that moves** (23076 taken) changes the address once: the dialog says so, and the source must be pasted again. It does not return to 23076 by itself later.
+- **No LAN address is offered for another computer's OBS** (above).
+- **Proved on Linux only.** The Rust tests (`stream.rs`) run the real server over temporary config directories: the saved port and tokens surviving a restart, `resume` at launch and the switch left on by `shutdown`, a damaged or tampered config replaced with the switch off, the port fallback and its `moved` flag, a config that cannot be written starting nothing, new addresses closing the sources and leaving the old one refused (4401), each server's token refused by the other, one publish reaching both servers while each stops alone, the 16 seats, and the files. The browser tests (`apps/web/e2e/stream-source.e2e.ts`) drive the source page against a fake relay: transparent page, the grid alone with axe at four widths and at OBS's sizes, `&timer=1` and `&bg=`, the last grid kept through a lost connection and a 4410, the 4401 line, and the reload after an update. On a real run of the app in development (a private Xvfb display, a temporary home, a headless Chromium standing in for OBS on `http://127.0.0.1:23076`): the source drew the run with its timer and followed an item clicked in the app; the app was killed and started again and the source, never touched, was back on the same address, followed the next click and the dialog said "1 source is connected."; **New addresses** changed `stream.json`'s token and the source switched to its out-of-date line; with 23076 held by another process the app started on a free port, saved it, and the dialog said the port moved. The dialog and the toolbar were looked at at 1440, 820 and 390 px (the Stream view item sits in More once the bar folds). Not tried: an OBS itself, another computer on the network, graceful quit (the `Exit` event is the unit-tested `shutdown`; the bench's kill is the abrupt case), macOS and Windows.
 
 ## Updates
 
@@ -429,7 +533,7 @@ sequenceDiagram
 ```
 
 - The app checks when it opens, then every hour, and never installs on its own: the same notice as the site's offers **Restart**, and the player picks the moment.
-- **Restart** downloads the update, stops live follow if it runs (the devices following are told "Stopped"), installs, then relaunches. The stop cannot wait for the app's exit event: on Windows the updater starts the installer and ends the process without one (above, "Security").
+- **Restart** downloads the update, stops live follow if it runs (the devices following are told "Stopped"), installs, then relaunches. The stream view is left running: a browser source retries until the relaunched app serves it again. The stop cannot wait for the app's exit event: on Windows the updater starts the installer and ends the process without one (above, "Security").
 - **Signing key.** Every installer is signed with the project's updater key, a free minisign (Ed25519) pair made by `tauri signer generate`. The public half is in `tauri.conf.json` (`plugins.updater.pubkey`). The private half and its password live in the repository's secrets, `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`, and in the owner's own backup, never in the repository. An installed app refuses an update its key did not sign: losing the private key means no update can reach the installed apps again (players would reinstall by hand).
 - This is separate from the systems' code signing (below): it proves an update comes from this project, whatever the system thinks of the publisher.
 
@@ -459,7 +563,6 @@ flowchart LR
 - **Size.** The AppImage weighs about 86 MB (v2.30.0's): it carries WebKitGTK. The `.deb` and `.rpm` (about 8 MB) use the system's, the Windows installer 5.4 MB, each macOS `.dmg` about 7 MB.
 - **Tested here on Linux only**: the release build in a private display (Xvfb, its own session bus and home), driven by xdotool. It renders the tracker, autotracks through SNI with RetroArch (the seed's run type read from alttpr.com), opens links in the system browser, saves an export through the Save dialog, copies the diagnostic report. The macOS and Windows builds come from CI, unproven until someone runs them.
 - **The application menu entry** (below) is the AppImage's alone, and Linux's. A player who also runs AppImageLauncher or appimaged gets that tool's own entry too, hence two: this one can be removed from **More**. A path holding a `%` is written escaped as the specification asks (`%%`), which GLib refuses to load (it looks the executable up before unescaping, measured on the bench): GNOME would not list the entry and the portal's `Register` would fail, the shortcuts then falling to the command mechanism. Left as is for a path nobody has.
-- **No stream view** (above). A future version could serve it to OBS from the app over local HTTP.
 - **Global shortcuts** (above):
   - Unverified on the systems listed there: GNOME 48+, Hyprland, Windows, macOS (KDE Wayland passed the checklist, above).
   - A Link to the Past's only: the other games have no keymap.
@@ -474,6 +577,6 @@ pnpm --filter @alltp/desktop dev     # the app on Vite's dev server, with HMR
 pnpm --filter @alltp/desktop build   # this system's installers
 ```
 
-Live follow in development serves `apps/web/dist-desktop` from disk, not the dev server (Tauri embeds no files under `devUrl` and its resolver reads `frontendDist`): run `pnpm --filter @alltp/web exec vite build --mode desktop` before testing it on a phone, and again after any change to the followed view (`?view=follow`, `apps/web/src/follow/`, `main.tsx`). Without a build the phone gets a 404; with an old one, the old page.
+Live follow and the stream view in development serve `apps/web/dist-desktop` from disk, not the dev server (Tauri embeds no files under `devUrl` and its resolver reads `frontendDist`): run `pnpm --filter @alltp/web exec vite build --mode desktop` before testing it on a phone, and again after any change to the followed or relayed stream view (`?view=follow`, `?view=obs&token=`, `apps/web/src/follow/`, `main.tsx`). Without a build the phone gets a 404; with an old one, the old page.
 
 Needs Rust ≥ 1.90 (`rustup`) and Tauri's system libraries ([prerequisites](https://v2.tauri.app/start/prerequisites/)). A local build signs the updater artifacts too: export `TAURI_SIGNING_PRIVATE_KEY` and its password first, or pass `--no-bundle` to skip them.
