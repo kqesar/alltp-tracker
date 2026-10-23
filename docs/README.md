@@ -13,7 +13,9 @@
 - [Sharing a run](share.md): the link format, its bounds, how it is opened and validated, its
   measured lengths, and the Share dialog's QR code.
 - [Desktop app](desktop.md): the Tauri app, its updates, global shortcuts, application menu and
-  live follow on the LAN.
+  live follow on the LAN, and the stream tools that serve OBS.
+- [Overlay API](overlay-api.md): the WebSocket a stream tool reads the run from (items, bosses,
+  timer, go mode), its frames, ids and guarantees, and what it never sends.
 - [Search engines and link previews](seo.md): the per-game pages, their tags and preview
   images.
 - [Logic engine](../packages/engine/README.md): the rule language and the three-valued solver.
