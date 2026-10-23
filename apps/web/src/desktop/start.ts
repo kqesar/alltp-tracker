@@ -13,6 +13,11 @@ import { UPDATE_CHECK_INTERVAL_MS, useUpdateStore } from "@/stores/updateStore";
  * signed with the project's key) and offer it as the site offers its own:
  * the notice waits, and the player restarts when the run allows. A check
  * that fails, offline, waits for the next one.
+ *
+ * Live follow stops between the download and the install: on Windows the
+ * installer ends the app without its exit event, which would leave the
+ * devices following retrying forever instead of saying "Stopped". A
+ * download that fails leaves it running.
  */
 export const offerUpdate = async () => {
   try {
@@ -20,7 +25,17 @@ export const offerUpdate = async () => {
     if (update === null) return;
     useUpdateStore.setState({
       apply: () => {
-        void update.downloadAndInstall().then(relaunch);
+        void (async () => {
+          await update.download();
+          const { useLiveFollowStore } = await import("@/desktop/liveFollow");
+          if (useLiveFollowStore.getState().session) {
+            await useLiveFollowStore.getState().stop();
+          }
+          await update.install();
+          await relaunch();
+        })().catch((error: unknown) => {
+          console.warn("Could not install the new version:", error);
+        });
       },
       label: "Restart",
     });
