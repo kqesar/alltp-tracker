@@ -343,7 +343,7 @@ export const TrackerControls = () => {
       <ConfirmDialog
         confirmLabel="New game"
         isOpen={isResetOpen}
-        message="This will clear all tracked progress and cannot be undone."
+        message="This clears all tracked progress. Undo takes it back."
         onCancel={() => setIsResetOpen(false)}
         onConfirm={confirmReset}
         title="Start a new game?"
