@@ -280,7 +280,7 @@ The state machine (with the portal flag), the escaping and the icon paths are Ru
 
 A player wants a second screen (a phone on the desk, a laptop for a co-commentator) to show the tracker as it updates. A page cannot open a server, so the site cannot do it; the app can. While the player has it on, the app serves its own page and a WebSocket that relays the run to devices on the same network. Nothing leaves the network: no relay service, no account, no cost.
 
-The Rust side is `apps/desktop/src-tauri/src/follow.rs`. **The page side** (publishing the run after each change, the follow view, the switch and QR code in the Share dialog) **is coming in the same series**; this section describes the contract it builds on.
+The Rust side is `apps/desktop/src-tauri/src/follow.rs`; the page side is the publisher (`apps/web/src/follow/publish.ts`, driven by `apps/web/src/desktop/liveFollow.ts`), the switch in the Share dialog (`apps/web/src/desktop/LiveFollowSection.tsx`) and the followed view (`apps/web/src/follow/`), below the relay's contract.
 
 ```mermaid
 sequenceDiagram
@@ -335,6 +335,7 @@ The files are the app's own, through Tauri's asset resolver (`tauri_assets`): em
 | Name | Arguments | Returns |
 |---|---|---|
 | `follow_start` | none | `{ url, port, lanFound, viewers }`; while running, the running session (same token) |
+| `follow_state` | none | the running session as `follow_start` describes it, or `null` while off: what a page that loaded again (a game switch reloads it) reads to pick the relay up |
 | `follow_stop` | none | nothing; idempotent. Waits up to 2 s for the viewers' sockets to close |
 | `follow_publish` | `{ game, key, value, sentAt }` (`sentAt` an integer, ms) | nothing; an error when `value` is over 1 MiB or `game`/`key` over 64 bytes |
 | event `follow-viewers` | | `{ count }`, each time a viewer joins or leaves |
@@ -364,12 +365,46 @@ The relay listens on all interfaces, port 23075 (another, shown in the URL, if i
 - **On**: one listener task, and per viewer one task and one socket. A publish serializes the snapshot once; every viewer's frame shares that buffer (reference-counted), so eight viewers hold one copy of the run, not eight.
 - **Binary**: axum 0.8 (HTTP/1 and WebSocket only, no default features) on the hyper, tokio and tower the app already carries for the updater, plus tungstenite: +745 KiB on the stripped Linux x86-64 release binary (15.0 → 15.7 MiB).
 
+### The player's side: publishing
+
+- **The switch**: the Share dialog's "Follow live on this network" section, in the desktop app only (`LiveFollowSection`, a lazy chunk behind the inline desktop test, so the site never downloads it). Off at every launch: no port opens unless the player asks. On, it shows the live link as a QR code and an address to copy, how many devices follow (the `follow-viewers` event) and what the other device needs (the same network, the firewall, auto-lock off).
+- **What is published** (`publishRun`): the game's run as its store saved it in `localStorage`, read rather than taken from the state, because it is exactly what the viewer's store reads, through the same validation and migration. The page subscribes to the active game's store (`GameModule.store`); a change starts a 250 ms wait, the changes during it ride along, and the saved run is read when it ends (the store saves after it tells its subscribers), so a burst (a sync from the game, an undo held down) costs one `follow_publish` and the last state always goes out. A run unchanged since the last one is not sent; a run never saved is saved first.
+- **On**: the run is published at once, then after each change. **Off**: the publisher unsubscribes before `follow_stop`, so nothing more is sent.
+- **A device joins**: the page publishes the run again at once, freshly stamped, for that device's clock (below).
+- **The page loads again** (a game switch reloads it) while the relay runs: `follow_state` says so, the switch shows on and the new game's run is published; the viewers switch game with it.
+
+### The viewer's side: the followed view
+
+`?view=follow&token=…` is picked in `main.tsx` before anything else starts. The desktop app serves its own build (`dist-desktop`) to the phone, and that build believes it runs in the app (`isDesktopApp` is a build-time constant), so the view must not reach the app's start-up: no `startDesktop`, no game `start()` (ALttPR's would import the global shortcuts and call the app), no service worker, no update notice, no visit counted. The view itself needs no Tauri API at all.
+
+```mermaid
+stateDiagram-v2
+  [*] --> connecting
+  connecting --> live: a run arrives
+  live --> reconnecting: drop (1006, network)
+  connecting --> reconnecting: cannot connect
+  reconnecting --> live: a run arrives
+  connecting --> full: 4503
+  live --> full: 4503
+  full --> live: a seat frees
+  live --> stopped: 4410
+  connecting --> expired: 4401
+  stopped --> [*]
+  expired --> [*]
+```
+
+- **Connection** (`follow/client.ts`): `ws://<the page's host>/follow?token=<the link's>`; only the token is read from the address, so a link cannot point the page at another host. A drop retries after 1 s, doubling to 30 s, at once when the device comes back online or the page back into view (a phone that slept); a full relay is retried after 5 s at least. 4401 and 4410 end it: a new session has a new token, so retrying the old link is pointless. The banner (a polite `role="status"`, with autotracking's status dot shapes) says each state and what to do.
+- **Applying a run**: each frame is checked (a known game, a value that is JSON and at most 1 MiB, a finite `sentAt`); the frame's `key` is never used: the run is written under the loaded game's own storage key, then `persist.rehydrate()` reloads the store. Each game's `merge` judges the data as it judges another tab's change: validation, migration, the undo history cleared.
+- **The game**: nothing renders until the first run; its game is loaded and saved as the device's, as a `?game=` link does. A run of another game later (the player switched) loads the page again on that game.
+- **Read-only**: the grid is the game's stream view (`ObsView` with `followed`: no keyboard shortcut hooks, `data-view="follow"`, an opaque page, the grid fitted to the room under the banner), inside an `inert` container: no click, tap or key reaches it. The cost: `inert` also hides the grid from screen readers, who hear the banner only.
+- **The timer's clock**: a running timer counts from `startedAt`, stamped on the player's computer. The view keeps the largest `sentAt − arrival` seen as the offset between the two clocks (network latency only makes a sample smaller, so the largest is the closest; the stale run the relay sends on connecting is discounted the same way, and the fresh one the page sends as the device joins wins) and draws the timer on `Date.now() + offset` (`utils/clock.ts`, read by `useNow`). A clock set back on the player's computer while the view is open keeps the old offset until the view reloads.
+
 ### Known limits
 
 - Only a device on the same network can follow: no remote restreamer (a choice: no server, no cost).
 - On `http://`, a phone's browser cannot keep its screen awake (the Wake Lock API needs a secure context): the viewer turns auto-lock off while watching.
-- The site has no live follow: a browser cannot open a server.
-- Proved here on Linux only, by Rust tests over the real server (`follow.rs`): token refused, snapshot then update, incoming messages ignored, the viewer limit, stop closing the sockets and freeing the port, the file routes.
+- The site has no live follow: a browser cannot open a server. Its build carries the followed view (a 3.5 kB chunk loaded only for `?view=follow`), which the browser tests drive against a fake relay (`apps/web/e2e/follow.e2e.ts`).
+- Proved on Linux only. The Rust tests run the real server (`follow.rs`): token refused, snapshot then update, incoming messages ignored, the viewer limit, stop closing the sockets and freeing the port, the file routes, `follow_state`. On a real machine (KDE Plasma, Wayland, the app in development under XWayland): the relay served the page to a headless Chromium on the LAN address, the followed grid showed the app's run and followed a `--step` from the command line in under 300 ms, the app counted the device, a reload of the app's page picked the running relay up, and turning it off showed "Stopped" and closed the port. Safari on iOS opening the QR code over the Wi-Fi is not yet tried.
 
 ## Updates
 
