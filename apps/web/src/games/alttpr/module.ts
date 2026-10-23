@@ -37,4 +37,5 @@ export const alttpr: GameModule = {
         });
     }
   },
+  store: useGameStore,
 };

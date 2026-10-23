@@ -22,4 +22,5 @@ export const sm: GameModule = {
   start: () => {
     syncAcrossTabs(useSmStore);
   },
+  store: useSmStore,
 };

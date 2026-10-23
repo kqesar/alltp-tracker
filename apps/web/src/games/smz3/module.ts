@@ -25,4 +25,5 @@ export const smz3: GameModule = {
   start: () => {
     syncAcrossTabs(useSmz3Store);
   },
+  store: useSmz3Store,
 };

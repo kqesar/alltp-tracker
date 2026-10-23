@@ -1,0 +1,63 @@
+/*
+ * The followed view (?view=follow, follow/FollowView.tsx): a phone or a
+ * second computer watching the desktop app's run. A banner on top says how
+ * the connection stands; the stream view's grid fills the rest, on the
+ * page's own opaque background (a phone has no scene to composite over).
+ */
+:root[data-view="follow"],
+:root[data-view="follow"] body {
+  overflow: hidden;
+}
+
+.follow-view {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.follow-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  align-items: baseline;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-header);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.follow-banner__title {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.follow-banner__status {
+  display: flex;
+  flex: 1 1 16rem;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-sm);
+  align-items: center;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.follow-banner__label {
+  font-weight: 700;
+}
+
+.follow-banner__detail {
+  color: var(--color-text-secondary);
+}
+
+/* The grid's room: the stage fills it, and useObsStage fits the grid to it */
+.follow-view__board {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+:root[data-view="follow"] .obs-view {
+  position: absolute;
+}

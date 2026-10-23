@@ -5,6 +5,13 @@ import { copyLink, type ShareResult } from "@/share/shareRun";
 // The QR encoder is only needed once a run is shared: its chunk loads then
 const QrCode = lazy(() => import("@/components/ui/QrCode"));
 
+// Live follow on the local network, the desktop app's alone: the test is
+// inline so the site's build drops the import and its chunk (docs/desktop.md)
+const LiveFollowSection =
+  import.meta.env.MODE === "desktop"
+    ? lazy(() => import("@/desktop/LiveFollowSection"))
+    : null;
+
 type ShareDialogProps = {
   /** The share in progress (see `shareRun`), or `null` while the dialog is closed */
   share: Promise<ShareResult> | null;
@@ -15,6 +22,7 @@ type ShareDialogProps = {
  * The dialog Share opens, the same for every game: how the copy went, the
  * link as a QR code (to open the run on another device), and a button to
  * copy it again. The copy itself already happened, inside the Share click.
+ * In the desktop app, live follow on the local network sits under it.
  */
 export const ShareDialog = ({ share, onClose }: ShareDialogProps) => {
   const [result, setResult] = useState<ShareResult | null>(null);
@@ -67,6 +75,11 @@ export const ShareDialog = ({ share, onClose }: ShareDialogProps) => {
             does not follow the game.
           </p>
         </>
+      )}
+      {LiveFollowSection && (
+        <Suspense fallback={null}>
+          <LiveFollowSection />
+        </Suspense>
       )}
     </Modal>
   );

@@ -1,0 +1,79 @@
+// The desktop app's side of live follow: after each change to the run, the
+// run as the game's store saved it goes to the relay, which hands it to every
+// device following (docs/desktop.md, "Live follow on the LAN").
+
+import type { GameId, RunStore } from "@/games/registry";
+
+/** The run, as the relay takes it (`follow_publish`). */
+export type Publication = {
+  game: GameId;
+  key: string;
+  value: string;
+  sentAt: number;
+};
+
+/** The longest wait between a change and its publication, in ms. */
+export const PUBLISH_DELAY_MS = 250;
+
+/**
+ * Publish the run now, then after each change, at most once per
+ * `PUBLISH_DELAY_MS`: a change starts the wait, those during it ride along,
+ * and the run is read from storage when it ends, so the last state always
+ * goes out. A burst (autotracking's sync, an undo held down) costs one
+ * publication. The saved run is read rather than the state, because it is
+ * what the following device's store reads, validated and migrated by the
+ * same code; and only once the wait ends, since the store saves after it
+ * tells its subscribers. A run unchanged since the last one is not sent again.
+ * @param send - Hands the run to the relay
+ * @param read - Reads the saved run; the page's storage by default
+ * @returns `stop`, which ends publishing, and `now`, which publishes at once
+ * even an unchanged run (a device just joined: it gets a fresh `sentAt`)
+ */
+export const publishRun = ({
+  game,
+  read = (key) => localStorage.getItem(key),
+  send,
+  store,
+}: {
+  game: GameId;
+  store: RunStore;
+  send: (publication: Publication) => void;
+  read?: (key: string) => string | null;
+}): { now: () => void; stop: () => void } => {
+  const key = store.persist.getOptions().name ?? "";
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let last: string | null = null;
+
+  const publish = (always: boolean) => {
+    clearTimeout(timer);
+    timer = undefined;
+    let value: string | null;
+    try {
+      value = read(key);
+      // A run never changed was never saved: save it as it stands
+      if (value === null) {
+        store.setState({});
+        value = read(key);
+      }
+    } catch {
+      return;
+    }
+    if (value === null || (!always && value === last)) return;
+    last = value;
+    send({ game, key, sentAt: Date.now(), value });
+  };
+
+  const unsubscribe = store.subscribe(() => {
+    timer ??= setTimeout(() => publish(false), PUBLISH_DELAY_MS);
+  });
+  publish(true);
+
+  return {
+    now: () => publish(true),
+    stop: () => {
+      unsubscribe();
+      clearTimeout(timer);
+      timer = undefined;
+    },
+  };
+};

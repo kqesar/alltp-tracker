@@ -11,7 +11,29 @@ export type ObsViewProps = {
   background: string | null;
   /** Whether to draw the run timer under the grid (`&timer=1`) */
   timer?: boolean;
+  /**
+   * Drawn for a device following the run live (`?view=follow`): no keyboard
+   * shortcut changes it, and it sits on an opaque page under the view's
+   * banner, not on a transparent source
+   */
+  followed?: boolean;
 };
+
+/**
+ * A game's persisted store, as far as the shell needs it: the desktop app
+ * publishes the saved run after each change, and a device following it
+ * writes the run it receives under the store's key, then reloads the store
+ * from it (`follow/`), as another tab's change is followed.
+ */
+export interface RunStore {
+  subscribe: (listener: () => void) => () => void;
+  /** With nothing to change, only saves the run as it stands */
+  setState: (nothing: Record<string, never>) => void;
+  persist: {
+    getOptions: () => { name?: string };
+    rehydrate: () => Promise<void> | void;
+  };
+}
 
 /**
  * A save read and checked by a game's own import, not yet applied: `load`
@@ -29,8 +51,10 @@ export type GameModule = {
   importRun: (save: string) => RunImport;
   /** The tracker. */
   App: ComponentType;
-  /** The stream view (`?view=obs`). */
+  /** The stream view (`?view=obs`), and the followed view's grid. */
   ObsView: ComponentType<ObsViewProps>;
+  /** The run's store. */
+  store: RunStore;
 };
 
 export const GAME_IDS = ["alttpr", "sm", "smz3"] as const;
@@ -65,7 +89,7 @@ export const pageTitle = (id: GameId): string =>
 /** Where this device keeps the game it tracks. */
 export const ACTIVE_GAME_KEY = "alltp-tracker-game";
 
-const isGameId = (value: unknown): value is GameId =>
+export const isGameId = (value: unknown): value is GameId =>
   (GAME_IDS as readonly unknown[]).includes(value);
 
 /**
@@ -79,6 +103,18 @@ export const activeGame = (storage?: Pick<Storage, "getItem">): GameId => {
     return isGameId(saved) ? saved : "alttpr";
   } catch {
     return "alttpr";
+  }
+};
+
+/**
+ * Save the game this device tracks, read by `activeGame` from the next load.
+ * Storage that refuses leaves the page on the game it had.
+ */
+export const saveActiveGame = (id: GameId): void => {
+  try {
+    localStorage.setItem(ACTIVE_GAME_KEY, id);
+  } catch {
+    // Storage refused: the page tracks the game it would have
   }
 };
 
@@ -98,12 +134,7 @@ export const takeGameFromAddress = (): void => {
     "",
     `${address.pathname}${address.search}${address.hash}`,
   );
-  if (!isGameId(asked)) return;
-  try {
-    localStorage.setItem(ACTIVE_GAME_KEY, asked);
-  } catch {
-    // Storage refused: the page tracks the game it would have
-  }
+  if (isGameId(asked)) saveActiveGame(asked);
 };
 
 /** Load a game's module. */
@@ -118,10 +149,6 @@ export const switchGame = (
   id: GameId,
   reload: () => void = () => window.location.reload(),
 ): void => {
-  try {
-    localStorage.setItem(ACTIVE_GAME_KEY, id);
-  } catch {
-    // Storage refused: the page loads again on the game it had
-  }
+  saveActiveGame(id);
   reload();
 };
