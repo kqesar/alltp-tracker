@@ -126,6 +126,8 @@ pub struct Started {
     /// address must be pasted again
     pub moved: bool,
     pub token: String,
+    /// What opens the overlay API (`/overlay`), a secret of its own
+    pub api_token: String,
     pub viewers: usize,
     /// Whether other devices on the network may reach the server
     pub lan: bool,
@@ -380,6 +382,7 @@ impl Stream {
             address: format!("http://127.0.0.1:{port}/"),
             moved: port != config.port,
             port,
+            api_token: kept.api_token.clone(),
             token: kept.view_token.clone(),
             viewers: 0,
             lan: kept.lan,
@@ -576,6 +579,7 @@ mod tests {
         assert!(!started.moved);
         assert_eq!(started.address, format!("http://127.0.0.1:{port}/"));
         assert_eq!(started.token.len(), 22);
+        assert_eq!(started.api_token, dir.saved().api_token);
         let saved = dir.saved();
         assert!(saved.enabled);
         assert_eq!(saved.port, port);
