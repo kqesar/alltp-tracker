@@ -126,6 +126,14 @@ pub struct Started {
     pub lan_address: Option<String>,
 }
 
+/// Where other devices reach the server: `http://<lan-address>:<port>/`, when
+/// the network is allowed and the app finds an address on one.
+fn lan_url(lan: bool, port: u16) -> Option<String> {
+    lan_address()
+        .filter(|_| lan)
+        .map(|ip| format!("http://{ip}:{port}/"))
+}
+
 /// A started server, and the answer `start` gave for it.
 struct Running {
     session: Session,
@@ -133,10 +141,12 @@ struct Running {
 }
 
 impl Running {
-    /// The session as `start` handed it, with the viewers watching now.
+    /// The session as `start` handed it, with the viewers watching now and
+    /// the network address as it is now (a laptop changes networks).
     fn now(&self) -> Started {
         let mut started = self.started.clone();
         started.viewers = self.session.viewers();
+        started.lan_address = lan_url(started.lan, started.port);
         started
     }
 }
@@ -205,14 +215,31 @@ impl Stream {
                 if let Some(config) = saved {
                     return Ok(config);
                 }
-                let bad = file.with_extension("json.bad");
-                if let Err(error) = std::fs::rename(file, &bad) {
-                    eprintln!("could not keep the damaged stream settings: {error}");
-                }
+                self.keep_damaged(file);
                 Config::fresh(self.preferred)
             }
             Err(error) if error.kind() == io::ErrorKind::NotFound => Config::fresh(self.preferred),
             Err(error) => Err(error),
+        }
+    }
+
+    /// Sets a damaged config aside as `stream.json.bad`, readable by its
+    /// owner alone (it may hold tokens). The first one is kept: a second
+    /// damaged file leaves it, and is replaced like any other.
+    fn keep_damaged(&self, file: &Path) {
+        let bad = file.with_extension("json.bad");
+        if bad.exists() {
+            return;
+        }
+        match std::fs::rename(file, &bad) {
+            Ok(()) => {
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let _ = std::fs::set_permissions(&bad, std::fs::Permissions::from_mode(0o600));
+                }
+            }
+            Err(error) => eprintln!("could not keep the damaged stream settings: {error}"),
         }
     }
 
@@ -233,11 +260,11 @@ impl Stream {
                 continue;
             }
             tried.push(port);
-            if let Ok(listener) = TcpListener::bind((address, port)).await {
+            if let Ok(listener) = relay::bind_exclusive(address, port).await {
                 return Ok(listener);
             }
         }
-        TcpListener::bind((address, 0)).await
+        relay::bind_exclusive(address, 0).await
     }
 
     /// Turns the switch on and opens the server on the saved port, or on a
@@ -315,9 +342,7 @@ impl Stream {
             token: kept.view_token.clone(),
             viewers: 0,
             lan: kept.lan,
-            lan_address: lan_address()
-                .filter(|_| kept.lan)
-                .map(|ip| format!("http://{ip}:{port}/")),
+            lan_address: lan_url(kept.lan, port),
         };
         inner.config = Some(kept);
         inner.running = Some(Running {
@@ -1087,5 +1112,32 @@ mod tests {
         assert!(!stream.start().await.unwrap().lan);
         stream.stop().await;
         assert!(!dir.saved().lan);
+    }
+
+    #[tokio::test]
+    async fn the_kept_damaged_config_is_private_and_the_first_one_is_not_clobbered() {
+        let dir = Scratch::new();
+        std::fs::create_dir_all(&dir.0).unwrap();
+        std::fs::write(dir.file(), "first damage").unwrap();
+        let (first, _) = stream(&dir, free_port().await, &RunFeed::new());
+        first.start().await.unwrap();
+        first.stop().await;
+        let bad = dir.0.join("stream.json.bad");
+        assert_eq!(std::fs::read_to_string(&bad).unwrap(), "first damage");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = std::fs::metadata(&bad).unwrap().permissions().mode();
+            assert_eq!(mode & 0o777, 0o600);
+        }
+
+        // Damaged again, at another launch: the first is kept, this one replaced
+        std::fs::write(dir.file(), "second damage").unwrap();
+        let (second, _) = self::stream(&dir, free_port().await, &RunFeed::new());
+        let started = second.start().await.unwrap();
+
+        assert_eq!(std::fs::read_to_string(&bad).unwrap(), "first damage");
+        assert_eq!(dir.saved().view_token, started.token);
+        second.stop().await;
     }
 }
