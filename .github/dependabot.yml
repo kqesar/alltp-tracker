@@ -5,7 +5,7 @@
 
 version: 2
 
-# A multi-ecosystem group collapses npm and GitHub Actions into a
+# A multi-ecosystem group collapses npm, cargo and GitHub Actions into a
 # single pull request instead of one per ecosystem. Everything that shapes that
 # shared pull request — schedule, commit message — belongs to the group and is
 # rejected on the individual entries; each entry only declares which ecosystem
@@ -27,6 +27,17 @@ updates:
   # --------------------------------------------------------------------------
   - package-ecosystem: npm
     directory: '/'
+    multi-ecosystem-group: all-dependencies
+    patterns: ['*']
+
+  # --------------------------------------------------------------------------
+  # cargo — the desktop app's Rust crates
+  # --------------------------------------------------------------------------
+  # The Tauri crates and their `@tauri-apps/*` npm twins must stay on matching
+  # versions. In the same weekly pull request, the two sides move together;
+  # as separate ones, either could be merged alone and let them drift apart.
+  - package-ecosystem: cargo
+    directory: '/apps/desktop/src-tauri'
     multi-ecosystem-group: all-dependencies
     patterns: ['*']
 

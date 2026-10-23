@@ -133,6 +133,8 @@ What remains trusted is a collaborator with write access to the repository, who 
 
 **Dependabot.** Its pull requests come from branches of this repository (observed on #206: run on the `pull_request` event, head repository `kqesar/alltp-tracker`), so their runs meet the rule and can promote. What their runs can do is limited by GitHub: the secret source is Dependabot's (this repository defines none there), and the repository secrets, among them the desktop signing key, are not exposed. The `GITHUB_TOKEN` had `contents: read` and the `pull-requests: write` the workflow asks for. A dependency update's code does run (Vitest, the Vite build) with those limits, as it did before this rule; promotion adds nothing the later master run would not have had. The `tested` job needs no more than `contents: read`: `actions/upload-artifact` authenticates with the runner's own runtime token, not `GITHUB_TOKEN`, so a Dependabot run can upload (this is also why a fork's run can, and why the rule above exists).
 
+Dependabot's configuration puts three ecosystems into one weekly group, hence one pull request: npm (the whole workspace, through the root lockfile), the desktop app's Rust crates (`apps/desktop/src-tauri`) and GitHub Actions. The crates are there so that the Tauri crates and their `@tauri-apps/*` npm twins are updated together and cannot drift apart; before that, only the npm side was ever updated. A crate update touches `apps/desktop/`, so `desktop.yml` lints and tests it on the pull request like any other change to that folder.
+
 ### What it costs and what it cannot see
 
 | Limit | Consequence |
