@@ -9,13 +9,13 @@ import { type GameId, isGameId, type RunStore } from "@/games/registry";
 const MAX_VALUE = 1 << 20;
 
 /**
- * The relay sends a beat every 15 s (follow.rs, `TIMING`): this long without
+ * The relay sends a beat every 15 s (relay.rs, `TIMING`): this long without
  * a frame, two beats missed, the connection is dead, though the browser may
  * still call it open (a phone that slept, a computer that left the network).
  */
 export const STALE_AFTER = 35_000;
 
-/** What the relay's close codes mean (follow.rs, `close`). */
+/** What the relay's close codes mean (relay.rs, `close`). */
 export const CLOSE = {
   /** Eight devices already follow: retry later */
   FULL: 4503,
