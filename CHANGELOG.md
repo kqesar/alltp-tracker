@@ -2,6 +2,44 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.36.1](https://github.com/kqesar/alltp-tracker/compare/v2.36.0...v2.36.1) (2026-10-23)
+
+
+### 🐛 Bug Fixes
+
+* **web:** drop a saved Super Metroid run that holds more than an item's pool ([8c27c8a](https://github.com/kqesar/alltp-tracker/commit/8c27c8a0ae20760845eb7f2082df304cdbd8fdc2))
+* **web:** fall back to a manual copy when the clipboard refuses ([106fc0b](https://github.com/kqesar/alltp-tracker/commit/106fc0bcb723e6ed327b625033b56eb09ae08b55))
+* **web:** follow other tabs only through localStorage on the Super Metroid and SMZ3 boards ([810ea15](https://github.com/kqesar/alltp-tracker/commit/810ea15092f23ed3d2d9faebf05f3e948d8199b8))
+* **web:** ignore Ctrl+Alt+Z and Shift+Y on the Super Metroid and SMZ3 boards ([7fa29f3](https://github.com/kqesar/alltp-tracker/commit/7fa29f3861276da861de21976e61aff4d16d5a10))
+* **web:** say that Undo takes back a new game ([e9631f9](https://github.com/kqesar/alltp-tracker/commit/e9631f966ae5434b058e58491a190470f2fd6225))
+* **web:** tell every board's player a save is another game's in the same words ([28c16b7](https://github.com/kqesar/alltp-tracker/commit/28c16b723af6f073471902d80ab42057689c9b5e))
+
+
+### 📚 Documentation
+
+* bring the engine README in line with the packs ([179c489](https://github.com/kqesar/alltp-tracker/commit/179c4891e1f0dc43ca8d9fbff8b9979f7a237b7d))
+* complete the packs' module tables, fix the Inverted note ([638a3be](https://github.com/kqesar/alltp-tracker/commit/638a3be444f10dd56533cd2b28e7ef3e78003564))
+* cover the Windows and macOS lint, drop a plan reference ([b670ef5](https://github.com/kqesar/alltp-tracker/commit/b670ef52a3ead5ff5c83db8cc9b0151716ac3d76))
+* describe the shortcuts, New game and big keys in the guide ([fecc5c6](https://github.com/kqesar/alltp-tracker/commit/fecc5c6d84db13e7fc3da796f9fc0bdb39671e92))
+* fix the layout notes in CLAUDE.md and development.md ([e63f7e9](https://github.com/kqesar/alltp-tracker/commit/e63f7e935a8ad8eefce693d837519b49ca630443))
+* fix three claims in the area rules ([0b665cb](https://github.com/kqesar/alltp-tracker/commit/0b665cb5d0a7aa4dd05e32660bd8808312a5968c))
+* name the duplication that is the design ([a16e629](https://github.com/kqesar/alltp-tracker/commit/a16e6299d3000f5169f885f32f471138eb2fddd8))
+* say SMZ3's store shares the history and tab sync, and when the status delay restarts ([7ad7c74](https://github.com/kqesar/alltp-tracker/commit/7ad7c744334a353acead37ab9dacab21a4020bf7))
+* spell the packs' script paths from the repository root ([140d002](https://github.com/kqesar/alltp-tracker/commit/140d002972a6931180870136a7ba653df88b47fc))
+
+
+### 🔧 Code Refactoring
+
+* **engine:** one locationId for the alttpr and smz3 packs ([852c80f](https://github.com/kqesar/alltp-tracker/commit/852c80fe9e0592088bf41b93eba2fee811c0082a))
+* **web:** make ShortcutsButton's dialog loader the shared lazyDialog ([70ced9e](https://github.com/kqesar/alltp-tracker/commit/70ced9ee4fc38bb85a6bc9e56d1edc45168ce8e1))
+* **web:** one GameShell around the three games' boards ([8ddf2a4](https://github.com/kqesar/alltp-tracker/commit/8ddf2a46151db7797e1c5e1b478313bb56dcbae2))
+* **web:** one hook for the stream views' page lifecycle ([0ce6612](https://github.com/kqesar/alltp-tracker/commit/0ce66123c1d1712188bb262fe5e134defaff8848))
+* **web:** one RunToolbar for the Super Metroid and SMZ3 bars ([5455889](https://github.com/kqesar/alltp-tracker/commit/5455889b7b432edbdcee1615306f7674839285ea))
+* **web:** one ToggleList for Super Metroid's objectives and SMZ3's boss tokens ([8d6aa6e](https://github.com/kqesar/alltp-tracker/commit/8d6aa6e6f2913d11170a3241199ba4e16c091fe1))
+* **web:** share the run history and save format of the SM and SMZ3 stores ([271139a](https://github.com/kqesar/alltp-tracker/commit/271139a109e1c9e381310e312ca327db7bd78133))
+* **web:** share the Super Metroid and SMZ3 boards' common CSS ([4c0395c](https://github.com/kqesar/alltp-tracker/commit/4c0395c3bf5678f96e1f1de27016d61a6d5514c5))
+* **web:** type the run history's changes without a cast ([52e9106](https://github.com/kqesar/alltp-tracker/commit/52e9106b02b7317fd21a54a328f2931c66d70c7d))
+
 ## [2.36.0](https://github.com/kqesar/alltp-tracker/compare/v2.35.0...v2.36.0) (2026-10-23)
 
 
