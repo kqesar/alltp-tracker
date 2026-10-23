@@ -5,10 +5,10 @@ import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
 import { itemGridFor } from "@/games/alttpr/data/items";
 import { useCrossedLogic } from "@/games/alttpr/hooks/useCrossedLogic";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
-import { useUndoShortcuts } from "@/games/alttpr/hooks/useUndoShortcuts";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { visibleRows } from "@/games/alttpr/utils";
 import type { ObsViewProps } from "@/games/registry";
+import { useUndoShortcuts } from "@/games/useUndoShortcuts";
 import { useUpdateStore } from "@/stores/updateStore";
 import { fitObsGrid } from "@/utils/view";
 
@@ -28,7 +28,7 @@ const GRID_COLUMNS = ITEMS_PER_ROW + 1;
  * in localStorage, so the reload loses nothing.
  */
 export const ObsView = ({ background, timer = false }: ObsViewProps) => {
-  useUndoShortcuts();
+  useUndoShortcuts(useGameStore);
   useItemShortcuts();
   useCrossedLogic();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);

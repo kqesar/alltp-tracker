@@ -229,6 +229,16 @@ describe("the Super Metroid toolbar", () => {
 });
 
 describe("the Super Metroid tracker", () => {
+  it("leaves Ctrl+Alt+Z (AltGr+Z on some layouts) and Shift+Y alone", () => {
+    render(<SmApp />);
+    fireEvent.click(screen.getByTestId("sm-item-ice"));
+    fireEvent.keyDown(window, { altKey: true, ctrlKey: true, key: "z" });
+    expect(store().items.ice).toBe(1);
+    fireEvent.keyDown(window, { ctrlKey: true, key: "z" });
+    fireEvent.keyDown(window, { ctrlKey: true, key: "Y", shiftKey: true });
+    expect(store().items.ice).toBe(0);
+  });
+
   it("undoes and redoes from the keyboard, as ALttPR's board", () => {
     render(<SmApp />);
     fireEvent.click(screen.getByTestId("sm-item-ice"));

@@ -1,10 +1,10 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { useUndoShortcuts } from "@/games/alttpr/hooks/useUndoShortcuts";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { useUndoShortcuts } from "@/games/useUndoShortcuts";
 
 const Harness = ({ withField = false }: { withField?: boolean }) => {
-  useUndoShortcuts();
+  useUndoShortcuts(useGameStore);
   return withField ? <input aria-label="Notes" data-testid="notes" /> : null;
 };
 
@@ -70,6 +70,17 @@ describe("useUndoShortcuts", () => {
 
     expect(hookshot()).toBe(true);
     dialog.remove();
+  });
+
+  it("leaves Ctrl+Alt+Z (AltGr+Z on some layouts) and Ctrl+Shift+Y alone", () => {
+    render(<Harness />);
+
+    fireEvent.keyDown(window, { altKey: true, ctrlKey: true, key: "z" });
+    expect(hookshot()).toBe(true);
+
+    fireEvent.keyDown(window, { ctrlKey: true, key: "z" });
+    fireEvent.keyDown(window, { ctrlKey: true, key: "Y", shiftKey: true });
+    expect(hookshot()).toBe(false);
   });
 
   it("ignores a plain z", () => {

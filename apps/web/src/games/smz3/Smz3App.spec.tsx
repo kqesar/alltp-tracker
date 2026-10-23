@@ -335,6 +335,16 @@ describe("keysanity", () => {
 });
 
 describe("the SMZ3 tracker", () => {
+  it("leaves Ctrl+Alt+Z (AltGr+Z on some layouts) and Shift+Y alone", () => {
+    render(<Smz3App />);
+    fireEvent.click(screen.getByTestId("smz3-item-ice"));
+    fireEvent.keyDown(window, { altKey: true, ctrlKey: true, key: "z" });
+    expect(store().items.ice).toBe(1);
+    fireEvent.keyDown(window, { ctrlKey: true, key: "z" });
+    fireEvent.keyDown(window, { ctrlKey: true, key: "Y", shiftKey: true });
+    expect(store().items.ice).toBe(0);
+  });
+
   it("undoes and redoes from the keyboard, and links samus.link", () => {
     render(<Smz3App />);
     fireEvent.click(screen.getByTestId("smz3-item-ice"));

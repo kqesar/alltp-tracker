@@ -14,10 +14,10 @@ import { useAutotrack } from "@/games/alttpr/hooks/useAutotrack";
 import { useCrossedLogic } from "@/games/alttpr/hooks/useCrossedLogic";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
 import { useRunAnalysis } from "@/games/alttpr/hooks/useRunAnalysis";
-import { useUndoShortcuts } from "@/games/alttpr/hooks/useUndoShortcuts";
 import { useVoice } from "@/games/alttpr/hooks/useVoice";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type { MapView } from "@/games/alttpr/utils";
+import { useUndoShortcuts } from "@/games/useUndoShortcuts";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
 
 // The desktop app's notice, a chunk of its own: the test is inline so the
@@ -32,7 +32,7 @@ const AppMenuPrompt =
  * Manages the overall state of items, layout, settings, and game state
  */
 function App() {
-  useUndoShortcuts();
+  useUndoShortcuts(useGameStore);
   useItemShortcuts();
   useAutotrack();
   useVoice();
