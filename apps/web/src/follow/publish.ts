@@ -3,6 +3,7 @@
 // device following (docs/desktop.md, "Live follow on the LAN").
 
 import type { GameId, RunStore } from "@/games/registry";
+import { trailing } from "@/utils/trailing";
 
 /** The run, as the relay takes it (`follow_publish`). */
 export type Publication = {
@@ -41,12 +42,10 @@ export const publishRun = ({
   read?: (key: string) => string | null;
 }): { now: () => void; stop: () => void } => {
   const key = store.persist.getOptions().name ?? "";
-  let timer: ReturnType<typeof setTimeout> | undefined;
   let last: string | null = null;
 
   const publish = (always: boolean) => {
-    clearTimeout(timer);
-    timer = undefined;
+    wait.cancel();
     let value: string | null;
     try {
       value = read(key);
@@ -63,17 +62,15 @@ export const publishRun = ({
     send({ game, key, sentAt: Date.now(), value });
   };
 
-  const unsubscribe = store.subscribe(() => {
-    timer ??= setTimeout(() => publish(false), PUBLISH_DELAY_MS);
-  });
+  const wait = trailing(PUBLISH_DELAY_MS, () => publish(false));
+  const unsubscribe = store.subscribe(wait.poke);
   publish(true);
 
   return {
     now: () => publish(true),
     stop: () => {
       unsubscribe();
-      clearTimeout(timer);
-      timer = undefined;
+      wait.cancel();
     },
   };
 };
