@@ -8,7 +8,7 @@
 - **A menu entry for a downloaded AppImage**, which installs none (below, "Application menu").
 - **Live follow on the local network**: a phone or a second screen watches the run update, served by the app itself (below, "Live follow on the LAN").
 
-The site stays the main product. The app adds no byte to it, and costs nothing: no store, no paid signing, builds on GitHub's free runners, updates served by GitHub Releases.
+The site stays the main product. The app adds none of its code to it but the followed view, a small chunk loaded only for `?view=follow` (below, "Live follow on the LAN"), and costs nothing: no store, no paid signing, builds on GitHub's free runners, updates served by GitHub Releases.
 
 ## One codebase, two builds
 
@@ -33,7 +33,7 @@ What the `desktop` mode changes (`apps/web/vite.config.ts`):
 | Stream view (OBS) | yes | hidden: OBS can neither load the app's pages nor follow its `localStorage` |
 | Share a run | a link to this deployment | a link to the published site (`SITE_URL`): the app's own address, `tauri://localhost`, opens nowhere else. A viewer opens it in a browser, where it keeps a run apart from the app's own |
 
-The code reads the mode through `isDesktopApp` (`apps/web/src/utils/platform.ts`), a constant the site's build folds to `false`. One exception: `main.tsx` tests `import.meta.env.MODE === "desktop"` inline, because Rollup does not fold a constant imported from another module far enough to drop a dynamic `import()`. With the inline test, the site's build emits no chunk of the desktop code (checked in the build output: no `start-*.js`).
+The code reads the mode through `isDesktopApp` (`apps/web/src/utils/platform.ts`), a constant the site's build folds to `false`. Every lazy `import()` of desktop-only code is the exception: it sits behind an inline `import.meta.env.MODE === "desktop"` test (`main.tsx`'s start-up and live follow, `ShareDialog`'s live follow section, `GameShell`'s and `TrackerControls`' application menu chunks, ALttPR's global shortcuts, and the rest), because Rollup does not fold a constant imported from another module far enough to drop a dynamic `import()`. With the inline test, the site's build emits no chunk of the desktop code (checked in the build output: no `start-*.js`).
 
 ## At runtime
 
@@ -299,9 +299,13 @@ sequenceDiagram
   Relay-->>Viewer: the latest snapshot, at once
   Page->>Relay: follow_publish (next change)
   Relay-->>Viewer: snapshot (a slow viewer skips intermediate ones)
+  loop every 15 s
+    Relay->>Viewer: ping, and a beat {"beat":true}
+    Viewer-->>Relay: pong (the browser, on its own)
+  end
   Page->>Relay: invoke follow_stop (or the app exits)
   Relay-->>Viewer: close 4410 "stopped"
-  Note over Relay: listener dropped: the port is closed
+  Note over Relay: listener dropped and every HTTP connection closed:<br/>the port is free
 ```
 
 ### Routes
@@ -315,13 +319,14 @@ sequenceDiagram
 | `GET /<path>` with an extension, not a file | 404 |
 | any other method | 405 |
 
-The files are the app's own, through Tauri's asset resolver (`tauri_assets`): embedded in a release, read from `apps/web/dist-desktop` in development. A path must be made of `[A-Za-z0-9._-]` segments, none of them `.` or `..`, else 404: in development Tauri reads the path from disk, so a traversal, a drive letter or a backslash must never reach it. Tauri's resolver falls back to `index.html` for a missing file; the adapter turns that fallback into a 404 unless HTML was asked for.
+The files are the app's own, through Tauri's asset resolver (`tauri_assets`): embedded in a release, read from `apps/web/dist-desktop` in development (the last `vite build --mode desktop`, not the dev server: see "Development"). A path must be made of `[A-Za-z0-9._-]` segments, none of them `.` or `..`, else 404: in development Tauri reads the path from disk, so a traversal, a drive letter or a backslash must never reach it. Tauri's resolver falls back to `index.html` for a missing file; the adapter turns that fallback into a 404 unless HTML was asked for.
 
 ### The stream
 
-- **Message**: a text frame, `{"game","key","value","sentAt"}`. `value` is the game's persisted state exactly as the page stored it (a JSON string, opaque to Rust: each game's own validation and migration read it on the viewer's side); `sentAt` is the page's `Date.now()`, so the viewer can correct its timer for clock skew.
+- **Message**: a text frame, `{"game","key","value","sentAt"}`, or the beat (below). `value` is the game's persisted state exactly as the page stored it (a JSON string, opaque to Rust: each game's own validation and migration read it on the viewer's side); `sentAt` is the page's `Date.now()`, so the viewer can correct its timer for clock skew.
 - **Semantics**: a `tokio::sync::watch` holds the latest snapshot. A viewer gets it at once on connect, then each change; a viewer slower than the updates skips the states it had no time for, never queues them. The snapshot survives `follow_stop`, so a session started later serves the run at once.
-- **Read-only**: what a viewer sends is read only to answer pings and to see it leave, never acted on; incoming frames are capped at 4 KiB.
+- **Read-only**: what a viewer sends is read only to answer pings, to hear that it is there and to see it leave, never acted on; incoming frames are capped at 4 KiB.
+- **Liveness, both ways**: every 15 s the relay pings each viewer (the browser answers with a pong on its own, even while the page's timers are throttled) and sends it a beat, the text frame `{"beat":true}`, which the page can see where it cannot see a ping. A viewer that has not answered the last ping by the next one has vanished (out of range, battery dead: no FIN ever comes) and loses its seat, 15 to 30 s after it went. A followed view that hears no frame for 35 s, two beats, drops its connection and opens a new one (below).
 - **Close codes.** A browser cannot read the HTTP status of a refused WebSocket (it only sees the socket close), so a refusal is an accepted socket closed at once with a code that says why:
 
 | Code | Reason | The viewer should |
@@ -336,34 +341,35 @@ The files are the app's own, through Tauri's asset resolver (`tauri_assets`): em
 |---|---|---|
 | `follow_start` | none | `{ url, port, lanFound, viewers }`; while running, the running session (same token) |
 | `follow_state` | none | the running session as `follow_start` describes it, or `null` while off: what a page that loaded again (a game switch reloads it) reads to pick the relay up |
-| `follow_stop` | none | nothing; idempotent. Waits up to 2 s for the viewers' sockets to close |
+| `follow_stop` | none | nothing; idempotent. Closes the port and every connection still in HTTP at once, and waits up to 2 s for the viewers' sockets to close |
 | `follow_publish` | `{ game, key, value, sentAt }` (`sentAt` an integer, ms) | nothing; an error when `value` is over 1 MiB or `game`/`key` over 64 bytes |
-| event `follow-viewers` | | `{ count }`, each time a viewer joins or leaves |
+| event `follow-viewers` | | `{ count }`, each time a viewer joins or leaves; never once its session has stopped (the event names no session: a late one would overwrite the next session's count) |
 
 `url` is `http://<lan-address>:<port>/?view=follow&token=<token>`. The address is the one the default route leaves from: a UDP socket "connected" to a documentation address (192.0.2.1) sends nothing but makes the system pick the route, and its local address is read back, without a crate. With no route (offline), `lanFound` is `false` and the URL is on 127.0.0.1, which only this machine can open. On a machine whose default route is a VPN, the address is the VPN's.
 
 ### Security
 
 - **On the local network only, by design**: no relay service, no port forwarding. Anyone who can reach the port is on the same network.
-- **The token gates the stream**: 128 bits from the system's random source (`getrandom`), base64url, new at each `follow_start`, compared in constant time. An old link stops working when the player restarts the relay. The page's files are not gated: they are the public site's code.
+- **The token gates the stream**: 128 bits from the system's random source (`getrandom`), base64url, new at each `follow_start`, compared in constant time. An old link stops working when the player restarts the relay: a request sent before the stop has its connection closed with it, and a stopped session refuses an upgrade (4410) before it reads the token, and sends nothing past the stop. The page's files are not gated: they are the public site's code.
 - **Nothing is writable**: no route but the files and the stream, no method but GET, no incoming message acted on.
-- **Bounded**: eight viewers at most (each costs a socket and a task), 1 MiB per snapshot, 4 KiB per incoming frame, and a viewer that takes more than 10 s to accept an update is dropped, so a stalled device cannot hold a seat.
-- **No port open while it is off**: `follow_start` starts the server; `follow_stop` and the app's exit close every socket (a close frame first) and the listener.
+- **Bounded before the token is read**: the relay runs its own accept loop on hyper's HTTP/1 (`axum::serve` sets no timer, so hyper's header timeout would never run). At most 32 connections still in HTTP at once (eight viewers loading the page together); one more is closed as soon as it is accepted. A connection that takes over 10 s to send a request's headers, or stays idle that long between two, is closed; its read buffer is 16 KiB (hyper's default allows about 400 KiB). An upgraded viewer leaves that count for the seats below.
+- **Bounded after**: eight viewers at most (each costs a socket, a task and a write buffer), 1 MiB per snapshot, 4 KiB per incoming frame. A viewer that takes more than 10 s to accept a frame is dropped (a stalled device), and one that stops answering pings is dropped by the next one (a vanished device, above), so neither holds a seat. A refused socket (4401, 4503) is closed within about a second, a close frame being given 1 s at most.
+- **No port open while it is off**: `follow_start` starts the server; `follow_stop` and the app's exit close the listener and every socket: a viewer's with a close frame first, a connection still in HTTP at once. A Windows update ends the app without its exit event (the updater runs the installer, then exits the process), so the page stops live follow itself between the download and the install (`desktop/start.ts`); a failed download leaves it running.
 - **Plain `http://`**: the token crosses the network in clear, visible to anything on it. Acceptable for a read-only view of a run; TLS on a LAN address would need a certificate no phone trusts.
 
 ### Firewalls
 
-The relay listens on all interfaces, port 23075 (another, shown in the URL, if it is taken).
+The relay listens on all interfaces, port 23075, or a free one, shown in the URL, if binding 23075 fails for any reason: taken, or refused, as Windows refuses (access denied, not "in use") a port inside a range Hyper-V, WSL or Docker excluded (`netsh int ipv4 show excludedportrange protocol=tcp`).
 
 - **Windows** asks on the first start whether the app may accept connections: allow it on private networks. On a network marked Public, inbound connections stay blocked: mark the Wi-Fi Private. A refusal is undone in "Allow an app through Windows Firewall".
 - **macOS**: the application firewall is off by default; when on, it asks on the first start.
-- **Linux**: most desktops run no firewall by default. With ufw: `sudo ufw allow 23075/tcp`; with firewalld: `sudo firewall-cmd --add-port=23075/tcp` (add `--permanent` to keep it after a reboot).
+- **Linux**: many desktops run no firewall by default, but some distributions enable one that drops inbound connections (CachyOS and Manjaro ship ufw on; openSUSE ships firewalld). With ufw: `sudo ufw allow 23075/tcp`. With firewalld: `sudo firewall-cmd --add-port=23075/tcp` opens it until the next reload or reboot; run it again with `--permanent` to keep it (`--permanent` alone writes the saved configuration only and does not open the port now).
 
 ### Budget
 
-- **Off**: nothing runs, no port, no task; the managed state is one empty channel.
-- **On**: one listener task, and per viewer one task and one socket. A publish serializes the snapshot once; every viewer's frame shares that buffer (reference-counted), so eight viewers hold one copy of the run, not eight.
-- **Binary**: axum 0.8 (HTTP/1 and WebSocket only, no default features) on the hyper, tokio and tower the app already carries for the updater, plus tungstenite: +745 KiB on the stripped Linux x86-64 release binary (15.0 → 15.7 MiB).
+- **Off**: nothing runs, no port, no task; the managed state is one channel holding the last published snapshot (empty until live follow is first turned on): the run, at most 1 MiB, and its envelope.
+- **On**: one accept-loop task; per connection still in HTTP (32 at most) one task, a socket and a read buffer of 16 KiB at most; per viewer one task and one socket. A publish serializes the snapshot once, and the viewers' frames share it (reference-counted) until each viewer's socket copies it into its own write buffer, which keeps its size: count one copy per viewer at worst, 8 × 1 MiB at the size cap, a few kB for a real run. The beat costs each viewer two small frames every 15 s.
+- **Binary**: axum 0.8 (HTTP/1 and WebSocket only, no default features) on the hyper, hyper-util, tokio and tower the app already carries for the updater, plus tungstenite: +745 KiB on the stripped Linux x86-64 release binary (15.0 → 15.7 MiB), measured before the relay ran its own accept loop.
 
 ### The player's side: publishing
 
@@ -381,10 +387,9 @@ The relay listens on all interfaces, port 23075 (another, shown in the URL, if i
 stateDiagram-v2
   [*] --> connecting
   connecting --> live: a run arrives
-  live --> reconnecting: drop (1006, network)
+  live --> reconnecting: drop (1006, network),<br/>or 35 s without a frame
   connecting --> reconnecting: cannot connect
   reconnecting --> live: a run arrives
-  connecting --> full: 4503
   live --> full: 4503
   full --> live: a seat frees
   live --> stopped: 4410
@@ -393,7 +398,9 @@ stateDiagram-v2
   expired --> [*]
 ```
 
-- **Connection** (`follow/client.ts`): `ws://<the page's host>/follow?token=<the link's>`; only the token is read from the address, so a link cannot point the page at another host. A drop retries after 1 s, doubling to 30 s, at once when the device comes back online or the page back into view (a phone that slept); a full relay is retried after 5 s at least. 4401 and 4410 end it: a new session has a new token, so retrying the old link is pointless. The banner (a polite `role="status"`, with autotracking's status dot shapes) says each state and what to do.
+The diagram shows the usual path. `follow/client.ts` reads a close the same way whatever the state, so from **any** state but the two ends: 4401 leads to `expired`, 4410 to `stopped`, 4503 to `full`, any other drop (or 35 s of silence) to `reconnecting`, and a run received to `live`. A phone that slept through a restart of the relay on the same port therefore wakes on `reconnecting`, then `expired`.
+
+- **Connection** (`follow/client.ts`): `ws://<the page's host>/follow?token=<the link's>`; only the token is read from the address, so a link cannot point the page at another host. A drop retries after 1 s, doubling to 30 s, at once when the device comes back online or the page back into view (a phone that slept); a full relay is retried after 5 s at least. A connection can die without a close reaching the phone (it slept with its Wi-Fi off, the computer left the network or lost power): the browser still calls it open and fires no `close`. So every frame, a run or a beat, re-arms a 35 s timer; when it runs out the socket is closed (its late `close` ignored) and the view says "reconnecting" and tries again. Coming back online or into view checks the same deadline at once, since a sleeping page's timers do not run; a socket still heard from is left alone. 4401 and 4410 end it: a new session has a new token, so retrying the old link is pointless. The banner (a polite `role="status"`, with autotracking's status dot shapes) says each state and what to do.
 - **Applying a run**: each frame is checked (a known game, a value that is JSON and at most 1 MiB, a finite `sentAt`); the frame's `key` is never used: the run is written under the loaded game's own storage key, then `persist.rehydrate()` reloads the store. Each game's `merge` judges the data as it judges another tab's change: validation, migration, the undo history cleared.
 - **The game**: nothing renders until the first run; its game is loaded and saved as the device's, as a `?game=` link does. A run of another game later (the player switched) loads the page again on that game.
 - **Read-only**: the grid is the game's stream view (`ObsView` with `followed`: no keyboard shortcut hooks, `data-view="follow"`, an opaque page, the grid fitted to the room under the banner), inside an `inert` container: no click, tap or key reaches it. The cost: `inert` also hides the grid from screen readers, who hear the banner only.
@@ -402,9 +409,10 @@ stateDiagram-v2
 ### Known limits
 
 - Only a device on the same network can follow: no remote restreamer (a choice: no server, no cost).
+- A device that cannot be reached when the player turns live follow off (asleep, offline) never receives 4410: on waking it says "Reconnecting", and keeps retrying while the relay stays off or came back on another port; if the relay came back on the same port, it says "Link expired".
 - On `http://`, a phone's browser cannot keep its screen awake (the Wake Lock API needs a secure context): the viewer turns auto-lock off while watching.
 - The site has no live follow: a browser cannot open a server. Its build carries the followed view (a 3.5 kB chunk loaded only for `?view=follow`), which the browser tests drive against a fake relay (`apps/web/e2e/follow.e2e.ts`).
-- Proved on Linux only. The Rust tests run the real server (`follow.rs`): token refused, snapshot then update, incoming messages ignored, the viewer limit, stop closing the sockets and freeing the port, the file routes, `follow_state`. On a real machine (KDE Plasma, Wayland, the app in development under XWayland): the relay served the page to a headless Chromium on the LAN address, the followed grid showed the app's run and followed a `--step` from the command line in under 300 ms, the app counted the device, a reload of the app's page picked the running relay up, and turning it off showed "Stopped" and closed the port. Safari on iOS opening the QR code over the Wi-Fi is not yet tried.
+- Proved on Linux only. The Rust tests run the real server (`follow.rs`): token refused, snapshot then update, incoming messages ignored, the viewer limit, stop closing the sockets and freeing the port, the file routes, `follow_state`, a connection that never finishes its headers (or sends nothing, or idles after a request) closed by the timeout, the connection cap, a half-sent request closed by the stop and never reaching the next session, and a viewer that stops answering pings losing its seat while one that answers keeps it and gets beats. On a real machine (KDE Plasma, Wayland, the app in development under XWayland): the relay served the page to a headless Chromium on the same machine through its LAN address, the followed grid showed the app's run and followed a `--step` from the command line in under 300 ms, the app counted the device, a reload of the app's page picked the running relay up, and turning it off showed "Stopped" and closed the port. That traffic stayed on the loopback interface, so it exercised neither the Wi-Fi nor the firewall (that machine's ufw drops inbound connections, and would need `ufw allow 23075/tcp` for a phone). No second device has followed yet: a phone (Safari on iOS, Chrome on Android) opening the QR code over the Wi-Fi is not yet tried.
 
 ## Updates
 
@@ -421,6 +429,7 @@ sequenceDiagram
 ```
 
 - The app checks when it opens, then every hour, and never installs on its own: the same notice as the site's offers **Restart**, and the player picks the moment.
+- **Restart** downloads the update, stops live follow if it runs (the devices following are told "Stopped"), installs, then relaunches. The stop cannot wait for the app's exit event: on Windows the updater starts the installer and ends the process without one (above, "Security").
 - **Signing key.** Every installer is signed with the project's updater key, a free minisign (Ed25519) pair made by `tauri signer generate`. The public half is in `tauri.conf.json` (`plugins.updater.pubkey`). The private half and its password live in the repository's secrets, `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`, and in the owner's own backup, never in the repository. An installed app refuses an update its key did not sign: losing the private key means no update can reach the installed apps again (players would reinstall by hand).
 - This is separate from the systems' code signing (below): it proves an update comes from this project, whatever the system thinks of the publisher.
 
@@ -464,5 +473,7 @@ flowchart LR
 pnpm --filter @alltp/desktop dev     # the app on Vite's dev server, with HMR
 pnpm --filter @alltp/desktop build   # this system's installers
 ```
+
+Live follow in development serves `apps/web/dist-desktop` from disk, not the dev server (Tauri embeds no files under `devUrl` and its resolver reads `frontendDist`): run `pnpm --filter @alltp/web exec vite build --mode desktop` before testing it on a phone, and again after any change to the followed view (`?view=follow`, `apps/web/src/follow/`, `main.tsx`). Without a build the phone gets a 404; with an old one, the old page.
 
 Needs Rust ≥ 1.90 (`rustup`) and Tauri's system libraries ([prerequisites](https://v2.tauri.app/start/prerequisites/)). A local build signs the updater artifacts too: export `TAURI_SIGNING_PRIVATE_KEY` and its password first, or pass `--no-bundle` to skip them.
