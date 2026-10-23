@@ -57,6 +57,12 @@ const startFollowing = (root: HTMLElement) => {
 };
 
 const startStreaming = (root: HTMLElement) => {
+  // Transparent from the first frame: until the first run arrives (the app has
+  // not published, the source waits for a seat, OBS reloaded it on a scene
+  // change) nothing is drawn, and base.css would paint a solid dark page over
+  // the scene. The grid's stage and the out-of-date line keep it so.
+  document.documentElement.dataset.view = "obs";
+  document.title = `${PRODUCT_NAME} stream view`;
   render(
     root,
     import("@/follow/StreamSourceView").then(({ StreamSourceView }) => (

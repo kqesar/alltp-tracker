@@ -170,6 +170,8 @@ hosted.describe("the stream view the app serves to OBS", () => {
     async ({ host, page }) => {
       await openSource(page, host);
       await expect(page.locator("#root")).toBeEmpty();
+      // Nothing drawn, and nothing painted either: the scene shows through
+      await expectTransparentPage(page);
 
       host.relay.publish(await withHookshot(page));
 
@@ -265,6 +267,19 @@ hosted.describe("the stream view the app serves to OBS", () => {
 
       await expect(page.getByTestId("item-hookshot")).toBeVisible();
       await expect.poll(() => host.relay.viewers(), { timeout: 8000 }).toBe(1);
+    },
+  );
+
+  hosted(
+    "stays transparent while it waits for a seat",
+    async ({ host, page }) => {
+      host.relay.refuse(4503);
+
+      await openSource(page, host);
+
+      await expect(page.locator("#root")).toBeEmpty();
+      await expectTransparentPage(page);
+      await expect(page).toHaveTitle("Rando Atlas stream view");
     },
   );
 
