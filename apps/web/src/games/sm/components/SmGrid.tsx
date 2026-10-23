@@ -48,7 +48,7 @@ const SmCell = ({ id, row, col }: SmCellProps) => {
       type="button"
     >
       {counted && value > 0 && (
-        <span aria-hidden="true" className="sm-cell__count">
+        <span aria-hidden="true" className="board-cell__count">
           {value}
         </span>
       )}
@@ -67,13 +67,13 @@ export const SmGrid = () => {
   return (
     <section
       aria-label="Item tracker grid"
-      className="sm-grid"
+      className="board-grid"
       data-testid="item-grid"
       ref={containerRef}
     >
       <h2 className="sr-only">Items</h2>
       <GridFocusProvider value={focus}>
-        <div className="sm-grid__cells">
+        <div className="board-grid__cells sm-grid__cells">
           {smGrid({ splitSpeed, wallJump }).map((row, rowIndex) =>
             row.map((id, colIndex) =>
               id === "" ? (

@@ -16,15 +16,15 @@ export const SmObjectives = () => {
   return (
     <section
       aria-labelledby="sm-objectives-heading"
-      className="sm-objectives"
+      className="board-panel sm-objectives"
       data-testid="sm-objectives"
     >
-      <h2 className="sm-objectives__heading" id="sm-objectives-heading">
+      <h2 className="board-panel__heading" id="sm-objectives-heading">
         Objectives
       </h2>
       <p
         aria-live="polite"
-        className="sm-objectives__summary"
+        className="board-panel__summary"
         data-testid="sm-objectives-summary"
       >
         {objectives.length === 0
@@ -34,19 +34,19 @@ export const SmObjectives = () => {
             : `${objectives.length - left} of ${objectives.length} done.`}
       </p>
       {objectives.length > 0 && (
-        <ul className="sm-objectives__list">
+        <ul className="board-panel__list">
           {objectives.map((id) => {
             const isDone = done.includes(id);
             return (
               <li key={id}>
                 <button
                   aria-pressed={isDone}
-                  className="sm-objective"
+                  className="toggle-chip"
                   data-testid={`sm-objective-${id}`}
                   onClick={() => toggleDone(id)}
                   type="button"
                 >
-                  <span aria-hidden="true" className="sm-objective__check">
+                  <span aria-hidden="true" className="toggle-chip__check">
                     {isDone ? "✓" : ""}
                   </span>
                   {NAME.get(id) ?? id}

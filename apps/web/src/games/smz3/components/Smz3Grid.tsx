@@ -82,7 +82,7 @@ const Smz3Cell = ({
       style={style}
     >
       {max > 1 && !cell.leveled && value > 0 && (
-        <span aria-hidden="true" className="smz3-cell__count">
+        <span aria-hidden="true" className="board-cell__count">
           {value}
         </span>
       )}
@@ -182,13 +182,13 @@ export const Smz3Grid = () => {
   return (
     <section
       aria-label="Item tracker grid"
-      className="smz3-grid"
+      className="board-grid"
       data-testid="item-grid"
       ref={containerRef}
     >
       <h2 className="sr-only">Items</h2>
       <GridFocusProvider value={focus}>
-        <div className="smz3-grid__cells">
+        <div className="board-grid__cells smz3-grid__cells">
           {gridOf(keysanity).map((row, rowIndex) =>
             row.map((slot, colIndex) =>
               slot === null ? (

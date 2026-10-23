@@ -13,34 +13,34 @@ export const Smz3Tokens = () => {
   return (
     <section
       aria-labelledby="smz3-tokens-heading"
-      className="smz3-tokens"
+      className="board-panel smz3-tokens"
       data-testid="smz3-tokens"
     >
-      <h2 className="smz3-tokens__heading" id="smz3-tokens-heading">
+      <h2 className="board-panel__heading" id="smz3-tokens-heading">
         Boss tokens
       </h2>
       <p
         aria-live="polite"
-        className="smz3-tokens__summary"
+        className="board-panel__summary"
         data-testid="smz3-tokens-summary"
       >
         {found >= needed
           ? `${found} found: Tourian is open.`
           : `${found} of the ${needed} Tourian asks for.`}
       </p>
-      <ul className="smz3-tokens__list">
+      <ul className="board-panel__list">
         {BOSS_TOKENS.map(({ id, name }) => {
           const held = (items[id] ?? 0) > 0;
           return (
             <li key={id}>
               <button
                 aria-pressed={held}
-                className="smz3-token"
+                className="toggle-chip"
                 data-testid={`smz3-${id}`}
                 onClick={() => step(id, held ? -1 : 1)}
                 type="button"
               >
-                <span aria-hidden="true" className="smz3-token__check">
+                <span aria-hidden="true" className="toggle-chip__check">
                   {held ? "✓" : ""}
                 </span>
                 {name}

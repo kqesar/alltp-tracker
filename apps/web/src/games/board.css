@@ -1,0 +1,142 @@
+/*
+ * What the Super Metroid and SMZ3 boards share, loaded with either module
+ * (and so in a chunk both games' players, and ALttPR's none, download): the
+ * panels of toggles under the grid, the run type dialog's fields, the stream
+ * dialog and the grid cells' counts. Each game's own sheet keeps its layout.
+ */
+
+/* A panel under the grid: the seed's objectives, the boss tokens, the keycards */
+.board-panel {
+  display: grid;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+}
+
+.board-panel__heading {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.board-panel__summary {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.board-panel__list {
+  display: grid;
+  gap: var(--spacing-xs);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* A toggle of the panel: a check box and a name */
+.toggle-chip {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.toggle-chip:hover {
+  border-color: var(--color-accent);
+}
+
+.toggle-chip[aria-pressed="true"] {
+  border-color: var(--color-success);
+}
+
+.toggle-chip__check {
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-weight: 700;
+  color: var(--color-success);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+/* The run type dialog's fields */
+.mode-field {
+  display: grid;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.mode-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: var(--spacing-xs) var(--spacing-md);
+  padding: var(--spacing-sm) 0 0;
+  margin: 0 0 var(--spacing-md);
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.mode-options legend {
+  padding: 0;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.mode-check {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  min-height: 2rem;
+}
+
+/* The stream dialog: the address, and how the copy went */
+.stream-url {
+  padding: var(--spacing-sm);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+  background: var(--surface-2);
+  border-radius: var(--border-radius-sm);
+}
+
+.stream-status {
+  min-height: 1.5em;
+  margin: var(--spacing-xs) 0 0;
+}
+
+/* The grid's cells: the rows of cells fill the grid in the page's colour,
+   which the stream view takes away (obs.css) */
+.board-grid__cells {
+  display: grid;
+  grid-auto-rows: var(--cell);
+  background-color: var(--color-bg);
+}
+
+/* How many packs, tanks or rewards: game-like digits in the lower right */
+.board-cell__count {
+  position: absolute;
+  right: 4%;
+  bottom: 2%;
+  font-family: var(--font-mono, monospace);
+  font-size: calc(var(--cell) * 0.3);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--sprite-white);
+  text-shadow:
+    1px 0 var(--sprite-ink),
+    -1px 0 var(--sprite-ink),
+    0 1px var(--sprite-ink),
+    0 -1px var(--sprite-ink);
+  pointer-events: none;
+}

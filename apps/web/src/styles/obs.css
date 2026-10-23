@@ -28,6 +28,17 @@
   background-color: transparent;
 }
 
+/* Super Metroid's and SMZ3's grids: the cells alone, placed as ALttPR's are */
+.obs-view .board-grid {
+  position: absolute;
+  top: var(--obs-top, 0);
+  left: var(--obs-left, 0);
+}
+
+.obs-view .board-grid__cells {
+  background-color: transparent;
+}
+
 /* The run timer (&timer=1), on the row ObsView keeps under the grid, as
    wide as the grid's eight columns: its drawing centres in that box. */
 .obs-view .stream-timer {

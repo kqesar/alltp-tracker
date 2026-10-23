@@ -64,7 +64,7 @@ const NumberSelect = ({
 }) => {
   const id = useId();
   return (
-    <div className="smz3-mode__field">
+    <div className="mode-field">
       <label htmlFor={id}>{label}</label>
       <select
         className="run-settings__select"
@@ -98,7 +98,7 @@ const Smz3ModeDialog = ({ onClose }: { onClose: () => void }) => {
   return (
     <Modal isOpen onClose={onClose} title="Choose a run type">
       <GamePicker current="smz3" />
-      <div className="smz3-mode__field">
+      <div className="mode-field">
         <label htmlFor={presetId}>Run type</label>
         <select
           className="run-settings__select"
@@ -118,9 +118,9 @@ const Smz3ModeDialog = ({ onClose }: { onClose: () => void }) => {
           <option value="custom">My own settings</option>
         </select>
       </div>
-      <fieldset className="smz3-mode__options">
+      <fieldset className="mode-options">
         <legend>The run's settings, as samus.link sets them</legend>
-        <div className="smz3-mode__field">
+        <div className="mode-field">
           <label htmlFor={logicId}>Super Metroid logic</label>
           <select
             className="run-settings__select"
@@ -136,7 +136,7 @@ const Smz3ModeDialog = ({ onClose }: { onClose: () => void }) => {
             <option value="hard">Hard</option>
           </select>
         </div>
-        <label className="smz3-mode__check">
+        <label className="mode-check">
           <input
             checked={settings.keysanity}
             onChange={(event) =>
@@ -168,7 +168,7 @@ const Smz3ModeDialog = ({ onClose }: { onClose: () => void }) => {
           value={settings.tourianBosses}
         />
       </fieldset>
-      <fieldset className="smz3-mode__options">
+      <fieldset className="mode-options">
         <legend>What each medallion pad wants</legend>
         {(
           [
@@ -176,7 +176,7 @@ const Smz3ModeDialog = ({ onClose }: { onClose: () => void }) => {
             ["turtleRock", "Turtle Rock"],
           ] as const
         ).map(([pad, name]) => (
-          <div className="smz3-mode__field" key={pad}>
+          <div className="mode-field" key={pad}>
             <label htmlFor={`${presetId}-${pad}`}>{name}</label>
             <select
               className="run-settings__select"
@@ -222,17 +222,13 @@ const Smz3StreamDialog = ({ onClose }: { onClose: () => void }) => {
         The item grid alone, on a transparent background, for an OBS browser
         source. It follows this tracker live.
       </p>
-      <p
-        className="smz3-stream__url"
-        data-testid="smz3-stream-url"
-        ref={urlRef}
-      >
+      <p className="stream-url" data-testid="smz3-stream-url" ref={urlRef}>
         {url}
       </p>
       <button className="tracker-controls__button" onClick={copy} type="button">
         Copy the address
       </button>
-      <p aria-live="polite" className="smz3-stream__status">
+      <p aria-live="polite" className="stream-status">
         {status}
       </p>
     </Modal>

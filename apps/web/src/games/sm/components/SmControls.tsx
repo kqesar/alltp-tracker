@@ -59,7 +59,7 @@ const SmModeDialog = ({ onClose }: { onClose: () => void }) => {
   return (
     <Modal isOpen onClose={onClose} title="Choose a run type">
       <GamePicker current="sm" />
-      <div className="sm-mode__field">
+      <div className="mode-field">
         <label htmlFor={presetId}>Objectives</label>
         <select
           className="run-settings__select"
@@ -78,10 +78,10 @@ const SmModeDialog = ({ onClose }: { onClose: () => void }) => {
           <option value="custom">Random, or my own</option>
         </select>
       </div>
-      <fieldset className="sm-mode__objectives">
+      <fieldset className="mode-options">
         <legend>The seed's objectives, as its pause screen lists them</legend>
         {OBJECTIVES.map((objective) => (
-          <label className="sm-mode__check" key={objective.id}>
+          <label className="mode-check" key={objective.id}>
             <input
               checked={objectives.includes(objective.id)}
               onChange={(event) =>
@@ -97,9 +97,9 @@ const SmModeDialog = ({ onClose }: { onClose: () => void }) => {
           </label>
         ))}
       </fieldset>
-      <fieldset className="sm-mode__options">
+      <fieldset className="mode-options">
         <legend>Items the seed adds</legend>
-        <label className="sm-mode__check">
+        <label className="mode-check">
           <input
             checked={wallJump}
             onChange={(event) => setOption("wallJump", event.target.checked)}
@@ -107,7 +107,7 @@ const SmModeDialog = ({ onClose }: { onClose: () => void }) => {
           />
           Wall Jump Boots (wall jumps need them)
         </label>
-        <label className="sm-mode__check">
+        <label className="mode-check">
           <input
             checked={splitSpeed}
             onChange={(event) => setOption("splitSpeed", event.target.checked)}
@@ -141,13 +141,13 @@ const SmStreamDialog = ({ onClose }: { onClose: () => void }) => {
         The item grid alone, on a transparent background, for an OBS browser
         source. It follows this tracker live.
       </p>
-      <p className="sm-stream__url" data-testid="sm-stream-url" ref={urlRef}>
+      <p className="stream-url" data-testid="sm-stream-url" ref={urlRef}>
         {url}
       </p>
       <button className="tracker-controls__button" onClick={copy} type="button">
         Copy the address
       </button>
-      <p aria-live="polite" className="sm-stream__status">
+      <p aria-live="polite" className="stream-status">
         {status}
       </p>
     </Modal>
