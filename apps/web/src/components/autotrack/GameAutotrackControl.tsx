@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import type { GameAutotrack } from "@/autotrack/gameSession";
 import { headlineOf, phaseOf } from "@/autotrack/status";
-import type { lazyDialog } from "@/components/autotrack/lazyDialog";
 import { StatusDot } from "@/components/autotrack/StatusDot";
+import type { lazyDialog } from "@/components/ui/lazyDialog";
 import { PlugIcon } from "@/components/ui/ToolbarIcons";
 
 /**

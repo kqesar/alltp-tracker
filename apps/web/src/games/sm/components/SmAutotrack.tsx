@@ -2,13 +2,13 @@ import {
   GameAutotrackControl,
   useGameAutotrack,
 } from "@/components/autotrack/GameAutotrackControl";
-import { lazyDialog } from "@/components/autotrack/lazyDialog";
+import { lazyAutotrackDialog } from "@/components/autotrack/lazyAutotrackDialog";
 import { smAutotrack } from "@/games/sm/autotrack/store";
 
 /** Autotracking's lifetime in the Super Metroid tracker (useGameAutotrack). */
 export const useSmAutotrack = () => useGameAutotrack(smAutotrack);
 
-const dialog = lazyDialog(() =>
+const dialog = lazyAutotrackDialog(() =>
   import("@/games/sm/components/SmAutotrackDialog").then(
     (module) => module.SmAutotrackDialog,
   ),
