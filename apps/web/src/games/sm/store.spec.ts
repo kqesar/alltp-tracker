@@ -89,6 +89,18 @@ describe("the Super Metroid run", () => {
     await useSmStore.persist.rehydrate();
     expect(store().done).toEqual([]);
   });
+
+  it("drops a saved run holding more than an item's pool", async () => {
+    const run = freshProgress();
+    run.items.missile = 47;
+    localStorage.setItem(
+      SM_STORAGE_KEY,
+      JSON.stringify({ state: { ...run, done: ["kraid"] }, version: 1 }),
+    );
+    await useSmStore.persist.rehydrate();
+    expect(store().items.missile).toBe(0);
+    expect(store().done).toEqual([]);
+  });
 });
 
 describe("Super Metroid saves", () => {

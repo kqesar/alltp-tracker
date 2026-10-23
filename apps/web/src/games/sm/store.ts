@@ -145,11 +145,12 @@ export const useSmStore = create<SmState>()(
       };
     },
     {
-      // A saved run that is not one (another version's, a damaged one) is
-      // dropped for a fresh run rather than half restored
+      // A saved run that is not one (another version's, a damaged one, a
+      // count beyond its pool) is dropped for a fresh run rather than half
+      // restored, as an import refuses it
       merge: (saved, current) => {
         const parsed = progressSchema.safeParse(saved);
-        return parsed.success
+        return parsed.success && withinPools(parsed.data)
           ? { ...current, ...completed(parsed.data) }
           : current;
       },
