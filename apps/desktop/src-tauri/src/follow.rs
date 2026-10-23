@@ -11,14 +11,14 @@
 // other route, and no port is open while the feature is off. A random token,
 // new at each start, gates the stream; at most MAX_VIEWERS watch at once,
 // over at most MAX_CONNECTIONS connections still in HTTP, each with a header
-// timeout.
+// timeout; a viewer that stops answering pings loses its seat.
 //
 // This module knows nothing of Tauri: the app's files come through an
 // `Assets` lookup and the viewer count goes out through `OnViewers`, so the
 // tests run the real server without an app.
 
 use axum::Router;
-use axum::body::Body;
+use axum::body::{Body, Bytes};
 use axum::extract::ws::{CloseFrame, Message, Utf8Bytes, WebSocket, WebSocketUpgrade};
 use axum::extract::{RawQuery, State};
 use axum::http::{HeaderValue, Method, StatusCode, Uri, header};
@@ -37,6 +37,7 @@ use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio::sync::{Mutex, watch};
 use tokio::task::{JoinHandle, JoinSet};
+use tokio::time::MissedTickBehavior;
 
 /// The port the relay asks for first; a free one when it is taken or refused.
 pub const PORT: u16 = 23075;
@@ -61,11 +62,19 @@ struct Timing {
     /// How long a connection may take to send a request's headers, and stay
     /// idle between two requests
     headers: Duration,
+    /// How often a viewer is pinged and sent a beat: one that has not
+    /// answered the last ping by the next one is dropped
+    beat: Duration,
 }
 
 const TIMING: Timing = Timing {
+    beat: Duration::from_secs(15),
     headers: Duration::from_secs(10),
 };
+
+/// The frame a viewer gets with each ping: a page cannot see pings, and a
+/// beat that stops coming tells it the connection died.
+const BEAT: &str = "{\"beat\":true}";
 
 /// How long the accept loop pauses after a failed accept (out of file
 /// descriptors, say), rather than spinning.
@@ -80,8 +89,8 @@ const MAX_NAME: usize = 64;
 /// A viewer sends nothing the relay reads: anything longer is cut off.
 const MAX_INCOMING: usize = 4096;
 
-/// A viewer that takes longer to accept one update is dropped, so a stalled
-/// device cannot hold a seat.
+/// A viewer that takes longer to accept one frame is dropped, so a stalled
+/// device cannot hold a seat (one that vanished is caught by the beat).
 const SEND_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// How long a closing socket waits for the viewer's own close frame.
@@ -152,6 +161,7 @@ struct Shared {
     viewers: Arc<watch::Sender<usize>>,
     assets: Assets,
     on_viewers: OnViewers,
+    beat: Duration,
 }
 
 /// The run as a viewer receives it.
@@ -223,6 +233,7 @@ impl Relay {
         let (viewers, viewers_rx) = watch::channel(0);
         let shared = Shared {
             assets: Arc::clone(&self.assets),
+            beat: self.timing.beat,
             latest: self.latest.subscribe(),
             on_viewers: Arc::clone(&self.on_viewers),
             stop: stop_rx.clone(),
@@ -360,11 +371,18 @@ async fn follow(
 }
 
 /// Sends the run to one viewer, then each change, until either side goes.
-/// A slow viewer skips the states it had no time for.
+/// A slow viewer skips the states it had no time for. Every `beat` the
+/// viewer is pinged (its browser answers on its own) and sent a beat (its
+/// page sees that the connection lives); one that has not answered the
+/// last ping by the next is gone without a word, and loses its seat.
 async fn relay_to(mut socket: WebSocket, shared: Shared, _seat: Seat) {
     let mut latest = shared.latest;
     let mut stop = shared.stop;
     latest.mark_changed();
+    let start = tokio::time::Instant::now() + shared.beat;
+    let mut beat = tokio::time::interval_at(start, shared.beat);
+    beat.set_missed_tick_behavior(MissedTickBehavior::Delay);
+    let mut unanswered = false;
     loop {
         // Biased, the stop first: a stopped session sends nothing more
         tokio::select! {
@@ -384,11 +402,21 @@ async fn relay_to(mut socket: WebSocket, shared: Shared, _seat: Seat) {
                     return;
                 }
             }
-            // Read only to answer pings and see the viewer leave
+            // Read only to answer pings, hear the viewer and see it leave
             incoming = socket.recv() => {
                 if !matches!(incoming, Some(Ok(message)) if !matches!(message, Message::Close(_))) {
                     return;
                 }
+                unanswered = false;
+            }
+            _ = beat.tick() => {
+                if unanswered
+                    || !send(&mut socket, Message::Ping(Bytes::new())).await
+                    || !send(&mut socket, Message::Text(Utf8Bytes::from_static(BEAT))).await
+                {
+                    return;
+                }
+                unanswered = true;
             }
         }
     }
@@ -604,6 +632,7 @@ mod tests {
 
     /// Clocks short enough for a test to wait them out.
     const FAST: Timing = Timing {
+        beat: Duration::from_millis(150),
         headers: Duration::from_millis(300),
     };
 
@@ -661,7 +690,7 @@ mod tests {
         connect(started.port, &format!("?token={}", token_of(started))).await
     }
 
-    /// The next message, pings and pongs included.
+    /// The next message, pings, pongs and beats included.
     async fn next_any(viewer: &mut Viewer) -> WsMessage {
         tokio::time::timeout(WAIT, viewer.next())
             .await
@@ -670,11 +699,16 @@ mod tests {
             .expect("the stream broke")
     }
 
-    /// The next message, skipping the pings and pongs.
+    /// The next message, skipping the pings, pongs and beats.
     async fn next(viewer: &mut Viewer) -> WsMessage {
         loop {
             let message = next_any(viewer).await;
-            if !matches!(message, WsMessage::Ping(_) | WsMessage::Pong(_)) {
+            let chatter = match &message {
+                WsMessage::Ping(_) | WsMessage::Pong(_) => true,
+                WsMessage::Text(text) => text.as_str() == BEAT,
+                _ => false,
+            };
+            if !chatter {
                 return message;
             }
         }
@@ -773,6 +807,7 @@ mod tests {
             match next_any(&mut viewer).await {
                 WsMessage::Pong(pong) => break pong,
                 WsMessage::Ping(_) => {}
+                WsMessage::Text(text) if text.as_str() == BEAT => {}
                 other => panic!("expected a pong, got {other:?}"),
             }
         };
@@ -945,6 +980,37 @@ mod tests {
         assert!(read.is_ok(), "the old connection is still open");
         assert!(!String::from_utf8_lossy(&response).contains("secret"));
         assert!(counts.lock().unwrap().is_empty());
+        relay.stop().await;
+    }
+
+    #[tokio::test]
+    async fn a_viewer_that_stops_answering_loses_its_seat() {
+        let (relay, counts) = relay_with(FAST);
+        relay.publish("alttpr", "k", "1", 1).unwrap();
+        let started = relay.start(0).await.unwrap();
+        // One reads all along, so its client answers the pings
+        let mut present = watch_with(&started).await;
+        let reader = tokio::spawn(async move {
+            let mut beats = 0;
+            while beats < 4 {
+                if let WsMessage::Text(text) = next_any(&mut present).await
+                    && text.as_str() == BEAT
+                {
+                    beats += 1;
+                }
+            }
+            present
+        });
+        // One goes silent after the run, as a phone out of range would
+        let mut gone = watch_with(&started).await;
+        snapshot(&mut gone).await;
+
+        // The one still there gets beats, and keeps its seat
+        let present = tokio::time::timeout(WAIT, reader).await.expect("no beat");
+        assert!(present.is_ok());
+        assert_eq!(*counts.lock().unwrap(), [1, 2, 1]);
+        assert_eq!(relay.running().await.unwrap().viewers, 1);
+        drop(gone);
         relay.stop().await;
     }
 
