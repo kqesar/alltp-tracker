@@ -21,7 +21,7 @@ const GRID_COLUMNS = ITEMS_PER_ROW + 1;
  * work, for OBS's Interact window. With `&timer=1` the run timer sits on a
  * row of its own under the grid, sized as the grid's rows are.
  * Nothing else of the app is drawn here: no header, toolbar, map or tooltip.
- * `followed`, the grid a device following the run live draws, takes no key.
+ * `relay`, set when the desktop app relays the run, takes no key.
  * Nor the update notice: nobody clicks in a browser source, so the view takes
  * a new version as soon as it is ready. It only shows the run, which is saved
  * in localStorage, so the reload loses nothing.
@@ -33,11 +33,7 @@ const ObsShortcuts = () => {
   return null;
 };
 
-export const ObsView = ({
-  background,
-  followed = false,
-  timer = false,
-}: ObsViewProps) => {
+export const ObsView = ({ background, relay, timer = false }: ObsViewProps) => {
   useCrossedLogic();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const grid = useGameStore((state) => itemGridFor(state.settings));
@@ -46,7 +42,7 @@ export const ObsView = ({
     columns: GRID_COLUMNS,
     extraRows: timer ? 1 : 0,
     rows,
-    view: followed ? "follow" : "obs",
+    view: relay === "follow" ? "follow" : "obs",
   });
 
   return (
@@ -56,7 +52,7 @@ export const ObsView = ({
       ref={stageRef}
       style={background ? { backgroundColor: background } : undefined}
     >
-      {!followed && <ObsShortcuts />}
+      {!relay && <ObsShortcuts />}
       <TrackerGrid itemLayout={grid} />
       {timer && <StreamTimer />}
     </main>

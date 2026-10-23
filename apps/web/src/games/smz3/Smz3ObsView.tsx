@@ -10,12 +10,12 @@ import { useObsStage } from "@/hooks/useObsStage";
  * through storage. It takes new versions at once: nobody clicks in a source.
  * No run timer yet: `&timer=1` draws nothing more here.
  */
-export const Smz3ObsView = ({ background, followed }: ObsViewProps) => {
+export const Smz3ObsView = ({ background, relay }: ObsViewProps) => {
   const rows = gridOf(useSmz3Store((state) => state.settings.keysanity)).length;
   const stageRef = useObsStage({
     columns: SMZ3_COLUMNS,
     rows,
-    view: followed ? "follow" : "obs",
+    view: relay === "follow" ? "follow" : "obs",
   });
 
   return (

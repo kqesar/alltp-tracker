@@ -3,6 +3,7 @@ import {
   bridgeUrl,
   fitObsGrid,
   isObsView,
+  isRelayedObsView,
   obsBackground,
   obsTimer,
   obsViewUrl,
@@ -104,6 +105,23 @@ describe("bridgeUrl", () => {
   });
 });
 
+describe("isRelayedObsView", () => {
+  it("is on for the stream view with a token: the desktop app serves it", () => {
+    expect(isRelayedObsView("?view=obs&token=abc")).toBe(true);
+    expect(isRelayedObsView("?token=abc&timer=1&view=obs")).toBe(true);
+    // An empty token still routes: the view says its address is out of date
+    expect(isRelayedObsView("?view=obs&token=")).toBe(true);
+  });
+
+  it("is off for the site's stream view, and for any other view", () => {
+    expect(isRelayedObsView("?view=obs")).toBe(false);
+    expect(isRelayedObsView("?view=obs&timer=1")).toBe(false);
+    expect(isRelayedObsView("?token=abc")).toBe(false);
+    expect(isRelayedObsView("?view=follow&token=abc")).toBe(false);
+    expect(isRelayedObsView("")).toBe(false);
+  });
+});
+
 describe("trackerUrl and obsViewUrl", () => {
   it("point at the deployment's base, whatever page they are built from", () => {
     const page = "https://example.org/some/path?view=map#map";
@@ -115,6 +133,20 @@ describe("trackerUrl and obsViewUrl", () => {
 
   it("build from the current page by default", () => {
     expect(obsViewUrl()).toBe(`${window.location.origin}/?view=obs`);
+  });
+
+  it("names the desktop app's own server and the token that opens it", () => {
+    const url = obsViewUrl({
+      base: "http://127.0.0.1:23076/",
+      timer: true,
+      token: "a-b_c",
+    });
+
+    expect(url).toBe("http://127.0.0.1:23076/?view=obs&token=a-b_c&timer=1");
+    expect(isRelayedObsView(new URL(url).search)).toBe(true);
+    expect(obsViewUrl({ base: "http://127.0.0.1:23076/", token: "x" })).toBe(
+      "http://127.0.0.1:23076/?view=obs&token=x",
+    );
   });
 
   it("asks the stream view for the run timer, which obsTimer reads", () => {

@@ -1,21 +1,6 @@
-import { useEffect, useState } from "react";
-import {
-  applySnapshot,
-  type FollowOptions,
-  type FollowStatus,
-  follow,
-  type Snapshot,
-} from "@/follow/client";
-import {
-  type GameId,
-  type GameModule,
-  loadGame,
-  PRODUCT_NAME,
-  saveActiveGame,
-  switchGame,
-} from "@/games/registry";
-import { setClockOffset } from "@/utils/clock";
-import { followSocketUrl } from "@/utils/view";
+import type { FollowOptions, FollowStatus } from "@/follow/client";
+import { useFollowedRun } from "@/follow/useFollowedRun";
+import { PRODUCT_NAME } from "@/games/registry";
 
 /** What the banner says of each status: a word, then what it means. */
 export const STATUS_WORDS: Readonly<
@@ -60,9 +45,6 @@ const DOT_PHASES: Readonly<Record<FollowStatus, string>> = {
   stopped: "off",
 };
 
-/** The game whose grid shows, once its module has loaded. */
-type Shown = { id: GameId; game: GameModule };
-
 /**
  * The followed view (`?view=follow&token=…`): what a phone or a second
  * computer on the same network shows while the desktop app shares its run.
@@ -84,56 +66,7 @@ export const FollowView = ({
   open?: FollowOptions["open"];
   reload?: () => void;
 }) => {
-  const [status, setStatus] = useState<FollowStatus>("connecting");
-  const [shown, setShown] = useState<Shown | null>(null);
-
-  useEffect(() => {
-    let game: GameModule | null = null;
-    let id: GameId | null = null;
-    let latest: Snapshot | null = null;
-    let current = true;
-
-    const show = (snapshot: Snapshot) => {
-      if (snapshot.game !== id) {
-        switchGame(snapshot.game, reload);
-        return;
-      }
-      if (game) applySnapshot(snapshot.value, game.store);
-    };
-
-    const stop = follow({
-      onSnapshot: (snapshot, clockOffset) => {
-        setClockOffset(clockOffset);
-        latest = snapshot;
-        if (id !== null) {
-          show(snapshot);
-          return;
-        }
-        const first = snapshot.game;
-        id = first;
-        saveActiveGame(first);
-        void loadGame(first).then(
-          (loaded) => {
-            if (!current || !latest) return;
-            game = loaded;
-            show(latest);
-            setShown({ game: loaded, id: first });
-          },
-          (error: unknown) => {
-            console.error("The tracker could not load:", error);
-          },
-        );
-      },
-      onStatus: setStatus,
-      open,
-      url: followSocketUrl(),
-    });
-    return () => {
-      current = false;
-      stop();
-    };
-  }, [open, reload]);
-
+  const { shown, status } = useFollowedRun({ open, reload });
   const words = STATUS_WORDS[status];
   const ObsView = shown?.game.ObsView;
   return (
@@ -157,7 +90,7 @@ export const FollowView = ({
       </header>
       {ObsView && (
         <div className="follow-view__board" data-testid="follow-board" inert>
-          <ObsView background={null} followed timer />
+          <ObsView background={null} relay="follow" timer />
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { type ReactElement, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@/styles/index.css";
 import {
@@ -15,33 +15,53 @@ import {
 } from "@/stores/updateStore";
 import { startAnalytics } from "@/utils/analytics";
 import { isDesktopApp } from "@/utils/platform";
-import { isFollowView, isObsView, obsBackground, obsTimer } from "@/utils/view";
+import {
+  isFollowView,
+  isObsView,
+  isRelayedObsView,
+  obsBackground,
+  obsTimer,
+} from "@/utils/view";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
 
-/**
- * A device following the desktop app's run live (`?view=follow`): only the
- * run it receives, a chunk of its own. Picked before anything else starts:
- * the desktop app serves its own build to that device, whose page would
- * otherwise believe it runs in the app. So no app start-up, no service
- * worker, no update notice, no visit counted.
- */
-const startFollowing = (root: HTMLElement) => {
-  document.title = `${PRODUCT_NAME} live`;
-  import("@/follow/FollowView").then(
-    ({ FollowView }) => {
-      createRoot(root).render(
-        <StrictMode>
-          <FollowView />
-        </StrictMode>,
-      );
+/** Renders a view that runs on the run the desktop app relays, or says why not. */
+const render = (root: HTMLElement, view: Promise<ReactElement>) => {
+  view.then(
+    (element) => {
+      createRoot(root).render(<StrictMode>{element}</StrictMode>);
     },
     (error: unknown) => {
       console.error("The tracker could not load:", error);
       root.textContent =
         "The tracker could not load. Check your connection, then reload the page.";
     },
+  );
+};
+
+/**
+ * A device following the desktop app's run live (`?view=follow`), or the
+ * stream view the app serves to OBS (`?view=obs&token=…`): only the run they
+ * receive, a chunk of its own. Picked before anything else starts: the
+ * desktop app serves its own build to those pages, which would otherwise
+ * believe they run in the app. So no app start-up, no service worker, no
+ * update notice, no visit counted.
+ */
+const startFollowing = (root: HTMLElement) => {
+  document.title = `${PRODUCT_NAME} live`;
+  render(
+    root,
+    import("@/follow/FollowView").then(({ FollowView }) => <FollowView />),
+  );
+};
+
+const startStreaming = (root: HTMLElement) => {
+  render(
+    root,
+    import("@/follow/StreamSourceView").then(({ StreamSourceView }) => (
+      <StreamSourceView />
+    )),
   );
 };
 
@@ -92,8 +112,8 @@ const startTracker = (root: HTMLElement) => {
   loadGame(active).then(
     (game) => {
       game.start();
-      // The desktop app publishes the run to its servers while the player has
-      // one on (desktop/attach.ts)
+      // The desktop app publishes the run to its live follow relay and its
+      // stream view while the player has either on (desktop/attach.ts)
       if (import.meta.env.MODE === "desktop" && !isObsView()) {
         void import("@/desktop/attach").then(({ attachRun }) =>
           attachRun(active, game.store),
@@ -118,4 +138,5 @@ const startTracker = (root: HTMLElement) => {
 };
 
 if (isFollowView()) startFollowing(rootElement);
+else if (isRelayedObsView()) startStreaming(rootElement);
 else startTracker(rootElement);

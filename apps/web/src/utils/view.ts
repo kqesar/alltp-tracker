@@ -21,10 +21,10 @@ export const isFollowView = (
 ): boolean => new URLSearchParams(search).get(VIEW_PARAM) === FOLLOW_VIEW;
 
 /**
- * The address of the run's stream for the followed view: `/follow` on the
- * host that served the page (the desktop app's relay), with the link's
- * token. Only the token is taken from the address, so a link can never point
- * the page at another host.
+ * The address of the run's stream for the followed view and the relayed
+ * stream view: `/follow` on the host that served the page (the desktop app's
+ * relay), with the link's token. Only the token is taken from the address, so
+ * a link can never point the page at another host.
  * @param page - The address of the current page
  */
 export const followSocketUrl = (
@@ -35,6 +35,24 @@ export const followSocketUrl = (
   url.protocol = address.protocol === "https:" ? "wss:" : "ws:";
   url.searchParams.set("token", address.searchParams.get("token") ?? "");
   return url.href;
+};
+
+/** `&token=` names the desktop app's stream the view is served by. */
+const TOKEN_PARAM = "token";
+
+/**
+ * Whether the page was opened as the stream view the desktop app serves to
+ * OBS (`?view=obs&token=…`): the run comes from the app's relay, not from this
+ * page's storage. A stream view with no token is the site's, following the
+ * tracker through storage. An empty token still counts: the view then says
+ * its address is out of date, rather than showing nothing.
+ * @param search - The query string, `window.location.search` by default
+ */
+export const isRelayedObsView = (
+  search: string = window.location.search,
+): boolean => {
+  const params = new URLSearchParams(search);
+  return params.get(VIEW_PARAM) === OBS_VIEW && params.has(TOKEN_PARAM);
 };
 
 /** `&bg=` paints the stream view a solid colour, for window capture. */
@@ -115,16 +133,24 @@ export const shareBaseUrl = (): string =>
   import.meta.env.MODE === "desktop" ? SITE_URL : trackerUrl();
 
 /**
- * The address of the stream view for this deployment of the tracker.
- * @param options - Whether it draws the run timer under the grid
+ * The address of the stream view for this deployment of the tracker, or for
+ * the desktop app's own server (`base`, `token`).
+ * @param options - Whether it draws the run timer under the grid; and, for
+ * the stream the desktop app serves, its address (`http://127.0.0.1:23076/`)
+ * and the token that opens it
  * @param page - The address of the current page
  */
 export const obsViewUrl = (
-  { timer = false }: { timer?: boolean } = {},
+  {
+    base,
+    timer = false,
+    token,
+  }: { base?: string; timer?: boolean; token?: string } = {},
   page: string = window.location.href,
 ): string => {
-  const url = new URL(trackerUrl(page));
+  const url = new URL(base ?? trackerUrl(page));
   url.searchParams.set(VIEW_PARAM, OBS_VIEW);
+  if (token !== undefined) url.searchParams.set(TOKEN_PARAM, token);
   if (timer) url.searchParams.set(TIMER_PARAM, "1");
   return url.href;
 };

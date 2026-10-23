@@ -12,11 +12,13 @@ export type ObsViewProps = {
   /** Whether to draw the run timer under the grid (`&timer=1`) */
   timer?: boolean;
   /**
-   * Drawn for a device following the run live (`?view=follow`): no keyboard
-   * shortcut changes it, and it sits on an opaque page under the view's
-   * banner, not on a transparent source
+   * Set when the run comes from the desktop app's relay, not from this
+   * page's storage: no keyboard shortcut changes it. `"follow"` is a device
+   * following the run live (`?view=follow`), on an opaque page under the
+   * view's banner; `"obs"` is the stream view the app serves to OBS
+   * (`?view=obs&token=…`), on a transparent page like the site's.
    */
-  followed?: boolean;
+  relay?: "follow" | "obs";
 };
 
 /**
