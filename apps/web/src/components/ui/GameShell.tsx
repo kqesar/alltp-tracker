@@ -11,11 +11,15 @@ const AppMenuPrompt =
   import.meta.env.MODE === "desktop"
     ? lazy(() => import("@/desktop/AppMenuPrompt"))
     : null;
+const StreamMovedNotice =
+  import.meta.env.MODE === "desktop"
+    ? lazy(() => import("@/desktop/StreamMovedNotice"))
+    : null;
 
 /**
  * The page around a game's board, the same for every game: the skip links,
  * the notices (an update, a shared run, and in the desktop app the
- * application menu entry), the header, the toolbar (fitted to its row by
+ * application menu entry and a moved stream port), the header, the toolbar (fitted to its row by
  * measurement, `useToolbarFit`) and the `main` landmark.
  * @param game - The game tracked, for the header and the shared-run notice
  * @param toolbar - The game's toolbar
@@ -51,6 +55,11 @@ export const GameShell = ({
         {AppMenuPrompt && (
           <Suspense fallback={null}>
             <AppMenuPrompt />
+          </Suspense>
+        )}
+        {StreamMovedNotice && (
+          <Suspense fallback={null}>
+            <StreamMovedNotice />
           </Suspense>
         )}
       </div>

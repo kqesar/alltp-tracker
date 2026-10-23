@@ -10,6 +10,8 @@ const { setRun } = await import("@/desktop/runFeed");
 
 const SESSION = {
   address: "http://127.0.0.1:23076/",
+  lan: false,
+  lanAddress: null,
   moved: false,
   port: 23076,
   token: "abcdefghijklmnopqrstuv",
@@ -34,11 +36,20 @@ const calls = (command: string) =>
 
 /** The `stream-viewers` handler `attachStream` registered. */
 let viewersEvent: (event: { payload: { count: number } }) => void;
+/** The `stream-started` handler: the app opened the stream after launch. */
+let startedEvent: (event: { payload: typeof SESSION }) => void;
 
 const answer = (running: typeof SESSION | null) => {
   tauri.invoke.mockImplementation(async (command: string) => {
     if (command === "stream_start") return SESSION;
     if (command === "stream_state") return running;
+    if (command === "stream_set_lan") {
+      return {
+        ...SESSION,
+        lan: true,
+        lanAddress: "http://192.168.1.20:23076/",
+      };
+    }
     if (command === "stream_new_tokens")
       return { ...SESSION, token: "ZYXWVUTSRQPONMLKJIHGFE" };
     return undefined;
@@ -50,8 +61,9 @@ beforeEach(async () => {
   vi.clearAllMocks();
   localStorage.clear();
   localStorage.setItem("alltp-tracker-state", "run");
-  tauri.listen.mockImplementation(async (_name, handler) => {
-    viewersEvent = handler;
+  tauri.listen.mockImplementation(async (name, handler) => {
+    if (name === "stream-started") startedEvent = handler;
+    else viewersEvent = handler;
     return () => {};
   });
   answer(null);
@@ -193,5 +205,156 @@ describe("the stream view in the desktop app", () => {
     await first;
     // The mock no longer hangs, so the cleanup can stop the stream
     answer(null);
+  });
+
+  describe("after a command failed", () => {
+    const warn = vi.spyOn(console, "warn");
+    beforeEach(() => warn.mockImplementation(() => {}));
+    afterEach(() => warn.mockReset());
+
+    /** The app refuses `command`, and says `state` when asked how it stands. */
+    const refuse = (command: string, state: typeof SESSION | null) =>
+      tauri.invoke.mockImplementation(async (name: string) => {
+        if (name === command) throw "could not open the port";
+        if (name === "stream_state") return state;
+        return undefined;
+      });
+
+    it("asks the app, so a restart that could not reopen shows the stream off", async () => {
+      await useStreamStore.getState().start();
+      expect(listeners.size).toBe(1);
+      refuse("stream_new_tokens", null);
+
+      await useStreamStore.getState().newTokens();
+
+      expect(useStreamStore.getState()).toMatchObject({
+        error: "could not open the port",
+        pending: false,
+        session: null,
+      });
+      // Nothing runs, so nothing is published
+      expect(listeners.size).toBe(0);
+    });
+
+    it("shows the stream on when the app says it still runs", async () => {
+      refuse("stream_start", { ...SESSION, viewers: 2 });
+
+      await useStreamStore.getState().start();
+
+      expect(useStreamStore.getState()).toMatchObject({
+        error: "could not open the port",
+        session: { viewers: 2 },
+      });
+      expect(listeners.size).toBe(1);
+    });
+
+    it("does the same after a change of who can reach it", async () => {
+      await useStreamStore.getState().start();
+      refuse("stream_set_lan", null);
+
+      await useStreamStore.getState().setLan(true);
+
+      expect(useStreamStore.getState().session).toBeNull();
+      expect(useStreamStore.getState().error).toBe("could not open the port");
+      expect(listeners.size).toBe(0);
+    });
+
+    it("shows the stream off when a stop failed and the app says it is off", async () => {
+      await useStreamStore.getState().start();
+      refuse("stream_stop", null);
+
+      await useStreamStore.getState().stop();
+
+      expect(useStreamStore.getState().session).toBeNull();
+      expect(listeners.size).toBe(0);
+    });
+  });
+
+  it("allows the network, taking the address the app gives for it", async () => {
+    await useStreamStore.getState().start();
+
+    await useStreamStore.getState().setLan(true);
+
+    expect(tauri.invoke).toHaveBeenCalledWith("stream_set_lan", { lan: true });
+    expect(useStreamStore.getState().session).toMatchObject({
+      lan: true,
+      lanAddress: "http://192.168.1.20:23076/",
+    });
+    expect(listeners.size).toBe(1);
+  });
+
+  describe("at launch", () => {
+    it("learns of a stream the app opened after the page asked", async () => {
+      // The page asked first and the app answered "off": it then opens it
+      expect(useStreamStore.getState().session).toBeNull();
+
+      startedEvent({ payload: { ...SESSION } });
+
+      expect(useStreamStore.getState().session).toEqual(SESSION);
+      expect(calls("run_publish")).toHaveLength(1);
+      expect(listeners.size).toBe(1);
+    });
+
+    it("takes the same session once when both the answer and the event bring it", async () => {
+      answer(SESSION);
+      await attachStream();
+      expect(calls("run_publish")).toHaveLength(1);
+
+      startedEvent({ payload: { ...SESSION } });
+
+      expect(calls("run_publish")).toHaveLength(1);
+      expect(listeners.size).toBe(1);
+    });
+
+    it("says a moved port outside the dialog, until it is dismissed", async () => {
+      startedEvent({ payload: { ...SESSION, moved: true, port: 44_897 } });
+
+      expect(useStreamStore.getState().movedNotice).toBe(true);
+      useStreamStore.getState().dismissMovedNotice();
+      expect(useStreamStore.getState().movedNotice).toBe(false);
+    });
+
+    it("says nothing when the port held", () => {
+      startedEvent({ payload: { ...SESSION } });
+
+      expect(useStreamStore.getState().movedNotice).toBe(false);
+    });
+
+    it("says nothing of a port the player just started, the dialog says it", async () => {
+      tauri.invoke.mockImplementation(async (command: string) =>
+        command === "stream_start" ? { ...SESSION, moved: true } : undefined,
+      );
+
+      await useStreamStore.getState().start();
+
+      expect(useStreamStore.getState().session?.moved).toBe(true);
+      expect(useStreamStore.getState().movedNotice).toBe(false);
+    });
+
+    it("keeps the count of a source that connected before the start answered", async () => {
+      let answerStart: (session: typeof SESSION) => void = () => {};
+      tauri.invoke.mockImplementation(async (command: string) => {
+        if (command !== "stream_start") return undefined;
+        return new Promise((resolve) => {
+          answerStart = resolve;
+        });
+      });
+      const starting = useStreamStore.getState().start();
+
+      // OBS was quicker than the answer
+      viewersEvent({ payload: { count: 1 } });
+      answerStart({ ...SESSION });
+      await starting;
+
+      expect(useStreamStore.getState().session?.viewers).toBe(1);
+    });
+
+    it("keeps the count heard before the page was told of a stream", () => {
+      viewersEvent({ payload: { count: 2 } });
+
+      startedEvent({ payload: { ...SESSION } });
+
+      expect(useStreamStore.getState().session?.viewers).toBe(2);
+    });
   });
 });
