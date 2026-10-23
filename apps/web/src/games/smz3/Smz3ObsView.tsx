@@ -1,10 +1,8 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
 import type { ObsViewProps } from "@/games/registry";
 import { Smz3Grid } from "@/games/smz3/components/Smz3Grid";
 import { gridOf, SMZ3_COLUMNS } from "@/games/smz3/data";
 import { useSmz3Store } from "@/games/smz3/store";
-import { useUpdateStore } from "@/stores/updateStore";
-import { fitObsGrid } from "@/utils/view";
+import { useObsStage } from "@/hooks/useObsStage";
 
 /**
  * SMZ3's stream view (`?view=obs`): the item grid alone on a
@@ -14,45 +12,7 @@ import { fitObsGrid } from "@/utils/view";
  */
 export const Smz3ObsView = ({ background }: ObsViewProps) => {
   const rows = gridOf(useSmz3Store((state) => state.settings.keysanity)).length;
-  const stageRef = useRef<HTMLElement>(null);
-  const applyUpdate = useUpdateStore((state) => state.apply);
-
-  useEffect(() => {
-    applyUpdate?.();
-  }, [applyUpdate]);
-
-  // The page itself must be transparent too: base.css paints the body
-  useLayoutEffect(() => {
-    const root = document.documentElement;
-    const title = document.title;
-    root.dataset.view = "obs";
-    document.title = "Rando Atlas stream view";
-    return () => {
-      delete root.dataset.view;
-      document.title = title;
-    };
-  }, []);
-
-  // Sized from the viewport on every resize, straight into CSS properties
-  useLayoutEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const fit = () => {
-      const { cell, left, top } = fitObsGrid({
-        columns: SMZ3_COLUMNS,
-        height: window.innerHeight,
-        pixelRatio: window.devicePixelRatio || 1,
-        rows,
-        width: window.innerWidth,
-      });
-      stage.style.setProperty("--cell", `${cell}px`);
-      stage.style.setProperty("--obs-left", `${left}px`);
-      stage.style.setProperty("--obs-top", `${top}px`);
-    };
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, [rows]);
+  const stageRef = useObsStage({ columns: SMZ3_COLUMNS, rows });
 
   return (
     <main
