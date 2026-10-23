@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { syncAcrossTabs } from "@/games/alttpr/stores/crossTabSync";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { PERSIST_VERSION } from "@/games/alttpr/stores/persistence";
+import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 
 const KEY = "alltp-tracker-state";
 
@@ -27,7 +27,7 @@ describe("syncAcrossTabs", () => {
   beforeEach(() => {
     localStorage.clear();
     useGameStore.setState(useGameStore.getInitialState(), true);
-    stop = syncAcrossTabs();
+    stop = syncAcrossTabs(useGameStore);
   });
 
   afterEach(() => stop());

@@ -43,7 +43,7 @@ Its autotracking lives in `games/smz3/autotrack/`, as Super Metroid's: `store.ts
 
 ## History
 
-`past` / `future` hold earlier `Progress` snapshots for undo/redo (cap 200), never persisted. Every action that changes `Progress` goes through `record(state, next)`, which pushes the current run and clears `future`; prefs bypass it. Rehydration (first load, another tab via `crossTabSync.ts`) clears the history.
+`past` / `future` hold earlier `Progress` snapshots for undo/redo (cap 200), never persisted. Every action that changes `Progress` goes through `record(state, next)`, which pushes the current run and clears `future`; prefs bypass it. Rehydration (first load, another tab via `games/syncAcrossTabs.ts`, which every game's module starts, filtered on `localStorage` and the store's key) clears the history.
 
 What the game says is the one exception: `applyGameNews(change)` lays autotracking's news on the run as no step, and on every snapshot of `past` and `future` too, each stamped on its timeline with the same instant, so undoing the player's change never undoes the game's. It sets nothing when `change` changes nothing, so a reading with no news writes neither the store nor localStorage. "Sync from game" (`syncWithGame`) is the player's action, one recorded step. The policy (a merge that never undoes the player's marks beyond the game, a sync that does, what Race Mode leaves alone) lives in `apps/web/src/games/alttpr/autotrack/apply.ts`.
 

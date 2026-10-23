@@ -6,12 +6,8 @@ import type { GameModule } from "@/games/registry";
 import Smz3App from "@/games/smz3/Smz3App";
 import { Smz3ObsView } from "@/games/smz3/Smz3ObsView";
 import { unpackLink } from "@/games/smz3/share";
-import {
-  IMPORT_ERRORS,
-  parseSave,
-  SMZ3_STORAGE_KEY,
-  useSmz3Store,
-} from "@/games/smz3/store";
+import { IMPORT_ERRORS, parseSave, useSmz3Store } from "@/games/smz3/store";
+import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 
 export const smz3: GameModule = {
   App: Smz3App,
@@ -26,8 +22,6 @@ export const smz3: GameModule = {
   ObsView: Smz3ObsView,
   // The run follows the other tabs and the stream view through storage
   start: () => {
-    window.addEventListener("storage", (event) => {
-      if (event.key === SMZ3_STORAGE_KEY) void useSmz3Store.persist.rehydrate();
-    });
+    syncAcrossTabs(useSmz3Store);
   },
 };
