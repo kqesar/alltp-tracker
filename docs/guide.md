@@ -128,7 +128,7 @@ The toolbar's **Share** button copies a link that holds your run, whatever the g
 
 ## Streaming with OBS
 
-The stream view, [`?view=obs`](https://kqesar.github.io/alltp-tracker/?view=obs), is the item grid alone on a transparent background. It fills its source, centred, at a size that keeps the pixel art sharp, and follows the run live. The toolbar's **Stream view** button copies its address. In OBS 31 or newer:
+The stream view, [`?view=obs`](https://kqesar.github.io/alltp-tracker/?view=obs), is the item grid alone on a transparent background. It fills its source, centred, at a size that keeps the pixel art sharp, and follows the run live. The toolbar's **Stream view** button copies its address (the desktop app serves it to OBS itself, [below](#the-desktop-app)). In OBS 31 or newer:
 
 1. **Track in a dock**: under *Docks → Custom Browser Docks*, add `https://kqesar.github.io/alltp-tracker/` and track your run there.
 2. **Show the grid**: add a *Browser Source* with the stream view's address. At 512 × 448 (512 × 512 with the key cells shown) every icon pixel is drawn whole; double it for a larger grid, or pick any size. Set the size in the source's properties: dragging its handles resamples the image and blurs it.
@@ -169,4 +169,10 @@ The tracker also comes as an app for Windows, macOS and Linux, from the [latest 
 - **The firewall**: on Windows, allow the app when asked, on private networks, and mark your Wi-Fi as private. On Linux with a firewall, open the port the dialog names (23075 unless taken): `sudo ufw allow 23075/tcp`, or `sudo firewall-cmd --add-port=23075/tcp` (until the next restart; run it again with `--permanent` to keep it).
 - **The screen**: the phone's browser cannot keep its screen on for such a link; turn auto-lock off while watching (iPhone: Settings → Display & Brightness → Auto-Lock → Never; Android: Settings → Display → Screen timeout). If it sleeps anyway, it reconnects when it wakes.
 
-Not in the app yet: the stream view for OBS, since OBS can neither load the app's pages nor follow its storage; stream with the web tracker in an OBS dock, as above. How the app is built and updated, how global shortcuts work and how live follow works: [desktop.md](desktop.md).
+**Show the run in OBS.** OBS can neither load the app's pages nor follow its storage, so the app serves the stream view to a Browser Source itself. Click **Stream view** in the toolbar, turn on **Serve the stream view to OBS**, and paste the address it shows (on this computer, `http://127.0.0.1:23076/?view=obs&token=…`) into a *Browser Source* in OBS. The dialog has the same options as the site's [stream view](#streaming-with-obs): *Show the run timer under the grid* for A Link to the Past, the sizes that keep every pixel whole, and `&bg=` for window capture.
+
+- **Set up once.** The switch, the port and the address are remembered: the stream starts with the app, and the source keeps working after a restart, a reboot or an update (the source reconnects within a few seconds of the app coming back). Quit the app and the source keeps its last grid until the app returns. While you track in the app, nothing else is needed: no dock, no browser.
+- **The address is a secret.** It carries a token that keeps other devices on your network out, and OBS shows a source's address in its properties window: keep it off screen. **New addresses** (after a confirmation) replaces it and cuts off every source using the old one; those then say "This address is out of date", and need the new address pasted.
+- **The port.** 23076 unless another program holds it; the dialog then says the stream moved to another port and the address must be pasted again. On this computer the firewall is not in the way; an OBS on another computer needs the port allowed.
+
+How the app is built and updated, how global shortcuts work, how live follow works and how the stream view is served: [desktop.md](desktop.md).
