@@ -25,6 +25,7 @@ import {
   useSmz3Store,
 } from "@/games/smz3/store";
 import { SHARE_HELP, type ShareResult, shareRun } from "@/share/shareRun";
+import { copyStatus, copyText } from "@/utils/clipboard";
 import { commandKey, isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
 import { obsViewUrl } from "@/utils/view";
@@ -203,27 +204,36 @@ const Smz3ModeDialog = ({ onClose }: { onClose: () => void }) => {
 /** The stream view's address, to copy into an OBS browser source. */
 const Smz3StreamDialog = ({ onClose }: { onClose: () => void }) => {
   const url = obsViewUrl({});
-  const [copied, setCopied] = useState(false);
+  const urlRef = useRef<HTMLParagraphElement>(null);
+  const [status, setStatus] = useState("");
+  const copy = async () =>
+    setStatus(
+      copyStatus(
+        await copyText(url, () => {
+          if (urlRef.current) {
+            window.getSelection()?.selectAllChildren(urlRef.current);
+          }
+        }),
+      ),
+    );
   return (
     <Modal isOpen onClose={onClose} title="Stream view">
       <p>
         The item grid alone, on a transparent background, for an OBS browser
         source. It follows this tracker live.
       </p>
-      <p className="smz3-stream__url" data-testid="smz3-stream-url">
+      <p
+        className="smz3-stream__url"
+        data-testid="smz3-stream-url"
+        ref={urlRef}
+      >
         {url}
       </p>
-      <button
-        className="tracker-controls__button"
-        onClick={() =>
-          void navigator.clipboard?.writeText(url).then(() => setCopied(true))
-        }
-        type="button"
-      >
+      <button className="tracker-controls__button" onClick={copy} type="button">
         Copy the address
       </button>
       <p aria-live="polite" className="smz3-stream__status">
-        {copied ? "Copied." : ""}
+        {status}
       </p>
     </Modal>
   );

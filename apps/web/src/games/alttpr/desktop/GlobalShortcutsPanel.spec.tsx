@@ -426,6 +426,18 @@ describe("the command line", () => {
     vi.unstubAllGlobals();
   });
 
+  it("says it could not copy on a page with no clipboard (plain http)", async () => {
+    vi.stubGlobal("navigator", { ...navigator, clipboard: undefined });
+    const { onStatus } = show(command);
+
+    await userEvent.click(screen.getByTestId("shortcut-copy-back-chest3"));
+
+    await vi.waitFor(() =>
+      expect(onStatus).toHaveBeenCalledWith("Could not copy the command."),
+    );
+    vi.unstubAllGlobals();
+  });
+
   it("names each copy button for the action it copies", () => {
     show(command);
     expect(

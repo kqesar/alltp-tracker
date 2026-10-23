@@ -29,6 +29,7 @@ import {
   useGlobalShortcutsStore,
 } from "@/games/alttpr/desktop/globalShortcutsStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { copyText } from "@/utils/clipboard";
 
 /** The command a window manager's binding runs to step `action`. */
 export const commandFor = (mechanism: Mechanism, action: string) =>
@@ -180,9 +181,12 @@ const GlobalShortcutsPanel = ({
     report?.bindings.find((binding) => binding.action === action);
   const copy = (action: ActionId) => {
     const command = commandFor(mechanism, action);
-    navigator.clipboard.writeText(command).then(
-      () => onStatus(`Copied: ${command}`),
-      () => onStatus("Could not copy the command."),
+    void copyText(command).then((result) =>
+      onStatus(
+        result === "copied"
+          ? `Copied: ${command}`
+          : "Could not copy the command.",
+      ),
     );
   };
 

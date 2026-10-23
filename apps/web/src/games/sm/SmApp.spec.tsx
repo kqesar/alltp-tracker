@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SmControls } from "@/games/sm/components/SmControls";
 import { SmGrid } from "@/games/sm/components/SmGrid";
 import { SmObjectives } from "@/games/sm/components/SmObjectives";
@@ -218,6 +218,49 @@ describe("the Super Metroid toolbar", () => {
     await user.click(screen.getByRole("button", { name: "Copy the address" }));
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining("view=obs"));
     expect(await screen.findByText("Copied.")).toBeInTheDocument();
+  });
+
+  describe("when the clipboard refuses the stream view's address", () => {
+    const { execCommand } = document;
+    afterEach(() => {
+      document.execCommand = execCommand;
+    });
+
+    it("selects it and copies it with the older command", async () => {
+      const user = userEvent.setup();
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: vi.fn().mockRejectedValue(new Error("denied")) },
+      });
+      const command = vi.fn(() => true);
+      document.execCommand = command;
+      render(<SmControls />);
+      await user.click(screen.getByTestId("sm-stream-view"));
+      await user.click(
+        screen.getByRole("button", { name: "Copy the address" }),
+      );
+      expect(await screen.findByText("Copied.")).toBeInTheDocument();
+      expect(command).toHaveBeenCalledWith("copy");
+      expect(String(window.getSelection())).toContain("view=obs");
+    });
+
+    it("leaves it selected for Ctrl+C when nothing can copy", async () => {
+      const user = userEvent.setup();
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: undefined,
+      });
+      document.execCommand = vi.fn(() => false);
+      render(<SmControls />);
+      await user.click(screen.getByTestId("sm-stream-view"));
+      await user.click(
+        screen.getByRole("button", { name: "Copy the address" }),
+      );
+      expect(
+        await screen.findByText("Press Ctrl+C to copy."),
+      ).toBeInTheDocument();
+      expect(String(window.getSelection())).toContain("view=obs");
+    });
   });
 
   it("gives the stream view's address", async () => {
