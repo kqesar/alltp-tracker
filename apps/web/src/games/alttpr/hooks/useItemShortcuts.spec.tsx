@@ -6,12 +6,12 @@ import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
 import { defaultItemGrid } from "@/games/alttpr/data/items";
 import type { Keymap } from "@/games/alttpr/data/keymap";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
-import { useUndoShortcuts } from "@/games/alttpr/hooks/useUndoShortcuts";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { useUndoShortcuts } from "@/games/useUndoShortcuts";
 
 /** The board as App wires it: the grid, undo/redo and the item shortcuts. */
 const Board = ({ children }: { children?: ReactNode }) => {
-  useUndoShortcuts();
+  useUndoShortcuts(useGameStore);
   useItemShortcuts();
   return (
     <>

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useRef } from "react";
 import { Header } from "@/components/ui/Header";
 import { SharedRunPrompt } from "@/components/ui/SharedRunPrompt";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
@@ -9,8 +9,8 @@ import { Smz3Keycards } from "@/games/smz3/components/Smz3Keycards";
 import { Smz3Maps } from "@/games/smz3/components/Smz3Maps";
 import { Smz3Tokens } from "@/games/smz3/components/Smz3Tokens";
 import { useSmz3Store } from "@/games/smz3/store";
+import { useUndoShortcuts } from "@/games/useUndoShortcuts";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
-import { isAwayFromBoard } from "@/utils/keyboard";
 
 // The desktop app's notice, a chunk of its own: the test is inline so the
 // site's build drops the import and its chunk (docs/desktop.md)
@@ -20,33 +20,12 @@ const AppMenuPrompt =
     : null;
 
 /**
- * Undo and redo from the keyboard, as the other boards take them: Ctrl or
- * ⌘+Z, with Shift (or Ctrl+Y) to redo, never while typing in a field or with
- * a dialog open.
- */
-const useSmz3UndoShortcuts = () => {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!(event.ctrlKey || event.metaKey) || isAwayFromBoard(event)) return;
-      const key = event.key.toLowerCase();
-      const { redo, undo } = useSmz3Store.getState();
-      if (key === "z" && !event.shiftKey) undo();
-      else if ((key === "z" && event.shiftKey) || key === "y") redo();
-      else return;
-      event.preventDefault();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-};
-
-/**
  * The SMZ3 tracker: both games' items and the rewards found (and under
  * keysanity, the keys and keycards), beside the maps of Hyrule and Zebes,
  * the pack's logic colouring every location.
  */
 const Smz3App = () => {
-  useSmz3UndoShortcuts();
+  useUndoShortcuts(useSmz3Store);
   useSmz3Autotrack();
   // Its actions show as icons once their labels no longer fit on one row:
   // it has no More menu, so the label fold is the one it takes
