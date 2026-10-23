@@ -79,6 +79,12 @@ async fn follow_start(relay: State<'_, follow::Relay>) -> Result<follow::Started
         .map_err(|error| error.to_string())
 }
 
+/// The running relay's session, or nothing while it is off.
+#[tauri::command]
+async fn follow_state(relay: State<'_, follow::Relay>) -> Result<Option<follow::Started>, String> {
+    Ok(relay.running().await)
+}
+
 /// Closes the relay and every viewer's connection; nothing when it is off.
 #[tauri::command]
 async fn follow_stop(relay: State<'_, follow::Relay>) -> Result<(), String> {
@@ -136,6 +142,7 @@ pub fn run() {
             app_menu_state,
             follow_publish,
             follow_start,
+            follow_state,
             follow_stop,
             retroarch,
             save_file,

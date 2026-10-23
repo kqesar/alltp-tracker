@@ -170,9 +170,7 @@ impl Relay {
     pub async fn start(&self, port: u16) -> io::Result<Started> {
         let mut session = self.session.lock().await;
         if let Some(running) = session.as_ref() {
-            let mut started = running.started.clone();
-            started.viewers = *running.viewers.borrow();
-            return Ok(started);
+            return Ok(running.now());
         }
         let listener = match TcpListener::bind((Ipv4Addr::UNSPECIFIED, port)).await {
             Err(error) if error.kind() == io::ErrorKind::AddrInUse => {
@@ -217,6 +215,12 @@ impl Relay {
         Ok(started)
     }
 
+    /// The running session, or `None` while the relay is off: what a page
+    /// that loads again (a game switch reloads it) reads to pick it up.
+    pub async fn running(&self) -> Option<Started> {
+        self.session.lock().await.as_ref().map(Session::now)
+    }
+
     /// Closes every viewer's socket and the port. Does nothing when the
     /// relay is off.
     pub async fn stop(&self) {
@@ -234,6 +238,15 @@ impl Relay {
         if wound_down.is_err() {
             server.abort();
         }
+    }
+}
+
+impl Session {
+    /// The session as `start` handed it, with the viewers watching now.
+    fn now(&self) -> Started {
+        let mut started = self.started.clone();
+        started.viewers = *self.viewers.borrow();
+        started
     }
 }
 
@@ -700,6 +713,26 @@ mod tests {
                 .contains(&format!(":{}/?view=follow&token=", first.port))
         );
         relay.stop().await;
+    }
+
+    #[tokio::test]
+    async fn tells_whether_it_runs() {
+        let (relay, _) = relay();
+        assert!(relay.running().await.is_none());
+        let started = relay.start(0).await.unwrap();
+        let _viewer = watch_with(&started).await;
+        let running = relay.running().await.unwrap();
+        assert_eq!(running.url, started.url);
+        // The count goes up once the server has the viewer's seat
+        tokio::time::timeout(WAIT, async {
+            while relay.running().await.unwrap().viewers != 1 {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await
+        .unwrap();
+        relay.stop().await;
+        assert!(relay.running().await.is_none());
     }
 
     #[tokio::test]
