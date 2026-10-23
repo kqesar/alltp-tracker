@@ -2,6 +2,31 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.37.0](https://github.com/kqesar/alltp-tracker/compare/v2.36.1...v2.37.0) (2026-10-23)
+
+
+### ✨ Features
+
+* **desktop:** relay the run to viewers on the local network ([50bc07a](https://github.com/kqesar/alltp-tracker/commit/50bc07a51c59cd59c9a81a23b127e78696512744))
+* **desktop:** tell a page that loads again whether the relay runs ([f05dbb2](https://github.com/kqesar/alltp-tracker/commit/f05dbb278e56e689574599ee6cf92794136c0381))
+* **web:** follow the desktop app's run live from a phone on the network ([664432b](https://github.com/kqesar/alltp-tracker/commit/664432b0733be985699564616036325b89c802d6))
+
+
+### 🐛 Bug Fixes
+
+* **desktop:** bound the relay's connections and close them all on stop ([e854edb](https://github.com/kqesar/alltp-tracker/commit/e854edbdc2cc9e04315dfd2a87952b173de67f05))
+* **desktop:** ping each viewer and send it a beat, dropping one that went silent ([55aeb68](https://github.com/kqesar/alltp-tracker/commit/55aeb68f805e2f1256271b41e9502b74d340b45f))
+* **web:** drop a followed connection that falls silent, at once when back in view ([b17a624](https://github.com/kqesar/alltp-tracker/commit/b17a62455d2e6384964174afd35152451b725379))
+* **web:** keep the live follow switch focused, announce its failures, show its link ([d3a36ae](https://github.com/kqesar/alltp-tracker/commit/d3a36aef3f65406ce17690321526f86699462f56))
+* **web:** stop live follow before an update installs ([87891fd](https://github.com/kqesar/alltp-tracker/commit/87891fd1dc82f53af143b8079d23601a5b088832))
+
+
+### 📚 Documentation
+
+* correct live follow's design doc to what the relay and the view do ([932076d](https://github.com/kqesar/alltp-tracker/commit/932076da106e0d8b2104501f3a3ac1047d30b39a))
+* describe live follow's page side and how a player follows on a phone ([6b320f4](https://github.com/kqesar/alltp-tracker/commit/6b320f48eaa0db59852766f340123c4de300fec3))
+* record what the real-app check of the relay's limits proved ([ee8357e](https://github.com/kqesar/alltp-tracker/commit/ee8357e1401481a225a6f936f8d02f6ec1fcfbeb))
+
 ## [2.36.1](https://github.com/kqesar/alltp-tracker/compare/v2.36.0...v2.36.1) (2026-10-23)
 
 
