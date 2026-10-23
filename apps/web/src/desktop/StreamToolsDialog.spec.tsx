@@ -13,6 +13,8 @@ const { default: StreamToolsDialog, sourcesText } = await import(
 
 const SESSION = {
   address: "http://127.0.0.1:23076/",
+  lan: false,
+  lanAddress: null as string | null,
   moved: false,
   port: 23076,
   token: "abcdefghijklmnopqrstuv",
@@ -161,14 +163,131 @@ describe("StreamToolsDialog", () => {
     );
   });
 
-  it("says it listens on the network, and which port a firewall must let in", () => {
+  describe("the network", () => {
+    const LAN = "http://192.168.1.20:23076/";
+
+    it("is closed by default: a checkbox, and nothing said of other devices", () => {
+      show();
+      running();
+
+      const box = screen.getByLabelText("Allow other devices on the network");
+      expect(box).toBe(screen.getByTestId("stream-tools-lan"));
+      expect(box).not.toBeChecked();
+      expect(screen.queryByTestId("stream-tools-lan-address-url")).toBeNull();
+      expect(screen.queryByTestId("stream-tools-lan-note")).toBeNull();
+      expect(screen.queryByTestId("stream-tools-no-lan")).toBeNull();
+    });
+
+    it("asks the app to open it, and shows the address other devices use", async () => {
+      tauri.invoke.mockImplementation(async (command: string) =>
+        command === "stream_set_lan"
+          ? { ...SESSION, lan: true, lanAddress: LAN }
+          : undefined,
+      );
+      show();
+      running();
+
+      fireEvent.click(screen.getByTestId("stream-tools-lan"));
+
+      const field = await screen.findByLabelText(
+        "For another computer or device",
+      );
+      expect(tauri.invoke).toHaveBeenCalledWith("stream_set_lan", {
+        lan: true,
+      });
+      expect(field).toHaveValue(`${LAN}?view=obs&token=abcdefghijklmnopqrstuv`);
+      expect(screen.getByTestId("stream-tools-lan")).toBeChecked();
+      // Said only now: who can reach it, and what a firewall must let in
+      expect(screen.getByTestId("stream-tools-lan-note")).toHaveTextContent(
+        "Anyone on your network who has the address",
+      );
+      expect(screen.getByTestId("stream-tools-lan-note")).toHaveTextContent(
+        "port 23076",
+      );
+      // The address for this computer stays
+      expect(screen.getByTestId("stream-tools-url")).toHaveValue(URL_OF());
+    });
+
+    it("copies that address on its own button, with the timer's change", async () => {
+      show({ sizeOf });
+      running({ lan: true, lanAddress: LAN });
+      fireEvent.click(screen.getByTestId("stream-tools-timer"));
+
+      fireEvent.click(screen.getByTestId("stream-tools-lan-address-copy"));
+
+      expect(writeText).toHaveBeenCalledWith(
+        `${LAN}?view=obs&token=abcdefghijklmnopqrstuv&timer=1`,
+      );
+      expect(
+        await screen.findByTestId("stream-tools-lan-address-status"),
+      ).toHaveTextContent("Copied.");
+    });
+
+    it("says so when it is open to the network and the computer is on none", () => {
+      show();
+      running({ lan: true, lanAddress: null });
+
+      expect(screen.getByTestId("stream-tools-no-lan")).toHaveTextContent(
+        "on no network",
+      );
+      expect(screen.getByTestId("stream-tools-lan-note")).toBeInTheDocument();
+    });
+
+    it("closes it again", async () => {
+      tauri.invoke.mockImplementation(async (command: string) =>
+        command === "stream_set_lan" ? { ...SESSION } : undefined,
+      );
+      show();
+      running({ lan: true, lanAddress: LAN });
+
+      fireEvent.click(screen.getByTestId("stream-tools-lan"));
+
+      await vi.waitFor(() =>
+        expect(screen.queryByTestId("stream-tools-lan-note")).toBeNull(),
+      );
+      expect(tauri.invoke).toHaveBeenCalledWith("stream_set_lan", {
+        lan: false,
+      });
+      expect(screen.getByTestId("stream-tools-lan")).not.toBeChecked();
+    });
+
+    it("changes nothing while another change is under way", () => {
+      show();
+      running();
+      act(() => useStreamStore.setState({ pending: true }));
+
+      fireEvent.click(screen.getByTestId("stream-tools-lan"));
+
+      expect(tauri.invoke).not.toHaveBeenCalled();
+    });
+
+    it("shows the stream off, with its error, when it could not reopen", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      tauri.invoke.mockImplementation(async (command: string) => {
+        if (command === "stream_set_lan") throw "Address in use";
+        return null;
+      });
+      show();
+      running();
+
+      fireEvent.click(screen.getByTestId("stream-tools-lan"));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "Address in use",
+      );
+      expect(screen.getByTestId("stream-tools-switch")).not.toBeChecked();
+      expect(screen.queryByTestId("stream-tools-lan")).toBeNull();
+      warn.mockRestore();
+    });
+  });
+
+  it("tells a player to start the app before OBS, or refresh the source", () => {
     show();
-    running({ port: 40_123 });
+    running();
 
     expect(screen.getByRole("dialog")).toHaveTextContent(
-      "listens on your whole network",
+      'Start Rando Atlas before OBS, or tick "Refresh browser when scene becomes active"',
     );
-    expect(screen.getByRole("dialog")).toHaveTextContent("port 40123");
   });
 
   it("turns the stream off", async () => {
@@ -283,6 +402,12 @@ describe("StreamToolsDialog", () => {
       expect(await violations(dialog)).toEqual([]);
 
       running({ moved: true, port: 40_123, viewers: 1 });
+      expect(await violations(dialog)).toEqual([]);
+
+      running({ lan: true, lanAddress: "http://192.168.1.20:40123/" });
+      expect(await violations(dialog)).toEqual([]);
+
+      running({ lan: true, lanAddress: null });
       expect(await violations(dialog)).toEqual([]);
     });
   });

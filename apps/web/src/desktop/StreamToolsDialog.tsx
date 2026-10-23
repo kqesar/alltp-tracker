@@ -15,6 +15,64 @@ export const sourcesText = (count: number): string => {
 };
 
 /**
+ * An address to copy: its label, the read-only field that selects itself when
+ * focused, and a Copy button whose result is said beside the label. Keyed by
+ * its address by the caller, so a changed address forgets "Copied.".
+ */
+const AddressRow = ({
+  label,
+  testId,
+  url,
+}: {
+  label: string;
+  testId: string;
+  url: string;
+}) => {
+  const [status, setStatus] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const id = useId();
+  const copy = async () =>
+    setStatus(
+      copyStatus(await copyText(url, () => inputRef.current?.select())),
+    );
+  return (
+    <div>
+      <div className="stream-view__label-row">
+        <label className="stream-view__label" htmlFor={id}>
+          {label}
+        </label>
+        <output
+          className="stream-view__status"
+          data-testid={`${testId}-status`}
+        >
+          {status}
+        </output>
+      </div>
+      <div className="stream-view__field">
+        <input
+          className="stream-view__url"
+          data-testid={`${testId}-url`}
+          id={id}
+          onFocus={(event) => event.currentTarget.select()}
+          readOnly
+          ref={inputRef}
+          type="text"
+          value={url}
+        />
+        <button
+          className="modal-btn modal-btn--primary"
+          data-testid={`${testId}-copy`}
+          onClick={copy}
+          type="button"
+        >
+          Copy
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/**
  * The desktop app's stream tools (the toolbar's Stream view button): a switch
  * that makes the app serve the stream view to an OBS browser source on this
  * computer, since OBS can neither load the app's pages nor follow its storage.
@@ -24,7 +82,9 @@ export const sourcesText = (count: number): string => {
  * The switch is kept across launches and the stream starts with the app, so a
  * source is set up once. The switch stays focusable while a start or stop
  * runs (`aria-disabled`, not `disabled`, which would drop the focus to the
- * page), and a failure is an alert.
+ * page), and a failure is an alert. The stream is reachable from this
+ * computer alone unless the player ticks "Allow other devices on the network",
+ * which adds the address those devices use and the firewall hint.
  * @param onClose - Closes the dialog
  * @param sizeOf - The source's size in pixels for the game's grid, with or
  * without the run timer's row; given only by a game that has a run timer
@@ -40,16 +100,15 @@ const StreamToolsDialog = ({
   const pending = useStreamStore((state) => state.pending);
   const error = useStreamStore((state) => state.error);
   const [timer, setTimer] = useState(false);
-  const [status, setStatus] = useState("");
   const [renewing, setRenewing] = useState(false);
-  const urlRef = useRef<HTMLInputElement>(null);
-  const urlId = useId();
   const timerId = useId();
+  const lanId = useId();
   const on = session !== null;
 
-  const url = session
-    ? obsViewUrl({ base: session.address, timer, token: session.token })
-    : "";
+  const urlOn = (base: string) =>
+    session ? obsViewUrl({ base, timer, token: session.token }) : "";
+  const url = session ? urlOn(session.address) : "";
+  const lanUrl = session?.lanAddress ? urlOn(session.lanAddress) : "";
   const sizes = (scale: number) => {
     if (!sizeOf) return "";
     const { height, width } = sizeOf(timer);
@@ -59,12 +118,13 @@ const StreamToolsDialog = ({
   const toggle = () => {
     const { pending: busy, start, stop } = useStreamStore.getState();
     if (busy) return;
-    setStatus("");
     void (on ? stop() : start());
   };
 
-  const copy = async () =>
-    setStatus(copyStatus(await copyText(url, () => urlRef.current?.select())));
+  const allowNetwork = (allowed: boolean) => {
+    if (useStreamStore.getState().pending) return;
+    void useStreamStore.getState().setLan(allowed);
+  };
 
   return (
     <>
@@ -100,7 +160,7 @@ const StreamToolsDialog = ({
             Show the tracker in OBS while you play here. Rando Atlas serves the
             stream view to a Browser Source on this computer: the item grid
             alone, on a transparent background, updated live as you track. It
-            stays on when you restart the app, so the source keeps working.
+            stays on when you restart the app.
           </p>
           <button
             aria-checked={on}
@@ -126,39 +186,12 @@ const StreamToolsDialog = ({
           </p>
           {session && (
             <>
-              <div>
-                <div className="stream-view__label-row">
-                  <label className="stream-view__label" htmlFor={urlId}>
-                    Browser source URL
-                  </label>
-                  <output
-                    className="stream-view__status"
-                    data-testid="stream-tools-status"
-                  >
-                    {status}
-                  </output>
-                </div>
-                <div className="stream-view__field">
-                  <input
-                    className="stream-view__url"
-                    data-testid="stream-tools-url"
-                    id={urlId}
-                    onFocus={(event) => event.currentTarget.select()}
-                    readOnly
-                    ref={urlRef}
-                    type="text"
-                    value={url}
-                  />
-                  <button
-                    className="modal-btn modal-btn--primary"
-                    data-testid="stream-tools-copy"
-                    onClick={copy}
-                    type="button"
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
+              <AddressRow
+                key={url}
+                label="Browser source URL"
+                testId="stream-tools"
+                url={url}
+              />
               {session.moved && (
                 <p
                   className="modal__message"
@@ -177,10 +210,7 @@ const StreamToolsDialog = ({
                     className="check-option__input"
                     data-testid="stream-tools-timer"
                     id={timerId}
-                    onChange={(event) => {
-                      setTimer(event.target.checked);
-                      setStatus("");
-                    }}
+                    onChange={(event) => setTimer(event.target.checked)}
                     type="checkbox"
                   />
                   <label htmlFor={timerId}>
@@ -198,8 +228,11 @@ const StreamToolsDialog = ({
                   </li>
                 )}
                 <li>
-                  Keep Rando Atlas open while you stream: the source shows the
-                  last run until it comes back.
+                  Start Rando Atlas before OBS, or tick "Refresh browser when
+                  scene becomes active" in the source's properties: OBS does not
+                  retry a source whose page failed to load. Once loaded, the
+                  source waits for the app and shows the last run until it comes
+                  back.
                 </li>
               </ol>
               <p
@@ -214,13 +247,49 @@ const StreamToolsDialog = ({
                 <code>&amp;bg=00ff00</code> to the URL for a solid colour to key
                 out.
               </p>
-              <p className="stream-view__note">
-                The stream listens on your whole network, not only on this
-                computer: the secret in the address keeps other devices out, so
-                keep it off screen (OBS shows a source's URL in its properties).
-                Another computer's OBS needs your firewall to allow port{" "}
-                {session.port}.
-              </p>
+              <div className="check-option">
+                <input
+                  checked={session.lan}
+                  className="check-option__input"
+                  data-testid="stream-tools-lan"
+                  id={lanId}
+                  onChange={(event) => allowNetwork(event.target.checked)}
+                  type="checkbox"
+                />
+                <label htmlFor={lanId}>
+                  Allow other devices on the network
+                </label>
+              </div>
+              {session.lan && (
+                <>
+                  {lanUrl ? (
+                    <AddressRow
+                      key={lanUrl}
+                      label="For another computer or device"
+                      testId="stream-tools-lan-address"
+                      url={lanUrl}
+                    />
+                  ) : (
+                    <p
+                      className="live-follow__error"
+                      data-testid="stream-tools-no-lan"
+                    >
+                      This computer is on no network: only it can open the
+                      address.
+                    </p>
+                  )}
+                  <p
+                    className="stream-view__note"
+                    data-testid="stream-tools-lan-note"
+                  >
+                    Anyone on your network who has the address can show your
+                    tracker: the secret in it keeps others out, so keep it off
+                    screen (OBS shows a source's URL in its properties). If
+                    another computer cannot connect, let Rando Atlas through
+                    your firewall (port {session.port}).
+                  </p>
+                </>
+              )}
             </>
           )}
         </div>
@@ -232,7 +301,6 @@ const StreamToolsDialog = ({
         onCancel={() => setRenewing(false)}
         onConfirm={() => {
           setRenewing(false);
-          setStatus("");
           void useStreamStore.getState().newTokens();
         }}
         title="Make new addresses?"
