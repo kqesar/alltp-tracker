@@ -2,6 +2,55 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.38.0](https://github.com/kqesar/alltp-tracker/compare/v2.37.0...v2.38.0) (2026-10-23)
+
+
+### ✨ Features
+
+* **desktop:** bind the stream to loopback unless the network is allowed ([ac3e7ec](https://github.com/kqesar/alltp-tracker/commit/ac3e7eced97d9e7a77bc70ac48aaa44240ca1d62))
+* **desktop:** hand the page the overlay API's token ([5f7c665](https://github.com/kqesar/alltp-tracker/commit/5f7c6659e366f53a3c977b670c0b31adc2d52452))
+* **desktop:** serve the overlay API on the stream server ([4d02f92](https://github.com/kqesar/alltp-tracker/commit/4d02f92e1ac1e4d8f5d0e2481bc0ea86c1d5153b))
+* **desktop:** serve the stream view to OBS from the app ([507e876](https://github.com/kqesar/alltp-tracker/commit/507e87669aed19bdecb9aeb0467e366dc97f2014))
+* **web:** add the stream view the desktop app serves to OBS ([e012523](https://github.com/kqesar/alltp-tracker/commit/e012523218be70167f6582f6a7467bb3a06cc878))
+* **web:** bring the Stream view button back in the desktop app with its tools ([33df57b](https://github.com/kqesar/alltp-tracker/commit/33df57bd2eb641ba2431229b3c3434bc97289362))
+* **web:** let the player allow the network, and never show a dead stream as on ([66a3f36](https://github.com/kqesar/alltp-tracker/commit/66a3f361059a51df8b98fb5a710451aabaecb6f4))
+* **web:** publish the overlay state while the stream runs ([af85127](https://github.com/kqesar/alltp-tracker/commit/af85127de7178d7d28f4709e81f0d63b6689f090))
+* **web:** read a race-safe whitelist of the run for the overlay API ([18dd69e](https://github.com/kqesar/alltp-tracker/commit/18dd69e1e121fcbfe3ff8bff112d24d734d9beb9))
+
+
+### 🐛 Bug Fixes
+
+* **desktop:** chmod a private file only when it is looser, and never fail on it ([f1914eb](https://github.com/kqesar/alltp-tracker/commit/f1914ebf1155457cfc34e3d3f055b01cb11af1b6))
+* **desktop:** correct the permissions of a secret file that already exists ([0069f9e](https://github.com/kqesar/alltp-tracker/commit/0069f9ed44886ad958dfca092b51de585efd5346))
+* **desktop:** forget the overlay state when the stream stops ([8a79f28](https://github.com/kqesar/alltp-tracker/commit/8a79f286722364ec944f7f61bd983d500908acfd))
+* **desktop:** refuse a shared port on Windows, keep the first .bad, refresh the network address ([caf386f](https://github.com/kqesar/alltp-tracker/commit/caf386f76886ed78a81b4d9f6af488c085216486))
+* **desktop:** wait for the port on a restart, and read the stream token from a subprotocol ([7c8df5f](https://github.com/kqesar/alltp-tracker/commit/7c8df5f73c9cf1c7ce422c751fee20eca3ab262d))
+* **web:** do not send SMZ3's boss tokens as objectives ([d8e9a39](https://github.com/kqesar/alltp-tracker/commit/d8e9a392ea601371ec2d3f8c7f8e50e31f84dd44))
+* **web:** hold commands until a failed one is resynced, and release the run when off ([086f568](https://github.com/kqesar/alltp-tracker/commit/086f568cda915a2cbd9ddc8788688534900b3b17))
+* **web:** keep the stream token out of the WebSocket address ([3fa666a](https://github.com/kqesar/alltp-tracker/commit/3fa666ac7853accd3e2b8500647fff7e00c680b5))
+* **web:** make the relayed stream source transparent from its first frame ([af884cc](https://github.com/kqesar/alltp-tracker/commit/af884cc41e2b6a1af1530a03759e42b8a4c7de82))
+* **web:** put the visible text in the accessible name of four controls ([b3f99d0](https://github.com/kqesar/alltp-tracker/commit/b3f99d07156879828053b6a19f2e322bd17127e8))
+* **web:** say a moved stream port once per launch ([76f420e](https://github.com/kqesar/alltp-tracker/commit/76f420eacfdb200e1838ce385504c69410790bf0))
+
+
+### 📚 Documentation
+
+* correct the Windows restart note, the macOS bind claim and the token's exposure ([e9c0140](https://github.com/kqesar/alltp-tracker/commit/e9c01407536a948fae2afd82fbbe31c1b2a0fcf4))
+* correct what a stream source survives and document the loopback default ([68fc0f7](https://github.com/kqesar/alltp-tracker/commit/68fc0f79001320270e9ab2d8fbb1dc414beb23a3))
+* describe the exclusive bind, the kept .bad file and the resync ([461f4fe](https://github.com/kqesar/alltp-tracker/commit/461f4fe272ac7114d2bbd8cf27499faba9a9ca65))
+* document the overlay API and its place in the stream tools ([c2d2b88](https://github.com/kqesar/alltp-tracker/commit/c2d2b88f694ea0d75bd368343e81cdd22309d3e8))
+* document the stream view served to OBS by the desktop app ([f0f7876](https://github.com/kqesar/alltp-tracker/commit/f0f787683a8c588ad895601db4b86695b31789e8))
+* record the bench rerun on the loopback-by-default stream ([c43be06](https://github.com/kqesar/alltp-tracker/commit/c43be061394f90585477f424a3cd019924d0e48b))
+* say what the browser lets an overlay page reach, and the API's edges ([381077a](https://github.com/kqesar/alltp-tracker/commit/381077ad4d6225fd0daa4c1b6832c284f484a676))
+* **web:** say what the close codes and MAX_VALUE mean today ([b8cd903](https://github.com/kqesar/alltp-tracker/commit/b8cd9038ac3609040c82cfbc29e29e741d7fb155))
+
+
+### 🔧 Code Refactoring
+
+* **desktop:** share the run and the atomic write between servers ([4f1f19d](https://github.com/kqesar/alltp-tracker/commit/4f1f19ddfcd43c522d79d1e2672f1854327acb20))
+* **desktop:** split the relay's building blocks out of follow.rs ([41aab3a](https://github.com/kqesar/alltp-tracker/commit/41aab3a9d16bab06bf920ab3a274ee971e8390e8))
+* **web:** share the trailing throttle between publishers ([d46143f](https://github.com/kqesar/alltp-tracker/commit/d46143ffba6a082f735e15bc2aedcc47cb0791cc))
+
 ## [2.37.0](https://github.com/kqesar/alltp-tracker/compare/v2.36.1...v2.37.0) (2026-10-23)
 
 
