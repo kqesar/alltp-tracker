@@ -59,6 +59,7 @@ export const useLiveFollowStore = create<LiveFollowStore>()((set, get) => ({
   pending: false,
   session: null,
   start: async () => {
+    if (get().pending) return;
     set({ error: null, pending: true });
     try {
       const session = await invoke<FollowSession>("follow_start");
@@ -70,6 +71,7 @@ export const useLiveFollowStore = create<LiveFollowStore>()((set, get) => ({
     }
   },
   stop: async () => {
+    if (get().pending) return;
     set({ error: null, pending: true });
     publishWhile(false);
     try {

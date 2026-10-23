@@ -146,6 +146,11 @@
   transform: translateX(1.25rem);
 }
 
+/* Busy, yet focusable: a disabled button would drop the focus */
+.switch[aria-disabled="true"] {
+  cursor: progress;
+}
+
 .switch:hover .switch__track {
   border-color: var(--color-accent);
 }

@@ -30,6 +30,13 @@
   border-top: 1px solid var(--color-border);
 }
 
+/* The live link: its QR code, its address and its copy button, scrolled
+   into view together */
+.live-follow__link {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
 .live-follow__heading {
   margin: 0;
   font-size: var(--font-size-base);
@@ -60,4 +67,9 @@
 .live-follow__error {
   margin: 0;
   color: var(--color-danger);
+}
+
+/* The alert stays mounted to be announced; empty, it takes no room */
+.live-follow__error:empty {
+  display: none;
 }
