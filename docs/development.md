@@ -64,9 +64,13 @@ apps/web/src/
 │   ├── sm/          Super Metroid (Map Rando): grid, objectives, store, autotrack/
 │   └── smz3/        SMZ3 (samus.link): grid, keys, maps of Hyrule and Zebes, logic, store
 ├── autotrack/    shared autotracking words (status, guide), the cross-tab Web Lock
-├── components/   ui/ (dialogs, toolbar menu, game picker, header), autotrack/ (setup guide,
-│                 status dot, lazy dialog loader), map/ (the map legend)
-├── hooks/        keyboard navigation, the toolbar's fit
+├── components/   ui/ (dialogs, toolbar menu, game picker, header, Share dialog), autotrack/
+│                 (setup guide, status dot, lazy dialog loader), map/ (the map legend)
+├── desktop/      the desktop app's page side (RetroArch transport, updates, save dialog,
+│                 application menu), behind isDesktopApp
+├── share/        the run link: codec, packed form, the Share action (docs/share.md)
+├── stores/       the update notice's store, the tooltip store
+├── hooks/        keyboard navigation, the toolbar's fit, tooltips, a shared clock
 ├── styles/       shared CSS, all imported by styles/index.css
 └── utils/        the stream view's address and fit, keyboard and platform helpers
 ```

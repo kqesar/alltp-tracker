@@ -20,7 +20,7 @@ flowchart LR
 | `/alltp-tracker/social/<id>.png` | The link preview image (Open Graph and X's large card): a real screenshot of the board. | |
 | `/alltp-tracker/sitemap.xml`, `robots.txt` | The four addresses above; allow everything. | |
 
-Why a page per game rather than the app at three addresses: the app picks its game from storage, so a second address would need a second entry point, its own update bookkeeping in the service worker (`sw/plugin.ts` marks `index.html` only) and a game switch that navigates instead of reloading. A static page costs about 4 kB, needs none of it, and is what a search engine ranks better than an empty shell.
+Why a page per game rather than the app at three addresses: the app picks its game from storage, so a second address would need a second entry point, its own update bookkeeping in the service worker (`sw/plugin.ts` marks `index.html` only) and a game switch that navigates instead of reloading. A static page costs a few kB (the three are 4 to 5 kB in the build), needs none of it, and is what a search engine ranks better than an empty shell.
 
 `?game=<id>` (`takeGameFromAddress`) is the link between the two: it saves the game as a switch in the run type dialog does (each game keeps its own run, so nothing is lost), then removes the parameter from the address. It also works as a shareable link to the tracker on a given game.
 
