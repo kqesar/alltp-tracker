@@ -165,7 +165,6 @@ export const useSmStore = create<SmState>()(
 export const { exportSave, IMPORT_ERRORS, parseSave } = createSaveFormat({
   complete: completed,
   game: "sm",
-  otherGame: "A Link to the Past",
   progressOf,
   schema: progressSchema,
   version: SM_SAVE_VERSION,

@@ -1,6 +1,6 @@
 // The file a game's Export writes and its Import reads, for the games whose
 // run is a `zod/mini` schema (Super Metroid, SMZ3). The decision chain is the
-// same; each game gives its schema, its pool check and its words.
+// same; each game gives its schema and its pool check.
 
 import * as z from "zod/mini";
 
@@ -19,16 +19,15 @@ export type ImportError =
   | "newer-version"
   | "invalid";
 
-/** What each reason says to the player, `otherGame` being the game's own. */
-const errorsOf = (
-  otherGame: string,
-): Readonly<Record<ImportError, string>> => ({
+/** What each reason says to the player. */
+const IMPORT_ERRORS: Readonly<Record<ImportError, string>> = {
   invalid: "This save's run is not one the tracker can read.",
   "newer-version": "This save comes from a newer version of the tracker.",
   "not-a-save": "This file is not a tracker save.",
   "not-json": "This file is not a tracker save.",
-  "other-game": `This save is for ${otherGame}: switch game to import it there.`,
-});
+  "other-game":
+    "This save is for another game: switch game to import it there.",
+};
 
 /** A game's save file: what `createSaveFormat` makes. */
 export type SaveFormat<P extends object> = ReturnType<
@@ -46,13 +45,10 @@ export type SaveFormat<P extends object> = ReturnType<
  * @param complete - A run whose items the file left out, from an older pool,
  * held at 0
  * @param within - Whether every count is within its item's pool
- * @param otherGame - What a save of another game says it is: "another game",
- * or the game that has its own board for it
  */
 export const createSaveFormat = <P extends object>({
   complete,
   game,
-  otherGame,
   progressOf,
   schema,
   version,
@@ -60,7 +56,6 @@ export const createSaveFormat = <P extends object>({
 }: {
   complete: (progress: P) => P;
   game: string;
-  otherGame: string;
   progressOf: (state: P) => P;
   schema: z.ZodMiniType<P>;
   version: number;
@@ -81,7 +76,7 @@ export const createSaveFormat = <P extends object>({
       null,
       2,
     )}\n`,
-  IMPORT_ERRORS: errorsOf(otherGame),
+  IMPORT_ERRORS,
   /**
    * A save file's run, or why not: not JSON, not a tracker save, another
    * game's, a version this one does not know, or a run that is not one.

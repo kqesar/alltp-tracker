@@ -158,7 +158,7 @@ describe("the Super Metroid toolbar", () => {
       ),
     );
     expect(await screen.findByTestId("sm-status")).toHaveTextContent(
-      "This save is for A Link to the Past: switch game to import it there.",
+      "This save is for another game: switch game to import it there.",
     );
   });
 

@@ -177,7 +177,6 @@ export const useSmz3Store = create<Smz3State>()(
 export const { exportSave, IMPORT_ERRORS, parseSave } = createSaveFormat({
   complete: completed,
   game: "smz3",
-  otherGame: "another game",
   progressOf,
   schema: progressSchema,
   version: SMZ3_SAVE_VERSION,
