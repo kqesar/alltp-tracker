@@ -1,11 +1,4 @@
-import {
-  type ChangeEvent,
-  lazy,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ChangeEvent, lazy, Suspense, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import { ShareDialog } from "@/components/ui/ShareDialog";
@@ -13,9 +6,7 @@ import {
   ExportIcon,
   ImportIcon,
   NewGameIcon,
-  RedoIcon,
   ShareIcon,
-  UndoIcon,
 } from "@/components/ui/ToolbarIcons";
 import {
   ToolbarMenu,
@@ -24,6 +15,7 @@ import {
   ToolbarMenuItem,
   ToolbarMenuSeparator,
 } from "@/components/ui/ToolbarMenu";
+import { UndoRedoButtons } from "@/components/ui/UndoRedoButtons";
 import {
   AutotrackControl,
   AutotrackLiveRegion,
@@ -40,12 +32,10 @@ import {
   withoutTimeline,
 } from "@/games/alttpr/stores/persistence";
 import type { MapLayout } from "@/games/alttpr/utils";
+import { useStatusLine } from "@/hooks/useStatusLine";
 import { SHARE_HELP, type ShareResult, shareRun } from "@/share/shareRun";
-import { commandKey, isDesktopApp } from "@/utils/platform";
+import { isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
-
-/** How long a status message such as "Save imported" stays on screen. */
-const STATUS_DURATION_MS = 4000;
 
 // The desktop app's "Add to application menu" item, a chunk of its own: the
 // test is inline so the site's build drops the import (docs/desktop.md)
@@ -100,13 +90,7 @@ export const TrackerControls = () => {
   const [pendingImport, setPendingImport] = useState<Partial<Progress> | null>(
     null,
   );
-  const [status, setStatus] = useState("");
-
-  useEffect(() => {
-    if (!status) return;
-    const timer = setTimeout(() => setStatus(""), STATUS_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [status]);
+  const [status, setStatus] = useStatusLine();
 
   const confirmReset = () => {
     reset();
@@ -165,30 +149,12 @@ export const TrackerControls = () => {
         </span>
         <span className="new-game__label">New game</span>
       </button>
-      <button
-        aria-keyshortcuts="Control+Z Meta+Z"
-        className="tracker-controls__button"
-        data-testid="undo"
-        disabled={!canUndo}
-        onClick={undo}
-        title={`Undo the last change (${commandKey()}+Z)`}
-        type="button"
-      >
-        <UndoIcon />
-        <span className="sr-only">Undo</span>
-      </button>
-      <button
-        aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y"
-        className="tracker-controls__button"
-        data-testid="redo"
-        disabled={!canRedo}
-        onClick={redo}
-        title={`Redo (${commandKey()}+Shift+Z)`}
-        type="button"
-      >
-        <RedoIcon />
-        <span className="sr-only">Redo</span>
-      </button>
+      <UndoRedoButtons
+        canRedo={canRedo}
+        canUndo={canUndo}
+        onRedo={redo}
+        onUndo={undo}
+      />
       {/* Its status stays in view: it folds into More last of all */}
       <span className="toolbar-autotrack">
         <AutotrackControl />

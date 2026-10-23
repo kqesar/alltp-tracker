@@ -30,6 +30,11 @@ const errorsOf = (
   "other-game": `This save is for ${otherGame}: switch game to import it there.`,
 });
 
+/** A game's save file: what `createSaveFormat` makes. */
+export type SaveFormat<P extends object> = ReturnType<
+  typeof createSaveFormat<P>
+>;
+
 /**
  * Export and Import for a game's run.
  * @param game - The game's id, written in the file and checked on import
