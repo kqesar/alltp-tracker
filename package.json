@@ -15,6 +15,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm typecheck && pnpm --filter @alltp/web build",
+    "check:docs": "node scripts/check-docs.mjs",
     "commit": "commit",
     "coverage": "node scripts/show-coverage.js",
     "dev": "pnpm --filter @alltp/web dev",

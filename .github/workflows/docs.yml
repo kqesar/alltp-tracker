@@ -1,0 +1,32 @@
+name: Docs
+
+# Every Markdown link, anchor and quoted repository path still resolves
+# (scripts/check-docs.mjs). A workflow of its own, not a step of ci.yml:
+# ci.yml ignores Markdown-only changes (paths-ignore), which are exactly the
+# ones to check, and a code change that moves a file a doc names must run it
+# too. So it has no path filter. It reads text only and needs no install:
+# plain Node, which the runner has.
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+# A new push to a pull request makes the check on its older commits obsolete
+concurrency:
+  group: docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check the docs' links and paths
+        run: node scripts/check-docs.mjs
