@@ -664,7 +664,7 @@ mod tests {
     async fn takes_a_free_port_and_says_so_when_the_saved_one_is_held() {
         let dir = Scratch::new();
         let feed = RunFeed::new();
-        let held = TcpListener::bind(("0.0.0.0", 0)).await.unwrap();
+        let held = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
         let taken = held.local_addr().unwrap().port();
         let (stream, _) = stream(&dir, taken, &feed);
 
@@ -935,11 +935,13 @@ mod tests {
         stream.shutdown().await;
     }
 
-    /// Holds `ports` until dropped, and says which of them it got.
+    /// Holds `ports` until dropped, and says which of them it got. On the
+    /// address the stream binds: Windows lets an exclusive bind of
+    /// 127.0.0.1 share a port with a plain bind of 0.0.0.0
     async fn hold(ports: &[u16]) -> Vec<TcpListener> {
         let mut held = Vec::new();
         for port in ports {
-            held.push(TcpListener::bind(("0.0.0.0", *port)).await.unwrap());
+            held.push(TcpListener::bind(("127.0.0.1", *port)).await.unwrap());
         }
         held
     }
@@ -977,7 +979,7 @@ mod tests {
         // The saved port, the preferred one and the next are all taken
         let _held = hold(&[saved, preferred]).await;
         let next = preferred + 1;
-        let _next = TcpListener::bind(("0.0.0.0", next)).await;
+        let _next = TcpListener::bind(("127.0.0.1", next)).await;
         let (second, _) = self::stream(&dir, preferred, &feed);
 
         let started = second.start().await.unwrap();
@@ -998,7 +1000,7 @@ mod tests {
         let mut held = hold(&[preferred]).await;
         for port in preferred + 1..=preferred + FALLBACK_PORTS {
             // A port of the range that something else holds is as good
-            if let Ok(listener) = TcpListener::bind(("0.0.0.0", port)).await {
+            if let Ok(listener) = TcpListener::bind(("127.0.0.1", port)).await {
                 held.push(listener);
             }
         }
