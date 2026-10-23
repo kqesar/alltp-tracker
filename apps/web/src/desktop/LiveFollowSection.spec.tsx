@@ -27,9 +27,12 @@ describe("viewersText", () => {
 
 describe("LiveFollowSection", () => {
   const writeText = vi.fn<(text: string) => Promise<void>>();
+  // jsdom lays nothing out, so it has no scrollIntoView
+  const scrollIntoView = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    Element.prototype.scrollIntoView = scrollIntoView;
     writeText.mockReset().mockResolvedValue();
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     tauri.invoke.mockImplementation(async (command: string) =>
@@ -37,6 +40,7 @@ describe("LiveFollowSection", () => {
     );
   });
   afterEach(() => {
+    Reflect.deleteProperty(Element.prototype, "scrollIntoView");
     vi.unstubAllGlobals();
     useLiveFollowStore.setState(useLiveFollowStore.getInitialState(), true);
   });
@@ -95,12 +99,68 @@ describe("LiveFollowSection", () => {
     );
   });
 
-  it("says why it could not start", () => {
-    useLiveFollowStore.setState({ error: "Address in use" });
+  it("says why it could not start, as an alert", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    tauri.invoke.mockRejectedValueOnce("Address in use");
     render(<LiveFollowSection />);
+    // Mounted empty first: a live region announces what enters it
+    const alert = screen.getByRole("alert");
+    expect(alert).toBeEmptyDOMElement();
 
-    expect(screen.getByTestId("live-follow-error")).toHaveTextContent(
-      "Live follow could not start: Address in use",
+    fireEvent.click(screen.getByTestId("live-follow-switch"));
+
+    await vi.waitFor(() =>
+      expect(alert).toHaveTextContent(
+        "Live follow could not start: Address in use",
+      ),
     );
+    expect(screen.getByTestId("live-follow-error")).toBe(alert);
+    expect(screen.getByTestId("live-follow-switch")).not.toBeChecked();
+    warn.mockRestore();
+  });
+
+  it("keeps the switch focusable while it works, and ignores a second press", async () => {
+    let started: (session: typeof SESSION) => void = () => {};
+    tauri.invoke.mockImplementation(
+      (command: string) =>
+        new Promise((resolve) => {
+          if (command === "follow_start") started = resolve;
+        }),
+    );
+    render(<LiveFollowSection />);
+    const toggle = screen.getByTestId("live-follow-switch");
+    toggle.focus();
+
+    fireEvent.click(toggle);
+
+    // Busy, not disabled: a disabled button would drop the focus to the page
+    expect(toggle).toHaveAttribute("aria-disabled", "true");
+    expect(toggle).toBeEnabled();
+    expect(toggle).toHaveFocus();
+    fireEvent.click(toggle);
+    expect(tauri.invoke).toHaveBeenCalledTimes(1);
+
+    started(SESSION);
+    await vi.waitFor(() => expect(toggle).toBeChecked());
+    expect(toggle).toHaveAttribute("aria-disabled", "false");
+    expect(toggle).toHaveFocus();
+  });
+
+  it("scrolls the live link into view when the player turns it on, not when it was on", async () => {
+    useLiveFollowStore.setState({ session: SESSION });
+    const { unmount } = render(<LiveFollowSection />);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    unmount();
+    useLiveFollowStore.setState({ session: null });
+
+    render(<LiveFollowSection />);
+    fireEvent.click(screen.getByTestId("live-follow-switch"));
+    await screen.findByTestId("live-follow-url");
+
+    expect(scrollIntoView).toHaveBeenCalledOnce();
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest" });
+    const link = scrollIntoView.mock.contexts[0] as Element;
+    expect(link).toContainElement(screen.getByTestId("live-follow-url"));
+    expect(link).toContainElement(screen.getByTestId("live-follow-copy"));
   });
 });

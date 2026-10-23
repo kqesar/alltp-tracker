@@ -1,4 +1,4 @@
-import { lazy, Suspense, useId, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { useLiveFollowStore } from "@/desktop/liveFollow";
 import { copyStatus, copyText } from "@/utils/clipboard";
 
@@ -16,6 +16,11 @@ export const viewersText = (count: number): string => {
  * an address to copy, how many devices follow, and what the other device
  * needs (the same network, a firewall that lets it in). Off by default, and
  * after each launch: no port opens unless the player asks.
+ *
+ * The switch stays focusable while a start or stop runs (`aria-disabled`,
+ * not `disabled`, which would drop the focus to the page), a failure is
+ * an alert, and the new link is scrolled into view: the dialog's own QR
+ * code, the snapshot's, sits above it.
  */
 const LiveFollowSection = () => {
   const session = useLiveFollowStore((state) => state.session);
@@ -24,11 +29,23 @@ const LiveFollowSection = () => {
   const [copied, setCopied] = useState("");
   const headingId = useId();
   const urlRef = useRef<HTMLParagraphElement>(null);
+  const linkRef = useRef<HTMLDivElement>(null);
+  // The player just turned it on: show the link once it comes
+  const starting = useRef(false);
   const on = session !== null;
+  const url = session?.url;
+
+  useEffect(() => {
+    if (!url || !starting.current) return;
+    starting.current = false;
+    linkRef.current?.scrollIntoView({ block: "nearest" });
+  }, [url]);
 
   const toggle = () => {
+    const { pending: busy, start, stop } = useLiveFollowStore.getState();
+    if (busy) return;
     setCopied("");
-    const { start, stop } = useLiveFollowStore.getState();
+    starting.current = !on;
     void (on ? stop() : start());
   };
 
@@ -53,9 +70,9 @@ const LiveFollowSection = () => {
       </h3>
       <button
         aria-checked={on}
+        aria-disabled={pending}
         className="switch"
         data-testid="live-follow-switch"
-        disabled={pending}
         onClick={toggle}
         role="switch"
         type="button"
@@ -67,33 +84,38 @@ const LiveFollowSection = () => {
         A phone or a computer on the same Wi-Fi opens a link and watches the
         board update as you track. Nothing leaves your network.
       </p>
-      {error && (
-        <p className="live-follow__error" data-testid="live-follow-error">
-          Live follow could not {on ? "stop" : "start"}: {error}
-        </p>
-      )}
+      {/* Mounted at all times: a live region announces what enters it */}
+      <p
+        className="live-follow__error"
+        data-testid="live-follow-error"
+        role="alert"
+      >
+        {error && `Live follow could not ${on ? "stop" : "start"}: ${error}`}
+      </p>
       {session && (
         <>
-          <Suspense fallback={<div className="share-qr" />}>
-            <QrCode label="QR code of the live link" text={session.url} />
-          </Suspense>
-          <p
-            className="live-follow__url"
-            data-testid="live-follow-url"
-            ref={urlRef}
-          >
-            {session.url}
-          </p>
-          <div className="live-follow__actions">
-            <button
-              className="modal-btn modal-btn--ghost"
-              data-testid="live-follow-copy"
-              onClick={copy}
-              type="button"
+          <div className="live-follow__link" ref={linkRef}>
+            <Suspense fallback={<div className="share-qr" />}>
+              <QrCode label="QR code of the live link" text={session.url} />
+            </Suspense>
+            <p
+              className="live-follow__url"
+              data-testid="live-follow-url"
+              ref={urlRef}
             >
-              Copy the live link
-            </button>
-            <output aria-live="polite">{copied}</output>
+              {session.url}
+            </p>
+            <div className="live-follow__actions">
+              <button
+                className="modal-btn modal-btn--ghost"
+                data-testid="live-follow-copy"
+                onClick={copy}
+                type="button"
+              >
+                Copy the live link
+              </button>
+              <output aria-live="polite">{copied}</output>
+            </div>
           </div>
           <p
             className="modal__message"

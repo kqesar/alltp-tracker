@@ -35,6 +35,10 @@ describe("ShareDialog", () => {
       screen.getByRole("dialog", { name: "Share this run" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Copying…");
+    // Named after what it copies: the desktop app adds a live link under it
+    expect(screen.getByTestId("share-copy-again")).toHaveAccessibleName(
+      "Copy the snapshot link",
+    );
     expect(screen.getByTestId("share-copy-again")).toBeDisabled();
     expect(screen.queryByTestId("share-qr")).not.toBeInTheDocument();
 

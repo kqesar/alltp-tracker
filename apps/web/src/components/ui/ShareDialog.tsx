@@ -21,12 +21,13 @@ type ShareDialogProps = {
 /**
  * The dialog Share opens, the same for every game: how the copy went, the
  * link as a QR code (to open the run on another device), and a button to
- * copy it again. The copy itself already happened, inside the Share click.
- * In the desktop app, live follow on the local network sits under it.
+ * copy it again, named after the snapshot it copies: in the desktop app it
+ * sits under live follow's section, whose link is another. The copy itself
+ * already happened, inside the Share click.
  */
 export const ShareDialog = ({ share, onClose }: ShareDialogProps) => {
   const [result, setResult] = useState<ShareResult | null>(null);
-  // What the last Copy again said, over the first copy's line
+  // What the last copy from the footer said, over the first copy's line
   const [again, setAgain] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export const ShareDialog = ({ share, onClose }: ShareDialogProps) => {
           }}
           type="button"
         >
-          Copy again
+          Copy the snapshot link
         </button>
       }
       isOpen={share !== null}
