@@ -13,6 +13,8 @@ import {
 import * as z from "zod/mini";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { type History, historyActions } from "@/games/runHistory";
+import { createSaveFormat } from "@/games/saveFormat";
 
 /** Where the run is saved: apart from the other games', so each keeps its own. */
 export const SMZ3_STORAGE_KEY = "alltp-tracker-smz3";
@@ -72,39 +74,35 @@ const completed = (progress: Smz3Progress): Smz3Progress => ({
 });
 
 /** Whether every count is within its item's pool. */
-const withinPools = (items: Smz3Progress["items"]) =>
-  Object.entries(items).every(
+const withinPools = (progress: Smz3Progress) =>
+  Object.entries(progress.items).every(
     ([id, value]) => (value ?? 0) <= (MAX.get(id) ?? 0),
   );
 
-/** Undo depth, as the other games'. */
-const HISTORY_LIMIT = 200;
-
-type Smz3State = Smz3Progress & {
-  past: Smz3Progress[];
-  future: Smz3Progress[];
-  /** Step an item: +1 or -1, wrapping within 0 and its pool. */
-  step: (id: string, direction: 1 | -1) => void;
-  /** Check the locations, or none of them once all are. */
-  toggleChecks: (ids: readonly string[]) => void;
-  /** Change the run's settings; what it holds and checked stays. */
-  setSettings: (change: Partial<Smz3Settings>) => void;
-  /** What the player knows a medallion pad wants. */
-  setPad: (which: keyof Smz3Pads, medallion: Smz3Pads["mire"]) => void;
-  /** A new game: nothing held or checked, the settings kept, the pads unknown. */
-  reset: () => void;
-  undo: () => void;
-  redo: () => void;
-  /** Replace the run with a save's: one undo step. */
-  load: (progress: Smz3Progress) => void;
-  /**
-   * Lay what the game says on the run and on every snapshot of its history:
-   * no step, so undoing the player's change never undoes the game's.
-   */
-  applyGameNews: (
-    change: (run: Smz3Progress) => Partial<Smz3Progress> | null,
-  ) => void;
-};
+type Smz3State = Smz3Progress &
+  History<Smz3Progress> & {
+    /** Step an item: +1 or -1, wrapping within 0 and its pool. */
+    step: (id: string, direction: 1 | -1) => void;
+    /** Check the locations, or none of them once all are. */
+    toggleChecks: (ids: readonly string[]) => void;
+    /** Change the run's settings; what it holds and checked stays. */
+    setSettings: (change: Partial<Smz3Settings>) => void;
+    /** What the player knows a medallion pad wants. */
+    setPad: (which: keyof Smz3Pads, medallion: Smz3Pads["mire"]) => void;
+    /** A new game: nothing held or checked, the settings kept, the pads unknown. */
+    reset: () => void;
+    undo: () => void;
+    redo: () => void;
+    /** Replace the run with a save's: one undo step. */
+    load: (progress: Smz3Progress) => void;
+    /**
+     * Lay what the game says on the run and on every snapshot of its history:
+     * no step, so undoing the player's change never undoes the game's.
+     */
+    applyGameNews: (
+      change: (run: Smz3Progress) => Partial<Smz3Progress> | null,
+    ) => void;
+  };
 
 const progressOf = (state: Smz3Progress): Smz3Progress => ({
   checked: state.checked,
@@ -116,42 +114,18 @@ const progressOf = (state: Smz3Progress): Smz3Progress => ({
 export const useSmz3Store = create<Smz3State>()(
   persist<Smz3State, [], [], Smz3Progress>(
     (set, get) => {
-      /** A change of the player's: one step of the history. */
-      const record = (change: Partial<Smz3Progress>) =>
-        set((state) => ({
-          ...change,
-          future: [],
-          past: [...state.past, progressOf(state)].slice(-HISTORY_LIMIT),
-        }));
+      const { applyGameNews, record, redo, undo } = historyActions({
+        get,
+        progressOf,
+        set,
+      });
       return {
         ...freshProgress(),
-        applyGameNews: (change) => {
-          const state = get();
-          const now = change(progressOf(state));
-          const rebase = (history: Smz3Progress[]) =>
-            history.map((run) => {
-              const changed = change(run);
-              return changed === null ? run : { ...run, ...changed };
-            });
-          set({
-            ...(now ?? {}),
-            future: rebase(state.future),
-            past: rebase(state.past),
-          });
-        },
+        applyGameNews,
         future: [],
         load: (progress) => record(progress),
         past: [],
-        redo: () =>
-          set((state) => {
-            const [next, ...future] = state.future;
-            if (next === undefined) return state;
-            return {
-              ...next,
-              future,
-              past: [...state.past, progressOf(state)],
-            };
-          }),
+        redo,
         reset: () => record(freshProgress(get().settings)),
         setPad: (which, medallion) => {
           if (get().pads[which] !== medallion) {
@@ -180,16 +154,7 @@ export const useSmz3Store = create<Smz3State>()(
           }
           record({ checked: [...checked] });
         },
-        undo: () =>
-          set((state) => {
-            const previous = state.past.at(-1);
-            if (previous === undefined) return state;
-            return {
-              ...previous,
-              future: [progressOf(state), ...state.future],
-              past: state.past.slice(0, -1),
-            };
-          }),
+        undo,
       };
     },
     {
@@ -197,7 +162,7 @@ export const useSmz3Store = create<Smz3State>()(
       // dropped for a fresh run rather than half restored
       merge: (saved, current) => {
         const parsed = progressSchema.safeParse(saved);
-        return parsed.success && withinPools(parsed.data.items)
+        return parsed.success && withinPools(parsed.data)
           ? { ...current, ...completed(parsed.data) }
           : current;
       },
@@ -209,70 +174,12 @@ export const useSmz3Store = create<Smz3State>()(
   ),
 );
 
-/**
- * The file an export writes: the run alone. It takes the store's state as it
- * is, so the run is picked out of it, never the undo history beside it.
- */
-export const exportSave = (progress: Smz3Progress): string =>
-  `${JSON.stringify(
-    {
-      format: "alltp-tracker-save",
-      game: "smz3",
-      progress: progressOf(progress),
-      version: SMZ3_SAVE_VERSION,
-    },
-    null,
-    2,
-  )}\n`;
-
-const saveSchema = z.object({
-  format: z.literal("alltp-tracker-save"),
-  game: z.string(),
-  progress: z.unknown(),
-  version: z.number(),
+export const { exportSave, IMPORT_ERRORS, parseSave } = createSaveFormat({
+  complete: completed,
+  game: "smz3",
+  otherGame: "another game",
+  progressOf,
+  schema: progressSchema,
+  version: SMZ3_SAVE_VERSION,
+  within: withinPools,
 });
-
-/** Why a file cannot be imported, in words the player can act on. */
-export type ImportError =
-  | "not-json"
-  | "not-a-save"
-  | "other-game"
-  | "newer-version"
-  | "invalid";
-
-/** What each reason says to the player. */
-export const IMPORT_ERRORS: Readonly<Record<ImportError, string>> = {
-  invalid: "This save's run is not one the tracker can read.",
-  "newer-version": "This save comes from a newer version of the tracker.",
-  "not-a-save": "This file is not a tracker save.",
-  "not-json": "This file is not a tracker save.",
-  "other-game":
-    "This save is for another game: switch game to import it there.",
-};
-
-/**
- * A save file's run, or why not: not JSON, not a tracker save, another
- * game's (each game imports its own), a version this one does not know, or
- * a run that is not one.
- */
-export const parseSave = (
-  text: string,
-): { ok: true; progress: Smz3Progress } | { ok: false; error: ImportError } => {
-  let json: unknown;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    return { error: "not-json", ok: false };
-  }
-  const save = saveSchema.safeParse(json);
-  if (!save.success) return { error: "not-a-save", ok: false };
-  if (save.data.game !== "smz3") return { error: "other-game", ok: false };
-  if (save.data.version > SMZ3_SAVE_VERSION) {
-    return { error: "newer-version", ok: false };
-  }
-  const progress = progressSchema.safeParse(save.data.progress);
-  if (!progress.success || !withinPools(progress.data.items)) {
-    return { error: "invalid", ok: false };
-  }
-  return { ok: true, progress: completed(progress.data) };
-};
