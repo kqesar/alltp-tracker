@@ -5,11 +5,18 @@ const tauri = vi.hoisted(() => ({ invoke: vi.fn(), listen: vi.fn() }));
 vi.mock("@tauri-apps/api/core", () => ({ invoke: tauri.invoke }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: tauri.listen }));
 
+const overlay = vi.hoisted(() => ({ hold: vi.fn(), release: vi.fn() }));
+vi.mock("@/desktop/overlayFeed", () => ({
+  holdOverlay: overlay.hold,
+  releaseOverlay: overlay.release,
+}));
+
 const { attachStream, useStreamStore } = await import("@/desktop/streamTools");
 const { setRun } = await import("@/desktop/runFeed");
 
 const SESSION = {
   address: "http://127.0.0.1:23076/",
+  apiToken: "ABCDEFGHIJKLMNOPQRSTUV",
   lan: false,
   lanAddress: null,
   moved: false,
@@ -113,6 +120,33 @@ describe("the stream view in the desktop app", () => {
     expect(useStreamStore.getState().session?.viewers).toBe(1);
     expect(calls("stream_start")).toEqual([]);
     expect(calls("run_publish")).toHaveLength(1);
+  });
+
+  it("feeds the overlay API while the stream runs, and only then", async () => {
+    expect(overlay.hold).not.toHaveBeenCalled();
+
+    await useStreamStore.getState().start();
+    expect(overlay.hold).toHaveBeenCalledTimes(1);
+    expect(overlay.release).not.toHaveBeenCalled();
+
+    await useStreamStore.getState().stop();
+    expect(overlay.release).toHaveBeenCalled();
+  });
+
+  it("feeds the overlay API for a stream the app started by itself", async () => {
+    answer(SESSION);
+    await attachStream();
+    expect(overlay.hold).toHaveBeenCalled();
+  });
+
+  it("stops feeding the overlay API when a change answers that the stream is off", async () => {
+    await useStreamStore.getState().start();
+    overlay.release.mockClear();
+    tauri.invoke.mockImplementation(async () => null);
+
+    await useStreamStore.getState().setLan(true);
+
+    expect(overlay.release).toHaveBeenCalled();
   });
 
   it("stops publishing when it stops", async () => {

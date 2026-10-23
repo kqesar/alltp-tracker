@@ -13,6 +13,7 @@ const { default: StreamToolsDialog, sourcesText } = await import(
 
 const SESSION = {
   address: "http://127.0.0.1:23076/",
+  apiToken: "ABCDEFGHIJKLMNOPQRSTUV",
   lan: false,
   lanAddress: null as string | null,
   moved: false,
@@ -161,6 +162,52 @@ describe("StreamToolsDialog", () => {
     expect(screen.getByTestId("stream-tools-moved")).toHaveTextContent(
       "now uses port 40123. Paste the address above into your OBS source again.",
     );
+  });
+
+  describe("the overlay API", () => {
+    const API = "ws://127.0.0.1:23076/overlay?token=ABCDEFGHIJKLMNOPQRSTUV";
+
+    it("shows its own address, with the API's token, and copies it", async () => {
+      show();
+      running();
+
+      const url = screen.getByLabelText("Overlay API address (WebSocket)");
+      expect(url).toBe(screen.getByTestId("stream-tools-api-url"));
+      expect(url).toHaveValue(API);
+      expect(url).toHaveAttribute("readonly");
+      expect(screen.getByTestId("stream-tools-api-note")).toHaveTextContent(
+        "never the checks",
+      );
+      fireEvent.click(screen.getByTestId("stream-tools-api-copy"));
+      expect(writeText).toHaveBeenCalledWith(API);
+      expect(
+        await screen.findByTestId("stream-tools-api-status"),
+      ).toHaveTextContent("Copied.");
+    });
+
+    it("is not shown while the stream is off", () => {
+      show();
+      expect(screen.queryByTestId("stream-tools-api-url")).toBeNull();
+    });
+
+    it("adds the address for another device once the network is allowed", () => {
+      show();
+      running({ lan: true, lanAddress: "http://192.168.1.20:23076/" });
+
+      expect(screen.getByTestId("stream-tools-lan-api-url")).toHaveValue(
+        "ws://192.168.1.20:23076/overlay?token=ABCDEFGHIJKLMNOPQRSTUV",
+      );
+      // Not the stream view's token
+      expect(
+        (screen.getByTestId("stream-tools-api-url") as HTMLInputElement).value,
+      ).not.toContain("abcdefghijklmnopqrstuv");
+    });
+
+    it("has no network address while the network is closed", () => {
+      show();
+      running();
+      expect(screen.queryByTestId("stream-tools-lan-api-url")).toBeNull();
+    });
   });
 
   describe("the network", () => {

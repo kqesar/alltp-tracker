@@ -10,10 +10,26 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { create } from "zustand";
+import { holdOverlay, releaseOverlay } from "@/desktop/overlayFeed";
 import { holdRun, publishNow, releaseRun } from "@/desktop/runFeed";
 
 /** What the stream is called among the run feed's holders. */
 const OWNER = "stream";
+
+/**
+ * While the stream runs, the page publishes the run for the source and what
+ * the whitelist reads of it for the overlay API (`overlayFeed.ts`): the same
+ * switch, so the same hold.
+ */
+const hold = () => {
+  holdRun(OWNER);
+  holdOverlay();
+};
+
+const release = () => {
+  releaseRun(OWNER);
+  releaseOverlay();
+};
 
 /** A running stream, as `stream_start` and `stream_state` describe it. */
 export type StreamSession = {
@@ -24,6 +40,8 @@ export type StreamSession = {
   moved: boolean;
   /** What opens the stream view (`?view=obs&token=…`) */
   token: string;
+  /** What opens the overlay API (`/overlay`), a secret of its own */
+  apiToken: string;
   /** The browser sources connected */
   viewers: number;
   /** Whether other devices on the network may reach the stream */
@@ -98,12 +116,12 @@ const resync = async (
   try {
     const session = await invoke<StreamSession | null>("stream_state");
     set({ session });
-    if (session) holdRun(OWNER);
-    else releaseRun(OWNER);
+    if (session) hold();
+    else release();
   } catch (error) {
     console.warn("Could not ask the app about the stream:", error);
     // What was shown stays, and a stream shown running keeps publishing
-    if (useStreamStore.getState().session) holdRun(OWNER);
+    if (useStreamStore.getState().session) hold();
   }
 };
 
@@ -123,8 +141,8 @@ const failed = async (
 
 /** The run is published while a session runs, and only then. */
 const publishWhile = (session: StreamSession | null) => {
-  if (session) holdRun(OWNER);
-  else releaseRun(OWNER);
+  if (session) hold();
+  else release();
 };
 
 export const useStreamStore = create<StreamStore>()((set, get) => ({
@@ -176,7 +194,7 @@ export const useStreamStore = create<StreamStore>()((set, get) => ({
         pending: false,
         session: { ...session, viewers: heardViewers ?? session.viewers },
       });
-      holdRun(OWNER);
+      hold();
     } catch (error) {
       console.warn("Could not start the stream:", error);
       await failed(set, error);
@@ -187,7 +205,7 @@ export const useStreamStore = create<StreamStore>()((set, get) => ({
   stop: async () => {
     if (get().pending) return;
     set({ error: null, pending: true });
-    releaseRun(OWNER);
+    release();
     try {
       await invoke("stream_stop");
       heardViewers = null;
@@ -216,7 +234,7 @@ const adopt = (session: StreamSession) => {
     session: { ...session, viewers: heardViewers ?? session.viewers },
   });
   heardViewers = null;
-  holdRun(OWNER);
+  hold();
 };
 
 /**
