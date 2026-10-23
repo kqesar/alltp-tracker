@@ -5,15 +5,14 @@ language, three-valued (Kleene) evaluation, and a world-graph solver that says,
 for every location, whether it is in logic (`yes`), possible (`maybe`) or out
 of logic (`no`) for the items the player holds.
 
-It is the prototype Phase 2 builds the tracker on: ALttPR first, then Super
-Metroid / SMZ3, Zelda 1 and Ocarina of Time. The current tracker logic
-(`src/data/logic.ts`, `chests.ts`, `dungeons.ts`) is hand-written predicates.
-Those can't express modes (inverted, keysanity key counts, entrance shuffle) or
-other games. Here a game is data: a graph of regions and requirement strings.
+It is the logic engine under the game packs (`packs/alttpr`, `packs/smz3`):
+the app holds no rule of its own and reads each pack. Hand-written predicates
+can't express modes (inverted, keysanity key counts, entrance shuffle) or other
+games. Here a game is data: a graph of regions and requirement strings.
 
 - TypeScript, zero runtime dependencies, no React, no DOM (`lib: ["ES2022"]`,
   tests run in Node).
-- Status: spike. The API will move. The public surface is `src/index.ts`.
+- Status: in use. The public surface is `src/index.ts`.
 
 ```ts
 import { compileWorld, loadRules, solve } from "@alltp/engine";
@@ -53,7 +52,7 @@ solution.locations(); // { linksUncle: "yes", library: "no", oldMan: "maybe" }
 `examples/alttp-sample.ts` is a 9-region / 23-location slice of ALttP in this
 format, and `examples/alttp-sample.spec.ts` pins where it says yes, maybe and
 no. Its rules are simplified to show the format. They are **not** the
-randomizer's: the real rules get ported from the randomizer's source in Phase 2.
+randomizer's: the real rules live in `packs/alttpr`, ported from its source.
 
 ## Design
 
@@ -462,7 +461,8 @@ the compiled world.
 const analysis = analyze(world, state, { acquirable, maxAtoms: 3 });
 analysis.blockers("mimicCave", "yes");
 // { sets: [[{ item: "hookshot", min: 1 }, { item: "mirror", min: 1 }]], truncated: false }
-analysis.blockers("ganonsTower", "yes"); // [[{ group: "crystal", min: 7 }]]
+analysis.blockers("ganonsTower", "yes");
+// { sets: [[{ group: "crystal", min: 7 }]], truncated: false }
 analysis.doableNow(); // the locations at yes now
 ```
 
@@ -631,12 +631,12 @@ slower.
 
 ## Tests
 
-`pnpm vitest run --project engine` runs 310 tests in about 1 s:
+`pnpm vitest run --project engine` runs the suite in a couple of seconds:
 
 - **Kleene tables:** both truth tables written out in full, plus every lattice
   law on all combinations.
 - **Parser:** valid inputs to exact ASTs (precedence, flattening, `?`, `!`,
-  settings, reserved words), and 40 invalid inputs, each with its error
+  settings, reserved words), and the invalid inputs, each with its error
   position and message.
 - **Printer:** canonical output, including trees the parser never builds.
 - **Settings:** a folding table (negation, thresholds, constants simplified
@@ -707,7 +707,9 @@ slower.
 
 ## How a game pack plugs in
 
-A pack is data plus a few pure functions. Something like:
+A pack is data plus a few pure functions. The interface below is an
+illustration of that shape, not an exported type (`src/index.ts` has no
+`GamePack`); `packs/alttpr` and `packs/smz3` are the real ones. Something like:
 
 ```ts
 interface GamePack<Settings> {
@@ -720,7 +722,7 @@ interface GamePack<Settings> {
 }
 ```
 
-The tracker would then:
+The tracker then:
 
 1. On a new run or a settings change, call
    `compileWorld(pack.world(s), loadRules(pack.rules(s)), { items: ids, settings: s })`
@@ -742,16 +744,23 @@ Multi-game seeds (SMZ3) are one graph: both games' regions under prefixed ids,
 joined by the exits that cross between them. The engine doesn't care which game
 a region belongs to.
 
-## Open questions for Phase 2
+## Open questions
 
-1. **Keysanity key counting.** `smallKeyHC >= 2` covers "has found N keys", and
+These were opened before the packs existed. Where a pack settled one, the entry
+says where, then keeps the original question.
+
+1. **Keysanity key counting.** Done in the packs: `packs/alttpr/src/keys.ts`
+   (`solveWithKeys`, see that README's "The key model"), as a model above the
+   engine. The original question: `smallKeyHC >= 2` covers "has found N keys", and
    that stays monotone. But keys are consumed, and the randomizer reasons about
    worst-case door order: a key behind a locked door may itself be the key. We
    need to port its key rules (per dungeon, from source) and decide where that
    logic lives. One option is pack-authored helpers over found-key counts.
    Another is a `keys(dungeon) >= n` atom over state derived by `toState`. When
    a key could have been spent elsewhere, the answer is probably `maybe`.
-2. **Entrance shuffle as dynamic exits.** Discovering an entrance changes the
+2. **Entrance shuffle as dynamic exits.** Done in `packs/alttpr`: the world
+   is recompiled for the doors noted (`crossedConnections`, `erWorld` in
+   `src/er-world.ts`). The original question: discovering an entrance changes the
    graph. Recompiling on every discovery is about 1 ms, which may be enough,
    since discoveries are rare compared to clicks. The alternative is exits whose
    target comes from state at solve time (an unknown target leads nowhere, or
@@ -767,13 +776,18 @@ a region belongs to.
    picking rules and world per settings, still works and suits whole-world
    changes such as inverted. Still open: which of ALttPR v31's Basic vs
    Advanced placement differences fit in a setting atom.
-5. **Events.** Agahnim, crystals and pendants are player-set flags today. The
+5. **Events.** Partly done above the engine: `packs/alttpr`'s
+   `solveFactsState` iterates `reach` facts and event items (the floodgate, the
+   frog) to a fixpoint; the player still records Agahnim, crystals and
+   pendants. The original question: Agahnim, crystals and pendants are player-set flags today. The
    solver could compute them: event locations that grant an item once reached,
    iterated to a fixpoint (monotone, at most one round per event). An event
    reached as `maybe` would grant a "maybe item", so item values would become
    Tri-valued. Decide whether the tracker infers events or the player records
    them.
-6. **Knowledge is not monotone.** A medallion going from unknown to known can
+6. **Knowledge is not monotone.** Done in the packs: `toState` recomputes the
+   state from scratch on every call (`packs/alttpr`, "What the player
+   records"). The original question: A medallion going from unknown to known can
    lower a location (from `maybe` to `no`). Monotonicity holds for items, not
    for knowledge. `toState` should model knowledge as "still possible" flags,
    and the docs should say which state changes can lower a result. Blockers
