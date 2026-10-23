@@ -5,12 +5,8 @@ import "@/games/sm/sm.css";
 import type { GameModule } from "@/games/registry";
 import SmApp from "@/games/sm/SmApp";
 import { SmObsView } from "@/games/sm/SmObsView";
-import {
-  IMPORT_ERRORS,
-  parseSave,
-  SM_STORAGE_KEY,
-  useSmStore,
-} from "@/games/sm/store";
+import { IMPORT_ERRORS, parseSave, useSmStore } from "@/games/sm/store";
+import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 
 export const sm: GameModule = {
   App: SmApp,
@@ -23,8 +19,6 @@ export const sm: GameModule = {
   ObsView: SmObsView,
   // The run follows the other tabs and the stream view through storage
   start: () => {
-    window.addEventListener("storage", (event) => {
-      if (event.key === SM_STORAGE_KEY) void useSmStore.persist.rehydrate();
-    });
+    syncAcrossTabs(useSmStore);
   },
 };

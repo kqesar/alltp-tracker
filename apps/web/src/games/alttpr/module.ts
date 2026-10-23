@@ -4,10 +4,10 @@
 import App from "@/games/alttpr/App";
 import { ObsView } from "@/games/alttpr/ObsView";
 import { unpackLink } from "@/games/alttpr/share";
-import { syncAcrossTabs } from "@/games/alttpr/stores/crossTabSync";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { parseSave } from "@/games/alttpr/stores/persistence";
 import type { GameModule } from "@/games/registry";
+import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 
 export const alttpr: GameModule = {
   App,
@@ -25,7 +25,7 @@ export const alttpr: GameModule = {
   ObsView,
   start: () => {
     // The run follows the other tabs and the stream view through storage
-    syncAcrossTabs();
+    syncAcrossTabs(useGameStore);
     // The desktop app's global shortcuts are this game's alone: only ALttPR
     // has a keymap. Tested inline, so the site's build drops the import
     // (docs/desktop.md).

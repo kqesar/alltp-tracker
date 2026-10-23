@@ -41,10 +41,21 @@ describe("SMZ3's module", () => {
         version: 1,
       }),
     );
-    window.dispatchEvent(new StorageEvent("storage", { key: "other" }));
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: "other", storageArea: localStorage }),
+    );
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: SMZ3_STORAGE_KEY,
+        storageArea: sessionStorage,
+      }),
+    );
     expect(rehydrate).not.toHaveBeenCalled();
     window.dispatchEvent(
-      new StorageEvent("storage", { key: SMZ3_STORAGE_KEY }),
+      new StorageEvent("storage", {
+        key: SMZ3_STORAGE_KEY,
+        storageArea: localStorage,
+      }),
     );
     expect(rehydrate).toHaveBeenCalledOnce();
     await vi.waitFor(() =>
