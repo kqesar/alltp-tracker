@@ -7,6 +7,7 @@ import {
   parseSnapshot,
   retryDelay,
   type Snapshot,
+  STALE_AFTER,
 } from "@/follow/client";
 import type { RunStore } from "@/games/registry";
 
@@ -199,6 +200,62 @@ describe("follow", () => {
     latest().drop();
     document.dispatchEvent(new Event("visibilitychange"));
     expect(sockets).toHaveLength(3);
+  });
+
+  it("drops a connection that falls silent, and tries again", () => {
+    const first = latest();
+    first.receive(frame());
+    vi.advanceTimersByTime(STALE_AFTER - 1);
+    expect(first.closed).toBe(false);
+    expect(statuses.at(-1)).toBe("live");
+
+    vi.advanceTimersByTime(1);
+    expect(first.closed).toBe(true);
+    expect(statuses.at(-1)).toBe("reconnecting");
+    vi.advanceTimersByTime(1000);
+    expect(sockets).toHaveLength(2);
+
+    // Its late close, and a late frame, say nothing more
+    const count = statuses.length;
+    first.drop();
+    first.receive(frame());
+    expect(statuses).toHaveLength(count);
+    expect(received).toHaveLength(1);
+  });
+
+  it("keeps a connection the relay's beats prove alive", () => {
+    latest().receive(frame());
+    for (let beat = 0; beat < 8; beat += 1) {
+      vi.advanceTimersByTime(15_000);
+      latest().receive('{"beat":true}');
+    }
+
+    expect(sockets).toHaveLength(1);
+    expect(latest().closed).toBe(false);
+    expect(statuses).toEqual(["connecting", "live"]);
+    expect(received).toHaveLength(1);
+  });
+
+  it("drops a silent connection at once when the page comes back into view", () => {
+    const first = latest();
+    first.receive(frame());
+    // The phone slept: the clock moved, the page's timers did not run
+    vi.setSystemTime(Date.now() + STALE_AFTER);
+    document.dispatchEvent(new Event("visibilitychange"));
+
+    expect(first.closed).toBe(true);
+    expect(sockets).toHaveLength(2);
+    expect(statuses.at(-1)).toBe("reconnecting");
+  });
+
+  it("keeps a connection that still speaks when the page comes back into view", () => {
+    latest().receive(frame());
+    vi.setSystemTime(Date.now() + STALE_AFTER - 1);
+    document.dispatchEvent(new Event("visibilitychange"));
+    window.dispatchEvent(new Event("online"));
+
+    expect(sockets).toHaveLength(1);
+    expect(latest().closed).toBe(false);
   });
 
   it("waits for a seat while the relay is full", () => {

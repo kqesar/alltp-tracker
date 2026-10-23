@@ -8,6 +8,13 @@ import { type GameId, isGameId, type RunStore } from "@/games/registry";
 /** The largest run the relay passes on (`MAX_VALUE` in follow.rs). */
 const MAX_VALUE = 1 << 20;
 
+/**
+ * The relay sends a beat every 15 s (follow.rs, `TIMING`): this long without
+ * a frame, two beats missed, the connection is dead, though the browser may
+ * still call it open (a phone that slept, a computer that left the network).
+ */
+export const STALE_AFTER = 35_000;
+
 /** What the relay's close codes mean (follow.rs, `close`). */
 export const CLOSE = {
   /** Eight devices already follow: retry later */
@@ -108,8 +115,9 @@ export type FollowOptions = {
 /**
  * Follow the relay: connect, hand on each run, and on a drop try again
  * after `retryDelay`, at once when the device comes back online or the page
- * comes back into view (a phone that slept). The token refused or the relay
- * stopped ends it.
+ * comes back into view (a phone that slept). A connection silent for
+ * `STALE_AFTER` (no run, no beat) counts as a drop: closed and tried again.
+ * The token refused or the relay stopped ends it.
  *
  * The clock offset is the largest `sentAt − arrival` seen: latency only makes
  * a sample smaller, so the largest is the closest. The run sent on connecting
@@ -128,14 +136,44 @@ export const follow = ({
   let attempt = 0;
   let ended = false;
   let clockOffset = Number.NEGATIVE_INFINITY;
+  // When the open socket last said anything, and the timer that gives up on it
+  let heard = 0;
+  let watchdog: ReturnType<typeof setTimeout> | undefined;
+
+  const retryLater = (full: boolean) => {
+    onStatus(full ? "full" : "reconnecting");
+    retry = setTimeout(connect, retryDelay(attempt, full));
+    attempt += 1;
+  };
+
+  // The open socket fell silent: close it (its late close is ignored) and
+  // try again, as after a drop
+  const abandon = () => {
+    const current = socket;
+    if (!current) return;
+    socket = null;
+    clearTimeout(watchdog);
+    current.close();
+    retryLater(false);
+  };
+
+  const hear = () => {
+    heard = Date.now();
+    clearTimeout(watchdog);
+    watchdog = setTimeout(abandon, STALE_AFTER);
+  };
 
   const connect = () => {
     retry = undefined;
     const current = open(url);
     socket = current;
+    hear();
     current.onmessage = (event: MessageEvent) => {
+      if (socket !== current) return;
+      hear();
+      // A beat is no run: it only proves the connection lives
       const snapshot = parseSnapshot(event.data);
-      if (!snapshot || socket !== current) return;
+      if (!snapshot) return;
       attempt = 0;
       clockOffset = Math.max(clockOffset, snapshot.sentAt - Date.now());
       onStatus("live");
@@ -144,22 +182,23 @@ export const follow = ({
     current.onclose = (event: CloseEvent) => {
       if (socket !== current || ended) return;
       socket = null;
+      clearTimeout(watchdog);
       if (event.code === CLOSE.TOKEN || event.code === CLOSE.STOPPED) {
         ended = true;
         stopListening();
         onStatus(event.code === CLOSE.TOKEN ? "expired" : "stopped");
         return;
       }
-      const full = event.code === CLOSE.FULL;
-      onStatus(full ? "full" : "reconnecting");
-      retry = setTimeout(connect, retryDelay(attempt, full));
-      attempt += 1;
+      retryLater(event.code === CLOSE.FULL);
     };
   };
 
-  // Waiting to try again: try now
+  // Back online or in view: a socket silent too long (its timer held back
+  // while the page slept) is dropped, and a pending attempt runs now
   const now = () => {
-    if (retry === undefined || ended) return;
+    if (ended) return;
+    if (socket && Date.now() - heard >= STALE_AFTER) abandon();
+    if (retry === undefined) return;
     clearTimeout(retry);
     connect();
   };
@@ -180,6 +219,7 @@ export const follow = ({
     ended = true;
     stopListening();
     clearTimeout(retry);
+    clearTimeout(watchdog);
     socket?.close();
     socket = null;
   };
