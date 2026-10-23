@@ -31,7 +31,12 @@ pub fn assets() -> Assets {
 
 /// Connects to `/follow` on `port`; `query` is the part from `?`.
 pub async fn connect(port: u16, query: &str) -> Viewer {
-    let url = format!("ws://127.0.0.1:{port}/follow{query}");
+    connect_route(port, "/follow", query).await
+}
+
+/// Connects to the route `path` on `port`; `query` is the part from `?`.
+pub async fn connect_route(port: u16, path: &str, query: &str) -> Viewer {
+    let url = format!("ws://127.0.0.1:{port}{path}{query}");
     connect_async(url).await.unwrap().0
 }
 
@@ -39,8 +44,13 @@ pub async fn connect(port: u16, query: &str) -> Viewer {
 /// `protocol` as the WebSocket subprotocol (`alltp.<token>`): the handshake's
 /// answer must name it, or tungstenite refuses the connection.
 pub async fn connect_with_protocol(port: u16, protocol: &str) -> Viewer {
+    connect_route_with_protocol(port, "/follow", protocol).await
+}
+
+/// The same, for the route `path`.
+pub async fn connect_route_with_protocol(port: u16, path: &str, protocol: &str) -> Viewer {
     use tokio_tungstenite::tungstenite::client::IntoClientRequest;
-    let mut request = format!("ws://127.0.0.1:{port}/follow")
+    let mut request = format!("ws://127.0.0.1:{port}{path}")
         .into_client_request()
         .unwrap();
     request

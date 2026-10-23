@@ -6,7 +6,8 @@
 // command line in cli.rs), an AppImage can add itself to the application menu
 // (app_menu.rs, launcher.rs), the run can be followed live from another
 // device on the local network (follow.rs) and shown to OBS (stream.rs), both
-// served over relay.rs and feed.rs, and new versions come from GitHub
+// served over relay.rs and feed.rs, and the stream tells overlays what the run
+// holds (overlay.rs), and new versions come from GitHub
 // Releases, signed with the project's updater key (docs/desktop.md).
 
 mod app_menu;
@@ -16,6 +17,7 @@ mod files;
 mod follow;
 #[cfg(target_os = "linux")]
 mod launcher;
+mod overlay;
 mod relay;
 mod retroarch;
 mod shortcuts;
@@ -114,6 +116,18 @@ async fn run_publish(
     feed.publish(&game, &key, &value, sent_at)
 }
 
+/// Hands the overlay API what the run holds now (`state`, a JSON object) and
+/// the events that led to it (`events`, a JSON array), both text, both
+/// computed by the page from its race-safe whitelist (see `overlay.rs`).
+#[tauri::command]
+async fn overlay_publish(
+    feed: State<'_, overlay::OverlayFeed>,
+    state: String,
+    events: String,
+) -> Result<(), String> {
+    feed.publish(&state, &events)
+}
+
 /// Turns the stream view for OBS on, or hands back the running one (see
 /// `stream.rs`). The switch is kept: the stream starts by itself at launch.
 #[tauri::command]
@@ -178,6 +192,8 @@ pub fn run() {
             app_menu::refresh_at_launch();
             let feed = feed::RunFeed::new();
             app.manage(feed.clone());
+            let overlay = overlay::OverlayFeed::new();
+            app.manage(overlay.clone());
             let assets = follow::tauri_assets(app.handle().clone());
             let handle = app.handle().clone();
             let on_followers = Arc::new(move |count| {
@@ -203,6 +219,7 @@ pub fn run() {
                 config_dir,
                 stream::PORT,
                 feed,
+                overlay,
                 assets,
                 on_sources,
             ));
@@ -228,6 +245,7 @@ pub fn run() {
             follow_start,
             follow_state,
             follow_stop,
+            overlay_publish,
             retroarch,
             run_publish,
             save_file,

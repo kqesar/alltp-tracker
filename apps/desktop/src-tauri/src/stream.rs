@@ -3,8 +3,10 @@
 // "Stream tools"). OBS cannot load the app's pages nor follow its storage,
 // so the app serves `?view=obs&token=…` itself and relays the run to it.
 //
-//   GET /follow?token=…  the run, as live follow streams it (feed.rs)
-//   GET /<file>          the app's embedded files
+//   GET /follow?token=…   the run, as live follow streams it (feed.rs)
+//   GET /overlay?token=…  the overlay API: what the run holds, whitelisted
+//                         (overlay.rs, docs/overlay-api.md)
+//   GET /<file>           the app's embedded files
 //
 // What differs from live follow is the lifetime. Live follow is a moment the
 // player starts (a new token, a free port when the usual one is taken, off at
@@ -16,7 +18,7 @@
 //   enabled    the player's switch, kept across launches
 //   port       the one the source's address names; 23076 first
 //   viewToken  gates the page's stream (22 characters, 128 bits)
-//   apiToken   reserved for the overlay API (not served yet)
+//   apiToken   gates the overlay API (22 characters, 128 bits)
 //   lan        whether other devices on the network may reach the server:
 //              off (the default) binds 127.0.0.1, on binds every interface
 //
@@ -33,6 +35,7 @@
 
 use crate::feed::{Follow, RunFeed, follow};
 use crate::files;
+use crate::overlay::{Overlay, OverlayFeed, overlay};
 use crate::relay::{self, Assets, OnViewers, Session, TIMING, Timing, lan_address, with_assets};
 use axum::Router;
 use axum::routing::get;
@@ -165,6 +168,7 @@ struct Inner {
 /// The stream server and its remembered settings.
 pub struct Stream {
     feed: RunFeed,
+    overlay: OverlayFeed,
     assets: Assets,
     on_viewers: OnViewers,
     timing: Timing,
@@ -182,12 +186,14 @@ impl Stream {
         dir: Option<PathBuf>,
         preferred: u16,
         feed: RunFeed,
+        overlay: OverlayFeed,
         assets: Assets,
         on_viewers: OnViewers,
     ) -> Self {
         Stream {
             assets,
             feed,
+            overlay,
             file: dir.map(|dir| dir.join(FILE)),
             inner: Mutex::new(Inner {
                 config: None,
@@ -345,8 +351,19 @@ impl Stream {
             Arc::clone(&self.on_viewers),
             |gate| {
                 let assets = Arc::clone(&self.assets);
-                with_assets(Router::new().route("/follow", get(follow)), assets)
-                    .with_state(Follow::new(gate, &config.view_token, &self.feed))
+                let follow_route = get(follow).with_state(Follow::new(
+                    gate.clone(),
+                    &config.view_token,
+                    &self.feed,
+                ));
+                let overlay_route =
+                    get(overlay).with_state(Overlay::new(gate, &config.api_token, &self.overlay));
+                with_assets(
+                    Router::new()
+                        .route("/follow", follow_route)
+                        .route("/overlay", overlay_route),
+                    assets,
+                )
             },
         )?;
         let port = session.port();
@@ -459,13 +476,15 @@ mod tests {
     use super::*;
     use crate::relay::close;
     use crate::test_support::{
-        Viewer, assets, close_code, connect, connect_with_protocol, request, snapshot,
+        Viewer, assets, close_code, connect, connect_route, connect_route_with_protocol,
+        connect_with_protocol, next, next_any, request, snapshot,
     };
     use std::sync::Mutex as StdMutex;
     use std::sync::atomic::{AtomicU32, Ordering};
     use std::time::Instant;
     use tokio::net::TcpListener;
     use tokio::net::TcpStream;
+    use tokio_tungstenite::tungstenite::Message as WsMessage;
 
     /// A config directory of its own, removed afterwards.
     struct Scratch(PathBuf);
@@ -508,6 +527,16 @@ mod tests {
     /// A stream over a directory, asking for `preferred`: what the app would
     /// build at launch, and the viewer counts it reports.
     fn stream(dir: &Scratch, preferred: u16, feed: &RunFeed) -> (Stream, Counts) {
+        stream_over(dir, preferred, feed, &OverlayFeed::new())
+    }
+
+    /// The same, over an overlay feed the test holds.
+    fn stream_over(
+        dir: &Scratch,
+        preferred: u16,
+        feed: &RunFeed,
+        overlay: &OverlayFeed,
+    ) -> (Stream, Counts) {
         let counts: Counts = Arc::new(StdMutex::new(Vec::new()));
         let seen = Arc::clone(&counts);
         let on_viewers: OnViewers = Arc::new(move |count| seen.lock().unwrap().push(count));
@@ -516,6 +545,7 @@ mod tests {
                 Some(dir.0.clone()),
                 preferred,
                 feed.clone(),
+                overlay.clone(),
                 assets(),
                 on_viewers,
             ),
@@ -923,6 +953,7 @@ mod tests {
             None,
             free_port().await,
             RunFeed::new(),
+            OverlayFeed::new(),
             assets(),
             on_viewers,
         );
@@ -1218,6 +1249,181 @@ mod tests {
         let mut query = watch_with(&started).await;
         assert_eq!(snapshot(&mut query).await["value"], "1");
         assert_eq!(*counts.lock().unwrap(), [1, 2]);
+        stream.stop().await;
+    }
+
+    /// The overlay API of a started stream, with the token it asks for.
+    async fn api(started: &Started, dir: &Scratch) -> Viewer {
+        let token = dir.saved().api_token;
+        connect_route(started.port, "/overlay", &format!("?token={token}")).await
+    }
+
+    async fn frame(viewer: &mut Viewer) -> serde_json::Value {
+        match next(viewer).await {
+            WsMessage::Text(text) => serde_json::from_str(&text).unwrap(),
+            other => panic!("expected a frame, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn the_overlay_api_sends_the_state_then_each_update_in_order() {
+        let dir = Scratch::new();
+        let overlay = OverlayFeed::new();
+        let (stream, counts) = stream_over(&dir, free_port().await, &RunFeed::new(), &overlay);
+        let started = stream.start().await.unwrap();
+        overlay.publish(r#"{"game":"alttpr"}"#, "[]").unwrap();
+
+        let mut client = api(&started, &dir).await;
+        let first = frame(&mut client).await;
+        assert_eq!(first["type"], "state");
+        assert_eq!(first["seq"], 1);
+        assert_eq!(first["state"]["game"], "alttpr");
+
+        overlay
+            .publish(r#"{"game":"alttpr","n":1}"#, r#"[{"type":"reset"}]"#)
+            .unwrap();
+        overlay.publish(r#"{"game":"alttpr","n":2}"#, "[]").unwrap();
+        let second = frame(&mut client).await;
+        let third = frame(&mut client).await;
+        assert_eq!(second["type"], "update");
+        assert_eq!(second["seq"], 2);
+        assert_eq!(second["events"][0]["type"], "reset");
+        assert_eq!(third["seq"], 3);
+        assert_eq!(third["state"]["n"], 2);
+        // The same socket, given as a subprotocol
+        let token = dir.saved().api_token;
+        let mut by_protocol =
+            connect_route_with_protocol(started.port, "/overlay", &format!("alltp.{token}")).await;
+        assert_eq!(frame(&mut by_protocol).await["seq"], 3);
+        // A client is a seat, counted with the sources
+        assert_eq!(*counts.lock().unwrap(), [1, 2]);
+        stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn each_route_takes_its_own_token_alone() {
+        let dir = Scratch::new();
+        let (stream, counts) = stream(&dir, free_port().await, &RunFeed::new());
+        let started = stream.start().await.unwrap();
+        let api = dir.saved().api_token;
+        // The view token opens no overlay, whatever way it comes
+        for query in [
+            "".to_owned(),
+            "?token=".to_owned(),
+            "?token=nope".to_owned(),
+            format!("?token={}", started.token),
+        ] {
+            let mut client = connect_route(started.port, "/overlay", &query).await;
+            assert_eq!(close_code(&mut client).await, close::TOKEN, "{query}");
+        }
+        let mut client = connect_route_with_protocol(
+            started.port,
+            "/overlay",
+            &format!("alltp.{}", started.token),
+        )
+        .await;
+        assert_eq!(close_code(&mut client).await, close::TOKEN);
+        // And the overlay's token opens no stream view
+        let mut source = connect(started.port, &format!("?token={api}")).await;
+        assert_eq!(close_code(&mut source).await, close::TOKEN);
+        // None of them took a seat
+        assert!(counts.lock().unwrap().is_empty());
+        stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn a_client_hears_a_beat_with_the_last_number_and_the_clock() {
+        let dir = Scratch::new();
+        let overlay = OverlayFeed::new();
+        let (mut stream, _) = stream_over(&dir, free_port().await, &RunFeed::new(), &overlay);
+        stream.timing = Timing {
+            beat: Duration::from_millis(150),
+            headers: Duration::from_millis(300),
+        };
+        let started = stream.start().await.unwrap();
+        overlay.publish("{}", "[]").unwrap();
+        let mut client = api(&started, &dir).await;
+        assert_eq!(frame(&mut client).await["seq"], 1);
+        // A source gets the old beat, the client the API's
+        let mut source = watch_with(&started).await;
+        let beat = loop {
+            match next_any(&mut client).await {
+                WsMessage::Text(text) => break serde_json::from_str::<serde_json::Value>(&text),
+                _ => continue,
+            }
+        }
+        .unwrap();
+        assert_eq!(beat["type"], "beat");
+        assert_eq!(beat["v"], 1);
+        assert_eq!(beat["seq"], 1);
+        assert!(beat["now"].as_u64().unwrap() > 1_600_000_000_000);
+        let old = loop {
+            match next_any(&mut source).await {
+                WsMessage::Text(text) => break text,
+                _ => continue,
+            }
+        };
+        assert_eq!(old.as_str(), crate::relay::BEAT);
+        stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn stopping_closes_the_clients_and_the_last_state_outlives_the_session() {
+        let dir = Scratch::new();
+        let overlay = OverlayFeed::new();
+        let (stream, _) = stream_over(&dir, free_port().await, &RunFeed::new(), &overlay);
+        let started = stream.start().await.unwrap();
+        overlay.publish(r#"{"n":1}"#, "[]").unwrap();
+        let mut client = api(&started, &dir).await;
+        assert_eq!(frame(&mut client).await["state"]["n"], 1);
+
+        stream.stop().await;
+        assert_eq!(close_code(&mut client).await, close::STOPPED);
+
+        // Published while off, kept: the next session serves it at once
+        overlay.publish(r#"{"n":2}"#, "[]").unwrap();
+        let again = stream.start().await.unwrap();
+        let mut late = api(&again, &dir).await;
+        let state = frame(&mut late).await;
+        assert_eq!(state["type"], "state");
+        assert_eq!(state["state"]["n"], 2);
+        stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn new_addresses_close_the_clients_and_refuse_the_old_api_token() {
+        let dir = Scratch::new();
+        let overlay = OverlayFeed::new();
+        let (stream, _) = stream_over(&dir, free_port().await, &RunFeed::new(), &overlay);
+        let before = stream.start().await.unwrap();
+        let old = dir.saved().api_token;
+        let mut client = api(&before, &dir).await;
+        overlay.publish("{}", "[]").unwrap();
+        assert_eq!(frame(&mut client).await["seq"], 1);
+
+        let after = stream.new_tokens().await.unwrap().unwrap();
+
+        assert_eq!(close_code(&mut client).await, close::STOPPED);
+        let mut stale = connect_route(after.port, "/overlay", &format!("?token={old}")).await;
+        assert_eq!(close_code(&mut stale).await, close::TOKEN);
+        let mut fresh = api(&after, &dir).await;
+        assert_eq!(frame(&mut fresh).await["type"], "state");
+        stream.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn the_overlay_follows_the_networks_switch() {
+        let dir = Scratch::new();
+        let (stream, _) = stream(&dir, free_port().await, &RunFeed::new());
+        let started = stream.start().await.unwrap();
+        // Loopback by default: the network address is refused
+        if let Some(ip) = relay::lan_address() {
+            assert!(TcpStream::connect((ip, started.port)).await.is_err());
+            stream.set_lan(true).await.unwrap();
+            let token = dir.saved().api_token;
+            let url = format!("ws://{ip}:{}/overlay?token={token}", started.port);
+            assert!(tokio_tungstenite::connect_async(url).await.is_ok());
+        }
         stream.stop().await;
     }
 }
