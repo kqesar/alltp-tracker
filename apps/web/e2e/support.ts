@@ -1,4 +1,5 @@
-import type { Locator, Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /** Phone, tablet, laptop and desktop: the widths every layout must hold at. */
 export const WIDTHS = [390, 820, 1440, 1920] as const;
@@ -88,4 +89,64 @@ export const pixelsIn = async (
       ...data.subarray(index * 4, index * 4 + 4),
     ]);
   }, png.toString("base64"));
+};
+
+/**
+ * The tracker on a game in one page load: the game this device tracks is
+ * saved before the page starts (unless a reload finds one saved), where
+ * picking it in the Mode dialog loads the page three times.
+ * @param game - A game's id
+ * @param query - The address's query string, `?bridge=…` for instance
+ */
+export const openOnGame = async (page: Page, game: string, query = "") => {
+  await page.addInitScript((id) => {
+    if (!localStorage.getItem("alltp-tracker-game")) {
+      localStorage.setItem("alltp-tracker-game", id);
+    }
+  }, game);
+  await page.goto(`./${query}`);
+  await page.getByTestId("toolbar").waitFor();
+};
+
+/**
+ * What every page state is held to: no axe violation, no sideways scroll,
+ * and every clickable thing reachable by keyboard.
+ * @param exclude - A selector axe leaves out, where a WCAG exception applies
+ */
+export const auditPage = async (page: Page, exclude?: string) => {
+  const axe = new AxeBuilder({ page }).withTags(WCAG_AA);
+  const { violations } = await (exclude ? axe.exclude(exclude) : axe).analyze();
+  expect(violations.map(({ id, nodes }) => `${id} ×${nodes.length}`)).toEqual(
+    [],
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    ),
+  ).toBeLessThanOrEqual(0);
+  expect(await unreachableClickables(page)).toEqual([]);
+};
+
+/**
+ * An open dialog's checks: axe once its opening animation has ended (its
+ * contrast changes as it fades in), and its right edge inside the viewport.
+ */
+export const auditDialog = async (
+  page: Page,
+  dialog: Locator,
+  width: number,
+) => {
+  await expect(dialog).toBeVisible();
+  await dialog.evaluate((element) =>
+    Promise.all(
+      element.getAnimations({ subtree: true }).map((a) => a.finished),
+    ),
+  );
+  const { violations } = await new AxeBuilder({ page })
+    .include("dialog[open]")
+    .withTags(WCAG_AA)
+    .analyze();
+  expect(violations.map(({ id }) => id)).toEqual([]);
+  const box = await dialog.boundingBox();
+  expect(box && box.x + box.width).toBeLessThanOrEqual(width);
 };

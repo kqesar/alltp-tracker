@@ -2,38 +2,18 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
 import { writeSmz3 } from "../../../packs/smz3/test/smz3-rom";
-import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
-
-/** The tracker with nothing saved, then SMZ3 picked in its dialog. */
-const openSmz3 = async (page: Page) => {
-  await page.goto("./");
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await page.getByRole("button", { name: /^Mode/ }).click();
-  await page
-    .getByRole("dialog", { name: "Choose a run type" })
-    .getByTestId("game-smz3")
-    .click();
-  await expect(page.getByTestId("smz3-item-morph")).toBeVisible();
-};
-
-/**
- * The tracker on SMZ3 in one page load: the game this device tracks is saved
- * before the page starts, where `openSmz3` loads the page three times to reach
- * it through the dialog.
- */
-const openOnSmz3 = async (page: Page) => {
-  await page.addInitScript(() =>
-    localStorage.setItem("alltp-tracker-game", "smz3"),
-  );
-  await page.goto("./");
-  await expect(page.getByTestId("smz3-item-morph")).toBeVisible();
-};
+import {
+  auditDialog,
+  openOnGame,
+  unreachableClickables,
+  WCAG_AA,
+  WIDTHS,
+} from "./support";
 
 test("tracks SMZ3: items, both maps by the logic, a reload keeping the run", async ({
   page,
 }) => {
-  await openSmz3(page);
+  await openOnGame(page, "smz3");
   await expect(page.getByTestId("link-samus")).toBeVisible();
 
   // Kakariko's well is open from the start; the Morphing Ball too
@@ -141,7 +121,7 @@ test("autotracks an SMZ3 seed through SNI, in both games", async ({ page }) => {
 });
 
 test("the stream view follows the SMZ3 tracker", async ({ context, page }) => {
-  await openSmz3(page);
+  await openOnGame(page, "smz3");
   const stream = await context.newPage();
   await stream.goto("./?view=obs");
   await expect(stream.getByTestId("obs-view")).toBeVisible();
@@ -185,7 +165,7 @@ for (const width of WIDTHS) {
     page,
   }) => {
     await page.setViewportSize({ height: 900, width });
-    await openOnSmz3(page);
+    await openOnGame(page, "smz3");
     for (const map of ["Hyrule", "Zebes"]) {
       await page.getByRole("tab", { name: map }).click();
       await auditBoard(page);
@@ -196,24 +176,12 @@ for (const width of WIDTHS) {
     page,
   }) => {
     await page.setViewportSize({ height: 900, width });
-    await openOnSmz3(page);
+    await openOnGame(page, "smz3");
 
     // The run type dialog
     await page.getByRole("button", { name: /^Mode/ }).click();
     const dialog = page.getByRole("dialog", { name: "Choose a run type" });
-    await expect(dialog).toBeVisible();
-    await dialog.evaluate((element) =>
-      Promise.all(
-        element.getAnimations({ subtree: true }).map((a) => a.finished),
-      ),
-    );
-    const dialogAxe = await new AxeBuilder({ page })
-      .include("dialog[open]")
-      .withTags(WCAG_AA)
-      .analyze();
-    expect(dialogAxe.violations.map(({ id }) => id)).toEqual([]);
-    const box = await dialog.boundingBox();
-    expect(box && box.x + box.width).toBeLessThanOrEqual(width);
+    await auditDialog(page, dialog, width);
 
     // Keysanity: the dungeons' key cells and Super Metroid's keycards
     await dialog.getByLabel("Keysanity (keys and keycards anywhere)").check();

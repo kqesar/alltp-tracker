@@ -1,21 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
 import { writeMapRando } from "../../../packs/sm/test/sm-rom";
-import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
-
-/** The tracker with nothing saved, then Super Metroid picked in its dialog. */
-const openSuperMetroid = async (page: Page, query = "") => {
-  await page.goto(`./${query}`);
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await page.getByRole("button", { name: /^Mode/ }).click();
-  await page
-    .getByRole("dialog", { name: "Choose a run type" })
-    .getByTestId("game-sm")
-    .click();
-  await expect(page.getByTestId("sm-item-morph")).toBeVisible();
-};
+import { auditDialog, auditPage, openOnGame, WCAG_AA, WIDTHS } from "./support";
 
 test("switches to Super Metroid and back, each game keeping its run", async ({
   page,
@@ -77,7 +64,7 @@ test("autotracks a Map Rando seed through SNI", async ({ page }) => {
       objectives: ["kraid", "phantoon", "draygon", "ridley"],
     };
     writeMapRando(bridge.memory, game);
-    await openSuperMetroid(page, `?bridge=${new URL(bridge.url).port}`);
+    await openOnGame(page, "sm", `?bridge=${new URL(bridge.url).port}`);
 
     await page.getByTestId("autotrack-button").click();
     const dialog = page.getByRole("dialog", { name: "Autotracking" });
@@ -138,7 +125,7 @@ test("the stream view follows the Super Metroid tracker", async ({
   context,
   page,
 }) => {
-  await openSuperMetroid(page);
+  await openOnGame(page, "sm");
   const stream = await context.newPage();
   await stream.goto("./?view=obs");
   await expect(stream.getByTestId("obs-view")).toBeVisible();
@@ -161,34 +148,12 @@ for (const width of WIDTHS) {
     page,
   }) => {
     await page.setViewportSize({ height: 900, width });
-    await openSuperMetroid(page);
-    const { violations } = await new AxeBuilder({ page })
-      .withTags(WCAG_AA)
-      .analyze();
-    expect(violations.map(({ id }) => id)).toEqual([]);
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth,
-      ),
-    ).toBe(true);
-    expect(await unreachableClickables(page)).toEqual([]);
+    await openOnGame(page, "sm");
+    await auditPage(page);
 
     // The run type dialog, its objectives and the items a seed adds
     await page.getByRole("button", { name: /^Mode/ }).click();
     const dialog = page.getByRole("dialog", { name: "Choose a run type" });
-    await expect(dialog).toBeVisible();
-    // Its contrast, once its opening animation has ended
-    await dialog.evaluate((element) =>
-      Promise.all(
-        element.getAnimations({ subtree: true }).map((a) => a.finished),
-      ),
-    );
-    const dialogAxe = await new AxeBuilder({ page })
-      .include("dialog[open]")
-      .withTags(WCAG_AA)
-      .analyze();
-    expect(dialogAxe.violations.map(({ id }) => id)).toEqual([]);
-    const box = await dialog.boundingBox();
-    expect(box && box.x + box.width).toBeLessThanOrEqual(width);
+    await auditDialog(page, dialog, width);
   });
 }
