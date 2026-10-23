@@ -118,3 +118,10 @@ jobs:
 
       - name: Lint
         run: cargo clippy --locked --all-targets -- -D warnings
+
+      # The servers' bind and restart behave differently on Windows (an
+      # exclusive bind waits for a closing connection: docs/desktop.md,
+      # "Stream tools"): only their tests run here, the rest is Linux's
+      - name: Test the servers
+        if: matrix.os == 'windows-latest'
+        run: cargo test --locked stream:: relay::
