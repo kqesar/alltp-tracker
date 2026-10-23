@@ -59,6 +59,30 @@ type StreamStore = {
   dismissMovedNotice: () => void;
 };
 
+/**
+ * Where the port the player was told about is kept for this launch: the
+ * page's own storage for the session, which a reload (a game switch) keeps
+ * and an app restart does not. A moved port is said once per launch, outside
+ * the dialog, whether or not it was dismissed; the dialog keeps saying it.
+ */
+const TOLD_KEY = "alltp-tracker-stream-moved-told";
+
+const wasTold = (port: number): boolean => {
+  try {
+    return sessionStorage.getItem(TOLD_KEY) === String(port);
+  } catch {
+    return false;
+  }
+};
+
+const markTold = (port: number): void => {
+  try {
+    sessionStorage.setItem(TOLD_KEY, String(port));
+  } catch {
+    // No storage: the notice may come back after a reload, nothing worse
+  }
+};
+
 /** A count heard while no session is known yet, applied when one arrives. */
 let heardViewers: number | null = null;
 
@@ -145,6 +169,8 @@ export const useStreamStore = create<StreamStore>()((set, get) => ({
     set({ error: null, pending: true });
     try {
       const session = await invoke<StreamSession>("stream_start");
+      // The dialog says a moved port to the player who just started it
+      if (session.moved) markTold(session.port);
       // A source may have connected before the answer came
       set({
         pending: false,
@@ -183,8 +209,10 @@ const adopt = (session: StreamSession) => {
     state.session.port === session.port
   )
     return;
+  const notice = session.moved && !wasTold(session.port);
+  if (notice) markTold(session.port);
   useStreamStore.setState({
-    movedNotice: session.moved,
+    movedNotice: notice,
     session: { ...session, viewers: heardViewers ?? session.viewers },
   });
   heardViewers = null;

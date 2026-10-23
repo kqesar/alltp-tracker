@@ -60,6 +60,7 @@ beforeEach(async () => {
   vi.useFakeTimers({ now: 9000 });
   vi.clearAllMocks();
   localStorage.clear();
+  sessionStorage.clear();
   localStorage.setItem("alltp-tracker-state", "run");
   tauri.listen.mockImplementation(async (name, handler) => {
     if (name === "stream-started") startedEvent = handler;
@@ -304,6 +305,52 @@ describe("the stream view in the desktop app", () => {
 
       expect(calls("run_publish")).toHaveLength(1);
       expect(listeners.size).toBe(1);
+    });
+
+    it("says a moved port once per launch: not again after a reload, dismissed or not", async () => {
+      const moved = { ...SESSION, moved: true, port: 44_897 };
+      startedEvent({ payload: moved });
+      expect(useStreamStore.getState().movedNotice).toBe(true);
+
+      // A game switch reloads the page: the store is new, the launch is not
+      useStreamStore.setState(useStreamStore.getInitialState(), true);
+      answer(moved);
+      await attachStream();
+
+      expect(useStreamStore.getState().session?.moved).toBe(true);
+      expect(useStreamStore.getState().movedNotice).toBe(false);
+    });
+
+    it("says it again for another port, and after the app restarts", async () => {
+      startedEvent({ payload: { ...SESSION, moved: true, port: 44_897 } });
+      useStreamStore.setState(useStreamStore.getInitialState(), true);
+
+      // Another port: news
+      answer({ ...SESSION, moved: true, port: 44_898 });
+      await attachStream();
+      expect(useStreamStore.getState().movedNotice).toBe(true);
+
+      // A new launch has a new webview session
+      sessionStorage.clear();
+      useStreamStore.setState(useStreamStore.getInitialState(), true);
+      answer({ ...SESSION, moved: true, port: 44_898 });
+      await attachStream();
+      expect(useStreamStore.getState().movedNotice).toBe(true);
+    });
+
+    it("does not say it after the player started the stream and saw it in the dialog", async () => {
+      tauri.invoke.mockImplementation(async (command: string) =>
+        command === "stream_start"
+          ? { ...SESSION, moved: true, port: 44_897 }
+          : undefined,
+      );
+      await useStreamStore.getState().start();
+
+      useStreamStore.setState(useStreamStore.getInitialState(), true);
+      answer({ ...SESSION, moved: true, port: 44_897 });
+      await attachStream();
+
+      expect(useStreamStore.getState().movedNotice).toBe(false);
     });
 
     it("says a moved port outside the dialog, until it is dismissed", async () => {
