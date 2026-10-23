@@ -75,6 +75,7 @@ requirement text ──parse──▶ AST ──loadRules / compileWorld──�
 | `solve.ts` | The solver and `Solution` |
 | `explain.ts` | `explain`: the route to a location and its requirement, node by node |
 | `analyze.ts` | `analyze`: blockers, the minimal sets of items that would unlock a location |
+| `ids.ts` | `locationId`: the one rule every pack names its locations by (ids are save keys) |
 
 Choices that shape everything else:
 

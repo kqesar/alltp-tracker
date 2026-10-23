@@ -2,6 +2,9 @@
 // opens it and where that rule was read upstream.
 import type { DungeonItemClass } from "./world";
 
+// The one id rule of every pack (ids are save keys): see `@alltp/engine`
+export { locationId } from "@alltp/engine";
+
 /**
  * The kinds of location: the upstream Location classes (app/Location/*.php),
  * in lowerCamel. A subclass (Prize\Crystal, Npc\Zora…) has its base's kind.
@@ -117,24 +120,6 @@ export interface LocationFill {
     readonly otherwise?: string;
     readonly source: Source;
   };
-}
-
-/**
- * The id of a location: its official name in lowercase kebab case, with
- * " - " as "/" and apostrophes dropped. "Tower of Hera - Big Key Chest" is
- * tower-of-hera/big-key-chest, "King's Tomb" kings-tomb.
- */
-export function locationId(name: string): string {
-  return name
-    .split(" - ")
-    .map((part) =>
-      part
-        .toLowerCase()
-        .replace(/['’]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, ""),
-    )
-    .join("/");
 }
 
 /** The kind of an upstream Location class: `Prize\Crystal` is a prize. */

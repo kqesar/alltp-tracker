@@ -6,17 +6,6 @@ const index = loadLocationIndex();
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/;
 
 describe("locationId", () => {
-  it.each([
-    ["Tower of Hera - Big Key Chest", "tower-of-hera/big-key-chest"],
-    ["King's Tomb", "kings-tomb"],
-    ["Sewers - Secret Room - Left", "sewers/secret-room/left"],
-    ["Hyrule Castle - Zelda's Cell", "hyrule-castle/zeldas-cell"],
-    ["Thieves' Town - Blind's Cell", "thieves-town/blinds-cell"],
-    ["  Odd -- Name! ", "odd-name"],
-  ])("%s is %s", (name, id) => {
-    expect(locationId(name)).toBe(id);
-  });
-
   it("gives every upstream location of the three worlds its own id", () => {
     // A location Inverted moves is built again under the same name
     const names = [...new Set(index.locations.map((l) => l.name))];
