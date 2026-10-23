@@ -1,4 +1,3 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
 import { StreamTimer } from "@/games/alttpr/components/ui/StreamTimer";
 import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
@@ -9,8 +8,7 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { visibleRows } from "@/games/alttpr/utils";
 import type { ObsViewProps } from "@/games/registry";
 import { useUndoShortcuts } from "@/games/useUndoShortcuts";
-import { useUpdateStore } from "@/stores/updateStore";
-import { fitObsGrid } from "@/utils/view";
+import { useObsStage } from "@/hooks/useObsStage";
 
 /** Grid columns: seven cells and the two half cells at its sides. */
 const GRID_COLUMNS = ITEMS_PER_ROW + 1;
@@ -34,47 +32,11 @@ export const ObsView = ({ background, timer = false }: ObsViewProps) => {
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const grid = useGameStore((state) => itemGridFor(state.settings));
   const rows = visibleRows(grid, bigKeysVisible).length;
-  const stageRef = useRef<HTMLElement>(null);
-  const applyUpdate = useUpdateStore((state) => state.apply);
-
-  useEffect(() => {
-    applyUpdate?.();
-  }, [applyUpdate]);
-
-  // The page itself must be transparent too: base.css paints the body
-  useLayoutEffect(() => {
-    const root = document.documentElement;
-    const title = document.title;
-    root.dataset.view = "obs";
-    document.title = "Rando Atlas stream view";
-    return () => {
-      delete root.dataset.view;
-      document.title = title;
-    };
-  }, []);
-
-  // Sized from the viewport on every resize, written straight to CSS custom
-  // properties: resizing the source never re-renders the grid.
-  useLayoutEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const fit = () => {
-      const { cell, left, top } = fitObsGrid({
-        columns: GRID_COLUMNS,
-        height: window.innerHeight,
-        pixelRatio: window.devicePixelRatio || 1,
-        rows: timer ? rows + 1 : rows,
-        width: window.innerWidth,
-      });
-      stage.style.setProperty("--cell", `${cell}px`);
-      stage.style.setProperty("--obs-left", `${left}px`);
-      stage.style.setProperty("--obs-top", `${top}px`);
-      stage.style.setProperty("--obs-timer-top", `${top + rows * cell}px`);
-    };
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, [rows, timer]);
+  const stageRef = useObsStage({
+    columns: GRID_COLUMNS,
+    extraRows: timer ? 1 : 0,
+    rows,
+  });
 
   return (
     <main
