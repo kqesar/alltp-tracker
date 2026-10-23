@@ -5,14 +5,15 @@
 // shortcuts work while the emulator has the focus (shortcuts/, and the
 // command line in cli.rs), an AppImage can add itself to the application menu
 // (app_menu.rs, launcher.rs), the run can be followed live from another
-// device on the local network (follow.rs), and new versions come from GitHub
-// Releases, signed with the project's updater key (docs/desktop.md).
+// device on the local network (follow.rs, relay.rs), and new versions come
+// from GitHub Releases, signed with the project's updater key (docs/desktop.md).
 
 mod app_menu;
 mod cli;
 mod follow;
 #[cfg(target_os = "linux")]
 mod launcher;
+mod relay;
 mod retroarch;
 mod shortcuts;
 

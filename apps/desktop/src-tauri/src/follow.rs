@@ -11,33 +11,28 @@
 // other route, and no port is open while the feature is off. A random token,
 // new at each start, gates the stream; at most MAX_VIEWERS watch at once,
 // over at most MAX_CONNECTIONS connections still in HTTP, each with a header
-// timeout; a viewer that stops answering pings loses its seat.
+// timeout; a viewer that stops answering pings loses its seat. The server
+// itself (lifecycle, seats, pump, file routes) is relay.rs; this module is
+// live follow's settings, its route and the run it keeps.
 //
 // This module knows nothing of Tauri: the app's files come through an
 // `Assets` lookup and the viewer count goes out through `OnViewers`, so the
 // tests run the real server without an app.
 
+use crate::relay::{
+    self, Asset, Assets, Gate, OnViewers, Session, TIMING, Timing, lan_address, relay_to,
+    with_assets,
+};
 use axum::Router;
-use axum::body::{Body, Bytes};
-use axum::extract::ws::{CloseFrame, Message, Utf8Bytes, WebSocket, WebSocketUpgrade};
+use axum::extract::ws::{Utf8Bytes, WebSocketUpgrade};
 use axum::extract::{RawQuery, State};
-use axum::http::{HeaderValue, Method, StatusCode, Uri, header};
-use axum::response::{IntoResponse, Response};
+use axum::response::Response;
 use axum::routing::get;
-use base64::Engine;
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-use hyper::server::conn::http1;
-use hyper_util::rt::{TokioIo, TokioTimer};
-use hyper_util::service::TowerToHyperService;
 use serde::Serialize;
 use std::io;
-use std::net::{Ipv4Addr, SocketAddr, UdpSocket};
+use std::net::Ipv4Addr;
 use std::sync::Arc;
-use std::time::Duration;
-use tokio::net::TcpListener;
 use tokio::sync::{Mutex, watch};
-use tokio::task::{JoinHandle, JoinSet};
-use tokio::time::MissedTickBehavior;
 
 /// The port the relay asks for first; a free one when it is taken or refused.
 pub const PORT: u16 = 23075;
@@ -46,82 +41,11 @@ pub const PORT: u16 = 23075;
 /// buffer as large as the largest update it was sent.
 pub const MAX_VIEWERS: usize = 8;
 
-/// The most HTTP connections at once, before any upgrade: eight viewers
-/// loading the page together. One more is closed as soon as it is accepted,
-/// so a device that opens many and sends nothing cannot run the app out of
-/// sockets.
-pub const MAX_CONNECTIONS: usize = 32;
-
-/// hyper's read buffer for one connection: a request is a short GET.
-/// hyper's own floor is 8 KiB.
-const MAX_BUFFER: usize = 16 * 1024;
-
-/// The relay's clocks, shorter in the tests.
-#[derive(Clone, Copy)]
-struct Timing {
-    /// How long a connection may take to send a request's headers, and stay
-    /// idle between two requests
-    headers: Duration,
-    /// How often a viewer is pinged and sent a beat: one that has not
-    /// answered the last ping by the next one is dropped
-    beat: Duration,
-}
-
-const TIMING: Timing = Timing {
-    beat: Duration::from_secs(15),
-    headers: Duration::from_secs(10),
-};
-
-/// The frame a viewer gets with each ping: a page cannot see pings, and a
-/// beat that stops coming tells it the connection died.
-const BEAT: &str = "{\"beat\":true}";
-
-/// How long the accept loop pauses after a failed accept (out of file
-/// descriptors, say), rather than spinning.
-const ACCEPT_PAUSE: Duration = Duration::from_millis(100);
-
 /// The largest run the page may publish. A full ALttPR run is a few kB.
 pub const MAX_VALUE: usize = 1 << 20;
 
 /// The longest a game id or a storage key may be.
 const MAX_NAME: usize = 64;
-
-/// A viewer sends nothing the relay reads: anything longer is cut off.
-const MAX_INCOMING: usize = 4096;
-
-/// A viewer that takes longer to accept one frame is dropped, so a stalled
-/// device cannot hold a seat (one that vanished is caught by the beat).
-const SEND_TIMEOUT: Duration = Duration::from_secs(10);
-
-/// How long a closing socket waits for the viewer's own close frame.
-const CLOSE_WAIT: Duration = Duration::from_secs(1);
-
-/// How long `stop` waits for the server and the viewers to wind down.
-const STOP_WAIT: Duration = Duration::from_secs(2);
-
-/// The close codes a viewer reads (a browser cannot read an HTTP status on a
-/// refused WebSocket, so a refusal is an accepted socket closed at once).
-pub mod close {
-    /// The token is missing or not this session's: the link is out of date.
-    pub const TOKEN: u16 = 4401;
-    /// The relay is stopped by the player.
-    pub const STOPPED: u16 = 4410;
-    /// MAX_VIEWERS already watch.
-    pub const FULL: u16 = 4503;
-}
-
-/// One of the app's files.
-pub struct Asset {
-    pub bytes: Vec<u8>,
-    pub mime: String,
-}
-
-/// Finds one of the app's files by its path (`index.html`,
-/// `assets/index-abc.js`): `None` when there is no such file.
-pub type Assets = Arc<dyn Fn(&str) -> Option<Asset> + Send + Sync>;
-
-/// Told the number of viewers each time it changes.
-pub type OnViewers = Arc<dyn Fn(usize) + Send + Sync>;
 
 /// What `start` hands the page.
 #[derive(Clone, Debug, Serialize)]
@@ -139,17 +63,16 @@ pub struct Started {
 /// The relay: the run the page last published, and the server while it runs.
 pub struct Relay {
     latest: watch::Sender<Option<Utf8Bytes>>,
-    session: Mutex<Option<Session>>,
+    session: Mutex<Option<Running>>,
     assets: Assets,
     on_viewers: OnViewers,
     timing: Timing,
 }
 
-struct Session {
+/// A started server, and the answer `start` gave for it.
+struct Running {
+    session: Session,
     started: Started,
-    stop: watch::Sender<bool>,
-    viewers: watch::Receiver<usize>,
-    server: JoinHandle<()>,
 }
 
 /// What every request of one session reads.
@@ -157,11 +80,7 @@ struct Session {
 struct Shared {
     token: Arc<str>,
     latest: watch::Receiver<Option<Utf8Bytes>>,
-    stop: watch::Receiver<bool>,
-    viewers: Arc<watch::Sender<usize>>,
-    assets: Assets,
-    on_viewers: OnViewers,
-    beat: Duration,
+    gate: Gate,
 }
 
 /// The run as a viewer receives it.
@@ -209,54 +128,46 @@ impl Relay {
     }
 
     /// Opens the relay on `port`, or on a free port when that one fails
-    /// (taken, or refused: Windows answers "access denied" for a port in a
-    /// range Hyper-V, WSL or Docker reserved), with a new token. While it
-    /// runs, hands back the running session unchanged.
+    /// (taken, or refused), with a new token. While it runs, hands back the
+    /// running session unchanged.
     pub async fn start(&self, port: u16) -> io::Result<Started> {
-        let mut session = self.session.lock().await;
-        if let Some(running) = session.as_ref() {
+        let mut running = self.session.lock().await;
+        if let Some(running) = running.as_ref() {
             return Ok(running.now());
         }
-        // A fault that is not the port's (no descriptor left) fails the free
-        // port the same way, and that error is the one reported
-        let listener = match TcpListener::bind((Ipv4Addr::UNSPECIFIED, port)).await {
-            Err(_) if port != 0 => TcpListener::bind((Ipv4Addr::UNSPECIFIED, 0)).await?,
-            bound => bound?,
-        };
-        let port = listener.local_addr()?.port();
-        let token = token()?;
+        let token = relay::token()?;
+        let shared_token: Arc<str> = token.as_str().into();
+        let latest = self.latest.subscribe();
+        let assets = Arc::clone(&self.assets);
+        let session = Session::open(
+            port,
+            MAX_VIEWERS,
+            self.timing,
+            Arc::clone(&self.on_viewers),
+            |gate| {
+                let shared = Shared {
+                    gate,
+                    latest,
+                    token: shared_token,
+                };
+                with_assets(Router::new().route("/follow", get(follow)), assets).with_state(shared)
+            },
+        )
+        .await?;
         let (lan_found, address) = match lan_address() {
             Some(address) => (true, address),
             None => (false, Ipv4Addr::LOCALHOST),
         };
-        let (stop, stop_rx) = watch::channel(false);
-        let (viewers, viewers_rx) = watch::channel(0);
-        let shared = Shared {
-            assets: Arc::clone(&self.assets),
-            beat: self.timing.beat,
-            latest: self.latest.subscribe(),
-            on_viewers: Arc::clone(&self.on_viewers),
-            stop: stop_rx.clone(),
-            token: token.as_str().into(),
-            viewers: Arc::new(viewers),
-        };
-        let server = tokio::spawn(serve(
-            listener,
-            router(shared),
-            stop_rx,
-            self.timing.headers,
-        ));
+        let port = session.port();
         let started = Started {
             lan_found,
             port,
             url: format!("http://{address}:{port}/?view=follow&token={token}"),
             viewers: 0,
         };
-        *session = Some(Session {
-            server,
+        *running = Some(Running {
+            session,
             started: started.clone(),
-            stop,
-            viewers: viewers_rx,
         });
         Ok(started)
     }
@@ -264,339 +175,44 @@ impl Relay {
     /// The running session, or `None` while the relay is off: what a page
     /// that loads again (a game switch reloads it) reads to pick it up.
     pub async fn running(&self) -> Option<Started> {
-        self.session.lock().await.as_ref().map(Session::now)
+        self.session.lock().await.as_ref().map(Running::now)
     }
 
     /// Closes the port and every connection: the viewers' with 4410, the
     /// others at once. Does nothing when the relay is off.
     pub async fn stop(&self) {
-        let Some(session) = self.session.lock().await.take() else {
+        let Some(running) = self.session.lock().await.take() else {
             return;
         };
-        session.stop.send_replace(true);
-        let mut viewers = session.viewers;
-        let mut server = session.server;
-        let wound_down = tokio::time::timeout(STOP_WAIT, async {
-            let _ = (&mut server).await;
-            let _ = viewers.wait_for(|count| *count == 0).await;
-        })
-        .await;
-        if wound_down.is_err() {
-            server.abort();
-        }
+        running.session.stop().await;
     }
 }
 
-impl Session {
+impl Running {
     /// The session as `start` handed it, with the viewers watching now.
     fn now(&self) -> Started {
         let mut started = self.started.clone();
-        started.viewers = *self.viewers.borrow();
+        started.viewers = self.session.viewers();
         started
     }
 }
 
-fn router(shared: Shared) -> Router {
-    Router::new()
-        .route("/follow", get(follow))
-        .fallback(asset)
-        .with_state(shared)
-}
-
-/// The accept loop: each connection served as HTTP/1 in a task of its own,
-/// at most MAX_CONNECTIONS at once. hyper's header timeout (which needs a
-/// timer, hence not `axum::serve`) closes a connection that sends no
-/// request, or half of one. Once the session stops, the port and every
-/// connection still in HTTP close at once; an upgraded viewer is no longer
-/// one of them, and closes on the stop flag with 4410.
-async fn serve(
-    listener: TcpListener,
-    router: Router,
-    mut stop: watch::Receiver<bool>,
-    headers: Duration,
-) {
-    let mut connections: JoinSet<()> = JoinSet::new();
-    loop {
-        let accepted = tokio::select! {
-            biased;
-            () = stopped(&mut stop) => break,
-            Some(_) = connections.join_next(), if !connections.is_empty() => continue,
-            accepted = listener.accept() => accepted,
-        };
-        let Ok((stream, _)) = accepted else {
-            tokio::time::sleep(ACCEPT_PAUSE).await;
-            continue;
-        };
-        while connections.try_join_next().is_some() {}
-        if connections.len() >= MAX_CONNECTIONS {
-            // Dropped: closed before a byte is read
-            continue;
-        }
-        let service = TowerToHyperService::new(router.clone());
-        connections.spawn(async move {
-            let mut http = http1::Builder::new();
-            http.timer(TokioTimer::new())
-                .header_read_timeout(headers)
-                .max_buf_size(MAX_BUFFER);
-            let connection = http.serve_connection(TokioIo::new(stream), service);
-            let _ = connection.with_upgrades().await;
-        });
-    }
-    drop(listener);
-    connections.shutdown().await;
-}
-
 /// The stream. A refused viewer gets a socket closed at once with a code
-/// that says why: a browser sees no HTTP status on a refused WebSocket.
+/// that says why (see `Gate::admit`).
 async fn follow(
     State(shared): State<Shared>,
     RawQuery(query): RawQuery,
     upgrade: WebSocketUpgrade,
 ) -> Response {
-    let upgrade = upgrade
-        .max_frame_size(MAX_INCOMING)
-        .max_message_size(MAX_INCOMING);
-    // A request that reaches a stopped session (it was sent before the stop)
-    // takes no seat and reads no run, whatever its token
-    if *shared.stop.borrow() {
-        return upgrade.on_upgrade(|socket| close_with(socket, close::STOPPED, "stopped"));
-    }
-    if !token_matches(query.as_deref(), &shared.token) {
-        return upgrade.on_upgrade(|socket| close_with(socket, close::TOKEN, "token"));
-    }
-    let Some(seat) = Seat::take(&shared) else {
-        return upgrade.on_upgrade(|socket| close_with(socket, close::FULL, "full"));
-    };
-    upgrade.on_upgrade(move |socket| relay_to(socket, shared, seat))
-}
-
-/// Sends the run to one viewer, then each change, until either side goes.
-/// A slow viewer skips the states it had no time for. Every `beat` the
-/// viewer is pinged (its browser answers on its own) and sent a beat (its
-/// page sees that the connection lives); one that has not answered the
-/// last ping by the next is gone without a word, and loses its seat.
-async fn relay_to(mut socket: WebSocket, shared: Shared, _seat: Seat) {
-    let mut latest = shared.latest;
-    let mut stop = shared.stop;
-    latest.mark_changed();
-    let start = tokio::time::Instant::now() + shared.beat;
-    let mut beat = tokio::time::interval_at(start, shared.beat);
-    beat.set_missed_tick_behavior(MissedTickBehavior::Delay);
-    let mut unanswered = false;
-    loop {
-        // Biased, the stop first: a stopped session sends nothing more
-        tokio::select! {
-            biased;
-            () = stopped(&mut stop) => {
-                close_with(socket, close::STOPPED, "stopped").await;
-                return;
-            }
-            changed = latest.changed() => {
-                if changed.is_err() {
-                    return;
-                }
-                let text = latest.borrow_and_update().clone();
-                if let Some(text) = text
-                    && !send(&mut socket, Message::Text(text)).await
-                {
-                    return;
-                }
-            }
-            // Read only to answer pings, hear the viewer and see it leave
-            incoming = socket.recv() => {
-                if !matches!(incoming, Some(Ok(message)) if !matches!(message, Message::Close(_))) {
-                    return;
-                }
-                unanswered = false;
-            }
-            _ = beat.tick() => {
-                if unanswered
-                    || !send(&mut socket, Message::Ping(Bytes::new())).await
-                    || !send(&mut socket, Message::Text(Utf8Bytes::from_static(BEAT))).await
-                {
-                    return;
-                }
-                unanswered = true;
-            }
-        }
-    }
-}
-
-/// Sends one frame, within SEND_TIMEOUT: whether it went.
-async fn send(socket: &mut WebSocket, message: Message) -> bool {
-    let sent = tokio::time::timeout(SEND_TIMEOUT, socket.send(message));
-    matches!(sent.await, Ok(Ok(())))
-}
-
-/// Resolves once the session stops (or is gone). Holds no lock on the flag
-/// once it resolves.
-async fn stopped(stop: &mut watch::Receiver<bool>) {
-    let _ = stop.wait_for(|stopped| *stopped).await;
-}
-
-/// Closes a socket with `code`, and waits briefly for the viewer's answer
-/// so the close is a clean one. A viewer that cannot even take the close
-/// frame is cut off after CLOSE_WAIT.
-async fn close_with(mut socket: WebSocket, code: u16, reason: &'static str) {
-    let frame = CloseFrame {
-        code,
-        reason: Utf8Bytes::from_static(reason),
-    };
-    let sent = tokio::time::timeout(CLOSE_WAIT, socket.send(Message::Close(Some(frame))));
-    if matches!(sent.await, Ok(Ok(()))) {
-        let _ = tokio::time::timeout(CLOSE_WAIT, async {
-            while let Some(Ok(_)) = socket.recv().await {}
-        })
-        .await;
-    }
-}
-
-/// A viewer's place, counted while it is held.
-struct Seat {
-    viewers: Arc<watch::Sender<usize>>,
-    on_viewers: OnViewers,
-    stop: watch::Receiver<bool>,
-}
-
-impl Seat {
-    /// The viewer count is told while the count is held, so it reaches the
-    /// page in order and before `stop` sees the last seat freed.
-    fn take(shared: &Shared) -> Option<Seat> {
-        let taken = shared.viewers.send_if_modified(|viewers| {
-            if *viewers == MAX_VIEWERS {
-                return false;
-            }
-            *viewers += 1;
-            tell(&shared.on_viewers, &shared.stop, *viewers);
-            true
-        });
-        taken.then(|| Seat {
-            on_viewers: Arc::clone(&shared.on_viewers),
-            stop: shared.stop.clone(),
-            viewers: Arc::clone(&shared.viewers),
-        })
-    }
-}
-
-impl Drop for Seat {
-    fn drop(&mut self) {
-        // Always counted down: `stop` waits for the count to reach 0
-        self.viewers.send_modify(|viewers| {
-            *viewers -= 1;
-            tell(&self.on_viewers, &self.stop, *viewers);
-        });
-    }
-}
-
-/// Tells the page the viewer count, unless the session has stopped: the
-/// event names no session, and a viewer of a stopped one that lingers (its
-/// socket slow to close) must not overwrite the next session's count.
-fn tell(on_viewers: &OnViewers, stop: &watch::Receiver<bool>, count: usize) {
-    if !*stop.borrow() {
-        on_viewers(count);
-    }
-}
-
-/// Any other GET: one of the app's files. `/` and paths without an extension
-/// (the page's own routes) get index.html; a missing file gets 404.
-async fn asset(State(shared): State<Shared>, method: Method, uri: Uri) -> Response {
-    if method != Method::GET {
-        return StatusCode::METHOD_NOT_ALLOWED.into_response();
-    }
-    let Some(path) = file_path(uri.path()) else {
-        return StatusCode::NOT_FOUND.into_response();
-    };
-    let found = (shared.assets)(path).map(|asset| (path, asset));
-    let found = match found {
-        None if !has_extension(path) => {
-            (shared.assets)("index.html").map(|asset| ("index.html", asset))
-        }
-        found => found,
-    };
-    let Some((path, asset)) = found else {
-        return StatusCode::NOT_FOUND.into_response();
-    };
-    let mut response = Response::new(Body::from(asset.bytes));
-    let headers = response.headers_mut();
-    if let Ok(mime) = HeaderValue::from_str(&asset.mime) {
-        headers.insert(header::CONTENT_TYPE, mime);
-    }
-    headers.insert(
-        header::X_CONTENT_TYPE_OPTIONS,
-        HeaderValue::from_static("nosniff"),
-    );
-    // The page names every other file by its content hash: only it must be
-    // asked for again, to pick up a new version
-    if path.ends_with(".html") {
-        headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
-    }
-    response
-}
-
-/// The file a request path names, or `None` for a path no file of the app
-/// has. A strict alphabet: in development Tauri reads the path from disk, so
-/// `..`, a drive letter or a backslash must never reach it.
-fn file_path(path: &str) -> Option<&str> {
-    let path = path.strip_prefix('/')?;
-    if path.is_empty() {
-        return Some("index.html");
-    }
-    let valid = path.split('/').all(|segment| {
-        !segment.is_empty()
-            && segment != "."
-            && segment != ".."
-            && segment
-                .bytes()
-                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
-    });
-    valid.then_some(path)
-}
-
-fn has_extension(path: &str) -> bool {
-    path.rsplit('/')
-        .next()
-        .is_some_and(|name| name.contains('.'))
-}
-
-/// 128 random bits from the system, base64url without padding: 22 characters
-/// that need no escaping in a URL.
-fn token() -> io::Result<String> {
-    let mut bits = [0; 16];
-    getrandom::fill(&mut bits).map_err(io::Error::other)?;
-    Ok(URL_SAFE_NO_PAD.encode(bits))
-}
-
-/// Whether the query carries this session's token, compared in constant time.
-fn token_matches(query: Option<&str>, token: &str) -> bool {
-    let given = query
-        .unwrap_or_default()
-        .split('&')
-        .find_map(|pair| pair.strip_prefix("token="))
-        .unwrap_or_default();
-    if given.len() != token.len() {
-        return false;
-    }
-    let difference = given
-        .bytes()
-        .zip(token.bytes())
-        .fold(0, |difference, (a, b)| difference | (a ^ b));
-    std::hint::black_box(difference) == 0
-}
-
-/// This machine's address on its network: the one the default route leaves
-/// from. Connecting a UDP socket sends nothing; it only picks the route.
-/// 192.0.2.1 is a documentation address, never a real host.
-fn lan_address() -> Option<Ipv4Addr> {
-    let socket = UdpSocket::bind((Ipv4Addr::UNSPECIFIED, 0)).ok()?;
-    socket.connect((Ipv4Addr::new(192, 0, 2, 1), 9)).ok()?;
-    match socket.local_addr().ok()? {
-        SocketAddr::V4(address)
-            if !address.ip().is_unspecified() && !address.ip().is_loopback() =>
-        {
-            Some(*address.ip())
-        }
-        _ => None,
-    }
+    let Shared {
+        gate,
+        latest,
+        token,
+    } = shared;
+    let pump = gate.clone();
+    gate.admit(upgrade, query.as_deref(), &token, move |socket| {
+        relay_to(socket, latest, pump)
+    })
 }
 
 /// The app's files, from Tauri: embedded in a release, read from the page's
@@ -619,9 +235,12 @@ pub fn tauri_assets<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Assets {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::relay::{BEAT, close};
     use futures_util::{SinkExt, StreamExt};
     use std::sync::Mutex as StdMutex;
+    use std::time::Duration;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
     use tokio::net::TcpStream;
     use tokio_tungstenite::tungstenite::Message as WsMessage;
     use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
@@ -629,19 +248,6 @@ mod tests {
     type Viewer = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
     const WAIT: Duration = Duration::from_secs(2);
-
-    /// Clocks short enough for a test to wait them out.
-    const FAST: Timing = Timing {
-        beat: Duration::from_millis(150),
-        headers: Duration::from_millis(300),
-    };
-
-    /// A relay with the given clocks.
-    fn relay_with(timing: Timing) -> (Relay, Arc<StdMutex<Vec<usize>>>) {
-        let (mut relay, counts) = relay();
-        relay.timing = timing;
-        (relay, counts)
-    }
 
     /// Whether the server closed this connection: it reads the end, or a
     /// reset, within WAIT.
@@ -875,73 +481,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn drops_a_connection_that_never_finishes_its_headers() {
-        let (relay, _) = relay_with(FAST);
-        let started = relay.start(0).await.unwrap();
-        let port = started.port;
-        // Half a request, then nothing
-        let mut half = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
-        half.write_all(b"GET / HTTP/1.1\r\nHost: tracker\r\n")
-            .await
-            .unwrap();
-        // Not a byte
-        let mut silent = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
-        // Idle after a request answered
-        let mut idle = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
-        idle.write_all(b"GET / HTTP/1.1\r\nHost: tracker\r\n\r\n")
-            .await
-            .unwrap();
-        let mut answer = [0; 12];
-        idle.read_exact(&mut answer).await.unwrap();
-        assert_eq!(&answer, b"HTTP/1.1 200");
-
-        let begun = tokio::time::Instant::now();
-        assert!(closed_by_server(&mut half).await);
-        assert!(closed_by_server(&mut silent).await);
-        assert!(closed_by_server(&mut idle).await);
-        assert!(begun.elapsed() >= FAST.headers / 2);
-        relay.stop().await;
-    }
-
-    #[tokio::test]
-    async fn closes_a_connection_past_the_limit_at_once() {
-        let (relay, _) = relay();
-        let started = relay.start(0).await.unwrap();
-        let port = started.port;
-        let mut held = Vec::new();
-        for _ in 0..MAX_CONNECTIONS {
-            held.push(TcpStream::connect(("127.0.0.1", port)).await.unwrap());
-        }
-        // The default header timeout is 10 s: this one is closed by the cap
-        let mut extra = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
-        assert!(closed_by_server(&mut extra).await);
-        for stream in &mut held[..4] {
-            let mut byte = [0; 1];
-            let open = tokio::time::timeout(Duration::from_millis(50), stream.read(&mut byte));
-            assert!(open.await.is_err(), "a connection under the cap was closed");
-        }
-
-        // A connection that leaves frees its place
-        held.pop();
-        let served = tokio::time::timeout(WAIT, async {
-            loop {
-                let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
-                let request = b"GET / HTTP/1.1\r\nHost: tracker\r\nConnection: close\r\n\r\n";
-                if stream.write_all(request).await.is_ok() {
-                    let mut response = Vec::new();
-                    let _ = stream.read_to_end(&mut response).await;
-                    if response.starts_with(b"HTTP/1.1 200") {
-                        return;
-                    }
-                }
-                tokio::time::sleep(Duration::from_millis(10)).await;
-            }
-        });
-        served.await.expect("no place freed");
-        relay.stop().await;
-    }
-
-    #[tokio::test]
     async fn stop_closes_a_half_sent_request_which_never_reaches_the_next_session() {
         let (relay, counts) = relay();
         let first = relay.start(0).await.unwrap();
@@ -984,37 +523,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_viewer_that_stops_answering_loses_its_seat() {
-        let (relay, counts) = relay_with(FAST);
-        relay.publish("alttpr", "k", "1", 1).unwrap();
-        let started = relay.start(0).await.unwrap();
-        // One reads all along, so its client answers the pings
-        let mut present = watch_with(&started).await;
-        let reader = tokio::spawn(async move {
-            let mut beats = 0;
-            while beats < 4 {
-                if let WsMessage::Text(text) = next_any(&mut present).await
-                    && text.as_str() == BEAT
-                {
-                    beats += 1;
-                }
-            }
-            present
-        });
-        // One goes silent after the run, as a phone out of range would
-        let mut gone = watch_with(&started).await;
-        snapshot(&mut gone).await;
-
-        // The one still there gets beats, and keeps its seat
-        let present = tokio::time::timeout(WAIT, reader).await.expect("no beat");
-        assert!(present.is_ok());
-        assert_eq!(*counts.lock().unwrap(), [1, 2, 1]);
-        assert_eq!(relay.running().await.unwrap().viewers, 1);
-        drop(gone);
-        relay.stop().await;
-    }
-
-    #[tokio::test]
     async fn start_while_running_hands_back_the_session() {
         let (relay, _) = relay();
         let first = relay.start(0).await.unwrap();
@@ -1048,16 +556,6 @@ mod tests {
         .unwrap();
         relay.stop().await;
         assert!(relay.running().await.is_none());
-    }
-
-    #[tokio::test]
-    async fn takes_a_free_port_when_the_preferred_one_is_taken() {
-        let taken = TcpListener::bind((Ipv4Addr::UNSPECIFIED, 0)).await.unwrap();
-        let port = taken.local_addr().unwrap().port();
-        let (relay, _) = relay();
-        let started = relay.start(port).await.unwrap();
-        assert_ne!(started.port, port);
-        relay.stop().await;
     }
 
     #[tokio::test]
@@ -1110,17 +608,5 @@ mod tests {
                 .is_err()
         );
         assert!(relay.publish("alttpr", "k", "{}", 0).is_ok());
-    }
-
-    #[test]
-    fn compares_the_token_whole() {
-        assert!(token_matches(Some("view=follow&token=abc"), "abc"));
-        assert!(token_matches(Some("token=abc"), "abc"));
-        assert!(!token_matches(Some("token=abd"), "abc"));
-        assert!(!token_matches(Some("token=ab"), "abc"));
-        assert!(!token_matches(Some("token=abcd"), "abc"));
-        assert!(!token_matches(Some("xtoken=abc"), "abc"));
-        assert!(!token_matches(None, "abc"));
-        assert_ne!(token().unwrap(), token().unwrap());
     }
 }
