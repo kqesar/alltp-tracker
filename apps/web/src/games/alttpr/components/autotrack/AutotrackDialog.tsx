@@ -25,7 +25,7 @@ import {
   useSeedCheck,
 } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-import { commandKey } from "@/utils/platform";
+import { copyStatus, copyText } from "@/utils/clipboard";
 
 /** What Sync from game did, in a few words. */
 const syncedText = (changed: number | null) => {
@@ -99,14 +99,11 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
       status: state.status,
       statusSince: state.since,
     });
-    try {
-      await navigator.clipboard.writeText(report);
-      setManualReport(null);
-      setCopied("Copied.");
-    } catch {
-      setManualReport(report);
-      setCopied(`Press ${commandKey()}+C to copy.`);
-    }
+    // The report is shown in a field only once the copy fails, so there is
+    // nothing to select beforehand
+    const result = await copyText(report);
+    setManualReport(result === "copied" ? null : report);
+    setCopied(copyStatus(result));
   };
 
   return (

@@ -6,7 +6,7 @@ import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
 import { defaultItemGrid } from "@/games/alttpr/data/items";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { visibleRows } from "@/games/alttpr/utils";
-import { commandKey } from "@/utils/platform";
+import { copyStatus, copyText } from "@/utils/clipboard";
 import { obsViewUrl, trackerUrl } from "@/utils/view";
 
 /** The icons' own size: a source of 64 px cells draws every pixel whole. */
@@ -44,21 +44,8 @@ export const StreamViewControl = ({
     setStatus("");
   };
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setStatus("Copied.");
-    } catch {
-      // No clipboard access (an insecure page, a denied permission): select
-      // the address, so that the older copy command or Ctrl/Cmd+C takes it.
-      urlRef.current?.select();
-      setStatus(
-        document.execCommand?.("copy")
-          ? "Copied."
-          : `Press ${commandKey()}+C to copy.`,
-      );
-    }
-  };
+  const copy = async () =>
+    setStatus(copyStatus(await copyText(url, () => urlRef.current?.select())));
 
   return (
     <>
