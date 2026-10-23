@@ -121,7 +121,12 @@ export type FollowOptions = {
   onSnapshot: (snapshot: Snapshot, clockOffset: number) => void;
   onStatus: (status: FollowStatus) => void;
   /** Opens a socket; the browser's WebSocket by default */
-  open?: (url: string) => WebSocket;
+  open?: (url: string, protocols?: string[]) => WebSocket;
+  /**
+   * The subprotocol that carries the token, `followProtocol()`: kept out of
+   * the address, which a failed connection puts in a log
+   */
+  protocol?: string;
   /**
    * Whether the relay stopping (4410) ends it, as for a phone the player
    * stopped sharing with. False for a browser source in OBS, which nobody
@@ -156,7 +161,8 @@ export const follow = ({
   maxDelay = MAX_RETRY_DELAY,
   onSnapshot,
   onStatus,
-  open = (url) => new WebSocket(url),
+  protocol,
+  open = (url, protocols) => new WebSocket(url, protocols),
   url,
 }: FollowOptions): (() => void) => {
   let socket: WebSocket | null = null;
@@ -193,7 +199,7 @@ export const follow = ({
 
   const connect = () => {
     retry = undefined;
-    const current = open(url);
+    const current = open(url, protocol ? [protocol] : undefined);
     socket = current;
     hear();
     current.onmessage = (event: MessageEvent) => {

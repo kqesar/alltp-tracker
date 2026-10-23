@@ -82,7 +82,7 @@ export type RelayFrame = {
 /**
  * The desktop app's live follow relay (src-tauri/src/follow.rs), faked on the
  * host's own port, as the app serves the page and the stream together:
- * `GET /follow?token=…` upgraded to a WebSocket that sends the last run at
+ * `GET /follow` upgraded to a WebSocket (the token in a subprotocol) that sends the last run at
  * once, then each one `publish` gives it, and closes with the app's codes.
  */
 const fakeRelay = (server: Server) => {
@@ -101,8 +101,16 @@ const fakeRelay = (server: Server) => {
       socket.destroy();
       return;
     }
+    // The page sends its token as the subprotocol `alltp.<token>`, as the
+    // app's relay reads it (relay.rs), so the address a failed connection
+    // logs names none; the query form is the old one
+    const offered = String(request.headers["sec-websocket-protocol"] ?? "")
+      .split(",")
+      .map((protocol) => protocol.trim())
+      .find((protocol) => protocol.startsWith("alltp."));
+    const given = searchParams.get("token") ?? offered?.slice("alltp.".length);
     sockets.handleUpgrade(request, socket, head, (viewer) => {
-      if (searchParams.get("token") !== RELAY_TOKEN) {
+      if (given !== RELAY_TOKEN) {
         viewer.close(4401, "token");
         return;
       }

@@ -14,7 +14,7 @@ import {
   switchGame,
 } from "@/games/registry";
 import { setClockOffset } from "@/utils/clock";
-import { followSocketUrl } from "@/utils/view";
+import { followProtocol, followSocketUrl } from "@/utils/view";
 
 /** The game whose grid shows, once its module has loaded. */
 export type Shown = { id: GameId; game: GameModule };
@@ -86,6 +86,7 @@ export const useFollowedRun = ({
       },
       onStatus: setStatus,
       open,
+      protocol: followProtocol(),
       url: followSocketUrl(),
     });
     return () => {
