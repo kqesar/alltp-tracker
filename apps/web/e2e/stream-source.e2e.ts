@@ -315,14 +315,20 @@ hosted.describe("the stream view the app serves to OBS", () => {
               ?.getAttribute("src") ?? "",
         );
       const before = await entry();
-      expect(before).not.toContain("v=2");
+      expect(before).not.toContain("/./");
 
-      // A new release: the same page, its entry script under a new address
+      // A new release: the same page, its entry script under another address
+      // as the page reads it. It is the same URL once resolved ("/./assets/x.js"
+      // is "/assets/x.js"), so the lazy chunks, which import the entry by its
+      // own address, find the module already loaded. A query such as "?v=2" is
+      // another URL: the entry would run a second time beside the first, two
+      // copies of the view would draw two grids, and this test would fail on
+      // a busy machine. A real release renames every file and runs once.
       const html = await readFile(join(DIST, "index.html"), "utf8");
       host.deploy({
         "index.html": html.replace(
-          /(<script[^>]*type="module"[^>]*src=")([^"]+)(")/,
-          "$1$2?v=2$3",
+          /(<script[^>]*type="module"[^>]*src="[^"]*?)(assets\/[^"]+")/,
+          "$1./$2",
         ),
       });
       const reloaded = page.waitForEvent("load");
@@ -330,7 +336,7 @@ hosted.describe("the stream view the app serves to OBS", () => {
       host.relay.drop();
 
       await reloaded;
-      await expect.poll(entry, { timeout: 8000 }).toContain("v=2");
+      await expect.poll(entry, { timeout: 8000 }).toContain("/./");
       await expect(page.getByTestId("item-hookshot")).toBeVisible();
     },
   );
