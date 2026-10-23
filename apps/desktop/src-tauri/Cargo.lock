@@ -42,6 +42,8 @@ dependencies = [
  "futures-util",
  "gdk",
  "getrandom 0.4.3",
+ "hyper",
+ "hyper-util",
  "serde",
  "serde_json",
  "tauri",
