@@ -110,7 +110,7 @@ export type OverlayEvent =
       name: string;
       level: number;
       previous: number;
-      /** The run time of the change; null when there is no running timer */
+      /** The run timer's reading at the change (counting, paused or stopped); null before it starts or with no timer */
       ms: number | null;
     }
   | {

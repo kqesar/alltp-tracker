@@ -29,7 +29,7 @@ For a tool on another computer, tick **Allow other devices on the network** and 
 
 **New addresses** (behind a confirmation) replaces both tokens, the stream view's and the API's: every client is closed with 4410 and the old address now gets 4401.
 
-The app must be open on the run. The API tells what the tracker's page publishes: with the window closed there is nothing to tell, and a client that connects before the page's first publication gets only beats until it is there.
+The app must be open on the run. The API tells what the tracker's page publishes: with the window closed there is nothing to tell, and a client that connects before the page's first publication gets only beats until it is there. Turning the stream off forgets the last state, since the run can change while it is off: a client that connects after the next start gets the state the page publishes first, not the old one. Switching game reloads the page, so for the instant before the new page's first publication a client may still be told the other game's state (its `game` says so) and then gets the new one.
 
 ### The token
 
@@ -41,9 +41,28 @@ new WebSocket("ws://127.0.0.1:23076/overlay", ["alltp." + token]);
 
 An OBS Browser Source writes its page's console errors to OBS's log, and streamers share those logs to get support: a page of yours should use the subprotocol. A tool that takes only an address (Streamer.bot) takes the `?token=` form.
 
-### Mixed content
+### Mixed content and local network access
 
-A page served over `https://` cannot open a `ws://` address on another machine: the browser blocks it as mixed content, and no setting of the app changes that. The usual case has no such problem: a Browser Source on the same computer opens a local file or an `http://` page and connects to `ws://127.0.0.1:23076`. Chromium (so OBS's browser) and Firefox treat loopback as a secure origin, so even an `https://` page may connect there; a page hosted on `https://` meant for a second computer cannot, and should be served over `http://` on the local network.
+Two browser rules decide whether a page may open `ws://127.0.0.1:23076`. What was run is in the table; what was not is below it.
+
+- **Mixed content**: an `https://` page may not open an insecure `ws://` socket. Firefox exempts the loopback addresses (`127.0.0.1`, `::1`; [bug 903966](https://bugzilla.mozilla.org/show_bug.cgi?id=903966), and for WebSockets [bug 1376309](https://bugzilla.mozilla.org/show_bug.cgi?id=1376309)). Chrome does too, for a connection it knows is local.
+- **Local Network Access**: since Chrome and Edge 147, a WebSocket from a *public* page to a loopback or private address is gated behind a permission prompt, as `fetch` has been since 142 ([Chrome's announcement](https://developer.chrome.com/blog/local-network-access); [coverage of 147](https://www.phoronix.com/news/Chrome-147-Stable-Released)). A denial, or a policy that hides the prompt, blocks the socket without a message the page can read beyond a failed connection ([Citrix's report of 147](https://support.citrix.com/external/article/CTX696569/chrome-147-and-edge-147-local-network-ac.html)). A page already on the local machine is not asked.
+
+So the overlay page belongs on the same machine, which is what a Browser Source is. Run on the bench's Chromium 156 (Playwright's), against the real app, a probe page opening `ws://127.0.0.1:23076/overlay` with the API token as the subprotocol:
+
+| The page is served from | Result |
+|---|---|
+| `file://` | connects |
+| `http://127.0.0.1` | connects |
+| `http://absolute/` (the address OBS gives a *Local file* page, per [users' reports](https://obsproject.com/forum/threads/browser-source-appears-to-have-incorrect-prefix-for-local-files.187002); mapped to loopback for the test) | connects |
+| `https://127.0.0.1` | connects |
+| `https://` on a *public* address (simulated with `--ip-address-space-overrides`), no permission | blocked: `ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS` |
+| the same, permission granted | connects (`ws://` included: the permission also lifts the mixed content check for a local destination) |
+| `http://` on a *public* address (simulated the same way) | blocked, the same error |
+
+What this means: use a local file or a page on the same computer (`http://127.0.0.1`, or served by your tool). A page hosted on the internet that needs to reach the API will be asked for the permission in Chrome and Edge, and is blocked in Firefox when the API is not on loopback; the API is plain `ws://`, so there is no `wss://` form to offer.
+
+What was **not** tried: OBS itself. OBS 33's release candidates move its browser from CEF 127 to CEF 150 ([OBS 33 coverage](https://linuxiac.com/obs-studio-33-nears-release-heres-what-to-expect/)), which is past Chrome 147, so a Browser Source should behave as above; that is an inference. The simulated public origin is a switch of Chromium's test setup, not a real internet page. Firefox's behavior is from its bug reports, not run here. Safari was not looked at.
 
 ## What is never sent
 
@@ -56,7 +75,9 @@ The whitelist is the whole of what the API says. Never, in any game:
 - small keys, big keys, maps, compasses and SMZ3's keycards;
 - shops.
 
-What it does say, per game: the items the board's grid shows, the bosses beaten (and the seed's objectives for Super Metroid), the run timer (A Link to the Past), and where the run stands against its go mode (A Link to the Past). A test per game (`apps/web/src/overlay/safety.spec.ts`) fills a run with all of the above, compares the reading with the one of a run without them, and pins the ids below: adding to the whitelist is a decision that shows in a diff.
+What it does say, per game: the items the board's grid shows, the bosses beaten (A Link to the Past) or the seed's objectives done (Super Metroid), the run timer (A Link to the Past), and where the run stands against its go mode (A Link to the Past). SMZ3 has no objectives: its boss tokens are rewards, found when a boss's reward is picked up and no proof a boss was beaten, and the tracker records no boss beaten in that game.
+
+**The go mode derives only from what the player holds**: the items, the bosses beaten and the prizes taken from them, the small keys in a run type that tracks them (keysanity), and the bomb merchant check, which stands for the Big Red Bomb. It never moves with where checks are, which medallion a pad was noted to want, the entrances noted, the chests left, big keys, maps and compasses, the shops, small keys outside keysanity, nor a prize marked on a dungeon whose boss is still alive. A test per game (`apps/web/src/overlay/safety.spec.ts`) holds a full inventory with goals done, changes all of that and checks the reading, go mode included, does not move; and pins the ids below: adding to the whitelist is a decision that shows in a diff.
 
 ## Frames
 
@@ -90,7 +111,7 @@ sequenceDiagram
 {"v":1,"type":"update","seq":8,"state":{"game":"alttpr","items":[…],"objectives":[…],"timer":{"state":"running","elapsedMs":0,"startedAt":1789000000000},"goMode":"no"},"events":[{"type":"item","id":"hookshot","name":"Hookshot","level":1,"previous":0,"ms":83211}]}
 ```
 
-`seq` starts at 1 with the app and counts publications; there is one sequence for all clients. A client sees them in order and never twice: a client that reads `seq` going back or repeating can drop the frame. A `beat` carrying a `seq` ahead of the last one the client saw means it missed an update (it is behind a slow socket, and a `state` is on its way). `state` and `update` carry the whole state: a client needs the events only for what a state cannot say (a flash, a sound), and can ignore them.
+`seq` starts at 1 each time the app starts and counts publications; there is one sequence for all clients, and it only goes up within one run of the app. A client sees them in order and never twice: a client that reads `seq` going back or repeating can drop the frame. Keep the last `seq` per connection, not across connections: a client that reconnects after the app restarted starts again from 1. A `beat` carrying a `seq` ahead of the last one the client saw means it missed an update or a state, which is on its way (a slow client is sent the `state` again). `state` and `update` carry the whole state: a client needs the events only for what a state cannot say (a flash, a sound), and can ignore them.
 
 ### State
 
@@ -98,7 +119,7 @@ sequenceDiagram
 |---|---|
 | `game` | `alttpr`, `sm` or `smz3` |
 | `items` | each item of the game's list, held or not: `{id, name, level, max}`. `level` is 0 when not held, up to `max` |
-| `objectives` | the goals: `{id, name, done, ms}`. `ms` is the run timer's reading when it was done, `null` when unknown |
+| `objectives` | the goals: `{id, name, done, ms}`. `ms` is the run timer's reading when it was done (A Link to the Past, from the Run tab's timeline), `null` when unknown or for a game with no timer |
 | `timer` | `{state, elapsedMs, startedAt}`, or `null` for a game with no timer. `state` is `idle`, `running`, `paused` or `finished` |
 | `goMode` | `yes` (every step in logic), `maybe`, `no`, or `null` |
 
@@ -108,8 +129,8 @@ sequenceDiagram
 
 | `type` | Fields | When |
 |---|---|---|
-| `item` | `id`, `name`, `level`, `previous`, `ms` | an item's level changed (a loss too). `ms` is the run time of the change while the timer counts, else `null` |
-| `objective` | `id`, `name`, `done`, `ms` | a boss or objective was done, or undone |
+| `item` | `id`, `name`, `level`, `previous`, `ms` | an item's level changed (a loss too). `ms` is the run timer's reading at the change, whether it counts, is paused or has stopped at the goal; `null` while the timer has not started or the game has none |
+| `objective` | `id`, `name`, `done`, `ms` | a boss or objective was done, or undone. `ms` as the state's, else the timer's reading at the change |
 | `timer` | `action`: `start`, `pause`, `resume`, `finish`, `reset` | the run timer changed state |
 | `goMode` | `goMode`, `previous` | the go mode changed |
 | `reset` | | the run fell back to its start: a new game |
@@ -149,7 +170,7 @@ Objectives, 12, named by their dungeon as the Run tab's splits are: `boss0` East
 
 **Super Metroid**, 24 items, always the same list (the options that change the grid, Wall Jump Boots and the split Speed Booster, are settings, never sent): `energyTank` `missile` `superMissile` `powerBomb` `bombs` `charge` `ice` `hiJump` `speedBooster` `wave` `spazer` `springBall` `varia` `gravity` `xRay` `plasma` `grapple` `spaceJump` `screwAttack` `morph` `reserveTank` `wallJump` `sparkBooster` `blueBooster`. A pack's `level` counts it (`missile` up to 46); the others are 0 or 1 (`reserveTank` to 4). Objectives are the seed's, by Map Rando's ids (`kraid`, `phantoon`, `draygon`, `ridley`, `sporeSpawn`, `crocomire`, `botwoon`, `goldenTorizo`, …), in the order the player set them. No timer, no go mode.
 
-**SMZ3**, Hyrule's 26 items then Zebes's 19: `sword` `shield` `glove` `bow` `hookshot` `mushroom` `powder` `firerod` `icerod` `bombos` `ether` `quake` `lamp` `hammer` `shovel` `flute` `book` `bottle` `somaria` `byrna` `cape` `mirror` `boots` `flippers` `moonPearl` `halfMagic`, then `charge` `ice` `wave` `plasma` `varia` `gravity` `grapple` `morph` `bombs` `springBall` `screwAttack` `hiJump` `spaceJump` `speedBooster` `missile` `super` `powerBomb` `eTank` `reserveTank`. Objectives are the four boss tokens, `tokenKraid`, `tokenPhantoon`, `tokenDraygon`, `tokenRidley`. The rewards (pendants, crystals) are never sent. No timer, no go mode.
+**SMZ3**, Hyrule's 26 items then Zebes's 19: `sword` `shield` `glove` `bow` `hookshot` `mushroom` `powder` `firerod` `icerod` `bombos` `ether` `quake` `lamp` `hammer` `shovel` `flute` `book` `bottle` `somaria` `byrna` `cape` `mirror` `boots` `flippers` `moonPearl` `halfMagic`, then `charge` `ice` `wave` `plasma` `varia` `gravity` `grapple` `morph` `bombs` `springBall` `screwAttack` `hiJump` `spaceJump` `speedBooster` `missile` `super` `powerBomb` `eTank` `reserveTank`. No objectives: the boss tokens and the rewards (pendants, crystals) are rewards, never sent, and the tracker records no boss beaten. No timer, no go mode.
 
 ## Close codes
 
@@ -185,7 +206,7 @@ Read `v` on each frame and ignore a frame whose `v` you do not know rather than 
 - **One publication per 250 ms at most**: a burst of changes (autotracking's first sync, an undo held down) is one update with all its events. The app keeps 16 updates for a slow client; one further behind gets `state` again, and the updates it skipped are not replayed.
 - **What the page sends the app is bounded** (the whitelist is a few kB): a state or an events list over 64 KiB, or that is not a JSON object and array, is refused and nothing is relayed.
 - **The tracker's page publishes**, so the app must be open on the run. With the stream on and no page yet (the app just launched), clients get beats and no state.
-- **Loopback by default**, and plain `ws://`: see "Turn it on" and "Mixed content".
+- **Loopback by default**, and plain `ws://`: see "Turn it on" and "Mixed content and local network access".
 
 ## A minimal overlay
 
