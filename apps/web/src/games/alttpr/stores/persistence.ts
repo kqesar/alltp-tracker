@@ -666,7 +666,7 @@ export const parseSave = (json: string): ParsedSave => {
   if (isSaveFile && "game" in parsed && parsed.game !== GAME) {
     return {
       ok: false,
-      reason: "This save is of a game this tracker does not track.",
+      reason: "This save is for another game: switch game to import it there.",
     };
   }
 

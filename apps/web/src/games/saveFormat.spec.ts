@@ -8,7 +8,6 @@ type Run = z.infer<typeof schema>;
 const { exportSave, IMPORT_ERRORS, parseSave } = createSaveFormat<Run>({
   complete: (run) => ({ items: { a: 0, ...run.items } }),
   game: "toy",
-  otherGame: "the other one",
   progressOf: (state) => ({ items: state.items }),
   schema,
   version: 2,
@@ -57,7 +56,7 @@ describe("a save file", () => {
 
   it("tells the player what each reason means", () => {
     expect(IMPORT_ERRORS["other-game"]).toBe(
-      "This save is for the other one: switch game to import it there.",
+      "This save is for another game: switch game to import it there.",
     );
     expect(Object.keys(IMPORT_ERRORS)).toHaveLength(5);
   });

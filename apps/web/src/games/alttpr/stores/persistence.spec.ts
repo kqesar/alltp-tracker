@@ -93,7 +93,7 @@ describe("parseSave", () => {
       parseSave(JSON.stringify({ ...file, game: "alttpr" })),
     ).toMatchObject({ ok: true });
     expect(refusal(JSON.stringify({ ...file, game: "smz3" }))).toMatch(
-      /game this tracker does not track/,
+      /for another game: switch game/,
     );
   });
 
