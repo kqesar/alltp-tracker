@@ -10,11 +10,23 @@ export type Dialog = ComponentType<{ onClose: () => void }>;
  */
 export const page = { reload: () => window.location.reload() };
 
+/** What the player is told when a dialog's code cannot be fetched. */
+type Unavailable = {
+  /** What the player asked for: the dialog's title */
+  title: string;
+  /** That it could not be loaded, and to reload: the run is saved */
+  message: string;
+};
+
 /**
  * Shown when a dialog's code cannot be fetched: offline before it was ever
  * cached, or a release since this page loaded has replaced it.
  */
-const AutotrackUnavailable: Dialog = ({ onClose }) => (
+const DialogUnavailable = ({
+  message,
+  onClose,
+  title,
+}: Unavailable & { onClose: () => void }) => (
   <Modal
     footer={
       <>
@@ -37,23 +49,27 @@ const AutotrackUnavailable: Dialog = ({ onClose }) => (
     }
     isOpen
     onClose={onClose}
-    title="Autotracking"
+    title={title}
   >
-    <p className="modal__message">
-      Autotracking could not be loaded. Reload the page to try again; your run
-      is saved.
-    </p>
+    <p className="modal__message">{message}</p>
   </Modal>
 );
 
 /**
- * An autotracking dialog fetched once, on demand: a chunk of its own (the
- * setup guide's text, the readout), asked for as soon as a pointer or focus
+ * A dialog fetched once, on demand: a chunk of its own (the autotracking
+ * guide's text, the shortcuts table), asked for as soon as a pointer or focus
  * reaches a control that opens it. A failed fetch is forgotten, for the next
  * try, and the player told so.
  * @param load - Imports the dialog's module and picks the dialog
+ * @param unavailable - What the player is told when the fetch failed
  */
-export const lazyDialog = (load: () => Promise<Dialog>) => {
+export const lazyDialog = (
+  load: () => Promise<Dialog>,
+  unavailable: Unavailable,
+) => {
+  const Unavailable: Dialog = ({ onClose }) => (
+    <DialogUnavailable {...unavailable} onClose={onClose} />
+  );
   let loading: Promise<Dialog> | undefined;
   /** The dialog, once its code has arrived. */
   let loaded: Dialog | undefined;
@@ -87,7 +103,7 @@ export const lazyDialog = (load: () => Promise<Dialog>) => {
     useDialog: () => {
       const [isOpen, setIsOpen] = useState(false);
       // Not React.lazy: a dialog whose code has arrived opens in the same
-      // frame as the click (see ShortcutsButton)
+      // frame as the click
       const [dialog, setDialog] = useState<{ Component: Dialog } | null>(null);
       const open = () => {
         setIsOpen(true);
@@ -97,7 +113,7 @@ export const lazyDialog = (load: () => Promise<Dialog>) => {
         }
         preload().then(
           (Component) => setDialog({ Component }),
-          () => setDialog({ Component: AutotrackUnavailable }),
+          () => setDialog({ Component: Unavailable }),
         );
       };
       const Shown = isOpen ? dialog?.Component : undefined;

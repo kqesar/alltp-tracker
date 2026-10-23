@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { headlineOf, phaseOf } from "@/autotrack/status";
-import { lazyDialog } from "@/components/autotrack/lazyDialog";
+import { lazyAutotrackDialog } from "@/components/autotrack/lazyAutotrackDialog";
 import { RaceBadge, StatusDot } from "@/components/autotrack/StatusDot";
 import { PlugIcon } from "@/components/ui/ToolbarIcons";
 import { ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 
-const dialog = lazyDialog(() =>
+const dialog = lazyAutotrackDialog(() =>
   import("@/games/alttpr/components/autotrack/AutotrackDialog").then(
     (module) => module.AutotrackDialog,
   ),

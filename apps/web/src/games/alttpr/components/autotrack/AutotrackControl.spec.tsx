@@ -176,7 +176,7 @@ describe("AutotrackControl's dialog", () => {
       "@/games/alttpr/components/autotrack/AutotrackControl"
     );
     // The page of the modules this test loaded afresh, not the one imported above
-    const { page } = await import("@/components/autotrack/lazyDialog");
+    const { page } = await import("@/components/ui/lazyDialog");
     const reload = vi.spyOn(page, "reload").mockImplementation(() => {});
     try {
       render(<control.AutotrackControl variant="menu" />);

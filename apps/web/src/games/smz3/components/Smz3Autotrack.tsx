@@ -2,13 +2,13 @@ import {
   GameAutotrackControl,
   useGameAutotrack,
 } from "@/components/autotrack/GameAutotrackControl";
-import { lazyDialog } from "@/components/autotrack/lazyDialog";
+import { lazyAutotrackDialog } from "@/components/autotrack/lazyAutotrackDialog";
 import { smz3Autotrack } from "@/games/smz3/autotrack/store";
 
 /** Autotracking's lifetime in the SMZ3 tracker (useGameAutotrack). */
 export const useSmz3Autotrack = () => useGameAutotrack(smz3Autotrack);
 
-const dialog = lazyDialog(() =>
+const dialog = lazyAutotrackDialog(() =>
   import("@/games/smz3/components/Smz3AutotrackDialog").then(
     (module) => module.Smz3AutotrackDialog,
   ),
