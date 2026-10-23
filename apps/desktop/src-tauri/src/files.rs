@@ -25,7 +25,7 @@ pub fn put_private(path: &Path, bytes: &[u8]) -> io::Result<bool> {
 fn replace(path: &Path, bytes: &[u8], private: bool) -> io::Result<bool> {
     if std::fs::read(path).is_ok_and(|current| current == bytes) {
         if private {
-            owner_only(path)?;
+            owner_only(path);
         }
         return Ok(false);
     }
@@ -60,16 +60,26 @@ fn create(path: &Path, private: bool) -> io::Result<std::fs::File> {
     options.open(path)
 }
 
-/// Makes an existing file readable by its owner alone (Unix).
-fn owner_only(path: &Path) -> io::Result<()> {
+/// Makes an existing file readable by its owner alone (Unix), if it is not
+/// already. A file that cannot be changed (a file system with no modes, one
+/// owned by another user) is reported and left: the content is right, and a
+/// failure here must not stop the stream from starting.
+fn owner_only(path: &Path) {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
+        let loose = std::fs::metadata(path)
+            .map(|metadata| metadata.permissions().mode() & 0o077 != 0)
+            .unwrap_or(false);
+        if loose
+            && let Err(error) =
+                std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))
+        {
+            eprintln!("could not make {} private: {error}", path.display());
+        }
     }
     #[cfg(not(unix))]
     let _ = path;
-    Ok(())
 }
 
 #[cfg(test)]
@@ -154,6 +164,27 @@ mod tests {
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
         assert!(!put_private(&path, b"new").unwrap());
         assert_eq!(mode(&path), 0o600);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_file_that_is_already_private_is_not_changed_again() {
+        use std::os::unix::fs::MetadataExt;
+        let dir = scratch("already");
+        let path = dir.join("secret.json");
+        assert!(put_private(&path, b"same").unwrap());
+        let changed = |path: &Path| {
+            let metadata = std::fs::metadata(path).unwrap();
+            (metadata.ctime(), metadata.ctime_nsec())
+        };
+        let before = changed(&path);
+        std::thread::sleep(std::time::Duration::from_millis(20));
+
+        assert!(!put_private(&path, b"same").unwrap());
+
+        // A chmod, even to the same mode, would have moved the inode's change time
+        assert_eq!(changed(&path), before);
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
