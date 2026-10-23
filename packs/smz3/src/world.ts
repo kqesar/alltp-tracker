@@ -14,7 +14,15 @@
 // of a run takes the one its logic asks for. Keysanity, which rules read as
 // `Config.Keysanity ? a : b`, stays a setting of the engine.
 
-import type { Location, Region, World } from "@alltp/engine";
+import {
+  type Location,
+  locationId,
+  type Region,
+  type World,
+} from "@alltp/engine";
+
+// The one id rule of every pack (ids are save keys): see `@alltp/engine`
+export { locationId };
 
 /** The root of the graph: a region whose CanEnter calls no other's. */
 export const START = "start";
@@ -70,25 +78,6 @@ export interface RegionModule {
    * which its rules call with `@`.
    */
   readonly helpers?: Readonly<Record<string, Rule>>;
-}
-
-/**
- * The id of a location: its name in lowercase kebab case, with " - " as
- * "/" and apostrophes dropped, as the ALttPR pack names A Link to the
- * Past's ("Tower of Hera - Big Key Chest" is tower-of-hera/big-key-chest).
- * Ids are save keys.
- */
-export function locationId(name: string): string {
-  return name
-    .split(" - ")
-    .map((part) =>
-      part
-        .toLowerCase()
-        .replace(/['’]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, ""),
-    )
-    .join("/");
 }
 
 /** The id of a region: its name in camelCase ("Crateria West" is crateriaWest). */

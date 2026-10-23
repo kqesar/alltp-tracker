@@ -35,6 +35,7 @@ export {
   trace,
 } from "./evaluate";
 export { type Explanation, explain, type PathStep } from "./explain";
+export { locationId } from "./ids";
 export { ParseError, parse } from "./parser";
 export { print } from "./printer";
 export {
