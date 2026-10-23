@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
+import { StreamTools } from "@/components/ui/StreamTools";
 import { StreamIcon } from "@/components/ui/ToolbarIcons";
 import { ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
 import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
@@ -7,6 +8,7 @@ import { defaultItemGrid } from "@/games/alttpr/data/items";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { visibleRows } from "@/games/alttpr/utils";
 import { copyStatus, copyText } from "@/utils/clipboard";
+import { isDesktopApp } from "@/utils/platform";
 import { obsViewUrl, trackerUrl } from "@/utils/view";
 
 /** The icons' own size: a source of 64 px cells draws every pixel whole. */
@@ -35,7 +37,11 @@ export const StreamViewControl = ({
   const width = (ITEMS_PER_ROW + 1) * NATIVE_CELL;
   const rows = visibleRows(defaultItemGrid, bigKeysVisible).length;
   // The timer takes a row of its own under the grid
-  const height = (timer ? rows + 1 : rows) * NATIVE_CELL;
+  const sizeOf = (withTimer: boolean) => ({
+    height: (withTimer ? rows + 1 : rows) * NATIVE_CELL,
+    width,
+  });
+  const { height } = sizeOf(timer);
   // A size never wraps between its two numbers
   const size = (scale: number) => `${width * scale} × ${height * scale}`;
 
@@ -69,6 +75,9 @@ export const StreamViewControl = ({
         </button>
       )}
 
+      {isDesktopApp && isOpen && (
+        <StreamTools onClose={close} sizeOf={sizeOf} />
+      )}
       <Modal
         footer={
           <>
@@ -90,7 +99,7 @@ export const StreamViewControl = ({
             </button>
           </>
         }
-        isOpen={isOpen}
+        isOpen={isOpen && !isDesktopApp}
         onClose={close}
         title="Stream view"
       >

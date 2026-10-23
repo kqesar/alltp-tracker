@@ -191,8 +191,7 @@ export const TrackerControls = () => {
           <ShareIcon />
           <span className="toolbar-label">Share</span>
         </button>
-        {/* OBS cannot load the desktop app's page nor follow its storage */}
-        {!isDesktopApp && <StreamViewControl />}
+        <StreamViewControl />
         <ShortcutsButton />
       </span>
       <ToolbarMenu badge={<AutotrackMoreBadge />}>
@@ -227,7 +226,7 @@ export const TrackerControls = () => {
                   testId="toolbar-more-share"
                 />
               )}
-              {!isDesktopApp && <StreamViewControl variant="menu" />}
+              {!onBar && <StreamViewControl variant="menu" />}
               {!onBar && <ShortcutsButton variant="menu" />}
               {AppMenuItem && (
                 <Suspense fallback={null}>

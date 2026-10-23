@@ -7,6 +7,7 @@ import {
 } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ShareDialog } from "@/components/ui/ShareDialog";
+import { StreamTools } from "@/components/ui/StreamTools";
 import { StreamUrlDialog } from "@/components/ui/StreamUrlDialog";
 import {
   ExportIcon,
@@ -170,19 +171,16 @@ export const RunToolbar = <P extends object>({
           <ShareIcon />
           <span className="toolbar-label">Share</span>
         </button>
-        {/* OBS cannot load the desktop app's page nor follow its storage */}
-        {!isDesktopApp && (
-          <button
-            className="tracker-controls__button"
-            data-testid={`${game}-stream-view`}
-            onClick={() => setDialog("stream")}
-            title="The stream view, for OBS"
-            type="button"
-          >
-            <StreamIcon />
-            <span className="toolbar-label">Stream view</span>
-          </button>
-        )}
+        <button
+          className="tracker-controls__button"
+          data-testid={`${game}-stream-view`}
+          onClick={() => setDialog("stream")}
+          title="The stream view, for OBS"
+          type="button"
+        >
+          <StreamIcon />
+          <span className="toolbar-label">Stream view</span>
+        </button>
       </span>
       <input
         accept="application/json,.json"
@@ -202,9 +200,15 @@ export const RunToolbar = <P extends object>({
         {status}
       </p>
       {dialog === "mode" && <ModeDialog onClose={() => setDialog(null)} />}
-      {dialog === "stream" && (
-        <StreamUrlDialog onClose={() => setDialog(null)} testIdPrefix={game} />
-      )}
+      {dialog === "stream" &&
+        (isDesktopApp ? (
+          <StreamTools onClose={() => setDialog(null)} />
+        ) : (
+          <StreamUrlDialog
+            onClose={() => setDialog(null)}
+            testIdPrefix={game}
+          />
+        ))}
       <ShareDialog onClose={() => setShare(null)} share={share} />
       <ConfirmDialog
         confirmLabel="New game"
