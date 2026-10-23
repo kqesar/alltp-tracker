@@ -1,8 +1,6 @@
-import { lazy, type MouseEvent, Suspense, useRef } from "react";
+import type { MouseEvent } from "react";
 import { flushSync } from "react-dom";
-import { Header } from "@/components/ui/Header";
-import { SharedRunPrompt } from "@/components/ui/SharedRunPrompt";
-import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
+import { GameShell } from "@/components/ui/GameShell";
 import { SeedPrompt } from "@/games/alttpr/components/autotrack/SeedPrompt";
 import { MAP_VIEW_ID, MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
@@ -18,14 +16,6 @@ import { useVoice } from "@/games/alttpr/hooks/useVoice";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type { MapView } from "@/games/alttpr/utils";
 import { useUndoShortcuts } from "@/games/useUndoShortcuts";
-import { useToolbarFit } from "@/hooks/useToolbarFit";
-
-// The desktop app's notice, a chunk of its own: the test is inline so the
-// site's build drops the import and its chunk (docs/desktop.md)
-const AppMenuPrompt =
-  import.meta.env.MODE === "desktop"
-    ? lazy(() => import("@/desktop/AppMenuPrompt"))
-    : null;
 
 /**
  * Main application component for the LttP Item Tracker
@@ -43,8 +33,6 @@ function App() {
   const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
   const mapLayout = useGameStore((state) => state.mapLayout);
   const setMapView = useGameStore((state) => state.setMapView);
-  const toolbarRef = useRef<HTMLDivElement>(null);
-  useToolbarFit(toolbarRef);
 
   // Render the chosen view before its panel takes the focus
   const skipTo = (view: MapView) => (event: MouseEvent) => {
@@ -55,33 +43,31 @@ function App() {
 
   return (
     <>
-      <a className="skip-link" href="#main-content">
-        Skip to main content
-      </a>
-      {/* biome-ignore lint/a11y/useValidAnchor: a skip link navigates; its href holds without script */}
-      <a className="skip-link" href="#map" onClick={skipTo("map")}>
-        Skip to map
-      </a>
-      {/* biome-ignore lint/a11y/useValidAnchor: a skip link navigates; its href holds without script */}
-      <a className="skip-link" href="#map" onClick={skipTo("checks")}>
-        Skip to checks
-      </a>
-      <div className="notices">
-        <UpdatePrompt />
-        <SharedRunPrompt game="alttpr" />
-        <SeedPrompt />
-        {AppMenuPrompt && (
-          <Suspense fallback={null}>
-            <AppMenuPrompt />
-          </Suspense>
-        )}
-      </div>
-      <Header />
-      <div className="toolbar" data-testid="toolbar" ref={toolbarRef}>
-        <TrackerControls />
-        <BigKeyToggle isVisible={bigKeysVisible} onToggle={setBigKeysVisible} />
-      </div>
-      <main className="main-content" id="main-content">
+      <GameShell
+        game="alttpr"
+        notices={<SeedPrompt />}
+        skipLinks={
+          <>
+            {/* biome-ignore lint/a11y/useValidAnchor: a skip link navigates; its href holds without script */}
+            <a className="skip-link" href="#map" onClick={skipTo("map")}>
+              Skip to map
+            </a>
+            {/* biome-ignore lint/a11y/useValidAnchor: a skip link navigates; its href holds without script */}
+            <a className="skip-link" href="#map" onClick={skipTo("checks")}>
+              Skip to checks
+            </a>
+          </>
+        }
+        toolbar={
+          <>
+            <TrackerControls />
+            <BigKeyToggle
+              isVisible={bigKeysVisible}
+              onToggle={setBigKeysVisible}
+            />
+          </>
+        }
+      >
         <div
           className={`layout${mapLayout === "stacked" ? " layout--stacked" : ""}${bigKeysVisible ? " layout--key-rows" : ""}`}
           data-testid="layout"
@@ -89,7 +75,7 @@ function App() {
           <TrackerGrid itemLayout={grid} />
           <MapPanel />
         </div>
-      </main>
+      </GameShell>
       <Tooltip />
     </>
   );
