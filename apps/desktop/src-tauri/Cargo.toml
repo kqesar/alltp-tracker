@@ -58,4 +58,8 @@ gdk = "0.18.2"
 futures-util = { version = "0.3.34", default-features = false }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61", features = ["Win32_UI_Input_KeyboardAndMouse"] }
+# SO_EXCLUSIVEADDRUSE for the stream's listener (relay.rs, `bind_exclusive`):
+# socket2, which tokio and hyper-util already build, makes the socket so the
+# option can be set before the bind; windows-sys sets it (socket2 has no setter)
+socket2 = "0.6.5"
+windows-sys = { version = "0.61", features = ["Win32_Networking_WinSock", "Win32_UI_Input_KeyboardAndMouse"] }

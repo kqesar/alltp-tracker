@@ -211,6 +211,51 @@ impl Session {
     }
 }
 
+/// Binds a listener nothing else can share the port with. On Windows a plain
+/// bind lets another process hold `127.0.0.1:P` while this one holds
+/// `0.0.0.0:P` (the more specific address wins, and this computer's own
+/// connections go to the other process): the stream's source would then reach
+/// whoever grabbed the port first. `SO_EXCLUSIVEADDRUSE`, set before the bind,
+/// makes the bind fail instead. Elsewhere the plain bind already refuses.
+pub async fn bind_exclusive(address: Ipv4Addr, port: u16) -> io::Result<TcpListener> {
+    #[cfg(windows)]
+    {
+        windows_exclusive(address, port)
+    }
+    #[cfg(not(windows))]
+    {
+        TcpListener::bind((address, port)).await
+    }
+}
+
+#[cfg(windows)]
+fn windows_exclusive(address: Ipv4Addr, port: u16) -> io::Result<TcpListener> {
+    use socket2::{Domain, Protocol, Socket, Type};
+    use std::os::windows::io::AsRawSocket;
+    use windows_sys::Win32::Networking::WinSock::{SO_EXCLUSIVEADDRUSE, SOL_SOCKET, setsockopt};
+
+    let socket = Socket::new(Domain::IPV4, Type::STREAM, Some(Protocol::TCP))?;
+    let on: i32 = 1;
+    // SAFETY: the socket is open for the whole call, and the option reads the
+    // four bytes of an int
+    let failed = unsafe {
+        setsockopt(
+            socket.as_raw_socket() as usize,
+            SOL_SOCKET,
+            SO_EXCLUSIVEADDRUSE,
+            (&raw const on).cast::<u8>(),
+            size_of::<i32>() as i32,
+        )
+    } != 0;
+    if failed {
+        return Err(io::Error::last_os_error());
+    }
+    socket.bind(&SocketAddr::from((address, port)).into())?;
+    socket.listen(1024)?;
+    socket.set_nonblocking(true)?;
+    TcpListener::from_std(socket.into())
+}
+
 impl Gate {
     /// Takes a seat, or `None` when `limit` viewers hold one. The viewer
     /// count is told while the count is held, so it reaches the page in
