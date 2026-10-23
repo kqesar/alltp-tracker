@@ -1,4 +1,5 @@
 import { OBJECTIVES } from "@alltp/pack-sm";
+import { ToggleList } from "@/components/ui/ToggleList";
 import { useSmStore } from "@/games/sm/store";
 
 const NAME = new Map(OBJECTIVES.map((o) => [o.id, o.name]));
@@ -14,48 +15,24 @@ export const SmObjectives = () => {
   const toggleDone = useSmStore((state) => state.toggleDone);
   const left = objectives.filter((id) => !done.includes(id)).length;
   return (
-    <section
-      aria-labelledby="sm-objectives-heading"
-      className="board-panel sm-objectives"
-      data-testid="sm-objectives"
-    >
-      <h2 className="board-panel__heading" id="sm-objectives-heading">
-        Objectives
-      </h2>
-      <p
-        aria-live="polite"
-        className="board-panel__summary"
-        data-testid="sm-objectives-summary"
-      >
-        {objectives.length === 0
+    <ToggleList
+      className="sm-objectives"
+      items={objectives.map((id) => ({
+        id,
+        name: NAME.get(id) ?? id,
+        on: done.includes(id),
+        testId: `sm-objective-${id}`,
+      }))}
+      onToggle={({ id }) => toggleDone(id)}
+      summary={
+        objectives.length === 0
           ? "This seed asks for none."
           : left === 0
             ? "All done: the barriers before Mother Brain are down."
-            : `${objectives.length - left} of ${objectives.length} done.`}
-      </p>
-      {objectives.length > 0 && (
-        <ul className="board-panel__list">
-          {objectives.map((id) => {
-            const isDone = done.includes(id);
-            return (
-              <li key={id}>
-                <button
-                  aria-pressed={isDone}
-                  className="toggle-chip"
-                  data-testid={`sm-objective-${id}`}
-                  onClick={() => toggleDone(id)}
-                  type="button"
-                >
-                  <span aria-hidden="true" className="toggle-chip__check">
-                    {isDone ? "✓" : ""}
-                  </span>
-                  {NAME.get(id) ?? id}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </section>
+            : `${objectives.length - left} of ${objectives.length} done.`
+      }
+      testId="sm-objectives"
+      title="Objectives"
+    />
   );
 };
