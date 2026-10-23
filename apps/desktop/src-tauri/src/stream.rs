@@ -17,29 +17,41 @@
 //   port       the one the source's address names; 23076 first
 //   viewToken  gates the page's stream (22 characters, 128 bits)
 //   apiToken   reserved for the overlay API (not served yet)
+//   lan        whether other devices on the network may reach the server:
+//              off (the default) binds 127.0.0.1, on binds every interface
 //
 // A new address (`new_tokens`) replaces both tokens and closes the sessions
 // that held the old ones. Quitting the app stops the server without turning
 // the switch off. The file is replaced whole or not at all, readable by its
-// owner alone, and a missing, damaged or tampered one is replaced by a fresh
-// config with the switch off.
+// owner alone. A missing file is replaced by a fresh config with the switch
+// off; a damaged or tampered one is kept as `stream.json.bad` first; a file
+// that cannot be read at all (not a missing one) is left alone and the stream
+// stays off for this launch.
 //
 // This module knows nothing of Tauri: the config directory and the app's files
 // come in as arguments, so the tests run the real server without an app.
 
 use crate::feed::{Follow, RunFeed, follow};
 use crate::files;
-use crate::relay::{self, Assets, OnViewers, Session, TIMING, Timing, with_assets};
+use crate::relay::{self, Assets, OnViewers, Session, TIMING, Timing, lan_address, with_assets};
 use axum::Router;
 use axum::routing::get;
 use serde::{Deserialize, Serialize};
 use std::io;
-use std::path::PathBuf;
+use std::net::Ipv4Addr;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use tokio::net::TcpListener;
 use tokio::sync::Mutex;
 
-/// The port the stream asks for first; a free one when it is taken or refused.
+/// The port the stream asks for first. When it is taken or refused, the next
+/// nine (23077 to 23085: below the system's own range for outgoing
+/// connections, 49152 and up, which a port a program grabs at random would
+/// come from) are tried before any free one.
 pub const PORT: u16 = 23076;
+
+/// How many ports after the preferred one are tried before any free one.
+const FALLBACK_PORTS: u16 = 9;
 
 /// The most sources at once: OBS, its preview, a second scene, a dock, a
 /// second computer, with room to spare. Each one costs a socket and a task.
@@ -59,6 +71,9 @@ struct Config {
     port: u16,
     view_token: String,
     api_token: String,
+    /// Absent from a config written before the switch existed: off
+    #[serde(default)]
+    lan: bool,
 }
 
 /// A token as `relay::token` makes them. A stored one that is anything else
@@ -76,6 +91,7 @@ impl Config {
         Ok(Config {
             api_token: relay::token()?,
             enabled: false,
+            lan: false,
             port,
             view_token: relay::token()?,
         })
@@ -103,6 +119,11 @@ pub struct Started {
     pub moved: bool,
     pub token: String,
     pub viewers: usize,
+    /// Whether other devices on the network may reach the server
+    pub lan: bool,
+    /// Where they reach it (`http://192.168.1.20:23076/`), when `lan` is on
+    /// and the app found its address on the network
+    pub lan_address: Option<String>,
 }
 
 /// A started server, and the answer `start` gave for it.
@@ -132,16 +153,18 @@ pub struct Stream {
     assets: Assets,
     on_viewers: OnViewers,
     timing: Timing,
-    file: PathBuf,
+    /// `None` when the app has no config directory: the stream is unavailable
+    file: Option<PathBuf>,
     /// The port a new config asks for
     preferred: u16,
     inner: Mutex<Inner>,
 }
 
 impl Stream {
-    /// `dir` is the app's config directory, where `stream.json` lives.
+    /// `dir` is the app's config directory, where `stream.json` lives; with
+    /// none, nothing could be kept and the stream refuses to start.
     pub fn new(
-        dir: PathBuf,
+        dir: Option<PathBuf>,
         preferred: u16,
         feed: RunFeed,
         assets: Assets,
@@ -150,7 +173,7 @@ impl Stream {
         Stream {
             assets,
             feed,
-            file: dir.join(FILE),
+            file: dir.map(|dir| dir.join(FILE)),
             inner: Mutex::new(Inner {
                 config: None,
                 running: None,
@@ -161,21 +184,60 @@ impl Stream {
         }
     }
 
-    /// The saved config, or a fresh one (switch off, new tokens) when there is
-    /// none or it cannot be trusted. Not written until something changes.
+    fn file(&self) -> io::Result<&Path> {
+        self.file.as_deref().ok_or_else(|| {
+            io::Error::other("the app has no config directory to keep the stream's settings in")
+        })
+    }
+
+    /// The saved config. A fresh one (switch off, new tokens, not written
+    /// until something changes) when there is no file yet, or when it cannot
+    /// be trusted, in which case it is first kept as `stream.json.bad`. A
+    /// file that cannot be read for any other reason (permissions, a
+    /// directory in its place) is an error: nothing is replaced.
     fn load(&self) -> io::Result<Config> {
-        let saved = std::fs::read(&self.file)
-            .ok()
-            .and_then(|bytes| serde_json::from_slice::<Config>(&bytes).ok())
-            .filter(Config::valid);
-        match saved {
-            Some(config) => Ok(config),
-            None => Config::fresh(self.preferred),
+        let file = self.file()?;
+        match std::fs::read(file) {
+            Ok(bytes) => {
+                let saved = serde_json::from_slice::<Config>(&bytes)
+                    .ok()
+                    .filter(Config::valid);
+                if let Some(config) = saved {
+                    return Ok(config);
+                }
+                let bad = file.with_extension("json.bad");
+                if let Err(error) = std::fs::rename(file, &bad) {
+                    eprintln!("could not keep the damaged stream settings: {error}");
+                }
+                Config::fresh(self.preferred)
+            }
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Config::fresh(self.preferred),
+            Err(error) => Err(error),
         }
     }
 
     fn save(&self, config: &Config) -> io::Result<()> {
-        files::put_private(&self.file, &config.bytes()?).map(|_| ())
+        files::put_private(self.file()?, &config.bytes()?).map(|_| ())
+    }
+
+    /// Binds the saved port, else the preferred one, else the few after it,
+    /// else any free one: a source's address should stay on a port a player
+    /// can recognise and open in the firewall. The error of the last attempt
+    /// is the one reported.
+    async fn bind(&self, address: Ipv4Addr, saved: u16) -> io::Result<TcpListener> {
+        let after =
+            self.preferred.saturating_add(1)..=self.preferred.saturating_add(FALLBACK_PORTS);
+        let mut tried = Vec::new();
+        for port in [saved, self.preferred].into_iter().chain(after) {
+            if port == 0 || tried.contains(&port) {
+                continue;
+            }
+            tried.push(port);
+            if let Ok(listener) = TcpListener::bind((address, port)).await {
+                return Ok(listener);
+            }
+        }
+        TcpListener::bind((address, 0)).await
     }
 
     /// Turns the switch on and opens the server on the saved port, or on a
@@ -217,8 +279,16 @@ impl Stream {
     /// the session again, so what is running is always what the next launch
     /// will start.
     async fn open(&self, inner: &mut Inner, config: Config) -> io::Result<Started> {
-        let session = Session::open(
-            config.port,
+        // Loopback unless the player allowed the network: a source on this
+        // computer needs nothing more, and nothing else can reach the port
+        let address = if config.lan {
+            Ipv4Addr::UNSPECIFIED
+        } else {
+            Ipv4Addr::LOCALHOST
+        };
+        let listener = self.bind(address, config.port).await?;
+        let session = Session::open_on(
+            listener,
             MAX_VIEWERS,
             self.timing,
             Arc::clone(&self.on_viewers),
@@ -227,8 +297,7 @@ impl Stream {
                 with_assets(Router::new().route("/follow", get(follow)), assets)
                     .with_state(Follow::new(gate, &config.view_token, &self.feed))
             },
-        )
-        .await?;
+        )?;
         let port = session.port();
         let kept = Config {
             enabled: true,
@@ -245,6 +314,10 @@ impl Stream {
             port,
             token: kept.view_token.clone(),
             viewers: 0,
+            lan: kept.lan,
+            lan_address: lan_address()
+                .filter(|_| kept.lan)
+                .map(|ip| format!("http://{ip}:{port}/")),
         };
         inner.config = Some(kept);
         inner.running = Some(Running {
@@ -288,6 +361,26 @@ impl Stream {
         if let Some(running) = running {
             running.session.stop().await;
         }
+    }
+
+    /// Allows other devices on the network (binds every interface) or takes
+    /// that back (loopback only), and keeps the choice. A running server is
+    /// opened again on the same port with the same tokens; one that is off
+    /// stays off. Fails, changing nothing, when the choice cannot be written.
+    pub async fn set_lan(&self, lan: bool) -> io::Result<Option<Started>> {
+        let mut inner = self.inner.lock().await;
+        let mut config = self.config(&mut inner)?;
+        if config.lan == lan {
+            return Ok(inner.running.as_ref().map(Running::now));
+        }
+        config.lan = lan;
+        self.save(&config)?;
+        inner.config = Some(config.clone());
+        let Some(running) = inner.running.take() else {
+            return Ok(None);
+        };
+        running.session.stop().await;
+        self.open(&mut inner, config).await.map(Some)
     }
 
     /// Replaces both tokens. The sources holding the old address are closed
@@ -367,13 +460,26 @@ mod tests {
         let seen = Arc::clone(&counts);
         let on_viewers: OnViewers = Arc::new(move |count| seen.lock().unwrap().push(count));
         (
-            Stream::new(dir.0.clone(), preferred, feed.clone(), assets(), on_viewers),
+            Stream::new(
+                Some(dir.0.clone()),
+                preferred,
+                feed.clone(),
+                assets(),
+                on_viewers,
+            ),
             counts,
         )
     }
 
     async fn watch_with(started: &Started) -> Viewer {
         connect(started.port, &format!("?token={}", started.token)).await
+    }
+
+    /// A source on another address of this machine, as a device on the
+    /// network would be.
+    async fn connect_to(ip: Ipv4Addr, port: u16, token: &str) -> Viewer {
+        let url = format!("ws://{ip}:{port}/follow?token={token}");
+        tokio_tungstenite::connect_async(url).await.unwrap().0
     }
 
     #[tokio::test]
@@ -495,6 +601,9 @@ mod tests {
             assert_eq!(started.port, port, "{text}");
             assert_ne!(started.token, good, "{text}");
             assert_eq!(dir.saved().view_token, started.token, "{text}");
+            // What was there is kept, not lost
+            let bad = dir.0.join("stream.json.bad");
+            assert_eq!(std::fs::read_to_string(bad).unwrap(), text, "{text}");
             stream.stop().await;
         }
     }
@@ -721,5 +830,262 @@ mod tests {
         // No route for the overlay yet
         assert_ne!(request(started.port, "GET", "/overlay").await.0, 101);
         stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn a_missing_config_is_replaced_without_keeping_anything() {
+        let dir = Scratch::new();
+        let (stream, _) = stream(&dir, free_port().await, &RunFeed::new());
+        stream.start().await.unwrap();
+        assert!(!dir.0.join("stream.json.bad").exists());
+        stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn a_config_that_cannot_be_read_is_left_alone_and_asked_again_later() {
+        let dir = Scratch::new();
+        let (stream, _) = stream(&dir, free_port().await, &RunFeed::new());
+        // Not a missing file: a directory where the file should be
+        std::fs::create_dir_all(dir.file().join("inside")).unwrap();
+
+        assert!(stream.resume().await.is_err());
+        assert!(stream.start().await.is_err());
+        stream.stop().await;
+        assert!(stream.new_tokens().await.is_err());
+
+        assert!(stream.running().await.is_none());
+        assert!(dir.file().join("inside").is_dir(), "it was overwritten");
+        assert!(!dir.0.join("stream.json.bad").exists());
+
+        // The failure was not remembered: once the file can be read, it starts
+        std::fs::remove_dir_all(dir.file()).unwrap();
+        assert!(stream.start().await.is_ok());
+        stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn without_a_config_directory_the_stream_refuses_to_start() {
+        let counts: Counts = Arc::new(StdMutex::new(Vec::new()));
+        let on_viewers: OnViewers = Arc::new(move |count| counts.lock().unwrap().push(count));
+        let stream = Stream::new(
+            None,
+            free_port().await,
+            RunFeed::new(),
+            assets(),
+            on_viewers,
+        );
+
+        assert!(stream.start().await.is_err());
+        assert!(stream.resume().await.is_err());
+
+        assert!(stream.running().await.is_none());
+        stream.stop().await;
+        stream.shutdown().await;
+    }
+
+    /// Holds `ports` until dropped, and says which of them it got.
+    async fn hold(ports: &[u16]) -> Vec<TcpListener> {
+        let mut held = Vec::new();
+        for port in ports {
+            held.push(TcpListener::bind(("0.0.0.0", *port)).await.unwrap());
+        }
+        held
+    }
+
+    #[tokio::test]
+    async fn tries_the_preferred_port_when_the_saved_one_is_taken() {
+        let dir = Scratch::new();
+        let feed = RunFeed::new();
+        let saved = free_port().await;
+        let (first, _) = stream(&dir, saved, &feed);
+        first.start().await.unwrap();
+        first.stop().await;
+        // The saved port is taken now; the app's own port is free
+        let preferred = free_port().await;
+        let _held = hold(&[saved]).await;
+        let (second, _) = self::stream(&dir, preferred, &feed);
+
+        let started = second.start().await.unwrap();
+
+        assert_eq!(started.port, preferred);
+        assert!(started.moved);
+        assert_eq!(dir.saved().port, preferred);
+        second.stop().await;
+    }
+
+    #[tokio::test]
+    async fn tries_the_few_ports_after_the_preferred_one_before_any_free_port() {
+        let dir = Scratch::new();
+        let feed = RunFeed::new();
+        let saved = free_port().await;
+        let (first, _) = stream(&dir, saved, &feed);
+        first.start().await.unwrap();
+        first.stop().await;
+        let preferred = free_port().await;
+        // The saved port, the preferred one and the next are all taken
+        let _held = hold(&[saved, preferred]).await;
+        let next = preferred + 1;
+        let _next = TcpListener::bind(("0.0.0.0", next)).await;
+        let (second, _) = self::stream(&dir, preferred, &feed);
+
+        let started = second.start().await.unwrap();
+
+        assert!(started.moved);
+        assert!(
+            (preferred + 2..=preferred + FALLBACK_PORTS).contains(&started.port),
+            "{} is not in the fixed range",
+            started.port
+        );
+        second.stop().await;
+    }
+
+    #[tokio::test]
+    async fn falls_back_to_any_free_port_when_the_whole_range_is_taken() {
+        let dir = Scratch::new();
+        let preferred = free_port().await;
+        let mut held = hold(&[preferred]).await;
+        for port in preferred + 1..=preferred + FALLBACK_PORTS {
+            // A port of the range that something else holds is as good
+            if let Ok(listener) = TcpListener::bind(("0.0.0.0", port)).await {
+                held.push(listener);
+            }
+        }
+        let (stream, _) = stream(&dir, preferred, &RunFeed::new());
+
+        let started = stream.start().await.unwrap();
+
+        assert!(started.moved);
+        assert!(!(preferred..=preferred + FALLBACK_PORTS).contains(&started.port));
+        stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn listens_on_this_computer_alone_unless_the_network_is_allowed() {
+        let dir = Scratch::new();
+        let feed = RunFeed::new();
+        let (stream, _) = stream(&dir, free_port().await, &feed);
+
+        let started = stream.start().await.unwrap();
+
+        assert!(!started.lan);
+        assert!(started.lan_address.is_none());
+        assert!(!dir.saved().lan);
+        // Loopback answers
+        let mut source = watch_with(&started).await;
+        feed.publish("alttpr", "k", "1", 1).unwrap();
+        assert_eq!(snapshot(&mut source).await["value"], "1");
+        // The network's address does not: nothing listens there
+        if let Some(ip) = relay::lan_address() {
+            assert!(
+                TcpStream::connect((ip, started.port)).await.is_err(),
+                "{ip} reached a stream that was not opened to the network"
+            );
+        }
+        stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn allowing_the_network_opens_the_same_port_with_the_same_tokens() {
+        let dir = Scratch::new();
+        let feed = RunFeed::new();
+        let (stream, _) = stream(&dir, free_port().await, &feed);
+        let before = stream.start().await.unwrap();
+        let mut source = watch_with(&before).await;
+
+        let after = stream.set_lan(true).await.unwrap().unwrap();
+
+        // The restart closes the sources, which come back on the same address
+        assert_eq!(close_code(&mut source).await, close::STOPPED);
+        assert_eq!(after.port, before.port);
+        assert_eq!(after.token, before.token);
+        assert!(!after.moved);
+        assert!(after.lan);
+        assert!(dir.saved().lan);
+        assert_eq!(dir.saved().view_token, before.token);
+        if let Some(ip) = relay::lan_address() {
+            assert_eq!(
+                after.lan_address.as_deref(),
+                Some(format!("http://{ip}:{}/", after.port).as_str())
+            );
+            assert!(TcpStream::connect((ip, after.port)).await.is_ok());
+            let mut other = connect_to(ip, after.port, &after.token).await;
+            feed.publish("alttpr", "k", "2", 2).unwrap();
+            assert_eq!(snapshot(&mut other).await["value"], "2");
+        }
+        let mut again = watch_with(&after).await;
+        assert_eq!(snapshot(&mut again).await["value"], "2");
+
+        // And back: loopback only, the same port and tokens again
+        let back = stream.set_lan(false).await.unwrap().unwrap();
+        assert!(!back.lan);
+        assert_eq!(back.port, before.port);
+        assert_eq!(back.token, before.token);
+        if let Some(ip) = relay::lan_address() {
+            assert!(TcpStream::connect((ip, back.port)).await.is_err());
+        }
+        stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn the_network_choice_outlives_a_launch_and_an_off_switch() {
+        let dir = Scratch::new();
+        let feed = RunFeed::new();
+        let port = free_port().await;
+        let (first, _) = stream(&dir, port, &feed);
+        // Chosen while the stream is off: kept, nothing opens
+        assert!(first.set_lan(true).await.unwrap().is_none());
+        assert!(first.running().await.is_none());
+        assert!(dir.saved().lan);
+        assert!(!dir.saved().enabled);
+        let started = first.start().await.unwrap();
+        assert!(started.lan);
+        first.shutdown().await;
+
+        let (second, _) = self::stream(&dir, port, &feed);
+        let resumed = second.resume().await.unwrap().unwrap();
+        assert!(resumed.lan);
+        assert_eq!(resumed.token, started.token);
+        // Setting it again changes nothing, and answers with the running session
+        let same = second.set_lan(true).await.unwrap().unwrap();
+        assert_eq!(same.port, resumed.port);
+        second.stop().await;
+        assert!(dir.saved().lan, "turning the stream off forgot the choice");
+    }
+
+    #[tokio::test]
+    async fn a_config_from_before_the_network_choice_listens_on_this_computer_alone() {
+        let dir = Scratch::new();
+        let port = free_port().await;
+        let (token, api) = ("A".repeat(22), "B".repeat(22));
+        std::fs::create_dir_all(&dir.0).unwrap();
+        std::fs::write(
+            dir.file(),
+            format!(
+                "{{\"enabled\":true,\"port\":{port},\"viewToken\":\"{token}\",\"apiToken\":\"{api}\"}}"
+            ),
+        )
+        .unwrap();
+        let (stream, _) = stream(&dir, port, &RunFeed::new());
+
+        let started = stream.resume().await.unwrap().unwrap();
+
+        // Trusted as it was: its tokens kept, nothing set aside
+        assert_eq!(started.token, token);
+        assert!(!started.lan);
+        assert!(!dir.0.join("stream.json.bad").exists());
+        if let Some(ip) = relay::lan_address() {
+            assert!(TcpStream::connect((ip, port)).await.is_err());
+        }
+        assert!(!dir.saved().lan);
+        stream.stop().await;
+    }
+
+    #[tokio::test]
+    async fn the_network_is_not_allowed_by_a_new_config() {
+        let dir = Scratch::new();
+        let (stream, _) = stream(&dir, free_port().await, &RunFeed::new());
+        assert!(!stream.start().await.unwrap().lan);
+        stream.stop().await;
+        assert!(!dir.saved().lan);
     }
 }

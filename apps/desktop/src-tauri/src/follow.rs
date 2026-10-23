@@ -88,6 +88,7 @@ impl Relay {
         let token = relay::token()?;
         let assets = Arc::clone(&self.assets);
         let session = Session::open(
+            Ipv4Addr::UNSPECIFIED,
             port,
             MAX_VIEWERS,
             self.timing,
