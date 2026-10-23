@@ -415,7 +415,7 @@ describe("Tooltip", () => {
       hover("item-hookshot");
 
       expect(tooltip()).toHaveTextContent(/^Hookshot/);
-      expect(keys()).toHaveTextContent(/^W\s*back\s*Shift\+W$/);
+      expect(keys()).toHaveTextContent(/^W\s*back\s*Shift\s*\+\s*W$/);
       // Two chords, each a <kbd> of <kbd> keys
       const chords = [...(keys()?.querySelectorAll("kbd") ?? [])].filter(
         (kbd) => kbd.parentElement?.tagName !== "KBD",

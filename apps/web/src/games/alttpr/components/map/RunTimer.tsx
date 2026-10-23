@@ -82,7 +82,7 @@ export const RunTimer = () => {
   return (
     <>
       <button
-        aria-label={`Run timer: ${TIMER_WORDS[state]}`}
+        aria-label={`Run timer: ${time}, ${TIMER_WORDS[state]}`}
         className={`run-timer run-timer--${state}`}
         data-testid="run-timer"
         onClick={(event) => placeUnder(event, panelId)}

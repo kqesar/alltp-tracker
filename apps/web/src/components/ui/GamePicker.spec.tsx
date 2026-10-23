@@ -11,7 +11,7 @@ describe("GamePicker", () => {
     const sm = screen.getByTestId("game-sm");
     expect(alttpr).toHaveAttribute("aria-pressed", "true");
     expect(sm).toHaveAttribute("aria-pressed", "false");
-    expect(sm).toHaveAccessibleName("Super Metroid, Map Rando");
+    expect(sm).toHaveAccessibleName("Super Metroid Map Rando");
     fireEvent.click(alttpr);
     expect(onSwitch).not.toHaveBeenCalled();
     fireEvent.click(sm);

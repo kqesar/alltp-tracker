@@ -332,7 +332,7 @@ test.describe("the narrowest bar, with the largest text", () => {
     await page.getByTestId("toolbar-more").click();
     const menu = page.getByRole("menu", { name: "More" });
     await expect(menu.getByRole("menuitem").first()).toHaveAccessibleName(
-      "Autotracking, Off",
+      "Autotracking Off",
     );
     const map = menu.getByRole("group", { name: "Map" });
     await expect(map.getByRole("menuitemradio")).toHaveCount(3);

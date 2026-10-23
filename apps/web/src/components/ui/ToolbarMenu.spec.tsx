@@ -185,7 +185,7 @@ describe("the toolbar's More menu", () => {
     );
     await user.click(more());
 
-    expect(items()[0]).toHaveAccessibleName("Autotracking, Off");
+    expect(items()[0]).toHaveAccessibleName("Autotracking Off");
     expect(items()[0]).toHaveFocus();
     // The button's dot is for the eye: its name stays "More"
     expect(more()).toHaveAccessibleName("More");

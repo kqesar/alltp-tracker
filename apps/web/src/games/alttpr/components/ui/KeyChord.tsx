@@ -16,7 +16,13 @@ export const KeyChord = ({ chord }: { chord: Chord }) => {
       {keys.map((key, index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: the keys of one chord, never reordered
         <Fragment key={index}>
-          {index > 0 && <span className="key-chord__plus">+</span>}
+          {index > 0 && (
+            <>
+              {/* Whitespace between flex items is not drawn, but it keeps the
+                  keys apart in the text tools read (WCAG 2.5.3) */}{" "}
+              <span className="key-chord__plus">+</span>{" "}
+            </>
+          )}
           <kbd className="key-chord__key">{key}</kbd>
         </Fragment>
       ))}

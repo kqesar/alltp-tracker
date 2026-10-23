@@ -242,10 +242,10 @@ test("starts the run timer as the game starts, and stops it at the goal", async 
   await openTracker(page);
   await connect(page);
   const timer = page.getByTestId("run-timer");
-  await expect(timer).toHaveAccessibleName("Run timer: not started");
+  await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
 
   bridge.memory[WRAM + 0x10] = 0x07; // into the game
-  await expect(timer).toHaveAccessibleName("Run timer: running");
+  await expect(timer).toHaveAccessibleName(/^Run timer: \d+:\d\d, running$/);
   await timer.click();
   await expect(page.getByTestId("run-timer-igt")).toHaveText(
     "In-game time: 1:00:00",
@@ -261,7 +261,9 @@ test("starts the run timer as the game starts, and stops it at the goal", async 
   );
 
   bridge.memory[WRAM + 0x10] = 0x19; // the Triforce room
-  await expect(timer).toHaveAccessibleName("Run timer: stopped at the goal");
+  await expect(timer).toHaveAccessibleName(
+    /^Run timer: [\d:]+, stopped at the goal$/,
+  );
   await expect(page.getByTestId("run-timer-status")).toHaveText(
     /^Run timer stopped at the goal: /,
   );

@@ -244,8 +244,8 @@ export const ToolbarMenuItem = ({
   <button
     {...handlers}
     // The item lays its parts out as flex items, which browsers name with
-    // spaces of their own between them: one name, label then state
-    aria-label={detail ? `${label}, ${detail}` : undefined}
+    // spaces of their own between them: one name, label then state, as shown
+    aria-label={detail ? `${label} ${detail}` : undefined}
     className="toolbar-menu__item"
     data-testid={testId}
     onClick={onSelect}
@@ -255,7 +255,12 @@ export const ToolbarMenuItem = ({
   >
     {icon}
     {label}
-    {detail && <span className="toolbar-menu__detail">{detail}</span>}
+    {detail && (
+      <>
+        {" "}
+        <span className="toolbar-menu__detail">{detail}</span>
+      </>
+    )}
   </button>
 );
 
