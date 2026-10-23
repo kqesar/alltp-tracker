@@ -92,10 +92,10 @@ const startTracker = (root: HTMLElement) => {
   loadGame(active).then(
     (game) => {
       game.start();
-      // The desktop app publishes the run to its live follow relay while the
-      // player has it on (desktop/liveFollow.ts)
+      // The desktop app publishes the run to its servers while the player has
+      // one on (desktop/attach.ts)
       if (import.meta.env.MODE === "desktop" && !isObsView()) {
-        void import("@/desktop/liveFollow").then(({ attachRun }) =>
+        void import("@/desktop/attach").then(({ attachRun }) =>
           attachRun(active, game.store),
         );
       }

@@ -1,13 +1,16 @@
 // Live follow in the desktop app (docs/desktop.md, "Live follow on the LAN"):
 // the Share dialog's switch starts and stops the app's relay
 // (src-tauri/src/follow.rs), and while it runs the page publishes the run
-// after each change (follow/publish.ts). Imported in the desktop build only.
+// after each change (runFeed.ts, over follow/publish.ts). Imported in the
+// desktop build only.
 
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { create } from "zustand";
-import { type Publication, publishRun } from "@/follow/publish";
-import type { GameId, RunStore } from "@/games/registry";
+import { holdRun, publishNow, releaseRun } from "@/desktop/runFeed";
+
+/** What live follow is called among the run feed's holders. */
+const OWNER = "follow";
 
 /** A running relay, as `follow_start` and `follow_state` describe it. */
 export type FollowSession = {
@@ -30,29 +33,10 @@ type LiveFollowStore = {
   stop: () => Promise<void>;
 };
 
-/** The run this page tracks, which the relay gets while it runs. */
-let attached: { game: GameId; store: RunStore } | null = null;
-let publisher: ReturnType<typeof publishRun> | null = null;
-
-const send = (publication: Publication) => {
-  invoke("follow_publish", publication).catch((error: unknown) => {
-    console.warn("Could not publish the run:", error);
-  });
-};
-
-const publishWhile = (running: boolean) => {
-  if (running && attached && !publisher) {
-    publisher = publishRun({ ...attached, send });
-  } else if (!running && publisher) {
-    publisher.stop();
-    publisher = null;
-  }
-};
-
 /**
  * Whether the relay runs, and how many devices follow. Nothing here is a
  * run, so nothing is saved: the relay itself is the truth, asked again each
- * time the page loads (`attachRun`).
+ * time the page loads (`attachFollow`).
  */
 export const useLiveFollowStore = create<LiveFollowStore>()((set, get) => ({
   error: null,
@@ -64,7 +48,7 @@ export const useLiveFollowStore = create<LiveFollowStore>()((set, get) => ({
     try {
       const session = await invoke<FollowSession>("follow_start");
       set({ pending: false, session });
-      publishWhile(true);
+      holdRun(OWNER);
     } catch (error) {
       console.warn("Could not start live follow:", error);
       set({ error: String(error), pending: false });
@@ -73,31 +57,29 @@ export const useLiveFollowStore = create<LiveFollowStore>()((set, get) => ({
   stop: async () => {
     if (get().pending) return;
     set({ error: null, pending: true });
-    publishWhile(false);
+    releaseRun(OWNER);
     try {
       await invoke("follow_stop");
       set({ pending: false, session: null });
     } catch (error) {
       console.warn("Could not stop live follow:", error);
       set({ error: String(error), pending: false });
-      if (get().session) publishWhile(true);
+      if (get().session) holdRun(OWNER);
     }
   },
 }));
 
 /**
- * Give live follow the run this page tracks, once its game has loaded. A
- * relay still running from before the page loaded again (a game switch
- * reloads it) is picked up, and gets this game's run at once. Each device
- * that joins gets the run again, freshly stamped, for its timer's clock.
+ * Pick up a relay still running from before the page loaded again (a game
+ * switch reloads it): it gets this game's run at once. Each device that joins
+ * gets the run again, freshly stamped, for its timer's clock.
  */
-export const attachRun = async (game: GameId, store: RunStore) => {
-  attached = { game, store };
+export const attachFollow = async () => {
   try {
     await listen<{ count: number }>("follow-viewers", ({ payload }) => {
       const { session } = useLiveFollowStore.getState();
       if (!session) return;
-      if (payload.count > session.viewers) publisher?.now();
+      if (payload.count > session.viewers) publishNow();
       useLiveFollowStore.setState({
         session: { ...session, viewers: payload.count },
       });
@@ -105,7 +87,7 @@ export const attachRun = async (game: GameId, store: RunStore) => {
     const session = await invoke<FollowSession | null>("follow_state");
     if (session) {
       useLiveFollowStore.setState({ session });
-      publishWhile(true);
+      holdRun(OWNER);
     }
   } catch (error) {
     console.warn("Live follow is not available:", error);

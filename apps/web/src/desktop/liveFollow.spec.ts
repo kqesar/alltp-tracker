@@ -8,7 +8,10 @@ const tauri = vi.hoisted(() => ({
 vi.mock("@tauri-apps/api/core", () => ({ invoke: tauri.invoke }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: tauri.listen }));
 
-const { attachRun, useLiveFollowStore } = await import("@/desktop/liveFollow");
+const { attachFollow, useLiveFollowStore } = await import(
+  "@/desktop/liveFollow"
+);
+const { setRun } = await import("@/desktop/runFeed");
 
 const SESSION = {
   lanFound: true,
@@ -39,7 +42,7 @@ const change = (value: string) => {
 const calls = (command: string) =>
   tauri.invoke.mock.calls.filter(([name]) => name === command);
 
-/** The `follow-viewers` handler `attachRun` registered. */
+/** The `follow-viewers` handler `attachFollow` registered. */
 let viewersEvent: (event: { payload: { count: number } }) => void;
 
 const answer = (running: typeof SESSION | null) => {
@@ -60,7 +63,8 @@ beforeEach(async () => {
     return () => {};
   });
   answer(null);
-  await attachRun("sm", store);
+  setRun("sm", store);
+  await attachFollow();
 });
 
 afterEach(async () => {
@@ -74,7 +78,7 @@ describe("live follow in the desktop app", () => {
     change("v2");
     vi.advanceTimersByTime(1000);
 
-    expect(calls("follow_publish")).toEqual([]);
+    expect(calls("run_publish")).toEqual([]);
     expect(tauri.listen).toHaveBeenCalledWith(
       "follow-viewers",
       expect.any(Function),
@@ -85,16 +89,16 @@ describe("live follow in the desktop app", () => {
     await useLiveFollowStore.getState().start();
 
     expect(useLiveFollowStore.getState().session).toEqual(SESSION);
-    expect(calls("follow_publish")).toEqual([
+    expect(calls("run_publish")).toEqual([
       [
-        "follow_publish",
+        "run_publish",
         { game: "sm", key: "alltp-tracker-sm", sentAt: 9000, value: "v1" },
       ],
     ]);
 
     change("v2");
     vi.advanceTimersByTime(250);
-    expect(calls("follow_publish").map(([, { value }]) => value)).toEqual([
+    expect(calls("run_publish").map(([, { value }]) => value)).toEqual([
       "v1",
       "v2",
     ]);
@@ -108,7 +112,7 @@ describe("live follow in the desktop app", () => {
 
     expect(calls("follow_stop")).toHaveLength(1);
     expect(useLiveFollowStore.getState().session).toBeNull();
-    expect(calls("follow_publish")).toHaveLength(1);
+    expect(calls("run_publish")).toHaveLength(1);
   });
 
   it("counts the devices, and sends a fresh run to each that joins", async () => {
@@ -117,14 +121,14 @@ describe("live follow in the desktop app", () => {
 
     viewersEvent({ payload: { count: 1 } });
     expect(useLiveFollowStore.getState().session?.viewers).toBe(1);
-    expect(calls("follow_publish").map(([, { sentAt }]) => sentAt)).toEqual([
+    expect(calls("run_publish").map(([, { sentAt }]) => sentAt)).toEqual([
       9000, 12_000,
     ]);
 
     // One leaving sends nothing
     viewersEvent({ payload: { count: 0 } });
     expect(useLiveFollowStore.getState().session?.viewers).toBe(0);
-    expect(calls("follow_publish")).toHaveLength(2);
+    expect(calls("run_publish")).toHaveLength(2);
   });
 
   it("says why it could not start", async () => {
@@ -145,10 +149,10 @@ describe("live follow in the desktop app", () => {
   it("picks up a relay still running when the page loads again", async () => {
     answer({ ...SESSION, viewers: 2 });
 
-    await attachRun("sm", store);
+    await attachFollow();
 
     expect(useLiveFollowStore.getState().session?.viewers).toBe(2);
     expect(calls("follow_start")).toEqual([]);
-    expect(calls("follow_publish")).toHaveLength(1);
+    expect(calls("run_publish")).toHaveLength(1);
   });
 });
