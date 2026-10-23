@@ -1,6 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
+import { auditPage, WIDTHS } from "./support";
 
 const T0 = new Date("2026-10-18T12:00:00Z");
 
@@ -73,18 +72,7 @@ for (const width of WIDTHS) {
       await playRun(page);
       await expect(findRows(page)).toHaveCount(3);
 
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - window.innerWidth,
-      );
-      const { violations } = await new AxeBuilder({ page })
-        .withTags(WCAG_AA)
-        .analyze();
-
-      expect(overflow).toBeLessThanOrEqual(0);
-      expect(
-        violations.map(({ id, nodes }) => `${id} ×${nodes.length}`),
-      ).toEqual([]);
-      expect(await unreachableClickables(page)).toEqual([]);
+      await auditPage(page);
     });
   });
 }

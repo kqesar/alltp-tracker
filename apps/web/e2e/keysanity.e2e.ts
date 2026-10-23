@@ -1,6 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
+import { auditPage, WIDTHS } from "./support";
 
 /** A keysanity run, its key cells shown, as localStorage keeps it. */
 const KEYSANITY = JSON.stringify({
@@ -44,20 +43,8 @@ for (const width of WIDTHS) {
       await openKeysanity(page);
       await expect(page.getByTestId("map-9")).toBeVisible();
 
-      const { violations } = await new AxeBuilder({ page })
-        .withTags(WCAG_AA)
-        // Map pins: WCAG 2.5.8's exception, as on the tracker's own audit
-        .exclude(".mapspan")
-        .analyze();
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - window.innerWidth,
-      );
-
-      expect(
-        violations.map(({ id, nodes }) => `${id} ×${nodes.length}`),
-      ).toEqual([]);
-      expect(overflow).toBeLessThanOrEqual(0);
-      expect(await unreachableClickables(page)).toEqual([]);
+      // Map pins: WCAG 2.5.8's exception, as on the tracker's own audit
+      await auditPage(page, ".mapspan");
 
       // The arrow keys walk a key cell's four controls, in reading order
       await page.getByTestId("map-3").focus();
