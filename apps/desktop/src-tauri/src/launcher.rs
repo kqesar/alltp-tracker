@@ -27,6 +27,7 @@
 // holds a control character.
 
 use crate::app_menu::State;
+use crate::files;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -132,24 +133,6 @@ impl Dirs {
         std::fs::read_to_string(self.desktop_file()).is_ok_and(|text| shows_in_menu(&text))
     }
 
-    /// Replaces a file's content, through a temporary file and a rename so a
-    /// desktop watching the directory never reads half of it. `false` when it
-    /// already held `bytes`: nothing is touched.
-    fn put(path: &Path, bytes: &[u8]) -> io::Result<bool> {
-        if std::fs::read(path).is_ok_and(|current| current == bytes) {
-            return Ok(false);
-        }
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        let temporary = path.with_extension("tmp");
-        std::fs::write(&temporary, bytes)?;
-        std::fs::rename(&temporary, path).inspect_err(|_| {
-            let _ = std::fs::remove_file(&temporary);
-        })?;
-        Ok(true)
-    }
-
     /// Writes the icons, then the file that names them: whenever the file
     /// exists, its `Icon=` resolves.
     fn write(&self, command: &str, in_menu: bool) -> io::Result<bool> {
@@ -159,9 +142,9 @@ impl Dirs {
             )
         })?;
         for (size, png) in ICONS {
-            Self::put(&self.icon(size), png)?;
+            files::put(&self.icon(size), png)?;
         }
-        Self::put(&self.desktop_file(), wanted.as_bytes())
+        files::put(&self.desktop_file(), wanted.as_bytes())
     }
 
     fn delete(&self) -> io::Result<()> {

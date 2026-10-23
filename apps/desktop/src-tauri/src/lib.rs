@@ -10,12 +10,16 @@
 
 mod app_menu;
 mod cli;
+mod feed;
+mod files;
 mod follow;
 #[cfg(target_os = "linux")]
 mod launcher;
 mod relay;
 mod retroarch;
 mod shortcuts;
+#[cfg(test)]
+mod test_support;
 
 use serde::Serialize;
 use std::sync::Arc;
@@ -93,18 +97,18 @@ async fn follow_stop(relay: State<'_, follow::Relay>) -> Result<(), String> {
     Ok(())
 }
 
-/// Hands the relay the run the page just saved: `value` is the game's
-/// persisted state, `sent_at` the page's clock (ms). Async, so a large run
-/// is copied off the main thread.
+/// Hands the servers the run the page just saved: `value` is the game's
+/// persisted state, `sent_at` the page's clock (ms). Every server streams it
+/// (live follow today). Async, so a large run is copied off the main thread.
 #[tauri::command]
-async fn follow_publish(
-    relay: State<'_, follow::Relay>,
+async fn run_publish(
+    feed: State<'_, feed::RunFeed>,
     game: String,
     key: String,
     value: String,
     sent_at: u64,
 ) -> Result<(), String> {
-    relay.publish(&game, &key, &value, sent_at)
+    feed.publish(&game, &key, &value, sent_at)
 }
 
 #[derive(Clone, Serialize)]
@@ -131,7 +135,10 @@ pub fn run() {
             let on_viewers = Arc::new(move |count| {
                 let _ = handle.emit("follow-viewers", ViewersPayload { count });
             });
+            let feed = feed::RunFeed::new();
+            app.manage(feed.clone());
             app.manage(follow::Relay::new(
+                feed,
                 follow::tauri_assets(app.handle().clone()),
                 on_viewers,
             ));
@@ -141,11 +148,11 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             app_menu_set,
             app_menu_state,
-            follow_publish,
             follow_start,
             follow_state,
             follow_stop,
             retroarch,
+            run_publish,
             save_file,
             shortcuts::global_shortcuts_ready,
             shortcuts::global_shortcuts_apply,
