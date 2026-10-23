@@ -6,6 +6,7 @@
 - **Talk to RetroArch directly** over UDP, without SNI (below, "Autotracking").
 - **Global shortcuts** that work while the emulator has the focus (below, "Global shortcuts").
 - **A menu entry for a downloaded AppImage**, which installs none (below, "Application menu").
+- **Live follow on the local network**: a phone or a second screen watches the run update, served by the app itself (below, "Live follow on the LAN").
 
 The site stays the main product. The app adds no byte to it, and costs nothing: no store, no paid signing, builds on GitHub's free runners, updates served by GitHub Releases.
 
@@ -73,7 +74,7 @@ flowchart TB
 ```
 
 - **The webview** is each system's own: WebView2 on Windows (pages at `http://tauri.localhost`), WKWebView on macOS and WebKitGTK on Linux (pages at `tauri://localhost`). None of these origins is https, so autotracking's WebSocket to SNI is not mixed content. `detectEnvironment` (`packages/autotrack/src/environment.ts`) gates loopback on https pages only, else the WebKit of macOS and Linux would read as a blocked Safari.
-- **What the pages may ask of the app** is listed in `src-tauri/capabilities/default.json`: open an https URL (`opener:allow-open-url` scoped to `https://*`: without a scope the permission grants the command but no URL), check for and install an update, restart, and the app's own commands, `save_file`, `retroarch`, `app_menu_*` and the `global_shortcuts_*` ones (an app's own commands need no permission entry). Nothing else: in particular no `global-shortcut:*` permission, so the page cannot register a key through the plugin itself, only through the app's command, which checks it.
+- **What the pages may ask of the app** is listed in `src-tauri/capabilities/default.json`: open an https URL (`opener:allow-open-url` scoped to `https://*`: without a scope the permission grants the command but no URL), check for and install an update, restart, and the app's own commands, `save_file`, `retroarch`, `app_menu_*`, `follow_*` and the `global_shortcuts_*` ones (an app's own commands need no permission entry). Nothing else: in particular no `global-shortcut:*` permission, so the page cannot register a key through the plugin itself, only through the app's command, which checks it.
 - **Links** to other sites open in the system browser (`openLinksOutside` in `apps/web/src/desktop/start.ts`). In the app's window they would replace the tracker.
 - **Exports** go through the system's Save dialog: `saveFile` (`apps/web/src/utils/saveFile.ts`) calls the app's `save_file` command (`src-tauri/src/lib.rs`), which asks where and writes there. A webview handles a download link its own way (WebKitGTK writes it, unasked, into the process's working directory), and the page gets no file-system access at all: it can write only where the player picks.
 - **The run** is saved in the webview's `localStorage`, apart from any browser's. Export and Import move it.
@@ -274,6 +275,101 @@ In the private Xvfb bench (a temporary home and session bus, the AppImage built 
 - the toolbar holds at 1440, 1180, 1000 and 760 px with More showing.
 
 The state machine (with the portal flag), the escaping and the icon paths are Rust unit tests (`launcher.rs`) over temporary directories.
+
+## Live follow on the LAN
+
+A player wants a second screen (a phone on the desk, a laptop for a co-commentator) to show the tracker as it updates. A page cannot open a server, so the site cannot do it; the app can. While the player has it on, the app serves its own page and a WebSocket that relays the run to devices on the same network. Nothing leaves the network: no relay service, no account, no cost.
+
+The Rust side is `apps/desktop/src-tauri/src/follow.rs`. **The page side** (publishing the run after each change, the follow view, the switch and QR code in the Share dialog) **is coming in the same series**; this section describes the contract it builds on.
+
+```mermaid
+sequenceDiagram
+  participant Page as Tracker page (webview)
+  participant Relay as follow.rs (axum on tokio)
+  participant Viewer as Phone's browser
+  Page->>Relay: invoke follow_start
+  Note over Relay: bind 0.0.0.0:23075 (a free port if taken),<br/>new 128-bit token
+  Relay-->>Page: { url, port, lanFound, viewers }
+  Page->>Relay: invoke follow_publish { game, key, value, sentAt }
+  Note over Relay: kept in a watch channel,<br/>serialized once
+  Viewer->>Relay: GET /?view=follow&token=… (from the QR code)
+  Relay-->>Viewer: index.html, then the hashed assets
+  Viewer->>Relay: GET /follow?token=… (WebSocket upgrade)
+  Relay-->>Page: event follow-viewers { count }
+  Relay-->>Viewer: the latest snapshot, at once
+  Page->>Relay: follow_publish (next change)
+  Relay-->>Viewer: snapshot (a slow viewer skips intermediate ones)
+  Page->>Relay: invoke follow_stop (or the app exits)
+  Relay-->>Viewer: close 4410 "stopped"
+  Note over Relay: listener dropped: the port is closed
+```
+
+### Routes
+
+| Request | Answer |
+|---|---|
+| `GET /follow?token=<t>` with a WebSocket upgrade | the stream (below). A wrong or missing token, or a ninth viewer, gets a socket closed at once with a code (below); a plain GET gets an HTTP error |
+| `GET /` | `index.html`, `Cache-Control: no-cache` |
+| `GET /<path>` of an embedded file | that file, with its MIME type and `X-Content-Type-Options: nosniff` |
+| `GET /<path>` without an extension, not a file | `index.html` (the page's own routes) |
+| `GET /<path>` with an extension, not a file | 404 |
+| any other method | 405 |
+
+The files are the app's own, through Tauri's asset resolver (`tauri_assets`): embedded in a release, read from `apps/web/dist-desktop` in development. A path must be made of `[A-Za-z0-9._-]` segments, none of them `.` or `..`, else 404: in development Tauri reads the path from disk, so a traversal, a drive letter or a backslash must never reach it. Tauri's resolver falls back to `index.html` for a missing file; the adapter turns that fallback into a 404 unless HTML was asked for.
+
+### The stream
+
+- **Message**: a text frame, `{"game","key","value","sentAt"}`. `value` is the game's persisted state exactly as the page stored it (a JSON string, opaque to Rust: each game's own validation and migration read it on the viewer's side); `sentAt` is the page's `Date.now()`, so the viewer can correct its timer for clock skew.
+- **Semantics**: a `tokio::sync::watch` holds the latest snapshot. A viewer gets it at once on connect, then each change; a viewer slower than the updates skips the states it had no time for, never queues them. The snapshot survives `follow_stop`, so a session started later serves the run at once.
+- **Read-only**: what a viewer sends is read only to answer pings and to see it leave, never acted on; incoming frames are capped at 4 KiB.
+- **Close codes.** A browser cannot read the HTTP status of a refused WebSocket (it only sees the socket close), so a refusal is an accepted socket closed at once with a code that says why:
+
+| Code | Reason | The viewer should |
+|---|---|---|
+| 4401 | `token`: missing, or not this session's (the relay was restarted) | ask for the new link, not retry |
+| 4503 | `full`: eight viewers already | retry later |
+| 4410 | `stopped`: the player turned it off, or quit | say so, not retry |
+
+### Commands and event
+
+| Name | Arguments | Returns |
+|---|---|---|
+| `follow_start` | none | `{ url, port, lanFound, viewers }`; while running, the running session (same token) |
+| `follow_stop` | none | nothing; idempotent. Waits up to 2 s for the viewers' sockets to close |
+| `follow_publish` | `{ game, key, value, sentAt }` (`sentAt` an integer, ms) | nothing; an error when `value` is over 1 MiB or `game`/`key` over 64 bytes |
+| event `follow-viewers` | | `{ count }`, each time a viewer joins or leaves |
+
+`url` is `http://<lan-address>:<port>/?view=follow&token=<token>`. The address is the one the default route leaves from: a UDP socket "connected" to a documentation address (192.0.2.1) sends nothing but makes the system pick the route, and its local address is read back, without a crate. With no route (offline), `lanFound` is `false` and the URL is on 127.0.0.1, which only this machine can open. On a machine whose default route is a VPN, the address is the VPN's.
+
+### Security
+
+- **On the local network only, by design**: no relay service, no port forwarding. Anyone who can reach the port is on the same network.
+- **The token gates the stream**: 128 bits from the system's random source (`getrandom`), base64url, new at each `follow_start`, compared in constant time. An old link stops working when the player restarts the relay. The page's files are not gated: they are the public site's code.
+- **Nothing is writable**: no route but the files and the stream, no method but GET, no incoming message acted on.
+- **Bounded**: eight viewers at most (each costs a socket and a task), 1 MiB per snapshot, 4 KiB per incoming frame, and a viewer that takes more than 10 s to accept an update is dropped, so a stalled device cannot hold a seat.
+- **No port open while it is off**: `follow_start` starts the server; `follow_stop` and the app's exit close every socket (a close frame first) and the listener.
+- **Plain `http://`**: the token crosses the network in clear, visible to anything on it. Acceptable for a read-only view of a run; TLS on a LAN address would need a certificate no phone trusts.
+
+### Firewalls
+
+The relay listens on all interfaces, port 23075 (another, shown in the URL, if it is taken).
+
+- **Windows** asks on the first start whether the app may accept connections: allow it on private networks. On a network marked Public, inbound connections stay blocked: mark the Wi-Fi Private. A refusal is undone in "Allow an app through Windows Firewall".
+- **macOS**: the application firewall is off by default; when on, it asks on the first start.
+- **Linux**: most desktops run no firewall by default. With ufw: `sudo ufw allow 23075/tcp`; with firewalld: `sudo firewall-cmd --add-port=23075/tcp` (add `--permanent` to keep it after a reboot).
+
+### Budget
+
+- **Off**: nothing runs, no port, no task; the managed state is one empty channel.
+- **On**: one listener task, and per viewer one task and one socket. A publish serializes the snapshot once; every viewer's frame shares that buffer (reference-counted), so eight viewers hold one copy of the run, not eight.
+- **Binary**: axum 0.8 (HTTP/1 and WebSocket only, no default features) on the hyper, tokio and tower the app already carries for the updater, plus tungstenite: +745 KiB on the stripped Linux x86-64 release binary (15.0 → 15.7 MiB).
+
+### Known limits
+
+- Only a device on the same network can follow: no remote restreamer (a choice: no server, no cost).
+- On `http://`, a phone's browser cannot keep its screen awake (the Wake Lock API needs a secure context): the viewer turns auto-lock off while watching.
+- The site has no live follow: a browser cannot open a server.
+- Proved here on Linux only, by Rust tests over the real server (`follow.rs`): token refused, snapshot then update, incoming messages ignored, the viewer limit, stop closing the sockets and freeing the port, the file routes.
 
 ## Updates
 

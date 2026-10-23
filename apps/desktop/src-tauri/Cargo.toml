@@ -17,6 +17,12 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.7.3", features = [] }
 
 [dependencies]
+# Live follow on the LAN (follow.rs): a small HTTP + WebSocket server on the
+# tokio and hyper the app already runs
+axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio", "ws"] }
+# The follow token, base64url: both already built for Tauri and its updater
+base64 = "0.23.1"
+getrandom = "0.4.3"
 # The commands' arguments and replies, and the events the page listens to
 serde = { version = "1", features = ["derive"] }
 # tauri::generate_context! writes the plugins' config as serde_json values
@@ -33,6 +39,10 @@ tauri-plugin-updater = "2.14.0"
 # RetroArch's network commands: UDP, with a timeout (Tauri runs on tokio already)
 tokio = { version = "1.54.0", features = ["macros", "net", "rt", "sync", "time"] }
 
+[dev-dependencies]
+futures-util = { version = "0.3.34", default-features = false, features = ["sink"] }
+# A WebSocket client for follow.rs's tests: axum's own version, so it is built once
+tokio-tungstenite = "0.29.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # The GlobalShortcuts portal (Wayland). async-io, as tauri-plugin-opener's zbus

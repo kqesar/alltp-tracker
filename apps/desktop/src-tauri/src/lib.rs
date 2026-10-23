@@ -4,17 +4,22 @@
 // the system browser, exports go through the system's Save dialog, global
 // shortcuts work while the emulator has the focus (shortcuts/, and the
 // command line in cli.rs), an AppImage can add itself to the application menu
-// (app_menu.rs, launcher.rs), and new versions come from GitHub Releases,
-// signed with the project's updater key (docs/desktop.md).
+// (app_menu.rs, launcher.rs), the run can be followed live from another
+// device on the local network (follow.rs), and new versions come from GitHub
+// Releases, signed with the project's updater key (docs/desktop.md).
 
 mod app_menu;
 mod cli;
+mod follow;
 #[cfg(target_os = "linux")]
 mod launcher;
 mod retroarch;
 mod shortcuts;
 
+use serde::Serialize;
+use std::sync::Arc;
 use std::time::Duration;
+use tauri::{Emitter, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 
 /// Sends one of RetroArch's network commands and returns its reply, or
@@ -64,6 +69,42 @@ async fn app_menu_set(added: bool) -> Result<app_menu::State, String> {
     app_menu::set_added(added)
 }
 
+/// Opens the live follow relay on the local network, or hands back the one
+/// running (see `follow.rs`).
+#[tauri::command]
+async fn follow_start(relay: State<'_, follow::Relay>) -> Result<follow::Started, String> {
+    relay
+        .start(follow::PORT)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+/// Closes the relay and every viewer's connection; nothing when it is off.
+#[tauri::command]
+async fn follow_stop(relay: State<'_, follow::Relay>) -> Result<(), String> {
+    relay.stop().await;
+    Ok(())
+}
+
+/// Hands the relay the run the page just saved: `value` is the game's
+/// persisted state, `sent_at` the page's clock (ms). Async, so a large run
+/// is copied off the main thread.
+#[tauri::command]
+async fn follow_publish(
+    relay: State<'_, follow::Relay>,
+    game: String,
+    key: String,
+    value: String,
+    sent_at: u64,
+) -> Result<(), String> {
+    relay.publish(&game, &key, &value, sent_at)
+}
+
+#[derive(Clone, Serialize)]
+struct ViewersPayload {
+    count: usize,
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -77,14 +118,25 @@ pub fn run() {
         // A `--step` this launch was started with waits for the page to load
         .manage(shortcuts::GlobalShortcuts::new(cli::own_steps()))
         // An existing menu entry follows the AppImage if it moved
-        .setup(|_| {
+        .setup(|app| {
             app_menu::refresh_at_launch();
+            let handle = app.handle().clone();
+            let on_viewers = Arc::new(move |count| {
+                let _ = handle.emit("follow-viewers", ViewersPayload { count });
+            });
+            app.manage(follow::Relay::new(
+                follow::tauri_assets(app.handle().clone()),
+                on_viewers,
+            ));
             Ok(())
         })
         .on_page_load(shortcuts::on_page_load)
         .invoke_handler(tauri::generate_handler![
             app_menu_set,
             app_menu_state,
+            follow_publish,
+            follow_start,
+            follow_stop,
             retroarch,
             save_file,
             shortcuts::global_shortcuts_ready,
@@ -92,6 +144,12 @@ pub fn run() {
             shortcuts::global_shortcuts_configure,
             shortcuts::key_labels
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running the tracker");
+        .build(tauri::generate_context!())
+        .expect("error while building the tracker")
+        .run(|app, event| {
+            // Viewers are told the relay stopped, rather than left to retry
+            if let tauri::RunEvent::Exit = event {
+                tauri::async_runtime::block_on(app.state::<follow::Relay>().stop());
+            }
+        });
 }
