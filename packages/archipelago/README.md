@@ -360,8 +360,8 @@ tar -xzf Archipelago_0.6.8_linux-x86_64.tar.gz -C ~/ap
 AP_DIR=~/ap/Archipelago pnpm --filter @alltp/archipelago record-fixtures
 ```
 
-`scripts/record-fixtures.mjs` hosts `test/server/*.archipelago` (no ROM is
-needed to host) through `scripts/serve.sh` on ports 38281 (plain), 38282
+`packages/archipelago/scripts/record-fixtures.mjs` hosts `test/server/*.archipelago` (no ROM is
+needed to host) through `packages/archipelago/scripts/serve.sh` on ports 38281 (plain), 38282
 (`--password bench-pass`), 38283 (the race multiworld) and 38284
 (`--compatibility 0`), plays the scenes each fixture is named after through
 archipelago.js, and writes every frame both ways. The multiworlds were
@@ -374,7 +374,7 @@ the ROM-less game: Clique left AP's core before 0.6.8), with
 
 AP 0.6.8 (frozen Linux release, Python 3.12.14), archipelago.js 2.1.0, Node
 22.23.3's WebSocket, `test/server/normal-seed4242.archipelago` served by
-`scripts/serve.sh` on 127.0.0.1, on 2026-10-24:
+`packages/archipelago/scripts/serve.sh` on 127.0.0.1, on 2026-10-24:
 
 - `AP_SERVER_URL=ws://127.0.0.1:38291 pnpm vitest run --project archipelago real-server`:
   both tests pass. The session connected on Link as a tracker (server
