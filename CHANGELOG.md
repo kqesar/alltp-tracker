@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.40.0](https://github.com/kqesar/alltp-tracker/compare/v2.39.0...v2.40.0) (2026-10-24)
+
+
+### ✨ Features
+
+* **web:** Archipelago feed, hints and players (S2) ([#336](https://github.com/kqesar/alltp-tracker/issues/336)) ([abec5c8](https://github.com/kqesar/alltp-tracker/commit/abec5c8480ff20ac7c9cf15ad984df798b4b9a96))
+
 ## [2.39.0](https://github.com/kqesar/alltp-tracker/compare/v2.38.2...v2.39.0) (2026-10-24)
 
 
