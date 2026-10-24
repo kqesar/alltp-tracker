@@ -628,21 +628,57 @@ describe("ArchipelagoSession, the page and the tab", () => {
       t.session.stop();
     });
 
-    it("takes Chromium's failure while undecided for the browser's", async () => {
-      // Headless Chromium 156 fails at once with the state still "prompt"
-      // (net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS, measured)
-      const t = gated({ [LOCAL]: { kind: "unreachable" } });
+    it("reads a prompt the browser turned into a denial", async () => {
+      // Chrome's headless mode (Chromium 156, Chrome 155, measured) fails the
+      // socket at once and leaves the permission "denied"
+      const t = gated({ [LOCAL]: held() });
       t.session.start();
       await t.clock.advance(10);
-      expect(t.session.status).toMatchObject({
+      t.permission.state = "denied";
+      t.network.last.drop();
+      await t.clock.advance(10);
+      expect(t.session.status).toEqual({
         code: "local-network-denied",
-        state: "prompt",
+        permission: "loopback-network",
+        retryInMs: null,
+        state: "denied",
+        url: LOCAL,
       });
       // Allowed in the site's settings: the session tries again on its own
       t.network.route(LOCAL, serve("normal-session", "tracker"));
       t.permission.set("granted");
       await t.clock.advance(10);
       expect(t.session.status).toEqual({ code: "connected", url: LOCAL });
+      t.session.stop();
+    });
+
+    it("leaves a quick failure while undecided to the server", async () => {
+      // Playwright's headless shell fails a blocked socket at once and keeps
+      // "prompt", as a closed port does: no browser a player uses does that
+      const t = gated({ [LOCAL]: { kind: "unreachable" } });
+      t.session.start();
+      await t.clock.advance(10);
+      expect(t.session.status).toMatchObject({
+        code: "unreachable",
+        hint: "not-running",
+        retryInMs: 1000,
+      });
+      t.session.stop();
+    });
+
+    it("claims no prompt for a LAN socket that hangs", async () => {
+      // Chromium checks a LAN address once connected: an unreachable host
+      // hangs as long as a prompt would, the permission untouched (measured)
+      const lan = "ws://192.168.1.20:38281";
+      const t = gated({ [lan]: { kind: "black-hole" } }, "chromium", lan);
+      t.session.start();
+      await t.clock.advance(7999);
+      expect(t.codes()).not.toContain("local-network-prompt");
+      await t.clock.advance(10);
+      expect(t.session.status).toMatchObject({
+        code: "timeout",
+        stage: "socket",
+      });
       t.session.stop();
     });
 

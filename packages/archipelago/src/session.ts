@@ -662,7 +662,7 @@ export class ArchipelagoSession {
         case "timeout": {
           const refused =
             outcome.kind === "unreachable" && gate !== null
-              ? await this.refusedByBrowser(gate.permission, outcome)
+              ? await this.refusedByBrowser(gate, outcome)
               : null;
           if (!this.alive(generation)) return;
           if (refused !== null && gate !== null) {
@@ -739,23 +739,26 @@ export class ArchipelagoSession {
 
   /**
    * Whether the browser, not the server, kept a failed socket shut, and how
-   * its permission reads then: "denied"; or still "prompt" after a socket
-   * that hung on the prompt (dismissed), or in Chromium after any failure
-   * (151+ asks even when nothing listens, so failing without asking means it
-   * no longer asks: dismissed again and again, or headless, measured). Firefox
-   * reads "prompt" without gating at all (Playwright's Firefox 157,
-   * measured): there a quick failure is the server's.
+   * its permission reads then: "denied" (Chrome's headless mode turns an
+   * unanswered prompt into a denial, measured in Chromium 156 and Chrome
+   * 155); or still "prompt" after a socket to this device that hung on the
+   * prompt (dismissed). A quick failure while "prompt" is the server's:
+   * Playwright's headless shell fails a blocked socket at once yet keeps
+   * "prompt", which no browser a player uses does, and Firefox reads "prompt"
+   * without gating at all (Playwright's Firefox 157). A LAN socket's hang
+   * says nothing: Chromium checks the address once connected, so an
+   * unreachable host hangs as long as a prompt (measured: 3 s then
+   * ERR_ADDRESS_UNREACHABLE, the permission untouched).
    */
   private async refusedByBrowser(
-    permission: LocalNetworkPermission,
+    gate: Gate,
     outcome: Extract<Outcome, { kind: "unreachable" }>,
   ): Promise<"denied" | "prompt" | null> {
-    const { state } = await permission.query();
+    const { state } = await gate.permission.query();
     if (state === "denied") return "denied";
-    if (state !== "prompt") return null;
-    const chromium =
-      this.page.kind === "secure" && this.page.browser === "chromium";
-    return chromium || outcome.hungMs >= this.timeouts.promptAfterMs
+    return state === "prompt" &&
+      gate.name === "loopback-network" &&
+      outcome.hungMs >= this.timeouts.promptAfterMs
       ? "prompt"
       : null;
   }
@@ -876,9 +879,12 @@ export class ArchipelagoSession {
         generation,
       );
       arm("socket", this.timeouts.socketMs);
-      if (gate !== null) {
-        // A socket still opening this long, the permission undecided: the
-        // browser shows its prompt. Its answer has no deadline.
+      if (gate?.name === "loopback-network") {
+        // A socket to this device still opening this long, the permission
+        // undecided: the browser shows its prompt (a loopback handshake takes
+        // milliseconds). Its answer has no deadline. Not for the LAN, where
+        // an unreachable host hangs just as long: there the socket keeps its
+        // timeout, and the answer's change event retries at once.
         connection.prompt = this.clock.setTimeout(() => {
           connection.prompt = null;
           void gate.permission.query().then(({ state }) => {

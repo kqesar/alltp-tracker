@@ -254,11 +254,20 @@ Firefox 157 headless):
   1006. A scheme-less archipelago.gg address is tried over wss alone.
 - Headless Chromium 156, the permission undecided: every name reads
   `prompt` (`loopback-network`, `local-network`, `local-network-access`)
-  and the socket fails at once (1006,
-  `net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS`). Granting
+  and a loopback socket fails at once (1006,
+  `net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS`). Chrome's headless
+  mode (Playwright's `chromium` channel; CI's Google Chrome 155) then reads
+  the permission `denied`, as a refused prompt; Playwright's default
+  headless shell keeps `prompt`, which no browser a player uses does. Granting
   `local-network-access` (Playwright's only accepted name) turns all three
   `granted` and fires each status's `change` event; clearing it fires
   `change` back to `prompt`.
+- A LAN address with no host behind it (`ws://192.168.1.20` from a
+  192.168.1.0/24 machine): the socket hangs 3 s, fails with
+  `ERR_ADDRESS_UNREACHABLE`, and the permission stays `prompt` in the
+  headless shell; Chromium checks a LAN address only once connected. On a
+  CI runner, where that address is routed away, it hangs past the socket
+  timeout.
 - Firefox 157 (Playwright's build) reads `loopback-network` and
   `local-network` as `prompt`, knows no `local-network-access`, and
   connects to loopback without asking.
@@ -314,17 +323,20 @@ permission, the session:
 2. before each attempt, reads it: `denied` opens no socket and reports
    `local-network-denied` (`state: "denied"`), waiting for a change or
    `retryNow()`;
-3. while a socket is still CONNECTING after `promptAfterMs` (1.5 s, as
-   autotrack) and the permission reads `prompt`, reports
-   `local-network-prompt` and lifts the socket timeout: the player's answer
-   has no deadline;
-4. after a failed socket, reads it again: `denied`, or still `prompt` after
-   a socket that hung on the prompt (dismissed) or, in Chromium, after any
-   failure (it asks even when nothing listens, so a failure without asking
-   means it no longer asks: dismissed again and again, or headless), report
-   `local-network-denied` (`state: "prompt"`, Retry asks again) and wait for
-   the player. Firefox reads `prompt` without gating, so its quick failure
-   is the server's: `unreachable`, with the usual backoff.
+3. while a socket to this device is still CONNECTING after `promptAfterMs`
+   (1.5 s, as autotrack: a loopback handshake takes milliseconds) and the
+   permission reads `prompt`, reports `local-network-prompt` and lifts the
+   socket timeout: the player's answer has no deadline. Not for the LAN:
+   Chromium checks a LAN address once connected, so an unreachable host
+   hangs exactly like a prompt (measured below); a LAN socket keeps its
+   timeout, and the answer's change event retries at once;
+4. after a failed socket, reads it again: `denied` reports
+   `local-network-denied` (`state: "denied"`); still `prompt` after a
+   socket to this device that hung on the prompt (dismissed) reports it
+   with `state: "prompt"` (Retry asks again); either waits for the player.
+   A quick failure while `prompt` is the server's (`unreachable`, the usual
+   backoff): only Playwright's headless shell fails a blocked socket and
+   keeps `prompt`, and Firefox reads `prompt` without gating.
 
 `session.spec.ts` drives each branch on a socket held in CONNECTING (the
 fake network's `held` route) under a fake permission; the app's browser test
@@ -572,7 +584,9 @@ it is newer, listing the `watched` files that changed between the two.
   whose page `http://tauri.localhost` may meet its local network rules).
 - A headed browser's prompt: measured headless, where an undecided
   permission fails the socket at once; the hang the session reads as a
-  prompt is from Chromium's and autotrack's behaviour, held by the specs.
+  prompt on loopback is from Chromium's and autotrack's behaviour, held by
+  the specs. Whether a headed Chrome's LAN prompt outlasts the 8 s socket
+  timeout often enough to matter (the answer's change event retries anyway).
 - A real Firefox's local network prompt (Firefox 154+ release notes):
   Playwright's build never asked.
 - A real archipelago.gg room through this package (the S1 gate reached one
