@@ -395,9 +395,12 @@ heading alone; a skin that cannot be fetched falls back to the list.
 
 - The desktop app on macOS and Windows reaching a `ws://` server on the LAN
   (measured on Linux only: [desktop.md](desktop.md#archipelago-rooms)).
-- A headed Chromium's prompt itself: the browser tests run headless, where
-  an undecided permission fails the socket at once; the prompt's hang is
-  covered by the package's specs.
+- A headed Chromium's prompt itself: the browser tests run Chrome's headless
+  mode (the `chromium` channel locally, the runner's Google Chrome in CI),
+  which refuses the prompt at once and reads `denied`; the prompt's hang is
+  covered by the package's specs. A LAN server through the prompt: the
+  browser test stays on loopback, since a LAN address only measures the
+  runner's network.
 - Firefox's local network prompt: Playwright's Firefox 157 reached loopback
   without asking, and its LAN behaviour beyond ws:// (refused) is untested.
 - Safari and iOS: from WebKit's bug tracker, not measured.

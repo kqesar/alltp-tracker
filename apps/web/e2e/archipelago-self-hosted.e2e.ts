@@ -1,10 +1,18 @@
 // A self-hosted room from the published site: the build is served at the
 // site's real https address (its requests answered from this machine's
-// server), and the fake AP server listens on loopback. Chromium then puts the
-// socket behind Local Network Access, as it does for players: headless, an
-// undecided permission fails the socket at once
-// (net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS, measured in Chromium 156);
+// server), and the fake AP server listens on loopback. Chrome then puts the
+// socket behind Local Network Access, as it does for players: in its headless
+// mode an undecided permission fails the socket at once
+// (net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS) and turns "denied", as a
+// prompt the player refused (measured: Chromium 156, CI's Chrome 155);
 // Playwright's grant of `local-network-access` is the player's Allow.
+//
+// Chrome's headless mode, not Playwright's default headless shell: the shell
+// keeps the permission "prompt" after the refusal, which no browser a player
+// uses does. CI runs the runner's Google Chrome; locally Playwright's full
+// Chromium build ("chromium" channel), the same mode.
+test.use({ channel: process.env.CI ? "chrome" : "chromium" });
+
 import { expect, type Page, test } from "@playwright/test";
 import { FakeApServer } from "../../../packages/archipelago/test/fake-ap-server";
 import { fixture } from "../../../packages/archipelago/test/fixtures";
@@ -69,12 +77,13 @@ test("says the browser will ask, then connects once the player allows it", async
     await expect(dialog.getByTestId("ap-step-permission")).toBeVisible();
     await dialog.getByTestId("ap-slot-input").fill("Link");
     await dialog.getByTestId("ap-connect").click();
-    // Headless Chromium dismisses its prompt: the board says so and waits
+    // Headless Chrome refuses on the player's behalf: the board says so and
+    // waits for the permission to change
     await expect(dialog.getByTestId("ap-connect-headline")).toHaveText(
       "Blocked by the browser",
     );
     await expect(dialog.getByTestId("ap-connect-detail")).toHaveText(
-      "The browser did not let this site reach this device. Retry, and choose Allow when it asks.",
+      "The browser blocks this site from reaching this device. Allow it in the site's settings (the icon left of the address): the tracker connects once it is allowed.",
     );
     await expect(dialog.getByTestId("ap-step-permission")).toHaveAttribute(
       "data-state",
@@ -83,7 +92,7 @@ test("says the browser will ask, then connects once the player allows it", async
     await expect(dialog.getByTestId("ap-retry")).toBeVisible();
     // The note under the Room field says it too, with how to undo it
     await expect(reach).toHaveText(
-      /The browser did not let this site reach this device\. Retry, and choose Allow when it asks; if it no longer asks, click the icon left of the address and set "Apps on device" to Allow\./,
+      /The browser blocks this site from reaching this device\. To undo it, click the icon left of the address and set "Apps on device" to Allow, then Retry\./,
     );
     await expect(reach).toHaveAttribute("data-tone", "warning");
     expect(room.responders).toHaveLength(0);
@@ -267,15 +276,15 @@ for (const width of WIDTHS) {
       await expect(
         dialog.getByTestId("ap-step-address").getByRole("button"),
       ).toBeFocused();
-      // A refusal reads as one too
-      await dialog.getByTestId("ap-room-input").fill("ws://192.168.1.20:38281");
-      await dialog.getByTestId("ap-slot-input").fill("Link");
+      // A refusal reads as one too: the join link's room, on loopback, which
+      // the browser refuses until allowed (a LAN address would only measure
+      // the runner's network)
       await dialog.getByTestId("ap-connect").click();
       await expect(dialog.getByTestId("ap-connect-headline")).toHaveText(
         "Blocked by the browser",
       );
       await expect(dialog.getByTestId("ap-room-reach")).toHaveText(
-        /did not let this site reach your local network\..*set "Local network" to Allow\./,
+        /blocks this site from reaching this device\..*set "Apps on device" to Allow, then Retry\./,
       );
       await auditDialog(page, dialog, width);
       if (SHOTS) {
