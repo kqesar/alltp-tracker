@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { ItemName } from "@/games/archipelago/components/ItemName";
 import { ITEM_KINDS, kindOf } from "@/games/archipelago/project";
 import type { ApItem } from "@/games/archipelago/store";
 
@@ -9,11 +10,14 @@ import type { ApItem } from "@/games/archipelago/store";
  * colour alone.
  * @param items - The items to list, in the order they came
  * @param heading - The list's heading
+ * @param game - Their world, which says how its names read (itemLabel.ts)
  */
 export const ItemList = ({
+  game,
   heading,
   items,
 }: {
+  game: string | undefined;
   heading: string;
   items: readonly ApItem[];
 }) => {
@@ -47,7 +51,11 @@ export const ItemList = ({
                   data-testid="ap-list-item"
                   key={item.name}
                 >
-                  <span className="ap-items__name">{item.name}</span>
+                  <ItemName
+                    className="ap-items__name"
+                    game={game}
+                    name={item.name}
+                  />
                   {item.count > 1 && (
                     <span className="ap-items__times">
                       <span aria-hidden="true">×</span>

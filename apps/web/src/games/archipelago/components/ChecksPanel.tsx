@@ -6,6 +6,7 @@ import {
   groupsFor,
   visibleZones,
 } from "@/games/archipelago/checks";
+import { itemLabel } from "@/games/archipelago/itemLabel";
 import { useApNamesStore } from "@/games/archipelago/names";
 import { useArchipelagoStore } from "@/games/archipelago/store";
 import { useSkin } from "@/games/archipelago/worlds/skins";
@@ -74,12 +75,17 @@ const useHeld = (): ReadonlyMap<number, string> => {
   const players = useArchipelagoStore((state) => state.players);
   const me = useArchipelagoStore((state) => state.room?.slot);
   return useMemo(() => {
-    const names = new Map(players.map((player) => [player.slot, player.name]));
+    const by = new Map(players.map((player) => [player.slot, player]));
     return new Map(
-      sent.map(({ item, location, to }) => [
-        location,
-        to === me ? item : `${item} for ${names.get(to) ?? `Player ${to}`}`,
-      ]),
+      sent.map(({ item, location, to }) => {
+        const words = itemLabel(by.get(to)?.game, item);
+        return [
+          location,
+          to === me
+            ? words
+            : `${words} for ${by.get(to)?.name ?? `Player ${to}`}`,
+        ];
+      }),
     );
   }, [sent, players, me]);
 };

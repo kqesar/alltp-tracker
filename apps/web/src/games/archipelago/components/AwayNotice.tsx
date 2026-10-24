@@ -1,6 +1,8 @@
 import { useId } from "react";
 import { CloseIcon } from "@/components/ui/ToolbarIcons";
+import { ItemName } from "@/games/archipelago/components/ItemName";
 import { useApConnectionStore } from "@/games/archipelago/connection";
+import { useArchipelagoStore } from "@/games/archipelago/store";
 
 /** How many items the card lists; the rest are counted. */
 const LISTED = 12;
@@ -13,6 +15,7 @@ const LISTED = 12;
  */
 export const AwayNotice = () => {
   const away = useApConnectionStore((state) => state.away);
+  const game = useArchipelagoStore((state) => state.room?.game);
   const id = useId();
   const items = away ?? [];
   return (
@@ -36,7 +39,11 @@ export const AwayNotice = () => {
                   // biome-ignore lint/suspicious/noArrayIndexKey: see above
                   key={index}
                 >
-                  <span className="ap-feed__item">{item.item}</span>
+                  <ItemName
+                    className="ap-feed__item"
+                    game={game}
+                    name={item.item}
+                  />
                   {" from "}
                   <span className="ap-feed__player">{item.sender}</span>
                   {" ("}

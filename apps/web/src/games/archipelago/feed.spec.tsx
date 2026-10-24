@@ -257,7 +257,7 @@ describe("hints, players and what was sent", () => {
     const held = screen
       .getAllByTestId("ap-check-held")
       .map((element) => element.textContent);
-    expect(held).toContain(", held ETank for Hybrid Hero");
+    expect(held).toContain(", held E Tank for Hybrid Hero");
     expect(held).toContain(", held Small Key (Ice Palace)");
   });
 

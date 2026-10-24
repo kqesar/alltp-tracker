@@ -7,6 +7,8 @@ import {
 } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ChecksPanel } from "@/games/archipelago/components/ChecksPanel";
+import { FeedWords, lineText } from "@/games/archipelago/components/FeedLine";
+import { HintsPanel } from "@/games/archipelago/components/HintsPanel";
 import { ItemsPanel } from "@/games/archipelago/components/ItemsPanel";
 import { worldNames } from "@/games/archipelago/fixtures";
 import { useApNamesStore } from "@/games/archipelago/names";
@@ -162,6 +164,15 @@ describe("an SMZ3 slot", () => {
     );
     // No keycard yet: no keycards' row
     expect(screen.queryByTestId("ap-item-cards-cr")).toBeNull();
+    // TotalSMZ3's identifiers in words, AP's own name kept as the title
+    const heart = within(screen.getByTestId("ap-item-list")).getByText(
+      "Heart Piece",
+    );
+    expect(heart).toHaveAttribute("title", "HeartPiece");
+    expect(heart).toHaveAccessibleDescription("HeartPiece");
+    expect(useArchipelagoStore.getState().items.at(-1)?.name).toBe(
+      "HeartPiece",
+    );
     expect(screen.getAllByRole("listitem").length).toBeGreaterThan(63);
   });
 
@@ -177,6 +188,60 @@ describe("an SMZ3 slot", () => {
     );
     expect(screen.getByTestId("ap-item-smmaps")).toHaveTextContent(
       "Super Metroid maps, not received",
+    );
+  });
+});
+
+describe("an SMZ3 item named elsewhere on the board", () => {
+  it("reads in words in the feed and the hints, by the item's world", () => {
+    const entry = {
+      flags: 1,
+      kind: "item" as const,
+      mine: true,
+      parts: [
+        { flags: 1, game: "SMZ3", kind: "item" as const, text: "BombUpgrade5" },
+        { kind: "text" as const, text: " and " },
+        {
+          flags: 1,
+          game: "A Link to the Past",
+          kind: "item" as const,
+          text: "Bomb Upgrade (+5)",
+        },
+      ],
+      received: true,
+      seq: 1,
+    };
+    render(<FeedWords entry={entry} />);
+    expect(screen.getByText("Bomb Upgrade 5")).toHaveAttribute(
+      "title",
+      "BombUpgrade5",
+    );
+    expect(screen.getByText("Bomb Upgrade (+5)")).not.toHaveAttribute("title");
+    expect(lineText(entry)).toBe("Bomb Upgrade 5 and Bomb Upgrade (+5)");
+  });
+
+  it("reads in words in a hint for an SMZ3 player", () => {
+    lay(SAMUS, [], {
+      hints: [
+        {
+          entrance: "",
+          finder: "Samus",
+          flags: 1,
+          forMe: false,
+          item: "ProgressiveSword",
+          location: "Bomb",
+          receiver: "Hybrid Hero",
+          status: "priority",
+        },
+      ],
+      players: [
+        { game: "Super Metroid", name: "Samus", slot: 2, status: null },
+        { game: "SMZ3", name: "Hybrid Hero", slot: 3, status: null },
+      ],
+    });
+    render(<HintsPanel />);
+    expect(screen.getByTestId("ap-hint")).toHaveTextContent(
+      "PriorityProgressive Sword for Hybrid Hero at Bomb",
     );
   });
 });

@@ -22,12 +22,13 @@ export const ItemsPanel = () => {
         Items
       </h2>
       {skin === null ? (
-        <ItemList heading="Received" items={items} />
+        <ItemList game={game} heading="Received" items={items} />
       ) : (
         skin !== undefined && (
           <>
             <SkinGrid skin={skin} />
             <ItemList
+              game={game}
               heading="More items"
               items={items.filter((item) => !mapped?.has(item.name))}
             />

@@ -3,6 +3,7 @@ import { StreamTimer } from "@/components/ui/StreamTimer";
 import type { StreamSize } from "@/components/ui/StreamTools";
 import { FeedWords } from "@/games/archipelago/components/FeedLine";
 import { SkinGrid } from "@/games/archipelago/components/SkinGrid";
+import { itemLabel } from "@/games/archipelago/itemLabel";
 import { kindOf } from "@/games/archipelago/project";
 import {
   type ApFeedEntry,
@@ -44,12 +45,13 @@ export const stageOf = (
 /** The progression items held, a line each: a world with no skin. */
 const ProgressionList = () => {
   const items = useArchipelagoStore((state) => state.items);
+  const game = useArchipelagoStore((state) => state.room?.game);
   const held = items.filter((item) => kindOf(item.flags) === "progression");
   return (
     <ul className="board-grid ap-obs-list" data-testid="ap-obs-list">
       {held.map((item) => (
         <li className="ap-obs-list__item" key={item.name}>
-          {item.name}
+          {itemLabel(game, item.name)}
           {item.count > 1 && ` ×${item.count}`}
         </li>
       ))}

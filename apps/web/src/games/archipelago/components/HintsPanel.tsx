@@ -1,4 +1,5 @@
 import { memo, useId } from "react";
+import { ItemName } from "@/games/archipelago/components/ItemName";
 import type { ApHint } from "@/games/archipelago/store";
 import { useArchipelagoStore } from "@/games/archipelago/store";
 
@@ -11,11 +12,11 @@ const STATUS_WORDS: Readonly<Record<ApHint["status"], string>> = {
   unspecified: "Unspecified",
 };
 
-const HintRow = memo(({ hint }: { hint: ApHint }) => (
+const HintRow = memo(({ game, hint }: { game?: string; hint: ApHint }) => (
   <li className="ap-hint" data-status={hint.status} data-testid="ap-hint">
     <span className="ap-hint__status">{STATUS_WORDS[hint.status]}</span>
     <span className="ap-hint__what">
-      <span className="ap-feed__item">{hint.item}</span>
+      <ItemName className="ap-feed__item" game={game} name={hint.item} />
       {hint.forMe ? null : (
         <>
           {" for "}
@@ -38,10 +39,13 @@ const HintRow = memo(({ hint }: { hint: ApHint }) => (
 
 const HintList = ({
   empty,
+  gameOf,
   hints,
   title,
 }: {
   empty: string;
+  /** A hinted item's world: its receiver's game. */
+  gameOf: (hint: ApHint) => string | undefined;
   hints: readonly ApHint[];
   title: string;
 }) => {
@@ -57,6 +61,7 @@ const HintList = ({
         <ul className="ap-hints__list">
           {hints.map((hint) => (
             <HintRow
+              game={gameOf(hint)}
               hint={hint}
               key={`${hint.receiver}|${hint.finder}|${hint.location}|${hint.item}`}
             />
@@ -78,6 +83,12 @@ export const HintsPanel = () => {
   const hints = useArchipelagoStore((state) => state.hints);
   const points = useArchipelagoStore((state) => state.hintPoints);
   const cost = useArchipelagoStore((state) => state.hintCost);
+  const players = useArchipelagoStore((state) => state.players);
+  const game = useArchipelagoStore((state) => state.room?.game);
+  const gameOf = (hint: ApHint) =>
+    hint.forMe
+      ? game
+      : players.find((player) => player.name === hint.receiver)?.game;
   const forMe = hints.filter((hint) => hint.forMe);
   const forOthers = hints.filter((hint) => !hint.forMe);
   return (
@@ -90,11 +101,13 @@ export const HintsPanel = () => {
       )}
       <HintList
         empty="No hint for you yet. Ask one from your game's client (!hint)."
+        gameOf={gameOf}
         hints={forMe}
         title="Items for you"
       />
       <HintList
         empty="No hint names an item in your world yet."
+        gameOf={gameOf}
         hints={forOthers}
         title="Others' items in your world"
       />

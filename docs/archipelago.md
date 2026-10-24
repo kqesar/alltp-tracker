@@ -46,6 +46,7 @@ document is the app's side.
 | `project.ts` | Pure: the session's snapshot (ids) to the run (names: items, hints, what was sent, players' status, slot data outside races); the items received while away; the games the run needs names of; AP's item flags |
 | `datapackageCache.ts` | The IndexedDB name cache (the package's `PackageStore` seam), with a memory fallback |
 | `names.ts` | The names and location groups of the slot's game, for the checks (never saved or published) |
+| `itemLabel.ts` | An item's name as shown: in words for a world that names its items as identifiers (SMZ3), AP's exact name kept as the data and the title (`components/ItemName.tsx`) |
 | `checks.ts` | Pure: the slot's locations by location group, and the filter. `ChecksPanel` draws each group as a `<details>` disclosure ("Group — n left / m"): open by default while it has checks left, every one closed where the board stacks (`max-width: 60rem`, followed through a resize or a rotation until the player opens or closes one), every match open while a filter is typed; what the player opens or closes holds until the page reloads (not saved) |
 | `status.ts` | The status dot's phase and the short headline per session status |
 | `worlds/skin.ts`, `worlds/cells.ts`, `worlds/skins.ts` | Skins: the model, the kinds of cell and the grid shapes the skins share, and the loader (`useSkin`, `loadSkin`): each skin a chunk of its own, fetched for its world only |
@@ -55,7 +56,7 @@ document is the app's side.
 | `ArchipelagoApp.tsx`, `ArchipelagoObsView.tsx` | The board and the stream view |
 
 What a device downloads (Vite's gzip sizes, 2026-10-24, with the feed and
-hints and the three skins): the module chunk (11.3 KB, the package's
+hints and the three skins): the module chunk (11.6 KB, the package's
 address, name-data, feed and hints code included), the slot's skin (A Link
 to the Past 1.3 KB, Super Metroid 1.3 KB, SMZ3 4.3 KB with its 316
 locations' groups; 0.9 KB of cell kinds they share, and for Super Metroid
@@ -311,6 +312,18 @@ source has a cell or an exclusion with its reason (ALttP's capacity
 upgrades, Triforce pieces and Power Star; SMZ3's dungeon maps and compasses;
 SM's `Generic`, never in a pool), no exclusion hides a counted name, every
 row is full and every cell placed once.
+
+**Names as shown.** AP's SMZ3 world names its items by TotalSMZ3's C# enum
+(`HeartPiece`, `BombUpgrade5`): identifiers, not words. `itemLabel.ts`
+shows a name of such a world split into words ("Heart Piece", "Bomb
+Upgrade 5") wherever an item is named: More items, the feed and its
+announcer, hints, "While you were away", what a checked location held, the
+stream view's list. The element's title (its accessible description) keeps
+AP's exact name, which stays the data everywhere: the run, the skins'
+matching, the overlay's ids. A name's world is the slot's for its own
+items, the receiver's for a hint or a send (the feed's item parts carry it,
+`game`). AP 0.6.8's ALttP and Super Metroid names read as text and are
+shown as given (`itemLabel.spec.ts`, over the pinned name data).
 
 **Location groups.** AP 0.6.8's Super Metroid and SMZ3 worlds name no
 location group but `Everywhere` (recorded: `sm-smz3-session.json`), so

@@ -104,7 +104,7 @@ test("connects to a room and shows the slot's items and checks", async ({
     // What the checked locations held: other games' names, loaded lazily
     await page.getByTestId("ap-checks-filter").fill("Old Man");
     await expect(page.getByTestId("ap-check-held")).toHaveText(
-      ", held ETank for Hybrid Hero",
+      ", held E Tank for Hybrid Hero",
     );
     await page.getByTestId("ap-checks-filter").fill("");
     // The hints, two lists, statuses in words
