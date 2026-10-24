@@ -3,13 +3,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import {
+  AP_LABEL,
   COMPARE_FILE_LIMIT,
   checkDrift,
+  checkReleaseDrift,
   issueBody,
   issueTitle,
   LABEL,
   listedChanges,
   logicOf,
+  releaseIssueBody,
+  releaseIssueTitle,
+  watchedChanges,
 } from "../scripts/logic-drift.mjs";
 
 const BASE = "219fcafd029dab597b8db400efafd8f56f8b4edb";
@@ -341,5 +346,193 @@ describe("logicOf", () => {
   it("reads the LOGIC constant", () => {
     expect(logicOf("class R {\n    const LOGIC = 31;\n}")).toBe(31);
     expect(logicOf("class R { const VERSION = '31'; }")).toBeUndefined();
+  });
+});
+
+describe("checkReleaseDrift", () => {
+  const PIN = "54803be064fc7e80c4628777ed0b46a9390f255f";
+  const AP_MANIFEST = {
+    commit: PIN,
+    nameData: { "A Link to the Past": "1858ba2" },
+    release: "0.6.8",
+    repo: "ArchipelagoMW/Archipelago",
+    watched: ["MultiServer.py", "worlds/alttp/Items.py"],
+  };
+  const apPath = join(dir, "ap.json");
+  writeFileSync(apPath, JSON.stringify(AP_MANIFEST));
+
+  /** A GitHub API double: this is the latest release, these files changed. */
+  function fakeAp({
+    files = [] as File[],
+    issues = [] as { body?: string; number: number; title: string }[],
+    status = "ahead",
+    tag = "0.6.9",
+  } = {}) {
+    const calls: { args: Record<string, unknown>; method: string }[] = [];
+    const record =
+      <T>(method: string, result: (args: Record<string, unknown>) => T) =>
+      async (args: Record<string, unknown>) => {
+        calls.push({ args, method });
+        return result(args);
+      };
+    const github = {
+      rest: {
+        issues: {
+          create: record("issues.create", () => ({
+            data: { number: 9, title: "" },
+          })),
+          createLabel: record("issues.createLabel", () => ({})),
+          getLabel: record("issues.getLabel", () => {
+            throw new Error("Not Found");
+          }),
+          listForRepo: record("issues.listForRepo", () => ({ data: issues })),
+          update: record("issues.update", (args) => ({
+            data: { number: Number(args.issue_number), title: "" },
+          })),
+        },
+        repos: {
+          compareCommits: record("repos.compareCommits", () => ({
+            data: { files, status, total_commits: 12 },
+          })),
+          getLatestRelease: record("repos.getLatestRelease", () => ({
+            data: {
+              assets: [
+                {
+                  digest: `sha256:${"c".repeat(64)}`,
+                  name: `Archipelago_${tag}_linux-x86_64.tar.gz`,
+                },
+                { digest: null, name: `Setup.Archipelago.${tag}.exe` },
+              ],
+              html_url: `https://github.com/ArchipelagoMW/Archipelago/releases/tag/${tag}`,
+              published_at: "2026-11-01T10:00:00Z",
+              tag_name: tag,
+            },
+          })),
+        },
+      },
+    };
+    const logs: string[] = [];
+    const core = {
+      info: (message: string) => logs.push(message),
+      warning: (message: string) => logs.push(message),
+    };
+    const context = { repo: { owner: "kqesar", repo: "alltp-tracker" } };
+    return {
+      calls,
+      logs,
+      run: () =>
+        checkReleaseDrift({ context, core, github, manifestPath: apPath }),
+    };
+  }
+  const created = (h: ReturnType<typeof fakeAp>) =>
+    h.calls.find((c) => c.method === "issues.create")?.args;
+
+  it("does nothing while the latest release is the pinned one", async () => {
+    const h = fakeAp({ tag: "0.6.8" });
+    expect(await h.run()).toEqual({ action: "none" });
+    expect(h.logs.join()).toContain("up to date");
+    expect(h.calls.map((c) => c.method)).toEqual(["repos.getLatestRelease"]);
+  });
+
+  it("does nothing when the pin is ahead of the latest release", async () => {
+    expect(await fakeAp({ status: "behind", tag: "0.6.7" }).run()).toEqual({
+      action: "none",
+    });
+  });
+
+  it("opens an ap-drift issue for a newer release, listing watched files", async () => {
+    const h = fakeAp({
+      files: [file("MultiServer.py"), file("worlds/alttp/Rom.py")],
+    });
+    expect(await h.run()).toEqual({ action: "created", issue: 9 });
+    expect(
+      h.calls.find((c) => c.method === "repos.compareCommits")?.args,
+    ).toMatchObject({ base: PIN, head: "0.6.9", repo: "Archipelago" });
+    expect(h.calls.map((c) => c.method)).toContain("issues.createLabel");
+    const args = created(h);
+    expect(args).toMatchObject({
+      labels: [AP_LABEL],
+      title: "Upstream Archipelago release: 0.6.8 → 0.6.9",
+    });
+    const body = String(args?.body);
+    expect(body).toContain("`MultiServer.py`");
+    expect(body).not.toContain("worlds/alttp/Rom.py");
+    expect(body).toContain("**to check**");
+    expect(body).toContain(
+      `Archipelago_0.6.9_linux-x86_64.tar.gz\`: \`${"c".repeat(64)}`,
+    );
+    expect(body).not.toContain("Setup.Archipelago");
+    expect(body).toContain("<!-- ap-drift base=0.6.8 head=0.6.9 -->");
+  });
+
+  it("opens the issue even when no watched file changed", async () => {
+    const h = fakeAp({ files: [file("README.md")] });
+    expect((await h.run()).action).toBe("created");
+    expect(String(created(h)?.body)).toContain(
+      "None of the watched files changed.",
+    );
+  });
+
+  it("says a world file changed, so a checksum may have", () => {
+    const body = releaseIssueBody({
+      changes: [file("worlds/alttp/Items.py")],
+      commits: 1,
+      manifest: AP_MANIFEST,
+      release: {
+        html_url: "https://example.test/0.6.9",
+        tag_name: "0.6.9",
+      },
+      truncated: true,
+    });
+    expect(body).toContain("a checksum may well have");
+    expect(body).toContain("(1 commit)");
+    expect(body).toContain(`stopped at ${COMPARE_FILE_LIMIT} files`);
+  });
+
+  it("updates the open issue, and leaves the logic-drift ones alone", async () => {
+    const h = fakeAp({
+      issues: [
+        { number: 3, title: issueTitle(BASE, HEAD) },
+        { body: "old", number: 5, title: releaseIssueTitle("0.6.8", "0.6.9") },
+      ],
+    });
+    expect(await h.run()).toEqual({ action: "updated", issue: 5 });
+    expect(h.calls.map((c) => c.method)).not.toContain("issues.create");
+  });
+
+  it("leaves an issue alone when it already says the same", async () => {
+    const first = fakeAp();
+    await first.run();
+    const body = String(created(first)?.body);
+    const h = fakeAp({
+      issues: [{ body, number: 5, title: releaseIssueTitle("0.6.8", "0.6.9") }],
+    });
+    expect(await h.run()).toEqual({ action: "unchanged", issue: 5 });
+  });
+});
+
+describe("watchedChanges", () => {
+  it("keeps the watched files, under their new or former name", () => {
+    const changes = watchedChanges(
+      {
+        commit: BASE,
+        nameData: {},
+        release: "0.6.8",
+        repo: "ArchipelagoMW/Archipelago",
+        watched: ["NetUtils.py"],
+      },
+      [
+        file("NetUtils.py"),
+        file("netutils/core.py", {
+          previous_filename: "NetUtils.py",
+          status: "renamed",
+        }),
+        file("Utils.py"),
+      ],
+    );
+    expect(changes.map((c) => c.filename)).toEqual([
+      "NetUtils.py",
+      "netutils/core.py",
+    ]);
   });
 });

@@ -6,6 +6,10 @@ name: Logic drift
 # update that pack's open issue labelled logic-drift; the logic-drift skill
 # (.claude/skills/logic-drift) ports ALttPR's change from there, the pack's
 # README SMZ3's. Nothing changed: nothing happens.
+# Archipelago has no branch to follow (its main moves daily), so the third
+# call compares the release packages/archipelago/upstream.json pins with the
+# latest stable one and keeps an open `ap-drift` issue listing the watched
+# files that changed between the two.
 # Upstream is read through the GitHub API only: this workflow checks out
 # none of it and runs none of its code. packs/alttpr/scripts/logic-drift.mjs
 # holds the logic, with its tests.
@@ -38,13 +42,14 @@ jobs:
             packs/alttpr/upstream.json
             packs/alttpr/scripts/logic-drift.mjs
             packs/smz3/upstream.json
+            packages/archipelago/upstream.json
           sparse-checkout-cone-mode: false
 
       - name: Compare upstream with the pinned commit
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const { checkDrift } = await import(
+            const { checkDrift, checkReleaseDrift } = await import(
               `${process.env.GITHUB_WORKSPACE}/packs/alttpr/scripts/logic-drift.mjs`
             );
             await checkDrift({ context, core, github });
@@ -54,4 +59,10 @@ jobs:
               github,
               manifestPath: `${process.env.GITHUB_WORKSPACE}/packs/smz3/upstream.json`,
               pack: "smz3",
+            });
+            await checkReleaseDrift({
+              context,
+              core,
+              github,
+              manifestPath: `${process.env.GITHUB_WORKSPACE}/packages/archipelago/upstream.json`,
             });

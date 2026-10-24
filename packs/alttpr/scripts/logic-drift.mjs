@@ -7,6 +7,11 @@
 // does nothing while no listed file changed and, for a manifest that pins
 // one, LOGIC did not move. Upstream is only read through the GitHub API:
 // nothing of it is checked out or run.
+//
+// Archipelago has no commit to follow (its main moves daily) but releases:
+// checkReleaseDrift compares the release packages/archipelago/upstream.json
+// pins with the latest stable one, and keeps one open `ap-drift` issue up to
+// date the same way.
 
 import { readFileSync } from "node:fs";
 
@@ -32,7 +37,7 @@ const PER_PAGE = 100;
  *       get(params: Repo): Promise<{ data: { default_branch: string } }>,
  *       getBranch(params: Repo & { branch: string }): Promise<{ data: { commit: { sha: string } } }>,
  *       compareCommits(params: Repo & { base: string, head: string, page: number, per_page: number }):
- *         Promise<{ data: { total_commits: number, files?: ChangedFile[] } }>,
+ *         Promise<{ data: { total_commits: number, status?: string, files?: ChangedFile[] } }>,
  *       getContent(params: Repo & { path: string, ref: string }): Promise<{ data: unknown }>,
  *     },
  *     issues: {
@@ -44,8 +49,29 @@ const PER_PAGE = 100;
  *     },
  *   },
  * }} GitHub
+ * @typedef {{
+ *   rest: {
+ *     repos: Pick<GitHub["rest"]["repos"], "compareCommits"> & {
+ *       getLatestRelease(params: Repo): Promise<{ data: Release }>,
+ *     },
+ *     issues: GitHub["rest"]["issues"],
+ *   },
+ * }} ReleaseGitHub
  * @typedef {{ info(message: string): void, warning(message: string): void }} Core
  * @typedef {{ repo: string, commit: string, logic?: number, rules: { file: string }[], tests: { file: string }[] }} Manifest
+ * @typedef {{
+ *   tag_name: string,
+ *   html_url: string,
+ *   published_at?: string | null,
+ *   assets?: { name: string, digest?: string | null }[],
+ * }} Release
+ * @typedef {{
+ *   repo: string,
+ *   release: string,
+ *   commit: string,
+ *   watched: string[],
+ *   nameData: Record<string, string>,
+ * }} ReleaseManifest
  */
 
 /**
@@ -184,7 +210,7 @@ export function issueBody({
 }
 
 /**
- * @param {GitHub} github
+ * @param {{ rest: { repos: Pick<GitHub["rest"]["repos"], "compareCommits"> } }} github
  * @param {Repo} upstream
  * @param {string} base
  * @param {string} head
@@ -193,6 +219,7 @@ async function compare(github, upstream, base, head) {
   /** @type {ChangedFile[]} */
   const files = [];
   let commits = 0;
+  let status = "";
   for (let page = 1; ; page++) {
     const { data } = await github.rest.repos.compareCommits({
       ...upstream,
@@ -202,11 +229,17 @@ async function compare(github, upstream, base, head) {
       per_page: PER_PAGE,
     });
     commits = data.total_commits;
+    status = data.status ?? "";
     const batch = data.files ?? [];
     files.push(...batch);
     if (batch.length < PER_PAGE || files.length >= COMPARE_FILE_LIMIT) break;
   }
-  return { commits, files, truncated: files.length >= COMPARE_FILE_LIMIT };
+  return {
+    commits,
+    files,
+    status,
+    truncated: files.length >= COMPARE_FILE_LIMIT,
+  };
 }
 
 /**
@@ -228,6 +261,81 @@ async function logicAt(github, upstream, ref) {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Keeps one open issue of a label up to date: updates the one whose title
+ * starts with `prefix` (a pull request is no issue), else opens one, creating
+ * the label first when it does not exist.
+ *
+ * @param {{
+ *   github: { rest: { issues: GitHub["rest"]["issues"] } },
+ *   context: { repo: Repo },
+ *   core: Core,
+ *   label: string,
+ *   color: string,
+ *   description: string,
+ *   prefix: string,
+ *   title: string,
+ *   body: string,
+ * }} options
+ * @returns {Promise<{ action: "created" | "updated" | "unchanged", issue: number }>}
+ */
+async function upsertIssue({
+  body,
+  color,
+  context,
+  core,
+  description,
+  github,
+  label,
+  prefix,
+  title,
+}) {
+  const here = context.repo;
+  const { data: open } = await github.rest.issues.listForRepo({
+    ...here,
+    labels: label,
+    per_page: 100,
+    state: "open",
+  });
+  const existing = open.find(
+    (issue) =>
+      issue.pull_request === undefined && issue.title.startsWith(prefix),
+  );
+  if (existing !== undefined) {
+    if (existing.title === title && existing.body === body) {
+      core.info(`Issue #${existing.number} already says so.`);
+      return { action: "unchanged", issue: existing.number };
+    }
+    await github.rest.issues.update({
+      ...here,
+      body,
+      issue_number: existing.number,
+      title,
+    });
+    core.info(`Updated issue #${existing.number}: ${title}`);
+    return { action: "updated", issue: existing.number };
+  }
+
+  try {
+    await github.rest.issues.getLabel({ ...here, name: label });
+  } catch {
+    await github.rest.issues.createLabel({
+      ...here,
+      color,
+      description,
+      name: label,
+    });
+  }
+  const { data: created } = await github.rest.issues.create({
+    ...here,
+    body,
+    labels: [label],
+    title,
+  });
+  core.info(`Opened issue #${created.number}: ${title}`);
+  return { action: "created", issue: created.number };
 }
 
 /**
@@ -281,59 +389,196 @@ export async function checkDrift({
     return { action: "none" };
   }
 
-  const title = issueTitle(manifest.commit, head, pack);
-  const body = issueBody({
-    changes,
-    commits,
-    head,
-    logic,
-    manifest,
-    pack,
-    truncated,
+  return upsertIssue({
+    body: issueBody({
+      changes,
+      commits,
+      head,
+      logic,
+      manifest,
+      pack,
+      truncated,
+    }),
+    color: "d93f0b",
+    context,
+    core,
+    description: "A randomizer changed a file a game pack ports",
+    github,
+    label: LABEL,
+    prefix: titlePrefix(pack),
+    title: issueTitle(manifest.commit, head, pack),
   });
-  const here = context.repo;
-  const { data: open } = await github.rest.issues.listForRepo({
-    ...here,
-    labels: LABEL,
-    per_page: 100,
-    state: "open",
-  });
-  const existing = open.find(
-    (issue) =>
-      issue.pull_request === undefined &&
-      issue.title.startsWith(titlePrefix(pack)),
+}
+
+export const AP_LABEL = "ap-drift";
+export const AP_TITLE_PREFIX = "Upstream Archipelago release: ";
+
+/**
+ * @param {string} base the pinned release
+ * @param {string} head the latest one
+ */
+export const releaseIssueTitle = (base, head) =>
+  `${AP_TITLE_PREFIX}${base} → ${head}`;
+
+/**
+ * The watched files that changed, under their new or former name.
+ *
+ * @param {ReleaseManifest} manifest
+ * @param {readonly ChangedFile[]} files
+ */
+export function watchedChanges(manifest, files) {
+  const watched = new Set(manifest.watched);
+  return files.filter(
+    (file) =>
+      watched.has(file.filename) ||
+      (file.previous_filename !== undefined &&
+        watched.has(file.previous_filename)),
   );
-  if (existing !== undefined) {
-    if (existing.title === title && existing.body === body) {
-      core.info(`Issue #${existing.number} already says so.`);
-      return { action: "unchanged", issue: existing.number };
-    }
-    await github.rest.issues.update({
-      ...here,
-      body,
-      issue_number: existing.number,
-      title,
-    });
-    core.info(`Updated issue #${existing.number}: ${title}`);
-    return { action: "updated", issue: existing.number };
+}
+
+/**
+ * @param {{
+ *   manifest: ReleaseManifest,
+ *   release: Release,
+ *   commits: number,
+ *   changes: readonly ChangedFile[],
+ *   truncated: boolean,
+ * }} drift
+ */
+export function releaseIssueBody({
+  changes,
+  commits,
+  manifest,
+  release,
+  truncated,
+}) {
+  const site = `https://github.com/${manifest.repo}`;
+  const base = manifest.release;
+  const head = release.tag_name;
+  const rows = changes.map((change) => {
+    const ref = change.status === "removed" ? manifest.commit : head;
+    const renamed =
+      change.previous_filename !== undefined &&
+      change.previous_filename !== change.filename
+        ? ` (was \`${change.previous_filename}\`)`
+        : "";
+    return `| [\`${change.filename}\`](${site}/blob/${ref}/${change.filename})${renamed} | ${change.status} | +${change.additions} -${change.deletions} |`;
+  });
+  const assets = (release.assets ?? [])
+    .filter((asset) => /_linux-x86_64\.(tar\.gz|AppImage)$/.test(asset.name))
+    .map((asset) => ({
+      name: asset.name,
+      sha: asset.digest?.replace(/^sha256:/, ""),
+    }))
+    .filter((asset) => asset.sha !== undefined);
+  const worlds = changes.some((change) =>
+    /^worlds\/(alttp|sm|smz3)\//.test(change.filename),
+  );
+  return [
+    `\`${manifest.repo}\` released [${head}](${release.html_url})` +
+      `${release.published_at ? ` on ${release.published_at.slice(0, 10)}` : ""}, ` +
+      `past the release \`packages/archipelago/upstream.json\` pins (${base}): ` +
+      `[\`${base}...${head}\`](${site}/compare/${manifest.commit}...${head}) ` +
+      `(${commits} commit${commits === 1 ? "" : "s"}).`,
+    "",
+    changes.length === 0
+      ? "None of the watched files changed."
+      : `${changes.length} of the watched files changed:`,
+    ...(changes.length === 0
+      ? []
+      : ["", "| File | Change | Lines |", "| --- | --- | --- |", ...rows]),
+    ...(truncated
+      ? [
+          "",
+          `The comparison stopped at ${COMPARE_FILE_LIMIT} files, the API's limit: ` +
+            "read the full diff on GitHub, a watched file may be missing above.",
+        ]
+      : []),
+    "",
+    "Name-data checksums (`nameData` in `upstream.json`): **to check**. " +
+      "The data package is built by the server, not shipped as a file: " +
+      (worlds
+        ? "a watched world file changed, so a checksum may well have. "
+        : "") +
+      'record the fixtures against the new release ("Recording the fixtures" in ' +
+      "`packages/archipelago/README.md`) and compare.",
+    ...(assets.length === 0
+      ? []
+      : [
+          "",
+          "The release's Linux assets, for `assets` in `upstream.json`:",
+          "",
+          ...assets.map((asset) => `- \`${asset.name}\`: \`${asset.sha}\``),
+        ]),
+    "",
+    "Bump the pin as the README says (release, commit, assets, watched files, name data), " +
+      "run the suite and the Archipelago workflow, then close this issue from the pull request.",
+    "",
+    `<!-- ap-drift base=${base} head=${head} -->`,
+  ].join("\n");
+}
+
+/**
+ * Has Archipelago released a stable version past the one
+ * packages/archipelago/upstream.json pins? Opens or updates the `ap-drift`
+ * issue when it has, whichever files changed: a newer release is worth a
+ * bump, and its changed watched files say how much work it is.
+ *
+ * @param {{
+ *   github: ReleaseGitHub,
+ *   context: { repo: Repo },
+ *   core: Core,
+ *   manifestPath?: string,
+ * }} options
+ * @returns {Promise<{ action: "none" | "created" | "updated" | "unchanged", issue?: number }>}
+ */
+export async function checkReleaseDrift({
+  context,
+  core,
+  github,
+  manifestPath = "packages/archipelago/upstream.json",
+}) {
+  /** @type {ReleaseManifest} */
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  const [owner = "", repo = ""] = manifest.repo.split("/");
+  const upstream = { owner, repo };
+
+  // The latest release GitHub marks as such: never a draft or a pre-release
+  const { data: release } = await github.rest.repos.getLatestRelease(upstream);
+  if (release.tag_name === manifest.release) {
+    core.info(`${manifest.repo} is still at ${manifest.release}: up to date.`);
+    return { action: "none" };
   }
 
-  try {
-    await github.rest.issues.getLabel({ ...here, name: LABEL });
-  } catch {
-    await github.rest.issues.createLabel({
-      ...here,
-      color: "d93f0b",
-      description: "A randomizer changed a file a game pack ports",
-      name: LABEL,
-    });
+  const { commits, files, status, truncated } = await compare(
+    github,
+    upstream,
+    manifest.commit,
+    release.tag_name,
+  );
+  // The pin is ahead of the latest release (a release was pulled)
+  if (status === "behind" || status === "identical") {
+    core.info(
+      `The latest release ${release.tag_name} is not past the pinned ${manifest.release}.`,
+    );
+    return { action: "none" };
   }
-  const { data: created } = await github.rest.issues.create({
-    ...here,
-    body,
-    labels: [LABEL],
-    title,
+
+  return upsertIssue({
+    body: releaseIssueBody({
+      changes: watchedChanges(manifest, files),
+      commits,
+      manifest,
+      release,
+      truncated,
+    }),
+    color: "fbca04",
+    context,
+    core,
+    description: "Archipelago released a version past the pinned one",
+    github,
+    label: AP_LABEL,
+    prefix: AP_TITLE_PREFIX,
+    title: releaseIssueTitle(manifest.release, release.tag_name),
   });
-  core.info(`Opened issue #${created.number}: ${title}`);
-  return { action: "created", issue: created.number };
 }
