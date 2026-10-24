@@ -68,7 +68,7 @@ const seedMemory = (
 /** A dungeon's code from the spoiler's name. */
 const codeOf = (name: string) => {
   const found = DUNGEONS.find(
-    (d) => d.name.replace("'", "") === name.replace("'", ""),
+    (d) => d.name.replaceAll("'", "") === name.replaceAll("'", ""),
   );
   if (found === undefined) throw new RangeError(name);
   return found.code as PrizeDungeon;
