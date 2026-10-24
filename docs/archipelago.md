@@ -46,11 +46,17 @@ document is the app's side.
 | `components/` | `ApControls` (toolbar), `ConnectDialog` (lazy), `RoomLine` with `ApRunTimer`, `ItemsPanel`, `SkinGrid`, `ItemList`, `FeedPanel` and `FeedLine` (a line's words, the stream view's too), `SidePanel` (tabs over `ChecksPanel`, `HintsPanel`, `PlayersPanel`), `AwayNotice` |
 | `ArchipelagoApp.tsx`, `ArchipelagoObsView.tsx` | The board and the stream view |
 
-What a device downloads: the module chunk (about 8.4 KB gzipped, plus 2 KB
-of the package's address and name-data code) when it tracks Archipelago;
-the connect dialog (5.8 KB) and the session (6 KB, plus archipelago.js, 7 KB)
-on demand. Every other game's start-up is unchanged but for the registry's
-entries (+0.2 KB on the shared entry chunk).
+What a device downloads (Vite's gzip sizes, 2026-10-24, with the feed and
+hints): the module chunk (12 KB, the package's address, name-data, feed and
+hints code included), the run's store (3.3 KB, a chunk of its own since the
+overlay's whitelist reads it too), the shared run timer (1.5 KB, ALttPR's
+too) and its stylesheet (2.3 KB) when it tracks Archipelago; the connect
+dialog (5.8 KB) and the session (8.6 KB, plus archipelago.js, 7 KB) on
+demand. The feed and hints series added 8.1 KB to the board's start and
+2.6 KB to the session. Every other game's start-up is unchanged but for the
+registry's entries and the stream view's `&feed=1` (+0.3 KB on the shared
+entry chunk); ALttPR's run timer moved to the shared chunk (+1 KB, the cost
+of a chunk of its own).
 
 ## Stores and keys
 
