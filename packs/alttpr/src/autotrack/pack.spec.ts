@@ -313,7 +313,9 @@ describe("ALTTPR_AUTOTRACK", () => {
     const casual = await attach(open);
     expect(casual.status).toMatchObject({ race: { active: false } });
     expect(asked(open)).toEqual([...PRIZE_RANGES]);
-    expect(casual.decoded?.prizes).toEqual({ P1: "greenPendant" });
+    expect(casual.decoded?.prizes).toEqual({
+      P1: { prize: "greenPendant", shownBy: "finished" },
+    });
     expect(race.decoded?.prizes).toBe("race-mode");
     expect(always.decoded?.prizes).toBe("race-mode");
   });

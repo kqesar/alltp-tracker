@@ -1,6 +1,10 @@
 import { MEMORY_RANGE, type MemoryRangeId } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
-import { SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
+import {
+  SAVE,
+  seedMemory,
+  writePrizeTables,
+} from "@/games/alttpr/autotrack/fixtures";
 import { readMemory } from "@/games/alttpr/autotrack/reading";
 import {
   describeReading,
@@ -87,6 +91,75 @@ describe("describeReading", () => {
     expect(readout.withheld.every(({ why }) => why === "race-mode")).toBe(true);
     // Race Mode still reads the bosses
     expect(readout.bosses).toEqual(["Eastern Palace"]);
+  });
+
+  it("lists the dungeon prizes the game shows, and why, none other", () => {
+    const memory = writePrizeTables(seedMemory({ race: false }));
+    const or = (offset: number, bits: number) => {
+      memory[SAVE(offset)] |= bits & 0xff;
+      memory[SAVE(offset) + 1] |= bits >> 8;
+    };
+    or(0x472, 0x0400); // Swamp Palace finished
+    or(0x368, 0x2000); // Eastern Palace's map
+    or(0x414, 0x0020); // Sahasrahla's mark: Tower of Hera
+    // In the Light World: Swamp Palace's (finished) and the Light World's
+    // two shown; Desert Palace's (no map) and the Dark World's are not
+    expect(describeSeed(memory).shownPrizes).toEqual([
+      {
+        dungeon: "Eastern Palace",
+        prize: "The Pendant of Power or Wisdom",
+        why: "its map held",
+      },
+      {
+        dungeon: "Tower of Hera",
+        prize: "The Pendant of Courage",
+        why: "marked by Sahasrahla",
+      },
+      {
+        dungeon: "Swamp Palace",
+        prize: "Crystal 5 or 6",
+        why: "dungeon finished",
+      },
+    ]);
+    // The Bomb Merchant's mark on Ice Palace, read in the Dark World
+    or(0x414, 0x0040);
+    memory[SAVE(0x3ca)] = 0x40;
+    expect(describeSeed(memory).shownPrizes).toEqual([
+      {
+        dungeon: "Swamp Palace",
+        prize: "Crystal 5 or 6",
+        why: "dungeon finished",
+      },
+      {
+        dungeon: "Ice Palace",
+        prize: "Crystal 5 or 6",
+        why: "marked by the Bomb Merchant",
+      },
+    ]);
+    // A map mode that always shows them
+    const always = writePrizeTables(seedMemory({ race: false }), 0x00);
+    expect(
+      describeSeed(always).shownPrizes.map(({ dungeon, why }) => [
+        dungeon,
+        why,
+      ]),
+    ).toEqual([
+      ["Eastern Palace", "on the world map"],
+      ["Desert Palace", "on the world map"],
+      ["Tower of Hera", "on the world map"],
+    ]);
+    expect(describeSeed(always).shownPrizesUnread).toBeNull();
+  });
+
+  it("says no dungeon prize is read in Race Mode, or before the ROM is", () => {
+    const memory = writePrizeTables(seedMemory({ race: true }));
+    memory[SAVE(0x473)] = 0xff; // every dungeon finished
+    const raced = describeSeed(memory, true);
+    expect(raced.shownPrizes).toEqual([]);
+    expect(raced.shownPrizesUnread).toBe("race-mode");
+    const unread = describeSeed(memory, false, ["prize-bits"]);
+    expect(unread.shownPrizes).toEqual([]);
+    expect(unread.shownPrizesUnread).toBe("not-read");
   });
 
   it("never says in Race Mode whether Zelda was rescued", () => {

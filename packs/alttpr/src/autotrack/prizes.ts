@@ -47,9 +47,22 @@ import {
 /** The ten dungeons with a prize, by the memory map's codes. */
 export type PrizeDungeon = Exclude<DungeonCode, "H2" | "A1" | "A2">;
 
+/**
+ * Why the game shows a prize: its dungeon is finished; or the world map
+ * draws it, because the map mode shows every prize, its dungeon's map is
+ * held, or Sahasrahla or the Bomb Merchant marked it (MapOverlay).
+ */
+export type PrizeShownBy = "finished" | "map-mode" | "map" | "mark";
+
+/** A prize the game shows, and why. */
+export interface ShownPrize {
+  readonly prize: Prize;
+  readonly shownBy: PrizeShownBy;
+}
+
 /** The prizes the game shows, by dungeon; or why none is known. */
 export type PrizeReading =
-  | Readonly<Partial<Record<PrizeDungeon, Prize>>>
+  | Readonly<Partial<Record<PrizeDungeon, ShownPrize>>>
   | Unsettled;
 
 /** The ROM tables' order, from Eastern Palace; null for Castle Tower. */
@@ -139,22 +152,27 @@ export function decodePrizes(
   const completed = numberOf(memory, "dungeons-completed") ?? 0;
   const mapMode = numberOf(memory, "map-mode");
   const world = numberOf(memory, "current-world");
-  const maps =
-    (numberOf(memory, "maps") ?? 0) | (numberOf(memory, "map-overlay") ?? 0);
+  const maps = numberOf(memory, "maps") ?? 0;
+  const marks = numberOf(memory, "map-overlay") ?? 0;
   const dark = world === null ? null : (world & DARK_WORLD) !== 0;
   const whole = dark ? WHOLE_WORLD.dark : WHOLE_WORLD.light;
-  const shown: Partial<Record<PrizeDungeon, Prize>> = {};
+  /** Why the world map draws a dungeon's prize now, if it does. */
+  const onMap = (code: PrizeDungeon, bit: number): PrizeShownBy | null => {
+    if (dark === null || dark === LIGHT_WORLD.has(code) || mapMode === null) {
+      return null;
+    }
+    if (mapMode === 0x00) return "map-mode";
+    if ((maps & (bit | whole)) !== 0) return "map";
+    return (marks & (bit | whole)) !== 0 ? "mark" : null;
+  };
+  const shown: Partial<Record<PrizeDungeon, ShownPrize>> = {};
   TABLE_ORDER.forEach((code, index) => {
     if (code === null) return;
     const prize = prizeClass(bits[index], kinds[index]);
     if (prize === null) return;
     const { bit } = DUNGEON[code];
-    const onMap =
-      dark !== null &&
-      dark !== LIGHT_WORLD.has(code) &&
-      mapMode !== null &&
-      (mapMode === 0x00 || (maps & (bit | whole)) !== 0);
-    if ((completed & bit) !== 0 || onMap) shown[code] = prize;
+    const shownBy = (completed & bit) !== 0 ? "finished" : onMap(code, bit);
+    if (shownBy !== null) shown[code] = { prize, shownBy };
   });
   return shown;
 }

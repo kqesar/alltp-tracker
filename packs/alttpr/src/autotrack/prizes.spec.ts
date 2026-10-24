@@ -4,7 +4,12 @@ import { ITEMS } from "../items";
 import { PRIZES, type Prize } from "../tracker";
 import type { MemoryView } from "./decode";
 import { DUNGEON, DUNGEONS, MEMORY_RANGE, type MemoryRangeId } from "./memory";
-import { decodePrizes, type PrizeDungeon, prizeClass } from "./prizes";
+import {
+  decodePrizes as decodeShown,
+  type PrizeDungeon,
+  type PrizeReading,
+  prizeClass,
+} from "./prizes";
 import { ALTTPR_RACE_PROFILE } from "./race-profile";
 
 // The fixture holds, for four alttpr.com seeds at v31, the bytes of the
@@ -32,6 +37,18 @@ const LIGHT = 0x00;
 const DARK = 0x40;
 
 type Seed = (typeof seeds.seeds)[number];
+
+/** A reading's prizes alone, by dungeon, without why each is shown. */
+const classesOf = (reading: PrizeReading) =>
+  typeof reading === "string"
+    ? reading
+    : Object.fromEntries(
+        Object.entries(reading).map(([code, { prize }]) => [code, prize]),
+      );
+
+/** decodePrizes, its prizes alone. */
+const decodePrizes = (memory: MemoryView, options: { race: boolean }) =>
+  classesOf(decodeShown(memory, options));
 
 /** The ranges a seed's ROM and a save in play give. */
 const seedMemory = (
@@ -194,6 +211,33 @@ describe("decodePrizes", () => {
         decodePrizes(seedMemory(always, { world: LIGHT }), { race: false }),
       ).sort(),
     ).toEqual(["P1", "P2", "P3"]);
+  });
+
+  it("says why it shows each prize, finishing first", () => {
+    const why = (memory: MemoryView) => {
+      const reading = decodeShown(memory, { race: false });
+      if (typeof reading === "string") throw new Error(reading);
+      return Object.fromEntries(
+        Object.entries(reading).map(([code, { shownBy }]) => [code, shownBy]),
+      );
+    };
+    const hera = DUNGEON.P3.bit;
+    const desert = DUNGEON.P2.bit;
+    expect(
+      why(
+        seedMemory(seed, {
+          completed: eastern,
+          maps: eastern | desert,
+          overlay: hera,
+          world: LIGHT,
+        }),
+      ),
+    ).toEqual({ P1: "finished", P2: "map", P3: "mark" });
+    expect(why(seedMemory({ ...seed, mapMode: 0 }, { world: LIGHT }))).toEqual({
+      P1: "map-mode",
+      P2: "map-mode",
+      P3: "map-mode",
+    });
   });
 
   it("honours the map's whole-world bits", () => {

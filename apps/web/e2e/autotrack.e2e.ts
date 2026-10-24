@@ -68,6 +68,23 @@ const checkIn = (bridge: FakeUsb2Snes, location: string) => {
   bridge.memory[address + 1] |= mask >> 8;
 };
 
+/**
+ * Writes a real seed's prize tables (alttpr.com 2v7g66Dpvq: Eastern Palace
+ * a pendant, Desert Palace a crystal, Tower of Hera the Pendant of Courage)
+ * with a map mode that shows every prize of Link's world.
+ */
+const writePrizeTables = (bridge: FakeUsb2Snes) => {
+  bridge.memory.set(
+    [0x01, 0x02, 0x00, 0x04, 0x02, 0x08, 0x40, 0x01, 0x04, 0x20, 0x10],
+    MEMORY_RANGE["prize-bits"].address,
+  );
+  bridge.memory.set(
+    [0x00, 0x40, 0x00, 0x40, 0x00, 0x40, 0x40, 0x40, 0x00, 0x40, 0x40],
+    MEMORY_RANGE["prize-kinds"].address,
+  );
+  bridge.memory[MEMORY_RANGE["map-mode"].address] = 0x00;
+};
+
 /** DungeonsCompleted's high byte: Eastern Palace's prize taken ($2000). */
 const EASTERN_DONE = () => [SAVE(0x473), 0x20] as const;
 
@@ -444,6 +461,7 @@ test("connects through the dialog, ticks every step and lists what it read", asy
   page,
 }) => {
   bootSeed(bridge, { race: false });
+  writePrizeTables(bridge);
   await openTracker(page);
   await openDialog(page);
   const shown = dialog(page);
@@ -482,6 +500,13 @@ test("connects through the dialog, ticks every step and lists what it read", asy
   await expect(shown.getByTestId("readout-bosses")).toHaveText(
     /Eastern Palace/,
   );
+  // The Light World's prizes, which its map shows; no Dark World one
+  const prizes = shown.getByTestId("readout-shown-prizes");
+  await expect(prizes).toContainText(
+    "The Pendant of Courage (on the world map)",
+  );
+  await expect(prizes).toContainText("Desert Palace");
+  await expect(prizes).not.toContainText("Swamp Palace");
   const checked = shown.getByTestId("readout-checked");
   await expect(checked).toContainText("Locations checked (4)");
   await expect(checked).toContainText("Link's House");
@@ -503,6 +528,7 @@ test("a race seed shows the race-legal badge and is never read where Race Mode f
   page,
 }) => {
   bootSeed(bridge, { race: true });
+  writePrizeTables(bridge);
   await openTracker(page);
   await openDialog(page);
   await dialog(page).getByTestId("autotrack-connect").click();
@@ -519,6 +545,9 @@ test("a race seed shows the race-legal badge and is never read where Race Mode f
     /Not read in Race Mode/,
   );
   await expect(shown.getByTestId("readout-items")).not.toContainText("Bottle");
+  await expect(shown.getByTestId("readout-shown-prizes")).toHaveText(
+    /Not read in Race Mode/,
+  );
   const withheld = shown.getByTestId("readout-race-mode");
   for (const fact of ["Pendants and crystals", "Bottles", "Checks inside"]) {
     await expect(withheld).toContainText(fact);

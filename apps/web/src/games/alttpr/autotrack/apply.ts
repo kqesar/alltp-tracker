@@ -132,7 +132,7 @@ const shownCells = (
   if (typeof prizes === "string") return told;
   for (const cell of PRIZE_CELLS) {
     const code = dungeon(cell.dungeon).code as PrizeDungeon;
-    const prize = prizes[code];
+    const prize = prizes[code]?.prize;
     if (prize === undefined) continue;
     if (prizeOf(cell, board.items[cell.id]) !== undefined) continue;
     const value = cell.values[prize];

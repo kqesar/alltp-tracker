@@ -39,6 +39,8 @@ export {
   decodePrizes,
   type PrizeDungeon,
   type PrizeReading,
+  type PrizeShownBy,
+  type ShownPrize,
 } from "./autotrack/prizes";
 export {
   ALTTPR_GAME_CHECK,
