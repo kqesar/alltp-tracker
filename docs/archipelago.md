@@ -163,7 +163,11 @@ location, hint, timer or go mode ([overlay-api.md](overlay-api.md#ids-per-game))
   stream view, the overlay or the report (which keeps the host and masks the
   port).
 - The password is `type="password"`, `autocomplete="off"`, kept per tab in
-  sessionStorage, and on the device only on request.
+  sessionStorage, and on the device only on request. It is stored as typed:
+  a page has nowhere to keep a key a script on it could not read too, so
+  encrypting it there would hide nothing. CodeQL's clear-text storage alerts
+  on `connection.ts` are dismissed for that reason. An AP room's password
+  gates one room, shared by its players; it is no account's credential.
 - Read-only twice over: the Tracker tag, and the package's guard on the
   socket, which refuses any packet off its whitelist and stops the session
   (`packages/archipelago/README.md`, "Read-only guarantee").
