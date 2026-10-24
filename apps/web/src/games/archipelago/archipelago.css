@@ -564,10 +564,11 @@
   box-shadow: var(--focus-ring);
 }
 
+/* Down each column, then across: the last column is the short one, never a
+   lone entry on a last row */
 .ap-slot-data__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: 2px var(--spacing-md);
+  column-gap: var(--spacing-md);
+  column-width: 14rem;
   margin: 0;
   font-size: var(--font-size-sm);
 }
@@ -577,6 +578,8 @@
   gap: var(--spacing-sm);
   justify-content: space-between;
   min-width: 0;
+  padding-block: 1px;
+  break-inside: avoid;
 }
 
 .ap-slot-data__entry dt {
@@ -719,12 +722,12 @@
    rows ObsView keeps for them, lettered as the list is */
 .obs-view .ap-obs-feed {
   position: absolute;
-  top: var(--obs-timer-top, 0);
+  top: calc(var(--obs-timer-top, 0px) + var(--cell) * var(--ap-feed-row, 0));
   left: var(--obs-left, 0);
   display: grid;
   grid-auto-rows: calc(var(--cell) * 0.55);
   align-items: center;
-  width: calc(var(--cell) * 7);
+  width: calc(var(--cell) * var(--obs-columns, 7));
   padding: 0;
   margin: 0;
   font-size: calc(var(--cell) * 0.3);

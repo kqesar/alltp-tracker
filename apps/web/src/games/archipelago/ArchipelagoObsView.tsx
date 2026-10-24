@@ -1,3 +1,6 @@
+import type { CSSProperties } from "react";
+import { StreamTimer } from "@/components/ui/StreamTimer";
+import type { StreamSize } from "@/components/ui/StreamTools";
 import { FeedWords } from "@/games/archipelago/components/FeedLine";
 import { SkinGrid } from "@/games/archipelago/components/SkinGrid";
 import { kindOf } from "@/games/archipelago/project";
@@ -60,35 +63,71 @@ const StreamFeed = () => {
  * has one, else the progression items held, a line each, on a transparent
  * page, following the board through storage. With `&feed=1` (off unless
  * asked), the last five lines of the feed involving the slot under it, never
- * a hint. It never connects, and shows nothing of where the room is: the run
- * it reads holds no address or password.
+ * a hint. With `&timer=1`, the run timer on a row of its own under the grid,
+ * as every game's stream view draws it (the feed then under the timer). It
+ * never connects, and shows nothing of where the room is: the run it reads
+ * holds no address or password.
  */
 export const ArchipelagoObsView = ({
   background,
   feed = false,
   relay,
+  timer = false,
 }: ObsViewProps) => {
   const skin = skinFor(useArchipelagoStore((state) => state.room?.game));
   const lines = useArchipelagoStore(
     (state) =>
       state.items.filter((item) => kindOf(item.flags) === "progression").length,
   );
+  const columns = skin === null ? LIST_COLUMNS : skin.columns;
   const stageRef = useObsStage({
-    columns: skin === null ? LIST_COLUMNS : skin.columns,
-    extraRows: feed ? FEED_ROWS : 0,
+    columns,
+    extraRows: (timer ? 1 : 0) + (feed ? FEED_ROWS : 0),
     rows: skin === null ? Math.max(lines, 1) : rowsOf(skin).length,
     view: relay === "follow" ? "follow" : "obs",
   });
+  const style = {
+    "--ap-feed-row": timer ? 1 : 0,
+    "--obs-columns": columns,
+    ...(background ? { backgroundColor: background } : {}),
+  } as CSSProperties;
 
   return (
     <main
       className="obs-view"
       data-testid="obs-view"
       ref={stageRef}
-      style={background ? { backgroundColor: background } : undefined}
+      style={style}
     >
       {skin === null ? <ProgressionList /> : <SkinGrid skin={skin} />}
+      {timer && <ApStreamTimer />}
       {feed && <StreamFeed />}
     </main>
   );
 };
+
+/** A cell's crisp size in a source, in pixels: four times the 16 px sprites. */
+const NATIVE_CELL = 64;
+
+/**
+ * The browser source's size for this board's stream view, with or without
+ * the timer's row and the feed's rows (the desktop app's Stream tools).
+ * @param game - The slot's game: its skin's grid, or the list
+ * @param lines - The list's lines, for a world without a skin
+ */
+export const streamSize =
+  (game: string | undefined, lines: number) =>
+  (timer: boolean, feed = false): StreamSize => {
+    const skin = skinFor(game);
+    const rows = skin === null ? Math.max(lines, 1) : rowsOf(skin).length;
+    const columns = skin === null ? LIST_COLUMNS : skin.columns;
+    return {
+      height: (rows + (timer ? 1 : 0) + (feed ? FEED_ROWS : 0)) * NATIVE_CELL,
+      width: columns * NATIVE_CELL,
+    };
+  };
+
+/** The run's timer, drawn as every game's stream view draws it. */
+const ApStreamTimer = () => (
+  <StreamTimer timer={useArchipelagoStore((state) => state.timer)} />
+);

@@ -124,6 +124,24 @@ test("connects to a room and shows the slot's items and checks", async ({
     await expect(page.getByTestId("run-timer")).toHaveAccessibleName(
       /running$/,
     );
+    // Link's own client status reaching its goal (30) stops it there
+    room.push([
+      [
+        {
+          cmd: "SetReply",
+          key: "_read_client_status_0_1",
+          original_value: 20,
+          slot: 1,
+          value: 30,
+        },
+      ],
+    ]);
+    await expect(page.getByTestId("run-timer")).toHaveAccessibleName(
+      /stopped at the goal$/,
+    );
+    const stopped = await page
+      .getByTestId("run-timer")
+      .getAttribute("aria-label");
     // Location names, by the world's groups, filtered
     const filter = page.getByTestId("ap-checks-filter");
     await filter.fill("Ice Palace");
@@ -140,6 +158,11 @@ test("connects to a room and shows the slot's items and checks", async ({
     await expect(roomDialog(page)).toHaveCount(0);
     await expect(page.getByTestId("ap-room-status")).toHaveText("Connected");
     await expect(page.getByTestId("ap-checks-hide")).toBeChecked();
+    // The run's time at the goal, as it was: saved with the run
+    await expect(page.getByTestId("run-timer")).toHaveAttribute(
+      "aria-label",
+      stopped ?? "",
+    );
 
     // Nothing a tracker may not send ever left the page
     const sent = new Set(room.received.map((packet) => packet.cmd));
@@ -264,7 +287,12 @@ test("says what arrived while the connection was down, with sender and location"
     await expect(away).toContainText(
       "Small Key (Ice Palace) from your world (Ice Palace - Jelly Key Drop)",
     );
-    if (SHOTS) await page.screenshot({ path: `${SHOTS}/away.png` });
+    if (SHOTS) {
+      for (const width of WIDTHS) {
+        await page.setViewportSize({ height: 900, width });
+        await page.screenshot({ path: `${SHOTS}/away-${width}.png` });
+      }
+    }
     await page.getByTestId("ap-away-dismiss").click();
     await expect(away).toHaveCount(0);
   } finally {
@@ -350,6 +378,31 @@ test("the stream view shows the grid and nothing of where the room is", async ({
       String(room.port),
     );
     if (SHOTS) await stream.screenshot({ path: `${SHOTS}/obs-feed.png` });
+
+    // &timer=1 too: the run timer on its row under the grid, the feed under it
+    await stream.goto("./?view=obs&feed=1&timer=1");
+    const timer = stream.getByTestId("stream-timer");
+    await expect(timer).toHaveAccessibleName(/^Run timer: \d+:\d\d, running$/);
+    const grid = await stream.getByTestId("ap-skin").boundingBox();
+    const drawn = await timer.boundingBox();
+    const lines = await stream.getByTestId("ap-obs-feed").boundingBox();
+    // Under the grid, as wide as it, the feed below and all in the viewport
+    expect(drawn?.y).toBeCloseTo((grid?.y ?? 0) + (grid?.height ?? 0), 0);
+    expect(drawn?.width).toBeCloseTo(grid?.width ?? 0, 0);
+    expect(lines?.y).toBeGreaterThanOrEqual(
+      (drawn?.y ?? 0) + (drawn?.height ?? 0) - 1,
+    );
+    expect((lines?.y ?? 0) + (lines?.height ?? 0)).toBeLessThanOrEqual(
+      stream.viewportSize()?.height ?? 0,
+    );
+    if (SHOTS) {
+      for (const width of WIDTHS) {
+        await stream.setViewportSize({ height: 900, width });
+        await stream.screenshot({
+          path: `${SHOTS}/obs-feed-timer-${width}.png`,
+        });
+      }
+    }
   } finally {
     await room.close();
   }

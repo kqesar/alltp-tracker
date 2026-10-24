@@ -1,9 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  pixelText,
-  StreamTimer,
-} from "@/games/alttpr/components/ui/StreamTimer";
+import { pixelText } from "@/components/ui/StreamTimer";
+import { StreamTimer } from "@/games/alttpr/components/ui/StreamTimer";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 const T0 = Date.UTC(2026, 9, 18, 12, 0, 0);

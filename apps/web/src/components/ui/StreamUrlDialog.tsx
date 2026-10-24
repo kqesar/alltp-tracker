@@ -6,22 +6,28 @@ import { obsViewUrl } from "@/utils/view";
 /**
  * The stream view's address, to copy into an OBS browser source: the dialog
  * of the games whose stream view is the grid alone (ALttPR's adds a timer and
- * the sizes, `StreamViewControl`).
+ * the sizes, `StreamViewControl`), and Archipelago's, which offers its run
+ * timer and its feed under the grid.
  * @param testIdPrefix - The game's, for the address's `data-testid`
  */
 export const StreamUrlDialog = ({
   feedOption = false,
   onClose,
   testIdPrefix,
+  timerOption = false,
 }: {
   /** Offer the room's feed under the grid (`&feed=1`), off until ticked. */
   feedOption?: boolean;
   onClose: () => void;
   testIdPrefix: string;
+  /** Offer the run timer under the grid (`&timer=1`), off until ticked. */
+  timerOption?: boolean;
 }) => {
   const [feed, setFeed] = useState(false);
+  const [timer, setTimer] = useState(false);
   const feedId = useId();
-  const url = obsViewUrl({ feed });
+  const timerId = useId();
+  const url = obsViewUrl({ feed, timer });
   const urlRef = useRef<HTMLParagraphElement>(null);
   const [status, setStatus] = useState("");
   const copy = async () =>
@@ -40,6 +46,19 @@ export const StreamUrlDialog = ({
         The item grid alone, on a transparent background, for an OBS browser
         source. It follows this tracker live.
       </p>
+      {timerOption && (
+        <div className="check-option">
+          <input
+            checked={timer}
+            className="check-option__input"
+            data-testid={`${testIdPrefix}-stream-timer`}
+            id={timerId}
+            onChange={(event) => setTimer(event.target.checked)}
+            type="checkbox"
+          />
+          <label htmlFor={timerId}>Show the run timer under the grid</label>
+        </div>
+      )}
       {feedOption && (
         <div className="check-option">
           <input

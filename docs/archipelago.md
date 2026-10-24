@@ -176,10 +176,13 @@ flowchart LR
   where they were found. A slot's first item ever, which comes at index 0 in
   a later frame, is not "away".
 - **Run timer**: the shared `RunTimer` (`components/ui/RunTimer.tsx`) over
-  `run.timer`. The countdown's 0 starts an idle timer while
-  `prefs.countdownTimer` (on by default) holds; nothing else moves it but the
-  player. No goal stops it: the room says nothing of a goal's time to a
-  tracker but a `Goal` line.
+  `run.timer`. While `prefs.countdownTimer` (on by default, "Start at the
+  room's countdown, stop at your goal") holds, the countdown's 0 starts an
+  idle timer and the slot's own `_read_client_status_{team}_{slot}` reaching
+  30 (`CLIENT_GOAL`, AP 0.6.8's NetUtils.py) stops a running one for good,
+  at the moment its `SetReply` arrives. A status already at 30 when a
+  connection reads it stops nothing: it says nothing of when. The stopped
+  time is the run's `timer`, saved with it, so a reload shows it.
 - **Performance.** Feed lines poke the same 250 ms batch as the snapshot: a
   release of 1,000 sends, each its own `PrintJSON` and `ReceivedItems`,
   renders the items and the feed once and writes the run once
@@ -226,8 +229,12 @@ never loads the session: it reads the run from storage, which holds no
 address or password. The desktop app's stream server and live follow need
 nothing of their own.
 
-`&feed=1` (off unless asked: the site's Stream view dialog has the
-checkbox; the desktop app's address takes it by hand) adds the feed's last
+`&timer=1` draws the run timer under the grid with the shared `StreamTimer`
+(`components/ui/StreamTimer.tsx`), on its row and as wide as the grid
+(`--obs-columns`), as every game's stream view does.
+
+`&feed=1` (off unless asked: the Stream view dialog has the
+checkbox, the desktop app's Stream tools too) adds the feed's last
 five lines involving the slot under the grid, oldest first as a chat
 overlay reads, never a hint, on rows `useObsStage` keeps for them
 (`extraRows`).

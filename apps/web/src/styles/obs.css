@@ -40,12 +40,13 @@
 }
 
 /* The run timer (&timer=1), on the row ObsView keeps under the grid, as
-   wide as the grid's eight columns: its drawing centres in that box. */
+   wide as the grid (eight columns, or the --obs-columns a view sets): its
+   drawing centres in that box. */
 .obs-view .stream-timer {
   position: absolute;
   top: var(--obs-timer-top, 0);
   left: var(--obs-left, 0);
-  width: calc(var(--cell) * 8);
+  width: calc(var(--cell) * var(--obs-columns, 8));
   height: var(--cell);
 }
 

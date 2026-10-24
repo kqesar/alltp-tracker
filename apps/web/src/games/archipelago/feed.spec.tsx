@@ -175,6 +175,32 @@ describe("the stream view's address", () => {
     expect(feed).toHaveAccessibleName(/last 5 lines involving you/);
     fireEvent.click(feed);
     expect(url.textContent).toMatch(/[?&]feed=1$/);
+    // No timer option unless the game has one
+    expect(screen.queryByTestId("ap-stream-timer")).toBeNull();
+  });
+
+  it("adds the run timer once ticked, and the view draws it under the grid", () => {
+    render(
+      <StreamUrlDialog
+        feedOption
+        onClose={() => {}}
+        testIdPrefix="ap"
+        timerOption
+      />,
+    );
+    fireEvent.click(screen.getByLabelText("Show the run timer under the grid"));
+    expect(screen.getByTestId("ap-stream-url").textContent).toMatch(
+      /[?&]timer=1$/,
+    );
+    act(() => run().apply({ ...freshRun(), room: LINK, updatedAt: 1 }));
+    act(() => run().startTimer(Date.now() - 61_000));
+    render(<ArchipelagoObsView background={null} timer />);
+    expect(screen.getByTestId("stream-timer")).toHaveAccessibleName(
+      /^Run timer: 1:0\d, running$/,
+    );
+    expect(screen.getByTestId("obs-view")).toHaveStyle({
+      "--obs-columns": "7",
+    });
   });
 });
 
@@ -267,6 +293,46 @@ describe("the countdown's timer", () => {
     expect(run().timer.startedAt).not.toBeNull();
   });
 
+  it("stops at the slot's own goal as the room says it, and a reload shows that time", async () => {
+    const room = await playedRoom();
+    // Quester's goal (slot 4, 30) went by in the recording: still running
+    expect(run().timer.startedAt).not.toBeNull();
+    const before = Date.now();
+    act(() =>
+      room.network.last.deliver([
+        [
+          {
+            cmd: "SetReply",
+            key: "_read_client_status_0_1",
+            original_value: 20,
+            slot: 1,
+            value: 30,
+          },
+        ],
+      ]),
+    );
+    const { timer } = run();
+    expect(timer.finished).toBe(true);
+    expect(timer.startedAt).toBeNull();
+    expect(timer.elapsedMs).toBeGreaterThanOrEqual(0);
+    expect(timer.elapsedMs).toBeLessThanOrEqual(Date.now() - before + 5000);
+    // Saved with the run: a reload draws the stopped time
+    const saved = localStorage.getItem(AP_STORAGE_KEY) ?? "";
+    useArchipelagoStore.setState(useArchipelagoStore.getInitialState(), true);
+    localStorage.setItem(AP_STORAGE_KEY, saved);
+    await useArchipelagoStore.persist.rehydrate();
+    expect(run().timer).toEqual(timer);
+  });
+
+  it("stops nothing that is not running, nor when the player turned it off", () => {
+    act(() => run().goalReached(5000));
+    expect(run().timer.finished).toBe(false);
+    act(() => run().startTimer(1000));
+    act(() => run().setPref("countdownTimer", false));
+    act(() => run().goalReached(5000));
+    expect(run().timer.startedAt).toBe(1000);
+  });
+
   it("starts nothing when the player turned it off", async () => {
     act(() => run().setPref("countdownTimer", false));
     await playedRoom();
@@ -337,7 +403,9 @@ describe("the board's run timer and the away card", () => {
     expect(run().timer.startedAt).toBeNull();
     fireEvent.click(screen.getByTestId("run-timer-reset"));
     expect(run().timer.elapsedMs).toBe(0);
-    const auto = screen.getByLabelText("Start at the room's countdown");
+    const auto = screen.getByLabelText(
+      "Start at the room's countdown, stop at your goal",
+    );
     expect(auto).toBeChecked();
     fireEvent.click(auto);
     expect(run().prefs.countdownTimer).toBe(false);

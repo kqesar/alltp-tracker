@@ -1,6 +1,11 @@
-import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { useNow } from "@/hooks/useNow";
-import { formatTime, TIMER_WORDS, timerMs, timerState } from "@/utils/runTimer";
+import {
+  formatTime,
+  type RunTimer,
+  TIMER_WORDS,
+  timerMs,
+  timerState,
+} from "@/utils/runTimer";
 
 /**
  * The chest counters' 3×5 font, by character: "#" is one font pixel. What
@@ -57,11 +62,11 @@ export const pixelText = (text: string): { d: string; width: number } => {
  * are: their pixel font on their dark, gold-lined frame, so it sits with the
  * grid on stream. Its height is one cell, which keeps every pixel whole
  * wherever the grid's are; white while it runs, grey while paused, gold once
- * the goal stopped it. It follows the tracker through storage, and redraws
+ * the goal stopped it. Every game's stream view gives it its run's timer,
+ * which follows the tracker through storage; it redraws
  * once a second while running.
  */
-export const StreamTimer = () => {
-  const timer = useGameStore((state) => state.timer);
+export const StreamTimer = ({ timer }: { timer: RunTimer }) => {
   const state = timerState(timer);
   const now = useNow(state === "running");
   const time = formatTime(timerMs(timer, now));

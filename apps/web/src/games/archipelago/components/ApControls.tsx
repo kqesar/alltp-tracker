@@ -6,7 +6,9 @@ import { Modal } from "@/components/ui/Modal";
 import { StreamTools } from "@/components/ui/StreamTools";
 import { StreamUrlDialog } from "@/components/ui/StreamUrlDialog";
 import { PlugIcon, StreamIcon } from "@/components/ui/ToolbarIcons";
+import { streamSize } from "@/games/archipelago/ArchipelagoObsView";
 import { useApConnectionStore } from "@/games/archipelago/connection";
+import { kindOf } from "@/games/archipelago/project";
 import { headlineOf, phaseOf } from "@/games/archipelago/status";
 import { useArchipelagoStore } from "@/games/archipelago/store";
 import { isDesktopApp } from "@/utils/platform";
@@ -46,6 +48,12 @@ export const ApControls = () => {
   const [dialog, setDialog] = useState<"mode" | "stream" | null>(null);
   const phase = phaseOf(status);
   const headline = headlineOf(status);
+  // What sizes the stream view's source: the skin's grid, or the list's lines
+  const game = useArchipelagoStore((state) => state.room?.game);
+  const lines = useArchipelagoStore(
+    (state) =>
+      state.items.filter((item) => kindOf(item.flags) === "progression").length,
+  );
 
   // No room yet: the dialog opens on its own, once, as the board does
   const asked = useRef(false);
@@ -99,12 +107,17 @@ export const ApControls = () => {
       {dialog === "mode" && <ModeDialog onClose={() => setDialog(null)} />}
       {dialog === "stream" &&
         (isDesktopApp ? (
-          <StreamTools onClose={() => setDialog(null)} />
+          <StreamTools
+            feedOption
+            onClose={() => setDialog(null)}
+            sizeOf={streamSize(game, lines)}
+          />
         ) : (
           <StreamUrlDialog
             feedOption
             onClose={() => setDialog(null)}
             testIdPrefix="archipelago"
+            timerOption
           />
         ))}
     </div>
