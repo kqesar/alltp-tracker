@@ -36,6 +36,18 @@ export const LOCAL_NETWORK_PERMISSION_NAMES: readonly string[] = [
   "local-network-access",
 ];
 
+/**
+ * The same for a server on the local network (an Archipelago room hosted on
+ * another computer): `local-network` gates private addresses in Chrome 145+
+ * (Chrome 145 release notes); Chrome 142-144 knew only the combined
+ * `local-network-access`, asked second. Measured in Chromium 156:
+ * Playwright's grant of `local-network-access` turns both names "granted".
+ */
+export const LAN_PERMISSION_NAMES: readonly string[] = [
+  "local-network",
+  "local-network-access",
+];
+
 interface PermissionStatusLike {
   readonly state: string;
   onchange: (() => void) | null;

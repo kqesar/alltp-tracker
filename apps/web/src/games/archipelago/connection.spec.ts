@@ -5,6 +5,7 @@ import {
   connect,
   disconnect,
   followOtherTabs,
+  localNetworkPermission,
   pageContext,
   readPassword,
   retry,
@@ -102,8 +103,54 @@ describe("the page", () => {
         "https:",
         "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0",
       ),
-    ).toEqual({ browser: "firefox", kind: "secure" });
+    ).toEqual({ browser: "firefox", gated: false, kind: "secure" });
     expect(pageContext()).toEqual({ kind: "insecure" });
+  });
+
+  it("knows which browsers gate this device and the LAN (autotracking's loopbackAccess)", () => {
+    const chrome = (major: number) =>
+      `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${major}.0.0.0 Safari/537.36`;
+    expect(pageContext("https:", chrome(156))).toEqual({
+      browser: "chromium",
+      gated: true,
+      kind: "secure",
+    });
+    expect(pageContext("https:", chrome(146))).toMatchObject({ gated: false });
+    expect(
+      pageContext(
+        "https:",
+        "Mozilla/5.0 (X11; Linux x86_64; rv:157.0) Gecko/20100101 Firefox/157.0",
+      ),
+    ).toMatchObject({ browser: "firefox", gated: true });
+  });
+});
+
+describe("the local network permission", () => {
+  it("asks the browser by the names each permission answers to", async () => {
+    const queried: string[] = [];
+    const query = vi.fn(async ({ name }: { name: string }) => {
+      queried.push(name);
+      if (name !== "local-network-access") throw new TypeError(name);
+      return { onchange: null, state: "denied" };
+    });
+    vi.stubGlobal("navigator", { ...navigator, permissions: { query } });
+    try {
+      expect(await localNetworkPermission("local-network").query()).toEqual({
+        name: "local-network-access",
+        state: "denied",
+      });
+      expect(
+        await localNetworkPermission("loopback-network").query(),
+      ).toMatchObject({ state: "denied" });
+      expect(queried).toEqual([
+        "local-network",
+        "local-network-access",
+        "loopback-network",
+        "local-network-access",
+      ]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

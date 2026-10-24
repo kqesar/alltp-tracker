@@ -582,6 +582,43 @@ flowchart LR
 | macOS | `.dmg`, Apple silicon and Intel | ad hoc (`signingIdentity: "-"`): without it an Apple silicon Mac calls the download "damaged". Not notarized (a paid Apple account): the player allows it once in Privacy & Security. |
 | Linux | AppImage, `.deb`, `.rpm` | none needed |
 
+## Archipelago rooms
+
+The Archipelago board connects from the webview itself: no Rust is
+involved. Its page context is `desktop` (`isDesktopApp`), so the package's
+pre-check never refuses an address and no local network permission is asked
+(`docs/archipelago.md`, "The pre-check and the local network permission").
+That is what the app adds over the site for a self-hosted room: a plain
+`ws://` server on the LAN (which Firefox and Safari refuse from the site)
+or on the internet (which every browser refuses from an https page).
+
+Measured on 2026-10-24 (the Archipelago bench's gate B), the Linux release
+build (WebKitGTK 2.54.2, page `tauri://localhost`) driven through WebKit's
+inspector (`WEBKIT_INSPECTOR_HTTP_SERVER=127.0.0.1:9333`, which a release
+build honours):
+
+| From the app on Linux | Result |
+| --- | --- |
+| `wss://archipelago.gg:<port>` | connects |
+| `ws://127.0.0.1:38281` | connects |
+| `ws://<LAN IP>:38285` | connects |
+| `ws://` on a public host | not tested |
+| `isSecureContext`, `Origin` | true, `tauri://localhost` |
+| IndexedDB (the name cache), `navigator.locks` (the tab lock) | work; `navigator.storage` is undefined |
+
+- **No Rust WebSocket.** The plan kept one in reserve (a WebSocket-like
+  class over a Rust socket) in case WebKit refused remote `ws://` from
+  `tauri://localhost`; gate B showed it does not, so none is built. It
+  would be built only if macOS or Windows turns out to block it.
+- **Windows keeps `http://tauri.localhost`.** With `useHttpsScheme` the
+  pages would be https and every plain `ws://` mixed content: SNI's
+  `ws://localhost` and a self-hosted room's alike.
+  `apps/web/src/desktop/webviewOrigin.spec.ts` fails if the setting appears.
+- **Not verified**: macOS (WKWebView, `tauri://localhost`) and Windows
+  (WebView2, a Chromium whose `http://tauri.localhost` page may meet its
+  Local Network Access rules: a prompt, or a refusal the board would report
+  as unreachable). Nobody has run either against a room yet.
+
 ## Known limits
 
 - **Size.** The AppImage weighs about 86 MB (v2.30.0's): it carries WebKitGTK. The `.deb` and `.rpm` (about 8 MB) use the system's, the Windows installer 5.4 MB, each macOS `.dmg` about 7 MB.

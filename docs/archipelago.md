@@ -39,9 +39,10 @@ document is the app's side.
 
 | File | What it holds |
 | --- | --- |
-| `module.ts` | The `GameModule`: `start` follows other tabs (`syncAcrossTabs` on the run, `followOtherTabs` on the connection's settings); `importRun` refuses |
+| `module.ts` | The `GameModule`: `start` follows other tabs (`syncAcrossTabs` on the run, `followOtherTabs` on the connection's settings) and takes a join link; `importRun` refuses |
 | `store.ts` | The run (`useArchipelagoStore`), persisted and published; its version 1 to 2 migration (`migrateRun`) |
-| `connection.ts` | The connection's settings, the password, the one session per page, its status; the Web Lock |
+| `connection.ts` | The connection's settings, the password, the one session per page, its status; the Web Lock; the page context and the local network permission (autotracking's probe) the pre-check and the session read |
+| `joinLink.ts` | Join links: read from the address and dropped from it (`takeJoinLink`), built from the dialog's fields (`joinLinkUrl`) |
 | `runtime.ts` | A chunk of its own, loaded on Connect: the package's session, the name data it loads (other games' lazily), the feed it folds, "While you were away", the countdown, the batched writes of the run |
 | `project.ts` | Pure: the session's snapshot (ids) to the run (names: items, hints, what was sent, players' status, slot data outside races); the items received while away; the games the run needs names of; AP's item flags |
 | `datapackageCache.ts` | The IndexedDB name cache (the package's `PackageStore` seam), with a memory fallback |
@@ -68,7 +69,11 @@ demand. The feed and hints series added 8.1 KB to the board's start and
 2.6 KB to the session. Every other game's start-up is unchanged but for the
 registry's entries and the stream view's `&feed=1` (+0.3 KB on the shared
 entry chunk); ALttPR's run timer moved to the shared chunk (+1 KB, the cost
-of a chunk of its own).
+of a chunk of its own). The self-hosted series (S4: the pre-check, the
+local network permission, join links) added 0.5 KB to the module chunk
+(12.0 KB), 1.6 KB to the connect dialog (7.4 KB), 0.4 KB to the session
+(9.1 KB) and 0.2 KB to the stylesheet; other games' start-ups moved by
+0.03 KB at most.
 
 ## Stores and keys
 
@@ -94,8 +99,10 @@ the timer idle, the prefs at their defaults with `hideChecked` kept, every
 status unread (null). Without that step persist would drop every version 1
 run for an empty board.
 
-The connection's store also holds `away` (transient, never saved): the items
-the slot received while the board was not connected, until dismissed.
+The connection's store also holds, transient and never saved, `away`: the
+items the slot received while the board was not connected, until dismissed;
+and `prefill`: the room and slot a join link named, until the dialog takes
+them ("Join links" below).
 
 ## Data flow
 
@@ -207,18 +214,60 @@ run), and from the toolbar's **Room** button. The Room field takes every
 form `parseAddress` reads; a room link `https://archipelago.gg/room/<id>` is
 resolved through `/api/room_status/<id>` (archipelago.gg allows the site's
 origin), which fills the port and turns **Slot** into a list of the room's
-slots (name · game). Before any socket, `blockedWhy` runs the package's
-`connectPlan` for this page (`pageContext`: the desktop app, an http page, or
-an https page and its browser): a ws:// server on the internet from the
-site is refused with the way out (wss, or the desktop app), as is a ws://
-this browser refuses to the local network. The status, its sentence
-(`describeStatus`), Retry now while the session waits, the room's page when
-archipelago.gg looks paused, the package's setup steps ticked from the
-status, and **Copy a report** (`diagnosticReport`: the port masked, never the
-slot or the password) follow.
+slots (name · game). The status, its sentence (`describeStatus`), Retry now
+while the session waits, the room's page when archipelago.gg looks paused,
+the package's setup steps ticked from the status, **Copy a join link** and
+**Copy a report** (`diagnosticReport`: the port masked, never the slot or the
+password) follow.
 
 Once the player connected, `connectOnStart` connects again as the board
 opens. **Disconnect** clears it.
+
+### The pre-check and the local network permission
+
+What the site can reach depends on the browser and on where the server sits
+(measured, [the package's table](../packages/archipelago/README.md#addresses-and-connectivity)),
+not on the scheme alone. As the player types, the dialog runs the package's
+pre-check on the address (`reachOf`, for `currentPage()`: `pageContext` reads
+the desktop app, an http page, or an https page with its browser and, from
+autotracking's `loopbackAccess`, whether that browser gates this device and
+the LAN) and says the outcome under the Room field before any socket opens
+(`describeReach`, part of the field's description):
+
+| Outcome | When | The way out shown |
+| --- | --- | --- |
+| nothing said | archipelago.gg, any wss:// to the internet, the desktop app, an http page, a permission already granted | |
+| `ask` | Chromium (or Firefox 154+), a server on this device or the LAN, the permission undecided | "The browser will ask … choose Allow" |
+| `denied` | the same, the permission refused; or the session found the browser said no while it still reads undecided (a dismissed or headless prompt, `local-network-denied` for this address) | how to undo it: in Chromium, the icon left of the address, then "Apps on device" (this device) or "Local network" (the LAN) set to Allow, as `CHROMIUM_SETTING` names them from Chromium's strings; then Connect, or Retry once a session waits |
+| `blocked-insecure` | ws:// to a public host from the site | a wss:// address from the host, or the desktop app |
+| `blocked-browser` | Firefox to a LAN ws://, Safari to this device or the LAN | Chrome or Edge, or the desktop app |
+
+A refusal also stops Connect (the sentence becomes the field's error). The
+permission is read through autotracking's own probe, never a second copy:
+`localNetworkPermission(name)` is `@alltp/autotrack`'s `systemPermission`
+over `LOCAL_NETWORK_PERMISSION_NAMES` (this device) or `LAN_PERMISSION_NAMES`
+(the LAN). The dialog follows its change event, so a permission granted or
+refused in the site's settings updates the note at once; the session gets the
+same factory and wakes on the same event (`local-network-prompt` while the
+browser asks, `local-network-denied` once it refused: the package's README,
+"The local network permission"). The setup steps add **Allow the connection
+in the browser**, with the browser's own words for this device or the LAN,
+only where it applies: the site, a self-hosted server on this device or the
+LAN, a known browser.
+
+### Join links
+
+`?game=archipelago&room=…&slot=…` opens the board with the dialog filled in
+(`joinLink.ts`): the module's `start` reads it (`takeJoinLink`, never in the
+stream view), drops `room`, `slot` and any `password` from the address as
+`takeGameFromAddress` drops `game`, and leaves it in the connection store's
+transient `prefill`. The dialog opens on its own, takes the fields, says
+they came from a join link and starts typing at the password (the slot when
+the link names none), where Enter connects. Nothing connects before the
+player does: `connectOnStart` waits too that load, since the link's room may
+not be the saved one. **Copy a join link** builds one from the Room and Slot
+fields (`joinLinkUrl` on `shareBaseUrl()`: the published site, also from the
+desktop app), never the password.
 
 ## Tabs and devices
 
@@ -270,9 +319,11 @@ hint, timer or go mode ([overlay-api.md](overlay-api.md#ids-per-game)).
 ## Security rules
 
 - The address, port, password and slot name together let anyone join the
-  slot. None of them reaches the run, an export, a link, live follow, the
-  stream view, the overlay or the report (which keeps the host and masks the
-  port).
+  slot. None of them reaches the run, an export, a shared run link, live
+  follow, the stream view, the overlay or the report (which keeps the host
+  and masks the port). A join link holds the room and the slot because the
+  player makes it to hand them on; it never holds the password, and one that
+  carries a `password` parameter has it dropped unread.
 - The password is `type="password"`, `autocomplete="off"`, kept per tab in
   sessionStorage, and on the device only on request. It is stored as typed:
   a page has nowhere to keep a key a script on it could not read too, so
@@ -342,8 +393,17 @@ heading alone; a skin that cannot be fetched falls back to the list.
 
 ## Not verified
 
-- The desktop app on macOS and Windows reaching a remote `ws://` (measured on
-  Linux only, see the package's README).
+- The desktop app on macOS and Windows reaching a `ws://` server on the LAN
+  (measured on Linux only: [desktop.md](desktop.md#archipelago-rooms)).
+- A headed Chromium's prompt itself: the browser tests run Chrome's headless
+  mode (the `chromium` channel locally, the runner's Google Chrome in CI),
+  which refuses the prompt at once and reads `denied`; the prompt's hang is
+  covered by the package's specs. A LAN server through the prompt: the
+  browser test stays on loopback, since a LAN address only measures the
+  runner's network.
+- Firefox's local network prompt: Playwright's Firefox 157 reached loopback
+  without asking, and its LAN behaviour beyond ws:// (refused) is untested.
+- Safari and iOS: from WebKit's bug tracker, not measured.
 - A real archipelago.gg room driven through the board (the package's bench
   reached one with archipelago.js; the browser tests use the package's fake
   server).

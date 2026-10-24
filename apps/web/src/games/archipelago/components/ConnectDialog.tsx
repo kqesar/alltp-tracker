@@ -1,29 +1,35 @@
 import {
   type AddressError,
+  addressClass,
   connectPlan,
+  describeReach,
   describeStatus,
   diagnosticReport,
   isArchipelagoGg,
+  type LocalNetworkPermissionName,
   type PageContext,
+  type PermissionStateName,
   parseAddress,
   parseRoomStatus,
+  type Reach,
   type RoomPlayer,
+  reachOf,
   roomAddress,
   roomPageUrl,
   roomStatusUrl,
-  SETUP_STEPS,
   type ServerAddress,
   type SessionStatus,
   type SetupStepId,
   setupProgress,
 } from "@alltp/archipelago";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, useEffect, useId, useState } from "react";
 import { StatusDot } from "@/components/autotrack/StatusDot";
 import { Modal } from "@/components/ui/Modal";
 import {
   connect,
+  currentPage,
+  currentPermission,
   disconnect,
-  pageContext,
   readPassword,
   retry,
   savePassword,
@@ -31,10 +37,12 @@ import {
   stop,
   useApConnectionStore,
 } from "@/games/archipelago/connection";
+import { joinLinkUrl } from "@/games/archipelago/joinLink";
 import { headlineOf, phaseOf, waits } from "@/games/archipelago/status";
 import { useStatusLine } from "@/hooks/useStatusLine";
 import { copyStatus, copyText } from "@/utils/clipboard";
 import { isDesktopApp } from "@/utils/platform";
+import { shareBaseUrl } from "@/utils/view";
 
 /** What a Room field the package cannot read means, in a sentence. */
 const ADDRESS_ERRORS: Record<AddressError, string> = {
@@ -82,24 +90,60 @@ const resolveRoom = async (
 };
 
 /**
- * The static check made before any socket: why this page cannot reach the
- * address, or null when it may try.
+ * The pre-check of the address typed, made before any socket: what this
+ * page will meet reaching it (`reachOf`), the browser's local network
+ * permission read and followed while the address needs it, and what the
+ * session met there: a refusal it reports for this address says so too,
+ * though the permission may still read "prompt" (a dismissed prompt).
  */
-export const blockedWhy = (
-  address: ServerAddress,
-  page: PageContext = pageContext(),
-): string | null => {
-  const plan = connectPlan(address, page);
-  if (plan.ok) return null;
-  const status: SessionStatus =
-    plan.code === "blocked-browser" && page.kind === "secure"
-      ? {
-          addressClass: plan.addressClass,
-          browser: page.browser,
-          code: "blocked-browser",
-        }
-      : { addressClass: plan.addressClass, code: "blocked-insecure" };
-  return describeStatus(status);
+const useReach = (
+  address: ServerAddress | null,
+  page: PageContext,
+  status: SessionStatus,
+): Reach => {
+  const plan = address === null ? null : connectPlan(address, page);
+  const name = plan?.ok ? plan.permission : null;
+  const [read, setRead] = useState<{
+    name: LocalNetworkPermissionName;
+    state: PermissionStateName;
+  } | null>(null);
+  useEffect(() => {
+    if (name === null) return;
+    const permission = currentPermission(name);
+    let live = true;
+    const update = () =>
+      void permission.query().then(({ state }) => {
+        if (live) setRead({ name, state });
+      });
+    update();
+    const unsubscribe = permission.subscribe(update);
+    return () => {
+      live = false;
+      unsubscribe();
+    };
+  }, [name]);
+  if (address === null) return { kind: "open" };
+  const refused =
+    status.code === "local-network-denied" &&
+    plan?.ok === true &&
+    plan.urls.includes(status.url)
+      ? status.state
+      : null;
+  return reachOf(
+    address,
+    page,
+    read?.name === name ? read.state : null,
+    refused,
+  );
+};
+
+/** The way the Room field's note looks: a warning for a refusal. */
+const REACH_TONE: Record<Reach["kind"], "note" | "warning"> = {
+  ask: "note",
+  "blocked-browser": "warning",
+  "blocked-insecure": "warning",
+  denied: "warning",
+  open: "note",
 };
 
 const STATE_NAMES = {
@@ -109,11 +153,21 @@ const STATE_NAMES = {
 } as const;
 
 /** The guide's steps, ticked from the status: the first to fix opens. */
-const Steps = ({ host, status }: { host: string; status: SessionStatus }) => {
+const Steps = ({
+  host,
+  page,
+  status,
+}: {
+  host: string;
+  page: PageContext;
+  status: SessionStatus;
+}) => {
   const progress = setupProgress(status, {
+    browser: page.kind === "secure" ? page.browser : null,
     host:
       isArchipelagoGg(host) || host === "" ? "archipelago.gg" : "self-hosted",
     page: isDesktopApp ? "desktop" : "site",
+    where: host === "" ? null : addressClass(host),
   });
   const baseId = useId();
   const [opened, setOpened] = useState<ReadonlySet<SetupStepId>>(
@@ -132,7 +186,7 @@ const Steps = ({ host, status }: { host: string; status: SessionStatus }) => {
           Steps
         </h3>
         <p className="setup__count" data-testid="ap-steps-count">
-          {done} of {SETUP_STEPS.length} steps done
+          {done} of {progress.steps.length} steps done
         </p>
       </div>
       <ol className="setup-steps">
@@ -210,8 +264,11 @@ const Steps = ({ host, status }: { host: string; status: SessionStatus }) => {
  * archipelago.gg room link, which fills the port and turns Slot into a list
  * of the room's slots), the slot, the password and whether this device
  * remembers it; the status in words with what to do, Retry now while the
- * session waits, and the steps ticked live. Nothing opens a socket before the
- * static check says this page may.
+ * session waits, and the steps ticked live. Under the Room field, the
+ * pre-check says what this browser will do with the address (ask for its
+ * local network permission, or refuse) and the way out, before any socket
+ * opens. A join link fills Room and Slot in, never connecting on its own;
+ * "Copy a join link" makes one of the fields (never the password).
  * @param onClose - Called to close the dialog
  */
 export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
@@ -220,8 +277,22 @@ export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
   const status = useApConnectionStore((state) => state.status);
   const since = useApConnectionStore((state) => state.since);
   const roomLink = useApConnectionStore((state) => state.roomLink);
-  const [room, setRoom] = useState(saved.roomLink ?? saved.address);
-  const [slot, setSlot] = useState(saved.slot);
+  const [prefilled] = useState(saved.prefill !== null);
+  // Where typing starts: the Room field of a first visit; after a join link,
+  // the slot it left empty, else the password (Enter then connects)
+  const [focusOn] = useState(() =>
+    saved.prefill !== null
+      ? saved.prefill.slot === ""
+        ? "slot"
+        : "password"
+      : saved.address === ""
+        ? "room"
+        : null,
+  );
+  const [room, setRoom] = useState(
+    saved.prefill?.room ?? saved.roomLink ?? saved.address,
+  );
+  const [slot, setSlot] = useState(saved.prefill?.slot ?? saved.slot);
   const [password, setPassword] = useState(readPassword);
   const [remember, setRemember] = useState(saved.rememberPassword);
   const [resolved, setResolved] = useState<Resolved | null>(null);
@@ -229,13 +300,25 @@ export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
   const [slotError, setSlotError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useStatusLine();
+  const [joinCopied, setJoinCopied] = useStatusLine();
   const id = useId();
   const phase = phaseOf(status);
+  const [page] = useState(currentPage);
 
-  const parsedHost = (() => {
+  // The join link's fields are in the form now: a later opening shows the saved room
+  useEffect(() => {
+    if (useApConnectionStore.getState().prefill !== null) {
+      useApConnectionStore.setState({ prefill: null });
+    }
+  }, []);
+
+  const server = (() => {
     const parsed = parseAddress(resolved?.address ?? room);
-    return parsed.ok && parsed.kind === "server" ? parsed.address.host : "";
+    return parsed.ok && parsed.kind === "server" ? parsed.address : null;
   })();
+  const parsedHost = server?.host ?? "";
+  const reach = useReach(server, page, status);
+  const reachText = describeReach(reach);
 
   /** The room link's port and slots, once. */
   const lookUp = async (text: string): Promise<Resolved | null> => {
@@ -272,11 +355,15 @@ export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
       address = found.address;
       link = found.link;
     }
-    const server = parseAddress(address);
-    if (!server.ok || server.kind !== "server") return;
-    const blocked = blockedWhy(server.address);
-    if (blocked !== null) {
-      setRoomError(blocked);
+    const target = parseAddress(address);
+    if (!target.ok || target.kind !== "server") return;
+    // A refusal the browser would make anyway: no socket, the way out instead
+    const blocked = reachOf(target.address, page, null);
+    if (
+      blocked.kind === "blocked-insecure" ||
+      blocked.kind === "blocked-browser"
+    ) {
+      setRoomError(describeReach(blocked));
       return;
     }
     setRoomError(null);
@@ -291,12 +378,24 @@ export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
     void connect();
   };
 
+  /** A link that opens this dialog with the room and the slot filled in. */
+  const copyJoinLink = async () => {
+    const parsed = parseAddress(room);
+    if (!parsed.ok) {
+      setRoomError(ADDRESS_ERRORS[parsed.error]);
+      return;
+    }
+    setJoinCopied(
+      copyStatus(await copyText(joinLinkUrl(shareBaseUrl(), { room, slot }))),
+    );
+  };
+
   const copyReport = async () => {
     const parsed = parseAddress(useApConnectionStore.getState().address);
     const report = diagnosticReport({
       address: parsed.ok && parsed.kind === "server" ? parsed.address : null,
       now: Date.now(),
-      page: pageContext(),
+      page: currentPage(),
       snapshot: null,
       status,
       statusSince: since,
@@ -358,17 +457,24 @@ export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
           </div>
         </div>
 
+        {prefilled && (
+          <p className="ap-connect__prefill" data-testid="ap-prefill-note">
+            Filled in from a join link. Check the room and your slot, add the
+            password if the room has one, then Connect.
+          </p>
+        )}
+
         <form className="ap-connect__form" noValidate onSubmit={submit}>
           <div className="ap-field">
             <label className="ap-field__label" htmlFor={`${id}-room`}>
               Room
             </label>
             <input
-              aria-describedby={`${id}-room-hint${roomError ? ` ${id}-room-error` : ""}`}
+              aria-describedby={`${id}-room-hint${roomError ? ` ${id}-room-error` : reachText !== null ? ` ${id}-room-reach` : ""}`}
               aria-invalid={roomError !== null}
               autoComplete="off"
               className="ap-field__input"
-              data-autofocus={saved.address === "" ? true : undefined}
+              data-autofocus={focusOn === "room" ? true : undefined}
               data-testid="ap-room-input"
               id={`${id}-room`}
               onBlur={() => void lookUp(room)}
@@ -391,6 +497,20 @@ export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
                 id={`${id}-room-error`}
               >
                 {roomError}
+              </p>
+            )}
+            {roomError === null && reachText !== null && (
+              <p
+                className="ap-field__reach"
+                data-kind={reach.kind}
+                data-testid="ap-room-reach"
+                data-tone={REACH_TONE[reach.kind]}
+                id={`${id}-room-reach`}
+              >
+                <span aria-hidden="true" className="ap-field__reach-mark">
+                  {REACH_TONE[reach.kind] === "warning" ? "!" : "i"}
+                </span>
+                {reachText}
               </p>
             )}
           </div>
@@ -421,6 +541,7 @@ export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
                 autoCapitalize="off"
                 autoComplete="off"
                 className="ap-field__input"
+                data-autofocus={focusOn === "slot" ? true : undefined}
                 data-testid="ap-slot-input"
                 id={`${id}-slot`}
                 onChange={(event) => {
@@ -451,6 +572,7 @@ export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
               aria-describedby={`${id}-password-hint`}
               autoComplete="off"
               className="ap-field__input"
+              data-autofocus={focusOn === "password" ? true : undefined}
               data-testid="ap-password-input"
               id={`${id}-password`}
               onChange={(event) => setPassword(event.target.value)}
@@ -509,7 +631,32 @@ export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
           server says you received and checked, and can send nothing.
         </p>
 
-        <Steps host={parsedHost} status={status} />
+        <section aria-labelledby={`${id}-join`} className="ap-join">
+          <h3 className="autotrack__heading" id={`${id}-join`}>
+            Join link
+          </h3>
+          <p className="ap-join__text" id={`${id}-join-hint`}>
+            A link that opens this dialog with the room and your slot filled in,
+            on another device or for a teammate. It never holds the password,
+            and it does not connect until Connect is pressed.
+          </p>
+          <div className="autotrack-actions">
+            <button
+              aria-describedby={`${id}-join-hint`}
+              className="modal-btn modal-btn--ghost"
+              data-testid="ap-copy-join"
+              onClick={() => void copyJoinLink()}
+              type="button"
+            >
+              Copy a join link
+            </button>
+            <p aria-live="polite" className="autotrack-actions__status">
+              {joinCopied}
+            </p>
+          </div>
+        </section>
+
+        <Steps host={parsedHost} page={page} status={status} />
 
         <div className="autotrack-actions">
           <button

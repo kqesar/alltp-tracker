@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { systemPermission } from "./permission";
+import { LAN_PERMISSION_NAMES, systemPermission } from "./permission";
 
 /** A Permissions API that knows `names`, like a browser's enum. */
 function host(names: Record<string, string>) {
@@ -34,6 +34,23 @@ describe("systemPermission", () => {
       state: "prompt",
     });
     expect(fake.queried).toEqual(["loopback-network"]);
+  });
+
+  it("asks local-network first for a server on the LAN", async () => {
+    const fake = host({
+      "local-network": "denied",
+      "local-network-access": "granted",
+      "loopback-network": "granted",
+    });
+    expect(
+      await systemPermission(fake.host, LAN_PERMISSION_NAMES).query(),
+    ).toEqual({ name: "local-network", state: "denied" });
+    expect(fake.queried).toEqual(["local-network"]);
+    // Chrome 142-144: the one combined permission
+    const older = host({ "local-network-access": "prompt" });
+    expect(
+      await systemPermission(older.host, LAN_PERMISSION_NAMES).query(),
+    ).toEqual({ name: "local-network-access", state: "prompt" });
   });
 
   it("falls back to Chrome 142-144's local-network-access", async () => {

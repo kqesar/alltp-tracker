@@ -38,11 +38,12 @@ const parsed = parseAddress("/connect archipelago.gg:60030");
 if (!parsed.ok || parsed.kind !== "server") throw new Error("not a server address");
 const session = new ArchipelagoSession({
   address: parsed.address,
-  page: { browser: "chromium", kind: "secure" }, // or { kind: "desktop" }
+  page: { browser: "chromium", gated: true, kind: "secure" }, // or { kind: "desktop" }
   slot: "Link", // case-sensitive
   uuid: deviceId, // kept by the app, one per device
   snapshot: persisted, // what the app saved last time
   lock: tabLock, // one connection per browser
+  permission: (name) => systemPermission(globalThis, namesOf(name)), // @alltp/autotrack's
 });
 session.subscribe((status) => render(status)); // status.code: see "Diagnostic codes"
 session.onSnapshot((snapshot, reset) => save(snapshot, reset));
@@ -55,7 +56,7 @@ const names = new NameDataLoader({ fetch: (game) => session.getDataPackage(game)
 
 | Module | What it holds |
 | --- | --- |
-| `address.ts` | Every form of the Room field, the address class (loopback, private, public), the URLs a page may try (`connectPlan`), room links and archipelago.gg's room status |
+| `address.ts` | Every form of the Room field, the address class (loopback, private, public), the URLs a page may try and the permission they wait on (`connectPlan`), the pre-check (`reachOf`), room links and archipelago.gg's room status |
 | `session.ts` | The connection: one archipelago.js Client per attempt on a socket of its own, its timeouts, backoff, keepalive, the tab lock, requests (`get`, `getDataPackage`) |
 | `guard.ts` | The outgoing whitelist, checked on every frame before it leaves |
 | `snapshot.ts` | The pure reducer from server packets to the slot's state |
@@ -65,7 +66,7 @@ const names = new NameDataLoader({ fetch: (game) => session.getDataPackage(game)
 | `diagnostics.ts` | The status union, refusal reasons, the hint for an unreachable server |
 | `report.ts` | One sentence per status and the copyable report (no slot, password or port) |
 | `setup.ts` | The "Connect to a room" guide as data |
-| `platform.ts` | Clock, visibility, network state, WebSocket and UUID seams |
+| `platform.ts` | Clock, visibility, network state, WebSocket, UUID and local network permission seams |
 
 ### The protocol subset
 
@@ -131,6 +132,10 @@ stateDiagram-v2
   authenticating --> refused: ConnectionRefused
   connecting --> unreachable: socket failed
   connecting --> timeout: no open / no RoomInfo
+  connecting --> local_network_prompt: still opening after 1.5 s, permission "prompt"
+  local_network_prompt --> connecting: answered (open, or a failure read below)
+  connecting --> local_network_denied: refused by the browser (see below)
+  local_network_denied --> connecting: permission changes, retryNow()
   authenticating --> timeout: no answer to Connect
   unreachable --> connecting: backoff, online, visible, retryNow()
   timeout --> connecting: backoff, online, visible, retryNow()
@@ -163,6 +168,8 @@ stateDiagram-v2
 - **The tab lock** is a seam (`TabLock`, the shape of the app's autotracking
   lock): the app gives the Web Lock `alltp-tracker-archipelago`, so one tab
   per browser holds the connection and the others follow it.
+- **The local network permission** is a seam too (`permission`, a
+  `PermissionFactory`; "The local network permission" below).
 
 ### The snapshot
 
@@ -232,24 +239,108 @@ game).
 
 Measured on 2026-10-24 (the S1 gate: a probe page served at the site's own
 origin through Playwright, and the release desktop app driven through the
-WebKit inspector):
+WebKit inspector; the permission's states again for S4, Chromium 156 and
+Firefox 157 headless):
 
 | Page \ server | archipelago.gg wss | ws://127.0.0.1 | ws:// private LAN IP | ws:// public host |
 | --- | --- | --- | --- | --- |
 | Site, Chromium 156 | yes | blocked by Local Network Access; yes once granted | yes once granted (mixed content only warns) | no (`SecurityError`) |
 | Site, Firefox 157 | yes | yes, no prompt | no | no |
+| Site, Safari / iOS | not tested | no (WebKit bug 171934) | no | no |
 | Desktop app, Linux (WebKitGTK 2.54.2) | yes | yes | yes | not tested |
+| Desktop app, macOS, Windows | not tested | not tested | not tested | not tested |
 
 - archipelago.gg room ports speak **wss only**: plain `ws://` fails with
   1006. A scheme-less archipelago.gg address is tried over wss alone.
-- `connectPlan(address, page)` is the static check made before any socket:
-  `blocked-insecure` for ws:// to a public host from an https page (every
-  browser), `blocked-browser` where this browser refuses what others allow
-  (Firefox to the LAN; Safari, untested here, to this device and the LAN,
-  WebKit bug 171934). An unknown browser is let try; if it throws
-  `SecurityError`, the session reports `blocked-insecure` and stops.
-- `localNetwork` flags Chromium's Local Network Access prompt for a later
-  task (the app's permission flow).
+- Headless Chromium 156, the permission undecided: every name reads
+  `prompt` (`loopback-network`, `local-network`, `local-network-access`)
+  and a loopback socket fails at once (1006,
+  `net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS`). Chrome's headless
+  mode (Playwright's `chromium` channel; CI's Google Chrome 155) then reads
+  the permission `denied`, as a refused prompt; Playwright's default
+  headless shell keeps `prompt`, which no browser a player uses does. Granting
+  `local-network-access` (Playwright's only accepted name) turns all three
+  `granted` and fires each status's `change` event; clearing it fires
+  `change` back to `prompt`.
+- A LAN address with no host behind it (`ws://192.168.1.20` from a
+  192.168.1.0/24 machine): the socket hangs 3 s, fails with
+  `ERR_ADDRESS_UNREACHABLE`, and the permission stays `prompt` in the
+  headless shell; Chromium checks a LAN address only once connected. On a
+  CI runner, where that address is routed away, it hangs past the socket
+  timeout.
+- Firefox 157 (Playwright's build) reads `loopback-network` and
+  `local-network` as `prompt`, knows no `local-network-access`, and
+  connects to loopback without asking.
+
+### The pre-check
+
+`connectPlan(address, page)` is the static check made before any socket:
+the URLs to try, and the local network permission they wait on
+(`permission`: `loopback-network` for this device, `local-network` for the
+LAN, null for a public host, the desktop app, an http page, or a browser
+that does not gate: `PageContext.gated`, which the app reads from
+autotrack's `loopbackAccess`, Chromium 147+ and Firefox 154+), or why none
+is worth trying: `blocked-insecure` for ws:// to a public host from an https
+page (every browser), `blocked-browser` where this browser refuses what
+others allow (Firefox to the LAN; Safari to this device and the LAN). An
+unknown browser is let try; if it throws `SecurityError`, the session
+reports `blocked-insecure` and stops.
+
+`reachOf(address, page, permissionState)` turns that plan and what the page
+knows of the permission into what will happen, and `describeReach` into one
+sentence with the way out, which the app shows under the Room field:
+
+| From the site | archipelago.gg | wss:// public | ws:// public | this device | the LAN, ws:// | the LAN, wss:// |
+| --- | --- | --- | --- | --- | --- | --- |
+| Chromium | open | open | blocked-insecure | ask / denied | ask / denied | ask / denied |
+| Firefox | open | open | blocked-insecure | open (ask / denied once gated) | blocked-browser | open |
+| Safari | open | open | blocked-insecure | blocked-browser (ws://), open (wss://) | blocked-browser | open |
+| Other | open | open | blocked-insecure | open | open | open |
+
+`ask` while the permission reads `prompt`; `denied` once refused, or when
+the caller passes the session's refusal (`reachOf`'s fourth argument, the
+`state` of a `local-network-denied` for this address: a dismissed or
+headless prompt leaves the permission reading `prompt`); `open` once
+granted or unsupported. A denial says how to undo it: in Chromium, the
+site settings entry by its own label (`CHROMIUM_SETTING`: "Apps on device"
+for this device, "Local network" for the LAN, from
+`components/site_settings_strings.grdp` at chromium/chromium `344811fd`),
+then Connect, or Retry while a session waits. The desktop app and an http
+page are `open` everywhere. `address.spec.ts` holds the whole table, browser
+× class × scheme, and the session's refusal.
+
+### The local network permission
+
+The package queries no permission: `SessionOptions.permission` is a
+`PermissionFactory`, given the plan's permission name, whose shape is
+`@alltp/autotrack`'s `systemPermission`. The app passes that one (over
+`LOCAL_NETWORK_PERMISSION_NAMES` or `LAN_PERMISSION_NAMES`); without it,
+nothing below is detected (`NO_PERMISSION`). With a plan that waits on a
+permission, the session:
+
+1. subscribes to its change event: a grant or a refusal in the browser ends
+   any wait at once;
+2. before each attempt, reads it: `denied` opens no socket and reports
+   `local-network-denied` (`state: "denied"`), waiting for a change or
+   `retryNow()`;
+3. while a socket to this device is still CONNECTING after `promptAfterMs`
+   (1.5 s, as autotrack: a loopback handshake takes milliseconds) and the
+   permission reads `prompt`, reports `local-network-prompt` and lifts the
+   socket timeout: the player's answer has no deadline. Not for the LAN:
+   Chromium checks a LAN address once connected, so an unreachable host
+   hangs exactly like a prompt (measured below); a LAN socket keeps its
+   timeout, and the answer's change event retries at once;
+4. after a failed socket, reads it again: `denied` reports
+   `local-network-denied` (`state: "denied"`); still `prompt` after a
+   socket to this device that hung on the prompt (dismissed) reports it
+   with `state: "prompt"` (Retry asks again); either waits for the player.
+   A quick failure while `prompt` is the server's (`unreachable`, the usual
+   backoff): only Playwright's headless shell fails a blocked socket and
+   keeps `prompt`, and Firefox reads `prompt` without gating.
+
+`session.spec.ts` drives each branch on a socket held in CONNECTING (the
+fake network's `held` route) under a fake permission; the app's browser test
+drives Chromium's real one from the site's own origin.
 
 ## Diagnostic codes
 
@@ -261,8 +352,10 @@ that waits carries `retryInMs`: the delay before the next attempt, or
 | --- | --- | --- | --- |
 | `idle`, `stopped` | Not started; stopped (`detail` when the guard stopped it) | `detail?` | none |
 | `elsewhere` | Another tab of this browser holds the connection | | when that tab lets go |
-| `blocked-insecure` | ws:// to a public host from an https page | `addressClass` | none: use wss or the desktop app |
-| `blocked-browser` | ws:// this browser refuses to this device or the LAN | `addressClass`, `browser` | none |
+| `blocked-insecure` | ws:// to a public host from an https page | `addressClass` | none: ask the host for wss, or use the desktop app |
+| `blocked-browser` | ws:// this browser refuses to this device or the LAN | `addressClass`, `browser` | none: Chrome or Edge, or the desktop app |
+| `local-network-prompt` | The browser shows its local network prompt: the socket has hung in CONNECTING for `promptAfterMs` while the permission reads `prompt` | `url`, `permission` | waits for the answer, no timeout |
+| `local-network-denied` | The browser does not let the site reach the server: the permission reads `denied`, or a socket failed while it read `prompt` (see "The local network permission") | `url`, `permission`, `state` | the player: a permission change or `retryNow()` (`retryInMs: null`) |
 | `connecting` | Opening the socket (`socket`), then waiting for RoomInfo (`room-info`) | `url`, `attempt`, `stage` | |
 | `authenticating` | Connect sent | `url`, `attempt` | |
 | `unreachable` | The socket failed; `hint`: `offline`, `room-paused`, `no-tls` (wss to a server that likely speaks ws), `not-running` (ws to this device or the LAN), `unknown` | `url`, `attempt`, `hint` | backoff; 60 s once `room-paused` |
@@ -350,12 +443,19 @@ Checksums of AP 0.6.8, the same archipelago.gg serves (`upstream.json`,
 
 ## Setup guide
 
-`SETUP_STEPS` (`src/setup.ts`): find the room's address, reach the server,
-the slot name, the password. Each step lists the statuses that mark it done
-or failing (`refused:<reason>` for refusals), and variants per page (site,
-desktop app) and host (archipelago.gg, self-hosted); `setupProgress(status,
-context)` ticks them and names the step to open. The slot step says the
-room sees the tracker join and leave (`… tracking … has joined`, recorded).
+`SETUP_STEPS` (`src/setup.ts`): find the room's address, allow the
+connection in the browser, reach the server, the slot name, the password.
+Each step lists the statuses that mark it done or failing
+(`refused:<reason>` for refusals), and variants per page (site, desktop
+app), host (archipelago.gg, self-hosted), browser and address class;
+`setupProgress(status, context)` ticks them, leaves out a step no variant
+fits, and names the step to open. The browser's step exists only on the
+site, for a self-hosted server on this device or the LAN, in a browser it
+knows: Chromium's words for each permission (its loopback prompt as Chrome's
+release notes quote it), Firefox's (this device: allowed, measured; the
+LAN: refused, use Chrome, Edge or the desktop app), Safari's (WebKit bug
+171934: the desktop app). The slot step says the room sees the tracker join
+and leave (`… tracking … has joined`, recorded).
 
 ## archipelago.js
 
@@ -480,6 +580,14 @@ it is newer, listing the `watched` files that changed between the two.
 
 - Safari and iOS: the WebKit row of the connectivity table is from WebKit's
   bug tracker, not measured.
-- The desktop app on macOS and Windows (WebView2's local network behaviour).
+- The desktop app on macOS and Windows (WKWebView; WebView2, a Chromium,
+  whose page `http://tauri.localhost` may meet its local network rules).
+- A headed browser's prompt: measured headless, where an undecided
+  permission fails the socket at once; the hang the session reads as a
+  prompt on loopback is from Chromium's and autotrack's behaviour, held by
+  the specs. Whether a headed Chrome's LAN prompt outlasts the 8 s socket
+  timeout often enough to matter (the answer's change event retries anyway).
+- A real Firefox's local network prompt (Firefox 154+ release notes):
+  Playwright's build never asked.
 - A real archipelago.gg room through this package (the S1 gate reached one
   with archipelago.js alone, from both browsers).

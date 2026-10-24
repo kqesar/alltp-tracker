@@ -217,12 +217,13 @@ test("says why the room refused the slot, and waits for the player", async ({
   }
 });
 
-test("refuses a ws:// room on the internet from a secure page before any socket", async ({
+test("says what is wrong with a Room it cannot read, before any socket", async ({
   page,
 }) => {
   await openOnGame(page, "archipelago");
   const dialog = roomDialog(page);
-  // The site is http here: only the format is checked before a socket
+  // The page is http here; the secure site's refusals are in
+  // archipelago-self-hosted.e2e.ts
   await dialog.getByTestId("ap-room-input").fill("https://example.com/room/x");
   await dialog.getByTestId("ap-slot-input").fill("Link");
   await dialog.getByTestId("ap-connect").click();

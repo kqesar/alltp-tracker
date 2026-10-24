@@ -52,7 +52,9 @@ const ArchipelagoApp = () => {
   const checksum = useArchipelagoStore((state) => state.room?.checksum);
 
   useEffect(() => {
-    if (useApConnectionStore.getState().connectOnStart) void connect();
+    // A join link waits for the player: the room it names may not be the saved one
+    const { connectOnStart, prefill } = useApConnectionStore.getState();
+    if (connectOnStart && prefill === null) void connect();
     return stop;
   }, []);
 

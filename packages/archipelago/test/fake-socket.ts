@@ -14,6 +14,11 @@ export type Route =
   | { readonly kind: "unreachable" }
   /** Never open, never fail: a black hole. */
   | { readonly kind: "black-hole" }
+  /**
+   * Hang in CONNECTING, as a browser does while it shows its local network
+   * prompt, until the spec calls `accept()` (allowed) or `drop()` (refused).
+   */
+  | { readonly kind: "held"; readonly responder: ResponderOptions }
   /** Throw from the constructor, as a browser does for mixed content. */
   | { readonly kind: "security-error" };
 
@@ -39,17 +44,22 @@ export class FakeSocket implements WebSocketLike {
     route: Route,
   ) {
     this.responder =
-      route.kind === "serve" ? new ApResponder(route.responder) : null;
+      route.kind === "serve" || route.kind === "held"
+        ? new ApResponder(route.responder)
+        : null;
     if (route.kind === "serve") {
-      later(() => {
-        if (this.readyState !== 0) return;
-        this.readyState = 1;
-        this.fire("open", {});
-        this.deliver(this.responder?.greeting() ?? []);
-      });
+      later(() => this.accept());
     } else if (route.kind === "unreachable") {
       later(() => this.drop());
     }
+  }
+
+  /** The connection opens and the server greets: RoomInfo. */
+  accept(): void {
+    if (this.readyState !== 0) return;
+    this.readyState = 1;
+    this.fire("open", {});
+    this.deliver(this.responder?.greeting() ?? []);
   }
 
   addEventListener(type: string, listener: Listener): void {

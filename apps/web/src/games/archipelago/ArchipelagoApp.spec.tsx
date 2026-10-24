@@ -373,6 +373,29 @@ describe("the board", () => {
     );
   });
 
+  it("opens a join link's room in the dialog, without connecting", async () => {
+    const room = startRoom();
+    saveRoom({ address: ROOM_ADDRESS, roomLink: null, slot: "Link" });
+    act(() =>
+      useApConnectionStore.setState({
+        connectOnStart: true,
+        prefill: { room: "archipelago.gg:60030", slot: "Samus" },
+      }),
+    );
+    render(<ArchipelagoApp />);
+    const dialog = await screen.findByRole("dialog", {
+      name: "Archipelago room",
+    });
+    expect(dialog).toHaveTextContent("Filled in from a join link");
+    expect(screen.getByTestId("ap-room-input")).toHaveValue(
+      "archipelago.gg:60030",
+    );
+    // The saved room waits too: the player chooses which to connect to
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    expect(useApConnectionStore.getState().active).toBe(false);
+    expect(room.network.sockets).toHaveLength(0);
+  });
+
   it("says once when the room held another run, until dismissed", () => {
     act(() => useApConnectionStore.setState({ notice: "Another run." }));
     lay();
@@ -467,6 +490,24 @@ describe("the module", () => {
       reason: IMPORT_REFUSAL,
     });
     expect(archipelago.store).toBe(useArchipelagoStore);
+  });
+
+  it("takes a join link from the address as it starts", () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/alltp-tracker/?room=localhost%3A38281&slot=Link&password=x",
+    );
+    try {
+      archipelago.start();
+      expect(useApConnectionStore.getState().prefill).toEqual({
+        room: "localhost:38281",
+        slot: "Link",
+      });
+      expect(window.location.search).toBe("");
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
   });
 
   it("follows the other tabs through storage", async () => {

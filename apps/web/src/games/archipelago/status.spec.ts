@@ -17,6 +17,18 @@ const STATUSES: Record<SessionStatus["code"], SessionStatus> = {
   connecting: { attempt: 1, code: "connecting", stage: "socket", url: URL },
   elsewhere: { code: "elsewhere" },
   idle: { code: "idle" },
+  "local-network-denied": {
+    code: "local-network-denied",
+    permission: "loopback-network",
+    retryInMs: null,
+    state: "denied",
+    url: "ws://127.0.0.1:38281",
+  },
+  "local-network-prompt": {
+    code: "local-network-prompt",
+    permission: "loopback-network",
+    url: "ws://127.0.0.1:38281",
+  },
   reconnecting: { attempt: 1, code: "reconnecting", retryInMs: 1000, url: URL },
   refused: {
     code: "refused",
@@ -58,6 +70,8 @@ describe("the connection's words", () => {
       connecting: ["busy", "Connecting…"],
       elsewhere: ["on", "Connected in another tab"],
       idle: ["off", "Not connected"],
+      "local-network-denied": ["problem", "Blocked by the browser"],
+      "local-network-prompt": ["busy", "Allow the connection in the browser"],
       reconnecting: ["busy", "Reconnecting…"],
       refused: ["problem", "Refused by the room"],
       stopped: ["off", "Not connected"],
@@ -70,5 +84,8 @@ describe("the connection's words", () => {
   it("know when the session waits to try again", () => {
     expect(waits(STATUSES.unreachable)).toBe(true);
     expect(waits(STATUSES.refused)).toBe(false);
+    // Retry asks the browser again; its prompt itself is the player's
+    expect(waits(STATUSES["local-network-denied"])).toBe(true);
+    expect(waits(STATUSES["local-network-prompt"])).toBe(false);
   });
 });

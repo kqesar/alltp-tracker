@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { FakeNetwork, type Route } from "../test/fake-socket";
 import {
   FakeOnline,
+  FakePermission,
   FakeVisibility,
   type FixtureName,
   fixture,
@@ -560,6 +561,187 @@ describe("ArchipelagoSession, the page and the tab", () => {
       code: "blocked-insecure",
     });
     expect(t.codes().filter((c) => c === "connecting")).toHaveLength(1);
+  });
+
+  describe("the browser's local network permission", () => {
+    const held = (): Route => ({
+      kind: "held",
+      responder: { client: "tracker", fixture: fixture("normal-session") },
+    });
+    const gated = (
+      routes: Record<string, Route>,
+      browser: "chromium" | "firefox" = "chromium",
+      at = LOCAL,
+    ) => {
+      const permission = new FakePermission();
+      const t = setup(routes, {
+        at,
+        page: { browser, gated: true, kind: "secure" },
+        permission: permission.factory,
+      });
+      return { ...t, permission };
+    };
+
+    it("says the browser is asking, waits for the answer, then connects", async () => {
+      const t = gated({ [LOCAL]: held() });
+      t.session.start();
+      await t.clock.advance(1499);
+      expect(t.session.status.code).toBe("connecting");
+      await t.clock.advance(1);
+      expect(t.session.status).toEqual({
+        code: "local-network-prompt",
+        permission: "loopback-network",
+        url: LOCAL,
+      });
+      // No deadline while the player reads the prompt
+      await t.clock.advance(120_000);
+      expect(t.session.status.code).toBe("local-network-prompt");
+      expect(t.network.sockets).toHaveLength(1);
+      t.permission.set("granted");
+      t.network.last.accept();
+      await t.clock.advance(10);
+      expect(t.session.status).toEqual({ code: "connected", url: LOCAL });
+      expect(t.permission.asked).toEqual(["loopback-network"]);
+      t.session.stop();
+      expect(t.permission.listening).toBe(0);
+    });
+
+    it("waits for the player after a dismissed prompt", async () => {
+      const t = gated({ [LOCAL]: held() });
+      t.session.start();
+      await t.clock.advance(2000);
+      t.network.last.drop();
+      await t.clock.advance(10);
+      expect(t.session.status).toEqual({
+        code: "local-network-denied",
+        permission: "loopback-network",
+        retryInMs: null,
+        state: "prompt",
+        url: LOCAL,
+      });
+      // No timer asks again: only the player does
+      await t.clock.advance(300_000);
+      expect(t.network.sockets).toHaveLength(1);
+      t.session.retryNow();
+      await t.clock.advance(10);
+      expect(t.network.sockets).toHaveLength(2);
+      t.session.stop();
+    });
+
+    it("reads a prompt the browser turned into a denial", async () => {
+      // Chrome's headless mode (Chromium 156, Chrome 155, measured) fails the
+      // socket at once and leaves the permission "denied"
+      const t = gated({ [LOCAL]: held() });
+      t.session.start();
+      await t.clock.advance(10);
+      t.permission.state = "denied";
+      t.network.last.drop();
+      await t.clock.advance(10);
+      expect(t.session.status).toEqual({
+        code: "local-network-denied",
+        permission: "loopback-network",
+        retryInMs: null,
+        state: "denied",
+        url: LOCAL,
+      });
+      // Allowed in the site's settings: the session tries again on its own
+      t.network.route(LOCAL, serve("normal-session", "tracker"));
+      t.permission.set("granted");
+      await t.clock.advance(10);
+      expect(t.session.status).toEqual({ code: "connected", url: LOCAL });
+      t.session.stop();
+    });
+
+    it("leaves a quick failure while undecided to the server", async () => {
+      // Playwright's headless shell fails a blocked socket at once and keeps
+      // "prompt", as a closed port does: no browser a player uses does that
+      const t = gated({ [LOCAL]: { kind: "unreachable" } });
+      t.session.start();
+      await t.clock.advance(10);
+      expect(t.session.status).toMatchObject({
+        code: "unreachable",
+        hint: "not-running",
+        retryInMs: 1000,
+      });
+      t.session.stop();
+    });
+
+    it("claims no prompt for a LAN socket that hangs", async () => {
+      // Chromium checks a LAN address once connected: an unreachable host
+      // hangs as long as a prompt would, the permission untouched (measured)
+      const lan = "ws://192.168.1.20:38281";
+      const t = gated({ [lan]: { kind: "black-hole" } }, "chromium", lan);
+      t.session.start();
+      await t.clock.advance(7999);
+      expect(t.codes()).not.toContain("local-network-prompt");
+      await t.clock.advance(10);
+      expect(t.session.status).toMatchObject({
+        code: "timeout",
+        stage: "socket",
+      });
+      t.session.stop();
+    });
+
+    it("leaves Firefox's quick failure to the server", async () => {
+      // Firefox 157 reads "prompt" yet connects without asking (measured):
+      // a closed port is a closed port
+      const t = gated({ [LOCAL]: { kind: "unreachable" } }, "firefox");
+      t.session.start();
+      await t.clock.advance(10);
+      expect(t.session.status).toMatchObject({
+        code: "unreachable",
+        hint: "not-running",
+      });
+      expect(t.session.status).toHaveProperty("retryInMs", 1000);
+      t.session.stop();
+    });
+
+    it("opens no socket while the permission is denied", async () => {
+      const lan = "ws://192.168.1.20:38281";
+      const t = gated(
+        { [lan]: serve("normal-session", "tracker") },
+        "chromium",
+        lan,
+      );
+      t.permission.state = "denied";
+      t.session.start();
+      await t.clock.advance(60_000);
+      expect(t.session.status).toEqual({
+        code: "local-network-denied",
+        permission: "local-network",
+        retryInMs: null,
+        state: "denied",
+        url: lan,
+      });
+      expect(t.network.sockets).toHaveLength(0);
+      // Retry asks the browser again, and finds it still denied
+      t.session.retryNow();
+      await t.clock.advance(10);
+      expect(t.network.sockets).toHaveLength(0);
+      t.permission.set("granted");
+      await t.clock.advance(10);
+      expect(t.session.status).toEqual({ code: "connected", url: lan });
+      t.session.stop();
+    });
+
+    it("asks nothing of a public host, the desktop app or an http page", async () => {
+      const permission = new FakePermission();
+      for (const [at, page] of [
+        ["wss://archipelago.gg:60030", secure("chromium")],
+        [LOCAL, { kind: "desktop" }],
+        [LOCAL, { kind: "insecure" }],
+      ] as const) {
+        const t = setup(
+          { "*": serve("normal-session", "tracker") },
+          { at, page, permission: permission.factory },
+        );
+        t.session.start();
+        await t.clock.advance(10);
+        expect(t.session.status.code).toBe("connected");
+        t.session.stop();
+      }
+      expect(permission.asked).toEqual([]);
+    });
   });
 
   it("waits while another tab holds the connection", async () => {

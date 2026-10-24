@@ -8,19 +8,26 @@
 // storage and take over when it lets go.
 
 import {
-  type BrowserFamily,
+  type LocalNetworkPermissionName,
   type PageContext,
+  type PermissionFactory,
   parseAddress,
   type SessionStatus,
   type Timeouts,
   type WebSocketFactory,
 } from "@alltp/archipelago";
-import { parseUserAgent } from "@alltp/autotrack";
+import {
+  LAN_PERMISSION_NAMES,
+  LOCAL_NETWORK_PERMISSION_NAMES,
+  parseUserAgent,
+  systemPermission,
+} from "@alltp/autotrack";
 import * as z from "zod/mini";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { createTabLock } from "@/autotrack/lock";
 import { nameCache } from "@/games/archipelago/datapackageCache";
+import type { JoinPrefill } from "@/games/archipelago/joinLink";
 import { useApNamesStore } from "@/games/archipelago/names";
 import type { AwayItem } from "@/games/archipelago/project";
 import type { Runtime } from "@/games/archipelago/runtime";
@@ -73,6 +80,11 @@ export type ConnectionState = Saved & {
    * Shown until dismissed; never saved.
    */
   away: AwayItem[] | null;
+  /**
+   * What a join link asked the dialog to fill in, until the dialog takes it.
+   * Never saved, and it never connects on its own.
+   */
+  prefill: JoinPrefill | null;
 };
 
 const IDLE: SessionStatus = { code: "idle" };
@@ -85,6 +97,7 @@ export const useApConnectionStore = create<ConnectionState>()(
       away: null,
       connectOnStart: false,
       notice: null,
+      prefill: null,
       rememberPassword: false,
       roomLink: null,
       since: Date.now(),
@@ -157,16 +170,31 @@ export const savePassword = (password: string, remember: boolean) => {
   set({ rememberPassword: remember });
 };
 
-/** Where the board runs, as the package's connect plan reads it. */
+/**
+ * Where the board runs, as the package's connect plan reads it: the
+ * browser, and whether it puts this device and the LAN behind its local
+ * network permission (autotracking's `loopbackAccess`, by engine version).
+ */
 export const pageContext = (
   protocol: string = window.location.protocol,
   userAgent: string = navigator.userAgent,
 ): PageContext => {
   if (isDesktopApp) return { kind: "desktop" };
   if (protocol !== "https:") return { kind: "insecure" };
-  const browser: BrowserFamily = parseUserAgent(userAgent).browser;
-  return { browser, kind: "secure" };
+  const { browser, loopback } = parseUserAgent(userAgent);
+  return { browser, gated: loopback === "prompt", kind: "secure" };
 };
+
+/** The names each permission answers to, newest browsers first. */
+const PERMISSION_NAMES: Record<LocalNetworkPermissionName, readonly string[]> =
+  {
+    "local-network": LAN_PERMISSION_NAMES,
+    "loopback-network": LOCAL_NETWORK_PERMISSION_NAMES,
+  };
+
+/** The browser's local network permission, through autotracking's probe. */
+export const localNetworkPermission: PermissionFactory = (name) =>
+  systemPermission(globalThis, PERMISSION_NAMES[name]);
 
 /** This device's id in the room, made once and kept. */
 const deviceUuid = () => {
@@ -183,9 +211,23 @@ const watched = { address: "", slot: "" };
 /** Bumped by each connect and stop: a late answer of an older one is dropped. */
 let generation = 0;
 const lock = createTabLock(AP_LOCK);
-/** Tests' own sockets and timers. */
-let overrides: { webSocket?: WebSocketFactory; timeouts?: Partial<Timeouts> } =
-  {};
+/**
+ * Tests' own sockets and timers, and the page and permission they play (a
+ * jsdom page is http, and its location cannot be replaced).
+ */
+let overrides: {
+  webSocket?: WebSocketFactory;
+  timeouts?: Partial<Timeouts>;
+  page?: PageContext;
+  permission?: PermissionFactory;
+} = {};
+
+/** The page the board runs in (`pageContext`, or a test's). */
+export const currentPage = (): PageContext => overrides.page ?? pageContext();
+
+/** The local network permission the board asks (autotracking's, or a test's). */
+export const currentPermission: PermissionFactory = (name) =>
+  (overrides.permission ?? localNetworkPermission)(name);
 const importRuntime = () => import("@/games/archipelago/runtime");
 /** Loads the session's chunk; tests may fail it. */
 let loadRuntime = importRuntime;
@@ -229,6 +271,7 @@ export const connect = async () => {
         lock,
         page: pageContext(),
         password: readPassword(),
+        permission: localNetworkPermission,
         slot: state.slot,
         uuid: deviceUuid(),
         ...overrides,

@@ -7,6 +7,8 @@ import {
   type PageContext,
   parseAddress,
   parseRoomStatus,
+  type Reach,
+  reachOf,
   roomAddress,
   roomPageUrl,
   roomStatusUrl,
@@ -143,8 +145,8 @@ describe("connectPlan, the measured table", () => {
       { kind: "insecure" } as const,
     ]) {
       expect(connectPlan(at("archipelago.gg:60030"), page)).toEqual({
-        localNetwork: false,
         ok: true,
+        permission: null,
         urls: ["wss://archipelago.gg:60030"],
       });
     }
@@ -152,18 +154,18 @@ describe("connectPlan, the measured table", () => {
 
   it("tries wss then ws for a scheme-less self-hosted server where ws is allowed", () => {
     expect(connectPlan(at("192.168.1.20:38281"), { kind: "desktop" })).toEqual({
-      localNetwork: false,
       ok: true,
+      permission: null,
       urls: ["wss://192.168.1.20:38281", "ws://192.168.1.20:38281"],
     });
     expect(connectPlan(at("example.com:38281"), site("chromium"))).toEqual({
-      localNetwork: false,
       ok: true,
+      permission: null,
       urls: ["wss://example.com:38281"],
     });
     expect(connectPlan(at("192.168.1.20"), site("firefox"))).toEqual({
-      localNetwork: false,
       ok: true,
+      permission: null,
       urls: ["wss://192.168.1.20:38281"],
     });
   });
@@ -195,27 +197,45 @@ describe("connectPlan, the measured table", () => {
     });
   });
 
-  it("flags Chromium's local network prompt", () => {
+  it("names the local network permission a gated browser asks for", () => {
     expect(connectPlan(at("ws://127.0.0.1:1"), site("chromium"))).toMatchObject(
-      {
-        localNetwork: true,
-      },
+      { permission: "loopback-network" },
     );
+    expect(connectPlan(at("localhost:1"), site("chromium"))).toMatchObject({
+      permission: "loopback-network",
+    });
     expect(
       connectPlan(at("wss://192.168.0.2:1"), site("chromium")),
-    ).toMatchObject({
-      localNetwork: true,
-    });
+    ).toMatchObject({ permission: "local-network" });
+    // Public hosts and ungated pages never wait on it
+    expect(
+      connectPlan(at("wss://example.com:1"), site("chromium")),
+    ).toMatchObject({ permission: null });
     expect(connectPlan(at("ws://127.0.0.1:1"), site("firefox"))).toMatchObject({
-      localNetwork: false,
+      permission: null,
     });
+    expect(
+      connectPlan(at("ws://127.0.0.1:1"), {
+        browser: "chromium",
+        gated: false,
+        kind: "secure",
+      }),
+    ).toMatchObject({ permission: null });
+    // autotrack's loopbackAccess says Firefox 154+ gates loopback
+    expect(
+      connectPlan(at("ws://127.0.0.1:1"), {
+        browser: "firefox",
+        gated: true,
+        kind: "secure",
+      }),
+    ).toMatchObject({ permission: "loopback-network" });
   });
 
   it("lets the desktop app and http pages open any ws://", () => {
     for (const page of [{ kind: "desktop" }, { kind: "insecure" }] as const) {
       expect(connectPlan(at("ws://example.com:1"), page)).toEqual({
-        localNetwork: false,
         ok: true,
+        permission: null,
         urls: ["ws://example.com:1"],
       });
     }
@@ -227,6 +247,120 @@ describe("connectPlan, the measured table", () => {
       code: "blocked-browser",
       ok: false,
     });
+  });
+});
+
+describe("reachOf, the pre-check: browser × address class × scheme", () => {
+  const at = (text: string): ServerAddress => {
+    const parsed = parseAddress(text);
+    if (!parsed.ok || parsed.kind !== "server") throw new Error(text);
+    return parsed.address;
+  };
+  const site = (browser: BrowserFamily): PageContext => ({
+    browser,
+    kind: "secure",
+  });
+  const BROWSERS: BrowserFamily[] = ["chromium", "firefox", "safari", "other"];
+
+  // [address, chromium, firefox, safari, other], from the https site, the
+  // local network permission still undecided ("prompt")
+  const table: [string, ...Reach["kind"][]][] = [
+    ["wss://archipelago.gg:1", "open", "open", "open", "open"],
+    [
+      "ws://example.com:1",
+      "blocked-insecure",
+      "blocked-insecure",
+      "blocked-insecure",
+      "blocked-insecure",
+    ],
+    ["wss://example.com:1", "open", "open", "open", "open"],
+    ["ws://127.0.0.1:1", "ask", "open", "blocked-browser", "open"],
+    ["wss://127.0.0.1:1", "ask", "open", "open", "open"],
+    ["[::1]:1", "ask", "open", "open", "open"],
+    ["ws://192.168.1.2:1", "ask", "blocked-browser", "blocked-browser", "open"],
+    ["wss://192.168.1.2:1", "ask", "open", "open", "open"],
+    ["192.168.1.2:1", "ask", "open", "open", "open"],
+  ];
+  it.each(table)("%s from the site", (text, ...kinds) => {
+    BROWSERS.forEach((browser, index) => {
+      expect(reachOf(at(text), site(browser), "prompt").kind, browser).toBe(
+        kinds[index],
+      );
+    });
+  });
+
+  it("follows the permission's state", () => {
+    const local = at("ws://192.168.1.2:1");
+    const chromium = site("chromium");
+    expect(reachOf(local, chromium, "granted")).toEqual({ kind: "open" });
+    expect(reachOf(local, chromium, "unsupported")).toEqual({ kind: "open" });
+    // Not read yet: nothing said before the browser has answered
+    expect(reachOf(local, chromium, null)).toEqual({ kind: "open" });
+    expect(reachOf(local, chromium, "denied")).toEqual({
+      browser: "chromium",
+      kind: "denied",
+      permission: "local-network",
+      retry: false,
+      state: "denied",
+    });
+    expect(reachOf(at("ws://127.0.0.1:1"), chromium, "prompt")).toEqual({
+      browser: "chromium",
+      kind: "ask",
+      permission: "loopback-network",
+    });
+  });
+
+  it("follows the session's refusal, the permission undecided or not", () => {
+    const local = at("ws://127.0.0.1:1");
+    const chromium = site("chromium");
+    // A dismissed prompt: the permission still reads "prompt"
+    expect(reachOf(local, chromium, "prompt", "prompt")).toEqual({
+      browser: "chromium",
+      kind: "denied",
+      permission: "loopback-network",
+      retry: true,
+      state: "prompt",
+    });
+    expect(reachOf(local, chromium, "denied", "denied")).toMatchObject({
+      retry: true,
+      state: "denied",
+    });
+    // The session saw the denial before the page read it
+    expect(reachOf(local, chromium, null, "denied")).toMatchObject({
+      kind: "denied",
+      state: "denied",
+    });
+    // Allowed since: the session wakes, the note goes
+    expect(reachOf(local, chromium, "granted", "prompt")).toEqual({
+      kind: "open",
+    });
+    // Nothing for a page or an address the session's refusal cannot touch
+    expect(
+      reachOf(at("ws://8.8.8.8:1"), chromium, "prompt", "prompt"),
+    ).toMatchObject({ kind: "blocked-insecure" });
+    expect(reachOf(local, { kind: "desktop" }, null, "prompt")).toEqual({
+      kind: "open",
+    });
+  });
+
+  it("names the browser and class of a refusal", () => {
+    expect(reachOf(at("ws://10.0.0.1:1"), site("firefox"), null)).toEqual({
+      addressClass: "private",
+      browser: "firefox",
+      kind: "blocked-browser",
+    });
+    expect(reachOf(at("ws://8.8.8.8:1"), site("chromium"), null)).toEqual({
+      addressClass: "public",
+      kind: "blocked-insecure",
+    });
+  });
+
+  it("puts nothing in the desktop app's or an http page's way", () => {
+    for (const page of [{ kind: "desktop" }, { kind: "insecure" }] as const) {
+      for (const text of ["ws://example.com:1", "ws://10.0.0.1:1"]) {
+        expect(reachOf(at(text), page, "denied")).toEqual({ kind: "open" });
+      }
+    }
   });
 });
 

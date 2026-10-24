@@ -19,6 +19,7 @@ import {
   NameDataLoader,
   type NetworkItem,
   type PageContext,
+  type PermissionFactory,
   resolveLine,
   type ServerAddress,
   type SessionStatus,
@@ -54,6 +55,8 @@ export type RuntimeOptions = {
   slot: string;
   password: string;
   page: PageContext;
+  /** The browser's local network permission, for a server on this device or the LAN. */
+  permission?: PermissionFactory;
   /** This device's id in the room. */
   uuid: string;
   lock: TabLock;
@@ -102,6 +105,7 @@ export const startRuntime = (
     password: options.password,
     slot: options.slot,
     uuid: options.uuid,
+    ...(options.permission ? { permission: options.permission } : {}),
     ...(options.webSocket ? { webSocket: options.webSocket } : {}),
     ...(options.timeouts ? { timeouts: options.timeouts } : {}),
   });

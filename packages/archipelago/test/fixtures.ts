@@ -4,7 +4,16 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Clock, Online, Visibility } from "../src/platform";
+import type {
+  LocalNetworkPermissionName,
+  PermissionStateName,
+} from "../src/address";
+import type {
+  Clock,
+  Online,
+  PermissionFactory,
+  Visibility,
+} from "../src/platform";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -190,6 +199,38 @@ export class FakeOnline implements Online {
 
   set(online: boolean): void {
     this.isOnline = online;
+    for (const listener of this.listeners) listener();
+  }
+
+  get listening(): number {
+    return this.listeners.size;
+  }
+}
+
+/**
+ * The browser's local network permission, as `@alltp/autotrack`'s
+ * `systemPermission` reports it: a state the spec sets, and a change event.
+ */
+export class FakePermission {
+  private listeners = new Set<() => void>();
+  state: PermissionStateName = "prompt";
+  /** The names the session asked for, in order. */
+  readonly asked: LocalNetworkPermissionName[] = [];
+
+  readonly factory: PermissionFactory = (name) => {
+    this.asked.push(name);
+    return {
+      query: async () => ({ name, state: this.state }),
+      subscribe: (listener) => {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+      },
+    };
+  };
+
+  /** The player answers, or changes the site's settings. */
+  set(state: PermissionStateName): void {
+    this.state = state;
     for (const listener of this.listeners) listener();
   }
 
