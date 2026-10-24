@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.39.0](https://github.com/kqesar/alltp-tracker/compare/v2.38.2...v2.39.0) (2026-10-24)
+
+
+### ✨ Features
+
+* **archipelago:** add the read-only Archipelago tracker package ([#332](https://github.com/kqesar/alltp-tracker/issues/332)) ([ae61e75](https://github.com/kqesar/alltp-tracker/commit/ae61e752287fed0b25e96d757dce5b64d406703c))
+* **web:** add the Archipelago board ([#334](https://github.com/kqesar/alltp-tracker/issues/334)) ([9697669](https://github.com/kqesar/alltp-tracker/commit/9697669b04ca38f9f9a93d4de10f05252c9115dd))
+
 ## [2.38.2](https://github.com/kqesar/alltp-tracker/compare/v2.38.1...v2.38.2) (2026-10-24)
 
 
