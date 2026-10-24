@@ -172,7 +172,10 @@ location, hint, timer or go mode ([overlay-api.md](overlay-api.md#ids-per-game))
 
 A skin (`worlds/skin.ts`) maps AP item names to cells: progressive items to
 levels (AP's `progression_mapping`), bits (the bow and silver arrows, the
-boomerangs), counts (bottles of any content) and keys per dungeon. Whatever
+boomerangs), counts (bottles of any content) and keys per dungeon, and lays
+them in an explicit `layout` of full rows: the ALttP skin follows ALttPR's board
+(its item order, two dungeons' keys where that board has key and boss cells,
+then the last seven dungeons'), six rows of seven. Whatever
 the slot received that no cell counts goes under **More items**, grouped by
 AP's flags as the generic list is. `worlds/alttp.ts` is read from AP 0.6.8's
 `worlds/alttp/Items.py`; `worlds/alttp.spec.ts` holds it to the pinned name
