@@ -433,6 +433,13 @@ slots, Link (ALttP), Samus (SM), Hybrid Hero (SMZ3) and Quester (APQuest,
 the ROM-less game: Clique left AP's core before 0.6.8), with
 `ArchipelagoGenerate --seed 4242`, then again with `--race`.
 
+`sm-smz3-session.json` is played on a server of its own (38285): a tracker
+on Samus, then one on Hybrid Hero, each reading its world's location groups
+(AP 0.6.8 holds only `Everywhere` for both), while a game client on the same
+slot checks locations holding the slot's own items. `AP_ONLY=sm-smz3-session`
+records that scene alone and leaves the other fixtures as they are (how it
+was added, on 2026-10-24).
+
 ## Checked against a real server
 
 AP 0.6.8 (frozen Linux release, Python 3.12.14), archipelago.js 2.1.0, Node

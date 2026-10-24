@@ -33,7 +33,7 @@ describe("upstream pin", () => {
     const names = readdirSync(join(root, "test/fixtures")).map((f) =>
       f.replace(/\.json$/, ""),
     );
-    expect(names.length).toBe(8);
+    expect(names.length).toBe(9);
     for (const name of names) {
       const data = fixture(name as FixtureName);
       expect(data.archipelago, name).toBe(upstream.release);
