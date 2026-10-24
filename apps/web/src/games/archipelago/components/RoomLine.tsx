@@ -1,4 +1,5 @@
 import { StatusDot } from "@/components/autotrack/StatusDot";
+import { ApRunTimer } from "@/games/archipelago/components/ApRunTimer";
 import { useApConnectionStore } from "@/games/archipelago/connection";
 import { headlineOf, phaseOf } from "@/games/archipelago/status";
 import { useArchipelagoStore } from "@/games/archipelago/store";
@@ -41,6 +42,9 @@ export const RoomLine = () => {
           Race seed
         </span>
       )}
+      <span className="ap-room__timer">
+        <ApRunTimer />
+      </span>
       <p className="ap-room__status" data-phase={phase}>
         <StatusDot phase={phase} />
         <span data-testid="ap-room-status" role="status">

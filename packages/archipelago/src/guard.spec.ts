@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { fixture, packetsFrom } from "../test/fixtures";
+import { fixture, packetsFrom, packetsTo } from "../test/fixtures";
 import {
   checkFrame,
   checkPacket,
@@ -28,6 +28,10 @@ function recorder() {
   } satisfies WebSocketLike;
   return { socket, wire };
 }
+
+/** The locations the property's slot has checked. */
+const CHECKED = new Set([1310724, 1310727, 1010170]);
+const context = { isChecked: (id: number) => CHECKED.has(id) };
 
 /**
  * The read-only rule, written apart from the guard as the property's
@@ -57,6 +61,14 @@ function readOnly(packet: Record<string, unknown>): boolean {
     case "GetDataPackage":
     case "Sync":
       return true;
+    case "LocationScouts":
+      // What the slot's own checked locations held, creating no hint
+      return (
+        packet.create_as_hint === 0 &&
+        Array.isArray(packet.locations) &&
+        packet.locations.length > 0 &&
+        packet.locations.every((id) => CHECKED.has(id))
+      );
     default:
       return false;
   }
@@ -95,15 +107,24 @@ const key = fc.oneof(
   fc.string(),
 );
 
+/** A location id: one the slot checked, one it did not, or anything. */
+const location = fc.oneof(
+  fc.constantFrom(...CHECKED),
+  fc.constantFrom(1310730, 59758),
+  fc.integer(),
+  fc.string(),
+);
+
 const packet = fc.record(
   {
     cmd: fc.oneof(fc.constantFrom(...COMMANDS), fc.string()),
+    create_as_hint: fc.oneof(fc.integer({ max: 3, min: -1 }), fc.string()),
     data: fc.jsonValue(),
     game: fc.constantFrom("", "A Link to the Past"),
     games: fc.array(fc.string(), { maxLength: 2 }),
     items_handling: fc.oneof(fc.integer({ max: 9, min: -1 }), fc.string()),
     keys: fc.array(key, { maxLength: 3 }),
-    locations: fc.array(fc.integer(), { maxLength: 3 }),
+    locations: fc.array(location, { maxLength: 3 }),
     name: fc.string(),
     status: fc.integer(),
     tags: fc.oneof(
@@ -133,6 +154,14 @@ const wellFormed = fc.oneof(
     games: fc.array(fc.string()),
   }),
   fc.record({
+    cmd: fc.constant("LocationScouts"),
+    create_as_hint: fc.constantFrom(0, 0, 0, 1, 2),
+    locations: fc.oneof(
+      fc.subarray([...CHECKED], { minLength: 1 }),
+      fc.array(location, { maxLength: 3, minLength: 1 }),
+    ),
+  }),
+  fc.record({
     cmd: fc.constant("Connect"),
     game: fc.constantFrom("", "", "SMZ3"),
     items_handling: fc.integer({ max: 8, min: 0 }),
@@ -156,9 +185,61 @@ describe("guard", () => {
       ...packetsFrom(fixture("slot-data-race"), "tracker:Link"),
     ];
     expect(sent.map((p) => p.cmd)).toEqual(
-      expect.arrayContaining(["Connect", "SetNotify", "Get"]),
+      expect.arrayContaining(["Connect", "SetNotify", "Get", "LocationScouts"]),
     );
-    for (const p of sent) expect(() => checkPacket(p)).not.toThrow();
+    // The refreshed tracker's Connected: the locations it may scout
+    const connected = packetsTo(data, "tracker-refresh").find(
+      (p) => p.cmd === "Connected",
+    );
+    const checked = new Set(connected?.checked_locations as number[]);
+    expect(checked.size).toBe(4);
+    const slot = { isChecked: (id: number) => checked.has(id) };
+    for (const p of sent) expect(() => checkPacket(p, slot)).not.toThrow();
+  });
+
+  it("lets a tracker scout only what the server states checked, creating no hint", () => {
+    const scout = packetsFrom(
+      fixture("normal-session"),
+      "tracker-refresh",
+    ).find((p) => p.cmd === "LocationScouts");
+    expect(scout).toMatchObject({ create_as_hint: 0 });
+    // Nothing checked: the same packet is refused
+    expect(() => checkPacket(scout)).toThrow(
+      /not one the server states checked/,
+    );
+    expect(() =>
+      checkPacket({ ...scout, create_as_hint: 2 }, { isChecked: () => true }),
+    ).toThrow(/create_as_hint/);
+    expect(() =>
+      checkPacket(
+        { cmd: "LocationScouts", locations: [1310724] },
+        { isChecked: () => true },
+      ),
+    ).toThrow(/create_as_hint/);
+    expect(() =>
+      checkPacket(
+        { cmd: "LocationScouts", create_as_hint: 0, locations: [] },
+        context,
+      ),
+    ).toThrow(/no locations/);
+    expect(() =>
+      checkPacket(
+        {
+          cmd: "LocationScouts",
+          create_as_hint: 0,
+          locations: [1310724, 1310730],
+        },
+        context,
+      ),
+    ).toThrow(/1310730/);
+    // The bench's server answered with what the locations held, and no hint
+    const answers = packetsTo(fixture("normal-session"), "tracker-refresh");
+    const info = answers.find((p) => p.cmd === "LocationInfo");
+    expect(info?.locations).toHaveLength(4);
+    const after = answers.slice(answers.indexOf(info as never));
+    expect(after.some((p) => p.cmd === "PrintJSON" && p.type === "Hint")).toBe(
+      false,
+    );
   });
 
   it.each(["LocationChecks", "StatusUpdate", "Bounce"])(
@@ -178,7 +259,12 @@ describe("guard", () => {
     [{ cmd: "CreateHints", locations: [1] }, /whitelist/],
     [{ cmd: "UpdateHint", location: 1, player: 1 }, /whitelist/],
     [{ cmd: "ConnectUpdate", tags: ["Tracker"] }, /whitelist/],
-    [{ cmd: "LocationScouts", create_as_hint: 0, locations: [1] }, /whitelist/],
+    [{ cmd: "LocationScouts", create_as_hint: 0, locations: [1] }, /checked/],
+    [{ cmd: "LocationScouts", create_as_hint: "0", locations: [1] }, /0/],
+    [
+      { cmd: "LocationScouts", create_as_hint: 0, locations: [1], x: 1 },
+      /unexpected/,
+    ],
     [{ cmd: "Get", keys: ["EnergyLink0"] }, /not read-only/],
     [{ cmd: "Get", keys: [] }, /no keys/],
     [{ cmd: "Get", keys: ["_read_race_mode"], uuid: 3 }, /uuid/],
@@ -253,13 +339,18 @@ describe("guard", () => {
   it("puts only read-only packets on the wire, whatever is sent (property)", () => {
     let accepted = 0;
     let refusedFrames = 0;
+    let scouts = 0;
     fc.assert(
       fc.property(
         fc.array(fc.oneof(packet, wellFormed), { maxLength: 3, minLength: 1 }),
         (packets) => {
           const { socket, wire } = recorder();
           const refused: GuardError[] = [];
-          const guarded = guardSocket(socket, (error) => refused.push(error));
+          const guarded = guardSocket(
+            socket,
+            (error) => refused.push(error),
+            context,
+          );
           let threw = false;
           try {
             guarded.send(JSON.stringify(packets));
@@ -272,6 +363,7 @@ describe("guard", () => {
           for (const frame of wire) {
             for (const p of JSON.parse(frame) as Record<string, unknown>[]) {
               expect(readOnly(p)).toBe(true);
+              if (p.cmd === "LocationScouts") scouts++;
             }
           }
           expect(wire).toHaveLength(threw ? 0 : 1);
@@ -281,9 +373,10 @@ describe("guard", () => {
       ),
       { numRuns: 3000 },
     );
-    // Not vacuous: both outcomes were met many times.
+    // Not vacuous: both outcomes were met many times, scouts among them.
     expect(accepted).toBeGreaterThan(100);
     expect(refusedFrames).toBeGreaterThan(100);
+    expect(scouts).toBeGreaterThan(20);
   });
 
   it("passes other errors through to the caller", () => {

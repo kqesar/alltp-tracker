@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import axe from "axe-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { streamSize } from "@/games/archipelago/ArchipelagoObsView";
 
 const tauri = vi.hoisted(() => ({ invoke: vi.fn(), listen: vi.fn() }));
 vi.mock("@tauri-apps/api/core", () => ({ invoke: tauri.invoke }));
@@ -132,11 +133,31 @@ describe("StreamToolsDialog", () => {
     expect(dialog.textContent).toMatch(/512 × 512 for the crispest/);
   });
 
+  it("offers Archipelago's feed, off until ticked, with its rows", () => {
+    // Archipelago's ALttP skin: seven columns of six rows, three for the feed
+    const { dialog } = show({
+      feedOption: true,
+      sizeOf: streamSize("A Link to the Past", 0),
+    });
+    running();
+    const feed = screen.getByTestId("stream-tools-feed");
+    expect(feed).not.toBeChecked();
+    expect(feed).toHaveAccessibleName(/last 5 lines involving you/);
+    expect(dialog.textContent).toMatch(/448 × 384 for the crispest/);
+    fireEvent.click(feed);
+    fireEvent.click(screen.getByTestId("stream-tools-timer"));
+    expect(screen.getByTestId("stream-tools-url")).toHaveValue(
+      URL_OF("&timer=1&feed=1"),
+    );
+    expect(dialog.textContent).toMatch(/448 × 640 for the crispest/);
+  });
+
   it("offers no timer nor size to a game that has no run timer", () => {
     const { dialog } = show();
     running();
 
     expect(screen.queryByTestId("stream-tools-timer")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("stream-tools-feed")).not.toBeInTheDocument();
     expect(dialog.textContent).not.toMatch(/crispest/);
     expect(screen.getByTestId("stream-tools-url")).toHaveValue(URL_OF());
   });

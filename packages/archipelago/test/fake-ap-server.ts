@@ -17,10 +17,13 @@ export class FakeApServer {
   readonly responders: ApResponder[] = [];
   private readonly sockets = new Set<WebSocket>();
 
+  private options: FakeApServerOptions;
+
   private constructor(
     private readonly server: WebSocketServer,
-    private readonly options: FakeApServerOptions,
+    options: FakeApServerOptions,
   ) {
+    this.options = options;
     server.on("connection", (socket) => {
       this.sockets.add(socket);
       socket.on("close", () => this.sockets.delete(socket));
@@ -72,6 +75,14 @@ export class FakeApServer {
     for (const socket of this.sockets) {
       for (const frame of frames) socket.send(JSON.stringify(frame));
     }
+  }
+
+  /**
+   * Replays another recorded client for the connections to come: the game
+   * went on meanwhile (`tracker-refresh` is Link after the whole session).
+   */
+  replayAs(client: string): void {
+    this.options = { ...this.options, client };
   }
 
   /** Cuts every connection without a closing handshake (1006 on the client). */

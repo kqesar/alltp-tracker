@@ -28,7 +28,7 @@ const openByDefault = (zones: readonly CheckZone[]): ReadonlySet<string> =>
       );
 
 /** One location: done or not, in words and by a glyph, never by colour alone. */
-const Row = memo(({ row }: { row: CheckRow }) => (
+const Row = memo(({ held, row }: { held?: string; row: CheckRow }) => (
   <li
     className="ap-check"
     data-checked={row.checked}
@@ -37,10 +37,39 @@ const Row = memo(({ row }: { row: CheckRow }) => (
     <span aria-hidden="true" className="ap-check__glyph">
       {row.checked ? "✓" : "○"}
     </span>
-    <span className="ap-check__name">{row.name}</span>
-    <span className="sr-only">, {row.checked ? "checked" : "not checked"}</span>
+    <span className="ap-check__name">
+      {row.name}
+      <span className="sr-only">
+        , {row.checked ? "checked" : "not checked"}
+      </span>
+      {held !== undefined && (
+        <span className="ap-check__held" data-testid="ap-check-held">
+          <span className="sr-only">, held </span>
+          {held}
+        </span>
+      )}
+    </span>
   </li>
 ));
+
+/**
+ * What each checked location held ("What I sent", from the server's
+ * LocationInfo): the item's name, and whose it was when not the slot's own.
+ */
+const useHeld = (): ReadonlyMap<number, string> => {
+  const sent = useArchipelagoStore((state) => state.sent);
+  const players = useArchipelagoStore((state) => state.players);
+  const me = useArchipelagoStore((state) => state.room?.slot);
+  return useMemo(() => {
+    const names = new Map(players.map((player) => [player.slot, player.name]));
+    return new Map(
+      sent.map(({ item, location, to }) => [
+        location,
+        to === me ? item : `${item} for ${names.get(to) ?? `Player ${to}`}`,
+      ]),
+    );
+  }, [sent, players, me]);
+};
 
 /**
  * The slot's own locations by the world's groups, as the server states them:
@@ -61,6 +90,7 @@ export const ChecksPanel = () => {
   /** The groups the player opened, once they opened or closed one. */
   const [chosen, setChosen] = useState<ReadonlySet<string> | null>(null);
   const id = useId();
+  const held = useHeld();
   const zones = useMemo(
     () => checkZones(checked, missing, names, groups),
     [checked, missing, names, groups],
@@ -97,14 +127,7 @@ export const ChecksPanel = () => {
   };
 
   return (
-    <section
-      aria-labelledby={`${id}-title`}
-      className="ap-panel ap-checks"
-      data-testid="ap-checks"
-    >
-      <h2 className="ap-panel__heading" id={`${id}-title`}>
-        Checks
-      </h2>
+    <div className="ap-checks" data-testid="ap-checks">
       <p className="ap-checks__note" id={`${id}-note`}>
         Archipelago's server says what you checked. It does not say what you can
         reach.
@@ -177,7 +200,11 @@ export const ChecksPanel = () => {
                     </summary>
                     <ul className="ap-checks__list">
                       {zone.rows.map((row) => (
-                        <Row key={row.id} row={row} />
+                        <Row
+                          held={row.checked ? held.get(row.id) : undefined}
+                          key={row.id}
+                          row={row}
+                        />
                       ))}
                     </ul>
                   </details>
@@ -187,6 +214,6 @@ export const ChecksPanel = () => {
           </section>
         </>
       )}
-    </section>
+    </div>
   );
 };

@@ -37,11 +37,18 @@ export class ApResponder {
   private readonly options: ResponderOptions;
   private readonly storage = new Map<string, unknown>();
 
+  /** What each location held, by slot, as LocationInfo answered in the recording. */
+  private readonly scouted = new Map<number, Map<number, Packet>>();
+
   constructor(options: ResponderOptions) {
     this.options = options;
+    const slotOf = new Map<string, number>();
     for (const frame of options.fixture.frames) {
       if (frame.dir !== "in") continue;
       for (const packet of frame.packets ?? []) {
+        if (packet.cmd === "Connected") {
+          slotOf.set(frame.client, packet.slot as number);
+        }
         if (packet.cmd === "Retrieved") {
           for (const [key, value] of Object.entries(
             packet.keys as Record<string, unknown>,
@@ -49,8 +56,26 @@ export class ApResponder {
             this.storage.set(key, value);
           }
         }
+        const slot = slotOf.get(frame.client);
+        if (packet.cmd === "LocationInfo" && slot !== undefined) {
+          const held = this.scouted.get(slot) ?? new Map<number, Packet>();
+          for (const item of packet.locations as Packet[]) {
+            held.set(item.location as number, item);
+          }
+          this.scouted.set(slot, held);
+        }
       }
     }
+  }
+
+  /** The slot the replayed client is on, once its Connected was answered. */
+  private slot(): number | undefined {
+    for (const frame of this.split().answer) {
+      for (const packet of frame) {
+        if (packet.cmd === "Connected") return packet.slot as number;
+      }
+    }
+    return undefined;
   }
 
   private frames(): readonly { dir: string; packets?: readonly Packet[] }[] {
@@ -129,6 +154,14 @@ export class ApResponder {
           games[game] = body;
         }
         return [[{ cmd: "DataPackage", data: { games } }]];
+      }
+      case "LocationScouts": {
+        // What the recording's LocationInfo said those locations held
+        const held = this.scouted.get(this.slot() ?? -1);
+        const locations = (packet.locations as number[])
+          .map((id) => held?.get(id))
+          .filter((item) => item !== undefined);
+        return [[{ cmd: "LocationInfo", locations }]];
       }
       case "Sync":
         return this.items.length === 0

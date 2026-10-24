@@ -16,17 +16,26 @@ export type StreamSize = { width: number; height: number };
  * stream view is an address to paste, `StreamViewControl`), so this renders
  * nothing there.
  * @param sizeOf - The browser source's size for the game's grid, with or
- * without the run timer's row; given by a game that has a run timer
+ * without the run timer's row (and the feed's rows); given by a game that has
+ * a run timer
+ * @param feedOption - Offer the room's feed under the grid (`&feed=1`):
+ * Archipelago's
  */
 export const StreamTools = ({
+  feedOption = false,
   onClose,
   sizeOf,
 }: {
   onClose: () => void;
-  sizeOf?: (timer: boolean) => StreamSize;
+  sizeOf?: (timer: boolean, feed?: boolean) => StreamSize;
+  feedOption?: boolean;
 }) =>
   StreamToolsDialog && (
     <Suspense fallback={null}>
-      <StreamToolsDialog onClose={onClose} sizeOf={sizeOf} />
+      <StreamToolsDialog
+        feedOption={feedOption}
+        onClose={onClose}
+        sizeOf={sizeOf}
+      />
     </Suspense>
   );

@@ -10,7 +10,6 @@ import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
 import { ITEMS as SMZ3_ITEMS } from "@alltp/pack-smz3";
 import { describe, expect, it } from "vitest";
 import { itemsMax } from "@/games/alttpr/data/items";
-import { IDLE_TIMER, startTimer } from "@/games/alttpr/logic/timer";
 import {
   type AlttprRun,
   overlayReadingOf as alttpr,
@@ -22,6 +21,7 @@ import { freshProgress as smFresh } from "@/games/sm/store";
 import { overlayReadingOf as smz3 } from "@/games/smz3/overlay";
 import { freshProgress as smz3Fresh } from "@/games/smz3/store";
 import type { OverlayState } from "@/overlay/protocol";
+import { IDLE_TIMER, startTimer } from "@/utils/runTimer";
 
 const SENTINEL = "SECRET-SENTINEL";
 

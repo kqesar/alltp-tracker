@@ -28,14 +28,6 @@ import {
   stampTimeline,
 } from "@/games/alttpr/logic/timeline";
 import {
-  finishTimer,
-  IDLE_TIMER,
-  pauseTimer,
-  type RunTimer,
-  restoreTimer,
-  startTimer,
-} from "@/games/alttpr/logic/timer";
-import {
   GAME,
   itemRange,
   migrate,
@@ -48,6 +40,14 @@ import {
 } from "@/games/alttpr/stores/persistence";
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
 import { HISTORY_LIMIT } from "@/games/runHistory";
+import {
+  finishTimer,
+  IDLE_TIMER,
+  pauseTimer,
+  type RunTimer,
+  restoreTimer,
+  startTimer,
+} from "@/utils/runTimer";
 
 /** Which way a click moves a counter or a progressive item. */
 export type Direction = 1 | -1;

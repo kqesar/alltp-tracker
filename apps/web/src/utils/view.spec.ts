@@ -7,6 +7,7 @@ import {
   isObsView,
   isRelayedObsView,
   obsBackground,
+  obsFeed,
   obsTimer,
   obsViewUrl,
   trackerUrl,
@@ -176,6 +177,14 @@ describe("trackerUrl and obsViewUrl", () => {
     expect(url).toBe("https://example.org/?view=obs&timer=1");
     expect(obsTimer(new URL(url).search)).toBe(true);
     expect(obsTimer(new URL(obsViewUrl({}, url)).search)).toBe(false);
+  });
+
+  it("asks for the room's feed only when told, which obsFeed reads", () => {
+    const url = obsViewUrl({ feed: true }, "https://example.org/");
+    expect(url).toBe("https://example.org/?view=obs&feed=1");
+    expect(obsFeed(new URL(url).search)).toBe(true);
+    expect(obsFeed("?view=obs")).toBe(false);
+    expect(obsFeed("?view=obs&feed=yes")).toBe(false);
   });
 });
 

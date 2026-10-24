@@ -88,21 +88,28 @@ const AddressRow = ({
  * which adds the address those devices use and the firewall hint.
  * @param onClose - Closes the dialog
  * @param sizeOf - The source's size in pixels for the game's grid, with or
- * without the run timer's row; given only by a game that has a run timer
+ * without the run timer's row (and the feed's rows); given only by a game
+ * that has a run timer
+ * @param feedOption - Offer the room's feed under the grid (`&feed=1`), off
+ * until ticked: Archipelago's
  */
 const StreamToolsDialog = ({
+  feedOption = false,
   onClose,
   sizeOf,
 }: {
+  feedOption?: boolean;
   onClose: () => void;
-  sizeOf?: (timer: boolean) => StreamSize;
+  sizeOf?: (timer: boolean, feed?: boolean) => StreamSize;
 }) => {
   const session = useStreamStore((state) => state.session);
   const pending = useStreamStore((state) => state.pending);
   const error = useStreamStore((state) => state.error);
   const [timer, setTimer] = useState(false);
+  const [feed, setFeed] = useState(false);
   const [renewing, setRenewing] = useState(false);
   const timerId = useId();
+  const feedId = useId();
   const lanId = useId();
   const on = session !== null;
 
@@ -114,7 +121,7 @@ const StreamToolsDialog = ({
   }, []);
 
   const urlOn = (base: string) =>
-    session ? obsViewUrl({ base, timer, token: session.token }) : "";
+    session ? obsViewUrl({ base, feed, timer, token: session.token }) : "";
   const url = session ? urlOn(session.address) : "";
   const lanUrl = session?.lanAddress ? urlOn(session.lanAddress) : "";
   const apiUrl = session ? overlayUrl(session.address, session.apiToken) : "";
@@ -123,7 +130,7 @@ const StreamToolsDialog = ({
     : "";
   const sizes = (scale: number) => {
     if (!sizeOf) return "";
-    const { height, width } = sizeOf(timer);
+    const { height, width } = sizeOf(timer, feed);
     return `${width * scale} × ${height * scale}`;
   };
 
@@ -227,6 +234,22 @@ const StreamToolsDialog = ({
                   />
                   <label htmlFor={timerId}>
                     Show the run timer under the grid
+                  </label>
+                </div>
+              )}
+              {feedOption && (
+                <div className="check-option">
+                  <input
+                    checked={feed}
+                    className="check-option__input"
+                    data-testid="stream-tools-feed"
+                    id={feedId}
+                    onChange={(event) => setFeed(event.target.checked)}
+                    type="checkbox"
+                  />
+                  <label htmlFor={feedId}>
+                    Show the room's last 5 lines involving you under the grid
+                    (never a hint)
                   </label>
                 </div>
               )}

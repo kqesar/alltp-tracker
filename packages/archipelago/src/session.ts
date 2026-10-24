@@ -26,6 +26,7 @@ import {
   unreachableHint,
 } from "./diagnostics";
 import { type GuardError, guardSocket, TRACKER_TAGS } from "./guard";
+import { clientStatusKey } from "./hints";
 import {
   type Clock,
   type Online,
@@ -92,6 +93,9 @@ export interface Timeouts {
   /** The retry delay once archipelago.gg looks paused. */
   readonly pausedRetryMs: number;
 }
+
+/** How long a burst of checks gathers before one LocationScouts asks about them. */
+export const SCOUT_BATCH_MS = 250;
 
 export const DEFAULT_TIMEOUTS: Timeouts = {
   keepaliveDeadlineMs: 10_000,
@@ -234,6 +238,14 @@ export class ArchipelagoSession {
   /** The candidate URL that worked last, tried first next time. */
   private preferredUrl: string | null = null;
   private requestCounter = 0;
+  /** The snapshot's checked locations as a set, for the guard. */
+  private checkedSet: { list: readonly number[]; set: ReadonlySet<number> } = {
+    list: [],
+    set: new Set(),
+  };
+  /** Checked locations asked about and not answered yet, on this connection. */
+  private scouting = new Set<number>();
+  private scoutTimer: unknown = null;
 
   constructor(options: SessionOptions) {
     this.address = options.address;
@@ -422,8 +434,79 @@ export class ArchipelagoSession {
 
   private setSnapshot(snapshot: ApSnapshot, reset: boolean): void {
     if (snapshot === this.state) return;
+    const before = this.state;
     this.state = snapshot;
     for (const listener of this.snapshotListeners) listener(snapshot, reset);
+    if (snapshot.checked !== before.checked || snapshot.sent !== before.sent) {
+      this.scheduleScout();
+    }
+  }
+
+  /** Whether the server states this location of the slot checked (the guard's question). */
+  private isChecked(location: number): boolean {
+    const { checked } = this.state;
+    if (this.checkedSet.list !== checked) {
+      this.checkedSet = { list: checked, set: new Set(checked) };
+    }
+    return this.checkedSet.set.has(location);
+  }
+
+  /**
+   * Soon, ask what the checked locations not yet scouted held ("What I
+   * sent"): one LocationScouts for a burst of checks, `create_as_hint: 0`,
+   * never an unchecked location (the guard refuses it anyway).
+   */
+  private scheduleScout(): void {
+    if (this.scoutTimer !== null || this.current.code !== "connected") return;
+    this.scoutTimer = this.clock.setTimeout(() => {
+      this.scoutTimer = null;
+      this.scout();
+    }, SCOUT_BATCH_MS);
+  }
+
+  private scout(): void {
+    const connection = this.connection;
+    if (connection === null || this.current.code !== "connected") return;
+    const known = new Set(this.state.sent.map((item) => item.location));
+    const locations = this.state.checked.filter(
+      (id) => !known.has(id) && !this.scouting.has(id),
+    );
+    if (locations.length === 0) return;
+    for (const id of locations) this.scouting.add(id);
+    try {
+      connection.client.socket.send({
+        cmd: "LocationScouts",
+        create_as_hint: 0,
+        locations,
+      } as never);
+    } catch {
+      // A refusal has stopped the session (onGuard); a closed socket reconnects
+    }
+  }
+
+  private clearScouting(): void {
+    if (this.scoutTimer !== null) this.clock.clearTimeout(this.scoutTimer);
+    this.scoutTimer = null;
+    this.scouting = new Set();
+  }
+
+  /**
+   * Reads every player's client status of the team and watches it: a
+   * SetReply then brings each change (players overview).
+   */
+  private watchStatuses(connection: Connection): void {
+    const { identity, players } = this.state;
+    if (identity === null) return;
+    const keys = players
+      .filter((player) => player.team === identity.team)
+      .map((player) => clientStatusKey(player.team, player.slot));
+    if (keys.length === 0) return;
+    try {
+      connection.client.socket.send({ cmd: "SetNotify", keys } as never);
+    } catch {
+      return;
+    }
+    this.get(keys).catch(() => {});
   }
 
   /**
@@ -652,8 +735,10 @@ export class ArchipelagoSession {
       });
 
       const factory: WebSocketFactory = (target) => {
-        const socket = guardSocket(this.webSocket(target), (error) =>
-          this.onGuard(error),
+        const socket = guardSocket(
+          this.webSocket(target),
+          (error) => this.onGuard(error),
+          { isChecked: (location) => this.isChecked(location) },
         );
         connection.socket = socket;
         socket.addEventListener("open", () => {
@@ -694,6 +779,8 @@ export class ArchipelagoSession {
           this.setStatus({ code: "connected", url }, generation);
           // The race flag at once; the keepalive re-reads it every 30 s.
           this.get(["_read_race_mode"]).catch(() => {});
+          this.watchStatuses(connection);
+          this.scheduleScout();
           this.scheduleKeepalive(connection);
         },
         (error: unknown) => {
@@ -787,6 +874,7 @@ export class ArchipelagoSession {
     if (connection === null) return;
     if (this.connection === connection) {
       this.connection = null;
+      this.clearScouting();
       // What is on screen is no longer current.
       this.setSnapshot(beginConnection(this.state), false);
     }

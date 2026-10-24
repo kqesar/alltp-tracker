@@ -380,6 +380,27 @@ async function main() {
     const again = newClient("tracker-refresh");
     await tryLogin(again, N, "Link", "", TRACKER);
     await sleep(700);
+    mark("tracker-refresh reads and watches every slot's client status");
+    const statusKeys = [1, 2, 3, 4].map(
+      (slot) => `_read_client_status_0_${slot}`,
+    );
+    raw(again, { cmd: "Get", keys: statusKeys, uuid: "bench-get-status" });
+    raw(again, { cmd: "SetNotify", keys: statusKeys });
+    await sleep(500);
+    const checked = again.room.checkedLocations;
+    mark(
+      `tracker-refresh scouts its checked locations (create_as_hint 0): ${JSON.stringify(checked)}`,
+    );
+    raw(again, {
+      cmd: "LocationScouts",
+      create_as_hint: 0,
+      locations: checked,
+    });
+    const [scouted] = (await waitFor(again, "locationInfo")) ?? [
+      { locations: [] },
+    ];
+    mark(`tracker-refresh scout -> ${scouted.locations.length} items, no hint`);
+    await sleep(500);
     again.socket.disconnect();
   }
   save("normal-session", {

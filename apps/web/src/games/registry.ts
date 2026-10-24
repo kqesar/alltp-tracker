@@ -11,6 +11,8 @@ export type ObsViewProps = {
   background: string | null;
   /** Whether to draw the run timer under the grid (`&timer=1`) */
   timer?: boolean;
+  /** Whether to draw the room's last lines under the grid (`&feed=1`, Archipelago's) */
+  feed?: boolean;
   /**
    * Set when the run comes from the desktop app's relay, not from this
    * page's storage: no keyboard shortcut changes it. `"follow"` is a device

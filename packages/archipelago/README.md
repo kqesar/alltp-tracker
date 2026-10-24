@@ -3,8 +3,10 @@
 The tracker's link to an [Archipelago](https://archipelago.gg) (AP) room: it
 joins the room as a read-only **Tracker** on the player's slot, keeps that
 connection alive, folds what the server says into a snapshot (items
-received, locations checked and left, the race flag), loads the names behind
-AP's ids, and says in plain terms what to fix when any of that fails.
+received, locations checked and left, what the checked ones held, the race
+flag, the slot's hints, every player's status), reads the room's feed, loads
+the names behind AP's ids, and says in plain terms what to fix when any of
+that fails.
 
 - **Game-agnostic.** No world, item or location lives here: names come from
   the room's own data packages. The app's board
@@ -57,6 +59,8 @@ const names = new NameDataLoader({ fetch: (game) => session.getDataPackage(game)
 | `session.ts` | The connection: one archipelago.js Client per attempt on a socket of its own, its timeouts, backoff, keepalive, the tab lock, requests (`get`, `getDataPackage`) |
 | `guard.ts` | The outgoing whitelist, checked on every frame before it leaves |
 | `snapshot.ts` | The pure reducer from server packets to the slot's state |
+| `feed.ts` | The room's feed: PrintJSON to events, folded into lines (bursts, presence, countdown), resolved into names |
+| `hints.ts` | Hints and their 0.6 statuses, the hint cost, the players' client status |
 | `datapackage.ts` | Name data per game and checksum, through a store the app provides; location groups |
 | `diagnostics.ts` | The status union, refusal reasons, the hint for an unreachable server |
 | `report.ts` | One sentence per status and the copyable report (no slot, password or port) |
@@ -70,16 +74,19 @@ What a tracker sends, and only that (`guard.ts`):
 | Packet | When |
 | --- | --- |
 | `Connect` | Once per socket: `name` the slot, `game: ""`, `tags: ["Tracker"]`, `items_handling: 0b111` (every item the slot receives, its own included), `slot_data: true`, this device's `uuid`, archipelago.js's version (0.6.3) |
-| `Get` | `_read_race_mode` after Connected and every 30 s (the keepalive); `_read_location_name_groups_<game>`; archipelago.js's own `_read_hints_<team>_<slot>` |
-| `SetNotify` | archipelago.js's own, on `_read_hints_<team>_<slot>` |
+| `Get` | `_read_race_mode` after Connected and every 30 s (the keepalive); `_read_client_status_<team>_<slot>` of every player of the team after Connected; `_read_location_name_groups_<game>`; archipelago.js's own `_read_hints_<team>_<slot>` |
+| `SetNotify` | archipelago.js's own, on `_read_hints_<team>_<slot>`; the session's, on every player's `_read_client_status_<team>_<slot>` |
 | `GetDataPackage` | One game at a time, only the games the board needs |
 | `Sync` | When `ReceivedItems` skips an index |
+| `LocationScouts` | `create_as_hint: 0`, for the slot's checked locations not asked about yet: after Connected, then once per burst of checks (250 ms) |
 
-What it reads: `RoomInfo` (versions, seed, games, checksums), `Connected`
-(team, slot, players, checked and missing locations, slot data),
-`ConnectionRefused`, `ReceivedItems`, `RoomUpdate`, `Retrieved`, `SetReply`,
-`DataPackage`. Every other packet (`PrintJSON` for the feed, later) reaches
-`onPacket` listeners untouched.
+What it reads: `RoomInfo` (versions, seed, games, checksums, hint cost),
+`Connected` (team, slot, players, checked and missing locations, slot data,
+hint points), `ConnectionRefused`, `ReceivedItems`, `RoomUpdate`,
+`Retrieved` and `SetReply` (the race flag, hints, client statuses),
+`LocationInfo`, `DataPackage`. Every packet, `PrintJSON` included, also
+reaches `onPacket` listeners untouched: the app folds the feed from them
+(`feed.ts`).
 
 ```mermaid
 sequenceDiagram
@@ -101,6 +108,9 @@ sequenceDiagram
     R->>W: ReceivedItems index 0, when the slot has items
     L->>W: SetNotify + Get _read_hints (the library's own)
     S->>W: Get _read_race_mode (then every 30 s, 10 s to answer)
+    S->>W: SetNotify + Get every player's _read_client_status
+    S->>W: LocationScouts of the checked locations, create_as_hint 0 (after 250 ms)
+    R->>W: LocationInfo (what they held, for whom)
   else refused
     R->>W: ConnectionRefused (errors)
     S->>W: close, wait for the player
@@ -175,6 +185,41 @@ never sends.
   index 0, which it does at once whenever the list is not empty.
 - `beginConnection()` marks the data as no longer current between
   connections (`ready: false`), keeping it on screen.
+- **Hints** are `_read_hints_<team>_<slot>`'s value, read by the library's
+  own Get and replaced by each SetReply (`parseHints`, `hints.ts`).
+- **Players' status** (`clientStatus`, by slot): each player's
+  `_read_client_status_<team>_<slot>`, read after Connected and watched
+  (0 unknown, 5 connected, 10 ready, 20 playing, 30 goal; recorded: 5, then 30
+  as Quester reached its goal).
+- **What I sent** (`sent`): `LocationInfo`'s items for the slot's checked
+  locations, `player` being the receiver; a location the snapshot does not
+  hold checked is ignored. Another run drops hints, statuses and `sent`.
+
+## The feed
+
+`feed.ts` turns the room's `PrintJSON` into lines, by the packet's typed
+fields only (never its text, which AP may reword):
+
+- **Kept:** `ItemSend` (finder, item, receiver, location, item flags),
+  `Hint`, `Goal`, `Release`, `Collect`, `Join`, `Part`, `Countdown`.
+- **Dropped:** `Chat` and `ServerChat` (no chat), `Tutorial`,
+  `CommandResult`, `AdminCommandResult`, `TagsChanged`, `ItemCheat` (an
+  admin's `!getitem`) and untyped messages.
+- **Folded** (`foldFeed`, by ids): the item sends that follow a `Release`
+  of slot S and come from S's world, or a `Collect` of S and go to S, join
+  its line ("Quester released 4 items, 2 for you"; recorded order at a goal:
+  Goal, Collect and its sends, Release and its sends). Joins and parts in a
+  row collapse into one line, each player as they stand last. A countdown
+  counts down on one line ("Starting countdown of 2s", 2, 1, then 0, "GO").
+  The tail keeps 200 lines.
+- **Involving me** (`involves`): the slot's items sent or received, its
+  hints, its goal, a release or collect by it or with its items, and the
+  countdown. Joins and parts are the room's only.
+- **Names** (`resolveLine`): an item is named by its receiver's game, a
+  location by its finder's (`lineGames`), so the app loads another game's
+  names only when a line needs them; until then a line reads "Item 84194".
+  A resolved line is parts (player, item with its flags, location, words),
+  which the board, the stream view and a screen reader read alike.
 
 ## Addresses and connectivity
 
@@ -250,19 +295,33 @@ a User-Agent string.
    `["Tracker"]`, `items_handling` 0–7, no other field), `Get` and
    `SetNotify` on `_read_hints_*`, `_read_client_status_*`,
    `_read_slot_data_*`, `_read_race_mode` and
-   `_read_location_name_groups_*` only, `GetDataPackage`, `Sync`.
-   Everything else throws a `GuardError` before a byte goes out:
+   `_read_location_name_groups_*` only, `GetDataPackage`, `Sync`, and
+   `LocationScouts` with `create_as_hint` exactly `0` (no hint created or
+   announced) for locations the server already states checked (the guard's
+   `GuardContext`, which the session answers from its snapshot as each frame
+   leaves). Everything else throws a `GuardError` before a byte goes out:
    `LocationChecks`, `StatusUpdate`, `Say`, `Set`, `CreateHints`,
-   `UpdateHint`, `ConnectUpdate`, `LocationScouts`, and **`Bounce`, which
-   the server does not refuse** (recorded). A refusal stops the session: it
-   is a bug, never something to retry.
+   `UpdateHint`, `ConnectUpdate`, a scout of an unchecked location or with
+   a hint, and **`Bounce`, which the server does not refuse** (recorded). A
+   refusal stops the session: it is a bug, never something to retry.
+
+Why scouts at all: "What I sent" shows what each of the slot's checked
+locations held and for whom. A checked location's content is no secret
+(the player opened it, and the server already broadcast the send), and
+`create_as_hint: 0` changes nothing on the server: recorded, a tracker's
+scout of its four checked locations got `LocationInfo` back and no hint,
+`SetReply` or `PrintJSON` followed.
 
 `guard.spec.ts` holds a fast-check property: random frames, mixing
 arbitrary packets with well-formed ones, never put a packet on the wire that
 an independent oracle calls read-only. Broken on purpose, it fails at once:
 allowing `Bounce` gave the counterexample `[{"cmd":"Bounce"}]`; accepting
 any tag list containing `Tracker` gave a Connect tagged
-`["Tracker","TextOnly"]` (2026-10-24).
+`["Tracker","TextOnly"]` (2026-10-24). The scouts' rule was broken the same
+way: dropping the checked test gave
+`[{"cmd":"LocationScouts","create_as_hint":0,"locations":[1310730]}]` (a
+location the property's slot has not checked); accepting any integer
+`create_as_hint` gave one with `create_as_hint: 2` (2026-10-24).
 
 ## Name data
 
@@ -338,7 +397,8 @@ and worked around here:
   every failure: refusal, unreachable, black hole, silent server, unanswered
   Connect, paused room, drop, keepalive, tab lock, blocked page, guard.
 - `test/responder.ts`: what an AP 0.6.8 server answers, replayed from a
-  fixture; both fakes answer through it.
+  fixture; both fakes answer through it (a `LocationScouts` from what the
+  recording's `LocationInfo` said those locations of the slot held).
 - `test/fake-ap-server.ts`: an in-process AP server on `ws`, replaying
   frames and failing on demand (refuse, no RoomInfo, no answer to Connect,
   cut). `ws` is there because Node 22 ships a WebSocket client, not a
@@ -391,6 +451,14 @@ AP 0.6.8 (frozen Linux release, Python 3.12.14), archipelago.js 2.1.0, Node
   joined. Client(0.6.3), ['Tracker']".
 - The fixtures were recorded again from the repository with the adapted
   script on the same day; the suite passed on that recording too.
+- Again with the feed and hints series (same day, same server): the spec
+  also waits for the slot's hints (`[]`) and the four players' status (Link
+  5, connected). The log shows the session's `SetNotify` and `Get` of
+  `_read_client_status_0_1` to `_0_4`, and still no `InvalidPacket`.
+  `normal-session.json` was recorded again with a last scene: the refreshed
+  tracker reads and watches every slot's status and scouts its four checked
+  locations (`create_as_hint: 0`); the server answered `LocationInfo` and
+  nothing else. The other fixtures were left as recorded before.
 
 CI does the same on every pull request or push to master that touches this
 package, and weekly (`.github/workflows/archipelago.yml`, `docs/ci.md`): it

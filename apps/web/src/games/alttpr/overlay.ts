@@ -17,7 +17,6 @@ import { goModeStatusOf } from "@/games/alttpr/logic/missing";
 import { splitName } from "@/games/alttpr/logic/runLog";
 import type { Inputs } from "@/games/alttpr/logic/solution";
 import type { Timeline } from "@/games/alttpr/logic/timeline";
-import { type RunTimer, timerState } from "@/games/alttpr/logic/timer";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type {
   OverlayGoMode,
@@ -27,6 +26,7 @@ import type {
   OverlaySource,
   OverlayTimer,
 } from "@/overlay/protocol";
+import { type RunTimer, timerState } from "@/utils/runTimer";
 
 /**
  * The items, in the grid's order: the API's id, then the tracker's key in the

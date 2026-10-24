@@ -3,6 +3,12 @@
 // throws before a byte goes out. The first layer is the Tracker tag, which
 // makes the server refuse checks and goals; it does not refuse Bounce, Say,
 // Set or hints (bench, normal-session.json), hence this whitelist.
+//
+// One packet depends on the slot's state: LocationScouts, which reads what
+// the slot's own checked locations held ("What I sent"). It passes only with
+// `create_as_hint: 0` (no hint created, nothing announced) and for locations
+// the server already states checked, so it never reveals a location the
+// player has not opened.
 
 import type { WebSocketLike } from "./platform";
 
@@ -26,6 +32,7 @@ export const ALLOWED_COMMANDS = [
   "Get",
   "SetNotify",
   "Sync",
+  "LocationScouts",
 ] as const;
 
 export type AllowedCommand = (typeof ALLOWED_COMMANDS)[number];
@@ -38,6 +45,15 @@ const READABLE_KEYS: readonly RegExp[] = [
   /^_read_race_mode$/,
   /^_read_location_name_groups_[^\n]+$/,
 ];
+
+/** What the guard needs to know of the slot: which locations are checked. */
+export interface GuardContext {
+  /** Whether the server states this location of the slot checked. */
+  readonly isChecked: (location: number) => boolean;
+}
+
+/** No location checked: every LocationScouts is refused. */
+export const NOTHING_CHECKED: GuardContext = { isChecked: () => false };
 
 /** The one tag a tracker connects with: no DeathLink, no game-client tags. */
 export const TRACKER_TAGS: readonly string[] = ["Tracker"];
@@ -88,9 +104,16 @@ const GET_FIELDS = new Set(["cmd", "keys", "uuid"]);
 const SET_NOTIFY_FIELDS = new Set(["cmd", "keys"]);
 const DATA_PACKAGE_FIELDS = new Set(["cmd", "games"]);
 const SYNC_FIELDS = new Set(["cmd"]);
+const SCOUT_FIELDS = new Set(["cmd", "locations", "create_as_hint"]);
 
-/** Throws a GuardError unless `packet` is one a read-only tracker sends. */
-export function checkPacket(packet: unknown): void {
+/**
+ * Throws a GuardError unless `packet` is one a read-only tracker sends.
+ * `context` says which locations are checked, for LocationScouts.
+ */
+export function checkPacket(
+  packet: unknown,
+  context: GuardContext = NOTHING_CHECKED,
+): void {
   if (typeof packet !== "object" || packet === null || Array.isArray(packet)) {
     refuse(null, "not a packet");
   }
@@ -143,13 +166,36 @@ export function checkPacket(packet: unknown): void {
     case "Sync":
       onlyFields(record, cmd, SYNC_FIELDS);
       return;
+    case "LocationScouts": {
+      onlyFields(record, cmd, SCOUT_FIELDS);
+      // 0 exactly, and said: the server's default today, never left to it
+      if (record.create_as_hint !== 0) {
+        refuse(cmd, "create_as_hint must be 0: a tracker creates no hint");
+      }
+      const { locations } = record;
+      if (!Array.isArray(locations) || locations.length === 0) {
+        refuse(cmd, "no locations");
+      }
+      for (const location of locations) {
+        if (!Number.isInteger(location) || !context.isChecked(location)) {
+          refuse(
+            cmd,
+            `location ${JSON.stringify(location)} is not one the server states checked`,
+          );
+        }
+      }
+      return;
+    }
     default:
       refuse(cmd, "not on the read-only whitelist");
   }
 }
 
 /** Throws a GuardError unless `data` is a JSON array of allowed packets. */
-export function checkFrame(data: unknown): void {
+export function checkFrame(
+  data: unknown,
+  context: GuardContext = NOTHING_CHECKED,
+): void {
   if (typeof data !== "string") refuse(null, "not text");
   let packets: unknown;
   try {
@@ -160,7 +206,7 @@ export function checkFrame(data: unknown): void {
   if (!Array.isArray(packets) || packets.length === 0) {
     refuse(null, "not a list of packets");
   }
-  for (const packet of packets) checkPacket(packet);
+  for (const packet of packets) checkPacket(packet, context);
 }
 
 /**
@@ -170,15 +216,17 @@ export function checkFrame(data: unknown): void {
  *
  * `onRefused` hears of each refusal before the throw: a refusal inside one
  * of the library's event handlers would otherwise end there, unseen.
+ * `context` is read at each frame: the checked locations as they stand.
  */
 export function guardSocket<T extends WebSocketLike>(
   socket: T,
   onRefused: (error: GuardError) => void = () => {},
+  context: GuardContext = NOTHING_CHECKED,
 ): T {
   const send = socket.send.bind(socket);
   socket.send = (data: string) => {
     try {
-      checkFrame(data);
+      checkFrame(data, context);
     } catch (error) {
       if (error instanceof GuardError) onRefused(error);
       throw error;

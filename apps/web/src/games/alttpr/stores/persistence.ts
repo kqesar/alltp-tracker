@@ -36,8 +36,8 @@ import {
   isTimelineKey,
   type Timeline,
 } from "@/games/alttpr/logic/timeline";
-import type { RunTimer } from "@/games/alttpr/logic/timer";
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
+import type { RunTimer } from "@/utils/runTimer";
 
 /**
  * The locations the player checked on the map, by the alttpr pack's ids

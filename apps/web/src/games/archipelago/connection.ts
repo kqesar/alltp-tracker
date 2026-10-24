@@ -22,6 +22,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { createTabLock } from "@/autotrack/lock";
 import { nameCache } from "@/games/archipelago/datapackageCache";
 import { useApNamesStore } from "@/games/archipelago/names";
+import type { AwayItem } from "@/games/archipelago/project";
 import type { Runtime } from "@/games/archipelago/runtime";
 import { sameRun, useArchipelagoStore } from "@/games/archipelago/store";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
@@ -66,6 +67,12 @@ export type ConnectionState = Saved & {
   unavailable: boolean;
   /** What the board says once, as a run of another room replaced it. */
   notice: string | null;
+  /**
+   * What the slot received while the board was not connected: the items
+   * past the board's last known index, once a connection resent the list.
+   * Shown until dismissed; never saved.
+   */
+  away: AwayItem[] | null;
 };
 
 const IDLE: SessionStatus = { code: "idle" };
@@ -75,6 +82,7 @@ export const useApConnectionStore = create<ConnectionState>()(
     (): ConnectionState => ({
       active: false,
       address: "",
+      away: null,
       connectOnStart: false,
       notice: null,
       rememberPassword: false,
@@ -211,6 +219,11 @@ export const connect = async () => {
     runtime = startRuntime(
       {
         address: parsed.address,
+        board: {
+          feed: stored.feed,
+          received: stored.received,
+          room: stored.room,
+        },
         cache: nameCache,
         checksum: stored.room?.checksum ?? null,
         lock,
@@ -221,6 +234,19 @@ export const connect = async () => {
         ...overrides,
       },
       {
+        away: (away) => {
+          if (mine === generation) set({ away });
+        },
+        countdown: (at) => {
+          if (mine === generation) {
+            useArchipelagoStore.getState().countdownEnded(at);
+          }
+        },
+        goal: (at) => {
+          if (mine === generation) {
+            useArchipelagoStore.getState().goalReached(at);
+          }
+        },
         groups: (groups) => {
           if (mine === generation) useApNamesStore.setState({ groups });
         },

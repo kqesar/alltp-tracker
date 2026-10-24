@@ -33,30 +33,36 @@ document is the app's side.
 | File | What it holds |
 | --- | --- |
 | `module.ts` | The `GameModule`: `start` follows other tabs (`syncAcrossTabs` on the run, `followOtherTabs` on the connection's settings); `importRun` refuses |
-| `store.ts` | The run (`useArchipelagoStore`), persisted and published |
+| `store.ts` | The run (`useArchipelagoStore`), persisted and published; its version 1 to 2 migration (`migrateRun`) |
 | `connection.ts` | The connection's settings, the password, the one session per page, its status; the Web Lock |
-| `runtime.ts` | A chunk of its own, loaded on Connect: the package's session, the name data it loads, the batched writes of the run |
-| `project.ts` | Pure: the session's snapshot (ids) to the run (names); AP's item flags |
+| `runtime.ts` | A chunk of its own, loaded on Connect: the package's session, the name data it loads (other games' lazily), the feed it folds, "While you were away", the countdown, the batched writes of the run |
+| `project.ts` | Pure: the session's snapshot (ids) to the run (names: items, hints, what was sent, players' status, slot data outside races); the items received while away; the games the run needs names of; AP's item flags |
 | `datapackageCache.ts` | The IndexedDB name cache (the package's `PackageStore` seam), with a memory fallback |
 | `names.ts` | The names and location groups of the slot's game, for the checks (never saved or published) |
 | `checks.ts` | Pure: the slot's locations by location group, and the filter. `ChecksPanel` draws each group as a `<details>` disclosure ("Group — n left / m"): open by default while it has checks left, every one closed where the board stacks (`max-width: 60rem`), every match open while a filter is typed; what the player opens or closes holds until the page reloads (not saved) |
 | `status.ts` | The status dot's phase and the short headline per session status |
 | `worlds/skin.ts`, `worlds/skins.ts`, `worlds/alttp.ts` | Skins: AP item names to cells of the tracker's art |
 | `overlay.ts` | The overlay API's whitelist: items only |
-| `components/` | `ApControls` (toolbar), `ConnectDialog` (lazy), `RoomLine`, `ItemsPanel`, `SkinGrid`, `ItemList`, `ChecksPanel` |
+| `components/` | `ApControls` (toolbar), `ConnectDialog` (lazy), `RoomLine` with `ApRunTimer`, `ItemsPanel`, `SkinGrid`, `ItemList`, `FeedPanel` and `FeedLine` (a line's words, the stream view's too), `SidePanel` (tabs over `ChecksPanel`, `HintsPanel`, `PlayersPanel`), `AwayNotice` |
 | `ArchipelagoApp.tsx`, `ArchipelagoObsView.tsx` | The board and the stream view |
 
-What a device downloads: the module chunk (about 8.4 KB gzipped, plus 2 KB
-of the package's address and name-data code) when it tracks Archipelago;
-the connect dialog (5.8 KB) and the session (6 KB, plus archipelago.js, 7 KB)
-on demand. Every other game's start-up is unchanged but for the registry's
-entries (+0.2 KB on the shared entry chunk).
+What a device downloads (Vite's gzip sizes, 2026-10-24, with the feed and
+hints): the module chunk (12 KB, the package's address, name-data, feed and
+hints code included), the run's store (3.3 KB, a chunk of its own since the
+overlay's whitelist reads it too), the shared run timer (1.5 KB, ALttPR's
+too) and its stylesheet (2.3 KB) when it tracks Archipelago; the connect
+dialog (5.8 KB) and the session (8.6 KB, plus archipelago.js, 7 KB) on
+demand. The feed and hints series added 8.1 KB to the board's start and
+2.6 KB to the session. Every other game's start-up is unchanged but for the
+registry's entries and the stream view's `&feed=1` (+0.3 KB on the shared
+entry chunk); ALttPR's run timer moved to the shared chunk (+1 KB, the cost
+of a chunk of its own).
 
 ## Stores and keys
 
 | Where | Key | What | Published |
 | --- | --- | --- | --- |
-| localStorage | `alltp-tracker-archipelago` | The run (zustand persist, version 1, a `zod/mini` schema): `room` (seed name, generator version, team, slot, slot name, game, the game's name-data checksum), `items` (`{name, count, flags}`, names resolved), `checked` and `missing` location ids, `players` (slot, alias, game), `raceMode`, `received` (the server's next item index), `updatedAt`, `prefs.hideChecked` | Yes: live follow, the stream view, the overlay read it |
+| localStorage | `alltp-tracker-archipelago` | The run (zustand persist, version 2, a `zod/mini` schema): `room` (seed name, generator version, team, slot, slot name, game, the game's name-data checksum), `items` (`{name, count, flags}`, names resolved), `checked` and `missing` location ids, `sent` (what each checked location held: `{location, item, to, flags}`), `players` (slot, alias, game, client status), `hints` (names resolved, `forMe`, status), `hintPoints`, `hintCost`, `slotData` (plain values, outside races only), `feed` (the last 100 lines, resolved into parts), `raceMode`, `received` (the server's next item index), `updatedAt`, `timer`, and `prefs` (`hideChecked`, `feedScope`, `announce`, `countdownTimer`, `side`) | Yes: live follow, the stream view, the overlay read it |
 | localStorage | `alltp-tracker-archipelago-connection` | The Room field as typed (or the address a room link resolved to), the room link, the slot name, `connectOnStart`, `rememberPassword`, this device's uuid in the room | No: device-only |
 | sessionStorage | `alltp-tracker-archipelago-password` | The password, for this tab | No |
 | localStorage | `alltp-tracker-archipelago-password` | The password, only while "Remember on this device" is ticked; unticking removes it at once | No |
@@ -68,6 +74,16 @@ is dropped for an empty board, which the next connection fills again. The
 run never holds the address, the port or the password: the server never
 sends them, and they live under the connection's key, which nothing reads
 but `connection.ts`.
+
+**Version 2** (S2) added `feed`, `hints`, `hintPoints`, `hintCost`, `sent`,
+`slotData`, `timer`, each player's `status` and the new prefs. `migrateRun`
+brings a version 1 run up before the schema reads it: the new fields empty,
+the timer idle, the prefs at their defaults with `hideChecked` kept, every
+status unread (null). Without that step persist would drop every version 1
+run for an empty board.
+
+The connection's store also holds `away` (transient, never saved): the items
+the slot received while the board was not connected, until dismissed.
 
 ## Data flow
 
@@ -107,7 +123,70 @@ flowchart LR
   groups: the connected tab gets them from the server (one `GetDataPackage`
   for the slot's game, `Get _read_location_name_groups_<game>`) and leaves
   them in the IndexedDB cache, where any other tab reads them by the run's
-  checksum.
+  checksum. Other games' names load only when the run needs them: a feed
+  line's item (the receiver's game) or location (the finder's), a hint's, a
+  checked location's item for another slot, an item received while away.
+  Each game is asked once per connection (`want` in `runtime.ts`); until it
+  comes the line reads "Item 84194", and it is written out again once it
+  does. Lines saved before are kept as written.
+
+## The feed, hints and players
+
+```mermaid
+flowchart LR
+  pj["PrintJSON"] -->|"feedEvent"| ev["event (ids)"]
+  ev -->|"foldFeed: bursts, presence, countdown"| lines["lines (ids), last 200"]
+  lines -->|"resolveLine, names loaded so far"| entries["entries (parts)"]
+  base["the board's saved feed"] --> run
+  entries -->|"last 100, every 250 ms"| run["run.feed"]
+  run --> panel["FeedPanel (role=log, not announced)"]
+  run --> obs["stream view, &feed=1: 5 lines, no hint"]
+  ev -->|"countdown 0"| timer["run timer starts"]
+```
+
+- **Folding** is the package's (`feed.ts`, its README "The feed"): a
+  release or collect is one line however many sends follow it; joins and
+  parts in a row are one line. The runtime keeps this connection's lines by
+  id and writes them out on each batched write after the board's saved feed,
+  the last 100 kept. Another run (identity) starts the feed afresh.
+- **Filters.** "Involving me" (the default, `prefs.feedScope`) keeps the
+  slot's items sent or received, its hints, its goal, a burst with its items,
+  the countdown; "Whole room" shows every line, the slot's own marked by a
+  rule as well as its name in bold. No chat ever reaches the feed.
+- **Accessibility.** The feed is a `role="log"` with `aria-live="off"`: a
+  busy room would talk over the game. "Announce items I receive"
+  (`prefs.announce`, off by default) says, in a polite status of its own,
+  each new progression item the slot receives, never a line it held already.
+  The log scrolls, so it takes focus (axe's scrollable-region-focusable).
+- **Hints** are the slot's `_read_hints` value, resolved: two lists (items for
+  the slot, wherever they are; others' items in its world), most wanted
+  first (priority, unspecified, no priority, avoid, found), each status a
+  word. The hint cost is the server's own formula over the slot's locations
+  (`hintCost`), shown with the hint points.
+- **Players**: every slot of the team with its `_read_client_status` in
+  words. Outside races (`raceMode === false`) the slot data's plain values,
+  64 at most, as information: the board reads nothing into them.
+- **What I sent**: the session scouts the slot's checked locations
+  (`LocationScouts`, `create_as_hint: 0`, through the guard); each checked
+  row of the checks says what it held and for whom.
+- **While you were away**: the runtime knows the board's run and item count;
+  when a connection's Connected brings the list again (in its own frame,
+  before the session says "connected") and it holds more items for the same
+  run, the items past that count go to `away`, named with their sender and
+  where they were found. A slot's first item ever, which comes at index 0 in
+  a later frame, is not "away".
+- **Run timer**: the shared `RunTimer` (`components/ui/RunTimer.tsx`) over
+  `run.timer`. While `prefs.countdownTimer` (on by default, "Start at the
+  room's countdown, stop at your goal") holds, the countdown's 0 starts an
+  idle timer and the slot's own `_read_client_status_{team}_{slot}` reaching
+  30 (`CLIENT_GOAL`, AP 0.6.8's NetUtils.py) stops a running one for good,
+  at the moment its `SetReply` arrives. A status already at 30 when a
+  connection reads it stops nothing: it says nothing of when. The stopped
+  time is the run's `timer`, saved with it, so a reload shows it.
+- **Performance.** Feed lines poke the same 250 ms batch as the snapshot: a
+  release of 1,000 sends, each its own `PrintJSON` and `ReceivedItems`,
+  renders the items and the feed once and writes the run once
+  (`burst.spec.tsx`).
 
 ## Connecting
 
@@ -149,6 +228,16 @@ items held, a line each, for a world without a skin. It never connects and
 never loads the session: it reads the run from storage, which holds no
 address or password. The desktop app's stream server and live follow need
 nothing of their own.
+
+`&timer=1` draws the run timer under the grid with the shared `StreamTimer`
+(`components/ui/StreamTimer.tsx`), on its row and as wide as the grid
+(`--obs-columns`), as every game's stream view does.
+
+`&feed=1` (off unless asked: the Stream view dialog has the
+checkbox, the desktop app's Stream tools too) adds the feed's last
+five lines involving the slot under the grid, oldest first as a chat
+overlay reads, never a hint, on rows `useObsStage` keeps for them
+(`extraRows`).
 
 ## Overlay API
 

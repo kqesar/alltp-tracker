@@ -198,7 +198,16 @@ describe("connect", () => {
         "SetNotify",
         "GetDataPackage",
         "Sync",
+        "LocationScouts",
       ]).toContain(cmd);
+    }
+    // Scouts only of what the server states checked, creating no hint
+    for (const packet of room.network.sockets.flatMap((s) => s.packets)) {
+      if (packet.cmd !== "LocationScouts") continue;
+      expect(packet.create_as_hint).toBe(0);
+      for (const id of packet.locations as number[]) {
+        expect(run().checked).toContain(id);
+      }
     }
   });
 

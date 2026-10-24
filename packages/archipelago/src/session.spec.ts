@@ -153,6 +153,63 @@ describe("ArchipelagoSession, against recorded frames", () => {
     t.session.stop();
   });
 
+  it("scouts only its checked locations, creating no hint, and watches every player's status", async () => {
+    const t = setup({ [LOCAL]: serve("normal-session", "tracker-refresh") });
+    t.session.start();
+    await t.clock.advance(10);
+    // Nothing yet: the scout waits for a burst of checks to gather
+    expect(sentCommands(t.network)).not.toContain("LocationScouts");
+    await t.clock.advance(300);
+    const scouts = t.network.last.packets.filter(
+      (p) => p.cmd === "LocationScouts",
+    );
+    expect(scouts).toEqual([
+      {
+        cmd: "LocationScouts",
+        create_as_hint: 0,
+        locations: [1010170, 1310724, 1310727, 1572867],
+      },
+    ]);
+    expect(t.session.snapshot.sent.map((i) => i.player)).toEqual([3, 1, 1, 4]);
+    const watched = t.network.last.packets.find(
+      (p) => p.cmd === "SetNotify" && String(p.keys).includes("client_status"),
+    );
+    expect(watched?.keys).toEqual([
+      "_read_client_status_0_1",
+      "_read_client_status_0_2",
+      "_read_client_status_0_3",
+      "_read_client_status_0_4",
+    ]);
+    expect(t.session.snapshot.clientStatus).toEqual({
+      1: 5,
+      2: 0,
+      3: 0,
+      4: 30,
+    });
+    // Answered: no second scout of the same locations
+    await t.clock.advance(1000);
+    expect(
+      t.network.last.packets.filter((p) => p.cmd === "LocationScouts"),
+    ).toHaveLength(1);
+    t.session.stop();
+  });
+
+  it("scouts a burst of new checks once, as the game goes on", async () => {
+    const t = setup({ [LOCAL]: serve("normal-session", "tracker") });
+    t.session.start();
+    await t.clock.advance(400);
+    // Nothing checked at Connected: nothing to scout
+    expect(sentCommands(t.network)).not.toContain("LocationScouts");
+    const socket = t.network.last;
+    socket.deliver(socket.responder?.later() ?? []);
+    await t.clock.advance(400);
+    const scouts = socket.packets.filter((p) => p.cmd === "LocationScouts");
+    expect(scouts).toHaveLength(1);
+    expect(scouts[0]?.locations).toEqual(t.session.snapshot.checked);
+    expect(t.session.snapshot.sent).toHaveLength(4);
+    t.session.stop();
+  });
+
   it("stops at a refusal and waits for the player", async () => {
     const t = setup({
       [LOCAL]: serve("refused", "refused:unknown slot", {
