@@ -89,6 +89,21 @@ describe("describeReading", () => {
     expect(readout.bosses).toEqual(["Eastern Palace"]);
   });
 
+  it("never says in Race Mode whether Zelda was rescued", () => {
+    const memory = seedMemory({ race: true });
+    memory[SAVE(0x3c5)] = 0x02; // Zelda rescued
+
+    expect(describeSeed(memory, true).progress).toEqual([
+      { label: "Game started", value: true },
+      { label: "Triforce reached", value: false },
+    ]);
+    // The same memory read outside Race Mode says it
+    expect(describeSeed(memory).progress).toContainEqual({
+      label: "Zelda rescued",
+      value: true,
+    });
+  });
+
   it("names levels, counts, dungeon items and the Agahnims", () => {
     const memory = seedMemory({ race: false });
     memory[SAVE(0x359)] = 0x04; // Golden Sword
