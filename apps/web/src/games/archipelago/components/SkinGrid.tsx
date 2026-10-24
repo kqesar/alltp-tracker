@@ -99,16 +99,9 @@ export const SkinGrid = ({ skin }: { skin: Skin }) => {
         className="board-grid__cells ap-skin__cells"
         style={{ "--columns": skin.columns } as CSSProperties}
       >
-        {rowsOf(skin).flatMap((row, rowIndex) =>
-          row.map((cell, colIndex) =>
-            cell === null ? (
-              <li
-                aria-hidden="true"
-                className="grid-item-base"
-                // biome-ignore lint/suspicious/noArrayIndexKey: a fixed place in the grid
-                key={`${rowIndex}-${colIndex}`}
-              />
-            ) : cell.kind === "item" ? (
+        {rowsOf(skin).flatMap((row) =>
+          row.map((cell) =>
+            cell.kind === "item" ? (
               <ItemCell cell={cell} count={count} key={cell.id} />
             ) : (
               <KeysCell cell={cell} count={count} key={cell.id} />

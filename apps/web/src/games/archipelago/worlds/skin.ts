@@ -42,8 +42,12 @@ export interface Skin {
   /** The world's name, as the room's data names it. */
   readonly game: string;
   readonly columns: number;
-  /** Item cells, then key cells, each kind starting a row. */
   readonly cells: readonly SkinCell[];
+  /**
+   * The grid, row by row, by cell id: every row `columns` long and every cell
+   * once (the skin's spec holds it), so no row is left half empty.
+   */
+  readonly layout: readonly (readonly string[])[];
   /** Progression items with no cell, each with why: under "More items". */
   readonly excluded: Readonly<Record<string, string>>;
 }
@@ -56,23 +60,16 @@ export const namesOf = (cell: SkinCell): readonly string[] =>
 export const mappedNames = (skin: Skin): ReadonlySet<string> =>
   new Set(skin.cells.flatMap(namesOf));
 
-/**
- * The skin's rows: its item cells, then its key cells, each kind starting a
- * row of `columns`, the last of each filled with gaps.
- */
-export const rowsOf = (
-  skin: Skin,
-): readonly (readonly (SkinCell | null)[])[] => {
-  const rows: (SkinCell | null)[][] = [];
-  for (const kind of ["item", "keys"] as const) {
-    const cells = skin.cells.filter((cell) => cell.kind === kind);
-    for (let i = 0; i < cells.length; i += skin.columns) {
-      const row: (SkinCell | null)[] = cells.slice(i, i + skin.columns);
-      while (row.length < skin.columns) row.push(null);
-      rows.push(row);
-    }
-  }
-  return rows;
+/** The skin's rows of cells, as its layout lays them. */
+export const rowsOf = (skin: Skin): readonly (readonly SkinCell[])[] => {
+  const byId = new Map(skin.cells.map((cell) => [cell.id, cell]));
+  return skin.layout.map((row) =>
+    row.map((id) => {
+      const cell = byId.get(id);
+      if (cell === undefined) throw new Error(`No cell ${id} in ${skin.game}`);
+      return cell;
+    }),
+  );
 };
 
 /** How many of each name the slot holds. */

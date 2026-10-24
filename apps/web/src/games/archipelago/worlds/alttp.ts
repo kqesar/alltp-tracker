@@ -110,7 +110,7 @@ const counted = (
 const SILVERS = 1;
 const BOW = 2;
 
-/** The grid's item cells, seven a row, as ALttPR's board orders them. */
+/** The grid's item cells; LAYOUT places them. */
 const ITEM_CELLS: readonly ItemCell[] = [
   progressive(
     "sword",
@@ -256,9 +256,25 @@ const EXCLUDED: Readonly<Record<string, string>> = {
   "Triforce Piece": "a goal piece, counted",
 };
 
+/**
+ * The grid as ALttPR's board lays its items (data/items.ts, `defaultItemGrid`):
+ * two full rows of items, then three of five items with two dungeons' keys
+ * where ALttPR's board has its key and boss cells, then the last seven
+ * dungeons' keys. Six full rows of seven: 29 items, 13 dungeons.
+ */
+const LAYOUT: readonly (readonly string[])[] = [
+  ["flute", "hookshot", "hammer", "firerod", "icerod", "boomerang", "net"],
+  ["bow", "lamp", "shield", "sword", "mail", "magic", "boots"],
+  ["shovel", "book", "quake", "bombos", "ether", "keys-ep", "keys-dp"],
+  ["powder", "glove", "bottle", "somaria", "byrna", "keys-th", "keys-pd"],
+  ["mushroom", "cape", "mirror", "moonpearl", "flippers", "keys-sp", "keys-sw"],
+  ["keys-tt", "keys-ip", "keys-mm", "keys-tr", "keys-hc", "keys-ct", "keys-gt"],
+];
+
 export const ALTTP_SKIN: Skin = {
   cells: [...ITEM_CELLS, ...KEY_CELLS],
   columns: 7,
   excluded: EXCLUDED,
   game: "A Link to the Past",
+  layout: LAYOUT,
 };

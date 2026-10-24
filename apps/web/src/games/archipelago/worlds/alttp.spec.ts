@@ -142,10 +142,17 @@ describe("the A Link to the Past skin, against AP 0.6.8's name data", () => {
     ).toEqual([]);
   });
 
-  it("lays seven columns: the items, then the keys of thirteen dungeons", () => {
+  it("lays six full rows of seven, every cell once", () => {
     const rows = rowsOf(ALTTP_SKIN);
-    expect(rows.every((row) => row.length === 7)).toBe(true);
-    expect(rows).toHaveLength(7);
+    expect(rows.map((row) => row.length)).toEqual([7, 7, 7, 7, 7, 7]);
+    const placed = ALTTP_SKIN.layout.flat();
+    expect(new Set(placed).size).toBe(placed.length);
+    expect([...placed].sort()).toEqual(
+      ALTTP_SKIN.cells.map((cell) => cell.id).sort(),
+    );
+    expect(() => rowsOf({ ...ALTTP_SKIN, layout: [["nowhere"]] })).toThrow(
+      "No cell nowhere in A Link to the Past",
+    );
     expect(ALTTP_SKIN.cells.filter((c) => c.kind === "keys")).toHaveLength(13);
     expect(skinFor("A Link to the Past")).toBe(ALTTP_SKIN);
     expect(skinFor("Clique")).toBeNull();
