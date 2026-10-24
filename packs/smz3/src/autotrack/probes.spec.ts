@@ -22,6 +22,18 @@ describe("the game check", () => {
     const other = new TextEncoder().encode("ALTTP+SM RANDOMIZER  ");
     expect(checkGame(other)).toMatchObject({ code: "not-smz3", ok: false });
   });
+
+  it("points an Archipelago seed to the Archipelago board, not samus.link's", () => {
+    const title = (text: string) => new TextEncoder().encode(text.padEnd(21));
+    // AP 0.6.8: "ZSM", patch 11.3.1 and AP 068 as digits, the logics' letters
+    expect(checkGame(title("ZSM1131068NN30000107b"))).toMatchObject({
+      code: "archipelago-rom",
+      message: expect.stringContaining("Archipelago seed of SMZ3"),
+      ok: false,
+    });
+    // samus.link writes its version with dots
+    expect(checkGame(title("ZSM11.3.2CN1234ABCD"))).toEqual({ ok: true });
+  });
 });
 
 describe("the race flag", () => {
