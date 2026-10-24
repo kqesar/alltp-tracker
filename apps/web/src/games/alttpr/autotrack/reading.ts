@@ -6,11 +6,13 @@ import {
   decodeChecks,
   decodeEntrances,
   decodeItems,
+  decodePrizes,
   decodeProgress,
   decodeSeedSettings,
   type EntranceReading,
   type ItemReading,
   type MemoryView,
+  type PrizeReading,
   type ProgressReading,
   type SeedSettingsReading,
   type Unsettled,
@@ -27,6 +29,11 @@ export type AutotrackReading = {
   /** The locations memory could not settle, with why. */
   readonly unsettled: readonly (readonly [id: string, why: Unsettled])[];
   readonly progress: ProgressReading;
+  /**
+   * The dungeon prizes the game shows, outside Race Mode: a finished
+   * dungeon's, and those the world map draws. No other prize is kept.
+   */
+  readonly prizes: PrizeReading;
   /**
    * The door or hole Link last went in by and the door he last came out
    * by, outside Race Mode: the game's numbers, which the entrance tables
@@ -56,6 +63,7 @@ export const readMemory = (
     checked: [...checks.checked],
     entrances: decodeEntrances(memory, options),
     items: decodeItems(memory, options),
+    prizes: decodePrizes(memory, options),
     progress: decodeProgress(memory, options),
     race,
     seed: decodeSeedSettings(memory, options),

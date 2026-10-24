@@ -13,6 +13,7 @@ import {
   readingOf,
   SAVE,
   seedMemory,
+  writePrizeTables,
 } from "@/games/alttpr/autotrack/fixtures";
 import { getPreset } from "@/games/alttpr/data/presets";
 import { counterMax } from "@/games/alttpr/logic/settings";
@@ -45,9 +46,15 @@ const orWord = (memory: Uint8Array, offset: number, bits: number) => {
   memory[SAVE(offset) + 1] |= bits >> 8;
 };
 
-/** DungeonsCompleted's bits: Eastern Palace's and Desert Palace's prize. */
+/**
+ * A dungeon's bit in DungeonsCompleted, MapField and MapOverlay (the pack's
+ * DUNGEONS).
+ */
 const EASTERN = 0x2000;
 const DESERT = 0x1000;
+const SWAMP = 0x0400;
+const PALACE_OF_DARKNESS = 0x0200;
+const HERA = 0x0020;
 
 const OPEN = getPreset("open").settings;
 const KEYSANITY = getPreset("keysanity").settings;
@@ -167,6 +174,81 @@ describe("gameView", () => {
     expect(gameView(readingOf(memory), fresh()).items).toMatchObject({
       reward0: 4,
       reward1: 4,
+    });
+  });
+
+  describe("with the ROM's prize tables", () => {
+    /** Desert Palace (crystal 1) and Swamp Palace (crystal 5) finished. */
+    const midRun = () => {
+      const memory = writePrizeTables(seedMemory({ race: false }));
+      memory[SAVE(0x374)] = 0; // no pendant
+      memory[SAVE(0x37a)] = 0x02 | 0x04; // crystals 1 and 5
+      orWord(memory, 0x472, DESERT | SWAMP);
+      return memory;
+    };
+    const rewards = (items: Record<string, unknown>) =>
+      Object.fromEntries(
+        Object.entries(items).filter(([id]) => id.startsWith("reward")),
+      );
+
+    it("names each finished dungeon's prize where elimination cannot", () => {
+      const memory = midRun();
+      // Without the tables: a crystal and a red crystal, either way round
+      const blind = gameView(
+        readingOf(memory, { unread: ["prize-bits"] }),
+        fresh(),
+      );
+      expect(rewards(blind.items)).toEqual({});
+      // With them: exactly, and no unfinished dungeon's (map mode $01, no map)
+      const view = gameView(readingOf(memory), fresh());
+      expect(rewards(view.items)).toEqual({ reward1: 3, reward4: 4 });
+    });
+
+    it("names an unfinished dungeon's prize once the world map shows it", () => {
+      const memory = midRun();
+      orWord(memory, 0x368, EASTERN | PALACE_OF_DARKNESS); // their maps
+      // In the Light World, Eastern Palace's: a pendant
+      expect(rewards(gameView(readingOf(memory), fresh()).items)).toEqual({
+        reward0: 2,
+        reward1: 3,
+        reward4: 4,
+      });
+      // In the Dark World, the Palace of Darkness's
+      memory[SAVE(0x3ca)] = 0x40;
+      expect(rewards(gameView(readingOf(memory), fresh()).items)).toEqual({
+        reward1: 3,
+        reward3: 2,
+        reward4: 4,
+      });
+      // Sahasrahla's reveal: Tower of Hera, the Pendant of Courage
+      memory[SAVE(0x3ca)] = 0x00;
+      orWord(memory, 0x414, HERA);
+      expect(gameView(readingOf(memory), fresh()).items.reward2).toBe(1);
+    });
+
+    it("names every prize of Link's world where the map always shows them", () => {
+      const memory = writePrizeTables(seedMemory({ race: false }), 0x00);
+      expect(rewards(gameView(readingOf(memory), fresh()).items)).toEqual({
+        reward0: 2,
+        reward1: 3,
+        reward2: 1,
+      });
+    });
+
+    it("keeps the prize the player named, merged or synced", () => {
+      const memory = midRun();
+      const board = marked(fresh(), { reward4: 3 });
+      const view = gameView(readingOf(memory), board);
+      expect(rewards(view.items)).toEqual({ reward1: 3 });
+      expect(mergeView(board, view)?.next.items?.reward4).toBe(3);
+      expect(syncView(board, view)?.next.items?.reward4).toBe(3);
+    });
+
+    it("tells no prize in Race Mode", () => {
+      const memory = midRun();
+      memory.set([0x01, 0x00], 0x18_0213); // the race flag
+      const view = gameView(readingOf(memory, { race: true }), fresh());
+      expect(rewards(view.items)).toEqual({});
     });
   });
 
