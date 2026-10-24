@@ -15,8 +15,10 @@ document is the app's side.
   board never reads the console and never maps an AP seed onto the tracker's
   packs (`packs/alttpr`, `packs/sm`, `packs/smz3`): their logic and run
   settings model alttpr.com, Map Rando and samus.link seeds, not AP's worlds.
-  Only art is shared: the A Link to the Past skin draws AP's item names with
-  ALttPR's sprites.
+  Only art is shared: the skins draw AP's item names with the tracker's
+  sprites (ALttPR's assets, the frames of Map Rando's Super Metroid sheet).
+  AP's Super Metroid is VARIA's randomizer and its SMZ3 TotalSMZ3's: their
+  item names are theirs, not Map Rando's or samus.link's.
 - **No logic.** The server says what the slot received and which of its
   locations are checked; it does not say what is reachable, and the board
   says so under the checks. Porting AP's Python logic per world was weighed
@@ -41,14 +43,18 @@ document is the app's side.
 | `names.ts` | The names and location groups of the slot's game, for the checks (never saved or published) |
 | `checks.ts` | Pure: the slot's locations by location group, and the filter. `ChecksPanel` draws each group as a `<details>` disclosure ("Group — n left / m"): open by default while it has checks left, every one closed where the board stacks (`max-width: 60rem`), every match open while a filter is typed; what the player opens or closes holds until the page reloads (not saved) |
 | `status.ts` | The status dot's phase and the short headline per session status |
-| `worlds/skin.ts`, `worlds/skins.ts`, `worlds/alttp.ts` | Skins: AP item names to cells of the tracker's art |
+| `worlds/skin.ts`, `worlds/cells.ts`, `worlds/skins.ts` | Skins: the model, the kinds of cell and the grid shapes the skins share, and the loader (`useSkin`, `loadSkin`): each skin a chunk of its own, fetched for its world only |
+| `worlds/alttp.ts`, `worlds/sm.ts`, `worlds/smz3.ts` | The skins: AP item names to cells of the tracker's art; Super Metroid's and SMZ3's location groups as data (`worlds/sm-groups.json`, `worlds/smz3-groups.json`, written by `apps/web/scripts/ap-location-groups.mjs`) |
 | `overlay.ts` | The overlay API's whitelist: items only |
 | `components/` | `ApControls` (toolbar), `ConnectDialog` (lazy), `RoomLine` with `ApRunTimer`, `ItemsPanel`, `SkinGrid`, `ItemList`, `FeedPanel` and `FeedLine` (a line's words, the stream view's too), `SidePanel` (tabs over `ChecksPanel`, `HintsPanel`, `PlayersPanel`), `AwayNotice` |
 | `ArchipelagoApp.tsx`, `ArchipelagoObsView.tsx` | The board and the stream view |
 
 What a device downloads (Vite's gzip sizes, 2026-10-24, with the feed and
-hints): the module chunk (12 KB, the package's address, name-data, feed and
-hints code included), the run's store (3.3 KB, a chunk of its own since the
+hints and the three skins): the module chunk (11.3 KB, the package's
+address, name-data, feed and hints code included), the slot's skin (A Link
+to the Past 1.3 KB, Super Metroid 1.3 KB, SMZ3 4.3 KB with its 316
+locations' groups; 0.9 KB of cell kinds they share, and for Super Metroid
+and SMZ3 the 0.6 KB of SM board data the SM and SMZ3 boards load too), the run's store (3.3 KB, a chunk of its own since the
 overlay's whitelist reads it too), the shared run timer (1.5 KB, ALttPR's
 too) and its stylesheet (2.3 KB) when it tracks Archipelago; the connect
 dialog (5.8 KB) and the session (8.6 KB, plus archipelago.js, 7 KB) on
@@ -223,8 +229,10 @@ opens. **Disconnect** clears it.
 
 ## The stream view (OBS)
 
-`?view=obs` draws the skin's grid (A Link to the Past), or the progression
-items held, a line each, for a world without a skin. It never connects and
+`?view=obs` draws the skin's grid (A Link to the Past, Super Metroid, SMZ3),
+or the progression items held, a line each, for a world without a skin. Its
+size follows the rows the grid shows: SMZ3's keycards' row adds one once it
+appears. It never connects and
 never loads the session: it reads the run from storage, which holds no
 address or password. The desktop app's stream server and live follow need
 nothing of their own.
@@ -242,8 +250,16 @@ overlay reads, never a hint, on rows `useObsStage` keeps for them
 ## Overlay API
 
 `overlay.ts` is items only: each item by its AP name as `id` (stable within a
-world's name data), `level` and `max` its count. No room, slot, player,
-location, hint, timer or go mode ([overlay-api.md](overlay-api.md#ids-per-game)).
+world's name data) and its count as `level`. A world with a skin lists every
+name its grid counts first, held or not, in the grid's order, its `max` the
+most AP's world puts in a pool where it fixes one (1 for a unique item or a
+big key, a progressive item's levels, 4 bottles); then the items no cell
+counts, in the order they came. An open-ended count (packs, tanks, small
+keys, any item of a world without a skin) has its count as `max`: AP's
+options set those pools and the server states none. The skin arrives as a
+chunk: until it has, the reading is the received items alone, and the
+source tells the API again once it has. No room, slot, player, location,
+hint, timer or go mode ([overlay-api.md](overlay-api.md#ids-per-game)).
 
 ## Security rules
 
@@ -265,17 +281,46 @@ location, hint, timer or go mode ([overlay-api.md](overlay-api.md#ids-per-game))
 
 A skin (`worlds/skin.ts`) maps AP item names to cells: progressive items to
 levels (AP's `progression_mapping`), bits (the bow and silver arrows, the
-boomerangs), counts (bottles of any content) and keys per dungeon, and lays
-them in an explicit `layout` of full rows: the ALttP skin follows ALttPR's board
-(its item order, two dungeons' keys where that board has key and boss cells,
-then the last seven dungeons'), six rows of seven. Whatever
+boomerangs), counts (bottles of any content), counters (tanks and packs,
+their count drawn on the sprite), keys per dungeon (a big key, small keys,
+either missing where the dungeon's pool has none) and an area's keycards.
+It lays them in an explicit `layout` of full rows of seven, never a gap,
+and may add `extraRows` once the slot holds an item they count. Whatever
 the slot received that no cell counts goes under **More items**, grouped by
-AP's flags as the generic list is. `worlds/alttp.ts` is read from AP 0.6.8's
-`worlds/alttp/Items.py`; `worlds/alttp.spec.ts` holds it to the pinned name
-data (`packages/archipelago/test/datapackages/`): every mapped name exists,
-and every progression item has a cell or an exclusion with its reason (the
-capacity upgrades, the Triforce and its pieces, the Power Star). Super
-Metroid and SMZ3 skins come next; until then those worlds get the list.
+AP's flags as the generic list is. Only art is shared with the packs: the
+names are AP's, read from its worlds at the pinned release (0.6.8, commit
+`54803be0`).
+
+| Skin | AP's source | Grid |
+| --- | --- | --- |
+| A Link to the Past (`alttp.ts`) | `worlds/alttp/Items.py` | ALttPR's board: its item order, two dungeons' keys where that board has key and boss cells, then the last seven dungeons'; 6 rows |
+| Super Metroid (`sm.ts`) | `worlds/sm/__init__.py` over VARIA's `rando/Items.py` | The SM board's order (beams, morph ball and suits, movement, counted items) on Map Rando's sheet; 3 rows |
+| SMZ3 (`smz3.ts`) | `worlds/smz3/TotalSMZ3/Item.py`, `create_items` | A Link to the Past's six rows, then Super Metroid's three; under keysanity a row of keycards by area and Super Metroid's maps, shown once the slot holds one |
+
+`worlds/cells.ts` holds the kinds of cell and the two shared grid shapes
+(`ZELDA_LAYOUT`, `SM_LAYOUT`): each skin's ids are those. Each skin's spec
+(`worlds/*.spec.ts`, through `skinProblems` in `fixtures.ts`) holds it to
+the pinned name data (`packages/archipelago/test/datapackages/`): every
+mapped and excluded name exists, every progression item of the world's
+source has a cell or an exclusion with its reason (ALttP's capacity
+upgrades, Triforce pieces and Power Star; SMZ3's dungeon maps and compasses;
+SM's `Generic`, never in a pool), no exclusion hides a counted name, every
+row is full and every cell placed once.
+
+**Location groups.** AP 0.6.8's Super Metroid and SMZ3 worlds name no
+location group but `Everywhere` (recorded: `sm-smz3-session.json`), so
+their skins carry groups as data (`groups`), used where the server's are
+empty (`groupsFor` in `checks.ts`): VARIA's graph areas for Super Metroid
+(`GraphArea` in `variaRandomizer/graph/location.py`, named in words: 10
+groups), TotalSMZ3's regions for SMZ3 (each region's `Name`, in World.py's
+order: 40 groups). `apps/web/scripts/ap-location-groups.mjs` writes both
+tables from an AP checkout, keeping only the pinned data's locations (the
+bosses carry no id); the specs hold every location in exactly one group.
+
+**Loading.** `worlds/skins.ts` imports each skin when a board, the stream
+view or the overlay first needs that world's: a device on an ALttP slot
+never fetches the SMZ3 skin. Until it arrives the items panel shows its
+heading alone; a skin that cannot be fetched falls back to the list.
 
 ## Not verified
 

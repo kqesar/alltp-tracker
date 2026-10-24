@@ -64,7 +64,7 @@ afterEach(() => {
 });
 
 describe("the items", () => {
-  it("draw an A Link to the Past slot with its art, the rest under More items", () => {
+  it("draw an A Link to the Past slot with its art, the rest under More items", async () => {
     lay({
       items: [
         { count: 2, flags: 1, name: "Progressive Sword" },
@@ -77,7 +77,9 @@ describe("the items", () => {
       ],
     });
     render(<ItemsPanel />);
-    const sword = screen.getByTestId("ap-item-sword");
+    // The skin is a chunk of its own: nothing until it arrived, then the grid
+    expect(screen.queryByTestId("ap-item-list")).toBeNull();
+    const sword = await screen.findByTestId("ap-item-sword");
     expect(sword).toHaveTextContent("Sword, Master Sword");
     expect(sword).not.toHaveClass("griditem--dimmed");
     expect(sword.style.getPropertyValue("--sprite")).toContain("sword2.png");
@@ -398,12 +400,12 @@ describe("a tab that follows another", () => {
 });
 
 describe("the stream view", () => {
-  it("draws the skin's grid, or the progression items held", () => {
+  it("draws the skin's grid, or the progression items held", async () => {
     lay({ items: [{ count: 1, flags: 1, name: "Hookshot" }] });
     const { rerender } = render(
       <ArchipelagoObsView background="#000000" relay="follow" />,
     );
-    expect(screen.getByTestId("ap-item-hookshot")).toHaveTextContent(
+    expect(await screen.findByTestId("ap-item-hookshot")).toHaveTextContent(
       "Hookshot, received",
     );
     expect(screen.getByTestId("obs-view")).toHaveStyle({

@@ -179,7 +179,7 @@ describe("the stream view's address", () => {
     expect(screen.queryByTestId("ap-stream-timer")).toBeNull();
   });
 
-  it("adds the run timer once ticked, and the view draws it under the grid", () => {
+  it("adds the run timer once ticked, and the view draws it under the grid", async () => {
     render(
       <StreamUrlDialog
         feedOption
@@ -198,9 +198,12 @@ describe("the stream view's address", () => {
     expect(screen.getByTestId("stream-timer")).toHaveAccessibleName(
       /^Run timer: 1:0\d, running$/,
     );
-    expect(screen.getByTestId("obs-view")).toHaveStyle({
-      "--obs-columns": "7",
-    });
+    // The skin's seven columns, once its chunk arrived
+    await vi.waitFor(() =>
+      expect(screen.getByTestId("obs-view")).toHaveStyle({
+        "--obs-columns": "7",
+      }),
+    );
   });
 });
 

@@ -494,3 +494,125 @@ for (const width of WIDTHS) {
     }
   });
 }
+
+/** AP 0.6.8's recording of a tracker on Samus (SM) or Hybrid Hero (SMZ3). */
+const startWorldRoom = (client: string) =>
+  FakeApServer.start({ client, fixture: fixture("sm-smz3-session") });
+
+for (const world of [
+  {
+    client: "tracker-samus",
+    // VARIA's names on Map Rando's sheet, packs and tanks counted
+    expect: async (page: Page) => {
+      await expect(page.getByTestId("ap-item-morph")).toHaveText(
+        "Morph Ball, received",
+      );
+      await expect(page.getByTestId("ap-item-missile")).toHaveText(
+        "Missile, 13 received13",
+      );
+      await expect(page.getByTestId("ap-item-etank")).toHaveText(
+        "Energy Tank, 3 received3",
+      );
+      await expect(page.getByTestId("ap-item-ice")).toHaveText(
+        "Ice Beam, not received",
+      );
+    },
+    game: "Super Metroid",
+    rows: 3,
+    slot: "Samus",
+    zone: "Crateria and Blue Brinstar",
+  },
+  {
+    client: "tracker-hybrid",
+    // Both games' items by TotalSMZ3's names
+    expect: async (page: Page) => {
+      await expect(page.getByTestId("ap-item-flippers")).toHaveText(
+        "Flippers, received",
+      );
+      await expect(page.getByTestId("ap-item-mail")).toHaveText(
+        "Mail, Blue Mail",
+      );
+      await expect(page.getByTestId("ap-item-spacejump")).toHaveText(
+        "Space Jump, received",
+      );
+      await expect(page.getByTestId("ap-item-ice")).toHaveText(
+        "Ice Beam, received",
+      );
+      // A run without keysanity sends no keycard: no keycards' row
+      await expect(page.getByTestId("ap-item-cards-cr")).toHaveCount(0);
+    },
+    game: "SMZ3",
+    rows: 9,
+    slot: "Hybrid Hero",
+    zone: "Light World South",
+  },
+]) {
+  test(`a ${world.game} slot: its skin, its groups, the stream view, at every width`, async ({
+    context,
+    page,
+  }) => {
+    const room = await startWorldRoom(world.client);
+    try {
+      await openOnGame(page, "archipelago");
+      await connectTo(page, room, world.slot);
+      await expect(
+        roomDialog(page).getByTestId("ap-connect-headline"),
+      ).toHaveText("Connected");
+      await page.keyboard.press("Escape");
+      await expect(page.getByTestId("ap-room-slot")).toHaveText(
+        `${world.slot} · ${world.game} · Team 1`,
+      );
+      playOn(room);
+      await world.expect(page);
+      // The skin's rows, every one full
+      const cells = page.getByTestId("ap-skin").getByRole("listitem");
+      await expect(cells).toHaveCount(world.rows * 7);
+      // The checks by the world's groups, as data: AP's world names none
+      const zone = page.getByTestId(`ap-zone-${world.zone}`);
+      await expect(zone.locator("summary")).toHaveText(
+        new RegExp(`^${world.zone} — \\d+ left / \\d+$`),
+      );
+      await expect(page.getByTestId("ap-zone-Other locations")).toHaveCount(0);
+
+      for (const width of WIDTHS) {
+        await page.setViewportSize({ height: 900, width });
+        await settled(page);
+        await auditPage(page);
+        // Every row one cell high, every cell square: no orphan, no gap
+        const boxes = await cells.evaluateAll((items) =>
+          items.map((item) => item.getBoundingClientRect().toJSON()),
+        );
+        const tops = new Set(boxes.map((box) => Math.round(box.top)));
+        expect(tops.size).toBe(world.rows);
+        for (const box of boxes) {
+          expect(Math.abs(box.width - box.height)).toBeLessThan(0.5);
+        }
+        if (SHOTS) {
+          await page.screenshot({
+            fullPage: true,
+            path: `${SHOTS}/${world.client}-${width}.png`,
+          });
+        }
+      }
+      await page.locator("body").click({ position: { x: 1, y: 1 } });
+      await tabTo(page, "ap-room-button");
+      await tabTo(page, "ap-checks-hide");
+
+      // The stream view draws the same grid, nothing of where the room is
+      const stream = await context.newPage();
+      await stream.goto("./?view=obs");
+      await world.expect(stream);
+      await expect(
+        stream.getByTestId("ap-skin").getByRole("listitem"),
+      ).toHaveCount(world.rows * 7);
+      expect(await stream.locator("body").innerText()).not.toContain(
+        String(room.port),
+      );
+      if (SHOTS) {
+        await stream.screenshot({ path: `${SHOTS}/${world.client}-obs.png` });
+      }
+    } finally {
+      await room.close();
+    }
+  });
+}

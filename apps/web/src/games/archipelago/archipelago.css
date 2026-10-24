@@ -111,6 +111,34 @@
   background-size: 0 0;
 }
 
+/* A Super Metroid item: a frame of Map Rando's item sheet (games/sm), 26
+   frames of 16 px side by side, set by --frame */
+.ap-cell--sm,
+.ap-cell--sm.griditem--dimmed::after {
+  background-image: url("../sm/assets/items.png");
+  background-position: calc(var(--frame, 0) * 100% / 25) 0;
+  background-size: 2600% 100%;
+}
+
+.ap-cell--sm.griditem--dimmed {
+  background-size: 0 0;
+}
+
+/* An area's keycards: each level's mark, boxed once held, faint until then */
+.ap-card {
+  margin: 12%;
+  font-size: calc(var(--cell) * 0.24);
+  font-weight: bold;
+  line-height: 1;
+  color: var(--color-text);
+  border: 1px solid var(--color-text);
+}
+
+.ap-card--missing {
+  color: var(--color-text-muted);
+  border-color: transparent;
+}
+
 .ap-key {
   position: relative;
   display: block;

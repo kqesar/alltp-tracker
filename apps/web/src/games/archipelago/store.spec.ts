@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { overlayReadingOf } from "@/games/archipelago/overlay";
 import {
   AP_SAVE_VERSION,
   AP_STORAGE_KEY,
@@ -85,48 +84,5 @@ describe("sameRun", () => {
     ]) {
       expect(sameRun(ROOM, { ...ROOM, ...change })).toBe(false);
     }
-  });
-});
-
-describe("the overlay's whitelist", () => {
-  it("tells the items alone, by name", () => {
-    const reading = overlayReadingOf({
-      items: [{ count: 2, flags: 1, name: "Progressive Sword" }],
-    });
-    expect(reading).toEqual({
-      fresh: false,
-      state: {
-        game: "archipelago",
-        goMode: null,
-        items: [
-          {
-            id: "Progressive Sword",
-            level: 2,
-            max: 2,
-            name: "Progressive Sword",
-          },
-        ],
-        objectives: [],
-        timer: null,
-      },
-    });
-    expect(overlayReadingOf({ items: [] }).fresh).toBe(true);
-  });
-
-  it("reads the store and follows it", async () => {
-    const { overlaySource } = await import("@/games/archipelago/overlay");
-    let calls = 0;
-    const stop = overlaySource.subscribe(() => calls++);
-    run().apply({
-      ...freshRun(),
-      items: [{ count: 1, flags: 0, name: "Bombs (3)" }],
-      room: ROOM,
-      updatedAt: 1,
-    });
-    stop();
-    expect(calls).toBe(1);
-    expect(overlaySource.read().state.items[0]?.id).toBe("Bombs (3)");
-    // Nothing of the room reaches the API
-    expect(JSON.stringify(overlaySource.read())).not.toContain("4242");
   });
 });

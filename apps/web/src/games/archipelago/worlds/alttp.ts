@@ -6,119 +6,35 @@
 // packages/archipelago/upstream.json): `item_table` and
 // `progression_mapping`; held to the pinned name data by alttp.spec.ts.
 
+import {
+  BOW,
+  BOW_WORDS,
+  bits,
+  bowSprite,
+  counted,
+  DUNGEON_SHORTS,
+  fromOne,
+  progressive,
+  SILVERS,
+  toggle,
+  ZELDA_LAYOUT,
+} from "@/games/archipelago/worlds/cells";
 import type { ItemCell, Skin, SkinCell } from "@/games/archipelago/worlds/skin";
 
-/** The progressive items' levels (Items.py, `progression_mapping`). */
-const swordLevels = {
-  "Fighter Sword": 1,
-  "Golden Sword": 4,
-  "Master Sword": 2,
-  "Tempered Sword": 3,
-};
-
-/** A cell whose level is its progressive item's count, or a fixed level's. */
-const progressive = (
-  id: string,
-  name: string,
-  progressives: readonly string[],
-  fixed: Readonly<Record<string, number>>,
-  levels: readonly string[],
-  sprite: (level: number) => string,
-): ItemCell => ({
-  describe: (level) => (level === 0 ? "not received" : levels[level - 1]),
-  id,
-  kind: "item",
-  level: (count) =>
-    Math.min(
-      levels.length,
-      Math.max(
-        progressives.reduce((sum, item) => sum + count(item), 0),
-        ...Object.entries(fixed).map(([item, level]) =>
-          count(item) > 0 ? level : 0,
-        ),
-      ),
-    ),
-  name,
-  names: [...progressives, ...Object.keys(fixed)],
-  sprite,
-});
-
-/** A cell held once any of its items is. */
-const toggle = (
-  id: string,
-  name: string,
-  file: string,
-  names: readonly string[] = [name],
-): ItemCell => ({
-  describe: (level) => (level === 0 ? "not received" : "received"),
-  id,
-  kind: "item",
-  level: (count) => (names.some((item) => count(item) > 0) ? 1 : 0),
-  name,
-  names,
-  sprite: () => file,
-});
-
-/** A cell whose level is a set of bits, one per item (the bow, the boomerangs). */
-const bits = (
-  id: string,
-  name: string,
-  items: Readonly<Record<string, number>>,
-  progressives: readonly string[],
-  progressiveBits: readonly number[],
-  words: Readonly<Record<number, string>>,
-  sprite: (level: number) => string,
-): ItemCell => ({
-  describe: (level) => words[level] ?? "not received",
-  id,
-  kind: "item",
-  level: (count) => {
-    const steps = progressives.reduce((sum, item) => sum + count(item), 0);
-    let level = steps > 0 ? (progressiveBits[steps - 1] ?? 0) : 0;
-    for (const [item, bit] of Object.entries(items)) {
-      if (count(item) > 0) level |= bit;
-    }
-    return level;
-  },
-  name,
-  names: [...progressives, ...Object.keys(items)],
-  sprite,
-});
-
-/** A cell that counts its items (the bottles). */
-const counted = (
-  id: string,
-  name: string,
-  names: readonly string[],
-  max: number,
-  sprite: (level: number) => string,
-): ItemCell => ({
-  describe: (level) => (level === 0 ? "not received" : `${level} received`),
-  id,
-  kind: "item",
-  level: (count) =>
-    Math.min(
-      max,
-      names.reduce((sum, item) => sum + count(item), 0),
-    ),
-  leveled: true,
-  name,
-  names,
-  sprite,
-});
-
-const SILVERS = 1;
-const BOW = 2;
-
-/** The grid's item cells; LAYOUT places them. */
+/** The grid's item cells; ZELDA_LAYOUT places them. */
 const ITEM_CELLS: readonly ItemCell[] = [
   progressive(
     "sword",
     "Sword",
     ["Progressive Sword"],
-    swordLevels,
+    {
+      "Fighter Sword": 1,
+      "Golden Sword": 4,
+      "Master Sword": 2,
+      "Tempered Sword": 3,
+    },
     ["Fighter Sword", "Master Sword", "Tempered Sword", "Golden Sword"],
-    (level) => `sword${Math.max(level, 1)}.png`,
+    fromOne("sword"),
   ),
   progressive(
     "shield",
@@ -126,7 +42,7 @@ const ITEM_CELLS: readonly ItemCell[] = [
     ["Progressive Shield"],
     { "Blue Shield": 1, "Mirror Shield": 3, "Red Shield": 2 },
     ["Blue Shield", "Red Shield", "Mirror Shield"],
-    (level) => `shield${Math.max(level, 1)}.png`,
+    fromOne("shield"),
   ),
   {
     ...progressive(
@@ -147,7 +63,7 @@ const ITEM_CELLS: readonly ItemCell[] = [
     ["Progressive Glove"],
     { "Power Glove": 1, "Titans Mitts": 2 },
     ["Power Glove", "Titan's Mitts"],
-    (level) => `glove${Math.max(level, 1)}.png`,
+    fromOne("glove"),
   ),
   bits(
     "bow",
@@ -155,12 +71,8 @@ const ITEM_CELLS: readonly ItemCell[] = [
     { Bow: BOW, "Silver Arrows": SILVERS, "Silver Bow": BOW | SILVERS },
     ["Progressive Bow", "Progressive Bow (Alt)"],
     [BOW, BOW | SILVERS],
-    {
-      [SILVERS]: "Silver Arrows only",
-      [BOW]: "Bow",
-      [BOW | SILVERS]: "Bow and Silver Arrows",
-    },
-    (level) => `bow${level === 0 ? BOW : level}.png`,
+    BOW_WORDS,
+    bowSprite,
   ),
   bits(
     "boomerang",
@@ -198,7 +110,7 @@ const ITEM_CELLS: readonly ItemCell[] = [
       "Bottle (Good Bee)",
     ],
     4,
-    (level) => `bottle${Math.max(level, 1)}.png`,
+    fromOne("bottle"),
   ),
   toggle("somaria", "Cane of Somaria", "somaria.png"),
   toggle("byrna", "Cane of Byrna", "byrna.png"),
@@ -213,31 +125,34 @@ const ITEM_CELLS: readonly ItemCell[] = [
   ]),
 ];
 
-/** Each dungeon as AP names its keys, in ALttPR's grid order, the castles last. */
-const DUNGEONS: readonly (readonly [string, string, string])[] = [
-  ["Eastern Palace", "Eastern Palace", "EP"],
-  ["Desert Palace", "Desert Palace", "DP"],
-  ["Tower of Hera", "Tower of Hera", "TH"],
-  ["Palace of Darkness", "Palace of Darkness", "PD"],
-  ["Swamp Palace", "Swamp Palace", "SP"],
-  ["Skull Woods", "Skull Woods", "SW"],
-  ["Thieves Town", "Thieves' Town", "TT"],
-  ["Ice Palace", "Ice Palace", "IP"],
-  ["Misery Mire", "Misery Mire", "MM"],
-  ["Turtle Rock", "Turtle Rock", "TR"],
-  ["Hyrule Castle", "Hyrule Castle", "HC"],
-  ["Agahnims Tower", "Castle Tower", "CT"],
-  ["Ganons Tower", "Ganon's Tower", "GT"],
+/** Each dungeon as AP names its keys, in DUNGEON_SHORTS' order. */
+const DUNGEONS: readonly (readonly [string, string])[] = [
+  ["Eastern Palace", "Eastern Palace"],
+  ["Desert Palace", "Desert Palace"],
+  ["Tower of Hera", "Tower of Hera"],
+  ["Palace of Darkness", "Palace of Darkness"],
+  ["Swamp Palace", "Swamp Palace"],
+  ["Skull Woods", "Skull Woods"],
+  ["Thieves Town", "Thieves' Town"],
+  ["Ice Palace", "Ice Palace"],
+  ["Misery Mire", "Misery Mire"],
+  ["Turtle Rock", "Turtle Rock"],
+  ["Hyrule Castle", "Hyrule Castle"],
+  ["Agahnims Tower", "Castle Tower"],
+  ["Ganons Tower", "Ganon's Tower"],
 ];
 
-const KEY_CELLS: readonly SkinCell[] = DUNGEONS.map(([ap, name, short]) => ({
-  big: `Big Key (${ap})`,
-  dungeon: name,
-  id: `keys-${short.toLowerCase()}`,
-  kind: "keys",
-  short,
-  small: `Small Key (${ap})`,
-}));
+const KEY_CELLS: readonly SkinCell[] = DUNGEONS.map(([ap, name], index) => {
+  const short = DUNGEON_SHORTS[index] ?? "";
+  return {
+    big: `Big Key (${ap})`,
+    dungeon: name,
+    id: `keys-${short.toLowerCase()}`,
+    kind: "keys",
+    short,
+    small: `Small Key (${ap})`,
+  };
+});
 
 /**
  * Progression items the grid leaves to "More items", each with why: the
@@ -256,25 +171,10 @@ const EXCLUDED: Readonly<Record<string, string>> = {
   "Triforce Piece": "a goal piece, counted",
 };
 
-/**
- * The grid as ALttPR's board lays its items (data/items.ts, `defaultItemGrid`):
- * two full rows of items, then three of five items with two dungeons' keys
- * where ALttPR's board has its key and boss cells, then the last seven
- * dungeons' keys. Six full rows of seven: 29 items, 13 dungeons.
- */
-const LAYOUT: readonly (readonly string[])[] = [
-  ["flute", "hookshot", "hammer", "firerod", "icerod", "boomerang", "net"],
-  ["bow", "lamp", "shield", "sword", "mail", "magic", "boots"],
-  ["shovel", "book", "quake", "bombos", "ether", "keys-ep", "keys-dp"],
-  ["powder", "glove", "bottle", "somaria", "byrna", "keys-th", "keys-pd"],
-  ["mushroom", "cape", "mirror", "moonpearl", "flippers", "keys-sp", "keys-sw"],
-  ["keys-tt", "keys-ip", "keys-mm", "keys-tr", "keys-hc", "keys-ct", "keys-gt"],
-];
-
 export const ALTTP_SKIN: Skin = {
   cells: [...ITEM_CELLS, ...KEY_CELLS],
   columns: 7,
   excluded: EXCLUDED,
   game: "A Link to the Past",
-  layout: LAYOUT,
+  layout: ZELDA_LAYOUT,
 };

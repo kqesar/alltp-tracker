@@ -22,6 +22,20 @@ export const OTHER_ZONE = "Other locations";
 export const ALL_ZONE = "Locations";
 
 /**
+ * The groups the list uses: the world's own (AP's `location_name_groups`),
+ * or, for a world that names none (Super Metroid, SMZ3), its skin's table.
+ * @param server - The groups the room's server holds, `Everywhere` left out
+ * @param world - The skin's groups, as data
+ */
+export const groupsFor = (
+  server: LocationGroups | null,
+  world: LocationGroups | undefined,
+): LocationGroups | null =>
+  server !== null && Object.keys(server).length > 0
+    ? server
+    : (world ?? server);
+
+/**
  * The slot's locations by group, in the order the world lists its groups; a
  * location may sit in several. Those in no group come last.
  * @param names - The world's names; none yet means no rows

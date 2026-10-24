@@ -137,7 +137,7 @@ describe("StreamToolsDialog", () => {
     // Archipelago's ALttP skin: seven columns of six rows, three for the feed
     const { dialog } = show({
       feedOption: true,
-      sizeOf: streamSize("A Link to the Past", 0),
+      sizeOf: streamSize({ columns: 7, rows: 6 }),
     });
     running();
     const feed = screen.getByTestId("stream-tools-feed");

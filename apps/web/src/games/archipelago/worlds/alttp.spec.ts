@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { alttpNames } from "@/games/archipelago/fixtures";
+import {
+  alttpNames,
+  NO_PROBLEM,
+  skinProblems,
+} from "@/games/archipelago/fixtures";
 import { ALTTP_SKIN } from "@/games/archipelago/worlds/alttp";
 import {
   countsOf,
   type ItemCell,
-  mappedNames,
   rowsOf,
 } from "@/games/archipelago/worlds/skin";
-import { skinFor } from "@/games/archipelago/worlds/skins";
 
 /**
  * A Link to the Past's progression items that AP's name data names: the
@@ -102,7 +104,6 @@ const PROGRESSION = [
 ];
 
 const names = alttpNames();
-const mapped = mappedNames(ALTTP_SKIN);
 
 /** An item cell of the skin, by id. */
 const cell = (id: string) =>
@@ -121,42 +122,38 @@ const levelOf = (id: string, held: Record<string, number>) => {
 };
 
 describe("the A Link to the Past skin, against AP 0.6.8's name data", () => {
-  it("maps only names the pinned data has", () => {
+  it("maps only names the pinned data has, every progression item placed", () => {
     expect(names.checksum).toBe("1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4");
-    const unknown = [...mapped].filter((name) => !names.itemIds.has(name));
-    expect(unknown).toEqual([]);
-    for (const name of [...Object.keys(ALTTP_SKIN.excluded)]) {
-      expect(names.itemIds.has(name)).toBe(true);
-    }
+    expect(skinProblems(ALTTP_SKIN, names, PROGRESSION)).toEqual(NO_PROBLEM);
+    // The checks catch what they are for
+    const broken = {
+      ...ALTTP_SKIN,
+      excluded: { ...ALTTP_SKIN.excluded, Hookshot: "no reason", Nope: "" },
+      layout: [...ALTTP_SKIN.layout.slice(1), ["flute", "flute"]],
+    };
+    expect(skinProblems(broken, names, [...PROGRESSION, "Bomb"])).toEqual({
+      ...NO_PROBLEM,
+      excludedMapped: ["Hookshot"],
+      // Flute placed twice, then the first row's others never
+      misplaced: [
+        "flute",
+        ...["boomerang", "hookshot", "firerod", "icerod", "hammer", "net"],
+      ],
+      shortRows: [2],
+      uncovered: ["Bomb"],
+      unknownItems: ["Nope"],
+      unknownProgression: ["Bomb"],
+    });
   });
 
-  it("gives every progression item a cell or an explicit exclusion", () => {
-    expect(PROGRESSION.every((name) => names.itemIds.has(name))).toBe(true);
-    const left = PROGRESSION.filter(
-      (name) => !mapped.has(name) && !(name in ALTTP_SKIN.excluded),
-    );
-    expect(left).toEqual([]);
-    // No exclusion hides an item a cell counts
-    expect(
-      Object.keys(ALTTP_SKIN.excluded).filter((n) => mapped.has(n)),
-    ).toEqual([]);
-  });
-
-  it("lays six full rows of seven, every cell once", () => {
-    const rows = rowsOf(ALTTP_SKIN);
-    expect(rows.map((row) => row.length)).toEqual([7, 7, 7, 7, 7, 7]);
-    const placed = ALTTP_SKIN.layout.flat();
-    expect(new Set(placed).size).toBe(placed.length);
-    expect([...placed].sort()).toEqual(
-      ALTTP_SKIN.cells.map((cell) => cell.id).sort(),
-    );
+  it("lays six full rows of seven, the keys of 13 dungeons", () => {
+    expect(rowsOf(ALTTP_SKIN).map((row) => row.length)).toEqual([
+      7, 7, 7, 7, 7, 7,
+    ]);
     expect(() => rowsOf({ ...ALTTP_SKIN, layout: [["nowhere"]] })).toThrow(
       "No cell nowhere in A Link to the Past",
     );
     expect(ALTTP_SKIN.cells.filter((c) => c.kind === "keys")).toHaveLength(13);
-    expect(skinFor("A Link to the Past")).toBe(ALTTP_SKIN);
-    expect(skinFor("Clique")).toBeNull();
-    expect(skinFor(undefined)).toBeNull();
   });
 });
 

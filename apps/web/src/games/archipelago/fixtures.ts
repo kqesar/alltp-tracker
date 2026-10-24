@@ -10,10 +10,12 @@
 
 import {
   type GamePackage,
+  type NameData,
   nameData,
   type WebSocketLike,
 } from "@alltp/archipelago";
 import { setRuntimeOptions } from "@/games/archipelago/connection";
+import { mappedNames, type Skin } from "@/games/archipelago/worlds/skin";
 
 /** A socket of the package's in-memory network (test/fake-socket.ts). */
 type FakeSocket = WebSocketLike & {
@@ -60,13 +62,13 @@ export const ROOM_ADDRESS = "127.0.0.1:38281";
  * @param options - Refuse the Connect with these reasons
  */
 export const startRoom = (
-  options: { refuse?: string[]; client?: string } = {},
+  options: { refuse?: string[]; client?: string; fixture?: string } = {},
 ) => {
   const network = new Network().route(ROOM_URL, {
     kind: "serve",
     responder: {
       client: options.client ?? "tracker",
-      fixture: fixture("normal-session"),
+      fixture: fixture(options.fixture ?? "normal-session"),
       ...(options.refuse ? { refuse: options.refuse } : {}),
     },
   });
@@ -81,12 +83,67 @@ export const startRoom = (
   };
 };
 
+/** A world's names, as the room's data package gives them. */
+export const worldNames = (game: string) => {
+  const { archipelago: _a, game: _g, ...pkg } = dataPackage(game);
+  return nameData(game, pkg as unknown as GamePackage);
+};
+
 /** A Link to the Past's names, as the room's data package gives them. */
-export const alttpNames = () => {
-  const {
-    archipelago: _a,
-    game: _g,
-    ...pkg
-  } = dataPackage("A Link to the Past");
-  return nameData("A Link to the Past", pkg as unknown as GamePackage);
+export const alttpNames = () => worldNames("A Link to the Past");
+
+/**
+ * What a skin gets wrong against its world's pinned name data, each list
+ * empty when nothing: names it maps or excludes that the data lacks,
+ * progression items with neither a cell nor an exclusion, exclusions a cell
+ * counts anyway, rows not `columns` long, cells placed twice or never, and
+ * locations its groups name that the data lacks, leave out or hold twice.
+ * @param progression - The world's progression items, read from AP's source
+ */
+export const skinProblems = (
+  skin: Skin,
+  names: NameData,
+  progression: readonly string[],
+) => {
+  const mapped = mappedNames(skin);
+  const placed = [...skin.layout, ...(skin.extraRows ?? [])].flat();
+  const grouped = Object.values(skin.groups ?? {}).flat();
+  const seen = new Set<string>();
+  const twice = grouped.filter((name) => seen.has(name) || !seen.add(name));
+  return {
+    excludedMapped: Object.keys(skin.excluded).filter((n) => mapped.has(n)),
+    groupedTwice: twice,
+    misplaced: [
+      ...placed.filter((id, index) => placed.indexOf(id) !== index),
+      ...skin.cells.map((cell) => cell.id).filter((id) => !placed.includes(id)),
+    ],
+    shortRows: [...skin.layout, ...(skin.extraRows ?? [])]
+      .map((row) => row.length)
+      .filter((length) => length !== skin.columns),
+    uncovered: progression.filter(
+      (name) => !mapped.has(name) && !Object.hasOwn(skin.excluded, name),
+    ),
+    ungrouped:
+      skin.groups === undefined
+        ? []
+        : [...names.locationIds.keys()].filter((name) => !seen.has(name)),
+    unknownGrouped: grouped.filter((name) => !names.locationIds.has(name)),
+    unknownItems: [...mapped, ...Object.keys(skin.excluded)].filter(
+      (name) => !names.itemIds.has(name),
+    ),
+    unknownProgression: progression.filter((name) => !names.itemIds.has(name)),
+  };
+};
+
+/** No problem found by `skinProblems`. */
+export const NO_PROBLEM = {
+  excludedMapped: [],
+  groupedTwice: [],
+  misplaced: [],
+  shortRows: [],
+  uncovered: [],
+  ungrouped: [],
+  unknownGrouped: [],
+  unknownItems: [],
+  unknownProgression: [],
 };

@@ -3,10 +3,12 @@ import {
   type CheckRow,
   type CheckZone,
   checkZones,
+  groupsFor,
   visibleZones,
 } from "@/games/archipelago/checks";
 import { useApNamesStore } from "@/games/archipelago/names";
 import { useArchipelagoStore } from "@/games/archipelago/store";
+import { useSkin } from "@/games/archipelago/worlds/skins";
 
 /**
  * Where the board stacks its panels (archipelago.css): there every group
@@ -85,7 +87,9 @@ export const ChecksPanel = () => {
   const hideChecked = useArchipelagoStore((state) => state.prefs.hideChecked);
   const setHideChecked = useArchipelagoStore((state) => state.setHideChecked);
   const names = useApNamesStore((state) => state.names);
-  const groups = useApNamesStore((state) => state.groups);
+  const serverGroups = useApNamesStore((state) => state.groups);
+  const skin = useSkin(useArchipelagoStore((state) => state.room?.game));
+  const groups = groupsFor(serverGroups, skin?.groups);
   const [filter, setFilter] = useState("");
   /** The groups the player opened, once they opened or closed one. */
   const [chosen, setChosen] = useState<ReadonlySet<string> | null>(null);
