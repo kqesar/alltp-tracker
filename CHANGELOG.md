@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.41.0](https://github.com/kqesar/alltp-tracker/compare/v2.40.0...v2.41.0) (2026-10-24)
+
+
+### ✨ Features
+
+* **web:** Super Metroid and SMZ3 skins for the Archipelago board (S3) ([#339](https://github.com/kqesar/alltp-tracker/issues/339)) ([ed91068](https://github.com/kqesar/alltp-tracker/commit/ed9106835aadbdfa2a34027a938e065b852ea1e5))
+
 ## [2.40.0](https://github.com/kqesar/alltp-tracker/compare/v2.39.0...v2.40.0) (2026-10-24)
 
 
