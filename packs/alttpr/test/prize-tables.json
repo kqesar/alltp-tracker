@@ -1,0 +1,96 @@
+{
+  "seeds": [
+    {
+      "dungeonItems": "standard",
+      "hash": "9MQ9gO1wMD",
+      "mapMode": 0,
+      "mode": "open",
+      "prizeBits": [2, 2, 0, 4, 16, 8, 32, 1, 4, 64, 1],
+      "prizeKinds": [64, 0, 0, 0, 64, 64, 64, 64, 64, 64, 0],
+      "revealBombShop": 0,
+      "revealSahasrahla": 0,
+      "source": "rom",
+      "spoilerPrizes": {
+        "Desert Palace": "PendantOfPower",
+        "Eastern Palace": "Crystal1",
+        "Ice Palace": "Crystal6",
+        "Misery Mire": "Crystal7",
+        "Palace of Darkness": "Crystal2",
+        "Skull Woods": "Crystal4",
+        "Swamp Palace": "PendantOfCourage",
+        "Thieves' Town": "Crystal3",
+        "Tower of Hera": "Crystal5",
+        "Turtle Rock": "PendantOfWisdom"
+      }
+    },
+    {
+      "dungeonItems": "standard",
+      "hash": "zMY966PmMg",
+      "mapMode": 0,
+      "mode": "open",
+      "prizeBits": [2, 1, 0, 4, 32, 8, 1, 64, 2, 4, 16],
+      "prizeKinds": [0, 0, 0, 64, 64, 64, 64, 64, 64, 0, 64],
+      "revealBombShop": 0,
+      "revealSahasrahla": 0,
+      "source": "patch",
+      "spoilerPrizes": {
+        "Desert Palace": "PendantOfWisdom",
+        "Eastern Palace": "PendantOfPower",
+        "Ice Palace": "Crystal3",
+        "Misery Mire": "Crystal7",
+        "Palace of Darkness": "Crystal4",
+        "Skull Woods": "Crystal6",
+        "Swamp Palace": "Crystal5",
+        "Thieves' Town": "PendantOfCourage",
+        "Tower of Hera": "Crystal1",
+        "Turtle Rock": "Crystal2"
+      }
+    },
+    {
+      "dungeonItems": "mc",
+      "hash": "2v7g66Dpvq",
+      "mapMode": 1,
+      "mode": "standard",
+      "prizeBits": [1, 2, 0, 4, 2, 8, 64, 1, 4, 32, 16],
+      "prizeKinds": [0, 64, 0, 64, 0, 64, 64, 64, 0, 64, 64],
+      "revealBombShop": 1088,
+      "revealSahasrahla": 32,
+      "source": "patch",
+      "spoilerPrizes": {
+        "Desert Palace": "Crystal1",
+        "Eastern Palace": "PendantOfWisdom",
+        "Ice Palace": "Crystal6",
+        "Misery Mire": "Crystal7",
+        "Palace of Darkness": "PendantOfPower",
+        "Skull Woods": "Crystal3",
+        "Swamp Palace": "Crystal5",
+        "Thieves' Town": "Crystal4",
+        "Tower of Hera": "PendantOfCourage",
+        "Turtle Rock": "Crystal2"
+      }
+    },
+    {
+      "dungeonItems": "full",
+      "hash": "gvdpeeO6vk",
+      "mapMode": 1,
+      "mode": "inverted",
+      "prizeBits": [16, 1, 0, 8, 64, 32, 2, 4, 4, 2, 1],
+      "prizeKinds": [64, 0, 0, 64, 64, 64, 64, 64, 0, 0, 64],
+      "revealBombShop": 72,
+      "revealSahasrahla": 32,
+      "source": "patch",
+      "spoilerPrizes": {
+        "Desert Palace": "PendantOfWisdom",
+        "Eastern Palace": "Crystal2",
+        "Ice Palace": "Crystal5",
+        "Misery Mire": "Crystal4",
+        "Palace of Darkness": "Crystal3",
+        "Skull Woods": "Crystal1",
+        "Swamp Palace": "Crystal7",
+        "Thieves' Town": "PendantOfPower",
+        "Tower of Hera": "PendantOfCourage",
+        "Turtle Rock": "Crystal6"
+      }
+    }
+  ]
+}

@@ -103,13 +103,17 @@ describe("MEMORY_RANGES", () => {
       (range) => `${range.id}:${range.category}`,
     );
     expect(forbidden).toEqual([
+      // Which prize each dungeon holds (prizes.ts)
+      "prize-bits:prizes",
       // Where the seed's doors and holes lead, and where Link went through
       "hole-table:entrances",
       "door-table:entrances",
       // Outside Race Mode's windows: anything else, which Race Mode leaves
+      "map-mode:prizes",
       "swordless-mode:other",
       "dungeon-item-menu:other",
       "inverted-mode:other",
+      "prize-kinds:prizes",
       "goal-items:other",
       "generic-keys:other",
       "tower-crystals:other",
@@ -125,6 +129,8 @@ describe("MEMORY_RANGES", () => {
       "bottles:hud",
       "pendants:prizes",
       "crystals:prizes",
+      "current-world:prizes",
+      "map-overlay:prizes",
       // The ROM's own stats, which no category of the spec permits
       "stats:other",
       "menu-frames:other",
@@ -209,7 +215,8 @@ describe("MEMORY_RANGES", () => {
     // settings count in: every range falls due on the first tick, and the
     // settings every 20th after (SETTINGS_MS). Outside races, where Link
     // went adds three pieces a second, and the ROM's door and hole tables
-    // two with the settings.
+    // two with the settings; the prizes' tables (prizes.ts) one more, and
+    // map mode and the prizes' kinds another, beside the settings.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -220,9 +227,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 736, pieces: 15 },
+      casual: { bytes: 782, pieces: 17 },
       race: { bytes: 364, pieces: 25 },
-      ranges: { casual: 24, race: 33 },
+      ranges: { casual: 29, race: 33 },
     });
   });
 });

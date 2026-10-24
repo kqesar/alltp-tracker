@@ -6,6 +6,10 @@
 import {
   dungeonOf,
   type ItemId,
+  type Prize,
+  type PrizeDungeon,
+  type PrizeReading,
+  type PrizeShownBy,
   type SeedGoal,
   type SeedLogic,
   type SeedSetting,
@@ -166,6 +170,18 @@ export type Readout = {
   readonly prizes: readonly string[];
   /** Why the prizes are not known, when they are not (Race Mode). */
   readonly prizesUnread: Unsettled | null;
+  /**
+   * The dungeon prizes the game shows, read from the ROM (the pack's
+   * decodePrizes), by dungeon: the prize and why the game shows it. None
+   * the game would not show.
+   */
+  readonly shownPrizes: readonly {
+    readonly dungeon: string;
+    readonly prize: string;
+    readonly why: string;
+  }[];
+  /** Why no dungeon prize was read, when none was. */
+  readonly shownPrizesUnread: Unsettled | null;
   /** The run's milestones, each reached or not, or not known and why. */
   readonly progress: readonly {
     readonly label: string;
@@ -190,6 +206,47 @@ export type Readout = {
   readonly untracked: readonly string[];
   /** The seed's name and settings, each in words or why it is unknown. */
   readonly seed: readonly { readonly label: string; readonly value: string }[];
+};
+
+/** A prize class, as the board's prize cells tell them apart. */
+const PRIZE_WORDS: Readonly<Record<Prize, string>> = {
+  crystal: "A crystal, not 5 or 6",
+  greenPendant: "The Pendant of Courage",
+  pendant: "The Pendant of Power or Wisdom",
+  redCrystal: "Crystal 5 or 6",
+};
+
+/** Why the game shows a prize, in words. */
+const shownWhy = (prize: Prize, shownBy: PrizeShownBy): string => {
+  switch (shownBy) {
+    case "finished":
+      return "dungeon finished";
+    case "map":
+      return "its map held";
+    case "map-mode":
+      return "on the world map";
+    case "mark":
+      if (prize === "greenPendant") return "marked by Sahasrahla";
+      return prize === "redCrystal"
+        ? "marked by the Bomb Merchant"
+        : "marked on the map";
+  }
+};
+
+/** The prizes the game shows, in the panel's words and dungeon order. */
+const describeShown = (prizes: PrizeReading): Readout["shownPrizes"] => {
+  if (typeof prizes === "string") return [];
+  return DUNGEON_CODES.flatMap((code) => {
+    const shown = prizes[code as PrizeDungeon];
+    if (shown === undefined) return [];
+    return [
+      {
+        dungeon: DUNGEON_NAMES[code],
+        prize: PRIZE_WORDS[shown.prize],
+        why: shownWhy(shown.prize, shown.shownBy),
+      },
+    ];
+  });
 };
 
 /** Why a seed's setting is unknown, in words. */
@@ -470,6 +527,9 @@ export const describeReading = (
       { label: "Triforce reached", value: goal },
     ],
     seed: describeSeed(reading.seed),
+    shownPrizes: describeShown(reading.prizes),
+    shownPrizesUnread:
+      typeof reading.prizes === "string" ? reading.prizes : null,
     untracked: [...untracked],
     withheld: [...withheld].map(([label, why]) => ({ label, why })),
   };

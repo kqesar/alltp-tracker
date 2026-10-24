@@ -270,6 +270,20 @@ export const MEMORY_RANGES = [
     size: 0x20,
     source: "z3:LTTP_RND_GeneralBugfixes.asm:14-27",
   }),
+  // CrystalPendantFlags from Eastern Palace to Turtle Rock: the bit each
+  // dungeon's prize sets in the pendants' or the crystals' field
+  // (tables.asm:611-626). vt writes each prize's second byte there (Prize
+  // locations' second address, Region/Standard/EasternPalace.php:58 and the
+  // nine alike; Item.php:148-150, 254-260). Outside Race Mode only, and
+  // only to name the prizes the game shows (prizes.ts).
+  range({
+    at: 0x02_a09d,
+    category: "prizes",
+    everyMs: SETTINGS_MS,
+    id: "prize-bits",
+    size: 11,
+    source: "z3:tables.asm:611-626",
+  }),
   // Where each hole and each overworld door leads: the entrance it loads,
   // which the entrance randomizer writes into the game's tables (Rom.py:
   // 533-539). Read as the seed's settings are: ROM does not change while a
@@ -393,10 +407,19 @@ export const MEMORY_RANGES = [
   save("progress-flags", 0x3c6, 1, "outside-checks", "z3:sram.asm:194-195"),
   // Purple chest, bottle merchant, hobo.
   save("npc-flags-vanilla", 0x3c9, 1, "outside-checks", "z3:sram.asm:203-205"),
+  // CurrentWorld: $00 the Light World, $40 the Dark World. The world map
+  // shows the prizes of its own world's dungeons (overworldmap.asm:73-78).
+  save("current-world", 0x3ca, 1, "prizes", "z3:sram.asm:206"),
   // Set when Agahnim 2 falls.
   save("agahnim-2", 0x40f, 1, "boss-kills", "z3:events.asm:104-106"),
   // The randomizer's NPC item flags.
   save("npc-flags", 0x410, 2, "outside-checks", "z3:sram.asm:240-247"),
+  // MapOverlay: the dungeons whose prize the world map shows as if their
+  // map were held, which Sahasrahla and the Bomb Merchant reveal (dialog.asm:
+  // 490-495; vt World.php:1221-1230). The map reads it as it reads the maps'
+  // field (overworldmap.asm:133-135), and vt writes it so (Region
+  // map_reveal: Tower of Hera $0020, Eastern Palace $2000).
+  save("map-overlay", 0x414, 2, "prizes", "z3:sram.asm:249-256"),
   // The ROM's own stats, which its end credits show (stats/statConfig.asm:
   // 50-68) and the game stops counting once StatsLocked is set. The race
   // rules (v2.0) let a tracker show bonks, deaths, chest turns and save &

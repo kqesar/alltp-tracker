@@ -169,6 +169,27 @@ export const Readout = ({
         >
           <Chips entries={readout.completed} />
         </Group>
+        <Group
+          count={readout.shownPrizes.length}
+          empty={
+            readout.shownPrizesUnread === null
+              ? "None the game shows yet"
+              : UNREAD[readout.shownPrizesUnread]
+          }
+          testId="readout-shown-prizes"
+          title="Dungeon prizes shown"
+        >
+          <dl className="readout__pairs">
+            {readout.shownPrizes.map(({ dungeon, prize, why }) => (
+              <div className="readout__pair" key={dungeon}>
+                <dt>{dungeon}</dt>
+                <dd>
+                  {prize} ({why})
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Group>
         <Group count={1} testId="readout-seed" title={seedTitle}>
           <dl className="readout__pairs">
             {readout.seed.map(({ label, value }) => (

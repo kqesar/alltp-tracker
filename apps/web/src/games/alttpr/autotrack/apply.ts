@@ -25,6 +25,7 @@ import {
   MAP_LOCATIONS,
   PRIZES,
   type Prize,
+  type PrizeDungeon,
 } from "@alltp/pack-alttpr";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
 import {
@@ -118,18 +119,33 @@ const asShown = (counts: Readonly<Record<string, number>>) => {
 };
 
 /**
- * The prizes the game tells, as prize cells' values. Memory holds the
- * pendants and crystals in hand and the dungeons whose prize was taken, not
- * which gave which: a dungeon's prize is known when only one fits. The
- * prizes the board already names for finished dungeons are taken as given;
- * the dungeons finished with no prize named share what is left, which they
- * can only do one way when it is all of one class (the first dungeon
- * finished, or two red crystals). Race Mode reads no pendant or crystal: it
- * tells nothing then.
+ * The prizes the game shows (the pack's decodePrizes: a finished dungeon's,
+ * and those the world map draws), as the values of the prize cells the
+ * board names no prize for: a prize the player named stays theirs.
  */
-const prizeCells = (
+const shownCells = (
   reading: AutotrackReading,
   board: Board,
+): Record<string, CellValue> => {
+  const { prizes } = reading;
+  const told: Record<string, CellValue> = {};
+  if (typeof prizes === "string") return told;
+  for (const cell of PRIZE_CELLS) {
+    const code = dungeon(cell.dungeon).code as PrizeDungeon;
+    const prize = prizes[code]?.prize;
+    if (prize === undefined) continue;
+    if (prizeOf(cell, board.items[cell.id]) !== undefined) continue;
+    const value = cell.values[prize];
+    if (value !== undefined) told[cell.id] = value;
+  }
+  return told;
+};
+
+/** The finished dungeons' prizes that only one class fits. */
+const byElimination = (
+  reading: AutotrackReading,
+  board: Board,
+  shown: Readonly<Record<string, CellValue>>,
 ): Record<string, CellValue> => {
   const { counts } = reading.items;
   const left = {} as Record<Prize, number>;
@@ -151,7 +167,7 @@ const prizeCells = (
     const done = at === undefined ? undefined : reading.progress.completed[at];
     if (typeof done !== "boolean") return {};
     if (!done) continue;
-    const named = prizeOf(cell, board.items[cell.id]);
+    const named = prizeOf(cell, shown[cell.id] ?? board.items[cell.id]);
     if (named === undefined) unnamed.push(cell);
     else left[named] -= 1;
   }
@@ -170,6 +186,26 @@ const prizeCells = (
     if (value !== undefined) told[cell.id] = value;
   }
   return told;
+};
+
+/**
+ * The prizes the game tells, as prize cells' values. The ROM's prize
+ * tables name each one the game shows (shownCells). Where they were not
+ * read (a device that serves no ROM), memory still holds the pendants and
+ * crystals in hand and the dungeons whose prize was taken, not which gave
+ * which: a dungeon's prize is known when only one fits. The prizes the
+ * board already names for finished dungeons are taken as given, and so are
+ * those the tables told; the dungeons finished with no prize named share
+ * what is left, which they can only do one way when it is all of one class
+ * (the first dungeon finished, or two red crystals). Race Mode reads no
+ * pendant or crystal: it tells nothing then.
+ */
+const prizeCells = (
+  reading: AutotrackReading,
+  board: Board,
+): Record<string, CellValue> => {
+  const shown = shownCells(reading, board);
+  return { ...byElimination(reading, board, shown), ...shown };
 };
 
 /** The bosses the game tells, as their cells' values. */

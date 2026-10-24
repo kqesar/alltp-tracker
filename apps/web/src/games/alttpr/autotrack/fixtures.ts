@@ -51,6 +51,30 @@ export const seedMemory = ({
   return memory;
 };
 
+/**
+ * Write a real seed's prize tables into a memory image: alttpr.com's
+ * 2v7g66Dpvq (Standard, maps and compasses wild), as its patch writes them.
+ * Eastern Palace holds the Pendant of Wisdom, Desert Palace crystal 1, Tower of
+ * Hera the Pendant of Courage, Palace of Darkness the Pendant of Power, Swamp
+ * Palace crystal 5, Skull Woods crystal 3, Thieves' Town crystal 4, Ice
+ * Palace crystal 6, Misery Mire crystal 7, Turtle Rock crystal 2.
+ * @param memory - A memory image, as `seedMemory` makes
+ * @param mapMode - $01 (the seed's): the world map shows a prize once its
+ * dungeon's map is held; $00: always
+ */
+export const writePrizeTables = (memory: Uint8Array, mapMode = 0x01) => {
+  memory.set(
+    [0x01, 0x02, 0x00, 0x04, 0x02, 0x08, 0x40, 0x01, 0x04, 0x20, 0x10],
+    MEMORY_RANGE["prize-bits"].address,
+  );
+  memory.set(
+    [0x00, 0x40, 0x00, 0x40, 0x00, 0x40, 0x40, 0x40, 0x00, 0x40, 0x40],
+    MEMORY_RANGE["prize-kinds"].address,
+  );
+  memory[MEMORY_RANGE["map-mode"].address] = mapMode;
+  return memory;
+};
+
 /** Where a range's byte at A-bus address `at` lies in a memory image. */
 const imageAddress = (range: MemoryRangeId, at: number) =>
   MEMORY_RANGE[range].address + (at - MEMORY_RANGE[range].bus);
