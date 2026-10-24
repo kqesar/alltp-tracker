@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.38.1](https://github.com/kqesar/alltp-tracker/compare/v2.38.0...v2.38.1) (2026-10-24)
+
+
+### 🐛 Bug Fixes
+
+* **desktop:** serve the web manifest instead of a 404 ([#328](https://github.com/kqesar/alltp-tracker/issues/328)) ([6d2f781](https://github.com/kqesar/alltp-tracker/commit/6d2f7818b6c6c94e8f0f6807a7e433d6f95585ff))
+
+
+### 📚 Documentation
+
+* record the overlay API and stream view run in a real OBS ([#327](https://github.com/kqesar/alltp-tracker/issues/327)) ([c6a6516](https://github.com/kqesar/alltp-tracker/commit/c6a6516a57a2b0892e01198f2491e8b18fa49ae0))
+
 ## [2.38.0](https://github.com/kqesar/alltp-tracker/compare/v2.37.0...v2.38.0) (2026-10-23)
 
 
