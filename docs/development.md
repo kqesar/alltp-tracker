@@ -41,6 +41,8 @@ apps/desktop/        the desktop app (Tauri 2): apps/web in a native window
 packages/engine/     @alltp/engine: a game-agnostic logic engine (rule language, three-valued solver)
 packages/autotrack/  @alltp/autotrack: the link to SNI / QUsb2Snes, or to RetroArch in the app;
                      its diagnostics and Race Mode
+packages/archipelago/ @alltp/archipelago: a read-only tracker on an Archipelago room; its
+                     diagnostics and name data (not used by the app yet)
 packs/alttpr/        @alltp/pack-alttpr: ALttPR's items and v31 rules, held to the official tests
 packs/sm/            @alltp/pack-sm: Super Metroid as Map Rando plays it: items, objectives, memory map
 packs/smz3/          @alltp/pack-smz3: SMZ3 as samus.link generates it: both games' logic, held to its tests

@@ -1,0 +1,12 @@
+{
+ "game": "Archipelago",
+ "archipelago": "0.6.8",
+ "item_name_to_id": {
+  "Nothing": -1
+ },
+ "location_name_to_id": {
+  "Cheat Console": -1,
+  "Server": -2
+ },
+ "checksum": "ac9141e9ad0318df2fa27da5f20c50a842afeecb"
+}

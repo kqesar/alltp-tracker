@@ -1,0 +1,1850 @@
+{
+ "fixture": "slot-data-race",
+ "recorded": "2026-10-24T17:05:20.083Z",
+ "archipelago": "0.6.8",
+ "archipelagoJs": "2.1.0",
+ "server": "race multiworld (Generate --race)",
+ "frames": [
+  {
+   "t": 0,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker on Link"
+  },
+  {
+   "t": 0,
+   "client": "tracker:Link",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38283/"
+  },
+  {
+   "t": 2,
+   "client": "tracker:Link",
+   "dir": "open"
+  },
+  {
+   "t": 2,
+   "client": "tracker:Link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861517.268848
+    }
+   ]
+  },
+  {
+   "t": 2,
+   "client": "tracker:Link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "tracker:Link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 1,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      59758,
+      59761,
+      59764,
+      59767,
+      59770,
+      59773,
+      59776,
+      59779,
+      59782,
+      59785,
+      59788,
+      59791,
+      59794,
+      59797,
+      59800,
+      59803,
+      59806,
+      59809,
+      59812,
+      59818,
+      59821,
+      59824,
+      59827,
+      59830,
+      59833,
+      59836,
+      59839,
+      59842,
+      59845,
+      59848,
+      59851,
+      59854,
+      59857,
+      59860,
+      59866,
+      59869,
+      59872,
+      59875,
+      59878,
+      59881,
+      59884,
+      59887,
+      59890,
+      59893,
+      59896,
+      59899,
+      59902,
+      59905,
+      59908,
+      59911,
+      59914,
+      59917,
+      59920,
+      59923,
+      59926,
+      59929,
+      59932,
+      59935,
+      59938,
+      59941,
+      59944,
+      59947,
+      59950,
+      59953,
+      59956,
+      59959,
+      59962,
+      59965,
+      59968,
+      59971,
+      59974,
+      59977,
+      59980,
+      59983,
+      59986,
+      59989,
+      59992,
+      59995,
+      59998,
+      60001,
+      60004,
+      60007,
+      60010,
+      60013,
+      60019,
+      60022,
+      60025,
+      60028,
+      60031,
+      60034,
+      60037,
+      60040,
+      60043,
+      60046,
+      60049,
+      60052,
+      60055,
+      60058,
+      60061,
+      60064,
+      60067,
+      60070,
+      60073,
+      60076,
+      60079,
+      60082,
+      60085,
+      60088,
+      60091,
+      60094,
+      60097,
+      60100,
+      60103,
+      60106,
+      60109,
+      60112,
+      60115,
+      60118,
+      60121,
+      60124,
+      60127,
+      60130,
+      60133,
+      60136,
+      60139,
+      60142,
+      60145,
+      60148,
+      60151,
+      60157,
+      60160,
+      60163,
+      60166,
+      60169,
+      60172,
+      60175,
+      60178,
+      60181,
+      60184,
+      60187,
+      60190,
+      60193,
+      60196,
+      60199,
+      60202,
+      60205,
+      60208,
+      60211,
+      60214,
+      60217,
+      60220,
+      60223,
+      60226,
+      60229,
+      60232,
+      60235,
+      60238,
+      60241,
+      60244,
+      60247,
+      60250,
+      60253,
+      60256,
+      60259,
+      60840,
+      166320,
+      188229,
+      191256,
+      193020,
+      209095,
+      211407,
+      212328,
+      212605,
+      975237,
+      975299,
+      1010170,
+      1310724,
+      1310727,
+      1310730,
+      1310733,
+      1310736,
+      1310739,
+      1310742,
+      1310745,
+      1310748,
+      1310751,
+      1310754,
+      1310757,
+      1310760,
+      1310763,
+      1310766,
+      1310769,
+      1310772,
+      1310775,
+      1310778,
+      1310781,
+      1310784,
+      1310787,
+      1310790,
+      1310793,
+      1310796,
+      1310799,
+      1310802,
+      1310805,
+      1310808,
+      1310811,
+      1310814,
+      1310817,
+      1310820,
+      1572864,
+      1572865,
+      1572866,
+      1572867,
+      1572868,
+      1572869,
+      1572870,
+      1572880,
+      1572881,
+      1572882,
+      1572883,
+      1572884,
+      1572885,
+      1572886,
+      1572887,
+      1572906,
+      1573184,
+      1573185,
+      1573186,
+      1573187,
+      1573188,
+      1573189,
+      1573190,
+      1573191,
+      1573192,
+      1573193,
+      1573194,
+      1573200,
+      1573201,
+      1573202,
+      1573203,
+      1573204,
+      1573205,
+      1573206,
+      1573207,
+      1573208,
+      1573209,
+      1573216,
+      1573217,
+      1573218
+     ],
+     "checked_locations": [],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 0,
+     "slot_data": {}
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "tracker:Link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_1"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "tracker:Link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_1"
+     ],
+     "uuid": "a9fc095b-c75f-421f-914c-2c18de041738"
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "tracker:Link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_race_mode",
+      "_read_slot_data_1",
+      "_read_hints_0_1"
+     ],
+     "uuid": "bench-Link"
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "tracker:Link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) tracking A Link to the Past has joined. Client(0.6.3), ['Tracker']."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "tracker:Link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "tracker:Link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_1": []
+     },
+     "uuid": "a9fc095b-c75f-421f-914c-2c18de041738"
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "tracker:Link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_race_mode": 1,
+      "_read_slot_data_1": {},
+      "_read_hints_0_1": []
+     },
+     "uuid": "bench-Link"
+    }
+   ]
+  },
+  {
+   "t": 504,
+   "client": "tracker:Link",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 704,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker on Samus"
+  },
+  {
+   "t": 704,
+   "client": "tracker:Samus",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38283/"
+  },
+  {
+   "t": 706,
+   "client": "tracker:Samus",
+   "dir": "open"
+  },
+  {
+   "t": 706,
+   "client": "tracker:Samus",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861517.9730716
+    }
+   ]
+  },
+  {
+   "t": 706,
+   "client": "tracker:Samus",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Samus",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 707,
+   "client": "tracker:Samus",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 2,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      82000,
+      82001,
+      82002,
+      82003,
+      82004,
+      82005,
+      82006,
+      82007,
+      82008,
+      82009,
+      82010,
+      82011,
+      82012,
+      82013,
+      82014,
+      82015,
+      82016,
+      82017,
+      82018,
+      82019,
+      82021,
+      82022,
+      82023,
+      82024,
+      82025,
+      82026,
+      82027,
+      82028,
+      82029,
+      82030,
+      82031,
+      82033,
+      82034,
+      82035,
+      82036,
+      82037,
+      82038,
+      82039,
+      82040,
+      82041,
+      82042,
+      82043,
+      82044,
+      82048,
+      82049,
+      82050,
+      82051,
+      82052,
+      82053,
+      82054,
+      82055,
+      82056,
+      82057,
+      82058,
+      82059,
+      82060,
+      82061,
+      82062,
+      82063,
+      82064,
+      82065,
+      82066,
+      82067,
+      82068,
+      82070,
+      82071,
+      82073,
+      82074,
+      82075,
+      82076,
+      82077,
+      82078,
+      82079,
+      82080,
+      82128,
+      82129,
+      82130,
+      82131,
+      82132,
+      82133,
+      82134,
+      82135,
+      82136,
+      82137,
+      82138,
+      82139,
+      82140,
+      82141,
+      82142,
+      82143,
+      82144,
+      82145,
+      82146,
+      82147,
+      82148,
+      82149,
+      82150,
+      82151,
+      82152,
+      82154
+     ],
+     "checked_locations": [],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 0,
+     "slot_data": {}
+    }
+   ]
+  },
+  {
+   "t": 707,
+   "client": "tracker:Samus",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_2"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 707,
+   "client": "tracker:Samus",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_2"
+     ],
+     "uuid": "f086ba74-671d-46f4-b3ec-d0b0d6207ef7"
+    }
+   ]
+  },
+  {
+   "t": 707,
+   "client": "tracker:Samus",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_race_mode",
+      "_read_slot_data_2",
+      "_read_hints_0_2"
+     ],
+     "uuid": "bench-Samus"
+    }
+   ]
+  },
+  {
+   "t": 707,
+   "client": "tracker:Samus",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Samus (Team #1) tracking Super Metroid has joined. Client(0.6.3), ['Tracker']."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 2,
+     "tags": [
+      "Tracker"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 707,
+   "client": "tracker:Samus",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 707,
+   "client": "tracker:Samus",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_2": []
+     },
+     "uuid": "f086ba74-671d-46f4-b3ec-d0b0d6207ef7"
+    }
+   ]
+  },
+  {
+   "t": 707,
+   "client": "tracker:Samus",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_race_mode": 1,
+      "_read_slot_data_2": {},
+      "_read_hints_0_2": []
+     },
+     "uuid": "bench-Samus"
+    }
+   ]
+  },
+  {
+   "t": 1207,
+   "client": "tracker:Samus",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 1408,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker on Hybrid Hero"
+  },
+  {
+   "t": 1408,
+   "client": "tracker:Hybrid Hero",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38283/"
+  },
+  {
+   "t": 1409,
+   "client": "tracker:Hybrid Hero",
+   "dir": "open"
+  },
+  {
+   "t": 1410,
+   "client": "tracker:Hybrid Hero",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861518.6767871
+    }
+   ]
+  },
+  {
+   "t": 1410,
+   "client": "tracker:Hybrid Hero",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Hybrid Hero",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 1411,
+   "client": "tracker:Hybrid Hero",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 3,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      85000,
+      85001,
+      85002,
+      85003,
+      85004,
+      85005,
+      85006,
+      85007,
+      85008,
+      85009,
+      85010,
+      85011,
+      85012,
+      85013,
+      85014,
+      85015,
+      85016,
+      85017,
+      85018,
+      85019,
+      85021,
+      85022,
+      85023,
+      85024,
+      85025,
+      85026,
+      85027,
+      85028,
+      85029,
+      85030,
+      85031,
+      85033,
+      85034,
+      85035,
+      85036,
+      85037,
+      85038,
+      85039,
+      85040,
+      85041,
+      85042,
+      85043,
+      85044,
+      85048,
+      85049,
+      85050,
+      85051,
+      85052,
+      85053,
+      85054,
+      85055,
+      85056,
+      85057,
+      85058,
+      85059,
+      85060,
+      85061,
+      85062,
+      85063,
+      85064,
+      85065,
+      85066,
+      85067,
+      85068,
+      85070,
+      85071,
+      85073,
+      85074,
+      85075,
+      85076,
+      85077,
+      85078,
+      85079,
+      85080,
+      85128,
+      85129,
+      85130,
+      85131,
+      85132,
+      85133,
+      85134,
+      85135,
+      85136,
+      85137,
+      85138,
+      85139,
+      85140,
+      85141,
+      85142,
+      85143,
+      85144,
+      85145,
+      85146,
+      85147,
+      85148,
+      85149,
+      85150,
+      85151,
+      85152,
+      85154,
+      85256,
+      85257,
+      85258,
+      85259,
+      85260,
+      85261,
+      85262,
+      85263,
+      85264,
+      85265,
+      85266,
+      85267,
+      85268,
+      85269,
+      85270,
+      85271,
+      85272,
+      85273,
+      85274,
+      85275,
+      85276,
+      85277,
+      85278,
+      85279,
+      85280,
+      85281,
+      85282,
+      85283,
+      85284,
+      85285,
+      85286,
+      85287,
+      85289,
+      85290,
+      85291,
+      85292,
+      85293,
+      85295,
+      85296,
+      85297,
+      85298,
+      85299,
+      85300,
+      85301,
+      85307,
+      85308,
+      85309,
+      85310,
+      85314,
+      85315,
+      85316,
+      85317,
+      85318,
+      85319,
+      85320,
+      85321,
+      85322,
+      85323,
+      85324,
+      85325,
+      85326,
+      85327,
+      85328,
+      85329,
+      85330,
+      85331,
+      85332,
+      85333,
+      85334,
+      85335,
+      85336,
+      85337,
+      85338,
+      85339,
+      85340,
+      85341,
+      85342,
+      85343,
+      85344,
+      85345,
+      85346,
+      85347,
+      85348,
+      85349,
+      85350,
+      85351,
+      85352,
+      85353,
+      85354,
+      85355,
+      85356,
+      85357,
+      85358,
+      85359,
+      85360,
+      85361,
+      85362,
+      85363,
+      85364,
+      85365,
+      85366,
+      85367,
+      85368,
+      85369,
+      85370,
+      85371,
+      85372,
+      85373,
+      85374,
+      85375,
+      85376,
+      85377,
+      85378,
+      85379,
+      85380,
+      85381,
+      85382,
+      85383,
+      85384,
+      85385,
+      85386,
+      85387,
+      85388,
+      85389,
+      85390,
+      85391,
+      85392,
+      85393,
+      85394,
+      85395,
+      85396,
+      85397,
+      85398,
+      85399,
+      85400,
+      85401,
+      85402,
+      85403,
+      85404,
+      85405,
+      85406,
+      85407,
+      85408,
+      85409,
+      85410,
+      85411,
+      85412,
+      85413,
+      85414,
+      85415,
+      85416,
+      85417,
+      85418,
+      85419,
+      85420,
+      85421,
+      85422,
+      85423,
+      85424,
+      85425,
+      85426,
+      85427,
+      85428,
+      85429,
+      85430,
+      85431,
+      85432,
+      85433,
+      85434,
+      85435,
+      85436,
+      85437,
+      85438,
+      85439,
+      85440,
+      85441,
+      85442,
+      85443,
+      85444,
+      85445,
+      85446,
+      85447,
+      85448,
+      85449,
+      85450,
+      85451,
+      85452,
+      85453,
+      85454,
+      85455,
+      85456,
+      85457,
+      85458,
+      85459,
+      85460,
+      85461,
+      85462,
+      85463,
+      85464,
+      85465,
+      85466,
+      85467,
+      85468,
+      85469,
+      85470,
+      85471,
+      85496,
+      85497,
+      85498,
+      85499,
+      85500,
+      85506,
+      85507,
+      85508,
+      85509,
+      85510
+     ],
+     "checked_locations": [],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 0,
+     "slot_data": {
+      "goal": 0,
+      "open_tower": 7,
+      "ganon_vulnerable": 7,
+      "open_tourian": 4,
+      "sm_logic": 0,
+      "key_shuffle": 0
+     }
+    }
+   ]
+  },
+  {
+   "t": 1411,
+   "client": "tracker:Hybrid Hero",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_3"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 1411,
+   "client": "tracker:Hybrid Hero",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_3"
+     ],
+     "uuid": "75f46463-ddb5-4685-8ff2-eb869f098cf5"
+    }
+   ]
+  },
+  {
+   "t": 1411,
+   "client": "tracker:Hybrid Hero",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_race_mode",
+      "_read_slot_data_3",
+      "_read_hints_0_3"
+     ],
+     "uuid": "bench-Hybrid Hero"
+    }
+   ]
+  },
+  {
+   "t": 1411,
+   "client": "tracker:Hybrid Hero",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Hybrid Hero (Team #1) tracking SMZ3 has joined. Client(0.6.3), ['Tracker']."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 3,
+     "tags": [
+      "Tracker"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 1411,
+   "client": "tracker:Hybrid Hero",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 1411,
+   "client": "tracker:Hybrid Hero",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_3": []
+     },
+     "uuid": "75f46463-ddb5-4685-8ff2-eb869f098cf5"
+    }
+   ]
+  },
+  {
+   "t": 1411,
+   "client": "tracker:Hybrid Hero",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_race_mode": 1,
+      "_read_slot_data_3": {
+       "goal": 0,
+       "open_tower": 7,
+       "ganon_vulnerable": 7,
+       "open_tourian": 4,
+       "sm_logic": 0,
+       "key_shuffle": 0
+      },
+      "_read_hints_0_3": []
+     },
+     "uuid": "bench-Hybrid Hero"
+    }
+   ]
+  },
+  {
+   "t": 1911,
+   "client": "tracker:Hybrid Hero",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 2112,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker on Quester"
+  },
+  {
+   "t": 2112,
+   "client": "tracker:Quester",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38283/"
+  },
+  {
+   "t": 2114,
+   "client": "tracker:Quester",
+   "dir": "open"
+  },
+  {
+   "t": 2114,
+   "client": "tracker:Quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861519.3809066
+    }
+   ]
+  },
+  {
+   "t": 2114,
+   "client": "tracker:Quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Quester",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 2114,
+   "client": "tracker:Quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 4,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      10
+     ],
+     "checked_locations": [],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 0,
+     "slot_data": {
+      "hard_mode": 0,
+      "hammer": 0,
+      "extra_starting_chest": 0,
+      "confetti_explosiveness": 3,
+      "player_sprite": 0
+     }
+    }
+   ]
+  },
+  {
+   "t": 2114,
+   "client": "tracker:Quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_4"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 2114,
+   "client": "tracker:Quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_4"
+     ],
+     "uuid": "9638a2c9-0923-47ba-a766-047f52f1e241"
+    }
+   ]
+  },
+  {
+   "t": 2114,
+   "client": "tracker:Quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_race_mode",
+      "_read_slot_data_4",
+      "_read_hints_0_4"
+     ],
+     "uuid": "bench-Quester"
+    }
+   ]
+  },
+  {
+   "t": 2115,
+   "client": "tracker:Quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) tracking APQuest has joined. Client(0.6.3), ['Tracker']."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 4,
+     "tags": [
+      "Tracker"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 2115,
+   "client": "tracker:Quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 2115,
+   "client": "tracker:Quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_4": []
+     },
+     "uuid": "9638a2c9-0923-47ba-a766-047f52f1e241"
+    }
+   ]
+  },
+  {
+   "t": 2115,
+   "client": "tracker:Quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_race_mode": 1,
+      "_read_slot_data_4": {
+       "hard_mode": 0,
+       "hammer": 0,
+       "extra_starting_chest": 0,
+       "confetti_explosiveness": 3,
+       "player_sprite": 0
+      },
+      "_read_hints_0_4": []
+     },
+     "uuid": "bench-Quester"
+    }
+   ]
+  },
+  {
+   "t": 2615,
+   "client": "tracker:Quester",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  }
+ ]
+}

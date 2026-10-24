@@ -1,0 +1,32 @@
+{
+  "archipelagoJs": {
+    "license": "MIT, Copyright 2024 Zach \"Phar\" Parks",
+    "repo": "ThePhar/archipelago.js",
+    "sends": "0.6.3",
+    "version": "2.1.0"
+  },
+  "assets": {
+    "Archipelago_0.6.8_linux-x86_64.AppImage": "1281fb7b9816bd919f9073093ceafcb3b1804143fc206bfc34b704170076240e",
+    "Archipelago_0.6.8_linux-x86_64.tar.gz": "c7ac311d8fe9c4d9c933f64be2c0b8742621e3e96b43697173157d1225017270"
+  },
+  "commit": "54803be064fc7e80c4628777ed0b46a9390f255f",
+  "license": "MIT, Copyright (c) 2017 LLCoolDave and the Archipelago contributors",
+  "nameData": {
+    "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+    "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+    "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+    "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+    "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+  },
+  "release": "0.6.8",
+  "released": "2026-10-04",
+  "repo": "ArchipelagoMW/Archipelago",
+  "watched": [
+    "MultiServer.py",
+    "NetUtils.py",
+    "docs/network protocol.md",
+    "worlds/alttp/Items.py",
+    "worlds/sm/__init__.py",
+    "worlds/smz3/TotalSMZ3/Item.py"
+  ]
+}

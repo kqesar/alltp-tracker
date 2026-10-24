@@ -1,0 +1,23 @@
+{
+ "game": "APQuest",
+ "archipelago": "0.6.8",
+ "item_name_to_id": {
+  "Key": 1,
+  "Sword": 2,
+  "Shield": 3,
+  "Hammer": 4,
+  "Health Upgrade": 5,
+  "Confetti Cannon": 6,
+  "Math Trap": 7
+ },
+ "location_name_to_id": {
+  "Top Left Room Chest": 1,
+  "Top Middle Chest": 2,
+  "Bottom Left Chest": 3,
+  "Bottom Left Extra Chest": 4,
+  "Bottom Right Room Left Chest": 5,
+  "Bottom Right Room Right Chest": 6,
+  "Right Room Enemy Drop": 10
+ },
+ "checksum": "854499b00d82a68764ce591dd80218ad75e83e2b"
+}

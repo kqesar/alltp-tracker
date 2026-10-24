@@ -300,6 +300,19 @@ importers:
         specifier: ^8.22.0
         version: 8.22.0
 
+  packages/archipelago:
+    dependencies:
+      archipelago.js:
+        specifier: 2.1.0
+        version: 2.1.0
+    devDependencies:
+      '@types/ws':
+        specifier: ^8.18.2
+        version: 8.18.2
+      ws:
+        specifier: ^8.22.0
+        version: 8.22.0
+
   packages/autotrack:
     devDependencies:
       '@types/ws':
@@ -1237,6 +1250,10 @@ packages:
   ansi-styles@6.2.3:
     resolution: {integrity: sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==}
     engines: {node: '>=12'}
+
+  archipelago.js@2.1.0:
+    resolution: {integrity: sha512-9Zq/lyhSHgUfzHNAm5NyBk1Kl10hf55/jQ1Navz6Z/Wz49bd4MRzbS8CcWDnQd7IoBH8s1p4cVn69iyHaljQKA==}
+    engines: {node: '>= 18.0.0'}
 
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
@@ -2895,6 +2912,8 @@ snapshots:
   ansi-styles@5.2.0: {}
 
   ansi-styles@6.2.3: {}
+
+  archipelago.js@2.1.0: {}
 
   argparse@2.0.1: {}
 

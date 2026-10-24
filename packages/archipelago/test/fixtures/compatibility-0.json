@@ -1,0 +1,609 @@
+{
+ "fixture": "compatibility-0",
+ "recorded": "2026-10-24T17:05:20.391Z",
+ "archipelago": "0.6.8",
+ "archipelagoJs": "2.1.0",
+ "server": "normal multiworld, --compatibility 0",
+ "frames": [
+  {
+   "t": 0,
+   "client": "-",
+   "dir": "mark",
+   "note": "archipelago.js default version (0.6.3)"
+  },
+  {
+   "t": 0,
+   "client": "compat0:default-version",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38284/"
+  },
+  {
+   "t": 2,
+   "client": "compat0:default-version",
+   "dir": "open"
+  },
+  {
+   "t": 2,
+   "client": "compat0:default-version",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861520.085511
+    }
+   ]
+  },
+  {
+   "t": 2,
+   "client": "compat0:default-version",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "compat0:default-version",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ConnectionRefused",
+     "errors": [
+      "IncompatibleVersion"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "-",
+   "dir": "mark",
+   "note": "-> {\"ok\":false,\"error\":\"LoginError: Connection was refused by the server. Reason(s): [IncompatibleVersion\",\"errors\":[\"IncompatibleVersion\"]}"
+  },
+  {
+   "t": 3,
+   "client": "compat0:default-version",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 305,
+   "client": "-",
+   "dir": "mark",
+   "note": "version copied from RoomInfo.version"
+  },
+  {
+   "t": 305,
+   "client": "compat0:server-version",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38284/"
+  },
+  {
+   "t": 307,
+   "client": "compat0:server-version",
+   "dir": "open"
+  },
+  {
+   "t": 307,
+   "client": "compat0:server-version",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861520.3899763
+    }
+   ]
+  },
+  {
+   "t": 307,
+   "client": "compat0:server-version",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 308,
+   "client": "compat0:server-version",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 1,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      59758,
+      59761,
+      59764,
+      59767,
+      59770,
+      59773,
+      59776,
+      59779,
+      59782,
+      59785,
+      59788,
+      59791,
+      59794,
+      59797,
+      59800,
+      59803,
+      59806,
+      59809,
+      59812,
+      59818,
+      59821,
+      59824,
+      59827,
+      59830,
+      59833,
+      59836,
+      59839,
+      59842,
+      59845,
+      59848,
+      59851,
+      59854,
+      59857,
+      59860,
+      59866,
+      59869,
+      59872,
+      59875,
+      59878,
+      59881,
+      59884,
+      59887,
+      59890,
+      59893,
+      59896,
+      59899,
+      59902,
+      59905,
+      59908,
+      59911,
+      59914,
+      59917,
+      59920,
+      59923,
+      59926,
+      59929,
+      59932,
+      59935,
+      59938,
+      59941,
+      59944,
+      59947,
+      59950,
+      59953,
+      59956,
+      59959,
+      59962,
+      59965,
+      59968,
+      59971,
+      59974,
+      59977,
+      59980,
+      59983,
+      59986,
+      59989,
+      59992,
+      59995,
+      59998,
+      60001,
+      60004,
+      60007,
+      60010,
+      60013,
+      60019,
+      60022,
+      60025,
+      60028,
+      60031,
+      60034,
+      60037,
+      60040,
+      60043,
+      60046,
+      60049,
+      60052,
+      60055,
+      60058,
+      60061,
+      60064,
+      60067,
+      60070,
+      60073,
+      60076,
+      60079,
+      60082,
+      60085,
+      60088,
+      60091,
+      60094,
+      60097,
+      60100,
+      60103,
+      60106,
+      60109,
+      60112,
+      60115,
+      60118,
+      60121,
+      60124,
+      60127,
+      60130,
+      60133,
+      60136,
+      60139,
+      60142,
+      60145,
+      60148,
+      60151,
+      60157,
+      60160,
+      60163,
+      60166,
+      60169,
+      60172,
+      60175,
+      60178,
+      60181,
+      60184,
+      60187,
+      60190,
+      60193,
+      60196,
+      60199,
+      60202,
+      60205,
+      60208,
+      60211,
+      60214,
+      60217,
+      60220,
+      60223,
+      60226,
+      60229,
+      60232,
+      60235,
+      60238,
+      60241,
+      60244,
+      60247,
+      60250,
+      60253,
+      60256,
+      60259,
+      60840,
+      166320,
+      188229,
+      191256,
+      193020,
+      209095,
+      211407,
+      212328,
+      212605,
+      975237,
+      975299,
+      1010170,
+      1310724,
+      1310727,
+      1310730,
+      1310733,
+      1310736,
+      1310739,
+      1310742,
+      1310745,
+      1310748,
+      1310751,
+      1310754,
+      1310757,
+      1310760,
+      1310763,
+      1310766,
+      1310769,
+      1310772,
+      1310775,
+      1310778,
+      1310781,
+      1310784,
+      1310787,
+      1310790,
+      1310793,
+      1310796,
+      1310799,
+      1310802,
+      1310805,
+      1310808,
+      1310811,
+      1310814,
+      1310817,
+      1310820,
+      1572864,
+      1572865,
+      1572866,
+      1572867,
+      1572868,
+      1572869,
+      1572870,
+      1572880,
+      1572881,
+      1572882,
+      1572883,
+      1572884,
+      1572885,
+      1572886,
+      1572887,
+      1572906,
+      1573184,
+      1573185,
+      1573186,
+      1573187,
+      1573188,
+      1573189,
+      1573190,
+      1573191,
+      1573192,
+      1573193,
+      1573194,
+      1573200,
+      1573201,
+      1573202,
+      1573203,
+      1573204,
+      1573205,
+      1573206,
+      1573207,
+      1573208,
+      1573209,
+      1573216,
+      1573217,
+      1573218
+     ],
+     "checked_locations": [],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 0,
+     "slot_data": {
+      "crystals_needed_for_gt": 7,
+      "crystals_needed_for_ganon": 7,
+      "open_pyramid": 2,
+      "big_key_shuffle": 0,
+      "small_key_shuffle": 0,
+      "compass_shuffle": 0,
+      "map_shuffle": 0,
+      "progressive": 2,
+      "swordless": 0,
+      "retro_bow": 0,
+      "retro_caves": 0,
+      "shop_item_slots": 0,
+      "boss_shuffle": 0,
+      "pot_shuffle": 0,
+      "enemy_shuffle": 0,
+      "key_drop_shuffle": 1,
+      "bombless_start": 0,
+      "randomize_shop_inventories": 0,
+      "shuffle_shop_inventories": 0,
+      "shuffle_capacity_upgrades": 0,
+      "entrance_shuffle": 0,
+      "dark_room_logic": 0,
+      "goal": 0,
+      "mode": 1,
+      "triforce_pieces_mode": 2,
+      "triforce_pieces_percentage": 150,
+      "triforce_pieces_required": 20,
+      "triforce_pieces_available": 30,
+      "triforce_pieces_extra": 10,
+      "mm_medalion": "Ether",
+      "tr_medalion": "Ether"
+     }
+    }
+   ]
+  },
+  {
+   "t": 308,
+   "client": "compat0:server-version",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_1"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 308,
+   "client": "compat0:server-version",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_1"
+     ],
+     "uuid": "1de086b9-5a4e-4b34-9d6f-996f54adade3"
+    }
+   ]
+  },
+  {
+   "t": 308,
+   "client": "-",
+   "dir": "mark",
+   "note": "-> {\"ok\":true,\"slotData\":{\"crystals_needed_for_gt\":7,\"crystals_needed_for_ganon\":7,\"open_pyramid\":2,\"big_key_shuffle\":0,\"sm"
+  }
+ ]
+}
