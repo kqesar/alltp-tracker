@@ -1,11 +1,12 @@
-// The Web Lock one tab of the tracker holds while it autotracks, whatever its
-// game: two tabs never both read the console and lay it on a run. Each game's
-// autotracking store takes it as it connects and lets it go as it stops.
+// The Web Locks one tab of the tracker holds while it talks to something
+// outside the page, so two tabs never both do. Autotracking takes one, whatever
+// the game: two tabs never both read the console and lay it on a run. The
+// Archipelago board takes its own: one connection to the room per browser.
 
-/** The lock's name, across every game and tab of the tracker. */
+/** The autotracking lock's name, across every game and tab of the tracker. */
 export const AUTOTRACK_LOCK = "alltp-tracker-autotrack";
 
-export type AutotrackLock = {
+export type TabLock = {
   /**
    * Take the lock: at once when no other tab holds it, else when that tab
    * lets it go (it closes, or disconnects), telling `waiting` meanwhile. A
@@ -22,18 +23,25 @@ export type AutotrackLock = {
   release: () => void;
 };
 
+/** The autotracking lock, as its stores know it. */
+export type AutotrackLock = TabLock;
+
+/** The browser's lock manager, none without Web Locks. */
+const browserLocks = () => (navigator as { locks?: LockManager }).locks;
+
 /**
- * A lock for one autotracking store.
+ * A lock one tab holds at a time.
+ * @param name - The Web Lock's name
  * @param lockManager - The browser's lock manager, read at each take (none
  * without Web Locks)
  */
-export const createAutotrackLock = (
-  lockManager: () => LockManager | undefined = () =>
-    (navigator as { locks?: LockManager }).locks,
-): AutotrackLock => {
-  /** Lets the lock go, while this store holds it. */
+export const createTabLock = (
+  name: string,
+  lockManager: () => LockManager | undefined = browserLocks,
+): TabLock => {
+  /** Lets the lock go, while this holder holds it. */
   let releaseLock: (() => void) | null = null;
-  /** Stops waiting for the lock, while this store waits. */
+  /** Stops waiting for the lock, while this holder waits. */
   let stopWaiting: AbortController | null = null;
 
   return {
@@ -49,7 +57,7 @@ export const createAutotrackLock = (
       const request = (options: LockOptions) =>
         new Promise<boolean>((resolve) => {
           locks
-            .request(AUTOTRACK_LOCK, options, (lock) => {
+            .request(name, options, (lock) => {
               // Not free, or no longer wanted: let it go at once
               if (lock === null || !isCurrent()) {
                 resolve(false);
@@ -72,3 +80,12 @@ export const createAutotrackLock = (
     },
   };
 };
+
+/**
+ * The lock for one autotracking store: `createTabLock` on the lock every
+ * game's autotracking shares.
+ * @param lockManager - The browser's lock manager, read at each take
+ */
+export const createAutotrackLock = (
+  lockManager: () => LockManager | undefined = browserLocks,
+): AutotrackLock => createTabLock(AUTOTRACK_LOCK, lockManager);
