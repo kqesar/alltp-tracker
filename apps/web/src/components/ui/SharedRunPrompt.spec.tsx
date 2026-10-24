@@ -1,10 +1,18 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { SharedRunPrompt } from "@/components/ui/SharedRunPrompt";
 import { packLink as packAlttpr } from "@/games/alttpr/share";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-import { switchGame } from "@/games/registry";
+import { loadGame, switchGame } from "@/games/registry";
 import { exportSave as exportSm, useSmStore } from "@/games/sm/store";
 import { packLink as packSmz3 } from "@/games/smz3/share";
 import { exportSave as exportSmz3, useSmz3Store } from "@/games/smz3/store";
@@ -30,6 +38,16 @@ const sharedSm = async () => {
 };
 
 describe("the shared run notice", () => {
+  // Each game's module, imported once before any test: the notice imports
+  // the link's game (`loadGame`) before it offers it, and a cold import of
+  // ALttPR's (its logic and pack, 250 ms alone, 400 to 500 ms in a full run,
+  // more on a busy machine) would eat the 1 s a `findBy` waits for the offer
+  beforeAll(async () => {
+    await Promise.all(
+      (["alttpr", "sm", "smz3"] as const).map((game) => loadGame(game)),
+    );
+  });
+
   beforeEach(() => {
     localStorage.clear();
     useGameStore.setState(useGameStore.getInitialState(), true);
