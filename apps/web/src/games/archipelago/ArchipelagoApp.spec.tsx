@@ -157,9 +157,11 @@ describe("the checks", () => {
     expect(screen.getByTestId(`ap-check-${sanctuary}`)).toHaveTextContent(
       "Sanctuary, not checked",
     );
-    expect(
-      screen.getByRole("heading", { name: "Light World 1 left" }),
-    ).toBeInTheDocument();
+    const world = screen.getByTestId("ap-zone-Light World");
+    expect(world).toHaveProperty("open", true);
+    expect(world.querySelector("summary")).toHaveTextContent(
+      "Light World — 1 left / 2",
+    );
     expect(screen.getByTestId("ap-checks-filter")).toHaveAccessibleDescription(
       "Archipelago's server says what you checked. It does not say what you can reach.",
     );
@@ -185,6 +187,80 @@ describe("the checks", () => {
     rerender(<ChecksPanel />);
     expect(screen.getByTestId("ap-checks-waiting")).toHaveTextContent(
       "Location names load once the board reaches the room.",
+    );
+  });
+});
+
+describe("the checks' groups", () => {
+  const house = at("Link's House");
+  const sanctuary = at("Sanctuary");
+  const palace = at("Eastern Palace - Big Chest");
+
+  const show = () => {
+    lay({ checked: [house, palace], missing: [sanctuary] });
+    act(() =>
+      useApNamesStore.setState({
+        groups: {
+          "Eastern Palace": ["Eastern Palace - Big Chest"],
+          "Light World": ["Link's House", "Sanctuary"],
+        },
+        names,
+      }),
+    );
+    render(<ChecksPanel />);
+    return {
+      east: screen.getByTestId("ap-zone-Eastern Palace") as HTMLDetailsElement,
+      world: screen.getByTestId("ap-zone-Light World") as HTMLDetailsElement,
+    };
+  };
+
+  /** What a click on a group's summary does in a browser. */
+  const flip = (group: HTMLDetailsElement) =>
+    act(() => {
+      group.open = !group.open;
+      group.dispatchEvent(new Event("toggle"));
+    });
+
+  const filter = (value: string) =>
+    fireEvent.change(screen.getByTestId("ap-checks-filter"), {
+      target: { value },
+    });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("open those with checks left, then as the player leaves them", () => {
+    const { east, world } = show();
+    expect(east.open).toBe(false);
+    expect(world.open).toBe(true);
+    expect(east.querySelector("summary")).toHaveTextContent(
+      "Eastern Palace — 0 left / 1",
+    );
+    flip(east);
+    flip(world);
+    filter("x");
+    filter("");
+    expect(east.open).toBe(true);
+    expect(world.open).toBe(false);
+  });
+
+  it("start closed where the board stacks, and open every match of a filter", () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({ matches: true, query }));
+    const { east, world } = show();
+    expect(east.open).toBe(false);
+    expect(world.open).toBe(false);
+    filter("palace");
+    expect(east.open).toBe(true);
+    expect(screen.queryByTestId("ap-zone-Light World")).toBeNull();
+    // A group closed while filtering stays the filter's business
+    flip(east);
+    filter("");
+    expect(screen.getByTestId("ap-zone-Eastern Palace")).toHaveProperty(
+      "open",
+      false,
+    );
+    expect(screen.getByTestId("ap-zone-Light World")).toHaveProperty(
+      "open",
+      false,
     );
   });
 });

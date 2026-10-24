@@ -213,22 +213,83 @@
 .ap-checks__zones {
   display: grid;
   flex: 1 1 auto;
-  gap: var(--spacing-md);
+  gap: 2px;
   align-content: start;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
-.ap-checks__zone .checks-zone__title {
+/* A group: a disclosure whose summary stays in view while its list scrolls
+   by, lettered as the ALttPR checks' zone headings, its triangle turning as
+   it opens */
+.ap-checks__summary {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--spacing-xs);
+  align-items: center;
+  min-height: 2.75rem;
+  padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  list-style: none;
   background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.ap-checks__summary::-webkit-details-marker {
+  display: none;
+}
+
+.ap-checks__summary::before {
+  display: inline-block;
+  width: 1em;
+  color: var(--color-text-muted);
+  text-align: center;
+  content: "▸";
+  transition: transform var(--transition);
+}
+
+.ap-checks__zone[open] > .ap-checks__summary::before {
+  transform: rotate(90deg);
+}
+
+.ap-checks__summary:hover {
+  color: var(--color-text);
+}
+
+.ap-checks__summary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ap-checks__zone-name {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ap-checks__zone-count {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-checks__summary::before {
+    transition: none;
+  }
 }
 
 .ap-checks__list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
   gap: 2px var(--spacing-md);
-  padding: 0;
+  padding: var(--spacing-xs) 0 var(--spacing-sm) 1.5em;
   margin: 0;
   list-style: none;
 }
@@ -343,10 +404,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.ap-checks__zones:focus-visible {
-  outline: none;
-  border-radius: var(--border-radius-sm);
-  box-shadow: var(--focus-ring);
 }

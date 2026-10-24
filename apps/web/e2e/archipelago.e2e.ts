@@ -288,6 +288,24 @@ for (const width of WIDTHS) {
       await page.locator("body").click({ position: { x: 1, y: 1 } });
       await tabTo(page, "ap-room-button");
       await tabTo(page, "ap-checks-hide");
+      // The groups: those with checks left open beside the items, every one
+      // closed where the board stacks; the keyboard opens and closes them
+      const ice = page.getByTestId("ap-zone-Ice Palace");
+      const summary = ice.locator("summary");
+      await expect(summary).toHaveText(/^Ice Palace — \d+ left \/ \d+$/);
+      const stacked = width < 960;
+      await expect(ice).toHaveJSProperty("open", !stacked);
+      await summary.focus();
+      await page.keyboard.press("Enter");
+      await expect(ice).toHaveJSProperty("open", stacked);
+      await page.keyboard.press("Space");
+      await expect(ice).toHaveJSProperty("open", !stacked);
+      if (stacked) {
+        // A phone's page ends with the groups, not 249 checks
+        expect(
+          await page.evaluate(() => document.documentElement.scrollHeight),
+        ).toBeLessThan(2600);
+      }
       if (SHOTS) {
         await page.screenshot({
           fullPage: true,

@@ -1,11 +1,31 @@
 import { memo, useId, useMemo, useState } from "react";
 import {
   type CheckRow,
+  type CheckZone,
   checkZones,
   visibleZones,
 } from "@/games/archipelago/checks";
 import { useApNamesStore } from "@/games/archipelago/names";
 import { useArchipelagoStore } from "@/games/archipelago/store";
+
+/**
+ * Where the board stacks its panels (archipelago.css): there every group
+ * starts closed, so the checks never run the page long on a phone.
+ */
+const NARROW = "(max-width: 60rem)";
+
+const isNarrow = () =>
+  typeof window.matchMedia === "function" && window.matchMedia(NARROW).matches;
+
+/** The groups open until the player opens or closes one: those with checks left. */
+const openByDefault = (zones: readonly CheckZone[]): ReadonlySet<string> =>
+  isNarrow()
+    ? new Set()
+    : new Set(
+        zones
+          .filter((zone) => zone.rows.some((row) => !row.checked))
+          .map((zone) => zone.name),
+      );
 
 /** One location: done or not, in words and by a glyph, never by colour alone. */
 const Row = memo(({ row }: { row: CheckRow }) => (
@@ -24,8 +44,11 @@ const Row = memo(({ row }: { row: CheckRow }) => (
 
 /**
  * The slot's own locations by the world's groups, as the server states them:
- * how many are left, a filter, and "Hide checked". Nothing to tick: the
- * server says what is checked, and nothing here says what is reachable.
+ * how many are left, a filter, and "Hide checked". Each group is a
+ * disclosure, "Group — n left / m": those with checks left open by default,
+ * every one closed where the board stacks (a phone), and every one a filter
+ * matches open while it does. Nothing to tick: the server says what is
+ * checked, and nothing here says what is reachable.
  */
 export const ChecksPanel = () => {
   const checked = useArchipelagoStore((state) => state.checked);
@@ -35,6 +58,8 @@ export const ChecksPanel = () => {
   const names = useApNamesStore((state) => state.names);
   const groups = useApNamesStore((state) => state.groups);
   const [filter, setFilter] = useState("");
+  /** The groups the player opened, once they opened or closed one. */
+  const [chosen, setChosen] = useState<ReadonlySet<string> | null>(null);
   const id = useId();
   const zones = useMemo(
     () => checkZones(checked, missing, names, groups),
@@ -44,8 +69,32 @@ export const ChecksPanel = () => {
     () => visibleZones(zones, filter, hideChecked),
     [zones, filter, hideChecked],
   );
+  const counts = useMemo(
+    () =>
+      new Map(
+        zones.map((zone) => [
+          zone.name,
+          {
+            left: zone.rows.filter((row) => !row.checked).length,
+            total: zone.rows.length,
+          },
+        ]),
+      ),
+    [zones],
+  );
+  const opened = chosen ?? openByDefault(zones);
+  const filtering = filter.trim() !== "";
   const total = checked.length + missing.length;
   const rows = shown.reduce((sum, zone) => sum + zone.rows.length, 0);
+
+  /** The player opened or closed a group (a filter opens them on its own). */
+  const toggle = (name: string, open: boolean) => {
+    if (filtering || opened.has(name) === open) return;
+    const next = new Set(opened);
+    if (open) next.add(name);
+    else next.delete(name);
+    setChosen(next);
+  };
 
   return (
     <section
@@ -104,32 +153,36 @@ export const ChecksPanel = () => {
             aria-label="Locations"
             className="ap-checks__zones"
             data-testid="ap-checks-zones"
-            // Scrolls on its own beside the items: the keyboard scrolls it too
-            // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrolling region
-            tabIndex={0}
           >
             {shown.length === 0 ? (
               <p className="ap-panel__empty">No location to show.</p>
             ) : (
-              shown.map((zone, index) => (
-                <section
-                  aria-labelledby={`${id}-zone-${index}`}
-                  className="ap-checks__zone"
-                  key={zone.name}
-                >
-                  <h3 className="checks-zone__title" id={`${id}-zone-${index}`}>
-                    {zone.name}{" "}
-                    <span className="checks-zone__count">
-                      {zone.rows.filter((row) => !row.checked).length} left
-                    </span>
-                  </h3>
-                  <ul className="ap-checks__list">
-                    {zone.rows.map((row) => (
-                      <Row key={row.id} row={row} />
-                    ))}
-                  </ul>
-                </section>
-              ))
+              shown.map((zone) => {
+                const count = counts.get(zone.name);
+                return (
+                  <details
+                    className="ap-checks__zone"
+                    data-testid={`ap-zone-${zone.name}`}
+                    key={zone.name}
+                    onToggle={(event) =>
+                      toggle(zone.name, event.currentTarget.open)
+                    }
+                    open={filtering || opened.has(zone.name)}
+                  >
+                    <summary className="ap-checks__summary">
+                      <span className="ap-checks__zone-name">{zone.name}</span>{" "}
+                      <span className="ap-checks__zone-count">
+                        — {count?.left} left / {count?.total}
+                      </span>
+                    </summary>
+                    <ul className="ap-checks__list">
+                      {zone.rows.map((row) => (
+                        <Row key={row.id} row={row} />
+                      ))}
+                    </ul>
+                  </details>
+                );
+              })
             )}
           </section>
         </>

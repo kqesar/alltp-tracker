@@ -39,7 +39,7 @@ document is the app's side.
 | `project.ts` | Pure: the session's snapshot (ids) to the run (names); AP's item flags |
 | `datapackageCache.ts` | The IndexedDB name cache (the package's `PackageStore` seam), with a memory fallback |
 | `names.ts` | The names and location groups of the slot's game, for the checks (never saved or published) |
-| `checks.ts` | Pure: the slot's locations by location group, and the filter |
+| `checks.ts` | Pure: the slot's locations by location group, and the filter. `ChecksPanel` draws each group as a `<details>` disclosure ("Group — n left / m"): open by default while it has checks left, every one closed where the board stacks (`max-width: 60rem`), every match open while a filter is typed; what the player opens or closes holds until the page reloads (not saved) |
 | `status.ts` | The status dot's phase and the short headline per session status |
 | `worlds/skin.ts`, `worlds/skins.ts`, `worlds/alttp.ts` | Skins: AP item names to cells of the tracker's art |
 | `overlay.ts` | The overlay API's whitelist: items only |
