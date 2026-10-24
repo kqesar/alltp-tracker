@@ -106,7 +106,18 @@ Pick **Archipelago** under **Game** in the run type dialog, or open [the tracker
 - **Drops and reloads**: the board reconnects on its own (at once when the device comes back online or the tab back into view). A reload shows the last board at once, then connects again. An archipelago.gg room idle for hours is paused: the dialog links to its page, which wakes it.
 - **An Archipelago ROM on the other boards**: autotracking on the A Link to the Past, Super Metroid or SMZ3 board knows a ROM Archipelago patched by its title, says so, and offers **Open the Archipelago board**: Archipelago's own client reads that game, and the board follows your slot from the room.
 - **Tabs and devices**: one tab of the browser connects; another says "Connected in another tab", follows it, and takes over when it closes. Another device can connect too, or follow the desktop app's board live.
-- **Where it works**: archipelago.gg rooms from any browser and the desktop app. A self-hosted server without TLS (`ws://`) on the internet only from the desktop app; on your computer or network, Chrome and Edge ask to allow local network access, Firefox reaches your computer only, Safari neither.
+- **Join links**: **Copy a join link**, in the Room dialog, copies a link that opens the board with the room and your slot filled in, for your phone or a teammate. It never holds the password, and it never connects on its own: the dialog opens, you add the password if the room has one, then Connect.
+- **Where it works**: archipelago.gg rooms work everywhere. A room someone hosts themselves depends on where it runs and on your browser; the dialog says what will happen as soon as you type the address, before anything connects:
+
+  | The room's server | Chrome, Edge | Firefox | Safari, iPhone, iPad | Desktop app |
+  |---|---|---|---|---|
+  | archipelago.gg | yes | yes | yes | yes |
+  | `wss://` (with TLS), anywhere | yes¹ | yes | yes² | yes |
+  | `ws://` on this computer (`localhost`) | yes¹ | yes¹ | no | yes |
+  | `ws://` on your network (`192.168.…`) | yes¹ | no | no | yes³ |
+  | `ws://` on the internet | no | no | no | yes³ |
+
+  ¹ The first time, the browser may ask whether the site may reach apps on this device, or devices on your network: choose **Allow**. Blocked by mistake? Click the icon left of the address and allow it there; the tracker connects as soon as you do. ² Not tried yet. ³ Tried on Linux; not yet on Windows or macOS. A host who can add TLS (`wss://`) lets every browser in; otherwise use the [desktop app](#the-desktop-app).
 - **Stream view**: the item grid (A Link to the Past, Super Metroid, SMZ3), or the progression items you hold, a line each, for any other game. In the **Stream view** dialog (the desktop app's Stream tools too), tick **Show the run timer under the grid** (`&timer=1`) for the run timer, drawn as for the other games, and **Show the room's last 5 lines involving you** (`&feed=1`) for the feed's last five lines involving you under it: never a hint, never the room's address. Both are off unless you ask.
 
 ## Autotracking
