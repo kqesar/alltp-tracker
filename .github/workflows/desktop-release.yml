@@ -122,5 +122,30 @@ jobs:
           tauriScript: pnpm tauri
           tagName: ${{ inputs.tag }}
           args: ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
-          uploadUpdaterJson: true
-          updaterJsonPreferNsis: true
+          # The four builds run at once: each writing latest.json, two writing
+          # together lost one side's entries (v2.42.0 lost Linux). The job
+          # below writes it once, after them all.
+          uploadUpdaterJson: false
+
+  # The updater's latest.json, from the installers and signatures the builds
+  # attached. Not when a build failed: the installed apps would then be offered
+  # an update with a platform missing, and rerunning the failed job runs this.
+  updater:
+    name: Write latest.json
+    needs: desktop
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout the scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Write and attach latest.json
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: .github/scripts/updater-json.sh "$TAG"

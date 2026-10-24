@@ -567,11 +567,14 @@ sequenceDiagram
 flowchart LR
   merge["release PR merged"] --> rp["release-please:<br/>tag + GitHub release"]
   rp --> matrix["desktop job, one per system:<br/>macOS arm64, macOS x64,<br/>Ubuntu 22.04, Windows"]
-  matrix -->|tauri-action| assets["installers, .sig,<br/>latest.json"]
+  matrix -->|tauri-action| assets["installers, .sig"]
   assets --> rel["the same release"]
+  assets --> updater["updater job:<br/>updater-json.sh"]
+  updater -->|"latest.json, once"| rel
 ```
 
 - The `desktop` job of `.github/workflows/desktop-release.yml` (dispatched by `ci.yml` once release-please cuts a release, after the site's deploy; it can also be started by hand for a tag, see `docs/ci.md`) runs only then: about five minutes per system, in parallel. Pull requests that touch `apps/desktop` run `.github/workflows/desktop.yml` instead (Linux: `cargo fmt`, `clippy`, tests; Windows and macOS: `clippy` again, for the code that compiles there only, and on Windows the tests of the two servers); the web side is tested by the CI workflow as always.
+- **latest.json is written once, after every build**, by the workflow's `updater` job (`.github/scripts/updater-json.sh`): one entry per updater platform key, each the installer's asset URL and its `.sig`. The builds no longer write it: while each one did, two finishing together kept only one side's entries (v2.42.0 lost its four Linux keys, put back by hand from their `.sig` files). The job does not run when a build failed, so the apps are never offered an update with a platform missing; rerunning the failed build runs it. `updater-json.sh <tag> --dry-run` prints the file without attaching it.
 - The app's version is the product's: `tauri.conf.json` reads the root `package.json`, which release-please bumps.
 - **Display name versus technical ids.** The product is called Rando Atlas: the window title, the menu entry's `Name=` and the page say so (an existing entry takes the name at the next launch, `refresh_at_launch` rewriting it). What installed apps rest on keeps the old name, `alltp-tracker`: the Tauri `identifier` (it fixes the webview's data folder, so changing it loses the run), `productName` (NSIS keys its install folder and uninstall entry on it: a new one installs a second copy beside the old), the updater endpoint (it survives a repository rename only through GitHub's redirect) and the storage keys.
 - Linux is built on Ubuntu 22.04, the oldest glibc the AppImage should run on.
