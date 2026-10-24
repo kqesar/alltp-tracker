@@ -269,8 +269,8 @@ describe("the room line", () => {
   it("names the slot, game, team and players, never the room's address", () => {
     lay({
       players: [
-        { game: "A Link to the Past", name: "Link", slot: 1 },
-        { game: "Super Metroid", name: "Samus", slot: 2 },
+        { game: "A Link to the Past", name: "Link", slot: 1, status: null },
+        { game: "Super Metroid", name: "Samus", slot: 2, status: 30 },
       ],
       raceMode: true,
     });
@@ -288,14 +288,14 @@ describe("the room line", () => {
       "2 players",
     );
     expect(screen.getByTestId("ap-race-badge")).toHaveTextContent("Race seed");
-    expect(screen.getByRole("status")).toHaveTextContent("Connected");
+    expect(screen.getByTestId("ap-room-status")).toHaveTextContent("Connected");
     expect(screen.getByTestId("ap-room")).not.toHaveTextContent("38281");
   });
 
   it("says when there is no room, and one player", () => {
     const { rerender } = render(<RoomLine />);
     expect(screen.getByText("No room yet")).toBeInTheDocument();
-    lay({ players: [{ game: "Clique", name: "Solo", slot: 1 }] });
+    lay({ players: [{ game: "Clique", name: "Solo", slot: 1, status: null }] });
     rerender(<RoomLine />);
     expect(screen.getByTestId("ap-room-players")).toHaveTextContent("1 player");
     expect(screen.queryByTestId("ap-race-badge")).toBeNull();

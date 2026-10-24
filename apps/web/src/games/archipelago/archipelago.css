@@ -179,17 +179,42 @@
   color: var(--color-text-secondary);
 }
 
-/* The checks: beside the items, they scroll within the viewport's height */
-.ap-checks {
+/* The items and, under them, the feed: one column, as wide as the items */
+.ap-board__main {
+  display: grid;
+  gap: var(--spacing-lg);
+  align-content: start;
+  min-width: 0;
+}
+
+/* The panel beside the items: tabs over the checks, hints or players. Beside
+   the items it scrolls within the viewport's height; stacked, it grows with
+   the page */
+.ap-side {
   display: flex;
   flex-direction: column;
   max-height: max(calc(var(--cell) * 7), calc(100dvh - 14rem));
 }
 
+.ap-side__panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
 @container app (width < 60rem) {
-  .ap-checks {
+  .ap-side {
     max-height: none;
   }
+}
+
+.ap-checks {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  min-height: 0;
 }
 
 .ap-checks__note,
@@ -325,6 +350,287 @@
   color: var(--color-text-muted);
 }
 
+/* What a checked location held, under its name */
+.ap-check__held {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+/* The feed: as wide as the items above it (its own lines never widen the
+   column), its lines newest first, scrolling within a few lines' height */
+.ap-feed {
+  width: 0;
+  min-width: 100%;
+}
+
+.ap-feed__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  align-items: center;
+}
+
+.ap-feed__scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.ap-feed__choice {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  min-height: 2.25rem;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.ap-feed__log {
+  position: relative;
+  max-height: 16rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--border-radius-sm);
+}
+
+.ap-feed__log:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ap-feed__lines {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.ap-feed__line {
+  padding: 2px var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+  border-inline-start: 2px solid transparent;
+}
+
+/* A line involving the slot, in the whole room's view: a rule, and its
+   names in bold already say it */
+.ap-feed__log[data-scope="room"] .ap-feed__line[data-mine="true"] {
+  border-inline-start-color: var(--color-accent);
+}
+
+.ap-feed__player[data-me="true"] {
+  font-weight: 700;
+}
+
+.ap-feed__item {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.ap-feed__item[data-kind="progression"] {
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.ap-feed__item[data-kind="trap"] {
+  color: var(--color-danger-hover);
+}
+
+.ap-feed__location {
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.ap-feed__status {
+  font-weight: 700;
+}
+
+/* The hints: two lists, each status a word in a badge */
+.ap-hints,
+.ap-players {
+  display: grid;
+  gap: var(--spacing-md);
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ap-hints__points {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ap-hints__group {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.ap-hints__list,
+.ap-players__list {
+  display: grid;
+  gap: var(--spacing-xs);
+  max-width: 44rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.ap-hint {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: baseline;
+  font-size: var(--font-size-sm);
+}
+
+.ap-hint__status {
+  flex: none;
+  min-width: 6.5em;
+  padding: 0 var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.ap-hint[data-status="priority"] .ap-hint__status {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.ap-hint[data-status="found"] {
+  color: var(--color-text-muted);
+}
+
+.ap-hint__what {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The players: name, game and status, a row each */
+.ap-player {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 8.5rem;
+  gap: var(--spacing-sm);
+  align-items: baseline;
+  font-size: var(--font-size-sm);
+}
+
+.ap-player__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ap-player__you {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.ap-player__game {
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.ap-player__status {
+  font-weight: 600;
+  text-align: end;
+}
+
+.ap-player[data-status="goal"] .ap-player__status {
+  color: var(--color-success);
+}
+
+.ap-slot-data__summary {
+  min-height: 2.75rem;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.ap-slot-data__summary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ap-slot-data__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 2px var(--spacing-md);
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.ap-slot-data__entry {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.ap-slot-data__entry dt {
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.ap-slot-data__entry dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "While you were away": a notice card with its list */
+.ap-away__body {
+  display: grid;
+  flex: 1 1 auto;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+.ap-away__title {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.ap-away__list {
+  display: grid;
+  gap: 2px;
+  max-height: 12rem;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  font-size: var(--font-size-sm);
+  list-style: none;
+}
+
+.ap-away__more {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* The room line's run timer */
+.ap-room__timer {
+  display: inline-flex;
+  margin-inline-start: auto;
+}
+
+.ap-room__timer + .ap-room__status {
+  margin-inline-start: 0;
+}
+
 /* The connect dialog's fields */
 .ap-connect__form {
   display: grid;
@@ -407,4 +713,42 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The stream view's feed (&feed=1): the last lines under the grid, on the
+   rows ObsView keeps for them, lettered as the list is */
+.obs-view .ap-obs-feed {
+  position: absolute;
+  top: var(--obs-timer-top, 0);
+  left: var(--obs-left, 0);
+  display: grid;
+  grid-auto-rows: calc(var(--cell) * 0.55);
+  align-items: center;
+  width: calc(var(--cell) * 7);
+  padding: 0;
+  margin: 0;
+  font-size: calc(var(--cell) * 0.3);
+  font-weight: 700;
+  color: var(--sprite-white);
+  text-shadow:
+    1px 0 var(--sprite-ink),
+    -1px 0 var(--sprite-ink),
+    0 1px var(--sprite-ink),
+    0 -1px var(--sprite-ink);
+  list-style: none;
+}
+
+.ap-obs-feed__line {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ap-obs-feed .ap-feed__item,
+.ap-obs-feed .ap-feed__item[data-kind="progression"] {
+  color: var(--sprite-gold);
+}
+
+.ap-obs-feed .ap-feed__location {
+  color: var(--sprite-white);
 }

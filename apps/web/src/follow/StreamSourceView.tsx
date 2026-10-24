@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import type { FollowOptions } from "@/follow/client";
 import { isStaleBuild } from "@/follow/staleBuild";
 import { useFollowedRun } from "@/follow/useFollowedRun";
-import { obsBackground, obsTimer } from "@/utils/view";
+import { obsBackground, obsFeed, obsTimer } from "@/utils/view";
 
 /** A browser source waits for the app this long at most between attempts. */
 const MAX_DELAY = 5000;
@@ -91,7 +91,12 @@ export const StreamSourceView = ({
   return (
     ObsView && (
       <div className="stream-source" data-testid="stream-source" inert>
-        <ObsView background={obsBackground()} relay="obs" timer={obsTimer()} />
+        <ObsView
+          background={obsBackground()}
+          feed={obsFeed()}
+          relay="obs"
+          timer={obsTimer()}
+        />
       </div>
     )
   );

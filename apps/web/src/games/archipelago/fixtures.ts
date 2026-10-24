@@ -59,11 +59,13 @@ export const ROOM_ADDRESS = "127.0.0.1:38281";
  * Link to the Past).
  * @param options - Refuse the Connect with these reasons
  */
-export const startRoom = (options: { refuse?: string[] } = {}) => {
+export const startRoom = (
+  options: { refuse?: string[]; client?: string } = {},
+) => {
   const network = new Network().route(ROOM_URL, {
     kind: "serve",
     responder: {
-      client: "tracker",
+      client: options.client ?? "tracker",
       fixture: fixture("normal-session"),
       ...(options.refuse ? { refuse: options.refuse } : {}),
     },

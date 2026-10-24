@@ -102,6 +102,7 @@ export const ApControls = () => {
           <StreamTools onClose={() => setDialog(null)} />
         ) : (
           <StreamUrlDialog
+            feedOption
             onClose={() => setDialog(null)}
             testIdPrefix="archipelago"
           />

@@ -20,6 +20,7 @@ import {
   isObsView,
   isRelayedObsView,
   obsBackground,
+  obsFeed,
   obsTimer,
 } from "@/utils/view";
 
@@ -128,7 +129,11 @@ const startTracker = (root: HTMLElement) => {
       createRoot(root).render(
         <StrictMode>
           {isObsView() ? (
-            <game.ObsView background={obsBackground()} timer={obsTimer()} />
+            <game.ObsView
+              background={obsBackground()}
+              feed={obsFeed()}
+              timer={obsTimer()}
+            />
           ) : (
             <game.App />
           )}

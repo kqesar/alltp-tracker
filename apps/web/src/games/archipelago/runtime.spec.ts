@@ -22,6 +22,8 @@ const failingCache = (): NameCache => ({
 
 const sink = () =>
   ({
+    away: vi.fn(),
+    countdown: vi.fn(),
     groups: vi.fn(),
     names: vi.fn(),
     run: vi.fn(),

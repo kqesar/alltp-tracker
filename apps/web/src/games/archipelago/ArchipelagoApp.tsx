@@ -2,9 +2,11 @@ import { useEffect } from "react";
 import { GameShell } from "@/components/ui/GameShell";
 import { CloseIcon } from "@/components/ui/ToolbarIcons";
 import { ApControls } from "@/games/archipelago/components/ApControls";
-import { ChecksPanel } from "@/games/archipelago/components/ChecksPanel";
+import { AwayNotice } from "@/games/archipelago/components/AwayNotice";
+import { FeedPanel } from "@/games/archipelago/components/FeedPanel";
 import { ItemsPanel } from "@/games/archipelago/components/ItemsPanel";
 import { RoomLine } from "@/games/archipelago/components/RoomLine";
+import { SidePanel } from "@/games/archipelago/components/SidePanel";
 import {
   connect,
   stop,
@@ -38,8 +40,10 @@ const RunNotice = () => {
 };
 
 /**
- * The Archipelago board: the room at a glance, the items the slot received
- * and its checks, as the room's server states them. It connects as it opens
+ * The Archipelago board: the room at a glance (its run timer too), the items
+ * the slot received with the room's feed under them, and beside them its
+ * checks, hints and players, as the room's server states them; what the slot
+ * received while away, once it connects again. It connects as it opens
  * once the player has connected before, and stops with it; a tab that
  * follows another reads the names from the cache that tab filled.
  */
@@ -61,14 +65,22 @@ const ArchipelagoApp = () => {
   return (
     <GameShell
       game="archipelago"
-      notices={<RunNotice />}
+      notices={
+        <>
+          <RunNotice />
+          <AwayNotice />
+        </>
+      }
       toolbar={<ApControls />}
     >
       <div className="ap-layout" data-testid="layout">
         <RoomLine />
         <div className="ap-board">
-          <ItemsPanel />
-          <ChecksPanel />
+          <div className="ap-board__main">
+            <ItemsPanel />
+            <FeedPanel />
+          </div>
+          <SidePanel />
         </div>
       </div>
     </GameShell>

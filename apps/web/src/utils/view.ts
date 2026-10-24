@@ -107,6 +107,18 @@ const TIMER_PARAM = "timer";
 export const obsTimer = (search: string = window.location.search): boolean =>
   new URLSearchParams(search).get(TIMER_PARAM) === "1";
 
+/** `&feed=1` draws the room's last lines under the grid (Archipelago's). */
+const FEED_PARAM = "feed";
+
+/**
+ * Whether the stream view draws the room's feed under its grid (`&feed=1`):
+ * an Archipelago board's last lines involving the slot, never a hint. Off
+ * unless asked.
+ * @param search - The query string, `window.location.search` by default
+ */
+export const obsFeed = (search: string = window.location.search): boolean =>
+  new URLSearchParams(search).get(FEED_PARAM) === "1";
+
 /** `&bridge=` names the port SNI listens on, when it is not the usual one. */
 const BRIDGE_PARAM = "bridge";
 
@@ -157,15 +169,17 @@ export const shareBaseUrl = (): string =>
 export const obsViewUrl = (
   {
     base,
+    feed = false,
     timer = false,
     token,
-  }: { base?: string; timer?: boolean; token?: string } = {},
+  }: { base?: string; feed?: boolean; timer?: boolean; token?: string } = {},
   page: string = window.location.href,
 ): string => {
   const url = new URL(base ?? trackerUrl(page));
   url.searchParams.set(VIEW_PARAM, OBS_VIEW);
   if (token !== undefined) url.searchParams.set(TOKEN_PARAM, token);
   if (timer) url.searchParams.set(TIMER_PARAM, "1");
+  if (feed) url.searchParams.set(FEED_PARAM, "1");
   return url.href;
 };
 
