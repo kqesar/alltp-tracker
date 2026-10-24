@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.42.0](https://github.com/kqesar/alltp-tracker/compare/v2.41.0...v2.42.0) (2026-10-24)
+
+
+### ✨ Features
+
+* Archipelago self-hosted rooms from the site, and join links (S4) ([#341](https://github.com/kqesar/alltp-tracker/issues/341)) ([195dea0](https://github.com/kqesar/alltp-tracker/commit/195dea07d08bf6020f6fa787674351345c9255cc))
+
 ## [2.41.0](https://github.com/kqesar/alltp-tracker/compare/v2.40.0...v2.41.0) (2026-10-24)
 
 
