@@ -12,8 +12,8 @@
 //   dungeondrops.asm, heartpieces.asm);
 // - vt: the randomizer's front end, for what it writes into the ROM: the
 //   seed's name, its race flag and its settings (seed-settings.ts);
-// - spec: the official race spec v1.2, for the categories, through
-//   ALTTPR_RACE_PROFILE;
+// - spec: the ALTTPR Auto-tracker Rules and Guidelines v2.0, for the
+//   categories, through ALTTPR_RACE_PROFILE;
 // - ap: Archipelago's ALttP client, for the location flags of
 //   check-flags.ts, which its spec holds to z3randomizer's own layout;
 // - er: the entrance randomizer vt hands shuffled entrances to, for where it
@@ -21,7 +21,7 @@
 //
 // Save data: the game keeps the save file in WRAM at $7E:F000-$7E:F4FF and
 // copies it to SRAM on save (sram.asm:7-9). The tracker reads the WRAM copy,
-// which is live and lies in the spec's permitted $7E:F000-$7E:F500.
+// which is live and lies in Race Mode's window $7E:F000-$7E:F500.
 
 import { bus, type RangeSpec } from "@alltp/autotrack";
 import tables from "./entrance-tables.json" with { type: "json" };
@@ -41,9 +41,9 @@ export const MEMORY_SOURCES = {
     repo: "https://github.com/cassidoxa/ALttPEntranceRandomizer",
   },
   spec: {
-    title: "The Official ALTTPR Race-legal Auto-tracker Specification",
-    url: "https://link.alttpr.com/autotracking",
-    version: "1.2 (2021-05-19)",
+    title: "ALTTPR Auto-tracker Rules and Guidelines",
+    url: "https://docs.google.com/document/d/e/2PACX-1vTgsj0FMiWyaBOYP97e_ABc4P_0vIGiJxoUJ5Rj-PBr1T7i_zpyLqhLLVkbftPwS_B6nwad5j5zhtMg/pub",
+    version: "2.0 (2024)",
   },
   vt: {
     commit: "219fcafd029dab597b8db400efafd8f56f8b4edb",
@@ -167,8 +167,8 @@ export const CRYSTAL_BITS = {
 
 /**
  * Game modes ($7E:0010, ram.asm:41). In play: dungeon $07, overworld $09,
- * special overworld $0B (ap Client.py:29). Goal: $19, the Triforce room, as
- * the spec's goal rule says (7.1), then $1A (ap Client.py:30). Before play:
+ * special overworld $0B (ap Client.py:29). Goal: $19, the Triforce room,
+ * where the game ends, then $1A (ap Client.py:30). Before play:
  * the title ($00), the file select and its copy, erase and name screens
  * ($01-$04), the game loading ($05) and the randomizer's spawn select ($1B,
  * seen on a real game going from the file select to play, 2026-10-17).
@@ -273,7 +273,8 @@ export const MEMORY_RANGES = [
   // Where each hole and each overworld door leads: the entrance it loads,
   // which the entrance randomizer writes into the game's tables (Rom.py:
   // 533-539). Read as the seed's settings are: ROM does not change while a
-  // seed runs. No race permits tracking entrances.
+  // seed runs. No race permits tracking entrances, and the race rules
+  // (v2.0) forbid accessing these ROM addresses before or during a race.
   range({
     at: 0x1b_b84c,
     category: "entrances",
@@ -397,9 +398,11 @@ export const MEMORY_RANGES = [
   // The randomizer's NPC item flags.
   save("npc-flags", 0x410, 2, "outside-checks", "z3:sram.asm:240-247"),
   // The ROM's own stats, which its end credits show (stats/statConfig.asm:
-  // 50-68) and the game stops counting once StatsLocked is set. No race
-  // permits them, so they are `other`, in three ranges around the two bytes
-  // races do read. From BonkCounter to NMIFrames, the frames played, which
+  // 50-68) and the game stops counting once StatsLocked is set. The race
+  // rules (v2.0) let a tracker show bonks, deaths, chest turns and save &
+  // quits during a race and the rest only after it; Race Mode reads none of
+  // them (deliberately strict), so they are `other`, in three ranges around
+  // the two bytes races do read. From BonkCounter to NMIFrames, the frames played, which
   // the NMI hook counts (framehook.asm:24-26): the game's play time.
   save("stats", 0x420, 0x22, "other", "z3:sram.asm:269-295"),
   // $01 from the Triforce room on (sram.asm:297): StatsFinalPrep sets it
@@ -417,8 +420,9 @@ export const MEMORY_RANGES = [
   // without a sword, when the first sword, the boots, the flute and the
   // mirror were found, damage taken and magic used.
   save("stats-finds", 0x449, 0x25, "other", "z3:sram.asm:300-315"),
-  // Heart pieces collected (itemdatatables.asm:717): the spec's "heart
-  // piece counts".
+  // Heart pieces collected (itemdatatables.asm:717): the HUD's heart piece
+  // count, which v2.0 allows and Race Mode still leaves alone (deliberately
+  // strict).
   save("heart-pieces", 0x470, 1, "hud", "z3:sram.asm:318"),
   // A dungeon's prize collected: SetCutsceneFlag calls SetDungeonCompleted
   // when the prize is taken (dungeondrops.asm:103-120, 323-329); Agahnim's

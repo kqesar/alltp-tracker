@@ -27,7 +27,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/er-world.ts` | `cassidoxa/ALttPEntranceRandomizer` (`Regions.py`, `Rules.py`): the world a seed with shuffled entrances is filled in, for the doors noted (see "The entrance randomizer's world") |
 | `src/derived.ts`, `src/medallions.ts` | facts the state derives before solving, for the rules that are not monotone in the items (Palace of Darkness's keys; what a medallion pad wants) |
 | `src/location.ts`, `src/rules.ts` | what a location is (its kinds, its rule and upstream source); every named rule, as the engine loads them |
-| `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags and seed settings, from the `z3randomizer` ASM and the race spec |
+| `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags and seed settings, from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -276,9 +276,10 @@ the model knows.
 ### Where Link went: autotracking the entrances
 
 Outside races, autotracking notes each door or hole Link goes through. The
-race spec forbids it ("Record or track any entrance locations, or where they
-lead"), so its ranges are the `entrances` category of the race profile:
-Race Mode never reads them.
+race rules (ALTTPR Auto-tracker Rules v2.0) forbid it ("Region endpoints may
+not be auto-tracked", and entrance ROM addresses "should not ever be
+accessed by an auto-tracker before or during a race"), so its ranges are the
+`entrances` category of the race profile: Race Mode never reads them.
 
 The randomizer writes where each entrance leads into the ROM (`Rom.py:
 490-539`): a door's slot of the game's door table (PC `0xDBB73`) and a

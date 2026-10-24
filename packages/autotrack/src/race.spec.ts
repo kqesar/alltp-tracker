@@ -6,8 +6,8 @@ import { assertRaceSafe, covers, defineRaceProfile } from "./race";
 import { raceStatus } from "./race-mode";
 
 describe("ALTTPR_RACE_PROFILE", () => {
-  it("permits exactly the spec's addresses, in FX Pak Pro space", () => {
-    // Spec v1.2, "Permitted SNES memory addresses", LoROM, ends inclusive.
+  it("permits exactly Race Mode's windows, in FX Pak Pro space", () => {
+    // Race Mode's own windows (v2.0 lists none), LoROM, ends inclusive.
     expect(ALTTPR_RACE_PROFILE.permitted).toEqual([
       { address: 0x00_7fb0, size: 0x30 },
       { address: 0xf5_0000, size: 0xb1 },
@@ -22,7 +22,7 @@ describe("ALTTPR_RACE_PROFILE", () => {
     });
   });
 
-  it("forbids what the spec forbids", () => {
+  it("forbids what the profile forbids", () => {
     const forbidden = Object.entries(ALTTPR_RACE_PROFILE.categories)
       .filter(([, c]) => !c.permitted)
       .map(([name]) => name);

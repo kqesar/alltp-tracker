@@ -80,7 +80,7 @@ export const ALTTPR_GAME_CHECK: GameCheck = {
 };
 
 /**
- * The race flag: TournamentSeed at A-bus $30:8213 (the spec's 0x308213;
+ * The race flag: TournamentSeed at A-bus $30:8213 (0x308213 on the bus;
  * the base patch writes it at its FastROM mirror $B0:8213, ROM 0x180213,
  * tables.asm:997-999), then TournamentSeedInverse, its complement
  * (tables.asm:1000-1001). The front end writes the pair as $01 $00 for a

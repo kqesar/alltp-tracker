@@ -40,8 +40,8 @@ Zebes, and SMZ3's own logic, ported from
 - **Autotracking.** The tracker reads your game while you play, through
   [SNI](https://github.com/alttpo/sni/releases/latest) or QUsb2Snes: RetroArch with the
   bsnes-mercury core, an FX Pak Pro, BizHawk or an NWA emulator. The desktop app also reads
-  RetroArch directly. On an ALttPR race seed it reads only what the
-  [race-legal specification](https://link.alttpr.com/autotracking) allows. The
+  RetroArch directly. On an ALttPR race seed, or with Race Mode set always on, it
+  follows the [ALTTPR Auto-tracker Rules v2.0](https://docs.google.com/document/d/e/2PACX-1vTgsj0FMiWyaBOYP97e_ABc4P_0vIGiJxoUJ5Rj-PBr1T7i_zpyLqhLLVkbftPwS_B6nwad5j5zhtMg/pub), stricter than they ask. The
   **Autotracking** button opens a setup guide for your system.
 - **Voice commands** (A Link to the Past). Say "tracker hook shot" to mark the hookshot.
   Speech is recognized in the browser by [Vosk](https://alphacephei.com/vosk/), in English;

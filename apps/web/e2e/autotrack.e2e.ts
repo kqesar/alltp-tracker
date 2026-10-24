@@ -47,7 +47,7 @@ const bootSeed = (
   memory[SAVE(0x342)] = 0x01; // Hookshot
   memory[SAVE(0x357)] = 0x01; // Moon Pearl
   memory[SAVE(0x359)] = 0x02; // Master Sword
-  memory[SAVE(0x35c)] = 0x02; // one empty bottle: a HUD fact races forbid
+  memory[SAVE(0x35c)] = 0x02; // one empty bottle: a HUD fact Race Mode leaves alone
   memory[SAVE(0x374)] = 0x04; // the Pendant of Courage: a prize, forbidden
   memory[SAVE(0x3c5)] = 0x02; // Zelda rescued
   memory[SAVE(0x208)] = 0x10; // Link's House chest (room $104)
@@ -78,7 +78,7 @@ const holds = (range: { address: number; size: number }, at: number) =>
 
 /**
  * The reads Race Mode forbids among those the bridge was sent: a byte
- * outside the memory the race specification permits, or inside a forbidden
+ * outside the memory Race Mode keeps to, or inside a forbidden
  * range where no permitted range shares it (a boss room inside the dungeon
  * rooms is read for the boss).
  */
@@ -465,7 +465,7 @@ test("connects through the dialog, ticks every step and lists what it read", asy
   );
 });
 
-test("a race seed shows the race-legal badge and is never read where races forbid", async ({
+test("a race seed shows the race-legal badge and is never read where Race Mode forbids", async ({
   page,
 }) => {
   bootSeed(bridge, { race: true });
@@ -480,7 +480,7 @@ test("a race seed shows the race-legal badge and is never read where races forbi
     "This is a race seed: the tracker reads only what races permit.",
   );
   await expect(shown.getByTestId("readout-items")).toContainText("Hookshot");
-  // What races forbid is neither read nor shown
+  // What Race Mode withholds is neither read nor shown
   await expect(shown.getByTestId("readout-prizes")).toHaveText(
     /Not read in Race Mode/,
   );
@@ -500,7 +500,7 @@ test("a race seed shows the race-legal badge and is never read where races forbi
   await expect(
     page.getByTestId("autotrack-button").getByTestId("race-badge"),
   ).toBeVisible();
-  // Nor are the ROM's own counts, which races forbid
+  // Nor are the ROM's own counts, which Race Mode leaves alone
   await page.getByTestId("map-view-tab-run").click();
   await expect(page.getByTestId("run-rom-stats")).toContainText(
     "Not read in races",

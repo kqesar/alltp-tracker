@@ -78,7 +78,7 @@ The decoders read each game through one view of its save, whichever game runs, s
 
 The game state and both saves are read at one cadence, in the same tick. With the state read twice as often, the first reading in play carried saves read during the new file's load, when the buffers were still blank SRAM: the board took every item for found. A save that was never written (Zelda's equipment all `$FF`, Super Metroid's items word `$FFFF`) decodes to nothing besides.
 
-**Races.** No SMZ3 autotracking specification exists; racetime.gg's smz3 category allows autotracking and bans ROM or RAM inspection otherwise. The race profile (`race-profile.ts`) therefore reads what the player sees and the settings a race announces. It forbids, in a race seed, the requirements a seed may draw at random (the crystals Ganon's Tower and Ganon ask for, the bosses Tourian asks for) and the medallions opening Misery Mire and Turtle Rock. The dungeons' and bosses' rewards are never read at all: a reward counts once found.
+**Races.** No SMZ3 autotracking specification exists; racetime.gg's smz3 category allows autotracking and bans ROM or RAM inspection otherwise. The race profile (`race-profile.ts`) therefore reads what the player sees and the settings a race announces. It forbids, in a race seed, the requirements a seed may draw at random (the crystals Ganon's Tower and Ganon ask for, the bosses Tourian asks for) and the medallions opening Misery Mire and Turtle Rock. The dungeons' and bosses' rewards are never read at all: a reward counts once found. The ALTTPR Auto-tracker Rules v2.0 do not apply: the smz3 category links no tracker rules, so this profile stays as it is, and Race Mode set always on in the tracker holds it whatever the race bit says.
 
 ## Not modelled
 

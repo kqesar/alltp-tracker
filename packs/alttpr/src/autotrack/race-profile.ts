@@ -1,82 +1,97 @@
 // The racing rules ALttPR autotracking answers to, as @alltp/autotrack's
-// race profile: the memory a race permits and the categories of tracked
+// race profile: the memory Race Mode reads and the categories of tracked
 // information, permitted or not. The memory map (memory.ts) files every
 // range it reads under one of these categories.
 import { defineRaceProfile, type RaceProfile } from "@alltp/autotrack";
 
+/** The rules racetime.gg's ALTTPR category links (read 2026-10-24). */
+const RULES_URL =
+  "https://docs.google.com/document/d/e/2PACX-1vTgsj0FMiWyaBOYP97e_ABc4P_0vIGiJxoUJ5Rj-PBr1T7i_zpyLqhLLVkbftPwS_B6nwad5j5zhtMg/pub";
+
+/** What a category v2.0 allows but Race Mode keeps forbidden says of it. */
+const STRICT =
+  " Race Mode still leaves it to the player: deliberately strict, pending clarification with the race admins.";
+
 /**
- * The ALttPR rules: "The Official ALTTPR Race-legal Auto-tracker
- * Specification", version 1.2 (2021-05-19), at link.alttpr.com/autotracking.
- * Addresses are the spec's "Permitted SNES memory addresses", in the SNES
- * LoROM space, ends inclusive; the internal header line ($FFB0-$FFDF) is
- * bank $00. "Anything not covered in this document is, by default,
- * considered not permitted": the `other` category stands for it.
+ * The ALttPR rules: the "ALTTPR Auto-tracker Rules and Guidelines", version
+ * 2.0 (2024), which racetime.gg's ALTTPR category links. Each `rule` quotes
+ * it. Race Mode is stricter than v2.0 on purpose: it keeps the categories
+ * v2.0 opened (checks inside dungeons, prizes upon collection, the HUD's
+ * counts, some stats, the ROM's settings) forbidden until their limits are
+ * clarified, and reads only inside the memory windows of the earlier
+ * version, in the SNES LoROM space, ends inclusive (the internal header line
+ * $FFB0-$FFDF is bank $00). v2.0 lists no addresses ("it does not matter
+ * where information is gathered, only that its use is allowed or
+ * disallowed"): the windows are the tracker's own limit. "Anything not
+ * covered in this document is, by default, considered not permitted": the
+ * `other` category stands for it. v2.0 says nothing of a race flag: the
+ * randomizer's tournament flag is what switches Race Mode on.
  */
 export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
   categories: {
     ammo: {
       permitted: true,
-      rule: "Record and track if the player has at least one bomb, or at least one arrow.",
+      rule: "The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.",
     },
     "boss-kills": {
       permitted: true,
-      rule: "Record and track defeated dungeon bosses.",
+      rule: "Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal). This includes not auto-tracking who the dungeon boss is in Enemizer modes before the boss is defeated.",
     },
     "dungeon-checks": {
       permitted: false,
-      rule: 'Record or track checked locations inside a dungeon, including presenting this information as the number of remaining "chests."',
+      rule: `An auto-tracker is allowed to track whether or not a location's content has been acquired by the player. This includes: overworld-locations, underworld-locations, and dungeon-locations.${STRICT}`,
     },
     entrances: {
       permitted: false,
-      rule: "Record or track any entrance locations, or where they lead.",
+      rule: "Region endpoints may not be auto-tracked: this includes any form of connecting one region to another, any annotations that indicate what is on the other side of an endpoint, or marking/clearing it off the map. ROM addresses associated with entrance locations and/or chest or other location contents should not ever be accessed by an auto-tracker before or during a race.",
     },
     "game-start": {
       permitted: true,
-      rule: "Record and track when the player starts playing the game.",
+      rule: "A program may keep track of when the game starts and when the game ends (i.e. auto-livesplit).",
     },
     goal: {
       permitted: true,
-      rule: "Record and track when the player has completed the goal (warped to triforce room).",
+      rule: "A program may keep track of when the game starts and when the game ends (i.e. auto-livesplit).",
     },
     hud: {
       permitted: false,
-      rule: "Record or track any information on the HUD. This includes bomb/arrow/rupee counts, equipped item, and heart piece counts. Additionally, current bottle contents are forbidden from autotracking.",
+      rule: `The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.${STRICT}`,
     },
     items: {
       permitted: true,
-      rule: "Record and track any item collected by a player, or record items already pre-equipped (starting boots, sword, flute, etc.).",
+      rule: "It is legal to have a program auto-track items that Link possesses, and locations that Link has checked: Y-, B-, and A-items, unique or progressive equipment.",
     },
     keys: {
       permitted: true,
-      rule: "Record and track any small or big keys collected by a player.",
+      rule: "Dungeon items (keys, maps, compasses).",
     },
     "msu-track": {
       permitted: true,
-      rule: "Read the currently playing MSU-1 track for on-stream display or other similar use (using 0x7E010B).",
+      rule: "The current MSU-1-track playing may be displayed but may not be used to infer regions.",
     },
     other: {
       permitted: false,
-      rule: "Anything else not explicitly defined as a permitted auto-tracking behavior.",
+      rule: "Anything not covered in this document is, by default, considered not permitted.",
     },
     "outside-checks": {
       permitted: true,
-      rule: "Record and track checked locations that are not in a dungeon, including non-dungeon underworld caves and indoor areas.",
+      rule: "An auto-tracker is allowed to track whether or not a location's content has been acquired by the player. This includes: overworld-locations, underworld-locations, and dungeon-locations.",
     },
     prizes: {
       permitted: false,
-      rule: "Record or track information on pendants and crystal locations, regardless of the source of information.",
+      rule: `Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal). Map checks are not allowed to be auto-tracked, and trackers may not auto-track which crystal is a 5/6-crystal. The green pendant may not be auto-tracked before it is picked up.${STRICT}`,
     },
     "race-flag": {
       permitted: true,
-      rule: "The auto-tracker should read the race flag at memory address 0x308213 and automatically enable a race-compliant mode.",
+      rule: "Auto-trackers are allowed to read any SRAM and/or ROM locations at any time (the randomizer's tournament flag, which switches Race Mode on; v2.0 does not name it).",
     },
     "rom-header": {
       permitted: true,
-      rule: "Auto-trackers are allowed to read the following memory addresses, and the internal ROM header.",
+      rule: "Auto-trackers are allowed to read any SRAM and/or ROM locations at any time, except ROM addresses associated with entrance locations and/or chest or other location contents.",
     },
     spheres: {
       permitted: false,
-      rule: 'Record or track the "sphere," or logical progression, of an item.',
+      rule: "An auto-tracker may not associate an acquired item with a specific location, nor can it derive any conclusions from the order or timing by which items are acquired.",
     },
   },
   id: "alttpr",
@@ -89,7 +104,7 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
     [0x30_8210, 0x30_823f],
   ],
   raceFlag: { bus: 0x30_8213, openValue: 0x00, raceValue: 0x01 },
-  source: "https://link.alttpr.com/autotracking",
-  title: "The Official ALTTPR Race-legal Auto-tracker Specification",
-  version: "1.2 (2021-05-19)",
+  source: RULES_URL,
+  title: "ALTTPR Auto-tracker Rules and Guidelines",
+  version: "2.0 (2024)",
 });

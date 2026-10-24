@@ -99,7 +99,7 @@ export const Readout = ({
           : `Last read at ${time}, before the connection dropped`}
         . Compare it with your game.
         {reading.race &&
-          " In Race Mode, what races forbid tracking is never read."}
+          " In Race Mode, what the tracker leaves you to mark is never read."}
       </p>
       <div className="readout__grid">
         <Group

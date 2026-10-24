@@ -307,7 +307,7 @@ describe("SEED_SETTINGS_RANGES", () => {
     }
   });
 
-  it("is race-permitted in the spec's $30:8210-$30:823F only", () => {
+  it("is race-permitted in Race Mode's $30:8210-$30:823F only", () => {
     const legal = SEED_SETTINGS_RANGES.filter((range) =>
       permitted(range.category),
     );

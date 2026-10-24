@@ -451,7 +451,7 @@ describe("AutotrackDialog's actions", () => {
     );
 
     expect(screen.getByTestId("autotrack-follow")).toHaveTextContent(
-      "In Race Mode, what races forbid tracking stays yours to mark: pendants and crystals, chests inside dungeons, bottles.",
+      "In Race Mode, these stay yours to mark: pendants and crystals, chests inside dungeons, bottles.",
     );
     // Where shuffled entrances lead, too
     act(() => useGameStore.getState().applyPreset("crosskeys"));
@@ -696,7 +696,7 @@ describe("AutotrackDialog's readout", () => {
       "before the connection dropped",
     );
     expect(screen.getByTestId("readout")).toHaveTextContent(
-      "In Race Mode, what races forbid tracking is never read.",
+      "In Race Mode, what the tracker leaves you to mark is never read.",
     );
     expect(screen.getByTestId("readout-progress")).toHaveTextContent(
       "Game startednot read yet",

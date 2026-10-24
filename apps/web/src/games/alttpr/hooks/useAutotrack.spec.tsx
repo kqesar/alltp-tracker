@@ -216,7 +216,7 @@ describe("useAutotrack", () => {
     await h.advance(1000);
     expect(state().reading?.items.counts.moonPearl).toBe(1);
 
-    // A race seed takes its place: what races forbid is dropped at once
+    // A race seed takes its place: what Race Mode withholds is dropped at once
     h.memory.set([0x01, 0x00], 0x18_0213);
     await h.advance(1000);
     expect(state().status).toMatchObject({ race: { active: true } });

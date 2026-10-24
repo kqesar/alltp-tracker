@@ -19,7 +19,7 @@ import {
 export type AutotrackReading = {
   /** When memory was read, in ms since the epoch. */
   readonly at: number;
-  /** Race Mode was on: what races forbid was neither read nor decoded. */
+  /** Race Mode was on: what it withholds was neither read nor decoded. */
   readonly race: boolean;
   readonly items: ItemReading;
   /** The locations checked, by the pack's location id, in the pack's order. */

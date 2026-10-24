@@ -3,8 +3,9 @@
 // the events. Pure and total: any bytes decode, none throw.
 //
 // In Race Mode a decoder never asks for a range whose category the race
-// profile forbids, and withholds what the spec forbids tracking even when a
-// permitted range holds it (checks inside dungeons). What it cannot tell, it
+// profile forbids, and withholds what the profile keeps from races even when
+// a permitted range holds it (checks inside dungeons, which the race rules,
+// v2.0, allow: Race Mode is deliberately stricter). What it cannot tell, it
 // leaves unsettled, with the reason, rather than guessing.
 
 import { ITEMS, type ItemId } from "../items";
@@ -362,9 +363,10 @@ export interface CheckReading {
 }
 
 /**
- * The checked locations. In Race Mode the spec forbids tracking checks
- * inside a dungeon: those stay unsettled, even the boss drops and prizes
- * whose flags permitted ranges hold.
+ * The checked locations. In Race Mode the checks inside a dungeon stay
+ * unsettled, even the boss drops and prizes whose flags permitted ranges
+ * hold: the race rules (v2.0) allow them, but Race Mode keeps them the
+ * player's, deliberately strict.
  */
 export function decodeChecks(
   memory: MemoryView,
@@ -405,7 +407,10 @@ export interface ProgressReading {
    * also turns false in menus and text boxes.
    */
   readonly beforePlay: Fact;
-  /** The ROM's own stats, outside Race Mode only: no race permits them. */
+  /**
+   * The ROM's own stats, outside Race Mode only (v2.0 allows a few during a
+   * race and the rest after it; Race Mode reads none, deliberately strict).
+   */
   readonly romStats: RomStats | Unsettled;
   /** The Triforce room reached: game mode $19 or $1A, or StatsLocked. */
   readonly goal: Fact;
@@ -603,7 +608,7 @@ const EXIT_ROOMS: Readonly<Record<string, number>> = ENTRANCE_TABLES.exitRooms;
 
 /**
  * Where Link went in and came out, from memory. Outside races only: the
- * spec forbids tracking entrances or where they lead.
+ * race rules (v2.0) forbid auto-tracking region endpoints.
  *
  * - In by a door: the base patch keeps its slot as it loads its entrance
  *   (overworld-door), which the door table must say that slot loads: a fall

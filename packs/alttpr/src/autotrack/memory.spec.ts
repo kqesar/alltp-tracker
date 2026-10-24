@@ -45,7 +45,7 @@ const overlaps = (a: ByteRange, b: ByteRange) =>
 describe("MEMORY_RANGES", () => {
   it("is a valid @alltp/autotrack pack under the ALttPR race profile", () => {
     // definePack throws on an unknown category or a race-permitted range
-    // outside the spec's memory.
+    // outside Race Mode's windows.
     expect(pack.ranges).toHaveLength(MEMORY_RANGES.length);
     expect(pack.tickMs).toBe(500);
   });
@@ -106,7 +106,7 @@ describe("MEMORY_RANGES", () => {
       // Where the seed's doors and holes lead, and where Link went through
       "hole-table:entrances",
       "door-table:entrances",
-      // Outside the spec's windows: anything else, which races forbid
+      // Outside Race Mode's windows: anything else, which Race Mode leaves
       "swordless-mode:other",
       "dungeon-item-menu:other",
       "inverted-mode:other",

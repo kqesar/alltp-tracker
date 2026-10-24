@@ -38,8 +38,9 @@ export const raceReason = (race: RaceStatus) => {
 /**
  * The race-legal badge: shown while Race Mode is on, because the player set
  * it always on, from the seed's race flag, or because the flag could not be
- * read. Race Mode then reads nothing the race profile forbids (stricter than
- * the ALTTPR Auto-tracker Rules v2.0 ask, `packages/autotrack/README.md`).
+ * read. Race Mode then reads nothing the race profile forbids, which keeps
+ * to the ALTTPR Auto-tracker Rules v2.0 and is stricter than they ask
+ * (`packages/autotrack/README.md`).
  * Set always on, it says so in a second part: "Race-legal | Always on".
  */
 export const RaceBadge = ({ race }: { race: RaceStatus }) => (
