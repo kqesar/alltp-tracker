@@ -5,7 +5,7 @@
 import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
 import { type ItemState, itemsMax } from "@/games/alttpr/data/items";
 import { PACK_ITEMS } from "@/games/alttpr/logic/packItems";
-import { isIdle, type RunTimer, timerMs } from "@/games/alttpr/logic/timer";
+import { isIdle, type RunTimer, timerMs } from "@/utils/runTimer";
 
 /**
  * When something was found: the instant (epoch milliseconds), for the

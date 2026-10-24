@@ -8,7 +8,7 @@ import {
   stampTimeline,
   type Timeline,
 } from "@/games/alttpr/logic/timeline";
-import { IDLE_TIMER, pauseTimer, startTimer } from "@/games/alttpr/logic/timer";
+import { IDLE_TIMER, pauseTimer, startTimer } from "@/utils/runTimer";
 
 const T0 = Date.UTC(2026, 9, 18, 12, 0, 0);
 const STAMP: Stamp = { at: T0 + 60_000, ms: 60_000 };

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { itemsMax } from "@/games/alttpr/data/items";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
-import { IDLE_TIMER, startTimer } from "@/games/alttpr/logic/timer";
 import {
   type AlttprRun,
   OVERLAY_ITEMS,
@@ -10,6 +9,7 @@ import {
   overlaySource,
 } from "@/games/alttpr/overlay";
 import { createProgress, useGameStore } from "@/games/alttpr/stores/gameStore";
+import { IDLE_TIMER, startTimer } from "@/utils/runTimer";
 
 const runOf = (changes: Partial<AlttprRun> = {}): AlttprRun => ({
   ...createProgress(),

@@ -1,10 +1,10 @@
 import { controlTitle } from "@/games/alttpr/data/keymap";
 import { isControlShown } from "@/games/alttpr/hooks/useItemShortcuts";
 import { smallKeysMax } from "@/games/alttpr/logic/settings";
-import { isRunning } from "@/games/alttpr/logic/timer";
 import { changedValue, type VoiceAction } from "@/games/alttpr/logic/voice";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { itemRange } from "@/games/alttpr/stores/persistence";
+import { isRunning } from "@/utils/runTimer";
 
 /** What a heard command did, said back to the player. */
 export interface Heard {

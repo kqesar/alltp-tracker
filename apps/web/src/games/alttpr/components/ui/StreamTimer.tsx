@@ -1,11 +1,6 @@
-import {
-  formatTime,
-  TIMER_WORDS,
-  timerMs,
-  timerState,
-} from "@/games/alttpr/logic/timer";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { useNow } from "@/hooks/useNow";
+import { formatTime, TIMER_WORDS, timerMs, timerState } from "@/utils/runTimer";
 
 /**
  * The chest counters' 3×5 font, by character: "#" is one font pixel. What
