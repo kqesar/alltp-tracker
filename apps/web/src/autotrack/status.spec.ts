@@ -114,6 +114,14 @@ describe("headlineOf", () => {
     ).toBe("This is not a Map Rando seed");
     expect(
       headlineOf(
+        statusOf("game-mismatch", {
+          check: { code: "archipelago-rom", message: "" },
+        }),
+        true,
+      ),
+    ).toBe("This is an Archipelago seed");
+    expect(
+      headlineOf(
         statusOf("attaching", {
           device: { id: "SD2SNES COM3", kind: "fxpakpro" },
         }),

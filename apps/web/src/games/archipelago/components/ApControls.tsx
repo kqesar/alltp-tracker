@@ -6,11 +6,11 @@ import { Modal } from "@/components/ui/Modal";
 import { StreamTools } from "@/components/ui/StreamTools";
 import { StreamUrlDialog } from "@/components/ui/StreamUrlDialog";
 import { PlugIcon, StreamIcon } from "@/components/ui/ToolbarIcons";
-import { streamSize } from "@/games/archipelago/ArchipelagoObsView";
+import { stageOf, streamSize } from "@/games/archipelago/ArchipelagoObsView";
 import { useApConnectionStore } from "@/games/archipelago/connection";
-import { kindOf } from "@/games/archipelago/project";
 import { headlineOf, phaseOf } from "@/games/archipelago/status";
 import { useArchipelagoStore } from "@/games/archipelago/store";
+import { useSkin } from "@/games/archipelago/worlds/skins";
 import { isDesktopApp } from "@/utils/platform";
 
 /** The connect dialog, a chunk of its own with the guide's words. */
@@ -49,11 +49,11 @@ export const ApControls = () => {
   const phase = phaseOf(status);
   const headline = headlineOf(status);
   // What sizes the stream view's source: the skin's grid, or the list's lines
-  const game = useArchipelagoStore((state) => state.room?.game);
-  const lines = useArchipelagoStore(
-    (state) =>
-      state.items.filter((item) => kindOf(item.flags) === "progression").length,
+  const skin = useSkin(useArchipelagoStore((state) => state.room?.game));
+  const columns = useArchipelagoStore(
+    (state) => stageOf(skin, state.items).columns,
   );
+  const rows = useArchipelagoStore((state) => stageOf(skin, state.items).rows);
 
   // No room yet: the dialog opens on its own, once, as the board does
   const asked = useRef(false);
@@ -110,7 +110,7 @@ export const ApControls = () => {
           <StreamTools
             feedOption
             onClose={() => setDialog(null)}
-            sizeOf={streamSize(game, lines)}
+            sizeOf={streamSize({ columns, rows })}
           />
         ) : (
           <StreamUrlDialog

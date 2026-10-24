@@ -43,7 +43,8 @@ export type FixtureName =
   | "slot-data-normal"
   | "slot-data-race"
   | "datapackage"
-  | "archipelagojs-edges";
+  | "archipelagojs-edges"
+  | "sm-smz3-session";
 
 const cache = new Map<string, Fixture>();
 

@@ -165,7 +165,78 @@ function stopServers() {
   }
 }
 
+// 8. Super Metroid and SMZ3: a tracker on Samus and one on Hybrid Hero, each reading its world's
+// location groups, while a game client on each slot checks locations holding the slot's own items.
+// A server of its own (38285), so the other scenes' state never reaches it.
+async function recordSmSmz3() {
+  await startServer(NORMAL, 38285);
+  const S = "ws://127.0.0.1:38285";
+  begin();
+  for (const [slot, id, game, take] of [
+    ["Samus", 2, "Super Metroid", 24],
+    ["Hybrid Hero", 3, "SMZ3", 40],
+  ]) {
+    const short = slot === "Samus" ? "samus" : "hybrid";
+    const tracker = newClient(`tracker-${short}`);
+    mark(`tracker logs in on ${slot}`);
+    const r = await tryLogin(tracker, S, slot, "", TRACKER);
+    mark(`tracker-${short} login -> ok=${r.ok}`);
+    await sleep(500);
+    raw(tracker, {
+      cmd: "Get",
+      keys: [
+        "_read_race_mode",
+        `_read_slot_data_${id}`,
+        `_read_client_status_0_${id}`,
+        `_read_hints_0_${id}`,
+        `_read_location_name_groups_${game}`,
+      ],
+      uuid: `bench-get-${short}`,
+    });
+    await sleep(500);
+
+    const player = newClient(`game-${short}`);
+    mark(`game client logs in on ${slot} (game ${game}, items 0b001)`);
+    const g = await tryLogin(player, S, slot, game, { items: 0b001, tags: [] });
+    mark(`game-${short} login -> ok=${g.ok}`);
+    await sleep(500);
+    raw(player, {
+      cmd: "LocationScouts",
+      create_as_hint: 0,
+      locations: player.room.missingLocations,
+    });
+    const [info] = (await waitFor(player, "locationInfo")) ?? [
+      { locations: [] },
+    ];
+    const own = info.locations
+      .filter((i) => i.player === id)
+      .map((i) => i.location)
+      .slice(0, take);
+    mark(
+      `game-${short} checks ${own.length} locations holding its own items, a few at a time`,
+    );
+    for (let i = 0; i < own.length; i += 6) {
+      raw(player, { cmd: "LocationChecks", locations: own.slice(i, i + 6) });
+      await sleep(400);
+    }
+    await sleep(700);
+    player.socket.disconnect();
+    await sleep(300);
+    tracker.socket.disconnect();
+    await sleep(300);
+  }
+  save("sm-smz3-session", {
+    server: "normal multiworld, no password, a server of its own",
+    slots: { 2: "Samus (Super Metroid)", 3: "Hybrid Hero (SMZ3)" },
+  });
+}
+
 async function main() {
+  // AP_ONLY=sm-smz3-session records that scene alone, leaving the others' fixtures as they are
+  if (process.env.AP_ONLY === "sm-smz3-session") {
+    await recordSmSmz3();
+    return;
+  }
   await startServer(NORMAL, 38281);
   await startServer(NORMAL, 38282, ["--password", PASSWORD]);
   await startServer(RACE, 38283);
@@ -632,6 +703,8 @@ async function main() {
     server: "normal multiworld + a silent ws server",
   });
   console.log(JSON.stringify(edges, null, 1));
+
+  await recordSmSmz3();
 }
 
 try {

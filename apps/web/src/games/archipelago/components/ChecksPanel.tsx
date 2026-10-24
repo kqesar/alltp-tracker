@@ -1,12 +1,15 @@
-import { memo, useId, useMemo, useState } from "react";
+import { memo, useId, useMemo, useState, useSyncExternalStore } from "react";
 import {
   type CheckRow,
   type CheckZone,
   checkZones,
+  groupsFor,
   visibleZones,
 } from "@/games/archipelago/checks";
+import { itemLabel } from "@/games/archipelago/itemLabel";
 import { useApNamesStore } from "@/games/archipelago/names";
 import { useArchipelagoStore } from "@/games/archipelago/store";
+import { useSkin } from "@/games/archipelago/worlds/skins";
 
 /**
  * Where the board stacks its panels (archipelago.css): there every group
@@ -17,9 +20,20 @@ const NARROW = "(max-width: 60rem)";
 const isNarrow = () =>
   typeof window.matchMedia === "function" && window.matchMedia(NARROW).matches;
 
+/** Calls back when the board starts or stops stacking (a resize, a rotation). */
+const onNarrowChange = (callback: () => void) => {
+  if (typeof window.matchMedia !== "function") return () => {};
+  const query = window.matchMedia(NARROW);
+  query.addEventListener("change", callback);
+  return () => query.removeEventListener("change", callback);
+};
+
 /** The groups open until the player opens or closes one: those with checks left. */
-const openByDefault = (zones: readonly CheckZone[]): ReadonlySet<string> =>
-  isNarrow()
+const openByDefault = (
+  zones: readonly CheckZone[],
+  narrow: boolean,
+): ReadonlySet<string> =>
+  narrow
     ? new Set()
     : new Set(
         zones
@@ -61,12 +75,17 @@ const useHeld = (): ReadonlyMap<number, string> => {
   const players = useArchipelagoStore((state) => state.players);
   const me = useArchipelagoStore((state) => state.room?.slot);
   return useMemo(() => {
-    const names = new Map(players.map((player) => [player.slot, player.name]));
+    const by = new Map(players.map((player) => [player.slot, player]));
     return new Map(
-      sent.map(({ item, location, to }) => [
-        location,
-        to === me ? item : `${item} for ${names.get(to) ?? `Player ${to}`}`,
-      ]),
+      sent.map(({ item, location, to }) => {
+        const words = itemLabel(by.get(to)?.game, item);
+        return [
+          location,
+          to === me
+            ? words
+            : `${words} for ${by.get(to)?.name ?? `Player ${to}`}`,
+        ];
+      }),
     );
   }, [sent, players, me]);
 };
@@ -85,7 +104,9 @@ export const ChecksPanel = () => {
   const hideChecked = useArchipelagoStore((state) => state.prefs.hideChecked);
   const setHideChecked = useArchipelagoStore((state) => state.setHideChecked);
   const names = useApNamesStore((state) => state.names);
-  const groups = useApNamesStore((state) => state.groups);
+  const serverGroups = useApNamesStore((state) => state.groups);
+  const skin = useSkin(useArchipelagoStore((state) => state.room?.game));
+  const groups = groupsFor(serverGroups, skin?.groups);
   const [filter, setFilter] = useState("");
   /** The groups the player opened, once they opened or closed one. */
   const [chosen, setChosen] = useState<ReadonlySet<string> | null>(null);
@@ -112,7 +133,9 @@ export const ChecksPanel = () => {
       ),
     [zones],
   );
-  const opened = chosen ?? openByDefault(zones);
+  // Until the player chooses, the defaults follow the board stacking or not
+  const narrow = useSyncExternalStore(onNarrowChange, isNarrow);
+  const opened = chosen ?? openByDefault(zones, narrow);
   const filtering = filter.trim() !== "";
   const total = checked.length + missing.length;
   const rows = shown.reduce((sum, zone) => sum + zone.rows.length, 0);

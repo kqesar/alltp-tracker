@@ -65,6 +65,8 @@ const playerSchema = z.object({
 /** A piece of a feed line (the package's `FeedPart`), names resolved. */
 const partSchema = z.object({
   flags: z.optional(int()),
+  /** An item's world, which says how its name reads (itemLabel.ts). */
+  game: z.optional(z.string()),
   kind: z.enum(["text", "player", "item", "location", "status"]),
   me: z.optional(z.boolean()),
   text: z.string(),

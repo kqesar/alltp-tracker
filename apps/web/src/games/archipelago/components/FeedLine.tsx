@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { itemLabel } from "@/games/archipelago/itemLabel";
 import { kindOf } from "@/games/archipelago/project";
 import type { ApFeedEntry } from "@/games/archipelago/store";
 
@@ -20,16 +21,21 @@ export const FeedWords = memo(({ entry }: { entry: ApFeedEntry }) => (
               {part.text}
             </span>
           );
-        case "item":
+        case "item": {
+          // In words for a world that names items as identifiers, AP's
+          // exact name as the title
+          const label = itemLabel(part.game, part.text);
           return (
             <span
               className="ap-feed__item"
               data-kind={kindOf(part.flags ?? 0)}
               key={key}
+              title={label === part.text ? undefined : part.text}
             >
-              {part.text}
+              {label}
             </span>
           );
+        }
         case "location":
           return (
             <span className="ap-feed__location" key={key}>
@@ -51,4 +57,8 @@ export const FeedWords = memo(({ entry }: { entry: ApFeedEntry }) => (
 
 /** A line's words as plain text: what the announcer says. */
 export const lineText = (entry: ApFeedEntry) =>
-  entry.parts.map((part) => part.text).join("");
+  entry.parts
+    .map((part) =>
+      part.kind === "item" ? itemLabel(part.game, part.text) : part.text,
+    )
+    .join("");

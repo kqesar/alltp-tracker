@@ -314,7 +314,13 @@ export function lineGames(
 export type FeedPart =
   | { readonly kind: "text"; readonly text: string }
   | { readonly kind: "player"; readonly text: string; readonly me: boolean }
-  | { readonly kind: "item"; readonly text: string; readonly flags: number }
+  | {
+      readonly kind: "item";
+      readonly text: string;
+      readonly flags: number;
+      /** The receiver's world, whose name data names the item. */
+      readonly game?: string;
+    }
   | { readonly kind: "location"; readonly text: string }
   | { readonly kind: "status"; readonly text: string };
 
@@ -362,12 +368,12 @@ export function resolveLine(line: FeedLine, names: FeedNames): FeedEntry {
   switch (line.kind) {
     case "item":
     case "hint": {
+      const game = names.game(line.receiver);
       const item: FeedPart = {
         flags: line.flags,
         kind: "item",
-        text:
-          names.item(names.game(line.receiver), line.item) ??
-          `Item ${line.item}`,
+        ...(game === undefined ? {} : { game }),
+        text: names.item(game, line.item) ?? `Item ${line.item}`,
       };
       const location: FeedPart = {
         kind: "location",

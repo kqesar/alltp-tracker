@@ -71,6 +71,20 @@ describe("checkGame", () => {
     });
   });
 
+  it("points an Archipelago seed to the Archipelago board", () => {
+    // AP 0.6.8's title: "AP", the world's version, the player, the seed
+    expect(checkGame(header("AP510_1_42424242424", PATCHED))).toEqual({
+      code: "archipelago-rom",
+      message:
+        "This is an Archipelago seed of A Link to the Past: Archipelago's own client tracks it into its room. Follow your slot on the Archipelago board.",
+      ok: false,
+    });
+    // Not every title starting AP: the digits and the player are AP's
+    expect(checkGame(header("APPLE GAME", PATCHED))).toMatchObject({
+      code: "not-alttpr",
+    });
+  });
+
   it("calls a header of zeros unreadable rather than another game", () => {
     expect(checkGame(new Uint8Array(0x20))).toMatchObject({
       code: "zero-filled",

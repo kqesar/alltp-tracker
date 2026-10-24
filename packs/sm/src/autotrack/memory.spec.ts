@@ -83,6 +83,14 @@ describe("checkGame", () => {
     expect(checkGame(header("VT abcdefghij"))).toMatchObject({
       code: "not-map-rando",
     });
+    // AP 0.6.8's Super Metroid (VARIA's): the Archipelago board follows it
+    expect(checkGame(header("SM068_2_42424242424"))).toMatchObject({
+      code: "archipelago-rom",
+      message: expect.stringContaining("Follow your slot on the Archipelago"),
+    });
+    expect(checkGame(header("SMALL GAME"))).toMatchObject({
+      code: "not-map-rando",
+    });
     expect(checkGame(new Uint8Array(0x20))).toMatchObject({
       code: "zero-filled",
     });

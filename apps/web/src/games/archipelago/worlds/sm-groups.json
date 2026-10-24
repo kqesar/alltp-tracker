@@ -1,0 +1,146 @@
+[
+  [
+    "Crateria and Blue Brinstar",
+    [
+      "Energy Tank, Gauntlet",
+      "Bomb",
+      "Energy Tank, Terminator",
+      "Morphing Ball",
+      "Energy Tank, Brinstar Ceiling",
+      "Power Bomb (Crateria surface)",
+      "Missile (Crateria moat)",
+      "Missile (Crateria bottom)",
+      "Missile (Crateria gauntlet right)",
+      "Missile (Crateria gauntlet left)",
+      "Super Missile (Crateria)",
+      "Missile (Crateria middle)",
+      "Power Bomb (blue Brinstar)",
+      "Missile (blue Brinstar middle)",
+      "Missile (blue Brinstar bottom)",
+      "Missile (blue Brinstar top)",
+      "Missile (blue Brinstar behind missile)"
+    ]
+  ],
+  [
+    "Green and Pink Brinstar",
+    [
+      "Reserve Tank, Brinstar",
+      "Charge Beam",
+      "Energy Tank, Etecoons",
+      "Energy Tank, Waterway",
+      "Energy Tank, Brinstar Gate",
+      "Power Bomb (green Brinstar bottom)",
+      "Super Missile (pink Brinstar)",
+      "Missile (green Brinstar below super missile)",
+      "Super Missile (green Brinstar top)",
+      "Missile (green Brinstar behind missile)",
+      "Missile (green Brinstar behind reserve tank)",
+      "Missile (pink Brinstar top)",
+      "Missile (pink Brinstar bottom)",
+      "Power Bomb (pink Brinstar)",
+      "Missile (green Brinstar pipe)",
+      "Super Missile (green Brinstar bottom)"
+    ]
+  ],
+  [
+    "Red Brinstar",
+    [
+      "X-Ray Scope",
+      "Spazer",
+      "Power Bomb (red Brinstar sidehopper room)",
+      "Power Bomb (red Brinstar spike room)",
+      "Missile (red Brinstar spike room)"
+    ]
+  ],
+  ["Kraid's Lair", ["Energy Tank, Kraid", "Varia Suit", "Missile (Kraid)"]],
+  [
+    "Upper Norfair",
+    [
+      "Ice Beam",
+      "Hi-Jump Boots",
+      "Reserve Tank, Norfair",
+      "Speed Booster",
+      "Wave Beam",
+      "Missile (lava room)",
+      "Missile (below Ice Beam)",
+      "Missile (above Crocomire)",
+      "Missile (Hi-Jump Boots)",
+      "Energy Tank (Hi-Jump Boots)",
+      "Missile (Norfair Reserve Tank)",
+      "Missile (bubble Norfair green door)",
+      "Missile (bubble Norfair)",
+      "Missile (Speed Booster)",
+      "Missile (Wave Beam)"
+    ]
+  ],
+  [
+    "Crocomire's Lair",
+    [
+      "Energy Tank, Crocomire",
+      "Grapple Beam",
+      "Power Bomb (Crocomire)",
+      "Missile (below Crocomire)",
+      "Missile (Grapple Beam)"
+    ]
+  ],
+  [
+    "Lower Norfair",
+    [
+      "Ridley",
+      "Energy Tank, Ridley",
+      "Screw Attack",
+      "Energy Tank, Firefleas",
+      "Missile (Gold Torizo)",
+      "Super Missile (Gold Torizo)",
+      "Missile (Mickey Mouse room)",
+      "Missile (lower Norfair above fire flea room)",
+      "Power Bomb (lower Norfair above fire flea room)",
+      "Power Bomb (Power Bombs of shame)",
+      "Missile (lower Norfair near Wave Beam)"
+    ]
+  ],
+  [
+    "Wrecked Ship",
+    [
+      "Reserve Tank, Wrecked Ship",
+      "Energy Tank, Wrecked Ship",
+      "Right Super, Wrecked Ship",
+      "Gravity Suit",
+      "Missile (outside Wrecked Ship bottom)",
+      "Missile (outside Wrecked Ship top)",
+      "Missile (outside Wrecked Ship middle)",
+      "Missile (Wrecked Ship middle)",
+      "Missile (Gravity Suit)",
+      "Missile (Wrecked Ship top)",
+      "Super Missile (Wrecked Ship left)"
+    ]
+  ],
+  [
+    "West Maridia",
+    [
+      "Energy Tank, Mama turtle",
+      "Missile (green Maridia shinespark)",
+      "Super Missile (green Maridia)",
+      "Missile (green Maridia tatori)",
+      "Super Missile (yellow Maridia)",
+      "Missile (yellow Maridia super missile)",
+      "Missile (yellow Maridia false wall)"
+    ]
+  ],
+  [
+    "East Maridia",
+    [
+      "Plasma Beam",
+      "Reserve Tank, Maridia",
+      "Spring Ball",
+      "Energy Tank, Botwoon",
+      "Space Jump",
+      "Missile (left Maridia sand pit room)",
+      "Missile (right Maridia sand pit room)",
+      "Power Bomb (right Maridia sand pit room)",
+      "Missile (pink Maridia)",
+      "Super Missile (pink Maridia)",
+      "Missile (Draygon)"
+    ]
+  ]
+]

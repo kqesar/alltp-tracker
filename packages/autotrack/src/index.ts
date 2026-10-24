@@ -42,6 +42,7 @@ export {
 } from "./errors";
 export { FirstAnsweringTransport } from "./first-answering";
 export {
+  ARCHIPELAGO_ROM,
   type AutotrackPack,
   type AutotrackPackSource,
   definePack,

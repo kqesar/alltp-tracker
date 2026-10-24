@@ -512,6 +512,12 @@
   margin: 0;
 }
 
+/* The board that follows this ROM instead: a button under the words */
+.setup-fix__board {
+  justify-self: start;
+  margin-top: var(--spacing-xs);
+}
+
 /* ---- What I read ---- */
 .readout {
   display: grid;

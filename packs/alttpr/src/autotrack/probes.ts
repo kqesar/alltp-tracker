@@ -3,6 +3,7 @@
 // fills unreadable memory with zeros cannot pass for an open seed.
 
 import {
+  ARCHIPELAGO_ROM,
   bus,
   type GameCheck,
   type GameCheckResult,
@@ -32,11 +33,20 @@ const ROM_SIZE = { patched: 0x0b, vanilla: 0x0a } as const;
 const TITLE_LENGTH = 21;
 const ROM_SIZE_OFFSET = 0xffd7 - 0xffc0;
 
+/**
+ * The title Archipelago's A Link to the Past writes at ROM 0x7FC0: "AP", its
+ * world's version's digits, "_", the player, "_", the seed (AP 0.6.8,
+ * worlds/alttp/Rom.py:1544-1546, commit 54803be0). Its client, not this
+ * tracker, follows such a ROM.
+ */
+export const ARCHIPELAGO_TITLE = /^AP\d{1,3}_\d+_/;
+
 /** Why the game check refused the running ROM. */
 export type GameCheckCode =
   | "zero-filled"
   | "vanilla-alttp"
   | "unnamed-randomizer"
+  | typeof ARCHIPELAGO_ROM
   | "not-alttpr";
 
 /**
@@ -56,6 +66,12 @@ export function checkGame(header: Uint8Array): GameCheckResult {
   }
   const title = String.fromCharCode(...header.subarray(0, TITLE_LENGTH));
   if (title.startsWith(SEED_TITLE_PREFIX)) return { ok: true };
+  if (ARCHIPELAGO_TITLE.test(title)) {
+    return fail(
+      ARCHIPELAGO_ROM,
+      "This is an Archipelago seed of A Link to the Past: Archipelago's own client tracks it into its room. Follow your slot on the Archipelago board.",
+    );
+  }
   if (title === VANILLA_TITLE) {
     return header[ROM_SIZE_OFFSET] === ROM_SIZE.vanilla
       ? fail(

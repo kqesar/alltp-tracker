@@ -64,7 +64,7 @@ afterEach(() => {
 });
 
 describe("the items", () => {
-  it("draw an A Link to the Past slot with its art, the rest under More items", () => {
+  it("draw an A Link to the Past slot with its art, the rest under More items", async () => {
     lay({
       items: [
         { count: 2, flags: 1, name: "Progressive Sword" },
@@ -77,7 +77,9 @@ describe("the items", () => {
       ],
     });
     render(<ItemsPanel />);
-    const sword = screen.getByTestId("ap-item-sword");
+    // The skin is a chunk of its own: nothing until it arrived, then the grid
+    expect(screen.queryByTestId("ap-item-list")).toBeNull();
+    const sword = await screen.findByTestId("ap-item-sword");
     expect(sword).toHaveTextContent("Sword, Master Sword");
     expect(sword).not.toHaveClass("griditem--dimmed");
     expect(sword.style.getPropertyValue("--sprite")).toContain("sword2.png");
@@ -243,8 +245,44 @@ describe("the checks' groups", () => {
     expect(world.open).toBe(false);
   });
 
+  /** A media query the spec flips, as a resize or a rotation does. */
+  const stack = (narrow: boolean) => {
+    const listeners = new Set<() => void>();
+    const media = { matches: narrow };
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      addEventListener: (_: string, listener: () => void) =>
+        listeners.add(listener),
+      get matches() {
+        return media.matches;
+      },
+      query,
+      removeEventListener: (_: string, listener: () => void) =>
+        listeners.delete(listener),
+    }));
+    return (next: boolean) =>
+      act(() => {
+        media.matches = next;
+        for (const listener of listeners) listener();
+      });
+  };
+
+  it("follow the board as it stacks or not, until the player chooses", () => {
+    const resize = stack(true);
+    const { world } = show();
+    expect(world.open).toBe(false);
+    resize(false);
+    expect(world.open).toBe(true);
+    resize(true);
+    expect(world.open).toBe(false);
+    // Once the player opened one, a resize leaves the groups as they are
+    flip(world);
+    resize(false);
+    resize(true);
+    expect(world.open).toBe(true);
+  });
+
   it("start closed where the board stacks, and open every match of a filter", () => {
-    vi.stubGlobal("matchMedia", (query: string) => ({ matches: true, query }));
+    stack(true);
     const { east, world } = show();
     expect(east.open).toBe(false);
     expect(world.open).toBe(false);
@@ -398,12 +436,12 @@ describe("a tab that follows another", () => {
 });
 
 describe("the stream view", () => {
-  it("draws the skin's grid, or the progression items held", () => {
+  it("draws the skin's grid, or the progression items held", async () => {
     lay({ items: [{ count: 1, flags: 1, name: "Hookshot" }] });
     const { rerender } = render(
       <ArchipelagoObsView background="#000000" relay="follow" />,
     );
-    expect(screen.getByTestId("ap-item-hookshot")).toHaveTextContent(
+    expect(await screen.findByTestId("ap-item-hookshot")).toHaveTextContent(
       "Hookshot, received",
     );
     expect(screen.getByTestId("obs-view")).toHaveStyle({
