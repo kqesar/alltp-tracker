@@ -61,6 +61,12 @@ export default defineConfig(({ mode }) => {
                   files: /^assets\/[^/]+\.(png|webp)$/,
                   module: "src/games/alttpr/module.ts",
                 },
+                // Archipelago draws A Link to the Past's items with the same
+                // icons (its map is not drawn: no webp)
+                archipelago: {
+                  files: /^assets\/[^/]+\.png$/,
+                  module: "src/games/archipelago/module.ts",
+                },
                 sm: { module: "src/games/sm/module.ts" },
                 smz3: {
                   files: /^assets\/[^/]+\.(png|webp)$/,
@@ -76,7 +82,7 @@ export default defineConfig(({ mode }) => {
               // pages, robots.txt and the sitemap), which no player's install
               // needs
               uncached:
-                /^(models\/|social\/|(alttpr|sm|smz3)\/index\.html$|robots\.txt$|sitemap\.xml$)/,
+                /^(models\/|social\/|(alttpr|archipelago|sm|smz3)\/index\.html$|robots\.txt$|sitemap\.xml$)/,
             }),
           ],
     ],

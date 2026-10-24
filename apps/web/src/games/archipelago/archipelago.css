@@ -1,0 +1,407 @@
+/*
+ * The Archipelago board, loaded with its module only: the room line, the
+ * items (a skin's grid of the shared item cell, `grid-item-base` and
+ * `griditem--dimmed`, its icon an ALttPR asset set by --sprite; the key cells
+ * ALttPR's `bigkey-*` from overlays.css; the generic list), the checks list
+ * (its tools and zone headings the shared checks.css classes) and the connect
+ * dialog's fields. Nothing here is clickable that is not a control.
+ */
+.ap-layout {
+  --cell: clamp(40px, min(100cqi / 20, (100dvh - 18rem) / 7), 64px);
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.ap-board {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+@container app (width < 60rem) {
+  .ap-layout {
+    --cell: clamp(36px, (100cqi - 2 * var(--spacing-md)) / 7.5, 64px);
+  }
+
+  .ap-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The room line: what, who and how the connection stands, wrapping */
+.ap-room {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+}
+
+.ap-room p {
+  margin: 0;
+}
+
+.ap-room__slot {
+  overflow-wrap: anywhere;
+}
+
+.ap-room__players {
+  color: var(--color-text-secondary);
+}
+
+.ap-room__status {
+  display: inline-flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  margin-inline-start: auto;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* A panel of the board: the items, the checks */
+.ap-panel {
+  display: grid;
+  gap: var(--spacing-sm);
+  align-content: start;
+  min-width: 0;
+  padding: var(--spacing-md);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+}
+
+.ap-panel__heading {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.ap-panel__subheading {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+.ap-panel__empty {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* A skin's grid: the shared cells, nothing to click */
+.ap-skin__cells {
+  grid-template-columns: repeat(var(--columns, 7), var(--cell));
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  background-color: transparent;
+}
+
+.ap-cell,
+.ap-cell.griditem--dimmed::after {
+  background-image: var(--sprite);
+  background-size: 100% 100%;
+}
+
+/* Not received: the cell hides its own icon, which its pseudo-element
+   redraws through the grey filter (dimmed.css) */
+.ap-cell.griditem--dimmed {
+  background-size: 0 0;
+}
+
+.ap-key {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+/* The generic list: by kind, a name and its count a row */
+.ap-items {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+/* Under a skin's grid, as wide as the grid */
+.ap-skin + .ap-items {
+  max-width: calc(var(--cell) * 7);
+}
+
+.ap-items__group {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.ap-items__kind {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ap-items__count {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.ap-items__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 2px var(--spacing-md);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.ap-items__item {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: space-between;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+}
+
+.ap-items__name {
+  overflow-wrap: anywhere;
+}
+
+.ap-items__times {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+/* The checks: beside the items, they scroll within the viewport's height */
+.ap-checks {
+  display: flex;
+  flex-direction: column;
+  max-height: max(calc(var(--cell) * 7), calc(100dvh - 14rem));
+}
+
+@container app (width < 60rem) {
+  .ap-checks {
+    max-height: none;
+  }
+}
+
+.ap-checks__note,
+.ap-checks__left {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.ap-checks__left {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.ap-checks__hide {
+  gap: var(--spacing-xs);
+  min-height: 2.25rem;
+}
+
+.ap-checks__zones {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 2px;
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* A group: a disclosure whose summary stays in view while its list scrolls
+   by, lettered as the ALttPR checks' zone headings, its triangle turning as
+   it opens */
+.ap-checks__summary {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--spacing-xs);
+  align-items: center;
+  min-height: 2.75rem;
+  padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  list-style: none;
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.ap-checks__summary::-webkit-details-marker {
+  display: none;
+}
+
+.ap-checks__summary::before {
+  display: inline-block;
+  width: 1em;
+  color: var(--color-text-muted);
+  text-align: center;
+  content: "▸";
+  transition: transform var(--transition);
+}
+
+.ap-checks__zone[open] > .ap-checks__summary::before {
+  transform: rotate(90deg);
+}
+
+.ap-checks__summary:hover {
+  color: var(--color-text);
+}
+
+.ap-checks__summary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ap-checks__zone-name {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ap-checks__zone-count {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-checks__summary::before {
+    transition: none;
+  }
+}
+
+.ap-checks__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 2px var(--spacing-md);
+  padding: var(--spacing-xs) 0 var(--spacing-sm) 1.5em;
+  margin: 0;
+  list-style: none;
+}
+
+.ap-check {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: baseline;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+}
+
+.ap-check__glyph {
+  flex: none;
+  width: 1em;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.ap-check__name {
+  overflow-wrap: anywhere;
+}
+
+.ap-check[data-checked="true"] .ap-check__glyph {
+  color: var(--color-success);
+}
+
+.ap-check[data-checked="true"] .ap-check__name {
+  color: var(--color-text-muted);
+}
+
+/* The connect dialog's fields */
+.ap-connect__form {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.ap-field {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.ap-field__label {
+  font-weight: 600;
+}
+
+.ap-field__input {
+  min-height: 2.75rem;
+  padding: 0 var(--spacing-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--surface-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.ap-field__input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.ap-field__input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.ap-field__hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.ap-field__error {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-danger-hover);
+}
+
+.ap-field__error::before {
+  font-weight: 700;
+  content: "! ";
+}
+
+.ap-mode__note {
+  margin: var(--spacing-md) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* The stream view's list, a world with no skin: a line a cell high, lettered
+   to read over stream footage */
+.ap-obs-list {
+  display: grid;
+  grid-auto-rows: var(--cell);
+  align-items: center;
+  width: calc(var(--cell) * 8);
+  padding: 0;
+  margin: 0;
+  font-size: calc(var(--cell) * 0.5);
+  font-weight: 700;
+  color: var(--sprite-white);
+  text-shadow:
+    1px 0 var(--sprite-ink),
+    -1px 0 var(--sprite-ink),
+    0 1px var(--sprite-ink),
+    0 -1px var(--sprite-ink);
+  list-style: none;
+}
+
+.ap-obs-list__item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

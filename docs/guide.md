@@ -6,6 +6,7 @@ commands, sharing a run, the stream view for OBS, offline use and the desktop ap
 - [A Link to the Past](#a-link-to-the-past)
 - [Super Metroid (Map Rando)](#super-metroid-map-rando)
 - [SMZ3 (samus.link)](#smz3-samuslink)
+- [Archipelago](#archipelago)
 - [Autotracking](#autotracking)
 - [Voice commands](#voice-commands)
 - [Sharing a run](#sharing-a-run)
@@ -68,7 +69,7 @@ The timeline is saved with the run, in exports too.
 
 ## Super Metroid (Map Rando)
 
-Pick **Super Metroid** under **Game** in the run type dialog (Mode); A Link to the Past is the other choice there. Each game keeps its own run on the device: switching and coming back finds it as it was, and the page loads only the game you track. The tracker follows **Map Rando** (maprando.com), the randomizer the community races: about 99 % of racetime.gg's Super Metroid Randomizer races of August to October 2026 were Map Rando seeds.
+Pick **Super Metroid** under **Game** in the run type dialog (Mode), where the other games are too. Each game keeps its own run on the device: switching and coming back finds it as it was, and the page loads only the game you track. The tracker follows **Map Rando** (maprando.com), the randomizer the community races: about 99 % of racetime.gg's Super Metroid Randomizer races of August to October 2026 were Map Rando seeds.
 
 - **Items**: the beams, the morph ball and suits, the movement items, and how many missile, super missile and power bomb packs and energy and reserve tanks you hold. Click a cell to add one, right-click or "-" to take one away; a cell greys while you hold none.
 - **The seed's objectives**: pick its preset in the run type dialog (Bosses, Minibosses, Chozos, Pirates, Metroids, None) or, for a Random seed, tick the ones its pause screen lists. Tick each as you finish it; once all are done, the barriers before Mother Brain are down.
@@ -86,6 +87,21 @@ Pick **SMZ3** under **Game** in the run type dialog. The tracker follows **samus
 - **Keysanity**: each dungeon's big key and small keys take two rows of the grid, as on A Link to the Past's keysanity board, and Super Metroid's keycards a table under the tokens; the logic reads them.
 - **Autotracking**: connected as for A Link to the Past (below), the tracker follows your SMZ3 game in both games, whichever one you are in: the items you hold, the rewards and boss tokens found, the keys and keycards, the locations checked on both maps, and the seed's Super Metroid logic and keysanity. Outside races it reads the seed's requirements (the crystals Ganon's Tower and Ganon ask for, the bosses Tourian asks for) and the medallions Misery Mire and Turtle Rock want, where the emulator serves that part of the ROM: RetroArch with bsnes-mercury does not, and the dialog says so rather than guess. In Race Mode (a race seed, or Race Mode set always on) it never does: SMZ3 has no autotracking specification, and racetime.gg allows autotracking but bans inspecting the ROM otherwise, so the tracker reads only what you see in the game. Dungeon and boss rewards are never read, race or not: a reward counts once found. **What I read** names the seed, which game runs and what was read. Like A Link to the Past's, it changes a value only when the game does, never undoes a mark you set beyond it, and lays nothing outside a game in play.
 - Export, Import, Undo, Redo and the stream view work as for the other games.
+
+## Archipelago
+
+Pick **Archipelago** under **Game** in the run type dialog, or open [the tracker on it](https://kqesar.github.io/alltp-tracker/?game=archipelago). [Archipelago](https://archipelago.gg) is a multiworld randomizer of its own: you play your game with Archipelago's own client (SNIClient for A Link to the Past), which sends your checks and receives your items. The board joins the same room as a **tracker on your slot**: it reads what the room's server says and can send nothing. It works for any game of the room, from any device, a phone included.
+
+- **Connect**: the **Room** dialog opens on its own the first time, and from the toolbar's **Room** button. Paste the room's address (`archipelago.gg:38281`), the `/connect` line its page shows, or the page's link (`https://archipelago.gg/room/…`): a link fills the port and lists the room's slots to pick from. Type your slot name exactly as the room lists it (case matters), and the password if the room has one. The password stays in the tab, or on the device if you tick **Remember on this device**; it is never shared, exported or put in a report. The steps under the form tick themselves as the connection goes, and say what to fix when one fails.
+- **The room sees the tracker.** Everyone in the room sees it join and leave ("… tracking … has joined"). Events set their own rules on trackers: check them before a race.
+- **The room line**: your slot, its game and team, how many players, a **Race seed** badge when the room was generated as a race, and the connection's state. It never shows the room's address.
+- **Items**: everything your slot received. A Link to the Past is drawn as its grid (swords, gloves, bows and bottles at their levels, each dungeon's keys), and what has no cell (capacity upgrades, Triforce pieces, rupees, hearts) is listed under **More items**. Any other game is a list, by Archipelago's kinds: progression, useful, filler, traps.
+- **Checks**: your slot's locations, by the game's own groups, with how many are left, a filter and **Hide checked**. Each group opens and closes ("Ice Palace — 11 left / 12"): those with checks left start open beside the items, every one starts closed on a phone or a narrow window, and a filter opens every group it matches. Archipelago's server says what you checked. It does not say what you can reach: the board has no logic.
+- **Nothing to click on the board**: it is the server's. No undo, New game, Export, Import or Share; open the room again instead.
+- **Drops and reloads**: the board reconnects on its own (at once when the device comes back online or the tab back into view). A reload shows the last board at once, then connects again. An archipelago.gg room idle for hours is paused: the dialog links to its page, which wakes it.
+- **Tabs and devices**: one tab of the browser connects; another says "Connected in another tab", follows it, and takes over when it closes. Another device can connect too, or follow the desktop app's board live.
+- **Where it works**: archipelago.gg rooms from any browser and the desktop app. A self-hosted server without TLS (`ws://`) on the internet only from the desktop app; on your computer or network, Chrome and Edge ask to allow local network access, Firefox reaches your computer only, Safari neither.
+- **Stream view**: the item grid (A Link to the Past), or the progression items you hold, a line each, for any other game.
 
 ## Autotracking
 

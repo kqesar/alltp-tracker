@@ -42,7 +42,7 @@ packages/engine/     @alltp/engine: a game-agnostic logic engine (rule language,
 packages/autotrack/  @alltp/autotrack: the link to SNI / QUsb2Snes, or to RetroArch in the app;
                      its diagnostics and Race Mode
 packages/archipelago/ @alltp/archipelago: a read-only tracker on an Archipelago room; its
-                     diagnostics and name data (not used by the app yet)
+                     diagnostics and name data (the app's Archipelago board)
 packs/alttpr/        @alltp/pack-alttpr: ALttPR's items and v31 rules, held to the official tests
 packs/sm/            @alltp/pack-sm: Super Metroid as Map Rando plays it: items, objectives, memory map
 packs/smz3/          @alltp/pack-smz3: SMZ3 as samus.link generates it: both games' logic, held to its tests
@@ -54,7 +54,8 @@ The app loads one game's module at a time (`apps/web/src/games/registry.ts`), ea
 its own, so a player never downloads another game's board. A game's run lives in its own
 Zustand store, saved to `localStorage` under its own key: A Link to the Past's in
 `games/alttpr/stores/gameStore.ts`, Super Metroid's in `games/sm/store.ts`, SMZ3's in
-`games/smz3/store.ts`.
+`games/smz3/store.ts`, an Archipelago room's in `games/archipelago/store.ts`
+([archipelago.md](archipelago.md)).
 
 ```
 apps/web/src/
@@ -65,7 +66,9 @@ apps/web/src/
 │   │                stores/, components/ (grid, map, Checks, Run, go mode),
 │   │                autotrack/, voice/, hooks/
 │   ├── sm/          Super Metroid (Map Rando): grid, objectives, store, autotrack/
-│   └── smz3/        SMZ3 (samus.link): grid, keys, maps of Hyrule and Zebes, logic, store
+│   ├── smz3/        SMZ3 (samus.link): grid, keys, maps of Hyrule and Zebes, logic, store
+│   └── archipelago/ an Archipelago room, read-only: items (skins, a list), checks,
+│                    the connection, the session in a chunk of its own
 ├── autotrack/    shared autotracking words (status, guide), the cross-tab Web Lock
 ├── components/   ui/ (dialogs, toolbar menu, game picker, header, Share dialog), autotrack/
 │                 (setup guide, status dot, lazy dialog loader), map/ (the map legend)

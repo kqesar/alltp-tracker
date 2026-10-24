@@ -10,6 +10,12 @@ const ESCAPES: Record<string, string> = {
 /** Text or an attribute value, safe in HTML. */
 const esc = (text: string) => text.replace(/["&<>]/g, (c) => ESCAPES[c]);
 
+/** Items in running text: "a, b and c". */
+const listOf = (items: string[]) =>
+  items.length < 2
+    ? items.join("")
+    : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+
 /** The title of a game's page, as `pageTitle` has it in src/games/registry.ts. */
 export const titleOf = (game: SeoGame) =>
   `${PRODUCT} · ${game.name} Randomizer`;
@@ -92,7 +98,7 @@ ${icons.map((tag) => `    ${tag}`).join("\n")}
 ${game.features.map((feature) => `        <li>${esc(feature)}</li>`).join("\n")}
       </ul>
       <footer>
-        <p>Follows ${esc(game.randomizer.name)} (<a href="${game.randomizer.href}">${game.randomizer.href.replace(/^https:\/\/|\/$/g, "")}</a>). Also tracks ${others.map((other) => `<a href="../${other.id}/">${esc(other.name)}</a>`).join(" and ")}.</p>
+        <p>Follows ${esc(game.randomizer.name)} (<a href="${game.randomizer.href}">${game.randomizer.href.replace(/^https:\/\/|\/$/g, "")}</a>). Also tracks ${listOf(others.map((other) => `<a href="../${other.id}/">${esc(other.name)}</a>`))}.</p>
         <p>Free and <a href="https://github.com/kqesar/alltp-tracker">open source</a>. Works offline once opened.</p>
       </footer>
     </main>

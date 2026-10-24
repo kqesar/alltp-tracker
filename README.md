@@ -3,7 +3,8 @@
 [![CI](https://github.com/kqesar/alltp-tracker/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/kqesar/alltp-tracker/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/kqesar/alltp-tracker)](https://github.com/kqesar/alltp-tracker/releases/latest)
 
-An item and map tracker for randomizer runs of A Link to the Past, Super Metroid and SMZ3.
+An item and map tracker for randomizer runs of A Link to the Past, Super Metroid and SMZ3,
+and a read-only board for Archipelago multiworld rooms.
 
 **[Open the tracker](https://kqesar.github.io/alltp-tracker/)** in a browser, or get the
 [desktop app](https://github.com/kqesar/alltp-tracker/releases/latest) for Windows, macOS or Linux.
@@ -28,6 +29,11 @@ own map is the one to follow.
 **SMZ3 ([samus.link](https://samus.link/)).** Both games' items, the maps of Hyrule and
 Zebes, and SMZ3's own logic, ported from
 [`tewtal/SMZ3Randomizer`](https://github.com/tewtal/SMZ3Randomizer) and held to its tests.
+
+**Archipelago ([archipelago.gg](https://archipelago.gg/)).** Join your slot in a room as a
+read-only tracker: the items you received (A Link to the Past in its sprites, any other game
+as a list) and your checks, as the room's server states them. No logic: the server says what
+you checked, not what you can reach.
 
 | Super Metroid | SMZ3, on Zebes |
 |---|---|

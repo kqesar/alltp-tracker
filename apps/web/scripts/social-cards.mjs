@@ -7,8 +7,12 @@
 //   e.g. http://localhost:4173/alltp-tracker/
 // The screenshot is then cut to 128 colours with ImageMagick (`magick`): the
 // board has fewer, and the file drops from about 500 kB to 170 kB.
+//
+// The Archipelago board shows a room: the script answers its socket itself
+// (Playwright's routeWebSocket) with what AP 0.6.8 sent the bench's tracker
+// on Link (packages/archipelago/test/fixtures), a few items given on top.
 import { execFile } from "node:child_process";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { chromium } from "@playwright/test";
@@ -31,6 +35,7 @@ const RUNS = {
     ],
     scale: 1,
   },
+  archipelago: { clicks: [], room: true, scale: 1 },
   sm: {
     clicks: [
       ...["morph", "varia", "bombs", "missile", "missile", "missile"],
@@ -45,6 +50,105 @@ const RUNS = {
   },
 };
 
+/** The package's recordings, read as plain JSON. */
+const AP_TEST = new URL("../../../packages/archipelago/test/", import.meta.url);
+const readJson = async (path) =>
+  JSON.parse(await readFile(new URL(path, AP_TEST), "utf8"));
+
+/** Items a run a little way in holds, by AP's names. */
+const AP_ITEMS = [
+  ...["Progressive Sword", "Progressive Sword", "Hookshot", "Pegasus Boots"],
+  ...["Lamp", "Moon Pearl", "Magic Mirror", "Progressive Glove", "Bow"],
+  ...["Fire Rod", "Flute", "Bottle", "Small Key (Eastern Palace)"],
+  ...["Big Key (Eastern Palace)", "Small Key (Desert Palace)"],
+  ...["Piece of Heart", "Piece of Heart", "Rupees (20)", "Bombs (3)"],
+];
+
+/**
+ * A room on Link (A Link to the Past) for the Archipelago board: RoomInfo and
+ * Connected as recorded, a sixth of the locations checked, AP_ITEMS
+ * received; Get and GetDataPackage answered from the recordings.
+ * @returns What waits for the board to show the room
+ */
+const archipelagoRoom = async (page) => {
+  const session = await readJson("fixtures/normal-session.json");
+  const pkg = await readJson("datapackages/A_Link_to_the_Past.json");
+  const sent = session.frames
+    .filter((frame) => frame.client === "tracker" && frame.dir === "in")
+    .flatMap((frame) => frame.packets);
+  const roomInfo = sent.find((packet) => packet.cmd === "RoomInfo");
+  const recorded = sent.find((packet) => packet.cmd === "Connected");
+  const storage = Object.assign(
+    {},
+    ...sent.filter((p) => p.cmd === "Retrieved").map((p) => p.keys),
+  );
+  const missing = recorded.missing_locations;
+  const done = missing.filter((_, index) => index % 6 === 0);
+  const connected = {
+    ...recorded,
+    checked_locations: done,
+    missing_locations: missing.filter((id) => !done.includes(id)),
+  };
+  const items = AP_ITEMS.map((name, index) => ({
+    // As AP classes them: the heart pieces useful, rupees and bombs filler
+    flags: name.startsWith("Piece") ? 2 : /Rupees|Bombs/.test(name) ? 0 : 1,
+    item: pkg.item_name_to_id[name],
+    location: done[index] ?? 0,
+    player: 1,
+  }));
+  const { archipelago: _a, game: _g, ...body } = pkg;
+  const answer = (packet) => {
+    switch (packet.cmd) {
+      case "Connect":
+        return [connected, { cmd: "ReceivedItems", index: 0, items }];
+      case "Get":
+        return [
+          {
+            cmd: "Retrieved",
+            keys: Object.fromEntries(
+              packet.keys.map((key) => [key, storage[key] ?? null]),
+            ),
+            uuid: packet.uuid,
+          },
+        ];
+      case "GetDataPackage":
+        return [{ cmd: "DataPackage", data: { games: { [pkg.game]: body } } }];
+      default:
+        return [];
+    }
+  };
+  await page.routeWebSocket(/^wss:\/\/archipelago\.gg/, (socket) => {
+    socket.send(JSON.stringify([roomInfo]));
+    socket.onMessage((message) => {
+      for (const packet of JSON.parse(String(message))) {
+        const packets = answer(packet);
+        if (packets.length > 0) socket.send(JSON.stringify(packets));
+      }
+    });
+  });
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "alltp-tracker-archipelago-connection",
+      JSON.stringify({
+        state: {
+          address: "archipelago.gg:38281",
+          connectOnStart: true,
+          rememberPassword: false,
+          roomLink: null,
+          slot: "Link",
+          uuid: null,
+        },
+        version: 0,
+      }),
+    ),
+  );
+  return async () => {
+    await page.getByTestId("ap-room-status").getByText("Connected").waitFor();
+    await page.getByTestId("ap-room-slot").waitFor();
+    await page.getByTestId("ap-checks-filter").waitFor();
+  };
+};
+
 const WIDTH = 1200;
 const HEIGHT = 630;
 
@@ -52,7 +156,7 @@ const PREFIX = { alttpr: "item", sm: "sm-item", smz3: "smz3-item" };
 
 const browser = await chromium.launch();
 await mkdir(out, { recursive: true });
-for (const [game, { clicks, scale }] of Object.entries(RUNS)) {
+for (const [game, { clicks, room, scale }] of Object.entries(RUNS)) {
   const context = await browser.newContext({
     deviceScaleFactor: scale,
     reducedMotion: "reduce",
@@ -64,8 +168,10 @@ for (const [game, { clicks, scale }] of Object.entries(RUNS)) {
     game,
   );
   const page = await context.newPage();
+  const ready = room ? await archipelagoRoom(page) : null;
   await page.goto(site);
   await page.getByTestId("toolbar").waitFor();
+  await ready?.();
   for (const click of clicks) {
     const testId = click.includes("-") ? click : `${PREFIX[game]}-${click}`;
     await page.getByTestId(testId).click();

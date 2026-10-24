@@ -60,6 +60,7 @@ describe("the overlay feed", () => {
   it("has a whitelist for each game", () => {
     expect(Object.keys(feed.OVERLAY_SOURCES).sort()).toEqual([
       "alttpr",
+      "archipelago",
       "sm",
       "smz3",
     ]);

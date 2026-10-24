@@ -7,8 +7,9 @@ received, locations checked and left, the race flag), loads the names behind
 AP's ids, and says in plain terms what to fix when any of that fails.
 
 - **Game-agnostic.** No world, item or location lives here: names come from
-  the room's own data packages. The app's boards (`apps/web`, next) map them
-  onto art.
+  the room's own data packages. The app's board
+  (`apps/web/src/games/archipelago/`, [docs/archipelago.md](../../docs/archipelago.md))
+  maps them onto art.
 - **The server is the truth.** Nothing here computes logic or reachability:
   the snapshot is what the server states, never what the tracker guesses.
 - **Read-only, twice over.** The Tracker tag makes the server refuse checks
@@ -19,8 +20,9 @@ AP's ids, and says in plain terms what to fix when any of that fails.
   (`src/platform.ts`) that tests replace.
 - **One runtime dependency**, archipelago.js, pinned exactly (see
   "archipelago.js"). `ws` is a dev dependency for the fake server.
-- `src/index.ts` is the public surface. Nothing in the app imports the
-  package yet: the board that does is the next task of the series.
+- `src/index.ts` is the public surface. The app's Archipelago module imports
+  it: the board, its connect dialog and, in a chunk of its own loaded on
+  Connect, the session (`apps/web/src/games/archipelago/runtime.ts`).
 
 ```ts
 import {

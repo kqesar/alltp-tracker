@@ -29,10 +29,23 @@ describe("Header", () => {
     ["alttpr", "A Link to the Past"],
     ["sm", "Super Metroid"],
     ["smz3", "SMZ3"],
+    ["archipelago", "Archipelago"],
   ] as const)("names the game tracked: %s", (game, name) => {
     render(<Header game={game} />);
 
     expect(screen.getByTestId("header-game")).toHaveTextContent(name);
+  });
+
+  it("links an Archipelago board to archipelago.gg", () => {
+    render(<Header game="archipelago" />);
+
+    expect(screen.getByTestId("link-archipelago")).toHaveAttribute(
+      "href",
+      "https://archipelago.gg/",
+    );
+    expect(screen.getByTestId("link-archipelago")).toHaveAccessibleName(
+      "archipelago.gg (the randomizer, opens in a new tab)",
+    );
   });
 
   it.each(LINKS)("opens $visible in a new, isolated tab", ({ href, id }) => {
