@@ -96,6 +96,40 @@ describe("reduce, over the recorded session", () => {
     expect(beginConnection(EMPTY_SNAPSHOT)).toBe(EMPTY_SNAPSHOT);
   });
 
+  it("follows the slot's hints and the players' status as the server changes them", () => {
+    const { snapshot } = fold(tracker);
+    // The last SetReply: one hint found (status 40), one in Link's world
+    expect(
+      snapshot.hints?.map((h) => [h.receiver, h.finder, h.item, h.status]),
+    ).toEqual([
+      [3, 1, 84007, 0],
+      [1, 4, 23, 40],
+    ]);
+    expect(snapshot.hints?.[1]?.found).toBe(true);
+    // Link connected (5); Quester reached its goal (30), by SetReply
+    expect(snapshot.clientStatus).toEqual({ 1: 5, 4: 30 });
+  });
+
+  it("reads every player's status and what the checked locations held, on a refresh", () => {
+    const { snapshot } = fold(refresh);
+    expect(snapshot.clientStatus).toEqual({ 1: 5, 2: 0, 3: 0, 4: 30 });
+    // LocationInfo: the receiver of each item in Link's checked locations
+    expect(snapshot.sent.map((i) => [i.location, i.item, i.player])).toEqual([
+      [1010170, 84192, 3],
+      [1310724, 169, 1],
+      [1310727, 172, 1],
+      [1572867, 7, 4],
+    ]);
+    // Asked again, nothing changes
+    const info = refresh.find((p) => p.cmd === "LocationInfo");
+    expect(reduce(snapshot, info).snapshot).toBe(snapshot);
+    // Another run forgets them
+    const samus = packetsTo(fixture("slot-data-normal"), "tracker:Samus");
+    const other = fold(samus, beginConnection(snapshot)).snapshot;
+    expect(other.sent).toEqual([]);
+    expect(other.hints).not.toEqual(snapshot.hints);
+  });
+
   it("asks for Sync on a gap and changes nothing", () => {
     const connectedAt = fold(tracker.slice(0, 2)).snapshot;
     const result = reduce(connectedAt, {
@@ -181,9 +215,25 @@ describe("reduce, on packets that do not hold together", () => {
       { cmd: "Retrieved", keys: { _read_race_mode: "1" } },
     ],
     [
-      "SetReply of another key",
-      { cmd: "SetReply", key: "_read_hints_0_1", value: [] },
+      "SetReply of another slot's hints",
+      { cmd: "SetReply", key: "_read_hints_0_2", value: [] },
     ],
+    [
+      "SetReply of the slot's hints that are not hints",
+      { cmd: "SetReply", key: "_read_hints_0_1", value: [{ item: "x" }] },
+    ],
+    [
+      "SetReply of another team's client status",
+      { cmd: "SetReply", key: "_read_client_status_1_2", value: 30 },
+    ],
+    [
+      "LocationInfo of a location not checked",
+      {
+        cmd: "LocationInfo",
+        locations: [{ flags: 0, item: 1, location: 59758, player: 2 }],
+      },
+    ],
+    ["LocationInfo without locations", { cmd: "LocationInfo" }],
     ["RoomUpdate with nothing known", { cmd: "RoomUpdate", foo: 1 }],
     [
       "RoomUpdate with a player without a team",
@@ -203,6 +253,22 @@ describe("reduce, on packets that do not hold together", () => {
       snapshot: ready,
       sync: false,
     });
+  });
+
+  it("keeps a client status read for the same slot unchanged", () => {
+    const once = reduce(ready, {
+      cmd: "SetReply",
+      key: "_read_client_status_0_2",
+      value: 20,
+    }).snapshot;
+    expect(once.clientStatus).toEqual({ 2: 20 });
+    expect(
+      reduce(once, {
+        cmd: "SetReply",
+        key: "_read_client_status_0_2",
+        value: 20,
+      }).snapshot,
+    ).toBe(once);
   });
 
   it("connects with no player list when the list is malformed", () => {

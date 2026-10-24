@@ -6,6 +6,8 @@
 // Every packet comes from the network, so each field is checked before use;
 // a packet that does not hold together leaves the snapshot unchanged.
 
+import { type Hint, hintsKey, parseClientStatusKey, parseHints } from "./hints";
+
 export interface NetworkItem {
   /** The item's id in the receiving slot's game. */
   readonly item: number;
@@ -68,6 +70,15 @@ export interface ApSnapshot {
   /** `_read_race_mode`: null until read. */
   readonly raceMode: boolean | null;
   readonly slotData: Readonly<Record<string, unknown>> | null;
+  /** `_read_hints_{team}_{slot}`: every hint involving the slot; null until read. */
+  readonly hints: readonly Hint[] | null;
+  /** `_read_client_status_{team}_{slot}` per slot of the team, as read so far. */
+  readonly clientStatus: Readonly<Record<number, number>>;
+  /**
+   * What the slot's checked locations held ("What I sent"), from
+   * LocationInfo: `player` is the receiver. Sorted by location.
+   */
+  readonly sent: readonly NetworkItem[];
 }
 
 export interface Reduction {
@@ -83,7 +94,9 @@ export interface Reduction {
 
 export const EMPTY_SNAPSHOT: ApSnapshot = {
   checked: [],
+  clientStatus: {},
   hintPoints: null,
+  hints: null,
   identity: null,
   items: [],
   missing: [],
@@ -91,6 +104,7 @@ export const EMPTY_SNAPSHOT: ApSnapshot = {
   raceMode: null,
   ready: false,
   room: null,
+  sent: [],
   slotData: null,
   slotName: null,
 };
@@ -233,7 +247,9 @@ function connected(state: ApSnapshot, packet: Record_): Reduction {
     reset,
     snapshot: {
       checked: sorted(checked),
+      clientStatus: reset ? {} : state.clientStatus,
       hintPoints: intOr(packet.hint_points, null),
+      hints: reset ? null : state.hints,
       identity,
       // Same run: the server's list only grows, and it resends it whole at
       // index 0 right after Connected whenever it is not empty.
@@ -243,6 +259,8 @@ function connected(state: ApSnapshot, packet: Record_): Reduction {
       raceMode: reset ? null : state.raceMode,
       ready: true,
       room,
+      // What was scouted stays true of the same run's checked locations
+      sent: reset ? [] : state.sent,
       slotData: isRecord(packet.slot_data) ? packet.slot_data : null,
       slotName: typeof own.name === "string" ? own.name : null,
     },
@@ -319,6 +337,58 @@ function raceMode(state: ApSnapshot, value: unknown): Reduction {
 
 const RACE_MODE_KEY = "_read_race_mode";
 
+/** One data storage value read or changed: the race flag, hints, a status. */
+function storageValue(
+  state: ApSnapshot,
+  key: string,
+  value: unknown,
+): ApSnapshot {
+  if (key === RACE_MODE_KEY) return raceMode(state, value).snapshot;
+  const identity = state.identity;
+  if (identity === null) return state;
+  if (key === hintsKey(identity.team, identity.slot)) {
+    const hints = parseHints(value);
+    return hints === null ? state : { ...state, hints };
+  }
+  const status = parseClientStatusKey(key);
+  if (status !== null && status.team === identity.team && isInt(value)) {
+    return state.clientStatus[status.slot] === value
+      ? state
+      : {
+          ...state,
+          clientStatus: { ...state.clientStatus, [status.slot]: value },
+        };
+  }
+  return state;
+}
+
+/** LocationInfo: what the slot's own checked locations held. */
+function locationInfo(state: ApSnapshot, packet: Record_): Reduction {
+  const { locations } = packet;
+  if (!state.ready || !Array.isArray(locations)) return done(state);
+  const checked = new Set(state.checked);
+  const byLocation = new Map(state.sent.map((item) => [item.location, item]));
+  let changed = false;
+  for (const entry of locations) {
+    const item = networkItem(entry);
+    // Only what the guard let the session ask: the slot's checked locations
+    if (item === null || !checked.has(item.location)) continue;
+    const had = byLocation.get(item.location);
+    if (
+      had?.item === item.item &&
+      had.player === item.player &&
+      had.flags === item.flags
+    ) {
+      continue;
+    }
+    byLocation.set(item.location, item);
+    changed = true;
+  }
+  if (!changed) return done(state);
+  const sent = [...byLocation.values()].sort((a, b) => a.location - b.location);
+  return done({ ...state, sent });
+}
+
 function done(snapshot: ApSnapshot): Reduction {
   return { reset: false, snapshot, sync: false };
 }
@@ -340,14 +410,20 @@ export function reduce(state: ApSnapshot, packet: unknown): Reduction {
       return receivedItems(state, packet);
     case "RoomUpdate":
       return roomUpdate(state, packet);
-    case "Retrieved":
-      return isRecord(packet.keys) && RACE_MODE_KEY in packet.keys
-        ? raceMode(state, packet.keys[RACE_MODE_KEY])
-        : done(state);
+    case "Retrieved": {
+      if (!isRecord(packet.keys)) return done(state);
+      let next = state;
+      for (const [key, value] of Object.entries(packet.keys)) {
+        next = storageValue(next, key, value);
+      }
+      return done(next);
+    }
     case "SetReply":
-      return packet.key === RACE_MODE_KEY
-        ? raceMode(state, packet.value)
+      return typeof packet.key === "string"
+        ? done(storageValue(state, packet.key, packet.value))
         : done(state);
+    case "LocationInfo":
+      return locationInfo(state, packet);
     default:
       return done(state);
   }

@@ -1,8 +1,8 @@
 {
- "fixture": "normal-session",
- "recorded": "2026-10-24T17:05:09.799Z",
  "archipelago": "0.6.8",
  "archipelagoJs": "2.1.0",
+ "fixture": "normal-session",
+ "recorded": "2026-10-24T19:23:59.889Z",
  "server": "normal multiworld, no password, release/collect auto, hint_cost default",
  "slots": {
   "1": "Link (A Link to the Past)",
@@ -12,34 +12,34 @@
  },
  "frames": [
   {
-   "t": 0,
    "client": "-",
    "dir": "mark",
-   "note": "tracker logs in on Link: no game, tags [Tracker], items_handling 0b111"
+   "note": "tracker logs in on Link: no game, tags [Tracker], items_handling 0b111",
+   "t": 0
   },
   {
-   "t": 1,
    "client": "tracker",
    "dir": "open-attempt",
+   "t": 0,
    "url": "ws://127.0.0.1:38281/"
   },
   {
-   "t": 1,
    "client": "datapackage",
    "dir": "close",
+   "t": 1,
    "code": 1005,
    "reason": "",
    "wasClean": true
   },
   {
-   "t": 2,
    "client": "tracker",
-   "dir": "open"
+   "dir": "open",
+   "t": 1
   },
   {
-   "t": 2,
    "client": "tracker",
    "dir": "in",
+   "t": 2,
    "packets": [
     {
      "cmd": "RoomInfo",
@@ -81,14 +81,14 @@
       "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
      },
      "seed_name": "72844992796894532502",
-     "time": 1792861492.7145026
+     "time": 1792869821.803007
     }
    ]
   },
   {
-   "t": 3,
    "client": "tracker",
    "dir": "out",
+   "t": 2,
    "packets": [
     {
      "cmd": "Connect",
@@ -97,7 +97,7 @@
      "password": "",
      "slot_data": true,
      "items_handling": 7,
-     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "uuid": "81c2f2f0-b5f7-45b9-a6e7-432b366e2c8a",
      "tags": [
       "Tracker"
      ],
@@ -111,9 +111,9 @@
    ]
   },
   {
-   "t": 3,
    "client": "tracker",
    "dir": "in",
+   "t": 3,
    "packets": [
     {
      "cmd": "Connected",
@@ -469,9 +469,9 @@
    ]
   },
   {
-   "t": 4,
    "client": "tracker",
    "dir": "out",
+   "t": 3,
    "packets": [
     {
      "cmd": "SetNotify",
@@ -482,29 +482,29 @@
    ]
   },
   {
-   "t": 11,
    "client": "tracker",
    "dir": "out",
+   "t": 3,
    "packets": [
     {
      "cmd": "Get",
      "keys": [
       "_read_hints_0_1"
      ],
-     "uuid": "b354eea8-b122-4542-a4ad-ddadf1401f3e"
+     "uuid": "5e07f0bf-fbc7-4940-9e13-ed16a823a60e"
     }
    ]
   },
   {
-   "t": 11,
    "client": "-",
    "dir": "mark",
-   "note": "tracker login -> {\"ok\":true,\"slotData\":{\"crystals_needed_for_gt\":7,\"crystals_needed_for_ganon\":7,\"open_pyramid\":2,\"big_key_shuffle\":0,\"small_key_shuffle\":0,\"compass_shuffle\":0,\"map_shuffle\":0,\"progressive\":2,\"swordles"
+   "note": "tracker login -> {\"ok\":true,\"slotData\":{\"crystals_needed_for_gt\":7,\"crystals_needed_for_ganon\":7,\"open_pyramid\":2,\"big_key_shuffle\":0,\"small_key_shuffle\":0,\"compass_shuffle\":0,\"map_shuffle\":0,\"progressive\":2,\"swordles",
+   "t": 3
   },
   {
-   "t": 11,
    "client": "tracker",
    "dir": "in",
+   "t": 4,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -523,9 +523,9 @@
    ]
   },
   {
-   "t": 11,
    "client": "tracker",
    "dir": "in",
+   "t": 4,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -539,29 +539,29 @@
    ]
   },
   {
-   "t": 11,
    "client": "tracker",
    "dir": "in",
+   "t": 4,
    "packets": [
     {
      "cmd": "Retrieved",
      "keys": {
       "_read_hints_0_1": []
      },
-     "uuid": "b354eea8-b122-4542-a4ad-ddadf1401f3e"
+     "uuid": "5e07f0bf-fbc7-4940-9e13-ed16a823a60e"
     }
    ]
   },
   {
-   "t": 511,
    "client": "-",
    "dir": "mark",
-   "note": "tracker reads data storage and subscribes"
+   "note": "tracker reads data storage and subscribes",
+   "t": 503
   },
   {
-   "t": 511,
    "client": "tracker",
    "dir": "out",
+   "t": 503,
    "packets": [
     {
      "cmd": "Get",
@@ -577,9 +577,9 @@
    ]
   },
   {
-   "t": 511,
    "client": "tracker",
    "dir": "out",
+   "t": 503,
    "packets": [
     {
      "cmd": "SetNotify",
@@ -592,9 +592,9 @@
    ]
   },
   {
-   "t": 512,
    "client": "tracker",
    "dir": "in",
+   "t": 504,
    "packets": [
     {
      "cmd": "Retrieved",
@@ -1162,26 +1162,26 @@
    ]
   },
   {
-   "t": 1014,
    "client": "-",
    "dir": "mark",
-   "note": "a second tracker on the same slot (two clients on one slot)"
+   "note": "a second tracker on the same slot (two clients on one slot)",
+   "t": 1005
   },
   {
-   "t": 1014,
    "client": "tracker2",
    "dir": "open-attempt",
+   "t": 1005,
    "url": "ws://127.0.0.1:38281/"
   },
   {
-   "t": 1016,
    "client": "tracker2",
-   "dir": "open"
+   "dir": "open",
+   "t": 1007
   },
   {
-   "t": 1016,
    "client": "tracker2",
    "dir": "in",
+   "t": 1007,
    "packets": [
     {
      "cmd": "RoomInfo",
@@ -1223,14 +1223,14 @@
       "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
      },
      "seed_name": "72844992796894532502",
-     "time": 1792861493.7281055
+     "time": 1792869822.8080854
     }
    ]
   },
   {
-   "t": 1016,
    "client": "tracker2",
    "dir": "out",
+   "t": 1007,
    "packets": [
     {
      "cmd": "Connect",
@@ -1239,7 +1239,7 @@
      "password": "",
      "slot_data": true,
      "items_handling": 7,
-     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "uuid": "81c2f2f0-b5f7-45b9-a6e7-432b366e2c8a",
      "tags": [
       "Tracker"
      ],
@@ -1253,9 +1253,9 @@
    ]
   },
   {
-   "t": 1017,
    "client": "tracker2",
    "dir": "in",
+   "t": 1008,
    "packets": [
     {
      "cmd": "Connected",
@@ -1611,9 +1611,9 @@
    ]
   },
   {
-   "t": 1017,
    "client": "tracker2",
    "dir": "out",
+   "t": 1008,
    "packets": [
     {
      "cmd": "SetNotify",
@@ -1624,29 +1624,29 @@
    ]
   },
   {
-   "t": 1017,
    "client": "tracker2",
    "dir": "out",
+   "t": 1009,
    "packets": [
     {
      "cmd": "Get",
      "keys": [
       "_read_hints_0_1"
      ],
-     "uuid": "8ebccaf1-6737-4541-84af-3e82e4373a75"
+     "uuid": "37d67837-0fa5-4216-9ff6-1bf3662cfa25"
     }
    ]
   },
   {
-   "t": 1017,
    "client": "-",
    "dir": "mark",
-   "note": "tracker2 login -> {\"ok\":true,\"slotData\":{\"crystals_needed_for_gt\":7,\"crystals_needed_for_ganon\":7,\"open_pyramid\":2,\"big_key_shuffle\":0,\"sm"
+   "note": "tracker2 login -> {\"ok\":true,\"slotData\":{\"crystals_needed_for_gt\":7,\"crystals_needed_for_ganon\":7,\"open_pyramid\":2,\"big_key_shuffle\":0,\"sm",
+   "t": 1009
   },
   {
-   "t": 1017,
    "client": "tracker",
    "dir": "in",
+   "t": 1009,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -1665,9 +1665,9 @@
    ]
   },
   {
-   "t": 1017,
    "client": "tracker2",
    "dir": "in",
+   "t": 1009,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -1686,9 +1686,9 @@
    ]
   },
   {
-   "t": 1017,
    "client": "tracker2",
    "dir": "in",
+   "t": 1009,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -1702,40 +1702,40 @@
    ]
   },
   {
-   "t": 1018,
    "client": "tracker2",
    "dir": "in",
+   "t": 1009,
    "packets": [
     {
      "cmd": "Retrieved",
      "keys": {
       "_read_hints_0_1": []
      },
-     "uuid": "8ebccaf1-6737-4541-84af-3e82e4373a75"
+     "uuid": "37d67837-0fa5-4216-9ff6-1bf3662cfa25"
     }
    ]
   },
   {
-   "t": 1517,
    "client": "-",
    "dir": "mark",
-   "note": "game client logs in on Quester (game APQuest, items 0b111)"
+   "note": "game client logs in on Quester (game APQuest, items 0b111)",
+   "t": 1509
   },
   {
-   "t": 1517,
    "client": "game-quester",
    "dir": "open-attempt",
+   "t": 1509,
    "url": "ws://127.0.0.1:38281/"
   },
   {
-   "t": 1519,
    "client": "game-quester",
-   "dir": "open"
+   "dir": "open",
+   "t": 1511
   },
   {
-   "t": 1519,
    "client": "game-quester",
    "dir": "in",
+   "t": 1511,
    "packets": [
     {
      "cmd": "RoomInfo",
@@ -1777,14 +1777,14 @@
       "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
      },
      "seed_name": "72844992796894532502",
-     "time": 1792861494.2309608
+     "time": 1792869823.3120134
     }
    ]
   },
   {
-   "t": 1519,
    "client": "game-quester",
    "dir": "out",
+   "t": 1511,
    "packets": [
     {
      "cmd": "Connect",
@@ -1793,7 +1793,7 @@
      "password": "",
      "slot_data": true,
      "items_handling": 7,
-     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "uuid": "81c2f2f0-b5f7-45b9-a6e7-432b366e2c8a",
      "tags": [],
      "version": {
       "major": 0,
@@ -1805,9 +1805,9 @@
    ]
   },
   {
-   "t": 1520,
    "client": "game-quester",
    "dir": "in",
+   "t": 1512,
    "packets": [
     {
      "cmd": "Connected",
@@ -1894,9 +1894,9 @@
    ]
   },
   {
-   "t": 1520,
    "client": "game-quester",
    "dir": "out",
+   "t": 1512,
    "packets": [
     {
      "cmd": "SetNotify",
@@ -1907,29 +1907,29 @@
    ]
   },
   {
-   "t": 1520,
    "client": "game-quester",
    "dir": "out",
+   "t": 1512,
    "packets": [
     {
      "cmd": "Get",
      "keys": [
       "_read_hints_0_4"
      ],
-     "uuid": "21f5dacc-338f-452d-9780-915937f0dd1f"
+     "uuid": "e87020e0-24b0-40a8-9591-18f564a6aa86"
     }
    ]
   },
   {
-   "t": 1520,
    "client": "-",
    "dir": "mark",
-   "note": "game-quester login -> ok=true"
+   "note": "game-quester login -> ok=true",
+   "t": 1512
   },
   {
-   "t": 1520,
    "client": "tracker",
    "dir": "in",
+   "t": 1512,
    "packets": [
     {
      "cmd": "SetReply",
@@ -1939,9 +1939,9 @@
    ]
   },
   {
-   "t": 1520,
    "client": "tracker2",
    "dir": "in",
+   "t": 1512,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -1958,9 +1958,9 @@
    ]
   },
   {
-   "t": 1520,
    "client": "game-quester",
    "dir": "in",
+   "t": 1512,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -1977,9 +1977,9 @@
    ]
   },
   {
-   "t": 1520,
    "client": "tracker",
    "dir": "in",
+   "t": 1513,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -1996,9 +1996,9 @@
    ]
   },
   {
-   "t": 1520,
    "client": "game-quester",
    "dir": "in",
+   "t": 1513,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -2012,32 +2012,33 @@
    ]
   },
   {
-   "t": 1520,
    "client": "game-quester",
    "dir": "in",
+   "t": 1513,
    "packets": [
     {
      "cmd": "Retrieved",
      "keys": {
       "_read_hints_0_4": []
      },
-     "uuid": "21f5dacc-338f-452d-9780-915937f0dd1f"
+     "uuid": "e87020e0-24b0-40a8-9591-18f564a6aa86"
     }
    ]
   },
   {
-   "t": 2020,
    "client": "-",
    "dir": "mark",
-   "note": "game-quester scouts its own missing locations (create_as_hint 0): 6"
+   "note": "game-quester scouts its own missing locations (create_as_hint 0): 6",
+   "t": 2012
   },
   {
-   "t": 2020,
    "client": "game-quester",
    "dir": "out",
+   "t": 2012,
    "packets": [
     {
      "cmd": "LocationScouts",
+     "create_as_hint": 0,
      "locations": [
       1,
       10,
@@ -2045,15 +2046,14 @@
       3,
       5,
       6
-     ],
-     "create_as_hint": 0
+     ]
     }
    ]
   },
   {
-   "t": 2020,
    "client": "game-quester",
    "dir": "in",
+   "t": 2012,
    "packets": [
     {
      "cmd": "LocationInfo",
@@ -2105,21 +2105,21 @@
    ]
   },
   {
-   "t": 2021,
    "client": "-",
    "dir": "mark",
-   "note": "Quester locations holding Link's items: [2,3,6]"
+   "note": "Quester locations holding Link's items: [2,3,6]",
+   "t": 2012
   },
   {
-   "t": 2021,
    "client": "-",
    "dir": "mark",
-   "note": "game-quester checks one location holding a Link item, then one holding another player's item"
+   "note": "game-quester checks one location holding a Link item, then one holding another player's item",
+   "t": 2013
   },
   {
-   "t": 2021,
    "client": "game-quester",
    "dir": "out",
+   "t": 2013,
    "packets": [
     {
      "cmd": "LocationChecks",
@@ -2130,9 +2130,9 @@
    ]
   },
   {
-   "t": 2021,
    "client": "tracker",
    "dir": "in",
+   "t": 2013,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -2182,9 +2182,9 @@
    ]
   },
   {
-   "t": 2022,
    "client": "tracker2",
    "dir": "in",
+   "t": 2014,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -2234,9 +2234,9 @@
    ]
   },
   {
-   "t": 2022,
    "client": "game-quester",
    "dir": "in",
+   "t": 2014,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -2286,9 +2286,9 @@
    ]
   },
   {
-   "t": 2022,
    "client": "tracker",
    "dir": "in",
+   "t": 2014,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -2306,9 +2306,9 @@
    ]
   },
   {
-   "t": 2022,
    "client": "tracker2",
    "dir": "in",
+   "t": 2014,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -2326,9 +2326,9 @@
    ]
   },
   {
-   "t": 2022,
    "client": "game-quester",
    "dir": "in",
+   "t": 2014,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -2340,9 +2340,9 @@
    ]
   },
   {
-   "t": 2725,
    "client": "game-quester",
    "dir": "out",
+   "t": 2717,
    "packets": [
     {
      "cmd": "LocationChecks",
@@ -2353,9 +2353,9 @@
    ]
   },
   {
-   "t": 2726,
    "client": "tracker",
    "dir": "in",
+   "t": 2718,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -2405,9 +2405,9 @@
    ]
   },
   {
-   "t": 2726,
    "client": "tracker2",
    "dir": "in",
+   "t": 2718,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -2457,9 +2457,9 @@
    ]
   },
   {
-   "t": 2726,
    "client": "game-quester",
    "dir": "in",
+   "t": 2718,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -2509,9 +2509,9 @@
    ]
   },
   {
-   "t": 2726,
    "client": "game-quester",
    "dir": "in",
+   "t": 2718,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -2523,26 +2523,26 @@
    ]
   },
   {
-   "t": 3428,
    "client": "-",
    "dir": "mark",
-   "note": "game client logs in on Link too (game A Link to the Past, items 0b001)"
+   "note": "game client logs in on Link too (game A Link to the Past, items 0b001)",
+   "t": 3421
   },
   {
-   "t": 3428,
    "client": "game-link",
    "dir": "open-attempt",
+   "t": 3421,
    "url": "ws://127.0.0.1:38281/"
   },
   {
-   "t": 3430,
    "client": "game-link",
-   "dir": "open"
+   "dir": "open",
+   "t": 3423
   },
   {
-   "t": 3431,
    "client": "game-link",
    "dir": "in",
+   "t": 3423,
    "packets": [
     {
      "cmd": "RoomInfo",
@@ -2584,14 +2584,14 @@
       "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
      },
      "seed_name": "72844992796894532502",
-     "time": 1792861496.1426387
+     "time": 1792869825.2239153
     }
    ]
   },
   {
-   "t": 3431,
    "client": "game-link",
    "dir": "out",
+   "t": 3423,
    "packets": [
     {
      "cmd": "Connect",
@@ -2600,7 +2600,7 @@
      "password": "",
      "slot_data": true,
      "items_handling": 1,
-     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "uuid": "81c2f2f0-b5f7-45b9-a6e7-432b366e2c8a",
      "tags": [],
      "version": {
       "major": 0,
@@ -2612,9 +2612,9 @@
    ]
   },
   {
-   "t": 3434,
    "client": "game-link",
    "dir": "in",
+   "t": 3426,
    "packets": [
     {
      "cmd": "Connected",
@@ -2983,9 +2983,9 @@
    ]
   },
   {
-   "t": 3434,
    "client": "game-link",
    "dir": "out",
+   "t": 3426,
    "packets": [
     {
      "cmd": "SetNotify",
@@ -2996,29 +2996,29 @@
    ]
   },
   {
-   "t": 3434,
    "client": "game-link",
    "dir": "out",
+   "t": 3426,
    "packets": [
     {
      "cmd": "Get",
      "keys": [
       "_read_hints_0_1"
      ],
-     "uuid": "97d7616a-b68e-4059-8125-20368aa5ca68"
+     "uuid": "a238251a-1fdc-4408-87d1-ac9f9f6bc9a2"
     }
    ]
   },
   {
-   "t": 3434,
    "client": "-",
    "dir": "mark",
-   "note": "game-link login -> ok=true"
+   "note": "game-link login -> ok=true",
+   "t": 3427
   },
   {
-   "t": 3434,
    "client": "tracker",
    "dir": "in",
+   "t": 3427,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -3035,9 +3035,9 @@
    ]
   },
   {
-   "t": 3434,
    "client": "tracker2",
    "dir": "in",
+   "t": 3427,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -3054,9 +3054,9 @@
    ]
   },
   {
-   "t": 3434,
    "client": "game-quester",
    "dir": "in",
+   "t": 3427,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -3073,9 +3073,9 @@
    ]
   },
   {
-   "t": 3434,
    "client": "game-link",
    "dir": "in",
+   "t": 3427,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -3092,9 +3092,9 @@
    ]
   },
   {
-   "t": 3434,
    "client": "game-link",
    "dir": "in",
+   "t": 3427,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -3108,26 +3108,27 @@
    ]
   },
   {
-   "t": 3434,
    "client": "game-link",
    "dir": "in",
+   "t": 3427,
    "packets": [
     {
      "cmd": "Retrieved",
      "keys": {
       "_read_hints_0_1": []
      },
-     "uuid": "97d7616a-b68e-4059-8125-20368aa5ca68"
+     "uuid": "a238251a-1fdc-4408-87d1-ac9f9f6bc9a2"
     }
    ]
   },
   {
-   "t": 3934,
    "client": "game-link",
    "dir": "out",
+   "t": 3927,
    "packets": [
     {
      "cmd": "LocationScouts",
+     "create_as_hint": 0,
      "locations": [
       1010170,
       1310724,
@@ -3378,15 +3379,14 @@
       60840,
       975237,
       975299
-     ],
-     "create_as_hint": 0
+     ]
     }
    ]
   },
   {
-   "t": 3935,
    "client": "game-link",
    "dir": "in",
+   "t": 3928,
    "packets": [
     {
      "cmd": "LocationInfo",
@@ -5139,15 +5139,15 @@
    ]
   },
   {
-   "t": 3935,
    "client": "-",
    "dir": "mark",
-   "note": "game-link checks two own-world locations and one holding another player's item"
+   "note": "game-link checks two own-world locations and one holding another player's item",
+   "t": 3928
   },
   {
-   "t": 3935,
    "client": "game-link",
    "dir": "out",
+   "t": 3928,
    "packets": [
     {
      "cmd": "LocationChecks",
@@ -5159,9 +5159,9 @@
    ]
   },
   {
-   "t": 3936,
    "client": "tracker",
    "dir": "in",
+   "t": 3929,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -5242,9 +5242,9 @@
    ]
   },
   {
-   "t": 3936,
    "client": "tracker2",
    "dir": "in",
+   "t": 3930,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -5325,9 +5325,9 @@
    ]
   },
   {
-   "t": 3936,
    "client": "game-link",
    "dir": "in",
+   "t": 3930,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -5408,9 +5408,9 @@
    ]
   },
   {
-   "t": 3936,
    "client": "game-quester",
    "dir": "in",
+   "t": 3930,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -5491,9 +5491,9 @@
    ]
   },
   {
-   "t": 3936,
    "client": "tracker",
    "dir": "in",
+   "t": 3930,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -5518,9 +5518,9 @@
    ]
   },
   {
-   "t": 3937,
    "client": "tracker2",
    "dir": "in",
+   "t": 3930,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -5545,9 +5545,24 @@
    ]
   },
   {
-   "t": 3937,
+   "client": "game-link",
+   "dir": "in",
+   "t": 3930,
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 2,
+     "checked_locations": [
+      1310724,
+      1310727
+     ]
+    }
+   ]
+  },
+  {
    "client": "tracker",
    "dir": "in",
+   "t": 3930,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -5560,9 +5575,9 @@
    ]
   },
   {
-   "t": 3937,
    "client": "tracker2",
    "dir": "in",
+   "t": 3930,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -5575,24 +5590,9 @@
    ]
   },
   {
-   "t": 3937,
-   "client": "game-link",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "RoomUpdate",
-     "hint_points": 2,
-     "checked_locations": [
-      1310724,
-      1310727
-     ]
-    }
-   ]
-  },
-  {
-   "t": 4638,
    "client": "game-link",
    "dir": "out",
+   "t": 4632,
    "packets": [
     {
      "cmd": "LocationChecks",
@@ -5603,9 +5603,9 @@
    ]
   },
   {
-   "t": 4639,
    "client": "tracker",
    "dir": "in",
+   "t": 4633,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -5655,9 +5655,9 @@
    ]
   },
   {
-   "t": 4639,
    "client": "tracker2",
    "dir": "in",
+   "t": 4633,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -5707,9 +5707,9 @@
    ]
   },
   {
-   "t": 4639,
    "client": "game-link",
    "dir": "in",
+   "t": 4633,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -5759,9 +5759,9 @@
    ]
   },
   {
-   "t": 4639,
    "client": "game-quester",
    "dir": "in",
+   "t": 4633,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -5811,9 +5811,9 @@
    ]
   },
   {
-   "t": 4639,
    "client": "tracker",
    "dir": "in",
+   "t": 4633,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -5825,9 +5825,9 @@
    ]
   },
   {
-   "t": 4639,
    "client": "tracker2",
    "dir": "in",
+   "t": 4633,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -5839,9 +5839,9 @@
    ]
   },
   {
-   "t": 4639,
    "client": "game-link",
    "dir": "in",
+   "t": 4633,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -5853,29 +5853,29 @@
    ]
   },
   {
-   "t": 5342,
    "client": "-",
    "dir": "mark",
-   "note": "hint: game-quester scouts a Link item with create_as_hint 2 (announce)"
+   "note": "hint: game-quester scouts a Link item with create_as_hint 2 (announce)",
+   "t": 5336
   },
   {
-   "t": 5342,
    "client": "game-quester",
    "dir": "out",
+   "t": 5336,
    "packets": [
     {
      "cmd": "LocationScouts",
+     "create_as_hint": 2,
      "locations": [
       3
-     ],
-     "create_as_hint": 2
+     ]
     }
    ]
   },
   {
-   "t": 5342,
    "client": "game-quester",
    "dir": "in",
+   "t": 5336,
    "packets": [
     {
      "cmd": "LocationInfo",
@@ -5892,57 +5892,9 @@
    ]
   },
   {
-   "t": 5343,
-   "client": "tracker",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "SetReply",
-     "key": "_read_hints_0_1",
-     "value": [
-      {
-       "receiving_player": 1,
-       "finding_player": 4,
-       "location": 3,
-       "item": 23,
-       "found": false,
-       "entrance": "",
-       "item_flags": 2,
-       "status": 0,
-       "class": "Hint"
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "t": 5343,
-   "client": "tracker2",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "SetReply",
-     "key": "_read_hints_0_1",
-     "value": [
-      {
-       "receiving_player": 1,
-       "finding_player": 4,
-       "location": 3,
-       "item": 23,
-       "found": false,
-       "entrance": "",
-       "item_flags": 2,
-       "status": 0,
-       "class": "Hint"
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "t": 5343,
    "client": "game-link",
    "dir": "in",
+   "t": 5337,
    "packets": [
     {
      "cmd": "SetReply",
@@ -5964,20 +5916,57 @@
    ]
   },
   {
-   "t": 5343,
    "client": "tracker",
    "dir": "in",
+   "t": 5337,
    "packets": [
     {
-     "cmd": "RoomUpdate",
-     "hint_points": 3
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
     }
    ]
   },
   {
-   "t": 5343,
    "client": "tracker2",
    "dir": "in",
+   "t": 5337,
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "client": "tracker",
+   "dir": "in",
+   "t": 5337,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -5986,9 +5975,31 @@
    ]
   },
   {
-   "t": 5343,
+   "client": "game-link",
+   "dir": "in",
+   "t": 5337,
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
+   "client": "tracker2",
+   "dir": "in",
+   "t": 5337,
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
    "client": "game-quester",
    "dir": "in",
+   "t": 5337,
    "packets": [
     {
      "cmd": "SetReply",
@@ -6010,84 +6021,9 @@
    ]
   },
   {
-   "t": 5343,
-   "client": "game-link",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "RoomUpdate",
-     "hint_points": 3
-    }
-   ]
-  },
-  {
-   "t": 5343,
-   "client": "tracker",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "PrintJSON",
-     "data": [
-      {
-       "text": "[Hint]: "
-      },
-      {
-       "text": "1",
-       "type": "player_id"
-      },
-      {
-       "text": "'s "
-      },
-      {
-       "text": "23",
-       "player": 1,
-       "flags": 2,
-       "type": "item_id"
-      },
-      {
-       "text": " is at "
-      },
-      {
-       "text": "3",
-       "player": 4,
-       "type": "location_id"
-      },
-      {
-       "text": " in "
-      },
-      {
-       "text": "4",
-       "type": "player_id"
-      },
-      {
-       "text": "'s World"
-      },
-      {
-       "text": ". "
-      },
-      {
-       "text": "(unspecified)",
-       "hint_status": 0,
-       "type": "hint_status"
-      }
-     ],
-     "type": "Hint",
-     "receiving": 1,
-     "item": {
-      "item": 23,
-      "location": 3,
-      "player": 4,
-      "flags": 2,
-      "class": "NetworkItem"
-     },
-     "found": false
-    }
-   ]
-  },
-  {
-   "t": 5343,
    "client": "game-quester",
    "dir": "in",
+   "t": 5337,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -6096,9 +6032,73 @@
    ]
   },
   {
-   "t": 5344,
+   "client": "tracker",
+   "dir": "in",
+   "t": 5337,
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Hint]: "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": "'s "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " is at "
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": " in "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": "'s World"
+      },
+      {
+       "text": ". "
+      },
+      {
+       "text": "(unspecified)",
+       "hint_status": 0,
+       "type": "hint_status"
+      }
+     ],
+     "type": "Hint",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 3,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     },
+     "found": false
+    }
+   ]
+  },
+  {
    "client": "tracker2",
    "dir": "in",
+   "t": 5338,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6160,9 +6160,9 @@
    ]
   },
   {
-   "t": 5344,
    "client": "game-link",
    "dir": "in",
+   "t": 5338,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6224,9 +6224,9 @@
    ]
   },
   {
-   "t": 5344,
    "client": "game-quester",
    "dir": "in",
+   "t": 5338,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6288,15 +6288,15 @@
    ]
   },
   {
-   "t": 6045,
    "client": "-",
    "dir": "mark",
-   "note": "hint: game-link CreateHints on one of its own locations holding a foreign item (0.6 packet)"
+   "note": "hint: game-link CreateHints on one of its own locations holding a foreign item (0.6 packet)",
+   "t": 6039
   },
   {
-   "t": 6045,
    "client": "game-link",
    "dir": "out",
+   "t": 6039,
    "packets": [
     {
      "cmd": "CreateHints",
@@ -6309,79 +6309,9 @@
    ]
   },
   {
-   "t": 6046,
-   "client": "tracker",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "SetReply",
-     "key": "_read_hints_0_1",
-     "value": [
-      {
-       "receiving_player": 3,
-       "finding_player": 1,
-       "location": 1310730,
-       "item": 84007,
-       "found": false,
-       "entrance": "",
-       "item_flags": 1,
-       "status": 0,
-       "class": "Hint"
-      },
-      {
-       "receiving_player": 1,
-       "finding_player": 4,
-       "location": 3,
-       "item": 23,
-       "found": false,
-       "entrance": "",
-       "item_flags": 2,
-       "status": 0,
-       "class": "Hint"
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "t": 6046,
-   "client": "tracker2",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "SetReply",
-     "key": "_read_hints_0_1",
-     "value": [
-      {
-       "receiving_player": 3,
-       "finding_player": 1,
-       "location": 1310730,
-       "item": 84007,
-       "found": false,
-       "entrance": "",
-       "item_flags": 1,
-       "status": 0,
-       "class": "Hint"
-      },
-      {
-       "receiving_player": 1,
-       "finding_player": 4,
-       "location": 3,
-       "item": 23,
-       "found": false,
-       "entrance": "",
-       "item_flags": 2,
-       "status": 0,
-       "class": "Hint"
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "t": 6046,
    "client": "game-link",
    "dir": "in",
+   "t": 6040,
    "packets": [
     {
      "cmd": "SetReply",
@@ -6414,42 +6344,112 @@
    ]
   },
   {
-   "t": 6046,
    "client": "tracker",
    "dir": "in",
+   "t": 6040,
    "packets": [
     {
-     "cmd": "RoomUpdate",
-     "hint_points": 3
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 3,
+       "finding_player": 1,
+       "location": 1310730,
+       "item": 84007,
+       "found": false,
+       "entrance": "",
+       "item_flags": 1,
+       "status": 0,
+       "class": "Hint"
+      },
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
     }
    ]
   },
   {
-   "t": 6046,
    "client": "tracker2",
    "dir": "in",
+   "t": 6040,
    "packets": [
     {
-     "cmd": "RoomUpdate",
-     "hint_points": 3
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 3,
+       "finding_player": 1,
+       "location": 1310730,
+       "item": 84007,
+       "found": false,
+       "entrance": "",
+       "item_flags": 1,
+       "status": 0,
+       "class": "Hint"
+      },
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
     }
    ]
   },
   {
-   "t": 6046,
-   "client": "game-link",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "RoomUpdate",
-     "hint_points": 3
-    }
-   ]
-  },
-  {
-   "t": 6046,
    "client": "tracker",
    "dir": "in",
+   "t": 6040,
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
+   "client": "game-link",
+   "dir": "in",
+   "t": 6040,
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
+   "client": "tracker2",
+   "dir": "in",
+   "t": 6040,
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
+   "client": "tracker",
+   "dir": "in",
+   "t": 6040,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6511,9 +6511,9 @@
    ]
   },
   {
-   "t": 6046,
    "client": "tracker2",
    "dir": "in",
+   "t": 6040,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6575,9 +6575,9 @@
    ]
   },
   {
-   "t": 6047,
    "client": "game-link",
    "dir": "in",
+   "t": 6040,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6639,15 +6639,15 @@
    ]
   },
   {
-   "t": 6748,
    "client": "-",
    "dir": "mark",
-   "note": "hint: game-link asks !hint for an item (costs points)"
+   "note": "hint: game-link asks !hint for an item (costs points)",
+   "t": 6743
   },
   {
-   "t": 6748,
    "client": "game-link",
    "dir": "out",
+   "t": 6743,
    "packets": [
     {
      "cmd": "Say",
@@ -6656,9 +6656,9 @@
    ]
   },
   {
-   "t": 6750,
    "client": "tracker",
    "dir": "in",
+   "t": 6746,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6675,9 +6675,9 @@
    ]
   },
   {
-   "t": 6751,
    "client": "tracker2",
    "dir": "in",
+   "t": 6746,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6694,9 +6694,9 @@
    ]
   },
   {
-   "t": 6751,
    "client": "game-quester",
    "dir": "in",
+   "t": 6746,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6713,9 +6713,9 @@
    ]
   },
   {
-   "t": 6751,
    "client": "game-link",
    "dir": "in",
+   "t": 6746,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6732,9 +6732,9 @@
    ]
   },
   {
-   "t": 6751,
    "client": "game-link",
    "dir": "in",
+   "t": 6746,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6748,15 +6748,15 @@
    ]
   },
   {
-   "t": 7450,
    "client": "-",
    "dir": "mark",
-   "note": "countdown from game-quester"
+   "note": "countdown from game-quester",
+   "t": 7445
   },
   {
-   "t": 7450,
    "client": "game-quester",
    "dir": "out",
+   "t": 7445,
    "packets": [
     {
      "cmd": "Say",
@@ -6765,9 +6765,9 @@
    ]
   },
   {
-   "t": 7450,
    "client": "tracker",
    "dir": "in",
+   "t": 7445,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6784,9 +6784,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "tracker2",
    "dir": "in",
+   "t": 7446,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6803,9 +6803,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "game-quester",
    "dir": "in",
+   "t": 7446,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6822,9 +6822,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "game-link",
    "dir": "in",
+   "t": 7446,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6841,9 +6841,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "tracker",
    "dir": "in",
+   "t": 7446,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6858,9 +6858,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "tracker2",
    "dir": "in",
+   "t": 7446,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6875,9 +6875,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "game-quester",
    "dir": "in",
+   "t": 7446,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6892,9 +6892,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "game-link",
    "dir": "in",
+   "t": 7446,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6909,9 +6909,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "tracker",
    "dir": "in",
+   "t": 7447,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6926,9 +6926,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "tracker2",
    "dir": "in",
+   "t": 7447,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6943,9 +6943,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "game-quester",
    "dir": "in",
+   "t": 7447,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6960,9 +6960,9 @@
    ]
   },
   {
-   "t": 7451,
    "client": "game-link",
    "dir": "in",
+   "t": 7447,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6977,9 +6977,9 @@
    ]
   },
   {
-   "t": 8452,
    "client": "tracker",
    "dir": "in",
+   "t": 8448,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -6994,9 +6994,9 @@
    ]
   },
   {
-   "t": 8452,
    "client": "tracker2",
    "dir": "in",
+   "t": 8448,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7011,9 +7011,9 @@
    ]
   },
   {
-   "t": 8452,
    "client": "game-quester",
    "dir": "in",
+   "t": 8448,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7028,9 +7028,9 @@
    ]
   },
   {
-   "t": 8452,
    "client": "game-link",
    "dir": "in",
+   "t": 8448,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7045,9 +7045,9 @@
    ]
   },
   {
-   "t": 9453,
    "client": "tracker",
    "dir": "in",
+   "t": 9448,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7062,9 +7062,9 @@
    ]
   },
   {
-   "t": 9453,
    "client": "tracker2",
    "dir": "in",
+   "t": 9448,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7079,9 +7079,9 @@
    ]
   },
   {
-   "t": 9453,
    "client": "game-quester",
    "dir": "in",
+   "t": 9449,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7096,9 +7096,9 @@
    ]
   },
   {
-   "t": 9453,
    "client": "game-link",
    "dir": "in",
+   "t": 9449,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7113,15 +7113,15 @@
    ]
   },
   {
-   "t": 10958,
    "client": "-",
    "dir": "mark",
-   "note": "tracker tries what it must never do (server-side read-only check)"
+   "note": "tracker tries what it must never do (server-side read-only check)",
+   "t": 10952
   },
   {
-   "t": 10958,
    "client": "tracker",
    "dir": "out",
+   "t": 10952,
    "packets": [
     {
      "cmd": "LocationChecks",
@@ -7132,9 +7132,9 @@
    ]
   },
   {
-   "t": 10958,
    "client": "tracker",
    "dir": "out",
+   "t": 10952,
    "packets": [
     {
      "cmd": "StatusUpdate",
@@ -7143,25 +7143,25 @@
    ]
   },
   {
-   "t": 10958,
    "client": "tracker",
    "dir": "out",
+   "t": 10952,
    "packets": [
     {
      "cmd": "Bounce",
-     "tags": [
-      "Bench"
-     ],
      "data": {
       "bench": true
-     }
+     },
+     "tags": [
+      "Bench"
+     ]
     }
    ]
   },
   {
-   "t": 10958,
    "client": "tracker",
    "dir": "in",
+   "t": 10952,
    "packets": [
     {
      "cmd": "InvalidPacket",
@@ -7172,9 +7172,9 @@
    ]
   },
   {
-   "t": 10959,
    "client": "tracker",
    "dir": "in",
+   "t": 10953,
    "packets": [
     {
      "cmd": "InvalidPacket",
@@ -7185,30 +7185,30 @@
    ]
   },
   {
-   "t": 11661,
    "client": "-",
    "dir": "mark",
-   "note": "ConnectUpdate from tracker2 (tags change) to see TagsChanged"
+   "note": "ConnectUpdate from tracker2 (tags change) to see TagsChanged",
+   "t": 11655
   },
   {
-   "t": 11661,
    "client": "tracker2",
    "dir": "out",
+   "t": 11655,
    "packets": [
     {
      "cmd": "ConnectUpdate",
+     "items_handling": 7,
      "tags": [
       "Tracker",
       "Bench"
-     ],
-     "items_handling": 7
+     ]
     }
    ]
   },
   {
-   "t": 11661,
    "client": "tracker",
    "dir": "in",
+   "t": 11655,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7228,9 +7228,9 @@
    ]
   },
   {
-   "t": 11662,
    "client": "tracker2",
    "dir": "in",
+   "t": 11656,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7250,9 +7250,9 @@
    ]
   },
   {
-   "t": 11662,
    "client": "game-quester",
    "dir": "in",
+   "t": 11656,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7272,9 +7272,9 @@
    ]
   },
   {
-   "t": 11662,
    "client": "game-link",
    "dir": "in",
+   "t": 11656,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7294,15 +7294,15 @@
    ]
   },
   {
-   "t": 12364,
    "client": "-",
    "dir": "mark",
-   "note": "game-quester reaches its goal: Goal, then auto release/collect"
+   "note": "game-quester reaches its goal: Goal, then auto release/collect",
+   "t": 12358
   },
   {
-   "t": 12364,
    "client": "game-quester",
    "dir": "out",
+   "t": 12358,
    "packets": [
     {
      "cmd": "StatusUpdate",
@@ -7311,9 +7311,9 @@
    ]
   },
   {
-   "t": 12365,
    "client": "tracker",
    "dir": "in",
+   "t": 12359,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7329,9 +7329,9 @@
    ]
   },
   {
-   "t": 12365,
    "client": "tracker2",
    "dir": "in",
+   "t": 12359,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7347,9 +7347,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "game-quester",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7365,9 +7365,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "game-link",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7383,9 +7383,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "tracker",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7401,9 +7401,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "tracker2",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7419,9 +7419,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "game-quester",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7437,9 +7437,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "game-link",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7455,9 +7455,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "tracker",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7507,9 +7507,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "tracker2",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7559,9 +7559,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "game-link",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7611,9 +7611,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "game-quester",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7663,9 +7663,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "game-quester",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -7683,9 +7683,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "tracker",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -7697,9 +7697,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "tracker2",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -7711,9 +7711,9 @@
    ]
   },
   {
-   "t": 12366,
    "client": "game-link",
    "dir": "in",
+   "t": 12360,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -7725,9 +7725,9 @@
    ]
   },
   {
-   "t": 12367,
    "client": "tracker",
    "dir": "in",
+   "t": 12361,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -7741,9 +7741,9 @@
    ]
   },
   {
-   "t": 12367,
    "client": "tracker2",
    "dir": "in",
+   "t": 12361,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -7757,9 +7757,9 @@
    ]
   },
   {
-   "t": 12367,
    "client": "game-link",
    "dir": "in",
+   "t": 12361,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -7773,9 +7773,9 @@
    ]
   },
   {
-   "t": 12367,
    "client": "tracker",
    "dir": "in",
+   "t": 12361,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -7915,9 +7915,9 @@
    ]
   },
   {
-   "t": 12367,
    "client": "tracker2",
    "dir": "in",
+   "t": 12361,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -8057,9 +8057,9 @@
    ]
   },
   {
-   "t": 12367,
    "client": "game-link",
    "dir": "in",
+   "t": 12361,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -8199,9 +8199,9 @@
    ]
   },
   {
-   "t": 12367,
    "client": "game-quester",
    "dir": "in",
+   "t": 12361,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -8341,106 +8341,9 @@
    ]
   },
   {
-   "t": 12367,
-   "client": "tracker",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "PrintJSON",
-     "data": [
-      {
-       "text": "3",
-       "type": "player_id"
-      },
-      {
-       "text": " sent "
-      },
-      {
-       "text": "1",
-       "player": 4,
-       "flags": 1,
-       "type": "item_id"
-      },
-      {
-       "text": " to "
-      },
-      {
-       "text": "4",
-       "type": "player_id"
-      },
-      {
-       "text": " ("
-      },
-      {
-       "text": "85298",
-       "player": 3,
-       "type": "location_id"
-      },
-      {
-       "text": ")"
-      }
-     ],
-     "type": "ItemSend",
-     "receiving": 4,
-     "item": {
-      "item": 1,
-      "location": 85298,
-      "player": 3,
-      "flags": 1,
-      "class": "NetworkItem"
-     }
-    },
-    {
-     "cmd": "PrintJSON",
-     "data": [
-      {
-       "text": "3",
-       "type": "player_id"
-      },
-      {
-       "text": " sent "
-      },
-      {
-       "text": "5",
-       "player": 4,
-       "flags": 2,
-       "type": "item_id"
-      },
-      {
-       "text": " to "
-      },
-      {
-       "text": "4",
-       "type": "player_id"
-      },
-      {
-       "text": " ("
-      },
-      {
-       "text": "85063",
-       "player": 3,
-       "type": "location_id"
-      },
-      {
-       "text": ")"
-      }
-     ],
-     "type": "ItemSend",
-     "receiving": 4,
-     "item": {
-      "item": 5,
-      "location": 85063,
-      "player": 3,
-      "flags": 2,
-      "class": "NetworkItem"
-     }
-    }
-   ]
-  },
-  {
-   "t": 12367,
    "client": "game-quester",
    "dir": "in",
+   "t": 12361,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -8472,9 +8375,106 @@
    ]
   },
   {
-   "t": 12367,
+   "client": "tracker",
+   "dir": "in",
+   "t": 12361,
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "1",
+       "player": 4,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "85298",
+       "player": 3,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 1,
+      "location": 85298,
+      "player": 3,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "85063",
+       "player": 3,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 5,
+      "location": 85063,
+      "player": 3,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
    "client": "tracker2",
    "dir": "in",
+   "t": 12361,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -8569,9 +8569,9 @@
    ]
   },
   {
-   "t": 12367,
    "client": "game-link",
    "dir": "in",
+   "t": 12361,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -8666,9 +8666,9 @@
    ]
   },
   {
-   "t": 12367,
    "client": "game-quester",
    "dir": "in",
+   "t": 12362,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -8763,9 +8763,27 @@
    ]
   },
   {
-   "t": 12368,
+   "client": "tracker",
+   "dir": "in",
+   "t": 12362,
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has released all remaining items from their world."
+      }
+     ],
+     "type": "Release",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
    "client": "game-quester",
    "dir": "in",
+   "t": 12362,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -8790,27 +8808,9 @@
    ]
   },
   {
-   "t": 12368,
-   "client": "tracker",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "PrintJSON",
-     "data": [
-      {
-       "text": "Quester (Team #1) has released all remaining items from their world."
-      }
-     ],
-     "type": "Release",
-     "team": 0,
-     "slot": 4
-    }
-   ]
-  },
-  {
-   "t": 12368,
    "client": "tracker2",
    "dir": "in",
+   "t": 12362,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -8826,27 +8826,9 @@
    ]
   },
   {
-   "t": 12368,
-   "client": "game-quester",
-   "dir": "in",
-   "packets": [
-    {
-     "cmd": "PrintJSON",
-     "data": [
-      {
-       "text": "Quester (Team #1) has released all remaining items from their world."
-      }
-     ],
-     "type": "Release",
-     "team": 0,
-     "slot": 4
-    }
-   ]
-  },
-  {
-   "t": 12368,
    "client": "game-link",
    "dir": "in",
+   "t": 12362,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -8862,9 +8844,27 @@
    ]
   },
   {
-   "t": 12368,
+   "client": "game-quester",
+   "dir": "in",
+   "t": 12362,
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has released all remaining items from their world."
+      }
+     ],
+     "type": "Release",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
    "client": "tracker",
    "dir": "in",
+   "t": 12362,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -9049,9 +9049,9 @@
    ]
   },
   {
-   "t": 12368,
    "client": "tracker2",
    "dir": "in",
+   "t": 12362,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -9236,9 +9236,9 @@
    ]
   },
   {
-   "t": 12368,
    "client": "game-link",
    "dir": "in",
+   "t": 12362,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -9423,9 +9423,9 @@
    ]
   },
   {
-   "t": 12368,
    "client": "game-quester",
    "dir": "in",
+   "t": 12362,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -9610,9 +9610,9 @@
    ]
   },
   {
-   "t": 12368,
    "client": "tracker",
    "dir": "in",
+   "t": 12363,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -9637,9 +9637,9 @@
    ]
   },
   {
-   "t": 12368,
    "client": "tracker2",
    "dir": "in",
+   "t": 12363,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -9664,9 +9664,9 @@
    ]
   },
   {
-   "t": 12368,
    "client": "game-link",
    "dir": "in",
+   "t": 12363,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -9691,9 +9691,9 @@
    ]
   },
   {
-   "t": 12368,
    "client": "game-quester",
    "dir": "in",
+   "t": 12363,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -9708,9 +9708,9 @@
    ]
   },
   {
-   "t": 12369,
    "client": "tracker",
    "dir": "in",
+   "t": 12363,
    "packets": [
     {
      "cmd": "SetReply",
@@ -9743,9 +9743,9 @@
    ]
   },
   {
-   "t": 12369,
    "client": "tracker2",
    "dir": "in",
+   "t": 12363,
    "packets": [
     {
      "cmd": "SetReply",
@@ -9778,9 +9778,9 @@
    ]
   },
   {
-   "t": 12369,
    "client": "game-link",
    "dir": "in",
+   "t": 12364,
    "packets": [
     {
      "cmd": "SetReply",
@@ -9813,9 +9813,9 @@
    ]
   },
   {
-   "t": 12369,
    "client": "game-quester",
    "dir": "in",
+   "t": 12364,
    "packets": [
     {
      "cmd": "SetReply",
@@ -9837,9 +9837,9 @@
    ]
   },
   {
-   "t": 12369,
    "client": "tracker",
    "dir": "in",
+   "t": 12364,
    "packets": [
     {
      "cmd": "SetReply",
@@ -9849,9 +9849,9 @@
    ]
   },
   {
-   "t": 12369,
    "client": "game-quester",
    "dir": "in",
+   "t": 12364,
    "packets": [
     {
      "cmd": "RoomUpdate",
@@ -9867,23 +9867,23 @@
    ]
   },
   {
-   "t": 13871,
    "client": "-",
    "dir": "mark",
-   "note": "disconnects: game-quester, tracker2, game-link (Part)"
+   "note": "disconnects: game-quester, tracker2, game-link (Part)",
+   "t": 13865
   },
   {
-   "t": 13871,
    "client": "game-quester",
    "dir": "close",
+   "t": 13865,
    "code": 1005,
    "reason": "",
    "wasClean": true
   },
   {
-   "t": 13872,
    "client": "tracker",
    "dir": "in",
+   "t": 13866,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -9899,9 +9899,9 @@
    ]
   },
   {
-   "t": 13872,
    "client": "tracker2",
    "dir": "in",
+   "t": 13866,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -9917,9 +9917,9 @@
    ]
   },
   {
-   "t": 13872,
    "client": "game-link",
    "dir": "in",
+   "t": 13866,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -9935,17 +9935,17 @@
    ]
   },
   {
-   "t": 14374,
    "client": "tracker2",
    "dir": "close",
+   "t": 14368,
    "code": 1005,
    "reason": "",
    "wasClean": true
   },
   {
-   "t": 14375,
    "client": "tracker",
    "dir": "in",
+   "t": 14369,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -9961,9 +9961,9 @@
    ]
   },
   {
-   "t": 14375,
    "client": "game-link",
    "dir": "in",
+   "t": 14369,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -9979,17 +9979,17 @@
    ]
   },
   {
-   "t": 14876,
    "client": "game-link",
    "dir": "close",
+   "t": 14870,
    "code": 1005,
    "reason": "",
    "wasClean": true
   },
   {
-   "t": 14877,
    "client": "tracker",
    "dir": "in",
+   "t": 14871,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -10005,15 +10005,15 @@
    ]
   },
   {
-   "t": 15378,
    "client": "-",
    "dir": "mark",
-   "note": "tracker sends Sync: ReceivedItems index 0, the whole list again"
+   "note": "tracker sends Sync: ReceivedItems index 0, the whole list again",
+   "t": 15372
   },
   {
-   "t": 15378,
    "client": "tracker",
    "dir": "out",
+   "t": 15372,
    "packets": [
     {
      "cmd": "Sync"
@@ -10021,9 +10021,9 @@
    ]
   },
   {
-   "t": 15378,
    "client": "tracker",
    "dir": "in",
+   "t": 15372,
    "packets": [
     {
      "cmd": "ReceivedItems",
@@ -10069,34 +10069,34 @@
    ]
   },
   {
-   "t": 16082,
    "client": "tracker",
    "dir": "close",
+   "t": 16076,
    "code": 1005,
    "reason": "",
    "wasClean": true
   },
   {
-   "t": 16382,
    "client": "-",
    "dir": "mark",
-   "note": "a fresh tracker client on Link (page refresh): Connected carries every check so far"
+   "note": "a fresh tracker client on Link (page refresh): Connected carries every check so far",
+   "t": 16378
   },
   {
-   "t": 16383,
    "client": "tracker-refresh",
    "dir": "open-attempt",
+   "t": 16378,
    "url": "ws://127.0.0.1:38281/"
   },
   {
-   "t": 16385,
    "client": "tracker-refresh",
-   "dir": "open"
+   "dir": "open",
+   "t": 16380
   },
   {
-   "t": 16385,
    "client": "tracker-refresh",
    "dir": "in",
+   "t": 16380,
    "packets": [
     {
      "cmd": "RoomInfo",
@@ -10138,14 +10138,14 @@
       "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
      },
      "seed_name": "72844992796894532502",
-     "time": 1792861509.0966992
+     "time": 1792869838.1807508
     }
    ]
   },
   {
-   "t": 16385,
    "client": "tracker-refresh",
    "dir": "out",
+   "t": 16380,
    "packets": [
     {
      "cmd": "Connect",
@@ -10154,7 +10154,7 @@
      "password": "",
      "slot_data": true,
      "items_handling": 7,
-     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "uuid": "81c2f2f0-b5f7-45b9-a6e7-432b366e2c8a",
      "tags": [
       "Tracker"
      ],
@@ -10168,9 +10168,9 @@
    ]
   },
   {
-   "t": 16386,
    "client": "tracker-refresh",
    "dir": "in",
+   "t": 16381,
    "packets": [
     {
      "cmd": "Connected",
@@ -10568,9 +10568,9 @@
    ]
   },
   {
-   "t": 16386,
    "client": "tracker-refresh",
    "dir": "out",
+   "t": 16381,
    "packets": [
     {
      "cmd": "SetNotify",
@@ -10581,23 +10581,23 @@
    ]
   },
   {
-   "t": 16386,
    "client": "tracker-refresh",
    "dir": "out",
+   "t": 16381,
    "packets": [
     {
      "cmd": "Get",
      "keys": [
       "_read_hints_0_1"
      ],
-     "uuid": "76a64fca-243b-4983-a2bd-5bc37345140d"
+     "uuid": "6140b1a9-ce2a-4a0b-9d21-d9741d9185b9"
     }
    ]
   },
   {
-   "t": 16386,
    "client": "tracker-refresh",
    "dir": "in",
+   "t": 16381,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -10616,9 +10616,9 @@
    ]
   },
   {
-   "t": 16386,
    "client": "tracker-refresh",
    "dir": "in",
+   "t": 16381,
    "packets": [
     {
      "cmd": "PrintJSON",
@@ -10632,9 +10632,9 @@
    ]
   },
   {
-   "t": 16386,
    "client": "tracker-refresh",
    "dir": "in",
+   "t": 16381,
    "packets": [
     {
      "cmd": "Retrieved",
@@ -10664,9 +10664,134 @@
        }
       ]
      },
-     "uuid": "76a64fca-243b-4983-a2bd-5bc37345140d"
+     "uuid": "6140b1a9-ce2a-4a0b-9d21-d9741d9185b9"
     }
    ]
+  },
+  {
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker-refresh reads and watches every slot's client status",
+   "t": 17082
+  },
+  {
+   "client": "tracker-refresh",
+   "dir": "out",
+   "t": 17082,
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_client_status_0_1",
+      "_read_client_status_0_2",
+      "_read_client_status_0_3",
+      "_read_client_status_0_4"
+     ],
+     "uuid": "bench-get-status"
+    }
+   ]
+  },
+  {
+   "client": "tracker-refresh",
+   "dir": "out",
+   "t": 17082,
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_client_status_0_1",
+      "_read_client_status_0_2",
+      "_read_client_status_0_3",
+      "_read_client_status_0_4"
+     ]
+    }
+   ]
+  },
+  {
+   "client": "tracker-refresh",
+   "dir": "in",
+   "t": 17082,
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_client_status_0_1": 5,
+      "_read_client_status_0_2": 0,
+      "_read_client_status_0_3": 0,
+      "_read_client_status_0_4": 30
+     },
+     "uuid": "bench-get-status"
+    }
+   ]
+  },
+  {
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker-refresh scouts its checked locations (create_as_hint 0): [1010170,1310724,1310727,1572867]",
+   "t": 17585
+  },
+  {
+   "client": "tracker-refresh",
+   "dir": "out",
+   "t": 17585,
+   "packets": [
+    {
+     "cmd": "LocationScouts",
+     "create_as_hint": 0,
+     "locations": [
+      1010170,
+      1310724,
+      1310727,
+      1572867
+     ]
+    }
+   ]
+  },
+  {
+   "client": "tracker-refresh",
+   "dir": "in",
+   "t": 17586,
+   "packets": [
+    {
+     "cmd": "LocationInfo",
+     "locations": [
+      {
+       "item": 84192,
+       "location": 1010170,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 1310724,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 1310727,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 7,
+       "location": 1572867,
+       "player": 4,
+       "flags": 4,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker-refresh scout -> 4 items, no hint",
+   "t": 17586
   }
  ]
 }

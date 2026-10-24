@@ -70,8 +70,14 @@ describe.skipIf(url === undefined)(`real server at ${url}`, () => {
       slot: 1,
     });
     expect(snapshot.checked.length + snapshot.missing.length).toBe(249);
-    // The race flag arrives right after Connected.
+    // The race flag arrives right after Connected, with the slot's hints
+    // and every player's status (this tracker's own makes Link connected).
     await expect.poll(() => session.snapshot.raceMode).toBe(false);
+    await expect.poll(() => session.snapshot.hints).toEqual([]);
+    await expect
+      .poll(() => Object.keys(session.snapshot.clientStatus).length)
+      .toBe(4);
+    expect(session.snapshot.clientStatus[1]).toBe(5);
 
     const game = "A Link to the Past";
     const names = await new NameDataLoader({

@@ -103,9 +103,14 @@ test("connects to a room and shows the slot's items and checks", async ({
     // Nothing a tracker may not send ever left the page
     const sent = new Set(room.received.map((packet) => packet.cmd));
     expect([...sent].sort()).toEqual(
-      ["Connect", "Get", "GetDataPackage", "SetNotify", "Sync"].filter((cmd) =>
-        sent.has(cmd),
-      ),
+      [
+        "Connect",
+        "Get",
+        "GetDataPackage",
+        "LocationScouts",
+        "SetNotify",
+        "Sync",
+      ].filter((cmd) => sent.has(cmd)),
     );
     expect(sent.has("Connect")).toBe(true);
     // The address, port and password stay out of the run others read
