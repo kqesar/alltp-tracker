@@ -81,6 +81,19 @@ describe("fixFor", () => {
     expect(linesOf(STATUSES["game-mismatch"])).toBe(
       "The original game. The tracker tries again on its own.",
     );
+    expect(fixFor(STATUSES["game-mismatch"], [])).not.toHaveProperty("board");
+  });
+
+  it("offers the Archipelago board for a ROM Archipelago patched", () => {
+    const ap = statusOf("game-mismatch", {
+      check: { code: "archipelago-rom", message: "An Archipelago seed." },
+    });
+    // No "tries again": waiting on this ROM would never end
+    expect(fixFor(ap, [])).toEqual({
+      allow: [],
+      board: "archipelago",
+      lines: ["An Archipelago seed."],
+    });
   });
 
   it("follows the session's remedy when memory cannot be read", () => {

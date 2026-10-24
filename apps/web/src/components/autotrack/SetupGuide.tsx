@@ -14,6 +14,7 @@ import { useId, useState } from "react";
 import { deviceInUse, type Fix, fixFor } from "@/autotrack/guide";
 import { headlineOf } from "@/autotrack/status";
 import { type Tab, Tabs, tabId } from "@/components/ui/Tabs";
+import { switchGame } from "@/games/registry";
 import { isDesktopApp } from "@/utils/platform";
 
 /** The systems the guide covers, as its tabs. */
@@ -92,6 +93,16 @@ const FixNote = ({ fix, headline }: { fix: Fix; headline: string }) => (
     {fix.allow.map((variant) => (
       <Variant key={variant.title} titled variant={variant} />
     ))}
+    {fix.board === "archipelago" && (
+      <button
+        className="modal-btn modal-btn--primary setup-fix__board"
+        data-testid="setup-fix-archipelago"
+        onClick={() => switchGame("archipelago")}
+        type="button"
+      >
+        Open the Archipelago board
+      </button>
+    )}
   </div>
 );
 

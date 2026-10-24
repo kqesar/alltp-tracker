@@ -6,12 +6,19 @@
 // there: it reads RetroArch itself, and no browser stands in between.
 
 import type {
+  ARCHIPELAGO_ROM,
   BridgeInfo,
   DeviceInfo,
   DeviceKind,
   SessionStatus,
 } from "@alltp/autotrack";
 import { isDesktopApp } from "@/utils/platform";
+
+/**
+ * A pack's code for a ROM Archipelago patched, spelled here so this module
+ * keeps to types: the type holds it to the package's constant.
+ */
+export const AP_ROM: typeof ARCHIPELAGO_ROM = "archipelago-rom";
 
 /**
  * The status dot: off; busy (starting, connecting, attaching, or the
@@ -131,7 +138,9 @@ export const headlineOf = (
     case "game-mismatch":
       return status.check.code === "zero-filled"
         ? "The ROM reads as zeros"
-        : `This is not ${seed}`;
+        : status.check.code === AP_ROM
+          ? "This is an Archipelago seed"
+          : `This is not ${seed}`;
     case "connected":
       return status.paused ? "Connected, paused while hidden" : "Connected";
   }

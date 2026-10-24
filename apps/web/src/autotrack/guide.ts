@@ -3,6 +3,7 @@
 // The headline (status.ts) says what is wrong; this says how to fix it.
 
 import type { DeviceKind, SessionStatus, SetupVariant } from "@alltp/autotrack";
+import { AP_ROM } from "@/autotrack/status";
 import { isDesktopApp } from "@/utils/platform";
 
 export type Fix = {
@@ -13,6 +14,11 @@ export type Fix = {
    * block cannot be told from a stopped bridge.
    */
   readonly allow: readonly SetupVariant[];
+  /**
+   * The board that follows this ROM instead: the Archipelago board, for a
+   * ROM Archipelago patched (its client tracks it into the room).
+   */
+  readonly board?: "archipelago";
 };
 
 /** The device a status names, once the bridge has listed or attached it. */
@@ -115,7 +121,9 @@ export const fixFor = (
     case "memory-unreadable":
       return fix(memoryFix(status));
     case "game-mismatch":
-      return fix([status.check.message, next(status)]);
+      return status.check.code === AP_ROM
+        ? { ...fix([status.check.message]), board: "archipelago" }
+        : fix([status.check.message, next(status)]);
     default:
       return null;
   }

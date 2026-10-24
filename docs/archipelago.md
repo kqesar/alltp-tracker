@@ -18,7 +18,12 @@ document is the app's side.
   Only art is shared: the skins draw AP's item names with the tracker's
   sprites (ALttPR's assets, the frames of Map Rando's Super Metroid sheet).
   AP's Super Metroid is VARIA's randomizer and its SMZ3 TotalSMZ3's: their
-  item names are theirs, not Map Rando's or samus.link's.
+  item names are theirs, not Map Rando's or samus.link's. The other way
+  round, the ALttPR, Super Metroid and SMZ3 packs' game checks know an AP
+  ROM by its header title (`AP…`, `SM068_…`, `ZSM` and digits alone) and
+  refuse it as `archipelago-rom`; the autotracking setup guide then offers
+  this board (`fixFor` in `apps/web/src/autotrack/guide.ts`). Only the title
+  is read: no logic or setting crosses over.
 - **No logic.** The server says what the slot received and which of its
   locations are checked; it does not say what is reachable, and the board
   says so under the checks. Porting AP's Python logic per world was weighed

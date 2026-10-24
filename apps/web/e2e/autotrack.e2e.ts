@@ -12,6 +12,7 @@ import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
 import { comeOut, goIn, leadTo } from "../../../packs/alttpr/test/entrance-rom";
 import { writeSeedSettings } from "../../../packs/alttpr/test/seed-rom";
 import {
+  auditPage,
   clickToolbarAction,
   focusedTestId,
   focusRinged,
@@ -194,6 +195,39 @@ test("marks the board and the map from the game as it changes", async ({
   await expect(tomb).toHaveAccessibleName("King's Tomb: done");
   // None of it is a step of the player's undo history
   await expect(page.getByTestId("undo")).toBeDisabled();
+});
+
+test("an Archipelago seed is pointed to the Archipelago board", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  // AP 0.6.8's title (worlds/alttp/Rom.py:1544): AP, version, player, seed
+  const title = "AP510_1_42424242424".padEnd(21, " ");
+  for (let i = 0; i < title.length; i++) {
+    bridge.memory[ROM_HEADER + i] = title.charCodeAt(i);
+  }
+  await openTracker(page);
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-connect").click();
+  await expect(dialog(page).getByTestId("autotrack-headline")).toHaveText(
+    "This is an Archipelago seed",
+  );
+  const fix = dialog(page).getByTestId("setup-fix");
+  await expect(fix).toContainText("Archipelago's own client tracks it");
+  await auditPage(page);
+  if (process.env.AP_SHOTS) {
+    await fix.screenshot({
+      path: `${process.env.AP_SHOTS}/ap-rom-pointer.png`,
+    });
+  }
+  await fix.getByTestId("setup-fix-archipelago").click();
+  // The page loads again on the Archipelago board
+  await expect(
+    page.getByRole("dialog", { name: "Archipelago room" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("alltp-tracker-game")),
+  ).toBe("archipelago");
 });
 
 test("notes the doors Link goes through in a Crosskeys run", async ({

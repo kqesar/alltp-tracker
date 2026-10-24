@@ -24,8 +24,15 @@ import {
   useAutotrackStore,
 } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { switchGame } from "@/games/registry";
 import { MemoryTransport } from "../../../../../../../packages/autotrack/test/memory-transport";
 import { writeSeedSettings } from "../../../../../../../packs/alttpr/test/seed-rom";
+
+// A switch loads the page again, which a spec cannot: the call is the test
+vi.mock("@/games/registry", async (original) => ({
+  ...(await original<typeof import("@/games/registry")>()),
+  switchGame: vi.fn(),
+}));
 
 const FIREFOX_LINUX = parseUserAgent(
   "Mozilla/5.0 (X11; Linux x86_64; rv:158.0) Gecko/20100101 Firefox/158.0",
@@ -125,6 +132,23 @@ describe("AutotrackDialog's setup guide", () => {
     expect(within(step("emulator")).getByTestId("setup-fix")).toHaveTextContent(
       "bsnes-mercury",
     );
+    expect(screen.queryByTestId("setup-fix-archipelago")).toBeNull();
+  });
+
+  it("offers the Archipelago board for a ROM Archipelago patched", async () => {
+    const user = userEvent.setup();
+    await open();
+    show(
+      statusOf("game-mismatch", {
+        check: { code: "archipelago-rom", message: "An Archipelago seed." },
+      }),
+    );
+    const fix = within(step("game")).getByTestId("setup-fix");
+    expect(fix).toHaveTextContent("This is an Archipelago seed");
+    const board = within(fix).getByTestId("setup-fix-archipelago");
+    expect(board).toHaveAccessibleName("Open the Archipelago board");
+    await user.click(board);
+    expect(switchGame).toHaveBeenCalledWith("archipelago");
   });
 
   it("opens and closes any step on a click", async () => {
