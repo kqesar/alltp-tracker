@@ -59,7 +59,7 @@ export type GameModule = {
   store: RunStore;
 };
 
-export const GAME_IDS = ["alttpr", "sm", "smz3"] as const;
+export const GAME_IDS = ["alttpr", "sm", "smz3", "archipelago"] as const;
 export type GameId = (typeof GAME_IDS)[number];
 
 /** Each game's name, and the randomizer the tracker follows for it. */
@@ -67,6 +67,7 @@ export const GAMES: Readonly<
   Record<GameId, { readonly name: string; readonly randomizer: string }>
 > = {
   alttpr: { name: "A Link to the Past", randomizer: "alttpr.com" },
+  archipelago: { name: "Archipelago", randomizer: "archipelago.gg" },
   sm: { name: "Super Metroid", randomizer: "Map Rando" },
   smz3: { name: "SMZ3", randomizer: "samus.link" },
 };
@@ -80,6 +81,8 @@ export const PRODUCT_NAME = "Rando Atlas";
 
 const LOADERS: Readonly<Record<GameId, () => Promise<GameModule>>> = {
   alttpr: () => import("@/games/alttpr/module").then(({ alttpr }) => alttpr),
+  archipelago: () =>
+    import("@/games/archipelago/module").then(({ archipelago }) => archipelago),
   sm: () => import("@/games/sm/module").then(({ sm }) => sm),
   smz3: () => import("@/games/smz3/module").then(({ smz3 }) => smz3),
 };

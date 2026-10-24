@@ -12,6 +12,11 @@ const MAP_RANDOMIZERS: Readonly<
     { href: string; label: string; testId: string }
   >
 > = {
+  archipelago: {
+    href: "https://archipelago.gg/",
+    label: "archipelago.gg",
+    testId: "link-archipelago",
+  },
   sm: {
     href: "https://maprando.com/",
     label: "Map Rando",

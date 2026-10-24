@@ -16,6 +16,10 @@ export const OVERLAY_SOURCES: Readonly<
 > = {
   alttpr: () =>
     import("@/games/alttpr/overlay").then(({ overlaySource }) => overlaySource),
+  archipelago: () =>
+    import("@/games/archipelago/overlay").then(
+      ({ overlaySource }) => overlaySource,
+    ),
   sm: () =>
     import("@/games/sm/overlay").then(({ overlaySource }) => overlaySource),
   smz3: () =>

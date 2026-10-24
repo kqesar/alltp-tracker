@@ -97,4 +97,9 @@ describe("loadGame", () => {
     expect(typeof game.ObsView).toBe("function");
     expect(typeof game.start).toBe("function");
   });
+
+  it("loads the Archipelago board, which refuses a save", async () => {
+    const game = await loadGame("archipelago");
+    expect(game.importRun("{}").ok).toBe(false);
+  });
 });
