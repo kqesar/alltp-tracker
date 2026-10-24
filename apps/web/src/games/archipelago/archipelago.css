@@ -210,7 +210,10 @@
   min-height: 2.25rem;
 }
 
+/* Positioned, so the rows' visually hidden words (absolute) scroll and clip
+   with it rather than stretch the page below the panel */
 .ap-checks__zones {
+  position: relative;
   display: grid;
   flex: 1 1 auto;
   gap: 2px;
