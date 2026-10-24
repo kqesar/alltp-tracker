@@ -1,0 +1,24 @@
+{
+  "name": "@alltp/archipelago",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Game-agnostic Archipelago link: a read-only tracker session, its diagnostics and name data",
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "record-fixtures": "node scripts/record-fixtures.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc -b tsconfig.json"
+  },
+  "dependencies": {
+    "archipelago.js": "2.1.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.2",
+    "ws": "^8.22.0"
+  }
+}

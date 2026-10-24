@@ -1,0 +1,225 @@
+{
+ "fixture": "datapackage",
+ "recorded": "2026-10-24T17:04:52.712Z",
+ "archipelago": "0.6.8",
+ "archipelagoJs": "2.1.0",
+ "server": "normal, no password",
+ "note": "GetDataPackage per game before Connect; DataPackage bodies moved to datapackages/*.json",
+ "frames": [
+  {
+   "t": 1,
+   "client": "datapackage",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 3,
+   "client": "datapackage",
+   "dir": "open"
+  },
+  {
+   "t": 4,
+   "client": "datapackage",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861492.706585
+    }
+   ]
+  },
+  {
+   "t": 4,
+   "client": "datapackage",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "GetDataPackage",
+     "games": [
+      "A Link to the Past"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 6,
+   "client": "datapackage",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "DataPackage",
+     "data": {
+      "games": {
+       "A Link to the Past": {
+        "checksum": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+        "$file": "datapackages/A_Link_to_the_Past.json"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "t": 6,
+   "client": "datapackage",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "GetDataPackage",
+     "games": [
+      "APQuest"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 7,
+   "client": "datapackage",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "DataPackage",
+     "data": {
+      "games": {
+       "APQuest": {
+        "checksum": "854499b00d82a68764ce591dd80218ad75e83e2b",
+        "$file": "datapackages/APQuest.json"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "t": 7,
+   "client": "datapackage",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "GetDataPackage",
+     "games": [
+      "Archipelago"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 7,
+   "client": "datapackage",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "DataPackage",
+     "data": {
+      "games": {
+       "Archipelago": {
+        "checksum": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+        "$file": "datapackages/Archipelago.json"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "t": 7,
+   "client": "datapackage",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "GetDataPackage",
+     "games": [
+      "SMZ3"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 8,
+   "client": "datapackage",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "DataPackage",
+     "data": {
+      "games": {
+       "SMZ3": {
+        "checksum": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+        "$file": "datapackages/SMZ3.json"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "t": 8,
+   "client": "datapackage",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "GetDataPackage",
+     "games": [
+      "Super Metroid"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 9,
+   "client": "datapackage",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "DataPackage",
+     "data": {
+      "games": {
+       "Super Metroid": {
+        "checksum": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6",
+        "$file": "datapackages/Super_Metroid.json"
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

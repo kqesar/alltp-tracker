@@ -1,0 +1,1743 @@
+{
+ "fixture": "refused",
+ "recorded": "2026-10-24T17:05:13.529Z",
+ "archipelago": "0.6.8",
+ "archipelagoJs": "2.1.0",
+ "server": "normal multiworld, no password",
+ "frames": [
+  {
+   "t": 1,
+   "client": "-",
+   "dir": "mark",
+   "note": "unknown slot"
+  },
+  {
+   "t": 1,
+   "client": "refused:unknown slot",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 1,
+   "client": "tracker-refresh",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 2,
+   "client": "refused:unknown slot",
+   "dir": "open"
+  },
+  {
+   "t": 3,
+   "client": "refused:unknown slot",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861509.8016474
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "refused:unknown slot",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Nobody",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "refused:unknown slot",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ConnectionRefused",
+     "errors": [
+      "InvalidSlot"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "-",
+   "dir": "mark",
+   "note": "-> {\"ok\":false,\"error\":\"LoginError: Connection was refused by the server. Reason(s): [InvalidSlot\",\"errors\":[\"InvalidSlot\"]}"
+  },
+  {
+   "t": 305,
+   "client": "-",
+   "dir": "mark",
+   "note": "same socket, second Connect with a good slot (the server keeps the socket open after a refusal)"
+  },
+  {
+   "t": 305,
+   "client": "refused:unknown slot",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "",
+     "password": "",
+     "uuid": "bench-retry",
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     },
+     "items_handling": 7,
+     "tags": [
+      "Tracker"
+     ],
+     "slot_data": true
+    }
+   ]
+  },
+  {
+   "t": 306,
+   "client": "refused:unknown slot",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 1,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      59758,
+      59761,
+      59764,
+      59767,
+      59770,
+      59773,
+      59776,
+      59779,
+      59782,
+      59785,
+      59788,
+      59791,
+      59794,
+      59797,
+      59800,
+      59803,
+      59806,
+      59809,
+      59812,
+      59818,
+      59821,
+      59824,
+      59827,
+      59830,
+      59833,
+      59836,
+      59839,
+      59842,
+      59845,
+      59848,
+      59851,
+      59854,
+      59857,
+      59860,
+      59866,
+      59869,
+      59872,
+      59875,
+      59878,
+      59881,
+      59884,
+      59887,
+      59890,
+      59893,
+      59896,
+      59899,
+      59902,
+      59905,
+      59908,
+      59911,
+      59914,
+      59917,
+      59920,
+      59923,
+      59926,
+      59929,
+      59932,
+      59935,
+      59938,
+      59941,
+      59944,
+      59947,
+      59950,
+      59953,
+      59956,
+      59959,
+      59962,
+      59965,
+      59968,
+      59971,
+      59974,
+      59977,
+      59980,
+      59983,
+      59986,
+      59989,
+      59992,
+      59995,
+      59998,
+      60001,
+      60004,
+      60007,
+      60010,
+      60013,
+      60019,
+      60022,
+      60025,
+      60028,
+      60031,
+      60034,
+      60037,
+      60040,
+      60043,
+      60046,
+      60049,
+      60052,
+      60055,
+      60058,
+      60061,
+      60064,
+      60067,
+      60070,
+      60073,
+      60076,
+      60079,
+      60082,
+      60085,
+      60088,
+      60091,
+      60094,
+      60097,
+      60100,
+      60103,
+      60106,
+      60109,
+      60112,
+      60115,
+      60118,
+      60121,
+      60124,
+      60127,
+      60130,
+      60133,
+      60136,
+      60139,
+      60142,
+      60145,
+      60148,
+      60151,
+      60157,
+      60160,
+      60163,
+      60166,
+      60169,
+      60172,
+      60175,
+      60178,
+      60181,
+      60184,
+      60187,
+      60190,
+      60193,
+      60196,
+      60199,
+      60202,
+      60205,
+      60208,
+      60211,
+      60214,
+      60217,
+      60220,
+      60223,
+      60226,
+      60229,
+      60232,
+      60235,
+      60238,
+      60241,
+      60244,
+      60247,
+      60250,
+      60253,
+      60256,
+      60259,
+      60840,
+      166320,
+      188229,
+      191256,
+      193020,
+      209095,
+      211407,
+      212328,
+      212605,
+      975237,
+      975299,
+      1310730,
+      1310733,
+      1310736,
+      1310739,
+      1310742,
+      1310745,
+      1310748,
+      1310751,
+      1310754,
+      1310757,
+      1310760,
+      1310763,
+      1310766,
+      1310769,
+      1310772,
+      1310775,
+      1310778,
+      1310781,
+      1310784,
+      1310787,
+      1310790,
+      1310793,
+      1310796,
+      1310799,
+      1310802,
+      1310805,
+      1310808,
+      1310811,
+      1310814,
+      1310817,
+      1310820,
+      1572864,
+      1572865,
+      1572866,
+      1572868,
+      1572869,
+      1572870,
+      1572880,
+      1572881,
+      1572882,
+      1572883,
+      1572884,
+      1572885,
+      1572886,
+      1572887,
+      1572906,
+      1573184,
+      1573185,
+      1573186,
+      1573187,
+      1573188,
+      1573189,
+      1573190,
+      1573191,
+      1573192,
+      1573193,
+      1573194,
+      1573200,
+      1573201,
+      1573202,
+      1573203,
+      1573204,
+      1573205,
+      1573206,
+      1573207,
+      1573208,
+      1573209,
+      1573216,
+      1573217,
+      1573218
+     ],
+     "checked_locations": [
+      1010170,
+      1310724,
+      1310727,
+      1572867
+     ],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 4,
+     "slot_data": {
+      "crystals_needed_for_gt": 7,
+      "crystals_needed_for_ganon": 7,
+      "open_pyramid": 2,
+      "big_key_shuffle": 0,
+      "small_key_shuffle": 0,
+      "compass_shuffle": 0,
+      "map_shuffle": 0,
+      "progressive": 2,
+      "swordless": 0,
+      "retro_bow": 0,
+      "retro_caves": 0,
+      "shop_item_slots": 0,
+      "boss_shuffle": 0,
+      "pot_shuffle": 0,
+      "enemy_shuffle": 0,
+      "key_drop_shuffle": 1,
+      "bombless_start": 0,
+      "randomize_shop_inventories": 0,
+      "shuffle_shop_inventories": 0,
+      "shuffle_capacity_upgrades": 0,
+      "entrance_shuffle": 0,
+      "dark_room_logic": 0,
+      "goal": 0,
+      "mode": 1,
+      "triforce_pieces_mode": 2,
+      "triforce_pieces_percentage": 150,
+      "triforce_pieces_required": 20,
+      "triforce_pieces_available": 30,
+      "triforce_pieces_extra": 10,
+      "mm_medalion": "Ether",
+      "tr_medalion": "Ether"
+     }
+    },
+    {
+     "cmd": "ReceivedItems",
+     "index": 0,
+     "items": [
+      {
+       "item": 40,
+       "location": 2,
+       "player": 4,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 1310724,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 1310727,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 3,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 6,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 306,
+   "client": "refused:unknown slot",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_1"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 306,
+   "client": "refused:unknown slot",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_1"
+     ],
+     "uuid": "8d1a8d43-4a62-44e5-a2d1-2a6b61dcb417"
+    }
+   ]
+  },
+  {
+   "t": 306,
+   "client": "refused:unknown slot",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) tracking A Link to the Past has joined. Client(0.6.3), ['Tracker']."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 306,
+   "client": "refused:unknown slot",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 306,
+   "client": "refused:unknown slot",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_1": [
+       {
+        "receiving_player": 3,
+        "finding_player": 1,
+        "location": 1310730,
+        "item": 84007,
+        "found": false,
+        "entrance": "",
+        "item_flags": 1,
+        "status": 0,
+        "class": "Hint"
+       },
+       {
+        "receiving_player": 1,
+        "finding_player": 4,
+        "location": 3,
+        "item": 23,
+        "found": true,
+        "entrance": "",
+        "item_flags": 2,
+        "status": 40,
+        "class": "Hint"
+       }
+      ]
+     },
+     "uuid": "8d1a8d43-4a62-44e5-a2d1-2a6b61dcb417"
+    }
+   ]
+  },
+  {
+   "t": 1008,
+   "client": "refused:unknown slot",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 1208,
+   "client": "-",
+   "dir": "mark",
+   "note": "slot name is case-sensitive"
+  },
+  {
+   "t": 1208,
+   "client": "refused:slot name is case-sensitive",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 1210,
+   "client": "refused:slot name is case-sensitive",
+   "dir": "open"
+  },
+  {
+   "t": 1210,
+   "client": "refused:slot name is case-sensitive",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861511.0089734
+    }
+   ]
+  },
+  {
+   "t": 1210,
+   "client": "refused:slot name is case-sensitive",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "link",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 1210,
+   "client": "refused:slot name is case-sensitive",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ConnectionRefused",
+     "errors": [
+      "InvalidSlot"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 1210,
+   "client": "-",
+   "dir": "mark",
+   "note": "-> {\"ok\":false,\"error\":\"LoginError: Connection was refused by the server. Reason(s): [InvalidSlot\",\"errors\":[\"InvalidSlot\"]}"
+  },
+  {
+   "t": 1513,
+   "client": "refused:slot name is case-sensitive",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 1712,
+   "client": "-",
+   "dir": "mark",
+   "note": "wrong game, no tracker tag"
+  },
+  {
+   "t": 1712,
+   "client": "refused:wrong game, no tracker tag",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 1714,
+   "client": "refused:wrong game, no tracker tag",
+   "dir": "open"
+  },
+  {
+   "t": 1714,
+   "client": "refused:wrong game, no tracker tag",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861511.513043
+    }
+   ]
+  },
+  {
+   "t": 1714,
+   "client": "refused:wrong game, no tracker tag",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "Not A Game",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 1715,
+   "client": "refused:wrong game, no tracker tag",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ConnectionRefused",
+     "errors": [
+      "InvalidGame"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 1715,
+   "client": "-",
+   "dir": "mark",
+   "note": "-> {\"ok\":false,\"error\":\"LoginError: Connection was refused by the server. Reason(s): [InvalidGame\",\"errors\":[\"InvalidGame\"]}"
+  },
+  {
+   "t": 2017,
+   "client": "refused:wrong game, no tracker tag",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 2217,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker announcing version 0.4.0"
+  },
+  {
+   "t": 2217,
+   "client": "refused:tracker announcing version 0.4.0",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 2219,
+   "client": "refused:tracker announcing version 0.4.0",
+   "dir": "open"
+  },
+  {
+   "t": 2219,
+   "client": "refused:tracker announcing version 0.4.0",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861512.0179465
+    }
+   ]
+  },
+  {
+   "t": 2219,
+   "client": "refused:tracker announcing version 0.4.0",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 4,
+      "build": 0,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 2219,
+   "client": "refused:tracker announcing version 0.4.0",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ConnectionRefused",
+     "errors": [
+      "IncompatibleVersion"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 2219,
+   "client": "-",
+   "dir": "mark",
+   "note": "-> {\"ok\":false,\"error\":\"LoginError: Connection was refused by the server. Reason(s): [IncompatibleVersion\",\"errors\":[\"IncompatibleVersion\"]}"
+  },
+  {
+   "t": 2521,
+   "client": "refused:tracker announcing version 0.4.0",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 2721,
+   "client": "-",
+   "dir": "mark",
+   "note": "items_handling not an int"
+  },
+  {
+   "t": 2721,
+   "client": "refused:items_handling not an int",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 2723,
+   "client": "refused:items_handling not an int",
+   "dir": "open"
+  },
+  {
+   "t": 2723,
+   "client": "refused:items_handling not an int",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861512.5218923
+    }
+   ]
+  },
+  {
+   "t": 2723,
+   "client": "refused:items_handling not an int",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": "all",
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 2723,
+   "client": "refused:items_handling not an int",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ConnectionRefused",
+     "errors": [
+      "InvalidItemsHandling"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 2723,
+   "client": "-",
+   "dir": "mark",
+   "note": "-> {\"ok\":false,\"error\":\"LoginError: Connection was refused by the server. Reason(s): [InvalidItemsHandling\",\"errors\":[\"InvalidItemsHandling\"]}"
+  },
+  {
+   "t": 3025,
+   "client": "refused:items_handling not an int",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 3225,
+   "client": "-",
+   "dir": "mark",
+   "note": "password sent to a room without one (accepted?)"
+  },
+  {
+   "t": 3225,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 3227,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "open"
+  },
+  {
+   "t": 3227,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861513.0259917
+    }
+   ]
+  },
+  {
+   "t": 3227,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "",
+     "password": "whatever",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 3228,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 1,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      59758,
+      59761,
+      59764,
+      59767,
+      59770,
+      59773,
+      59776,
+      59779,
+      59782,
+      59785,
+      59788,
+      59791,
+      59794,
+      59797,
+      59800,
+      59803,
+      59806,
+      59809,
+      59812,
+      59818,
+      59821,
+      59824,
+      59827,
+      59830,
+      59833,
+      59836,
+      59839,
+      59842,
+      59845,
+      59848,
+      59851,
+      59854,
+      59857,
+      59860,
+      59866,
+      59869,
+      59872,
+      59875,
+      59878,
+      59881,
+      59884,
+      59887,
+      59890,
+      59893,
+      59896,
+      59899,
+      59902,
+      59905,
+      59908,
+      59911,
+      59914,
+      59917,
+      59920,
+      59923,
+      59926,
+      59929,
+      59932,
+      59935,
+      59938,
+      59941,
+      59944,
+      59947,
+      59950,
+      59953,
+      59956,
+      59959,
+      59962,
+      59965,
+      59968,
+      59971,
+      59974,
+      59977,
+      59980,
+      59983,
+      59986,
+      59989,
+      59992,
+      59995,
+      59998,
+      60001,
+      60004,
+      60007,
+      60010,
+      60013,
+      60019,
+      60022,
+      60025,
+      60028,
+      60031,
+      60034,
+      60037,
+      60040,
+      60043,
+      60046,
+      60049,
+      60052,
+      60055,
+      60058,
+      60061,
+      60064,
+      60067,
+      60070,
+      60073,
+      60076,
+      60079,
+      60082,
+      60085,
+      60088,
+      60091,
+      60094,
+      60097,
+      60100,
+      60103,
+      60106,
+      60109,
+      60112,
+      60115,
+      60118,
+      60121,
+      60124,
+      60127,
+      60130,
+      60133,
+      60136,
+      60139,
+      60142,
+      60145,
+      60148,
+      60151,
+      60157,
+      60160,
+      60163,
+      60166,
+      60169,
+      60172,
+      60175,
+      60178,
+      60181,
+      60184,
+      60187,
+      60190,
+      60193,
+      60196,
+      60199,
+      60202,
+      60205,
+      60208,
+      60211,
+      60214,
+      60217,
+      60220,
+      60223,
+      60226,
+      60229,
+      60232,
+      60235,
+      60238,
+      60241,
+      60244,
+      60247,
+      60250,
+      60253,
+      60256,
+      60259,
+      60840,
+      166320,
+      188229,
+      191256,
+      193020,
+      209095,
+      211407,
+      212328,
+      212605,
+      975237,
+      975299,
+      1310730,
+      1310733,
+      1310736,
+      1310739,
+      1310742,
+      1310745,
+      1310748,
+      1310751,
+      1310754,
+      1310757,
+      1310760,
+      1310763,
+      1310766,
+      1310769,
+      1310772,
+      1310775,
+      1310778,
+      1310781,
+      1310784,
+      1310787,
+      1310790,
+      1310793,
+      1310796,
+      1310799,
+      1310802,
+      1310805,
+      1310808,
+      1310811,
+      1310814,
+      1310817,
+      1310820,
+      1572864,
+      1572865,
+      1572866,
+      1572868,
+      1572869,
+      1572870,
+      1572880,
+      1572881,
+      1572882,
+      1572883,
+      1572884,
+      1572885,
+      1572886,
+      1572887,
+      1572906,
+      1573184,
+      1573185,
+      1573186,
+      1573187,
+      1573188,
+      1573189,
+      1573190,
+      1573191,
+      1573192,
+      1573193,
+      1573194,
+      1573200,
+      1573201,
+      1573202,
+      1573203,
+      1573204,
+      1573205,
+      1573206,
+      1573207,
+      1573208,
+      1573209,
+      1573216,
+      1573217,
+      1573218
+     ],
+     "checked_locations": [
+      1010170,
+      1310724,
+      1310727,
+      1572867
+     ],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 4,
+     "slot_data": {
+      "crystals_needed_for_gt": 7,
+      "crystals_needed_for_ganon": 7,
+      "open_pyramid": 2,
+      "big_key_shuffle": 0,
+      "small_key_shuffle": 0,
+      "compass_shuffle": 0,
+      "map_shuffle": 0,
+      "progressive": 2,
+      "swordless": 0,
+      "retro_bow": 0,
+      "retro_caves": 0,
+      "shop_item_slots": 0,
+      "boss_shuffle": 0,
+      "pot_shuffle": 0,
+      "enemy_shuffle": 0,
+      "key_drop_shuffle": 1,
+      "bombless_start": 0,
+      "randomize_shop_inventories": 0,
+      "shuffle_shop_inventories": 0,
+      "shuffle_capacity_upgrades": 0,
+      "entrance_shuffle": 0,
+      "dark_room_logic": 0,
+      "goal": 0,
+      "mode": 1,
+      "triforce_pieces_mode": 2,
+      "triforce_pieces_percentage": 150,
+      "triforce_pieces_required": 20,
+      "triforce_pieces_available": 30,
+      "triforce_pieces_extra": 10,
+      "mm_medalion": "Ether",
+      "tr_medalion": "Ether"
+     }
+    },
+    {
+     "cmd": "ReceivedItems",
+     "index": 0,
+     "items": [
+      {
+       "item": 40,
+       "location": 2,
+       "player": 4,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 1310724,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 1310727,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 3,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 6,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3228,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_1"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3228,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_1"
+     ],
+     "uuid": "10c2c4da-8f4d-4231-b038-d5f9925047f0"
+    }
+   ]
+  },
+  {
+   "t": 3228,
+   "client": "-",
+   "dir": "mark",
+   "note": "-> {\"ok\":true,\"slotData\":{\"crystals_needed_for_gt\":7,\"crystals_needed_for_ganon\":7,\"open_pyramid\":2,\"big_key_shuffle\":0,\"small_key_shuffle\":0,\"compass_shuffle\":0,\"map_shuffle\":0,\"progressive\":2,\"swordless\":0,\"retro_bow\":0,\"retro_caves\":0,\"shop_item_slots\":0,\"boss_shuffle\":0,\"pot_shuffle\":0,\"enemy_shuffle\":0,\"key_drop_shuffle\":1,\"bombless_start\":0,\"randomize_shop_inventories\":0,\"shuffle_shop_inventories\":0,\"shuffle_capacity_upgrades\":0,\"entrance_shuffle\":0,\"dark_room_logic\":0,\"goal\":0,\"mode\":1,\"triforce_pieces_mode\":2,\"triforce_pieces_percentage\":150,\"triforce_pieces_required\":20,\"triforce_pieces_available\":30,\"triforce_pieces_extra\":10,\"mm_medalion\":\"Ether\",\"tr_medalion\":\"Ether\"}}"
+  },
+  {
+   "t": 3229,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) tracking A Link to the Past has joined. Client(0.6.3), ['Tracker']."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3229,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 3229,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_1": [
+       {
+        "receiving_player": 3,
+        "finding_player": 1,
+        "location": 1310730,
+        "item": 84007,
+        "found": false,
+        "entrance": "",
+        "item_flags": 1,
+        "status": 0,
+        "class": "Hint"
+       },
+       {
+        "receiving_player": 1,
+        "finding_player": 4,
+        "location": 3,
+        "item": 23,
+        "found": true,
+        "entrance": "",
+        "item_flags": 2,
+        "status": 40,
+        "class": "Hint"
+       }
+      ]
+     },
+     "uuid": "10c2c4da-8f4d-4231-b038-d5f9925047f0"
+    }
+   ]
+  },
+  {
+   "t": 3530,
+   "client": "refused:password sent to a room without one (accepted?)",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  }
+ ]
+}

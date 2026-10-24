@@ -1,0 +1,10 @@
+{
+  // Two programs: the sources see ES2022 only, so they cannot lean on a DOM
+  // or Node global by accident (they run in a page, a worker or a desktop
+  // webview); the tests and the fake bridge run in Node and see its types.
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.src.json" },
+    { "path": "./tsconfig.test.json" }
+  ]
+}

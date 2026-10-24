@@ -1,0 +1,10672 @@
+{
+ "fixture": "normal-session",
+ "recorded": "2026-10-24T17:05:09.799Z",
+ "archipelago": "0.6.8",
+ "archipelagoJs": "2.1.0",
+ "server": "normal multiworld, no password, release/collect auto, hint_cost default",
+ "slots": {
+  "1": "Link (A Link to the Past)",
+  "2": "Samus (Super Metroid)",
+  "3": "Hybrid Hero (SMZ3)",
+  "4": "Quester (APQuest)"
+ },
+ "frames": [
+  {
+   "t": 0,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker logs in on Link: no game, tags [Tracker], items_handling 0b111"
+  },
+  {
+   "t": 1,
+   "client": "tracker",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 1,
+   "client": "datapackage",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 2,
+   "client": "tracker",
+   "dir": "open"
+  },
+  {
+   "t": 2,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861492.7145026
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "tracker",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 3,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 1,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      59758,
+      59761,
+      59764,
+      59767,
+      59770,
+      59773,
+      59776,
+      59779,
+      59782,
+      59785,
+      59788,
+      59791,
+      59794,
+      59797,
+      59800,
+      59803,
+      59806,
+      59809,
+      59812,
+      59818,
+      59821,
+      59824,
+      59827,
+      59830,
+      59833,
+      59836,
+      59839,
+      59842,
+      59845,
+      59848,
+      59851,
+      59854,
+      59857,
+      59860,
+      59866,
+      59869,
+      59872,
+      59875,
+      59878,
+      59881,
+      59884,
+      59887,
+      59890,
+      59893,
+      59896,
+      59899,
+      59902,
+      59905,
+      59908,
+      59911,
+      59914,
+      59917,
+      59920,
+      59923,
+      59926,
+      59929,
+      59932,
+      59935,
+      59938,
+      59941,
+      59944,
+      59947,
+      59950,
+      59953,
+      59956,
+      59959,
+      59962,
+      59965,
+      59968,
+      59971,
+      59974,
+      59977,
+      59980,
+      59983,
+      59986,
+      59989,
+      59992,
+      59995,
+      59998,
+      60001,
+      60004,
+      60007,
+      60010,
+      60013,
+      60019,
+      60022,
+      60025,
+      60028,
+      60031,
+      60034,
+      60037,
+      60040,
+      60043,
+      60046,
+      60049,
+      60052,
+      60055,
+      60058,
+      60061,
+      60064,
+      60067,
+      60070,
+      60073,
+      60076,
+      60079,
+      60082,
+      60085,
+      60088,
+      60091,
+      60094,
+      60097,
+      60100,
+      60103,
+      60106,
+      60109,
+      60112,
+      60115,
+      60118,
+      60121,
+      60124,
+      60127,
+      60130,
+      60133,
+      60136,
+      60139,
+      60142,
+      60145,
+      60148,
+      60151,
+      60157,
+      60160,
+      60163,
+      60166,
+      60169,
+      60172,
+      60175,
+      60178,
+      60181,
+      60184,
+      60187,
+      60190,
+      60193,
+      60196,
+      60199,
+      60202,
+      60205,
+      60208,
+      60211,
+      60214,
+      60217,
+      60220,
+      60223,
+      60226,
+      60229,
+      60232,
+      60235,
+      60238,
+      60241,
+      60244,
+      60247,
+      60250,
+      60253,
+      60256,
+      60259,
+      60840,
+      166320,
+      188229,
+      191256,
+      193020,
+      209095,
+      211407,
+      212328,
+      212605,
+      975237,
+      975299,
+      1010170,
+      1310724,
+      1310727,
+      1310730,
+      1310733,
+      1310736,
+      1310739,
+      1310742,
+      1310745,
+      1310748,
+      1310751,
+      1310754,
+      1310757,
+      1310760,
+      1310763,
+      1310766,
+      1310769,
+      1310772,
+      1310775,
+      1310778,
+      1310781,
+      1310784,
+      1310787,
+      1310790,
+      1310793,
+      1310796,
+      1310799,
+      1310802,
+      1310805,
+      1310808,
+      1310811,
+      1310814,
+      1310817,
+      1310820,
+      1572864,
+      1572865,
+      1572866,
+      1572867,
+      1572868,
+      1572869,
+      1572870,
+      1572880,
+      1572881,
+      1572882,
+      1572883,
+      1572884,
+      1572885,
+      1572886,
+      1572887,
+      1572906,
+      1573184,
+      1573185,
+      1573186,
+      1573187,
+      1573188,
+      1573189,
+      1573190,
+      1573191,
+      1573192,
+      1573193,
+      1573194,
+      1573200,
+      1573201,
+      1573202,
+      1573203,
+      1573204,
+      1573205,
+      1573206,
+      1573207,
+      1573208,
+      1573209,
+      1573216,
+      1573217,
+      1573218
+     ],
+     "checked_locations": [],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 0,
+     "slot_data": {
+      "crystals_needed_for_gt": 7,
+      "crystals_needed_for_ganon": 7,
+      "open_pyramid": 2,
+      "big_key_shuffle": 0,
+      "small_key_shuffle": 0,
+      "compass_shuffle": 0,
+      "map_shuffle": 0,
+      "progressive": 2,
+      "swordless": 0,
+      "retro_bow": 0,
+      "retro_caves": 0,
+      "shop_item_slots": 0,
+      "boss_shuffle": 0,
+      "pot_shuffle": 0,
+      "enemy_shuffle": 0,
+      "key_drop_shuffle": 1,
+      "bombless_start": 0,
+      "randomize_shop_inventories": 0,
+      "shuffle_shop_inventories": 0,
+      "shuffle_capacity_upgrades": 0,
+      "entrance_shuffle": 0,
+      "dark_room_logic": 0,
+      "goal": 0,
+      "mode": 1,
+      "triforce_pieces_mode": 2,
+      "triforce_pieces_percentage": 150,
+      "triforce_pieces_required": 20,
+      "triforce_pieces_available": 30,
+      "triforce_pieces_extra": 10,
+      "mm_medalion": "Ether",
+      "tr_medalion": "Ether"
+     }
+    }
+   ]
+  },
+  {
+   "t": 4,
+   "client": "tracker",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_1"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 11,
+   "client": "tracker",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_1"
+     ],
+     "uuid": "b354eea8-b122-4542-a4ad-ddadf1401f3e"
+    }
+   ]
+  },
+  {
+   "t": 11,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker login -> {\"ok\":true,\"slotData\":{\"crystals_needed_for_gt\":7,\"crystals_needed_for_ganon\":7,\"open_pyramid\":2,\"big_key_shuffle\":0,\"small_key_shuffle\":0,\"compass_shuffle\":0,\"map_shuffle\":0,\"progressive\":2,\"swordles"
+  },
+  {
+   "t": 11,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) tracking A Link to the Past has joined. Client(0.6.3), ['Tracker']."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 11,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 11,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_1": []
+     },
+     "uuid": "b354eea8-b122-4542-a4ad-ddadf1401f3e"
+    }
+   ]
+  },
+  {
+   "t": 511,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker reads data storage and subscribes"
+  },
+  {
+   "t": 511,
+   "client": "tracker",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_race_mode",
+      "_read_slot_data_1",
+      "_read_client_status_0_1",
+      "_read_hints_0_1",
+      "_read_location_name_groups_A Link to the Past"
+     ],
+     "uuid": "bench-get-1"
+    }
+   ]
+  },
+  {
+   "t": 511,
+   "client": "tracker",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_1",
+      "_read_client_status_0_1",
+      "_read_client_status_0_4"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 512,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_race_mode": 0,
+      "_read_slot_data_1": {
+       "crystals_needed_for_gt": 7,
+       "crystals_needed_for_ganon": 7,
+       "open_pyramid": 2,
+       "big_key_shuffle": 0,
+       "small_key_shuffle": 0,
+       "compass_shuffle": 0,
+       "map_shuffle": 0,
+       "progressive": 2,
+       "swordless": 0,
+       "retro_bow": 0,
+       "retro_caves": 0,
+       "shop_item_slots": 0,
+       "boss_shuffle": 0,
+       "pot_shuffle": 0,
+       "enemy_shuffle": 0,
+       "key_drop_shuffle": 1,
+       "bombless_start": 0,
+       "randomize_shop_inventories": 0,
+       "shuffle_shop_inventories": 0,
+       "shuffle_capacity_upgrades": 0,
+       "entrance_shuffle": 0,
+       "dark_room_logic": 0,
+       "goal": 0,
+       "mode": 1,
+       "triforce_pieces_mode": 2,
+       "triforce_pieces_percentage": 150,
+       "triforce_pieces_required": 20,
+       "triforce_pieces_available": 30,
+       "triforce_pieces_extra": 10,
+       "mm_medalion": "Ether",
+       "tr_medalion": "Ether"
+      },
+      "_read_client_status_0_1": 5,
+      "_read_hints_0_1": [],
+      "_read_location_name_groups_A Link to the Past": {
+       "Blind's Hideout": [
+        "Blind's Hideout - Far Left",
+        "Blind's Hideout - Far Right",
+        "Blind's Hideout - Left",
+        "Blind's Hideout - Right",
+        "Blind's Hideout - Top"
+       ],
+       "Castle Tower": [
+        "Castle Tower - Circle of Pots Key Drop",
+        "Castle Tower - Dark Archer Key Drop",
+        "Castle Tower - Dark Maze",
+        "Castle Tower - Room 03"
+       ],
+       "Desert Palace": [
+        "Desert Palace - Beamos Hall Pot Key",
+        "Desert Palace - Big Chest",
+        "Desert Palace - Big Key Chest",
+        "Desert Palace - Boss",
+        "Desert Palace - Compass Chest",
+        "Desert Palace - Desert Tiles 1 Pot Key",
+        "Desert Palace - Desert Tiles 2 Pot Key",
+        "Desert Palace - Map Chest",
+        "Desert Palace - Torch"
+       ],
+       "Eastern Palace": [
+        "Eastern Palace - Big Chest",
+        "Eastern Palace - Big Key Chest",
+        "Eastern Palace - Boss",
+        "Eastern Palace - Cannonball Chest",
+        "Eastern Palace - Compass Chest",
+        "Eastern Palace - Dark Eyegore Key Drop",
+        "Eastern Palace - Dark Square Pot Key",
+        "Eastern Palace - Map Chest"
+       ],
+       "Everywhere": [
+        "Aginah's Cave",
+        "Blacksmith",
+        "Blind's Hideout - Far Left",
+        "Blind's Hideout - Far Right",
+        "Blind's Hideout - Left",
+        "Blind's Hideout - Right",
+        "Blind's Hideout - Top",
+        "Bombos Tablet",
+        "Bonk Rock Cave",
+        "Bottle Merchant",
+        "Brewery",
+        "Bumper Cave Ledge",
+        "C-Shaped House",
+        "Capacity Upgrade Left",
+        "Capacity Upgrade Right",
+        "Castle Tower - Circle of Pots Key Drop",
+        "Castle Tower - Dark Archer Key Drop",
+        "Castle Tower - Dark Maze",
+        "Castle Tower - Room 03",
+        "Catfish",
+        "Cave 45",
+        "Cave Shop (Dark Death Mountain) Center",
+        "Cave Shop (Dark Death Mountain) Left",
+        "Cave Shop (Dark Death Mountain) Right",
+        "Cave Shop (Lake Hylia) Center",
+        "Cave Shop (Lake Hylia) Left",
+        "Cave Shop (Lake Hylia) Right",
+        "Checkerboard Cave",
+        "Chest Game",
+        "Chicken House",
+        "Dark Lake Hylia Shop Center",
+        "Dark Lake Hylia Shop Left",
+        "Dark Lake Hylia Shop Right",
+        "Dark World Lumberjack Shop Center",
+        "Dark World Lumberjack Shop Left",
+        "Dark World Lumberjack Shop Right",
+        "Dark World Potion Shop Center",
+        "Dark World Potion Shop Left",
+        "Dark World Potion Shop Right",
+        "Desert Ledge",
+        "Desert Palace - Beamos Hall Pot Key",
+        "Desert Palace - Big Chest",
+        "Desert Palace - Big Key Chest",
+        "Desert Palace - Boss",
+        "Desert Palace - Compass Chest",
+        "Desert Palace - Desert Tiles 1 Pot Key",
+        "Desert Palace - Desert Tiles 2 Pot Key",
+        "Desert Palace - Map Chest",
+        "Desert Palace - Torch",
+        "Digging Game",
+        "Eastern Palace - Big Chest",
+        "Eastern Palace - Big Key Chest",
+        "Eastern Palace - Boss",
+        "Eastern Palace - Cannonball Chest",
+        "Eastern Palace - Compass Chest",
+        "Eastern Palace - Dark Eyegore Key Drop",
+        "Eastern Palace - Dark Square Pot Key",
+        "Eastern Palace - Map Chest",
+        "Ether Tablet",
+        "Floating Island",
+        "Floodgate Chest",
+        "Flute Spot",
+        "Ganons Tower - Big Chest",
+        "Ganons Tower - Big Key Chest",
+        "Ganons Tower - Big Key Room - Left",
+        "Ganons Tower - Big Key Room - Right",
+        "Ganons Tower - Bob's Chest",
+        "Ganons Tower - Bob's Torch",
+        "Ganons Tower - Compass Room - Bottom Left",
+        "Ganons Tower - Compass Room - Bottom Right",
+        "Ganons Tower - Compass Room - Top Left",
+        "Ganons Tower - Compass Room - Top Right",
+        "Ganons Tower - Conveyor Cross Pot Key",
+        "Ganons Tower - Conveyor Star Pits Pot Key",
+        "Ganons Tower - DMs Room - Bottom Left",
+        "Ganons Tower - DMs Room - Bottom Right",
+        "Ganons Tower - DMs Room - Top Left",
+        "Ganons Tower - DMs Room - Top Right",
+        "Ganons Tower - Double Switch Pot Key",
+        "Ganons Tower - Firesnake Room",
+        "Ganons Tower - Hope Room - Left",
+        "Ganons Tower - Hope Room - Right",
+        "Ganons Tower - Map Chest",
+        "Ganons Tower - Mini Helmasaur Key Drop",
+        "Ganons Tower - Mini Helmasaur Room - Left",
+        "Ganons Tower - Mini Helmasaur Room - Right",
+        "Ganons Tower - Pre-Moldorm Chest",
+        "Ganons Tower - Randomizer Room - Bottom Left",
+        "Ganons Tower - Randomizer Room - Bottom Right",
+        "Ganons Tower - Randomizer Room - Top Left",
+        "Ganons Tower - Randomizer Room - Top Right",
+        "Ganons Tower - Tile Room",
+        "Ganons Tower - Validation Chest",
+        "Graveyard Cave",
+        "Hobo",
+        "Hookshot Cave - Bottom Left",
+        "Hookshot Cave - Bottom Right",
+        "Hookshot Cave - Top Left",
+        "Hookshot Cave - Top Right",
+        "Hype Cave - Bottom",
+        "Hype Cave - Generous Guy",
+        "Hype Cave - Middle Left",
+        "Hype Cave - Middle Right",
+        "Hype Cave - Top",
+        "Hyrule Castle - Big Key Drop",
+        "Hyrule Castle - Boomerang Chest",
+        "Hyrule Castle - Boomerang Guard Key Drop",
+        "Hyrule Castle - Map Chest",
+        "Hyrule Castle - Map Guard Key Drop",
+        "Hyrule Castle - Zelda's Chest",
+        "Ice Palace - Big Chest",
+        "Ice Palace - Big Key Chest",
+        "Ice Palace - Boss",
+        "Ice Palace - Compass Chest",
+        "Ice Palace - Conveyor Key Drop",
+        "Ice Palace - Freezor Chest",
+        "Ice Palace - Hammer Block Key Drop",
+        "Ice Palace - Iced T Room",
+        "Ice Palace - Jelly Key Drop",
+        "Ice Palace - Many Pots Pot Key",
+        "Ice Palace - Map Chest",
+        "Ice Palace - Spike Room",
+        "Ice Rod Cave",
+        "Kakariko Shop Center",
+        "Kakariko Shop Left",
+        "Kakariko Shop Right",
+        "Kakariko Tavern",
+        "Kakariko Well - Bottom",
+        "Kakariko Well - Left",
+        "Kakariko Well - Middle",
+        "Kakariko Well - Right",
+        "Kakariko Well - Top",
+        "King Zora",
+        "King's Tomb",
+        "Lake Hylia Island",
+        "Library",
+        "Light World Death Mountain Shop Center",
+        "Light World Death Mountain Shop Left",
+        "Light World Death Mountain Shop Right",
+        "Link's House",
+        "Link's Uncle",
+        "Lost Woods Hideout",
+        "Lumberjack Tree",
+        "Magic Bat",
+        "Master Sword Pedestal",
+        "Maze Race",
+        "Mimic Cave",
+        "Mini Moldorm Cave - Far Left",
+        "Mini Moldorm Cave - Far Right",
+        "Mini Moldorm Cave - Generous Guy",
+        "Mini Moldorm Cave - Left",
+        "Mini Moldorm Cave - Right",
+        "Mire Shed - Left",
+        "Mire Shed - Right",
+        "Misery Mire - Big Chest",
+        "Misery Mire - Big Key Chest",
+        "Misery Mire - Boss",
+        "Misery Mire - Bridge Chest",
+        "Misery Mire - Compass Chest",
+        "Misery Mire - Conveyor Crystal Key Drop",
+        "Misery Mire - Fishbone Pot Key",
+        "Misery Mire - Main Lobby",
+        "Misery Mire - Map Chest",
+        "Misery Mire - Spike Chest",
+        "Misery Mire - Spikes Pot Key",
+        "Mushroom",
+        "Old Man",
+        "Old Man Sword Cave",
+        "Palace of Darkness - Big Chest",
+        "Palace of Darkness - Big Key Chest",
+        "Palace of Darkness - Boss",
+        "Palace of Darkness - Compass Chest",
+        "Palace of Darkness - Dark Basement - Left",
+        "Palace of Darkness - Dark Basement - Right",
+        "Palace of Darkness - Dark Maze - Bottom",
+        "Palace of Darkness - Dark Maze - Top",
+        "Palace of Darkness - Harmless Hellway",
+        "Palace of Darkness - Map Chest",
+        "Palace of Darkness - Shooter Room",
+        "Palace of Darkness - Stalfos Basement",
+        "Palace of Darkness - The Arena - Bridge",
+        "Palace of Darkness - The Arena - Ledge",
+        "Paradox Cave Lower - Far Left",
+        "Paradox Cave Lower - Far Right",
+        "Paradox Cave Lower - Left",
+        "Paradox Cave Lower - Middle",
+        "Paradox Cave Lower - Right",
+        "Paradox Cave Upper - Left",
+        "Paradox Cave Upper - Right",
+        "Peg Cave",
+        "Potion Shop",
+        "Potion Shop Center",
+        "Potion Shop Left",
+        "Potion Shop Right",
+        "Purple Chest",
+        "Pyramid",
+        "Pyramid Fairy - Left",
+        "Pyramid Fairy - Right",
+        "Red Shield Shop Center",
+        "Red Shield Shop Left",
+        "Red Shield Shop Right",
+        "Sahasrahla",
+        "Sahasrahla's Hut - Left",
+        "Sahasrahla's Hut - Middle",
+        "Sahasrahla's Hut - Right",
+        "Sanctuary",
+        "Secret Passage",
+        "Sewers - Dark Cross",
+        "Sewers - Key Rat Key Drop",
+        "Sewers - Secret Room - Left",
+        "Sewers - Secret Room - Middle",
+        "Sewers - Secret Room - Right",
+        "Sick Kid",
+        "Skull Woods - Big Chest",
+        "Skull Woods - Big Key Chest",
+        "Skull Woods - Boss",
+        "Skull Woods - Bridge Room",
+        "Skull Woods - Compass Chest",
+        "Skull Woods - Map Chest",
+        "Skull Woods - Pinball Room",
+        "Skull Woods - Pot Prison",
+        "Skull Woods - Spike Corner Key Drop",
+        "Skull Woods - West Lobby Pot Key",
+        "Spectacle Rock",
+        "Spectacle Rock Cave",
+        "Spike Cave",
+        "Spiral Cave",
+        "Stumpy",
+        "Sunken Treasure",
+        "Superbunny Cave - Bottom",
+        "Superbunny Cave - Top",
+        "Swamp Palace - Big Chest",
+        "Swamp Palace - Big Key Chest",
+        "Swamp Palace - Boss",
+        "Swamp Palace - Compass Chest",
+        "Swamp Palace - Entrance",
+        "Swamp Palace - Flooded Room - Left",
+        "Swamp Palace - Flooded Room - Right",
+        "Swamp Palace - Hookshot Pot Key",
+        "Swamp Palace - Map Chest",
+        "Swamp Palace - Pot Row Pot Key",
+        "Swamp Palace - Trench 1 Pot Key",
+        "Swamp Palace - Trench 2 Pot Key",
+        "Swamp Palace - Waterfall Room",
+        "Swamp Palace - Waterway Pot Key",
+        "Swamp Palace - West Chest",
+        "Take-Any #1",
+        "Take-Any #2",
+        "Take-Any #3",
+        "Take-Any #4",
+        "Thieves' Town - Ambush Chest",
+        "Thieves' Town - Attic",
+        "Thieves' Town - Big Chest",
+        "Thieves' Town - Big Key Chest",
+        "Thieves' Town - Blind's Cell",
+        "Thieves' Town - Boss",
+        "Thieves' Town - Compass Chest",
+        "Thieves' Town - Hallway Pot Key",
+        "Thieves' Town - Map Chest",
+        "Thieves' Town - Spike Switch Pot Key",
+        "Tower of Hera - Basement Cage",
+        "Tower of Hera - Big Chest",
+        "Tower of Hera - Big Key Chest",
+        "Tower of Hera - Boss",
+        "Tower of Hera - Compass Chest",
+        "Tower of Hera - Map Chest",
+        "Turtle Rock - Big Chest",
+        "Turtle Rock - Big Key Chest",
+        "Turtle Rock - Boss",
+        "Turtle Rock - Chain Chomps",
+        "Turtle Rock - Compass Chest",
+        "Turtle Rock - Crystaroller Room",
+        "Turtle Rock - Eye Bridge - Bottom Left",
+        "Turtle Rock - Eye Bridge - Bottom Right",
+        "Turtle Rock - Eye Bridge - Top Left",
+        "Turtle Rock - Eye Bridge - Top Right",
+        "Turtle Rock - Pokey 1 Key Drop",
+        "Turtle Rock - Pokey 2 Key Drop",
+        "Turtle Rock - Roller Room - Left",
+        "Turtle Rock - Roller Room - Right",
+        "Village of Outcasts Shop Center",
+        "Village of Outcasts Shop Left",
+        "Village of Outcasts Shop Right",
+        "Waterfall Fairy - Left",
+        "Waterfall Fairy - Right",
+        "Zora's Ledge"
+       ],
+       "Ganons Tower": [
+        "Ganons Tower - Big Chest",
+        "Ganons Tower - Big Key Chest",
+        "Ganons Tower - Big Key Room - Left",
+        "Ganons Tower - Big Key Room - Right",
+        "Ganons Tower - Bob's Chest",
+        "Ganons Tower - Bob's Torch",
+        "Ganons Tower - Compass Room - Bottom Left",
+        "Ganons Tower - Compass Room - Bottom Right",
+        "Ganons Tower - Compass Room - Top Left",
+        "Ganons Tower - Compass Room - Top Right",
+        "Ganons Tower - Conveyor Cross Pot Key",
+        "Ganons Tower - Conveyor Star Pits Pot Key",
+        "Ganons Tower - DMs Room - Bottom Left",
+        "Ganons Tower - DMs Room - Bottom Right",
+        "Ganons Tower - DMs Room - Top Left",
+        "Ganons Tower - DMs Room - Top Right",
+        "Ganons Tower - Double Switch Pot Key",
+        "Ganons Tower - Firesnake Room",
+        "Ganons Tower - Hope Room - Left",
+        "Ganons Tower - Hope Room - Right",
+        "Ganons Tower - Map Chest",
+        "Ganons Tower - Mini Helmasaur Key Drop",
+        "Ganons Tower - Mini Helmasaur Room - Left",
+        "Ganons Tower - Mini Helmasaur Room - Right",
+        "Ganons Tower - Pre-Moldorm Chest",
+        "Ganons Tower - Randomizer Room - Bottom Left",
+        "Ganons Tower - Randomizer Room - Bottom Right",
+        "Ganons Tower - Randomizer Room - Top Left",
+        "Ganons Tower - Randomizer Room - Top Right",
+        "Ganons Tower - Tile Room",
+        "Ganons Tower - Validation Chest"
+       ],
+       "Ganons Tower Climb": [
+        "Ganons Tower - Mini Helmasaur Key Drop",
+        "Ganons Tower - Mini Helmasaur Room - Left",
+        "Ganons Tower - Mini Helmasaur Room - Right",
+        "Ganons Tower - Pre-Moldorm Chest",
+        "Ganons Tower - Validation Chest"
+       ],
+       "Hookshot Cave": [
+        "Hookshot Cave - Bottom Left",
+        "Hookshot Cave - Bottom Right",
+        "Hookshot Cave - Top Left",
+        "Hookshot Cave - Top Right"
+       ],
+       "Hype Cave": [
+        "Hype Cave - Bottom",
+        "Hype Cave - Generous Guy",
+        "Hype Cave - Middle Left",
+        "Hype Cave - Middle Right",
+        "Hype Cave - Top"
+       ],
+       "Hyrule Castle": [
+        "Hyrule Castle - Big Key Drop",
+        "Hyrule Castle - Boomerang Chest",
+        "Hyrule Castle - Boomerang Guard Key Drop",
+        "Hyrule Castle - Map Chest",
+        "Hyrule Castle - Map Guard Key Drop",
+        "Hyrule Castle - Zelda's Chest",
+        "Sewers - Dark Cross",
+        "Sewers - Key Rat Key Drop",
+        "Sewers - Secret Room - Left",
+        "Sewers - Secret Room - Middle",
+        "Sewers - Secret Room - Right"
+       ],
+       "Ice Palace": [
+        "Ice Palace - Big Chest",
+        "Ice Palace - Big Key Chest",
+        "Ice Palace - Boss",
+        "Ice Palace - Compass Chest",
+        "Ice Palace - Conveyor Key Drop",
+        "Ice Palace - Freezor Chest",
+        "Ice Palace - Hammer Block Key Drop",
+        "Ice Palace - Iced T Room",
+        "Ice Palace - Jelly Key Drop",
+        "Ice Palace - Many Pots Pot Key",
+        "Ice Palace - Map Chest",
+        "Ice Palace - Spike Room"
+       ],
+       "Kakariko Well": [
+        "Kakariko Well - Bottom",
+        "Kakariko Well - Left",
+        "Kakariko Well - Middle",
+        "Kakariko Well - Right",
+        "Kakariko Well - Top"
+       ],
+       "Mini Moldorm Cave": [
+        "Mini Moldorm Cave - Far Left",
+        "Mini Moldorm Cave - Far Right",
+        "Mini Moldorm Cave - Generous Guy",
+        "Mini Moldorm Cave - Left",
+        "Mini Moldorm Cave - Right"
+       ],
+       "Misery Mire": [
+        "Misery Mire - Big Chest",
+        "Misery Mire - Big Key Chest",
+        "Misery Mire - Boss",
+        "Misery Mire - Bridge Chest",
+        "Misery Mire - Compass Chest",
+        "Misery Mire - Conveyor Crystal Key Drop",
+        "Misery Mire - Fishbone Pot Key",
+        "Misery Mire - Main Lobby",
+        "Misery Mire - Map Chest",
+        "Misery Mire - Spike Chest",
+        "Misery Mire - Spikes Pot Key"
+       ],
+       "Palace of Darkness": [
+        "Palace of Darkness - Big Chest",
+        "Palace of Darkness - Big Key Chest",
+        "Palace of Darkness - Boss",
+        "Palace of Darkness - Compass Chest",
+        "Palace of Darkness - Dark Basement - Left",
+        "Palace of Darkness - Dark Basement - Right",
+        "Palace of Darkness - Dark Maze - Bottom",
+        "Palace of Darkness - Dark Maze - Top",
+        "Palace of Darkness - Harmless Hellway",
+        "Palace of Darkness - Map Chest",
+        "Palace of Darkness - Shooter Room",
+        "Palace of Darkness - Stalfos Basement",
+        "Palace of Darkness - The Arena - Bridge",
+        "Palace of Darkness - The Arena - Ledge"
+       ],
+       "Paradox Cave": [
+        "Paradox Cave Lower - Far Left",
+        "Paradox Cave Lower - Far Right",
+        "Paradox Cave Lower - Left",
+        "Paradox Cave Lower - Middle",
+        "Paradox Cave Lower - Right",
+        "Paradox Cave Upper - Left",
+        "Paradox Cave Upper - Right"
+       ],
+       "Skull Woods": [
+        "Skull Woods - Big Chest",
+        "Skull Woods - Big Key Chest",
+        "Skull Woods - Boss",
+        "Skull Woods - Bridge Room",
+        "Skull Woods - Compass Chest",
+        "Skull Woods - Map Chest",
+        "Skull Woods - Pinball Room",
+        "Skull Woods - Pot Prison",
+        "Skull Woods - Spike Corner Key Drop",
+        "Skull Woods - West Lobby Pot Key"
+       ],
+       "Swamp Palace": [
+        "Swamp Palace - Big Chest",
+        "Swamp Palace - Big Key Chest",
+        "Swamp Palace - Boss",
+        "Swamp Palace - Compass Chest",
+        "Swamp Palace - Entrance",
+        "Swamp Palace - Flooded Room - Left",
+        "Swamp Palace - Flooded Room - Right",
+        "Swamp Palace - Hookshot Pot Key",
+        "Swamp Palace - Map Chest",
+        "Swamp Palace - Pot Row Pot Key",
+        "Swamp Palace - Trench 1 Pot Key",
+        "Swamp Palace - Trench 2 Pot Key",
+        "Swamp Palace - Waterfall Room",
+        "Swamp Palace - Waterway Pot Key",
+        "Swamp Palace - West Chest"
+       ],
+       "Thieves' Town": [
+        "Thieves' Town - Ambush Chest",
+        "Thieves' Town - Attic",
+        "Thieves' Town - Big Chest",
+        "Thieves' Town - Big Key Chest",
+        "Thieves' Town - Blind's Cell",
+        "Thieves' Town - Boss",
+        "Thieves' Town - Compass Chest",
+        "Thieves' Town - Hallway Pot Key",
+        "Thieves' Town - Map Chest",
+        "Thieves' Town - Spike Switch Pot Key"
+       ],
+       "Tower of Hera": [
+        "Tower of Hera - Basement Cage",
+        "Tower of Hera - Big Chest",
+        "Tower of Hera - Big Key Chest",
+        "Tower of Hera - Boss",
+        "Tower of Hera - Compass Chest",
+        "Tower of Hera - Map Chest"
+       ],
+       "Turtle Rock": [
+        "Turtle Rock - Big Chest",
+        "Turtle Rock - Big Key Chest",
+        "Turtle Rock - Boss",
+        "Turtle Rock - Chain Chomps",
+        "Turtle Rock - Compass Chest",
+        "Turtle Rock - Crystaroller Room",
+        "Turtle Rock - Eye Bridge - Bottom Left",
+        "Turtle Rock - Eye Bridge - Bottom Right",
+        "Turtle Rock - Eye Bridge - Top Left",
+        "Turtle Rock - Eye Bridge - Top Right",
+        "Turtle Rock - Pokey 1 Key Drop",
+        "Turtle Rock - Pokey 2 Key Drop",
+        "Turtle Rock - Roller Room - Left",
+        "Turtle Rock - Roller Room - Right"
+       ]
+      }
+     },
+     "uuid": "bench-get-1"
+    }
+   ]
+  },
+  {
+   "t": 1014,
+   "client": "-",
+   "dir": "mark",
+   "note": "a second tracker on the same slot (two clients on one slot)"
+  },
+  {
+   "t": 1014,
+   "client": "tracker2",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 1016,
+   "client": "tracker2",
+   "dir": "open"
+  },
+  {
+   "t": 1016,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861493.7281055
+    }
+   ]
+  },
+  {
+   "t": 1016,
+   "client": "tracker2",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 1017,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 1,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      59758,
+      59761,
+      59764,
+      59767,
+      59770,
+      59773,
+      59776,
+      59779,
+      59782,
+      59785,
+      59788,
+      59791,
+      59794,
+      59797,
+      59800,
+      59803,
+      59806,
+      59809,
+      59812,
+      59818,
+      59821,
+      59824,
+      59827,
+      59830,
+      59833,
+      59836,
+      59839,
+      59842,
+      59845,
+      59848,
+      59851,
+      59854,
+      59857,
+      59860,
+      59866,
+      59869,
+      59872,
+      59875,
+      59878,
+      59881,
+      59884,
+      59887,
+      59890,
+      59893,
+      59896,
+      59899,
+      59902,
+      59905,
+      59908,
+      59911,
+      59914,
+      59917,
+      59920,
+      59923,
+      59926,
+      59929,
+      59932,
+      59935,
+      59938,
+      59941,
+      59944,
+      59947,
+      59950,
+      59953,
+      59956,
+      59959,
+      59962,
+      59965,
+      59968,
+      59971,
+      59974,
+      59977,
+      59980,
+      59983,
+      59986,
+      59989,
+      59992,
+      59995,
+      59998,
+      60001,
+      60004,
+      60007,
+      60010,
+      60013,
+      60019,
+      60022,
+      60025,
+      60028,
+      60031,
+      60034,
+      60037,
+      60040,
+      60043,
+      60046,
+      60049,
+      60052,
+      60055,
+      60058,
+      60061,
+      60064,
+      60067,
+      60070,
+      60073,
+      60076,
+      60079,
+      60082,
+      60085,
+      60088,
+      60091,
+      60094,
+      60097,
+      60100,
+      60103,
+      60106,
+      60109,
+      60112,
+      60115,
+      60118,
+      60121,
+      60124,
+      60127,
+      60130,
+      60133,
+      60136,
+      60139,
+      60142,
+      60145,
+      60148,
+      60151,
+      60157,
+      60160,
+      60163,
+      60166,
+      60169,
+      60172,
+      60175,
+      60178,
+      60181,
+      60184,
+      60187,
+      60190,
+      60193,
+      60196,
+      60199,
+      60202,
+      60205,
+      60208,
+      60211,
+      60214,
+      60217,
+      60220,
+      60223,
+      60226,
+      60229,
+      60232,
+      60235,
+      60238,
+      60241,
+      60244,
+      60247,
+      60250,
+      60253,
+      60256,
+      60259,
+      60840,
+      166320,
+      188229,
+      191256,
+      193020,
+      209095,
+      211407,
+      212328,
+      212605,
+      975237,
+      975299,
+      1010170,
+      1310724,
+      1310727,
+      1310730,
+      1310733,
+      1310736,
+      1310739,
+      1310742,
+      1310745,
+      1310748,
+      1310751,
+      1310754,
+      1310757,
+      1310760,
+      1310763,
+      1310766,
+      1310769,
+      1310772,
+      1310775,
+      1310778,
+      1310781,
+      1310784,
+      1310787,
+      1310790,
+      1310793,
+      1310796,
+      1310799,
+      1310802,
+      1310805,
+      1310808,
+      1310811,
+      1310814,
+      1310817,
+      1310820,
+      1572864,
+      1572865,
+      1572866,
+      1572867,
+      1572868,
+      1572869,
+      1572870,
+      1572880,
+      1572881,
+      1572882,
+      1572883,
+      1572884,
+      1572885,
+      1572886,
+      1572887,
+      1572906,
+      1573184,
+      1573185,
+      1573186,
+      1573187,
+      1573188,
+      1573189,
+      1573190,
+      1573191,
+      1573192,
+      1573193,
+      1573194,
+      1573200,
+      1573201,
+      1573202,
+      1573203,
+      1573204,
+      1573205,
+      1573206,
+      1573207,
+      1573208,
+      1573209,
+      1573216,
+      1573217,
+      1573218
+     ],
+     "checked_locations": [],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 0,
+     "slot_data": {
+      "crystals_needed_for_gt": 7,
+      "crystals_needed_for_ganon": 7,
+      "open_pyramid": 2,
+      "big_key_shuffle": 0,
+      "small_key_shuffle": 0,
+      "compass_shuffle": 0,
+      "map_shuffle": 0,
+      "progressive": 2,
+      "swordless": 0,
+      "retro_bow": 0,
+      "retro_caves": 0,
+      "shop_item_slots": 0,
+      "boss_shuffle": 0,
+      "pot_shuffle": 0,
+      "enemy_shuffle": 0,
+      "key_drop_shuffle": 1,
+      "bombless_start": 0,
+      "randomize_shop_inventories": 0,
+      "shuffle_shop_inventories": 0,
+      "shuffle_capacity_upgrades": 0,
+      "entrance_shuffle": 0,
+      "dark_room_logic": 0,
+      "goal": 0,
+      "mode": 1,
+      "triforce_pieces_mode": 2,
+      "triforce_pieces_percentage": 150,
+      "triforce_pieces_required": 20,
+      "triforce_pieces_available": 30,
+      "triforce_pieces_extra": 10,
+      "mm_medalion": "Ether",
+      "tr_medalion": "Ether"
+     }
+    }
+   ]
+  },
+  {
+   "t": 1017,
+   "client": "tracker2",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_1"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 1017,
+   "client": "tracker2",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_1"
+     ],
+     "uuid": "8ebccaf1-6737-4541-84af-3e82e4373a75"
+    }
+   ]
+  },
+  {
+   "t": 1017,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker2 login -> {\"ok\":true,\"slotData\":{\"crystals_needed_for_gt\":7,\"crystals_needed_for_ganon\":7,\"open_pyramid\":2,\"big_key_shuffle\":0,\"sm"
+  },
+  {
+   "t": 1017,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) tracking A Link to the Past has joined. Client(0.6.3), ['Tracker']."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 1017,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) tracking A Link to the Past has joined. Client(0.6.3), ['Tracker']."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 1017,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 1018,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_1": []
+     },
+     "uuid": "8ebccaf1-6737-4541-84af-3e82e4373a75"
+    }
+   ]
+  },
+  {
+   "t": 1517,
+   "client": "-",
+   "dir": "mark",
+   "note": "game client logs in on Quester (game APQuest, items 0b111)"
+  },
+  {
+   "t": 1517,
+   "client": "game-quester",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 1519,
+   "client": "game-quester",
+   "dir": "open"
+  },
+  {
+   "t": 1519,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861494.2309608
+    }
+   ]
+  },
+  {
+   "t": 1519,
+   "client": "game-quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Quester",
+     "game": "APQuest",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 1520,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 4,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      10
+     ],
+     "checked_locations": [],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 0,
+     "slot_data": {
+      "hard_mode": 0,
+      "hammer": 0,
+      "extra_starting_chest": 0,
+      "confetti_explosiveness": 3,
+      "player_sprite": 0
+     }
+    }
+   ]
+  },
+  {
+   "t": 1520,
+   "client": "game-quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_4"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 1520,
+   "client": "game-quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_4"
+     ],
+     "uuid": "21f5dacc-338f-452d-9780-915937f0dd1f"
+    }
+   ]
+  },
+  {
+   "t": 1520,
+   "client": "-",
+   "dir": "mark",
+   "note": "game-quester login -> ok=true"
+  },
+  {
+   "t": 1520,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_client_status_0_4",
+     "value": 5
+    }
+   ]
+  },
+  {
+   "t": 1520,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) playing APQuest has joined. Client(0.6.3), []."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 4,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "t": 1520,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) playing APQuest has joined. Client(0.6.3), []."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 4,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "t": 1520,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) playing APQuest has joined. Client(0.6.3), []."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 4,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "t": 1520,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 1520,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_4": []
+     },
+     "uuid": "21f5dacc-338f-452d-9780-915937f0dd1f"
+    }
+   ]
+  },
+  {
+   "t": 2020,
+   "client": "-",
+   "dir": "mark",
+   "note": "game-quester scouts its own missing locations (create_as_hint 0): 6"
+  },
+  {
+   "t": 2020,
+   "client": "game-quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "LocationScouts",
+     "locations": [
+      1,
+      10,
+      2,
+      3,
+      5,
+      6
+     ],
+     "create_as_hint": 0
+    }
+   ]
+  },
+  {
+   "t": 2020,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "LocationInfo",
+     "locations": [
+      {
+       "item": 84194,
+       "location": 1,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84062,
+       "location": 10,
+       "player": 3,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 40,
+       "location": 2,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 3,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83002,
+       "location": 5,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 6,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 2021,
+   "client": "-",
+   "dir": "mark",
+   "note": "Quester locations holding Link's items: [2,3,6]"
+  },
+  {
+   "t": 2021,
+   "client": "-",
+   "dir": "mark",
+   "note": "game-quester checks one location holding a Link item, then one holding another player's item"
+  },
+  {
+   "t": 2021,
+   "client": "game-quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "LocationChecks",
+     "locations": [
+      2
+     ]
+    }
+   ]
+  },
+  {
+   "t": 2021,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "40",
+       "player": 1,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "2",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 40,
+      "location": 2,
+      "player": 4,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 2022,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "40",
+       "player": 1,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "2",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 40,
+      "location": 2,
+      "player": 4,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 2022,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "40",
+       "player": 1,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "2",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 40,
+      "location": 2,
+      "player": 4,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 2022,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 0,
+     "items": [
+      {
+       "item": 40,
+       "location": 2,
+       "player": 4,
+       "flags": 0,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 2022,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 0,
+     "items": [
+      {
+       "item": 40,
+       "location": 2,
+       "player": 4,
+       "flags": 0,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 2022,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 1,
+     "checked_locations": [
+      2
+     ]
+    }
+   ]
+  },
+  {
+   "t": 2725,
+   "client": "game-quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "LocationChecks",
+     "locations": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "t": 2726,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84194",
+       "player": 3,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84194,
+      "location": 1,
+      "player": 4,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 2726,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84194",
+       "player": 3,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84194,
+      "location": 1,
+      "player": 4,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 2726,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84194",
+       "player": 3,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84194,
+      "location": 1,
+      "player": 4,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 2726,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 2,
+     "checked_locations": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3428,
+   "client": "-",
+   "dir": "mark",
+   "note": "game client logs in on Link too (game A Link to the Past, items 0b001)"
+  },
+  {
+   "t": 3428,
+   "client": "game-link",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 3430,
+   "client": "game-link",
+   "dir": "open"
+  },
+  {
+   "t": 3431,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861496.1426387
+    }
+   ]
+  },
+  {
+   "t": 3431,
+   "client": "game-link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "A Link to the Past",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 1,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 3434,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 1,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      59758,
+      59761,
+      59764,
+      59767,
+      59770,
+      59773,
+      59776,
+      59779,
+      59782,
+      59785,
+      59788,
+      59791,
+      59794,
+      59797,
+      59800,
+      59803,
+      59806,
+      59809,
+      59812,
+      59818,
+      59821,
+      59824,
+      59827,
+      59830,
+      59833,
+      59836,
+      59839,
+      59842,
+      59845,
+      59848,
+      59851,
+      59854,
+      59857,
+      59860,
+      59866,
+      59869,
+      59872,
+      59875,
+      59878,
+      59881,
+      59884,
+      59887,
+      59890,
+      59893,
+      59896,
+      59899,
+      59902,
+      59905,
+      59908,
+      59911,
+      59914,
+      59917,
+      59920,
+      59923,
+      59926,
+      59929,
+      59932,
+      59935,
+      59938,
+      59941,
+      59944,
+      59947,
+      59950,
+      59953,
+      59956,
+      59959,
+      59962,
+      59965,
+      59968,
+      59971,
+      59974,
+      59977,
+      59980,
+      59983,
+      59986,
+      59989,
+      59992,
+      59995,
+      59998,
+      60001,
+      60004,
+      60007,
+      60010,
+      60013,
+      60019,
+      60022,
+      60025,
+      60028,
+      60031,
+      60034,
+      60037,
+      60040,
+      60043,
+      60046,
+      60049,
+      60052,
+      60055,
+      60058,
+      60061,
+      60064,
+      60067,
+      60070,
+      60073,
+      60076,
+      60079,
+      60082,
+      60085,
+      60088,
+      60091,
+      60094,
+      60097,
+      60100,
+      60103,
+      60106,
+      60109,
+      60112,
+      60115,
+      60118,
+      60121,
+      60124,
+      60127,
+      60130,
+      60133,
+      60136,
+      60139,
+      60142,
+      60145,
+      60148,
+      60151,
+      60157,
+      60160,
+      60163,
+      60166,
+      60169,
+      60172,
+      60175,
+      60178,
+      60181,
+      60184,
+      60187,
+      60190,
+      60193,
+      60196,
+      60199,
+      60202,
+      60205,
+      60208,
+      60211,
+      60214,
+      60217,
+      60220,
+      60223,
+      60226,
+      60229,
+      60232,
+      60235,
+      60238,
+      60241,
+      60244,
+      60247,
+      60250,
+      60253,
+      60256,
+      60259,
+      60840,
+      166320,
+      188229,
+      191256,
+      193020,
+      209095,
+      211407,
+      212328,
+      212605,
+      975237,
+      975299,
+      1010170,
+      1310724,
+      1310727,
+      1310730,
+      1310733,
+      1310736,
+      1310739,
+      1310742,
+      1310745,
+      1310748,
+      1310751,
+      1310754,
+      1310757,
+      1310760,
+      1310763,
+      1310766,
+      1310769,
+      1310772,
+      1310775,
+      1310778,
+      1310781,
+      1310784,
+      1310787,
+      1310790,
+      1310793,
+      1310796,
+      1310799,
+      1310802,
+      1310805,
+      1310808,
+      1310811,
+      1310814,
+      1310817,
+      1310820,
+      1572864,
+      1572865,
+      1572866,
+      1572867,
+      1572868,
+      1572869,
+      1572870,
+      1572880,
+      1572881,
+      1572882,
+      1572883,
+      1572884,
+      1572885,
+      1572886,
+      1572887,
+      1572906,
+      1573184,
+      1573185,
+      1573186,
+      1573187,
+      1573188,
+      1573189,
+      1573190,
+      1573191,
+      1573192,
+      1573193,
+      1573194,
+      1573200,
+      1573201,
+      1573202,
+      1573203,
+      1573204,
+      1573205,
+      1573206,
+      1573207,
+      1573208,
+      1573209,
+      1573216,
+      1573217,
+      1573218
+     ],
+     "checked_locations": [],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 0,
+     "slot_data": {
+      "crystals_needed_for_gt": 7,
+      "crystals_needed_for_ganon": 7,
+      "open_pyramid": 2,
+      "big_key_shuffle": 0,
+      "small_key_shuffle": 0,
+      "compass_shuffle": 0,
+      "map_shuffle": 0,
+      "progressive": 2,
+      "swordless": 0,
+      "retro_bow": 0,
+      "retro_caves": 0,
+      "shop_item_slots": 0,
+      "boss_shuffle": 0,
+      "pot_shuffle": 0,
+      "enemy_shuffle": 0,
+      "key_drop_shuffle": 1,
+      "bombless_start": 0,
+      "randomize_shop_inventories": 0,
+      "shuffle_shop_inventories": 0,
+      "shuffle_capacity_upgrades": 0,
+      "entrance_shuffle": 0,
+      "dark_room_logic": 0,
+      "goal": 0,
+      "mode": 1,
+      "triforce_pieces_mode": 2,
+      "triforce_pieces_percentage": 150,
+      "triforce_pieces_required": 20,
+      "triforce_pieces_available": 30,
+      "triforce_pieces_extra": 10,
+      "mm_medalion": "Ether",
+      "tr_medalion": "Ether"
+     }
+    },
+    {
+     "cmd": "ReceivedItems",
+     "index": 0,
+     "items": [
+      {
+       "item": 40,
+       "location": 2,
+       "player": 4,
+       "flags": 0,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3434,
+   "client": "game-link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_1"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3434,
+   "client": "game-link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_1"
+     ],
+     "uuid": "97d7616a-b68e-4059-8125-20368aa5ca68"
+    }
+   ]
+  },
+  {
+   "t": 3434,
+   "client": "-",
+   "dir": "mark",
+   "note": "game-link login -> ok=true"
+  },
+  {
+   "t": 3434,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) playing A Link to the Past has joined. Client(0.6.3), []."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "t": 3434,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) playing A Link to the Past has joined. Client(0.6.3), []."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "t": 3434,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) playing A Link to the Past has joined. Client(0.6.3), []."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "t": 3434,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) playing A Link to the Past has joined. Client(0.6.3), []."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": []
+    }
+   ]
+  },
+  {
+   "t": 3434,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 3434,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_1": []
+     },
+     "uuid": "97d7616a-b68e-4059-8125-20368aa5ca68"
+    }
+   ]
+  },
+  {
+   "t": 3934,
+   "client": "game-link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "LocationScouts",
+     "locations": [
+      1010170,
+      1310724,
+      1310727,
+      1310730,
+      1310733,
+      1310736,
+      1310739,
+      1310742,
+      1310745,
+      1310748,
+      1310751,
+      1310754,
+      1310757,
+      1310760,
+      1310763,
+      1310766,
+      1310769,
+      1310772,
+      1310775,
+      1310778,
+      1310781,
+      1310784,
+      1310787,
+      1310790,
+      1310793,
+      1310796,
+      1310799,
+      1310802,
+      1310805,
+      1310808,
+      1310811,
+      1310814,
+      1310817,
+      1310820,
+      1572864,
+      1572865,
+      1572866,
+      1572867,
+      1572868,
+      1572869,
+      1572870,
+      1572880,
+      1572881,
+      1572882,
+      1572883,
+      1572884,
+      1572885,
+      1572886,
+      1572887,
+      1572906,
+      1573184,
+      1573185,
+      1573186,
+      1573187,
+      1573188,
+      1573189,
+      1573190,
+      1573191,
+      1573192,
+      1573193,
+      1573194,
+      1573200,
+      1573201,
+      1573202,
+      1573203,
+      1573204,
+      1573205,
+      1573206,
+      1573207,
+      1573208,
+      1573209,
+      1573216,
+      1573217,
+      1573218,
+      166320,
+      188229,
+      191256,
+      193020,
+      209095,
+      211407,
+      212328,
+      212605,
+      59758,
+      59761,
+      59764,
+      59767,
+      59770,
+      59773,
+      59776,
+      59779,
+      59782,
+      59785,
+      59788,
+      59791,
+      59794,
+      59797,
+      59800,
+      59803,
+      59806,
+      59809,
+      59812,
+      59818,
+      59821,
+      59824,
+      59827,
+      59830,
+      59833,
+      59836,
+      59839,
+      59842,
+      59845,
+      59848,
+      59851,
+      59854,
+      59857,
+      59860,
+      59866,
+      59869,
+      59872,
+      59875,
+      59878,
+      59881,
+      59884,
+      59887,
+      59890,
+      59893,
+      59896,
+      59899,
+      59902,
+      59905,
+      59908,
+      59911,
+      59914,
+      59917,
+      59920,
+      59923,
+      59926,
+      59929,
+      59932,
+      59935,
+      59938,
+      59941,
+      59944,
+      59947,
+      59950,
+      59953,
+      59956,
+      59959,
+      59962,
+      59965,
+      59968,
+      59971,
+      59974,
+      59977,
+      59980,
+      59983,
+      59986,
+      59989,
+      59992,
+      59995,
+      59998,
+      60001,
+      60004,
+      60007,
+      60010,
+      60013,
+      60019,
+      60022,
+      60025,
+      60028,
+      60031,
+      60034,
+      60037,
+      60040,
+      60043,
+      60046,
+      60049,
+      60052,
+      60055,
+      60058,
+      60061,
+      60064,
+      60067,
+      60070,
+      60073,
+      60076,
+      60079,
+      60082,
+      60085,
+      60088,
+      60091,
+      60094,
+      60097,
+      60100,
+      60103,
+      60106,
+      60109,
+      60112,
+      60115,
+      60118,
+      60121,
+      60124,
+      60127,
+      60130,
+      60133,
+      60136,
+      60139,
+      60142,
+      60145,
+      60148,
+      60151,
+      60157,
+      60160,
+      60163,
+      60166,
+      60169,
+      60172,
+      60175,
+      60178,
+      60181,
+      60184,
+      60187,
+      60190,
+      60193,
+      60196,
+      60199,
+      60202,
+      60205,
+      60208,
+      60211,
+      60214,
+      60217,
+      60220,
+      60223,
+      60226,
+      60229,
+      60232,
+      60235,
+      60238,
+      60241,
+      60244,
+      60247,
+      60250,
+      60253,
+      60256,
+      60259,
+      60840,
+      975237,
+      975299
+     ],
+     "create_as_hint": 0
+    }
+   ]
+  },
+  {
+   "t": 3935,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "LocationInfo",
+     "locations": [
+      {
+       "item": 84192,
+       "location": 1010170,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 1310724,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 1310727,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84007,
+       "location": 1310730,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84023,
+       "location": 1310733,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84095,
+       "location": 1310736,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 122,
+       "location": 1310739,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 154,
+       "location": 1310742,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 165,
+       "location": 1310745,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 168,
+       "location": 1310748,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 68,
+       "location": 1310751,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 1310754,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 1310757,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84040,
+       "location": 1310760,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 163,
+       "location": 1310763,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84095,
+       "location": 1310766,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 163,
+       "location": 1310769,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 160,
+       "location": 1310772,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 160,
+       "location": 1310775,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 146,
+       "location": 1310778,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 127,
+       "location": 1310781,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 173,
+       "location": 1310784,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 173,
+       "location": 1310787,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 1310790,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 1310793,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 136,
+       "location": 1310796,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 30,
+       "location": 1310799,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 164,
+       "location": 1310802,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 167,
+       "location": 1310805,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84054,
+       "location": 1310808,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 157,
+       "location": 1310811,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 171,
+       "location": 1310814,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 164,
+       "location": 1310817,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 167,
+       "location": 1310820,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 1572864,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84186,
+       "location": 1572865,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 1572866,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 7,
+       "location": 1572867,
+       "player": 4,
+       "flags": 4,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 1572868,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 1572869,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 1572870,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 1572880,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 40,
+       "location": 1572881,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 29,
+       "location": 1572882,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84075,
+       "location": 1572883,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83020,
+       "location": 1572884,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 1572885,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 1572886,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83006,
+       "location": 1572887,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83014,
+       "location": 1572906,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84192,
+       "location": 1573184,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84040,
+       "location": 1573185,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83005,
+       "location": 1573186,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 1573187,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84178,
+       "location": 1573188,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84023,
+       "location": 1573189,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 62,
+       "location": 1573190,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84062,
+       "location": 1573191,
+       "player": 3,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 9,
+       "location": 1573192,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84023,
+       "location": 1573193,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84196,
+       "location": 1573194,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 125,
+       "location": 1573200,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 124,
+       "location": 1573201,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84053,
+       "location": 1573202,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 72,
+       "location": 1573203,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 68,
+       "location": 1573204,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 135,
+       "location": 1573205,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 132,
+       "location": 1573206,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 118,
+       "location": 1573207,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 167,
+       "location": 1573208,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 131,
+       "location": 1573209,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 163,
+       "location": 1573216,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 173,
+       "location": 1573217,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 149,
+       "location": 1573218,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84040,
+       "location": 166320,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83000,
+       "location": 188229,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83020,
+       "location": 191256,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 193020,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83003,
+       "location": 209095,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 211407,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84081,
+       "location": 212328,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84192,
+       "location": 212605,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 160,
+       "location": 59758,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84180,
+       "location": 59761,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84192,
+       "location": 59764,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 162,
+       "location": 59767,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 59770,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 162,
+       "location": 59773,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 78,
+       "location": 59776,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84185,
+       "location": 59779,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 165,
+       "location": 59782,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 165,
+       "location": 59785,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84190,
+       "location": 59788,
+       "player": 3,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 163,
+       "location": 59791,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 168,
+       "location": 59794,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 134,
+       "location": 59797,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 168,
+       "location": 59800,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 151,
+       "location": 59803,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84023,
+       "location": 59806,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 168,
+       "location": 59809,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 150,
+       "location": 59812,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 59818,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 59821,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84095,
+       "location": 59824,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84054,
+       "location": 59827,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 156,
+       "location": 59830,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 141,
+       "location": 59833,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 75,
+       "location": 59836,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 59839,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 59842,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 59845,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 168,
+       "location": 59848,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 140,
+       "location": 59851,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 59854,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 59857,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84070,
+       "location": 59860,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 167,
+       "location": 59866,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 59869,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 59872,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84023,
+       "location": 59875,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 117,
+       "location": 59878,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 40,
+       "location": 59881,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84062,
+       "location": 59884,
+       "player": 3,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 59887,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 59890,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 59893,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 170,
+       "location": 59896,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 133,
+       "location": 59899,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 119,
+       "location": 59902,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 148,
+       "location": 59905,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 171,
+       "location": 59908,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83018,
+       "location": 59911,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 171,
+       "location": 59914,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 95,
+       "location": 59917,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 116,
+       "location": 59920,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 59923,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 59926,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 19,
+       "location": 59929,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 59932,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 59935,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 147,
+       "location": 59938,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 59941,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 59944,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 62,
+       "location": 59947,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83002,
+       "location": 59950,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 115,
+       "location": 59953,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 59956,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 166,
+       "location": 59959,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83002,
+       "location": 59962,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 166,
+       "location": 59965,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 121,
+       "location": 59968,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 166,
+       "location": 59971,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 153,
+       "location": 59974,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83003,
+       "location": 59977,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 166,
+       "location": 59980,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 59983,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 166,
+       "location": 59986,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 53,
+       "location": 59989,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 137,
+       "location": 59992,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 166,
+       "location": 59995,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 167,
+       "location": 59998,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84062,
+       "location": 60001,
+       "player": 3,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84065,
+       "location": 60004,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 167,
+       "location": 60007,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 152,
+       "location": 60010,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 120,
+       "location": 60013,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84192,
+       "location": 60019,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 60022,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 159,
+       "location": 60025,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 60028,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 60031,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84195,
+       "location": 60034,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 60037,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84023,
+       "location": 60040,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84068,
+       "location": 60043,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83003,
+       "location": 60046,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 68,
+       "location": 60049,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84097,
+       "location": 60052,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 60055,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 60058,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 165,
+       "location": 60061,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 165,
+       "location": 60064,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83010,
+       "location": 60067,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 138,
+       "location": 60070,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 165,
+       "location": 60073,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84179,
+       "location": 60076,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84019,
+       "location": 60079,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 164,
+       "location": 60082,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 164,
+       "location": 60085,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84065,
+       "location": 60088,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 173,
+       "location": 60091,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 60094,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84054,
+       "location": 60097,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 130,
+       "location": 60100,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 60103,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83000,
+       "location": 60106,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 96,
+       "location": 60109,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 173,
+       "location": 60112,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84040,
+       "location": 60115,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83002,
+       "location": 60118,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 173,
+       "location": 60121,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84022,
+       "location": 60124,
+       "player": 3,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84196,
+       "location": 60127,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 40,
+       "location": 60130,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84094,
+       "location": 60133,
+       "player": 3,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 94,
+       "location": 60136,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 60139,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84094,
+       "location": 60142,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 173,
+       "location": 60145,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 40,
+       "location": 60148,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 40,
+       "location": 60151,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 173,
+       "location": 60157,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 60160,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84033,
+       "location": 60163,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 114,
+       "location": 60166,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 60169,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 160,
+       "location": 60172,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 60175,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 40,
+       "location": 60178,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 94,
+       "location": 60181,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84009,
+       "location": 60184,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84189,
+       "location": 60187,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 60190,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 60193,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84023,
+       "location": 60196,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84068,
+       "location": 60199,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 60202,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84012,
+       "location": 60205,
+       "player": 3,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 60208,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83001,
+       "location": 60211,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 70,
+       "location": 60214,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 68,
+       "location": 60217,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 62,
+       "location": 60220,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 53,
+       "location": 60223,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 62,
+       "location": 60226,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84026,
+       "location": 60229,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 60232,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84070,
+       "location": 60235,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83000,
+       "location": 60238,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84194,
+       "location": 60241,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84193,
+       "location": 60244,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84052,
+       "location": 60247,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 65,
+       "location": 60250,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 60253,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84040,
+       "location": 60256,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84054,
+       "location": 60259,
+       "player": 3,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 84096,
+       "location": 60840,
+       "player": 3,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 83003,
+       "location": 975237,
+       "player": 2,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 54,
+       "location": 975299,
+       "player": 1,
+       "flags": 0,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3935,
+   "client": "-",
+   "dir": "mark",
+   "note": "game-link checks two own-world locations and one holding another player's item"
+  },
+  {
+   "t": 3935,
+   "client": "game-link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "LocationChecks",
+     "locations": [
+      1310724,
+      1310727
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3936,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " found their "
+      },
+      {
+       "text": "169",
+       "player": 1,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1310724",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 169,
+      "location": 1310724,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " found their "
+      },
+      {
+       "text": "172",
+       "player": 1,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1310727",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 172,
+      "location": 1310727,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 3936,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " found their "
+      },
+      {
+       "text": "169",
+       "player": 1,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1310724",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 169,
+      "location": 1310724,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " found their "
+      },
+      {
+       "text": "172",
+       "player": 1,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1310727",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 172,
+      "location": 1310727,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 3936,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " found their "
+      },
+      {
+       "text": "169",
+       "player": 1,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1310724",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 169,
+      "location": 1310724,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " found their "
+      },
+      {
+       "text": "172",
+       "player": 1,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1310727",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 172,
+      "location": 1310727,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 3936,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " found their "
+      },
+      {
+       "text": "169",
+       "player": 1,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1310724",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 169,
+      "location": 1310724,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " found their "
+      },
+      {
+       "text": "172",
+       "player": 1,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1310727",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 172,
+      "location": 1310727,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 3936,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 1,
+     "items": [
+      {
+       "item": 169,
+       "location": 1310724,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 1310727,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3937,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 1,
+     "items": [
+      {
+       "item": 169,
+       "location": 1310724,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 1310727,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3937,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 2,
+     "checked_locations": [
+      1310724,
+      1310727
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3937,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 2,
+     "checked_locations": [
+      1310724,
+      1310727
+     ]
+    }
+   ]
+  },
+  {
+   "t": 3937,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 2,
+     "checked_locations": [
+      1310724,
+      1310727
+     ]
+    }
+   ]
+  },
+  {
+   "t": 4638,
+   "client": "game-link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "LocationChecks",
+     "locations": [
+      1010170
+     ]
+    }
+   ]
+  },
+  {
+   "t": 4639,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84192",
+       "player": 3,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1010170",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84192,
+      "location": 1010170,
+      "player": 1,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 4639,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84192",
+       "player": 3,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1010170",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84192,
+      "location": 1010170,
+      "player": 1,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 4639,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84192",
+       "player": 3,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1010170",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84192,
+      "location": 1010170,
+      "player": 1,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 4639,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84192",
+       "player": 3,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1010170",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84192,
+      "location": 1010170,
+      "player": 1,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 4639,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3,
+     "checked_locations": [
+      1010170
+     ]
+    }
+   ]
+  },
+  {
+   "t": 4639,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3,
+     "checked_locations": [
+      1010170
+     ]
+    }
+   ]
+  },
+  {
+   "t": 4639,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3,
+     "checked_locations": [
+      1010170
+     ]
+    }
+   ]
+  },
+  {
+   "t": 5342,
+   "client": "-",
+   "dir": "mark",
+   "note": "hint: game-quester scouts a Link item with create_as_hint 2 (announce)"
+  },
+  {
+   "t": 5342,
+   "client": "game-quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "LocationScouts",
+     "locations": [
+      3
+     ],
+     "create_as_hint": 2
+    }
+   ]
+  },
+  {
+   "t": 5342,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "LocationInfo",
+     "locations": [
+      {
+       "item": 23,
+       "location": 3,
+       "player": 1,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 5343,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 5343,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 5343,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 5343,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
+   "t": 5343,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
+   "t": 5343,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_4",
+     "value": [
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 5343,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
+   "t": 5343,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Hint]: "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": "'s "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " is at "
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": " in "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": "'s World"
+      },
+      {
+       "text": ". "
+      },
+      {
+       "text": "(unspecified)",
+       "hint_status": 0,
+       "type": "hint_status"
+      }
+     ],
+     "type": "Hint",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 3,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     },
+     "found": false
+    }
+   ]
+  },
+  {
+   "t": 5343,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 2
+    }
+   ]
+  },
+  {
+   "t": 5344,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Hint]: "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": "'s "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " is at "
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": " in "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": "'s World"
+      },
+      {
+       "text": ". "
+      },
+      {
+       "text": "(unspecified)",
+       "hint_status": 0,
+       "type": "hint_status"
+      }
+     ],
+     "type": "Hint",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 3,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     },
+     "found": false
+    }
+   ]
+  },
+  {
+   "t": 5344,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Hint]: "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": "'s "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " is at "
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": " in "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": "'s World"
+      },
+      {
+       "text": ". "
+      },
+      {
+       "text": "(unspecified)",
+       "hint_status": 0,
+       "type": "hint_status"
+      }
+     ],
+     "type": "Hint",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 3,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     },
+     "found": false
+    }
+   ]
+  },
+  {
+   "t": 5344,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Hint]: "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": "'s "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " is at "
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": " in "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": "'s World"
+      },
+      {
+       "text": ". "
+      },
+      {
+       "text": "(unspecified)",
+       "hint_status": 0,
+       "type": "hint_status"
+      }
+     ],
+     "type": "Hint",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 3,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     },
+     "found": false
+    }
+   ]
+  },
+  {
+   "t": 6045,
+   "client": "-",
+   "dir": "mark",
+   "note": "hint: game-link CreateHints on one of its own locations holding a foreign item (0.6 packet)"
+  },
+  {
+   "t": 6045,
+   "client": "game-link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "CreateHints",
+     "locations": [
+      1310730
+     ],
+     "player": 1,
+     "status": 0
+    }
+   ]
+  },
+  {
+   "t": 6046,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 3,
+       "finding_player": 1,
+       "location": 1310730,
+       "item": 84007,
+       "found": false,
+       "entrance": "",
+       "item_flags": 1,
+       "status": 0,
+       "class": "Hint"
+      },
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 6046,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 3,
+       "finding_player": 1,
+       "location": 1310730,
+       "item": 84007,
+       "found": false,
+       "entrance": "",
+       "item_flags": 1,
+       "status": 0,
+       "class": "Hint"
+      },
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 6046,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 3,
+       "finding_player": 1,
+       "location": 1310730,
+       "item": 84007,
+       "found": false,
+       "entrance": "",
+       "item_flags": 1,
+       "status": 0,
+       "class": "Hint"
+      },
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": false,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 0,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 6046,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
+   "t": 6046,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
+   "t": 6046,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 3
+    }
+   ]
+  },
+  {
+   "t": 6046,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Hint]: "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": "'s "
+      },
+      {
+       "text": "84007",
+       "player": 3,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " is at "
+      },
+      {
+       "text": "1310730",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": " in "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": "'s World"
+      },
+      {
+       "text": ". "
+      },
+      {
+       "text": "(unspecified)",
+       "hint_status": 0,
+       "type": "hint_status"
+      }
+     ],
+     "type": "Hint",
+     "receiving": 3,
+     "item": {
+      "item": 84007,
+      "location": 1310730,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     },
+     "found": false
+    }
+   ]
+  },
+  {
+   "t": 6046,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Hint]: "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": "'s "
+      },
+      {
+       "text": "84007",
+       "player": 3,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " is at "
+      },
+      {
+       "text": "1310730",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": " in "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": "'s World"
+      },
+      {
+       "text": ". "
+      },
+      {
+       "text": "(unspecified)",
+       "hint_status": 0,
+       "type": "hint_status"
+      }
+     ],
+     "type": "Hint",
+     "receiving": 3,
+     "item": {
+      "item": 84007,
+      "location": 1310730,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     },
+     "found": false
+    }
+   ]
+  },
+  {
+   "t": 6047,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Hint]: "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": "'s "
+      },
+      {
+       "text": "84007",
+       "player": 3,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " is at "
+      },
+      {
+       "text": "1310730",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": " in "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": "'s World"
+      },
+      {
+       "text": ". "
+      },
+      {
+       "text": "(unspecified)",
+       "hint_status": 0,
+       "type": "hint_status"
+      }
+     ],
+     "type": "Hint",
+     "receiving": 3,
+     "item": {
+      "item": 84007,
+      "location": 1310730,
+      "player": 1,
+      "flags": 1,
+      "class": "NetworkItem"
+     },
+     "found": false
+    }
+   ]
+  },
+  {
+   "t": 6748,
+   "client": "-",
+   "dir": "mark",
+   "note": "hint: game-link asks !hint for an item (costs points)"
+  },
+  {
+   "t": 6748,
+   "client": "game-link",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Say",
+     "text": "!hint Progressive Sword"
+    }
+   ]
+  },
+  {
+   "t": 6750,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link: !hint Progressive Sword"
+      }
+     ],
+     "type": "Chat",
+     "team": 0,
+     "slot": 1,
+     "message": "!hint Progressive Sword"
+    }
+   ]
+  },
+  {
+   "t": 6751,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link: !hint Progressive Sword"
+      }
+     ],
+     "type": "Chat",
+     "team": 0,
+     "slot": 1,
+     "message": "!hint Progressive Sword"
+    }
+   ]
+  },
+  {
+   "t": 6751,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link: !hint Progressive Sword"
+      }
+     ],
+     "type": "Chat",
+     "team": 0,
+     "slot": 1,
+     "message": "!hint Progressive Sword"
+    }
+   ]
+  },
+  {
+   "t": 6751,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link: !hint Progressive Sword"
+      }
+     ],
+     "type": "Chat",
+     "team": 0,
+     "slot": 1,
+     "message": "!hint Progressive Sword"
+    }
+   ]
+  },
+  {
+   "t": 6751,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "You can't afford the hint. You have 3 points and need at least 24."
+      }
+     ],
+     "type": "CommandResult"
+    }
+   ]
+  },
+  {
+   "t": 7450,
+   "client": "-",
+   "dir": "mark",
+   "note": "countdown from game-quester"
+  },
+  {
+   "t": 7450,
+   "client": "game-quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Say",
+     "text": "!countdown 2"
+    }
+   ]
+  },
+  {
+   "t": 7450,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester: !countdown 2"
+      }
+     ],
+     "type": "Chat",
+     "team": 0,
+     "slot": 4,
+     "message": "!countdown 2"
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester: !countdown 2"
+      }
+     ],
+     "type": "Chat",
+     "team": 0,
+     "slot": 4,
+     "message": "!countdown 2"
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester: !countdown 2"
+      }
+     ],
+     "type": "Chat",
+     "team": 0,
+     "slot": 4,
+     "message": "!countdown 2"
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester: !countdown 2"
+      }
+     ],
+     "type": "Chat",
+     "team": 0,
+     "slot": 4,
+     "message": "!countdown 2"
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: Starting countdown of 2s"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 2
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: Starting countdown of 2s"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 2
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: Starting countdown of 2s"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 2
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: Starting countdown of 2s"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 2
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: 2"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 2
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: 2"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 2
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: 2"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 2
+    }
+   ]
+  },
+  {
+   "t": 7451,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: 2"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 2
+    }
+   ]
+  },
+  {
+   "t": 8452,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: 1"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 1
+    }
+   ]
+  },
+  {
+   "t": 8452,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: 1"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 1
+    }
+   ]
+  },
+  {
+   "t": 8452,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: 1"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 1
+    }
+   ]
+  },
+  {
+   "t": 8452,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: 1"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 1
+    }
+   ]
+  },
+  {
+   "t": 9453,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: GO"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 0
+    }
+   ]
+  },
+  {
+   "t": 9453,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: GO"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 0
+    }
+   ]
+  },
+  {
+   "t": 9453,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: GO"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 0
+    }
+   ]
+  },
+  {
+   "t": 9453,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "[Server]: GO"
+      }
+     ],
+     "type": "Countdown",
+     "countdown": 0
+    }
+   ]
+  },
+  {
+   "t": 10958,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker tries what it must never do (server-side read-only check)"
+  },
+  {
+   "t": 10958,
+   "client": "tracker",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "LocationChecks",
+     "locations": [
+      1310739
+     ]
+    }
+   ]
+  },
+  {
+   "t": 10958,
+   "client": "tracker",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "StatusUpdate",
+     "status": 30
+    }
+   ]
+  },
+  {
+   "t": 10958,
+   "client": "tracker",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Bounce",
+     "tags": [
+      "Bench"
+     ],
+     "data": {
+      "bench": true
+     }
+    }
+   ]
+  },
+  {
+   "t": 10958,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "InvalidPacket",
+     "type": "cmd",
+     "text": "Trackers can't register new Location Checks",
+     "original_cmd": "LocationChecks"
+    }
+   ]
+  },
+  {
+   "t": 10959,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "InvalidPacket",
+     "type": "cmd",
+     "text": "Trackers can't register Goal Complete",
+     "original_cmd": "StatusUpdate"
+    }
+   ]
+  },
+  {
+   "t": 11661,
+   "client": "-",
+   "dir": "mark",
+   "note": "ConnectUpdate from tracker2 (tags change) to see TagsChanged"
+  },
+  {
+   "t": 11661,
+   "client": "tracker2",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "ConnectUpdate",
+     "tags": [
+      "Tracker",
+      "Bench"
+     ],
+     "items_handling": 7
+    }
+   ]
+  },
+  {
+   "t": 11661,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) has changed tags from ['Tracker'] to ['Tracker', 'Bench']."
+      }
+     ],
+     "type": "TagsChanged",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker",
+      "Bench"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 11662,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) has changed tags from ['Tracker'] to ['Tracker', 'Bench']."
+      }
+     ],
+     "type": "TagsChanged",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker",
+      "Bench"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 11662,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) has changed tags from ['Tracker'] to ['Tracker', 'Bench']."
+      }
+     ],
+     "type": "TagsChanged",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker",
+      "Bench"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 11662,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) has changed tags from ['Tracker'] to ['Tracker', 'Bench']."
+      }
+     ],
+     "type": "TagsChanged",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker",
+      "Bench"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12364,
+   "client": "-",
+   "dir": "mark",
+   "note": "game-quester reaches its goal: Goal, then auto release/collect"
+  },
+  {
+   "t": 12364,
+   "client": "game-quester",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "StatusUpdate",
+     "status": 30
+    }
+   ]
+  },
+  {
+   "t": 12365,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has completed their goal."
+      }
+     ],
+     "type": "Goal",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12365,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has completed their goal."
+      }
+     ],
+     "type": "Goal",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has completed their goal."
+      }
+     ],
+     "type": "Goal",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has completed their goal."
+      }
+     ],
+     "type": "Goal",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has collected their items from other worlds."
+      }
+     ],
+     "type": "Collect",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has collected their items from other worlds."
+      }
+     ],
+     "type": "Collect",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has collected their items from other worlds."
+      }
+     ],
+     "type": "Collect",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has collected their items from other worlds."
+      }
+     ],
+     "type": "Collect",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "7",
+       "player": 4,
+       "flags": 4,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1572867",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 7,
+      "location": 1572867,
+      "player": 1,
+      "flags": 4,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "7",
+       "player": 4,
+       "flags": 4,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1572867",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 7,
+      "location": 1572867,
+      "player": 1,
+      "flags": 4,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "7",
+       "player": 4,
+       "flags": 4,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1572867",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 7,
+      "location": 1572867,
+      "player": 1,
+      "flags": 4,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "7",
+       "player": 4,
+       "flags": 4,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "1572867",
+       "player": 1,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 7,
+      "location": 1572867,
+      "player": 1,
+      "flags": 4,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 0,
+     "items": [
+      {
+       "item": 7,
+       "location": 1572867,
+       "player": 1,
+       "flags": 4,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 4,
+     "checked_locations": [
+      1572867
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 4,
+     "checked_locations": [
+      1572867
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12366,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 4,
+     "checked_locations": [
+      1572867
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "checked_locations": [
+      1010170,
+      1310724,
+      1310727,
+      1572867
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "checked_locations": [
+      1010170,
+      1310724,
+      1310727,
+      1572867
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "checked_locations": [
+      1010170,
+      1310724,
+      1310727,
+      1572867
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "2",
+       "player": 4,
+       "flags": 3,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82054",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 2,
+      "location": 82054,
+      "player": 2,
+      "flags": 3,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82150",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 3,
+      "location": 82150,
+      "player": 2,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82050",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 5,
+      "location": 82050,
+      "player": 2,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "2",
+       "player": 4,
+       "flags": 3,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82054",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 2,
+      "location": 82054,
+      "player": 2,
+      "flags": 3,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82150",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 3,
+      "location": 82150,
+      "player": 2,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82050",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 5,
+      "location": 82050,
+      "player": 2,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "2",
+       "player": 4,
+       "flags": 3,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82054",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 2,
+      "location": 82054,
+      "player": 2,
+      "flags": 3,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82150",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 3,
+      "location": 82150,
+      "player": 2,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82050",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 5,
+      "location": 82050,
+      "player": 2,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "2",
+       "player": 4,
+       "flags": 3,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82054",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 2,
+      "location": 82054,
+      "player": 2,
+      "flags": 3,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82150",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 3,
+      "location": 82150,
+      "player": 2,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "82050",
+       "player": 2,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 5,
+      "location": 82050,
+      "player": 2,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "1",
+       "player": 4,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "85298",
+       "player": 3,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 1,
+      "location": 85298,
+      "player": 3,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "85063",
+       "player": 3,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 5,
+      "location": 85063,
+      "player": 3,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 1,
+     "items": [
+      {
+       "item": 2,
+       "location": 82054,
+       "player": 2,
+       "flags": 3,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 3,
+       "location": 82150,
+       "player": 2,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 5,
+       "location": 82050,
+       "player": 2,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "1",
+       "player": 4,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "85298",
+       "player": 3,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 1,
+      "location": 85298,
+      "player": 3,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "85063",
+       "player": 3,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 5,
+      "location": 85063,
+      "player": 3,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "1",
+       "player": 4,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "85298",
+       "player": 3,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 1,
+      "location": 85298,
+      "player": 3,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "85063",
+       "player": 3,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 5,
+      "location": 85063,
+      "player": 3,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12367,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "1",
+       "player": 4,
+       "flags": 1,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "85298",
+       "player": 3,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 1,
+      "location": 85298,
+      "player": 3,
+      "flags": 1,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "85063",
+       "player": 3,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 4,
+     "item": {
+      "item": 5,
+      "location": 85063,
+      "player": 3,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 4,
+     "items": [
+      {
+       "item": 1,
+       "location": 85298,
+       "player": 3,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 5,
+       "location": 85063,
+       "player": 3,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has released all remaining items from their world."
+      }
+     ],
+     "type": "Release",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has released all remaining items from their world."
+      }
+     ],
+     "type": "Release",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has released all remaining items from their world."
+      }
+     ],
+     "type": "Release",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has released all remaining items from their world."
+      }
+     ],
+     "type": "Release",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 3,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "6",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 6,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "83002",
+       "player": 2,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 2,
+     "item": {
+      "item": 83002,
+      "location": 5,
+      "player": 4,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84062",
+       "player": 3,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "10",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84062,
+      "location": 10,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 3,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "6",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 6,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "83002",
+       "player": 2,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 2,
+     "item": {
+      "item": 83002,
+      "location": 5,
+      "player": 4,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84062",
+       "player": 3,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "10",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84062,
+      "location": 10,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 3,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "6",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 6,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "83002",
+       "player": 2,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 2,
+     "item": {
+      "item": 83002,
+      "location": 5,
+      "player": 4,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84062",
+       "player": 3,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "10",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84062,
+      "location": 10,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "3",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 3,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "23",
+       "player": 1,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "1",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "6",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 1,
+     "item": {
+      "item": 23,
+      "location": 6,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "83002",
+       "player": 2,
+       "flags": 0,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "2",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "5",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 2,
+     "item": {
+      "item": 83002,
+      "location": 5,
+      "player": 4,
+      "flags": 0,
+      "class": "NetworkItem"
+     }
+    },
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "4",
+       "type": "player_id"
+      },
+      {
+       "text": " sent "
+      },
+      {
+       "text": "84062",
+       "player": 3,
+       "flags": 2,
+       "type": "item_id"
+      },
+      {
+       "text": " to "
+      },
+      {
+       "text": "3",
+       "type": "player_id"
+      },
+      {
+       "text": " ("
+      },
+      {
+       "text": "10",
+       "player": 4,
+       "type": "location_id"
+      },
+      {
+       "text": ")"
+      }
+     ],
+     "type": "ItemSend",
+     "receiving": 3,
+     "item": {
+      "item": 84062,
+      "location": 10,
+      "player": 4,
+      "flags": 2,
+      "class": "NetworkItem"
+     }
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 3,
+     "items": [
+      {
+       "item": 23,
+       "location": 3,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 6,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 3,
+     "items": [
+      {
+       "item": 23,
+       "location": 3,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 6,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 1,
+     "items": [
+      {
+       "item": 23,
+       "location": 3,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 6,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12368,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "hint_points": 6,
+     "checked_locations": [
+      10,
+      3,
+      5,
+      6
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12369,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 3,
+       "finding_player": 1,
+       "location": 1310730,
+       "item": 84007,
+       "found": false,
+       "entrance": "",
+       "item_flags": 1,
+       "status": 0,
+       "class": "Hint"
+      },
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": true,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 40,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12369,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 3,
+       "finding_player": 1,
+       "location": 1310730,
+       "item": 84007,
+       "found": false,
+       "entrance": "",
+       "item_flags": 1,
+       "status": 0,
+       "class": "Hint"
+      },
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": true,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 40,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12369,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_1",
+     "value": [
+      {
+       "receiving_player": 3,
+       "finding_player": 1,
+       "location": 1310730,
+       "item": 84007,
+       "found": false,
+       "entrance": "",
+       "item_flags": 1,
+       "status": 0,
+       "class": "Hint"
+      },
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": true,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 40,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12369,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_hints_0_4",
+     "value": [
+      {
+       "receiving_player": 1,
+       "finding_player": 4,
+       "location": 3,
+       "item": 23,
+       "found": true,
+       "entrance": "",
+       "item_flags": 2,
+       "status": 40,
+       "class": "Hint"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 12369,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "SetReply",
+     "key": "_read_client_status_0_4",
+     "value": 30
+    }
+   ]
+  },
+  {
+   "t": 12369,
+   "client": "game-quester",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomUpdate",
+     "checked_locations": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      10
+     ]
+    }
+   ]
+  },
+  {
+   "t": 13871,
+   "client": "-",
+   "dir": "mark",
+   "note": "disconnects: game-quester, tracker2, game-link (Part)"
+  },
+  {
+   "t": 13871,
+   "client": "game-quester",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 13872,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has left the game. Client(0.6.3), []."
+      }
+     ],
+     "type": "Part",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 13872,
+   "client": "tracker2",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has left the game. Client(0.6.3), []."
+      }
+     ],
+     "type": "Part",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 13872,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Quester (Team #1) has left the game. Client(0.6.3), []."
+      }
+     ],
+     "type": "Part",
+     "team": 0,
+     "slot": 4
+    }
+   ]
+  },
+  {
+   "t": 14374,
+   "client": "tracker2",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 14375,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) has stopped tracking the game. Client(0.6.3), ['Tracker', 'Bench']."
+      }
+     ],
+     "type": "Part",
+     "team": 0,
+     "slot": 1
+    }
+   ]
+  },
+  {
+   "t": 14375,
+   "client": "game-link",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) has stopped tracking the game. Client(0.6.3), ['Tracker', 'Bench']."
+      }
+     ],
+     "type": "Part",
+     "team": 0,
+     "slot": 1
+    }
+   ]
+  },
+  {
+   "t": 14876,
+   "client": "game-link",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 14877,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) has left the game. Client(0.6.3), []."
+      }
+     ],
+     "type": "Part",
+     "team": 0,
+     "slot": 1
+    }
+   ]
+  },
+  {
+   "t": 15378,
+   "client": "-",
+   "dir": "mark",
+   "note": "tracker sends Sync: ReceivedItems index 0, the whole list again"
+  },
+  {
+   "t": 15378,
+   "client": "tracker",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Sync"
+    }
+   ]
+  },
+  {
+   "t": 15378,
+   "client": "tracker",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "ReceivedItems",
+     "index": 0,
+     "items": [
+      {
+       "item": 40,
+       "location": 2,
+       "player": 4,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 1310724,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 1310727,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 3,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 6,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 16082,
+   "client": "tracker",
+   "dir": "close",
+   "code": 1005,
+   "reason": "",
+   "wasClean": true
+  },
+  {
+   "t": 16382,
+   "client": "-",
+   "dir": "mark",
+   "note": "a fresh tracker client on Link (page refresh): Connected carries every check so far"
+  },
+  {
+   "t": 16383,
+   "client": "tracker-refresh",
+   "dir": "open-attempt",
+   "url": "ws://127.0.0.1:38281/"
+  },
+  {
+   "t": 16385,
+   "client": "tracker-refresh",
+   "dir": "open"
+  },
+  {
+   "t": 16385,
+   "client": "tracker-refresh",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "RoomInfo",
+     "password": false,
+     "games": [
+      "A Link to the Past",
+      "APQuest",
+      "Archipelago",
+      "SMZ3",
+      "Super Metroid"
+     ],
+     "tags": [
+      "AP"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "generator_version": {
+      "major": 0,
+      "minor": 6,
+      "build": 8,
+      "class": "Version"
+     },
+     "permissions": {
+      "release": 6,
+      "remaining": 2,
+      "collect": 6
+     },
+     "hint_cost": 10,
+     "location_check_points": 1,
+     "datapackage_checksums": {
+      "A Link to the Past": "1858ba29ffb7bf55e9e71a76fc7aba1b5c0950e4",
+      "APQuest": "854499b00d82a68764ce591dd80218ad75e83e2b",
+      "Archipelago": "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      "SMZ3": "12f632000dfc0e2bb4404146d4c9121e830b9b8f",
+      "Super Metroid": "4fd6c0bb6c0f0ab1157fb5dbda01a572ae3d0da6"
+     },
+     "seed_name": "72844992796894532502",
+     "time": 1792861509.0966992
+    }
+   ]
+  },
+  {
+   "t": 16385,
+   "client": "tracker-refresh",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Connect",
+     "name": "Link",
+     "game": "",
+     "password": "",
+     "slot_data": true,
+     "items_handling": 7,
+     "uuid": "87bf03c2-0a8d-44a5-a6e3-1a435d213f17",
+     "tags": [
+      "Tracker"
+     ],
+     "version": {
+      "major": 0,
+      "minor": 6,
+      "build": 3,
+      "class": "Version"
+     }
+    }
+   ]
+  },
+  {
+   "t": 16386,
+   "client": "tracker-refresh",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Connected",
+     "team": 0,
+     "slot": 1,
+     "players": [
+      {
+       "team": 0,
+       "slot": 1,
+       "alias": "Link",
+       "name": "Link",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 2,
+       "alias": "Samus",
+       "name": "Samus",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 3,
+       "alias": "Hybrid Hero",
+       "name": "Hybrid Hero",
+       "class": "NetworkPlayer"
+      },
+      {
+       "team": 0,
+       "slot": 4,
+       "alias": "Quester",
+       "name": "Quester",
+       "class": "NetworkPlayer"
+      }
+     ],
+     "missing_locations": [
+      59758,
+      59761,
+      59764,
+      59767,
+      59770,
+      59773,
+      59776,
+      59779,
+      59782,
+      59785,
+      59788,
+      59791,
+      59794,
+      59797,
+      59800,
+      59803,
+      59806,
+      59809,
+      59812,
+      59818,
+      59821,
+      59824,
+      59827,
+      59830,
+      59833,
+      59836,
+      59839,
+      59842,
+      59845,
+      59848,
+      59851,
+      59854,
+      59857,
+      59860,
+      59866,
+      59869,
+      59872,
+      59875,
+      59878,
+      59881,
+      59884,
+      59887,
+      59890,
+      59893,
+      59896,
+      59899,
+      59902,
+      59905,
+      59908,
+      59911,
+      59914,
+      59917,
+      59920,
+      59923,
+      59926,
+      59929,
+      59932,
+      59935,
+      59938,
+      59941,
+      59944,
+      59947,
+      59950,
+      59953,
+      59956,
+      59959,
+      59962,
+      59965,
+      59968,
+      59971,
+      59974,
+      59977,
+      59980,
+      59983,
+      59986,
+      59989,
+      59992,
+      59995,
+      59998,
+      60001,
+      60004,
+      60007,
+      60010,
+      60013,
+      60019,
+      60022,
+      60025,
+      60028,
+      60031,
+      60034,
+      60037,
+      60040,
+      60043,
+      60046,
+      60049,
+      60052,
+      60055,
+      60058,
+      60061,
+      60064,
+      60067,
+      60070,
+      60073,
+      60076,
+      60079,
+      60082,
+      60085,
+      60088,
+      60091,
+      60094,
+      60097,
+      60100,
+      60103,
+      60106,
+      60109,
+      60112,
+      60115,
+      60118,
+      60121,
+      60124,
+      60127,
+      60130,
+      60133,
+      60136,
+      60139,
+      60142,
+      60145,
+      60148,
+      60151,
+      60157,
+      60160,
+      60163,
+      60166,
+      60169,
+      60172,
+      60175,
+      60178,
+      60181,
+      60184,
+      60187,
+      60190,
+      60193,
+      60196,
+      60199,
+      60202,
+      60205,
+      60208,
+      60211,
+      60214,
+      60217,
+      60220,
+      60223,
+      60226,
+      60229,
+      60232,
+      60235,
+      60238,
+      60241,
+      60244,
+      60247,
+      60250,
+      60253,
+      60256,
+      60259,
+      60840,
+      166320,
+      188229,
+      191256,
+      193020,
+      209095,
+      211407,
+      212328,
+      212605,
+      975237,
+      975299,
+      1310730,
+      1310733,
+      1310736,
+      1310739,
+      1310742,
+      1310745,
+      1310748,
+      1310751,
+      1310754,
+      1310757,
+      1310760,
+      1310763,
+      1310766,
+      1310769,
+      1310772,
+      1310775,
+      1310778,
+      1310781,
+      1310784,
+      1310787,
+      1310790,
+      1310793,
+      1310796,
+      1310799,
+      1310802,
+      1310805,
+      1310808,
+      1310811,
+      1310814,
+      1310817,
+      1310820,
+      1572864,
+      1572865,
+      1572866,
+      1572868,
+      1572869,
+      1572870,
+      1572880,
+      1572881,
+      1572882,
+      1572883,
+      1572884,
+      1572885,
+      1572886,
+      1572887,
+      1572906,
+      1573184,
+      1573185,
+      1573186,
+      1573187,
+      1573188,
+      1573189,
+      1573190,
+      1573191,
+      1573192,
+      1573193,
+      1573194,
+      1573200,
+      1573201,
+      1573202,
+      1573203,
+      1573204,
+      1573205,
+      1573206,
+      1573207,
+      1573208,
+      1573209,
+      1573216,
+      1573217,
+      1573218
+     ],
+     "checked_locations": [
+      1010170,
+      1310724,
+      1310727,
+      1572867
+     ],
+     "slot_info": {
+      "1": {
+       "name": "Link",
+       "game": "A Link to the Past",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "2": {
+       "name": "Samus",
+       "game": "Super Metroid",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "3": {
+       "name": "Hybrid Hero",
+       "game": "SMZ3",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      },
+      "4": {
+       "name": "Quester",
+       "game": "APQuest",
+       "type": 1,
+       "group_members": [],
+       "class": "NetworkSlot"
+      }
+     },
+     "hint_points": 4,
+     "slot_data": {
+      "crystals_needed_for_gt": 7,
+      "crystals_needed_for_ganon": 7,
+      "open_pyramid": 2,
+      "big_key_shuffle": 0,
+      "small_key_shuffle": 0,
+      "compass_shuffle": 0,
+      "map_shuffle": 0,
+      "progressive": 2,
+      "swordless": 0,
+      "retro_bow": 0,
+      "retro_caves": 0,
+      "shop_item_slots": 0,
+      "boss_shuffle": 0,
+      "pot_shuffle": 0,
+      "enemy_shuffle": 0,
+      "key_drop_shuffle": 1,
+      "bombless_start": 0,
+      "randomize_shop_inventories": 0,
+      "shuffle_shop_inventories": 0,
+      "shuffle_capacity_upgrades": 0,
+      "entrance_shuffle": 0,
+      "dark_room_logic": 0,
+      "goal": 0,
+      "mode": 1,
+      "triforce_pieces_mode": 2,
+      "triforce_pieces_percentage": 150,
+      "triforce_pieces_required": 20,
+      "triforce_pieces_available": 30,
+      "triforce_pieces_extra": 10,
+      "mm_medalion": "Ether",
+      "tr_medalion": "Ether"
+     }
+    },
+    {
+     "cmd": "ReceivedItems",
+     "index": 0,
+     "items": [
+      {
+       "item": 40,
+       "location": 2,
+       "player": 4,
+       "flags": 0,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 169,
+       "location": 1310724,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 172,
+       "location": 1310727,
+       "player": 1,
+       "flags": 1,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 3,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      },
+      {
+       "item": 23,
+       "location": 6,
+       "player": 4,
+       "flags": 2,
+       "class": "NetworkItem"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "t": 16386,
+   "client": "tracker-refresh",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "SetNotify",
+     "keys": [
+      "_read_hints_0_1"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 16386,
+   "client": "tracker-refresh",
+   "dir": "out",
+   "packets": [
+    {
+     "cmd": "Get",
+     "keys": [
+      "_read_hints_0_1"
+     ],
+     "uuid": "76a64fca-243b-4983-a2bd-5bc37345140d"
+    }
+   ]
+  },
+  {
+   "t": 16386,
+   "client": "tracker-refresh",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Link (Team #1) tracking A Link to the Past has joined. Client(0.6.3), ['Tracker']."
+      }
+     ],
+     "type": "Join",
+     "team": 0,
+     "slot": 1,
+     "tags": [
+      "Tracker"
+     ]
+    }
+   ]
+  },
+  {
+   "t": 16386,
+   "client": "tracker-refresh",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "PrintJSON",
+     "data": [
+      {
+       "text": "Now that you are connected, you can use !help to list commands to run via the server. If your client supports it, you may have additional local commands you can list with /help."
+      }
+     ],
+     "type": "Tutorial"
+    }
+   ]
+  },
+  {
+   "t": 16386,
+   "client": "tracker-refresh",
+   "dir": "in",
+   "packets": [
+    {
+     "cmd": "Retrieved",
+     "keys": {
+      "_read_hints_0_1": [
+       {
+        "receiving_player": 3,
+        "finding_player": 1,
+        "location": 1310730,
+        "item": 84007,
+        "found": false,
+        "entrance": "",
+        "item_flags": 1,
+        "status": 0,
+        "class": "Hint"
+       },
+       {
+        "receiving_player": 1,
+        "finding_player": 4,
+        "location": 3,
+        "item": 23,
+        "found": true,
+        "entrance": "",
+        "item_flags": 2,
+        "status": 40,
+        "class": "Hint"
+       }
+      ]
+     },
+     "uuid": "76a64fca-243b-4983-a2bd-5bc37345140d"
+    }
+   ]
+  }
+ ]
+}
