@@ -63,4 +63,17 @@ export const SEO_GAMES: readonly SeoGame[] = [
     name: "SMZ3",
     randomizer: { href: "https://samus.link/", name: "samus.link" },
   },
+  {
+    description:
+      "Free tracker for Archipelago multiworld rooms: join your slot read-only and see the items you received and the checks left, for any game.",
+    features: [
+      "Joins your room on archipelago.gg, or one hosted elsewhere, as a read-only tracker on your slot.",
+      "The items you received, with A Link to the Past drawn in its sprites and any other game as a list.",
+      "The checks you have done and those left, by the game's own groups, as the server states them.",
+      "An OBS stream view, and the board in every tab and on other devices.",
+    ],
+    id: "archipelago",
+    name: "Archipelago",
+    randomizer: { href: "https://archipelago.gg/", name: "archipelago.gg" },
+  },
 ];
