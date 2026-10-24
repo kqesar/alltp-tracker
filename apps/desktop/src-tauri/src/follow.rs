@@ -146,16 +146,41 @@ impl Running {
 /// build in development.
 pub fn tauri_assets<R: tauri::Runtime>(app: tauri::AppHandle<R>) -> Assets {
     Arc::new(move |path| {
-        let asset = app.asset_resolver().get(path.to_owned())?;
-        // A release falls back to index.html for a file it does not have:
-        // that is a 404 here, unless HTML was asked for
-        if asset.mime_type == "text/html" && !path.ends_with(".html") {
-            return None;
-        }
-        Some(Asset {
+        let resolver = app.asset_resolver();
+        let asset = resolver.get(path.to_owned())?;
+        let asset = Asset {
             bytes: asset.bytes,
             mime: asset.mime_type,
-        })
+        };
+        let index = || {
+            resolver
+                .get("index.html".to_owned())
+                .map(|index| index.bytes)
+        };
+        served(path, asset, index)
+    })
+}
+
+/// What a path Tauri resolved to is served as. A release falls back to
+/// index.html for a file it does not have, and Tauri types as HTML any
+/// extension it does not know (`.webmanifest`): only the bytes tell the two
+/// apart. The fallback is a 404 here, unless HTML was asked for: a page that
+/// fails to load a file logs its own address, the token in it.
+fn served(path: &str, asset: Asset, index: impl FnOnce() -> Option<Vec<u8>>) -> Option<Asset> {
+    if asset.mime != "text/html" || path.ends_with(".html") {
+        return Some(asset);
+    }
+    if index().is_some_and(|index| index == asset.bytes) {
+        return None;
+    }
+    let mime = if path.ends_with(".webmanifest") {
+        "application/manifest+json"
+    } else {
+        "application/octet-stream"
+    };
+    Some(Asset {
+        bytes: asset.bytes,
+        mime: mime.to_owned(),
     })
 }
 
@@ -420,6 +445,33 @@ mod tests {
         .unwrap();
         relay.stop().await;
         assert!(relay.running().await.is_none());
+    }
+
+    #[test]
+    fn tells_a_file_tauri_types_as_html_from_its_fallback() {
+        let html = |bytes: &[u8]| Asset {
+            bytes: bytes.to_vec(),
+            mime: "text/html".to_owned(),
+        };
+        let index = || Some(b"<!doctype html>".to_vec());
+
+        let manifest = served("manifest.webmanifest", html(b"{}"), index).unwrap();
+        assert_eq!(manifest.mime, "application/manifest+json");
+        assert_eq!(manifest.bytes, b"{}");
+        let other = served("data.unknown", html(b"x"), index).unwrap();
+        assert_eq!(other.mime, "application/octet-stream");
+
+        assert!(served("missing.webmanifest", html(b"<!doctype html>"), index).is_none());
+        let page = served("index.html", html(b"<!doctype html>"), index).unwrap();
+        assert_eq!(page.mime, "text/html");
+        let script = Asset {
+            bytes: b"<!doctype html>".to_vec(),
+            mime: "text/javascript".to_owned(),
+        };
+        assert_eq!(
+            served("app.js", script, index).unwrap().mime,
+            "text/javascript"
+        );
     }
 
     #[tokio::test]
