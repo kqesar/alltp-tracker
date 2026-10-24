@@ -345,7 +345,8 @@ and worked around here:
 - `test/upstream.spec.ts`: `upstream.json`, the dependency pin, the
   fixtures' recorded versions and the name-data checksums agree.
 - `test/real-server.spec.ts`: against a real server, only when
-  `AP_SERVER_URL` is set (see below).
+  `AP_SERVER_URL` is set (see below); `.github/workflows/archipelago.yml`
+  sets it up in CI.
 
 ### Recording the fixtures
 
@@ -388,6 +389,15 @@ AP 0.6.8 (frozen Linux release, Python 3.12.14), archipelago.js 2.1.0, Node
   joined. Client(0.6.3), ['Tracker']".
 - The fixtures were recorded again from the repository with the adapted
   script on the same day; the suite passed on that recording too.
+
+CI does the same on every pull request or push to master that touches this
+package, and weekly (`.github/workflows/archipelago.yml`, `docs/ci.md`): it
+downloads the release `upstream.json` pins, checks its sha256 against
+`assets`, hosts `normal-seed4242.archipelago` with `serve.sh` and runs the
+spec. It is not a required check; a failed weekly run opens an issue labelled
+`archipelago-server`. The weekly Logic drift workflow also compares `release`
+with Archipelago's latest stable release and opens an `ap-drift` issue when
+it is newer, listing the `watched` files that changed between the two.
 
 ## Not verified
 

@@ -47,7 +47,8 @@ flowchart LR
 | `docs.yml` | PR and push to master, every path | `scripts/check-docs.mjs` over the tracked Markdown: each relative link and its `#anchor`, and each repository path quoted in backticks, must exist. See "The docs check". |
 | `desktop.yml` | PR and master, `apps/desktop/**` only | Rust side of the desktop app: `fmt`, `clippy` and tests on Linux, and `clippy` again on Windows and macOS (the code that compiles on one system only), plus the tests of the two servers (`stream::`, `relay::`) on Windows, where an exclusive bind and a restart behave differently. |
 | `desktop-release.yml` | `workflow_dispatch`, started by the `desktop` job of `ci.yml` or by hand | The desktop installers for 4 targets, built from the release's tag and attached to it, after a check of the tag. A run of its own, so it neither holds the master queue nor turns master red. See "Releases". |
-| `logic-drift.yml` | weekly, manual | Compares the pinned randomizer commit with upstream and opens an issue on drift. |
+| `logic-drift.yml` | weekly, manual | Compares the pinned randomizer commits (ALttPR, SMZ3) with upstream and opens a `logic-drift` issue on drift. For Archipelago, which has no branch to follow, it compares the pinned release with the latest stable one and opens an `ap-drift` issue listing the watched files that changed. |
+| `archipelago.yml` | PR and master when `packages/archipelago/**` or the workflow changed, weekly, manual | Runs `real-server.spec.ts` against the pinned Archipelago server. See "The Archipelago real-server run". |
 
 Markdown-only changes skip `ci.yml` and CodeQL (`paths-ignore`): no job reads them, but `docs.yml` has no path filter and still checks their links.
 
@@ -321,6 +322,18 @@ Consequences and limits:
 - The macOS and Windows jobs of the installers' matrix no longer keep their own pnpm store (66 and 79 MB): they download the dependencies at each release, a few seconds. Saving one copy per release from each would have re-created the duplicates.
 - A promoted push runs no `ci`, so it saves no store. After a dependency update merged that way, the new store is saved by the next full run on master, at the latest the nightly one; until then pull requests restore the older store and install the difference.
 - Cache entries of a deleted branch or closed PR are evicted after 7 days without access, or earlier by LRU. `gh cache list` and `gh api repos/<owner>/<repo>/actions/cache/usage` show the state; `gh cache delete <key>` removes an entry.
+
+## The Archipelago real-server run
+
+`packages/archipelago` is tested against recorded frames and an in-process fake server in `ci.yml`. `archipelago.yml` adds the one check those cannot make: that the recording still matches a real server. It downloads the Linux release `packages/archipelago/upstream.json` pins (`release`, and the sha256 under `assets`, the one place a bump changes), checks it with `sha256sum`, hosts the committed `test/server/normal-seed4242.archipelago` with `ArchipelagoServer` (`packages/archipelago/scripts/serve.sh`; hosting needs no ROM), waits for the port, and runs `pnpm vitest run --project archipelago real-server` with `AP_SERVER_URL` pointing at it. The server's log tail is printed at the end.
+
+- **Triggers.** A pull request or push to master that changes `packages/archipelago/**` or the workflow, once a week (Monday), and by hand. Nothing else can change its outcome, so no other change pays for it.
+- **Cost.** Under a minute of one runner: 19 s for the first run on the pull request that added it (install from the cached store, a 10 s download of the 122 MB release, the server's start, 0.3 s of tests). It runs beside `ci` and `e2e` and finishes long before them, so it adds no wait; a pull request that does not touch the package does not start it.
+- **The release is cached** as one entry per version (`archipelago-release-<version>`), saved by master only, like the pnpm store: a copy saved by a pull request would be its own and never reused. The cache is a courtesy more than a speed-up; the checksum is verified on every run, a cached copy included.
+- **Not a required check.** It reads a third party's release asset over the network, so a GitHub or download outage would otherwise block unrelated merges, and it protects a package that no other check depends on. A red run on a pull request is read like any other; nothing enforces it.
+- **A failed weekly run opens an issue**, the same way `nightly-report` does: `report` creates the `archipelago-server` label if needed (`gh label create --force`), then comments on the open issue with that label or title, or opens one. Close it once fixed. Pull requests and pushes show their failure on the check itself, so only the scheduled run reports.
+
+The other half of the pin is the `ap-drift` issue, opened by `logic-drift.yml` when Archipelago releases a version past the pinned one (see `packs/alttpr/scripts/logic-drift.mjs`, `checkReleaseDrift`): it lists the watched files that changed between the two tags, the new release's Linux assets with their sha256, and says the name-data checksums are *to check*, since the data package is built by the server rather than shipped as a file. A bump of the pin then runs this workflow on the pull request.
 
 ## The docs check
 

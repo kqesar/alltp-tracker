@@ -1,0 +1,187 @@
+name: Archipelago
+
+# The Archipelago link (packages/archipelago) against a real server: the AP
+# release upstream.json pins hosts the committed multiworld, and
+# test/real-server.spec.ts connects to it. The package's other tests run
+# against recorded frames and a fake server in ci.yml; this one is what says
+# the recording still matches what a server does. Hosting needs no ROM.
+# On a pull request or a push to master that touches the package or this
+# workflow, weekly, and on demand. Not a required check (docs/ci.md): a
+# failure of the weekly run opens an issue instead.
+on:
+  pull_request:
+    paths:
+      - "packages/archipelago/**"
+      - ".github/workflows/archipelago.yml"
+  push:
+    branches: [master]
+    paths:
+      - "packages/archipelago/**"
+      - ".github/workflows/archipelago.yml"
+  schedule:
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: archipelago-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Any free port: the server is the job's own
+  AP_PORT: "38281"
+
+jobs:
+  real-server:
+    name: Real server
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The release, its file and its checksum all come from upstream.json,
+      # the one place a bump changes.
+      - name: Read the pinned release
+        id: pin
+        run: |
+          node -e '
+            const pin = require("./packages/archipelago/upstream.json");
+            const asset = `Archipelago_${pin.release}_linux-x86_64.tar.gz`;
+            const sha = pin.assets[asset];
+            if (!sha) throw new Error(`upstream.json lists no checksum for ${asset}`);
+            const url = `https://github.com/${pin.repo}/releases/download/${pin.release}/${asset}`;
+            const out = Object.entries({ asset, release: pin.release, sha, url });
+            require("fs").appendFileSync(
+              process.env.GITHUB_OUTPUT,
+              out.map(([k, v]) => `${k}=${v}\n`).join(""),
+            );
+          '
+
+      # pnpm, the Node.js package.json pins (devEngines.runtime), then the
+      # dependencies as the lockfile has them, from the cached store
+      - name: Setup pnpm, Node.js and dependencies
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        with:
+          cache: true
+          save-cache: false
+          require-lockfile: true
+
+      # The release is 120 MB and downloads in seconds, so the cache is a
+      # courtesy to GitHub, not a speed-up: one entry per release, written by
+      # master only (a pull request's copy would be its own and never reused).
+      - name: Restore the release
+        id: cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/ap-release
+          key: archipelago-release-${{ steps.pin.outputs.release }}
+
+      - name: Download the release
+        if: steps.cache.outputs.cache-hit != 'true'
+        env:
+          ASSET: ${{ steps.pin.outputs.asset }}
+          URL: ${{ steps.pin.outputs.url }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/ap-release"
+          curl --fail --location --silent --show-error --retry 3 \
+            --output "$RUNNER_TEMP/ap-release/$ASSET" "$URL"
+
+      # Always, a cached copy included
+      - name: Check the release against upstream.json
+        env:
+          ASSET: ${{ steps.pin.outputs.asset }}
+          SHA: ${{ steps.pin.outputs.sha }}
+        run: |
+          cd "$RUNNER_TEMP/ap-release"
+          echo "$SHA  $ASSET" | sha256sum --check -
+
+      - name: Save the release
+        if: steps.cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/master'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/ap-release
+          key: archipelago-release-${{ steps.pin.outputs.release }}
+
+      - name: Extract the release
+        env:
+          ASSET: ${{ steps.pin.outputs.asset }}
+        run: |
+          mkdir "$RUNNER_TEMP/ap"
+          tar -xzf "$RUNNER_TEMP/ap-release/$ASSET" -C "$RUNNER_TEMP/ap"
+          echo "AP_DIR=$RUNNER_TEMP/ap/Archipelago" >> "$GITHUB_ENV"
+
+      # serve.sh keeps the server's stdin open (it reads its console there)
+      # and hosts a copy of the multiworld in a temp HOME, saves off.
+      - name: Start the server
+        run: |
+          sh packages/archipelago/scripts/serve.sh \
+            packages/archipelago/test/server/normal-seed4242.archipelago \
+            127.0.0.1 "$AP_PORT" > "$RUNNER_TEMP/server.log" 2>&1 &
+          for _ in $(seq 60); do
+            if (exec 3<>"/dev/tcp/127.0.0.1/$AP_PORT") 2>/dev/null; then
+              echo "The server listens on $AP_PORT."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::the server did not open port $AP_PORT in 60 s"
+          cat "$RUNNER_TEMP/server.log"
+          exit 1
+
+      - name: Run the real-server tests
+        env:
+          AP_SERVER_URL: ws://127.0.0.1:${{ env.AP_PORT }}
+        run: pnpm vitest run --project archipelago real-server
+
+      # The runner kills what a job leaves behind; this one also shows what
+      # the server said, which is the first thing to read on a failure.
+      - name: Stop the server
+        if: always()
+        run: |
+          pkill -f "$AP_DIR/ArchipelagoServer" || true
+          pkill -f "tail -f /dev/null" || true
+          tail -n 60 "$RUNNER_TEMP/server.log" || true
+
+  # The weekly run found something: one open issue at most, which a later
+  # failure comments on instead of opening another. Close it once fixed.
+  # Pull requests and pushes show their failure on the check itself.
+  report:
+    name: Report a failed weekly run
+    needs: real-server
+    if: ${{ !cancelled() && github.event_name == 'schedule' && needs.real-server.result != 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      issues: write
+
+    steps:
+      - name: Open the issue, or comment on the open one
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          LABEL: archipelago-server
+          RESULT: ${{ needs.real-server.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TITLE: The Archipelago real-server run failed
+        run: |
+          body=$(printf 'The weekly run of `packages/archipelago` against the pinned Archipelago server did not pass (`%s`) on `%s`.\n\n%s\n\nRead the server log at the end of the job. Either the package or the recorded fixtures no longer match what the server does, or the runner broke. Close this issue once fixed.' \
+            "$RESULT" "$GITHUB_SHA" "$RUN_URL")
+          # The label first, and idempotently: an issue created with a label that
+          # does not exist loses it silently. The title is the second key.
+          gh label create "$LABEL" --force --color d93f0b \
+            --description 'The Archipelago real-server run failed' \
+            || echo "::warning::could not create the $LABEL label"
+          # Pull requests are issues too, for this endpoint
+          open=$(gh api "repos/$GH_REPO/issues?state=open&per_page=100" --jq \
+            '[.[] | select(.pull_request | not)
+              | select(.title == env.TITLE or any(.labels[]; .name == env.LABEL))][0].number // empty')
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body "$body"
+          else
+            gh api "repos/$GH_REPO/issues" -f title="$TITLE" -f body="$body" \
+              -f "labels[]=$LABEL" --jq '.html_url'
+          fi
