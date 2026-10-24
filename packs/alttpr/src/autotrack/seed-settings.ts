@@ -4,10 +4,12 @@
 // tables (vt app/World.php:1110-1345, writeToRom), where the game reads it
 // as it plays; the tracker reads the same bytes.
 //
-// Race Mode: the race spec permits the ROM header and $30:8210-$30:823F
-// alone. The only setting there is the seed type (the logic); every other
-// table lies outside, so a race seed's settings are never read, and stay
-// the player's to choose. The memory map (memory.ts) lists these ranges
+// Race Mode reads the ROM header and $30:8210-$30:823F alone, its own
+// windows. The race rules (v2.0) let a tracker set itself up from the ROM's
+// settings unless the seed is a Mystery one; Race Mode stays stricter
+// (deliberately, pending clarification). The only setting in its windows is
+// the seed type (the logic); every other table lies outside, so a race
+// seed's settings are never read, and stay the player's to choose. The memory map (memory.ts) lists these ranges
 // beside the rest, and the race guard holds them to the same rules.
 //
 // Sources, read as data and never run (MEMORY_SOURCES in memory.ts):
@@ -52,11 +54,11 @@ function rom<const Id extends string>(
 
 /**
  * The ROM ranges that hold a seed's settings, in address order. All but the
- * seed type lie outside the memory races permit: their category is the race
- * profile's `other`, which Race Mode never reads. The seed type sits in
- * the permitted $30:8210-$30:823F, beside the race flag: `rom-header` is the
- * profile's category for that clause of the spec ("allowed to read the
- * following memory addresses, and the internal ROM header").
+ * seed type lie outside the memory Race Mode reads: their category is the
+ * race profile's `other`, which Race Mode never reads. The seed type sits in
+ * Race Mode's $30:8210-$30:823F, beside the race flag: `rom-header` is the
+ * profile's category for it ("allowed to read any SRAM and/or ROM locations
+ * at any time", short of entrances and location contents).
  */
 export const SEED_SETTINGS_RANGES = [
   // HammerableGanon, a byte nothing uses, then AllowSwordlessMedallionUse
@@ -366,7 +368,7 @@ function seedName(memory: MemoryView): string | null {
 
 /**
  * A seed's settings, from its ROM. Pure and total: any bytes decode. In
- * Race Mode it never asks for a range races forbid: every setting but the
+ * Race Mode it never asks for a range Race Mode leaves alone: every setting but the
  * logic is then unknown, "race-mode".
  * @param memory - The ranges read, by id: the session's snapshot
  */

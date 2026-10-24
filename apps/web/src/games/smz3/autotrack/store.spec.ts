@@ -119,6 +119,51 @@ describe("SMZ3's autotracking", () => {
     expect(run().items).toMatchObject({ missile: 2, moonPearl: 1 });
   });
 
+  it("holds Race Mode always on when the player sets it, whatever the seed", async () => {
+    const h = harness({ ...PLAYED, mire: "quake", towerCrystals: 3 });
+    smz3Autotrack.setRaceChoice("on");
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+
+    const { status } = state();
+    expect(status.code === "connected" && status.race).toMatchObject({
+      active: true,
+      flag: "open",
+      setting: "on",
+    });
+    expect(state().reading?.race).toBe(true);
+    expect(state().reading?.requirements).toBe("race-mode");
+    expect(run().settings.towerCrystals).toBe(7);
+    expect(run().pads.mire).toBe("unknown");
+    // Saved with the wish to connect on start
+    expect(
+      JSON.parse(localStorage.getItem("alltp-tracker-smz3-autotrack") ?? "{}")
+        .state,
+    ).toEqual({ connectOnStart: true, raceChoice: "on" });
+
+    // Back to the ROM's flag, the session running: it reads them at once
+    smz3Autotrack.setRaceChoice("auto");
+    for (let tick = 0; tick < 12; tick++) await h.advance(1000);
+    expect(state().reading?.race).toBe(false);
+    expect(run().settings.towerCrystals).toBe(3);
+  });
+
+  it("reads a Race Mode saved by another version as the ROM's flag", async () => {
+    localStorage.setItem(
+      "alltp-tracker-smz3-autotrack",
+      JSON.stringify({ state: { raceChoice: "off" }, version: 0 }),
+    );
+    await smz3Autotrack.useStore.persist.rehydrate();
+    expect(state().raceChoice).toBe("auto");
+    localStorage.setItem(
+      "alltp-tracker-smz3-autotrack",
+      JSON.stringify({ state: { raceChoice: "on" }, version: 0 }),
+    );
+    await smz3Autotrack.useStore.persist.rehydrate();
+    expect(state().raceChoice).toBe("on");
+  });
+
   it("lays nothing while the running game is not in play", async () => {
     const h = harness({ ...PLAYED, inPlay: false });
     await smz3Autotrack.connect();

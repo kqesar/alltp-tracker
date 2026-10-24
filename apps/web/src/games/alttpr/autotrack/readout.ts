@@ -464,7 +464,9 @@ export const describeReading = (
     prizesUnread,
     progress: [
       { label: "Game started", value: started },
-      { label: "Zelda rescued", value: rescueZelda },
+      // The race rules forbid telling whether Zelda was rescued in a
+      // Standard seed: Race Mode never says it, whatever the seed's world
+      ...(reading.race ? [] : [{ label: "Zelda rescued", value: rescueZelda }]),
       { label: "Triforce reached", value: goal },
     ],
     seed: describeSeed(reading.seed),

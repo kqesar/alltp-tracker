@@ -53,13 +53,13 @@ export interface CheckEntry {
   /** The pack's location id. */
   readonly id: string;
   readonly flag: CheckFlag;
-  /** The dungeon it lies in, or null outside dungeons (spec v1.2). */
+  /** The dungeon it lies in, or null outside dungeons (Race Mode's split). */
   readonly dungeon: DungeonCode | null;
   readonly source: SourceRef;
 }
 
 /**
- * The dungeons' locations, by id: the spec's dungeons (Hyrule Castle with
+ * The dungeons' locations, by id: Race Mode's dungeons (Hyrule Castle with
  * its sewers, Castle Tower, the twelve others). Link's Uncle and the Secret
  * Passage share the escape's region upstream but stand outside the castle:
  * the compass totals count eight Hyrule Castle locations without them (vt

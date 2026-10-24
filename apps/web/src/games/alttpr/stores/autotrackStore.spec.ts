@@ -111,9 +111,88 @@ describe("autotracking and the board", () => {
   });
 });
 
+describe("Race Mode as the player sets it", () => {
+  const reading = () => useAutotrackStore.getState().reading;
+
+  it("holds Race Mode on over a seed without the race flag, saved", async () => {
+    const h = harness();
+    act(() => useAutotrackStore.getState().setRaceChoice("on"));
+    await act(() => connectAutotrack());
+    await h.advance(0);
+
+    const { status } = useAutotrackStore.getState();
+    expect(status.code === "connected" && status.race).toMatchObject({
+      active: true,
+      flag: "open",
+      setting: "on",
+    });
+    // Decoded as on a race seed: no entrance, no settings, no ROM stats, no
+    // check inside a dungeon
+    expect(reading()).toMatchObject({ entrances: "race-mode", race: true });
+    expect(reading()?.progress.romStats).toBe("race-mode");
+    expect(reading()?.seed.mode).toEqual({ known: false, why: "race-mode" });
+    expect(board().checked["links-house"]).toBe(true);
+    expect(board().checked["eastern-palace/compass-chest"]).toBeUndefined();
+    expect(
+      JSON.parse(localStorage.getItem("alltp-tracker-autotrack") ?? "{}").state,
+    ).toEqual({ connectOnStart: true, keptSeed: null, raceChoice: "on" });
+  });
+
+  it("follows a change while connected, decoding again at once", async () => {
+    const h = harness();
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(reading()?.race).toBe(false);
+
+    act(() => useAutotrackStore.getState().setRaceChoice("on"));
+    expect(reading()?.race).toBe(true);
+    expect(reading()?.entrances).toBe("race-mode");
+
+    act(() => useAutotrackStore.getState().setRaceChoice("auto"));
+    expect(reading()?.race).toBe(false);
+  });
+
+  it("follows a change made in another tab of the tracker", async () => {
+    const h = harness();
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(reading()?.race).toBe(false);
+
+    // Another tab saves its choice; this one hears of it through storage
+    localStorage.setItem(
+      "alltp-tracker-autotrack",
+      JSON.stringify({
+        state: { connectOnStart: true, keptSeed: null, raceChoice: "on" },
+        version: 1,
+      }),
+    );
+    await act(async () => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "alltp-tracker-autotrack",
+          storageArea: localStorage,
+        }),
+      );
+    });
+
+    expect(useAutotrackStore.getState().raceChoice).toBe("on");
+    expect(reading()?.race).toBe(true);
+  });
+
+  it("reads a saved Race Mode it does not know as the ROM's flag", async () => {
+    localStorage.setItem(
+      "alltp-tracker-autotrack",
+      JSON.stringify({ state: { raceChoice: "off" }, version: 1 }),
+    );
+    await act(() => useAutotrackStore.persist.rehydrate());
+    expect(useAutotrackStore.getState().raceChoice).toBe("auto");
+  });
+});
+
 describe("following the seed's run type", () => {
   const game = board;
   /** What the last reading's seed says of the board's run type. */
+  const reading = () => useAutotrackStore.getState().reading;
   const seedCheck = () => {
     const reading = useAutotrackStore.getState().reading;
     return reading && checkSeed(reading.seed, game());
@@ -170,7 +249,7 @@ describe("following the seed's run type", () => {
     act(() => keepRunType());
     expect(
       JSON.parse(localStorage.getItem("alltp-tracker-autotrack") ?? "{}").state,
-    ).toEqual({ connectOnStart: true, keptSeed: "KEPT" });
+    ).toEqual({ connectOnStart: true, keptSeed: "KEPT", raceChoice: "auto" });
 
     // A new game, fresh: still the player's run type for this seed
     act(() => game().reset());
@@ -223,58 +302,49 @@ describe("following the seed's run type", () => {
       return fetch;
     };
 
-    it("switches a fresh board once the file is in, asked once", async () => {
-      const fetch = fileOnline("RaceFresh1");
+    it("never asks for it in Race Mode: the run type stays the player's", async () => {
+      // A Mystery race's file, which would switch a fresh board to Mystery
+      const fetch = fileOnline("RaceFresh1", {
+        spoilers: "mystery",
+        tournament: "true",
+      });
       const h = harness({ name: "RaceFresh1", race: true });
       await act(() => connectAutotrack());
       await h.advance(0);
-
-      await vi.waitFor(() => expect(game().presetId).toBe("keysanity"));
-      expect(useAutotrackStore.getState().news?.text).toBe(
-        "This seed is Keysanity (Open, Ganon, 7/7): the tracker switched to it.",
-      );
-      expect(seedCheck()?.kind).toBe("same");
-
       h.memory[SAVE(0x357)] = 0x01; // the game moves on: a new reading
       await h.advance(1000);
+
       expect(game().items.moonpearl).toBe(true);
-      expect(seedCheck()?.kind).toBe("same");
-      expect(fetch).toHaveBeenCalledOnce();
-    });
-
-    it("asks before switching a board with a run on it", async () => {
-      fileOnline("RaceAsked1");
-      const h = harness({ name: "RaceAsked1", race: true });
-      act(() => game().handleItemClick("flute"));
-      await act(() => connectAutotrack());
-      await h.advance(0);
-
-      await vi.waitFor(() =>
-        expect(seedCheck()).toMatchObject({
-          kind: "differs",
-          presetId: "keysanity",
-        }),
-      );
-      expect(game().presetId).toBe("open");
-    });
-
-    it("leaves the run type the player's when alttpr.com has no file", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(async () => new Response("", { status: 403 })),
-      );
-      const h = harness({ name: "RaceGone01", race: true });
-      await act(() => connectAutotrack());
-      await h.advance(0);
-
-      await vi.waitFor(() =>
-        expect(useAutotrackStore.getState().seedFile).toEqual({
-          hash: "RaceGone01",
-          result: "not-found",
-        }),
-      );
+      expect(fetch).not.toHaveBeenCalled();
+      expect(useAutotrackStore.getState().seedFile).toBeNull();
       expect(seedCheck()).toEqual({ kind: "unread", why: "race-mode" });
       expect(game().presetId).toBe("open");
+      expect(useAutotrackStore.getState().news).toBeNull();
+    });
+
+    it("lets a file asked before go once Race Mode is set always on", async () => {
+      const fetch = fileOnline("NotRaced02", { item_placement: "basic" });
+      const h = keysanitySeed("NotRaced02");
+      await act(() => connectAutotrack());
+      await h.advance(0);
+      await vi.waitFor(() =>
+        expect(reading()?.seed.itemPlacement).toMatchObject({
+          value: "basic",
+        }),
+      );
+
+      act(() => useAutotrackStore.getState().setRaceChoice("on"));
+
+      expect(useAutotrackStore.getState().seedFile).toBeNull();
+      expect(reading()?.seed.itemPlacement).not.toMatchObject({
+        value: "basic",
+      });
+      h.memory[SAVE(0x357)] = 0x01; // the game moves on: a new reading
+      await h.advance(1000);
+      expect(reading()?.seed.itemPlacement).not.toMatchObject({
+        value: "basic",
+      });
+      expect(fetch).toHaveBeenCalledOnce();
     });
 
     it("takes what a ROM never states from the file, then switches once", async () => {

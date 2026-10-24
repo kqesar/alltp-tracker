@@ -76,12 +76,44 @@ describe("SMZ3's autotracking dialog", () => {
     );
     const dialog = await openDialog();
     expect(within(dialog).getByTestId("smz3-readout")).toHaveTextContent(
-      "A race seed: its requirements and medallions stay yours to set.",
+      "In Race Mode, its requirements and medallions stay yours to set.",
     );
     expect(
       within(dialog).queryByTestId("smz3-readout-requirements"),
     ).toBeNull();
     expect(within(dialog).getByTestId("autotrack-connect")).toBeVisible();
+  });
+
+  it("sets Race Mode always on, and says so while connected", async () => {
+    const dialog = await openDialog();
+    const user = userEvent.setup();
+    const group = within(dialog).getByRole("group", { name: "Race Mode" });
+    expect(screen.queryByTestId("race-badge")).toBeNull();
+
+    await user.click(within(group).getByRole("radio", { name: "Always on" }));
+    expect(smz3Autotrack.useStore.getState().raceChoice).toBe("on");
+
+    act(() =>
+      smz3Autotrack.useStore.setState({
+        active: true,
+        shown: {
+          ...STATUSES.connected,
+          race: {
+            active: true,
+            flag: "open",
+            overridden: false,
+            raceLegal: true,
+            setting: "on",
+          },
+        },
+      }),
+    );
+    expect(within(dialog).getByTestId("race-badge")).toHaveTextContent(
+      "Race-legal Always on",
+    );
+    expect(within(dialog).getByTestId("race-mode")).toHaveTextContent(
+      "Race Mode is always on, as you set it",
+    );
   });
 
   it("says when the emulator does not serve the requirements", async () => {

@@ -2,15 +2,21 @@ import { detectEnvironment, parseUserAgent } from "@alltp/autotrack";
 import { type ReactNode, useEffect } from "react";
 import type { GameAutotrack } from "@/autotrack/gameSession";
 import { detailOf, headlineOf, phaseOf } from "@/autotrack/status";
+import { RaceModeOption } from "@/components/autotrack/RaceModeOption";
 import { SetupGuide } from "@/components/autotrack/SetupGuide";
-import { StatusDot } from "@/components/autotrack/StatusDot";
+import {
+  RaceBadge,
+  raceReason,
+  StatusDot,
+} from "@/components/autotrack/StatusDot";
 import { Modal } from "@/components/ui/Modal";
 
 /**
- * A game's autotracking dialog, as ALttPR's: the status, Connect or
- * Disconnect, Retry now while the session waits, Stop waiting while another
- * tab autotracks, what the board follows, the setup guide ticked live, and
- * what was read of the seed. It opens only on the player's click.
+ * A game's autotracking dialog, as ALttPR's: the status with the race-legal
+ * badge while Race Mode is on, Connect or Disconnect, Retry now while the
+ * session waits, Stop waiting while another tab autotracks, what the board
+ * follows, Race Mode (the ROM's flag or always on), the setup guide ticked
+ * live, and what was read of the seed. It opens only on the player's click.
  * @param session - The game's autotracking
  * @param game - The game as the setup guide names it
  * @param follows - What the board follows, in a sentence or two
@@ -40,6 +46,9 @@ export const GameAutotrackDialog = <Reading,>({
     ? "Autotracking could not be loaded"
     : headlineOf(shown, active, elsewhere, session.seed);
   const canRetry = active && !elsewhere && "retryInMs" in shown;
+  const connected = active && !elsewhere && shown.code === "connected";
+  const race = connected && shown.race.active ? shown.race : null;
+  const raceChoice = session.useStore((state) => state.raceChoice);
 
   // The setup guide, before any connection: the system, once, as it opens
   useEffect(() => {
@@ -76,12 +85,18 @@ export const GameAutotrackDialog = <Reading,>({
               >
                 {headline}
               </p>
+              {race && <RaceBadge race={race} />}
             </div>
             <p className="autotrack-status__detail">
               {unavailable
                 ? "Reload the page to try again; your run is saved."
                 : detailOf(shown, active, elsewhere)}
             </p>
+            {race && (
+              <p className="autotrack-status__detail" data-testid="race-mode">
+                {raceReason(race)}
+              </p>
+            )}
           </div>
         </div>
 
@@ -130,6 +145,7 @@ export const GameAutotrackDialog = <Reading,>({
           )}
         </div>
         <p className="autotrack-follow__text">{follows}</p>
+        <RaceModeOption onChange={session.setRaceChoice} value={raceChoice} />
 
         <SetupGuide
           environment={environment ?? parseUserAgent(navigator.userAgent)}

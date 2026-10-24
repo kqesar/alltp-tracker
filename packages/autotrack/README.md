@@ -342,19 +342,30 @@ spec; Chromium and Firefox sources as cited in the research notes; Firefox
 A **race profile** is one community's rules: the memory it permits, its
 categories of tracked information, permitted or not, and its race flag. The
 package defines the shape (`defineRaceProfile`); packs bring the profiles.
-The ALttPR one, from "The Official ALTTPR Race-legal Auto-tracker
-Specification" v1.2 (link.alttpr.com/autotracking), lives in the pack
-(`packs/alttpr/src/autotrack/race-profile.ts`); this package's tests import it:
+The ALttPR one answers to the [ALTTPR Auto-tracker Rules and Guidelines
+v2.0](https://docs.google.com/document/d/e/2PACX-1vTgsj0FMiWyaBOYP97e_ABc4P_0vIGiJxoUJ5Rj-PBr1T7i_zpyLqhLLVkbftPwS_B6nwad5j5zhtMg/pub) (2024), which racetime.gg's ALTTPR category links; it lives in the
+pack (`packs/alttpr/src/autotrack/race-profile.ts`), each category quoting
+v2.0, and this package's tests import it. It is deliberately stricter than
+v2.0, pending clarification with the race admins:
 
-- permitted memory (LoROM, ends inclusive): `$00:FFB0-$00:FFDF` (header),
-  `$7E:0000-$7E:00B0`, `$7E:010B`, `$7E:F000-$7E:F500`, `$30:8210-$30:823F`;
-  "Reading memory outside the above memory addresses is prohibited";
+- memory (LoROM, ends inclusive): `$00:FFB0-$00:FFDF` (header),
+  `$7E:0000-$7E:00B0`, `$7E:010B`, `$7E:F000-$7E:F500`, `$30:8210-$30:823F`.
+  v2.0 lists no addresses ("it does not matter where information is
+  gathered, only that its use is allowed or disallowed") and lets a tracker
+  read any ROM but entrance and location contents: these windows, from the
+  rules' earlier version, are the tracker's own limit;
 - permitted categories: items, keys, boss kills, checks outside dungeons,
   game start, goal, "at least one bomb/arrow", the MSU-1 track, the header,
-  the race flag; forbidden: dungeon checks and counts, prizes, spheres,
-  entrances, HUD data (counts, equipped item, heart pieces, bottle
-  contents), and anything else;
-- race flag `$30:8213`: `0x01` race, `0x00` not.
+  the race flag; forbidden: entrances and spheres (as v2.0 has it), and
+  dungeon checks and counts, prizes, HUD data (counts, heart pieces, bottle
+  contents) and the ROM's settings and stats, which v2.0 allows within
+  limits but Race Mode keeps the player's; and anything else;
+- race flag `$30:8213`: `0x01` race, `0x00` not. v2.0 names no race flag:
+  the randomizer's tournament flag is what switches Race Mode on.
+
+Super Metroid's (Map Rando) and SMZ3's profiles live in their packs:
+racetime.gg's categories for them link no tracker rules, so they stay as
+their READMEs describe.
 
 Compliant by construction:
 
@@ -370,8 +381,13 @@ Compliant by construction:
 4. It fails closed: in `auto`, Race Mode is on until the flag reads "open",
    and stays on when the device cannot read ROM (`NO_ROM_READ`) or the flag
    reads neither value.
-5. The user may turn it `off` over a race ROM; `race.overridden` is then
-   true, and the spec asks the UI to show a warning.
+5. The setting is the user's (`raceSetting`, then `setRaceMode`, which
+   takes effect from the next tick and reports the new status at once).
+   `on` holds Race Mode whatever the flag says, for a race on a seed
+   generated without it; the app offers `auto` and `on` for every game
+   (`apps/web/src/autotrack/raceChoice.ts`), never `off`. The package
+   supports `off` over a race ROM, with `race.overridden` true for the UI
+   to warn.
 
 `race.raceLegal` is true when every read the poller issues is permitted:
 Race Mode is on, or the pack reads nothing forbidden.

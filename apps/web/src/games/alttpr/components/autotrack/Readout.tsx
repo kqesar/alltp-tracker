@@ -71,18 +71,17 @@ export const Readout = ({
   const titleId = useId();
   const wildKeys = useGameStore((state) => wildItems(state.settings).keys);
   const readout = describeReading(reading, wildKeys);
-  // What the ROM does not state comes from the seed's file once it is in:
-  // all of a race seed's settings but its logic
+  // What the ROM does not state comes from the seed's file once it is in,
+  // outside Race Mode only
   const fileIn = useAutotrackStore(
     (state) =>
+      !reading.race &&
       state.seedFile?.hash === reading.seed.seed &&
       typeof state.seedFile.result === "object",
   );
-  const seedTitle = !fileIn
-    ? "Seed settings"
-    : reading.race
-      ? "Seed settings, from alttpr.com"
-      : "Seed settings, from the ROM and alttpr.com";
+  const seedTitle = fileIn
+    ? "Seed settings, from the ROM and alttpr.com"
+    : "Seed settings";
   const time = new Date(reading.at).toLocaleTimeString();
 
   return (
@@ -100,7 +99,7 @@ export const Readout = ({
           : `Last read at ${time}, before the connection dropped`}
         . Compare it with your game.
         {reading.race &&
-          " In Race Mode, what races forbid tracking is never read."}
+          " In Race Mode, what the tracker leaves you to mark is never read."}
       </p>
       <div className="readout__grid">
         <Group

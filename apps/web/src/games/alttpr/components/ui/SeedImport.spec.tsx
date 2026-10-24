@@ -1,8 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { STATUSES, statusOf } from "@/autotrack/fixtures";
 import { forgetSeedFiles } from "@/games/alttpr/autotrack/seedFile";
 import { SeedImport } from "@/games/alttpr/components/ui/SeedImport";
 import { getPreset } from "@/games/alttpr/data/presets";
+import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 import open from "../../../../../../../packs/alttpr/test/seed-files/9MQ9gO1wMD.json";
 
 const OPEN_RUN = { presetId: "open", settings: getPreset("open").settings };
@@ -30,7 +32,10 @@ const withMeta = (meta: Record<string, unknown>) => async () =>
     }),
   );
 
-beforeEach(() => forgetSeedFiles());
+beforeEach(() => {
+  forgetSeedFiles();
+  useAutotrackStore.setState(useAutotrackStore.getInitialState(), true);
+});
 afterEach(() => vi.unstubAllGlobals());
 
 describe("SeedImport", () => {
@@ -95,6 +100,41 @@ describe("SeedImport", () => {
     expect(
       await screen.findByText("alttpr.com has no seed with this hash."),
     ).toBeInTheDocument();
+  });
+
+  it("asks alttpr.com for nothing in Race Mode, and says why", () => {
+    const fetch = vi.fn(withMeta({}));
+    vi.stubGlobal("fetch", fetch);
+    act(() => useAutotrackStore.setState({ raceChoice: "on" }));
+    render(<SeedImport onSwitch={vi.fn()} run={OPEN_RUN} />);
+
+    expect(screen.queryByTestId("seed-import-input")).toBeNull();
+    expect(screen.getByTestId("seed-import-race")).toHaveTextContent(
+      "Off in Race Mode: during a race the tracker asks alttpr.com for nothing, since a seed's file holds where every item is. Pick the run type below.",
+    );
+
+    // On in this tab's session too, set Auto: the race flag said race
+    act(() =>
+      useAutotrackStore.setState({
+        active: true,
+        raceChoice: "auto",
+        status: statusOf("connected", {
+          race: {
+            active: true,
+            flag: "race",
+            overridden: false,
+            raceLegal: true,
+            setting: "auto",
+          },
+        }),
+      }),
+    );
+    expect(screen.getByTestId("seed-import-race")).toBeVisible();
+
+    // Out of it, the form is back
+    act(() => useAutotrackStore.setState({ status: STATUSES.connected }));
+    expect(screen.getByTestId("seed-import-input")).toBeVisible();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("drops an answer that comes after the form closed", async () => {

@@ -66,7 +66,7 @@ const ROOM_FLAGS = CHECK_FLAGS.filter(
   ({ flag }) => flag.size === 2 && flag.at < SAVE_DATA + 0x250,
 ).map(({ id }) => ({ id, ...roomOf(id) }));
 
-/** The upstream region files of the spec's dungeons. */
+/** The upstream region files of Race Mode's dungeons. */
 const DUNGEON_FILES = new Set(
   [
     "DesertPalace",

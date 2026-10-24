@@ -112,7 +112,11 @@ describe("useAutotrack", () => {
 
     expect(h.transports).toHaveLength(1);
     expect(state().status.code).toBe("connected");
-    expect(saved()).toEqual({ connectOnStart: true, keptSeed: null });
+    expect(saved()).toEqual({
+      connectOnStart: true,
+      keptSeed: null,
+      raceChoice: "auto",
+    });
 
     // The tracker closes: the session stops, the wish stays
     first.unmount();
@@ -212,7 +216,7 @@ describe("useAutotrack", () => {
     await h.advance(1000);
     expect(state().reading?.items.counts.moonPearl).toBe(1);
 
-    // A race seed takes its place: what races forbid is dropped at once
+    // A race seed takes its place: what Race Mode withholds is dropped at once
     h.memory.set([0x01, 0x00], 0x18_0213);
     await h.advance(1000);
     expect(state().status).toMatchObject({ race: { active: true } });
@@ -250,7 +254,11 @@ describe("useAutotrack", () => {
       connectOnStart: false,
       reading: null,
     });
-    expect(saved()).toEqual({ connectOnStart: false, keptSeed: null });
+    expect(saved()).toEqual({
+      connectOnStart: false,
+      keptSeed: null,
+      raceChoice: "auto",
+    });
     render(<Tracker />);
     await h.advance(0);
     expect(h.transports).toHaveLength(1);

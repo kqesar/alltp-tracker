@@ -1,7 +1,7 @@
 // A game's autotracking: the one session per page, loaded lazily on Connect,
-// its status and last reading. Only `connectOnStart` is saved, under the
-// game's key: a device that connected once connects again as the tracker
-// opens. Across the tracker's tabs one session, whatever the game: the tab
+// its status and last reading. Only `connectOnStart` and `raceChoice` are
+// saved, under the game's key: a device that connected once connects again
+// as the tracker opens, in the Race Mode the player set. Across the tracker's tabs one session, whatever the game: the tab
 // that runs it holds the shared Web Lock (autotrack/lock.ts), another waits.
 //
 // Super Metroid and SMZ3 build theirs with it. It follows ALttPR's
@@ -13,6 +13,7 @@ import type {
   BridgeInfo,
   DeviceDescriptor,
   Environment,
+  RaceSetting,
   SessionOptions,
   SessionStatus,
 } from "@alltp/autotrack";
@@ -20,7 +21,9 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { bridgeOptions } from "@/autotrack/bridge";
 import { createAutotrackLock } from "@/autotrack/lock";
+import { mergeRaceChoice, type RaceChoice } from "@/autotrack/raceChoice";
 import { shownStatus } from "@/autotrack/status";
+import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isObsView } from "@/utils/view";
 
 /** What a bridge listed, as the session last saw it. */
@@ -40,6 +43,8 @@ export type GameRuntimeSink<Reading> = {
 /** A running session, as the store drives it. */
 export type GameRuntime = {
   retryNow: () => void;
+  /** Follow the player's Race Mode. */
+  setRaceMode: (setting: RaceSetting) => void;
   stop: () => void;
 };
 
@@ -72,6 +77,8 @@ export type GameAutotrackState<Reading> = {
   reading: Reading | null;
   /** The session's code could not be loaded. */
   unavailable: boolean;
+  /** Race Mode as the player set it: the ROM's race flag, or always on. */
+  raceChoice: RaceChoice;
 };
 
 const IDLE: SessionStatus = { code: "idle" };
@@ -99,6 +106,7 @@ export const createGameAutotrack = <Reading>({
         connectOnStart: false,
         elsewhere: false,
         environment: null,
+        raceChoice: "auto",
         reading: null,
         seen: { bridge: null, devices: [] },
         shown: IDLE,
@@ -107,8 +115,12 @@ export const createGameAutotrack = <Reading>({
         unavailable: false,
       }),
       {
+        merge: mergeRaceChoice,
         name: storageKey,
-        partialize: ({ connectOnStart }) => ({ connectOnStart }),
+        partialize: ({ connectOnStart, raceChoice }) => ({
+          connectOnStart,
+          raceChoice,
+        }),
         storage: createJSONStorage(() => localStorage),
       },
     ),
@@ -121,6 +133,16 @@ export const createGameAutotrack = <Reading>({
   const lock = createAutotrackLock();
   /** Session options of the tests' own: a transport, a clock... */
   let overrides: Partial<SessionOptions> = {};
+
+  // The session follows the player's Race Mode as it changes, here or in
+  // another tab of the tracker (the choice is saved, and read again from
+  // storage): a tab that waits for the session can set it too
+  useStore.subscribe((state, before) => {
+    if (state.raceChoice !== before.raceChoice) {
+      runtime?.setRaceMode(state.raceChoice);
+    }
+  });
+  syncAcrossTabs(useStore);
 
   /**
    * Start autotracking: load the session's code, take the lock, connect, and
@@ -156,7 +178,12 @@ export const createGameAutotrack = <Reading>({
       set({ environment });
       const follower = createFollower();
       runtime = start(
-        { environment, ...bridge, ...overrides },
+        {
+          environment,
+          ...bridge,
+          raceSetting: useStore.getState().raceChoice,
+          ...overrides,
+        },
         {
           reading: (reading) => {
             if (mine !== generation) return;
@@ -211,6 +238,8 @@ export const createGameAutotrack = <Reading>({
     setOptions: (options: Partial<SessionOptions>) => {
       overrides = options;
     },
+    /** Set Race Mode: the ROM's race flag decides, or always on. */
+    setRaceChoice: (raceChoice: RaceChoice) => set({ raceChoice }),
     stop,
     useStore,
   };

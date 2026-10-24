@@ -58,8 +58,8 @@ const SeedRead = () => {
           ? `, in ${GAMES[reading.mode as keyof typeof GAMES]}`
           : ""}
         .{" "}
-        {seed.race
-          ? "A race seed: its requirements and medallions stay yours to set."
+        {reading.race
+          ? "In Race Mode, its requirements and medallions stay yours to set."
           : requirements === "unreadable"
             ? "Your emulator does not serve the part of the ROM that holds its requirements and medallions: set them yourself."
             : "Compare it with your game."}
@@ -90,7 +90,7 @@ const SeedRead = () => {
  */
 export const Smz3AutotrackDialog = ({ onClose }: { onClose: () => void }) => (
   <GameAutotrackDialog
-    follows="The board follows your SMZ3 game as you play, in both games: the items you hold, the rewards found, the locations checked, and the seed's settings. The marks you set beyond it stay. In a race seed, the requirements and medallions stay yours to set."
+    follows="The board follows your SMZ3 game as you play, in both games: the items you hold, the rewards found, the locations checked, and the seed's settings. The marks you set beyond it stay. In Race Mode (on for a race seed), the requirements and medallions stay yours to set."
     game="SMZ3"
     onClose={onClose}
     session={smz3Autotrack}

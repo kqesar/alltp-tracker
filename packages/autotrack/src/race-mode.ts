@@ -25,7 +25,7 @@ export interface RaceStatus {
   readonly active: boolean;
   /**
    * The user turned Race Mode off although the flag does not say "open".
-   * The race spec allows it "as long as a warning is displayed".
+   * A UI that offers it should warn; the app never does.
    */
   readonly overridden: boolean;
   /**

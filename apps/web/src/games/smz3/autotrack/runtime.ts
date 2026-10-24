@@ -50,6 +50,7 @@ export const startSmz3Runtime = (
   session.start();
   return {
     retryNow: () => session.retryNow(),
+    setRaceMode: (setting) => session.setRaceMode(setting),
     stop: () => session.stop(),
   };
 };

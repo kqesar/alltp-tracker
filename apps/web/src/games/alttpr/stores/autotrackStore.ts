@@ -11,6 +11,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { bridgeOptions } from "@/autotrack/bridge";
 import { createAutotrackLock } from "@/autotrack/lock";
+import { mergeRaceChoice, type RaceChoice } from "@/autotrack/raceChoice";
 import { shownStatus } from "@/autotrack/status";
 import type { Follower } from "@/games/alttpr/autotrack/follow";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
@@ -27,6 +28,7 @@ import {
   withSeedFile,
 } from "@/games/alttpr/autotrack/seedFile";
 import { isFreshRun, useGameStore } from "@/games/alttpr/stores/gameStore";
+import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isObsView } from "@/utils/view";
 
 type AutotrackState = {
@@ -61,8 +63,8 @@ type AutotrackState = {
   reading: AutotrackReading | null;
   /**
    * The seed's file on alttpr.com, asked once per connection for a seed
-   * whose name is a hash: its settings, or why there are none, or "loading"
-   * while asked.
+   * whose name is a hash, outside Race Mode: its settings, or why there are
+   * none, or "loading" while asked.
    */
   seedFile: {
     readonly hash: string;
@@ -84,7 +86,13 @@ type AutotrackState = {
    * cached, or a release since this page loaded replaced it.
    */
   unavailable: boolean;
+  /**
+   * Race Mode as the player set it: the ROM's race flag decides ("auto"),
+   * or it is always on. Saved; the session follows a change at once.
+   */
+  raceChoice: RaceChoice;
   setConnectOnStart: (connectOnStart: boolean) => void;
+  setRaceChoice: (raceChoice: RaceChoice) => void;
 };
 
 const IDLE: SessionStatus = { code: "idle" };
@@ -93,7 +101,8 @@ const STOPPED: SessionStatus = { code: "stopped" };
 /**
  * Autotracking's state: the session's status and what it read. Kept apart
  * from the game store, so a status change never re-renders the board, and
- * nothing of it is saved but the player's wish to connect on start.
+ * nothing of it is saved but the player's wish to connect on start, the
+ * seed whose run type they kept, and their Race Mode.
  */
 export const useAutotrackStore = create<AutotrackState>()(
   persist(
@@ -106,19 +115,23 @@ export const useAutotrackStore = create<AutotrackState>()(
       environment: null,
       keptSeed: null,
       news: null,
+      raceChoice: "auto",
       reading: null,
       seedFile: null,
       setConnectOnStart: (connectOnStart) => set({ connectOnStart }),
+      setRaceChoice: (raceChoice) => set({ raceChoice }),
       shown: IDLE,
       since: 0,
       status: IDLE,
       unavailable: false,
     }),
     {
+      merge: mergeRaceChoice,
       name: "alltp-tracker-autotrack",
-      partialize: ({ connectOnStart, keptSeed }) => ({
+      partialize: ({ connectOnStart, keptSeed, raceChoice }) => ({
         connectOnStart,
         keptSeed,
+        raceChoice,
       }),
       version: 1,
     },
@@ -129,6 +142,16 @@ const set = useAutotrackStore.setState;
 
 /** The one session of this page, once started. */
 let runtime: Runtime | null = null;
+
+// The session follows the player's Race Mode as it changes, here or in
+// another tab of the tracker (the choice is saved, and read again from
+// storage): a tab that waits for the session can set it too
+useAutotrackStore.subscribe((state, before) => {
+  if (state.raceChoice !== before.raceChoice) {
+    runtime?.setRaceMode(state.raceChoice);
+  }
+});
+syncAcrossTabs(useAutotrackStore);
 
 /** The board's side of the session: what it read, laid on the run. */
 let follower: Follower | null = null;
@@ -207,13 +230,20 @@ const followSeed = (
 /** A reading with its seed's file laid on it, once the file is in. */
 const withFile = (reading: AutotrackReading): AutotrackReading => {
   const file = useAutotrackStore.getState().seedFile;
-  return file === null || typeof file.result === "string"
+  return reading.race || file === null || typeof file.result === "string"
     ? reading
     : { ...reading, seed: withSeedFile(reading.seed, file.result) };
 };
 
-/** The seed's hash, when alttpr.com keeps a file for it. */
+/**
+ * The seed's hash, when alttpr.com keeps a file for it and the tracker may
+ * ask for it: never in Race Mode. The file holds the seed's patch, every
+ * item placement with it, and the ALTTPR Auto-tracker Rules v2.0 bar a
+ * tracker from accessing location contents before or during a race; the run
+ * type is then the racer's to pick.
+ */
 const hashOf = (reading: AutotrackReading): string | null => {
+  if (reading.race) return null;
   const name = reading.seed.seed;
   // A name of another generator's is no alttpr.com hash
   return name !== null && seedHashOf(name) === name ? name : null;
@@ -227,10 +257,10 @@ const awaitsFile = (reading: AutotrackReading): boolean => {
 };
 
 /**
- * Ask alttpr.com for the seed's file, once per connection: it states what
- * the ROM does not (a race seed's settings; any seed's item placement,
- * accessibility, item pool and functionality). When it comes, or cannot,
- * the seed's run type is held against the board's.
+ * Ask alttpr.com for the seed's file, once per connection and outside Race
+ * Mode only: it states what the ROM does not (item placement, accessibility,
+ * item pool and functionality, whether it is a Mystery seed). When it comes,
+ * or cannot, the seed's run type is held against the board's.
  */
 const askSeedFile = (reading: AutotrackReading, mine: number) => {
   const hash = hashOf(reading);
@@ -260,6 +290,10 @@ const sinkFor = (mine: number): RuntimeSink => ({
   // A stopped session never reads again: no reading outlives its session
   reading: (read) => {
     if (mine !== generation) return;
+    // Race Mode turned on mid-session: a file asked before is let go
+    if (read.race && useAutotrackStore.getState().seedFile !== null) {
+      set({ seedFile: null });
+    }
     const reading = withFile(read);
     // A seed with a file on alttpr.com is held against the board once the
     // file has settled (askSeedFile): the two never switch it twice
@@ -331,7 +365,12 @@ export const connectAutotrack = async () => {
     set({ environment });
     follower = createFollower();
     runtime = startRuntime(
-      { environment, ...bridge, ...overrides },
+      {
+        environment,
+        ...bridge,
+        raceSetting: useAutotrackStore.getState().raceChoice,
+        ...overrides,
+      },
       sinkFor(mine),
     );
   } catch {

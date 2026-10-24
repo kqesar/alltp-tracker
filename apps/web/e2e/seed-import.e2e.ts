@@ -112,5 +112,23 @@ for (const width of WIDTHS) {
       expect(form.x + form.width).toBeLessThanOrEqual(box.x + box.width);
     }
     expect(await unreachableClickables(page, "dialog[open]")).toEqual([]);
+
+    // Race Mode set always on: a note in the form's place, read by axe too
+    await page.evaluate(() =>
+      localStorage.setItem(
+        "alltp-tracker-autotrack",
+        JSON.stringify({ state: { raceChoice: "on" }, version: 1 }),
+      ),
+    );
+    await page.reload();
+    await page.getByRole("button", { name: /^Mode/ }).click();
+    await expect(page.getByTestId("seed-import-race")).toBeVisible();
+    const race = await new AxeBuilder({ page })
+      .include('[data-testid="seed-import"]')
+      .withTags(WCAG_AA)
+      .analyze();
+    expect(race.violations.map(({ id }) => id)).toEqual([]);
+    const note = await page.getByTestId("seed-import").boundingBox();
+    expect(note && box && note.x + note.width <= box.x + box.width).toBe(true);
   });
 }

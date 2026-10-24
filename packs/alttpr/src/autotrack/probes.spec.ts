@@ -135,10 +135,10 @@ describe("probeRaceFlag", () => {
 });
 
 describe("ALTTPR_RACE_FLAG", () => {
-  it("reads two bytes at the spec's 0x308213, as the transport takes it", () => {
+  it("reads two bytes at 0x308213, as the transport takes it", () => {
     // LoROM $30:8213 is ROM offset 0x180213: FX Pak Pro space.
     expect(ALTTPR_RACE_FLAG).toMatchObject({ address: 0x18_0213, size: 2 });
-    // Inside the spec's $30:8210-$30:823F, ROM 0x180210-0x18023F.
+    // Inside Race Mode's $30:8210-$30:823F, ROM 0x180210-0x18023F.
     const { address, size } = ALTTPR_RACE_FLAG;
     expect(
       ALTTPR_RACE_PROFILE.permitted.some(

@@ -78,6 +78,32 @@ describe("AutotrackControl", () => {
     expect(screen.queryByTestId("race-badge")).toBeNull();
   });
 
+  it("says on the badge when the player set Race Mode always on", () => {
+    render(<AutotrackControl />);
+
+    show(
+      statusOf("connected", {
+        race: {
+          active: true,
+          flag: "open",
+          overridden: false,
+          raceLegal: true,
+          setting: "on",
+        },
+      }),
+    );
+
+    const badge = screen.getByTestId("race-badge");
+    expect(badge).toHaveTextContent("Race-legal Always on");
+    expect(badge).toHaveAttribute(
+      "title",
+      "Race Mode is always on, as you set it: the tracker reads only what races permit.",
+    );
+    expect(screen.getByTestId("autotrack-button")).toHaveAccessibleName(
+      "Autotracking Race-legal Always on, Connected",
+    );
+  });
+
   it("says when another tab of the tracker autotracks", () => {
     render(<AutotrackControl />);
 

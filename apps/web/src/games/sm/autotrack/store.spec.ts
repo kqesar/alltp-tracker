@@ -95,7 +95,7 @@ describe("Super Metroid's autotracking", () => {
     await h.advance(2000);
 
     expect(run().items.superMissile).toBe(2);
-    expect(saved()).toEqual({ connectOnStart: true });
+    expect(saved()).toEqual({ connectOnStart: true, raceChoice: "auto" });
   });
 
   it("refuses a ROM that is not a Map Rando seed", async () => {
@@ -115,11 +115,11 @@ describe("Super Metroid's autotracking", () => {
     stopSmAutotrack();
     expect(state()).toMatchObject({ active: false, reading: null });
     expect(state().status.code).toBe("stopped");
-    expect(saved()).toEqual({ connectOnStart: true });
+    expect(saved()).toEqual({ connectOnStart: true, raceChoice: "auto" });
 
     await connectSmAutotrack();
     disconnectSmAutotrack();
-    expect(saved()).toEqual({ connectOnStart: false });
+    expect(saved()).toEqual({ connectOnStart: false, raceChoice: "auto" });
   });
 
   it("retries now at the player's word", async () => {

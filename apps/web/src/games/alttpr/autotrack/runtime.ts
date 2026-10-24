@@ -8,6 +8,7 @@ import {
   type BridgeInfo,
   type DeviceDescriptor,
   type Environment,
+  type RaceSetting,
   type SessionOptions,
   type SessionStatus,
 } from "@alltp/autotrack";
@@ -40,6 +41,8 @@ export type RuntimeSink = {
 export type Runtime = {
   /** Skip the wait: retry now, or check the game again. */
   retryNow: () => void;
+  /** Follow the player's Race Mode: the next reading is decoded under it. */
+  setRaceMode: (setting: RaceSetting) => void;
   /** Stop for good: no socket, timer or listener survives. */
   stop: () => void;
 };
@@ -82,6 +85,7 @@ export const startRuntime = (
 
   return {
     retryNow: () => session.retryNow(),
+    setRaceMode: (setting) => session.setRaceMode(setting),
     stop: () => session.stop(),
   };
 };

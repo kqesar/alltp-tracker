@@ -47,7 +47,7 @@ const bootSeed = (
   memory[SAVE(0x342)] = 0x01; // Hookshot
   memory[SAVE(0x357)] = 0x01; // Moon Pearl
   memory[SAVE(0x359)] = 0x02; // Master Sword
-  memory[SAVE(0x35c)] = 0x02; // one empty bottle: a HUD fact races forbid
+  memory[SAVE(0x35c)] = 0x02; // one empty bottle: a HUD fact Race Mode leaves alone
   memory[SAVE(0x374)] = 0x04; // the Pendant of Courage: a prize, forbidden
   memory[SAVE(0x3c5)] = 0x02; // Zelda rescued
   memory[SAVE(0x208)] = 0x10; // Link's House chest (room $104)
@@ -78,7 +78,7 @@ const holds = (range: { address: number; size: number }, at: number) =>
 
 /**
  * The reads Race Mode forbids among those the bridge was sent: a byte
- * outside the memory the race specification permits, or inside a forbidden
+ * outside the memory Race Mode keeps to, or inside a forbidden
  * range where no permitted range shares it (a boss room inside the dungeon
  * rooms is read for the boss).
  */
@@ -465,7 +465,7 @@ test("connects through the dialog, ticks every step and lists what it read", asy
   );
 });
 
-test("a race seed shows the race-legal badge and is never read where races forbid", async ({
+test("a race seed shows the race-legal badge and is never read where Race Mode forbids", async ({
   page,
 }) => {
   bootSeed(bridge, { race: true });
@@ -480,7 +480,7 @@ test("a race seed shows the race-legal badge and is never read where races forbi
     "This is a race seed: the tracker reads only what races permit.",
   );
   await expect(shown.getByTestId("readout-items")).toContainText("Hookshot");
-  // What races forbid is neither read nor shown
+  // What Race Mode withholds is neither read nor shown
   await expect(shown.getByTestId("readout-prizes")).toHaveText(
     /Not read in Race Mode/,
   );
@@ -500,11 +500,54 @@ test("a race seed shows the race-legal badge and is never read where races forbi
   await expect(
     page.getByTestId("autotrack-button").getByTestId("race-badge"),
   ).toBeVisible();
-  // Nor are the ROM's own counts, which races forbid
+  // Nor are the ROM's own counts, which Race Mode leaves alone
   await page.getByTestId("map-view-tab-run").click();
   await expect(page.getByTestId("run-rom-stats")).toContainText(
     "Not read in races",
   );
+});
+
+test("Race Mode set always on reads a seed without the race flag as a race seed", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  await openTracker(page);
+  await openDialog(page);
+  const shown = dialog(page);
+  const always = shown
+    .getByRole("group", { name: "Race Mode" })
+    .getByRole("radio", { name: "Always on" });
+  await always.check();
+  await shown.getByTestId("autotrack-connect").click();
+
+  await expect(shown.getByTestId("autotrack-headline")).toHaveText("Connected");
+  await expect(shown.getByTestId("race-badge")).toHaveText(
+    "Race-legal Always on",
+  );
+  await expect(shown.getByTestId("race-mode")).toHaveText(
+    "Race Mode is always on, as you set it: the tracker reads only what races permit.",
+  );
+  await expect(shown.getByTestId("readout-prizes")).toHaveText(
+    /Not read in Race Mode/,
+  );
+  await expect.poll(() => bridge.reads.length).toBeGreaterThan(30);
+  expect(forbiddenReads(bridge)).toEqual([]);
+
+  // Back to the ROM's flag, mid-session: the seed is read as it is
+  await shown
+    .getByRole("radio", { name: "Auto (the ROM's race flag)" })
+    .check();
+  await expect(shown.getByTestId("race-badge")).toHaveCount(0);
+  await expect(shown.getByTestId("readout-prizes")).toHaveText(
+    /Pendant of Courage/,
+  );
+  // The choice is the device's: a reload keeps it
+  await always.check();
+  await page.reload();
+  await openDialog(page);
+  await expect(
+    dialog(page).getByRole("radio", { name: "Always on" }),
+  ).toBeChecked();
 });
 
 test("losing the bridge says so without a dialog, then reconnects on its own", async ({
@@ -709,7 +752,7 @@ test.describe("the seed's run type", () => {
     await openDialog(page);
 
     await expect(dialog(page).getByTestId("autotrack-seed")).toHaveText(
-      "Settings not read in Race Mode: the run type stays yours.",
+      "Settings not read in Race Mode, nor asked of alttpr.com: pick the run type yourself.",
     );
     await expect(mode(page)).toHaveAccessibleName("Mode Open");
     const settingsRead = SEED_SETTINGS_RANGES.filter((range) =>
@@ -723,7 +766,7 @@ test.describe("the seed's run type", () => {
     expect(forbiddenReads(bridge)).toEqual([]);
   });
 
-  test("takes a race seed's settings from its file on alttpr.com", async ({
+  test("never asks alttpr.com for a race seed's file: the run type stays the player's", async ({
     page,
   }) => {
     const asked: string[] = [];
@@ -749,22 +792,23 @@ test.describe("the seed's run type", () => {
 
     await connect(page);
 
-    await expect(mode(page)).toHaveAccessibleName("Mode Inverted");
-    await expect(page.getByTestId("autotrack-live")).toContainText(
-      "This seed is Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality): the tracker switched to it.",
-    );
     await openDialog(page);
     await expect(dialog(page).getByTestId("autotrack-seed")).toHaveText(
-      "The run type matches this seed: Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality).",
+      "Settings not read in Race Mode, nor asked of alttpr.com: pick the run type yourself.",
     );
     await expect(
-      dialog(page).getByRole("heading", {
-        name: "Seed settings, from alttpr.com",
-      }),
+      dialog(page).getByRole("heading", { exact: true, name: "Seed settings" }),
     ).toBeVisible();
-    expect(asked).toEqual([
-      "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/eM43RgZ4Gj.json",
-    ]);
+    await page.keyboard.press("Escape");
+    await expect(mode(page)).toHaveAccessibleName("Mode Open");
+    // Nor does Start from a seed while the race goes on
+    await mode(page).click();
+    await expect(page.getByTestId("seed-import-race")).toContainText(
+      "Off in Race Mode",
+    );
+    await expect(page.getByTestId("seed-import-input")).toHaveCount(0);
+    await expect.poll(() => bridge.reads.length).toBeGreaterThan(30);
+    expect(asked).toEqual([]);
     expect(forbiddenReads(bridge)).toEqual([]);
   });
 });
@@ -802,6 +846,16 @@ for (const width of WIDTHS) {
       );
       // Focus stays on the button, now Disconnect
       expect(await focusedTestId(page)).toBe("autotrack-disconnect");
+
+      // Race Mode: Tab reaches the choice made, an arrow key makes another
+      await tabTo(page, "race-option-auto", 20);
+      expect(await focusRinged(page)).toBe(true);
+      await page.keyboard.press("ArrowRight");
+      expect(await focusedTestId(page)).toBe("race-option-on");
+      await expect(page.getByTestId("race-option-on")).toBeChecked();
+      await expect(dialog(page).getByTestId("race-badge")).toHaveText(
+        "Race-legal Always on",
+      );
 
       // The system tabs: Tab reaches the selected one (the system detected),
       // the arrow keys and Home and End select another

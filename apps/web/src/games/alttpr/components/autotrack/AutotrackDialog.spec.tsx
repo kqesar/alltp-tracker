@@ -220,6 +220,49 @@ describe("AutotrackDialog's status", () => {
     );
   });
 
+  it("sets Race Mode always on or back to the ROM's flag, from the keyboard", async () => {
+    const user = userEvent.setup();
+    await open();
+    const group = screen.getByRole("group", { name: "Race Mode" });
+    expect(group).toHaveAccessibleDescription(
+      "In Race Mode the tracker reads only what races permit. Set it always on to race a seed generated without the race flag.",
+    );
+    const auto = within(group).getByRole("radio", {
+      name: "Auto (the ROM's race flag)",
+    });
+    const always = within(group).getByRole("radio", { name: "Always on" });
+    expect(auto).toBeChecked();
+
+    await user.click(auto);
+    await user.keyboard("{ArrowRight}");
+
+    expect(always).toBeChecked();
+    expect(always).toHaveFocus();
+    expect(useAutotrackStore.getState().raceChoice).toBe("on");
+
+    // A session set always on says so beside its badge
+    show(
+      statusOf("connected", {
+        race: {
+          active: true,
+          flag: "open",
+          overridden: false,
+          raceLegal: true,
+          setting: "on",
+        },
+      }),
+    );
+    expect(screen.getByTestId("race-badge")).toHaveTextContent(
+      "Race-legal Always on",
+    );
+    expect(screen.getByTestId("race-mode")).toHaveTextContent(
+      "Race Mode is always on, as you set it: the tracker reads only what races permit.",
+    );
+
+    await user.click(auto);
+    expect(useAutotrackStore.getState().raceChoice).toBe("auto");
+  });
+
   it("says what the seed's settings mean for the run type", async () => {
     await open();
     show(STATUSES.connected);
@@ -249,25 +292,7 @@ describe("AutotrackDialog's status", () => {
       }),
     );
     expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
-      "Settings not read in Race Mode: the run type stays yours.",
-    );
-
-    // A race seed's settings come from its file on alttpr.com, once in
-    act(() =>
-      useAutotrackStore.setState({
-        seedFile: { hash: "RACE", result: "loading" },
-      }),
-    );
-    expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
-      "Settings not read in Race Mode: asking alttpr.com for them…",
-    );
-    act(() =>
-      useAutotrackStore.setState({
-        seedFile: { hash: "RACE", result: "offline" },
-      }),
-    );
-    expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
-      "Settings not read in Race Mode, and alttpr.com could not be reached: the run type stays yours.",
+      "Settings not read in Race Mode, nor asked of alttpr.com: pick the run type yourself.",
     );
   });
 
@@ -426,7 +451,7 @@ describe("AutotrackDialog's actions", () => {
     );
 
     expect(screen.getByTestId("autotrack-follow")).toHaveTextContent(
-      "In Race Mode, what races forbid tracking stays yours to mark: pendants and crystals, chests inside dungeons, bottles.",
+      "In Race Mode, these stay yours to mark: pendants and crystals, chests inside dungeons, bottles.",
     );
     // Where shuffled entrances lead, too
     act(() => useGameStore.getState().applyPreset("crosskeys"));
@@ -594,7 +619,7 @@ describe("AutotrackDialog's readout", () => {
     );
   });
 
-  it("says which of a seed's settings came from its file on alttpr.com", async () => {
+  it("says when a seed's settings came from its file, outside Race Mode only", async () => {
     await open();
     const raced = reading(true);
     act(() =>
@@ -613,7 +638,8 @@ describe("AutotrackDialog's readout", () => {
         seedFile: { hash: "RACE", result: raced.seed },
       }),
     );
-    expect(title()).toHaveTextContent(/^Seed settings, from alttpr\.com$/);
+    // Race Mode never lays a file's settings, should one be held
+    expect(title()).toHaveTextContent(/^Seed settings$/);
 
     // A seed out of Race Mode: the ROM's settings, and the file's beside
     const unraced = reading(false);
@@ -670,7 +696,7 @@ describe("AutotrackDialog's readout", () => {
       "before the connection dropped",
     );
     expect(screen.getByTestId("readout")).toHaveTextContent(
-      "In Race Mode, what races forbid tracking is never read.",
+      "In Race Mode, what the tracker leaves you to mark is never read.",
     );
     expect(screen.getByTestId("readout-progress")).toHaveTextContent(
       "Game startednot read yet",

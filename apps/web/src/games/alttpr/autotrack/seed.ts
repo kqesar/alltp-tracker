@@ -4,8 +4,8 @@
 // switches (autotrack/follow.ts).
 //
 // A setting the seed does not state is never guessed. In Race Mode the ROM's
-// settings are not read at all (the pack's seed-settings.ts): without the
-// seed's file the run type then stays the player's. Item placement,
+// settings are not read at all (the pack's seed-settings.ts), nor is the
+// seed's file asked for: the run type stays the player's. Item placement,
 // accessibility and the item pool and functionality only the file states:
 // without it the run's own stay. A seed the tracker cannot hold (dungeon
 // items let out in a mix vt never writes, the Ganonhunt and Completionist
@@ -18,7 +18,6 @@ import type {
   SeedSettingsReading,
   SeedUnknown,
 } from "@alltp/pack-alttpr";
-import type { SeedFileError } from "@/games/alttpr/autotrack/seedFile";
 import {
   ACCESSIBILITY_LABELS,
   DUNGEON_ITEM_LABELS,
@@ -418,34 +417,16 @@ export const promptText = (check: Extract<SeedCheck, { kind: "differs" }>) =>
 export const switchedText = (check: Extract<SeedCheck, { kind: "differs" }>) =>
   `This seed is ${check.seedText}: the tracker switched to it.`;
 
-/** What the dialog says of a race seed while its file gives no settings. */
-const RACE_FILE_LINES: Readonly<Record<"loading" | SeedFileError, string>> = {
-  loading: "Settings not read in Race Mode: asking alttpr.com for them…",
-  "not-found":
-    "Settings not read in Race Mode, and alttpr.com has no file for this seed: the run type stays yours.",
-  offline:
-    "Settings not read in Race Mode, and alttpr.com could not be reached: the run type stays yours.",
-  unrecognized:
-    "Settings not read in Race Mode, and this seed's file on alttpr.com is not one the tracker reads: the run type stays yours.",
-};
-
 /**
  * What the dialog says of the seed's run type, for each check.
  * @param check - What the seed says of the run type
  * @param kept - Whether the player kept their run type for this seed
- * @param file - Where a race seed's file stands, while it gives no settings
  */
-export const seedLineText = (
-  check: SeedCheck,
-  kept: boolean,
-  file?: "loading" | SeedFileError,
-): string => {
+export const seedLineText = (check: SeedCheck, kept: boolean): string => {
   switch (check.kind) {
     case "unread":
       if (check.why === "race-mode") {
-        return file === undefined
-          ? "Settings not read in Race Mode: the run type stays yours."
-          : RACE_FILE_LINES[file];
+        return "Settings not read in Race Mode, nor asked of alttpr.com: pick the run type yourself.";
       }
       if (check.why === "mystery") {
         return "A Mystery seed: its settings stay hidden until you find them in game.";
