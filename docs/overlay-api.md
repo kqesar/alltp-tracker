@@ -117,7 +117,7 @@ sequenceDiagram
 
 | Field | Meaning |
 |---|---|
-| `game` | `alttpr`, `sm` or `smz3` |
+| `game` | `alttpr`, `sm`, `smz3` or `archipelago` |
 | `items` | each item of the game's list, held or not: `{id, name, level, max}`. `level` is 0 when not held, up to `max` |
 | `objectives` | the goals: `{id, name, done, ms}`. `ms` is the run timer's reading when it was done (A Link to the Past, from the Run tab's timeline), `null` when unknown or for a game with no timer |
 | `timer` | `{state, elapsedMs, startedAt}`, or `null` for a game with no timer. `state` is `idle`, `running`, `paused` or `finished` |
@@ -171,6 +171,8 @@ Objectives, 12, named by their dungeon as the Run tab's splits are: `boss0` East
 **Super Metroid**, 24 items, always the same list (the options that change the grid, Wall Jump Boots and the split Speed Booster, are settings, never sent): `energyTank` `missile` `superMissile` `powerBomb` `bombs` `charge` `ice` `hiJump` `speedBooster` `wave` `spazer` `springBall` `varia` `gravity` `xRay` `plasma` `grapple` `spaceJump` `screwAttack` `morph` `reserveTank` `wallJump` `sparkBooster` `blueBooster`. A pack's `level` counts it (`missile` up to 46); the others are 0 or 1 (`reserveTank` to 4). Objectives are the seed's, by Map Rando's ids (`kraid`, `phantoon`, `draygon`, `ridley`, `sporeSpawn`, `crocomire`, `botwoon`, `goldenTorizo`, …), in the order the player set them. No timer, no go mode.
 
 **SMZ3**, Hyrule's 26 items then Zebes's 19: `sword` `shield` `glove` `bow` `hookshot` `mushroom` `powder` `firerod` `icerod` `bombos` `ether` `quake` `lamp` `hammer` `shovel` `flute` `book` `bottle` `somaria` `byrna` `cape` `mirror` `boots` `flippers` `moonPearl` `halfMagic`, then `charge` `ice` `wave` `plasma` `varia` `gravity` `grapple` `morph` `bombs` `springBall` `screwAttack` `hiJump` `spaceJump` `speedBooster` `missile` `super` `powerBomb` `eTank` `reserveTank`. No objectives: the boss tokens and the rewards (pendants, crystals) are rewards, never sent, and the tracker records no boss beaten. No timer, no go mode.
+
+**Archipelago**, the items the slot received, by the names the room's data gives them, in the order the first of each came: the `id` and the `name` are the item's AP name (`Progressive Sword`, `Small Key (Ice Palace)`), stable for a world's name data, and `level` and `max` both its count (AP states no pool). An item appears once received, so `previous` is 0 on its first event. Nothing else of the room: no objectives, no locations, players, hints or slot, no timer, no go mode ([archipelago.md](archipelago.md)).
 
 ## Close codes
 
@@ -307,6 +309,6 @@ It prints a `state` frame at once, an `update` for each change (click an item in
 | The route and the feed | `apps/desktop/src-tauri/src/overlay.rs` (numbers, relays, the beat), served by `stream.rs` |
 | The command the page publishes with | `overlay_publish` (`lib.rs`): `{state, events}` as JSON text, each at most 64 KiB |
 | The protocol's types | `apps/web/src/overlay/protocol.ts` |
-| The whitelists | `apps/web/src/games/{alttpr,sm,smz3}/overlay.ts` |
+| The whitelists | `apps/web/src/games/{alttpr,sm,smz3,archipelago}/overlay.ts` |
 | The events | `apps/web/src/overlay/diff.ts` |
 | The publisher, and the stream's hold on it | `apps/web/src/overlay/publish.ts`, `apps/web/src/desktop/overlayFeed.ts` |

@@ -7,7 +7,7 @@ The tracker is a single-page app: one `index.html`, and the game it shows is pic
 ```mermaid
 flowchart LR
   crawler["crawler / link preview bot"] -->|GET| root["/alltp-tracker/<br/>index.html: the app + a noscript body"]
-  crawler -->|GET| pages["/alltp-tracker/{alttpr,sm,smz3}/<br/>static page per game, no script"]
+  crawler -->|GET| pages["/alltp-tracker/{alttpr,sm,smz3,archipelago}/<br/>static page per game, no script"]
   pages -->|"og:image"| cards["/alltp-tracker/social/{game}.png<br/>1200 x 630"]
   player["player"] -->|"button: ../?game=sm"| root
   root -->|"takeGameFromAddress() saves sm,<br/>drops the parameter"| app["the tracker on Super Metroid"]
@@ -15,12 +15,12 @@ flowchart LR
 
 | Address | What it is | Canonical |
 |---|---|---|
-| `/alltp-tracker/` | The app. Its static `<head>` is generic (the three games); its static body is a short text with a link to each game's page, inside a `<noscript>` (see below). The title is then set for the game tracked (`pageTitle`, `src/games/registry.ts`). | itself |
+| `/alltp-tracker/` | The app. Its static `<head>` is generic (every game); its static body is a short text with a link to each game's page, inside a `<noscript>` (see below). The title is then set for the game tracked (`pageTitle`, `src/games/registry.ts`). | itself |
 | `/alltp-tracker/<id>/` | A static page per game, written at build time by `seo/plugin.ts` from `seo/games.ts` (`landing.ts` is the template). No script: what a crawler reads is what a player sees. Its button opens the tracker on that game. | itself |
 | `/alltp-tracker/social/<id>.png` | The link preview image (Open Graph and X's large card): a real screenshot of the board. | |
-| `/alltp-tracker/sitemap.xml`, `robots.txt` | The four addresses above; allow everything. | |
+| `/alltp-tracker/sitemap.xml`, `robots.txt` | The app and each game page; allow everything. | |
 
-Why a page per game rather than the app at three addresses: the app picks its game from storage, so a second address would need a second entry point, its own update bookkeeping in the service worker (`sw/plugin.ts` marks `index.html` only) and a game switch that navigates instead of reloading. A static page costs a few kB (the three are 4 to 5 kB in the build), needs none of it, and is what a search engine ranks better than an empty shell.
+Why a page per game rather than the app at an address per game: the app picks its game from storage, so a second address would need a second entry point, its own update bookkeeping in the service worker (`sw/plugin.ts` marks `index.html` only) and a game switch that navigates instead of reloading. A static page costs a few kB (each is 4 to 5 kB in the build), needs none of it, and is what a search engine ranks better than an empty shell.
 
 `?game=<id>` (`takeGameFromAddress`) is the link between the two: it saves the game as a switch in the run type dialog does (each game keeps its own run, so nothing is lost), then removes the parameter from the address. It also works as a shareable link to the tracker on a given game.
 
@@ -41,6 +41,8 @@ Why a page per game rather than the app at three addresses: the app picks its ga
 pnpm --filter @alltp/web build && pnpm --filter @alltp/web preview --port 4173 &
 pnpm --filter @alltp/web exec node scripts/social-cards.mjs http://localhost:4173/alltp-tracker/
 ```
+
+The Archipelago card shows a room: the script answers the board's socket itself (Playwright's `routeWebSocket`) with what AP 0.6.8 sent the bench's tracker on Link (`packages/archipelago/test/fixtures/normal-session.json`), a sixth of the locations checked and a few items given on top, so no server runs.
 
 PNG, not WebP: link previews do not all read WebP.
 

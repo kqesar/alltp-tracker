@@ -16,6 +16,8 @@
   live follow on the LAN, and the stream tools that serve OBS.
 - [Overlay API](overlay-api.md): the WebSocket a stream tool reads the run from (items, bosses,
   timer, go mode), its frames, ids and guarantees, and what it never sends.
+- [Archipelago board](archipelago.md): the read-only board of an Archipelago room, its stores and
+  keys, its data flow, tabs, devices, the stream view and what never leaves the device.
 - [Search engines and link previews](seo.md): the per-game pages, their tags and preview
   images.
 - [Logic engine](../packages/engine/README.md): the rule language and the three-valued solver.
