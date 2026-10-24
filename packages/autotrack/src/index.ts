@@ -54,6 +54,7 @@ export {
   type RangeSpec,
 } from "./pack";
 export {
+  LAN_PERMISSION_NAMES,
   LOCAL_NETWORK_PERMISSION_NAMES,
   type LocalNetworkPermission,
   type PermissionState,
