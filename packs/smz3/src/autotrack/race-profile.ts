@@ -7,8 +7,9 @@
 // settings a race announces. It forbids, in a race, what only the ROM
 // knows: the requirements a seed may draw at random (the crystals Ganon's
 // Tower and Ganon ask for, the bosses Tourian asks for) and the medallions
-// that open Misery Mire and Turtle Rock. The dungeons' and bosses' rewards
-// are never read at all: a reward counts once found. Decided on 2026-10-19,
+// that open Misery Mire and Turtle Rock. Which dungeon or boss holds which
+// reward is never read: the pendants, crystals and boss tokens held are
+// (decode.ts), so a reward counts once found. Decided on 2026-10-19,
 // without asking the moderators.
 
 import { defineRaceProfile, type RaceProfile } from "@alltp/autotrack";
