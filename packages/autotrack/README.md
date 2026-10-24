@@ -284,7 +284,7 @@ and so does `retryNow()`).
 | `attaching` | Attaching | `bridge`, `device`, `devices` | |
 | `attach-failed` | `Attach`/`Info` closed the socket | `device`, `detail` | backoff |
 | `memory-unreadable` | Attached, but memory cannot be read | `cause`, `evidence`, `remedy`, `detail`, `device` | backoff |
-| `game-mismatch` | The pack's game check failed | `check.code`, `check.message` | backoff, same socket |
+| `game-mismatch` | The pack's game check failed; `check.code` is `ARCHIPELAGO_ROM` (`archipelago-rom`) for a ROM Archipelago patched, which each pack knows by its world's title and the app answers with its Archipelago board | `check.code`, `check.message` | backoff, same socket |
 | `connected` | Polling | `race`, `unreadable`, `paused` | a drop after `stableAfterMs` (5 s) reconnects at once |
 
 `memory-unreadable` causes, with the evidence that settles them:

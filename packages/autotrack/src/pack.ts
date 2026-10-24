@@ -49,6 +49,14 @@ export type GameCheckResult =
       readonly message: string;
     };
 
+/**
+ * The code a game check gives a ROM Archipelago patched: AP's own client
+ * (SNIClient) tracks it into the room, and the app's Archipelago board
+ * follows the room. Each pack knows its world's ROM title; this is the one
+ * word they share with the app, which offers the board on it.
+ */
+export const ARCHIPELAGO_ROM = "archipelago-rom";
+
 export interface GameCheck {
   /** Ids of the ranges it needs; their categories must be race-permitted. */
   readonly ranges: readonly string[];
