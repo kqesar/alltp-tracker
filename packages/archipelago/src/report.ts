@@ -4,13 +4,14 @@
 // report keeps the host, which says whether the room is archipelago.gg.
 
 import { libraryVersion, targetVersion } from "archipelago.js";
-import type {
-  AddressClass,
-  BrowserFamily,
-  LocalNetworkPermissionName,
-  PageContext,
-  Reach,
-  ServerAddress,
+import {
+  type AddressClass,
+  type BrowserFamily,
+  CHROMIUM_SETTING,
+  type LocalNetworkPermissionName,
+  type PageContext,
+  type Reach,
+  type ServerAddress,
 } from "./address";
 import type {
   RefusalReason,
@@ -96,6 +97,16 @@ function elsewhere(browser: BrowserFamily, where: AddressClass): string {
   return "Use Chrome or Edge, which ask first, or the desktop app.";
 }
 
+/** How to let the site in again: Chromium's own words, else where to look. */
+function undoOf(
+  browser: BrowserFamily,
+  permission: LocalNetworkPermissionName,
+): string {
+  return browser === "chromium"
+    ? `click the icon left of the address and set "${CHROMIUM_SETTING[permission]}" to Allow`
+    : "allow it in the site's settings (the icon left of the address)";
+}
+
 /**
  * What will happen when the page reaches the server, and the way out, before
  * any socket opens (`reachOf`); null when nothing stands in the way.
@@ -108,8 +119,13 @@ export function describeReach(reach: Reach): string | null {
       return reach.browser === "chromium"
         ? `The browser will ask to let this site reach ${targetOf(reach.permission)}: choose Allow.`
         : `If the browser asks to let this site reach ${targetOf(reach.permission)}, choose Allow.`;
-    case "denied":
-      return `The browser blocks this site from reaching ${targetOf(reach.permission)}. Allow it in the site's settings (the icon left of the address), then connect.`;
+    case "denied": {
+      const target = targetOf(reach.permission);
+      const undo = undoOf(reach.browser, reach.permission);
+      return reach.state === "denied"
+        ? `The browser blocks this site from reaching ${target}. To undo it, ${undo}, then ${reach.retry ? "Retry" : "Connect"}.`
+        : `The browser did not let this site reach ${target}. Retry, and choose Allow when it asks; if it no longer asks, ${undo}.`;
+    }
     case "blocked-insecure":
     case "blocked-browser":
       return blockedText(reach);

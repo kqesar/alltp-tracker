@@ -177,6 +177,17 @@ export type BrowserFamily = "chromium" | "firefox" | "safari" | "other";
 export type LocalNetworkPermissionName = "loopback-network" | "local-network";
 
 /**
+ * Chromium's site settings label for each permission
+ * (components/site_settings_strings.grdp, IDS_SITE_SETTINGS_TYPE_LOOPBACK_NETWORK
+ * and IDS_SITE_SETTINGS_TYPE_LOCAL_NETWORK, chromium/chromium at
+ * 344811fd4389c1eaf5594996b1c21b7174004364, read 2026-10-24).
+ */
+export const CHROMIUM_SETTING: Record<LocalNetworkPermissionName, string> = {
+  "local-network": "Local network",
+  "loopback-network": "Apps on device",
+};
+
+/**
  * The page the tracker runs in:
  * - "desktop": the Tauri app (a secure context that may open plain ws://
  *   anywhere: gate B, Linux);
@@ -287,7 +298,10 @@ export function connectPlan(
  * - "open": nothing stands in the way;
  * - "ask": the browser asks for its local network permission first (its
  *   state reads "prompt");
- * - "denied": the player refused that permission to the site;
+ * - "denied": the browser keeps the site out: the permission reads
+ *   "denied" (`state` "denied"), or the session found a socket refused while
+ *   it read "prompt" (`state` "prompt": the prompt dismissed, or no longer
+ *   shown); `retry` when the session waits for the player's Retry;
  * - "blocked-insecure", "blocked-browser": `connectPlan`'s refusals.
  */
 export type Reach =
@@ -301,6 +315,8 @@ export type Reach =
       readonly kind: "denied";
       readonly permission: LocalNetworkPermissionName;
       readonly browser: BrowserFamily;
+      readonly state: "denied" | "prompt";
+      readonly retry: boolean;
     }
   | { readonly kind: "blocked-insecure"; readonly addressClass: AddressClass }
   | {
@@ -318,12 +334,16 @@ export type PermissionStateName =
 
 /**
  * The pre-check: the plan for this address from this page, then what the
- * page knows of the permission it waits on (null while not read yet).
+ * page knows of the permission it waits on (null while not read yet), and
+ * whether a session to this address reports the browser refused it
+ * (`local-network-denied`'s `state`; a headless or dismissed prompt leaves
+ * the permission reading "prompt" though the browser said no).
  */
 export function reachOf(
   address: ServerAddress,
   page: PageContext,
   permission: PermissionStateName | null,
+  refused: "denied" | "prompt" | null = null,
 ): Reach {
   const plan = connectPlan(address, page);
   if (!plan.ok) {
@@ -339,8 +359,16 @@ export function reachOf(
     return { kind: "open" };
   }
   const { browser } = page;
-  if (permission === "denied") {
-    return { browser, kind: "denied", permission: plan.permission };
+  // Allowed since: the session wakes on the change, nothing stands in the way
+  if (permission === "granted") return { kind: "open" };
+  if (permission === "denied" || refused !== null) {
+    return {
+      browser,
+      kind: "denied",
+      permission: plan.permission,
+      retry: refused !== null,
+      state: permission === "denied" ? "denied" : (refused ?? "denied"),
+    };
   }
   if (permission === "prompt") {
     return { browser, kind: "ask", permission: plan.permission };

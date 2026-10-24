@@ -288,10 +288,17 @@ sentence with the way out, which the app shows under the Room field:
 | Safari | open | open | blocked-insecure | blocked-browser (ws://), open (wss://) | blocked-browser | open |
 | Other | open | open | blocked-insecure | open | open | open |
 
-`ask` while the permission reads `prompt`, `denied` once refused, `open`
-once granted or unsupported. The desktop app and an http page are `open`
-everywhere. `address.spec.ts` holds the whole table, browser × class ×
-scheme.
+`ask` while the permission reads `prompt`; `denied` once refused, or when
+the caller passes the session's refusal (`reachOf`'s fourth argument, the
+`state` of a `local-network-denied` for this address: a dismissed or
+headless prompt leaves the permission reading `prompt`); `open` once
+granted or unsupported. A denial says how to undo it: in Chromium, the
+site settings entry by its own label (`CHROMIUM_SETTING`: "Apps on device"
+for this device, "Local network" for the LAN, from
+`components/site_settings_strings.grdp` at chromium/chromium `344811fd`),
+then Connect, or Retry while a session waits. The desktop app and an http
+page are `open` everywhere. `address.spec.ts` holds the whole table, browser
+× class × scheme, and the session's refusal.
 
 ### The local network permission
 

@@ -117,7 +117,7 @@ Pick **Archipelago** under **Game** in the run type dialog, or open [the tracker
   | `ws://` on your network (`192.168.…`) | yes¹ | no | no | yes³ |
   | `ws://` on the internet | no | no | no | yes³ |
 
-  ¹ The first time, the browser may ask whether the site may reach apps on this device, or devices on your network: choose **Allow**. Blocked by mistake? Click the icon left of the address and allow it there; the tracker connects as soon as you do. ² Not tried yet. ³ Tried on Linux; not yet on Windows or macOS. A host who can add TLS (`wss://`) lets every browser in; otherwise use the [desktop app](#the-desktop-app).
+  ¹ The first time, the browser may ask whether the site may reach apps on this device, or devices on your network: choose **Allow**. Blocked by mistake? Click the icon left of the address and set **Apps on device** (this computer) or **Local network** (your network) to Allow; the tracker connects as soon as you do. ² Not tried yet. ³ Tried on Linux; not yet on Windows or macOS. A host who can add TLS (`wss://`) lets every browser in; otherwise use the [desktop app](#the-desktop-app).
 - **Stream view**: the item grid (A Link to the Past, Super Metroid, SMZ3), or the progression items you hold, a line each, for any other game. In the **Stream view** dialog (the desktop app's Stream tools too), tick **Show the run timer under the grid** (`&timer=1`) for the run timer, drawn as for the other games, and **Show the room's last 5 lines involving you** (`&feed=1`) for the feed's last five lines involving you under it: never a hint, never the room's address. Both are off unless you ask.
 
 ## Autotracking

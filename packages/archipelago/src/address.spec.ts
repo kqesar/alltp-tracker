@@ -300,11 +300,46 @@ describe("reachOf, the pre-check: browser × address class × scheme", () => {
       browser: "chromium",
       kind: "denied",
       permission: "local-network",
+      retry: false,
+      state: "denied",
     });
     expect(reachOf(at("ws://127.0.0.1:1"), chromium, "prompt")).toEqual({
       browser: "chromium",
       kind: "ask",
       permission: "loopback-network",
+    });
+  });
+
+  it("follows the session's refusal, the permission undecided or not", () => {
+    const local = at("ws://127.0.0.1:1");
+    const chromium = site("chromium");
+    // A dismissed prompt: the permission still reads "prompt"
+    expect(reachOf(local, chromium, "prompt", "prompt")).toEqual({
+      browser: "chromium",
+      kind: "denied",
+      permission: "loopback-network",
+      retry: true,
+      state: "prompt",
+    });
+    expect(reachOf(local, chromium, "denied", "denied")).toMatchObject({
+      retry: true,
+      state: "denied",
+    });
+    // The session saw the denial before the page read it
+    expect(reachOf(local, chromium, null, "denied")).toMatchObject({
+      kind: "denied",
+      state: "denied",
+    });
+    // Allowed since: the session wakes, the note goes
+    expect(reachOf(local, chromium, "granted", "prompt")).toEqual({
+      kind: "open",
+    });
+    // Nothing for a page or an address the session's refusal cannot touch
+    expect(
+      reachOf(at("ws://8.8.8.8:1"), chromium, "prompt", "prompt"),
+    ).toMatchObject({ kind: "blocked-insecure" });
+    expect(reachOf(local, { kind: "desktop" }, null, "prompt")).toEqual({
+      kind: "open",
     });
   });
 

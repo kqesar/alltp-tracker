@@ -81,6 +81,11 @@ test("says the browser will ask, then connects once the player allows it", async
       "failing",
     );
     await expect(dialog.getByTestId("ap-retry")).toBeVisible();
+    // The note under the Room field says it too, with how to undo it
+    await expect(reach).toHaveText(
+      /The browser did not let this site reach this device\. Retry, and choose Allow when it asks; if it no longer asks, click the icon left of the address and set "Apps on device" to Allow\./,
+    );
+    await expect(reach).toHaveAttribute("data-tone", "warning");
     expect(room.responders).toHaveLength(0);
     // The player allows it: the permission's change wakes the session
     await context.grantPermissions(["local-network-access"], { origin: SITE });
@@ -142,14 +147,17 @@ test("opens no socket while the player has blocked the site", async ({
     await openSite(page);
     const dialog = roomDialog(page);
     await dialog.getByTestId("ap-room-input").fill(room.url);
-    await expect(dialog.getByTestId("ap-room-reach")).toHaveText(
-      /blocks this site from reaching this device\. Allow it in the site's settings/,
+    const reach = dialog.getByTestId("ap-room-reach");
+    await expect(reach).toHaveText(
+      /blocks this site from reaching this device\. To undo it, click the icon left of the address and set "Apps on device" to Allow, then Connect\./,
     );
     await dialog.getByTestId("ap-slot-input").fill("Link");
     await dialog.getByTestId("ap-connect").click();
     await expect(dialog.getByTestId("ap-connect-detail")).toHaveText(
       /Allow it in the site's settings \(the icon left of the address\): the tracker connects once it is allowed\./,
     );
+    // The session waits now: the note points at Retry
+    await expect(reach).toHaveText(/to Allow, then Retry\.$/);
     await page.waitForTimeout(1000);
     expect(room.responders).toHaveLength(0);
   } finally {
@@ -266,8 +274,15 @@ for (const width of WIDTHS) {
       await expect(dialog.getByTestId("ap-connect-headline")).toHaveText(
         "Blocked by the browser",
       );
+      await expect(dialog.getByTestId("ap-room-reach")).toHaveText(
+        /did not let this site reach your local network\..*set "Local network" to Allow\./,
+      );
       await auditDialog(page, dialog, width);
       if (SHOTS) {
+        // The status and the Room field's note together
+        await dialog
+          .locator(".modal__body")
+          .evaluate((body) => body.scrollTo(0, 0));
         await page.screenshot({
           path: `${SHOTS}/self-hosted-denied-${width}.png`,
         });

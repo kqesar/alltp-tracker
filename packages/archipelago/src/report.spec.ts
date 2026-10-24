@@ -147,18 +147,37 @@ describe("describeStatus", () => {
     ).toMatch(/^If the browser asks/);
     expect(
       describeReach({
-        browser: "chromium",
-        kind: "denied",
-        permission: "loopback-network",
-      }),
-    ).toMatch(/blocks this site from reaching this device\. Allow it/);
-    expect(
-      describeReach({
         addressClass: "private",
         browser: "safari",
         kind: "blocked-browser",
       }),
     ).toMatch(/Use the desktop app, or Chrome or Edge on a computer\.$/);
+  });
+
+  it("says how to undo a refusal, in Chromium's own words", () => {
+    const denied = {
+      browser: "chromium",
+      kind: "denied",
+      permission: "loopback-network",
+      retry: false,
+      state: "denied",
+    } as const;
+    expect(describeReach(denied)).toBe(
+      'The browser blocks this site from reaching this device. To undo it, click the icon left of the address and set "Apps on device" to Allow, then Connect.',
+    );
+    expect(
+      describeReach({ ...denied, permission: "local-network", retry: true }),
+    ).toBe(
+      'The browser blocks this site from reaching your local network. To undo it, click the icon left of the address and set "Local network" to Allow, then Retry.',
+    );
+    // A prompt dismissed: Retry asks again, unless the browser stopped asking
+    expect(describeReach({ ...denied, retry: true, state: "prompt" })).toBe(
+      'The browser did not let this site reach this device. Retry, and choose Allow when it asks; if it no longer asks, click the icon left of the address and set "Apps on device" to Allow.',
+    );
+    // Other browsers' labels are not known: where to look instead
+    expect(describeReach({ ...denied, browser: "firefox" })).toMatch(
+      /To undo it, allow it in the site's settings \(the icon left of the address\), then Connect\.$/,
+    );
   });
 
   it("explains a --compatibility 0 refusal with both versions", () => {

@@ -6,7 +6,11 @@
 // one; a step no variant fits is left out (the browser's permission, on the
 // desktop app). The README's "Setup guide" is written from this file.
 
-import type { AddressClass, BrowserFamily } from "./address";
+import {
+  type AddressClass,
+  type BrowserFamily,
+  CHROMIUM_SETTING,
+} from "./address";
 import type { SessionStatus } from "./diagnostics";
 
 export type SetupStepId =
@@ -72,6 +76,8 @@ const DESKTOP_RELEASES =
   "https://github.com/kqesar/alltp-tracker/releases/latest";
 const CHROME_147 = "https://developer.chrome.com/release-notes/147";
 const CHROME_145 = "https://developer.chrome.com/release-notes/145";
+const CHROMIUM_LABELS =
+  "chromium/chromium components/site_settings_strings.grdp at 344811fd4389c1eaf5594996b1c21b7174004364";
 const FIREFOX_LNA =
   "https://support.mozilla.org/en-US/kb/control-personal-device-local-network-permissions-firefox";
 const WEBKIT_171934 = "https://bugs.webkit.org/show_bug.cgi?id=171934";
@@ -122,10 +128,10 @@ export const SETUP_STEPS: readonly SetupStep[] = [
       {
         items: [
           'When the browser asks to "Access other apps and services on this device", click Allow.',
-          "Blocked by mistake? Click the icon left of the address, allow the site to reach apps on this device, and the tracker connects.",
+          `Blocked by mistake? Click the icon left of the address, set "${CHROMIUM_SETTING["loopback-network"]}" to Allow, and the tracker connects.`,
         ],
         links: [],
-        sources: [CHROME_147, CHROME_145, BENCH],
+        sources: [CHROME_147, CHROME_145, CHROMIUM_LABELS, BENCH],
         title: "Chrome, Edge and other Chromium browsers",
         when: {
           browser: ["chromium"],
@@ -137,10 +143,10 @@ export const SETUP_STEPS: readonly SetupStep[] = [
       {
         items: [
           "When the browser asks to let this site reach devices on your local network, click Allow.",
-          "Blocked by mistake? Click the icon left of the address, allow the site to reach your local network, and the tracker connects.",
+          `Blocked by mistake? Click the icon left of the address, set "${CHROMIUM_SETTING["local-network"]}" to Allow, and the tracker connects.`,
         ],
         links: [],
-        sources: [CHROME_145, BENCH],
+        sources: [CHROME_145, CHROMIUM_LABELS, BENCH],
         title: "Chrome, Edge and other Chromium browsers",
         when: {
           browser: ["chromium"],

@@ -238,7 +238,7 @@ the LAN) and says the outcome under the Room field before any socket opens
 | --- | --- | --- |
 | nothing said | archipelago.gg, any wss:// to the internet, the desktop app, an http page, a permission already granted | |
 | `ask` | Chromium (or Firefox 154+), a server on this device or the LAN, the permission undecided | "The browser will ask … choose Allow" |
-| `denied` | the same, the permission refused | allow it in the site's settings; the tracker connects once it is |
+| `denied` | the same, the permission refused; or the session found the browser said no while it still reads undecided (a dismissed or headless prompt, `local-network-denied` for this address) | how to undo it: in Chromium, the icon left of the address, then "Apps on device" (this device) or "Local network" (the LAN) set to Allow, as `CHROMIUM_SETTING` names them from Chromium's strings; then Connect, or Retry once a session waits |
 | `blocked-insecure` | ws:// to a public host from the site | a wss:// address from the host, or the desktop app |
 | `blocked-browser` | Firefox to a LAN ws://, Safari to this device or the LAN | Chrome or Edge, or the desktop app |
 

@@ -92,9 +92,15 @@ const resolveRoom = async (
 /**
  * The pre-check of the address typed, made before any socket: what this
  * page will meet reaching it (`reachOf`), the browser's local network
- * permission read and followed while the address needs it.
+ * permission read and followed while the address needs it, and what the
+ * session met there: a refusal it reports for this address says so too,
+ * though the permission may still read "prompt" (a dismissed prompt).
  */
-const useReach = (address: ServerAddress | null, page: PageContext): Reach => {
+const useReach = (
+  address: ServerAddress | null,
+  page: PageContext,
+  status: SessionStatus,
+): Reach => {
   const plan = address === null ? null : connectPlan(address, page);
   const name = plan?.ok ? plan.permission : null;
   const [read, setRead] = useState<{
@@ -117,7 +123,18 @@ const useReach = (address: ServerAddress | null, page: PageContext): Reach => {
     };
   }, [name]);
   if (address === null) return { kind: "open" };
-  return reachOf(address, page, read?.name === name ? read.state : null);
+  const refused =
+    status.code === "local-network-denied" &&
+    plan?.ok === true &&
+    plan.urls.includes(status.url)
+      ? status.state
+      : null;
+  return reachOf(
+    address,
+    page,
+    read?.name === name ? read.state : null,
+    refused,
+  );
 };
 
 /** The way the Room field's note looks: a warning for a refusal. */
@@ -300,7 +317,7 @@ export const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
     return parsed.ok && parsed.kind === "server" ? parsed.address : null;
   })();
   const parsedHost = server?.host ?? "";
-  const reach = useReach(server, page);
+  const reach = useReach(server, page, status);
   const reachText = describeReach(reach);
 
   /** The room link's port and slots, once. */

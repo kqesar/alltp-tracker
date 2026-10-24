@@ -5,6 +5,7 @@ export {
   ARCHIPELAGO_GG,
   addressClass,
   type BrowserFamily,
+  CHROMIUM_SETTING,
   type ConnectPlan,
   connectPlan,
   DEFAULT_PORT,

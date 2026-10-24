@@ -278,14 +278,17 @@ describe("the pre-check, before any socket", () => {
       /will ask to let this site reach this device/,
     );
     expect(permission.asked).toEqual(["loopback-network"]);
-    // Refused in the site's settings meanwhile: the note says so at once
+    // Refused in the site's settings meanwhile: the note says so at once,
+    // and how to undo it in Chrome's words
     act(() => permission.set("denied"));
     await vi.waitFor(() =>
       expect(reach()).toHaveTextContent(
-        /blocks this site from reaching this device\. Allow it in the site's settings/,
+        'The browser blocks this site from reaching this device. To undo it, click the icon left of the address and set "Apps on device" to Allow, then Connect.',
       ),
     );
+    expect(reach()).toHaveAttribute("data-kind", "denied");
     expect(reach()).toHaveAttribute("data-tone", "warning");
+    // Allowed: nothing stands in the way, nothing is said
     act(() => permission.set("granted"));
     await vi.waitFor(() =>
       expect(screen.queryByTestId("ap-room-reach")).toBeNull(),
@@ -295,6 +298,35 @@ describe("the pre-check, before any socket", () => {
     await vi.waitFor(() =>
       expect(permission.asked).toEqual(["loopback-network", "local-network"]),
     );
+  });
+
+  it("follows the session when the browser said no without a denial", async () => {
+    // A dismissed (or headless) prompt: the permission still reads "prompt"
+    // while the session reports the browser refused
+    setRuntimeOptions({
+      page: site("chromium"),
+      permission: fakePermission("prompt").factory,
+    });
+    useApConnectionStore.setState({
+      status: {
+        code: "local-network-denied",
+        permission: "local-network",
+        retryInMs: null,
+        state: "prompt",
+        url: "ws://192.168.1.20:38281",
+      },
+    });
+    open();
+    type("ap-room-input", "ws://192.168.1.20:38281");
+    await vi.waitFor(() =>
+      expect(reach()).toHaveTextContent(
+        'The browser did not let this site reach your local network. Retry, and choose Allow when it asks; if it no longer asks, click the icon left of the address and set "Local network" to Allow.',
+      ),
+    );
+    expect(reach()).toHaveAttribute("data-tone", "warning");
+    // Another address is not the one refused: the browser will ask for it
+    type("ap-room-input", "ws://192.168.1.21:38281");
+    await vi.waitFor(() => expect(reach()).toHaveAttribute("data-kind", "ask"));
   });
 
   it("refuses what the browser would refuse, with the way out", () => {
