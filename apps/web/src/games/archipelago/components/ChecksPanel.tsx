@@ -1,4 +1,4 @@
-import { memo, useId, useMemo, useState } from "react";
+import { memo, useId, useMemo, useState, useSyncExternalStore } from "react";
 import {
   type CheckRow,
   type CheckZone,
@@ -19,9 +19,20 @@ const NARROW = "(max-width: 60rem)";
 const isNarrow = () =>
   typeof window.matchMedia === "function" && window.matchMedia(NARROW).matches;
 
+/** Calls back when the board starts or stops stacking (a resize, a rotation). */
+const onNarrowChange = (callback: () => void) => {
+  if (typeof window.matchMedia !== "function") return () => {};
+  const query = window.matchMedia(NARROW);
+  query.addEventListener("change", callback);
+  return () => query.removeEventListener("change", callback);
+};
+
 /** The groups open until the player opens or closes one: those with checks left. */
-const openByDefault = (zones: readonly CheckZone[]): ReadonlySet<string> =>
-  isNarrow()
+const openByDefault = (
+  zones: readonly CheckZone[],
+  narrow: boolean,
+): ReadonlySet<string> =>
+  narrow
     ? new Set()
     : new Set(
         zones
@@ -116,7 +127,9 @@ export const ChecksPanel = () => {
       ),
     [zones],
   );
-  const opened = chosen ?? openByDefault(zones);
+  // Until the player chooses, the defaults follow the board stacking or not
+  const narrow = useSyncExternalStore(onNarrowChange, isNarrow);
+  const opened = chosen ?? openByDefault(zones, narrow);
   const filtering = filter.trim() !== "";
   const total = checked.length + missing.length;
   const rows = shown.reduce((sum, zone) => sum + zone.rows.length, 0);

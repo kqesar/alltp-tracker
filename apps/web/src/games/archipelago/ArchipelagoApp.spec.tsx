@@ -245,8 +245,44 @@ describe("the checks' groups", () => {
     expect(world.open).toBe(false);
   });
 
+  /** A media query the spec flips, as a resize or a rotation does. */
+  const stack = (narrow: boolean) => {
+    const listeners = new Set<() => void>();
+    const media = { matches: narrow };
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      addEventListener: (_: string, listener: () => void) =>
+        listeners.add(listener),
+      get matches() {
+        return media.matches;
+      },
+      query,
+      removeEventListener: (_: string, listener: () => void) =>
+        listeners.delete(listener),
+    }));
+    return (next: boolean) =>
+      act(() => {
+        media.matches = next;
+        for (const listener of listeners) listener();
+      });
+  };
+
+  it("follow the board as it stacks or not, until the player chooses", () => {
+    const resize = stack(true);
+    const { world } = show();
+    expect(world.open).toBe(false);
+    resize(false);
+    expect(world.open).toBe(true);
+    resize(true);
+    expect(world.open).toBe(false);
+    // Once the player opened one, a resize leaves the groups as they are
+    flip(world);
+    resize(false);
+    resize(true);
+    expect(world.open).toBe(true);
+  });
+
   it("start closed where the board stacks, and open every match of a filter", () => {
-    vi.stubGlobal("matchMedia", (query: string) => ({ matches: true, query }));
+    stack(true);
     const { east, world } = show();
     expect(east.open).toBe(false);
     expect(world.open).toBe(false);
