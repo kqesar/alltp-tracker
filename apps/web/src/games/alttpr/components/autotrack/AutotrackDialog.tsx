@@ -5,6 +5,7 @@ import {
 } from "@alltp/autotrack";
 import { useEffect, useId, useRef, useState } from "react";
 import { detailOf, headlineOf, phaseOf } from "@/autotrack/status";
+import { RaceModeOption } from "@/components/autotrack/RaceModeOption";
 import { SetupGuide } from "@/components/autotrack/SetupGuide";
 import {
   RaceBadge,
@@ -37,7 +38,8 @@ const syncedText = (changed: number | null) => {
 /**
  * The autotracking dialog: the status with the race-legal badge, Connect or
  * Disconnect, Retry now while the session waits, the diagnostic report to
- * copy, Sync from game, the setup guide ticked live, and what was read. It
+ * copy, Sync from game, Race Mode (the ROM's flag or always on), the setup
+ * guide ticked live, and what was read. It
  * opens only on the player's click; nothing in it pops up on its own.
  * @param onClose - Called to close the dialog
  */
@@ -52,6 +54,8 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
   const setConnectOnStart = useAutotrackStore(
     (state) => state.setConnectOnStart,
   );
+  const raceChoice = useAutotrackStore((state) => state.raceChoice);
+  const setRaceChoice = useAutotrackStore((state) => state.setRaceChoice);
   const [copied, setCopied] = useState("");
   const [synced, setSynced] = useState("");
   const [manualReport, setManualReport] = useState<string | null>(null);
@@ -272,6 +276,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
             Connect when the tracker opens, on this device
           </label>
         </div>
+        <RaceModeOption onChange={setRaceChoice} value={raceChoice} />
 
         <SetupGuide
           environment={environment ?? parseUserAgent(navigator.userAgent)}

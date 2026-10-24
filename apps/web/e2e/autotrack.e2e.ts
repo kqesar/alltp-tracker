@@ -507,6 +507,49 @@ test("a race seed shows the race-legal badge and is never read where races forbi
   );
 });
 
+test("Race Mode set always on reads a seed without the race flag as a race seed", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  await openTracker(page);
+  await openDialog(page);
+  const shown = dialog(page);
+  const always = shown
+    .getByRole("group", { name: "Race Mode" })
+    .getByRole("radio", { name: "Always on" });
+  await always.check();
+  await shown.getByTestId("autotrack-connect").click();
+
+  await expect(shown.getByTestId("autotrack-headline")).toHaveText("Connected");
+  await expect(shown.getByTestId("race-badge")).toHaveText(
+    "Race-legal Always on",
+  );
+  await expect(shown.getByTestId("race-mode")).toHaveText(
+    "Race Mode is always on, as you set it: the tracker reads only what races permit.",
+  );
+  await expect(shown.getByTestId("readout-prizes")).toHaveText(
+    /Not read in Race Mode/,
+  );
+  await expect.poll(() => bridge.reads.length).toBeGreaterThan(30);
+  expect(forbiddenReads(bridge)).toEqual([]);
+
+  // Back to the ROM's flag, mid-session: the seed is read as it is
+  await shown
+    .getByRole("radio", { name: "Auto (the ROM's race flag)" })
+    .check();
+  await expect(shown.getByTestId("race-badge")).toHaveCount(0);
+  await expect(shown.getByTestId("readout-prizes")).toHaveText(
+    /Pendant of Courage/,
+  );
+  // The choice is the device's: a reload keeps it
+  await always.check();
+  await page.reload();
+  await openDialog(page);
+  await expect(
+    dialog(page).getByRole("radio", { name: "Always on" }),
+  ).toBeChecked();
+});
+
 test("losing the bridge says so without a dialog, then reconnects on its own", async ({
   page,
 }) => {
@@ -802,6 +845,16 @@ for (const width of WIDTHS) {
       );
       // Focus stays on the button, now Disconnect
       expect(await focusedTestId(page)).toBe("autotrack-disconnect");
+
+      // Race Mode: Tab reaches the choice made, an arrow key makes another
+      await tabTo(page, "race-option-auto", 20);
+      expect(await focusRinged(page)).toBe(true);
+      await page.keyboard.press("ArrowRight");
+      expect(await focusedTestId(page)).toBe("race-option-on");
+      await expect(page.getByTestId("race-option-on")).toBeChecked();
+      await expect(dialog(page).getByTestId("race-badge")).toHaveText(
+        "Race-legal Always on",
+      );
 
       // The system tabs: Tab reaches the selected one (the system detected),
       // the arrow keys and Home and End select another

@@ -38,6 +38,7 @@ export const startSmRuntime = (
   session.start();
   return {
     retryNow: () => session.retryNow(),
+    setRaceMode: (setting) => session.setRaceMode(setting),
     stop: () => session.stop(),
   };
 };

@@ -370,8 +370,13 @@ Compliant by construction:
 4. It fails closed: in `auto`, Race Mode is on until the flag reads "open",
    and stays on when the device cannot read ROM (`NO_ROM_READ`) or the flag
    reads neither value.
-5. The user may turn it `off` over a race ROM; `race.overridden` is then
-   true, and the spec asks the UI to show a warning.
+5. The setting is the user's (`raceSetting`, then `setRaceMode`, which
+   takes effect from the next tick and reports the new status at once).
+   `on` holds Race Mode whatever the flag says, for a race on a seed
+   generated without it; the app offers `auto` and `on` for every game
+   (`apps/web/src/autotrack/raceChoice.ts`), never `off`. The package
+   supports `off` over a race ROM, with `race.overridden` true for the UI
+   to warn.
 
 `race.raceLegal` is true when every read the poller issues is permitted:
 Race Mode is on, or the pack reads nothing forbidden.

@@ -220,6 +220,49 @@ describe("AutotrackDialog's status", () => {
     );
   });
 
+  it("sets Race Mode always on or back to the ROM's flag, from the keyboard", async () => {
+    const user = userEvent.setup();
+    await open();
+    const group = screen.getByRole("group", { name: "Race Mode" });
+    expect(group).toHaveAccessibleDescription(
+      "In Race Mode the tracker reads only what races permit. Set it always on to race a seed generated without the race flag.",
+    );
+    const auto = within(group).getByRole("radio", {
+      name: "Auto (the ROM's race flag)",
+    });
+    const always = within(group).getByRole("radio", { name: "Always on" });
+    expect(auto).toBeChecked();
+
+    await user.click(auto);
+    await user.keyboard("{ArrowRight}");
+
+    expect(always).toBeChecked();
+    expect(always).toHaveFocus();
+    expect(useAutotrackStore.getState().raceChoice).toBe("on");
+
+    // A session set always on says so beside its badge
+    show(
+      statusOf("connected", {
+        race: {
+          active: true,
+          flag: "open",
+          overridden: false,
+          raceLegal: true,
+          setting: "on",
+        },
+      }),
+    );
+    expect(screen.getByTestId("race-badge")).toHaveTextContent(
+      "Race-legal Always on",
+    );
+    expect(screen.getByTestId("race-mode")).toHaveTextContent(
+      "Race Mode is always on, as you set it: the tracker reads only what races permit.",
+    );
+
+    await user.click(auto);
+    expect(useAutotrackStore.getState().raceChoice).toBe("auto");
+  });
+
   it("says what the seed's settings mean for the run type", async () => {
     await open();
     show(STATUSES.connected);

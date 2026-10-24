@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { headlineOf, phaseOf } from "@/autotrack/status";
 import { lazyAutotrackDialog } from "@/components/autotrack/lazyAutotrackDialog";
-import { RaceBadge, StatusDot } from "@/components/autotrack/StatusDot";
+import {
+  RaceBadge,
+  raceBadgeText,
+  StatusDot,
+} from "@/components/autotrack/StatusDot";
 import { PlugIcon } from "@/components/ui/ToolbarIcons";
 import { ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
@@ -62,7 +66,11 @@ export const AutotrackControl = ({
       {variant === "menu" ? (
         <ToolbarMenuItem
           {...dialog.handlers}
-          detail={race ? `${headline}, race-legal` : headline}
+          detail={
+            race === null
+              ? headline
+              : `${headline}, race-legal${race.setting === "on" ? ", always on" : ""}`
+          }
           icon={icon}
           label="Autotracking"
           onSelect={open}
@@ -74,7 +82,7 @@ export const AutotrackControl = ({
           // Its words and badge are flex items, which browsers name with
           // spaces between them: one name, the visible text first, in the
           // order it shows, then the status the dot stands for
-          aria-label={`Autotracking${race ? " Race-legal" : ""}, ${headline}`}
+          aria-label={`Autotracking${race ? ` ${raceBadgeText(race)}` : ""}, ${headline}`}
           className="tracker-controls__button autotrack-button"
           data-phase={phase}
           data-testid="autotrack-button"

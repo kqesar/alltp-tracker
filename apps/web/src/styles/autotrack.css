@@ -104,6 +104,13 @@
   border-radius: var(--border-radius-sm);
 }
 
+/* Race Mode set always on: a second part, behind a rule */
+.race-badge__forced {
+  padding-inline-start: var(--spacing-xs);
+  margin-inline-start: var(--spacing-xs);
+  border-inline-start: 1px solid var(--color-success);
+}
+
 /* ---- Folded into More (toolbar-menu.css), the menu button's dot ---- */
 .toolbar-more .tracker-controls__button {
   position: relative;
@@ -219,6 +226,37 @@
   background: var(--surface-1);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--border-radius);
+}
+
+/* Race Mode: the ROM's race flag, or always on */
+.race-option {
+  display: grid;
+  gap: var(--spacing-xs);
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.race-option__legend {
+  padding: 0;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.race-option__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-lg);
+}
+
+.race-option__hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-muted);
 }
 
 /* What the board does with what was read, and Sync from game */

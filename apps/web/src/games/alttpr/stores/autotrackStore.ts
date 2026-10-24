@@ -11,6 +11,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { bridgeOptions } from "@/autotrack/bridge";
 import { createAutotrackLock } from "@/autotrack/lock";
+import { mergeRaceChoice, type RaceChoice } from "@/autotrack/raceChoice";
 import { shownStatus } from "@/autotrack/status";
 import type { Follower } from "@/games/alttpr/autotrack/follow";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
@@ -27,6 +28,7 @@ import {
   withSeedFile,
 } from "@/games/alttpr/autotrack/seedFile";
 import { isFreshRun, useGameStore } from "@/games/alttpr/stores/gameStore";
+import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isObsView } from "@/utils/view";
 
 type AutotrackState = {
@@ -84,7 +86,13 @@ type AutotrackState = {
    * cached, or a release since this page loaded replaced it.
    */
   unavailable: boolean;
+  /**
+   * Race Mode as the player set it: the ROM's race flag decides ("auto"),
+   * or it is always on. Saved; the session follows a change at once.
+   */
+  raceChoice: RaceChoice;
   setConnectOnStart: (connectOnStart: boolean) => void;
+  setRaceChoice: (raceChoice: RaceChoice) => void;
 };
 
 const IDLE: SessionStatus = { code: "idle" };
@@ -93,7 +101,8 @@ const STOPPED: SessionStatus = { code: "stopped" };
 /**
  * Autotracking's state: the session's status and what it read. Kept apart
  * from the game store, so a status change never re-renders the board, and
- * nothing of it is saved but the player's wish to connect on start.
+ * nothing of it is saved but the player's wish to connect on start, the
+ * seed whose run type they kept, and their Race Mode.
  */
 export const useAutotrackStore = create<AutotrackState>()(
   persist(
@@ -106,19 +115,23 @@ export const useAutotrackStore = create<AutotrackState>()(
       environment: null,
       keptSeed: null,
       news: null,
+      raceChoice: "auto",
       reading: null,
       seedFile: null,
       setConnectOnStart: (connectOnStart) => set({ connectOnStart }),
+      setRaceChoice: (raceChoice) => set({ raceChoice }),
       shown: IDLE,
       since: 0,
       status: IDLE,
       unavailable: false,
     }),
     {
+      merge: mergeRaceChoice,
       name: "alltp-tracker-autotrack",
-      partialize: ({ connectOnStart, keptSeed }) => ({
+      partialize: ({ connectOnStart, keptSeed, raceChoice }) => ({
         connectOnStart,
         keptSeed,
+        raceChoice,
       }),
       version: 1,
     },
@@ -129,6 +142,16 @@ const set = useAutotrackStore.setState;
 
 /** The one session of this page, once started. */
 let runtime: Runtime | null = null;
+
+// The session follows the player's Race Mode as it changes, here or in
+// another tab of the tracker (the choice is saved, and read again from
+// storage): a tab that waits for the session can set it too
+useAutotrackStore.subscribe((state, before) => {
+  if (state.raceChoice !== before.raceChoice) {
+    runtime?.setRaceMode(state.raceChoice);
+  }
+});
+syncAcrossTabs(useAutotrackStore);
 
 /** The board's side of the session: what it read, laid on the run. */
 let follower: Follower | null = null;
@@ -331,7 +354,12 @@ export const connectAutotrack = async () => {
     set({ environment });
     follower = createFollower();
     runtime = startRuntime(
-      { environment, ...bridge, ...overrides },
+      {
+        environment,
+        ...bridge,
+        raceSetting: useAutotrackStore.getState().raceChoice,
+        ...overrides,
+      },
       sinkFor(mine),
     );
   } catch {
