@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.38.2](https://github.com/kqesar/alltp-tracker/compare/v2.38.1...v2.38.2) (2026-10-24)
+
+
+### 🐛 Bug Fixes
+
+* **web:** bring Race Mode in line with the ALTTPR Auto-tracker Rules v2.0 ([#330](https://github.com/kqesar/alltp-tracker/issues/330)) ([a36cfcd](https://github.com/kqesar/alltp-tracker/commit/a36cfcda253d733535c7ad3251715b8e0b800224))
+
 ## [2.38.1](https://github.com/kqesar/alltp-tracker/compare/v2.38.0...v2.38.1) (2026-10-24)
 
 
