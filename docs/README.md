@@ -21,6 +21,8 @@
 - [Logic engine](../packages/engine/README.md): the rule language and the three-valued solver.
 - [Autotracking](../packages/autotrack/README.md): the SNI and RetroArch link, the session,
   Race Mode.
+- [Archipelago link](../packages/archipelago/README.md): the read-only tracker session on an
+  Archipelago room, its diagnostics, name data, and the archipelago.js edges it works around.
 - [ALttPR pack](../packs/alttpr/README.md): the v31 rules ported from the randomizer, and the
   upstream tests they are held to.
 - [Super Metroid pack](../packs/sm/README.md): Map Rando's items, objectives and memory map.
