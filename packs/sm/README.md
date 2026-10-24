@@ -40,7 +40,11 @@ flowchart LR
 
 - **The game check**: Map Rando names the cartridge "SUPERMETROID MAPRANDO"
   (`patch.rs:2111-2112`), where the original game's header says
-  "Super Metroid".
+  "Super Metroid". Archipelago's Super Metroid (VARIA's randomizer) writes
+  "SM", AP's version, the player and the seed (AP 0.6.8,
+  `worlds/sm/__init__.py:677-681`): refused as `archipelago-rom`, which points
+  the player to the app's Archipelago board (AP's own client tracks that ROM;
+  nothing of its logic or settings is read).
 - **Items** (`decodeItems`): the items and beams collected (`$09A4`, `$09A8`),
   by the bits the patcher gives a seed's starting items (`patch.rs:
   2300-2324`), Map Rando's three included (the Wall Jump Boots, the Spark
