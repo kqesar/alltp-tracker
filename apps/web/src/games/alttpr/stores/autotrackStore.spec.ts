@@ -192,6 +192,7 @@ describe("Race Mode as the player sets it", () => {
 describe("following the seed's run type", () => {
   const game = board;
   /** What the last reading's seed says of the board's run type. */
+  const reading = () => useAutotrackStore.getState().reading;
   const seedCheck = () => {
     const reading = useAutotrackStore.getState().reading;
     return reading && checkSeed(reading.seed, game());
@@ -301,58 +302,49 @@ describe("following the seed's run type", () => {
       return fetch;
     };
 
-    it("switches a fresh board once the file is in, asked once", async () => {
-      const fetch = fileOnline("RaceFresh1");
+    it("never asks for it in Race Mode: the run type stays the player's", async () => {
+      // A Mystery race's file, which would switch a fresh board to Mystery
+      const fetch = fileOnline("RaceFresh1", {
+        spoilers: "mystery",
+        tournament: "true",
+      });
       const h = harness({ name: "RaceFresh1", race: true });
       await act(() => connectAutotrack());
       await h.advance(0);
-
-      await vi.waitFor(() => expect(game().presetId).toBe("keysanity"));
-      expect(useAutotrackStore.getState().news?.text).toBe(
-        "This seed is Keysanity (Open, Ganon, 7/7): the tracker switched to it.",
-      );
-      expect(seedCheck()?.kind).toBe("same");
-
       h.memory[SAVE(0x357)] = 0x01; // the game moves on: a new reading
       await h.advance(1000);
+
       expect(game().items.moonpearl).toBe(true);
-      expect(seedCheck()?.kind).toBe("same");
-      expect(fetch).toHaveBeenCalledOnce();
-    });
-
-    it("asks before switching a board with a run on it", async () => {
-      fileOnline("RaceAsked1");
-      const h = harness({ name: "RaceAsked1", race: true });
-      act(() => game().handleItemClick("flute"));
-      await act(() => connectAutotrack());
-      await h.advance(0);
-
-      await vi.waitFor(() =>
-        expect(seedCheck()).toMatchObject({
-          kind: "differs",
-          presetId: "keysanity",
-        }),
-      );
-      expect(game().presetId).toBe("open");
-    });
-
-    it("leaves the run type the player's when alttpr.com has no file", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(async () => new Response("", { status: 403 })),
-      );
-      const h = harness({ name: "RaceGone01", race: true });
-      await act(() => connectAutotrack());
-      await h.advance(0);
-
-      await vi.waitFor(() =>
-        expect(useAutotrackStore.getState().seedFile).toEqual({
-          hash: "RaceGone01",
-          result: "not-found",
-        }),
-      );
+      expect(fetch).not.toHaveBeenCalled();
+      expect(useAutotrackStore.getState().seedFile).toBeNull();
       expect(seedCheck()).toEqual({ kind: "unread", why: "race-mode" });
       expect(game().presetId).toBe("open");
+      expect(useAutotrackStore.getState().news).toBeNull();
+    });
+
+    it("lets a file asked before go once Race Mode is set always on", async () => {
+      const fetch = fileOnline("NotRaced02", { item_placement: "basic" });
+      const h = keysanitySeed("NotRaced02");
+      await act(() => connectAutotrack());
+      await h.advance(0);
+      await vi.waitFor(() =>
+        expect(reading()?.seed.itemPlacement).toMatchObject({
+          value: "basic",
+        }),
+      );
+
+      act(() => useAutotrackStore.getState().setRaceChoice("on"));
+
+      expect(useAutotrackStore.getState().seedFile).toBeNull();
+      expect(reading()?.seed.itemPlacement).not.toMatchObject({
+        value: "basic",
+      });
+      h.memory[SAVE(0x357)] = 0x01; // the game moves on: a new reading
+      await h.advance(1000);
+      expect(reading()?.seed.itemPlacement).not.toMatchObject({
+        value: "basic",
+      });
+      expect(fetch).toHaveBeenCalledOnce();
     });
 
     it("takes what a ROM never states from the file, then switches once", async () => {

@@ -292,25 +292,7 @@ describe("AutotrackDialog's status", () => {
       }),
     );
     expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
-      "Settings not read in Race Mode: the run type stays yours.",
-    );
-
-    // A race seed's settings come from its file on alttpr.com, once in
-    act(() =>
-      useAutotrackStore.setState({
-        seedFile: { hash: "RACE", result: "loading" },
-      }),
-    );
-    expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
-      "Settings not read in Race Mode: asking alttpr.com for them…",
-    );
-    act(() =>
-      useAutotrackStore.setState({
-        seedFile: { hash: "RACE", result: "offline" },
-      }),
-    );
-    expect(screen.getByTestId("autotrack-seed")).toHaveTextContent(
-      "Settings not read in Race Mode, and alttpr.com could not be reached: the run type stays yours.",
+      "Settings not read in Race Mode, nor asked of alttpr.com: pick the run type yourself.",
     );
   });
 
@@ -637,7 +619,7 @@ describe("AutotrackDialog's readout", () => {
     );
   });
 
-  it("says which of a seed's settings came from its file on alttpr.com", async () => {
+  it("says when a seed's settings came from its file, outside Race Mode only", async () => {
     await open();
     const raced = reading(true);
     act(() =>
@@ -656,7 +638,8 @@ describe("AutotrackDialog's readout", () => {
         seedFile: { hash: "RACE", result: raced.seed },
       }),
     );
-    expect(title()).toHaveTextContent(/^Seed settings, from alttpr\.com$/);
+    // Race Mode never lays a file's settings, should one be held
+    expect(title()).toHaveTextContent(/^Seed settings$/);
 
     // A seed out of Race Mode: the ROM's settings, and the file's beside
     const unraced = reading(false);

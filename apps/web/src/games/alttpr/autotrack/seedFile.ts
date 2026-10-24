@@ -1,11 +1,13 @@
 // A seed's settings from the file alttpr.com keeps for it (the pack's
-// seed-file.ts reads it): for a seed autotracking reads, the settings its ROM
-// does not state (all but its name and logic for a race seed; item placement,
-// accessibility and the item pool and functionality for any), and for a seed
-// the player names by its link.
+// seed-file.ts reads it): for a seed autotracking reads outside Race Mode,
+// the settings its ROM does not state (item placement, accessibility and the
+// item pool and functionality), and for a seed the player names by its link.
 //
 // The file comes from alttpr.com's bucket, which any origin may read. It
-// holds the seed's patch too, downloaded with the rest and never read.
+// holds the seed's patch too, downloaded with the rest and never read. The
+// ALTTPR Auto-tracker Rules v2.0 bar a tracker from ever accessing the ROM's
+// location contents before or during a race; the patch holds them, so Race
+// Mode never asks for the file.
 
 import {
   type SeedSetting,

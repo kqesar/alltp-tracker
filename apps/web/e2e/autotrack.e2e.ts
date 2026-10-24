@@ -752,7 +752,7 @@ test.describe("the seed's run type", () => {
     await openDialog(page);
 
     await expect(dialog(page).getByTestId("autotrack-seed")).toHaveText(
-      "Settings not read in Race Mode: the run type stays yours.",
+      "Settings not read in Race Mode, nor asked of alttpr.com: pick the run type yourself.",
     );
     await expect(mode(page)).toHaveAccessibleName("Mode Open");
     const settingsRead = SEED_SETTINGS_RANGES.filter((range) =>
@@ -766,7 +766,7 @@ test.describe("the seed's run type", () => {
     expect(forbiddenReads(bridge)).toEqual([]);
   });
 
-  test("takes a race seed's settings from its file on alttpr.com", async ({
+  test("never asks alttpr.com for a race seed's file: the run type stays the player's", async ({
     page,
   }) => {
     const asked: string[] = [];
@@ -792,22 +792,23 @@ test.describe("the seed's run type", () => {
 
     await connect(page);
 
-    await expect(mode(page)).toHaveAccessibleName("Mode Inverted");
-    await expect(page.getByTestId("autotrack-live")).toContainText(
-      "This seed is Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality): the tracker switched to it.",
-    );
     await openDialog(page);
     await expect(dialog(page).getByTestId("autotrack-seed")).toHaveText(
-      "The run type matches this seed: Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality).",
+      "Settings not read in Race Mode, nor asked of alttpr.com: pick the run type yourself.",
     );
     await expect(
-      dialog(page).getByRole("heading", {
-        name: "Seed settings, from alttpr.com",
-      }),
+      dialog(page).getByRole("heading", { exact: true, name: "Seed settings" }),
     ).toBeVisible();
-    expect(asked).toEqual([
-      "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/eM43RgZ4Gj.json",
-    ]);
+    await page.keyboard.press("Escape");
+    await expect(mode(page)).toHaveAccessibleName("Mode Open");
+    // Nor does Start from a seed while the race goes on
+    await mode(page).click();
+    await expect(page.getByTestId("seed-import-race")).toContainText(
+      "Off in Race Mode",
+    );
+    await expect(page.getByTestId("seed-import-input")).toHaveCount(0);
+    await expect.poll(() => bridge.reads.length).toBeGreaterThan(30);
+    expect(asked).toEqual([]);
     expect(forbiddenReads(bridge)).toEqual([]);
   });
 });

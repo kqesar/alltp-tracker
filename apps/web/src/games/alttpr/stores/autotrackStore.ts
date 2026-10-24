@@ -63,8 +63,8 @@ type AutotrackState = {
   reading: AutotrackReading | null;
   /**
    * The seed's file on alttpr.com, asked once per connection for a seed
-   * whose name is a hash: its settings, or why there are none, or "loading"
-   * while asked.
+   * whose name is a hash, outside Race Mode: its settings, or why there are
+   * none, or "loading" while asked.
    */
   seedFile: {
     readonly hash: string;
@@ -230,13 +230,20 @@ const followSeed = (
 /** A reading with its seed's file laid on it, once the file is in. */
 const withFile = (reading: AutotrackReading): AutotrackReading => {
   const file = useAutotrackStore.getState().seedFile;
-  return file === null || typeof file.result === "string"
+  return reading.race || file === null || typeof file.result === "string"
     ? reading
     : { ...reading, seed: withSeedFile(reading.seed, file.result) };
 };
 
-/** The seed's hash, when alttpr.com keeps a file for it. */
+/**
+ * The seed's hash, when alttpr.com keeps a file for it and the tracker may
+ * ask for it: never in Race Mode. The file holds the seed's patch, every
+ * item placement with it, and the ALTTPR Auto-tracker Rules v2.0 bar a
+ * tracker from accessing location contents before or during a race; the run
+ * type is then the racer's to pick.
+ */
 const hashOf = (reading: AutotrackReading): string | null => {
+  if (reading.race) return null;
   const name = reading.seed.seed;
   // A name of another generator's is no alttpr.com hash
   return name !== null && seedHashOf(name) === name ? name : null;
@@ -250,10 +257,10 @@ const awaitsFile = (reading: AutotrackReading): boolean => {
 };
 
 /**
- * Ask alttpr.com for the seed's file, once per connection: it states what
- * the ROM does not (a race seed's settings; any seed's item placement,
- * accessibility, item pool and functionality). When it comes, or cannot,
- * the seed's run type is held against the board's.
+ * Ask alttpr.com for the seed's file, once per connection and outside Race
+ * Mode only: it states what the ROM does not (item placement, accessibility,
+ * item pool and functionality, whether it is a Mystery seed). When it comes,
+ * or cannot, the seed's run type is held against the board's.
  */
 const askSeedFile = (reading: AutotrackReading, mine: number) => {
   const hash = hashOf(reading);
@@ -283,6 +290,10 @@ const sinkFor = (mine: number): RuntimeSink => ({
   // A stopped session never reads again: no reading outlives its session
   reading: (read) => {
     if (mine !== generation) return;
+    // Race Mode turned on mid-session: a file asked before is let go
+    if (read.race && useAutotrackStore.getState().seedFile !== null) {
+      set({ seedFile: null });
+    }
     const reading = withFile(read);
     // A seed with a file on alttpr.com is held against the board once the
     // file has settled (askSeedFile): the two never switch it twice

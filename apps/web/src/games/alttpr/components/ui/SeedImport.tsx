@@ -10,6 +10,7 @@ import {
   loadSeedFile,
   type SeedFileError,
 } from "@/games/alttpr/autotrack/seedFile";
+import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 
 /** What the form says when alttpr.com gives no settings. */
 const ERRORS: Readonly<Record<SeedFileError, string>> = {
@@ -22,9 +23,24 @@ const ERRORS: Readonly<Record<SeedFileError, string>> = {
 export type SeedSwitch = Extract<SeedCheck, { kind: "differs" }>;
 
 /**
+ * Whether Race Mode is on for this device: set always on, or on in the
+ * session this tab runs. Race Mode asks alttpr.com for nothing: a seed's
+ * file holds its patch, every item placement with it.
+ */
+const useRaceMode = () =>
+  useAutotrackStore(
+    (state) =>
+      state.raceChoice === "on" ||
+      (state.active &&
+        state.status.code === "connected" &&
+        state.status.race.active),
+  );
+
+/**
  * SeedImport - starts a run from an alttpr.com seed: its link or hash names
  * its file, whose settings name the run type. A seed of another run type
- * goes to `onSwitch`; the form says anything else in its status line.
+ * goes to `onSwitch`; the form says anything else in its status line. In
+ * Race Mode it fetches nothing and says why instead of the form.
  * @param run - The board's run type and settings
  * @param onSwitch - Called with a seed of another run type
  */
@@ -36,6 +52,7 @@ export const SeedImport = ({
   run: Run;
 }) => {
   const inputId = useId();
+  const race = useRaceMode();
   const [text, setText] = useState("");
   const [message, setMessage] = useState("");
   // The last load asked: an earlier one's answer, or one after the form
@@ -50,6 +67,7 @@ export const SeedImport = ({
 
   const load = async (event: FormEvent) => {
     event.preventDefault();
+    if (race) return;
     const hash = seedHashOf(text);
     if (hash === null) {
       setMessage("Paste the seed's link from alttpr.com, or its hash.");
@@ -71,6 +89,19 @@ export const SeedImport = ({
       setMessage(seedLineText(check, false));
     }
   };
+
+  if (race) {
+    return (
+      <div className="seed-import" data-testid="seed-import">
+        <p className="seed-import__label">Start from a seed</p>
+        <p className="seed-import__status" data-testid="seed-import-race">
+          Off in Race Mode: during a race the tracker asks alttpr.com for
+          nothing, since a seed's file holds where every item is. Pick the run
+          type below.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form className="seed-import" data-testid="seed-import" onSubmit={load}>
