@@ -27,7 +27,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/er-world.ts` | `cassidoxa/ALttPEntranceRandomizer` (`Regions.py`, `Rules.py`): the world a seed with shuffled entrances is filled in, for the doors noted (see "The entrance randomizer's world") |
 | `src/derived.ts`, `src/medallions.ts` | facts the state derives before solving, for the rules that are not monotone in the items (Palace of Darkness's keys; what a medallion pad wants) |
 | `src/location.ts`, `src/rules.ts` | what a location is (its kinds, its rule and upstream source); every named rule, as the engine loads them |
-| `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags and seed settings, from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
+| `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags, seed settings and the prizes the game shows (`prizes.ts`), from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -156,6 +156,44 @@ closes it to a player holding Bombos only), so nothing carries over.
 - **The derived facts** (`src/derived.ts`), from the items it gives.
 - **Small keys**, per dungeon, only with wild keys. Outside keysanity the
   key model reads the dungeons without them.
+
+### A dungeon's prize, as the game shows it
+
+Autotracking names a dungeon's prize as soon as the player could know it in
+the game, never earlier, and only outside Race Mode (`decodePrizes`,
+`src/autotrack/prizes.ts`). The ROM names every prize in two tables of
+z3randomizer's, one byte per dungeon from Eastern Palace to Turtle Rock in
+the order `DungeonID / 2 - 2`, Castle Tower's slot empty:
+
+| Table | Address (ROM offset) | Byte |
+| --- | --- | --- |
+| `CrystalPendantFlags` (`tables.asm:611-626`) | `$02:A09D` (`0x1209D`), 11 bytes | the prize's bit in the pendants' (`$7EF374`) or the crystals' (`$7EF37A`) field |
+| `CrystalPendantFlags_2` (`tables.asm:213-233`) | `$30:8052` (`0x180052`), 11 bytes | `$00` a pendant, `$40` a crystal |
+
+vt writes them as the second and fifth bytes of each prize item at the
+second and fifth addresses of each `Prize` location (`Item.php:148-150,
+254-260`; `Region/Standard/EasternPalace.php:58` and the nine alike;
+`Location.php:271-278`). Open, Inverted and Retro reuse the Standard
+dungeons' prize locations, and the entrance randomizer writes the same
+bytes at the same addresses (`Regions.py:624-633`, `Rom.py:473-476`).
+The bit and the kind together give the class: the pendant bit `$04` is the
+green pendant, crystals 5 and 6 (`$04`, `$01`) are red. Checked against
+four alttpr.com seeds' spoilers (`test/prize-tables.json`: Open, Standard
+with mc, Inverted with full; every prize matched).
+
+The game shows a prize when the dungeon is finished (DungeonsCompleted),
+or when the world map draws it (`overworldmap.asm:59-141`): in the world
+Link is in (`CurrentWorld`, `$7EF3CA`) for that world's dungeons, and
+either always (`MapMode`, `$30:803B`, `$00`) or once its dungeon's map is
+held or revealed (`$01`: MapField `$7EF368` or MapOverlay `$7EF414`, which
+Sahasrahla and the Bomb Merchant fill with the green pendant's and the red
+crystals' dungeons). vt writes `MapMode` `$01` when maps leave their
+dungeons (dungeon items mc, mcs, full: `World.php:122-124, 1232`), and so
+does the entrance randomizer with keysanity (`Rom.py:928`). Any other
+prize never leaves the decoder. A range not read counts as not met; a ROM
+the device does not serve (zero-filled) names nothing, and the app falls
+back to telling a finished dungeon's prize by elimination. A prize the
+player named stays theirs.
 
 ## A Mystery run
 

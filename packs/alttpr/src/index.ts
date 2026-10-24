@@ -36,6 +36,11 @@ export {
 } from "./autotrack/memory";
 export { ALTTPR_AUTOTRACK } from "./autotrack/pack";
 export {
+  decodePrizes,
+  type PrizeDungeon,
+  type PrizeReading,
+} from "./autotrack/prizes";
+export {
   ALTTPR_GAME_CHECK,
   ALTTPR_RACE_FLAG,
   checkGame,

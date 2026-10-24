@@ -19,6 +19,7 @@ import {
 } from "./decode";
 import { MEMORY_RANGES } from "./memory";
 import { ALTTPR_AUTOTRACK } from "./pack";
+import { decodePrizes } from "./prizes";
 import { decodeSeedSettings } from "./seed-settings";
 
 // A console behind a usb2snes bridge, in FX Pak Pro space: ROM from $00_0000
@@ -138,6 +139,7 @@ function decodeAll(
   return {
     checks: decodeChecks(snapshot, { race }),
     items: decodeItems(snapshot, { race }),
+    prizes: decodePrizes(snapshot, { race }),
     progress: decodeProgress(snapshot, { race }),
     race,
     seed: decodeSeedSettings(snapshot, { race }),
@@ -259,6 +261,61 @@ describe("ALTTPR_AUTOTRACK", () => {
       race: { active: true, flag: "unknown" },
     });
     expect(readForbidden(console)).toEqual([]);
+  });
+
+  it("never asks for a prize table in Race Mode, by the ROM's flag or set always on", async () => {
+    const PRIZE_RANGES = [
+      "prize-bits",
+      "prize-kinds",
+      "map-mode",
+      "current-world",
+      "map-overlay",
+    ] as const;
+    /** The prize ranges the console was asked for a byte of. */
+    const asked = (console: Console) =>
+      PRIZE_RANGES.filter((id) => {
+        const { address, size } = MEMORY_RANGES.find(
+          (range) => range.id === id,
+        ) as (typeof MEMORY_RANGES)[number];
+        return console.pieces.some(
+          ([at, length]) => at < address + size && address < at + length,
+        );
+      });
+    const withPrizes = (console: Console) => {
+      const at = (id: (typeof PRIZE_RANGES)[number]) =>
+        (MEMORY_RANGES.find((range) => range.id === id) as { address: number })
+          .address;
+      // Eastern Palace's prize: the Pendant of Courage, finished
+      console.memory[at("prize-bits")] = 0x04;
+      console.memory[at("prize-kinds")] = 0x00;
+      console.memory[SAVE(0x473)] = 0x20;
+      return console;
+    };
+
+    const raced = withPrizes(
+      new Console().seed("VT RACE", [0x01, 0x00]).play(),
+    );
+    const race = await attach(raced);
+    expect(race.status).toMatchObject({ race: { active: true, flag: "race" } });
+    expect(asked(raced)).toEqual([]);
+
+    const forced = withPrizes(
+      new Console().seed("VT OPEN", [0x00, 0x01]).play(),
+    );
+    const always = await attach(forced, "on");
+    expect(always.status).toMatchObject({
+      race: { active: true, flag: "open" },
+    });
+    expect(asked(forced)).toEqual([]);
+
+    // The same open seed outside Race Mode: every one of them is read
+    const open = withPrizes(new Console().seed("VT OPEN", [0x00, 0x01]).play());
+    const casual = await attach(open);
+    expect(casual.status).toMatchObject({ race: { active: false } });
+    expect(asked(open)).toEqual([...PRIZE_RANGES]);
+    expect(casual.decoded?.prizes).toEqual({ P1: "greenPendant" });
+    expect(race.decoded?.prizes).toBe("race-mode");
+    expect(always.decoded?.prizes).toBe("race-mode");
   });
 
   it("refuses the original game", async () => {

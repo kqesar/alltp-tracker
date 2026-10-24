@@ -38,7 +38,7 @@ function rom<const Id extends string>(
   id: Id,
   at: number,
   size: number,
-  category: "other" | "rom-header",
+  category: "other" | "prizes" | "rom-header",
   source: SourceRef,
 ): AlttprRange & { readonly id: Id } {
   return {
@@ -58,9 +58,16 @@ function rom<const Id extends string>(
  * race profile's `other`, which Race Mode never reads. The seed type sits in
  * Race Mode's $30:8210-$30:823F, beside the race flag: `rom-header` is the
  * profile's category for it ("allowed to read any SRAM and/or ROM locations
- * at any time", short of entrances and location contents).
+ * at any time", short of entrances and location contents). Two of bank $30's
+ * tables among them are the prizes' (prizes.ts), under the profile's
+ * `prizes`, which no race permits.
  */
 export const SEED_SETTINGS_RANGES = [
+  // MapMode: $00, the world map shows every dungeon's prize; $01, only once
+  // its map is held (tables.asm:124-125). vt writes $01 when maps leave
+  // their dungeon, dungeonItems mc, mcs or full (Rom.php:1959-1964,
+  // World.php:122-124, 1232). Read by the prizes (prizes.ts).
+  rom("map-mode", 0x30_803b, 1, "prizes", "z3:tables.asm:124-125"),
   // HammerableGanon, a byte nothing uses, then AllowSwordlessMedallionUse
   // (tables.asm:136-144): setSwordlessMode writes $01 to both, or $00 (vt
   // Rom.php:2065-2069), on every seed (World.php:1249).
@@ -73,6 +80,12 @@ export const SEED_SETTINGS_RANGES = [
   // InvertedMode: $00 normal, $01 inverted (tables.asm:181-183; vt
   // Rom.php:1592).
   rom("inverted-mode", 0x30_804a, 1, "other", "z3:tables.asm:181-183"),
+  // CrystalPendantFlags_2 from Eastern Palace to Turtle Rock: $00 a
+  // pendant, $40 a crystal (tables.asm:213-233). vt writes each prize's
+  // fifth byte there (Prize locations' fifth address, Region/Standard/
+  // EasternPalace.php:58 and the nine alike; Item.php:148-150, 254-260).
+  // The prizes' own table: read outside Race Mode only (prizes.ts).
+  rom("prize-kinds", 0x30_8052, 11, "prizes", "z3:tables.asm:213-233"),
   // GoalItemRequirement, a word: the triforce pieces the goal asks for, $0000
   // when it asks for none (tables.asm:789-791; vt Rom.php:472-476).
   rom("goal-items", 0x30_8167, 2, "other", "z3:tables.asm:789-791"),
