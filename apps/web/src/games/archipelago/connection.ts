@@ -242,6 +242,11 @@ export const connect = async () => {
             useArchipelagoStore.getState().countdownEnded(at);
           }
         },
+        goal: (at) => {
+          if (mine === generation) {
+            useArchipelagoStore.getState().goalReached(at);
+          }
+        },
         groups: (groups) => {
           if (mine === generation) useApNamesStore.setState({ groups });
         },

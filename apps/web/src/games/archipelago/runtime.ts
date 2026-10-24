@@ -7,6 +7,8 @@
 
 import {
   ArchipelagoSession,
+  CLIENT_STATUS,
+  clientStatusKey,
   emptyFeed,
   type FeedState,
   feedEvent,
@@ -79,6 +81,8 @@ export type RuntimeSink = {
   away: (items: AwayItem[]) => void;
   /** The room's countdown reached 0, now. */
   countdown: (at: number) => void;
+  /** The slot's own status reached its goal, now. */
+  goal: (at: number) => void;
 };
 
 export type Runtime = {
@@ -227,8 +231,19 @@ export const startRuntime = (
         away = items.slice(known.received);
       }
     }
+    // The slot's own client status reaching its goal (30), as it happens: a
+    // status already at 30 when a connection reads it says nothing of when
+    const { identity } = session.snapshot;
+    if (
+      packet.cmd === "SetReply" &&
+      identity !== null &&
+      packet.key === clientStatusKey(identity.team, identity.slot) &&
+      packet.value === CLIENT_STATUS.goal
+    ) {
+      sink.goal(Date.now());
+    }
     const event = feedEvent(packet);
-    const me = session.snapshot.identity?.slot;
+    const me = identity?.slot;
     if (event === null || me === undefined) return;
     feed = foldFeed(feed, event, me);
     if (event.kind === "countdown" && event.value === 0) {

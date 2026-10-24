@@ -10,8 +10,10 @@ import * as z from "zod/mini";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
+  finishTimer,
   IDLE_TIMER,
   isIdle,
+  isRunning,
   pauseTimer,
   type RunTimer,
   startTimer,
@@ -118,7 +120,7 @@ const timerSchema = z.object({
 const prefsSchema = z.object({
   /** Say each progression item the slot receives (a polite live region). */
   announce: z.boolean(),
-  /** The room's countdown starts the run timer at 0. */
+  /** The room's countdown starts the run timer at 0, the slot's goal stops it. */
   countdownTimer: z.boolean(),
   /** The feed's filter: the lines involving the slot, or the whole room's. */
   feedScope: z.enum(["mine", "room"]),
@@ -210,6 +212,8 @@ type ApState = ApRun & {
   resetTimer: () => void;
   /** The room's countdown reached 0: start an idle timer, if the player lets it. */
   countdownEnded: (at: number) => void;
+  /** The slot reached its goal: stop a running timer there, if the player lets it. */
+  goalReached: (at: number) => void;
 };
 
 const runOf = (state: ApRun): ApRun => ({
@@ -280,6 +284,13 @@ export const useArchipelagoStore = create<ApState>()(
           // (another !countdown) never restarts one
           if (prefs.countdownTimer && isIdle(timer)) {
             setTimer(startTimer(timer, at));
+          }
+        },
+        // The run's time, kept (and saved) as the run's own: a reload shows it
+        goalReached: (at) => {
+          const { prefs, timer } = get();
+          if (prefs.countdownTimer && isRunning(timer)) {
+            setTimer(finishTimer(timer, at));
           }
         },
         pauseTimer: (at = Date.now()) => setTimer(pauseTimer(get().timer, at)),

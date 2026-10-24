@@ -24,6 +24,7 @@ const sink = () =>
   ({
     away: vi.fn(),
     countdown: vi.fn(),
+    goal: vi.fn(),
     groups: vi.fn(),
     names: vi.fn(),
     run: vi.fn(),

@@ -3,9 +3,10 @@ import { useArchipelagoStore } from "@/games/archipelago/store";
 
 /**
  * The run timer of an Archipelago board: the shared timer over the run's,
- * started and paused by the player, or started by the room's countdown as
- * it reaches 0 ("GO") while "Start at the room's countdown" is ticked (on
- * by default). The room says nothing of a goal's time, so nothing stops it.
+ * started and paused by the player; while "Start at the room's countdown,
+ * stop at your goal" is ticked (on by default), started by the room's
+ * countdown as it reaches 0 ("GO") and stopped for good as the slot's own
+ * client status reaches its goal (30), which the room says as it happens.
  */
 export const ApRunTimer = () => {
   const timer = useArchipelagoStore((state) => state.timer);
@@ -18,7 +19,7 @@ export const ApRunTimer = () => {
     <RunTimer
       auto={{
         checked: auto,
-        label: "Start at the room's countdown",
+        label: "Start at the room's countdown, stop at your goal",
         onChange: (checked) => setPref("countdownTimer", checked),
       }}
       onPause={() => pause()}
