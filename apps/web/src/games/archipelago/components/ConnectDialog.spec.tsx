@@ -233,10 +233,10 @@ describe("the static check", () => {
 
   it("blocks ws:// to the internet from a secure page, with the way out", () => {
     expect(blockedWhy(PUBLIC, { browser: "chromium", kind: "secure" })).toMatch(
-      /Use wss:\/\/, or the desktop app/,
+      /Ask the room.s host for a wss:\/\/ address, or use the desktop app/,
     );
     expect(blockedWhy(LAN, { browser: "firefox", kind: "secure" })).toMatch(
-      /This browser does not let a secure page open ws:\/\/ to the local network/,
+      /Firefox does not let a secure site reach a ws:\/\/ server on your local network/,
     );
     expect(blockedWhy(PUBLIC, { kind: "desktop" })).toBeNull();
     expect(blockedWhy(LAN, { browser: "chromium", kind: "secure" })).toBeNull();

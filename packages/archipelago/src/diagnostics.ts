@@ -7,6 +7,7 @@ import {
   addressClass,
   type BrowserFamily,
   isArchipelagoGg,
+  type LocalNetworkPermissionName,
 } from "./address";
 
 /**
@@ -63,6 +64,29 @@ export type SessionStatus =
       readonly code: "blocked-browser";
       readonly addressClass: AddressClass;
       readonly browser: BrowserFamily;
+    }
+  | {
+      /**
+       * The browser shows its local network prompt: the socket has hung in
+       * CONNECTING for `promptAfterMs` while the permission reads "prompt".
+       * The session waits for the answer, with no timeout.
+       */
+      readonly code: "local-network-prompt";
+      readonly url: string;
+      readonly permission: LocalNetworkPermissionName;
+    }
+  | {
+      /**
+       * The browser does not let this site reach the server: the permission
+       * reads "denied" (`state`), or a socket failed while it still read
+       * "prompt" (the prompt dismissed, or no longer shown). The session
+       * waits for the permission to change, or for the player's Retry.
+       */
+      readonly code: "local-network-denied";
+      readonly url: string;
+      readonly permission: LocalNetworkPermissionName;
+      readonly state: "denied" | "prompt";
+      readonly retryInMs: null;
     }
   | {
       /** Opening the socket ("socket"), then waiting for RoomInfo ("room-info"). */
@@ -127,6 +151,8 @@ export const SESSION_CODES: readonly SessionCode[] = [
   "elsewhere",
   "blocked-insecure",
   "blocked-browser",
+  "local-network-prompt",
+  "local-network-denied",
   "connecting",
   "authenticating",
   "unreachable",

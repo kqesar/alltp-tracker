@@ -2,6 +2,11 @@
 // only, so every browser API they use is declared here, structurally, and
 // looked up on globalThis at call time (test fakes installed later apply).
 
+import type {
+  LocalNetworkPermissionName,
+  PermissionStateName,
+} from "./address";
+
 /** The part of the WHATWG WebSocket archipelago.js and this package use. */
 export interface WebSocketLike {
   readonly url: string;
@@ -39,6 +44,31 @@ export interface Online {
   /** Calls `listener` on every change; returns the unsubscribe function. */
   subscribe(listener: () => void): () => void;
 }
+
+/**
+ * What the page knows of its local network permission: the shape of
+ * `@alltp/autotrack`'s `systemPermission()`, which the app passes in. This
+ * package queries no permission itself (it would be a second copy).
+ */
+export interface LocalNetworkPermission {
+  query(): Promise<{
+    readonly name: string | null;
+    readonly state: PermissionStateName;
+  }>;
+  /** Calls `listener` when the state changes; returns the unsubscribe. */
+  subscribe(listener: () => void): () => void;
+}
+
+/** The permission behind one name, made when a plan needs it. */
+export type PermissionFactory = (
+  name: LocalNetworkPermissionName,
+) => LocalNetworkPermission;
+
+/** No Permissions API: every state reads "unsupported", nothing changes. */
+export const NO_PERMISSION: PermissionFactory = () => ({
+  query: async () => ({ name: null, state: "unsupported" }),
+  subscribe: () => () => {},
+});
 
 interface EventHost {
   addEventListener(type: string, listener: () => void): void;

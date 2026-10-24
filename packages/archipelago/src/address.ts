@@ -169,16 +169,31 @@ export function serverUrl(scheme: Scheme, address: ServerAddress): string {
 export type BrowserFamily = "chromium" | "firefox" | "safari" | "other";
 
 /**
+ * The permission a browser asks for before a public page reaches this device
+ * ("loopback-network") or the local network ("local-network"): Local Network
+ * Access, Chromium 145+ and Firefox 154+ (`@alltp/autotrack`'s README, "Local
+ * network access").
+ */
+export type LocalNetworkPermissionName = "loopback-network" | "local-network";
+
+/**
  * The page the tracker runs in:
  * - "desktop": the Tauri app (a secure context that may open plain ws://
  *   anywhere: gate B, Linux);
  * - "insecure": an http page (the dev server): no mixed content to block;
- * - "secure": an https page in a browser, the site.
+ * - "secure": an https page in a browser, the site. `gated` says whether this
+ *   browser puts sockets to this device and the LAN behind its local network
+ *   permission (the app reads it from `@alltp/autotrack`'s `loopbackAccess`:
+ *   Chromium 147+, Firefox 154+); absent, Chromium alone counts as gated.
  */
 export type PageContext =
   | { readonly kind: "desktop" }
   | { readonly kind: "insecure" }
-  | { readonly kind: "secure"; readonly browser: BrowserFamily };
+  | {
+      readonly kind: "secure";
+      readonly browser: BrowserFamily;
+      readonly gated?: boolean;
+    };
 
 export type ConnectPlan =
   | {
@@ -186,10 +201,10 @@ export type ConnectPlan =
       /** The URLs to try, in order, each with a scheme. */
       readonly urls: readonly string[];
       /**
-       * Chromium asks the user before a public page reaches this device or
-       * the LAN (Local Network Access): the first attempt may wait on it.
+       * The local network permission the browser may ask for before the
+       * first socket opens, or null when none stands in the way.
        */
-      readonly localNetwork: boolean;
+      readonly permission: LocalNetworkPermissionName | null;
     }
   | {
       readonly ok: false;
@@ -225,9 +240,20 @@ function plainAllowed(
   }
 }
 
+/** The permission a secure page's sockets to this class wait on, if any. */
+function permissionFor(
+  page: PageContext,
+  where: AddressClass,
+): LocalNetworkPermissionName | null {
+  if (page.kind !== "secure" || where === "public") return null;
+  if (!(page.gated ?? page.browser === "chromium")) return null;
+  return where === "loopback" ? "loopback-network" : "local-network";
+}
+
 /**
  * The static check made before any socket opens: the URLs worth trying for
- * this address from this page, or why none is.
+ * this address from this page and the permission they may wait on, or why
+ * none is worth trying.
  *
  * Without a scheme, archipelago.gg gets wss only (its room ports refuse
  * plain ws), and any other host wss then ws, as AP's own clients and
@@ -238,21 +264,88 @@ export function connectPlan(
   page: PageContext,
 ): ConnectPlan {
   const where = addressClass(address.host);
-  const localNetwork =
-    page.kind === "secure" && page.browser === "chromium" && where !== "public";
   const plain = plainAllowed(page, where);
+  const permission = permissionFor(page, where);
   if (address.scheme === "wss") {
-    return { localNetwork, ok: true, urls: [serverUrl("wss", address)] };
+    return { ok: true, permission, urls: [serverUrl("wss", address)] };
   }
   if (address.scheme === "ws") {
     if (plain !== true) return { addressClass: where, code: plain, ok: false };
-    return { localNetwork, ok: true, urls: [serverUrl("ws", address)] };
+    return { ok: true, permission, urls: [serverUrl("ws", address)] };
   }
   const urls = [serverUrl("wss", address)];
   if (plain === true && !isArchipelagoGg(address.host)) {
     urls.push(serverUrl("ws", address));
   }
-  return { localNetwork, ok: true, urls };
+  return { ok: true, permission, urls };
+}
+
+/**
+ * What will happen when this page reaches the address, said before any
+ * socket opens, each with its way out (README, "Addresses and
+ * connectivity"):
+ * - "open": nothing stands in the way;
+ * - "ask": the browser asks for its local network permission first (its
+ *   state reads "prompt");
+ * - "denied": the player refused that permission to the site;
+ * - "blocked-insecure", "blocked-browser": `connectPlan`'s refusals.
+ */
+export type Reach =
+  | { readonly kind: "open" }
+  | {
+      readonly kind: "ask";
+      readonly permission: LocalNetworkPermissionName;
+      readonly browser: BrowserFamily;
+    }
+  | {
+      readonly kind: "denied";
+      readonly permission: LocalNetworkPermissionName;
+      readonly browser: BrowserFamily;
+    }
+  | { readonly kind: "blocked-insecure"; readonly addressClass: AddressClass }
+  | {
+      readonly kind: "blocked-browser";
+      readonly addressClass: AddressClass;
+      readonly browser: BrowserFamily;
+    };
+
+/** What the browser says of a permission: the state its Permissions API reads. */
+export type PermissionStateName =
+  | "granted"
+  | "prompt"
+  | "denied"
+  | "unsupported";
+
+/**
+ * The pre-check: the plan for this address from this page, then what the
+ * page knows of the permission it waits on (null while not read yet).
+ */
+export function reachOf(
+  address: ServerAddress,
+  page: PageContext,
+  permission: PermissionStateName | null,
+): Reach {
+  const plan = connectPlan(address, page);
+  if (!plan.ok) {
+    return plan.code === "blocked-browser" && page.kind === "secure"
+      ? {
+          addressClass: plan.addressClass,
+          browser: page.browser,
+          kind: "blocked-browser",
+        }
+      : { addressClass: plan.addressClass, kind: "blocked-insecure" };
+  }
+  if (plan.permission === null || page.kind !== "secure") {
+    return { kind: "open" };
+  }
+  const { browser } = page;
+  if (permission === "denied") {
+    return { browser, kind: "denied", permission: plan.permission };
+  }
+  if (permission === "prompt") {
+    return { browser, kind: "ask", permission: plan.permission };
+  }
+  return { kind: "open" };
 }
 
 /** One slot of a room, as archipelago.gg's room status lists it. */

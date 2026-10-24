@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { fixture, packetsTo } from "../test/fixtures";
 import { parseAddress, type ServerAddress } from "./address";
-import { REFUSAL_REASONS, type SessionStatus } from "./diagnostics";
+import {
+  REFUSAL_REASONS,
+  SESSION_CODES,
+  type SessionStatus,
+} from "./diagnostics";
 import {
   CLIENT_VERSION,
+  describeReach,
   describeRefusal,
   describeStatus,
   diagnosticReport,
@@ -20,6 +25,20 @@ const STATUSES: SessionStatus[] = [
   { addressClass: "public", code: "blocked-insecure" },
   { addressClass: "loopback", browser: "safari", code: "blocked-browser" },
   { addressClass: "private", browser: "firefox", code: "blocked-browser" },
+  {
+    code: "local-network-prompt",
+    permission: "loopback-network",
+    url: "ws://127.0.0.1:60030",
+  },
+  ...(["denied", "prompt"] as const).map(
+    (state): SessionStatus => ({
+      code: "local-network-denied",
+      permission: "local-network",
+      retryInMs: null,
+      state,
+      url: "ws://192.168.1.20:60030",
+    }),
+  ),
   { attempt: 2, code: "connecting", stage: "socket", url: URL_ },
   { attempt: 2, code: "connecting", stage: "room-info", url: URL_ },
   { attempt: 1, code: "authenticating", url: URL_ },
@@ -64,6 +83,83 @@ describe("describeStatus", () => {
       expect(text).not.toContain("60030");
     },
   );
+
+  it("covers every code", () => {
+    expect(new Set(STATUSES.map((s) => s.code))).toEqual(
+      new Set(SESSION_CODES),
+    );
+  });
+
+  it("gives each refusal by the browser its way out", () => {
+    expect(
+      describeStatus({ addressClass: "public", code: "blocked-insecure" }),
+    ).toMatch(
+      /Ask the room's host for a wss:\/\/ address, or use the desktop app\.$/,
+    );
+    expect(
+      describeStatus({
+        addressClass: "private",
+        browser: "firefox",
+        code: "blocked-browser",
+      }),
+    ).toBe(
+      "Firefox does not let a secure site reach a ws:// server on your local network. Use Chrome or Edge, which ask first, or the desktop app.",
+    );
+    expect(
+      describeStatus({
+        addressClass: "loopback",
+        browser: "safari",
+        code: "blocked-browser",
+      }),
+    ).toMatch(
+      /on this device\. Use the desktop app, or Chrome, Edge or Firefox/,
+    );
+    expect(
+      describeStatus({
+        code: "local-network-denied",
+        permission: "loopback-network",
+        retryInMs: null,
+        state: "prompt",
+        url: "ws://127.0.0.1:1",
+      }),
+    ).toBe(
+      "The browser did not let this site reach this device. Retry, and choose Allow when it asks.",
+    );
+  });
+
+  it("says before any socket what will happen", () => {
+    expect(describeReach({ kind: "open" })).toBeNull();
+    expect(
+      describeReach({
+        browser: "chromium",
+        kind: "ask",
+        permission: "local-network",
+      }),
+    ).toBe(
+      "The browser will ask to let this site reach your local network: choose Allow.",
+    );
+    expect(
+      describeReach({
+        browser: "firefox",
+        kind: "ask",
+        permission: "loopback-network",
+      }),
+    ).toMatch(/^If the browser asks/);
+    expect(
+      describeReach({
+        browser: "chromium",
+        kind: "denied",
+        permission: "loopback-network",
+      }),
+    ).toMatch(/blocks this site from reaching this device\. Allow it/);
+    expect(
+      describeReach({
+        addressClass: "private",
+        browser: "safari",
+        kind: "blocked-browser",
+      }),
+    ).toMatch(/Use the desktop app, or Chrome or Edge on a computer\.$/);
+  });
 
   it("explains a --compatibility 0 refusal with both versions", () => {
     expect(describeRefusal("IncompatibleVersion", "0.6.8")).toContain(

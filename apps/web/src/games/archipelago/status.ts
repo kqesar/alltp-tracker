@@ -13,6 +13,7 @@ export const phaseOf = (status: SessionStatus): Phase => {
     case "connecting":
     case "authenticating":
     case "reconnecting":
+    case "local-network-prompt":
       return "busy";
     case "connected":
     case "elsewhere":
@@ -45,7 +46,10 @@ export const headlineOf = (status: SessionStatus): string => {
       return "The room does not answer";
     case "blocked-insecure":
     case "blocked-browser":
+    case "local-network-denied":
       return "Blocked by the browser";
+    case "local-network-prompt":
+      return "Allow the connection in the browser";
     case "unavailable":
       return "Could not load";
   }

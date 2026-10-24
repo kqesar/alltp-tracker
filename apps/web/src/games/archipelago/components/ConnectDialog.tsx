@@ -11,7 +11,6 @@ import {
   roomAddress,
   roomPageUrl,
   roomStatusUrl,
-  SETUP_STEPS,
   type ServerAddress,
   type SessionStatus,
   type SetupStepId,
@@ -132,7 +131,7 @@ const Steps = ({ host, status }: { host: string; status: SessionStatus }) => {
           Steps
         </h3>
         <p className="setup__count" data-testid="ap-steps-count">
-          {done} of {SETUP_STEPS.length} steps done
+          {done} of {progress.steps.length} steps done
         </p>
       </div>
       <ol className="setup-steps">

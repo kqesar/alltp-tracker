@@ -4,7 +4,14 @@
 // report keeps the host, which says whether the room is archipelago.gg.
 
 import { libraryVersion, targetVersion } from "archipelago.js";
-import type { PageContext, ServerAddress } from "./address";
+import type {
+  AddressClass,
+  BrowserFamily,
+  LocalNetworkPermissionName,
+  PageContext,
+  Reach,
+  ServerAddress,
+} from "./address";
 import type {
   RefusalReason,
   SessionStatus,
@@ -65,6 +72,58 @@ function describeUnreachable(hint: UnreachableHint, host: string): string {
   }
 }
 
+/** What a local network permission lets the site reach. */
+function targetOf(where: LocalNetworkPermissionName | AddressClass): string {
+  return where === "loopback-network" || where === "loopback"
+    ? "this device"
+    : "your local network";
+}
+
+const BROWSER_NAMES: Record<BrowserFamily, string> = {
+  chromium: "This browser",
+  firefox: "Firefox",
+  other: "This browser",
+  safari: "Safari, like every iOS browser,",
+};
+
+/** Where to go instead when this browser refuses ws:// to this class. */
+function elsewhere(browser: BrowserFamily, where: AddressClass): string {
+  if (browser === "safari") {
+    return where === "loopback"
+      ? "Use the desktop app, or Chrome, Edge or Firefox on a computer."
+      : "Use the desktop app, or Chrome or Edge on a computer.";
+  }
+  return "Use Chrome or Edge, which ask first, or the desktop app.";
+}
+
+/**
+ * What will happen when the page reaches the server, and the way out, before
+ * any socket opens (`reachOf`); null when nothing stands in the way.
+ */
+export function describeReach(reach: Reach): string | null {
+  switch (reach.kind) {
+    case "open":
+      return null;
+    case "ask":
+      return reach.browser === "chromium"
+        ? `The browser will ask to let this site reach ${targetOf(reach.permission)}: choose Allow.`
+        : `If the browser asks to let this site reach ${targetOf(reach.permission)}, choose Allow.`;
+    case "denied":
+      return `The browser blocks this site from reaching ${targetOf(reach.permission)}. Allow it in the site's settings (the icon left of the address), then connect.`;
+    case "blocked-insecure":
+    case "blocked-browser":
+      return blockedText(reach);
+  }
+}
+
+function blockedText(
+  reach: Extract<Reach, { kind: "blocked-insecure" | "blocked-browser" }>,
+): string {
+  return reach.kind === "blocked-insecure"
+    ? "A secure site cannot open an unencrypted ws:// connection to a server on the internet. Ask the room's host for a wss:// address, or use the desktop app."
+    : `${BROWSER_NAMES[reach.browser]} does not let a secure site reach a ws:// server on ${targetOf(reach.addressClass)}. ${elsewhere(reach.browser, reach.addressClass)}`;
+}
+
 /** One English sentence for a status, for the report and for UIs. */
 export function describeStatus(status: SessionStatus): string {
   switch (status.code) {
@@ -73,9 +132,15 @@ export function describeStatus(status: SessionStatus): string {
     case "elsewhere":
       return "Connected in another tab of this browser; this one follows it.";
     case "blocked-insecure":
-      return "A secure page cannot open an unencrypted ws:// connection to a server on the internet. Use wss://, or the desktop app.";
+      return blockedText({ ...status, kind: status.code });
     case "blocked-browser":
-      return `This browser does not let a secure page open ws:// to ${status.addressClass === "loopback" ? "this device" : "the local network"}. Try another browser, or the desktop app.`;
+      return blockedText({ ...status, kind: status.code });
+    case "local-network-prompt":
+      return `The browser is asking whether this site may reach ${targetOf(status.permission)}: choose Allow.`;
+    case "local-network-denied":
+      return status.state === "denied"
+        ? `The browser blocks this site from reaching ${targetOf(status.permission)}. Allow it in the site's settings (the icon left of the address): the tracker connects once it is allowed.`
+        : `The browser did not let this site reach ${targetOf(status.permission)}. Retry, and choose Allow when it asks.`;
     case "connecting":
       return status.stage === "socket"
         ? `Reaching ${hostOf(status.url)} (attempt ${status.attempt}).`
@@ -143,6 +208,11 @@ export function diagnosticReport(input: ReportInput): string {
     `message: ${describeStatus(status)}`,
   ];
   if ("url" in status) lines.push(`url: ${maskUrl(status.url)}`);
+  if ("permission" in status) {
+    lines.push(
+      `permission: ${status.permission}${"state" in status ? ` (${status.state})` : " (asking)"}`,
+    );
+  }
   if (status.code === "refused") {
     lines.push(`reasons: ${status.reasons.join(", ")}`);
   }

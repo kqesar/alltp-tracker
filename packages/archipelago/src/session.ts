@@ -15,6 +15,7 @@ import {
   type ConnectPlan,
   connectPlan,
   isArchipelagoGg,
+  type LocalNetworkPermissionName,
   type PageContext,
   type ServerAddress,
 } from "./address";
@@ -29,7 +30,10 @@ import { type GuardError, guardSocket, TRACKER_TAGS } from "./guard";
 import { clientStatusKey } from "./hints";
 import {
   type Clock,
+  type LocalNetworkPermission,
+  NO_PERMISSION,
   type Online,
+  type PermissionFactory,
   systemClock,
   systemOnline,
   systemUuid,
@@ -92,6 +96,12 @@ export interface Timeouts {
   readonly stableMs: number;
   /** The retry delay once archipelago.gg looks paused. */
   readonly pausedRetryMs: number;
+  /**
+   * A socket still CONNECTING this long while the local network permission
+   * reads "prompt" means the browser shows its prompt (loopback and LAN
+   * handshakes take milliseconds; autotrack's session uses the same 1.5 s).
+   */
+  readonly promptAfterMs: number;
 }
 
 /** How long a burst of checks gathers before one LocationScouts asks about them. */
@@ -102,6 +112,7 @@ export const DEFAULT_TIMEOUTS: Timeouts = {
   keepaliveEveryMs: 30_000,
   loginMs: 10_000,
   pausedRetryMs: 60_000,
+  promptAfterMs: 1500,
   requestMs: 10_000,
   roomInfoMs: 8000,
   socketMs: 8000,
@@ -150,6 +161,12 @@ export interface SessionOptions {
   readonly visibility?: Visibility;
   readonly online?: Online;
   readonly webSocket?: WebSocketFactory;
+  /**
+   * The browser's local network permission by name (`@alltp/autotrack`'s
+   * `systemPermission`); none by default, which leaves the prompt and the
+   * denial undetected.
+   */
+  readonly permission?: PermissionFactory;
   readonly timeouts?: Partial<Timeouts>;
   readonly backoff?: Partial<BackoffOptions>;
   readonly random?: () => number;
@@ -170,7 +187,12 @@ type Outcome =
   | { readonly kind: "stopped" }
   | { readonly kind: "refused"; readonly reasons: readonly string[] }
   | { readonly kind: "blocked" }
-  | { readonly kind: "unreachable"; readonly url: string }
+  | {
+      readonly kind: "unreachable";
+      readonly url: string;
+      /** How long the socket stayed CONNECTING before it failed. */
+      readonly hungMs: number;
+    }
   | {
       readonly kind: "timeout";
       readonly url: string;
@@ -181,6 +203,12 @@ type Outcome =
       readonly url: string;
       readonly livedMs: number;
     };
+
+/** The local network permission a plan's sockets wait on. */
+interface Gate {
+  readonly name: LocalNetworkPermissionName;
+  readonly permission: LocalNetworkPermission;
+}
 
 /** One request waiting for its answer on a connection. */
 interface Waiter {
@@ -197,6 +225,8 @@ interface Connection {
   readonly waiters: Set<Waiter>;
   timer: unknown;
   keepalive: unknown;
+  /** The check for the browser's local network prompt, while it waits. */
+  prompt: unknown;
   /** Ends the attempt; the first call wins. */
   settle: (outcome: Outcome) => void;
 }
@@ -217,6 +247,7 @@ export class ArchipelagoSession {
   private readonly visibility: Visibility;
   private readonly online: Online;
   private readonly webSocket: WebSocketFactory;
+  private readonly permissionFactory: PermissionFactory;
   private readonly timeouts: Timeouts;
   private readonly backoff: BackoffOptions;
   private readonly random: () => number;
@@ -258,6 +289,7 @@ export class ArchipelagoSession {
     this.visibility = options.visibility ?? systemVisibility;
     this.online = options.online ?? systemOnline;
     this.webSocket = options.webSocket ?? systemWebSocket;
+    this.permissionFactory = options.permission ?? NO_PERMISSION;
     this.timeouts = { ...DEFAULT_TIMEOUTS, ...options.timeouts };
     this.backoff = { ...DEFAULT_BACKOFF, ...options.backoff };
     this.random = options.random ?? Math.random;
@@ -562,9 +594,45 @@ export class ArchipelagoSession {
     );
     if (!held || !this.alive(generation)) return;
 
+    // The browser's answer to its prompt, or a change in its settings, is
+    // the player's move: it ends any wait at once
+    const gate: Gate | null =
+      plan.permission === null
+        ? null
+        : {
+            name: plan.permission,
+            permission: this.permissionFactory(plan.permission),
+          };
+    if (gate !== null) {
+      this.unsubscribers.push(
+        gate.permission.subscribe(() => this.wakeUp(true)),
+      );
+    }
+
     let failures = 0;
     while (this.alive(generation)) {
-      const outcome = await this.attempt(generation, failures + 1, plan.urls);
+      // Refused already: no socket until the player allows it
+      if (gate !== null && (await gate.permission.query()).state === "denied") {
+        if (!this.alive(generation)) return;
+        this.setStatus(
+          {
+            code: "local-network-denied",
+            permission: gate.name,
+            retryInMs: null,
+            state: "denied",
+            url: plan.urls[0],
+          },
+          generation,
+        );
+        if (!(await this.wait(null, generation))) return;
+        continue;
+      }
+      const outcome = await this.attempt(
+        generation,
+        failures + 1,
+        plan.urls,
+        gate,
+      );
       if (!this.alive(generation)) return;
       switch (outcome.kind) {
         case "blocked":
@@ -592,6 +660,26 @@ export class ArchipelagoSession {
         }
         case "unreachable":
         case "timeout": {
+          const refused =
+            outcome.kind === "unreachable" && gate !== null
+              ? await this.refusedByBrowser(gate.permission, outcome)
+              : null;
+          if (!this.alive(generation)) return;
+          if (refused !== null && gate !== null) {
+            failures = 0;
+            this.setStatus(
+              {
+                code: "local-network-denied",
+                permission: gate.name,
+                retryInMs: null,
+                state: refused,
+                url: outcome.url,
+              },
+              generation,
+            );
+            if (!(await this.wait(null, generation))) return;
+            break;
+          }
           failures++;
           const status = this.failedStatus(outcome, failures);
           this.setStatus(status, generation);
@@ -649,11 +737,35 @@ export class ArchipelagoSession {
     return { addressClass: plan.addressClass, code: "blocked-insecure" };
   }
 
+  /**
+   * Whether the browser, not the server, kept a failed socket shut, and how
+   * its permission reads then: "denied"; or still "prompt" after a socket
+   * that hung on the prompt (dismissed), or in Chromium after any failure
+   * (151+ asks even when nothing listens, so failing without asking means it
+   * no longer asks: dismissed again and again, or headless, measured). Firefox
+   * reads "prompt" without gating at all (Playwright's Firefox 157,
+   * measured): there a quick failure is the server's.
+   */
+  private async refusedByBrowser(
+    permission: LocalNetworkPermission,
+    outcome: Extract<Outcome, { kind: "unreachable" }>,
+  ): Promise<"denied" | "prompt" | null> {
+    const { state } = await permission.query();
+    if (state === "denied") return "denied";
+    if (state !== "prompt") return null;
+    const chromium =
+      this.page.kind === "secure" && this.page.browser === "chromium";
+    return chromium || outcome.hungMs >= this.timeouts.promptAfterMs
+      ? "prompt"
+      : null;
+  }
+
   /** Tries each URL in turn; the next one only when this one is not there. */
   private async attempt(
     generation: number,
     number: number,
     urls: readonly string[],
+    gate: Gate | null,
   ): Promise<Outcome> {
     const ordered =
       this.preferredUrl !== null && urls.includes(this.preferredUrl)
@@ -661,7 +773,7 @@ export class ArchipelagoSession {
         : urls;
     let outcome: Outcome = { kind: "stopped" };
     for (const url of ordered) {
-      outcome = await this.connectTo(generation, number, url);
+      outcome = await this.connectTo(generation, number, url, gate);
       const tryNext =
         outcome.kind === "unreachable" ||
         (outcome.kind === "timeout" && outcome.stage === "socket");
@@ -674,10 +786,12 @@ export class ArchipelagoSession {
     generation: number,
     number: number,
     url: string,
+    gate: Gate | null,
   ): Promise<Outcome> {
     return new Promise<Outcome>((resolve) => {
       let settled = false;
       let connectedAt: number | null = null;
+      const startedAt = this.clock.now();
       const client = new Client({
         autoFetchDataPackage: false,
         debugLogVersions: false,
@@ -689,6 +803,7 @@ export class ArchipelagoSession {
         client,
         generation,
         keepalive: null,
+        prompt: null,
         settle: (outcome) => {
           if (settled) return;
           settled = true;
@@ -743,6 +858,10 @@ export class ArchipelagoSession {
         connection.socket = socket;
         socket.addEventListener("open", () => {
           if (settled) return;
+          if (connection.prompt !== null) {
+            this.clock.clearTimeout(connection.prompt);
+            connection.prompt = null;
+          }
           this.setStatus(
             { attempt: number, code: "connecting", stage: "room-info", url },
             generation,
@@ -757,6 +876,30 @@ export class ArchipelagoSession {
         generation,
       );
       arm("socket", this.timeouts.socketMs);
+      if (gate !== null) {
+        // A socket still opening this long, the permission undecided: the
+        // browser shows its prompt. Its answer has no deadline.
+        connection.prompt = this.clock.setTimeout(() => {
+          connection.prompt = null;
+          void gate.permission.query().then(({ state }) => {
+            if (
+              settled ||
+              state !== "prompt" ||
+              connection.socket?.readyState !== 0
+            ) {
+              return;
+            }
+            if (connection.timer !== null) {
+              this.clock.clearTimeout(connection.timer);
+              connection.timer = null;
+            }
+            this.setStatus(
+              { code: "local-network-prompt", permission: gate.name, url },
+              generation,
+            );
+          });
+        }, this.timeouts.promptAfterMs);
+      }
       // login() is async: whatever goes wrong comes back as a rejection.
       const login = withWebSocket(factory, () =>
         client.login(url, this.slot, "", {
@@ -785,14 +928,19 @@ export class ArchipelagoSession {
         },
         (error: unknown) => {
           if (settled) return;
-          connection.settle(this.failure(error, url, generation));
+          connection.settle(this.failure(error, url, generation, startedAt));
         },
       );
     });
   }
 
   /** What a rejected login means. Messages are never parsed: `errors` is. */
-  private failure(error: unknown, url: string, generation: number): Outcome {
+  private failure(
+    error: unknown,
+    url: string,
+    generation: number,
+    startedAt: number,
+  ): Outcome {
     // (A GuardError never gets here: onGuard() has stopped the session.)
     if (error instanceof LoginError) {
       const reasons = [...error.errors].sort(
@@ -821,7 +969,7 @@ export class ArchipelagoSession {
       );
       return { kind: "blocked" };
     }
-    return { kind: "unreachable", url };
+    return { hungMs: this.clock.now() - startedAt, kind: "unreachable", url };
   }
 
   private onGuard(error: GuardError): void {
@@ -882,8 +1030,10 @@ export class ArchipelagoSession {
     if (connection.keepalive !== null) {
       this.clock.clearTimeout(connection.keepalive);
     }
+    if (connection.prompt !== null) this.clock.clearTimeout(connection.prompt);
     connection.timer = null;
     connection.keepalive = null;
+    connection.prompt = null;
     for (const waiter of [...connection.waiters]) waiter.closed();
     // The library cannot close a socket that never got RoomInfo (its
     // disconnect() returns early), so the raw socket is closed too.
