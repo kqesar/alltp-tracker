@@ -55,13 +55,16 @@ export const ApControls = () => {
   );
   const rows = useArchipelagoStore((state) => stageOf(skin, state.items).rows);
 
-  // No room yet: the dialog opens on its own, once, as the board does
+  // No room yet, or a join link to fill in: the dialog opens on its own,
+  // once, as the board does
   const asked = useRef(false);
   useEffect(() => {
     if (asked.current) return;
     asked.current = true;
-    const { address } = useApConnectionStore.getState();
-    if (address === "" && useArchipelagoStore.getState().room === null) open();
+    const { address, prefill } = useApConnectionStore.getState();
+    const empty =
+      address === "" && useArchipelagoStore.getState().room === null;
+    if (empty || prefill !== null) open();
   }, [open]);
 
   return (

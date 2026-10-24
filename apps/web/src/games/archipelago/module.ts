@@ -6,10 +6,15 @@ import "@/games/board.css";
 import "@/games/archipelago/archipelago.css";
 import ArchipelagoApp from "@/games/archipelago/ArchipelagoApp";
 import { ArchipelagoObsView } from "@/games/archipelago/ArchipelagoObsView";
-import { followOtherTabs } from "@/games/archipelago/connection";
+import {
+  followOtherTabs,
+  useApConnectionStore,
+} from "@/games/archipelago/connection";
+import { takeJoinLink } from "@/games/archipelago/joinLink";
 import { useArchipelagoStore } from "@/games/archipelago/store";
 import type { GameModule } from "@/games/registry";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
+import { isObsView } from "@/utils/view";
 
 /** Why a save or a shared link never opens on this board. */
 export const IMPORT_REFUSAL =
@@ -24,6 +29,11 @@ export const archipelago: GameModule = {
   start: () => {
     syncAcrossTabs(useArchipelagoStore);
     followOtherTabs();
+    // A join link fills the connect dialog in, and only that
+    if (!isObsView()) {
+      const prefill = takeJoinLink();
+      if (prefill !== null) useApConnectionStore.setState({ prefill });
+    }
   },
   store: useArchipelagoStore,
 };

@@ -714,6 +714,67 @@
   content: "! ";
 }
 
+/* The pre-check: what the browser will do with the address typed, a glyph
+   besides the colour for a refusal */
+.ap-field__reach {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+  padding: var(--spacing-sm);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: var(--surface-3);
+  border: 1px solid var(--color-border-strong);
+  border-inline-start: 3px solid var(--color-accent);
+  border-radius: var(--border-radius-sm);
+}
+
+.ap-field__reach[data-tone="warning"] {
+  border-inline-start-color: var(--color-danger);
+}
+
+.ap-field__reach-mark {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border-radius: 50%;
+}
+
+.ap-field__reach[data-tone="warning"] .ap-field__reach-mark {
+  color: var(--state-ink);
+  background: var(--color-danger-hover);
+}
+
+.ap-connect__prefill {
+  padding: var(--spacing-sm);
+  margin: 0 0 var(--spacing-md);
+  font-size: var(--font-size-sm);
+  background: var(--surface-3);
+  border: 1px solid var(--color-border-strong);
+  border-inline-start: 3px solid var(--color-accent);
+  border-radius: var(--border-radius-sm);
+}
+
+/* The join link: what it holds, then Copy */
+.ap-join {
+  display: grid;
+  gap: var(--spacing-xs);
+  margin-block: var(--spacing-md);
+}
+
+.ap-join__text {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
 .ap-mode__note {
   margin: var(--spacing-md) 0 0;
   font-size: var(--font-size-sm);

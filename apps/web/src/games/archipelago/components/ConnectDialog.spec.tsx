@@ -1,9 +1,12 @@
+import type {
+  BrowserFamily,
+  PageContext,
+  PermissionFactory,
+  PermissionStateName,
+} from "@alltp/archipelago";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  blockedWhy,
-  ConnectDialog,
-} from "@/games/archipelago/components/ConnectDialog";
+import { ConnectDialog } from "@/games/archipelago/components/ConnectDialog";
 import {
   AP_PASSWORD_KEY,
   setRuntimeOptions,
@@ -227,27 +230,179 @@ describe("the connect dialog", () => {
   });
 });
 
-describe("the static check", () => {
-  const PUBLIC = { host: "example.com", port: 38281, scheme: "ws" } as const;
-  const LAN = { host: "192.168.1.20", port: 38281, scheme: "ws" } as const;
+/** The browser's local network permission, its state set by the spec. */
+const fakePermission = (initial: PermissionStateName) => {
+  let state = initial;
+  const listeners = new Set<() => void>();
+  const asked: string[] = [];
+  const factory: PermissionFactory = (name) => {
+    asked.push(name);
+    return {
+      query: async () => ({ name, state }),
+      subscribe: (listener) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+    };
+  };
+  const set = (next: PermissionStateName) => {
+    state = next;
+    for (const listener of listeners) listener();
+  };
+  return { asked, factory, set };
+};
 
-  it("blocks ws:// to the internet from a secure page, with the way out", () => {
-    expect(blockedWhy(PUBLIC, { browser: "chromium", kind: "secure" })).toMatch(
-      /Ask the room.s host for a wss:\/\/ address, or use the desktop app/,
+const site = (browser: BrowserFamily): PageContext => ({
+  browser,
+  kind: "secure",
+});
+
+describe("the pre-check, before any socket", () => {
+  const reach = () => screen.getByTestId("ap-room-reach");
+
+  it("says the browser will ask, then follows its answer", async () => {
+    const permission = fakePermission("prompt");
+    setRuntimeOptions({
+      page: site("chromium"),
+      permission: permission.factory,
+    });
+    open();
+    type("ap-room-input", "ws://127.0.0.1:38281");
+    await vi.waitFor(() =>
+      expect(reach()).toHaveTextContent(
+        "The browser will ask to let this site reach this device: choose Allow.",
+      ),
     );
-    expect(blockedWhy(LAN, { browser: "firefox", kind: "secure" })).toMatch(
-      /Firefox does not let a secure site reach a ws:\/\/ server on your local network/,
+    expect(reach()).toHaveAttribute("data-kind", "ask");
+    expect(screen.getByTestId("ap-room-input")).toHaveAccessibleDescription(
+      /will ask to let this site reach this device/,
     );
-    expect(blockedWhy(PUBLIC, { kind: "desktop" })).toBeNull();
-    expect(blockedWhy(LAN, { browser: "chromium", kind: "secure" })).toBeNull();
+    expect(permission.asked).toEqual(["loopback-network"]);
+    // Refused in the site's settings meanwhile: the note says so at once
+    act(() => permission.set("denied"));
+    await vi.waitFor(() =>
+      expect(reach()).toHaveTextContent(
+        /blocks this site from reaching this device\. Allow it in the site's settings/,
+      ),
+    );
+    expect(reach()).toHaveAttribute("data-tone", "warning");
+    act(() => permission.set("granted"));
+    await vi.waitFor(() =>
+      expect(screen.queryByTestId("ap-room-reach")).toBeNull(),
+    );
+    // A server on the LAN is the other permission
+    type("ap-room-input", "192.168.1.20:38281");
+    await vi.waitFor(() =>
+      expect(permission.asked).toEqual(["loopback-network", "local-network"]),
+    );
   });
 
-  it("is said in the dialog before any socket", () => {
+  it("refuses what the browser would refuse, with the way out", () => {
+    setRuntimeOptions({
+      page: site("chromium"),
+      permission: fakePermission("prompt").factory,
+    });
     open();
     type("ap-room-input", "ws://example.com:38281");
+    expect(reach()).toHaveTextContent(
+      "Ask the room's host for a wss:// address, or use the desktop app.",
+    );
     type("ap-slot-input", "Link");
     submit();
-    // This page is http: nothing to block, so the session starts
+    expect(screen.getByTestId("ap-room-error")).toHaveTextContent(
+      /cannot open an unencrypted ws:\/\/ connection/,
+    );
+    // The error replaces the note: one sentence, said once
+    expect(screen.queryByTestId("ap-room-reach")).toBeNull();
+    expect(state().active).toBe(false);
+  });
+
+  it("sends Firefox to Chrome, Edge or the desktop app for the LAN", () => {
+    setRuntimeOptions({ page: site("firefox") });
+    open();
+    type("ap-room-input", "ws://192.168.1.20:38281");
+    expect(reach()).toHaveTextContent(
+      "Firefox does not let a secure site reach a ws:// server on your local network. Use Chrome or Edge, which ask first, or the desktop app.",
+    );
+    expect(reach()).toHaveAttribute("data-kind", "blocked-browser");
+  });
+
+  it("asks the browser's permission step only where it applies", () => {
+    setRuntimeOptions({
+      page: site("chromium"),
+      permission: fakePermission("prompt").factory,
+    });
+    const { unmount } = open();
+    type("ap-room-input", "localhost:38281");
+    expect(screen.getByTestId("ap-step-permission")).toHaveTextContent(
+      "Allow the connection in the browser",
+    );
+    type("ap-room-input", "archipelago.gg:38281");
+    expect(screen.queryByTestId("ap-step-permission")).toBeNull();
+    unmount();
+    // This page is http: no browser stands in the way
+    setRuntimeOptions({});
+    open();
+    type("ap-room-input", "ws://example.com:38281");
+    expect(screen.queryByTestId("ap-step-permission")).toBeNull();
+    expect(screen.queryByTestId("ap-room-reach")).toBeNull();
+    type("ap-slot-input", "Link");
+    submit();
     expect(screen.queryByTestId("ap-room-error")).toBeNull();
+  });
+});
+
+describe("join links", () => {
+  it("fills the dialog in from a join link, and connects only on Connect", () => {
+    startRoom();
+    useApConnectionStore.setState({
+      address: "archipelago.gg:50000",
+      connectOnStart: true,
+      prefill: { room: ROOM_ADDRESS, slot: "Link" },
+      slot: "Samus",
+    });
+    open();
+    expect(screen.getByTestId("ap-prefill-note")).toHaveTextContent(
+      "Filled in from a join link",
+    );
+    expect(screen.getByTestId("ap-room-input")).toHaveValue(ROOM_ADDRESS);
+    expect(screen.getByTestId("ap-slot-input")).toHaveValue("Link");
+    expect(screen.getByTestId("ap-password-input")).toHaveValue("");
+    // Taken: opening the dialog again shows the saved room
+    expect(state().prefill).toBeNull();
+    expect(state().active).toBe(false);
+  });
+
+  it("copies a link with the room and the slot, never the password", async () => {
+    const writeText = vi.fn(async (_text: string) => {});
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    open();
+    type("ap-room-input", "/connect archipelago.gg:60030");
+    type("ap-slot-input", "Hybrid Hero");
+    type("ap-password-input", "secret");
+    expect(screen.getByTestId("ap-copy-join")).toHaveAccessibleDescription(
+      /never holds the password/,
+    );
+    fireEvent.click(screen.getByTestId("ap-copy-join"));
+    await vi.waitFor(() =>
+      expect(screen.getByText("Copied.")).toBeInTheDocument(),
+    );
+    const url = new URL(writeText.mock.calls[0]?.[0] ?? "");
+    expect([...url.searchParams]).toEqual([
+      ["game", "archipelago"],
+      ["room", "/connect archipelago.gg:60030"],
+      ["slot", "Hybrid Hero"],
+    ]);
+    expect(url.href).not.toContain("secret");
+  });
+
+  it("copies nothing for a room it cannot read", () => {
+    const writeText = vi.fn(async (_text: string) => {});
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    open();
+    type("ap-room-input", "ftp://example.com");
+    fireEvent.click(screen.getByTestId("ap-copy-join"));
+    expect(screen.getByTestId("ap-room-error")).toBeInTheDocument();
+    expect(writeText).not.toHaveBeenCalled();
   });
 });
