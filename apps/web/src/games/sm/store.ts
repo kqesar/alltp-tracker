@@ -12,16 +12,14 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { type History, historyActions } from "@/games/runHistory";
 import { createSaveFormat } from "@/games/saveFormat";
 import {
-  alignTimer,
-  finishTimer,
-  type GameClock,
-  IDLE_TIMER,
-  pauseTimer,
-  type RunTimer,
-  restoreTimer,
-  startTimer,
-  type TimerClock,
-} from "@/utils/runTimer";
+  freshTimerSlice,
+  restoreTimerSlice,
+  type TimerActions,
+  type TimerSlice,
+  timerActions,
+  timerSliceOf,
+} from "@/games/timerSlice";
+import { IDLE_TIMER } from "@/utils/runTimer";
 
 /** Where the run is saved: apart from ALttPR's, so each game keeps its own. */
 export const SM_STORAGE_KEY = "alltp-tracker-sm";
@@ -72,20 +70,10 @@ const completed = (progress: SmProgress): SmProgress => ({
 
 /**
  * What the store keeps beside the run, saved with it but never a step of the
- * history nor part of an export: the run timer, whether the game starts and
- * stops it, the clock it shows, and the game clock's reading when it began.
+ * history nor part of an export: the run timer (games/timerSlice.ts), and the
+ * game clock's reading when it began.
  */
-type TimerFields = {
-  /** The run's timer, kept apart from the history. */
-  timer: RunTimer;
-  /** Whether the timer starts and stops with the game, autotracking. */
-  autoTimer: boolean;
-  /**
-   * Which clock the timer shows: real time, as races time, or Map Rando's RTA
-   * while autotracking reads it outside Race Mode. A save without it is real
-   * time.
-   */
-  timerClock: TimerClock;
+type TimerFields = TimerSlice & {
   /**
    * The RTA clock's frames when the run's timer was at 0, or null before it
    * is known: the clock counts since the SRAM was set up, not since a run
@@ -95,32 +83,18 @@ type TimerFields = {
 };
 
 const freshTimerFields = (): TimerFields => ({
-  autoTimer: true,
+  ...freshTimerSlice(),
   clockBase: null,
-  timer: IDLE_TIMER,
-  timerClock: "real",
 });
 
 type SmState = SmProgress &
   TimerFields &
+  TimerActions &
   History<SmProgress> & {
-    /** Start the run timer, or go on from its pause, at `at` (now). */
-    startTimer: (at?: number) => void;
-    /** Pause the run timer at `at` (now). */
-    pauseTimer: (at?: number) => void;
-    /** Stop the run timer for good, the goal reached, at `at` (now). */
-    finishTimer: (at?: number) => void;
     /** Set the run timer back to 0, stopped. */
     resetTimer: () => void;
-    setAutoTimer: (on: boolean) => void;
-    setTimerClock: (clock: TimerClock) => void;
     /** Note the RTA clock's frames at the timer's 0, or null to forget them. */
     setClockBase: (frames: number | null) => void;
-    /**
-     * Set the run timer on the game's clock as read at `at`; the timer is
-     * left as it is, same object, when it is already there.
-     */
-    alignTimer: (clock: GameClock, at: number) => void;
     /** Step an item: +1 or -1, wrapping within 0 and its pool. */
     step: (id: SmItemId, direction: 1 | -1) => void;
     /** Mark an objective done, or not. */
@@ -177,22 +151,14 @@ export const useSmStore = create<SmState>()(
       return {
         ...freshProgress(),
         ...freshTimerFields(),
-        alignTimer: (clock, at) =>
-          set((state) => {
-            const timer = alignTimer(state.timer, clock, at);
-            return timer === state.timer ? state : { timer };
-          }),
+        ...timerActions(set),
         applyGameNews,
-        finishTimer: (at = Date.now()) =>
-          set((state) => ({ timer: finishTimer(state.timer, at) })),
         future: [],
         load: (progress) => {
           record(progress);
           set({ clockBase: null, timer: IDLE_TIMER });
         },
         past: [],
-        pauseTimer: (at = Date.now()) =>
-          set((state) => ({ timer: pauseTimer(state.timer, at) })),
         redo,
         reset: () => {
           const { objectives, splitSpeed, wallJump } = get();
@@ -200,7 +166,6 @@ export const useSmStore = create<SmState>()(
           set({ clockBase: null, timer: IDLE_TIMER });
         },
         resetTimer: () => set({ clockBase: null, timer: IDLE_TIMER }),
-        setAutoTimer: (autoTimer) => set({ autoTimer }),
         setClockBase: (clockBase) => set({ clockBase }),
         setObjectives: (ids) => {
           const objectives = [...new Set(ids)].filter((id) =>
@@ -214,9 +179,6 @@ export const useSmStore = create<SmState>()(
         setOption: (option, on) => {
           if (get()[option] !== on) record({ [option]: on });
         },
-        setTimerClock: (timerClock) => set({ timerClock }),
-        startTimer: (at = Date.now()) =>
-          set((state) => ({ timer: startTimer(state.timer, at) })),
         step: (id, direction) => {
           const max = MAX.get(id) ?? 1;
           const value = get().items[id] ?? 0;
@@ -242,34 +204,23 @@ export const useSmStore = create<SmState>()(
       merge: (saved, current) => {
         const parsed = progressSchema.safeParse(saved);
         if (!parsed.success || !withinPools(parsed.data)) return current;
-        // The timer fields are not part of the run's schema: a save made
-        // before the timer has none, a damaged one is no timer
+        // A save made before the timer has none, a damaged one is no timer
         const extras =
           typeof saved === "object" && saved !== null
-            ? (saved as Partial<Record<keyof TimerFields, unknown>>)
+            ? (saved as { clockBase?: unknown })
             : {};
         return {
           ...current,
           ...completed(parsed.data),
-          autoTimer:
-            typeof extras.autoTimer === "boolean"
-              ? extras.autoTimer
-              : current.autoTimer,
+          ...restoreTimerSlice(saved, current),
           clockBase: restoreBase(extras.clockBase),
-          timer: restoreTimer(extras.timer),
-          timerClock:
-            extras.timerClock === "game" || extras.timerClock === "real"
-              ? extras.timerClock
-              : current.timerClock,
         };
       },
       name: SM_STORAGE_KEY,
       partialize: (state) => ({
         ...progressOf(state),
-        autoTimer: state.autoTimer,
+        ...timerSliceOf(state),
         clockBase: state.clockBase,
-        timer: state.timer,
-        timerClock: state.timerClock,
       }),
       storage: createJSONStorage(() => localStorage),
       version: SM_SAVE_VERSION,

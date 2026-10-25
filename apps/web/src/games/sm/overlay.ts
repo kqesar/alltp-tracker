@@ -6,20 +6,11 @@
 
 import { OBJECTIVES, SM_ITEMS } from "@alltp/pack-sm";
 import { type SmProgress, useSmStore } from "@/games/sm/store";
-import type {
-  OverlayReading,
-  OverlaySource,
-  OverlayTimer,
-} from "@/overlay/protocol";
-import { type RunTimer, timerState } from "@/utils/runTimer";
+import type { OverlayReading, OverlaySource } from "@/overlay/protocol";
+import { overlayTimerOf } from "@/overlay/timer";
+import type { RunTimer } from "@/utils/runTimer";
 
 const OBJECTIVE_NAMES = new Map(OBJECTIVES.map((o) => [o.id, o.name]));
-
-const overlayTimer = (timer: RunTimer): OverlayTimer => ({
-  elapsedMs: timer.elapsedMs,
-  startedAt: timer.startedAt,
-  state: timerState(timer),
-});
 
 /** What the reading reads of the store: the run and its timer. */
 export type SmRun = SmProgress & { readonly timer: RunTimer };
@@ -38,7 +29,7 @@ export const overlayReadingOf = (run: SmRun): OverlayReading => {
     ms: null,
     name: OBJECTIVE_NAMES.get(id) ?? id,
   }));
-  const timer = overlayTimer(run.timer);
+  const timer = overlayTimerOf(run.timer);
   return {
     fresh:
       timer.state === "idle" &&

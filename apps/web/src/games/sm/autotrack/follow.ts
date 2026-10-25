@@ -21,12 +21,9 @@ import {
   clockStraddled,
   type SmItemId,
 } from "@alltp/pack-sm";
+import { gameClockOf, timerNews } from "@/games/gameTimer";
 import type { SmReading } from "@/games/sm/autotrack/reading";
-import {
-  clockBaseOf,
-  gameClockOf,
-  timerNews,
-} from "@/games/sm/autotrack/timer";
+import { clockBaseOf } from "@/games/sm/autotrack/timer";
 import { type SmProgress, useSmStore } from "@/games/sm/store";
 import { type GameClock, isIdle, timerState } from "@/utils/runTimer";
 

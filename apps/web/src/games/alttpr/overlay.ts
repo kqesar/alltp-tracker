@@ -24,9 +24,9 @@ import type {
   OverlayObjective,
   OverlayReading,
   OverlaySource,
-  OverlayTimer,
 } from "@/overlay/protocol";
-import { type RunTimer, timerState } from "@/utils/runTimer";
+import { overlayTimerOf } from "@/overlay/timer";
+import type { RunTimer } from "@/utils/runTimer";
 
 /**
  * The items, in the grid's order: the API's id, then the tracker's key in the
@@ -125,12 +125,6 @@ const overlayObjectives = (run: AlttprRun): OverlayObjective[] =>
     name: splitName(key),
   }));
 
-const overlayTimer = (timer: RunTimer): OverlayTimer => ({
-  elapsedMs: timer.elapsedMs,
-  startedAt: timer.startedAt,
-  state: timerState(timer),
-});
-
 /**
  * Where the run stands against its go mode. Null for a goal without one (all
  * dungeons, a triforce hunt), a Mystery run whose goal is not known yet, and
@@ -158,7 +152,7 @@ const startLevel = (key: string): number => {
  */
 export const overlayReadingOf = (run: AlttprRun): OverlayReading => {
   const objectives = overlayObjectives(run);
-  const timer = overlayTimer(run.timer);
+  const timer = overlayTimerOf(run.timer);
   return {
     fresh:
       timer.state === "idle" &&
