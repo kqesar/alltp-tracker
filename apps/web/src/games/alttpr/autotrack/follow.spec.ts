@@ -1,3 +1,4 @@
+import { playTimeMs } from "@alltp/pack-alttpr";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { settle } from "@/autotrack/fixtures";
 import {
@@ -98,6 +99,180 @@ describe("the run timer, with the game", () => {
 
     expect(store().presetId).toBe("keysanity");
     expect(store().timer).toBe(running);
+  });
+});
+
+describe("the run timer, on the game's time", () => {
+  /** A reading in `mode`, the game's counter at `frames`, `seconds` on. */
+  const at = (
+    memory: Uint8Array,
+    mode: number,
+    frames: number,
+    seconds = 0,
+    race = false,
+  ) => {
+    memory[GAME_MODE] = mode;
+    memory.set(
+      [frames & 0xff, (frames >> 8) & 0xff, (frames >> 16) & 0xff, 0],
+      SAVE(0x43e),
+    );
+    const reading = readingOf(memory, { race });
+    return { ...reading, at: reading.at + seconds * 1000 };
+  };
+
+  beforeEach(() => store().setTimerClock("game"));
+
+  it("shows the game's time at each reading, ticking between them", () => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+
+    // The file select clears the counter: no time to set the timer on
+    follower.read(at(memory, 0x01, 0));
+    expect(store().timer.elapsedMs).toBe(0);
+    expect(store().timer.startedAt).toBeNull();
+
+    // The player joined a run at 10 minutes: the timer takes the game's time
+    const first = at(memory, 0x07, 36_000, 1);
+    follower.read(first);
+    expect(store().timer).toEqual({
+      elapsedMs: playTimeMs(36_000),
+      finished: false,
+      startedAt: first.at,
+    });
+
+    // Two seconds of game time later, a reading three real seconds on
+    // (the game was slower than the clock): the timer is set right
+    const second = at(memory, 0x07, 36_000 + 120, 4);
+    follower.read(second);
+    expect(store().timer).toEqual({
+      elapsedMs: playTimeMs(36_120),
+      finished: false,
+      startedAt: second.at,
+    });
+  });
+
+  it("writes nothing for a reading that agrees with the timer", () => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    follower.read(at(memory, 0x07, 6_000, 0));
+    const timer = store().timer;
+
+    follower.read(at(memory, 0x07, 6_000 + 60, 1));
+    expect(store().timer).toBe(timer);
+  });
+
+  it("stops while the game is before play, and goes on from there", () => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    follower.read(at(memory, 0x07, 6_000, 0));
+
+    // The spawn select after a load: the file's time, not counting
+    follower.read(at(memory, 0x05, 6_000, 5));
+    expect(store().timer).toEqual({
+      elapsedMs: playTimeMs(6_000),
+      finished: false,
+      startedAt: null,
+    });
+    // A menu in play does count (the item menu is in the game's time)
+    follower.read(at(memory, 0x0e, 6_060, 6));
+    expect(store().timer.startedAt).not.toBeNull();
+    expect(store().timer.elapsedMs).toBe(playTimeMs(6_060));
+  });
+
+  it("pauses at the title, whose counter reads 0, and sets nothing from it", () => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    follower.read(at(memory, 0x07, 6_000, 0));
+    expect(store().timer.startedAt).not.toBeNull();
+
+    const title = at(memory, 0x00, 0, 30);
+    follower.read(title);
+    expect(store().timer).toEqual({
+      elapsedMs: playTimeMs(6_000) + 30_000,
+      finished: false,
+      startedAt: null,
+    });
+  });
+
+  it("finishes at the goal on the game's final time, and stays there", () => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    follower.read(at(memory, 0x07, 6_000, 0));
+
+    follower.read(at(memory, 0x19, 216_000, 10));
+    expect(store().timer).toEqual({
+      elapsedMs: playTimeMs(216_000),
+      finished: true,
+      startedAt: null,
+    });
+    // The credits, and a counter the game stopped
+    follower.read(at(memory, 0x1a, 216_000, 20));
+    expect(store().timer.elapsedMs).toBe(playTimeMs(216_000));
+    expect(store().timer.finished).toBe(true);
+  });
+
+  it("answers to the choice, not to Start and stop with the game", () => {
+    store().setAutoTimer(false);
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+
+    follower.read(at(memory, 0x07, 6_000, 0));
+    expect(store().timer.startedAt).not.toBeNull();
+  });
+
+  it("counts real time in Race Mode, where the counter is never read", () => {
+    const memory = seedMemory({ race: true });
+    const follower = createFollower();
+
+    follower.read(at(memory, 0x01, 6_000, 0, true));
+    const start = at(memory, 0x07, 6_000, 1, true);
+    follower.read(start);
+    // Started as the real-time timer is, from 0, not from the counter
+    expect(store().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: start.at,
+    });
+  });
+
+  it("counts real time while the counter is unsettled", () => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    follower.read(at(memory, 0x01, 0, 0));
+    memory[GAME_MODE] = 0x07;
+    const start = {
+      ...readingOf(memory, { unread: ["stats"] }),
+      at: Date.UTC(2026, 9, 16, 20, 16),
+    };
+    follower.read(start);
+
+    expect(store().timer.elapsedMs).toBe(0);
+    expect(store().timer.startedAt).toBe(start.at);
+  });
+
+  it("keeps a sensible value when the choice changes in the middle of a run", () => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    store().setTimerClock("real");
+    follower.read(at(memory, 0x01, 0, 0));
+    follower.read(at(memory, 0x07, 100, 1));
+    // Real time: the game's counter changes nothing
+    const real = store().timer;
+    expect(real.elapsedMs).toBe(0);
+    follower.read(at(memory, 0x07, 6_000, 61));
+    expect(store().timer).toBe(real);
+
+    // Game time: the next reading sets the timer on the game's
+    store().setTimerClock("game");
+    follower.read(at(memory, 0x07, 6_060, 62));
+    expect(store().timer.elapsedMs).toBe(playTimeMs(6_060));
+    expect(store().timer.startedAt).not.toBeNull();
+
+    // Back to real time: the timer goes on from what it shows
+    store().setTimerClock("real");
+    const shown = store().timer;
+    follower.read(at(memory, 0x07, 6_300, 66));
+    expect(store().timer).toBe(shown);
   });
 });
 

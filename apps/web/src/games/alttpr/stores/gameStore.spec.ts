@@ -794,6 +794,44 @@ describe("GameStore", () => {
       expect(store().timer).toBe(running);
     });
 
+    it("keeps the clock choice with the preferences, real time by default", async () => {
+      expect(store().timerClock).toBe("real");
+      store().setTimerClock("game");
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+      expect(stored.state.timerClock).toBe("game");
+
+      // It survives a new run; a save states it, or leaves the current one
+      store().reset();
+      expect(store().timerClock).toBe("game");
+      storeSave({ timerClock: "real" }, PERSIST_VERSION);
+      await useGameStore.persist.rehydrate();
+      expect(store().timerClock).toBe("real");
+      storeSave({ timerClock: "game" }, PERSIST_VERSION);
+      await useGameStore.persist.rehydrate();
+      expect(store().timerClock).toBe("game");
+      // An older save has none, a damaged one is no choice
+      storeSave({}, PERSIST_VERSION);
+      await useGameStore.persist.rehydrate();
+      expect(store().timerClock).toBe("game");
+      storeSave({ timerClock: "ingame" }, PERSIST_VERSION);
+      await useGameStore.persist.rehydrate();
+      expect(store().timerClock).toBe("game");
+    });
+
+    it("sets the timer on the game's clock outside the undo history", () => {
+      store().alignTimer({ ms: 5000, status: "running" }, T0);
+      const timer = store().timer;
+      expect(timer).toEqual({
+        elapsedMs: 5000,
+        finished: false,
+        startedAt: T0,
+      });
+      expect(store().past).toEqual([]);
+      // Already there: the same object, so nothing redraws
+      store().alignTimer({ ms: 5100, status: "running" }, T0 + 100);
+      expect(store().timer).toBe(timer);
+    });
+
     it("is saved with the run, and the auto setting with the preferences", async () => {
       store().startTimer(T0);
       store().setAutoTimer(false);

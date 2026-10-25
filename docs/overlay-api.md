@@ -141,7 +141,7 @@ A new event type can appear in version 1 (see "Compatibility"): ignore a type yo
 
 ### The timer
 
-The state holds the timer as data, not as a time that goes stale. While it runs, the time is `elapsedMs + (now - startedAt)`, where `now` is **the app's clock**. On the same computer it is yours. On another, a `beat` carries the app's `now` every 15 s: keep the difference to your own clock and count with it.
+The state holds the timer as data, not as a time that goes stale. While it runs, the time is `elapsedMs + (now - startedAt)`, where `now` is **the app's clock**. On the same computer it is yours. On another, a `beat` carries the app's `now` every 15 s: keep the difference to your own clock and count with it. It is the timer the player's page shows, whichever clock they chose: on the game's time (A Link to the Past, outside Race Mode), `elapsedMs` is the game's time at its last reading and `startedAt` the instant of that reading, so your count ticks between two; the API gains no field and the player's choice is not sent.
 
 ```js
 let skew = 0; // your clock minus the app's, from the last beat

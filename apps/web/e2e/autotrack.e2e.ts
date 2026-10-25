@@ -330,6 +330,38 @@ test("starts the run timer as the game starts, and stops it at the goal", async 
   );
 });
 
+test("shows the game's time when the player chose it, not in Race Mode", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  bridge.memory[WRAM + 0x10] = 0x01; // the file select
+  const frames = Math.round(3600 * 60.0988);
+  bridge.memory.set(
+    [frames & 0xff, (frames >> 8) & 0xff, (frames >> 16) & 0xff, 0],
+    SAVE(0x43e),
+  );
+  await openTracker(page);
+  const timer = page.getByTestId("run-timer");
+  await timer.click();
+  await page.getByRole("radio", { name: "Game time" }).check();
+  await page.keyboard.press("Escape");
+  await connect(page);
+
+  bridge.memory[WRAM + 0x10] = 0x07; // into the game
+  await expect(timer).toHaveAccessibleName(/^Run timer: 1:00:0\d, running$/);
+  await timer.click();
+  await expect(page.getByTestId("run-timer-clock-hint")).toHaveText(
+    "The timer follows the game's clock.",
+  );
+  await expect(page.getByTestId("run-timer-pause")).toBeDisabled();
+  await page.keyboard.press("Escape");
+
+  bridge.memory[WRAM + 0x10] = 0x19; // the Triforce room
+  await expect(timer).toHaveAccessibleName(
+    "Run timer: 1:00:00, stopped at the goal",
+  );
+});
+
 test("keeps the player's marks beyond the game until Sync from game", async ({
   page,
 }) => {
