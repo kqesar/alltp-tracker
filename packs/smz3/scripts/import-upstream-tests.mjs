@@ -29,6 +29,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const LOGIC = "Randomizer.SMZ3.Tests/Logic";
+const ITEM_FILE = "Randomizer.SMZ3/Item.cs";
 
 /** The four fixtures, as LogicTests.cs sets each up. */
 export const FIXTURES = [
@@ -636,6 +637,60 @@ export function importAll(checkout, outDir) {
   return counts;
 }
 
+/**
+ * Item.cs's `ItemType` enum: each item's name as the randomizer writes it
+ * (its `[Description]`, which Item.Name is, and so what a spoiler log
+ * prints) and the type it stands for. Two types may share a name
+ * (`TwentyRupees` and `TwentyRupees2`): the first one is kept, as a log
+ * cannot tell them apart.
+ * @param {string} source
+ * @returns {Record<string, string>}
+ */
+export function readItemTypes(source) {
+  const text = stripComments(source);
+  const start = text.indexOf("enum ItemType");
+  const open = start < 0 ? -1 : text.indexOf("{", start);
+  const close = open < 0 ? -1 : text.indexOf("}", open);
+  if (close < 0) throw new Error("No ItemType enum in Item.cs");
+  /** @type {Record<string, string>} */
+  const items = {};
+  const pattern =
+    /\[Description\("([^"]+)"\)\]\s*(\w+)\s*(?:=\s*[^,\s]+\s*)?,/g;
+  for (const [, name, type] of text.slice(open, close).matchAll(pattern)) {
+    if (!(name in items)) items[name] = type;
+  }
+  if (Object.keys(items).length === 0) throw new Error("ItemType is empty");
+  return items;
+}
+
+/**
+ * Writes `src/spoiler/item-types.json`: the table that turns a spoiler
+ * log's item names into upstream item types.
+ * @param {string} checkout
+ * @param {string} file
+ */
+export function importItemTypes(checkout, file) {
+  const items = readItemTypes(readFileSync(join(checkout, ITEM_FILE), "utf8"));
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(
+    file,
+    `${JSON.stringify(
+      {
+        header: {
+          commit: readCommit(checkout),
+          file: ITEM_FILE,
+          license: "MIT, see test/upstream/LICENSE",
+          repo: "tewtal/SMZ3Randomizer",
+        },
+        items,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  return Object.keys(items).length;
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const checkout = process.argv[2];
   if (!checkout || !existsSync(join(checkout, LOGIC))) {
@@ -650,4 +705,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   for (const [name, count] of Object.entries(counts)) {
     console.log(`${name}: ${count} cases`);
   }
+  const itemTypes = importItemTypes(
+    resolve(checkout),
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../src/spoiler/item-types.json",
+    ),
+  );
+  console.log(`item-types: ${itemTypes} names`);
 }

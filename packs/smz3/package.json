@@ -11,6 +11,7 @@
   },
   "scripts": {
     "import-upstream": "node scripts/import-upstream-tests.mjs",
+    "spoiler-fixtures": "node scripts/spoiler-fixtures.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },

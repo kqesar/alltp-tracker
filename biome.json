@@ -39,6 +39,8 @@
       "!packages/archipelago/test/datapackages",
       "!packs/smz3/src/markers-hyrule.json",
       "!packs/smz3/src/autotrack/zelda-flags.json",
+      "!packs/smz3/src/spoiler/item-types.json",
+      "!packs/smz3/test/spoilers",
       "!**/playwright-report",
       "!**/test-results",
       "!pnpm-lock.yaml",
