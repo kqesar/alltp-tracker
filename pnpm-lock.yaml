@@ -330,6 +330,8 @@ importers:
 
   packages/engine: {}
 
+  packages/spoiler: {}
+
   packs/alttpr:
     dependencies:
       '@alltp/autotrack':

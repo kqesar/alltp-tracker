@@ -1,0 +1,16 @@
+{
+  "name": "@alltp/spoiler",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Game-agnostic spoiler log review: the normalized model, a bounded JSON key slicer, seed matching and the run-against-seed comparison",
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -b tsconfig.json"
+  }
+}
