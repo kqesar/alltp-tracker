@@ -11,13 +11,16 @@
   },
   "scripts": {
     "import-er": "node scripts/import-er.mjs",
+    "import-item-names": "node scripts/import-item-names.mjs",
     "import-upstream": "node scripts/import-upstream-tests.mjs",
+    "spoiler-fixtures": "node scripts/spoiler-fixtures.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@alltp/autotrack": "workspace:*",
     "@alltp/engine": "workspace:*",
+    "@alltp/spoiler": "workspace:*",
     "zod": "^4.6.7"
   }
 }

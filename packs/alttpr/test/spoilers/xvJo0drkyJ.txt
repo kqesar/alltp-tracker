@@ -1,0 +1,10 @@
+{
+    "meta": {
+        "size": 2,
+        "build": "2023-09-22",
+        "logic": "NoGlitches",
+        "spoilers": "mystery",
+        "tournament": true,
+        "allow_quickswap": true
+    }
+}

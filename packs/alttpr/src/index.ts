@@ -222,6 +222,12 @@ export {
   UPSTREAM_TEST,
   type UpstreamConfig,
 } from "./settings";
+export { fileFacts, hashInName, parseSpoiler } from "./spoiler/parse";
+export type {
+  AlttprSpoilerExtra,
+  AlttprSpoilerLog,
+  SpoilerShop,
+} from "./spoiler/read";
 export {
   EMPTY_INPUT,
   EVENT_CHECKS,

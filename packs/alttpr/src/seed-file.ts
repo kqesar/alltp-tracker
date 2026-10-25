@@ -170,3 +170,22 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
     wildMaps: setting(wild?.maps ?? null),
   };
 };
+
+/** A hash the schema accepts, for a meta that arrives without its seed. */
+const NO_HASH = "0000000000";
+
+/**
+ * The settings a `meta` states, read as `seedFileReading` reads a seed
+ * file's, for a spoiler log (spoiler/parse.ts), which holds the same meta
+ * but may not know its seed's hash: `seed` is what the caller knows of it.
+ * Null when `meta` is not a vt meta.
+ * @param meta - The spoiler's `meta`: untrusted
+ * @param seed - The seed's hash, where the log names one
+ */
+export const metaReading = (
+  meta: unknown,
+  seed: string | null,
+): SeedSettingsReading | null => {
+  const reading = seedFileReading({ hash: NO_HASH, spoiler: { meta } });
+  return reading === null ? null : { ...reading, seed };
+};

@@ -340,6 +340,9 @@ importers:
       '@alltp/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@alltp/spoiler':
+        specifier: workspace:*
+        version: link:../../packages/spoiler
       zod:
         specifier: ^4.6.7
         version: 4.6.7
