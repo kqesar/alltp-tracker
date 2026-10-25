@@ -9,6 +9,7 @@
     { "path": "packages/archipelago" },
     { "path": "packages/autotrack" },
     { "path": "packages/engine" },
+    { "path": "packages/spoiler" },
     { "path": "packs/alttpr" },
     { "path": "packs/sm" },
     { "path": "packs/smz3" }
