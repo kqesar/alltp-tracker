@@ -1262,4 +1262,74 @@ describe("GameStore", () => {
       ).not.toHaveProperty("shortcuts");
     });
   });
+
+  describe("tricks", () => {
+    const store = () => useGameStore.getState();
+    const all = [
+      "darkRooms",
+      "fakeFlipper",
+      "waterWalk",
+      "superBunny",
+      "bunnyRevive",
+      "dungeonRevive",
+    ];
+
+    it("start off, with all six known once on", () => {
+      expect(store().tricks).toEqual({ enabled: false, techniques: all });
+    });
+
+    it("round-trip through localStorage, leniently restored", async () => {
+      store().setTricks({
+        enabled: true,
+        techniques: ["waterWalk", "darkRooms"],
+      });
+      const saved = localStorage.getItem(STORAGE_KEY) ?? "{}";
+      expect(JSON.parse(saved).state.tricks).toEqual({
+        enabled: true,
+        techniques: ["waterWalk", "darkRooms"],
+      });
+
+      useGameStore.setState(useGameStore.getInitialState(), true);
+      localStorage.setItem(STORAGE_KEY, saved);
+      await useGameStore.persist.rehydrate();
+      // Kept in the pack's order
+      expect(store().tricks).toEqual({
+        enabled: true,
+        techniques: ["darkRooms", "waterWalk"],
+      });
+
+      // A save without it, or a damaged one, changes nothing
+      storeSave({}, PERSIST_VERSION);
+      await useGameStore.persist.rehydrate();
+      expect(store().tricks.enabled).toBe(true);
+      storeSave(
+        {
+          tricks: {
+            enabled: "yes",
+            techniques: ["superBunny", "superBunny", "x"],
+          },
+        },
+        PERSIST_VERSION,
+      );
+      await useGameStore.persist.rehydrate();
+      expect(store().tricks).toEqual({
+        enabled: true,
+        techniques: ["superBunny"],
+      });
+    });
+
+    it("are a preference: no undo step, no export, a new game keeps them", () => {
+      store().handleItemClick("boots");
+      const past = store().past.length;
+      store().setTricks({ enabled: true, techniques: all as never });
+      expect(store().past).toHaveLength(past);
+      expect(JSON.parse(store().exportState()).progress).not.toHaveProperty(
+        "tricks",
+      );
+      store().undo();
+      expect(store().tricks.enabled).toBe(true);
+      store().reset();
+      expect(store().tricks.enabled).toBe(true);
+    });
+  });
 });

@@ -35,10 +35,19 @@ import {
   settingsFromUpstream,
   solveWithKeys,
   type TrackerInput,
+  type TrickId,
   toState,
+  trickFiller,
+  trickState,
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES, DUNGEON_INDICES } from "@/games/alttpr/constants";
-import { crossedLogic, logicModelled } from "@/games/alttpr/data/presets";
+import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
+import {
+  crossedLogic,
+  logicModelled,
+  type RunSettings,
+} from "@/games/alttpr/data/presets";
+import type { TrickPrefs } from "@/games/alttpr/data/tricks";
 import type { CrossedRun, CrossedSolver } from "@/games/alttpr/logic/crossed";
 import { packReading } from "@/games/alttpr/logic/packItems";
 import {
@@ -47,14 +56,15 @@ import {
   worldOf,
 } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-import type { Progress } from "@/games/alttpr/stores/persistence";
+import type { Prefs, Progress } from "@/games/alttpr/stores/persistence";
 
 /**
  * What a location shows while it is not checked: the pack's markerStatus,
- * or seen, for one out of logic that the player can already see (the Book
- * reads the Pedestal, a ledge item shows from below).
+ * seen, for one out of logic that the player can already see (the Book
+ * reads the Pedestal, a ledge item shows from below), or trick, for one out
+ * of logic that a trick the player knows would open (`trickSolutionOf`).
  */
-export type LocationStatus = MarkerStatus | "seen";
+export type LocationStatus = MarkerStatus | "seen" | "trick";
 
 /** What a marker shows: what is left in logic, or done. */
 export type MarkerState = LocationStatus | "opened";
@@ -65,38 +75,45 @@ export const STATE_LABELS: Record<MarkerState, string> = {
   opened: "done",
   possible: "maybe available",
   seen: "visible, not reachable yet",
+  trick: "out of logic, doable with a trick",
   unavailable: "out of logic",
 };
 
 /**
- * What locations left show, from their tris and what can be seen of them
- * (`visible`, never below the tri): available > possible > seen >
- * unavailable. markerStatus says the first two; failing those, seen when
- * one of them can be seen, a `maybe` sight included, as a `maybe` tri is
- * possible.
+ * What locations left show, from their tris, what can be seen of them
+ * (`visible`, never below the tri) and their tris with the player's tricks:
+ * available > possible > trick > seen > unavailable. markerStatus says the
+ * first two; failing those, trick when a trick would open one of them, else
+ * seen when one of them can be seen, a `maybe` sight included, as a `maybe`
+ * tri is possible.
  * @param tris - The locations' tris
  * @param visibles - What can be seen of each, in the same order
+ * @param tricks - Their tris with the tricks known, if any are
  */
 export const locationStatus = (
   tris: readonly Tri[],
   visibles: readonly Tri[],
+  tricks?: readonly Tri[],
 ): LocationStatus => {
   const status = markerStatus(tris);
-  return status === "unavailable" && visibles.some((seen) => seen !== "no")
-    ? "seen"
-    : status;
+  if (status !== "unavailable") return status;
+  if (tricks?.some((opened) => opened !== "no")) return "trick";
+  return visibles.some((seen) => seen !== "no") ? "seen" : status;
 };
 
 /**
  * The slices of the run the solution reads; of what is checked, only the
  * events (EVENT_CHECKS), so checking any other location solves nothing; the
- * entrances noted, in a run whose logic reads them (crossedLogic).
+ * entrances noted, in a run whose logic reads them (crossedLogic). The
+ * tricks are a preference `solutionOf` never reads: only `trickSolutionOf`
+ * does, for the markers.
  */
 export type Inputs = Pick<
   Progress,
   "items" | "medallions" | "settings" | "smallKeys"
 > &
-  Partial<Pick<Progress, "checked" | "entrances">>;
+  Partial<Pick<Progress, "checked" | "entrances">> &
+  Partial<Pick<Prefs, "tricks">>;
 
 /** The slices a marker's status reads: the solution's, and what is checked. */
 export type MarkerInputs = Inputs & Pick<Progress, "checked">;
@@ -284,6 +301,79 @@ export const solutionOf = (state: Inputs): Solution => {
 };
 
 /**
+ * Whether the map marks the checks a trick opens: the preference is on and
+ * lists a trick, and the run has a tricks world (a crossed run has none).
+ */
+export const tricksShown = (state: Inputs): boolean =>
+  state.tricks?.enabled === true &&
+  state.tricks.techniques.length > 0 &&
+  !crossedLogic(state.settings);
+
+/** A run solved again with the tricks the player knows held. */
+export interface TrickSolution {
+  /** The tricks it was solved with. */
+  readonly techniques: readonly TrickId[];
+  /** Every location of the run's world, with those tricks. */
+  readonly tris: Readonly<Record<string, Tri>>;
+}
+
+let lastTricks:
+  | {
+      solution: Solution;
+      techniques: readonly TrickId[];
+      result: TrickSolution;
+    }
+  | undefined;
+
+/**
+ * The run solved in the pack's tricks world, with the tricks the player
+ * knows held over the state the real solution is made of (its keys surely in
+ * hand included), so what a trick opens is what the real world says but for
+ * the trick. Synchronous and memoized on the solution and the list of
+ * tricks. Undefined when the preference is off or lists none, when the run's
+ * logic is not modelled, and for a crossed run, which has no tricks world.
+ * @param state - The game store's state, or any object with those slices
+ */
+export const trickSolutionOf = (state: Inputs): TrickSolution | undefined => {
+  if (!tricksShown(state)) return undefined;
+  const solution = solutionOf(state);
+  if (!solution.modelled) return undefined;
+  const { techniques } = state.tricks as TrickPrefs;
+  if (
+    lastTricks !== undefined &&
+    lastTricks.solution === solution &&
+    lastTricks.techniques === techniques
+  ) {
+    return lastTricks.result;
+  }
+  const keyed = solveWithKeys(trickFiller(solution.settings), {
+    ...solution.keyed.state,
+    ...trickState(techniques),
+  });
+  const result = { techniques, tris: keyed.locations() };
+  lastTricks = { result, solution, techniques };
+  return result;
+};
+
+/**
+ * Compiles the run's tricks world and its key model ahead of the first trick
+ * solve (about 50 ms, more than a frame), so that turning the tricks on
+ * costs a solve. A run with no tricks world has nothing to warm.
+ * @param run - The run's settings
+ */
+export const warmTricks = (run: RunSettings): void => {
+  if (!logicModelled(run) || crossedLogic(run)) return;
+  const settings = packSettings(run);
+  const fresh = trackerInput({
+    items: freshItems as ItemState,
+    medallions: [],
+    settings: run,
+    smallKeys: [],
+  });
+  solveWithKeys(trickFiller(settings), toState(fresh, settings));
+};
+
+/**
  * Every marker of any world by id: Inverted's lists each of Open's and
  * Standard's, which differ from it by place alone, and the Bomb Merchant.
  */
@@ -303,12 +393,26 @@ const tri = (solution: Solution, id: string): Tri => solution.tris[id] ?? "no";
 const seen = (solution: Solution, id: string): Tri =>
   solution.visibles[id] ?? "no";
 
-/** What locations of a solution show: locationStatus of their tris. */
-const statusOf = (solution: Solution, ids: readonly string[]) =>
-  locationStatus(
-    ids.map((id) => tri(solution, id)),
-    ids.map((id) => seen(solution, id)),
-  );
+/** A trick solution's tris of these locations, `no` where it has none. */
+const trickTris = (
+  trick: TrickSolution | undefined,
+  ids: readonly string[],
+): readonly Tri[] | undefined =>
+  trick && ids.map((id) => trick.tris[id] ?? "no");
+
+/**
+ * What locations of a run show: locationStatus of their tris. The tricks
+ * are solved only for one out of logic, so a run with nothing out of logic
+ * in sight never pays for them.
+ */
+const statusOf = (state: Inputs, ids: readonly string[]) => {
+  const solution = solutionOf(state);
+  const tris = ids.map((id) => tri(solution, id));
+  const visibles = ids.map((id) => seen(solution, id));
+  const status = locationStatus(tris, visibles);
+  if (status !== "unavailable" && status !== "seen") return status;
+  return locationStatus(tris, visibles, trickTris(trickSolutionOf(state), ids));
+};
 
 /**
  * What a location marker shows: done once every location it stands for is
@@ -320,7 +424,7 @@ export const markerStateOf = (
 ): MarkerState => {
   const left = marker.locations.filter((id) => !state.checked[id]);
   if (left.length === 0) return "opened";
-  return statusOf(solutionOf(state), left);
+  return statusOf(state, left);
 };
 
 const itemLocations = new Map<string, readonly string[]>();
@@ -369,12 +473,20 @@ export const dungeonStateOf = (id: DungeonId, state: Inputs): MarkerState => {
     tri(solution, location),
   );
   const left = dungeonCount(id, state);
-  if (left !== undefined) {
-    return left > 0 ? dungeonStatus(left, tris) : "opened";
+  const status = (all: readonly Tri[]): MarkerStatus =>
+    left === undefined ? markerStatus(all) : dungeonStatus(left, all);
+  if (left === undefined) {
+    if (dungeonItemCount(dungeon(id), solution.settings) === 0) return "opened";
+  } else if (left === 0) {
+    return "opened";
   }
-  return dungeonItemCount(dungeon(id), solution.settings) > 0
-    ? markerStatus(tris)
-    : "opened";
+  const shown = status(tris);
+  if (shown !== "unavailable") return shown;
+  const items = itemLocationsOf(id, solution.settings);
+  const opened = trickTris(trickSolutionOf(state), items);
+  return opened !== undefined && status(opened) !== "unavailable"
+    ? "trick"
+    : shown;
 };
 
 /**
@@ -416,7 +528,13 @@ export const prizeOf = (id: DungeonId, settings: AlttprSettings): string => {
 export const bossStateOf = (id: DungeonId, state: Inputs): MarkerState => {
   if (isBeaten(id, state.items)) return "opened";
   const solution = solutionOf(state);
-  return markerStatus([tri(solution, prizeOf(id, solution.settings))]);
+  const prize = prizeOf(id, solution.settings);
+  const status = markerStatus([tri(solution, prize)]);
+  if (status !== "unavailable") return status;
+  const opened = trickTris(trickSolutionOf(state), [prize]);
+  return opened !== undefined && markerStatus(opened) !== "unavailable"
+    ? "trick"
+    : status;
 };
 
 /**
@@ -480,8 +598,7 @@ export const markerDetail = (
 export const locationStateOf = (
   id: string,
   state: MarkerInputs,
-): MarkerState =>
-  state.checked[id] ? "opened" : statusOf(solutionOf(state), [id]);
+): MarkerState => (state.checked[id] ? "opened" : statusOf(state, [id]));
 
 /** A location's tri as the tracker shows it, stable between changes. */
 export const useLocationStatus = (id: string): Tri =>

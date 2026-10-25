@@ -4,6 +4,7 @@ import {
   filler,
   MARKERS,
   solveWithKeys,
+  type TrickId,
   toState,
 } from "@alltp/pack-alttpr";
 import { act, render } from "@testing-library/react";
@@ -13,6 +14,7 @@ import {
   type ItemState,
   itemsMax,
 } from "@/games/alttpr/data/items";
+import { getPreset } from "@/games/alttpr/data/presets";
 import { analyzeRun, goModeStatusOf } from "@/games/alttpr/logic/missing";
 import { KEY_DUNGEONS, packSettings } from "@/games/alttpr/logic/settings";
 import {
@@ -21,6 +23,7 @@ import {
   dungeonCount,
   dungeonStateOf,
   locationName,
+  locationStateOf,
   locationStatus,
   markerById,
   markerDetail,
@@ -28,10 +31,13 @@ import {
   setCrossedSolver,
   solutionOf,
   trackerInput,
+  trickSolutionOf,
+  tricksShown,
   useBossStatus,
   useDungeonStatus,
   useLocationStatus,
   useMarkerStatus,
+  warmTricks,
 } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -519,5 +525,139 @@ describe("the hooks", () => {
 
     expect(rerendered(renders, rendered)).toEqual(["marker:kakariko-well"]);
     expect(solutionOf(store())).toBe(solution);
+  });
+});
+
+describe("locationStatus with tricks", () => {
+  // [tris, visibles, tricks, status]: available > possible > trick > seen
+  it.each([
+    [["no"], ["no"], ["yes"], "trick"],
+    [["no"], ["no"], ["maybe"], "trick"],
+    [["no", "no"], ["no", "no"], ["no", "yes"], "trick"],
+    [["no"], ["yes"], ["yes"], "trick"],
+    [["no"], ["yes"], ["no"], "seen"],
+    [["no"], ["no"], ["no"], "unavailable"],
+    [["yes", "no"], ["yes", "no"], ["yes", "yes"], "possible"],
+    [["yes"], ["yes"], ["yes"], "available"],
+    [["maybe"], ["maybe"], ["yes"], "possible"],
+  ] as const)(
+    "reads tris %j, seen %j, with tricks %j, as %s",
+    (tris, visibles, tricks, status) => {
+      expect(locationStatus(tris, visibles, tricks)).toBe(status);
+    },
+  );
+});
+
+describe("the tricks the player knows", () => {
+  const learn = (...techniques: TrickId[]) =>
+    act(() => store().setTricks({ enabled: true, techniques }));
+  const show = (id: string) => markerStateOf(markerById(id), store());
+
+  it("solve nothing while the preference is off or lists none", () => {
+    expect(trickSolutionOf(store())).toBeUndefined();
+    act(() => store().setTricks({ enabled: false, techniques: ["darkRooms"] }));
+    expect(trickSolutionOf(store())).toBeUndefined();
+    expect(show("sewers-secret-room")).toBe("unavailable");
+    learn();
+    expect(trickSolutionOf(store())).toBeUndefined();
+    expect(tricksShown(store())).toBe(false);
+  });
+
+  it("mark what a trick opens, and only for the trick known", () => {
+    // No Lamp, no Flippers, Zelda rescued: the dark room of the Sewers, and
+    // the Hobo's and King Zora's waters
+    expect(show("sewers-secret-room")).toBe("unavailable");
+    expect(show("hobo")).toBe("unavailable");
+
+    learn("darkRooms");
+    expect(show("sewers-secret-room")).toBe("trick");
+    expect(show("hobo")).toBe("unavailable");
+
+    learn("fakeFlipper");
+    expect(show("sewers-secret-room")).toBe("unavailable");
+    expect(show("hobo")).toBe("trick");
+    expect(show("king-zora")).toBe("trick");
+    expect(locationStateOf("hobo", store())).toBe("trick");
+  });
+
+  it("leave a location in logic, or done, as it is", () => {
+    learn("darkRooms", "fakeFlipper", "waterWalk", "superBunny");
+    give({ flippers: true });
+    expect(show("hobo")).toBe("available");
+    act(() => store().toggleChecks(["hobo"]));
+    expect(show("hobo")).toBe("opened");
+  });
+
+  it("put a dungeon's square and boss on the trick that opens them", () => {
+    give({
+      boots: true,
+      bow: 3,
+      firerod: true,
+      glove: 2,
+      hammer: true,
+      hookshot: true,
+      icerod: true,
+      mirror: true,
+      moonpearl: true,
+      somaria: true,
+      sword: 3,
+    });
+    expect(dungeonStateOf("ice-palace", store())).toBe("unavailable");
+    expect(bossStateOf("ice-palace", store())).toBe("unavailable");
+    expect(bossStateOf("palace-of-darkness", store())).toBe("unavailable");
+    expect(bossStateOf("castle-tower", store())).toBe("unavailable");
+
+    learn("fakeFlipper");
+    expect(dungeonStateOf("ice-palace", store())).toBe("trick");
+    expect(bossStateOf("ice-palace", store())).toBe("trick");
+    expect(bossStateOf("palace-of-darkness", store())).toBe("unavailable");
+
+    learn("darkRooms");
+    expect(dungeonStateOf("ice-palace", store())).toBe("unavailable");
+    expect(bossStateOf("palace-of-darkness", store())).toBe("trick");
+    expect(bossStateOf("castle-tower", store())).toBe("trick");
+  });
+
+  it("are solved once per run and per list, never by a click", () => {
+    learn("darkRooms");
+    const first = trickSolutionOf(store());
+    expect(first).toBeDefined();
+    expect(trickSolutionOf(store())).toBe(first);
+
+    act(() => store().toggleChecks(["hobo"]));
+    expect(trickSolutionOf(store())).toBe(first);
+
+    learn("darkRooms", "waterWalk");
+    expect(trickSolutionOf(store())).not.toBe(first);
+
+    const second = trickSolutionOf(store());
+    give({ boots: true });
+    expect(trickSolutionOf(store())).not.toBe(second);
+  });
+
+  it("are not offered where the run has no tricks world", () => {
+    act(() => {
+      store().applyPreset("crosskeys");
+      store().setTricks({ enabled: true, techniques: ["darkRooms"] });
+    });
+    expect(tricksShown(store())).toBe(false);
+    expect(trickSolutionOf(store())).toBeUndefined();
+  });
+
+  it("warm the tricks world ahead without turning anything on", () => {
+    const before = solutionOf(store());
+    warmTricks(store().settings);
+    expect(solutionOf(store())).toBe(before);
+    expect(trickSolutionOf(store())).toBeUndefined();
+    // A run with no tricks world has nothing to warm
+    expect(() => warmTricks(getPreset("crosskeys").settings)).not.toThrow();
+    learn("darkRooms");
+    expect(show("sewers-secret-room")).toBe("trick");
+  });
+
+  it("move no in-logic answer: the solution never reads them", () => {
+    const off = solutionOf(store());
+    learn("darkRooms", "fakeFlipper", "waterWalk");
+    expect(solutionOf(store())).toBe(off);
   });
 });

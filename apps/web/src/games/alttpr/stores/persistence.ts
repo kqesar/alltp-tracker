@@ -30,6 +30,7 @@ import {
   presets,
   type RunSettings,
 } from "@/games/alttpr/data/presets";
+import type { TrickPrefs } from "@/games/alttpr/data/tricks";
 import { counterMax, SMALL_KEYS_MAX } from "@/games/alttpr/logic/settings";
 import {
   isStamp,
@@ -97,6 +98,12 @@ export type Prefs = {
    * without it is real time: no version needed.
    */
   timerClock: TimerClock;
+  /**
+   * Whether the map marks the checks a trick opens, and which tricks the
+   * player knows. A save without it is off: no version needed. A display
+   * choice of this device, so never in an export, a link or the history.
+   */
+  tricks: TrickPrefs;
 };
 
 /** The game a save is for: the one game pack the tracker has today. */

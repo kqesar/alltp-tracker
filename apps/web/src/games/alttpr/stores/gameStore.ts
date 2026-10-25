@@ -17,6 +17,11 @@ import {
   wildItems,
 } from "@/games/alttpr/data/presets";
 import {
+  DEFAULT_TRICKS,
+  restoreTricks,
+  type TrickPrefs,
+} from "@/games/alttpr/data/tricks";
+import {
   COUNTER_INDICES,
   counterMax,
   SMALL_KEYS_MAX,
@@ -151,6 +156,8 @@ type GameState = Progress &
     /** The keyboard shortcuts' master switch */
     setShortcutsEnabled: (enabled: boolean) => void;
     setKeymap: (keymap: Keymap) => void;
+    /** The tricks the map marks checks for: a preference, no undo step */
+    setTricks: (tricks: TrickPrefs) => void;
 
     // Persistence helpers
     /** The run as the text of a save file */
@@ -268,6 +275,7 @@ const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
   mapView: "map",
   shortcuts: DEFAULT_SHORTCUTS,
   timerClock: "real",
+  tricks: DEFAULT_TRICKS,
 });
 
 /**
@@ -326,6 +334,7 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
     saved.timerClock === "game" || saved.timerClock === "real"
       ? saved.timerClock
       : base.timerClock,
+  tricks: restoreTricks(saved.tricks, base.tricks),
 });
 
 /** The run alone, as a save file carries it. */
@@ -438,6 +447,7 @@ const toPersisted = (state: GameState): PersistedState => ({
   shortcuts: state.shortcuts,
   timer: state.timer,
   timerClock: state.timerClock,
+  tricks: state.tricks,
 });
 
 export const useGameStore = create<GameState>()(
@@ -635,6 +645,7 @@ export const useGameStore = create<GameState>()(
             return record(state, { smallKeys });
           }),
         setTimerClock: (timerClock: TimerClock) => set({ timerClock }),
+        setTricks: (tricks: TrickPrefs) => set({ tricks }),
         startTimer: (at = Date.now()) =>
           set((state) => ({ timer: startTimer(state.timer, at) })),
 

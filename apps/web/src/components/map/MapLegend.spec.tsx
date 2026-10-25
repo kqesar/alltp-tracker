@@ -34,6 +34,22 @@ describe("MapLegend", () => {
     ).toEqual(["available", "possible", "unavailable", "opened"]);
   });
 
+  it("adds the trick state, after maybe, only when the map marks tricks", () => {
+    render(<MapLegend trick />);
+    expect(
+      [...document.querySelectorAll(".map-legend__item")].map(
+        (item) => item.textContent,
+      ),
+    ).toEqual([
+      "Available now",
+      "Maybe, or only some",
+      "Out of logic, doable with a trick",
+      "Visible, not reachable yet",
+      "Out of logic",
+      "Opened / cleared",
+    ]);
+  });
+
   it("exposes an accessible label", () => {
     render(<MapLegend />);
     expect(

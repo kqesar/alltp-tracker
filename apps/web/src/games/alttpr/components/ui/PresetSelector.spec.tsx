@@ -11,6 +11,7 @@ import {
 import { forgetSeedFiles } from "@/games/alttpr/autotrack/seedFile";
 import { PresetSelector } from "@/games/alttpr/components/ui/PresetSelector";
 import { getPreset } from "@/games/alttpr/data/presets";
+import { DEFAULT_TRICKS } from "@/games/alttpr/data/tricks";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import daily from "../../../../../../../packs/alttpr/test/seed-files/eM43RgZ4Gj.json";
 
@@ -20,6 +21,7 @@ const applyRun = vi.fn();
 const updateSettings = vi.fn();
 const hideSetting = vi.fn();
 const setBigKeysVisible = vi.fn();
+const setTricks = vi.fn();
 const OPEN_RUN = {
   presetId: "open",
   settings: {
@@ -34,6 +36,8 @@ const fakeState = {
   hideSetting,
   ...OPEN_RUN,
   setBigKeysVisible,
+  setTricks,
+  tricks: DEFAULT_TRICKS,
   updateSettings,
 };
 
@@ -43,7 +47,10 @@ afterEach(() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  Object.assign(fakeState, OPEN_RUN, { bigKeysVisible: false });
+  Object.assign(fakeState, OPEN_RUN, {
+    bigKeysVisible: false,
+    tricks: DEFAULT_TRICKS,
+  });
   forgetSeedFiles();
   (useGameStore as unknown as Mock).mockImplementation(
     (selector: (state: typeof fakeState) => unknown) => selector(fakeState),
@@ -98,6 +105,49 @@ describe("PresetSelector", () => {
     expect(setBigKeysVisible).toHaveBeenCalledWith(true);
     expect(applyRun).not.toHaveBeenCalled();
     expect(updateSettings).not.toHaveBeenCalled();
+  });
+
+  it("offers the tricks under the key cells, opening their dialog", () => {
+    render(<PresetSelector />);
+    const dialog = openList();
+
+    const entry = within(dialog).getByTestId("tricks-button");
+    expect(entry).toHaveAccessibleName("Tricks");
+    expect(entry).toHaveAccessibleDescription(/^Off\./);
+    // Under the key cells' checkbox, outside the settings summary
+    const keyCells = within(dialog).getByTestId("key-cells-toggle");
+    expect(
+      keyCells.compareDocumentPosition(entry) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(entry.closest(".run-settings")).toBeNull();
+    expect(screen.queryByRole("dialog", { name: "Tricks" })).toBeNull();
+
+    fireEvent.click(entry);
+    const tricks = screen.getByRole("dialog", { name: "Tricks" });
+    fireEvent.click(
+      within(tricks).getByRole("checkbox", {
+        name: "Mark checks these tricks open",
+      }),
+    );
+    expect(setTricks).toHaveBeenCalledWith({
+      enabled: true,
+      techniques: DEFAULT_TRICKS.techniques,
+    });
+    expect(applyRun).not.toHaveBeenCalled();
+  });
+
+  it("says how many tricks are known once they are on", () => {
+    fakeState.tricks = {
+      enabled: true,
+      techniques: ["darkRooms", "waterWalk"],
+    } as typeof DEFAULT_TRICKS;
+    render(<PresetSelector />);
+    expect(
+      within(openList()).getByTestId("tricks-button"),
+    ).toHaveAccessibleDescription(
+      "On, 2 tricks known: checks they open are marked.",
+    );
   });
 
   it("checks the key cells while they are shown, and hides them on a click", () => {

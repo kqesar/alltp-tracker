@@ -11,6 +11,7 @@ import {
   VoiceControl,
   VoiceLiveRegion,
 } from "@/games/alttpr/components/map/VoiceControl";
+import { tricksShown } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type { MapView } from "@/games/alttpr/utils";
 
@@ -52,6 +53,7 @@ export const MapPanel = () => {
   // A run without shuffled entrances has no Entrances tab: the map instead
   const view = saved === "entrances" && !shuffled ? "map" : saved;
   const setMapView = useGameStore((state) => state.setMapView);
+  const tricksOn = useGameStore(tricksShown);
   const baseId = useId();
 
   return (
@@ -84,7 +86,7 @@ export const MapPanel = () => {
         {view === "map" && (
           <>
             <MapTracker />
-            <MapLegend />
+            <MapLegend trick={tricksOn} />
           </>
         )}
         {view === "checks" && <ChecksPanel />}

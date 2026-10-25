@@ -42,6 +42,7 @@
   --state-available: #2ecc40;
   --state-possible: #ffdc00;
   --state-seen: #7fdbff;
+  --state-trick: #b10dc9; /* out of logic, doable with a trick */
   --state-unavailable: #ff4136;
   --state-opened: #7f7f7f;
   --state-ink: #0b0b0f; /* glyph colour on a state swatch */
