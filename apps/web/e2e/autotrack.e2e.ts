@@ -85,6 +85,16 @@ const writePrizeTables = (bridge: FakeUsb2Snes) => {
   bridge.memory[MEMORY_RANGE["map-mode"].address] = 0x00;
 };
 
+/**
+ * Writes the pads' medallions (the Mire asks Ether, Turtle Rock Quake) and
+ * stands Link on the Mire's overworld screen. Needs the prize tables too: a
+ * served ROM is told from a zeroed one by them.
+ */
+const standOnMirePad = (bridge: FakeUsb2Snes) => {
+  bridge.memory.set([0x01, 0x02], MEMORY_RANGE.medallions.address);
+  bridge.memory[MEMORY_RANGE["overworld-screen"].address] = 0x70;
+};
+
 /** DungeonsCompleted's high byte: Eastern Palace's prize taken ($2000). */
 const EASTERN_DONE = () => [SAVE(0x473), 0x20] as const;
 
@@ -462,6 +472,7 @@ test("connects through the dialog, ticks every step and lists what it read", asy
 }) => {
   bootSeed(bridge, { race: false });
   writePrizeTables(bridge);
+  standOnMirePad(bridge);
   await openTracker(page);
   await openDialog(page);
   const shown = dialog(page);
@@ -507,6 +518,20 @@ test("connects through the dialog, ticks every step and lists what it read", asy
   );
   await expect(prizes).toContainText("Desert Palace");
   await expect(prizes).not.toContainText("Swamp Palace");
+  // Link stands on the Mire's screen: its medallion is shown and laid on the
+  // board; Turtle Rock's is not
+  await expect(shown.getByTestId("readout-shown-medallions")).toHaveText(
+    /Misery Mire\s*Ether \(its entrance's screen in view\)/,
+  );
+  await expect(shown.getByTestId("readout-shown-medallions")).not.toContainText(
+    "Turtle Rock",
+  );
+  await expect(page.getByTestId("medallion-overlay-8")).toHaveAccessibleName(
+    /medallion: Ether/,
+  );
+  await expect(page.getByTestId("medallion-overlay-9")).toHaveAccessibleName(
+    /medallion: unknown/,
+  );
   const checked = shown.getByTestId("readout-checked");
   await expect(checked).toContainText("Locations checked (4)");
   await expect(checked).toContainText("Link's House");
@@ -529,6 +554,7 @@ test("a race seed shows the race-legal badge and is never read where Race Mode f
 }) => {
   bootSeed(bridge, { race: true });
   writePrizeTables(bridge);
+  standOnMirePad(bridge);
   await openTracker(page);
   await openDialog(page);
   await dialog(page).getByTestId("autotrack-connect").click();
@@ -547,6 +573,12 @@ test("a race seed shows the race-legal badge and is never read where Race Mode f
   await expect(shown.getByTestId("readout-items")).not.toContainText("Bottle");
   await expect(shown.getByTestId("readout-shown-prizes")).toHaveText(
     /Not read in Race Mode/,
+  );
+  await expect(shown.getByTestId("readout-shown-medallions")).toHaveText(
+    /Not read in Race Mode/,
+  );
+  await expect(page.getByTestId("medallion-overlay-8")).toHaveAccessibleName(
+    /medallion: unknown/,
   );
   const withheld = shown.getByTestId("readout-race-mode");
   for (const fact of ["Pendants and crystals", "Bottles", "Checks inside"]) {

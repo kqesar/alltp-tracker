@@ -1,8 +1,11 @@
 import { MEMORY_RANGE, type MemoryRangeId } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import {
+  openEntrance,
   SAVE,
   seedMemory,
+  standOn,
+  writeMedallions,
   writePrizeTables,
 } from "@/games/alttpr/autotrack/fixtures";
 import { readMemory } from "@/games/alttpr/autotrack/reading";
@@ -149,6 +152,44 @@ describe("describeReading", () => {
       ["Tower of Hera", "on the world map"],
     ]);
     expect(describeSeed(always).shownPrizesUnread).toBeNull();
+  });
+
+  it("lists the pad medallions the game shows, and why", () => {
+    // The Mire asks Ether, Turtle Rock Quake
+    const memory = writeMedallions(seedMemory({ race: false }), 1, 2);
+    expect(describeSeed(memory).shownMedallions).toEqual([]);
+    expect(describeSeed(memory).shownMedallionsUnread).toBeNull();
+
+    standOn(memory, 0x70);
+    expect(describeSeed(memory).shownMedallions).toEqual([
+      {
+        medallion: "Ether",
+        pad: "Misery Mire",
+        why: "its entrance's screen in view",
+      },
+    ]);
+    openEntrance(memory, 0x47);
+    expect(describeSeed(memory).shownMedallions).toEqual([
+      {
+        medallion: "Ether",
+        pad: "Misery Mire",
+        why: "its entrance's screen in view",
+      },
+      { medallion: "Quake", pad: "Turtle Rock", why: "entrance opened" },
+    ]);
+  });
+
+  it("says no pad medallion is read in Race Mode, or before the ROM is", () => {
+    const memory = standOn(
+      writeMedallions(seedMemory({ race: true }), 1, 2),
+      0x70,
+    );
+    const raced = describeSeed(memory, true);
+    expect(raced.shownMedallions).toEqual([]);
+    expect(raced.shownMedallionsUnread).toBe("race-mode");
+    const unread = describeSeed(memory, false, ["medallions"]);
+    expect(unread.shownMedallions).toEqual([]);
+    expect(unread.shownMedallionsUnread).toBe("not-read");
   });
 
   it("says no dungeon prize is read in Race Mode, or before the ROM is", () => {

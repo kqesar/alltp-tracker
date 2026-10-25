@@ -6,6 +6,10 @@
 import {
   dungeonOf,
   type ItemId,
+  type Medallion,
+  type MedallionReading,
+  type MedallionShownBy,
+  type Pad,
   type Prize,
   type PrizeDungeon,
   type PrizeReading,
@@ -182,6 +186,18 @@ export type Readout = {
   }[];
   /** Why no dungeon prize was read, when none was. */
   readonly shownPrizesUnread: Unsettled | null;
+  /**
+   * The medallions the game shows for Misery Mire and Turtle Rock, read from
+   * the ROM (the pack's decodeMedallions): the medallion and why the game
+   * shows it. None the game would not show.
+   */
+  readonly shownMedallions: readonly {
+    readonly pad: string;
+    readonly medallion: string;
+    readonly why: string;
+  }[];
+  /** Why no medallion was read, when none was. */
+  readonly shownMedallionsUnread: Unsettled | null;
   /** The run's milestones, each reached or not, or not known and why. */
   readonly progress: readonly {
     readonly label: string;
@@ -244,6 +260,42 @@ const describeShown = (prizes: PrizeReading): Readout["shownPrizes"] => {
         dungeon: DUNGEON_NAMES[code],
         prize: PRIZE_WORDS[shown.prize],
         why: shownWhy(shown.prize, shown.shownBy),
+      },
+    ];
+  });
+};
+
+/** The pads, as the panel names them, in the board's order. */
+const PAD_NAMES: Readonly<Record<Pad, string>> = {
+  mire: "Misery Mire",
+  turtleRock: "Turtle Rock",
+};
+
+const MEDALLION_NAMES: Readonly<Record<Medallion, string>> = {
+  bombos: "Bombos",
+  ether: "Ether",
+  quake: "Quake",
+};
+
+/** Why the game shows a medallion, in words. */
+const MEDALLION_WHY: Readonly<Record<MedallionShownBy, string>> = {
+  "on-screen": "its entrance's screen in view",
+  opened: "entrance opened",
+};
+
+/** The medallions the game shows, in the panel's words. */
+const describeMedallions = (
+  medallions: MedallionReading,
+): Readout["shownMedallions"] => {
+  if (typeof medallions === "string") return [];
+  return (Object.keys(PAD_NAMES) as Pad[]).flatMap((pad) => {
+    const shown = medallions[pad];
+    if (shown === undefined) return [];
+    return [
+      {
+        medallion: MEDALLION_NAMES[shown.medallion],
+        pad: PAD_NAMES[pad],
+        why: MEDALLION_WHY[shown.shownBy],
       },
     ];
   });
@@ -527,6 +579,9 @@ export const describeReading = (
       { label: "Triforce reached", value: goal },
     ],
     seed: describeSeed(reading.seed),
+    shownMedallions: describeMedallions(reading.medallions),
+    shownMedallionsUnread:
+      typeof reading.medallions === "string" ? reading.medallions : null,
     shownPrizes: describeShown(reading.prizes),
     shownPrizesUnread:
       typeof reading.prizes === "string" ? reading.prizes : null,

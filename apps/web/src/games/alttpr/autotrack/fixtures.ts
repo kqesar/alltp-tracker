@@ -75,6 +75,39 @@ export const writePrizeTables = (memory: Uint8Array, mapMode = 0x01) => {
   return memory;
 };
 
+/**
+ * Write a seed's pad medallions into a memory image (Misery Mire's, then
+ * Turtle Rock's: $00 Bombos, $01 Ether, $02 Quake), with the prize table
+ * every seed's ROM holds beside it, which tells a served ROM from a zeroed
+ * one.
+ * @param memory - A memory image, as `seedMemory` makes
+ */
+export const writeMedallions = (
+  memory: Uint8Array,
+  mire: number,
+  turtleRock: number,
+) => {
+  writePrizeTables(memory);
+  memory.set([mire, turtleRock], MEMORY_RANGE.medallions.address);
+  return memory;
+};
+
+/**
+ * Put Link on an overworld screen: the game mode is the overworld's, and
+ * OverworldIndex the screen ($70 Misery Mire's, $47 Turtle Rock's).
+ */
+export const standOn = (memory: Uint8Array, screen: number, mode = 0x09) => {
+  memory[GAME_MODE] = mode;
+  memory[MEMORY_RANGE["overworld-screen"].address] = screen;
+  return memory;
+};
+
+/** Set the bit that says a screen's entrance was opened ($20 of its event byte). */
+export const openEntrance = (memory: Uint8Array, screen: number) => {
+  memory[MEMORY_RANGE.overworld.address + screen] |= 0x20;
+  return memory;
+};
+
 /** Where a range's byte at A-bus address `at` lies in a memory image. */
 const imageAddress = (range: MemoryRangeId, at: number) =>
   MEMORY_RANGE[range].address + (at - MEMORY_RANGE[range].bus);

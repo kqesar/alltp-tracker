@@ -37,6 +37,7 @@ import {
   PRIZE_CELLS,
   prizeOf,
 } from "@/games/alttpr/autotrack/table";
+import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import { wildItems } from "@/games/alttpr/data/presets";
 import {
   COUNTER_INDICES,
@@ -52,7 +53,7 @@ import type { Progress } from "@/games/alttpr/stores/persistence";
 /** The slices of the run the game's view is laid on. */
 export type Board = Pick<
   Progress,
-  "checked" | "items" | "settings" | "smallKeys"
+  "checked" | "items" | "medallions" | "settings" | "smallKeys"
 >;
 
 /** What the game says of the run: the values it settles, by the run's ids. */
@@ -73,6 +74,12 @@ export type GameView = {
    * leave their dungeons (MCS and Full Shuffle).
    */
   readonly smallKeys: Readonly<Record<number, number>>;
+  /**
+   * The medallions the game has shown, as `medallions[n]` holds them
+   * (`MEDALLION_VALUES`), by grid dungeon index: Misery Mire's and Turtle
+   * Rock's.
+   */
+  readonly medallions: Readonly<Record<number, number>>;
 };
 
 /** The locations whose flag the game keeps, on the map. */
@@ -222,6 +229,37 @@ const beatenCells = (reading: AutotrackReading): Record<string, CellValue> => {
   return cells;
 };
 
+/** The pads' slots in the board's `medallions`, and the value each medallion has. */
+const PAD_SLOTS = [
+  ["mire", DUNGEON_INDICES.MISERY_MIRE],
+  ["turtleRock", DUNGEON_INDICES.TURTLE_ROCK],
+] as const;
+
+const MEDALLION_VALUE = {
+  bombos: MEDALLION_VALUES.BOMBOS,
+  ether: MEDALLION_VALUES.ETHER,
+  quake: MEDALLION_VALUES.QUAKE,
+} as const;
+
+/**
+ * The medallions the game shows now (the pack's decodeMedallions: a pad
+ * whose screen is in view, or whose entrance is open), as the values of
+ * `medallions`, by slot. A later reading, away from the pad, shows none:
+ * the follower keeps what was shown.
+ */
+export const medallionsShown = (
+  reading: AutotrackReading,
+): Record<number, number> => {
+  const told: Record<number, number> = {};
+  const { medallions } = reading;
+  if (typeof medallions === "string") return told;
+  for (const [pad, slot] of PAD_SLOTS) {
+    const shown = medallions[pad];
+    if (shown !== undefined) told[slot] = MEDALLION_VALUE[shown.medallion];
+  }
+  return told;
+};
+
 /** The board's cells the game settles, and the value each shows. */
 export const gameCells = (
   reading: AutotrackReading,
@@ -313,11 +351,14 @@ const counterRanges = (
  * @param board - The run it is laid on: its settings, and the prizes it
  * already names
  * @param keysFound - The least small keys found, by grid dungeon index
+ * @param medallionsKept - The medallions shown at earlier readings, by slot:
+ * once shown, a medallion stays known whatever the screen in view
  */
 export const gameView = (
   reading: AutotrackReading,
   board: Board,
   keysFound: Readonly<Record<number, number>> = {},
+  medallionsKept: Readonly<Record<number, number>> = {},
 ): GameView => {
   const isChecked = new Set(reading.checked);
   const unsettled = new Set(reading.unsettled.map(([id]) => id));
@@ -340,6 +381,7 @@ export const gameView = (
       new Set(Object.keys(checked)),
     ),
     items: gameCells(reading, board),
+    medallions: { ...medallionsKept, ...medallionsShown(reading) },
     settings: packSettings(board.settings),
     smallKeys,
   };
@@ -374,6 +416,7 @@ export const newsOf = (prev: GameView, next: GameView): GameView => {
         )
       : next.counters,
     items: changed(prev.items, next.items),
+    medallions: changed(prev.medallions, next.medallions),
     settings: next.settings,
     smallKeys: sameRun
       ? changed(prev.smallKeys, next.smallKeys)
@@ -386,6 +429,7 @@ export const isEmptyView = (view: GameView) =>
   Object.keys(view.items).length === 0 &&
   Object.keys(view.counters).length === 0 &&
   Object.keys(view.checked).length === 0 &&
+  Object.keys(view.medallions).length === 0 &&
   Object.keys(view.smallKeys).length === 0;
 
 /** How a value of the board moves to what the game says of it. */
@@ -394,6 +438,7 @@ type Lay = {
   counter: (board: number, least: number, most: number) => number;
   checked: (board: boolean, game: boolean) => boolean;
   keys: (board: number, least: number) => number;
+  medallion: (board: number, game: number) => number;
 };
 
 /** Towards progress only: nothing the player marked beyond the game is undone. */
@@ -402,6 +447,9 @@ const MERGE: Lay = {
   counter: (board, _least, most) => Math.min(board, most),
   item: joinValues,
   keys: (board, least) => Math.max(board, least),
+  // A medallion the player named stays theirs, as a prize does
+  medallion: (board, game) =>
+    board === MEDALLION_VALUES.UNKNOWN ? game : board,
 };
 
 /**
@@ -413,6 +461,7 @@ const SYNC: Lay = {
   counter: (board, least, most) => Math.min(most, Math.max(least, board)),
   item: (_id, _board, game) => game,
   keys: (board, least) => Math.max(board, least),
+  medallion: (_board, game) => game,
 };
 
 /** The slices of the board a view changes when laid on it, and how many values. */
@@ -458,12 +507,22 @@ const lay = (board: Board, view: GameView, how: Lay): Laid | null => {
       count++;
     }
   }
+  let medallions: number[] | undefined;
+  for (const [slot, game] of Object.entries(view.medallions)) {
+    const i = Number(slot);
+    const next = how.medallion(board.medallions[i] ?? 0, game);
+    if (next === board.medallions[i]) continue;
+    medallions ??= [...board.medallions];
+    medallions[i] = next;
+    count++;
+  }
   if (count === 0) return null;
   return {
     count,
     next: {
       ...(items && { items: items as Progress["items"] }),
       ...(checked && { checked }),
+      ...(medallions && { medallions }),
       ...(smallKeys && { smallKeys }),
     },
   };
