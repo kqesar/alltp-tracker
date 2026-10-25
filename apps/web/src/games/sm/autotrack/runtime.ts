@@ -35,6 +35,9 @@ export const startSmRuntime = (
   session.onUpdate(({ snapshot }) =>
     sink.reading(readSm(snapshot, Date.now())),
   );
+  // The RTA clock is read on every poll: one that changed nothing is a game
+  // that stands still
+  session.onSteady(() => sink.steady?.(Date.now()));
   session.start();
   return {
     retryNow: () => session.retryNow(),

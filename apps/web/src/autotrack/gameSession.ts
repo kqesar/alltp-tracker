@@ -38,6 +38,12 @@ export type GameRuntimeSink<Reading> = {
   status: (status: SessionStatus, since: number, seen: SessionSeen) => void;
   /** The game, decoded again after every read that changed memory. */
   reading: (reading: Reading) => void;
+  /**
+   * A poll read memory and found it unchanged, at `at`: a game's counter
+   * standing still (a paused emulator). Only a game with a follower that
+   * wants it wires it.
+   */
+  steady?: (at: number) => void;
 };
 
 /** A running session, as the store drives it. */
@@ -58,7 +64,11 @@ export type GameRuntimeModule<Reading> = {
     sink: GameRuntimeSink<Reading>,
   ) => GameRuntime;
   /** What lays the readings on the run, for one session. */
-  createFollower: () => { read: (reading: Reading) => void };
+  createFollower: () => {
+    read: (reading: Reading) => void;
+    /** A poll found memory unchanged at `at` (see `GameRuntimeSink.steady`). */
+    steady?: (at: number) => void;
+  };
 };
 
 export type GameAutotrackState<Reading> = {
@@ -200,6 +210,9 @@ export const createGameAutotrack = <Reading>({
             }));
             // The session stopped itself: no longer active
             if (status.code === "stopped") set({ active: false });
+          },
+          steady: (at) => {
+            if (mine === generation) follower.steady?.(at);
           },
         },
       );

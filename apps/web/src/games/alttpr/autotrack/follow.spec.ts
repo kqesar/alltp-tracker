@@ -151,6 +151,47 @@ describe("the run timer, on the game's time", () => {
     });
   });
 
+  it("stops at the game's last time when a poll finds memory unchanged, and goes on when it moves", () => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    const first = at(memory, 0x07, 6_000, 0);
+    follower.read(first);
+    expect(store().timer.startedAt).toBe(first.at);
+
+    // The emulator is paused: no reading comes, a steady poll does
+    follower.steady(first.at + 1_000);
+    expect(store().timer).toEqual({
+      elapsedMs: playTimeMs(6_000),
+      finished: false,
+      startedAt: null,
+    });
+    // Another steady poll changes nothing
+    const held = store().timer;
+    follower.steady(first.at + 2_000);
+    expect(store().timer).toBe(held);
+
+    // The emulator runs again: the next reading resumes the timer
+    const later = at(memory, 0x07, 6_600, 30);
+    follower.read(later);
+    expect(store().timer).toEqual({
+      elapsedMs: playTimeMs(6_600),
+      finished: false,
+      startedAt: later.at,
+    });
+  });
+
+  it("leaves a timer alone that real time counts, or the game's clock does not set", () => {
+    store().setTimerClock("real");
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    follower.read(at(memory, 0x01, 0, 0));
+    follower.read(at(memory, 0x07, 6_000, 1));
+    expect(store().timer.startedAt).not.toBeNull();
+    const running = store().timer;
+    follower.steady(Date.now());
+    expect(store().timer).toBe(running);
+  });
+
   it("writes nothing for a reading that agrees with the timer", () => {
     const memory = seedMemory({ race: false });
     const follower = createFollower();

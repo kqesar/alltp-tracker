@@ -35,6 +35,8 @@ export type RuntimeSink = {
   ) => void;
   /** The game, decoded again after every read that changed memory. */
   reading: (reading: AutotrackReading) => void;
+  /** A poll read memory and found it unchanged: the game stands still. */
+  steady?: (at: number) => void;
 };
 
 /** A running session, as the store drives it. */
@@ -81,6 +83,9 @@ export const startRuntime = (
     }
   });
   session.onUpdate(({ snapshot }) => decode(snapshot));
+  // The play frames are read on every poll: one that changed nothing is a
+  // game that stands still
+  session.onSteady(() => sink.steady?.(Date.now()));
   session.start();
 
   return {

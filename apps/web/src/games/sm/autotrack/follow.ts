@@ -28,7 +28,7 @@ import {
   timerNews,
 } from "@/games/sm/autotrack/timer";
 import { type SmProgress, useSmStore } from "@/games/sm/store";
-import { isIdle, timerState } from "@/utils/runTimer";
+import { type GameClock, isIdle, timerState } from "@/utils/runTimer";
 
 /** What the game says, kept to tell news from what it said before. */
 type View = {
@@ -66,6 +66,8 @@ export const createSmFollower = () => {
   /** The RTA clock as last read, and the frames of the last reading taken. */
   let lastClock: ClockReading | undefined;
   let frames: number | undefined;
+  /** The game's clock the timer was last set on, to hold it if the game stops. */
+  let lastGame: GameClock | undefined;
 
   /**
    * The run timer follows the game: started and stopped by it if the player
@@ -93,6 +95,7 @@ export const createSmFollower = () => {
       run.startTimer(reading.at);
     }
     const after = useSmStore.getState();
+    lastGame = undefined;
     // Game time: only a timer that has begun is set on the clock
     if (
       after.timerClock === "game" &&
@@ -107,10 +110,8 @@ export const createSmFollower = () => {
         reading.at,
       );
       if (base !== after.clockBase) after.setClockBase(base);
-      after.alignTimer(
-        gameClockOf(ms, reading.goal, moving, after.autoTimer),
-        reading.at,
-      );
+      lastGame = gameClockOf(ms, reading.goal, moving, after.autoTimer);
+      after.alignTimer(lastGame, reading.at);
     } else if (news === "finish") after.finishTimer(reading.at);
     if (typeof reading.beforePlay === "boolean") {
       beforePlay = reading.beforePlay;
@@ -170,6 +171,18 @@ export const createSmFollower = () => {
         }
         return change;
       });
+    },
+    /**
+     * A poll read memory and found it unchanged at `at`: the game stands
+     * still (a paused emulator), so a timer set on its clock stops at its
+     * last time until a reading moves it again.
+     */
+    steady: (at: number) => {
+      const run = useSmStore.getState();
+      if (run.timerClock === "game" && lastGame?.status === "running") {
+        lastGame = { ms: lastGame.ms, status: "paused" };
+        run.alignTimer(lastGame, at);
+      }
     },
   };
 };
