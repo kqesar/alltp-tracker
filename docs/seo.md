@@ -46,6 +46,8 @@ The Archipelago card shows a room: the script answers the board's socket itself 
 
 PNG, not WebP: link previews do not all read WebP.
 
+The same run also draws the repository's social preview on GitHub, `.github/social-preview.png`: A Link to the Past's board at the 1280 x 640 GitHub asks for, kept out of the site. GitHub has no API for it: after a new one, upload it in the repository's settings (Social preview, Edit).
+
 ## Adding a game
 
 Its entry in `GAMES` (`src/games/registry.ts`), its page in `SEO_GAMES` (`seo/games.ts`: name, description of at most 160 characters, features), its address in `public/sitemap.xml`, its link in `index.html`'s body, its `uncached` pattern in `vite.config.ts`, and its card in `social-cards.mjs`. The e2e test covers each of them.

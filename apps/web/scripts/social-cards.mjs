@@ -1,6 +1,8 @@
 // Draws the link preview image of each game (public/social/<id>.png, 1200 x 630,
-// what Open Graph and X's large card use): a real screenshot of the tracker,
-// a few items found, never a stock graphic.
+// what Open Graph and X's large card use), and the repository's social preview
+// on GitHub (.github/social-preview.png, 1280 x 640, A Link to the Past's
+// board): a real screenshot of the tracker, a few items found, never a stock
+// graphic.
 //
 // Usage, with the site's production build served (pnpm preview):
 //   pnpm --filter @alltp/web exec node scripts/social-cards.mjs <site url> [out dir]
@@ -14,6 +16,7 @@
 import { execFile } from "node:child_process";
 import { mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { chromium } from "@playwright/test";
 
@@ -149,19 +152,21 @@ const archipelagoRoom = async (page) => {
   };
 };
 
-const WIDTH = 1200;
-const HEIGHT = 630;
-
 const PREFIX = { alttpr: "item", sm: "sm-item", smz3: "smz3-item" };
 
 const browser = await chromium.launch();
-await mkdir(out, { recursive: true });
-for (const [game, { clicks, room, scale }] of Object.entries(RUNS)) {
+
+/**
+ * Shoots one game's board at a size, then cuts it to 128 colours.
+ * @param file Where the PNG goes
+ */
+const shoot = async (game, width, height, file) => {
+  const { clicks, room, scale } = RUNS[game];
   const context = await browser.newContext({
     deviceScaleFactor: scale,
     reducedMotion: "reduce",
     serviceWorkers: "block",
-    viewport: { height: HEIGHT / scale, width: WIDTH / scale },
+    viewport: { height: height / scale, width: width / scale },
   });
   await context.addInitScript(
     (id) => localStorage.setItem("alltp-tracker-game", id),
@@ -177,9 +182,8 @@ for (const [game, { clicks, room, scale }] of Object.entries(RUNS)) {
     await page.getByTestId(testId).click();
   }
   // Nothing hovered or focused: no tooltip, no focus ring
-  await page.mouse.move(WIDTH / scale - 1, HEIGHT / scale - 1);
+  await page.mouse.move(width / scale - 1, height / scale - 1);
   await page.evaluate(() => document.activeElement?.blur());
-  const file = join(out, `${game}.png`);
   await page.screenshot({ path: file });
   await run("magick", [
     file,
@@ -187,5 +191,20 @@ for (const [game, { clicks, room, scale }] of Object.entries(RUNS)) {
     ...["-define", "png:compression-level=9", file],
   ]);
   await context.close();
+};
+
+await mkdir(out, { recursive: true });
+for (const game of Object.keys(RUNS)) {
+  await shoot(game, 1200, 630, join(out, `${game}.png`));
 }
+// The repository's social preview on GitHub, at the 1280 x 640 GitHub asks
+// for: uploaded by hand in the repository's settings (there is no API)
+await shoot(
+  "alttpr",
+  1280,
+  640,
+  fileURLToPath(
+    new URL("../../../.github/social-preview.png", import.meta.url),
+  ),
+);
 await browser.close();
