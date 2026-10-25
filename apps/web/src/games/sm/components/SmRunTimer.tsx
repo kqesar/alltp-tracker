@@ -20,6 +20,7 @@ const useRaceMode = (): boolean =>
 export const SmRunTimer = () => (
   <GameRunTimer
     clockRead={useClockRead()}
+    endable
     raceMode={useRaceMode()}
     useRun={useSmStore}
   />

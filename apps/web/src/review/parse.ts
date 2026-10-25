@@ -19,6 +19,10 @@ const loadParser = (game: SpoilerGame): Promise<Parse> | null => {
       ({ parseSpoiler }) => parseSpoiler,
     );
   }
+  if (game === "sm") {
+    // Map Rando's file is read by its slicer: a 21 MB text, 39 KB kept
+    return import("@alltp/pack-sm").then(({ parseSpoiler }) => parseSpoiler);
+  }
   return null;
 };
 

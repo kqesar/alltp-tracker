@@ -2,6 +2,7 @@
 // device that tracks it (games/registry.ts). Its stylesheet comes with it.
 
 import "@/games/board.css";
+import "@/games/review.css";
 import "@/games/sm/sm.css";
 import type { GameModule } from "@/games/registry";
 import SmApp from "@/games/sm/SmApp";

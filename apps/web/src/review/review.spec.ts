@@ -205,7 +205,7 @@ describe("readSpoiler", () => {
   });
 
   it("refuses a game with no review yet", async () => {
-    const result = await readSpoiler(spoilerFile("9MQ9gO1wMD"), "sm", {
+    const result = await readSpoiler(spoilerFile("9MQ9gO1wMD"), "smz3", {
       worker: null,
     });
     expect(result).toMatchObject({ error: "unsupported", ok: false });

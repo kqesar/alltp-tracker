@@ -6,10 +6,13 @@ export const bindingText = (review: Loaded): string => {
   if (binding.verdict === "verified") {
     return `Seed ${log.seed.id}: the log's seed is this run's (matched by ${log.seed.from === "content" ? "its hash" : "its file name"}).`;
   }
+  // Map Rando's log never names its seed, whatever the run knows
   const why =
-    boundSeed === null
-      ? "this run does not know its seed"
-      : "the file names no seed";
+    log.game === "sm"
+      ? "Map Rando's log names no seed"
+      : boundSeed === null
+        ? "this run does not know its seed"
+        : "the file names no seed";
   const agreed =
     binding.facts === 0
       ? ""

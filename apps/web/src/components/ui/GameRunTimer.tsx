@@ -18,13 +18,16 @@ type RunStore = <T>(
  * @param useRun - The game's store
  * @param raceMode - Race Mode is on: the clock is never read
  * @param clockRead - The clock was read: autotracking runs, outside Race Mode
+ * @param endable - The board reviews a finished run: the timer offers End run
  */
 export const GameRunTimer = ({
   clockRead,
+  endable = false,
   raceMode,
   useRun,
 }: {
   clockRead: boolean;
+  endable?: boolean;
   raceMode: boolean;
   useRun: RunStore;
 }) => {
@@ -36,6 +39,7 @@ export const GameRunTimer = ({
   const setAutoTimer = useRun((state) => state.setAutoTimer);
   const setTimerClock = useRun((state) => state.setTimerClock);
   const resetTimer = useRun((state) => state.resetTimer);
+  const finishTimer = useRun((state) => state.finishTimer);
   // The clock sets a timer that has begun; an idle one waits for its start
   const following =
     timerClock === "game" && !raceMode && clockRead && !isIdle(timer);
@@ -58,6 +62,7 @@ export const GameRunTimer = ({
           ? "The timer follows the game's clock once it starts."
           : "Counts real time until autotracking reads the game's clock.",
       }}
+      onEnd={endable ? () => finishTimer() : undefined}
       onPause={() => pauseTimer()}
       onReset={resetTimer}
       onStart={() => startTimer()}
