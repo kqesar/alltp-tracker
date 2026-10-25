@@ -509,6 +509,29 @@ export function decodeSeed(memory: MemoryView): SeedReading | Unsettled {
   };
 }
 
+/** The seed's guid, as its ROM states it. */
+export interface SeedGuidReading {
+  /** 32 lowercase hex digits. */
+  readonly guid: string;
+}
+
+/**
+ * The seed's guid, outside races only (race-profile.ts): 32 lowercase hex
+ * digits, ASCII, as `Patch.cs:590-612` writes it, the id samus.link names the
+ * seed and its spoiler log by. Unreadable when the bytes are not that.
+ * @param race - Race Mode is on: the guid stays unread
+ */
+export function decodeSeedGuid(
+  memory: MemoryView,
+  race: boolean,
+): SeedGuidReading | Unsettled {
+  if (race) return "race-mode";
+  const bytes = bytesOf(memory, "seed-guid");
+  if (!bytes) return "not-read";
+  const guid = String.fromCharCode(...bytes.subarray(0, 32));
+  return /^[0-9a-f]{32}$/.test(guid) ? { guid } : "unreadable";
+}
+
 /** What a seed asks for, which a race may draw at random. */
 export interface RequirementsReading {
   /** Crystals Ganon's Tower and Ganon ask for; null past seven. */

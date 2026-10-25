@@ -30,6 +30,9 @@ const long = (memory: Uint8Array, address: number, value: number) => {
 /** Super Metroid's save offsets the tracker reads, $00-$CF. */
 const SM_SAVE_SIZE = 0xd0;
 
+/** The guid of the owner's SMZ3 ROM, a real one (spoiler fixtures' seed). */
+export const SAMPLE_GUID = "8506bbef2c2b4432af378b571c6c9133";
+
 /** A seed in play; anything left out is a fresh game's. */
 export type Smz3Game = {
   /** Which game runs. */
@@ -42,6 +45,8 @@ export type Smz3Game = {
   readonly keysanity?: boolean;
   readonly smLogic?: "normal" | "hard";
   readonly seed?: number;
+  /** The seed's guid, 32 hex digits ($80:FF60). */
+  readonly guid?: string;
   readonly towerCrystals?: number;
   readonly ganonCrystals?: number;
   readonly tourianBosses?: number;
@@ -79,6 +84,7 @@ export const writeSmz3 = (
     keysanity = false,
     smLogic = "normal",
     seed = 0x1234_abcd,
+    guid = SAMPLE_GUID,
     towerCrystals = 7,
     ganonCrystals = 7,
     tourianBosses = 4,
@@ -110,6 +116,11 @@ export const writeSmz3 = (
   memory.set(
     [...title.padEnd(21)].map((c) => c.charCodeAt(0)),
     at("rom-header", 0x80_ffc0),
+  );
+  // The seed's guid, in ASCII (Patch.cs:590-612)
+  memory.set(
+    [...guid].map((c) => c.charCodeAt(0)),
+    at("seed-guid", 0x80_ff60),
   );
   // The requirements (Patch.cs:129-152, 809-815)
   memory[at("requirements", 0x40_0022)] = MEDALLIONS.indexOf(mire);

@@ -61,6 +61,7 @@ describe("the pack", () => {
       (_, index) => !SMZ3_AUTOTRACK.racePermitted[index],
     ).map(({ id }) => id);
     expect(forbidden).toEqual([
+      "seed-guid",
       "requirements",
       "tourian",
       "clock-sm-live",
@@ -76,6 +77,7 @@ describe("the pack", () => {
       ).map(({ id }) => id);
     expect(inMode("credits")).toEqual([
       "seed",
+      "seed-guid",
       "rom-header",
       "requirements",
       "tourian",

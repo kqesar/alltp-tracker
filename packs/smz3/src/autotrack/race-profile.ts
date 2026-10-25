@@ -12,8 +12,10 @@
 // (decode.ts), so a reward counts once found. Decided on 2026-10-19,
 // without asking the moderators.
 //
-// A third thing is kept out on purpose: `game-time`, the two games' frame
-// counters (2026-10-25). They reveal nothing of the seed, but the game shows
+// Two more are kept out on purpose (2026-10-25). `seed-guid`: the seed's id,
+// 32 characters the post-run review matches a spoiler log with; it states no
+// setting, but a race has no spoiler to match. And `game-time`, the two
+// games' frame counters. They reveal nothing of the seed, but the game shows
 // their sum only in its end credits, never in play, and the tracker's rule
 // for races is to read no more than a player sees (a policy, not a rule of
 // the page: the category allows autotracking). A race therefore keeps the
@@ -41,6 +43,10 @@ export const SMZ3_RACE_PROFILE: RaceProfile = defineRaceProfile({
     seed: {
       permitted: true,
       rule: "racetime.gg/smz3: a race announces its settings (Super Metroid's logic, keysanity).",
+    },
+    "seed-guid": {
+      permitted: false,
+      rule: "Not a rule of racetime.gg/smz3: the guid names a seed on samus.link and a race seed has no public spoiler log to match it to, so the tracker does not read it in a race.",
     },
     sm: { permitted: true, rule: ALLOWED },
     zelda: { permitted: true, rule: ALLOWED },
