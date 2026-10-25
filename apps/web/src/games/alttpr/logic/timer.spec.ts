@@ -1,5 +1,6 @@
+import { playTimeMs } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
-import { timerNews } from "@/games/alttpr/logic/timer";
+import { gameClockOf, timerNews } from "@/games/alttpr/logic/timer";
 import {
   finishTimer,
   IDLE_TIMER,
@@ -9,6 +10,51 @@ import {
 
 const T0 = Date.UTC(2026, 9, 18, 12, 0, 0);
 const SECOND = 1000;
+
+describe("gameClockOf", () => {
+  const stats = (playFrames: number) => ({ playFrames }) as never;
+  const progress = (
+    playFrames: number,
+    beforePlay: boolean | "not-read",
+    goal: boolean | "not-read" = false,
+  ) => ({ beforePlay, goal, romStats: stats(playFrames) });
+
+  it("counts in play, menus and text boxes included", () => {
+    expect(gameClockOf(false, progress(3600, false))).toEqual({
+      ms: playTimeMs(3600),
+      status: "running",
+    });
+  });
+
+  it("is paused before play, and over at the goal", () => {
+    expect(gameClockOf(false, progress(3600, true))).toEqual({
+      ms: playTimeMs(3600),
+      status: "paused",
+    });
+    expect(gameClockOf(false, progress(3600, "not-read"))).toMatchObject({
+      status: "paused",
+    });
+    expect(gameClockOf(false, progress(3600, false, true))).toEqual({
+      ms: playTimeMs(3600),
+      status: "over",
+    });
+  });
+
+  it("is no time before a file is loaded: the counter reads 0", () => {
+    expect(gameClockOf(false, progress(0, true))).toBe("unloaded");
+  });
+
+  it("is unavailable in Race Mode and while the stats are unsettled", () => {
+    expect(gameClockOf(true, progress(3600, false))).toBe("unavailable");
+    expect(
+      gameClockOf(false, {
+        beforePlay: false,
+        goal: false,
+        romStats: "not-read",
+      }),
+    ).toBe("unavailable");
+  });
+});
 
 describe("timerNews", () => {
   const progress = (started: boolean, goal = false) => ({ goal, started });

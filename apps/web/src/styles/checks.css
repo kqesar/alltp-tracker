@@ -107,6 +107,37 @@
   gap: var(--spacing-sm);
 }
 
+/* The clock choice: two radios in a fieldset, like the Race Mode option's */
+.run-timer-clock {
+  display: grid;
+  gap: var(--spacing-xs);
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.run-timer-clock__legend {
+  padding: 0;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.run-timer-clock__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-lg);
+}
+
+.run-timer-clock__hint {
+  max-width: 24rem;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
 .run-timer-panel__igt {
   margin: 0;
   font-variant-numeric: tabular-nums;

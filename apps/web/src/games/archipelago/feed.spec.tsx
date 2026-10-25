@@ -400,6 +400,8 @@ describe("while you were away", () => {
 describe("the board's run timer and the away card", () => {
   it("is the shared timer over the run's, its countdown switch a pref", () => {
     render(<ApRunTimer />);
+    // A room has no game clock of its own: no clock to choose
+    expect(screen.queryByTestId("run-timer-clock")).toBeNull();
     fireEvent.click(screen.getByTestId("run-timer-start"));
     expect(run().timer.startedAt).not.toBeNull();
     fireEvent.click(screen.getByTestId("run-timer-pause"));

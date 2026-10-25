@@ -132,6 +132,96 @@ describe("RunTimer", () => {
     expect(screen.queryByTestId("run-timer-igt")).toBeNull();
   });
 
+  describe("the clock choice", () => {
+    /** A reading in play with the game's counter at `frames`. */
+    const playing = (frames: number, race = false) => {
+      const memory = seedMemory({ race });
+      memory.set(
+        [frames & 0xff, (frames >> 8) & 0xff, (frames >> 16) & 0xff, 0],
+        SAVE(0x43e),
+      );
+      return readingOf(memory, { race });
+    };
+    const radio = (name: string) =>
+      screen.getByRole("radio", { hidden: true, name });
+
+    it("is two radios in a fieldset named Clock, real time by default", () => {
+      render(<RunTimer />);
+      const group = screen.getByRole("group", { hidden: true, name: "Clock" });
+      expect(group.tagName).toBe("FIELDSET");
+      expect(radio("Real time")).toBeChecked();
+      expect(radio("Game time")).not.toBeChecked();
+      expect(radio("Game time")).toBeEnabled();
+      expect(screen.getByTestId("run-timer-clock-hint")).toHaveTextContent(
+        "Counts real time, as races time.",
+      );
+      expect(group).toHaveAccessibleDescription(
+        "Counts real time, as races time.",
+      );
+    });
+
+    it("saves the choice in the store", () => {
+      render(<RunTimer />);
+      fireEvent.click(radio("Game time"));
+      expect(useGameStore.getState().timerClock).toBe("game");
+      expect(radio("Game time")).toBeChecked();
+      fireEvent.click(radio("Real time"));
+      expect(useGameStore.getState().timerClock).toBe("real");
+    });
+
+    it("says game time waits for a game when none is read", () => {
+      act(() => useGameStore.getState().setTimerClock("game"));
+      render(<RunTimer />);
+      expect(screen.getByTestId("run-timer-clock-hint")).toHaveTextContent(
+        "until autotracking reads a game with a file loaded",
+      );
+      // The player still drives the timer
+      expect(screen.getByTestId("run-timer-start")).toBeEnabled();
+      expect(screen.getByTestId("run-timer-auto")).toBeEnabled();
+    });
+
+    it("leaves the timer to the game once its clock is read", () => {
+      act(() => {
+        useGameStore.getState().setTimerClock("game");
+        useAutotrackStore.setState({ reading: playing(3600) });
+      });
+      render(<RunTimer />);
+      expect(screen.getByTestId("run-timer-clock-hint")).toHaveTextContent(
+        "The timer follows the game's clock.",
+      );
+      expect(screen.getByTestId("run-timer-start")).toBeDisabled();
+      expect(screen.getByTestId("run-timer-auto")).toBeDisabled();
+      // The game's time is what the timer shows: no second line for it
+      expect(screen.queryByTestId("run-timer-igt")).toBeNull();
+
+      // Real time chosen again: the player's, with the game's time beside
+      fireEvent.click(radio("Real time"));
+      expect(screen.getByTestId("run-timer-start")).toBeEnabled();
+      expect(screen.getByTestId("run-timer-igt")).toBeInTheDocument();
+    });
+
+    it("is unavailable in Race Mode, and says so", () => {
+      act(() => {
+        useGameStore.getState().setTimerClock("game");
+        useAutotrackStore.setState({ reading: playing(3600, true) });
+      });
+      render(<RunTimer />);
+      expect(radio("Game time")).toBeDisabled();
+      expect(radio("Real time")).toBeChecked();
+      expect(screen.getByTestId("run-timer-clock-hint")).toHaveTextContent(
+        "Not in Race Mode: the timer counts real time.",
+      );
+      expect(screen.getByTestId("run-timer-start")).toBeEnabled();
+    });
+
+    it("is unavailable when Race Mode is set always on, before any reading", () => {
+      act(() => useAutotrackStore.setState({ raceChoice: "on" }));
+      render(<RunTimer />);
+      expect(radio("Game time")).toBeDisabled();
+      act(() => useAutotrackStore.setState({ raceChoice: "auto" }));
+    });
+  });
+
   it("gives no play time before play, nor before the frames are read", () => {
     const memory = seedMemory({ race: false });
     memory[GAME_MODE] = 0x01; // the file select

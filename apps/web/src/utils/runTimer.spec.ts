@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  alignTimer,
   finishTimer,
   formatTime,
   IDLE_TIMER,
@@ -92,5 +93,69 @@ describe("restoreTimer", () => {
     [{ elapsedMs: Number.NaN, finished: false, startedAt: null }],
   ])("reads %j as no timer", (saved) => {
     expect(restoreTimer(saved)).toBe(IDLE_TIMER);
+  });
+});
+
+describe("aligning the timer on a game's clock", () => {
+  const game = (ms: number, status: "over" | "paused" | "running") => ({
+    ms,
+    status,
+  });
+
+  it("sets a running timer on the game's time, ticking from the reading", () => {
+    const timer = alignTimer(IDLE_TIMER, game(60 * SECOND, "running"), T0);
+    expect(timer).toEqual({
+      elapsedMs: 60 * SECOND,
+      finished: false,
+      startedAt: T0,
+    });
+    // Between two readings it shows the game's time plus the wait
+    expect(timerMs(timer, T0 + 400)).toBe(60 * SECOND + 400);
+  });
+
+  it("corrects a drift, and leaves a timer already there alone", () => {
+    const timer = alignTimer(IDLE_TIMER, game(60 * SECOND, "running"), T0);
+    // A second on, the game says 1:01.1: within the tolerance, same object
+    expect(alignTimer(timer, game(61_100, "running"), T0 + SECOND)).toBe(timer);
+    // A second on, the game says 1:03: the timer is set right
+    expect(
+      alignTimer(timer, game(63 * SECOND, "running"), T0 + SECOND),
+    ).toEqual({
+      elapsedMs: 63 * SECOND,
+      finished: false,
+      startedAt: T0 + SECOND,
+    });
+  });
+
+  it("stops the timer on the game's time while the game does not count", () => {
+    const running = alignTimer(IDLE_TIMER, game(60 * SECOND, "running"), T0);
+    const paused = alignTimer(running, game(61 * SECOND, "paused"), T0 + 999);
+    expect(paused).toEqual({
+      elapsedMs: 61 * SECOND,
+      finished: false,
+      startedAt: null,
+    });
+    expect(timerMs(paused, T0 + 3600 * SECOND)).toBe(61 * SECOND);
+    // The same pause read again changes nothing
+    expect(alignTimer(paused, game(61 * SECOND, "paused"), T0 + 2000)).toBe(
+      paused,
+    );
+    // And the game going on starts it again
+    expect(
+      isRunning(alignTimer(paused, game(61 * SECOND, "running"), T0 + 3000)),
+    ).toBe(true);
+  });
+
+  it("finishes on the game's time at the goal, and stays finished", () => {
+    const running = alignTimer(IDLE_TIMER, game(60 * SECOND, "running"), T0);
+    const over = alignTimer(running, game(3723 * SECOND, "over"), T0 + SECOND);
+    expect(over).toEqual({
+      elapsedMs: 3723 * SECOND,
+      finished: true,
+      startedAt: null,
+    });
+    expect(timerState(over)).toBe("finished");
+    expect(alignTimer(over, game(1, "running"), T0 + 9 * SECOND)).toBe(over);
+    expect(alignTimer(over, game(1, "paused"), T0 + 9 * SECOND)).toBe(over);
   });
 });

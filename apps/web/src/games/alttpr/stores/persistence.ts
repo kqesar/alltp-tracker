@@ -37,7 +37,7 @@ import {
   type Timeline,
 } from "@/games/alttpr/logic/timeline";
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
-import type { RunTimer } from "@/utils/runTimer";
+import type { RunTimer, TimerClock } from "@/utils/runTimer";
 
 /**
  * The locations the player checked on the map, by the alttpr pack's ids
@@ -91,6 +91,12 @@ export type Prefs = {
   shortcuts: ShortcutPrefs;
   /** Whether the run timer starts and stops with the game, autotracking. */
   autoTimer: boolean;
+  /**
+   * Which clock the run timer shows: real time, as races time, or the game's
+   * own play time while autotracking reads it outside Race Mode. A save
+   * without it is real time: no version needed.
+   */
+  timerClock: TimerClock;
 };
 
 /** The game a save is for: the one game pack the tracker has today. */

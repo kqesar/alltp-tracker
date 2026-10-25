@@ -41,12 +41,15 @@ import {
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
 import { HISTORY_LIMIT } from "@/games/runHistory";
 import {
+  alignTimer,
   finishTimer,
+  type GameClock,
   IDLE_TIMER,
   pauseTimer,
   type RunTimer,
   restoreTimer,
   startTimer,
+  type TimerClock,
 } from "@/utils/runTimer";
 
 /** Which way a click moves a counter or a progressive item. */
@@ -68,6 +71,12 @@ type GameState = Progress &
     /** Set the run timer back to 0, stopped. */
     resetTimer: () => void;
     setAutoTimer: (on: boolean) => void;
+    setTimerClock: (clock: TimerClock) => void;
+    /**
+     * Set the run timer on the game's clock as read at `at`; the timer is
+     * left as it is, same object, when it is already there.
+     */
+    alignTimer: (clock: GameClock, at: number) => void;
 
     // Actions
     applyPreset: (presetId: string) => void;
@@ -258,6 +267,7 @@ const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
   mapLayout: "auto",
   mapView: "map",
   shortcuts: DEFAULT_SHORTCUTS,
+  timerClock: "real",
 });
 
 /**
@@ -312,6 +322,10 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
       ? saved.mapView
       : base.mapView,
   shortcuts: restoreShortcuts(saved.shortcuts, base.shortcuts),
+  timerClock:
+    saved.timerClock === "game" || saved.timerClock === "real"
+      ? saved.timerClock
+      : base.timerClock,
 });
 
 /** The run alone, as a save file carries it. */
@@ -423,6 +437,7 @@ const toPersisted = (state: GameState): PersistedState => ({
   mapView: state.mapView,
   shortcuts: state.shortcuts,
   timer: state.timer,
+  timerClock: state.timerClock,
 });
 
 export const useGameStore = create<GameState>()(
@@ -431,6 +446,12 @@ export const useGameStore = create<GameState>()(
       (set, get) => ({
         ...createProgress(),
         ...createPrefs(),
+
+        alignTimer: (clock, at) =>
+          set((state) => {
+            const timer = alignTimer(state.timer, clock, at);
+            return timer === state.timer ? state : { timer };
+          }),
 
         applyGameNews: (change) => {
           const state = get();
@@ -471,7 +492,6 @@ export const useGameStore = create<GameState>()(
 
         exportState: () =>
           JSON.stringify(toSaveFile(progressOf(get())), null, 2),
-
         finishTimer: (at = Date.now()) =>
           set((state) => ({ timer: finishTimer(state.timer, at) })),
         future: [],
@@ -614,6 +634,7 @@ export const useGameStore = create<GameState>()(
             smallKeys[dungeonIndex] = count;
             return record(state, { smallKeys });
           }),
+        setTimerClock: (timerClock: TimerClock) => set({ timerClock }),
         startTimer: (at = Date.now()) =>
           set((state) => ({ timer: startTimer(state.timer, at) })),
 

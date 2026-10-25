@@ -9,7 +9,7 @@ import {
   overlaySource,
 } from "@/games/alttpr/overlay";
 import { createProgress, useGameStore } from "@/games/alttpr/stores/gameStore";
-import { IDLE_TIMER, startTimer } from "@/utils/runTimer";
+import { alignTimer, IDLE_TIMER, startTimer } from "@/utils/runTimer";
 
 const runOf = (changes: Partial<AlttprRun> = {}): AlttprRun => ({
   ...createProgress(),
@@ -168,6 +168,19 @@ describe("A Link to the Past's overlay reading", () => {
         runOf({ timer: { elapsedMs: 9_000, finished: true, startedAt: null } }),
       ).state.timer,
     ).toEqual({ elapsedMs: 9_000, startedAt: null, state: "finished" });
+  });
+
+  it("hands over a timer set on the game's time as it is, a client counting from it", () => {
+    const timer = alignTimer(
+      IDLE_TIMER,
+      { ms: 3_723_000, status: "running" },
+      5_000,
+    );
+    expect(overlayReadingOf(runOf({ timer })).state.timer).toEqual({
+      elapsedMs: 3_723_000,
+      startedAt: 5_000,
+      state: "running",
+    });
   });
 
   describe("fresh", () => {

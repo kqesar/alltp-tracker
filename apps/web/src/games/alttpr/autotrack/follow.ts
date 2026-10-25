@@ -25,12 +25,13 @@ import {
 } from "@/games/alttpr/autotrack/apply";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
 import { entrancesKnown, type RunSettings } from "@/games/alttpr/data/presets";
-import { timerNews } from "@/games/alttpr/logic/timer";
+import { gameClockOf, timerNews } from "@/games/alttpr/logic/timer";
 import {
   createProgress,
   useGameStore,
   withNotes,
 } from "@/games/alttpr/stores/gameStore";
+import { isRunning } from "@/utils/runTimer";
 
 /** The board's side of a session. */
 export type Follower = {
@@ -147,9 +148,19 @@ export const createFollower = (): Follower => {
       );
     },
     read: (reading) => {
-      // The run timer starts and stops with the game, if the player lets it
+      // The run timer follows the game: set on the game's own clock if the
+      // player chose that and it can be read, else started and stopped by
+      // the game if the player lets it
       const game = useGameStore.getState();
-      if (game.autoTimer) {
+      const clock =
+        game.timerClock === "game"
+          ? gameClockOf(reading.race, reading.progress)
+          : "unavailable";
+      if (typeof clock === "object") game.alignTimer(clock, reading.at);
+      else if (clock === "unloaded") {
+        // The title or the file select: the game's time is not there to read
+        if (isRunning(game.timer)) game.pauseTimer(reading.at);
+      } else if (game.autoTimer) {
         const news = timerNews(beforePlay, reading.progress, game.timer);
         if (news === "start") game.startTimer(reading.at);
         if (news === "finish") game.finishTimer(reading.at);

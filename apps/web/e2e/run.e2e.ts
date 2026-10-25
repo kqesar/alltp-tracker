@@ -74,5 +74,28 @@ for (const width of WIDTHS) {
 
       await auditPage(page);
     });
+
+    test("opens the timer's clock choice, which passes axe and is reachable", async ({
+      page,
+    }) => {
+      await playRun(page);
+      await page.getByTestId("run-timer").click();
+      const clock = page.getByRole("group", { name: "Clock" });
+      await expect(clock).toBeVisible();
+      await page.getByRole("radio", { name: "Game time" }).check();
+      await expect(page.getByTestId("run-timer-clock-hint")).toHaveText(
+        "Counts real time until autotracking reads a game with a file loaded.",
+      );
+      await expect(
+        page.getByRole("radio", { name: "Game time" }),
+      ).toBeFocused();
+      // The arrow keys move between the two radios
+      await page.keyboard.press("ArrowUp");
+      await expect(
+        page.getByRole("radio", { name: "Real time" }),
+      ).toBeChecked();
+
+      await auditPage(page);
+    });
   });
 }

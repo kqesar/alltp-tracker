@@ -68,6 +68,52 @@ export const finishTimer = (timer: RunTimer, at: number): RunTimer => ({
   startedAt: null,
 });
 
+/** The clock a timer shows, chosen by the player: how races time, or the game's. */
+export type TimerClock = "game" | "real";
+
+/** A game's own clock at one reading, and where its run stands. */
+export type GameClock = {
+  /** The game's time, in milliseconds. */
+  readonly ms: number;
+  /** Counting, stopped for now (a menu the game does not count, the title), or over (the goal). */
+  readonly status: "over" | "paused" | "running";
+};
+
+/**
+ * How far a running timer may be from its game clock before a reading sets it
+ * right. Readings come about every second, so setting it at each would write
+ * the run (and redraw its other views) for nothing; the drift this allows
+ * stays under the second a timer shows.
+ */
+const ALIGN_TOLERANCE_MS = 250;
+
+/**
+ * Set a timer on a game's clock as read at `at`: its time becomes the game's,
+ * running (so it ticks between two readings) while the game counts, stopped
+ * while it does not, finished at the goal. A finished timer stays so; a
+ * running one that is within the tolerance of the game is returned as it is.
+ */
+export const alignTimer = (
+  timer: RunTimer,
+  clock: GameClock,
+  at: number,
+): RunTimer => {
+  if (timer.finished) return timer;
+  const { ms, status } = clock;
+  if (status === "over") {
+    return { elapsedMs: ms, finished: true, startedAt: null };
+  }
+  if (status === "paused") {
+    return timer.startedAt === null && timer.elapsedMs === ms
+      ? timer
+      : { elapsedMs: ms, finished: false, startedAt: null };
+  }
+  return isRunning(timer) &&
+    Math.abs(timerMs(timer, at) - ms) <= ALIGN_TOLERANCE_MS
+    ? timer
+    : { elapsedMs: ms, finished: false, startedAt: at };
+};
+
 /** "1:23:45", or "23:45" under an hour: the time a timer shows. */
 export const formatTime = (ms: number): string => {
   const seconds = Math.floor(Math.max(0, ms) / 1000);
