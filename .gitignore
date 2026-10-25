@@ -36,3 +36,6 @@ apps/web/public/models/
 # Playwright
 playwright-report/
 test-results/
+
+# playwright-cli snapshots and screenshots, wherever it ran
+.playwright-cli/
