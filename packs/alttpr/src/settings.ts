@@ -180,21 +180,23 @@ export type AlttprSettings = {
   // The glitch flags of config/logic.php, and two the region rules read that
   // no logic sets. NoGlitches sets none (logic.php:4), and it is the only
   // logic the pack models: a rule writes the branch upstream gates on one as
-  // `setting(canBootsClip) & ...`, which folds away.
+  // `setting(canBootsClip) & ...`, which folds away. The five tricks that
+  // tricks.ts reads as items may be compiled on, as its tests do; a run
+  // sets none.
   readonly canBootsClip: false;
-  readonly canBunnyRevive: false;
+  readonly canBunnyRevive: boolean;
   readonly canBunnySurf: false;
-  readonly canDungeonRevive: false;
-  readonly canFakeFlipper: false;
+  readonly canDungeonRevive: boolean;
+  readonly canFakeFlipper: boolean;
   readonly canMirrorClip: false;
   readonly canMirrorWrap: false;
   readonly canOneFrameClipOW: false;
   readonly canOneFrameClipUW: false;
   readonly canOWYBA: false;
-  readonly canSuperBunny: false;
+  readonly canSuperBunny: boolean;
   readonly canSuperSpeed: false;
   readonly canTransitionWrapped: false;
-  readonly canWaterWalk: false;
+  readonly canWaterWalk: boolean;
 };
 
 /** The worlds this pack builds: `World::factory`'s type. */

@@ -305,6 +305,18 @@
       "status": "ported"
     },
     {
+      "file": "app/Http/Controllers/CustomizerController.php",
+      "module": "src/tricks.ts",
+      "role": "item.require.Lamp set to 0 by the customizer's dark room toggle: the dark rooms trick",
+      "status": "ported"
+    },
+    {
+      "file": "resources/js/store/modules/glitches.js",
+      "module": "src/tricks.ts",
+      "role": "the customizer's glitch flags, canBunnyRevive among them, which no logic sets: the bunny revival trick",
+      "status": "ported"
+    },
+    {
       "file": "app/World/Standard.php",
       "module": "src/worlds/standard.ts",
       "role": "the regions of a Standard world",
