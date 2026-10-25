@@ -304,10 +304,17 @@ export const Tooltip = () => {
     const onPointerMove = (event: PointerEvent) => {
       if (event.pointerType !== "mouse") return;
       const onTooltip = isOnTooltip(event.clientX, event.clientY);
-      if (onTooltip === hovered) return;
-      hovered = onTooltip;
-      if (onTooltip) cancelHide();
-      else if (!anchor.contains(event.target as Node)) scheduleHide(anchor);
+      // Every move over it keeps it: one that opened under the pointer has
+      // been hovered since before it moved, yet leaving its anchor has
+      // scheduled its hide
+      if (onTooltip) {
+        hovered = true;
+        cancelHide();
+        return;
+      }
+      if (!hovered) return;
+      hovered = false;
+      if (!anchor.contains(event.target as Node)) scheduleHide(anchor);
     };
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("pointerdown", onPointerDown);

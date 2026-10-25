@@ -213,8 +213,8 @@ test.describe("a tooltip", () => {
   test("stays while hovered, yet lets a press reach the item it covers", async ({
     page,
   }) => {
-    // Skull Woods' boss sits under the Magic Mirror: its tooltip, above it,
-    // covers the mirror's cell
+    // Skull Woods' boss sits under the Magic Mirror: its tooltip, above it
+    // or over it where the screen is short, covers the mirror's cell
     const boss = page.getByTestId("item-boss5");
     const mirror = page.getByTestId("item-mirror");
     const tooltip = page.getByTestId("tooltip");
