@@ -26,6 +26,20 @@ export const clickToolbarAction = async (
   await page.getByTestId(item).click();
 };
 
+/**
+ * Show or hide ALttPR's key cells, where the choice lives: the checkbox of
+ * the Mode dialog, which this opens and closes again.
+ */
+export const setKeyCells = async (page: Page, shown: boolean) => {
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Choose a run type" });
+  await dialog
+    .getByRole("checkbox", { name: "Show key cells" })
+    .setChecked(shown);
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+};
+
 /** The data-testid of the element that has focus. */
 export const focusedTestId = (page: Page) =>
   page.evaluate(() => document.activeElement?.getAttribute("data-testid"));

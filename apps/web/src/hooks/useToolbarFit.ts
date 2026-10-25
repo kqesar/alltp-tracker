@@ -8,13 +8,12 @@ import { type RefObject, useLayoutEffect } from "react";
  * - `labels`: every action with its label, on one row.
  * - `secondary-icons`: Export, Import, Share, Stream view and Shortcuts show
  *   as icons while the primary controls (Mode, New game, Autotracking, the
- *   map layout, the key cells toggle) keep their labels. A button added to
+ *   map layout) keep their labels. A button added to
  *   the bar later costs this step its few pixels, never every label at once.
  * - `icons`: every action as an icon, on one row.
  * - `more`: Export, Import, Stream view and Shortcuts move into More.
  * - `more-map`: the map layout too, set once per device and the widest
  *   control left.
- * - `more-keys`: the key cells toggle too, which the run type mostly sets.
  * - `compact`: New game shows as an icon; Mode keeps the run type's name,
  *   and Undo and Redo, used all run long, never fold.
  * - `more-autotrack`: last of all, the Autotracking control, whose dot is
@@ -28,15 +27,14 @@ export const FITS = [
   { fit: "icons", fold: ["labels"], rows: 1 },
   { fit: "more", fold: ["labels", "secondary"], rows: 2 },
   { fit: "more-map", fold: ["labels", "secondary", "map"], rows: 2 },
-  { fit: "more-keys", fold: ["labels", "secondary", "map", "keys"], rows: 2 },
   {
     fit: "compact",
-    fold: ["labels", "secondary", "map", "keys", "new-game"],
+    fold: ["labels", "secondary", "map", "new-game"],
     rows: 2,
   },
   {
     fit: "more-autotrack",
-    fold: ["labels", "secondary", "map", "keys", "new-game", "autotrack"],
+    fold: ["labels", "secondary", "map", "new-game", "autotrack"],
     rows: 2,
   },
 ] as const;

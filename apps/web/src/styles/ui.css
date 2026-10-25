@@ -10,15 +10,14 @@
 }
 
 /* Tracker controls: run type, new game, undo/redo, save files, map layout.
-   Its buttons join the toolbar row directly, so they wrap with the key-cells
-   toggle instead of as a separate block. */
+   Its buttons join the toolbar row directly, so they wrap with it instead of
+   as a separate block. */
 .tracker-controls {
   display: contents;
 }
 
 /* Shared look of every toolbar button */
 .tracker-controls__button,
-.bigkey-toggle,
 .notice__button {
   display: inline-flex;
   gap: var(--spacing-sm);
@@ -41,7 +40,6 @@
 }
 
 .tracker-controls__button:hover:not(:disabled),
-.bigkey-toggle:hover,
 .notice__button:hover {
   color: var(--color-accent);
   background: var(--surface-hover);
@@ -50,7 +48,6 @@
 
 /* The page's focus ring, which the raised shadow above would replace */
 .tracker-controls__button:focus-visible,
-.bigkey-toggle:focus-visible,
 .notice__button:focus-visible {
   box-shadow: var(--focus-ring);
 }
@@ -69,7 +66,6 @@
    first the secondary actions only ("secondary-labels", inside
    .toolbar-secondary or .toolbar-actions), then every button ("labels") */
 .toolbar[data-fold~="labels"] .tracker-controls__button,
-.toolbar[data-fold~="labels"] .bigkey-toggle,
 .toolbar[data-fold~="secondary-labels"]
   :is(.toolbar-secondary, .toolbar-actions)
   .tracker-controls__button {
@@ -165,60 +161,6 @@
 
 .segmented__option:has(:focus-visible) {
   box-shadow: var(--focus-ring);
-}
-
-/* Key cells toggle: pushed to the far end of the toolbar */
-.bigkey-toggle-container {
-  margin-inline-start: auto;
-}
-
-.bigkey-toggle--active {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-.bigkey-toggle__icon {
-  position: relative;
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-}
-
-.bigkey-toggle__key-icon {
-  position: relative;
-  display: block;
-  width: 12px;
-  height: 12px;
-  background: currentColor;
-  border-radius: 2px;
-}
-
-.bigkey-toggle__key-icon::before {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  content: "";
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 1px;
-  transform: translate(-50%, -50%);
-}
-
-.bigkey-toggle__slash {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    45deg,
-    transparent 40%,
-    currentColor 45%,
-    currentColor 55%,
-    transparent 60%
-  );
 }
 
 /* Tooltip: one per page, anchored to the control it describes. A press on

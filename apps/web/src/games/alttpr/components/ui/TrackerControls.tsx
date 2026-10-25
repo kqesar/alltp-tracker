@@ -78,8 +78,6 @@ export const TrackerControls = () => {
   const canUndo = useGameStore((state) => state.past.length > 0);
   const canRedo = useGameStore((state) => state.future.length > 0);
   const mapLayout = useGameStore((state) => state.mapLayout);
-  const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
-  const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
   const setMapLayout = useGameStore((state) => state.setMapLayout);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -249,18 +247,6 @@ export const TrackerControls = () => {
                       />
                     ))}
                   </ToolbarMenuGroup>
-                </>
-              )}
-              {folded.has("keys") && (
-                <>
-                  <ToolbarMenuSeparator />
-                  <ToolbarMenuChoice
-                    checked={bigKeysVisible}
-                    kind="checkbox"
-                    label="Big keys"
-                    onSelect={() => setBigKeysVisible(!bigKeysVisible)}
-                    testId="toolbar-more-big-keys"
-                  />
                 </>
               )}
             </>

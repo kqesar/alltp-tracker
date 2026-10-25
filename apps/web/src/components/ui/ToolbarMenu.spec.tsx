@@ -138,10 +138,10 @@ describe("the toolbar's More menu", () => {
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
-  it("offers the map layout and key cells as choices once the bar folds them", async () => {
+  it("offers the map layout as choices once the bar folds it", async () => {
     const user = userEvent.setup();
     render(
-      <div data-fold="labels secondary map keys">
+      <div data-fold="labels secondary map">
         <TrackerControls />
       </div>,
     );
@@ -156,11 +156,9 @@ describe("the toolbar's More menu", () => {
     expect(
       choices.map((choice) => choice.getAttribute("aria-checked")),
     ).toEqual(["true", "false", "false"]);
-    const keys = within(menu()).getByRole("menuitemcheckbox", {
-      name: "Big keys",
-    });
-    expect(keys).toHaveAttribute("aria-checked", "false");
-    expect(within(menu()).getAllByRole("separator")).toHaveLength(2);
+    // The key cells moved to the Mode dialog: no checkbox is left in the menu
+    expect(within(menu()).queryByRole("menuitemcheckbox")).toBeNull();
+    expect(within(menu()).getAllByRole("separator")).toHaveLength(1);
 
     // Choosing closes the menu, as a command does, and the choice holds
     await user.click(choices[2]);
@@ -170,16 +168,12 @@ describe("the toolbar's More menu", () => {
     expect(
       within(menu()).getByRole("menuitemradio", { name: "Stack" }),
     ).toHaveAttribute("aria-checked", "true");
-    await user.click(
-      within(menu()).getByRole("menuitemcheckbox", { name: "Big keys" }),
-    );
-    expect(useGameStore.getState().bigKeysVisible).toBe(true);
   });
 
   it("leads with Autotracking and its status once the bar folds it last", async () => {
     const user = userEvent.setup();
     render(
-      <div data-fold="labels secondary map keys new-game autotrack">
+      <div data-fold="labels secondary map new-game autotrack">
         <TrackerControls />
       </div>,
     );
@@ -211,7 +205,7 @@ describe("the toolbar's More menu", () => {
   it("moves through choices and commands alike with the arrows", async () => {
     const user = userEvent.setup();
     render(
-      <div data-fold="labels secondary map keys">
+      <div data-fold="labels secondary map">
         <TrackerControls />
       </div>,
     );
@@ -219,11 +213,11 @@ describe("the toolbar's More menu", () => {
 
     await user.keyboard("{End}");
     expect(
-      within(menu()).getByRole("menuitemcheckbox", { name: "Big keys" }),
+      within(menu()).getByRole("menuitemradio", { name: "Stack" }),
     ).toHaveFocus();
     await user.keyboard("{ArrowUp}");
     expect(
-      within(menu()).getByRole("menuitemradio", { name: "Stack" }),
+      within(menu()).getByRole("menuitemradio", { name: "Side" }),
     ).toHaveFocus();
   });
 

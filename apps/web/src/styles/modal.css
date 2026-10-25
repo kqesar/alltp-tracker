@@ -292,6 +292,22 @@
   box-shadow: var(--focus-ring);
 }
 
+/* A display option of this device, under the run's summary: its box, then
+   a line saying what it does, in line with the label */
+.run-display {
+  display: grid;
+  gap: var(--spacing-xs);
+  margin: 0 0 var(--spacing-md);
+}
+
+.run-display__hint {
+  padding-inline-start: calc(1.25rem + var(--spacing-sm));
+  margin: 0;
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
 /* Start from a seed: its alttpr.com link or hash */
 .seed-import {
   display: grid;

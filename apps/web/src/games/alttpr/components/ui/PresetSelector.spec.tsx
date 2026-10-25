@@ -19,6 +19,7 @@ vi.mock("@/games/alttpr/stores/gameStore", () => ({ useGameStore: vi.fn() }));
 const applyRun = vi.fn();
 const updateSettings = vi.fn();
 const hideSetting = vi.fn();
+const setBigKeysVisible = vi.fn();
 const OPEN_RUN = {
   presetId: "open",
   settings: {
@@ -29,8 +30,10 @@ const OPEN_RUN = {
 };
 const fakeState = {
   applyRun,
+  bigKeysVisible: false,
   hideSetting,
   ...OPEN_RUN,
+  setBigKeysVisible,
   updateSettings,
 };
 
@@ -40,7 +43,7 @@ afterEach(() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  Object.assign(fakeState, OPEN_RUN);
+  Object.assign(fakeState, OPEN_RUN, { bigKeysVisible: false });
   forgetSeedFiles();
   (useGameStore as unknown as Mock).mockImplementation(
     (selector: (state: typeof fakeState) => unknown) => selector(fakeState),
@@ -75,6 +78,38 @@ describe("PresetSelector", () => {
     expect(
       within(dialog).getByRole("combobox", { name: "Ganon" }),
     ).toHaveDisplayValue("6 crystals");
+  });
+
+  it("offers the key cells as a described checkbox, a display option", () => {
+    render(<PresetSelector />);
+    const dialog = openList();
+
+    const option = within(dialog).getByRole("checkbox", {
+      name: "Show key cells",
+    });
+    expect(option).not.toBeChecked();
+    expect(option).toHaveAccessibleDescription(
+      /on their own in MC, MCS and Full/i,
+    );
+    // Outside the settings summary: no select, no run change
+    expect(option.closest(".run-settings")).toBeNull();
+
+    fireEvent.click(option);
+    expect(setBigKeysVisible).toHaveBeenCalledWith(true);
+    expect(applyRun).not.toHaveBeenCalled();
+    expect(updateSettings).not.toHaveBeenCalled();
+  });
+
+  it("checks the key cells while they are shown, and hides them on a click", () => {
+    fakeState.bigKeysVisible = true;
+    render(<PresetSelector />);
+    const option = within(openList()).getByRole("checkbox", {
+      name: "Show key cells",
+    });
+
+    expect(option).toBeChecked();
+    fireEvent.click(option);
+    expect(setBigKeysVisible).toHaveBeenCalledWith(false);
   });
 
   it("asks for confirmation before switching, then applies the preset", () => {

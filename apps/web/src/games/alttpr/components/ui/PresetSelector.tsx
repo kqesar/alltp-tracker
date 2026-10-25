@@ -77,6 +77,38 @@ const SettingSelect = ({
 };
 
 /**
+ * The key cells' switch, a display option of this device and not a seed
+ * setting: it sits under the run's summary, apart from the selects. A run
+ * whose maps and compasses leave their dungeons shows the cells on its own
+ * (`applyRun`); in any other the player shows them to track keys by hand.
+ */
+const KeyCellsOption = () => {
+  const id = useId();
+  const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
+  const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
+  return (
+    <div className="run-display">
+      <div className="check-option">
+        <input
+          aria-describedby={`${id}-hint`}
+          checked={bigKeysVisible}
+          className="check-option__input"
+          data-testid="key-cells-toggle"
+          id={id}
+          onChange={(event) => setBigKeysVisible(event.target.checked)}
+          type="checkbox"
+        />
+        <label htmlFor={id}>Show key cells</label>
+      </div>
+      <p className="run-display__hint" id={`${id}-hint`}>
+        Shown on their own in MC, MCS and Full; elsewhere, to track keys by
+        hand.
+      </p>
+    </div>
+  );
+};
+
+/**
  * PresetSelector - lets the player pick a run-type preset (Open, Keysanity,
  * Inverted, ...), or a seed of alttpr.com's, whose settings name one.
  * Picking a different run type asks for confirmation because it resets the
@@ -153,6 +185,7 @@ export const PresetSelector = () => {
             </div>
           ))}
         </dl>
+        <KeyCellsOption />
         <SeedImport
           onSwitch={(seed) =>
             setPending({
