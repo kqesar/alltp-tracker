@@ -5,13 +5,19 @@
 // fastest of several runs of each stage, so a busy machine does not fail it.
 import { describe, expect, it } from "vitest";
 import { getPreset } from "@/games/alttpr/data/presets";
+import { DEFAULT_TRICKS } from "@/games/alttpr/data/tricks";
 import {
   budgetOf,
   fastest,
   GRID_ITEMS,
   stage,
 } from "@/games/alttpr/logic/performance.fixtures";
-import { type Inputs, solutionOf } from "@/games/alttpr/logic/solution";
+import {
+  type Inputs,
+  solutionOf,
+  trickSolutionOf,
+  warmTricks,
+} from "@/games/alttpr/logic/solution";
 
 /** A solve's budget: a quarter of a frame, more when coverage slows it. */
 const BUDGET_MS = 4;
@@ -43,6 +49,44 @@ describe("a click's solve", () => {
         `${preset}: first solve ${cold.toFixed(1)} ms, then ${mean.toFixed(2)} ms on average, ${Math.max(...times).toFixed(2)} ms at most`,
       );
       expect(mean).toBeLessThan(budget);
+    },
+    120_000,
+  );
+});
+
+describe("a click's solve with every trick known", () => {
+  it.each(["open", "keysanity"])(
+    "stays within half a frame along a whole %s game, the cold start apart",
+    (preset) => {
+      const settings = getPreset(preset).settings;
+      const tricks = { enabled: true, techniques: DEFAULT_TRICKS.techniques };
+      const stages = Array.from({ length: GRID_ITEMS.length + 1 }, (_, i) => ({
+        ...stage(i, settings),
+        tricks,
+      }));
+      // The real world is solved already: what turning the tricks on adds is
+      // the tricks world's compile, its key model and the first solve
+      solutionOf(stage(0, settings));
+      // Warmed while the dialog is read, so the switch costs only a solve
+      const warming = fastest(() => warmTricks(settings), 1);
+      const cold = fastest(() => trickSolutionOf(stages[0] as Inputs), 1);
+
+      // A new items object each time: neither memo must answer for it
+      const times = stages.map((inputs) =>
+        fastest(
+          () => trickSolutionOf({ ...inputs, items: { ...inputs.items } }),
+          5,
+        ),
+      );
+      const mean = times.reduce((sum, ms) => sum + ms, 0) / times.length;
+
+      // Real work: a tricks solve answers for every location of the world
+      const early = trickSolutionOf(stages[1] as Inputs)?.tris ?? {};
+      expect(Object.keys(early).length).toBeGreaterThan(100);
+      console.info(
+        `${preset} with tricks: warming ${warming.toFixed(1)} ms, first solve then ${cold.toFixed(1)} ms, then ${mean.toFixed(2)} ms on average, ${Math.max(...times).toFixed(2)} ms at most`,
+      );
+      expect(mean).toBeLessThan(budgetOf(2 * BUDGET_MS));
     },
     120_000,
   );

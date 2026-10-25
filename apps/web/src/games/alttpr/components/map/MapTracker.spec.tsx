@@ -191,6 +191,23 @@ describe("MapTracker worlds and markers", () => {
     );
   });
 
+  it("marks a check a known trick opens, and says so in its name", () => {
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: true, techniques: ["fakeFlipper"] }),
+    );
+    render(<MapTracker />);
+
+    const hobo = screen.getByTestId("marker-hobo");
+    expect(hobo).toHaveAccessibleName(
+      "Hobo: out of logic, doable with a trick",
+    );
+    expect(hobo).toHaveClass("trick");
+    // What the trick does not open stays out of logic
+    expect(screen.getByTestId("marker-kings-tomb")).toHaveClass("unavailable");
+  });
+
   it("keeps the dungeon square out of the accessibility tree", () => {
     render(<MapTracker />);
 

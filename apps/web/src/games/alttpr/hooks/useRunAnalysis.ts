@@ -9,7 +9,7 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
 const IDLE_TIMEOUT_MS = 500;
 
 /** Run `task` when the browser is idle; returns what cancels it. */
-const whenIdle = (task: () => void): (() => void) => {
+export const whenIdle = (task: () => void): (() => void) => {
   if (typeof requestIdleCallback === "function") {
     const handle = requestIdleCallback(task, { timeout: IDLE_TIMEOUT_MS });
     return () => cancelIdleCallback(handle);

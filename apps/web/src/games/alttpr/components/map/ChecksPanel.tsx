@@ -23,6 +23,7 @@ import {
   dungeonCount,
   type MarkerState,
   solutionOf,
+  tricksShown,
   useDungeonStatus,
 } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -31,6 +32,7 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
 const FILTERS: readonly { state: MarkerState; label: string }[] = [
   { label: "Available", state: "available" },
   { label: "Maybe", state: "possible" },
+  { label: "Trick", state: "trick" },
   { label: "Seen", state: "seen" },
   { label: "Out of logic", state: "unavailable" },
   { label: "Checked", state: "opened" },
@@ -283,6 +285,8 @@ export const ChecksPanel = () => {
     ),
   );
   const toggleChecks = useGameStore((state) => state.toggleChecks);
+  // The Trick filter exists while the map marks them
+  const tricksOn = useGameStore(tricksShown);
   const [shown, setShown] = useState(FIRST_SHOWN);
   const [zoneName, setZoneName] = useState("");
   const [query, setQuery] = useState("");
@@ -315,6 +319,9 @@ export const ChecksPanel = () => {
             `${zone.name} ${check.name}`.toLowerCase().includes(words),
         ),
   );
+  const filters = tricksOn
+    ? FILTERS
+    : FILTERS.filter(({ state }) => state !== "trick");
   const counts = Object.fromEntries(FILTERS.map(({ state }) => [state, 0]));
   for (const check of inScope.flat()) counts[states[check.id]]++;
   const lists = inScope.map((checks) =>
@@ -341,7 +348,7 @@ export const ChecksPanel = () => {
       <div className="checks__tools">
         <fieldset className="segmented checks__filters">
           <legend className="segmented__legend">Show</legend>
-          {FILTERS.map(({ label, state }) => (
+          {filters.map(({ label, state }) => (
             <label className="segmented__option checks-filter" key={state}>
               <input
                 checked={shown.has(state)}

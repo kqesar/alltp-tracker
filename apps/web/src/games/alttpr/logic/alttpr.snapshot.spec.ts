@@ -5,6 +5,7 @@ import {
   type ItemState,
 } from "@/games/alttpr/data/items";
 import { getPreset } from "@/games/alttpr/data/presets";
+import { DEFAULT_TRICKS, type TrickPrefs } from "@/games/alttpr/data/tricks";
 import {
   bossStateOf,
   dungeonStateOf,
@@ -38,6 +39,7 @@ const CODES: Record<MarkerState, string> = {
   opened: "o",
   possible: "p",
   seen: "s",
+  trick: "t",
   unavailable: "u",
 };
 
@@ -245,13 +247,14 @@ const scenarios: Array<{
 ];
 
 /** What the map shows for a state: its markers, and its dungeons' bosses. */
-const shown = (items: ItemState, medallions: number[]) => {
+const shown = (items: ItemState, medallions: number[], tricks?: TrickPrefs) => {
   const run = {
     checked: {},
     items,
     medallions,
     settings: getPreset("open").settings,
     smallKeys: Array(10).fill(0),
+    ...(tricks === undefined ? {} : { tricks }),
   };
   return {
     bosses: MARKED_DUNGEONS.map((id) => CODES[bossStateOf(id, run)]).join(""),
@@ -276,5 +279,36 @@ describe("what the map shows, by the alttpr pack", () => {
       expect(expected.markers, name).toHaveLength(MARKERS.length);
       expect(expected.bosses, name).toHaveLength(MARKED_DUNGEONS.length);
     }
+  });
+});
+
+describe("the tricks preference", () => {
+  it.each([
+    ["off", DEFAULT_TRICKS],
+    ["on, no trick known", { enabled: true, techniques: [] }],
+  ] as const)("changes nothing the map shows when it is %s", (_, tricks) => {
+    for (const { expected, items, medallions, name } of scenarios) {
+      expect(shown(items, medallions, tricks), name).toEqual(expected);
+    }
+  });
+
+  it("only turns what is out of logic, seen or not, into a trick", () => {
+    const tricks = { ...DEFAULT_TRICKS, enabled: true };
+    let marked = 0;
+    for (const { expected, items, medallions, name } of scenarios) {
+      const withTricks = shown(items, medallions, tricks);
+      for (const kind of ["bosses", "markers"] as const) {
+        [...expected[kind]].forEach((was, index) => {
+          const now = withTricks[kind][index];
+          if (now === was) return;
+          // A mark said where a trick opens what logic does not, and
+          // nothing of what logic opens or what is done moves
+          expect(now, `${name} ${kind}[${index}]`).toBe("t");
+          expect("us", `${name} ${kind}[${index}]`).toContain(was);
+          marked++;
+        });
+      }
+    }
+    expect(marked).toBeGreaterThan(0);
   });
 });

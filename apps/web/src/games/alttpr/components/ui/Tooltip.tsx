@@ -57,6 +57,7 @@ const STATE_TEXT: Record<MarkerState, string> = {
   opened: "Done",
   possible: "Maybe",
   seen: "Visible, not reachable yet",
+  trick: "Doable with a trick",
   unavailable: "Out of logic",
 };
 

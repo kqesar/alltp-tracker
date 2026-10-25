@@ -36,6 +36,43 @@ describe("ChecksPanel", () => {
     );
   });
 
+  it("offers the Trick filter only while tricks are marked", async () => {
+    const user = userEvent.setup();
+    render(<ChecksPanel />);
+    expect(screen.queryByTestId("checks-filter-trick")).toBeNull();
+
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: true, techniques: ["darkRooms"] }),
+    );
+    // Not shown at first: the count says what it would show
+    expect(filter("trick").closest("label")).toHaveTextContent(/Trick[1-9]/);
+    expect(filter("trick")).not.toBeChecked();
+    const marked = () =>
+      screen
+        .queryAllByTestId(/^check-row-/)
+        .filter((each) => each.textContent?.includes("Trick"));
+    expect(marked()).toHaveLength(0);
+
+    await user.click(filter("trick"));
+    expect(marked().length).toBeGreaterThan(0);
+    expect(marked()).toHaveLength(
+      Number(
+        /Trick(\d+)/.exec(
+          filter("trick").closest("label")?.textContent ?? "",
+        )?.[1],
+      ),
+    );
+
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: false, techniques: ["darkRooms"] }),
+    );
+    expect(screen.queryByTestId("checks-filter-trick")).toBeNull();
+  });
+
   it("filters by state, zone and words", async () => {
     const user = userEvent.setup();
     render(<ChecksPanel />);

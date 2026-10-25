@@ -3,6 +3,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { GamePicker } from "@/components/ui/GamePicker";
 import { Modal } from "@/components/ui/Modal";
 import { SeedImport } from "@/games/alttpr/components/ui/SeedImport";
+import { TricksDialog } from "@/games/alttpr/components/ui/TricksDialog";
 import {
   describeSettings,
   getPreset,
@@ -109,6 +110,39 @@ const KeyCellsOption = () => {
 };
 
 /**
+ * The Tricks entry, under the key cells' switch: a button that opens the
+ * tricks dialog, and a line saying how the tricks stand. A display option of
+ * the device, like the switch above it.
+ */
+const TricksOption = () => {
+  const id = useId();
+  const [isOpen, setIsOpen] = useState(false);
+  const known = useGameStore((state) => state.tricks.techniques.length);
+  const enabled = useGameStore((state) => state.tricks.enabled);
+  return (
+    <div className="run-display">
+      <div className="tricks-entry">
+        <button
+          aria-describedby={`${id}-hint`}
+          className="modal-btn modal-btn--ghost"
+          data-testid="tricks-button"
+          onClick={() => setIsOpen(true)}
+          type="button"
+        >
+          Tricks
+        </button>
+        <p className="run-display__hint tricks-entry__hint" id={`${id}-hint`}>
+          {enabled
+            ? `On, ${known === 1 ? "1 trick" : `${known} tricks`} known: checks they open are marked.`
+            : "Off. Marks checks a trick opens, out of logic."}
+        </p>
+      </div>
+      <TricksDialog isOpen={isOpen} onClose={() => setIsOpen(false)} />
+    </div>
+  );
+};
+
+/**
  * PresetSelector - lets the player pick a run-type preset (Open, Keysanity,
  * Inverted, ...), or a seed of alttpr.com's, whose settings name one.
  * Picking a different run type asks for confirmation because it resets the
@@ -186,6 +220,7 @@ export const PresetSelector = () => {
           ))}
         </dl>
         <KeyCellsOption />
+        <TricksOption />
         <SeedImport
           onSwitch={(seed) =>
             setPending({

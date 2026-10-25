@@ -352,6 +352,24 @@ describe("Tooltip", () => {
     ).toHaveClass("seen");
   });
 
+  it("says a location a known trick opens is doable with a trick", () => {
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: true, techniques: ["fakeFlipper"] }),
+    );
+    renderMap();
+
+    fireEvent.pointerEnter(screen.getByTestId("marker-hobo"), {
+      pointerType: "mouse",
+    });
+
+    expect(rows()).toEqual(["Doable with a trick trick"]);
+    expect(
+      screen.getByTestId("tooltip-checks").querySelector(".state-glyph"),
+    ).toHaveClass("trick");
+  });
+
   it("gives a dungeon's items left, those surely in logic, and each chest", () => {
     renderMap();
     fireEvent.pointerEnter(screen.getByTestId("boss-marker-eastern-palace"), {

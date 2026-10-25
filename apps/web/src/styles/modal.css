@@ -514,3 +514,89 @@ a.modal-btn {
 .check-option label {
   cursor: pointer;
 }
+
+/* The tricks dialog: a switch, then one row per trick */
+.tricks-dialog {
+  display: grid;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.tricks-dialog p {
+  margin: 0;
+}
+
+.tricks-dialog__note {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.tricks-dialog__list {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.tricks-dialog__list legend {
+  padding: 0;
+  margin-bottom: var(--spacing-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.tricks-dialog__list:disabled {
+  opacity: 0.6;
+}
+
+.tricks-dialog__list > ul {
+  display: grid;
+  gap: var(--spacing-md);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.trick-row {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.tricks-dialog a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.trick-row__guides {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--spacing-md);
+  padding-inline-start: calc(1.25rem + var(--spacing-sm));
+  padding-top: var(--spacing-xs);
+  margin: 0;
+  font-size: var(--font-size-xs);
+  list-style: none;
+}
+
+/* A guide link keeps the 24 px target of WCAG 2.5.8 where they stack */
+.trick-row__guides li {
+  display: flex;
+  align-items: center;
+  min-height: 1.5rem;
+}
+
+/* The Mode dialog's Tricks entry: a button and what it does */
+.tricks-entry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-sm);
+  align-items: center;
+}
+
+.tricks-entry__hint {
+  padding-inline-start: 0;
+}

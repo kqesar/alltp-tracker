@@ -113,6 +113,19 @@
     center / 80% no-repeat;
 }
 
+.trick {
+  --glyph: "";
+  background-color: var(--state-trick);
+}
+
+/* A lightning bolt in the ink colour, a mask like the eye's */
+.trick.state-glyph::after {
+  background-color: var(--state-ink);
+  mask:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M14 1 4 13.5h6.2L8.8 23 20 9.8h-6.6L14 1Z'/></svg>")
+    center / 76% no-repeat;
+}
+
 .opened {
   --glyph: "";
   background-color: var(--state-opened);
@@ -147,6 +160,14 @@
   background-color: inherit;
   border: 1px solid var(--state-ink);
   border-radius: 50%;
+}
+
+/* The boss's badge keeps its disc: the bolt is drawn in it, not cut out */
+.boss.trick.state-glyph::after {
+  background:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230b0b0f' d='M14 1 4 13.5h6.2L8.8 23 20 9.8h-6.6L14 1Z'/></svg>")
+    center / 76% no-repeat var(--state-trick);
+  mask: none;
 }
 
 .boss.opened::after {
