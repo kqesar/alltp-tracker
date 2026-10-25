@@ -572,8 +572,18 @@ legacy map's coordinate space (`apps/web/public/assets/map.webp`, 884 x 442):
 half (x 0 to 50), the Dark World on its right half. A marker stands for one
 location or several (a cave's chests), or for a dungeon's item locations.
 
-- The legacy map's 63 chest markers that stand for a check keep their
-  position and their group, in their legacy order, under plain names.
+- The legacy map's chest markers that stand for a check keep their
+  position and their group, in their legacy order, under plain names, but
+  for two places it split in two, now one marker each, standing for all of
+  the place's locations: Hookshot Cave (its bottom right chest, which the
+  boots reach, with the other three) and Sahasrahla's Hut (the three chests
+  with Sahasrahla's gift, given in the same house). A merged marker is
+  available when all its locations are, possible when only some are, and
+  its tooltip lists each with what it lacks. Each says where its position
+  was read (the cave's midway between the two legacy markers, the hut where
+  the legacy hut marker stood). `LEGACY_CHESTS` is untouched, so a legacy
+  save still checks the same locations, and `MAP_LOCATIONS` keeps its
+  order, which shared links index (a merge never moves a location in it).
 - Its 10 dungeons keep theirs.
 - Three markers are new, for what it lacked: the Waterfall of Wishing
   (`waterfall-fairy`), Castle Tower and Ganon's Tower. Each says where its

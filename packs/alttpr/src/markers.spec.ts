@@ -1,7 +1,9 @@
 // The map markers: every check on exactly one, in the right world's half,
 // at the legacy map's positions where it had a marker.
+import { solve } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { LEGACY_CHESTS, LEGACY_DUNGEONS } from "./legacy";
+import { markerStatus } from "./marker-status";
 import {
   INVERTED_MARKERS,
   LEGACY_CHEST_POSITIONS,
@@ -11,7 +13,7 @@ import {
   MARKERS,
   markersOf,
 } from "./markers";
-import { regionModules } from "./pack";
+import { compile, regionModules } from "./pack";
 import { OPEN, STANDARD, settingsFromUpstream } from "./settings";
 
 const INVERTED = settingsFromUpstream("inverted", {});
@@ -68,8 +70,9 @@ describe("the markers", () => {
     const chests = MARKERS.filter(
       (m) => "legacy" in m.position && m.position.legacy === "chest",
     );
-    // Every legacy marker but "Bridge", which stands for nothing
-    expect(chests).toHaveLength(63);
+    // Every legacy marker but "Bridge", which stands for nothing, and the
+    // four the map merged into two (below)
+    expect(chests).toHaveLength(59);
     for (const m of chests) {
       const { index } = m.position as { index: number };
       expect([m.x, m.y], m.id).toEqual(LEGACY_CHEST_POSITIONS[index]);
@@ -88,6 +91,8 @@ describe("the markers", () => {
   it("add the places the legacy map lacked, each with where it was read", () => {
     const added = MARKERS.filter((m) => "source" in m.position);
     expect(added.map((m) => m.id)).toEqual([
+      "sahasrahlas-hut",
+      "hookshot-cave",
       "waterfall-fairy",
       "castle-tower",
       "ganons-tower",
@@ -97,6 +102,69 @@ describe("the markers", () => {
     }
     expect(MARKED_DUNGEONS).not.toContain("hyrule-castle");
     expect(MARKED_DUNGEONS).toHaveLength(12);
+  });
+});
+
+describe("the places the legacy map split in two", () => {
+  const byId = (id: string) => {
+    const marker = MARKERS.find((m) => m.id === id);
+    if (marker === undefined) throw new RangeError(id);
+    return marker;
+  };
+  const status = (id: string, items: Record<string, number>) => {
+    const solution = solve(compile(OPEN), items);
+    return markerStatus(byId(id).locations.map((l) => solution.location(l)));
+  };
+
+  it("stand as one marker each for all of the place's locations", () => {
+    expect([...byId("hookshot-cave").locations].sort()).toEqual([
+      "hookshot-cave/bottom-left",
+      "hookshot-cave/bottom-right",
+      "hookshot-cave/top-left",
+      "hookshot-cave/top-right",
+    ]);
+    expect([...byId("sahasrahlas-hut").locations].sort()).toEqual([
+      "sahasrahla",
+      "sahasrahlas-hut/left",
+      "sahasrahlas-hut/middle",
+      "sahasrahlas-hut/right",
+    ]);
+    for (const gone of ["hookshot-cave-bottom-right", "sahasrahla"]) {
+      expect(MARKERS.map((m) => m.id)).not.toContain(gone);
+      expect(INVERTED_MARKERS.map((m) => m.id)).not.toContain(gone);
+    }
+  });
+
+  it("leave the order of the locations shared links index by as it was", () => {
+    const all = [...MAP_LOCATIONS];
+    const legacy = LEGACY_CHESTS.flatMap((c) => c.locations);
+    expect(all.slice(0, legacy.length)).toEqual(legacy);
+    expect(all.indexOf("hookshot-cave/bottom-right")).toBeLessThan(
+      all.indexOf("hookshot-cave/top-right"),
+    );
+  });
+
+  it("show Hookshot Cave as only some when the boots cross without the hookshot", () => {
+    const dark = {
+      flute: 1,
+      glove: 2,
+      hammer: 1,
+      magicMirror: 1,
+      moonPearl: 1,
+      rescueZelda: 1,
+    };
+    expect(status("hookshot-cave", dark)).toBe("unavailable");
+    expect(status("hookshot-cave", { ...dark, pegasusBoots: 1 })).toBe(
+      "possible",
+    );
+    expect(status("hookshot-cave", { ...dark, hookshot: 1 })).toBe("available");
+  });
+
+  it("show Sahasrahla's Hut as only some until the Pendant of Courage is held", () => {
+    expect(status("sahasrahlas-hut", { rescueZelda: 1 })).toBe("possible");
+    expect(
+      status("sahasrahlas-hut", { pendantOfCourage: 1, rescueZelda: 1 }),
+    ).toBe("available");
   });
 });
 
