@@ -35,8 +35,14 @@ const SETTING_NAMES: Readonly<Record<string, string>> = {
   itemFunctionality: "item functionality",
   itemPlacement: "item placement",
   itemPool: "item pool",
+  keysanity: "key shuffle",
+  "medallion:mire": "Misery Mire's medallion",
+  "medallion:turtle-rock": "Turtle Rock's medallion",
   mode: "mode",
+  smLogic: "Super Metroid logic",
   swordless: "swordless",
+  tourianBosses: "bosses to open Tourian",
+  towerCrystals: "crystals for Ganon's Tower",
 };
 
 /**

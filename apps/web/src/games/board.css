@@ -148,6 +148,8 @@
 .board-run {
   display: flex;
   grid-column: 1 / -1;
+  gap: var(--spacing-sm);
+  align-items: center;
   justify-content: flex-end;
   width: 100%;
 }

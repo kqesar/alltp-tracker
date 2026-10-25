@@ -2,6 +2,7 @@
 // tracks it (games/registry.ts). Its stylesheet comes with it.
 
 import "@/games/board.css";
+import "@/games/review.css";
 import "@/games/smz3/smz3.css";
 import type { GameModule } from "@/games/registry";
 import Smz3App from "@/games/smz3/Smz3App";

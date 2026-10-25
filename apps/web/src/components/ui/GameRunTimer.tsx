@@ -35,11 +35,11 @@ export const GameRunTimer = ({
   const autoTimer = useRun((state) => state.autoTimer);
   const timerClock = useRun((state) => state.timerClock);
   const startTimer = useRun((state) => state.startTimer);
+  const finishTimer = useRun((state) => state.finishTimer);
   const pauseTimer = useRun((state) => state.pauseTimer);
   const setAutoTimer = useRun((state) => state.setAutoTimer);
   const setTimerClock = useRun((state) => state.setTimerClock);
   const resetTimer = useRun((state) => state.resetTimer);
-  const finishTimer = useRun((state) => state.finishTimer);
   // The clock sets a timer that has begun; an idle one waits for its start
   const following =
     timerClock === "game" && !raceMode && clockRead && !isIdle(timer);

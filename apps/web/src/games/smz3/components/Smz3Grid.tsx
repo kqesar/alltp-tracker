@@ -1,6 +1,7 @@
 import { ITEMS } from "@alltp/pack-smz3";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { type Cell, gridOf, type KeyCell } from "@/games/smz3/data";
+import { placesText, useItemPlaces } from "@/games/smz3/review/labels";
 import { useSmz3Store } from "@/games/smz3/store";
 import {
   GridFocusProvider,
@@ -30,10 +31,13 @@ const useStepControl = (id: string, name: string, position: GridPosition) => {
   const value = useSmz3Store((state) => state.items[id] ?? 0);
   const step = useSmz3Store((state) => state.step);
   const focusable = useGridFocusable(position);
+  // In a review: where the seed put it
+  const places = useItemPlaces(id);
+  const where = places === null ? "" : `. In the seed: ${placesText(places)}`;
   return {
     props: {
       ...focusable,
-      "aria-label": `${name}, ${describe(id, value)}. Click to change state.`,
+      "aria-label": `${name}, ${describe(id, value)}${where}. Click to change state.`,
       "data-testid": `smz3-item-${id}`,
       onClick: () => step(id, 1),
       onContextMenu: (event: MouseEvent) => {
@@ -46,6 +50,7 @@ const useStepControl = (id: string, name: string, position: GridPosition) => {
           step(id, -1);
         }
       },
+      title: places === null ? undefined : `${name}: ${placesText(places)}`,
       type: "button" as const,
     },
     value,

@@ -4,8 +4,13 @@ import { Smz3Controls } from "@/games/smz3/components/Smz3Controls";
 import { Smz3Grid } from "@/games/smz3/components/Smz3Grid";
 import { Smz3Keycards } from "@/games/smz3/components/Smz3Keycards";
 import { Smz3Maps } from "@/games/smz3/components/Smz3Maps";
+import {
+  Smz3ReviewBanner,
+  Smz3ReviewButton,
+} from "@/games/smz3/components/Smz3ReviewButton";
 import { Smz3RunTimer } from "@/games/smz3/components/Smz3RunTimer";
 import { Smz3Tokens } from "@/games/smz3/components/Smz3Tokens";
+import { useCloseReview } from "@/games/smz3/review/useReview";
 import { useSmz3Store } from "@/games/smz3/store";
 import { useUndoShortcuts } from "@/games/useUndoShortcuts";
 
@@ -20,6 +25,7 @@ import { useUndoShortcuts } from "@/games/useUndoShortcuts";
 const Smz3App = () => {
   useUndoShortcuts(useSmz3Store);
   useSmz3Autotrack();
+  useCloseReview();
   const keysanity = useSmz3Store((state) => state.settings.keysanity);
   return (
     <GameShell game="smz3" toolbar={<Smz3Controls />}>
@@ -29,8 +35,10 @@ const Smz3App = () => {
         data-testid="layout"
       >
         <div className="board-run">
+          <Smz3ReviewButton />
           <Smz3RunTimer />
         </div>
+        <Smz3ReviewBanner />
         <div className="smz3-board">
           <Smz3Grid />
           <Smz3Tokens />

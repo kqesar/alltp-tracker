@@ -4,7 +4,7 @@ import type { Loaded } from "@/review/store";
 export const bindingText = (review: Loaded): string => {
   const { binding, boundSeed, log } = review;
   if (binding.verdict === "verified") {
-    return `Seed ${log.seed.id}: the log's seed is this run's (matched by ${log.seed.from === "content" ? "its hash" : "its file name"}).`;
+    return `Seed ${log.seed.id}: the log's seed is this run's (matched by ${log.seed.from === "content" ? (review.game === "smz3" ? "its guid" : "its hash") : "its file name"}).`;
   }
   // Map Rando's log never names its seed, whatever the run knows
   const why =

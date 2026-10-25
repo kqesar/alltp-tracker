@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
-import { auditDialog, auditPage, WIDTHS } from "./support";
+import { auditDialog, auditPage, openOnGame, WIDTHS } from "./support";
 
 const T0 = new Date("2026-10-25T12:00:00Z");
 const SPOILERS = join(
@@ -200,6 +200,177 @@ for (const width of WIDTHS) {
       await page.getByTestId("map-view-tab-map").click();
       await expect(page.locator("[data-review], [data-places]")).toHaveCount(0);
       await expect(page.locator("[data-held]")).toHaveCount(0);
+    });
+  });
+}
+
+// SMZ3: the pack's recorded samus.link log (the Download's text, rebuilt from
+// the API with the site's own code), bound by the guid the run carries
+const SMZ3_SPOILERS = join(
+  import.meta.dirname,
+  "../../../packs/smz3/test/spoilers",
+);
+const SMZ3_SLUG = "hQa77ywrRDKvN4tXHGyRMw";
+const GUID = "8506bbef2c2b4432af378b571c6c9133";
+const SMZ3_NAME = `Super Metroid & A Link to the Past Combo Randomizer v11.3.2 - ${SMZ3_SLUG} - Spoiler.txt`;
+
+const smz3Log = () => ({
+  buffer: readFileSync(join(SMZ3_SPOILERS, `${SMZ3_SLUG}.txt`)),
+  mimeType: "text/plain",
+  name: SMZ3_NAME,
+});
+
+/** An SMZ3 run tracked by hand, a few finds and checks, over; its seed set when given. */
+const playSmz3 = async (page: Page, seed: string | null) => {
+  await openOnGame(page, "smz3");
+  await page.evaluate(
+    ([key, guid]) => {
+      localStorage.removeItem(key);
+      if (guid !== null) {
+        localStorage.setItem(
+          key,
+          JSON.stringify({
+            state: {
+              checked: [],
+              items: {},
+              pads: { mire: "unknown", turtleRock: "unknown" },
+              seed: guid,
+              settings: {
+                ganonCrystals: 7,
+                keysanity: false,
+                smLogic: "normal",
+                tourianBosses: 4,
+                towerCrystals: 7,
+              },
+            },
+            version: 1,
+          }),
+        );
+      }
+    },
+    ["alltp-tracker-smz3", seed] as const,
+  );
+  await page.reload();
+  await expect(page.getByTestId("item-grid")).toBeVisible();
+  await page.getByTestId("smz3-item-hookshot").click();
+  await page.getByTestId("marker-links-house").click();
+  await page.getByTestId("run-timer").click();
+  await page.getByTestId("run-timer-start").click();
+  await page.keyboard.press("Escape");
+  await page.getByTestId("run-timer").click();
+  await page.getByTestId("run-timer-end").click();
+  await page
+    .getByRole("dialog", { name: "End this run?" })
+    .getByRole("button", { name: "End run" })
+    .click();
+  await expect(page.getByTestId("run-timer")).toHaveAccessibleName(/stopped$/);
+};
+
+test.describe("reviewing a finished SMZ3 run", () => {
+  test("is bound by the guid, reads on the device and leaves nothing behind", async ({
+    page,
+  }) => {
+    const requests: string[] = [];
+    await playSmz3(page, GUID);
+    page.on("request", (request) => requests.push(request.url()));
+
+    await page.getByTestId("review-open").click();
+    await page.getByTestId("review-file").setInputFiles(smz3Log());
+    await expect(page.getByTestId("review-notice")).toBeVisible();
+    await expect(page.getByTestId("review-binding")).toContainText(
+      `Seed ${GUID}: the log's seed is this run's (matched by its guid)`,
+    );
+    await expect(page.getByTestId("review-result")).toBeVisible();
+    await expect(page.getByTestId("review-note")).toContainText("no times");
+    await expect(page.getByTestId("review-summary")).toContainText(
+      "You checked 1 of 316 places",
+    );
+
+    // The maps give what each place held
+    await page.getByTestId("smz3-map-tab-hyrule").click();
+    await expect(page.getByTestId("marker-links-house")).toHaveAttribute(
+      "data-review",
+      "found",
+    );
+    await expect(page.getByTestId("marker-links-house")).toHaveAccessibleName(
+      /Held: .+; all checked$/,
+    );
+
+    expect(
+      requests.filter(
+        (url) => !new URL(url).pathname.startsWith("/alltp-tracker/"),
+      ),
+    ).toEqual([]);
+    expect(
+      await page.evaluate(() => JSON.stringify({ ...localStorage })),
+    ).not.toContain("Playthrough");
+
+    // Close review gives the maps back; reload leaves nothing
+    await page.getByTestId("review-close").click();
+    await expect(page.getByTestId("review-notice")).toHaveCount(0);
+    await expect(page.getByTestId("smz3-map-tab-review")).toHaveCount(0);
+    await page.getByTestId("review-open").click();
+    await page.getByTestId("review-file").setInputFiles(smz3Log());
+    await expect(page.getByTestId("review-notice")).toBeVisible();
+    await page.reload();
+    await expect(page.getByTestId("review-notice")).toHaveCount(0);
+  });
+
+  test("refuses another seed's log, and another game's, with the reason", async ({
+    page,
+  }) => {
+    await playSmz3(page, "f".repeat(32));
+    await page.getByTestId("review-open").click();
+    await page.getByTestId("review-file").setInputFiles(smz3Log());
+    await expect(page.getByTestId("review-error")).toContainText(
+      `This spoiler log is for seed ${GUID}; your run is seed ${"f".repeat(32)}.`,
+    );
+    await page.getByTestId("review-file").setInputFiles(spoiler(HASH, NAME));
+    await expect(page.getByTestId("review-error")).toContainText(
+      "alttpr.com spoiler log",
+    );
+    await expect(page.getByTestId("review-notice")).toHaveCount(0);
+  });
+});
+
+for (const width of WIDTHS) {
+  test.describe(`the SMZ3 review at ${width}px`, () => {
+    const phone = width < 600;
+    test.use({
+      hasTouch: phone,
+      isMobile: phone,
+      viewport: { height: phone ? 844 : 900, width },
+    });
+
+    test("fits the page, passes axe and is keyboard-reachable", async ({
+      page,
+    }) => {
+      await playSmz3(page, GUID);
+      // Map markers keep their pin exception (WCAG 2.5.8), as the SMZ3 board's own audit
+      await auditPage(page, ".mapspan");
+
+      await page.getByTestId("review-open").click();
+      const dialog = page.getByRole("dialog", { name: "Review this run" });
+      await auditDialog(page, dialog, width);
+      await shot(page, "smz3-import", width);
+
+      await page.getByTestId("review-file").setInputFiles(smz3Log());
+      await expect(page.getByTestId("review-result")).toBeVisible();
+      // Map markers keep their pin exception (WCAG 2.5.8), as the SMZ3 board's own audit
+      await auditPage(page, ".mapspan");
+      await shot(page, "smz3-review-tab", width);
+
+      await page.getByTestId("smz3-map-tab-hyrule").click();
+      // Markers whose place held an item the board has art for draw it
+      await expect(page.locator("[data-held]").first()).toBeVisible();
+      // Map markers keep their pin exception (WCAG 2.5.8), as the SMZ3 board's own audit
+      await auditPage(page, ".mapspan");
+      await shot(page, "smz3-hyrule", width);
+
+      await page.getByTestId("smz3-map-tab-zebes").click();
+      // Map markers keep their pin exception (WCAG 2.5.8), as the SMZ3 board's own audit
+      await auditPage(page, ".mapspan");
+      await shot(page, "smz3-zebes", width);
     });
   });
 }
