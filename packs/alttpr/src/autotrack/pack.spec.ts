@@ -17,6 +17,7 @@ import {
   decodeProgress,
   racePermitted,
 } from "./decode";
+import { decodeMedallions } from "./medallion-pads";
 import { MEMORY_RANGES } from "./memory";
 import { ALTTPR_AUTOTRACK } from "./pack";
 import { decodePrizes } from "./prizes";
@@ -139,6 +140,7 @@ function decodeAll(
   return {
     checks: decodeChecks(snapshot, { race }),
     items: decodeItems(snapshot, { race }),
+    medallions: decodeMedallions(snapshot, { race }),
     prizes: decodePrizes(snapshot, { race }),
     progress: decodeProgress(snapshot, { race }),
     race,
@@ -318,6 +320,55 @@ describe("ALTTPR_AUTOTRACK", () => {
     });
     expect(race.decoded?.prizes).toBe("race-mode");
     expect(always.decoded?.prizes).toBe("race-mode");
+  });
+
+  it("never asks for the pads' medallions or the screen in view in Race Mode", async () => {
+    const MEDALLION_RANGES = ["medallions", "overworld-screen"] as const;
+    /** The medallion ranges the console was asked for a byte of. */
+    const asked = (console: Console) =>
+      MEDALLION_RANGES.filter((id) => {
+        const { address, size } = MEMORY_RANGES.find(
+          (range) => range.id === id,
+        ) as (typeof MEMORY_RANGES)[number];
+        return console.pieces.some(
+          ([at, length]) => at < address + size && address < at + length,
+        );
+      });
+    const at = (id: string) =>
+      (MEMORY_RANGES.find((range) => range.id === id) as { address: number })
+        .address;
+    /** A seed asking Quake at the Mire, Link standing on its screen. */
+    const standing = (console: Console) => {
+      console.memory.set(
+        [0x00, 0x40, 0x00, 0x40, 0x00, 0x40, 0x40, 0x40, 0x00, 0x40, 0x40],
+        at("prize-kinds"),
+      );
+      console.memory[at("medallions")] = 0x02;
+      console.memory[at("overworld-screen")] = 0x70;
+      return console;
+    };
+
+    const raced = standing(new Console().seed("VT RACE", [0x01, 0x00]).play());
+    const race = await attach(raced);
+    expect(race.status).toMatchObject({ race: { active: true, flag: "race" } });
+    expect(asked(raced)).toEqual([]);
+    expect(race.decoded?.medallions).toBe("race-mode");
+
+    const forced = standing(new Console().seed("VT OPEN", [0x00, 0x01]).play());
+    const always = await attach(forced, "on");
+    expect(always.status).toMatchObject({ race: { active: true } });
+    expect(asked(forced)).toEqual([]);
+    expect(always.decoded?.medallions).toBe("race-mode");
+
+    // The same open seed outside Race Mode: both are read, and Link on the
+    // Mire's screen is told its medallion
+    const open = standing(new Console().seed("VT OPEN", [0x00, 0x01]).play());
+    const casual = await attach(open);
+    expect(casual.status).toMatchObject({ race: { active: false } });
+    expect(asked(open)).toEqual([...MEDALLION_RANGES]);
+    expect(casual.decoded?.medallions).toEqual({
+      mire: { medallion: "quake", shownBy: "on-screen" },
+    });
   });
 
   it("refuses the original game", async () => {

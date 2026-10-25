@@ -487,12 +487,12 @@ export const UNMAPPED_LOCATIONS: readonly UnmappedLocation[] = [
   {
     id: "turtle-rock-medallion",
     reason:
-      "Holds the medallion that opens the dungeon: not a check, and no flag says it is known.",
+      "Holds the medallion that opens the dungeon: not a check, and no flag says it is known. Outside Race Mode the ROM names it, told once the game shows it (autotrack/medallion-pads.ts).",
   },
   {
     id: "misery-mire-medallion",
     reason:
-      "Holds the medallion that opens the dungeon: not a check, and no flag says it is known.",
+      "Holds the medallion that opens the dungeon: not a check, and no flag says it is known. Outside Race Mode the ROM names it, told once the game shows it (autotrack/medallion-pads.ts).",
   },
   { id: "waterfall-bottle", reason: `A fairy fountain: ${NO_FLAG}.` },
   { id: "pyramid-bottle", reason: `A fairy fountain: ${NO_FLAG}.` },

@@ -109,6 +109,7 @@ describe("MEMORY_RANGES", () => {
       "hole-table:entrances",
       "door-table:entrances",
       // Outside Race Mode's windows: anything else, which Race Mode leaves
+      "medallions:other",
       "map-mode:prizes",
       "swordless-mode:other",
       "dungeon-item-menu:other",
@@ -121,6 +122,7 @@ describe("MEMORY_RANGES", () => {
       "ganon-vulnerable:other",
       "initial-pyramid:other",
       "initial-progress:other",
+      "overworld-screen:other",
       "room:entrances",
       "entrance:entrances",
       "dungeon-rooms:dungeon-checks",
@@ -216,7 +218,9 @@ describe("MEMORY_RANGES", () => {
     // settings every 20th after (SETTINGS_MS). Outside races, where Link
     // went adds three pieces a second, and the ROM's door and hole tables
     // two with the settings; the prizes' tables (prizes.ts) one more, and
-    // map mode and the prizes' kinds another, beside the settings.
+    // map mode and the prizes' kinds another, beside the settings; the pad
+    // medallions (medallion-pads.ts) a piece with the settings and the
+    // overworld screen one with the game mode. Race Mode asks for neither.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -227,9 +231,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 782, pieces: 17 },
+      casual: { bytes: 785, pieces: 19 },
       race: { bytes: 364, pieces: 25 },
-      ranges: { casual: 29, race: 33 },
+      ranges: { casual: 31, race: 33 },
     });
   });
 });

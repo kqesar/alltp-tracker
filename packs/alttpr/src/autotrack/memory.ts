@@ -176,6 +176,8 @@ export const CRYSTAL_BITS = {
 export const GAME_MODES = {
   beforePlay: [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x1b],
   goal: [0x19, 0x1a],
+  /** The overworld proper, where OverworldIndex is the screen in view. */
+  overworld: 0x09,
   playing: [0x07, 0x09, 0x0b],
 } as const;
 
@@ -315,6 +317,18 @@ export const MEMORY_RANGES = [
     id: "game-mode",
     size: 1,
     source: "z3:ram.asm:41",
+  }),
+  // OverworldIndex: the overworld screen Link is on (a Dark World screen is
+  // OR $40), kept in the dungeons too, as the screen he came from. Read
+  // outside Race Mode only, to see whether a medallion pad's screen is the
+  // one in view (medallions.ts); inside Race Mode's window, but `other`.
+  range({
+    at: 0x7e_008a,
+    category: "other",
+    everyMs: GAME_MS,
+    id: "overworld-screen",
+    size: 1,
+    source: "z3:ram.asm:93",
   }),
   // The room Link is in, or last was once outdoors: the one he came out of.
   range({
