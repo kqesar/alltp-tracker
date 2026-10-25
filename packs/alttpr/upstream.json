@@ -7,6 +7,7 @@
     "pinnedBy": "the commit vt's composer.json requires for its entrance shuffle",
     "repo": "cassidoxa/ALttPEntranceRandomizer",
     "rules": "src/entrances/rules.json",
+    "spoilerItems": "src/spoiler/er-items.json",
     "tests": "test/er-upstream"
   },
   "license": "MIT, Copyright (c) 2016 sporchia",
@@ -349,7 +350,7 @@
     {
       "file": "app/Item.php",
       "module": "src/items.ts",
-      "role": "the item names and classes, which decide how items count (Item\\Bottle for bottleCount...)",
+      "role": "the item names and classes, which decide how items count (Item\\Bottle for bottleCount...); their ROM codes join the entrance randomizer's items to them (src/spoiler/er-items.json)",
       "status": "ported"
     },
     {
@@ -361,7 +362,7 @@
     {
       "file": "resources/lang/en/item.php",
       "module": "src/items.ts",
-      "role": "English item names, which Item::get falls back to: the tests write 'Flute'",
+      "role": "English item names, which Item::get falls back to (the tests write 'Flute') and which a spoiler log's items are shown by (src/spoiler/item-names.json)",
       "status": "ported"
     }
   ],

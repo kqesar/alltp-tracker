@@ -32,6 +32,8 @@ export interface Manifest {
     readonly repo: string;
     /** Its rules, translated (scripts/er-rules.mjs). */
     readonly rules: string;
+    /** Its items joined to vt's by ROM code (scripts/import-item-names.mjs). */
+    readonly spoilerItems: string;
     /** Its own tests' cases, imported (scripts/er-tests.mjs). */
     readonly tests: string;
   };

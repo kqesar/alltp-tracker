@@ -24,6 +24,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/seed-link.ts` | `app/Seed.php`, `routes/web.php`: a seed's hash, from a link to its page, and where its file lies |
 | `src/entrances.ts` | `cassidoxa/ALttPEntranceRandomizer` (`EntranceShuffle.py`, `Regions.py`), at the commit vt pins: the overworld's entrances and where the crossed shuffle may lead them (`src/entrances/er.json`, imported), and the doors and holes autotracking shows Link went through (`linksOf`) |
 | `src/seed-file.ts` | `app/Jobs/SendPatchToDisk.php`, `World.php`, `EntranceRandomizer.php`: a seed's settings from its file (its entrance shuffle included), through a Zod schema of `spoiler.meta` |
+| `src/spoiler/*.ts` | `World::getSpoiler` (`app/World.php`), the entrance randomizer's `Spoiler.to_json` (`BaseClasses.py`): the spoiler log alttpr.com lets a player save, as `@alltp/spoiler`'s model (see "Spoiler logs") |
 | `src/er-world.ts` | `cassidoxa/ALttPEntranceRandomizer` (`Regions.py`, `Rules.py`): the world a seed with shuffled entrances is filled in, for the doors noted (see "The entrance randomizer's world") |
 | `src/derived.ts`, `src/medallions.ts` | facts the state derives before solving, for the rules that are not monotone in the items (Palace of Darkness's keys; what a medallion pad wants) |
 | `src/location.ts`, `src/rules.ts` | what a location is (its kinds, its rule and upstream source); every named rule, as the engine loads them |
@@ -803,3 +804,109 @@ not have.
   joined with `joinBlockers`. Ask it of `withUntracked(filler, state)`, the
   state with every key the player does not track held: a key is never
   something to collect, and the key model says the rest.
+
+## Spoiler logs
+
+`parseSpoiler(text, fileName)` (`src/spoiler/parse.ts`) reads the spoiler log
+alttpr.com lets a player save, into `@alltp/spoiler`'s `SpoilerLog` (its
+README is the model's design doc). It is pure and never throws on the file:
+a reason not to show it is a refusal with one of that package's codes. The
+review that uses it (a finished run, Race Mode off) lives in the app; this
+is only the reading.
+
+What the site writes. The seed page's "Save Spoiler" button saves
+`JSON.stringify(spoiler, null, 4)` in `alttpr - <logic>-<mode>-<goal>_<hash>.txt`
+(vt `resources/js/HashLoader.vue:199-204` at the pinned commit). The seed file
+S3 keeps (`seedFileUrl`, `{ hash, spoiler, … }`) holds the same object and is
+read too, which is how a log gets its hash from its content. The spoiler has no
+hash inside: only that wrapper has it, and a saved log only its name, which a
+player may rename. `log.seed` says which (`content`, `file-name`, or none), and
+`@alltp/spoiler`'s `bindSeed` treats a name as weak evidence.
+
+Two layouts, told apart by an `Entrances` list:
+
+| | vt's own (`vt.ts`) | The entrance randomizer's (`er.ts`) |
+| --- | --- | --- |
+| Made when | the seed has no shuffled entrances | the entrances are shuffled; vt stores what the Python program wrote (`EntranceRandomizer.php:159-166`) |
+| A name | `Hobo:1` (`name:world`) | `Hobo`, no world |
+| An item | the vt class `UPSTREAM_ITEMS` keys on: `ProgressiveSword:1` | English: `Progressive Sword`, `Small Key (Ice Palace)` |
+| Sections | one per vt region, kept as `Placement.area` | by kind of region (`Caves`, `Light World`…): meaningless, `area` is null |
+| Playthrough | spheres of locations by region, then two counts | spheres of locations, flat |
+| `Special` | the two bottles and the two medallions, which are locations of the pack | the two medallions only |
+| Ids | `locationId(name)` | `erLocationId(name)` (the nine names the randomizer writes otherwise than vt) |
+
+Both come out as the same log. `placements` are the pack's locations with the
+pack's item id (`fromUpstream(class).item`, null for rupees, ammunition and
+the rest no rule reads) and the sphere the playthrough gives, or null. The
+playthrough lists the items the win needs only, so most placements have none;
+a spoiler race's log (`spoilers: "on"`, a tournament seed) has locations and no
+playthrough at all, and reads with `spheres` 0. Events the file lists (the
+entrance randomizer's `Beat Agahnim 1`, `Get Frog`…) have no item to map to and
+go to `skipped` by their location; vt's playthrough also names Agahnim 2 and
+Ganon, which its sections leave out, and those only count in `spheres`.
+`extra` (`AlttprSpoilerExtra`) holds what the shared model has no field for:
+the `meta` settings as a seed file's are read (`metaReading` in
+`seed-file.ts`, a `SeedSettingsReading`), the two medallions, the prize of
+each dungeon, the bosses when they are shuffled, the shops, and the starting
+items by name (`start`). The entrance randomizer's `Entrances` and `paths` are
+not read yet: the review of a shuffle's real connections is a later step.
+
+Refusals, with the code and `detail`:
+
+| Code | When |
+| --- | --- |
+| `too-large` | over `MAX_SPOILER_BYTES.alttpr` |
+| `not-a-spoiler` | a ROM, not JSON, not an object with a `meta`, a location twice, a malformed playthrough, no location at all |
+| `other-game` | `sniffSpoiler` names Map Rando or samus.link's SMZ3 (`detail` the game) |
+| `unsupported` | Archipelago, samus.link's Super Metroid, a multiworld (`worlds` or `players` over 1, a name or item of another world) |
+| `stripped` | a `meta` and no location: the site withheld it, `detail` being `meta.spoilers` (`off` for a race, `mystery`, `generate`) |
+| `newer-version` | an item no table knows, or more than four locations the pack has no id for (fewer go to `skipped`) |
+
+`fileFacts(log)` lists what a log states that a run can state too, for
+`bindSeed`: the settings (`logic`, `mode`, `goal`, `crystalsTower`…, by the
+names of `SeedSettingsReading`), `medallion:mire`, `medallion:turtle-rock` and
+`prize:<dungeon id>`; a mystery seed's hidden settings are absent. The app's
+adapter pairs each with the run's value of the same name.
+
+### The generated tables
+
+- `src/spoiler/item-names.json`: vt class -> English name
+  (`resources/lang/en/item.php`), for the names shown and the starting items.
+- `src/spoiler/er-items.json`: the entrance randomizer's item name -> vt class,
+  or null for an event. The two programs share nothing but the code the ROM
+  stores an item under, so the join is that code: vt's `app/Item.php`
+  (`new Item('Hookshot', [0x0A], …)`) against `item_table` in the randomizer's
+  `Items.py`. A pendant or crystal has a list of sprite bytes instead; its last
+  byte is the prize's item code, which the programs number differently (vt's
+  Power Pendant is 0x39, the randomizer's Red Pendant 0x38), so the five bytes
+  before it are the key. The importer stops at a code that matches no item or
+  two.
+
+Both are written, never edited, by
+
+```sh
+pnpm --filter @alltp/pack-alttpr import-item-names --vt <vt-checkout> --er <er-checkout>
+```
+
+at the commits `upstream.json` pins (`entranceRandomizer.spoilerItems` names
+the second; the first reads the two files the manifest already lists, so the
+weekly drift workflow watches them). A checkout is read, never run.
+
+### Fixtures
+
+`test/spoilers/*.txt` are real files, byte for byte what the button saves:
+`9MQ9gO1wMD` (vt's own layout), `0yAObedRMV` (entrance randomizer,
+"crossed", keysanity), `eM43RgZ4Gj` (the daily challenge: a race seed whose
+spoiler is `meta` only) and `xvJo0drkyJ` (a mystery seed, the same). Written by
+
+```sh
+pnpm --filter @alltp/pack-alttpr spoiler-fixtures <hash>…
+```
+
+from the seed files on S3, with their `patch` left out. `test/spoilers/index.json`
+records where each came from: the address, when it was recorded, the file's own
+`generated` time, its size and SHA-256 and what its `meta` says of the seed.
+The script refuses a file whose `meta` carries `notes`, free text a player
+wrote; the files hold seed data, item names and a public daily's title, no
+personal data. Spoiler-race, multiworld, shuffled-boss and malformed variants
+are made in the specs by editing a fixture's parsed document, never stored.

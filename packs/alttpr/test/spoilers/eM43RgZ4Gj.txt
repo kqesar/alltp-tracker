@@ -1,0 +1,31 @@
+{
+    "meta": {
+        "goal": "fast_ganon",
+        "mode": "inverted",
+        "name": "Daily Challenge: Oct 16, 2026",
+        "size": 2,
+        "build": "2023-09-22",
+        "hints": "on",
+        "logic": "NoGlitches",
+        "worlds": 1,
+        "weapons": "randomized",
+        "rom_mode": "NoGlitches",
+        "spoilers": "off",
+        "world_id": 1,
+        "item_pool": "hard",
+        "tournament": true,
+        "pseudoboots": false,
+        "accessibility": "items",
+        "dungeon_items": "standard",
+        "item_placement": "basic",
+        "allow_quickswap": true,
+        "item_functionality": "hard",
+        "enemizer.pot_shuffle": "off",
+        "entry_crystals_ganon": "7",
+        "entry_crystals_tower": "4",
+        "enemizer.boss_shuffle": "none",
+        "enemizer.enemy_damage": "default",
+        "enemizer.enemy_health": "hard",
+        "enemizer.enemy_shuffle": "none"
+    }
+}

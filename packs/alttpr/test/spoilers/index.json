@@ -1,0 +1,69 @@
+{
+  "generated": "By packs/alttpr/scripts/spoiler-fixtures.mjs from real seeds. Record again, never edit.",
+  "seeds": {
+    "0yAObedRMV": {
+      "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/0yAObedRMV.json",
+      "bytes": 79604,
+      "generated": "2026-10-18T14:55:17+00:00",
+      "layout": "entrance randomizer",
+      "meta": {
+        "goal": "ganon",
+        "logic": "NoGlitches",
+        "mode": "open",
+        "name": null,
+        "spoilers": "on",
+        "tournament": false
+      },
+      "recorded": "2026-10-25T16:37:39.231Z",
+      "sha256": "9b64948b9842ece11a3a3df525c15bc07e8f3a2cd59658bc11c3536aea65d680"
+    },
+    "9MQ9gO1wMD": {
+      "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/9MQ9gO1wMD.json",
+      "bytes": 22094,
+      "generated": "2026-10-16T16:17:42+00:00",
+      "layout": "vt",
+      "meta": {
+        "goal": "ganon",
+        "logic": "NoGlitches",
+        "mode": "open",
+        "name": null,
+        "spoilers": "on",
+        "tournament": false
+      },
+      "recorded": "2026-10-25T16:37:39.084Z",
+      "sha256": "966796146c7dd4f4ab74d7a4acdb51aaa17d13e07c99432a4b101222cd102684"
+    },
+    "eM43RgZ4Gj": {
+      "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/eM43RgZ4Gj.json",
+      "bytes": 916,
+      "generated": "2026-10-16T00:00:54+00:00",
+      "layout": "vt",
+      "meta": {
+        "goal": "fast_ganon",
+        "logic": "NoGlitches",
+        "mode": "inverted",
+        "name": "Daily Challenge: Oct 16, 2026",
+        "spoilers": "off",
+        "tournament": true
+      },
+      "recorded": "2026-10-25T16:37:39.364Z",
+      "sha256": "7e42554ae5f5c032db18b4741f05a1d2302a081a4a275ddcc577804d70d9dd33"
+    },
+    "xvJo0drkyJ": {
+      "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/xvJo0drkyJ.json",
+      "bytes": 195,
+      "generated": "2026-10-18T14:54:40+00:00",
+      "layout": "vt",
+      "meta": {
+        "goal": null,
+        "logic": "NoGlitches",
+        "mode": null,
+        "name": null,
+        "spoilers": "mystery",
+        "tournament": true
+      },
+      "recorded": "2026-10-25T16:37:39.509Z",
+      "sha256": "11ef67cf2a012993a444e69b37a5dd32876419a493b6564ba24bcaca7b1ee482"
+    }
+  }
+}
