@@ -12,8 +12,10 @@ import {
   decodeMode,
   decodeRequirements,
   decodeSeed,
+  decodeSeedGuid,
   type MemoryView,
   type RequirementsReading,
+  type SeedGuidReading,
   type SeedReading,
   type Smz3Mode,
   type Unsettled,
@@ -22,7 +24,7 @@ import {
 export type Smz3Reading = {
   /** When memory was read, in ms since the epoch. */
   readonly at: number;
-  /** Race Mode was on: the requirements were neither read nor decoded. */
+  /** Race Mode was on: the requirements and the guid were neither read nor decoded. */
   readonly race: boolean;
   /** Which game runs. */
   readonly mode: Smz3Mode | Unsettled;
@@ -42,6 +44,8 @@ export type Smz3Reading = {
   /** The locations checked, by the pack's location id. */
   readonly checked: readonly string[] | Unsettled;
   readonly seed: SeedReading | Unsettled;
+  /** The seed's guid; never read in Race Mode (the pack's race profile). */
+  readonly guid: SeedGuidReading | Unsettled;
   readonly requirements: RequirementsReading | Unsettled;
 };
 
@@ -61,6 +65,7 @@ export const readSmz3 = (
   checked: decodeChecks(memory),
   clock: decodeGameClock(memory, race),
   goal: decodeGoal(memory),
+  guid: decodeSeedGuid(memory, race),
   inPlay: decodeInPlay(memory),
   items: decodeItems(memory),
   mode: decodeMode(memory),

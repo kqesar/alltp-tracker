@@ -80,6 +80,18 @@ export const MEMORY_RANGES = [
     size: 0x0a,
     source: "Patch.cs:590-612",
   }),
+  // The seed's guid, 32 ASCII hex digits (Patch.cs:590-612, the line after
+  // the seed block): what the seed page's address and the spoiler log name
+  // the seed by. Category `seed-guid`: the race profile forbids it, so Race
+  // Mode never reads it (a race seed has no public spoiler to match it to)
+  range({
+    at: 0x80_ff60,
+    category: "seed-guid",
+    everyMs: ROM_MS,
+    id: "seed-guid",
+    size: 0x20,
+    source: "Patch.cs:590-612",
+  }),
   // The title: "ZSM", the version, the logics' letters and the seed in hex
   // (Patch.cs:625-639)
   range({

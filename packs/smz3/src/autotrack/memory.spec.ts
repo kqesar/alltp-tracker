@@ -75,7 +75,46 @@ describe("the game time's ranges", () => {
   });
 });
 
+describe("the seed's guid range", () => {
+  it("is its own category, which the race profile forbids", () => {
+    expect(MEMORY_RANGE["seed-guid"].category).toBe("seed-guid");
+    expect(MEMORY_RANGE["seed-guid"].bus).toBe(0x80_ff60);
+    expect(MEMORY_RANGE["seed-guid"].size).toBe(0x20);
+    expect(SMZ3_RACE_PROFILE.categories["seed-guid"]?.permitted).toBe(false);
+  });
+
+  it("lies after the seed block, in no permitted range", () => {
+    const seedBlock = MEMORY_RANGE.seed;
+    expect(MEMORY_RANGE["seed-guid"].address).toBeGreaterThanOrEqual(
+      seedBlock.address + seedBlock.size,
+    );
+  });
+});
+
 describe("Race Mode", () => {
+  it("never asks for the seed's guid, in any mode, and the guard stops a plan that does", () => {
+    for (const mode of MODES) {
+      const pieces = piecesOf(racePlan(mode));
+      expect(
+        pieces.some((piece) => overlaps(piece, MEMORY_RANGE["seed-guid"])),
+        mode,
+      ).toBe(false);
+    }
+    const reading = planReads([MEMORY_RANGE["seed-guid"]], {
+      barriers: [],
+      gap: SMZ3_AUTOTRACK.gap,
+      limits: USB2SNES_LIMITS,
+    });
+    expect(() =>
+      assertRaceSafe(
+        reading,
+        SMZ3_RACE_PROFILE,
+        SMZ3_AUTOTRACK.permittedBytes,
+        SMZ3_AUTOTRACK.forbiddenBytes,
+      ),
+    ).toThrow(RaceViolationError);
+  });
+
   it("never asks for Super Metroid's counter or its saved copy, in any mode, and the guard passes", () => {
     for (const mode of MODES) {
       const plan = racePlan(mode);

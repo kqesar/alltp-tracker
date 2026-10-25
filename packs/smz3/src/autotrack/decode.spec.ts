@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { type Smz3Game, viewOf, writeSmz3 } from "../../test/smz3-rom";
+import {
+  SAMPLE_GUID,
+  type Smz3Game,
+  viewOf,
+  writeSmz3,
+} from "../../test/smz3-rom";
 import {
   decodeBeforePlay,
   decodeChecks,
@@ -10,6 +15,7 @@ import {
   decodeMode,
   decodeRequirements,
   decodeSeed,
+  decodeSeedGuid,
   SMZ3_FRAMES_PER_SECOND,
   smz3Ms,
 } from "./decode";
@@ -224,6 +230,34 @@ describe("the seed", () => {
     expect(decodeSeed({ ...viewOf(memory, "zelda"), has: () => false })).toBe(
       "not-read",
     );
+  });
+
+  it("gives its guid outside races, never in one", () => {
+    const game = read({ guid: SAMPLE_GUID });
+    expect(decodeSeedGuid(game, false)).toEqual({ guid: SAMPLE_GUID });
+    expect(decodeSeedGuid(game, true)).toBe("race-mode");
+    expect(decodeSeedGuid({ ...game, has: () => false }, false)).toBe(
+      "not-read",
+    );
+  });
+
+  it("calls a guid that is not 32 lowercase hex digits unreadable", () => {
+    for (const guid of [
+      "0".repeat(32),
+      "8506BBEF2C2B4432AF378B571C6C9133",
+      "8506bbef2c2b4432af378b571c6c913g",
+      "x".repeat(32),
+    ]) {
+      const read = decodeSeedGuid(
+        viewOf(writeSmz3(image(), { guid }), "zelda"),
+        false,
+      );
+      expect(read, guid).toEqual(
+        guid === "0".repeat(32) ? { guid } : "unreadable",
+      );
+    }
+    // A blank ROM, a block never written
+    expect(decodeSeedGuid(viewOf(image(), "zelda"), false)).toBe("unreadable");
   });
 
   it("gives its requirements outside races, never in one", () => {
