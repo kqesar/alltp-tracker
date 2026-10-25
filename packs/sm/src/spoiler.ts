@@ -29,9 +29,11 @@ import {
   type Fact,
   type Placement,
   refuse,
+  SNIFF_HEAD_LENGTH,
   type SpoilerLog,
   type SpoilerResult,
   sliceTopLevel,
+  sniffSpoiler,
 } from "@alltp/spoiler";
 import * as z from "zod/mini";
 import { SM_ITEMS, type SmItemId } from "./items";
@@ -120,10 +122,26 @@ const keyOf = (l: { room_id: number; node_id: number }) =>
  * Reads a Map Rando `spoiler.json`. Never throws on its input: random text,
  * another file, a truncated one and an unknown item all answer a refusal
  * (`not-a-spoiler`; `newer-version` for an item or objective this pack does
- * not know, named in the detail). Its size is the caller's to bound first
+ * not know, named in the detail). Another randomizer's file is told apart
+ * from its head and name (`other-game`, `unsupported`, a ROM), as the other
+ * packs do. Its size is the caller's to bound first
  * (`checkSize("sm", file.size)`), before the file is read.
+ *
+ * @param text - The file, decoded: untrusted
+ * @param fileName - Its name, which tells a ROM apart
  */
-export function parseSpoiler(text: string): SpoilerResult<MapRandoLog> {
+export function parseSpoiler(
+  text: string,
+  fileName = "",
+): SpoilerResult<MapRandoLog> {
+  const sniffed = sniffSpoiler(text.slice(0, SNIFF_HEAD_LENGTH), fileName);
+  if (sniffed.known) {
+    if (sniffed.game !== "sm") return refuse("other-game", sniffed.game);
+  } else if (sniffed.what === "rom") {
+    return refuse("not-a-spoiler", "rom");
+  } else if (sniffed.what !== "unknown") {
+    return refuse("unsupported", sniffed.what);
+  }
   const sliced = sliceTopLevel(text, SPOILER_KEYS);
   if (!sliced.ok) return sliced;
   const checked = SPOILER.safeParse(sliced.value);
