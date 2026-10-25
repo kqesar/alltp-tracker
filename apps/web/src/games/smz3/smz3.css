@@ -147,3 +147,44 @@
 .smz3-zebes .mapspan {
   --marker: clamp(14px, 2.4cqw, 28px);
 }
+
+/* The review (components/Smz3Review*.tsx, review/labels.ts) */
+.smz3-layout > .review-notice {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+/* A Super Metroid item drawn on a marker: a frame of the sheet, whose
+   background the shared marker rule (review.css) leaves to the game */
+.smz3-maps .mapspan[data-held="sheet"]::before {
+  background-image: url("../sm/assets/items.png");
+  background-position: calc(var(--frame, 0) * 100% / 25) 0;
+  background-size: 2600% 100%;
+}
+
+.smz3-held {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+/* An item's picture beside its name, in the review's lists */
+.smz3-sprite {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  image-rendering: pixelated;
+  background: var(--sprite) center / 100% 100% no-repeat;
+}
+
+.smz3-sprite[data-sheet] {
+  background:
+    url("../sm/assets/items.png") calc(var(--frame, 0) * 100% / 25) 0 / 2600%
+    100% no-repeat;
+}
+
+.review-note {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}

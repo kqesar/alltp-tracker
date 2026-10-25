@@ -1,8 +1,9 @@
-import type { SpoilerError } from "@alltp/spoiler";
+import type { SpoilerError, SpoilerGame } from "@alltp/spoiler";
 import { describe, expect, it, vi } from "vitest";
 import { isRaceModeOn, type RaceModeState } from "@/autotrack/raceMode";
 import { spoilerFile, spoilerLog } from "@/games/alttpr/review/fixtures";
 import { reviewGate } from "@/review/gate";
+import { parseFile } from "@/review/parse";
 import { type ReviewWorker, readSpoiler } from "@/review/read";
 import { refusalWords } from "@/review/words";
 import { finishTimer, IDLE_TIMER, startTimer } from "@/utils/runTimer";
@@ -204,10 +205,12 @@ describe("readSpoiler", () => {
     expect(terminate).toHaveBeenCalledTimes(1);
   });
 
-  it("refuses a game with no review yet", async () => {
-    const result = await readSpoiler(spoilerFile("9MQ9gO1wMD"), "smz3", {
-      worker: null,
-    });
+  it("refuses a game it has no parser for", async () => {
+    // What the worker is handed crosses a message: never trust its game
+    const result = await parseFile(
+      spoilerFile("9MQ9gO1wMD"),
+      "toString" as SpoilerGame,
+    );
     expect(result).toMatchObject({ error: "unsupported", ok: false });
   });
 

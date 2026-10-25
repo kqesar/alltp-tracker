@@ -2,13 +2,14 @@
 
 Once a run is over, the player can import the seed's spoiler log and see the board and the Run tab
 against it. This document is the design: when a review may open, how a log is read and bound to
-the run, where it lives, and what ALttPR's Run tab compares. What players see is in the
-[guide](guide.md#reviewing-a-run); the log formats and the model are the packages'
+the run, where it lives, and what ALttPR's Run tab and SMZ3's Review tab compare. What players see is
+in the [guide](guide.md#reviewing-a-run); the log formats and the model are the packages'
 ([`@alltp/spoiler`](../packages/spoiler/README.md), the ALttPR pack's
-[Spoiler logs](../packs/alttpr/README.md#spoiler-logs)).
+[Spoiler logs](../packs/alttpr/README.md#spoiler-logs), the SMZ3 pack's
+[Spoiler logs](../packs/smz3/README.md#spoiler-logs)).
 
-**A Link to the Past** and **Super Metroid** (Map Rando) review today. The shared parts (`apps/web/src/review/`,
-`components/ui/Review*.tsx`) take a game's adapter; SMZ3 joins them later. [Super Metroid's review](#super-metroid-map-rando) is the reduced one: its board has no location and no timeline.
+**A Link to the Past**, **Super Metroid** (Map Rando) and **SMZ3** review today. The shared parts (`apps/web/src/review/`,
+`components/ui/Review*.tsx`) take a game's adapter. [Super Metroid's review](#super-metroid-map-rando) is the reduced one: its board has no location and no timeline; [SMZ3's](#smz3) has the places but no times.
 
 ```mermaid
 flowchart LR
@@ -141,6 +142,9 @@ The labels are worked out once per review (`labelsOf`, a `WeakMap` over the immu
 | `apps/web/src/games/sm/components/` | `SmReview.tsx` (Review run beside the timer, the banner, the section), `SmReviewDialog.tsx` and `SmReviewResult.tsx` (lazy) |
 | `apps/web/src/games/alttpr/review/` | `adapter.ts` (binding, finds, comparison), `useReview.ts`, `labels.ts` (what each place held), `fixtures.ts` (specs) |
 | `apps/web/src/games/alttpr/components/map/` | `ReviewSection.tsx` (Review run, the Run tab section), `ReviewResult.tsx` (lazy), `AlttprReviewDialog.tsx` (lazy) |
+| `apps/web/src/games/smz3/review/` | `adapter.ts` (binding, comparison), `labels.ts` (what each place held), `useReview.ts`, `fixtures.ts` (specs) |
+| `apps/web/src/games/smz3/components/` | `Smz3ReviewButton.tsx` (Review run, the banner), `Smz3ReviewDialog.tsx` (lazy), `Smz3ReviewPanel.tsx` (the tab, lazy), `Smz3Maps.tsx`, `Smz3Grid.tsx` |
+| `apps/web/src/review/active.ts` | Which review is a game's own run's, and the rule that drops a stale one (each game's hooks call it) |
 | `apps/web/src/games/review.css` | The styles, loaded by the module of each game that reviews |
 
 ## Super Metroid (Map Rando)
@@ -200,3 +204,41 @@ flowchart LR
   chunk) under it, **Review run** beside the timer (`SmReviewButton`); the dialog is the shared
   `ReviewDialog`. Memory only, as above: a spec holds the modules that save, share, stream or follow
   a Super Metroid run never to import the review.
+
+## SMZ3
+
+SMZ3 shares the gate, the store, the dialog and the banner; its adapter is `games/smz3/review/`.
+
+- **Binding** (`bindRun`): the run's `seed` is the seed's guid, which autotracking records from the
+  ROM outside Race Mode (`$80:FF60`, the pack's README); the log's is `Meta.guid`, so a verified
+  review says "matched by its guid". A run tracked by hand has none and opens "Not verified", with
+  how many facts agreed. Facts compared: Super Metroid's logic, keysanity, the crystals Ganon's
+  Tower and Ganon ask for, the bosses Tourian asks for, and each pad's medallion once the board
+  knows it. The log carries no prize per dungeon on the board's terms (it counts rewards found), so
+  rewards are not compared.
+- **No timeline, so no "found at".** SMZ3's store keeps `checked` but no stamps, and its board has
+  no Run tab. The review therefore compares *what* was checked, not *when*: `compareReview` sets the
+  run's `checked` against the log's placements and lays the playthrough's spheres beside them for
+  reference (a sphere is how soon the seed's logic reaches a place, not the order the player took).
+  Nothing says "late" or "in order"; the Review tab says so in its first line. A timeline for SMZ3
+  and Super Metroid is a separate series, after which the shared comparison (`compareRun`) lights up
+  for them.
+- **The Review tab** (`Smz3Maps`, a third tab while a review is open, selected when it opens and
+  dropped when it closes): a summary (places checked of the seed's, of those the playthrough needs),
+  the playthrough as a `<table>` (Sphere, Place, Held with the item's picture, Your run), the places
+  not checked grouped by the file's regions with what they held (a region holding a place the
+  playthrough needs starts open), and the seed's medallions and rewards. `Smz3ReviewPanel` is a lazy
+  chunk.
+- **On the board** (`review/labels.ts`, precomputed once per review in a `WeakMap`; `useMarkerHeld`
+  and `useItemPlaces` answer null outside a review): a marker of Hyrule or Zebes draws the most
+  notable item it held (`--held`, an ALttPR asset, or `data-held="sheet"` and `--frame` for a frame
+  of Super Metroid's sheet, drawn by `::before`), rings itself solid when all its places are
+  checked and dashed otherwise, and ends its accessible name with "Held: …; all checked" or "not
+  all checked". A grid cell adds "In the seed: at <place>" or "N places: …" to its name and a
+  `title`. Notable means: in the playthrough, then an item with a grid cell, then a dungeon key,
+  then the rest (rupees, maps, compasses…), which have no picture.
+- **The parser's chunk.** `review/parse.ts` loads `@alltp/pack-smz3/spoiler` (the pack's `./spoiler`
+  export, `src/spoiler/parse.ts`), never the pack's index: a dynamic import of the index keeps
+  every export, which would put js-yaml in the board's own chunk. The vite build gives that chunk
+  the worker's `review-` name (`chunkFileNames`) so the in-place read (no `Worker`) is as on
+  demand as the worker's; the shell stays at 17 files, 335 kB.

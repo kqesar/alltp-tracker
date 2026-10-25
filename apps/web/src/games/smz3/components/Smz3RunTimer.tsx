@@ -23,6 +23,7 @@ const useRaceMode = (): boolean =>
 export const Smz3RunTimer = () => (
   <GameRunTimer
     clockRead={useClockRead()}
+    endable
     raceMode={useRaceMode()}
     useRun={useSmz3Store}
   />

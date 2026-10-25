@@ -12,18 +12,16 @@ import {
 
 type Parse = (text: string, fileName: string) => SpoilerResult<SpoilerLog>;
 
-/** The parser of a game's spoiler log, or null for a game with no review yet. */
-const loadParser = (game: SpoilerGame): Promise<Parse> | null => {
-  if (game === "alttpr") {
-    return import("@alltp/pack-alttpr").then(
-      ({ parseSpoiler }) => parseSpoiler,
-    );
-  }
-  if (game === "sm") {
-    // Map Rando's file is read by its slicer: a 21 MB text, 39 KB kept
-    return import("@alltp/pack-sm").then(({ parseSpoiler }) => parseSpoiler);
-  }
-  return null;
+/** Each game's parser, loaded on first use. */
+const PARSERS: Record<SpoilerGame, () => Promise<Parse>> = {
+  alttpr: () =>
+    import("@alltp/pack-alttpr").then(({ parseSpoiler }) => parseSpoiler),
+  // Map Rando's file is read by its slicer: a 21 MB text, 39 KB kept
+  sm: () => import("@alltp/pack-sm").then(({ parseSpoiler }) => parseSpoiler),
+  // The parser's own entry, not the pack's: js-yaml travels with this chunk
+  // and no other, where the pack's index would pull it into the board's
+  smz3: () =>
+    import("@alltp/pack-smz3/spoiler").then(({ parseSpoiler }) => parseSpoiler),
 };
 
 /**
@@ -34,8 +32,9 @@ export const parseFile = async (
   file: File,
   game: SpoilerGame,
 ): Promise<SpoilerResult<SpoilerLog>> => {
-  const parser = loadParser(game);
-  if (parser === null) return refuse("unsupported", game);
+  // The game crosses the worker's message: a name off the table is refused
+  if (!Object.hasOwn(PARSERS, game)) return refuse("unsupported", game);
+  const parser = PARSERS[game]();
   let text: string;
   try {
     text = await file.text();
