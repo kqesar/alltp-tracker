@@ -76,6 +76,8 @@ export const createFollower = (): Follower => {
    * reading says.
    */
   let beforePlay: boolean | undefined;
+  /** The game's frame counter at the last reading, if it was read. */
+  let frames: number | undefined;
   /** The small keys in hand at the last reading, or null out of play. */
   let hand: Record<number, number> | null = null;
   /** The least small keys found, by grid dungeon index. */
@@ -154,8 +156,13 @@ export const createFollower = (): Follower => {
       const game = useGameStore.getState();
       const clock =
         game.timerClock === "game"
-          ? gameClockOf(reading.race, reading.progress)
+          ? gameClockOf(reading.race, reading.progress, frames)
           : "unavailable";
+      const { romStats } = reading.progress;
+      frames =
+        reading.race || typeof romStats === "string"
+          ? undefined
+          : romStats.playFrames;
       if (typeof clock === "object") game.alignTimer(clock, reading.at);
       else if (clock === "unloaded") {
         // The title or the file select: the game's time is not there to read

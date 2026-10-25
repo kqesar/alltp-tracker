@@ -161,6 +161,33 @@ describe("the run timer, on the game's time", () => {
     expect(store().timer).toBe(timer);
   });
 
+  it("stops where the game stopped when its counter does not move", () => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    follower.read(at(memory, 0x07, 36_000, 0));
+    expect(store().timer.startedAt).not.toBeNull();
+
+    // The emulator is paused: the same counter a second on, and again
+    follower.read(at(memory, 0x07, 36_000, 1));
+    expect(store().timer).toEqual({
+      elapsedMs: playTimeMs(36_000),
+      finished: false,
+      startedAt: null,
+    });
+    follower.read(at(memory, 0x07, 36_000, 2));
+    expect(store().timer.startedAt).toBeNull();
+    expect(store().timer.elapsedMs).toBe(playTimeMs(36_000));
+
+    // It runs again as soon as the counter moves
+    const resumed = at(memory, 0x07, 36_060, 3);
+    follower.read(resumed);
+    expect(store().timer).toEqual({
+      elapsedMs: playTimeMs(36_060),
+      finished: false,
+      startedAt: resumed.at,
+    });
+  });
+
   it("stops while the game is before play, and goes on from there", () => {
     const memory = seedMemory({ race: false });
     const follower = createFollower();

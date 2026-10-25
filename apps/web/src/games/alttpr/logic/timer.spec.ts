@@ -26,6 +26,20 @@ describe("gameClockOf", () => {
     });
   });
 
+  it("is paused while the counter has not moved since the reading before", () => {
+    expect(gameClockOf(false, progress(3600, false), 3599)).toMatchObject({
+      status: "running",
+    });
+    expect(gameClockOf(false, progress(3600, false), 3600)).toEqual({
+      ms: playTimeMs(3600),
+      status: "paused",
+    });
+    // The goal stays the goal, whatever the counter did
+    expect(gameClockOf(false, progress(3600, false, true), 3600)).toMatchObject(
+      { status: "over" },
+    );
+  });
+
   it("is paused before play, and over at the goal", () => {
     expect(gameClockOf(false, progress(3600, true))).toEqual({
       ms: playTimeMs(3600),
