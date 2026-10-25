@@ -13,10 +13,15 @@ const NAME = `alttpr - NoGlitches-open-ganon_${HASH}.txt`;
 
 /** Where the screenshots go when asked for (a scratch directory, never the repo). */
 const SHOTS = process.env.REVIEW_SHOTS;
-const shot = async (page: Page, name: string, width: number) => {
+const shot = async (
+  page: Page,
+  name: string,
+  width: number,
+  fullPage = true,
+) => {
   if (SHOTS) {
     await page.screenshot({
-      fullPage: true,
+      fullPage,
       path: join(SHOTS, `${name}-${width}.png`),
     });
   }
@@ -166,6 +171,35 @@ for (const width of WIDTHS) {
       await expect(page.getByTestId("review-playthrough")).toBeVisible();
       await auditPage(page);
       await shot(page, "run-tab", width);
+
+      // The map: each marker says what it held, and the ring says if it was checked
+      await page.getByTestId("map-view-tab-map").click();
+      const held = page.locator("[data-review][data-held]");
+      await expect(held.first()).toBeVisible();
+      expect(await held.count()).toBeGreaterThan(20);
+      await expect(page.locator('[data-review="found"]')).toHaveCount(0);
+      await expect(page.locator("[data-review]").first()).toHaveAccessibleName(
+        /Held: .*; not all checked$/,
+      );
+      // Markers keep WCAG 2.5.8's map-pin exception (docs: components.md)
+      await auditPage(page, ".mapspan");
+      await shot(page, "map", width);
+
+      // The Checks list names the item of each check, and keeps the missed ones
+      await page.getByTestId("map-view-tab-checks").click();
+      await expect(page.getByTestId("checks-missed-only")).toBeVisible();
+      await page.getByTestId("checks-missed-only").check();
+      await expect(
+        page.locator('[data-testid^="check-held-"]').first(),
+      ).toBeVisible();
+      await auditPage(page);
+      await shot(page, "checks", width, false);
+
+      // Out of the review, nothing of it is left on the board
+      await page.getByTestId("review-close").click();
+      await page.getByTestId("map-view-tab-map").click();
+      await expect(page.locator("[data-review], [data-places]")).toHaveCount(0);
+      await expect(page.locator("[data-held]")).toHaveCount(0);
     });
   });
 }

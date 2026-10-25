@@ -10,6 +10,7 @@ import {
   useBossStatus,
   useMarkerStatus,
 } from "@/games/alttpr/logic/solution";
+import { useMarkerHeld } from "@/games/alttpr/review/labels";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath, toWorldPosition } from "@/games/alttpr/utils";
 import { useTooltip } from "@/hooks/useTooltip";
@@ -40,16 +41,24 @@ export const MapLocation = ({ marker }: { marker: MapMarker }) => {
   const toggleChecks = useGameStore((store) => store.toggleChecks);
   const tooltip = useTooltip({ id: marker.id, kind: "marker" });
   const count = marker.locations.length;
+  // In a review: what the marker held, drawn on it and said in its name
+  const held = useMarkerHeld(marker.id);
+  const heldStyle =
+    held?.top.icon == null
+      ? undefined
+      : { "--held": `url(${getAssetPath(held.top.icon)})` };
 
   return (
     <button
       {...tooltip}
-      aria-label={`${marker.name}${count > 1 ? ` (${count} checks)` : ""}: ${STATE_LABELS[state]}`}
+      aria-label={`${marker.name}${count > 1 ? ` (${count} checks)` : ""}: ${STATE_LABELS[state]}${held ? `. Held: ${held.words}; ${state === "opened" ? "all checked" : "not all checked"}` : ""}`}
       aria-pressed={state === "opened"}
       className={`mapspan chest state-glyph ${state}`}
+      data-held={held && heldStyle ? "" : undefined}
+      data-review={held ? (state === "opened" ? "found" : "missed") : undefined}
       data-testid={`marker-${marker.id}`}
       onClick={() => toggleChecks(marker.locations)}
-      style={markerStyle(marker, "poi.png")}
+      style={{ ...markerStyle(marker, "poi.png"), ...heldStyle }}
       type="button"
     />
   );

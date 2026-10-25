@@ -243,3 +243,58 @@
   outline: none;
   box-shadow: var(--focus-ring);
 }
+
+/* The map in a review: what each marker held, drawn on it, and whether it was
+   checked, by the shape of its ring as well as the colour of the words */
+.mapspan[data-review] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.mapspan[data-review="missed"] {
+  outline-style: dashed;
+  outline-color: var(--color-text);
+}
+
+.mapspan[data-held]::before {
+  position: absolute;
+  inset: -40% auto auto -40%;
+  z-index: 1;
+  width: 80%;
+  height: 80%;
+  pointer-events: none;
+  content: "";
+  image-rendering: pixelated;
+  background: var(--held) center / 80% no-repeat var(--surface-1);
+  border: 1px solid var(--color-accent);
+  border-radius: 3px;
+}
+
+.mapspan[data-review="missed"][data-held]::before {
+  border-style: dashed;
+}
+
+/* The Checks list in a review: the item a check held, under its name */
+.check-row__check:has(.check-row__held) {
+  flex-wrap: wrap;
+  row-gap: 0;
+  padding-block: var(--spacing-xs);
+}
+
+.check-row__held {
+  display: inline-flex;
+  flex-basis: 100%;
+  gap: var(--spacing-xs);
+  align-items: center;
+  margin-inline-start: calc(1.125rem + var(--spacing-sm));
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.check-row__sprite {
+  image-rendering: pixelated;
+}
+
+.tooltip__held {
+  color: var(--color-accent);
+}

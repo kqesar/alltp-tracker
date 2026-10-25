@@ -27,7 +27,9 @@ import {
   tricksShown,
   useDungeonStatus,
 } from "@/games/alttpr/logic/solution";
+import { useInReview, useLocationHeld } from "@/games/alttpr/review/labels";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { getAssetPath } from "@/games/alttpr/utils";
 
 /** The states the list filters on, in the legend's order, with its words. */
 const FILTERS: readonly { state: MarkerState; label: string }[] = [
@@ -130,27 +132,48 @@ const CheckRow = memo(
     explained: boolean;
     onToggle: (id: string, input: HTMLInputElement) => void;
     state: MarkerState;
-  }) => (
-    <li className="check-row" data-testid={`check-row-${check.id}`}>
-      <label className="check-row__check">
-        <input
-          checked={state === "opened"}
-          className="check-row__input"
-          disabled={cleared}
-          onChange={(event) => onToggle(check.id, event.currentTarget)}
-          type="checkbox"
-        />
-        <span className="check-row__name">{check.name}</span>
-      </label>
-      <span className="check-row__state">
-        <Swatch state={state} />
-        {LABELS[state]}
-      </span>
-      {explained && state !== "available" && state !== "opened" && (
-        <Why check={check} />
-      )}
-    </li>
-  ),
+  }) => {
+    const held = useLocationHeld(check.id);
+    return (
+      <li className="check-row" data-testid={`check-row-${check.id}`}>
+        <label className="check-row__check">
+          <input
+            checked={state === "opened"}
+            className="check-row__input"
+            disabled={cleared}
+            onChange={(event) => onToggle(check.id, event.currentTarget)}
+            type="checkbox"
+          />
+          <span className="check-row__name">{check.name}</span>
+          {held && (
+            <span
+              className="check-row__held"
+              data-testid={`check-held-${check.id}`}
+            >
+              <span className="sr-only">, held </span>
+              {held.icon !== null && (
+                <img
+                  alt=""
+                  className="check-row__sprite"
+                  height={20}
+                  src={getAssetPath(held.icon)}
+                  width={20}
+                />
+              )}
+              {held.name}
+            </span>
+          )}
+        </label>
+        <span className="check-row__state">
+          <Swatch state={state} />
+          {LABELS[state]}
+        </span>
+        {explained && state !== "available" && state !== "opened" && (
+          <Why check={check} />
+        )}
+      </li>
+    );
+  },
 );
 
 /** A dungeon's counter beside its name: the items left and their state. */
@@ -313,6 +336,9 @@ export const ChecksPanel = () => {
   const [shown, setShown] = useState(FIRST_SHOWN);
   const [zoneName, setZoneName] = useState("");
   const [query, setQuery] = useState("");
+  // In a review: every check left undone, whatever the state filters say
+  const inReview = useInReview();
+  const [missedOnly, setMissedOnly] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const ids = useId();
 
@@ -347,8 +373,13 @@ export const ChecksPanel = () => {
     : FILTERS.filter(({ state }) => state !== "trick");
   const counts = Object.fromEntries(FILTERS.map(({ state }) => [state, 0]));
   for (const check of inScope.flat()) counts[states[check.id]]++;
+  const unfiltered = inReview && missedOnly;
   const lists = inScope.map((checks) =>
-    checks.filter((check) => shown.has(states[check.id] ?? "unavailable")),
+    checks.filter((check) =>
+      unfiltered
+        ? states[check.id] !== "opened"
+        : shown.has(states[check.id] ?? "unavailable"),
+    ),
   );
   const total = lists.reduce((sum, checks) => sum + checks.length, 0);
 
@@ -386,6 +417,18 @@ export const ChecksPanel = () => {
             </label>
           ))}
         </fieldset>
+        {inReview && (
+          <label className="segmented__option checks-filter checks__missed">
+            <input
+              checked={missedOnly}
+              className="segmented__input"
+              data-testid="checks-missed-only"
+              onChange={(event) => setMissedOnly(event.target.checked)}
+              type="checkbox"
+            />
+            Missed only
+          </label>
+        )}
         <label className="checks__field">
           <span className="checks__field-label">Zone</span>
           <select

@@ -32,7 +32,10 @@ export const ReviewNotice = ({
   <div className="review-notice" data-testid="review-notice" role="status">
     <p className="review-notice__text">
       <strong className="review-notice__badge">Review</strong>{" "}
-      <span data-testid="review-binding">{bindingText(review)}</span>
+      <span data-testid="review-binding">{bindingText(review)}</span>{" "}
+      <span className="review-notice__hint">
+        The board shows what each place held: markers, Checks and the grid.
+      </span>
     </p>
     <button
       className="modal-btn modal-btn--ghost"
