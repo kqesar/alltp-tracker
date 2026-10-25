@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.43.0](https://github.com/kqesar/alltp-tracker/compare/v2.42.0...v2.43.0) (2026-10-25)
+
+
+### ✨ Features
+
+* **alttpr:** read the pad medallions the game shows from the ROM ([6e5755b](https://github.com/kqesar/alltp-tracker/commit/6e5755be00d324c7c58a04bfbd575652c74bd0e7))
+* **web:** fill a pad's medallion once the game shows it ([79577d1](https://github.com/kqesar/alltp-tracker/commit/79577d13c7190265c9cab2137b1417ffdaffac04))
+* **web:** mark Ganon's Tower's boss cell GT ([e1029ca](https://github.com/kqesar/alltp-tracker/commit/e1029ca922aed1e0917436772aa0425bff728f61))
+
+
+### 📚 Documentation
+
+* draw the repository's social preview with the cards ([b543839](https://github.com/kqesar/alltp-tracker/commit/b54383910444149719218942cc4d5ff35ca5c4e0))
+* merge CLAUDE.md's two Archipelago package entries ([#346](https://github.com/kqesar/alltp-tracker/issues/346)) ([87da85c](https://github.com/kqesar/alltp-tracker/commit/87da85c0682c0805870f6da51b0e973a730c0e89))
+* **web:** redraw the link preview cards ([2b18166](https://github.com/kqesar/alltp-tracker/commit/2b18166e0cb75c677cf7ba2252ff3f76d028ce97))
+
 ## [2.42.0](https://github.com/kqesar/alltp-tracker/compare/v2.41.0...v2.42.0) (2026-10-24)
 
 
