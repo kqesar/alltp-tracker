@@ -2,7 +2,10 @@ import type { MapMarker } from "@alltp/pack-alttpr";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { KeyChord } from "@/games/alttpr/components/ui/KeyChord";
-import { MissingLines } from "@/games/alttpr/components/ui/Missing";
+import {
+  MissingGroups,
+  MissingLines,
+} from "@/games/alttpr/components/ui/Missing";
 import { itemLabels } from "@/games/alttpr/data/items";
 import {
   type Chord,
@@ -14,7 +17,12 @@ import {
   type ShortcutPrefs,
 } from "@/games/alttpr/data/keymap";
 import { useCurrentAnalysis } from "@/games/alttpr/hooks/useRunAnalysis";
-import type { Missing, RunAnalysis } from "@/games/alttpr/logic/missing";
+import {
+  dungeonMissing,
+  type Missing,
+  type MissingGroup,
+  type RunAnalysis,
+} from "@/games/alttpr/logic/missing";
 import { KEY_DUNGEONS } from "@/games/alttpr/logic/settings";
 import {
   bossStateOf,
@@ -24,7 +32,6 @@ import {
   type MarkerState,
   markerById,
   markerDetail,
-  prizeOf,
 } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath } from "@/games/alttpr/utils";
@@ -85,23 +92,14 @@ type MissingEntry = {
 };
 
 /**
- * What a marker's checks left are missing: for a dungeon, its boss's (the
- * prize's rule) until beaten; for a cave, each location's, those missing the
- * same thing together, named when not all its checks left miss it.
+ * What a cave's checks left are missing, each location's, those missing the
+ * same thing together, named when not all its checks left miss it. (A
+ * dungeon's are grouped by `dungeonMissing`.)
  */
 const missingOf = (
-  marker: MapMarker,
   rows: readonly { id: string; label: string; state: MarkerState }[],
   analysis: RunAnalysis,
-  boss: MarkerState | undefined,
 ): MissingEntry[] => {
-  if (marker.dungeon !== undefined) {
-    if (boss === "opened" || boss === "available") return [];
-    const missing = analysis.missing.get(
-      prizeOf(marker.dungeon, analysis.solution.settings),
-    );
-    return missing ? [{ key: "boss", label: "Boss", missing }] : [];
-  }
   const left = rows.filter((row) => row.state !== "opened");
   const groups = new Map<string, { labels: string[]; missing: Missing }>();
   for (const row of left) {
@@ -173,8 +171,8 @@ type Placement = { left: number; top: number; side: "above" | "below" };
  * when there is room, below otherwise, kept inside the viewport. A map
  * marker's lists each location it stands for with its state and what those
  * not in logic are missing, and a dungeon's says how many items its counter
- * has left, how many of those are surely in logic, and what its boss is
- * missing. The marker's accessible name says its state, so its title is
+ * has left, how many of those are surely in logic, and what its checks and
+ * boss are missing, grouped by what they miss. The marker's accessible name says its state, so its title is
  * hidden from assistive technology; the rest, which the name does not say,
  * is a `role="tooltip"` detail that describes the marker (aria-describedby)
  * while shown. What is missing comes from the run's analysis, worked out
@@ -243,15 +241,25 @@ export const Tooltip = () => {
         });
   const wide = rows.length >= COLUMNS_FROM;
   const missing =
-    marker === undefined || analysis === undefined
+    marker === undefined || dungeon !== undefined || analysis === undefined
       ? []
-      : missingOf(marker, rows, analysis, boss);
+      : missingOf(rows, analysis);
+  // A dungeon's: every check left, grouped by what it is missing
+  const groups: readonly MissingGroup[] =
+    dungeon === undefined || analysis === undefined
+      ? []
+      : dungeonMissing(rows, dungeon, boss, analysis);
+  // Something is out of logic in it, and the analysis is not in yet
+  const pending =
+    dungeon !== undefined &&
+    analysis === undefined &&
+    rows.some(({ state }) => state !== "opened" && state !== "available");
   // The marker's name says the state of a one-location marker: its row
   // stays out of the description
   const single = rows.length === 1 && dungeon === undefined;
   const described = left !== undefined || !single || missing.length > 0;
   const hasDetail = marker !== undefined && described;
-  const size = `${title}|${text}|${left}|${sure}|${pad}|${detail.join()}|${lines.length}|${missing.map((entry) => entry.key).join()}`;
+  const size = `${title}|${text}|${left}|${sure}|${pad}|${detail.join()}|${lines.length}|${missing.map((entry) => entry.key).join()}|${groups.map(({ key, spots }) => `${key}${spots.map((spot) => spot.name).join()}`).join()}|${pending}`;
 
   // The detail is what the anchor's name does not say: it describes it
   useLayoutEffect(() => {
@@ -399,6 +407,21 @@ export const Tooltip = () => {
             </span>
           )}
           {!single && checks}
+          {groups.length > 0 && (
+            <div className="tooltip__missing" data-testid="tooltip-missing">
+              <MissingGroups groups={groups} />
+            </div>
+          )}
+          {pending && (
+            <div className="tooltip__missing">
+              <p
+                className="missing missing--pending"
+                data-testid="tooltip-pending"
+              >
+                Working it out…
+              </p>
+            </div>
+          )}
           {missing.map((entry) => (
             <div
               className="tooltip__missing"

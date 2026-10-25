@@ -174,6 +174,10 @@ for (const width of WIDTHS) {
     test("shows every check within the page, accessibly", async ({ page }) => {
       await openTracker(page);
       await showAllChecks(page);
+      await page.getByTestId("zone-why-eastern-palace").click();
+      await expect(
+        page.getByTestId("zone-missing-eastern-palace"),
+      ).toContainText(": Big Key Chest");
       await page.getByTestId("check-why-library").click();
       await page.getByTestId("go-mode").click();
 
@@ -189,6 +193,40 @@ for (const width of WIDTHS) {
         violations.map(({ id, nodes }) => `${id} ×${nodes.length}`),
       ).toEqual([]);
       expect(await unreachableClickables(page)).toEqual([]);
+    });
+
+    test("says what a dungeon's checks are missing in a tooltip that fits the screen", async ({
+      page,
+    }) => {
+      await openTracker(page);
+      // Ganon's Tower: the longest list, every check out of logic
+      await page.getByTestId("item-boss12").hover();
+
+      const tooltip = page.getByTestId("tooltip");
+      await expect(tooltip).toContainText("Ganon's Tower");
+      await expect(page.getByTestId("tooltip-missing")).toBeVisible();
+      await expect(page.getByTestId("tooltip-pending")).toHaveCount(0);
+      const groups = page.getByTestId("missing-group");
+      expect(await groups.count()).toBeGreaterThan(0);
+      const box = await tooltip.boundingBox();
+      const viewport = page.viewportSize();
+      expect(box).not.toBeNull();
+      expect(box?.x).toBeGreaterThanOrEqual(0);
+      expect(box?.y).toBeGreaterThanOrEqual(0);
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(
+        viewport?.width ?? 0,
+      );
+      expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(
+        viewport?.height ?? 0,
+      );
+      // Map pins sit where the location is: WCAG 2.5.8's exception
+      const { violations } = await new AxeBuilder({ page })
+        .withTags(WCAG_AA)
+        .exclude(".mapspan")
+        .analyze();
+      expect(
+        violations.map(({ id, nodes }) => `${id} ×${nodes.length}`),
+      ).toEqual([]);
     });
 
     test("switches the view with the arrow keys", async ({ page }) => {

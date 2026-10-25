@@ -2,8 +2,14 @@ import type { DungeonId } from "@alltp/pack-alttpr";
 import { memo, useCallback, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useShallow } from "zustand/react/shallow";
-import { MissingLines } from "@/games/alttpr/components/ui/Missing";
-import { useMissing } from "@/games/alttpr/hooks/useRunAnalysis";
+import {
+  MissingGroups,
+  MissingLines,
+} from "@/games/alttpr/components/ui/Missing";
+import {
+  useCurrentAnalysis,
+  useMissing,
+} from "@/games/alttpr/hooks/useRunAnalysis";
 import {
   type Check,
   checkStates,
@@ -11,7 +17,9 @@ import {
   runZones,
   type Zone,
 } from "@/games/alttpr/logic/checks";
+import { dungeonMissing } from "@/games/alttpr/logic/missing";
 import {
+  bossStateOf,
   dungeonCount,
   type MarkerState,
   solutionOf,
@@ -42,6 +50,9 @@ const FIRST_SHOWN: ReadonlySet<MarkerState> = new Set([
 const Swatch = ({ state }: { state: MarkerState }) => (
   <span aria-hidden="true" className={`check-swatch state-glyph ${state}`} />
 );
+
+/** The states with nothing left to say: done, or in logic. */
+const SETTLED: ReadonlySet<MarkerState> = new Set(["available", "opened"]);
 
 /** What a check is missing, once the analysis has it. */
 const WhyLines = ({ id }: { id: string }) => (
@@ -132,6 +143,42 @@ const DungeonCount = ({ dungeon }: { dungeon: DungeonId }) => {
   );
 };
 
+/**
+ * What a dungeon's checks left are missing, grouped by what they miss: the
+ * run's analysis, so "Working it out…" until it is in.
+ */
+const ZoneMissing = ({
+  boss,
+  dungeon,
+  states,
+  zone,
+}: {
+  boss: MarkerState | undefined;
+  dungeon: DungeonId;
+  states: Record<string, MarkerState>;
+  zone: Zone;
+}) => {
+  const analysis = useCurrentAnalysis();
+  if (analysis === undefined) {
+    return <p className="missing missing--pending">Working it out…</p>;
+  }
+  const groups = dungeonMissing(
+    zone.checks.map(({ id, name }) => ({
+      id,
+      label: name,
+      state: states[id] ?? "unavailable",
+    })),
+    dungeon,
+    boss,
+    analysis,
+  );
+  return groups.length === 0 ? (
+    <p className="missing missing--pending">Nothing is missing.</p>
+  ) : (
+    <MissingGroups groups={groups} />
+  );
+};
+
 /** A zone's heading and its checks shown. */
 const ZoneList = ({
   checks,
@@ -149,12 +196,60 @@ const ZoneList = ({
   zone: Zone;
 }) => {
   const headingId = useId();
+  const bodyId = useId();
+  const [open, setOpen] = useState(false);
+  const { dungeon } = zone;
+  // Hyrule Castle has no boss: its prize is Zelda's
+  const boss = useGameStore((state) =>
+    dungeon === undefined || dungeon === "hyrule-castle"
+      ? undefined
+      : bossStateOf(dungeon, state),
+  );
+  // Every check of the dungeon counts, whatever the filters show
+  const worthAsking =
+    dungeon !== undefined &&
+    explained &&
+    !cleared &&
+    (zone.checks.some(({ id }) => !SETTLED.has(states[id] ?? "unavailable")) ||
+      (boss !== undefined && !SETTLED.has(boss)));
   return (
     <section aria-labelledby={headingId} className="checks-zone">
-      <h3 className="checks-zone__title page-background" id={headingId}>
-        {zone.name}
-        {zone.dungeon !== undefined && <DungeonCount dungeon={zone.dungeon} />}
-      </h3>
+      <div className="checks-zone__head page-background">
+        <h3 className="checks-zone__title" id={headingId}>
+          {zone.name}
+          {dungeon !== undefined && <DungeonCount dungeon={dungeon} />}
+        </h3>
+        {worthAsking && (
+          <button
+            aria-controls={bodyId}
+            aria-expanded={open}
+            aria-label={`What's missing? ${zone.name}`}
+            className="check-why"
+            data-testid={`zone-why-${dungeon}`}
+            onClick={() => setOpen(!open)}
+            type="button"
+          >
+            What's missing?
+          </button>
+        )}
+      </div>
+      {worthAsking && (
+        <div
+          className="checks-zone__missing"
+          data-testid={`zone-missing-${dungeon}`}
+          hidden={!open}
+          id={bodyId}
+        >
+          {open && (
+            <ZoneMissing
+              boss={boss}
+              dungeon={dungeon}
+              states={states}
+              zone={zone}
+            />
+          )}
+        </div>
+      )}
       <ul className="checks-zone__list">
         {checks.map((check) => (
           <CheckRow

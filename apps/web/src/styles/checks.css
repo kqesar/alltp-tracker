@@ -315,16 +315,40 @@
   outline: none;
 }
 
-/* Kept in view while its zone scrolls by */
-.checks-zone__title {
+/* Kept in view while its zone scrolls by: the heading, and for a dungeon
+   the button that asks what it is missing, whose answer opens under them */
+.checks-zone__head {
   position: sticky;
   top: 0;
   z-index: var(--z-overlay);
   display: flex;
   flex-wrap: wrap;
+  gap: 0 var(--spacing-sm);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) 0;
+}
+
+.checks-zone__missing {
+  display: grid;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm) var(--spacing-sm);
+  margin-bottom: 2px;
+  font-size: var(--font-size-sm);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.checks-zone__missing[hidden] {
+  display: none;
+}
+
+.checks-zone__title {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
   gap: var(--spacing-xs) var(--spacing-sm);
   align-items: center;
-  padding: var(--spacing-xs) 0;
   margin: 0;
   font-size: var(--font-size-sm);
   font-weight: 700;
