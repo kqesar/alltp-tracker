@@ -430,6 +430,15 @@ read in the new mode: a decoder never takes an earlier stint's bytes, which
 still sit in the snapshot, for the current one. Categories
 stay per range, and the profile per community.
 
+A portal can also fall inside a tick, between the probe and the reads of
+mode-bound ranges, which would then hold the other game's memory under the
+old mode's name. A tick that read a mode-bound range (either phase) therefore
+reads the probe once more at its end, in a request of its own (two bytes), and
+if the mode is no longer the planned one it counts as a switch: the update
+says `modeChanged`, every mode-bound range counts as unread, the casual
+ranges it read are dropped, and the next tick plans for the new mode. A tick
+that read no mode-bound range pays nothing.
+
 ## Setup guide and environment
 
 `SETUP_STEPS` is the "Set up autotracking" guide as data: get SNI, run it,

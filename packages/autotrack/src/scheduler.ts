@@ -12,6 +12,12 @@
 // another one, the tick keeps only the ranges every mode shares, skips the
 // casual phase, and the next tick reads the new layout: a portal crossing in
 // SMZ3 costs one tick, not a round trip on every tick.
+//
+// A portal can also fall inside a tick, after the probe was read and before
+// the ranges bound to its mode were: those would hold the other game's
+// memory. So a tick that read a mode-bound range reads the probe once more
+// at its end, in a request of its own, and takes the tick for a switch (the
+// ranges it read count as unread) if the mode is no longer the planned one.
 
 import { ALL_MODES, type AutotrackPack } from "./pack";
 import { type ByteRange, EMPTY_PLAN, planReads, type ReadPlan } from "./plan";
@@ -55,6 +61,8 @@ interface Phase {
   readonly plan: ReadPlan;
   /** Range index of each planned input range, or FLAG. */
   readonly members: Uint32Array;
+  /** Whether a range bound to some modes only is among them. */
+  readonly modeBound: boolean;
 }
 
 interface DuePlans {
@@ -62,7 +70,26 @@ interface DuePlans {
   readonly casual: Phase;
 }
 
-const NO_PHASE: Phase = { members: new Uint32Array(0), plan: EMPTY_PLAN };
+const NO_PHASE: Phase = {
+  members: new Uint32Array(0),
+  modeBound: false,
+  plan: EMPTY_PLAN,
+};
+
+/** The mode probe's range alone, planned for Race Mode's guard like any permitted read. */
+function phaseOfProbe(
+  pack: AutotrackPack,
+  probe: number,
+  limits: Transport["limits"],
+): Phase {
+  const plan = planReads([pack.ranges[probe]], {
+    barriers: pack.raceBarriers,
+    gap: pack.gap,
+    limits,
+  });
+  assertRaceSafe(plan, pack.profile, pack.permittedBytes, pack.forbiddenBytes);
+  return { members: Uint32Array.of(probe), modeBound: false, plan };
+}
 
 export class Poller implements MemorySnapshot {
   /** Ranges this device cannot serve (ROM ranges when ROM is unreadable). */
@@ -74,6 +101,9 @@ export class Poller implements MemorySnapshot {
   private readonly probeBytes: Uint8Array;
   private readonly plans = new Map<number, DuePlans>();
   private readonly checkPlan: Phase;
+  /** The probe alone, read again at the end of a tick that read mode-bound ranges. */
+  private readonly probePhase: Phase;
+  private readonly probeScratch: Uint8Array;
   private readonly build: (set: number, mode: number) => DuePlans;
   private readonly now: () => number;
   private scratch: Uint8Array;
@@ -168,7 +198,13 @@ export class Poller implements MemorySnapshot {
           pack.permittedBytes,
           pack.forbiddenBytes,
         );
-      return { members: Uint32Array.from(members), plan };
+      return {
+        members: Uint32Array.from(members),
+        modeBound: members.some(
+          (index) => index !== FLAG && pack.modeMasks[index] !== ALL_MODES,
+        ),
+        plan,
+      };
     };
     this.build = (set, mode) => ({
       casual: phase(pack.dueSets[set], false, mode),
@@ -179,6 +215,11 @@ export class Poller implements MemorySnapshot {
         ? NO_PHASE
         : phase(pack.gameCheck.ranges, true, UNKNOWN_MODE);
     this.scratch = new Uint8Array(this.checkPlan.plan.size);
+    this.probePhase =
+      probe >= 0 && readable[probe]
+        ? phaseOfProbe(pack, probe, transport.limits)
+        : NO_PHASE;
+    this.probeScratch = new Uint8Array(this.probePhase.plan.size);
     this.update = {
       at: 0,
       changed: this.changedIds,
@@ -246,27 +287,55 @@ export class Poller implements MemorySnapshot {
     this.changedIds.length = 0;
     await this.fetch(plans.race);
     this.readControls(plans.race);
-    const switched = this.modeIndex !== planned;
+    let switched = this.modeIndex !== planned;
     this.scatter(plans.race, switched);
-    // A new mode: every mode-bound range holds another stint's bytes, unread
-    // until read again in this one
-    if (switched) {
-      this.pack.modeMasks.forEach((mask, index) => {
-        if (mask !== ALL_MODES) this.seen[index] = 0;
-      });
-    }
     // Decided after the race phase, on the flag it just read; a new mode
     // means this tick's casual plan was for the old layout.
-    if (!switched && !this.raceActive()) {
-      await this.fetch(plans.casual);
-      this.scatter(plans.casual, false);
+    if (!switched) {
+      const casual = this.raceActive() ? NO_PHASE : plans.casual;
+      await this.fetch(casual);
+      // A portal since the probe was read: what the mode-bound ranges held
+      // is the other game's
+      if (
+        (plans.race.modeBound || casual.modeBound) &&
+        !(await this.stillIn(planned))
+      ) {
+        switched = true;
+      } else this.scatter(casual, false);
     }
+    // A new mode: every mode-bound range holds another stint's bytes, unread
+    // until read again in this one
+    if (switched) this.forgetModeBound();
     this.ticks++;
     if (this.changedIds.length === 0 && !switched) return null;
     this.update.tick = this.ticks;
     this.update.at = this.now();
     this.update.modeChanged = switched;
     return this.update;
+  }
+
+  private forgetModeBound(): void {
+    this.pack.modeMasks.forEach((mask, index) => {
+      if (mask !== ALL_MODES) this.seen[index] = 0;
+    });
+  }
+
+  /**
+   * Reads the probe again and tells whether the mode is still `planned`; if
+   * not, takes the new one, which the next tick plans for.
+   */
+  private async stillIn(planned: number): Promise<boolean> {
+    const modes = this.pack.modes;
+    const { plan } = this.probePhase;
+    if (modes === null || plan.size === 0) return true;
+    for (const request of plan.requests) {
+      await this.transport.read(request, this.probeScratch, request.offset);
+    }
+    const name = modes.decode(this.probeScratch);
+    const index = name === null ? UNKNOWN_MODE : modes.names.indexOf(name);
+    if (index === planned) return true;
+    this.modeIndex = index;
+    return false;
   }
 
   /** `race.active` without building the status object. */
