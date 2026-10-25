@@ -28,7 +28,6 @@ const fakeState = {
   presetId: "open",
   redo: vi.fn(),
   reset,
-  // The More menu's key cells choice, once the bar folds it
   setBigKeysVisible: vi.fn(),
   setMapLayout,
   settings: {

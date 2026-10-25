@@ -1,6 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { pixelsIn, unreachableClickables, WCAG_AA, WIDTHS } from "./support";
+import {
+  pixelsIn,
+  setKeyCells,
+  unreachableClickables,
+  WCAG_AA,
+  WIDTHS,
+} from "./support";
 
 /** Regions that must never cover one another, by data-testid. */
 const REGIONS = ["toolbar", "item-grid", "map-tracker", "map-legend"] as const;
@@ -338,7 +344,7 @@ test.describe("a missing item", () => {
   test("greys a key not found the same way, in colour once held", async ({
     page,
   }) => {
-    await page.getByTestId("key-cells-toggle").click();
+    await setKeyCells(page, true);
     await page.mouse.move(0, 0);
     const key = page.getByTestId("big-key-0");
     await expect(key).toHaveAccessibleName(

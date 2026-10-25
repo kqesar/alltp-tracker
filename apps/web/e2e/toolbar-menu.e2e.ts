@@ -305,7 +305,7 @@ test.describe("the narrowest bar, with the largest text", () => {
   });
   test.beforeEach(async ({ page }) => {
     await openTracker(page);
-    // Text at 175 %: the map layout, the key cells, even Autotracking fold
+    // Text at 175 %: the map layout, even Autotracking fold
     await page.addStyleTag({ content: largeText(28) });
     await settle(page);
   });
@@ -324,7 +324,6 @@ test.describe("the narrowest bar, with the largest text", () => {
       page.getByRole("button", { exact: true, name: "New game" }),
     ).toBeVisible();
     await expect(page.getByTestId("map-layout")).toBeHidden();
-    await expect(page.getByTestId("key-cells-toggle")).toBeHidden();
     // Autotracking folds last; its dot stays in view, on More
     await expect(page.getByTestId("autotrack-button")).toBeHidden();
     await expect(page.getByTestId("toolbar-more-badge")).toBeVisible();
@@ -339,8 +338,8 @@ test.describe("the narrowest bar, with the largest text", () => {
     await expect(
       map.getByRole("menuitemradio", { name: "Auto" }),
     ).toHaveAttribute("aria-checked", "true");
-    const keys = menu.getByRole("menuitemcheckbox", { name: "Big keys" });
-    await expect(keys).toHaveAttribute("aria-checked", "false");
+    // The key cells are the Mode dialog's: nothing to check in this menu
+    await expect(menu.getByRole("menuitemcheckbox")).toHaveCount(0);
     const { violations } = await new AxeBuilder({ page })
       .include('[data-testid="toolbar"]')
       .withTags(WCAG_AA)
@@ -349,15 +348,13 @@ test.describe("the narrowest bar, with the largest text", () => {
       [],
     );
 
-    // A choice sets the layout; the check shows the key cells
+    // A choice sets the layout
     await map.getByRole("menuitemradio", { name: "Stack" }).click();
     await expect(page.getByTestId("layout")).toHaveClass(/layout--stacked/);
     await page.getByTestId("toolbar-more").click();
     await expect(
       menu.getByRole("menuitemradio", { name: "Stack" }),
     ).toHaveAttribute("aria-checked", "true");
-    await keys.click();
-    await expect(page.getByTestId("big-key-0")).toBeVisible();
   });
 
   test("reaches every item from the keyboard, the folded settings included", async ({
@@ -366,7 +363,7 @@ test.describe("the narrowest bar, with the largest text", () => {
     await tabTo(page, "toolbar-more");
     await page.keyboard.press("Enter");
     const reached: string[] = [];
-    for (let press = 0; press < 11; press++) {
+    for (let press = 0; press < 10; press++) {
       reached.push((await focusedTestId(page)) ?? "");
       expect(await focusRinged(page)).toBe(true);
       await page.keyboard.press("ArrowDown");
@@ -382,7 +379,6 @@ test.describe("the narrowest bar, with the largest text", () => {
       "toolbar-more-map-auto",
       "toolbar-more-map-side-by-side",
       "toolbar-more-map-stacked",
-      "toolbar-more-big-keys",
       // Down from the last item wraps to the first
       "toolbar-more-autotrack",
     ]);

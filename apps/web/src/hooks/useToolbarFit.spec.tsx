@@ -33,7 +33,6 @@ const LAYOUTS: Record<ToolbarFit, FitLayout> = {
   labels: { gap: 8, padding: 0, widths: [500, 500] },
   more: { gap: 8, padding: 0, widths: [200, 200, 200] },
   "more-autotrack": { gap: 0, padding: 0, widths: [50, 50, 50] },
-  "more-keys": { gap: 0, padding: 0, widths: [100, 100, 100, 100] },
   "more-map": { gap: 8, padding: 0, widths: [150, 150, 150] },
   "secondary-icons": { gap: 8, padding: 0, widths: [400, 400] },
 };
@@ -51,9 +50,7 @@ describe("chooseFit", () => {
     [408, "more"],
     [407, "more-map"],
     [308, "more-map"],
-    [307, "more-keys"],
-    [200, "more-keys"],
-    [199, "compact"],
+    [307, "compact"],
     [120, "compact"],
     [119, "more-autotrack"],
     [75, "more-autotrack"],
@@ -87,7 +84,7 @@ describe("chooseFit", () => {
     expect(chooseFit(1007, layoutOf, "labels")).toBe("secondary-icons");
     expect(chooseFit(807, layoutOf, "secondary-icons")).toBe("icons");
     expect(chooseFit(407, layoutOf, "more")).toBe("more-map");
-    expect(chooseFit(250, layoutOf, "labels")).toBe("more-keys");
+    expect(chooseFit(250, layoutOf, "labels")).toBe("compact");
   });
 
   it("moves up only with room to spare, so an edge width cannot flip it", () => {
@@ -124,7 +121,6 @@ beforeEach(() => {
     labels: 400,
     more: 150,
     "more-autotrack": 40,
-    "more-keys": 80,
     "more-map": 100,
     "secondary-icons": 300,
   };
@@ -251,15 +247,14 @@ describe("useToolbarFit", () => {
     render(<Toolbar />);
     const folds: Record<number, [string?, string?]> = {};
 
-    for (const width of [900, 700, 400, 250, 170, 130, 100]) {
+    for (const width of [900, 700, 400, 250, 130, 100]) {
       resizeTo(width);
       folds[width] = [toolbar().dataset.fit, toolbar().dataset.fold];
     }
 
     expect(folds).toEqual({
-      100: ["more-autotrack", "labels secondary map keys new-game autotrack"],
-      130: ["compact", "labels secondary map keys new-game"],
-      170: ["more-keys", "labels secondary map keys"],
+      100: ["more-autotrack", "labels secondary map new-game autotrack"],
+      130: ["compact", "labels secondary map new-game"],
       250: ["more-map", "labels secondary map"],
       400: ["more", "labels secondary"],
       700: ["icons", "labels"],

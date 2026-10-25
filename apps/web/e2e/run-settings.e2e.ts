@@ -150,6 +150,43 @@ test("a run type whose logic is not modelled says so, every check maybe", async 
   expect(violations.map(({ id }) => id)).toEqual([]);
 });
 
+test("shows the key cells from the Mode dialog, by keyboard too", async ({
+  page,
+}) => {
+  await openTracker(page);
+  // The toolbar has no button for them any more
+  await expect(page.getByTestId("big-key-0")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /big keys/i })).toHaveCount(0);
+
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const option = runTypes(page).getByRole("checkbox", {
+    name: "Show key cells",
+  });
+  await expect(option).not.toBeChecked();
+  await expect(option).toHaveAccessibleDescription(
+    /shown on their own in MC, MCS and Full/i,
+  );
+
+  // Reached by Tab after the settings' selects, and set with Space
+  await runTypes(page).getByRole("combobox").last().focus();
+  await page.keyboard.press("Tab");
+  await expect(option).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(option).toBeChecked();
+  await runTypes(page).getByRole("button", { name: "Close" }).click();
+  await expect(page.getByTestId("big-key-0")).toBeVisible();
+  await expect(page.getByTestId("layout")).toHaveClass(/layout--key-rows/);
+
+  // A device pref: it holds across a reload, and the box shows it
+  await page.reload();
+  await expect(page.getByTestId("big-key-0")).toBeVisible();
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await expect(option).toBeChecked();
+  await option.uncheck();
+  await runTypes(page).getByRole("button", { name: "Close" }).click();
+  await expect(page.getByTestId("big-key-0")).toHaveCount(0);
+});
+
 for (const width of WIDTHS) {
   test(`the run's tunable settings pass axe and fit at ${width}px`, async ({
     page,
@@ -160,8 +197,12 @@ for (const width of WIDTHS) {
     const dialog = runTypes(page);
     await expect(dialog.getByRole("combobox")).toHaveCount(9);
 
+    await expect(
+      dialog.getByRole("checkbox", { name: "Show key cells" }),
+    ).toBeVisible();
+
     const { violations } = await new AxeBuilder({ page })
-      .include(".run-settings")
+      .include("dialog[open]")
       .withTags(WCAG_AA)
       .analyze();
     expect(violations.map(({ id }) => id)).toEqual([]);

@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { auditPage, WIDTHS } from "./support";
+import { auditPage, setKeyCells, WIDTHS } from "./support";
 
 /** A keysanity run, its key cells shown, as localStorage keeps it. */
 const KEYSANITY = JSON.stringify({
@@ -118,7 +118,7 @@ test.describe("a keysanity run", () => {
 
     // The keys and labels go with the key cells; Agahnim and Ganon's Tower's
     // cell stay
-    await page.getByTestId("key-cells-toggle").click();
+    await setKeyCells(page, false);
     await expect(page.getByTestId("key-label-hyrule-castle")).toBeEmpty();
     await expect(page.getByTestId("item-agahnim")).toBeVisible();
     await expect(page.getByTestId("small-key-11")).toHaveCount(0);

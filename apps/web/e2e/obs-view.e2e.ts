@@ -3,6 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import {
   clickToolbarAction,
+  setKeyCells,
   unreachableClickables,
   WCAG_AA,
   WIDTHS,
@@ -136,7 +137,7 @@ test.describe("the stream view", () => {
   }) => {
     const tracker = await context.newPage();
     await tracker.goto("./");
-    await tracker.getByTestId("key-cells-toggle").click();
+    await setKeyCells(tracker, true);
     await openObsView(page);
 
     for (const id of ["big-key-0", "small-key-1"]) {
@@ -292,7 +293,7 @@ test.describe("the stream view", () => {
 
     // The key cells add two rows: the view refits to keep them on screen
     const before = await cellOf(page);
-    await tracker.getByTestId("key-cells-toggle").click();
+    await setKeyCells(tracker, true);
     await expect(page.getByTestId("grid-row")).toHaveCount(8);
     const after = await cellOf(page);
     const grid = await page.getByTestId("item-grid").boundingBox();

@@ -4,7 +4,6 @@ import { GameShell } from "@/components/ui/GameShell";
 import { SeedPrompt } from "@/games/alttpr/components/autotrack/SeedPrompt";
 import { MAP_VIEW_ID, MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
-import { BigKeyToggle } from "@/games/alttpr/components/ui/BigKeyToggle";
 import { Tooltip } from "@/games/alttpr/components/ui/Tooltip";
 import { TrackerControls } from "@/games/alttpr/components/ui/TrackerControls";
 import { itemGridFor } from "@/games/alttpr/data/items";
@@ -30,7 +29,6 @@ function App() {
   useCrossedLogic();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const grid = useGameStore((state) => itemGridFor(state.settings));
-  const setBigKeysVisible = useGameStore((state) => state.setBigKeysVisible);
   const mapLayout = useGameStore((state) => state.mapLayout);
   const setMapView = useGameStore((state) => state.setMapView);
 
@@ -58,15 +56,7 @@ function App() {
             </a>
           </>
         }
-        toolbar={
-          <>
-            <TrackerControls />
-            <BigKeyToggle
-              isVisible={bigKeysVisible}
-              onToggle={setBigKeysVisible}
-            />
-          </>
-        }
+        toolbar={<TrackerControls />}
       >
         <div
           className={`layout${mapLayout === "stacked" ? " layout--stacked" : ""}${bigKeysVisible ? " layout--key-rows" : ""}`}
