@@ -28,6 +28,12 @@ export {
   type Unsettled,
 } from "./autotrack/decode";
 export {
+  decodeMedallions,
+  type MedallionReading,
+  type MedallionShownBy,
+  type ShownMedallion,
+} from "./autotrack/medallion-pads";
+export {
   type AlttprRange,
   MEMORY_RANGE,
   MEMORY_RANGES,

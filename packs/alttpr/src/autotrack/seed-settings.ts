@@ -63,6 +63,13 @@ function rom<const Id extends string>(
  * `prizes`, which no race permits.
  */
 export const SEED_SETTINGS_RANGES = [
+  // MireRequiredMedallion and TRockRequiredMedallion: the medallion each
+  // pad wants, $00 Bombos, $01 Ether, $02 Quake (tables.asm:53-62; vt
+  // Medallions.php:30-31 writes the item's second byte there). The game
+  // shows it only as an emblem on the pad's overworld screen, so it is read
+  // outside Race Mode only and kept until the player could see it
+  // (medallions.ts). `other`: the rules cover it nowhere.
+  rom("medallions", 0x30_8022, 2, "other", "z3:tables.asm:53-62"),
   // MapMode: $00, the world map shows every dungeon's prize; $01, only once
   // its map is held (tables.asm:124-125). vt writes $01 when maps leave
   // their dungeon, dungeonItems mc, mcs or full (Rom.php:1959-1964,

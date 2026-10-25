@@ -27,7 +27,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/er-world.ts` | `cassidoxa/ALttPEntranceRandomizer` (`Regions.py`, `Rules.py`): the world a seed with shuffled entrances is filled in, for the doors noted (see "The entrance randomizer's world") |
 | `src/derived.ts`, `src/medallions.ts` | facts the state derives before solving, for the rules that are not monotone in the items (Palace of Darkness's keys; what a medallion pad wants) |
 | `src/location.ts`, `src/rules.ts` | what a location is (its kinds, its rule and upstream source); every named rule, as the engine loads them |
-| `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags, seed settings and the prizes the game shows (`prizes.ts`), from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
+| `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags, seed settings, the prizes the game shows (`prizes.ts`) and the pad medallions it shows (`medallion-pads.ts`), from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
 | `src/pack.ts` | the run's world, compiled with its settings |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -194,6 +194,48 @@ prize never leaves the decoder. A range not read counts as not met; a ROM
 the device does not serve (zero-filled) names nothing, and the app falls
 back to telling a finished dungeon's prize by elimination. A prize the
 player named stays theirs.
+
+### A pad's medallion, as the game shows it
+
+Autotracking fills Misery Mire's and Turtle Rock's medallion as soon as the
+player could know it in the game, never earlier, and only outside Race Mode
+(`decodeMedallions`, `src/autotrack/medallion-pads.ts`). The ROM names both
+in z3randomizer's `MireRequiredMedallion` and `TRockRequiredMedallion`
+(`tables.asm:53-62`): `$30:8022` and `$30:8023`, `$00` Bombos, `$01` Ether,
+`$02` Quake. vt writes the medallion item's second byte at both
+(`Region/Standard/Medallions.php:30-31`, `Item.php:108-110`,
+`Location.php:271-278`), and Inverted reuses that region
+(`World/Inverted.php:53`; both pads still need the medallion in
+`Region/Inverted/MiseryMire.php:31-33` and `TurtleRock.php:55-57`), so the
+bytes and the screens below hold for every world. Read on a rig seed and a
+daily seed, they matched the graphics each patch carries.
+
+The game shows the medallion nowhere but on the dungeon's entrance, as the
+emblem carved there: the base patch swaps the overworld graphics sheet
+(`LTTP_RND_GeneralBugfixes.asm:188-206`; vt writes the sheet's pointer
+bytes with the medallion, `Medallions.php:30-31`). No map, HUD or menu draws
+it, no hint names it (vt leaves it out of the hints, `HintService.php:147,
+156`), and no flag records that the player looked. The decoder follows that:
+
+| The game shows it when | Memory |
+| --- | --- |
+| the entrance's overworld screen is in view | `OverworldIndex` (`$7E:008A`, `ram.asm:93`) is `$70` for Misery Mire or `$47` for Turtle Rock (`medallions.asm:6, 25`, which the game checks for both worlds alike), with the game mode `$09`, the overworld: the index keeps the screen Link left while he is in a cave or a dungeon |
+| the entrance is open already | bit `$20` of the screen's event byte, `$7EF280` + the screen (`medallions.asm:9, 28`): only the right medallion cast on the pad sets it |
+
+The screen is a proxy: the emblem lies somewhere on it, and standing on the
+screen is the nearest the memory gets to seeing it. What the reading keeps
+is only what is shown; the app remembers it for the session and the run
+keeps it (see the guide). The bytes are read with the ROM's other tables, at
+the settings' pace, and the screen with the game mode. A device that serves
+no ROM there (zero-filled) would read Bombos twice, so the decoder trusts
+the table only when `prize-kinds` holds a seed's seven crystals, and names
+nothing otherwise (`not-read`).
+
+Race Mode reads neither range: their category is `other`, which the rules
+(v2.0: "anything not covered ... is not permitted"; ROM addresses of
+entrance locations "should not ever be accessed") leave to the player. The
+opened bit lies in the `overworld` range the checks read, but the decoder
+asks for nothing then.
 
 ## A Mystery run
 
