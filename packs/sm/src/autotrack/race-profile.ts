@@ -1,9 +1,10 @@
 // The rules Map Rando races answer to, as @alltp/autotrack's race profile.
 //
 // Map Rando races run on racetime.gg's "Super Metroid Randomizer" category
-// (racetime.gg/smr), whose rules ban emulators, glitches, stream sniping and
-// controller macros, and say nothing of trackers or autotrackers (its `info`,
-// read on 2026-10-19). Map Rando's own "Race mode" only locks a seed's
+// (racetime.gg/smr), whose rules ban the old emulators (SNES9x 1.43 and below,
+// ZSNES), glitches, stream sniping and controller macros, and say nothing of
+// trackers or autotrackers (its `info`, read on 2026-10-19 and again on
+// 2026-10-25). Map Rando's own "Race mode" only locks a seed's
 // spoiler on the website (rust/maprando-web/templates/generate/help/
 // race.html) and writes nothing into the ROM: there is no race flag to read.
 // So every category this pack reads is permitted. It reads what the player
