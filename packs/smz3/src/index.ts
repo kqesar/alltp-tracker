@@ -2,7 +2,11 @@
 // data over the engine, held to upstream's logic tests, and its autotracking
 // (README.md).
 export {
+  type ClockReading,
+  decodeBeforePlay,
   decodeChecks,
+  decodeGameClock,
+  decodeGoal,
   decodeInPlay,
   decodeItems,
   decodeMode,
@@ -11,6 +15,8 @@ export {
   type MemoryView,
   type RequirementsReading,
   type SeedReading,
+  SMZ3_FRAMES_PER_SECOND,
+  smz3Ms,
   type Unsettled,
 } from "./autotrack/decode";
 export {

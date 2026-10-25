@@ -22,6 +22,11 @@ const word = (memory: Uint8Array, address: number, value: number) => {
   memory[address + 1] = (value >> 8) & 0xff;
 };
 
+const long = (memory: Uint8Array, address: number, value: number) => {
+  word(memory, address, value & 0xffff);
+  word(memory, address + 2, Math.floor(value / 0x1_0000));
+};
+
 /** Super Metroid's save offsets the tracker reads, $00-$CF. */
 const SM_SAVE_SIZE = 0xd0;
 
@@ -31,6 +36,8 @@ export type Smz3Game = {
   readonly mode?: Smz3Mode;
   /** The running game is in play (its mode or state), not on a title screen. */
   readonly inPlay?: boolean;
+  /** The running game's mode ($7E:0010) or state ($7E:0998), over `inPlay`. */
+  readonly state?: number;
   readonly race?: boolean;
   readonly keysanity?: boolean;
   readonly smLogic?: "normal" | "hard";
@@ -44,6 +51,11 @@ export type Smz3Game = {
   readonly zelda?: Readonly<Record<number, number>>;
   /** Super Metroid's save, by offset: $7E:09A2+n below $60, $7E:D7C0+n on. */
   readonly sm?: Readonly<Record<number, number>>;
+  /**
+   * The games' frame counters: each game's own, live where its game runs and
+   * saved where the other does (memory.ts). Left out, 0 and 0.
+   */
+  readonly clock?: { readonly sm: number; readonly zelda: number };
 };
 
 /** The game byte's value per mode (common.asm:53-76; credits.asm:62-64). */
@@ -62,6 +74,7 @@ export const writeSmz3 = (
   {
     mode = "zelda",
     inPlay = true,
+    state,
     race = false,
     keysanity = false,
     smLogic = "normal",
@@ -73,6 +86,7 @@ export const writeSmz3 = (
     turtleRock = "quake",
     zelda = {},
     sm = {},
+    clock = { sm: 0, zelda: 0 },
   }: Smz3Game = {},
 ): Uint8Array => {
   // The seed block: config words, version 11.3 in the low byte
@@ -121,12 +135,12 @@ export const writeSmz3 = (
   }
 
   if (mode === "zelda") {
-    memory[at("zelda-mode", 0x7e_0010)] = inPlay ? 0x09 : 0x01;
+    memory[at("zelda-mode", 0x7e_0010)] = state ?? (inPlay ? 0x09 : 0x01);
     memory.set(zeldaSave, at("zelda-wram", 0x7e_f000));
     memory.set(smSave.subarray(0, 0x80), at("sm-buffer", 0xa1_7900));
     memory.set(smSave.subarray(0xb0, 0xd0), at("sm-sram-items", 0xa1_60c0));
   } else if (mode === "sm") {
-    word(memory, at("sm-state", 0x7e_0998), inPlay ? 0x08 : 0x01);
+    word(memory, at("sm-state", 0x7e_0998), state ?? (inPlay ? 0x08 : 0x01));
     memory.set(smSave.subarray(0, 0x60), at("sm-equipment", 0x7e_09a2));
     memory.set(smSave.subarray(0x70, 0xd0), at("sm-events", 0x7e_d830));
     memory.set(zeldaSave, at("zelda-sram", 0xa0_6000));
@@ -136,6 +150,15 @@ export const writeSmz3 = (
       at("zelda-keys-buffer", 0xa1_7f50),
     );
   }
+  // The frame counters, each in the home its game's mode gives it
+  const where = {
+    credits: ["clock-sm-saved", "clock-zelda-saved"],
+    sm: ["clock-sm-live", "clock-zelda-saved"],
+    zelda: ["clock-sm-saved", "clock-zelda-live"],
+  } as const;
+  const [smId, zeldaId] = where[mode];
+  long(memory, MEMORY_RANGE[smId].address, clock.sm);
+  long(memory, MEMORY_RANGE[zeldaId].address, clock.zelda);
   return memory;
 };
 
@@ -144,12 +167,18 @@ export const writeSmz3 = (
  * read, and the mode given.
  * @param memory - The image
  * @param mode - The mode the probe said
+ * @param unread - Ranges the session did not read (Race Mode's)
  */
-export const viewOf = (memory: Uint8Array, mode: Smz3Mode | null) => ({
+export const viewOf = (
+  memory: Uint8Array,
+  mode: Smz3Mode | null,
+  unread: readonly MemoryRangeId[] = [],
+) => ({
   bytes: (id: string) => {
     const range = MEMORY_RANGE[id as MemoryRangeId];
     return memory.subarray(range.address, range.address + range.size);
   },
-  has: (id: string) => id in MEMORY_RANGE,
+  has: (id: string) =>
+    id in MEMORY_RANGE && !unread.includes(id as MemoryRangeId),
   mode,
 });

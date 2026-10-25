@@ -11,6 +11,15 @@
 // reward is never read: the pendants, crystals and boss tokens held are
 // (decode.ts), so a reward counts once found. Decided on 2026-10-19,
 // without asking the moderators.
+//
+// A third thing is kept out on purpose: `game-time`, the two games' frame
+// counters (2026-10-25). They reveal nothing of the seed, but the game shows
+// their sum only in its end credits, never in play, and the tracker's rule
+// for races is to read no more than a player sees (a policy, not a rule of
+// the page: the category allows autotracking). A race therefore keeps the
+// run timer on real time, as racetime.gg times it. The Zelda half of the
+// sum does lie in the 0x500-byte Zelda save, which a race reads whole as
+// before; nothing decodes it there.
 
 import { defineRaceProfile, type RaceProfile } from "@alltp/autotrack";
 
@@ -20,6 +29,10 @@ const ALLOWED =
 export const SMZ3_RACE_PROFILE: RaceProfile = defineRaceProfile({
   categories: {
     "game-state": { permitted: true, rule: ALLOWED },
+    "game-time": {
+      permitted: false,
+      rule: "Not a rule of racetime.gg/smz3: the tracker reads no more than a player sees in a race, and the game shows its time only in its end credits.",
+    },
     requirements: {
       permitted: false,
       rule: "racetime.gg/smz3: ROM inspection beyond autotracking is banned, and a seed's random requirements and its medallions show only in the game.",
