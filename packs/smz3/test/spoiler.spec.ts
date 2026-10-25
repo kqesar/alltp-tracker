@@ -232,9 +232,11 @@ describe("refusals", () => {
     expect(
       code('{"item_priority":["ReserveTank"],"summary":[]}', "spoiler.json"),
     ).toBe("other-game: sm");
-    expect(code(YAML_FILE.slice(0, 2000), "rom.sfc")).toBe("not-a-spoiler");
+    expect(code(YAML_FILE.slice(0, 2000), "rom.sfc")).toBe(
+      "not-a-spoiler: rom",
+    );
     expect(code("")).toBe("not-a-spoiler");
-    expect(code("\0\0\0\0")).toBe("not-a-spoiler");
+    expect(code("\0\0\0\0")).toBe("not-a-spoiler: rom");
   });
 
   it("refuses a file over its bound without reading it", () => {

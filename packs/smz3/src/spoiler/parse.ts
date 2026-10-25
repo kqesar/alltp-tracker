@@ -245,6 +245,7 @@ export function parseSpoiler(
   if (size !== null) return size;
   const sniffed = sniffSpoiler(text.slice(0, SNIFF_HEAD_LENGTH), fileName);
   if (!sniffed.known) {
+    if (sniffed.what === "rom") return refuse("not-a-spoiler", "rom");
     return sniffed.what === "archipelago" || sniffed.what === "smz3-sm"
       ? refuse(
           "unsupported",
