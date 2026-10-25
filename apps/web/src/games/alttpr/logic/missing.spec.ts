@@ -1,6 +1,10 @@
 // What each check is missing and why one is only possible, worked out from
 // the pack's blockers and explanations over real runs.
-import { type DungeonId, LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
+import {
+  type DungeonId,
+  LEGACY_DUNGEONS,
+  type TrickId,
+} from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import {
   items as freshItems,
@@ -8,6 +12,7 @@ import {
   itemsMax,
 } from "@/games/alttpr/data/items";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
+import { DEFAULT_TRICKS, type TrickPrefs } from "@/games/alttpr/data/tricks";
 import {
   analyzeRun,
   compactSpots,
@@ -25,6 +30,7 @@ import {
   markerById,
   setCrossedSolver,
   solutionOf,
+  trickSolutionOf,
 } from "@/games/alttpr/logic/solution";
 
 /** A run of a preset with these cells set. */
@@ -476,5 +482,112 @@ describe("what a dungeon's checks are missing, grouped", () => {
     expect(spots).not.toContain("Boss");
     // The rest is still to say
     expect(spots).toContain("Big Chest");
+  });
+});
+
+describe("the tricks that open a check", () => {
+  const ALL: TrickPrefs = { ...DEFAULT_TRICKS, enabled: true };
+  const known = (...techniques: TrickId[]): TrickPrefs => ({
+    enabled: true,
+    techniques,
+  });
+  /** The run's analysis with the tricks the player knows. */
+  const withTricks = (inputs: Inputs, tricks: TrickPrefs) => {
+    const run = { ...inputs, tricks };
+    return analyzeRun(solutionOf(run), run.settings, trickSolutionOf(run));
+  };
+
+  it("says which known trick opens a check, and keeps what else would", () => {
+    const analysis = withTricks(FRESH, known("fakeFlipper", "darkRooms"));
+
+    const hobo = analysis.missing.get("hobo");
+    expect(hobo?.tricks).toEqual([["fakeFlipper"]]);
+    expect(waysText(hobo?.inLogic as Ways)).toBe("Zora's Flippers");
+    expect(analysis.missing.get("sewers/secret-room/left")?.tricks).toEqual([
+      ["darkRooms"],
+    ]);
+    // What no trick known opens says nothing of them
+    expect(analysis.missing.get("kings-tomb")?.tricks).toBeUndefined();
+    expect(analysis.tricks).toEqual(["fakeFlipper", "darkRooms"]);
+  });
+
+  it("names the tricks a check wants together, never one the player does not know", () => {
+    // The ledge needs the fake flipper and the water walk, and the boots
+    const run = inputsOf({ boots: true, glove: 1 });
+    expect(withTricks(run, ALL).missing.get("zoras-ledge")?.tricks).toEqual([
+      ["fakeFlipper", "waterWalk"],
+    ]);
+    expect(
+      withTricks(run, known("fakeFlipper")).missing.get("zoras-ledge")?.tricks,
+    ).toBeUndefined();
+  });
+
+  it("says nothing without tricks, and leaves every other answer as it was", () => {
+    const plain = analysisOf(FRESH);
+    expect(plain.tricks).toBeUndefined();
+    const analysis = withTricks(FRESH, ALL);
+    expect([...analysis.missing.keys()]).toEqual([...plain.missing.keys()]);
+    for (const [id, missing] of analysis.missing) {
+      const { tricks: _, ...rest } = missing;
+      expect(rest, id).toEqual(plain.missing.get(id));
+    }
+  });
+
+  it("groups a dungeon's checks by the trick that opens them", () => {
+    // Palace of Darkness in reach, without the Lantern or the Fire Rod
+    const run = inputsOf({
+      agahnim: 1,
+      boots: true,
+      bow: 2,
+      flute: true,
+      glove: 2,
+      hammer: true,
+      moonpearl: true,
+      sword: 2,
+    });
+    const marker = markerById("palace-of-darkness");
+    const checks = marker.locations.map((id) => ({
+      id,
+      label: locationLabel(marker, id),
+      state: locationStateOf(id, { ...run, checked: {} }),
+    }));
+    const groups = (tricks: TrickPrefs) =>
+      dungeonMissing(
+        checks,
+        "palace-of-darkness",
+        bossStateOf("palace-of-darkness", run),
+        withTricks(run, tricks),
+      ).map(({ missing, spots }) => ({
+        spots: spots.map(({ count, name }) =>
+          count > 1 ? `${name} x${count}` : name,
+        ),
+        tricks: missing.tricks,
+      }));
+
+    expect(groups(known("darkRooms"))).toEqual([
+      {
+        spots: ["Big Chest", "Dark Maze x2", "Boss"],
+        tricks: [["darkRooms"]],
+      },
+      { spots: ["Dark Basement x2"], tricks: [["darkRooms"]] },
+      // Maybe for its keys, so no trick to name
+      {
+        spots: ["Big Key Chest", "Compass Chest", "Harmless Hellway"],
+        tricks: undefined,
+      },
+    ]);
+    // Another trick opens none of them: the lines are as without tricks
+    expect(
+      groups(known("superBunny")).every(({ tricks }) => tricks === undefined),
+    ).toBe(true);
+  });
+
+  it("is a different analysis from the same run's without them", () => {
+    const solution = solutionOf(FRESH);
+    const trick = trickSolutionOf({ ...FRESH, tricks: ALL });
+    expect(analyzeRun(solution, FRESH.settings, trick).tricks).toBe(
+      trick?.techniques,
+    );
+    expect(analyzeRun(solution, FRESH.settings).tricks).toBeUndefined();
   });
 });

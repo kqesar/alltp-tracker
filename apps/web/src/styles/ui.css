@@ -248,6 +248,13 @@
   color: var(--color-text);
 }
 
+/* A trick named here teaches itself: its name links to its guide */
+.missing a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .missing__lead {
   font-weight: 700;
   color: var(--color-text-secondary);

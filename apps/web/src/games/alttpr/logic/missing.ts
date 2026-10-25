@@ -35,6 +35,9 @@ import {
   goModeBlockers,
   goModeOf,
   goModeStatus,
+  TRICKS,
+  type TrickId,
+  trickFiller,
   type UntrackedItem,
   untrackedItems,
   withUntracked,
@@ -51,6 +54,7 @@ import {
   prizeOf,
   type Solution,
   solutionOf,
+  type TrickSolution,
 } from "@/games/alttpr/logic/solution";
 
 /** Why a location is only possible. */
@@ -83,6 +87,12 @@ export type Missing = {
   readonly possible?: Ways;
   /** Why it is only possible, for a location at `maybe`. */
   readonly doubts: readonly Doubt[];
+  /**
+   * The tricks the player knows that open it, for one out of logic that
+   * they open: each way a set of tricks (fewest first), the pack's tricks
+   * world asked what brings it in logic from the trick items alone.
+   */
+  readonly tricks?: readonly (readonly TrickId[])[];
 };
 
 /** Everything worked out for one solution of the run. */
@@ -93,6 +103,11 @@ export type RunAnalysis = {
   readonly missing: ReadonlyMap<string, Missing>;
   /** What the run's go mode is missing, if its goal has one. */
   readonly goMode?: Ways;
+  /**
+   * The tricks it was worked out with (`TrickSolution.techniques`), by
+   * identity: another list, or none, and it is stale, as for another run.
+   */
+  readonly tricks?: readonly TrickId[];
 };
 
 /** The most atoms in one set: three things to get at once. */
@@ -135,6 +150,48 @@ const untracked = (settings: AlttprSettings): readonly UntrackedItem[] => {
     untrackedOf.set(settings, found);
   }
   return found;
+};
+
+/**
+ * The ways the tricks known open each location they open: the pack's
+ * tricks world, asked what brings the location in logic when the only items
+ * to get are the tricks' (every key held, as for `analyze`). A location the
+ * tricks leave closed has no entry; none is asked for one in logic or one
+ * that only maybe is, which the markers do not mark.
+ * @param missing - What each location not in logic is missing
+ */
+const trickWays = (
+  solution: Solution,
+  trick: TrickSolution,
+  missing: ReadonlyMap<string, Missing>,
+): Map<string, readonly (readonly TrickId[])[]> => {
+  const fill = trickFiller(solution.settings);
+  const known = new Map(trick.techniques.map((id) => [TRICKS[id].item, id]));
+  const analysis = analyze(
+    fill.world,
+    withUntracked(fill, solution.keyed.state),
+    {
+      acquirable: (item) => known.has(item),
+      maxAtoms: MAX_ATOMS,
+      maxLevel: () => 1,
+    },
+  );
+  const ways = new Map<string, readonly (readonly TrickId[])[]>();
+  for (const [id, { tri }] of missing) {
+    const opened = trick.tris[id];
+    if (tri !== "no" || opened === undefined || opened === "no") continue;
+    const sets = analysis
+      .blockers(id, opened === "yes" ? "yes" : "maybe")
+      .sets.map((set) =>
+        set.flatMap((atom) => {
+          const found = "item" in atom ? known.get(atom.item) : undefined;
+          return found === undefined ? [] : [found];
+        }),
+      )
+      .filter((set) => set.length > 0);
+    if (sets.length > 0) ways.set(id, sets);
+  }
+  return ways;
 };
 
 /** The medallion rules, by the dungeon whose pad they read. */
@@ -292,6 +349,7 @@ const sameThing = (missing: Missing): string =>
     missing.tri,
     missing.inLogic,
     missing.possible,
+    missing.tricks,
     [
       ...new Set(
         missing.doubts.map((doubt) =>
@@ -371,10 +429,13 @@ export const dungeonMissing = (
  * world's untracked items are placed: call it off a click's path.
  * @param solution - The run solved (solutionOf)
  * @param run - The run's settings, whose goal says the go mode
+ * @param tricks - The run solved with the tricks the player knows
+ *   (trickSolutionOf), to say which of them open each check they open
  */
 export const analyzeRun = (
   solution: Solution,
   run: RunSettings,
+  tricks?: TrickSolution,
 ): RunAnalysis => {
   const { keyed, settings, tris } = solution;
   // Nothing to say of a check under logic the pack does not model
@@ -402,6 +463,12 @@ export const analyzeRun = (
     });
   }
   const mode = goModeOfRun(run, settings);
+  if (tricks !== undefined) {
+    for (const [id, ways] of trickWays(solution, tricks, missing)) {
+      const found = missing.get(id) as Missing;
+      missing.set(id, { ...found, tricks: ways });
+    }
+  }
   return {
     goMode:
       mode === undefined
@@ -413,6 +480,7 @@ export const analyzeRun = (
           ),
     missing,
     solution,
+    tricks: tricks?.techniques,
   };
 };
 
