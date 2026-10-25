@@ -11,6 +11,7 @@ import {
 } from "@alltp/pack-alttpr";
 import { worldOf } from "@/games/alttpr/logic/settings";
 import {
+  clearedStateOf,
   dungeonCount,
   locationName,
   locationStateOf,
@@ -87,8 +88,9 @@ export const runZones = (state: MarkerInputs): readonly Zone[] =>
   zonesOf(solutionOf(state).settings);
 
 /**
- * Whether a dungeon's counter says it holds nothing more: its checks are
- * then all done, whatever is checked.
+ * Whether a dungeon's counter says it holds no item more: its checks are
+ * then all done, whatever is checked, but its boss's, which follows the boss
+ * (`clearedStateOf`).
  */
 export const isCleared = (zone: Zone, state: MarkerInputs): boolean =>
   zone.dungeon !== undefined && dungeonCount(zone.dungeon, state) === 0;
@@ -99,9 +101,12 @@ export const checkStates = (
 ): Record<string, MarkerState> => {
   const states: Record<string, MarkerState> = {};
   for (const zone of runZones(state)) {
-    const cleared = isCleared(zone, state);
+    const { dungeon } = zone;
     for (const { id } of zone.checks) {
-      states[id] = cleared ? "opened" : locationStateOf(id, state);
+      states[id] =
+        dungeon !== undefined && isCleared(zone, state)
+          ? clearedStateOf(dungeon, id, state)
+          : locationStateOf(id, state);
     }
   }
   return states;

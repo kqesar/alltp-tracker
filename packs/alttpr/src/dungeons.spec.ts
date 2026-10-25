@@ -3,6 +3,7 @@ import type { Tri } from "@alltp/engine";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import {
+  bossLocation,
   DUNGEON_IDS,
   DUNGEONS,
   dungeon,
@@ -136,6 +137,51 @@ describe("the dungeons", () => {
     expect(() =>
       dungeonRegions({ ...dungeon("eastern-palace"), region: "nowhere" }, OPEN),
     ).toThrow(/No region "nowhere"/);
+  });
+});
+
+describe("bossLocation", () => {
+  it("is the one drop of each dungeon with a boss, in every world", () => {
+    const worlds = [
+      OPEN,
+      STANDARD,
+      settingsFromUpstream("inverted", {}),
+      settingsFromUpstream("inverted", { dungeonItems: "full" }),
+    ];
+    for (const settings of worlds) {
+      const found = DUNGEONS.map((d) => [d.id, bossLocation(d, settings)]);
+      expect(Object.fromEntries(found)).toEqual({
+        "castle-tower": undefined,
+        "desert-palace": "desert-palace/boss",
+        "eastern-palace": "eastern-palace/boss",
+        "ganons-tower": undefined,
+        "hyrule-castle": undefined,
+        "ice-palace": "ice-palace/boss",
+        "misery-mire": "misery-mire/boss",
+        "palace-of-darkness": "palace-of-darkness/boss",
+        "skull-woods": "skull-woods/boss",
+        "swamp-palace": "swamp-palace/boss",
+        "thieves-town": "thieves-town/boss",
+        "tower-of-hera": "tower-of-hera/boss",
+        "turtle-rock": "turtle-rock/boss",
+      });
+      // Exactly one: the helper would hide a second
+      for (const d of DUNGEONS) {
+        const drops = dungeonRegions(d, settings)
+          .flatMap((r) => r.locations)
+          .filter((l) => l.kind === "drop");
+        expect(drops.length, d.id).toBe(bossLocation(d, settings) ? 1 : 0);
+      }
+    }
+  });
+
+  it("is a location the dungeon's counter counts", () => {
+    for (const d of DUNGEONS) {
+      const boss = bossLocation(d, OPEN);
+      if (boss !== undefined) {
+        expect(dungeonLocations(d, OPEN), d.id).toContain(boss);
+      }
+    }
   });
 });
 

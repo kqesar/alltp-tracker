@@ -25,6 +25,7 @@ import {
 } from "@/games/alttpr/logic/missing";
 import { KEY_DUNGEONS } from "@/games/alttpr/logic/settings";
 import {
+  bossLocationOf,
   bossStateOf,
   dungeonCount,
   itemsSurelyInLogic,
@@ -207,6 +208,9 @@ export const Tooltip = () => {
   const boss = useGameStore((state) =>
     dungeon === undefined ? undefined : bossStateOf(dungeon, state),
   );
+  const bossId = useGameStore((state) =>
+    dungeon === undefined ? undefined : bossLocationOf(dungeon, state),
+  );
   // Worked out when the browser was idle: a hover only reads it
   const analysis = useCurrentAnalysis();
   const ref = useRef<HTMLDivElement>(null);
@@ -223,13 +227,18 @@ export const Tooltip = () => {
   const lines = target ? shortcutLines(target, shortcuts) : [];
   // One row per location, but for a marker that stands for one only: its
   // state then follows its name
-  // A dungeon counted down to 0 has nothing left anywhere in it
+  // A dungeon counted down to 0 has no item left anywhere in it, but its
+  // boss location follows the boss
   const rows =
     marker === undefined
       ? []
       : marker.locations.map((id, index) => {
           const state =
-            left === 0 ? "opened" : (detail[index] ?? "unavailable");
+            left === 0
+              ? id === bossId
+                ? (boss ?? "opened")
+                : "opened"
+              : (detail[index] ?? "unavailable");
           return {
             id,
             label:

@@ -209,7 +209,6 @@ const ZoneList = ({
   const worthAsking =
     dungeon !== undefined &&
     explained &&
-    !cleared &&
     (zone.checks.some(({ id }) => !SETTLED.has(states[id] ?? "unavailable")) ||
       (boss !== undefined && !SETTLED.has(boss)));
   return (

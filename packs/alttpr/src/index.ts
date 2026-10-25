@@ -81,6 +81,7 @@ export {
   derivedFacts,
 } from "./derived";
 export {
+  bossLocation,
   DUNGEON_IDS,
   DUNGEONS,
   type DungeonDef,

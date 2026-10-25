@@ -210,6 +210,22 @@ export function dungeonLocations(
 }
 
 /**
+ * The dungeon's boss location in the run's world: its one location of kind
+ * `drop` (its heart container), which still means "beat the boss" to the
+ * player. Undefined for a dungeon without one: Hyrule Castle has no boss,
+ * and Castle Tower's and Ganon's Tower's bosses are rules, their prizes
+ * events.
+ */
+export function bossLocation(
+  d: DungeonDef,
+  settings: AlttprSettings,
+): string | undefined {
+  return dungeonRegions(d, settings)
+    .flatMap((r) => r.locations)
+    .find((l) => l.kind === "drop")?.id;
+}
+
+/**
  * How many items the dungeon's counter starts from: its item locations,
  * less the dungeon items that stay in it (Region::canFill keeps each class
  * that is not wild, Region.php:232-246), which are no items to the player.
