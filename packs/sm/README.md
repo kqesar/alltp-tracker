@@ -14,6 +14,7 @@ own source at the commit `upstream.json` pins, never from memory:
 | `src/items.ts` | the items, Map Rando's `enum Item` but Nothing, with the game's full pool for the counted ones | `rust/maprando-game/src/lib.rs:155-181` |
 | `src/objectives.ts` | the 19 objectives a seed may ask for, by group, each with its flag | `rust/maprando/src/patch.rs:3327-3355, 3596-3681` |
 | `src/settings.ts` | the presets the ROM keeps for autotrackers, and the items its settings add | `settings.rs:113-241`, `patch.rs:783, 2038-2105`, `Bank DF.txt` |
+| `src/spoiler.ts` | Map Rando's spoiler log read into `@alltp/spoiler`'s shape | `rust/maprando/src/spoiler_log.rs:110-149, 197-262, 1236`, `settings.rs:521-545` |
 | `src/autotrack/` | the memory map, the decoders, the game check and the race profile | below |
 
 ## No logic, on purpose
@@ -119,6 +120,56 @@ page). Race Mode therefore never reads `rta-saved` and `rta-pending`
 time. The state and the escape event, which start and stop it, stay permitted.
 The rules of racetime.gg/smr ban the old emulators (SNES9x 1.43 and below, ZSNES),
 not emulators in general (read again on 2026-10-25).
+
+## Spoiler logs
+
+`parseSpoiler(text)` reads the `spoiler.json` of maprando.com
+(`/seed/<name>/data/spoiler.json`, "Spoiler log JSON" on the seed page) into
+`@alltp/spoiler`'s `SpoilerLog`, for the post-run review. It never throws on
+its input: a refusal is `{ ok: false, error, detail? }` with the package's
+codes. The caller bounds the size first (`checkSize("sm", file.size)`, 64 MiB).
+
+- **A file of 21 MB, 39 KB read.** `details` (routes), `game_data`
+  (sm-json-data copied in) and the traversals are 99.8 % of it. `sliceTopLevel`
+  takes `all_items`, `summary`, `objectives`, `start_location` and the three
+  pack sizes without building the rest; zod (`zod/mini`) checks what it took
+  (bounded: 500 locations, 200 steps, names of 200 characters).
+- **Measured** on the real file of seed `dsjF6gGsH` (20 928 610 bytes, 100
+  locations), Node 24.22, desktop CPU, under Vitest, median of 15 runs: slice
+  35.8 ms, slice and parse 36.5 ms, against 83.6 ms for a full `JSON.parse`.
+  A phone is several times slower: the app reads it in a worker.
+- **Locations** are keyed `<room_id>:<node_id>` (sm-json-data's ids: node names
+  repeat inside a room), named `<room>: <node>`, with the file's `area`. The
+  pack has no location list of its own (no logic), so the log is the only
+  source of them.
+- **Items**: Rust `enum Item` variant names, through `SM_ITEMS[].variant` (the
+  25 of `lib.rs:155-181`, held to their indices by the spec). "Nothing" is a
+  location without an item: no placement, `skipped: ["Nothing"]`. A variant the
+  pack lacks refuses as `newer-version`, naming it.
+- **Steps**: `summary[].step` is the placement's `sphere`; `spheres` is the
+  highest step holding an item. An item in no step (one logic never collects)
+  keeps `sphere: null`. The file contradicting itself (a location twice, a step
+  item `all_items` does not hold) is `not-a-spoiler`.
+- **Objectives**: flag names (`f_DefeatedKraid`) to the pack's ids through
+  `OBJECTIVES[].upstream`; an unknown flag refuses as `newer-version`.
+- **No seed.** The file names no seed, version or date (searched: 0 hits for
+  the seed's name), so `seed` is empty and a log is never "verified". The
+  weak facts live in `mapRandoEvidence(extra, run)`, for `bindSeed`: the
+  objectives (same set), and the Wall Jump Boots and split Speed Booster the
+  seed placed against the run's ROM (`decodeSeed`). A log placing none of them
+  says nothing, since a starting item is not a placement. Likewise "the run
+  holds more of an item than the seed placed" is no refusal here: Map Rando's
+  starting items (`details[0].start_state`, not read) would trip it;
+  `extra.placed` holds the counts for the app to word.
+
+**The fixture** `test/spoilers/dsjF6gGsH.json` (38 KB, with its
+`.provenance.json`: source URL, SHA-256 and size of the 21 MB file) is the
+real file cut to the keys the parser reads, in the file's order, by
+`pnpm --filter @alltp/pack-sm spoiler-fixture <seed name | file> [name]`;
+never edit it. It holds game data only: no seed name, path, address or account
+(checked by search). To hold the parser to the real file and time it, run the
+spec with `MAP_RANDO_SPOILER=<spoiler.json>` set: it must read the same log as
+the fixture.
 
 ## Tests
 

@@ -10,10 +10,13 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "spoiler-fixture": "node scripts/spoiler-fixture.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@alltp/autotrack": "workspace:*"
+    "@alltp/autotrack": "workspace:*",
+    "@alltp/spoiler": "workspace:*",
+    "zod": "^4.6.7"
   }
 }

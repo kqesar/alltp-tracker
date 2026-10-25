@@ -8,7 +8,8 @@
       "patches/src/new_game.asm": "src/autotrack/memory.ts: the equipment and event addresses",
       "rust/maprando-game/src/lib.rs": "src/items.ts: the items",
       "rust/maprando/src/patch.rs": "src/objectives.ts, src/autotrack/decode.ts: objectives, item bits and sizes, the cartridge name",
-      "rust/maprando/src/settings.rs": "src/settings.ts: the presets autotrackers read"
+      "rust/maprando/src/settings.rs": "src/settings.ts, src/objectives.ts: the presets autotrackers read, the objectives' flag names",
+      "rust/maprando/src/spoiler_log.rs": "src/spoiler.ts: the spoiler log's shape (SpoilerLog, SpoilerItemLoc, SpoilerSummary), its item names"
     },
     "license": "MIT, Copyright (c) 2023 maddo, kyleb",
     "repo": "blkerby/MapRandomizer",

@@ -34,6 +34,7 @@
       "!**/coverage_backup",
       "!**/package.json",
       "!packs/*/test/upstream",
+      "!packs/sm/test/spoilers",
       "!packages/archipelago/test/fixtures",
       "!packages/archipelago/test/datapackages",
       "!packs/smz3/src/markers-hyrule.json",
