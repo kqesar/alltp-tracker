@@ -7,8 +7,8 @@ the run, where it lives, and what ALttPR's Run tab compares. What players see is
 ([`@alltp/spoiler`](../packages/spoiler/README.md), the ALttPR pack's
 [Spoiler logs](../packs/alttpr/README.md#spoiler-logs)).
 
-Today only **A Link to the Past** reviews. The shared parts (`apps/web/src/review/`,
-`components/ui/Review*.tsx`) take a game's adapter; SMZ3 and Super Metroid join them later.
+**A Link to the Past** and **Super Metroid** (Map Rando) review today. The shared parts (`apps/web/src/review/`,
+`components/ui/Review*.tsx`) take a game's adapter; SMZ3 joins them later. [Super Metroid's review](#super-metroid-map-rando) is the reduced one: its board has no location and no timeline.
 
 ```mermaid
 flowchart LR
@@ -137,6 +137,66 @@ The labels are worked out once per review (`labelsOf`, a `WeakMap` over the immu
 | `apps/web/src/review/gate.ts`, `store.ts`, `read.ts`, `parse.ts`, `spoiler.worker.ts`, `words.ts` | Gate, memory store, bounded read in a worker, the parse, the sentences |
 | `apps/web/src/autotrack/raceMode.ts` | Race Mode for any game's autotracking state |
 | `apps/web/src/components/ui/ReviewDialog.tsx`, `ReviewNotice.tsx` | The import dialog and the standing banner |
+| `apps/web/src/games/sm/review/` | `adapter.ts` (binding, the board's items against the seed's, places by item), `useReview.ts`, `fixtures.ts` (specs) |
+| `apps/web/src/games/sm/components/` | `SmReview.tsx` (Review run beside the timer, the banner, the section), `SmReviewDialog.tsx` and `SmReviewResult.tsx` (lazy) |
 | `apps/web/src/games/alttpr/review/` | `adapter.ts` (binding, finds, comparison), `useReview.ts`, `labels.ts` (what each place held), `fixtures.ts` (specs) |
 | `apps/web/src/games/alttpr/components/map/` | `ReviewSection.tsx` (Review run, the Run tab section), `ReviewResult.tsx` (lazy), `AlttprReviewDialog.tsx` (lazy) |
-| `apps/web/src/games/review.css` | The styles, loaded with ALttPR's module |
+| `apps/web/src/games/review.css` | The styles, loaded by the module of each game that reviews |
+
+## Super Metroid (Map Rando)
+
+The same gate, store and read as ALttPR's (`games/sm/review/useReview.ts`; the timer's **End run** is
+the shared `GameRunTimer`'s `endable`, which SMZ3 leaves off until it reviews). Race Mode is
+`isRaceModeOn` over the autotracking store with no reading: Map Rando has no race flag in the ROM, so
+it is the player's choice or a session that says race.
+
+```mermaid
+flowchart LR
+  file["spoiler.json<br/>(about 21 MB)"] --> size["checkSize(sm): 64 MiB<br/>on file.size, before any read"]
+  size --> worker["Web Worker<br/>file.text()"]
+  worker --> sniff["sniffSpoiler (head, name)"]
+  sniff --> slice["sliceTopLevel:<br/>7 keys, about 39 KB kept"]
+  slice --> parse["parseSpoiler (zod/mini)"]
+  parse --> log["SpoilerLog + MapRandoExtra"]
+  log -- structured clone --> bind["bindRun: mapRandoEvidence"]
+  bind --> store["review/store.ts (memory)"]
+  store --> board["Review section, grid cells' names"]
+```
+
+- **Reading.** The file is read where the page cannot freeze: the worker decodes it (`file.text()`),
+  `sliceTopLevel` keeps `all_items`, `summary`, `objectives`, `start_location` and the three pack
+  sizes without building the rest (`details`, `game_data` and the traversals are 99.8 % of it), and
+  only the log, about 15 KB, crosses back. The real 20 MB file of seed `dsjF6gGsH` reads in 70 ms
+  from picking the file to the review standing (Chromium on the desktop; 123 ms with the page's CPU
+  throttled 6 times), the page's longest frame 17 ms (33 ms throttled). The size bound is the log's
+  own: 64 MiB (`MAX_SPOILER_BYTES`), where ALttPR's is 1 MiB; a file over it is refused before a
+  byte is read. The pack names another randomizer's file by its head and name (`other-game`,
+  `unsupported`, a ROM), as the other packs do.
+- **Binding is never "verified".** Map Rando's file names no seed, so `bindRun` gives
+  `mapRandoEvidence` (`packs/sm`) no seed id and the banner always says "Not verified: Map Rando's log
+  names no seed". It refuses on the facts both sides state: the same set of objectives, the Wall Jump
+  Boots and the split Speed Booster the seed placed against the run's. The board's objectives and
+  options start at a default that a player tracking by hand never declared (the four bosses, no extra
+  item), which would contradict any other seed, so a run states them only when the ROM did
+  (autotracking read the seed, so the run knows its name) or when the player moved them off the
+  default (`runStatements`). "The run holds more of an item than the seed placed" is no refusal: Map
+  Rando's starting items are not in the log's placements.
+- **What it shows.** The board keeps counts of items, not Map Rando's locations (the rooms are
+  reconnected, there is no map and no logic) and no timeline, so the review says what the spoiler
+  says against what the board holds, and no more. `compareItems` (`adapter.ts`):
+  - the single items (held or not) with the room, node and area the seed put them in and their
+    **step**, Map Rando's own word for a round of its playthrough (`summary[].step`: the item is
+    where it first becomes reachable); those the board never held first (Never found), then the
+    playthrough's order;
+  - each pack and tank type, held against placed ("Missiles: 30 of 46 held, 16 never found"), with a
+    disclosure of every one's place by area; a count above what was placed is a starting item, not a
+    find that was missed;
+  - the seed's facts: start, objectives, what a pack gives;
+  - in the grid, each cell's accessible name and tooltip end "In the seed: <room: node (area)>." or
+    "In the seed: N places." Nothing changes without a review.
+  It cannot say which location a find came from nor when, and does not guess. (Unverified follow-up:
+  the ROM's per-location collected bits might map to the log's room and node ids.)
+- **Where.** The banner (`SmReviewNotice`) sits over the board, the section (`SmReviewResult`, a lazy
+  chunk) under it, **Review run** beside the timer (`SmReviewButton`); the dialog is the shared
+  `ReviewDialog`. Memory only, as above: a spec holds the modules that save, share, stream or follow
+  a Super Metroid run never to import the review.

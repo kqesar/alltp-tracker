@@ -46,3 +46,31 @@
 .sm-objectives .toggle-chip[aria-pressed="true"] {
   color: var(--color-text-secondary);
 }
+
+/* A review (docs/review.md): the timer's row holds the Review run button
+   beside it, and the banner and the review span the board's columns */
+.sm-layout .board-run {
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.sm-layout > .review-notice,
+.sm-layout > .sm-review {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 100%;
+  max-width: 60rem;
+}
+
+.sm-review__area {
+  margin: var(--spacing-sm) 0 var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* The facts' label beside its value once the board is wide enough */
+@container app (width >= 44rem) {
+  .sm-review .review-facts__row {
+    grid-template-columns: 9rem minmax(0, 1fr);
+  }
+}
