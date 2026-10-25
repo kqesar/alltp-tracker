@@ -23,7 +23,7 @@ commands, sharing a run, the stream view for OBS, offline use and the desktop ap
 | Colour | Glyph | Meaning |
 |---|---|---|
 | green | ✓ | reachable now |
-| yellow | ? | maybe reachable (a dark room, an unknown medallion, a key that may be anywhere), or only some of a marker's checks |
+| yellow | ? | maybe reachable (an unknown medallion, a key that may be anywhere), or only some of a marker's checks |
 | light blue | eye | seen but not reachable yet (the Book reads the Pedestal, a ledge item shows from below) |
 | red | ✕ | out of logic |
 | grey | | already done |
