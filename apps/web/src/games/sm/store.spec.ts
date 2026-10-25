@@ -308,3 +308,50 @@ describe("the run timer", () => {
     expect(progress).not.toHaveProperty("clockBase");
   });
 });
+
+describe("the run's seed", () => {
+  const file = (progress: object) =>
+    JSON.stringify({
+      format: "alltp-tracker-save",
+      game: "sm",
+      progress,
+      version: 1,
+    });
+
+  it("is null in a fresh run, written by an export and read back", () => {
+    expect(store().seed).toBeNull();
+    useSmStore.setState({ seed: "dsjF6gGsH" });
+    const parsed = parseSave(exportSave(store()));
+    expect(parsed.ok && parsed.progress.seed).toBe("dsjF6gGsH");
+  });
+
+  it("is null in a save from before it was kept, which still opens", () => {
+    const { seed: _, ...older } = freshProgress();
+    const parsed = parseSave(file(older));
+    expect(parsed.ok && parsed.progress.seed).toBeNull();
+  });
+
+  it("refuses a seed that is not an id", () => {
+    for (const bad of [4, "", "x".repeat(65)]) {
+      expect(parseSave(file({ ...freshProgress(), seed: bad }))).toEqual({
+        error: "invalid",
+        ok: false,
+      });
+    }
+  });
+
+  it("is restored with the saved run, and cleared by New game", async () => {
+    vi.resetModules();
+    localStorage.setItem(
+      SM_STORAGE_KEY,
+      JSON.stringify({
+        state: { ...freshProgress(), seed: "dsjF6gGsH" },
+        version: 1,
+      }),
+    );
+    const fresh = await import("@/games/sm/store");
+    expect(fresh.useSmStore.getState().seed).toBe("dsjF6gGsH");
+    fresh.useSmStore.getState().reset();
+    expect(fresh.useSmStore.getState().seed).toBeNull();
+  });
+});

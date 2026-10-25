@@ -7,6 +7,7 @@
 //   player marked more: the game never takes back a find.
 // - A location the game says checked is checked; one it does not stays as
 //   the player left it.
+// - The seed's guid, outside races, is recorded as the run's `seed`.
 // - The settings the ROM states (Super Metroid's logic, keysanity) and,
 //   outside races, its requirements and medallions follow the seed.
 //
@@ -18,6 +19,7 @@
 
 import { type Smz3Settings, smz3Ms } from "@alltp/pack-smz3";
 import { gameClockOf, timerNews } from "@/games/gameTimer";
+import { recordSeed } from "@/games/seedId";
 import type { Smz3Reading } from "@/games/smz3/autotrack/reading";
 import {
   type Smz3Pads,
@@ -139,6 +141,10 @@ export const createSmz3Follower = () => {
     read: (reading: Smz3Reading) => {
       followTimer(reading);
       if (reading.inPlay !== true) return;
+      recordSeed(
+        useSmz3Store,
+        typeof reading.guid === "string" ? null : reading.guid.guid,
+      );
       const now = viewOf(reading);
       const before = shown;
       shown = now;

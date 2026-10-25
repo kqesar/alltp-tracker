@@ -5,7 +5,7 @@ import {
   withoutTimeline,
 } from "@/games/alttpr/stores/persistence";
 import { packLink as packSmz3 } from "@/games/smz3/share";
-import { play, randoms, STAGES } from "@/share/playedRuns";
+import { play, randoms, SEEDS, STAGES } from "@/share/playedRuns";
 import {
   clearSharedRun,
   decodeRun,
@@ -52,6 +52,10 @@ describe("a run in a link", () => {
         // Minified on the way in: the same save, the same data
         expect(JSON.parse(await decodeRun(payload))).toEqual(JSON.parse(save));
         expect(gameOfSave(await decodeRun(payload))).toBe(game);
+        // The seed is part of the run that comes back
+        expect(JSON.parse(await decodeRun(payload)).progress.seed).toBe(
+          SEEDS[game],
+        );
       },
     );
   });

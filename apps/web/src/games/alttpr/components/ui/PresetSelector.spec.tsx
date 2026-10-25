@@ -203,16 +203,23 @@ describe("PresetSelector", () => {
     expect(applyRun).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: /switch & reset/i }));
-    expect(applyRun).toHaveBeenCalledWith("inverted", {
-      ...fakeState.settings,
-      crystalsGanon: 7,
-      crystalsTower: 4,
-      goal: "fast-ganon",
-      itemFunctionality: "hard",
-      itemPlacement: "basic",
-      itemPool: "hard",
-      mode: "inverted",
-    });
+    expect(applyRun).toHaveBeenCalledWith(
+      "inverted",
+      {
+        ...fakeState.settings,
+        crystalsGanon: 7,
+        crystalsTower: 4,
+        goal: "fast-ganon",
+        itemFunctionality: "hard",
+        itemPlacement: "basic",
+        itemPool: "hard",
+        mode: "inverted",
+      },
+      expect.any(Function),
+    );
+    // The run starts as the seed's: the hash it was asked for
+    const lay = applyRun.mock.calls[0]?.[2] as () => unknown;
+    expect(lay()).toEqual({ seed: "eM43RgZ4Gj" });
   });
 
   it("tunes the settings in place, the run kept", () => {

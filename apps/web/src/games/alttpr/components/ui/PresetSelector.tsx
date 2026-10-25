@@ -22,6 +22,8 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
 type PendingRun = {
   readonly name: string;
   readonly presetId: string;
+  /** The seed's hash, for a run started from a seed: the run is its. */
+  readonly seed?: string;
   readonly settings: RunSettings;
 };
 
@@ -171,7 +173,12 @@ export const PresetSelector = () => {
   };
 
   const confirmSwitch = () => {
-    if (pending) applyRun(pending.presetId, pending.settings);
+    if (pending) {
+      const { presetId: id, seed, settings: next } = pending;
+      // A run started from a seed is that seed's
+      if (seed === undefined) applyRun(id, next);
+      else applyRun(id, next, () => ({ seed }));
+    }
     setPending(null);
     setIsListOpen(false);
   };
@@ -226,6 +233,7 @@ export const PresetSelector = () => {
             setPending({
               name: seed.seedText,
               presetId: seed.presetId,
+              seed: seed.seed,
               settings: seed.settings,
             })
           }

@@ -8,6 +8,7 @@
 // - The seed's objectives are the ROM's: its table says which the seed asks
 //   for. An objective the game says done is done; one it does not say done
 //   stays as the player left it.
+// - The seed's name is recorded as the run's `seed`.
 // - The items the seed adds (the Wall Jump Boots, the split Speed Booster)
 //   follow its settings.
 //
@@ -22,6 +23,7 @@ import {
   type SmItemId,
 } from "@alltp/pack-sm";
 import { gameClockOf, timerNews } from "@/games/gameTimer";
+import { recordSeed } from "@/games/seedId";
 import type { SmReading } from "@/games/sm/autotrack/reading";
 import { clockBaseOf } from "@/games/sm/autotrack/timer";
 import { type SmProgress, useSmStore } from "@/games/sm/store";
@@ -120,6 +122,10 @@ export const createSmFollower = () => {
     read: (reading: SmReading) => {
       followTimer(reading);
       if (reading.inPlay !== true) return;
+      recordSeed(
+        useSmStore,
+        typeof reading.seed === "string" ? null : reading.seed.name,
+      );
       const now = viewOf(reading);
       const before = shown;
       shown = now;

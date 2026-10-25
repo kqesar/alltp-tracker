@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SHORTCUTS } from "@/games/alttpr/data/keymap";
 import { getPreset } from "@/games/alttpr/data/presets";
+import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import {
   migrate,
   PERSIST_VERSION,
@@ -439,5 +440,41 @@ describe("migrate", () => {
     expect(migrate({ mapLayout: "side-by-side" }, PERSIST_VERSION)).toEqual({
       mapLayout: "side-by-side",
     });
+  });
+});
+
+describe("a save's seed", () => {
+  it("keeps a seed id or null, and refuses anything else", () => {
+    for (const seed of ["9MQ9gO1wMD", null]) {
+      expect(validateProgress({ seed })).toEqual({
+        errors: [],
+        value: { seed },
+      });
+    }
+    for (const bad of [3, "", "x".repeat(65), "tab\t", ["a"]]) {
+      expect(validateProgress({ seed: bad }).errors).toEqual([
+        "seed must be a seed id or null",
+      ]);
+    }
+  });
+
+  it("round-trips through a file, and a save without it holds none", () => {
+    const withSeed = parseSave(saveFile({ seed: "9MQ9gO1wMD" }));
+    expect(withSeed).toEqual({ ok: true, progress: { seed: "9MQ9gO1wMD" } });
+
+    // A save from before the seed was kept: valid, and it restores null
+    const without = parseSave(saveFile({ presetId: "open" }));
+    expect(without).toEqual({ ok: true, progress: { presetId: "open" } });
+    useGameStore.setState(useGameStore.getInitialState(), true);
+    useGameStore.setState({ seed: "stale" });
+    if (without.ok) useGameStore.getState().loadProgress(without.progress);
+    expect(useGameStore.getState().seed).toBeNull();
+  });
+
+  it("is written by an export", () => {
+    useGameStore.setState(useGameStore.getInitialState(), true);
+    useGameStore.setState({ seed: "9MQ9gO1wMD" });
+    const { progress } = JSON.parse(useGameStore.getState().exportState());
+    expect(progress.seed).toBe("9MQ9gO1wMD");
   });
 });

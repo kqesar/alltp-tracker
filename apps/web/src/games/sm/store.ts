@@ -11,6 +11,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { type History, historyActions } from "@/games/runHistory";
 import { createSaveFormat } from "@/games/saveFormat";
+import { SEED_ID } from "@/games/seedId";
 import {
   freshTimerSlice,
   restoreTimerSlice,
@@ -41,6 +42,8 @@ const progressSchema = z.object({
   done: z.array(z.enum(OBJECTIVE_IDS)),
   items: z.partialRecord(z.enum(ITEM_IDS), z.number().check(z.int(), z.gte(0))),
   objectives: z.array(z.enum(OBJECTIVE_IDS)),
+  // The seed's name, null while unknown; a save without it is null
+  seed: z._default(z.nullable(z.string().check(z.regex(SEED_ID))), null),
   splitSpeed: z.boolean(),
   wallJump: z.boolean(),
 });
@@ -55,6 +58,7 @@ export const freshProgress = (): SmProgress => ({
     number
   >,
   objectives: ["kraid", "phantoon", "draygon", "ridley"],
+  seed: null,
   splitSpeed: false,
   wallJump: false,
 });
@@ -127,6 +131,7 @@ const progressOf = (state: SmProgress): SmProgress => ({
   done: state.done,
   items: state.items,
   objectives: state.objectives,
+  seed: state.seed,
   splitSpeed: state.splitSpeed,
   wallJump: state.wallJump,
 });

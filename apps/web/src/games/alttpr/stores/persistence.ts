@@ -38,6 +38,7 @@ import {
   type Timeline,
 } from "@/games/alttpr/logic/timeline";
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
+import { isSeedId } from "@/games/seedId";
 import type { RunTimer, TimerClock } from "@/utils/runTimer";
 
 /**
@@ -70,6 +71,13 @@ export type Progress = {
    * before it was kept, notes none: no version needed.
    */
   entrances: Readonly<Record<string, string>>;
+  /**
+   * The seed the run is played on: its hash on alttpr.com, as the ROM's
+   * header names it, or the one the player started the run from. Null while
+   * unknown (a run tracked by hand). A save without it, from before it was
+   * kept, restores null: no version needed.
+   */
+  seed: string | null;
 };
 
 /**
@@ -594,6 +602,11 @@ export const validateProgress = (
     ) {
       value.entrances = saved.entrances as Record<string, string>;
     } else errors.push("entrances must map entrance ids to target ids");
+  }
+
+  if (saved.seed !== undefined) {
+    if (saved.seed === null || isSeedId(saved.seed)) value.seed = saved.seed;
+    else errors.push("seed must be a seed id or null");
   }
 
   if (saved.presetId !== undefined) {

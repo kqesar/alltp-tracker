@@ -244,6 +244,7 @@ export const createProgress = (
   items: { ...initialItems, ...fullCounters(settings) } as ItemState,
   medallions: Array(10).fill(0) as number[],
   presetId: getPreset(presetId).id,
+  seed: null,
   settings,
   // One per key dungeon (KEY_DUNGEONS), none found yet
   smallKeys: Array(SMALL_KEYS_MAX.length).fill(0) as number[],
@@ -302,6 +303,7 @@ const restoreProgress = (
     items,
     medallions: saved.medallions ?? base.medallions,
     presetId: saved.presetId ?? base.presetId,
+    seed: saved.seed === undefined ? base.seed : saved.seed,
     settings,
     smallKeys: saved.smallKeys ?? base.smallKeys,
     timeline: saved.timeline ?? base.timeline,
@@ -344,6 +346,7 @@ const progressOf = (state: GameState): Progress => ({
   items: state.items,
   medallions: state.medallions,
   presetId: state.presetId,
+  seed: state.seed,
   settings: state.settings,
   smallKeys: state.smallKeys,
   timeline: state.timeline,

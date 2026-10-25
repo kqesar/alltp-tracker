@@ -24,6 +24,17 @@ export const randoms = () => {
 };
 
 /**
+ * The seed each game's played run is on, as its ROM names it: alttpr.com's
+ * hash, a Map Rando seed name, samus.link's guid. Real shapes, so the links
+ * measured carry what a real run's does.
+ */
+export const SEEDS = {
+  alttpr: "9MQ9gO1wMD",
+  sm: "dsjF6gGsH",
+  smz3: "8506bbef2c2b4432af378b571c6c9133",
+} as const;
+
+/**
  * Play a game's store as a player does, a click or a check every 20 to 100
  * seconds: `share` of what there is to find gets found. The clock moves, so
  * the ALttPR timeline's stamps are as unpredictable as a real run's.
@@ -31,6 +42,7 @@ export const randoms = () => {
 export const play = {
   alttpr: (share: number, random: () => number) => {
     useGameStore.setState(useGameStore.getInitialState(), true);
+    useGameStore.setState({ seed: SEEDS.alttpr });
     const store = useGameStore.getState();
     store.startTimer(Date.now());
     const tick = () =>
@@ -54,6 +66,7 @@ export const play = {
   },
   sm: (share: number, random: () => number) => {
     useSmStore.setState(useSmStore.getInitialState(), true);
+    useSmStore.setState({ seed: SEEDS.sm });
     for (const item of SM_ITEMS) {
       for (let n = 0; n < item.max; n++) {
         if (random() < share) useSmStore.getState().step(item.id, 1);
@@ -63,6 +76,7 @@ export const play = {
   },
   smz3: (share: number, random: () => number) => {
     useSmz3Store.setState(useSmz3Store.getInitialState(), true);
+    useSmz3Store.setState({ seed: SEEDS.smz3 });
     for (const item of ITEMS) {
       for (let n = 0; n < item.max; n++) {
         if (random() < share) useSmz3Store.getState().step(item.id, 1);
