@@ -48,6 +48,8 @@ A link written before `sizes` existed (the first packed links) carries none: it 
 
 **The timeline** (`timelineField`) is the heaviest field, a find's key and instant being close to noise. It is written as varints (count, first instant, a Rice parameter, then the timer readings as runs) followed by a bit block: each find's key in a fixed number of bits (an index in the key table), then the time since the previous find as a Rice code, which costs a bit or two over the gap's magnitude and so takes a long wait without making every gap pay. The finds are ordered by instant. A timer reading is stored as its *drift* from the clock (`at - ms`): a timer running straight keeps one drift, so a stretch of finds is a single run; a pause or a stop starts another; `null` (timer not started) is a run of its own. Bits rather than bytes because a varint's continuation bits make deflate's job harder: measured on a late run, byte-aligned varints cost about 1470 characters of the link, the bit block about 1110.
 
+**The seed** (`seed`, the id of the seed the run was played on: alttpr.com's hash, a Map Rando seed name, samus.link's guid; null when unknown) travels in every link, packed or plain, as the plain string every game's save holds. It is not a packed field: a hash is ten random characters and a guid 32 hex digits, which no table indexes and deflate already carries at about their entropy. Packing the guid as 16 bytes would save about 25 characters of an SMZ3 link, not worth a field that must also say null and refuse a seed that is not a guid. A link made before runs kept their seed has none, and opens with the run's seed null.
+
 A save the codec cannot hold exactly (an id the pack does not list, an instant that is not a whole number, a field of another shape) is not packed: it is written plain, which any version opens.
 
 **Bounds.** Everything below is checked at the boundary, before the game's own validation sees the run:
@@ -132,6 +134,8 @@ Sizes measured on real links (all decoded with `zbarimg`, at 2 and at 3 pixels p
 | ALttPR without its timeline | ~550 | 16 | 81 |
 | SMZ3 | ~1030 | 23 | 109 |
 | ALttPR, late, with its timeline | ~1650 | 30 | 137 |
+
+(Measured before runs carried their seed, which adds 17 to 19 characters to Super Metroid's and ALttPR's links and 48 to SMZ3's; the lengths in the next table include it.)
 | 2000 characters | 2000 | 33 | 149 |
 
 ## Length
@@ -142,12 +146,12 @@ Measured on runs played through the real stores, a click or a check every 20 to 
 
 | Run | Early (~15 %) | Mid (~50 %) | Late (~95 %) |
 |---|---|---|---|
-| Super Metroid (plain) | 414 | 427 | 418 |
-| ALttPR, with its timeline | 898 (2580) | 1322 (4922) | 1651 (7135) |
-| ALttPR, without its timeline | 548 (1403) | 571 (1943) | 543 (2603) |
-| SMZ3 | 998 (1512) | 1031 (2522) | 999 (3402) |
+| Super Metroid (plain) | 432 | 446 | 435 |
+| ALttPR, with its timeline | 915 (2580) | 1338 (4922) | 1668 (7135) |
+| ALttPR, without its timeline | 567 (1403) | 588 (1943) | 560 (2603) |
+| SMZ3 | 1046 (1512) | 1076 (2522) | 1047 (3402) |
 
-Every case is under 2000, the timeline included: a late ALttPR run is 1651, and a late SMZ3 run costs the same as an early one, since its checked locations are now a constant 40 bytes. Super Metroid stays plain: its link is about 420 characters, nothing the packing could shorten enough to be worth tying it to a table.
+Every case is under 2000, the timeline included (the seed each run carries is part of these lengths): a late ALttPR run is 1668, and a late SMZ3 run costs the same as an early one, since its checked locations are now a constant 40 bytes. Super Metroid stays plain: its link is about 440 characters, nothing the packing could shorten enough to be worth tying it to a table.
 
 The synthetic runs are a floor on the timeline's cost, not a ceiling: their gaps are uniform between 20 and 100 seconds, about 16 bits of noise a find. A real run has pauses and bursts (a dungeon cleared in a minute, then ten minutes of travel), which the Rice code takes at no more than the bits their magnitude says. What would break the target is a run of about 300 finds or more (a late ALttPR run has about 220), each costing about 5 characters of the link.
 

@@ -17,6 +17,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { type History, historyActions } from "@/games/runHistory";
 import { createSaveFormat } from "@/games/saveFormat";
+import { SEED_ID } from "@/games/seedId";
 import {
   freshTimerSlice,
   restoreTimerSlice,
@@ -53,6 +54,8 @@ const progressSchema = z.object({
   checked: z.array(z.enum(LOCATION_IDS)),
   items: z.partialRecord(z.enum(ITEM_IDS), count(40)),
   pads: z.object({ mire: pad, turtleRock: pad }),
+  // The seed's guid, null while unknown; a save without it is null
+  seed: z._default(z.nullable(z.string().check(z.regex(SEED_ID))), null),
   settings: z.object({
     ganonCrystals: count(7),
     keysanity: z.boolean(),
@@ -72,6 +75,7 @@ export const freshProgress = (
   checked: [],
   items: Object.fromEntries(ITEM_IDS.map((id) => [id, 0])),
   pads: { mire: "unknown", turtleRock: "unknown" },
+  seed: null,
   settings,
 });
 
@@ -126,6 +130,7 @@ const progressOf = (state: Smz3Progress): Smz3Progress => ({
   checked: state.checked,
   items: state.items,
   pads: state.pads,
+  seed: state.seed,
   settings: state.settings,
 });
 

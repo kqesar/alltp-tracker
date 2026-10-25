@@ -4,7 +4,7 @@ import { LOCATION_IDS, parseSave } from "@/games/smz3/store";
 import { toBase64Url } from "@/share/bytes";
 import legacyLink from "@/share/fixtures/link-smz3-before-sizes.json";
 import { LINK_FORMAT, OTHER_VERSION } from "@/share/packed";
-import { play, randoms, STAGES } from "@/share/playedRuns";
+import { play, randoms, SEEDS, STAGES } from "@/share/playedRuns";
 
 /** The run a save holds, read as an import reads it. */
 const runOf = (save: string) => {
@@ -30,6 +30,8 @@ describe("an SMZ3 run in a packed link", () => {
       expect([...got.checked].sort()).toEqual([...expected.checked].sort());
       expect(got).toEqual({ ...expected, checked: got.checked });
       expect(expected.checked.length).toBeGreaterThan(0);
+      // The seed travels with the run
+      expect(got.seed).toBe(SEEDS.smz3);
     },
   );
 
@@ -40,6 +42,8 @@ describe("an SMZ3 run in a packed link", () => {
 
     expect(unpacked.ok).toBe(true);
     if (!unpacked.ok) return;
+    // Made before runs kept their seed: none, as a fresh run has it
+    expect(runOf(unpacked.save).seed).toBeNull();
     expect([...runOf(unpacked.save).checked].sort()).toEqual(
       [LOCATION_IDS[0], LOCATION_IDS[100], LOCATION_IDS[315]].sort(),
     );

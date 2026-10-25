@@ -280,3 +280,40 @@ describe("a save file", () => {
     expect(parseSave(text)).toEqual({ error, ok: false });
   });
 });
+
+describe("the run's seed", () => {
+  const GUID = "8506bbef2c2b4432af378b571c6c9133";
+  const file = (progress: object) =>
+    JSON.stringify({
+      format: "alltp-tracker-save",
+      game: "smz3",
+      progress,
+      version: 1,
+    });
+
+  it("is null in a fresh run, written by an export and read back", () => {
+    expect(store().seed).toBeNull();
+    useSmz3Store.setState({ seed: GUID });
+    const parsed = parseSave(exportSave(store()));
+    expect(parsed.ok && parsed.progress.seed).toBe(GUID);
+  });
+
+  it("is null in a save from before it was kept, which still opens", () => {
+    const { seed: _, ...older } = freshProgress();
+    const parsed = parseSave(file(older));
+    expect(parsed.ok && parsed.progress.seed).toBeNull();
+  });
+
+  it("refuses a seed that is not an id", () => {
+    for (const bad of [4, "", "x".repeat(65)]) {
+      expect(parseSave(file({ ...freshProgress(), seed: bad })).ok).toBe(false);
+    }
+  });
+
+  it("is cleared by New game", () => {
+    useSmz3Store.setState({ seed: GUID });
+    store().reset();
+
+    expect(store().seed).toBeNull();
+  });
+});

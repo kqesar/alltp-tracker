@@ -20,13 +20,13 @@ const CLOCK_IDS: MemoryRangeId[] = [
   "clock-zelda-saved",
 ];
 
-/** A reading at an instant; `race` leaves out the counters, as Race Mode does. */
+/** A reading at an instant; `race` leaves out the counters and the guid, as Race Mode does. */
 const readingAt = (at: number, game: Smz3Game = {}, race = false) =>
   readSmz3(
     viewOf(
       writeSmz3(new Uint8Array(0x100_0000), game),
       game.mode ?? "zelda",
-      race ? CLOCK_IDS : [],
+      race ? [...CLOCK_IDS, "seed-guid"] : [],
     ),
     race,
     at,
@@ -398,5 +398,49 @@ describe("the run timer, on the game's time", () => {
     follower.read(at(3_000, { sm: 9, zelda: 9 }, {}, true));
     follower.steady(T0 + 4_000);
     expect(run().timer).toBe(running);
+  });
+});
+
+describe("the run's seed", () => {
+  const GUID = "8506bbef2c2b4432af378b571c6c9133";
+  const OTHER = "c4538986b998477dbef480df8eb6eaec";
+
+  it("records the guid the ROM holds, as no undo step", () => {
+    run().step("hookshot", 1);
+    createSmz3Follower().read(readingAt(T0, { guid: GUID }));
+
+    expect(run().seed).toBe(GUID);
+    run().undo();
+    expect(run().items.hookshot).toBe(0);
+    expect(run().seed).toBe(GUID);
+  });
+
+  it("records nothing in Race Mode, where the guid is never read", () => {
+    createSmz3Follower().read(readingAt(T0, { guid: GUID }, true));
+
+    expect(run().seed).toBeNull();
+  });
+
+  it("lays nothing while no game is in play", () => {
+    createSmz3Follower().read(
+      readingAt(T0, { guid: GUID, mode: "sm", state: SM.FILE_SELECT }),
+    );
+
+    expect(run().seed).toBeNull();
+  });
+
+  it("follows another seed after New game, and gives the earlier run back as it was", () => {
+    const follower = createSmz3Follower();
+    follower.read(readingAt(T0, { guid: GUID }));
+    run().step("hookshot", 1);
+
+    run().reset();
+    expect(run().seed).toBeNull();
+    follower.read(readingAt(T0 + 1_000, { guid: OTHER }));
+    expect(run().seed).toBe(OTHER);
+
+    run().undo();
+    expect(run().items.hookshot).toBe(1);
+    expect(run().seed).toBe(GUID);
   });
 });

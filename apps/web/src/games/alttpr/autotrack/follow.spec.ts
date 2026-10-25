@@ -682,3 +682,72 @@ describe("the doors Link goes through", () => {
     for (const progress of store().past) expect(progress.entrances).toEqual({});
   });
 });
+
+describe("the run's seed", () => {
+  const seedOf = (name: string, race = false) =>
+    readingOf(seedMemory({ name, race }), { race });
+
+  it("records the seed the game names, as no undo step", () => {
+    const follower = createFollower();
+    store().handleItemClick("hammer");
+    expect(store().seed).toBeNull();
+
+    follower.read(seedOf("9MQ9gO1wMD"));
+
+    expect(store().seed).toBe("9MQ9gO1wMD");
+    // Undoing the player's click leaves the game's news
+    store().undo();
+    expect(store().items.hammer).toBe(false);
+    expect(store().seed).toBe("9MQ9gO1wMD");
+    expect(store().future).toHaveLength(1);
+  });
+
+  it("records a race seed's name too: the header is on the screen", () => {
+    createFollower().read(seedOf("eM43RgZ4Gj", true));
+
+    expect(store().seed).toBe("eM43RgZ4Gj");
+  });
+
+  it("lays nothing while no game is in play", () => {
+    const memory = seedMemory({ name: "9MQ9gO1wMD", race: false });
+    memory[GAME_MODE] = 0x01;
+    createFollower().read(readingOf(memory));
+
+    expect(store().seed).toBeNull();
+  });
+
+  it("follows a new seed, and gives a run before the switch back as it was", () => {
+    const follower = createFollower();
+    follower.read(seedOf("9MQ9gO1wMD"));
+    store().handleItemClick("hammer");
+
+    // New game, then another seed in the console
+    store().reset();
+    expect(store().seed).toBeNull();
+    follower.read(seedOf("0yAObedRMV"));
+    expect(store().seed).toBe("0yAObedRMV");
+
+    // Undoing New game brings back the run of the first seed, as it was
+    store().undo();
+    expect(store().items.hammer).toBe(true);
+    expect(store().seed).toBe("9MQ9gO1wMD");
+  });
+
+  it("keeps a run started from a seed's hash until the game says another", () => {
+    store().applyRun("open", store().settings, () => ({ seed: "9MQ9gO1wMD" }));
+    expect(store().seed).toBe("9MQ9gO1wMD");
+
+    createFollower().read(seedOf("9MQ9gO1wMD"));
+    expect(store().past).toHaveLength(1);
+
+    createFollower().read(seedOf("0yAObedRMV"));
+    expect(store().seed).toBe("0yAObedRMV");
+  });
+
+  it("is cleared by New game", () => {
+    createFollower().read(seedOf("9MQ9gO1wMD"));
+    store().reset();
+
+    expect(store().seed).toBeNull();
+  });
+});

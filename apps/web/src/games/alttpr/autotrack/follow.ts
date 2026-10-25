@@ -8,6 +8,9 @@
 // only. Nothing is laid while no game is in play (the title screen, the file
 // select): memory there is not the run's.
 //
+// The seed the game names in its header (race seeds too: the title is on
+// the screen) is recorded as the run's `seed`.
+//
 // Outside Race Mode, the doors and holes Link goes through are noted in a run
 // whose shuffled entrances the assistant knows: the entrance tables load on
 // demand, as for the assistant, and the notes land as the game's news.
@@ -31,6 +34,7 @@ import {
   useGameStore,
   withNotes,
 } from "@/games/alttpr/stores/gameStore";
+import { recordSeed } from "@/games/seedId";
 import { type GameClock, isRunning } from "@/utils/runTimer";
 
 /** The board's side of a session. */
@@ -188,6 +192,7 @@ export const createFollower = (): Follower => {
         return;
       }
       noteEntrances(reading.entrances);
+      recordSeed(useGameStore, reading.seed.seed);
       const store = useGameStore.getState();
       countKeys(reading, store.smallKeys);
       if (reading.race) {

@@ -12,7 +12,7 @@ import { parseSave } from "@/games/alttpr/stores/persistence";
 import { BitWriter, ByteWriter, toBase64Url } from "@/share/bytes";
 import legacyLink from "@/share/fixtures/link-alttpr-before-sizes.json";
 import { LINK_FORMAT, OTHER_VERSION } from "@/share/packed";
-import { play, randoms, STAGES } from "@/share/playedRuns";
+import { play, randoms, SEEDS, STAGES } from "@/share/playedRuns";
 
 const MALFORMED = "This link does not hold a tracker run.";
 
@@ -102,6 +102,8 @@ describe("an ALttPR run in a packed link", () => {
       if (!unpacked.ok) return;
       expect(runOf(unpacked.save)).toEqual(runOf(save));
       expect(Object.keys(runOf(save).timeline ?? {}).length).toBeGreaterThan(0);
+      // The seed travels with the run
+      expect(runOf(unpacked.save).seed).toBe(SEEDS.alttpr);
     },
   );
 
@@ -184,6 +186,8 @@ describe("an ALttPR run in a packed link", () => {
     expect(unpacked.ok).toBe(true);
     if (!unpacked.ok) return;
     const run = runOf(unpacked.save);
+    // Made before runs kept their seed: none
+    expect(run.seed).toBeUndefined();
     expect(run.items).toMatchObject({
       boots: true,
       hookshot: true,

@@ -433,3 +433,36 @@ describe("the run timer, on the game's time", () => {
     expect(run().timer.startedAt).toBeNull();
   });
 });
+
+describe("the run's seed", () => {
+  it("records the seed's name the ROM holds, as no undo step", () => {
+    run().step("varia", 1);
+    createSmFollower().read(reading({ items: MORPH, name: "dsjF6gGsH" }));
+
+    expect(run().seed).toBe("dsjF6gGsH");
+    run().undo();
+    expect(run().items.varia).toBe(0);
+    expect(run().seed).toBe("dsjF6gGsH");
+  });
+
+  it("lays nothing while no game is in play", () => {
+    createSmFollower().read(reading({ name: "dsjF6gGsH", state: 0x02 }));
+
+    expect(run().seed).toBeNull();
+  });
+
+  it("follows another seed after New game, and gives the earlier run back as it was", () => {
+    const follower = createSmFollower();
+    follower.read(reading({ name: "dsjF6gGsH" }));
+    run().step("morph", 1);
+
+    run().reset();
+    expect(run().seed).toBeNull();
+    follower.read(reading({ name: "cHXhTSCB8" }));
+    expect(run().seed).toBe("cHXhTSCB8");
+
+    run().undo();
+    expect(run().items.morph).toBe(1);
+    expect(run().seed).toBe("dsjF6gGsH");
+  });
+});
