@@ -14,7 +14,7 @@ and a read-only board for Archipelago multiworld rooms.
 ## Games
 
 **A Link to the Past (ALttPR).** Mark the items you find and the map shows which locations
-you can reach: in logic, maybe (a dark room, an unknown medallion), in sight only, or out of
+you can reach: in logic, maybe (an unknown medallion, a key that may be anywhere), in sight only, or out of
 logic. Each state has its own glyph as well as its colour. The rules are ported from
 [the randomizer's source](https://github.com/sporchia/alttp_vt_randomizer) (logic v31) and
 held to its own tests. Run types: Open, Standard, Inverted, Keysanity, All Dungeons,
