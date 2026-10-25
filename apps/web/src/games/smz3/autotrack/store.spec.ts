@@ -1,9 +1,11 @@
 import { parseUserAgent } from "@alltp/autotrack";
+import { smz3Ms } from "@alltp/pack-smz3";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { FakeVisibility, GRANTED, ManualClock } from "@/autotrack/fixtures";
 import { smz3Autotrack } from "@/games/smz3/autotrack/store";
 import { useSmz3Store } from "@/games/smz3/store";
 import { MemoryTransport } from "../../../../../../packages/autotrack/test/memory-transport";
+import { MEMORY_RANGE } from "../../../../../../packs/smz3/src/autotrack/memory";
 import {
   type Smz3Game,
   writeSmz3,
@@ -16,18 +18,38 @@ const run = () => useSmz3Store.getState();
 const harness = (game: Smz3Game = {}) => {
   const memory = writeSmz3(new Uint8Array(0x100_0000), game);
   const clock = new ManualClock();
+  const transports: MemoryTransport[] = [];
+  /** Runs before each request is served: a console that moves in a tick. */
+  const hooks: { before: ((pieces: [number, number][]) => void) | null } = {
+    before: null,
+  };
   smz3Autotrack.setOptions({
     clock,
     permission: GRANTED,
     random: () => 0,
-    transport: () => new MemoryTransport(memory),
+    transport: () => {
+      const transport = new MemoryTransport(memory);
+      const read = transport.read.bind(transport);
+      transport.read = (request, into, offset) => {
+        const pieces: [number, number][] = [];
+        for (let i = 0; i < request.pieces.length; i += 2) {
+          pieces.push([request.pieces[i], request.pieces[i + 1]]);
+        }
+        hooks.before?.(pieces);
+        return read(request, into, offset);
+      };
+      transports.push(transport);
+      return transport;
+    },
     visibility: new FakeVisibility(),
   });
   return {
     advance: (ms: number) => clock.advance(ms),
+    hooks,
     memory,
     /** The game moves on: memory now holds `next`. */
     play: (next: Smz3Game) => writeSmz3(memory, { ...game, ...next }),
+    transports,
   };
 };
 
@@ -182,5 +204,187 @@ describe("SMZ3's autotracking", () => {
 
     expect(state().status.code).toBe("game-mismatch");
     expect(run().items.moonPearl).toBe(0);
+  });
+});
+
+describe("SMZ3's autotracking and the run timer", () => {
+  const SM_FILE_SELECT = 0x04;
+  const SM_PLAY = 0x08;
+  const ZELDA_PLAY = 0x09;
+
+  /** The pieces asked of the consoles that touch one of the game-time ranges. */
+  const readOf = (
+    transports: MemoryTransport[],
+    ids: readonly (keyof typeof MEMORY_RANGE)[],
+  ) =>
+    transports
+      .flatMap((transport) => transport.pieces)
+      .filter(([address, size]) =>
+        ids.some((id) => {
+          const range = MEMORY_RANGE[id];
+          return (
+            range.address < address + size &&
+            address < range.address + range.size
+          );
+        }),
+      );
+
+  it("starts at the first reading in play, follows the games' time and stops at the credits", async () => {
+    run().setTimerClock("game");
+    const h = harness({
+      clock: { sm: 5_000, zelda: 1_000 },
+      mode: "sm",
+      state: SM_FILE_SELECT,
+    });
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    expect(run().timer.startedAt).toBeNull();
+    expect(state().reading?.clock).toEqual({ final: false, frames: 6_000 });
+
+    // The file loads: Super Metroid in play, a hundred frames later
+    h.play({ clock: { sm: 5_100, zelda: 1_000 }, mode: "sm", state: SM_PLAY });
+    await h.advance(1000);
+    expect(run().timer.startedAt).not.toBeNull();
+    expect(run().timer.elapsedMs).toBe(smz3Ms(6_100));
+
+    // A portal to Zelda, which runs 12 000 frames (200 s) in a real second
+    h.play({
+      clock: { sm: 5_100, zelda: 13_000 },
+      mode: "zelda",
+      state: ZELDA_PLAY,
+    });
+    await h.advance(1000);
+    await h.advance(1000);
+    expect(state().reading?.mode).toBe("zelda");
+    expect(run().timer.elapsedMs).toBe(smz3Ms(18_100));
+
+    // The credits: both counters saved, the final time
+    h.play({ clock: { sm: 60_000, zelda: 40_000 }, mode: "credits" });
+    await h.advance(1000);
+    await h.advance(1000);
+    expect(run().timer).toEqual({
+      elapsedMs: smz3Ms(100_000),
+      finished: true,
+      startedAt: null,
+    });
+  });
+
+  it("stops the timer on the game's time while the emulator is paused, and goes on when it runs", async () => {
+    run().setTimerClock("game");
+    const h = harness({
+      clock: { sm: 0, zelda: 1_000 },
+      state: 0x01,
+    });
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    h.play({ clock: { sm: 0, zelda: 1_200 }, state: ZELDA_PLAY });
+    await h.advance(1000);
+    h.play({ clock: { sm: 0, zelda: 13_200 }, state: ZELDA_PLAY });
+    await h.advance(1000);
+    expect(run().timer.startedAt).not.toBeNull();
+
+    // A paused emulator serves the same bytes: no reading, only steady polls
+    await h.advance(3000);
+    expect(run().timer).toEqual({
+      elapsedMs: smz3Ms(13_200),
+      finished: false,
+      startedAt: null,
+    });
+
+    h.play({ clock: { sm: 0, zelda: 14_200 }, state: ZELDA_PLAY });
+    await h.advance(1000);
+    expect(run().timer.startedAt).not.toBeNull();
+    expect(run().timer.elapsedMs).toBe(smz3Ms(14_200));
+  });
+
+  it("goes back with the game when a death sets the counters to the last save", async () => {
+    run().setTimerClock("game");
+    run().startTimer();
+    const h = harness({ clock: { sm: 0, zelda: 30_000 }, state: ZELDA_PLAY });
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    expect(run().timer.elapsedMs).toBe(smz3Ms(30_000));
+
+    h.play({ clock: { sm: 0, zelda: 21_000 }, state: ZELDA_PLAY });
+    await h.advance(1000);
+    expect(run().timer.elapsedMs).toBe(smz3Ms(21_000));
+  });
+
+  it("reads the game time outside Race Mode, with the game", async () => {
+    const h = harness();
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    expect(
+      readOf(h.transports, ["clock-sm-saved", "clock-zelda-live"]),
+    ).not.toHaveLength(0);
+  });
+
+  it("reads none of Super Metroid's counter in Race Mode, yet starts and stops the timer", async () => {
+    smz3Autotrack.setRaceChoice("on");
+    run().setTimerClock("game");
+    const h = harness({
+      clock: { sm: 5_000, zelda: 1_000 },
+      mode: "sm",
+      state: SM_FILE_SELECT,
+    });
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    h.play({ clock: { sm: 5_100, zelda: 1_000 }, mode: "sm", state: SM_PLAY });
+    await h.advance(1000);
+    expect(run().timer.startedAt).not.toBeNull();
+    expect(state().reading?.clock).toBe("race-mode");
+    h.play({ clock: { sm: 9_000, zelda: 1_000 }, mode: "credits" });
+    await h.advance(1000);
+    await h.advance(1000);
+
+    expect(run().timer.finished).toBe(true);
+    // Nothing of Super Metroid's counter was asked of the console
+    expect(readOf(h.transports, ["clock-sm-live", "clock-sm-saved"])).toEqual(
+      [],
+    );
+  });
+
+  it("does not take a counter read across a portal for a time", async () => {
+    run().setTimerClock("game");
+    run().startTimer();
+    const h = harness({
+      clock: { sm: 6_000, zelda: 1_500 },
+      mode: "sm",
+      state: SM_PLAY,
+    });
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    expect(run().timer.elapsedMs).toBe(smz3Ms(7_500));
+
+    // The portal fires after the tick read the mode and before it reads Super
+    // Metroid's counter: WRAM holds Zelda's memory there, 0x7fff0000 as it
+    // reads. Super Metroid saved its 6 600 before the switch
+    h.hooks.before = (pieces) => {
+      const live = MEMORY_RANGE["clock-sm-live"];
+      if (!pieces.some(([address]) => address === live.address)) return;
+      h.hooks.before = null;
+      writeSmz3(h.memory, {
+        clock: { sm: 6_600, zelda: 1_500 },
+        mode: "zelda",
+        state: ZELDA_PLAY,
+      });
+      h.memory.set([0x00, 0x00, 0xff, 0x7f], live.address);
+    };
+    await h.advance(1000);
+    // That tick is a switch: no time from it
+    expect(state().reading?.mode).toBe("zelda");
+    expect(state().reading?.clock).toBe("not-read");
+    expect(run().timer.elapsedMs).toBe(smz3Ms(7_500));
+
+    // The next reads Zelda's memory: its live counter and Super Metroid's save
+    await h.advance(1000);
+    expect(state().reading?.clock).toEqual({ final: false, frames: 8_100 });
+    expect(run().timer.elapsedMs).toBe(smz3Ms(8_100));
   });
 });

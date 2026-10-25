@@ -4,6 +4,7 @@ import { Smz3Controls } from "@/games/smz3/components/Smz3Controls";
 import { Smz3Grid } from "@/games/smz3/components/Smz3Grid";
 import { Smz3Keycards } from "@/games/smz3/components/Smz3Keycards";
 import { Smz3Maps } from "@/games/smz3/components/Smz3Maps";
+import { Smz3RunTimer } from "@/games/smz3/components/Smz3RunTimer";
 import { Smz3Tokens } from "@/games/smz3/components/Smz3Tokens";
 import { useSmz3Store } from "@/games/smz3/store";
 import { useUndoShortcuts } from "@/games/useUndoShortcuts";
@@ -11,7 +12,8 @@ import { useUndoShortcuts } from "@/games/useUndoShortcuts";
 /**
  * The SMZ3 tracker: both games' items and the rewards found (and under
  * keysanity, the keys and keycards), beside the maps of Hyrule and Zebes,
- * the pack's logic colouring every location. Its actions show as icons once
+ * the pack's logic colouring every location, and the run timer on a row of
+ * its own above them, at the right (`board-run`). Its actions show as icons once
  * their labels no longer fit on one row: it has no More menu, so the label
  * fold is the one it takes.
  */
@@ -26,6 +28,9 @@ const Smz3App = () => {
         data-keys={keysanity || undefined}
         data-testid="layout"
       >
+        <div className="board-run">
+          <Smz3RunTimer />
+        </div>
         <div className="smz3-board">
           <Smz3Grid />
           <Smz3Tokens />

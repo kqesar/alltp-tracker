@@ -47,6 +47,9 @@ export const startSmz3Runtime = (
     }
   });
   session.onUpdate(({ snapshot }) => decode(snapshot));
+  // The game clock is read on every poll: one that changed nothing is a game
+  // that stands still
+  session.onSteady(() => sink.steady?.(Date.now()));
   session.start();
   return {
     retryNow: () => session.retryNow(),

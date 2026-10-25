@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { smz3 } from "@/games/smz3/module";
-import { Smz3ObsView } from "@/games/smz3/Smz3ObsView";
+import { Smz3ObsView, streamSize } from "@/games/smz3/Smz3ObsView";
 import {
   freshProgress,
   SMZ3_STORAGE_KEY,
@@ -27,6 +27,34 @@ describe("SMZ3's stream view", () => {
     expect(stage.style.getPropertyValue("--cell")).toMatch(/px$/);
     unmount();
     expect(document.documentElement.dataset.view).toBeUndefined();
+  });
+});
+
+describe("SMZ3's stream view timer", () => {
+  it("draws no timer unless asked, then the run's under the grid", () => {
+    const { rerender } = render(<Smz3ObsView background={null} />);
+    expect(screen.queryByTestId("stream-timer")).toBeNull();
+
+    act(() => useSmz3Store.getState().startTimer(Date.now()));
+    rerender(<Smz3ObsView background={null} timer />);
+    expect(screen.getByTestId("stream-timer")).toHaveAccessibleName(
+      "Run timer: 0:00, running",
+    );
+    expect(
+      screen.getByTestId("obs-view").style.getPropertyValue("--obs-columns"),
+    ).toBe("7");
+
+    act(() => {
+      useSmz3Store.getState().finishTimer(Date.now() + 61_000);
+    });
+    expect(screen.getByTestId("stream-timer")).toHaveAccessibleName(
+      "Run timer: 1:01, stopped at the goal",
+    );
+  });
+
+  it("sizes the source with a row for the timer", () => {
+    expect(streamSize(8)(false)).toEqual({ height: 512, width: 448 });
+    expect(streamSize(8)(true)).toEqual({ height: 576, width: 448 });
   });
 });
 

@@ -193,6 +193,22 @@ const SPRITE_PIXELS = 16;
 /** How much of the room the crisp size may give up before it is not worth it. */
 const MAX_CRISP_LOSS = 1 / 8;
 
+/** A grid cell's crisp size in a stream source, in pixels: four times the 16 px sprites. */
+const NATIVE_CELL = 64;
+
+/**
+ * A browser source's size for a game's stream view, with or without the run
+ * timer's row under the grid (the Stream view dialogs).
+ * @param columns - The grid's columns
+ * @param rows - The grid's rows
+ */
+export const gridStreamSize =
+  (columns: number, rows: number) =>
+  (timer: boolean): { width: number; height: number } => ({
+    height: (rows + (timer ? 1 : 0)) * NATIVE_CELL,
+    width: columns * NATIVE_CELL,
+  });
+
 /** Where the stream view draws its grid: cell size and offset, in CSS px. */
 export type GridFit = { cell: number; left: number; top: number };
 

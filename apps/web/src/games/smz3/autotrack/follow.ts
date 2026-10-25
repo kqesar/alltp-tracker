@@ -9,14 +9,22 @@
 //   the player left it.
 // - The settings the ROM states (Super Metroid's logic, keysanity) and,
 //   outside races, its requirements and medallions follow the seed.
+//
+// The run timer follows the game too, whether or not a game is in play: the
+// player's "Start and stop with the game" starts it on the first reading in
+// play after one before play (in whichever game the file starts in) and stops
+// it when the credits run, and "Game time" sets it on the games' frame
+// counters, summed (the pack's `decodeGameClock`).
 
-import type { Smz3Settings } from "@alltp/pack-smz3";
+import { type Smz3Settings, smz3Ms } from "@alltp/pack-smz3";
+import { gameClockOf, timerNews } from "@/games/gameTimer";
 import type { Smz3Reading } from "@/games/smz3/autotrack/reading";
 import {
   type Smz3Pads,
   type Smz3Progress,
   useSmz3Store,
 } from "@/games/smz3/store";
+import { type GameClock, isIdle, timerState } from "@/utils/runTimer";
 
 /** What the game says, kept to tell news from what it said before. */
 type View = {
@@ -71,9 +79,65 @@ const newIn = <T extends object>(now: T, before: T | undefined) =>
 /** Start following the game, for a new session. */
 export const createSmz3Follower = () => {
   let shown: View | null = null;
+  /**
+   * Whether a reading before play came since the last one in play, for the
+   * timer to see a game start; the readings between (a portal, a load) leave
+   * it as it is, so a file that starts in either game starts the timer.
+   */
+  let armed = false;
+  /** The sum of the counters as last read, to tell a game that stands still. */
+  let frames: number | undefined;
+  /** The game's clock the timer was last set on, to hold it if the game stops. */
+  let lastGame: GameClock | undefined;
+
+  /**
+   * The run timer follows the game: started and stopped by it if the player
+   * lets it, set on the game's time if the player chose that. The time is the
+   * game's: a death or a reload sets both counters back to the last save, and
+   * the timer goes back with them, as the credits' total would.
+   */
+  const followTimer = (reading: Smz3Reading) => {
+    const run = useSmz3Store.getState();
+    const now =
+      typeof reading.clock === "object" ? reading.clock.frames : undefined;
+    const moving = now !== frames;
+    frames = now;
+
+    const news = run.autoTimer ? timerNews(armed, reading, run.timer) : null;
+    if (news === "start") run.startTimer(reading.at);
+    const after = useSmz3Store.getState();
+    lastGame = undefined;
+    // Game time: only a timer that has begun is set on the counters
+    if (
+      after.timerClock === "game" &&
+      now !== undefined &&
+      !isIdle(after.timer) &&
+      timerState(after.timer) !== "finished"
+    ) {
+      lastGame = gameClockOf(
+        smz3Ms(now),
+        reading.goal,
+        moving,
+        after.autoTimer,
+      );
+      after.alignTimer(lastGame, reading.at);
+    } else if (
+      news === "finish" &&
+      // On game time the credits' own total is the stop: the tick that sees
+      // the credits has not read the counters yet (a new mode), and a timer
+      // finished on real time could not be set right
+      !(after.timerClock === "game" && reading.clock === "not-read")
+    ) {
+      after.finishTimer(reading.at);
+    }
+    if (reading.beforePlay === true) armed = true;
+    else if (reading.inPlay === true) armed = false;
+  };
+
   return {
     /** Lay a reading's news on the run. */
     read: (reading: Smz3Reading) => {
+      followTimer(reading);
       if (reading.inPlay !== true) return;
       const now = viewOf(reading);
       const before = shown;
@@ -112,6 +176,18 @@ export const createSmz3Follower = () => {
         }
         return change;
       });
+    },
+    /**
+     * A poll read memory and found it unchanged at `at`: the game stands
+     * still (a paused emulator), so a timer set on its counters stops at its
+     * last time until a reading moves it again.
+     */
+    steady: (at: number) => {
+      const run = useSmz3Store.getState();
+      if (run.timerClock === "game" && lastGame?.status === "running") {
+        lastGame = { ms: lastGame.ms, status: "paused" };
+        run.alignTimer(lastGame, at);
+      }
     },
   };
 };

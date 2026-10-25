@@ -120,6 +120,109 @@ test("autotracks an SMZ3 seed through SNI, in both games", async ({ page }) => {
   }
 });
 
+test("starts the run timer with the game, follows both games' time and stops at the credits", async ({
+  page,
+}) => {
+  const bridge = await FakeUsb2Snes.start();
+  try {
+    // Super Metroid's file select; Zelda's counter holds 1 000 frames already
+    writeSmz3(bridge.memory, {
+      clock: { sm: 5_000, zelda: 1_000 },
+      mode: "sm",
+      state: 0x04,
+    });
+    await openOnGame(page, "smz3", `?bridge=${new URL(bridge.url).port}`);
+    const timer = page.getByTestId("run-timer");
+    await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
+    await timer.click();
+    await page.getByRole("radio", { name: "Game time" }).check();
+    await page.keyboard.press("Escape");
+
+    await page.getByTestId("autotrack-button").click();
+    const dialog = page.getByRole("dialog", { name: "Autotracking" });
+    await dialog.getByTestId("autotrack-connect").click();
+    await expect(dialog.getByTestId("autotrack-headline")).toHaveText(
+      "Connected",
+    );
+    await page.keyboard.press("Escape");
+    await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
+
+    // The file loads and the game runs (15 frames every 250 ms, a real
+    // 60 fps): the first reading in play starts the timer, on the sum of the
+    // games' counters (6 000 frames: 1:40)
+    let smFrames = 5_000;
+    const running = setInterval(() => {
+      smFrames += 15;
+      writeSmz3(bridge.memory, {
+        clock: { sm: smFrames, zelda: 1_000 },
+        mode: "sm",
+        state: 0x08,
+      });
+    }, 250);
+    try {
+      await expect(timer).toHaveAccessibleName(
+        /^Run timer: 1:(39|4\d), running$/,
+      );
+    } finally {
+      clearInterval(running);
+    }
+    // The emulator pauses: the counters stand still and so does the timer
+    await expect(timer).toHaveAccessibleName(/^Run timer: 1:\d\d, paused$/);
+
+    // A portal to Zelda, which has run to 7 000 frames while Super Metroid's
+    // count stays saved: the sum goes on, the timer is set on it
+    writeSmz3(bridge.memory, {
+      clock: { sm: smFrames, zelda: 7_000 },
+      mode: "zelda",
+      state: 0x09,
+    });
+    await expect(timer).toHaveAccessibleName(
+      /^Run timer: 3:(2\d|3\d), (running|paused)$/,
+    );
+    await timer.click();
+    await expect(page.getByTestId("run-timer-clock-hint")).toHaveText(
+      "The timer follows the game's clock.",
+    );
+    await page.keyboard.press("Escape");
+
+    // The credits: both counters saved, their total is the time
+    writeSmz3(bridge.memory, {
+      clock: { sm: smFrames, zelda: 7_000 },
+      mode: "credits",
+    });
+    await expect(timer).toHaveAccessibleName(
+      /^Run timer: 3:(2\d|3\d), stopped at the goal$/,
+    );
+  } finally {
+    await bridge.stop();
+  }
+});
+
+test("the stream view draws the run timer under the grid", async ({
+  context,
+  page,
+}) => {
+  await openOnGame(page, "smz3");
+  const stream = await context.newPage();
+  await stream.goto("./?view=obs&timer=1");
+  const timer = stream.getByTestId("stream-timer");
+  await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
+
+  await page.getByTestId("run-timer").click();
+  await page.getByTestId("run-timer-start").click();
+  await expect(timer).toHaveAccessibleName(/^Run timer: 0:0\d, running$/);
+  await page.getByTestId("run-timer-pause").click();
+  await expect(timer).toHaveAccessibleName(/^Run timer: 0:0\d, paused$/);
+  // The timer sits under the grid, inside the stage
+  const grid = await stream.locator(".board-grid").boundingBox();
+  const drawn = await timer.boundingBox();
+  expect(drawn?.y).toBeGreaterThanOrEqual((grid?.y ?? 0) + (grid?.height ?? 0));
+  // Without the option, no timer
+  await stream.goto("./?view=obs");
+  await expect(stream.getByTestId("obs-view")).toBeVisible();
+  await expect(stream.getByTestId("stream-timer")).toHaveCount(0);
+});
+
 test("the stream view follows the SMZ3 tracker", async ({ context, page }) => {
   await openOnGame(page, "smz3");
   const stream = await context.newPage();
@@ -177,6 +280,12 @@ for (const width of WIDTHS) {
   }) => {
     await page.setViewportSize({ height: 900, width });
     await openOnGame(page, "smz3");
+
+    // The timer's panel, open
+    await page.getByTestId("run-timer").click();
+    await expect(page.getByTestId("run-timer-clock")).toBeVisible();
+    await auditBoard(page);
+    await page.keyboard.press("Escape");
 
     // The run type dialog
     await page.getByRole("button", { name: /^Mode/ }).click();

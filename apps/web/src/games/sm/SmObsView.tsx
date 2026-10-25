@@ -1,26 +1,18 @@
 import type { CSSProperties } from "react";
 import { StreamTimer } from "@/components/ui/StreamTimer";
-import type { StreamSize } from "@/components/ui/StreamTools";
 import type { ObsViewProps } from "@/games/registry";
 import { SmGrid } from "@/games/sm/components/SmGrid";
 import { SM_COLUMNS, smGrid } from "@/games/sm/data";
 import { useSmStore } from "@/games/sm/store";
 import { useObsStage } from "@/hooks/useObsStage";
-
-/** A cell's crisp size in a source, in pixels: four times the 16 px sprites. */
-const NATIVE_CELL = 64;
+import { gridStreamSize } from "@/utils/view";
 
 /**
  * The browser source's size for this board's stream view, with or without the
  * run timer's row (the Stream view dialogs).
  * @param rows - The grid's rows (`smGrid`)
  */
-export const streamSize =
-  (rows: number) =>
-  (timer: boolean): StreamSize => ({
-    height: (rows + (timer ? 1 : 0)) * NATIVE_CELL,
-    width: SM_COLUMNS * NATIVE_CELL,
-  });
+export const streamSize = (rows: number) => gridStreamSize(SM_COLUMNS, rows);
 
 /** The run's timer, drawn as every game's stream view draws it. */
 const SmStreamTimer = () => (

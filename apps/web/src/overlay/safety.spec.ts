@@ -197,6 +197,8 @@ describe("what the overlay API never sends", () => {
         items: full,
         pads: { mire: "bombos", turtleRock: "quake" },
         settings: { ...fresh.settings, keysanity: true },
+        timer: IDLE_TIMER,
+        timerClock: "game",
       } as unknown as Parameters<typeof smz3>[0];
       const { state } = smz3(loaded);
       shapeOf(state);
@@ -216,6 +218,11 @@ describe("what the overlay API never sends", () => {
         expect(ids).not.toContain(secret);
       }
       expect(state.objectives).toEqual([]);
+      expect(state.timer).toEqual({
+        elapsedMs: 0,
+        startedAt: null,
+        state: "idle",
+      });
       expect(JSON.stringify(state)).not.toContain("secret-location");
       expect(smz3(loaded)).toEqual(
         smz3({
