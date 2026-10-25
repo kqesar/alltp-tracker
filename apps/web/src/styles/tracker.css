@@ -70,3 +70,22 @@
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
+
+/* Ganon's Tower's short name over its Agahnim, lettered like the key labels
+   so it reads over stream footage too; the boss under it takes the clicks */
+.boss-cell__name {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: var(--z-overlay);
+  font-size: calc(var(--cell) * 0.3);
+  font-weight: bold;
+  line-height: 1;
+  color: var(--color-text);
+  text-shadow:
+    1px 0 var(--color-bg),
+    -1px 0 var(--color-bg),
+    0 1px var(--color-bg),
+    0 -1px var(--color-bg);
+  pointer-events: none;
+}

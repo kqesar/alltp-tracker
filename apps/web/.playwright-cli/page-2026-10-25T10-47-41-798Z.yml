@@ -1,0 +1,267 @@
+- generic [ref=e2]:
+  - link "Skip to main content" [ref=e3] [cursor=pointer]:
+    - /url: "#main-content"
+  - link "Skip to map" [ref=e4] [cursor=pointer]:
+    - /url: "#map"
+  - link "Skip to checks" [ref=e5] [cursor=pointer]:
+    - /url: "#map"
+  - generic:
+    - status
+    - status
+    - status
+  - banner [ref=e6]:
+    - generic [ref=e7]:
+      - heading "Rando Atlas" [level=1] [ref=e8]
+      - paragraph [ref=e9]: A Link to the Past
+    - navigation "Navigation and external links" [ref=e10]:
+      - link "GitHub (source code, opens in a new tab)" [ref=e11] [cursor=pointer]:
+        - /url: https://github.com/kqesar/alltp-tracker
+        - generic [ref=e14]: GitHub
+        - generic [ref=e15]: (source code, opens in a new tab)
+      - link "ALttPR (the randomizer, opens in a new tab)" [ref=e16] [cursor=pointer]:
+        - /url: https://alttpr.com/
+        - generic [ref=e17]: ALttPR
+        - generic [ref=e18]: (the randomizer, opens in a new tab)
+      - link "Original (the tracker this one started from, opens in a new tab)" [ref=e19] [cursor=pointer]:
+        - /url: https://github.com/TestRunnerSRL/lttp-tracker
+        - generic [ref=e22]: Original
+        - generic [ref=e23]: (the tracker this one started from, opens in a new tab)
+  - generic [ref=e24]:
+    - generic [ref=e25]:
+      - button "Mode Open" [ref=e26] [cursor=pointer]:
+        - generic [ref=e27]: Mode
+        - generic [ref=e28]: Open
+      - button "New game" [ref=e29] [cursor=pointer]
+      - button "Undo" [disabled] [ref=e31]
+      - button "Redo" [disabled] [ref=e35]
+      - button "Autotracking, Off" [ref=e40] [cursor=pointer]:
+        - generic [ref=e45]: Autotracking
+      - status [ref=e46]
+      - generic [ref=e47]:
+        - button "Export" [ref=e48] [cursor=pointer]
+        - button "Import" [ref=e52] [cursor=pointer]
+        - button "Share" [ref=e56] [cursor=pointer]
+        - button "Stream view" [ref=e60] [cursor=pointer]
+        - button "Shortcuts" [ref=e64] [cursor=pointer]
+      - group "Map" [ref=e68]:
+        - generic "Side by side while there is room, stacked below" [ref=e70] [cursor=pointer]:
+          - radio "Auto" [checked] [ref=e71]
+          - text: Auto
+        - generic "Light World left, Dark World right" [ref=e72] [cursor=pointer]:
+          - radio "Side" [ref=e73]
+          - text: Side
+        - generic "Dark World under the Light World" [ref=e74] [cursor=pointer]:
+          - radio "Stack" [ref=e75]
+          - text: Stack
+      - button [aria-hidden] [ref=e76]
+    - button "Show big keys" [ref=e78] [cursor=pointer]
+  - main [ref=e82]:
+    - generic [ref=e83]:
+      - region "Item tracker grid" [ref=e84]:
+        - heading "Item Tracker" [level=2] [ref=e85]
+        - generic [ref=e86]:
+          - generic [ref=e87]:
+            - button "Flute, not obtained. Click to change state." [ref=e89] [cursor=pointer]
+            - button "Hookshot, not obtained. Click to change state." [ref=e90] [cursor=pointer]
+            - button "Hammer, not obtained. Click to change state." [ref=e91] [cursor=pointer]
+            - button "Fire Rod, not obtained. Click to change state." [ref=e92] [cursor=pointer]
+            - button "Ice Rod, not obtained. Click to change state." [ref=e93] [cursor=pointer]
+            - button "Boomerang, not obtained. Click to change state." [ref=e94] [cursor=pointer]
+            - button "Bug Net, not obtained. Click to change state." [ref=e95] [cursor=pointer]
+          - generic [ref=e97]:
+            - button "Bow, not obtained. Click to change state." [ref=e99] [cursor=pointer]
+            - button "Lantern, not obtained. Click to change state." [ref=e100] [cursor=pointer]
+            - button "Shield, not obtained. Click to change state." [ref=e101] [cursor=pointer]
+            - button "Sword, not obtained. Click to change state." [ref=e102] [cursor=pointer]
+            - button "Tunic, not obtained. Click to change state." [ref=e103] [cursor=pointer]
+            - button "Half Magic, not obtained. Click to change state." [ref=e104] [cursor=pointer]
+            - button "Pegasus Boots, not obtained. Click to change state." [ref=e105] [cursor=pointer]
+          - generic [ref=e107]:
+            - button "Shovel, not obtained. Click to change state." [ref=e109] [cursor=pointer]
+            - button "Book of Mudora, not obtained. Click to change state." [ref=e110] [cursor=pointer]
+            - button "Quake Medallion, not obtained. Click to change state." [ref=e111] [cursor=pointer]
+            - button "Bombos Medallion, not obtained. Click to change state." [ref=e112] [cursor=pointer]
+            - button "Ether Medallion, not obtained. Click to change state." [ref=e113] [cursor=pointer]
+            - group "Eastern Palace" [ref=e115]:
+              - button "Armos Knights, not defeated. Click to change state." [ref=e116] [cursor=pointer]
+              - 'button "Eastern Palace chests: 3 left, maybe available" [ref=e117] [cursor=pointer]'
+              - 'button "Eastern Palace reward: unknown" [ref=e118] [cursor=pointer]'
+          - generic [ref=e120]:
+            - button "Magic Powder, not obtained. Click to change state." [ref=e122] [cursor=pointer]
+            - button "Power Glove, not obtained. Click to change state." [ref=e123] [cursor=pointer]
+            - button "Bottle, not obtained. Click to change state." [ref=e124] [cursor=pointer]
+            - button "Cane of Somaria, not obtained. Click to change state." [ref=e125] [cursor=pointer]
+            - button "Cane of Byrna, not obtained. Click to change state." [ref=e126] [cursor=pointer]
+            - group "Desert Palace" [ref=e128]:
+              - button "Lanmolas, not defeated. Click to change state." [ref=e129] [cursor=pointer]
+              - 'button "Desert Palace chests: 2 left, out of logic" [ref=e130] [cursor=pointer]'
+              - 'button "Desert Palace reward: unknown" [ref=e131] [cursor=pointer]'
+          - generic [ref=e133]:
+            - button "Mushroom, not obtained. Click to change state." [ref=e135] [cursor=pointer]
+            - button "Magic Cape, not obtained. Click to change state." [ref=e136] [cursor=pointer]
+            - button "Magic Mirror, not obtained. Click to change state." [ref=e137] [cursor=pointer]
+            - button "Moon Pearl, not obtained. Click to change state." [ref=e138] [cursor=pointer]
+            - button "Zora's Flippers, not obtained. Click to change state." [ref=e139] [cursor=pointer]
+            - group "Tower of Hera" [ref=e141]:
+              - button "Moldorm, not defeated. Click to change state." [ref=e142] [cursor=pointer]
+              - 'button "Tower of Hera chests: 2 left, out of logic" [ref=e143] [cursor=pointer]'
+              - 'button "Tower of Hera reward: unknown" [ref=e144] [cursor=pointer]'
+          - generic [ref=e146]:
+            - group "Palace of Darkness" [ref=e148]:
+              - button "Helmasaur King, not defeated. Click to change state." [ref=e149] [cursor=pointer]
+              - 'button "Palace of Darkness chests: 5 left, out of logic" [ref=e150] [cursor=pointer]'
+              - 'button "Palace of Darkness reward: unknown" [ref=e151] [cursor=pointer]'
+            - group "Swamp Palace" [ref=e152]:
+              - button "Arrghus, not defeated. Click to change state." [ref=e153] [cursor=pointer]
+              - 'button "Swamp Palace chests: 6 left, out of logic" [ref=e154] [cursor=pointer]'
+              - 'button "Swamp Palace reward: unknown" [ref=e155] [cursor=pointer]'
+            - group "Skull Woods" [ref=e156]:
+              - button "Mothula, not defeated. Click to change state." [ref=e157] [cursor=pointer]
+              - 'button "Skull Woods chests: 2 left, out of logic" [ref=e158] [cursor=pointer]'
+              - 'button "Skull Woods reward: unknown" [ref=e159] [cursor=pointer]'
+            - group "Thieves' Town" [ref=e160]:
+              - button "Blind the Thief, not defeated. Click to change state." [ref=e161] [cursor=pointer]
+              - 'button "Thieves'' Town chests: 4 left, out of logic" [ref=e162] [cursor=pointer]'
+              - 'button "Thieves'' Town reward: unknown" [ref=e163] [cursor=pointer]'
+            - group "Ice Palace" [ref=e164]:
+              - button "Kholdstare, not defeated. Click to change state." [ref=e165] [cursor=pointer]
+              - 'button "Ice Palace chests: 3 left, out of logic" [ref=e166] [cursor=pointer]'
+              - 'button "Ice Palace reward: unknown" [ref=e167] [cursor=pointer]'
+            - group "Misery Mire" [ref=e168]:
+              - button "Vitreous, not defeated. Click to change state." [ref=e169] [cursor=pointer]
+              - 'button "Misery Mire medallion: unknown" [ref=e170] [cursor=pointer]'
+              - 'button "Misery Mire chests: 2 left, out of logic" [ref=e171] [cursor=pointer]'
+              - 'button "Misery Mire reward: unknown" [ref=e172] [cursor=pointer]'
+            - group "Turtle Rock" [ref=e173]:
+              - button "Trinexx, not defeated. Click to change state." [ref=e174] [cursor=pointer]
+              - 'button "Turtle Rock medallion: unknown" [ref=e175] [cursor=pointer]'
+              - 'button "Turtle Rock chests: 5 left, out of logic" [ref=e176] [cursor=pointer]'
+              - 'button "Turtle Rock reward: unknown" [ref=e177] [cursor=pointer]'
+          - generic [ref=e179]:
+            - button "Agahnim, not obtained. Click to change state." [ref=e183] [cursor=pointer]
+            - group "Ganon's Tower" [ref=e187]:
+              - button "Agahnim 2, not defeated. Click to change state." [ref=e188] [cursor=pointer]
+              - generic [aria-hidden]: GT
+              - 'button "Ganon''s Tower chests: 20 left, out of logic" [ref=e189] [cursor=pointer]'
+      - generic [ref=e191]:
+        - generic [ref=e192]:
+          - tablist "Map view" [ref=e193]:
+            - tab "Map" [selected] [ref=e194] [cursor=pointer]
+            - tab "Checks" [ref=e195] [cursor=pointer]
+            - tab "Run" [ref=e196] [cursor=pointer]
+          - generic [ref=e197]:
+            - 'button "Voice commands: off" [ref=e198] [cursor=pointer]':
+              - generic [aria-hidden] [ref=e201]: Voice
+            - 'button "Run timer: 0:00, not started" [ref=e202] [cursor=pointer]':
+              - generic [aria-hidden] [ref=e203]: ▷
+              - generic [aria-hidden] [ref=e204]: 0:00
+            - status [ref=e205]
+            - 'button "Go mode: not yet" [ref=e206] [cursor=pointer]':
+              - generic [aria-hidden] [ref=e207]: ☆
+              - text: "Go mode: not yet"
+            - status [ref=e208]: "Go mode: not yet"
+            - status [ref=e209]
+        - tabpanel "Map" [ref=e210]:
+          - region "Map tracker with locations and dungeons" [ref=e211]:
+            - heading "Map Locations" [level=2] [ref=e212]
+            - region "Light World" [ref=e213]:
+              - 'button "King''s Tomb: out of logic" [ref=e214] [cursor=pointer]': ✕
+              - 'button "Dam (2 checks): available" [ref=e215] [cursor=pointer]': ✓
+              - 'button "Link''s House: available" [ref=e216] [cursor=pointer]': ✓
+              - 'button "Spiral Cave: out of logic" [ref=e217] [cursor=pointer]': ✕
+              - 'button "Mimic Cave: out of logic" [ref=e218] [cursor=pointer]': ✕
+              - 'button "Kakariko Tavern: available" [ref=e219] [cursor=pointer]': ✓
+              - 'button "Chicken House: available" [ref=e220] [cursor=pointer]': ✓
+              - 'button "Aginah''s Cave: available" [ref=e221] [cursor=pointer]': ✓
+              - 'button "Sahasrahla''s Hut (3 checks): available" [ref=e222] [cursor=pointer]': ✓
+              - 'button "Kakariko Well (5 checks): available" [ref=e223] [cursor=pointer]': ✓
+              - 'button "Blind''s Hideout (5 checks): available" [ref=e224] [cursor=pointer]': ✓
+              - 'button "Paradox Cave (7 checks): out of logic" [ref=e225] [cursor=pointer]': ✕
+              - 'button "Pegasus Rocks: out of logic" [ref=e226] [cursor=pointer]': ✕
+              - 'button "Mini Moldorm Cave (5 checks): available" [ref=e227] [cursor=pointer]': ✓
+              - 'button "Ice Rod Cave: available" [ref=e228] [cursor=pointer]': ✓
+              - 'button "Bottle Merchant: available" [ref=e229] [cursor=pointer]': ✓
+              - 'button "Sahasrahla: out of logic" [ref=e230] [cursor=pointer]': ✕
+              - 'button "Sick Kid: out of logic" [ref=e231] [cursor=pointer]': ✕
+              - 'button "Hobo: out of logic" [ref=e232] [cursor=pointer]': ✕
+              - 'button "Ether Tablet: out of logic" [ref=e233] [cursor=pointer]': ✕
+              - 'button "Bombos Tablet: out of logic" [ref=e234] [cursor=pointer]': ✕
+              - 'button "King Zora: out of logic" [ref=e235] [cursor=pointer]': ✕
+              - 'button "Old Man: out of logic" [ref=e236] [cursor=pointer]': ✕
+              - 'button "Potion Shop: out of logic" [ref=e237] [cursor=pointer]': ✕
+              - 'button "Lost Woods Hideout: available" [ref=e238] [cursor=pointer]': ✓
+              - 'button "Lumberjack Tree: out of logic" [ref=e239] [cursor=pointer]': ✕
+              - 'button "Spectacle Rock Cave: out of logic" [ref=e240] [cursor=pointer]': ✕
+              - 'button "Cave 45: out of logic" [ref=e241] [cursor=pointer]': ✕
+              - 'button "Graveyard Ledge: out of logic" [ref=e242] [cursor=pointer]': ✕
+              - 'button "Checkerboard Cave: out of logic" [ref=e243] [cursor=pointer]': ✕
+              - 'button "Library: out of logic" [ref=e244] [cursor=pointer]': ✕
+              - 'button "Mushroom: available" [ref=e245] [cursor=pointer]': ✓
+              - 'button "Spectacle Rock: out of logic" [ref=e246] [cursor=pointer]': ✕
+              - 'button "Floating Island: out of logic" [ref=e247] [cursor=pointer]': ✕
+              - 'button "Maze Race: available" [ref=e248] [cursor=pointer]': ✓
+              - 'button "Desert Ledge: visible, not reachable yet" [ref=e249] [cursor=pointer]'
+              - 'button "Lake Hylia Island: visible, not reachable yet" [ref=e250] [cursor=pointer]'
+              - 'button "Zora''s Ledge: out of logic" [ref=e251] [cursor=pointer]': ✕
+              - 'button "Flute Spot: out of logic" [ref=e252] [cursor=pointer]': ✕
+              - 'button "Sewers Secret Room (3 checks): out of logic" [ref=e253] [cursor=pointer]': ✕
+              - 'button "Secret Passage (2 checks): available" [ref=e254] [cursor=pointer]': ✓
+              - 'button "Hyrule Castle (4 checks): maybe available" [ref=e255] [cursor=pointer]': "?"
+              - 'button "Sanctuary: available" [ref=e256] [cursor=pointer]': ✓
+              - 'button "Magic Bat: out of logic" [ref=e257] [cursor=pointer]': ✕
+              - 'button "Blacksmith: out of logic" [ref=e258] [cursor=pointer]': ✕
+              - 'button "Master Sword Pedestal: out of logic" [ref=e259] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e260]: "?"
+              - 'button "Eastern Palace: boss out of logic, 3 chests left (maybe available)" [ref=e261] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e262]: ✕
+              - 'button "Desert Palace: boss out of logic, 2 chests left (out of logic)" [ref=e263] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e264]: ✕
+              - 'button "Tower of Hera: boss out of logic, 2 chests left (out of logic)" [ref=e265] [cursor=pointer]': ✕
+              - 'button "Waterfall Fairy (2 checks): out of logic" [ref=e266] [cursor=pointer]': ✕
+              - 'button "Castle Tower: boss out of logic, no item to find" [ref=e268] [cursor=pointer]': ✕
+            - region "Dark World" [ref=e269]:
+              - 'button "Brewery: out of logic" [ref=e270] [cursor=pointer]': ✕
+              - 'button "C-Shaped House: out of logic" [ref=e271] [cursor=pointer]': ✕
+              - 'button "Mire Shed (2 checks): out of logic" [ref=e272] [cursor=pointer]': ✕
+              - 'button "Superbunny Cave (2 checks): out of logic" [ref=e273] [cursor=pointer]': ✕
+              - 'button "Spike Cave: out of logic" [ref=e274] [cursor=pointer]': ✕
+              - 'button "Hype Cave (5 checks): out of logic" [ref=e275] [cursor=pointer]': ✕
+              - 'button "Hookshot Cave Bottom Right: out of logic" [ref=e276] [cursor=pointer]': ✕
+              - 'button "Hookshot Cave (3 checks): out of logic" [ref=e277] [cursor=pointer]': ✕
+              - 'button "Chest Game: out of logic" [ref=e278] [cursor=pointer]': ✕
+              - 'button "Stumpy: out of logic" [ref=e279] [cursor=pointer]': ✕
+              - 'button "Purple Chest: out of logic" [ref=e280] [cursor=pointer]': ✕
+              - 'button "Catfish: out of logic" [ref=e281] [cursor=pointer]': ✕
+              - 'button "Hammer Pegs: out of logic" [ref=e282] [cursor=pointer]': ✕
+              - 'button "Bumper Cave: out of logic" [ref=e283] [cursor=pointer]': ✕
+              - 'button "Pyramid: out of logic" [ref=e284] [cursor=pointer]': ✕
+              - 'button "Digging Game: out of logic" [ref=e285] [cursor=pointer]': ✕
+              - 'button "Pyramid Fairy (2 checks): out of logic" [ref=e286] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e287]: ✕
+              - 'button "Palace of Darkness: boss out of logic, 5 chests left (out of logic)" [ref=e288] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e289]: ✕
+              - 'button "Swamp Palace: boss out of logic, 6 chests left (out of logic)" [ref=e290] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e291]: ✕
+              - 'button "Skull Woods: boss out of logic, 2 chests left (out of logic)" [ref=e292] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e293]: ✕
+              - 'button "Thieves'' Town: boss out of logic, 4 chests left (out of logic)" [ref=e294] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e295]: ✕
+              - 'button "Ice Palace: boss out of logic, 3 chests left (out of logic)" [ref=e296] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e297]: ✕
+              - 'button "Misery Mire, unknown medallion: boss out of logic, 2 chests left (out of logic)" [ref=e298] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e299]: ✕
+              - 'button "Turtle Rock, unknown medallion: boss out of logic, 5 chests left (out of logic)" [ref=e300] [cursor=pointer]': ✕
+              - generic [aria-hidden] [ref=e301]: ✕
+              - 'button "Ganon''s Tower: boss out of logic, 20 chests left (out of logic)" [ref=e302] [cursor=pointer]': ✕
+          - region "Map availability legend" [ref=e303]:
+            - generic [ref=e304]:
+              - generic [aria-hidden] [ref=e305]: ✓
+              - text: Available now
+            - generic [ref=e306]:
+              - generic [aria-hidden] [ref=e307]: "?"
+              - text: Maybe, or only some
+            - generic [ref=e308]: Visible, not reachable yet
+            - generic [ref=e310]:
+              - generic [aria-hidden] [ref=e311]: ✕
+              - text: Out of logic
+            - generic [ref=e312]: Opened / cleared

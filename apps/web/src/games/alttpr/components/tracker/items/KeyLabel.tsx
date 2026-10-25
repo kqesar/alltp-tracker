@@ -5,9 +5,10 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
 /**
  * The short names of the castle dungeons, as keysanity trackers label their
  * key rows (CodeTracker's hc_label, at_label, gt_label). Castle Tower has
- * none: Agahnim's cell stands there, as the head of its keys.
+ * none: Agahnim's cell stands there, as the head of its keys. Ganon's Tower's
+ * also marks its boss cell, whose Agahnim 2 would pass for Castle Tower's.
  */
-const SHORT_NAMES: Partial<Record<DungeonId, string>> = {
+export const SHORT_NAMES: Partial<Record<DungeonId, string>> = {
   "ganons-tower": "GT",
   "hyrule-castle": "HC",
 };
