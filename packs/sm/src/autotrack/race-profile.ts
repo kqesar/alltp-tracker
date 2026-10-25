@@ -7,8 +7,15 @@
 // 2026-10-25). Map Rando's own "Race mode" only locks a seed's
 // spoiler on the website (rust/maprando-web/templates/generate/help/
 // race.html) and writes nothing into the ROM: there is no race flag to read.
-// So every category this pack reads is permitted. It reads what the player
-// holds and has done, never what a location holds.
+// So every category this pack reads for the board is permitted. It reads what
+// the player holds and has done, never what a location holds.
+//
+// One category is kept out on purpose: `game-time`, Map Rando's RTA clock.
+// It reveals nothing of the seed, but the game shows it only in its end
+// credits, never in play, and the tracker's rule for races is to read no more
+// than a player sees (a policy, not a rule of the page: the rules restrict no
+// tracking). A race therefore keeps the run timer on real time, as racetime.gg
+// times it.
 
 import { defineRaceProfile, type RaceProfile } from "@alltp/autotrack";
 
@@ -18,6 +25,10 @@ const NO_RULE =
 export const MAP_RANDO_RACE_PROFILE: RaceProfile = defineRaceProfile({
   categories: {
     "game-state": { permitted: true, rule: NO_RULE },
+    "game-time": {
+      permitted: false,
+      rule: "Not a rule of racetime.gg/smr: the tracker reads no more than a player sees in a race, and Map Rando shows its RTA clock only in its end credits.",
+    },
     items: { permitted: true, rule: NO_RULE },
     objectives: { permitted: true, rule: NO_RULE },
     "rom-header": { permitted: true, rule: NO_RULE },

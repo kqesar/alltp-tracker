@@ -215,3 +215,101 @@ export function decodeInPlay(memory: MemoryView): boolean | Unsettled {
   const value = state.word(0x7e_0998);
   return value === 0x07 || value === 0x08;
 }
+
+/** The game state ($0998), or why it is not known. */
+export function decodeGameState(memory: MemoryView): number | Unsettled {
+  const state = reader(memory, "game-state");
+  return state ? state.word(0x7e_0998) : "not-read";
+}
+
+/**
+ * Whether the game is before play: the title, the menus, the file select and
+ * the loading of a game (states $00-$06), and $1F, where a new game's data is
+ * set up (fast_reload.asm:46-47, 166-167; new_game.asm:195-212). The reading
+ * after one that was, and is in play, is a game starting; after a pause, a
+ * door or a death it is not.
+ */
+export function decodeBeforePlay(memory: MemoryView): boolean | Unsettled {
+  const state = decodeGameState(memory);
+  if (state === "not-read") return state;
+  return state <= 0x06 || state === 0x1f;
+}
+
+/** Event $0E, the escape set (stats.asm, hook_samus_enter_ship; `$80:81FA`). */
+const ESCAPE_EVENT = { address: 0x7e_d821, mask: 0x40 } as const;
+
+/**
+ * Whether the run reached its goal: the escape is set (Mother Brain is dead)
+ * and Samus is in the ship, the game state $26 (Samus escapes) or $27 (the
+ * ending and credits) (`$82:84BD`, `$82:8503`; stats.asm:38-40, 546-567).
+ * Both are read in a race too.
+ */
+export function decodeGoal(memory: MemoryView): boolean | Unsettled {
+  const state = decodeGameState(memory);
+  const events = reader(memory, "events");
+  if (state === "not-read" || !events) return "not-read";
+  const escaped = (events.byte(ESCAPE_EVENT.address) & ESCAPE_EVENT.mask) !== 0;
+  return escaped && (state === 0x26 || state === 0x27);
+}
+
+/**
+ * Map Rando's RTA clock at one reading: the frames flushed to SRAM and the
+ * frames the NMI counter holds, whose sum is the frames since the clock was
+ * zeroed, every NMI counted (lag, menus, file select and credits too).
+ */
+export interface ClockReading {
+  /** `!stat_timer`, $70:1E10. */
+  readonly saved: number;
+  /** `!nmi_counter`, $7E:1F80, 0 to 254. */
+  readonly pending: number;
+  readonly frames: number;
+}
+
+/**
+ * Map Rando's RTA clock (stats.asm; constants.asm: `!stat_timer` $70:1E10,
+ * `!nmi_counter` $7E:1F80), or why it is not known: not in Race Mode, which
+ * never reads it (race profile), nor before both parts were read. A count
+ * since the SRAM was set up, not since a run began: the run takes a baseline.
+ */
+export function decodeGameClock(memory: MemoryView): ClockReading | Unsettled {
+  const saved = reader(memory, "rta-saved");
+  const pending = reader(memory, "rta-pending");
+  if (!saved || !pending) return "not-read";
+  const flushed = saved.word(0x70_1e10) + saved.word(0x70_1e12) * 0x1_0000;
+  const held = pending.byte(0x7e_1f80);
+  return { frames: flushed + held, pending: held, saved: flushed };
+}
+
+/**
+ * Whether `now` straddles a flush: the NMI counter flushes into SRAM by
+ * adding what it holds and zeroing, and the two parts are read one after the
+ * other (SRAM first). A flush between them leaves the SRAM word before the
+ * flush and the counter after it, so the sum falls back by up to 254 frames.
+ * That reading is told by the SRAM word standing still while the counter went
+ * back, which a flush alone causes (a flush also raises the SRAM word). A
+ * straddled reading is not a time: hold the last one.
+ * @param before - The reading before, if any
+ */
+export function clockStraddled(
+  before: ClockReading | undefined,
+  now: ClockReading,
+): boolean {
+  return (
+    before !== undefined &&
+    now.saved === before.saved &&
+    now.pending < before.pending
+  );
+}
+
+/**
+ * Map Rando's frame rate, as its end credits convert the clock to time:
+ * `100 / 60.09881186` hundredths of a second a frame (credits.asm,
+ * adjust_time_fps). The SNES's NTSC rate; kept here because packs import
+ * nothing of each other (the ALttPR pack derives the same from the master
+ * clock).
+ */
+export const RTA_FRAMES_PER_SECOND = 60.098_811_86;
+
+/** How long `frames` of the clock last, in milliseconds. */
+export const rtaMs = (frames: number): number =>
+  Math.round((frames * 1000) / RTA_FRAMES_PER_SECOND);
