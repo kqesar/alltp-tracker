@@ -171,6 +171,37 @@ describe("Tooltip", () => {
     expect(groups().join()).toMatch(/Big Chest/);
   });
 
+  it("keeps a dungeon counted down to 0 open at its boss until it is beaten", () => {
+    const index = LEGACY_DUNGEONS.indexOf("desert-palace");
+    act(() =>
+      useGameStore.setState((state) => ({
+        items: { ...state.items, [`chest${index}`]: 0 },
+      })),
+    );
+    renderMap();
+    fireEvent.pointerEnter(screen.getByTestId("boss-marker-desert-palace"), {
+      pointerType: "mouse",
+    });
+
+    expect(screen.getByTestId("tooltip-count")).toHaveTextContent(
+      "No item left",
+    );
+    // The counter counts items: Lanmolas, and the heart container he drops,
+    // are still to get
+    expect(rows()).toEqual([
+      "Big Chest opened",
+      "Map Chest opened",
+      "Torch opened",
+      "Big Key Chest opened",
+      "Compass Chest opened",
+      "Boss unavailable",
+    ]);
+
+    act(() => useGameStore.getState().handleItemClick(`boss${index}`));
+
+    expect(rows().every((row) => row.endsWith(" opened"))).toBe(true);
+  });
+
   /** Palace of Darkness in reach, without the Lantern or the Fire Rod. */
   const lightsOut = () =>
     act(() => {

@@ -103,6 +103,31 @@ describe("ChecksPanel", () => {
     }
   });
 
+  it("keeps a cleared dungeon's boss check open until the boss is beaten", async () => {
+    const user = userEvent.setup();
+    act(() =>
+      useGameStore.setState((state) => ({
+        items: { ...state.items, chest0: 0 },
+      })),
+    );
+    render(<ChecksPanel />);
+    await user.click(filter("opened"));
+    await user.click(filter("unavailable"));
+    const boss = () =>
+      within(row("eastern-palace/boss") as HTMLElement).getByRole("checkbox");
+
+    // The counter counts items: the boss is still to beat, and no box can
+    // say otherwise, so it is left to the boss cell
+    expect(boss()).not.toBeChecked();
+    expect(boss()).toBeDisabled();
+    expect(row("eastern-palace/compass-chest")).toHaveTextContent("Checked");
+
+    act(() => useGameStore.getState().handleItemClick("boss0"));
+
+    expect(boss()).toBeChecked();
+    expect(boss()).toBeDisabled();
+  });
+
   it("names a dungeon's items left beside it", () => {
     render(<ChecksPanel />);
 
@@ -192,7 +217,7 @@ describe("ChecksPanel", () => {
       expect(ask).toHaveAttribute("aria-expanded", "false");
     });
 
-    it("is not offered for a dungeon whose counter is 0", async () => {
+    it("is offered for a dungeon whose counter is 0 only while its boss lives", async () => {
       const user = userEvent.setup();
       act(() =>
         useGameStore.setState((state) => ({
@@ -203,10 +228,14 @@ describe("ChecksPanel", () => {
       await user.click(filter("opened"));
       await user.click(filter("unavailable"));
 
-      // Its counter is at 0: every check is done
+      // Its counter is at 0, but Armos Knights are not beaten
       expect(
         screen.getByRole("region", { name: /^Eastern Palace/ }),
       ).toBeVisible();
+      expect(screen.getByTestId("zone-why-eastern-palace")).toBeInTheDocument();
+
+      act(() => useGameStore.getState().handleItemClick("boss0"));
+
       expect(screen.queryByTestId("zone-why-eastern-palace")).toBeNull();
       expect(screen.getByTestId("zone-why-desert-palace")).toBeInTheDocument();
     });

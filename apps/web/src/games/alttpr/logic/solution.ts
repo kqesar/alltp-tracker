@@ -11,6 +11,7 @@
 import type { Tri } from "@alltp/engine";
 import {
   type AlttprSettings,
+  bossLocation,
   compile,
   type DungeonId,
   dungeon,
@@ -417,6 +418,28 @@ export const bossStateOf = (id: DungeonId, state: Inputs): MarkerState => {
   const solution = solutionOf(state);
   return markerStatus([tri(solution, prizeOf(id, solution.settings))]);
 };
+
+/**
+ * A dungeon's boss location in the run's world: undefined for Hyrule Castle,
+ * which has no boss, and for Castle Tower and Ganon's Tower, whose bosses
+ * are rules.
+ */
+export const bossLocationOf = (
+  id: DungeonId,
+  state: Inputs,
+): string | undefined => bossLocation(dungeon(id), solutionOf(state).settings);
+
+/**
+ * What a location of a dungeon counted down to 0 shows: done, but for the
+ * boss location, which the counter (of items) does not clear. It follows
+ * the boss, so it stays open until the boss is beaten.
+ */
+export const clearedStateOf = (
+  id: DungeonId,
+  location: string,
+  state: Inputs,
+): MarkerState =>
+  location === bossLocationOf(id, state) ? bossStateOf(id, state) : "opened";
 
 /** Every location's official name, every world's together. */
 const NAMES: ReadonlyMap<string, string> = new Map(

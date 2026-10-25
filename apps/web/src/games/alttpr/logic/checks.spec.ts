@@ -1,5 +1,6 @@
 import {
   INVERTED_MARKERS,
+  LEGACY_DUNGEONS,
   MARKERS,
   OPEN,
   STANDARD,
@@ -96,7 +97,7 @@ describe("checkStates", () => {
     expect(states["kings-tomb"]).toBe("unavailable");
   });
 
-  it("shows a dungeon's checks done once its counter is 0", () => {
+  it("shows a dungeon's item checks done once its counter is 0", () => {
     const eastern = runZones(useGameStore.getState()).find(
       (zone) => zone.dungeon === "eastern-palace",
     );
@@ -110,8 +111,51 @@ describe("checkStates", () => {
     const state = useGameStore.getState();
     expect(isCleared(eastern, state)).toBe(true);
     const states = checkStates(state);
-    expect(eastern.checks.map((check) => states[check.id])).toEqual(
-      eastern.checks.map(() => "opened"),
+    // Its boss's check is the boss's own (below)
+    const items = eastern.checks.filter(
+      (check) => check.id !== "eastern-palace/boss",
+    );
+    expect(items.map((check) => states[check.id])).toEqual(
+      items.map(() => "opened"),
+    );
+  });
+
+  it("keeps a cleared dungeon's boss check open until the boss is beaten", () => {
+    const index = LEGACY_DUNGEONS.indexOf("desert-palace");
+    const desert = runZones(useGameStore.getState()).find(
+      (zone) => zone.dungeon === "desert-palace",
+    );
+    if (desert === undefined) throw new Error("No Desert Palace");
+    useGameStore.setState((state) => ({
+      items: { ...state.items, [`chest${index}`]: 0 },
+    }));
+
+    const others = desert.checks.filter(
+      ({ id }) => id !== "desert-palace/boss",
+    );
+    expect(others).toHaveLength(desert.checks.length - 1);
+    const alive = checkStates(useGameStore.getState());
+    expect(isCleared(desert, useGameStore.getState())).toBe(true);
+    expect(others.map(({ id }) => alive[id])).toEqual(
+      others.map(() => "opened"),
+    );
+    expect(alive["desert-palace/boss"]).toBe("unavailable");
+
+    useGameStore.getState().handleItemClick(`boss${index}`);
+    const beaten = checkStates(useGameStore.getState());
+    expect(beaten["desert-palace/boss"]).toBe("opened");
+  });
+
+  it("has no boss check to keep in the towers, whose bosses are rules", () => {
+    useGameStore.setState((state) => ({
+      items: { ...state.items, chest12: 0 },
+    }));
+    const states = checkStates(useGameStore.getState());
+    const tower = runZones(useGameStore.getState()).find(
+      (zone) => zone.dungeon === "ganons-tower",
+    );
+    expect(tower?.checks.map(({ id }) => states[id])).toEqual(
+      tower?.checks.map(() => "opened"),
     );
   });
 });
