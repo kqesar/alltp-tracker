@@ -232,8 +232,8 @@ describe("the item and objective names", () => {
 });
 
 describe("refusals", () => {
-  const refused = (input: string) => {
-    const result = parseSpoiler(input);
+  const refused = (input: string, fileName = "") => {
+    const result = parseSpoiler(input, fileName);
     if (result.ok) throw new Error("read, expected a refusal");
     return result;
   };
@@ -242,6 +242,28 @@ describe("refusals", () => {
     for (const input of ["", "hello", "[]", "null", "{", '{"summary": [}']) {
       expect(refused(input).error).toBe("not-a-spoiler");
     }
+  });
+
+  it("tells another randomizer's file apart by its head and name", () => {
+    expect(
+      refused(
+        '{"meta":{"worlds":1},"Light World":{}}',
+        "alttpr - x_9MQ9gO1wMD.txt",
+      ),
+    ).toMatchObject({ detail: "alttpr", error: "other-game" });
+    expect(refused("- SMZ3 1.0 seed\nPlaythrough:")).toMatchObject({
+      detail: "smz3",
+      error: "other-game",
+    });
+    expect(refused("Archipelago Version 0.6.8\n")).toMatchObject({
+      detail: "archipelago",
+      error: "unsupported",
+    });
+    expect(refused(text, "game.sfc")).toMatchObject({
+      detail: "rom",
+      error: "not-a-spoiler",
+    });
+    expect(refused("\0\u0001\u0002")).toMatchObject({ detail: "rom" });
   });
 
   it("refuses a truncated file, whatever the cut", () => {

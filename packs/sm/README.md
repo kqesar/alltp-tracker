@@ -123,11 +123,14 @@ not emulators in general (read again on 2026-10-25).
 
 ## Spoiler logs
 
-`parseSpoiler(text)` reads the `spoiler.json` of maprando.com
+`parseSpoiler(text, fileName)` reads the `spoiler.json` of maprando.com
 (`/seed/<name>/data/spoiler.json`, "Spoiler log JSON" on the seed page) into
 `@alltp/spoiler`'s `SpoilerLog`, for the post-run review. It never throws on
 its input: a refusal is `{ ok: false, error, detail? }` with the package's
-codes. The caller bounds the size first (`checkSize("sm", file.size)`, 64 MiB).
+codes. The caller bounds the size first (`checkSize("sm", file.size)`, 64 MiB). Another
+randomizer's file is told apart from its head and name (`sniffSpoiler`: `other-game`,
+`unsupported`, a ROM), as the ALttPR and SMZ3 packs do; the app's review reads it in a worker
+([docs/review.md](../../docs/review.md#super-metroid-map-rando)).
 
 - **A file of 21 MB, 39 KB read.** `details` (routes), `game_data`
   (sm-json-data copied in) and the traversals are 99.8 % of it. `sliceTopLevel`
