@@ -7,7 +7,7 @@ import {
 } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ShareDialog } from "@/components/ui/ShareDialog";
-import { StreamTools } from "@/components/ui/StreamTools";
+import { type StreamSize, StreamTools } from "@/components/ui/StreamTools";
 import { StreamUrlDialog } from "@/components/ui/StreamUrlDialog";
 import {
   ExportIcon,
@@ -56,6 +56,11 @@ type RunToolbarProps<P extends object> = {
   /** What New game asks before it clears the run */
   resetMessage: string;
   saveFormat: SaveFormat<P>;
+  /**
+   * The stream view's source size, with or without the run timer's row, for a
+   * game whose stream view can draw a timer: the dialogs then offer it
+   */
+  streamSizeOf?: (timer: boolean) => StreamSize;
   useStore: RunStore<P>;
 };
 
@@ -74,6 +79,7 @@ export const RunToolbar = <P extends object>({
   modeValue,
   resetMessage,
   saveFormat: { exportSave, IMPORT_ERRORS, parseSave },
+  streamSizeOf,
   useStore,
 }: RunToolbarProps<P>) => {
   const canUndo = useStore((state) => state.past.length > 0);
@@ -202,11 +208,12 @@ export const RunToolbar = <P extends object>({
       {dialog === "mode" && <ModeDialog onClose={() => setDialog(null)} />}
       {dialog === "stream" &&
         (isDesktopApp ? (
-          <StreamTools onClose={() => setDialog(null)} />
+          <StreamTools onClose={() => setDialog(null)} sizeOf={streamSizeOf} />
         ) : (
           <StreamUrlDialog
             onClose={() => setDialog(null)}
             testIdPrefix={game}
+            timerOption={streamSizeOf !== undefined}
           />
         ))}
       <ShareDialog onClose={() => setShare(null)} share={share} />

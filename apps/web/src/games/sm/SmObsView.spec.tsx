@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sm } from "@/games/sm/module";
-import { SmObsView } from "@/games/sm/SmObsView";
+import { SmObsView, streamSize } from "@/games/sm/SmObsView";
 import { freshProgress, SM_STORAGE_KEY, useSmStore } from "@/games/sm/store";
 
 beforeEach(() => {
@@ -23,6 +23,34 @@ describe("Super Metroid's stream view", () => {
     expect(stage.style.getPropertyValue("--cell")).toMatch(/px$/);
     unmount();
     expect(document.documentElement.dataset.view).toBeUndefined();
+  });
+});
+
+describe("Super Metroid's stream view timer", () => {
+  it("draws no timer unless asked, then the run's under the grid", () => {
+    const { rerender } = render(<SmObsView background={null} />);
+    expect(screen.queryByTestId("stream-timer")).toBeNull();
+
+    act(() => useSmStore.getState().startTimer(Date.now()));
+    rerender(<SmObsView background={null} timer />);
+    expect(screen.getByTestId("stream-timer")).toHaveAccessibleName(
+      "Run timer: 0:00, running",
+    );
+    expect(
+      screen.getByTestId("obs-view").style.getPropertyValue("--obs-columns"),
+    ).toBe("6");
+
+    act(() => {
+      useSmStore.getState().finishTimer(Date.now() + 61_000);
+    });
+    expect(screen.getByTestId("stream-timer")).toHaveAccessibleName(
+      "Run timer: 1:01, stopped at the goal",
+    );
+  });
+
+  it("sizes the source with a row for the timer", () => {
+    expect(streamSize(4)(false)).toEqual({ height: 256, width: 384 });
+    expect(streamSize(4)(true)).toEqual({ height: 320, width: 384 });
   });
 });
 

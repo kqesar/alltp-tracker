@@ -2,6 +2,10 @@
 // memory snapshot, kept as plain data for the autotracking store.
 
 import {
+  type ClockReading,
+  decodeBeforePlay,
+  decodeGameClock,
+  decodeGoal,
   decodeInPlay,
   decodeItems,
   decodeObjectives,
@@ -16,6 +20,15 @@ import {
 export type SmReading = {
   /** When memory was read, in ms since the epoch. */
   readonly at: number;
+  /** The game is before play (title, menus, file select, loading a game). */
+  readonly beforePlay: boolean | Unsettled;
+  /**
+   * Map Rando's RTA clock. Never read in Race Mode (the pack's race profile):
+   * then, like before it is read, not known.
+   */
+  readonly clock: ClockReading | Unsettled;
+  /** Mother Brain is dead and Samus is in the ship. */
+  readonly goal: boolean | Unsettled;
   /** A game is in play: the items held are the run's. */
   readonly inPlay: boolean | Unsettled;
   readonly items: Readonly<Record<SmItemId, number>> | Unsettled;
@@ -31,6 +44,9 @@ export type SmReading = {
  */
 export const readSm = (memory: MemoryView, at: number): SmReading => ({
   at,
+  beforePlay: decodeBeforePlay(memory),
+  clock: decodeGameClock(memory),
+  goal: decodeGoal(memory),
   inPlay: decodeInPlay(memory),
   items: decodeItems(memory),
   objectives: decodeObjectives(memory),

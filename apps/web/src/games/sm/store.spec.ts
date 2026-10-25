@@ -175,3 +175,136 @@ describe("the store as the page creates it", () => {
     expect(fresh.useSmStore.getState().done).toEqual(["draygon"]);
   });
 });
+
+describe("the run timer", () => {
+  const T0 = 1_000_000;
+
+  it("starts, pauses, finishes and resets, apart from the history", () => {
+    store().startTimer(T0);
+    expect(store().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: T0,
+    });
+    store().pauseTimer(T0 + 5_000);
+    expect(store().timer).toEqual({
+      elapsedMs: 5_000,
+      finished: false,
+      startedAt: null,
+    });
+    store().startTimer(T0 + 6_000);
+    store().finishTimer(T0 + 10_000);
+    expect(store().timer).toEqual({
+      elapsedMs: 9_000,
+      finished: true,
+      startedAt: null,
+    });
+    // No step of the history, and undoing a find leaves the clock alone
+    expect(store().past).toEqual([]);
+    store().step("morph", 1);
+    store().undo();
+    expect(store().timer.finished).toBe(true);
+    store().resetTimer();
+    expect(store().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: null,
+    });
+  });
+
+  it("is cleared by a new game and by an import, with the clock's base", () => {
+    store().startTimer(T0);
+    store().setClockBase(1_000);
+    store().reset();
+    expect(store()).toMatchObject({
+      clockBase: null,
+      timer: { elapsedMs: 0, startedAt: null },
+    });
+
+    store().startTimer(T0);
+    store().setClockBase(1_000);
+    store().load(freshProgress());
+    expect(store()).toMatchObject({
+      clockBase: null,
+      timer: { elapsedMs: 0, startedAt: null },
+    });
+  });
+
+  it("sets the timer on the game's clock outside the undo history", () => {
+    store().startTimer(T0);
+    store().alignTimer({ ms: 5_000, status: "running" }, T0 + 1_000);
+    const timer = store().timer;
+    expect(timer).toEqual({
+      elapsedMs: 5_000,
+      finished: false,
+      startedAt: T0 + 1_000,
+    });
+    expect(store().past).toEqual([]);
+    // Already there: the same object, so nothing redraws
+    store().alignTimer({ ms: 5_100, status: "running" }, T0 + 1_100);
+    expect(store().timer).toBe(timer);
+  });
+
+  it("is saved with the run, with the auto setting, the clock choice and its base", async () => {
+    store().startTimer(T0);
+    store().setAutoTimer(false);
+    store().setTimerClock("game");
+    store().setClockBase(123_456);
+    const saved = localStorage.getItem(SM_STORAGE_KEY) ?? "{}";
+    expect(JSON.parse(saved).state).toMatchObject({
+      autoTimer: false,
+      clockBase: 123_456,
+      timer: { elapsedMs: 0, finished: false, startedAt: T0 },
+      timerClock: "game",
+    });
+
+    useSmStore.setState(useSmStore.getInitialState(), true);
+    expect(store().timer.startedAt).toBeNull();
+    localStorage.setItem(SM_STORAGE_KEY, saved);
+    await useSmStore.persist.rehydrate();
+    expect(store()).toMatchObject({
+      autoTimer: false,
+      clockBase: 123_456,
+      timer: { startedAt: T0 },
+      timerClock: "game",
+    });
+  });
+
+  it("restores a run saved before the timer, and refuses a damaged timer", async () => {
+    const save = (state: object) =>
+      localStorage.setItem(
+        SM_STORAGE_KEY,
+        JSON.stringify({ state: { ...freshProgress(), ...state }, version: 1 }),
+      );
+    save({ done: ["kraid"] });
+    await useSmStore.persist.rehydrate();
+    expect(store()).toMatchObject({
+      autoTimer: true,
+      clockBase: null,
+      done: ["kraid"],
+      timer: { elapsedMs: 0, startedAt: null },
+      timerClock: "real",
+    });
+
+    save({
+      autoTimer: "yes",
+      clockBase: -4,
+      timer: { elapsedMs: "soon" },
+      timerClock: "ingame",
+    });
+    await useSmStore.persist.rehydrate();
+    expect(store()).toMatchObject({
+      autoTimer: true,
+      clockBase: null,
+      timer: { elapsedMs: 0, startedAt: null },
+      timerClock: "real",
+    });
+  });
+
+  it("is not in an export", () => {
+    store().startTimer(T0);
+    const { progress } = JSON.parse(exportSave(store()));
+    expect(progress).not.toHaveProperty("timer");
+    expect(progress).not.toHaveProperty("clockBase");
+  });
+});

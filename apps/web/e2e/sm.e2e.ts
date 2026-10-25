@@ -121,6 +121,93 @@ test("autotracks a Map Rando seed through SNI", async ({ page }) => {
   }
 });
 
+test("starts the run timer with the game, follows its clock and stops at the ship", async ({
+  page,
+}) => {
+  const bridge = await FakeUsb2Snes.start();
+  try {
+    // The file select; the console's RTA clock already holds 50 000 frames
+    writeMapRando(bridge.memory, {
+      clock: { pending: 0, saved: 50_000 },
+      state: 0x04,
+    });
+    await openOnGame(page, "sm", `?bridge=${new URL(bridge.url).port}`);
+    const timer = page.getByTestId("run-timer");
+    await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
+    await timer.click();
+    await page.getByRole("radio", { name: "Game time" }).check();
+    await page.keyboard.press("Escape");
+
+    await page.getByTestId("autotrack-button").click();
+    const dialog = page.getByRole("dialog", { name: "Autotracking" });
+    await dialog.getByTestId("autotrack-connect").click();
+    await expect(dialog.getByTestId("autotrack-headline")).toHaveText(
+      "Connected",
+    );
+    await page.keyboard.press("Escape");
+    await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
+
+    // The file loads: the first reading in play starts the timer
+    writeMapRando(bridge.memory, {
+      clock: { pending: 0, saved: 53_000 },
+      state: 0x08,
+    });
+    await expect(timer).toHaveAccessibleName(/^Run timer: 0:0\d, running$/);
+
+    // 6 000 frames of the game (99.8 s) in a few seconds of real time: the
+    // timer is set on the game's clock
+    writeMapRando(bridge.memory, {
+      clock: { pending: 0, saved: 59_000 },
+      state: 0x08,
+    });
+    await expect(timer).toHaveAccessibleName(
+      /^Run timer: 1:(39|4\d), running$/,
+    );
+    await timer.click();
+    await expect(page.getByTestId("run-timer-clock-hint")).toHaveText(
+      "The timer follows the game's clock.",
+    );
+    await page.keyboard.press("Escape");
+
+    // Mother Brain is dead and Samus is in the ship: the goal
+    writeMapRando(bridge.memory, {
+      clock: { pending: 0, saved: 59_060 },
+      escaping: true,
+      state: 0x27,
+    });
+    await expect(timer).toHaveAccessibleName(
+      /^Run timer: 1:(40|41), stopped at the goal$/,
+    );
+  } finally {
+    await bridge.stop();
+  }
+});
+
+test("the stream view draws the run timer under the grid", async ({
+  context,
+  page,
+}) => {
+  await openOnGame(page, "sm");
+  const stream = await context.newPage();
+  await stream.goto("./?view=obs&timer=1");
+  const timer = stream.getByTestId("stream-timer");
+  await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
+
+  await page.getByTestId("run-timer").click();
+  await page.getByTestId("run-timer-start").click();
+  await expect(timer).toHaveAccessibleName(/^Run timer: 0:0\d, running$/);
+  await page.getByTestId("run-timer-pause").click();
+  await expect(timer).toHaveAccessibleName(/^Run timer: 0:0\d, paused$/);
+  // The timer sits under the grid, inside the stage
+  const grid = await stream.locator(".board-grid").boundingBox();
+  const drawn = await timer.boundingBox();
+  expect(drawn?.y).toBeGreaterThanOrEqual((grid?.y ?? 0) + (grid?.height ?? 0));
+  // Without the option, no timer
+  await stream.goto("./?view=obs");
+  await expect(stream.getByTestId("obs-view")).toBeVisible();
+  await expect(stream.getByTestId("stream-timer")).toHaveCount(0);
+});
+
 test("the stream view follows the Super Metroid tracker", async ({
   context,
   page,
@@ -150,6 +237,12 @@ for (const width of WIDTHS) {
     await page.setViewportSize({ height: 900, width });
     await openOnGame(page, "sm");
     await auditPage(page);
+
+    // The timer's panel, open
+    await page.getByTestId("run-timer").click();
+    await expect(page.getByTestId("run-timer-clock")).toBeVisible();
+    await auditPage(page);
+    await page.keyboard.press("Escape");
 
     // The run type dialog, its objectives and the items a seed adds
     await page.getByRole("button", { name: /^Mode/ }).click();

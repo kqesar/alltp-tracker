@@ -5,7 +5,7 @@
  * scaled crisp, the frame set by --frame on each cell.
  */
 .sm-layout {
-  --cell: clamp(48px, min(100cqi / 7, (100dvh - 14rem) / 4), 88px);
+  --cell: clamp(48px, min(100cqi / 7, (100dvh - 17.5rem) / 4), 88px);
   display: grid;
   grid-template-columns: auto minmax(14rem, 22rem);
   gap: var(--spacing-lg);

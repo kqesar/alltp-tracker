@@ -13,6 +13,7 @@ export {
   type MemoryView,
   type ObjectiveReading,
   RTA_FRAMES_PER_SECOND,
+  rtaFrames,
   rtaMs,
   type SeedReading,
   type Unsettled,

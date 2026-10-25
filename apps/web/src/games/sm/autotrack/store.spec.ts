@@ -1,4 +1,5 @@
 import { parseUserAgent } from "@alltp/autotrack";
+import { rtaMs } from "@alltp/pack-sm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   FakeLocks,
@@ -17,6 +18,7 @@ import {
 } from "@/games/sm/autotrack/store";
 import { useSmStore } from "@/games/sm/store";
 import { MemoryTransport } from "../../../../../../packages/autotrack/test/memory-transport";
+import { MEMORY_RANGE } from "../../../../../../packs/sm/src/autotrack/memory";
 import {
   type MapRandoGame,
   writeMapRando,
@@ -185,6 +187,90 @@ describe("Super Metroid's autotracking across the tracker's tabs", () => {
     stopSmAutotrack();
     await settle();
     expect(locks.isHeld).toBe(false);
+  });
+});
+
+describe("Super Metroid's autotracking and the run timer", () => {
+  const FILE_SELECT = 0x04;
+  const CREDITS = 0x27;
+  /** The RTA clock's two parts, in FX Pak Pro space: SRAM, then WRAM. */
+  const CLOCK = [
+    { address: MEMORY_RANGE["rta-saved"].address, size: 4 },
+    { address: MEMORY_RANGE["rta-pending"].address, size: 1 },
+  ];
+  const readClock = (transports: MemoryTransport[]) =>
+    transports
+      .flatMap((transport) => transport.pieces)
+      .filter(([address, size]) =>
+        CLOCK.some(
+          (part) =>
+            part.address < address + size && address < part.address + part.size,
+        ),
+      );
+
+  it("starts at the first reading in play, follows the game's time and stops at the ship", async () => {
+    run().setTimerClock("game");
+    const h = harness({
+      clock: { pending: 0, saved: 50_000 },
+      state: FILE_SELECT,
+    });
+    await connectSmAutotrack();
+    await h.advance(0);
+    expect(run().timer.startedAt).toBeNull();
+    expect(state().reading?.clock).toMatchObject({ frames: 50_000 });
+
+    // The file loads: a game in play, 3 000 frames later by its clock
+    h.play({ clock: { pending: 0, saved: 53_000 }, state: 0x08 });
+    await h.advance(1000);
+    expect(run().timer.startedAt).not.toBeNull();
+    expect(run().clockBase).toBe(53_000);
+
+    // 12 000 frames more (about 200 s) in a real second: set on the game's
+    h.play({ clock: { pending: 0, saved: 65_000 } });
+    await h.advance(1000);
+    expect(run().timer.elapsedMs).toBe(rtaMs(12_000));
+
+    // The ship: the escape was set, the credits run
+    h.play({
+      clock: { pending: 0, saved: 66_000 },
+      escaping: true,
+      state: CREDITS,
+    });
+    await h.advance(1000);
+    expect(run().timer).toEqual({
+      elapsedMs: rtaMs(13_000),
+      finished: true,
+      startedAt: null,
+    });
+  });
+
+  it("reads the clock outside Race Mode", async () => {
+    const h = harness();
+    await connectSmAutotrack();
+    await h.advance(2000);
+    expect(readClock(h.transports).length).toBeGreaterThan(0);
+  });
+
+  it("reads none of the clock in Race Mode, yet starts and stops the timer", async () => {
+    useSmAutotrackStore.setState({ raceChoice: "on" });
+    run().setTimerClock("game");
+    const h = harness({
+      clock: { pending: 0, saved: 50_000 },
+      state: FILE_SELECT,
+    });
+    await connectSmAutotrack();
+    await h.advance(0);
+    h.play({ state: 0x08 });
+    await h.advance(1000);
+    expect(run().timer.startedAt).not.toBeNull();
+    h.play({ escaping: true, state: CREDITS });
+    await h.advance(1000);
+
+    expect(run().timer.finished).toBe(true);
+    // Nothing of the RTA clock was asked of the console, and none is known
+    expect(readClock(h.transports)).toEqual([]);
+    expect(state().reading?.clock).toBe("not-read");
+    expect(run().clockBase).toBeNull();
   });
 });
 

@@ -313,3 +313,7 @@ export const RTA_FRAMES_PER_SECOND = 60.098_811_86;
 /** How long `frames` of the clock last, in milliseconds. */
 export const rtaMs = (frames: number): number =>
   Math.round((frames * 1000) / RTA_FRAMES_PER_SECOND);
+
+/** How many frames of the clock `ms` milliseconds are: `rtaMs` the other way. */
+export const rtaFrames = (ms: number): number =>
+  Math.round((ms * RTA_FRAMES_PER_SECOND) / 1000);
