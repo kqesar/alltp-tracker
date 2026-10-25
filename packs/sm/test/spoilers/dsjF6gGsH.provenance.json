@@ -1,0 +1,15 @@
+{
+  "keptBytes": 38149,
+  "keys": [
+    "missile_size",
+    "super_size",
+    "powerbomb_size",
+    "summary",
+    "objectives",
+    "start_location",
+    "all_items"
+  ],
+  "source": "https://maprando.com/seed/dsjF6gGsH/data/spoiler.json",
+  "sourceBytes": 20928610,
+  "sourceSha256": "32f581d71eb5b9b51199c7e25c89952a4442c012fdbfeb1a0fe4bc538b9a29c3"
+}

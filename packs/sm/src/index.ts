@@ -37,3 +37,10 @@ export {
   QOL_PRESETS,
   SKILL_PRESETS,
 } from "./settings";
+export {
+  type MapRandoExtra,
+  type MapRandoLog,
+  type MapRandoRun,
+  mapRandoEvidence,
+  parseSpoiler,
+} from "./spoiler";
