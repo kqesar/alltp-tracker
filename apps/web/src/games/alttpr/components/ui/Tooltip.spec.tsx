@@ -286,6 +286,25 @@ describe("Tooltip", () => {
     expect(tooltip()).toHaveTextContent("King's Tomb");
   });
 
+  it("stays when it opened under the pointer, which then moves within it", () => {
+    vi.useFakeTimers();
+    renderMap();
+    const marker = screen.getByTestId("marker-kings-tomb");
+    const covered = screen.getByTestId("marker-dam");
+    fireEvent.pointerEnter(marker, { pointerType: "mouse" });
+    placeTooltip();
+    // The browser moves the pointer again once the tooltip is laid out
+    // over it: the pointer is on the tooltip before it has moved at all
+    fireEvent.pointerMove(marker, mouse);
+
+    fireEvent.pointerLeave(marker, { pointerType: "mouse" });
+    fireEvent.pointerEnter(covered, mouse);
+    fireEvent.pointerMove(covered, mouse);
+    act(() => vi.advanceTimersByTime(500));
+
+    expect(tooltip()).toHaveTextContent("King's Tomb");
+  });
+
   it("is not taken over by a control it covers, until the pointer leaves it", () => {
     vi.useFakeTimers();
     renderMap();
