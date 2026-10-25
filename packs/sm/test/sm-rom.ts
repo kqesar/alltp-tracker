@@ -2,7 +2,8 @@
 // game hold it, for the specs and browser tests of Super Metroid
 // autotracking: the header, bank $DF's seed data, the objective table, the
 // item sizes, and the game's state, equipment and events, in the FX Pak Pro
-// space the bridges serve (ROM from $00_0000, LoROM; WRAM from $F5_0000).
+// space the bridges serve (ROM from $00_0000, LoROM; SRAM from $E0_0000; WRAM
+// from $F5_0000).
 
 import { MEMORY_RANGE, type MemoryRangeId } from "../src/autotrack/memory";
 import { MAP_RANDO_TITLE } from "../src/autotrack/probes";
@@ -45,6 +46,13 @@ export type MapRandoGame = {
   readonly done?: readonly string[];
   /** The game state ($0998): $08 in play. */
   readonly state?: number;
+  /** The escape event ($D821 bit 6), set once Mother Brain is dead. */
+  readonly escaping?: boolean;
+  /**
+   * Map Rando's RTA clock: the frames flushed to SRAM ($70:1E10) and the NMI
+   * counter ($7E:1F80), 0 to 254. Left out, 0 and 0.
+   */
+  readonly clock?: { readonly saved: number; readonly pending: number };
 };
 
 /**
@@ -69,6 +77,8 @@ export const writeMapRando = (
     objectives = ["kraid", "phantoon", "draygon", "ridley"],
     done = [],
     state = 0x08,
+    escaping = false,
+    clock = { pending: 0, saved: 0 },
   }: MapRandoGame = {},
 ): Uint8Array => {
   // The header's title (patch.rs:2111-2112)
@@ -123,6 +133,11 @@ export const writeMapRando = (
     memory[at("events", objective.flag.address) + 1] |=
       objective.flag.mask >> 8;
   }
+  if (escaping) memory[at("events", 0x7e_d821)] |= 0x40;
+  // The RTA clock (stats.asm; constants.asm)
+  word(memory, at("rta-saved", 0x70_1e10), clock.saved & 0xffff);
+  word(memory, at("rta-saved", 0x70_1e12), Math.floor(clock.saved / 0x1_0000));
+  memory[at("rta-pending", 0x7e_1f80)] = clock.pending;
   return memory;
 };
 

@@ -3,11 +3,18 @@ import { describe, expect, it } from "vitest";
 import { viewOf, writeMapRando } from "../../test/sm-rom";
 import { SM_ITEMS } from "../items";
 import {
+  clockStraddled,
+  decodeBeforePlay,
+  decodeGameClock,
+  decodeGameState,
+  decodeGoal,
   decodeInPlay,
   decodeItems,
   decodeObjectives,
   decodeSeed,
   type MemoryView,
+  RTA_FRAMES_PER_SECOND,
+  rtaMs,
 } from "./decode";
 import { MEMORY_RANGES, type MemoryRangeId } from "./memory";
 
@@ -141,6 +148,94 @@ describe("decodeInPlay", () => {
   });
 });
 
+describe("decodeBeforePlay", () => {
+  it("is before play in the states of the title, the menus and the loading of a game", () => {
+    for (const state of [0x00, 0x04, 0x06, 0x1f]) {
+      expect(decodeBeforePlay(game({ state })), `$${state}`).toBe(true);
+      expect(decodeGameState(game({ state }))).toBe(state);
+    }
+    // In play, paused, in a door, dying, escaping or in the credits
+    for (const state of [0x07, 0x08, 0x09, 0x0c, 0x0e, 0x13, 0x26, 0x27]) {
+      expect(decodeBeforePlay(game({ state })), `$${state}`).toBe(false);
+    }
+    expect(decodeBeforePlay(viewOf(image(), ["game-state"]))).toBe("not-read");
+  });
+});
+
+describe("decodeGoal", () => {
+  it("is the goal once the escape is set and Samus is in the ship, states $26 and $27", () => {
+    expect(decodeGoal(game({ escaping: true, state: 0x26 }))).toBe(true);
+    expect(decodeGoal(game({ escaping: true, state: 0x27 }))).toBe(true);
+    // Escaping, not yet at the ship
+    expect(decodeGoal(game({ escaping: true, state: 0x08 }))).toBe(false);
+    // The states alone: the escape was not set
+    expect(decodeGoal(game({ state: 0x27 }))).toBe(false);
+    expect(decodeGoal(game({ state: 0x26 }))).toBe(false);
+  });
+
+  it("is not known before the state and the events are read", () => {
+    expect(decodeGoal(viewOf(image(), ["game-state"]))).toBe("not-read");
+    expect(decodeGoal(viewOf(image(), ["events"]))).toBe("not-read");
+  });
+});
+
+describe("decodeGameClock", () => {
+  it("adds the NMI counter to the frames flushed to SRAM", () => {
+    expect(
+      decodeGameClock(game({ clock: { pending: 200, saved: 1_000 } })),
+    ).toEqual({ frames: 1_200, pending: 200, saved: 1_000 });
+  });
+
+  it("reads all four bytes of the SRAM word", () => {
+    const saved = 0x0012_34ff;
+    expect(decodeGameClock(game({ clock: { pending: 1, saved } }))).toEqual({
+      frames: saved + 1,
+      pending: 1,
+      saved,
+    });
+    // An hour of play is 216 000 frames, past a 16-bit word
+    expect(
+      decodeGameClock(game({ clock: { pending: 0, saved: 216_000 } })),
+    ).toMatchObject({ frames: 216_000 });
+  });
+
+  it("is not known unless both parts were read", () => {
+    expect(decodeGameClock(viewOf(image(), ["rta-saved"]))).toBe("not-read");
+    expect(decodeGameClock(viewOf(image(), ["rta-pending"]))).toBe("not-read");
+  });
+
+  it("counts at the rate Map Rando's credits do", () => {
+    expect(RTA_FRAMES_PER_SECOND).toBe(60.098_811_86);
+    // 60.0988 frames are a second, not 60
+    expect(rtaMs(60)).toBe(998);
+    expect(rtaMs(216_000)).toBe(3_594_081);
+  });
+});
+
+describe("clockStraddled", () => {
+  const at = (saved: number, pending: number) => ({
+    frames: saved + pending,
+    pending,
+    saved,
+  });
+
+  it("tells a flush between the two reads: the counter went back, the SRAM word did not move", () => {
+    // 250 frames held, then the SRAM word is read before the flush adds them
+    // and the counter after it zeroed them
+    expect(clockStraddled(at(1_000, 250), at(1_000, 3))).toBe(true);
+  });
+
+  it("lets a flush through whole, and a clock that only moves on", () => {
+    // The flush adds what the counter held: the word went up
+    expect(clockStraddled(at(1_000, 250), at(1_255, 3))).toBe(false);
+    expect(clockStraddled(at(1_000, 20), at(1_000, 80))).toBe(false);
+    // Paused: the same two parts
+    expect(clockStraddled(at(1_000, 20), at(1_000, 20))).toBe(false);
+    // The first reading has nothing to straddle
+    expect(clockStraddled(undefined, at(1_000, 3))).toBe(false);
+  });
+});
+
 describe("the decoders on random bytes", () => {
   const ids = MEMORY_RANGES.map((range) => range.id);
   const sizes = new Map(MEMORY_RANGES.map((range) => [range.id, range.size]));
@@ -185,6 +280,13 @@ describe("the decoders on random bytes", () => {
         }
         decodeSeed(view(ranges));
         decodeInPlay(view(ranges));
+        decodeBeforePlay(view(ranges));
+        decodeGoal(view(ranges));
+        const clock = decodeGameClock(view(ranges));
+        if (typeof clock !== "string") {
+          expect(clock.frames).toBe(clock.saved + clock.pending);
+          expect(clock.pending).toBeLessThanOrEqual(0xff);
+        }
       }),
     );
   });

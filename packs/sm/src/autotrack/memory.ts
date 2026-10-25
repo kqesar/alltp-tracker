@@ -10,7 +10,8 @@
 // - rust/maprando/src/patch.rs, for what the patcher writes into the ROM
 //   (the seed's identifiers, settings, objectives and item sizes);
 // - patches/rom_map/Bank DF.txt, the map of bank $DF it keeps for autotrackers;
-// - patches/src/fast_reload.asm and stats.asm, for the game states.
+// - patches/src/fast_reload.asm and stats.asm, for the game states and the
+//   RTA clock (stats.asm, constants.asm).
 
 import { bus, type RangeSpec } from "@alltp/autotrack";
 
@@ -110,6 +111,19 @@ export const MEMORY_RANGES = [
     size: 0x1e,
     source: "Bank DF.txt",
   }),
+  // Map Rando's RTA clock, in two parts. The frames flushed to SRAM: every
+  // NMI counts, the NMI counter adds its 255 here when it fills and on each
+  // item pickup (!stat_timer, constants.asm; stats.asm, inc_skipcount and
+  // save_to_sram). Not a Race Mode read: the pack's race profile keeps
+  // `game-time` out of it, so the timer counts real time in a race.
+  range({
+    at: 0x70_1e10,
+    category: "game-time",
+    everyMs: ITEMS_MS,
+    id: "rta-saved",
+    size: 4,
+    source: "constants.asm (!stat_timer), stats.asm",
+  }),
   // The game state: $06 loading a game, $07 and $08 in play, $13 dying, $1F
   // before a game loads, $27 the credits (fast_reload.asm:46-47, 134-136,
   // 166-167, 316-318; stats.asm:108-109).
@@ -133,6 +147,18 @@ export const MEMORY_RANGES = [
     id: "equipment",
     size: 0x4c,
     source: "new_game.asm:85-120",
+  }),
+  // The RTA clock's frames not yet flushed to SRAM, 0 to 254 (!nmi_counter,
+  // constants.asm; stats.asm, inc_skipcount): the clock is the two parts'
+  // sum. Read after the SRAM word in one request (the planner sorts pieces
+  // by address), which the straddle guard of `rtaFrames` relies on.
+  range({
+    at: 0x7e_1f80,
+    category: "game-time",
+    everyMs: ITEMS_MS,
+    id: "rta-pending",
+    size: 1,
+    source: "constants.asm (!nmi_counter), stats.asm",
   }),
   // Event flags ($D821-$D823) and boss flags by area ($D828-$D82F), where
   // every objective's flag lies (new_game.asm:93-98, 134; patch.rs:

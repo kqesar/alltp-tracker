@@ -1,11 +1,19 @@
 // Public entry point of @alltp/pack-sm: the app imports the pack from here only.
 export {
+  type ClockReading,
+  clockStraddled,
+  decodeBeforePlay,
+  decodeGameClock,
+  decodeGameState,
+  decodeGoal,
   decodeInPlay,
   decodeItems,
   decodeObjectives,
   decodeSeed,
   type MemoryView,
   type ObjectiveReading,
+  RTA_FRAMES_PER_SECOND,
+  rtaMs,
   type SeedReading,
   type Unsettled,
 } from "./autotrack/decode";

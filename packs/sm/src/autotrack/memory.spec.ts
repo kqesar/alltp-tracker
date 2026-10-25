@@ -1,7 +1,9 @@
 import {
   assertRaceSafe,
+  type ByteRange,
   definePack,
   planReads,
+  RaceViolationError,
   USB2SNES_LIMITS,
 } from "@alltp/autotrack";
 import { describe, expect, it } from "vitest";
@@ -33,19 +35,92 @@ describe("MEMORY_RANGES", () => {
     expect(MEMORY_RANGE["pack-sizes"].address).toBe(0x02_60b8);
     expect(MEMORY_RANGE.equipment.address).toBe(0xf5_09a2);
     expect(MEMORY_RANGE.events.address).toBe(0xf5_d820);
+    // The RTA clock: SRAM $70:1E10 is $E0:1E10, and sorts before the WRAM byte
+    expect(MEMORY_RANGE["rta-saved"].address).toBe(0xe0_1e10);
+    expect(MEMORY_RANGE["rta-pending"].address).toBe(0xf5_1f80);
   });
 
-  it("reads only what races permit, which is everything it reads", () => {
+  const racePack = definePack({
+    id: "map-rando",
+    profile: MAP_RANDO_RACE_PROFILE,
+    raceFlag: null,
+    ranges: MEMORY_RANGES,
+  });
+  const polled = MEMORY_RANGES.filter((range) => "everyMs" in range);
+  const clock = [MEMORY_RANGE["rta-saved"], MEMORY_RANGE["rta-pending"]];
+  const overlaps = (a: ByteRange, b: ByteRange) =>
+    a.address < b.address + b.size && b.address < a.address + a.size;
+
+  it("permits all it reads for the board, and forbids the RTA clock alone", () => {
+    const forbidden = MEMORY_RANGES.filter(
+      (range) => !MAP_RANDO_RACE_PROFILE.categories[range.category]?.permitted,
+    ).map((range) => `${range.id}:${range.category}`);
+    expect(forbidden).toEqual(["rta-saved:game-time", "rta-pending:game-time"]);
+    for (const category of new Set(MEMORY_RANGES.map((r) => r.category))) {
+      expect(MAP_RANDO_RACE_PROFILE.categories[category]).toBeDefined();
+    }
+  });
+
+  it("reads nothing of the RTA clock in Race Mode", () => {
+    // Race Mode's phase: the permitted ranges only, every forbidden byte
+    // barred from a bridged gap
     const plan = planReads(
-      MEMORY_RANGES.filter((range) => "everyMs" in range),
-      { barriers: [], gap: 16, limits: USB2SNES_LIMITS },
+      polled.filter(
+        (range) => MAP_RANDO_RACE_PROFILE.categories[range.category]?.permitted,
+      ),
+      {
+        barriers: racePack.raceBarriers,
+        gap: racePack.gap,
+        limits: USB2SNES_LIMITS,
+      },
     );
     expect(() =>
-      assertRaceSafe(plan, MAP_RANDO_RACE_PROFILE, [], []),
+      assertRaceSafe(
+        plan,
+        MAP_RANDO_RACE_PROFILE,
+        racePack.permittedBytes,
+        racePack.forbiddenBytes,
+      ),
     ).not.toThrow();
-    for (const category of new Set(MEMORY_RANGES.map((r) => r.category))) {
-      expect(MAP_RANDO_RACE_PROFILE.categories[category]?.permitted).toBe(true);
+    for (const request of plan.requests) {
+      for (let i = 0; i < request.pieces.length; i += 2) {
+        const piece = {
+          address: request.pieces[i],
+          size: request.pieces[i + 1],
+        };
+        expect(clock.some((range) => overlaps(range, piece))).toBe(false);
+      }
     }
+    // And the guard stops a plan that does read it
+    const reading = planReads(clock, {
+      barriers: [],
+      gap: racePack.gap,
+      limits: USB2SNES_LIMITS,
+    });
+    expect(() =>
+      assertRaceSafe(
+        reading,
+        MAP_RANDO_RACE_PROFILE,
+        racePack.permittedBytes,
+        racePack.forbiddenBytes,
+      ),
+    ).toThrow(RaceViolationError);
+  });
+
+  it("reads the clock's two parts in one request, SRAM first", () => {
+    // clockStraddled relies on the order of the pieces
+    const plan = planReads(clock, {
+      barriers: [],
+      gap: racePack.gap,
+      limits: USB2SNES_LIMITS,
+    });
+    expect(plan.requests).toHaveLength(1);
+    expect([...plan.requests[0].pieces]).toEqual([
+      MEMORY_RANGE["rta-saved"].address,
+      4,
+      MEMORY_RANGE["rta-pending"].address,
+      1,
+    ]);
   });
 });
 
