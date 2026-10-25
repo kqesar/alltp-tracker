@@ -51,6 +51,7 @@ export const RunTimer = () => {
   const startTimer = useGameStore((state) => state.startTimer);
   const pauseTimer = useGameStore((state) => state.pauseTimer);
   const resetTimer = useGameStore((state) => state.resetTimer);
+  const finishTimer = useGameStore((state) => state.finishTimer);
   const setAutoTimer = useGameStore((state) => state.setAutoTimer);
   const setTimerClock = useGameStore((state) => state.setTimerClock);
   const playTime = usePlayTime();
@@ -73,6 +74,7 @@ export const RunTimer = () => {
           : null,
         value: timerClock,
       }}
+      onEnd={() => finishTimer()}
       onPause={() => pauseTimer()}
       onReset={resetTimer}
       onStart={() => startTimer()}

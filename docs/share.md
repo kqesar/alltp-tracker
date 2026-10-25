@@ -166,6 +166,7 @@ What the tracker does about it:
 
 - **No live following.** A link is a snapshot. Following a player live needs a relay, which a page cannot open: the desktop app has one, for devices on the same network (a phone, a second screen; no hosted server, so no remote restream). See [Live follow on the LAN](desktop.md#live-follow-on-the-lan).
 - **The desktop app cannot open a link itself.** Its webview has no address bar and no `#run=` to read: a viewer opens the link in a browser, where the run lives apart from the app's own.
+- **No spoiler review.** A review of a finished run against its seed's spoiler log is memory only and never travels in a link (see [Reviewing a run](review.md)).
 - **No account, no server-side short link.** The link and its QR code are all there is: the code is drawn in the page from the same address, and nothing is stored anywhere.
 
 ## Files

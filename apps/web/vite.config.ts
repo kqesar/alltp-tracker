@@ -76,7 +76,10 @@ export default defineConfig(({ mode }) => {
               // Voice commands' engine, and the SMZ3 board's map of Zebes:
               // fetched the first time a page asks, so players of another
               // game never do
-              onDemand: /^assets\/(vosk[.-]|smz3\/)/,
+              // Reading a spoiler log: its worker and each game's parser
+              // (`review-*`, named under `worker` below), loaded when a
+              // player reviews a run
+              onDemand: /^assets\/(vosk[.-]|smz3\/|review-)/,
               // Never at install: the speech model, and what only crawlers
               // and link previews read (the link preview images, the game
               // pages, robots.txt and the sitemap), which no player's install
@@ -93,5 +96,17 @@ export default defineConfig(({ mode }) => {
     },
     // tauri dev loads this port: another one would leave its window blank
     server: desktop ? { strictPort: true } : {},
+    // The spoiler log is read in a module worker (`review/read.ts`) that loads
+    // its parser as a chunk: ES format for the split, and names the service
+    // worker keeps out of the install download
+    worker: {
+      format: "es" as const,
+      rollupOptions: {
+        output: {
+          chunkFileNames: "assets/review-[name]-[hash].js",
+          entryFileNames: "assets/review-[name]-[hash].js",
+        },
+      },
+    },
   };
 });

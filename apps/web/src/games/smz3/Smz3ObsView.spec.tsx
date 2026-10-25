@@ -48,7 +48,7 @@ describe("SMZ3's stream view timer", () => {
       useSmz3Store.getState().finishTimer(Date.now() + 61_000);
     });
     expect(screen.getByTestId("stream-timer")).toHaveAccessibleName(
-      "Run timer: 1:01, stopped at the goal",
+      "Run timer: 1:01, stopped",
     );
   });
 

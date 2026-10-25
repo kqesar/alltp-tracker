@@ -160,6 +160,51 @@ const watchOffline = (page: Page) => {
   };
 };
 
+/** The spoiler review's worker and parser: fetched on first use, never at install. */
+const REVIEW_FILE = /\/assets\/review-[\w.-]+\.js$/;
+
+test.describe("the spoiler review offline", () => {
+  test("is no part of the install, is cached the first time a log is read, then works offline", async ({
+    context,
+    page,
+  }) => {
+    await openControlled(page);
+    expect(await hasCached(page, REVIEW_FILE)).toBe(false);
+
+    await page.getByTestId("run-timer").click();
+    await page.getByTestId("run-timer-start").click();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(1100);
+    await page.getByTestId("run-timer").click();
+    await page.getByTestId("run-timer-end").click();
+    await page.getByRole("button", { name: "End run" }).click();
+    await page.getByTestId("map-view-tab-run").click();
+
+    const log = {
+      buffer: await readFile(
+        join(
+          import.meta.dirname,
+          "../../../packs/alttpr/test/spoilers/9MQ9gO1wMD.txt",
+        ),
+      ),
+      mimeType: "text/plain",
+      name: "alttpr - NoGlitches-open-ganon_9MQ9gO1wMD.txt",
+    };
+    await page.getByTestId("review-import").click();
+    await page.getByTestId("review-file").setInputFiles(log);
+    await expect(page.getByTestId("review-notice")).toBeVisible();
+    await expect.poll(() => hasCached(page, REVIEW_FILE)).toBe(true);
+
+    // Offline, after a reload: the run is still over, the log reads again
+    await context.setOffline(true);
+    await page.reload();
+    await page.getByTestId("map-view-tab-run").click();
+    await page.getByTestId("review-import").click();
+    await page.getByTestId("review-file").setInputFiles(log);
+    await expect(page.getByTestId("review-notice")).toBeVisible();
+  });
+});
+
 test.describe("offline, game by game", () => {
   test("a Super Metroid player caches the shell and Super Metroid alone", async ({
     context,
@@ -366,9 +411,9 @@ const nextRelease = async () => {
   return { "index.html": html, "sw.js": worker };
 };
 
-/** A file only ALttPR's players load, and the line the next release adds. */
+/** A file only ALttPR's players load (its review dialog, a chunk of its own), and the line the next release adds. */
 const ALTTPR_CHUNK =
-  /"(\/alltp-tracker\/assets\/legacy-[\w-]+\.js)","([0-9a-f]{16})"/;
+  /"(\/alltp-tracker\/assets\/AlttprReviewDialog-[\w-]+\.js)","([0-9a-f]{16})"/;
 const NEXT_CODE = "\n// the next release\n";
 
 /**
@@ -560,7 +605,7 @@ test.describe("an update", () => {
 
       // The new revision of that file is cached, the old one dropped
       const chunk = (await cachedPaths(page)).filter((path) =>
-        /\/assets\/legacy-[\w-]+\.js$/.test(path),
+        /\/assets\/AlttprReviewDialog-[\w-]+\.js$/.test(path),
       );
       expect(chunk).toHaveLength(1);
       expect(await hasCached(page, SMZ3_FILE)).toBe(false);

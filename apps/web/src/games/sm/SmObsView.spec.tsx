@@ -44,7 +44,7 @@ describe("Super Metroid's stream view timer", () => {
       useSmStore.getState().finishTimer(Date.now() + 61_000);
     });
     expect(screen.getByTestId("stream-timer")).toHaveAccessibleName(
-      "Run timer: 1:01, stopped at the goal",
+      "Run timer: 1:01, stopped",
     );
   });
 

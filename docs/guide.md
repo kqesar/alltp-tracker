@@ -40,12 +40,13 @@ The glyphs mean colour is never the only cue. Click a marker to check its locati
 - **Splits**: each boss in the order it fell, with the time since the last, as a speedrun timer splits a run.
 - **Timeline**: every item found and location checked, newest first, timed by the run timer. Whatever you or autotracking marks is timed. Undo takes a time away with its mark, and Redo brings the same time back.
 - **From the game**: outside Race Mode, while autotracking reads your game, the counts its ROM keeps, as its end credits list them: when the first sword, the boots, the flute and the mirror were found, deaths, save and quits, menu and lag time, and more.
+- **Review**: once the run is over, the seed's spoiler log set against it (see [Reviewing a run](#reviewing-a-run)).
 
 The timeline is saved with the run, in exports too.
 
 **Go mode.** Beside the tabs, ☆ **Go mode: not yet**, ★? **possible** or ★ **in logic** tells whether every step to the run's goal (Ganon, fast Ganon or the Pedestal) is in logic; click it to see what is missing. Goals that end with everything (all dungeons, triforce hunt) have none.
 
-**Run timer.** Beside go mode, the run's time: click it to start, pause, resume or reset it. While autotracking reads your game, it starts as you leave the file select for the game and stops at the goal on its own (**Start and stop with the game**, on by default; connecting mid-run starts nothing). It keeps counting through a reload.
+**Run timer.** Beside go mode, the run's time: click it to start, pause, resume or reset it. While autotracking reads your game, it starts as you leave the file select for the game and stops at the goal on its own (**Start and stop with the game**, on by default; connecting mid-run starts nothing). It keeps counting through a reload. **End run**, in the timer's panel while it counts or is paused, stops the timer for good once you confirm (Cancel is the focused choice): for a run tracked by hand, or one that ends short of the goal. **Reset** or **New game** starts again.
 
 The timer's **Clock** choice picks what it counts. **Real time** (the default) is the time that passes, as races time it. **Game time** is the game's own play time, counted by the ROM frame by frame (menus and lag included, as the end credits show it): while autotracking reads your game outside Race Mode, with a file loaded, the timer is set on it at each reading and ticks between two, stops while the game is before play (the spawn select) or its counter stands still (a paused emulator), and stops at the goal on the game's final time. The game then drives the timer, so Start, Pause and **Start and stop with the game** are off; at the title or the file select, where the game holds no time, the timer pauses. In Race Mode, or until a game is read, the timer counts real time and the panel says why. Switching the choice mid-run keeps the timer's value: to Game time it jumps to the game's time at the next reading, back to Real time it goes on from what it shows. Outside Game time the panel also gives the game's own play time. The stream view's timer, the overlay API and the Run tab follow whichever time the timer shows.
 
@@ -165,6 +166,16 @@ Mark what you find without leaving the game: say **"tracker"**, then the find. F
 ## Sharing a run
 
 The toolbar's **Share** button copies a link that holds your run, whatever the game, and opens a **Share this run** dialog: it says how the copy went, shows the link as a QR code (scan it to open the run on a phone or another device; it is a snapshot that does not follow the game) and has a **Copy the snapshot link** button to copy it again. If your browser refuses the clipboard, the QR code is still there. The run is compressed into the address's fragment (`#run=…`), which the browser never sends to any server. Whoever opens it is asked "Open this shared run?" and chooses **Open** (loaded as an Import is, **Undo** takes it back) or **Keep mine**; nothing is replaced without that answer. A late ALttPR run is too long for a Discord message with its timeline, so the link then leaves the timeline out and says so. [Sharing a run through its URL](share.md) has the format and the measured lengths.
+
+## Reviewing a run
+
+Once a run is over you can import the seed's spoiler log and see how the run went against it. A review is for a **finished** run: the timer stopped at the goal, or stopped by **End run** in the timer's panel. It never opens in **Race Mode** (a race keeps its spoiler closed), and a run still counting or paused has none, so a review cannot spoil a run in progress or a stream of it.
+
+Save the log from the seed's page (alttpr.com: **Save Spoiler**), then use **Review run** beside the timer, or **Import the spoiler log…** in the Run tab, and pick the file. It is read on your device and never sent anywhere. The tracker checks it is this run's: the seed in the file's name (or the seed file's hash) against the run's own seed, and the settings, medallions and prizes both state. A file of another seed or other settings is refused with the reason. When nothing proves it (a run tracked by hand, a renamed file) the review opens marked **Not verified**.
+
+A review lives in the page's memory only: it is not saved, exported, shared, streamed or followed, and reloading the page, **Reset**, **New game**, importing or sharing another run, switching seed or turning Race Mode on closes it. **Close review** closes it too.
+
+**A Link to the Past.** The Run tab's **Review** section compares the run with the playthrough, sphere by sphere: each required item, where it was, when you found it, and whether it came in order, **late** (after something the playthrough has later) or **missed**. Below, what was missed, and the seed's medallions, prizes and starting items. The timeline names what each checked location held. A dungeon's checks that the board only counts (a run tracked by hand) are listed as chests left, not as missed. Spoiler races' logs (placements without a playthrough) and entrance-shuffle logs are read; the real connections of a shuffle are not shown yet. Super Metroid and SMZ3 have no review yet.
 
 ## Streaming with OBS
 

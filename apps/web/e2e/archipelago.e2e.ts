@@ -137,7 +137,7 @@ test("connects to a room and shows the slot's items and checks", async ({
       ],
     ]);
     await expect(page.getByTestId("run-timer")).toHaveAccessibleName(
-      /stopped at the goal$/,
+      /stopped$/,
     );
     const stopped = await page
       .getByTestId("run-timer")

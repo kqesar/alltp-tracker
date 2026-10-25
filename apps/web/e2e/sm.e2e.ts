@@ -175,9 +175,7 @@ test("starts the run timer with the game, follows its clock and stops at the shi
       escaping: true,
       state: 0x27,
     });
-    await expect(timer).toHaveAccessibleName(
-      /^Run timer: 1:(40|41), stopped at the goal$/,
-    );
+    await expect(timer).toHaveAccessibleName(/^Run timer: 1:(40|41), stopped$/);
   } finally {
     await bridge.stop();
   }

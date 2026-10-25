@@ -21,6 +21,7 @@
     "@alltp/pack-alttpr": "workspace:*",
     "@alltp/pack-sm": "workspace:*",
     "@alltp/pack-smz3": "workspace:*",
+    "@alltp/spoiler": "workspace:*",
     "@lichess-org/vosk-browser": "0.0.3",
     "@tauri-apps/api": "^2.12.4",
     "@tauri-apps/plugin-opener": "^2.7.2",

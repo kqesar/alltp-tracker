@@ -12,6 +12,8 @@
   release is cut.
 - [Sharing a run](share.md): the link format, its bounds, how it is opened and validated, its
   measured lengths, and the Share dialog's QR code.
+- [Reviewing a run](review.md): the post-run review against the seed's spoiler log, its gate, seed binding,
+  memory-only storage, the worker and the Run tab's comparison.
 - [Desktop app](desktop.md): the Tauri app, its updates, global shortcuts, application menu and
   live follow on the LAN, and the stream tools that serve OBS.
 - [Overlay API](overlay-api.md): the WebSocket a stream tool reads the run from (items, bosses,

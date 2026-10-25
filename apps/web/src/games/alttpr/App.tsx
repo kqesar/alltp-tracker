@@ -12,6 +12,7 @@ import { useCrossedLogic } from "@/games/alttpr/hooks/useCrossedLogic";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
 import { useRunAnalysis } from "@/games/alttpr/hooks/useRunAnalysis";
 import { useVoice } from "@/games/alttpr/hooks/useVoice";
+import { useCloseReview } from "@/games/alttpr/review/useReview";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type { MapView } from "@/games/alttpr/utils";
 import { useUndoShortcuts } from "@/games/useUndoShortcuts";
@@ -26,6 +27,7 @@ function App() {
   useAutotrack();
   useVoice();
   useRunAnalysis();
+  useCloseReview();
   useCrossedLogic();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const grid = useGameStore((state) => itemGridFor(state.settings));

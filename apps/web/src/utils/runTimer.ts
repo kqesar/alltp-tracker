@@ -39,7 +39,7 @@ export type TimerState = "finished" | "idle" | "paused" | "running";
 
 /** Each state in words, for a screen reader. */
 export const TIMER_WORDS: Readonly<Record<TimerState, string>> = {
-  finished: "stopped at the goal",
+  finished: "stopped",
   idle: "not started",
   paused: "paused",
   running: "running",

@@ -1,0 +1,245 @@
+/*
+ * Reviewing a finished run against its spoiler log: the button beside the run
+ * timer, the standing banner over the map panel's tabs, the import dialog and
+ * the Run tab's comparison (components/ui/Review*.tsx, games/alttpr/components/
+ * map/Review*.tsx). Nothing here applies outside a review but the button,
+ * which only shows once a run is over.
+ */
+.review-button {
+  min-height: 2rem;
+  padding: 0 var(--spacing-md);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-on-accent);
+  cursor: pointer;
+  background: var(--color-accent);
+  border: 0;
+  border-radius: var(--border-radius);
+}
+
+.review-button:hover {
+  background: var(--color-accent-strong);
+}
+
+.review-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.review-notice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-md);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--surface-2);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--border-radius);
+}
+
+.review-notice__text {
+  min-width: 0;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.review-notice__badge {
+  padding: 0 var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-on-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--color-accent);
+  border-radius: var(--border-radius-sm);
+}
+
+.review-dialog {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.review-dialog__pick {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.review-dialog__label {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.review-dialog__file {
+  max-width: 100%;
+  font: inherit;
+  color: var(--color-text);
+}
+
+.review-dialog__status,
+.review-dialog__refused {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.review-dialog__error {
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--border-radius);
+}
+
+/* A review's comparison is long: the Run tab grows with the page then */
+.run--review {
+  grid-template-rows: auto;
+  height: auto;
+}
+
+.run--review .run__side,
+.run--review .run-finds {
+  overflow-y: visible;
+}
+
+.review-section {
+  gap: var(--spacing-sm);
+}
+
+.review-result {
+  display: grid;
+  gap: var(--spacing-md);
+  min-width: 0;
+}
+
+.review-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.review-table {
+  width: 100%;
+  font-size: var(--font-size-sm);
+  border-spacing: 0 2px;
+  border-collapse: separate;
+}
+
+.review-table__caption {
+  padding-bottom: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  text-align: start;
+}
+
+.review-table th,
+.review-table td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  vertical-align: top;
+  text-align: start;
+}
+
+.review-table td:first-child {
+  font-variant-numeric: tabular-nums;
+}
+
+.review-table thead th {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.review-table tbody th,
+.review-table tbody td {
+  background: var(--surface-1);
+}
+
+.review-table tbody th {
+  font-weight: 600;
+}
+
+.review-table tbody tr[data-state="missed"] th,
+.review-table tbody tr[data-state="missed"] td {
+  box-shadow: inset 3px 0 0 var(--color-danger);
+}
+
+.review-table tbody tr[data-state="late"] th,
+.review-table tbody tr[data-state="late"] td {
+  box-shadow: inset 3px 0 0 var(--state-possible);
+}
+
+.review-table tbody tr[data-state="late"] td:not(:first-child),
+.review-table tbody tr[data-state="late"] th,
+.review-table tbody tr[data-state="missed"] td:not(:first-child),
+.review-table tbody tr[data-state="missed"] th {
+  box-shadow: none;
+}
+
+.review-missed {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  list-style: none;
+}
+
+.review-missed li {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  overflow-wrap: anywhere;
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.review-facts {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.review-facts__row {
+  display: grid;
+  gap: 0 var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.review-facts dt {
+  color: var(--color-text-secondary);
+}
+
+.review-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@container map (width >= 40rem) {
+  .review-facts__row {
+    grid-template-columns: 9rem minmax(0, 1fr);
+  }
+}
+
+.run-find__held {
+  color: var(--color-text-secondary);
+}
+
+.review-others {
+  display: grid;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+}
+
+.review-others summary {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.review-others summary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

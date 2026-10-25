@@ -81,9 +81,7 @@ describe("StreamTimer", () => {
     });
     render(<StreamTimer />);
     const timer = screen.getByTestId("stream-timer");
-    expect(timer).toHaveAccessibleName(
-      "Run timer: 1:23:45, stopped at the goal",
-    );
+    expect(timer).toHaveAccessibleName("Run timer: 1:23:45, stopped");
     expect(timer).toHaveAttribute("viewBox", "0 0 52 16");
     expect(timer).toHaveClass("stream-timer--finished");
   });

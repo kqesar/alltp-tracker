@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useNow } from "@/hooks/useNow";
 import { placeUnder } from "@/utils/popover";
 import {
@@ -27,7 +28,7 @@ const announce = (state: TimerState, time: string): string => {
     case "paused":
       return `Run timer paused at ${time}`;
     case "finished":
-      return `Run timer stopped at the goal: ${time}`;
+      return `Run timer stopped: ${time}`;
     default:
       return "Run timer reset";
   }
@@ -71,6 +72,12 @@ export type RunTimerProps = {
   onStart: () => void;
   onPause: () => void;
   onReset: () => void;
+  /**
+   * Ends the run for good: stops the timer where it stands, after the
+   * player confirms. Offered while the timer counts or is paused, by a board
+   * that can review a finished run; omitted, no such action is shown.
+   */
+  onEnd?: () => void;
   /** What may start (and stop) the timer on its own, as a checkbox. */
   auto: {
     checked: boolean;
@@ -98,6 +105,7 @@ export const RunTimer = ({
   auto,
   children,
   clock,
+  onEnd,
   onPause,
   onReset,
   onStart,
@@ -107,6 +115,7 @@ export const RunTimer = ({
   const autoId = useId();
   const clockId = useId();
   const state = timerState(timer);
+  const [ending, setEnding] = useState(false);
   const now = useNow(state === "running");
   const time = formatTime(timerMs(timer, now));
   // The game sets the time: starting, pausing and the game's own start and
@@ -180,6 +189,16 @@ export const RunTimer = ({
           >
             Reset
           </button>
+          {onEnd && (state === "running" || state === "paused") && (
+            <button
+              className="modal-btn modal-btn--ghost"
+              data-testid="run-timer-end"
+              onClick={() => setEnding(true)}
+              type="button"
+            >
+              End run
+            </button>
+          )}
         </div>
         <div className="check-option">
           <input
@@ -235,6 +254,19 @@ export const RunTimer = ({
       <span className="sr-only" data-testid="run-timer-status" role="status">
         {news}
       </span>
+      {onEnd && (
+        <ConfirmDialog
+          confirmLabel="End run"
+          isOpen={ending}
+          message={`The timer stops for good at ${time}. Reset or New game starts another run. Once it is over, you can review the run with the seed's spoiler log.`}
+          onCancel={() => setEnding(false)}
+          onConfirm={() => {
+            setEnding(false);
+            onEnd();
+          }}
+          title="End this run?"
+        />
+      )}
     </>
   );
 };
