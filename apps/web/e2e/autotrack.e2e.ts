@@ -348,17 +348,27 @@ test("shows the game's time when the player chose it, not in Race Mode", async (
   await connect(page);
 
   bridge.memory[WRAM + 0x10] = 0x07; // into the game
-  await expect(timer).toHaveAccessibleName(/^Run timer: 1:00:0\d, running$/);
+  // The bridge's counter stands still, as a paused emulator's does: the
+  // timer stops on the game's time instead of ticking past it
+  await expect(timer).toHaveAccessibleName("Run timer: 1:00:00, paused");
   await timer.click();
   await expect(page.getByTestId("run-timer-clock-hint")).toHaveText(
     "The timer follows the game's clock.",
   );
-  await expect(page.getByTestId("run-timer-pause")).toBeDisabled();
+  await expect(page.getByTestId("run-timer-start")).toBeDisabled();
   await page.keyboard.press("Escape");
+
+  // Ten seconds of frames played: it runs again
+  const later = frames + 600;
+  bridge.memory.set(
+    [later & 0xff, (later >> 8) & 0xff, (later >> 16) & 0xff, 0],
+    SAVE(0x43e),
+  );
+  await expect(timer).toHaveAccessibleName(/^Run timer: 1:00:\d\d, running$/);
 
   bridge.memory[WRAM + 0x10] = 0x19; // the Triforce room
   await expect(timer).toHaveAccessibleName(
-    "Run timer: 1:00:00, stopped at the goal",
+    /^Run timer: 1:00:(09|10), stopped at the goal$/,
   );
 });
 

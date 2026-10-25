@@ -38,17 +38,26 @@ export const timerNews = (
  * - `"unloaded"`: the counter reads 0, as it does at the title and the file
  *   select, which clear the save data in WRAM; never a time to set a timer on.
  * - Otherwise the clock: counting in play (a menu or a text box included),
- *   paused before it (the spawn select, where the file is loaded), over at the
- *   goal.
+ *   paused before it (the spawn select, where the file is loaded) or while the
+ *   counter has not moved since `before`, the counter of the reading before
+ *   (the emulator paused), over at the goal.
  */
 export const gameClockOf = (
   race: boolean,
   progress: Pick<ProgressReading, "beforePlay" | "goal" | "romStats">,
+  before?: number,
 ): GameClock | "unavailable" | "unloaded" => {
   const { romStats } = progress;
   if (race || typeof romStats === "string") return "unavailable";
   if (romStats.playFrames === 0) return "unloaded";
   const ms = playTimeMs(romStats.playFrames);
   if (progress.goal === true) return { ms, status: "over" };
-  return { ms, status: progress.beforePlay === false ? "running" : "paused" };
+  // A counter that did not move since the reading before says the game is
+  // not running (the emulator paused, the game frozen): the timer stops
+  // there rather than tick on and be set back
+  const moving = romStats.playFrames !== before;
+  return {
+    ms,
+    status: progress.beforePlay === false && moving ? "running" : "paused",
+  };
 };
