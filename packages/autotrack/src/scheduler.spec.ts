@@ -1,11 +1,18 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
+import { ALTTPR_AUTOTRACK } from "../../../packs/alttpr/src/autotrack/pack";
 import { ALTTPR_RACE_PROFILE } from "../../../packs/alttpr/src/autotrack/race-profile";
+import { MAP_RANDO_AUTOTRACK } from "../../../packs/sm/src/autotrack/pack";
 import { bootGame, SAMPLE_PACK } from "../test/fixtures";
 import { MemoryTransport } from "../test/memory-transport";
 import { bus } from "./address";
 import { definePack, type RangeSpec } from "./pack";
-import type { PlannedRequest } from "./plan";
+import {
+  type ByteRange,
+  type PlannedRequest,
+  planReads,
+  USB2SNES_LIMITS,
+} from "./plan";
 import { covers, defineRaceProfile } from "./race";
 import type { RaceSetting } from "./race-mode";
 import { Poller } from "./scheduler";
@@ -269,6 +276,62 @@ describe("Race Mode", () => {
       { numRuns: 150 },
     );
   });
+});
+
+describe("packs without modes (A Link to the Past, Super Metroid)", () => {
+  /**
+   * The requests a tick of `set` should send, worked out from the pack's own
+   * data: the race phase (the due permitted ranges and the flag, never
+   * bridging a barrier) and, with Race Mode off, the casual one. This is what
+   * the poller sent before it re-read the mode probe: no probe, no extra read.
+   */
+  const expected = (pack: typeof ALTTPR_AUTOTRACK, set: number) => {
+    const due = pack.dueSets[set];
+    const permitted = due.filter((i) => pack.racePermitted[i]);
+    const casual = due.filter((i) => !pack.racePermitted[i]);
+    const race: ByteRange[] = permitted.map((i) => pack.ranges[i]);
+    if (pack.raceFlag !== null && due.length > 0) race.push(pack.raceFlag);
+    const options = { gap: pack.gap, limits: USB2SNES_LIMITS };
+    return (
+      planReads(race, { ...options, barriers: pack.raceBarriers }).requests
+        .length +
+      planReads(
+        casual.map((i) => pack.ranges[i]),
+        options,
+      ).requests.length
+    );
+  };
+
+  for (const [name, pack] of [
+    ["A Link to the Past", ALTTPR_AUTOTRACK],
+    ["Super Metroid", MAP_RANDO_AUTOTRACK],
+  ] as const) {
+    it(`sends only the requests ${name}'s plans hold, on every tick, with no probe read again`, async () => {
+      expect(pack.modes).toBeNull();
+      const memory = new Uint8Array(0x100_0000);
+      const transport = new MemoryTransport(memory);
+      let sent = 0;
+      const read = transport.read.bind(transport);
+      transport.read = (request, into, offset) => {
+        sent++;
+        return read(request, into, offset);
+      };
+      const poller = new Poller(pack, transport, {
+        now: () => 0,
+        romReadable: true,
+        setting: "off",
+      });
+      // Race Mode off: the casual phase runs after the race phase
+      for (let tick = 0; tick < pack.cycle.length * 2; tick++) {
+        const before = sent;
+        await poller.tick();
+        expect(sent - before, `tick ${tick}`).toBe(
+          expected(pack, pack.cycle[tick % pack.cycle.length]),
+        );
+      }
+      expect(poller.race.active).toBe(false);
+    });
+  }
 });
 
 describe("modes (a combined ROM such as SMZ3)", () => {

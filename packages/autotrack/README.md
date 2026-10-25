@@ -436,8 +436,19 @@ old mode's name. A tick that read a mode-bound range (either phase) therefore
 reads the probe once more at its end, in a request of its own (two bytes), and
 if the mode is no longer the planned one it counts as a switch: the update
 says `modeChanged`, every mode-bound range counts as unread, the casual
-ranges it read are dropped, and the next tick plans for the new mode. A tick
-that read no mode-bound range pays nothing.
+ranges it read are dropped, and the next tick plans for the new mode.
+
+**What it costs.** One extra request of two bytes (the probe) on a tick that read a
+mode-bound range, at the pack's cadence (once a second for SMZ3); nothing on any
+other tick. A pack without `modes` (A Link to the Past, Super Metroid) builds no
+probe plan and sends exactly the requests its plans hold, as before:
+`scheduler.spec.ts` counts them tick by tick against the plans worked out from
+each pack's data, and the same spec passes on the poller from before the guard.
+**Why.** The race phase reads the probe first and the casual phase reads after
+it, so a portal between them (or between the probe and a mode-bound read
+later in the same request) hands a decoder the other game's memory under the old
+mode's name, which no ordering of one request's pieces can rule out: SRAM sorts
+before WRAM, and the probe is SRAM.
 
 ## Setup guide and environment
 
