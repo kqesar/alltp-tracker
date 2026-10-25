@@ -57,7 +57,7 @@ The timeline is saved with the run, in exports too.
 
 **Boss overlays.** Each boss cell carries three corner buttons: the medallion requirement (top right, Misery Mire and Turtle Rock only), the remaining chest count (bottom left) and the reward, crystal or pendant (bottom right). Click steps them forward, right-click back.
 
-**Half Magic.** The ½ cell sits between the tunic and the boots, as in other trackers: a click, or `/`, toggles it. The game's own reading marks it too. A quarter magic, which only a customized seed gives, shows as the ½, while the logic keeps the real value. Agahnim has the castles' row, with Castle Tower's keys.
+**Half Magic.** The ½ cell sits between the tunic and the boots, as in other trackers: a click, or `/`, toggles it. The game's own reading marks it too. A quarter magic, which only a customized seed gives, shows as the ½, while the logic keeps the real value. Agahnim has the castles' row, with Castle Tower's keys; the GT cell at its end is Ganon's Tower: Agahnim 2 and the items it has left.
 
 **Keyboard.** The item grid is a single Tab stop: arrow keys move inside it (through a boss's overlays too) and wrap, Home / End jump to the ends of a row, Ctrl+Home / End to the ends of the grid. Space and Enter step the focused control forward, "-" steps it back. Every map marker is a button Tab can reach; "Skip to map" and "Skip to checks" jump to either view.
 

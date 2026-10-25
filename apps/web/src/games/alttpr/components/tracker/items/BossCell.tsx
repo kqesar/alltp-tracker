@@ -1,4 +1,5 @@
 import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
+import { SHORT_NAMES } from "@/games/alttpr/components/tracker/items/KeyLabel";
 import {
   ChestCounter,
   MedallionPicker,
@@ -27,7 +28,9 @@ type BossCellProps = {
  * same cell, its medallion, chest-count and reward buttons. They are siblings
  * grouped under the dungeon's name, never buttons inside a button. Ganon's
  * Tower's cell (`boss12`) has its boss, Agahnim 2 (`agahnim2`, as on its map
- * marker), and its chests, and no reward: it gives none.
+ * marker), and its chests, and no reward: it gives none. Its short name, GT,
+ * sits in the top left corner, decorative (the fieldset names the dungeon):
+ * Agahnim's sprite alone would pass for Castle Tower's cell.
  */
 export const BossCell = ({ row, col, item }: BossCellProps) => {
   const index = Number.parseInt(item.slice("boss".length), 10);
@@ -59,6 +62,15 @@ export const BossCell = ({ row, col, item }: BossCellProps) => {
         style={{ backgroundImage: getItemBackground(control, value) }}
         type="button"
       />
+      {isTower && (
+        <span
+          aria-hidden="true"
+          className="boss-cell__name"
+          data-testid={`boss-name-${index}`}
+        >
+          {SHORT_NAMES["ganons-tower"]}
+        </span>
+      )}
       <MedallionPicker col={col} index={index} row={row} />
       <ChestCounter col={col} index={index} row={row} />
       {!isTower && <RewardPicker col={col} index={index} row={row} />}

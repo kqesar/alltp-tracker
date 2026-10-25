@@ -157,6 +157,10 @@ describe("GridItem", () => {
     );
     expect(screen.queryByTestId("reward-overlay-12")).toBeNull();
     expect(screen.queryByTestId("medallion-overlay-12")).toBeNull();
+    // Its short name tells its Agahnim from Castle Tower's, for the eye only
+    const name = screen.getByTestId("boss-name-12");
+    expect(name).toHaveTextContent("GT");
+    expect(name).toHaveAttribute("aria-hidden", "true");
 
     fireEvent.click(boss);
     fireEvent.click(chests);
