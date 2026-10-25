@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { type Smz3Game, viewOf, writeSmz3 } from "../../test/smz3-rom";
 import {
+  decodeBeforePlay,
   decodeChecks,
+  decodeGameClock,
+  decodeGoal,
   decodeInPlay,
   decodeItems,
   decodeMode,
   decodeRequirements,
   decodeSeed,
+  SMZ3_FRAMES_PER_SECOND,
+  smz3Ms,
 } from "./decode";
 import { MEMORY_RANGE } from "./memory";
 
@@ -280,5 +285,148 @@ describe("the seed", () => {
         false,
       ),
     ).toBe("not-read");
+  });
+});
+
+describe("before play", () => {
+  it("is the title, the menus, the file select and the loading of a game, in either game", () => {
+    for (const state of [0x00, 0x01, 0x04, 0x05, 0x1b]) {
+      expect(decodeBeforePlay(read({ state })), `zelda $${state}`).toBe(true);
+    }
+    // In play, a pre-dungeon or overworld load, the menu, a death
+    for (const state of [0x06, 0x07, 0x08, 0x09, 0x0b, 0x0e, 0x12]) {
+      expect(decodeBeforePlay(read({ state })), `zelda $${state}`).toBe(false);
+    }
+    for (const state of [0x00, 0x04, 0x06, 0x1f]) {
+      expect(
+        decodeBeforePlay(read({ mode: "sm", state })),
+        `sm $${state}`,
+      ).toBe(true);
+    }
+    // In play, a door, a portal ($0B), a pause, a death, the escape
+    for (const state of [0x07, 0x08, 0x09, 0x0b, 0x0c, 0x13, 0x26]) {
+      expect(
+        decodeBeforePlay(read({ mode: "sm", state })),
+        `sm $${state}`,
+      ).toBe(false);
+    }
+  });
+
+  it("is not, in the credits, and not known until the mode and its state are read", () => {
+    expect(decodeBeforePlay(read({ mode: "credits" }))).toBe(false);
+    expect(decodeBeforePlay(viewOf(writeSmz3(image()), null))).toBe("not-read");
+    const memory = writeSmz3(image());
+    expect(
+      decodeBeforePlay({ ...viewOf(memory, "zelda"), has: () => false }),
+    ).toBe("not-read");
+    expect(
+      decodeBeforePlay({ ...viewOf(memory, "sm"), has: () => false }),
+    ).toBe("not-read");
+  });
+});
+
+describe("the goal", () => {
+  /** The game byte as written: the credits write its low byte only. */
+  const withGameByte = (low: number, high: number) => {
+    const memory = writeSmz3(image());
+    memory[MEMORY_RANGE["current-game"].address] = low;
+    memory[MEMORY_RANGE["current-game"].address + 1] = high;
+    return viewOf(memory, "credits");
+  };
+
+  it("is reached when the credits run: the game byte's low byte is $11, whatever the high one", () => {
+    expect(decodeGoal(read({ mode: "credits" }))).toBe(true);
+    // From Super Metroid the high byte stays $FF
+    expect(decodeGoal(withGameByte(0x11, 0xff))).toBe(true);
+    expect(decodeGoal(withGameByte(0x11, 0x00))).toBe(true);
+  });
+
+  it("is not, in either game or for any other byte that decodeMode calls the credits", () => {
+    expect(decodeGoal(read({ mode: "zelda" }))).toBe(false);
+    expect(decodeGoal(read({ mode: "sm" }))).toBe(false);
+    // Positive, so decodeMode says credits, but only $11 is what credits_init writes
+    expect(decodeMode(withGameByte(0x12, 0x00))).toBe("credits");
+    expect(decodeGoal(withGameByte(0x12, 0x00))).toBe(false);
+    expect(decodeGoal(withGameByte(0x01, 0x00))).toBe(false);
+    expect(decodeGoal({ ...read(), has: () => false })).toBe("not-read");
+  });
+});
+
+describe("the game time", () => {
+  it("is the live counter of the game that runs and the saved one of the other", () => {
+    const clock = { sm: 6_000, zelda: 1_500 };
+    expect(decodeGameClock(read({ clock, mode: "zelda" }), false)).toEqual({
+      final: false,
+      frames: 7_500,
+    });
+    expect(decodeGameClock(read({ clock, mode: "sm" }), false)).toEqual({
+      final: false,
+      frames: 7_500,
+    });
+  });
+
+  it("goes on across a portal: each game saves before it", () => {
+    // Super Metroid ran to 6 000 frames with Zelda's 1 500 saved; Zelda takes
+    // over from its 1 500 and Super Metroid's 6 000 is saved
+    const before = read({ clock: { sm: 6_000, zelda: 1_500 }, mode: "sm" });
+    const after = read({ clock: { sm: 6_000, zelda: 1_500 }, mode: "zelda" });
+    expect(decodeGameClock(after, false)).toEqual(
+      decodeGameClock(before, false),
+    );
+    // And Zelda runs on, 120 frames later
+    expect(
+      decodeGameClock(
+        read({ clock: { sm: 6_000, zelda: 1_620 }, mode: "zelda" }),
+        false,
+      ),
+    ).toMatchObject({ frames: 7_620 });
+  });
+
+  it("is final in the credits, where both counters are saved", () => {
+    expect(
+      decodeGameClock(
+        read({ clock: { sm: 400_000, zelda: 300_000 }, mode: "credits" }),
+        false,
+      ),
+    ).toEqual({ final: true, frames: 700_000 });
+  });
+
+  it("reads all four bytes of each counter, as unsigned", () => {
+    const sm = 0x8000_0001;
+    const zelda = 0x0001_ffff;
+    expect(
+      decodeGameClock(read({ clock: { sm, zelda }, mode: "zelda" }), false),
+    ).toEqual({ final: false, frames: sm + zelda });
+  });
+
+  it("is never known in Race Mode, whatever the bytes", () => {
+    for (const mode of ["zelda", "sm", "credits"] as const) {
+      expect(
+        decodeGameClock(read({ clock: { sm: 9, zelda: 9 }, mode }), true),
+      ).toBe("race-mode");
+    }
+  });
+
+  it("is not known until the mode's two halves were read", () => {
+    const memory = writeSmz3(image(), {
+      clock: { sm: 5, zelda: 5 },
+      mode: "sm",
+    });
+    for (const missing of ["clock-sm-live", "clock-zelda-saved"] as const) {
+      const unread = viewOf(memory, "sm", [missing]);
+      expect(decodeGameClock(unread, false)).toBe("not-read");
+    }
+    // Super Metroid's mode, but only Zelda's ranges are read: after a portal
+    // the scheduler counts the new mode's ranges unread until read again
+    const stale = viewOf(memory, "sm", ["clock-sm-live"]);
+    expect(decodeGameClock(stale, false)).toBe("not-read");
+    expect(decodeGameClock(viewOf(memory, null), false)).toBe("not-read");
+  });
+
+  it("counts a frame as a sixtieth of a second, as the credits print it", () => {
+    expect(SMZ3_FRAMES_PER_SECOND).toBe(60);
+    expect(smz3Ms(60)).toBe(1_000);
+    expect(smz3Ms(216_000)).toBe(3_600_000);
+    expect(smz3Ms(1)).toBe(17);
   });
 });

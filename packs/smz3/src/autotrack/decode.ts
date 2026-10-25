@@ -157,6 +157,114 @@ export function decodeInPlay(memory: MemoryView): boolean | Unsettled {
   return mode;
 }
 
+/**
+ * Zelda's game modes ($7E:0010, z3 ram.asm:41) before play: the title ($00),
+ * the file select and its copy, erase and name screens ($01-$04), the game
+ * loading ($05) and the randomizer's spawn select ($1B). The list is the
+ * ALttPR pack's `GAME_MODES.beforePlay` (packs/alttpr/src/autotrack/memory.ts,
+ * read against ram.asm:41 and seen on a real game on 2026-10-17), kept here as
+ * data since packs import nothing of each other. $06 (pre-dungeon) is no
+ * before-play mode: every dungeon entry passes it.
+ */
+const ZELDA_BEFORE_PLAY: readonly number[] = [
+  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x1b,
+];
+/** Super Metroid's game states before play: the title and menus, loading a game ($06), and $1F, where a new game is set up. */
+const SM_BEFORE_PLAY = (state: number) => state <= 0x06 || state === 0x1f;
+
+/**
+ * Whether the running game is before play: its title, its menus, its file
+ * select or the loading of a game. A reading in play after one that was is a
+ * game starting, in whichever game the file starts in; after a pause, a door,
+ * a portal or a death it is not. Never in the credits.
+ */
+export function decodeBeforePlay(memory: MemoryView): boolean | Unsettled {
+  const mode = decodeMode(memory);
+  if (mode === "credits") return false;
+  if (mode === "zelda") {
+    const state = bytesOf(memory, "zelda-mode");
+    return state ? ZELDA_BEFORE_PLAY.includes(state[0] ?? 0) : "not-read";
+  }
+  if (mode === "sm") {
+    const state = bytesOf(memory, "sm-state");
+    if (!state) return "not-read";
+    return SM_BEFORE_PLAY((state[0] ?? 0) | ((state[1] ?? 0) << 8));
+  }
+  return mode;
+}
+
+/** The game byte's value once the credits run (credits.asm:62-64). */
+const CREDITS_BYTE = 0x11;
+
+/**
+ * Whether the run reached its goal: the credits run. The game byte's low
+ * byte is exactly $11, which `credits_init` alone writes, and only once both
+ * games' endings were reached (sm/ending.asm:22-30, 84-95; z3/ending.asm:
+ * 12-33, 43-56): so no completion flag is read besides. Read in a race too.
+ */
+export function decodeGoal(memory: MemoryView): boolean | Unsettled {
+  const game = bytesOf(memory, "current-game");
+  return game ? (game[0] ?? 0) === CREDITS_BYTE : "not-read";
+}
+
+/**
+ * The games' frame counters at one reading, summed: the frames since the
+ * file began, as the credits' TOTAL TIME counts them. Each game counts its
+ * own NMIs while it runs, and keeps what it counted in its save (written
+ * before every portal), so the sum is the live counter of the running game
+ * plus the saved one of the other. Both revert to the last save on a death
+ * or a reload, so the sum falls back with them: it is the game's, not
+ * monotonic.
+ */
+export interface ClockReading {
+  /** Both games' frames. */
+  readonly frames: number;
+  /** The credits run: neither game does, both counters are saved, the sum is final. */
+  readonly final: boolean;
+}
+
+const u32 = (bytes: Uint8Array) =>
+  ((bytes[0] ?? 0) |
+    ((bytes[1] ?? 0) << 8) |
+    ((bytes[2] ?? 0) << 16) |
+    ((bytes[3] ?? 0) << 24)) >>>
+  0;
+
+/**
+ * The game time, or why it is not known: never in a race (the ranges are
+ * not read: race-profile.ts), nor before the mode's two halves were read.
+ * @param race - Race Mode is on: the counters stay undecoded
+ */
+export function decodeGameClock(
+  memory: MemoryView,
+  race: boolean,
+): ClockReading | Unsettled {
+  if (race) return "race-mode";
+  const mode = decodeMode(memory);
+  if (mode !== "zelda" && mode !== "sm" && mode !== "credits") return mode;
+  const [smId, zeldaId] =
+    mode === "zelda"
+      ? (["clock-sm-saved", "clock-zelda-live"] as const)
+      : mode === "sm"
+        ? (["clock-sm-live", "clock-zelda-saved"] as const)
+        : (["clock-sm-saved", "clock-zelda-saved"] as const);
+  const sm = bytesOf(memory, smId);
+  const zelda = bytesOf(memory, zeldaId);
+  if (!sm || !zelda) return "not-read";
+  return { final: mode === "credits", frames: u32(sm) + u32(zelda) };
+}
+
+/**
+ * The credits count a frame as a sixtieth of a second (credits.asm:719,
+ * `draw_full_time`), not at the SNES's 60.0988: the timer ends at the time
+ * the game prints.
+ */
+export const SMZ3_FRAMES_PER_SECOND = 60;
+
+/** How long `frames` of the clock last, in milliseconds. */
+export const smz3Ms = (frames: number): number =>
+  Math.round((frames * 1000) / SMZ3_FRAMES_PER_SECOND);
+
 const bit = (value: number, mask: number) => ((value & mask) === 0 ? 0 : 1);
 const bits = (value: number) => {
   let count = 0;

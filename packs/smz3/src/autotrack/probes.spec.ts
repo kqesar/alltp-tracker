@@ -60,7 +60,14 @@ describe("the pack", () => {
     const forbidden = MEMORY_RANGES.filter(
       (_, index) => !SMZ3_AUTOTRACK.racePermitted[index],
     ).map(({ id }) => id);
-    expect(forbidden).toEqual(["requirements", "tourian"]);
+    expect(forbidden).toEqual([
+      "requirements",
+      "tourian",
+      "clock-sm-live",
+      "clock-sm-saved",
+      "clock-zelda-live",
+      "clock-zelda-saved",
+    ]);
     const inMode = (mode: string) =>
       MEMORY_RANGES.filter(
         (range) =>
@@ -73,6 +80,8 @@ describe("the pack", () => {
       "requirements",
       "tourian",
       "current-game",
+      "clock-sm-saved",
+      "clock-zelda-saved",
     ]);
     expect(inMode("zelda")).toContain("zelda-wram");
     expect(inMode("zelda")).toContain("sm-buffer");

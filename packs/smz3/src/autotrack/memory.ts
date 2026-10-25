@@ -11,6 +11,8 @@
 //   src/{z3,sm}/teleport.asm and transition.asm, what moves between WRAM and
 //   SRAM at a portal; src/z3/items.asm and src/sm/rewards.asm, where a pickup
 //   in the other game goes; src/z3/randomizer/sram.asm, Zelda's save layout;
+//   src/sm/randomizer/tracking.asm and src/credits.asm, the two games' frame
+//   counters and the sum the credits print;
 // - tewtal/SMZ3Randomizer at d53be76 (MIT), Randomizer.SMZ3/Patch.cs: what
 //   samus.link writes into the ROM (the seed block, the title, the
 //   requirements), and Snes() (Patch.cs:842-851), its SNES addresses.
@@ -228,6 +230,59 @@ export const MEMORY_RANGES = [
     modes: ["sm"],
     size: 0x10,
     source: "sram.asm:29",
+  }),
+  // The game time: the two games' frame counters, whose sum the credits
+  // print as TOTAL TIME (credits.asm:895-901; tracking.asm:97-123). Each
+  // lives in its game's memory while that game runs, and in its save (written
+  // before every portal) while the other does. They are read in one request
+  // with the mode check after it (@alltp/autotrack), so a portal inside the
+  // tick never pairs one game's live counter with a stale one. Category
+  // `game-time`: the race profile forbids it, so Race Mode reads none of
+  // these four.
+  //
+  // Super Metroid's NMI counter, low word then high word, while it runs
+  // (sm/randomizer/tracking.asm:1-3, 62-90)
+  range({
+    at: 0x7e_05b8,
+    category: "game-time",
+    everyMs: GAME_MS,
+    id: "clock-sm-live",
+    modes: ["sm"],
+    size: 4,
+    source: "sm/randomizer/tracking.asm:1-3, 62-90",
+  }),
+  // Its saved copy, word 0 and 1 of the first stats slot, while Zelda runs
+  // and in the credits (sram.asm:10; tracking.asm:112-119, 464-472)
+  range({
+    at: 0xa1_7a00,
+    category: "game-time",
+    everyMs: GAME_MS,
+    id: "clock-sm-saved",
+    modes: ["zelda", "credits"],
+    size: 4,
+    source: "sram.asm:10, tracking.asm:112-119, 464-472",
+  }),
+  // Zelda's NMI counter (`NMIFrames`) while it runs (z3/randomizer/sram.asm:
+  // 293, 582; framehook.asm:45-52)
+  range({
+    at: 0x7e_f43e,
+    category: "game-time",
+    everyMs: GAME_MS,
+    id: "clock-zelda-live",
+    modes: ["zelda"],
+    size: 4,
+    source: "z3/randomizer/sram.asm:293, 582",
+  }),
+  // Its saved copy, inside the Zelda save, while Super Metroid runs and in
+  // the credits (credits.asm:895-901; tracking.asm:105-109)
+  range({
+    at: 0xa0_643e,
+    category: "game-time",
+    everyMs: GAME_MS,
+    id: "clock-zelda-saved",
+    modes: ["sm", "credits"],
+    size: 4,
+    source: "credits.asm:895-901, tracking.asm:105-109",
   }),
 ] as const;
 
