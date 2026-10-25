@@ -31,12 +31,18 @@ import {
   useGameStore,
   withNotes,
 } from "@/games/alttpr/stores/gameStore";
-import { isRunning } from "@/utils/runTimer";
+import { type GameClock, isRunning } from "@/utils/runTimer";
 
 /** The board's side of a session. */
 export type Follower = {
   /** Lay a reading's news on the board. */
   read: (reading: AutotrackReading) => void;
+  /**
+   * A poll read memory and found it unchanged at `at`: the game stands still
+   * (a paused emulator), so a timer set on its clock stops at its last time
+   * until a reading moves it again.
+   */
+  steady: (at: number) => void;
   /**
    * Set the board to all the game holds, as one undo step.
    * @returns How many values changed, or null before any game in play was read
@@ -78,6 +84,8 @@ export const createFollower = (): Follower => {
   let beforePlay: boolean | undefined;
   /** The game's frame counter at the last reading, if it was read. */
   let frames: number | undefined;
+  /** The game's clock the timer was last set on, to hold it if the game stops. */
+  let lastClock: GameClock | undefined;
   /** The small keys in hand at the last reading, or null out of play. */
   let hand: Record<number, number> | null = null;
   /** The least small keys found, by grid dungeon index. */
@@ -163,6 +171,7 @@ export const createFollower = (): Follower => {
         reading.race || typeof romStats === "string"
           ? undefined
           : romStats.playFrames;
+      lastClock = typeof clock === "object" ? clock : undefined;
       if (typeof clock === "object") game.alignTimer(clock, reading.at);
       else if (clock === "unloaded") {
         // The title or the file select: the game's time is not there to read
@@ -190,6 +199,13 @@ export const createFollower = (): Follower => {
       shown = view;
       if (isEmptyView(news)) return;
       store.applyGameNews((board) => mergeView(board, news)?.next ?? null);
+    },
+    steady: (at) => {
+      const game = useGameStore.getState();
+      if (game.timerClock === "game" && lastClock?.status === "running") {
+        game.alignTimer({ ms: lastClock.ms, status: "paused" }, at);
+        lastClock = { ms: lastClock.ms, status: "paused" };
+      }
     },
     switchRun: (presetId, settings) => {
       const reading = last;

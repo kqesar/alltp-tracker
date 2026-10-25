@@ -320,6 +320,9 @@ const sinkFor = (mine: number): RuntimeSink => ({
       status,
     }));
   },
+  steady: (at) => {
+    if (mine === generation) follower?.steady(at);
+  },
 });
 
 /** The Web Lock one tab of the tracker holds while it autotracks. */

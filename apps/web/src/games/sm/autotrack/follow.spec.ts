@@ -299,6 +299,39 @@ describe("the run timer, on the game's time", () => {
     });
   });
 
+  it("stops at the game's last time when a poll finds memory unchanged, and goes on when it moves", () => {
+    const follower = start();
+    follower.read(at(11_000, 100_601));
+    expect(run().timer.startedAt).not.toBeNull();
+
+    // The emulator is paused: no reading comes, a steady poll does
+    follower.steady(T0 + 12_000);
+    expect(run().timer).toEqual({
+      elapsedMs: rtaMs(601),
+      finished: false,
+      startedAt: null,
+    });
+    const held = run().timer;
+    follower.steady(T0 + 13_000);
+    expect(run().timer).toBe(held);
+
+    // It runs again: the next reading resumes the timer
+    follower.read(at(30_000, 101_201));
+    expect(run().timer).toEqual({
+      elapsedMs: rtaMs(1_201),
+      finished: false,
+      startedAt: T0 + 30_000,
+    });
+  });
+
+  it("leaves a timer alone that real time counts", () => {
+    run().setTimerClock("real");
+    const follower = start();
+    const running = run().timer;
+    follower.steady(T0 + 12_000);
+    expect(run().timer).toBe(running);
+  });
+
   it("holds a reading a flush split, and takes the next", () => {
     const follower = start();
     // 250 frames held in the NMI counter, 100 255 flushed ahead of them

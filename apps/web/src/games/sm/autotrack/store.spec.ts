@@ -244,6 +244,34 @@ describe("Super Metroid's autotracking and the run timer", () => {
     });
   });
 
+  it("stops the timer on the game's time while the emulator is paused, and goes on when it runs", async () => {
+    run().setTimerClock("game");
+    const h = harness({
+      clock: { pending: 0, saved: 50_000 },
+      state: FILE_SELECT,
+    });
+    await connectSmAutotrack();
+    await h.advance(0);
+    h.play({ clock: { pending: 0, saved: 53_000 }, state: 0x08 });
+    await h.advance(1000);
+    h.play({ clock: { pending: 0, saved: 65_000 } });
+    await h.advance(1000);
+    expect(run().timer.startedAt).not.toBeNull();
+
+    // A paused emulator serves the same bytes: no reading, only steady polls
+    await h.advance(3000);
+    expect(run().timer).toEqual({
+      elapsedMs: rtaMs(12_000),
+      finished: false,
+      startedAt: null,
+    });
+
+    h.play({ clock: { pending: 0, saved: 66_000 } });
+    await h.advance(1000);
+    expect(run().timer.startedAt).not.toBeNull();
+    expect(run().timer.elapsedMs).toBe(rtaMs(13_000));
+  });
+
   it("reads the clock outside Race Mode", async () => {
     const h = harness();
     await connectSmAutotrack();
