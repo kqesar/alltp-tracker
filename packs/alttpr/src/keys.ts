@@ -30,7 +30,6 @@ import { DUNGEONS, type DungeonId, dungeonPool } from "./dungeons";
 import type { Filler } from "./fill";
 import { fromUpstream, ITEMS } from "./items";
 import { medallionFacts } from "./medallions";
-import { regionModules } from "./pack";
 import { RULES } from "./rules";
 import type { AlttprSettings } from "./settings";
 
@@ -305,7 +304,8 @@ function modelOf(filler: Filler): Model {
   const owner = new Map(untracked.map((u) => [u.item, u.dungeon]));
   const closed = (region: string) => all(keys, bigKeys).region(region) === "no";
   const dungeonsOf = new Map<string, readonly DungeonId[]>();
-  for (const region of regionModules(settings).flatMap((m) => m.regions)) {
+  // The filler's own modules: a tricks world's rules read more than the run's
+  for (const region of filler.modules.flatMap((m) => m.regions)) {
     for (const location of region.locations) {
       const read = readsOf(location.req, settings, closed) ?? [];
       const ids = [...new Set(read.flatMap((n) => owner.get(n) ?? []))];

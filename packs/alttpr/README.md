@@ -29,6 +29,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/location.ts`, `src/rules.ts` | what a location is (its kinds, its rule and upstream source); every named rule, as the engine loads them |
 | `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags, seed settings, the prizes the game shows (`prizes.ts`) and the pad medallions it shows (`medallion-pads.ts`), from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
 | `src/pack.ts` | the run's world, compiled with its settings |
+| `src/tricks.ts` | `config/logic.php`, `CustomizerController.php`, the customizer's `glitches.js`: the tricks world, six minor tricks as items (see "Tricks") |
 
 `upstream.json` maps every upstream file to its module, with its status;
 `test/contract.ts` checks the pack against every case of the test files it
@@ -694,6 +695,83 @@ state (where each item may sit, the world with everything held at each
 count): about 14 ms under Vitest. Each call after that takes a few solves:
 the keys in hand, all keys, and the counts a dungeon's safety asks about,
 about 0.2 to 0.5 ms under Vitest for every location of the world.
+
+## Tricks
+
+The pack models NoGlitches only, but upstream's region files already write
+what six minor tricks open, behind config flags no NoGlitches run sets. The
+*tricks world* (`src/tricks.ts`) keeps those branches, so the tracker can
+say which checks out of logic a trick would open, and which trick.
+
+| Trick (`TrickId`) | Item | Upstream switch | Turned on by |
+| --- | --- | --- | --- |
+| `darkRooms` | `trickDarkRooms` | `item.require.Lamp` at 0: `has('Lamp', 0)` is true with no Lamp (`ItemCollection.php:260`) | the customizer's "Allow dark room navigation" (`CustomizerController.php:156`, `Settings.vue:74-84`) |
+| `fakeFlipper` | `trickFakeFlipper` | `canFakeFlipper` | OverworldGlitches and up (`config/logic.php:7`) |
+| `waterWalk` | `trickWaterWalk` | `canWaterWalk` | the same (`logic.php:11`) |
+| `superBunny` | `trickSuperBunny` | `canSuperBunny` | the same (`logic.php:6`) |
+| `bunnyRevive` | `trickBunnyRevive` | `canBunnyRevive` (with a bottle, the net and a catchable fairy, `@canBunnyRevive`) | no logic: the customizer alone (`resources/js/store/modules/glitches.js:8`) |
+| `dungeonRevive` | `trickDungeonRevive` | `canDungeonRevive` | OverworldGlitches and up (`logic.php:12`) |
+
+**One world, the tricks as items.** A setting is folded at compile time, so
+the real world cannot hold a trick for one state and not another, and a
+world per combination would be 64 compiles. `trickModules(settings)` rewrites
+every requirement of the run's modules instead (entrances, locations, what
+seeing a location needs) and `TRICK_RULES` the helpers:
+`setting(canFakeFlipper)` becomes the item `trickFakeFlipper`, and
+`lamp >= setting(requireLamp)` becomes `(lamp >= setting(requireLamp) |
+trickDarkRooms)`. The rest of each rule, other glitches included, is left as
+it is. `compileTricks(settings)` compiles it with `STATE_NAMES` and
+`TRICK_ITEMS`, once per settings object; `trickState(ids)` is the state that
+holds those tricks, to spread over the real world's state.
+
+**Exact, not approximate** (`src/tricks.spec.ts`, fast-check over random
+states of Open, Standard and Inverted, every location, visible and region):
+
+- with a set of tricks held, the tricks world reads as the real world
+  compiled with those switches on (`requireLamp` at 0 for the dark rooms);
+- with none, as the real world;
+- learning one more trick never closes anything.
+
+Fake flipper and water walk are separate items, so a check that needs both
+(Zora's Ledge, `LightWorld/NorthEast.php:75`) asks for both. A rule that asks
+a trick to be off (`!setting(canFakeFlipper)`) would break monotonicity:
+`trickRequirement` throws on it, and today no rule does.
+
+**What a trick does not move.**
+
+- **Placement.** The seed was filled under NoGlitches, so the fill rules
+  stay the real world's, and so does where each dungeon item may sit:
+  `untrackedItems(trickFiller(settings))` equals the real world's (tested in
+  every world, with wild maps, keysanity and retro).
+- **Palace of Darkness's keys.** vt with the dark rooms allowed asks a sixth
+  key once the hammer and a bow are held (`PalaceOfDarkness.php:88`). That
+  fact (`podFewerKeysSuffice`) is derived from the real items under the real
+  settings before solving (`src/derived.ts`) and reads no trick's item, so a
+  player using a trick sees the key count the run's logic asks.
+
+**The key model** (`solveWithKeys`) takes `trickFiller(settings)`: a
+`Filler` carries the modules it was built from (`Filler.modules`), and the
+model reads which dungeons' keys each location's rule reads from those, so a
+trick's branch that read a key would count. Today none reads a key its
+location does not already read: the dungeons each location reads are the
+real world's.
+
+**Limits.** "Doable" means what vt's glitched logic counts, no more: a trick
+branch keeps its own conditions (`!setting(cantTakeDamage)` for some fake
+flipper branches, a bottle and the net for bunny revival), and the dark rooms
+trick stands in for the Lamp in every dark room, as `item.require.Lamp` at 0
+does, so it also covers the rooms the Fire Rod lights under advanced
+placement. Crossed entrance runs have no tricks world.
+
+**Cost**, measured under Vitest on the development machine (the median of 15
+runs per world, each on a new settings object; `src/tricks.spec.ts` keeps a
+loose budget):
+
+| Step | Tricks world | Real world |
+| --- | --- | --- |
+| The first compile of a variant, its rewrite included | 10 ms | |
+| Compile and key model, cold | 23 ms | 23 ms |
+| A keyed solve read for every location, warm | 0.1 to 0.9 ms | 0.1 to 0.3 ms |
 
 ## Go mode
 

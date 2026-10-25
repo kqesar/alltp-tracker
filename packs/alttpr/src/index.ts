@@ -232,6 +232,19 @@ export {
   toState,
 } from "./tracker";
 export {
+  compileTricks,
+  TRICK_IDS,
+  TRICK_ITEMS,
+  TRICK_RULES,
+  TRICKS,
+  type TrickDef,
+  type TrickId,
+  trickFiller,
+  trickModules,
+  trickRequirement,
+  trickState,
+} from "./tricks";
+export {
   buildWorld,
   canFill,
   type DungeonItemClass,

@@ -36,6 +36,7 @@ import type { AlttprSettings } from "./settings";
 import {
   dungeonItemClass,
   type RegionDef,
+  type RegionModule,
   canFill as regionCanFill,
 } from "./world";
 
@@ -119,6 +120,12 @@ export interface Filler {
   readonly world: CompiledWorld;
   /** The settings that world was compiled with. */
   readonly settings: AlttprSettings;
+  /**
+   * The region modules that world was built from: the run's
+   * (`regionModules`), or the tricks world's (`trickModules`), whose rules
+   * read the tricks' items.
+   */
+  readonly modules: readonly RegionModule[];
   /** The world's location ids, in the order of its regions. */
   readonly locations: readonly string[];
   /**
@@ -136,13 +143,17 @@ export interface Filler {
   ): Tri;
 }
 
-/** The filler of a compiled world, under the settings it was compiled with. */
+/**
+ * The filler of a compiled world, under the settings it was compiled with
+ * and the modules it was built from (the run's world by default).
+ */
 export function filler(
   compiled: CompiledWorld,
   settings: AlttprSettings,
+  modules: readonly RegionModule[] = regionModules(settings),
 ): Filler {
   const where = new Map<string, { location: LocationDef; region: RegionDef }>();
-  for (const module of regionModules(settings)) {
+  for (const module of modules) {
     for (const region of module.regions) {
       for (const location of region.locations) {
         where.set(location.id, { location, region });
@@ -188,6 +199,7 @@ export function filler(
       return or(always, and(requires, access));
     },
     locations: [...where.keys()],
+    modules,
     settings,
     world: compiled,
   };
