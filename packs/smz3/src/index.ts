@@ -71,6 +71,7 @@ export {
   placementSetting,
   type Smz3Settings,
 } from "./settings";
+export { parseSpoiler, type Smz3SpoilerExtra } from "./spoiler/parse";
 export {
   type Entrance,
   type LocationDef,

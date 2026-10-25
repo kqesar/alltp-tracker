@@ -1,0 +1,9 @@
+{
+  "api": "https://samus.link/api/spoiler/8506bbef2c2b4432af378b571c6c9133",
+  "downloadName": "Super Metroid & A Link to the Past Combo Randomizer v11.3.2 - hQa77ywrRDKvN4tXHGyRMw - Spoiler.txt",
+  "guid": "8506bbef2c2b4432af378b571c6c9133",
+  "note": "The YAML was REBUILT from the API JSON with samus.link's own downloadSpoiler code, not downloaded from the site's Download button; the JSON is the API's answer as received.",
+  "renderedWith": "yaml@1.10.3, indentSeq: false",
+  "rendererSource": "tewtal/SMZ3Randomizer d53be76, WebRandomizer/ClientApp/src/spoiler/Spoiler.jsx:92-121",
+  "source": "fetched from the API"
+}

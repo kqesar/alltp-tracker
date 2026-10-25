@@ -18,6 +18,7 @@ import {
   readClass,
   readCommit,
   readDeclarations,
+  readItemTypes,
   readRegionFile,
   resolveFixture,
   skippable,
@@ -321,5 +322,37 @@ describe("importing a checkout", () => {
     expect(formatFixture({ a: 1 }, [{ b: 2 }, { c: 3 }])).toBe(
       '{\n  "header": {"a":1},\n  "cases": [\n    {"b":2},\n    {"c":3}\n  ]\n}\n',
     );
+  });
+});
+
+describe("Item.cs's item types", () => {
+  const ITEM_CS = `
+    public enum ItemType : byte {
+      [Description("Nothing")]
+      Nothing,
+
+      /* a comment, [Description("Ghost")] Ghost, */
+      [Description("Hyrule Castle Map")]
+      MapHC = 0x7F,
+      [Description("Progressive Sword")] ProgressiveSword = 0x5E,
+      [Description("Twenty Rupees")]
+      TwentyRupees = 0x36,
+      [Description("Twenty Rupees")]
+      TwentyRupees2 = 0x47,
+    }
+    class Item { [Description("Not an item")] int X; }`;
+
+  it("reads each description and its type, the first of two alike", () => {
+    expect(readItemTypes(ITEM_CS)).toEqual({
+      "Hyrule Castle Map": "MapHC",
+      Nothing: "Nothing",
+      "Progressive Sword": "ProgressiveSword",
+      "Twenty Rupees": "TwentyRupees",
+    });
+  });
+
+  it("stops on a file that has no enum", () => {
+    expect(() => readItemTypes("class Item {}")).toThrow("No ItemType enum");
+    expect(() => readItemTypes("enum ItemType { A }")).toThrow("empty");
   });
 });

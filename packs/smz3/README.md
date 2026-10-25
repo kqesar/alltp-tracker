@@ -84,6 +84,36 @@ The game state and both saves are read at one cadence, in the same tick. With th
 
 **Races.** No SMZ3 autotracking specification exists; racetime.gg's smz3 category allows autotracking and bans ROM or RAM inspection otherwise. The race profile (`race-profile.ts`) therefore reads what the player sees and the settings a race announces. It forbids, in a race seed, the requirements a seed may draw at random (the crystals Ganon's Tower and Ganon ask for, the bosses Tourian asks for) and the medallions opening Misery Mire and Turtle Rock. Which dungeon or boss holds which reward is never read; the pendants, crystals and boss tokens held are, so a reward counts once found. One category is kept out on purpose, `game-time` (the four counter ranges): it reveals nothing of the seed, but the game shows its time only in its credits, and the tracker reads no more than a player sees in a race (a policy of the tracker, not a rule of the page). Race Mode therefore never reads Super Metroid's counter or its saved copy (`memory.spec.ts` proves it over the real plans, in every mode) and the run timer counts real time. Zelda's counter does lie in the 0x500-byte Zelda save a race reads whole, as it always did; `decodeGameClock(…, race)` never decodes it there. The state and the credits byte, which start and stop the timer, stay permitted. The ALTTPR Auto-tracker Rules v2.0 do not apply: the smz3 category links no tracker rules, so this profile stays as it is, and Race Mode set always on in the tracker holds it whatever the race bit says.
 
+## Spoiler logs
+
+`parseSpoiler(text, fileName)` reads a samus.link spoiler log into `@alltp/spoiler`'s `SpoilerLog` (what the post-run review compares a run with). It is pure, never throws on its input and answers `{ ok: true, value } | { ok: false, error, detail? }` with the package's codes.
+
+```mermaid
+flowchart LR
+  text["text + file name"] --> size["checkSize (1 MiB)"]
+  size --> sniff["sniffSpoiler"]
+  sniff -- "YAML" --> yaml["yaml.ts<br/>js-yaml, failsafe schema, no alias"]
+  sniff -- "API JSON" --> json["JSON.parse"]
+  yaml --> doc["document.ts<br/>zod/mini: one Document"]
+  json --> doc
+  doc --> build["parse.ts: names to ids"]
+  build --> log["SpoilerLog"]
+```
+
+**Two files hold it.** The seed page's Download button saves a YAML text (`<game> v<version> - <slug> - Spoiler.txt`): a sequence of the title, `Playthrough` (spheres of `location: item`, the progression only), `Prizes and Requirements`, one block per region and `Meta` (`guid`, goal, logic, key shuffle, the three counts). The page builds it from `GET /api/spoiler/<guid>` with `downloadSpoiler` (`WebRandomizer/ClientApp/src/spoiler/Spoiler.jsx:92-121` at `d53be76`), and a player who saved that JSON can import it as is: the same document, so the same log (a spec holds the two equal). The server's own `?yaml=true` layout (`Game:`, `Regions:`) is another text no button saves, and is refused as `unsupported`.
+
+**Refused.** A Super Metroid-only samus.link file (`SM …` title, `gameId: sm`), Archipelago's and a multiworld (`players`, or names that are known ones with ` - <player>` after them): `unsupported`. Another randomizer's file: `other-game`. A ROM, a cut or malformed file, a Meta block out of range, a location listed twice: `not-a-spoiler`. Over 1 MiB: `too-large`. More than five names the pack does not know, which is a newer samus.link's: `newer-version`; up to five are skipped and listed in `skipped`.
+
+**Names to ids.** The log holds names, no ids.
+- A location is matched by its upstream name, the one `locationId` slugs: the 316 of the pack, exactly the seed page's (a spec holds both ways). `Placement.location` is the pack's id and `area` the region of the file; placements come in the pack's order whichever order the file lists them in.
+- An item is matched by its `[Description]` in Item.cs's `ItemType` (`src/spoiler/item-types.json`, written by `pnpm --filter @alltp/pack-smz3 import-upstream <checkout>` from the pinned commit, never by hand), then `fromUpstream`. An item the logic does not read (rupees, hearts, arrows, maps, compasses, the bug net) has `item: null` and keeps its `itemName`.
+- A sphere is the order in the playthrough with the empty ones dropped, as the seed page numbers them; a location outside the playthrough has `sphere: null`.
+- `extra` (`Smz3SpoilerExtra`) holds the guid (the seed's id for `bindSeed`: it is also in the ROM), version, hash words, goal, `settings` (as `Smz3Settings`; a count an older seed lacks is samus.link's default), the reward each prize area holds (as the pack's `pendantGreen`, `crystalRed`, `tokenKraid`… ids) and the medallion of Misery Mire and Turtle Rock. Super Metroid's drop prizes are not kept.
+
+**The YAML library is js-yaml 5.5.0** (MIT, exact pin). It replaces a YAML parser the pack would otherwise write: plain-scalar, quoting and indentation rules are easy to get subtly wrong, and samus.link's writer (`yaml` 1.10, which quotes a name holding a comma) may change. Bundled alone with `load` and the failsafe schema it is 45.6 kB, **13.8 kB gzipped** (esbuild 0.28.1, minified, `gzip -9`); `yaml` 2.9.1 was 30.4 kB. It is loaded with the failsafe schema (maps, sequences and strings only: `Yes` and `1` stay text, no tag builds anything), `maxAliases: 0` (the writer never emits an alias, and an alias is how a small file expands) and its default of refusing a duplicate key; the text was bounded before. Only `src/spoiler/yaml.ts` imports it, and the app is to load `parse.ts` on demand, so a player who never imports a spoiler log never downloads it. It is a runtime dependency of the pack (the parser is shipped code); `yaml` 1.10.3 (the site's own writer) is a dev dependency of the fixture script alone.
+
+**Fixtures.** `test/spoilers/` holds seed `hQa77ywrRDKvN4tXHGyRMw` (guid `8506bbef2c2b4432af378b571c6c9133`, 316 locations, no personal data): the API's answer as received and the Download file **rebuilt from it with the site's own `downloadSpoiler` code and `yaml` 1.10.3, not downloaded from the button** (`provenance.json` says so). `pnpm --filter @alltp/pack-smz3 spoiler-fixtures <guid | API JSON file>` writes them; `test/spoiler-fixtures.spec.ts` renders the YAML again from the JSON and fails on any hand edit. A real download is still welcome: its text should parse the same.
+
 ## Not modelled
 
 - **Ganon and Mother Brain.** Upstream's logic has no region for them: the game checks the goal (crystals for Ganon, bosses for Tourian), which the tracker counts from the rewards found.
