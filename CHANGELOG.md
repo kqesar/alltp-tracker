@@ -2,6 +2,45 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.44.0](https://github.com/kqesar/alltp-tracker/compare/v2.43.0...v2.44.0) (2026-10-25)
+
+
+### ✨ Features
+
+* **alttpr:** add a tricks world with six minor tricks as items ([40dd161](https://github.com/kqesar/alltp-tracker/commit/40dd16155d1815343d1195c7a5e22ba7da266cd5))
+* **alttpr:** one map marker for Hookshot Cave and Sahasrahla's Hut ([1a44781](https://github.com/kqesar/alltp-tracker/commit/1a447819ca10ce30d5ba1dc27301528979b2ebfc))
+* **autotrack:** confirm the mode after reading mode-bound ranges ([6f25697](https://github.com/kqesar/alltp-tracker/commit/6f256971141cd4b89fca24fc3f80961bdc15f9fa))
+* **autotrack:** tell a poll that found memory unchanged ([26bfe5b](https://github.com/kqesar/alltp-tracker/commit/26bfe5b45def34cbb04976234a244cf4effc039f))
+* **sm:** read Map Rando's RTA clock, the start and the goal outside Race Mode ([1b743a7](https://github.com/kqesar/alltp-tracker/commit/1b743a71fe48641affff51afa4096fe07324d757))
+* **smz3:** read the games' frame counters, the start and the credits outside Race Mode ([21a88fd](https://github.com/kqesar/alltp-tracker/commit/21a88fdcab185941070f8bb5655f9f9d6baad047))
+* **web:** add a run timer to the SMZ3 board ([39b1d8f](https://github.com/kqesar/alltp-tracker/commit/39b1d8fca60659b10612d2e2641f22e607bec6dc))
+* **web:** add a run timer to the Super Metroid board ([6fd8e3d](https://github.com/kqesar/alltp-tracker/commit/6fd8e3d558d62f19d788a60f407c04bd1847f35e))
+* **web:** group what a dungeon's chests are missing ([942d537](https://github.com/kqesar/alltp-tracker/commit/942d5372a33b6b5ebe7de5d9fba7e74f6fe466b2))
+* **web:** mark checks a trick opens ([f116e6a](https://github.com/kqesar/alltp-tracker/commit/f116e6a3f9e1ec627b2455db9990cb3fa3496426))
+* **web:** move the key cells switch from the toolbar to the Mode dialog ([6b8350e](https://github.com/kqesar/alltp-tracker/commit/6b8350e60c7680f54feed613315d922999a1e686))
+* **web:** offer game time on the run timer for A Link to the Past ([3f14975](https://github.com/kqesar/alltp-tracker/commit/3f1497580094348a60841dae676a4b9e02965403))
+* **web:** say which trick opens a check ([fe3c5e2](https://github.com/kqesar/alltp-tracker/commit/fe3c5e2a4a08a864ee63b7ad10ebf710f742dcf3))
+
+
+### 🐛 Bug Fixes
+
+* **web:** keep a cleared dungeon's boss row open until the boss is beaten ([80003fc](https://github.com/kqesar/alltp-tracker/commit/80003fc9fe7279b7d4666219c991877213d5d9bd))
+* **web:** keep a tooltip that opens under the pointer ([d059a1d](https://github.com/kqesar/alltp-tracker/commit/d059a1df0a36370fce8df3135b3ac19efa0de44a))
+* **web:** stop a game-time timer while the emulator is paused ([5a93b75](https://github.com/kqesar/alltp-tracker/commit/5a93b75f899f12e617ac97b6119456d22e650c83))
+* **web:** stop the game-time timer while the game's counter stands still ([c88108f](https://github.com/kqesar/alltp-tracker/commit/c88108f7c946dfd7fafedfcc54df84ce30286882))
+
+
+### 📚 Documentation
+
+* **sm:** say which emulators the smr rules ban ([5f4445a](https://github.com/kqesar/alltp-tracker/commit/5f4445a6b8579fa252948aef0ff025cbb07c8b19))
+* **web:** drop the dark room from what makes a check maybe ([8eef748](https://github.com/kqesar/alltp-tracker/commit/8eef74886e057165ced7e002396448c435079ea3))
+
+
+### 🔧 Code Refactoring
+
+* **web:** share the out-of-tab link ([399c56c](https://github.com/kqesar/alltp-tracker/commit/399c56c87d6ccee2e428b00949210fbaf05c3e5f))
+* **web:** share the run timer's store slice, steps and component ([65592e9](https://github.com/kqesar/alltp-tracker/commit/65592e9ad6effdb27b66d7e5288bf7fa03180aa6))
+
 ## [2.43.0](https://github.com/kqesar/alltp-tracker/compare/v2.42.0...v2.43.0) (2026-10-25)
 
 
