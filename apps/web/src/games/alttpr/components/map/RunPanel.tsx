@@ -1,6 +1,7 @@
 import { playTimeMs, type RomStats } from "@alltp/pack-alttpr";
 import { memo, useId, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { ReviewSection } from "@/games/alttpr/components/map/ReviewSection";
 import { checkStates } from "@/games/alttpr/logic/checks";
 import {
   type Find,
@@ -10,6 +11,7 @@ import {
   type Split,
   splitsOf,
 } from "@/games/alttpr/logic/runLog";
+import { useReview } from "@/games/alttpr/review/useReview";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath } from "@/games/alttpr/utils";
@@ -144,7 +146,7 @@ const Splits = ({ splits }: { splits: readonly Split[] }) => {
 };
 
 /** One find: its time, its image (or a location's tick) and its name. */
-const FindRow = memo(({ find }: { find: Find }) => {
+const FindRow = memo(({ find, held }: { find: Find; held?: string }) => {
   const icon = findIcon(find.key);
   return (
     <li className="run-find" data-testid={`find-${find.key}`}>
@@ -162,13 +164,31 @@ const FindRow = memo(({ find }: { find: Find }) => {
           width={24}
         />
       )}
-      <span className="run-find__name">{findName(find.key)}</span>
+      <span className="run-find__name">
+        {findName(find.key)}
+        {held !== undefined && (
+          <span
+            className="run-find__held"
+            data-testid={`find-held-${find.key}`}
+          >
+            {" "}
+            → {held}
+          </span>
+        )}
+      </span>
     </li>
   );
 });
 
 /** Every find of the run, newest first. */
-const Finds = ({ finds }: { finds: readonly Find[] }) => {
+const Finds = ({
+  finds,
+  held,
+}: {
+  finds: readonly Find[];
+  /** In a review, what each checked location held, by location id. */
+  held: ReadonlyMap<string, string> | null;
+}) => {
   const titleId = useId();
   return (
     <section
@@ -193,7 +213,15 @@ const Finds = ({ finds }: { finds: readonly Find[] }) => {
       ) : (
         <ol aria-label="Timeline" className="run-finds__list">
           {finds.map((find) => (
-            <FindRow find={find} key={find.key} />
+            <FindRow
+              find={find}
+              held={
+                find.key.startsWith("check:")
+                  ? held?.get(find.key.slice(6))
+                  : undefined
+              }
+              key={find.key}
+            />
           ))}
         </ol>
       )}
@@ -300,19 +328,34 @@ export const RunPanel = () => {
   const timeline = useGameStore((state) => state.timeline);
   const finds = useMemo(() => findsOf(timeline), [timeline]);
   const splits = useMemo(() => splitsOf(timeline), [timeline]);
+  const review = useReview();
+  const held = useMemo(
+    () =>
+      review === null
+        ? null
+        : new Map(
+            review.log.placements.map((p) => [p.location, p.itemName] as const),
+          ),
+    [review],
+  );
   const titleId = useId();
   return (
-    <section aria-labelledby={titleId} className="run" data-testid="run-panel">
+    <section
+      aria-labelledby={titleId}
+      className={`run${review === null ? "" : " run--review"}`}
+      data-testid="run-panel"
+    >
       <h2 className="sr-only" id={titleId}>
         Run
       </h2>
       <Summary />
+      <ReviewSection />
       <div className="run__columns">
         <div className="run__side">
           <Splits splits={splits} />
           <FromTheGame />
         </div>
-        <Finds finds={finds} />
+        <Finds finds={finds} held={held} />
       </div>
     </section>
   );

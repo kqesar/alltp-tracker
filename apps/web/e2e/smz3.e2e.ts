@@ -191,7 +191,7 @@ test("starts the run timer with the game, follows both games' time and stops at 
       mode: "credits",
     });
     await expect(timer).toHaveAccessibleName(
-      /^Run timer: 3:(2\d|3\d), stopped at the goal$/,
+      /^Run timer: 3:(2\d|3\d), stopped$/,
     );
   } finally {
     await bridge.stop();

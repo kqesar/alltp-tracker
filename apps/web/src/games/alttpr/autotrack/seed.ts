@@ -99,7 +99,7 @@ const GOAL_NAMES: Readonly<Record<RunSettings["goal"], string>> = {
 };
 
 /** The settings a run type holds, which a seed's must match. */
-const COMPARED = [
+export const COMPARED = [
   "mode",
   "entranceShuffle",
   "goal",

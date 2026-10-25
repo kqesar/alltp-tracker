@@ -1,5 +1,6 @@
 import { seedHashOf } from "@alltp/pack-alttpr";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
+import { isRaceModeOn } from "@/autotrack/raceMode";
 import {
   checkSeed,
   type Run,
@@ -23,20 +24,6 @@ const ERRORS: Readonly<Record<SeedFileError, string>> = {
 export type SeedSwitch = Extract<SeedCheck, { kind: "differs" }>;
 
 /**
- * Whether Race Mode is on for this device: set always on, or on in the
- * session this tab runs. Race Mode asks alttpr.com for nothing: a seed's
- * file holds its patch, every item placement with it.
- */
-const useRaceMode = () =>
-  useAutotrackStore(
-    (state) =>
-      state.raceChoice === "on" ||
-      (state.active &&
-        state.status.code === "connected" &&
-        state.status.race.active),
-  );
-
-/**
  * SeedImport - starts a run from an alttpr.com seed: its link or hash names
  * its file, whose settings name the run type. A seed of another run type
  * goes to `onSwitch`; the form says anything else in its status line. In
@@ -52,7 +39,7 @@ export const SeedImport = ({
   run: Run;
 }) => {
   const inputId = useId();
-  const race = useRaceMode();
+  const race = useAutotrackStore(isRaceModeOn);
   const [text, setText] = useState("");
   const [message, setMessage] = useState("");
   // The last load asked: an earlier one's answer, or one after the form

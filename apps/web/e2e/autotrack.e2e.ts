@@ -322,11 +322,9 @@ test("starts the run timer as the game starts, and stops it at the goal", async 
   );
 
   bridge.memory[WRAM + 0x10] = 0x19; // the Triforce room
-  await expect(timer).toHaveAccessibleName(
-    /^Run timer: [\d:]+, stopped at the goal$/,
-  );
+  await expect(timer).toHaveAccessibleName(/^Run timer: [\d:]+, stopped$/);
   await expect(page.getByTestId("run-timer-status")).toHaveText(
-    /^Run timer stopped at the goal: /,
+    /^Run timer stopped: /,
   );
 });
 
@@ -368,7 +366,7 @@ test("shows the game's time when the player chose it, not in Race Mode", async (
 
   bridge.memory[WRAM + 0x10] = 0x19; // the Triforce room
   await expect(timer).toHaveAccessibleName(
-    /^Run timer: 1:00:(09|10), stopped at the goal$/,
+    /^Run timer: 1:00:(09|10), stopped$/,
   );
 });
 

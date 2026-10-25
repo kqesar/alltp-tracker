@@ -76,9 +76,7 @@ describe("RunTimer", () => {
     });
     render(<RunTimer />);
 
-    expect(button()).toHaveAccessibleName(
-      "Run timer: 1:23:45, stopped at the goal",
-    );
+    expect(button()).toHaveAccessibleName("Run timer: 1:23:45, stopped");
     expect(button()).toHaveTextContent("1:23:45");
     expect(screen.getByTestId("run-timer-start")).toBeDisabled();
   });
@@ -88,7 +86,7 @@ describe("RunTimer", () => {
     act(() => useGameStore.getState().startTimer(T0));
     act(() => useGameStore.getState().finishTimer(T0 + 754_000));
     expect(screen.getByTestId("run-timer-status")).toHaveTextContent(
-      "Run timer stopped at the goal: 12:34",
+      "Run timer stopped: 12:34",
     );
   });
 

@@ -1,6 +1,7 @@
 // A Link to the Past Randomizer as a game module: what the shell loads for a
 // device that tracks it (games/registry.ts).
 
+import "@/games/review.css";
 import App from "@/games/alttpr/App";
 import { ObsView } from "@/games/alttpr/ObsView";
 import { unpackLink } from "@/games/alttpr/share";

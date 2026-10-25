@@ -1,10 +1,12 @@
 import { lazy, Suspense, useId } from "react";
 import { MapLegend } from "@/components/map/MapLegend";
+import { ReviewNotice } from "@/components/ui/ReviewNotice";
 import { type Tab, Tabs, tabId } from "@/components/ui/Tabs";
 import { ChecksPanel } from "@/games/alttpr/components/map/ChecksPanel";
 import { GoMode } from "@/games/alttpr/components/map/GoMode";
 import { LogicNote } from "@/games/alttpr/components/map/LogicNote";
 import { MapTracker } from "@/games/alttpr/components/map/MapTracker";
+import { ReviewButton } from "@/games/alttpr/components/map/ReviewSection";
 import { RunPanel } from "@/games/alttpr/components/map/RunPanel";
 import { RunTimer } from "@/games/alttpr/components/map/RunTimer";
 import {
@@ -12,8 +14,10 @@ import {
   VoiceLiveRegion,
 } from "@/games/alttpr/components/map/VoiceControl";
 import { tricksShown } from "@/games/alttpr/logic/solution";
+import { useReview } from "@/games/alttpr/review/useReview";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type { MapView } from "@/games/alttpr/utils";
+import { useReviewStore } from "@/review/store";
 
 /** The panel's views, as its tabs; the Entrances list with shuffled ones. */
 const VIEWS = [
@@ -55,6 +59,8 @@ export const MapPanel = () => {
   const setMapView = useGameStore((state) => state.setMapView);
   const tricksOn = useGameStore(tricksShown);
   const baseId = useId();
+  const review = useReview();
+  const closeReview = useReviewStore((state) => state.close);
 
   return (
     <div className="map-panel" id="map">
@@ -71,10 +77,14 @@ export const MapPanel = () => {
         <div className="map-panel__status">
           <VoiceControl />
           <RunTimer />
+          <ReviewButton />
           <GoMode />
           <VoiceLiveRegion />
         </div>
       </div>
+      {review !== null && (
+        <ReviewNotice onClose={closeReview} review={review} />
+      )}
       <div
         aria-labelledby={tabId(baseId, view)}
         className="map-view"
