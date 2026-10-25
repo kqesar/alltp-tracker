@@ -61,24 +61,16 @@
    "y": 77.1
   },
   {
-   "id": "hookshot-cave-bottom-right",
-   "locations": [
-    "hookshot-cave/bottom-right"
-   ],
-   "name": "Hookshot Cave Bottom Right",
-   "x": 83.2,
-   "y": 8.6
-  },
-  {
    "id": "hookshot-cave",
    "locations": [
     "hookshot-cave/top-right",
     "hookshot-cave/top-left",
-    "hookshot-cave/bottom-left"
+    "hookshot-cave/bottom-left",
+    "hookshot-cave/bottom-right"
    ],
    "name": "Hookshot Cave",
    "x": 83.2,
-   "y": 3.4
+   "y": 6
   },
   {
    "id": "chest-game",
@@ -401,7 +393,8 @@
    "locations": [
     "sahasrahlas-hut/left",
     "sahasrahlas-hut/middle",
-    "sahasrahlas-hut/right"
+    "sahasrahlas-hut/right",
+    "sahasrahla"
    ],
    "name": "Sahasrahla's Hut",
    "x": 81.4,
@@ -487,15 +480,6 @@
    "name": "Bottle Merchant",
    "x": 9,
    "y": 46.8
-  },
-  {
-   "id": "sahasrahla",
-   "locations": [
-    "sahasrahla"
-   ],
-   "name": "Sahasrahla",
-   "x": 81.4,
-   "y": 46.7
   },
   {
    "id": "sick-kid",

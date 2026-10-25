@@ -190,13 +190,18 @@ test.describe("the map", () => {
       readFileSync(join(FIXTURES, "v5-local-storage.json"), "utf8"),
     );
 
-    // Its opened chest markers: Link's House, Sahasrahla's Hut, Hyrule Castle
-    for (const id of ["links-house", "sahasrahlas-hut", "hyrule-castle"]) {
+    // Its opened chest markers: Link's House, Hyrule Castle
+    for (const id of ["links-house", "hyrule-castle"]) {
       await expect(page.getByTestId(`marker-${id}`)).toHaveAttribute(
         "aria-pressed",
         "true",
       );
     }
+    // Sahasrahla's Hut (3) stood apart from Sahasrahla's gift, which it did
+    // not check: the merged marker keeps its three chests checked, not done
+    const hut = page.getByTestId("marker-sahasrahlas-hut");
+    await expect(hut).toHaveAttribute("aria-pressed", "false");
+    await expect(hut).toHaveAccessibleName(/^Sahasrahla's Hut \(4 checks\)/);
     await expect(page.getByTestId("marker-kings-tomb")).toHaveAttribute(
       "aria-pressed",
       "false",

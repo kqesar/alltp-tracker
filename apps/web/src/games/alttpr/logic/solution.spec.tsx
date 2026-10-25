@@ -254,6 +254,49 @@ describe("what a marker shows", () => {
     expect(show("kings-tomb")).toBe("available");
   });
 
+  it("shows a cave the old map split in two as one marker, only some of it in logic", () => {
+    // Boots and a way to the Dark World's Death Mountain, no hookshot: the
+    // boots cross to the bottom right chest alone
+    give({
+      boots: true,
+      flute: true,
+      glove: 2,
+      hammer: true,
+      mirror: true,
+      moonpearl: true,
+    });
+    const cave = markerById("hookshot-cave");
+    expect(cave.locations).toHaveLength(4);
+    expect(show("hookshot-cave")).toBe("possible");
+    expect(markerDetail(cave, store())).toEqual([
+      "unavailable",
+      "unavailable",
+      "unavailable",
+      "available",
+    ]);
+    expect(() => markerById("hookshot-cave-bottom-right")).toThrow(RangeError);
+
+    give({ hookshot: true });
+    expect(show("hookshot-cave")).toBe("available");
+  });
+
+  it("shows Sahasrahla's Hut as only some until the pendant he wants is held", () => {
+    const hut = markerById("sahasrahlas-hut");
+    expect(hut.locations).toContain("sahasrahla");
+    expect(show("sahasrahlas-hut")).toBe("possible");
+    expect(markerDetail(hut, store())).toEqual([
+      "available",
+      "available",
+      "available",
+      "unavailable",
+    ]);
+    expect(() => markerById("sahasrahla")).toThrow(RangeError);
+
+    // Checking the chests leaves the gift to take
+    act(() => store().toggleChecks(hut.locations.slice(0, 3)));
+    expect(show("sahasrahlas-hut")).toBe("unavailable");
+  });
+
   it("is done once every location it stands for is checked", () => {
     act(() => store().toggleChecks(["mire-shed/left"]));
     expect(show("mire-shed")).toBe("unavailable");

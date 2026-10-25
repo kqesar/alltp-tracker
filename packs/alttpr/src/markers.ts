@@ -193,17 +193,72 @@ const CHEST_NAMES = [
   "Master Sword Pedestal",
 ] as const;
 
-const fromLegacyChests: readonly MapMarker[] = CHEST_NAMES.map(
-  (name, index) => {
+/**
+ * The places the legacy map split into two markers, each now one marker
+ * standing for both: the kept marker (the key) takes the locations of the
+ * absorbed one and a position of its own, read off the legacy ones. Both
+ * are legacy names, so a legacy save, which checks locations by the legacy
+ * index (`LEGACY_CHESTS`, untouched), still loads.
+ */
+const MERGED_PLACES: Readonly<
+  Record<
+    string,
+    { absorbs: string; at: readonly [number, number]; why: string }
+  >
+> = {
+  "Hookshot Cave": {
+    absorbs: "Hookshot Cave Bottom Right",
+    at: [91.6, 6],
+    why: "midway between the legacy cave's two markers, (91.6%, 3.4%) and (91.6%, 8.6%): the cave runs from its north door to its south one",
+  },
+  "Sahasrahla's Hut": {
+    absorbs: "Sahasrahla",
+    at: [40.7, 41.4],
+    why: "the hut, where the legacy hut marker stood: Sahasrahla gives his item inside it",
+  },
+};
+
+const ABSORBED: ReadonlySet<string> = new Set(
+  Object.values(MERGED_PLACES).map((merge) => merge.absorbs),
+);
+
+/** The locations of a legacy chest marker, by its name. */
+const legacyLocations = (name: string): readonly string[] =>
+  LEGACY_CHESTS[(CHEST_NAMES as readonly string[]).indexOf(name)]?.locations ??
+  [];
+
+const fromLegacyChests: readonly MapMarker[] = CHEST_NAMES.flatMap(
+  (name, index): MapMarker[] => {
+    if (ABSORBED.has(name)) return [];
+    const id = locationId(name);
+    const merge = MERGED_PLACES[name];
+    if (merge !== undefined) {
+      const [x, y] = merge.at;
+      return [
+        {
+          id,
+          locations: [
+            ...legacyLocations(name),
+            ...legacyLocations(merge.absorbs),
+          ],
+          name,
+          position: { source: "game", why: merge.why },
+          x,
+          y,
+        },
+      ];
+    }
     const [x, y] = LEGACY_CHEST_POSITIONS[index] ?? [0, 0];
-    return {
-      id: locationId(name),
-      locations: LEGACY_CHESTS[index]?.locations ?? [],
-      name,
-      position: { index, legacy: "chest" },
-      x,
-      y,
-    };
+    return [
+      {
+        id,
+        locations: LEGACY_CHESTS[index]?.locations ?? [],
+        name,
+        position: { index, legacy: "chest" },
+        x,
+        y,
+      },
+    ];
   },
 );
 
@@ -251,8 +306,9 @@ const NEW_MARKERS: readonly MapMarker[] = [
 
 /**
  * Every marker of the map: the legacy map's 63 chest markers that stand for
- * a location (in their legacy order), the 10 legacy dungeons, and the
- * markers the legacy map lacked. Each check of the world is on exactly one.
+ * a location (in their legacy order, the two places it split merged into
+ * one marker each), the 10 legacy dungeons, and the markers the legacy map
+ * lacked. Each check of the world is on exactly one.
  */
 export const MARKERS: readonly MapMarker[] = [
   ...fromLegacyChests,
@@ -338,11 +394,15 @@ export const markersOf = (settings: AlttprSettings): readonly MapMarker[] =>
 
 /**
  * Every location a marker of some world stands for: what the player may
- * check, in a save of any run.
+ * check, in a save of any run. Its order is the order shared links index
+ * their locations by (apps/web/src/games/alttpr/share.ts: append-only), so
+ * it starts with the legacy markers' locations as they stood before two
+ * places merged, which a merge must not move.
  */
-export const MAP_LOCATIONS: ReadonlySet<string> = new Set(
-  [...MARKERS, ...INVERTED_MARKERS].flatMap((marker) => marker.locations),
-);
+export const MAP_LOCATIONS: ReadonlySet<string> = new Set([
+  ...CHEST_NAMES.flatMap(legacyLocations),
+  ...[...MARKERS, ...INVERTED_MARKERS].flatMap((marker) => marker.locations),
+]);
 
 /** The dungeons with a marker: every one but Hyrule Castle's escape. */
 export const MARKED_DUNGEONS: readonly DungeonId[] = DUNGEONS.map(
