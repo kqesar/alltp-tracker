@@ -118,6 +118,26 @@ describe("checkDocs", () => {
     expect(checkDocs(root)).toEqual([]);
   });
 
+  it("reports a merge conflict marker left outside a fence", () => {
+    repo({
+      "README.md": [
+        "<<<<<<< HEAD",
+        "ours",
+        "=======",
+        "theirs",
+        ">>>>>>> abc1234 (feat: x)",
+        "```",
+        "<<<<<<< HEAD",
+        "```",
+      ].join("\n"),
+    });
+    expect(checkDocs(root)).toEqual([
+      "README.md:1 holds a merge conflict marker",
+      "README.md:3 holds a merge conflict marker",
+      "README.md:5 holds a merge conflict marker",
+    ]);
+  });
+
   it("reports each failure with file and line, and skips the changelog", () => {
     repo({
       "CHANGELOG.md": "[x](gone.md) `apps/gone.ts`\n",

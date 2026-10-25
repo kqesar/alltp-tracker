@@ -1,5 +1,6 @@
 // Checks that what the Markdown files point at still exists: relative links
-// and their #anchors, and the repository paths quoted in backticks. It reads
+// and their #anchors, and the repository paths quoted in backticks; and that
+// no merge conflict marker was left in one (a rebase once left one). It reads
 // no description, so a doc that stopped being true still passes (CLAUDE.md,
 // "Quality bar"); it catches the most common cause of a false doc, a file
 // that moved or was deleted. Plain Node, no dependency.
@@ -246,6 +247,14 @@ export const checkDocs = (root) => {
   for (const file of markdownFiles(root)) {
     const text = readFileSync(join(root, file), "utf8");
     const fail = (line, message) => failures.push(`${file}:${line} ${message}`);
+
+    maskFences(text)
+      .split("\n")
+      .forEach((row, index) => {
+        if (/^(?:<{7}|>{7})(?: |$)|^={7}$/.test(row)) {
+          fail(index + 1, "holds a merge conflict marker");
+        }
+      });
 
     for (const { target, line } of linkTargets(text)) {
       if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(target)) continue;
