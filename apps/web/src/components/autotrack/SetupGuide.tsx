@@ -13,6 +13,7 @@ import {
 import { useId, useState } from "react";
 import { deviceInUse, type Fix, fixFor } from "@/autotrack/guide";
 import { headlineOf } from "@/autotrack/status";
+import { OutLink } from "@/components/ui/OutLink";
 import { type Tab, Tabs, tabId } from "@/components/ui/Tabs";
 import { switchGame } from "@/games/registry";
 import { isDesktopApp } from "@/utils/platform";
@@ -47,14 +48,6 @@ const STATE_NAMES: Record<StepState, string> = {
   failing: "needs attention",
   pending: "to do",
 };
-
-/** A link out of the tracker, said to open a new tab. */
-const OutLink = ({ label, url }: { label: string; url: string }) => (
-  <a href={url} rel="noopener noreferrer" target="_blank">
-    {label}
-    <span className="sr-only"> (opens in a new tab)</span>
-  </a>
-);
 
 /** A variant of a step: its own heading when the step has several. */
 const Variant = ({
