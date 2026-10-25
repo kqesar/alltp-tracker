@@ -190,6 +190,27 @@ export const Readout = ({
             ))}
           </dl>
         </Group>
+        <Group
+          count={readout.shownMedallions.length}
+          empty={
+            readout.shownMedallionsUnread === null
+              ? "None the game shows yet"
+              : UNREAD[readout.shownMedallionsUnread]
+          }
+          testId="readout-shown-medallions"
+          title="Pad medallions shown"
+        >
+          <dl className="readout__pairs">
+            {readout.shownMedallions.map(({ pad, medallion, why }) => (
+              <div className="readout__pair" key={pad}>
+                <dt>{pad}</dt>
+                <dd>
+                  {medallion} ({why})
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Group>
         <Group count={1} testId="readout-seed" title={seedTitle}>
           <dl className="readout__pairs">
             {readout.seed.map(({ label, value }) => (

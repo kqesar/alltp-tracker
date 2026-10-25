@@ -6,8 +6,11 @@ import {
   readingOf,
   SAVE,
   seedMemory,
+  standOn,
+  writeMedallions,
 } from "@/games/alttpr/autotrack/fixtures";
 import { createFollower } from "@/games/alttpr/autotrack/follow";
+import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import {
   comeOut,
@@ -260,6 +263,67 @@ describe("following the game", () => {
     store().undo();
     expect(store().presetId).toBe("open");
     expect(store().items).toMatchObject({ flute: true, hookshot: true });
+  });
+
+  describe("the pads' medallions", () => {
+    const MIRE = DUNGEON_INDICES.MISERY_MIRE;
+    const ROCK = DUNGEON_INDICES.TURTLE_ROCK;
+    /** The Mire asks Ether, Turtle Rock Quake; Link on `screen`. */
+    const standing = (screen: number, mode = 0x09) =>
+      readingOf(
+        standOn(
+          writeMedallions(seedMemory({ race: false }), 1, 2),
+          screen,
+          mode,
+        ),
+      );
+
+    it("fills a pad once Link reaches its screen, and keeps it away from it", () => {
+      const follower = createFollower();
+
+      follower.read(standing(0x30));
+      expect(store().medallions[MIRE]).toBe(MEDALLION_VALUES.UNKNOWN);
+
+      follower.read(standing(0x70));
+      expect(store().medallions[MIRE]).toBe(MEDALLION_VALUES.ETHER);
+      expect(store().medallions[ROCK]).toBe(MEDALLION_VALUES.UNKNOWN);
+
+      // Into a cave, then across the map: the pad stays known
+      follower.read(standing(0x70, 0x07));
+      follower.read(standing(0x30));
+      expect(store().medallions[MIRE]).toBe(MEDALLION_VALUES.ETHER);
+    });
+
+    it("leaves the change the player makes after the game showed it", () => {
+      const follower = createFollower();
+      follower.read(standing(0x70));
+
+      store().handleMedallionChange(MIRE, MEDALLION_VALUES.BOMBOS);
+      follower.read(standing(0x30));
+      follower.read(standing(0x70));
+      expect(store().medallions[MIRE]).toBe(MEDALLION_VALUES.BOMBOS);
+    });
+
+    it("leaves a medallion the player named before the game showed it", () => {
+      const follower = createFollower();
+      store().handleMedallionChange(ROCK, MEDALLION_VALUES.BOMBOS);
+
+      follower.read(standing(0x47));
+      expect(store().medallions[ROCK]).toBe(MEDALLION_VALUES.BOMBOS);
+      // Sync from game sets it to what the game shows
+      follower.sync();
+      expect(store().medallions[ROCK]).toBe(MEDALLION_VALUES.QUAKE);
+    });
+
+    it("fills nothing in Race Mode", () => {
+      const follower = createFollower();
+      const memory = standOn(
+        writeMedallions(seedMemory({ race: true }), 1, 2),
+        0x70,
+      );
+      follower.read(readingOf(memory, { race: true }));
+      expect(store().medallions).toEqual(Array(10).fill(0));
+    });
   });
 
   it("switches to a bare run before any game in play was read", () => {

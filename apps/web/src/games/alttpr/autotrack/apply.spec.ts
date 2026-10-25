@@ -4,17 +4,22 @@ import {
   gameView,
   isEmptyView,
   keysInHand,
+  medallionsShown,
   mergeView,
   newsOf,
   syncView,
 } from "@/games/alttpr/autotrack/apply";
 import {
   checkIn,
+  openEntrance,
   readingOf,
   SAVE,
   seedMemory,
+  standOn,
+  writeMedallions,
   writePrizeTables,
 } from "@/games/alttpr/autotrack/fixtures";
+import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import { getPreset } from "@/games/alttpr/data/presets";
 import { counterMax } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -22,8 +27,9 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
 /** A new run of a preset, as the store starts it. */
 const fresh = (presetId = "open"): Board => {
   useGameStore.getState().applyPreset(presetId);
-  const { checked, items, settings, smallKeys } = useGameStore.getState();
-  return { checked, items, settings, smallKeys };
+  const { checked, items, medallions, settings, smallKeys } =
+    useGameStore.getState();
+  return { checked, items, medallions, settings, smallKeys };
 };
 
 /** A board changed by hand from a fresh one. */
@@ -316,8 +322,9 @@ describe("gameView", () => {
     // Small keys leave their dungeons from MCS Shuffle up, not MC
     const level = (dungeonItems: "mc" | "mcs") => {
       useGameStore.getState().applyRun("open", { ...OPEN, dungeonItems });
-      const { checked, items, settings, smallKeys } = useGameStore.getState();
-      return { checked, items, settings, smallKeys };
+      const { checked, items, medallions, settings, smallKeys } =
+        useGameStore.getState();
+      return { checked, items, medallions, settings, smallKeys };
     };
     expect(gameView(reading, level("mcs"), { 3: 2 }).smallKeys).toEqual({
       3: 2,
@@ -525,6 +532,76 @@ describe("syncView", () => {
     expect(laid?.next.checked).toEqual({
       "eastern-palace/big-chest": true,
       "links-house": true,
+    });
+  });
+});
+
+describe("the pads' medallions", () => {
+  const MIRE = DUNGEON_INDICES.MISERY_MIRE;
+  const ROCK = DUNGEON_INDICES.TURTLE_ROCK;
+  /** A seed asking Ether at the Mire and Quake at Turtle Rock, Link on `screen`. */
+  const standing = (screen: number) =>
+    standOn(writeMedallions(seedMemory({ race: false }), 1, 2), screen);
+
+  it("lays the medallion of the pad Link stands at, and no other", () => {
+    const board = fresh();
+    const mire = gameView(readingOf(standing(0x70)), board);
+    expect(mire.medallions).toEqual({ [MIRE]: MEDALLION_VALUES.ETHER });
+    expect(mergeView(board, mire)?.next.medallions).toEqual(
+      board.medallions.map((value, i) =>
+        i === MIRE ? MEDALLION_VALUES.ETHER : value,
+      ),
+    );
+
+    const rock = gameView(readingOf(standing(0x47)), board);
+    expect(rock.medallions).toEqual({ [ROCK]: MEDALLION_VALUES.QUAKE });
+    expect(gameView(readingOf(standing(0x30)), board).medallions).toEqual({});
+  });
+
+  it("lays a pad's medallion once its entrance is open, wherever Link is", () => {
+    const memory = openEntrance(standing(0x30), 0x47);
+    expect(gameView(readingOf(memory), fresh()).medallions).toEqual({
+      [ROCK]: MEDALLION_VALUES.QUAKE,
+    });
+  });
+
+  it("keeps what was shown when a later reading shows none", () => {
+    const board = fresh();
+    const shown = medallionsShown(readingOf(standing(0x70)));
+    const away = readingOf(standing(0x30));
+    expect(gameView(away, board).medallions).toEqual({});
+    expect(gameView(away, board, {}, shown).medallions).toEqual({
+      [MIRE]: MEDALLION_VALUES.ETHER,
+    });
+  });
+
+  it("lays nothing in Race Mode, whose snapshot holds no ROM byte", () => {
+    const view = gameView(readingOf(standing(0x70), { race: true }), fresh());
+    expect(view.medallions).toEqual({});
+  });
+
+  it("leaves a medallion the player named theirs, on a merge only", () => {
+    const board = fresh();
+    const named = board.medallions.map((value, i) =>
+      i === MIRE ? MEDALLION_VALUES.BOMBOS : value,
+    );
+    const mine = { ...board, medallions: named };
+    const view = gameView(readingOf(standing(0x70)), mine);
+
+    expect(mergeView(mine, view)?.next.medallions).toBeUndefined();
+    expect(syncView(mine, view)?.next.medallions?.[MIRE]).toBe(
+      MEDALLION_VALUES.ETHER,
+    );
+  });
+
+  it("is news once, not again on a reading that shows it still", () => {
+    const board = fresh();
+    const away = gameView(readingOf(standing(0x30)), board);
+    const first = gameView(readingOf(standing(0x70)), board);
+    const again = gameView(readingOf(standing(0x70)), board);
+    expect(isEmptyView(newsOf(first, again))).toBe(true);
+    expect(newsOf(away, first).medallions).toEqual({
+      [MIRE]: MEDALLION_VALUES.ETHER,
     });
   });
 });

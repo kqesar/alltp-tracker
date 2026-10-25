@@ -6,11 +6,13 @@ import {
   decodeChecks,
   decodeEntrances,
   decodeItems,
+  decodeMedallions,
   decodePrizes,
   decodeProgress,
   decodeSeedSettings,
   type EntranceReading,
   type ItemReading,
+  type MedallionReading,
   type MemoryView,
   type PrizeReading,
   type ProgressReading,
@@ -34,6 +36,12 @@ export type AutotrackReading = {
    * dungeon's, and those the world map draws. No other prize is kept.
    */
   readonly prizes: PrizeReading;
+  /**
+   * The medallions Misery Mire and Turtle Rock ask for that the game shows,
+   * outside Race Mode: those of a pad whose screen is in view, or whose
+   * entrance is open. No other medallion is kept.
+   */
+  readonly medallions: MedallionReading;
   /**
    * The door or hole Link last went in by and the door he last came out
    * by, outside Race Mode: the game's numbers, which the entrance tables
@@ -63,6 +71,7 @@ export const readMemory = (
     checked: [...checks.checked],
     entrances: decodeEntrances(memory, options),
     items: decodeItems(memory, options),
+    medallions: decodeMedallions(memory, options),
     prizes: decodePrizes(memory, options),
     progress: decodeProgress(memory, options),
     race,

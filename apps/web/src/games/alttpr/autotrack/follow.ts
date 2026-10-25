@@ -18,6 +18,7 @@ import {
   gameView,
   isEmptyView,
   keysInHand,
+  medallionsShown,
   mergeView,
   newsOf,
   syncView,
@@ -78,6 +79,14 @@ export const createFollower = (): Follower => {
   let hand: Record<number, number> | null = null;
   /** The least small keys found, by grid dungeon index. */
   const found: Record<number, number> = {};
+  /**
+   * The medallions the game has shown, by slot of the board's `medallions`:
+   * a reading shows one only while its pad's screen is in view (or its
+   * entrance open), so the session keeps what was shown. The game never
+   * un-shows one; Race Mode, if a race seed replaces the game in the session,
+   * starts it over.
+   */
+  const known: Record<number, number> = {};
   /** The doors and holes last noted, to note only what the game shows anew. */
   let noted: string | null = null;
 
@@ -128,7 +137,7 @@ export const createFollower = (): Follower => {
       const game =
         last === null
           ? null
-          : syncView(fresh, gameView(last, fresh, found))?.next;
+          : syncView(fresh, gameView(last, fresh, found, known))?.next;
       const run = { ...fresh, ...game };
       return (
         sameValues(run.items, store.items) &&
@@ -154,7 +163,10 @@ export const createFollower = (): Follower => {
       noteEntrances(reading.entrances);
       const store = useGameStore.getState();
       countKeys(reading, store.smallKeys);
-      const view = gameView(reading, store, found);
+      if (reading.race) {
+        for (const slot of Object.keys(known)) delete known[Number(slot)];
+      } else Object.assign(known, medallionsShown(reading));
+      const view = gameView(reading, store, found, known);
       const news = shown === null ? view : newsOf(shown, view);
       last = reading;
       shown = view;
@@ -169,7 +181,8 @@ export const createFollower = (): Follower => {
         (fresh) =>
           reading === null
             ? null
-            : (syncView(fresh, gameView(reading, fresh, found))?.next ?? null),
+            : (syncView(fresh, gameView(reading, fresh, found, known))?.next ??
+              null),
         // The timer the game just started goes on in the seed's run
         true,
       );
@@ -177,7 +190,7 @@ export const createFollower = (): Follower => {
     sync: () => {
       if (last === null) return null;
       const store = useGameStore.getState();
-      const laid = syncView(store, gameView(last, store, found));
+      const laid = syncView(store, gameView(last, store, found, known));
       if (laid !== null) store.syncWithGame(laid.next);
       return laid?.count ?? 0;
     },
