@@ -404,6 +404,145 @@ describe("modes (a combined ROM such as SMZ3)", () => {
     expect(Array.from(poller.bytes("zelda-saved"))).toEqual([1, 2, 3, 6]);
   });
 
+  describe("a portal inside a tick", () => {
+    /** A poller over `memory` whose transport runs `after` when a request is read. */
+    const watched = (
+      source: typeof pack,
+      memory: Uint8Array,
+      after: (pieces: [number, number][]) => void,
+      setting: RaceSetting = "auto",
+    ) => {
+      const transport = new MemoryTransport(memory);
+      const read = transport.read.bind(transport);
+      transport.read = async (request, into, offset) => {
+        await read(request, into, offset);
+        const pieces: [number, number][] = [];
+        for (let i = 0; i < request.pieces.length; i += 2) {
+          pieces.push([request.pieces[i], request.pieces[i + 1]]);
+        }
+        after(pieces);
+      };
+      const poller = new Poller(source, transport, {
+        now: () => 0,
+        romReadable: true,
+        setting,
+      });
+      return { poller, transport };
+    };
+    const reads = (pieces: [number, number][], address: number) =>
+      pieces.some(([at]) => at === address);
+
+    it("counts the ranges read in it as unread, whichever phase read them", async () => {
+      const memory = new Uint8Array(0x100_0000);
+      memory.set([1, 2, 3, 4], ZELDA_WRAM);
+      let portal = false;
+      const { poller } = watched(pack, memory, (pieces) => {
+        // After the tick's request read ALttP's memory, the portal fires
+        if (portal && reads(pieces, ZELDA_WRAM)) memory[PROBE] = 1;
+      });
+      await poller.tick();
+      await poller.tick();
+      expect(poller.has("zelda-items")).toBe(true);
+
+      portal = true;
+      const update = await poller.tick();
+      expect(update?.modeChanged).toBe(true);
+      expect(poller.mode).toBe("metroid");
+      expect(poller.has("zelda-items")).toBe(false);
+      expect(poller.has("metroid-saved")).toBe(false);
+
+      // The next tick reads the new layout, from the mode the guard took
+      portal = false;
+      memory.set([7, 7, 7, 7], METROID_WRAM);
+      await poller.tick();
+      expect(Array.from(poller.bytes("metroid-items"))).toEqual([7, 7, 7, 7]);
+      expect(poller.has("metroid-items")).toBe(true);
+    });
+
+    // A forbidden range bound to a mode: the casual phase reads it
+    const CLOCK = 0xf5_05b8;
+    const casualPack = definePack({
+      id: "combo-clock",
+      modes: {
+        decode: (bytes) =>
+          bytes[0] === 0 ? "zelda" : bytes[0] === 1 ? "metroid" : null,
+        names: ["zelda", "metroid"],
+        range: "game",
+      },
+      profile: defineRaceProfile({
+        categories: {
+          clock: { permitted: false, rule: "test" },
+          state: { permitted: true, rule: "test" },
+        },
+        id: "test-clock",
+        mapping: "lorom",
+        permitted: [[0x7e_0ff0, 0x7e_0ff0]],
+        source: "test",
+        title: "test",
+        version: "1",
+      }),
+      ranges: [
+        {
+          address: PROBE,
+          category: "state",
+          everyMs: 250,
+          id: "game",
+          size: 1,
+        },
+        {
+          address: CLOCK,
+          category: "clock",
+          everyMs: 250,
+          id: "clock",
+          modes: ["metroid"],
+          size: 4,
+        },
+      ],
+    });
+
+    it("drops the casual ranges read across it, and guards nothing in Race Mode", async () => {
+      const memory = new Uint8Array(0x100_0000);
+      memory[PROBE] = 1;
+      memory.set([5, 0, 0, 0], CLOCK);
+      let portal = false;
+      const { poller } = watched(casualPack, memory, (pieces) => {
+        if (portal && reads(pieces, CLOCK)) memory[PROBE] = 0;
+      });
+      await poller.tick();
+      await poller.tick();
+      expect(poller.has("clock")).toBe(true);
+
+      // Zelda now runs and WRAM holds its memory, which the read took
+      portal = true;
+      memory.set([0xee, 0, 0, 0], CLOCK);
+      const update = await poller.tick();
+      expect(update?.modeChanged).toBe(true);
+      expect(poller.mode).toBe("zelda");
+      expect(poller.has("clock")).toBe(false);
+
+      // Race Mode reads no casual range, so there is nothing to guard
+      const race = watched(casualPack, memory, () => {}, "on");
+      memory[PROBE] = 1;
+      await race.poller.tick();
+      race.transport.pieces.length = 0;
+      await race.poller.tick();
+      expect(race.transport.pieces.filter(([at]) => at === PROBE)).toHaveLength(
+        1,
+      );
+    });
+
+    it("reads the probe once more only after a tick that read a mode-bound range", async () => {
+      const memory = new Uint8Array(0x100_0000);
+      memory[PROBE] = 1;
+      const { poller, transport } = watched(casualPack, memory, () => {});
+      await poller.tick();
+      transport.pieces.length = 0;
+      await poller.tick();
+      // The probe with the race phase, and again to confirm the mode
+      expect(transport.pieces.filter(([at]) => at === PROBE)).toHaveLength(2);
+    });
+  });
+
   it("falls back to the shared ranges while the probe cannot tell", async () => {
     const memory = new Uint8Array(0x100_0000);
     memory[PROBE] = 0x55;
