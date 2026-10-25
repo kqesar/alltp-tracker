@@ -1,7 +1,9 @@
 // The SMZ3 run: what the player holds in both games, the locations checked,
 // the run's settings and what the player knows of the medallion pads. One
 // Zustand store, saved under its own key (each game keeps its run), with
-// undo and redo, as Super Metroid's (games/sm/store.ts).
+// undo and redo, as Super Metroid's (games/sm/store.ts), and beside them the
+// run timer (utils/runTimer.ts), kept apart from the history so undoing a find
+// never rewinds the clock. What the game says (autotracking) lands as news.
 
 import {
   DEFAULT_SETTINGS,
@@ -15,6 +17,15 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { type History, historyActions } from "@/games/runHistory";
 import { createSaveFormat } from "@/games/saveFormat";
+import {
+  freshTimerSlice,
+  restoreTimerSlice,
+  type TimerActions,
+  type TimerSlice,
+  timerActions,
+  timerSliceOf,
+} from "@/games/timerSlice";
+import { IDLE_TIMER } from "@/utils/runTimer";
 
 /** Where the run is saved: apart from the other games', so each keeps its own. */
 export const SMZ3_STORAGE_KEY = "alltp-tracker-smz3";
@@ -79,8 +90,15 @@ const withinPools = (progress: Smz3Progress) =>
     ([id, value]) => (value ?? 0) <= (MAX.get(id) ?? 0),
   );
 
+/** What the store saves: the run and its timer. */
+type Persisted = Smz3Progress & TimerSlice;
+
 type Smz3State = Smz3Progress &
+  TimerSlice &
+  TimerActions &
   History<Smz3Progress> & {
+    /** Set the run timer back to 0, stopped. */
+    resetTimer: () => void;
     /** Step an item: +1 or -1, wrapping within 0 and its pool. */
     step: (id: string, direction: 1 | -1) => void;
     /** Check the locations, or none of them once all are. */
@@ -112,7 +130,7 @@ const progressOf = (state: Smz3Progress): Smz3Progress => ({
 });
 
 export const useSmz3Store = create<Smz3State>()(
-  persist<Smz3State, [], [], Smz3Progress>(
+  persist<Smz3State, [], [], Persisted>(
     (set, get) => {
       const { applyGameNews, record, redo, undo } = historyActions({
         get,
@@ -121,12 +139,21 @@ export const useSmz3Store = create<Smz3State>()(
       });
       return {
         ...freshProgress(),
+        ...freshTimerSlice(),
+        ...timerActions(set),
         applyGameNews,
         future: [],
-        load: (progress) => record(progress),
+        load: (progress) => {
+          record(progress);
+          set({ timer: IDLE_TIMER });
+        },
         past: [],
         redo,
-        reset: () => record(freshProgress(get().settings)),
+        reset: () => {
+          record(freshProgress(get().settings));
+          set({ timer: IDLE_TIMER });
+        },
+        resetTimer: () => set({ timer: IDLE_TIMER }),
         setPad: (which, medallion) => {
           if (get().pads[which] !== medallion) {
             record({ pads: { ...get().pads, [which]: medallion } });
@@ -163,11 +190,18 @@ export const useSmz3Store = create<Smz3State>()(
       merge: (saved, current) => {
         const parsed = progressSchema.safeParse(saved);
         return parsed.success && withinPools(parsed.data)
-          ? { ...current, ...completed(parsed.data) }
+          ? {
+              ...current,
+              ...completed(parsed.data),
+              ...restoreTimerSlice(saved, current),
+            }
           : current;
       },
       name: SMZ3_STORAGE_KEY,
-      partialize: (state) => progressOf(state),
+      partialize: (state) => ({
+        ...progressOf(state),
+        ...timerSliceOf(state),
+      }),
       storage: createJSONStorage(() => localStorage),
       version: SMZ3_SAVE_VERSION,
     },

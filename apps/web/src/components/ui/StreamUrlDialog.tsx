@@ -6,8 +6,8 @@ import { obsViewUrl } from "@/utils/view";
 /**
  * The stream view's address, to copy into an OBS browser source: the dialog
  * of the games whose stream view is the grid alone (ALttPR's adds a timer and
- * the sizes, `StreamViewControl`), Super Metroid's, which offers its run timer
- * under the grid, and Archipelago's, which offers its timer and its feed.
+ * the sizes, `StreamViewControl`), Super Metroid's and SMZ3's, which offer their
+ * run timer under the grid, and Archipelago's, which offers its timer and its feed.
  * @param testIdPrefix - The game's, for the address's `data-testid`
  */
 export const StreamUrlDialog = ({

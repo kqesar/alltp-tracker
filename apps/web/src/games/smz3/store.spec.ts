@@ -15,6 +15,118 @@ beforeEach(() => {
   useSmz3Store.setState(useSmz3Store.getInitialState(), true);
 });
 
+describe("the SMZ3 run timer", () => {
+  it("is idle, started and stopped by the game, on real time, in a fresh run", () => {
+    expect(store()).toMatchObject({
+      autoTimer: true,
+      timer: { elapsedMs: 0, finished: false, startedAt: null },
+      timerClock: "real",
+    });
+  });
+
+  it("starts, pauses, finishes and is set on a game's clock, as the shared timer does", () => {
+    store().startTimer(1_000);
+    store().pauseTimer(6_000);
+    expect(store().timer).toEqual({
+      elapsedMs: 5_000,
+      finished: false,
+      startedAt: null,
+    });
+    store().alignTimer({ ms: 90_000, status: "running" }, 10_000);
+    expect(store().timer).toEqual({
+      elapsedMs: 90_000,
+      finished: false,
+      startedAt: 10_000,
+    });
+    const timer = store().timer;
+    store().alignTimer({ ms: 90_100, status: "running" }, 10_000);
+    expect(store().timer).toBe(timer);
+    store().finishTimer(20_000);
+    expect(store().timer.finished).toBe(true);
+  });
+
+  it("is saved with the run, its choices too, and restored", async () => {
+    store().step("sword", 1);
+    store().setAutoTimer(false);
+    store().setTimerClock("game");
+    store().startTimer(1_000);
+    store().pauseTimer(9_000);
+    const saved = localStorage.getItem(SMZ3_STORAGE_KEY) ?? "null";
+    const savedState = JSON.parse(saved).state;
+    expect(savedState).toMatchObject({
+      autoTimer: false,
+      timer: { elapsedMs: 8_000, finished: false, startedAt: null },
+      timerClock: "game",
+    });
+
+    useSmz3Store.setState(useSmz3Store.getInitialState(), true);
+    expect(store().timer.elapsedMs).toBe(0);
+    localStorage.setItem(SMZ3_STORAGE_KEY, saved);
+    await useSmz3Store.persist.rehydrate();
+    expect(store()).toMatchObject({
+      autoTimer: false,
+      timer: { elapsedMs: 8_000, finished: false, startedAt: null },
+      timerClock: "game",
+    });
+    expect(store().items.sword).toBe(1);
+  });
+
+  it("restores a run saved before the timer as idle, on and real, and a damaged timer as idle", async () => {
+    localStorage.setItem(
+      SMZ3_STORAGE_KEY,
+      JSON.stringify({ state: freshProgress(), version: 1 }),
+    );
+    await useSmz3Store.persist.rehydrate();
+    expect(store()).toMatchObject({
+      autoTimer: true,
+      timer: { elapsedMs: 0, finished: false, startedAt: null },
+      timerClock: "real",
+    });
+
+    localStorage.setItem(
+      SMZ3_STORAGE_KEY,
+      JSON.stringify({
+        state: {
+          ...freshProgress(),
+          autoTimer: "yes",
+          timer: { elapsedMs: -5, finished: true, startedAt: 3 },
+          timerClock: "rta",
+        },
+        version: 1,
+      }),
+    );
+    await useSmz3Store.persist.rehydrate();
+    expect(store()).toMatchObject({
+      autoTimer: true,
+      timer: { elapsedMs: 0, finished: false, startedAt: null },
+      timerClock: "real",
+    });
+  });
+
+  it("is cleared by a new game, an import and a reset, but never by an undo, and is no part of an export", () => {
+    store().startTimer(1_000);
+    store().step("hookshot", 1);
+    store().undo();
+    expect(store().timer.startedAt).toBe(1_000);
+
+    expect(JSON.stringify(exportSave(store()))).not.toContain("timer");
+    expect(JSON.stringify(exportSave(store()))).not.toContain("elapsedMs");
+
+    store().reset();
+    expect(store().timer.startedAt).toBeNull();
+    store().startTimer(2_000);
+    store().load(freshProgress());
+    expect(store().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: null,
+    });
+    store().startTimer(3_000);
+    store().resetTimer();
+    expect(store().timer.startedAt).toBeNull();
+  });
+});
+
 describe("the SMZ3 run", () => {
   it("steps an item within its pool, wrapping both ways", () => {
     store().step("sword", 1);

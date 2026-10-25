@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { OVERLAY_ITEMS } from "@/games/alttpr/overlay";
 import { overlayReadingOf, overlaySource } from "@/games/smz3/overlay";
 import { freshProgress, useSmz3Store } from "@/games/smz3/store";
+import { IDLE_TIMER } from "@/utils/runTimer";
+
+/** A fresh run with its timer, as the reading takes it. */
+const fresh = () => ({ ...freshProgress(), timer: IDLE_TIMER });
 
 /** Pinned: what SMZ3's items may say is a decision, not a side effect. */
 const ZELDA_IDS = [
@@ -56,7 +60,7 @@ const SM_IDS = [
 
 describe("SMZ3's overlay reading", () => {
   it("names exactly the items the API may show: Hyrule's, then Zebes's", () => {
-    const { state } = overlayReadingOf(freshProgress());
+    const { state } = overlayReadingOf(fresh());
     expect(state.items.map(({ id }) => id)).toEqual([...ZELDA_IDS, ...SM_IDS]);
     // The boss tokens are rewards, found when picked up and no boss beaten:
     // not sent, and no other objective is recorded for this game
@@ -71,7 +75,7 @@ describe("SMZ3's overlay reading", () => {
   });
 
   it("reads each item's level with the pool's range", () => {
-    const run = freshProgress();
+    const run = fresh();
     run.items.sword = 3;
     run.items.missile = 5;
     const { state } = overlayReadingOf(run);
@@ -89,23 +93,45 @@ describe("SMZ3's overlay reading", () => {
   });
 
   it("never reads the boss tokens, which a boss's reward is", () => {
-    const run = freshProgress();
+    const run = fresh();
     run.items.tokenDraygon = 1;
-    const { fresh, state } = overlayReadingOf(run);
+    const { fresh: untouched, state } = overlayReadingOf(run);
     expect(state.objectives).toEqual([]);
     expect(JSON.stringify(state)).not.toMatch(/token/i);
-    expect(fresh).toBe(true);
+    expect(untouched).toBe(true);
   });
 
-  it("has no timer nor go mode, and is fresh until something is held", () => {
-    const { fresh, state } = overlayReadingOf(freshProgress());
-    expect(state.game).toBe("smz3");
-    expect(state.timer).toBeNull();
-    expect(state.goMode).toBeNull();
-    expect(fresh).toBe(true);
-    const held = freshProgress();
+  it("has the run timer as data and no go mode, and is fresh until something is held or timed", () => {
+    const run = fresh();
+    const reading = overlayReadingOf(run);
+    expect(reading.state.game).toBe("smz3");
+    expect(reading.state.goMode).toBeNull();
+    expect(reading.state.timer).toEqual({
+      elapsedMs: 0,
+      startedAt: null,
+      state: "idle",
+    });
+    expect(reading.fresh).toBe(true);
+    const held = fresh();
     held.items.hookshot = 1;
     expect(overlayReadingOf(held).fresh).toBe(false);
+    // The timer as the page shows it, whichever clock set it
+    const running = {
+      ...run,
+      timer: { elapsedMs: 5_000, finished: false, startedAt: 1_000 },
+    };
+    expect(overlayReadingOf(running)).toMatchObject({
+      fresh: false,
+      state: {
+        timer: { elapsedMs: 5_000, startedAt: 1_000, state: "running" },
+      },
+    });
+    expect(
+      overlayReadingOf({
+        ...run,
+        timer: { elapsedMs: 9_000, finished: true, startedAt: null },
+      }).state.timer?.state,
+    ).toBe("finished");
   });
 
   describe("the store", () => {

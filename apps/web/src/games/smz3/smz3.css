@@ -8,7 +8,7 @@
  * composed (packs/smz3 markers.ts).
  */
 .smz3-layout {
-  --cell: clamp(40px, min(100cqi / 18, (100dvh - 14rem) / 9), 64px);
+  --cell: clamp(40px, min(100cqi / 18, (100dvh - 17.5rem) / 9), 64px);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: var(--spacing-lg);
@@ -17,7 +17,7 @@
 
 /* Keysanity adds two rows of key cells, and the keycards under the tokens */
 .smz3-layout[data-keys] {
-  --cell: clamp(40px, min(100cqi / 18, (100dvh - 14rem) / 12), 64px);
+  --cell: clamp(40px, min(100cqi / 18, (100dvh - 17.5rem) / 12), 64px);
 }
 
 @container app (width < 60rem) {

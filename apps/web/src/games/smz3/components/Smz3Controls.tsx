@@ -4,7 +4,8 @@ import { GamePicker } from "@/components/ui/GamePicker";
 import { Modal } from "@/components/ui/Modal";
 import { RunToolbar } from "@/components/ui/RunToolbar";
 import { Smz3Autotrack } from "@/games/smz3/components/Smz3Autotrack";
-import { PRESETS } from "@/games/smz3/data";
+import { gridOf, PRESETS } from "@/games/smz3/data";
+import { streamSize } from "@/games/smz3/Smz3ObsView";
 import { packLink } from "@/games/smz3/share";
 import {
   exportSave,
@@ -186,15 +187,19 @@ const Smz3ModeDialog = ({ onClose }: { onClose: () => void }) => {
  * The SMZ3 toolbar: the run type (with the game), New game, Undo and Redo,
  * Export, Import and Share, and the stream view.
  */
-export const Smz3Controls = () => (
-  <RunToolbar
-    autotrack={<Smz3Autotrack />}
-    game="smz3"
-    link={packLink}
-    ModeDialog={Smz3ModeDialog}
-    modeValue="SMZ3"
-    resetMessage="Start a new game? What you found and checked is cleared; the run's settings stay."
-    saveFormat={{ exportSave, IMPORT_ERRORS, parseSave }}
-    useStore={useSmz3Store}
-  />
-);
+export const Smz3Controls = () => {
+  const keysanity = useSmz3Store((state) => state.settings.keysanity);
+  return (
+    <RunToolbar
+      autotrack={<Smz3Autotrack />}
+      game="smz3"
+      link={packLink}
+      ModeDialog={Smz3ModeDialog}
+      modeValue="SMZ3"
+      resetMessage="Start a new game? What you found, checked and the run timer are cleared; the run's settings stay."
+      saveFormat={{ exportSave, IMPORT_ERRORS, parseSave }}
+      streamSizeOf={streamSize(gridOf(keysanity).length)}
+      useStore={useSmz3Store}
+    />
+  );
+};

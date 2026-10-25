@@ -2,7 +2,11 @@
 // memory snapshot, kept as plain data for the autotracking store.
 
 import {
+  type ClockReading,
+  decodeBeforePlay,
   decodeChecks,
+  decodeGameClock,
+  decodeGoal,
   decodeInPlay,
   decodeItems,
   decodeMode,
@@ -22,6 +26,15 @@ export type Smz3Reading = {
   readonly race: boolean;
   /** Which game runs. */
   readonly mode: Smz3Mode | Unsettled;
+  /** The running game is before play (title, file select, loading a game). */
+  readonly beforePlay: boolean | Unsettled;
+  /**
+   * The games' frame counters, summed. Never read in Race Mode (the pack's
+   * race profile): then, like before it is read, not known.
+   */
+  readonly clock: ClockReading | Unsettled;
+  /** The credits run: both games' endings were reached. */
+  readonly goal: boolean | Unsettled;
   /** The running game is in play: the saves hold the run. */
   readonly inPlay: boolean | Unsettled;
   /** Both games' items held, by the pack's item id. */
@@ -35,7 +48,7 @@ export type Smz3Reading = {
 /**
  * Decode a snapshot.
  * @param memory - The session's snapshot
- * @param race - Whether Race Mode is on: the requirements stay unread
+ * @param race - Whether Race Mode is on: the requirements and the clock stay unread
  * @param at - When it was read
  */
 export const readSmz3 = (
@@ -44,7 +57,10 @@ export const readSmz3 = (
   at: number,
 ): Smz3Reading => ({
   at,
+  beforePlay: decodeBeforePlay(memory),
   checked: decodeChecks(memory),
+  clock: decodeGameClock(memory, race),
+  goal: decodeGoal(memory),
   inPlay: decodeInPlay(memory),
   items: decodeItems(memory),
   mode: decodeMode(memory),
