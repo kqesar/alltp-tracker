@@ -79,7 +79,11 @@ export const findIcon = (key: string): string | null => {
   if (key.startsWith("check:")) return null;
   const [id, level] = itemOf(key);
   const dungeonItem = DUNGEON_ITEM.exec(id);
-  if (dungeonItem) return `${dungeonItem[1]}.png`;
+  if (dungeonItem) {
+    return dungeonItem[1] === "map"
+      ? "dungeonmap.png"
+      : `${dungeonItem[1]}.png`;
+  }
   // Agahnim 2 is drawn as Agahnim, as on the board
   if (id.startsWith("agahnim")) return "agahnim1.png";
   // The half magic and the quarter share the cell's picture
