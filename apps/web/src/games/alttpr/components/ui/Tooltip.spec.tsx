@@ -1,3 +1,4 @@
+import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MapTracker } from "@/games/alttpr/components/map/MapTracker";
@@ -145,21 +146,130 @@ describe("Tooltip", () => {
     ]);
   });
 
-  it("says what a dungeon's boss is missing, until beaten", () => {
+  it("says what a dungeon's boss is missing among its checks, until beaten", () => {
     act(() => analyzeNow());
     renderMap();
     fireEvent.pointerEnter(screen.getByTestId("boss-marker-tower-of-hera"), {
       pointerType: "mouse",
     });
 
-    expect(screen.getByTestId("tooltip-missing")).toHaveTextContent(
-      /^BossMissing: Flute \+ Hammer \+ Hookshot, or /,
+    const groups = () =>
+      screen
+        .getAllByTestId("missing-group")
+        .map((group) => group.textContent ?? "");
+    expect(groups()).toHaveLength(3);
+    expect(groups().at(-1)).toMatch(
+      /^Flute \+ Hammer \+ Hookshot, or .*: Boss$/,
     );
     act(() => {
       useGameStore.getState().handleItemClick("boss2");
       analyzeNow();
     });
+    // Beaten: the boss is no more to ask for, the chests still are
+    expect(groups()).toHaveLength(2);
+    expect(groups().join()).not.toMatch(/Boss/);
+    expect(groups().join()).toMatch(/Big Chest/);
+  });
+
+  /** Palace of Darkness in reach, without the Lantern or the Fire Rod. */
+  const lightsOut = () =>
+    act(() => {
+      useGameStore.setState((state) => ({
+        items: {
+          ...state.items,
+          agahnim: 1,
+          boots: true,
+          bow: 2,
+          flute: true,
+          glove: 2,
+          hammer: true,
+          moonpearl: true,
+          sword: 2,
+        },
+      }));
+      analyzeNow();
+    });
+
+  const missingGroups = () =>
+    screen
+      .getAllByTestId("missing-group")
+      .map((group) => group.textContent?.replaceAll(" ", " "));
+
+  it("groups what a dungeon's checks are missing, one line per thing", () => {
+    lightsOut();
+    renderMap();
+    fireEvent.pointerEnter(
+      screen.getByTestId("boss-marker-palace-of-darkness"),
+      { pointerType: "mouse" },
+    );
+
+    expect(missingGroups()).toEqual([
+      // A shared room is said once with its count, which a screen reader
+      // hears in words
+      "Lantern: Big Chest, Dark Maze ×2 (2 checks), Boss",
+      "Fire Rod, or Lantern: Dark Basement ×2 (2 checks)",
+      "Maybe, big key and small key may be behind other checks: Big Key Chest, Compass Chest, Harmless Hellway",
+    ]);
+    expect(
+      screen.getAllByTestId("missing-group")[0]?.querySelector(".need__icon"),
+    ).not.toBeNull();
+    // The count is drawn, not read: its words are
+    expect(
+      screen
+        .getByTestId("tooltip-missing")
+        .querySelectorAll('[aria-hidden="true"].missing__count'),
+    ).toHaveLength(2);
+  });
+
+  it("says the same on the grid's boss cell as on the map's dungeon", () => {
+    lightsOut();
+    const cell = `boss${LEGACY_DUNGEONS.indexOf("palace-of-darkness")}`;
+    render(
+      <>
+        <TrackerGrid itemLayout={[[cell]]} />
+        <Tooltip />
+      </>,
+    );
+
+    fireEvent.pointerEnter(screen.getByTestId(`item-${cell}`), {
+      pointerType: "mouse",
+    });
+
+    expect(tooltip()).toHaveTextContent("Palace of Darkness");
+    expect(missingGroups()[0]).toBe(
+      "Lantern: Big Chest, Dark Maze ×2 (2 checks), Boss",
+    );
+  });
+
+  it("works it out for no one on hover: it says so while the analysis is pending", () => {
+    renderMap();
+    fireEvent.pointerEnter(
+      screen.getByTestId("boss-marker-palace-of-darkness"),
+      { pointerType: "mouse" },
+    );
+
+    expect(screen.getByTestId("tooltip-pending")).toHaveTextContent(
+      "Working it out…",
+    );
     expect(screen.queryByTestId("tooltip-missing")).toBeNull();
+
+    act(() => analyzeNow());
+
+    expect(screen.queryByTestId("tooltip-pending")).toBeNull();
+    expect(screen.getAllByTestId("missing-group").length).toBeGreaterThan(0);
+  });
+
+  it("keeps a cave's lines as they were", () => {
+    act(() => analyzeNow());
+    renderMap();
+    fireEvent.pointerEnter(screen.getByTestId("marker-kings-tomb"), {
+      pointerType: "mouse",
+    });
+
+    expect(screen.queryByTestId("missing-group")).toBeNull();
+    expect(screen.getByTestId("tooltip-missing")).toHaveTextContent(
+      "Missing: Titan's Mitt + Pegasus Boots",
+    );
   });
 
   it("says why a check is only possible", () => {
@@ -185,17 +295,17 @@ describe("Tooltip", () => {
       pointerType: "mouse",
     });
     // The boss wants the Cane of Somaria too: out of logic
-    expect(screen.getByTestId("tooltip-missing")).toHaveTextContent(
-      "Possible with: Cane of Somaria",
+    expect(missingGroups()[0]).toBe(
+      "Cane of Somaria + Ether Medallion + Quake Medallion (possible with Cane of Somaria): Boss",
     );
     act(() => {
       useGameStore.getState().handleItemClick("somaria");
       analyzeNow();
     });
-    expect(screen.getByTestId("tooltip-missing")).toHaveTextContent(
-      "In logic with: Ether Medallion + Quake Medallion" +
-        "Maybe: Misery Mire's medallion is not noted yet",
-    );
+    expect(missingGroups()).toEqual([
+      "In logic with Ether Medallion + Quake Medallion; Maybe, medallion not noted yet: " +
+        "Big Chest, Main Lobby, Big Key Chest, Compass Chest, Bridge Chest, Map Chest, Spike Chest, Boss",
+    ]);
   });
 
   it("says a location seen from afar is visible, not reachable yet", () => {

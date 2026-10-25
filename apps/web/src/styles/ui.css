@@ -253,6 +253,17 @@
   color: var(--color-text-secondary);
 }
 
+/* A group of checks: what they miss, then which. The count stays with its
+   room's name, and the list wraps between spots. */
+.missing--group {
+  overflow-wrap: anywhere;
+}
+
+.missing__count {
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
 .missing--pending,
 .ways__far {
   color: var(--color-text-muted);

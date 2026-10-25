@@ -1,5 +1,10 @@
 import { Fragment } from "react";
-import type { Doubt, Missing } from "@/games/alttpr/logic/missing";
+import type {
+  Doubt,
+  Missing,
+  MissingGroup,
+  Spot,
+} from "@/games/alttpr/logic/missing";
 import type { Ways } from "@/games/alttpr/logic/needs";
 import { getAssetPath } from "@/games/alttpr/utils";
 
@@ -120,3 +125,98 @@ export const MissingLines = ({
     </>
   );
 };
+
+/**
+ * Why a group of checks is only possible, in a few words: what their
+ * doubts have in common, not the spots a key may be behind (they differ by
+ * check, and the Checks list's "Why?" says them).
+ */
+export const shortDoubts = (doubts: readonly Doubt[]): string[] => {
+  const keys = [
+    ...new Set(
+      doubts.flatMap((doubt) => (doubt.kind === "keys" ? [doubt.key] : [])),
+    ),
+  ].sort();
+  return [
+    ...(keys.length > 0
+      ? [`${keys.join(" and ")} may be behind other checks`]
+      : []),
+    ...(doubts.some(({ kind }) => kind === "medallion")
+      ? ["medallion not noted yet"]
+      : []),
+    ...(doubts.some(({ kind }) => kind === "placement")
+      ? ["depends on where an item was placed"]
+      : []),
+  ];
+};
+
+/** A spot's name; a room shared by several checks says how many. */
+const SpotName = ({ spot }: { spot: Spot }) => (
+  <>
+    {spot.name}
+    {spot.count > 1 && (
+      <>
+        <span aria-hidden="true" className="missing__count">
+          {` ×${spot.count}`}
+        </span>
+        <span className="sr-only"> ({spot.count} checks)</span>
+      </>
+    )}
+  </>
+);
+
+/**
+ * Checks that miss the same thing, one line each: what they miss, then
+ * which ("Lantern: Dark Maze ×2, Big Chest, Boss"). The ways are a single
+ * check's (WaysList); a check only maybe says what puts it in logic and why
+ * it is not yet ("Maybe, small key may be behind other checks: Compass
+ * Chest").
+ */
+export const MissingGroups = ({
+  groups,
+}: {
+  groups: readonly MissingGroup[];
+}) => (
+  <>
+    {groups.map(({ key, missing, spots }) => {
+      const { inLogic, possible, tri } = missing;
+      const doubted = shortDoubts(missing.doubts);
+      return (
+        <p
+          className="missing missing--group"
+          data-testid="missing-group"
+          key={key}
+        >
+          {tri === "no" && <WaysList ways={inLogic} />}
+          {tri === "no" && possible && (
+            <>
+              {" "}
+              <span className="missing__lead">(possible with</span>{" "}
+              <WaysList ways={possible} />
+              <span className="missing__lead">)</span>
+            </>
+          )}
+          {tri === "maybe" && !isThere(inLogic) && (
+            <>
+              <span className="missing__lead">In logic with</span>{" "}
+              <WaysList ways={inLogic} />
+              {doubted.length > 0 && "; "}
+            </>
+          )}
+          {tri === "maybe" && doubted.length > 0 && (
+            <>
+              <span className="missing__lead">Maybe,</span> {doubted.join("; ")}
+            </>
+          )}
+          <span className="missing__lead">:</span>{" "}
+          {spots.map((spot, index) => (
+            <Fragment key={spot.name}>
+              {index > 0 && ", "}
+              <SpotName spot={spot} />
+            </Fragment>
+          ))}
+        </p>
+      );
+    })}
+  </>
+);

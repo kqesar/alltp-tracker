@@ -47,6 +47,8 @@ import {
   fillerOf,
   type Inputs,
   locationName,
+  type MarkerState,
+  prizeOf,
   type Solution,
   solutionOf,
 } from "@/games/alttpr/logic/solution";
@@ -229,6 +231,137 @@ const rulesDoubts = (
           kind: "medallion" as const,
         },
   );
+};
+
+/** One place to look in a dungeon, or several that share a room. */
+export type Spot = {
+  /** "Big Chest", or the room they share: "Dark Basement" */
+  readonly name: string;
+  /** How many checks it stands for */
+  readonly count: number;
+};
+
+/** The checks that miss the same thing. */
+export type MissingGroup = {
+  /** Stable for what the group says: its ways and doubts, not its spots. */
+  readonly key: string;
+  /** What its first check is missing: the others miss the same. */
+  readonly missing: Missing;
+  readonly spots: readonly Spot[];
+};
+
+const ROOM_SEPARATOR = " - ";
+
+/**
+ * Shortens the names of a dungeon's checks: those that share a room (the
+ * words before " - ") become the room with a count, "Dark Basement - Left"
+ * and "Dark Basement - Right" being "Dark Basement" twice, placed where the
+ * first of them stood.
+ */
+export const compactSpots = (labels: readonly string[]): Spot[] => {
+  const room = (label: string) => {
+    const at = label.indexOf(ROOM_SEPARATOR);
+    return at < 0 ? undefined : label.slice(0, at);
+  };
+  const sizes = new Map<string, number>();
+  for (const label of labels) {
+    const name = room(label);
+    if (name !== undefined) sizes.set(name, (sizes.get(name) ?? 0) + 1);
+  }
+  const done = new Set<string>();
+  const spots: Spot[] = [];
+  for (const label of labels) {
+    const name = room(label);
+    const count = name === undefined ? 1 : (sizes.get(name) ?? 1);
+    if (name === undefined || count < 2) {
+      spots.push({ count: 1, name: label });
+    } else if (!done.has(name)) {
+      done.add(name);
+      spots.push({ count, name });
+    }
+  }
+  return spots;
+};
+
+/**
+ * What makes two checks miss "the same thing": the same ways and the same
+ * kinds of doubt (which spots hold a key differs by check, and is left out).
+ */
+const sameThing = (missing: Missing): string =>
+  JSON.stringify([
+    missing.tri,
+    missing.inLogic,
+    missing.possible,
+    [
+      ...new Set(
+        missing.doubts.map((doubt) =>
+          doubt.kind === "keys" ? `${doubt.kind}:${doubt.key}` : doubt.kind,
+        ),
+      ),
+    ].sort(),
+  ]);
+
+/**
+ * Groups checks by what they are missing, from the run's analysis: those
+ * out of logic first, then those only maybe, each in the order given, a
+ * group's checks shortened by compactSpots. A check the analysis has
+ * nothing on (it is in logic) is left out. Pure: nothing is solved here.
+ * @param spots - The checks to look at, with the name to say them by
+ */
+export const groupMissing = (
+  spots: readonly { id: string; label: string }[],
+  analysis: RunAnalysis,
+): MissingGroup[] => {
+  const groups = new Map<string, { labels: string[]; missing: Missing }>();
+  for (const { id, label } of spots) {
+    const missing = analysis.missing.get(id);
+    if (missing === undefined) continue;
+    const key = sameThing(missing);
+    const group = groups.get(key) ?? { labels: [], missing };
+    group.labels.push(label);
+    groups.set(key, group);
+  }
+  return [...groups]
+    .map(([key, { labels, missing }]) => ({
+      key,
+      missing,
+      spots: compactSpots(labels),
+    }))
+    .sort(
+      (a, b) =>
+        Number(a.missing.tri === "maybe") - Number(b.missing.tri === "maybe"),
+    );
+};
+
+/**
+ * What a dungeon's checks left are missing, grouped: every check not done
+ * and not in logic, and the boss. Castle Tower and Ganon's Tower have no
+ * boss check, so theirs is the prize's rule, said "Boss".
+ * @param checks - The dungeon's checks as shown, with their name in it
+ * @param boss - What its boss shows; undefined for a dungeon without one
+ */
+export const dungeonMissing = (
+  checks: readonly { id: string; label: string; state: MarkerState }[],
+  dungeon: DungeonId,
+  boss: MarkerState | undefined,
+  analysis: RunAnalysis,
+): MissingGroup[] => {
+  const beaten = boss === "opened";
+  const spots = checks.filter(
+    ({ id, state }) => state !== "opened" && !(beaten && id.endsWith("/boss")),
+  );
+  if (
+    boss !== undefined &&
+    !beaten &&
+    !checks.some(({ id }) => id.endsWith("/boss"))
+  ) {
+    spots.push({
+      id: prizeOf(dungeon, analysis.solution.settings),
+      label: "Boss",
+      state: boss,
+    });
+  }
+  return groupMissing(spots, analysis);
 };
 
 /**

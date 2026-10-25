@@ -1,5 +1,6 @@
 // What each check is missing and why one is only possible, worked out from
 // the pack's blockers and explanations over real runs.
+import { type DungeonId, LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import {
   items as freshItems,
@@ -9,12 +10,19 @@ import {
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import {
   analyzeRun,
+  compactSpots,
+  dungeonMissing,
   goModeStatusOf,
+  groupMissing,
   type Missing,
 } from "@/games/alttpr/logic/missing";
 import { type Ways, waysText } from "@/games/alttpr/logic/needs";
 import {
+  bossStateOf,
   type Inputs,
+  locationLabel,
+  locationStateOf,
+  markerById,
   setCrossedSolver,
   solutionOf,
 } from "@/games/alttpr/logic/solution";
@@ -334,5 +342,139 @@ describe("a run with shuffled entrances", () => {
         "tri": "no",
       }
     `);
+  });
+});
+
+describe("compactSpots", () => {
+  it("folds the checks of a shared room into the room with a count", () => {
+    expect(
+      compactSpots([
+        "Big Chest",
+        "Dark Basement - Left",
+        "Compass Chest",
+        "Dark Basement - Right",
+        "Dark Maze - Top",
+        "Dark Maze - Bottom",
+        "Boss",
+      ]),
+    ).toEqual([
+      { count: 1, name: "Big Chest" },
+      { count: 2, name: "Dark Basement" },
+      { count: 1, name: "Compass Chest" },
+      { count: 2, name: "Dark Maze" },
+      { count: 1, name: "Boss" },
+    ]);
+  });
+
+  it("keeps the full name of a room with one check left", () => {
+    expect(compactSpots(["Dark Basement - Left", "Boss"])).toEqual([
+      { count: 1, name: "Dark Basement - Left" },
+      { count: 1, name: "Boss" },
+    ]);
+    expect(compactSpots([])).toEqual([]);
+  });
+});
+
+describe("what a dungeon's checks are missing, grouped", () => {
+  const POD = "palace-of-darkness";
+
+  /** Palace of Darkness in reach, without the Lantern or the Fire Rod. */
+  const DARK = inputsOf({
+    agahnim: 1,
+    boots: true,
+    bow: 2,
+    flute: true,
+    glove: 2,
+    hammer: true,
+    moonpearl: true,
+    sword: 2,
+  });
+
+  /** A marker's checks as the tooltip lists them. */
+  const checksOf = (inputs: Inputs, id: string) => {
+    const marker = markerById(id);
+    if (marker === undefined) throw new RangeError(id);
+    return marker.locations.map((location) => ({
+      id: location,
+      label: locationLabel(marker, location),
+      state: locationStateOf(location, { ...inputs, checked: {} }),
+    }));
+  };
+
+  const groupsOf = (inputs: Inputs, id: DungeonId) =>
+    dungeonMissing(
+      checksOf(inputs, id),
+      id,
+      bossStateOf(id, inputs),
+      analysisOf(inputs),
+    );
+
+  /** Every spot named, a room shared by two as "Name x2". */
+  const named = (groups: ReturnType<typeof groupsOf>) =>
+    groups.flatMap(({ spots }) =>
+      spots.map(({ count, name }) => (count > 1 ? `${name} x${count}` : name)),
+    );
+
+  it("names what Palace of Darkness lacks without the Lantern, once per thing", () => {
+    expect(
+      groupsOf(DARK, POD).map(({ missing, spots }) => ({
+        spots: named([{ key: "", missing, spots }]),
+        tri: missing.tri,
+        ways: waysText(missing.inLogic),
+      })),
+    ).toEqual([
+      // Out of logic first: the Lantern lights the maze and opens the big chest
+      {
+        spots: ["Big Chest", "Dark Maze x2", "Boss"],
+        tri: "no",
+        ways: "Lantern",
+      },
+      // The basement is lit by the Fire Rod too
+      {
+        spots: ["Dark Basement x2"],
+        tri: "no",
+        ways: "Fire Rod, or Lantern",
+      },
+      // The rest wait on keys the tracker cannot place
+      {
+        spots: ["Big Key Chest", "Compass Chest", "Harmless Hellway"],
+        tri: "maybe",
+        ways: "",
+      },
+    ]);
+  });
+
+  it("says every check once, and none of those in logic", () => {
+    const spots = named(groupsOf(DARK, POD));
+    // Of the 14 checks, five are in logic
+    expect(spots).toHaveLength(7);
+    expect(spots).not.toContain("Shooter Room");
+    expect(new Set(spots).size).toBe(spots.length);
+  });
+
+  it("does not depend on the order the checks come in", () => {
+    const analysis = analysisOf(DARK);
+    const checks = checksOf(DARK, POD);
+    const keys = (given: readonly { id: string; label: string }[]) =>
+      groupMissing(given, analysis)
+        .map(({ key }) => key)
+        .sort();
+    expect(keys([...checks].reverse())).toEqual(keys(checks));
+  });
+
+  it("gives Castle Tower, whose rooms hold no boss, its prize's rule as Boss", () => {
+    const inputs = inputsOf({ moonpearl: true });
+    expect(named(groupsOf(inputs, "castle-tower"))).toContain("Boss");
+  });
+
+  it("leaves out a boss beaten", () => {
+    const beaten = inputsOf({
+      ...DARK.items,
+      [`boss${LEGACY_DUNGEONS.indexOf(POD)}`]: 2,
+    });
+    const spots = named(groupsOf(beaten, POD));
+    expect(spots).not.toContain("Boss");
+    // The rest is still to say
+    expect(spots).toContain("Big Chest");
   });
 });

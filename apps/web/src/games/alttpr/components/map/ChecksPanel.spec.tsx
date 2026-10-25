@@ -141,5 +141,89 @@ describe("ChecksPanel", () => {
     expect(filter("unavailable").closest("label")).toHaveTextContent(
       "Out of logic0",
     );
+    expect(screen.queryByTestId("zone-why-eastern-palace")).toBeNull();
+  });
+
+  describe("what a dungeon is missing", () => {
+    it("opens on its heading, grouped, once the analysis is in", async () => {
+      const user = userEvent.setup();
+      render(<ChecksPanel />);
+      await user.click(filter("unavailable"));
+      const ask = screen.getByTestId("zone-why-palace-of-darkness");
+      expect(ask).toHaveAccessibleName("What's missing? Palace of Darkness");
+      expect(ask).toHaveAttribute("aria-expanded", "false");
+      expect(
+        screen.getByTestId("zone-missing-palace-of-darkness"),
+      ).not.toBeVisible();
+      // Only a dungeon has one
+      expect(screen.queryByTestId("check-why-sahasrahlas-hut/left")).toBeNull();
+
+      await user.click(ask);
+
+      expect(ask).toHaveAttribute("aria-expanded", "true");
+      const body = screen.getByTestId("zone-missing-palace-of-darkness");
+      expect(body).toBeVisible();
+      expect(body).toHaveTextContent("Working it out…");
+      expect(ask).toHaveAttribute("aria-controls", body.id);
+
+      act(() => analyzeNow());
+
+      expect(body).not.toHaveTextContent("Working it out…");
+      const groups = within(body)
+        .getAllByTestId("missing-group")
+        .map((group) => group.textContent);
+      // Nothing in logic yet: every check is behind something
+      expect(groups.join()).toMatch(/Agahnim \+ Moon Pearl/);
+      expect(groups.join()).toMatch(/Dark Basement ×2 \(2 checks\)/);
+      expect(groups.at(-1)).toMatch(/: Boss$/);
+    });
+
+    it("closes again, and reads the run as it moves", async () => {
+      const user = userEvent.setup();
+      act(() => analyzeNow());
+      render(<ChecksPanel />);
+      const ask = screen.getByTestId("zone-why-eastern-palace");
+      const body = screen.getByTestId("zone-missing-eastern-palace");
+
+      await user.click(ask);
+      expect(body).toHaveTextContent("Boss");
+      await user.click(ask);
+      expect(body).not.toBeVisible();
+      expect(ask).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("is not offered for a dungeon whose counter is 0", async () => {
+      const user = userEvent.setup();
+      act(() =>
+        useGameStore.setState((state) => ({
+          items: { ...state.items, chest0: 0 },
+        })),
+      );
+      render(<ChecksPanel />);
+      await user.click(filter("opened"));
+      await user.click(filter("unavailable"));
+
+      // Its counter is at 0: every check is done
+      expect(
+        screen.getByRole("region", { name: /^Eastern Palace/ }),
+      ).toBeVisible();
+      expect(screen.queryByTestId("zone-why-eastern-palace")).toBeNull();
+      expect(screen.getByTestId("zone-why-desert-palace")).toBeInTheDocument();
+    });
+
+    it("counts every check of the dungeon, whatever the filters show", async () => {
+      const user = userEvent.setup();
+      act(() => analyzeNow());
+      render(<ChecksPanel />);
+      // Only what is available is listed under Eastern Palace
+      await user.click(filter("possible"));
+      expect(row("eastern-palace/big-key-chest")).toBeNull();
+
+      await user.click(screen.getByTestId("zone-why-eastern-palace"));
+
+      expect(
+        screen.getByTestId("zone-missing-eastern-palace"),
+      ).toHaveTextContent("Big Key Chest");
+    });
   });
 });
