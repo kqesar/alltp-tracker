@@ -7,6 +7,27 @@ const FAKE_FLIPPER = JSON.stringify({
   version: 12,
 });
 
+/** Palace of Darkness in reach without a light, every trick known. */
+const DARK_ROOMS = JSON.stringify({
+  state: {
+    items: {
+      agahnim: 1,
+      boots: true,
+      bow: 2,
+      flute: true,
+      glove: 2,
+      hammer: true,
+      moonpearl: true,
+      sword: 2,
+    },
+    tricks: {
+      enabled: true,
+      techniques: ["darkRooms", "fakeFlipper", "waterWalk"],
+    },
+  },
+  version: 12,
+});
+
 /** Load the tracker with a localStorage save, or with nothing tracked. */
 const openTracker = async (page: Page, saved?: string) => {
   await page.goto("./");
@@ -110,6 +131,69 @@ for (const width of WIDTHS) {
         await expect(link).toHaveAttribute("href", /^https:\/\//);
       }
       await auditDialog(page, dialog, width);
+    });
+
+    test("says which trick opens a check in Why?, linked and accessibly", async ({
+      page,
+    }) => {
+      await openTracker(page, FAKE_FLIPPER);
+      await page.getByTestId("map-view-tab-checks").click();
+      await page.getByTestId("checks-filter-trick").check();
+
+      await page.getByTestId("check-why-hobo").click();
+
+      const row = page.getByTestId("check-row-hobo");
+      await expect(row).toContainText("Doable now with: Fake flipper");
+      await expect(row).toContainText("Missing: Zora's Flippers");
+      await expect(
+        row.getByRole("link", { name: /^Fake flipper/ }),
+      ).toHaveAttribute("href", /youtube\.com\/watch\?v=0YzkiaY3eys&t=874s$/);
+      await auditPage(page, ".mapspan");
+
+      await page.getByTestId("check-about-tricks-hobo").click();
+      const dialog = page.getByRole("dialog", { name: "Tricks" });
+      await auditDialog(page, dialog, width);
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+      await expect(page.getByTestId("check-about-tricks-hobo")).toBeFocused();
+    });
+
+    test("leads a dungeon's tooltip with the trick, within the screen", async ({
+      page,
+    }) => {
+      await openTracker(page, DARK_ROOMS);
+
+      await page.getByTestId("item-boss3").hover();
+
+      const tooltip = page.getByTestId("tooltip");
+      await expect(tooltip).toContainText("Palace of Darkness");
+      await expect(tooltip).toContainText("Doable now with Dark rooms");
+      const box = await tooltip.boundingBox();
+      const viewport = page.viewportSize();
+      expect(box).not.toBeNull();
+      expect(box?.x).toBeGreaterThanOrEqual(0);
+      expect(box?.y).toBeGreaterThanOrEqual(0);
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(
+        viewport?.width ?? 0,
+      );
+      expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(
+        viewport?.height ?? 0,
+      );
+    });
+
+    test("names the trick in a tooltip, with no link", async ({ page }) => {
+      await openTracker(page, FAKE_FLIPPER);
+      const hobo = page.getByTestId("marker-hobo");
+      await hobo.scrollIntoViewIfNeeded();
+
+      await hobo.hover();
+
+      await expect(page.getByTestId("missing-tricks")).toHaveText(
+        "Doable now with: Fake flipper",
+      );
+      await expect(page.getByTestId("tooltip").getByRole("link")).toHaveCount(
+        0,
+      );
     });
 
     test("marks a trick on the map, in its tooltip, accessibly", async ({

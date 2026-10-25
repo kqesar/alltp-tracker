@@ -36,6 +36,52 @@ describe("ChecksPanel", () => {
     );
   });
 
+  it("says which trick opens a check, links its guide, and opens the Tricks dialog", async () => {
+    const user = userEvent.setup();
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: true, techniques: ["fakeFlipper"] }),
+    );
+    render(<ChecksPanel />);
+    await user.click(filter("trick"));
+
+    await user.click(screen.getByTestId("check-why-hobo"));
+    act(() => analyzeNow());
+
+    expect(row("hobo")).toHaveTextContent(
+      /Doable now with: Fake flipper.*Missing: Zora's Flippers/,
+    );
+    const link = within(row("hobo") as HTMLElement).getByRole("link", {
+      name: /^Fake flipper/,
+    });
+    expect(link).toHaveAttribute(
+      "href",
+      "https://www.youtube.com/watch?v=0YzkiaY3eys&t=874s",
+    );
+    expect(link).toHaveAttribute("target", "_blank");
+
+    expect(screen.queryByRole("dialog", { name: "Tricks" })).toBeNull();
+    await user.click(screen.getByTestId("check-about-tricks-hobo"));
+    expect(screen.getByRole("dialog", { name: "Tricks" })).toBeInTheDocument();
+  });
+
+  it("offers no About tricks for a check no trick opens", async () => {
+    const user = userEvent.setup();
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: true, techniques: ["fakeFlipper"] }),
+    );
+    render(<ChecksPanel />);
+    await user.click(filter("unavailable"));
+    await user.click(screen.getByTestId("check-why-library"));
+    act(() => analyzeNow());
+
+    expect(row("library")).toHaveTextContent("Missing: Pegasus Boots");
+    expect(screen.queryByTestId("check-about-tricks-library")).toBeNull();
+  });
+
   it("offers the Trick filter only while tricks are marked", async () => {
     const user = userEvent.setup();
     render(<ChecksPanel />);

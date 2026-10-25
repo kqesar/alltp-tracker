@@ -1,5 +1,5 @@
 import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MapTracker } from "@/games/alttpr/components/map/MapTracker";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
@@ -368,6 +368,71 @@ describe("Tooltip", () => {
     expect(
       screen.getByTestId("tooltip-checks").querySelector(".state-glyph"),
     ).toHaveClass("trick");
+  });
+
+  it("names the trick that opens a check, without a link", () => {
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: true, techniques: ["fakeFlipper"] }),
+    );
+    renderMap();
+    act(() => analyzeNow());
+
+    fireEvent.pointerEnter(screen.getByTestId("marker-hobo"), {
+      pointerType: "mouse",
+    });
+
+    const lines = screen
+      .getAllByTestId(/^missing-(tricks|in-logic)$/)
+      .map((line) => line.textContent);
+    expect(lines).toEqual([
+      "Doable now with: Fake flipper",
+      "Missing: Zora's Flippers",
+    ]);
+    expect(
+      within(screen.getByTestId("tooltip")).queryByRole("link"),
+    ).toBeNull();
+  });
+
+  it("leads a dungeon's group with the trick that opens it", () => {
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: true, techniques: ["darkRooms"] }),
+    );
+    act(() =>
+      useGameStore.setState((state) => ({
+        items: {
+          ...state.items,
+          agahnim: 1,
+          boots: true,
+          bow: 2,
+          flute: true,
+          glove: 2,
+          hammer: true,
+          moonpearl: true,
+          sword: 2,
+        },
+      })),
+    );
+    renderMap();
+    act(() => analyzeNow());
+
+    fireEvent.pointerEnter(
+      screen.getByTestId("boss-marker-palace-of-darkness"),
+      { pointerType: "mouse" },
+    );
+
+    expect(
+      screen
+        .getAllByTestId("missing-group")
+        .map((group) => group.textContent?.replace(/\s+/g, " ")),
+    ).toEqual([
+      "Doable now with Dark rooms without the Lamp; or Lantern: Big Chest, Dark Maze ×2 (2 checks), Boss",
+      "Doable now with Dark rooms without the Lamp; or Fire Rod, or Lantern: Dark Basement ×2 (2 checks)",
+      "Maybe, big key and small key may be behind other checks: Big Key Chest, Compass Chest, Harmless Hellway",
+    ]);
   });
 
   it("gives a dungeon's items left, those surely in logic, and each chest", () => {

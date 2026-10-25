@@ -6,6 +6,7 @@
 // several runs of each stage, so a busy machine does not fail it.
 import { describe, expect, it } from "vitest";
 import { getPreset } from "@/games/alttpr/data/presets";
+import { DEFAULT_TRICKS } from "@/games/alttpr/data/tricks";
 import { analyzeRun } from "@/games/alttpr/logic/missing";
 import {
   budgetOf,
@@ -13,7 +14,7 @@ import {
   GRID_ITEMS,
   stage,
 } from "@/games/alttpr/logic/performance.fixtures";
-import { solutionOf } from "@/games/alttpr/logic/solution";
+import { solutionOf, trickSolutionOf } from "@/games/alttpr/logic/solution";
 
 /**
  * An idle moment's worth: well under a frame, so even a browser without an
@@ -49,6 +50,39 @@ describe("the run's analysis", () => {
         `${preset}: ${mean.toFixed(2)} ms on average, ${Math.max(...times).toFixed(2)} ms at most`,
       );
       expect(mean).toBeLessThan(budget);
+    },
+    120_000,
+  );
+});
+
+describe("the run's analysis with every trick known", () => {
+  it.each(["open", "keysanity"])(
+    "stays within an idle moment along a whole %s game",
+    (preset) => {
+      const settings = getPreset(preset).settings;
+      const tricks = { ...DEFAULT_TRICKS, enabled: true };
+      const runs = Array.from({ length: GRID_ITEMS.length + 1 }, (_, i) => {
+        const inputs = { ...stage(i, settings), tricks };
+        return { solution: solutionOf(inputs), trick: trickSolutionOf(inputs) };
+      });
+      // The first analysis of a world places its untracked items once
+      analyzeRun(runs[0].solution, settings, runs[0].trick);
+
+      const times = runs.map(({ solution, trick }) =>
+        fastest(() => analyzeRun(solution, settings, trick), 5),
+      );
+      const mean = times.reduce((sum, ms) => sum + ms, 0) / times.length;
+
+      // Real work: the start of a run has checks only a trick opens
+      const start = analyzeRun(runs[0].solution, settings, runs[0].trick);
+      expect(
+        [...start.missing.values()].filter((m) => m.tricks !== undefined)
+          .length,
+      ).toBeGreaterThan(2);
+      console.info(
+        `${preset} with tricks: ${mean.toFixed(2)} ms on average, ${Math.max(...times).toFixed(2)} ms at most`,
+      );
+      expect(mean).toBeLessThan(budgetOf(BUDGET_MS));
     },
     120_000,
   );

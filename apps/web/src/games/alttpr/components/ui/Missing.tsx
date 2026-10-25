@@ -1,4 +1,7 @@
+import type { TrickId } from "@alltp/pack-alttpr";
 import { Fragment } from "react";
+import { OutLink } from "@/components/ui/OutLink";
+import { TRICK_WORDS } from "@/games/alttpr/data/tricks";
 import type {
   Doubt,
   Missing,
@@ -67,6 +70,43 @@ export const WaysList = ({ ways }: { ways: Ways }) => {
   );
 };
 
+/**
+ * The tricks that open a check, by name: "Fake flipper, or Water walk +
+ * Fake flipper". With `guides`, each name links to the page or video that
+ * teaches it.
+ */
+export const TrickWays = ({
+  guides = false,
+  ways,
+}: {
+  guides?: boolean;
+  ways: readonly (readonly TrickId[])[];
+}) => (
+  <>
+    {ways.map((set) => (
+      <Fragment key={set.join()}>
+        {set !== ways[0] && ", or "}
+        <span className="ways__set">
+          {set.map((id, at) => {
+            const { guides: pages, name } = TRICK_WORDS[id];
+            const page = pages[0];
+            return (
+              <Fragment key={id}>
+                {at > 0 && " + "}
+                {guides && page !== undefined ? (
+                  <OutLink label={name} url={page.url} />
+                ) : (
+                  name
+                )}
+              </Fragment>
+            );
+          })}
+        </span>
+      </Fragment>
+    ))}
+  </>
+);
+
 /** Whether a list of ways is the one empty set: nothing to get. */
 const isThere = (ways: Ways) =>
   ways.sets.length === 1 && ways.sets[0]?.length === 0;
@@ -78,11 +118,14 @@ const isThere = (ways: Ways) =>
  * @param missing - The analysis of the location: null when it is in logic,
  * undefined while the analysis is pending
  * @param pending - What to say while it is pending; nothing by default
+ * @param guides - Link the tricks it names to their guides
  */
 export const MissingLines = ({
+  guides,
   missing,
   pending,
 }: {
+  guides?: boolean;
   missing: Missing | null | undefined;
   pending?: string;
 }) => {
@@ -92,9 +135,15 @@ export const MissingLines = ({
     ) : null;
   }
   if (missing === null) return null;
-  const { doubts, inLogic, possible, tri } = missing;
+  const { doubts, inLogic, possible, tri, tricks } = missing;
   return (
     <>
+      {tri === "no" && tricks && (
+        <p className="missing" data-testid="missing-tricks">
+          <span className="missing__lead">Doable now with:</span>{" "}
+          <TrickWays guides={guides} ways={tricks} />
+        </p>
+      )}
       {tri === "no" && (
         <p className="missing" data-testid="missing-in-logic">
           <span className="missing__lead">Missing:</span>{" "}
@@ -170,16 +219,19 @@ const SpotName = ({ spot }: { spot: Spot }) => (
  * which ("Lantern: Dark Maze ×2, Big Chest, Boss"). The ways are a single
  * check's (WaysList); a check only maybe says what puts it in logic and why
  * it is not yet ("Maybe, small key may be behind other checks: Compass
- * Chest").
+ * Chest"). A check a trick known opens leads with it: "Doable now with Fake
+ * flipper; or Zora's Flippers: King Zora".
  */
 export const MissingGroups = ({
   groups,
+  guides,
 }: {
   groups: readonly MissingGroup[];
+  guides?: boolean;
 }) => (
   <>
     {groups.map(({ key, missing, spots }) => {
-      const { inLogic, possible, tri } = missing;
+      const { inLogic, possible, tri, tricks } = missing;
       const doubted = shortDoubts(missing.doubts);
       return (
         <p
@@ -187,6 +239,13 @@ export const MissingGroups = ({
           data-testid="missing-group"
           key={key}
         >
+          {tri === "no" && tricks && (
+            <>
+              <span className="missing__lead">Doable now with</span>{" "}
+              <TrickWays guides={guides} ways={tricks} />
+              <span className="missing__lead">; or</span>{" "}
+            </>
+          )}
           {tri === "no" && <WaysList ways={inLogic} />}
           {tri === "no" && possible && (
             <>

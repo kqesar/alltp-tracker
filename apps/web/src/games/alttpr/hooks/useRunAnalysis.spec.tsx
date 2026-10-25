@@ -135,6 +135,44 @@ describe("useMissing", () => {
     expect(result.current).toBeNull();
   });
 
+  it("never shows an analysis made for other tricks, or none", () => {
+    act(() => analyzeNow());
+    const { result } = renderHook(() => useMissing("hobo"));
+    expect(result.current?.tricks).toBeUndefined();
+
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: true, techniques: ["fakeFlipper"] }),
+    );
+    expect(result.current).toBeUndefined();
+    act(() => analyzeNow());
+    expect(result.current?.tricks).toEqual([["fakeFlipper"]]);
+
+    // Another list: stale again, and the same list again is not
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: true, techniques: ["fakeFlipper", "waterWalk"] }),
+    );
+    expect(result.current).toBeUndefined();
+    act(() => analyzeNow());
+    expect(result.current?.tricks).toEqual([["fakeFlipper"]]);
+    vi.mocked(analyzeRun).mockClear();
+    act(() => analyzeNow());
+    expect(analyzeRun).not.toHaveBeenCalled();
+
+    act(() =>
+      useGameStore.getState().setTricks({
+        enabled: false,
+        techniques: ["fakeFlipper", "waterWalk"],
+      }),
+    );
+    expect(result.current).toBeUndefined();
+    act(() => analyzeNow());
+    expect(result.current?.tricks).toBeUndefined();
+  });
+
   it("reads the go mode's missing ways", () => {
     act(() => analyzeNow());
     const { result } = renderHook(() => useGoModeMissing());

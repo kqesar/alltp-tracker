@@ -6,6 +6,7 @@ import {
   MissingGroups,
   MissingLines,
 } from "@/games/alttpr/components/ui/Missing";
+import { TricksDialog } from "@/games/alttpr/components/ui/TricksDialog";
 import {
   useCurrentAnalysis,
   useMissing,
@@ -56,10 +57,32 @@ const Swatch = ({ state }: { state: MarkerState }) => (
 /** The states with nothing left to say: done, or in logic. */
 const SETTLED: ReadonlySet<MarkerState> = new Set(["available", "opened"]);
 
-/** What a check is missing, once the analysis has it. */
-const WhyLines = ({ id }: { id: string }) => (
-  <MissingLines missing={useMissing(id)} pending="Working it out…" />
-);
+/**
+ * What a check is missing, once the analysis has it, with the tricks that
+ * open it linked to their guides and a way to read about them all.
+ */
+const WhyLines = ({ id }: { id: string }) => {
+  const missing = useMissing(id);
+  const [about, setAbout] = useState(false);
+  return (
+    <>
+      <MissingLines guides missing={missing} pending="Working it out…" />
+      {missing?.tricks && (
+        <>
+          <button
+            className="check-why"
+            data-testid={`check-about-tricks-${id}`}
+            onClick={() => setAbout(true)}
+            type="button"
+          >
+            About tricks
+          </button>
+          <TricksDialog isOpen={about} onClose={() => setAbout(false)} />
+        </>
+      )}
+    </>
+  );
+};
 
 /**
  * "Why?": what keeps a check from being available, worked out on demand
@@ -177,7 +200,7 @@ const ZoneMissing = ({
   return groups.length === 0 ? (
     <p className="missing missing--pending">Nothing is missing.</p>
   ) : (
-    <MissingGroups groups={groups} />
+    <MissingGroups groups={groups} guides />
   );
 };
 

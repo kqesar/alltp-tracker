@@ -1,7 +1,16 @@
 import { useEffect } from "react";
-import { analyzeRun, type Missing } from "@/games/alttpr/logic/missing";
+import {
+  analyzeRun,
+  type Missing,
+  type RunAnalysis,
+} from "@/games/alttpr/logic/missing";
 import type { Ways } from "@/games/alttpr/logic/needs";
-import { type Solution, solutionOf } from "@/games/alttpr/logic/solution";
+import {
+  type Solution,
+  solutionOf,
+  type TrickSolution,
+  trickSolutionOf,
+} from "@/games/alttpr/logic/solution";
 import { useAnalysisStore } from "@/games/alttpr/stores/analysisStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -20,15 +29,27 @@ export const whenIdle = (task: () => void): (() => void) => {
 };
 
 /**
+ * Whether an analysis is for this solution and these tricks: it says which
+ * tricks open a check, so another list of tricks, or none, makes it stale.
+ */
+const isCurrent = (
+  analysis: RunAnalysis | null | undefined,
+  solution: Solution,
+  tricks: TrickSolution | undefined,
+): analysis is RunAnalysis =>
+  analysis?.solution === solution && analysis.tricks === tricks?.techniques;
+
+/**
  * Work the run's analysis out now, for the run as it stands, unless it is
  * done already for its solution.
  */
 export const analyzeNow = () => {
   const state = useGameStore.getState();
   const solution = solutionOf(state);
-  if (useAnalysisStore.getState().analysis?.solution === solution) return;
+  const tricks = trickSolutionOf(state);
+  if (isCurrent(useAnalysisStore.getState().analysis, solution, tricks)) return;
   useAnalysisStore.setState({
-    analysis: analyzeRun(solution, state.settings),
+    analysis: analyzeRun(solution, state.settings, tricks),
   });
 };
 
@@ -42,8 +63,16 @@ export const useRunAnalysis = () => {
   useEffect(() => {
     let cancel: (() => void) | undefined;
     const schedule = () => {
-      const solution = solutionOf(useGameStore.getState());
-      if (useAnalysisStore.getState().analysis?.solution === solution) return;
+      const state = useGameStore.getState();
+      if (
+        isCurrent(
+          useAnalysisStore.getState().analysis,
+          solutionOf(state),
+          trickSolutionOf(state),
+        )
+      ) {
+        return;
+      }
       cancel?.();
       cancel = whenIdle(() => {
         cancel = undefined;
@@ -62,8 +91,9 @@ export const useRunAnalysis = () => {
 /** The analysis, if it is for the solution on screen. */
 export const useCurrentAnalysis = () => {
   const solution: Solution = useGameStore(solutionOf);
+  const tricks = useGameStore(trickSolutionOf);
   const analysis = useAnalysisStore((state) => state.analysis);
-  return analysis?.solution === solution ? analysis : undefined;
+  return isCurrent(analysis, solution, tricks) ? analysis : undefined;
 };
 
 /**
