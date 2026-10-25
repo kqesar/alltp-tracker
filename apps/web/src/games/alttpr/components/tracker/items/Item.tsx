@@ -1,6 +1,7 @@
 import { itemLabels, itemsMin, TOGGLE_ITEMS } from "@/games/alttpr/data/items";
 import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
+import { placesText, useCellHeld } from "@/games/alttpr/review/labels";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getItemBackground, isItemDimmed } from "@/games/alttpr/utils";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
@@ -38,6 +39,8 @@ const describeState = (item: string, value: number | boolean): string => {
 export const Item = ({ row, col, item }: ItemProps) => {
   const value = useGameStore((state) => state.items[item]);
   const handleItemClick = useGameStore((state) => state.handleItemClick);
+  // In a review: where the seed had it
+  const places = useCellHeld(item);
   const handlers = mergeHandlers(
     useGridFocusable({ col, row, slot: 0 }),
     useStepHandlers(
@@ -50,8 +53,9 @@ export const Item = ({ row, col, item }: ItemProps) => {
   return (
     <button
       {...handlers}
-      aria-label={`${itemLabels(item)}, ${describeState(item, value)}. Click to change state.`}
+      aria-label={`${itemLabels(item)}, ${describeState(item, value)}${places ? `, ${placesText(places)}` : ""}. Click to change state.`}
       className={`griditem grid-item-base${isItemDimmed(item, value) ? " griditem--dimmed" : ""}`}
+      data-places={places ? "" : undefined}
       data-testid={`item-${item}`}
       disabled={item === "blank"}
       style={{ backgroundImage: getItemBackground(item, value) }}

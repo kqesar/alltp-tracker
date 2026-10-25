@@ -34,6 +34,11 @@ import {
   markerById,
   markerDetail,
 } from "@/games/alttpr/logic/solution";
+import {
+  placesText,
+  useCellHeld,
+  useReviewHeld,
+} from "@/games/alttpr/review/labels";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath } from "@/games/alttpr/utils";
 import {
@@ -191,6 +196,9 @@ export const Tooltip = () => {
   const shortcuts = useGameStore((state) => state.shortcuts);
   const marker = markerOf(target);
   const dungeon = marker?.dungeon;
+  // In a review: what each place held, and where an item was
+  const heldAt = useReviewHeld();
+  const itemPlaces = useCellHeld(target?.kind === "item" ? target.item : "");
   const detail = useGameStore(
     useShallow((state) =>
       marker === undefined ? NO_DETAIL : markerDetail(marker, state),
@@ -269,7 +277,7 @@ export const Tooltip = () => {
   const single = rows.length === 1 && dungeon === undefined;
   const described = left !== undefined || !single || missing.length > 0;
   const hasDetail = marker !== undefined && described;
-  const size = `${title}|${text}|${left}|${sure}|${pad}|${detail.join()}|${lines.length}|${missing.map((entry) => entry.key).join()}|${groups.map(({ key, spots }) => `${key}${spots.map((spot) => spot.name).join()}`).join()}|${pending}`;
+  const size = `${title}|${text}|${left}|${sure}|${pad}|${detail.join()}|${lines.length}|${missing.map((entry) => entry.key).join()}|${groups.map(({ key, spots }) => `${key}${spots.map((spot) => spot.name).join()}`).join()}|${pending}|${heldAt.size}|${itemPlaces?.length ?? 0}`;
 
   // The detail is what the anchor's name does not say: it describes it
   useLayoutEffect(() => {
@@ -359,7 +367,18 @@ export const Tooltip = () => {
       {rows.map(({ id, label, state }) => (
         <li className={`tooltip__check tooltip__check--${state}`} key={id}>
           <span className={`tooltip__glyph state-glyph ${state}`} />
-          <span className="tooltip__label">{label}</span>
+          <span className="tooltip__label">
+            {label}
+            {heldAt.get(id) && (
+              <span
+                className="tooltip__held"
+                data-testid={`tooltip-held-${id}`}
+              >
+                {" "}
+                → {heldAt.get(id)?.name}
+              </span>
+            )}
+          </span>
         </li>
       ))}
     </ul>
@@ -396,6 +415,15 @@ export const Tooltip = () => {
       {text !== "" && (
         <span aria-hidden="true" className="tooltip__text">
           {text}
+        </span>
+      )}
+      {itemPlaces && (
+        <span
+          aria-hidden="true"
+          className="tooltip__text"
+          data-testid="tooltip-places"
+        >
+          Seed: {placesText(itemPlaces)}
         </span>
       )}
       {single && checks}
