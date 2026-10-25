@@ -142,6 +142,7 @@ export class AutotrackSession {
   private since = 0;
   private readonly statusListeners = new Set<(status: SessionStatus) => void>();
   private readonly updateListeners = new Set<(update: PollUpdate) => void>();
+  private readonly steadyListeners = new Set<(at: number) => void>();
   private generation = 0;
   private running = false;
   private transport: Transport | null = null;
@@ -214,6 +215,23 @@ export class AutotrackSession {
     this.updateListeners.add(listener);
     return () => {
       this.updateListeners.delete(listener);
+    };
+  }
+
+  /**
+   * Calls `listener` with the time after every poll that read memory and found
+   * it unchanged: at most once a poll, and only while connected and in view
+   * (a session paused for a hidden page polls nothing). A poll that changed
+   * memory calls `onUpdate`'s listeners instead, and the first poll after
+   * connecting always does: it reads every range for the first time. What a
+   * steady poll says is that every range due on that tick held its bytes,
+   * which tells a game's frame counter standing still (a paused emulator, a
+   * frozen game) only if the pack reads that counter on every tick.
+   */
+  onSteady(listener: (at: number) => void): () => void {
+    this.steadyListeners.add(listener);
+    return () => {
+      this.steadyListeners.delete(listener);
     };
   }
 
@@ -534,8 +552,12 @@ export class AutotrackSession {
       const update = await poller.tick();
       if (!this.alive(generation)) return;
       attempt.readOk = true;
-      if (update !== null)
+      if (update !== null) {
         for (const listener of this.updateListeners) listener(update);
+      } else {
+        const at = this.clock.now();
+        for (const listener of this.steadyListeners) listener(at);
+      }
       const next = poller.race;
       if (
         race === null ||

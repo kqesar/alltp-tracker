@@ -511,6 +511,47 @@ describe("AutotrackSession", () => {
     h.session.stop();
   });
 
+  it("tells a poll that read memory and found it unchanged, once, never while hidden", async () => {
+    const h = harness();
+    const updates: string[][] = [];
+    const steady: number[] = [];
+    h.session.onUpdate((update) => updates.push([...update.changed]));
+    const stopSteady = h.session.onSteady((at) => steady.push(at));
+    h.session.start();
+    await flush();
+    // The first poll read every range for the first time: a change, not steady
+    expect(updates).toHaveLength(1);
+    expect(steady).toEqual([]);
+
+    // A poll that changed memory is an update, not a steady one
+    h.memory[bus(0x7e_0010)] = 0x09;
+    await vi.advanceTimersByTimeAsync(250);
+    expect(updates).toHaveLength(2);
+    expect(steady).toEqual([]);
+
+    // Memory standing still: one steady call a poll, stamped with the clock
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(updates).toHaveLength(2);
+    expect(steady.length).toBeGreaterThanOrEqual(1);
+    expect(steady.at(-1)).toBe(Date.now());
+    const polls = steady.length;
+
+    // A hidden page polls nothing, so nothing is steady
+    h.visibility.set(true);
+    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(steady).toHaveLength(polls);
+    h.visibility.set(false);
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    // An unsubscribed listener hears no more
+    const heard = steady.length;
+    stopSteady();
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(steady).toHaveLength(heard);
+    h.session.stop();
+  });
+
   it("switches Race Mode on demand and on the flag", async () => {
     const h = harness();
     h.session.start();
