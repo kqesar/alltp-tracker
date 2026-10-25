@@ -36,6 +36,8 @@ flowchart LR
   rom --> items
   wram --> obj
   wram --> play["decodeInPlay"]
+  wram --> goal["decodeBeforePlay, decodeGoal<br/>game state, escape event"]
+  clock["SRAM $70:1E10 + WRAM $7E:1F80<br/>(never read in Race Mode)"] --> rta["decodeGameClock<br/>clockStraddled, rtaMs"]
 ```
 
 - **The game check**: Map Rando names the cartridge "SUPERMETROID MAPRANDO"
@@ -66,6 +68,36 @@ flowchart LR
   (`Bank DF.txt`).
 - **In play** (`decodeInPlay`): game state `$07` or `$08`
   (`fast_reload.asm:134-136`).
+- **Before play** (`decodeBeforePlay`): states `$00-$06` (the title, the menus,
+  the file select, the loading of a game) and `$1F`, where a new game is set
+  up (`fast_reload.asm:46-47, 166-167`, `new_game.asm:195-212`). A reading in
+  play after one before play is a game starting: the run timer starts there,
+  and not on `$1F` or `$06`, which a poll every second misses.
+- **The goal** (`decodeGoal`): event `$0E`, the escape (`$D821` bit 6, set when
+  Mother Brain dies: `stats.asm`, `hook_samus_enter_ship`), with the game state
+  `$26` (Samus escapes) or `$27` (the ending and credits): Samus in the ship.
+  `stat_final_time` is no signal: a new game does not clear it.
+- **The RTA clock** (`decodeGameClock`, `rtaMs`): Map Rando's frame counter,
+  which its credits print as the final time (`stats.asm`, "based on VARIA
+  patch by total & ouiche"). Every NMI counts, lag, menus, the file select and
+  the credits too, and a death or a reload never rewinds it, unlike the
+  game's own IGT (`$7E:09DA`, which reverts to the last save). It has two
+  parts: `!stat_timer`, a 32-bit count in SRAM (`$70:1E10`) which the NMI
+  counter adds its 255 to when it fills and on every item pickup, and
+  `!nmi_counter`, a byte of WRAM (`$7E:1F80`) holding the frames not yet
+  flushed, 0 to 254 (`constants.asm`, `stats.asm`): the clock is their sum.
+  It is a count since the console's SRAM was set up, not since a run began:
+  the app notes it when the run starts. Frames convert at Map Rando's
+  `100 / 60.09881186` hundredths a frame (`credits.asm`, `adjust_time_fps`),
+  defined here from that source (packs import nothing of each other).
+  **The flush guard** (`clockStraddled`): the two parts are read one after the
+  other, the SRAM word first (the planner sorts pieces by address; the spec
+  holds the order), and a flush between them leaves the old word with the new
+  counter, so the sum falls back by up to 254 frames. Such a reading is told
+  by the word standing still while the counter went back, which only a
+  missed flush does (a flush raises the word): it is not a time, and the
+  app holds the last one. Not verified against a live console: how SNI and
+  RetroArch order a multi-range read is taken from the planner's contract.
 
 Bank `$DF` lies past the first 2 MiB of this 3 MiB LoROM game: it reads
 through `@alltp/autotrack`'s 4 MiB LoROM mapping (its README, "Address
@@ -78,7 +110,15 @@ Map Rando races run on racetime.gg/smr, whose rules restrict no tracking
 seed's spoiler on the website and writes nothing into the ROM. The race
 profile (`MAP_RANDO_RACE_PROFILE`) therefore permits every category this
 pack reads, and the pack has no race flag. It reads what the player holds
-and has done, never what a location holds.
+and has done, never what a location holds. The one exception is the RTA clock
+(category `game-time`), which the profile forbids: it reveals nothing of the
+seed, but the game shows it only in its end credits, and the tracker reads no
+more than a player sees in a race (a policy of the tracker, not a rule of the
+page). Race Mode therefore never reads `rta-saved` and `rta-pending`
+(`memory.spec.ts` proves it over a real plan), and the run timer counts real
+time. The state and the escape event, which start and stop it, stay permitted.
+The rules of racetime.gg/smr ban the old emulators (SNES9x 1.43 and below, ZSNES),
+not emulators in general (read again on 2026-10-25).
 
 ## Tests
 

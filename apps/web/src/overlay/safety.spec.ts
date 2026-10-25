@@ -161,14 +161,23 @@ describe("what the overlay API never sends", () => {
         ),
         // A field the whitelist does not read, as a store may grow one
         [SENTINEL]: "x",
+        // The clock's frames before the run, which the timer is set on
+        clockBase: 987_654,
         splitSpeed: true,
+        timer: IDLE_TIMER,
+        timerClock: "game",
         wallJump: true,
-      } as unknown as ReturnType<typeof smFresh>;
+      } as unknown as Parameters<typeof sm>[0];
       const { state } = sm(run);
       shapeOf(state);
       expect(JSON.stringify(state)).not.toContain(SENTINEL);
       expect(state.objectives.every(({ done }) => done)).toBe(true);
-      expect(state.timer).toBeNull();
+      expect(state.timer).toEqual({
+        elapsedMs: 0,
+        startedAt: null,
+        state: "idle",
+      });
+      expect(JSON.stringify(state)).not.toContain("987654");
       expect(state.goMode).toBeNull();
       expect(sm(run)).toEqual(
         sm({ ...run, splitSpeed: false, wallJump: false }),

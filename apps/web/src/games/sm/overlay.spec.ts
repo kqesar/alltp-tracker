@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { overlayReadingOf, overlaySource } from "@/games/sm/overlay";
+import {
+  overlayReadingOf,
+  overlaySource,
+  type SmRun,
+} from "@/games/sm/overlay";
 import { freshProgress, useSmStore } from "@/games/sm/store";
+import { IDLE_TIMER } from "@/utils/runTimer";
+
+const idle = { timer: IDLE_TIMER };
 
 /** Pinned: what Super Metroid's items may say is a decision, not a side effect. */
 const ITEM_IDS = [
@@ -36,7 +43,11 @@ describe("Super Metroid's overlay reading", () => {
       { splitSpeed: false, wallJump: false },
       { splitSpeed: true, wallJump: true },
     ]) {
-      const { state } = overlayReadingOf({ ...freshProgress(), ...options });
+      const { state } = overlayReadingOf({
+        ...freshProgress(),
+        ...idle,
+        ...options,
+      });
       expect(state.items.map(({ id }) => id)).toEqual(ITEM_IDS);
     }
   });
@@ -45,7 +56,7 @@ describe("Super Metroid's overlay reading", () => {
     const run = freshProgress();
     run.items.missile = 12;
     run.items.charge = 1;
-    const { state } = overlayReadingOf(run);
+    const { state } = overlayReadingOf({ ...run, ...idle });
 
     expect(state.items.find((i) => i.id === "missile")).toEqual({
       id: "missile",
@@ -63,27 +74,63 @@ describe("Super Metroid's overlay reading", () => {
       done: ["phantoon"],
       objectives: ["kraid", "phantoon", "botwoon"],
     };
-    expect(overlayReadingOf(run).state.objectives).toEqual([
+    expect(overlayReadingOf({ ...run, ...idle }).state.objectives).toEqual([
       { done: false, id: "kraid", ms: null, name: "Kraid" },
       { done: true, id: "phantoon", ms: null, name: "Phantoon" },
       { done: false, id: "botwoon", ms: null, name: "Botwoon" },
     ]);
   });
 
-  it("has no timer nor go mode", () => {
-    const { state } = overlayReadingOf(freshProgress());
+  it("has the run timer as data, and no go mode", () => {
+    const run = { ...freshProgress(), ...idle };
+    const { state } = overlayReadingOf(run);
     expect(state.game).toBe("sm");
-    expect(state.timer).toBeNull();
     expect(state.goMode).toBeNull();
+    expect(state.timer).toEqual({
+      elapsedMs: 0,
+      startedAt: null,
+      state: "idle",
+    });
+    const running = { elapsedMs: 5_000, finished: false, startedAt: 1_000 };
+    expect(overlayReadingOf({ ...run, timer: running }).state.timer).toEqual({
+      elapsedMs: 5_000,
+      startedAt: 1_000,
+      state: "running",
+    });
+    expect(
+      overlayReadingOf({
+        ...run,
+        timer: { elapsedMs: 9_000, finished: true, startedAt: null },
+      }).state.timer?.state,
+    ).toBe("finished");
   });
 
-  it("is fresh until something is held or done", () => {
-    expect(overlayReadingOf(freshProgress()).fresh).toBe(true);
+  it("reads nothing of the clock the timer is set on", () => {
+    const { state } = overlayReadingOf({
+      ...useSmStore.getState(),
+      clockBase: 123_456,
+      timerClock: "game",
+    } as SmRun);
+    expect(Object.keys(state.timer ?? {}).sort()).toEqual([
+      "elapsedMs",
+      "startedAt",
+      "state",
+    ]);
+    expect(JSON.stringify(state)).not.toContain("123456");
+  });
+
+  it("is fresh until something is held or done, or the timer has begun", () => {
+    const fresh = { ...freshProgress(), ...idle };
+    expect(overlayReadingOf(fresh).fresh).toBe(true);
     const held = freshProgress();
     held.items.morph = 1;
-    expect(overlayReadingOf(held).fresh).toBe(false);
+    expect(overlayReadingOf({ ...held, ...idle }).fresh).toBe(false);
+    expect(overlayReadingOf({ ...fresh, done: ["kraid"] }).fresh).toBe(false);
     expect(
-      overlayReadingOf({ ...freshProgress(), done: ["kraid"] }).fresh,
+      overlayReadingOf({
+        ...fresh,
+        timer: { elapsedMs: 0, finished: false, startedAt: 1 },
+      }).fresh,
     ).toBe(false);
   });
 

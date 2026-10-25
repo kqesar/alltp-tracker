@@ -140,3 +140,14 @@
     0 -1px var(--sprite-ink);
   pointer-events: none;
 }
+
+/* The run timer's row, above a board's grid and panels (Super Metroid's; the
+   board keeps no map panel or room bar to hold it). It spans the board's
+   columns and sits at their end, where ALttPR's map panel and Archipelago's
+   room bar put theirs. */
+.board-run {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  width: 100%;
+}

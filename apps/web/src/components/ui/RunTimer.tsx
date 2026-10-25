@@ -41,6 +41,12 @@ export type ClockChoice = {
   unavailable: string | null;
   /** Whether the game's clock sets the timer now: the game then drives it. */
   following: boolean;
+  /**
+   * What the hint says while Game time is chosen and the clock does not set
+   * the timer yet. A game's own words where its clock needs more than being
+   * read; the default is for one with a file to load.
+   */
+  waiting?: string;
 };
 
 const CLOCKS: readonly (readonly [TimerClock, string])[] = [
@@ -49,12 +55,15 @@ const CLOCKS: readonly (readonly [TimerClock, string])[] = [
 ];
 
 /** What the clock choice means right now, said under it. */
-const clockHint = ({ following, unavailable, value }: ClockChoice): string => {
+const clockHint = ({
+  following,
+  unavailable,
+  value,
+  waiting = "Counts real time until autotracking reads a game with a file loaded.",
+}: ClockChoice): string => {
   if (unavailable !== null) return unavailable;
   if (value === "real") return "Counts real time, as races time.";
-  return following
-    ? "The timer follows the game's clock."
-    : "Counts real time until autotracking reads a game with a file loaded.";
+  return following ? "The timer follows the game's clock." : waiting;
 };
 
 export type RunTimerProps = {

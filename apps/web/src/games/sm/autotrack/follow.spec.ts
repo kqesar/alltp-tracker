@@ -1,7 +1,10 @@
+import { rtaMs } from "@alltp/pack-sm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createSmFollower } from "@/games/sm/autotrack/follow";
 import { readSm } from "@/games/sm/autotrack/reading";
 import { useSmStore } from "@/games/sm/store";
+import { timerMs } from "@/utils/runTimer";
+import type { MemoryRangeId } from "../../../../../../packs/sm/src/autotrack/memory";
 import {
   type MapRandoGame,
   viewOf,
@@ -118,5 +121,282 @@ describe("the Super Metroid run following the game", () => {
     follower.read(reading({ items: MORPH }));
 
     expect(run()).toBe(before);
+  });
+});
+
+/** A reading at an instant; `race` leaves out the RTA clock, as Race Mode does. */
+const readingAt = (at: number, game: MapRandoGame = {}, race = false) =>
+  readSm(
+    viewOf(
+      writeMapRando(new Uint8Array(0x100_0000), game),
+      race ? (["rta-pending", "rta-saved"] satisfies MemoryRangeId[]) : [],
+    ),
+    at,
+  );
+
+const T0 = 1_000_000;
+/** The game states: the file select, play, the pause menu, a door, the credits. */
+const FILE_SELECT = 0x04;
+const PLAY = 0x08;
+const PAUSED = 0x0c;
+const DOOR = 0x0a;
+const CREDITS = 0x27;
+
+describe("the run timer, with the game", () => {
+  it("starts on the first reading in play after one before play", () => {
+    const follower = createSmFollower();
+    follower.read(readingAt(T0, { state: FILE_SELECT }));
+    expect(run().timer.startedAt).toBeNull();
+
+    follower.read(readingAt(T0 + 1_000, { state: PLAY }));
+    expect(run().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: T0 + 1_000,
+    });
+
+    // A pause, a door, then play again: the timer runs on, from its start
+    follower.read(readingAt(T0 + 5_000, { state: PAUSED }));
+    follower.read(readingAt(T0 + 6_000, { state: PLAY }));
+    follower.read(readingAt(T0 + 7_000, { state: DOOR }));
+    follower.read(readingAt(T0 + 8_000, { state: PLAY }));
+    expect(run().timer.startedAt).toBe(T0 + 1_000);
+  });
+
+  it("starts nothing for a tracker that connects to a game already in play", () => {
+    createSmFollower().read(readingAt(T0, { state: PLAY }));
+    expect(run().timer.startedAt).toBeNull();
+  });
+
+  it("starts nothing when play follows a pause: that is no new game", () => {
+    const follower = createSmFollower();
+    follower.read(readingAt(T0, { state: PLAY }));
+    follower.read(readingAt(T0 + 1_000, { state: PAUSED }));
+    follower.read(readingAt(T0 + 2_000, { state: PLAY }));
+    expect(run().timer.startedAt).toBeNull();
+  });
+
+  it("stops at the goal: the escape set and Samus in the ship", () => {
+    const follower = createSmFollower();
+    follower.read(readingAt(T0, { state: FILE_SELECT }));
+    follower.read(readingAt(T0 + 1_000, { state: PLAY }));
+    // The escape runs in play: not the goal yet
+    follower.read(readingAt(T0 + 60_000, { escaping: true, state: PLAY }));
+    expect(run().timer.finished).toBe(false);
+    // The ending's state without the escape is not the goal either
+    follower.read(readingAt(T0 + 61_000, { state: CREDITS }));
+    expect(run().timer.finished).toBe(false);
+
+    follower.read(readingAt(T0 + 90_000, { escaping: true, state: CREDITS }));
+    expect(run().timer).toEqual({
+      elapsedMs: 89_000,
+      finished: true,
+      startedAt: null,
+    });
+
+    // The credits go on: the timer stays where the goal stopped it
+    follower.read(readingAt(T0 + 120_000, { escaping: true, state: CREDITS }));
+    expect(run().timer.elapsedMs).toBe(89_000);
+  });
+
+  it("leaves the timer to the player who turned that off", () => {
+    run().setAutoTimer(false);
+    const follower = createSmFollower();
+    follower.read(readingAt(T0, { state: FILE_SELECT }));
+    follower.read(readingAt(T0 + 1_000, { state: PLAY }));
+    expect(run().timer.startedAt).toBeNull();
+
+    run().startTimer(T0 + 2_000);
+    follower.read(readingAt(T0 + 9_000, { escaping: true, state: CREDITS }));
+    expect(run().timer.finished).toBe(false);
+    expect(run().timer.startedAt).toBe(T0 + 2_000);
+  });
+
+  it("works in Race Mode, which never reads the clock", () => {
+    const follower = createSmFollower();
+    follower.read(readingAt(T0, { state: FILE_SELECT }, true));
+    follower.read(readingAt(T0 + 1_000, { state: PLAY }, true));
+    expect(run().timer.startedAt).toBe(T0 + 1_000);
+    expect(run().clockBase).toBeNull();
+    follower.read(
+      readingAt(T0 + 9_000, { escaping: true, state: CREDITS }, true),
+    );
+    expect(run().timer).toEqual({
+      elapsedMs: 8_000,
+      finished: true,
+      startedAt: null,
+    });
+  });
+});
+
+describe("the run timer, on the game's time", () => {
+  /** The game's frames now, as a reading of the RTA clock. */
+  const at = (
+    when: number,
+    frames: number,
+    game: MapRandoGame = {},
+    race = false,
+  ) =>
+    readingAt(
+      T0 + when,
+      {
+        clock: { pending: frames % 255, saved: frames - (frames % 255) },
+        state: PLAY,
+        ...game,
+      },
+      race,
+    );
+  const start = (follower = createSmFollower()) => {
+    follower.read(readingAt(T0, { state: FILE_SELECT }));
+    // The clock counts since the SRAM was set up: 100 000 frames already
+    follower.read(at(1_000, 100_000));
+    return follower;
+  };
+
+  beforeEach(() => run().setTimerClock("game"));
+
+  it("counts the game's time since the run's start, not the clock's", () => {
+    const follower = start();
+    expect(run().clockBase).toBe(100_000);
+    expect(run().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: T0 + 1_000,
+    });
+
+    // A minute of real time, 4 000 frames of the game (66.5 s: the emulator
+    // ran fast): the timer is set on the game's
+    follower.read(at(61_000, 104_000));
+    expect(run().timer).toEqual({
+      elapsedMs: rtaMs(4_000),
+      finished: false,
+      startedAt: T0 + 61_000,
+    });
+  });
+
+  it("writes nothing for a reading that agrees with the timer", () => {
+    const follower = start();
+    follower.read(at(11_000, 100_601));
+    const timer = run().timer;
+    follower.read(at(12_000, 100_661));
+    expect(run().timer).toBe(timer);
+  });
+
+  it("stops while the counter stands still: a paused emulator", () => {
+    const follower = start();
+    follower.read(at(11_000, 100_601));
+    follower.read(at(12_000, 100_601));
+    expect(run().timer).toEqual({
+      elapsedMs: rtaMs(601),
+      finished: false,
+      startedAt: null,
+    });
+    // It runs again as the counter moves
+    follower.read(at(20_000, 100_900));
+    expect(run().timer).toMatchObject({
+      elapsedMs: rtaMs(900),
+      startedAt: T0 + 20_000,
+    });
+  });
+
+  it("holds a reading a flush split, and takes the next", () => {
+    const follower = start();
+    // 250 frames held in the NMI counter, 100 255 flushed ahead of them
+    follower.read(at(11_000, 0, { clock: { pending: 250, saved: 100_255 } }));
+    const before = run().timer;
+    // The SRAM word read before a flush, the counter after it: 250 frames short
+    follower.read(at(12_000, 0, { clock: { pending: 3, saved: 100_255 } }));
+    expect(run().timer).toBe(before);
+    // The flush done: the word moved on and the counter is small
+    follower.read(at(13_000, 0, { clock: { pending: 33, saved: 100_510 } }));
+    expect(run().timer.elapsedMs).toBe(rtaMs(100_543 - 100_000));
+    expect(run().timer.startedAt).not.toBeNull();
+  });
+
+  it("stops at the goal on the game's time, and the credits do not move it", () => {
+    const follower = start();
+    follower.read(at(61_000, 103_606, { escaping: true, state: CREDITS }));
+    expect(run().timer).toEqual({
+      elapsedMs: rtaMs(3_606),
+      finished: true,
+      startedAt: null,
+    });
+    follower.read(at(90_000, 105_000, { escaping: true, state: CREDITS }));
+    expect(run().timer.elapsedMs).toBe(rtaMs(3_606));
+  });
+
+  it("does not stop at the goal when the player turned that off", () => {
+    run().setAutoTimer(false);
+    const follower = createSmFollower();
+    run().startTimer(T0);
+    follower.read(at(61_000, 103_606, { escaping: true, state: CREDITS }));
+    expect(run().timer.finished).toBe(false);
+  });
+
+  it("goes on from the timer's own time when the clock was not known at its start", () => {
+    // A timer the player started and ran 30 s in real time, then chose Game time
+    run().setTimerClock("real");
+    run().startTimer(T0);
+    run().setTimerClock("game");
+    const follower = createSmFollower();
+    follower.read(at(30_000, 777_000));
+    const shown = (when: number) => timerMs(run().timer, T0 + when);
+    expect(shown(30_000)).toBeGreaterThanOrEqual(29_990);
+    expect(shown(30_000)).toBeLessThanOrEqual(30_010);
+    const base = run().clockBase ?? 0;
+    expect(777_000 - base).toBe(Math.round((30_000 * 60.098_811_86) / 1000));
+
+    // Two seconds of real time, a game second more: set on the game's
+    follower.read(at(32_000, 777_000 + 1_863 + 60));
+    expect(shown(32_000)).toBe(rtaMs(777_000 + 1_863 + 60 - base));
+  });
+
+  it("takes a new base when the clock falls behind it: the SRAM was set up again", () => {
+    const follower = start();
+    follower.read(at(11_000, 100_601));
+    follower.read(at(12_000, 5_000));
+    // Carried on from the 10 s the timer held, not set to 0 or negative
+    expect(run().clockBase).toBeLessThan(5_000);
+    expect(timerMs(run().timer, T0 + 12_000)).toBeGreaterThan(10_000);
+  });
+
+  it("leaves a timer alone that has not begun, and the clock unread in a race", () => {
+    const follower = createSmFollower();
+    follower.read(at(0, 100_000));
+    expect(run().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: null,
+    });
+
+    // Race Mode: the clock is never read, the timer counts real time
+    run().startTimer(T0);
+    follower.read(at(10_000, 100_600, {}, true));
+    expect(run().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: T0,
+    });
+  });
+
+  it("keeps the real-time timer while real time is chosen, noting the base", () => {
+    run().setTimerClock("real");
+    const follower = start();
+    expect(run().clockBase).toBe(100_000);
+    follower.read(at(11_000, 100_000 + 4_000));
+    // 4 000 frames are 66 s of the game; the timer is the player's clock
+    expect(run().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: T0 + 1_000,
+    });
+  });
+
+  it("forgets the base with the timer: a new game", () => {
+    start();
+    expect(run().clockBase).toBe(100_000);
+    run().reset();
+    expect(run().clockBase).toBeNull();
+    expect(run().timer.startedAt).toBeNull();
   });
 });

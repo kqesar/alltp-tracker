@@ -8,7 +8,9 @@ import {
   OBJECTIVE_PRESET_NAMES,
   OBJECTIVE_PRESETS,
   type ObjectivePreset,
+  smGrid,
 } from "@/games/sm/data";
+import { streamSize } from "@/games/sm/SmObsView";
 import {
   exportSave,
   IMPORT_ERRORS,
@@ -105,14 +107,19 @@ const SmModeDialog = ({ onClose }: { onClose: () => void }) => {
  * The Super Metroid toolbar: the run type (with the game), New game, Undo
  * and Redo, Export, Import and Share, and the stream view.
  */
-export const SmControls = () => (
-  <RunToolbar
-    autotrack={<SmAutotrack />}
-    game="sm"
-    ModeDialog={SmModeDialog}
-    modeValue="Super Metroid"
-    resetMessage="Start a new game? What you found and the objectives done are cleared; the seed's objectives and settings stay."
-    saveFormat={{ exportSave, IMPORT_ERRORS, parseSave }}
-    useStore={useSmStore}
-  />
-);
+export const SmControls = () => {
+  const wallJump = useSmStore((state) => state.wallJump);
+  const splitSpeed = useSmStore((state) => state.splitSpeed);
+  return (
+    <RunToolbar
+      autotrack={<SmAutotrack />}
+      game="sm"
+      ModeDialog={SmModeDialog}
+      modeValue="Super Metroid"
+      resetMessage="Start a new game? What you found, the objectives done and the run timer are cleared; the seed's objectives and settings stay."
+      saveFormat={{ exportSave, IMPORT_ERRORS, parseSave }}
+      streamSizeOf={streamSize(smGrid({ splitSpeed, wallJump }).length)}
+      useStore={useSmStore}
+    />
+  );
+};

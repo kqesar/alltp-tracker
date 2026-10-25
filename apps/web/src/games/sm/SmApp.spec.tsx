@@ -269,9 +269,38 @@ describe("the Super Metroid toolbar", () => {
     await user.click(screen.getByTestId("sm-stream-view"));
     expect(screen.getByTestId("sm-stream-url")).toHaveTextContent("view=obs");
   });
+
+  it("offers the run timer under the grid, adding it to the address", async () => {
+    const user = userEvent.setup();
+    render(<SmControls />);
+    await user.click(screen.getByTestId("sm-stream-view"));
+    expect(screen.getByTestId("sm-stream-url")).not.toHaveTextContent(
+      "timer=1",
+    );
+    await user.click(screen.getByTestId("sm-stream-timer"));
+    expect(screen.getByTestId("sm-stream-url")).toHaveTextContent("timer=1");
+  });
 });
 
 describe("the Super Metroid tracker", () => {
+  it("has the run timer above the grid, cleared by a new game", async () => {
+    const user = userEvent.setup();
+    render(<SmApp />);
+    const timer = screen.getByTestId("run-timer");
+    expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
+    act(() => store().startTimer());
+    expect(timer).toHaveAccessibleName("Run timer: 0:00, running");
+
+    await user.click(screen.getByTitle("Start a new game (clears progress)"));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "New game?" })).getByRole(
+        "button",
+        { name: "New game" },
+      ),
+    );
+    expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
+  });
+
   it("leaves Ctrl+Alt+Z (AltGr+Z on some layouts) and Shift+Y alone", () => {
     render(<SmApp />);
     fireEvent.click(screen.getByTestId("sm-item-ice"));

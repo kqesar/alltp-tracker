@@ -10,10 +10,25 @@
 //   stays as the player left it.
 // - The items the seed adds (the Wall Jump Boots, the split Speed Booster)
 //   follow its settings.
+//
+// The run timer follows the game too, whether or not a game is in play: the
+// player's "Start and stop with the game" starts it on the first reading in
+// play after one before play and stops it at the goal, and "Game time" sets
+// it on Map Rando's RTA clock (timer.ts).
 
-import type { SmItemId } from "@alltp/pack-sm";
+import {
+  type ClockReading,
+  clockStraddled,
+  type SmItemId,
+} from "@alltp/pack-sm";
 import type { SmReading } from "@/games/sm/autotrack/reading";
+import {
+  clockBaseOf,
+  gameClockOf,
+  timerNews,
+} from "@/games/sm/autotrack/timer";
 import { type SmProgress, useSmStore } from "@/games/sm/store";
+import { isIdle, timerState } from "@/utils/runTimer";
 
 /** What the game says, kept to tell news from what it said before. */
 type View = {
@@ -43,9 +58,69 @@ const viewOf = (reading: SmReading): View => ({
 /** Start following the game, for a new session. */
 export const createSmFollower = () => {
   let shown: View | null = null;
+  /**
+   * Whether the reading before was before play, for the timer to see a game
+   * start; undefined until a reading says.
+   */
+  let beforePlay: boolean | undefined;
+  /** The RTA clock as last read, and the frames of the last reading taken. */
+  let lastClock: ClockReading | undefined;
+  let frames: number | undefined;
+
+  /**
+   * The run timer follows the game: started and stopped by it if the player
+   * lets it, set on the RTA clock if the player chose that.
+   */
+  const followTimer = (reading: SmReading) => {
+    const run = useSmStore.getState();
+    // A reading split by a flush of the clock is no time: the timer goes on
+    // from the last one
+    let now: number | undefined;
+    if (typeof reading.clock === "object") {
+      if (!clockStraddled(lastClock, reading.clock)) now = reading.clock.frames;
+      lastClock = reading.clock;
+    } else lastClock = undefined;
+    const moving = now !== frames;
+    if (now !== undefined) frames = now;
+    else if (reading.clock === "not-read") frames = undefined;
+
+    const news = run.autoTimer
+      ? timerNews(beforePlay, reading, run.timer)
+      : null;
+    if (news === "start") {
+      // The clock's frames at the run's 0: the game's time counts from here
+      if (now !== undefined) run.setClockBase(now);
+      run.startTimer(reading.at);
+    }
+    const after = useSmStore.getState();
+    // Game time: only a timer that has begun is set on the clock
+    if (
+      after.timerClock === "game" &&
+      now !== undefined &&
+      !isIdle(after.timer) &&
+      timerState(after.timer) !== "finished"
+    ) {
+      const { base, ms } = clockBaseOf(
+        now,
+        after.clockBase,
+        after.timer,
+        reading.at,
+      );
+      if (base !== after.clockBase) after.setClockBase(base);
+      after.alignTimer(
+        gameClockOf(ms, reading.goal, moving, after.autoTimer),
+        reading.at,
+      );
+    } else if (news === "finish") after.finishTimer(reading.at);
+    if (typeof reading.beforePlay === "boolean") {
+      beforePlay = reading.beforePlay;
+    }
+  };
+
   return {
     /** Lay a reading's news on the run. */
     read: (reading: SmReading) => {
+      followTimer(reading);
       if (reading.inPlay !== true) return;
       const now = viewOf(reading);
       const before = shown;
