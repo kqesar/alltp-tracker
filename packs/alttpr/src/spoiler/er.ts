@@ -13,7 +13,7 @@
 import * as z from "zod/mini";
 import { erLocationId } from "../entrances";
 import { UPSTREAM_ITEMS } from "../items";
-import ER_ITEMS from "./er-items.json";
+import ER_ITEMS from "./er-items.json" with { type: "json" };
 import type { Shape } from "./read";
 
 const PLAYTHROUGH = z.record(

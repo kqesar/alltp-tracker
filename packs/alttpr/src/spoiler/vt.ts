@@ -11,7 +11,7 @@
 import * as z from "zod/mini";
 import { UPSTREAM_ITEMS } from "../items";
 import { locationId } from "../location";
-import ITEM_NAMES from "./item-names.json";
+import ITEM_NAMES from "./item-names.json" with { type: "json" };
 import type { Shape } from "./read";
 
 const WORLD = /^(.+):(\d+)$/;
