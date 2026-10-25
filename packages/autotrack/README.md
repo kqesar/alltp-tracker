@@ -38,6 +38,7 @@ const pack = definePack({
 const session = new AutotrackSession({ environment: await detectEnvironment(), pack });
 session.subscribe((status) => render(status)); // status.code, see "Diagnostic codes"
 session.onUpdate(({ changed, snapshot }) => apply(changed, snapshot));
+session.onSteady((at) => holdClock(at)); // a poll ran, memory did not change
 button.onclick = () => session.start(); // from a click: the browser may prompt
 ```
 
@@ -407,6 +408,13 @@ forbidden bytes only where a permitted range covers them.
   poll still allocates: the promises, the WebSocket message.
 - `onUpdate` receives the same `PollUpdate` object every time, with the ids
   that changed; `snapshot.previous(id)` holds the bytes before the change.
+- `onSteady` receives the clock's time after each poll that read memory and
+  found it unchanged (never the first poll, which reads every range for the
+  first time, and never while the page is hidden: nothing is polled then).
+  It is how a follower learns that a frame counter stands still, a paused
+  emulator or a frozen game, which `onUpdate` can never say: it speaks only
+  of change. It holds for a counter the pack reads on every tick; a counter
+  read more slowly cannot tell a steady tick from one that did not read it.
 - Polling pauses while the page is hidden (`pauseWhenHidden`).
 
 ### Modes: combined ROMs
