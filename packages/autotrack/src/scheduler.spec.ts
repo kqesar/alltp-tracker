@@ -270,8 +270,11 @@ describe("Race Mode", () => {
       fc.integer({ max: 48, min: 1 }),
       fc.constantFrom(250, 500, 1000),
       fc.constantFrom(0xf5_f000, 0xf5_0000, 0xf5_1000, 0x18_0200, 0x00_7f00),
+      // What a forbidden range may also be: behind a switch (an assist the
+      // player turns on), gated, or gated and read alone, held or not
+      fc.constantFrom("plain", "switch", "gated", "alone", "kept"),
     )
-    .map(([category, block, offset, size, everyMs, base]) => {
+    .map(([category, block, offset, size, everyMs, base, kind]) => {
       if (ALTTPR_RACE_PROFILE.categories[category].permitted) {
         const area = permitted[block];
         const at = area.address + (offset % area.size);
@@ -282,7 +285,20 @@ describe("Race Mode", () => {
           size: Math.min(size, area.address + area.size - at),
         };
       }
-      return { address: base + offset, category, everyMs, size };
+      const range: RangeSpec = {
+        address: base + offset,
+        category,
+        everyMs,
+        id: "",
+        size,
+      };
+      return {
+        ...range,
+        ...(kind !== "plain" && { optIn: "assist" }),
+        ...(kind !== "plain" && kind !== "switch" && { when: () => true }),
+        ...(kind === "alone" && { alone: true }),
+        ...(kind === "kept" && { keep: () => true, when: () => false }),
+      };
     });
   const packArb = fc
     .array(rangeArb, { maxLength: 12, minLength: 1 })
@@ -310,6 +326,7 @@ describe("Race Mode", () => {
           const transport = new MemoryTransport(memory);
           const poller = new Poller(pack, transport, {
             now: () => 0,
+            optIn: new Set(["assist"]),
             romReadable: true,
             setting,
           });
@@ -345,7 +362,11 @@ describe("packs without modes (A Link to the Past, Super Metroid)", () => {
    * the poller sent before it re-read the mode probe: no probe, no extra read.
    */
   const expected = (pack: typeof ALTTPR_AUTOTRACK, set: number) => {
-    const due = pack.dueSets[set];
+    // Opt-in ranges (an assist the player turns on) wait for their switch,
+    // which these pollers never get: the requests are what they were before
+    const due = pack.dueSets[set].filter(
+      (i) => pack.optInOf[i] < 0 && !pack.isAlone[i],
+    );
     const permitted = due.filter((i) => pack.racePermitted[i]);
     const casual = due.filter((i) => !pack.racePermitted[i]);
     const race: ByteRange[] = permitted.map((i) => pack.ranges[i]);

@@ -14,6 +14,15 @@
 // no longer lets the tracker see. A casual fetch that was in flight when it
 // came on is dropped, never laid into the snapshot.
 //
+// A range may be gated (`when`): read only while it is wanted, after the tick's
+// other reads and never in a plan, the gated ranges together as one request or,
+// for a big span (`alone`), as a request of its own (see `RangeSpec`). It is a
+// casual read: the tick that Race Mode holds never reaches it, and a tick that
+// would not have read the race flag reads it first for the purpose. A range may
+// also wait for a host switch (`optIn`, `setOptIn`). A read of a gated range
+// that fails is not the tick's failure: the range is skipped from then on, on
+// this device, and said in `unreadable`.
+//
 // Plans follow the last mode the probe reported. When the probe reports
 // another one, the tick keeps only the ranges every mode shares, skips the
 // casual phase, and the next tick reads the new layout: a portal crossing in
@@ -71,9 +80,14 @@ interface Phase {
   readonly modeBound: boolean;
 }
 
+/** The plan key leaves this many bits for the switches' mask. */
+const OPT_BITS = 8;
+
 interface DuePlans {
   readonly race: Phase;
   readonly casual: Phase;
+  /** The race flag and the probe alone: read before a gated read on a tick with no race phase. */
+  readonly lone: Phase;
 }
 
 const NO_PHASE: Phase = {
@@ -98,8 +112,19 @@ function phaseOfProbe(
 }
 
 export class Poller implements MemorySnapshot {
-  /** Ranges this device cannot serve (ROM ranges when ROM is unreadable). */
-  readonly unreadable: readonly string[];
+  /**
+   * Ranges this device cannot serve: ROM ranges when ROM is unreadable, then
+   * the gated ranges whose read failed here, which are skipped from then on.
+   */
+  get unreadable(): readonly string[] {
+    return this.skipped.size === 0
+      ? this.notServed
+      : [...this.notServed, ...this.skipped];
+  }
+  private readonly notServed: readonly string[];
+  /** The ids of gated ranges whose read failed on this device. */
+  private readonly skipped: Set<string>;
+  private readonly onSkip: ((id: string, reason: string) => void) | undefined;
   private readonly current: Uint8Array[] = [];
   private readonly prior: Uint8Array[] = [];
   private readonly seen: Uint8Array;
@@ -114,6 +139,8 @@ export class Poller implements MemorySnapshot {
   private readonly now: () => number;
   private scratch: Uint8Array;
   private readonly changedIds: string[] = [];
+  /** Ranges forgotten between ticks (a switch turned off): reported by the next. */
+  private readonly pendingForgotten: string[] = [];
   private readonly update: {
     at: number;
     changed: string[];
@@ -122,11 +149,21 @@ export class Poller implements MemorySnapshot {
     tick: number;
   };
   private setting: RaceSetting;
+  /** Bit per `pack.optIns` entry: the switches that are on. */
+  private optMask = 0;
+  /** Whether each gated range's gate held when it was last looked at. */
+  private readonly gateWasOpen: boolean[];
+  /** The plan of each `alone` range, by range index. */
+  private readonly alonePlans = new Map<number, Phase>();
+  /** The plan of the gated ranges that are not alone, read together. */
+  private groupPhase: Phase = NO_PHASE;
   private flag: RaceFlagState;
   private modeIndex = UNKNOWN_MODE;
   private ticks = 0;
   /** Whether Race Mode was on at the end of the last tick. */
   private racing = false;
+  /** Whether the last tick was due for a range that is no assist's. */
+  private baseTick = false;
 
   constructor(
     private readonly pack: AutotrackPack,
@@ -135,6 +172,12 @@ export class Poller implements MemorySnapshot {
       readonly romReadable: boolean;
       readonly setting: RaceSetting;
       readonly now: () => number;
+      /** The opt-in switches that are on from the start. */
+      readonly optIn?: ReadonlySet<string>;
+      /** Gated ranges a read of which failed before, on this device: not read. */
+      readonly skipped?: ReadonlySet<string>;
+      /** Called when the read of a gated range fails: it is skipped from now on. */
+      readonly onSkip?: (id: string, reason: string) => void;
     },
   ) {
     const romOk = (range: ByteRange) =>
@@ -153,7 +196,9 @@ export class Poller implements MemorySnapshot {
       this.prior.push(before.subarray(slots[index], end));
     });
     this.seen = new Uint8Array(pack.ranges.length);
-    this.unreadable = pack.ranges.filter((r) => !romOk(r)).map((r) => r.id);
+    this.notServed = pack.ranges.filter((r) => !romOk(r)).map((r) => r.id);
+    this.skipped = new Set(options.skipped);
+    this.onSkip = options.onSkip;
     const readable = pack.ranges.map(romOk);
     const flag = pack.raceFlag;
     const flagReadable = flag !== null && romOk(flag);
@@ -171,6 +216,8 @@ export class Poller implements MemorySnapshot {
       indices: readonly number[],
       race: boolean,
       mode: number,
+      /** Plan the race flag and the probe though no range is due. */
+      force = false,
     ): Phase => {
       const members: number[] = [];
       const ranges: ByteRange[] = [];
@@ -181,12 +228,15 @@ export class Poller implements MemorySnapshot {
       const inMode = (index: number) =>
         pack.modeMasks[index] === ALL_MODES ||
         (mode !== UNKNOWN_MODE && (pack.modeMasks[index] & (1 << mode)) !== 0);
+      let reads = force ? 1 : 0;
       for (const index of indices) {
+        if (pack.isGated[index] || !this.switchedOn(index)) continue;
+        reads++;
         if (index === probe || !readable[index] || !inMode(index)) continue;
         if (pack.racePermitted[index] === race) add(index);
       }
       // The flag and the probe ride with every tick that reads anything.
-      if (race && indices.length > 0) {
+      if (race && reads > 0) {
         if (probe >= 0 && readable[probe]) add(probe);
         if (flag !== null && flagReadable) {
           members.push(FLAG);
@@ -216,8 +266,36 @@ export class Poller implements MemorySnapshot {
     };
     this.build = (set, mode) => ({
       casual: phase(pack.dueSets[set], false, mode),
+      lone: phase([], true, mode, true),
       race: phase(pack.dueSets[set], true, mode),
     });
+    this.gateWasOpen = pack.gated.map(() => false);
+    const group: ByteRange[] = [];
+    const groupMembers: number[] = [];
+    for (const { alone, index } of pack.gated) {
+      if (!readable[index]) continue;
+      if (!alone) {
+        group.push(pack.ranges[index]);
+        groupMembers.push(index);
+        continue;
+      }
+      const plan = planReads([pack.ranges[index]], {
+        gap: pack.gap,
+        limits: transport.limits,
+      });
+      this.alonePlans.set(index, {
+        members: Uint32Array.of(index),
+        modeBound: false,
+        plan,
+      });
+    }
+    if (group.length > 0) {
+      this.groupPhase = {
+        members: Uint32Array.from(groupMembers),
+        modeBound: false,
+        plan: planReads(group, { gap: pack.gap, limits: transport.limits }),
+      };
+    }
     this.checkPlan =
       pack.gameCheck === undefined
         ? NO_PHASE
@@ -228,6 +306,7 @@ export class Poller implements MemorySnapshot {
         ? phaseOfProbe(pack, probe, transport.limits)
         : NO_PHASE;
     this.probeScratch = new Uint8Array(this.probePhase.plan.size);
+    for (const name of options.optIn ?? []) this.setOptIn(name, true);
     this.update = {
       at: 0,
       changed: this.changedIds,
@@ -253,6 +332,44 @@ export class Poller implements MemorySnapshot {
 
   setRaceSetting(setting: RaceSetting): void {
     this.setting = setting;
+  }
+
+  /**
+   * Whether the last tick read a range of the pack's own (no assist's: not
+   * behind a switch, not alone). A poll that found memory unchanged says the
+   * game stands still only if it read what the game's clock is read from, which
+   * the pack's own ranges are on the cadences it was laid out for; a tick the
+   * assists alone made due (the dark room's position, between two of those)
+   * says nothing.
+   */
+  get readBase(): boolean {
+    return this.baseTick;
+  }
+
+  /**
+   * Turns an opt-in switch (`RangeSpec.optIn`) on or off. From the next tick
+   * its ranges are read or not; off, they forget their bytes at once (`has`
+   * turns false), which the next update reports. A name no range uses does
+   * nothing.
+   */
+  setOptIn(name: string, on: boolean): void {
+    const slot = this.pack.optIns.indexOf(name);
+    if (slot < 0) return;
+    const bit = 1 << slot;
+    if (on === ((this.optMask & bit) !== 0)) return;
+    this.optMask = on ? this.optMask | bit : this.optMask & ~bit;
+    if (on) return;
+    this.pack.optInOf.forEach((of, index) => {
+      if (of !== slot || this.seen[index] === 0) return;
+      this.seen[index] = 0;
+      this.pendingForgotten.push(this.pack.ranges[index].id);
+    });
+  }
+
+  /** Whether a range's switch, if it has one, is on. */
+  private switchedOn(index: number): boolean {
+    const slot = this.pack.optInOf[index];
+    return slot < 0 || (this.optMask & (1 << slot)) !== 0;
   }
 
   bytes(id: string): Uint8Array {
@@ -286,13 +403,18 @@ export class Poller implements MemorySnapshot {
     const pack = this.pack;
     const set = pack.cycle[this.ticks % pack.cycle.length];
     const planned = this.modeIndex;
-    const key = set * 33 + planned + 1;
+    const key = (set * 33 + planned + 1) * (1 << OPT_BITS) + this.optMask;
     let plans = this.plans.get(key);
     if (plans === undefined) {
       plans = this.build(set, planned);
       this.plans.set(key, plans);
     }
+    this.baseTick = pack.dueSets[set].some(
+      (index) => pack.optInOf[index] < 0 && !pack.isGated[index],
+    );
     this.changedIds.length = 0;
+    for (const id of this.pendingForgotten) this.changedIds.push(id);
+    this.pendingForgotten.length = 0;
     await this.fetch(plans.race);
     this.readControls(plans.race);
     let switched = this.modeIndex !== planned;
@@ -313,6 +435,7 @@ export class Poller implements MemorySnapshot {
         // Race Mode may have come on while the casual ranges were in flight:
         // what they brought is not laid
         this.scatter(casual, false);
+        await this.readGated(set, plans);
       }
     }
     // A new mode: every mode-bound range holds another stint's bytes, unread
@@ -328,12 +451,126 @@ export class Poller implements MemorySnapshot {
   }
 
   /**
+   * Reads the gated ranges that are wanted. A range whose gate holds is read
+   * when its cadence is due, when the gate has just opened and, for an alone
+   * range, when a range it refreshes on changed this tick; the gated ranges
+   * that are not alone go in one request, the alone ones one each. One whose
+   * gate stopped holding forgets its bytes, unless `keep` holds them. A tick
+   * that has no race phase reads the race flag first, so that a race ROM
+   * loaded since is caught before any of these reads.
+   */
+  private async readGated(set: number, plans: DuePlans): Promise<void> {
+    const { gated, ranges, dueSets } = this.pack;
+    if (gated.length === 0) return;
+    const readable = (index: number) =>
+      this.alonePlans.has(index) || this.groupPhase.members.includes(index);
+    // 0 forget, 1 hold, 2 read
+    const states = gated.map(({ index }) => {
+      const range = ranges[index];
+      if (
+        !this.switchedOn(index) ||
+        this.skipped.has(range.id) ||
+        !readable(index)
+      ) {
+        return 0;
+      }
+      if (range.when?.(this) === true) return 2;
+      return range.keep?.(this) === true ? 1 : 0;
+    });
+    gated.forEach(({ index }, k) => {
+      if (states[k] !== 0) return;
+      this.gateWasOpen[k] = false;
+      if (this.seen[index] === 1) {
+        this.seen[index] = 0;
+        this.changedIds.push(ranges[index].id);
+      }
+    });
+    const due = (index: number) => dueSets[set].includes(index);
+    const wasOpen = gated.map((_, k) => this.gateWasOpen[k]);
+    gated.forEach((_, k) => {
+      if (states[k] === 2) this.gateWasOpen[k] = true;
+    });
+    const group = gated.some(
+      ({ alone, index }, k) =>
+        !alone && states[k] === 2 && (!wasOpen[k] || due(index)),
+    );
+    // The alone ranges are asked after the group, which may have changed the
+    // range they refresh on
+    const aloneWanted = (k: number) =>
+      gated[k].alone &&
+      states[k] === 2 &&
+      (!wasOpen[k] ||
+        due(gated[k].index) ||
+        gated[k].refreshOn.some((other) =>
+          this.changedIds.includes(ranges[other].id),
+        ));
+    // An alone range's refresh needs the group to have changed: no group,
+    // nothing to refresh on, so only an open or a cadence asks for it here
+    const anyAlone = gated.some(
+      ({ alone, index }, k) =>
+        alone && states[k] === 2 && (!wasOpen[k] || due(index)),
+    );
+    if (!group && !anyAlone) return;
+    if (plans.race.plan.size === 0 && plans.lone.plan.size > 0) {
+      await this.fetch(plans.lone);
+      this.readControls(plans.lone);
+      this.scatter(plans.lone, false);
+      if (this.raceActive()) return;
+    }
+    if (group) {
+      const open = new Set(
+        gated.filter((_, k) => states[k] === 2).map(({ index }) => index),
+      );
+      if (await this.fetchGated(this.groupPhase)) {
+        // Race Mode may have come on while it was in flight
+        if (this.raceActive()) return;
+        this.scatter(this.groupPhase, false, open);
+      }
+    }
+    for (let k = 0; k < gated.length; k++) {
+      if (!aloneWanted(k)) continue;
+      const phase = this.alonePlans.get(gated[k].index);
+      if (phase === undefined || !(await this.fetchGated(phase))) continue;
+      if (this.raceActive()) return;
+      this.scatter(phase, false);
+    }
+  }
+
+  /**
+   * A gated range's read: one that fails is skipped from then on (reported to
+   * `onSkip`) and the tick goes on, where the game's own reads, and the race
+   * flag's, fail the tick as they always did.
+   * @returns Whether the bytes came
+   */
+  private async fetchGated(phase: Phase): Promise<boolean> {
+    try {
+      await this.fetch(phase);
+      return true;
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      for (let k = 0; k < phase.members.length; k++) {
+        const index = phase.members[k];
+        if (index === FLAG) continue;
+        const id = this.pack.ranges[index].id;
+        this.skipped.add(id);
+        if (this.seen[index] === 1) {
+          this.seen[index] = 0;
+          this.changedIds.push(id);
+        }
+        this.onSkip?.(id, reason);
+      }
+      return false;
+    }
+  }
+
+  /**
    * As Race Mode comes on, forgets what the ranges it forbids held, and
    * reports them changed so a reading decodes them as unread.
    */
   private forgetForbidden(): void {
     const racing = this.raceActive();
     if (racing && !this.racing) {
+      this.gateWasOpen.fill(false);
       this.pack.racePermitted.forEach((permitted, index) => {
         if (permitted || this.seen[index] === 0) return;
         this.seen[index] = 0;
@@ -414,14 +651,23 @@ export class Poller implements MemorySnapshot {
     }
   }
 
-  /** Copies a fetched phase into the snapshot, noting what changed. */
-  private scatter(phase: Phase, sharedOnly: boolean): void {
+  /**
+   * Copies a fetched phase into the snapshot, noting what changed. A range
+   * whose switch went off while the phase was in flight is not laid back, and
+   * with `only`, neither is one that is not in it.
+   */
+  private scatter(
+    phase: Phase,
+    sharedOnly: boolean,
+    only?: ReadonlySet<number>,
+  ): void {
     const { plan, members } = phase;
     const scratch = this.scratch;
     for (let k = 0; k < members.length; k++) {
       const index = members[k];
       if (index === FLAG) continue;
       if (sharedOnly && this.pack.modeMasks[index] !== ALL_MODES) continue;
+      if (!this.switchedOn(index) || (only && !only.has(index))) continue;
       const from = plan.rangeOffsets[k];
       const into = this.current[index];
       let same = this.seen[index] === 1;

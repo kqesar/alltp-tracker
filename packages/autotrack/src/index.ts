@@ -52,6 +52,7 @@ export {
   type RaceFlagProbe,
   type RaceFlagReading,
   type RangeSpec,
+  type RangeView,
 } from "./pack";
 export {
   LAN_PERMISSION_NAMES,

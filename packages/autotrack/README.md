@@ -420,8 +420,52 @@ forbidden bytes only where a permitted range covers them.
   It is how a follower learns that a frame counter stands still, a paused
   emulator or a frozen game, which `onUpdate` can never say: it speaks only
   of change. It holds for a counter the pack reads on every tick; a counter
-  read more slowly cannot tell a steady tick from one that did not read it.
+  read more slowly cannot tell a steady tick from one that did not read it. A tick that only an assist's ranges (`optIn`) made due is
+  no poll for this and never reports steady (`Poller.readBase`).
 - Polling pauses while the page is hidden (`pauseWhenHidden`).
+
+### Assists: opt-in and gated ranges
+
+A pack can offer an assist the player turns on, which reads memory only while
+it is wanted. Four fields of a `RangeSpec` carry it; all but `optIn` are for
+ranges of a **forbidden** category, so Race Mode never reaches them
+(`definePack` refuses them on a permitted one).
+
+- `optIn: "name"`: the range is read only while the host has the switch on
+  (`session.setOptIn(name, on)`, or `SessionOptions.optIn` at the start; it
+  outlives a reconnection). Off, the poller plans no request for it, a tick due
+  for nothing else sends nothing, the range forgets its bytes (`has` is false,
+  the id is reported changed), and a read in flight is not laid back. Plans are
+  cached per due set, mode **and** switch mask. At most 8 switches.
+- `when(view)` (with `everyMs`): a **gate**. The range is read only while it
+  holds over the snapshot as the tick left it, after the tick's other reads
+  and never in a plan: the gated ranges that are not alone go together, as one
+  request. Put the bytes the gate reads in the pack's own plan at its own cadence
+  (an `optIn` range in the casual plan costs no request of its own, as it rides
+  with the others); the gated ranges can then fall due more often than that, at no
+  cost while the gate is shut. A tick that has no race phase of its own reads the
+  race flag first, so a race ROM loaded since is caught before any gated read.
+  When `when` stops holding the range forgets its bytes, unless `keep(view)`
+  holds (a menu over the room): nothing is read then, nothing forgotten.
+- `alone: true`: a gated big span, sent as a request of its own, never merged:
+  planned beside others, usb2snes cuts a span into 255-byte pieces (QUsb2Snes
+  refuses more in a multi-range request), while a single range goes whole.
+  Measured against SNI and RetroArch, 8 KiB took 64-107 ms as 33 pieces and
+  16-21 ms alone. It is read when its cadence is due, on the tick `when` turns
+  true, and on a tick where a range of `refreshOn` changed, so its bytes match the
+  state read with them.
+- A gated read is not the session's failure. A read that fails (a timeout, an
+  error on that range) skips the range on that device, for the rest of the
+  session and through reconnections, and lists its id among `unreadable` in the
+  `connected` status and the diagnostic report: the pack's own reads go on. (The
+  transport may have dropped its socket with the error; the session's usual
+  reconnection then follows, and does not ask for the range again.)
+- A tick that only an assist's ranges made due says nothing of a game standing
+  still: it is not a steady poll (`Poller.readBase`).
+
+Gated ranges are read in the casual phase: the tick that Race Mode holds never
+reaches them, and one that comes on while a read is in flight drops it.
+ALttPR's dark room map uses all of it (`packs/alttpr`, "The dark room map").
 
 ### Modes: combined ROMs
 
