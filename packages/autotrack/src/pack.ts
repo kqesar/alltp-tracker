@@ -23,6 +23,45 @@ export interface RangeSpec {
   readonly category: string;
   /** The modes it is read in (see `ModeProbe`); omit for every mode. */
   readonly modes?: readonly string[];
+  /**
+   * The host's switch (`setOptIn`) the range waits for: it is read only
+   * while that switch is on, and forgotten when it goes off. Omit for a range
+   * that is always read. A switch is for an assist the player chooses.
+   */
+  readonly optIn?: string;
+  /**
+   * A gate: the range is read only while this holds over the memory as the
+   * tick left it. When it stops holding the range forgets its bytes (`has`
+   * turns false), so a decoder never takes an earlier stint's for the current
+   * one, unless `keep` says to hold them. Only a range of a forbidden category
+   * may have a gate, with a cadence. A gated range is never in the tick's plan:
+   * it is read after the tick's other reads, in the casual phase (Race Mode
+   * never reaches it), on a tick that read the race flag first (one more
+   * request of its own, when the tick would not have). Gated ranges that are
+   * not `alone` are read together, as one request.
+   */
+  readonly when?: (view: RangeView) => boolean;
+  /**
+   * Holds the bytes of a gated range while this holds, though `when` does not
+   * (a menu over the room): nothing is read, nothing forgotten. Needs `when`.
+   */
+  readonly keep?: (view: RangeView) => boolean;
+  /**
+   * A gated range sent as a request of its own, never merged with another: a
+   * big span planned beside others is cut into small pieces (usb2snes: 255
+   * bytes), several times slower than whole. It is read when its cadence is
+   * due, when `when` has just turned true, and when a range of `refreshOn`
+   * changed on the tick.
+   */
+  readonly alone?: boolean;
+  /** Ids of ranges whose change makes an `alone` range read on that tick. */
+  readonly refreshOn?: readonly string[];
+}
+
+/** What a range's `when` sees: the snapshot, as a decoder would. */
+export interface RangeView {
+  has(id: string): boolean;
+  bytes(id: string): Uint8Array;
 }
 
 /**
@@ -127,6 +166,20 @@ export interface AutotrackPack {
   } | null;
   /** For each range, the bits of the modes it is read in (`ALL_MODES`). */
   readonly modeMasks: Uint32Array;
+  /** The opt-in switches the ranges name, in first-seen order (at most 8). */
+  readonly optIns: readonly string[];
+  /** For each range, the index of its switch in `optIns`, or -1. */
+  readonly optInOf: Int8Array;
+  /** The gated ranges, in order (`refreshOn` resolved), alone or not. */
+  readonly gated: readonly {
+    readonly index: number;
+    readonly alone: boolean;
+    readonly refreshOn: readonly number[];
+  }[];
+  /** For each range: whether it is gated (never in the tick's plans). */
+  readonly isGated: readonly boolean[];
+  /** For each range: whether it is read alone. */
+  readonly isAlone: readonly boolean[];
 }
 
 const MAX_CYCLE = 4096;
@@ -177,7 +230,10 @@ function complement(ranges: readonly ByteRange[]): ByteRange[] {
  * check that names an unknown range or one of a forbidden category; a race
  * flag outside the permitted memory; modes that are empty or repeated, a
  * mode probe that is unknown, forbidden or mode-bound, a range naming an
- * unknown mode, a game check reading a mode-bound range.
+ * unknown mode, a game check reading a mode-bound range; a range with `when`,
+ * `keep`, `alone` or `refreshOn` in a race-permitted category, `keep`, `alone`
+ * or `refreshOn` without `when`, `when` without a cadence, `refreshOn` without
+ * `alone`, an unknown `refreshOn` id, more than 8 switches.
  */
 export function definePack(source: AutotrackPackSource): AutotrackPack {
   const { id, profile, ranges } = source;
@@ -338,6 +394,56 @@ export function definePack(source: AutotrackPackSource): AutotrackPack {
     }
   }
 
+  const optIns: string[] = [];
+  const optInOf = new Int8Array(ranges.length).fill(-1);
+  const gated: { alone: boolean; index: number; refreshOn: number[] }[] = [];
+  const isGated: boolean[] = ranges.map(() => false);
+  const isAlone: boolean[] = ranges.map(() => false);
+  ranges.forEach((range, index) => {
+    const where = `range "${range.id}"`;
+    if (range.optIn !== undefined) {
+      if (!ID.test(range.optIn)) fail(id, `${where}: a switch is kebab-case`);
+      let slot = optIns.indexOf(range.optIn);
+      if (slot < 0) {
+        slot = optIns.push(range.optIn) - 1;
+        if (slot >= 8) fail(id, "at most 8 opt-in switches");
+      }
+      optInOf[index] = slot;
+    }
+    const gate = range.when !== undefined;
+    if (
+      !gate &&
+      range.keep === undefined &&
+      range.alone === undefined &&
+      range.refreshOn === undefined
+    ) {
+      return;
+    }
+    if (racePermitted[index]) {
+      fail(
+        id,
+        `${where}: when, keep, alone and refreshOn are for forbidden categories`,
+      );
+    }
+    if (!gate) fail(id, `${where}: keep, alone and refreshOn need when`);
+    if (range.everyMs === undefined) fail(id, `${where}: when needs everyMs`);
+    if (range.alone !== true && range.refreshOn !== undefined) {
+      fail(id, `${where}: refreshOn needs alone`);
+    }
+    if (modeMasks[index] !== ALL_MODES) {
+      fail(id, `${where}: a gated range is read in every mode`);
+    }
+    const refreshOn = (range.refreshOn ?? []).map((other) => {
+      const at = indexOf.get(other);
+      if (at === undefined)
+        fail(id, `${where}: refreshOn: unknown range "${other}"`);
+      return at;
+    });
+    isGated[index] = true;
+    isAlone[index] = range.alone === true;
+    gated.push({ alone: range.alone === true, index, refreshOn });
+  });
+
   const gap = source.gap ?? 16;
   if (!Number.isInteger(gap) || gap < 0)
     fail(id, "gap must be a natural number");
@@ -353,10 +459,15 @@ export function definePack(source: AutotrackPackSource): AutotrackPack {
     forbiddenBytes,
     gameCheck,
     gap,
+    gated,
     id,
     indexOf,
+    isAlone,
+    isGated,
     modeMasks,
     modes,
+    optInOf,
+    optIns,
     permittedBytes,
     profile,
     raceBarriers: [...complement(profile.permitted), ...forbiddenBytes],

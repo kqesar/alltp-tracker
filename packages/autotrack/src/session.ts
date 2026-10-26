@@ -90,6 +90,8 @@ export interface SessionOptions {
   /** A connection that lived this long is retried at once when it drops. */
   readonly stableAfterMs?: number;
   readonly raceSetting?: RaceSetting;
+  /** The opt-in switches (`RangeSpec.optIn`) that are on from the start. */
+  readonly optIn?: readonly string[];
   /** Polling stops while the page is hidden (default true). */
   readonly pauseWhenHidden?: boolean;
 }
@@ -153,6 +155,12 @@ export class AutotrackSession {
   private paused = false;
   private switching = false;
   private raceSetting: RaceSetting;
+  private readonly optIns: Set<string>;
+  /**
+   * The gated ranges (`RangeSpec.when`) whose read failed, by device id: the
+   * session does not ask that device for them again, through reconnections.
+   */
+  private readonly skipped = new Map<string, Set<string>>();
   private preferredDevice: string | null = null;
   private unsubscribers: (() => void)[] = [];
   private devices: readonly DeviceDescriptor[] = [];
@@ -173,6 +181,7 @@ export class AutotrackSession {
     this.promptAfterMs = options.promptAfterMs ?? 1500;
     this.stableAfterMs = options.stableAfterMs ?? 5000;
     this.raceSetting = options.raceSetting ?? "auto";
+    this.optIns = new Set(options.optIn);
     this.pauseWhenHidden = options.pauseWhenHidden ?? true;
   }
 
@@ -226,7 +235,9 @@ export class AutotrackSession {
    * connecting always does: it reads every range for the first time. What a
    * steady poll says is that every range due on that tick held its bytes,
    * which tells a game's frame counter standing still (a paused emulator, a
-   * frozen game) only if the pack reads that counter on every tick.
+   * frozen game) only if the pack reads that counter on every tick. A tick
+   * that only an assist made due (a range behind `optIn`, read between two of
+   * the pack's own) is no poll for this: it reads none of the pack's ranges.
    */
   onSteady(listener: (at: number) => void): () => void {
     this.steadyListeners.add(listener);
@@ -279,6 +290,23 @@ export class AutotrackSession {
     if (this.current.code === "connected" && this.poller !== null) {
       this.setStatus({ ...this.current, race: this.poller.race });
     }
+  }
+
+  /** Remembers that a device could not serve a gated range. */
+  private skip(device: string, range: string): void {
+    const ids = this.skipped.get(device) ?? new Set<string>();
+    ids.add(range);
+    this.skipped.set(device, ids);
+  }
+
+  /**
+   * Turns an opt-in switch on or off (`RangeSpec.optIn`), now and for every
+   * connection after: the ranges behind it are read only while it is on.
+   */
+  setOptIn(name: string, on: boolean): void {
+    if (on) this.optIns.add(name);
+    else this.optIns.delete(name);
+    this.poller?.setOptIn(name, on);
   }
 
   /** Prefers a device by id (null: the first listed); reattaches if needed. */
@@ -408,8 +436,12 @@ export class AutotrackSession {
       attempt.stage = "check";
       const poller = new Poller(this.pack, transport, {
         now: () => this.clock.now(),
+        // What failed to read on this device before is not asked again
+        onSkip: (id) => this.skip(info.device.id, id),
+        optIn: this.optIns,
         romReadable: info.romReadable,
         setting: this.raceSetting,
+        skipped: this.skipped.get(info.device.id),
       });
       for (let tries = 1; ; tries++) {
         const verdict = await this.checkGame(poller, info, bridge);
@@ -538,6 +570,7 @@ export class AutotrackSession {
     // The first poll comes before "connected", so the status already
     // carries the race flag it read.
     let race: RaceStatus | null = null;
+    let unreadableCount = poller.unreadable.length;
     while (this.alive(generation)) {
       if (race !== null && this.pauseWhenHidden && this.visibility.hidden()) {
         this.paused = true;
@@ -554,7 +587,7 @@ export class AutotrackSession {
       attempt.readOk = true;
       if (update !== null) {
         for (const listener of this.updateListeners) listener(update);
-      } else {
+      } else if (poller.readBase) {
         const at = this.clock.now();
         for (const listener of this.steadyListeners) listener(at);
       }
@@ -564,9 +597,11 @@ export class AutotrackSession {
         next.active !== race.active ||
         next.flag !== race.flag ||
         next.overridden !== race.overridden ||
-        next.setting !== race.setting
+        next.setting !== race.setting ||
+        poller.unreadable.length !== unreadableCount
       ) {
         race = next;
+        unreadableCount = poller.unreadable.length;
         this.setStatus(connected(race), generation);
       }
       const elapsed = this.clock.now() - started;
