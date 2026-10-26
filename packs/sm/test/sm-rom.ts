@@ -53,6 +53,13 @@ export type MapRandoGame = {
    * counter ($7E:1F80), 0 to 254. Left out, 0 and 0.
    */
   readonly clock?: { readonly saved: number; readonly pending: number };
+  /** The bits set in the collected array ($7E:D870), by bit index. */
+  readonly collected?: readonly number[];
+  /**
+   * The bits of the locations that hold Nothing: the ROM's mask ($B5:FE12),
+   * and set in the collected array too, as new_game.asm:121-128 copies it.
+   */
+  readonly nothing?: readonly number[];
 };
 
 /**
@@ -79,6 +86,8 @@ export const writeMapRando = (
     state = 0x08,
     escaping = false,
     clock = { pending: 0, saved: 0 },
+    collected = [],
+    nothing = [],
   }: MapRandoGame = {},
 ): Uint8Array => {
   // The header's title (patch.rs:2111-2112)
@@ -134,6 +143,15 @@ export const writeMapRando = (
       objective.flag.mask >> 8;
   }
   if (escaping) memory[at("events", 0x7e_d821)] |= 0x40;
+  // The locations: the Nothing mask in ROM, copied into the collected bits at
+  // a new game, then the bits the player has set
+  for (const bit of nothing) {
+    memory[at("nothing-mask", 0xb5_fe12) + (bit >> 3)] |= 1 << (bit & 7);
+    memory[at("collected", 0x7e_d870) + (bit >> 3)] |= 1 << (bit & 7);
+  }
+  for (const bit of collected) {
+    memory[at("collected", 0x7e_d870) + (bit >> 3)] |= 1 << (bit & 7);
+  }
   // The RTA clock (stats.asm; constants.asm)
   word(memory, at("rta-saved", 0x70_1e10), clock.saved & 0xffff);
   word(memory, at("rta-saved", 0x70_1e12), Math.floor(clock.saved / 0x1_0000));

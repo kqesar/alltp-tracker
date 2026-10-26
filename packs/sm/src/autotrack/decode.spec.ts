@@ -2,9 +2,11 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { viewOf, writeMapRando } from "../../test/sm-rom";
 import { SM_ITEMS } from "../items";
+import { LOCATION_KEYS, LOCATIONS } from "../locations";
 import {
   clockStraddled,
   decodeBeforePlay,
+  decodeCollected,
   decodeGameClock,
   decodeGameState,
   decodeGoal,
@@ -16,7 +18,7 @@ import {
   RTA_FRAMES_PER_SECOND,
   rtaMs,
 } from "./decode";
-import { MEMORY_RANGES, type MemoryRangeId } from "./memory";
+import { MEMORY_RANGE, MEMORY_RANGES, type MemoryRangeId } from "./memory";
 
 const image = () => new Uint8Array(0x100_0000);
 const game = (seed: Parameters<typeof writeMapRando>[1] = {}) =>
@@ -80,6 +82,88 @@ describe("decodeItems", () => {
     expect(counts).toMatchObject({ missile: 46 });
     const unread = viewOf(writeMapRando(image()), ["pack-sizes"]);
     expect(decodeItems(unread)).toBe("not-read");
+  });
+});
+
+describe("decodeCollected", () => {
+  // Bits 19 and 12 are Brinstar Reserve Tank Room's middle item (46:3) and
+  // 230 Missile Room's (17:2), 4 The Moat's (7:3)
+  it("names the locations whose bit is set", () => {
+    expect(
+      [
+        ...(decodeCollected(game({ collected: [19, 12] })) as Set<string>),
+      ].sort(),
+    ).toEqual(["17:2", "46:3"]);
+    expect(decodeCollected(game())).toEqual(new Set());
+  });
+
+  it("reads every bit of the array, the last byte's included", () => {
+    const bits = LOCATIONS.map(({ bit }) => bit);
+    const found = decodeCollected(game({ collected: bits }));
+    expect(found).toEqual(new Set(LOCATION_KEYS));
+    // Bit 154 is byte $D883's, the array's last used one
+    expect(decodeCollected(game({ collected: [154] }))).toEqual(
+      new Set(["194:2"]),
+    );
+  });
+
+  it("leaves out the locations that hold Nothing, set from a new game on", () => {
+    // The Moat (bit 4) holds Nothing: its bit is set at a new game
+    const fresh = game({ nothing: [4] });
+    expect(decodeCollected(fresh)).toEqual(new Set());
+    // Collecting another location shows only that one
+    expect(decodeCollected(game({ collected: [19], nothing: [4] }))).toEqual(
+      new Set(["46:3"]),
+    );
+  });
+
+  it("is not known when the mask names a bit the collected bits lack", () => {
+    // A running game holds the mask's bits (a new game copies them in): a mask
+    // that does not fit is the menus' leftovers or another ROM's
+    const memory = writeMapRando(image(), {});
+    memory[MEMORY_RANGE["nothing-mask"].address] |= 0x10;
+    expect(decodeCollected(viewOf(memory))).toBe("not-read");
+    // The same mask, with its bit set in the collected bits, is read
+    memory[MEMORY_RANGE.collected.address] |= 0x10;
+    expect(decodeCollected(viewOf(memory))).toEqual(new Set());
+    // Whichever byte of the mask it is in
+    const last = writeMapRando(image(), { collected: [154] });
+    last[MEMORY_RANGE["nothing-mask"].address + 19] |= 0x08;
+    expect(decodeCollected(viewOf(last))).toBe("not-read");
+  });
+
+  it("never names a masked location, and is known only when the bits cover the mask", () => {
+    const bytes = fc.uint8Array({ maxLength: 0x14, minLength: 0x14 });
+    fc.assert(
+      fc.property(bytes, bytes, (mask, extra) => {
+        const view = (collected: Uint8Array) =>
+          ({
+            bytes: (id: string) => (id === "collected" ? collected : mask),
+            has: () => true,
+          }) satisfies MemoryView;
+        // A running game: the mask's bits, and whatever else was collected
+        const covering = extra.map((byte, i) => byte | mask[i]);
+        const found = decodeCollected(view(covering));
+        expect(typeof found).toBe("object");
+        for (const { bit, key } of LOCATIONS) {
+          const masked = (mask[bit >> 3] & (1 << (bit & 7))) !== 0;
+          const set = (extra[bit >> 3] & (1 << (bit & 7))) !== 0;
+          expect((found as Set<string>).has(key)).toBe(!masked && set);
+        }
+        // Any mask bit the collected bits lack: not known
+        const lacking = covering.map((byte, i) => byte & ~mask[i]);
+        if (mask.some((byte) => byte !== 0)) {
+          expect(decodeCollected(view(lacking))).toBe("not-read");
+        }
+      }),
+    );
+  });
+
+  it("is not known unless both ranges were read", () => {
+    const memory = writeMapRando(image(), { collected: [19] });
+    expect(decodeCollected(viewOf(memory, ["collected"]))).toBe("not-read");
+    expect(decodeCollected(viewOf(memory, ["nothing-mask"]))).toBe("not-read");
+    expect(decodeCollected(viewOf(memory))).toEqual(new Set(["46:3"]));
   });
 });
 
@@ -277,6 +361,20 @@ describe("the decoders on random bytes", () => {
         const objectives = decodeObjectives(view(ranges));
         if (typeof objectives !== "string") {
           expect(objectives.length).toBeLessThanOrEqual(20);
+        }
+        const collected = decodeCollected(view(ranges));
+        if (typeof collected !== "string") {
+          for (const key of collected) expect(LOCATION_KEYS).toContain(key);
+          // Never a location the mask holds, whatever the bytes
+          const mask = ranges["nothing-mask"];
+          const bits = ranges.collected;
+          if (mask && bits && mask.length >= 0x14 && bits.length >= 0x14) {
+            for (const { bit, key } of LOCATIONS) {
+              if (mask[bit >> 3] & (1 << (bit & 7))) {
+                expect(collected.has(key)).toBe(false);
+              }
+            }
+          }
         }
         decodeSeed(view(ranges));
         decodeInPlay(view(ranges));

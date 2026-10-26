@@ -11,7 +11,9 @@
 //   (the seed's identifiers, settings, objectives and item sizes);
 // - patches/rom_map/Bank DF.txt, the map of bank $DF it keeps for autotrackers;
 // - patches/src/fast_reload.asm and stats.asm, for the game states and the
-//   RTA clock (stats.asm, constants.asm).
+//   RTA clock (stats.asm, constants.asm);
+// - patches/src/item_count.asm, for the locations collected and the mask of
+//   those that hold Nothing.
 
 import { bus, type RangeSpec } from "@alltp/autotrack";
 
@@ -100,6 +102,21 @@ export const MEMORY_RANGES = [
     size: 0x50,
     source: "patch.rs:3683-3684",
   }),
+  // The locations that hold Nothing, one bit each, in the layout of the
+  // collected bits below (patch.rs:853-856 builds it, :2279 and :2415-2416
+  // write it): new_game.asm:121-128 copies it into the collected bits, so
+  // those start set. Category `locations`, never read in Race Mode: it says
+  // where the seed put no item. Polled with the collected bits, at their
+  // cadence, so both come from the same tick: a ROM loaded in between would
+  // pair one seed's mask with another's bits.
+  range({
+    at: 0xb5_fe12,
+    category: "locations",
+    everyMs: ITEMS_MS,
+    id: "nothing-mask",
+    size: 0x14,
+    source: "patch.rs:853-856, new_game.asm:121-128",
+  }),
   // Bank $DF's autotracker data: the seed's name, its display hash, the
   // items its settings add, and its presets (Bank DF.txt; patch.rs:783,
   // 2038-2124).
@@ -170,6 +187,18 @@ export const MEMORY_RANGES = [
     id: "events",
     size: 0x10,
     source: "patch.rs:3596-3681",
+  }),
+  // The locations collected: one bit per item location, 155 of them, the
+  // bit of each in locations.ts (item_count.asm:126-136 sums them, minus the
+  // Nothing mask above). A location holding Nothing starts set. Category
+  // `locations`, never read in Race Mode.
+  range({
+    at: 0x7e_d870,
+    category: "locations",
+    everyMs: ITEMS_MS,
+    id: "collected",
+    size: 0x14,
+    source: "item_count.asm:126-136, patch.rs:212",
   }),
 ] as const;
 

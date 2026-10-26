@@ -4,6 +4,7 @@
 // decode, none throw. What memory cannot tell yet, it says so.
 
 import { SM_ITEMS, type SmItemId } from "../items";
+import { LOCATIONS, type LocationKey } from "../locations";
 import { type Objective, objectiveByFlag } from "../objectives";
 import {
   MAP_PRESETS,
@@ -126,6 +127,46 @@ export function decodeItems(
   counted("superMissile", equipment.word(MAX_AT.superMissile));
   counted("powerBomb", equipment.word(MAX_AT.powerBomb));
   return counts;
+}
+
+/** The collected array and the Nothing mask: 155 bits in 20 bytes each. */
+const COLLECTED_AT = 0x7e_d870;
+const NOTHING_AT = 0xb5_fe12;
+const COLLECTED_BYTES = 0x14;
+
+/**
+ * The locations the player has collected, by key: the game's bit for each
+ * (locations.ts), less the locations that hold Nothing, whose bit is set from
+ * a new game on (new_game.asm:121-128). The mask is applied here, as Map
+ * Rando's own counter does (item_count.asm:117-136: `bits & ~mask`), so the
+ * set never names a Nothing location: nothing downstream, a save, a link or a
+ * stream, can tell where the seed put none.
+ *
+ * Both ranges are category `locations`, which Race Mode never reads (race
+ * profile): then, like before they are read, not known. Nor is it known when
+ * the mask names a bit the collected array lacks: a running game always holds
+ * the mask's bits (new_game.asm copies it in, and they are never cleared), so
+ * what breaks that is the menus' leftover WRAM or a mask of another ROM.
+ */
+export function decodeCollected(
+  memory: MemoryView,
+): ReadonlySet<LocationKey> | Unsettled {
+  const collected = reader(memory, "collected");
+  const nothing = reader(memory, "nothing-mask");
+  if (!collected || !nothing) return "not-read";
+  for (let at = 0; at < COLLECTED_BYTES; at++) {
+    const mask = nothing.byte(NOTHING_AT + at);
+    if ((mask & ~collected.byte(COLLECTED_AT + at)) !== 0) return "not-read";
+  }
+  const found = new Set<LocationKey>();
+  for (const { bit, key } of LOCATIONS) {
+    const at = bit >> 3;
+    if (at >= COLLECTED_BYTES) continue;
+    const set =
+      collected.byte(COLLECTED_AT + at) & ~nothing.byte(NOTHING_AT + at);
+    if ((set & (1 << (bit & 7))) !== 0) found.add(key);
+  }
+  return found;
 }
 
 /** One of the seed's objectives, and whether it is done. */
