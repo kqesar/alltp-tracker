@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.47.0](https://github.com/kqesar/alltp-tracker/compare/v2.46.0...v2.47.0) (2026-10-26)
+
+
+### ✨ Features
+
+* **alttpr:** read and decode a dark room's map ([6e403a4](https://github.com/kqesar/alltp-tracker/commit/6e403a4e49cdab68bdf2249f6a22f8f1fea812a3))
+* **autotrack:** opt-in and gated ranges, read alone or together ([f07334a](https://github.com/kqesar/alltp-tracker/commit/f07334a0a681cb7df3da40fd0bff068a862109d1))
+* **web:** show a dark room's plan and Link's place in it ([67d4755](https://github.com/kqesar/alltp-tracker/commit/67d47559f47e7ebd8a4e149fb6e9f1d72fbf1da7))
+
+
+### 📚 Documentation
+
+* **alttpr:** describe the dark room map, its reads and its limits ([c830e7a](https://github.com/kqesar/alltp-tracker/commit/c830e7a2c50b003c544d845eb62486bd6fa4632b))
+* say alttpr.com shows Save Spoiler once the base ROM is loaded ([9c1ecb3](https://github.com/kqesar/alltp-tracker/commit/9c1ecb36df44dd89a99e23cfa56b072f288af221))
+
 ## [2.46.0](https://github.com/kqesar/alltp-tracker/compare/v2.45.0...v2.46.0) (2026-10-26)
 
 
