@@ -198,6 +198,65 @@ describe("Poller", () => {
   });
 });
 
+describe("Race Mode coming on mid-session", () => {
+  const forbiddenIds = SAMPLE_PACK.ranges
+    .filter((_, index) => !SAMPLE_PACK.racePermitted[index])
+    .map((range) => range.id);
+  const forbiddenBytes = SAMPLE_PACK.forbiddenBytes;
+
+  it("forgets the bytes of the ranges it forbids, and tells a reading they changed", async () => {
+    const { poller } = setup();
+    await poller.tick();
+    expect(forbiddenIds.length).toBeGreaterThan(0);
+    for (const id of forbiddenIds) expect(poller.has(id)).toBe(true);
+    expect(poller.has("module")).toBe(true);
+
+    // The player turns Race Mode on: the next tick forgets, and says so
+    poller.setRaceSetting("on");
+    const update = await poller.tick();
+    expect(update?.changed).toEqual(expect.arrayContaining(forbiddenIds));
+    for (const id of forbiddenIds) expect(poller.has(id)).toBe(false);
+    // What a race permits stays known
+    expect(poller.has("module")).toBe(true);
+
+    // And only once: nothing changed on the tick after
+    await poller.tick();
+    expect(await poller.tick()).toBeNull();
+  });
+
+  it("forgets them as a race flag is read late, too", async () => {
+    const { memory, poller } = setup();
+    await poller.tick();
+    for (const id of forbiddenIds) expect(poller.has(id)).toBe(true);
+    memory[bus(0x30_8213)] = 0x01;
+    const update = await poller.tick();
+    expect(poller.race.active).toBe(true);
+    expect(update?.changed).toEqual(expect.arrayContaining(forbiddenIds));
+    for (const id of forbiddenIds) expect(poller.has(id)).toBe(false);
+  });
+
+  it("drops a casual fetch that was in flight as it came on", async () => {
+    const { poller, transport } = setup();
+    const read = transport.read.bind(transport);
+    transport.read = async (request, into, offset) => {
+      await read(request, into, offset);
+      const touched = [...request.pieces].some((_, i) => {
+        if (i % 2 === 1) return false;
+        const [address, size] = [request.pieces[i], request.pieces[i + 1]];
+        return forbiddenBytes.some(
+          (f) => f.address < address + size && f.address + f.size > address,
+        );
+      });
+      // The switch lands after the forbidden bytes came back
+      if (touched) poller.setRaceSetting("on");
+    };
+    await poller.tick();
+    // The casual phase ran, but its bytes were never laid
+    for (const id of forbiddenIds) expect(poller.has(id)).toBe(false);
+    expect(poller.race.active).toBe(true);
+  });
+});
+
 describe("Race Mode", () => {
   const categories = Object.keys(ALTTPR_RACE_PROFILE.categories);
   const permitted = ALTTPR_RACE_PROFILE.permitted;
