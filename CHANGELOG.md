@@ -2,6 +2,40 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.45.0](https://github.com/kqesar/alltp-tracker/compare/v2.44.0...v2.45.0) (2026-10-26)
+
+
+### ✨ Features
+
+* **alttpr:** read alttpr.com spoiler logs ([135a664](https://github.com/kqesar/alltp-tracker/commit/135a66403f2ad4bb72ba4603ff5f2b54a60fceb2))
+* **sm:** read Map Rando spoiler logs ([dcabec2](https://github.com/kqesar/alltp-tracker/commit/dcabec2889ea8f0dc3d6cf6761d5f292f7719c85))
+* **sm:** tell another randomizer's spoiler log apart ([5a66672](https://github.com/kqesar/alltp-tracker/commit/5a6667289d50d06a44a17e298551856ce0b7a59b))
+* **smz3:** read samus.link spoiler logs ([09fcafb](https://github.com/kqesar/alltp-tracker/commit/09fcafbd08f01a4f6390e7b7ab5ad8bc29ab48be))
+* **smz3:** read the seed's guid outside races ([9491def](https://github.com/kqesar/alltp-tracker/commit/9491deffe58956851821db9a5821fbbfc8f35720))
+* **spoiler:** add the spoiler log review package ([b7de208](https://github.com/kqesar/alltp-tracker/commit/b7de208eb4922447c5a9cd58997e5d4f000dfea5))
+* **web:** remember each run's seed ([8a2a875](https://github.com/kqesar/alltp-tracker/commit/8a2a8754f248ff2d03e407da477afa23166776d8))
+* **web:** review a finished ALttPR run with its spoiler log ([53ac625](https://github.com/kqesar/alltp-tracker/commit/53ac6250e5a6e1ab20d96317ad318a6b82a64836))
+* **web:** review a finished Map Rando run with its spoiler log ([eec41b2](https://github.com/kqesar/alltp-tracker/commit/eec41b2accb944ed7c8d2807e256ecac421a222f))
+* **web:** review a finished SMZ3 run with its spoiler log ([a17cc6e](https://github.com/kqesar/alltp-tracker/commit/a17cc6e8a04c7be319819ea8793eef1a7e960bf1))
+* **web:** show what each ALttPR location held in a review ([f8be2bc](https://github.com/kqesar/alltp-tracker/commit/f8be2bc502adb9a2021570c0be942257ec3c8cb5))
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** import the spoiler name tables as JSON modules ([19316b4](https://github.com/kqesar/alltp-tracker/commit/19316b49d49ae2f546045413bb133833c51d03eb))
+* **smz3:** say a ROM is a ROM when reading a spoiler log ([b36aa1c](https://github.com/kqesar/alltp-tracker/commit/b36aa1cae9c7420254be7da2fcd2fedd2682dd85))
+* **web:** draw a dungeon map's find with the map's own image ([dca667f](https://github.com/kqesar/alltp-tracker/commit/dca667f862a3e962cb2ea01b9c6cc26bd4c6e7e6))
+
+
+### ⚡ Performance Improvements
+
+* **web:** keep ALttPR's spoiler parser out of the board's chunk ([4fff050](https://github.com/kqesar/alltp-tracker/commit/4fff050073e1e3e580efb3d4b99c28f304f94d1d))
+
+
+### 📚 Documentation
+
+* resolve the conflict left in the guide's Checks paragraph ([638c584](https://github.com/kqesar/alltp-tracker/commit/638c5848286c89b213931d3fe929161f8946abec))
+
 ## [2.44.0](https://github.com/kqesar/alltp-tracker/compare/v2.43.0...v2.44.0) (2026-10-25)
 
 
