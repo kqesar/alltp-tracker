@@ -239,6 +239,149 @@ entrance locations "should not ever be accessed") leave to the player. The
 opened bit lies in the `overworld` range the checks read, but the decoder
 asks for nothing then.
 
+## The dark room map
+
+Without the Lamp a dark room shows almost nothing. The game knows the room
+all the same: its collision map is in WRAM. `decodeDarkRoom` (`src/autotrack/
+dark-room.ts`) turns it into what a schematic can draw, and the app shows it
+in the map panel while Link is in such a room (`docs/guide.md`, "Dark room
+map"). It is an **assist**, so it is a device option, on by default, and it is
+**never read in Race Mode**.
+
+Sources: the game's decompilation, `snesrev/zelda3` at
+`45a149d8b4bb8098f53d1009f76e76e7d8b79bbf` (`MEMORY_SOURCES.zelda3`; `g_ram + N`
+is `$7E:0000 + N`), each address cited in `memory.ts` by file and line. Its
+values were read from `dungeon.c` and `tile_detect.c`, then checked against a
+running game (RetroArch 1.22.2, bsnes-mercury, SNI): Link's House, the Old
+Man's cave and the Secret Passage were loaded by the game's own entrance code
+and read. The two recordings in `test/dark-room/` are that memory, written by
+`pnpm --filter @alltp/pack-alttpr record-dark-room` (the script's header says
+how), never edited.
+
+### What is read, and when
+
+```mermaid
+flowchart TD
+    base["every 500 ms, the tick's casual plan<br/>(no request of its own): mode, indoors, dark"] --> held{"darkRoomHeld<br/>$10=07 or 0E, $1B=1,<br/>$C005=1, Lamp=0"}
+    held -- no --> forget["what was read is forgotten"]
+    held -- yes --> play{"darkRoomWanted<br/>$10=07, $11=00"}
+    play -- "no: a menu, a text box,<br/>a scroll" --> keep["held as it is, nothing read"]
+    play -- yes --> flag["a tick with no race phase<br/>reads the race flag first"]
+    flag --> pos["every 250 ms, one request:<br/>Link, room, layer, objects"]
+    pos --> map["$7F:2000-$3FFF, 8 KiB, a request of its own:<br/>each second, on a room change, as the gate opens"]
+    race{"Race Mode?"} -. "never reaches" .-> pos
+```
+
+| Range | Address | Size | When | Why |
+| --- | --- | ---: | --- | --- |
+| `dark-room-mode` | `$7E:0010` | 2 | 500 ms, the gate | main module and submodule (`$10/$11`), not the frame counter `$1A` beside them |
+| `dark-room-indoors` | `$7E:001B` | 1 | 500 ms, the gate | indoors |
+| `dark-room-dark` | `$7E:C005` | 1 | 500 ms, the gate | the room is dark by its header |
+| `dark-room-link` | `$7E:0020` | 4 | 250 ms, gated | Link's Y and X, absolute in the dungeon's grid |
+| `dark-room-room` | `$7E:00A0` | 2 | 250 ms, gated | the room's id (not the quadrant bytes, which change inside a room) |
+| `dark-room-layer` | `$7E:00EE` | 1 | 250 ms, gated | which attribute table Link stands on |
+| `dark-room-lights` | `$7E:0458` | 34 | 250 ms, gated | the header's collision layer (`$046C`), where the torches start (`$0478`) |
+| `dark-room-objects` | `$7E:0500` | 96 | 250 ms, gated | what each object is (`$0500`), the torches' words, bit `$8000` lit (`$0540`) |
+| `dark-room-chests` | `$7E:06E0` | 32 | 250 ms, gated | a chest's word with `$8000` is a big key lock |
+| `dark-room-doors` | `$7E:1980` | 32 | 250 ms, gated | each closed door's type |
+| `dark-room-map` | `$7F:2000` | 8192 | 1 s, gated, alone | the two attribute tables, 64 x 64 bytes each |
+
+The Lamp is read from the equipment the items are read from (`equipment-b`,
+`$7E:F34A`). `$C005`, not `$0458`, says the room is dark: the Lamp does not
+change it, it draws a cone (`hud.c:1343-1349`).
+
+- **The gate costs no request.** Its three ranges are in the casual plan, with
+  the game's own, every 500 ms (4 bytes in 2 pieces more than before). Everything
+  else is gated (`@alltp/autotrack`, "Assists: opt-in and gated ranges"): in
+  the ticks between, in the overworld, with the Lamp, or in Race Mode, nothing is
+  sent. In a dark room, each of those ticks sends the race flag (a casual read
+  needs a race phase's flag first) and the position, then the rest.
+  `dark-room-cost.spec.ts` counts it over ten seconds: 40 requests outside a
+  dark room with the option on or off (Race Mode 20), 110 in a dark room (11 a
+  second). Before the gate moved into the casual plan, the option on sent 80 and
+  40 in the same places.
+- **The room is held, not re-read, over a menu.** `darkRoomHeld` is true in
+  the menu and the text modules (`$10 = 0E`), where `$1B` stays 1; the ranges
+  keep their bytes (`keep`) and the panel stays. Nothing is read until play is back
+  (`$10 = 07`, `$11 = 00`), which is when the table is whole
+  (`dungeon.c:3803-3827` rebuilds it over several frames in a scroll). The Lamp, a
+  lit room, leaving the dungeon, a death or Race Mode let it go.
+- **The map is its own request.** Planned beside other ranges, usb2snes cuts a
+  span into 255-byte pieces; measured against SNI on RetroArch, 8 KiB took 64 to
+  107 ms as pieces and 16 to 21 ms alone. It is read when the gate opens, on
+  its second, and at once on a room change (`refreshOn: ["dark-room-room"]`),
+  because the table is written whole on a room load and patched live by doors,
+  chests and blocks, so the bytes must belong to the room read beside them.
+- **Always 8 KiB.** `$046C` says whether the second table matters, but ranges are
+  static: the map's size is the same in every room, and the read stays one
+  request.
+- **Off costs nothing.** All the ranges name the `dark-room` switch
+  (`DARK_ROOM_SWITCH`): with the option off, the poller plans none of them.
+  The one trace is the pack's tick, 250 ms instead of 500 ms: an empty tick
+  sends nothing, and does not count as a steady poll (`Poller.readBase`).
+- **A read that fails is not the session's failure.** A gated range the device
+  cannot serve (a timeout on the 8 KiB, say) is skipped on that device from then
+  on, reconnections included, and listed among `unreadable` ranges in the
+  diagnostic report; the board's tracking goes on without the map.
+
+### Race Mode never reads it
+
+Their category, `navigation` (`race-profile.ts`), is not permitted: the rules'
+catch-all ("anything not covered ... is not permitted"), because the plan shows
+what the game hides without the Lamp. So `definePack` puts every range in
+`forbiddenBytes`, Race Mode's merges never bridge into them, and the casual
+phase, where gated ranges are read, runs only when the flag just read says Race
+Mode is off (a tick that has no race phase reads the flag first). `dark-room.spec.ts` and `memory.spec.ts` hold it: the category is
+forbidden, the race plan carries none of its bytes, the full race plan is
+byte for byte what it was, and a pack that put the map in a permitted category
+does not define. `decodeDarkRoom(view, { race: true })` is null before it
+asks for a range.
+
+### The decoder
+
+`decodeDarkRoom(view, { race })` is null unless the room is held (`darkRoomHeld`)
+and every range is read. It gives:
+
+- the room's id, and the layer: `$EE` picks the second table only where the
+  header says the room has two (`$046C != 0`); in a single-layer room the second
+  table is junk (mostly `$1C`);
+- Link's footprint, the 2 x 2 tiles he collides with, `((X & 0x1FF) >> 3,
+  ((Y & 0x1FF) + 8) >> 3)` (`tile_detect.c:7-10`);
+- one **kind** per tile (`TILE`), and the raw byte beside it, so a value no
+  kind names (`unknown`) is still there to read;
+- the box worth drawing: what Link can reach through tiles that are not wall (a
+  room is one quadrant or two; the rest of the 64 x 64 space holds floor and
+  walls it never uses), and the closed chests' boxes, a big chest being the wide
+  one, and the torches, lit or not.
+
+| Values | Kind |
+| --- | --- |
+| `00 1C 48 4A 60 66` | floor |
+| `01-04 0B 26 43 46 50-57 6C-6F` | wall |
+| `10-13 18-1B` | diagonal wall |
+| `08 09` / `0D 44` / `0E 0F` / `20 B0-BD` / `28-2F` | water / spikes / ice / pit / ledge |
+| `1D-1F 22 30-39 3D-3F 5E 5F` | stairs |
+| `58-5D 63` / `27` | closed chest, or a big key lock when its word has `$8000` / opened chest |
+| `67` / `68-6B` | raised peg / conveyor |
+| `70-7F` | block (`$0500[n] = 0`), pot (`$1111`), another object |
+| `80-8D 90-AF` / `8E 8F` | open doorway / exit |
+| `C0-CF` | torch, lit by `$0540 + $0478 + 2n` bit `$8000` |
+| `F0-FF` | closed door, its type from `$1980 + 2k`: key (`1C`), bombable (`28 30`), shutter (`18 44 48 4A`), else closed |
+
+`27` is also a hookshot target (`dungeon.c:5762`), which dungeons seldom hold:
+it is drawn as an opened chest.
+
+### Limits
+
+- Seen on a real game: the three dark rooms above, the pots, the exit, stairs, a
+  chest, an unlit torch. Not seen: a closed door of each type, a block pushed,
+  a torch lit, crystal pegs, a layered room (`$046C != 0`), a big chest, and the
+  sewers (from the Sanctuary the rig's Link stopped under the north doorway).
+  Their decoding is read from the source and held by synthetic memory
+  (`dark-room.spec.ts`), which the recordings do not cover.
+- Only Link's own layer is drawn in a layered room, and a closed door is drawn
+  by type but a "big key door" has no type of its own here.
+
 ## A Mystery run
 
 A Mystery seed hides its settings: its file on alttpr.com keeps only its
