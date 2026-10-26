@@ -56,6 +56,36 @@ const playRun = async (page: Page) => {
   await page.keyboard.press("Escape");
 };
 
+/**
+ * A run autotracking followed, over: the places it saw taken, each with the
+ * timer's reading (a Morph Ball 12:34 in, a Super Missile before the timer, an
+ * Energy Tank 20:04 in), written into the run's save as the follower lays them.
+ */
+const playFoundRun = async (page: Page) => {
+  await openOnGame(page, "sm");
+  await page.evaluate(() => localStorage.removeItem("alltp-tracker-sm"));
+  await page.reload();
+  await expect(page.getByTestId("item-grid")).toBeVisible();
+  await page.getByTestId("sm-item-morph").click();
+  await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem("alltp-tracker-sm") ?? "{}");
+    const at = Date.now();
+    saved.state.found = {
+      "17:2": { at, ms: 1_204_000 },
+      "28:2": { at, ms: null },
+      "46:2": { at, ms: 754_000 },
+    };
+    saved.state.timer = {
+      elapsedMs: 3_600_000,
+      finished: true,
+      startedAt: null,
+    };
+    localStorage.setItem("alltp-tracker-sm", JSON.stringify(saved));
+  });
+  await page.reload();
+  await expect(page.getByTestId("review-open")).toBeVisible();
+};
+
 const endRun = async (page: Page) => {
   await page.getByTestId("run-timer").click();
   await page.getByTestId("run-timer-end").click();
@@ -130,6 +160,41 @@ test.describe("reviewing a finished Super Metroid run", () => {
     await expect(page.getByTestId("review-notice")).toHaveCount(0);
     await expect(page.getByTestId("run-timer")).toHaveAccessibleName(
       /, stopped$/,
+    );
+  });
+
+  test("sets the places the run found against the log, with their times", async ({
+    page,
+  }) => {
+    await playFoundRun(page);
+    await page.getByTestId("review-open").click();
+    await page.getByTestId("review-file").setInputFiles(log(text));
+    await expect(page.getByTestId("review-notice")).toBeVisible();
+
+    await expect(page.getByTestId("review-mode")).toContainText(
+      "Autotracking saw which places you took",
+    );
+    await expect(page.getByTestId("review-caption")).toHaveText(
+      "16 items: 1 found, 15 not found.",
+    );
+    const morph = page.getByTestId("review-row-46:2");
+    await expect(morph).toHaveAttribute("data-state", "found");
+    await expect(morph).toContainText("Found at 12:34");
+    const speed = page.getByTestId("review-row-46:4");
+    await expect(speed).toHaveAttribute("data-state", "missed");
+    await expect(speed).toContainText("Not found");
+    await expect(page.getByTestId("review-pack-energyTank")).toContainText(
+      "1 of 14 found, 13 never found",
+    );
+    await expect(page.getByTestId("review-pack-superMissile")).toContainText(
+      "1 of 10 found, 9 never found",
+    );
+    await page.getByTestId("review-places").locator("summary").click();
+    await expect(page.getByTestId("review-place-17:2")).toContainText(
+      "Found at 20:04",
+    );
+    await expect(page.getByTestId("review-place-28:2")).toHaveText(
+      /Super Missile: .* — Found$/,
     );
   });
 
@@ -276,6 +341,24 @@ for (const width of WIDTHS) {
       await page.getByTestId("review-places").locator("summary").click();
       await auditPage(page);
       await shot(page, "sm-review-places", width);
+    });
+
+    test("by location: fits the page, passes axe and is keyboard-reachable", async ({
+      page,
+    }) => {
+      await playFoundRun(page);
+      await page.getByTestId("review-open").click();
+      await page.getByTestId("review-file").setInputFiles(log(text));
+      await expect(page.getByTestId("review-result")).toBeVisible();
+      await expect(page.getByTestId("review-row-46:2")).toContainText(
+        "Found at 12:34",
+      );
+      await auditPage(page);
+      await shot(page, "sm-found-review", width);
+
+      await page.getByTestId("review-places").locator("summary").click();
+      await auditPage(page);
+      await shot(page, "sm-found-places", width);
     });
   });
 }
