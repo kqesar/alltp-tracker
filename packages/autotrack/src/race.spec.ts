@@ -30,6 +30,7 @@ describe("ALTTPR_RACE_PROFILE", () => {
       "dungeon-checks",
       "entrances",
       "hud",
+      "navigation",
       "other",
       "prizes",
       "spheres",

@@ -9,6 +9,15 @@ export {
   type UnmappedLocation,
 } from "./autotrack/check-flags";
 export {
+  type ChestSpot,
+  type DarkRoomReading,
+  decodeDarkRoom,
+  ROOM_TILES,
+  TILE,
+  type TileBox,
+  type TileKind,
+} from "./autotrack/dark-room";
+export {
   type BossDungeon,
   type CheckReading,
   type DecodeOptions,
@@ -35,6 +44,7 @@ export {
 } from "./autotrack/medallion-pads";
 export {
   type AlttprRange,
+  DARK_ROOM_SWITCH,
   MEMORY_RANGE,
   MEMORY_RANGES,
   MEMORY_SOURCES,
