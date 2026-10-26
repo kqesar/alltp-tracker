@@ -135,7 +135,12 @@ describe("Race Mode as the player sets it", () => {
     expect(board().checked["eastern-palace/compass-chest"]).toBeUndefined();
     expect(
       JSON.parse(localStorage.getItem("alltp-tracker-autotrack") ?? "{}").state,
-    ).toEqual({ connectOnStart: true, keptSeed: null, raceChoice: "on" });
+    ).toEqual({
+      connectOnStart: true,
+      darkRoomMap: true,
+      keptSeed: null,
+      raceChoice: "on",
+    });
   });
 
   it("follows a change while connected, decoding again at once", async () => {
@@ -249,7 +254,12 @@ describe("following the seed's run type", () => {
     act(() => keepRunType());
     expect(
       JSON.parse(localStorage.getItem("alltp-tracker-autotrack") ?? "{}").state,
-    ).toEqual({ connectOnStart: true, keptSeed: "KEPT", raceChoice: "auto" });
+    ).toEqual({
+      connectOnStart: true,
+      darkRoomMap: true,
+      keptSeed: "KEPT",
+      raceChoice: "auto",
+    });
 
     // A new game, fresh: still the player's run type for this seed
     act(() => game().reset());

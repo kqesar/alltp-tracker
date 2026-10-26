@@ -114,6 +114,7 @@ describe("useAutotrack", () => {
     expect(state().status.code).toBe("connected");
     expect(saved()).toEqual({
       connectOnStart: true,
+      darkRoomMap: true,
       keptSeed: null,
       raceChoice: "auto",
     });
@@ -256,6 +257,7 @@ describe("useAutotrack", () => {
     });
     expect(saved()).toEqual({
       connectOnStart: false,
+      darkRoomMap: true,
       keptSeed: null,
       raceChoice: "auto",
     });

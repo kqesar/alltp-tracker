@@ -1,0 +1,82 @@
+/* The dark room plan, over the map panel's tabs (DarkRoomPanel.tsx). Its
+   colours are the --dark-room-* tokens; every kind of tile also has a shape. */
+.dark-room {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+  background: var(--surface-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius);
+}
+
+.dark-room__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.dark-room__title {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+.dark-room__room,
+.dark-room__note {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.dark-room__plan {
+  display: block;
+  align-self: center;
+  width: 100%;
+  max-width: 36rem;
+  max-height: min(50vh, 26rem);
+  background: var(--dark-room-wall);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.dark-room__link {
+  transition: transform 0.22s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dark-room__link {
+    transition: none;
+  }
+}
+
+.dark-room__words {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.dark-room__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  padding: 0;
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  list-style: none;
+}
+
+.dark-room__legend li {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.dark-room__swatch {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+}
