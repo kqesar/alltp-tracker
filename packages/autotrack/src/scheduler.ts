@@ -8,6 +8,12 @@
 // when Race Mode is off after the flag just read, so a race ROM loaded
 // mid-session is caught before any forbidden byte is requested from it.
 //
+// When Race Mode comes on mid-session (the player's switch, or a race flag the
+// ROM reads late), the bytes of the ranges it forbids are forgotten: a reading
+// then reports them unread, rather than holding a stretch of memory the race
+// no longer lets the tracker see. A casual fetch that was in flight when it
+// came on is dropped, never laid into the snapshot.
+//
 // Plans follow the last mode the probe reported. When the probe reports
 // another one, the tick keeps only the ranges every mode shares, skips the
 // casual phase, and the next tick reads the new layout: a portal crossing in
@@ -119,6 +125,8 @@ export class Poller implements MemorySnapshot {
   private flag: RaceFlagState;
   private modeIndex = UNKNOWN_MODE;
   private ticks = 0;
+  /** Whether Race Mode was on at the end of the last tick. */
+  private racing = false;
 
   constructor(
     private readonly pack: AutotrackPack,
@@ -301,17 +309,38 @@ export class Poller implements MemorySnapshot {
         !(await this.stillIn(planned))
       ) {
         switched = true;
-      } else this.scatter(casual, false);
+      } else if (!this.raceActive()) {
+        // Race Mode may have come on while the casual ranges were in flight:
+        // what they brought is not laid
+        this.scatter(casual, false);
+      }
     }
     // A new mode: every mode-bound range holds another stint's bytes, unread
     // until read again in this one
     if (switched) this.forgetModeBound();
+    this.forgetForbidden();
     this.ticks++;
     if (this.changedIds.length === 0 && !switched) return null;
     this.update.tick = this.ticks;
     this.update.at = this.now();
     this.update.modeChanged = switched;
     return this.update;
+  }
+
+  /**
+   * As Race Mode comes on, forgets what the ranges it forbids held, and
+   * reports them changed so a reading decodes them as unread.
+   */
+  private forgetForbidden(): void {
+    const racing = this.raceActive();
+    if (racing && !this.racing) {
+      this.pack.racePermitted.forEach((permitted, index) => {
+        if (permitted || this.seen[index] === 0) return;
+        this.seen[index] = 0;
+        this.changedIds.push(this.pack.ranges[index].id);
+      });
+    }
+    this.racing = racing;
   }
 
   private forgetModeBound(): void {

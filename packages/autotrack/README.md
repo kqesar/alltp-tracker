@@ -378,7 +378,13 @@ Compliant by construction:
    `assertRaceSafe` checks every race plan when it is built, before any use.
 3. The casual phase (forbidden categories) runs only if Race Mode is off
    **after the flag the race phase just read**: a race ROM loaded mid-session
-   never receives a forbidden read.
+   never receives a forbidden read. A casual fetch already in flight when
+   Race Mode comes on (the player's switch lands during the request) is
+   dropped, never laid into the snapshot.
+   As Race Mode comes on, the poller also **forgets** the bytes of every
+   range it forbids (`has` turns false, the ids are reported changed), so a
+   reading decodes them as unread instead of holding what the race no longer
+   lets the tracker see; they are read again when Race Mode goes off.
 4. It fails closed: in `auto`, Race Mode is on until the flag reads "open",
    and stays on when the device cannot read ROM (`NO_ROM_READ`) or the flag
    reads neither value.
