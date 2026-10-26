@@ -151,7 +151,7 @@ Measured on runs played through the real stores, a click or a check every 20 to 
 | ALttPR, without its timeline | 567 (1403) | 588 (1943) | 560 (2603) |
 | SMZ3 | 1046 (1512) | 1076 (2522) | 1047 (3402) |
 
-Every case is under 2000, the timeline included (the seed each run carries is part of these lengths): a late ALttPR run is 1668, and a late SMZ3 run costs the same as an early one, since its checked locations are now a constant 40 bytes. Super Metroid stays plain: its link is about 440 characters, nothing the packing could shorten enough to be worth tying it to a table.
+Every case is under 2000, the timeline included (the seed each run carries is part of these lengths): a late ALttPR run is 1668, and a late SMZ3 run costs the same as an early one, since its checked locations are now a constant 40 bytes. Super Metroid stays plain: its link is about 440 characters for a run tracked by hand, nothing the packing could shorten enough to be worth tying it to a table. A run autotracking followed also carries `found`, each place seen collected with its time: about 670 characters with 30 places and 1600 with all 100 (a deflated export, measured with the real log's ids and times 20 to 110 seconds apart), still under 2000.
 
 The synthetic runs are a floor on the timeline's cost, not a ceiling: their gaps are uniform between 20 and 100 seconds, about 16 bits of noise a find. A real run has pauses and bursts (a dungeon cleared in a minute, then ten minutes of travel), which the Rice code takes at no more than the bits their magnitude says. What would break the target is a run of about 300 finds or more (a late ALttPR run has about 220), each costing about 5 characters of the link.
 
