@@ -812,7 +812,10 @@ alttpr.com lets a player save, into `@alltp/spoiler`'s `SpoilerLog` (its
 README is the model's design doc). It is pure and never throws on the file:
 a reason not to show it is a refusal with one of that package's codes. The
 review that uses it (a finished run, Race Mode off) lives in the app; this
-is only the reading.
+is only the reading. The app loads it through the package's `./spoiler`
+export (`@alltp/pack-alttpr/spoiler`), never through the index the board
+imports, so the location tables it checks names against stay out of the
+board's chunk.
 
 What the site writes. The seed page's "Save Spoiler" button saves
 `JSON.stringify(spoiler, null, 4)` in `alttpr - <logic>-<mode>-<goal>_<hash>.txt`

@@ -15,11 +15,12 @@ type Parse = (text: string, fileName: string) => SpoilerResult<SpoilerLog>;
 /** Each game's parser, loaded on first use. */
 const PARSERS: Record<SpoilerGame, () => Promise<Parse>> = {
   alttpr: () =>
-    import("@alltp/pack-alttpr").then(({ parseSpoiler }) => parseSpoiler),
+    import("@alltp/pack-alttpr/spoiler").then(
+      ({ parseSpoiler }) => parseSpoiler,
+    ),
   // Map Rando's file is read by its slicer: a 21 MB text, 39 KB kept
   sm: () => import("@alltp/pack-sm").then(({ parseSpoiler }) => parseSpoiler),
-  // The parser's own entry, not the pack's: js-yaml travels with this chunk
-  // and no other, where the pack's index would pull it into the board's
+  // js-yaml travels with this chunk and no other
   smz3: () =>
     import("@alltp/pack-smz3/spoiler").then(({ parseSpoiler }) => parseSpoiler),
 };

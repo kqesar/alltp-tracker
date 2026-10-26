@@ -7,7 +7,8 @@
   "sideEffects": false,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./spoiler": "./src/spoiler/parse.ts"
   },
   "scripts": {
     "import-er": "node scripts/import-er.mjs",
