@@ -15,6 +15,7 @@ own source at the commit `upstream.json` pins, never from memory:
 | `src/objectives.ts` | the 19 objectives a seed may ask for, by group, each with its flag | `rust/maprando/src/patch.rs:3327-3355, 3596-3681` |
 | `src/settings.ts` | the presets the ROM keeps for autotrackers, and the items its settings add | `settings.rs:113-241`, `patch.rs:783, 2038-2105`, `Bank DF.txt` |
 | `src/spoiler.ts` | Map Rando's spoiler log read into `@alltp/spoiler`'s shape | `rust/maprando/src/spoiler_log.rs:110-149, 197-262, 1236`, `settings.rs:521-545` |
+| `src/locations.ts` | the 100 item locations by the spoiler log's `room_id:node_id`, each with its bit in the game's collected array; generated (`pnpm --filter @alltp/pack-sm import-locations <sm-json-data checkout> <vanilla.sfc>`), never edited | `rust/maprando-game/src/lib.rs:4908-4914`, `patch.rs:843-866`, sm-json-data's item nodes (`upstream.json`) |
 | `src/autotrack/` | the memory map, the decoders, the game check and the race profile | below |
 
 ## No logic, on purpose
@@ -39,6 +40,7 @@ flowchart LR
   wram --> play["decodeInPlay"]
   wram --> goal["decodeBeforePlay, decodeGoal<br/>game state, escape event"]
   clock["SRAM $70:1E10 + WRAM $7E:1F80<br/>(never read in Race Mode)"] --> rta["decodeGameClock<br/>clockStraddled, rtaMs"]
+  bits["WRAM $7E:D870 collected bits +<br/>ROM $B5:FE12 Nothing mask<br/>(never read in Race Mode)"] --> locs["decodeCollected<br/>bits &amp; ~mask, through locations.ts"]
 ```
 
 - **The game check**: Map Rando names the cartridge "SUPERMETROID MAPRANDO"
@@ -67,6 +69,28 @@ flowchart LR
   maprando.com/seed/<name>/ finds, the presets at `$DF:FF09-$FF0D` (0 for a
   setting the seed customized) and the items its settings add at `$DF:FF05`
   (`Bank DF.txt`).
+- **Locations collected** (`decodeCollected`): Map Rando keeps one bit per item
+  location in the vanilla array at `$7E:D870`, 20 bytes, bits 0 to 154
+  (`item_count.asm:126-136` sums it; `patch.rs:212`), and a bit is set by the
+  location's item PLM, whose argument (the bit's index) the patcher never
+  rewrites, only the PLM's type (`patch.rs:843-866`). So the bit of each
+  location is the same for every seed: `src/locations.ts`, 100 rows, read from
+  sm-json-data's item nodes (their `nodeAddress` is the PLM in the vanilla ROM)
+  and the word at PLM + 4, a bijection onto 100 of the bits 0 to 154, equal to
+  the table for all 100 PLMs of four real seeds' ROMs, and covering exactly the
+  `all_items` of the real log (`locations.spec.ts`). A location that holds
+  **Nothing** has its bit set from a new game (`new_game.asm:121-128` copies
+  the ROM's mask, `$B5:FE12`, 20 bytes, into the array), so a set bit alone
+  does not say collected: the decoder removes the mask, `bits & ~mask`, as
+  Map Rando's own counter does (`item_count.asm:117-136`), and answers a set of
+  keys that never names a Nothing location. A running game always holds the
+  mask's bits (they are copied in and never cleared), so the decoder answers
+  "not read" when the mask names a bit the array lacks: the menus' leftover
+  WRAM, or a mask from another ROM. Verified on a rig (RetroArch,
+  seed `dsjF6gGsH`, 2026-10-26): items picked up by the game itself in three
+  rooms set exactly the table's bits. Not verified in a running game: a seed
+  with Nothing locations (none of four seeds had any); the mask rests on the
+  source and the unit tests.
 - **In play** (`decodeInPlay`): game state `$07` or `$08`
   (`fast_reload.asm:134-136`).
 - **Before play** (`decodeBeforePlay`): states `$00-$06` (the title, the menus,
@@ -108,18 +132,28 @@ spaces").
 
 Map Rando races run on racetime.gg/smr, whose rules restrict no tracking
 (its category info, read 2026-10-19); Map Rando's "Race mode" only locks a
-seed's spoiler on the website and writes nothing into the ROM. The race
-profile (`MAP_RANDO_RACE_PROFILE`) therefore permits every category this
-pack reads, and the pack has no race flag. It reads what the player holds
-and has done, never what a location holds. The one exception is the RTA clock
-(category `game-time`), which the profile forbids: it reveals nothing of the
-seed, but the game shows it only in its end credits, and the tracker reads no
-more than a player sees in a race (a policy of the tracker, not a rule of the
-page). Race Mode therefore never reads `rta-saved` and `rta-pending`
-(`memory.spec.ts` proves it over a real plan), and the run timer counts real
-time. The state and the escape event, which start and stop it, stay permitted.
-The rules of racetime.gg/smr ban the old emulators (SNES9x 1.43 and below, ZSNES),
-not emulators in general (read again on 2026-10-25).
+seed's spoiler on the website and writes nothing into the ROM. The pack
+therefore has no race flag: Race Mode is the player's switch, turned on for a
+race (Auto, the default, leaves it off, and a race tracked in Auto is read as
+any other run). The race profile (`MAP_RANDO_RACE_PROFILE`) permits every
+category this pack reads but two, which it forbids as a policy of the tracker
+and no rule of the page: in Race Mode the tracker reads what the player holds
+and has done, never what a location holds, and no more than a player sees.
+
+- The RTA clock (category `game-time`) reveals nothing of the seed, but the
+  game shows it only in its end credits: Race Mode never reads `rta-saved` and
+  `rta-pending`, and the run timer counts real time. The state and the escape
+  event, which start and stop it, stay permitted.
+- The locations (category `locations`: the collected bits, `collected`, and
+  the Nothing mask, `nothing-mask`) would say where the seed put no item, since
+  a Nothing location's bit is set from the first frame, which a player learns
+  only by reaching the spot: Race Mode never reads either, and the run keeps
+  the review by item count. Both are polled at one cadence, so a reading takes
+  them from the same tick.
+
+`memory.spec.ts` proves both over a real plan and pins the list of forbidden
+ranges. The rules of racetime.gg/smr ban the old emulators (SNES9x 1.43 and
+below, ZSNES), not emulators in general (read again on 2026-10-25).
 
 ## Spoiler logs
 

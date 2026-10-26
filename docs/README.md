@@ -29,5 +29,5 @@
   Archipelago room, its diagnostics, name data, and the archipelago.js edges it works around.
 - [ALttPR pack](../packs/alttpr/README.md): the v31 rules ported from the randomizer, and the
   upstream tests they are held to.
-- [Super Metroid pack](../packs/sm/README.md): Map Rando's items, objectives and memory map.
+- [Super Metroid pack](../packs/sm/README.md): Map Rando's items, objectives, item locations and memory map.
 - [SMZ3 pack](../packs/smz3/README.md): samus.link's logic for both games, and its tests.
