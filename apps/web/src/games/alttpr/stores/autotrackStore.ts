@@ -27,6 +27,7 @@ import {
   type SeedFileResult,
   withSeedFile,
 } from "@/games/alttpr/autotrack/seedFile";
+import { useDarkRoomStore } from "@/games/alttpr/stores/darkRoomStore";
 import { isFreshRun, useGameStore } from "@/games/alttpr/stores/gameStore";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isObsView } from "@/utils/view";
@@ -91,8 +92,32 @@ type AutotrackState = {
    * or it is always on. Saved; the session follows a change at once.
    */
   raceChoice: RaceChoice;
+  /**
+   * Draw a dark room's plan and Link's place in it while he has no Lamp (never
+   * in Race Mode). On by default; a device setting, saved, that the session
+   * follows at once: off, its memory is not read at all.
+   */
+  darkRoomMap: boolean;
   setConnectOnStart: (connectOnStart: boolean) => void;
   setRaceChoice: (raceChoice: RaceChoice) => void;
+  setDarkRoomMap: (darkRoomMap: boolean) => void;
+};
+
+/** The saved fields over the fresh ones: Race Mode and the dark room map checked. */
+const mergeSaved = (
+  persisted: unknown,
+  current: AutotrackState,
+): AutotrackState => {
+  const saved =
+    typeof persisted === "object" && persisted !== null
+      ? (persisted as Partial<AutotrackState>)
+      : {};
+  return {
+    ...mergeRaceChoice(persisted, current),
+    // Absent from a save before the option, or not a boolean: the default, on
+    darkRoomMap:
+      typeof saved.darkRoomMap === "boolean" ? saved.darkRoomMap : true,
+  };
 };
 
 const IDLE: SessionStatus = { code: "idle" };
@@ -110,6 +135,7 @@ export const useAutotrackStore = create<AutotrackState>()(
       active: false,
       bridge: null,
       connectOnStart: false,
+      darkRoomMap: true,
       devices: [],
       elsewhere: false,
       environment: null,
@@ -119,6 +145,7 @@ export const useAutotrackStore = create<AutotrackState>()(
       reading: null,
       seedFile: null,
       setConnectOnStart: (connectOnStart) => set({ connectOnStart }),
+      setDarkRoomMap: (darkRoomMap) => set({ darkRoomMap }),
       setRaceChoice: (raceChoice) => set({ raceChoice }),
       shown: IDLE,
       since: 0,
@@ -126,10 +153,11 @@ export const useAutotrackStore = create<AutotrackState>()(
       unavailable: false,
     }),
     {
-      merge: mergeRaceChoice,
+      merge: mergeSaved,
       name: "alltp-tracker-autotrack",
-      partialize: ({ connectOnStart, keptSeed, raceChoice }) => ({
+      partialize: ({ connectOnStart, darkRoomMap, keptSeed, raceChoice }) => ({
         connectOnStart,
+        darkRoomMap,
         keptSeed,
         raceChoice,
       }),
@@ -149,6 +177,10 @@ let runtime: Runtime | null = null;
 useAutotrackStore.subscribe((state, before) => {
   if (state.raceChoice !== before.raceChoice) {
     runtime?.setRaceMode(state.raceChoice);
+  }
+  if (state.darkRoomMap !== before.darkRoomMap) {
+    runtime?.setDarkRoom(state.darkRoomMap);
+    if (!state.darkRoomMap) useDarkRoomStore.getState().show(null);
   }
 });
 syncAcrossTabs(useAutotrackStore);
@@ -287,6 +319,11 @@ const askSeedFile = (reading: AutotrackReading, mine: number) => {
  * "stopped" its stop() reports) is dropped: what replaced it decides.
  */
 const sinkFor = (mine: number): RuntimeSink => ({
+  // The dark room has a store of its own: it never touches the reading, so
+  // the board and the run know nothing of it
+  darkRoom: (room) => {
+    if (mine === generation) useDarkRoomStore.getState().show(room);
+  },
   // A stopped session never reads again: no reading outlives its session
   reading: (read) => {
     if (mine !== generation) return;
@@ -371,6 +408,7 @@ export const connectAutotrack = async () => {
       {
         environment,
         ...bridge,
+        darkRoom: useAutotrackStore.getState().darkRoomMap,
         raceSetting: useAutotrackStore.getState().raceChoice,
         ...overrides,
       },
@@ -390,6 +428,7 @@ export const stopAutotrack = () => {
   runtime?.stop();
   runtime = null;
   follower = null;
+  useDarkRoomStore.getState().show(null);
   lock.release();
   set({
     active: false,

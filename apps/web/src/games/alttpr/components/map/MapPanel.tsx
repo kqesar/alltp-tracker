@@ -15,6 +15,7 @@ import {
 } from "@/games/alttpr/components/map/VoiceControl";
 import { tricksShown } from "@/games/alttpr/logic/solution";
 import { useReview } from "@/games/alttpr/review/useReview";
+import { useDarkRoomStore } from "@/games/alttpr/stores/darkRoomStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type { MapView } from "@/games/alttpr/utils";
 import { useReviewStore } from "@/review/store";
@@ -40,6 +41,11 @@ const EntrancePicker = lazy(
   () => import("@/games/alttpr/components/map/entrances/EntrancePicker"),
 );
 
+/** The dark room's plan: its code loads only when a dark room is read. */
+const DarkRoomPanel = lazy(
+  () => import("@/games/alttpr/components/map/DarkRoomPanel"),
+);
+
 /** The id of the view's panel, which the skip links focus. */
 export const MAP_VIEW_ID = "map-view";
 
@@ -47,7 +53,8 @@ export const MAP_VIEW_ID = "map-view";
  * The map panel: the two worlds with their legend, every check as a list
  * (ChecksPanel) or the run's splits, timeline and stats (RunPanel), behind
  * ARIA tabs, with voice commands, the run timer and go mode beside them. The view is a
- * preference of the device, kept across runs.
+ * preference of the device, kept across runs. Over the tabs, a dark room's plan
+ * while autotracking reads Link in one without the Lamp.
  */
 export const MapPanel = () => {
   const shuffled = useGameStore(
@@ -61,6 +68,7 @@ export const MapPanel = () => {
   const baseId = useId();
   const review = useReview();
   const closeReview = useReviewStore((state) => state.close);
+  const inDarkRoom = useDarkRoomStore((state) => state.map !== null);
 
   return (
     <div className="map-panel" id="map">
@@ -88,6 +96,11 @@ export const MapPanel = () => {
           onClose={closeReview}
           review={review}
         />
+      )}
+      {inDarkRoom && (
+        <Suspense fallback={null}>
+          <DarkRoomPanel />
+        </Suspense>
       )}
       <div
         aria-labelledby={tabId(baseId, view)}

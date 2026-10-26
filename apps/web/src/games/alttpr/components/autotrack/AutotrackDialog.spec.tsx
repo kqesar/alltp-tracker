@@ -529,6 +529,26 @@ describe("AutotrackDialog's actions", () => {
     expect(useAutotrackStore.getState().connectOnStart).toBe(true);
   });
 
+  it("keeps the dark room map in a checkbox, on by default, described", async () => {
+    const user = userEvent.setup();
+    await open();
+    const box = screen.getByRole("checkbox", { name: "Dark room map" });
+    expect(box).toBeChecked();
+    expect(box).toHaveAccessibleDescription(
+      /Draws a dark room's walls, chests and your position while you have no Lamp. Never in Race Mode: it shows what the game hides/s,
+    );
+
+    await user.click(box);
+
+    expect(box).not.toBeChecked();
+    expect(useAutotrackStore.getState().darkRoomMap).toBe(false);
+    // Saved on this device
+    expect(
+      JSON.parse(localStorage.getItem("alltp-tracker-autotrack") ?? "{}").state
+        .darkRoomMap,
+    ).toBe(false);
+  });
+
   it("copies the diagnostic report", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn(() => Promise.resolve());

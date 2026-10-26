@@ -54,6 +54,23 @@
   --entrance-single: #d8dbe6;
   --entrance-drop: #e08a4a;
 
+  /* ---- The dark room plan: what the game's collision map holds. Every kind
+     also has a pattern of its own, so none is told by colour alone ---- */
+  --dark-room-wall: #07080d;
+  --dark-room-floor: #3b4160;
+  --dark-room-floor-edge: #565d86;
+  --dark-room-water: #2a78b0;
+  --dark-room-ice: #9fdcee;
+  --dark-room-hazard: #f0506e;
+  --dark-room-stairs: #c9a46a;
+  --dark-room-pit: #000000;
+  --dark-room-chest: #e6c34a;
+  --dark-room-door: #c07f4a;
+  --dark-room-object: #8fa3d6;
+  --dark-room-torch: #ff9a3c;
+  --dark-room-exit: #3fb950;
+  --dark-room-link: #ffffff;
+
   /* ---- Item not obtained: greyed, at the brightness where every missing
      icon stays below every held one in contrast with the page (2.2:1
      median against 4.3:1) yet keeps its shape; the same over stream

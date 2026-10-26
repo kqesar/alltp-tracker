@@ -56,12 +56,15 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
   );
   const raceChoice = useAutotrackStore((state) => state.raceChoice);
   const setRaceChoice = useAutotrackStore((state) => state.setRaceChoice);
+  const darkRoomMap = useAutotrackStore((state) => state.darkRoomMap);
+  const setDarkRoomMap = useAutotrackStore((state) => state.setDarkRoomMap);
   const [copied, setCopied] = useState("");
   const [synced, setSynced] = useState("");
   const [manualReport, setManualReport] = useState<string | null>(null);
   const reportRef = useRef<HTMLTextAreaElement>(null);
   const optionId = useId();
   const followId = useId();
+  const darkRoomId = useId();
 
   // The session's code, so that Connect starts at once; the system, for the
   // guide's tabs and the report
@@ -275,6 +278,23 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
           </label>
         </div>
         <RaceModeOption onChange={setRaceChoice} value={raceChoice} />
+        <div className="check-option">
+          <input
+            aria-describedby={`${darkRoomId}-hint`}
+            checked={darkRoomMap}
+            className="check-option__input"
+            data-testid="autotrack-dark-room"
+            id={darkRoomId}
+            onChange={(event) => setDarkRoomMap(event.target.checked)}
+            type="checkbox"
+          />
+          <label htmlFor={darkRoomId}>Dark room map</label>
+        </div>
+        <p className="race-option__hint" id={`${darkRoomId}-hint`}>
+          Draws a dark room's walls, chests and your position while you have no
+          Lamp. Never in Race Mode: it shows what the game hides from you in the
+          dark.
+        </p>
 
         <SetupGuide
           environment={environment ?? parseUserAgent(navigator.userAgent)}

@@ -153,3 +153,27 @@ export const readingOf = (
     race,
     Date.UTC(2026, 9, 16, 20, 15),
   );
+
+/** The ranges of a recorded dark room, by id, as bytes (packs/alttpr/test/dark-room/). */
+export type DarkRoomRecording = {
+  readonly ranges: Readonly<Record<string, string>>;
+};
+
+/**
+ * Put a recorded dark room into a memory image: Link in it, the room dark,
+ * the map and the Lamp as the recording held them (none, in Link's House).
+ * @param memory - A memory image, as `seedMemory` makes
+ * @param recording - packs/alttpr/test/dark-room/links-house.json
+ */
+export const putDarkRoom = (
+  memory: Uint8Array,
+  recording: DarkRoomRecording,
+) => {
+  for (const [id, text] of Object.entries(recording.ranges)) {
+    const { address } = MEMORY_RANGE[id as MemoryRangeId];
+    for (let i = 0; i < text.length; i += 2) {
+      memory[address + i / 2] = Number.parseInt(text.slice(i, i + 2), 16);
+    }
+  }
+  return memory;
+};
