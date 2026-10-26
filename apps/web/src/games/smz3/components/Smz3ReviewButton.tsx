@@ -45,6 +45,10 @@ export const Smz3ReviewBanner = () => {
   const review = useReview();
   const close = useReviewStore((state) => state.close);
   return review === null ? null : (
-    <ReviewNotice onClose={close} review={review} />
+    <ReviewNotice
+      hint="The board shows what each place held: the maps' markers and the grid."
+      onClose={close}
+      review={review}
+    />
   );
 };

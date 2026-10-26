@@ -99,12 +99,19 @@ describe("a review", () => {
     );
     // Nothing offers a second import while one is open
     expect(screen.queryByTestId("review-open")).toBeNull();
+    // Super Metroid's board has no markers and no Checks tab
+    expect(screen.getByTestId("review-notice")).toHaveTextContent(
+      "Each grid cell says where the seed put its item",
+    );
+    expect(screen.getByTestId("review-notice")).not.toHaveTextContent(
+      /markers|Checks/,
+    );
   });
 
   it("says the same for a run that knows its seed, and counts the facts that agree", async () => {
     await open("Zebes42");
     expect(screen.getByTestId("review-binding")).toHaveTextContent(
-      "Map Rando's log names no seed, so the tracker cannot prove this is the run's seed. 1 settings and facts agree",
+      "Map Rando's log names no seed, so the tracker cannot prove this is the run's seed. 1 setting or fact agrees",
     );
   });
 

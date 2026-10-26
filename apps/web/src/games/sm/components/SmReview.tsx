@@ -51,7 +51,11 @@ export const SmReviewNotice = () => {
   const review = useReview();
   const close = useReviewStore((state) => state.close);
   return review === null ? null : (
-    <ReviewNotice onClose={close} review={review} />
+    <ReviewNotice
+      hint="Each grid cell says where the seed put its item; the review below lists every place."
+      onClose={close}
+      review={review}
+    />
   );
 };
 

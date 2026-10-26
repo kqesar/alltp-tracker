@@ -83,7 +83,11 @@ export const MapPanel = () => {
         </div>
       </div>
       {review !== null && (
-        <ReviewNotice onClose={closeReview} review={review} />
+        <ReviewNotice
+          hint="The board shows what each place held: markers, Checks and the grid."
+          onClose={closeReview}
+          review={review}
+        />
       )}
       <div
         aria-labelledby={tabId(baseId, view)}

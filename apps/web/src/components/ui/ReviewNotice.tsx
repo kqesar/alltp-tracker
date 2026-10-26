@@ -16,19 +16,23 @@ export const bindingText = (review: Loaded): string => {
   const agreed =
     binding.facts === 0
       ? ""
-      : ` ${binding.facts} settings and facts agree with the run.`;
+      : binding.facts === 1
+        ? " 1 setting or fact agrees with the run."
+        : ` ${binding.facts} settings and facts agree with the run.`;
   return `Not verified: ${why}, so the tracker cannot prove this is the run's seed.${agreed}`;
 };
 
 /**
  * The review's standing banner: that the board is in review, which log, how
- * it relates to the run, and the way out. Shown over every tab of the map
- * panel while a review is open.
+ * it relates to the run, where the game's board shows the seed (`hint`, its
+ * own words), and the way out.
  */
 export const ReviewNotice = ({
+  hint,
   onClose,
   review,
 }: {
+  hint: string;
   review: Loaded;
   onClose: () => void;
 }) => (
@@ -36,9 +40,7 @@ export const ReviewNotice = ({
     <p className="review-notice__text">
       <strong className="review-notice__badge">Review</strong>{" "}
       <span data-testid="review-binding">{bindingText(review)}</span>{" "}
-      <span className="review-notice__hint">
-        The board shows what each place held: markers, Checks and the grid.
-      </span>
+      <span className="review-notice__hint">{hint}</span>
     </p>
     <button
       className="modal-btn modal-btn--ghost"
