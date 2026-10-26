@@ -166,6 +166,83 @@ describe("the board's items against the seed's", () => {
   });
 });
 
+describe("the run's locations against the seed's", () => {
+  // Brinstar Reserve Tank Room's chozo item (the Morph Ball), 230 Missile
+  // Room's (an energy tank) and the room's middle item (a power bomb)
+  const MORPH_AT = { at: 1_800_000_060_000, ms: 60_000 };
+  const TANK_AT = { at: 1_800_000_120_000, ms: null };
+  const found = { "17:2": TANK_AT, "46:2": MORPH_AT, "46:3": MORPH_AT };
+
+  it("goes by count while the run says no location", () => {
+    expect(compareItems(log, NO_ITEMS).mode).toBe("counts");
+    expect(compareItems(log, NO_ITEMS, {}).mode).toBe("counts");
+    expect(compareItems(log, NO_ITEMS, {}).stamps).toEqual({});
+  });
+
+  it("goes by location once the run found one: each place found or not, with its time", () => {
+    const { majors, mode, summary } = compareItems(log, NO_ITEMS, found);
+    expect(mode).toBe("locations");
+    // The board holds nothing, yet the Morph Ball's place was found
+    expect(summary).toMatchObject({ majors: 16, neverFound: 15 });
+    const morph = majors.find(({ id }) => id === "morph");
+    expect(morph).toMatchObject({ held: true, stamp: MORPH_AT });
+    // The places not found come first, as the items never held do
+    expect(majors.at(-1)).toMatchObject({ held: true, id: "morph" });
+    for (const row of majors.slice(0, -1)) {
+      expect(row).toMatchObject({ held: false, stamp: null });
+    }
+  });
+
+  it("goes by place while the board agrees: every single item it holds has its place found", () => {
+    const { majors, mode, partial } = compareItems(
+      log,
+      held({ morph: 1 }),
+      found,
+    );
+    expect([mode, partial]).toEqual(["locations", false]);
+    expect(majors.find(({ id }) => id === "morph")?.held).toBe(true);
+    // An item held that the seed did not place (a start's) asks nothing
+    expect(compareItems(log, held({ wallJump: 1 }), found).mode).toBe(
+      "locations",
+    );
+  });
+
+  it("falls back to the count when the board holds an item whose place was not found", () => {
+    // The Varia Suit is held, its place (Waterway Energy Tank Room) is not
+    // among the places found: autotracking did not see it
+    const { majors, mode, partial, stamps } = compareItems(
+      log,
+      held({ morph: 1, varia: 1 }),
+      found,
+    );
+    expect([mode, partial]).toEqual(["counts", true]);
+    expect(stamps).toEqual({});
+    expect(majors.find(({ id }) => id === "varia")).toMatchObject({
+      held: true,
+      stamp: null,
+    });
+    // And no found at all is a count run that is not partial
+    expect(compareItems(log, held({ varia: 1 })).partial).toBe(false);
+  });
+
+  it("counts a pack or tank type by the places found, not by the board", () => {
+    const { counted, summary } = compareItems(
+      log,
+      held({ energyTank: 14, powerBomb: 10 }),
+      found,
+    );
+    const row = (id: string) => counted.find((r) => r.id === id);
+    expect(row("energyTank")).toMatchObject({ held: 1, placed: 14 });
+    expect(row("powerBomb")).toMatchObject({ held: 1, placed: 10 });
+    expect(row("missile")).toMatchObject({ held: 0, placed: 46 });
+    expect(summary.packsLeft).toBe(84 - 2);
+  });
+
+  it("keeps the stamps of the places found, for a row of packs to read", () => {
+    expect(compareItems(log, NO_ITEMS, found).stamps).toEqual(found);
+  });
+});
+
 describe("where the seed put things", () => {
   it("words a place with its room, node and area", () => {
     const morph = placesByItem(log).get("morph")?.[0];

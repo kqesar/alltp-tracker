@@ -355,3 +355,69 @@ describe("the run's seed", () => {
     expect(fresh.useSmStore.getState().seed).toBeNull();
   });
 });
+
+describe("the locations found", () => {
+  const file = (progress: object) =>
+    JSON.stringify({
+      format: "alltp-tracker-save",
+      game: "sm",
+      progress,
+      version: 1,
+    });
+  const FOUND = { "46:3": { at: 1_800_000_000_000, ms: 754_000 } };
+
+  it("is empty in a fresh run, written by an export and read back", () => {
+    expect(store().found).toEqual({});
+    useSmStore.setState({ found: FOUND });
+    const { progress } = JSON.parse(exportSave(store()));
+    expect(progress.found).toEqual(FOUND);
+    const parsed = parseSave(exportSave(store()));
+    expect(parsed.ok && parsed.progress.found).toEqual(FOUND);
+  });
+
+  it("is empty in a save from before it was kept, which still opens", () => {
+    const { found: _, ...older } = freshProgress();
+    const parsed = parseSave(file(older));
+    expect(parsed.ok && parsed.progress.found).toEqual({});
+  });
+
+  it("refuses a location the pack does not know, and a value that is no time", () => {
+    for (const bad of [
+      { "1:1": { at: 1, ms: null } },
+      { "46:3": { at: -1, ms: null } },
+      { "46:3": { at: 1 } },
+      { "46:3": 12 },
+      [],
+    ]) {
+      expect(parseSave(file({ ...freshProgress(), found: bad }))).toEqual({
+        error: "invalid",
+        ok: false,
+      });
+    }
+  });
+
+  it("is laid on the history too: undoing a step never takes back a find", () => {
+    store().step("morph", 1);
+    store().applyGameNews(() => ({ found: FOUND }));
+    store().undo();
+    expect(store().items.morph).toBe(0);
+    expect(store().found).toEqual(FOUND);
+    store().redo();
+    expect(store().found).toEqual(FOUND);
+  });
+
+  it("is restored with the saved run, and cleared by New game", async () => {
+    vi.resetModules();
+    localStorage.setItem(
+      SM_STORAGE_KEY,
+      JSON.stringify({
+        state: { ...freshProgress(), found: FOUND },
+        version: 1,
+      }),
+    );
+    const fresh = await import("@/games/sm/store");
+    expect(fresh.useSmStore.getState().found).toEqual(FOUND);
+    fresh.useSmStore.getState().reset();
+    expect(fresh.useSmStore.getState().found).toEqual({});
+  });
+});

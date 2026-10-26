@@ -11,6 +11,12 @@
 // - The seed's name is recorded as the run's `seed`.
 // - The items the seed adds (the Wall Jump Boots, the split Speed Booster)
 //   follow its settings.
+// - A location the game says collected is added to the run's `found` with
+//   the run timer's reading and the instant it was seen, and never taken
+//   back, as an item is not. The decoder leaves the Nothing locations out,
+//   and Race Mode never reads the bits, so a run tracked in Race Mode keeps
+//   none (Map Rando's ROM has no race flag: the player turns Race Mode on for
+//   a race, and Auto leaves it off).
 //
 // The run timer follows the game too, whether or not a game is in play: the
 // player's "Start and stop with the game" starts it on the first reading in
@@ -20,6 +26,7 @@
 import {
   type ClockReading,
   clockStraddled,
+  type LocationKey,
   type SmItemId,
 } from "@alltp/pack-sm";
 import { gameClockOf, timerNews } from "@/games/gameTimer";
@@ -27,16 +34,20 @@ import { recordSeed } from "@/games/seedId";
 import type { SmReading } from "@/games/sm/autotrack/reading";
 import { clockBaseOf } from "@/games/sm/autotrack/timer";
 import { type SmProgress, useSmStore } from "@/games/sm/store";
+import { stampOf } from "@/games/stamp";
 import { type GameClock, isIdle, timerState } from "@/utils/runTimer";
 
 /** What the game says, kept to tell news from what it said before. */
 type View = {
+  found: ReadonlySet<LocationKey>;
   items: Readonly<Record<string, number>>;
   objectives: string;
   done: readonly string[];
   wallJump: boolean | null;
   splitSpeed: boolean | null;
 };
+
+const NO_LOCATIONS: ReadonlySet<LocationKey> = new Set();
 
 const viewOf = (reading: SmReading): View => ({
   done:
@@ -45,6 +56,8 @@ const viewOf = (reading: SmReading): View => ({
       : reading.objectives
           .filter(({ done }) => done)
           .map(({ objective }) => objective.id),
+  found:
+    typeof reading.collected === "string" ? NO_LOCATIONS : reading.collected,
   items: typeof reading.items === "string" ? {} : reading.items,
   objectives:
     typeof reading.objectives === "string"
@@ -138,6 +151,9 @@ export const createSmFollower = () => {
       const doneNews = now.done.filter(
         (id) => before === null || !before.done.includes(id),
       );
+      const foundNews = [...now.found].filter(
+        (key) => before === null || !before.found.has(key),
+      );
       const options = (["wallJump", "splitSpeed"] as const).filter(
         (option) =>
           now[option] !== null &&
@@ -147,10 +163,13 @@ export const createSmFollower = () => {
         itemNews.length === 0 &&
         !objectivesNews &&
         doneNews.length === 0 &&
+        foundNews.length === 0 &&
         options.length === 0
       ) {
         return;
       }
+      // One stamp for the reading, taken after the timer followed it
+      const stamp = stampOf(useSmStore.getState().timer, reading.at);
       useSmStore.getState().applyGameNews((run) => {
         const change: Partial<SmProgress> = {};
         if (itemNews.length > 0) {
@@ -168,6 +187,14 @@ export const createSmFollower = () => {
           change.done = [...new Set([...run.done, ...doneNews])].filter((id) =>
             objectives.includes(id),
           );
+        }
+        // A location found keeps its first stamp, and is never taken back
+        const fresh = foundNews.filter((key) => run.found[key] === undefined);
+        if (fresh.length > 0) {
+          change.found = {
+            ...run.found,
+            ...Object.fromEntries(fresh.map((key) => [key, stamp])),
+          };
         }
         for (const option of options) {
           change[option] = now[option] === true;

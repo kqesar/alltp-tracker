@@ -1,14 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
-  isStamp,
   isTimelineKey,
-  type Stamp,
-  stampOf,
   stampTimeline,
   type Timeline,
 } from "@/games/alttpr/logic/timeline";
-import { IDLE_TIMER, pauseTimer, startTimer } from "@/utils/runTimer";
+import type { Stamp } from "@/games/stamp";
 
 const T0 = Date.UTC(2026, 9, 18, 12, 0, 0);
 const STAMP: Stamp = { at: T0 + 60_000, ms: 60_000 };
@@ -17,17 +14,6 @@ const run = (
   items: Record<string, boolean | number> = {},
   checked: Record<string, true> = {},
 ) => ({ checked, items: { ...freshItems, ...items } as ItemState });
-
-describe("stampOf", () => {
-  it("reads the timer, or none before it started", () => {
-    expect(stampOf(IDLE_TIMER, T0)).toEqual({ at: T0, ms: null });
-    const running = startTimer(IDLE_TIMER, T0);
-    expect(stampOf(running, T0 + 5000)).toEqual({ at: T0 + 5000, ms: 5000 });
-    // A paused timer gives its pause's time
-    const paused = pauseTimer(running, T0 + 5000);
-    expect(stampOf(paused, T0 + 9000)).toEqual({ at: T0 + 9000, ms: 5000 });
-  });
-});
 
 describe("stampTimeline", () => {
   it("stamps an item found, and drops it once it is not held", () => {
@@ -147,24 +133,5 @@ describe("isTimelineKey", () => {
     "kings-tomb",
   ])("refuses %s", (key) => {
     expect(isTimelineKey(key)).toBe(false);
-  });
-});
-
-describe("isStamp", () => {
-  it("takes an instant and a timer reading, or none", () => {
-    expect(isStamp({ at: T0, ms: 0 })).toBe(true);
-    expect(isStamp({ at: T0, ms: null })).toBe(true);
-  });
-
-  it.each([
-    [null],
-    [T0],
-    [{ at: T0 }],
-    [{ at: -1, ms: null }],
-    [{ at: T0, ms: -5 }],
-    [{ at: Number.NaN, ms: null }],
-    [{ at: "today", ms: null }],
-  ])("refuses %j", (value) => {
-    expect(isStamp(value)).toBe(false);
   });
 });

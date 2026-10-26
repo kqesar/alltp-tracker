@@ -16,8 +16,11 @@ export { detectEnvironment } from "@alltp/autotrack";
 export { createSmFollower } from "@/games/sm/autotrack/follow";
 
 /**
- * Start a Map Rando session. Races restrict no tracking (the pack's race
- * profile), so every reading decodes all it reads.
+ * Start a Map Rando session. Races restrict no tracking, but the pack's race
+ * profile keeps two categories out of Race Mode, the RTA clock and the
+ * locations: with it on, which the player does for a race (the ROM has no race
+ * flag, so Auto leaves it off), a reading holds neither and decodes them as
+ * unread.
  * @param options - The session's options, the environment found among them
  * @param sink - Where statuses and readings go
  */

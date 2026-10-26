@@ -4,7 +4,10 @@ import { createSmFollower } from "@/games/sm/autotrack/follow";
 import { readSm } from "@/games/sm/autotrack/reading";
 import { useSmStore } from "@/games/sm/store";
 import { timerMs } from "@/utils/runTimer";
-import type { MemoryRangeId } from "../../../../../../packs/sm/src/autotrack/memory";
+import {
+  MEMORY_RANGE,
+  type MemoryRangeId,
+} from "../../../../../../packs/sm/src/autotrack/memory";
 import {
   type MapRandoGame,
   viewOf,
@@ -464,5 +467,141 @@ describe("the run's seed", () => {
     run().undo();
     expect(run().items.morph).toBe(1);
     expect(run().seed).toBe("dsjF6gGsH");
+  });
+});
+
+/** Bits of the table: Brinstar Reserve Tank Room's middle item, 230 Missile Room's, the Moat's. */
+const RESERVE_ROOM = 19;
+const MISSILE_ROOM = 12;
+const MOAT = 4;
+
+/** A reading whose ranges are served or, in a race, never read. */
+const locationsAt = (
+  at: number,
+  game: MapRandoGame = {},
+  unread: MemoryRangeId[] = [],
+) =>
+  readSm(viewOf(writeMapRando(new Uint8Array(0x100_0000), game), unread), at);
+
+describe("the locations found, with the game", () => {
+  it("dates each new location with the timer's reading, as no undo step", () => {
+    const follower = createSmFollower();
+    follower.read(locationsAt(T0, { state: FILE_SELECT }));
+    follower.read(locationsAt(T0 + 1_000, { state: PLAY }));
+    expect(run().found).toEqual({});
+
+    run().step("varia", 1);
+    follower.read(
+      locationsAt(T0 + 61_000, { collected: [RESERVE_ROOM], state: PLAY }),
+    );
+    expect(run().found).toEqual({ "46:3": { at: T0 + 61_000, ms: 60_000 } });
+
+    follower.read(
+      locationsAt(T0 + 91_000, {
+        collected: [RESERVE_ROOM, MISSILE_ROOM],
+        state: PLAY,
+      }),
+    );
+    expect(run().found).toEqual({
+      "17:2": { at: T0 + 91_000, ms: 90_000 },
+      "46:3": { at: T0 + 61_000, ms: 60_000 },
+    });
+    // Undoing the player's change leaves what the game found
+    run().undo();
+    expect(run().items.varia).toBe(0);
+    expect(Object.keys(run().found).sort()).toEqual(["17:2", "46:3"]);
+  });
+
+  it("dates a location found before the timer started with none", () => {
+    createSmFollower().read(
+      locationsAt(T0, { collected: [MISSILE_ROOM], state: PLAY }),
+    );
+    expect(run().found).toEqual({ "17:2": { at: T0, ms: null } });
+  });
+
+  it("never takes a location back, nor changes the time of one found", () => {
+    const follower = createSmFollower();
+    follower.read(locationsAt(T0, { collected: [MISSILE_ROOM], state: PLAY }));
+    // A death reloads the save: the bit is gone, then back later
+    follower.read(locationsAt(T0 + 1_000, { state: PLAY }));
+    expect(Object.keys(run().found)).toEqual(["17:2"]);
+    follower.read(
+      locationsAt(T0 + 9_000, { collected: [MISSILE_ROOM], state: PLAY }),
+    );
+    expect(run().found["17:2"]).toEqual({ at: T0, ms: null });
+  });
+
+  it("lays nothing while no game is in play", () => {
+    createSmFollower().read(
+      locationsAt(T0, { collected: [MISSILE_ROOM], state: 0x01 }),
+    );
+    expect(run().found).toEqual({});
+  });
+
+  it("never names a Nothing location, whose bit is set from a new game on", () => {
+    const follower = createSmFollower();
+    follower.read(locationsAt(T0, { nothing: [MOAT], state: PLAY }));
+    expect(run().found).toEqual({});
+    follower.read(
+      locationsAt(T0 + 1_000, {
+        collected: [RESERVE_ROOM],
+        nothing: [MOAT],
+        state: PLAY,
+      }),
+    );
+    expect(Object.keys(run().found)).toEqual(["46:3"]);
+  });
+
+  it("lays nothing from a reading whose mask the bits do not cover, then goes on", () => {
+    const GREEN_HILL = 25;
+    const follower = createSmFollower();
+    follower.read(
+      locationsAt(T0, {
+        collected: [MISSILE_ROOM],
+        nothing: [MOAT],
+        state: PLAY,
+      }),
+    );
+    expect(Object.keys(run().found)).toEqual(["17:2"]);
+
+    // Another seed's mask met these bits (a ROM swapped between the reads):
+    // the Moat's bit is in the mask, not in the bits
+    const memory = writeMapRando(new Uint8Array(0x100_0000), {
+      collected: [MISSILE_ROOM, GREEN_HILL],
+      state: PLAY,
+    });
+    memory[MEMORY_RANGE["nothing-mask"].address] |= 1 << (MOAT & 7);
+    follower.read(readSm(viewOf(memory), T0 + 1_000));
+    expect(Object.keys(run().found)).toEqual(["17:2"]);
+
+    // The next tick reads one seed's bits and mask: the find is laid
+    follower.read(
+      locationsAt(T0 + 2_000, {
+        collected: [MISSILE_ROOM, GREEN_HILL],
+        nothing: [MOAT],
+        state: PLAY,
+      }),
+    );
+    expect(Object.keys(run().found).sort()).toEqual(["17:2", "54:4"]);
+  });
+
+  it("lays nothing in a race, which never reads the bits", () => {
+    createSmFollower().read(
+      locationsAt(T0, { collected: [MISSILE_ROOM], state: PLAY }, [
+        "collected",
+        "nothing-mask",
+      ]),
+    );
+    expect(run().found).toEqual({});
+  });
+
+  it("writes nothing for a reading with no new location", () => {
+    const follower = createSmFollower();
+    follower.read(locationsAt(T0, { collected: [MISSILE_ROOM], state: PLAY }));
+    const before = run();
+    follower.read(
+      locationsAt(T0 + 1_000, { collected: [MISSILE_ROOM], state: PLAY }),
+    );
+    expect(run()).toBe(before);
   });
 });
