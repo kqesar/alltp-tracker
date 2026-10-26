@@ -65,9 +65,13 @@ parser throws on a file's content: every reason not to show it is a refusal, wor
 `review/words.ts`.
 
 The worker and its chunks are named `review-*` (`worker.rollupOptions` in `apps/web/vite.config.ts`)
-and listed `onDemand` in the service worker, so no install downloads them. The ALttPR parser's chunk
-holds the pack's location tables (`known.ts` reads the three worlds' regions to check names): about
-280 kB (60 kB gzip), fetched once, the first time a log is imported. Slimming it means a generated
+and listed `onDemand` in the service worker, so no install downloads them. A pack's parser loads
+through its own entry (`@alltp/pack-alttpr/spoiler`, `@alltp/pack-smz3/spoiler`: the pack's
+`./spoiler` export), never the pack's index, which the board imports: a dynamic import of a module
+the board already holds lands in the board's chunk, which then carries the parser for every player.
+The ALttPR parser's chunk holds the pack's location tables (`known.ts` reads the three worlds' regions
+to check names): about 255 kB (51 kB gzip), fetched once, the first time a log is imported; out of
+the board's chunk, it took 105 kB off what the ALttPR board downloads at start. Slimming it means a generated
 list of location ids in the pack; it has not been worth its keep yet.
 
 ## Binding the log to the run
@@ -237,8 +241,8 @@ SMZ3 shares the gate, the store, the dialog and the banner; its adapter is `game
   all checked". A grid cell adds "In the seed: at <place>" or "N places: …" to its name and a
   `title`. Notable means: in the playthrough, then an item with a grid cell, then a dungeon key,
   then the rest (rupees, maps, compasses…), which have no picture.
-- **The parser's chunk.** `review/parse.ts` loads `@alltp/pack-smz3/spoiler` (the pack's `./spoiler`
-  export, `src/spoiler/parse.ts`), never the pack's index: a dynamic import of the index keeps
-  every export, which would put js-yaml in the board's own chunk. The vite build gives that chunk
+- **The parser's chunk.** `review/parse.ts` loads `@alltp/pack-smz3/spoiler` (`src/spoiler/parse.ts`),
+  never the pack's index, as ALttPR's ([Reading a file](#reading-a-file)): through the index,
+  js-yaml would be in the board's own chunk. The vite build gives that chunk
   the worker's `review-` name (`chunkFileNames`) so the in-place read (no `Worker`) is as on
   demand as the worker's; the shell stays at 17 files, 335 kB.

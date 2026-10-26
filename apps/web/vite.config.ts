@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => {
       ...(desktop ? { outDir: DESKTOP_OUT } : {}),
       rollupOptions: {
         output: {
-          // A game pack's spoiler parser (SMZ3's, with js-yaml) is read only
+          // A game pack's spoiler parser (its `./spoiler` entry) is read only
           // when a player reviews a run, in the review worker or, where there
           // is none, in place: its chunk takes the worker's `review-` name so
           // the service worker keeps it out of every install
