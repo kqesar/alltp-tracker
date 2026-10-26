@@ -26,10 +26,15 @@ const permitted = (id: string) =>
     MEMORY_RANGE[id as keyof typeof MEMORY_RANGE].category
   ]?.permitted;
 
-/** The plan of one full tick's phase: every polled range of that phase. */
+/**
+ * The plan of one full tick's phase: every polled range of that phase, the
+ * dark room's switch on: its gate bytes ride in the casual plan, the rest of
+ * it is gated and read apart (see dark-room.spec.ts).
+ */
 function phasePlan(race: boolean) {
   const ranges = MEMORY_RANGES.filter(
-    (range) => "everyMs" in range && permitted(range.id) === race,
+    (range) =>
+      "everyMs" in range && !("when" in range) && permitted(range.id) === race,
   );
   const plan = planReads(ranges, {
     barriers: race ? pack.raceBarriers : [],
@@ -47,7 +52,8 @@ describe("MEMORY_RANGES", () => {
     // definePack throws on an unknown category or a race-permitted range
     // outside Race Mode's windows.
     expect(pack.ranges).toHaveLength(MEMORY_RANGES.length);
-    expect(pack.tickMs).toBe(500);
+    // The dark room's position is read four times a second (NAV_MS)
+    expect(pack.tickMs).toBe(250);
   });
 
   it("lists ranges in address order, for the planner to coalesce", () => {
@@ -122,9 +128,20 @@ describe("MEMORY_RANGES", () => {
       "ganon-vulnerable:other",
       "initial-pyramid:other",
       "initial-progress:other",
+      // The dark room map (dark-room.ts): navigation, which no race permits
+      "dark-room-mode:navigation",
+      "dark-room-indoors:navigation",
+      "dark-room-link:navigation",
       "overworld-screen:other",
       "room:entrances",
+      "dark-room-room:navigation",
+      "dark-room-layer:navigation",
       "entrance:entrances",
+      "dark-room-lights:navigation",
+      "dark-room-objects:navigation",
+      "dark-room-chests:navigation",
+      "dark-room-doors:navigation",
+      "dark-room-dark:navigation",
       "dungeon-rooms:dungeon-checks",
       "bomb-count:hud",
       "bottle-index:hud",
@@ -139,6 +156,7 @@ describe("MEMORY_RANGES", () => {
       "heart-containers:hud",
       "stats-finds:other",
       "heart-pieces:hud",
+      "dark-room-map:navigation",
       "overworld-door:entrances",
     ]);
   });
@@ -151,6 +169,9 @@ describe("MEMORY_RANGES", () => {
       }
     });
     expect(pairs).toEqual([
+      // The map's own copies of the mode and the room, `navigation`
+      "game-mode/dark-room-mode",
+      "room/dark-room-room",
       "dungeon-rooms/swamp-palace-boss-room",
       "dungeon-rooms/tower-of-hera-boss-room",
       "dungeon-rooms/skull-woods-boss-room",
@@ -221,6 +242,9 @@ describe("MEMORY_RANGES", () => {
     // map mode and the prizes' kinds another, beside the settings; the pad
     // medallions (medallion-pads.ts) a piece with the settings and the
     // overworld screen one with the game mode. Race Mode asks for neither.
+    // The dark room's gate (mode, indoors, dark: 4 bytes) rides in the casual
+    // phase with its switch on, 13 bytes and 2 pieces over what it was; the
+    // rest of it is gated, read apart. The race phase is what it was.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -231,9 +255,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 785, pieces: 19 },
+      casual: { bytes: 798, pieces: 21 },
       race: { bytes: 364, pieces: 25 },
-      ranges: { casual: 31, race: 33 },
+      ranges: { casual: 34, race: 33 },
     });
   });
 });

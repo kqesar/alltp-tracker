@@ -14,6 +14,7 @@
     "import-er": "node scripts/import-er.mjs",
     "import-item-names": "node scripts/import-item-names.mjs",
     "import-upstream": "node scripts/import-upstream-tests.mjs",
+    "record-dark-room": "node scripts/record-dark-room.mjs",
     "spoiler-fixtures": "node scripts/spoiler-fixtures.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"

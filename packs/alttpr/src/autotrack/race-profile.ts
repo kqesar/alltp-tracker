@@ -69,6 +69,10 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
       permitted: true,
       rule: "The current MSU-1-track playing may be displayed but may not be used to infer regions.",
     },
+    navigation: {
+      permitted: false,
+      rule: "Anything not covered in this document is, by default, considered not permitted. A dark room's plan and Link's place in it show what the game hides without the Lamp, so Race Mode never reads them.",
+    },
     other: {
       permitted: false,
       rule: "Anything not covered in this document is, by default, considered not permitted.",

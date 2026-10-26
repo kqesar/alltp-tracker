@@ -182,7 +182,7 @@ describe("ALTTPR_AUTOTRACK", () => {
       size: 2,
     });
     expect(ALTTPR_AUTOTRACK.gameCheck?.ranges).toEqual([0]);
-    expect(ALTTPR_AUTOTRACK.tickMs).toBe(500);
+    expect(ALTTPR_AUTOTRACK.tickMs).toBe(250);
   });
 
   it("tracks a race seed in Race Mode, never reading a forbidden byte", async () => {

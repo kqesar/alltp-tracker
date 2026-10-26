@@ -24,6 +24,7 @@
 // which is live and lies in Race Mode's window $7E:F000-$7E:F500.
 
 import { bus, type RangeSpec } from "@alltp/autotrack";
+import { darkRoomHeld, darkRoomWanted } from "./dark-room-gate";
 import tables from "./entrance-tables.json" with { type: "json" };
 import { SEED_SETTINGS_RANGES, SETTINGS_MS } from "./seed-settings";
 
@@ -54,6 +55,13 @@ export const MEMORY_SOURCES = {
     commit: "dcb0a2b42d14445f7994a0e9e4d63cbecf4b98d3",
     repo: "https://github.com/KatDevsGames/z3randomizer",
     version: "31.2.2",
+  },
+  // The game's decompilation, for the dungeon engine's variables and tables
+  // (the dark room map). Cited by file:line, `g_ram + N` being $7E:0000 + N.
+  zelda3: {
+    commit: "45a149d8b4bb8098f53d1009f76e76e7d8b79bbf",
+    license: "MIT",
+    repo: "https://github.com/snesrev/zelda3",
   },
 } as const;
 
@@ -192,6 +200,43 @@ export const GAME_MODES = {
  */
 export const GAME_MS = 500;
 
+/**
+ * The dark room map's cadences. Its gate (mode, indoors, dark) is read with
+ * the game's own, `GAME_MS`, in the casual plan that is read anyway. Only
+ * while the gate holds, a dark room without the Lamp, are the rest read:
+ * Link's place and the room's state four times a second, so the marker follows
+ * him, in one more request; the 8 KiB map itself once a second and on a room
+ * change.
+ */
+export const NAV_MS = 250;
+export const MAP_MS = 1000;
+
+/** The switch the app turns on for the dark room map (`RangeSpec.optIn`). */
+export const DARK_ROOM_SWITCH = "dark-room";
+
+/**
+ * A range of the dark room map read while the room is wanted: four times a
+ * second, in one request beside the others of its kind, and held over a menu
+ * or a text box (`darkRoomHeld`).
+ */
+function assist<const Id extends string>(spec: {
+  readonly id: Id;
+  readonly at: number;
+  readonly size: number;
+  readonly source: SourceRef;
+}): AlttprRange & { readonly id: Id } {
+  return {
+    ...range({
+      ...spec,
+      category: "navigation",
+      everyMs: NAV_MS,
+      optIn: DARK_ROOM_SWITCH,
+    }),
+    keep: darkRoomHeld,
+    when: darkRoomWanted,
+  };
+}
+
 interface RangeSource<Id extends string> {
   readonly id: Id;
   /** A-bus address. */
@@ -201,6 +246,7 @@ interface RangeSource<Id extends string> {
   /** Omitted: never polled. */
   readonly everyMs?: number;
   readonly source: SourceRef;
+  readonly optIn?: string;
 }
 
 function range<const Id extends string>(
@@ -318,6 +364,38 @@ export const MEMORY_RANGES = [
     size: 1,
     source: "z3:ram.asm:41",
   }),
+  // The dark room map (dark-room.ts): never read in Race Mode (category
+  // `navigation`, which no race permits), and only while the player turns
+  // the assist on (the `dark-room` switch). The gate: main module and
+  // submodule ($10 = 07 and $11 = 00 is normal play in a dungeon, $10 = 0E the
+  // menu and the text modules over it). Two bytes, not the frame counter $1A
+  // beside them, which changes at every read.
+  range({
+    at: 0x7e_0010,
+    category: "navigation",
+    everyMs: GAME_MS,
+    id: "dark-room-mode",
+    optIn: DARK_ROOM_SWITCH,
+    size: 2,
+    source: "zelda3:src/variables.h:3-4",
+  }),
+  // Indoors.
+  range({
+    at: 0x7e_001b,
+    category: "navigation",
+    everyMs: GAME_MS,
+    id: "dark-room-indoors",
+    optIn: DARK_ROOM_SWITCH,
+    size: 1,
+    source: "zelda3:src/variables.h:14",
+  }),
+  // Link's Y and X, absolute in the dungeon's grid (& $1FF inside the room).
+  assist({
+    at: 0x7e_0020,
+    id: "dark-room-link",
+    size: 4,
+    source: "zelda3:src/variables.h:19-20",
+  }),
   // OverworldIndex: the overworld screen Link is on (a Dark World screen is
   // OR $40), kept in the dungeons too, as the screen he came from. Read
   // outside Race Mode only, to see whether a medallion pad's screen is the
@@ -339,6 +417,21 @@ export const MEMORY_RANGES = [
     size: 2,
     source: "z3:ram.asm:107",
   }),
+  // The room alone, not the quadrant bytes beside it: they change inside a
+  // room, and a change of this range makes the map be read again.
+  assist({
+    at: 0x7e_00a0,
+    id: "dark-room-room",
+    size: 2,
+    source: "zelda3:src/variables.h:112",
+  }),
+  // The layer Link is on: 1 selects the second attribute table.
+  assist({
+    at: 0x7e_00ee,
+    id: "dark-room-layer",
+    size: 1,
+    source: "zelda3:src/variables.h:141",
+  }),
   // The entrance the last door or hole loaded.
   range({
     at: 0x7e_010e,
@@ -347,6 +440,47 @@ export const MEMORY_RANGES = [
     id: "entrance",
     size: 2,
     source: "z3:ram.asm:158",
+  }),
+  // $0458-$0479: the Lamp's cone, the torches lit, the room header's
+  // collision layer ($046C) and where the torches start in the objects'
+  // arrays ($0478).
+  assist({
+    at: 0x7e_0458,
+    id: "dark-room-lights",
+    size: 0x22,
+    source: "zelda3:src/variables.h:444-464",
+  }),
+  // The objects' arrays: what each replaceable object is ($0500), where each
+  // torch sits and whether it is lit, bit $8000 ($0540, misc.c:470-480).
+  assist({
+    at: 0x7e_0500,
+    id: "dark-room-objects",
+    size: 0x60,
+    source: "zelda3:src/variables.h:512-514",
+  }),
+  // The chests' words: bit $8000 marks a big key lock, not a chest.
+  assist({
+    at: 0x7e_06e0,
+    id: "dark-room-chests",
+    size: 0x20,
+    source: "zelda3:src/dungeon.c:4020-4048",
+  }),
+  // What each closed door is: its type in the low byte of the slot's word.
+  assist({
+    at: 0x7e_1980,
+    id: "dark-room-doors",
+    size: 0x20,
+    source: "zelda3:src/variables.h:798",
+  }),
+  // Whether the room is dark by its header (dung_want_lights_out).
+  range({
+    at: 0x7e_c005,
+    category: "navigation",
+    everyMs: GAME_MS,
+    id: "dark-room-dark",
+    optIn: DARK_ROOM_SWITCH,
+    size: 1,
+    source: "zelda3:src/dungeon.c:3699",
   }),
   // Dungeon rooms $00-$E0: every dungeon location's room lies there, the
   // last being Castle Tower's Room 03 ($E0). The boss rooms and the three
@@ -466,6 +600,26 @@ export const MEMORY_RANGES = [
   // fall sets Castle Tower's bit, Agahnim 2's Ganon's Tower's (events.asm:
   // 89-109).
   save("dungeons-completed", 0x472, 2, "items", "z3:dungeondrops.asm:323-329"),
+  // The room's collision map: the two attribute tables, 64 x 64 bytes each,
+  // contiguous (dung_bg2_attr_table, dung_bg1_attr_table). Read alone, as its
+  // own request, and only while the room is dark and Link has no Lamp
+  // (darkRoomWanted); again on a room change (`refreshOn`) and once a second,
+  // for doors, chests and blocks patch it live.
+  {
+    ...range({
+      at: 0x7f_2000,
+      category: "navigation",
+      everyMs: MAP_MS,
+      id: "dark-room-map",
+      optIn: DARK_ROOM_SWITCH,
+      size: 0x2000,
+      source: "zelda3:src/variables.h:1161-1162",
+    }),
+    alone: true,
+    keep: darkRoomHeld,
+    refreshOn: ["dark-room-room"],
+    when: darkRoomWanted,
+  },
   // The overworld door Link last went in by, its slot of the door table plus
   // one, which the base patch keeps as the game loads its entrance
   // (doorframefixes.asm:8-12, hooks.asm:2081-2082). A respawn keeps it
