@@ -10,6 +10,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "import-locations": "node scripts/locations.mjs",
     "spoiler-fixture": "node scripts/spoiler-fixture.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"

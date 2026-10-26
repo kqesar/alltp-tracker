@@ -3,6 +3,7 @@ export {
   type ClockReading,
   clockStraddled,
   decodeBeforePlay,
+  decodeCollected,
   decodeGameClock,
   decodeGameState,
   decodeGoal,
@@ -23,6 +24,7 @@ export { MAP_RANDO_AUTOTRACK } from "./autotrack/pack";
 export { checkGame, MAP_RANDO_TITLE } from "./autotrack/probes";
 export { MAP_RANDO_RACE_PROFILE } from "./autotrack/race-profile";
 export { SM_ITEMS, type SmItem, type SmItemId, smItem } from "./items";
+export { LOCATION_KEYS, type LocationKey } from "./locations";
 export {
   OBJECTIVES,
   type Objective,

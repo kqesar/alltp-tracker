@@ -5,14 +5,24 @@
       "patches/rom_map/Bank DF.txt": "src/autotrack/memory.ts, src/settings.ts: bank $DF's seed data for autotrackers",
       "patches/src/disableable_etanks.asm": "src/autotrack/decode.ts: energy tanks disabled from the pause menu",
       "patches/src/fast_reload.asm": "src/autotrack/memory.ts: the game states",
-      "patches/src/new_game.asm": "src/autotrack/memory.ts: the equipment and event addresses",
-      "rust/maprando-game/src/lib.rs": "src/items.ts: the items",
-      "rust/maprando/src/patch.rs": "src/objectives.ts, src/autotrack/decode.ts: objectives, item bits and sizes, the cartridge name",
+      "patches/src/item_count.asm": "src/autotrack/decode.ts: the locations collected, less the Nothing mask (`bits & ~mask`)",
+      "patches/src/new_game.asm": "src/autotrack/memory.ts: the equipment and event addresses, the collected bits a new game starts from the Nothing mask",
+      "rust/maprando-game/src/lib.rs": "src/items.ts, src/locations.ts: the items, the item locations (:4908-4914)",
+      "rust/maprando/src/patch.rs": "src/objectives.ts, src/autotrack/decode.ts, src/locations.ts: objectives, item bits and sizes, the cartridge name, the PLM argument kept per location and the Nothing mask (:843-866)",
       "rust/maprando/src/settings.rs": "src/settings.ts, src/objectives.ts: the presets autotrackers read, the objectives' flag names",
       "rust/maprando/src/spoiler_log.rs": "src/spoiler.ts: the spoiler log's shape (SpoilerLog, SpoilerItemLoc, SpoilerSummary), its item names"
     },
     "license": "MIT, Copyright (c) 2023 maddo, kyleb",
     "repo": "blkerby/MapRandomizer",
     "why": "Map Rando is the Super Metroid randomizer the community races: about 99 % of racetime.gg's smr races of August to October 2026 link maprando.com"
+  },
+  "smJsonData": {
+    "commit": "dcdae26aec1efaff9cf701c73a2335f720f6aa6d",
+    "files": {
+      "region/**/*.json": "src/locations.ts, via scripts/locations.mjs: the item nodes (`nodeType: \"item\"`: room id, node id, `nodeAddress`, the PLM in the vanilla ROM whose argument is the location's bit)"
+    },
+    "license": "CC BY 4.0, by the ALttP Randomizer and Super Metroid Randomizer communities",
+    "note": "Map Rando's submodule at the commit above (kjbranch/sm-json-data, branch map-rando)",
+    "repo": "kjbranch/sm-json-data"
   }
 }

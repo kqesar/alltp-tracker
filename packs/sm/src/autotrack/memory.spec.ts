@@ -38,6 +38,19 @@ describe("MEMORY_RANGES", () => {
     // The RTA clock: SRAM $70:1E10 is $E0:1E10, and sorts before the WRAM byte
     expect(MEMORY_RANGE["rta-saved"].address).toBe(0xe0_1e10);
     expect(MEMORY_RANGE["rta-pending"].address).toBe(0xf5_1f80);
+    // The locations: the collected bits $7E:D870 are $F5:D870, the Nothing
+    // mask at bank $B5's $FE12 is ROM offset $1A_FE12
+    expect(MEMORY_RANGE.collected.address).toBe(0xf5_d870);
+    expect(MEMORY_RANGE.collected.size).toBe(0x14);
+    expect(MEMORY_RANGE["nothing-mask"].address).toBe(0x1a_fe12);
+    expect(MEMORY_RANGE["nothing-mask"].size).toBe(0x14);
+  });
+
+  it("polls the Nothing mask with the collected bits, so both come from one tick", () => {
+    expect(MEMORY_RANGE["nothing-mask"]).toMatchObject({
+      everyMs: MEMORY_RANGE.collected.everyMs,
+    });
+    expect(MEMORY_RANGE.collected.everyMs).toBe(1000);
   });
 
   const racePack = definePack({
@@ -48,20 +61,26 @@ describe("MEMORY_RANGES", () => {
   });
   const polled = MEMORY_RANGES.filter((range) => "everyMs" in range);
   const clock = [MEMORY_RANGE["rta-saved"], MEMORY_RANGE["rta-pending"]];
+  const locations = [MEMORY_RANGE.collected, MEMORY_RANGE["nothing-mask"]];
   const overlaps = (a: ByteRange, b: ByteRange) =>
     a.address < b.address + b.size && b.address < a.address + a.size;
 
-  it("permits all it reads for the board, and forbids the RTA clock alone", () => {
+  it("permits all it reads for the board, and forbids the RTA clock and the locations", () => {
     const forbidden = MEMORY_RANGES.filter(
       (range) => !MAP_RANDO_RACE_PROFILE.categories[range.category]?.permitted,
     ).map((range) => `${range.id}:${range.category}`);
-    expect(forbidden).toEqual(["rta-saved:game-time", "rta-pending:game-time"]);
+    expect(forbidden).toEqual([
+      "nothing-mask:locations",
+      "rta-saved:game-time",
+      "rta-pending:game-time",
+      "collected:locations",
+    ]);
     for (const category of new Set(MEMORY_RANGES.map((r) => r.category))) {
       expect(MAP_RANDO_RACE_PROFILE.categories[category]).toBeDefined();
     }
   });
 
-  it("reads nothing of the RTA clock in Race Mode", () => {
+  it("reads nothing of the RTA clock nor of the locations in Race Mode", () => {
     // Race Mode's phase: the permitted ranges only, every forbidden byte
     // barred from a bridged gap
     const plan = planReads(
@@ -89,8 +108,25 @@ describe("MEMORY_RANGES", () => {
           size: request.pieces[i + 1],
         };
         expect(clock.some((range) => overlaps(range, piece))).toBe(false);
+        expect(locations.some((range) => overlaps(range, piece))).toBe(false);
       }
     }
+    // The ranges are polled outside a race, so the exclusion is the profile's
+    expect(polled).toEqual(expect.arrayContaining(locations));
+    // And the guard stops a plan that reads the locations
+    const peeking = planReads(locations, {
+      barriers: [],
+      gap: racePack.gap,
+      limits: USB2SNES_LIMITS,
+    });
+    expect(() =>
+      assertRaceSafe(
+        peeking,
+        MAP_RANDO_RACE_PROFILE,
+        racePack.permittedBytes,
+        racePack.forbiddenBytes,
+      ),
+    ).toThrow(RaceViolationError);
     // And the guard stops a plan that does read it
     const reading = planReads(clock, {
       barriers: [],
