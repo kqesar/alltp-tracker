@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.46.0](https://github.com/kqesar/alltp-tracker/compare/v2.45.0...v2.46.0) (2026-10-26)
+
+
+### ✨ Features
+
+* **sm:** read which locations the player collected ([7334dd3](https://github.com/kqesar/alltp-tracker/commit/7334dd3d407af83f8e68ea0a07ba8cef15c4ed28))
+* **web:** review a Super Metroid run place by place ([772eab1](https://github.com/kqesar/alltp-tracker/commit/772eab1639fe9a57cc97abbff2fa5601e1141f7c))
+
+
+### 🐛 Bug Fixes
+
+* **autotrack:** forget forbidden ranges when Race Mode comes on ([fc49d36](https://github.com/kqesar/alltp-tracker/commit/fc49d36636b91de9ccc47c64d91f79ea445fceb2))
+* **web:** word the review banner for each game's board ([99168b0](https://github.com/kqesar/alltp-tracker/commit/99168b03a5ed10cd9d3c636db6df26a8772703b3))
+
+
+### 📚 Documentation
+
+* **sm:** describe the place-by-place review ([5d665aa](https://github.com/kqesar/alltp-tracker/commit/5d665aa299ee173911ea018d60e5c919e055a984))
+
 ## [2.45.0](https://github.com/kqesar/alltp-tracker/compare/v2.44.0...v2.45.0) (2026-10-26)
 
 
