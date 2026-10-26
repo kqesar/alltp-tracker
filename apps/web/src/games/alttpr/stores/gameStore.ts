@@ -27,11 +27,7 @@ import {
   SMALL_KEYS_MAX,
   smallKeysMax,
 } from "@/games/alttpr/logic/settings";
-import {
-  type Stamp,
-  stampOf,
-  stampTimeline,
-} from "@/games/alttpr/logic/timeline";
+import { stampTimeline } from "@/games/alttpr/logic/timeline";
 import {
   GAME,
   itemRange,
@@ -45,6 +41,7 @@ import {
 } from "@/games/alttpr/stores/persistence";
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
 import { HISTORY_LIMIT } from "@/games/runHistory";
+import { type Stamp, stampOf } from "@/games/stamp";
 import {
   alignTimer,
   finishTimer,

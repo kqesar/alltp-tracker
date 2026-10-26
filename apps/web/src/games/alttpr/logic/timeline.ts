@@ -5,16 +5,7 @@
 import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
 import { type ItemState, itemsMax } from "@/games/alttpr/data/items";
 import { PACK_ITEMS } from "@/games/alttpr/logic/packItems";
-import { isIdle, type RunTimer, timerMs } from "@/utils/runTimer";
-
-/**
- * When something was found: the instant (epoch milliseconds), for the
- * order, and the run timer's reading then, null before the timer started.
- */
-export interface Stamp {
-  readonly at: number;
-  readonly ms: number | null;
-}
+import type { Stamp } from "@/games/stamp";
 
 /**
  * A run's finds by key: `item:<id>` for an item held or not, `item:<id>:<n>`
@@ -45,12 +36,6 @@ const findsOf = (id: string): "bits" | "levels" | null => {
 /** Each bit set in `value`, as its own value: 3 is 1 and 2. */
 const bitsOf = (value: number): number[] =>
   [1, 2, 4, 8].filter((bit) => (value & bit) !== 0);
-
-/** The stamp of a change at `at`, read off the run timer. */
-export const stampOf = (timer: RunTimer, at: number): Stamp => ({
-  at,
-  ms: isIdle(timer) ? null : timerMs(timer, at),
-});
 
 /**
  * The timeline once a run changes from `before` to `after` at `stamp`: each
@@ -126,14 +111,4 @@ export const isTimelineKey = (key: string): boolean => {
   if (level === undefined) return false;
   if (finds === "bits") return bitsOf(itemsMax[id]).includes(Number(level));
   return Number(level) >= 1 && Number(level) <= itemsMax[id];
-};
-
-const isTime = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value) && value >= 0;
-
-/** Whether a saved value is a stamp. */
-export const isStamp = (value: unknown): value is Stamp => {
-  if (typeof value !== "object" || value === null) return false;
-  const { at, ms } = value as Record<string, unknown>;
-  return isTime(at) && (ms === null || isTime(ms));
 };

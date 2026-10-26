@@ -5,13 +5,19 @@
 // (autotracking) lands as news: no step of the history, and the timer is
 // kept apart from the history, so undoing a find never rewinds the clock.
 
-import { OBJECTIVES, SM_ITEMS, type SmItemId } from "@alltp/pack-sm";
+import {
+  LOCATION_KEYS,
+  OBJECTIVES,
+  SM_ITEMS,
+  type SmItemId,
+} from "@alltp/pack-sm";
 import * as z from "zod/mini";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { type History, historyActions } from "@/games/runHistory";
 import { createSaveFormat } from "@/games/saveFormat";
 import { SEED_ID } from "@/games/seedId";
+import { stampSchema } from "@/games/stamp";
 import {
   freshTimerSlice,
   restoreTimerSlice,
@@ -40,6 +46,10 @@ const MAX = new Map(SM_ITEMS.map((item) => [item.id, item.max]));
  */
 const progressSchema = z.object({
   done: z.array(z.enum(OBJECTIVE_IDS)),
+  // When each location was found, by the log's `room_id:node_id`: only what
+  // autotracking read (Map Rando's collected bits, never a Nothing location),
+  // and none for a run tracked by hand; a save without it is empty
+  found: z._default(z.partialRecord(z.enum(LOCATION_KEYS), stampSchema), {}),
   items: z.partialRecord(z.enum(ITEM_IDS), z.number().check(z.int(), z.gte(0))),
   objectives: z.array(z.enum(OBJECTIVE_IDS)),
   // The seed's name, null while unknown; a save without it is null
@@ -53,6 +63,7 @@ export type SmProgress = z.infer<typeof progressSchema>;
 /** A fresh run: nothing held, the four bosses to beat, the game's settings. */
 export const freshProgress = (): SmProgress => ({
   done: [],
+  found: {},
   items: Object.fromEntries(ITEM_IDS.map((id) => [id, 0])) as Record<
     SmItemId,
     number
@@ -129,6 +140,7 @@ const withinPools = (progress: SmProgress) =>
 
 const progressOf = (state: SmProgress): SmProgress => ({
   done: state.done,
+  found: state.found,
   items: state.items,
   objectives: state.objectives,
   seed: state.seed,

@@ -133,6 +133,92 @@ describe("a review", () => {
     );
   });
 
+  it("says in words that a run tracked by hand cannot tell the place", async () => {
+    await open();
+    expect(screen.getByTestId("review-mode")).toHaveTextContent(
+      "not which location you took them from",
+    );
+    expect(screen.getByTestId("review-row-46:2")).toHaveAttribute(
+      "data-state",
+      "missed",
+    );
+    expect(screen.queryByTestId("review-place-46:3")).toHaveTextContent(
+      /^Power Bomb: Brinstar Reserve Tank Room: Middle Visible Item \(step \d+\)$/,
+    );
+  });
+
+  describe("of a run that found its locations", () => {
+    const FOUND = {
+      // A tank's, before the timer started
+      "17:2": { at: T0, ms: null },
+      // The Morph Ball's place, 12 minutes 34 seconds in
+      "46:2": { at: T0 + 754_000, ms: 754_000 },
+    };
+
+    it("goes place by place, with the time each was found", async () => {
+      // The board holds the Morph Ball, whose place was found
+      act(() => {
+        store().step("morph", 1);
+        useSmStore.setState({ found: FOUND });
+      });
+      await open();
+      expect(screen.getByTestId("review-mode")).toHaveTextContent(
+        "Autotracking saw which places you took",
+      );
+      expect(screen.getByTestId("review-mode")).not.toHaveTextContent(
+        "not which location",
+      );
+      expect(await screen.findByTestId("review-caption")).toHaveTextContent(
+        "16 items: 1 found, 15 not found.",
+      );
+      const morph = screen.getByTestId("review-row-46:2");
+      expect(morph).toHaveAttribute("data-state", "found");
+      expect(morph).toHaveTextContent("Found at 12:34");
+      expect(morph.querySelector("time")).toHaveAttribute("datetime", "PT754S");
+      const speed = screen.getByTestId("review-row-46:4");
+      expect(speed).toHaveAttribute("data-state", "missed");
+      expect(speed).toHaveTextContent("Not found");
+      expect(speed).not.toHaveTextContent("Held");
+    });
+
+    it("goes by count, and says why, when the board holds an item whose place was not seen", async () => {
+      act(() => {
+        store().step("varia", 1);
+        useSmStore.setState({ found: FOUND });
+      });
+      await open();
+      expect(screen.getByTestId("review-mode")).toHaveTextContent(
+        "Autotracking did not see every find",
+      );
+      expect(screen.getByTestId("review-mode")).toHaveTextContent(
+        "not which location",
+      );
+      expect(await screen.findByTestId("review-caption")).toHaveTextContent(
+        "16 items: 1 held, 15 never found.",
+      );
+      expect(screen.getByTestId("review-row-46:2")).toHaveTextContent(
+        "Never found",
+      );
+      expect(screen.queryByTestId("review-place-17:2")).toHaveTextContent(
+        /^Energy Tank: 230 Missile Room: Item \(step \d+\)$/,
+      );
+    });
+
+    it("tells each tank and pack apart, found or not", async () => {
+      act(() => useSmStore.setState({ found: FOUND }));
+      await open();
+      expect(screen.getByTestId("review-pack-energyTank")).toHaveTextContent(
+        "Energy Tanks: 1 of 14 found, 13 never found",
+      );
+      const tank = screen.getByTestId("review-place-17:2");
+      expect(tank).toHaveAttribute("data-state", "found");
+      expect(tank).toHaveTextContent(/Energy Tank.*— Found$/);
+      const bomb = screen.getByTestId("review-place-46:3");
+      expect(bomb).toHaveAttribute("data-state", "missed");
+      expect(bomb).toHaveTextContent(/— Not found$/);
+    });
+  });
+
   it("tells each grid cell where the seed put its item", async () => {
     act(() => store().setOption("wallJump", true));
     await open();

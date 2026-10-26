@@ -6,11 +6,16 @@
 // tracker's run into their terms.
 //
 // The board tracks items, not Map Rando's locations (the rooms are
-// reconnected, there is no map and no logic), and its run keeps no timeline.
-// So the review says what the spoiler says, where each item was, in the
-// playthrough's order, and sets it against the item counts the board holds:
-// which items the run never got. It cannot say which location was found, nor
-// when.
+// reconnected, there is no map and no logic). Two ways to set the log against
+// the run:
+// - By location, when autotracking read the game's collected bits (the run's
+//   `found`, each location with the time it was seen): each place the seed
+//   put an item is found, with its time, or not. The Nothing locations are
+//   not in `found` (the decoder masks them) and not in the log's placements.
+// - By count, for a run tracked by hand: the spoiler says where each item
+//   was, in the playthrough's order, set against the item counts the board
+//   holds: which items the run never got. It cannot say which location was
+//   found, nor when.
 
 import {
   type MapRandoLog,
@@ -22,12 +27,20 @@ import {
 } from "@alltp/pack-sm";
 import { type Binding, bindSeed, type Placement } from "@alltp/spoiler";
 import { freshProgress, type SmProgress } from "@/games/sm/store";
+import type { Stamp } from "@/games/stamp";
 
 /** The run, as far as a review reads it. */
 export type ReviewedRun = Pick<
   SmProgress,
-  "items" | "objectives" | "seed" | "splitSpeed" | "wallJump"
+  "found" | "items" | "objectives" | "seed" | "splitSpeed" | "wallJump"
 >;
+
+/** A run's locations found, by the log's `room_id:node_id`. */
+export type Found = SmProgress["found"];
+
+/** Whether the run says which locations it found. */
+export const hasLocations = (found: Found): boolean =>
+  Object.keys(found).length > 0;
 
 const sameSet = (a: readonly string[], b: readonly string[]): boolean =>
   a.length === b.length && a.every((id) => b.includes(id));
@@ -84,13 +97,19 @@ const byStep = (a: Placement, b: Placement): number =>
 export type MajorRow = {
   readonly id: SmItemId;
   readonly placement: Placement;
-  /** The board holds it. */
+  /**
+   * By count, the board holds the item; by location, the run found this
+   * place.
+   */
   readonly held: boolean;
+  /** By location, when it was found (`ms` null before the timer started). */
+  readonly stamp: Stamp | null;
 };
 
 /** A pack or tank type: how many the board holds of those the seed placed. */
 export type CountedRow = {
   readonly id: SmItemId;
+  /** By count, the board's count; by location, the places the run found. */
   readonly held: number;
   readonly placed: number;
   /** Where the seed put them, in the playthrough's order. */
@@ -98,6 +117,17 @@ export type CountedRow = {
 };
 
 export type ReviewComparison = {
+  /** How the run was set against the log: by each place, or by item counts. */
+  readonly mode: "locations" | "counts";
+  /**
+   * The run names some locations found, yet the review goes by count: the
+   * board holds a single item whose place is not among them, so autotracking
+   * did not see every find (Race Mode on for part of the run, an item marked
+   * by hand).
+   */
+  readonly partial: boolean;
+  /** By location, when each place was found, by its key. */
+  readonly stamps: Found;
   /** The seed's single items: those never held first, then in the playthrough's order. */
   readonly majors: readonly MajorRow[];
   /** Packs and tanks, in the pack's order. */
@@ -111,21 +141,46 @@ export type ReviewComparison = {
 };
 
 /**
- * The board's items set against what the seed placed.
+ * The board's items set against what the seed placed: place by place when the
+ * run says which locations it found and they agree with the board (every
+ * single item it holds has its place among them), else by the item counts it
+ * holds: a partial `found` would call a place missed that the player took.
  * @param log - The Map Rando log
  * @param items - The run's counts, by item id
+ * @param found - The run's locations found, with their times
  */
 export const compareItems = (
   log: MapRandoLog,
   items: Readonly<Partial<Record<SmItemId, number>>>,
+  found: Found = {},
 ): ReviewComparison => {
+  const stampOf = (placement: Placement): Stamp | null =>
+    (found as Readonly<Record<string, Stamp | undefined>>)[
+      placement.location
+    ] ?? null;
+  const named = hasLocations(found);
+  const byLocation =
+    named &&
+    log.placements.every(
+      ({ item, ...placement }) =>
+        item === null ||
+        MAX.get(item) !== 1 ||
+        (items[item as SmItemId] ?? 0) === 0 ||
+        stampOf({ ...placement, item }) !== null,
+    );
   const majors: MajorRow[] = [];
   const places = new Map<SmItemId, Placement[]>();
   for (const placement of log.placements) {
     const id = placement.item as SmItemId | null;
     if (id === null) continue;
     if (MAX.get(id) === 1) {
-      majors.push({ held: (items[id] ?? 0) > 0, id, placement });
+      const stamp = byLocation ? stampOf(placement) : null;
+      majors.push({
+        held: byLocation ? stamp !== null : (items[id] ?? 0) > 0,
+        id,
+        placement,
+        stamp,
+      });
     } else {
       places.set(id, [...(places.get(id) ?? []), placement]);
     }
@@ -139,7 +194,9 @@ export const compareItems = (
     const where = places.get(id);
     if (where === undefined) continue;
     counted.push({
-      held: items[id] ?? 0,
+      held: byLocation
+        ? where.filter((placement) => stampOf(placement) !== null).length
+        : (items[id] ?? 0),
       id,
       placed: where.length,
       places: [...where].sort(byStep),
@@ -148,6 +205,9 @@ export const compareItems = (
   return {
     counted,
     majors,
+    mode: byLocation ? "locations" : "counts",
+    partial: named && !byLocation,
+    stamps: byLocation ? found : {},
     summary: {
       majors: majors.length,
       neverFound: majors.filter(({ held }) => !held).length,

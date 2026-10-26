@@ -6,7 +6,8 @@
 
 import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
 import { items as freshItems, itemsMax } from "@/games/alttpr/data/items";
-import { isTimelineKey, type Stamp } from "@/games/alttpr/logic/timeline";
+import { isTimelineKey } from "@/games/alttpr/logic/timeline";
+import type { Stamp } from "@/games/stamp";
 import {
   BitReader,
   BitWriter,

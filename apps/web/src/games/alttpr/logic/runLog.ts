@@ -4,7 +4,8 @@
 import { itemLabels, TOGGLE_ITEMS } from "@/games/alttpr/data/items";
 import { dungeonName } from "@/games/alttpr/logic/settings";
 import { locationName } from "@/games/alttpr/logic/solution";
-import type { Stamp, Timeline } from "@/games/alttpr/logic/timeline";
+import type { Timeline } from "@/games/alttpr/logic/timeline";
+import type { Stamp } from "@/games/stamp";
 
 /** One find of the timeline, as the Run tab lists it. */
 export interface Find {

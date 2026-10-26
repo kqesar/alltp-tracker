@@ -32,13 +32,10 @@ import {
 } from "@/games/alttpr/data/presets";
 import type { TrickPrefs } from "@/games/alttpr/data/tricks";
 import { counterMax, SMALL_KEYS_MAX } from "@/games/alttpr/logic/settings";
-import {
-  isStamp,
-  isTimelineKey,
-  type Timeline,
-} from "@/games/alttpr/logic/timeline";
+import { isTimelineKey, type Timeline } from "@/games/alttpr/logic/timeline";
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
 import { isSeedId } from "@/games/seedId";
+import { isStamp } from "@/games/stamp";
 import type { RunTimer, TimerClock } from "@/utils/runTimer";
 
 /**

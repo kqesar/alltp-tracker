@@ -4,12 +4,14 @@
 import {
   type ClockReading,
   decodeBeforePlay,
+  decodeCollected,
   decodeGameClock,
   decodeGoal,
   decodeInPlay,
   decodeItems,
   decodeObjectives,
   decodeSeed,
+  type LocationKey,
   type MemoryView,
   type ObjectiveReading,
   type SeedReading,
@@ -29,6 +31,12 @@ export type SmReading = {
   readonly clock: ClockReading | Unsettled;
   /** Mother Brain is dead and Samus is in the ship. */
   readonly goal: boolean | Unsettled;
+  /**
+   * The item locations collected (the Nothing ones left out by the decoder).
+   * Never read in Race Mode (the pack's race profile): then, like before it
+   * is read, not known.
+   */
+  readonly collected: ReadonlySet<LocationKey> | Unsettled;
   /** A game is in play: the items held are the run's. */
   readonly inPlay: boolean | Unsettled;
   readonly items: Readonly<Record<SmItemId, number>> | Unsettled;
@@ -46,6 +54,7 @@ export const readSm = (memory: MemoryView, at: number): SmReading => ({
   at,
   beforePlay: decodeBeforePlay(memory),
   clock: decodeGameClock(memory),
+  collected: decodeCollected(memory),
   goal: decodeGoal(memory),
   inPlay: decodeInPlay(memory),
   items: decodeItems(memory),
