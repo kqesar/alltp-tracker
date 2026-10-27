@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { viewOf, writeMapRando } from "../../test/sm-rom";
 import { SM_ITEMS } from "../items";
 import { LOCATION_KEYS, LOCATIONS } from "../locations";
+import { isBossKill, OBJECTIVES } from "../objectives";
 import {
   clockStraddled,
   decodeBeforePlay,
@@ -184,6 +185,45 @@ describe("decodeObjectives", () => {
       ["sporeSpawn", false],
       ["metroidRoom2", true],
       ["pitRoom", false],
+    ]);
+  });
+
+  it("tells only a boss kill in Race Mode, the rest the player's", () => {
+    // The one rule found for Map Rando races permits "items and boss kills"
+    const done = [
+      "phantoon",
+      "sporeSpawn",
+      "bombTorizo",
+      "bowlingStatue",
+      "metroidRoom2",
+      "pitRoom",
+    ];
+    const objectives = decodeObjectives(game({ done, objectives: done }), true);
+    expect(
+      typeof objectives === "string"
+        ? objectives
+        : objectives.map(({ done, objective }) => [objective.id, done]),
+    ).toEqual([
+      ["phantoon", true],
+      ["sporeSpawn", true],
+      ["bombTorizo", true],
+      ["bowlingStatue", "race-mode"],
+      ["metroidRoom2", "race-mode"],
+      ["pitRoom", "race-mode"],
+    ]);
+  });
+
+  it("calls a boss kill what the game's boss flags hold, and nothing else", () => {
+    expect(OBJECTIVES.filter(isBossKill).map(({ id }) => id)).toEqual([
+      "kraid",
+      "phantoon",
+      "draygon",
+      "ridley",
+      "sporeSpawn",
+      "crocomire",
+      "botwoon",
+      "goldenTorizo",
+      "bombTorizo",
     ]);
   });
 

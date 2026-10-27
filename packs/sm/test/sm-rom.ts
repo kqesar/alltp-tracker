@@ -134,7 +134,7 @@ export const writeMapRando = (
   word(memory, at("equipment", 0x7e_09cc), maxSupers);
   word(memory, at("equipment", 0x7e_09d0), maxPowerBombs);
   word(memory, at("equipment", 0x7e_09d4), maxReserve);
-  word(memory, at("equipment", 0x7e_09ec), disabledTanks);
+  word(memory, at("disabled-tanks", 0x7e_09ec), disabledTanks);
   for (const id of done) {
     const objective = OBJECTIVES.find((o) => o.id === id);
     if (objective === undefined) throw new RangeError(`No objective "${id}"`);

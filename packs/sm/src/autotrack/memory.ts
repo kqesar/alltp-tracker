@@ -154,16 +154,26 @@ export const MEMORY_RANGES = [
   }),
   // Items equipped and collected ($09A2, $09A4), beams ($09A6, $09A8),
   // energy and its maximum ($09C2, $09C4), missiles, supers and power bombs
-  // and theirs ($09C6-$09D0), the reserves' maximum and energy ($09D4,
-  // $09D6) (new_game.asm:85-120), and the energy tanks the player disabled
-  // ($09EC, constants.asm; disableable_etanks.asm:564-569).
+  // and theirs ($09C6-$09D0) and the reserves' maximum ($09D4)
+  // (new_game.asm:85-120). It stops there: the game's own in-game time
+  // follows ($09DA-$09E1), which Race Mode never reads (race-profile.ts).
   range({
     at: 0x7e_09a2,
     category: "items",
     everyMs: ITEMS_MS,
     id: "equipment",
-    size: 0x4c,
+    size: 0x34,
     source: "new_game.asm:85-120",
+  }),
+  // The energy tanks the player disabled from the pause menu (constants.asm;
+  // disableable_etanks.asm:564-569): held all the same.
+  range({
+    at: 0x7e_09ec,
+    category: "items",
+    everyMs: ITEMS_MS,
+    id: "disabled-tanks",
+    size: 2,
+    source: "disableable_etanks.asm:564-569",
   }),
   // The RTA clock's frames not yet flushed to SRAM, 0 to 254 (!nmi_counter,
   // constants.asm; stats.asm, inc_skipcount): the clock is the two parts'
