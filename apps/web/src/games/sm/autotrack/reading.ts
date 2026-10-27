@@ -4,6 +4,7 @@
 import {
   type ClockReading,
   decodeBeforePlay,
+  decodeBossKills,
   decodeCollected,
   decodeGameClock,
   decodeGoal,
@@ -23,10 +24,16 @@ export type SmReading = {
   /** When memory was read, in ms since the epoch. */
   readonly at: number;
   /**
-   * Race Mode was on: the clock and the locations were not read, and only
-   * the objectives done by a boss kill were told.
+   * Race Mode was on: of the objectives, only the boss flags were read
+   * (`bossKills`), and neither the seed's settings, the clock nor the
+   * locations.
    */
   readonly race: boolean;
+  /**
+   * The objectives a boss kill completes that the game says done, whatever
+   * the seed asks for: what Race Mode reads of the objectives.
+   */
+  readonly bossKills: readonly string[] | Unsettled;
   /** The game is before play (title, menus, file select, loading a game). */
   readonly beforePlay: boolean | Unsettled;
   /**
@@ -46,8 +53,8 @@ export type SmReading = {
   readonly inPlay: boolean | Unsettled;
   readonly items: Readonly<Record<SmItemId, number>> | Unsettled;
   /**
-   * The seed's objectives in the pause screen's order, each done or not, or
-   * "race-mode" for one that is no boss kill, in Race Mode.
+   * The seed's objectives in the pause screen's order, each done or not.
+   * Never read in Race Mode: the player sets them.
    */
   readonly objectives: readonly ObjectiveReading[] | Unsettled;
   readonly seed: SeedReading | Unsettled;
@@ -57,8 +64,8 @@ export type SmReading = {
  * Decode a snapshot.
  * @param memory - The session's snapshot
  * @param at - When it was read
- * @param race - Whether Race Mode is on: of the objectives, only a boss kill
- * is told
+ * @param race - Whether Race Mode was on as the session read it (which ranges
+ * it read follows from it)
  */
 export const readSm = (
   memory: MemoryView,
@@ -67,12 +74,13 @@ export const readSm = (
 ): SmReading => ({
   at,
   beforePlay: decodeBeforePlay(memory),
+  bossKills: decodeBossKills(memory),
   clock: decodeGameClock(memory),
   collected: decodeCollected(memory),
   goal: decodeGoal(memory),
   inPlay: decodeInPlay(memory),
   items: decodeItems(memory),
-  objectives: decodeObjectives(memory, race),
+  objectives: decodeObjectives(memory),
   race,
   seed: decodeSeed(memory),
 });

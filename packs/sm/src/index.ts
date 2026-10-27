@@ -3,6 +3,7 @@ export {
   type ClockReading,
   clockStraddled,
   decodeBeforePlay,
+  decodeBossKills,
   decodeCollected,
   decodeGameClock,
   decodeGameState,

@@ -67,14 +67,20 @@ describe("MEMORY_RANGES", () => {
   const overlaps = (a: ByteRange, b: ByteRange) =>
     a.address < b.address + b.size && b.address < a.address + a.size;
 
-  it("permits all it reads for the board, and forbids the RTA clock and the locations", () => {
+  it("permits the items and the boss kills, and what reading them needs, alone", () => {
     const forbidden = MEMORY_RANGES.filter(
       (range) => !MAP_RANDO_RACE_PROFILE.categories[range.category]?.permitted,
     ).map((range) => `${range.id}:${range.category}`);
     expect(forbidden).toEqual([
+      // The seed's objectives and settings: the player's in a race
+      "objective-count:objectives",
+      "objective-flags:objectives",
       "nothing-mask:locations",
+      "seed:seed",
       "rta-saved:game-time",
       "rta-pending:game-time",
+      // The escape, the statues used, the rooms cleared
+      "events:events",
       "collected:locations",
     ]);
     for (const category of new Set(MEMORY_RANGES.map((r) => r.category))) {
@@ -112,6 +118,14 @@ describe("MEMORY_RANGES", () => {
         expect(clock.some((range) => overlaps(range, piece))).toBe(false);
         expect(locations.some((range) => overlaps(range, piece))).toBe(false);
         expect(overlaps(igt, piece)).toBe(false);
+        for (const id of [
+          "objective-count",
+          "objective-flags",
+          "seed",
+          "events",
+        ] as const) {
+          expect(overlaps(MEMORY_RANGE[id], piece), id).toBe(false);
+        }
       }
     }
     // The ranges are polled outside a race, so the exclusion is the profile's

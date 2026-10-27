@@ -7,21 +7,22 @@
 //   player marked more: the game never takes back a find.
 // - The seed's objectives are the ROM's: its table says which the seed asks
 //   for. An objective the game says done is done; one it does not say done
-//   stays as the player left it.
-// - The seed's name is recorded as the run's `seed`.
+//   stays as the player left it. In Race Mode (on by default: Map Rando's ROM
+//   has no race flag) the table is not read: the player sets the objectives,
+//   and the game marks done those of them a boss kill completes.
+// - The seed's name is recorded as the run's `seed` (outside Race Mode).
 // - The items the seed adds (the Wall Jump Boots, the split Speed Booster)
-//   follow its settings.
+//   follow its settings (outside Race Mode; the player's in it).
 // - A location the game says collected is added to the run's `found` with
 //   the run timer's reading and the instant it was seen, and never taken
 //   back, as an item is not. The decoder leaves the Nothing locations out,
 //   and Race Mode never reads the bits, so a run tracked in Race Mode keeps
-//   none (Map Rando's ROM has no race flag: the player turns Race Mode on for
-//   a race, and Auto leaves it off).
+//   none.
 //
-// The run timer follows the game too, whether or not a game is in play: the
-// player's "Start and stop with the game" starts it on the first reading in
-// play after one before play and stops it at the goal, and "Game time" sets
-// it on Map Rando's RTA clock (timer.ts).
+// The run timer follows the game too, outside Race Mode, whether or not a game
+// is in play: the player's "Start and stop with the game" starts it on the
+// first reading in play after one before play and stops it at the goal, and
+// "Game time" sets it on Map Rando's RTA clock (timer.ts).
 
 import {
   type ClockReading,
@@ -49,13 +50,29 @@ type View = {
 
 const NO_LOCATIONS: ReadonlySet<LocationKey> = new Set();
 
-const viewOf = (reading: SmReading): View => ({
-  done:
-    typeof reading.objectives === "string"
+/**
+ * The objectives the game says done. In Race Mode, which reads neither the
+ * seed's objectives nor the events, the boss kills among those the player
+ * set (`objectives`, the run's).
+ */
+const doneOf = (
+  reading: SmReading,
+  objectives: readonly string[],
+): readonly string[] => {
+  if (reading.race) {
+    return typeof reading.bossKills === "string"
       ? []
-      : reading.objectives
-          .filter(({ done }) => done === true)
-          .map(({ objective }) => objective.id),
+      : reading.bossKills.filter((id) => objectives.includes(id));
+  }
+  return typeof reading.objectives === "string"
+    ? []
+    : reading.objectives
+        .filter(({ done }) => done)
+        .map(({ objective }) => objective.id);
+};
+
+const viewOf = (reading: SmReading, objectives: readonly string[]): View => ({
+  done: doneOf(reading, objectives),
   found:
     typeof reading.collected === "string" ? NO_LOCATIONS : reading.collected,
   items: typeof reading.items === "string" ? {} : reading.items,
@@ -142,7 +159,7 @@ export const createSmFollower = () => {
         useSmStore,
         typeof reading.seed === "string" ? null : reading.seed.name,
       );
-      const now = viewOf(reading);
+      const now = viewOf(reading, useSmStore.getState().objectives);
       const before = shown;
       shown = now;
       const itemNews = Object.entries(now.items).filter(
