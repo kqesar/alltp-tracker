@@ -28,7 +28,7 @@ export default defineConfig({
         branches: 92,
         functions: 98,
         lines: 98,
-        statements: 97,
+        statements: 98,
       },
     },
     // Listing the projects by path keeps agent worktrees under .claude out.
