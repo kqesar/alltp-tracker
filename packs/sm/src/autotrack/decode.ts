@@ -5,7 +5,12 @@
 
 import { SM_ITEMS, type SmItemId } from "../items";
 import { LOCATIONS, type LocationKey } from "../locations";
-import { isBossKill, type Objective, objectiveByFlag } from "../objectives";
+import {
+  isBossKill,
+  OBJECTIVES,
+  type Objective,
+  objectiveByFlag,
+} from "../objectives";
 import {
   MAP_PRESETS,
   OBJECTIVE_PRESETS,
@@ -170,14 +175,17 @@ export function decodeCollected(
   return found;
 }
 
-/**
- * One of the seed's objectives, and whether it is done; "race-mode" for one
- * that is no boss kill, in Race Mode (`decodeObjectives`).
- */
+/** One of the seed's objectives, and whether it is done. */
 export interface ObjectiveReading {
   readonly objective: Objective;
-  readonly done: boolean | "race-mode";
+  readonly done: boolean;
 }
+
+/** The word at an objective's flag, from the range that holds it. */
+const flagWord = (memory: MemoryView, address: number): number | undefined => {
+  const id = address >= 0x7e_d828 ? "boss-flags" : "events";
+  return reader(memory, id)?.word(address);
+};
 
 /** The most objectives the ROM's table holds (patch.rs:3683-3684). */
 const MAX_OBJECTIVES = 20;
@@ -186,20 +194,17 @@ const MAX_OBJECTIVES = 20;
  * The seed's objectives, in the pause screen's order, each done once its
  * flag is set: the count the ROM keeps (its high bit the fast pause menu,
  * patch.rs:3574-3584), then each objective's flag address and mask
- * (patch.rs:3683-3684). A flag the pack does not know is left out. In Race
- * Mode only a boss kill is told (`isBossKill`): the one rule Map Rando's
- * races state for autotracking permits "items and boss kills"
- * (race-profile.ts), so a statue used, a room of pirates cleared or the
- * metroids of a room killed are "race-mode", the player's to mark.
+ * (patch.rs:3683-3684). A flag the pack does not know is left out. Race Mode
+ * reads neither the table nor the events: not known then.
  */
 export function decodeObjectives(
   memory: MemoryView,
-  race = false,
 ): readonly ObjectiveReading[] | Unsettled {
   const count = reader(memory, "objective-count");
   const flags = reader(memory, "objective-flags");
-  const events = reader(memory, "events");
-  if (!count || !flags || !events) return "not-read";
+  if (!count || !flags || !memory.has("events") || !memory.has("boss-flags")) {
+    return "not-read";
+  }
   const n = Math.min(count.word(0x82_fffc) & 0x7fff, MAX_OBJECTIVES);
   const objectives: ObjectiveReading[] = [];
   for (let i = 0; i < n; i++) {
@@ -207,14 +212,29 @@ export function decodeObjectives(
     const mask = flags.word(0x8f_ebe8 + 2 * i);
     const objective = objectiveByFlag(address, mask);
     if (objective === undefined) continue;
-    if (race && !isBossKill(objective)) {
-      objectives.push({ done: "race-mode", objective });
-      continue;
-    }
-    const word = events.word(objective.flag.address);
+    const word = flagWord(memory, objective.flag.address) ?? 0;
     objectives.push({ done: (word & objective.flag.mask) !== 0, objective });
   }
   return objectives;
+}
+
+/**
+ * The objectives a boss kill completes that the game's boss flags say done,
+ * by id, whatever the seed asks for: what Race Mode reads of the objectives
+ * (`isBossKill`; the one rule found for Map Rando races permits autotracking
+ * "items and boss kills", race-profile.ts). The player says which the seed
+ * asks for.
+ */
+export function decodeBossKills(
+  memory: MemoryView,
+): readonly string[] | Unsettled {
+  const flags = reader(memory, "boss-flags");
+  if (!flags) return "not-read";
+  return OBJECTIVES.filter(
+    (objective) =>
+      isBossKill(objective) &&
+      (flags.word(objective.flag.address) & objective.flag.mask) !== 0,
+  ).map(({ id }) => id);
 }
 
 /** The seed's identity and settings, from its ROM. */

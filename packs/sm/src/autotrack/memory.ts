@@ -187,16 +187,27 @@ export const MEMORY_RANGES = [
     size: 1,
     source: "constants.asm (!nmi_counter), stats.asm",
   }),
-  // Event flags ($D821-$D823) and boss flags by area ($D828-$D82F), where
-  // every objective's flag lies (new_game.asm:93-98, 134; patch.rs:
-  // 3596-3681).
+  // Event flags ($D821-$D823): the escape (the goal) and the objectives a
+  // statue used or a room cleared completes (new_game.asm:134; patch.rs:
+  // 3619-3681). Category `events`, never read in Race Mode.
   range({
     at: 0x7e_d820,
-    category: "objectives",
+    category: "events",
     everyMs: ITEMS_MS,
     id: "events",
-    size: 0x10,
-    source: "patch.rs:3596-3681",
+    size: 8,
+    source: "patch.rs:3619-3681",
+  }),
+  // Boss flags by area ($D828-$D82F): a boss or a miniboss beaten, Bomb
+  // Torizo included (new_game.asm:93-98; patch.rs:3596-3618, 3635). One
+  // cadence with the events, beside them.
+  range({
+    at: 0x7e_d828,
+    category: "boss-kills",
+    everyMs: ITEMS_MS,
+    id: "boss-flags",
+    size: 8,
+    source: "patch.rs:3596-3618, 3635",
   }),
   // The locations collected: one bit per item location, 155 of them, the
   // bit of each in locations.ts (item_count.asm:126-136 sums them, minus the

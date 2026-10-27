@@ -138,9 +138,9 @@ export const writeMapRando = (
   for (const id of done) {
     const objective = OBJECTIVES.find((o) => o.id === id);
     if (objective === undefined) throw new RangeError(`No objective "${id}"`);
-    memory[at("events", objective.flag.address)] |= objective.flag.mask & 0xff;
-    memory[at("events", objective.flag.address) + 1] |=
-      objective.flag.mask >> 8;
+    const range = objective.flag.address >= 0x7e_d828 ? "boss-flags" : "events";
+    memory[at(range, objective.flag.address)] |= objective.flag.mask & 0xff;
+    memory[at(range, objective.flag.address) + 1] |= objective.flag.mask >> 8;
   }
   if (escaping) memory[at("events", 0x7e_d821)] |= 0x40;
   // The locations: the Nothing mask in ROM, copied into the collected bits at

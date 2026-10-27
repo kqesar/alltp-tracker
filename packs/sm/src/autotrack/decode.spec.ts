@@ -7,6 +7,7 @@ import { isBossKill, OBJECTIVES } from "../objectives";
 import {
   clockStraddled,
   decodeBeforePlay,
+  decodeBossKills,
   decodeCollected,
   decodeGameClock,
   decodeGameState,
@@ -188,29 +189,19 @@ describe("decodeObjectives", () => {
     ]);
   });
 
-  it("tells only a boss kill in Race Mode, the rest the player's", () => {
-    // The one rule found for Map Rando races permits "items and boss kills"
-    const done = [
-      "phantoon",
-      "sporeSpawn",
-      "bombTorizo",
-      "bowlingStatue",
-      "metroidRoom2",
-      "pitRoom",
-    ];
-    const objectives = decodeObjectives(game({ done, objectives: done }), true);
-    expect(
-      typeof objectives === "string"
-        ? objectives
-        : objectives.map(({ done, objective }) => [objective.id, done]),
-    ).toEqual([
-      ["phantoon", true],
-      ["sporeSpawn", true],
-      ["bombTorizo", true],
-      ["bowlingStatue", "race-mode"],
-      ["metroidRoom2", "race-mode"],
-      ["pitRoom", "race-mode"],
-    ]);
+  it("is not known without the table or either flag range: Race Mode's case", () => {
+    const memory = writeMapRando(image(), {
+      done: ["kraid"],
+      objectives: ["kraid"],
+    });
+    for (const id of [
+      "objective-count",
+      "objective-flags",
+      "events",
+      "boss-flags",
+    ] as const) {
+      expect(decodeObjectives(viewOf(memory, [id])), id).toBe("not-read");
+    }
   });
 
   it("calls a boss kill what the game's boss flags hold, and nothing else", () => {
@@ -233,6 +224,29 @@ describe("decodeObjectives", () => {
     memory[(count?.address ?? 0) + 1] |= 0x80;
     expect(decodeObjectives(viewOf(memory))).toHaveLength(1);
     expect(decodeObjectives(game({ objectives: [] }))).toEqual([]);
+  });
+});
+
+describe("decodeBossKills", () => {
+  it("names the objectives a boss kill completes, the seed's or not", () => {
+    // The one rule found for Map Rando races permits "items and boss kills":
+    // Race Mode reads these alone, the player saying which the seed asks for
+    const kills = decodeBossKills(
+      viewOf(
+        writeMapRando(image(), {
+          done: ["ridley", "botwoon", "bombTorizo", "metroidRoom1", "pitRoom"],
+          objectives: [],
+        }),
+        ["events", "objective-count", "objective-flags", "seed"],
+      ),
+    );
+    expect(kills).toEqual(["ridley", "botwoon", "bombTorizo"]);
+  });
+
+  it("is not known before the boss flags are read", () => {
+    expect(
+      decodeBossKills(viewOf(writeMapRando(image()), ["boss-flags"])),
+    ).toBe("not-read");
   });
 });
 

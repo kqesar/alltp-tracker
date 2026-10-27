@@ -21,6 +21,18 @@ const reading = (game: MapRandoGame = {}) =>
   readSm(viewOf(writeMapRando(new Uint8Array(0x100_0000), game)), 0);
 
 const MORPH = 0x0004;
+
+/** What a race leaves unread (the pack's race profile). */
+const RACE_UNREAD = [
+  "objective-count",
+  "objective-flags",
+  "seed",
+  "events",
+  "collected",
+  "nothing-mask",
+  "rta-saved",
+  "rta-pending",
+] satisfies MemoryRangeId[];
 const BOMBS = 0x1000;
 const WAVE = 0x0001;
 
@@ -61,38 +73,38 @@ describe("the Super Metroid run following the game", () => {
     expect(run().future).toHaveLength(1);
   });
 
-  it("lays only the objectives a boss kill does in Race Mode", () => {
-    // Map Rando's one rule on autotracking permits "items and boss kills"
-    const follower = createSmFollower();
-    const objectives = ["kraid", "crocomire", "acidChozoStatue", "plasmaRoom"];
-    follower.read(
+  it("lays in Race Mode the boss kills among the player's objectives, and no setting", () => {
+    // Map Rando's one rule on autotracking permits "items and boss kills": a
+    // race reads neither the seed's objectives and settings nor the events
+    const raced = (at: number) =>
       readSm(
         viewOf(
           writeMapRando(new Uint8Array(0x100_0000), {
-            done: objectives,
-            objectives,
+            done: ["kraid", "crocomire", "ridley", "plasmaRoom"],
+            items: MORPH,
+            objectives: ["kraid", "botwoon"],
+            wallJump: true,
           }),
+          RACE_UNREAD,
         ),
-        0,
+        at,
         true,
-      ),
-    );
-    expect(run().objectives).toEqual(objectives);
-    expect(run().done).toEqual(["kraid", "crocomire"]);
+      );
+    run().setObjectives(["kraid", "crocomire", "plasmaRoom"]);
+    const follower = createSmFollower();
+    follower.read(raced(0));
+    expect(run()).toMatchObject({
+      // Ridley fell but is no objective of the player's; a room cleared is
+      // no boss kill
+      done: ["kraid", "crocomire"],
+      // The player's objectives stay; the seed's were never read
+      objectives: ["kraid", "crocomire", "plasmaRoom"],
+      wallJump: false,
+    });
+    expect(run().items.morph).toBe(1);
     // The player marks the rest, and the game never takes a mark back
     run().toggleDone("plasmaRoom");
-    follower.read(
-      readSm(
-        viewOf(
-          writeMapRando(new Uint8Array(0x100_0000), {
-            done: objectives,
-            objectives,
-          }),
-        ),
-        1,
-        true,
-      ),
-    );
+    follower.read(raced(1));
     expect(run().done).toEqual(["kraid", "crocomire", "plasmaRoom"]);
   });
 

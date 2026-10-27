@@ -22,6 +22,8 @@ const readingOf = (name: string, race = false) =>
         name,
         objectives: ["ridley", "botwoon", "pitRoom"],
       }),
+      // What a race leaves unread (the pack's race profile)
+      race ? ["objective-count", "objective-flags", "seed", "events"] : [],
     ),
     0,
     race,
@@ -96,7 +98,7 @@ describe("Super Metroid's autotracking control", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("names no seed in Race Mode, and leaves the objectives but bosses to the player", async () => {
+  it("says in Race Mode the bosses beaten alone: no seed, no objective, no setting", async () => {
     act(() =>
       useSmAutotrackStore.setState({ reading: readingOf("Zebes42", true) }),
     );
@@ -104,15 +106,16 @@ describe("Super Metroid's autotracking control", () => {
     const dialog = await openDialog();
     const readout = within(dialog).getByTestId("sm-readout");
     expect(readout).toHaveTextContent(
-      "A Map Rando seed, in Race Mode: the objectives other than bosses stay yours to mark.",
+      "A Map Rando seed, in Race Mode: the tracker reads the items you hold and the bosses you beat. Set the seed's objectives, the Wall Jump Boots and the split Speed Booster in Mode.",
     );
     expect(readout).not.toHaveTextContent("Zebes42");
     expect(within(readout).queryByRole("link")).toBeNull();
+    expect(within(readout).queryByTestId("sm-readout-settings")).toBeNull();
     expect(
       within(readout)
         .getAllByRole("listitem")
         .map((item) => item.textContent),
-    ).toEqual(["Ridley, done", "Botwoon", "Pit Room, not read in Race Mode"]);
+    ).toEqual(["Ridley"]);
     // racetime.gg's rules say nothing of autotracking: the dialog never
     // claims they allow it
     expect(dialog).not.toHaveTextContent("Races allow autotracking");
