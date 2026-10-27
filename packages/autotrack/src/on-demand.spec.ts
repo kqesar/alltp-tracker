@@ -189,6 +189,24 @@ describe("Poller.request", () => {
     expect(await again).toHaveProperty("value");
   });
 
+  it("drops a read whose signal aborts while it waits, never sending it", async () => {
+    const { poller, transport } = setup();
+    await poller.tick();
+    const controller = new AbortController();
+    const asked = settle(poller.request({ ...ASK, signal: controller.signal }));
+    controller.abort();
+    expect(await asked).toEqual({
+      error: expect.objectContaining({ name: "AbortError" }),
+    });
+    transport.pieces.length = 0;
+    await poller.tick();
+    expect(transport.pieces.some(([a]) => a === bus(0x11_b800))).toBe(false);
+    // One aborted before it is asked for is refused at once
+    expect(
+      await settle(poller.request({ ...ASK, signal: controller.signal })),
+    ).toEqual({ error: expect.objectContaining({ name: "AbortError" }) });
+  });
+
   it("rejects what waits when the poller closes", async () => {
     const { poller } = setup();
     await poller.tick();

@@ -499,6 +499,9 @@ time, and resolves with each range's bytes in order.
 - A failed read rejects that request only: the tick goes on, nothing is skipped,
   and the next request tries again. Requests waiting when the connection ends,
   or asked while not connected, are rejected.
+- A request may carry a `signal` (an `AbortSignal`): aborted while it waits for
+  its tick, it is rejected with an `AbortError` and never sent. The dark room's
+  picture drops its reads so when its style turns to Plan.
 - What a request reads is the host's to hold: the session keeps nothing.
   ALttPR's dark room picture reads the ROM's tile sheets and Link's graphics so
   (`packs/alttpr`, "The dark room in the game's graphics").
