@@ -273,6 +273,59 @@ describe("createArtLoader", () => {
     expect((outcome.art.link?.pixels[0] ?? 0) >>> 0).toBe(0xffff_0000);
     expect(io.calls[1]).toContainEqual({ address: bus(0x10_8000), size: 0x40 });
   });
+
+  /** One 8 x 8 sprite of tile 5, the first WRAM upload's ($0AC0 → $7E:9040). */
+  const swordRoom = (memory: Uint8Array, colour: number, sword: number) => {
+    // The sword's graphics, a tile of one colour, where the game unpacked it
+    memory.set(
+      Array.from({ length: 0x20 }, (_, i) =>
+        i < 16
+          ? i % 2 === 0
+            ? colour & 1
+              ? 0xff
+              : 0
+            : colour & 2
+              ? 0xff
+              : 0
+          : 0,
+      ),
+      bus(0x7e_9040),
+    );
+    const held = ranges();
+    const sprites = held["dark-room-art-sprites"] as Uint8Array;
+    sprites.set([0x40, 0x90], 0x0ac0 - 0x800);
+    sprites.set([40, 50, 5, 7 << 1], 0);
+    const palette = held["dark-room-art-palette"] as Uint8Array;
+    palette.set([0x1f, 0x00], 2 * (128 + 7 * 16 + 1)); // red
+    palette.set([0x00, 0x7c], 2 * (128 + 7 * 16 + 2)); // blue
+    held["equipment-c"] = new Uint8Array(12);
+    held["equipment-c"][9] = sword;
+    return held;
+  };
+
+  it("draws a sword found in the room, not the one Link held before", async () => {
+    const { memory } = console();
+    const loader = createArtLoader(reader(memory).read);
+    const before = await loader.update(new View(swordRoom(memory, 1, 1)));
+    if (before?.status !== "ready") throw new Error("not drawn");
+    expect((before.art.link?.pixels[0] ?? 0) >>> 0).toBe(0xff00_00ff);
+    // The game unpacks the new sword over the old one, same place
+    const after = await loader.update(new View(swordRoom(memory, 2, 2)));
+    if (after?.status !== "ready") throw new Error("not drawn");
+    expect((after.art.link?.pixels[0] ?? 0) >>> 0).toBe(0xffff_0000);
+  });
+
+  it("forgets Link's graphics with the ROM", async () => {
+    const { memory } = console();
+    const io = reader(memory);
+    const loader = createArtLoader(io.read);
+    await loader.update(new View(swordRoom(memory, 1, 1)));
+    const held = swordRoom(memory, 2, 1);
+    held["rom-header"] = new Uint8Array(32).fill(0x42);
+    const after = await loader.update(new View(held));
+    if (after?.status !== "ready") throw new Error("not drawn");
+    expect((after.art.link?.pixels[0] ?? 0) >>> 0).toBe(0xffff_0000);
+  });
 });
 
 // Every range the loader reads is one of the memory map's

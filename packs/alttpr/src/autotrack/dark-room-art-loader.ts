@@ -80,6 +80,9 @@ const NEEDED = [
 /** Where `dark-room-art-view` ($7E:00A2) holds the sprite bank and BG2's scroll. */
 const VIEW = { bank: 0xbc - 0xa2, scrollX: 0xe2 - 0xa2, scrollY: 0xe8 - 0xa2 };
 
+/** The sword's and the shield's levels in `equipment-c` ($7E:F359-F35A). */
+const ARMS = 0xf359 - 0xf350;
+
 /** How long a failed read keeps the loader from asking again. */
 export const ART_RETRY_MS = 5000;
 
@@ -108,7 +111,8 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
   /** Sheets of this ROM that do not unpack: never asked for again. */
   const badSheets = new Set<number>();
   const romPieces = new Map<string, Uint8Array>();
-  let wramRoom = -1;
+  /** The room, sword and shield Link's WRAM pieces were read for. */
+  let wramKey = "";
   const wramPieces = new Map<string, Uint8Array>();
   let animated: { key: string; bytes: Uint8Array } | null = null;
   let failedAt = Number.NEGATIVE_INFINITY;
@@ -174,19 +178,30 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
         backgroundWanted(view) && view.has("dark-room-art-bg1")
           ? copy("dark-room-art-bg1")
           : null;
+      const arms = view.has("equipment-c")
+        ? hexOf(view.bytes("equipment-c").subarray(ARMS, ARMS + 2))
+        : "";
 
+      // Another ROM: nothing of the last one holds
       if (header !== romKey) {
         romKey = header;
         tables = null;
         sheets.clear();
         badSheets.clear();
         romPieces.clear();
+        wramPieces.clear();
+        wramKey = "";
+        animated = null;
         drawn = null;
       }
       if (tables === "bad") return fail("other-base-patch");
       if (now() - failedAt < ART_RETRY_MS) return fail("read-failed");
-      if (room !== wramRoom) {
-        wramRoom = room;
+      // Link's WRAM graphics are unpacked into the same buffers whatever the
+      // sword and shield (load_gfx.c:485-499): a new one in the room is new
+      // bytes at the same place
+      const pieceKey = `${room}:${arms}`;
+      if (pieceKey !== wramKey) {
+        wramKey = pieceKey;
         wramPieces.clear();
       }
 
