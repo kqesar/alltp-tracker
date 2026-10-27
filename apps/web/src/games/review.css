@@ -111,6 +111,7 @@
 
 .review-result {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--spacing-md);
   min-width: 0;
 }
