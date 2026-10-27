@@ -496,6 +496,22 @@ describe("definePack and gated ranges", () => {
   });
 });
 
+describe("a switch turned off and on between two ticks", () => {
+  it("reads its alone range again on the next tick, not at its cadence", async () => {
+    const h = setup();
+    h.memory[GATE] = 1;
+    await h.tick();
+    await h.tick();
+    expect(h.poller.has("map")).toBe(true);
+    const before = h.touched(BIG, SIZE);
+    h.poller.setOptIn("assist", false);
+    h.poller.setOptIn("assist", true);
+    await h.tick();
+    expect(h.poller.has("map")).toBe(true);
+    expect(h.touched(BIG, SIZE)).toBe(before + 1);
+  });
+});
+
 describe("an alone range refreshed on another alone range", () => {
   /** A second big span, listed first, refreshed on the map's change. */
   const picture = {

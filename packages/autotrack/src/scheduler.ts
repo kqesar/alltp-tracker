@@ -401,6 +401,11 @@ export class Poller implements MemorySnapshot {
     if (on === ((this.optMask & bit) !== 0)) return;
     this.optMask = on ? this.optMask | bit : this.optMask & ~bit;
     if (on) return;
+    // Its gates count as shut: on again, even before a tick, they open anew
+    // and an alone range is read at once rather than at its cadence
+    this.pack.gated.forEach(({ index }, k) => {
+      if (this.pack.optInOf[index] === slot) this.gateWasOpen[k] = false;
+    });
     this.pack.optInOf.forEach((of, index) => {
       if (of !== slot || this.seen[index] === 0) return;
       this.seen[index] = 0;
