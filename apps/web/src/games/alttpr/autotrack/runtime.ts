@@ -66,7 +66,10 @@ export type RuntimeSink = {
 const isDarkRoomRange = (id: string) => id.startsWith("dark-room-");
 /** The ranges its picture is drawn from (`dark-room-art-…`), or that redraw it. */
 const isArtRange = (id: string) =>
-  id.startsWith("dark-room-art-") || id === "dark-room-room";
+  id.startsWith("dark-room-art-") ||
+  id === "dark-room-room" ||
+  // The sword and the shield: a new one is new graphics for Link
+  id === "equipment-c";
 /** The equipment holding the Lamp, which the room's gate reads. */
 const LAMP_RANGE = "equipment-b";
 
