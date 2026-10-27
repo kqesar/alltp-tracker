@@ -75,18 +75,31 @@ const harness = ({
 
 const store = () => useDarkRoomStore.getState();
 
+/** What the fake 2D context saw: images made, the last one put. */
+const canvas: { made: number; last: ImageData | null } = {
+  last: null,
+  made: 0,
+};
+
 beforeEach(() => {
   localStorage.clear();
   // jsdom draws no canvas: a 2D context that keeps what it was given
+  canvas.made = 0;
+  canvas.last = null;
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
     () =>
       ({
-        createImageData: (width: number, height: number) => ({
-          data: new Uint8ClampedArray(width * height * 4),
-          height,
-          width,
-        }),
-        putImageData: vi.fn(),
+        createImageData: (width: number, height: number) => {
+          canvas.made++;
+          return {
+            data: new Uint8ClampedArray(width * height * 4),
+            height,
+            width,
+          };
+        },
+        putImageData: (image: ImageData) => {
+          canvas.last = image;
+        },
       }) as unknown as CanvasRenderingContext2D,
   );
   act(() => {
@@ -139,6 +152,46 @@ describe("the dark room in the game's graphics", () => {
     expect(within(panel).getAllByRole("status")).toHaveLength(1);
     // Link drawn as the game draws him: no marker of ours, no arrow
     expect(within(panel).queryByTestId("dark-room-facing")).toBeNull();
+  });
+
+  it("makes the image once, and puts back only what Link covered as he moves", async () => {
+    const h = harness();
+    await act(() => connectAutotrack());
+    await h.settle();
+    render(<MapPanel />);
+    await screen.findByTestId("dark-room-art");
+    expect(canvas.made).toBe(1);
+    const { picture, sprite } = store();
+    if (picture === null || sprite === null) throw new Error("not drawn");
+    const art = screen.getByTestId("dark-room-art") as HTMLCanvasElement;
+    // The canvas holds the room's box, in pixels
+    const bounds = store().map?.bounds;
+    if (bounds === undefined) throw new Error("no room");
+    const boxX = bounds.x0 * 8;
+    const boxY = bounds.y0 * 8;
+    // Link steps a tile right: his sprite moves, the room stays
+    const moved = { ...sprite, pixels: sprite.pixels.slice(), x: sprite.x + 8 };
+    act(() =>
+      store().showArt({
+        art: {
+          background: picture.background,
+          link: moved,
+          room: picture.room,
+          version: picture.version,
+        },
+        status: "ready",
+      }),
+    );
+    expect(canvas.made).toBe(1);
+    // Where he stood is the room again
+    const out = new Uint32Array(canvas.last?.data.buffer ?? new ArrayBuffer(0));
+    const at = (x: number, y: number) =>
+      out[(y - boxY) * art.width + (x - boxX)] >>> 0;
+    expect(at(sprite.x, sprite.y)).toBe(
+      picture.background[sprite.y * 512 + sprite.x] >>> 0,
+    );
+    // And where he stands now is him
+    expect(at(moved.x, moved.y)).toBe(moved.pixels[0] >>> 0);
   });
 
   it("scales the picture again when the window changes height only", async () => {

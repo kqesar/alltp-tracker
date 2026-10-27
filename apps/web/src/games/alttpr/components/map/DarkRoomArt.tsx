@@ -66,10 +66,42 @@ const useRoom = () => {
   return { ref, space };
 };
 
+/** What a canvas holds: the room's pixels and the sprite laid on them. */
+interface Painted {
+  readonly picture: DarkRoomPicture;
+  readonly box: ReturnType<typeof boxOf>;
+  readonly image: ImageData;
+  readonly out: Uint32Array;
+  sprite: SpriteImage | null;
+}
+
+const painted = new WeakMap<HTMLCanvasElement, Painted>();
+
+/** Copies the room's pixels into `out` over a rectangle of the box. */
+const restore = (
+  { box, out, picture }: Painted,
+  x0: number,
+  y0: number,
+  width: number,
+  height: number,
+) => {
+  const left = Math.max(0, x0);
+  const right = Math.min(box.width, x0 + width);
+  if (right <= left) return;
+  for (let y = Math.max(0, y0); y < Math.min(box.height, y0 + height); y++) {
+    const from = (box.y + y) * ROOM_PX + box.x;
+    out.set(
+      picture.background.subarray(from + left, from + right),
+      y * box.width + left,
+    );
+  }
+};
+
 /**
  * The room's pixels inside its box, then Link's sprite laid over them where
- * it draws, into the canvas: one `putImageData` per change, a few hundred
- * thousand pixels at most.
+ * it draws, into the canvas. The image is made once per picture and box: a
+ * new sprite puts back only the pixels the last one covered, so Link walking
+ * allocates nothing.
  */
 const draw = (
   canvas: HTMLCanvasElement,
@@ -79,12 +111,23 @@ const draw = (
 ) => {
   const context = canvas.getContext("2d");
   if (context === null) return;
-  const image = context.createImageData(box.width, box.height);
-  const out = new Uint32Array(image.data.buffer);
-  for (let y = 0; y < box.height; y++) {
-    const from = (box.y + y) * ROOM_PX + box.x;
-    out.set(picture.background.subarray(from, from + box.width), y * box.width);
+  let held = painted.get(canvas);
+  if (held === undefined || held.picture !== picture || held.box !== box) {
+    const image = context.createImageData(box.width, box.height);
+    held = {
+      box,
+      image,
+      out: new Uint32Array(image.data.buffer),
+      picture,
+      sprite: null,
+    };
+    painted.set(canvas, held);
+    restore(held, 0, 0, box.width, box.height);
+  } else if (held.sprite !== null) {
+    const last = held.sprite;
+    restore(held, last.x - box.x, last.y - box.y, last.width, last.height);
   }
+  const { out } = held;
   if (sprite !== null) {
     for (let y = 0; y < sprite.height; y++) {
       const py = sprite.y + y - box.y;
@@ -97,7 +140,8 @@ const draw = (
       }
     }
   }
-  context.putImageData(image, 0, 0);
+  held.sprite = sprite;
+  context.putImageData(held.image, 0, 0);
 };
 
 /** Unopened chests ringed, the nearest one called out: they must be seen first. */
