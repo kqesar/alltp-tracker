@@ -74,6 +74,18 @@ describe("findsOf", () => {
       "item:hookshot",
     ]);
   });
+
+  it("lists the items alone in Race Mode, so no place is tied to an item", () => {
+    const timeline: Timeline = {
+      "check:kings-tomb": at(90),
+      "item:boss0:2": at(60),
+      "item:hammer": at(90),
+    };
+    expect(findsOf(timeline, true).map(({ key }) => key)).toEqual([
+      "item:hammer",
+      "item:boss0:2",
+    ]);
+  });
 });
 
 describe("splitsOf", () => {

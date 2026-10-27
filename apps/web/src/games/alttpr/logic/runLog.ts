@@ -92,9 +92,16 @@ export const findIcon = (key: string): string | null => {
   return level === undefined ? `${id}.png` : `${id}${level}.png`;
 };
 
-/** The timeline's finds, newest first. */
-export const findsOf = (timeline: Timeline): Find[] =>
+/**
+ * The timeline's finds, newest first. In Race Mode, the items alone: the race
+ * rules (v2.0) allow "displaying a timeline of acquired items" but forbid
+ * associating an acquired item with a specific location, which a checked
+ * location's time beside an item's would do. The stamps stay in the run, and
+ * show again once Race Mode is off.
+ */
+export const findsOf = (timeline: Timeline, race = false): Find[] =>
   Object.entries(timeline)
+    .filter(([key]) => !race || !key.startsWith("check:"))
     .map(([key, stamp]) => ({ key, stamp }))
     .sort((a, b) => b.stamp.at - a.stamp.at || a.key.localeCompare(b.key));
 
