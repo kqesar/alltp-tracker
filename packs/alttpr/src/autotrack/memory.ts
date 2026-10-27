@@ -23,8 +23,12 @@
 // copies it to SRAM on save (sram.asm:7-9). The tracker reads the WRAM copy,
 // which is live and lies in Race Mode's window $7E:F000-$7E:F500.
 
-import { bus, type RangeSpec } from "@alltp/autotrack";
-import { darkRoomHeld, darkRoomWanted } from "./dark-room-gate";
+import { bus, type RangeSpec, type RangeView } from "@alltp/autotrack";
+import {
+  backgroundWanted,
+  darkRoomHeld,
+  darkRoomWanted,
+} from "./dark-room-gate";
 import tables from "./entrance-tables.json" with { type: "json" };
 import { SEED_SETTINGS_RANGES, SETTINGS_MS } from "./seed-settings";
 
@@ -215,6 +219,20 @@ export const MAP_MS = 1000;
 export const DARK_ROOM_SWITCH = "dark-room";
 
 /**
+ * The switch for the room drawn in the game's own graphics
+ * (`dark-room-art.ts`): on only while the dark room map is on and its style
+ * is "Game art". Its ranges are the `dark-room-art-…` ones.
+ */
+export const DARK_ROOM_ART_SWITCH = "dark-room-art";
+
+/**
+ * How often the room's tilemaps are read again when nothing said they
+ * changed: they are read on entry and whenever the collision map, the objects
+ * or the doors change, which is when the game patches them.
+ */
+export const ART_MS = 5000;
+
+/**
  * A range of the dark room map read while the room is wanted: four times a
  * second, in one request beside the others of its kind, and held over a menu
  * or a text box (`darkRoomHeld`).
@@ -224,16 +242,61 @@ function assist<const Id extends string>(spec: {
   readonly at: number;
   readonly size: number;
   readonly source: SourceRef;
+  readonly optIn?: string;
 }): AlttprRange & { readonly id: Id } {
   return {
     ...range({
+      optIn: DARK_ROOM_SWITCH,
       ...spec,
       category: "navigation",
       everyMs: NAV_MS,
-      optIn: DARK_ROOM_SWITCH,
     }),
     keep: darkRoomHeld,
     when: darkRoomWanted,
+  };
+}
+
+/** A range of the room's picture: read as `assist` does, behind its own switch. */
+function art<const Id extends string>(spec: {
+  readonly id: Id;
+  readonly at: number;
+  readonly size: number;
+  readonly source: SourceRef;
+}): AlttprRange & { readonly id: Id } {
+  return assist({ ...spec, optIn: DARK_ROOM_ART_SWITCH });
+}
+
+/**
+ * A tilemap of the room's picture, 8 KiB read alone: on entry, when the
+ * collision map, the objects or the doors change (the game patches the
+ * tilemap with them: dungeon.c:5704-5826, misc.c:470-512), and every
+ * `ART_MS`.
+ */
+function tilemap<const Id extends string>(spec: {
+  readonly id: Id;
+  readonly at: number;
+  readonly source: SourceRef;
+  readonly when: (view: RangeView) => boolean;
+}): AlttprRange & { readonly id: Id } {
+  return {
+    ...range({
+      at: spec.at,
+      category: "navigation",
+      everyMs: ART_MS,
+      id: spec.id,
+      optIn: DARK_ROOM_ART_SWITCH,
+      size: 0x2000,
+      source: spec.source,
+    }),
+    alone: true,
+    keep: darkRoomHeld,
+    refreshOn: [
+      "dark-room-room",
+      "dark-room-map",
+      "dark-room-objects",
+      "dark-room-doors",
+    ],
+    when: spec.when,
   };
 }
 
@@ -389,12 +452,35 @@ export const MEMORY_RANGES = [
     size: 1,
     source: "zelda3:src/variables.h:14",
   }),
+  // The main and sub screens' layers (TM_copy, TS_copy): bit 0 of the main
+  // screen's says whether BG1 is drawn (dungeon.c:6762-6772).
+  art({
+    at: 0x7e_001c,
+    id: "dark-room-art-screens",
+    size: 2,
+    source: "zelda3:src/variables.h:15-16",
+  }),
   // Link's Y and X, absolute in the dungeon's grid (& $1FF inside the room).
   assist({
     at: 0x7e_0020,
     id: "dark-room-link",
     size: 4,
     source: "zelda3:src/variables.h:19-20",
+  }),
+  // The way Link faces: 0 up, 2 down, 4 left, 6 right.
+  assist({
+    at: 0x7e_002f,
+    id: "dark-room-facing",
+    size: 1,
+    source: "zelda3:src/variables.h:31",
+  }),
+  // The sword's charge while B is held: 48 and up is a spin attack ready
+  // (player.c:2197-2242).
+  assist({
+    at: 0x7e_0079,
+    id: "dark-room-charge",
+    size: 1,
+    source: "zelda3:src/variables.h:91",
   }),
   // OverworldIndex: the overworld screen Link is on (a Dark World screen is
   // OR $40), kept in the dungeons too, as the screen he came from. Read
@@ -424,6 +510,22 @@ export const MEMORY_RANGES = [
     id: "dark-room-room",
     size: 2,
     source: "zelda3:src/variables.h:112",
+  }),
+  // The ROM bank Link's body graphics are copied from each frame: $10, or the
+  // base patch's own when a custom player sprite is loaded (z3 ram.asm:120,
+  // spriteswap.asm).
+  art({
+    at: 0x7e_00bc,
+    id: "dark-room-art-sprite-bank",
+    size: 1,
+    source: "z3:ram.asm:120",
+  }),
+  // The scroll registers' copies: BG2's horizontal at $E2, vertical at $E8.
+  art({
+    at: 0x7e_00e0,
+    id: "dark-room-art-scroll",
+    size: 12,
+    source: "zelda3:src/variables.h:134-139",
   }),
   // The layer Link is on: 1 selects the second attribute table.
   assist({
@@ -465,12 +567,45 @@ export const MEMORY_RANGES = [
     size: 0x20,
     source: "zelda3:src/dungeon.c:4020-4048",
   }),
+  // The OAM buffer the NMI copies to the PPU each frame (nmi.c:218): 128
+  // sprites of 4 bytes, then their high bits, 2 a sprite.
+  art({
+    at: 0x7e_0800,
+    id: "dark-room-art-oam",
+    size: 0x220,
+    source: "zelda3:src/nmi.c:218",
+  }),
+  // The room's blocksets ($0AA1 main, $0AA2 aux: variables.h:599-601), then
+  // the sources of what the NMI copies to sprite VRAM each frame: Link's body
+  // from ROM, his sword, shield and items from WRAM ($0AC0-$0AF9,
+  // variables.h:620-645, nmi.c:173-199), with the animated tiles' at $0ADC.
+  art({
+    at: 0x7e_0aa1,
+    id: "dark-room-art-gfx",
+    size: 0x59,
+    source: "zelda3:src/variables.h:599-645",
+  }),
   // What each closed door is: its type in the low byte of the slot's word.
   assist({
     at: 0x7e_1980,
     id: "dark-room-doors",
     size: 0x20,
     source: "zelda3:src/variables.h:798",
+  }),
+  // The room's tilemaps, the source the game uploads VRAM from: BG2, and
+  // BG1 only while the main screen draws it (variables.h:926-927,
+  // dungeon.c:2393-2427).
+  tilemap({
+    at: 0x7e_2000,
+    id: "dark-room-art-bg2",
+    source: "zelda3:src/variables.h:926",
+    when: darkRoomWanted,
+  }),
+  tilemap({
+    at: 0x7e_4000,
+    id: "dark-room-art-bg1",
+    source: "zelda3:src/variables.h:927",
+    when: backgroundWanted,
   }),
   // Whether the room is dark by its header (dung_want_lights_out).
   range({
@@ -481,6 +616,15 @@ export const MEMORY_RANGES = [
     optIn: DARK_ROOM_SWITCH,
     size: 1,
     source: "zelda3:src/dungeon.c:3699",
+  }),
+  // The palettes the NMI copies to CGRAM (nmi.c:212): the backgrounds' 128
+  // colours, then the sprites'. A dark room keeps its colours: the darkness
+  // is colour math (load_gfx.c:1658-1697).
+  art({
+    at: 0x7e_c500,
+    id: "dark-room-art-palette",
+    size: 0x200,
+    source: "zelda3:src/variables.h:1055",
   }),
   // Dungeon rooms $00-$E0: every dungeon location's room lies there, the
   // last being Castle Tower's Room 03 ($E0). The boss rooms and the three

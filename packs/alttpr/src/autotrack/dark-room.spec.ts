@@ -71,7 +71,11 @@ describe("the dark room's ranges", () => {
     expect(ids.length).toBeGreaterThan(8);
     for (const range of ids) {
       expect(range.category, range.id).toBe("navigation");
-      expect(range.optIn, range.id).toBe("dark-room");
+      // The picture's ranges wait for their own switch, which the app turns
+      // on only with the map's
+      expect(range.optIn, range.id).toBe(
+        range.id.startsWith("dark-room-art-") ? "dark-room-art" : "dark-room",
+      );
     }
     expect(ALTTPR_RACE_PROFILE.categories.navigation?.permitted).toBe(false);
   });
@@ -153,14 +157,22 @@ describe("the dark room's ranges", () => {
   });
 
   it("are all in each recording, at the map's size and no other", () => {
+    // The picture's ranges hold the game's own tilemaps and palettes: never
+    // recorded. Link's stance came after these two recordings, which decode
+    // without it (no facing, no charge); a recording made since holds it.
+    const stance = ["dark-room-charge", "dark-room-facing"];
     for (const recording of [links, passage]) {
+      const ids = Object.keys(recording.ranges);
       const wanted = [
-        ...MEMORY_RANGES.filter((r) => r.id.startsWith("dark-room-")),
+        ...MEMORY_RANGES.filter(
+          (r) =>
+            r.id.startsWith("dark-room-") &&
+            !r.id.startsWith("dark-room-art-") &&
+            (!stance.includes(r.id) || ids.includes(r.id)),
+        ),
         MEMORY_RANGE["equipment-b"],
       ];
-      expect(Object.keys(recording.ranges).sort()).toEqual(
-        wanted.map((r) => r.id).sort(),
-      );
+      expect(ids.sort()).toEqual(wanted.map((r) => r.id).sort());
       for (const range of wanted) {
         expect(
           hex(recording.ranges[range.id as keyof typeof recording.ranges])
@@ -237,11 +249,37 @@ describe("decodeDarkRoom, over Link's House as the game held it", () => {
     const at = hex(links.ranges["dark-room-link"]);
     const y = at[0] | (at[1] << 8);
     const x = at[2] | (at[3] << 8);
-    expect(reading?.link).toEqual(linkTile(x, y));
+    expect(reading?.link).toMatchObject(linkTile(x, y));
     expect(reading?.link).toEqual({
+      // Recorded before the stance's ranges: neither is known
+      charge: "none",
+      facing: null,
       x: (x & 0x1ff) >> 3,
       y: ((y & 0x1ff) + 8) >> 3,
     });
+  });
+
+  it("reads which way Link faces and how charged his sword is", () => {
+    const view = house();
+    const stance = (facing: number, charge: number) =>
+      decodeDarkRoom(
+        new View({
+          ...Object.fromEntries(
+            Object.keys(links.ranges).map((id) => [id, view.bytes(id)]),
+          ),
+          "dark-room-charge": Uint8Array.of(charge),
+          "dark-room-facing": Uint8Array.of(facing),
+        }),
+        OPTIONS,
+      )?.link;
+    expect(stance(0, 0)).toMatchObject({ charge: "none", facing: "up" });
+    expect(stance(2, 1)).toMatchObject({ charge: "charging", facing: "down" });
+    expect(stance(4, 47)).toMatchObject({ charge: "charging", facing: "left" });
+    expect(stance(6, 48)).toMatchObject({ charge: "charged", facing: "right" });
+    expect(stance(6, 64)).toMatchObject({ charge: "charged" });
+    // A value the game never holds there
+    expect(stance(3, 0)).toMatchObject({ facing: null });
+    expect(stance(8, 0)).toMatchObject({ facing: null });
   });
 
   it("draws the walls, the floor, the pots, the exit, and nothing unknown", () => {
