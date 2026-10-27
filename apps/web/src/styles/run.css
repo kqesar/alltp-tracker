@@ -5,9 +5,11 @@
  * column scrolls; under the grid it grows with the page, as the Checks list
  * does.
  */
+/* Three rows: the summary, the review's line, then the columns, which take
+ * what height is left and scroll in it */
 .run {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: var(--spacing-md);
   min-width: 0;
   height: max(calc(var(--cell) * 7), calc(100dvh - 16rem));
