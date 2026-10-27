@@ -105,6 +105,8 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
   let romKey: string | null = null;
   let tables: ArtTables | null | "bad" = null;
   const sheets = new Map<number, Uint8Array>();
+  /** Sheets of this ROM that do not unpack: never asked for again. */
+  const badSheets = new Set<number>();
   const romPieces = new Map<string, Uint8Array>();
   let wramRoom = -1;
   const wramPieces = new Map<string, Uint8Array>();
@@ -177,6 +179,7 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
         romKey = header;
         tables = null;
         sheets.clear();
+        badSheets.clear();
         romPieces.clear();
         drawn = null;
       }
@@ -194,6 +197,10 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
         const aux = gfx[1];
         const slots = sheetSlots(loaded, main, aux);
         if (slots === null) return fail("unknown-graphics");
+        // A sheet that did not unpack will not unpack better read again
+        if (slots.some((sheet) => badSheets.has(sheet))) {
+          return fail("unknown-graphics");
+        }
 
         // What is missing, asked for in one read: sheets, the animated frame,
         // Link's pieces
@@ -212,12 +219,14 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
           if (sheets.has(sheet)) continue;
           const address = sheetAddress(loaded, sheet);
           if (address === null) {
+            badSheets.add(sheet);
             sheetBad.push(sheet);
             continue;
           }
           ask(address, SHEET_WINDOW, (bytes) => {
             const unpacked = decompress(bytes);
             if (unpacked === null || unpacked.length < SHEET_BYTES) {
+              badSheets.add(sheet);
               sheetBad.push(sheet);
             } else sheets.set(sheet, unpacked);
           });
