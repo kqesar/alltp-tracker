@@ -112,6 +112,12 @@ export const SPRITE_SLACK = 24;
 
 const pak = (address: number) => bus(address);
 
+/** A read the host dropped (an `AbortError`), which is no failure of the device. */
+const isDropped = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  (error as { name?: unknown }).name === "AbortError";
+
 const sameBytes = (a: Uint8Array | null, b: Uint8Array | null) => {
   if (a === null || b === null) return a === b;
   if (a.length !== b.length) return false;
@@ -331,7 +337,9 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
             for (const [k, bytes] of got.entries()) landing[k](bytes);
           }
           roomPause.succeeded();
-        } catch {
+        } catch (error) {
+          // Dropped by the host (the style turned to Plan): no failure
+          if (isDropped(error)) return null;
           roomPause.failed();
           return unavailable(roomPause.gaveUp ? "unreadable" : "read-failed");
         }
@@ -391,7 +399,8 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
             cacheOf(k).set(sources[k] ?? "", bytes);
           }
           linkPause.succeeded();
-        } catch {
+        } catch (error) {
+          if (isDropped(error)) return null;
           linkPause.failed();
         }
       }

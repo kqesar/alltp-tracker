@@ -287,6 +287,28 @@ describe("createArtLoader", () => {
     expect(io.calls).toHaveLength(4);
   });
 
+  it("counts a read the host dropped as no failure", async () => {
+    const { memory } = console();
+    let drop = true;
+    let calls = 0;
+    const loader = createArtLoader(async (asked) => {
+      calls++;
+      if (drop) {
+        const error = new Error("the read was dropped");
+        error.name = "AbortError";
+        throw error;
+      }
+      return asked.map(({ address, size }) =>
+        memory.slice(address, address + size),
+      );
+    });
+    expect(await loader.update(moving(0))).toBeNull();
+    // Back to the picture: read at once, no pause
+    drop = false;
+    expect((await loader.update(moving(1)))?.status).toBe("ready");
+    expect(calls).toBe(4);
+  });
+
   it("keeps the room drawn when only Link's graphics fail to read", async () => {
     const { memory } = console();
     const io = reader(memory);

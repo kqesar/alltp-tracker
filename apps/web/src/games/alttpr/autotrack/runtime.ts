@@ -124,8 +124,15 @@ export const startRuntime = (
   // drawn after the one under way
   // The session's own clock, so a retry runs on the tests' clock too
   const clock = sessionOptions.clock ?? systemClock;
+  // Turned off, the picture's reads still waiting are dropped, never sent
+  let reads = new AbortController();
+  const dropReads = () => {
+    reads.abort();
+    reads = new AbortController();
+  };
   const loader = createArtLoader(
-    (ranges) => session.request({ category: "navigation", ranges }),
+    (ranges) =>
+      session.request({ category: "navigation", ranges, signal: reads.signal }),
     () => clock.now(),
   );
   /** A draw again once a failed read's pause is over, even if nothing moves. */
@@ -247,6 +254,7 @@ export const startRuntime = (
       // Off: its ranges are forgotten by the next poll; the room goes now
       if (!on) {
         shownRoom = false;
+        dropReads();
         sink.darkRoom?.(null);
         sink.darkRoomArt?.(null);
       }
@@ -254,7 +262,10 @@ export const startRuntime = (
     setDarkRoomArt: (on) => {
       artWanted = on;
       session.setOptIn(DARK_ROOM_ART_SWITCH, artOn());
-      if (!on) sink.darkRoomArt?.(null);
+      if (!on) {
+        dropReads();
+        sink.darkRoomArt?.(null);
+      }
     },
     setRaceMode: (setting) => session.setRaceMode(setting),
     stop: () => {

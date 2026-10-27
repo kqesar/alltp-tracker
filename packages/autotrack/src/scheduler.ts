@@ -92,6 +92,21 @@ export interface OnDemandRead {
   readonly category: string;
   /** FX Pak Pro ranges, each inside one memory region. */
   readonly ranges: readonly ByteRange[];
+  /**
+   * Drops the read while it waits for its tick (the host no longer wants it):
+   * it is rejected with an `AbortError` and never sent.
+   */
+  readonly signal?: DropSignal;
+}
+
+/** What `OnDemandRead.signal` needs of an `AbortSignal`. */
+export interface DropSignal {
+  readonly aborted: boolean;
+  addEventListener(
+    type: "abort",
+    listener: () => void,
+    options?: { readonly once?: boolean },
+  ): void;
 }
 
 /** The most bytes one on-demand read may ask for. */
@@ -102,6 +117,7 @@ interface Pending {
   readonly ranges: readonly ByteRange[];
   readonly resolve: (bytes: Uint8Array[]) => void;
   readonly reject: (error: Error) => void;
+  readonly signal: DropSignal | undefined;
 }
 
 const FLAG = 0xffff_ffff;
@@ -145,6 +161,13 @@ function phaseOfProbe(
   assertRaceSafe(plan, pack.profile, pack.permittedBytes, pack.forbiddenBytes);
   return { members: Uint32Array.of(probe), modeBound: false, plan };
 }
+
+/** What a read the host dropped rejects with. */
+const dropped = () => {
+  const error = new Error("the read was dropped");
+  error.name = "AbortError";
+  return error;
+};
 
 const raceRefusal = () =>
   new RaceViolationError("Race Mode: on-demand reads are refused");
@@ -693,12 +716,31 @@ export class Poller implements MemorySnapshot {
       );
     }
     if (this.raceActive()) return Promise.reject(raceRefusal());
+    const { signal } = read;
+    if (signal?.aborted === true) return Promise.reject(dropped());
     const plan = planReads(read.ranges, {
       gap: this.pack.gap,
       limits: this.transport.limits,
     });
     return new Promise((resolve, reject) => {
-      this.pending.push({ plan, ranges: read.ranges, reject, resolve });
+      const entry: Pending = {
+        plan,
+        ranges: read.ranges,
+        reject,
+        resolve,
+        signal,
+      };
+      this.pending.push(entry);
+      signal?.addEventListener(
+        "abort",
+        () => {
+          const at = this.pending.indexOf(entry);
+          if (at < 0) return;
+          this.pending.splice(at, 1);
+          reject(dropped());
+        },
+        { once: true },
+      );
     });
   }
 
@@ -717,7 +759,11 @@ export class Poller implements MemorySnapshot {
     if (!(await this.freshFlag(plans))) return;
     const batch = this.pending;
     this.pending = [];
-    for (const { plan, ranges, reject, resolve } of batch) {
+    for (const { plan, ranges, reject, resolve, signal } of batch) {
+      if (signal?.aborted === true) {
+        reject(dropped());
+        continue;
+      }
       const into = new Uint8Array(plan.size);
       try {
         for (const request of plan.requests) {
