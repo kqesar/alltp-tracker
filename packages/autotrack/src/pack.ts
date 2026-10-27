@@ -444,6 +444,30 @@ export function definePack(source: AutotrackPackSource): AutotrackPack {
     gated.push({ alone: range.alone === true, index, refreshOn });
   });
 
+  // An alone range refreshing on another alone range is read after it, so a
+  // change of that one is seen on the same tick
+  const visiting = new Set<number>();
+  const position = (k: number): number => {
+    if (visiting.has(k)) {
+      fail(id, `range "${ranges[gated[k].index].id}": refreshOn loops`);
+    }
+    visiting.add(k);
+    let after = k;
+    for (const other of gated[k].refreshOn) {
+      const at = gated.findIndex((g) => g.index === other);
+      if (at >= 0 && gated[at].alone) {
+        after = Math.max(after, position(at) + 0.5);
+      }
+    }
+    visiting.delete(k);
+    return after;
+  };
+  const order = gated.map((_, k) => position(k));
+  const sortedGated = gated
+    .map((entry, k) => ({ entry, key: order[k] }))
+    .sort((a, b) => a.key - b.key)
+    .map(({ entry }) => entry);
+
   const gap = source.gap ?? 16;
   if (!Number.isInteger(gap) || gap < 0)
     fail(id, "gap must be a natural number");
@@ -459,7 +483,7 @@ export function definePack(source: AutotrackPackSource): AutotrackPack {
     forbiddenBytes,
     gameCheck,
     gap,
-    gated,
+    gated: sortedGated,
     id,
     indexOf,
     isAlone,

@@ -23,6 +23,13 @@
 // that fails is not the tick's failure: the range is skipped from then on, on
 // this device, and said in `unreadable`.
 //
+// A host may also ask for bytes whose addresses only the game can tell
+// (`request`: a ROM table points at them), with the category they are tracked
+// for. Such a read is casual by construction: its category must be one the
+// race profile forbids, it is served after the tick's gated reads, never while
+// Race Mode is on (a tick that would not have read the race flag reads it
+// first), and one that Race Mode overtakes is refused, never handed over.
+//
 // Plans follow the last mode the probe reported. When the probe reports
 // another one, the tick keeps only the ranges every mode shares, skips the
 // casual phase, and the next tick reads the new layout: a portal crossing in
@@ -34,6 +41,8 @@
 // at its end, in a request of its own, and takes the tick for a switch (the
 // ranges it read count as unread) if the mode is no longer the planned one.
 
+import { hex, pakRegion } from "./address";
+import { DefinitionError, RaceViolationError, TransportError } from "./errors";
 import { ALL_MODES, type AutotrackPack } from "./pack";
 import { type ByteRange, EMPTY_PLAN, planReads, type ReadPlan } from "./plan";
 import { assertRaceSafe } from "./race";
@@ -67,6 +76,30 @@ export interface PollUpdate {
   /** Whether the mode changed on this tick. */
   readonly modeChanged: boolean;
   readonly snapshot: MemorySnapshot;
+}
+
+/**
+ * Bytes asked for at run time (`Poller.request`), at addresses the game
+ * itself tells (a ROM table, a pointer in WRAM), never planned ahead.
+ */
+export interface OnDemandRead {
+  /**
+   * What the bytes are tracked for: a category the race profile forbids, so
+   * Race Mode never serves it.
+   */
+  readonly category: string;
+  /** FX Pak Pro ranges, each inside one memory region. */
+  readonly ranges: readonly ByteRange[];
+}
+
+/** The most bytes one on-demand read may ask for. */
+export const ON_DEMAND_MAX = 0x1_0000;
+
+interface Pending {
+  readonly plan: ReadPlan;
+  readonly ranges: readonly ByteRange[];
+  readonly resolve: (bytes: Uint8Array[]) => void;
+  readonly reject: (error: Error) => void;
 }
 
 const FLAG = 0xffff_ffff;
@@ -110,6 +143,9 @@ function phaseOfProbe(
   assertRaceSafe(plan, pack.profile, pack.permittedBytes, pack.forbiddenBytes);
   return { members: Uint32Array.of(probe), modeBound: false, plan };
 }
+
+const raceRefusal = () =>
+  new RaceViolationError("Race Mode: on-demand reads are refused");
 
 export class Poller implements MemorySnapshot {
   /**
@@ -164,6 +200,11 @@ export class Poller implements MemorySnapshot {
   private racing = false;
   /** Whether the last tick was due for a range that is no assist's. */
   private baseTick = false;
+  /** On-demand reads waiting for a tick's casual phase. */
+  private pending: Pending[] = [];
+  /** Whether the race flag was read on the tick under way. */
+  private flagFresh = false;
+  private readonly romReadable: boolean;
 
   constructor(
     private readonly pack: AutotrackPack,
@@ -180,6 +221,7 @@ export class Poller implements MemorySnapshot {
       readonly onSkip?: (id: string, reason: string) => void;
     },
   ) {
+    this.romReadable = options.romReadable;
     const romOk = (range: ByteRange) =>
       options.romReadable || range.address >= 0xe0_0000;
     let total = 0;
@@ -417,6 +459,7 @@ export class Poller implements MemorySnapshot {
     this.pendingForgotten.length = 0;
     await this.fetch(plans.race);
     this.readControls(plans.race);
+    this.flagFresh = plans.race.plan.size > 0;
     let switched = this.modeIndex !== planned;
     this.scatter(plans.race, switched);
     // Decided after the race phase, on the flag it just read; a new mode
@@ -436,8 +479,10 @@ export class Poller implements MemorySnapshot {
         // what they brought is not laid
         this.scatter(casual, false);
         await this.readGated(set, plans);
+        await this.serveRequests(plans);
       }
     }
+    if (this.raceActive()) this.refuseRequests();
     // A new mode: every mode-bound range holds another stint's bytes, unread
     // until read again in this one
     if (switched) this.forgetModeBound();
@@ -511,12 +556,7 @@ export class Poller implements MemorySnapshot {
         alone && states[k] === 2 && (!wasOpen[k] || due(index)),
     );
     if (!group && !anyAlone) return;
-    if (plans.race.plan.size === 0 && plans.lone.plan.size > 0) {
-      await this.fetch(plans.lone);
-      this.readControls(plans.lone);
-      this.scatter(plans.lone, false);
-      if (this.raceActive()) return;
-    }
+    if (!(await this.freshFlag(plans))) return;
     if (group) {
       const open = new Set(
         gated.filter((_, k) => states[k] === 2).map(({ index }) => index),
@@ -534,6 +574,135 @@ export class Poller implements MemorySnapshot {
       if (this.raceActive()) return;
       this.scatter(phase, false);
     }
+  }
+
+  /**
+   * Reads the race flag on a tick that has not yet (the flag and the probe
+   * alone), before a casual read the tick would not otherwise make.
+   * @returns Whether Race Mode is still off
+   */
+  private async freshFlag(plans: DuePlans): Promise<boolean> {
+    if (!this.flagFresh && plans.lone.plan.size > 0) {
+      await this.fetch(plans.lone);
+      this.readControls(plans.lone);
+      this.scatter(plans.lone, false);
+      this.flagFresh = true;
+    }
+    return !this.raceActive();
+  }
+
+  /**
+   * Asks for bytes at addresses known only at run time: read on a coming tick,
+   * after its gated reads, in requests of their own. Resolves with each
+   * range's bytes, in order. Rejects with a DefinitionError for a category the
+   * profile does not know or permits, an empty range, one across two memory
+   * regions or a read over `ON_DEMAND_MAX`; with a RaceViolationError while
+   * Race Mode is on, or when it comes on before the bytes are handed over;
+   * with a TransportError for ROM the device cannot read, a read that failed
+   * (nothing is skipped: the next ask tries again), or a poller closed.
+   */
+  request(read: OnDemandRead): Promise<Uint8Array[]> {
+    const { profile } = this.pack;
+    const category = profile.categories[read.category];
+    if (category === undefined) {
+      return Promise.reject(
+        new DefinitionError(
+          `on-demand read: unknown category "${read.category}" in ${profile.id}`,
+        ),
+      );
+    }
+    if (category.permitted) {
+      return Promise.reject(
+        new DefinitionError(
+          `on-demand read: category "${read.category}" is race-permitted; on-demand reads are for forbidden ones`,
+        ),
+      );
+    }
+    let total = 0;
+    for (const { address, size } of read.ranges) {
+      const region = pakRegion(address);
+      if (
+        !Number.isInteger(size) ||
+        size < 1 ||
+        region === undefined ||
+        address + size - 1 > region.end
+      ) {
+        return Promise.reject(
+          new DefinitionError(
+            `on-demand read: $${hex(address, 6)}+${size} is not inside one FX Pak Pro memory region`,
+          ),
+        );
+      }
+      if (!this.romReadable && address < 0xe0_0000) {
+        return Promise.reject(
+          new TransportError("device", "read", "this device cannot read ROM"),
+        );
+      }
+      total += size;
+    }
+    if (total > ON_DEMAND_MAX) {
+      return Promise.reject(
+        new DefinitionError(`on-demand read: ${total} bytes asked for at once`),
+      );
+    }
+    if (this.raceActive()) return Promise.reject(raceRefusal());
+    const plan = planReads(read.ranges, {
+      gap: this.pack.gap,
+      limits: this.transport.limits,
+    });
+    return new Promise((resolve, reject) => {
+      this.pending.push({ plan, ranges: read.ranges, reject, resolve });
+    });
+  }
+
+  /** Refuses every on-demand read still waiting: the poller is done. */
+  close(): void {
+    const pending = this.pending;
+    this.pending = [];
+    for (const { reject } of pending) {
+      reject(new TransportError("closed", "read", "the session ended"));
+    }
+  }
+
+  /** Serves the on-demand reads waiting, once the race flag says they may. */
+  private async serveRequests(plans: DuePlans): Promise<void> {
+    if (this.pending.length === 0) return;
+    if (!(await this.freshFlag(plans))) return;
+    const batch = this.pending;
+    this.pending = [];
+    for (const { plan, ranges, reject, resolve } of batch) {
+      const into = new Uint8Array(plan.size);
+      try {
+        for (const request of plan.requests) {
+          await this.transport.read(request, into, request.offset);
+        }
+      } catch (error) {
+        reject(
+          error instanceof Error
+            ? error
+            : new TransportError("protocol", "read", String(error)),
+        );
+        continue;
+      }
+      // Race Mode may have come on while it was in flight
+      if (this.raceActive()) {
+        reject(raceRefusal());
+        continue;
+      }
+      resolve(
+        ranges.map(({ size }, k) =>
+          into.slice(plan.rangeOffsets[k], plan.rangeOffsets[k] + size),
+        ),
+      );
+    }
+  }
+
+  /** Race Mode is on: what waits is refused, never read. */
+  private refuseRequests(): void {
+    if (this.pending.length === 0) return;
+    const pending = this.pending;
+    this.pending = [];
+    for (const { reject } of pending) reject(raceRefusal());
   }
 
   /**

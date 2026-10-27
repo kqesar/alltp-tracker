@@ -467,6 +467,35 @@ Gated ranges are read in the casual phase: the tick that Race Mode holds never
 reaches them, and one that comes on while a read is in flight drops it.
 ALttPR's dark room map uses all of it (`packs/alttpr`, "The dark room map").
 
+An alone range may refresh on another alone range: `definePack` orders them so
+the one refreshed is read after the one it watches, on the same tick, and
+refuses a `refreshOn` that loops.
+
+### On-demand reads
+
+Some bytes have no address a pack can write down: a ROM table points at them,
+or a pointer in WRAM does. `session.request({ category, ranges })` (the
+poller's `request`) reads such ranges, FX Pak Pro addresses computed at run
+time, and resolves with each range's bytes in order.
+
+- **Casual by construction.** The category must be one the race profile
+  forbids (`DefinitionError` otherwise), so no race reads it. A request is
+  served on a coming tick, after its gated reads, never while Race Mode is on:
+  one asked in Race Mode, or before the race flag is first read, is refused
+  (`RaceViolationError`); one waiting when Race Mode comes on is refused
+  unread; one whose bytes come back after it came on is refused, the bytes
+  dropped. A tick that would not have read the race flag reads it first.
+- Each range lies inside one memory region; a request carries at most
+  `ON_DEMAND_MAX` bytes (64 KiB), planned like any read (ROM pieces stop at 8
+  KiB pages, so LoROM data crossing a bank end is one range). ROM a device
+  cannot read is refused (`TransportError`).
+- A failed read rejects that request only: the tick goes on, nothing is skipped,
+  and the next request tries again. Requests waiting when the connection ends,
+  or asked while not connected, are rejected.
+- What a request reads is the host's to hold: the session keeps nothing.
+  ALttPR's dark room picture reads the ROM's tile sheets and Link's graphics so
+  (`packs/alttpr`, "The dark room in the game's graphics").
+
 ### Modes: combined ROMs
 
 SMZ3 holds Super Metroid and ALttP in one ROM: the running game's state is
