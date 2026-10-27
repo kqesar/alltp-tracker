@@ -9,7 +9,10 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
-import { dungeonContext } from "@/games/alttpr/components/map/ReviewWaits";
+import {
+  dungeonContext,
+  ReviewWaits,
+} from "@/games/alttpr/components/map/ReviewWaits";
 import { getPreset } from "@/games/alttpr/data/presets";
 import { compareReview, type ReviewedRun } from "@/games/alttpr/review/adapter";
 import {
@@ -386,6 +389,40 @@ describe("the dungeon sentence", () => {
   it("names the places in logic when the item came into logic, its own among them", () => {
     expect(dungeonContext(wait, sweep)).toBe(
       "Eastern Palace: 3 of 6 places were in logic then (Cannonball Chest, Compass Chest and Map Chest); one held the Hookshot. The whole dungeon was in logic from 1:00:00. You entered it at 30:00.",
+    );
+  });
+
+  it("never says nothing waited over a list of what did", () => {
+    const bigKey: Wait = {
+      ...wait,
+      item: "bigKeyP1",
+      kind: "dungeon",
+      name: "Eastern Palace Big Key",
+    };
+    render(
+      <ReviewWaits
+        comparison={{
+          counted: [],
+          rows: [],
+          summary: {
+            inOrder: 1,
+            late: 0,
+            missed: 0,
+            required: 1,
+            unknown: 0,
+            untimed: 0,
+          },
+        }}
+        sweep={{ ...sweep, waits: [bigKey] }}
+      />,
+    );
+    const waits = screen.getByTestId("review-waits");
+    expect(waits).not.toHaveTextContent("as soon as it was in logic");
+    expect(within(waits).getByRole("listitem")).toHaveTextContent(
+      "Eastern Palace Big Key",
+    );
+    expect(screen.getByTestId("review-tiles")).toHaveTextContent(
+      "Longest wait1 h 10Eastern Palace Big Key",
     );
   });
 
