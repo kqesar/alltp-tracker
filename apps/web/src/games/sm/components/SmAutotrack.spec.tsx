@@ -14,16 +14,17 @@ import { viewOf, writeMapRando } from "../../../../../../packs/sm/test/sm-rom";
 const state = () => useSmAutotrackStore.getState();
 
 /** What the tracker read of a Map Rando seed. */
-const readingOf = (name: string) =>
+const readingOf = (name: string, race = false) =>
   readSm(
     viewOf(
       writeMapRando(new Uint8Array(0x100_0000), {
-        done: ["ridley"],
+        done: ["ridley", "pitRoom"],
         name,
-        objectives: ["ridley", "botwoon"],
+        objectives: ["ridley", "botwoon", "pitRoom"],
       }),
     ),
     0,
+    race,
   );
 
 const openDialog = async () => {
@@ -81,7 +82,7 @@ describe("Super Metroid's autotracking control", () => {
       within(readout)
         .getAllByRole("listitem")
         .map((item) => item.textContent),
-    ).toEqual(["Ridley, done", "Botwoon"]);
+    ).toEqual(["Ridley, done", "Botwoon", "Pit Room, done"]);
     expect(within(dialog).getByTestId("autotrack-headline")).toHaveTextContent(
       "SNI sees no emulator or console",
     );
@@ -93,6 +94,31 @@ describe("Super Metroid's autotracking control", () => {
     expect(state()).toMatchObject({ active: false, connectOnStart: false });
     await userEvent.click(within(dialog).getByRole("button", { name: "Done" }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("names no seed in Race Mode, and leaves the objectives but bosses to the player", async () => {
+    act(() =>
+      useSmAutotrackStore.setState({ reading: readingOf("Zebes42", true) }),
+    );
+    render(<SmAutotrack />);
+    const dialog = await openDialog();
+    const readout = within(dialog).getByTestId("sm-readout");
+    expect(readout).toHaveTextContent(
+      "A Map Rando seed, in Race Mode: the objectives other than bosses stay yours to mark.",
+    );
+    expect(readout).not.toHaveTextContent("Zebes42");
+    expect(within(readout).queryByRole("link")).toBeNull();
+    expect(
+      within(readout)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Ridley, done", "Botwoon", "Pit Room, not read in Race Mode"]);
+    // racetime.gg's rules say nothing of autotracking: the dialog never
+    // claims they allow it
+    expect(dialog).not.toHaveTextContent("Races allow autotracking");
+    expect(dialog).toHaveTextContent(
+      "racetime.gg's Super Metroid Randomizer rules say nothing of autotracking",
+    );
   });
 
   it("says a seed without a name, and nothing before a reading", async () => {

@@ -13,6 +13,7 @@ import {
   disconnectSmAutotrack,
   retrySmAutotrack,
   setSmAutotrackOptions,
+  smAutotrack,
   stopSmAutotrack,
   useSmAutotrackStore,
 } from "@/games/sm/autotrack/store";
@@ -270,6 +271,25 @@ describe("Super Metroid's autotracking and the run timer", () => {
     await h.advance(1000);
     expect(run().timer.startedAt).not.toBeNull();
     expect(run().timer.elapsedMs).toBe(rtaMs(13_000));
+  });
+
+  it("lays only boss kills among the objectives in Race Mode, and all once it is off", async () => {
+    const objectives = ["kraid", "metroidRoom1"];
+    const h = harness({ done: objectives, objectives, state: 0x08 });
+    smAutotrack.setRaceChoice("on");
+    await connectSmAutotrack();
+    await h.advance(0);
+    await h.advance(1000);
+    expect(state().reading?.race).toBe(true);
+    expect(run().objectives).toEqual(objectives);
+    expect(run().done).toEqual(["kraid"]);
+
+    // Back to Auto, Map Rando having no race flag: the reading is decoded
+    // again at once, the session running
+    smAutotrack.setRaceChoice("auto");
+    for (let tick = 0; tick < 12; tick++) await h.advance(1000);
+    expect(state().reading?.race).toBe(false);
+    expect(run().done).toEqual(objectives);
   });
 
   it("reads the clock outside Race Mode", async () => {

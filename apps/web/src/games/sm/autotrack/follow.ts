@@ -54,7 +54,7 @@ const viewOf = (reading: SmReading): View => ({
     typeof reading.objectives === "string"
       ? []
       : reading.objectives
-          .filter(({ done }) => done)
+          .filter(({ done }) => done === true)
           .map(({ objective }) => objective.id),
   found:
     typeof reading.collected === "string" ? NO_LOCATIONS : reading.collected,
