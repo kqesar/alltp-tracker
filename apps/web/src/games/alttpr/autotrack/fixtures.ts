@@ -233,8 +233,13 @@ export const putDarkRoomArt = (memory: Uint8Array) => {
   // piece 0 ($0ACE), both at $10:8000, a tile of colour 1
   memory.set([0x00, 0x80], sprites + (0x0acc - 0x0800));
   memory.set([0x00, 0x80], sprites + (0x0ace - 0x0800));
-  // The sprite bank, $BC
-  memory[MEMORY_RANGE["dark-room-art-view"].address + (0xbc - 0xa2)] = 0x10;
+  // The sprite bank, $BC; BG2's scroll ($E2, $E8) puts the sprite on Link's
+  // footprint in the recorded Link's House (tiles 40-41 by 44-45): its top left at
+  // (100 + 220, 80 + 1 + 263) = (320, 344)
+  const view = MEMORY_RANGE["dark-room-art-view"].address;
+  memory[view + (0xbc - 0xa2)] = 0x10;
+  memory.set([220, 0], view + (0xe2 - 0xa2));
+  memory.set([263 & 0xff, 263 >> 8], view + (0xe8 - 0xa2));
   put(
     0x10_8000,
     Array.from({ length: 0x40 }, (_, i) =>

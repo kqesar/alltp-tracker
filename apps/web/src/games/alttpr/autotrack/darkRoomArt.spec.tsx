@@ -12,7 +12,10 @@ import {
   seedMemory,
 } from "@/games/alttpr/autotrack/fixtures";
 import { AutotrackDialog } from "@/games/alttpr/components/autotrack/AutotrackDialog";
-import { scaleFor } from "@/games/alttpr/components/map/DarkRoomArt";
+import {
+  linkSprite,
+  scaleFor,
+} from "@/games/alttpr/components/map/DarkRoomArt";
 import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import {
   connectAutotrack,
@@ -104,7 +107,12 @@ describe("the dark room in the game's graphics", () => {
     // The synthetic sheets' stripes in the synthetic palette: gold
     // (colour 15: red 31, green 25, blue 0)
     expect((store().picture?.background[0] ?? 0) >>> 0).toBe(0xff_00_ce_ff);
-    expect(store().sprite).toMatchObject({ height: 16, width: 16 });
+    expect(store().sprite).toMatchObject({
+      height: 16,
+      width: 16,
+      x: 320,
+      y: 344,
+    });
 
     render(<MapPanel />);
     const panel = await screen.findByTestId("dark-room");
@@ -120,6 +128,8 @@ describe("the dark room in the game's graphics", () => {
     expect(Number(art.dataset.scale)).toBeGreaterThanOrEqual(1);
     // Still one live region: the sentence
     expect(within(panel).getAllByRole("status")).toHaveLength(1);
+    // Link drawn as the game draws him: no marker of ours, no arrow
+    expect(within(panel).queryByTestId("dark-room-facing")).toBeNull();
   });
 
   it("reads nothing of the picture, nor the ROM's graphics, in Race Mode", async () => {
@@ -202,6 +212,25 @@ describe("the dark room in the game's graphics", () => {
       .map((key) => localStorage.getItem(key) ?? "")
       .join("");
     expect(saved).not.toMatch(/background|sprite|picture/);
+  });
+});
+
+describe("linkSprite", () => {
+  const sprite = {
+    height: 24,
+    pixels: new Uint32Array(16 * 24),
+    width: 16,
+    x: 376,
+    y: 376,
+  };
+
+  it("keeps the sprite on Link's footprint, and leaves one the camera lags", () => {
+    // Footprint (47, 48): its middle at (384, 392), the sprite's at (384, 388)
+    expect(linkSprite(sprite, { x: 47, y: 48 })).toBe(sprite);
+    // Link told to stand ten tiles away, the camera left where it was
+    expect(linkSprite(sprite, { x: 57, y: 48 })).toBeNull();
+    expect(linkSprite(null, { x: 47, y: 48 })).toBeNull();
+    expect(linkSprite(sprite, null)).toBeNull();
   });
 });
 
