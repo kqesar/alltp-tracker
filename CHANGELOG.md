@@ -2,6 +2,36 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.49.0](https://github.com/kqesar/alltp-tracker/compare/v2.48.3...v2.49.0) (2026-10-27)
+
+
+### ✨ Features
+
+* **web:** show how long each needed item waited in an ALttPR run review ([799899f](https://github.com/kqesar/alltp-tracker/commit/799899f02d51404313399ac14cd90d2afb48bbc9))
+
+
+### 🐛 Bug Fixes
+
+* **web:** count no break from a find made before the run timer started ([4a948d9](https://github.com/kqesar/alltp-tracker/commit/4a948d9cf57a55068162b99b4e89273b1dc865a4))
+* **web:** describe a waiting item's dungeon as it stood when the item was in logic ([7a7cf1c](https://github.com/kqesar/alltp-tracker/commit/7a7cf1ce3ca802c36c2c8dad2a3bd991a64e302a))
+* **web:** hide a review's waits for shuffled bosses and glitched logic ([a6142ab](https://github.com/kqesar/alltp-tracker/commit/a6142ab3c5169e5faf627cd8189a858a9c543500))
+* **web:** let a keyboard reach the SMZ3 review's playthrough table ([d586646](https://github.com/kqesar/alltp-tracker/commit/d58664691a0203180a0009c56f28791f30f85a07))
+* **web:** let a review's column shrink below its widest content ([6c17c54](https://github.com/kqesar/alltp-tracker/commit/6c17c54ea84c0e9157dd00e4c87bad40b530e199))
+* **web:** list items taken but never in logic, outside the chain ([1714594](https://github.com/kqesar/alltp-tracker/commit/1714594dbcb1d64d662f11184d7464e5a8915309))
+* **web:** name the review's dungeons table apart from its section ([40171e1](https://github.com/kqesar/alltp-tracker/commit/40171e13a52102d1485019c77053509784e8d733))
+* **web:** never say nothing waited above dungeon items that did ([749e7a3](https://github.com/kqesar/alltp-tracker/commit/749e7a3c1b83a52f9ed5014eee050de6d635c4b9))
+* **web:** read a review's prizes and medallions from the log ([201d78f](https://github.com/kqesar/alltp-tracker/commit/201d78fbc71ebe3b64052454017ce3304d819968))
+* **web:** say Race Mode, not a hand run, when a review's dungeon chests went unread ([dff310e](https://github.com/kqesar/alltp-tracker/commit/dff310ebdf084fc579c8bcbd5819ca4526a8a617))
+* **web:** time a review's places with the keys where the log put them ([fd5ebe7](https://github.com/kqesar/alltp-tracker/commit/fd5ebe74cc927873a17282ae9425219d20f4517a))
+* **web:** word the review's import prompt without late or in order ([e80f954](https://github.com/kqesar/alltp-tracker/commit/e80f954f0af8c96131071f9c9d573e04047d1f26))
+
+
+### 📚 Documentation
+
+* describe the review's fixes: Race Mode, items never in logic, the dungeon sentence ([8369e06](https://github.com/kqesar/alltp-tracker/commit/8369e06252788f35f639ab00f35f23832b43f76e))
+* describe the waits of an ALttPR run review ([80cdedf](https://github.com/kqesar/alltp-tracker/commit/80cdedf1cfdfacf86c8aabfe6095f68b033933f6))
+* say in the area rules what the review's waits show ([ea8d55d](https://github.com/kqesar/alltp-tracker/commit/ea8d55db2fc72b006a132f19171da7334b8ccfff))
+
 ## [2.48.3](https://github.com/kqesar/alltp-tracker/compare/v2.48.2...v2.48.3) (2026-10-27)
 
 
