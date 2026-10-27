@@ -82,6 +82,8 @@ function setup(
     pack?: AutotrackPackSource;
     skipped?: ReadonlySet<string>;
     onSkip?: (id: string, reason: string) => void;
+    struck?: ReadonlySet<string>;
+    onStrike?: (id: string) => void;
   } = {},
 ) {
   const memory = new Uint8Array(0x100_0000);
@@ -90,10 +92,12 @@ function setup(
   const poller = new Poller(definePack(options.pack ?? source()), transport, {
     now: () => 0,
     onSkip: options.onSkip,
+    onStrike: options.onStrike,
     optIn: new Set(options.on === false ? [] : ["assist"]),
     romReadable: true,
     setting: "auto",
     skipped: options.skipped,
+    struck: options.struck,
   });
   /** How many requests each tick sent, by counting the transport's reads. */
   const requests: number[] = [];
@@ -289,7 +293,7 @@ describe("a gated range", () => {
 });
 
 describe("a gated range whose read fails", () => {
-  it("is skipped from then on, said in `unreadable`, and the tick goes on", async () => {
+  it("is skipped from then on when the device refuses it, said in `unreadable`, and the tick goes on", async () => {
     const skipped: string[] = [];
     const h = setup({ onSkip: (id) => skipped.push(id) });
     h.memory[GATE] = 1;
@@ -298,7 +302,7 @@ describe("a gated range whose read fails", () => {
     let failing = true;
     h.transport.read = async (request, into, offset) => {
       if (failing && request.size === SIZE) {
-        throw new TransportError("timeout", "read", "no answer");
+        throw new TransportError("device", "read", "no memory there");
       }
       return read(request, into, offset);
     };
@@ -315,6 +319,50 @@ describe("a gated range whose read fails", () => {
     for (let i = 0; i < 8; i++) await h.tick();
     expect(h.touched(BIG, SIZE)).toBe(before);
     expect(h.poller.has("pos")).toBe(true);
+  });
+
+  it("fails the tick, unskipped, on a dropped connection or a timeout the first time", async () => {
+    const skipped: string[] = [];
+    const struck: string[] = [];
+    const h = setup({
+      onSkip: (id) => skipped.push(id),
+      onStrike: (id) => struck.push(id),
+    });
+    h.memory[GATE] = 1;
+    await h.tick();
+    const read = h.transport.read.bind(h.transport);
+    h.transport.read = async (request, into, offset) => {
+      if (request.size === SIZE) {
+        throw new TransportError("closed", "read", "gone");
+      }
+      return read(request, into, offset);
+    };
+    h.memory[POS] = 9;
+    await expect(h.poller.tick()).rejects.toThrow("gone");
+    expect(struck).toEqual(["map"]);
+    expect(skipped).toEqual([]);
+    expect(h.poller.unreadable).toEqual([]);
+  });
+
+  it("is skipped when it fails so again, on another connection", async () => {
+    const skipped: string[] = [];
+    const h = setup({
+      onSkip: (id) => skipped.push(id),
+      struck: new Set(["map"]),
+    });
+    h.memory[GATE] = 1;
+    await h.tick();
+    const read = h.transport.read.bind(h.transport);
+    h.transport.read = async (request, into, offset) => {
+      if (request.size === SIZE) {
+        throw new TransportError("timeout", "read", "no answer");
+      }
+      return read(request, into, offset);
+    };
+    h.memory[POS] = 9;
+    await expect(h.tick()).resolves.not.toThrow();
+    expect(skipped).toEqual(["map"]);
+    expect(h.poller.unreadable).toEqual(["map"]);
   });
 
   it("is not read at all on a device that failed it before", async () => {

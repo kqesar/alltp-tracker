@@ -25,6 +25,7 @@ export {
 } from "./autotrack/dark-room";
 export { ROOM_PX, type SpriteImage } from "./autotrack/dark-room-art";
 export {
+  ART_RANGES,
   ART_RETRY_MS,
   type ArtFailure,
   type ArtOutcome,

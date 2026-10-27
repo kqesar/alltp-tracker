@@ -20,8 +20,10 @@
 // casual read: the tick that Race Mode holds never reaches it, and a tick that
 // would not have read the race flag reads it first for the purpose. A range may
 // also wait for a host switch (`optIn`, `setOptIn`). A read of a gated range
-// that fails is not the tick's failure: the range is skipped from then on, on
-// this device, and said in `unreadable`.
+// the device refuses is not the tick's failure: the range is skipped from then
+// on, on this device, and said in `unreadable`. One that fails with a dropped
+// connection or a timeout fails the tick, once; a second time, on another
+// connection, it is skipped too.
 //
 // A host may also ask for bytes whose addresses only the game can tell
 // (`request`: a ROM table points at them), with the category they are tracked
@@ -161,6 +163,8 @@ export class Poller implements MemorySnapshot {
   /** The ids of gated ranges whose read failed on this device. */
   private readonly skipped: Set<string>;
   private readonly onSkip: ((id: string, reason: string) => void) | undefined;
+  private readonly struck: ReadonlySet<string>;
+  private readonly onStrike: ((id: string) => void) | undefined;
   private readonly current: Uint8Array[] = [];
   private readonly prior: Uint8Array[] = [];
   private readonly seen: Uint8Array;
@@ -225,6 +229,14 @@ export class Poller implements MemorySnapshot {
       readonly skipped?: ReadonlySet<string>;
       /** Called when the read of a gated range fails: it is skipped from now on. */
       readonly onSkip?: (id: string, reason: string) => void;
+      /**
+       * Gated ranges whose read failed once already, on an earlier
+       * connection to this device, for a reason that may not be theirs: a
+       * second such failure skips them.
+       */
+      readonly struck?: ReadonlySet<string>;
+      /** Called when a gated range's read fails for such a reason the first time. */
+      readonly onStrike?: (id: string) => void;
     },
   ) {
     this.romReadable = options.romReadable;
@@ -247,6 +259,8 @@ export class Poller implements MemorySnapshot {
     this.notServed = pack.ranges.filter((r) => !romOk(r)).map((r) => r.id);
     this.skipped = new Set(options.skipped);
     this.onSkip = options.onSkip;
+    this.struck = options.struck ?? new Set();
+    this.onStrike = options.onStrike;
     const readable = pack.ranges.map(romOk);
     const flag = pack.raceFlag;
     const flagReadable = flag !== null && romOk(flag);
@@ -739,9 +753,11 @@ export class Poller implements MemorySnapshot {
   }
 
   /**
-   * A gated range's read: one that fails is skipped from then on (reported to
-   * `onSkip`) and the tick goes on, where the game's own reads, and the race
-   * flag's, fail the tick as they always did.
+   * A gated range's read: one the device refuses (a `device` or `protocol`
+   * error), or that failed before on another connection (`struck`), is
+   * skipped from then on (reported to `onSkip`) and the tick goes on. Any
+   * other failure is reported to `onStrike` and fails the tick, as the game's
+   * own reads do: it may be no fault of the range's.
    * @returns Whether the bytes came
    */
   private async fetchGated(phase: Phase): Promise<boolean> {
@@ -750,6 +766,24 @@ export class Poller implements MemorySnapshot {
       return true;
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
+      const ids: string[] = [];
+      for (let k = 0; k < phase.members.length; k++) {
+        if (phase.members[k] !== FLAG) {
+          ids.push(this.pack.ranges[phase.members[k]].id);
+        }
+      }
+      // The device said no: these bytes it cannot serve. A dropped socket or
+      // a timeout says nothing of them (the emulator closed, the bridge
+      // restarted, a refusal over usb2snes): the tick fails, the session
+      // connects again, and only a second such failure, on another
+      // connection, skips them
+      const refused =
+        error instanceof TransportError &&
+        (error.code === "device" || error.code === "protocol");
+      if (!refused && !ids.some((id) => this.struck.has(id))) {
+        for (const id of ids) this.onStrike?.(id);
+        throw error;
+      }
       for (let k = 0; k < phase.members.length; k++) {
         const index = phase.members[k];
         if (index === FLAG) continue;
