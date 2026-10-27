@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.48.1](https://github.com/kqesar/alltp-tracker/compare/v2.48.0...v2.48.1) (2026-10-27)
+
+
+### 🐛 Bug Fixes
+
+* **web:** give a run ended on real time the game's final time ([9a7d6b6](https://github.com/kqesar/alltp-tracker/commit/9a7d6b6964bc953d09e90f494b070e713cb01764))
+
 ## [2.48.0](https://github.com/kqesar/alltp-tracker/compare/v2.47.0...v2.48.0) (2026-10-27)
 
 
