@@ -11,7 +11,7 @@ import {
   ROOM_PX,
   SHEETS,
 } from "./dark-room-art";
-import { createArtLoader } from "./dark-room-art-loader";
+import { createArtLoader, onFootprint } from "./dark-room-art-loader";
 import { MEMORY_RANGE, type MemoryRangeId } from "./memory";
 
 /** A sheet's stream: 0x600 bytes of `value` (two long byte fills). */
@@ -354,6 +354,41 @@ describe("createArtLoader", () => {
     });
     expect((outcome.art.link?.pixels[0] ?? 0) >>> 0).toBe(0xffff_0000);
     expect(io.calls[2]).toContainEqual({ address: bus(0x10_8000), size: 0x40 });
+  });
+
+  it("draws Link only on his footprint, both read in the same poll", async () => {
+    const { memory } = console();
+    const loader = createArtLoader(reader(memory).read);
+    // The sprite at (40, 51), 8 x 8: its middle (44, 55); footprint (4, 5)'s
+    // middle is (40, 48)
+    const at = (x: number, y: number) => {
+      const held = swordRoom(memory, 1, 1);
+      // Y then X, absolute: (y & 0x1FF) + 8 >> 3 and x >> 3
+      held["dark-room-link"] = Uint8Array.of(y - 8, 0, x, 0);
+      return new View(held);
+    };
+    const near = await loader.update(at(4 * 8, 5 * 8));
+    expect(near?.status === "ready" && near.art.link).not.toBeNull();
+    // Link told to stand ten tiles away, the camera left where it was
+    const far = await loader.update(at(14 * 8, 5 * 8));
+    expect(far?.status === "ready" && far.art.link).toBeNull();
+  });
+
+  it("holds a sprite to a footprint within 24 px", () => {
+    const sprite = {
+      height: 24,
+      pixels: new Uint32Array(16 * 24),
+      width: 16,
+      x: 376,
+      y: 376,
+    };
+    // Footprint (47, 48): its middle at (384, 392), the sprite's at (384, 388)
+    expect(onFootprint(sprite, { x: 47, y: 48 })).toBe(sprite);
+    expect(onFootprint(sprite, { x: 50, y: 48 })).toBe(sprite);
+    expect(onFootprint(sprite, { x: 51, y: 48 })).toBeNull();
+    expect(onFootprint(null, { x: 47, y: 48 })).toBeNull();
+    // No footprint read: unchecked
+    expect(onFootprint(sprite, null)).toBe(sprite);
   });
 
   /** One 8 x 8 sprite of tile 5, the first WRAM upload's ($0AC0 → $7E:9040). */

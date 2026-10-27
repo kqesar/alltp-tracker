@@ -11,6 +11,7 @@
 // nothing here goes anywhere but back to the caller.
 
 import { bus } from "@alltp/autotrack";
+import { linkTile } from "./dark-room";
 import {
   ANIMATED_BYTES,
   ART_ROM,
@@ -51,8 +52,8 @@ export interface DarkRoomArt {
   /** Changes each time `background` is drawn again. */
   readonly version: number;
   /**
-   * Link as the game draws him, or null: no sprite of his on screen, or his
-   * graphics not read.
+   * Link as the game draws him, or null: no sprite of his on screen, his
+   * graphics not read, or the sprite off his footprint (`SPRITE_SLACK`).
    */
   readonly link: SpriteImage | null;
 }
@@ -102,6 +103,13 @@ export const ART_RETRY_MS = 5000;
  */
 export const ART_MAX_FAILURES = 4;
 
+/**
+ * How far, in pixels, Link's sprite may lie from his footprint: the screen
+ * shows him where the camera put him, which can lag his position (a room
+ * transition, a position written by a tool). Farther, no sprite is drawn.
+ */
+export const SPRITE_SLACK = 24;
+
 const pak = (address: number) => bus(address);
 
 const sameBytes = (a: Uint8Array | null, b: Uint8Array | null) => {
@@ -113,6 +121,24 @@ const sameBytes = (a: Uint8Array | null, b: Uint8Array | null) => {
 
 const hexOf = (bytes: Uint8Array) =>
   Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+
+/**
+ * The sprite, if it lies on Link's footprint (its top left in tiles), within
+ * `SPRITE_SLACK`; null otherwise (unchecked without a footprint). Both come
+ * from the same snapshot, so a
+ * sprite drawn a poll late is never held to a newer footprint.
+ */
+export function onFootprint(
+  sprite: SpriteImage | null,
+  footprint: { readonly x: number; readonly y: number } | null,
+): SpriteImage | null {
+  if (sprite === null || footprint === null) return sprite;
+  const dx = sprite.x + sprite.width / 2 - (footprint.x + 1) * 8;
+  const dy = sprite.y + sprite.height / 2 - (footprint.y + 1) * 8;
+  return Math.abs(dx) <= SPRITE_SLACK && Math.abs(dy) <= SPRITE_SLACK
+    ? sprite
+    : null;
+}
 
 /** A pause that holds reads back after failures, doubling, then gives up. */
 function backoff(now: () => number) {
@@ -220,6 +246,12 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
         backgroundWanted(view) && view.has("dark-room-art-bg1")
           ? copy("dark-room-art-bg1")
           : null;
+      const footprint = view.has("dark-room-link")
+        ? (() => {
+            const b = view.bytes("dark-room-link");
+            return linkTile(b[2] | (b[3] << 8), b[0] | (b[1] << 8));
+          })()
+        : null;
       const arms = view.has("equipment-c")
         ? hexOf(view.bytes("equipment-c").subarray(ARMS, ARMS + 2))
         : "";
@@ -373,7 +405,10 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
       let link: SpriteImage | null = null;
       if (whole) {
         const { filled, tiles } = linkTiles(pieces);
-        link = renderLink({ colours, filled, oam, scrollX, scrollY, tiles });
+        link = onFootprint(
+          renderLink({ colours, filled, oam, scrollX, scrollY, tiles }),
+          footprint,
+        );
       }
       return {
         art: {

@@ -12,10 +12,7 @@ import {
   seedMemory,
 } from "@/games/alttpr/autotrack/fixtures";
 import { AutotrackDialog } from "@/games/alttpr/components/autotrack/AutotrackDialog";
-import {
-  linkSprite,
-  scaleFor,
-} from "@/games/alttpr/components/map/DarkRoomArt";
+import { scaleFor } from "@/games/alttpr/components/map/DarkRoomArt";
 import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import {
   connectAutotrack,
@@ -328,25 +325,6 @@ describe("showArt", () => {
     expect(store().sprite).not.toBe(sprite);
     act(() => store().showArt(outcome(8, 2)));
     expect(store().picture).not.toBe(picture);
-  });
-});
-
-describe("linkSprite", () => {
-  const sprite = {
-    height: 24,
-    pixels: new Uint32Array(16 * 24),
-    width: 16,
-    x: 376,
-    y: 376,
-  };
-
-  it("keeps the sprite on Link's footprint, and leaves one the camera lags", () => {
-    // Footprint (47, 48): its middle at (384, 392), the sprite's at (384, 388)
-    expect(linkSprite(sprite, { x: 47, y: 48 })).toBe(sprite);
-    // Link told to stand ten tiles away, the camera left where it was
-    expect(linkSprite(sprite, { x: 57, y: 48 })).toBeNull();
-    expect(linkSprite(null, { x: 47, y: 48 })).toBeNull();
-    expect(linkSprite(sprite, null)).toBeNull();
   });
 });
 

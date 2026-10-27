@@ -91,27 +91,6 @@ const draw = (
   context.putImageData(image, 0, 0);
 };
 
-/** How far, in pixels, Link's sprite may lie from his footprint. */
-const SPRITE_SLACK = 24;
-
-/**
- * Link's sprite, if it lies where his footprint says he is: the screen shows
- * him where the camera put him, and the camera can lag his position (a room
- * transition, a position the game was told). Off from it, the marker shows
- * instead of a sprite drawn in the wrong place.
- */
-export const linkSprite = (
-  sprite: SpriteImage | null,
-  link: { readonly x: number; readonly y: number } | null,
-): SpriteImage | null => {
-  if (sprite === null || link === null) return null;
-  const dx = sprite.x + sprite.width / 2 - (link.x + 1) * TILE;
-  const dy = sprite.y + sprite.height / 2 - (link.y + 1) * TILE;
-  return Math.abs(dx) <= SPRITE_SLACK && Math.abs(dy) <= SPRITE_SLACK
-    ? sprite
-    : null;
-};
-
 /** Unopened chests ringed, the nearest one called out: they must be seen first. */
 const Chests = memo(function Chests({
   chests,
@@ -230,9 +209,9 @@ export const DarkRoomArt = ({
   map: DarkRoomMap;
   picture: DarkRoomPicture;
 }) => {
-  const drawn = useDarkRoomStore((state) => state.sprite);
+  // Off his footprint, the loader drew none: the marker shows instead
+  const sprite = useDarkRoomStore((state) => state.sprite);
   const link = useDarkRoomStore((state) => state.link);
-  const sprite = linkSprite(drawn, link);
   const canvas = useRef<HTMLCanvasElement>(null);
   const box = useMemo(() => boxOf(map), [map]);
   const { ref, space } = useRoom();
