@@ -119,6 +119,24 @@ describe("the items", () => {
     });
   });
 
+  it("never tell a red crystal from a blue one in Race Mode", () => {
+    // v2.0: "trackers may not auto-track which crystal is a 5/6-crystal"
+    const [inZelda, inSm] = both({ sm: SM_ITEMS, zelda: ZELDA_ITEMS });
+    for (const memory of [inZelda, inSm]) {
+      const raced = decodeItems(memory, true);
+      if (typeof raced === "string") throw new Error(raced);
+      expect(raced).not.toHaveProperty("crystalRed");
+      expect(raced).not.toHaveProperty("crystalBlue");
+      // The rest is what a casual reading says, the pendants included
+      const casual = decodeItems(memory);
+      if (typeof casual === "string") throw new Error(casual);
+      const { crystalBlue, crystalRed, ...rest } = casual;
+      expect(crystalRed).toBe(2);
+      expect(crystalBlue).toBe(1);
+      expect(raced).toEqual(rest);
+    }
+  });
+
   it("are capped at their pools, and none for an unknown level", () => {
     const items = decodeItems(
       read({ sm: { 38: 0xff, 39: 0xff }, zelda: { 857: 0xff, 1254: 9 } }),
