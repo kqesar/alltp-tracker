@@ -245,13 +245,14 @@ export const DarkRoomArt = ({
   const { bounds } = map;
   const tilesWide = bounds.x1 - bounds.x0 + 1;
   const tilesHigh = bounds.y1 - bounds.y0 + 1;
-  const size = {
-    height: `${box.height * scale}px`,
-    width: `${box.width * scale}px`,
-  };
   return (
     <div className="dark-room__art" ref={ref}>
-      <div className="dark-room__frame" style={size}>
+      {/* The frame takes the width, never more than the panel's; the canvas
+          fills it at its own proportions */}
+      <div
+        className="dark-room__frame"
+        style={{ width: `${box.width * scale}px` }}
+      >
         <canvas
           aria-label="The dark room drawn lit in the game's graphics, seen from above, with you in it and its unopened chests ringed"
           className={`dark-room__canvas${scale >= 1 ? " dark-room__canvas--crisp" : ""}`}
@@ -260,7 +261,7 @@ export const DarkRoomArt = ({
           height={box.height}
           ref={canvas}
           role="img"
-          style={size}
+          style={{ aspectRatio: `${box.width} / ${box.height}` }}
           width={box.width}
         />
         <svg
