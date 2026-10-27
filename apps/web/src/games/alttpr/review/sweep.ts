@@ -695,7 +695,10 @@ export const chainOf = (waits: readonly Wait[]): Wait[] => {
     if (known !== undefined) return known;
     const before = wait.after === null ? undefined : byKey.get(wait.after.key);
     const chain =
-      before === undefined || seen.has(before) || before.kind !== "major"
+      before === undefined ||
+      seen.has(before) ||
+      before.kind !== "major" ||
+      before.reach === null
         ? [wait]
         : [...chainTo(before, new Set([...seen, wait])), wait];
     chains.set(wait, chain);
@@ -703,7 +706,10 @@ export const chainOf = (waits: readonly Wait[]): Wait[] => {
   };
   let best: Wait[] = [];
   for (const wait of waits) {
-    if (wait.kind !== "major" || wait.taken === null) continue;
+    // An item never in logic has no place in it, whenever it was taken
+    if (wait.kind !== "major" || wait.taken === null || wait.reach === null) {
+      continue;
+    }
     const chain = chainTo(wait, new Set([wait]));
     const end = chain.at(-1)?.taken ?? 0;
     if (

@@ -619,9 +619,15 @@ const Ahead = ({ ahead }: { ahead: readonly Wait[] }) => {
           <ItemRow
             end={
               <span className="review-list__when">
-                Taken <At ms={wait.taken ?? 0} />; in logic from{" "}
-                <At ms={wait.reach ?? 0} />
-                {wait.after === null ? "" : `, after ${wait.after.name}`}
+                Taken <At ms={wait.taken ?? 0} />;{" "}
+                {wait.reach === null ? (
+                  "not in logic by the run's end"
+                ) : (
+                  <>
+                    in logic from <At ms={wait.reach} />
+                    {wait.after === null ? "" : `, after ${wait.after.name}`}
+                  </>
+                )}
               </span>
             }
             key={wait.location}
@@ -681,8 +687,12 @@ export const ReviewWaits = ({
   sweep: Sweep;
 }) => {
   const waited = sweep.waits.filter(({ waited }) => (waited ?? 0) > 0);
+  // Taken before its place was in logic, or with its place never in logic
   const ahead = sweep.waits
-    .filter(({ waited }) => waited !== null && waited < 0)
+    .filter(
+      ({ reach, taken, waited }) =>
+        (waited !== null && waited < 0) || (reach === null && taken !== null),
+    )
     .sort((a, b) => (a.taken ?? 0) - (b.taken ?? 0));
   const top = waited.find(({ kind }) => kind === "major");
   return (
