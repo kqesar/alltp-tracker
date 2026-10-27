@@ -40,7 +40,8 @@ const useRoom = () => {
     const element = ref.current;
     if (element === null) return;
     const measure = () => {
-      const width = Math.min(element.clientWidth || 576, 576);
+      // Less the frame's border, one pixel a side
+      const width = Math.min(element.clientWidth || 576, 576) - 2;
       const height = Math.min(window.innerHeight * 0.5, 416);
       setSpace((before) =>
         before.width === width && before.height === height

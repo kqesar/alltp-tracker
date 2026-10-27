@@ -257,10 +257,22 @@ test("draws the room in the game's graphics, Link in it, the chests ringed", asy
       true,
     );
     if (width >= 820) {
-      expect(
-        Number(await art.getAttribute("data-scale")),
-      ).toBeGreaterThanOrEqual(1);
+      const scale = Number(await art.getAttribute("data-scale"));
+      expect(scale).toBeGreaterThanOrEqual(1);
+      // Painted at exactly that factor: every game pixel a whole square
+      const painted = await art.evaluate((canvas: HTMLCanvasElement) => ({
+        height: canvas.clientHeight,
+        pixelsHigh: canvas.height,
+        pixelsWide: canvas.width,
+        width: canvas.clientWidth,
+      }));
+      expect(painted.width).toBe(painted.pixelsWide * scale);
+      expect(painted.height).toBe(painted.pixelsHigh * scale);
     }
+    // The marks' layer lies on the picture, pixel for pixel
+    const marks = await page.locator(".dark-room__overlay").boundingBox();
+    const picture = await art.boundingBox();
+    expect(marks).toEqual(picture);
     if (SHOTS) await panel.screenshot({ path: `${SHOTS}/art-${width}.png` });
   }
 
