@@ -1,7 +1,7 @@
 import { playTimeMs, type RomStats } from "@alltp/pack-alttpr";
 import { memo, useId, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { isRaceModeOn } from "@/autotrack/raceMode";
+import { isRaceModeOrPending } from "@/autotrack/raceMode";
 import { ReviewSection } from "@/games/alttpr/components/map/ReviewSection";
 import { checkStates } from "@/games/alttpr/logic/checks";
 import {
@@ -336,7 +336,9 @@ const FromTheGame = () => {
  */
 export const RunPanel = () => {
   const timeline = useGameStore((state) => state.timeline);
-  const race = useAutotrackStore(isRaceModeOn);
+  // Failing closed: until a reading has told the race flag of a run that is
+  // autotracked, its places stay hidden too
+  const race = useAutotrackStore(isRaceModeOrPending);
   const finds = useMemo(() => findsOf(timeline, race), [timeline, race]);
   const splits = useMemo(() => splitsOf(timeline), [timeline]);
   const review = useReview();
