@@ -2,6 +2,48 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.48.0](https://github.com/kqesar/alltp-tracker/compare/v2.47.0...v2.48.0) (2026-10-27)
+
+
+### ✨ Features
+
+* **alttpr:** rebuild a dark room in the game's own graphics ([e38f9b5](https://github.com/kqesar/alltp-tracker/commit/e38f9b5e47df3ac1fccdc9e8224f9c9ddb3440b1))
+* **autotrack:** read bytes at addresses the game tells, on demand ([9ea650b](https://github.com/kqesar/alltp-tracker/commit/9ea650b1593477a75ac93a240fff4f1f3191c444))
+* **web:** draw a dark room in the game's own graphics ([5e585f3](https://github.com/kqesar/alltp-tracker/commit/5e585f3741e3f66b461002167e51d2ea4fc77ff5))
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** draw the sword or shield Link has now, and forget a ROM's ([e1f5c00](https://github.com/kqesar/alltp-tracker/commit/e1f5c00e39b77b30bef304713f22f78be2a1a2c3))
+* **alttpr:** hold Link's sprite to the footprint read with it ([bd99134](https://github.com/kqesar/alltp-tracker/commit/bd99134818add21c6fefa8b585309cf232bd602d))
+* **alttpr:** never read again a sheet that did not unpack ([d0284c1](https://github.com/kqesar/alltp-tracker/commit/d0284c1dc2c86736388ed9ea401efa00f4b0f475))
+* **alttpr:** retry a failed read of the room's graphics while it moves ([7bb9231](https://github.com/kqesar/alltp-tracker/commit/7bb9231116d042cec359fab6931d554372aec7ba))
+* **autotrack:** open a switch's gates anew when it comes back on ([e4e43ef](https://github.com/kqesar/alltp-tracker/commit/e4e43ef6ff4eb619610fea234e5898f2b0151286))
+* **autotrack:** read only the open gated ranges of a group ([f746c62](https://github.com/kqesar/alltp-tracker/commit/f746c628ed588c98b44ef3cc3e86e75605dfeef1))
+* **autotrack:** skip a gated range only when the device refuses it ([23f2c22](https://github.com/kqesar/alltp-tracker/commit/23f2c22c8b9fe5a3d212a7ddcd0af42fe099bcdd))
+* **web:** draw Link's marker when his sprite is off his footprint ([cef5492](https://github.com/kqesar/alltp-tracker/commit/cef54923289452700f78be931baa920820bbfaaf))
+* **web:** keep the dark room's picture at a whole factor, marks on it ([5218d95](https://github.com/kqesar/alltp-tracker/commit/5218d95b48c74bd7a87593693931538731208cc3))
+* **web:** keep the dark room's picture inside its panel on a phone ([95683d3](https://github.com/kqesar/alltp-tracker/commit/95683d34df61b7a738e67de9c45ee9f876cf91cb))
+* **web:** scale the dark room's picture again on a height-only resize ([fe2d137](https://github.com/kqesar/alltp-tracker/commit/fe2d13786f75fdca8aaadadbc66e1a936513482e))
+
+
+### ⚡ Performance Improvements
+
+* **alttpr:** keep the dark room's picture in its one request a tick ([d361799](https://github.com/kqesar/alltp-tracker/commit/d361799938cc1f65e239da2079232cc6ce7f3467))
+* **autotrack:** drop an on-demand read the host no longer wants ([57d3885](https://github.com/kqesar/alltp-tracker/commit/57d3885200237889bef3969db5aa3d70b7e3b63a))
+* **web:** make the dark room's image once, not at every step of Link's ([4feb2e4](https://github.com/kqesar/alltp-tracker/commit/4feb2e4d62dc98b27443dd836fb4ba8fbbc0ae8b))
+
+
+### 📚 Documentation
+
+* describe the dark room in the game's own graphics ([7808ffe](https://github.com/kqesar/alltp-tracker/commit/7808ffefc4f02e73b1d905e89ffb942315ee2520))
+* say what a failed read of the dark room's graphics does ([ceb6f77](https://github.com/kqesar/alltp-tracker/commit/ceb6f773b366b75f344fc880d590c652eae88440))
+
+
+### 🔧 Code Refactoring
+
+* **alttpr:** export the picture's ROM layout from the pack's entry ([318fc14](https://github.com/kqesar/alltp-tracker/commit/318fc1456214c63386da4931f6cd25c01a874517))
+
 ## [2.47.0](https://github.com/kqesar/alltp-tracker/compare/v2.46.0...v2.47.0) (2026-10-26)
 
 
