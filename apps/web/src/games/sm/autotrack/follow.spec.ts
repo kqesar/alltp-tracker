@@ -41,6 +41,40 @@ beforeEach(() => {
   useSmStore.setState(useSmStore.getInitialState(), true);
 });
 
+describe("a Super Metroid reading in Race Mode", () => {
+  it("decodes nothing a race forbids, whatever the snapshot still holds", () => {
+    // The snapshot of a casual tick, every range read: Race Mode coming
+    // decodes it again before the session forgets the forbidden ranges
+    const raced = readSm(
+      viewOf(
+        writeMapRando(new Uint8Array(0x100_0000), {
+          clock: { pending: 3, saved: 50_000 },
+          collected: [0],
+          done: ["kraid", "pitRoom"],
+          escaping: true,
+          items: MORPH,
+          name: "Zebes42",
+          objectives: ["kraid", "pitRoom"],
+          state: 0x27,
+          wallJump: true,
+        }),
+      ),
+      0,
+      true,
+    );
+    expect(raced).toMatchObject({
+      clock: "not-read",
+      collected: "not-read",
+      goal: "not-read",
+      objectives: "not-read",
+      seed: "not-read",
+    });
+    // What a race permits is decoded as ever
+    expect(raced.bossKills).toEqual(["kraid"]);
+    expect(raced.items).toMatchObject({ morph: 1 });
+  });
+});
+
 describe("the Super Metroid run following the game", () => {
   it("lays the game's items, objectives and settings, as no undo step", () => {
     run().step("varia", 1);

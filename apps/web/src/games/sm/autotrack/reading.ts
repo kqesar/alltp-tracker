@@ -60,12 +60,18 @@ export type SmReading = {
   readonly seed: SeedReading | Unsettled;
 };
 
+/** What a reading in Race Mode never decodes: the race profile's forbidden. */
+const RACE_UNREAD = "not-read" satisfies Unsettled;
+
 /**
  * Decode a snapshot.
  * @param memory - The session's snapshot
  * @param at - When it was read
- * @param race - Whether Race Mode was on as the session read it (which ranges
- * it read follows from it)
+ * @param race - Whether Race Mode is on: the seed, its objectives, the
+ * locations, the RTA clock and the goal are then not decoded, whatever the
+ * snapshot holds. The session forgets a forbidden range only at the end of
+ * its next tick, so the snapshot decoded again as Race Mode comes may still
+ * hold a casual reading's bytes.
  */
 export const readSm = (
   memory: MemoryView,
@@ -75,12 +81,12 @@ export const readSm = (
   at,
   beforePlay: decodeBeforePlay(memory),
   bossKills: decodeBossKills(memory),
-  clock: decodeGameClock(memory),
-  collected: decodeCollected(memory),
-  goal: decodeGoal(memory),
+  clock: race ? RACE_UNREAD : decodeGameClock(memory),
+  collected: race ? RACE_UNREAD : decodeCollected(memory),
+  goal: race ? RACE_UNREAD : decodeGoal(memory),
   inPlay: decodeInPlay(memory),
   items: decodeItems(memory),
-  objectives: decodeObjectives(memory),
+  objectives: race ? RACE_UNREAD : decodeObjectives(memory),
   race,
-  seed: decodeSeed(memory),
+  seed: race ? RACE_UNREAD : decodeSeed(memory),
 });
