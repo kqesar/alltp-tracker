@@ -195,6 +195,24 @@ describe("createArtLoader", () => {
     expect(outcome).toMatchObject({ reason: "unknown-graphics" });
   });
 
+  it("never reads a sheet that did not unpack again, the room moving or not", async () => {
+    const { memory, put } = console();
+    put(0x91_8030, [0x1f, 1, 2]);
+    memory.fill(0x00, bus(0x91_8033), bus(0x91_8033) + 0x700);
+    const io = reader(memory);
+    const loader = createArtLoader(io.read);
+    for (let t = 0; t < 10; t++) {
+      const held = ranges();
+      // An enemy moving: the OAM changes on every update
+      held["dark-room-art-sprites"]?.set([t], 100);
+      expect(await loader.update(new View(held))).toMatchObject({
+        reason: "unknown-graphics",
+      });
+    }
+    // The tables, then the sheets once
+    expect(io.calls).toHaveLength(2);
+  });
+
   it("pauses after a failed read, then tries again", async () => {
     const { memory } = console();
     const io = reader(memory);
