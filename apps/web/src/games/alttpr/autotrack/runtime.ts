@@ -11,6 +11,7 @@ import {
   type RaceSetting,
   type SessionOptions,
   type SessionStatus,
+  systemClock,
 } from "@alltp/autotrack";
 import {
   ALTTPR_AUTOTRACK,
@@ -117,12 +118,8 @@ export const startRuntime = (
   // The picture: what it is drawn from is read on demand (navigation, which
   // the session refuses in Race Mode), one draw at a time, the last asked for
   // drawn after the one under way
-  const clock = sessionOptions.clock ?? {
-    clearTimeout: (handle: unknown) =>
-      clearTimeout(handle as ReturnType<typeof setTimeout>),
-    now: () => Date.now(),
-    setTimeout: (callback: () => void, ms: number) => setTimeout(callback, ms),
-  };
+  // The session's own clock, so a retry runs on the tests' clock too
+  const clock = sessionOptions.clock ?? systemClock;
   const loader = createArtLoader(
     (ranges) => session.request({ category: "navigation", ranges }),
     () => clock.now(),
