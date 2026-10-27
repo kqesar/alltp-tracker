@@ -268,3 +268,113 @@ describe("MEMORY_RANGES", () => {
     });
   });
 });
+
+/**
+ * Where the game keeps Link's place, by the names z3randomizer's ram.asm gives
+ * them (`z3:ram.asm`, MEMORY_SOURCES.z3) and, for the dungeon, the engine's
+ * variables. The race admins' clarification of June 2026 bars a tracker from
+ * identifying or displaying any of it in a race.
+ */
+const POSITION: readonly { name: string; bus: number; size: number }[] = [
+  { bus: 0x7e_001b, name: "IndoorsFlag", size: 1 },
+  { bus: 0x7e_0020, name: "LinkAbsoluteY / LinkPosY", size: 2 },
+  { bus: 0x7e_0022, name: "LinkAbsoluteX / LinkPosX", size: 2 },
+  { bus: 0x7e_008a, name: "OverworldIndex", size: 2 },
+  { bus: 0x7e_00a0, name: "RoomIndex", size: 2 },
+  { bus: 0x7e_00a2, name: "PreviousRoom", size: 2 },
+  { bus: 0x7e_010e, name: "EntranceIndex", size: 2 },
+  { bus: 0x7e_040c, name: "DungeonID", size: 2 },
+];
+
+const wram = (bus: number) => bus - 0x7e_0000 + 0xf5_0000;
+
+describe("Race Mode and Link's position", () => {
+  it("permits no memory where Link, the room, the dungeon or the entrance are", () => {
+    for (const place of POSITION) {
+      const at = { address: wram(place.bus), size: place.size };
+      const window = ALTTPR_RACE_PROFILE.permitted.find((range) =>
+        overlaps(range, at),
+      );
+      expect(
+        window,
+        `${place.name} lies in a permitted window`,
+      ).toBeUndefined();
+    }
+  });
+
+  it("permits in low WRAM, where the game keeps all of it, the game mode alone", () => {
+    const low = { address: 0xf5_0000, size: 0x2000 };
+    expect(
+      ALTTPR_RACE_PROFILE.permitted.filter((range) => overlaps(range, low)),
+    ).toEqual([{ address: wram(0x7e_0010), size: 1 }]);
+    // The one byte is read: the check above is not vacuous
+    expect(MEMORY_RANGE["game-mode"]).toMatchObject({
+      address: wram(0x7e_0010),
+      size: 1,
+    });
+  });
+
+  it("reads no race-permitted range over any of it", () => {
+    for (const place of POSITION) {
+      const at = { address: wram(place.bus), size: place.size };
+      const readers = MEMORY_RANGES.filter(
+        (range) => permitted(range.id) && overlaps(range, at),
+      ).map((range) => range.id);
+      expect(readers, place.name).toEqual([]);
+    }
+  });
+
+  it("plans no race read over any of it, nor a bridge across", () => {
+    const { plan } = phasePlan(true);
+    const pieces = planPieces(plan);
+    expect(pieces.length).toBeGreaterThan(0);
+    for (const place of POSITION) {
+      const at = { address: wram(place.bus), size: place.size };
+      for (const piece of pieces) {
+        expect(overlaps(piece, at), place.name).toBe(false);
+      }
+    }
+    // The race flag is the only other thing the race phase adds
+    expect(() =>
+      assertRaceSafe(
+        plan,
+        ALTTPR_RACE_PROFILE,
+        pack.permittedBytes,
+        pack.forbiddenBytes,
+      ),
+    ).not.toThrow();
+  });
+
+  it("files each of its addresses under a category no race permits", () => {
+    // Where the map reads them at all, so that a range can never be filed
+    // under a permitted category without this failing.
+    const wanted = POSITION.flatMap((place) =>
+      MEMORY_RANGES.filter((range) =>
+        overlaps(range, { address: wram(place.bus), size: place.size }),
+      ),
+    );
+    expect(wanted.length).toBeGreaterThan(0);
+    for (const range of wanted) {
+      expect(permitted(range.id), range.id).toBe(false);
+    }
+  });
+
+  it("refuses a pack that files a range over Link under a permitted category", () => {
+    const bad = {
+      address: wram(0x7e_0020),
+      bus: 0x7e_0020,
+      category: "items",
+      everyMs: 250,
+      id: "link-position",
+      size: 4,
+      source: "z3:ram.asm:51",
+    };
+    expect(() =>
+      definePack({
+        id: "alttpr",
+        profile: ALTTPR_RACE_PROFILE,
+        ranges: [bad],
+      }),
+    ).toThrow();
+  });
+});
