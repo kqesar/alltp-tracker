@@ -7,10 +7,11 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import { type Publication, publishRun } from "@/follow/publish";
+import type { RaceFeed } from "@/follow/raceRun";
 import type { GameId, RunStore } from "@/games/registry";
 
 /** The run this page tracks. */
-let run: { game: GameId; store: RunStore } | null = null;
+let run: { game: GameId; store: RunStore; race?: RaceFeed } | null = null;
 let publisher: ReturnType<typeof publishRun> | null = null;
 /** Who needs the run published now: "follow", "stream". */
 const holders = new Set<string>();
@@ -30,11 +31,15 @@ const sync = () => {
   }
 };
 
-/** Give the feed the run this page tracks, once its game has loaded. */
-export const setRun = (game: GameId, store: RunStore) => {
+/**
+ * Give the feed the run this page tracks, once its game has loaded, with its
+ * Race Mode and whitelist where it has them: the run then goes cut to it in
+ * Race Mode (`follow/raceRun.ts`).
+ */
+export const setRun = (game: GameId, store: RunStore, race?: RaceFeed) => {
   publisher?.stop();
   publisher = null;
-  run = { game, store };
+  run = { game, race, store };
   sync();
 };
 

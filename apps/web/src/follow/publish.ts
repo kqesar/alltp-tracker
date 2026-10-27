@@ -2,6 +2,7 @@
 // run as the game's store saved it goes to the relay, which hands it to every
 // device following (docs/desktop.md, "Live follow on the LAN").
 
+import type { RaceFeed } from "@/follow/raceRun";
 import type { GameId, RunStore } from "@/games/registry";
 import { trailing } from "@/utils/trailing";
 
@@ -27,11 +28,15 @@ export const PUBLISH_DELAY_MS = 250;
  * tells its subscribers. A run unchanged since the last one is not sent again.
  * @param send - Hands the run to the relay
  * @param read - Reads the saved run; the page's storage by default
+ * @param race - The game's Race Mode and whitelist: while Race Mode is on,
+ * the run goes cut to it (`follow/raceRun.ts`), and it goes again when Race
+ * Mode comes or goes
  * @returns `stop`, which ends publishing, and `now`, which publishes at once
  * even an unchanged run (a device just joined: it gets a fresh `sentAt`)
  */
 export const publishRun = ({
   game,
+  race,
   read = (key) => localStorage.getItem(key),
   send,
   store,
@@ -40,6 +45,7 @@ export const publishRun = ({
   store: RunStore;
   send: (publication: Publication) => void;
   read?: (key: string) => string | null;
+  race?: RaceFeed;
 }): { now: () => void; stop: () => void } => {
   const key = store.persist.getOptions().name ?? "";
   let last: string | null = null;
@@ -57,6 +63,8 @@ export const publishRun = ({
     } catch {
       return;
     }
+    // In Race Mode, the whitelist alone; a run it cannot read is not sent
+    if (value !== null && race?.source.isOn()) value = race.run(value);
     if (value === null || (!always && value === last)) return;
     last = value;
     send({ game, key, sentAt: Date.now(), value });
@@ -64,12 +72,14 @@ export const publishRun = ({
 
   const wait = trailing(PUBLISH_DELAY_MS, () => publish(false));
   const unsubscribe = store.subscribe(wait.poke);
+  const stopRace = race?.source.subscribe(wait.poke);
   publish(true);
 
   return {
     now: () => publish(true),
     stop: () => {
       unsubscribe();
+      stopRace?.();
       wait.cancel();
     },
   };
