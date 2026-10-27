@@ -204,14 +204,18 @@ readings instead:
 2. **What waited for you the longest**: an `<ol>` of the five longest major items, each card a
    `<dl>` (In logic from, Taken, Waited), an `aria-hidden` bar on the run's play time (waiting
    hatched, taken a dot, breaks dotted, with a legend: never colour alone), the dungeon sentence when
-   only part of its dungeon was in logic then, the trade-off, and a note when it is an estimate (a
+   only part of its dungeon was in logic then (the places in logic at the item's own "in logic
+   from", its place among them; `dungeonContext`), the trade-off, and a note when it is an estimate (a
    copy, a match by item). **Show all** (`aria-expanded`) adds the rest and the dungeon items and
    prizes (three show before).
-3. **The chain behind the run**, from three items.
-4. **Dungeons**: a `<table>` with `scope` headers in a focusable scroll region, and a mini strip
-   (`aria-hidden`, shown when the panel is 60 rem wide).
-5. **Before the logic expected**: items taken before the items held put them in logic, said
-   without a cause.
+   With no inventory item waiting, the section says so and the tile shows the longest dungeon
+   item or prize.
+3. **The chain behind the run**, from three items, none of them never in logic.
+4. **Dungeons**: a `<table>` with `scope` headers and a visually hidden caption, which names its
+   focusable scroll region apart from the section, and a mini strip (`aria-hidden`, shown when the
+   panel is 60 rem wide).
+5. **Before the logic expected**: items taken before the items held put them in logic, and items
+   taken whose place was not in logic by the run's end, said without a cause.
 6. **How these times are worked out**: what is exact and what is estimated.
 7. **Places that mattered, never checked**: the needed ones, then a dungeon mostly unchecked as one
    line, progression and hearts by item, and how many other places held rupees, arrows or the like.
