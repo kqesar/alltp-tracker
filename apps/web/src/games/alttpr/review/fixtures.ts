@@ -2,7 +2,17 @@
 // (packs/alttpr/test/spoilers/, recorded by its script, never edited), for the
 // app's specs.
 
-import { type AlttprSpoilerLog, parseSpoiler } from "@alltp/pack-alttpr";
+import {
+  type AlttprSpoilerLog,
+  LEGACY_DUNGEONS,
+  MAP_LOCATIONS,
+  MEDALLIONS,
+  parseSpoiler,
+} from "@alltp/pack-alttpr";
+import type { ItemState } from "@/games/alttpr/data/items";
+import { itemsFromPack } from "@/games/alttpr/logic/packItems";
+import { stampTimeline, type Timeline } from "@/games/alttpr/logic/timeline";
+import type { ReviewedRun } from "@/games/alttpr/review/adapter";
 import entrances from "../../../../../../packs/alttpr/test/spoilers/0yAObedRMV.txt?raw";
 import vt from "../../../../../../packs/alttpr/test/spoilers/9MQ9gO1wMD.txt?raw";
 import daily from "../../../../../../packs/alttpr/test/spoilers/eM43RgZ4Gj.txt?raw";
@@ -34,4 +44,71 @@ export const spoilerLog = (hash: FixtureHash): AlttprSpoilerLog => {
   const result = parseSpoiler(spoilerText(hash), spoilerName(hash));
   if (!result.ok) throw new Error(`fixture ${hash}: ${result.error}`);
   return result.value;
+};
+
+/** One find of a synthetic run: a place checked at a minute of the timer. */
+export interface Played {
+  readonly location: string;
+  readonly minute: number;
+}
+
+/** The reward value the board records for a prize item: see packItems' REWARDS. */
+const rewardOf = (item: string): number =>
+  item === "pendantOfCourage"
+    ? 1
+    : item.startsWith("pendant")
+      ? 2
+      : item === "crystal5" || item === "crystal6"
+        ? 4
+        : 3;
+
+/**
+ * A run played as autotracking records one: each place checked and the item
+ * it held stamped at one instant (a prize, by its boss beaten), the timer at
+ * `minute`, the seed's medallions and prizes on the board. Built through the
+ * store's own `stampTimeline`, so the keys are the ones a real run saves.
+ */
+export const playedRun = (
+  log: AlttprSpoilerLog,
+  plan: readonly Played[],
+  run: ReviewedRun,
+  t0 = Date.UTC(2026, 9, 25, 12),
+): ReviewedRun => {
+  const held = new Map(log.placements.map((p) => [p.location, p.item]));
+  const counts: Record<string, number> = {};
+  let items = { ...run.items };
+  for (const [dungeon, item] of Object.entries(log.extra.prizes)) {
+    const index = (LEGACY_DUNGEONS as readonly string[]).indexOf(dungeon);
+    if (index >= 0) items[`reward${index}`] = rewardOf(item);
+  }
+  let checked: Record<string, true> = {};
+  let timeline: Timeline = {};
+  for (const { location, minute } of plan) {
+    const before = { checked, items };
+    const item = held.get(location);
+    const prize = /^(.+)\/prize$/.exec(location)?.[1];
+    if (prize !== undefined) {
+      const index = (LEGACY_DUNGEONS as readonly string[]).indexOf(prize);
+      items = { ...items, [`boss${index}`]: 2 };
+    } else {
+      if (item !== null && item !== undefined) {
+        counts[item] = (counts[item] ?? 0) + 1;
+        items = { ...items, ...itemsFromPack(counts) } as ItemState;
+      }
+      if (MAP_LOCATIONS.has(location))
+        checked = { ...checked, [location]: true };
+    }
+    timeline = stampTimeline(
+      timeline,
+      before,
+      { checked, items },
+      { at: t0 + minute * 60_000, ms: minute * 60_000 },
+    );
+  }
+  const pad = (medallion: string | null) =>
+    medallion === null ? 0 : MEDALLIONS.indexOf(medallion as never) + 1;
+  const medallions = [...run.medallions];
+  medallions[8] = pad(log.extra.medallions.mire);
+  medallions[9] = pad(log.extra.medallions.turtleRock);
+  return { ...run, checked, items, medallions, timeline };
 };
