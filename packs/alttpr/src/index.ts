@@ -23,7 +23,17 @@ export {
   type TileBox,
   type TileKind,
 } from "./autotrack/dark-room";
-export { ROOM_PX, type SpriteImage } from "./autotrack/dark-room-art";
+// The ROM layout the picture is read through: tests lay out synthetic ROMs
+// with it
+export {
+  ART_ROM,
+  AUX_ROWS,
+  GUARD,
+  MAIN_ROWS,
+  ROOM_PX,
+  SHEETS,
+  type SpriteImage,
+} from "./autotrack/dark-room-art";
 export {
   ART_RANGES,
   ART_RETRY_MS,
