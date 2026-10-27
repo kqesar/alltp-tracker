@@ -136,6 +136,32 @@ describe("Super Metroid's autotracking control", () => {
     expect(state().raceChoice).toBe("auto");
   });
 
+  it("says Race Mode while connected in it, and claims no legality", async () => {
+    render(<SmAutotrack />);
+    const dialog = await openDialog();
+    act(() =>
+      useSmAutotrackStore.setState({
+        active: true,
+        shown: statusOf("connected", {
+          race: {
+            active: true,
+            flag: "none",
+            overridden: false,
+            raceLegal: true,
+            setting: "on",
+          },
+        }),
+      }),
+    );
+    // racetime.gg's Super Metroid Randomizer rules say nothing of trackers
+    const badge = within(dialog).getByTestId("race-badge");
+    expect(badge).toHaveTextContent(/^Race Mode$/);
+    expect(badge).not.toHaveTextContent(/legal/i);
+    expect(within(dialog).getByTestId("race-mode")).toHaveTextContent(
+      "Race Mode is on: the tracker reads only what this game's race rules are known to allow.",
+    );
+  });
+
   it("says a seed without a name, and nothing before a reading", async () => {
     act(() => useSmAutotrackStore.setState({ reading: readingOf("") }));
     render(<SmAutotrack />);
