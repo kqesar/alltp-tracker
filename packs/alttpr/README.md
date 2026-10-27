@@ -462,8 +462,8 @@ faces, his sword and shield are therefore the screen's. What is not drawn:
 - Link always on top: a sprite the game would hide behind a high-priority tile
   is drawn over it, so he is never lost;
 - the screen shows Link where the camera put him: when the sprite lies more than
-  24 px from his footprint (a room transition, a position written by a tool)
-  the marker is drawn instead.
+  24 px from the footprint read in the same poll (a room transition, a position
+  written by a tool) the loader draws none and the marker shows instead.
 
 **Reads.** All `navigation`, so never in Race Mode: the picture's WRAM ranges
 are gated like the map's and wait for their own switch, `dark-room-art`
@@ -493,9 +493,16 @@ request over usb2snes and over RetroArch's own commands alike
   rig (RetroArch 1.22.2, bsnes-mercury, SNI 0.0.103, Chromium), the picture
   showed 0.27 s after the plan;
 - **as Link moves**: a new pose's body pieces once per ROM, a new WRAM piece
-  once per room; otherwise nothing.
+  once per room and per sword and shield (a new one is unpacked over the old
+  one, same address); otherwise nothing.
 
-A read that fails shows the plan with a note and is tried again after 5 s.
+A read of the room's graphics that fails shows the plan with a note, and is
+tried again after 5 s, then 10, 20: the pause is set by the failure alone, so
+a room where things move retries all the same. After four failures the loader
+gives up on that ROM ("could not be read"), since over usb2snes each failed read
+drops the connection. A failed read of Link's graphics keeps the room drawn and
+drops his sprite only, on the same pauses. A sheet that does not unpack is kept
+as such for the ROM and never read again.
 
 **Seen on the rig** (2026-10-27, seed `9MQ9gO1wMD`, through SNI): Link's House,
 the Secret Passage (Hyrule Castle's dark room, with its chest opened live: the

@@ -496,9 +496,15 @@ time, and resolves with each range's bytes in order.
   `ON_DEMAND_MAX` bytes (64 KiB), planned like any read (ROM pieces stop at 8
   KiB pages, so LoROM data crossing a bank end is one range). ROM a device
   cannot read is refused (`TransportError`).
-- A failed read rejects that request only: the tick goes on, nothing is skipped,
-  and the next request tries again. Requests waiting when the connection ends,
-  or asked while not connected, are rejected.
+- A failed read rejects that request, and nothing is skipped: the next request
+  tries again. What else follows depends on the bridge. A RetroArch `-1` (the
+  desktop app's direct path) fails that request alone and the tick goes on.
+  Over usb2snes a failed read closes the socket (a timeout drops it, and a
+  refusal is signalled by a close): the rest of the tick fails and the session
+  connects again, as for any lost connection. A host should therefore not
+  retry a failing read on a short fixed beat (the dark room's picture backs
+  off and gives up). Requests waiting when the connection ends, or asked while
+  not connected, are rejected.
 - A request may carry a `signal` (an `AbortSignal`): aborted while it waits for
   its tick, it is rejected with an `AbortError` and never sent. The dark room's
   picture drops its reads so when its style turns to Plan.
