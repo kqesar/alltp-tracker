@@ -204,6 +204,17 @@ describe("the sweep", () => {
 });
 
 describe("the chain behind the run", () => {
+  it("leaves out an item never in logic, wherever it was taken", () => {
+    const never = sweep.waits.map((wait) =>
+      wait.location === HOOKSHOT ? { ...wait, reach: null } : wait,
+    );
+    const chain = chainOf(never);
+    expect(chain.length).toBeGreaterThan(0);
+    expect(chain.map(({ location }) => location)).not.toContain(HOOKSHOT);
+    // Nor does an item come after it
+    for (const wait of chain) expect(wait.after?.name).not.toBe("the Hookshot");
+  });
+
   it("follows each item to the one held when it came into logic", () => {
     const chain = chainOf(sweep.waits);
     expect(chain.length).toBeGreaterThanOrEqual(3);

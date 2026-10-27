@@ -47,9 +47,12 @@ const PLAN: readonly Played[] = (() => {
 })();
 
 /** Puts a played run on the board, ends it and opens its review. */
-const openReview = async (change: Partial<ReviewedRun> = {}) => {
+const openReview = async (
+  change: Partial<ReviewedRun> = {},
+  plan: readonly Played[] = PLAN,
+) => {
   const initial = useGameStore.getInitialState();
-  const run = playedRun(log, PLAN, {
+  const run = playedRun(log, plan, {
     checked: {},
     items: initial.items,
     medallions: initial.medallions,
@@ -59,7 +62,7 @@ const openReview = async (change: Partial<ReviewedRun> = {}) => {
     smallKeys: initial.smallKeys,
     timeline: {},
   });
-  const end = ((PLAN.at(-1)?.minute ?? 0) + 2) * 60_000;
+  const end = ((plan.at(-1)?.minute ?? 0) + 2) * 60_000;
   useGameStore.setState({
     ...run,
     ...change,
@@ -168,6 +171,21 @@ describe("the waits of a reviewed run", () => {
       /Fire Rod.*Taken .*; in logic from .*, after the Hookshot/,
     );
     expect(ahead).not.toHaveTextContent(/trick|glitch|mistake/i);
+  });
+
+  it("lists an item taken whose place was never in logic, and keeps it out of the chain", async () => {
+    // The Hookshot never taken: Hookshot Cave, and its Fire Rod, never in logic
+    await openReview(
+      {},
+      PLAN.filter(({ location }) => location !== HOOKSHOT),
+    );
+    await screen.findByTestId("review-ahead");
+    const fireRod = log.placements.find((p) => p.item === "fireRod");
+    const row = screen.getByTestId(`ahead-${fireRod?.location}`);
+    expect(row).toHaveTextContent(/Taken .*; not in logic by the run's end/);
+    expect(row).not.toHaveTextContent("start");
+    const chain = screen.queryByTestId("review-chain");
+    expect(chain?.textContent ?? "").not.toContain("Fire Rod");
   });
 
   it("folds the playthrough under Details by step, with the waits in it", async () => {
