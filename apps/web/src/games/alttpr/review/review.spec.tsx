@@ -117,6 +117,12 @@ describe("when a review may open", () => {
     finishRun();
     expect(screen.getByTestId("review-open")).toHaveTextContent("Review run");
     expect(screen.getByTestId("review-import")).toBeInTheDocument();
+    // Neutral words: what came into logic when, never "late"
+    const section = screen.getByTestId("review-section");
+    expect(section).toHaveTextContent(
+      "when each item the seed needed came into logic, and when you took it",
+    );
+    expect(section).not.toHaveTextContent(/late|in order/i);
   });
 
   it("never in Race Mode, a finished run included", () => {
