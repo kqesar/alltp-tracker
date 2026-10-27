@@ -20,11 +20,9 @@ import { writeFileSync } from "node:fs";
 
 /** The ranges of memory.ts that `dark-room.ts` reads, A-bus address and size. */
 const RANGES = {
-  "dark-room-charge": [0x7e_0079, 1],
   "dark-room-chests": [0x7e_06e0, 0x20],
   "dark-room-dark": [0x7e_c005, 1],
   "dark-room-doors": [0x7e_1980, 0x20],
-  "dark-room-facing": [0x7e_002f, 1],
   "dark-room-indoors": [0x7e_001b, 1],
   "dark-room-layer": [0x7e_00ee, 1],
   "dark-room-lights": [0x7e_0458, 0x22],
@@ -33,6 +31,7 @@ const RANGES = {
   "dark-room-mode": [0x7e_0010, 2],
   "dark-room-objects": [0x7e_0500, 0x60],
   "dark-room-room": [0x7e_00a0, 2],
+  "dark-room-stance": [0x7e_002f, 0x4b],
   // The equipment that holds the Lamp
   "equipment-b": [0x7e_f344, 11],
 };

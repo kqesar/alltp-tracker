@@ -345,7 +345,7 @@ export function renderBackground(input: {
 
 /**
  * What the NMI copies to sprite VRAM each frame for Link (NMI_DoUpdates,
- * nmi.c:172-199): the offset of the source's word in the `dark-room-art-gfx`
+ * nmi.c:172-199): the source's word in `dark-room-art-sprites`, from $0AA1
  * range ($0AA1 on; null for a fixed WRAM source), the fixed source, the VRAM
  * word it lands at and its size. Body parts come from ROM (the bank at $BC),
  * the rest from WRAM.
@@ -383,7 +383,7 @@ export const LINK_UPLOADS: readonly {
   { fixed: 0xbd80, rom: false, size: 0x40, vram: 0x4340, word: null },
 ];
 
-/** The first byte of `dark-room-art-gfx`. */
+/** Where the blocksets and uploads start ($0AA1), inside `dark-room-art-sprites`. */
 export const GFX_BASE = 0x0aa1;
 
 /** One upload's A-bus source, or null when it points nowhere it can. */

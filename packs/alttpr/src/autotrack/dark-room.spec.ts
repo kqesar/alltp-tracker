@@ -160,7 +160,7 @@ describe("the dark room's ranges", () => {
     // The picture's ranges hold the game's own tilemaps and palettes: never
     // recorded. Link's stance came after these two recordings, which decode
     // without it (no facing, no charge); a recording made since holds it.
-    const stance = ["dark-room-charge", "dark-room-facing"];
+    const stance = ["dark-room-stance"];
     for (const recording of [links, passage]) {
       const ids = Object.keys(recording.ranges);
       const wanted = [
@@ -267,8 +267,10 @@ describe("decodeDarkRoom, over Link's House as the game held it", () => {
           ...Object.fromEntries(
             Object.keys(links.ranges).map((id) => [id, view.bytes(id)]),
           ),
-          "dark-room-charge": Uint8Array.of(charge),
-          "dark-room-facing": Uint8Array.of(facing),
+          // $2F, then $79 at the end
+          "dark-room-stance": Uint8Array.from({ length: 0x4b }, (_, i) =>
+            i === 0 ? facing : i === 0x4a ? charge : 0,
+          ),
         }),
         OPTIONS,
       )?.link;

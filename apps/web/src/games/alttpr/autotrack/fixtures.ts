@@ -227,13 +227,14 @@ export const putDarkRoomArt = (memory: Uint8Array) => {
   for (let i = 0; i < 128; i++) oam[i * 4 + 1] = 0xf0;
   oam.set([100, 80, 0x00, 7 << 1], 0);
   oam[0x200] = 0b10;
-  memory.set(oam, MEMORY_RANGE["dark-room-art-oam"].address);
+  const sprites = MEMORY_RANGE["dark-room-art-sprites"].address;
+  memory.set(oam, sprites);
   // Its four tiles: 0 and 1 from body piece 3 ($0ACC), 16 and 17 from body
   // piece 0 ($0ACE), both at $10:8000, a tile of colour 1
-  const gfx = MEMORY_RANGE["dark-room-art-gfx"].address;
-  memory.set([0x00, 0x80], gfx + (0x0acc - 0x0aa1));
-  memory.set([0x00, 0x80], gfx + (0x0ace - 0x0aa1));
-  memory[MEMORY_RANGE["dark-room-art-sprite-bank"].address] = 0x10;
+  memory.set([0x00, 0x80], sprites + (0x0acc - 0x0800));
+  memory.set([0x00, 0x80], sprites + (0x0ace - 0x0800));
+  // The sprite bank, $BC
+  memory[MEMORY_RANGE["dark-room-art-view"].address + (0xbc - 0xa2)] = 0x10;
   put(
     0x10_8000,
     Array.from({ length: 0x40 }, (_, i) =>
