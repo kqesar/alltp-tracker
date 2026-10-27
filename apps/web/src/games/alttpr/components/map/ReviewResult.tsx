@@ -40,7 +40,7 @@ const HIDDEN: Readonly<Record<Hidden, string>> = {
   "no-times":
     "Nothing the seed needed has a time on this run, so when each item waited is not shown.",
   "not-modelled":
-    "This run's logic is not fully known to the tracker (hidden settings, or a mode it does not model), so when each place came into logic is not shown.",
+    "This seed's logic is not one the tracker models (hidden settings, shuffled bosses, a glitched logic or a mode it does not model), so when each place came into logic is not shown.",
 };
 
 const iso = (ms: number) => `PT${Math.floor(ms / 1000)}S`;

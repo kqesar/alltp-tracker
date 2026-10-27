@@ -49,7 +49,10 @@ export type Hidden =
   | "keysanity"
   /** Entrances are shuffled: the run does not time them. */
   | "entrances"
-  /** The pack does not model the run's logic, or settings are hidden. */
+  /**
+   * The pack does not model the run's logic: settings hidden, the bosses
+   * shuffled, a glitched logic.
+   */
   | "not-modelled"
   /** Nothing the seed needed has a time. */
   | "no-times"
@@ -77,7 +80,14 @@ export const hiddenReason = (
   if (settings.entranceShuffle !== "none" || log.format === "er") {
     return "entrances";
   }
-  if (!logicModelled(settings) || (settings.hidden?.length ?? 0) > 0) {
+  // The pack ports vt's NoGlitches rules with the vanilla bosses
+  const logic = log.extra.settings?.logic;
+  if (
+    !logicModelled(settings) ||
+    (settings.hidden?.length ?? 0) > 0 ||
+    log.extra.bosses !== null ||
+    (logic?.known === true && logic.value !== "NoGlitches")
+  ) {
     return "not-modelled";
   }
   const found = required(comparison.rows).filter(

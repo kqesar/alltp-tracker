@@ -79,6 +79,33 @@ describe("when the waits are shown", () => {
     expect(hiddenReason(log, changed, comparison)).toBe(reason);
   });
 
+  it("not with the bosses shuffled: the pack's rules are the vanilla bosses'", () => {
+    const shuffled = {
+      ...log,
+      extra: { ...log.extra, bosses: { "tower-of-hera": "Kholdstare" } },
+    };
+    expect(hiddenReason(shuffled, run, comparison)).toBe("not-modelled");
+  });
+
+  it.each(["OverworldGlitches", "MajorGlitches"] as const)(
+    "not for a %s seed, whose logic is not the pack's",
+    (logic) => {
+      const { settings } = log.extra;
+      expect(settings).not.toBeNull();
+      const glitched = {
+        ...log,
+        extra: {
+          ...log.extra,
+          settings: settings && {
+            ...settings,
+            logic: { known: true as const, value: logic },
+          },
+        },
+      };
+      expect(hiddenReason(glitched, run, comparison)).toBe("not-modelled");
+    },
+  );
+
   it("not for a run with no times", () => {
     const untimed = { ...run, timeline: {} };
     expect(hiddenReason(log, untimed, compareReview(log, untimed))).toBe(
