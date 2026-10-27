@@ -132,6 +132,8 @@ export interface Wait {
   readonly location: string;
   /** Where the copy paired with it was taken (its own place, for a single item). */
   readonly where: string | null;
+  /** That place's location id. */
+  readonly place: string | null;
   readonly item: string;
   /** "Titan's Mitt": the copy taken, as the timeline names it. */
   readonly name: string;
@@ -167,6 +169,8 @@ export interface DungeonTimes {
   readonly partial: number | null;
   /** Location ids in logic at `partial`. */
   readonly atPartial: readonly string[];
+  /** Each of its places: the play time it came into logic, null never. */
+  readonly reaches: Readonly<Record<string, number | null>>;
   readonly full: number | null;
   readonly fullAfter: After | null;
   readonly entered: number | null;
@@ -555,6 +559,7 @@ export function* sweepRun(
           ? row.entry.placement.itemName
           : findName(takenKey),
       opened: [],
+      place: takenRow?.entry.placement.location ?? null,
       reach,
       reachIndex,
       sphere,
@@ -653,6 +658,12 @@ export function* sweepRun(
         id: marker.dungeon,
         name: marker.name,
         partial: partial === undefined ? null : playAt(partial),
+        reaches: Object.fromEntries(
+          locations.map((id, i) => {
+            const at = firsts[i];
+            return [id, at === undefined ? null : playAt(at)];
+          }),
+        ),
         total: locations.length,
       },
     ];

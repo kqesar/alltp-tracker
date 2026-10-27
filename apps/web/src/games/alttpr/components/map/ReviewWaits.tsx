@@ -118,30 +118,37 @@ const Track = ({ wait, sweep }: { wait: Wait; sweep: Sweep }) => {
   );
 };
 
-/** The dungeon an item waited in, when only part of it was in logic then. */
-const dungeonContext = (wait: Wait, sweep: Sweep): string | null => {
-  const dungeon = sweep.dungeons.find(({ name }) =>
-    wait.where?.startsWith(`${name} - `),
+/**
+ * The dungeon an item waited in, when only part of it was in logic then:
+ * the places in logic at the item's own "in logic from", its place among them.
+ */
+export const dungeonContext = (wait: Wait, sweep: Sweep): string | null => {
+  const { place, reach } = wait;
+  const dungeon = sweep.dungeons.find(
+    ({ reaches }) => place !== null && place in reaches,
   );
   if (
     dungeon === undefined ||
+    place === null ||
+    reach === null ||
     dungeon.full === null ||
-    dungeon.partial === null ||
-    wait.reach === null ||
-    dungeon.full <= wait.reach
+    dungeon.full <= reach
   ) {
     return null;
   }
+  const then = Object.entries(dungeon.reaches)
+    .filter(([, at]) => at !== null && at <= reach)
+    .map(([id]) => id);
+  if (!then.includes(place)) return null;
   const short = (id: string) =>
     locationName(id).replace(`${dungeon.name} - `, "");
-  const from = (ms: number) => (ms === 0 ? "the start" : formatTime(ms));
   const entered =
     dungeon.entered === null
       ? ""
       : ` You entered it at ${formatTime(dungeon.entered)}.`;
   return (
-    `${dungeon.name}: ${dungeon.atPartial.length} of ${dungeon.total} places in logic from ` +
-    `${from(dungeon.partial)} (${andList(dungeon.atPartial.map(short))}); one held the ${wait.name}. ` +
+    `${dungeon.name}: ${then.length} of ${dungeon.total} places were in logic then ` +
+    `(${andList(then.map(short))}); one held the ${wait.name}. ` +
     `The whole dungeon was in logic from ${formatTime(dungeon.full)}` +
     `${dungeon.fullAfter === null ? "" : `, with ${dungeon.fullAfter.name}`}.${entered}`
   );

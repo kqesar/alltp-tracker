@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
+import { dungeonContext } from "@/games/alttpr/components/map/ReviewWaits";
 import { getPreset } from "@/games/alttpr/data/presets";
 import { compareReview, type ReviewedRun } from "@/games/alttpr/review/adapter";
 import {
@@ -16,6 +17,7 @@ import {
   spoilerFile,
   spoilerLog,
 } from "@/games/alttpr/review/fixtures";
+import type { Sweep, Wait } from "@/games/alttpr/review/sweep";
 import { useCloseReview } from "@/games/alttpr/review/useReview";
 import { useSweep } from "@/games/alttpr/review/useSweep";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
@@ -299,5 +301,69 @@ describe("the sweep on the page", () => {
     );
     act(() => vi.runAllTimers());
     expect(hidden.result.current).toBeNull();
+  });
+});
+
+describe("the dungeon sentence", () => {
+  const MIN = 60_000;
+  const wait: Wait = {
+    after: null,
+    copies: 1,
+    icon: "hookshot",
+    inferred: false,
+    item: "hookshot",
+    kind: "major",
+    location: "eastern-palace/map-chest",
+    name: "Hookshot",
+    opened: [],
+    place: "eastern-palace/map-chest",
+    reach: 20 * MIN,
+    sphere: 1,
+    taken: 90 * MIN,
+    takenKey: "item:hookshot",
+    tradeOff: null,
+    waited: 70 * MIN,
+    where: "Eastern Palace - Map Chest",
+  };
+  const sweep: Sweep = {
+    breaks: [],
+    dungeons: [
+      {
+        atPartial: [
+          "eastern-palace/compass-chest",
+          "eastern-palace/cannonball-chest",
+        ],
+        entered: 30 * MIN,
+        finished: null,
+        full: 60 * MIN,
+        fullAfter: null,
+        id: "eastern-palace",
+        name: "Eastern Palace",
+        partial: 0,
+        reaches: {
+          "eastern-palace/big-chest": 60 * MIN,
+          "eastern-palace/big-key-chest": 60 * MIN,
+          "eastern-palace/boss": 60 * MIN,
+          "eastern-palace/cannonball-chest": 0,
+          "eastern-palace/compass-chest": 0,
+          "eastern-palace/map-chest": 20 * MIN,
+        },
+        total: 6,
+      },
+    ],
+    end: 100 * MIN,
+    solves: 0,
+    timerEnd: 100 * MIN,
+    waits: [wait],
+  };
+
+  it("names the places in logic when the item came into logic, its own among them", () => {
+    expect(dungeonContext(wait, sweep)).toBe(
+      "Eastern Palace: 3 of 6 places were in logic then (Cannonball Chest, Compass Chest and Map Chest); one held the Hookshot. The whole dungeon was in logic from 1:00:00. You entered it at 30:00.",
+    );
+  });
+
+  it("says nothing once the whole dungeon was in logic", () => {
+    expect(dungeonContext({ ...wait, reach: 60 * MIN }, sweep)).toBeNull();
   });
 });
