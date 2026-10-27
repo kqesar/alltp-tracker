@@ -5,8 +5,11 @@
 // none for this game). A whitelist, as ALttPR's (games/alttpr/overlay.ts).
 
 import { OBJECTIVES, SM_ITEMS } from "@alltp/pack-sm";
+import { raceSourceOf } from "@/autotrack/raceMode";
+import { useSmAutotrackStore } from "@/games/sm/autotrack/store";
 import { type SmProgress, useSmStore } from "@/games/sm/store";
 import type { OverlayReading, OverlaySource } from "@/overlay/protocol";
+import { raceSafe } from "@/overlay/race";
 import { overlayTimerOf } from "@/overlay/timer";
 import type { RunTimer } from "@/utils/runTimer";
 
@@ -39,7 +42,11 @@ export const overlayReadingOf = (run: SmRun): OverlayReading => {
   };
 };
 
-export const overlaySource: OverlaySource = {
-  read: () => overlayReadingOf(useSmStore.getState()),
-  subscribe: (listener) => useSmStore.subscribe(listener),
-};
+/** The run as the API tells it: with no time in Race Mode (overlay/race.ts). */
+export const overlaySource: OverlaySource = raceSafe(
+  {
+    read: () => overlayReadingOf(useSmStore.getState()),
+    subscribe: (listener) => useSmStore.subscribe(listener),
+  },
+  raceSourceOf(useSmAutotrackStore),
+);

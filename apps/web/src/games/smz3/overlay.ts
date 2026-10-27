@@ -10,9 +10,12 @@
 // Zelda items go by ALttPR's overlay ids where the two share them.
 
 import { ITEMS } from "@alltp/pack-smz3";
+import { raceSourceOf } from "@/autotrack/raceMode";
+import { smz3Autotrack } from "@/games/smz3/autotrack/store";
 import { SM_CELLS, ZELDA_CELLS } from "@/games/smz3/data";
 import { type Smz3Progress, useSmz3Store } from "@/games/smz3/store";
 import type { OverlayReading, OverlaySource } from "@/overlay/protocol";
+import { raceSafe } from "@/overlay/race";
 import { overlayTimerOf } from "@/overlay/timer";
 import type { RunTimer } from "@/utils/runTimer";
 
@@ -42,7 +45,11 @@ export const overlayReadingOf = (run: Smz3Run): OverlayReading => {
   };
 };
 
-export const overlaySource: OverlaySource = {
-  read: () => overlayReadingOf(useSmz3Store.getState()),
-  subscribe: (listener) => useSmz3Store.subscribe(listener),
-};
+/** The run as the API tells it: with no time in Race Mode (overlay/race.ts). */
+export const overlaySource: OverlaySource = raceSafe(
+  {
+    read: () => overlayReadingOf(useSmz3Store.getState()),
+    subscribe: (listener) => useSmz3Store.subscribe(listener),
+  },
+  raceSourceOf(smz3Autotrack.useStore),
+);
