@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { RaceSource } from "@/autotrack/raceMode";
+import { type RaceSource, raceSourceOf } from "@/autotrack/raceMode";
 import { overlaySource as alttprSource } from "@/games/alttpr/overlay";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -31,30 +31,49 @@ const readingOf = (hookshot: number): OverlayReading => ({
   },
 });
 
-/** A run and a Race Mode the test changes, firing listeners as stores do. */
-const fakes = () => {
+/** Listeners kept apart, as two stores keep theirs. */
+const listenerSet = () => {
   const listeners = new Set<() => void>();
+  return {
+    fire: () => {
+      for (const listener of listeners) listener();
+    },
+    listeners,
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+};
+
+/**
+ * A run and a Race Mode the test changes, each firing its own listeners: a
+ * Race Mode change reaches the publisher only through the race source.
+ */
+const fakes = () => {
+  const run = listenerSet();
+  const raceListeners = listenerSet();
   let reading = readingOf(0);
   let race = false;
-  const subscribe = (listener: () => void) => {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
+  const source: OverlaySource = {
+    read: () => reading,
+    subscribe: run.subscribe,
   };
-  const fire = () => {
-    for (const listener of listeners) listener();
+  const raceSource: RaceSource = {
+    isOn: () => race,
+    subscribe: raceListeners.subscribe,
   };
-  const source: OverlaySource = { read: () => reading, subscribe };
-  const raceSource: RaceSource = { isOn: () => race, subscribe };
   return {
     find: () => {
       reading = readingOf(1);
-      fire();
+      run.fire();
     },
-    listeners,
+    raceListeners: raceListeners.listeners,
     raceSource,
+    runListeners: run.listeners,
     setRace: (on: boolean) => {
       race = on;
-      fire();
+      raceListeners.fire();
     },
     source,
   };
@@ -97,6 +116,9 @@ describe("the overlay API in Race Mode", () => {
       source: raceSafe(fake.source, fake.raceSource),
     });
     expect(last().state.timer).toMatchObject({ state: "running" });
+    // It listens to the run and to Race Mode, each once
+    expect(fake.runListeners.size).toBe(1);
+    expect(fake.raceListeners.size).toBe(1);
 
     fake.setRace(true);
     vi.advanceTimersByTime(OVERLAY_DELAY_MS);
@@ -122,7 +144,40 @@ describe("the overlay API in Race Mode", () => {
     vi.advanceTimersByTime(OVERLAY_DELAY_MS);
     expect(last().state.timer).toMatchObject({ state: "running" });
     stop();
-    expect(fake.listeners.size).toBe(0);
+    expect(fake.runListeners.size).toBe(0);
+    expect(fake.raceListeners.size).toBe(0);
+  });
+});
+
+describe("raceSourceOf", () => {
+  beforeEach(() => {
+    useAutotrackStore.setState(useAutotrackStore.getInitialState(), true);
+  });
+
+  it("answers as the store's Race Mode, failing closed, and calls only when that changes", () => {
+    const race = raceSourceOf(useAutotrackStore);
+    const listener = vi.fn();
+    const stop = race.subscribe(listener);
+    expect(race.isOn()).toBe(false);
+
+    // A change that leaves the answer as it was calls nothing
+    useAutotrackStore.setState({ elsewhere: false, seedFile: null });
+    expect(listener).not.toHaveBeenCalled();
+
+    useAutotrackStore.setState({ raceChoice: "on" });
+    expect(race.isOn()).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+    // On already: Auto with autotracking set to connect stays on, unread
+    useAutotrackStore.setState({ connectOnStart: true, raceChoice: "auto" });
+    expect(race.isOn()).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+    useAutotrackStore.setState({ connectOnStart: false });
+    expect(race.isOn()).toBe(false);
+    expect(listener).toHaveBeenCalledTimes(2);
+
+    stop();
+    useAutotrackStore.setState({ raceChoice: "on" });
+    expect(listener).toHaveBeenCalledTimes(2);
   });
 });
 
