@@ -4,13 +4,13 @@
 // tables (vt app/World.php:1110-1345, writeToRom), where the game reads it
 // as it plays; the tracker reads the same bytes.
 //
-// Race Mode reads the ROM header and $30:8210-$30:823F alone, its own
-// windows. The race rules (v2.0) let a tracker set itself up from the ROM's
-// settings unless the seed is a Mystery one; Race Mode stays stricter
-// (deliberately, pending clarification). The only setting in its windows is
-// the seed type (the logic); every other table lies outside, so a race
-// seed's settings are never read, and stay the player's to choose. The memory map (memory.ts) lists these ranges
-// beside the rest, and the race guard holds them to the same rules.
+// Race Mode reads none of them. The race rules (v2.0) let a tracker set
+// itself up from the ROM's settings only "if it can ensure it does not do so
+// on Mystery seeds", and a race seed's ROM does not say whether it is one
+// (only its file on alttpr.com does, which Race Mode never asks for): so a
+// race seed's settings, the logic included, are never read, and stay the
+// player's to choose. The memory map (memory.ts) lists these ranges beside
+// the rest, and the race guard holds them to the same rules.
 //
 // Sources, read as data and never run (MEMORY_SOURCES in memory.ts):
 // - z3: z3randomizer at dcb0a2b4, tables.asm and initsramtable.asm, for
@@ -38,7 +38,7 @@ function rom<const Id extends string>(
   id: Id,
   at: number,
   size: number,
-  category: "other" | "prizes" | "rom-header",
+  category: "other" | "prizes",
   source: SourceRef,
 ): AlttprRange & { readonly id: Id } {
   return {
@@ -53,14 +53,12 @@ function rom<const Id extends string>(
 }
 
 /**
- * The ROM ranges that hold a seed's settings, in address order. All but the
- * seed type lie outside the memory Race Mode reads: their category is the
- * race profile's `other`, which Race Mode never reads. The seed type sits in
- * Race Mode's $30:8210-$30:823F, beside the race flag: `rom-header` is the
- * profile's category for it ("allowed to read any SRAM and/or ROM locations
- * at any time", short of entrances and location contents). Two of bank $30's
- * tables among them are the prizes' (prizes.ts), under the profile's
- * `prizes`, which no race permits.
+ * The ROM ranges that hold a seed's settings, in address order. All lie
+ * outside the memory Race Mode reads: their category is the race profile's
+ * `other`, which Race Mode never reads. The seed type sits beside the race
+ * flag and its complement ($30:8213-$30:8214), which Race Mode reads alone. Two of bank $30's tables
+ * among them are the prizes' (prizes.ts), under the profile's `prizes`,
+ * which no race permits.
  */
 export const SEED_SETTINGS_RANGES = [
   // MireRequiredMedallion and TRockRequiredMedallion: the medallion each
@@ -110,7 +108,7 @@ export const SEED_SETTINGS_RANGES = [
   rom("ganon-vulnerable", 0x30_81a8, 1, "other", "z3:tables.asm:940-952"),
   // RandomizerSeedType: $00 no glitches, $01 major glitches, $02 overworld
   // glitches (tables.asm:970-972; vt Rom.php:832-851, World.php:1292-1324).
-  rom("seed-type", 0x30_8210, 1, "rom-header", "z3:tables.asm:970-972"),
+  rom("seed-type", 0x30_8210, 1, "other", "z3:tables.asm:970-972"),
   // The initial save's overworld byte of screen $5B, the pyramid: $20 once
   // its hole is open from the start (initsramtable.asm:17, 27: the table
   // copies the save's layout from $30:B000, overworld events at +$280). vt
@@ -388,8 +386,9 @@ function seedName(memory: MemoryView): string | null {
 
 /**
  * A seed's settings, from its ROM. Pure and total: any bytes decode. In
- * Race Mode it never asks for a range Race Mode leaves alone: every setting but the
- * logic is then unknown, "race-mode".
+ * Race Mode it never asks for a range Race Mode leaves alone: every setting,
+ * the logic included, is then unknown, "race-mode"; the seed's name comes
+ * from the header.
  * @param memory - The ranges read, by id: the session's snapshot
  */
 export function decodeSeedSettings(

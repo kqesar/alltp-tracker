@@ -152,7 +152,7 @@ describe("ALTTPR_RACE_FLAG", () => {
   it("reads two bytes at 0x308213, as the transport takes it", () => {
     // LoROM $30:8213 is ROM offset 0x180213: FX Pak Pro space.
     expect(ALTTPR_RACE_FLAG).toMatchObject({ address: 0x18_0213, size: 2 });
-    // Inside Race Mode's $30:8210-$30:823F, ROM 0x180210-0x18023F.
+    // Race Mode's window in bank $30 is the pair alone, ROM 0x180213-0x180214.
     const { address, size } = ALTTPR_RACE_FLAG;
     expect(
       ALTTPR_RACE_PROFILE.permitted.some(
@@ -162,8 +162,8 @@ describe("ALTTPR_RACE_FLAG", () => {
       ),
     ).toBe(true);
     expect(ALTTPR_RACE_PROFILE.permitted).toContainEqual({
-      address: 0x18_0210,
-      size: 0x30,
+      address: 0x18_0213,
+      size: 2,
     });
   });
 

@@ -126,6 +126,8 @@ describe("MEMORY_RANGES", () => {
       "tower-crystals:other",
       "ganon-crystals:other",
       "ganon-vulnerable:other",
+      // The seed type, a setting a Mystery seed may hide (seed-settings.ts)
+      "seed-type:other",
       "initial-pyramid:other",
       "initial-progress:other",
       // The dark room map (dark-room.ts): navigation, which no race permits
@@ -251,7 +253,8 @@ describe("MEMORY_RANGES", () => {
     // overworld screen one with the game mode. Race Mode asks for neither.
     // The dark room's gate (mode, indoors, dark: 4 bytes) rides in the casual
     // phase with its switch on, 13 bytes and 2 pieces over what it was; the
-    // rest of it is gated, read apart. The race phase is what it was.
+    // rest of it is gated, read apart. The seed type left the race phase
+    // for the casual one (a setting, which Race Mode never reads).
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -262,9 +265,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 798, pieces: 21 },
-      race: { bytes: 364, pieces: 25 },
-      ranges: { casual: 34, race: 33 },
+      casual: { bytes: 799, pieces: 22 },
+      race: { bytes: 363, pieces: 24 },
+      ranges: { casual: 35, race: 32 },
     });
   });
 });

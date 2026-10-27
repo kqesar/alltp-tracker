@@ -12,7 +12,7 @@ describe("ALTTPR_RACE_PROFILE", () => {
       { address: 0x00_7fb0, size: 0x30 },
       { address: 0xf5_0010, size: 1 },
       { address: 0xf5_f000, size: 0x501 },
-      { address: 0x18_0210, size: 0x30 },
+      { address: 0x18_0213, size: 2 },
     ]);
     expect(ALTTPR_RACE_PROFILE.raceFlag).toEqual({
       address: 0x18_0213,

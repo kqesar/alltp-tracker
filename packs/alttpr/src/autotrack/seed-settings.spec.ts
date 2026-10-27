@@ -198,16 +198,19 @@ describe("decodeSeedSettings", () => {
     expect(shown(decode(image({ [OFFSET.seedType]: type })).logic)).toBe(logic);
   });
 
-  it("reads only the seed and its logic in Race Mode", () => {
+  it("reads only the seed's name in Race Mode, no setting, the logic included", () => {
+    // v2.0 lets a tracker set itself up from the ROM only if it can ensure
+    // the seed is no Mystery one, which a race seed's ROM does not say
     const memory = writeSeedSettings(image(), {
       dungeonItems: "full",
+      logic: "OverworldGlitches",
       mode: "standard",
     });
     expect(settings(decode(memory, { race: true }))).toEqual({
       crystalsGanon: "?race-mode",
       crystalsTower: "?race-mode",
       goal: "?race-mode",
-      logic: "NoGlitches",
+      logic: "?race-mode",
       mode: "?race-mode",
       seed: "eM43RgZ4Gj",
       swordless: "?race-mode",
@@ -236,7 +239,7 @@ describe("decodeSeedSettings", () => {
     });
     expect(
       shown(decode(memory, { race: true, unread: ["seed-type"] }).logic),
-    ).toBe("?not-read");
+    ).toBe("?race-mode");
     expect(
       shown(decode(memory, { race: true, unread: ["initial-progress"] }).mode),
     ).toBe("?race-mode");
@@ -307,15 +310,18 @@ describe("SEED_SETTINGS_RANGES", () => {
     }
   });
 
-  it("is race-permitted in Race Mode's $30:8210-$30:823F only", () => {
+  it("is never race-permitted, nor inside Race Mode's memory", () => {
     const legal = SEED_SETTINGS_RANGES.filter((range) =>
       permitted(range.category),
     );
-    expect(legal.map((range) => range.id)).toEqual(["seed-type"]);
-    for (const range of SEED_SETTINGS_RANGES) {
-      const inWindow =
-        range.bus >= 0x30_8210 && range.bus + range.size - 1 <= 0x30_823f;
-      expect(permitted(range.category), range.id).toBe(inWindow);
+    expect(legal.map((range) => range.id)).toEqual([]);
+    for (const { address, id, size } of SEED_SETTINGS_RANGES) {
+      const inside = ALTTPR_RACE_PROFILE.permitted.some(
+        (window) =>
+          address < window.address + window.size &&
+          window.address < address + size,
+      );
+      expect(inside, id).toBe(false);
     }
   });
 });
