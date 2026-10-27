@@ -2,15 +2,22 @@
 //
 // racetime.gg's smz3 category (racetime.gg/smz3, its rules updated
 // 2024-01-30) allows autotracking and bans ROM and RAM inspection besides;
-// SMZ3 has no autotracking specification of its own. So the profile keeps to
-// what a player sees: what they hold, the locations they checked, the
-// settings a race announces. It forbids, in a race, what only the ROM
-// knows: the requirements a seed may draw at random (the crystals Ganon's
-// Tower and Ganon ask for, the bosses Tourian asks for) and the medallions
-// that open Misery Mire and Turtle Rock. Which dungeon or boss holds which
-// reward is never read: the pendants, crystals and boss tokens held are
-// (decode.ts), so a reward counts once found. Decided on 2026-10-19,
-// without asking the moderators.
+// SMZ3 has no autotracking specification of its own, and its tournaments
+// race under A Link to the Past's: "Autotracking is permitted in compliance
+// with the TARC ruleset" (SMZ3 Winter 2025 Community Tournament rules, read
+// 2026-10-27), the ALTTPR Auto-tracker Rules and Guidelines v2.0. So the
+// profile keeps to what a player sees and to v2.0: what they hold, the
+// locations they checked, the settings a race announces. It forbids, in a
+// race, what only the ROM knows: the requirements a seed may draw at random
+// (the crystals Ganon's Tower and Ganon ask for, the bosses Tourian asks
+// for) and the medallions that open Misery Mire and Turtle Rock. Which
+// dungeon or boss holds which reward is never read: the pendants, crystals
+// and boss tokens held are (decode.ts), so a reward counts once found; but
+// in a race, not the crystals, whose bits tell the red ones (5 and 6) from
+// the blue, which v2.0 forbids ("trackers may not auto-track which crystal
+// is a 5/6-crystal"): `decodeItems` leaves them out, the Zelda save being
+// read whole. Decided on 2026-10-19 without asking the moderators; the
+// crystals on 2026-10-27.
 //
 // Two more are kept out on purpose (2026-10-25). `seed-guid`: the seed's id,
 // 32 characters the post-run review matches a spoiler log with; it states no

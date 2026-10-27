@@ -443,13 +443,24 @@ function smItems(save: Save): Record<string, number> {
 const MAX = new Map(ITEMS.map((item) => [item.id, item.max]));
 
 /**
+ * The crystals, whose kind the race rules keep from a tracker: "trackers may
+ * not auto-track which crystal is a 5/6-crystal" (ALTTPR Auto-tracker Rules
+ * v2.0, which SMZ3's tournaments race under), and the save tells the red ones
+ * (5 and 6) from the blue by their bits.
+ */
+const RACE_HIDDEN_ITEMS: readonly string[] = ["crystalBlue", "crystalRed"];
+
+/**
  * The items held in both games, by the pack's item id, capped at their
  * pools: 1 or 0 for an item held or not, a level or a count for the others.
  * The keys are the keys found (z3 stats.asm:264-276), which no door takes
- * back; the rewards, those found.
+ * back; the rewards, those found. In Race Mode the crystals are left out
+ * (`RACE_HIDDEN_ITEMS`): the board has no cell for a crystal of either kind,
+ * so they stay the player's to mark.
  */
 export function decodeItems(
   memory: MemoryView,
+  race = false,
 ): Readonly<Record<string, number>> | Unsettled {
   const zelda = zeldaSave(memory);
   const sm = smSave(memory);
@@ -459,6 +470,7 @@ export function decodeItems(
   for (const [id, count] of Object.entries(counts)) {
     counts[id] = Math.max(0, Math.min(count, MAX.get(id) ?? 0));
   }
+  if (race) for (const id of RACE_HIDDEN_ITEMS) delete counts[id];
   return counts;
 }
 
