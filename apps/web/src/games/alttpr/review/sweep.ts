@@ -57,7 +57,12 @@ export type Hidden =
   /** Nothing the seed needed has a time. */
   | "no-times"
   /** Tracked by hand: its times are clicks. */
-  | "by-hand";
+  | "by-hand"
+  /**
+   * Autotracked in Race Mode, which never reads a dungeon's chests: places
+   * outside dungeons are stamped, none inside, so most finds go by item.
+   */
+  | "race-mode";
 
 const required = (rows: readonly ReviewRow[]) =>
   rows.filter(({ entry }) => entry.placement.sphere !== null);
@@ -97,7 +102,22 @@ export const hiddenReason = (
   const placed = found.filter(
     ({ entry }) => !entry.inferred && entry.find?.location !== undefined,
   ).length;
-  return placed * 2 < found.length ? "by-hand" : null;
+  if (placed * 2 >= found.length) return null;
+  return dungeonChecksStamped(run) === "outside only" ? "race-mode" : "by-hand";
+};
+
+/** Whether a dungeon's place, or only places outside dungeons, were stamped. */
+const dungeonChecksStamped = (
+  run: Pick<ReviewedRun, "timeline">,
+): "inside" | "outside only" | "none" => {
+  let outside = false;
+  for (const key of Object.keys(run.timeline)) {
+    if (!key.startsWith("check:")) continue;
+    const place = key.slice(6);
+    if (DUNGEONS.some(({ id }) => place.startsWith(`${id}/`))) return "inside";
+    outside = true;
+  }
+  return outside ? "outside only" : "none";
 };
 
 /** One instant the run changed at, the run's start first. */
@@ -194,6 +214,8 @@ export interface Sweep {
   readonly dungeons: readonly DungeonTimes[];
   /** How many times the run was solved. */
   readonly solves: number;
+  /** Whether any dungeon place was stamped (Race Mode stamps none). */
+  readonly dungeonChecks: boolean;
 }
 
 const DUNGEON_PRIZES = new Set(DUNGEONS.map((d) => `${d.id}/prize`));
@@ -671,6 +693,7 @@ export function* sweepRun(
 
   return {
     breaks: gaps.map(([a, b]) => ({ at: play(a), length: b - a })),
+    dungeonChecks: dungeonChecksStamped(run) === "inside",
     dungeons,
     end: play(timerEnd),
     solves,
