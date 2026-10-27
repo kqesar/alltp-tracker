@@ -18,11 +18,18 @@ const STRICT =
  * it. Race Mode is stricter than v2.0 on purpose: it keeps the categories
  * v2.0 opened (checks inside dungeons, prizes upon collection, the HUD's
  * counts, some stats, the ROM's settings) forbidden until their limits are
- * clarified, and reads only inside the memory windows of the earlier
- * version, in the SNES LoROM space, ends inclusive (the internal header line
- * $FFB0-$FFDF is bank $00). v2.0 lists no addresses ("it does not matter
- * where information is gathered, only that its use is allowed or
- * disallowed"): the windows are the tracker's own limit. "Anything not
+ * clarified, and reads only inside the memory windows below, in the SNES
+ * LoROM space, ends inclusive (the internal header line $FFB0-$FFDF is bank
+ * $00). v2.0 lists no addresses ("it does not matter where information is
+ * gathered, only that its use is allowed or disallowed"): the windows are
+ * the tracker's own limit. They started as the earlier version's, whose
+ * WRAM window ($7E:0000-$7E:00B0) held Link's coordinates ($20-$23), the
+ * room ($A0) and the overworld screen ($8A). The race admins' clarification
+ * of 11 and 13 June 2026 (no change to the rules) says a tracker may not
+ * identify or display Link's position, dungeon, room or X/Y in a race, so
+ * the WRAM window is now only the game mode ($7E:0010: when the game starts
+ * and ends), which holds no coordinates, room or dungeon. Widening a window needs a read of
+ * what the new bytes hold (memory.spec.ts holds the position out). "Anything not
  * covered in this document is, by default, considered not permitted": the
  * `other` category stands for it. v2.0 says nothing of a race flag: the
  * randomizer's tournament flag is what switches Race Mode on.
@@ -71,7 +78,7 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
     },
     navigation: {
       permitted: false,
-      rule: "Anything not covered in this document is, by default, considered not permitted. A dark room's plan and Link's place in it show what the game hides without the Lamp, so Race Mode never reads them.",
+      rule: "Anything not covered in this document is, by default, considered not permitted: the race admins' clarification of June 2026 (no change to v2.0) reads it to bar any display of Link's position, the dungeon ID, the room ID or the X/Y coordinates, and what follows from them. A dark room's plan and Link's place in it show the same and what the game hides without the Lamp, so Race Mode never reads them.",
     },
     other: {
       permitted: false,
@@ -102,8 +109,7 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
   mapping: "lorom",
   permitted: [
     [0x00_ffb0, 0x00_ffdf],
-    [0x7e_0000, 0x7e_00b0],
-    [0x7e_010b, 0x7e_010b],
+    [0x7e_0010, 0x7e_0010],
     [0x7e_f000, 0x7e_f500],
     [0x30_8210, 0x30_823f],
   ],

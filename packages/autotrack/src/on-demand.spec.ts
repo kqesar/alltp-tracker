@@ -75,7 +75,7 @@ describe("Poller.request", () => {
       ranges: SAMPLE_SOURCE.ranges
         .map((r) => (r.everyMs === undefined ? r : { ...r, everyMs: 500 }))
         .concat({
-          address: bus(0x7e_0011),
+          address: bus(0x7e_0010),
           category: "game-start",
           everyMs: 250,
           id: "tick",
