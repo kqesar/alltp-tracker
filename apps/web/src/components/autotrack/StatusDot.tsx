@@ -26,7 +26,10 @@ export const StatusDot = ({
  * set it always on, the seed's race flag says so, or the flag could not be
  * read and Race Mode stays on to be safe (the session fails closed).
  */
-export const raceReason = (race: RaceStatus) => {
+export const raceReason = (race: RaceStatus, flag = true) => {
+  if (!flag) {
+    return "Race Mode is on: the tracker reads only what this game's race rules are known to allow. Its ROMs carry no race flag, so turn it off yourself outside a race.";
+  }
   if (race.setting === "on") {
     return "Race Mode is always on, as you set it: the tracker reads only what races permit.";
   }
@@ -42,15 +45,24 @@ export const raceReason = (race: RaceStatus) => {
  * to the ALTTPR Auto-tracker Rules v2.0 and is stricter than they ask
  * (`packages/autotrack/README.md`).
  * Set always on, it says so in a second part: "Race-legal | Always on".
+ * For a game without a race flag (Map Rando), whose racetime.gg rules say
+ * nothing of autotracking, it claims no legality: "Race Mode", on by default.
+ * @param flag - Whether the game's ROMs carry a race flag
  */
-export const RaceBadge = ({ race }: { race: RaceStatus }) => (
+export const RaceBadge = ({
+  flag = true,
+  race,
+}: {
+  flag?: boolean;
+  race: RaceStatus;
+}) => (
   <span
     className="race-badge"
     data-testid="race-badge"
-    title={raceReason(race)}
+    title={raceReason(race, flag)}
   >
-    Race-legal
-    {race.setting === "on" && (
+    {flag ? "Race-legal" : "Race Mode"}
+    {flag && race.setting === "on" && (
       <>
         {" "}
         <span className="race-badge__forced" data-testid="race-badge-forced">

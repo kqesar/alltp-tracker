@@ -85,7 +85,7 @@ export const GameAutotrackDialog = <Reading,>({
               >
                 {headline}
               </p>
-              {race && <RaceBadge race={race} />}
+              {race && <RaceBadge flag={session.raceFlag} race={race} />}
             </div>
             <p className="autotrack-status__detail">
               {unavailable
@@ -94,7 +94,7 @@ export const GameAutotrackDialog = <Reading,>({
             </p>
             {race && (
               <p className="autotrack-status__detail" data-testid="race-mode">
-                {raceReason(race)}
+                {raceReason(race, session.raceFlag)}
               </p>
             )}
           </div>
