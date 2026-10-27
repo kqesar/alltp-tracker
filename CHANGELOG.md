@@ -2,6 +2,40 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.48.3](https://github.com/kqesar/alltp-tracker/compare/v2.48.2...v2.48.3) (2026-10-27)
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** keep the seed type out of Race Mode ([668d682](https://github.com/kqesar/alltp-tracker/commit/668d682e8db413aadb99ff5e24247842e2c6b127))
+* **sm:** read only items and boss kills in Race Mode ([cbd5d5a](https://github.com/kqesar/alltp-tracker/commit/cbd5d5a5eedbd28b5ff7c82b41e2a6a2c01f3400))
+* **sm:** read only the equipment words the items count needs ([3a122a0](https://github.com/kqesar/alltp-tracker/commit/3a122a03cfd864531ad58d0e95f9b72d59810f61))
+* **sm:** tell only boss kills among the objectives in Race Mode ([0327edf](https://github.com/kqesar/alltp-tracker/commit/0327edf514f852e3ed4a6d69ffa591834b5aa8c9))
+* **smz3:** tell no crystal's kind in Race Mode ([ba97b17](https://github.com/kqesar/alltp-tracker/commit/ba97b17f915895201700d08b8342442f83c737eb))
+* **web:** call Map Rando's race badge Race Mode, not race-legal ([4656134](https://github.com/kqesar/alltp-tracker/commit/4656134f7ff9288be831cf4ba2d85ee17b70d51f))
+* **web:** decode nothing a race forbids in a Super Metroid race reading ([533884c](https://github.com/kqesar/alltp-tracker/commit/533884c54493bd19c836f8b3c3ea6faa50c5c52c))
+* **web:** fail closed while autotracking has not read the race flag ([5a6605f](https://github.com/kqesar/alltp-tracker/commit/5a6605f617619e419cf5d89de43e024f730d5742))
+* **web:** give the Run tab's columns its free height, not the review line ([bb1e9c7](https://github.com/kqesar/alltp-tracker/commit/bb1e9c72427afc6f139859382ed2ab1b25255124))
+* **web:** hold Super Metroid's Race Mode to boss kills and no seed name ([52798a8](https://github.com/kqesar/alltp-tracker/commit/52798a83ed5a6f1991594c24f2a89afc37547015))
+* **web:** keep SMZ3's crystals and seed name out of Race Mode ([eef3514](https://github.com/kqesar/alltp-tracker/commit/eef35144b0054a004b4cc7058e539cbe9bea7944))
+* **web:** leave Super Metroid's run timer to the player in Race Mode ([13300b6](https://github.com/kqesar/alltp-tracker/commit/13300b64ba40c305bffc6fe4750e4d22c44ec930))
+* **web:** leave the places checked out of the timeline in Race Mode ([d4fcde8](https://github.com/kqesar/alltp-tracker/commit/d4fcde81a71c3a1092270bffd0048f8b3fd0cf5b))
+* **web:** relay only the grid and timer of a run in Race Mode ([c84ce12](https://github.com/kqesar/alltp-tracker/commit/c84ce129a7d3a5d8d75d46e0d01dfce8f90b4aef))
+* **web:** save Super Metroid's Off as off, with no save version bump ([cabc17c](https://github.com/kqesar/alltp-tracker/commit/cabc17c7e0b3870d37dcb27be6b1f5e20910aec3))
+* **web:** say only what is true of Race Mode in its texts and docs ([aec3a8c](https://github.com/kqesar/alltp-tracker/commit/aec3a8c8a2d766c4a2bcac6224e3cff1c5774909))
+* **web:** send the overlay API no time in Race Mode ([9cda0ee](https://github.com/kqesar/alltp-tracker/commit/9cda0ee7bea7994ad59b02f3f409c2ba9809a2b3))
+* **web:** show no seed name in the readout in Race Mode ([dce1ea3](https://github.com/kqesar/alltp-tracker/commit/dce1ea36d59923d8883a1b50d862386d4ed54bc5))
+* **web:** turn Super Metroid's Race Mode on by default ([72db910](https://github.com/kqesar/alltp-tracker/commit/72db91013da47ee8432aaccf71aca160e77e60d0))
+
+
+### 📚 Documentation
+
+* say in the area rules how each game's Race Mode decides ([fefd9ad](https://github.com/kqesar/alltp-tracker/commit/fefd9ad4337de3a53d7109e91520f95548326dc4))
+* say in the area rules how Race Mode fails closed ([8c35229](https://github.com/kqesar/alltp-tracker/commit/8c35229fd60c998fcc90e31c77930d9d30735b53))
+* say in the area rules what Race Mode keeps back ([6d54ebf](https://github.com/kqesar/alltp-tracker/commit/6d54ebf5e8b6ec44e311c6775446c5f5f27a1433))
+* say what Race Mode keeps back in each game ([5616c4c](https://github.com/kqesar/alltp-tracker/commit/5616c4cad0a3826bb5b6ed216e4c7e00b6078f97))
+* say what Race Mode now does for Super Metroid, overlays and live follow ([88e9a84](https://github.com/kqesar/alltp-tracker/commit/88e9a844366becf33cb04069d5e33b64e9982195))
+
 ## [2.48.2](https://github.com/kqesar/alltp-tracker/compare/v2.48.1...v2.48.2) (2026-10-27)
 
 
