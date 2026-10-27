@@ -4,6 +4,7 @@
 // asks for that one; a player of one game never downloads another's.
 
 import type { ComponentType } from "react";
+import type { RaceFeed } from "@/follow/raceRun";
 
 /** What the stream view takes from its address (`utils/view.ts`). */
 export type ObsViewProps = {
@@ -59,6 +60,11 @@ export type GameModule = {
   ObsView: ComponentType<ObsViewProps>;
   /** The run's store. */
   store: RunStore;
+  /**
+   * The game's Race Mode and what the desktop app relays of the run in it
+   * (`follow/raceRun.ts`); a game without one relays its run as saved.
+   */
+  race?: RaceFeed;
 };
 
 export const GAME_IDS = ["alttpr", "sm", "smz3", "archipelago"] as const;

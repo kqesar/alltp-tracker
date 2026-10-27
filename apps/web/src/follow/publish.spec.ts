@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type Publication, publishRun } from "@/follow/publish";
+import {
+  PUBLISH_DELAY_MS,
+  type Publication,
+  publishRun,
+} from "@/follow/publish";
+import type { RaceFeed } from "@/follow/raceRun";
 import type { RunStore } from "@/games/registry";
 
 /** A store whose saved run the test writes, and whose changes it fires. */
@@ -32,6 +37,84 @@ const fakeStore = () => {
     store,
   };
 };
+
+describe("publishRun in Race Mode", () => {
+  let sent: Publication[];
+  const send = (publication: Publication) => sent.push(publication);
+
+  beforeEach(() => {
+    vi.useFakeTimers({ now: 5000 });
+    sent = [];
+  });
+  afterEach(() => vi.useRealTimers());
+
+  /** A Race Mode the test turns on and off, and a whitelist that marks. */
+  const fakeRace = () => {
+    const listeners = new Set<() => void>();
+    let on = false;
+    const race: RaceFeed = {
+      run: (saved) => (saved === "unreadable" ? null : `race(${saved})`),
+      source: {
+        isOn: () => on,
+        subscribe: (listener) => {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+      },
+    };
+    return {
+      listeners,
+      race,
+      set: (value: boolean) => {
+        on = value;
+        for (const listener of listeners) listener();
+      },
+    };
+  };
+
+  it("sends the whitelist while Race Mode is on, and again as it comes and goes", () => {
+    const run = fakeStore();
+    run.saved.set("alltp-tracker-sm", "v1");
+    const race = fakeRace();
+    const { stop } = publishRun({
+      game: "sm",
+      race: race.race,
+      read: run.read,
+      send,
+      store: run.store,
+    });
+    expect(sent.at(-1)?.value).toBe("v1");
+
+    race.set(true);
+    vi.advanceTimersByTime(PUBLISH_DELAY_MS);
+    expect(sent.at(-1)?.value).toBe("race(v1)");
+    run.change("v2");
+    vi.advanceTimersByTime(PUBLISH_DELAY_MS);
+    expect(sent.at(-1)?.value).toBe("race(v2)");
+    expect(sent.map(({ value }) => value)).not.toContain("v2");
+
+    race.set(false);
+    vi.advanceTimersByTime(PUBLISH_DELAY_MS);
+    expect(sent.at(-1)?.value).toBe("v2");
+    stop();
+    expect(race.listeners.size).toBe(0);
+  });
+
+  it("sends nothing in Race Mode for a run the whitelist cannot read", () => {
+    const run = fakeStore();
+    run.saved.set("alltp-tracker-sm", "unreadable");
+    const race = fakeRace();
+    race.set(true);
+    publishRun({
+      game: "sm",
+      race: race.race,
+      read: run.read,
+      send,
+      store: run.store,
+    });
+    expect(sent).toEqual([]);
+  });
+});
 
 describe("publishRun", () => {
   let sent: Publication[];

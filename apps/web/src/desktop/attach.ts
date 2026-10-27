@@ -7,10 +7,15 @@ import { attachFollow } from "@/desktop/liveFollow";
 import { setOverlayGame } from "@/desktop/overlayFeed";
 import { setRun } from "@/desktop/runFeed";
 import { attachStream } from "@/desktop/streamTools";
+import type { RaceFeed } from "@/follow/raceRun";
 import type { GameId, RunStore } from "@/games/registry";
 
-export const attachRun = async (game: GameId, store: RunStore) => {
-  setRun(game, store);
+export const attachRun = async (
+  game: GameId,
+  store: RunStore,
+  race?: RaceFeed,
+) => {
+  setRun(game, store, race);
   setOverlayGame(game);
   await Promise.all([attachFollow(), attachStream()]);
 };

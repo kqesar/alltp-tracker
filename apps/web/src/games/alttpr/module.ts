@@ -2,9 +2,12 @@
 // device that tracks it (games/registry.ts).
 
 import "@/games/review.css";
+import { raceSourceOf } from "@/autotrack/raceMode";
+import { raceFeed } from "@/follow/raceRun";
 import App from "@/games/alttpr/App";
 import { ObsView } from "@/games/alttpr/ObsView";
 import { unpackLink } from "@/games/alttpr/share";
+import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { parseSave } from "@/games/alttpr/stores/persistence";
 import type { GameModule } from "@/games/registry";
@@ -24,6 +27,26 @@ export const alttpr: GameModule = {
       : { ok: false, reason: parsed.reason };
   },
   ObsView,
+  // In Race Mode the desktop app relays what the stream view and the
+  // followed view draw: the grid (its items, keys, medallions and run type)
+  // and the timer. Never the places checked, their times, the entrances
+  // noted or the seed.
+  race: raceFeed({
+    fresh: () =>
+      useGameStore.persist
+        .getOptions()
+        .partialize?.(useGameStore.getInitialState()) ?? {},
+    kept: [
+      "bigKeysVisible",
+      "items",
+      "medallions",
+      "presetId",
+      "settings",
+      "smallKeys",
+      "timer",
+    ],
+    source: raceSourceOf(useAutotrackStore),
+  }),
   start: () => {
     // The run follows the other tabs and the stream view through storage
     syncAcrossTabs(useGameStore);

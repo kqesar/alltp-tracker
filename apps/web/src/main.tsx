@@ -123,7 +123,7 @@ const startTracker = (root: HTMLElement) => {
       // stream view while the player has either on (desktop/attach.ts)
       if (import.meta.env.MODE === "desktop" && !isObsView()) {
         void import("@/desktop/attach").then(({ attachRun }) =>
-          attachRun(active, game.store),
+          attachRun(active, game.store, game.race),
         );
       }
       createRoot(root).render(
