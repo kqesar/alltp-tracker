@@ -193,6 +193,12 @@ export class Poller implements MemorySnapshot {
   private readonly alonePlans = new Map<number, Phase>();
   /** The plan of the gated ranges that are not alone, read together. */
   private groupPhase: Phase = NO_PHASE;
+  /**
+   * The group's plan for the members whose gates hold (and switches are on),
+   * by their indices: a range of a switch that is off, or whose gate is shut,
+   * is never asked for beside the others.
+   */
+  private readonly groupPlans = new Map<string, Phase>();
   private flag: RaceFlagState;
   private modeIndex = UNKNOWN_MODE;
   private ticks = 0;
@@ -566,10 +572,11 @@ export class Poller implements MemorySnapshot {
       const open = new Set(
         gated.filter((_, k) => states[k] === 2).map(({ index }) => index),
       );
-      if (await this.fetchGated(this.groupPhase)) {
+      const phase = this.groupOf(open);
+      if (await this.fetchGated(phase)) {
         // Race Mode may have come on while it was in flight
         if (this.raceActive()) return;
-        this.scatter(this.groupPhase, false, open);
+        this.scatter(phase, false, open);
       }
     }
     for (let k = 0; k < gated.length; k++) {
@@ -579,6 +586,27 @@ export class Poller implements MemorySnapshot {
       if (this.raceActive()) return;
       this.scatter(phase, false);
     }
+  }
+
+  /** The group's plan over its members in `open`, built once per set. */
+  private groupOf(open: ReadonlySet<number>): Phase {
+    const members = Array.from(this.groupPhase.members).filter((index) =>
+      open.has(index),
+    );
+    const key = members.join(",");
+    let phase = this.groupPlans.get(key);
+    if (phase === undefined) {
+      phase = {
+        members: Uint32Array.from(members),
+        modeBound: false,
+        plan: planReads(
+          members.map((index) => this.pack.ranges[index]),
+          { gap: this.pack.gap, limits: this.transport.limits },
+        ),
+      };
+      this.groupPlans.set(key, phase);
+    }
+    return phase;
   }
 
   /**
