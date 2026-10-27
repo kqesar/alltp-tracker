@@ -25,7 +25,7 @@ beforeEach(() => {
   vi.useFakeTimers({ now: T0 });
   localStorage.clear();
   useSmStore.setState(useSmStore.getInitialState(), true);
-  useSmAutotrackStore.setState({ raceChoice: "auto", reading: null });
+  useSmAutotrackStore.setState({ raceChoice: "off", reading: null });
 });
 
 afterEach(() => {
@@ -127,7 +127,7 @@ describe("Super Metroid's run timer", () => {
     );
     // The player's setting is kept for the runs outside Race Mode
     expect(store().autoTimer).toBe(true);
-    act(() => useSmAutotrackStore.setState({ raceChoice: "auto" }));
+    act(() => useSmAutotrackStore.setState({ raceChoice: "off" }));
     expect(auto).toBeChecked();
   });
 });

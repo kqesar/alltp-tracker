@@ -23,8 +23,7 @@ import { bridgeOptions } from "@/autotrack/bridge";
 import { createAutotrackLock } from "@/autotrack/lock";
 import {
   mergeRaceChoice,
-  migrateRaceChoice,
-  RACE_CHOICE_VERSION,
+  RACE_CHOICES,
   type RaceChoice,
 } from "@/autotrack/raceChoice";
 import { shownStatus } from "@/autotrack/status";
@@ -105,8 +104,8 @@ const STOPPED: SessionStatus = { code: "stopped" };
  * @param load - Imports the game's runtime chunk
  * @param seed - What the board tracks, as headlines name it: "a Map Rando seed"
  * @param raceFlag - Whether the game's ROMs carry a race flag. Without one
- * (Map Rando), "auto" reads no flag and means off, so Race Mode is on by
- * default and its option reads On or Off
+ * (Map Rando) there is nothing for "auto" to read, so Race Mode is "on" by
+ * default and its option reads On or Off ("off")
  */
 export const createGameAutotrack = <Reading>({
   load,
@@ -119,7 +118,8 @@ export const createGameAutotrack = <Reading>({
   seed: string;
   storageKey: string;
 }) => {
-  const raceDefault: RaceChoice = raceFlag ? "auto" : "on";
+  const raceChoices = raceFlag ? RACE_CHOICES.flag : RACE_CHOICES.flagless;
+  const raceDefault: RaceChoice = raceChoices[0];
   const useStore = create<GameAutotrackState<Reading>>()(
     persist(
       (): GameAutotrackState<Reading> => ({
@@ -137,19 +137,13 @@ export const createGameAutotrack = <Reading>({
       }),
       {
         merge: (persisted, current) =>
-          mergeRaceChoice(persisted, current, raceDefault),
-        migrate: (persisted, version) =>
-          migrateRaceChoice(persisted, version, raceDefault) as Pick<
-            GameAutotrackState<Reading>,
-            "connectOnStart" | "raceChoice"
-          >,
+          mergeRaceChoice(persisted, current, raceChoices),
         name: storageKey,
         partialize: ({ connectOnStart, raceChoice }) => ({
           connectOnStart,
           raceChoice,
         }),
         storage: createJSONStorage(() => localStorage),
-        version: RACE_CHOICE_VERSION,
       },
     ),
   );
@@ -271,7 +265,7 @@ export const createGameAutotrack = <Reading>({
     setOptions: (options: Partial<SessionOptions>) => {
       overrides = options;
     },
-    /** Set Race Mode: the ROM's race flag decides (off without one), or on. */
+    /** Set Race Mode: the ROM's race flag decides, or on; without one, on or off. */
     setRaceChoice: (raceChoice: RaceChoice) => set({ raceChoice }),
     stop,
     useStore,
