@@ -877,7 +877,7 @@ test.describe("the seed's run type", () => {
     await expect(mode(page)).toHaveAccessibleName("Mode Open");
   });
 
-  test("reads only the seed type of a race seed: the run type stays the player's", async ({
+  test("reads none of a race seed's settings: the run type stays the player's", async ({
     page,
   }) => {
     bootKeysanity({ race: true });
@@ -897,7 +897,9 @@ test.describe("the seed's run type", () => {
           range.address < address + size,
       ),
     ).map((range) => range.id);
-    expect(settingsRead).toEqual(["seed-type"]);
+    // Not even the logic: v2.0 lets a tracker set itself up from the ROM only
+    // if it can ensure the seed is no Mystery one
+    expect(settingsRead).toEqual([]);
     expect(forbiddenReads(bridge)).toEqual([]);
   });
 

@@ -32,7 +32,12 @@ const STRICT =
  * what the new bytes hold (memory.spec.ts holds the position out). "Anything not
  * covered in this document is, by default, considered not permitted": the
  * `other` category stands for it. v2.0 says nothing of a race flag: the
- * randomizer's tournament flag is what switches Race Mode on.
+ * randomizer's tournament flag is what switches Race Mode on, and bank $30's
+ * window is that flag and its complement alone ($30:8213-$30:8214, probes.ts).
+ * The seed type beside them ($30:8210)
+ * is a setting, which v2.0 lets a tracker set itself up from only "if it can
+ * ensure it does not do so on Mystery seeds": a race seed's ROM does not say
+ * whether it is one, so Race Mode reads no setting (seed-settings.ts).
  */
 export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
   categories: {
@@ -111,7 +116,7 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
     [0x00_ffb0, 0x00_ffdf],
     [0x7e_0010, 0x7e_0010],
     [0x7e_f000, 0x7e_f500],
-    [0x30_8210, 0x30_823f],
+    [0x30_8213, 0x30_8214],
   ],
   raceFlag: { bus: 0x30_8213, openValue: 0x00, raceValue: 0x01 },
   source: RULES_URL,

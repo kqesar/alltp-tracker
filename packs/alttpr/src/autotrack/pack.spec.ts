@@ -234,7 +234,8 @@ describe("ALTTPR_AUTOTRACK", () => {
     expect(readForbidden(race)).toEqual([]);
     expect(raced.decoded?.seed).toMatchObject({
       goal: { known: false, why: "race-mode" },
-      logic: { known: true, value: "NoGlitches" },
+      // A Mystery race seed may hide its logic: Race Mode reads no setting
+      logic: { known: false, why: "race-mode" },
       mode: { known: false, why: "race-mode" },
       seed: "RACE",
       wildKeys: { known: false, why: "race-mode" },

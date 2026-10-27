@@ -389,7 +389,7 @@ describe("the seed's settings", () => {
     });
   });
 
-  it("says why a race seed's settings are not read, its logic aside", () => {
+  it("says why a race seed's settings are not read, the logic included", () => {
     const memory = writeSeedSettings(seedMemory({ race: true }), {});
     const seed = Object.fromEntries(
       describeSeed(memory, true).seed.map(({ label, value }) => [label, value]),
@@ -398,7 +398,7 @@ describe("the seed's settings", () => {
     expect(seed).toMatchObject({
       Ganon: "not read in Race Mode",
       Goal: "not read in Race Mode",
-      Logic: "No Glitches",
+      Logic: "not read in Race Mode",
       "Outside their dungeons": "not read in Race Mode",
       Seed: "RACE",
       World: "not read in Race Mode",
