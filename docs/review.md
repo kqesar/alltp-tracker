@@ -188,7 +188,7 @@ readings instead:
 |---|---|
 | `keysanity` (MCS, Full) | small keys are counts on the board, not stamped |
 | `entrances` | where each entrance led is not stamped, and the final ones would leak |
-| `not-modelled` | the pack does not model the run's logic, or settings are hidden (Mystery) |
+| `not-modelled` | the pack does not model the run's logic: settings hidden (Mystery), bosses shuffled (the log's `Bosses`), a logic other than NoGlitches (the log's `meta.logic`) |
 | `by-hand` | fewer than half the needed finds are matched by place: the times are clicks |
 | `no-times` | nothing needed has a time |
 | `no-playthrough` | a spoiler race's log |
