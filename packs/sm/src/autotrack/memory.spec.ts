@@ -61,6 +61,8 @@ describe("MEMORY_RANGES", () => {
   });
   const polled = MEMORY_RANGES.filter((range) => "everyMs" in range);
   const clock = [MEMORY_RANGE["rta-saved"], MEMORY_RANGE["rta-pending"]];
+  /** The game's own in-game time, $7E:09DA-$7E:09E1: frames to hours. */
+  const igt = { address: 0xf5_09da, size: 8 };
   const locations = [MEMORY_RANGE.collected, MEMORY_RANGE["nothing-mask"]];
   const overlaps = (a: ByteRange, b: ByteRange) =>
     a.address < b.address + b.size && b.address < a.address + a.size;
@@ -109,6 +111,7 @@ describe("MEMORY_RANGES", () => {
         };
         expect(clock.some((range) => overlaps(range, piece))).toBe(false);
         expect(locations.some((range) => overlaps(range, piece))).toBe(false);
+        expect(overlaps(igt, piece)).toBe(false);
       }
     }
     // The ranges are polled outside a race, so the exclusion is the profile's
@@ -141,6 +144,21 @@ describe("MEMORY_RANGES", () => {
         racePack.forbiddenBytes,
       ),
     ).toThrow(RaceViolationError);
+  });
+
+  it("permits no byte of the in-game time, between the equipment and the tanks disabled", () => {
+    // The equipment stops at the reserves' maximum; the tanks disabled follow
+    // the in-game time
+    expect(MEMORY_RANGE.equipment.address + MEMORY_RANGE.equipment.size).toBe(
+      0xf5_09d6,
+    );
+    expect(MEMORY_RANGE["disabled-tanks"].address).toBe(0xf5_09ec);
+    for (const range of MEMORY_RANGES) {
+      expect(overlaps(range, igt), range.id).toBe(false);
+    }
+    expect(
+      MAP_RANDO_RACE_PROFILE.permitted.some((window) => overlaps(window, igt)),
+    ).toBe(false);
   });
 
   it("reads the clock's two parts in one request, SRAM first", () => {

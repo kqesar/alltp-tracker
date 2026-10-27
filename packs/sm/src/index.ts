@@ -26,6 +26,7 @@ export { MAP_RANDO_RACE_PROFILE } from "./autotrack/race-profile";
 export { SM_ITEMS, type SmItem, type SmItemId, smItem } from "./items";
 export { LOCATION_KEYS, type LocationKey } from "./locations";
 export {
+  isBossKill,
   OBJECTIVES,
   type Objective,
   type ObjectiveGroup,

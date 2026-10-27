@@ -5,7 +5,7 @@
 
 import { SM_ITEMS, type SmItemId } from "../items";
 import { LOCATIONS, type LocationKey } from "../locations";
-import { type Objective, objectiveByFlag } from "../objectives";
+import { isBossKill, type Objective, objectiveByFlag } from "../objectives";
 import {
   MAP_PRESETS,
   OBJECTIVE_PRESETS,
@@ -99,9 +99,10 @@ export function decodeItems(
   memory: MemoryView,
 ): Readonly<Record<SmItemId, number>> | Unsettled {
   const equipment = reader(memory, "equipment");
+  const disabled = reader(memory, "disabled-tanks");
   const packs = reader(memory, "pack-sizes");
   const reserve = reader(memory, "reserve-size");
-  if (!equipment || !packs || !reserve) return "not-read";
+  if (!equipment || !disabled || !packs || !reserve) return "not-read";
   const items = equipment.word(0x7e_09a4);
   const beams = equipment.word(0x7e_09a8);
   const counts = {} as Record<SmItemId, number>;
@@ -120,7 +121,7 @@ export function decodeItems(
   };
   const energy =
     Math.floor(equipment.word(MAX_AT.energyTank) / 100) * 100 +
-    equipment.word(DISABLED_TANKS) * 100;
+    disabled.word(DISABLED_TANKS) * 100;
   counted("energyTank", energy);
   counted("reserveTank", equipment.word(MAX_AT.reserveTank));
   counted("missile", equipment.word(MAX_AT.missile));
@@ -169,10 +170,13 @@ export function decodeCollected(
   return found;
 }
 
-/** One of the seed's objectives, and whether it is done. */
+/**
+ * One of the seed's objectives, and whether it is done; "race-mode" for one
+ * that is no boss kill, in Race Mode (`decodeObjectives`).
+ */
 export interface ObjectiveReading {
   readonly objective: Objective;
-  readonly done: boolean;
+  readonly done: boolean | "race-mode";
 }
 
 /** The most objectives the ROM's table holds (patch.rs:3683-3684). */
@@ -182,10 +186,15 @@ const MAX_OBJECTIVES = 20;
  * The seed's objectives, in the pause screen's order, each done once its
  * flag is set: the count the ROM keeps (its high bit the fast pause menu,
  * patch.rs:3574-3584), then each objective's flag address and mask
- * (patch.rs:3683-3684). A flag the pack does not know is left out.
+ * (patch.rs:3683-3684). A flag the pack does not know is left out. In Race
+ * Mode only a boss kill is told (`isBossKill`): the one rule Map Rando's
+ * races state for autotracking permits "items and boss kills"
+ * (race-profile.ts), so a statue used, a room of pirates cleared or the
+ * metroids of a room killed are "race-mode", the player's to mark.
  */
 export function decodeObjectives(
   memory: MemoryView,
+  race = false,
 ): readonly ObjectiveReading[] | Unsettled {
   const count = reader(memory, "objective-count");
   const flags = reader(memory, "objective-flags");
@@ -198,6 +207,10 @@ export function decodeObjectives(
     const mask = flags.word(0x8f_ebe8 + 2 * i);
     const objective = objectiveByFlag(address, mask);
     if (objective === undefined) continue;
+    if (race && !isBossKill(objective)) {
+      objectives.push({ done: "race-mode", objective });
+      continue;
+    }
     const word = events.word(objective.flag.address);
     objectives.push({ done: (word & objective.flag.mask) !== 0, objective });
   }

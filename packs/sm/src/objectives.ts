@@ -224,6 +224,19 @@ export const OBJECTIVES: readonly Objective[] = [
   ),
 ];
 
+/**
+ * The game's boss flags, one byte per area ($7E:D828-$7E:D82F, new_game.asm:
+ * 93-98): set when a boss or a miniboss falls, Bomb Torizo included. The
+ * other objectives' flags are events ($7E:D821-$7E:D823): a statue used, a
+ * room cleared of its pirates or its metroids.
+ */
+const BOSS_FLAGS = { first: 0x7e_d828, last: 0x7e_d82f } as const;
+
+/** Whether an objective is done by killing a boss, as its flag says. */
+export const isBossKill = (objective: Objective): boolean =>
+  objective.flag.address >= BOSS_FLAGS.first &&
+  objective.flag.address <= BOSS_FLAGS.last;
+
 const BY_FLAG = new Map(
   OBJECTIVES.map((o) => [`${o.flag.address}:${o.flag.mask}`, o]),
 );
