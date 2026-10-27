@@ -75,9 +75,12 @@ describe("SMZ3's autotracking dialog", () => {
       }),
     );
     const dialog = await openDialog();
-    expect(within(dialog).getByTestId("smz3-readout")).toHaveTextContent(
-      "In Race Mode, its requirements and medallions stay yours to set.",
+    const readout = within(dialog).getByTestId("smz3-readout");
+    expect(readout).toHaveTextContent(
+      "An SMZ3 race seed, in A Link to the Past. In Race Mode, its requirements, medallions and crystals stay yours to set.",
     );
+    // v2.0 lets a tracker present only what it lists: no seed's name
+    expect(readout).not.toHaveTextContent("ZSM");
     expect(
       within(dialog).queryByTestId("smz3-readout-requirements"),
     ).toBeNull();
