@@ -70,14 +70,15 @@ export type ArtFailure =
 /** The ranges the picture needs read before anything is drawn. */
 const NEEDED = [
   "dark-room-art-screens",
-  "dark-room-art-gfx",
-  "dark-room-art-oam",
-  "dark-room-art-scroll",
-  "dark-room-art-sprite-bank",
+  "dark-room-art-sprites",
+  "dark-room-art-view",
   "dark-room-art-palette",
   "dark-room-art-bg2",
   "dark-room-room",
 ] as const;
+
+/** Where `dark-room-art-view` ($7E:00A2) holds the sprite bank and BG2's scroll. */
+const VIEW = { bank: 0xbc - 0xa2, scrollX: 0xe2 - 0xa2, scrollY: 0xe8 - 0xa2 };
 
 /** How long a failed read keeps the loader from asking again. */
 export const ART_RETRY_MS = 5000;
@@ -158,10 +159,13 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
         (view.bytes("dark-room-room")[0] |
           (view.bytes("dark-room-room")[1] << 8)) &
         0x1ff;
-      const gfx = copy("dark-room-art-gfx");
-      const oam = copy("dark-room-art-oam");
-      const scroll = copy("dark-room-art-scroll");
-      const bank = view.bytes("dark-room-art-sprite-bank")[0];
+      const sprites = copy("dark-room-art-sprites");
+      const oam = sprites.subarray(0, 0x220);
+      const gfx = sprites.subarray(GFX_BASE - 0x0800);
+      const at = view.bytes("dark-room-art-view");
+      const bank = at[VIEW.bank];
+      const scrollX = at[VIEW.scrollX] | (at[VIEW.scrollX + 1] << 8);
+      const scrollY = at[VIEW.scrollY] | (at[VIEW.scrollY + 1] << 8);
       const palette = copy("dark-room-art-palette");
       const bg2 = copy("dark-room-art-bg2");
       const bg1 =
@@ -281,8 +285,8 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
           colours,
           filled,
           oam,
-          scrollX: scroll[2] | (scroll[3] << 8),
-          scrollY: scroll[8] | (scroll[9] << 8),
+          scrollX,
+          scrollY,
           tiles,
         });
         return {

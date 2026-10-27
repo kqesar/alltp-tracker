@@ -3,6 +3,7 @@
 // pack's, read as scheduler.spec.ts reads it).
 import { describe, expect, it } from "vitest";
 import {
+  DARK_ROOM_ART_SWITCH,
   DARK_ROOM_SWITCH,
   MEMORY_RANGE,
   type MemoryRangeId,
@@ -10,6 +11,8 @@ import {
 import { ALTTPR_AUTOTRACK } from "../../../packs/alttpr/src/autotrack/pack";
 import links from "../../../packs/alttpr/test/dark-room/links-house.json";
 import { MemoryTransport } from "../test/memory-transport";
+import { planReads } from "./plan";
+import { RETROARCH_LIMITS } from "./retroarch";
 import { Poller } from "./scheduler";
 
 const RACE_FLAG = 0x18_0213;
@@ -18,7 +21,7 @@ const TICKS = 40; // ten seconds of 250 ms ticks, which holds the settings' read
 /** Requests the poller sends over ten seconds, and the ranges they touched. */
 async function measure(
   where: "overworld" | "dark room" | "menu",
-  options: { assist: boolean; race: boolean },
+  options: { assist: boolean; race: boolean; art?: boolean },
 ) {
   const memory = new Uint8Array(0x100_0000);
   if (where === "overworld") {
@@ -37,7 +40,10 @@ async function measure(
   const transport = new MemoryTransport(memory);
   const poller = new Poller(ALTTPR_AUTOTRACK, transport, {
     now: () => 0,
-    optIn: new Set(options.assist ? [DARK_ROOM_SWITCH] : []),
+    optIn: new Set([
+      ...(options.assist ? [DARK_ROOM_SWITCH] : []),
+      ...(options.art ? [DARK_ROOM_ART_SWITCH] : []),
+    ]),
     romReadable: true,
     setting: "auto",
   });
@@ -56,9 +62,11 @@ async function measure(
   };
   return {
     map: touched("dark-room-map"),
+    picture: touched("dark-room-art-bg2") + touched("dark-room-art-sprites"),
     position: touched("dark-room-link"),
     race: poller.race.active,
     requests,
+    tilemap: touched("dark-room-art-bg2"),
   };
 }
 
@@ -102,6 +110,51 @@ describe("the dark room map's cost to the ALttPR poller", () => {
       on: 110,
     });
     expect(on.map).toBe(10);
+  });
+
+  it("draws the room in the game's graphics for the tilemap on entry and every 5 s, no more requests at rest", async () => {
+    const plan = await measure("dark room", { assist: true, race: false });
+    const art = await measure("dark room", {
+      art: true,
+      assist: true,
+      race: false,
+    });
+    // The picture's small ranges ride in the 250 ms request; the tilemap is
+    // one request of its own on entry and on its 5 s cadence (two in ten
+    // seconds: entry, then 5 s), the room standing still
+    expect(art.tilemap).toBe(2);
+    expect(art.requests - plan.requests).toBe(2);
+    // Over RetroArch's own commands (the desktop app), eight pieces a request:
+    // the 250 ms group stays one request with the picture's ranges
+    const group = ALTTPR_AUTOTRACK.gated
+      .filter(({ alone }) => !alone)
+      .map(({ index }) => ALTTPR_AUTOTRACK.ranges[index]);
+    const withArt = planReads(group, {
+      gap: ALTTPR_AUTOTRACK.gap,
+      limits: RETROARCH_LIMITS,
+    });
+    const without = planReads(
+      group.filter((r) => !r.id.startsWith("dark-room-art-")),
+      { gap: ALTTPR_AUTOTRACK.gap, limits: RETROARCH_LIMITS },
+    );
+    expect({
+      with: withArt.requests.length,
+      without: without.requests.length,
+    }).toEqual({ with: 1, without: 1 });
+    // Off, outside a dark room, or in Race Mode: none of it
+    expect(plan.picture).toBe(0);
+    const overworld = await measure("overworld", {
+      art: true,
+      assist: true,
+      race: false,
+    });
+    expect(overworld.picture).toBe(0);
+    const race = await measure("dark room", {
+      art: true,
+      assist: true,
+      race: true,
+    });
+    expect(race.picture).toBe(0);
   });
 
   it("holds the room over a menu without reading any of it again", async () => {

@@ -128,7 +128,7 @@ describe("the dark room in the game's graphics", () => {
     await h.settle();
     expect(store().picture).toBeNull();
     expect(h.touched(GUARD_AT, 15)).toBe(0);
-    const oam = MEMORY_RANGE["dark-room-art-oam"];
+    const oam = MEMORY_RANGE["dark-room-art-sprites"];
     expect(h.touched(oam.address, oam.size)).toBe(0);
   });
 

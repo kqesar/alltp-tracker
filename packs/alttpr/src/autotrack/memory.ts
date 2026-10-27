@@ -467,20 +467,15 @@ export const MEMORY_RANGES = [
     size: 4,
     source: "zelda3:src/variables.h:19-20",
   }),
-  // The way Link faces: 0 up, 2 down, 4 left, 6 right.
+  // Link's stance: the way he faces at $2F (0 up, 2 down, 4 left, 6 right),
+  // and at $79 his sword's charge while B is held, 48 and up a spin attack
+  // ready (player.c:2197-2242). One range from the one to the other, so the
+  // 250 ms request keeps one span here rather than two.
   assist({
     at: 0x7e_002f,
-    id: "dark-room-facing",
-    size: 1,
-    source: "zelda3:src/variables.h:31",
-  }),
-  // The sword's charge while B is held: 48 and up is a spin attack ready
-  // (player.c:2197-2242).
-  assist({
-    at: 0x7e_0079,
-    id: "dark-room-charge",
-    size: 1,
-    source: "zelda3:src/variables.h:91",
+    id: "dark-room-stance",
+    size: 0x4b,
+    source: "zelda3:src/variables.h:31-91",
   }),
   // OverworldIndex: the overworld screen Link is on (a Dark World screen is
   // OR $40), kept in the dungeons too, as the screen he came from. Read
@@ -511,21 +506,16 @@ export const MEMORY_RANGES = [
     size: 2,
     source: "zelda3:src/variables.h:112",
   }),
-  // The ROM bank Link's body graphics are copied from each frame: $10, or the
-  // base patch's own when a custom player sprite is loaded (z3 ram.asm:120,
-  // spriteswap.asm).
+  // From the room's id to the layer: at $BC the ROM bank Link's body graphics
+  // are copied from each frame ($10, or the base patch's own for a custom
+  // player sprite: z3 ram.asm:120, spriteswap.asm), at $E2 and $E8 the copies
+  // of BG2's scroll registers (zelda3 variables.h:134-139). One range, so the
+  // 250 ms request keeps one span from the room to the layer.
   art({
-    at: 0x7e_00bc,
-    id: "dark-room-art-sprite-bank",
-    size: 1,
+    at: 0x7e_00a2,
+    id: "dark-room-art-view",
+    size: 0x4a,
     source: "z3:ram.asm:120",
-  }),
-  // The scroll registers' copies: BG2's horizontal at $E2, vertical at $E8.
-  art({
-    at: 0x7e_00e0,
-    id: "dark-room-art-scroll",
-    size: 12,
-    source: "zelda3:src/variables.h:134-139",
   }),
   // The layer Link is on: 1 selects the second attribute table.
   assist({
@@ -568,22 +558,17 @@ export const MEMORY_RANGES = [
     source: "zelda3:src/dungeon.c:4020-4048",
   }),
   // The OAM buffer the NMI copies to the PPU each frame (nmi.c:218): 128
-  // sprites of 4 bytes, then their high bits, 2 a sprite.
+  // sprites of 4 bytes, then their high bits, 2 a sprite; then the room's
+  // blocksets ($0AA1 main, $0AA2 aux: variables.h:599-601) and the sources of
+  // what the NMI copies to sprite VRAM each frame: Link's body from ROM, his
+  // sword, shield and items from WRAM ($0AC0-$0AF9, variables.h:620-645,
+  // nmi.c:173-199), with the animated tiles' at $0ADC. One range across the
+  // 129 bytes between, so the 250 ms request keeps one span.
   art({
     at: 0x7e_0800,
-    id: "dark-room-art-oam",
-    size: 0x220,
+    id: "dark-room-art-sprites",
+    size: 0x2fa,
     source: "zelda3:src/nmi.c:218",
-  }),
-  // The room's blocksets ($0AA1 main, $0AA2 aux: variables.h:599-601), then
-  // the sources of what the NMI copies to sprite VRAM each frame: Link's body
-  // from ROM, his sword, shield and items from WRAM ($0AC0-$0AF9,
-  // variables.h:620-645, nmi.c:173-199), with the animated tiles' at $0ADC.
-  art({
-    at: 0x7e_0aa1,
-    id: "dark-room-art-gfx",
-    size: 0x59,
-    source: "zelda3:src/variables.h:599-645",
   }),
   // What each closed door is: its type in the low byte of the slot's word.
   assist({

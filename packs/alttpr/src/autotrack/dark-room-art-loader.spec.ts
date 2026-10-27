@@ -42,24 +42,27 @@ function console() {
 
 /** The art ranges' bytes for room $55, blockset 4, BG2 naming tile 0. */
 function ranges(): Partial<Record<MemoryRangeId, Uint8Array>> {
-  const gfx = new Uint8Array(0x59);
+  // The OAM buffer at $0800, the blocksets and uploads from $0AA1
+  const sprites = new Uint8Array(0x2fa);
+  const oam = sprites.subarray(0, 0x220);
+  const gfx = sprites.subarray(GFX_BASE - 0x800);
   gfx[0] = 4; // main blockset
   gfx[1] = 0; // aux
   // The animated frame at $7E:A680
   gfx[0x0adc - GFX_BASE] = 0x80;
   gfx[0x0add - GFX_BASE] = 0xa6;
-  const oam = new Uint8Array(0x220);
   for (let i = 0; i < 128; i++) oam[i * 4 + 1] = 0xf0;
+  // The view's sprite bank ($BC); BG2's scroll at 0
+  const view = new Uint8Array(0x4a);
+  view[0xbc - 0xa2] = 0x10;
   const palette = new Uint8Array(0x200);
   palette.set([0x1f, 0x00], 2 * 15); // colour 15 (7, sheet 0 high): red
   return {
     "dark-room-art-bg2": new Uint8Array(0x2000),
-    "dark-room-art-gfx": gfx,
-    "dark-room-art-oam": oam,
     "dark-room-art-palette": palette,
     "dark-room-art-screens": Uint8Array.of(0x16, 0),
-    "dark-room-art-scroll": new Uint8Array(12),
-    "dark-room-art-sprite-bank": Uint8Array.of(0x10),
+    "dark-room-art-sprites": sprites,
+    "dark-room-art-view": view,
     "dark-room-room": Uint8Array.of(0x55, 0),
     "rom-header": new Uint8Array(32).fill(0x41),
   };
@@ -174,7 +177,7 @@ describe("createArtLoader", () => {
   it("shows the plan for a blockset past the tables", async () => {
     const { memory } = console();
     const held = ranges();
-    held["dark-room-art-gfx"]?.set([MAIN_ROWS], 0);
+    held["dark-room-art-sprites"]?.set([MAIN_ROWS], GFX_BASE - 0x800);
     const outcome = await createArtLoader(reader(memory).read).update(
       new View(held),
     );
@@ -232,10 +235,10 @@ describe("createArtLoader", () => {
         .map((_, i) => (i % 32 < 16 && i % 2 === 0 ? 0xff : 0)),
     );
     const held = ranges();
-    const gfx = held["dark-room-art-gfx"] as Uint8Array;
-    gfx[0x0ace - GFX_BASE] = 0x00;
-    gfx[0x0acf - GFX_BASE] = 0x80;
-    const oam = held["dark-room-art-oam"] as Uint8Array;
+    const sprites = held["dark-room-art-sprites"] as Uint8Array;
+    sprites[0x0ace - 0x800] = 0x00;
+    sprites[0x0acf - 0x800] = 0x80;
+    const oam = sprites;
     // One 8 x 8 sprite of tile 16, palette 7, at (40, 50)
     oam.set([40, 50, 16, 7 << 1], 0);
     const palette = held["dark-room-art-palette"] as Uint8Array;

@@ -401,12 +401,11 @@ export function decodeDarkRoom(
   const tile = linkTile(at.word(0x7e_0022), at.word(0x7e_0020));
   // The stance is read with the place; a recording older than its ranges has
   // neither
-  const facing = reader(view, "dark-room-facing");
-  const charge = reader(view, "dark-room-charge");
+  const stance = reader(view, "dark-room-stance");
   const link: LinkPlace = {
     ...tile,
-    charge: charge === null ? "none" : chargeOf(charge.byte(0x7e_0079)),
-    facing: facing === null ? null : facingOf(facing.byte(0x7e_002f)),
+    charge: stance === null ? "none" : chargeOf(stance.byte(0x7e_0079)),
+    facing: stance === null ? null : facingOf(stance.byte(0x7e_002f)),
   };
   // The part of the table worth drawing is what Link can reach through tiles
   // that are not wall: a room is one quadrant of the 64 x 64 space, or two,
