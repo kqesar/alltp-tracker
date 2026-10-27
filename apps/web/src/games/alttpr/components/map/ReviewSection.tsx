@@ -70,8 +70,8 @@ export const ReviewSection = () => {
       ) : gate === "open" ? (
         <>
           <p className="run-section__empty">
-            This run is over. Import the spoiler log of its seed to compare the
-            run with it: what was found in order, late or missed.
+            This run is over. Import the spoiler log of its seed to see when
+            each item the seed needed came into logic, and when you took it.
           </p>
           <div>
             <button
