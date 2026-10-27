@@ -275,6 +275,38 @@ describe("the dark room in the game's graphics", () => {
     expect(h.touched(oam.address, oam.size)).toBe(0);
   });
 
+  it("lets the picture go the moment Race Mode comes on, and reads none of it after", async () => {
+    const h = harness();
+    await act(() => connectAutotrack());
+    await h.settle();
+    render(<MapPanel />);
+    expect(await screen.findByTestId("dark-room-art")).toBeInTheDocument();
+
+    act(() => useAutotrackStore.getState().setRaceChoice("on"));
+    expect(store().picture).toBeNull();
+    expect(store().sprite).toBeNull();
+    expect(screen.queryByTestId("dark-room")).toBeNull();
+    // Nothing of it read again: the ROM, the OAM, the tilemap
+    const sprites = MEMORY_RANGE["dark-room-art-sprites"];
+    const bg2 = MEMORY_RANGE["dark-room-art-bg2"];
+    const before = {
+      bg2: h.touched(bg2.address, bg2.size),
+      guard: h.touched(GUARD_AT, 15),
+      sprites: h.touched(sprites.address, sprites.size),
+    };
+    // An enemy moving, Link walking: what would make it draw again
+    for (let t = 1; t <= 24; t++) {
+      h.memory[sprites.address + 100] = t;
+      await act(() => h.clock.advance(250));
+    }
+    expect({
+      bg2: h.touched(bg2.address, bg2.size),
+      guard: h.touched(GUARD_AT, 15),
+      sprites: h.touched(sprites.address, sprites.size),
+    }).toEqual(before);
+    expect(store().picture).toBeNull();
+  });
+
   it("reads none of its memory in the Plan style", async () => {
     useAutotrackStore.setState({ darkRoomStyle: "plan" });
     const h = harness();
