@@ -134,8 +134,8 @@ export const smRaceModeOff = async (page: Page) => {
       localStorage.setItem(
         "alltp-tracker-sm-autotrack",
         JSON.stringify({
-          state: { connectOnStart: false, raceChoice: "auto" },
-          version: 1,
+          state: { connectOnStart: false, raceChoice: "off" },
+          version: 0,
         }),
       );
     }

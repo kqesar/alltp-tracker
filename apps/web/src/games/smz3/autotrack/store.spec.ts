@@ -181,6 +181,14 @@ describe("SMZ3's autotracking", () => {
     expect(state().raceChoice).toBe("auto");
     expect(smz3Autotrack.useStore.getInitialState().raceChoice).toBe("auto");
     expect(smz3Autotrack.raceFlag).toBe(true);
+    // Its save keeps the version it always had: a tab of an older version
+    // reads it and keeps the player's "on"
+    smz3Autotrack.setRaceChoice("on");
+    expect(
+      JSON.parse(
+        localStorage.getItem("alltp-tracker-smz3-autotrack") ?? "null",
+      ),
+    ).toMatchObject({ state: { raceChoice: "on" }, version: 0 });
   });
 
   it("reads a Race Mode saved by another version as the ROM's flag", async () => {

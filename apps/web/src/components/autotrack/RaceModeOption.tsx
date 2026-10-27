@@ -7,12 +7,12 @@ const CHOICES: readonly (readonly [RaceChoice, string])[] = [
 ];
 
 /**
- * For a game whose ROMs carry no race flag (Map Rando): "auto" reads none, so
- * it is Off, and On comes first, as the default.
+ * For a game whose ROMs carry no race flag (Map Rando): On, the default, or
+ * Off.
  */
 const FLAGLESS_CHOICES: readonly (readonly [RaceChoice, string])[] = [
   ["on", "On"],
-  ["auto", "Off"],
+  ["off", "Off"],
 ];
 
 /**

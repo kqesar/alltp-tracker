@@ -150,7 +150,7 @@ describe("each game's overlay source", () => {
   it("tells Super Metroid's timer only once Race Mode, on by default, is off", () => {
     useSmStore.getState().startTimer(T0);
     expect(smSource.read().state.timer).toBeNull();
-    useSmAutotrackStore.setState({ raceChoice: "auto" });
+    useSmAutotrackStore.setState({ raceChoice: "off" });
     expect(smSource.read().state.timer).not.toBeNull();
   });
 

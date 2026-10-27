@@ -69,7 +69,7 @@ beforeEach(() => {
     environment: parseUserAgent(
       "Mozilla/5.0 (X11; Linux x86_64; rv:158.0) Gecko/20100101 Firefox/158.0",
     ),
-    raceChoice: "auto",
+    raceChoice: "off",
   });
 });
 
@@ -102,11 +102,23 @@ describe("Super Metroid's Race Mode by default", () => {
     expect(await fresh()).toBe("on");
   });
 
-  it("keeps Off, once chosen in this version", async () => {
-    save({ connectOnStart: true, raceChoice: "auto" }, 1);
-    expect(await fresh()).toBe("auto");
-    // A value no version writes reads as the default
-    save({ connectOnStart: true, raceChoice: "off" }, 1);
+  it('saves Off as "off", in the same save version, which an older tab reads as off', async () => {
+    smAutotrack.setRaceChoice("off");
+    const saved = JSON.parse(
+      localStorage.getItem("alltp-tracker-sm-autotrack") ?? "null",
+    );
+    // No version an older tab could not read, which would drop the save
+    expect(saved).toEqual({
+      state: { connectOnStart: false, raceChoice: "off" },
+      version: 0,
+    });
+    expect(await fresh()).toBe("off");
+    // The version before read any value but "on" as "auto": off for a game
+    // with no race flag, as the player chose
+    const olderRestore = (value: unknown) => (value === "on" ? "on" : "auto");
+    expect(olderRestore(saved.state.raceChoice)).toBe("auto");
+    // A value this game does not offer reads as its default
+    save({ connectOnStart: true, raceChoice: "always" }, 0);
     expect(await fresh()).toBe("on");
   });
 });
@@ -134,7 +146,7 @@ describe("Super Metroid's autotracking", () => {
     await h.advance(2000);
 
     expect(run().items.superMissile).toBe(2);
-    expect(saved()).toEqual({ connectOnStart: true, raceChoice: "auto" });
+    expect(saved()).toEqual({ connectOnStart: true, raceChoice: "off" });
   });
 
   it("refuses a ROM that is not a Map Rando seed", async () => {
@@ -154,11 +166,11 @@ describe("Super Metroid's autotracking", () => {
     stopSmAutotrack();
     expect(state()).toMatchObject({ active: false, reading: null });
     expect(state().status.code).toBe("stopped");
-    expect(saved()).toEqual({ connectOnStart: true, raceChoice: "auto" });
+    expect(saved()).toEqual({ connectOnStart: true, raceChoice: "off" });
 
     await connectSmAutotrack();
     disconnectSmAutotrack();
-    expect(saved()).toEqual({ connectOnStart: false, raceChoice: "auto" });
+    expect(saved()).toEqual({ connectOnStart: false, raceChoice: "off" });
   });
 
   it("retries now at the player's word", async () => {
@@ -342,7 +354,7 @@ describe("Super Metroid's autotracking and the run timer", () => {
     expect(asked()).toEqual([]);
 
     // Off, Map Rando having no race flag: the session reads them at once
-    smAutotrack.setRaceChoice("auto");
+    smAutotrack.setRaceChoice("off");
     for (let tick = 0; tick < 12; tick++) await h.advance(1000);
     expect(state().reading?.race).toBe(false);
     expect(asked().length).toBeGreaterThan(0);

@@ -132,11 +132,11 @@ describe("Super Metroid's autotracking control", () => {
       within(group)
         .getAllByRole("radio")
         .map((radio) => radio.getAttribute("value")),
-    ).toEqual(["on", "auto"]);
+    ).toEqual(["on", "off"]);
     expect(within(group).getByRole("radio", { name: "On" })).toBeChecked();
     expect(group).toHaveAccessibleDescription(/carry no race flag/);
     await userEvent.click(within(group).getByRole("radio", { name: "Off" }));
-    expect(state().raceChoice).toBe("auto");
+    expect(state().raceChoice).toBe("off");
   });
 
   it("says Race Mode while connected in it, and claims no legality", async () => {

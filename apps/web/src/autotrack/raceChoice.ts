@@ -1,58 +1,45 @@
 // The Race Mode the player picks, saved with each game's autotracking
-// preferences and handed to its session (`AutotrackSession.setRaceMode`):
-// "auto" follows the ROM's race flag, "on" holds Race Mode whatever the ROM
-// says, for a race on a seed generated without the flag. There is no "off":
-// a seed whose flag says race stays in Race Mode.
+// preferences and handed to its session (`AutotrackSession.setRaceMode`).
+// For a game whose ROMs carry a race flag: "auto" follows the flag, "on"
+// holds Race Mode whatever the ROM says, for a race on a seed generated
+// without it; there is no "off" there: a seed whose flag says race stays in
+// Race Mode. For a game without one (Map Rando): "on", the default, or "off".
+//
+// No save ever changed version for it: a version an older tab cannot read
+// would make it drop the saved choice. An older version reads "off" as
+// "auto", which means off for a game without a flag, as "off" does now; and
+// a legacy "auto" of a game without a flag, which every save held as the
+// default it then was, reads as that game's default now.
 
 import type { RaceSetting } from "@alltp/autotrack";
 
-export type RaceChoice = Extract<RaceSetting, "auto" | "on">;
+export type RaceChoice = RaceSetting;
+
+/** The choices a game offers: with its race flag, or without one. */
+export const RACE_CHOICES = {
+  flag: ["auto", "on"],
+  flagless: ["on", "off"],
+} as const satisfies Record<string, readonly RaceChoice[]>;
 
 /**
- * A saved choice, or `fallback` (the game's default, "auto" unless it says
- * otherwise) for anything else.
+ * A saved choice the game offers (`choices`), or the game's default, the
+ * first of them, for anything else.
  */
 export const restoreRaceChoice = (
   saved: unknown,
-  fallback: RaceChoice = "auto",
-): RaceChoice => (saved === "on" || saved === "auto" ? saved : fallback);
-
-/**
- * The save's version for a game's autotracking (`autotrack/gameSession.ts`):
- * 1 since Super Metroid's Race Mode is on by default. A save before it kept
- * "auto" as the default it then was, never as a choice: `migrateRaceChoice`
- * reads it as the game's default now.
- */
-export const RACE_CHOICE_VERSION = 1;
-
-/**
- * The persist middleware's migration to `RACE_CHOICE_VERSION`: a choice saved
- * before it reads "auto" as the game's default, `fallback`, since every save
- * held the default then; "on", which only the player set, stays.
- */
-export const migrateRaceChoice = (
-  persisted: unknown,
-  version: number,
-  fallback: RaceChoice,
-): unknown => {
-  if (version >= RACE_CHOICE_VERSION) return persisted;
-  if (typeof persisted !== "object" || persisted === null) return persisted;
-  const saved = persisted as { raceChoice?: unknown };
-  return saved.raceChoice === "on"
-    ? persisted
-    : { ...persisted, raceChoice: fallback };
-};
+  choices: readonly RaceChoice[] = RACE_CHOICES.flag,
+): RaceChoice =>
+  choices.find((choice) => choice === saved) ?? choices[0] ?? "auto";
 
 /**
  * The persist middleware's merge for a store that saves a Race Mode choice:
- * the saved fields over the fresh ones, the choice checked, so a value no
- * version writes reads as `fallback`, the game's default ("auto" unless it
- * says otherwise).
+ * the saved fields over the fresh ones, the choice checked against what the
+ * game offers, so any other value reads as the game's default.
  */
 export const mergeRaceChoice = <State extends { raceChoice: RaceChoice }>(
   persisted: unknown,
   current: State,
-  fallback: RaceChoice = "auto",
+  choices: readonly RaceChoice[] = RACE_CHOICES.flag,
 ): State => {
   const saved: Partial<State> =
     typeof persisted === "object" && persisted !== null
@@ -61,6 +48,6 @@ export const mergeRaceChoice = <State extends { raceChoice: RaceChoice }>(
   return {
     ...current,
     ...saved,
-    raceChoice: restoreRaceChoice(saved.raceChoice, fallback),
+    raceChoice: restoreRaceChoice(saved.raceChoice, choices),
   };
 };
