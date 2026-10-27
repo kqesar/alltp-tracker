@@ -117,7 +117,12 @@ const Smz3ReviewPanel = ({ review }: { review: Loaded }) => {
         <h3 className="run-section__title" id="smz3-review-playthrough">
           Playthrough
         </h3>
-        <div className="review-table-wrap">
+        <section
+          aria-labelledby="smz3-review-playthrough"
+          className="review-table-wrap"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: a table wider than a phone scrolls sideways, and a keyboard must reach it
+          tabIndex={0}
+        >
           <table className="review-table" data-testid="review-playthrough">
             <caption
               className="review-table__caption"
@@ -153,7 +158,7 @@ const Smz3ReviewPanel = ({ review }: { review: Loaded }) => {
               )}
             </tbody>
           </table>
-        </div>
+        </section>
       </section>
 
       <section aria-labelledby="smz3-review-missed">
