@@ -1,6 +1,10 @@
 import type { SpoilerError, SpoilerGame } from "@alltp/spoiler";
 import { describe, expect, it, vi } from "vitest";
-import { isRaceModeOn, type RaceModeState } from "@/autotrack/raceMode";
+import {
+  isRaceModeOn,
+  isRaceModeOrPending,
+  type RaceModeState,
+} from "@/autotrack/raceMode";
 import { spoilerFile, spoilerLog } from "@/games/alttpr/review/fixtures";
 import { reviewGate } from "@/review/gate";
 import { parseFile } from "@/review/parse";
@@ -37,6 +41,7 @@ describe("reviewGate", () => {
 describe("isRaceModeOn", () => {
   const off: RaceModeState = {
     active: false,
+    connectOnStart: false,
     raceChoice: "auto",
     reading: null,
     status: { code: "idle" },
@@ -66,6 +71,70 @@ describe("isRaceModeOn", () => {
         } as RaceModeState["status"],
       }),
     ).toBe(true);
+  });
+});
+
+describe("isRaceModeOrPending", () => {
+  const handTracked: RaceModeState = {
+    active: false,
+    connectOnStart: false,
+    raceChoice: "auto",
+    reading: null,
+    status: { code: "idle" },
+  };
+  const connectedOpen = {
+    code: "connected",
+    race: { active: false, flag: "open", setting: "auto" },
+  } as RaceModeState["status"];
+
+  it("is off for a run tracked by hand, autotracking never started", () => {
+    expect(isRaceModeOrPending(handTracked)).toBe(false);
+  });
+
+  it("is on where Race Mode is", () => {
+    expect(isRaceModeOrPending({ ...handTracked, raceChoice: "on" })).toBe(
+      true,
+    );
+    expect(
+      isRaceModeOrPending({ ...handTracked, reading: { race: true } }),
+    ).toBe(true);
+  });
+
+  it("fails closed while autotracking starts and no flag was read", () => {
+    // The desktop app's stream starts with the app, before SNI answers
+    expect(isRaceModeOrPending({ ...handTracked, connectOnStart: true })).toBe(
+      true,
+    );
+    // Connecting, or waiting on another tab
+    expect(isRaceModeOrPending({ ...handTracked, active: true })).toBe(true);
+  });
+
+  it("is off once a reading or the session's status told an open seed", () => {
+    expect(
+      isRaceModeOrPending({
+        ...handTracked,
+        connectOnStart: true,
+        reading: { race: false },
+      }),
+    ).toBe(false);
+    expect(
+      isRaceModeOrPending({
+        ...handTracked,
+        active: true,
+        status: connectedOpen,
+      }),
+    ).toBe(false);
+  });
+
+  it("is off for a game without a flag the player turned off", () => {
+    expect(
+      isRaceModeOrPending({
+        ...handTracked,
+        active: true,
+        connectOnStart: true,
+        raceChoice: "off",
+      }),
+    ).toBe(false);
   });
 });
 

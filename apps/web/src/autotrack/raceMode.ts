@@ -11,6 +11,8 @@ export type RaceModeState = {
   readonly raceChoice: RaceChoice;
   /** A session runs, or is starting. */
   readonly active: boolean;
+  /** The player connected last time: a session starts with the tracker. */
+  readonly connectOnStart: boolean;
   readonly status: SessionStatus;
   /** The game as last read; `race` is its seed's race flag, where it has one. */
   readonly reading: { readonly race?: boolean } | null;
@@ -28,9 +30,30 @@ export const isRaceModeOn = (state: RaceModeState): boolean =>
     state.status.race.active);
 
 /**
+ * Race Mode, failing closed, for what shows or tells the run before a race
+ * flag has been read: the overlay API, the run the desktop app relays, the
+ * Run tab's timeline. On as `isRaceModeOn` has it, and also while the run is
+ * autotracked or about to be (Auto, a session running or starting, or set
+ * to connect as the tracker opens) and nothing has told the flag yet: the
+ * desktop app's stream starts with it, before SNI answers. A run tracked by
+ * hand, autotracking never started, stays as it is.
+ */
+export const isRaceModeOrPending = (state: RaceModeState): boolean => {
+  if (isRaceModeOn(state)) return true;
+  if (state.raceChoice !== "auto") return false;
+  if (!state.active && !state.connectOnStart) return false;
+  const told =
+    state.reading !== null ||
+    (state.active &&
+      state.status.code === "connected" &&
+      (state.status.race.flag === "open" || state.status.race.flag === "none"));
+  return !told;
+};
+
+/**
  * A game's Race Mode, for what tells the run to other software or devices
- * (the overlay API, live follow): whether it is on, and a call when it comes
- * or goes.
+ * (the overlay API, live follow): whether it is on or not yet known to be off
+ * (`isRaceModeOrPending`), and a call when that answer changes.
  */
 export type RaceSource = {
   readonly isOn: () => boolean;
@@ -42,9 +65,11 @@ export const raceSourceOf = <State extends RaceModeState>(store: {
   getState: () => State;
   subscribe: (listener: (state: State, before: State) => void) => () => void;
 }): RaceSource => ({
-  isOn: () => isRaceModeOn(store.getState()),
+  isOn: () => isRaceModeOrPending(store.getState()),
   subscribe: (listener) =>
     store.subscribe((state, before) => {
-      if (isRaceModeOn(state) !== isRaceModeOn(before)) listener();
+      if (isRaceModeOrPending(state) !== isRaceModeOrPending(before)) {
+        listener();
+      }
     }),
 });
