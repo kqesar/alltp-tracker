@@ -34,7 +34,7 @@ is done.
 flowchart LR
   rom["ROM: header, $82:FFFC, $84 PLMs,<br/>$8F:EBC0 table, $DF:FEF0 seed"] --> seed["decodeSeed<br/>name, presets, added items"]
   rom --> obj["decodeObjectives"]
-  wram["WRAM: $0998 state, $09A2-$09ED<br/>equipment, $D820-$D82F events"] --> items["decodeItems"]
+  wram["WRAM: $0998 state, $09A2-$09D5<br/>equipment, $09EC tanks disabled,<br/>$D820-$D82F events"] --> items["decodeItems"]
   rom --> items
   wram --> obj
   wram --> play["decodeInPlay"]
@@ -64,7 +64,8 @@ flowchart LR
   (`$82:FFFC`, its high bit the fast pause menu) and each one's flag, an
   event address and a mask (`$8F:EBC0`, `$8F:EBE8`, `patch.rs:3574-3584,
   3683-3684`), in the pause screen's order. An objective is done once its
-  flag is set in WRAM (`$7E:D820-$D82F`).
+  flag is set in WRAM (`$7E:D820-$D82F`); in Race Mode only a boss kill is
+  told (see Races).
 - **The seed** (`decodeSeed`): its name at `$DF:FEF0`, which
   maprando.com/seed/<name>/ finds, the presets at `$DF:FF09-$FF0D` (0 for a
   setting the seed customized) and the items its settings add at `$DF:FF05`
@@ -130,20 +131,37 @@ spaces").
 
 ### Races
 
-Map Rando races run on racetime.gg/smr, whose rules restrict no tracking
-(its category info, read 2026-10-19); Map Rando's "Race mode" only locks a
-seed's spoiler on the website and writes nothing into the ROM. The pack
-therefore has no race flag: Race Mode is the player's switch, turned on for a
-race (Auto, the default, leaves it off, and a race tracked in Auto is read as
-any other run). The race profile (`MAP_RANDO_RACE_PROFILE`) permits every
-category this pack reads but two, which it forbids as a policy of the tracker
-and no rule of the page: in Race Mode the tracker reads what the player holds
-and has done, never what a location holds, and no more than a player sees.
+Map Rando races run on racetime.gg/smr, whose rules say nothing of trackers
+or autotracking (its category info, read 2026-10-19, 2026-10-25 and
+2026-10-27); Map Rando's "Race mode" only locks a seed's spoiler on the
+website and writes nothing into the ROM. The one rule found that states what
+Map Rando races allow is a tournament's: "Auto tracking is permitted for items
+and boss kills. Auto tracking of the map layout is not permitted."
+([Super Metroid Map Randomizer - Hard Tricky Multicategory
+Tournament](https://docs.google.com/document/d/1CF84nNmK0JqFP6lmxTpViiRC5nFuXBrTzeV320eJdOo),
+2025, read 2026-10-27). What no rule states is not permitted in Race Mode, as
+A Link to the Past's rules have it. The pack has no race flag: Race Mode is
+the player's switch, turned on for a race (Auto, the default, leaves it off,
+and a race tracked in Auto is read as any other run). The race profile
+(`MAP_RANDO_RACE_PROFILE`) quotes that rule for the items and the objectives,
+and says of every other category it permits that no rule states it:
+
+- Of the objectives, a race reading tells only those a boss kill does: the
+  game's boss flags (`$7E:D828-$7E:D82F`, `isBossKill`: the four bosses, the
+  minibosses and Bomb Torizo). A statue used, a room cleared of its pirates or
+  its metroids is `"race-mode"` (`decodeObjectives(…, true)`), the player's
+  to mark. The seed's objectives themselves, its settings, the event flags
+  (the escape stops the run timer) and the game state (it starts it) are
+  still read in a race: no rule states them either, and the app's owner
+  keeps them pending a decision (2026-10-27).
+- The map layout is never read, race or not.
 
 - The RTA clock (category `game-time`) reveals nothing of the seed, but the
   game shows it only in its end credits: Race Mode never reads `rta-saved` and
-  `rta-pending`, and the run timer counts real time. The state and the escape
-  event, which start and stop it, stay permitted.
+  `rta-pending`, and the run timer counts real time. The game's own in-game
+  time (`$7E:09DA-$7E:09E1`) lies between the equipment and the energy tanks
+  disabled: `equipment` stops before it and `disabled-tanks` starts after, and
+  Race Mode's memory leaves it out.
 - The locations (category `locations`: the collected bits, `collected`, and
   the Nothing mask, `nothing-mask`) would say where the seed put no item, since
   a Nothing location's bit is set from the first frame, which a player learns
@@ -151,8 +169,8 @@ and has done, never what a location holds, and no more than a player sees.
   the review by item count. Both are polled at one cadence, so a reading takes
   them from the same tick.
 
-`memory.spec.ts` proves both over a real plan and pins the list of forbidden
-ranges. The rules of racetime.gg/smr ban the old emulators (SNES9x 1.43 and
+`memory.spec.ts` proves all three over a real plan and pins the list of
+forbidden ranges; `decode.spec.ts` holds the objectives a race tells. The rules of racetime.gg/smr ban the old emulators (SNES9x 1.43 and
 below, ZSNES), not emulators in general (read again on 2026-10-25).
 
 ## Spoiler logs

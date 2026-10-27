@@ -371,8 +371,9 @@ v2.0, pending clarification with the race admins:
   the randomizer's tournament flag is what switches Race Mode on.
 
 Super Metroid's (Map Rando) and SMZ3's profiles live in their packs:
-racetime.gg's categories for them link no tracker rules, so they stay as
-their READMEs describe.
+racetime.gg's categories for them link no tracker rules, so each keeps to
+what its community's tournament rules state (Map Rando's: items and boss
+kills; SMZ3's: v2.0), as their READMEs describe.
 
 Compliant by construction:
 
