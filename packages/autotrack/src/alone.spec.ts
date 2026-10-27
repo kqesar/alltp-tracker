@@ -496,6 +496,32 @@ describe("definePack and gated ranges", () => {
   });
 });
 
+describe("gated ranges of two switches, read together", () => {
+  /** A second gated range beside `pos`, behind a switch of its own. */
+  const extra = {
+    address: bus(0x7e_0800),
+    category: "other",
+    everyMs: 250,
+    id: "extra",
+    optIn: "more",
+    size: 0x20,
+    when: (view: { has(id: string): boolean; bytes(id: string): Uint8Array }) =>
+      view.has("gate") && view.bytes("gate")[0] === 1,
+  };
+
+  it("never asks for the bytes of a switch that is off", async () => {
+    const h = setup({ pack: source({ ranges: [...source().ranges, extra] }) });
+    h.memory[GATE] = 1;
+    for (let i = 0; i < 6; i++) await h.tick();
+    expect(h.poller.has("pos")).toBe(true);
+    expect(h.touched(bus(0x7e_0800), 0x20)).toBe(0);
+    h.poller.setOptIn("more", true);
+    await h.tick();
+    expect(h.poller.has("extra")).toBe(true);
+    expect(h.touched(bus(0x7e_0800), 0x20)).toBe(1);
+  });
+});
+
 describe("a switch turned off and on between two ticks", () => {
   it("reads its alone range again on the next tick, not at its cadence", async () => {
     const h = setup();
