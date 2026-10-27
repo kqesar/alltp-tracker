@@ -1,7 +1,15 @@
 import { readFileSync } from "node:fs";
+import { bus } from "@alltp/autotrack";
 import { MEMORY_RANGE, type MemoryRangeId } from "@alltp/pack-alttpr";
 import { expect, type Page, test } from "@playwright/test";
 import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
+import {
+  ART_ROM,
+  AUX_ROWS,
+  GUARD,
+  MAIN_ROWS,
+  SHEETS,
+} from "../../../packs/alttpr/src/autotrack/dark-room-art";
 import { auditPage, clickToolbarAction, WIDTHS } from "./support";
 
 // The browser connects to a fake usb2snes bridge over a real WebSocket, as
@@ -73,6 +81,53 @@ const boot = ({ race = false, kitchenSink = false } = {}) => {
   memory[MEMORY_RANGE["dark-room-doors"].address] = 0x1c;
   // The torch at slot 1 is lit: its word at $0540 + start (6) + 2
   memory[MEMORY_RANGE["dark-room-objects"].address + 0x40 + 6 + 3] = 0x80;
+};
+
+/**
+ * What the room's picture is drawn from, synthetic, never a byte of the
+ * game's: the base patch's guard and tables in ROM, sheets that unpack to
+ * stripes, a palette, and one 16 x 16 sprite of Link's on his footprint (the
+ * recording's tiles 40-41 by 44-45), drawn from a body piece of ROM.
+ */
+const bootArt = () => {
+  const { memory } = bridge;
+  const put = (at: number, bytes: ArrayLike<number>) =>
+    memory.set(bytes, bus(at));
+  put(ART_ROM.guard, GUARD);
+  const pointers = new Uint8Array(SHEETS * 3);
+  for (let s = 0; s < SHEETS; s++) {
+    const address = 0x91_8000 + s * 0x10;
+    pointers[s] = address >> 16;
+    pointers[SHEETS + s] = (address >> 8) & 0xff;
+    pointers[2 * SHEETS + s] = address & 0xff;
+    put(address, [0xe7, 0xff, 0xaa, 0xe5, 0xff, 0xaa, 0xff]);
+  }
+  put(ART_ROM.sheetPointers, pointers);
+  const main = new Uint8Array(MAIN_ROWS * 8);
+  for (let row = 0; row < MAIN_ROWS; row++) {
+    main.set([1, 2, 3, 4, 5, 6, 7, 8], row * 8);
+  }
+  put(ART_ROM.mainTilesets, main);
+  put(ART_ROM.auxTilesets, new Uint8Array(AUX_ROWS * 4));
+  const palette = MEMORY_RANGE["dark-room-art-palette"].address;
+  memory.set([0x3f, 0x03], palette + 2 * 15);
+  memory.set([0xff, 0x7f], palette + 2 * (128 + 7 * 16 + 1));
+  const sprites = MEMORY_RANGE["dark-room-art-sprites"].address;
+  for (let i = 0; i < 128; i++) memory[sprites + i * 4 + 1] = 0xf0;
+  memory.set([100, 80, 0x00, 7 << 1], sprites);
+  memory[sprites + 0x200] = 0b10;
+  memory.set([0x00, 0x80], sprites + (0x0acc - 0x0800));
+  memory.set([0x00, 0x80], sprites + (0x0ace - 0x0800));
+  const view = MEMORY_RANGE["dark-room-art-view"].address;
+  memory[view + (0xbc - 0xa2)] = 0x10;
+  memory.set([220, 0], view + (0xe2 - 0xa2));
+  memory.set([263 & 0xff, 263 >> 8], view + (0xe8 - 0xa2));
+  put(
+    0x10_8000,
+    Array.from({ length: 0x40 }, (_, i) =>
+      i % 32 < 16 && i % 2 === 0 ? 0xff : 0,
+    ),
+  );
 };
 
 const reads = (id: MemoryRangeId) => {
@@ -170,6 +225,61 @@ test("draws the dark room Link is in without the Lamp, and follows him", async (
   expect(reads("dark-room-map").length).toBe(mapReads);
 });
 
+test("draws the room in the game's graphics, Link in it, the chests ringed", async ({
+  page,
+}) => {
+  boot({ kitchenSink: true });
+  bootArt();
+  await openTracker(page);
+  await connect(page);
+  const panel = page.getByTestId("dark-room");
+  const art = page.getByTestId("dark-room-art");
+  await expect(art).toBeVisible();
+  await expect(art).toHaveAccessibleName(/drawn lit in the game's graphics/);
+  await expect(page.getByTestId("dark-room-plan")).toHaveCount(0);
+  await expect(page.getByTestId("dark-room-nearest-chest")).toHaveCount(1);
+  // Link is the sprite: no marker of ours over him
+  await expect(page.getByTestId("dark-room-facing")).toHaveCount(0);
+  await expect(page.getByTestId("dark-room-note")).toContainText(
+    "from your own console and ROM",
+  );
+  // The guard, the tables and the sheets came from the ROM, on demand
+  expect(bridge.reads.some(([at]) => at === bus(ART_ROM.guard))).toBe(true);
+
+  for (const width of WIDTHS) {
+    await page.setViewportSize({ height: 1000, width });
+    await expect(art).toBeVisible();
+    await auditPage(page, ".mapspan");
+    // Never wider than its panel; a whole factor wherever one fits
+    const drawn = await art.boundingBox();
+    const box = await panel.boundingBox();
+    expect(drawn && box && drawn.x + drawn.width <= box.x + box.width + 1).toBe(
+      true,
+    );
+    if (width >= 820) {
+      expect(
+        Number(await art.getAttribute("data-scale")),
+      ).toBeGreaterThanOrEqual(1);
+    }
+    if (SHOTS) await panel.screenshot({ path: `${SHOTS}/art-${width}.png` });
+  }
+
+  // The Plan style: the plan again, and the picture's memory no more read
+  await clickToolbarAction(
+    page,
+    page.getByTestId("autotrack-button"),
+    "toolbar-more-autotrack",
+  );
+  const styles = dialog(page).getByTestId("dark-room-style");
+  await expect(styles).toHaveAccessibleName("Dark room map style");
+  await styles.getByRole("radio", { name: "Plan" }).check();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("dark-room-plan")).toBeVisible();
+  const before = reads("dark-room-art-sprites").length;
+  await page.waitForTimeout(1500);
+  expect(reads("dark-room-art-sprites").length).toBe(before);
+});
+
 test("stays on the page through a menu and a text box, where the content does not jump", async ({
   page,
 }) => {
@@ -236,6 +346,7 @@ test("is reachable and described from the Autotracking dialog", async ({
 
 test("is never read in Race Mode, and never shown", async ({ page }) => {
   boot({ race: true });
+  bootArt();
   await openTracker(page);
   await connect(page);
   await page.waitForTimeout(2000);
@@ -246,7 +357,11 @@ test("is never read in Race Mode, and never shown", async ({ page }) => {
     "dark-room-link",
     "dark-room-room",
     "dark-room-dark",
+    "dark-room-art-sprites",
+    "dark-room-art-bg2",
   ] as const) {
     expect(reads(id), id).toEqual([]);
   }
+  // Nor the ROM's graphics: no on-demand read
+  expect(bridge.reads.some(([at]) => at === bus(ART_ROM.guard))).toBe(false);
 });
