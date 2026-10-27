@@ -304,22 +304,80 @@ describe("the sweep on the page", () => {
     log,
   });
 
-  it("runs in slices of the main thread: nothing until the first, then the sweep", () => {
-    vi.useFakeTimers({ now: T0 });
+  /** A clock whose every read is 5 ms on: a slice of 8 ms holds two solves. */
+  const slowClock = () => {
+    let now = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => {
+      now += 5;
+      return now;
+    });
+  };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("runs in slices of the main thread, a frame between two", () => {
+    vi.useFakeTimers({ now: T0, toFake: ["setTimeout", "clearTimeout"] });
+    slowClock();
     const loaded = review();
     const { result } = renderHook(() =>
       useSweep(loaded, run, comparison, 60_000, false),
     );
     // Nothing is solved while the page draws its frame
     expect(result.current).toBeNull();
-    act(() => vi.advanceTimersByTime(0));
-    // A slice runs, then hands the page a frame, until the sweep is done
-    act(() => vi.runAllTimers());
+    expect(vi.getTimerCount()).toBe(1);
+    // One slice, then the next is left for after a frame
+    act(() => vi.advanceTimersToNextTimer());
+    expect(result.current).toBeNull();
+    expect(vi.getTimerCount()).toBe(1);
+    let slices = 1;
+    while (result.current === null && slices < 10_000) {
+      act(() => vi.advanceTimersToNextTimer());
+      slices++;
+    }
+    expect(slices).toBeGreaterThan(10);
     expect(result.current?.waits.length).toBeGreaterThan(20);
   });
 
+  it("stops between two slices when the tab goes, and keeps nothing half done", () => {
+    vi.useFakeTimers({ now: T0, toFake: ["setTimeout", "clearTimeout"] });
+    slowClock();
+    const loaded = review();
+    const first = renderHook(() =>
+      useSweep(loaded, run, comparison, 60_000, false),
+    );
+    act(() => vi.advanceTimersToNextTimer());
+    expect(vi.getTimerCount()).toBe(1);
+    first.unmount();
+    // The next slice is cancelled, and no sweep was kept for the review
+    expect(vi.getTimerCount()).toBe(0);
+    const again = renderHook(() =>
+      useSweep(loaded, run, comparison, 60_000, false),
+    );
+    expect(again.result.current).toBeNull();
+  });
+
+  it("starts over when the run changes mid-sweep, and keeps the new run's", () => {
+    vi.useFakeTimers({ now: T0, toFake: ["setTimeout", "clearTimeout"] });
+    const loaded = review();
+    const { rerender, result } = renderHook(
+      ({ end }) => useSweep(loaded, run, comparison, end, false),
+      { initialProps: { end: 60_000 } },
+    );
+    act(() => vi.advanceTimersToNextTimer());
+    rerender({ end: 120_000 });
+    act(() => vi.runAllTimers());
+    expect(result.current?.timerEnd).toBe(
+      Math.max(
+        120_000,
+        ...Object.values(run.timeline).map(({ ms }) => ms ?? 0),
+      ),
+    );
+  });
+
   it("is kept per review, and never run for a run whose waits are hidden", () => {
-    vi.useFakeTimers({ now: T0 });
+    vi.useFakeTimers({ now: T0, toFake: ["setTimeout", "clearTimeout"] });
     const loaded = review();
     const first = renderHook(() =>
       useSweep(loaded, run, comparison, 60_000, false),
@@ -327,16 +385,24 @@ describe("the sweep on the page", () => {
     act(() => vi.runAllTimers());
     const done = first.result.current;
     expect(done).not.toBeNull();
-    // Mounted again with the same run: the same sweep, at once
+    // Mounted again with the same run: the same sweep, at once, nothing run
     const again = renderHook(() =>
       useSweep(loaded, { ...run }, comparison, 60_000, false),
     );
     expect(again.result.current).toBe(done);
-    // Another review starts over; a hidden one never starts
+    expect(vi.getTimerCount()).toBe(0);
+    // Another review starts over: a slice is waiting
+    const other = renderHook(() =>
+      useSweep(review(), run, comparison, 60_000, false),
+    );
+    expect(other.result.current).toBeNull();
+    expect(vi.getTimerCount()).toBe(1);
+    other.unmount();
+    // A hidden one never starts
     const hidden = renderHook(() =>
       useSweep(review(), run, comparison, 60_000, true),
     );
-    act(() => vi.runAllTimers());
+    expect(vi.getTimerCount()).toBe(0);
     expect(hidden.result.current).toBeNull();
   });
 });
