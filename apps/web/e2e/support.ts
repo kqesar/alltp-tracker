@@ -153,11 +153,12 @@ export const auditPage = async (page: Page, exclude?: string) => {
   expect(violations.map(({ id, nodes }) => `${id} ×${nodes.length}`)).toEqual(
     [],
   );
+  // Against the viewport asked for: a phone's (isMobile) zooms out to a page
+  // wider than it, and its innerWidth grows with the page
+  const width = page.viewportSize()?.width ?? 0;
   expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth - window.innerWidth,
-    ),
-  ).toBeLessThanOrEqual(0);
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(width);
   expect(await unreachableClickables(page)).toEqual([]);
 };
 
