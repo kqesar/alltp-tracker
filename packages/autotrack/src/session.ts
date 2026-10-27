@@ -166,6 +166,11 @@ export class AutotrackSession {
    * session does not ask that device for them again, through reconnections.
    */
   private readonly skipped = new Map<string, Set<string>>();
+  /**
+   * The gated ranges whose read failed once with a dropped connection or a
+   * timeout, by device id: a second such failure skips them.
+   */
+  private readonly struck = new Map<string, Set<string>>();
   private preferredDevice: string | null = null;
   private unsubscribers: (() => void)[] = [];
   private devices: readonly DeviceDescriptor[] = [];
@@ -310,6 +315,13 @@ export class AutotrackSession {
     if (this.current.code === "connected" && this.poller !== null) {
       this.setStatus({ ...this.current, race: this.poller.race });
     }
+  }
+
+  /** Remembers that a gated range's read failed once, for a reason not its own. */
+  private strike(device: string, range: string): void {
+    const ids = this.struck.get(device) ?? new Set<string>();
+    ids.add(range);
+    this.struck.set(device, ids);
   }
 
   /** Remembers that a device could not serve a gated range. */
@@ -458,10 +470,12 @@ export class AutotrackSession {
         now: () => this.clock.now(),
         // What failed to read on this device before is not asked again
         onSkip: (id) => this.skip(info.device.id, id),
+        onStrike: (id) => this.strike(info.device.id, id),
         optIn: this.optIns,
         romReadable: info.romReadable,
         setting: this.raceSetting,
         skipped: this.skipped.get(info.device.id),
+        struck: this.struck.get(info.device.id),
       });
       for (let tries = 1; ; tries++) {
         const verdict = await this.checkGame(poller, info, bridge);

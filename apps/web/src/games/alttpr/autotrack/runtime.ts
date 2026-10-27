@@ -15,6 +15,7 @@ import {
 } from "@alltp/autotrack";
 import {
   ALTTPR_AUTOTRACK,
+  ART_RANGES,
   ART_RETRY_MS,
   type ArtOutcome,
   createArtLoader,
@@ -150,6 +151,18 @@ export const startRuntime = (
         sink.darkRoomArt?.(null);
         break;
       }
+      // The device could not serve the picture's memory: it never comes, so
+      // say so rather than wait
+      const status = session.status;
+      if (
+        status.code === "connected" &&
+        status.unreadable.some((id) =>
+          (ART_RANGES as readonly string[]).includes(id),
+        )
+      ) {
+        sink.darkRoomArt?.({ reason: "unreadable", status: "unavailable" });
+        break;
+      }
       const outcome = await loader.update(snapshot);
       if (stopped) return;
       clearRetry();
@@ -194,6 +207,9 @@ export const startRuntime = (
       shownRoom = false;
       sink.darkRoom?.(null);
       sink.darkRoomArt?.(null);
+    } else if (shownRoom && artOn() && status.unreadable.length > 0) {
+      // A range the device cannot serve: the picture may be one of them
+      void drawArt();
     }
     // Race Mode can change without memory changing: decode again under it
     const snapshot = session.snapshot;

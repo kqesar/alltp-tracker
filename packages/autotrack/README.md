@@ -458,12 +458,15 @@ ranges of a **forbidden** category, so Race Mode never reaches them
   16-21 ms alone. It is read when its cadence is due, on the tick `when` turns
   true, and on a tick where a range of `refreshOn` changed, so its bytes match the
   state read with them.
-- A gated read is not the session's failure. A read that fails (a timeout, an
-  error on that range) skips the range on that device, for the rest of the
-  session and through reconnections, and lists its id among `unreadable` in the
-  `connected` status and the diagnostic report: the pack's own reads go on. (The
-  transport may have dropped its socket with the error; the session's usual
-  reconnection then follows, and does not ask for the range again.)
+- A gated read the device refuses (a RetroArch `-1`, a reply that does not
+  fit: a `device` or `protocol` error) is not the session's failure: it skips
+  the range on that device, for the rest of the session and through
+  reconnections, and lists its id among `unreadable` in the `connected` status
+  and the diagnostic report; the pack's own reads go on. A dropped connection or
+  a timeout says nothing of the range (the emulator closed, the bridge
+  restarted; over usb2snes a refusal looks the same): the tick fails and the
+  session connects again, as for the pack's own reads. Only when it fails so on
+  a second connection to the same device is the range skipped.
 - A tick that only an assist's ranges made due says nothing of a game standing
   still: it is not a steady poll (`Poller.readBase`).
 

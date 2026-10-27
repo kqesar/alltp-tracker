@@ -39,8 +39,12 @@ const harness = ({
   if (art) putDarkRoomArt(memory);
   const clock = new ManualClock();
   const transports: MemoryTransport[] = [];
-  /** While set, a read of the ROM's guard fails, as a timeout would. */
-  const failing = { rom: false };
+  /**
+   * While set, a read of the ROM's guard fails, and one of the BG2 tilemap,
+   * the device refusing it.
+   */
+  const failing = { rom: false, tilemap: false };
+  const bg2 = MEMORY_RANGE["dark-room-art-bg2"].address;
   setAutotrackOptions({
     clock,
     permission: GRANTED,
@@ -48,7 +52,8 @@ const harness = ({
     transport: () => {
       const transport = new MemoryTransport(memory, {
         read: (pieces) =>
-          failing.rom && pieces.some(([a]) => a === GUARD_AT)
+          (failing.rom && pieces.some(([a]) => a === GUARD_AT)) ||
+          (failing.tilemap && pieces.some(([a]) => a === bg2))
             ? new TransportError("device", "read", "no")
             : undefined,
       });
@@ -195,6 +200,23 @@ describe("the dark room in the game's graphics", () => {
     await h.settle();
     expect(store().art).toEqual({ status: "ready" });
     expect(await screen.findByTestId("dark-room-art")).toBeInTheDocument();
+  });
+
+  it("says so when the device cannot serve the picture's memory", async () => {
+    const h = harness();
+    h.failing.tilemap = true;
+    await act(() => connectAutotrack());
+    await h.settle();
+    expect(store().art).toEqual({
+      reason: "unreadable",
+      status: "unavailable",
+    });
+    render(<MapPanel />);
+    expect(await screen.findByTestId("dark-room-note")).toHaveTextContent(
+      /could not be read; the plan stays/,
+    );
+    // The plan itself, from the map's own ranges, still shows
+    expect(screen.getByTestId("dark-room-plan")).toBeInTheDocument();
   });
 
   it("gives up on a ROM whose reads keep failing, and says so", async () => {

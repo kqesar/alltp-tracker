@@ -320,10 +320,13 @@ change it, it draws a cone (`hud.c:1343-1349`).
   (`DARK_ROOM_SWITCH`): with the option off, the poller plans none of them.
   The one trace is the pack's tick, 250 ms instead of 500 ms: an empty tick
   sends nothing, and does not count as a steady poll (`Poller.readBase`).
-- **A read that fails is not the session's failure.** A gated range the device
-  cannot serve (a timeout on the 8 KiB, say) is skipped on that device from then
-  on, reconnections included, and listed among `unreadable` ranges in the
-  diagnostic report; the board's tracking goes on without the map.
+- **A range the device cannot serve is skipped, not the session.** Refused (a
+  RetroArch `-1`), or failing on two connections in a row (a timeout on the 8
+  KiB, say), a gated range is skipped on that device from then on,
+  reconnections included, and listed among `unreadable` ranges in the
+  diagnostic report; the board's tracking goes on without it. A picture's range
+  skipped so shows the plan with a note saying the console's graphics could not
+  be read.
 
 ### Race Mode never reads it
 
