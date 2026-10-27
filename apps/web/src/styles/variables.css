@@ -70,6 +70,8 @@
   --dark-room-torch: #ff9a3c;
   --dark-room-exit: #3fb950;
   --dark-room-link: #ffffff;
+  /* The sword's charge around Link, over the game's art or the plan */
+  --dark-room-charge: #6ee7ff;
 
   /* ---- Item not obtained: greyed, at the brightness where every missing
      icon stays below every held one in contrast with the page (2.2:1

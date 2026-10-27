@@ -138,6 +138,7 @@ describe("Race Mode as the player sets it", () => {
     ).toEqual({
       connectOnStart: true,
       darkRoomMap: true,
+      darkRoomStyle: "art",
       keptSeed: null,
       raceChoice: "on",
     });
@@ -257,6 +258,7 @@ describe("following the seed's run type", () => {
     ).toEqual({
       connectOnStart: true,
       darkRoomMap: true,
+      darkRoomStyle: "art",
       keptSeed: "KEPT",
       raceChoice: "auto",
     });

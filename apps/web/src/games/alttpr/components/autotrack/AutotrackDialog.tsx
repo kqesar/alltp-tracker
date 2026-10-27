@@ -17,6 +17,7 @@ import { seedLineText } from "@/games/alttpr/autotrack/seed";
 import { Readout } from "@/games/alttpr/components/autotrack/Readout";
 import {
   connectAutotrack,
+  type DarkRoomStyle,
   disconnectAutotrack,
   preloadAutotrack,
   retryAutotrack,
@@ -27,6 +28,12 @@ import {
 } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { copyStatus, copyText } from "@/utils/clipboard";
+
+/** The dark room map's styles, as the option names them. */
+const DARK_ROOM_STYLES: readonly (readonly [DarkRoomStyle, string])[] = [
+  ["art", "Game art"],
+  ["plan", "Plan"],
+];
 
 /** What Sync from game did, in a few words. */
 const syncedText = (changed: number | null) => {
@@ -58,6 +65,8 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
   const setRaceChoice = useAutotrackStore((state) => state.setRaceChoice);
   const darkRoomMap = useAutotrackStore((state) => state.darkRoomMap);
   const setDarkRoomMap = useAutotrackStore((state) => state.setDarkRoomMap);
+  const darkRoomStyle = useAutotrackStore((state) => state.darkRoomStyle);
+  const setDarkRoomStyle = useAutotrackStore((state) => state.setDarkRoomStyle);
   const [copied, setCopied] = useState("");
   const [synced, setSynced] = useState("");
   const [manualReport, setManualReport] = useState<string | null>(null);
@@ -295,6 +304,36 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
           Lamp. Never in Race Mode: it shows what the game hides from you in the
           dark.
         </p>
+        <fieldset
+          aria-describedby={`${darkRoomId}-style-hint`}
+          className="race-option"
+          data-testid="dark-room-style"
+          disabled={!darkRoomMap}
+        >
+          <legend className="race-option__legend">Dark room map style</legend>
+          <div className="race-option__choices">
+            {DARK_ROOM_STYLES.map(([style, words]) => (
+              <div className="check-option" key={style}>
+                <input
+                  checked={darkRoomStyle === style}
+                  className="check-option__input"
+                  data-testid={`dark-room-style-${style}`}
+                  id={`${darkRoomId}-${style}`}
+                  name={`${darkRoomId}-style`}
+                  onChange={() => setDarkRoomStyle(style)}
+                  type="radio"
+                  value={style}
+                />
+                <label htmlFor={`${darkRoomId}-${style}`}>{words}</label>
+              </div>
+            ))}
+          </div>
+          <p className="race-option__hint" id={`${darkRoomId}-style-hint`}>
+            Game art redraws the room lit, and you in it, from your own console
+            and ROM, kept on this page only; the plan shows while it loads or
+            when your ROM's graphics cannot be read.
+          </p>
+        </fieldset>
 
         <SetupGuide
           environment={environment ?? parseUserAgent(navigator.userAgent)}

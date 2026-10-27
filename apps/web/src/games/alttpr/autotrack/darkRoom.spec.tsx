@@ -89,7 +89,12 @@ describe("the dark room, from a session", () => {
     await h.advance(0);
 
     expect(store().map?.room).toBe(0x104);
-    expect(store().link).toEqual(tileOf(at().x, at().y));
+    expect(store().link).toEqual({
+      ...tileOf(at().x, at().y),
+      // The console image holds 0 at $2F and $79: facing up, no charge
+      charge: "none",
+      facing: "up",
+    });
     expect(h.read().map).toBeGreaterThan(0);
     expect(h.read().small).toBeGreaterThan(0);
   });
@@ -179,6 +184,7 @@ describe("the dark room, from a session", () => {
     expect(Object.keys(saved).sort()).toEqual([
       "connectOnStart",
       "darkRoomMap",
+      "darkRoomStyle",
       "keptSeed",
       "raceChoice",
     ]);
@@ -271,11 +277,13 @@ describe("the dark room panel", () => {
     render(<MapPanel />);
     const words = await screen.findByTestId("dark-room-words");
     expect(words).toHaveAttribute("role", "status");
-    expect(words).toHaveTextContent("No unopened chest in this room.");
+    expect(words).toHaveTextContent(
+      "No unopened chest in this room. Facing up.",
+    );
     const panel = screen.getByTestId("dark-room");
     expect(within(panel).getAllByRole("status")).toEqual([words]);
     expect(
-      within(panel).getAllByText("No unopened chest in this room."),
+      within(panel).getAllByText("No unopened chest in this room. Facing up."),
     ).toHaveLength(1);
   });
 

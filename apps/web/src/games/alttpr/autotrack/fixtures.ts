@@ -2,12 +2,20 @@
 // memory holding an alttpr.com seed in play, a location's flag set, and the
 // whole decoded. What every game's specs share is in autotrack/fixtures.ts.
 
+import { bus } from "@alltp/autotrack";
 import {
   CHECK_FLAGS,
   MEMORY_RANGE,
   type MemoryRangeId,
 } from "@alltp/pack-alttpr";
 import { readMemory } from "@/games/alttpr/autotrack/reading";
+import {
+  ART_ROM,
+  AUX_ROWS,
+  GUARD,
+  MAIN_ROWS,
+  SHEETS,
+} from "../../../../../../packs/alttpr/src/autotrack/dark-room-art";
 
 // The console's memory in the FX Pak Pro space the bridges take: ROM from
 // $00_0000 (LoROM, headerless), WRAM from $F5_0000.
@@ -175,5 +183,62 @@ export const putDarkRoom = (
       memory[address + i / 2] = Number.parseInt(text.slice(i, i + 2), 16);
     }
   }
+  return memory;
+};
+
+/** Where the synthetic sheets lie: sheet `s` at $91:8000 + s * $10. */
+const SHEET_AT = (sheet: number) => 0x91_8000 + sheet * 0x10;
+
+/**
+ * Lay out what the dark room's picture is drawn from, all synthetic, never a
+ * byte of the game's: the base patch's guard and tables in ROM, every sheet a
+ * fill of $AA (stripes of colour 7, 15 in a high sheet), every blockset the
+ * same eight sheets; in WRAM, a palette (colour 15 gold, sprites' colour 1
+ * white), a BG2 tilemap naming tile 0 everywhere, and one 16 x 16 sprite of
+ * Link's at screen (100, 80), drawn from a body piece of ROM.
+ * @param memory - A memory image holding a dark room (`putDarkRoom`)
+ */
+export const putDarkRoomArt = (memory: Uint8Array) => {
+  const put = (busAddress: number, bytes: ArrayLike<number>) =>
+    memory.set(bytes, bus(busAddress));
+  put(ART_ROM.guard, GUARD);
+  const pointers = new Uint8Array(SHEETS * 3);
+  for (let s = 0; s < SHEETS; s++) {
+    const address = SHEET_AT(s);
+    pointers[s] = address >> 16;
+    pointers[SHEETS + s] = (address >> 8) & 0xff;
+    pointers[2 * SHEETS + s] = address & 0xff;
+    // 0x400 then 0x200 bytes of $AA, then the end
+    put(address, [0xe7, 0xff, 0xaa, 0xe5, 0xff, 0xaa, 0xff]);
+  }
+  put(ART_ROM.sheetPointers, pointers);
+  const main = new Uint8Array(MAIN_ROWS * 8);
+  for (let row = 0; row < MAIN_ROWS; row++) {
+    main.set([1, 2, 3, 4, 5, 6, 7, 8], row * 8);
+  }
+  put(ART_ROM.mainTilesets, main);
+  put(ART_ROM.auxTilesets, new Uint8Array(AUX_ROWS * 4));
+  const palette = new Uint8Array(0x200);
+  palette.set([0x3f, 0x03], 2 * 15); // gold
+  palette.set([0xff, 0x7f], 2 * (128 + 7 * 16 + 1)); // white
+  memory.set(palette, MEMORY_RANGE["dark-room-art-palette"].address);
+  // OAM: every sprite hidden, but one 16 x 16 of tile 0 in palette 7
+  const oam = new Uint8Array(0x220);
+  for (let i = 0; i < 128; i++) oam[i * 4 + 1] = 0xf0;
+  oam.set([100, 80, 0x00, 7 << 1], 0);
+  oam[0x200] = 0b10;
+  memory.set(oam, MEMORY_RANGE["dark-room-art-oam"].address);
+  // Its four tiles: 0 and 1 from body piece 3 ($0ACC), 16 and 17 from body
+  // piece 0 ($0ACE), both at $10:8000, a tile of colour 1
+  const gfx = MEMORY_RANGE["dark-room-art-gfx"].address;
+  memory.set([0x00, 0x80], gfx + (0x0acc - 0x0aa1));
+  memory.set([0x00, 0x80], gfx + (0x0ace - 0x0aa1));
+  memory[MEMORY_RANGE["dark-room-art-sprite-bank"].address] = 0x10;
+  put(
+    0x10_8000,
+    Array.from({ length: 0x40 }, (_, i) =>
+      i % 32 < 16 && i % 2 === 0 ? 0xff : 0,
+    ),
+  );
   return memory;
 };

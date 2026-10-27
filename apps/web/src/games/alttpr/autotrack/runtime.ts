@@ -14,6 +14,10 @@ import {
 } from "@alltp/autotrack";
 import {
   ALTTPR_AUTOTRACK,
+  ART_RETRY_MS,
+  type ArtOutcome,
+  createArtLoader,
+  DARK_ROOM_ART_SWITCH,
   DARK_ROOM_SWITCH,
   type DarkRoomReading,
   decodeDarkRoom,
@@ -48,10 +52,20 @@ export type RuntimeSink = {
    * which never reads it). Not a part of the reading: it never reaches the run.
    */
   darkRoom?: (room: DarkRoomReading | null) => void;
+  /**
+   * The dark room drawn in the game's own graphics (the "Game art" style),
+   * drawn again as what it is made of changes; null when there is no room or
+   * the style is off. Rebuilt from the player's own console and ROM, held in
+   * memory only, like the room itself.
+   */
+  darkRoomArt?: (art: ArtOutcome | null) => void;
 };
 
 /** The ranges the dark room map reads (the pack's `dark-room-…`). */
 const isDarkRoomRange = (id: string) => id.startsWith("dark-room-");
+/** The ranges its picture is drawn from (`dark-room-art-…`), or that redraw it. */
+const isArtRange = (id: string) =>
+  id.startsWith("dark-room-art-") || id === "dark-room-room";
 /** The equipment holding the Lamp, which the room's gate reads. */
 const LAMP_RANGE = "equipment-b";
 
@@ -61,6 +75,8 @@ export type Runtime = {
   retryNow: () => void;
   /** Turn the dark room map on or off: its ranges are read only while on. */
   setDarkRoom: (on: boolean) => void;
+  /** Draw the dark room in the game's graphics, or not (the plan alone). */
+  setDarkRoomArt: (on: boolean) => void;
   /** Follow the player's Race Mode: the next reading is decoded under it. */
   setRaceMode: (setting: RaceSetting) => void;
   /** Stop for good: no socket, timer or listener survives. */
@@ -78,17 +94,81 @@ export const startRuntime = (
     readonly environment: Environment;
     /** The dark room map is on (the player's choice, on by default). */
     readonly darkRoom?: boolean;
+    /** It is drawn in the game's graphics (on by default, with the map). */
+    readonly darkRoomArt?: boolean;
   },
   sink: RuntimeSink,
 ): Runtime => {
-  const { darkRoom = true, ...sessionOptions } = options;
+  const { darkRoom = true, darkRoomArt = true, ...sessionOptions } = options;
+  let mapOn = darkRoom;
+  let artWanted = darkRoomArt;
+  const artOn = () => mapOn && artWanted;
   const session = new AutotrackSession({
     ...sessionOptions,
-    optIn: darkRoom ? [DARK_ROOM_SWITCH] : [],
+    optIn: [
+      ...(darkRoom ? [DARK_ROOM_SWITCH] : []),
+      ...(artOn() ? [DARK_ROOM_ART_SWITCH] : []),
+    ],
     pack: ALTTPR_AUTOTRACK,
   });
   // Race Mode is on until the race flag says otherwise: fail closed
   const raceActive = () => session.race?.active ?? true;
+
+  // The picture: what it is drawn from is read on demand (navigation, which
+  // the session refuses in Race Mode), one draw at a time, the last asked for
+  // drawn after the one under way
+  const clock = sessionOptions.clock ?? {
+    clearTimeout: (handle: unknown) =>
+      clearTimeout(handle as ReturnType<typeof setTimeout>),
+    now: () => Date.now(),
+    setTimeout: (callback: () => void, ms: number) => setTimeout(callback, ms),
+  };
+  const loader = createArtLoader(
+    (ranges) => session.request({ category: "navigation", ranges }),
+    () => clock.now(),
+  );
+  /** A draw again once a failed read's pause is over, even if nothing moves. */
+  let retry: unknown = null;
+  const clearRetry = () => {
+    if (retry !== null) clock.clearTimeout(retry);
+    retry = null;
+  };
+  let shownRoom = false;
+  let drawing = false;
+  let drawAgain = false;
+  let stopped = false;
+  const drawArt = async () => {
+    if (drawing) {
+      drawAgain = true;
+      return;
+    }
+    drawing = true;
+    do {
+      drawAgain = false;
+      const snapshot = session.snapshot;
+      if (!shownRoom || !artOn() || raceActive() || snapshot === null) {
+        sink.darkRoomArt?.(null);
+        break;
+      }
+      const outcome = await loader.update(snapshot);
+      if (stopped) return;
+      clearRetry();
+      if (
+        outcome?.status === "unavailable" &&
+        outcome.reason === "read-failed"
+      ) {
+        retry = clock.setTimeout(() => {
+          retry = null;
+          void drawArt();
+        }, ART_RETRY_MS);
+      }
+      // The room may have gone, or Race Mode come, while it was drawn
+      sink.darkRoomArt?.(
+        shownRoom && artOn() && !raceActive() ? outcome : null,
+      );
+    } while (drawAgain);
+    drawing = false;
+  };
   let decodedInRace: boolean | null = null;
 
   const decode = (snapshot: NonNullable<AutotrackSession["snapshot"]>) => {
@@ -97,13 +177,24 @@ export const startRuntime = (
   };
 
   /** The dark room, decoded under Race Mode as it stands. */
-  const showDarkRoom = (snapshot: NonNullable<AutotrackSession["snapshot"]>) =>
-    sink.darkRoom?.(decodeDarkRoom(snapshot, { race: raceActive() }));
+  const showDarkRoom = (
+    snapshot: NonNullable<AutotrackSession["snapshot"]>,
+  ) => {
+    const room = decodeDarkRoom(snapshot, { race: raceActive() });
+    sink.darkRoom?.(room);
+    const was = shownRoom;
+    shownRoom = room !== null;
+    if (was && !shownRoom) sink.darkRoomArt?.(null);
+  };
 
   session.subscribe((status) => {
     sink.status(status, session.statusSince, session.seen);
     // No bridge, no game: no room to show
-    if (status.code !== "connected") sink.darkRoom?.(null);
+    if (status.code !== "connected") {
+      shownRoom = false;
+      sink.darkRoom?.(null);
+      sink.darkRoomArt?.(null);
+    }
     // Race Mode can change without memory changing: decode again under it
     const snapshot = session.snapshot;
     if (
@@ -114,6 +205,7 @@ export const startRuntime = (
     ) {
       decode(snapshot);
       showDarkRoom(snapshot);
+      void drawArt();
     }
   });
   session.onUpdate(({ changed, snapshot }) => {
@@ -123,6 +215,7 @@ export const startRuntime = (
     if (changed.some((id) => isDarkRoomRange(id) || id === LAMP_RANGE)) {
       showDarkRoom(snapshot);
     }
+    if (artOn() && shownRoom && changed.some(isArtRange)) void drawArt();
   });
   // The play frames are read on every poll: one that changed nothing is a
   // game that stands still
@@ -132,11 +225,26 @@ export const startRuntime = (
   return {
     retryNow: () => session.retryNow(),
     setDarkRoom: (on) => {
+      mapOn = on;
       session.setOptIn(DARK_ROOM_SWITCH, on);
+      session.setOptIn(DARK_ROOM_ART_SWITCH, artOn());
       // Off: its ranges are forgotten by the next poll; the room goes now
-      if (!on) sink.darkRoom?.(null);
+      if (!on) {
+        shownRoom = false;
+        sink.darkRoom?.(null);
+        sink.darkRoomArt?.(null);
+      }
+    },
+    setDarkRoomArt: (on) => {
+      artWanted = on;
+      session.setOptIn(DARK_ROOM_ART_SWITCH, artOn());
+      if (!on) sink.darkRoomArt?.(null);
     },
     setRaceMode: (setting) => session.setRaceMode(setting),
-    stop: () => session.stop(),
+    stop: () => {
+      stopped = true;
+      clearRetry();
+      session.stop();
+    },
   };
 };
