@@ -455,7 +455,7 @@ const RACE_HIDDEN_ITEMS: readonly string[] = ["crystalBlue", "crystalRed"];
  * pools: 1 or 0 for an item held or not, a level or a count for the others.
  * The keys are the keys found (z3 stats.asm:264-276), which no door takes
  * back; the rewards, those found. In Race Mode the crystals are left out
- * (`RACE_HIDDEN_ITEMS`): the board has no cell for a crystal of either kind,
+ * (`RACE_HIDDEN_ITEMS`): the board has no cell for a crystal of unknown kind,
  * so they stay the player's to mark.
  */
 export function decodeItems(

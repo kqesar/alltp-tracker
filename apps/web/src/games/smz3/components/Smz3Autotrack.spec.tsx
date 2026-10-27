@@ -87,6 +87,17 @@ describe("SMZ3's autotracking dialog", () => {
     expect(within(dialog).getByTestId("autotrack-connect")).toBeVisible();
   });
 
+  it("calls a seed without the race flag no race seed, Race Mode set always on", async () => {
+    act(() => smz3Autotrack.useStore.setState({ reading: reading({}, true) }));
+    const dialog = await openDialog();
+    const readout = within(dialog).getByTestId("smz3-readout");
+    expect(readout).toHaveTextContent(
+      "An SMZ3 seed, in Race Mode, in A Link to the Past.",
+    );
+    expect(readout).not.toHaveTextContent("race seed");
+    expect(readout).not.toHaveTextContent("ZSM");
+  });
+
   it("sets Race Mode always on, and says so while connected", async () => {
     const dialog = await openDialog();
     const user = userEvent.setup();
