@@ -22,7 +22,7 @@ flowchart LR
   log -- structured clone --> bind["Game adapter: bindRun<br/>(seed, settings, medallions, prizes)"]
   bind -- refused --> words
   bind --> store["review/store.ts<br/>(memory only)"]
-  store --> runtab["Run tab: compareReview<br/>(timeline against the playthrough)"]
+  store --> runtab["Run tab: compareReview + sweep<br/>(when each needed item was in logic, and taken)"]
 ```
 
 ## The gate
@@ -99,6 +99,14 @@ the same after an import, and that none of those modules imports the review. A r
 
 ## The Run tab
 
+The tab answers one question for the player: for each item the seed needed, when did the items
+they held first put its place in logic, and when did they take it? The difference is how long it
+**waited** for them. The words stay neutral ("waited", "could have"), never "late" or "mistake":
+a player may skip a dungeon only partly in logic on purpose, and the tab shows the trade-off, not a
+reproach.
+
+### Matching finds to placements
+
 `compareReview` (adapter) turns the run's timeline into `@alltp/spoiler` finds and sets them against
 the playthrough with `compareRun`:
 
@@ -108,21 +116,95 @@ the playthrough with `compareRun`:
 - a check and the item it gave, stamped at one instant (autotracking lays a reading's news at
   one), are **one** find, so the item is not matched again by its order;
 - a find with a location matches that placement exactly; an item found with no location matches
-  the k-th placement of that item in sphere order, marked "by item order";
-- **late** is `compareRun`'s `behind`: placements of later spheres found before this one. The
-  playthrough lists items by the sphere where they become reachable, so a late item means another
-  route (a shortcut, a trick, a different order), not a mistake.
+  the k-th placement of that item in sphere order (`inferred`).
 
-What the board cannot tell is **unknown**, never missed: locations it does not track (the bottles,
-the medallion pads, Ganon) and a dungeon's checks when only its counter was kept (a manual run, a
-race: autotracking checks them one by one otherwise). A dungeon the counter finished reads "done,
-no time recorded". The Missed list names the rest with what they held, required items first, and
-says how many items a counted dungeon has left.
+`compareRun` also counts `behind` (placements of later spheres found first); the package keeps it,
+the tab no longer shows it. What the board cannot tell is **unknown**, never missed: locations it
+does not track (the bottles, the medallion pads, Ganon) and a dungeon's checks when only its counter
+was kept. A dungeon the counter finished reads "done, no time".
 
-The tab shows the table (Sphere, Item, Where, Found, Note, with a caption "12 required items:
-9 in order, 2 late, 1 missed"), the Missed list and the seed's facts (medallions, prizes, starting
-items, bosses when shuffled). An entrance randomizer log reads the same way; its real entrance
-connections are not shown yet. The timeline's `check:` rows gain "→ the item held".
+### The sweep
+
+`games/alttpr/review/sweep.ts` replays the run through the pack's rules:
+
+```mermaid
+flowchart LR
+  timeline["Run timeline<br/>(check: and item: stamps)"] --> steps["Instants, in order<br/>+ the start"]
+  steps --> state["Items held at each instant<br/>(timed items from nothing,<br/>untimed as the run ended)"]
+  state --> solve["solveWithKeys<br/>(the run's compiled world)"]
+  solve --> first["First instant each place<br/>reads yes"]
+  first --> pair["Each needed item:<br/>k-th copy reached / taken"]
+  pair --> counter["Items that waited:<br/>solve again with one more"]
+  counter --> sweep["Sweep: waits, dungeons,<br/>breaks, play time"]
+```
+
+- **In logic from** is the first instant whose held items put the place at `yes` (the key model
+  included; a dark room without the Lantern is `maybe`, so not yet). The start counts as one
+  instant, before the first stamp. Items with no timeline entry (an old save) count from the start,
+  as do the medallion pads and the prize each dungeon holds; a crystal or pendant counts held once
+  its boss is beaten, which is timed.
+- **Play time** is the run timer's reading less each gap of 30 minutes or more with nothing found
+  (`BREAK_MS`), the end of the run included: the waits are in play time, the breaks said.
+- **Copies.** Each needed placement is paired with the k-th copy of its item reached and the k-th
+  taken, k its rank among that item's placements in sphere order: a sword's levels are told apart
+  by order, not by place. Its name and picture are the k-th timeline key of that item
+  (`findName`, `findIcon`): "Titan's Mitt", not "Progressive Glove".
+- **After** is the item stamped at the instant a place came into logic (a needed one first, then a
+  boss), which the chain follows (`chainOf`: the longest run of items each in logic once the one
+  before was held).
+- **Trade-off.** For each major item that waited, the run is solved again with one more of it at
+  each instant from its reach to its taking, until something new reads `yes`: what holding it
+  earlier could have opened, and from when. What it opened when taken is the fallback sentence.
+- **Dungeons**: per dungeon marker, when its first place and all of them were in logic, the first
+  of its places checked (entered), and its boss (the boss's place checked or the boss marked,
+  whichever came first).
+
+On seed `9MQ9gO1wMD` and a real six-hour run (208 instants), the sweep solves 321 times in about
+120 ms in Node, no solve over 8 ms. `useSweep` runs it on the main thread in slices of 8 ms
+(`setTimeout` between them, so the page draws), says "Working out…" in a `role="status"` meanwhile,
+and keeps the result per review in a `WeakMap` keyed by the `Loaded`, checked against the run's
+slices and the timer, so the tab mounting again finds it done. It never runs in Race Mode: the
+review is closed there.
+
+### When the waits are hidden
+
+`hiddenReason` says why, in one sentence, and the tab shows the playthrough with the run timer's
+readings instead:
+
+| Reason | Why it cannot be told |
+|---|---|
+| `keysanity` (MCS, Full) | small keys are counts on the board, not stamped |
+| `entrances` | where each entrance led is not stamped, and the final ones would leak |
+| `not-modelled` | the pack does not model the run's logic, or settings are hidden (Mystery) |
+| `by-hand` | fewer than half the needed finds are matched by place: the times are clicks |
+| `no-times` | nothing needed has a time |
+| `no-playthrough` | a spoiler race's log |
+
+### What it shows
+
+`ReviewResult` (lazy) and `ReviewWaits`:
+
+1. **Tiles**: play time (the timer's reading and the breaks left out), needed items taken of the
+   playthrough's, the longest wait.
+2. **What waited for you the longest**: an `<ol>` of the five longest major items, each card a
+   `<dl>` (In logic from, Taken, Waited), an `aria-hidden` bar on the run's play time (waiting
+   hatched, taken a dot, breaks dotted, with a legend: never colour alone), the dungeon sentence when
+   only part of its dungeon was in logic then, the trade-off, and a note when it is an estimate (a
+   copy, a match by item). **Show all** (`aria-expanded`) adds the rest and the dungeon items and
+   prizes (three show before).
+3. **The chain behind the run**, from three items.
+4. **Dungeons**: a `<table>` with `scope` headers in a focusable scroll region, and a mini strip
+   (`aria-hidden`, shown when the panel is 60 rem wide).
+5. **Before the logic expected**: items taken before the items held put them in logic, said
+   without a cause.
+6. **How these times are worked out**: what is exact and what is estimated.
+7. **Places that mattered, never checked**: the needed ones, then a dungeon mostly unchecked as one
+   line, progression and hearts by item, and how many other places held rupees, arrows or the like.
+8. **Details by step**: the playthrough folded (Step, Item, Where, In logic from, Taken, Waited).
+9. The seed's facts (medallions, prizes, starting items, bosses when shuffled).
+
+An entrance randomizer log reads the same way, with the waits hidden. The timeline's `check:` rows
+gain "→ the item held".
 
 ## The board
 
@@ -144,8 +226,8 @@ The labels are worked out once per review (`labelsOf`, a `WeakMap` over the immu
 | `apps/web/src/components/ui/ReviewDialog.tsx`, `ReviewNotice.tsx` | The import dialog and the standing banner |
 | `apps/web/src/games/sm/review/` | `adapter.ts` (binding, the board's items against the seed's, places by item), `useReview.ts`, `fixtures.ts` (specs) |
 | `apps/web/src/games/sm/components/` | `SmReview.tsx` (Review run beside the timer, the banner, the section), `SmReviewDialog.tsx` and `SmReviewResult.tsx` (lazy) |
-| `apps/web/src/games/alttpr/review/` | `adapter.ts` (binding, finds, comparison), `useReview.ts`, `labels.ts` (what each place held), `fixtures.ts` (specs) |
-| `apps/web/src/games/alttpr/components/map/` | `ReviewSection.tsx` (Review run, the Run tab section), `ReviewResult.tsx` (lazy), `AlttprReviewDialog.tsx` (lazy) |
+| `apps/web/src/games/alttpr/review/` | `adapter.ts` (binding, finds, comparison), `sweep.ts` (when each needed item was in logic), `useSweep.ts` (the sweep in slices, kept per review), `useReview.ts`, `labels.ts` (what each place held), `fixtures.ts` (specs: the recorded logs, `playedRun`) |
+| `apps/web/src/games/alttpr/components/map/` | `ReviewSection.tsx` (Review run, the Run tab section), `ReviewResult.tsx` and `ReviewWaits.tsx` (lazy), `AlttprReviewDialog.tsx` (lazy) |
 | `apps/web/src/games/smz3/review/` | `adapter.ts` (binding, comparison), `labels.ts` (what each place held), `useReview.ts`, `fixtures.ts` (specs) |
 | `apps/web/src/games/smz3/components/` | `Smz3ReviewButton.tsx` (Review run, the banner), `Smz3ReviewDialog.tsx` (lazy), `Smz3ReviewPanel.tsx` (the tab, lazy), `Smz3Maps.tsx`, `Smz3Grid.tsx` |
 | `apps/web/src/review/active.ts` | Which review is a game's own run's, and the rule that drops a stale one (each game's hooks call it) |
