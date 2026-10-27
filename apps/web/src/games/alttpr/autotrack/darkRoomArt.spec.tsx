@@ -187,12 +187,34 @@ describe("the dark room in the game's graphics", () => {
     expect(await screen.findByTestId("dark-room-note")).toHaveTextContent(
       /could not be read just now/,
     );
-    // Tried again after the pause, Link standing still
+    // Tried again after the pause, an enemy moving all the while (the OAM
+    // changes on every poll)
     h.failing.rom = false;
-    await act(() => h.clock.advance(5000));
+    const oam = MEMORY_RANGE["dark-room-art-sprites"].address;
+    for (let t = 1; t <= 24; t++) {
+      h.memory[oam + 100] = t;
+      await act(() => h.clock.advance(250));
+    }
     await h.settle();
     expect(store().art).toEqual({ status: "ready" });
     expect(await screen.findByTestId("dark-room-art")).toBeInTheDocument();
+  });
+
+  it("gives up on a ROM whose reads keep failing, and says so", async () => {
+    const h = harness();
+    h.failing.rom = true;
+    await act(() => connectAutotrack());
+    // Failures at 0, 5, 15 and 35 s
+    for (let t = 0; t < 45 * 4; t++) await act(() => h.clock.advance(250));
+    await h.settle();
+    expect(store().art).toEqual({
+      reason: "unreadable",
+      status: "unavailable",
+    });
+    render(<MapPanel />);
+    expect(await screen.findByTestId("dark-room-note")).toHaveTextContent(
+      /could not be read; the plan stays/,
+    );
   });
 
   it("reads nothing of the picture, nor the ROM's graphics, in Race Mode", async () => {

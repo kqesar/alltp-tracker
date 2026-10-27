@@ -124,8 +124,8 @@ describe("createArtLoader", () => {
     // Every plane set: colour 7, 15 in sheet 1, a high one (VRAM slot 0)
     expect(art.background[0] >>> 0).toBe(0xff00_00ff);
     expect(art.link).toBeNull();
-    // The tables, then the sheets, the animated frame and Link's pieces at once
-    expect(io.calls).toHaveLength(2);
+    // The tables, then the sheets and the animated frame, then Link's pieces
+    expect(io.calls).toHaveLength(3);
     expect(io.calls[0].map((r) => r.address)).toEqual(
       [
         ART_ROM.guard,
@@ -147,7 +147,7 @@ describe("createArtLoader", () => {
     const held = ranges();
     const first = await loader.update(new View(held));
     const again = await loader.update(new View(held));
-    expect(io.calls).toHaveLength(2);
+    expect(io.calls).toHaveLength(3);
     if (first?.status !== "ready" || again?.status !== "ready") {
       throw new Error("not drawn");
     }
@@ -158,7 +158,7 @@ describe("createArtLoader", () => {
     expect(changed?.status === "ready" && changed.art.version).toBe(
       first.art.version + 1,
     );
-    expect(io.calls).toHaveLength(2);
+    expect(io.calls).toHaveLength(3);
   });
 
   it("shows the plan for another base patch's code, for good", async () => {
@@ -232,6 +232,88 @@ describe("createArtLoader", () => {
     expect((await loader.update(new View(ranges())))?.status).toBe("ready");
   });
 
+  /** The room as an update sees it at `t`: an enemy moving, the OAM changing. */
+  const moving = (t: number) => {
+    const held = ranges();
+    held["dark-room-art-sprites"]?.set([t & 0xff], 100);
+    return new View(held);
+  };
+
+  it("tries again once the pause is over, though the room keeps moving", async () => {
+    const { memory } = console();
+    const io = reader(memory);
+    let clock = 0;
+    const loader = createArtLoader(io.read, () => clock);
+    io.fail(true);
+    expect(await loader.update(moving(0))).toMatchObject({
+      reason: "read-failed",
+    });
+    io.fail(false);
+    const outcomes: (string | undefined)[] = [];
+    // 30 s of polls, four a second
+    for (let t = 1; t <= 120; t++) {
+      clock = t * 250;
+      outcomes.push((await loader.update(moving(t)))?.status);
+    }
+    // Nothing asked during the 5 s pause, then drawn
+    expect(outcomes.slice(0, 19).every((s) => s === "unavailable")).toBe(true);
+    expect(outcomes[19]).toBe("ready");
+    expect(outcomes.slice(19).every((s) => s === "ready")).toBe(true);
+  });
+
+  it("doubles the pause after each failure, then gives up on the ROM", async () => {
+    const { memory } = console();
+    const io = reader(memory);
+    let clock = 0;
+    const loader = createArtLoader(io.read, () => clock);
+    io.fail(true);
+    // Failures at 0, 5 s, 15 s (5 + 10), 35 s (15 + 20)
+    const asked: number[] = [];
+    for (let t = 0; t <= 200; t++) {
+      clock = t * 250;
+      const before = io.calls.length;
+      const outcome = await loader.update(moving(t));
+      if (io.calls.length > before) asked.push(clock);
+      if (clock === 50_000)
+        expect(outcome).toMatchObject({ reason: "unreadable" });
+    }
+    expect(asked).toEqual([0, 5000, 15_000, 35_000]);
+    // Given up, for good on this ROM: no read, whatever comes
+    io.fail(false);
+    clock = 1_000_000;
+    expect(await loader.update(moving(1))).toMatchObject({
+      reason: "unreadable",
+    });
+    expect(io.calls).toHaveLength(4);
+  });
+
+  it("keeps the room drawn when only Link's graphics fail to read", async () => {
+    const { memory } = console();
+    const io = reader(memory);
+    let clock = 0;
+    const loader = createArtLoader(io.read, () => clock);
+    const first = await loader.update(moving(0));
+    if (first?.status !== "ready") throw new Error("not drawn");
+    // Link takes a pose whose body piece is not read yet; the read fails
+    io.fail(true);
+    const held = ranges();
+    held["dark-room-art-sprites"]?.set([0x00, 0x81], 0x0ace - 0x800);
+    const second = await loader.update(new View(held));
+    expect(second).toMatchObject({ status: "ready" });
+    if (second?.status !== "ready") return;
+    expect(second.art.background).toBe(first.art.background);
+    expect(second.art.link).toBeNull();
+    // Paused, then read again
+    io.fail(false);
+    const calls = io.calls.length;
+    clock = 1000;
+    await loader.update(new View(held));
+    expect(io.calls).toHaveLength(calls);
+    clock = 6000;
+    await loader.update(new View(held));
+    expect(io.calls).toHaveLength(calls + 1);
+  });
+
   it("forgets the ROM's tables when another ROM runs", async () => {
     const { memory } = console();
     const io = reader(memory);
@@ -240,7 +322,7 @@ describe("createArtLoader", () => {
     await loader.update(new View(held));
     held["rom-header"] = new Uint8Array(32).fill(0x42);
     await loader.update(new View(held));
-    expect(io.calls).toHaveLength(4);
+    expect(io.calls).toHaveLength(6);
   });
 
   it("draws Link from his uploads, body from ROM, sword from WRAM", async () => {
@@ -271,7 +353,7 @@ describe("createArtLoader", () => {
       y: 51,
     });
     expect((outcome.art.link?.pixels[0] ?? 0) >>> 0).toBe(0xffff_0000);
-    expect(io.calls[1]).toContainEqual({ address: bus(0x10_8000), size: 0x40 });
+    expect(io.calls[2]).toContainEqual({ address: bus(0x10_8000), size: 0x40 });
   });
 
   /** One 8 x 8 sprite of tile 5, the first WRAM upload's ($0AC0 → $7E:9040). */

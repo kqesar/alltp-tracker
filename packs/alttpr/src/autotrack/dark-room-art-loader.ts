@@ -5,9 +5,10 @@
 // which no race permits: the session refuses them in Race Mode).
 //
 // Held in memory only, per session: the ROM's tables and sheets once per ROM
-// (its header tells one ROM from another), Link's body pieces once per ROM,
-// his WRAM pieces and the animated frame once per room. Nothing is stored,
-// and nothing here goes anywhere but back to the caller.
+// (its header tells one ROM from another), the sheets that do not unpack too,
+// Link's body pieces once per ROM, his WRAM pieces once per room, ROM and
+// sword and shield, the animated frame once per room. Nothing is stored, and
+// nothing here goes anywhere but back to the caller.
 
 import { bus } from "@alltp/autotrack";
 import {
@@ -49,7 +50,10 @@ export interface DarkRoomArt {
   readonly background: Uint32Array;
   /** Changes each time `background` is drawn again. */
   readonly version: number;
-  /** Link as the game draws him, or null when no sprite of his is on screen. */
+  /**
+   * Link as the game draws him, or null: no sprite of his on screen, or his
+   * graphics not read.
+   */
   readonly link: SpriteImage | null;
 }
 
@@ -64,11 +68,16 @@ export type ArtFailure =
   | "other-base-patch"
   /** A blockset or a sheet the tables do not hold, or that does not unpack. */
   | "unknown-graphics"
-  /** A read failed: the next update past the pause tries again. */
-  | "read-failed";
+  /** A read failed: tried again after a pause that doubles each time. */
+  | "read-failed"
+  /**
+   * Given up on this ROM: its reads failed `ART_MAX_FAILURES` times, or the
+   * device cannot serve the picture's memory (the runtime says so).
+   */
+  | "unreadable";
 
 /** The ranges the picture needs read before anything is drawn. */
-const NEEDED = [
+export const ART_RANGES = [
   "dark-room-art-screens",
   "dark-room-art-sprites",
   "dark-room-art-view",
@@ -83,8 +92,15 @@ const VIEW = { bank: 0xbc - 0xa2, scrollX: 0xe2 - 0xa2, scrollY: 0xe8 - 0xa2 };
 /** The sword's and the shield's levels in `equipment-c` ($7E:F359-F35A). */
 const ARMS = 0xf359 - 0xf350;
 
-/** How long a failed read keeps the loader from asking again. */
+/** The first pause after a failed read; each failure after doubles it. */
 export const ART_RETRY_MS = 5000;
+
+/**
+ * Failed reads after which the loader gives up on a ROM: over usb2snes a read
+ * the device refuses closes the socket, so retrying it for ever would drop and
+ * reconnect the whole session again and again.
+ */
+export const ART_MAX_FAILURES = 4;
 
 const pak = (address: number) => bus(address);
 
@@ -98,11 +114,37 @@ const sameBytes = (a: Uint8Array | null, b: Uint8Array | null) => {
 const hexOf = (bytes: Uint8Array) =>
   Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
+/** A pause that holds reads back after failures, doubling, then gives up. */
+function backoff(now: () => number) {
+  let failures = 0;
+  let until = Number.NEGATIVE_INFINITY;
+  return {
+    failed() {
+      failures++;
+      until = now() + ART_RETRY_MS * 2 ** (failures - 1);
+    },
+    get gaveUp() {
+      return failures >= ART_MAX_FAILURES;
+    },
+    reset() {
+      failures = 0;
+      until = Number.NEGATIVE_INFINITY;
+    },
+    succeeded() {
+      failures = 0;
+    },
+    /** Whether reads are held back now. */
+    get waiting() {
+      return failures > 0 && now() < until;
+    },
+  };
+}
+
 /**
  * A loader for one session: `update` draws the room from the memory as the
  * poll left it, reading on demand what it has not cached. Calls are to be
  * made one at a time (the runtime waits for each); `now` is the clock the
- * retry pause is measured on.
+ * pauses are measured on.
  */
 export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
   let romKey: string | null = null;
@@ -111,11 +153,12 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
   /** Sheets of this ROM that do not unpack: never asked for again. */
   const badSheets = new Set<number>();
   const romPieces = new Map<string, Uint8Array>();
-  /** The room, sword and shield Link's WRAM pieces were read for. */
   let wramKey = "";
   const wramPieces = new Map<string, Uint8Array>();
   let animated: { key: string; bytes: Uint8Array } | null = null;
-  let failedAt = Number.NEGATIVE_INFINITY;
+  /** The room's reads (tables, sheets, the animated frame), and Link's. */
+  const roomPause = backoff(now);
+  const linkPause = backoff(now);
   let drawn: {
     key: string;
     bg2: Uint8Array;
@@ -123,13 +166,14 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
     palette: Uint8Array;
     background: Uint32Array;
     version: number;
+    room: number;
   } | null = null;
   let version = 0;
 
-  const fail = (reason: ArtFailure): ArtOutcome => {
-    if (reason === "read-failed") failedAt = now();
-    return { reason, status: "unavailable" };
-  };
+  const unavailable = (reason: ArtFailure): ArtOutcome => ({
+    reason,
+    status: "unavailable",
+  });
 
   /** The ROM's tables, once per ROM: null when the guard says another patch. */
   const loadTables = async (): Promise<ArtTables | null> => {
@@ -155,16 +199,14 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
      * read (the room just entered, the style just turned on).
      */
     async update(view: MemoryView): Promise<ArtOutcome | null> {
-      if (!NEEDED.every((id) => view.has(id))) return null;
+      if (!ART_RANGES.every((id) => view.has(id))) return null;
       // The snapshot's bytes change under a read: copy what is used
       const copy = (id: string) => view.bytes(id).slice();
       const header = view.has("rom-header")
         ? hexOf(view.bytes("rom-header"))
         : "";
-      const room =
-        (view.bytes("dark-room-room")[0] |
-          (view.bytes("dark-room-room")[1] << 8)) &
-        0x1ff;
+      const roomBytes = view.bytes("dark-room-room");
+      const room = (roomBytes[0] | (roomBytes[1] << 8)) & 0x1ff;
       const sprites = copy("dark-room-art-sprites");
       const oam = sprites.subarray(0, 0x220);
       const gfx = sprites.subarray(GFX_BASE - 0x0800);
@@ -193,138 +235,155 @@ export function createArtLoader(read: ArtRead, now: () => number = Date.now) {
         wramKey = "";
         animated = null;
         drawn = null;
+        roomPause.reset();
+        linkPause.reset();
       }
-      if (tables === "bad") return fail("other-base-patch");
-      if (now() - failedAt < ART_RETRY_MS) return fail("read-failed");
+      if (tables === "bad") return unavailable("other-base-patch");
+      if (roomPause.gaveUp) return unavailable("unreadable");
       // Link's WRAM graphics are unpacked into the same buffers whatever the
-      // sword and shield (load_gfx.c:485-499): a new one in the room is new
-      // bytes at the same place
+      // sword and shield: a new one in the room is new bytes at the same place
       const pieceKey = `${room}:${arms}`;
       if (pieceKey !== wramKey) {
         wramKey = pieceKey;
         wramPieces.clear();
       }
 
-      try {
-        const loaded = await loadTables();
-        if (loaded === null) return fail("other-base-patch");
-        const main = gfx[0];
-        const aux = gfx[1];
-        const slots = sheetSlots(loaded, main, aux);
-        if (slots === null) return fail("unknown-graphics");
-        // A sheet that did not unpack will not unpack better read again
-        if (slots.some((sheet) => badSheets.has(sheet))) {
-          return fail("unknown-graphics");
-        }
-
-        // What is missing, asked for in one read: sheets, the animated frame,
-        // Link's pieces
-        const asks: { address: number; size: number }[] = [];
-        const landing: ((bytes: Uint8Array) => void)[] = [];
-        const ask = (
-          address: number,
-          size: number,
-          land: (b: Uint8Array) => void,
-        ) => {
-          asks.push({ address: pak(address), size });
-          landing.push(land);
-        };
-        const sheetBad: number[] = [];
-        for (const sheet of new Set(slots)) {
-          if (sheets.has(sheet)) continue;
-          const address = sheetAddress(loaded, sheet);
-          if (address === null) {
-            badSheets.add(sheet);
-            sheetBad.push(sheet);
-            continue;
+      // The room: tables, sheets, the animated frame
+      const main = gfx[0];
+      const aux = gfx[1];
+      const animatedSource =
+        gfx[0x0adc - GFX_BASE] | (gfx[0x0add - GFX_BASE] << 8);
+      const animatedKey = `${room}:${main}:${aux}`;
+      let slots = tables === null ? null : sheetSlots(tables, main, aux);
+      const roomReady =
+        slots?.every((sheet) => sheets.has(sheet)) === true &&
+        animated?.key === animatedKey;
+      if (!roomReady) {
+        if (roomPause.waiting) return unavailable("read-failed");
+        try {
+          const loaded = await loadTables();
+          if (loaded === null) return unavailable("other-base-patch");
+          slots = sheetSlots(loaded, main, aux);
+          if (slots === null) return unavailable("unknown-graphics");
+          if (slots.some((sheet) => badSheets.has(sheet))) {
+            return unavailable("unknown-graphics");
           }
-          ask(address, SHEET_WINDOW, (bytes) => {
-            const unpacked = decompress(bytes);
-            if (unpacked === null || unpacked.length < SHEET_BYTES) {
+          const asks: { address: number; size: number }[] = [];
+          const landing: ((bytes: Uint8Array) => void)[] = [];
+          for (const sheet of new Set(slots)) {
+            if (sheets.has(sheet)) continue;
+            const address = sheetAddress(loaded, sheet);
+            if (address === null) {
               badSheets.add(sheet);
-              sheetBad.push(sheet);
-            } else sheets.set(sheet, unpacked);
-          });
+              continue;
+            }
+            asks.push({ address: pak(address), size: SHEET_WINDOW });
+            landing.push((bytes) => {
+              const unpacked = decompress(bytes);
+              if (unpacked === null || unpacked.length < SHEET_BYTES) {
+                badSheets.add(sheet);
+              } else sheets.set(sheet, unpacked);
+            });
+          }
+          if (animated?.key !== animatedKey) {
+            asks.push({
+              address: pak(0x7e_0000 | animatedSource),
+              size: ANIMATED_BYTES,
+            });
+            landing.push((bytes) => {
+              animated = { bytes, key: animatedKey };
+            });
+          }
+          if (asks.length > 0) {
+            const got = await read(asks);
+            for (const [k, bytes] of got.entries()) landing[k](bytes);
+          }
+          roomPause.succeeded();
+        } catch {
+          roomPause.failed();
+          return unavailable(roomPause.gaveUp ? "unreadable" : "read-failed");
         }
-        const animatedSource =
-          gfx[0x0adc - GFX_BASE] | (gfx[0x0add - GFX_BASE] << 8);
-        const animatedKey = `${room}:${main}:${aux}`;
-        if (animated?.key !== animatedKey) {
-          ask(0x7e_0000 | animatedSource, ANIMATED_BYTES, (bytes) => {
-            animated = { bytes, key: animatedKey };
-          });
+        if (slots.some((sheet) => badSheets.has(sheet))) {
+          return unavailable("unknown-graphics");
         }
-        const sources = LINK_UPLOADS.map((upload) => {
-          const source = uploadSource(upload, gfx, bank);
-          return source === null ? null : `${source}:${upload.size}`;
-        });
-        LINK_UPLOADS.forEach((upload, k) => {
-          const key = sources[k];
-          if (key === null) return;
-          const cache = upload.rom ? romPieces : wramPieces;
-          if (cache.has(key)) return;
-          const [address] = key.split(":").map(Number);
-          ask(address, upload.size, (bytes) => cache.set(key, bytes));
-        });
-        if (asks.length > 0) {
-          const got = await read(asks);
-          for (const [k, bytes] of got.entries()) landing[k](bytes);
-        }
-        if (sheetBad.length > 0) return fail("unknown-graphics");
-
-        const colours = paletteColours(palette);
-        const key = `${room}:${main}:${aux}:${animated?.key}`;
-        if (
-          drawn === null ||
-          drawn.key !== key ||
-          !sameBytes(drawn.bg2, bg2) ||
-          !sameBytes(drawn.bg1, bg1) ||
-          !sameBytes(
-            drawn.palette.subarray(0, 0x100),
-            palette.subarray(0, 0x100),
-          )
-        ) {
-          const tiles = backgroundTiles(
-            slots.map((sheet) => sheets.get(sheet) ?? new Uint8Array(0)),
-            main,
-            animated?.key === animatedKey ? animated.bytes : null,
-          );
-          version++;
-          drawn = {
-            background: renderBackground({ bg1, bg2, colours, tiles }),
-            bg1,
-            bg2,
-            key,
-            palette,
-            version,
-          };
-        }
-        const pieces = LINK_UPLOADS.map((upload, k) => {
-          const pieceKey = sources[k];
-          if (pieceKey === null) return null;
-          return (upload.rom ? romPieces : wramPieces).get(pieceKey) ?? null;
-        });
-        const { filled, tiles } = linkTiles(pieces);
-        const link = renderLink({
-          colours,
-          filled,
-          oam,
-          scrollX,
-          scrollY,
-          tiles,
-        });
-        return {
-          art: {
-            background: drawn.background,
-            link,
-            room,
-            version: drawn.version,
-          },
-          status: "ready",
-        };
-      } catch {
-        return fail("read-failed");
       }
+      if (slots === null) return unavailable("unknown-graphics");
+
+      const colours = paletteColours(palette);
+      const key = `${room}:${main}:${aux}:${animated?.key}`;
+      if (
+        drawn === null ||
+        drawn.key !== key ||
+        !sameBytes(drawn.bg2, bg2) ||
+        !sameBytes(drawn.bg1, bg1) ||
+        !sameBytes(drawn.palette.subarray(0, 0x100), palette.subarray(0, 0x100))
+      ) {
+        const tiles = backgroundTiles(
+          slots.map((sheet) => sheets.get(sheet) ?? new Uint8Array(0)),
+          main,
+          animated?.key === animatedKey ? animated.bytes : null,
+        );
+        version++;
+        drawn = {
+          background: renderBackground({ bg1, bg2, colours, tiles }),
+          bg1,
+          bg2,
+          key,
+          palette,
+          room,
+          version,
+        };
+      }
+
+      // Link: what his uploads need, read unless his reads are paused; a
+      // failure there drops his sprite, never the room
+      const sources = LINK_UPLOADS.map((upload) => {
+        const source = uploadSource(upload, gfx, bank);
+        return source === null ? null : `${source}:${upload.size}`;
+      });
+      const cacheOf = (k: number) =>
+        LINK_UPLOADS[k].rom ? romPieces : wramPieces;
+      const missing = sources.flatMap((source, k) =>
+        source !== null && !cacheOf(k).has(source) ? [k] : [],
+      );
+      if (missing.length > 0 && !linkPause.waiting && !linkPause.gaveUp) {
+        try {
+          const got = await read(
+            missing.map((k) => ({
+              address: pak(Number((sources[k] ?? "0").split(":")[0])),
+              size: LINK_UPLOADS[k].size,
+            })),
+          );
+          for (const [i, bytes] of got.entries()) {
+            const k = missing[i];
+            cacheOf(k).set(sources[k] ?? "", bytes);
+          }
+          linkPause.succeeded();
+        } catch {
+          linkPause.failed();
+        }
+      }
+      const pieces = sources.map((source, k) =>
+        source === null ? null : (cacheOf(k).get(source) ?? null),
+      );
+      // A piece still missing: no sprite rather than half a Link
+      const whole = pieces.every(
+        (piece, k) => sources[k] === null || piece !== null,
+      );
+      let link: SpriteImage | null = null;
+      if (whole) {
+        const { filled, tiles } = linkTiles(pieces);
+        link = renderLink({ colours, filled, oam, scrollX, scrollY, tiles });
+      }
+      return {
+        art: {
+          background: drawn.background,
+          link,
+          room,
+          version: drawn.version,
+        },
+        status: "ready",
+      };
     },
   };
 }
