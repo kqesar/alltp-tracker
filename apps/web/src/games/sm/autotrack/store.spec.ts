@@ -63,16 +63,52 @@ beforeEach(() => {
   window.history.replaceState(null, "", "/");
   useSmStore.setState(useSmStore.getInitialState(), true);
   useSmAutotrackStore.setState(useSmAutotrackStore.getInitialState(), true);
+  // Outside Race Mode, which is on by default (its own describe): most of
+  // these specs read what only a casual session reads
   useSmAutotrackStore.setState({
     environment: parseUserAgent(
       "Mozilla/5.0 (X11; Linux x86_64; rv:158.0) Gecko/20100101 Firefox/158.0",
     ),
+    raceChoice: "auto",
   });
 });
 
 afterEach(() => {
   stopSmAutotrack();
   setSmAutotrackOptions({});
+});
+
+describe("Super Metroid's Race Mode by default", () => {
+  /** The choice the store reads from what localStorage holds now. */
+  const fresh = async () => {
+    await useSmAutotrackStore.persist.rehydrate();
+    return state().raceChoice;
+  };
+  const save = (state: object, version?: number) =>
+    localStorage.setItem(
+      "alltp-tracker-sm-autotrack",
+      JSON.stringify(version === undefined ? { state } : { state, version }),
+    );
+
+  it("is on for a device that never set it: Map Rando has no race flag", () => {
+    expect(useSmAutotrackStore.getInitialState().raceChoice).toBe("on");
+  });
+
+  it('reads a save from before as the default, keeping an "on" set', async () => {
+    // Every save then held "auto", the default it was: never a choice
+    save({ connectOnStart: true, raceChoice: "auto" }, 0);
+    expect(await fresh()).toBe("on");
+    save({ connectOnStart: true, raceChoice: "on" }, 0);
+    expect(await fresh()).toBe("on");
+  });
+
+  it("keeps Off, once chosen in this version", async () => {
+    save({ connectOnStart: true, raceChoice: "auto" }, 1);
+    expect(await fresh()).toBe("auto");
+    // A value no version writes reads as the default
+    save({ connectOnStart: true, raceChoice: "off" }, 1);
+    expect(await fresh()).toBe("on");
+  });
 });
 
 describe("Super Metroid's autotracking", () => {

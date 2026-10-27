@@ -2,7 +2,14 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
 import { writeMapRando } from "../../../packs/sm/test/sm-rom";
-import { auditDialog, auditPage, openOnGame, WCAG_AA, WIDTHS } from "./support";
+import {
+  auditDialog,
+  auditPage,
+  openOnGame,
+  smRaceModeOff,
+  WCAG_AA,
+  WIDTHS,
+} from "./support";
 
 test("switches to Super Metroid and back, each game keeping its run", async ({
   page,
@@ -64,6 +71,9 @@ test("autotracks a Map Rando seed through SNI", async ({ page }) => {
       objectives: ["kraid", "phantoon", "draygon", "ridley"],
     };
     writeMapRando(bridge.memory, game);
+    // Outside Race Mode, on by default for Map Rando: the seed's objectives,
+    // its settings and the game's clock are read then alone
+    await smRaceModeOff(page);
     await openOnGame(page, "sm", `?bridge=${new URL(bridge.url).port}`);
 
     await page.getByTestId("autotrack-button").click();
@@ -131,6 +141,9 @@ test("starts the run timer with the game, follows its clock and stops at the shi
       clock: { pending: 0, saved: 50_000 },
       state: 0x04,
     });
+    // Outside Race Mode, on by default for Map Rando: the seed's objectives,
+    // its settings and the game's clock are read then alone
+    await smRaceModeOff(page);
     await openOnGame(page, "sm", `?bridge=${new URL(bridge.url).port}`);
     const timer = page.getByTestId("run-timer");
     await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");

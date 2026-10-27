@@ -123,6 +123,26 @@ export const openOnGame = async (page: Page, game: string, query = "") => {
 };
 
 /**
+ * Super Metroid's Race Mode off, as a device that chose Off: Map Rando's ROMs
+ * carry no race flag, so it is on by default, and a spec of what only a
+ * casual run reads (the seed's objectives, the game's clock, the review)
+ * turns it off first. Kept once the page has saved a choice.
+ */
+export const smRaceModeOff = async (page: Page) => {
+  await page.addInitScript(() => {
+    if (!localStorage.getItem("alltp-tracker-sm-autotrack")) {
+      localStorage.setItem(
+        "alltp-tracker-sm-autotrack",
+        JSON.stringify({
+          state: { connectOnStart: false, raceChoice: "auto" },
+          version: 1,
+        }),
+      );
+    }
+  });
+};
+
+/**
  * What every page state is held to: no axe violation, no sideways scroll,
  * and every clickable thing reachable by keyboard.
  * @param exclude - A selector axe leaves out, where a WCAG exception applies

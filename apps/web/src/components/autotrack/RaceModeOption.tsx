@@ -7,22 +7,35 @@ const CHOICES: readonly (readonly [RaceChoice, string])[] = [
 ];
 
 /**
+ * For a game whose ROMs carry no race flag (Map Rando): "auto" reads none, so
+ * it is Off, and On comes first, as the default.
+ */
+const FLAGLESS_CHOICES: readonly (readonly [RaceChoice, string])[] = [
+  ["on", "On"],
+  ["auto", "Off"],
+];
+
+/**
  * Race Mode, as the player sets it: the ROM's race flag decides, or it is
- * always on, for a race on a seed generated without the flag. Two radios in
- * a fieldset: the arrow keys move between them, and a screen reader hears
- * the group's name and what the choice does. It applies at once, to a
- * session running or the next one.
+ * always on, for a race on a seed generated without the flag; for a game
+ * without a race flag, on or off. Two radios in a fieldset: the arrow keys
+ * move between them, and a screen reader hears the group's name and what the
+ * choice does. It applies at once, to a session running or the next one.
  * @param value - The choice saved
  * @param onChange - Called with the choice the player made
+ * @param flag - Whether the game's ROMs carry a race flag
  */
 export const RaceModeOption = ({
+  flag = true,
   onChange,
   value,
 }: {
+  flag?: boolean;
   onChange: (choice: RaceChoice) => void;
   value: RaceChoice;
 }) => {
   const id = useId();
+  const choices = flag ? CHOICES : FLAGLESS_CHOICES;
   return (
     <fieldset
       aria-describedby={`${id}-hint`}
@@ -31,7 +44,7 @@ export const RaceModeOption = ({
     >
       <legend className="race-option__legend">Race Mode</legend>
       <div className="race-option__choices">
-        {CHOICES.map(([choice, words]) => (
+        {choices.map(([choice, words]) => (
           <div className="check-option" key={choice}>
             <input
               checked={value === choice}
@@ -48,8 +61,9 @@ export const RaceModeOption = ({
         ))}
       </div>
       <p className="race-option__hint" id={`${id}-hint`}>
-        In Race Mode the tracker reads only what races permit. Set it always on
-        to race a seed generated without the race flag.
+        {flag
+          ? "In Race Mode the tracker reads only what races permit. Set it always on to race a seed generated without the race flag."
+          : "In Race Mode the tracker reads only what races permit. This game's ROMs carry no race flag, so it stays on until you turn it off, outside a race."}
       </p>
     </fieldset>
   );
