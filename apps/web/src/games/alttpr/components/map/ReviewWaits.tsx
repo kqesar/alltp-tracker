@@ -389,9 +389,14 @@ const Waits = ({
       <h4 className="run-section__title" id={titleId}>
         What waited for you the longest
       </h4>
-      {majors.length === 0 ? (
+      {waited.length === 0 ? (
         <p className="run-section__empty">
           Each needed item was taken as soon as it was in logic.
+        </p>
+      ) : majors.length === 0 ? (
+        <p className="run-section__empty">
+          No item of your inventory waited for you: only dungeon items and
+          prizes did.
         </p>
       ) : (
         <>
@@ -706,7 +711,8 @@ export const ReviewWaits = ({
         (waited !== null && waited < 0) || (reach === null && taken !== null),
     )
     .sort((a, b) => (a.taken ?? 0) - (b.taken ?? 0));
-  const top = waited.find(({ kind }) => kind === "major");
+  // The longest of all, a dungeon item or prize when no major item waited
+  const top = waited.find(({ kind }) => kind === "major") ?? waited[0];
   return (
     <>
       <Tiles comparison={comparison} sweep={sweep} top={top} />
