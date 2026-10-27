@@ -1,6 +1,6 @@
 {
   "name": "alltp-tracker",
-  "version": "2.48.1",
+  "version": "2.48.2",
   "private": true,
   "description": "Rando Atlas, an item and map tracker for A Link to the Past, Super Metroid and SMZ3 randomizers",
   "bugs": {
