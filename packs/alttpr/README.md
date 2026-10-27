@@ -341,6 +341,30 @@ byte for byte what it was, and a pack that put the map in a permitted category
 does not define. `decodeDarkRoom(view, { race: true })` is null before it
 asks for a range.
 
+### Race Mode never reads where Link is
+
+The race admins' clarification of 11 and 13 June 2026 (no change to v2.0)
+says a tracker in a race may not identify or display Link's position: the
+dungeon ID, the room ID or the X/Y coordinates. So it may not switch maps on
+entering a dungeon, track entrances or overworld tile swaps by itself, or
+clear a floor item when Link enters its cave. Race Mode complies by
+construction, in two layers:
+
+- every range that holds such a fact is filed under `navigation`, `entrances`
+  or `other` (`memory.ts`: Link's coordinates `$7E:0020-$7E:0023`, indoors
+  `$1B`, the overworld screen `$8A`, the room `$A0`, the entrance `$010E`,
+  all named in z3randomizer's `ram.asm`), none of which a race permits;
+- the race profile's WRAM window is the game mode alone, `$7E:0010`
+  (`race-profile.ts`), so a range filed under a permitted category by mistake
+  would not define (`definePack` refuses a race-permitted range outside the
+  windows). The window had been the earlier rules' `$7E:0000-$7E:00B0` and
+  `$7E:010B` (the MSU-1 track, read by nothing), which held all of it.
+
+The game mode is read for when the game starts and ends. The app keeps only
+whether it is in play, before play or at the goal, never which dungeon or the
+overworld. `memory.spec.ts` holds the position out: it fails if a permitted
+window or range covers one of those addresses.
+
 ### The decoder
 
 `decodeDarkRoom(view, { race })` is null unless the room is held (`darkRoomHeld`)

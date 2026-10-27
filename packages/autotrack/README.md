@@ -350,11 +350,13 @@ v2.0, and this package's tests import it. It is deliberately stricter than
 v2.0, pending clarification with the race admins:
 
 - memory (LoROM, ends inclusive): `$00:FFB0-$00:FFDF` (header),
-  `$7E:0000-$7E:00B0`, `$7E:010B`, `$7E:F000-$7E:F500`, `$30:8210-$30:823F`.
+  `$7E:0010` (the game mode), `$7E:F000-$7E:F500`, `$30:8210-$30:823F`.
   v2.0 lists no addresses ("it does not matter where information is
   gathered, only that its use is allowed or disallowed") and lets a tracker
-  read any ROM but entrance and location contents: these windows, from the
-  rules' earlier version, are the tracker's own limit;
+  read any ROM but entrance and location contents: these windows are the
+  tracker's own limit, from the rules' earlier version but for WRAM, cut to
+  the game mode after the race admins' clarification of June 2026 (a
+  tracker may not identify or display Link's position, room or dungeon);
 - permitted categories: items, keys, boss kills, checks outside dungeons,
   game start, goal, "at least one bomb/arrow", the MSU-1 track, the header,
   the race flag; forbidden: entrances and spheres (as v2.0 has it), and
