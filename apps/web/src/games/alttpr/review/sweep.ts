@@ -125,6 +125,8 @@ interface Step {
   readonly at: number;
   /** The run timer's reading then (0 before it started). */
   readonly ms: number;
+  /** Whether the timer had started: a find before it says nothing of breaks. */
+  readonly timed: boolean;
   readonly keys: readonly string[];
 }
 
@@ -330,10 +332,11 @@ export function* sweepRun(
       at,
       keys: [...(step?.keys ?? []), key],
       ms: Math.max(step?.ms ?? 0, ms ?? 0),
+      timed: (step?.timed ?? false) || ms !== null,
     });
   }
   const steps: Step[] = [
-    { at: Number.NEGATIVE_INFINITY, keys: [], ms: 0 },
+    { at: Number.NEGATIVE_INFINITY, keys: [], ms: 0, timed: false },
     ...[...byAt.values()].sort((a, b) => a.at - b.at),
   ];
   const indexOfAt = new Map(steps.map((step, index) => [step.at, index]));
@@ -489,7 +492,13 @@ export function* sweepRun(
 
   // Play time: the run timer's reading less the breaks before it
   const points = [
-    ...new Set([...steps.slice(1).map((step) => step.ms), endMs]),
+    ...new Set([
+      ...steps
+        .slice(1)
+        .filter(({ timed }) => timed)
+        .map((step) => step.ms),
+      endMs,
+    ]),
   ].sort((a, b) => a - b);
   const gaps: [number, number][] = [];
   for (let i = 1; i < points.length; i++) {

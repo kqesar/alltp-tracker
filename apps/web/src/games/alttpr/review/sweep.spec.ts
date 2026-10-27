@@ -164,6 +164,30 @@ describe("the sweep", () => {
     expect(sweep.end).toBe(endMs - 40 * 60_000);
   });
 
+  it("takes no break from a find made before the timer started", () => {
+    const late = playedRun(
+      log,
+      [
+        { location: "sanctuary", minute: 40 },
+        { location: "chicken-house", minute: 42 },
+      ],
+      fresh(),
+    );
+    // Link's House, checked before the timer: dated, with no reading
+    const early = {
+      ...late,
+      timeline: {
+        ...late.timeline,
+        "check:links-house": { at: Date.UTC(2026, 9, 25, 11), ms: null },
+      },
+    };
+    const result = drain(
+      sweepRun(log, early, compareReview(log, early), 43 * 60_000),
+    );
+    expect(result.breaks).toEqual([]);
+    expect(result.end).toBe(43 * 60_000);
+  });
+
   it("finds the Hookshot in logic from the start, waiting the whole run", () => {
     const hookshot = waitAt(HOOKSHOT);
     expect(hookshot).toMatchObject({
