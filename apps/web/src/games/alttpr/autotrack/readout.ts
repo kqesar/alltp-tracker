@@ -353,14 +353,26 @@ const WILD_ITEMS = [
   ["wildBigKeys", "big keys"],
 ] as const;
 
-/** A seed's name and settings, as the panel lists them. */
-export const describeSeed = (seed: SeedSettingsReading): Readout["seed"] => {
+/**
+ * A seed's name and settings, as the panel lists them. In Race Mode the name
+ * is not shown: the race rules (v2.0) let a tracker present only what they
+ * list before the seed is completed, and a seed's name is not among it.
+ */
+export const describeSeed = (
+  seed: SeedSettingsReading,
+  race = false,
+): Readout["seed"] => {
   const wild = WILD_ITEMS.map(([key]) => seed[key]);
   const unknown = wild.find((setting) => !setting.known);
   const crystals = (count: number) =>
     `${count} crystal${count === 1 ? "" : "s"}`;
   return [
-    { label: "Seed", value: seed.seed ?? "not an alttpr.com seed" },
+    {
+      label: "Seed",
+      value: race
+        ? "not shown in Race Mode"
+        : (seed.seed ?? "not an alttpr.com seed"),
+    },
     { label: "Logic", value: settingText(seed.logic, (v) => LOGIC_NAMES[v]) },
     { label: "World", value: settingText(seed.mode, (v) => MODE_LABELS[v]) },
     {
@@ -578,7 +590,7 @@ export const describeReading = (
       ...(reading.race ? [] : [{ label: "Zelda rescued", value: rescueZelda }]),
       { label: "Triforce reached", value: goal },
     ],
-    seed: describeSeed(reading.seed),
+    seed: describeSeed(reading.seed, reading.race),
     shownMedallions: describeMedallions(reading.medallions),
     shownMedallionsUnread:
       typeof reading.medallions === "string" ? reading.medallions : null,
