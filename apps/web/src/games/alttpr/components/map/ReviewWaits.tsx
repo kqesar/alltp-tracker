@@ -582,7 +582,12 @@ const Dungeons = ({ sweep }: { sweep: Sweep }) => {
                     )}
                 </td>
                 <td>
-                  <Cell ms={dungeon.entered} />
+                  {dungeon.entered === null &&
+                  (!sweep.dungeonChecks || dungeon.finished !== null) ? (
+                    <span className="wait-card__muted">not timed</span>
+                  ) : (
+                    <Cell ms={dungeon.entered} />
+                  )}
                 </td>
                 <td>
                   {dungeon.finished === null ? (

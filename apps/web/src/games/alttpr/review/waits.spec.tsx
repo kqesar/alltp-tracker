@@ -1,3 +1,4 @@
+import { DUNGEONS } from "@alltp/pack-alttpr";
 import {
   act,
   fireEvent,
@@ -190,6 +191,30 @@ describe("the waits of a reviewed run", () => {
     expect(chain?.textContent ?? "").not.toContain("Fire Rod");
   });
 
+  it("says a dungeon's entry is not timed when no dungeon chest was (Race Mode)", async () => {
+    const { timeline } = playedRun(log, PLAN, {
+      ...useGameStore.getInitialState(),
+      presetId: "open",
+      seed: HASH,
+      settings: getPreset("open").settings,
+      timeline: {},
+    });
+    await openReview({
+      timeline: Object.fromEntries(
+        Object.entries(timeline).filter(
+          ([key]) => !DUNGEONS.some(({ id }) => key.startsWith(`check:${id}/`)),
+        ),
+      ),
+    });
+    const eastern = await screen.findByTestId("review-dungeon-eastern-palace");
+    // Part in logic, All in logic, Entered, Boss
+    const entered = within(eastern).getAllByRole("cell")[2];
+    expect(entered).toHaveTextContent(/^not timed$/);
+    expect(within(eastern).getAllByRole("cell")[3]).toHaveTextContent(
+      /^\d+:\d\d$/,
+    );
+  });
+
   it("folds the playthrough under Details by step, with the waits in it", async () => {
     await openReview();
     const steps = await screen.findByTestId("review-playthrough");
@@ -327,6 +352,7 @@ describe("the dungeon sentence", () => {
   };
   const sweep: Sweep = {
     breaks: [],
+    dungeonChecks: true,
     dungeons: [
       {
         atPartial: [

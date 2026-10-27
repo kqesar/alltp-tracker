@@ -125,6 +125,29 @@ describe("when the waits are shown", () => {
     );
   });
 
+  it("not for a run in Race Mode, saying so: outside dungeons stamped, none inside", () => {
+    // Race Mode never reads a dungeon's chests; here, few places outside either
+    const outside = Object.keys(run.timeline).filter(
+      (key) =>
+        key.startsWith("check:") &&
+        !/^check:(eastern-palace|desert-palace|tower-of-hera|palace-of-darkness|swamp-palace|skull-woods|thieves-town|ice-palace|misery-mire|turtle-rock|castle-tower|ganons-tower|hyrule-castle)\//.test(
+          key,
+        ),
+    );
+    const raced = {
+      ...run,
+      timeline: Object.fromEntries(
+        Object.entries(run.timeline).filter(
+          ([key]) => !key.startsWith("check:") || key === outside[0],
+        ),
+      ),
+    };
+    expect(outside.length).toBeGreaterThan(0);
+    expect(hiddenReason(log, raced, compareReview(log, raced))).toBe(
+      "race-mode",
+    );
+  });
+
   it("not for a log with no playthrough", () => {
     const race = { ...log, spheres: 0 };
     expect(hiddenReason(race, run, comparison)).toBe("no-playthrough");
