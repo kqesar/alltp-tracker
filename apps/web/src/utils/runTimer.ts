@@ -90,7 +90,9 @@ const ALIGN_TOLERANCE_MS = 250;
 /**
  * Set a timer on a game's clock as read at `at`: its time becomes the game's,
  * running (so it ticks between two readings) while the game counts, stopped
- * while it does not, finished at the goal. A finished timer stays so; a
+ * while it does not, finished at the goal. A finished timer stays so, but
+ * takes the game's final time when the game is over: a run that ended on real
+ * time, then switched to the game's clock, shows the time the game counted. A
  * running one that is within the tolerance of the game is returned as it is.
  */
 export const alignTimer = (
@@ -98,8 +100,12 @@ export const alignTimer = (
   clock: GameClock,
   at: number,
 ): RunTimer => {
-  if (timer.finished) return timer;
   const { ms, status } = clock;
+  if (timer.finished) {
+    return status === "over" && timer.elapsedMs !== ms
+      ? { elapsedMs: ms, finished: true, startedAt: null }
+      : timer;
+  }
   if (status === "over") {
     return { elapsedMs: ms, finished: true, startedAt: null };
   }

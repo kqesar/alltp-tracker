@@ -158,4 +158,21 @@ describe("aligning the timer on a game's clock", () => {
     expect(alignTimer(over, game(1, "running"), T0 + 9 * SECOND)).toBe(over);
     expect(alignTimer(over, game(1, "paused"), T0 + 9 * SECOND)).toBe(over);
   });
+
+  it("puts a timer that ended on real time on the game's final time", () => {
+    // A run finished on real time, the clock then switched to the game's
+    const ended = finishTimer(
+      startTimer(IDLE_TIMER, T0),
+      T0 + 590_000 * SECOND,
+    );
+    const over = alignTimer(ended, game(18_720 * SECOND, "over"), T0);
+    expect(over).toEqual({
+      elapsedMs: 18_720 * SECOND,
+      finished: true,
+      startedAt: null,
+    });
+    expect(alignTimer(over, game(18_720 * SECOND, "over"), T0)).toBe(over);
+    // A run ended short of the goal keeps its time
+    expect(alignTimer(ended, game(60 * SECOND, "paused"), T0)).toBe(ended);
+  });
 });
