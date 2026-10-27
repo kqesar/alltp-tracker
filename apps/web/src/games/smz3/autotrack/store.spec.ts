@@ -171,6 +171,18 @@ describe("SMZ3's autotracking", () => {
     expect(run().settings.towerCrystals).toBe(3);
   });
 
+  it("keeps the ROM's flag by default, a save from before included", async () => {
+    // SMZ3's ROMs carry a race flag: only Super Metroid's default moved
+    localStorage.setItem(
+      "alltp-tracker-smz3-autotrack",
+      JSON.stringify({ state: { raceChoice: "auto" }, version: 0 }),
+    );
+    await smz3Autotrack.useStore.persist.rehydrate();
+    expect(state().raceChoice).toBe("auto");
+    expect(smz3Autotrack.useStore.getInitialState().raceChoice).toBe("auto");
+    expect(smz3Autotrack.raceFlag).toBe(true);
+  });
+
   it("reads a Race Mode saved by another version as the ROM's flag", async () => {
     localStorage.setItem(
       "alltp-tracker-smz3-autotrack",

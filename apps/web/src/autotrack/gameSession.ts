@@ -21,7 +21,12 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { bridgeOptions } from "@/autotrack/bridge";
 import { createAutotrackLock } from "@/autotrack/lock";
-import { mergeRaceChoice, type RaceChoice } from "@/autotrack/raceChoice";
+import {
+  mergeRaceChoice,
+  migrateRaceChoice,
+  RACE_CHOICE_VERSION,
+  type RaceChoice,
+} from "@/autotrack/raceChoice";
 import { shownStatus } from "@/autotrack/status";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isObsView } from "@/utils/view";
@@ -99,16 +104,22 @@ const STOPPED: SessionStatus = { code: "stopped" };
  * @param storageKey - Where the wish to connect on start is saved
  * @param load - Imports the game's runtime chunk
  * @param seed - What the board tracks, as headlines name it: "a Map Rando seed"
+ * @param raceFlag - Whether the game's ROMs carry a race flag. Without one
+ * (Map Rando), "auto" reads no flag and means off, so Race Mode is on by
+ * default and its option reads On or Off
  */
 export const createGameAutotrack = <Reading>({
   load,
+  raceFlag = true,
   seed,
   storageKey,
 }: {
   load: () => Promise<GameRuntimeModule<Reading>>;
+  raceFlag?: boolean;
   seed: string;
   storageKey: string;
 }) => {
+  const raceDefault: RaceChoice = raceFlag ? "auto" : "on";
   const useStore = create<GameAutotrackState<Reading>>()(
     persist(
       (): GameAutotrackState<Reading> => ({
@@ -116,7 +127,7 @@ export const createGameAutotrack = <Reading>({
         connectOnStart: false,
         elsewhere: false,
         environment: null,
-        raceChoice: "auto",
+        raceChoice: raceDefault,
         reading: null,
         seen: { bridge: null, devices: [] },
         shown: IDLE,
@@ -125,13 +136,20 @@ export const createGameAutotrack = <Reading>({
         unavailable: false,
       }),
       {
-        merge: mergeRaceChoice,
+        merge: (persisted, current) =>
+          mergeRaceChoice(persisted, current, raceDefault),
+        migrate: (persisted, version) =>
+          migrateRaceChoice(persisted, version, raceDefault) as Pick<
+            GameAutotrackState<Reading>,
+            "connectOnStart" | "raceChoice"
+          >,
         name: storageKey,
         partialize: ({ connectOnStart, raceChoice }) => ({
           connectOnStart,
           raceChoice,
         }),
         storage: createJSONStorage(() => localStorage),
+        version: RACE_CHOICE_VERSION,
       },
     ),
   );
@@ -244,6 +262,8 @@ export const createGameAutotrack = <Reading>({
       stop();
       set({ connectOnStart: false, unavailable: false });
     },
+    /** Whether the game's ROMs carry a race flag ("auto" reads it). */
+    raceFlag,
     /** Retry now rather than after the session's wait. */
     retry: () => runtime?.retryNow(),
     seed,
@@ -251,7 +271,7 @@ export const createGameAutotrack = <Reading>({
     setOptions: (options: Partial<SessionOptions>) => {
       overrides = options;
     },
-    /** Set Race Mode: the ROM's race flag decides, or always on. */
+    /** Set Race Mode: the ROM's race flag decides (off without one), or on. */
     setRaceChoice: (raceChoice: RaceChoice) => set({ raceChoice }),
     stop,
     useStore,

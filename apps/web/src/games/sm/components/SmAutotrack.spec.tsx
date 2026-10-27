@@ -121,6 +121,21 @@ describe("Super Metroid's autotracking control", () => {
     );
   });
 
+  it("offers Race Mode on or off, on by default: Map Rando has no race flag", async () => {
+    render(<SmAutotrack />);
+    const dialog = await openDialog();
+    const group = within(dialog).getByRole("group", { name: "Race Mode" });
+    expect(
+      within(group)
+        .getAllByRole("radio")
+        .map((radio) => radio.getAttribute("value")),
+    ).toEqual(["on", "auto"]);
+    expect(within(group).getByRole("radio", { name: "On" })).toBeChecked();
+    expect(group).toHaveAccessibleDescription(/carry no race flag/);
+    await userEvent.click(within(group).getByRole("radio", { name: "Off" }));
+    expect(state().raceChoice).toBe("auto");
+  });
+
   it("says a seed without a name, and nothing before a reading", async () => {
     act(() => useSmAutotrackStore.setState({ reading: readingOf("") }));
     render(<SmAutotrack />);

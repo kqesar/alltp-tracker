@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
-import { auditDialog, auditPage, openOnGame, WIDTHS } from "./support";
+import {
+  auditDialog,
+  auditPage,
+  openOnGame,
+  smRaceModeOff,
+  WIDTHS,
+} from "./support";
 
 const FIXTURE = join(
   import.meta.dirname,
@@ -44,6 +50,8 @@ const heavyLog = (bytes: number): Buffer => {
 
 /** A run on the Super Metroid board: a few finds, the timer started. */
 const playRun = async (page: Page) => {
+  // A review never opens in Race Mode, on by default for Map Rando
+  await smRaceModeOff(page);
   await openOnGame(page, "sm");
   await page.evaluate(() => localStorage.removeItem("alltp-tracker-sm"));
   await page.reload();
@@ -62,6 +70,8 @@ const playRun = async (page: Page) => {
  * Energy Tank 20:04 in), written into the run's save as the follower lays them.
  */
 const playFoundRun = async (page: Page) => {
+  // A review never opens in Race Mode, on by default for Map Rando
+  await smRaceModeOff(page);
   await openOnGame(page, "sm");
   await page.evaluate(() => localStorage.removeItem("alltp-tracker-sm"));
   await page.reload();

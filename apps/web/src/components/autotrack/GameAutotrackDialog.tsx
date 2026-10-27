@@ -145,7 +145,11 @@ export const GameAutotrackDialog = <Reading,>({
           )}
         </div>
         <p className="autotrack-follow__text">{follows}</p>
-        <RaceModeOption onChange={session.setRaceChoice} value={raceChoice} />
+        <RaceModeOption
+          flag={session.raceFlag}
+          onChange={session.setRaceChoice}
+          value={raceChoice}
+        />
 
         <SetupGuide
           environment={environment ?? parseUserAgent(navigator.userAgent)}
