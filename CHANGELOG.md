@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.48.2](https://github.com/kqesar/alltp-tracker/compare/v2.48.1...v2.48.2) (2026-10-27)
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** keep Link's position out of Race Mode's memory window ([bb8ef80](https://github.com/kqesar/alltp-tracker/commit/bb8ef806a936ab8d2b5eae2a7b44a5f5db30c96a))
+
+
+### 📚 Documentation
+
+* say Race Mode never reads where Link is ([e7a619b](https://github.com/kqesar/alltp-tracker/commit/e7a619b18e6bf6f45e81c924d1ac4daf4c421db6))
+
 ## [2.48.1](https://github.com/kqesar/alltp-tracker/compare/v2.48.0...v2.48.1) (2026-10-27)
 
 
