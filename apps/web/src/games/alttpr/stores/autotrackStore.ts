@@ -98,10 +98,21 @@ type AutotrackState = {
    * follows at once: off, its memory is not read at all.
    */
   darkRoomMap: boolean;
+  /**
+   * How the dark room is drawn: in the game's own graphics, rebuilt from the
+   * player's console and ROM ("art", the default, the plan while they load
+   * or when they cannot be), or as the plan alone. A device setting, saved;
+   * the session reads the picture's memory only for "art".
+   */
+  darkRoomStyle: DarkRoomStyle;
   setConnectOnStart: (connectOnStart: boolean) => void;
   setRaceChoice: (raceChoice: RaceChoice) => void;
   setDarkRoomMap: (darkRoomMap: boolean) => void;
+  setDarkRoomStyle: (darkRoomStyle: DarkRoomStyle) => void;
 };
+
+/** The dark room map's styles: the game's graphics, or the plan. */
+export type DarkRoomStyle = "art" | "plan";
 
 /** The saved fields over the fresh ones: Race Mode and the dark room map checked. */
 const mergeSaved = (
@@ -117,6 +128,8 @@ const mergeSaved = (
     // Absent from a save before the option, or not a boolean: the default, on
     darkRoomMap:
       typeof saved.darkRoomMap === "boolean" ? saved.darkRoomMap : true,
+    // Absent, or a style this version does not know: the game's graphics
+    darkRoomStyle: saved.darkRoomStyle === "plan" ? "plan" : "art",
   };
 };
 
@@ -136,6 +149,7 @@ export const useAutotrackStore = create<AutotrackState>()(
       bridge: null,
       connectOnStart: false,
       darkRoomMap: true,
+      darkRoomStyle: "art",
       devices: [],
       elsewhere: false,
       environment: null,
@@ -146,6 +160,7 @@ export const useAutotrackStore = create<AutotrackState>()(
       seedFile: null,
       setConnectOnStart: (connectOnStart) => set({ connectOnStart }),
       setDarkRoomMap: (darkRoomMap) => set({ darkRoomMap }),
+      setDarkRoomStyle: (darkRoomStyle) => set({ darkRoomStyle }),
       setRaceChoice: (raceChoice) => set({ raceChoice }),
       shown: IDLE,
       since: 0,
@@ -155,9 +170,16 @@ export const useAutotrackStore = create<AutotrackState>()(
     {
       merge: mergeSaved,
       name: "alltp-tracker-autotrack",
-      partialize: ({ connectOnStart, darkRoomMap, keptSeed, raceChoice }) => ({
+      partialize: ({
         connectOnStart,
         darkRoomMap,
+        darkRoomStyle,
+        keptSeed,
+        raceChoice,
+      }) => ({
+        connectOnStart,
+        darkRoomMap,
+        darkRoomStyle,
         keptSeed,
         raceChoice,
       }),
@@ -181,6 +203,12 @@ useAutotrackStore.subscribe((state, before) => {
   if (state.darkRoomMap !== before.darkRoomMap) {
     runtime?.setDarkRoom(state.darkRoomMap);
     if (!state.darkRoomMap) useDarkRoomStore.getState().show(null);
+  }
+  if (state.darkRoomStyle !== before.darkRoomStyle) {
+    runtime?.setDarkRoomArt(state.darkRoomStyle === "art");
+    if (state.darkRoomStyle !== "art") {
+      useDarkRoomStore.getState().showArt(null);
+    }
   }
 });
 syncAcrossTabs(useAutotrackStore);
@@ -324,6 +352,10 @@ const sinkFor = (mine: number): RuntimeSink => ({
   darkRoom: (room) => {
     if (mine === generation) useDarkRoomStore.getState().show(room);
   },
+  // Its picture too: memory only, beside it
+  darkRoomArt: (art) => {
+    if (mine === generation) useDarkRoomStore.getState().showArt(art);
+  },
   // A stopped session never reads again: no reading outlives its session
   reading: (read) => {
     if (mine !== generation) return;
@@ -409,6 +441,7 @@ export const connectAutotrack = async () => {
         environment,
         ...bridge,
         darkRoom: useAutotrackStore.getState().darkRoomMap,
+        darkRoomArt: useAutotrackStore.getState().darkRoomStyle === "art",
         raceSetting: useAutotrackStore.getState().raceChoice,
         ...overrides,
       },

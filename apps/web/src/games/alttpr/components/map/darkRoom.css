@@ -41,13 +41,132 @@
   border-radius: var(--border-radius-sm);
 }
 
+/* The game's art (DarkRoomArt.tsx): a canvas the size of the room's box in
+   game pixels, shown at a whole factor (data-scale) so every game pixel is a
+   square, under an SVG in tile units for the marks */
+.dark-room__art {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.dark-room__frame {
+  position: relative;
+  flex: none;
+}
+
+.dark-room__canvas {
+  display: block;
+  background: var(--dark-room-wall);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.dark-room__canvas--crisp {
+  image-rendering: pixelated;
+}
+
+.dark-room__overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* An unopened chest: a gold ring on a dark one, so it shows on any floor */
+.dark-room__chest-shade {
+  fill: none;
+  stroke: var(--dark-room-wall);
+  stroke-width: 0.75;
+}
+
+.dark-room__chest-ring {
+  fill: none;
+  stroke: var(--dark-room-chest);
+  stroke-width: 0.38;
+}
+
+/* The nearest one: a second ring that swells and fades, again and again */
+.dark-room__chest-pulse {
+  fill: none;
+  stroke: var(--dark-room-chest);
+  stroke-width: 0.3;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: dark-room-pulse 1.6s ease-out infinite;
+}
+
+.dark-room__chest-pulse--still {
+  transform: scale(1.35);
+  animation: none;
+}
+
+@keyframes dark-room-pulse {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
 .dark-room__link {
   transition: transform 0.22s linear;
+}
+
+.dark-room__link-shade {
+  fill: none;
+  stroke: var(--dark-room-wall);
+  stroke-width: 0.5;
+}
+
+.dark-room__link-ring {
+  fill: none;
+  stroke: var(--dark-room-link);
+  stroke-width: 0.22;
+}
+
+.dark-room__link-dot {
+  fill: var(--dark-room-link);
+}
+
+.dark-room__link-arrow {
+  fill: var(--dark-room-link);
+  stroke: var(--dark-room-wall);
+  stroke-width: 0.12;
+}
+
+/* The sword's charge: dashed while it charges, whole and doubled once a spin
+   attack is ready */
+.dark-room__charge {
+  fill: none;
+  stroke: var(--dark-room-charge);
+  stroke-width: 0.3;
+}
+
+.dark-room__charge--charging {
+  stroke-dasharray: 0.55 0.45;
+}
+
+.dark-room__charge--charged {
+  filter: drop-shadow(0 0 0.3px var(--dark-room-charge));
+  stroke-width: 0.5;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .dark-room__link {
     transition: none;
+  }
+
+  .dark-room__chest-pulse {
+    transform: scale(1.35);
+    animation: none;
   }
 }
 

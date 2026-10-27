@@ -15,6 +15,11 @@ import {
   roomWords,
 } from "@/games/alttpr/autotrack/darkRoom";
 import {
+  DarkRoomArt,
+  LinkMarker,
+} from "@/games/alttpr/components/map/DarkRoomArt";
+import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
+import {
   type DarkRoomMap,
   useDarkRoomStore,
 } from "@/games/alttpr/stores/darkRoomStore";
@@ -375,41 +380,6 @@ const Tiles = memo(function Tiles({
   );
 });
 
-/** Link: a ring dark then light, so it shows on any tile, on his 2 x 2 tiles. */
-const LinkMarker = () => {
-  const link = useDarkRoomStore((state) => state.link);
-  if (link === null) return null;
-  return (
-    <g
-      className="dark-room__link"
-      data-testid="dark-room-link"
-      style={{ transform: `translate(${link.x}px, ${link.y}px)` }}
-    >
-      <rect
-        fill="none"
-        height="2.3"
-        rx="0.6"
-        stroke={token("wall")}
-        strokeWidth="0.5"
-        width="2.3"
-        x="-0.15"
-        y="-0.15"
-      />
-      <rect
-        fill="none"
-        height="2.3"
-        rx="0.6"
-        stroke={token("link")}
-        strokeWidth="0.22"
-        width="2.3"
-        x="-0.15"
-        y="-0.15"
-      />
-      <circle cx="1" cy="1" fill={token("link")} r="0.34" />
-    </g>
-  );
-};
-
 /** How long the sentence keeps still while Link walks, for the one who hears it. */
 const SETTLE_MS = 1500;
 
@@ -447,15 +417,83 @@ const Words = () => {
   );
 };
 
+/** What the art's marks mean: shapes, not colours alone. */
+const ArtLegend = () => (
+  <ul aria-label="Legend" className="dark-room__legend">
+    <li data-testid="dark-room-legend-chest">
+      <svg aria-hidden="true" className="dark-room__swatch" viewBox="0 0 4 4">
+        <rect
+          className="dark-room__chest-ring"
+          height="3"
+          rx="0.7"
+          width="3"
+          x="0.5"
+          y="0.5"
+        />
+      </svg>
+      Unopened chest
+    </li>
+    <li data-testid="dark-room-legend-nearest">
+      <svg aria-hidden="true" className="dark-room__swatch" viewBox="0 0 4 4">
+        <rect
+          className="dark-room__chest-ring"
+          height="3"
+          rx="0.7"
+          width="3"
+          x="0.5"
+          y="0.5"
+        />
+        <rect
+          className="dark-room__chest-pulse dark-room__chest-pulse--still"
+          height="3"
+          rx="0.7"
+          width="3"
+          x="0.5"
+          y="0.5"
+        />
+      </svg>
+      Nearest one
+    </li>
+    <li data-testid="dark-room-legend-charge">
+      <svg
+        aria-hidden="true"
+        className="dark-room__swatch"
+        viewBox="-2.4 -2.4 4.8 4.8"
+      >
+        <circle
+          className="dark-room__charge dark-room__charge--charged"
+          r="1.8"
+        />
+      </svg>
+      Sword charged (dashed: charging)
+    </li>
+  </ul>
+);
+
+/** Why the plan shows though the style is the game's graphics. */
+const FALLBACK: Readonly<Record<string, string>> = {
+  "other-base-patch":
+    "Shown as a plan: this ROM's graphics are not laid out as the tracker reads them.",
+  "read-failed":
+    "Shown as a plan: your ROM's graphics could not be read just now; trying again.",
+  "unknown-graphics":
+    "Shown as a plan: this room's graphics could not be rebuilt from your ROM.",
+};
+
 /**
- * The plan of a dark room, with Link's place in it: shown by the map panel
- * while the game is in a room that is dark and he has no Lamp (autotracking,
- * outside Race Mode, with the "Dark room map" option on). A picture with a
- * name, a sentence for the nearest chest, and a legend of what the room holds.
- * Nothing here is saved, shared or followed (`darkRoomStore.ts`).
+ * A dark room, with Link's place in it: shown by the map panel while the game
+ * is in a room that is dark and he has no Lamp (autotracking, outside Race
+ * Mode, with the "Dark room map" option on). In the "Game art" style, the room
+ * as the game would draw it lit, Link as the game draws him and the unopened
+ * chests ringed; as a plan otherwise, while the graphics load, or when they
+ * cannot be rebuilt. A picture with a name, a sentence for the nearest chest,
+ * and a legend. Nothing here is saved, shared or followed (`darkRoomStore.ts`).
  */
 export const DarkRoomPanel = () => {
   const map = useDarkRoomStore((state) => state.map);
+  const picture = useDarkRoomStore((state) => state.picture);
+  const art = useDarkRoomStore((state) => state.art);
+  const style = useAutotrackStore((state) => state.darkRoomStyle);
   const ids = useId().replaceAll(":", "");
   const legend = useMemo(
     () => (map === null ? [] : kindsIn(map.kinds, map.bounds)),
@@ -464,6 +502,10 @@ export const DarkRoomPanel = () => {
   const titleId = `${ids}-title`;
   const headingId = `${ids}-heading`;
   if (map === null) return null;
+  const drawn =
+    style === "art" && picture !== null && picture.room === map.room
+      ? picture
+      : null;
   const { bounds } = map;
   const width = bounds.x1 - bounds.x0 + 1;
   const height = bounds.y1 - bounds.y0 + 1;
@@ -482,47 +524,59 @@ export const DarkRoomPanel = () => {
           {map.layer === 1 ? ", lower level" : ""}
         </p>
       </div>
-      <svg
-        aria-labelledby={titleId}
-        className="dark-room__plan"
-        data-testid="dark-room-plan"
-        role="img"
-        style={{ aspectRatio: `${width} / ${height}` }}
-        viewBox={`${bounds.x0} ${bounds.y0} ${width} ${height}`}
-      >
-        <title id={titleId}>
-          Plan of the dark room, seen from above, with your position as a ring
-        </title>
-        <Tiles ids={ids} map={map} />
-        <LinkMarker />
-      </svg>
+      {drawn !== null ? (
+        <DarkRoomArt map={map} picture={drawn} />
+      ) : (
+        <svg
+          aria-labelledby={titleId}
+          className="dark-room__plan"
+          data-testid="dark-room-plan"
+          role="img"
+          style={{ aspectRatio: `${width} / ${height}` }}
+          viewBox={`${bounds.x0} ${bounds.y0} ${width} ${height}`}
+        >
+          <title id={titleId}>
+            Plan of the dark room, seen from above, with your position as a ring
+            and an arrow the way you face
+          </title>
+          <Tiles ids={ids} map={map} />
+          <LinkMarker drawn={false} />
+        </svg>
+      )}
       <Words />
-      <ul aria-label="Legend" className="dark-room__legend">
-        {legend.map((kind) => (
-          <li data-testid={`dark-room-legend-${kind}`} key={kind}>
-            <svg
-              aria-hidden="true"
-              className="dark-room__swatch"
-              viewBox="0 0 1 1"
-            >
-              <rect fill={`url(#${ids}-${kind})`} height="1" width="1" />
-              <rect
-                fill="none"
-                height="0.96"
-                stroke={token("floor-edge")}
-                strokeWidth="0.04"
-                width="0.96"
-                x="0.02"
-                y="0.02"
-              />
-            </svg>
-            {KIND_NAMES[kind]}
-          </li>
-        ))}
-      </ul>
-      <p className="dark-room__note">
-        Drawn from the game's own collision map while this room is dark and you
-        have no Lamp. Never in Race Mode.
+      {drawn !== null ? (
+        <ArtLegend />
+      ) : (
+        <ul aria-label="Legend" className="dark-room__legend">
+          {legend.map((kind) => (
+            <li data-testid={`dark-room-legend-${kind}`} key={kind}>
+              <svg
+                aria-hidden="true"
+                className="dark-room__swatch"
+                viewBox="0 0 1 1"
+              >
+                <rect fill={`url(#${ids}-${kind})`} height="1" width="1" />
+                <rect
+                  fill="none"
+                  height="0.96"
+                  stroke={token("floor-edge")}
+                  strokeWidth="0.04"
+                  width="0.96"
+                  x="0.02"
+                  y="0.02"
+                />
+              </svg>
+              {KIND_NAMES[kind]}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="dark-room__note" data-testid="dark-room-note">
+        {drawn !== null
+          ? "Drawn lit from your own console and ROM while this room is dark and you have no Lamp; kept on this page only. Never in Race Mode."
+          : style === "art" && art.status === "unavailable"
+            ? `${FALLBACK[art.reason]} Never in Race Mode.`
+            : "Drawn from the game's own collision map while this room is dark and you have no Lamp. Never in Race Mode."}
       </p>
     </section>
   );

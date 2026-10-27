@@ -1,8 +1,28 @@
-import type { DarkRoomReading } from "@alltp/pack-alttpr";
+import type {
+  ArtFailure,
+  ArtOutcome,
+  DarkRoomReading,
+  SpriteImage,
+} from "@alltp/pack-alttpr";
 import { create } from "zustand";
 
 /** What of a room changes seldom: its tiles, chests, torches. */
 export type DarkRoomMap = Omit<DarkRoomReading, "link">;
+
+/** The room drawn in the game's graphics, which changes seldom too. */
+export type DarkRoomPicture = {
+  readonly room: number;
+  /** 512 x 512 pixels, 0xAABBGGRR. */
+  readonly background: Uint32Array;
+  /** Changes each time the background is drawn again. */
+  readonly version: number;
+};
+
+/** Where the game's graphics stand: drawn, on their way, or not to be. */
+export type ArtState =
+  | { readonly status: "none" }
+  | { readonly status: "ready" }
+  | { readonly status: "unavailable"; readonly reason: ArtFailure };
 
 type DarkRoomState = {
   /** The dark room Link stands in, or null: no room to show. */
@@ -11,7 +31,16 @@ type DarkRoomState = {
   link: DarkRoomReading["link"] | null;
   /** Show a reading, or clear with null. */
   show: (reading: DarkRoomReading | null) => void;
+  /** The room in the game's graphics, or null: none drawn (the plan shows). */
+  picture: DarkRoomPicture | null;
+  /** Link as the game draws him, which changes several times a second. */
+  sprite: SpriteImage | null;
+  art: ArtState;
+  /** Show what the loader drew, or clear with null. */
+  showArt: (outcome: ArtOutcome | null) => void;
 };
+
+const NO_ART: ArtState = { status: "none" };
 
 const sameBytes = (a: Uint8Array, b: Uint8Array) => {
   if (a.length !== b.length) return false;
@@ -40,12 +69,22 @@ const sameChests = (
  * objects, so nothing that subscribes re-renders.
  */
 export const useDarkRoomStore = create<DarkRoomState>()((set, get) => ({
+  art: NO_ART,
   link: null,
   map: null,
+  picture: null,
   show: (reading) => {
     if (reading === null) {
-      if (get().map !== null || get().link !== null) {
-        set({ link: null, map: null });
+      // No room: no picture of it either
+      const { art, link, map, picture } = get();
+      if (map !== null || link !== null || picture !== null || art !== NO_ART) {
+        set({
+          art: NO_ART,
+          link: null,
+          map: null,
+          picture: null,
+          sprite: null,
+        });
       }
       return;
     }
@@ -66,11 +105,52 @@ export const useDarkRoomStore = create<DarkRoomState>()((set, get) => ({
     const sameLink =
       before.link !== null &&
       before.link.x === link.x &&
-      before.link.y === link.y;
+      before.link.y === link.y &&
+      before.link.facing === link.facing &&
+      before.link.charge === link.charge;
     if (same && sameLink) return;
     set({
       link: sameLink ? before.link : link,
       map: same ? kept : rest,
     });
   },
+  showArt: (outcome) => {
+    const before = get();
+    if (outcome === null) {
+      if (before.art !== NO_ART || before.picture !== null) {
+        set({ art: NO_ART, picture: null, sprite: null });
+      }
+      return;
+    }
+    if (outcome.status === "unavailable") {
+      if (
+        before.art.status !== "unavailable" ||
+        before.art.reason !== outcome.reason
+      ) {
+        set({ art: outcome, picture: null, sprite: null });
+      }
+      return;
+    }
+    const { background, link, room, version } = outcome.art;
+    const kept = before.picture;
+    const samePicture =
+      kept !== null && kept.room === room && kept.version === version;
+    const sprite = before.sprite;
+    const sameSprite =
+      sprite === link ||
+      (sprite !== null &&
+        link !== null &&
+        sprite.x === link.x &&
+        sprite.y === link.y &&
+        sprite.width === link.width &&
+        sprite.height === link.height &&
+        sprite.pixels.every((value, i) => value === link.pixels[i]));
+    if (samePicture && sameSprite && before.art.status === "ready") return;
+    set({
+      art: before.art.status === "ready" ? before.art : { status: "ready" },
+      picture: samePicture ? kept : { background, room, version },
+      sprite: sameSprite ? sprite : link,
+    });
+  },
+  sprite: null,
 }));

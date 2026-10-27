@@ -4,7 +4,9 @@
 // nothing here reads memory.
 
 import {
+  type Facing,
   ROOM_TILES,
+  type SwordCharge,
   TILE,
   type TileBox,
   type TileKind,
@@ -120,7 +122,8 @@ export function directionWords(dx: number, dy: number): string {
 
 /**
  * The room in a sentence: the nearest chest not opened yet, as tiles to the
- * left or right and up or down from Link, and how many torches are not lit.
+ * left or right and up or down from Link, how many torches are not lit,
+ * and, once read, which way he faces and how charged his sword is.
  * Distances are between the middle of Link's footprint and the middle of the
  * chest's, in 8-pixel tiles.
  */
@@ -129,21 +132,70 @@ export function roomWords(
     readonly chests: readonly TileBox[];
     readonly torches: { readonly total: number; readonly unlit: number };
   },
-  link: { readonly x: number; readonly y: number },
+  link: {
+    readonly x: number;
+    readonly y: number;
+    readonly facing?: Facing | null;
+    readonly charge?: SwordCharge;
+  },
 ): string {
+  return [placeWords(room, link), stanceWords(link)]
+    .filter((words) => words !== "")
+    .join(" ");
+}
+
+/**
+ * The unopened chest nearest to Link, between the middle of his footprint
+ * and the middle of the chest's, and how far it lies in whole tiles; null
+ * when there is none.
+ */
+export function nearestChest(
+  chests: readonly TileBox[],
+  link: { readonly x: number; readonly y: number },
+): {
+  readonly index: number;
+  readonly offset: { dx: number; dy: number };
+} | null {
   const cx = link.x + 1;
   const cy = link.y + 1;
-  let best: { dx: number; dy: number } | null = null;
+  let best: { index: number; offset: { dx: number; dy: number } } | null = null;
   let distance = Number.POSITIVE_INFINITY;
-  for (const chest of room.chests) {
+  for (const [index, chest] of chests.entries()) {
     const dx = (chest.x0 + chest.x1 + 1) / 2 - cx;
     const dy = (chest.y0 + chest.y1 + 1) / 2 - cy;
     const d = dx * dx + dy * dy;
     if (d < distance) {
       distance = d;
-      best = { dx: Math.round(dx), dy: Math.round(dy) };
+      best = { index, offset: { dx: Math.round(dx), dy: Math.round(dy) } };
     }
   }
+  return best;
+}
+
+/** "Facing up, sword charged.", or nothing while the facing is unknown. */
+export function stanceWords(link: {
+  readonly facing?: Facing | null;
+  readonly charge?: SwordCharge;
+}): string {
+  if (link.facing === undefined || link.facing === null) return "";
+  const sword =
+    link.charge === "charged"
+      ? ", sword charged"
+      : link.charge === "charging"
+        ? ", sword charging"
+        : "";
+  return `Facing ${link.facing}${sword}.`;
+}
+
+function placeWords(
+  room: {
+    readonly chests: readonly TileBox[];
+    readonly torches: { readonly total: number; readonly unlit: number };
+  },
+  link: { readonly x: number; readonly y: number },
+): string {
+  const nearest = nearestChest(room.chests, link);
+  const best = nearest === null ? null : nearest.offset;
   const chest =
     best === null
       ? "No unopened chest in this room."

@@ -115,6 +115,7 @@ describe("useAutotrack", () => {
     expect(saved()).toEqual({
       connectOnStart: true,
       darkRoomMap: true,
+      darkRoomStyle: "art",
       keptSeed: null,
       raceChoice: "auto",
     });
@@ -258,6 +259,7 @@ describe("useAutotrack", () => {
     expect(saved()).toEqual({
       connectOnStart: false,
       darkRoomMap: true,
+      darkRoomStyle: "art",
       keptSeed: null,
       raceChoice: "auto",
     });
