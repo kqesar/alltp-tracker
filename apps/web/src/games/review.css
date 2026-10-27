@@ -165,13 +165,6 @@
   box-shadow: inset 3px 0 0 var(--color-danger);
 }
 
-.review-table tbody tr[data-state="late"] th,
-.review-table tbody tr[data-state="late"] td {
-  box-shadow: inset 3px 0 0 var(--state-possible);
-}
-
-.review-table tbody tr[data-state="late"] td:not(:first-child),
-.review-table tbody tr[data-state="late"] th,
 .review-table tbody tr[data-state="missed"] td:not(:first-child),
 .review-table tbody tr[data-state="missed"] th {
   box-shadow: none;
@@ -297,4 +290,479 @@
 
 .tooltip__held {
   color: var(--color-accent);
+}
+
+/* ALttPR's waits (ReviewWaits.tsx): each needed item's time in logic against
+   when it was taken, drawn on the run's play time. Waiting is hatched, taken
+   a dot, a break a dotted line: never colour alone. */
+.review-result {
+  --wait: var(--color-accent);
+  --ahead: var(--state-seen);
+  --track: var(--color-border);
+  --hatch: rgba(0, 0, 0, 0.28);
+}
+
+.review-hidden {
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  background: var(--surface-1);
+  border-left: 3px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.run-summary .review-tiles__note {
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+@container map (width < 40rem) {
+  .review-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .review-tiles .run-summary__item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--spacing-sm);
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .review-tiles .review-tiles__note {
+    flex-basis: 100%;
+  }
+}
+
+.review-sprite {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  image-rendering: pixelated;
+}
+
+.review-sprite--sm,
+.review-sprite--none {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.review-sprite--none {
+  display: inline-block;
+}
+
+.wait-cards {
+  display: grid;
+  gap: var(--spacing-sm);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.wait-card {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: var(--spacing-sm) var(--spacing-md);
+  align-items: start;
+  padding: var(--spacing-md);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.wait-card__rank {
+  min-width: 1ch;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  line-height: 2rem;
+  color: var(--color-text-muted);
+}
+
+.wait-card__body {
+  display: grid;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.wait-card__title {
+  margin: 0;
+  font-size: var(--font-size-base);
+  line-height: 2rem;
+  overflow-wrap: anywhere;
+}
+
+.wait-card__where {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.wait-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-lg);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.wait-card__facts dt {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.wait-card__facts dd {
+  margin: 0;
+}
+
+.wait-card__muted {
+  color: var(--color-text-muted);
+}
+
+.wait-card__waited {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--wait);
+  white-space: nowrap;
+}
+
+.wait-card__context {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background: var(--surface-2);
+  border-left: 3px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.wait-card__opened {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.wait-card__note {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+@container map (width < 40rem) {
+  .wait-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: var(--spacing-sm);
+  }
+
+  .wait-card__rank {
+    display: none;
+  }
+}
+
+/* A wait on the run's play time */
+.review-track__break,
+.review-track__wait,
+.review-track__taken,
+.review-track__reach,
+.review-track__ahead,
+.review-dungeon-track__part,
+.review-dungeon-track__full,
+.review-dungeon-track__entered,
+.review-dungeon-track__done {
+  position: absolute;
+}
+
+.review-legend__wait,
+.review-legend__taken,
+.review-legend__break,
+.review-legend__part,
+.review-legend__full,
+.review-legend__entered,
+.review-legend__done {
+  display: inline-block;
+  flex: none;
+}
+
+.review-track {
+  position: relative;
+  height: 0.75rem;
+  background:
+    linear-gradient(var(--track), var(--track)) center / 100% 2px no-repeat;
+}
+
+.review-track__break {
+  top: -0.2rem;
+  bottom: -0.2rem;
+  width: 0;
+  border-left: 2px dotted var(--color-text-muted);
+}
+
+.review-track__wait,
+.review-legend__wait {
+  background:
+    repeating-linear-gradient(135deg, transparent 0 3px, var(--hatch) 3px 5px),
+    var(--wait);
+  border-radius: 4px 0 0 4px;
+}
+
+.review-track__wait {
+  top: 0.125rem;
+  height: 0.5rem;
+}
+
+.review-track__taken {
+  top: -0.0625rem;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-left: -0.4375rem;
+  background: var(--color-text);
+  border: 2px solid var(--surface-1);
+  border-radius: 50%;
+}
+
+.review-track__reach {
+  top: 0;
+  width: 2px;
+  height: 0.75rem;
+  margin-left: -1px;
+  background: var(--wait);
+}
+
+.review-track__ahead {
+  top: 0;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-left: -0.375rem;
+  background: var(--ahead);
+  border: 2px solid var(--surface-1);
+  transform: rotate(45deg);
+}
+
+.review-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  padding: 0;
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  list-style: none;
+}
+
+.review-legend li {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.review-legend__wait {
+  width: 1.5rem;
+  height: 0.5rem;
+}
+
+.review-legend__taken {
+  width: 0.75rem;
+  height: 0.75rem;
+  background: var(--color-text);
+  border-radius: 50%;
+}
+
+.review-legend__break {
+  width: 0;
+  height: 0.875rem;
+  border-left: 2px dotted var(--color-text-muted);
+}
+
+.review-more {
+  justify-self: start;
+}
+
+.review-subtitle {
+  margin: var(--spacing-sm) 0 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+/* The chain: each item in logic once the one before was held */
+.review-chain {
+  display: grid;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.review-chain__title {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.review-chain__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.review-chain__list li {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  font-size: var(--font-size-sm);
+  line-height: 1.2;
+}
+
+.review-chain__list li + li::before {
+  margin-inline-end: var(--spacing-xs);
+  color: var(--color-text-muted);
+  content: "→";
+}
+
+/* Short rows: dungeon items that waited, before the logic, never checked */
+.review-list {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.review-list > li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-sm);
+  align-items: center;
+  min-height: 2.5rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.review-list__grow {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.review-list__when {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+/* The dungeons' table and its strip */
+.review-dungeons {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.review-dungeons__track {
+  width: 40%;
+  min-width: 14rem;
+}
+
+@container map (width < 60rem) {
+  .review-dungeons__track,
+  .review-legend--dungeons {
+    display: none;
+  }
+}
+
+.review-dungeon-track {
+  position: relative;
+  height: 1rem;
+  background:
+    linear-gradient(var(--track), var(--track)) center / 100% 2px no-repeat;
+}
+
+.review-dungeon-track__part,
+.review-legend__part {
+  border: 1.5px solid var(--color-text-muted);
+  border-right: 0;
+  border-radius: 4px 0 0 4px;
+}
+
+.review-dungeon-track__part,
+.review-dungeon-track__full {
+  top: 0.25rem;
+  height: 0.5rem;
+}
+
+.review-dungeon-track__full,
+.review-legend__full {
+  background: var(--color-text-muted);
+}
+
+.review-legend__part,
+.review-legend__full {
+  width: 1.25rem;
+  height: 0.5rem;
+}
+
+.review-dungeon-track__entered,
+.review-legend__entered {
+  width: 0;
+  height: 0;
+  border-inline: 0.375rem solid transparent;
+  border-top: 0.6rem solid var(--wait);
+}
+
+.review-dungeon-track__entered {
+  top: -0.125rem;
+  margin-left: -0.375rem;
+}
+
+.review-dungeon-track__done,
+.review-legend__done {
+  width: 0.75rem;
+  height: 0.75rem;
+  background: var(--color-text);
+  border-radius: 50%;
+}
+
+.review-dungeon-track__done {
+  top: 0.125rem;
+  margin-left: -0.375rem;
+  border: 2px solid var(--surface-2);
+}
+
+.review-how {
+  display: grid;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-sm) 0 var(--spacing-lg);
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+/* Details by step: the playthrough, folded */
+.review-steps {
+  min-width: 0;
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.review-steps > summary {
+  min-height: 2.75rem;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.review-steps > summary:focus-visible,
+.review-table-wrap:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.review-steps > .review-table-wrap {
+  padding: 0 var(--spacing-md) var(--spacing-md);
 }

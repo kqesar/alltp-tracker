@@ -146,7 +146,11 @@ describe("a review", () => {
       `Seed ${HASH}: the log's seed is this run's (matched by its file name)`,
     );
     expect(await screen.findByTestId("review-caption")).toHaveTextContent(
-      /^\d+ required items?: \d+ in order, \d+ late, \d+ missed/,
+      /^32 needed items\. Step 1 is what the start reaches/,
+    );
+    // A run with no finds has no times: the waits say why they are not shown
+    expect(screen.getByTestId("review-hidden")).toHaveTextContent(
+      "Nothing the seed needed has a time on this run",
     );
     expect(screen.getByTestId("review-missed")).toBeInTheDocument();
     expect(screen.getByTestId("review-facts")).toHaveTextContent("Medallions");

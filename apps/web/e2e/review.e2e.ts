@@ -44,6 +44,54 @@ const playRun = async (page: Page) => {
   await page.getByTestId("map-view-tab-run").click();
 };
 
+/**
+ * A run played as autotracking records one, on the seed whose log the pack
+ * keeps: each place checked and the item it held at one instant (the clock
+ * stands still between clicks), the playthrough's first steps a minute
+ * apart, then a break of 35 minutes and the Hookshot, which Eastern Palace
+ * held from the start, last (a dungeon's chest, so it is matched by item).
+ */
+const playWaitedRun = async (page: Page) => {
+  await page.clock.install({ time: T0 });
+  await page.goto("./");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await expect(page.getByTestId("item-grid")).toBeVisible();
+  await page.getByTestId("run-timer").click();
+  await page.getByTestId("run-timer-start").click();
+  await page.keyboard.press("Escape");
+  await page.getByTestId("map-view-tab-map").click();
+  // Time stands still between the clicks of one find, as in one reading
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+  const finds: readonly (readonly [string, ...string[]])[] = [
+    ["sanctuary", "boots"],
+    ["blinds-hideout", "moonpearl", "glove", "powder"],
+    ["chicken-house", "sword"],
+    ["sahasrahlas-hut", "glove"],
+    ["chest-game", "mirror"],
+    ["graveyard-ledge", "flute"],
+    ["magic-bat", "hammer"],
+    ["stumpy", "sword"],
+  ];
+  for (const [marker, ...items] of finds) {
+    await page.clock.fastForward(60_000);
+    await page.getByTestId(`marker-${marker}`).click();
+    for (const item of items) await page.getByTestId(`item-${item}`).click();
+  }
+  await page.clock.fastForward(35 * 60_000);
+  await page.getByTestId("item-hookshot").click();
+  await page.clock.fastForward(60_000);
+  await page.getByTestId("run-timer").click();
+  await page.getByTestId("run-timer-end").click();
+  await page
+    .getByRole("dialog", { name: "End this run?" })
+    .getByRole("button", { name: "End run" })
+    .click();
+  // The review's sweep runs in slices of the page's timers
+  await page.clock.resume();
+  await page.getByTestId("map-view-tab-run").click();
+};
+
 const spoiler = (hash: string, name: string) => ({
   buffer: readFileSync(join(SPOILERS, `${hash}.txt`)),
   mimeType: "text/plain",
@@ -88,7 +136,7 @@ test.describe("reviewing a finished run", () => {
       "Not verified: this run does not know its seed",
     );
     await expect(page.getByTestId("review-caption")).toContainText(
-      "required items",
+      "needed items",
     );
     await expect(page.getByTestId("review-playthrough")).toBeVisible();
 
@@ -138,6 +186,38 @@ test.describe("reviewing a finished run", () => {
   });
 });
 
+test.describe("the waits of a reviewed run", () => {
+  test("say what waited, from when, and what holding it earlier would have opened", async ({
+    page,
+  }) => {
+    await playWaitedRun(page);
+    await page.getByTestId("review-import").click();
+    await page.getByTestId("review-file").setInputFiles(spoiler(HASH, NAME));
+    await expect(page.getByTestId("review-notice")).toBeVisible();
+
+    const tiles = page.getByTestId("review-tiles");
+    await expect(tiles).toContainText("1 break (35 min) left out");
+    await expect(tiles).toContainText("Hookshot, in logic from the start");
+    const hookshot = page.getByTestId("wait-eastern-palace/map-chest");
+    await expect(hookshot).toContainText(
+      "Hookshot · Eastern Palace - Map Chest",
+    );
+    await expect(hookshot).toContainText(
+      "Matched by the item, not by its place.",
+    );
+    await expect(hookshot).toContainText(/Trade-off\. .*Hookshot Cave/);
+    await expect(page.getByTestId("review-dungeons")).toContainText(
+      "Eastern Palace",
+    );
+    await expect(page.getByTestId("review-waits")).not.toContainText(/late/i);
+    // The playthrough is folded, and opens
+    const steps = page.getByTestId("review-playthrough");
+    await expect(steps.getByRole("table")).toBeHidden();
+    await steps.locator("summary").click();
+    await expect(steps.getByRole("table")).toBeVisible();
+  });
+});
+
 for (const width of WIDTHS) {
   test.describe(`the review at ${width}px`, () => {
     const phone = width < 600;
@@ -169,6 +249,10 @@ for (const width of WIDTHS) {
       await page.getByTestId("review-file").setInputFiles(spoiler(HASH, NAME));
       await expect(page.getByTestId("review-notice")).toBeVisible();
       await expect(page.getByTestId("review-playthrough")).toBeVisible();
+      // A run tracked by hand: the waits say why they are not shown
+      await expect(page.getByTestId("review-hidden")).toContainText(
+        "tracked by hand",
+      );
       await auditPage(page);
       await shot(page, "run-tab", width);
 
@@ -200,6 +284,33 @@ for (const width of WIDTHS) {
       await page.getByTestId("map-view-tab-map").click();
       await expect(page.locator("[data-review], [data-places]")).toHaveCount(0);
       await expect(page.locator("[data-held]")).toHaveCount(0);
+    });
+  });
+}
+
+for (const width of WIDTHS) {
+  test.describe(`the waits at ${width}px`, () => {
+    const phone = width < 600;
+    test.use({
+      hasTouch: phone,
+      isMobile: phone,
+      viewport: { height: phone ? 844 : 900, width },
+    });
+
+    test("fit the page, pass axe and are keyboard-reachable", async ({
+      page,
+    }) => {
+      await playWaitedRun(page);
+      await page.getByTestId("review-import").click();
+      await page.getByTestId("review-file").setInputFiles(spoiler(HASH, NAME));
+      await expect(page.getByTestId("review-waits")).toBeVisible();
+      await auditPage(page);
+      await shot(page, "waits", width);
+      await page.getByTestId("review-waits-all").click();
+      await page.getByTestId("review-playthrough").locator("summary").click();
+      await page.getByTestId("review-how").locator("summary").click();
+      await auditPage(page);
+      await shot(page, "waits-all", width);
     });
   });
 }
