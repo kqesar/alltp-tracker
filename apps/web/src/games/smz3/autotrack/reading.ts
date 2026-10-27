@@ -24,7 +24,10 @@ import {
 export type Smz3Reading = {
   /** When memory was read, in ms since the epoch. */
   readonly at: number;
-  /** Race Mode was on: the requirements and the guid were neither read nor decoded. */
+  /**
+   * Race Mode was on: the requirements and the guid were neither read nor
+   * decoded, and the crystals were left out of the items.
+   */
   readonly race: boolean;
   /** Which game runs. */
   readonly mode: Smz3Mode | Unsettled;
@@ -52,7 +55,8 @@ export type Smz3Reading = {
 /**
  * Decode a snapshot.
  * @param memory - The session's snapshot
- * @param race - Whether Race Mode is on: the requirements and the clock stay unread
+ * @param race - Whether Race Mode is on: the requirements and the clock stay
+ * unread, and the crystals' kind untold
  * @param at - When it was read
  */
 export const readSmz3 = (
@@ -67,7 +71,7 @@ export const readSmz3 = (
   goal: decodeGoal(memory),
   guid: decodeSeedGuid(memory, race),
   inPlay: decodeInPlay(memory),
-  items: decodeItems(memory),
+  items: decodeItems(memory, race),
   mode: decodeMode(memory),
   race,
   requirements: decodeRequirements(memory, race),
