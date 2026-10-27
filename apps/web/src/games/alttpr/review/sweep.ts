@@ -2,10 +2,14 @@
 // was taken: the run's timeline replayed through the pack's rules. At each
 // instant the items held change, the run is solved again with what was held
 // then; a place is "in logic from" the first instant it reads `yes` (a dark
-// room without the Lamp is not yet). Pure: `sweepRun` is a generator that
-// yields after each solve, so the page runs it in slices (useSweep.ts).
+// room without the Lamp is not yet). The log says where every dungeon key
+// is, so the keys count as held once their place is checked, solved as
+// keysanity solves them: the seed's own key logic, not the board's guess.
+// Pure: `sweepRun` is a generator that yields after each solve, so the page
+// runs it in slices (useSweep.ts).
 
 import {
+  type AlttprSettings,
   type AlttprSpoilerLog,
   bossLocation,
   DUNGEONS,
@@ -15,6 +19,7 @@ import {
   MAP_LOCATIONS,
   markersOf,
   solveWithKeys,
+  type TrackerInput,
   toState,
 } from "@alltp/pack-alttpr";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
@@ -221,6 +226,27 @@ const afterOf = (step: Step, needed: ReadonlySet<string>): After | null => {
   };
 };
 
+const keysKnown = new WeakMap<AlttprSettings, AlttprSettings>();
+
+/**
+ * A run's settings with its small and big keys tracked, as keysanity
+ * tracks them (maps and compasses left as they are: wild ones would make a
+ * boss want its compass). The same object for the same settings, so its
+ * world compiles once (fillerOf).
+ */
+const withKeysKnown = (settings: AlttprSettings): AlttprSettings => {
+  let known = keysKnown.get(settings);
+  if (known === undefined) {
+    known = {
+      ...settings,
+      wildBigKeys: true,
+      wildKeys: settings.genericKeys ? settings.wildKeys : true,
+    };
+    keysKnown.set(settings, known);
+  }
+  return known;
+};
+
 /** An item's value once a timeline key is applied to it. */
 const applyKey = (
   value: boolean | number | undefined,
@@ -246,7 +272,9 @@ export function* sweepRun(
   endMs: number,
 ): Generator<void, Sweep, void> {
   const settings = packSettings(run.settings);
-  const filler = fillerOf(settings);
+  // The keys are the log's: solved as wild keys, counted where it put them
+  const seedSettings = withKeysKnown(settings);
+  const filler = fillerOf(seedSettings);
 
   // The instants, in order, each with its keys
   const byAt = new Map<number, Step>();
@@ -274,12 +302,35 @@ export function* sweepRun(
       }
     }
   }
+  // Where the log put each dungeon key, and when each place was taken: its
+  // check, or for a boss's place and its prize, the boss beaten
+  const keyOf = new Map<string, { dungeon: DungeonId; big: boolean }>();
+  for (const { item, location } of log.placements) {
+    const key = /^(bigKey|key)([A-Z]\d)$/.exec(item ?? "");
+    const owner = DUNGEONS.find((d) => d.code === key?.[2]);
+    if (key !== null && owner !== undefined) {
+      keyOf.set(location, { big: key[1] === "bigKey", dungeon: owner.id });
+    }
+  }
+  const takenAt = (key: string): string[] => {
+    if (key.startsWith("check:")) return [key.slice(6)];
+    const beaten = /^item:boss(\d+):2$/.exec(key)?.[1];
+    const id =
+      beaten === undefined ? undefined : LEGACY_DUNGEONS[Number(beaten)];
+    if (id === undefined) return [];
+    const place = bossLocation(dungeon(id), settings);
+    return [...(place === undefined ? [] : [place]), `${id}/prize`];
+  };
+
   const checked: Record<string, true> = {};
-  const states: ReturnType<typeof toState>[] = [];
+  const smallKeys: Partial<Record<DungeonId, number>> = {};
+  const bigKeys: Record<string, number> = {};
+  const inputs: TrackerInput[] = [];
   const tris: Readonly<Record<string, string>>[] = [];
   const first = new Map<string, number>();
-  const solveAt = (state: ReturnType<typeof toState>) =>
-    solveWithKeys(filler, state).locations();
+  const placeTaken = new Map<string, number>();
+  const solveAt = (input: TrackerInput) =>
+    solveWithKeys(filler, toState(input, seedSettings)).locations();
   let solves = 0;
   for (const [index, step] of steps.entries()) {
     if (index > 0) {
@@ -290,27 +341,85 @@ export function* sweepRun(
         else if (Object.hasOwn(freshItems, id)) {
           items[id] = applyKey(items[id], id, level);
         }
+        for (const place of takenAt(key)) {
+          if (placeTaken.has(place)) continue;
+          placeTaken.set(place, index);
+          const owned = keyOf.get(place);
+          if (owned?.big) {
+            const big = `bigKey${dungeon(owned.dungeon).code}`;
+            bigKeys[big] = 1;
+          } else if (owned !== undefined) {
+            smallKeys[owned.dungeon] = (smallKeys[owned.dungeon] ?? 0) + 1;
+          }
+        }
       }
     }
-    const state = toState(
-      trackerInput({
-        checked,
-        items: items as ItemState,
-        medallions: run.medallions,
-        settings: run.settings,
-        smallKeys: run.smallKeys,
-      }),
-      settings,
+    const board = trackerInput({
+      checked,
+      items: items as ItemState,
+      medallions: run.medallions,
+      settings: run.settings,
+      smallKeys: run.smallKeys,
+    });
+    // The board's own big keys give way to the log's
+    const held = Object.fromEntries(
+      Object.entries(board.items).filter(([id]) => !id.startsWith("bigKey")),
     );
-    const solved = solveAt(state);
+    const input: TrackerInput = {
+      ...board,
+      items: { ...held, ...bigKeys },
+      keys: { ...smallKeys },
+    };
+    const solved = solveAt(input);
     solves++;
-    states.push(state);
+    inputs.push(input);
     tris.push(solved);
     for (const [location, tri] of Object.entries(solved)) {
       if (tri === "yes" && !first.has(location)) first.set(location, index);
     }
     yield;
   }
+
+  // A key never taken leaves its dungeon's logic short of the seed's: there,
+  // a needed place is in logic at the latest once every needed item of the
+  // spheres before its own was held, the playthrough's own bound
+  const short = new Set(
+    [...keyOf]
+      .filter(([place]) => !placeTaken.has(place))
+      .map(([, { dungeon: id }]) => id),
+  );
+  const sphereOf = new Map(
+    log.placements.map((p) => [p.location, p.sphere] as const),
+  );
+  const rowsBefore = (sphere: number) =>
+    required(comparison.rows).filter(
+      ({ entry, state }) =>
+        (entry.placement.sphere ?? 0) < sphere &&
+        state !== "unknown" &&
+        state !== "untimed",
+    );
+  const capOf = (sphere: number): number | undefined => {
+    let cap = 0;
+    for (const row of rowsBefore(sphere)) {
+      const at =
+        row.entry.find === null ? undefined : indexOfAt.get(row.entry.find.at);
+      if (at === undefined) return undefined;
+      cap = Math.max(cap, at);
+    }
+    return cap;
+  };
+  const reachIndexOf = (location: string): number | undefined => {
+    const solved = first.get(location);
+    const sphere = sphereOf.get(location);
+    const owner = DUNGEONS.find(({ id }) => location.startsWith(`${id}/`));
+    if (sphere === null || sphere === undefined || owner === undefined) {
+      return solved;
+    }
+    if (!short.has(owner.id)) return solved;
+    const cap = capOf(sphere);
+    if (cap === undefined) return solved;
+    return solved === undefined ? cap : Math.min(solved, cap);
+  };
 
   // Play time: the run timer's reading less the breaks before it
   const points = [
@@ -350,7 +459,8 @@ export function* sweepRun(
   }
   const itemKeys = (item: string): readonly string[] =>
     keysByItem.get(item) ?? [];
-  const reachOf = (row: ReviewRow) => first.get(row.entry.placement.location);
+  const reachOf = (row: ReviewRow) =>
+    reachIndexOf(row.entry.placement.location);
   const takenOf = (row: ReviewRow) =>
     row.entry.find === null ? undefined : indexOfAt.get(row.entry.find.at);
   const byTime =
@@ -417,10 +527,12 @@ export function* sweepRun(
     });
   }
 
-  // What an item that waited would have opened: when taken, and earlier
-  const plusOne = (index: number, item: string) => {
-    const state = states[index] as Record<string, number>;
-    return { ...state, [item]: (state[item] ?? 0) + 1 };
+  // What an item that waited would have opened: when taken, and earlier,
+  // its derived facts worked out again with it (toState)
+  const plusOne = (index: number, item: string): TrackerInput => {
+    const input = inputs[index] as TrackerInput;
+    const items = input.items as Record<string, number>;
+    return { ...input, items: { ...items, [item]: (items[item] ?? 0) + 1 } };
   };
   const newlyYes = (
     after: Readonly<Record<string, string>>,
@@ -473,7 +585,7 @@ export function* sweepRun(
     if (marker.dungeon === undefined) return [];
     const locations = marker.locations.filter((id) => id in last);
     if (locations.length === 0) return [];
-    const firsts = locations.map((id) => first.get(id));
+    const firsts = locations.map(reachIndexOf);
     const known = firsts.filter((index) => index !== undefined);
     const partial = known.length === 0 ? undefined : Math.min(...known);
     const full =
