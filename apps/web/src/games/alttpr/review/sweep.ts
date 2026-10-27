@@ -17,7 +17,10 @@ import {
   dungeon,
   LEGACY_DUNGEONS,
   MAP_LOCATIONS,
+  MEDALLIONS,
   markersOf,
+  PRIZES,
+  type Prize,
   solveWithKeys,
   type TrackerInput,
   toState,
@@ -226,6 +229,13 @@ const afterOf = (step: Step, needed: ReadonlySet<string>): After | null => {
   };
 };
 
+/** The prize group of each prize item, as the rules tell them apart. */
+const PRIZE_OF = new Map<string, Prize>(
+  (Object.keys(PRIZES) as Prize[]).flatMap((group) =>
+    PRIZES[group].map((item) => [item, group] as const),
+  ),
+);
+
 const keysKnown = new WeakMap<AlttprSettings, AlttprSettings>();
 
 /**
@@ -322,6 +332,24 @@ export function* sweepRun(
     return [...(place === undefined ? [] : [place]), `${id}/prize`];
   };
 
+  // The seed's prizes and pads, whatever the board was left with (Race Mode
+  // reads no prize, a hand run may set none): a prize counts once its boss
+  // is beaten, which the timeline dates
+  const prizes: Partial<Record<DungeonId, Prize>> = {};
+  for (const [id, item] of Object.entries(log.extra.prizes)) {
+    const group = PRIZE_OF.get(item);
+    if (group !== undefined) prizes[id as DungeonId] = group;
+  }
+  const pad = (medallion: string | null) =>
+    MEDALLIONS.find((name) => name === medallion);
+  const medallions: TrackerInput["medallions"] = {
+    ...(pad(log.extra.medallions.mire) === undefined
+      ? {}
+      : { mire: pad(log.extra.medallions.mire) }),
+    ...(pad(log.extra.medallions.turtleRock) === undefined
+      ? {}
+      : { turtleRock: pad(log.extra.medallions.turtleRock) }),
+  };
   const checked: Record<string, true> = {};
   const smallKeys: Partial<Record<DungeonId, number>> = {};
   const bigKeys: Record<string, number> = {};
@@ -369,6 +397,8 @@ export function* sweepRun(
       ...board,
       items: { ...held, ...bigKeys },
       keys: { ...smallKeys },
+      medallions,
+      prizes,
     };
     const solved = solveAt(input);
     solves++;
