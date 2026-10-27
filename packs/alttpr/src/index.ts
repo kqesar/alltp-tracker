@@ -10,13 +10,28 @@ export {
 } from "./autotrack/check-flags";
 export {
   type ChestSpot,
+  chargeOf,
   type DarkRoomReading,
   decodeDarkRoom,
+  type Facing,
+  facingOf,
+  type LinkPlace,
   ROOM_TILES,
+  SPIN_READY,
+  type SwordCharge,
   TILE,
   type TileBox,
   type TileKind,
 } from "./autotrack/dark-room";
+export { ROOM_PX, type SpriteImage } from "./autotrack/dark-room-art";
+export {
+  ART_RETRY_MS,
+  type ArtFailure,
+  type ArtOutcome,
+  type ArtRead,
+  createArtLoader,
+  type DarkRoomArt,
+} from "./autotrack/dark-room-art-loader";
 export {
   type BossDungeon,
   type CheckReading,
@@ -44,6 +59,7 @@ export {
 } from "./autotrack/medallion-pads";
 export {
   type AlttprRange,
+  DARK_ROOM_ART_SWITCH,
   DARK_ROOM_SWITCH,
   MEMORY_RANGE,
   MEMORY_RANGES,

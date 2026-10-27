@@ -1,6 +1,7 @@
 // Records the dark room map's ranges from a running game, as a fixture for
 // `src/autotrack/dark-room.spec.ts`: RetroArch (bsnes-mercury) with Network
-// Commands on (port 55355), Link in the room to record, in normal play.
+// Commands on (port 55355, or the one RA_PORT names), Link in the room to
+// record, in normal play.
 //
 //   pnpm --filter @alltp/pack-alttpr record-dark-room test/dark-room/<name>.json "<what it is>"
 //
@@ -19,9 +20,11 @@ import { writeFileSync } from "node:fs";
 
 /** The ranges of memory.ts that `dark-room.ts` reads, A-bus address and size. */
 const RANGES = {
+  "dark-room-charge": [0x7e_0079, 1],
   "dark-room-chests": [0x7e_06e0, 0x20],
   "dark-room-dark": [0x7e_c005, 1],
   "dark-room-doors": [0x7e_1980, 0x20],
+  "dark-room-facing": [0x7e_002f, 1],
   "dark-room-indoors": [0x7e_001b, 1],
   "dark-room-layer": [0x7e_00ee, 1],
   "dark-room-lights": [0x7e_0458, 0x22],
@@ -40,6 +43,8 @@ if (!file || !description) {
   process.exit(2);
 }
 
+/** RetroArch's command port: another instance than the player's own. */
+const PORT = Number(process.env.RA_PORT ?? 55355);
 const socket = createSocket("udp4");
 /**
  * @param {string} text
@@ -55,7 +60,7 @@ const ask = (text) =>
       clearTimeout(timer);
       resolve(message.toString().trim());
     });
-    socket.send(text, 55355, "127.0.0.1");
+    socket.send(text, PORT, "127.0.0.1");
   });
 
 /**

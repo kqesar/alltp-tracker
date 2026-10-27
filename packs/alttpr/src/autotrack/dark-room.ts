@@ -58,6 +58,28 @@ export interface TileBox {
   readonly y1: number;
 }
 
+/** The way Link faces ($2F: 0, 2, 4, 6). */
+export type Facing = "up" | "down" | "left" | "right";
+
+/**
+ * The sword's charge while B is held ($79, player.c:2197-2242): it counts up
+ * from the swing, and at 48 a spin attack is ready.
+ */
+export type SwordCharge = "none" | "charging" | "charged";
+
+/** The count at which the spin attack is ready (player.c:2240). */
+export const SPIN_READY = 48;
+
+/** Where Link is and how he stands. */
+export interface LinkPlace {
+  /** His footprint's top left, in tiles. */
+  readonly x: number;
+  readonly y: number;
+  /** Null while its byte is unread. */
+  readonly facing: Facing | null;
+  readonly charge: SwordCharge;
+}
+
 /** A closed chest: the box of its tiles. */
 export interface ChestSpot extends TileBox {
   /** The big chest, which is wider than the others. */
@@ -69,8 +91,8 @@ export interface DarkRoomReading {
   readonly room: number;
   /** The attribute table the tiles come from: Link's layer in a layered room. */
   readonly layer: 0 | 1;
-  /** Link's footprint, the 2 x 2 tiles he collides with: its top left. */
-  readonly link: { readonly x: number; readonly y: number };
+  /** Link's footprint, the 2 x 2 tiles he collides with, and his stance. */
+  readonly link: LinkPlace;
   /** Each tile's kind (`TILE`), row by row. */
   readonly kinds: Uint8Array;
   /** The attribute bytes as the game holds them, for a value no kind names. */
@@ -102,6 +124,18 @@ export function linkTile(x: number, y: number): { x: number; y: number } {
     x: Math.min((x & 0x1ff) >> 3, ROOM_TILES - 2),
     y: Math.min(((y & 0x1ff) + 8) >> 3, ROOM_TILES - 2),
   };
+}
+
+const FACINGS: readonly Facing[] = ["up", "down", "left", "right"];
+
+/** The way Link faces, from $2F, or null for a value it never holds. */
+export function facingOf(value: number): Facing | null {
+  return (value & 1) === 0 && value < 8 ? FACINGS[value >> 1] : null;
+}
+
+/** The sword's charge, from $79. */
+export function chargeOf(value: number): SwordCharge {
+  return value === 0 ? "none" : value >= SPIN_READY ? "charged" : "charging";
 }
 
 /** What a closed door (F0-FF) is, from its type (dungeon.h:6-36). */
@@ -364,7 +398,16 @@ export function decodeDarkRoom(
     }
   }
 
-  const link = linkTile(at.word(0x7e_0022), at.word(0x7e_0020));
+  const tile = linkTile(at.word(0x7e_0022), at.word(0x7e_0020));
+  // The stance is read with the place; a recording older than its ranges has
+  // neither
+  const facing = reader(view, "dark-room-facing");
+  const charge = reader(view, "dark-room-charge");
+  const link: LinkPlace = {
+    ...tile,
+    charge: charge === null ? "none" : chargeOf(charge.byte(0x7e_0079)),
+    facing: facing === null ? null : facingOf(facing.byte(0x7e_002f)),
+  };
   // The part of the table worth drawing is what Link can reach through tiles
   // that are not wall: a room is one quadrant of the 64 x 64 space, or two,
   // and the rest holds floor and walls the room never uses. With no way out

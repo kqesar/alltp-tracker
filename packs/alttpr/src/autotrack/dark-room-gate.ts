@@ -45,6 +45,13 @@ export const LAMP: Place = {
   range: "equipment-b",
 };
 
+/** The main screen's layers (TM_copy): bit 0 draws BG1. */
+export const SCREENS: Place = {
+  at: 0x7e_001c,
+  base: 0x7e_001c,
+  range: "dark-room-art-screens",
+};
+
 /** A byte of memory, or undefined while its range is unread. */
 export function byteAt(view: MemoryView, place: Place): number | undefined {
   if (!view.has(place.range)) return undefined;
@@ -64,6 +71,15 @@ export function darkRoomHeld(view: MemoryView): boolean {
     byteAt(view, DARK) === 0x01 &&
     byteAt(view, LAMP) === 0x00
   );
+}
+
+/**
+ * Whether the room's BG1 tilemap is read: the room is, and its main screen
+ * draws BG1 (dungeon.c:6762-6772); most dark rooms are BG2 alone.
+ */
+export function backgroundWanted(view: MemoryView): boolean {
+  const screens = byteAt(view, SCREENS);
+  return screens !== undefined && (screens & 1) === 1 && darkRoomWanted(view);
 }
 
 /**
