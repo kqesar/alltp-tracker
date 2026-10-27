@@ -510,6 +510,7 @@ const Cell = ({ ms }: { ms: number | null }) =>
 /** The dungeons: when part and all of each was in logic, when you went. */
 const Dungeons = ({ sweep }: { sweep: Sweep }) => {
   const titleId = useId();
+  const captionId = useId();
   return (
     <section
       aria-labelledby={titleId}
@@ -542,12 +543,15 @@ const Dungeons = ({ sweep }: { sweep: Sweep }) => {
         </li>
       </ul>
       <section
-        aria-labelledby={titleId}
+        aria-labelledby={captionId}
         className="review-table-wrap"
         // biome-ignore lint/a11y/noNoninteractiveTabindex: a table wider than a phone scrolls sideways, and a keyboard must reach it
         tabIndex={0}
       >
         <table className="review-table review-dungeons">
+          <caption className="sr-only" id={captionId}>
+            Each dungeon's times on the run's play time
+          </caption>
           <thead>
             <tr>
               <th scope="col">Dungeon</th>

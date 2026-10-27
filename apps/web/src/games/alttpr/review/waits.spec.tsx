@@ -157,7 +157,16 @@ describe("the waits of a reviewed run", () => {
   it("times each dungeon in a table with its headers", async () => {
     await openReview();
     const dungeons = await screen.findByTestId("review-dungeons");
-    expect(within(dungeons).getByRole("table")).toBeInTheDocument();
+    expect(within(dungeons).getByRole("table")).toHaveAccessibleName(
+      "Each dungeon's times on the run's play time",
+    );
+    // The scroll region is named apart from the section around it
+    expect(dungeons).toHaveAccessibleName(
+      "Dungeons: when they were in logic, when you went",
+    );
+    expect(within(dungeons).getByRole("region")).toHaveAccessibleName(
+      "Each dungeon's times on the run's play time",
+    );
     expect(
       within(dungeons).getByRole("columnheader", { name: "Part in logic" }),
     ).toBeInTheDocument();
