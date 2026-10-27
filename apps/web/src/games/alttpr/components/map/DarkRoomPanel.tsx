@@ -1,4 +1,4 @@
-import { TILE, type TileKind } from "@alltp/pack-alttpr";
+import { type ArtFailure, TILE, type TileKind } from "@alltp/pack-alttpr";
 import {
   memo,
   type ReactNode,
@@ -471,13 +471,15 @@ const ArtLegend = () => (
 );
 
 /** Why the plan shows though the style is the game's graphics. */
-const FALLBACK: Readonly<Record<string, string>> = {
+const FALLBACK: Readonly<Record<ArtFailure, string>> = {
   "other-base-patch":
     "Shown as a plan: this ROM's graphics are not laid out as the tracker reads them.",
   "read-failed":
     "Shown as a plan: your ROM's graphics could not be read just now; trying again.",
   "unknown-graphics":
     "Shown as a plan: this room's graphics could not be rebuilt from your ROM.",
+  unreadable:
+    "Shown as a plan: your console's graphics could not be read; the plan stays for this ROM.",
 };
 
 /**
