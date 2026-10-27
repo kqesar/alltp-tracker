@@ -241,3 +241,32 @@ describe("a run taken in the playthrough's order", () => {
     expect(turtleRock?.full).toBeLessThanOrEqual(result.end);
   });
 });
+
+describe("the seed's prizes and medallions", () => {
+  it("come from the log, whatever the board left unset (Race Mode, a hand run)", () => {
+    const plan = inOrder();
+    const played = playedRun(log, plan, fresh());
+    const blank = {
+      ...played,
+      items: Object.fromEntries(
+        Object.entries(played.items).map(([id, value]) => [
+          id,
+          id.startsWith("reward") ? 0 : value,
+        ]),
+      ) as ReviewedRun["items"],
+      medallions: played.medallions.map(() => 0),
+    };
+    const compared = compareReview(log, blank);
+    const end = ((plan.at(-1)?.minute ?? 0) + 2) * 60_000;
+    const result = drain(sweepRun(log, blank, compared, end));
+    for (const id of ["misery-mire", "turtle-rock", "ganons-tower"]) {
+      expect(
+        result.dungeons.find((dungeon) => dungeon.id === id)?.full,
+      ).not.toBeNull();
+    }
+    expect(
+      result.waits.find(({ location }) => location === "misery-mire/prize")
+        ?.reach,
+    ).not.toBeNull();
+  });
+});

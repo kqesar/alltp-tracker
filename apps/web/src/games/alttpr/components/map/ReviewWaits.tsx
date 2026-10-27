@@ -663,8 +663,7 @@ const HowWorkedOut = () => (
         first: an estimate.
       </li>
       <li>
-        A dungeon's prize counts from its boss beaten, and the medallion pads as
-        the run ended: estimates.
+        A dungeon's prize, the one the log names, counts from its boss beaten.
       </li>
     </ul>
   </details>

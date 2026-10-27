@@ -150,9 +150,12 @@ flowchart LR
 - **A key never checked** (a counted dungeon, a key left behind) leaves its dungeon's logic short of
   the seed's. There a needed place is in logic at the latest at the instant every needed item of the
   spheres before its own was held (unknown and untimed ones aside): the playthrough's own bound, an
-  estimate the tab says. Items with no timeline entry (an old save) count from the start,
-  as do the medallion pads and the prize each dungeon holds; a crystal or pendant counts held once
-  its boss is beaten, which is timed.
+  estimate the tab says.
+- **Prizes and pads are the log's.** Each dungeon's prize (`log.extra.prizes`) counts held once its
+  boss is beaten, which is timed, and the medallion pads (`log.extra.medallions`) are known from
+  the start, whatever the board was left with: Race Mode reads no prize, a hand run may set none,
+  and an unknown pad would ask for all three medallions. Items with no timeline entry (an old save)
+  count from the start.
 - **Play time** is the run timer's reading less each gap of 30 minutes or more with nothing found
   (`BREAK_MS`), the end of the run included: the waits are in play time, the breaks said.
 - **Copies.** Each needed placement is paired with the k-th copy of its item reached and the k-th
