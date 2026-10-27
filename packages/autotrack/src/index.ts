@@ -102,7 +102,12 @@ export {
   type RetroArchTimeouts,
   RetroArchTransport,
 } from "./retroarch";
-export type { MemorySnapshot, PollUpdate } from "./scheduler";
+export {
+  type MemorySnapshot,
+  ON_DEMAND_MAX,
+  type OnDemandRead,
+  type PollUpdate,
+} from "./scheduler";
 export {
   AutotrackSession,
   type BackoffOptions,

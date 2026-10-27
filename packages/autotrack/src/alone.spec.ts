@@ -495,3 +495,43 @@ describe("definePack and gated ranges", () => {
     expect(() => definePack(source({ ranges }))).toThrow(/at most 8/);
   });
 });
+
+describe("an alone range refreshed on another alone range", () => {
+  /** A second big span, listed first, refreshed on the map's change. */
+  const picture = {
+    address: bus(0x7e_2000),
+    alone: true,
+    category: "other",
+    everyMs: 5000,
+    id: "picture",
+    optIn: "assist",
+    refreshOn: ["map"],
+    size: SIZE,
+    when: (view: { has(id: string): boolean; bytes(id: string): Uint8Array }) =>
+      view.has("gate") && view.bytes("gate")[0] === 1,
+  };
+
+  it("is read after it, so the map's change is seen on the same tick", async () => {
+    const pack = source({ ranges: [picture, ...source().ranges] });
+    const defined = definePack(pack);
+    const order = defined.gated.map(({ index }) => defined.ranges[index].id);
+    expect(order.indexOf("picture")).toBeGreaterThan(order.indexOf("map"));
+    const h = setup({ pack });
+    h.memory[GATE] = 1;
+    await h.tick(); // the gate opens: both read
+    for (let i = 0; i < 3; i++) await h.tick();
+    const before = h.touched(bus(0x7e_2000), SIZE);
+    h.memory[BIG] = 7; // the map changes
+    for (let i = 0; i < 4; i++) await h.tick(); // its 1 s cadence comes
+    expect(h.touched(bus(0x7e_2000), SIZE)).toBe(before + 1);
+  });
+
+  it("refuses refreshOn that loops", () => {
+    const ranges = source().ranges.map((r) =>
+      r.id === "map" ? { ...r, refreshOn: ["picture"] } : r,
+    );
+    expect(() => definePack(source({ ranges: [picture, ...ranges] }))).toThrow(
+      /refreshOn loops/,
+    );
+  });
+});

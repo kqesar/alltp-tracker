@@ -29,7 +29,12 @@ import {
   type Visibility,
 } from "./platform";
 import type { RaceSetting, RaceStatus } from "./race-mode";
-import { type MemorySnapshot, Poller, type PollUpdate } from "./scheduler";
+import {
+  type MemorySnapshot,
+  type OnDemandRead,
+  Poller,
+  type PollUpdate,
+} from "./scheduler";
 import type {
   BridgeInfo,
   DeviceDescriptor,
@@ -274,9 +279,24 @@ export class AutotrackSession {
     this.clearPromptTimer();
     this.transport?.close();
     this.transport = null;
+    this.poller?.close();
     this.poller = null;
     this.paused = false;
     this.setStatus({ code: "stopped" });
+  }
+
+  /**
+   * Reads bytes at addresses known only at run time (`Poller.request`): on
+   * a coming poll, in its casual phase, never in Race Mode. Rejects at once
+   * before the game is polled, and when the connection ends before the read.
+   */
+  request(read: OnDemandRead): Promise<Uint8Array[]> {
+    if (this.poller === null) {
+      return Promise.reject(
+        new TransportError("closed", "read", "not connected to a game"),
+      );
+    }
+    return this.poller.request(read);
   }
 
   /** Skips the current wait: retries now, or re-checks the game. */
@@ -489,7 +509,10 @@ export class AutotrackSession {
     } finally {
       transport.close();
       if (this.transport === transport) this.transport = null;
-      if (alive()) this.poller = null;
+      if (alive()) {
+        this.poller?.close();
+        this.poller = null;
+      }
     }
   }
 
