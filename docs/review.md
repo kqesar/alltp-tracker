@@ -138,9 +138,19 @@ flowchart LR
   counter --> sweep["Sweep: waits, dungeons,<br/>breaks, play time"]
 ```
 
-- **In logic from** is the first instant whose held items put the place at `yes` (the key model
-  included; a dark room without the Lantern is `maybe`, so not yet). The start counts as one
-  instant, before the first stamp. Items with no timeline entry (an old save) count from the start,
+- **In logic from** is the first instant whose held items put the place at `yes` (a dark room
+  without the Lantern reads `no`, so not yet). The start counts as one instant, before the first
+  stamp.
+- **The keys are the log's.** The board does not track small and big keys outside keysanity, and the
+  key model reads `maybe` wherever one could hide, so a run taken in the playthrough's own order
+  would show items "before the logic expected". The log says where every key is: a key counts as
+  held once the place that held it is checked (or its boss beaten, for a boss's place), and the run
+  is solved with the keys tracked, as keysanity solves it (`withKeysKnown`: wild small and big keys,
+  maps and compasses left as the run has them, since wild ones make a boss want its compass).
+- **A key never checked** (a counted dungeon, a key left behind) leaves its dungeon's logic short of
+  the seed's. There a needed place is in logic at the latest at the instant every needed item of the
+  spheres before its own was held (unknown and untimed ones aside): the playthrough's own bound, an
+  estimate the tab says. Items with no timeline entry (an old save) count from the start,
   as do the medallion pads and the prize each dungeon holds; a crystal or pendant counts held once
   its boss is beaten, which is timed.
 - **Play time** is the run timer's reading less each gap of 30 minutes or more with nothing found

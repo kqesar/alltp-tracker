@@ -186,3 +186,58 @@ describe("the chain behind the run", () => {
     }
   });
 });
+
+/**
+ * The playthrough taken in its own order, two minutes apart, each dungeon's
+ * small keys with the first needed item of that dungeon, then every other
+ * place a minute apart: a run that never takes a needed item before the
+ * seed's logic has it, and holds the whole seed at its end.
+ */
+const inOrder = (): Played[] => {
+  const plan: Played[] = log.placements
+    .filter((p) => p.sphere !== null)
+    .sort(
+      (a, b) =>
+        (a.sphere ?? 0) - (b.sphere ?? 0) ||
+        a.locationName.localeCompare(b.locationName),
+    )
+    .map((p, index) => ({ location: p.location, minute: 2 * (index + 1) }));
+  let last = plan.at(-1)?.minute ?? 0;
+  const keys = log.placements
+    .filter((p) => /^key[A-Z]/.test(p.item ?? ""))
+    .map((p) => {
+      const dungeon = p.location.split("/")[0];
+      const first = plan.find((q) => q.location.startsWith(`${dungeon}/`));
+      return { location: p.location, minute: first?.minute ?? last };
+    });
+  const taken = new Set([...plan, ...keys].map(({ location }) => location));
+  const rest = log.placements
+    .filter((p) => !taken.has(p.location))
+    .map((p) => {
+      last += 1;
+      return { location: p.location, minute: last };
+    });
+  return [...plan, ...keys, ...rest].sort((a, b) => a.minute - b.minute);
+};
+
+describe("a run taken in the playthrough's order", () => {
+  const plan = inOrder();
+  const played = playedRun(log, plan, fresh());
+  const compared = compareReview(log, played);
+  const end = ((plan.at(-1)?.minute ?? 0) + 2) * 60_000;
+  const result = drain(sweepRun(log, played, compared, end));
+
+  it("takes nothing before the seed's logic has it in logic", () => {
+    const ahead = result.waits.filter(
+      (wait) => wait.waited !== null && wait.waited < 0,
+    );
+    expect(ahead.map(({ location }) => location)).toEqual([]);
+    for (const wait of result.waits) expect(wait.reach).not.toBeNull();
+  });
+
+  it("has every dungeon whole in logic by the end, Turtle Rock's included", () => {
+    const turtleRock = result.dungeons.find(({ id }) => id === "turtle-rock");
+    expect(turtleRock?.full).not.toBeNull();
+    expect(turtleRock?.full).toBeLessThanOrEqual(result.end);
+  });
+});

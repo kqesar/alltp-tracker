@@ -640,9 +640,15 @@ const HowWorkedOut = () => (
     <summary>How these times are worked out</summary>
     <ul className="review-how">
       <li>
-        In logic from: the first moment the items you held put the place in
-        logic, by the randomizer's own rules (a dark room without the Lantern is
+        In logic from: the first moment the items you held, and the dungeon keys
+        from the places the log put them once you checked those, put the place
+        in logic by the randomizer's rules (a dark room without the Lantern is
         not yet).
+      </li>
+      <li>
+        Where a dungeon key's place was never checked, a needed place counts as
+        in logic once you held every needed item of the steps before its own, as
+        the seed's playthrough has it: an estimate.
       </li>
       <li>
         Play time leaves out each stretch of {BREAK_MS / 60_000} minutes or more
