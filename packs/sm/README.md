@@ -34,7 +34,7 @@ is done.
 flowchart LR
   rom["ROM: header, $82:FFFC, $84 PLMs,<br/>$8F:EBC0 table, $DF:FEF0 seed"] --> seed["decodeSeed<br/>name, presets, added items"]
   rom --> obj["decodeObjectives"]
-  wram["WRAM: $0998 state, $09A2-$09D5<br/>equipment, $09EC tanks disabled,<br/>$D820-$D827 events, $D828-$D82F boss flags"] --> items["decodeItems"]
+  wram["WRAM: $0998 state, $09A4/$09A8 collected,<br/>$09C4-$09D4 maximums, $09EC tanks disabled,<br/>$D820-$D827 events, $D828-$D82F boss flags"] --> items["decodeItems"]
   rom --> items
   wram --> obj
   wram --> play["decodeInPlay"]
@@ -162,10 +162,14 @@ forbids the rest:
 
 - The RTA clock (category `game-time`) reveals nothing of the seed, but the
   game shows it only in its end credits: Race Mode never reads `rta-saved` and
-  `rta-pending`, and the run timer counts real time. The game's own in-game
-  time (`$7E:09DA-$7E:09E1`) lies between the equipment and the energy tanks
-  disabled: `equipment` stops before it and `disabled-tanks` starts after, and
-  Race Mode's memory leaves it out.
+  `rta-pending`, and the run timer counts real time.
+- The equipment is read word by word, what the items count needs and nothing
+  else: the items and beams collected (`items-collected`, `beams-collected`)
+  and the five maximums (`max-energy`, `max-missiles`, `max-supers`,
+  `max-power-bombs`, `max-reserve`), then `disabled-tanks`. Race Mode's memory
+  is those words alone: no HUD (what is equipped, the energy and ammunition as
+  they stand, the reserves' energy) and not the game's own in-game time
+  (`$7E:09DA-$7E:09E1`).
 - The locations (category `locations`: the collected bits, `collected`, and
   the Nothing mask, `nothing-mask`) would say where the seed put no item, since
   a Nothing location's bit is set from the first frame, which a player learns

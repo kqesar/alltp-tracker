@@ -50,6 +50,17 @@ const range = <const Id extends string>(spec: {
   return { ...rest, address: bus(at), bus: at };
 };
 
+/** A word of the equipment the items count reads (new_game.asm:85-120). */
+const word = <const Id extends string>(id: Id, at: number) =>
+  range({
+    at,
+    category: "items",
+    everyMs: ITEMS_MS,
+    id,
+    size: 2,
+    source: "new_game.asm:85-120",
+  });
+
 /** Every range, in address order. */
 export const MEMORY_RANGES = [
   // The header: Map Rando names the cartridge "SUPERMETROID MAPRANDO"
@@ -152,19 +163,21 @@ export const MEMORY_RANGES = [
     size: 2,
     source: "fast_reload.asm:134-136",
   }),
-  // Items equipped and collected ($09A2, $09A4), beams ($09A6, $09A8),
-  // energy and its maximum ($09C2, $09C4), missiles, supers and power bombs
-  // and theirs ($09C6-$09D0) and the reserves' maximum ($09D4)
-  // (new_game.asm:85-120). It stops there: the game's own in-game time
-  // follows ($09DA-$09E1), which Race Mode never reads (race-profile.ts).
-  range({
-    at: 0x7e_09a2,
-    category: "items",
-    everyMs: ITEMS_MS,
-    id: "equipment",
-    size: 0x34,
-    source: "new_game.asm:85-120",
-  }),
+  // The equipment (new_game.asm:85-120), read word by word: what the items
+  // count needs and nothing else, so Race Mode reads no HUD (the items and
+  // beams equipped, $09A2 and $09A6; energy, missiles, supers, power bombs
+  // and reserve energy as they stand, $09C2, $09C6, $09CA, $09CE, $09D6) nor
+  // the game's own in-game time ($09DA-$09E1). The items and the beams
+  // collected ($09A4,
+  // $09A8), then the maximum each pack or tank raised: energy ($09C4),
+  // missiles ($09C8), supers ($09CC), power bombs ($09D0), reserves ($09D4).
+  word("items-collected", 0x7e_09a4),
+  word("beams-collected", 0x7e_09a8),
+  word("max-energy", 0x7e_09c4),
+  word("max-missiles", 0x7e_09c8),
+  word("max-supers", 0x7e_09cc),
+  word("max-power-bombs", 0x7e_09d0),
+  word("max-reserve", 0x7e_09d4),
   // The energy tanks the player disabled from the pause menu (constants.asm;
   // disableable_etanks.asm:564-569): held all the same.
   range({

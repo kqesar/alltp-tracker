@@ -33,7 +33,7 @@ describe("MEMORY_RANGES", () => {
     // Bank $DF's $FEF0 is ROM offset $2F_FEF0; WRAM $7E:xxxx is $F5:xxxx
     expect(MEMORY_RANGE.seed.address).toBe(0x2f_fef0);
     expect(MEMORY_RANGE["pack-sizes"].address).toBe(0x02_60b8);
-    expect(MEMORY_RANGE.equipment.address).toBe(0xf5_09a2);
+    expect(MEMORY_RANGE["items-collected"].address).toBe(0xf5_09a4);
     expect(MEMORY_RANGE.events.address).toBe(0xf5_d820);
     // The RTA clock: SRAM $70:1E10 is $E0:1E10, and sorts before the WRAM byte
     expect(MEMORY_RANGE["rta-saved"].address).toBe(0xe0_1e10);
@@ -63,6 +63,20 @@ describe("MEMORY_RANGES", () => {
   const clock = [MEMORY_RANGE["rta-saved"], MEMORY_RANGE["rta-pending"]];
   /** The game's own in-game time, $7E:09DA-$7E:09E1: frames to hours. */
   const igt = { address: 0xf5_09da, size: 8 };
+  /**
+   * The equipment's bytes the items count never reads: what is equipped and
+   * the HUD's counts as they stand (energy, missiles, supers, power bombs,
+   * the reserves' energy).
+   */
+  const hud = [
+    { address: 0xf5_09a2, size: 2 }, // items equipped
+    { address: 0xf5_09a6, size: 2 }, // beams equipped
+    { address: 0xf5_09c2, size: 2 }, // energy
+    { address: 0xf5_09c6, size: 2 }, // missiles
+    { address: 0xf5_09ca, size: 2 }, // supers
+    { address: 0xf5_09ce, size: 2 }, // power bombs
+    { address: 0xf5_09d6, size: 2 }, // reserve energy
+  ];
   const locations = [MEMORY_RANGE.collected, MEMORY_RANGE["nothing-mask"]];
   const overlaps = (a: ByteRange, b: ByteRange) =>
     a.address < b.address + b.size && b.address < a.address + a.size;
@@ -118,6 +132,11 @@ describe("MEMORY_RANGES", () => {
         expect(clock.some((range) => overlaps(range, piece))).toBe(false);
         expect(locations.some((range) => overlaps(range, piece))).toBe(false);
         expect(overlaps(igt, piece)).toBe(false);
+        for (const bytes of hud) {
+          expect(overlaps(bytes, piece), `$${bytes.address.toString(16)}`).toBe(
+            false,
+          );
+        }
         for (const id of [
           "objective-count",
           "objective-flags",
@@ -160,19 +179,30 @@ describe("MEMORY_RANGES", () => {
     ).toThrow(RaceViolationError);
   });
 
-  it("permits no byte of the in-game time, between the equipment and the tanks disabled", () => {
-    // The equipment stops at the reserves' maximum; the tanks disabled follow
-    // the in-game time
-    expect(MEMORY_RANGE.equipment.address + MEMORY_RANGE.equipment.size).toBe(
-      0xf5_09d6,
-    );
-    expect(MEMORY_RANGE["disabled-tanks"].address).toBe(0xf5_09ec);
+  it("permits of the equipment the words the items count reads, and no HUD nor in-game time", () => {
     for (const range of MEMORY_RANGES) {
       expect(overlaps(range, igt), range.id).toBe(false);
+      for (const bytes of hud)
+        expect(overlaps(range, bytes), range.id).toBe(false);
+    }
+    for (const window of MAP_RANDO_RACE_PROFILE.permitted) {
+      expect(overlaps(window, igt)).toBe(false);
+      for (const bytes of hud) expect(overlaps(window, bytes)).toBe(false);
     }
     expect(
-      MAP_RANDO_RACE_PROFILE.permitted.some((window) => overlaps(window, igt)),
-    ).toBe(false);
+      MEMORY_RANGES.filter(
+        (range) => range.address >= 0xf5_09a2 && range.address <= 0xf5_09ed,
+      ).map(({ id, size }) => `${id}:${size}`),
+    ).toEqual([
+      "items-collected:2",
+      "beams-collected:2",
+      "max-energy:2",
+      "max-missiles:2",
+      "max-supers:2",
+      "max-power-bombs:2",
+      "max-reserve:2",
+      "disabled-tanks:2",
+    ]);
   });
 
   it("reads the clock's two parts in one request, SRAM first", () => {

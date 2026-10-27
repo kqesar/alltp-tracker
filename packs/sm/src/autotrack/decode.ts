@@ -79,14 +79,17 @@ const SIZE_AT = {
   superMissile: 0x84_e102,
 } as const;
 
-/** The maximum each counted item raises (new_game.asm:102-120). */
-const MAX_AT = {
-  energyTank: 0x7e_09c4,
-  missile: 0x7e_09c8,
-  powerBomb: 0x7e_09d0,
-  reserveTank: 0x7e_09d4,
-  superMissile: 0x7e_09cc,
-} as const;
+/**
+ * The maximum each counted item raises (new_game.asm:102-120): the range
+ * that holds it.
+ */
+const MAX_RANGE = {
+  energyTank: "max-energy",
+  missile: "max-missiles",
+  powerBomb: "max-power-bombs",
+  reserveTank: "max-reserve",
+  superMissile: "max-supers",
+} as const satisfies Record<string, MemoryRangeId>;
 
 /** Energy tanks the player disabled from the pause menu (constants.asm). */
 const DISABLED_TANKS = 0x7e_09ec;
@@ -103,13 +106,29 @@ const MAX = new Map(SM_ITEMS.map((i) => [i.id, i.max]));
 export function decodeItems(
   memory: MemoryView,
 ): Readonly<Record<SmItemId, number>> | Unsettled {
-  const equipment = reader(memory, "equipment");
+  const collected = reader(memory, "items-collected");
+  const beamsCollected = reader(memory, "beams-collected");
   const disabled = reader(memory, "disabled-tanks");
   const packs = reader(memory, "pack-sizes");
   const reserve = reader(memory, "reserve-size");
-  if (!equipment || !disabled || !packs || !reserve) return "not-read";
-  const items = equipment.word(0x7e_09a4);
-  const beams = equipment.word(0x7e_09a8);
+  const maxima = Object.values(MAX_RANGE).map((id) => reader(memory, id));
+  if (
+    !collected ||
+    !beamsCollected ||
+    !disabled ||
+    !packs ||
+    !reserve ||
+    maxima.some((max) => !max)
+  ) {
+    return "not-read";
+  }
+  /** The maximum a counted item raised, from its own word. */
+  const maxOf = (id: keyof typeof MAX_RANGE) => {
+    const range = MEMORY_RANGE[MAX_RANGE[id]];
+    return reader(memory, MAX_RANGE[id])?.word(range.bus) ?? 0;
+  };
+  const items = collected.word(0x7e_09a4);
+  const beams = beamsCollected.word(0x7e_09a8);
   const counts = {} as Record<SmItemId, number>;
   for (const { id } of SM_ITEMS) {
     const item = ITEM_BITS[id];
@@ -119,19 +138,19 @@ export function decodeItems(
   }
   const size = (id: keyof typeof SIZE_AT) =>
     id === "reserveTank" ? reserve.word(SIZE_AT[id]) : packs.word(SIZE_AT[id]);
-  const counted = (id: keyof typeof MAX_AT, raised: number) => {
+  const counted = (id: keyof typeof MAX_RANGE, raised: number) => {
     const each = size(id);
     const count = each > 0 ? Math.floor(raised / each) : 0;
     counts[id] = Math.max(0, Math.min(count, MAX.get(id) ?? 0));
   };
   const energy =
-    Math.floor(equipment.word(MAX_AT.energyTank) / 100) * 100 +
+    Math.floor(maxOf("energyTank") / 100) * 100 +
     disabled.word(DISABLED_TANKS) * 100;
   counted("energyTank", energy);
-  counted("reserveTank", equipment.word(MAX_AT.reserveTank));
-  counted("missile", equipment.word(MAX_AT.missile));
-  counted("superMissile", equipment.word(MAX_AT.superMissile));
-  counted("powerBomb", equipment.word(MAX_AT.powerBomb));
+  counted("reserveTank", maxOf("reserveTank"));
+  counted("missile", maxOf("missile"));
+  counted("superMissile", maxOf("superMissile"));
+  counted("powerBomb", maxOf("powerBomb"));
   return counts;
 }
 

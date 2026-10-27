@@ -75,14 +75,21 @@ export const MAP_RANDO_RACE_PROFILE: RaceProfile = defineRaceProfile({
   id: "map-rando",
   mapping: "lorom",
   // The memory Race Mode reads: the header, the item sizes in bank $84, and
-  // the game's state, equipment (short of the in-game time at $09DA-$09E1),
-  // tanks disabled and boss flags
+  // the game's state, the words of the equipment the items count reads (the
+  // items and beams collected, the five maximums: no HUD, no in-game time),
+  // the tanks disabled and the boss flags
   permitted: [
     [0x00_ffc0, 0x00_ffdf],
     [0x84_e0b8, 0x84_e128],
     [0x84_e444, 0x84_e445],
     [0x7e_0998, 0x7e_0999],
-    [0x7e_09a2, 0x7e_09d5],
+    [0x7e_09a4, 0x7e_09a5],
+    [0x7e_09a8, 0x7e_09a9],
+    [0x7e_09c4, 0x7e_09c5],
+    [0x7e_09c8, 0x7e_09c9],
+    [0x7e_09cc, 0x7e_09cd],
+    [0x7e_09d0, 0x7e_09d1],
+    [0x7e_09d4, 0x7e_09d5],
     [0x7e_09ec, 0x7e_09ed],
     [0x7e_d828, 0x7e_d82f],
   ],
