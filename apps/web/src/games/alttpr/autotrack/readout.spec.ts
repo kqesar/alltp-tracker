@@ -400,7 +400,9 @@ describe("the seed's settings", () => {
       Goal: "not read in Race Mode",
       Logic: "not read in Race Mode",
       "Outside their dungeons": "not read in Race Mode",
-      Seed: "RACE",
+      // v2.0 lets a tracker present only what it lists before the seed is
+      // completed: the seed's name is not among it
+      Seed: "not shown in Race Mode",
       World: "not read in Race Mode",
     });
   });
