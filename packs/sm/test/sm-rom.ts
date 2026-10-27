@@ -10,6 +10,9 @@ import { MAP_RANDO_TITLE } from "../src/autotrack/probes";
 import { OBJECTIVES } from "../src/objectives";
 import { SETTING_FLAGS } from "../src/settings";
 
+/** Where a WRAM address lies in a memory image: FX Pak Pro's $F5:xxxx. */
+const wram = (bus: number) => bus - 0x7e_0000 + 0xf5_0000;
+
 /** Where an A-bus address of a range lies in a memory image. */
 const at = (id: MemoryRangeId, bus: number) =>
   MEMORY_RANGE[id].address + (bus - MEMORY_RANGE[id].bus);
@@ -125,15 +128,21 @@ export const writeMapRando = (
   });
   // The game: its state, equipment and events (new_game.asm:85-134)
   word(memory, at("game-state", 0x7e_0998), state);
-  word(memory, at("equipment", 0x7e_09a2), items);
-  word(memory, at("equipment", 0x7e_09a4), items);
-  word(memory, at("equipment", 0x7e_09a6), beams);
-  word(memory, at("equipment", 0x7e_09a8), beams);
-  word(memory, at("equipment", 0x7e_09c4), maxEnergy);
-  word(memory, at("equipment", 0x7e_09c8), maxMissiles);
-  word(memory, at("equipment", 0x7e_09cc), maxSupers);
-  word(memory, at("equipment", 0x7e_09d0), maxPowerBombs);
-  word(memory, at("equipment", 0x7e_09d4), maxReserve);
+  // Equipped as collected, and every count full: the game's own bytes,
+  // which only the items collected and the maximums count
+  word(memory, wram(0x7e_09a2), items);
+  word(memory, at("items-collected", 0x7e_09a4), items);
+  word(memory, wram(0x7e_09a6), beams);
+  word(memory, at("beams-collected", 0x7e_09a8), beams);
+  word(memory, wram(0x7e_09c2), maxEnergy);
+  word(memory, at("max-energy", 0x7e_09c4), maxEnergy);
+  word(memory, wram(0x7e_09c6), maxMissiles);
+  word(memory, at("max-missiles", 0x7e_09c8), maxMissiles);
+  word(memory, wram(0x7e_09ca), maxSupers);
+  word(memory, at("max-supers", 0x7e_09cc), maxSupers);
+  word(memory, wram(0x7e_09ce), maxPowerBombs);
+  word(memory, at("max-power-bombs", 0x7e_09d0), maxPowerBombs);
+  word(memory, at("max-reserve", 0x7e_09d4), maxReserve);
   word(memory, at("disabled-tanks", 0x7e_09ec), disabledTanks);
   for (const id of done) {
     const objective = OBJECTIVES.find((o) => o.id === id);
