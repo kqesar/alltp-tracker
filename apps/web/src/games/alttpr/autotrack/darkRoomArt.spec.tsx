@@ -141,6 +141,35 @@ describe("the dark room in the game's graphics", () => {
     expect(within(panel).queryByTestId("dark-room-facing")).toBeNull();
   });
 
+  it("scales the picture again when the window changes height only", async () => {
+    const h = harness();
+    await act(() => connectAutotrack());
+    await h.settle();
+    const height = window.innerHeight;
+    try {
+      Object.defineProperty(window, "innerHeight", {
+        configurable: true,
+        value: 1000,
+      });
+      render(<MapPanel />);
+      const art = await screen.findByTestId("dark-room-art");
+      const tall = Number(art.dataset.scale);
+      expect(tall).toBeGreaterThan(1);
+      // Half the window's height bounds it: a short window, a smaller factor
+      Object.defineProperty(window, "innerHeight", {
+        configurable: true,
+        value: (art as HTMLCanvasElement).height * 2,
+      });
+      act(() => window.dispatchEvent(new Event("resize")));
+      expect(Number(art.dataset.scale)).toBe(1);
+    } finally {
+      Object.defineProperty(window, "innerHeight", {
+        configurable: true,
+        value: height,
+      });
+    }
+  });
+
   it("rings the unopened chests, the nearest called out", async () => {
     const h = harness();
     // Two chests on the floor, as the game's collision map holds them
