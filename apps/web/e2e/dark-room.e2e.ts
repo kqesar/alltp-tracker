@@ -1,15 +1,16 @@
 import { readFileSync } from "node:fs";
 import { bus } from "@alltp/autotrack";
-import { MEMORY_RANGE, type MemoryRangeId } from "@alltp/pack-alttpr";
-import { expect, type Page, test } from "@playwright/test";
-import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
 import {
   ART_ROM,
   AUX_ROWS,
   GUARD,
   MAIN_ROWS,
+  MEMORY_RANGE,
+  type MemoryRangeId,
   SHEETS,
-} from "../../../packs/alttpr/src/autotrack/dark-room-art";
+} from "@alltp/pack-alttpr";
+import { expect, type Page, test } from "@playwright/test";
+import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
 import { auditPage, clickToolbarAction, WIDTHS } from "./support";
 
 // The browser connects to a fake usb2snes bridge over a real WebSocket, as

@@ -4,18 +4,16 @@
 
 import { bus } from "@alltp/autotrack";
 import {
-  CHECK_FLAGS,
-  MEMORY_RANGE,
-  type MemoryRangeId,
-} from "@alltp/pack-alttpr";
-import { readMemory } from "@/games/alttpr/autotrack/reading";
-import {
   ART_ROM,
   AUX_ROWS,
+  CHECK_FLAGS,
   GUARD,
   MAIN_ROWS,
+  MEMORY_RANGE,
+  type MemoryRangeId,
   SHEETS,
-} from "../../../../../../packs/alttpr/src/autotrack/dark-room-art";
+} from "@alltp/pack-alttpr";
+import { readMemory } from "@/games/alttpr/autotrack/reading";
 
 // The console's memory in the FX Pak Pro space the bridges take: ROM from
 // $00_0000 (LoROM, headerless), WRAM from $F5_0000.
