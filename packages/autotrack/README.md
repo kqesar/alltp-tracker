@@ -446,7 +446,11 @@ ranges of a **forbidden** category, so Race Mode never reaches them
   cost while the gate is shut. A tick that has no race phase of its own reads the
   race flag first, so a race ROM loaded since is caught before any gated read.
   When `when` stops holding the range forgets its bytes, unless `keep(view)`
-  holds (a menu over the room): nothing is read then, nothing forgotten.
+  holds (a menu over the room): nothing is read then, nothing forgotten. The
+  group's request covers the ranges whose gate holds and whose switch is on,
+  planned once per such set: a range behind a switch that is off is never asked
+  for beside the others. A switch turned off counts its gates as shut, so on
+  again an alone range is read at once.
 - `alone: true`: a gated big span, sent as a request of its own, never merged:
   planned beside others, usb2snes cuts a span into 255-byte pieces (QUsb2Snes
   refuses more in a multi-range request), while a single range goes whole.

@@ -284,6 +284,7 @@ flowchart TD
 | `dark-room-objects` | `$7E:0500` | 96 | 250 ms, gated | what each object is (`$0500`), the torches' words, bit `$8000` lit (`$0540`) |
 | `dark-room-chests` | `$7E:06E0` | 32 | 250 ms, gated | a chest's word with `$8000` is a big key lock |
 | `dark-room-doors` | `$7E:1980` | 32 | 250 ms, gated | each closed door's type |
+| `dark-room-stance` | `$7E:002F` | 75 | 250 ms, gated | the way Link faces (`$2F`) and his sword's charge (`$79`, 48 and up a spin attack ready), one span from one to the other |
 | `dark-room-map` | `$7F:2000` | 8192 | 1 s, gated, alone | the two attribute tables, 64 x 64 bytes each |
 
 The Lamp is read from the equipment the items are read from (`equipment-b`,
@@ -346,7 +347,9 @@ and every range is read. It gives:
   header says the room has two (`$046C != 0`); in a single-layer room the second
   table is junk (mostly `$1C`);
 - Link's footprint, the 2 x 2 tiles he collides with, `((X & 0x1FF) >> 3,
-  ((Y & 0x1FF) + 8) >> 3)` (`tile_detect.c:7-10`);
+  ((Y & 0x1FF) + 8) >> 3)` (`tile_detect.c:7-10`), with his stance: the way he
+  faces and his sword's charge (none, charging, charged), or no facing for a
+  memory without `dark-room-stance` (the two recordings predate it);
 - one **kind** per tile (`TILE`), and the raw byte beside it, so a value no
   kind names (`unknown`) is still there to read;
 - the box worth drawing: what Link can reach through tiles that are not wall (a
@@ -381,6 +384,123 @@ it is drawn as an opened chest.
   (`dark-room.spec.ts`), which the recordings do not cover.
 - Only Link's own layer is drawn in a layered room, and a closed door is drawn
   by type but a "big key door" has no type of its own here.
+
+### The dark room in the game's graphics
+
+The panel's default style, **Game art**, draws the room as the game would draw
+it lit, and Link as the game draws him (`src/autotrack/dark-room-art.ts`,
+pure, and `dark-room-art-loader.ts`, which reads and caches). Nothing of the
+game ships with the tracker: every tile, colour and sprite is rebuilt at run
+time from the player's own console and ROM over the autotracking link, held in
+the page's memory, and never saved, exported, shared, streamed, followed or put
+in the overlay API. The plan above stays as the other style and as the
+fallback.
+
+Why the ROM and not VRAM: SNI's RetroArch driver answers VRAM addresses with
+WRAM bytes, without an error, and RetroArch's own commands (the desktop app)
+have no VRAM at all. WRAM holds the tilemaps the game uploads VRAM from and the
+palettes it uploads CGRAM from; the tile graphics are unpacked from the ROM by
+the game's own algorithm. Measured in the study that chose this (2026-10-27),
+the rebuilt BG2 matched a screenshot taken with the darkness' colour math off
+on 98.8-99.5 % of the pixels below the HUD, the rest being sprites.
+
+```mermaid
+flowchart LR
+    wram["WRAM, gated ranges<br/>tilemaps $7E:2000 / $4000<br/>palettes $7E:C500<br/>OAM $0800, uploads $0AC0"] --> loader
+    rom["ROM, on-demand reads<br/>guard $00:E7CF, pointer and<br/>blockset tables, 8 sheets"] --> loader
+    loader["createArtLoader<br/>(caches per ROM, per room)"] --> bg["renderBackground<br/>512 x 512 RGBA"]
+    loader --> link["renderLink<br/>Link's sprites"]
+    bg --> panel["DarkRoomArt canvas<br/>+ chest rings, charge ring"]
+    link --> panel
+```
+
+**The room.** As `InitializeTilesets` (`load_gfx.c:814-844`) lays VRAM:
+
+- the blocksets `$0AA1` (main) and `$0AA2` (aux) pick eight sheets from the
+  ROM's tables: main 0-2, aux 0-3 where not 0 (else main 3-6), main 7;
+- each sheet's address is in three tables of 223 bytes (banks, highs, lows) at
+  `$00:CFC0`, `$00:D09F`, `$00:D17E` of the JP 1.0 ROM ALttPR is built on (zelda3
+  names the US ROM's); the main and aux blocksets at `$00:E0B3` and `$00:DDD7`;
+  a seed relocates a few sheets, which reading the pointers covers;
+- **the guard**: the 15 bytes of code at `$00:E7CF` that read those tables
+  (`LDA $CFC0,Y : STA $CA` and the two alike). Other bytes mean another base
+  patch: the plan is shown, for that ROM, with a note saying why;
+- a sheet is unpacked by the game's LZ format (`Decompress`,
+  `load_gfx.c:1007-1055`: literal, byte, word and incrementing fills, a copy
+  from an earlier offset; `$FF` ends it) from a 0x640-byte window, the most a
+  0x600-byte sheet's stream can take; 3 bpp tiles become 4 bpp, the first four
+  sheets "high" (colours 9-15) in a dungeon (`load_gfx.c:938-977`);
+- tiles 432-463 are the animated frame, copied from WRAM at the pointer
+  `$0ADC` (`nmi.c:204`), read once per room: water and lava show one frame;
+- BG2, plus BG1 when the main screen draws it (`$1C` bit 0), in mode 1's
+  priority order, in the colours of `$7E:C500` (the buffer the NMI copies to
+  CGRAM: a dark room keeps its colours, its darkness being colour math,
+  `load_gfx.c:1658-1697`). BG1 is drawn opaque, not blended.
+
+**Link.** Each frame the NMI copies Link's graphics to sprite VRAM
+(`NMI_DoUpdates`, `nmi.c:172-199`): his body from ROM, in the bank the base
+patch keeps at `$BC` (`$10`, or a custom player sprite's: so the player's
+chosen sprite is the one drawn), his sword, shield and held items from the
+WRAM buffers they were unpacked into (`$7E:9000` on), by the sources at
+`$0AC0-$0AF9`. The loader reads those pieces (body pieces cached per ROM, WRAM
+pieces per room), rebuilds sprite tiles 0-13, 16-29, 32-37 and 48-53, and draws
+every sprite of the OAM buffer (`$0800`, which the NMI copies to OAM) made of
+those tiles only, the lower index on top, placed in the room by BG2's scroll.
+OBSEL is the game's fixed 8 x 8 / 16 x 16 at word `$4000`. His pose, the way he
+faces, his sword and shield are therefore the screen's. What is not drawn:
+
+- the sword's charge sparkle and his shadow, from sheets the uploads do not
+  fill: the charge is a ring of the tracker's own (dashed while charging, whole
+  once a spin attack is ready, from `$79`), and the sentence says it;
+- every other sprite: enemies, keys and items on the floor, Uncle. They come
+  from the room's sprite sheets (another blockset table, another expansion and
+  their own VRAM slots), which this does not rebuild: more reads and code for
+  what the plan's purpose, finding the way and the chests, does not need;
+- Link always on top: a sprite the game would hide behind a high-priority tile
+  is drawn over it, so he is never lost;
+- the screen shows Link where the camera put him: when the sprite lies more than
+  24 px from his footprint (a room transition, a position written by a tool)
+  the marker is drawn instead.
+
+**Reads.** All `navigation`, so never in Race Mode: the picture's WRAM ranges
+are gated like the map's and wait for their own switch, `dark-room-art`
+(`DARK_ROOM_ART_SWITCH`), on only while the map is on and its style is Game
+art; the ROM and Link's pieces are on-demand reads (`@alltp/autotrack`,
+"On-demand reads"), which the session refuses in Race Mode by construction.
+
+| Range | Address | Size | When |
+| --- | --- | ---: | --- |
+| `dark-room-art-screens` | `$7E:001C` | 2 | 250 ms, gated: the main and sub screens' layers |
+| `dark-room-art-view` | `$7E:00A2` | 74 | 250 ms, gated: the sprite bank (`$BC`), BG2's scroll (`$E2`, `$E8`) |
+| `dark-room-art-sprites` | `$7E:0800` | 762 | 250 ms, gated: OAM, the blocksets, the uploads' sources |
+| `dark-room-art-palette` | `$7E:C500` | 512 | 250 ms, gated |
+| `dark-room-art-bg2` | `$7E:2000` | 8192 | gated, alone: on entry, when the map, the objects or the doors change (the game patches the tilemap with them), every 5 s |
+| `dark-room-art-bg1` | `$7E:4000` | 8192 | the same, only while `$1C` bit 0 is set (`backgroundWanted`) |
+
+The small ranges are cut so that the 250 ms request keeps eight spans: one
+request over usb2snes and over RetroArch's own commands alike
+(`dark-room-cost.spec.ts`). Costs:
+
+- **at rest in a dark room**: no request more than the plan's (11 a second),
+  bytes more in the same request, and the tilemap every 5 s (2 requests in
+  ten seconds, counted by the spec);
+- **a room's first entry, cold**: one on-demand read of the guard and tables
+  (4 ranges, 1.3 KiB, once per ROM), one of the 8 sheets' windows, the
+  animated frame and Link's pieces (up to 14.7 KiB, once per blockset); on the
+  rig (RetroArch 1.22.2, bsnes-mercury, SNI 0.0.103, Chromium), the picture
+  showed 0.27 s after the plan;
+- **as Link moves**: a new pose's body pieces once per ROM, a new WRAM piece
+  once per room; otherwise nothing.
+
+A read that fails shows the plan with a note and is tried again after 5 s.
+
+**Seen on the rig** (2026-10-27, seed `9MQ9gO1wMD`, through SNI): Link's House,
+the Secret Passage (Hyrule Castle's dark room, with its chest opened live: the
+tilemap patch came through and the ring went) and the Death Mountain dark cave
+`0xE7`, Link walking, facing each way, his sword and shield, a charged spin
+attack, each against a screenshot of the same frame. **Not seen**: a dark room
+of another dungeon (Palace of Darkness, Eastern Palace, Turtle Rock, the
+sewers), a room drawing BG1, a custom player sprite, an FX Pak Pro, QUsb2Snes.
 
 ## A Mystery run
 
