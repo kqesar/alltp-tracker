@@ -71,11 +71,12 @@ export {
   type ReadPlan,
   USB2SNES_LIMITS,
 } from "./plan";
-export type {
-  Clock,
-  Visibility,
-  WebSocketFactory,
-  WebSocketLike,
+export {
+  type Clock,
+  systemClock,
+  type Visibility,
+  type WebSocketFactory,
+  type WebSocketLike,
 } from "./platform";
 export {
   assertRaceSafe,
