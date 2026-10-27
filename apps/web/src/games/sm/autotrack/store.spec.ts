@@ -335,7 +335,7 @@ describe("Super Metroid's autotracking and the run timer", () => {
     expect(readClock(h.transports).length).toBeGreaterThan(0);
   });
 
-  it("reads none of the clock in Race Mode, yet starts and stops the timer", async () => {
+  it("reads none of the clock in Race Mode, and leaves the timer to the player", async () => {
     useSmAutotrackStore.setState({ raceChoice: "on" });
     run().setTimerClock("game");
     const h = harness({
@@ -346,11 +346,11 @@ describe("Super Metroid's autotracking and the run timer", () => {
     await h.advance(0);
     h.play({ state: 0x08 });
     await h.advance(1000);
-    expect(run().timer.startedAt).not.toBeNull();
+    expect(run().timer.startedAt).toBeNull();
     h.play({ escaping: true, state: CREDITS });
     await h.advance(1000);
 
-    expect(run().timer.finished).toBe(true);
+    expect(run().timer.finished).toBe(false);
     // Nothing of the RTA clock was asked of the console, and none is known
     expect(readClock(h.transports)).toEqual([]);
     expect(state().reading?.clock).toBe("not-read");

@@ -98,9 +98,12 @@ export const createSmFollower = () => {
     if (now !== undefined) frames = now;
     else if (reading.clock === "not-read") frames = undefined;
 
-    const news = run.autoTimer
-      ? timerNews(beforePlay, reading, run.timer)
-      : null;
+    // In Race Mode the timer is the player's: no Map Rando race rule speaks
+    // of a tracker starting or stopping it
+    const news =
+      run.autoTimer && !reading.race
+        ? timerNews(beforePlay, reading, run.timer)
+        : null;
     if (news === "start") {
       // The clock's frames at the run's 0: the game's time counts from here
       if (now !== undefined) run.setClockBase(now);

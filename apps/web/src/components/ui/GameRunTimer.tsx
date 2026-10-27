@@ -19,13 +19,18 @@ type RunStore = <T>(
  * @param raceMode - Race Mode is on: the clock is never read
  * @param clockRead - The clock was read: autotracking runs, outside Race Mode
  * @param endable - The board reviews a finished run: the timer offers End run
+ * @param autoInRace - The game may start and stop the timer in Race Mode;
+ * false for Super Metroid, whose races state no rule for it (the player's
+ * then, as racetime.gg times the race)
  */
 export const GameRunTimer = ({
+  autoInRace = true,
   clockRead,
   endable = false,
   raceMode,
   useRun,
 }: {
+  autoInRace?: boolean;
   clockRead: boolean;
   endable?: boolean;
   raceMode: boolean;
@@ -50,6 +55,10 @@ export const GameRunTimer = ({
         checked: autoTimer,
         label: "Start and stop with the game",
         onChange: setAutoTimer,
+        unavailable:
+          raceMode && !autoInRace
+            ? "Not in Race Mode: start and end the run yourself, as racetime.gg times the race."
+            : null,
       }}
       clock={{
         following,

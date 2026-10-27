@@ -112,4 +112,22 @@ describe("Super Metroid's run timer", () => {
     // Nothing drives the timer: the player may still pause it
     expect(screen.getByTestId("run-timer-pause")).toBeEnabled();
   });
+
+  it("leaves starting and stopping to the player in Race Mode, and says why", () => {
+    render(<SmRunTimer />);
+    const auto = screen.getByTestId("run-timer-auto");
+    expect(auto).toBeChecked();
+    expect(auto).toBeEnabled();
+
+    act(() => useSmAutotrackStore.setState({ raceChoice: "on" }));
+    expect(auto).not.toBeChecked();
+    expect(auto).toBeDisabled();
+    expect(auto).toHaveAccessibleDescription(
+      "Not in Race Mode: start and end the run yourself, as racetime.gg times the race.",
+    );
+    // The player's setting is kept for the runs outside Race Mode
+    expect(store().autoTimer).toBe(true);
+    act(() => useSmAutotrackStore.setState({ raceChoice: "auto" }));
+    expect(auto).toBeChecked();
+  });
 });

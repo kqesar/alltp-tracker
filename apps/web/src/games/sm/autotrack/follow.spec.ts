@@ -170,6 +170,7 @@ const readingAt = (at: number, game: MapRandoGame = {}, race = false) =>
       race ? (["rta-pending", "rta-saved"] satisfies MemoryRangeId[]) : [],
     ),
     at,
+    race,
   );
 
 const T0 = 1_000_000;
@@ -250,20 +251,26 @@ describe("the run timer, with the game", () => {
     expect(run().timer.startedAt).toBe(T0 + 2_000);
   });
 
-  it("works in Race Mode, which never reads the clock", () => {
+  it("leaves the timer to the player in Race Mode: no Map Rando rule speaks of it", () => {
     const follower = createSmFollower();
     follower.read(readingAt(T0, { state: FILE_SELECT }, true));
     follower.read(readingAt(T0 + 1_000, { state: PLAY }, true));
-    expect(run().timer.startedAt).toBe(T0 + 1_000);
-    expect(run().clockBase).toBeNull();
+    expect(run().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: null,
+    });
+    // Started by the player, it is not stopped by the game either
+    run().startTimer(T0 + 2_000);
     follower.read(
       readingAt(T0 + 9_000, { escaping: true, state: CREDITS }, true),
     );
     expect(run().timer).toEqual({
-      elapsedMs: 8_000,
-      finished: true,
-      startedAt: null,
+      elapsedMs: 0,
+      finished: false,
+      startedAt: T0 + 2_000,
     });
+    expect(run().clockBase).toBeNull();
   });
 });
 
