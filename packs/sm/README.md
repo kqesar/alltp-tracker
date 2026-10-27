@@ -34,7 +34,7 @@ is done.
 flowchart LR
   rom["ROM: header, $82:FFFC, $84 PLMs,<br/>$8F:EBC0 table, $DF:FEF0 seed"] --> seed["decodeSeed<br/>name, presets, added items"]
   rom --> obj["decodeObjectives"]
-  wram["WRAM: $0998 state, $09A2-$09D5<br/>equipment, $09EC tanks disabled,<br/>$D820-$D82F events"] --> items["decodeItems"]
+  wram["WRAM: $0998 state, $09A2-$09D5<br/>equipment, $09EC tanks disabled,<br/>$D820-$D827 events, $D828-$D82F boss flags"] --> items["decodeItems"]
   rom --> items
   wram --> obj
   wram --> play["decodeInPlay"]
@@ -64,8 +64,10 @@ flowchart LR
   (`$82:FFFC`, its high bit the fast pause menu) and each one's flag, an
   event address and a mask (`$8F:EBC0`, `$8F:EBE8`, `patch.rs:3574-3584,
   3683-3684`), in the pause screen's order. An objective is done once its
-  flag is set in WRAM (`$7E:D820-$D82F`); in Race Mode only a boss kill is
-  told (see Races).
+  flag is set in WRAM: the events (`$7E:D820-$D827`) or the boss flags
+  (`$7E:D828-$D82F`). Race Mode reads neither the table nor the events:
+  `decodeBossKills` then says which boss kills the boss flags hold (see
+  Races).
 - **The seed** (`decodeSeed`): its name at `$DF:FEF0`, which
   maprando.com/seed/<name>/ finds, the presets at `$DF:FF09-$FF0D` (0 for a
   setting the seed customized) and the items its settings add at `$DF:FF05`
@@ -140,20 +142,22 @@ and boss kills. Auto tracking of the map layout is not permitted."
 ([Super Metroid Map Randomizer - Hard Tricky Multicategory
 Tournament](https://docs.google.com/document/d/1CF84nNmK0JqFP6lmxTpViiRC5nFuXBrTzeV320eJdOo),
 2025, read 2026-10-27). What no rule states is not permitted in Race Mode, as
-A Link to the Past's rules have it. The pack has no race flag: Race Mode is
-the player's switch, turned on for a race (Auto, the default, leaves it off,
-and a race tracked in Auto is read as any other run). The race profile
-(`MAP_RANDO_RACE_PROFILE`) quotes that rule for the items and the objectives,
-and says of every other category it permits that no rule states it:
+A Link to the Past's rules have it (the app's owner, 2026-10-27). The pack has
+no race flag, so the app keeps Race Mode on unless the player turns it off
+(an option that reads On or Off). The race profile (`MAP_RANDO_RACE_PROFILE`)
+permits the items (`items`), the boss flags (`boss-kills`) and what reading
+them needs (`rom-header`, the game check; `game-state`, a game in play), and
+forbids the rest:
 
-- Of the objectives, a race reading tells only those a boss kill does: the
-  game's boss flags (`$7E:D828-$7E:D82F`, `isBossKill`: the four bosses, the
-  minibosses and Bomb Torizo). A statue used, a room cleared of its pirates or
-  its metroids is `"race-mode"` (`decodeObjectives(…, true)`), the player's
-  to mark. The seed's objectives themselves, its settings, the event flags
-  (the escape stops the run timer) and the game state (it starts it) are
-  still read in a race: no rule states them either, and the app's owner
-  keeps them pending a decision (2026-10-27).
+- The boss flags (`boss-flags`, `$7E:D828-$7E:D82F`) are read alone:
+  `decodeBossKills` names the objectives a boss kill completes that they say
+  done (`isBossKill`: the four bosses, the minibosses and Bomb Torizo),
+  whatever the seed asks for; the app marks done those the player set.
+- The seed's objectives and settings (`objective-count`, `objective-flags`,
+  `seed`) are never read in a race: the player sets them in the Mode dialog.
+  Nor are the event flags (`events`, `$7E:D820-$7E:D827`: the escape, a
+  statue used, a room cleared), so the goal is not known in a race and the
+  app leaves the run timer to the player.
 - The map layout is never read, race or not.
 
 - The RTA clock (category `game-time`) reveals nothing of the seed, but the
@@ -169,8 +173,9 @@ and says of every other category it permits that no rule states it:
   the review by item count. Both are polled at one cadence, so a reading takes
   them from the same tick.
 
-`memory.spec.ts` proves all three over a real plan and pins the list of
-forbidden ranges; `decode.spec.ts` holds the objectives a race tells. The rules of racetime.gg/smr ban the old emulators (SNES9x 1.43 and
+`memory.spec.ts` proves it over a real plan (no piece of the table, the seed,
+the events, the clocks or the locations) and pins the list of forbidden ranges;
+`decode.spec.ts` holds the boss kills a race tells. The rules of racetime.gg/smr ban the old emulators (SNES9x 1.43 and
 below, ZSNES), not emulators in general (read again on 2026-10-25).
 
 ## Spoiler logs
