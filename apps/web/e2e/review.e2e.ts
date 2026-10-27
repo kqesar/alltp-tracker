@@ -470,6 +470,15 @@ for (const width of WIDTHS) {
       // Map markers keep their pin exception (WCAG 2.5.8), as the SMZ3 board's own audit
       await auditPage(page, ".mapspan");
       await shot(page, "smz3-review-tab", width);
+      if (phone) {
+        // A narrower phone, or wider system fonts, must not push the tab out:
+        // its columns shrink, its wide table scrolls
+        await page.setViewportSize({ height: 844, width: 320 });
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth),
+        ).toBeLessThanOrEqual(320);
+        await page.setViewportSize({ height: 844, width });
+      }
 
       await page.getByTestId("smz3-map-tab-hyrule").click();
       // Markers whose place held an item the board has art for draw it
