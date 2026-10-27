@@ -7,7 +7,7 @@ const SeedRead = () => {
   const reading = useSmAutotrackStore((state) => state.reading);
   const titleId = useId();
   if (reading === null || typeof reading.seed === "string") return null;
-  const { seed } = reading;
+  const { race, seed } = reading;
   const objectives =
     typeof reading.objectives === "string" ? null : reading.objectives;
   const rows: [string, string][] = [
@@ -27,7 +27,10 @@ const SeedRead = () => {
         What I read
       </h3>
       <p className="readout__meta">
-        {seed.name === null ? (
+        {race ? (
+          // Race Mode presents no seed's name, nor its page on maprando.com
+          "A Map Rando seed, in Race Mode: the objectives other than bosses stay yours to mark."
+        ) : seed.name === null ? (
           "A Map Rando seed."
         ) : (
           <>
@@ -67,7 +70,8 @@ const SeedRead = () => {
                 {objectives.map(({ done, objective }) => (
                   <li className="readout__chip" key={objective.id}>
                     {objective.name}
-                    {done && ", done"}
+                    {done === true && ", done"}
+                    {done === "race-mode" && ", not read in Race Mode"}
                   </li>
                 ))}
               </ul>
@@ -86,7 +90,7 @@ const SeedRead = () => {
  */
 export const SmAutotrackDialog = ({ onClose }: { onClose: () => void }) => (
   <GameAutotrackDialog
-    follows="The board follows your Map Rando game as you play: the items you hold, the seed's objectives and those done. The marks you set beyond it stay. Races allow autotracking."
+    follows="The board follows your Map Rando game as you play: the items you hold, the seed's objectives and those done. The marks you set beyond it stay. racetime.gg's Super Metroid Randomizer rules say nothing of autotracking; Map Rando's tournament rules allow it for items and boss kills, so in Race Mode the other objectives stay yours to mark."
     game="Map Rando"
     onClose={onClose}
     session={smAutotrack}

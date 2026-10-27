@@ -22,6 +22,11 @@ import {
 export type SmReading = {
   /** When memory was read, in ms since the epoch. */
   readonly at: number;
+  /**
+   * Race Mode was on: the clock and the locations were not read, and only
+   * the objectives done by a boss kill were told.
+   */
+  readonly race: boolean;
   /** The game is before play (title, menus, file select, loading a game). */
   readonly beforePlay: boolean | Unsettled;
   /**
@@ -40,7 +45,10 @@ export type SmReading = {
   /** A game is in play: the items held are the run's. */
   readonly inPlay: boolean | Unsettled;
   readonly items: Readonly<Record<SmItemId, number>> | Unsettled;
-  /** The seed's objectives in the pause screen's order, each done or not. */
+  /**
+   * The seed's objectives in the pause screen's order, each done or not, or
+   * "race-mode" for one that is no boss kill, in Race Mode.
+   */
   readonly objectives: readonly ObjectiveReading[] | Unsettled;
   readonly seed: SeedReading | Unsettled;
 };
@@ -49,8 +57,14 @@ export type SmReading = {
  * Decode a snapshot.
  * @param memory - The session's snapshot
  * @param at - When it was read
+ * @param race - Whether Race Mode is on: of the objectives, only a boss kill
+ * is told
  */
-export const readSm = (memory: MemoryView, at: number): SmReading => ({
+export const readSm = (
+  memory: MemoryView,
+  at: number,
+  race = false,
+): SmReading => ({
   at,
   beforePlay: decodeBeforePlay(memory),
   clock: decodeGameClock(memory),
@@ -58,6 +72,7 @@ export const readSm = (memory: MemoryView, at: number): SmReading => ({
   goal: decodeGoal(memory),
   inPlay: decodeInPlay(memory),
   items: decodeItems(memory),
-  objectives: decodeObjectives(memory),
+  objectives: decodeObjectives(memory, race),
+  race,
   seed: decodeSeed(memory),
 });

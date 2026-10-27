@@ -61,6 +61,41 @@ describe("the Super Metroid run following the game", () => {
     expect(run().future).toHaveLength(1);
   });
 
+  it("lays only the objectives a boss kill does in Race Mode", () => {
+    // Map Rando's one rule on autotracking permits "items and boss kills"
+    const follower = createSmFollower();
+    const objectives = ["kraid", "crocomire", "acidChozoStatue", "plasmaRoom"];
+    follower.read(
+      readSm(
+        viewOf(
+          writeMapRando(new Uint8Array(0x100_0000), {
+            done: objectives,
+            objectives,
+          }),
+        ),
+        0,
+        true,
+      ),
+    );
+    expect(run().objectives).toEqual(objectives);
+    expect(run().done).toEqual(["kraid", "crocomire"]);
+    // The player marks the rest, and the game never takes a mark back
+    run().toggleDone("plasmaRoom");
+    follower.read(
+      readSm(
+        viewOf(
+          writeMapRando(new Uint8Array(0x100_0000), {
+            done: objectives,
+            objectives,
+          }),
+        ),
+        1,
+        true,
+      ),
+    );
+    expect(run().done).toEqual(["kraid", "crocomire", "plasmaRoom"]);
+  });
+
   it("follows the seed's Wall Jump Boots and split Speed Booster", () => {
     const follower = createSmFollower();
     follower.read(reading({ wallJump: true }));
