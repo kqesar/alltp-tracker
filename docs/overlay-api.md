@@ -77,6 +77,10 @@ The whitelist is the whole of what the API says. Never, in any game:
 
 What it does say, per game: the items the board's grid shows, the bosses beaten (A Link to the Past) or the seed's objectives done (Super Metroid), the run timer (A Link to the Past, Super Metroid and SMZ3), and where the run stands against its go mode (A Link to the Past). SMZ3 has no objectives: its boss tokens are rewards, found when a boss's reward is picked up and no proof a boss was beaten, and the tracker records no boss beaten in that game.
 
+### Race Mode: no time
+
+While the game's Race Mode is on, the API tells no time: the state's `timer` is `null` (as for a game with no timer), every objective's `ms` is `null`, and so is every event's `ms`; no `timer` event is sent. The items, the goals done and the go mode go on. The race rules ([ALTTPR Auto-tracker Rules and Guidelines v2.0](https://docs.google.com/document/d/e/2PACX-1vTgsj0FMiWyaBOYP97e_ABc4P_0vIGiJxoUJ5Rj-PBr1T7i_zpyLqhLLVkbftPwS_B6nwad5j5zhtMg/pub)) let a tracker log when the game starts and ends and when each item was found, but "Anything allowed under this section is not allowed to integrate with any other part of other trackers unless explicitly stated": a stream tool is other software. Race Mode coming or going publishes the state again, with no event; Super Metroid's is on by default. Show the timer from the state when it is there, and nothing when it is `null` (`apps/web/src/overlay/race.ts`, `race.spec.ts`).
+
 **The go mode derives only from what the player holds**: the items, the bosses beaten and the prizes taken from them, the small keys in a run type that tracks them (keysanity), and the bomb merchant check, which stands for the Big Red Bomb. It never moves with where checks are, which medallion a pad was noted to want, the entrances noted, the chests left, big keys, maps and compasses, the shops, small keys outside keysanity, nor a prize marked on a dungeon whose boss is still alive. A test per game (`apps/web/src/overlay/safety.spec.ts`) holds a full inventory with goals done, changes all of that and checks the reading, go mode included, does not move; and pins the ids below: adding to the whitelist is a decision that shows in a diff.
 
 ## Frames
@@ -119,8 +123,8 @@ sequenceDiagram
 |---|---|
 | `game` | `alttpr`, `sm`, `smz3` or `archipelago` |
 | `items` | each item of the game's list, held or not: `{id, name, level, max}`. `level` is 0 when not held, up to `max` |
-| `objectives` | the goals: `{id, name, done, ms}`. `ms` is the run timer's reading when it was done (A Link to the Past, from the Run tab's timeline), `null` when unknown or for a game with no timer |
-| `timer` | `{state, elapsedMs, startedAt}`, or `null` for a game with no timer. `state` is `idle`, `running`, `paused` or `finished` |
+| `objectives` | the goals: `{id, name, done, ms}`. `ms` is the run timer's reading when it was done (A Link to the Past, from the Run tab's timeline), `null` when unknown, for a game with no timer, or in Race Mode |
+| `timer` | `{state, elapsedMs, startedAt}`, or `null` for a game with no timer and in Race Mode. `state` is `idle`, `running`, `paused` or `finished` |
 | `goMode` | `yes` (every step in logic), `maybe`, `no`, or `null` |
 
 `goMode` is `null` when the game has none (Super Metroid, SMZ3), for a goal without one (all dungeons, triforce hunt), while a Mystery run's goal is not known, for a run whose logic the tracker does not model, and, for a run with shuffled entrances, until its solver has loaded (it is then recomputed at the next change to the run).
@@ -129,9 +133,9 @@ sequenceDiagram
 
 | `type` | Fields | When |
 |---|---|---|
-| `item` | `id`, `name`, `level`, `previous`, `ms` | an item's level changed (a loss too). `ms` is the run timer's reading at the change, whether it counts, is paused or has stopped at the goal; `null` while the timer has not started or the game has none |
+| `item` | `id`, `name`, `level`, `previous`, `ms` | an item's level changed (a loss too). `ms` is the run timer's reading at the change, whether it counts, is paused or has stopped at the goal; `null` while the timer has not started, the game has none, or in Race Mode |
 | `objective` | `id`, `name`, `done`, `ms` | a boss or objective was done, or undone. `ms` as the state's, else the timer's reading at the change |
-| `timer` | `action`: `start`, `pause`, `resume`, `finish`, `reset` | the run timer changed state |
+| `timer` | `action`: `start`, `pause`, `resume`, `finish`, `reset` | the run timer changed state (never in Race Mode) |
 | `goMode` | `goMode`, `previous` | the go mode changed |
 | `reset` | | the run fell back to its start: a new game |
 

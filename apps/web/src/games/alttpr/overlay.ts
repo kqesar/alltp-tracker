@@ -6,6 +6,7 @@
 // Adding to it is a decision about what streams may show, taken here and in
 // the safety test, not a side effect of the store growing a field.
 
+import { raceSourceOf } from "@/autotrack/raceMode";
 import {
   type ItemState,
   items as initialItems,
@@ -17,6 +18,7 @@ import { goModeStatusOf } from "@/games/alttpr/logic/missing";
 import { splitName } from "@/games/alttpr/logic/runLog";
 import type { Inputs } from "@/games/alttpr/logic/solution";
 import type { Timeline } from "@/games/alttpr/logic/timeline";
+import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type {
   OverlayGoMode,
@@ -25,6 +27,7 @@ import type {
   OverlayReading,
   OverlaySource,
 } from "@/overlay/protocol";
+import { raceSafe } from "@/overlay/race";
 import { overlayTimerOf } from "@/overlay/timer";
 import type { RunTimer } from "@/utils/runTimer";
 
@@ -170,7 +173,11 @@ export const overlayReadingOf = (run: AlttprRun): OverlayReading => {
   };
 };
 
-export const overlaySource: OverlaySource = {
-  read: () => overlayReadingOf(useGameStore.getState()),
-  subscribe: (listener) => useGameStore.subscribe(listener),
-};
+/** The run as the API tells it: with no time in Race Mode (overlay/race.ts). */
+export const overlaySource: OverlaySource = raceSafe(
+  {
+    read: () => overlayReadingOf(useGameStore.getState()),
+    subscribe: (listener) => useGameStore.subscribe(listener),
+  },
+  raceSourceOf(useAutotrackStore),
+);

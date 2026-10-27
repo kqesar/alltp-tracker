@@ -26,3 +26,25 @@ export const isRaceModeOn = (state: RaceModeState): boolean =>
   (state.active &&
     state.status.code === "connected" &&
     state.status.race.active);
+
+/**
+ * A game's Race Mode, for what tells the run to other software or devices
+ * (the overlay API, live follow): whether it is on, and a call when it comes
+ * or goes.
+ */
+export type RaceSource = {
+  readonly isOn: () => boolean;
+  readonly subscribe: (listener: () => void) => () => void;
+};
+
+/** A game's Race Mode, from its autotracking store. */
+export const raceSourceOf = <State extends RaceModeState>(store: {
+  getState: () => State;
+  subscribe: (listener: (state: State, before: State) => void) => () => void;
+}): RaceSource => ({
+  isOn: () => isRaceModeOn(store.getState()),
+  subscribe: (listener) =>
+    store.subscribe((state, before) => {
+      if (isRaceModeOn(state) !== isRaceModeOn(before)) listener();
+    }),
+});
