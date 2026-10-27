@@ -53,7 +53,11 @@ const SeedRead = () => {
         What I read
       </h3>
       <p className="readout__meta">
-        {reading.race ? "An SMZ3 race seed" : `The SMZ3 seed ${seed.title}`}
+        {reading.race
+          ? seed.race
+            ? "An SMZ3 race seed"
+            : "An SMZ3 seed, in Race Mode"
+          : `The SMZ3 seed ${seed.title}`}
         {typeof reading.mode === "string" && reading.mode in GAMES
           ? `, in ${GAMES[reading.mode as keyof typeof GAMES]}`
           : ""}
