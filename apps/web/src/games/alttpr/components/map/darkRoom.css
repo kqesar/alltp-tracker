@@ -52,19 +52,22 @@
   min-width: 0;
 }
 
+/* The border is the frame's, outside its content box: the canvas inside is
+   exactly the width the scale gives, so every game pixel stays a whole square
+   and the overlay, inset 0, lies on it */
 .dark-room__frame {
   position: relative;
+  box-sizing: content-box;
   flex: none;
-  max-width: 100%;
+  max-width: calc(100% - 2px);
+  background: var(--dark-room-wall);
+  border: 1px solid var(--color-border-strong);
 }
 
 .dark-room__canvas {
   display: block;
   width: 100%;
   height: auto;
-  background: var(--dark-room-wall);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--border-radius-sm);
 }
 
 .dark-room__canvas--crisp {
