@@ -1,6 +1,7 @@
 import { playTimeMs, type RomStats } from "@alltp/pack-alttpr";
 import { memo, useId, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { isRaceModeOn } from "@/autotrack/raceMode";
 import { ReviewSection } from "@/games/alttpr/components/map/ReviewSection";
 import { checkStates } from "@/games/alttpr/logic/checks";
 import {
@@ -180,14 +181,16 @@ const FindRow = memo(({ find, held }: { find: Find; held?: string }) => {
   );
 });
 
-/** Every find of the run, newest first. */
+/** Every find of the run, newest first; in Race Mode, the items alone. */
 const Finds = ({
   finds,
   held,
+  race,
 }: {
   finds: readonly Find[];
   /** In a review, what each checked location held, by location id. */
   held: ReadonlyMap<string, string> | null;
+  race: boolean;
 }) => {
   const titleId = useId();
   return (
@@ -205,10 +208,17 @@ const Finds = ({
           </span>
         </span>
       </h3>
+      {race && (
+        <p className="run-section__note" data-testid="run-finds-race">
+          Race Mode lists the items alone: the race rules never let a tracker
+          tie an item to the place it came from.
+        </p>
+      )}
       {finds.length === 0 ? (
         <p className="run-section__empty">
-          Each item found and location checked lands here, timed by the run
-          timer.
+          {race
+            ? "Each item found lands here, timed by the run timer."
+            : "Each item found and location checked lands here, timed by the run timer."}
         </p>
       ) : (
         <ol aria-label="Timeline" className="run-finds__list">
@@ -326,7 +336,8 @@ const FromTheGame = () => {
  */
 export const RunPanel = () => {
   const timeline = useGameStore((state) => state.timeline);
-  const finds = useMemo(() => findsOf(timeline), [timeline]);
+  const race = useAutotrackStore(isRaceModeOn);
+  const finds = useMemo(() => findsOf(timeline, race), [timeline, race]);
   const splits = useMemo(() => splitsOf(timeline), [timeline]);
   const review = useReview();
   const held = useMemo(
@@ -355,7 +366,7 @@ export const RunPanel = () => {
           <Splits splits={splits} />
           <FromTheGame />
         </div>
-        <Finds finds={finds} held={held} />
+        <Finds finds={finds} held={held} race={race} />
       </div>
     </section>
   );

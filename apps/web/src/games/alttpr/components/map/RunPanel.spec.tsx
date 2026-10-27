@@ -22,7 +22,7 @@ beforeEach(() => {
   vi.useFakeTimers({ now: T0 });
   localStorage.clear();
   useGameStore.setState(useGameStore.getInitialState(), true);
-  useAutotrackStore.setState({ reading: null });
+  useAutotrackStore.setState({ raceChoice: "auto", reading: null });
 });
 
 afterEach(() => {
@@ -70,6 +70,31 @@ describe("RunPanel", () => {
     expect(
       screen.getByRole("heading", { name: "Timeline 4 finds" }),
     ).toBeVisible();
+  });
+
+  it("lists the items alone in Race Mode, never a place beside them", () => {
+    clickAt(0, "hookshot");
+    act(() => store().startTimer(T0 + 10_000));
+    clickAt(130, "sword");
+    act(() => store().toggleChecks(["kings-tomb"]));
+    act(() => useAutotrackStore.setState({ raceChoice: "on" }));
+    render(<RunPanel />);
+
+    const rows = within(screen.getByRole("list", { name: "Timeline" }))
+      .getAllByRole("listitem")
+      .map((row) => row.textContent);
+    expect(rows).toEqual(["2:00Fighter's Sword", "–before the timerHookshot"]);
+    expect(screen.queryByTestId("find-check:kings-tomb")).toBeNull();
+    expect(screen.getByTestId("run-finds-race")).toHaveTextContent(
+      "Race Mode lists the items alone",
+    );
+
+    // The place's time stays in the run, and shows once Race Mode is off
+    act(() => useAutotrackStore.setState({ raceChoice: "auto" }));
+    expect(screen.getByTestId("find-check:kings-tomb")).toHaveTextContent(
+      "2:00✓King's Tomb",
+    );
+    expect(screen.queryByTestId("run-finds-race")).toBeNull();
   });
 
   it("splits the run at each boss, and at the goal", () => {
