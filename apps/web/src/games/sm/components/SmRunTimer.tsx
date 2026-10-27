@@ -15,10 +15,12 @@ const useRaceMode = (): boolean =>
  * paused by the player, or by the game while autotracking reads it ("Start and
  * stop with the game": the first reading in play after the title or the file
  * select, the goal in the ship), or set on Map Rando's RTA clock ("Game time",
- * outside Race Mode, which never reads it; the follower does it).
+ * outside Race Mode, which never reads it; the follower does it). In Race
+ * Mode the game drives nothing: no Map Rando race rule speaks of it.
  */
 export const SmRunTimer = () => (
   <GameRunTimer
+    autoInRace={false}
     clockRead={useClockRead()}
     endable
     raceMode={useRaceMode()}

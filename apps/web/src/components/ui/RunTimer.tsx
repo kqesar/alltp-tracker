@@ -83,6 +83,12 @@ export type RunTimerProps = {
     checked: boolean;
     label: string;
     onChange: (checked: boolean) => void;
+    /**
+     * Why the game may not drive the timer now (Super Metroid's Race Mode),
+     * said under the checkbox, which is then off and disabled; null or
+     * omitted, it may.
+     */
+    unavailable?: string | null;
   };
   /**
    * Which clock the timer shows, for a game that has one: real time or the
@@ -202,16 +208,26 @@ export const RunTimer = ({
         </div>
         <div className="check-option">
           <input
-            checked={auto.checked}
+            aria-describedby={auto.unavailable ? `${autoId}-hint` : undefined}
+            checked={auto.checked && !auto.unavailable}
             className="check-option__input"
             data-testid="run-timer-auto"
-            disabled={driven}
+            disabled={driven || Boolean(auto.unavailable)}
             id={autoId}
             onChange={(event) => auto.onChange(event.target.checked)}
             type="checkbox"
           />
           <label htmlFor={autoId}>{auto.label}</label>
         </div>
+        {auto.unavailable && (
+          <p
+            className="run-timer-clock__hint"
+            data-testid="run-timer-auto-hint"
+            id={`${autoId}-hint`}
+          >
+            {auto.unavailable}
+          </p>
+        )}
         {clock && (
           <fieldset
             aria-describedby={`${clockId}-hint`}
