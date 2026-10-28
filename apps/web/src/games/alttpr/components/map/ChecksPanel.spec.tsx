@@ -160,6 +160,51 @@ describe("ChecksPanel", () => {
     expect(screen.queryByTestId("checks-filter-trick")).toBeNull();
   });
 
+  it("offers Outside margin in a basic placement run, and says why", async () => {
+    const user = userEvent.setup();
+    render(<ChecksPanel />);
+    expect(screen.queryByTestId("checks-filter-margin")).toBeNull();
+
+    // Basic placement, everything but the hearts: 11 on screen of the 15
+    // Misery Mire's way in waits for
+    act(() => {
+      const state = useGameStore.getState();
+      state.updateSettings({ ...state.settings, itemPlacement: "basic" });
+      useGameStore.setState({
+        items: {
+          ...state.items,
+          bombos: true,
+          boots: true,
+          bottle: 2,
+          ether: true,
+          firerod: true,
+          flute: true,
+          glove: 2,
+          hearts: 9,
+          hookshot: true,
+          lantern: true,
+          moonpearl: true,
+          quake: true,
+          somaria: true,
+          sword: 2,
+        },
+      });
+    });
+    expect(filter("margin")).not.toBeChecked();
+    await user.click(filter("margin"));
+    const bigChest = row("misery-mire/big-chest") as HTMLElement;
+    expect(bigChest).toHaveTextContent("Outside margin");
+
+    act(() => analyzeNow());
+    await user.click(screen.getByTestId("check-why-misery-mire/big-chest"));
+    expect(within(bigChest).getByTestId("missing-margin")).toHaveTextContent(
+      /^Doable now, outside Basic's safety margin:/,
+    );
+    expect(within(bigChest).getByTestId("missing-in-logic")).toHaveTextContent(
+      "In logic with: 15 hearts (you have 11 hearts)",
+    );
+  });
+
   it("filters by state, zone and words", async () => {
     const user = userEvent.setup();
     render(<ChecksPanel />);
