@@ -94,12 +94,27 @@ describe("timerNews", () => {
     );
   });
 
-  it("stops a running timer at the goal, and only a running one", () => {
+  it("ends the run at the goal, a timer that never started included", () => {
     const running = startTimer(IDLE_TIMER, T0);
     expect(timerNews(false, progress(true, true), running)).toBe("finish");
-    expect(timerNews(false, progress(false, true), IDLE_TIMER)).toBeNull();
-    const finished = finishTimer(running, T0 + SECOND);
+    // The game was already in play when connected, or the run was reset
+    expect(timerNews(undefined, progress(true, true), IDLE_TIMER)).toBe(
+      "finish",
+    );
+    const paused = pauseTimer(running, T0 + SECOND);
+    expect(timerNews(false, progress(true, true), paused)).toBe("finish");
+    expect(timerNews(false, progress(false, true), IDLE_TIMER)).toBe("finish");
+  });
+
+  it("ends nothing already over, nor a run reset on the credits", () => {
+    const finished = finishTimer(startTimer(IDLE_TIMER, T0), T0 + SECOND);
     expect(timerNews(false, progress(true, true), finished)).toBeNull();
+    // The goal was reached at the reading before: this run is another's
+    expect(timerNews(false, progress(true, true), IDLE_TIMER, true)).toBeNull();
+    // Unless the player started it again: a running timer stops at the goal
+    expect(
+      timerNews(false, progress(true, true), startTimer(IDLE_TIMER, T0), true),
+    ).toBe("finish");
   });
 
   it("reads an unsettled fact as unknown", () => {

@@ -1,5 +1,5 @@
 import { playTimeMs } from "@alltp/pack-alttpr";
-import { RunTimer as Timer } from "@/components/ui/RunTimer";
+import { STARTED_IN_PLAY, RunTimer as Timer } from "@/components/ui/RunTimer";
 import { gameClockOf } from "@/games/alttpr/logic/timer";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -30,6 +30,15 @@ const useGameClockRead = (): boolean =>
     );
   });
 
+/** Whether a game in play, not at its goal, is read now. */
+const useInPlay = (): boolean =>
+  useAutotrackStore(
+    (state) =>
+      state.status.code === "connected" &&
+      state.reading?.progress.started === true &&
+      state.reading.progress.goal !== true,
+  );
+
 /** Whether Race Mode is on, set always on or by the seed's race flag. */
 const useRaceMode = (): boolean =>
   useAutotrackStore(
@@ -57,6 +66,7 @@ export const RunTimer = () => {
   const playTime = usePlayTime();
   const raceMode = useRaceMode();
   const clockRead = useGameClockRead();
+  const inPlay = useInPlay();
   const following = timerClock === "game" && !raceMode && clockRead;
 
   return (
@@ -78,6 +88,7 @@ export const RunTimer = () => {
       onPause={() => pauseTimer()}
       onReset={resetTimer}
       onStart={() => startTimer()}
+      startHint={inPlay && autoTimer ? STARTED_IN_PLAY : null}
       timer={timer}
     >
       {playTime !== undefined && !following && (

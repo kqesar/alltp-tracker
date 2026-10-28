@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { statusOf } from "@/autotrack/fixtures";
 import {
   GAME_MODE,
   readingOf,
@@ -128,6 +129,55 @@ describe("RunTimer", () => {
     );
     render(<RunTimer />);
     expect(screen.queryByTestId("run-timer-igt")).toBeNull();
+  });
+
+  describe("the hint to start it", () => {
+    const hint = () => screen.queryByTestId("run-timer-start-hint");
+    /** A session reading a game in play. */
+    const connected = (memory = seedMemory({ race: false })) =>
+      act(() =>
+        useAutotrackStore.setState({
+          reading: readingOf(memory),
+          status: statusOf("connected"),
+        }),
+      );
+
+    it("tells the player to start a timer the game was already running under", () => {
+      connected();
+      render(<RunTimer />);
+
+      expect(hint()).toHaveTextContent(
+        "The game was already in play: start the timer yourself.",
+      );
+    });
+
+    it("says nothing once the timer has started, or when the game may not start it", () => {
+      connected();
+      render(<RunTimer />);
+      fireEvent.click(screen.getByTestId("run-timer-start"));
+      expect(hint()).toBeNull();
+
+      fireEvent.click(screen.getByTestId("run-timer-reset"));
+      expect(hint()).not.toBeNull();
+      act(() => useGameStore.getState().setAutoTimer(false));
+      expect(hint()).toBeNull();
+    });
+
+    it("says nothing before play, at the goal, or with no session", () => {
+      render(<RunTimer />);
+      expect(hint()).toBeNull();
+
+      const memory = seedMemory({ race: false });
+      memory[GAME_MODE] = 0x01; // the file select
+      connected(memory);
+      expect(hint()).toBeNull();
+
+      const goal = seedMemory({ race: false });
+      goal[GAME_MODE] = 0x19;
+      goal[SAVE(0x443)] = 0x01;
+      connected(goal);
+      expect(hint()).toBeNull();
+    });
   });
 
   describe("the clock choice", () => {

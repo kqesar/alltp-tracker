@@ -19,6 +19,7 @@ import {
   useSmAutotrackStore,
 } from "@/games/sm/autotrack/store";
 import { freshProgress, useSmStore } from "@/games/sm/store";
+import { isIdle } from "@/utils/runTimer";
 import { MemoryTransport } from "../../../../../../packages/autotrack/test/memory-transport";
 import { MEMORY_RANGE } from "../../../../../../packs/sm/src/autotrack/memory";
 import {
@@ -324,6 +325,60 @@ describe("Super Metroid's autotracking and the run timer", () => {
       finished: true,
       startedAt: null,
     });
+  });
+
+  it("ends a run whose timer never started at the ship, connected mid-play or reset", async () => {
+    const h = harness({ clock: { pending: 0, saved: 50_000 }, state: 0x08 });
+    await connectSmAutotrack();
+    await h.advance(0);
+    run().reset();
+    await h.advance(1000);
+    expect(isIdle(run().timer)).toBe(true);
+
+    h.play({
+      clock: { pending: 0, saved: 51_000 },
+      escaping: true,
+      state: CREDITS,
+    });
+    await h.advance(1000);
+
+    expect(run().timer.finished).toBe(true);
+  });
+
+  it("does not end again a run reset on the credits", async () => {
+    const h = harness({
+      clock: { pending: 0, saved: 50_000 },
+      escaping: true,
+      state: CREDITS,
+    });
+    await connectSmAutotrack();
+    await h.advance(0);
+    expect(run().timer.finished).toBe(true);
+
+    run().reset();
+    await h.advance(2000);
+
+    expect(isIdle(run().timer)).toBe(true);
+  });
+
+  it("follows the game's clock, after a reset, once the player starts the timer", async () => {
+    run().setTimerClock("game");
+    const h = harness({ clock: { pending: 0, saved: 50_000 }, state: 0x08 });
+    await connectSmAutotrack();
+    await h.advance(0);
+    run().reset();
+    await h.advance(1000);
+    // The game was in play: the timer waits for the player
+    expect(isIdle(run().timer)).toBe(true);
+
+    run().startTimer(Date.now());
+    h.play({ clock: { pending: 0, saved: 53_000 } });
+    await h.advance(1000);
+    h.play({ clock: { pending: 0, saved: 56_000 } });
+    await h.advance(1000);
+
+    // The game's time since the start, as a timer started by hand follows it
+    expect(run().timer.elapsedMs).toBe(rtaMs(3_000));
   });
 
   it("stops the timer on the game's time while the emulator is paused, and goes on when it runs", async () => {

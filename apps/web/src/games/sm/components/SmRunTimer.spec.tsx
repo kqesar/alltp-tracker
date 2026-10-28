@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { statusOf } from "@/autotrack/fixtures";
 import { readSm } from "@/games/sm/autotrack/reading";
 import { useSmAutotrackStore } from "@/games/sm/autotrack/store";
 import { SmRunTimer } from "@/games/sm/components/SmRunTimer";
@@ -51,6 +52,35 @@ describe("Super Metroid's run timer", () => {
 
     fireEvent.click(screen.getByTestId("run-timer-reset"));
     expect(button()).toHaveAccessibleName("Run timer: 0:00, not started");
+  });
+
+  it("tells the player to start a timer the game was already running under", () => {
+    useSmAutotrackStore.setState({
+      reading: reading(),
+      status: statusOf("connected"),
+    });
+    render(<SmRunTimer />);
+    const hint = () => screen.queryByTestId("run-timer-start-hint");
+    expect(hint()).toHaveTextContent(
+      "The game was already in play: start the timer yourself.",
+    );
+
+    fireEvent.click(screen.getByTestId("run-timer-start"));
+    expect(hint()).toBeNull();
+  });
+
+  it("says nothing with no game read, or in Race Mode where the player starts it anyway", () => {
+    render(<SmRunTimer />);
+    expect(screen.queryByTestId("run-timer-start-hint")).toBeNull();
+
+    act(() =>
+      useSmAutotrackStore.setState({
+        raceChoice: "on",
+        reading: reading(true),
+        status: statusOf("connected"),
+      }),
+    );
+    expect(screen.queryByTestId("run-timer-start-hint")).toBeNull();
   });
 
   it("keeps the start and stop with the game as a setting of the store", () => {

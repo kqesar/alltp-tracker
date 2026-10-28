@@ -18,16 +18,22 @@ type Signal = boolean | string;
  * start and stop with the game: start an idle timer when a reading in play
  * follows one before play (the title, the menus, the file select, the loading
  * of a game: a pause, a door or a death is no new start), stop a running one
- * once the goal is reached. `before` is whether a reading before play came
- * before this one, or undefined when none did: a tracker that connects to a
- * game already running starts nothing.
+ * once the goal is reached, a timer that never started included (the game
+ * was already in play when it was connected or the run reset): the run is
+ * over, untimed. `before` is whether a reading before play came before this
+ * one, or undefined when none did: a tracker that connects to a game already
+ * running starts nothing. `atGoal` is whether the goal was already reached at
+ * the reading before, so a run reset on the credits is not ended again by it.
  */
 export const timerNews = (
   before: boolean | undefined,
   reading: { readonly goal: Signal; readonly inPlay: Signal },
   timer: RunTimer,
+  atGoal = false,
 ): "finish" | "start" | null => {
-  if (reading.goal === true) return isRunning(timer) ? "finish" : null;
+  if (reading.goal === true) {
+    return isRunning(timer) || (!timer.finished && !atGoal) ? "finish" : null;
+  }
   return before === true && reading.inPlay === true && isIdle(timer)
     ? "start"
     : null;

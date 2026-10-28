@@ -100,6 +100,8 @@ export const createFollower = (): Follower => {
    * reading says.
    */
   let beforePlay: boolean | undefined;
+  /** Whether the reading before was at the goal. */
+  let atGoal = false;
   /** The game's frame counter at the last reading, if it was read. */
   let frames: number | undefined;
   /** The game's clock the timer was last set on, to hold it if the game stops. */
@@ -203,12 +205,18 @@ export const createFollower = (): Follower => {
         // The title or the file select: the game's time is not there to read
         if (isRunning(game.timer)) game.pauseTimer(reading.at);
       } else if (game.autoTimer) {
-        const news = timerNews(beforePlay, reading.progress, game.timer);
+        const news = timerNews(
+          beforePlay,
+          reading.progress,
+          game.timer,
+          atGoal,
+        );
         if (news === "start") game.startTimer(reading.at);
         if (news === "finish") game.finishTimer(reading.at);
       }
       const { beforePlay: now } = reading.progress;
       if (typeof now === "boolean") beforePlay = now;
+      atGoal = reading.progress.goal === true;
       playing = reading.progress.started === true;
       if (!playing) return;
       lay(reading);
