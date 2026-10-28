@@ -47,7 +47,12 @@ import {
 } from "@alltp/pack-alttpr";
 import { STARTING_HEARTS } from "@/games/alttpr/data/items";
 import type { RunSettings } from "@/games/alttpr/data/presets";
-import { sameWays, type Ways, waysOf } from "@/games/alttpr/logic/needs";
+import {
+  HEART_POWER,
+  sameWays,
+  type Ways,
+  waysOf,
+} from "@/games/alttpr/logic/needs";
 import { RECORDED_LEVELS } from "@/games/alttpr/logic/packItems";
 import { KEY_DUNGEONS, SMALL_KEYS_MAX } from "@/games/alttpr/logic/settings";
 import {
@@ -220,12 +225,6 @@ const PADS: Readonly<Record<string, DungeonId>> = {
 const UNKNOWN_FACTS: ReadonlyMap<string, string> = new Map(
   Object.entries(UNKNOWN_COUNTS).map(([count, { fact }]) => [fact, count]),
 );
-
-/** What each heart item adds to the hearts found: a piece is a quarter. */
-const HEART_POWER: Readonly<Record<string, number>> = {
-  heartContainer: 1,
-  pieceOfHeart: 0.25,
-};
 
 /** The count a `fact & maybe` branch stands for, if it is one. */
 const unknownBranch = (expr: Expr): string | undefined => {
