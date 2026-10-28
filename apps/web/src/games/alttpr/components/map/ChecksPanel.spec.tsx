@@ -198,11 +198,10 @@ describe("ChecksPanel", () => {
     act(() => analyzeNow());
     await user.click(screen.getByTestId("check-why-misery-mire/big-chest"));
     expect(within(bigChest).getByTestId("missing-margin")).toHaveTextContent(
-      /^Doable now, outside Basic's safety margin:/,
+      "Doable now, outside Basic's safety margin: Basic placement waits for 15 hearts (you have 11 hearts) before the seed relies on entering Misery Mire.",
     );
-    expect(within(bigChest).getByTestId("missing-in-logic")).toHaveTextContent(
-      "In logic with: 15 hearts (you have 11 hearts)",
-    );
+    // What the margin says is all that is missing: no line repeats it
+    expect(within(bigChest).queryByTestId("missing-in-logic")).toBeNull();
   });
 
   it("filters by state, zone and words", async () => {

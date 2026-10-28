@@ -121,7 +121,7 @@ describe("a place out of logic by basic placement's margin alone", () => {
     const analysis = analyzeRun(solutionOf(eleven), eleven.settings);
     const missing = analysis.missing.get(BIG_CHEST);
     expect(missing?.tri).toBe("no");
-    expect(missing?.margin).toEqual({ hearts: 11 });
+    expect(missing?.margin).toEqual({ gates: ["miseryMire"], hearts: 11 });
     expect(missing && waysText(missing.inLogic)).toBe("15 hearts");
     // A check out of logic for something else says no margin
     const dark = run(9, { firerod: false, lantern: false });
@@ -138,9 +138,34 @@ describe("a place out of logic by basic placement's margin alone", () => {
       darkAnalysis,
     );
     expect(groups.map(({ missing }) => missing.margin)).toEqual([
-      { hearts: 9 },
+      { gates: ["palaceOfDarkness"], hearts: 9 },
       undefined,
     ]);
+  });
+
+  it("shows a boss Basic wants a better weapon for, and names it", () => {
+    // The Fighter's Sword, no magic: Ice Palace's way in and Kholdstare
+    // both wait for the Master Sword
+    const fighter = run(15, { boss7: 0, bottle: 0, magic: 0, sword: 1 });
+    expect(bossStateOf("ice-palace", fighter)).toBe("margin");
+    const analysis = analyzeRun(solutionOf(fighter), fighter.settings);
+    expect(analysis.missing.get("ice-palace/boss")?.margin?.gates).toEqual([
+      "icePalace",
+      "kholdstare",
+    ]);
+    // Swamp Palace lets the Fighter's Sword in; Arrghus alone waits for
+    // the Master Sword
+    const swamp = run(15, { boss4: 0, sword: 1 });
+    expect(dungeonStateOf("swamp-palace", swamp)).not.toBe("margin");
+    expect(bossStateOf("swamp-palace", swamp)).toBe("margin");
+    expect(
+      analyzeRun(solutionOf(swamp), swamp.settings).missing.get(
+        "swamp-palace/boss",
+      )?.margin?.gates,
+    ).toEqual(["arrghus"]);
+    expect(bossStateOf("swamp-palace", run(15, { boss4: 0, sword: 2 }))).toBe(
+      "available",
+    );
   });
 });
 
@@ -163,9 +188,22 @@ describe("the go mode outside basic placement's margin", () => {
     expect(goModeMarginOf(run(11, {}, { itemPlacement: "advanced" }))).toBe(
       false,
     );
-    // Basic placement's silver arrows for Ganon are no part of the margin
-    const noSilvers = run(11, { bow: 2 });
-    expect(goModeStatusOf(noSilvers)?.tri).toBe("no");
-    expect(goModeMarginOf(noSilvers)).toBe(false);
+    // The Moon Pearl is no part of any margin
+    const noPearl = run(11, { moonpearl: false });
+    expect(goModeStatusOf(noPearl)?.tri).toBe("no");
+    expect(goModeMarginOf(noPearl)).toBe(false);
+  });
+
+  it("is reached but for Ganon's margin without silvers or the Tempered Sword", () => {
+    // Basic placement asks them of Ganon; the advanced placement does not
+    for (const items of [{ bow: 2 }, { sword: 2 }]) {
+      const short = run(15, items);
+      expect(goModeStatusOf(short)?.tri).toBe("no");
+      expect(goModeMarginOf(short)).toBe(true);
+    }
+    // A swordless run wants the silvers whatever the placement
+    const swordless = run(15, { bow: 2, sword: 0 }, { swordless: true });
+    expect(goModeStatusOf(swordless)?.tri).toBe("no");
+    expect(goModeMarginOf(swordless)).toBe(false);
   });
 });
