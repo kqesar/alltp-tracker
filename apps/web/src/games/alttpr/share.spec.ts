@@ -225,6 +225,29 @@ describe("an ALttPR run in a packed link", () => {
     expect(unpacked.ok && runOf(unpacked.save).timeline).toEqual({});
   });
 
+  it("writes link 2 for a run with no find, which a tracker before link 3 opens, and link 3 for any other", () => {
+    const played = play.alttpr(0.5, randoms());
+    const bare = JSON.parse(packLink(withProgress(played, { timeline: {} })));
+    const { timeline: _, ...progress } = JSON.parse(played).progress;
+    const none = JSON.parse(
+      packLink(JSON.stringify({ ...JSON.parse(played), progress })),
+    );
+
+    // The short link Share falls back to: the byte both layouts share
+    expect(bare.link).toBe(2);
+    expect(bare.progress.timeline).toBe("AA");
+    expect(none.link).toBe(2);
+    expect(JSON.parse(packLink(played)).link).toBe(3);
+    // As v2.58.0, the last tracker to read link 2 alone, wrote it
+    const recorded = firstLayout.links.find(
+      ({ name }) => name === "an empty timeline",
+    );
+    expect(recorded).toBeDefined();
+    expect(JSON.parse(packLink(JSON.stringify(recorded?.save)))).toEqual(
+      recorded?.link,
+    );
+  });
+
   /** The run a link's address opens to. */
   const runIn = async (url: string) => {
     const unpacked = unpackLink(

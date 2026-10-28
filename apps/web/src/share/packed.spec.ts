@@ -315,6 +315,28 @@ describe("a packed link", () => {
     ).toEqual({ ok: false, reason: OTHER_VERSION });
   });
 
+  it("writes a save in the earliest layout whose bytes are the latest's, as the codec says", () => {
+    const earliest: PackCodec = {
+      ...codec,
+      version: 3,
+      // Nothing checked: the same bytes in every layout
+      versionFor: (progress) =>
+        Array.isArray(progress.checked) && progress.checked.length === 0
+          ? LINK_VERSION
+          : 3,
+    };
+    expect(JSON.parse(packRun(save([]), earliest)).link).toBe(LINK_VERSION);
+    expect(JSON.parse(packRun(save(["a/one"]), earliest)).link).toBe(3);
+    // Never past the codec's own, nor before the first
+    for (const asked of [9, 0]) {
+      const odd = { ...earliest, versionFor: () => asked };
+      expect(JSON.parse(packRun(save(["a/one"]), odd)).link).toBe(
+        asked > 3 ? 3 : LINK_VERSION,
+      );
+    }
+    expect(unpackRun(packRun(save([]), earliest), earliest).ok).toBe(true);
+  });
+
   it("reads a link that carries no sizes as the tables the first version had", () => {
     const link = tampered(packRun(save(["b/one"]), codec), (file) => {
       delete file.sizes;
