@@ -1,4 +1,9 @@
-import type { TrickId } from "@alltp/pack-alttpr";
+import {
+  DUNGEONS,
+  MARGIN_GATES,
+  type MarginGateId,
+  type TrickId,
+} from "@alltp/pack-alttpr";
 import { Fragment } from "react";
 import { OutLink } from "@/components/ui/OutLink";
 import { TRICK_WORDS } from "@/games/alttpr/data/tricks";
@@ -120,9 +125,28 @@ export const TrickWays = ({
 /** What a check outside basic placement's safety margin leads with. */
 const MARGIN_LEAD = "Doable now, outside Basic's safety margin";
 
-/** Why such a check is out of logic, in the player's words. */
-const MARGIN_WHY =
-  "Basic placement counts on it only once Link can take more hits (hearts, sword, bottles or mail).";
+/** What a margin guards, after "before the seed relies on". */
+const gateWords = (id: MarginGateId): string => {
+  const gate = MARGIN_GATES[id];
+  switch (gate.kind) {
+    case "dungeon": {
+      const { dungeon } = gate;
+      return `entering ${DUNGEONS.find((d) => d.id === dungeon)?.name ?? dungeon}`;
+    }
+    case "boss":
+      return `beating ${gate.boss}`;
+    case "ganon":
+      return "beating Ganon";
+  }
+};
+
+/**
+ * What the margins holding a check back guard, in words: "entering Misery
+ * Mire", "entering Turtle Rock and beating Trinexx"; "it" when none is
+ * known.
+ */
+export const marginSubject = (gates: readonly MarginGateId[]): string =>
+  gates.length === 0 ? "it" : gates.map(gateWords).join(" and ");
 
 /** The hearts Link has, after a margin's ways that ask for hearts. */
 const HeartsHeld = ({ margin }: { margin: Margin }) =>
@@ -157,7 +181,10 @@ export const MissingLines = ({
     <>
       {tri === "no" && margin && (
         <p className="missing" data-testid="missing-margin">
-          <span className="missing__lead">{MARGIN_LEAD}:</span> {MARGIN_WHY}
+          <span className="missing__lead">{MARGIN_LEAD}:</span> Basic placement
+          waits for <WaysList ways={inLogic} />
+          <HeartsHeld margin={margin} /> before the seed relies on{" "}
+          {marginSubject(margin.gates)}.
         </p>
       )}
       {tri === "no" && tricks && (
@@ -166,13 +193,10 @@ export const MissingLines = ({
           <TrickWays guides={guides} ways={tricks} />
         </p>
       )}
-      {tri === "no" && (
+      {tri === "no" && !margin && (
         <p className="missing" data-testid="missing-in-logic">
-          <span className="missing__lead">
-            {margin ? "In logic with:" : "Missing:"}
-          </span>{" "}
+          <span className="missing__lead">Missing:</span>{" "}
           <WaysList ways={inLogic} />
-          {margin && <HeartsHeld margin={margin} />}
         </p>
       )}
       {tri === "maybe" && !isThere(inLogic) && (
@@ -246,8 +270,9 @@ const SpotName = ({ spot }: { spot: Spot }) => (
  * it is not yet ("Maybe, small key may be behind other checks: Compass
  * Chest"). A check a trick known opens leads with it: "Doable now with Fake
  * flipper; or Zora's Flippers: King Zora"; one out of logic by basic
- * placement's safety margin alone says so: "Doable now, outside Basic's
- * safety margin; in logic with 15 hearts (you have 11 hearts): Big Chest".
+ * placement's safety margins alone says which: "Doable now, outside Basic's
+ * safety margin; Basic placement waits for 15 hearts (you have 11 hearts)
+ * before the seed relies on entering Misery Mire: Big Chest".
  */
 export const MissingGroups = ({
   groups,
@@ -269,7 +294,7 @@ export const MissingGroups = ({
           {tri === "no" && margin && (
             <>
               <span className="missing__lead">
-                {MARGIN_LEAD}; in logic with
+                {MARGIN_LEAD}; Basic placement waits for
               </span>{" "}
             </>
           )}
@@ -281,7 +306,14 @@ export const MissingGroups = ({
             </>
           )}
           {tri === "no" && <WaysList ways={inLogic} />}
-          {tri === "no" && margin && <HeartsHeld margin={margin} />}
+          {tri === "no" && margin && (
+            <>
+              <HeartsHeld margin={margin} />{" "}
+              <span className="missing__lead">
+                before the seed relies on {marginSubject(margin.gates)}
+              </span>
+            </>
+          )}
           {tri === "no" && possible && (
             <>
               {" "}

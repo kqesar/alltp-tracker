@@ -105,8 +105,8 @@ const GoModeDetail = ({ tri }: { tri: Shown }) => {
           <span className="missing__lead">
             Doable now, outside Basic's safety margin:
           </span>{" "}
-          every step is open, but Basic placement counts on it only once Link
-          can take more hits.
+          every step is open, but Basic placement waits for what is left below
+          before the seed relies on it.
         </p>
       )}
       <GoModeLeftDetail left={left} tri={tri} />

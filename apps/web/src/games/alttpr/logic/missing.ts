@@ -36,12 +36,14 @@ import {
   type DungeonId,
   dungeon,
   everything,
+  GATE_OF_ITEM,
   type GoMode,
   type GoModeStatus,
   goModeBlockers,
   goModeOf,
   goModeStatus,
   goModeStatusBy,
+  type MarginGateId,
   marginFiller,
   TRICKS,
   type TrickId,
@@ -124,17 +126,22 @@ export type Missing = {
    */
   readonly tricks?: readonly (readonly TrickId[])[];
   /**
-   * For one out of logic by basic placement's safety margin alone (the
+   * For one out of logic by basic placement's safety margins alone (the
    * pack's margin world opens it): doable now, `inLogic` saying what the
-   * seed waits for. `hearts` is Link's hearts on screen, when a way asks
-   * for hearts.
+   * seed waits for.
    */
   readonly margin?: Margin;
 };
 
-/** What a check outside basic placement's safety margin tells of Link. */
+/** What a check outside basic placement's safety margins tells. */
 export type Margin = {
-  /** The hearts on screen, the 3 Link starts with included. */
+  /**
+   * The margins that hold it back, the fewest that open it: a dungeon's
+   * way in, a boss's weapon, Ganon's (the pack's `MARGIN_GATES`). Empty
+   * when more than three would.
+   */
+  readonly gates: readonly MarginGateId[];
+  /** Link's hearts on screen, when a way asks for hearts. */
   readonly hearts?: number;
 };
 
@@ -320,11 +327,54 @@ const heartsHeld = (state: State): number =>
     STARTING_HEARTS,
   );
 
-/** What a check out of logic by the margin alone says of Link. */
-const marginOfWays = (ways: Ways, state: State): Margin =>
+/** What a check out of logic by the margins alone says. */
+const marginOfWays = (
+  gates: readonly MarginGateId[],
+  ways: Ways,
+  state: State,
+): Margin =>
   ways.sets.some((set) => set.some(({ key }) => key.startsWith("hearts>=")))
-    ? { hearts: heartsHeld(state) }
-    : {};
+    ? { gates, hearts: heartsHeld(state) }
+    : { gates };
+
+/**
+ * The margins that hold each location back that the margin world opens: the
+ * pack's margin world, asked what brings the location in logic when the
+ * only items to get are the margins (every key held, as for `analyze`), the
+ * fewest first. A location the margins leave closed has no entry.
+ */
+const marginGates = (
+  solution: Solution,
+  opened: Readonly<Record<string, Tri>>,
+  ids: readonly string[],
+): Map<string, readonly MarginGateId[]> => {
+  const fill = marginFiller(solution.settings);
+  const analysis = analyze(
+    fill.world,
+    withUntracked(fill, solution.keyed.state),
+    {
+      acquirable: (item) => GATE_OF_ITEM.has(item),
+      maxAtoms: MAX_ATOMS,
+      maxLevel: () => 1,
+    },
+  );
+  const gates = new Map<string, readonly MarginGateId[]>();
+  for (const id of ids) {
+    const tri = opened[id] ?? "no";
+    if (tri === "no") continue;
+    const [fewest] = analysis
+      .blockers(id, tri === "yes" ? "yes" : "maybe")
+      .sets.map((set) =>
+        set.flatMap((atom) => {
+          const gate = "item" in atom ? GATE_OF_ITEM.get(atom.item) : undefined;
+          return gate === undefined ? [] : [gate];
+        }),
+      )
+      .filter((set) => set.length > 0);
+    gates.set(id, fewest ?? []);
+  }
+  return gates;
+};
 
 /** The medallion rules, by the dungeon whose pad they read. */
 const PADS: Readonly<Record<string, DungeonId>> = {
@@ -668,11 +718,17 @@ export const analyzeRun = (
   }
   const margin = marginOf(solution);
   if (margin !== undefined) {
-    for (const [id, found] of missing) {
-      if (found.tri !== "no" || (margin.tris[id] ?? "no") === "no") continue;
+    const held = [...missing]
+      .filter(
+        ([id, { tri }]) => tri === "no" && (margin.tris[id] ?? "no") !== "no",
+      )
+      .map(([id]) => id);
+    const gates = marginGates(solution, margin.tris, held);
+    for (const id of held) {
+      const found = missing.get(id) as Missing;
       missing.set(id, {
         ...found,
-        margin: marginOfWays(found.inLogic, keyed.state),
+        margin: marginOfWays(gates.get(id) ?? [], found.inLogic, keyed.state),
       });
     }
   }
