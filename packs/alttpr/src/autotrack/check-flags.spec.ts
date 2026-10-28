@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { erWorld, mandatoryConnections } from "../er-world";
 import type { LocationDef } from "../location";
+import { compile } from "../pack";
+import { settingsFromUpstream } from "../settings";
 import type { RegionModule } from "../world";
-import { OPEN_REGIONS } from "../worlds/open";
 import { STANDARD_REGIONS } from "../worlds/standard";
 import {
   CHECK_FLAGS,
@@ -39,8 +41,24 @@ function placed(modules: readonly RegionModule[]): Placed[] {
 }
 
 const STANDARD = placed(STANDARD_REGIONS);
+
+/** Every world the app compiles: vt's four, and the entrance shuffle's. */
+const UPSTREAM_WORLDS = ["open", "standard", "inverted", "retro"] as const;
+
+/**
+ * The locations of every world: vt's, and the entrance randomizer's but for
+ * its events (the floodgate, the frog, a region reached), which its solver
+ * gives once their location is reached, and no player checks.
+ */
 const ALL_IDS = new Set(
-  [...STANDARD, ...placed(OPEN_REGIONS)].map(({ location }) => location.id),
+  UPSTREAM_WORLDS.flatMap((mode) => {
+    const settings = settingsFromUpstream(mode);
+    const vt = compile(settings).locationIds;
+    if (mode === "inverted") return vt;
+    const er = erWorld(settings, mandatoryConnections());
+    const events = new Set(er.facts.map(({ location }) => location));
+    return [...vt, ...er.compiled.locationIds.filter((id) => !events.has(id))];
+  }),
 );
 const KIND = new Map(
   STANDARD.map(({ location }) => [location.id, location.kind]),
@@ -86,7 +104,7 @@ const DUNGEON_FILES = new Set(
 );
 
 describe("CHECK_FLAGS and UNMAPPED_LOCATIONS", () => {
-  it("map or explain every location of both worlds, once", () => {
+  it("map or explain every location of every world, once", () => {
     const mapped = CHECK_FLAGS.map(({ id }) => id);
     const unmapped = UNMAPPED_LOCATIONS.map(({ id }) => id);
     expect(new Set(mapped).size).toBe(mapped.length);
