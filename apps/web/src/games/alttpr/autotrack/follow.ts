@@ -130,7 +130,9 @@ export const createFollower = (): Follower => {
   /**
    * Count the small keys found: memory holds those in hand, which a door
    * spends, so every rise between two readings is a key found. A stretch of
-   * play starts from the board's count, or the keys in hand if more.
+   * play starts from the board's count, or the keys in hand if more. A key
+   * an enemy or a pot drops rises the same, though the rules count only the
+   * pool's: the pack's README ("What autotracking gives the rules").
    */
   const countKeys = (reading: AutotrackReading, smallKeys: number[]) => {
     const now = keysInHand(reading);
