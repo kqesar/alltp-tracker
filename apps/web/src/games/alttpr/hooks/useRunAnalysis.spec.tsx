@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   analyzeNow,
-  useGoModeMissing,
+  useGoModeLeft,
   useMissing,
   useRunAnalysis,
 } from "@/games/alttpr/hooks/useRunAnalysis";
@@ -173,9 +173,12 @@ describe("useMissing", () => {
     expect(result.current?.tricks).toBeUndefined();
   });
 
-  it("reads the go mode's missing ways", () => {
+  it("reads what the go mode is missing", () => {
     act(() => analyzeNow());
-    const { result } = renderHook(() => useGoModeMissing());
-    expect(result.current).toEqual({ sets: [], truncated: false });
+    const { result } = renderHook(() => useGoModeLeft());
+    expect(result.current).toEqual({
+      kind: "items",
+      ways: { sets: [], truncated: false },
+    });
   });
 });

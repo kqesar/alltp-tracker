@@ -17,6 +17,7 @@ import {
   analyzeRun,
   compactSpots,
   dungeonMissing,
+  goModeLeftOf,
   goModeStatusOf,
   groupMissing,
   type Missing,
@@ -32,6 +33,7 @@ import {
   solutionOf,
   trickSolutionOf,
 } from "@/games/alttpr/logic/solution";
+import END_GAME from "../../../../e2e/fixtures/end-game.json";
 
 /** A run of a preset with these cells set. */
 const inputsOf = (
@@ -266,18 +268,137 @@ describe("analyzeRun", () => {
     });
   });
 
-  it("works out what the go mode misses for the run's goal", () => {
-    const midgame = analysisOf(MIDGAME).goMode;
-    expect(midgame && waysText(midgame)).toBe(
-      "Titan's Mitt + Hookshot + 7 crystals",
-    );
-    // Too far from the start to say within three things
-    expect(analysisOf(FRESH).goMode).toEqual({ sets: [], truncated: false });
+  it("has no go mode to work out for a goal without one", () => {
     for (const preset of ["all-dungeons", "triforce-hunt"]) {
       expect(analysisOf(inputsOf({}, { preset })).goMode, preset).toBe(
         undefined,
       );
     }
+  });
+});
+
+describe("what the go mode is missing, crystals aside", () => {
+  /** The browser tests' end of a run, with these cells and settings. */
+  const endGame = (
+    items: Partial<ItemState>,
+    settings: Partial<RunSettings> = {},
+  ): Inputs => {
+    const { state } = END_GAME;
+    return {
+      items: { ...state.items, ...items } as ItemState,
+      medallions: state.medallions,
+      settings: { ...(state.settings as RunSettings), ...settings },
+      smallKeys: state.smallKeys,
+    };
+  };
+
+  /** The go mode's ways as text, or the kind of what is left. */
+  const left = (inputs: Inputs) => {
+    const found = analysisOf(inputs).goMode;
+    return found?.kind === "items" ? waysText(found.ways) : found?.kind;
+  };
+
+  it("lists the items left, never the crystals", () => {
+    // Was "Titan's Mitt + Hookshot + 7 crystals": the crystals are the board's
+    expect(goModeStatusOf(MIDGAME)?.tri).toBe("no");
+    expect(left(MIDGAME)).toBe("Titan's Mitt + Hookshot");
+    // A third item and the crystals still fit: they no longer take its place
+    expect(
+      left(
+        endGame({
+          boss7: 0,
+          boss8: 0,
+          boss9: 0,
+          glove: 1,
+          moonpearl: false,
+          sword: 1,
+        }),
+      ),
+    ).toBe("Titan's Mitt + Moon Pearl + Master Sword");
+  });
+
+  it("gives every way, the fewest items first", () => {
+    const far = endGame(
+      { agahnim: 0, glove: 0, hammer: false, moonpearl: false },
+      { goal: "fast-ganon" },
+    );
+    expect(left(far)).toBe(
+      "Agahnim + Moon Pearl, or Titan's Mitt + Moon Pearl, or Power Glove + Hammer + Moon Pearl",
+    );
+    expect(left(endGame({ firerod: false, lantern: false }))).toBe(
+      "Fire Rod, or Lantern",
+    );
+  });
+
+  it("says when only crystals are left", () => {
+    const crystals = endGame({ boss7: 0, boss8: 0, boss9: 0 });
+    expect(goModeStatusOf(crystals)?.tri).toBe("no");
+    expect(analysisOf(crystals).goMode).toEqual({ kind: "crystals" });
+  });
+
+  it("has nothing left once in go mode", () => {
+    const end = endGame({});
+    expect(goModeStatusOf(end)?.tri).toBe("yes");
+    expect(analysisOf(end).goMode).toEqual({ kind: "nothing" });
+  });
+
+  it("says more than three items away with an empty list", () => {
+    expect(analysisOf(FRESH).goMode).toEqual({
+      kind: "items",
+      ways: { sets: [], truncated: false },
+    });
+  });
+
+  it("asks a Mystery run with its hearts not set for hearts on screen", () => {
+    // The item placement hidden may be basic, whose dungeons want hearts
+    const mystery = endGame(
+      { hearts: 0, sword: 1 },
+      { hidden: ["swordless", "itemPlacement", "crystalsGanon"] },
+    );
+    expect(goModeStatusOf(mystery)?.tri).toBe("maybe");
+    expect(left(mystery)).toBe("15 hearts + Tempered Sword");
+  });
+
+  it("follows the pedestal goal's pendants", () => {
+    expect(
+      left(endGame({ boss0: 0, boss1: 0, boss2: 0 }, { goal: "pedestal" })),
+    ).toBe("Pendant of Courage + Pendant of Power + Pendant of Wisdom");
+  });
+
+  describe("goModeLeftOf", () => {
+    const ways = (...sets: string[][]): Ways => ({
+      sets: sets.map((set) => set.map((label) => ({ key: label, label }))),
+      truncated: false,
+    });
+    const never = () => {
+      throw new Error("not asked");
+    };
+
+    it("tells crystals from nothing left when nothing is to get with them", () => {
+      expect(goModeLeftOf(ways([]), () => ways(["7 crystals"]), never)).toEqual(
+        { kind: "crystals" },
+      );
+      expect(goModeLeftOf(ways([]), () => ways([]), never)).toEqual({
+        kind: "nothing",
+      });
+    });
+
+    it("says no item settles it when everything held would not", () => {
+      expect(goModeLeftOf(ways(), never, () => false)).toEqual({
+        kind: "unknown",
+      });
+      expect(goModeLeftOf(ways(), never, () => true)).toEqual({
+        kind: "items",
+        ways: ways(),
+      });
+    });
+
+    it("puts the fewest items first", () => {
+      expect(goModeLeftOf(ways(["a", "b"], ["c"]), never, never)).toEqual({
+        kind: "items",
+        ways: ways(["c"], ["a", "b"]),
+      });
+    });
   });
 });
 
