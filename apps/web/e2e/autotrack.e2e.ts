@@ -356,13 +356,27 @@ test("shows the game's time when the player chose it, not in Race Mode", async (
   await expect(page.getByTestId("run-timer-start")).toBeDisabled();
   await page.keyboard.press("Escape");
 
-  // Ten seconds of frames played: it runs again
-  const later = frames + 600;
-  bridge.memory.set(
-    [later & 0xff, (later >> 8) & 0xff, (later >> 16) & 0xff, 0],
-    SAVE(0x43e),
-  );
-  await expect(timer).toHaveAccessibleName(/^Run timer: 1:00:\d\d, running$/);
+  // Ten seconds of frames played, and the emulator runs again: its counter
+  // moves between two reads of it, as a frame every 100 ms does (the page
+  // reads it every 500 ms). One jump and then stillness would show "running"
+  // for a single read, about half a second, which a slow runner's polling of
+  // the name can miss.
+  let played = frames + 600;
+  const writeFrames = () =>
+    bridge.memory.set(
+      [played & 0xff, (played >> 8) & 0xff, (played >> 16) & 0xff, 0],
+      SAVE(0x43e),
+    );
+  writeFrames();
+  const emulator = setInterval(() => {
+    played += 1;
+    writeFrames();
+  }, 100);
+  try {
+    await expect(timer).toHaveAccessibleName(/^Run timer: 1:00:\d\d, running$/);
+  } finally {
+    clearInterval(emulator);
+  }
 
   bridge.memory[WRAM + 0x10] = 0x19; // the Triforce room
   await expect(timer).toHaveAccessibleName(
