@@ -89,6 +89,29 @@ describe("needOf", () => {
   });
 });
 
+describe("hearts", () => {
+  it("names the hearts found as the hearts on screen they make", () => {
+    expect(needOf(item("heartContainer", 7))).toEqual({
+      icon: "heart.png",
+      key: "hearts>=7",
+      label: "10 hearts",
+    });
+    expect(needOf(item("pieceOfHeart", 3)).label).toBe("3¾ hearts");
+  });
+
+  it("joins a set's containers and pieces, and the sets that then read alike", () => {
+    const ways = waysOf({
+      sets: [
+        [item("heartContainer", 7)],
+        [item("heartContainer", 6), item("pieceOfHeart", 4)],
+        [item("heartContainer", 5), item("pieceOfHeart", 8), item("hammer")],
+      ],
+      truncated: false,
+    });
+    expect(waysText(ways)).toBe("10 hearts, or 10 hearts + Hammer");
+  });
+});
+
 describe("waysText", () => {
   it("joins atoms with +, sets with or, and says when some were cut", () => {
     const ways = waysOf({

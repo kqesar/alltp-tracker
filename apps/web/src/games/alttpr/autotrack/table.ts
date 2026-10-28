@@ -4,7 +4,8 @@
 // (itemsFromPack), the cells that say a boss is beaten, the prize cells and
 // the value each prize takes, and how a value the player marked joins one
 // the game shows. Nothing here names an item: a cell added to the table is
-// read from the game with no change here.
+// read from the game with no change here. The hearts cell is laid from the
+// game's heart count (`decodeHealth`), which joins as a count does.
 
 import {
   type DungeonId,
@@ -146,6 +147,8 @@ export const joinValues = (
 ): CellValue => {
   const entry = PACK_ITEMS[id];
   switch (entry?.kind) {
+    case "hearts":
+      return Math.max(Number(board), Number(game));
     case "count":
       return typeof board === "boolean"
         ? board || game === true

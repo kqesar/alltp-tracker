@@ -591,3 +591,39 @@ describe("the tricks that open a check", () => {
     expect(analyzeRun(solution, FRESH.settings).tricks).toBeUndefined();
   });
 });
+
+describe("the hearts, under the basic placement", () => {
+  /** Open, basic placement: Agahnim beaten, a sword, a bottle, the pearl. */
+  const basic = (hearts: number) =>
+    inputsOf(
+      { agahnim: 1, bottle: 1, hearts, moonpearl: true, sword: 1 },
+      {
+        settings: { ...getPreset("open").settings, itemPlacement: "basic" },
+      },
+    );
+  const SHOOTER_ROOM = "palace-of-darkness/shooter-room";
+
+  it("say a dungeon is maybe while the hearts are not set, and why", () => {
+    const run = basic(0);
+    expect(solutionOf(run).tris[SHOOTER_ROOM]).toBe("maybe");
+    expect(words(analysisOf(run).missing.get(SHOOTER_ROOM))).toEqual({
+      doubts: [{ basic: true, hearts: 10, kind: "hearts" }],
+      inLogic: "10 hearts",
+      possible: undefined,
+      tri: "maybe",
+    });
+  });
+
+  it("propose the hearts a dungeon lacks once they are set", () => {
+    // 9 hearts on screen: 6 found, one short of upstream's hasHealth(7)
+    const run = basic(7);
+    expect(solutionOf(run).tris[SHOOTER_ROOM]).toBe("no");
+    expect(words(analysisOf(run).missing.get(SHOOTER_ROOM))).toMatchObject({
+      doubts: [],
+      inLogic: "10 hearts",
+      tri: "no",
+    });
+    // 10 hearts: in logic
+    expect(solutionOf(basic(8)).tris[SHOOTER_ROOM]).toBe("yes");
+  });
+});

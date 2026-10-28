@@ -26,6 +26,12 @@ export const doubtText = (doubt: Doubt): string => {
       return `${doubt.dungeon}'s medallion is not noted yet`;
     case "placement":
       return "it depends on where an item was placed";
+    case "hearts":
+      return doubt.hearts > 0
+        ? `it takes ${doubt.hearts} hearts${doubt.basic ? " (Basic placement)" : ""}, and your hearts are not set`
+        : "it takes hearts, and your hearts are not set";
+    case "bombs":
+      return "it takes the Ten Bombs item, which the tracker does not record";
   }
 };
 

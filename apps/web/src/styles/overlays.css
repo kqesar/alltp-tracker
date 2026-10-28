@@ -29,6 +29,28 @@
   bottom: 2px;
 }
 
+/* Link's hearts on the tunic's cell: the count over a heart, lettered like
+   the key counts so it reads over stream footage too */
+.heart-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heart-counter__count {
+  position: relative;
+  z-index: 1;
+  font-size: calc(var(--cell) * 0.22);
+  font-weight: bold;
+  line-height: 1;
+  color: var(--color-text);
+  text-shadow:
+    1px 0 var(--color-bg),
+    -1px 0 var(--color-bg),
+    0 1px var(--color-bg),
+    0 -1px var(--color-bg);
+}
+
 /* Key cell: a 2x2 grid holding the big key (top right), the small key
    (bottom left) and the count of small keys found (bottom right); with maps
    and compasses outside their dungeons (MC Shuffle and up) the map and

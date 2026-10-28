@@ -2,6 +2,7 @@ import { BigKeyCell } from "@/games/alttpr/components/tracker/items/BigKeyCell";
 import { BossCell } from "@/games/alttpr/components/tracker/items/BossCell";
 import { Item } from "@/games/alttpr/components/tracker/items/Item";
 import { KeyLabel } from "@/games/alttpr/components/tracker/items/KeyLabel";
+import { TunicCell } from "@/games/alttpr/components/tracker/items/TunicCell";
 
 type GridItemProps = {
   /** Grid row index */
@@ -33,6 +34,9 @@ export const GridItem = ({ row, col, item }: GridItemProps) => {
   if (item.startsWith("boss")) {
     return <BossCell col={col} item={item} row={row} />;
   }
+
+  // The tunic's cell carries Link's hearts beside the mail
+  if (item === "tunic") return <TunicCell col={col} row={row} />;
 
   return <Item col={col} item={item} row={row} />;
 };

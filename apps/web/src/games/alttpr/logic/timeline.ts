@@ -24,12 +24,12 @@ interface Finds {
 /**
  * How the timeline reads an item's value, from what it records for the
  * pack (logic/packItems.ts): each bit an item, each level a find, or no
- * find at all (a dungeon's items left, the prize picked for it, the
- * spacer).
+ * find at all (a dungeon's items left, the prize picked for it, the hearts
+ * on screen, the spacer).
  */
 const findsOf = (id: string): "bits" | "levels" | null => {
   const kind = Object.hasOwn(PACK_ITEMS, id) ? PACK_ITEMS[id].kind : "none";
-  if (kind === "none" || kind === "prize") return null;
+  if (kind === "none" || kind === "prize" || kind === "hearts") return null;
   return kind === "bits" ? "bits" : "levels";
 };
 

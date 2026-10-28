@@ -38,6 +38,7 @@ import {
   prizeOf,
 } from "@/games/alttpr/autotrack/table";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
+import { heartsValue } from "@/games/alttpr/data/items";
 import { wildItems } from "@/games/alttpr/data/presets";
 import {
   COUNTER_INDICES,
@@ -268,6 +269,10 @@ export const gameCells = (
   ...cellsFromPack(asShown(reading.items.counts as Record<string, number>)),
   ...beatenCells(reading),
   ...prizeCells(reading, board),
+  // The hearts on screen, which Race Mode reads too (v2.0's heart count)
+  ...(typeof reading.health === "number"
+    ? { hearts: heartsValue(reading.health) }
+    : {}),
 });
 
 /** The small keys in hand, by key dungeon index, where memory tells. */

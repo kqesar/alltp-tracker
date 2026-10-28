@@ -605,3 +605,38 @@ describe("the pads' medallions", () => {
     });
   });
 });
+
+describe("the hearts", () => {
+  /** A game showing `max` in MaximumHealth and `pieces` toward the next. */
+  const showing = (max: number, pieces = 0) => {
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x36c)] = max;
+    memory[SAVE(0x36b)] = pieces;
+    return memory;
+  };
+
+  it("lays the hearts on screen from the game, Race Mode too", () => {
+    // 10 hearts and three pieces: 10 on screen, the cell's 8
+    const memory = showing(0x50, 3);
+    for (const race of [false, true]) {
+      const board = fresh();
+      const view = gameView(readingOf(memory, { race }), board);
+      expect(view.items.hearts, `race ${race}`).toBe(8);
+      expect(mergeView(board, view)?.next.items?.hearts).toBe(8);
+    }
+    // 9 and three pieces stay 9: one short of the basic placement's 10
+    expect(gameView(readingOf(showing(0x48, 3)), fresh()).items.hearts).toBe(7);
+  });
+
+  it("leaves the cell alone while the game shows no hearts", () => {
+    const view = gameView(readingOf(showing(0)), fresh());
+    expect(view.items).not.toHaveProperty("hearts");
+  });
+
+  it("keeps more hearts the player marked on a merge, and the game's on a sync", () => {
+    const board = marked(fresh(), { hearts: 10 });
+    const view = gameView(readingOf(showing(0x50)), board);
+    expect(mergeView(board, view)?.next.items?.hearts ?? 10).toBe(10);
+    expect(syncView(board, view)?.next.items?.hearts).toBe(8);
+  });
+});

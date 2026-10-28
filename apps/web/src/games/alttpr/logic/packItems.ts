@@ -7,6 +7,7 @@ import {
   type DungeonId,
   dungeon,
   type InventoryItemId,
+  ITEMS,
   LEGACY_DUNGEONS,
   PRIZES,
   type Prize,
@@ -15,9 +16,11 @@ import {
 import { BOSS_STATES } from "@/games/alttpr/constants";
 import {
   items as freshItems,
+  heartsShown,
   type ItemState,
   itemsMax,
   itemsMin,
+  STARTING_HEARTS,
 } from "@/games/alttpr/data/items";
 
 /** What one of the tracker's item ids records, in the pack's terms. */
@@ -44,6 +47,12 @@ export type PackItem =
     }
   /** What a dungeon's boss drops, by the value: see REWARDS. */
   | { readonly kind: "prize"; readonly dungeon: DungeonId }
+  /**
+   * Link's hearts on screen (`heartsShown`): the heart containers and
+   * pieces found beyond the 3 he starts with, which upstream's hasHealth
+   * sums; not set, the health is unknown to the rules.
+   */
+  | { readonly kind: "hearts" }
   /** Nothing the rules read: the blank cell, a dungeon's counter. */
   | { readonly kind: "none" };
 
@@ -100,6 +109,7 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   flute: count("flute"),
   glove: count("glove"),
   hammer: count("hammer"),
+  hearts: { kind: "hearts" },
   hookshot: count("hookshot"),
   icerod: count("iceRod"),
   lantern: count("lamp"),
@@ -142,12 +152,18 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   map12: dungeonItem("map")("ganons-tower"),
 };
 
+/** The pool's heart containers and pieces: the most the hearts cell records. */
+const POOL = new Map(ITEMS.map(({ id, max }) => [id, max]));
+const HEART_CONTAINERS = POOL.get("heartContainer") ?? 0;
+
 /**
  * Every pack item the tracker's cells can record, at the highest level they
  * reach: a count's top less its base (the tunic's 3 is armor 2), each bit's
- * item, the event a dungeon beaten gives (Agahnim, Agahnim 2), and the
- * prizes a boss drops. What the cells cannot say (bombs, hearts, the bow's
- * second level) is left out: no player could mark it collected.
+ * item, the event a dungeon beaten gives (Agahnim, Agahnim 2), the prizes a
+ * boss drops, and the heart containers and pieces the hearts cell stands
+ * for, its 17 hearts found being the pool's 11 and 24. What the cells cannot
+ * say (the escape's bombs, the bow's second level) is left out: no player
+ * could mark it collected.
  */
 export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
   const levels = new Map<string, number>();
@@ -159,6 +175,9 @@ export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
       reach(entry.item, top - (entry.base ?? 0));
     } else if (entry.kind === "bits") {
       for (const item of entry.items) reach(item, 1);
+    } else if (entry.kind === "hearts") {
+      reach("heartContainer", HEART_CONTAINERS);
+      reach("pieceOfHeart", POOL.get("pieceOfHeart") ?? 0);
     } else if (entry.kind === "beaten") {
       const { event } = dungeon(entry.dungeon);
       if (event) reach(event.item, 1);
@@ -168,14 +187,38 @@ export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
   return levels;
 })();
 
-/** What the tracker's items record: TrackerInput's items, beaten, prizes. */
-export type PackReading = Pick<TrackerInput, "beaten" | "items" | "prizes">;
+/**
+ * What the tracker's items record: TrackerInput's items, beaten, prizes, and
+ * the counts it does not know.
+ */
+export type PackReading = Pick<
+  TrackerInput,
+  "beaten" | "items" | "prizes" | "unknown"
+>;
+
+/**
+ * The heart containers and pieces of hearts found, as upstream's hasHealth
+ * sums them: the containers first, up to the pool's, then four pieces a
+ * heart.
+ */
+const heartItems = (
+  found: number,
+): Partial<Record<InventoryItemId, number>> => {
+  const containers = Math.min(HEART_CONTAINERS, found);
+  return {
+    heartContainer: containers,
+    pieceOfHeart: 4 * (found - containers),
+  };
+};
 
 /**
  * The tracker's items as the pack reads them, through PACK_ITEMS. Like a
  * legacy run, a run counts Hyrule Castle finished, Zelda rescued: the
  * tracker does not record the escape, which in Standard opens the Light
- * World. An id the table lacks records nothing.
+ * World. An id the table lacks records nothing. The hearts found are those
+ * on screen less the 3 Link starts with; hearts not set (or not given) leave
+ * the health unknown, and the escape's bombs, which no cell records, are
+ * unknown always.
  * @param items - The run's items, by the tracker's ids
  */
 export const packReading = (items: Readonly<ItemState>): PackReading => {
@@ -184,6 +227,7 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
     "hyrule-castle": true,
   };
   const prizes: Partial<Record<DungeonId, Prize>> = {};
+  let health = false;
   const hold = (item: InventoryItemId, times: number) => {
     if (times > 0) held[item] = (held[item] ?? 0) + times;
   };
@@ -207,9 +251,25 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
         if (prize !== undefined) prizes[entry.dungeon] = prize;
         break;
       }
+      case "hearts": {
+        const shown = heartsShown(value);
+        if (shown === null) break;
+        health = true;
+        for (const [item, times] of Object.entries(
+          heartItems(shown - STARTING_HEARTS),
+        )) {
+          hold(item as InventoryItemId, times);
+        }
+        break;
+      }
     }
   }
-  return { beaten, items: held, prizes };
+  return {
+    beaten,
+    items: held,
+    prizes,
+    unknown: { bombs: true, ...(health ? {} : { health: true }) },
+  };
 };
 
 /**
@@ -217,7 +277,8 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
  * every id whose entry is a count or bits, from the pack items it reads (one
  * left out is not held), within the item's range. A held-or-not item is
  * `true` or `false`. A boss beaten, a prize, a dungeon's counter are no pack
- * item: their ids are left out.
+ * item: their ids are left out, and so are the hearts, which autotracking
+ * reads as the game shows them (`decodeHealth`).
  * @param counts - Pack items held, by pack id: an autotracker's reading
  */
 export const itemsFromPack = (

@@ -61,6 +61,8 @@ describe("trackerInput", () => {
       keys: Object.fromEntries(KEY_DUNGEONS.map((id) => [id, 0])),
       medallions: { mire: "unknown", turtleRock: "unknown" },
       prizes: {},
+      // No hearts set, and no cell for the escape's bombs
+      unknown: { bombs: true, health: true },
     });
   });
 

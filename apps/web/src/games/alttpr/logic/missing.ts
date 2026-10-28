@@ -17,8 +17,10 @@ import {
   type AnalyzeOptions,
   analyze,
   type CompiledWorld,
+  type Expr,
   explain,
   parse,
+  type Rules,
   type Solution as Solved,
   type State,
   solve,
@@ -38,10 +40,12 @@ import {
   TRICKS,
   type TrickId,
   trickFiller,
+  UNKNOWN_COUNTS,
   type UntrackedItem,
   untrackedItems,
   withUntracked,
 } from "@alltp/pack-alttpr";
+import { STARTING_HEARTS } from "@/games/alttpr/data/items";
 import type { RunSettings } from "@/games/alttpr/data/presets";
 import { sameWays, type Ways, waysOf } from "@/games/alttpr/logic/needs";
 import { RECORDED_LEVELS } from "@/games/alttpr/logic/packItems";
@@ -72,7 +76,19 @@ export type Doubt =
   /** A medallion pad the player has not noted: any medallion may open it. */
   | { readonly kind: "medallion"; readonly dungeon: string }
   /** A rule asks where an item sits, which the tracker cannot know. */
-  | { readonly kind: "placement" };
+  | { readonly kind: "placement" }
+  /**
+   * A rule asks for hearts and the hearts are not set: `hearts` on screen,
+   * the 3 Link starts with included; `basic` when it is the basic item
+   * placement's dungeon gate (upstream's hasHealth).
+   */
+  | {
+      readonly kind: "hearts";
+      readonly hearts: number;
+      readonly basic: boolean;
+    }
+  /** A rule takes the escape's ten bombs, which no cell records. */
+  | { readonly kind: "bombs" };
 
 /** What a location not in logic is missing. */
 export type Missing = {
@@ -200,12 +216,55 @@ const PADS: Readonly<Record<string, DungeonId>> = {
   hasTurtleRockMedallion: "turtle-rock",
 };
 
+/** The facts of the counts the tracker may not know, by fact. */
+const UNKNOWN_FACTS: ReadonlyMap<string, string> = new Map(
+  Object.entries(UNKNOWN_COUNTS).map(([count, { fact }]) => [fact, count]),
+);
+
+/** What each heart item adds to the hearts found: a piece is a quarter. */
+const HEART_POWER: Readonly<Record<string, number>> = {
+  heartContainer: 1,
+  pieceOfHeart: 0.25,
+};
+
+/** The count a `fact & maybe` branch stands for, if it is one. */
+const unknownBranch = (expr: Expr): string | undefined => {
+  if (expr.type !== "and") return undefined;
+  const fact = expr.args.find((arg) => arg.type === "item");
+  return fact?.type === "item" ? UNKNOWN_FACTS.get(fact.name) : undefined;
+};
+
+/**
+ * The hearts found a rule of hearts alone asks for, the fewest any of its
+ * ways does (hasHealth7: 7); undefined for a rule that reads anything else.
+ */
+const heartsAsked = (expr: Expr): number | undefined => {
+  if (expr.type === "item") {
+    const power = HEART_POWER[expr.name];
+    return power === undefined || typeof expr.min !== "number"
+      ? undefined
+      : expr.min * power;
+  }
+  if (expr.type !== "and" && expr.type !== "or") return undefined;
+  const parts = expr.args
+    .filter((arg) => unknownBranch(arg) === undefined)
+    .map(heartsAsked);
+  if (parts.length === 0 || parts.some((part) => part === undefined)) {
+    return undefined;
+  }
+  const values = parts as number[];
+  return expr.type === "and"
+    ? values.reduce((sum, value) => sum + value, 0)
+    : Math.min(...values);
+};
+
 /**
  * The `maybe`s that make a traced requirement `maybe`: under every node at
  * `maybe`, the arguments at `maybe` too, down to a `maybe` constant (where
- * an item sits) or a medallion pad's rule.
+ * an item sits), a medallion pad's rule, a rule of hearts not set or a
+ * count the tracker does not know.
  */
-const doubtsIn = (node: TraceNode, found: Set<string>) => {
+const doubtsIn = (node: TraceNode, found: Set<string>, rules: Rules) => {
   if (node.value !== "maybe") return;
   const { expr } = node;
   if (expr.type === "const") {
@@ -216,7 +275,41 @@ const doubtsIn = (node: TraceNode, found: Set<string>) => {
     found.add(`medallion:${PADS[expr.name]}`);
     return;
   }
-  for (const child of node.children) doubtsIn(child, found);
+  const body = expr.type === "helper" ? rules.helpers.get(expr.name) : expr;
+  const hearts = body === undefined ? undefined : heartsAsked(body);
+  if (hearts !== undefined && hearts > 0) {
+    // upstream's hasHealth is the basic placement's gate, and only that
+    const basic = expr.type === "helper" && expr.name.startsWith("hasHealth");
+    found.add(`hearts:${hearts}:${basic}`);
+    return;
+  }
+  const count = unknownBranch(expr);
+  if (count !== undefined) {
+    found.add(`unknown:${count}`);
+    return;
+  }
+  for (const child of node.children) doubtsIn(child, found, rules);
+};
+
+/** A doubt, from its key in doubtsIn's set. */
+const doubtOf = (key: string): Doubt => {
+  const [kind = "", what = "", basic] = key.split(":");
+  if (kind === "medallion") {
+    return { dungeon: nameOf(what), kind: "medallion" };
+  }
+  if (kind === "hearts") {
+    return {
+      basic: basic === "true",
+      hearts: STARTING_HEARTS + Number(what),
+      kind: "hearts",
+    };
+  }
+  if (kind === "unknown") {
+    return what === "bombs"
+      ? { kind: "bombs" }
+      : { basic: false, hearts: 0, kind: "hearts" };
+  }
+  return { kind: "placement" };
 };
 
 const nameOf = (id: string) => DUNGEONS.find((d) => d.id === id)?.name ?? id;
@@ -275,19 +368,16 @@ const rulesDoubts = (
 ): Doubt[] => {
   const { path, requirement } = explain(world, state, id);
   const found = new Set<string>();
-  doubtsIn(requirement, found);
+  doubtsIn(requirement, found, world.rules);
   for (const step of path) {
     if (step.exit?.value !== "maybe") continue;
-    doubtsIn(trace(parse(step.exit.req), state, world.rules), found);
+    doubtsIn(
+      trace(parse(step.exit.req), state, world.rules),
+      found,
+      world.rules,
+    );
   }
-  return [...found].sort().map((doubt) =>
-    doubt === "placement"
-      ? { kind: "placement" as const }
-      : {
-          dungeon: nameOf(doubt.slice("medallion:".length)),
-          kind: "medallion" as const,
-        },
-  );
+  return [...found].sort().map(doubtOf);
 };
 
 /** One place to look in a dungeon, or several that share a room. */
@@ -352,9 +442,12 @@ const sameThing = (missing: Missing): string =>
     missing.tricks,
     [
       ...new Set(
-        missing.doubts.map((doubt) =>
-          doubt.kind === "keys" ? `${doubt.kind}:${doubt.key}` : doubt.kind,
-        ),
+        missing.doubts.map((doubt) => {
+          if (doubt.kind === "keys") return `${doubt.kind}:${doubt.key}`;
+          return doubt.kind === "hearts"
+            ? `${doubt.kind}:${doubt.hearts}`
+            : doubt.kind;
+        }),
       ),
     ].sort(),
   ]);
@@ -449,9 +542,9 @@ export const analyzeRun = (
   const missing = new Map<string, Missing>();
   for (const [id, tri] of Object.entries(tris)) {
     if (tri === "yes") continue;
-    const inLogic = waysOf(analysis.blockers(id, "yes"));
+    const inLogic = waysOf(analysis.blockers(id, "yes"), state);
     const possible =
-      tri === "no" ? waysOf(analysis.blockers(id, "maybe")) : undefined;
+      tri === "no" ? waysOf(analysis.blockers(id, "maybe"), state) : undefined;
     missing.set(id, {
       doubts: tri === "maybe" ? doubtsOf(id, solution, state, allKeys) : [],
       inLogic,
@@ -477,6 +570,7 @@ export const analyzeRun = (
             goModeBlockers(fill.world, state, mode, settingsOptions, (s) =>
               s === state ? analysis : analyze(fill.world, s, settingsOptions),
             ),
+            state,
           ),
     missing,
     solution,
@@ -509,13 +603,15 @@ const analyzeCrossed = (solution: Solution, run: RunSettings): RunAnalysis => {
     if (tri === "yes" || facts.has(id)) continue;
     // Out of reach with everything held: no item brings it, a door does
     const behind = all.location(id) === "no";
-    const inLogic = behind ? door : waysOf(analysis.blockers(id, "yes"));
+    const inLogic = behind
+      ? door
+      : waysOf(analysis.blockers(id, "yes"), crossed.state);
     const possible =
       tri !== "no"
         ? undefined
         : behind
           ? door
-          : waysOf(analysis.blockers(id, "maybe"));
+          : waysOf(analysis.blockers(id, "maybe"), crossed.state);
     missing.set(id, {
       doubts:
         tri === "maybe"
@@ -547,6 +643,7 @@ const analyzeCrossed = (solution: Solution, run: RunSettings): RunAnalysis => {
                     ? analysis
                     : crossed.solver.analyze(crossed, s, settingsOptions),
               ),
+              crossed.state,
             ),
     missing,
     solution,

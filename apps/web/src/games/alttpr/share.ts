@@ -52,6 +52,7 @@ export const SHARE_ITEMS: readonly string[] = `
   reward0 reward1 reward2 reward3 reward4 reward5 reward6 reward7 reward8
   reward9
   magic
+  hearts
 `
   .trim()
   .split(/\s+/);

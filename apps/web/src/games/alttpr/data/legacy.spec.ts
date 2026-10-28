@@ -12,7 +12,8 @@ import { items, itemsMax, itemsMin } from "@/games/alttpr/data/items";
  * Items added since version 5, which no older save holds: Agahnim 2
  * (version 6), each dungeon's map and compass (version 7), the castle
  * dungeons' own items (version 11), Ganon's Tower's counter, the retro
- * world's shops (a save without them starts them unfound), the half magic.
+ * world's shops (a save without them starts them unfound), the half magic,
+ * the hearts (a save without them leaves them not set).
  */
 const ADDED = [
   "agahnim2",
@@ -23,6 +24,7 @@ const ADDED = [
   "bigkey12",
   "chest12",
   "compass12",
+  "hearts",
   "magic",
   "map10",
   "map12",
