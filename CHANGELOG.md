@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.51.0](https://github.com/kqesar/alltp-tracker/compare/v2.50.1...v2.51.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **alttpr:** list the checks that cost rupees ([42635d6](https://github.com/kqesar/alltp-tracker/commit/42635d68fbb26298bd3dd65206f094d8a3faf03d))
+* **web:** show a paid check's price after its name ([5e879ba](https://github.com/kqesar/alltp-tracker/commit/5e879bae25d0cefd690bd6f96f9520d2e3331b4e))
+
+
+### 📚 Documentation
+
+* describe the checks that cost rupees ([dc23bf4](https://github.com/kqesar/alltp-tracker/commit/dc23bf4cb4453305774d0d1d5961376d2c3a52a6))
+
 ## [2.50.1](https://github.com/kqesar/alltp-tracker/compare/v2.50.0...v2.50.1) (2026-10-28)
 
 
