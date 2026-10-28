@@ -21,6 +21,8 @@ import type {
 } from "@alltp/pack-alttpr";
 import {
   ACCESSIBILITY_LABELS,
+  BOSS_SHUFFLE_LABELS,
+  bossShuffleOf,
   DUNGEON_ITEM_LABELS,
   ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
@@ -141,6 +143,10 @@ export const COMPARED = [
   "itemFunctionality",
 ] as const satisfies readonly (keyof RunSettings)[];
 
+/** A tunable setting's value, a boss shuffle left out read as "none". */
+const tunedValue = (settings: RunSettings, key: TunableSetting) =>
+  key === "bossShuffle" ? bossShuffleOf(settings) : settings[key];
+
 /** A setting only the seed's file states: the seed's when known, else `own`. */
 const fromFile = <T>(setting: SeedSetting<T> | undefined, own: T): T =>
   setting?.known ? setting.value : own;
@@ -254,6 +260,10 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
   }
   if (differs("accessibility")) {
     parts.push(ACCESSIBILITY_LABELS[settings.accessibility]);
+  }
+  // No preset shuffles the bosses
+  if (shown("bossShuffle") && bossShuffleOf(settings) !== "none") {
+    parts.push(`${BOSS_SHUFFLE_LABELS[bossShuffleOf(settings)]} boss shuffle`);
   }
   // No preset is glitched
   if (settings.glitches !== undefined) {
@@ -386,6 +396,10 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   );
   // The seed's settings hide nothing: a Mystery run's hidden list is its own
   delete settings.hidden;
+  // Only the file states it; none is said by its absence, as every preset
+  const bossShuffle = fromFile(seed.bossShuffle, bossShuffleOf(run.settings));
+  if (bossShuffle === "none") delete settings.bossShuffle;
+  else settings.bossShuffle = bossShuffle;
   const sameLogic = settings.glitches === run.settings.glitches;
   // A Mystery run takes what the seed reveals, in place, in its own world
   // and logic
@@ -412,12 +426,14 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
         itemPlacement: settings.itemPlacement,
       }),
       ...(seed.itemPool?.known && { itemPool: settings.itemPool }),
+      ...(seed.bossShuffle?.known && { bossShuffle }),
     };
     const change = Object.fromEntries(
       (Object.keys(said) as TunableSetting[])
         .filter(
           (key) =>
-            said[key] !== run.settings[key] || isHidden(run.settings, key),
+            said[key] !== tunedValue(run.settings, key) ||
+            isHidden(run.settings, key),
         )
         .map((key) => [key, said[key]]),
     );
@@ -432,7 +448,8 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   }
   if (
     sameLogic &&
-    COMPARED.every((key) => settings[key] === run.settings[key])
+    COMPARED.every((key) => settings[key] === run.settings[key]) &&
+    bossShuffle === bossShuffleOf(run.settings)
   ) {
     return {
       kind: "same",

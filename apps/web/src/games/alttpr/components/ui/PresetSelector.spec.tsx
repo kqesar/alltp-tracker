@@ -234,14 +234,21 @@ describe("PresetSelector", () => {
       within(dialog).getByRole("combobox", { name: "Ganon's Tower" }),
       { target: { value: "0" } },
     );
+    // A run that names no boss shuffle has none
+    const bosses = within(dialog).getByRole("combobox", {
+      name: "Boss shuffle",
+    });
+    expect(bosses).toHaveValue("none");
+    fireEvent.change(bosses, { target: { value: "full" } });
 
     expect(updateSettings.mock.calls).toEqual([
       [{ itemPool: "hard" }],
       [{ crystalsTower: 0 }],
+      [{ bossShuffle: "full" }],
     ]);
     expect(applyRun).not.toHaveBeenCalled();
     // The world names the run type: it is no field
-    expect(within(dialog).getAllByRole("combobox")).toHaveLength(9);
+    expect(within(dialog).getAllByRole("combobox")).toHaveLength(10);
   });
 
   it("offers a Mystery run's settings as not known yet, and hides one again", () => {

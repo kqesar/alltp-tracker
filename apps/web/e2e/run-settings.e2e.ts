@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { unreachableClickables, WCAG_AA, WIDTHS } from "./support";
@@ -187,6 +189,43 @@ test("shows the key cells from the Mode dialog, by keyboard too", async ({
   await expect(page.getByTestId("big-key-0")).toHaveCount(0);
 });
 
+test("a boss shuffle reads each boss as any its dungeon may hold", async ({
+  page,
+}) => {
+  // The browser tests' end of a run, Misery Mire's boss alive, no hookshot:
+  // Vitreous needs none, Arrghus does
+  const end = JSON.parse(
+    readFileSync(join(import.meta.dirname, "fixtures/end-game.json"), "utf8"),
+  );
+  const saved = JSON.stringify({
+    ...end,
+    state: {
+      ...end.state,
+      items: { ...end.state.items, boss8: 1, hookshot: false },
+    },
+  });
+  await page.goto("./");
+  await page.evaluate((value) => {
+    localStorage.clear();
+    localStorage.setItem("alltp-tracker-state", value);
+  }, saved);
+  await page.reload();
+  const boss = page.getByTestId("boss-marker-misery-mire");
+  await expect(boss).toHaveAccessibleName(/: boss available/);
+
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const bosses = runTypes(page).getByRole("combobox", { name: "Boss shuffle" });
+  await expect(bosses).toHaveValue("none");
+  await bosses.selectOption("full");
+  await runTypes(page).getByRole("button", { name: "Close" }).click();
+
+  await expect(boss).toHaveAccessibleName(/: boss maybe available/);
+  const state = await page.evaluate(
+    () => JSON.parse(localStorage.getItem("alltp-tracker-state") ?? "{}").state,
+  );
+  expect(state.settings.bossShuffle).toBe("full");
+});
+
 for (const width of WIDTHS) {
   test(`the run's tunable settings pass axe and fit at ${width}px`, async ({
     page,
@@ -195,7 +234,7 @@ for (const width of WIDTHS) {
     await openTracker(page);
     await page.getByRole("button", { name: /^Mode/ }).click();
     const dialog = runTypes(page);
-    await expect(dialog.getByRole("combobox")).toHaveCount(9);
+    await expect(dialog.getByRole("combobox")).toHaveCount(10);
 
     await expect(
       dialog.getByRole("checkbox", { name: "Show key cells" }),

@@ -200,6 +200,48 @@ describe("checkSeed", () => {
     expect(checkSeed(vanilla, run("open"))).toMatchObject({ kind: "same" });
   });
 
+  it("takes the boss shuffle a seed's file states, and says it", () => {
+    // alttpr.com's bGbbOaDWGP: Standard, boss shuffle "full"
+    const shuffled = {
+      ...seedOf({ mode: "standard" }),
+      bossShuffle: { known: true, value: "full" },
+    } as const;
+    const check = checkSeed(shuffled, run("standard"));
+    expect(check).toMatchObject({
+      kind: "differs",
+      presetId: "standard",
+      seedText: "Standard (Standard, Ganon, 7/7, Full boss shuffle)",
+      settings: { bossShuffle: "full" },
+    });
+    if (check.kind !== "differs") throw new Error("expected differs");
+    expect(
+      checkSeed(shuffled, { presetId: "standard", settings: check.settings }),
+    ).toMatchObject({ kind: "same" });
+    // None is the presets' own, said or not
+    const none = {
+      ...shuffled,
+      bossShuffle: { known: true, value: "none" },
+    } as const;
+    expect(checkSeed(none, run("standard"))).toMatchObject({ kind: "same" });
+    expect(
+      checkSeed(none, {
+        presetId: "standard",
+        settings: { ...getPreset("standard").settings, bossShuffle: "none" },
+      }),
+    ).toMatchObject({ kind: "same" });
+    // A Mystery run takes it in place, as what the file reveals
+    const mystery = getPreset("mystery").settings;
+    expect(
+      checkSeed(shuffled, {
+        presetId: "mystery",
+        settings: { ...mystery, mode: "standard" },
+      }),
+    ).toMatchObject({
+      change: { bossShuffle: "full" },
+      kind: "reveals",
+    });
+  });
+
   it("holds a seed's maps and compasses, or its small keys too, outside their dungeons", () => {
     expect(
       checkSeed(seedOf({ dungeonItems: "mc" }), run("open")),

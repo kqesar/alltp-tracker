@@ -364,12 +364,29 @@ describe("migrate", () => {
       // None is said by the setting's absence, as every preset says it
       { glitches: "none" },
       { glitches: "minor_glitches" },
+      { bossShuffle: "chaos" },
+      { bossShuffle: true },
     ]) {
       expect(
         refusal(saveFile({ settings: { ...settings, ...wrong } })),
         JSON.stringify(wrong),
       ).toMatch(/item placement, accessibility, item pool and functionality/);
     }
+  });
+
+  it("keeps a run's boss shuffle, and reads a save without one as none", () => {
+    const settings = { ...getPreset("open").settings, bossShuffle: "full" };
+
+    expect(parseSave(saveFile({ settings }))).toMatchObject({
+      ok: true,
+      progress: { settings: { bossShuffle: "full" } },
+    });
+    const without = parseSave(
+      saveFile({ settings: getPreset("open").settings }),
+    );
+    expect(without).toMatchObject({ ok: true });
+    if (!without.ok) throw new Error("expected a save");
+    expect(without.progress.settings).not.toHaveProperty("bossShuffle");
   });
 
   it("keeps a glitched logic a seed was generated for", () => {

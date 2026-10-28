@@ -17,6 +17,7 @@ import {
 } from "@/games/alttpr/data/keymap";
 import {
   ACCESSIBILITY_LABELS,
+  BOSS_SHUFFLE_LABELS,
   DEFAULT_PRESET_ID,
   DUNGEON_ITEM_LABELS,
   ENTRANCE_LABELS,
@@ -489,6 +490,7 @@ const isRunSettings = (value: unknown): value is RunSettings => {
   if (!hasRunType(value)) return false;
   const {
     accessibility,
+    bossShuffle,
     crystalsGanon,
     crystalsTower,
     glitches,
@@ -515,6 +517,8 @@ const isRunSettings = (value: unknown): value is RunSettings => {
   return (
     hiddenOk &&
     glitchesOk &&
+    // Absent in every save before it, and in any run without it: none
+    (bossShuffle === undefined || named(bossShuffle, BOSS_SHUFFLE_LABELS)) &&
     typeof swordless === "boolean" &&
     isIntIn(crystalsTower, 0, 7) &&
     isIntIn(crystalsGanon, 0, 7) &&

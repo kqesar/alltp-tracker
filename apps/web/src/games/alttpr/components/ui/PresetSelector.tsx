@@ -5,6 +5,7 @@ import { Modal } from "@/components/ui/Modal";
 import { SeedImport } from "@/games/alttpr/components/ui/SeedImport";
 import { TricksDialog } from "@/games/alttpr/components/ui/TricksDialog";
 import {
+  bossShuffleOf,
   describeSettings,
   getPreset,
   HIDEABLE,
@@ -67,7 +68,15 @@ const SettingSelect = ({
         );
         if (picked) updateSettings({ [setting]: picked[0] });
       }}
-      value={hidden ? HIDDEN : String(settings[setting])}
+      value={
+        hidden
+          ? HIDDEN
+          : String(
+              setting === "bossShuffle"
+                ? bossShuffleOf(settings)
+                : settings[setting],
+            )
+      }
     >
       {hideable && <option value={HIDDEN}>? Unknown</option>}
       {options.map(([option, words]) => (
