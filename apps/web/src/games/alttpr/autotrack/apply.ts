@@ -333,6 +333,12 @@ export const gameCells = (
   // The hearts on screen and the pieces toward the next, which Race Mode
   // reads too (v2.0's heart count and heart piece count)
   ...(typeof reading.health === "object" ? healthCells(reading.health) : {}),
+  // The Triforce pieces found, Race Mode too (v2.0 lists them as items), and
+  // the pieces the ROM asks for, which the seed's settings state outside it
+  ...(typeof reading.pieces === "number" ? { triforce: reading.pieces } : {}),
+  ...(reading.seed.goalPieces?.known
+    ? { goalpieces: reading.seed.goalPieces.value }
+    : {}),
   // Race Mode reads the flute, never whether it was activated: the rules
   // read that as not known, maybe at most (the pack's unknown counts)
   ...(reading.race ? { fluteactive: ACTIVATION.UNKNOWN } : {}),

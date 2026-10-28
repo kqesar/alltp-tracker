@@ -251,4 +251,25 @@ describe("GoMode", () => {
     expect(panel).toHaveTextContent("Every step to the goal is in logic.");
     expect(within(panel).queryByRole("list", { hidden: true })).toBeNull();
   });
+
+  it("counts a triforce hunt's pieces left, in logic once the goal's are found", async () => {
+    setRun({ goalpieces: 20, triforce: 13 }, { goal: "triforce-hunt" });
+    render(<GoMode />);
+
+    const button = screen.getByTestId("go-mode");
+    expect(button).toHaveAccessibleName("Go mode: 7 pieces left");
+    const panel = await openPanel();
+    expect(panel).toHaveTextContent("7 Triforce pieces left to find");
+
+    setRun({ goalpieces: 20, triforce: 19 }, { goal: "triforce-hunt" });
+    expect(button).toHaveAccessibleName("Go mode: 1 piece left");
+    expect(panel).toHaveTextContent("1 Triforce piece left to find");
+
+    setRun({ goalpieces: 20, triforce: 20 }, { goal: "triforce-hunt" });
+    expect(button).toHaveAccessibleName("Go mode: in logic");
+    expect(panel).toHaveTextContent("Every Triforce piece the goal asks for");
+    expect(screen.getByTestId("go-mode-status")).toHaveTextContent(
+      "Go mode: in logic",
+    );
+  });
 });

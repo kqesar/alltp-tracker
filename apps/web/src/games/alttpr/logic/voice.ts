@@ -113,6 +113,9 @@ const ITEMS: readonly (readonly [
   [["mirror"], "mirror", ON],
   [["moon pearl", "pearl"], "moonpearl", ON],
   [["flippers"], "flippers", ON],
+  // A triforce hunt's piece, found: one more (the model has "tri" and "force",
+  // not their joining)
+  [["tri force", "try force", "tri force piece"], "triforce", NEXT],
   // The retro world's shops, found
   [["arrow shop"], "shoparrow", ON],
   [["key shop"], "shopkey", ON],

@@ -5,6 +5,7 @@
 import {
   decodeChecks,
   decodeEntrances,
+  decodeGoalPieces,
   decodeHealth,
   decodeItems,
   decodeMedallions,
@@ -37,6 +38,11 @@ export type AutotrackReading = {
   readonly progress: ProgressReading;
   /** Link's hearts on screen (`decodeHealth`), Race Mode or not. */
   readonly health: HealthReading;
+  /**
+   * The Triforce pieces Link holds (`decodeGoalPieces`), Race Mode or not:
+   * v2.0 lists them among the items.
+   */
+  readonly pieces: number | Unsettled;
   /**
    * The pendants and crystals Link took, by class (`decodePrizesHeld`), Race
    * Mode or not: the crystals counted, never told 5/6 or not.
@@ -85,6 +91,7 @@ export const readMemory = (
     held: decodePrizesHeld(memory, options),
     items: decodeItems(memory, options),
     medallions: decodeMedallions(memory, options),
+    pieces: decodeGoalPieces(memory, options),
     prizes: decodePrizes(memory, options),
     progress: decodeProgress(memory, options),
     race,

@@ -22,6 +22,10 @@ import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import { getPreset } from "@/games/alttpr/data/presets";
 import { counterMax } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import {
+  type SeedRom,
+  writeSeedSettings,
+} from "../../../../../../packs/alttpr/test/seed-rom";
 
 /** A new run of a preset, as the store starts it. */
 const fresh = (presetId = "open"): Board => {
@@ -740,5 +744,62 @@ describe("the hearts", () => {
     const view = gameView(readingOf(showing(0x50)), board);
     expect(mergeView(board, view)?.next.items?.hearts ?? 10).toBe(10);
     expect(syncView(board, view)?.next.items?.hearts).toBe(8);
+  });
+});
+
+describe("the Triforce pieces", () => {
+  /** A game that has counted `found` goal items. */
+  const counting = (found: number, rom?: SeedRom) => {
+    const memory = seedMemory({ race: false });
+    if (rom) writeSeedSettings(memory, rom);
+    memory[SAVE(0x418)] = found & 0xff;
+    memory[SAVE(0x418) + 1] = found >> 8;
+    return memory;
+  };
+
+  it("lays the pieces found from the game, Race Mode too", () => {
+    for (const race of [false, true]) {
+      const view = gameView(
+        readingOf(counting(12), { race }),
+        fresh("triforce-hunt"),
+      );
+      expect(view.items, `race ${race}`).toMatchObject({ triforce: 12 });
+    }
+  });
+
+  it("lays a piece found as news", () => {
+    const board = fresh("triforce-hunt");
+    const news = newsOf(
+      gameView(readingOf(counting(3)), board),
+      gameView(readingOf(counting(4)), board),
+    );
+    expect(news.items).toEqual({ triforce: 4 });
+    expect(mergeView(board, news)?.next.items).toMatchObject({ triforce: 4 });
+  });
+
+  it("keeps more pieces the player marked on a merge, and the game's on a sync", () => {
+    const board = marked(fresh("triforce-hunt"), { triforce: 9 });
+    const view = gameView(readingOf(counting(5)), board);
+    expect(mergeView(board, view)?.next.items?.triforce ?? 9).toBe(9);
+    expect(syncView(board, view)?.next.items?.triforce).toBe(5);
+    const ahead = gameView(readingOf(counting(11)), board);
+    expect(mergeView(board, ahead)?.next.items?.triforce).toBe(11);
+  });
+
+  it("lays the pieces the ROM asks for outside Race Mode, and none in a race", () => {
+    const hunt = { goal: "triforce-hunt", pieces: 30 } as const;
+    const board = fresh("triforce-hunt");
+    expect(gameView(readingOf(counting(0, hunt)), board).items).toMatchObject({
+      goalpieces: 30,
+    });
+    expect(
+      gameView(readingOf(counting(0, hunt), { race: true }), board).items,
+    ).not.toHaveProperty("goalpieces");
+  });
+
+  it("leaves the cell alone while the count is no save's", () => {
+    // More than any goal asks for: a game with no save loaded yet
+    const view = gameView(readingOf(counting(0x0fff)), fresh("triforce-hunt"));
+    expect(view.items).not.toHaveProperty("triforce");
   });
 });

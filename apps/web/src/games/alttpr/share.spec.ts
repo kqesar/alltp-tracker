@@ -268,13 +268,14 @@ describe("an ALttPR run in a packed link", () => {
     expect(none.link).toBe(2);
     expect(JSON.parse(packLink(played)).link).toBe(4);
     // As v2.58.0, the last tracker to read link 2 alone, wrote it, but for
-    // the items appended to the table since (heartquarters), at the end
+    // the items appended to the table since (heartquarters, then the hunt's
+    // pieces), at the end
     const recorded = firstLayout.links.find(
       ({ name }) => name === "an empty timeline",
     );
     if (recorded === undefined) throw new Error("No empty timeline recorded");
     const since = SHARE_ITEMS.slice(recorded.link.sizes[1]);
-    expect(since).toEqual(["heartquarters"]);
+    expect(since).toEqual(["heartquarters", "triforce", "goalpieces"]);
     const save = recorded.save as { progress: { items: object } };
     const written = JSON.parse(
       packLink(
@@ -300,10 +301,11 @@ describe("an ALttPR run in a packed link", () => {
       table: null,
     });
     expect(written.sizes).toEqual([MAP_LOCATIONS.size, SHARE_ITEMS.length]);
-    // The recorded items' bytes, then a 0 for each item appended
+    // The recorded items' bytes, then each item appended at its fresh value
+    // (a signed varint: twice a small count)
     expect([...fromBase64Url(writtenItems)]).toEqual([
       ...fromBase64Url(recordedItems),
-      ...since.map(() => 0),
+      ...since.map((id) => 2 * Number(freshItems[id])),
     ]);
   });
 
@@ -479,7 +481,7 @@ describe("an ALttPR run in a packed link", () => {
     // A new item is appended to SHARE_ITEMS: moving one breaks every link
     expect(new Set(SHARE_ITEMS)).toEqual(new Set(Object.keys(freshItems)));
     expect(SHARE_ITEMS).toHaveLength(new Set(SHARE_ITEMS).size);
-    expect(SHARE_ITEMS.slice(-8)).toEqual([
+    expect(SHARE_ITEMS.slice(-10)).toEqual([
       "hearts",
       "tenbombs",
       "escape",
@@ -488,6 +490,8 @@ describe("an ALttPR run in a packed link", () => {
       "heldgreen",
       "heldpendants",
       "heartquarters",
+      "triforce",
+      "goalpieces",
     ]);
     expect(JSON.parse(packLink(play.alttpr(0.5, randoms()))).sizes).toEqual([
       MAP_LOCATIONS.size,

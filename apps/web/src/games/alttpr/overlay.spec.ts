@@ -216,10 +216,19 @@ describe("A Link to the Past's overlay reading", () => {
     });
 
     it("is null for a goal that has none", () => {
-      for (const goal of ["all-dungeons", "triforce-hunt"] as const) {
-        const run = runOf({ settings: settingsOf({ goal }) });
-        expect(overlayReadingOf(run).state.goMode, goal).toBeNull();
-      }
+      const run = runOf({ settings: settingsOf({ goal: "all-dungeons" }) });
+      expect(overlayReadingOf(run).state.goMode).toBeNull();
+    });
+
+    it("is the count of a triforce hunt: in logic once the pieces asked for are found", () => {
+      const hunt = settingsOf({ goal: "triforce-hunt" });
+      const withPieces = (found: number) =>
+        runOf({
+          items: { ...runOf().items, goalpieces: 20, triforce: found },
+          settings: hunt,
+        });
+      expect(overlayReadingOf(withPieces(19)).state.goMode).toBe("no");
+      expect(overlayReadingOf(withPieces(20)).state.goMode).toBe("yes");
     });
 
     it("is null while a Mystery run's goal is not known yet", () => {

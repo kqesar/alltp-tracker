@@ -6,7 +6,7 @@ import { MAP_VIEW_ID, MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
 import { Tooltip } from "@/games/alttpr/components/ui/Tooltip";
 import { TrackerControls } from "@/games/alttpr/components/ui/TrackerControls";
-import { itemGridFor } from "@/games/alttpr/data/items";
+import { itemGridFor, PIECES_ITEM } from "@/games/alttpr/data/items";
 import { useAutotrack } from "@/games/alttpr/hooks/useAutotrack";
 import { useCrossedLogic } from "@/games/alttpr/hooks/useCrossedLogic";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
@@ -31,6 +31,8 @@ function App() {
   useCrossedLogic();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const grid = useGameStore((state) => itemGridFor(state.settings));
+  // The pieces cell is a row more, which --grid-rows counts
+  const hunt = grid.some((row) => row.includes(PIECES_ITEM));
   const mapLayout = useGameStore((state) => state.mapLayout);
   const setMapView = useGameStore((state) => state.setMapView);
 
@@ -61,7 +63,7 @@ function App() {
         toolbar={<TrackerControls />}
       >
         <div
-          className={`layout${mapLayout === "stacked" ? " layout--stacked" : ""}${bigKeysVisible ? " layout--key-rows" : ""}`}
+          className={`layout${mapLayout === "stacked" ? " layout--stacked" : ""}${bigKeysVisible ? " layout--key-rows" : ""}${hunt ? " layout--pieces-row" : ""}`}
           data-testid="layout"
         >
           <TrackerGrid itemLayout={grid} />

@@ -54,6 +54,31 @@
   translate: 2px 2px;
 }
 
+/* A triforce hunt's cell: the pieces found over the pieces asked for, in the
+   key counts' lettering so it reads over stream footage too */
+.pieces-cell {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.pieces-cell__count {
+  font-size: calc(var(--cell) * 0.26);
+  font-weight: bold;
+  line-height: 1;
+  color: var(--color-text);
+  text-shadow:
+    1px 0 var(--color-bg),
+    -1px 0 var(--color-bg),
+    0 1px var(--color-bg),
+    0 -1px var(--color-bg);
+}
+
+/* Enough pieces: the count turns the colour of a key count at its top */
+.pieces-cell--enough .pieces-cell__count {
+  color: var(--state-available);
+}
+
 /* Key cell: a 2x2 grid holding the big key (top right), the small key
    (bottom left) and the count of small keys found (bottom right); with maps
    and compasses outside their dungeons (MC Shuffle and up) the map and

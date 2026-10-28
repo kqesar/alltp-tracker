@@ -4,6 +4,7 @@ import {
   heartsAfter,
   heartsOf,
   heartsText,
+  isHunt,
   isKeyCell,
   itemGridFor,
   itemLabels,
@@ -146,6 +147,35 @@ describe("itemGridFor", () => {
       "boss12",
     ]);
     expect(items).toMatchObject({ shoparrow: false, shopkey: false });
+  });
+
+  it("adds a triforce hunt's pieces under the grid, centred, in every world", () => {
+    const hunt = itemGridFor({ goal: "triforce-hunt", mode: "open" });
+    expect(hunt.slice(0, -1)).toEqual(defaultItemGrid);
+    expect(hunt.at(-1)).toEqual(["", "", "", "triforce", "", "", ""]);
+    const retro = itemGridFor({ goal: "triforce-hunt", mode: "retro" });
+    expect(retro.slice(0, -1)).toEqual(itemGridFor({ mode: "retro" }));
+    expect(retro.at(-1)).toEqual(hunt.at(-1));
+    // The same arrays each time: the board selects them without re-rendering
+    expect(itemGridFor({ goal: "triforce-hunt", mode: "open" })).toBe(hunt);
+    // No other goal has the row
+    expect(itemGridFor({ goal: "ganon", mode: "open" })).toBe(defaultItemGrid);
+  });
+
+  it("leaves the row out while a Mystery run's goal is hidden", () => {
+    expect(
+      itemGridFor({ goal: "triforce-hunt", hidden: ["goal"], mode: "open" }),
+    ).toBe(defaultItemGrid);
+    expect(isHunt({ goal: "triforce-hunt", hidden: ["goal"] })).toBe(false);
+    expect(isHunt({ goal: "triforce-hunt" })).toBe(true);
+  });
+
+  it("counts the pieces found from none to a goal's most, and asks for 20 at first", () => {
+    expect([itemsMin.triforce, itemsMax.triforce, items.triforce]).toEqual([
+      0, 50, 0,
+    ]);
+    expect(items.goalpieces).toBe(20);
+    expect(itemLabels("triforce")).toBe("Triforce pieces");
   });
 });
 

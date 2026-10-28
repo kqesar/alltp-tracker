@@ -196,6 +196,9 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   flute: count("flute"),
   fluteactive: { at: 2, count: "flute", item: "flute", kind: "activation" },
   glove: count("glove"),
+  // A triforce hunt's pieces, which no rule of the pack reads: its go mode
+  // is the count (goModeStatusOf)
+  goalpieces: NONE,
   hammer: count("hammer"),
   heartquarters: { kind: "quarters" },
   hearts: { kind: "hearts" },
@@ -222,6 +225,7 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   sword: count("sword"),
   // The escape's Ten Bombs: known only once autotracking reads them
   tenbombs: { count: "bombs", item: "tenBombs", kind: "known" },
+  triforce: NONE,
   // 1 the green tunic, which every run starts with: no armor yet
   tunic: count("armor", 1),
   ...perDungeon("bigkey", dungeonItem("bigKey")),

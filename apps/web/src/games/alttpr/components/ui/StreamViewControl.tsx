@@ -4,7 +4,7 @@ import { StreamTools } from "@/components/ui/StreamTools";
 import { StreamIcon } from "@/components/ui/ToolbarIcons";
 import { ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
 import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
-import { defaultItemGrid } from "@/games/alttpr/data/items";
+import { itemGridFor } from "@/games/alttpr/data/items";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { visibleRows } from "@/games/alttpr/utils";
 import { copyStatus, copyText } from "@/utils/clipboard";
@@ -26,6 +26,7 @@ export const StreamViewControl = ({
   variant?: "toolbar" | "menu";
 }) => {
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
+  const grid = useGameStore((state) => itemGridFor(state.settings));
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState("");
   const [timer, setTimer] = useState(false);
@@ -35,7 +36,7 @@ export const StreamViewControl = ({
 
   const url = obsViewUrl({ timer });
   const width = (ITEMS_PER_ROW + 1) * NATIVE_CELL;
-  const rows = visibleRows(defaultItemGrid, bigKeysVisible).length;
+  const rows = visibleRows(grid, bigKeysVisible).length;
   // The timer takes a row of its own under the grid
   const sizeOf = (withTimer: boolean) => ({
     height: (withTimer ? rows + 1 : rows) * NATIVE_CELL,

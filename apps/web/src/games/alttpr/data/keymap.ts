@@ -60,14 +60,14 @@ const isItemCell = (id: string) =>
   Boolean(id) && id !== "blank" && !id.startsWith("boss") && !isKeyCell(id);
 
 /**
- * The grid's items, in reading order, then the retro world's shops, then
- * Link's hearts, on the tunic's cell.
+ * The grid's items, in reading order, then the retro world's shops and a
+ * triforce hunt's pieces, then Link's hearts, on the tunic's cell.
  */
 export const ITEM_CONTROLS: readonly ControlId[] = [
   ...[
     ...new Set([
       ...defaultItemGrid.flat(),
-      ...itemGridFor({ mode: "retro" }).flat(),
+      ...itemGridFor({ goal: "triforce-hunt", mode: "retro" }).flat(),
     ]),
   ].filter(isItemCell),
   "hearts",

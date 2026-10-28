@@ -8,6 +8,8 @@ import {
   heartsAfter,
   heartsOf,
   items as initialItems,
+  itemsMax,
+  PIECES_ITEM,
   TOGGLE_ITEMS,
 } from "@/games/alttpr/data/items";
 import {
@@ -565,6 +567,17 @@ export const useGameStore = create<GameState>()(
                 state,
                 heartsAfter(heartsOf(state.items), change),
               );
+            }
+
+            // The triforce pieces found stop at none and at the most a goal
+            // holds: a stray right-click from none would say them all found
+            if (item === PIECES_ITEM) {
+              const next = Math.max(
+                0,
+                Math.min(itemsMax[item], current + direction),
+              );
+              if (next === current) return state;
+              return record(state, { items: { ...state.items, [item]: next } });
             }
 
             // Chest counters count down as chests are emptied; everything

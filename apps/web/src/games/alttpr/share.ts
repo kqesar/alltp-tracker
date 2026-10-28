@@ -58,6 +58,7 @@ export const SHARE_ITEMS: readonly string[] = `
   hearts tenbombs
   escape fluteactive heldcrystals heldgreen heldpendants
   heartquarters
+  triforce goalpieces
 `
   .trim()
   .split(/\s+/);
