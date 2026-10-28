@@ -36,6 +36,21 @@ describe("ChecksPanel", () => {
     );
   });
 
+  it("puts a paid check's price in parentheses after its name, and in its names", async () => {
+    const user = userEvent.setup();
+    render(<ChecksPanel />);
+    await user.click(filter("unavailable"));
+
+    expect(row("bottle-merchant")).toHaveTextContent(
+      "Bottle Merchant (100 rupees)",
+    );
+    expect(row("king-zora")).toHaveTextContent("King Zora (500 rupees)");
+    expect(
+      screen.getByRole("button", { name: "Why? King Zora (500 rupees)" }),
+    ).toBeInTheDocument();
+    expect(row("hobo")).not.toHaveTextContent("rupees");
+  });
+
   it("says which trick opens a check, links its guide, and opens the Tricks dialog", async () => {
     const user = userEvent.setup();
     act(() =>

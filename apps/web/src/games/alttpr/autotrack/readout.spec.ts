@@ -321,6 +321,13 @@ describe("locationName", () => {
     );
   });
 
+  it("prices a paid check, and no free one", () => {
+    expect(locationName("bottle-merchant")).toBe(
+      "Bottle Merchant (100 rupees)",
+    );
+    expect(locationName("hobo")).toBe("Hobo");
+  });
+
   it("leaves the dungeon out under its own heading, but not the sewers", () => {
     expect(locationName("ganons-tower/dms-room/top-left", true)).toBe(
       "DMs Room - Top Left",

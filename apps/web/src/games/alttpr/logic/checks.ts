@@ -8,6 +8,7 @@ import {
   dungeonLocations,
   MAP_LOCATIONS,
   regionModules,
+  rupeeCostOf,
 } from "@alltp/pack-alttpr";
 import { worldOf } from "@/games/alttpr/logic/settings";
 import {
@@ -25,6 +26,8 @@ export type Check = {
   readonly id: string;
   /** Its name in its zone: "Compass Chest" in Eastern Palace. */
   readonly name: string;
+  /** Rupees the game takes to give it; shown only, the logic ignores it. */
+  readonly cost?: number;
 };
 
 /** A zone of the world and the checks in it, in upstream's order. */
@@ -69,7 +72,9 @@ export const zonesOf = (settings: AlttprSettings): readonly Zone[] => {
   const made = [...byName].map(([name, { dungeon, ids }]) => ({
     checks: ids.map((id) => {
       const full = locationName(id);
+      const cost = rupeeCostOf(id);
       return {
+        ...(cost === undefined ? {} : { cost }),
         id,
         name: full.startsWith(`${name} - `)
           ? full.slice(name.length + 3)

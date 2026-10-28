@@ -12,6 +12,15 @@ describe("MapTracker", () => {
     act(() => useGameStore.setState(useGameStore.getInitialState(), true));
   });
 
+  it("names a paid check's marker with its price", () => {
+    render(<MapTracker />);
+
+    expect(screen.getByTestId("marker-bottle-merchant")).toHaveAccessibleName(
+      /^Bottle Merchant \(100 rupees\): /,
+    );
+    expect(screen.getByTestId("marker-hobo")).toHaveAccessibleName(/^Hobo: /);
+  });
+
   it("draws the pack's markers: one per location, a boss and a square per dungeon", () => {
     render(<MapTracker />);
 

@@ -31,6 +31,7 @@ import {
   PLACEMENT_LABELS,
   POOL_LABELS,
 } from "@/games/alttpr/data/presets";
+import { withCost } from "@/games/alttpr/logic/costs";
 
 /** The dungeons, by the pack's codes. */
 const DUNGEON_NAMES = {
@@ -472,7 +473,7 @@ export const locationName = (id: string, underDungeon = false) => {
     underDungeon && parts.length > 1 && parts[0] !== "sewers"
       ? parts.slice(1)
       : parts;
-  return shown.map(words).join(" - ");
+  return withCost(shown.map(words).join(" - "), id);
 };
 
 /** An item's name at a count: a level's name, or the item's with its count. */

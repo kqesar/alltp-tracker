@@ -18,6 +18,7 @@ import {
   runZones,
   type Zone,
 } from "@/games/alttpr/logic/checks";
+import { rupeesText, withRupees } from "@/games/alttpr/logic/costs";
 import { dungeonMissing } from "@/games/alttpr/logic/missing";
 import {
   bossStateOf,
@@ -98,7 +99,7 @@ const Why = ({ check }: { check: Check }) => {
       <button
         aria-controls={bodyId}
         aria-expanded={open}
-        aria-label={`Why? ${check.name}`}
+        aria-label={`Why? ${withRupees(check.name, check.cost)}`}
         className="check-why"
         data-testid={`check-why-${check.id}`}
         onClick={() => setOpen(!open)}
@@ -144,7 +145,17 @@ const CheckRow = memo(
             onChange={(event) => onToggle(check.id, event.currentTarget)}
             type="checkbox"
           />
-          <span className="check-row__name">{check.name}</span>
+          <span className="check-row__name">
+            {check.name}
+            {check.cost !== undefined && (
+              <>
+                {" "}
+                <span className="check-row__cost">
+                  ({rupeesText(check.cost)})
+                </span>
+              </>
+            )}
+          </span>
           {held && (
             <span
               className="check-row__held"
