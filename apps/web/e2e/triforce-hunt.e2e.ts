@@ -66,7 +66,8 @@ for (const width of WIDTHS) {
   }) => {
     await page.setViewportSize({ height: 900, width });
     await openHunt(page);
-    await page.getByTestId("item-triforce").click();
+    // Off the grid: a hovered cell is drawn a little larger
+    await page.mouse.move(0, 0);
 
     const [grid, cell, count] = await Promise.all([
       page.getByTestId("item-grid").boundingBox(),
