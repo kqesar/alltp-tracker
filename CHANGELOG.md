@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.62.0](https://github.com/kqesar/alltp-tracker/compare/v2.61.2...v2.62.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **alttpr:** read every boss a slot may hold under boss shuffle ([a70787f](https://github.com/kqesar/alltp-tracker/commit/a70787fe060dfb88f3485d1b78baa438c55fbbcc))
+* **web:** know a run's boss shuffle, from the run type or the seed ([433335b](https://github.com/kqesar/alltp-tracker/commit/433335bb14e51b0fbff2526b3cf4f1c1abba70f7))
+
 ## [2.61.2](https://github.com/kqesar/alltp-tracker/compare/v2.61.1...v2.61.2) (2026-10-28)
 
 
