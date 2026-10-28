@@ -91,8 +91,8 @@ describe("a run in a link", () => {
       expect(lengths[`smz3 ${stage}`]).toBeLessThan((await link(smz3)) * 0.7);
     }
     // Autotracked on the game's clock, its reading drifting at every pause:
-    // up to about 270 finds (300 falls back to the short link, alttpr/share)
-    for (const stamps of [66, 250, 270]) {
+    // up to 300 finds, every place and most items, the settings packed (link 4)
+    for (const stamps of [66, 250, 270, 300]) {
       lengths[`alttpr game clock ${stamps}`] = await link(
         packAlttpr(playOnGameClock(stamps, randoms())),
       );

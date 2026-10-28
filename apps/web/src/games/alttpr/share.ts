@@ -415,21 +415,141 @@ const compactField = (keys: readonly string[]): FieldCodec => {
 };
 
 /**
- * The fields over the location and item tables a link was made against: the
- * whole of today's, or a prefix of each. The timeline's key table follows
- * from them, and the digest covers it too. Its bytes follow the link's
- * layout version: whole drifts in runs (link 2), or bits throughout (link 3).
+ * Every value a run's settings can hold, as `key:value`, in the order links
+ * index them: each setting's options, the crystal counts, the glitched
+ * logics a seed may name, then a Mystery run's hidden settings, `hidden:`
+ * standing for the list itself. A new value goes at the end, never in the
+ * middle (a spec holds this list to the tracker's options), so a link made
+ * before it still reads. A value written out, not derived from the labels:
+ * their order is the dialog's, which may change.
  */
-const layoutAt = ([locations, items]: Tables, version: number): Layout => {
-  const keys = timelineKeys(items, locations);
+export const SHARE_SETTINGS: readonly string[] = `
+  mode:open mode:standard mode:inverted mode:retro
+  goal:ganon goal:fast-ganon goal:all-dungeons goal:pedestal goal:triforce-hunt
+  dungeonItems:standard dungeonItems:mc dungeonItems:mcs dungeonItems:full
+  entranceShuffle:none entranceShuffle:simple entranceShuffle:restricted
+  entranceShuffle:full entranceShuffle:crossed entranceShuffle:insanity
+  swordless:false swordless:true
+  crystalsTower:0 crystalsTower:1 crystalsTower:2 crystalsTower:3
+  crystalsTower:4 crystalsTower:5 crystalsTower:6 crystalsTower:7
+  crystalsGanon:0 crystalsGanon:1 crystalsGanon:2 crystalsGanon:3
+  crystalsGanon:4 crystalsGanon:5 crystalsGanon:6 crystalsGanon:7
+  itemPlacement:advanced itemPlacement:basic
+  accessibility:items accessibility:locations accessibility:none
+  itemPool:normal itemPool:hard itemPool:expert itemPool:superexpert
+  itemPool:crowd_control
+  itemFunctionality:normal itemFunctionality:hard itemFunctionality:expert
+  itemFunctionality:superexpert
+  glitches:overworld_glitches glitches:major_glitches
+  glitches:hybrid_major_glitches glitches:no_logic
+  hidden: hidden:goal hidden:swordless hidden:crystalsTower
+  hidden:crystalsGanon hidden:itemPlacement hidden:itemPool
+  hidden:itemFunctionality hidden:accessibility
+`
+  .trim()
+  .split(/\s+/);
+
+/** The layout version whose settings are packed too (link 4). */
+const SETTINGS_PACKED = 4;
+
+/** An entry of `SHARE_SETTINGS` as its key and the value it stands for. */
+const entryOf = (entry: string): [string, string | number | boolean] => {
+  const at = entry.indexOf(":");
+  const key = entry.slice(0, at);
+  const text = entry.slice(at + 1);
+  if (key === "swordless") return [key, text === "true"];
+  return [key, key.startsWith("crystals") ? Number(text) : text];
+};
+
+/**
+ * The run's settings (link 4): one varint a setting, its entry in the
+ * settings table, in the settings' own order; for `hidden`, the `hidden:`
+ * entry, then each hidden setting's, in the list's order. JSON spelled them
+ * out, about 160 characters of every link; this is about thirteen bytes.
+ * Settings with a key or a value the table does not have (another type
+ * included: `"7"` for 7) are not packed, and the save stays plain. A reader
+ * refuses what a writer never writes: a key twice, a hidden setting twice or
+ * away from its list.
+ * @param entries - The settings table the link was made against
+ */
+const settingsField = (entries: readonly string[]): FieldCodec => {
+  const index = new Map(entries.map((entry, at) => [entry, at]));
   return {
-    digested: [locations, items, keys],
-    fields: {
-      checked: bitsetField(locations, "record"),
-      items: itemsField(items),
-      timeline:
-        version >= COMPACT ? compactField(keys) : wholeDriftsField(keys),
+    pack: (value) => {
+      if (!isRecord(value) || Object.keys(value).length === 0) return null;
+      const written: (number | undefined)[] = [];
+      for (const [key, held] of Object.entries(value)) {
+        if (key !== "hidden") {
+          const at = index.get(`${key}:${String(held)}`);
+          if (at === undefined || entryOf(entries[at])[1] !== held) return null;
+          written.push(at);
+          continue;
+        }
+        if (!Array.isArray(held) || new Set(held).size !== held.length) {
+          return null;
+        }
+        written.push(index.get("hidden:"));
+        for (const setting of held) {
+          written.push(
+            typeof setting === "string" && setting !== ""
+              ? index.get(`hidden:${setting}`)
+              : undefined,
+          );
+        }
+      }
+      const out = new ByteWriter();
+      for (const at of written) {
+        if (at === undefined) return null;
+        out.uint(at);
+      }
+      return out.done();
     },
+    unpack: (bytes) => {
+      const read = new ByteReader(bytes);
+      const settings: Record<string, unknown> = {};
+      let hidden: unknown[] | null = null;
+      while (!read.done) {
+        const at = read.uint();
+        const entry = at === null ? undefined : entries[at];
+        if (entry === undefined) return undefined;
+        const [key, value] = entryOf(entry);
+        if (key === "hidden" && value !== "") {
+          if (hidden === null || hidden.includes(value)) return undefined;
+          hidden.push(value);
+          continue;
+        }
+        if (Object.hasOwn(settings, key)) return undefined;
+        hidden = key === "hidden" ? [] : null;
+        settings[key] = hidden ?? value;
+      }
+      return settings;
+    },
+  };
+};
+
+/**
+ * The fields over the tables a link was made against: the whole of today's,
+ * or a prefix of each. The timeline's key table follows from the location
+ * and item tables, and the digest covers it too. The fields follow the
+ * link's layout version: the timeline's whole drifts in runs (link 2), or
+ * bits throughout (link 3 on), and the settings as JSON, or packed over the
+ * settings table (link 4 on).
+ */
+const layoutAt = (
+  [locations, items, settings]: Tables,
+  version: number,
+): Layout => {
+  const keys = timelineKeys(items, locations);
+  const fields: Record<string, FieldCodec> = {
+    checked: bitsetField(locations, "record"),
+    items: itemsField(items),
+    timeline: version >= COMPACT ? compactField(keys) : wholeDriftsField(keys),
+  };
+  if (settings === undefined)
+    return { digested: [locations, items, keys], fields };
+  return {
+    digested: [locations, items, keys, settings],
+    fields: { ...fields, settings: settingsField(settings) },
   };
 };
 
@@ -437,14 +557,18 @@ const CODEC: PackCodec = {
   at: layoutAt,
   game: "alttpr",
   legacySizes: LEGACY_SIZES,
-  tables: [LOCATIONS, SHARE_ITEMS],
-  version: COMPACT,
-  // A timeline with no find is one zero byte in both layouts: written as
-  // link 2, which a tracker before link 3 opens too (the short link Share
-  // falls back to, among others)
+  tables: [LOCATIONS, SHARE_ITEMS, SHARE_SETTINGS],
+  // The settings table is link 4's
+  tablesIn: (version) => (version >= SETTINGS_PACKED ? 3 : 2),
+  version: SETTINGS_PACKED,
+  // A save without a find is written as link 2, which every tracker since
+  // the packed form opens: its timeline is the one byte all layouts share,
+  // and its settings as JSON cost it nothing that matters, the short link
+  // Share falls back to among such saves being far under a chat's limit.
+  // Any other is link 4, which the settings packed keep short
   versionFor: ({ timeline }) =>
     isRecord(timeline) && Object.keys(timeline).length > 0
-      ? COMPACT
+      ? SETTINGS_PACKED
       : LINK_VERSION,
 };
 
