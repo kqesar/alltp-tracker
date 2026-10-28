@@ -23,6 +23,7 @@ import {
   bitsetField,
   type FieldCodec,
   type Layout,
+  LINK_VERSION,
   type PackCodec,
   packRun,
   type Tables,
@@ -158,21 +159,25 @@ const keyBitsOf = (keys: readonly string[]): number =>
   Math.max(1, Math.ceil(Math.log2(keys.length)));
 
 /**
- * The timeline as link 2 wrote it, read only: the tracker writes link 3
- * (`compactField`), and links of this layout recorded by its last writer,
- * v2.58.0's (`share/fixtures/links-alttpr-v2.json`), hold this reader to
- * them. The finds in the order they came, in three parts.
- * Varints: how many finds, the first one's instant, the Rice parameter of
- * the gaps, then the readings as runs of finds that share one, each its
- * length, then 0 for no reading or 1 and its drift whole. Then bits, no
- * padding between them: each find's key (an index in the key table), then
- * the time since the find before as a Rice code.
+ * The timeline as link 2 wrote it, read: links of this layout recorded by
+ * v2.58.0's writer (`share/fixtures/links-alttpr-v2.json`) hold this reader
+ * to them. The finds in the order they came, in three parts. Varints: how
+ * many finds, the first one's instant, the Rice parameter of the gaps, then
+ * the readings as runs of finds that share one, each its length, then 0 for
+ * no reading or 1 and its drift whole. Then bits, no padding between them:
+ * each find's key (an index in the key table), then the time since the find
+ * before as a Rice code. The tracker writes it for a timeline with no find
+ * alone, the one byte both layouts share (`versionFor`), and link 3
+ * (`compactField`) for any other.
  * @param keys - The key table the link was made against
  */
 const wholeDriftsField = (keys: readonly string[]): FieldCodec => {
   const keyBits = keyBitsOf(keys);
   return {
-    pack: () => null,
+    pack: (value) =>
+      isRecord(value) && Object.keys(value).length === 0
+        ? Uint8Array.of(0)
+        : null,
     unpack: (bytes) => {
       const read = new ByteReader(bytes);
       const length = read.uint();
@@ -434,6 +439,13 @@ const CODEC: PackCodec = {
   legacySizes: LEGACY_SIZES,
   tables: [LOCATIONS, SHARE_ITEMS],
   version: COMPACT,
+  // A timeline with no find is one zero byte in both layouts: written as
+  // link 2, which a tracker before link 3 opens too (the short link Share
+  // falls back to, among others)
+  versionFor: ({ timeline }) =>
+    isRecord(timeline) && Object.keys(timeline).length > 0
+      ? COMPACT
+      : LINK_VERSION,
 };
 
 /** An export as a packed link's text, for the Share action. */

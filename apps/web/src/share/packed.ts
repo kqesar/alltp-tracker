@@ -87,6 +87,12 @@ export interface PackCodec {
    */
   readonly version?: number;
   /**
+   * The layout version a save is written in, `version` when absent: the
+   * earliest whose bytes for it are the latest's, so a tracker that reads
+   * only that one still opens the link. Between `LINK_VERSION` and `version`.
+   */
+  readonly versionFor?: (progress: Record<string, unknown>) => number;
+  /**
    * The fields over `tables`, or over a prefix of each (an older link's), in
    * the layout of `version`.
    */
@@ -130,7 +136,13 @@ export const packRun = (save: string, codec: PackCodec): string => {
   const file: unknown = JSON.parse(save);
   if (!isRecord(file) || file.format !== SAVE_FORMAT) return save;
   if (file.game !== codec.game || !isRecord(file.progress)) return save;
-  const version = versionOf(codec);
+  const version = Math.min(
+    versionOf(codec),
+    Math.max(
+      LINK_VERSION,
+      codec.versionFor?.(file.progress) ?? versionOf(codec),
+    ),
+  );
   const layout = codec.at(codec.tables, version);
   const progress: Record<string, unknown> = { ...file.progress };
   for (const [name, field] of Object.entries(layout.fields)) {
