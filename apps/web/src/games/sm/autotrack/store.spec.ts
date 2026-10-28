@@ -61,6 +61,9 @@ const harness = (game: MapRandoGame = {}) => {
 };
 
 beforeEach(() => {
+  // The readings stamp Date.now(): a frozen wall clock leaves the specs to
+  // the ManualClock alone, as the timer maths are exact
+  vi.useFakeTimers({ now: Date.UTC(2026, 9, 28, 9, 30), toFake: ["Date"] });
   localStorage.clear();
   window.history.replaceState(null, "", "/");
   useSmStore.setState(useSmStore.getInitialState(), true);
@@ -76,6 +79,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   stopSmAutotrack();
   setSmAutotrackOptions({});
 });
