@@ -280,6 +280,43 @@ entrance locations "should not ever be accessed") leave to the player. The
 opened bit lies in the `overworld` range the checks read, but the decoder
 asks for nothing then.
 
+### What autotracking gives the rules
+
+Two specs hold autotracking to the rules, so that what memory holds cannot
+silently stop short of the logic, as the hearts and the escape's Ten Bombs
+did until 2.52.0:
+
+- **Locations** (`src/autotrack/check-flags.spec.ts`): every location of
+  every world the app compiles (Open, Standard, Inverted, Retro, and the
+  entrance randomizer's but for the events its solver gives) has a flag in
+  `CHECK_FLAGS`, or a reason in `UNMAPPED_LOCATIONS`: the Pyramid Fairy's
+  two trades, the fairy fountains' bottles, Ganon, the two pads' medallions
+  (told otherwise, above) and Inverted's Bomb Merchant.
+- **Items** (the app's `games/alttpr/autotrack/rules.spec.ts`): a console
+  holding everything, read and laid on a fresh board in each world and
+  dungeon item level, gives `toState` every pack item at the level the game
+  holds, outside Race Mode and in it, but for these:
+
+| Item | Why the rules do not get it from memory |
+| --- | --- |
+| `bow` 2 (the silver bow) | the board shows it as the bow and the silver arrows, which `canShootArrows2` reads alike |
+| `flute` 2 (activated) | the board's cell says found, not activated: `canFly` reads a flute found through `canActivateOcarina`, which only an Inverted run can deny |
+| `shopArrow`, `shopKey` | no memory says what a retro shop sells |
+| `bigRedBomb` | no flag keeps Inverted's Bomb Merchant (`UNMAPPED_LOCATIONS`) |
+| small keys | in their dungeons the key model holds them; retro's generic keys are never vouched for; with keys outside their dungeons the board takes those memory shows in hand (below) |
+| Race Mode: `bottle`, pendants, crystals | their ranges' categories (`hud`, `prizes`) stay forbidden, stricter than v2.0 (`race-profile.ts`) |
+
+With small keys outside their dungeons (MCS, Full), memory holds the keys
+in hand (`DungeonKeys`, `sram.asm:153-168`), which a door spends: the app
+counts each rise between two readings as a key found. A key an enemy or a
+pot drops (not shuffled in v31) rises the same, and a key found and spent
+while the tracker does not read is missed. The base patch also counts the
+keys received as items per dungeon (`DungeonCollectedKeys`, `$7EF4E0`,
+`sram.asm:361-375`, written by `CountChestKey`, `stats.asm:126-148`, from
+`DungeonIncrement`, `inventory.asm:208-213`): what the HUD shows in such a
+run. Reading it waits on a real game's check, Tower of Hera's basement key
+and a Crosskeys ROM's base patch included.
+
 ## The dark room map
 
 Without the Lamp a dark room shows almost nothing. The game knows the room
