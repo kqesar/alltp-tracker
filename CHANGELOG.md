@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.59.0](https://github.com/kqesar/alltp-tracker/compare/v2.58.0...v2.59.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **web:** offer a reload for a link a newer tracker wrote ([8a8f9f6](https://github.com/kqesar/alltp-tracker/commit/8a8f9f688e9c3405a57b980825dbb2d9212e46d4))
+* **web:** pack an ALttPR link's timeline in bits, each drift as a change ([52eba13](https://github.com/kqesar/alltp-tracker/commit/52eba130e7ae1d3365412fc81d58d6db3808e24e))
+
+
+### 🐛 Bug Fixes
+
+* **web:** write link 2 for a save without a find ([6107669](https://github.com/kqesar/alltp-tracker/commit/61076696fd36cfb15aaa900968ffbb20b9000785))
+
+
+### 📚 Documentation
+
+* describe link 3's timeline and the lengths it measures ([6d6f216](https://github.com/kqesar/alltp-tracker/commit/6d6f216dbde2e5e16a4be7c78af4cd310b797584))
+* say how a newer tracker's link reads, and when link 2 is still written ([698ba6b](https://github.com/kqesar/alltp-tracker/commit/698ba6b037e1e327c1421117cf4b534063d5cc1d))
+
+
+### 🔧 Code Refactoring
+
+* **web:** let a link codec write a later layout and read the earlier ones ([6eea68f](https://github.com/kqesar/alltp-tracker/commit/6eea68fb0977a7327d1ba18b443a56866a063157))
+
 ## [2.58.0](https://github.com/kqesar/alltp-tracker/compare/v2.57.0...v2.58.0) (2026-10-28)
 
 
