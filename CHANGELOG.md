@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.61.0](https://github.com/kqesar/alltp-tracker/compare/v2.60.2...v2.61.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **alttpr:** read the heart pieces toward the next heart, in Race Mode too ([54bce8a](https://github.com/kqesar/alltp-tracker/commit/54bce8a51684fb4af1cf66be722265c9008e90d6))
+* **web:** count the heart pieces toward the next heart on the hearts counter ([a23e721](https://github.com/kqesar/alltp-tracker/commit/a23e72178446d0df0f76d2ef3c5038067bfd26c0))
+
+
+### 🐛 Bug Fixes
+
+* **web:** give every row of the shortcuts table an icon that exists ([5394774](https://github.com/kqesar/alltp-tracker/commit/53947741b84c4295bf687632dee78a5a918cdd3d))
+
+
+### 📚 Documentation
+
+* describe the heart pieces on the hearts counter ([8757922](https://github.com/kqesar/alltp-tracker/commit/8757922aa05c181718fdda94533b99ca44fbc18b))
+
 ## [2.60.2](https://github.com/kqesar/alltp-tracker/compare/v2.60.1...v2.60.2) (2026-10-28)
 
 
