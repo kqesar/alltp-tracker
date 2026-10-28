@@ -156,11 +156,11 @@ flowchart LR
   its last count would read as held from the start and open the basic placement's dungeons too early.
   The board's hearts and bombs are dropped (`withLogCounts`): a heart container, a piece of heart or
   the Ten Bombs counts once the place the log put it at is taken, like a key. A run that dated no
-  place (Race Mode stamps no check) cannot date them, so they stay unknown, and a rule asking for
+  place cannot date them, so they stay unknown, and a rule asking for
   them reads `maybe`, never `yes`.
 - **Prizes and pads are the log's.** Each dungeon's prize (`log.extra.prizes`) counts held once its
   boss is beaten, which is timed, and the medallion pads (`log.extra.medallions`) are known from
-  the start, whatever the board was left with: Race Mode reads no prize, a hand run may set none,
+  the start, whatever the board was left with: Race Mode names no dungeon's prize, a hand run may set none,
   and an unknown pad would ask for all three medallions. Items with no timeline entry (an old save)
   count from the start.
 - **Play time** is the run timer's reading less each gap of 30 minutes or more with nothing found
@@ -178,7 +178,7 @@ flowchart LR
 - **Dungeons**: per dungeon marker, when its first place and all of them were in logic, the first
   of its places checked (entered), and its boss (the boss's place checked or the boss marked,
   whichever came first). A dungeon with no place stamped reads "not timed" as entered, never
-  "never", when the run stamped no dungeon place at all (Race Mode) or its boss fell.
+  "never", when the run stamped no dungeon place at all (Race Mode before 2.53) or its boss fell.
 
 On seed `9MQ9gO1wMD` and a real six-hour run (208 instants), the sweep solves 321 times in about
 120 ms in Node, no solve over 8 ms. `useSweep` runs it on the main thread in slices of 8 ms
@@ -197,7 +197,7 @@ readings instead:
 | `keysanity` (MCS, Full) | small keys are counts on the board, not stamped |
 | `entrances` | where each entrance led is not stamped, and the final ones would leak |
 | `not-modelled` | the pack does not model the run's logic: settings hidden (Mystery), bosses shuffled (the log's `Bosses`), a logic other than NoGlitches (the log's `meta.logic`) |
-| `race-mode` | fewer than half the needed finds are matched by place, and places outside dungeons are stamped but none inside: Race Mode never reads a dungeon's chests |
+| `race-mode` | fewer than half the needed finds are matched by place, and places outside dungeons are stamped but none inside: Race Mode before 2.53 did not read a dungeon's chests (it does since, v2.0's dungeon-locations) |
 | `by-hand` | fewer than half the needed finds are matched by place otherwise: the times are clicks |
 | `no-times` | nothing needed has a time |
 | `no-playthrough` | a spoiler race's log |

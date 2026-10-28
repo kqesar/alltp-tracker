@@ -194,11 +194,13 @@ Autotracking reads the hearts on screen, `MaximumHealth` (`$7E:F36C`,
 `max-health`: `$08` a heart, from `$18` to `$A0`, `sram.asm:131-132`), whole:
 four pieces add a heart there and `HeartPieceQuarter` wraps (`sram.asm:130`),
 so 9 hearts and three pieces read 9 (`decodeHealth`). Its category,
-`health`, is the one HUD count Race Mode reads: v2.0 says "The tracker may
-also display and/or react to changes in current bomb count, arrow count,
-rupee count, heart count, heart piece count, and bottle contents", and the
-basic placement's dungeons ask for it. The stats' heart counters
-(`heart-containers`, `heart-pieces`) stay `hud`, unread in a race.
+`health`, is one of the two HUD counts Race Mode reads, beside the bottles'
+contents (`bottles`, which `@hasABottle` and `bottleCount` read in the same
+gate): v2.0 says "The tracker may also display and/or react to changes in
+current bomb count, arrow count, rupee count, heart count, heart piece
+count, and bottle contents", and the basic placement's dungeons ask for
+both. The stats' heart counters (`heart-containers`, `heart-pieces`) stay
+`hud`, unread in a race.
 
 ### A dungeon's prize, as the game shows it
 
@@ -237,6 +239,17 @@ prize never leaves the decoder. A range not read counts as not met; a ROM
 the device does not serve (zero-filled) names nothing, and the app falls
 back to telling a finished dungeon's prize by elimination. A prize the
 player named stays theirs.
+
+Beside the dungeons' prizes, the rules get the prizes Link holds by class,
+whichever dungeon gave them (`decodePrizesHeld`, `TrackerInput.held`): the
+green pendant, the other pendants, and the crystals counted. The game sets
+a prize's bit in `PendantsField` or `CrystalsField` (`sram.asm:139-150`)
+only as Link takes it, so this is v2.0's "prizes upon collection", which
+Race Mode reads: only the count of the crystals leaves the decoder, never
+which is 5 or 6. `toState` tops the dungeons' prizes up from the next free
+items of each class, a counted crystal taking a regular one while one is
+left: a count makes a crystal red only when there are more crystals than
+regular ones (six or seven), which any player can count too.
 
 ### A pad's medallion, as the game shows it
 
@@ -300,11 +313,55 @@ did until 2.52.0:
 | Item | Why the rules do not get it from memory |
 | --- | --- |
 | `bow` 2 (the silver bow) | the board shows it as the bow and the silver arrows, which `canShootArrows2` reads alike |
-| `flute` 2 (activated) | the board's cell says found, not activated: `canFly` reads a flute found through `canActivateOcarina`, which only an Inverted run can deny |
 | `shopArrow`, `shopKey` | no memory says what a retro shop sells |
-| `bigRedBomb` | no flag keeps Inverted's Bomb Merchant (`UNMAPPED_LOCATIONS`) |
+| `bigRedBomb` | no flag keeps the Bomb Merchant (`UNMAPPED_LOCATIONS`); outside Race Mode, in an Inverted run (the one world whose map has the Merchant), the app checks it once a reading sees Link carry the big bomb (`FollowerIndicator` `$0D`, `sram.asm:211`, which only the purchase sets for good: zelda3 `sprite_main.c:24295`) and keeps it for the session |
 | small keys | in their dungeons the key model holds them; retro's generic keys are never vouched for; with keys outside their dungeons the board takes those memory shows in hand (below) |
-| Race Mode: `bottle`, pendants, crystals | their ranges' categories (`hud`, `prizes`) stay forbidden, stricter than v2.0 (`race-profile.ts`) |
+
+Three more reach the rules through values no cell draws, which the app's
+`logic/packItems.ts` lists: the flute activated (`InventoryTracking` f,
+`inventory.asm:450-453`: `flute` 2, so an Inverted run that activated it
+out of logic keeps `canFly`), the prizes held by class (above), and, outside
+Race Mode, Standard's escape: `ProgressIndicator` `$02`, set as the rain
+ends with Zelda in the Sanctuary (`zelda.asm:11-13`), is upstream's
+`RescueZelda`, and until it the app counts Hyrule Castle unfinished, so the
+Light World stays shut during the escape. A run by hand still counts the
+escape done from the start.
+
+A shield a Pikit takes drops `ShieldEquipment` (`$7EF35A`) to 0; it takes
+the fighter's and the fire shield, never the mirror shield, and gives it
+back when it dies (zelda3 `sprite_main.c:19892-19894`, `sprite.c:1413`).
+The rules read the mirror shield alone (`canBlockLasers`, `shield >= 3`),
+so the logic never moves with it: the board keeps the shield found until
+**Sync from game** sets it to what Link holds.
+
+### What Race Mode reads (v2.0)
+
+Race Mode reads what the ALTTPR Auto-tracker Rules v2.0 permit in so many
+words, and nothing they leave in doubt (`race-profile.ts` quotes each
+category's line; `memory.spec.ts` lists every range a race reads):
+
+| Read in a race | v2.0 |
+| --- | --- |
+| items, dungeon items, bosses | "Y-, B-, and A-items"; "Dungeon items (keys, maps, compasses)"; "Defeated bosses" |
+| locations checked, outside and inside the dungeons, and so each dungeon's counter | "overworld-locations, underworld-locations, and dungeon-locations"; "how many locations have been cleared, both in total, and per dungeon" |
+| the heart count, the bottles' contents | "heart count, heart piece count, and bottle contents" |
+| the pendants by name, the crystals as a count | "Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal)" |
+| the game's start and end | "when the game starts and when the game ends" |
+
+| Kept from a race | Why |
+| --- | --- |
+| which crystal is 5 or 6; which dungeon gave which prize | "trackers may not auto-track which crystal is a 5/6-crystal"; "may not associate an acquired item with a specific location" |
+| the ROM's prize table, the world map's prizes | "ROM addresses associated with ... chest or other location contents should not ever be accessed"; "Map checks are not allowed to be auto-tracked" |
+| Zelda's rescue (the `zelda` check, Standard's escape) | "may not alert whether or not Zelda was rescued in a Standard opening seed" |
+| the big bomb (`FollowerIndicator`), the ROM's stats, the bomb count, the stats' heart counters, the seed's settings | not named, or named within limits: "Anything not covered in this document is, by default, considered not permitted" |
+| Link's position, room, dungeon, entrances | the race admins' clarification of June 2026 (below) and "Region endpoints may not be auto-tracked" |
+
+A dungeon location checked says Link cleared it, as a cave's says he was in
+the cave: that is the location tracking v2.0 names, not a display of where
+he is. The decoders read only the chest, key and boss bits of a room's word,
+never its doors or the quadrants visited, and nothing marks where he is now.
+`DungeonLocationsChecked` (`$7EF4C0`, the HUD's per-dungeon count) is not
+read: the locations' own flags give the same count and say which.
 
 With small keys outside their dungeons (MCS, Full), memory holds the keys
 in hand (`DungeonKeys`, `sram.asm:153-168`), which a door spends: the app
