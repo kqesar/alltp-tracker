@@ -186,6 +186,22 @@ describe("compareReview", () => {
     expect(dungeonRow).toMatchObject({ ms: null, state: "untimed" });
   });
 
+  it("calls a check missed that a dungeon ticked check by check left at 0", () => {
+    const compass = "eastern-palace/compass-chest";
+    const zone = runZones(run()).find((z) => z.dungeon === "eastern-palace");
+    const others = (zone?.checks ?? [])
+      .map(({ id }) => id)
+      .filter((id) => id !== compass && id !== "eastern-palace/boss");
+    expect(others.length).toBeGreaterThan(0);
+    act(() => {
+      store().toggleChecks(others);
+      store().setItem("chest0", 0);
+    });
+    const { rows } = compareReview(log, run());
+    const dungeonRow = rows.find((r) => r.entry.placement.location === compass);
+    expect(dungeonRow?.state).toBe("missed");
+  });
+
   it("matches a boss beaten to its boss and prize locations", () => {
     vi.setSystemTime(T0 + 90_000);
     act(() => store().setItem("boss0", 2));

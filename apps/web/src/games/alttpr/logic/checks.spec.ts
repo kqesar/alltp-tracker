@@ -146,6 +146,55 @@ describe("checkStates", () => {
     expect(beaten["desert-palace/boss"]).toBe("opened");
   });
 
+  it("shows each check its own state at 0 once the dungeon's checks are ticked", () => {
+    const index = LEGACY_DUNGEONS.indexOf("desert-palace");
+    const desert = runZones(useGameStore.getState()).find(
+      (zone) => zone.dungeon === "desert-palace",
+    );
+    if (desert === undefined) throw new Error("No Desert Palace");
+    // Four chests opened, as autotracking ticks them: their items and the
+    // big key make the counter 0, the big chest left holding a dungeon item
+    useGameStore
+      .getState()
+      .toggleChecks([
+        "desert-palace/map-chest",
+        "desert-palace/torch",
+        "desert-palace/big-key-chest",
+        "desert-palace/compass-chest",
+      ]);
+    useGameStore.setState((state) => ({
+      items: {
+        ...state.items,
+        [`bigkey${index}`]: 1,
+        book: true,
+        [`chest${index}`]: 0,
+      },
+    }));
+
+    const state = useGameStore.getState();
+    expect(isCleared(desert, state)).toBe(false);
+    const states = checkStates(state);
+    expect(states["desert-palace/big-chest"]).toBe("available");
+    expect(states["desert-palace/torch"]).toBe("opened");
+    expect(states["desert-palace/boss"]).toBe("unavailable");
+  });
+
+  it("still counts a dungeon out whose boss alone is ticked", () => {
+    const index = LEGACY_DUNGEONS.indexOf("desert-palace");
+    const desert = runZones(useGameStore.getState()).find(
+      (zone) => zone.dungeon === "desert-palace",
+    );
+    if (desert === undefined) throw new Error("No Desert Palace");
+    useGameStore.getState().toggleChecks(["desert-palace/boss"]);
+    useGameStore.setState((state) => ({
+      items: { ...state.items, [`chest${index}`]: 0 },
+    }));
+
+    const state = useGameStore.getState();
+    expect(isCleared(desert, state)).toBe(true);
+    expect(checkStates(state)["desert-palace/big-chest"]).toBe("opened");
+  });
+
   it("has no boss check to keep in the towers, whose bosses are rules", () => {
     useGameStore.setState((state) => ({
       items: { ...state.items, chest12: 0 },

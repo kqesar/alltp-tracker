@@ -114,6 +114,29 @@ test.describe("the Checks panel", () => {
     await expect(page.getByTestId("checks-panel")).toBeVisible();
   });
 
+  test("leaves a chest unopened at 0 once the dungeon's checks are ticked", async ({
+    page,
+  }) => {
+    await openTracker(page);
+    await showAllChecks(page);
+    await page.getByTestId("checks-zone").selectOption("Eastern Palace");
+    for (const id of ["cannonball-chest", "map-chest", "big-chest"]) {
+      await page
+        .getByTestId(`check-row-eastern-palace/${id}`)
+        .getByRole("checkbox")
+        .check();
+    }
+    // Its counter down to 0: the compass chest holds a dungeon item only
+    for (let item = 0; item < 3; item++) {
+      await page.getByTestId("chest-overlay-0").click();
+    }
+
+    const compass = page.getByTestId("check-row-eastern-palace/compass-chest");
+    await expect(compass).toContainText("Available");
+    await expect(compass.getByRole("checkbox")).not.toBeChecked();
+    await expect(compass.getByRole("checkbox")).toBeEnabled();
+  });
+
   test("skips to the checks from the keyboard", async ({ page }) => {
     await openTracker(page);
 
