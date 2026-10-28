@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { page } from "@/components/ui/lazyDialog";
 import { CloseIcon } from "@/components/ui/ToolbarIcons";
 import { GAMES, type GameId, loadGame, switchGame } from "@/games/registry";
 import {
@@ -8,6 +9,7 @@ import {
   RunLinkError,
   sharedPayload,
 } from "@/share/runLink";
+import { useUpdateStore } from "@/stores/updateStore";
 
 /** How long "Shared run opened" stays on screen. */
 const OPENED_MS = 4000;
@@ -17,7 +19,8 @@ const MAX_REASON_CHARS = 200;
 
 type Offer =
   | { kind: "ask"; game: GameId; load: () => void }
-  | { kind: "refused"; reason: string }
+  /** `newer`: a newer tracker wrote it, so a reload, the address kept, may open it */
+  | { kind: "refused"; reason: string; newer?: true }
   | { kind: "opened" };
 
 /**
@@ -35,9 +38,12 @@ const inspect = async (payload: string): Promise<Offer> => {
       };
     }
     const result = (await loadGame(game)).importRun(save);
-    return result.ok
-      ? { game, kind: "ask", load: result.load }
-      : { kind: "refused", reason: result.reason.slice(0, MAX_REASON_CHARS) };
+    if (result.ok) return { game, kind: "ask", load: result.load };
+    return {
+      kind: "refused",
+      reason: result.reason.slice(0, MAX_REASON_CHARS),
+      ...(result.newer && { newer: true }),
+    };
   } catch (error) {
     return {
       kind: "refused",
@@ -56,11 +62,16 @@ const inspect = async (payload: string): Promise<Offer> => {
  * answers, and a link that is not a valid run only says so. One of the
  * page's notices, a live region that stays in the page, empty, so it is heard
  * the moment it fills. It watches the address, so a link opened in a tab
- * already on the tracker asks too.
+ * already on the tracker asks too. A link a newer tracker wrote offers
+ * Reload, which keeps the address: the latest release, once loaded, opens
+ * it; only the player's dismissal clears it.
  * @param game - The game this page tracks: another one's run switches to it
  */
 export const SharedRunPrompt = ({ game }: { game: GameId }) => {
   const [offer, setOffer] = useState<Offer | null>(null);
+  // A new version already waiting is taken on the way; else a plain reload,
+  // which fetches the latest release from the network (sw/sw.ts)
+  const update = useUpdateStore((state) => state.apply);
 
   useEffect(() => {
     let current = true;
@@ -134,6 +145,16 @@ export const SharedRunPrompt = ({ game }: { game: GameId }) => {
             {offer.reason} Nothing was changed.
           </p>
           <div className="notice__actions">
+            {offer.newer && (
+              <button
+                className="notice__button notice__button--primary"
+                data-testid="shared-run-reload"
+                onClick={() => (update ?? page.reload)()}
+                type="button"
+              >
+                Reload
+              </button>
+            )}
             <button
               aria-label="Dismiss"
               className="notice__button"

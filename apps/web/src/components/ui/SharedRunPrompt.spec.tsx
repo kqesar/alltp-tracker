@@ -9,6 +9,7 @@ import {
   it,
   vi,
 } from "vitest";
+import { page } from "@/components/ui/lazyDialog";
 import { SharedRunPrompt } from "@/components/ui/SharedRunPrompt";
 import { packLink as packAlttpr } from "@/games/alttpr/share";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -17,6 +18,7 @@ import { exportSave as exportSm, useSmStore } from "@/games/sm/store";
 import { packLink as packSmz3 } from "@/games/smz3/share";
 import { exportSave as exportSmz3, useSmz3Store } from "@/games/smz3/store";
 import { encodeRun } from "@/share/runLink";
+import { useUpdateStore } from "@/stores/updateStore";
 
 vi.mock("@/games/registry", async (importActual) => ({
   ...(await importActual<typeof import("@/games/registry")>()),
@@ -263,6 +265,80 @@ describe("the shared run notice", () => {
     );
     expect(screen.queryByTestId("shared-run-open")).not.toBeInTheDocument();
     expect(useGameStore.getState().items.lantern).toBe(true);
+  });
+
+  describe("a link a newer tracker wrote", () => {
+    const NEWER =
+      "This link comes from a newer version of the tracker: reload to update. Nothing was changed.";
+
+    /** A link of a layout past this tracker's, in the address. */
+    const openNewer = async () => {
+      useGameStore.getState().handleItemClick("hookshot");
+      const link = JSON.parse(
+        packAlttpr(useGameStore.getState().exportState()),
+      );
+      useGameStore.setState(useGameStore.getInitialState(), true);
+      link.link = 99;
+      openLink(await encodeRun(JSON.stringify(link)));
+    };
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      useUpdateStore.setState({ apply: null });
+    });
+
+    it("says so, and offers a reload that keeps the address", async () => {
+      const reload = vi.spyOn(page, "reload").mockImplementation(() => {});
+      await openNewer();
+      render(<SharedRunPrompt game="alttpr" />);
+
+      expect(await screen.findByTestId("shared-run-refused")).toHaveTextContent(
+        NEWER,
+      );
+      const button = screen.getByTestId("shared-run-reload");
+      expect(button).toHaveAccessibleName("Reload");
+      expect(screen.queryByTestId("shared-run-open")).not.toBeInTheDocument();
+      // The link stays in the address until the player has chosen
+      expect(window.location.hash).toMatch(/^#run=/);
+
+      await userEvent.click(button);
+      expect(reload).toHaveBeenCalledOnce();
+      expect(window.location.hash).toMatch(/^#run=/);
+      expect(useGameStore.getState().items.hookshot).toBe(false);
+
+      // Dismissed, it goes
+      await userEvent.click(screen.getByTestId("shared-run-dismiss"));
+      expect(window.location.hash).toBe("");
+    });
+
+    it("takes a new version already waiting on the way", async () => {
+      const reload = vi.spyOn(page, "reload").mockImplementation(() => {});
+      const apply = vi.fn();
+      useUpdateStore.setState({ apply });
+      await openNewer();
+      render(<SharedRunPrompt game="alttpr" />);
+
+      await userEvent.click(await screen.findByTestId("shared-run-reload"));
+
+      expect(apply).toHaveBeenCalledOnce();
+      expect(reload).not.toHaveBeenCalled();
+      expect(window.location.hash).toMatch(/^#run=/);
+    });
+
+    it("is offered for a newer tracker's link only, not another's", async () => {
+      useGameStore.getState().handleItemClick("hookshot");
+      const link = JSON.parse(
+        packAlttpr(useGameStore.getState().exportState()),
+      );
+      link.table = "AAAAAA";
+      openLink(await encodeRun(JSON.stringify(link)));
+      render(<SharedRunPrompt game="alttpr" />);
+
+      expect(await screen.findByTestId("shared-run-refused")).toHaveTextContent(
+        "This link comes from another version of the tracker.",
+      );
+      expect(screen.queryByTestId("shared-run-reload")).not.toBeInTheDocument();
+    });
   });
 
   it("asks again when a link is opened in a tab already on the tracker", async () => {

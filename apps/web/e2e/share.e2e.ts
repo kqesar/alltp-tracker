@@ -398,6 +398,53 @@ test("a link from another version of the tracker says so and changes nothing", a
   );
 });
 
+test("a link a newer tracker wrote says so, and Reload keeps it in the address", async ({
+  page,
+}) => {
+  await fresh(page);
+  await page.getByTestId("item-hookshot").click();
+  const save = JSON.parse(
+    readFileSync(
+      join(import.meta.dirname, "fixtures", "share-v1-alttpr.json"),
+      "utf8",
+    ),
+  );
+  // A layout version past any this build reads
+  const link = JSON.stringify({
+    ...save,
+    format: "alltp-tracker-link",
+    link: 99,
+    table: "AAAAAA",
+  });
+  await page.goto(`./#run=${deflateRawSync(link).toString("base64url")}`);
+
+  const refused = page.getByTestId("shared-run-refused");
+  await expect(refused).toHaveText(
+    "This link comes from a newer version of the tracker: reload to update. Nothing was changed.",
+  );
+  await expect(page.getByTestId("shared-run-open")).toHaveCount(0);
+  const axe = await new AxeBuilder({ page })
+    .exclude(".mapspan")
+    .withTags(WCAG_AA)
+    .analyze();
+  expect(axe.violations.map(({ id }) => id)).toEqual([]);
+
+  // Reload keeps the link: the page loads again on it, and asks again
+  await Promise.all([
+    page.waitForEvent("load"),
+    page.getByTestId("shared-run-reload").click(),
+  ]);
+  expect(await page.evaluate(() => window.location.hash)).toMatch(/^#run=/);
+  await expect(refused).toContainText("a newer version of the tracker");
+  await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+    OBTAINED,
+  );
+
+  // Only the player's dismissal clears it
+  await page.getByTestId("shared-run-dismiss").click();
+  expect(await page.evaluate(() => window.location.hash)).toBe("");
+});
+
 test("Keep mine leaves the run untouched, and a link opened on the board asks", async ({
   browser,
 }) => {
