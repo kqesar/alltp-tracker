@@ -928,6 +928,44 @@ reachable locations as items left" would be wrong: with two `yes` and two
 `no` locations and two items left, the player may have opened the two
 `yes` ones. A property checks the rule against every way R items can sit.
 
+## Paid checks
+
+`RUPEE_COSTS` (`src/rupee-costs.ts`) lists the checks the game charges rupees
+for, by location id, and `rupeeCostOf(id)` reads one. It is display data: the
+randomizer does not model money (no rule asks for a rupee), so the logic, the
+fill and the tris ignore it, and the app only prints the price after the
+check's name.
+
+| Location | Rupees | Dialogue (`app/Text.php`) | ROM code that charges it |
+| --- | --- | --- | --- |
+| Bottle Merchant | 100 | `bottle_vendor_choice`, line 512 | zelda3 `Sprite_BottleVendor`, `sprite_main.c:6185` |
+| Chest Game | 30 | `game_chest_village_of_outcasts`, line 808 | `ChestGameGuy`, `sprite_main.c:25029` |
+| Digging Game | 80 | `game_digging_choice`, line 886 | `Sprite_D5_DigGameGuy`, `sprite_main.c:19175` |
+| King Zora | 500 | `zora_tells_cost`, line 750 | `Sprite_52_KingZora`, `sprite_main.c:3024` |
+| Blacksmith | 10 | `blacksmiths_paywall`, line 528 | z3randomizer `swordswap.asm:113-128` (`GetSmithSword`) |
+| Bomb Merchant (Inverted) | 100 | `bomb_shop_big_bomb`, line 664 | `Sprite_BombShop_SuperBomb`, `sprite_main.c:24291` |
+
+The price is stated in the dialogue vt writes into the ROM (the commit
+`upstream.json` pins), which `test/upstream/rupee-texts.json` holds; the spec
+checks each price against its line. The ROM code is a cross-check from the
+base game's disassembly (snesrev/zelda3 at `45a149d`, whose line numbers the
+table gives) and, for the Blacksmith, from the randomizer's patch
+(KatDevsGames/z3randomizer at `dcb0a2b`, the commit vt's `composer.lock` pins):
+with `region.swordsInPool` the smith gives the item for 10 rupees, as the
+base game's tempering does without it. No setting of vt changes any of these
+prices; Retro's shops are not locations of the pack. Everything else that
+takes rupees in the game (the archery game, Kiki, the fortune tellers, the
+witch's potions, the bomb shop's bombs) holds no item of the randomizer.
+
+The fixture is written, never edited, by
+
+```sh
+pnpm --filter @alltp/pack-alttpr import-rupee-texts <vt-checkout>
+```
+
+and `upstream.json` lists `app/Text.php`, so the weekly drift workflow
+watches it.
+
 ## The key model
 
 Outside keysanity the player does not track the dungeons' small keys, nor
