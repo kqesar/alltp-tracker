@@ -10,7 +10,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/items.ts` | `app/Item.php`, `config/item.php`: item ids, ranges, and how upstream counts them |
 | `src/settings.ts` | `app/World.php`, `config/logic.php`: every config value a rule reads, `UNKNOWN` for those a Mystery run hides, and the presets |
 | `src/helpers.ts` | `app/Support/ItemCollection.php`: `@canLiftRocks`, `@hasSword2`… |
-| `src/bosses.ts` | `app/Boss.php`: each boss's `canBeat`, and the boss each dungeon fights |
+| `src/bosses.ts` | `app/Boss.php`, `app/Randomizer.php` (`placeBosses`): each boss's `canBeat`, the boss each dungeon fights, and the bosses each may hold under boss shuffle |
 | `src/world.ts` | `app/Region.php`: regions, entrances, prizes, `canFill` |
 | `src/worlds/*.ts` | `app/World/Standard.php`, `app/World/Open.php`, `app/World/Inverted.php`: the region modules of each world |
 | `src/regions/**` | one module per upstream region file |
@@ -156,6 +156,9 @@ closes it to a player holding Bombos only), so nothing carries over.
   gives the next item of its class, in dungeon order.
 - **The medallion pads**, through their facts (`src/medallions.ts`). A pad
   the player has not noted is unknown.
+- **The bosses**, under boss shuffle, through their slots' facts
+  (`bosses`, `src/bosses.ts`): a slot the player has not met is unknown. See
+  [Boss shuffle](#boss-shuffle).
 - **The derived facts** (`src/derived.ts`), from the items it gives.
 - **Small keys**, per dungeon, only with wild keys. Outside keysanity the
   key model reads the dungeons without them.
@@ -751,6 +754,65 @@ attack, each against a screenshot of the same frame. **Not seen**: a dark room
 of another dungeon (Palace of Darkness, Eastern Palace, Turtle Rock, the
 sewers), a room drawing BG1, a custom player sprite, an FX Pak Pro, QUsb2Snes.
 
+## Boss shuffle
+
+alttpr.com's enemizer can move the dungeons' bosses (`enemizer.bossShuffle`,
+`config/alttp.php:241-246`). vt places them before it fills the seed
+(`Randomizer.php:140`, `placeBosses` at 361-452), and every region's rule
+reads its boss through `$this->boss->canBeat` (`EasternPalace.php:89` and
+the twelve alike; Ganon's Tower's three at `GanonsTower.php:337-383`), so
+the fill only ever relies on beating the bosses it placed.
+
+| Value | What `placeBosses` does |
+| --- | --- |
+| `none` | each dungeon its vanilla boss (434-447) |
+| `simple` | the ten placeable bosses plus Armos, Lanmolas and Moldorm once more, one per slot (418-431) |
+| `full` | the ten plus three drawn at random, one per slot (406-417) |
+| `random` | any boss, drawn per slot, repeats allowed (397-405) |
+
+Agahnim in Castle Tower and Agahnim 2 atop Ganon's Tower never move
+(451-452). Each slot's `canPlaceBoss` narrows what it takes, whatever the
+mode:
+
+| Slot | Never holds |
+| --- | --- |
+| Tower of Hera, Ganon's Tower top | Armos, Arrghus, Blind, Lanmolas, Trinexx (`TowerOfHera.php:74-92`, `GanonsTower.php:157-168`) |
+| Skull Woods | Trinexx (`SkullWoods.php:81-97`) |
+| Ganon's Tower middle | Blind (`GanonsTower.php:170-177`) |
+| every other | nothing (`Region.php:98-111`) |
+
+Swordless keeps Kholdstare in Ice Palace, shuffled or not, and nowhere else
+(`Randomizer.php:380-394`, `Region.php:100-105`).
+
+The three shuffling modes give each slot the same possible bosses, so the
+pack reads one flag, `bossShuffle` (`src/settings.ts`, `UNKNOWN` in a
+Mystery run). Each slot's rule (`BOSS_SLOTS`) is its vanilla boss without
+it, and with it:
+
+- the boss the player knows (`<slot>BossIs<Boss>`, from
+  `TrackerInput.bosses`): exactly that boss's `canBeat`, as upstream reads
+  it;
+- while unknown (`<slot>BossUnknown`, which `toState` sets for every slot
+  not known): `yes` when every boss the slot may hold is beaten, `maybe`
+  when some is, `no` when none is (`bossesAt`), each through the bosses'
+  own `canBeat` (`BOSSES`), never spelled again.
+
+The dungeons' boss locations and prizes, Ganon's Tower's climb and Agahnim
+2, and so the go mode, all read the slots, and follow. Without
+boss shuffle every rule folds to its vanilla boss at compile time: upstream's
+tests and the tracker's refactor guard are unchanged. The `simple` mode's
+one-of-each (a boss met in one dungeon is not in another) is not used: it
+would only sharpen a `maybe`.
+
+The entrance randomizer's port (`src/entrances/rules.json`) is imported as
+the randomizer writes it on vt's path, with no boss shuffle: a crossed run
+with shuffled bosses is not one the pack models.
+
+No ROM table states the setting itself: only the bosses the enemizer wrote
+into each boss room, which the player is not to learn before meeting them.
+It comes from the seed's file (`seed-file.ts`, `enemizer.boss_shuffle` in
+its `meta`, which a tournament Mystery seed hides).
+
 ## A Mystery run
 
 A Mystery seed hides its settings: its file on alttpr.com keeps only its
@@ -760,8 +822,8 @@ Race Mode. The player learns them as the run goes.
 
 `settingsFromUpstream(mode, config)` takes `UNKNOWN` for each config value
 a player discovers: `mode.weapons`, `goal`, `crystals.tower`,
-`crystals.ganon`, `itemPlacement`, `accessibility`, `item.pool` and
-`item.functionality`.
+`crystals.ganon`, `itemPlacement`, `accessibility`, `item.pool`,
+`item.functionality` and `enemizer.bossShuffle`.
 - **Derived settings follow Kleene's logic.** A setting derived from an
   unknown value is unknown (`Flag`), unless the known ones settle it:
   - `requireBetterBow` is basic placement *or* swordless, true as soon as
