@@ -1,6 +1,6 @@
 import { parseUserAgent } from "@alltp/autotrack";
 import { smz3Ms } from "@alltp/pack-smz3";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FakeVisibility, GRANTED, ManualClock } from "@/autotrack/fixtures";
 import { isRaceModeOrPending } from "@/autotrack/raceMode";
 import { smz3Autotrack } from "@/games/smz3/autotrack/store";
@@ -56,6 +56,9 @@ const harness = (game: Smz3Game = {}) => {
 };
 
 beforeEach(() => {
+  // The readings stamp Date.now(): a frozen wall clock leaves the specs to
+  // the ManualClock alone, as the timer maths are exact
+  vi.useFakeTimers({ now: Date.UTC(2026, 9, 28, 9, 30), toFake: ["Date"] });
   localStorage.clear();
   window.history.replaceState(null, "", "/");
   useSmz3Store.setState(useSmz3Store.getInitialState(), true);
@@ -71,6 +74,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   smz3Autotrack.stop();
   smz3Autotrack.setOptions({});
 });
