@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.55.0](https://github.com/kqesar/alltp-tracker/compare/v2.54.1...v2.55.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **alttpr:** read every logic alttpr.com offers from a seed's file ([e205ea3](https://github.com/kqesar/alltp-tracker/commit/e205ea3a0bf1a88a16261d3855aacb8297b049f1))
+* **web:** keep a glitched seed's logic in its run, said not modelled ([ac1450a](https://github.com/kqesar/alltp-tracker/commit/ac1450aa5f2580bac4d96c7c070c93f91def43ac))
+* **web:** name the trick under a check it opens in the Checks list ([aec4432](https://github.com/kqesar/alltp-tracker/commit/aec4432008674617194af965944734dcadfd0530))
+
+
+### 📚 Documentation
+
+* say where tricks show and what a glitched seed's run does ([7335c67](https://github.com/kqesar/alltp-tracker/commit/7335c67e89594c73cf9d5df78f86dd0bee411f95))
+
 ## [2.54.1](https://github.com/kqesar/alltp-tracker/compare/v2.54.0...v2.54.1) (2026-10-28)
 
 
