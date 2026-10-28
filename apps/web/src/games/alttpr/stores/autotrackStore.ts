@@ -12,7 +12,11 @@ import { persist } from "zustand/middleware";
 import { bridgeOptions } from "@/autotrack/bridge";
 import { createAutotrackLock } from "@/autotrack/lock";
 import { mergeRaceChoice, type RaceChoice } from "@/autotrack/raceChoice";
-import { onRunReplaced, rememberRace } from "@/autotrack/raceMode";
+import {
+  onRaceRestored,
+  onRunReplaced,
+  rememberRace,
+} from "@/autotrack/raceMode";
 import { shownStatus } from "@/autotrack/status";
 import type { Follower } from "@/games/alttpr/autotrack/follow";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
@@ -204,10 +208,16 @@ export const useAutotrackStore = create<AutotrackState>()(
 const set = useAutotrackStore.setState;
 
 // A race read is remembered; the run replaced (New game, Import, a shared
-// link) ends it
+// link) ends it, and Undo back to the race's board brings it back
 rememberRace(useAutotrackStore);
 onRunReplaced((game) => {
-  if (game === "alttpr") set({ raceSeen: false });
+  if (game !== "alttpr") return false;
+  const held = useAutotrackStore.getState().raceSeen;
+  set({ raceSeen: false });
+  return held;
+});
+onRaceRestored((game) => {
+  if (game === "alttpr") set({ raceSeen: true });
 });
 
 /** The one session of this page, once started. */

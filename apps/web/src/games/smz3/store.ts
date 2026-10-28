@@ -15,7 +15,7 @@ import {
 import * as z from "zod/mini";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { runReplaced } from "@/autotrack/raceMode";
+import { boardRestored, runReplaced } from "@/autotrack/raceMode";
 import { type History, historyActions } from "@/games/runHistory";
 import { createSaveFormat } from "@/games/saveFormat";
 import { SEED_ID } from "@/games/seedId";
@@ -138,7 +138,12 @@ const progressOf = (state: Smz3Progress): Smz3Progress => ({
 export const useSmz3Store = create<Smz3State>()(
   persist<Smz3State, [], [], Persisted>(
     (set, get) => {
-      const { applyGameNews, record, redo, undo } = historyActions({
+      const {
+        applyGameNews,
+        record,
+        redo,
+        undo: undoStep,
+      } = historyActions({
         get,
         progressOf,
         set,
@@ -152,14 +157,14 @@ export const useSmz3Store = create<Smz3State>()(
         load: (progress) => {
           record(progress);
           set({ timer: IDLE_TIMER });
-          runReplaced("smz3");
+          runReplaced("smz3", get().past);
         },
         past: [],
         redo,
         reset: () => {
           record(freshProgress(get().settings));
           set({ timer: IDLE_TIMER });
-          runReplaced("smz3");
+          runReplaced("smz3", get().past);
         },
         resetTimer: () => set({ timer: IDLE_TIMER }),
         setPad: (which, medallion) => {
@@ -189,7 +194,11 @@ export const useSmz3Store = create<Smz3State>()(
           }
           record({ checked: [...checked] });
         },
-        undo,
+        undo: () => {
+          const previous = get().past.at(-1);
+          undoStep();
+          if (previous) boardRestored("smz3", previous);
+        },
       };
     },
     {

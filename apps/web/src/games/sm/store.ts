@@ -14,7 +14,7 @@ import {
 import * as z from "zod/mini";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { runReplaced } from "@/autotrack/raceMode";
+import { boardRestored, runReplaced } from "@/autotrack/raceMode";
 import { type History, historyActions } from "@/games/runHistory";
 import { createSaveFormat } from "@/games/saveFormat";
 import { SEED_ID } from "@/games/seedId";
@@ -161,7 +161,12 @@ const restoreBase = (saved: unknown): number | null =>
 export const useSmStore = create<SmState>()(
   persist<SmState, [], [], Persisted>(
     (set, get) => {
-      const { applyGameNews, record, redo, undo } = historyActions({
+      const {
+        applyGameNews,
+        record,
+        redo,
+        undo: undoStep,
+      } = historyActions({
         get,
         progressOf,
         set,
@@ -175,7 +180,7 @@ export const useSmStore = create<SmState>()(
         load: (progress) => {
           record(progress);
           set({ clockBase: null, timer: IDLE_TIMER });
-          runReplaced("sm");
+          runReplaced("sm", get().past);
         },
         past: [],
         redo,
@@ -183,7 +188,7 @@ export const useSmStore = create<SmState>()(
           const { objectives, splitSpeed, wallJump } = get();
           record({ ...freshProgress(), objectives, splitSpeed, wallJump });
           set({ clockBase: null, timer: IDLE_TIMER });
-          runReplaced("sm");
+          runReplaced("sm", get().past);
         },
         resetTimer: () => set({ clockBase: null, timer: IDLE_TIMER }),
         setClockBase: (clockBase) => set({ clockBase }),
@@ -214,7 +219,11 @@ export const useSmStore = create<SmState>()(
               : [...done, id],
           });
         },
-        undo,
+        undo: () => {
+          const previous = get().past.at(-1);
+          undoStep();
+          if (previous) boardRestored("sm", previous);
+        },
       };
     },
     {
