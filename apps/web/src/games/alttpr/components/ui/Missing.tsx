@@ -5,6 +5,7 @@ import { TRICK_WORDS } from "@/games/alttpr/data/tricks";
 import {
   type Doubt,
   isThere,
+  type Margin,
   type Missing,
   type MissingGroup,
   type Spot,
@@ -116,6 +117,17 @@ export const TrickWays = ({
   </>
 );
 
+/** What a check outside basic placement's safety margin leads with. */
+const MARGIN_LEAD = "Doable now, outside Basic's safety margin";
+
+/** Why such a check is out of logic, in the player's words. */
+const MARGIN_WHY =
+  "Basic placement counts on it only once Link can take more hits (hearts, sword, bottles or mail).";
+
+/** The hearts Link has, after a margin's ways that ask for hearts. */
+const HeartsHeld = ({ margin }: { margin: Margin }) =>
+  margin.hearts === undefined ? null : <> (you have {margin.hearts} hearts)</>;
+
 /**
  * What a location is missing, line by line: out of logic, what puts it in
  * logic ("Missing") and, when less does, what makes it possible; only
@@ -140,9 +152,14 @@ export const MissingLines = ({
     ) : null;
   }
   if (missing === null) return null;
-  const { doubts, inLogic, possible, tri, tricks } = missing;
+  const { doubts, inLogic, margin, possible, tri, tricks } = missing;
   return (
     <>
+      {tri === "no" && margin && (
+        <p className="missing" data-testid="missing-margin">
+          <span className="missing__lead">{MARGIN_LEAD}:</span> {MARGIN_WHY}
+        </p>
+      )}
       {tri === "no" && tricks && (
         <p className="missing" data-testid="missing-tricks">
           <span className="missing__lead">Doable now with:</span>{" "}
@@ -151,8 +168,11 @@ export const MissingLines = ({
       )}
       {tri === "no" && (
         <p className="missing" data-testid="missing-in-logic">
-          <span className="missing__lead">Missing:</span>{" "}
+          <span className="missing__lead">
+            {margin ? "In logic with:" : "Missing:"}
+          </span>{" "}
           <WaysList ways={inLogic} />
+          {margin && <HeartsHeld margin={margin} />}
         </p>
       )}
       {tri === "maybe" && !isThere(inLogic) && (
@@ -225,7 +245,9 @@ const SpotName = ({ spot }: { spot: Spot }) => (
  * check's (WaysList); a check only maybe says what puts it in logic and why
  * it is not yet ("Maybe, small key may be behind other checks: Compass
  * Chest"). A check a trick known opens leads with it: "Doable now with Fake
- * flipper; or Zora's Flippers: King Zora".
+ * flipper; or Zora's Flippers: King Zora"; one out of logic by basic
+ * placement's safety margin alone says so: "Doable now, outside Basic's
+ * safety margin; in logic with 15 hearts (you have 11 hearts): Big Chest".
  */
 export const MissingGroups = ({
   groups,
@@ -236,7 +258,7 @@ export const MissingGroups = ({
 }) => (
   <>
     {groups.map(({ key, missing, spots }) => {
-      const { inLogic, possible, tri, tricks } = missing;
+      const { inLogic, margin, possible, tri, tricks } = missing;
       const doubted = shortDoubts(missing.doubts);
       return (
         <p
@@ -244,7 +266,14 @@ export const MissingGroups = ({
           data-testid="missing-group"
           key={key}
         >
-          {tri === "no" && tricks && (
+          {tri === "no" && margin && (
+            <>
+              <span className="missing__lead">
+                {MARGIN_LEAD}; in logic with
+              </span>{" "}
+            </>
+          )}
+          {tri === "no" && !margin && tricks && (
             <>
               <span className="missing__lead">Doable now with</span>{" "}
               <TrickWays guides={guides} ways={tricks} />
@@ -252,6 +281,7 @@ export const MissingGroups = ({
             </>
           )}
           {tri === "no" && <WaysList ways={inLogic} />}
+          {tri === "no" && margin && <HeartsHeld margin={margin} />}
           {tri === "no" && possible && (
             <>
               {" "}

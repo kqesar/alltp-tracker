@@ -30,12 +30,14 @@ import {
  * Each state is one line per kind, one character per marker or dungeon, in
  * the order of the pack's MARKERS (61 location markers, then the dungeons:
  * their square, the counter) and MARKED_DUNGEONS (their boss): "a"
- * available, "p" possible, "s" seen (out of logic, but in sight), "u"
+ * available, "p" possible, "m" doable outside basic placement's margin,
+ * "t" doable with a trick, "s" seen (out of logic, but in sight), "u"
  * unavailable, "o" done.
  */
 
 const CODES: Record<MarkerState, string> = {
   available: "a",
+  margin: "m",
   opened: "o",
   possible: "p",
   seen: "s",

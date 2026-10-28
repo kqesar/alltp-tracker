@@ -126,6 +126,20 @@
     center / 76% no-repeat;
 }
 
+.margin {
+  --glyph: "";
+  background-color: var(--state-margin);
+}
+
+/* A heart, Link's: what basic placement's margin waits for, a mask like the
+   eye's */
+.margin.state-glyph::after {
+  background-color: var(--state-ink);
+  mask:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 21.4 10.6 20C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1C13.1 3.8 14.8 3 16.5 3 19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.6 11.5L12 21.4Z'/></svg>")
+    center / 74% no-repeat;
+}
+
 .opened {
   --glyph: "";
   background-color: var(--state-opened);
@@ -167,6 +181,13 @@
   background:
     url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230b0b0f' d='M14 1 4 13.5h6.2L8.8 23 20 9.8h-6.6L14 1Z'/></svg>")
     center / 76% no-repeat var(--state-trick);
+  mask: none;
+}
+
+.boss.margin.state-glyph::after {
+  background:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230b0b0f' d='M12 21.4 10.6 20C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1C13.1 3.8 14.8 3 16.5 3 19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.6 11.5L12 21.4Z'/></svg>")
+    center / 74% no-repeat var(--state-margin);
   mask: none;
 }
 
