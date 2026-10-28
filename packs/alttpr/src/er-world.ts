@@ -40,6 +40,7 @@ import { everything } from "./keys";
 import { STATE_NAMES } from "./pack";
 import { RULES } from "./rules";
 import type { AlttprSettings } from "./settings";
+import { unknownCountRequirement } from "./unknown-counts";
 
 /** A rule of rules.json, and the lines it was read at. */
 interface SpotRule {
@@ -274,8 +275,12 @@ const START = "start";
  */
 const factOf = (id: string) => `reached_${id}`;
 const REACH = /reach\((\w+)\)/g;
+/**
+ * A rule as the world reads it: each reach() a fact, and each count a tracker
+ * may not know read as maybe while it is not (unknown-counts.ts).
+ */
 const withFacts = (req: string): string =>
-  req.replace(REACH, (_, id) => factOf(id));
+  unknownCountRequirement(req.replace(REACH, (_, id) => factOf(id)));
 
 /** Both rules: `(a) & (b)`, as text, `true` dropped. */
 const and = (...reqs: string[]): string => {
@@ -493,7 +498,7 @@ function graph(
       });
     const located: Location[] = r.locations.map((name) => ({
       id: erLocationId(name),
-      req: locations.get(name) ?? "true",
+      req: unknownCountRequirement(locations.get(name) ?? "true"),
     }));
     // A region's fact, given as it is reached
     if (factRegions.has(r.id)) located.push({ id: factOf(r.id) });

@@ -49,12 +49,14 @@ export {
   type DecodeOptions,
   decodeChecks,
   decodeEntrances,
+  decodeHealth,
   decodeItems,
   decodeProgress,
   type EntranceLink,
   type EntranceReading,
   type Fact,
   FRAMES_PER_SECOND,
+  type HealthReading,
   type ItemReading,
   type MemoryView,
   type ProgressReading,
@@ -289,6 +291,15 @@ export {
   trickRequirement,
   trickState,
 } from "./tricks";
+export {
+  type CountKnowledge,
+  UNKNOWN_COUNT_FACTS,
+  UNKNOWN_COUNTS,
+  UNKNOWN_FACT_OF,
+  type UnknownCount,
+  unknownCountFacts,
+  unknownCountRequirement,
+} from "./unknown-counts";
 export {
   buildWorld,
   canFill,

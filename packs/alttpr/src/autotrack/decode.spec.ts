@@ -5,6 +5,7 @@ import { CHECK_FLAGS } from "./check-flags";
 import {
   decodeChecks,
   decodeEntrances,
+  decodeHealth,
   decodeItems,
   decodeProgress,
   FRAMES_PER_SECOND,
@@ -952,5 +953,42 @@ describe("the decoders on random bytes", () => {
       }),
       { numRuns: 300 },
     );
+  });
+});
+
+describe("decodeHealth", () => {
+  const MAX_HEALTH = SAVE(0x36c);
+  const PIECES = SAVE(0x36b);
+  const health = (max: number, pieces = 0, race = false) =>
+    decodeHealth(
+      new Image()
+        .set(PIECES, pieces)
+        .set(MAX_HEALTH, max)
+        .view({ strict: race }),
+      { race },
+    );
+
+  it("reads the hearts on screen, $08 a heart", () => {
+    expect(health(0x18)).toBe(3);
+    expect(health(0x50)).toBe(10);
+    expect(health(0xa0)).toBe(20);
+  });
+
+  it("leaves the pieces toward the next heart out: 9 and three pieces are 9", () => {
+    expect(health(0x48, 3)).toBe(9);
+    expect(health(0x50, 0)).toBe(10);
+  });
+
+  it("reads it in Race Mode, which v2.0 lets react to the heart count", () => {
+    expect(racePermitted("max-health")).toBe(true);
+    expect(health(0x50, 3, true)).toBe(10);
+  });
+
+  it("settles nothing off the scale or before it is read", () => {
+    expect(health(0)).toBe("not-read");
+    expect(health(0xa8)).toBe("not-read");
+    expect(
+      decodeHealth(new Image().view({ read: () => false }), { race: false }),
+    ).toBe("not-read");
   });
 });

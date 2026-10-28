@@ -10,6 +10,7 @@ import { ITEM_IDS } from "./items";
 import { MEDALLION_FACTS } from "./medallions";
 import { RULES } from "./rules";
 import { settingsFromUpstream, UPSTREAM_TEST } from "./settings";
+import { UNKNOWN_COUNT_FACTS } from "./unknown-counts";
 
 const NO_LAMP_RULE = settingsFromUpstream("standard", {
   "item.require.Lamp": 0,
@@ -74,7 +75,7 @@ describe("derivedFacts", () => {
         items,
         settings: UPSTREAM_TEST,
       });
-    const known = [...ITEM_IDS, ...MEDALLION_FACTS];
+    const known = [...ITEM_IDS, ...MEDALLION_FACTS, ...UNKNOWN_COUNT_FACTS];
     expect(() => check(known)).not.toThrow();
     expect(() => check(known.filter((id) => id !== "hammer"))).toThrow(
       DefinitionError,

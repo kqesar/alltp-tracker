@@ -18,6 +18,7 @@ import {
 import { ITEMS, type ItemId } from "./items";
 import { medallionFacts, type PadKnowledge } from "./medallions";
 import type { AlttprSettings } from "./settings";
+import { type CountKnowledge, unknownCountFacts } from "./unknown-counts";
 
 /**
  * What a dungeon's boss drops, as far as the rules tell them apart: the
@@ -107,6 +108,12 @@ export interface TrackerInput {
    * EVENT_CHECKS are read: an item location tells nothing of what it held.
    */
   readonly checked?: Readonly<Record<string, boolean>>;
+  /**
+   * The counts the player has not recorded (unknown-counts.ts): Link's
+   * health, the escape's bombs. A rule asking for one then reads maybe at
+   * most, never no; one left out is known, as upstream's tests read it.
+   */
+  readonly unknown?: CountKnowledge;
 }
 
 /** A new run: nothing held, nothing finished, nothing known. */
@@ -135,7 +142,8 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
  * no item left for is a mistake, and gives nothing. The pads' facts read
  * an unknown pad as unknown. The keys count only with wild keys that are
  * not generic. A checked
- * event gives its item (EVENT_CHECKS).
+ * event gives its item (EVENT_CHECKS). A count not known holds its fact
+ * (unknown-counts.ts).
  *
  * Pure: a new state on every call, nothing kept between calls. Throws a
  * RangeError for an item id the pack does not have.
@@ -189,5 +197,6 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
       turtleRock: input.medallions.turtleRock ?? "unknown",
     }),
     ...derivedFacts(state, settings),
+    ...unknownCountFacts(input.unknown ?? {}),
   };
 }
