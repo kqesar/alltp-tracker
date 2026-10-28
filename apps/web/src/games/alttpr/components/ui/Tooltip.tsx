@@ -61,6 +61,7 @@ const COLUMNS_FROM = 10;
 /** How the tooltip words a location's state, beside its glyph. */
 const STATE_TEXT: Record<MarkerState, string> = {
   available: "Available",
+  margin: "Doable, outside Basic's safety margin",
   opened: "Done",
   possible: "Maybe",
   seen: "Visible, not reachable yet",

@@ -25,9 +25,11 @@ import {
   INVERTED_MARKERS,
   type KeyedSolution,
   LEGACY_DUNGEONS,
+  MARGIN_STATE,
   type MapMarker,
   type MarkerStatus,
   type Medallion,
+  marginFiller,
   markerStatus,
   OPEN,
   regionModules,
@@ -44,6 +46,7 @@ import { BOSS_STATES, DUNGEON_INDICES } from "@/games/alttpr/constants";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
   crossedLogic,
+  isHidden,
   logicModelled,
   type RunSettings,
 } from "@/games/alttpr/data/presets";
@@ -61,10 +64,12 @@ import type { Prefs, Progress } from "@/games/alttpr/stores/persistence";
 /**
  * What a location shows while it is not checked: the pack's markerStatus,
  * seen, for one out of logic that the player can already see (the Book
- * reads the Pedestal, a ledge item shows from below), or trick, for one out
- * of logic that a trick the player knows would open (`trickSolutionOf`).
+ * reads the Pedestal, a ledge item shows from below), trick, for one out
+ * of logic that a trick the player knows would open (`trickSolutionOf`),
+ * or margin, for one out of logic by basic placement's safety margin alone
+ * (`marginSolutionOf`): doable, the seed only counting on it later.
  */
-export type LocationStatus = MarkerStatus | "seen" | "trick";
+export type LocationStatus = MarkerStatus | "margin" | "seen" | "trick";
 
 /** What a marker shows: what is left in logic, or done. */
 export type MarkerState = LocationStatus | "opened";
@@ -72,6 +77,7 @@ export type MarkerState = LocationStatus | "opened";
 /** The words a screen reader hears for each state; the glyph says it on screen. */
 export const STATE_LABELS: Record<MarkerState, string> = {
   available: "available",
+  margin: "out of logic, doable outside Basic's safety margin",
   opened: "done",
   possible: "maybe available",
   seen: "visible, not reachable yet",
@@ -81,22 +87,27 @@ export const STATE_LABELS: Record<MarkerState, string> = {
 
 /**
  * What locations left show, from their tris, what can be seen of them
- * (`visible`, never below the tri) and their tris with the player's tricks:
- * available > possible > trick > seen > unavailable. markerStatus says the
- * first two; failing those, trick when a trick would open one of them, else
- * seen when one of them can be seen, a `maybe` sight included, as a `maybe`
- * tri is possible.
+ * (`visible`, never below the tri), their tris with the player's tricks and
+ * without basic placement's safety margin: available > possible > margin >
+ * trick > seen > unavailable. markerStatus says the first two; failing
+ * those, margin when dropping the margin would open one of them (nothing to
+ * learn: only hearts or gear the seed waits for), trick when a trick would
+ * (a technique to know), else seen when one of them can be seen, a `maybe`
+ * sight included, as a `maybe` tri is possible.
  * @param tris - The locations' tris
  * @param visibles - What can be seen of each, in the same order
  * @param tricks - Their tris with the tricks known, if any are
+ * @param margin - Their tris without the margin, in a basic placement run
  */
 export const locationStatus = (
   tris: readonly Tri[],
   visibles: readonly Tri[],
   tricks?: readonly Tri[],
+  margin?: readonly Tri[],
 ): LocationStatus => {
   const status = markerStatus(tris);
   if (status !== "unavailable") return status;
+  if (margin?.some((opened) => opened !== "no")) return "margin";
   if (tricks?.some((opened) => opened !== "no")) return "trick";
   return visibles.some((seen) => seen !== "no") ? "seen" : status;
 };
@@ -374,6 +385,65 @@ export const warmTricks = (run: RunSettings): void => {
 };
 
 /**
+ * Whether the map marks what basic placement's safety margin alone keeps
+ * out of logic: a run with basic item placement known, whose logic the pack
+ * models in a world without shuffled entrances (the entrance randomizer's
+ * has no margin world). An unknown placement (Mystery) reads the gates as
+ * maybe already.
+ */
+export const marginShown = (state: Inputs): boolean =>
+  state.settings.itemPlacement === "basic" &&
+  !isHidden(state.settings, "itemPlacement") &&
+  logicModelled(state.settings) &&
+  !crossedLogic(state.settings);
+
+/** A run solved again without basic placement's safety margin. */
+export interface MarginSolution {
+  /** The key model's view of it, which the go mode steps through. */
+  readonly keyed: KeyedSolution;
+  /** Every location of the run's world, without the margin. */
+  readonly tris: Readonly<Record<string, Tri>>;
+}
+
+const margins = new WeakMap<Solution, MarginSolution>();
+
+/**
+ * A solution solved again in the pack's margin world (`marginFiller`), the
+ * margin dropped over the state it is made of (its keys surely in hand
+ * included), so what it opens is what the real world says but for basic
+ * placement's health gates. Memoized on the solution. Undefined but in a
+ * basic placement run whose logic is modelled, without shuffled entrances.
+ * @param solution - The run solved (solutionOf)
+ */
+export const marginOf = (solution: Solution): MarginSolution | undefined => {
+  if (
+    solution.settings.basicPlacement !== true ||
+    !solution.modelled ||
+    solution.crossed !== undefined
+  ) {
+    return undefined;
+  }
+  let found = margins.get(solution);
+  if (found === undefined) {
+    const keyed = solveWithKeys(marginFiller(solution.settings), {
+      ...solution.keyed.state,
+      ...MARGIN_STATE,
+    });
+    found = { keyed, tris: keyed.locations() };
+    margins.set(solution, found);
+  }
+  return found;
+};
+
+/**
+ * The run solved without basic placement's safety margin, when the map
+ * marks it (`marginShown`): synchronous, memoized on the solution.
+ * @param state - The game store's state, or any object with those slices
+ */
+export const marginSolutionOf = (state: Inputs): MarginSolution | undefined =>
+  marginShown(state) ? marginOf(solutionOf(state)) : undefined;
+
+/**
  * Every marker of any world by id: Inverted's lists each of Open's and
  * Standard's, which differ from it by place alone, and the Bomb Merchant.
  */
@@ -393,17 +463,17 @@ const tri = (solution: Solution, id: string): Tri => solution.tris[id] ?? "no";
 const seen = (solution: Solution, id: string): Tri =>
   solution.visibles[id] ?? "no";
 
-/** A trick solution's tris of these locations, `no` where it has none. */
-const trickTris = (
-  trick: TrickSolution | undefined,
+/** A trick or margin solution's tris of these locations, `no` where none. */
+const otherTris = (
+  other: { readonly tris: Readonly<Record<string, Tri>> } | undefined,
   ids: readonly string[],
 ): readonly Tri[] | undefined =>
-  trick && ids.map((id) => trick.tris[id] ?? "no");
+  other && ids.map((id) => other.tris[id] ?? "no");
 
 /**
- * What locations of a run show: locationStatus of their tris. The tricks
- * are solved only for one out of logic, so a run with nothing out of logic
- * in sight never pays for them.
+ * What locations of a run show: locationStatus of their tris. The margin
+ * and the tricks are solved only for one out of logic, so a run with
+ * nothing out of logic in sight never pays for them.
  */
 const statusOf = (state: Inputs, ids: readonly string[]) => {
   const solution = solutionOf(state);
@@ -411,7 +481,12 @@ const statusOf = (state: Inputs, ids: readonly string[]) => {
   const visibles = ids.map((id) => seen(solution, id));
   const status = locationStatus(tris, visibles);
   if (status !== "unavailable" && status !== "seen") return status;
-  return locationStatus(tris, visibles, trickTris(trickSolutionOf(state), ids));
+  return locationStatus(
+    tris,
+    visibles,
+    otherTris(trickSolutionOf(state), ids),
+    otherTris(marginSolutionOf(state), ids),
+  );
 };
 
 /**
@@ -483,10 +558,10 @@ export const dungeonStateOf = (id: DungeonId, state: Inputs): MarkerState => {
   const shown = status(tris);
   if (shown !== "unavailable") return shown;
   const items = itemLocationsOf(id, solution.settings);
-  const opened = trickTris(trickSolutionOf(state), items);
-  return opened !== undefined && status(opened) !== "unavailable"
-    ? "trick"
-    : shown;
+  const opens = (other?: readonly Tri[]) =>
+    other !== undefined && status(other) !== "unavailable";
+  if (opens(otherTris(marginSolutionOf(state), items))) return "margin";
+  return opens(otherTris(trickSolutionOf(state), items)) ? "trick" : shown;
 };
 
 /**
@@ -531,10 +606,10 @@ export const bossStateOf = (id: DungeonId, state: Inputs): MarkerState => {
   const prize = prizeOf(id, solution.settings);
   const status = markerStatus([tri(solution, prize)]);
   if (status !== "unavailable") return status;
-  const opened = trickTris(trickSolutionOf(state), [prize]);
-  return opened !== undefined && markerStatus(opened) !== "unavailable"
-    ? "trick"
-    : status;
+  const opens = (other?: readonly Tri[]) =>
+    other !== undefined && markerStatus(other) !== "unavailable";
+  if (opens(otherTris(marginSolutionOf(state), [prize]))) return "margin";
+  return opens(otherTris(trickSolutionOf(state), [prize])) ? "trick" : status;
 };
 
 /**

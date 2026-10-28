@@ -25,6 +25,7 @@ import {
   bossStateOf,
   dungeonCount,
   type MarkerState,
+  marginShown,
   solutionOf,
   tricksShown,
   useDungeonStatus,
@@ -37,6 +38,7 @@ import { getAssetPath } from "@/games/alttpr/utils";
 const FILTERS: readonly { state: MarkerState; label: string }[] = [
   { label: "Available", state: "available" },
   { label: "Maybe", state: "possible" },
+  { label: "Outside margin", state: "margin" },
   { label: "Trick", state: "trick" },
   { label: "Seen", state: "seen" },
   { label: "Out of logic", state: "unavailable" },
@@ -360,8 +362,9 @@ export const ChecksPanel = () => {
     ),
   );
   const toggleChecks = useGameStore((state) => state.toggleChecks);
-  // The Trick filter exists while the map marks them
+  // The Trick and Outside margin filters exist while the map marks them
   const tricksOn = useGameStore(tricksShown);
+  const marginOn = useGameStore(marginShown);
   const [shown, setShown] = useState(FIRST_SHOWN);
   const [zoneName, setZoneName] = useState("");
   const [query, setQuery] = useState("");
@@ -397,9 +400,10 @@ export const ChecksPanel = () => {
             `${zone.name} ${check.name}`.toLowerCase().includes(words),
         ),
   );
-  const filters = tricksOn
-    ? FILTERS
-    : FILTERS.filter(({ state }) => state !== "trick");
+  const filters = FILTERS.filter(
+    ({ state }) =>
+      (tricksOn || state !== "trick") && (marginOn || state !== "margin"),
+  );
   const counts = Object.fromEntries(FILTERS.map(({ state }) => [state, 0]));
   for (const check of inScope.flat()) counts[states[check.id]]++;
   const unfiltered = inReview && missedOnly;

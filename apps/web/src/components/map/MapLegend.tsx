@@ -2,6 +2,7 @@
 const LEGEND_ITEMS = [
   { className: "available", label: "Available now" },
   { className: "possible", label: "Maybe, or only some" },
+  { className: "margin", label: "Doable, outside Basic's safety margin" },
   { className: "trick", label: "Out of logic, doable with a trick" },
   { className: "seen", label: "Visible, not reachable yet" },
   { className: "unavailable", label: "Out of logic" },
@@ -13,13 +14,17 @@ const LEGEND_ITEMS = [
  * understandable without relying on colour alone (accessibility).
  * @param seen - Whether the map draws locations seen but not reachable (a
  *   game whose logic has no such channel leaves it out)
+ * @param margin - Whether the map marks what basic placement's safety margin
+ *   alone keeps out of logic (another placement: the state never shows)
  * @param trick - Whether the map marks the checks a trick opens (off: the
  *   state never shows, so the legend leaves it out)
  */
 export const MapLegend = ({
+  margin = false,
   seen = true,
   trick = false,
 }: {
+  margin?: boolean;
   seen?: boolean;
   trick?: boolean;
 }) => (
@@ -31,6 +36,7 @@ export const MapLegend = ({
     {LEGEND_ITEMS.filter(
       (item) =>
         (seen || item.className !== "seen") &&
+        (margin || item.className !== "margin") &&
         (trick || item.className !== "trick"),
     ).map((item) => (
       <span className="map-legend__item" key={item.className}>

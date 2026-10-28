@@ -20,6 +20,7 @@ import {
   type CompiledWorld,
   type Expr,
   explain,
+  itemValue,
   parse,
   type Rules,
   type Solution as Solved,
@@ -41,6 +42,7 @@ import {
   goModeOf,
   goModeStatus,
   goModeStatusBy,
+  marginFiller,
   TRICKS,
   type TrickId,
   trickFiller,
@@ -64,6 +66,7 @@ import {
   type Inputs,
   locationName,
   type MarkerState,
+  marginOf,
   prizeOf,
   type Solution,
   solutionOf,
@@ -120,6 +123,19 @@ export type Missing = {
    * world asked what brings it in logic from the trick items alone.
    */
   readonly tricks?: readonly (readonly TrickId[])[];
+  /**
+   * For one out of logic by basic placement's safety margin alone (the
+   * pack's margin world opens it): doable now, `inLogic` saying what the
+   * seed waits for. `hearts` is Link's hearts on screen, when a way asks
+   * for hearts.
+   */
+  readonly margin?: Margin;
+};
+
+/** What a check outside basic placement's safety margin tells of Link. */
+export type Margin = {
+  /** The hearts on screen, the 3 Link starts with included. */
+  readonly hearts?: number;
 };
 
 /** Everything worked out for one solution of the run. */
@@ -296,6 +312,19 @@ const trickWays = (
   }
   return ways;
 };
+
+/** The hearts on screen a state holds, the 3 Link starts with included. */
+const heartsHeld = (state: State): number =>
+  Object.entries(HEART_POWER).reduce(
+    (sum, [item, power]) => sum + power * itemValue(state, item),
+    STARTING_HEARTS,
+  );
+
+/** What a check out of logic by the margin alone says of Link. */
+const marginOfWays = (ways: Ways, state: State): Margin =>
+  ways.sets.some((set) => set.some(({ key }) => key.startsWith("hearts>=")))
+    ? { hearts: heartsHeld(state) }
+    : {};
 
 /** The medallion rules, by the dungeon whose pad they read. */
 const PADS: Readonly<Record<string, DungeonId>> = {
@@ -521,6 +550,7 @@ const sameThing = (missing: Missing): string =>
     missing.inLogic,
     missing.possible,
     missing.tricks,
+    missing.margin,
     [
       ...new Set(
         missing.doubts.map((doubt) => {
@@ -635,6 +665,16 @@ export const analyzeRun = (
           : possible,
       tri,
     });
+  }
+  const margin = marginOf(solution);
+  if (margin !== undefined) {
+    for (const [id, found] of missing) {
+      if (found.tri !== "no" || (margin.tris[id] ?? "no") === "no") continue;
+      missing.set(id, {
+        ...found,
+        margin: marginOfWays(found.inLogic, keyed.state),
+      });
+    }
   }
   const mode = goModeOfRun(run, settings);
   if (tricks !== undefined) {
@@ -787,4 +827,32 @@ export const goModeStatusOf = (inputs: Inputs): GoModeStatus | undefined => {
           );
   lastStatus = { solution, status };
   return status;
+};
+
+let lastMargin: { solution: Solution; margin: boolean } | undefined;
+
+/**
+ * Whether the go mode, not in logic, is reached but for basic placement's
+ * safety margin: every step to the goal in logic, or maybe, in the pack's
+ * margin world. Memoized on the solution; false but in a basic placement
+ * run (`marginOf`), and when the go mode is in logic or maybe already.
+ */
+export const goModeMarginOf = (inputs: Inputs): boolean => {
+  const status = goModeStatusOf(inputs);
+  if (status?.tri !== "no") return false;
+  const solution = solutionOf(inputs);
+  if (lastMargin?.solution === solution) return lastMargin.margin;
+  const margin = marginOf(solution);
+  const mode = goModeOfRun(inputs.settings, solution.settings);
+  const found =
+    margin !== undefined &&
+    mode !== undefined &&
+    goModeStatus(
+      marginFiller(solution.settings),
+      margin.keyed.state,
+      mode,
+      margin.keyed,
+    ).tri !== "no";
+  lastMargin = { margin: found, solution };
+  return found;
 };

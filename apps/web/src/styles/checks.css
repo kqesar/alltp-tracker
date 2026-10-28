@@ -209,6 +209,17 @@
   color: var(--state-possible);
 }
 
+/* Reached but for basic placement's safety margin: the margin state's
+   orange, its heart in the glyph */
+.go-mode--margin {
+  color: var(--color-text);
+  border-color: var(--state-margin);
+}
+
+.go-mode--margin .go-mode__glyph {
+  color: var(--state-margin);
+}
+
 .go-mode--no .go-mode__glyph {
   color: var(--color-text-muted);
 }

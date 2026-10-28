@@ -42,6 +42,8 @@
   --state-available: #2ecc40;
   --state-possible: #ffdc00;
   --state-seen: #7fdbff;
+  /* out of logic by basic placement's safety margin alone: doable */
+  --state-margin: #ff851b;
   --state-trick: #b10dc9; /* out of logic, doable with a trick */
   --state-unavailable: #ff4136;
   --state-opened: #7f7f7f;

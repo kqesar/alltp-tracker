@@ -5,14 +5,25 @@ import {
   useGoModeLeft,
   useLastGoModeLeft,
 } from "@/games/alttpr/hooks/useRunAnalysis";
-import { type GoModeLeft, goModeStatusOf } from "@/games/alttpr/logic/missing";
+import {
+  type GoModeLeft,
+  goModeMarginOf,
+  goModeStatusOf,
+} from "@/games/alttpr/logic/missing";
 import type { Need } from "@/games/alttpr/logic/needs";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath } from "@/games/alttpr/utils";
 import { placeUnder } from "@/utils/popover";
 
+/**
+ * What the button shows: the go mode's tri, or `margin` for one not yet in
+ * logic that basic placement's safety margin alone holds back.
+ */
+type Shown = Tri | "margin";
+
 /** Each state's glyph and words, after "Go mode". */
-const STATES: Record<Tri, { glyph: string; words: string }> = {
+const STATES: Record<Shown, { glyph: string; words: string }> = {
+  margin: { glyph: "★♥", words: "outside Basic's margin" },
   maybe: { glyph: "★?", words: "possible" },
   no: { glyph: "☆", words: "not yet" },
   yes: { glyph: "★", words: "in logic" },
@@ -82,11 +93,35 @@ const Line = ({ children }: { children: string }) => (
  * or the ways to it, fewest items first, the first three in sight and the
  * others behind a disclosure; a sentence when no list can say it.
  */
-const GoModeDetail = ({ tri }: { tri: Tri }) => {
+const GoModeDetail = ({ tri }: { tri: Shown }) => {
   const left = useGoModeLeft();
   if (tri === "yes") {
     return <p className="missing">Every step to the goal is in logic.</p>;
   }
+  return (
+    <>
+      {tri === "margin" && (
+        <p className="missing" data-testid="go-mode-margin">
+          <span className="missing__lead">
+            Doable now, outside Basic's safety margin:
+          </span>{" "}
+          every step is open, but Basic placement counts on it only once Link
+          can take more hits.
+        </p>
+      )}
+      <GoModeLeftDetail left={left} tri={tri} />
+    </>
+  );
+};
+
+/** What the go mode is missing, from the run's analysis. */
+const GoModeLeftDetail = ({
+  left,
+  tri,
+}: {
+  left: GoModeLeft | undefined;
+  tri: Shown;
+}) => {
   if (left === undefined) {
     return <p className="missing missing--pending">Working it out…</p>;
   }
@@ -114,7 +149,7 @@ const GoModeDetail = ({ tri }: { tri: Tri }) => {
   if (sets.length === 0) {
     return <Line>More than three items away, crystals aside.</Line>;
   }
-  const lead = tri === "maybe" ? "In logic with" : "Missing";
+  const lead = tri === "no" ? "Missing" : "In logic with";
   const [first] = sets;
   if (sets.length === 1 && first !== undefined) {
     return (
@@ -148,7 +183,8 @@ const GoModeDetail = ({ tri }: { tri: Tri }) => {
 
 /**
  * The run's go mode: whether every step to the run's goal is in logic
- * (★), possible (★?) or not yet (☆), in words beside the glyph; not yet,
+ * (★), possible (★?), reached but for basic placement's safety margin (★♥,
+ * `goModeMarginOf`) or not yet (☆), in words beside the glyph; not yet,
  * how far it is when one word can say it ("2 items left", "crystals left").
  * A screen reader hears a change of state as it comes. A click shows what
  * is missing, crystals aside. Nothing for a goal without a go mode (all
@@ -156,7 +192,10 @@ const GoModeDetail = ({ tri }: { tri: Tri }) => {
  * until the player sets it.
  */
 export const GoMode = () => {
-  const tri = useGameStore((state) => goModeStatusOf(state)?.tri);
+  const status = useGameStore((state) => goModeStatusOf(state)?.tri);
+  // Not yet in logic, but reached without basic placement's margin
+  const margin = useGameStore(goModeMarginOf);
+  const tri: Shown | undefined = margin ? "margin" : status;
   const goalHidden = useGameStore((state) => isHidden(state.settings, "goal"));
   const summary = goModeSummary(useLastGoModeLeft());
   const panelId = useId();
