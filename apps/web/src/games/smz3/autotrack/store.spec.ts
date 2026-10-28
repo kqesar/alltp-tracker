@@ -2,6 +2,7 @@ import { parseUserAgent } from "@alltp/autotrack";
 import { smz3Ms } from "@alltp/pack-smz3";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { FakeVisibility, GRANTED, ManualClock } from "@/autotrack/fixtures";
+import { isRaceModeOrPending } from "@/autotrack/raceMode";
 import { smz3Autotrack } from "@/games/smz3/autotrack/store";
 import { useSmz3Store } from "@/games/smz3/store";
 import { MemoryTransport } from "../../../../../../packages/autotrack/test/memory-transport";
@@ -162,7 +163,7 @@ describe("SMZ3's autotracking", () => {
     expect(
       JSON.parse(localStorage.getItem("alltp-tracker-smz3-autotrack") ?? "{}")
         .state,
-    ).toEqual({ connectOnStart: true, raceChoice: "on" });
+    ).toEqual({ connectOnStart: true, raceChoice: "on", raceSeen: false });
 
     // Back to the ROM's flag, the session running: it reads them at once
     smz3Autotrack.setRaceChoice("auto");
@@ -406,5 +407,53 @@ describe("SMZ3's autotracking and the run timer", () => {
     await h.advance(1000);
     expect(state().reading?.clock).toEqual({ final: false, frames: 8_100 });
     expect(run().timer.elapsedMs).toBe(smz3Ms(8_100));
+  });
+});
+
+describe("a race, once read, is remembered", () => {
+  it("holds Race Mode through a Disconnect, until the run is replaced", async () => {
+    const h = harness({ ...PLAYED, race: true });
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    expect(state().raceSeen).toBe(true);
+
+    smz3Autotrack.disconnect();
+    expect(state()).toMatchObject({ active: false, reading: null });
+    expect(isRaceModeOrPending(state())).toBe(true);
+    expect(
+      JSON.parse(localStorage.getItem("alltp-tracker-smz3-autotrack") ?? "{}")
+        .state.raceSeen,
+    ).toBe(true);
+
+    run().reset();
+    expect(state().raceSeen).toBe(false);
+    expect(isRaceModeOrPending(state())).toBe(false);
+  });
+
+  it("is ended by an import, and by the player's word", async () => {
+    const h = harness({ ...PLAYED, race: true });
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    smz3Autotrack.disconnect();
+
+    run().load(run());
+    expect(state().raceSeen).toBe(false);
+
+    smz3Autotrack.useStore.setState({ raceSeen: true });
+    smz3Autotrack.endRace();
+    expect(state().raceSeen).toBe(false);
+  });
+
+  it("is never set by a seed that is no race's", async () => {
+    const h = harness(PLAYED);
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    smz3Autotrack.disconnect();
+
+    expect(state().raceSeen).toBe(false);
+    expect(isRaceModeOrPending(state())).toBe(false);
   });
 });

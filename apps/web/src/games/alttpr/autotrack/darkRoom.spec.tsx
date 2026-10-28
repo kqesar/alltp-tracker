@@ -187,6 +187,7 @@ describe("the dark room, from a session", () => {
       "darkRoomStyle",
       "keptSeed",
       "raceChoice",
+      "raceSeen",
     ]);
     // The run knows nothing of it
     expect(JSON.stringify(useGameStore.getState())).not.toMatch(

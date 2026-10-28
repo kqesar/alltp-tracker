@@ -118,6 +118,7 @@ describe("useAutotrack", () => {
       darkRoomStyle: "art",
       keptSeed: null,
       raceChoice: "auto",
+      raceSeen: false,
     });
 
     // The tracker closes: the session stops, the wish stays
@@ -262,6 +263,7 @@ describe("useAutotrack", () => {
       darkRoomStyle: "art",
       keptSeed: null,
       raceChoice: "auto",
+      raceSeen: false,
     });
     render(<Tracker />);
     await h.advance(0);

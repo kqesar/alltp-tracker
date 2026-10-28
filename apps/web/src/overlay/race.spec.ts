@@ -179,6 +179,29 @@ describe("raceSourceOf", () => {
     useAutotrackStore.setState({ raceChoice: "on" });
     expect(listener).toHaveBeenCalledTimes(2);
   });
+
+  it("stays on through a Disconnect after a race was read, and calls when the race is ended", () => {
+    const race = raceSourceOf(useAutotrackStore);
+    const listener = vi.fn();
+    race.subscribe(listener);
+
+    // Read as a race's, then the player disconnects: reading, session and the
+    // wish to connect are gone, the memory is not
+    useAutotrackStore.setState({ raceSeen: true });
+    expect(race.isOn()).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+    useAutotrackStore.setState({
+      active: false,
+      connectOnStart: false,
+      reading: null,
+    });
+    expect(race.isOn()).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    useAutotrackStore.getState().endRace();
+    expect(race.isOn()).toBe(false);
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("each game's overlay source", () => {
