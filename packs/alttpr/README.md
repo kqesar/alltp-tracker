@@ -20,7 +20,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/tracker.ts` | `TrackerInput`, what the player records, and `toState`, the state it gives |
 | `src/legacy.ts` | the app's save format before the pack (version 5), mapped to the pack |
 | `src/markers.ts`, `src/marker-status.ts` | the map markers, and what a marker shows (`markerStatus`, which any game's map takes) |
-| `src/goals.ts` | `app/Randomizer.php`: where each goal puts the Triforce, and its go mode |
+| `src/goals.ts` | `app/Randomizer.php`, `config/alttp.php`, `app/World.php`: where each goal puts the Triforce, its go mode, and a Triforce Hunt's pieces |
 | `src/seed-link.ts` | `app/Seed.php`, `routes/web.php`: a seed's hash, from a link to its page, and where its file lies |
 | `src/entrances.ts` | `cassidoxa/ALttPEntranceRandomizer` (`EntranceShuffle.py`, `Regions.py`), at the commit vt pins: the overworld's entrances and where the crossed shuffle may lead them (`src/entrances/er.json`, imported), and the doors and holes autotracking shows Link went through (`linksOf`) |
 | `src/seed-file.ts` | `app/Jobs/SendPatchToDisk.php`, `World.php`, `EntranceRandomizer.php`: a seed's settings from its file (its entrance shuffle included, and its logic, any of the five alttpr.com offers, `RandomizerController.php:110-116`, where the ROM's seed type folds the three major ones into one), through a Zod schema of `spoiler.meta` |
@@ -218,6 +218,33 @@ count, and bottle contents", and the basic placement's dungeons ask for
 both. The stats' heart counters (`heart-containers`, `heart-pieces`: every
 container and piece collected, not the menu's count) stay `hud`, unread in
 a race.
+
+### The Triforce pieces of a Triforce Hunt
+
+alttpr.com's `triforce-hunt` goal puts 30 `TriforcePiece` items among the
+others and asks for 20 (`config/alttp.php:32-41`, `TRIFORCE_HUNT`); a
+customized seed sets `item.Goal.Required`. The ROM holds the number asked
+for, `GoalItemRequirement` (a word at `$30:8167`, `tables.asm:789-791`,
+written by `Rom.php:472-476` from `World.php:1125`), and counts the pieces
+found in `GoalCounter` (a word at `$7E:F418`, `sram.asm:265`), which every
+goal item Link raises adds one to (`newitems.asm:102-105, 470-473`). The
+game's HUD draws the two as "found/asked" (`newhud.asm:69-80`), and Murahdahla
+at Hyrule Castle takes the pieces in (`elder.asm:35-66`, `World.php:1196`).
+The pack lists `TriforcePiece` as an item no rule reads (`items.ts`): the
+randomizer's own win test is `has('TriforcePiece', item.Goal.Required)` beside
+the north east Light World's entry (`World.php:103-105`), which only Standard
+gates, on the escape, so there is no location to solve for. A hunt's go mode
+is the count (`huntGoModeOf(held, required)`: `yes` once the pieces asked for
+are held), which the app holds beside the board's two counters.
+
+- `decodeGoalPieces` reads `GoalCounter` (the range `goal-counter`, category
+  `items`): the ALttPR Auto-tracker Rules v2.0 list "Triforce pieces" among
+  "the following inventory items may be auto-tracked", so Race Mode reads it
+  (`memory.spec.ts` pins it among the race reads). A word above 50, ganonhunt's
+  pool and the most any goal asks for, is no count of the game's: not read.
+- `SeedSettingsReading.goalPieces` reads `GoalItemRequirement` from the ROM
+  (1 to 50; none for a goal that asks for none or a counter-only `$FFFF`).
+  It is a setting, category `other`, so Race Mode never reads it.
 
 ### A dungeon's prize, as the game shows it
 
@@ -1478,8 +1505,9 @@ The solver computes no event, so a step that gives one (Agahnim 2 gives
 `defeatAgahnim2`) is solved first, and the steps after it in a state that
 holds it; once the player holds it, the step is done. The dungeons goal
 (Ganon wants every dungeon) and completionist (every location) have no go
-mode before their end, and the triforce hunts count pieces this pack does
-not have.
+mode before their end, and the triforce hunts have no location to reach: a
+hunt's go mode is the count of its pieces (`TRIFORCE_HUNT`, `huntGoModeOf`;
+see the Triforce pieces above).
 
 - `goModeOf(settings)`: the run's go mode, if its goal has one and is
   known (a Mystery run's hidden goal has none yet).

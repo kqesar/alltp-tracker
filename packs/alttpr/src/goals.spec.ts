@@ -10,7 +10,9 @@ import {
   goModeBlockers,
   goModeOf,
   goModeStatus,
+  huntGoModeOf,
   joinBlockers,
+  TRIFORCE_HUNT,
 } from "./goals";
 import { withUntracked } from "./keys";
 import { compile, regionModules, STATE_NAMES } from "./pack";
@@ -191,6 +193,21 @@ describe("GO_MODES", () => {
     const [tower] = GO_MODES.ganon.steps;
     expect(tower.gives).toBe(dungeon("ganons-tower").event?.item);
     expect(STATE_NAMES).toContain(tower.gives);
+  });
+});
+
+describe("a triforce hunt", () => {
+  it("asks for 20 of the 30 pieces (config/alttp.php:32-41)", () => {
+    expect(TRIFORCE_HUNT).toMatchObject({ pool: 30, required: 20 });
+  });
+
+  it("is in go mode once the pieces asked for are held", () => {
+    expect(huntGoModeOf(0, 20)).toBe("no");
+    expect(huntGoModeOf(19, 20)).toBe("no");
+    expect(huntGoModeOf(20, 20)).toBe("yes");
+    expect(huntGoModeOf(30, 20)).toBe("yes");
+    // A seed that asks for fewer
+    expect(huntGoModeOf(15, 15)).toBe("yes");
   });
 });
 

@@ -5,6 +5,7 @@ import { CHECK_FLAGS } from "./check-flags";
 import {
   decodeChecks,
   decodeEntrances,
+  decodeGoalPieces,
   decodeHealth,
   decodeItems,
   decodePrizesHeld,
@@ -1082,6 +1083,39 @@ describe("the decoders on random bytes", () => {
       }),
       { numRuns: 300 },
     );
+  });
+});
+
+describe("decodeGoalPieces", () => {
+  const GOAL_COUNTER = SAVE(0x418);
+  const pieces = (count: number, race = false) =>
+    decodeGoalPieces(
+      new Image()
+        .set(GOAL_COUNTER, count & 0xff)
+        .set(GOAL_COUNTER + 1, count >> 8)
+        .view({ strict: race }),
+      { race },
+    );
+
+  it("reads the goal items found, a word", () => {
+    expect(pieces(0)).toBe(0);
+    expect(pieces(12)).toBe(12);
+    expect(pieces(50)).toBe(50);
+  });
+
+  it("reads them in Race Mode, which v2.0 lists among the items", () => {
+    expect(racePermitted("goal-counter")).toBe(true);
+    expect(pieces(7, true)).toBe(7);
+  });
+
+  it("settles nothing past what a goal asks for or before it is read", () => {
+    expect(pieces(51)).toBe("not-read");
+    expect(pieces(0x0100)).toBe("not-read");
+    expect(
+      decodeGoalPieces(new Image().view({ read: () => false }), {
+        race: false,
+      }),
+    ).toBe("not-read");
   });
 });
 

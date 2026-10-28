@@ -18,7 +18,7 @@
 // Ganon with Agahnim 2 beaten. Not modeled: the dungeons goal, whose Ganon
 // wants every dungeon done (no go mode before the end), completionist,
 // which wants every location, and the triforce hunts, whose pieces are not
-// items of this pack.
+// items of this pack: a hunt's go mode is its count (TRIFORCE_HUNT).
 import {
   type Analysis,
   type AnalyzeOptions,
@@ -35,6 +35,35 @@ import type { Filler } from "./fill";
 import { type KeyedSolution, solveWithKeys } from "./keys";
 import type { Source } from "./location";
 import type { AlttprSettings } from "./settings";
+
+/**
+ * The triforce-hunt goal's pieces, read at the same commit. The goal puts
+ * `pool` pieces among the items and wins once `required` are brought to
+ * Murahdahla (config/alttp.php:32-41; World.php:103-105 wins on
+ * `has('TriforcePiece', item.Goal.Required)` beside the north east Light
+ * World's entry, which only Standard gates, on the escape). The ROM holds
+ * the number asked for (GoalItemRequirement, World.php:1125, Rom.php:472-476)
+ * and counts the pieces found (GoalCounter, z3randomizer's sram.asm:265).
+ * Pieces are items of no region's rule, so a hunt has no step in logic: its
+ * go mode is the count (`huntGoModeOf`).
+ */
+export const TRIFORCE_HUNT = {
+  /** The pieces among the items. */
+  pool: 30,
+  /** The pieces the goal asks for. */
+  required: 20,
+  source: "config/alttp.php:32-41",
+} as const;
+
+/**
+ * Where a triforce hunt stands: `yes` once the pieces asked for are held
+ * (World.php:103-105), else `no`.
+ * @param held - The pieces found
+ * @param required - The pieces the goal asks for
+ */
+export function huntGoModeOf(held: number, required: number): Tri {
+  return held >= required ? "yes" : "no";
+}
 
 /** One step of a go mode: a location to reach in logic. */
 export interface GoStep {
