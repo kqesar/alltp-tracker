@@ -66,10 +66,12 @@ const READ_BY_NONE =
 /**
  * What the randomizer's state holds once it collects `names`, each as an
  * advancement (TestDungeon.py:44-46), as the pack's state: progressive
- * items step up, a bottle or a heart counts.
+ * items step up, a bottle or a heart counts. Its heart_count adds the 3
+ * hearts Link starts with (BaseClasses.py:418), which the pack's state
+ * holds as three heart containers, as toState gives them.
  */
 function collect(names: readonly string[]): State {
-  const state: Record<string, number> = {};
+  const state: Record<string, number> = { heartContainer: 3 };
   const add = (id: string) => {
     state[id] = (state[id] ?? 0) + 1;
   };

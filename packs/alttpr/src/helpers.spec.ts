@@ -7,7 +7,7 @@ import {
 } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { GROUPS, HELPERS } from "./helpers";
-import { ITEM_IDS, stateFromUpstream } from "./items";
+import { ITEM_IDS, PRE_COLLECTED, stateFromUpstream } from "./items";
 import {
   type AlttprSettings,
   settingsFromUpstream,
@@ -230,8 +230,27 @@ const TABLES: Readonly<Partial<Record<keyof typeof HELPERS, readonly Row[]>>> =
       [Array(7).fill("HeartContainerNoAnimation"), "yes"],
       [["HeartContainer", ...Array(24).fill("PieceOfHeart")], "yes"],
       [Array(24).fill("PieceOfHeart"), "no"],
+      // A seed's collection: Link's 3 starting hearts (Randomizer.php:46-56)
+      [[...PRE_COLLECTED, ...Array(4).fill("BossHeartContainer")], "yes"],
+      [
+        [
+          ...PRE_COLLECTED,
+          ...Array(3).fill("BossHeartContainer"),
+          ...Array(3).fill("PieceOfHeart"),
+        ],
+        "no",
+      ],
     ],
     hasHealth12: [
+      [[...PRE_COLLECTED, ...Array(9).fill("BossHeartContainer")], "yes"],
+      [
+        [
+          ...PRE_COLLECTED,
+          ...Array(8).fill("BossHeartContainer"),
+          ...Array(3).fill("PieceOfHeart"),
+        ],
+        "no",
+      ],
       [
         [...Array(11).fill("HeartContainer"), ...Array(3).fill("PieceOfHeart")],
         "no",
@@ -375,6 +394,15 @@ describe("the item helpers", () => {
     expect(HELPERS.hasHealth7.req).toBe(
       "heartContainer >= 7 | heartContainer >= 6 & pieceOfHeart >= 4 | heartContainer >= 5 & pieceOfHeart >= 8 | heartContainer >= 4 & pieceOfHeart >= 12 | heartContainer >= 3 & pieceOfHeart >= 16 | heartContainer >= 2 & pieceOfHeart >= 20 | heartContainer >= 1 & pieceOfHeart >= 24",
     );
-    expect(HELPERS.hasHealth12.req.split(" | ")).toHaveLength(6);
+    // 12 containers at most: the pool's 11 and the 3 every world is given
+    expect(HELPERS.hasHealth12.req.split(" | ")).toEqual([
+      "heartContainer >= 12",
+      "heartContainer >= 11 & pieceOfHeart >= 4",
+      "heartContainer >= 10 & pieceOfHeart >= 8",
+      "heartContainer >= 9 & pieceOfHeart >= 12",
+      "heartContainer >= 8 & pieceOfHeart >= 16",
+      "heartContainer >= 7 & pieceOfHeart >= 20",
+      "heartContainer >= 6 & pieceOfHeart >= 24",
+    ]);
   });
 });

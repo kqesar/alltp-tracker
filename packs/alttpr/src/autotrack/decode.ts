@@ -420,7 +420,8 @@ export function decodeItems(
 
 /**
  * Link's hearts on screen, whole, or why memory cannot say: a number from 1
- * to 20, which upstream's hasHealth reads less the 3 Link starts with.
+ * to 20, which upstream's hasHealth reads as it is, the 3 Link starts with
+ * being heart containers every world is given (PRE_COLLECTED).
  */
 export type HealthReading = number | Unsettled;
 

@@ -17,7 +17,10 @@
 export interface ItemDef {
   /** The state key, and the name requirements use. */
   readonly id: string;
-  /** The highest count that means something; 1 for an item held or not. */
+  /**
+   * The highest count the pool holds; 1 for an item held or not. A state
+   * holds every world's pre-collected items beside it (STATE_MAX).
+   */
   readonly max: number;
 }
 
@@ -74,7 +77,9 @@ export const ITEMS = [
   { id: "shopArrow", max: 1 },
   { id: "shopKey", max: 1 },
 
-  // hasHealth sums them: a piece is a quarter heart (Item.php:116, 131-156)
+  // hasHealth sums them: a piece is a quarter heart (Item.php:116, 131-156).
+  // The pool's 11 containers; a run's state holds the 3 every world is
+  // given beside them (STATE_MAX)
   { id: "heartContainer", max: 11 },
   { id: "pieceOfHeart", max: 24 },
 
@@ -154,8 +159,6 @@ export type ItemId = (typeof ITEMS)[number]["id"];
 
 /** Every item id, for `compileWorld`'s check of the names rules use. */
 export const ITEM_IDS: readonly ItemId[] = ITEMS.map((item) => item.id);
-
-const MAX = new Map<string, number>(ITEMS.map((item) => [item.id, item.max]));
 
 /**
  * What one upstream item adds to a state. Most add `count` to `item`. An
@@ -405,16 +408,8 @@ export function fromUpstream(name: string): Contribution | null {
   return contribution;
 }
 
-/**
- * The state for a collection of upstream items, as upstream counts them:
- * per item, the sum of what adds to it or the highest level reached,
- * whichever is greater, within the item's range. Only held items appear.
- * The order of `names` does not matter, and adding a name never lowers a
- * count.
- */
-export function stateFromUpstream(
-  names: Iterable<string>,
-): Partial<Record<ItemId, number>> {
+/** What a collection of upstream items counts, item by item, unbounded. */
+function counts(names: Iterable<string>): Map<ItemId, number> {
   const added = new Map<ItemId, number>();
   const levels = new Map<ItemId, number>();
   for (const name of names) {
@@ -427,13 +422,66 @@ export function stateFromUpstream(
       added.set(item, (added.get(item) ?? 0) + count);
     }
   }
-  const state: Partial<Record<ItemId, number>> = {};
+  const counted = new Map<ItemId, number>();
   for (const item of ITEM_IDS) {
-    const count = Math.min(
-      MAX.get(item) ?? 0,
-      Math.max(added.get(item) ?? 0, levels.get(item) ?? 0),
-    );
-    if (count > 0) state[item] = count;
+    const count = Math.max(added.get(item) ?? 0, levels.get(item) ?? 0);
+    if (count > 0) counted.set(item, count);
+  }
+  return counted;
+}
+
+/**
+ * What every world is given before its fill when nothing was given to it
+ * already (app/Randomizer.php:46-56): three boss heart containers, which
+ * are Link's 3 starting hearts, and the bomb and arrow capacities, which
+ * no rule reads (BombUpgrade10, ArrowUpgrade10: canBombThings is true and
+ * canShootArrows reads the bow, ItemCollection.php:476-494, 602-605). Every
+ * fill and a seed's playthrough start from them (World.php:557,
+ * RandomAssumed.php:86, PlaythroughService.php:181), so hasHealth counts
+ * the 3 starting hearts (ItemCollection.php:546-553): hasHealth(7) is 7
+ * hearts on screen.
+ */
+export const PRE_COLLECTED: readonly string[] = [
+  "BossHeartContainer",
+  "BossHeartContainer",
+  "BossHeartContainer",
+  "BombUpgrade10",
+  "ArrowUpgrade10",
+  "ArrowUpgrade10",
+  "ArrowUpgrade10",
+];
+
+/**
+ * PRE_COLLECTED as a state counts it, which toState adds to what the
+ * player found: the three heart containers.
+ */
+export const PRE_COLLECTED_STATE: Readonly<Partial<Record<ItemId, number>>> =
+  Object.freeze(Object.fromEntries(counts(PRE_COLLECTED)));
+
+/**
+ * The most of each item a state holds: the pool's (ITEMS) and what every
+ * world is given beside it (PRE_COLLECTED_STATE), 14 heart containers.
+ */
+export const STATE_MAX: ReadonlyMap<string, number> = new Map(
+  ITEMS.map(({ id, max }) => [
+    id,
+    max + (PRE_COLLECTED_STATE[id as ItemId] ?? 0),
+  ]),
+);
+
+/**
+ * The state for a collection of upstream items, as upstream counts them:
+ * per item, the sum of what adds to it or the highest level reached,
+ * whichever is greater, within what a state holds (STATE_MAX). Only held
+ * items appear. The order of `names` does not matter, and adding a name
+ * never lowers a count.
+ */
+export function stateFromUpstream(
+  names: Iterable<string>,
+): Partial<Record<ItemId, number>> {
+  const state: Partial<Record<ItemId, number>> = {};
+  for (const [item, count] of counts(names)) {
+    state[item] = Math.min(STATE_MAX.get(item) ?? 0, count);
   }
   return state;
 }

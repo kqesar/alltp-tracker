@@ -609,18 +609,21 @@ const METHODS = {
       any(atom("fireRod"), atom("lamp")),
     ),
   // heart_count: the 3 hearts Link starts with, the containers and a heart
-  // per 4 pieces. Each is capped by the item pool's difficulty, at 2
-  // containers and 8 pieces at the lowest (ItemList.py difficulties): no
-  // cap binds while 2 hearts or fewer are wanted. Hearts are no
-  // advancement items, so a seed's fill never counts them, but the
-  // randomizer's tests collect them as such (TestMiseryMire.py:72): the
-  // rule stands as it is written
+  // per 4 pieces (BaseClasses.py:411-419). The state holds the 3 as heart
+  // containers, as vt pre-collects them (the pack's PRE_COLLECTED_STATE),
+  // so the containers count them. Each found item is capped by the item
+  // pool's difficulty, at 2 containers and 8 pieces at the lowest
+  // (ItemList.py difficulties): no cap binds while 2 hearts or fewer are
+  // found. Hearts are no advancement items, so a seed's fill never counts
+  // them, but the randomizer's tests collect them as such
+  // (TestMiseryMire.py:72): the rule stands as it is written
   has_hearts: (ctx, [, count]) => {
-    const wanted = Number(numberOf(count, 0)) - 3;
-    if (wanted > 2) throw new Untranslatable(`${wanted} hearts, past a cap`);
-    return method(ctx, "has_hearts", `${wanted + 3}`, () =>
+    const wanted = Number(numberOf(count, 0));
+    const found = wanted - 3;
+    if (found > 2) throw new Untranslatable(`${found} hearts, past a cap`);
+    return method(ctx, "has_hearts", `${wanted}`, () =>
       any(
-        ...Array.from({ length: wanted + 1 }, (_, pieces) =>
+        ...Array.from({ length: found + 1 }, (_, pieces) =>
           all(
             atLeast("heartContainer", wanted - pieces),
             atLeast("pieceOfHeart", 4 * pieces),

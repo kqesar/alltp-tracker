@@ -87,14 +87,15 @@ describe("the basic placement's dungeon gate", () => {
     expect(shooterRoom(atPalace({}, { health: true }))).toBe("maybe");
   });
 
-  it("reads the hearts found once known: 7 open it, 6 and three pieces do not", () => {
-    expect(shooterRoom(atPalace({ heartContainer: 7 }))).toBe("yes");
-    expect(shooterRoom(atPalace({ heartContainer: 6, pieceOfHeart: 3 }))).toBe(
+  it("reads the hearts once known, the 3 Link starts with counted: 7 open it, 6¾ do not", () => {
+    // 4 found and the 3 every world is given (Randomizer.php:46-56)
+    expect(shooterRoom(atPalace({ heartContainer: 4 }))).toBe("yes");
+    expect(shooterRoom(atPalace({ heartContainer: 3, pieceOfHeart: 3 }))).toBe(
       "no",
     );
     expect(
       shooterRoom(
-        atPalace({ heartContainer: 6, pieceOfHeart: 4 }, { health: false }),
+        atPalace({ heartContainer: 3, pieceOfHeart: 4 }, { health: false }),
       ),
     ).toBe("yes");
   });
