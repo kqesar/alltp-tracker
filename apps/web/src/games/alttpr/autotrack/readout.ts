@@ -324,8 +324,10 @@ const SETTING_UNKNOWN: Readonly<Record<SeedUnknown, string>> = {
 };
 
 const LOGIC_NAMES: Readonly<Record<SeedLogic, string>> = {
+  HybridMajorGlitches: "Hybrid Major Glitches",
   MajorGlitches: "Major Glitches",
   NoGlitches: "No Glitches",
+  NoLogic: "No Logic",
   OverworldGlitches: "Overworld Glitches",
 };
 

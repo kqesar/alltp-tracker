@@ -83,6 +83,25 @@ describe("seedFileReading", () => {
     ).toEqual({ known: true, value: false });
   });
 
+  it.each([
+    "NoGlitches",
+    "OverworldGlitches",
+    "HybridMajorGlitches",
+    "MajorGlitches",
+    "NoLogic",
+  ])("reads the logic %s, one alttpr.com offers", (logic) => {
+    expect(seedFileReading(withMeta({ logic }))?.logic).toEqual({
+      known: true,
+      value: logic,
+    });
+  });
+
+  it("leaves a logic alttpr.com never offers unrecognized", () => {
+    expect(
+      seedFileReading(withMeta({ logic: "MinorGlitches" }))?.logic,
+    ).toEqual({ known: false, why: "unrecognized" });
+  });
+
   it("leaves a value vt never writes unrecognized, and only that one", () => {
     const reading = seedFileReading(
       withMeta({ entry_crystals_tower: "random", mode: 3 }),

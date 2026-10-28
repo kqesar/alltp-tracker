@@ -42,9 +42,12 @@ const PIECES: Partial<Record<SeedGoal, number>> = {
   "triforce-hunt": 20,
 };
 
+/** Rom.php:836-848: the three major glitched logics write one type. */
 const SEED_TYPE: Readonly<Record<SeedLogic, number>> = {
+  HybridMajorGlitches: 0x01,
   MajorGlitches: 0x01,
   NoGlitches: 0x00,
+  NoLogic: 0x01,
   OverworldGlitches: 0x02,
 };
 

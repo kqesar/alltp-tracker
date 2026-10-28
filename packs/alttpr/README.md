@@ -23,7 +23,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/goals.ts` | `app/Randomizer.php`: where each goal puts the Triforce, and its go mode |
 | `src/seed-link.ts` | `app/Seed.php`, `routes/web.php`: a seed's hash, from a link to its page, and where its file lies |
 | `src/entrances.ts` | `cassidoxa/ALttPEntranceRandomizer` (`EntranceShuffle.py`, `Regions.py`), at the commit vt pins: the overworld's entrances and where the crossed shuffle may lead them (`src/entrances/er.json`, imported), and the doors and holes autotracking shows Link went through (`linksOf`) |
-| `src/seed-file.ts` | `app/Jobs/SendPatchToDisk.php`, `World.php`, `EntranceRandomizer.php`: a seed's settings from its file (its entrance shuffle included), through a Zod schema of `spoiler.meta` |
+| `src/seed-file.ts` | `app/Jobs/SendPatchToDisk.php`, `World.php`, `EntranceRandomizer.php`: a seed's settings from its file (its entrance shuffle included, and its logic, any of the five alttpr.com offers, `RandomizerController.php:110-116`, where the ROM's seed type folds the three major ones into one), through a Zod schema of `spoiler.meta` |
 | `src/spoiler/*.ts` | `World::getSpoiler` (`app/World.php`), the entrance randomizer's `Spoiler.to_json` (`BaseClasses.py`): the spoiler log alttpr.com lets a player save, as `@alltp/spoiler`'s model (see "Spoiler logs") |
 | `src/er-world.ts` | `cassidoxa/ALttPEntranceRandomizer` (`Regions.py`, `Rules.py`): the world a seed with shuffled entrances is filled in, for the doors noted (see "The entrance randomizer's world") |
 | `src/derived.ts`, `src/medallions.ts` | facts the state derives before solving, for the rules that are not monotone in the items (Palace of Darkness's keys; what a medallion pad wants) |
@@ -1249,6 +1249,12 @@ say which checks out of logic a trick would open, and which trick.
 | `superBunny` | `trickSuperBunny` | `canSuperBunny` | the same (`logic.php:6`) |
 | `bunnyRevive` | `trickBunnyRevive` | `canBunnyRevive` (with a bottle, the net and a catchable fairy, `@canBunnyRevive`) | no logic: the customizer alone (`resources/js/store/modules/glitches.js:8`) |
 | `dungeonRevive` | `trickDungeonRevive` | `canDungeonRevive` | OverworldGlitches and up (`logic.php:12`) |
+
+No upstream logic turns these six on alone, so the tricks world is no
+seed's logic: a check it opens stays out of logic. Minor Glitches left in
+VT8.25 (`resources/views/updates.blade.php:965`), and OverworldGlitches
+adds boots clips, mirror clips and super speed (`config/logic.php:5-13`),
+which the pack does not port.
 
 **One world, the tricks as items.** A setting is folded at compile time, so
 the real world cannot hold a trick for one state and not another, and a
