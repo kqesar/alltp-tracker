@@ -494,6 +494,10 @@ export const UNMAPPED_LOCATIONS: readonly UnmappedLocation[] = [
     reason:
       "Holds the medallion that opens the dungeon: not a check, and no flag says it is known. Outside Race Mode the ROM names it, told once the game shows it (autotrack/medallion-pads.ts).",
   },
+  {
+    id: "bomb-merchant",
+    reason: `Inverted's event that sells the big bomb: ${NO_FLAG}. PreGTBKLocations' "Big Bomb Acquired" bit (sram.asm:282-283) is never set at this commit, and FollowerIndicator $0D (sram.asm:211) holds only while Link carries the bomb.`,
+  },
   { id: "waterfall-bottle", reason: `A fairy fountain: ${NO_FLAG}.` },
   { id: "pyramid-bottle", reason: `A fairy fountain: ${NO_FLAG}.` },
 ];
