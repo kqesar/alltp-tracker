@@ -213,6 +213,35 @@ describe("compareReview", () => {
     expect(prize?.entry.state).toBe("found");
   });
 
+  it("dates a prize by its boss's stamp, the timer's reading then", () => {
+    act(() => store().startTimer());
+    vi.setSystemTime(T0 + 90_000);
+    act(() => store().setItem("boss0", 2));
+    const prize = compareReview(log, run()).rows.find(
+      (r) => r.entry.placement.location === "eastern-palace/prize",
+    );
+    expect(prize).toMatchObject({ ms: 90_000, state: "in-order" });
+  });
+
+  it("calls a beaten boss's prize taken, with no time, when the run kept none", () => {
+    // A run opened from a link that left its timeline out: bosses beaten, no stamp
+    act(() => {
+      store().setItem("boss0", 2);
+      useGameStore.setState({ timeline: {} });
+    });
+    const { rows, summary } = compareReview(log, run());
+    const prize = (dungeon: string) =>
+      rows.find((r) => r.entry.placement.location === `${dungeon}/prize`);
+    expect(prize("eastern-palace")).toMatchObject({
+      ms: null,
+      state: "untimed",
+    });
+    expect(prize("eastern-palace")?.entry.placement.sphere).not.toBeNull();
+    // A boss still alive: its prize was never taken
+    expect(prize("desert-palace")?.state).toBe("missed");
+    expect(summary.untimed).toBeGreaterThan(0);
+  });
+
   it("leaves the locations the board does not track unknown", () => {
     const { rows } = compareReview(log, run());
     for (const location of ["pyramid-bottle", "turtle-rock-medallion"]) {

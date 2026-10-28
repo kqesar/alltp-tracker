@@ -317,7 +317,8 @@ export const compareReview = (
 
 /**
  * Which locations the board shows done: checked, or in a dungeon its counter
- * finished (`isCleared`).
+ * finished (`isCleared`), and a dungeon's prize once its boss is beaten (the
+ * game gives it on the kill; the board has no check for it).
  */
 const runStates = (run: ReviewedRun): Map<string, boolean> => {
   const done = new Map<string, boolean>();
@@ -331,5 +332,9 @@ const runStates = (run: ReviewedRun): Map<string, boolean> => {
       done.set(id, run.checked[id] === true || (cleared && id !== boss));
     }
   }
+  const { settings } = solutionOf(run);
+  LEGACY_DUNGEONS.forEach((id, index) => {
+    if (run.items[`boss${index}`] === 2) done.set(prizeOf(id, settings), true);
+  });
   return done;
 };
