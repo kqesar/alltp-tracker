@@ -433,11 +433,15 @@ const sinkFor = (mine: number): RuntimeSink => ({
       set({ seedFile: null });
     }
     const reading = withFile(read);
+    // Whether the board held nothing of the player's before this reading
+    const fresh = isFreshRun(useGameStore.getState());
+    set({ reading });
+    // The game first: a run type switched to the seed's is then laid with
+    // this reading, not the one before it
+    follower?.read(reading);
     // A seed with a file on alttpr.com is held against the board once the
     // file has settled (askSeedFile): the two never switch it twice
-    if (!awaitsFile(reading)) followSeed(reading);
-    set({ reading });
-    follower?.read(reading);
+    if (!awaitsFile(reading)) followSeed(reading, fresh);
     askSeedFile(reading, mine);
   },
   status: (status, since, { bridge, devices }) => {

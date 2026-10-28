@@ -123,6 +123,19 @@ export const createFollower = (): Follower => {
   let bombBought = false;
   /** The doors and holes last noted, to note only what the game shows anew. */
   let noted: string | null = null;
+  /** The seed the last reading in play named. */
+  let seedName: string | null = null;
+
+  /**
+   * Forget what the session kept of the run it followed: the medallions
+   * shown, the bomb bought, the entrances noted. The run was replaced, or the
+   * game is on another seed: none of it is this run's.
+   */
+  const forget = () => {
+    for (const slot of Object.keys(known)) delete known[Number(slot)];
+    bombBought = false;
+    noted = null;
+  };
 
   /**
    * Note where the game shows Link went, once per change, in a run whose
@@ -151,6 +164,9 @@ export const createFollower = (): Follower => {
    * shown before, all of it when none was.
    */
   const lay = (reading: AutotrackReading) => {
+    const name = reading.seed.seed;
+    if (seedName !== null && name !== null && name !== seedName) forget();
+    if (name !== null) seedName = name;
     noteEntrances(reading.entrances);
     recordSeed(useGameStore, reading.seed.seed);
     const store = useGameStore.getState();
@@ -226,8 +242,8 @@ export const createFollower = (): Follower => {
     },
     resync: (now) => {
       shown = null;
-      // Entrances noted on the board replaced are noted again
-      noted = null;
+      // Nothing the session kept belongs to the run replaced
+      forget();
       if (now && playing && last !== null) lay(last);
     },
     steady: (at) => {
