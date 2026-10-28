@@ -135,6 +135,7 @@ test("starts the run timer with the game, follows its clock and stops at the shi
   page,
 }) => {
   const bridge = await FakeUsb2Snes.start();
+  let emulator: ReturnType<typeof setInterval> | undefined;
   try {
     // The file select; the console's RTA clock already holds 50 000 frames
     writeMapRando(bridge.memory, {
@@ -160,22 +161,32 @@ test("starts the run timer with the game, follows its clock and stops at the shi
     await page.keyboard.press("Escape");
     await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
 
-    // The file loads: the first reading in play starts the timer
-    writeMapRando(bridge.memory, {
-      clock: { pending: 0, saved: 53_000 },
-      state: 0x08,
-    });
+    // The file loads and the game runs (15 frames every 250 ms, a real
+    // 60 fps): the first reading in play starts the timer. The clock keeps
+    // moving until the timer has been seen running, as one jump and then
+    // stillness would show "running" for a single read, about half a second,
+    // which a slow runner's polling of the name can miss.
+    let saved = 53_000;
+    const play = () =>
+      writeMapRando(bridge.memory, {
+        clock: { pending: 0, saved },
+        state: 0x08,
+      });
+    play();
+    emulator = setInterval(() => {
+      saved += 15;
+      play();
+    }, 250);
     await expect(timer).toHaveAccessibleName(/^Run timer: 0:0\d, running$/);
 
     // 6 000 frames of the game (99.8 s) in a few seconds of real time: the
     // timer is set on the game's clock
-    writeMapRando(bridge.memory, {
-      clock: { pending: 0, saved: 59_000 },
-      state: 0x08,
-    });
+    saved = 59_000;
+    play();
     await expect(timer).toHaveAccessibleName(
       /^Run timer: 1:(39|4\d), running$/,
     );
+    clearInterval(emulator);
     await timer.click();
     await expect(page.getByTestId("run-timer-clock-hint")).toHaveText(
       "The timer follows the game's clock.",
@@ -190,6 +201,7 @@ test("starts the run timer with the game, follows its clock and stops at the shi
     });
     await expect(timer).toHaveAccessibleName(/^Run timer: 1:(40|41), stopped$/);
   } finally {
+    clearInterval(emulator);
     await bridge.stop();
   }
 });
