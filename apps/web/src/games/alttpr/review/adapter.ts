@@ -24,7 +24,7 @@ import {
 } from "@alltp/spoiler";
 import { COMPARED, checkSeed } from "@/games/alttpr/autotrack/seed";
 import { isHidden, type TunableSetting } from "@/games/alttpr/data/presets";
-import { runZones } from "@/games/alttpr/logic/checks";
+import { isCleared, runZones } from "@/games/alttpr/logic/checks";
 import { PACK_ITEMS, packReading } from "@/games/alttpr/logic/packItems";
 import {
   bossLocationOf,
@@ -315,12 +315,14 @@ export const compareReview = (
   return { counted, rows, summary };
 };
 
-/** Which locations the board shows done: checked, or in a dungeon its counter finished. */
+/**
+ * Which locations the board shows done: checked, or in a dungeon its counter
+ * finished (`isCleared`).
+ */
 const runStates = (run: ReviewedRun): Map<string, boolean> => {
   const done = new Map<string, boolean>();
   for (const zone of runZones(run)) {
-    const cleared =
-      zone.dungeon !== undefined && dungeonCount(zone.dungeon, run) === 0;
+    const cleared = isCleared(zone, run);
     const boss =
       zone.dungeon === undefined
         ? undefined

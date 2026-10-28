@@ -185,7 +185,7 @@ const DungeonCount = ({ dungeon }: { dungeon: DungeonId }) => {
     <span className="checks-zone__count">
       <Swatch state={state} />
       {left === 0
-        ? "done"
+        ? "no item left"
         : `${left} ${left === 1 ? "item" : "items"} left, ${LABELS[state].toLowerCase()}`}
     </span>
   );

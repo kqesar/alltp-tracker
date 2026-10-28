@@ -28,6 +28,7 @@ import {
   bossLocationOf,
   bossStateOf,
   dungeonCount,
+  isCountedOut,
   itemsSurelyInLogic,
   locationLabel,
   type MarkerState,
@@ -220,6 +221,9 @@ export const Tooltip = () => {
   const bossId = useGameStore((state) =>
     dungeon === undefined ? undefined : bossLocationOf(dungeon, state),
   );
+  const countedOut = useGameStore(
+    (state) => dungeon !== undefined && isCountedOut(dungeon, state),
+  );
   // Worked out when the browser was idle: a hover only reads it
   const analysis = useCurrentAnalysis();
   const ref = useRef<HTMLDivElement>(null);
@@ -236,18 +240,17 @@ export const Tooltip = () => {
   const lines = target ? shortcutLines(target, shortcuts) : [];
   // One row per location, but for a marker that stands for one only: its
   // state then follows its name
-  // A dungeon counted down to 0 has no item left anywhere in it, but its
-  // boss location follows the boss
+  // A dungeon tracked by its counter alone and counted down to 0 has no item
+  // left anywhere in it, but its boss location follows the boss
   const rows =
     marker === undefined
       ? []
       : marker.locations.map((id, index) => {
-          const state =
-            left === 0
-              ? id === bossId
-                ? (boss ?? "opened")
-                : "opened"
-              : (detail[index] ?? "unavailable");
+          const state = countedOut
+            ? id === bossId
+              ? (boss ?? "opened")
+              : "opened"
+            : (detail[index] ?? "unavailable");
           return {
             id,
             label:

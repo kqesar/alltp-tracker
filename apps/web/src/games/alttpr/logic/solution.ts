@@ -548,9 +548,25 @@ export const bossLocationOf = (
 ): string | undefined => bossLocation(dungeon(id), solutionOf(state).settings);
 
 /**
- * What a location of a dungeon counted down to 0 shows: done, but for the
- * boss location, which the counter (of items) does not clear. It follows
- * the boss, so it stays open until the boss is beaten.
+ * Whether a dungeon's counter says its checks are done: at 0 while the
+ * dungeon is tracked by its counter alone, none of its checks ticked but its
+ * boss's (which follows the boss). Once one is ticked (autotracking ticks
+ * each outside Race Mode), every check shows its own state: the counter
+ * counts items, so at 0 a chest left unopened may still hold the dungeon's
+ * map, compass or keys, and is no more opened for that.
+ */
+export const isCountedOut = (id: DungeonId, state: MarkerInputs): boolean => {
+  if (dungeonCount(id, state) !== 0) return false;
+  const boss = bossLocationOf(id, state);
+  return !itemLocationsOf(id, solutionOf(state).settings).some(
+    (location) => location !== boss && state.checked[location] === true,
+  );
+};
+
+/**
+ * What a location of a dungeon counted out (`isCountedOut`) shows: done,
+ * but for the boss location, which the counter (of items) does not clear.
+ * It follows the boss, so it stays open until the boss is beaten.
  */
 export const clearedStateOf = (
   id: DungeonId,

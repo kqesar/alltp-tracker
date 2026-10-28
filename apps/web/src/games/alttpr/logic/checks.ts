@@ -12,7 +12,7 @@ import {
 import { worldOf } from "@/games/alttpr/logic/settings";
 import {
   clearedStateOf,
-  dungeonCount,
+  isCountedOut,
   locationName,
   locationStateOf,
   type MarkerInputs,
@@ -88,12 +88,12 @@ export const runZones = (state: MarkerInputs): readonly Zone[] =>
   zonesOf(solutionOf(state).settings);
 
 /**
- * Whether a dungeon's counter says it holds no item more: its checks are
- * then all done, whatever is checked, but its boss's, which follows the boss
- * (`clearedStateOf`).
+ * Whether a dungeon tracked by its counter alone is counted down to 0
+ * (`isCountedOut`): its checks are then all done but its boss's, which
+ * follows the boss (`clearedStateOf`).
  */
 export const isCleared = (zone: Zone, state: MarkerInputs): boolean =>
-  zone.dungeon !== undefined && dungeonCount(zone.dungeon, state) === 0;
+  zone.dungeon !== undefined && isCountedOut(zone.dungeon, state);
 
 /** What every check of the run shows, by location id. */
 export const checkStates = (
@@ -102,9 +102,10 @@ export const checkStates = (
   const states: Record<string, MarkerState> = {};
   for (const zone of runZones(state)) {
     const { dungeon } = zone;
+    const cleared = isCleared(zone, state);
     for (const { id } of zone.checks) {
       states[id] =
-        dungeon !== undefined && isCleared(zone, state)
+        cleared && dungeon !== undefined
           ? clearedStateOf(dungeon, id, state)
           : locationStateOf(id, state);
     }

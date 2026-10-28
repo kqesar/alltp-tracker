@@ -179,11 +179,45 @@ describe("ChecksPanel", () => {
     await user.click(filter("opened"));
 
     const eastern = screen.getByRole("region", { name: /^Eastern Palace/ });
-    expect(eastern).toHaveTextContent("done");
+    expect(eastern).toHaveTextContent("no item left");
     for (const box of within(eastern).getAllByRole("checkbox")) {
       expect(box).toBeChecked();
       expect(box).toBeDisabled();
     }
+  });
+
+  it("leaves a dungeon ticked check by check at 0 to its own checks", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useGameStore
+        .getState()
+        .toggleChecks([
+          "eastern-palace/cannonball-chest",
+          "eastern-palace/map-chest",
+          "eastern-palace/big-chest",
+          "eastern-palace/big-key-chest",
+        ]);
+      useGameStore.setState((state) => ({
+        items: { ...state.items, chest0: 0 },
+      }));
+    });
+    render(<ChecksPanel />);
+    await user.click(filter("opened"));
+
+    const eastern = screen.getByRole("region", { name: /^Eastern Palace/ });
+    expect(eastern).toHaveTextContent("no item left");
+    // Not opened, so neither ticked nor locked: the counter counts items
+    const compass = within(
+      row("eastern-palace/compass-chest") as HTMLElement,
+    ).getByRole("checkbox", { name: "Compass Chest" });
+    expect(compass).not.toBeChecked();
+    expect(compass).toBeEnabled();
+    expect(row("eastern-palace/compass-chest")).toHaveTextContent("Available");
+
+    await user.click(compass);
+    expect(
+      useGameStore.getState().checked["eastern-palace/compass-chest"],
+    ).toBe(true);
   });
 
   it("keeps a cleared dungeon's boss check open until the boss is beaten", async () => {
