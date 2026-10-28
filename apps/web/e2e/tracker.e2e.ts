@@ -150,7 +150,7 @@ for (const width of WIDTHS) {
       expect(unringed).toEqual([]);
     });
 
-    test("fits the hearts in the tunic's cell, two digits included, and steps them by keyboard", async ({
+    test("fits the hearts in the tunic's cell, two digits included, and steps them a quarter at a time by keyboard", async ({
       page,
     }) => {
       await openTracker(page);
@@ -161,7 +161,19 @@ for (const width of WIDTHS) {
       await page.getByTestId("item-tunic").focus();
       await page.keyboard.press("ArrowRight");
       await expect(hearts).toBeFocused();
-      for (let step = 0; step < 18; step++) await page.keyboard.press("Space");
+      // The 3 starting hearts, then three pieces: the heart three quarters
+      // full, as the pause menu draws it, the count still 3
+      for (let step = 0; step < 4; step++) await page.keyboard.press("Space");
+      await expect(hearts).toHaveAccessibleName(/^Hearts: 3 and 3 quarters\./);
+      await expect(hearts).toHaveText("3");
+      await expect(hearts).toHaveCSS("background-image", /heart3\.png/);
+      // The fourth piece makes a heart, the next quarters the rest, to 20
+      await page.keyboard.press("Space");
+      await expect(hearts).toHaveAccessibleName(/^Hearts: 4\./);
+      await expect(hearts).toHaveCSS("background-image", /heart0\.png/);
+      for (let step = 0; step < 4 * 16 + 1; step++) {
+        await page.keyboard.press("Space");
+      }
       await expect(hearts).toHaveAccessibleName(/^Hearts: 20\./);
 
       const [cell, button, count] = await Promise.all([
@@ -179,8 +191,10 @@ for (const width of WIDTHS) {
         a.x + a.width <= b.x + b.width + 0.5 &&
         a.y + a.height <= b.y + b.height + 0.5;
       expect(inside(button, cell)).toBe(true);
-      // "20" stays within its heart
-      expect(inside(count, button)).toBe(true);
+      // "20" stays within the cell, on the heart's lower half: the top
+      // quarters the pieces fill stay in sight
+      expect(inside(count, cell)).toBe(true);
+      expect(count.y).toBeGreaterThanOrEqual(button.y + button.height / 2 - 1);
     });
   });
 }
