@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.60.2](https://github.com/kqesar/alltp-tracker/compare/v2.60.1...v2.60.2) (2026-10-28)
+
+
+### 🐛 Bug Fixes
+
+* **web:** forget the pads and bomb of an earlier run when the run changes ([44b3b84](https://github.com/kqesar/alltp-tracker/commit/44b3b84ba50a7f1bfad67f2ca712bd20d62d9030))
+* **web:** lay the game on a run replaced under a connected session ([b3cf356](https://github.com/kqesar/alltp-tracker/commit/b3cf3567ef268a786619fcec384ad3082c324f2c))
+* **web:** the goal ends a run whose timer never started ([a425f8f](https://github.com/kqesar/alltp-tracker/commit/a425f8f9305056ea620f3f918781a9a922f8e582))
+
 ## [2.60.1](https://github.com/kqesar/alltp-tracker/compare/v2.60.0...v2.60.1) (2026-10-28)
 
 
