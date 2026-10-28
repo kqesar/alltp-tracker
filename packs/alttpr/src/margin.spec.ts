@@ -133,8 +133,7 @@ describe("marginRequirement", () => {
     for (const req of [
       // Ganon's Tower's torches (GanonsTower.php:282)
       "(hammer & hookshot | fireRod & caneOfSomaria) & keyA2 >= 3 & (!setting(basicPlacement) | fireRod | ether & @hasSword)",
-      // Turtle Rock's laser bridge, the Pegasus Boots for a hookshot gap
-      "!setting(basicPlacement) | cape | caneOfByrna",
+      // The Pegasus Boots for a hookshot gap
       "hookshot | !setting(basicPlacement) & pegasusBoots",
       // The Book of Mudora at the Pedestal
       "(!setting(basicPlacement) | bookOfMudora) & pendantOfPower",
@@ -143,14 +142,24 @@ describe("marginRequirement", () => {
     }
     expect(isHealthGate(parse("@hasHealth7 | hookshot"))).toBe(false);
   });
+
+  it("gives Turtle Rock's laser bridge its margin, and refuses one elsewhere", () => {
+    const bridge = "!setting(basicPlacement) | cape | caneOfByrna";
+    expect(marginRequirement(bridge, { region: "turtleRock" })).toBe(
+      "!setting(basicPlacement) | cape | caneOfByrna | marginLaserBridge",
+    );
+    expect(() => marginRequirement(bridge, { region: "miseryMire" })).toThrow(
+      RangeError,
+    );
+  });
 });
 
 describe("the margin world", () => {
   /**
    * Every rule it relaxes, pinned with its upstream source: the eight
-   * dungeons' ways in (their health gates) and Ganon's better sword and
-   * silvers. What else basic placement asks (Turtle Rock's laser bridge,
-   * the Boots for a gap, Ganon's Tower's torches, the Book at the Pedestal,
+   * dungeons' ways in (their health gates), Turtle Rock's laser bridge and
+   * Ganon's better sword and silvers. What else basic placement asks (the
+   * Boots for a gap, Bob's Chest's Fire Rod or Ether, the Book at the Pedestal,
    * the Mirror for the smith, the Hookshot at the Bumper Cave, Ice Palace's
    * keys) is not among them.
    */
@@ -167,6 +176,10 @@ describe("the margin world", () => {
     "skullWoods <- northWestDarkWorld (app/Region/Standard/SkullWoods.php:153): marginSkullWoods",
     "swampPalace <- southDarkWorld (app/Region/Standard/SwampPalace.php:177): marginSwampPalace",
     "thievesTown <- northWestDarkWorld (app/Region/Standard/ThievesTown.php:118): marginThievesTown",
+    "turtle-rock/eye-bridge/bottom-left (app/Region/Standard/TurtleRock.php:192): marginLaserBridge",
+    "turtle-rock/eye-bridge/bottom-right (app/Region/Standard/TurtleRock.php:200): marginLaserBridge",
+    "turtle-rock/eye-bridge/top-left (app/Region/Standard/TurtleRock.php:208): marginLaserBridge",
+    "turtle-rock/eye-bridge/top-right (app/Region/Standard/TurtleRock.php:216): marginLaserBridge",
     "turtleRock <- turtleRockLower (app/Region/Standard/TurtleRock.php:261): marginTurtleRock",
     "turtleRock <- turtleRockMiddle (app/Region/Standard/TurtleRock.php:262): marginTurtleRock",
     "turtleRock <- turtleRockUpper (app/Region/Standard/TurtleRock.php:263): marginTurtleRock",
@@ -191,6 +204,10 @@ describe("the margin world", () => {
       "skullWoods <- northWestDarkWorld (app/Region/Inverted/SkullWoods.php:43): marginSkullWoods",
       "swampPalace <- southLightWorld (app/Region/Inverted/SwampPalace.php:133): marginSwampPalace",
       "thievesTown <- northWestDarkWorld (app/Region/Inverted/ThievesTown.php:23): marginThievesTown",
+      "turtle-rock/eye-bridge/bottom-left (app/Region/Inverted/TurtleRock.php:135): marginLaserBridge",
+      "turtle-rock/eye-bridge/bottom-right (app/Region/Inverted/TurtleRock.php:144): marginLaserBridge",
+      "turtle-rock/eye-bridge/top-left (app/Region/Inverted/TurtleRock.php:153): marginLaserBridge",
+      "turtle-rock/eye-bridge/top-right (app/Region/Inverted/TurtleRock.php:162): marginLaserBridge",
       "turtleRock <- turtleRockLower (app/Region/Inverted/TurtleRock.php:211): marginTurtleRock",
       "turtleRock <- turtleRockMiddle (app/Region/Inverted/TurtleRock.php:210): marginTurtleRock",
       "turtleRock <- turtleRockUpper (app/Region/Inverted/TurtleRock.php:209): marginTurtleRock",
@@ -314,7 +331,7 @@ describe("the margin world", () => {
     ).toEqual(solve(compile(OPEN_ADVANCED), state).locations());
   });
 
-  it("keeps the laser bridge, the dark rooms' lamp and Ganon's Tower's torches", () => {
+  it("drops the laser bridge's protection, keeps the lamp and Bob's torches", () => {
     const state = {
       ...elevenHearts(OPEN_BASIC),
       caneOfByrna: 0,
@@ -324,21 +341,29 @@ describe("the margin world", () => {
       lamp: 0,
       shield: 2,
     };
-    // The laser bridge: the Cape, Byrna or the Mirror Shield, kept
+    // The laser bridge: the Cape, Byrna or the Mirror Shield, its own margin
+    // beside Turtle Rock's way in (maybe: a key may sit behind it)
+    const lit = { ...state, lamp: 1 };
+    const BRIDGE = "turtle-rock/eye-bridge/bottom-left";
+    expect(tri(OPEN_BASIC, lit, BRIDGE)).toEqual({
+      margin: "maybe",
+      real: "no",
+    });
+    expect(tri(OPEN_BASIC, lit, BRIDGE, "turtleRock")).toEqual({
+      margin: "no",
+      real: "no",
+    });
     expect(
-      tri(
-        OPEN_BASIC,
-        { ...state, lamp: 1 },
-        "turtle-rock/eye-bridge/bottom-left",
-      ),
-    ).toEqual({ margin: "no", real: "no" });
-    expect(
-      tri(
-        OPEN_BASIC,
-        { ...state, cape: 1, lamp: 1 },
-        "turtle-rock/eye-bridge/bottom-left",
-      ),
-    ).toEqual({ margin: "maybe", real: "no" }); // a key may sit behind it
+      solve(compileMargin(OPEN_BASIC), {
+        ...lit,
+        [MARGIN_GATES.laserBridge.item]: 1,
+        [MARGIN_GATES.turtleRock.item]: 1,
+      }).location(BRIDGE),
+    ).toBe("maybe");
+    expect(tri(OPEN_BASIC, { ...lit, cape: 1 }, BRIDGE, "turtleRock")).toEqual({
+      margin: "maybe",
+      real: "no",
+    });
     // Dark rooms: the lamp is no part of the margin
     expect(tri(OPEN_BASIC, state, "palace-of-darkness/dark-maze/top")).toEqual({
       margin: "no",

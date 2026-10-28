@@ -137,6 +137,8 @@ const gateWords = (id: MarginGateId): string => {
       return `beating ${gate.boss}`;
     case "ganon":
       return "beating Ganon";
+    case "laserBridge":
+      return "crossing Turtle Rock's laser bridge";
   }
 };
 

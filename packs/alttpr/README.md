@@ -1339,14 +1339,17 @@ harder: the safety margins.
 | Kholdstare | the Master Sword, or the Fire Rod with more magic, or Bombos and the Fire Rod | `Boss.php:108` |
 | Vitreous | the Master Sword or a bow | `Boss.php:115` |
 | Trinexx | the Tempered Sword, or the Master Sword with magic (or swordless) | `Boss.php:119` |
+| Turtle Rock's laser bridge (its four chests) | the Cape, the Cane of Byrna or the Mirror Shield against the lasers | `TurtleRock.php:192-222`; Inverted's `TurtleRock.php:135-162` |
 | Ganon | the Tempered Sword where the Master Sword does (`region.requireBetterSword`), the silver arrows (`region.requireBetterBow`, which a swordless run sets whatever the placement) | `World.php:261-273`, `DarkWorld/NorthEast.php:227-232` |
 
 **The margin world** (`src/margin.ts`). Each margin is an item
-(`marginMiseryMire`, `marginArrghus`, `marginGanon`…). `marginRequirement`
+(`marginMiseryMire`, `marginArrghus`, `marginLaserBridge`, `marginGanon`…). `marginRequirement`
 reads every rule with where it sits (`RuleSite`, which `src/rewritten.ts`
 passes): in a dungeon's region, an `or` with `!setting(basicPlacement)`
 beside an argument reading `@hasHealth…` gains the dungeon's item (a health
-gate anywhere else throws); in a boss's rule, every `!setting(basicPlacement)`
+gate anywhere else throws), and in Turtle Rock's an `or` with
+`!setting(basicPlacement)` beside `cape` gains `marginLaserBridge` (one
+anywhere else throws); in a boss's rule, every `!setting(basicPlacement)`
 reads `| ` the boss's item (Helmasaur King's `!setting(basicPlacement) &
 @hasSword` branch included); anywhere, `!setting(requireBetterSword)` reads
 `| marginGanon` and `!setting(requireBetterBow)` `| !setting(swordless) &
@@ -1357,14 +1360,13 @@ share: the rules rewritten, the fill rules the real world's, once per
 settings object). With no margin held it reads as the real world; with one,
 as the real world without it; `MARGIN_STATE` holds them all.
 `src/margin.spec.ts` pins every rule that moves, with its upstream source:
-in Open, Standard and Inverted, the eight dungeons' ways in and Ganon's
-rule, and among the named rules the seven bosses'.
+in Open, Standard and Inverted, the eight dungeons' ways in, the laser
+bridge's four chests and Ganon's rule, and among the named rules the seven
+bosses'.
 
 **What is not a margin.** The other clauses basic placement adds ask the
 player to get through a place, not to be sturdier, so a tracker saying
-"doable now" for them could send a player where they cannot pass: Turtle
-Rock's laser bridge (the Cape, the Cane of Byrna or the Mirror Shield,
-`TurtleRock.php:192-222`), the Pegasus Boots where the Hookshot crosses a
+"doable now" for them could send a player where they cannot pass: the Pegasus Boots where the Hookshot crosses a
 gap (Misery Mire, Ganon's Tower's map chest, `GanonsTower.php:266`, the
 Hookshot Cave), Bob's Chest's Fire Rod or Ether (`GanonsTower.php:286`), the
 Book of Mudora at the Pedestal, the Magic Mirror to bring the smith back,
