@@ -227,6 +227,15 @@ export {
   type Source,
   type Visible,
 } from "./location";
+export {
+  compileMargin,
+  isMarginGate,
+  MARGIN_ITEM,
+  MARGIN_STATE,
+  marginFiller,
+  marginModules,
+  marginRequirement,
+} from "./margin";
 export { type MarkerStatus, markerStatus } from "./marker-status";
 export {
   INVERTED_MARKERS,

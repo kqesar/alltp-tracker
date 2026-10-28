@@ -24,19 +24,15 @@
 // an item may sit does not move.
 import {
   type CompiledWorld,
-  compileWorld,
   type Expr,
-  loadRules,
   parse,
   print,
   type RulesSource,
 } from "@alltp/engine";
-import { type Filler, filler } from "./fill";
-import type { LocationDef } from "./location";
-import { regionModules, STATE_NAMES } from "./pack";
-import { RULES } from "./rules";
+import type { Filler } from "./fill";
+import { rewrittenWorld } from "./rewritten";
 import type { AlttprSettings } from "./settings";
-import { buildWorld, type RegionDef, type RegionModule } from "./world";
+import type { RegionModule } from "./world";
 
 /** The tricks, in the order a player learns them. */
 export const TRICK_IDS = [
@@ -172,96 +168,31 @@ export function trickRequirement(req: string): string {
   return print(rewrite(parse(req), req));
 }
 
-function trickLocation(location: LocationDef): LocationDef {
-  const req = trickRequirement(location.req);
-  const visible = location.visible;
-  const seen =
-    visible?.req === undefined ? undefined : trickRequirement(visible.req);
-  if (req === location.req && seen === visible?.req) return location;
-  return {
-    ...location,
-    req,
-    ...(visible === undefined ? {} : { visible: { ...visible, req: seen } }),
-  };
-}
-
-function trickRegion(region: RegionDef): RegionDef {
-  return {
-    ...region,
-    entrances: region.entrances.map((entrance) => ({
-      ...entrance,
-      req: trickRequirement(entrance.req),
-    })),
-    locations: region.locations.map(trickLocation),
-  };
-}
-
-const rewritten = new WeakMap<
-  readonly RegionModule[],
-  readonly RegionModule[]
->();
+const TRICKS_WORLD = rewrittenWorld(trickRequirement, TRICK_ITEMS);
 
 /**
  * The region modules of the run's world, every rule read for the tricks:
  * the entrances', the locations' and what seeing a location needs. Their
  * fill rules are the real world's.
  */
-export function trickModules(
+export const trickModules: (
   settings: AlttprSettings,
-): readonly RegionModule[] {
-  const modules = regionModules(settings);
-  let found = rewritten.get(modules);
-  if (found === undefined) {
-    found = modules.map((module) => ({
-      ...module,
-      regions: module.regions.map(trickRegion),
-    }));
-    rewritten.set(modules, found);
-  }
-  return found;
-}
+) => readonly RegionModule[] = TRICKS_WORLD.modules;
 
 /** The pack's named rules, read for the tricks. */
-export const TRICK_RULES: RulesSource = {
-  ...RULES,
-  helpers: Object.fromEntries(
-    Object.entries(RULES.helpers ?? {}).map(([name, req]) => [
-      name,
-      trickRequirement(req),
-    ]),
-  ),
-};
-
-const compiled = new WeakMap<AlttprSettings, CompiledWorld>();
-const fillers = new WeakMap<AlttprSettings, Filler>();
+export const TRICK_RULES: RulesSource = TRICKS_WORLD.rules;
 
 /**
  * The tricks world of the run, compiled with its settings: once per
  * settings object. Solve it with the state of the real world and the items
  * of the tricks the player knows (`trickState`).
  */
-export function compileTricks(settings: AlttprSettings): CompiledWorld {
-  let found = compiled.get(settings);
-  if (found === undefined) {
-    found = compileWorld(
-      buildWorld(trickModules(settings)),
-      loadRules(TRICK_RULES),
-      { items: [...STATE_NAMES, ...TRICK_ITEMS], settings },
-    );
-    compiled.set(settings, found);
-  }
-  return found;
-}
+export const compileTricks: (settings: AlttprSettings) => CompiledWorld =
+  TRICKS_WORLD.compile;
 
 /**
  * The tricks world's filler, for the key model (`solveWithKeys`): once per
  * settings object. Where the dungeons' items may sit is the real world's.
  */
-export function trickFiller(settings: AlttprSettings): Filler {
-  let found = fillers.get(settings);
-  if (found === undefined) {
-    found = filler(compileTricks(settings), settings, trickModules(settings));
-    fillers.set(settings, found);
-  }
-  return found;
-}
+export const trickFiller: (settings: AlttprSettings) => Filler =
+  TRICKS_WORLD.filler;
