@@ -107,6 +107,23 @@ describe.each(GAMES)("$name toolbar and Race Mode", (game) => {
     expect(screen.getByTestId(game.status)).toHaveTextContent(RACE_SHARE_WHY);
   });
 
+  it("says the refusal again at every click, in the quiet tone", async () => {
+    const user = userEvent.setup();
+    act(() => game.setAutotrack(game.on));
+    render(game.controls());
+
+    await user.click(exportButton());
+    const status = screen.getByTestId(game.status);
+    expect(status).toHaveAttribute("data-tone", "refused");
+    const first = status.firstElementChild;
+    expect(first).toHaveTextContent(RACE_SHARE_WHY);
+    await user.click(shareButton());
+
+    // A new node in the live region: a screen reader says it once more
+    expect(status.firstElementChild).toHaveTextContent(RACE_SHARE_WHY);
+    expect(status.firstElementChild).not.toBe(first);
+  });
+
   it("brings both back at once when Race Mode goes off", async () => {
     const user = userEvent.setup();
     act(() => game.setAutotrack(game.on));
@@ -145,9 +162,22 @@ describe.each(GAMES)("$name toolbar and Race Mode", (game) => {
 });
 
 describe("the More menu of A Link to the Past", () => {
+  const download = vi.fn();
+  beforeEach(() => {
+    localStorage.clear();
+    act(() => useGameStore.setState(useGameStore.getInitialState(), true));
+    download.mockClear();
+    URL.createObjectURL = vi.fn(() => "blob:save");
+    URL.revokeObjectURL = vi.fn();
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(download);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    act(() => useAutotrackStore.setState({ raceChoice: "auto" }));
+  });
+
   it("keeps Export and Share in the menu, off and described, in a race", async () => {
     const user = userEvent.setup();
-    localStorage.clear();
     act(() => useAutotrackStore.setState({ raceChoice: "on" }));
     render(<TrackerControls />);
     await user.click(screen.getByTestId("toolbar-more"));
@@ -158,11 +188,24 @@ describe("the More menu of A Link to the Past", () => {
       expect(item).toHaveAttribute("aria-disabled", "true");
       expect(item).toHaveAccessibleDescription(RACE_SHARE_WHY);
     }
-    await user.click(screen.getByTestId("toolbar-more-share"));
-    expect(screen.queryByRole("dialog")).toBeNull();
+    await user.click(screen.getByTestId("toolbar-more-export"));
+    expect(download).not.toHaveBeenCalled();
     expect(screen.getByTestId("controls-status")).toHaveTextContent(
       RACE_SHARE_WHY,
     );
-    act(() => useAutotrackStore.setState({ raceChoice: "auto" }));
+    // The menu closed on the choice: open it again for the Share item
+    await user.click(screen.getByTestId("toolbar-more"));
+    await user.click(screen.getByTestId("toolbar-more-share"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("exports from the menu outside a race", async () => {
+    const user = userEvent.setup();
+    render(<TrackerControls />);
+    await user.click(screen.getByTestId("toolbar-more"));
+
+    await user.click(screen.getByTestId("toolbar-more-export"));
+
+    expect(download).toHaveBeenCalledOnce();
   });
 });

@@ -15,6 +15,9 @@ beforeEach(() => {
   useSmStore.setState(useSmStore.getInitialState(), true);
 });
 
+// Map Rando has no race flag: Race Mode is on by default, whatever a spec set
+afterEach(() => smAutotrack.useStore.setState({ raceChoice: "on" }));
+
 describe("the Super Metroid grid", () => {
   it("names each item and its state, and steps it by click, right-click or -", () => {
     render(<SmGrid />);
@@ -179,7 +182,6 @@ describe("the Super Metroid toolbar", () => {
     expect(click).toHaveBeenCalledOnce();
     created.mockRestore();
     click.mockRestore();
-    act(() => smAutotrack.useStore.setState({ raceChoice: "on" }));
   });
 
   it("cancels a new game or an import as asked, and says a file it cannot read", async () => {

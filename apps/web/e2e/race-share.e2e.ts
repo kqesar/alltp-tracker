@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { auditPage, clickToolbarAction, tabTo, WIDTHS } from "./support";
 
@@ -5,8 +7,17 @@ import { auditPage, clickToolbarAction, tabTo, WIDTHS } from "./support";
 // from the overlay API and live follow: both are off in a race, on again once
 // it is off, with no reload. docs/guide.md, "Races".
 
-const WHY =
-  "Off while Race Mode is on or not yet known to be off: a file or a link would hold the places you checked and when. It is back once Race Mode is off.";
+// The reason the buttons give, read from the app's own source so the two
+// cannot drift (the browser tests run outside the app's `@/` aliases)
+const WHY = (() => {
+  const source = readFileSync(
+    join(import.meta.dirname, "../src/share/raceShare.ts"),
+    "utf8",
+  );
+  const reason = /RACE_SHARE_WHY =\s*"([^"]+)"/.exec(source)?.[1];
+  if (!reason) throw new Error("RACE_SHARE_WHY not found in raceShare.ts");
+  return reason;
+})();
 
 /** The tracker with nothing saved but Race Mode set always on. */
 const inRace = async (page: Page) => {
@@ -82,6 +93,10 @@ for (const width of WIDTHS) {
         "toolbar-more-export",
       );
       await expect(page.getByTestId("controls-status")).toHaveText(WHY);
+      await expect(page.getByTestId("controls-status")).toHaveAttribute(
+        "data-tone",
+        "refused",
+      );
       await clickOff(
         page,
         page.getByTestId("share-button"),
@@ -165,5 +180,13 @@ test("Super Metroid's Export and Share are off while its Race Mode is on", async
   await page.getByTestId("toolbar").waitFor();
   await expect(page.getByTestId("share-button")).not.toHaveAttribute(
     "aria-disabled",
+  );
+  await expect(
+    page.getByRole("button", { name: "Export" }),
+  ).not.toHaveAttribute("aria-disabled");
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export" }).click();
+  expect((await download).suggestedFilename()).toMatch(
+    /^alltp-tracker-sm-.*\.json$/,
   );
 });

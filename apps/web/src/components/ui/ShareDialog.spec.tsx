@@ -121,7 +121,7 @@ describe("ShareDialog", () => {
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 
-  it("shows no link and no copy button in a race, whatever was made", async () => {
+  it("shows no link in a race, whatever was made, and its Copy button is off but described", async () => {
     render(
       <ShareDialog
         onClose={onClose}
@@ -134,6 +134,27 @@ describe("ShareDialog", () => {
       /^No link to the run is made while Race Mode is on/,
     );
     expect(screen.queryByTestId("share-qr")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("share-copy-again")).not.toBeInTheDocument();
+    const copy = screen.getByTestId("share-copy-again");
+    expect(copy).toHaveAttribute("aria-disabled", "true");
+    expect(copy).toHaveAccessibleDescription(/^No link to the run is made/);
+    fireEvent.click(copy);
+    expect(writeText).not.toHaveBeenCalled();
+  });
+
+  it("keeps the focus on Copy when Race Mode comes on under it", async () => {
+    const share = Promise.resolve({ link: LINK, message: COPIED });
+    const { rerender } = render(
+      <ShareDialog onClose={onClose} share={share} />,
+    );
+    await screen.findByTestId("share-qr");
+    const copy = screen.getByTestId("share-copy-again");
+    copy.focus();
+    expect(copy).toHaveFocus();
+
+    rerender(<ShareDialog onClose={onClose} race share={share} />);
+
+    expect(screen.queryByTestId("share-qr")).not.toBeInTheDocument();
+    expect(screen.getByTestId("share-copy-again")).toBe(copy);
+    expect(copy).toHaveFocus();
   });
 });
