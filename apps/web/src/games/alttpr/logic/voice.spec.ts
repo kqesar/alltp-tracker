@@ -24,6 +24,18 @@ describe("the voice commands", () => {
     expect(CONTROLS.filter((control) => !reached.has(control))).toEqual([]);
   });
 
+  it("hear a Triforce piece in words the speech model has", () => {
+    // "triforce" is not in the model's vocabulary (152217 words, checked with
+    // `node scripts/voice-words.mjs`: tri, force, try and piece are), so a
+    // piece is said as the words it has
+    expect(GRAMMAR).not.toContain(`${WAKE_WORD} triforce`);
+    for (const phrase of ["tri force", "try force", "tri force piece"]) {
+      expect(commandsOf(`${WAKE_WORD} ${phrase}`), phrase).toEqual([
+        set("triforce", { to: "next" }),
+      ]);
+    }
+  });
+
   it("name nothing a shortcut cannot step", () => {
     const known = new Set(CONTROLS);
     const unknown = [...COMMANDS.values()].flatMap((action) =>
