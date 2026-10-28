@@ -121,7 +121,8 @@ the playthrough with `compareRun`:
 `compareRun` also counts `behind` (placements of later spheres found first); the package keeps it,
 the tab no longer shows it. What the board cannot tell is **unknown**, never missed: locations it
 does not track (the bottles, the medallion pads, Ganon) and a dungeon's checks when only its counter
-was kept. A dungeon the counter finished reads "done, no time".
+was kept. A dungeon the counter finished reads "done, no time" when only its counter was kept;
+once its checks were ticked one by one, a check left unticked reads missed, as the board shows it.
 
 ### The sweep
 
