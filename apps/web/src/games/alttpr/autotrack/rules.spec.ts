@@ -230,7 +230,7 @@ describe("autotracking feeds the rules", () => {
   });
 
   it("would catch the flute activated, and the prizes a race reads, left off the board", () => {
-    // The board before 2.53: no cell for them
+    // The board before these cells: nothing carried them
     const settings = getPreset("open").settings;
     const cells = ["fluteactive", "heldcrystals", "heldgreen", "heldpendants"];
     expect(shortOf(settings, false, cells)).toContain("flute");

@@ -178,7 +178,7 @@ flowchart LR
 - **Dungeons**: per dungeon marker, when its first place and all of them were in logic, the first
   of its places checked (entered), and its boss (the boss's place checked or the boss marked,
   whichever came first). A dungeon with no place stamped reads "not timed" as entered, never
-  "never", when the run stamped no dungeon place at all (Race Mode before 2.53) or its boss fell.
+  "never", when the run stamped no dungeon place at all (Race Mode in an earlier version) or its boss fell.
 
 On seed `9MQ9gO1wMD` and a real six-hour run (208 instants), the sweep solves 321 times in about
 120 ms in Node, no solve over 8 ms. `useSweep` runs it on the main thread in slices of 8 ms
@@ -197,7 +197,7 @@ readings instead:
 | `keysanity` (MCS, Full) | small keys are counts on the board, not stamped |
 | `entrances` | where each entrance led is not stamped, and the final ones would leak |
 | `not-modelled` | the pack does not model the run's logic: settings hidden (Mystery), bosses shuffled (the log's `Bosses`), a logic other than NoGlitches (the log's `meta.logic`) |
-| `race-mode` | fewer than half the needed finds are matched by place, and places outside dungeons are stamped but none inside: Race Mode before 2.53 did not read a dungeon's chests (it does since, v2.0's dungeon-locations) |
+| `race-mode` | fewer than half the needed finds are matched by place, and places outside dungeons are stamped but none inside: Race Mode in an earlier version did not read a dungeon's chests (it does now, v2.0's dungeon-locations) |
 | `by-hand` | fewer than half the needed finds are matched by place otherwise: the times are clicks |
 | `no-times` | nothing needed has a time |
 | `no-playthrough` | a spoiler race's log |
