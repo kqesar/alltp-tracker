@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.54.0](https://github.com/kqesar/alltp-tracker/compare/v2.53.0...v2.54.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **web:** list the items go mode still misses, crystals aside ([13b4d16](https://github.com/kqesar/alltp-tracker/commit/13b4d1688eaea9b62b195f294827a9d63f6f434a))
+
+
+### 📚 Documentation
+
+* say what the go mode lists, crystals aside ([acfdab9](https://github.com/kqesar/alltp-tracker/commit/acfdab94c6c191cce3e87e58662b4d6c21622e9f))
+
 ## [2.53.0](https://github.com/kqesar/alltp-tracker/compare/v2.52.1...v2.53.0) (2026-10-28)
 
 
