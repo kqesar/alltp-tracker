@@ -376,14 +376,17 @@ describe("mergeView", () => {
       chest0: 1,
       hookshot: true,
       sword: 2,
+      // No Ten Bombs found: known, none
+      tenbombs: 1,
     });
     expect(laid?.next.checked).toEqual({
       "eastern-palace/boss": true,
       "eastern-palace/compass-chest": true,
       "links-house": true,
     });
-    // Hookshot, sword, bottle, Armos Knights, the counter, three checks
-    expect(laid?.count).toBe(8);
+    // Hookshot, sword, bottle, Armos Knights, the counter, the bombs, three
+    // checks
+    expect(laid?.count).toBe(9);
   });
 
   it("never undoes what the player marked beyond the game", () => {

@@ -627,3 +627,25 @@ describe("the hearts, under the basic placement", () => {
     expect(solutionOf(basic(8)).tris[SHOOTER_ROOM]).toBe("yes");
   });
 });
+
+describe("the escape's Ten Bombs, which no cell draws", () => {
+  /** Standard, nothing found: the escape's checks want a weapon. */
+  const standard = (tenbombs: number) =>
+    inputsOf({ tenbombs }, { preset: "standard" });
+  const SECRET_ROOM = "sewers/secret-room/left";
+
+  it("make the escape maybe while not known, never out of logic", () => {
+    const run = standard(0);
+    expect(solutionOf(run).tris[SECRET_ROOM]).toBe("maybe");
+    expect(analysisOf(run).missing.get(SECRET_ROOM)?.doubts).toContainEqual({
+      kind: "bombs",
+    });
+  });
+
+  it("read as the game says once autotracking knows them", () => {
+    // None found: out of logic, as upstream reads it
+    expect(solutionOf(standard(1)).tris[SECRET_ROOM]).toBe("no");
+    // Found: in logic, the key model holding the sewers' key
+    expect(solutionOf(standard(2)).tris[SECRET_ROOM]).not.toBe("no");
+  });
+});

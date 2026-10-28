@@ -29,7 +29,7 @@ interface Finds {
  */
 const findsOf = (id: string): "bits" | "levels" | null => {
   const kind = Object.hasOwn(PACK_ITEMS, id) ? PACK_ITEMS[id].kind : "none";
-  if (kind === "none" || kind === "prize" || kind === "hearts") return null;
+  if (["hearts", "known", "none", "prize"].includes(kind)) return null;
   return kind === "bits" ? "bits" : "levels";
 };
 

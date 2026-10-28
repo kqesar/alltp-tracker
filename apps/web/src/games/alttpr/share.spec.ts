@@ -171,7 +171,7 @@ describe("an ALttPR run in a packed link", () => {
     // A new item is appended to SHARE_ITEMS: moving one breaks every link
     expect(new Set(SHARE_ITEMS)).toEqual(new Set(Object.keys(freshItems)));
     expect(SHARE_ITEMS).toHaveLength(new Set(SHARE_ITEMS).size);
-    expect(SHARE_ITEMS.at(-1)).toBe("hearts");
+    expect(SHARE_ITEMS.slice(-2)).toEqual(["hearts", "tenbombs"]);
     expect(JSON.parse(packLink(play.alttpr(0.5, randoms()))).sizes).toEqual([
       MAP_LOCATIONS.size,
       SHARE_ITEMS.length,

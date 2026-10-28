@@ -12,6 +12,8 @@ import {
   PRIZES,
   type Prize,
   type TrackerInput,
+  UNKNOWN_COUNTS,
+  type UnknownCount,
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES } from "@/games/alttpr/constants";
 import {
@@ -53,6 +55,15 @@ export type PackItem =
    * sums; not set, the health is unknown to the rules.
    */
   | { readonly kind: "hearts" }
+  /**
+   * A count no cell draws, which autotracking reads: 0 not known (the
+   * pack's `unknown`), else the item held one less times than the value.
+   */
+  | {
+      readonly kind: "known";
+      readonly item: InventoryItemId;
+      readonly count: UnknownCount;
+    }
   /** Nothing the rules read: the blank cell, a dungeon's counter. */
   | { readonly kind: "none" };
 
@@ -128,6 +139,8 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   shovel: count("shovel"),
   somaria: count("caneOfSomaria"),
   sword: count("sword"),
+  // The escape's Ten Bombs: known only once autotracking reads them
+  tenbombs: { count: "bombs", item: "tenBombs", kind: "known" },
   // 1 the green tunic, which every run starts with: no armor yet
   tunic: count("armor", 1),
   ...perDungeon("bigkey", dungeonItem("bigKey")),
@@ -217,8 +230,8 @@ const heartItems = (
  * tracker does not record the escape, which in Standard opens the Light
  * World. An id the table lacks records nothing. The hearts found are those
  * on screen less the 3 Link starts with; hearts not set (or not given) leave
- * the health unknown, and the escape's bombs, which no cell records, are
- * unknown always.
+ * the health unknown, and the escape's bombs are unknown until autotracking
+ * reads them.
  * @param items - The run's items, by the tracker's ids
  */
 export const packReading = (items: Readonly<ItemState>): PackReading => {
@@ -227,7 +240,7 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
     "hyrule-castle": true,
   };
   const prizes: Partial<Record<DungeonId, Prize>> = {};
-  let health = false;
+  const known = new Set<UnknownCount>();
   const hold = (item: InventoryItemId, times: number) => {
     if (times > 0) held[item] = (held[item] ?? 0) + times;
   };
@@ -251,10 +264,16 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
         if (prize !== undefined) prizes[entry.dungeon] = prize;
         break;
       }
+      case "known":
+        if (value > 0) {
+          known.add(entry.count);
+          hold(entry.item, value - 1);
+        }
+        break;
       case "hearts": {
         const shown = heartsShown(value);
         if (shown === null) break;
-        health = true;
+        known.add("health");
         for (const [item, times] of Object.entries(
           heartItems(shown - STARTING_HEARTS),
         )) {
@@ -268,7 +287,11 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
     beaten,
     items: held,
     prizes,
-    unknown: { bombs: true, ...(health ? {} : { health: true }) },
+    unknown: Object.fromEntries(
+      (Object.keys(UNKNOWN_COUNTS) as UnknownCount[])
+        .filter((count) => !known.has(count))
+        .map((count) => [count, true]),
+    ),
   };
 };
 
@@ -289,7 +312,11 @@ export const itemsFromPack = (
   for (const [id, entry] of Object.entries(PACK_ITEMS)) {
     let value: number;
     if (entry.kind === "count") value = (entry.base ?? 0) + held(entry.item);
-    else if (entry.kind === "bits") {
+    else if (entry.kind === "known") {
+      // Known only where the reading has it
+      if (!(entry.item in counts)) continue;
+      value = 1 + Math.min(1, held(entry.item));
+    } else if (entry.kind === "bits") {
       value = entry.items.reduce(
         (sum, item, bit) => sum | (Math.min(1, held(item)) << bit),
         0,
