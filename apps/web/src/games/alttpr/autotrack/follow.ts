@@ -67,6 +67,13 @@ export type Follower = {
    * connection dropped).
    */
   resume: () => void;
+  /**
+   * The board was replaced by another run (New game, Import, a shared link, a
+   * new run type): lay all the game says on it, as at the first reading.
+   * @param now - Whether the game is read now; else it waits for the next
+   * reading, as after `resume`
+   */
+  resync: (now: boolean) => void;
 };
 
 /** Two records or arrays with the same values under the same keys. */
@@ -85,6 +92,8 @@ export const createFollower = (): Follower => {
   /** The last reading of a game in play, and the view taken of it. */
   let last: AutotrackReading | null = null;
   let shown: GameView | null = null;
+  /** Whether the last reading was of a game in play, `last` being its. */
+  let playing = false;
   /**
    * Whether the reading before was before play (the title, the file select,
    * the spawn select), for the timer to see a game start; undefined until a
@@ -135,6 +144,29 @@ export const createFollower = (): Follower => {
     );
   };
 
+  /**
+   * Lay a reading of a game in play on the board: the news against the view
+   * shown before, all of it when none was.
+   */
+  const lay = (reading: AutotrackReading) => {
+    noteEntrances(reading.entrances);
+    recordSeed(useGameStore, reading.seed.seed);
+    const store = useGameStore.getState();
+    if (reading.race) {
+      for (const slot of Object.keys(known)) delete known[Number(slot)];
+      bombBought = false;
+    } else {
+      Object.assign(known, medallionsShown(reading));
+      if (reading.progress.bigBomb === true) bombBought = true;
+    }
+    const view = gameView(reading, store, known, bombBought);
+    const news = shown === null ? view : newsOf(shown, view);
+    last = reading;
+    shown = view;
+    if (isEmptyView(news)) return;
+    store.applyGameNews((board) => mergeView(board, news)?.next ?? null);
+  };
+
   return {
     holdsGameOnly: () => {
       const store = useGameStore.getState();
@@ -177,26 +209,18 @@ export const createFollower = (): Follower => {
       }
       const { beforePlay: now } = reading.progress;
       if (typeof now === "boolean") beforePlay = now;
-      if (reading.progress.started !== true) return;
-      noteEntrances(reading.entrances);
-      recordSeed(useGameStore, reading.seed.seed);
-      const store = useGameStore.getState();
-      if (reading.race) {
-        for (const slot of Object.keys(known)) delete known[Number(slot)];
-        bombBought = false;
-      } else {
-        Object.assign(known, medallionsShown(reading));
-        if (reading.progress.bigBomb === true) bombBought = true;
-      }
-      const view = gameView(reading, store, known, bombBought);
-      const news = shown === null ? view : newsOf(shown, view);
-      last = reading;
-      shown = view;
-      if (isEmptyView(news)) return;
-      store.applyGameNews((board) => mergeView(board, news)?.next ?? null);
+      playing = reading.progress.started === true;
+      if (!playing) return;
+      lay(reading);
     },
     resume: () => {
       shown = null;
+    },
+    resync: (now) => {
+      shown = null;
+      // Entrances noted on the board replaced are noted again
+      noted = null;
+      if (now && playing && last !== null) lay(last);
     },
     steady: (at) => {
       const game = useGameStore.getState();

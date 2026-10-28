@@ -18,6 +18,7 @@ import {
   onRunReplaced,
   rememberRace,
 } from "@/autotrack/raceMode";
+import { onResync } from "@/autotrack/resync";
 import { shownStatus } from "@/autotrack/status";
 import type { Follower } from "@/games/alttpr/autotrack/follow";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
@@ -274,6 +275,15 @@ syncAcrossTabs(useAutotrackStore);
 
 /** The board's side of the session: what it read, laid on the run. */
 let follower: Follower | null = null;
+
+// A run replaced under a connected session (New game, Import, a shared link,
+// a new run type): the game lays on the new board at once, not only when it
+// next changes. Not connected: the next reading does
+onResync((game) => {
+  if (game === "alttpr") {
+    follower?.resync(useAutotrackStore.getState().status.code === "connected");
+  }
+});
 
 /**
  * Bumped by every connect and stop: a start that loses a race with a stop

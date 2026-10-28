@@ -15,6 +15,7 @@ import * as z from "zod/mini";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { boardRestored, runReplaced } from "@/autotrack/raceMode";
+import { requestResync } from "@/autotrack/resync";
 import { type History, historyActions } from "@/games/runHistory";
 import { createSaveFormat } from "@/games/saveFormat";
 import { SEED_ID } from "@/games/seedId";
@@ -181,6 +182,7 @@ export const useSmStore = create<SmState>()(
           record(progress);
           set({ clockBase: null, timer: IDLE_TIMER });
           runReplaced("sm", get().past);
+          requestResync("sm");
         },
         past: [],
         redo,
@@ -189,6 +191,7 @@ export const useSmStore = create<SmState>()(
           record({ ...freshProgress(), objectives, splitSpeed, wallJump });
           set({ clockBase: null, timer: IDLE_TIMER });
           runReplaced("sm", get().past);
+          requestResync("sm");
         },
         resetTimer: () => set({ clockBase: null, timer: IDLE_TIMER }),
         setClockBase: (clockBase) => set({ clockBase }),

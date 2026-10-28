@@ -119,6 +119,82 @@ describe("autotracking and the board", () => {
   });
 });
 
+describe("a run replaced under a connected session", () => {
+  const checks = () => Object.keys(board().checked).length;
+
+  /** Connected and read: the board holds the game; the game then stands still. */
+  const connected = async (options?: Parameters<typeof harness>[0]) => {
+    const h = harness(options);
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(board().items.sword).toBe(2);
+    return h;
+  };
+
+  it("lays the game on a new game at once, with memory unchanged", async () => {
+    await connected();
+    expect(checks()).toBeGreaterThan(0);
+    act(() => board().reset());
+
+    expect(board().items).toMatchObject({ hookshot: true, sword: 2 });
+    expect(checks()).toBeGreaterThan(0);
+  });
+
+  it("lays the game on a new run type, as Switch and reset does", async () => {
+    await connected();
+    act(() => board().applyRun("keysanity", board().settings));
+
+    expect(board().items).toMatchObject({ hookshot: true, sword: 2 });
+  });
+
+  it("lays the game on an imported run or a shared link", async () => {
+    await connected();
+    act(() => board().loadProgress({}));
+
+    expect(board().items).toMatchObject({ hookshot: true, sword: 2 });
+    expect(checks()).toBeGreaterThan(0);
+  });
+
+  it("reads in Race Mode what it may after the run is replaced, nothing more", async () => {
+    act(() => board().applyPreset("standard"));
+    const h = harness({ race: true });
+    h.memory[SAVE(0x3c5)] = 0x01; // mid-escape: a race never tells
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    const found = checks();
+    expect(found).toBeGreaterThan(0);
+    act(() => board().reset());
+
+    expect(board().items).toMatchObject({ hookshot: true, sword: 2 });
+    expect(checks()).toBe(found);
+    expect(board().items.escape).toBe(0);
+  });
+
+  it("leaves the marks of the player alone at the next ordinary reading", async () => {
+    const h = await connected();
+    act(() => board().reset());
+    act(() => board().handleItemClick("sword"));
+    expect(board().items.sword).toBe(3);
+
+    h.memory[SAVE(0x357)] = 0x01; // Moon Pearl: a change elsewhere
+    await h.advance(1000);
+
+    expect(board().items.moonpearl).toBe(true);
+    expect(board().items.sword).toBe(3);
+  });
+
+  it("waits for the next reading while the game is not read", async () => {
+    const h = await connected();
+    act(() => stopAutotrack());
+    act(() => board().reset());
+    expect(board().items.sword).toBe(0);
+
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(board().items.sword).toBe(2);
+  });
+});
+
 describe("Standard's escape, as autotracking reads it", () => {
   /** ProgressIndicator: $01 the uncle's item, $02 Zelda in the Sanctuary. */
   const PROGRESS = SAVE(0x3c5);

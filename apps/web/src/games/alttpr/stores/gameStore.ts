@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { boardRestored, runReplaced } from "@/autotrack/raceMode";
+import { requestResync } from "@/autotrack/resync";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
 import type { ItemState } from "@/games/alttpr/data/items";
 import {
@@ -496,7 +497,7 @@ export const useGameStore = create<GameState>()(
         applyPreset: (presetId: string) =>
           get().applyRun(presetId, getPreset(presetId).settings),
 
-        applyRun: (presetId, settings, lay, keepTimer = false) =>
+        applyRun: (presetId, settings, lay, keepTimer = false) => {
           set((state) => {
             const fresh = createProgress(presetId, settings);
             return {
@@ -504,7 +505,9 @@ export const useGameStore = create<GameState>()(
               ...keyCellsFor(state, settings),
               timer: keepTimer ? state.timer : IDLE_TIMER,
             };
-          }),
+          });
+          requestResync("alttpr");
+        },
 
         exportState: () =>
           JSON.stringify(toSaveFile(progressOf(get())), null, 2),
@@ -592,6 +595,7 @@ export const useGameStore = create<GameState>()(
             timer: IDLE_TIMER,
           }));
           runReplaced("alttpr", get().past);
+          requestResync("alttpr");
         },
 
         noteEntrance: (entrance: string, target: string | null) =>
@@ -623,6 +627,7 @@ export const useGameStore = create<GameState>()(
             timer: IDLE_TIMER,
           }));
           runReplaced("alttpr", get().past);
+          requestResync("alttpr");
         },
         resetTimer: () => set({ timer: IDLE_TIMER }),
         revealSettings: (change) => {
