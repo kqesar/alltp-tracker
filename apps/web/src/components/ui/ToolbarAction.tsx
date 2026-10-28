@@ -1,49 +1,48 @@
-import { type ReactNode, useId } from "react";
+import type { ReactNode } from "react";
+import { useUnavailable } from "@/components/ui/useUnavailable";
 
 type ToolbarActionProps = {
   icon: ReactNode;
   label: string;
   onClick: () => void;
+  /** Told the reason when the player activates the action while it is off */
+  onUnavailable?: (reason: string) => void;
   testId?: string;
   title: string;
-  /**
-   * Why the action cannot be used now, or null. It stays in the tab order
-   * (`aria-disabled`, not `disabled`, which would drop the focus) with the
-   * reason as its description; `onClick` then says it to the player.
-   */
+  /** Why the action cannot be used now, or null (`useUnavailable`) */
   unavailable?: string | null;
 };
 
 /**
  * A secondary action of the run toolbar: its icon and its label, which the
- * bar's fit hides before any other (ui.css).
+ * bar's fit hides before any other (ui.css). While `unavailable` it never
+ * calls `onClick`.
  */
 export const ToolbarAction = ({
   icon,
   label,
   onClick,
+  onUnavailable,
   testId,
   title,
   unavailable = null,
 }: ToolbarActionProps) => {
-  const reasonId = useId();
+  const { activate, attributes, note } = useUnavailable(
+    unavailable,
+    onUnavailable,
+  );
   return (
     <button
-      aria-describedby={unavailable ? reasonId : undefined}
-      aria-disabled={unavailable ? true : undefined}
+      {...attributes}
       className="tracker-controls__button"
       data-testid={testId}
-      onClick={onClick}
+      onClick={activate(onClick)}
       title={unavailable ?? title}
       type="button"
     >
       {icon}
       <span className="toolbar-label">{label}</span>
-      {unavailable && (
-        <span hidden id={reasonId}>
-          {unavailable}
-        </span>
-      )}
+      {note}
     </button>
   );
 };

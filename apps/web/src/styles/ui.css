@@ -103,6 +103,11 @@
 }
 
 /* Empty, it is no flex item: its gap would push a control onto a new row */
+/* A refusal is no success: the quiet text colour */
+.tracker-controls__status[data-tone="refused"] {
+  color: var(--color-text-secondary);
+}
+
 .tracker-controls__status:empty {
   display: none;
 }

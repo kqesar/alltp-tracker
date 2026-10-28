@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { MoreIcon } from "@/components/ui/ToolbarIcons";
+import { useUnavailable } from "@/components/ui/useUnavailable";
 
 /** The least room the menu keeps from the viewport's edge. */
 const SCREEN_MARGIN_PX = 8;
@@ -224,10 +225,9 @@ type ToolbarMenuItemProps = {
   label: string;
   onSelect: () => void;
   testId: string;
-  /**
-   * Why the command cannot be used now, or null: the item stays in the menu
-   * and in its arrow order (`aria-disabled`), described by the reason
-   */
+  /** Told the reason when the item is chosen while it is off */
+  onUnavailable?: (reason: string) => void;
+  /** Why the command cannot be used now, or null (`useUnavailable`) */
   unavailable?: string | null;
 } & Pick<
   ComponentProps<"button">,
@@ -243,22 +243,25 @@ export const ToolbarMenuItem = ({
   icon,
   label,
   onSelect,
+  onUnavailable,
   testId,
   unavailable = null,
   ...handlers
 }: ToolbarMenuItemProps) => {
-  const reasonId = useId();
+  const { activate, attributes, note } = useUnavailable(
+    unavailable,
+    onUnavailable,
+  );
   return (
     <button
       {...handlers}
-      aria-describedby={unavailable ? reasonId : undefined}
-      aria-disabled={unavailable ? true : undefined}
+      {...attributes}
       // The item lays its parts out as flex items, which browsers name with
       // spaces of their own between them: one name, label then state, as shown
       aria-label={detail ? `${label} ${detail}` : undefined}
       className="toolbar-menu__item"
       data-testid={testId}
-      onClick={onSelect}
+      onClick={activate(onSelect)}
       role="menuitem"
       tabIndex={-1}
       type="button"
@@ -271,11 +274,7 @@ export const ToolbarMenuItem = ({
           <span className="toolbar-menu__detail">{detail}</span>
         </>
       )}
-      {unavailable && (
-        <span hidden id={reasonId}>
-          {unavailable}
-        </span>
-      )}
+      {note}
     </button>
   );
 };

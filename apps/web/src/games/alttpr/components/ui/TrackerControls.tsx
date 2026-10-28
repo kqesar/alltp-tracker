@@ -36,12 +36,8 @@ import {
 } from "@/games/alttpr/stores/persistence";
 import type { MapLayout } from "@/games/alttpr/utils";
 import { useStatusLine } from "@/hooks/useStatusLine";
-import {
-  RACE_SHARE_LIVE_HELP,
-  RACE_SHARE_NOTE,
-  RACE_SHARE_WHY,
-} from "@/share/raceShare";
-import { SHARE_HELP, type ShareResult, shareRun } from "@/share/shareRun";
+import { raceShareGate } from "@/share/raceShare";
+import { useShare } from "@/share/useShare";
 import { isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
 
@@ -51,12 +47,6 @@ const AppMenuItem =
   import.meta.env.MODE === "desktop"
     ? lazy(() => import("@/desktop/AppMenuItem"))
     : null;
-
-/** What the Share dialog opens on in a race: no link, only its note. */
-const NO_LINK: Promise<ShareResult> = Promise.resolve({
-  link: null,
-  message: RACE_SHARE_NOTE,
-});
 
 /** The map layouts the player can pick, in the order they are offered. */
 const MAP_LAYOUTS: { value: MapLayout; label: string; hint: string }[] = [
@@ -94,19 +84,23 @@ export const TrackerControls = () => {
   const mapLayout = useGameStore((state) => state.mapLayout);
   const setMapLayout = useGameStore((state) => state.setMapLayout);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Race Mode on or not yet known to be off: no file, no link (the desktop
-  // app keeps Share open for live follow, which the race whitelist cuts)
+  // Race Mode on or not yet known to be off: no file, no link
   const race = useAutotrackStore(isRaceModeOrPending);
-  const shareOff = race && !isDesktopApp;
 
   const [isResetOpen, setIsResetOpen] = useState(false);
-  const [share, setShare] = useState<Promise<ShareResult> | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   // A save that was read and validated, waiting for the player to confirm
   const [pendingImport, setPendingImport] = useState<Partial<Progress> | null>(
     null,
   );
-  const [status, setStatus] = useStatusLine();
+  const [status, setStatus, statusLine] = useStatusLine();
+  // The timeline is what a link drops first when it would be too long
+  const sharing = useShare(race, () => {
+    const save = exportState();
+    return [save, withoutTimeline(save)].map(packLink);
+  });
+  const { exportOff, shareOff, shareTitle } = raceShareGate(race);
+  const refuse = (reason: string) => setStatus(reason, "refused");
 
   const confirmReset = () => {
     reset();
@@ -120,21 +114,11 @@ export const TrackerControls = () => {
     setStatus("Save imported.");
   };
 
-  const handleExport = () => {
-    if (race) return setStatus(RACE_SHARE_WHY);
+  const handleExport = () =>
     saveFile(
       `alltp-tracker-save-${new Date().toISOString().slice(0, 10)}.json`,
       exportState(),
     );
-  };
-
-  // The timeline is what a link drops first when it would be too long
-  const handleShare = () => {
-    if (shareOff) return setStatus(RACE_SHARE_WHY);
-    if (race) return setShare(NO_LINK);
-    const save = exportState();
-    setShare(shareRun([save, withoutTimeline(save)].map(packLink)));
-  };
 
   const handleImportClick = () => fileInputRef.current?.click();
 
@@ -187,8 +171,9 @@ export const TrackerControls = () => {
           icon={<ExportIcon />}
           label="Export"
           onClick={handleExport}
+          onUnavailable={refuse}
           title="Export progress to a file"
-          unavailable={race ? RACE_SHARE_WHY : null}
+          unavailable={exportOff}
         />
         <button
           className="tracker-controls__button"
@@ -202,10 +187,11 @@ export const TrackerControls = () => {
         <ToolbarAction
           icon={<ShareIcon />}
           label="Share"
-          onClick={handleShare}
+          onClick={sharing.open}
+          onUnavailable={refuse}
           testId="share-button"
-          title={race ? RACE_SHARE_LIVE_HELP : SHARE_HELP}
-          unavailable={shareOff ? RACE_SHARE_WHY : null}
+          title={shareTitle}
+          unavailable={shareOff}
         />
         <StreamViewControl />
         <ShortcutsButton />
@@ -223,8 +209,9 @@ export const TrackerControls = () => {
                   icon={<ExportIcon />}
                   label="Export"
                   onSelect={handleExport}
+                  onUnavailable={refuse}
                   testId="toolbar-more-export"
-                  unavailable={race ? RACE_SHARE_WHY : null}
+                  unavailable={exportOff}
                 />
               )}
               {!onBar && (
@@ -239,9 +226,10 @@ export const TrackerControls = () => {
                 <ToolbarMenuItem
                   icon={<ShareIcon />}
                   label="Share"
-                  onSelect={handleShare}
+                  onSelect={sharing.open}
+                  onUnavailable={refuse}
                   testId="toolbar-more-share"
-                  unavailable={shareOff ? RACE_SHARE_WHY : null}
+                  unavailable={shareOff}
                 />
               )}
               {!onBar && <StreamViewControl variant="menu" />}
@@ -306,11 +294,12 @@ export const TrackerControls = () => {
       <output
         className="tracker-controls__status"
         data-testid="controls-status"
+        data-tone={statusLine.tone}
       >
-        {status}
+        {status && <span key={statusLine.count}>{status}</span>}
       </output>
 
-      <ShareDialog onClose={() => setShare(null)} race={race} share={share} />
+      <ShareDialog onClose={sharing.close} race={race} share={sharing.share} />
       <ConfirmDialog
         confirmLabel="New game"
         isOpen={isResetOpen}

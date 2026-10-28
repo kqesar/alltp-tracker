@@ -105,6 +105,33 @@ export const shareRun = async (
 };
 
 /**
+ * A link to the run, made with no copy: for a dialog that was open when Race
+ * Mode went off, where no click is at hand to copy inside. The player copies
+ * it with the dialog's button.
+ * @param saves - As for `shareRun`
+ */
+export const snapshotRun = async (
+  saves: readonly string[],
+): Promise<ShareResult> => {
+  try {
+    const link = await makeLink(saves);
+    return {
+      link,
+      message: `The link is ready: copy it with the button below. ${
+        link.fallback
+          ? "It leaves out the timeline, to keep it short."
+          : "The run stays in the link, never sent to a server."
+      }`,
+    };
+  } catch (error) {
+    if (error instanceof RunLinkError) {
+      return { link: null, message: error.message };
+    }
+    throw error;
+  }
+};
+
+/**
  * Copy a link again, from the click of a button, and say how it went.
  * @returns A line for the share dialog
  */
