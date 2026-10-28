@@ -601,6 +601,45 @@ describe("following the game", () => {
       expect(store().medallions[ROCK]).toBe(MEDALLION_VALUES.QUAKE);
     });
 
+    it("forgets the pads shown in the run replaced, which no pad in view brings back", () => {
+      const follower = createFollower();
+      follower.read(standing(0x70));
+      expect(store().medallions[MIRE]).toBe(MEDALLION_VALUES.ETHER);
+
+      store().reset();
+      follower.resync(true);
+      // Link is on the Mire's screen still: this run sees it at once
+      expect(store().medallions[MIRE]).toBe(MEDALLION_VALUES.ETHER);
+
+      follower.read(standing(0x30));
+      store().reset();
+      follower.resync(true);
+      // Away from every pad: none is this run's to know
+      expect(store().medallions[MIRE]).toBe(MEDALLION_VALUES.UNKNOWN);
+      follower.sync();
+      expect(store().medallions[MIRE]).toBe(MEDALLION_VALUES.UNKNOWN);
+      expect(store().medallions[ROCK]).toBe(MEDALLION_VALUES.UNKNOWN);
+    });
+
+    it("forgets the pads of a seed the game left for another", () => {
+      const follower = createFollower();
+      const on = (name: string, screen: number) =>
+        readingOf(
+          standOn(
+            writeMedallions(seedMemory({ name, race: false }), 1, 2),
+            screen,
+          ),
+        );
+      follower.read(on("SEEDONE", 0x70));
+      expect(store().medallions[MIRE]).toBe(MEDALLION_VALUES.ETHER);
+
+      // A board begun over by hand, then the game on another seed, no pad in view
+      store().reset();
+      follower.read(on("SEEDTWO", 0x30));
+      follower.sync();
+      expect(store().medallions[MIRE]).toBe(MEDALLION_VALUES.UNKNOWN);
+    });
+
     it("fills nothing in Race Mode", () => {
       const follower = createFollower();
       const memory = standOn(

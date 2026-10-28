@@ -9,9 +9,16 @@ import {
   statusOf,
 } from "@/autotrack/fixtures";
 import { isRaceModeOn, isRaceModeOrPending } from "@/autotrack/raceMode";
-import { GAME_MODE, SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
+import {
+  GAME_MODE,
+  SAVE,
+  seedMemory,
+  standOn,
+  writeMedallions,
+} from "@/games/alttpr/autotrack/fixtures";
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
 import { forgetSeedFiles } from "@/games/alttpr/autotrack/seedFile";
+import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import { solutionOf } from "@/games/alttpr/logic/solution";
 import {
   connectAutotrack,
@@ -170,6 +177,28 @@ describe("a run replaced under a connected session", () => {
     expect(board().items).toMatchObject({ hookshot: true, sword: 2 });
     expect(checks()).toBe(found);
     expect(board().items.escape).toBe(0);
+  });
+
+  it("keeps the pads of an earlier run out of the next one", async () => {
+    const h = harness();
+    writeMedallions(h.memory, 1, 2);
+    standOn(h.memory, 0x70);
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(board().medallions[DUNGEON_INDICES.MISERY_MIRE]).toBe(
+      MEDALLION_VALUES.ETHER,
+    );
+
+    // A new run: Link walks away from every pad
+    standOn(h.memory, 0x30);
+    await h.advance(1000);
+    act(() => board().applyRun("keysanity", board().settings));
+    await h.advance(1000);
+    act(() => syncFromGame());
+
+    expect(board().medallions[DUNGEON_INDICES.MISERY_MIRE]).toBe(
+      MEDALLION_VALUES.UNKNOWN,
+    );
   });
 
   it("leaves the marks of the player alone at the next ordinary reading", async () => {
