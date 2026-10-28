@@ -107,9 +107,37 @@ describe("when the waits are shown", () => {
     },
   );
 
-  it("not for a run with no times", () => {
-    const untimed = { ...run, timeline: {} };
+  it("not for a run with no times: every find stamped before the timer", () => {
+    const untimed = {
+      ...run,
+      timeline: Object.fromEntries(
+        Object.entries(run.timeline).map(([key, { at }]) => [
+          key,
+          { at, ms: null },
+        ]),
+      ),
+    };
     expect(hiddenReason(log, untimed, compareReview(log, untimed))).toBe(
+      "no-times",
+    );
+  });
+
+  it("not for a run that came without its timeline, saying so before any other reason", () => {
+    // What a run opened from a link that left its timeline out holds
+    const bare = { ...run, timeline: {} };
+    expect(hiddenReason(log, bare, compareReview(log, bare))).toBe(
+      "no-timeline",
+    );
+    const keysanity = {
+      ...bare,
+      settings: { ...bare.settings, dungeonItems: "full" as const },
+    };
+    expect(hiddenReason(log, keysanity, compareReview(log, keysanity))).toBe(
+      "no-timeline",
+    );
+    // A run with nothing done is not one that lost its times
+    const untouched = fresh();
+    expect(hiddenReason(log, untouched, compareReview(log, untouched))).toBe(
       "no-times",
     );
   });

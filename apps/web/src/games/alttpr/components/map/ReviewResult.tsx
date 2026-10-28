@@ -38,6 +38,8 @@ const HIDDEN: Readonly<Record<Hidden, string>> = {
     "Small keys were shuffled: the run does not time them, so when each place came into logic is not shown.",
   "no-playthrough":
     "This log has no playthrough (a spoiler race's): there is nothing to set the run against.",
+  "no-timeline":
+    "This run came without its timeline (a shared link leaves it out to stay short), so nothing on it has a time: review it on the device where it was played, or open its full link, which Share copies with the timeline.",
   "no-times":
     "Nothing the seed needed has a time on this run, so when each item waited is not shown.",
   "not-modelled":
