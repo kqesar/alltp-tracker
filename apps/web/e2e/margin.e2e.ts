@@ -61,7 +61,7 @@ test.describe("basic placement's safety margin", () => {
     await boss.hover();
     const tooltip = page.getByTestId("tooltip");
     await expect(tooltip).toContainText(
-      "Doable now, outside Basic's safety margin; in logic with 15 hearts (you have 11 hearts)",
+      "Doable now, outside Basic's safety margin; Basic placement waits for 15 hearts (you have 11 hearts) before the seed relies on entering Misery Mire",
     );
   });
 
@@ -80,6 +80,28 @@ test.describe("basic placement's safety margin", () => {
       /\bavailable\b/,
     );
     await expect(page.getByTestId("map-legend")).not.toContainText("margin");
+  });
+
+  test("names a boss's margin: Arrghus waits for the Master Sword", async ({
+    page,
+  }) => {
+    await openTracker(
+      page,
+      JSON.stringify({
+        ...END_GAME,
+        state: {
+          ...END_GAME.state,
+          items: { ...END_GAME.state.items, boss4: 0, hearts: 13, sword: 1 },
+          settings: { ...END_GAME.state.settings, itemPlacement: "basic" },
+        },
+      }),
+    );
+    const boss = page.getByTestId("boss-marker-swamp-palace");
+    await expect(boss).toHaveClass(/\bmargin\b/);
+    await boss.hover();
+    await expect(page.getByTestId("tooltip")).toContainText(
+      "before the seed relies on beating Arrghus",
+    );
   });
 
   test("says the go mode the margin alone holds back", async ({ page }) => {
@@ -122,13 +144,12 @@ for (const width of WIDTHS) {
       const row = page.getByTestId("check-row-misery-mire/big-chest");
       await expect(row).toContainText("Outside margin");
       await page.getByTestId("check-why-misery-mire/big-chest").click();
-      await expect(row.getByTestId("missing-margin")).toBeVisible();
-      await expect(row.getByTestId("missing-in-logic")).toHaveText(
-        "In logic with: 15 hearts (you have 11 hearts)",
+      await expect(row.getByTestId("missing-margin")).toHaveText(
+        "Doable now, outside Basic's safety margin: Basic placement waits for 15 hearts (you have 11 hearts) before the seed relies on entering Misery Mire.",
       );
       await page.getByTestId("zone-why-misery-mire").click();
       await expect(page.getByTestId("zone-missing-misery-mire")).toContainText(
-        "Doable now, outside Basic's safety margin; in logic with 15 hearts (you have 11 hearts)",
+        "Doable now, outside Basic's safety margin; Basic placement waits for 15 hearts (you have 11 hearts) before the seed relies on entering Misery Mire",
       );
       await auditPage(page, ".mapspan");
     });
