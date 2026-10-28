@@ -1,8 +1,10 @@
 import type { Smz3Settings } from "@alltp/pack-smz3";
 import { useId } from "react";
+import { isRaceModeOrPending } from "@/autotrack/raceMode";
 import { GamePicker } from "@/components/ui/GamePicker";
 import { Modal } from "@/components/ui/Modal";
 import { RunToolbar } from "@/components/ui/RunToolbar";
+import { smz3Autotrack } from "@/games/smz3/autotrack/store";
 import { Smz3Autotrack } from "@/games/smz3/components/Smz3Autotrack";
 import { gridOf, PRESETS } from "@/games/smz3/data";
 import { streamSize } from "@/games/smz3/Smz3ObsView";
@@ -189,6 +191,7 @@ const Smz3ModeDialog = ({ onClose }: { onClose: () => void }) => {
  */
 export const Smz3Controls = () => {
   const keysanity = useSmz3Store((state) => state.settings.keysanity);
+  const race = smz3Autotrack.useStore(isRaceModeOrPending);
   return (
     <RunToolbar
       autotrack={<Smz3Autotrack />}
@@ -196,6 +199,7 @@ export const Smz3Controls = () => {
       link={packLink}
       ModeDialog={Smz3ModeDialog}
       modeValue="SMZ3"
+      race={race}
       resetMessage="Start a new game? What you found, checked and the run timer are cleared; the run's settings stay."
       saveFormat={{ exportSave, IMPORT_ERRORS, parseSave }}
       streamSizeOf={streamSize(gridOf(keysanity).length)}

@@ -39,7 +39,7 @@
     border-color var(--transition);
 }
 
-.tracker-controls__button:hover:not(:disabled),
+.tracker-controls__button:hover:not(:disabled, [aria-disabled="true"]),
 .notice__button:hover {
   color: var(--color-accent);
   background: var(--surface-hover);
@@ -87,8 +87,14 @@
   clip-path: inset(50%);
 }
 
-.tracker-controls__button:disabled {
+.tracker-controls__button:disabled,
+.tracker-controls__button[aria-disabled="true"] {
   opacity: 0.45;
+}
+
+/* Off, yet focusable and described: a disabled button would drop the focus */
+.tracker-controls__button[aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
 .tracker-controls__status {

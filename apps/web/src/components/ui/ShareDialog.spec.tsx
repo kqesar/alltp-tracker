@@ -120,4 +120,20 @@ describe("ShareDialog", () => {
 
     expect(onClose).toHaveBeenCalledTimes(2);
   });
+
+  it("shows no link and no copy button in a race, whatever was made", async () => {
+    render(
+      <ShareDialog
+        onClose={onClose}
+        race
+        share={Promise.resolve({ link: LINK, message: COPIED })}
+      />,
+    );
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /^No link to the run is made while Race Mode is on/,
+    );
+    expect(screen.queryByTestId("share-qr")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("share-copy-again")).not.toBeInTheDocument();
+  });
 });

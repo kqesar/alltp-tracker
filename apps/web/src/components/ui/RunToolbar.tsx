@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ShareDialog } from "@/components/ui/ShareDialog";
 import { type StreamSize, StreamTools } from "@/components/ui/StreamTools";
 import { StreamUrlDialog } from "@/components/ui/StreamUrlDialog";
+import { ToolbarAction } from "@/components/ui/ToolbarAction";
 import {
   ExportIcon,
   ImportIcon,
@@ -20,6 +21,11 @@ import { UndoRedoButtons } from "@/components/ui/UndoRedoButtons";
 import type { History } from "@/games/runHistory";
 import type { SaveFormat } from "@/games/saveFormat";
 import { useStatusLine } from "@/hooks/useStatusLine";
+import {
+  RACE_SHARE_LIVE_HELP,
+  RACE_SHARE_NOTE,
+  RACE_SHARE_WHY,
+} from "@/share/raceShare";
 import { SHARE_HELP, type ShareResult, shareRun } from "@/share/shareRun";
 import { isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
@@ -53,6 +59,12 @@ type RunToolbarProps<P extends object> = {
   ModeDialog: ComponentType<{ onClose: () => void }>;
   /** The game's name, on the Mode button */
   modeValue: string;
+  /**
+   * Race Mode is on or not yet known to be off (`isRaceModeOrPending`): the
+   * file and the link would hold the places checked and when, so Export and
+   * Share are off (the desktop app's Share still offers live follow)
+   */
+  race: boolean;
   /** What New game asks before it clears the run */
   resetMessage: string;
   saveFormat: SaveFormat<P>;
@@ -63,6 +75,12 @@ type RunToolbarProps<P extends object> = {
   streamSizeOf?: (timer: boolean) => StreamSize;
   useStore: RunStore<P>;
 };
+
+/** What the Share dialog opens on in a race: no link, only its note. */
+const NO_LINK: Promise<ShareResult> = Promise.resolve({
+  link: null,
+  message: RACE_SHARE_NOTE,
+});
 
 /**
  * The toolbar of the games with no More menu (Super Metroid, SMZ3): Mode, New
@@ -77,6 +95,7 @@ export const RunToolbar = <P extends object>({
   link = (save) => save,
   ModeDialog,
   modeValue,
+  race,
   resetMessage,
   saveFormat: { exportSave, IMPORT_ERRORS, parseSave },
   streamSizeOf,
@@ -96,14 +115,23 @@ export const RunToolbar = <P extends object>({
   const [share, setShare] = useState<Promise<ShareResult> | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleExport = () =>
+  // The desktop app keeps Share in a race, for live follow, which it holds
+  const shareOff = race && !isDesktopApp;
+
+  const handleExport = () => {
+    if (race) return setStatus(RACE_SHARE_WHY);
     saveFile(
       `alltp-tracker-${game}-${new Date().toISOString().slice(0, 10)}.json`,
       exportSave(useStore.getState()),
     );
+  };
 
-  const handleShare = () =>
-    setShare(shareRun([link(exportSave(useStore.getState()))]));
+  const handleShare = () => {
+    if (shareOff) return setStatus(RACE_SHARE_WHY);
+    setShare(
+      race ? NO_LINK : shareRun([link(exportSave(useStore.getState()))]),
+    );
+  };
 
   const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
     const [file] = event.target.files ?? [];
@@ -149,15 +177,13 @@ export const RunToolbar = <P extends object>({
       {/* The secondary actions lose their labels before the primary controls
           do (ui.css); with no More menu they never move */}
       <span className="toolbar-actions">
-        <button
-          className="tracker-controls__button"
+        <ToolbarAction
+          icon={<ExportIcon />}
+          label="Export"
           onClick={handleExport}
           title="Export progress to a file"
-          type="button"
-        >
-          <ExportIcon />
-          <span className="toolbar-label">Export</span>
-        </button>
+          unavailable={race ? RACE_SHARE_WHY : null}
+        />
         <button
           className="tracker-controls__button"
           onClick={() => fileRef.current?.click()}
@@ -167,16 +193,14 @@ export const RunToolbar = <P extends object>({
           <ImportIcon />
           <span className="toolbar-label">Import</span>
         </button>
-        <button
-          className="tracker-controls__button"
-          data-testid="share-button"
+        <ToolbarAction
+          icon={<ShareIcon />}
+          label="Share"
           onClick={handleShare}
-          title={SHARE_HELP}
-          type="button"
-        >
-          <ShareIcon />
-          <span className="toolbar-label">Share</span>
-        </button>
+          testId="share-button"
+          title={race ? RACE_SHARE_LIVE_HELP : SHARE_HELP}
+          unavailable={shareOff ? RACE_SHARE_WHY : null}
+        />
         <button
           className="tracker-controls__button"
           data-testid={`${game}-stream-view`}
@@ -216,7 +240,7 @@ export const RunToolbar = <P extends object>({
             timerOption={streamSizeOf !== undefined}
           />
         ))}
-      <ShareDialog onClose={() => setShare(null)} share={share} />
+      <ShareDialog onClose={() => setShare(null)} race={race} share={share} />
       <ConfirmDialog
         confirmLabel="New game"
         isOpen={dialog === "reset"}

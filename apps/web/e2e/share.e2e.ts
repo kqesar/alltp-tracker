@@ -6,6 +6,7 @@ import { expect, type Page, test } from "@playwright/test";
 import {
   clickToolbarAction,
   focusedTestId,
+  smRaceModeOff,
   tabTo,
   unreachableClickables,
   WCAG_AA,
@@ -41,6 +42,8 @@ const GAMES = {
     item: "sm-item-morph",
     name: "Super Metroid",
     open: async (page: Page) => {
+      // Race Mode is on by default there, and a race shares no link
+      await smRaceModeOff(page);
       await fresh(page);
       await pick(page, "sm");
     },

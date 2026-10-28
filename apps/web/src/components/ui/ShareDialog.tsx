@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
+import { RACE_SHARE_NOTE } from "@/share/raceShare";
 import { copyLink, type ShareResult } from "@/share/shareRun";
 
 // The QR encoder is only needed once a run is shared: its chunk loads then
@@ -13,6 +14,12 @@ const LiveFollowSection =
     : null;
 
 type ShareDialogProps = {
+  /**
+   * Race Mode is on or not yet known to be off: no link is shown, whatever
+   * `share` holds, and the dialog says why (live follow stays, in the desktop
+   * app)
+   */
+  race?: boolean;
   /** The share in progress (see `shareRun`), or `null` while the dialog is closed */
   share: Promise<ShareResult> | null;
   onClose: () => void;
@@ -25,7 +32,11 @@ type ShareDialogProps = {
  * sits under live follow's section, whose link is another. The copy itself
  * already happened, inside the Share click.
  */
-export const ShareDialog = ({ share, onClose }: ShareDialogProps) => {
+export const ShareDialog = ({
+  race = false,
+  share,
+  onClose,
+}: ShareDialogProps) => {
   const [result, setResult] = useState<ShareResult | null>(null);
   // What the last copy from the footer said, over the first copy's line
   const [again, setAgain] = useState<string | null>(null);
@@ -43,28 +54,30 @@ export const ShareDialog = ({ share, onClose }: ShareDialogProps) => {
     };
   }, [share]);
 
-  const link = result?.link ?? null;
+  const link = race ? null : (result?.link ?? null);
   return (
     <Modal
       footer={
-        <button
-          className="modal-btn modal-btn--ghost"
-          data-testid="share-copy-again"
-          disabled={!link}
-          onClick={() => {
-            if (link) void copyLink(link).then(setAgain);
-          }}
-          type="button"
-        >
-          Copy the snapshot link
-        </button>
+        race ? undefined : (
+          <button
+            className="modal-btn modal-btn--ghost"
+            data-testid="share-copy-again"
+            disabled={!link}
+            onClick={() => {
+              if (link) void copyLink(link).then(setAgain);
+            }}
+            type="button"
+          >
+            Copy the snapshot link
+          </button>
+        )
       }
       isOpen={share !== null}
       onClose={onClose}
       title="Share this run"
     >
       <p className="modal__message" data-testid="share-message" role="status">
-        {again ?? result?.message ?? "Copying…"}
+        {race ? RACE_SHARE_NOTE : (again ?? result?.message ?? "Copying…")}
       </p>
       {link && (
         <>

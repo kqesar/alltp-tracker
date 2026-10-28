@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { smAutotrack } from "@/games/sm/autotrack/store";
 import { SmControls } from "@/games/sm/components/SmControls";
 import { SmGrid } from "@/games/sm/components/SmGrid";
 import { SmObjectives } from "@/games/sm/components/SmObjectives";
@@ -163,6 +164,8 @@ describe("the Super Metroid toolbar", () => {
   });
 
   it("exports the run as a save file", async () => {
+    // Map Rando has no race flag: Race Mode is on until the player turns it off
+    act(() => smAutotrack.useStore.setState({ raceChoice: "off" }));
     const user = userEvent.setup();
     const created = vi
       .spyOn(URL, "createObjectURL")
@@ -176,6 +179,7 @@ describe("the Super Metroid toolbar", () => {
     expect(click).toHaveBeenCalledOnce();
     created.mockRestore();
     click.mockRestore();
+    act(() => smAutotrack.useStore.setState({ raceChoice: "on" }));
   });
 
   it("cancels a new game or an import as asked, and says a file it cannot read", async () => {
