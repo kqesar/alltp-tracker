@@ -26,7 +26,11 @@ import {
   RACE_CHOICES,
   type RaceChoice,
 } from "@/autotrack/raceChoice";
-import { onRunReplaced, rememberRace } from "@/autotrack/raceMode";
+import {
+  onRaceRestored,
+  onRunReplaced,
+  rememberRace,
+} from "@/autotrack/raceMode";
 import { shownStatus } from "@/autotrack/status";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isObsView } from "@/utils/view";
@@ -182,7 +186,14 @@ export const createGameAutotrack = <Reading>({
   if (raceFlag) {
     rememberRace(useStore);
     onRunReplaced((replaced) => {
-      if (replaced === game) set({ raceSeen: false });
+      if (replaced !== game) return false;
+      const held = useStore.getState().raceSeen;
+      set({ raceSeen: false });
+      return held;
+    });
+    // Undo back to the board of a race brings the memory back with it
+    onRaceRestored((restored) => {
+      if (restored === game) set({ raceSeen: true });
     });
   }
 
