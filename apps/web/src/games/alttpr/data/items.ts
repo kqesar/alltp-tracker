@@ -75,6 +75,13 @@ const RETRO_ITEM_GRID: string[][] = [
  */
 export const TOGGLE_ITEMS: ReadonlySet<string> = new Set(["magic"]);
 
+/**
+ * The counters that stop at their ends instead of wrapping round: the
+ * hearts, whose "not set" one step back from 20 would say all hearts held
+ * on a stray right-click, and the reverse.
+ */
+export const CLAMPED_ITEMS: ReadonlySet<string> = new Set(["hearts"]);
+
 /** Whether a grid id is a key cell's or a castle dungeon's label. */
 export const isKeyCell = (id: string): boolean =>
   id.startsWith("keys") || id.startsWith("keylabel");

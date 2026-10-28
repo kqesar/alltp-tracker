@@ -14,8 +14,8 @@ type HeartCounterProps = {
  * Link's hearts on screen (`hearts`), on the tunic's cell (bottom right): a
  * heart with the count over it, "?" while not set, which the logic reads as
  * unknown (maybe, never out of logic). Click adds a heart, right-click or
- * "-" takes one off; past 20 it goes back to not set. Autotracking sets it
- * from the game.
+ * "-" takes one off, stopping at not set and at 20 (CLAMPED_ITEMS).
+ * Autotracking sets it from the game.
  */
 export const HeartCounter = ({ row, col }: HeartCounterProps) => {
   const value = useGameStore((state) => state.items.hearts as number);
