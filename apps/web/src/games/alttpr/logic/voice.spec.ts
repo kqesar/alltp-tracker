@@ -129,6 +129,16 @@ describe("changedValue", () => {
     expect(changedValue({ to: "on" }, 0, 0, 1)).toBe(1);
   });
 
+  it("finds a whole heart: 4 on screen from not set, then one more each", () => {
+    // From not set: the 3 Link starts with and the one found, the cell's 2
+    expect(changedValue({ to: "heart" }, 0, 0, 18)).toBe(2);
+    expect(changedValue({ to: "heart" }, 2, 0, 18)).toBe(3);
+    expect(changedValue({ to: "heart" }, 18, 0, 18)).toBe(18);
+    expect(commandsOf("tracker heart container")).toEqual([
+      { change: { to: "heart" }, control: "hearts", kind: "set" },
+    ]);
+  });
+
   it("goes one level up, never past the top nor round to none", () => {
     expect(changedValue({ to: "next" }, 1, 0, 4)).toBe(2);
     expect(changedValue({ to: "next" }, 4, 0, 4)).toBe(4);

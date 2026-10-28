@@ -10,6 +10,7 @@
 // words it has that sound like it ("samaria" for Somaria), as checked against
 // synthesized speech of the real names in three voices.
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
+import { heartsValue, STARTING_HEARTS } from "@/games/alttpr/data/items";
 import { CONTROLS, type ControlId } from "@/games/alttpr/data/keymap";
 
 /** The word every command starts with. */
@@ -21,6 +22,11 @@ export type Change =
   | { readonly to: "on" }
   /** One level, or one small key, more: never past the top */
   | { readonly to: "next" }
+  /**
+   * A whole heart found: one more on screen, or from not set the 3 Link
+   * starts with and this one. A heart piece is not spoken: four make one.
+   */
+  | { readonly to: "heart" }
   /** One item fewer left in a dungeon: never below none */
   | { readonly to: "less" }
   /** The bow's and the boomerangs' bits: one more item among them */
@@ -88,7 +94,8 @@ const ITEMS: readonly (readonly [
   [["glove", "gloves", "power glove"], "glove", NEXT],
   [["mitts", "titan mitt"], "glove", { atLeast: 2 }],
   [["bottle"], "bottle", NEXT],
-  [["heart", "heart container"], "hearts", NEXT],
+  // Whole hearts only: four pieces make one, which the player then says
+  [["heart", "heart container"], "hearts", { to: "heart" }],
   [["samaria", "red cane"], "somaria", ON],
   // Nor Byrna, which it hears as "mire": these are the words that work
   [["burner", "blue cane"], "byrna", ON],
@@ -279,6 +286,10 @@ export const changedValue = (
   switch (change.to) {
     case "next":
       return Math.min(value + 1, max);
+    case "heart":
+      return value === 0
+        ? heartsValue(STARTING_HEARTS + 1)
+        : Math.min(value + 1, max);
     case "less":
       return Math.max(value - 1, min);
     default:
