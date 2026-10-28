@@ -257,6 +257,29 @@ test("an Archipelago seed is pointed to the Archipelago board", async ({
   ).toBe("archipelago");
 });
 
+test("lays the game on a run replaced by Switch & reset, memory unchanged", async ({
+  page,
+}) => {
+  bootSeed(bridge, { race: false });
+  await openTracker(page);
+  await connect(page);
+  const sword = page.getByTestId("item-sword");
+  await expect(sword).toHaveAccessibleName(cell("Sword", "level 2"));
+
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await page
+    .getByRole("dialog", { name: "Choose a run type" })
+    .getByRole("button", { name: /^Keysanity/ })
+    .click();
+  await page.getByRole("button", { name: "Switch & reset" }).click();
+
+  // The game's memory did not change: the board is the game's at once
+  await expect(sword).toHaveAccessibleName(cell("Sword", "level 2"));
+  await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+    cell("Hookshot", "obtained"),
+  );
+});
+
 test("notes the doors Link goes through in a Crosskeys run", async ({
   page,
 }) => {

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { FakeVisibility, GRANTED, ManualClock } from "@/autotrack/fixtures";
 import { isRaceModeOrPending } from "@/autotrack/raceMode";
 import { smz3Autotrack } from "@/games/smz3/autotrack/store";
-import { useSmz3Store } from "@/games/smz3/store";
+import { freshProgress, useSmz3Store } from "@/games/smz3/store";
 import { MemoryTransport } from "../../../../../../packages/autotrack/test/memory-transport";
 import { MEMORY_RANGE } from "../../../../../../packs/smz3/src/autotrack/memory";
 import {
@@ -120,6 +120,23 @@ describe("SMZ3's autotracking", () => {
     expect(state().reading?.mode).toBe("sm");
     expect(run().items).toMatchObject({ firerod: 1, moonPearl: 1, morph: 1 });
     expect(run().checked).toEqual(["links-house", "morphing-ball"]);
+  });
+
+  it("lays the game on a run replaced under the session, with memory unchanged", async () => {
+    const h = harness(PLAYED);
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    expect(run().checked).toEqual(["links-house"]);
+
+    run().reset();
+    expect(run().items).toMatchObject({ missile: 1, moonPearl: 1 });
+    expect(run().checked).toEqual(["links-house"]);
+
+    // An import or a shared link
+    run().load(freshProgress());
+    expect(run().items).toMatchObject({ missile: 1, moonPearl: 1 });
+    expect(run().checked).toEqual(["links-house"]);
   });
 
   it("keeps a race seed's requirements and medallions unread, and the player's marks", async () => {

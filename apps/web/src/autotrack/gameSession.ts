@@ -31,6 +31,7 @@ import {
   onRunReplaced,
   rememberRace,
 } from "@/autotrack/raceMode";
+import { onResync } from "@/autotrack/resync";
 import { shownStatus } from "@/autotrack/status";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isObsView } from "@/utils/view";
@@ -77,6 +78,11 @@ export type GameRuntimeModule<Reading> = {
     read: (reading: Reading) => void;
     /** A poll found memory unchanged at `at` (see `GameRuntimeSink.steady`). */
     steady?: (at: number) => void;
+    /**
+     * The run was replaced: lay all the game says on it, now if it is read
+     * now, else at the next reading.
+     */
+    resync?: (now: boolean) => void;
   };
 };
 
@@ -167,6 +173,10 @@ export const createGameAutotrack = <Reading>({
   const set = useStore.setState;
 
   let runtime: GameRuntime | null = null;
+  /** The board's side of the session, while one runs. */
+  let follower: ReturnType<
+    GameRuntimeModule<Reading>["createFollower"]
+  > | null = null;
   /** Bumped by each connect and stop: a late answer of an older one is dropped. */
   let generation = 0;
   const lock = createAutotrackLock();
@@ -182,6 +192,13 @@ export const createGameAutotrack = <Reading>({
     }
   });
   syncAcrossTabs(useStore);
+  // A run replaced under a connected session: the game lays on the new board
+  // at once, not only when it next changes
+  onResync((replaced) => {
+    if (replaced === game) {
+      follower?.resync?.(useStore.getState().status.code === "connected");
+    }
+  });
   // A game with a race flag remembers a race read; its run replaced ends it
   if (raceFlag) {
     rememberRace(useStore);
@@ -229,7 +246,8 @@ export const createGameAutotrack = <Reading>({
       const bridge = await bridgeOptions();
       if (mine !== generation) return;
       set({ environment });
-      const follower = createFollower();
+      const own = createFollower();
+      follower = own;
       runtime = start(
         {
           environment,
@@ -241,7 +259,7 @@ export const createGameAutotrack = <Reading>({
           reading: (reading) => {
             if (mine !== generation) return;
             set({ reading });
-            follower.read(reading);
+            own.read(reading);
           },
           status: (status, since, seen) => {
             if (mine !== generation) return;
@@ -255,7 +273,7 @@ export const createGameAutotrack = <Reading>({
             if (status.code === "stopped") set({ active: false });
           },
           steady: (at) => {
-            if (mine === generation) follower.steady?.(at);
+            if (mine === generation) own.steady?.(at);
           },
         },
       );
@@ -269,6 +287,7 @@ export const createGameAutotrack = <Reading>({
     generation++;
     runtime?.stop();
     runtime = null;
+    follower = null;
     lock.release();
     set({
       active: false,

@@ -18,7 +18,7 @@ import {
   stopSmAutotrack,
   useSmAutotrackStore,
 } from "@/games/sm/autotrack/store";
-import { useSmStore } from "@/games/sm/store";
+import { freshProgress, useSmStore } from "@/games/sm/store";
 import { MemoryTransport } from "../../../../../../packages/autotrack/test/memory-transport";
 import { MEMORY_RANGE } from "../../../../../../packs/sm/src/autotrack/memory";
 import {
@@ -148,6 +148,38 @@ describe("Super Metroid's autotracking", () => {
 
     expect(run().items.superMissile).toBe(2);
     expect(saved()).toEqual({ connectOnStart: true, raceChoice: "off" });
+  });
+
+  it("lays the game on a run replaced under the session, with memory unchanged", async () => {
+    const h = harness({
+      done: ["kraid"],
+      items: 0x0004,
+      objectives: ["kraid", "ridley"],
+    });
+    await connectSmAutotrack();
+    await h.advance(0);
+    expect(run().items.morph).toBe(1);
+
+    run().reset();
+    expect(run().items.morph).toBe(1);
+    expect(run().done).toEqual(["kraid"]);
+
+    // An import or a shared link
+    run().load(freshProgress());
+    expect(run().items.morph).toBe(1);
+  });
+
+  it("lays the game on the next reading when the run is replaced while not connected", async () => {
+    const h = harness({ items: 0x0004 });
+    await connectSmAutotrack();
+    await h.advance(0);
+    stopSmAutotrack();
+    run().reset();
+    expect(run().items.morph).toBeFalsy();
+
+    await connectSmAutotrack();
+    await h.advance(0);
+    expect(run().items.morph).toBe(1);
   });
 
   it("refuses a ROM that is not a Map Rando seed", async () => {

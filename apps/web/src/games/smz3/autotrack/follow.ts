@@ -81,6 +81,9 @@ const newIn = <T extends object>(now: T, before: T | undefined) =>
 /** Start following the game, for a new session. */
 export const createSmz3Follower = () => {
   let shown: View | null = null;
+  /** The last reading of a game in play, and whether the last one was. */
+  let last: Smz3Reading | null = null;
+  let playing = false;
   /**
    * Whether a reading before play came since the last one in play, for the
    * timer to see a game start; the readings between (a portal, a load) leave
@@ -136,52 +139,68 @@ export const createSmz3Follower = () => {
     else if (reading.inPlay === true) armed = false;
   };
 
+  /** Lay a reading in play on the run: the news against the view shown. */
+  const lay = (reading: Smz3Reading) => {
+    recordSeed(
+      useSmz3Store,
+      typeof reading.guid === "string" ? null : reading.guid.guid,
+    );
+    const now = viewOf(reading);
+    const before = shown;
+    shown = now;
+    const itemNews = Object.entries(newIn(now.items, before?.items));
+    const checkNews = [...now.checked].filter(
+      (id) => before === null || !before.checked.has(id),
+    );
+    const settingNews = newIn(now.settings, before?.settings);
+    const padNews = newIn(now.pads, before?.pads);
+    if (
+      itemNews.length === 0 &&
+      checkNews.length === 0 &&
+      Object.keys(settingNews).length === 0 &&
+      Object.keys(padNews).length === 0
+    ) {
+      return;
+    }
+    useSmz3Store.getState().applyGameNews((run) => {
+      const change: Partial<Smz3Progress> = {};
+      if (itemNews.length > 0) {
+        const items = { ...run.items };
+        for (const [id, count] of itemNews) {
+          items[id] = Math.max(items[id] ?? 0, count ?? 0);
+        }
+        change.items = items;
+      }
+      if (checkNews.length > 0) {
+        change.checked = [...new Set([...run.checked, ...checkNews])];
+      }
+      if (Object.keys(settingNews).length > 0) {
+        change.settings = { ...run.settings, ...settingNews };
+      }
+      if (Object.keys(padNews).length > 0) {
+        change.pads = { ...run.pads, ...padNews };
+      }
+      return change;
+    });
+  };
+
   return {
     /** Lay a reading's news on the run. */
     read: (reading: Smz3Reading) => {
       followTimer(reading);
-      if (reading.inPlay !== true) return;
-      recordSeed(
-        useSmz3Store,
-        typeof reading.guid === "string" ? null : reading.guid.guid,
-      );
-      const now = viewOf(reading);
-      const before = shown;
-      shown = now;
-      const itemNews = Object.entries(newIn(now.items, before?.items));
-      const checkNews = [...now.checked].filter(
-        (id) => before === null || !before.checked.has(id),
-      );
-      const settingNews = newIn(now.settings, before?.settings);
-      const padNews = newIn(now.pads, before?.pads);
-      if (
-        itemNews.length === 0 &&
-        checkNews.length === 0 &&
-        Object.keys(settingNews).length === 0 &&
-        Object.keys(padNews).length === 0
-      ) {
-        return;
-      }
-      useSmz3Store.getState().applyGameNews((run) => {
-        const change: Partial<Smz3Progress> = {};
-        if (itemNews.length > 0) {
-          const items = { ...run.items };
-          for (const [id, count] of itemNews) {
-            items[id] = Math.max(items[id] ?? 0, count ?? 0);
-          }
-          change.items = items;
-        }
-        if (checkNews.length > 0) {
-          change.checked = [...new Set([...run.checked, ...checkNews])];
-        }
-        if (Object.keys(settingNews).length > 0) {
-          change.settings = { ...run.settings, ...settingNews };
-        }
-        if (Object.keys(padNews).length > 0) {
-          change.pads = { ...run.pads, ...padNews };
-        }
-        return change;
-      });
+      playing = reading.inPlay === true;
+      if (!playing) return;
+      last = reading;
+      lay(reading);
+    },
+    /**
+     * The run was replaced (New game, Import, a shared link): lay all the
+     * game says on the new one, now if the game in play was read last, else
+     * with the next reading in play.
+     */
+    resync: (now: boolean) => {
+      shown = null;
+      if (now && playing && last !== null) lay(last);
     },
     /**
      * A poll read memory and found it unchanged at `at`: the game stands

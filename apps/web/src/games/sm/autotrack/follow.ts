@@ -87,6 +87,9 @@ const viewOf = (reading: SmReading, objectives: readonly string[]): View => ({
 /** Start following the game, for a new session. */
 export const createSmFollower = () => {
   let shown: View | null = null;
+  /** The last reading of a game in play, and whether the last one was. */
+  let last: SmReading | null = null;
+  let playing = false;
   /**
    * Whether the reading before was before play, for the timer to see a game
    * start; undefined until a reading says.
@@ -150,77 +153,93 @@ export const createSmFollower = () => {
     }
   };
 
+  /** Lay a reading in play on the run: the news against the view shown. */
+  const lay = (reading: SmReading, at: number) => {
+    recordSeed(
+      useSmStore,
+      typeof reading.seed === "string" ? null : reading.seed.name,
+    );
+    const now = viewOf(reading, useSmStore.getState().objectives);
+    const before = shown;
+    shown = now;
+    const itemNews = Object.entries(now.items).filter(
+      ([id, count]) => before === null || before.items[id] !== count,
+    );
+    const objectivesNews =
+      now.objectives !== "" &&
+      (before === null || before.objectives !== now.objectives);
+    const doneNews = now.done.filter(
+      (id) => before === null || !before.done.includes(id),
+    );
+    const foundNews = [...now.found].filter(
+      (key) => before === null || !before.found.has(key),
+    );
+    const options = (["wallJump", "splitSpeed"] as const).filter(
+      (option) =>
+        now[option] !== null &&
+        (before === null || before[option] !== now[option]),
+    );
+    if (
+      itemNews.length === 0 &&
+      !objectivesNews &&
+      doneNews.length === 0 &&
+      foundNews.length === 0 &&
+      options.length === 0
+    ) {
+      return;
+    }
+    // One stamp for the reading, taken after the timer followed it
+    const stamp = stampOf(useSmStore.getState().timer, at);
+    useSmStore.getState().applyGameNews((run) => {
+      const change: Partial<SmProgress> = {};
+      if (itemNews.length > 0) {
+        const items = { ...run.items };
+        for (const [id, count] of itemNews) {
+          items[id as SmItemId] = Math.max(items[id as SmItemId] ?? 0, count);
+        }
+        change.items = items;
+      }
+      const objectives = objectivesNews
+        ? now.objectives.split(",")
+        : run.objectives;
+      if (objectivesNews) change.objectives = objectives;
+      if (objectivesNews || doneNews.length > 0) {
+        change.done = [...new Set([...run.done, ...doneNews])].filter((id) =>
+          objectives.includes(id),
+        );
+      }
+      // A location found keeps its first stamp, and is never taken back
+      const fresh = foundNews.filter((key) => run.found[key] === undefined);
+      if (fresh.length > 0) {
+        change.found = {
+          ...run.found,
+          ...Object.fromEntries(fresh.map((key) => [key, stamp])),
+        };
+      }
+      for (const option of options) {
+        change[option] = now[option] === true;
+      }
+      return change;
+    });
+  };
+
   return {
     /** Lay a reading's news on the run. */
     read: (reading: SmReading) => {
       followTimer(reading);
-      if (reading.inPlay !== true) return;
-      recordSeed(
-        useSmStore,
-        typeof reading.seed === "string" ? null : reading.seed.name,
-      );
-      const now = viewOf(reading, useSmStore.getState().objectives);
-      const before = shown;
-      shown = now;
-      const itemNews = Object.entries(now.items).filter(
-        ([id, count]) => before === null || before.items[id] !== count,
-      );
-      const objectivesNews =
-        now.objectives !== "" &&
-        (before === null || before.objectives !== now.objectives);
-      const doneNews = now.done.filter(
-        (id) => before === null || !before.done.includes(id),
-      );
-      const foundNews = [...now.found].filter(
-        (key) => before === null || !before.found.has(key),
-      );
-      const options = (["wallJump", "splitSpeed"] as const).filter(
-        (option) =>
-          now[option] !== null &&
-          (before === null || before[option] !== now[option]),
-      );
-      if (
-        itemNews.length === 0 &&
-        !objectivesNews &&
-        doneNews.length === 0 &&
-        foundNews.length === 0 &&
-        options.length === 0
-      ) {
-        return;
-      }
-      // One stamp for the reading, taken after the timer followed it
-      const stamp = stampOf(useSmStore.getState().timer, reading.at);
-      useSmStore.getState().applyGameNews((run) => {
-        const change: Partial<SmProgress> = {};
-        if (itemNews.length > 0) {
-          const items = { ...run.items };
-          for (const [id, count] of itemNews) {
-            items[id as SmItemId] = Math.max(items[id as SmItemId] ?? 0, count);
-          }
-          change.items = items;
-        }
-        const objectives = objectivesNews
-          ? now.objectives.split(",")
-          : run.objectives;
-        if (objectivesNews) change.objectives = objectives;
-        if (objectivesNews || doneNews.length > 0) {
-          change.done = [...new Set([...run.done, ...doneNews])].filter((id) =>
-            objectives.includes(id),
-          );
-        }
-        // A location found keeps its first stamp, and is never taken back
-        const fresh = foundNews.filter((key) => run.found[key] === undefined);
-        if (fresh.length > 0) {
-          change.found = {
-            ...run.found,
-            ...Object.fromEntries(fresh.map((key) => [key, stamp])),
-          };
-        }
-        for (const option of options) {
-          change[option] = now[option] === true;
-        }
-        return change;
-      });
+      playing = reading.inPlay === true;
+      if (!playing) return;
+      last = reading;
+      lay(reading, reading.at);
+    },
+    /**
+     * The run was replaced (New game, Import, a shared link): lay all the
+     * game says on the new one, now if the game in play was read last, else
+     * with the next reading in play.
+     */
+    resync: (now: boolean) => {
+      shown = null;
+      if (now && playing && last !== null) lay(last, Date.now());
     },
     /**
      * A poll read memory and found it unchanged at `at`: the game stands
