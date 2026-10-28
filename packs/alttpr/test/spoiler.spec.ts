@@ -13,6 +13,7 @@ const ER = "0yAObedRMV";
 const DAILY = "eM43RgZ4Gj";
 const MYSTERY = "xvJo0drkyJ";
 const RETRO = "VMR3zKaKv5";
+const STANDARD = "6v1ab7qmv7";
 
 const textOf = (hash: string) =>
   readFileSync(new URL(`spoilers/${hash}.txt`, import.meta.url), "utf8");
@@ -570,6 +571,61 @@ describe("a retro seed's spoiler", () => {
     expect(
       empty.placements.filter((p) => p.itemName === "Nothing"),
     ).toHaveLength(1);
+  });
+});
+
+describe("a Standard seed's spoiler, whose playthrough starts at sphere 0", () => {
+  // The uncle's sword is a pre-collected item, which the playthrough lists as
+  // sphere 0: `{ "Equipped": { "Equipment Slot 1": "UncleSword:1" } }`
+  // (PlaythroughService.php:220-235)
+  const standard = logOf(parseSpoiler(textOf(STANDARD), nameOf(STANDARD)));
+  const doc = jsonOf(STANDARD);
+  const numbered = Object.keys(doc.playthrough)
+    .map(Number)
+    .filter((sphere) => Number.isInteger(sphere) && sphere >= 1);
+
+  it("is a real file with that sphere", () => {
+    expect(doc.playthrough["0"]).toEqual({
+      Equipped: { "Equipment Slot 1": "UncleSword:1" },
+    });
+  });
+
+  it("reads it: the spheres are the numbered ones, the start is the Equipped section's", () => {
+    expect(standard.spheres).toBe(Math.max(...numbered));
+    expect(standard.start).toContain("Progressive Sword");
+    expect(standard.placements.some((p) => p.sphere === 1)).toBe(true);
+  });
+
+  it("gives no location a sphere 0", () => {
+    expect(standard.placements.every((p) => p.sphere !== 0)).toBe(true);
+  });
+
+  it("refuses a sphere 0 that is not the starting equipment", () => {
+    for (const zero of [
+      { "Light World": { "Hobo:1": "IceRod:1" } },
+      { Equipped: { "Equipment Slot 1": "UncleSword:1" }, Other: {} },
+      {},
+    ]) {
+      expect(
+        refused(
+          changed(STANDARD, (edit) => {
+            edit.playthrough["0"] = zero;
+          }),
+        ),
+      ).toEqual(["not-a-spoiler", "playthrough"]);
+    }
+  });
+
+  it("still refuses a sphere below 0 or one that is not a number", () => {
+    for (const key of ["-1", "x"]) {
+      expect(
+        refused(
+          changed(STANDARD, (edit) => {
+            edit.playthrough[key] = { "Light World": { "Hobo:1": "IceRod:1" } };
+          }),
+        ),
+      ).toEqual(["not-a-spoiler", "playthrough"]);
+    }
   });
 });
 

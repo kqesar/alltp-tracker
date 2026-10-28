@@ -1472,6 +1472,16 @@ board counts no generic key), only in an item position, and every other name
 without a `:1` keeps refusing the log as a multiworld. Shops, `Equipped` and
 `Special` always carry the world (`ShopKey:1`).
 
+vt's playthrough may also open with a sphere `"0"`, the starting equipment as
+`{ "Equipped": { "Equipment Slot 1": "UncleSword:1" } }` (`PlaythroughService.php:220-235`):
+written whenever the world has pre-collected items besides hearts, ammunition
+and events, which is every seed with assured weapons (Standard's and the
+default; `Randomizer.php:258-259`) and the glitched logics' Boots (`:123`). It
+holds items, not locations, so it is read as nothing (the `Equipped` section
+gives the `start`) and is no sphere; any other shape at `"0"` still refuses as a
+malformed playthrough. The entrance randomizer's playthrough numbers from 1
+(`Main.py:414`).
+
 Both come out as the same log. `placements` are the pack's locations with the
 pack's item id (`fromUpstream(class).item`, null for rupees, ammunition and
 the rest no rule reads) and the sphere the playthrough gives, or null. The
@@ -1535,7 +1545,8 @@ weekly drift workflow watches them). A checkout is read, never run.
 `9MQ9gO1wMD` (vt's own layout), `0yAObedRMV` (entrance randomizer,
 "crossed", keysanity), `eM43RgZ4Gj` (the daily challenge: a race seed whose
 spoiler is `meta` only), `xvJo0drkyJ` (a mystery seed, the same) and
-`VMR3zKaKv5` (Retro, with 19 bare `Key`s). Written by
+`VMR3zKaKv5` (Retro, with 19 bare `Key`s) and `6v1ab7qmv7` (Standard, assured
+weapons: a sphere 0 in its playthrough). Written by
 
 ```sh
 pnpm --filter @alltp/pack-alttpr spoiler-fixtures <hash>…

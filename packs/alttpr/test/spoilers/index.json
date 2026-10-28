@@ -17,6 +17,22 @@
       "recorded": "2026-10-25T16:37:39.231Z",
       "sha256": "9b64948b9842ece11a3a3df525c15bc07e8f3a2cd59658bc11c3536aea65d680"
     },
+    "6v1ab7qmv7": {
+      "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/6v1ab7qmv7.json",
+      "bytes": 22458,
+      "generated": "2026-10-28T22:15:55+00:00",
+      "layout": "vt",
+      "meta": {
+        "goal": "ganon",
+        "logic": "NoGlitches",
+        "mode": "standard",
+        "name": null,
+        "spoilers": "on",
+        "tournament": false
+      },
+      "recorded": "2026-10-28T22:16:01.755Z",
+      "sha256": "899905f21fceae86dd04e5cd035930d469d3a586cd1982f84351f74533f24717"
+    },
     "9MQ9gO1wMD": {
       "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/9MQ9gO1wMD.json",
       "bytes": 22094,

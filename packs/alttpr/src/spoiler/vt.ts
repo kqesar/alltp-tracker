@@ -13,7 +13,8 @@
 //
 // The playthrough is a list of spheres, each holding the locations it opens by
 // region: `{ "1": { "Light World": { "Hobo:1": "IceRod:1" } }, … }`, then two
-// counts (`longest_item_chain`, `regions_visited`).
+// counts (`longest_item_chain`, `regions_visited`). A sphere "0" may come first:
+// the starting equipment, below.
 
 import * as z from "zod/mini";
 import { UPSTREAM_ITEMS } from "../items";
@@ -79,6 +80,17 @@ export const VT: Shape = {
     for (const [key, spheres] of Object.entries(parsed.data)) {
       // `longest_item_chain` and `regions_visited`
       if (typeof spheres === "number") continue;
+      // Sphere 0 is the starting equipment, `{ "Equipped": { "Equipment Slot 1":
+      // "UncleSword:1" } }`: items, not locations (PlaythroughService.php:220-235,
+      // written when the world has pre-collected items other than hearts, ammunition
+      // and events: the uncle's sword with assured weapons, Randomizer.php:258-259,
+      // the Boots of a glitched logic, :123). The log's `Equipped` section already
+      // gives them as `start`.
+      if (key === "0") {
+        const regions = Object.keys(spheres);
+        if (regions.length !== 1 || regions[0] !== "Equipped") return null;
+        continue;
+      }
       const sphere = Number(key);
       if (!Number.isInteger(sphere) || sphere < 1) return null;
       for (const locations of Object.values(spheres)) {
