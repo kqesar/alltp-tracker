@@ -247,6 +247,7 @@ export {
 } from "./medallions";
 export { compile, regionModules, STATE_NAMES, world } from "./pack";
 export { NAMED_RULES, RULES } from "./rules";
+export { RUPEE_COSTS, type RupeeCost, rupeeCostOf } from "./rupee-costs";
 export { seedFileReading } from "./seed-file";
 export { seedFileUrl, seedHashOf } from "./seed-link";
 export {

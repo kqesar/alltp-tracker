@@ -364,6 +364,12 @@
       "module": "src/items.ts",
       "role": "English item names, which Item::get falls back to (the tests write 'Flute') and which a spoiler log's items are shown by (src/spoiler/item-names.json)",
       "status": "ported"
+    },
+    {
+      "file": "app/Text.php",
+      "module": "src/rupee-costs.ts",
+      "role": "the vendors' offers, whose dialogue states what a paid check costs (test/upstream/rupee-texts.json)",
+      "status": "ported"
     }
   ],
   "tests": [

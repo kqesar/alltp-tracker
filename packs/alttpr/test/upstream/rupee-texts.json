@@ -1,0 +1,35 @@
+{
+  "file": "app/Text.php",
+  "generated": "By packs/alttpr/scripts/import-rupee-texts.mjs from app/Text.php. Re-import, never edit.",
+  "texts": {
+    "blacksmiths_paywall": {
+      "line": 528,
+      "text": "It's 10 rupees\n  ≥ Easy\n    Hang on…\n{CHOICE}"
+    },
+    "bomb_shop_big_bomb": {
+      "line": 664,
+      "text": "30 bombs for 100 rupees, 100 rupees 1 BIG bomb. Good deals all day!"
+    },
+    "bottle_vendor_choice": {
+      "line": 512,
+      "text": "I gots bottles.\nYous gots 100 rupees?\n  ≥ I want\n    No way!"
+    },
+    "game_chest_village_of_outcasts": {
+      "line": 808,
+      "text": "Pay 30 rupees, open 2 chests. Are you lucky?\nSo, play game?\n  ≥ Play\n    Never!\n{CHOICE}"
+    },
+    "game_digging_choice": {
+      "line": 886,
+      "text": "Have 80 Rupees? Want to play digging game?\n  ≥Yes\n   No\n{CHOICE}"
+    },
+    "zora_tells_cost": {
+      "line": 750,
+      "text": "Fine! But they aren't cheap. You got 500 rupees?\n  ≥ Duh\n    Oh carp\n{CHOICE}"
+    }
+  },
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  }
+}
