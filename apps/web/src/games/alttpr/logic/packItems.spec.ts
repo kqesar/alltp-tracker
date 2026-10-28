@@ -91,6 +91,22 @@ describe("the app's one table of the pack's items", () => {
     });
   });
 
+  it("reads the Ten Bombs as known only once autotracking set them", () => {
+    expect(packReading({ tenbombs: 0 } as never).unknown).toMatchObject({
+      bombs: true,
+    });
+    expect(packReading({ tenbombs: 1 } as never).unknown).not.toHaveProperty(
+      "bombs",
+    );
+    expect(packReading({ tenbombs: 2 } as never).items).toEqual({
+      tenBombs: 1,
+    });
+    // From the game: known where read, left alone where not
+    expect(itemsFromPack({ tenBombs: 0 }).tenbombs).toBe(1);
+    expect(itemsFromPack({ tenBombs: 1 }).tenbombs).toBe(2);
+    expect(itemsFromPack({})).not.toHaveProperty("tenbombs");
+  });
+
   it("reads the hearts on screen as those found beyond the 3 Link starts with", () => {
     const found = (hearts: number) => packReading({ hearts } as never);
     // Not set: the health is unknown, and nothing is held

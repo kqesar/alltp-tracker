@@ -13,7 +13,8 @@ import { items, itemsMax, itemsMin } from "@/games/alttpr/data/items";
  * (version 6), each dungeon's map and compass (version 7), the castle
  * dungeons' own items (version 11), Ganon's Tower's counter, the retro
  * world's shops (a save without them starts them unfound), the half magic,
- * the hearts (a save without them leaves them not set).
+ * the hearts and the escape's bombs (a save without them leaves them not
+ * known).
  */
 const ADDED = [
   "agahnim2",
@@ -30,6 +31,7 @@ const ADDED = [
   "map12",
   "shoparrow",
   "shopkey",
+  "tenbombs",
 ];
 
 /**

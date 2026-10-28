@@ -31,7 +31,7 @@ export const doubtText = (doubt: Doubt): string => {
         ? `it takes ${doubt.hearts} hearts${doubt.basic ? " (Basic placement)" : ""}, and your hearts are not set`
         : "it takes hearts, and your hearts are not set";
     case "bombs":
-      return "it takes the Ten Bombs item, which the tracker does not record";
+      return "it takes the Ten Bombs, which no cell records: autotracking reads them from the game";
   }
 };
 

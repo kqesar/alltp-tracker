@@ -115,6 +115,9 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   magic: [0, 2],
   shield: [0, 3],
   sword: [0, 4],
+  // The Ten Bombs (the escape's), which no cell draws: 0 not known, 1 none
+  // found, 2 found; autotracking reads it
+  tenbombs: [0, 2],
   tunic: [1, 3],
 
   // Big keys (0 = not obtained, 1 = obtained)
@@ -251,6 +254,7 @@ const ITEM_NAMES: Record<string, string> = {
   shoparrow: "Arrow shop",
   shopkey: "Key shop",
   somaria: "Cane of Somaria",
+  tenbombs: "Ten Bombs",
 };
 
 /**
