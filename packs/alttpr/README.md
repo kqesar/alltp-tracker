@@ -1462,6 +1462,16 @@ Two layouts, told apart by an `Entrances` list:
 | `Special` | the two bottles and the two medallions, which are locations of the pack | the two medallions only |
 | Ids | `locationId(name)` | `erLocationId(name)` (the nine names the randomizer writes otherwise than vt) |
 
+vt's layout writes two values without a world, because `World::getSpoiler`
+spells them out instead of asking the item (`app/World.php:965-969` at the
+pinned commit): `Key`, every small key of a seed with generic keys (Retro,
+`rom.genericKeys`), and `Nothing`, a location holding no item. They are read
+as the item they stand for (`Key` as `KeyGK`, the class the entrance
+randomizer's `Small Key (Universal)` joins; its pack item is null, as the
+board counts no generic key), only in an item position, and every other name
+without a `:1` keeps refusing the log as a multiworld. Shops, `Equipped` and
+`Special` always carry the world (`ShopKey:1`).
+
 Both come out as the same log. `placements` are the pack's locations with the
 pack's item id (`fromUpstream(class).item`, null for rupees, ammunition and
 the rest no rule reads) and the sphere the playthrough gives, or null. The
@@ -1524,7 +1534,8 @@ weekly drift workflow watches them). A checkout is read, never run.
 `test/spoilers/*.txt` are real files, byte for byte what the button saves:
 `9MQ9gO1wMD` (vt's own layout), `0yAObedRMV` (entrance randomizer,
 "crossed", keysanity), `eM43RgZ4Gj` (the daily challenge: a race seed whose
-spoiler is `meta` only) and `xvJo0drkyJ` (a mystery seed, the same). Written by
+spoiler is `meta` only), `xvJo0drkyJ` (a mystery seed, the same) and
+`VMR3zKaKv5` (Retro, with 19 bare `Key`s). Written by
 
 ```sh
 pnpm --filter @alltp/pack-alttpr spoiler-fixtures <hash>…

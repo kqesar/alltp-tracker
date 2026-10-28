@@ -12,6 +12,7 @@ const VT = "9MQ9gO1wMD";
 const ER = "0yAObedRMV";
 const DAILY = "eM43RgZ4Gj";
 const MYSTERY = "xvJo0drkyJ";
+const RETRO = "VMR3zKaKv5";
 
 const textOf = (hash: string) =>
   readFileSync(new URL(`spoilers/${hash}.txt`, import.meta.url), "utf8");
@@ -34,6 +35,12 @@ const placement = (log: AlttprSpoilerLog, id: string) => {
   const found = log.placements.find((p) => p.location === id);
   if (found === undefined) throw new Error(`no placement at ${id}`);
   return found;
+};
+
+const refused = (text: string, name = "") => {
+  const result = parseSpoiler(text, name);
+  if (result.ok) throw new Error("accepted");
+  return [result.error, result.detail];
 };
 
 /** The same text with its document changed. */
@@ -327,12 +334,6 @@ describe("the seed", () => {
 });
 
 describe("what it refuses", () => {
-  const refused = (text: string, name = "") => {
-    const result = parseSpoiler(text, name);
-    if (result.ok) throw new Error("accepted");
-    return [result.error, result.detail];
-  };
-
   it("withholds a race seed's and a mystery seed's, with the site's reason", () => {
     expect(refused(textOf(DAILY), nameOf(DAILY))).toEqual(["stripped", "off"]);
     expect(refused(textOf(MYSTERY), nameOf(MYSTERY))).toEqual([
@@ -494,6 +495,81 @@ describe("what it refuses", () => {
         }),
       ),
     ).toEqual(["not-a-spoiler", "playthrough"]);
+  });
+});
+
+describe("a retro seed's spoiler", () => {
+  // World::getSpoiler writes every small key of a generic-key seed as a bare
+  // `Key`, with no world (app/World.php:965)
+  const retro = logOf(parseSpoiler(textOf(RETRO), nameOf(RETRO)));
+
+  it("reads the bare Key as the generic key, 19 times", () => {
+    const keys = retro.placements.filter((p) => p.itemName === "Key");
+    expect(keys).toHaveLength(19);
+    expect(keys.every((p) => p.item === null)).toBe(true);
+    expect(retro.extra.settings?.mode).toEqual({ known: true, value: "retro" });
+    expect(retro.placements).toHaveLength(
+      Object.entries(jsonOf(RETRO)).reduce(
+        (sum, [key, value]) =>
+          [
+            "meta",
+            "Shops",
+            "Bosses",
+            "Special",
+            "Equipped",
+            "playthrough",
+          ].includes(key)
+            ? sum
+            : sum + Object.keys(value as object).length,
+        0,
+      ) + 4,
+    );
+  });
+
+  it("reads the shops that sell a key", () => {
+    const sold = retro.extra.shops.flatMap((shop) =>
+      shop.items.map((item) => item.name),
+    );
+    expect(sold).toContain("Key");
+  });
+
+  it("still refuses a bare name that is no item the site writes", () => {
+    for (const bare of ["Hookshot", "Keys", "Key:2", "key"]) {
+      expect(
+        refused(
+          changed(RETRO, (doc) => {
+            const [first] = Object.keys(doc["Light World"]);
+            doc["Light World"][first as string] = bare;
+          }),
+        ),
+      ).toEqual(["unsupported", "multiworld"]);
+    }
+  });
+
+  it("still refuses another world's item in a retro log", () => {
+    expect(
+      refused(
+        changed(RETRO, (doc) => {
+          const [first] = Object.keys(doc["Light World"]);
+          doc["Light World"][first as string] = "Hookshot:2";
+        }),
+      ),
+    ).toEqual(["unsupported", "multiworld"]);
+  });
+
+  it("reads a location that holds nothing, written bare", () => {
+    const empty = logOf(
+      parseSpoiler(
+        changed(RETRO, (doc) => {
+          const [first] = Object.keys(doc["Light World"]);
+          doc["Light World"][first as string] = "Nothing";
+        }),
+        nameOf(RETRO),
+      ),
+    );
+    expect(
+      empty.placements.filter((p) => p.itemName === "Nothing"),
+    ).toHaveLength(1);
   });
 });
 
