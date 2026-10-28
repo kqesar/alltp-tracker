@@ -290,7 +290,7 @@
     {
       "file": "app/Randomizer.php",
       "module": "src/goals.ts",
-      "role": "prepareWorld: where each goal puts the Triforce, which go mode reaches",
+      "role": "prepareWorld: where each goal puts the Triforce, which go mode reaches; placeBosses: the bosses each slot may hold under boss shuffle, read by src/bosses.ts",
       "status": "ported"
     },
     {

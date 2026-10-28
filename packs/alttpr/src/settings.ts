@@ -18,9 +18,8 @@
 // setting derived from one is then unknown to the engine, which folds it to
 // maybe (a flag either way, a number in its range).
 //
-// Left out: boss shuffle (each
-// dungeon keeps the boss its region names, see bosses.ts); the triforce-hunt
-// and ganonhunt goals (triforce pieces are not items of this pack).
+// Left out: the triforce-hunt and ganonhunt goals (triforce pieces are not
+// items of this pack).
 
 /** A config value the player has not discovered yet. */
 export const UNKNOWN = { unknown: true } as const;
@@ -78,6 +77,12 @@ export type AlttprSettings = {
    * fill rule reads it (SkullWoods.php:107).
    */
   readonly forceSkullWoodsKey: Flag;
+  /**
+   * enemizer.bossShuffle is not 'none' (Randomizer.php:396-447): a
+   * dungeon's boss may be another's (bosses.ts). 'simple', 'full' and
+   * 'random' let each slot hold the same bosses, so one flag says it.
+   */
+  readonly bossShuffle: Flag;
 
   /** goal is 'ganon', the default (World.php:67; DarkWorld/NorthEast.php:213). */
   readonly ganonGoal: Flag;
@@ -219,6 +224,9 @@ const POOLS = [
   "superexpert",
 ] as const;
 
+/** The boss shuffles (config/alttp.php:241-246, Randomizer.php:396-447). */
+export const BOSS_SHUFFLES = ["none", "simple", "full", "random"] as const;
+
 /** The item functionalities (World.php:216-259). */
 const FUNCTIONALITIES = ["expert", "hard", "normal", "superexpert"] as const;
 
@@ -255,6 +263,7 @@ export type UpstreamConfig = {
   readonly dungeonItems?: "full" | "mc" | "mcs" | "standard";
   readonly "crystals.ganon"?: Discovered<number>;
   readonly "crystals.tower"?: Discovered<number>;
+  readonly "enemizer.bossShuffle"?: Discovered<(typeof BOSS_SHUFFLES)[number]>;
   readonly "enemizer.enemyHealth"?: string;
   readonly goal?: Discovered<(typeof GOALS)[number]>;
   readonly ignoreCanKillEscapeThings?: boolean;
@@ -310,6 +319,7 @@ const KEYS: Readonly<Record<keyof UpstreamConfig, Check>> = {
   "crystals.tower": orUnknown(isCrystals),
   difficulty: isString,
   dungeonItems: oneOf("full", "mc", "mcs", "standard"),
+  "enemizer.bossShuffle": orUnknown(oneOf(...BOSS_SHUFFLES)),
   "enemizer.enemyHealth": isString,
   goal: orUnknown(oneOf(...GOALS)),
   ignoreCanKillEscapeThings: isBoolean,
@@ -418,6 +428,9 @@ export function settingsFromUpstream(
     advancedPlacement: is(c.itemPlacement, "advanced"),
     basicPlacement: basic,
     bossNormalLocation: c["region.bossNormalLocation"] ?? true,
+    bossShuffle: isUnknown(c["enemizer.bossShuffle"])
+      ? UNKNOWN
+      : (c["enemizer.bossShuffle"] ?? "none") !== "none",
     canBootsClip: false,
     canBunnyRevive: false,
     canBunnySurf: false,

@@ -5,8 +5,9 @@
 // app/Boss.php:68-129 for the rules, and each region's constructor for its
 // boss (`$this->boss = Boss::get(...)`). A region's rule reads its boss
 // through its slot: `@canBeatEasternPalaceBoss` is `$this->boss->canBeat`
-// in EasternPalace.php. Boss shuffle (enemizer.bossShuffle) would rebind the
-// slots; the pack does not model it, so each dungeon keeps its vanilla boss.
+// in EasternPalace.php. Boss shuffle (enemizer.bossShuffle, Randomizer.php:
+// 361-452) rebinds the slots: the `bossShuffle` setting and the facts of
+// what the player knows of each slot's boss (BOSS_FACTS) pick the rule.
 //
 // `!setting(basicPlacement)` is upstream's `itemPlacement !== 'basic'`,
 // true in the advanced placement and in the upstream tests, which set no
@@ -70,13 +71,149 @@ const region = (file: string, line: number): Source =>
   `app/Region/Standard/${file}.php:${line}`;
 
 /**
- * The boss each region fights, `Region::$boss` as its constructor sets it.
- * Ganon's Tower has four: Agahnim 2 and the three it meets on the way up
- * (`boss_bottom`, `boss_middle`, `boss_top`). Agahnim in Hyrule Castle Tower
- * and Ganon are not fought through Boss::canBeat: their regions' rules say
- * what beats them.
+ * The bosses boss shuffle places: Boss::all (Boss.php:68-129) less the two
+ * Agahnims, which `canPlaceBoss` refuses everywhere (Region.php:98-111);
+ * Ganon is no boss of Boss::all's.
  */
-export const BOSS_SLOTS = {
+export const SHUFFLED_BOSSES = [
+  "armosKnights",
+  "lanmolas",
+  "moldorm",
+  "helmasaurKing",
+  "arrghus",
+  "mothula",
+  "blind",
+  "kholdstare",
+  "vitreous",
+  "trinexx",
+] as const;
+export type ShuffledBoss = (typeof SHUFFLED_BOSSES)[number];
+
+/** Tower of Hera's and Ganon's Tower's top: no room for these five. */
+const NARROW = [
+  "armosKnights",
+  "arrghus",
+  "blind",
+  "lanmolas",
+  "trinexx",
+] as const satisfies readonly ShuffledBoss[];
+
+/**
+ * The thirteen slots `placeBosses` fills (Randomizer.php:361-449), under
+ * the prefix of their facts: each one's named rule, and the bosses its
+ * `canPlaceBoss` refuses beside the Agahnims (TowerOfHera.php:74-92,
+ * SkullWoods.php:81-97, GanonsTower.php:148-183 by level, Region.php:98-111
+ * for the rest). Agahnim 2 at Ganon's Tower's top (`canBeatGanonsTowerBoss`)
+ * and Agahnim in Castle Tower never move (Randomizer.php:451-452).
+ */
+export const BOSS_PLACES = {
+  desertPalace: { refuses: [], rule: "canBeatDesertPalaceBoss" },
+  easternPalace: { refuses: [], rule: "canBeatEasternPalaceBoss" },
+  ganonsTowerBottom: { refuses: [], rule: "canBeatGanonsTowerBottomBoss" },
+  ganonsTowerMiddle: {
+    refuses: ["blind"],
+    rule: "canBeatGanonsTowerMiddleBoss",
+  },
+  ganonsTowerTop: { refuses: NARROW, rule: "canBeatGanonsTowerTopBoss" },
+  icePalace: { refuses: [], rule: "canBeatIcePalaceBoss" },
+  miseryMire: { refuses: [], rule: "canBeatMiseryMireBoss" },
+  palaceOfDarkness: { refuses: [], rule: "canBeatPalaceOfDarknessBoss" },
+  skullWoods: { refuses: ["trinexx"], rule: "canBeatSkullWoodsBoss" },
+  swampPalace: { refuses: [], rule: "canBeatSwampPalaceBoss" },
+  thievesTown: { refuses: [], rule: "canBeatThievesTownBoss" },
+  towerOfHera: { refuses: NARROW, rule: "canBeatTowerOfHeraBoss" },
+  turtleRock: { refuses: [], rule: "canBeatTurtleRockBoss" },
+} as const satisfies Readonly<
+  Record<
+    string,
+    { readonly refuses: readonly ShuffledBoss[]; readonly rule: string }
+  >
+>;
+export type BossPlaceId = keyof typeof BOSS_PLACES;
+
+/** What the player knows of each slot's boss; a slot left out is unknown. */
+export type BossKnowledge = Partial<
+  Readonly<Record<BossPlaceId, ShuffledBoss>>
+>;
+
+const capital = (word: string) =>
+  `${word.charAt(0).toUpperCase()}${word.slice(1)}`;
+
+const PLACE_IDS = Object.keys(BOSS_PLACES) as BossPlaceId[];
+
+/** The bosses a slot may hold under boss shuffle, in Boss::all's order. */
+export function bossesAt(place: BossPlaceId): readonly ShuffledBoss[] {
+  const refuses: readonly ShuffledBoss[] = BOSS_PLACES[place].refuses;
+  return SHUFFLED_BOSSES.filter((boss) => !refuses.includes(boss));
+}
+
+const factOf = (place: BossPlaceId, boss: ShuffledBoss) =>
+  `${place}BossIs${capital(boss)}`;
+const unknownFactOf = (place: BossPlaceId) => `${place}BossUnknown`;
+
+/** Every fact a slot may read: `easternPalaceBossIsBlind` … `…BossUnknown`. */
+export const BOSS_FACTS: readonly string[] = PLACE_IDS.flatMap((place) => [
+  ...bossesAt(place).map((boss) => factOf(place, boss)),
+  unknownFactOf(place),
+]);
+
+/**
+ * The facts that hold, each at 1, for what the player knows: a slot's boss
+ * once known, else its Unknown fact. A boss its slot cannot hold is no
+ * knowledge a seed could give: the slot stays unknown.
+ */
+export function bossFacts(
+  known: BossKnowledge,
+): Readonly<Record<string, number>> {
+  const facts: Record<string, number> = {};
+  for (const place of PLACE_IDS) {
+    const boss = known[place];
+    const fact =
+      boss !== undefined && bossesAt(place).includes(boss)
+        ? factOf(place, boss)
+        : unknownFactOf(place);
+    facts[fact] = 1;
+  }
+  return facts;
+}
+
+/** A boss's canBeat, as BOSSES names it. */
+const canBeat = (boss: ShuffledBoss) => `@canBeat${capital(boss)}`;
+
+/**
+ * A slot's boss under boss shuffle, as far as the player knows it: the boss
+ * known, or, while unknown, every boss the slot may hold beaten (yes), some
+ * (maybe), none (no). Swordless keeps Kholdstare in Ice Palace alone
+ * (Randomizer.php:380-394, Region.php:100-105): elsewhere it counts only
+ * with swords.
+ */
+function shuffledRule(place: BossPlaceId): string {
+  const bosses = bossesAt(place);
+  const all = bosses.map((boss) =>
+    boss === "kholdstare"
+      ? `(setting(swordless) | ${canBeat(boss)})`
+      : canBeat(boss),
+  );
+  const any = bosses.map((boss) =>
+    boss === "kholdstare"
+      ? `!setting(swordless) & ${canBeat(boss)}`
+      : canBeat(boss),
+  );
+  return [
+    ...bosses.map((boss) => `${factOf(place, boss)} & ${canBeat(boss)}`),
+    `${unknownFactOf(place)} & (${all.join(" & ")} | maybe & (${any.join(" | ")}))`,
+  ].join(" | ");
+}
+
+/**
+ * The boss each region fights without boss shuffle: `Region::$boss` as its
+ * constructor sets it, as `placeBosses` does for 'none' (Randomizer.php:
+ * 434-447). Ganon's Tower has four: Agahnim 2 and the three it meets on the
+ * way up (`boss_bottom`, `boss_middle`, `boss_top`). Agahnim in Hyrule
+ * Castle Tower and Ganon are not fought through Boss::canBeat: their
+ * regions' rules say what beats them.
+ */
+const VANILLA_SLOTS = {
   canBeatDesertPalaceBoss: {
     req: "@canBeatLanmolas",
     source: region("DesertPalace", 52),
@@ -134,6 +271,42 @@ export const BOSS_SLOTS = {
     source: region("TurtleRock", 57),
   },
 } as const satisfies Readonly<Record<string, Rule>>;
+type SlotName = keyof typeof VANILLA_SLOTS;
+
+/** A slot's rule: its vanilla boss, or, with boss shuffle, `shuffledRule`. */
+function slotRule(name: SlotName): Rule {
+  const { req, source } = VANILLA_SLOTS[name];
+  const place = PLACE_IDS.find((id) => BOSS_PLACES[id].rule === name);
+  if (place === undefined) return { req, source };
+  const either = `!setting(bossShuffle) & ${req} | setting(bossShuffle) & (${shuffledRule(place)})`;
+  return {
+    // Swordless keeps Kholdstare in Ice Palace, shuffled or not
+    // (Randomizer.php:380-383)
+    req:
+      place === "icePalace"
+        ? `setting(swordless) & ${req} | !setting(swordless) & (${either})`
+        : either,
+    source,
+  };
+}
+
+/**
+ * The boss each region fights, `Region::$boss`, which the region rules read
+ * through its slot. Without boss shuffle (enemizer.bossShuffle 'none'), the
+ * vanilla one. With it ('simple', 'full' or 'random': Randomizer.php:
+ * 396-433), any boss its slot's `canPlaceBoss` takes, which the player
+ * learns on meeting it (`shuffledRule`). 'simple' places each boss once
+ * (and Armos, Lanmolas and Moldorm twice), 'full' and 'random' may repeat
+ * them: a slot alone may hold the same bosses in all three. The generator
+ * fills the seed with each region's rule calling `$this->boss->canBeat`, so
+ * a slot whose boss is known reads as upstream's.
+ */
+export const BOSS_SLOTS = Object.fromEntries(
+  (Object.keys(VANILLA_SLOTS) as SlotName[]).map((name) => [
+    name,
+    slotRule(name),
+  ]),
+) as Readonly<Record<SlotName, Rule>>;
 
 /** Where a dungeon file writes the parts of its boss that dungeonBoss ports. */
 export interface BossLines {

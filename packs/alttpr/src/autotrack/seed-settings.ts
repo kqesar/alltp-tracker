@@ -244,7 +244,16 @@ export interface SeedSettingsReading {
   readonly itemFunctionality?: SeedSetting<SeedItemFunctionality>;
   /** entrances, like itemPlacement. */
   readonly entrances?: SeedSetting<SeedEntrances>;
+  /**
+   * enemizer.bossShuffle, like itemPlacement: no ROM table holds the
+   * setting, only the bosses the enemizer placed, which the player is not
+   * to learn before meeting each (so the ROM leaves it out).
+   */
+  readonly bossShuffle?: SeedSetting<SeedBossShuffle>;
 }
+
+/** upstream's enemizer.bossShuffle (config/alttp.php:241-246). */
+export type SeedBossShuffle = "none" | "simple" | "full" | "random";
 
 /** HUDDungeonItems' bits (tables.asm:161; vt CustomizerController.php:157-162). */
 export const DUNGEON_ITEM_BITS = {

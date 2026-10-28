@@ -1,13 +1,15 @@
 // What the player records, and the state the rules read from it.
 //
 // The player records items, the dungeons they finished and what each boss
-// dropped, what the medallion pads want, and with wild keys the keys they
-// found. toState turns that into the engine's state: the items as they
-// are, the events and prizes derived from the dungeons (the solver never
-// computes them), the pads' facts (medallions.ts) and the derived facts
+// dropped, what the medallion pads want, the bosses met under boss shuffle,
+// and with wild keys the keys they found. toState turns that into the
+// engine's state: the items as they are, the events and prizes derived from
+// the dungeons (the solver never computes them), the pads' facts
+// (medallions.ts), the boss slots' (bosses.ts) and the derived facts
 // (derived.ts). Knowledge is not monotone (learning a pad's medallion can
 // lower a location), so toState recomputes everything on every call.
 import type { State } from "@alltp/engine";
+import { type BossKnowledge, bossFacts } from "./bosses";
 import { derivedFacts } from "./derived";
 import {
   DUNGEONS,
@@ -120,6 +122,11 @@ export interface TrackerInput {
    */
   readonly medallions: PadKnowledge;
   /**
+   * Each dungeon's boss, as far as the player knows it: only a run with
+   * boss shuffle reads it. A slot left out is unknown.
+   */
+  readonly bosses?: BossKnowledge;
+  /**
    * The small keys found in each dungeon, with wild keys (keysanity). The
    * player does not track them otherwise, and they are not read then: the
    * key model (keys.ts) stands in for them. Nor are they with generic keys
@@ -168,7 +175,8 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
  * held by class (`held`) top up those the dungeons gave, from the next free
  * items of their class: a crystal counted takes a regular crystal while one
  * is left, so a count makes a crystal red only when there are more crystals
- * than regular ones. The pads' facts read an unknown pad as unknown. The
+ * than regular ones. The pads' facts read an unknown pad as unknown, the
+ * boss slots' an unknown boss as unknown. The
  * keys count only with wild keys that are not generic. A checked
  * event gives its item (EVENT_CHECKS). A count not known holds its fact
  * (unknown-counts.ts).
@@ -238,6 +246,7 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
       mire: input.medallions.mire ?? "unknown",
       turtleRock: input.medallions.turtleRock ?? "unknown",
     }),
+    ...bossFacts(input.bosses ?? {}),
     ...derivedFacts(state, settings),
     ...unknownCountFacts(input.unknown ?? {}, state),
   };

@@ -21,6 +21,7 @@ describe("seedFileReading", () => {
   it("reads an Open seed's settings", () => {
     expect(seedFileReading(seedFile("9MQ9gO1wMD"))).toEqual({
       accessibility: { known: true, value: "items" },
+      bossShuffle: { known: true, value: "none" },
       crystalsGanon: { known: true, value: 7 },
       crystalsTower: { known: true, value: 7 },
       // vt randomized it itself: its entrances are vanilla
@@ -38,6 +39,28 @@ describe("seedFileReading", () => {
       wildKeys: { known: true, value: false },
       wildMaps: { known: true, value: false },
     });
+  });
+
+  it("reads a boss-shuffled seed's boss shuffle, never its bosses", () => {
+    // alttpr.com's bGbbOaDWGP: enemizer boss shuffle "full"
+    const reading = seedFileReading(seedFile("bGbbOaDWGP"));
+
+    expect(reading?.bossShuffle).toEqual({ known: true, value: "full" });
+    expect(reading).toMatchObject({
+      accessibility: { value: "locations" },
+      itemPlacement: { value: "basic" },
+      mode: { value: "standard" },
+    });
+    for (const value of ["simple", "random"]) {
+      expect(
+        seedFileReading(withMeta({ "enemizer.boss_shuffle": value }))
+          ?.bossShuffle,
+      ).toEqual({ known: true, value });
+    }
+    expect(
+      seedFileReading(withMeta({ "enemizer.boss_shuffle": "madness" }))
+        ?.bossShuffle,
+    ).toEqual({ known: false, why: "unrecognized" });
   });
 
   it("reads a tournament seed's, whose spoiler is its meta alone", () => {
@@ -129,6 +152,7 @@ describe("seedFileReading", () => {
     const hidden = { known: false, why: "mystery" };
     expect(reading).toEqual({
       accessibility: hidden,
+      bossShuffle: hidden,
       crystalsGanon: hidden,
       crystalsTower: hidden,
       entrances: hidden,

@@ -102,6 +102,7 @@ export {
   decodeSeedSettings,
   SEED_SETTINGS_RANGES,
   type SeedAccessibility,
+  type SeedBossShuffle,
   type SeedEntrances,
   type SeedGoal,
   type SeedItemFunctionality,
@@ -114,7 +115,18 @@ export {
   type SeedSettingsReading,
   type SeedUnknown,
 } from "./autotrack/seed-settings";
-export { BOSS_SLOTS, BOSSES } from "./bosses";
+export {
+  BOSS_FACTS,
+  BOSS_PLACES,
+  BOSS_SLOTS,
+  BOSSES,
+  type BossKnowledge,
+  type BossPlaceId,
+  bossesAt,
+  bossFacts,
+  SHUFFLED_BOSSES,
+  type ShuffledBoss,
+} from "./bosses";
 export {
   DERIVED,
   DERIVED_FACTS,
@@ -274,6 +286,7 @@ export { seedFileReading } from "./seed-file";
 export { seedFileUrl, seedHashOf } from "./seed-link";
 export {
   type AlttprSettings,
+  BOSS_SHUFFLES,
   type Mode,
   OPEN,
   STANDARD,

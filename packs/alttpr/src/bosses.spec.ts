@@ -1,6 +1,17 @@
 import { evaluate, loadRules, parse, type Tri } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
-import { BOSS_SLOTS, BOSSES } from "./bosses";
+import {
+  BOSS_FACTS,
+  BOSS_PLACES,
+  BOSS_SLOTS,
+  BOSSES,
+  type BossKnowledge,
+  type BossPlaceId,
+  bossesAt,
+  bossFacts,
+  SHUFFLED_BOSSES,
+  type ShuffledBoss,
+} from "./bosses";
 import { HELPERS } from "./helpers";
 import { stateFromUpstream } from "./items";
 import { MEDALLION_RULES } from "./medallions";
@@ -9,6 +20,7 @@ import {
   type AlttprSettings,
   OPEN,
   settingsFromUpstream,
+  UNKNOWN,
   UPSTREAM_TEST,
 } from "./settings";
 
@@ -247,28 +259,203 @@ describe("the bosses", () => {
   });
 });
 
+/** A slot's rule with what the player knows of the bosses. */
+function slot(
+  name: keyof typeof BOSS_SLOTS,
+  settings: AlttprSettings,
+  items: readonly string[],
+  known: BossKnowledge = {},
+): Tri {
+  return evaluate(
+    parse(`@${name}`),
+    { ...stateFromUpstream(items), ...bossFacts(known) },
+    rules,
+    { settings },
+  );
+}
+
+/** Every item set of the golden tables, to hold a slot to its boss with. */
+const ITEM_SETS = [
+  ...new Set(
+    Object.values(GOLDEN).flatMap((rows) =>
+      rows.map(([, items]) => items.join(",")),
+    ),
+  ),
+].map((items) => (items === "" ? [] : items.split(",")));
+
+const shuffled = (
+  bossShuffle: "simple" | "full" | "random" | typeof UNKNOWN,
+  config: Record<string, unknown> = {},
+) =>
+  settingsFromUpstream("standard", {
+    "enemizer.bossShuffle": bossShuffle,
+    itemPlacement: "advanced",
+    ...config,
+  });
+const FULL = shuffled("full");
+
+/**
+ * Beats Moldorm, Helmasaur King, Mothula, Kholdstare and Vitreous in the
+ * advanced placement, and Armos, Lanmolas and Blind too: neither Arrghus
+ * (no hookshot) nor Trinexx (no ice rod).
+ */
+const NO_ARRGHUS_NOR_TRINEXX = ["ProgressiveSword", "Hammer", "FireRod"];
+
+/** alttpr.com's bGbbOaDWGP (boss shuffle "full"): its spoiler's bosses. */
+const SEED_BOSSES: Readonly<Record<BossPlaceId, ShuffledBoss>> = {
+  desertPalace: "helmasaurKing",
+  easternPalace: "helmasaurKing",
+  ganonsTowerBottom: "trinexx",
+  ganonsTowerMiddle: "mothula",
+  ganonsTowerTop: "vitreous",
+  icePalace: "vitreous",
+  miseryMire: "blind",
+  palaceOfDarkness: "arrghus",
+  skullWoods: "blind",
+  swampPalace: "lanmolas",
+  thievesTown: "moldorm",
+  towerOfHera: "kholdstare",
+  turtleRock: "armosKnights",
+};
+
 describe("the boss slots", () => {
-  it("give every dungeon of the Standard world its vanilla boss", () => {
+  const VANILLA = {
+    canBeatDesertPalaceBoss: "canBeatLanmolas",
+    canBeatEasternPalaceBoss: "canBeatArmosKnights",
+    canBeatGanonsTowerBoss: "canBeatAgahnim2",
+    canBeatGanonsTowerBottomBoss: "canBeatArmosKnights",
+    canBeatGanonsTowerMiddleBoss: "canBeatLanmolas",
+    canBeatGanonsTowerTopBoss: "canBeatMoldorm",
+    canBeatIcePalaceBoss: "canBeatKholdstare",
+    canBeatMiseryMireBoss: "canBeatVitreous",
+    canBeatPalaceOfDarknessBoss: "canBeatHelmasaurKing",
+    canBeatSkullWoodsBoss: "canBeatMothula",
+    canBeatSwampPalaceBoss: "canBeatArrghus",
+    canBeatThievesTownBoss: "canBeatBlind",
+    canBeatTowerOfHeraBoss: "canBeatMoldorm",
+    canBeatTurtleRockBoss: "canBeatTrinexx",
+  } as const satisfies Record<keyof typeof BOSS_SLOTS, keyof typeof BOSSES>;
+
+  it.each(Object.entries(SETTINGS))(
+    "give every dungeon its vanilla boss without boss shuffle (%s)",
+    (_, settings) => {
+      expect(Object.keys(BOSS_SLOTS).sort()).toEqual(
+        Object.keys(VANILLA).sort(),
+      );
+      for (const [name, boss] of Object.entries(VANILLA)) {
+        for (const items of ITEM_SETS) {
+          expect(
+            slot(name as keyof typeof VANILLA, settings, items),
+            `${name} with ${items.join(", ")}`,
+          ).toBe(beat(boss, settings, items));
+        }
+      }
+    },
+  );
+
+  it("let each slot hold the bosses its canPlaceBoss takes", () => {
+    expect(bossesAt("towerOfHera")).toEqual([
+      "moldorm",
+      "helmasaurKing",
+      "mothula",
+      "kholdstare",
+      "vitreous",
+    ]);
+    expect(bossesAt("ganonsTowerTop")).toEqual(bossesAt("towerOfHera"));
+    expect(bossesAt("skullWoods")).not.toContain("trinexx");
+    expect(bossesAt("ganonsTowerMiddle")).not.toContain("blind");
+    expect(bossesAt("turtleRock")).toEqual(SHUFFLED_BOSSES);
+    expect(Object.keys(BOSS_PLACES)).toHaveLength(13);
+    // A real seed's bosses each sit in a slot that may hold them
+    for (const [place, boss] of Object.entries(SEED_BOSSES)) {
+      expect(bossesAt(place as BossPlaceId), place).toContain(boss);
+    }
+  });
+
+  it("are maybe while some boss the slot may hold is not beaten", () => {
+    // The defect: bGbbOaDWGP's Misery Mire and Turtle Rock read as their
+    // vanilla bosses, Vitreous and Trinexx, whatever the seed placed
+    const items = NO_ARRGHUS_NOR_TRINEXX;
+    expect(slot("canBeatMiseryMireBoss", OPEN, items)).toBe("yes");
+    expect(slot("canBeatMiseryMireBoss", FULL, items)).toBe("maybe");
+    expect(slot("canBeatTurtleRockBoss", FULL, items)).toBe("maybe");
+    expect(slot("canBeatSkullWoodsBoss", FULL, items)).toBe("maybe");
+    // Neither Arrghus nor Trinexx fits at Tower of Hera nor at the top
+    expect(slot("canBeatTowerOfHeraBoss", FULL, items)).toBe("yes");
+    expect(slot("canBeatGanonsTowerTopBoss", FULL, items)).toBe("yes");
+  });
+
+  it("are yes when every boss is beaten, no when none is", () => {
+    const everything = [
+      ...NO_ARRGHUS_NOR_TRINEXX,
+      "Hookshot",
+      "IceRod",
+      "ProgressiveSword",
+      "ProgressiveSword",
+    ];
+    for (const bossShuffle of ["simple", "full", "random"] as const) {
+      const settings = shuffled(bossShuffle);
+      for (const name of Object.keys(BOSS_SLOTS)) {
+        const rule = name as keyof typeof BOSS_SLOTS;
+        expect(slot(rule, settings, everything), name).toBe("yes");
+        expect(slot(rule, settings, []), name).toBe("no");
+      }
+    }
+    // Lanmolas falls to the fire rod alone: maybe, never no
+    expect(slot("canBeatEasternPalaceBoss", FULL, ["FireRod"])).toBe("maybe");
+  });
+
+  it("read the boss the player knows exactly", () => {
+    const blind = { miseryMire: "blind" } as const;
+    expect(slot("canBeatMiseryMireBoss", FULL, ["Hammer"], blind)).toBe("yes");
+    expect(slot("canBeatMiseryMireBoss", FULL, ["FireRod"], blind)).toBe("no");
+    const basic = shuffled("full", { itemPlacement: "basic" });
+    expect(slot("canBeatMiseryMireBoss", basic, ["Hammer"], blind)).toBe("no");
     expect(
-      Object.fromEntries(
-        Object.entries(BOSS_SLOTS).map(([slot, { req }]) => [slot, req]),
-      ),
-    ).toEqual({
-      canBeatDesertPalaceBoss: "@canBeatLanmolas",
-      canBeatEasternPalaceBoss: "@canBeatArmosKnights",
-      canBeatGanonsTowerBoss: "@canBeatAgahnim2",
-      canBeatGanonsTowerBottomBoss: "@canBeatArmosKnights",
-      canBeatGanonsTowerMiddleBoss: "@canBeatLanmolas",
-      canBeatGanonsTowerTopBoss: "@canBeatMoldorm",
-      canBeatIcePalaceBoss: "@canBeatKholdstare",
-      canBeatMiseryMireBoss: "@canBeatVitreous",
-      canBeatPalaceOfDarknessBoss: "@canBeatHelmasaurKing",
-      canBeatSkullWoodsBoss: "@canBeatMothula",
-      canBeatSwampPalaceBoss: "@canBeatArrghus",
-      canBeatThievesTownBoss: "@canBeatBlind",
-      canBeatTowerOfHeraBoss: "@canBeatMoldorm",
-      canBeatTurtleRockBoss: "@canBeatTrinexx",
+      slot("canBeatMiseryMireBoss", basic, ["ProgressiveSword", "Cape"], blind),
+    ).toBe("yes");
+    // Another slot's knowledge leaves Misery Mire unknown
+    expect(
+      slot("canBeatMiseryMireBoss", FULL, ["Hammer"], { turtleRock: "blind" }),
+    ).toBe("maybe");
+    // A boss its slot cannot hold is no knowledge: the slot stays unknown
+    expect(bossFacts({ towerOfHera: "trinexx" })).toMatchObject({
+      towerOfHeraBossUnknown: 1,
     });
+    expect(BOSS_FACTS).not.toContain("towerOfHeraBossIsTrinexx");
+  });
+
+  it("keep Kholdstare in Ice Palace alone when swordless", () => {
+    const swordless = shuffled("full", { "mode.weapons": "swordless" });
+    const melt = ["FireRod", "Hammer"];
+    expect(slot("canBeatIcePalaceBoss", swordless, melt)).toBe(
+      beat("canBeatKholdstare", swordless, melt),
+    );
+    expect(slot("canBeatIcePalaceBoss", swordless, melt)).toBe("yes");
+    expect(slot("canBeatIcePalaceBoss", FULL, melt)).toBe("maybe");
+    // Elsewhere, Kholdstare is no boss a swordless seed places: the slot
+    // asks nothing to melt him
+    const noMelt = [
+      "Hammer",
+      "Hookshot",
+      "IceRod",
+      "Bow",
+      "BottleWithBee",
+      "HalfMagic",
+    ];
+    // Skull Woods never holds Trinexx, the one other boss left unbeaten
+    expect(slot("canBeatSkullWoodsBoss", swordless, noMelt)).toBe("yes");
+    expect(slot("canBeatSkullWoodsBoss", FULL, noMelt)).toBe("maybe");
+  });
+
+  it("are maybe at most while a Mystery run hides boss shuffle", () => {
+    const hidden = shuffled(UNKNOWN);
+    const items = NO_ARRGHUS_NOR_TRINEXX;
+    // Vitreous, the vanilla boss, is beaten; another may not be
+    expect(slot("canBeatMiseryMireBoss", hidden, items)).toBe("maybe");
+    expect(slot("canBeatTowerOfHeraBoss", hidden, items)).toBe("yes");
+    expect(slot("canBeatTurtleRockBoss", hidden, items)).toBe("maybe");
+    expect(slot("canBeatTurtleRockBoss", hidden, [])).toBe("no");
   });
 
   it("read as their boss does", () => {

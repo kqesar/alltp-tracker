@@ -12,7 +12,8 @@
 //
 // What meta says (World.php:991-1017): `mode`, `goal`, `weapons`, `logic`,
 // `dungeon_items`, `item_placement`, `accessibility`, `item_pool` and
-// `item_functionality` are the world's config; `entry_crystals_tower` and
+// `item_functionality` are the world's config, and so is
+// `enemizer.boss_shuffle` (its key holds the dot); `entry_crystals_tower` and
 // `entry_crystals_ganon` are the options the seed was asked for, as strings
 // ("random" when it was asked for random crystals, whose counts the file
 // drops: SendPatchToDisk.php:41-44). `shuffle` is the entrance
@@ -49,6 +50,8 @@ const SEED_FILE = z.object({
       accessibility: oneOf(["items", "locations", "none"]),
       // config/alttp.php:185-190
       dungeon_items: oneOf(["standard", "mc", "mcs", "full"]),
+      // config/alttp.php:241-246; World.php:1012 names it with its dot
+      "enemizer.boss_shuffle": oneOf(["none", "simple", "full", "random"]),
       // config/alttp.php:205-226
       entry_crystals_ganon: oneOf(CRYSTALS),
       entry_crystals_tower: oneOf(CRYSTALS),
@@ -134,6 +137,7 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
   if (meta.tournament && meta.spoilers === "mystery") {
     return {
       accessibility: MYSTERY,
+      bossShuffle: MYSTERY,
       crystalsGanon: MYSTERY,
       crystalsTower: MYSTERY,
       entrances: MYSTERY,
@@ -156,6 +160,7 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
     setting(count === null ? null : Number(count));
   return {
     accessibility: setting(meta.accessibility),
+    bossShuffle: setting(meta["enemizer.boss_shuffle"]),
     crystalsGanon: crystals(meta.entry_crystals_ganon),
     crystalsTower: crystals(meta.entry_crystals_tower),
     entrances:

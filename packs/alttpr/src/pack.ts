@@ -6,6 +6,7 @@ import {
   loadRules,
   type World,
 } from "@alltp/engine";
+import { BOSS_FACTS } from "./bosses";
 import { DERIVED_FACTS } from "./derived";
 import { ITEM_IDS } from "./items";
 import { MEDALLION_FACTS } from "./medallions";
@@ -19,13 +20,14 @@ import { STANDARD_REGIONS } from "./worlds/standard";
 
 /**
  * Every name a requirement may read from the state: the items, the
- * medallion facts, the facts derived from the items and those of the counts
+ * medallion facts, the boss slots' facts, the facts derived from the items and those of the counts
  * not known. Anything that compiles a world of this pack takes its item list
  * from here.
  */
 export const STATE_NAMES: readonly string[] = [
   ...ITEM_IDS,
   ...MEDALLION_FACTS,
+  ...BOSS_FACTS,
   ...DERIVED_FACTS,
   ...UNKNOWN_COUNT_FACTS,
 ];
