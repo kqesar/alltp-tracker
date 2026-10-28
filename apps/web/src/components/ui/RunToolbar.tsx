@@ -21,12 +21,8 @@ import { UndoRedoButtons } from "@/components/ui/UndoRedoButtons";
 import type { History } from "@/games/runHistory";
 import type { SaveFormat } from "@/games/saveFormat";
 import { useStatusLine } from "@/hooks/useStatusLine";
-import {
-  RACE_SHARE_LIVE_HELP,
-  RACE_SHARE_NOTE,
-  RACE_SHARE_WHY,
-} from "@/share/raceShare";
-import { SHARE_HELP, type ShareResult, shareRun } from "@/share/shareRun";
+import { raceShareGate } from "@/share/raceShare";
+import { useShare } from "@/share/useShare";
 import { isDesktopApp } from "@/utils/platform";
 import { saveFile } from "@/utils/saveFile";
 
@@ -76,12 +72,6 @@ type RunToolbarProps<P extends object> = {
   useStore: RunStore<P>;
 };
 
-/** What the Share dialog opens on in a race: no link, only its note. */
-const NO_LINK: Promise<ShareResult> = Promise.resolve({
-  link: null,
-  message: RACE_SHARE_NOTE,
-});
-
 /**
  * The toolbar of the games with no More menu (Super Metroid, SMZ3): Mode, New
  * game, Undo and Redo, the game's autotracking, Export, Import, Share and the
@@ -111,27 +101,17 @@ export const RunToolbar = <P extends object>({
     null,
   );
   const [pendingImport, setPendingImport] = useState<P | null>(null);
-  const [status, setStatus] = useStatusLine();
-  const [share, setShare] = useState<Promise<ShareResult> | null>(null);
+  const [status, setStatus, statusLine] = useStatusLine();
+  const sharing = useShare(race, () => [link(exportSave(useStore.getState()))]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { exportOff, shareOff, shareTitle } = raceShareGate(race);
+  const refuse = (reason: string) => setStatus(reason, "refused");
 
-  // The desktop app keeps Share in a race, for live follow, which it holds
-  const shareOff = race && !isDesktopApp;
-
-  const handleExport = () => {
-    if (race) return setStatus(RACE_SHARE_WHY);
+  const handleExport = () =>
     saveFile(
       `alltp-tracker-${game}-${new Date().toISOString().slice(0, 10)}.json`,
       exportSave(useStore.getState()),
     );
-  };
-
-  const handleShare = () => {
-    if (shareOff) return setStatus(RACE_SHARE_WHY);
-    setShare(
-      race ? NO_LINK : shareRun([link(exportSave(useStore.getState()))]),
-    );
-  };
 
   const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
     const [file] = event.target.files ?? [];
@@ -181,8 +161,9 @@ export const RunToolbar = <P extends object>({
           icon={<ExportIcon />}
           label="Export"
           onClick={handleExport}
+          onUnavailable={refuse}
           title="Export progress to a file"
-          unavailable={race ? RACE_SHARE_WHY : null}
+          unavailable={exportOff}
         />
         <button
           className="tracker-controls__button"
@@ -196,10 +177,11 @@ export const RunToolbar = <P extends object>({
         <ToolbarAction
           icon={<ShareIcon />}
           label="Share"
-          onClick={handleShare}
+          onClick={sharing.open}
+          onUnavailable={refuse}
           testId="share-button"
-          title={race ? RACE_SHARE_LIVE_HELP : SHARE_HELP}
-          unavailable={shareOff ? RACE_SHARE_WHY : null}
+          title={shareTitle}
+          unavailable={shareOff}
         />
         <button
           className="tracker-controls__button"
@@ -226,8 +208,9 @@ export const RunToolbar = <P extends object>({
         aria-live="polite"
         className="tracker-controls__status"
         data-testid={`${game}-status`}
+        data-tone={statusLine.tone}
       >
-        {status}
+        {status && <span key={statusLine.count}>{status}</span>}
       </p>
       {dialog === "mode" && <ModeDialog onClose={() => setDialog(null)} />}
       {dialog === "stream" &&
@@ -240,7 +223,7 @@ export const RunToolbar = <P extends object>({
             timerOption={streamSizeOf !== undefined}
           />
         ))}
-      <ShareDialog onClose={() => setShare(null)} race={race} share={share} />
+      <ShareDialog onClose={sharing.close} race={race} share={sharing.share} />
       <ConfirmDialog
         confirmLabel="New game"
         isOpen={dialog === "reset"}

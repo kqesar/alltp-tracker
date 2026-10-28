@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { RACE_SHARE_NOTE } from "@/share/raceShare";
 import { copyLink, type ShareResult } from "@/share/shareRun";
@@ -40,6 +40,7 @@ export const ShareDialog = ({
   const [result, setResult] = useState<ShareResult | null>(null);
   // What the last copy from the footer said, over the first copy's line
   const [again, setAgain] = useState<string | null>(null);
+  const messageId = useId();
 
   useEffect(() => {
     setResult(null);
@@ -58,25 +59,32 @@ export const ShareDialog = ({
   return (
     <Modal
       footer={
-        race ? undefined : (
-          <button
-            className="modal-btn modal-btn--ghost"
-            data-testid="share-copy-again"
-            disabled={!link}
-            onClick={() => {
-              if (link) void copyLink(link).then(setAgain);
-            }}
-            type="button"
-          >
-            Copy the snapshot link
-          </button>
-        )
+        // In a race the button stays, off but described, so a focus on it
+        // when Race Mode comes on is not lost to the page behind the dialog
+        <button
+          aria-describedby={race ? messageId : undefined}
+          aria-disabled={race ? true : undefined}
+          className="modal-btn modal-btn--ghost"
+          data-testid="share-copy-again"
+          disabled={!link && !race}
+          onClick={() => {
+            if (link) void copyLink(link).then(setAgain);
+          }}
+          type="button"
+        >
+          Copy the snapshot link
+        </button>
       }
       isOpen={share !== null}
       onClose={onClose}
       title="Share this run"
     >
-      <p className="modal__message" data-testid="share-message" role="status">
+      <p
+        className="modal__message"
+        data-testid="share-message"
+        id={messageId}
+        role="status"
+      >
         {race ? RACE_SHARE_NOTE : (again ?? result?.message ?? "Copying…")}
       </p>
       {link && (

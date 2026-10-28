@@ -144,6 +144,12 @@
   transition: all var(--transition);
 }
 
+/* Off, yet focusable and described: a disabled button would drop the focus */
+.modal-btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .modal-btn--ghost {
   color: var(--color-text-secondary);
   background: transparent;
