@@ -117,8 +117,8 @@ export const TricksDialog = ({
         </p>
         {!modelled && (
           <p className="tricks-dialog__note" data-testid="tricks-unsupported">
-            This run's logic has no tricks yet (shuffled entrances, or logic not
-            modelled): nothing is marked.
+            This run's logic has no tricks yet (shuffled entrances, a glitched
+            logic, or logic not modelled): nothing is marked.
           </p>
         )}
         <div className="check-option">

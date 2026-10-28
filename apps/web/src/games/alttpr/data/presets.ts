@@ -32,6 +32,23 @@ type EntranceShuffle =
   | "insanity";
 
 /**
+ * alttpr.com's "Glitches Required" beyond None (config/alttp.php:174-180):
+ * the glitched logics a seed may be generated for. The pack ports
+ * NoGlitches alone (`logicModelled`), so a run of any of these shows every
+ * check as maybe. The six tricks of the Tricks dialog are no logic of
+ * alttpr.com's: Overworld Glitches turns four of them on, but with boots
+ * clips, mirror clips and super speed besides (config/logic.php:5-13),
+ * whose branches of the region rules the pack folds away, and upstream's
+ * tests/OverworldGlitches hold them; the Minor Glitches logic left in VT8.25
+ * (resources/views/updates.blade.php:965).
+ */
+export type Glitches =
+  | "overworld_glitches"
+  | "hybrid_major_glitches"
+  | "major_glitches"
+  | "no_logic";
+
+/**
  * alttpr.com's dungeon items (config/alttp.php:185-190): which of a
  * dungeon's own items may lie outside it. Each level lets out the ones below
  * it too (World.php:111-129): maps and compasses (mc), then small keys
@@ -93,6 +110,11 @@ export type RunSettings = {
   itemPool: ItemPool;
   /** Beyond normal: fairies cannot be caught, a bottle refills less magic */
   itemFunctionality: ItemFunctionality;
+  /**
+   * The glitched logic the seed was generated for; absent for alttpr.com's
+   * "None", the NoGlitches logic of every preset, which the pack ports.
+   */
+  glitches?: Glitches;
   /**
    * The settings not known yet, a Mystery run's: their values above only
    * stand in, and the logic reads them as unknown. Absent when all are known.
@@ -214,11 +236,13 @@ export const entrancesKnown = (settings: RunSettings): boolean =>
   settings.entranceShuffle !== "none" && settings.mode !== "inverted";
 
 /**
- * Whether the pack models a run's logic: vt's without shuffled entrances,
- * the entrance randomizer's for a crossed shuffle it models (crossedLogic).
+ * Whether the pack models a run's logic: vt's NoGlitches without shuffled
+ * entrances, the entrance randomizer's for a crossed shuffle it models
+ * (crossedLogic). No glitched logic (`Glitches`).
  */
 export const logicModelled = (settings: RunSettings): boolean =>
-  settings.entranceShuffle === "none" || crossedLogic(settings);
+  settings.glitches === undefined &&
+  (settings.entranceShuffle === "none" || crossedLogic(settings));
 
 /** The preset selected by default. */
 export const DEFAULT_PRESET_ID = "open";
@@ -286,6 +310,15 @@ export const FUNCTIONALITY_LABELS: Record<ItemFunctionality, string> = {
   hard: "Hard",
   normal: "Normal",
   superexpert: "Super Expert",
+};
+
+/** alttpr.com's "Glitches Required", None included. */
+export const GLITCHES_LABELS: Record<Glitches | "none", string> = {
+  hybrid_major_glitches: "Hybrid Major Glitches",
+  major_glitches: "Major Glitches",
+  no_logic: "No Logic",
+  none: "None",
+  overworld_glitches: "Overworld Glitches",
 };
 
 export const ENTRANCE_LABELS: Record<EntranceShuffle, string> = {
@@ -406,5 +439,6 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
       ACCESSIBILITY_LABELS[settings.accessibility],
     ),
     { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
+    { label: "Glitches", value: GLITCHES_LABELS[settings.glitches ?? "none"] },
   ];
 };

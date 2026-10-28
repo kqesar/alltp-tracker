@@ -89,6 +89,49 @@ test("says when alttpr.com has no such seed, or the text is no seed", async ({
   ).toHaveAccessibleName("Mode Open");
 });
 
+test("starts a glitched seed's run with no logic, every check maybe", async ({
+  page,
+}) => {
+  // The Open seed's file, as alttpr.com writes an Overworld Glitches one
+  const file = JSON.parse(
+    readFileSync(
+      new URL(
+        "../../../packs/alttpr/test/seed-files/9MQ9gO1wMD.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  file.spoiler.meta.logic = "OverworldGlitches";
+  await page.route(SEED_FILES, (route) =>
+    route.fulfill({
+      body: JSON.stringify(file),
+      contentType: "application/json",
+      headers: { "Access-Control-Allow-Origin": "*" },
+    }),
+  );
+  const dialog = await openRunTypes(page);
+
+  await load(page, "9MQ9gO1wMD");
+  const confirm = page.getByRole("dialog", { name: "Switch run type?" });
+  await expect(confirm).toContainText(
+    'Switching to "Open (Open, Ganon, 7/7, Overworld Glitches)"',
+  );
+  await confirm.getByRole("button", { name: "Switch & reset" }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(page.getByTestId("logic-note")).toHaveText(
+    "The tracker has no logic for Overworld Glitches seeds yet: every check shows as maybe.",
+  );
+  await expect(page.getByTestId("marker-sahasrahlas-hut")).toHaveAccessibleName(
+    /: maybe available$/,
+  );
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await expect(dialog.getByLabel("Current run settings")).toContainText(
+    "GlitchesOverworld Glitches",
+  );
+});
+
 for (const width of WIDTHS) {
   test(`the run types' seed form passes axe and fits at ${width}px`, async ({
     page,

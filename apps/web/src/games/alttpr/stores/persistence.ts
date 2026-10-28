@@ -21,6 +21,7 @@ import {
   DUNGEON_ITEM_LABELS,
   ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
+  GLITCHES_LABELS,
   GOAL_LABELS,
   getPreset,
   HIDEABLE,
@@ -490,6 +491,7 @@ const isRunSettings = (value: unknown): value is RunSettings => {
     accessibility,
     crystalsGanon,
     crystalsTower,
+    glitches,
     hidden,
     itemFunctionality,
     itemPlacement,
@@ -506,8 +508,13 @@ const isRunSettings = (value: unknown): value is RunSettings => {
       hidden.every((setting) =>
         (HIDEABLE as readonly unknown[]).includes(setting),
       ));
+  // A glitched logic; None is said by its absence, as every preset says it
+  const glitchesOk =
+    glitches === undefined ||
+    (glitches !== "none" && named(glitches, GLITCHES_LABELS));
   return (
     hiddenOk &&
+    glitchesOk &&
     typeof swordless === "boolean" &&
     isIntIn(crystalsTower, 0, 7) &&
     isIntIn(crystalsGanon, 0, 7) &&
@@ -537,7 +544,7 @@ export const validateProgress = (
     if (isRunSettings(saved.settings)) value.settings = saved.settings;
     else
       errors.push(
-        "settings must name a known mode, goal, entrance shuffle, dungeon items, item placement, accessibility, item pool and functionality, and crystal counts from 0 to 7",
+        "settings must name a known mode, goal, entrance shuffle, dungeon items, item placement, accessibility, item pool and functionality, any glitched logic, and crystal counts from 0 to 7",
       );
   }
 
