@@ -120,7 +120,7 @@ test.describe("the map", () => {
 
     await expect(
       light.getByTestId("marker-bomb-merchant"),
-    ).toHaveAccessibleName("Bomb Merchant: done");
+    ).toHaveAccessibleName("Bomb Merchant (100 rupees): done");
     await expect(fairy).toHaveAccessibleName(
       "Pyramid Fairy (2 checks): available",
     );

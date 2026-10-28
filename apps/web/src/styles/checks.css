@@ -417,6 +417,13 @@
   overflow-wrap: anywhere;
 }
 
+/* The rupees a paid check costs, kept in one piece after its name */
+.check-row__cost {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
 .check-row__state {
   display: inline-flex;
   gap: var(--spacing-xs);

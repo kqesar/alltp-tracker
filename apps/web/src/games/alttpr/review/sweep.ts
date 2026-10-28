@@ -27,6 +27,7 @@ import {
 } from "@alltp/pack-alttpr";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import { logicModelled } from "@/games/alttpr/data/presets";
+import { withCost } from "@/games/alttpr/logic/costs";
 import { PACK_ITEMS } from "@/games/alttpr/logic/packItems";
 import { findIcon, findName, splitName } from "@/games/alttpr/logic/runLog";
 import { packSettings } from "@/games/alttpr/logic/settings";
@@ -599,7 +600,13 @@ export function* sweepRun(
       takenKey: takenKey ?? null,
       tradeOff: null,
       waited: reach === null || taken === null ? null : taken - reach,
-      where: takenRow?.entry.placement.locationName ?? null,
+      where:
+        takenRow === undefined
+          ? null
+          : withCost(
+              takenRow.entry.placement.locationName,
+              takenRow.entry.placement.location,
+            ),
     });
   }
 

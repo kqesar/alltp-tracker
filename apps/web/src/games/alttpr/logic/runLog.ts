@@ -2,6 +2,7 @@
 // the board draws it, newest first, and the splits, the bosses in the order
 // they fell, as a speedrun timer splits a run.
 import { itemLabels, TOGGLE_ITEMS } from "@/games/alttpr/data/items";
+import { withCost } from "@/games/alttpr/logic/costs";
 import { dungeonName } from "@/games/alttpr/logic/settings";
 import { locationName } from "@/games/alttpr/logic/solution";
 import type { Timeline } from "@/games/alttpr/logic/timeline";
@@ -58,7 +59,9 @@ const itemOf = (key: string): [id: string, level: number | undefined] => {
 
 /** A find's name: the item at its level, the boss beaten, the location. */
 export const findName = (key: string): string => {
-  if (key.startsWith("check:")) return locationName(key.slice(6));
+  if (key.startsWith("check:")) {
+    return withCost(locationName(key.slice(6)), key.slice(6));
+  }
   const [id, level = 1] = itemOf(key);
   const bits = BITS[id];
   if (bits) return bits[level] ?? itemLabels(id);

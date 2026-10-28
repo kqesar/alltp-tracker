@@ -66,6 +66,16 @@ describe("Tooltip", () => {
     ).toBe("true");
   });
 
+  it("titles a paid check's marker with its price", () => {
+    renderMap();
+
+    fireEvent.pointerEnter(screen.getByTestId("marker-digging-game"), {
+      pointerType: "mouse",
+    });
+
+    expect(tooltip()).toHaveTextContent(/^Digging Game \(80 rupees\)/);
+  });
+
   it("says a one-location marker's state beside its name, out of its description", () => {
     act(() => analyzeNow());
     renderMap();

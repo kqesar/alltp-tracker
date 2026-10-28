@@ -1,4 +1,5 @@
 import { type ReactNode, useId, useState } from "react";
+import { withCost } from "@/games/alttpr/logic/costs";
 import { locationName } from "@/games/alttpr/logic/solution";
 import type { ReviewComparison } from "@/games/alttpr/review/adapter";
 import {
@@ -43,14 +44,19 @@ export const andList = (words: readonly string[], last = "and"): string =>
 /** Places by the region before their " - ": "Swamp Palace (11), Hobo". */
 const regionsOf = (locations: readonly string[], max = 3): string => {
   const counts = new Map<string, number>();
+  // A place of one check that is the check itself shows its price
+  const priced = new Map<string, string>();
   for (const id of locations) {
     const region = locationName(id).split(" - ")[0] ?? id;
     counts.set(region, (counts.get(region) ?? 0) + 1);
+    if (locationName(id) === region) priced.set(region, withCost(region, id));
   }
   const sorted = [...counts].sort((a, b) => b[1] - a[1]);
   const shown = sorted
     .slice(0, max)
-    .map(([region, n]) => (n > 1 ? `${region} (${n})` : region));
+    .map(([region, n]) =>
+      n > 1 ? `${region} (${n})` : (priced.get(region) ?? region),
+    );
   const more = sorted.slice(max).reduce((sum, [, n]) => sum + n, 0);
   return andList(
     more > 0

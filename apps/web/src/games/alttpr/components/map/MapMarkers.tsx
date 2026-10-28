@@ -4,6 +4,7 @@ import {
   type MapMarker,
 } from "@alltp/pack-alttpr";
 import type { CSSProperties } from "react";
+import { markerTitle } from "@/games/alttpr/logic/costs";
 import {
   dungeonCount,
   STATE_LABELS,
@@ -51,7 +52,7 @@ export const MapLocation = ({ marker }: { marker: MapMarker }) => {
   return (
     <button
       {...tooltip}
-      aria-label={`${marker.name}${count > 1 ? ` (${count} checks)` : ""}: ${STATE_LABELS[state]}${held ? `. Held: ${held.words}; ${state === "opened" ? "all checked" : "not all checked"}` : ""}`}
+      aria-label={`${markerTitle(marker)}${count > 1 ? ` (${count} checks)` : ""}: ${STATE_LABELS[state]}${held ? `. Held: ${held.words}; ${state === "opened" ? "all checked" : "not all checked"}` : ""}`}
       aria-pressed={state === "opened"}
       className={`mapspan chest state-glyph ${state}`}
       data-held={held && heldStyle ? "" : undefined}

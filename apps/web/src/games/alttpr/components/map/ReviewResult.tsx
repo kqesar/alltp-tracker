@@ -5,6 +5,7 @@ import {
   duration,
   ReviewWaits,
 } from "@/games/alttpr/components/map/ReviewWaits";
+import { withCost } from "@/games/alttpr/logic/costs";
 import { locationName } from "@/games/alttpr/logic/solution";
 import {
   compareReview,
@@ -136,7 +137,13 @@ const Steps = ({
               >
                 <td>{placement.sphere}</td>
                 <th scope="row">{wait?.name ?? placement.itemName}</th>
-                <td>{wait?.where ?? locationName(placement.location)}</td>
+                <td>
+                  {wait?.where ??
+                    withCost(
+                      locationName(placement.location),
+                      placement.location,
+                    )}
+                </td>
                 {sweep !== null && (
                   <td>
                     <PlayTime ms={wait?.reach ?? null} />
@@ -324,7 +331,11 @@ const NeverChecked = ({
                   null,
                 <>
                   <strong>{row.entry.placement.itemName}</strong>, at{" "}
-                  {row.entry.placement.locationName}: the seed needed it.
+                  {withCost(
+                    row.entry.placement.locationName,
+                    row.entry.placement.location,
+                  )}
+                  : the seed needed it.
                 </>,
               ),
             )}
@@ -348,7 +359,12 @@ const NeverChecked = ({
                   </strong>
                   :{" "}
                   {andList(
-                    rows.map(({ entry }) => entry.placement.locationName),
+                    rows.map(({ entry }) =>
+                      withCost(
+                        entry.placement.locationName,
+                        entry.placement.location,
+                      ),
+                    ),
                   )}
                   .
                 </>,

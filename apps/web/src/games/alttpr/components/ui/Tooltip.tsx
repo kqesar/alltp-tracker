@@ -17,6 +17,7 @@ import {
   type ShortcutPrefs,
 } from "@/games/alttpr/data/keymap";
 import { useCurrentAnalysis } from "@/games/alttpr/hooks/useRunAnalysis";
+import { markerTitle, withCost } from "@/games/alttpr/logic/costs";
 import {
   dungeonMissing,
   type Missing,
@@ -230,7 +231,7 @@ export const Tooltip = () => {
   const [placement, setPlacement] = useState<Placement | null>(null);
 
   const title =
-    marker?.name ??
+    (marker && markerTitle(marker)) ??
     (target?.kind === "item"
       ? itemLabels(target.item)
       : target?.kind === "text"
@@ -255,7 +256,7 @@ export const Tooltip = () => {
             id,
             label:
               marker.locations.length > 1 || dungeon !== undefined
-                ? locationLabel(marker, id)
+                ? withCost(locationLabel(marker, id), id)
                 : STATE_TEXT[state],
             state,
           };
