@@ -94,6 +94,11 @@ interface ItemSource {
   /** The count, from the range's bytes. decodeItems caps it at its max. */
   readonly read: (bytes: Bytes) => number;
   /**
+   * What memory holds before `read` takes back a count the game is known
+   * to make twice (Tower of Hera's basement key): what `beyond` reports.
+   */
+  readonly counted?: (bytes: Bytes) => number;
+  /**
    * Race Mode reads the range but not this item: which crystal is which
    * (v2.0: "but not identify if a crystal is a 5/6 crystal or a regular
    * crystal"), Zelda's rescue ("may not alert whether or not Zelda was
@@ -170,17 +175,19 @@ const HERA_BASEMENT_DOUBLE_COUNT = 1;
  */
 function smallKeys(code: DungeonCode): ItemSource {
   const at = MEMORY_RANGE["collected-keys"].bus;
+  // A sewers' or Hyrule Castle's key writes both bytes (stats.asm:142-145).
+  const counted = ({ byte }: Bytes) =>
+    code === "H2"
+      ? Math.max(byte(at + DUNGEON.H2.keys), byte(at + SEWER_KEYS))
+      : byte(at + DUNGEON[code].keys);
   return {
+    counted,
     range: "collected-keys",
-    read: ({ byte }) => {
-      // A sewers' or Hyrule Castle's key writes both bytes (stats.asm:142-145).
-      const counted =
-        code === "H2"
-          ? Math.max(byte(at + DUNGEON.H2.keys), byte(at + SEWER_KEYS))
-          : byte(at + DUNGEON[code].keys);
-      return code === "P3" && counted > 1
-        ? counted - HERA_BASEMENT_DOUBLE_COUNT
-        : counted;
+    read: (bytes) => {
+      const count = counted(bytes);
+      return code === "P3" && count > 1
+        ? count - HERA_BASEMENT_DOUBLE_COUNT
+        : count;
     },
   };
 }
@@ -375,9 +382,10 @@ export interface ItemReading {
   readonly counts: Partial<Record<ItemId, number>>;
   readonly unsettled: Partial<Record<ItemId, Unsettled>>;
   /**
-   * What memory counts beyond an item's max, before `counts` caps it: a
-   * count the game should not reach, such as a key counted twice somewhere
-   * other than Tower of Hera's basement. The readout names it.
+   * The count memory holds, for an item whose count goes beyond its max
+   * once any known double count is taken back: a count the game should not
+   * reach, such as a key counted twice somewhere other than Tower of Hera's
+   * basement. `counts` caps it; the readout names it.
    */
   readonly beyond: Partial<Record<ItemId, number>>;
 }
@@ -405,7 +413,7 @@ export function decodeItems(
     const read = (options.race && source.raceRead) || source.read;
     const value = read(bytes);
     counts[id] = Math.min(max, value);
-    if (value > max) beyond[id] = value;
+    if (value > max) beyond[id] = source.counted?.(bytes) ?? value;
   }
   return { beyond, counts, unsettled };
 }

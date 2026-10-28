@@ -322,7 +322,7 @@ describe("decodeItems", () => {
     expect(read(1).counts.keyP3).toBe(1);
     // A count past the double count is still reported
     expect(read(3).counts.keyP3).toBe(1);
-    expect(read(3).beyond).toEqual({ keyP3: 2 });
+    expect(read(3).beyond).toEqual({ keyP3: 3 });
   });
 
   it("reports a key count beyond a dungeon's keys rather than hiding it", () => {
