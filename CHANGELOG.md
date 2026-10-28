@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.58.0](https://github.com/kqesar/alltp-tracker/compare/v2.57.0...v2.58.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **web:** offer the full link when Share leaves the timeline out ([13de4ee](https://github.com/kqesar/alltp-tracker/commit/13de4ee0ff20b60768698f78998f23ac07d2f8e6))
+
+
+### 🐛 Bug Fixes
+
+* **web:** count a beaten boss's prize as taken in the review ([46e41df](https://github.com/kqesar/alltp-tracker/commit/46e41dfaea5d39e0baebfad364ed77ea9b937c5f))
+* **web:** say when a reviewed run came without its timeline ([1f834de](https://github.com/kqesar/alltp-tracker/commit/1f834dea12e944df4960a2601752af2d57f801a7))
+
+
+### 📚 Documentation
+
+* say why a late link drops its timeline, and what the review does then ([1ba9b3d](https://github.com/kqesar/alltp-tracker/commit/1ba9b3dd13175c13f78b1f65428f40e114176262))
+
 ## [2.57.0](https://github.com/kqesar/alltp-tracker/compare/v2.56.0...v2.57.0) (2026-10-28)
 
 
