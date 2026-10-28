@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.52.1](https://github.com/kqesar/alltp-tracker/compare/v2.52.0...v2.52.1) (2026-10-28)
+
+
+### 📚 Documentation
+
+* **alttpr:** say what autotracking gives the rules, and how keys are counted ([45f404c](https://github.com/kqesar/alltp-tracker/commit/45f404c6fe22305b2e69a5842578a1621ce299f7))
+
 ## [2.52.0](https://github.com/kqesar/alltp-tracker/compare/v2.51.0...v2.52.0) (2026-10-28)
 
 
