@@ -674,10 +674,12 @@ export const MEMORY_RANGES = [
   save("compasses", 0x364, 2, "items", "z3:sram.asm:119-126"),
   save("big-keys", 0x366, 2, "keys", "z3:sram.asm:119-126"),
   save("maps", 0x368, 2, "items", "z3:sram.asm:119-126"),
-  // MaximumHealth: the hearts on screen, $08 a heart, from the 3 Link starts
-  // with ($18) to 20 ($A0) (sram.asm:131-132). The race rules (v2.0) let a
-  // tracker show and react to the heart count: Race Mode reads it.
-  save("max-health", 0x36c, 1, "health", "z3:sram.asm:131-132"),
+  // HeartPieceQuarter, the pieces toward the next heart, 0 to 3, wrapping to
+  // $00 as the fourth adds a heart (sram.asm:130); then MaximumHealth, the
+  // hearts on screen, $08 a heart, from the 3 Link starts with ($18) to 20
+  // ($A0) (sram.asm:131-132). The race rules (v2.0) let a tracker show and
+  // react to the heart count and the heart piece count: Race Mode reads both.
+  save("health", 0x36b, 2, "health", "z3:sram.asm:130-132"),
   // The pendants and crystals taken (sram.asm:139-150): Race Mode reads
   // them as `prizes-held`, the crystals as a count alone (decode.ts).
   save("pendants", 0x374, 1, "prizes-held", "z3:sram.asm:139-140"),

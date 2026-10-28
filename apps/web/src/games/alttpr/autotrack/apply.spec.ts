@@ -677,17 +677,57 @@ describe("the hearts", () => {
     return memory;
   };
 
-  it("lays the hearts on screen from the game, Race Mode too", () => {
-    // 10 hearts and three pieces: 10 on screen, the cell's 8
+  it("lays the hearts on screen and the pieces toward the next from the game, Race Mode too", () => {
+    // 10 hearts and three pieces: 10 on screen, the cell's 8, and 3 quarters
     const memory = showing(0x50, 3);
     for (const race of [false, true]) {
       const board = fresh();
       const view = gameView(readingOf(memory, { race }), board);
-      expect(view.items.hearts, `race ${race}`).toBe(8);
-      expect(mergeView(board, view)?.next.items?.hearts).toBe(8);
+      expect(view.items, `race ${race}`).toMatchObject({
+        heartquarters: 3,
+        hearts: 8,
+      });
+      expect(mergeView(board, view)?.next.items).toMatchObject({
+        heartquarters: 3,
+        hearts: 8,
+      });
     }
-    // 9 and three pieces stay 9: one short of the basic placement's 10
-    expect(gameView(readingOf(showing(0x48, 3)), fresh()).items.hearts).toBe(7);
+    // 9 and three pieces: 9 and 3 quarters, never a tenth heart
+    expect(gameView(readingOf(showing(0x48, 3)), fresh()).items).toMatchObject({
+      heartquarters: 3,
+      hearts: 7,
+    });
+  });
+
+  it("lays a piece found as news, the hearts with it", () => {
+    const board = fresh();
+    const before = gameView(readingOf(showing(0x50, 2)), board);
+    const after = gameView(readingOf(showing(0x50, 3)), board);
+    const news = newsOf(before, after);
+    expect(news.items).toEqual({ heartquarters: 3, hearts: 8 });
+    expect(mergeView(board, news)?.next.items).toMatchObject({
+      heartquarters: 3,
+      hearts: 8,
+    });
+  });
+
+  it("joins the hearts and their quarters as one count on a merge", () => {
+    // The player's 11 hearts beat the game's 10 and 3 quarters, whole
+    const ahead = marked(fresh(), { heartquarters: 0, hearts: 9 });
+    const view = gameView(readingOf(showing(0x50, 3)), ahead);
+    const kept = mergeView(ahead, view)?.next.items ?? ahead.items;
+    expect(kept).toMatchObject({ heartquarters: 0, hearts: 9 });
+    // The game's 10 and 3 quarters beat the player's 10 and 1
+    const behind = marked(fresh(), { heartquarters: 1, hearts: 8 });
+    expect(mergeView(behind, view)?.next.items).toMatchObject({
+      heartquarters: 3,
+      hearts: 8,
+    });
+    // A sync takes the game's, both values
+    expect(syncView(ahead, view)?.next.items).toMatchObject({
+      heartquarters: 3,
+      hearts: 8,
+    });
   });
 
   it("leaves the cell alone while the game shows no hearts", () => {

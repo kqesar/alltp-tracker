@@ -419,35 +419,44 @@ export function decodeItems(
 }
 
 /**
- * Link's hearts on screen, whole, or why memory cannot say: a number from 1
- * to 20, which upstream's hasHealth reads as it is, the 3 Link starts with
- * being heart containers every world is given (PRE_COLLECTED).
+ * Link's health as the game's menu shows it, or why memory cannot say:
+ * `hearts`, the hearts on screen, whole, from 1 to 20, which upstream's
+ * hasHealth reads as it is, the 3 Link starts with being heart containers
+ * every world is given (PRE_COLLECTED); and `quarters`, the heart pieces
+ * toward the next heart, 0 to 3, each a quarter to hasHealth.
  */
-export type HealthReading = number | Unsettled;
+export type HealthReading =
+  | { readonly hearts: number; readonly quarters: number }
+  | Unsettled;
 
 /** A heart in MaximumHealth (sram.asm:132): $04 is half a heart. */
 const HEART = 0x08;
 /** MaximumHealth's top: 20 hearts (sram.asm:132). */
 const MAX_HEALTH = 0xa0;
+/** HeartPieceQuarter's top: it wraps to $00 after $03 (sram.asm:130). */
+const MAX_QUARTERS = 3;
 
 /**
- * The hearts on screen: MaximumHealth over $08 (sram.asm:131-132). A heart
- * container adds $08, and so do four heart pieces, the fourth turning
- * HeartPieceQuarter back to $00 (sram.asm:130), so the pieces toward the
- * next heart never make a whole one and are not read: 9 hearts and three
- * pieces are 9 hearts. Race Mode reads it (category `health`). A value off
- * the scale (no save loaded yet) is not read.
+ * The hearts on screen, MaximumHealth over $08 (sram.asm:131-132), and the
+ * pieces toward the next, HeartPieceQuarter (sram.asm:130). A heart
+ * container adds $08 to the first, and so do four heart pieces, the fourth
+ * turning the second back to $00, so the quarters never make a whole heart:
+ * 9 hearts and three pieces are 9 hearts and 3 quarters, as the pause menu
+ * draws them. Race Mode reads both (category `health`: v2.0's heart count
+ * and heart piece count). A value off either scale (no save loaded yet)
+ * is not read.
  */
 export function decodeHealth(
   memory: MemoryView,
   options: DecodeOptions,
 ): HealthReading {
-  const bytes = new Reader(memory, options.race).range("max-health");
+  const bytes = new Reader(memory, options.race).range("health");
   if (typeof bytes === "string") return bytes;
-  const value = bytes.byte();
-  return value < HEART || value > MAX_HEALTH
+  const quarters = bytes.byte(SAVE(0x36b));
+  const health = bytes.byte(SAVE(0x36c));
+  return health < HEART || health > MAX_HEALTH || quarters > MAX_QUARTERS
     ? "not-read"
-    : Math.floor(value / HEART);
+    : { hearts: Math.floor(health / HEART), quarters };
 }
 
 /**
