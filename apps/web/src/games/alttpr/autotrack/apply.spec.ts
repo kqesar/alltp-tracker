@@ -363,6 +363,24 @@ describe("gameView", () => {
     expect(gameView(reading, level("mcs")).smallKeys).toMatchObject({ 3: 2 });
     expect(gameView(reading, level("mc")).smallKeys).toEqual({});
   });
+
+  it("counts no small key with generic keys, keys outside their dungeons or not", () => {
+    // Retro: the base patch still counts Tower of Hera's basement cage
+    // twice, whatever generic key it holds (stats.asm:99-103)
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x4e0 + 10)] = 2;
+    const retro = getPreset("retro").settings;
+    for (const dungeonItems of ["standard", "mcs", "full"] as const) {
+      useGameStore.getState().applyRun("retro", { ...retro, dungeonItems });
+      const { checked, items, medallions, settings, smallKeys } =
+        useGameStore.getState();
+      const board = { checked, items, medallions, settings, smallKeys };
+      for (const race of [false, true]) {
+        const view = gameView(readingOf(memory, { race }), board);
+        expect(view.smallKeys, `${dungeonItems} race ${race}`).toEqual({});
+      }
+    }
+  });
 });
 
 describe("newsOf", () => {
