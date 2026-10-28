@@ -269,20 +269,42 @@ describe("gameView", () => {
     expect(gameView(readingOf(memory), fresh()).items.bow).toBe(1);
   });
 
-  it("leaves what Race Mode withholds out", () => {
+  it("lays in Race Mode what v2.0 permits, and leaves the rest out", () => {
     const memory = seedMemory({ race: true });
     orWord(memory, 0x472, EASTERN);
-    const view = gameView(readingOf(memory, { race: true }), fresh());
+    memory[SAVE(0x3cc)] = 0x0d; // Link carries the big bomb
+    const raced = readingOf(memory, { race: true });
+    const view = gameView(raced, fresh(), {}, {}, true);
 
-    expect(view.items).toMatchObject({ boss0: 2, hookshot: true, sword: 2 });
-    // Bottles are on the HUD; pendants and crystals are prizes
-    expect(view.items).not.toHaveProperty("bottle");
+    // The bottles (bottle contents) and the prizes held by class (prizes
+    // upon collection), the green pendant by name
+    expect(view.items).toMatchObject({
+      boss0: 2,
+      bottle: 1,
+      heldcrystals: 0,
+      heldgreen: 1,
+      heldpendants: 0,
+      hookshot: true,
+      sword: 2,
+    });
+    // No dungeon's prize named: the casual reading names Eastern Palace's
+    // by elimination (its pendant the only prize held), a race never ties
+    // a prize to its dungeon
+    expect(gameView(readingOf(memory), fresh()).items.reward0).toBe(1);
     expect(view.items).not.toHaveProperty("reward0");
-    expect(view.checked).toMatchObject({ "links-house": true });
-    expect(
-      Object.keys(view.checked).filter((id) => id.startsWith("eastern-")),
-    ).toEqual([]);
-    expect(view.counters).toEqual({});
+    // Nor Zelda's rescue
+    expect(view.items).not.toHaveProperty("escape");
+    // The checks inside dungeons (dungeon-locations), and the counter
+    expect(view.checked).toMatchObject({
+      "eastern-palace/boss": true,
+      "eastern-palace/compass-chest": true,
+      "links-house": true,
+    });
+    expect(view.counters.chest0).toEqual([1, 1]);
+    // The big bomb, though latched, is no check in Open, and the follower
+    // latches none in a race (follow.spec.ts)
+    expect(view.checked).not.toHaveProperty("bomb-merchant");
+    expect(raced.progress.bigBomb).toBe("race-mode");
   });
 
   it("leaves out what was not read yet", () => {
@@ -374,6 +396,9 @@ describe("mergeView", () => {
       boss0: 2,
       bottle: 1,
       chest0: 1,
+      // Zelda in the Sanctuary, the green pendant held
+      escape: 2,
+      heldgreen: 1,
       hookshot: true,
       sword: 2,
       // No Ten Bombs found: known, none
@@ -384,9 +409,9 @@ describe("mergeView", () => {
       "eastern-palace/compass-chest": true,
       "links-house": true,
     });
-    // Hookshot, sword, bottle, Armos Knights, the counter, the bombs, three
-    // checks
-    expect(laid?.count).toBe(9);
+    // Hookshot, sword, bottle, Armos Knights, the counter, the bombs, the
+    // escape, the green pendant, three checks
+    expect(laid?.count).toBe(11);
   });
 
   it("never undoes what the player marked beyond the game", () => {
@@ -514,10 +539,11 @@ describe("syncView", () => {
   it("leaves what Race Mode withholds as the player marked it", () => {
     const memory = seedMemory({ race: true });
     orWord(memory, 0x472, EASTERN);
-    const board = marked(fresh(), { bottle: 4, chest0: 0, reward0: 3 }, [
-      "eastern-palace/big-chest",
-      "kings-tomb",
-    ]);
+    const board = marked(
+      fresh(),
+      { bottle: 4, chest0: 0, escape: 1, reward0: 3 },
+      ["eastern-palace/big-chest", "kings-tomb"],
+    );
 
     const laid = syncView(
       board,
@@ -525,15 +551,19 @@ describe("syncView", () => {
     );
 
     expect(laid?.next.items).toMatchObject({
-      bottle: 4,
-      chest0: 0,
+      // What a race reads: the bottles, and the counter from the checks
+      bottle: 1,
+      chest0: 1,
+      // What it does not: the dungeon's prize, Zelda's rescue
+      escape: 1,
       hookshot: true,
       reward0: 3,
       sword: 2,
     });
-    // Outside dungeons the game tells; inside, the player does
+    // The game tells the checks, inside dungeons too
     expect(laid?.next.checked).toEqual({
-      "eastern-palace/big-chest": true,
+      "eastern-palace/boss": true,
+      "eastern-palace/compass-chest": true,
       "links-house": true,
     });
   });

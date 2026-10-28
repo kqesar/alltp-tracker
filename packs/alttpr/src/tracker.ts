@@ -36,6 +36,21 @@ export const PRIZES = {
 
 export type Prize = keyof typeof PRIZES;
 
+/**
+ * The prizes as an autotracker may count them in a race: the green
+ * pendant, the other pendants, and the crystals, never told 5/6 or not.
+ */
+export type HeldPrize = "crystal" | "greenPendant" | "pendant";
+
+/** The prize classes each held class takes its items from, in order. */
+const HELD_FROM: Readonly<Record<HeldPrize, readonly Prize[]>> = {
+  // The regular crystals first: a count alone never says a crystal is red
+  // until there are more crystals than regular ones
+  crystal: ["crystal", "redCrystal"],
+  greenPendant: ["greenPendant"],
+  pendant: ["pendant"],
+};
+
 type PrizeItem = (typeof PRIZES)[Prize][number];
 type EventItem = NonNullable<DungeonDef["event"]>["item"];
 
@@ -92,6 +107,12 @@ export interface TrackerInput {
   /** What each dungeon's boss drops, as far as the player knows it. */
   readonly prizes: Readonly<Partial<Record<DungeonId, Prize>>>;
   /**
+   * The prizes Link holds, whichever dungeons gave them, by class, as an
+   * autotracker counts them: at least these many, beside those the
+   * dungeons finished give. One left out is none known.
+   */
+  readonly held?: Readonly<Partial<Record<HeldPrize, number>>>;
+  /**
    * What the medallion pads want, as far as the player knows it. A pad left
    * out is unknown, as it is to a player who has not looked.
    */
@@ -139,7 +160,11 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
  * Agahnim 2 once Ganon's Tower is. A finished dungeon's prize, once known,
  * gives the next item of its class in dungeon order: two red crystals are
  * crystals 5 and 6, whichever dungeons dropped them; a prize the pool has
- * no item left for is a mistake, and gives nothing. The pads' facts read
+ * no item left for is a mistake, and gives nothing. The prizes held by
+ * class (`held`) top up those the dungeons gave, from the next free items
+ * of their class: a crystal counted takes a regular crystal while one is
+ * left, so a count makes a crystal red only when there are more crystals
+ * than regular ones. The pads' facts read
  * an unknown pad as unknown. The keys count only with wild keys that are
  * not generic. A checked
  * event gives its item (EVENT_CHECKS). A count not known holds its fact
@@ -179,6 +204,17 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
     const prize = input.prizes[d.id];
     const item = prize === undefined ? undefined : free[prize].shift();
     if (item !== undefined) state[item] = 1;
+  }
+  for (const [held, from] of Object.entries(HELD_FROM)) {
+    const pool = from.reduce((sum, prize) => sum + PRIZES[prize].length, 0);
+    const want = count(held, input.held?.[held as HeldPrize] ?? 0, pool);
+    let has = pool - from.reduce((sum, prize) => sum + free[prize].length, 0);
+    for (const prize of from) {
+      while (has < want && free[prize].length > 0) {
+        state[free[prize].shift() as string] = 1;
+        has++;
+      }
+    }
   }
   if (settings.wildKeys && !settings.genericKeys) {
     for (const d of DUNGEONS) {

@@ -134,12 +134,13 @@ describe("Race Mode as the player sets it", () => {
       setting: "on",
     });
     // Decoded as on a race seed: no entrance, no settings, no ROM stats, no
-    // check inside a dungeon
+    // Zelda's rescue
     expect(reading()).toMatchObject({ entrances: "race-mode", race: true });
     expect(reading()?.progress.romStats).toBe("race-mode");
+    expect(reading()?.progress.rescueZelda).toBe("race-mode");
     expect(reading()?.seed.mode).toEqual({ known: false, why: "race-mode" });
     expect(board().checked["links-house"]).toBe(true);
-    expect(board().checked["eastern-palace/compass-chest"]).toBeUndefined();
+    expect(board().items.escape).toBe(0);
     expect(
       JSON.parse(localStorage.getItem("alltp-tracker-autotrack") ?? "{}").state,
     ).toEqual({

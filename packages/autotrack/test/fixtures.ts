@@ -67,7 +67,8 @@ export const SAMPLE_SOURCE: AutotrackPackSource = {
     },
     {
       address: bus(0x7e_f4c0),
-      category: "dungeon-checks",
+      // A stat under a category no race permits (`other`)
+      category: "other",
       everyMs: 1000,
       id: "dungeon-counts",
       size: 0x10,

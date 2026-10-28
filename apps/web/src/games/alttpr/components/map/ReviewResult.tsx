@@ -43,7 +43,7 @@ const HIDDEN: Readonly<Record<Hidden, string>> = {
   "not-modelled":
     "This seed's logic is not one the tracker models (hidden settings, shuffled bosses, a glitched logic or a mode it does not model), so when each place came into logic is not shown.",
   "race-mode":
-    "Autotracking in Race Mode never reads which dungeon chest you opened, so most needed items are matched by the item, not by its place: when each waited is not shown.",
+    "Only places outside dungeons have times in this run (autotracked in Race Mode before version 2.53, which did not read a dungeon's chests), so most needed items are matched by the item, not by its place: when each waited is not shown.",
 };
 
 const iso = (ms: number) => `PT${Math.floor(ms / 1000)}S`;

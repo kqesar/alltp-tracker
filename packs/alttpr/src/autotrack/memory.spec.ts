@@ -44,6 +44,53 @@ function phasePlan(race: boolean) {
   return { plan, ranges };
 }
 
+/**
+ * Every range Race Mode reads, with its category: the header, the game
+ * mode, the locations checked (outside and inside the dungeons), the bosses,
+ * the items and dungeon items, the bottles, the heart count, the pendants
+ * and crystals taken, the progress and the goal.
+ */
+const RACE_READS = [
+  "rom-header:rom-header",
+  "game-mode:game-start",
+  "dungeon-rooms:dungeon-checks",
+  "swamp-palace-boss-room:boss-kills",
+  "tower-of-hera-boss-room:boss-kills",
+  "skull-woods-boss-room:boss-kills",
+  "kakariko-well-room:outside-checks",
+  "desert-palace-boss-room:boss-kills",
+  "hookshot-cave-room:outside-checks",
+  "secret-passage-room:outside-checks",
+  "palace-of-darkness-boss-room:boss-kills",
+  "misery-mire-boss-room:boss-kills",
+  "turtle-rock-boss-room:boss-kills",
+  "thieves-town-boss-room:boss-kills",
+  "eastern-palace-boss-room:boss-kills",
+  "ice-palace-boss-room:boss-kills",
+  "cave-rooms:outside-checks",
+  "overworld:outside-checks",
+  "equipment-a:items",
+  "equipment-b:items",
+  "equipment-c:items",
+  "bottles:bottles",
+  "compasses:items",
+  "big-keys:keys",
+  "maps:items",
+  "max-health:health",
+  "pendants:prizes-held",
+  "crystals:prizes-held",
+  "magic-upgrade:items",
+  "small-keys:keys",
+  "item-tracking:items",
+  "progress:items",
+  "progress-flags:outside-checks",
+  "npc-flags-vanilla:outside-checks",
+  "agahnim-2:boss-kills",
+  "npc-flags:outside-checks",
+  "stats-locked:goal",
+  "dungeons-completed:items",
+];
+
 const overlaps = (a: ByteRange, b: ByteRange) =>
   a.address < b.address + b.size && b.address < a.address + a.size;
 
@@ -104,7 +151,7 @@ describe("MEMORY_RANGES", () => {
     }
   });
 
-  it("forbids exactly the seed's settings, the entrances, the dungeon rooms, the prizes and the HUD", () => {
+  it("forbids exactly the seed's settings, the entrances, the prize table and map, the follower and the HUD", () => {
     const forbidden = MEMORY_RANGES.filter((range) => !permitted(range.id)).map(
       (range) => `${range.id}:${range.category}`,
     );
@@ -151,13 +198,12 @@ describe("MEMORY_RANGES", () => {
       "dark-room-art-bg1:navigation",
       "dark-room-dark:navigation",
       "dark-room-art-palette:navigation",
-      "dungeon-rooms:dungeon-checks",
       "bomb-count:hud",
       "bottle-index:hud",
-      "bottles:hud",
-      "pendants:prizes",
-      "crystals:prizes",
+      // The world Link is in, which picks the world map's half
       "current-world:prizes",
+      // Who follows Link: Zelda among them, whose rescue a race never tells
+      "follower:other",
       "map-overlay:prizes",
       // The ROM's own stats, which no category of the spec permits
       "stats:other",
@@ -255,6 +301,32 @@ describe("MEMORY_RANGES", () => {
     }
   });
 
+  it("lets Race Mode read exactly what v2.0 names", () => {
+    const read = MEMORY_RANGES.filter((range) => permitted(range.id)).map(
+      (range) => `${range.id}:${range.category}`,
+    );
+    expect(read).toEqual(RACE_READS);
+    // Each of v2.0's openings is one range under its own category
+    for (const [id, category] of [
+      ["dungeon-rooms", "dungeon-checks"],
+      ["bottles", "bottles"],
+      ["pendants", "prizes-held"],
+      ["crystals", "prizes-held"],
+    ] as const) {
+      expect(MEMORY_RANGE[id].category, id).toBe(category);
+      expect(
+        ALTTPR_RACE_PROFILE.categories[category]?.rule,
+        category,
+      ).toContain(
+        category === "bottles"
+          ? "bottle contents"
+          : category === "prizes-held"
+            ? "but not identify if a crystal is a 5/6 crystal"
+            : "dungeon-locations",
+      );
+    }
+  });
+
   it("reads this many bytes on a full tick", () => {
     // Without the two race flag bytes, which the race phase adds. The seed's
     // settings count in: every range falls due on the first tick, and the
@@ -269,7 +341,11 @@ describe("MEMORY_RANGES", () => {
     // rest of it is gated, read apart. The seed type left the race phase
     // for the casual one (a setting, which Race Mode never reads). The heart
     // count (max-health) joins the race phase: 3 bytes, the gap from the
-    // maps' range, in no new piece.
+    // maps' range, in no new piece. The dungeon rooms, the bottles, the
+    // pendants and the crystals joined it too (v2.0's dungeon-locations,
+    // bottle contents and prizes upon collection): the rooms bridge the
+    // boss rooms, so the race phase reads more bytes in fewer pieces; the
+    // follower byte (the big bomb) joins the casual one.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -280,9 +356,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 799, pieces: 22 },
-      race: { bytes: 366, pieces: 24 },
-      ranges: { casual: 35, race: 33 },
+      casual: { bytes: 340, pieces: 18 },
+      race: { bytes: 812, pieces: 12 },
+      ranges: { casual: 32, race: 37 },
     });
   });
 });

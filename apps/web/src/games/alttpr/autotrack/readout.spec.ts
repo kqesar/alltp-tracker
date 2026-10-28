@@ -77,19 +77,26 @@ describe("describeReading", () => {
   });
 
   it("says what Race Mode leaves unread, and shows none of it", () => {
-    const readout = describeSeed(seedMemory({ race: true }), true);
+    const memory = seedMemory({ race: true });
+    memory[SAVE(0x37a)] = 0x04 | 0x01; // crystals 5 and 6
+    const readout = describeSeed(memory, true);
 
-    expect(readout.items).toEqual(["Master Sword", "Hookshot"]);
-    expect(readout.prizes).toEqual([]);
-    expect(readout.prizesUnread).toBe("race-mode");
+    // The bottles (bottle contents), the pendants by name and the crystals
+    // counted (prizes upon collection), the checks inside dungeons
+    expect(readout.items).toEqual(["Master Sword", "Bottle ×1", "Hookshot"]);
+    expect(readout.prizes).toEqual(["Pendant of Courage", "Crystals ×2"]);
+    expect(readout.prizesUnread).toBeNull();
     expect(readout.checked).toEqual([
       { area: "Outside dungeons", locations: ["Link's House"] },
+      {
+        area: "Eastern Palace",
+        locations: expect.arrayContaining(["Compass Chest"]),
+      },
     ]);
     expect(readout.withheld.map(({ label }) => label)).toEqual([
-      "Bottles",
+      "Which crystals are 5 and 6",
       "Heart containers and pieces",
-      "Pendants and crystals",
-      expect.stringMatching(/^Checks inside dungeons \(\d+\)$/),
+      "Zelda's rescue",
     ]);
     expect(readout.withheld.every(({ why }) => why === "race-mode")).toBe(true);
     // Race Mode still reads the bosses

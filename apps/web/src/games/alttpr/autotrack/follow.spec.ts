@@ -12,6 +12,7 @@ import {
 } from "@/games/alttpr/autotrack/fixtures";
 import { createFollower } from "@/games/alttpr/autotrack/follow";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
+import { solutionOf } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import {
   comeOut,
@@ -749,5 +750,122 @@ describe("the run's seed", () => {
     store().reset();
 
     expect(store().seed).toBeNull();
+  });
+});
+
+describe("what no flag keeps, and what a race may read", () => {
+  /** FollowerIndicator (sram.asm:208-211): $0D the big bomb. */
+  const FOLLOWER = SAVE(0x3cc);
+  const solved = () =>
+    solutionOf(store()).keyed.state as Readonly<Record<string, number>>;
+
+  it("latches Inverted's Bomb Merchant once Link carries the big bomb, outside Race Mode", () => {
+    store().applyPreset("inverted");
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    follower.read(readingOf(memory));
+    expect(store().checked["bomb-merchant"]).toBeUndefined();
+
+    memory[FOLLOWER] = 0x0d; // bought: Link carries it
+    follower.read(readingOf(memory));
+    expect(store().checked["bomb-merchant"]).toBe(true);
+    expect(solved().bigRedBomb).toBe(1);
+
+    // The bomb blows up: the purchase stays, through a Sync too
+    memory[FOLLOWER] = 0x00;
+    follower.read(readingOf(memory));
+    follower.sync();
+    expect(store().checked["bomb-merchant"]).toBe(true);
+  });
+
+  it("latches nothing in Race Mode, nor in a world whose map has no Merchant", () => {
+    store().applyPreset("inverted");
+    const raced = seedMemory({ race: true });
+    raced[FOLLOWER] = 0x0d;
+    createFollower().read(readingOf(raced, { race: true }));
+    expect(store().checked["bomb-merchant"]).toBeUndefined();
+
+    store().applyPreset("open");
+    const open = seedMemory({ race: false });
+    open[FOLLOWER] = 0x0d;
+    createFollower().read(readingOf(open));
+    expect(store().checked["bomb-merchant"]).toBeUndefined();
+  });
+
+  it("keeps Standard's Light World shut until Zelda is in the Sanctuary, outside Race Mode", () => {
+    store().applyPreset("standard");
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x3c5)] = 0x01; // the uncle's item, Zelda not yet rescued
+    const follower = createFollower();
+    follower.read(readingOf(memory));
+    expect(store().items.escape).toBe(1);
+    expect(solved().rescueZelda).toBeUndefined();
+
+    memory[SAVE(0x3c5)] = 0x02; // the rain ends (zelda.asm:11-13)
+    follower.read(readingOf(memory));
+    expect(store().items.escape).toBe(2);
+    expect(solved().rescueZelda).toBe(1);
+
+    // A race never reads it: the escape stays as a run by hand counts it
+    store().applyPreset("standard");
+    const raced = seedMemory({ race: true });
+    raced[SAVE(0x3c5)] = 0x01;
+    createFollower().read(readingOf(raced, { race: true }));
+    expect(store().items.escape).toBe(0);
+    expect(solved().rescueZelda).toBe(1);
+  });
+
+  it("keeps the flute activated, which the flute's cell cannot say", () => {
+    store().applyPreset("inverted");
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x38c)] = 0x02; // the flute, not activated (sram.asm:175)
+    const follower = createFollower();
+    follower.read(readingOf(memory));
+    expect(store().items).toMatchObject({ flute: true, fluteactive: 0 });
+    expect(solved().flute).toBe(1);
+
+    memory[SAVE(0x38c)] = 0x01; // activated (inventory.asm:450-453)
+    follower.read(readingOf(memory));
+    expect(store().items).toMatchObject({ flute: true, fluteactive: 1 });
+    expect(solved().flute).toBe(2);
+  });
+
+  it("gives a race the pendants and crystals held, never a red crystal it cannot count", () => {
+    const memory = seedMemory({ race: true });
+    memory[SAVE(0x37a)] = 0x04 | 0x01; // crystals 5 and 6, taken
+    createFollower().read(readingOf(memory, { race: true }));
+
+    expect(store().items).toMatchObject({
+      heldcrystals: 2,
+      heldgreen: 1,
+      // No dungeon's prize named
+      reward0: 0,
+    });
+    const state = solved();
+    // Two crystals, read as regular ones: the Pyramid Fairy's red crystals
+    // stay the player's to mark
+    expect([state.crystal1, state.crystal2]).toEqual([1, 1]);
+    expect([state.crystal5, state.crystal6]).toEqual([undefined, undefined]);
+    expect(state.pendantOfCourage).toBe(1);
+  });
+
+  it("follows a shield a Pikit takes on Sync, and keeps it on the board until then", () => {
+    // A Pikit takes a fighter's or fire shield, never the mirror shield
+    // (zelda3 sprite_main.c:19892-19894), and gives it back when it dies
+    // (sprite.c:1413). The rules read the mirror shield alone
+    // (canBlockLasers, shield >= 3), so neither level moves them.
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x35a)] = 0x02; // the fire shield
+    const follower = createFollower();
+    follower.read(readingOf(memory));
+    expect(store().items.shield).toBe(2);
+
+    memory[SAVE(0x35a)] = 0x00; // taken
+    follower.read(readingOf(memory));
+    // A merge never lowers the board: the shield found stays marked
+    expect(store().items.shield).toBe(2);
+    // Sync from game sets the board to what Link holds
+    follower.sync();
+    expect(store().items.shield).toBe(0);
   });
 });

@@ -9,6 +9,7 @@ import {
   decodeItems,
   decodeMedallions,
   decodePrizes,
+  decodePrizesHeld,
   decodeProgress,
   decodeSeedSettings,
   type EntranceReading,
@@ -17,6 +18,7 @@ import {
   type MedallionReading,
   type MemoryView,
   type PrizeReading,
+  type PrizesHeldReading,
   type ProgressReading,
   type SeedSettingsReading,
   type Unsettled,
@@ -35,6 +37,11 @@ export type AutotrackReading = {
   readonly progress: ProgressReading;
   /** Link's hearts on screen (`decodeHealth`), Race Mode or not. */
   readonly health: HealthReading;
+  /**
+   * The pendants and crystals Link took, by class (`decodePrizesHeld`), Race
+   * Mode or not: the crystals counted, never told 5/6 or not.
+   */
+  readonly held: PrizesHeldReading;
   /**
    * The dungeon prizes the game shows, outside Race Mode: a finished
    * dungeon's, and those the world map draws. No other prize is kept.
@@ -60,7 +67,7 @@ export type AutotrackReading = {
  * Decode a snapshot.
  * @param memory - The session's snapshot
  * @param race - Whether Race Mode is on: the decoders then never ask for a
- * forbidden range and withhold dungeon checks
+ * forbidden range and withhold what the race rules keep from a race
  * @param at - When it was read
  */
 export const readMemory = (
@@ -75,6 +82,7 @@ export const readMemory = (
     checked: [...checks.checked],
     entrances: decodeEntrances(memory, options),
     health: decodeHealth(memory, options),
+    held: decodePrizesHeld(memory, options),
     items: decodeItems(memory, options),
     medallions: decodeMedallions(memory, options),
     prizes: decodePrizes(memory, options),

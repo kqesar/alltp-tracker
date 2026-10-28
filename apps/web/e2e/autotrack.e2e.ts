@@ -48,8 +48,8 @@ const bootSeed = (
   memory[SAVE(0x342)] = 0x01; // Hookshot
   memory[SAVE(0x357)] = 0x01; // Moon Pearl
   memory[SAVE(0x359)] = 0x02; // Master Sword
-  memory[SAVE(0x35c)] = 0x02; // one empty bottle: a HUD fact Race Mode leaves alone
-  memory[SAVE(0x374)] = 0x04; // the Pendant of Courage: a prize, forbidden
+  memory[SAVE(0x35c)] = 0x02; // one empty bottle: bottle contents, which races read
+  memory[SAVE(0x374)] = 0x04; // the Pendant of Courage: a prize held, read by class
   memory[SAVE(0x3c5)] = 0x02; // Zelda rescued
   memory[SAVE(0x208)] = 0x10; // Link's House chest (room $104)
   memory[SAVE(0x150)] = 0x10; // Eastern Palace's compass chest (room $A8)
@@ -427,7 +427,7 @@ test("undoes the player's own change, never the game's", async ({ page }) => {
   await expect(hammer).toHaveAccessibleName(cell("Hammer", "obtained"));
 });
 
-test("a race seed leaves pendants, crystals and dungeon chests to the player", async ({
+test("a race seed reads what v2.0 permits, and leaves the dungeons' prizes to the player", async ({
   page,
 }) => {
   bootSeed(bridge, { race: true });
@@ -444,29 +444,32 @@ test("a race seed leaves pendants, crystals and dungeon chests to the player", a
 
   await connect(page);
 
-  // What races permit comes in: items, bosses, checks outside dungeons
+  // What races permit comes in: items, bottles, bosses, checks
   await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
     cell("Hookshot", "obtained"),
+  );
+  await expect(page.getByTestId("item-bottle")).not.toHaveAccessibleName(
+    cell("Bottle", "not obtained"),
   );
   await expect(page.getByTestId("item-boss0")).toHaveAccessibleName(/defeated/);
   await expect(page.getByTestId("marker-links-house")).toHaveAccessibleName(
     "Link's House: done",
   );
-  // What they forbid stays as the player marked it, Sync included
+  // No dungeon's prize is ever named, and a merge never raises a counter
+  await expect(reward).toHaveAccessibleName(/reward: a crystal$/);
+  await expect(chests).toHaveAccessibleName(/chests: 0 left$/);
   await openDialog(page);
   await expect(dialog(page).getByTestId("autotrack-follow")).toContainText(
-    "pendants and crystals, chests inside dungeons, bottles",
+    "each dungeon's prize, red crystals included",
   );
+  // Sync sets the counter to the dungeon's checks, the prize stays yours
   await dialog(page).getByTestId("autotrack-sync").click();
   await expect(dialog(page).getByTestId("autotrack-sync-status")).toHaveText(
-    "The board already matches the game.",
+    /set to the game's/,
   );
   await page.keyboard.press("Escape");
   await expect(reward).toHaveAccessibleName(/reward: a crystal$/);
-  await expect(chests).toHaveAccessibleName(/chests: 0 left$/);
-  await expect(page.getByTestId("item-bottle")).toHaveAccessibleName(
-    cell("Bottle", "not obtained"),
-  );
+  await expect(chests).toHaveAccessibleName(/chests: 1 left, /);
   await expect.poll(() => bridge.reads.length).toBeGreaterThan(30);
   expect(forbiddenReads(bridge)).toEqual([]);
 });
@@ -606,11 +609,15 @@ test("a race seed shows the race-legal badge and is never read where Race Mode f
     "This is a race seed: the tracker reads only what races permit.",
   );
   await expect(shown.getByTestId("readout-items")).toContainText("Hookshot");
-  // What Race Mode withholds is neither read nor shown
-  await expect(shown.getByTestId("readout-prizes")).toHaveText(
-    /Not read in Race Mode/,
+  // The pendants by name and the bottles, as v2.0 permits; what Race Mode
+  // withholds (the prize table, the pads) is neither read nor shown
+  await expect(shown.getByTestId("readout-prizes")).toContainText(
+    "Pendant of Courage",
   );
-  await expect(shown.getByTestId("readout-items")).not.toContainText("Bottle");
+  await expect(shown.getByTestId("readout-items")).toContainText("Bottle");
+  await expect(shown.getByTestId("readout-race-mode")).toContainText(
+    "Which crystals are 5 and 6",
+  );
   await expect(shown.getByTestId("readout-shown-prizes")).toHaveText(
     /Not read in Race Mode/,
   );
@@ -621,11 +628,17 @@ test("a race seed shows the race-legal badge and is never read where Race Mode f
     /medallion: unknown/,
   );
   const withheld = shown.getByTestId("readout-race-mode");
-  for (const fact of ["Pendants and crystals", "Bottles", "Checks inside"]) {
+  for (const fact of [
+    "Which crystals are 5 and 6",
+    "Heart containers and pieces",
+    "Zelda's rescue",
+  ]) {
     await expect(withheld).toContainText(fact);
   }
+  // Link's House, and Eastern Palace's compass chest and boss: v2.0's
+  // dungeon-locations
   await expect(shown.getByTestId("readout-checked")).toContainText(
-    "Locations checked (1)",
+    "Locations checked (3)",
   );
 
   // Many polls later, still nothing forbidden asked for
@@ -662,8 +675,8 @@ test("Race Mode set always on reads a seed without the race flag as a race seed"
   await expect(shown.getByTestId("race-mode")).toHaveText(
     "Race Mode is always on, as you set it: the tracker reads only what races permit.",
   );
-  await expect(shown.getByTestId("readout-prizes")).toHaveText(
-    /Not read in Race Mode/,
+  await expect(shown.getByTestId("readout-race-mode")).toContainText(
+    "Which crystals are 5 and 6",
   );
   await expect.poll(() => bridge.reads.length).toBeGreaterThan(30);
   expect(forbiddenReads(bridge)).toEqual([]);
@@ -673,8 +686,9 @@ test("Race Mode set always on reads a seed without the race flag as a race seed"
     .getByRole("radio", { name: "Auto (the ROM's race flag)" })
     .check();
   await expect(shown.getByTestId("race-badge")).toHaveCount(0);
-  await expect(shown.getByTestId("readout-prizes")).toHaveText(
-    /Pendant of Courage/,
+  // Zelda's rescue, which no race is told
+  await expect(shown.getByTestId("readout-progress")).toContainText(
+    "Zelda rescued",
   );
   // The choice is the device's: a reload keeps it
   await always.check();

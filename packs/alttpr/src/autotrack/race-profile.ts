@@ -4,11 +4,11 @@
 // range it reads under one of these categories.
 import { defineRaceProfile, type RaceProfile } from "@alltp/autotrack";
 
-/** The rules racetime.gg's ALTTPR category links (read 2026-10-24). */
+/** The rules racetime.gg's ALTTPR category links (read 2026-10-28). */
 const RULES_URL =
   "https://docs.google.com/document/d/e/2PACX-1vTgsj0FMiWyaBOYP97e_ABc4P_0vIGiJxoUJ5Rj-PBr1T7i_zpyLqhLLVkbftPwS_B6nwad5j5zhtMg/pub";
 
-/** v2.0's line on the HUD's counts: the heart count, read; the rest, not. */
+/** v2.0's line on the HUD's counts: the heart count and the bottles, read. */
 const HUD_COUNTS =
   "The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.";
 
@@ -19,15 +19,30 @@ const STRICT =
 /**
  * The ALttPR rules: the "ALTTPR Auto-tracker Rules and Guidelines", version
  * 2.0 (2024), which racetime.gg's ALTTPR category links. Each `rule` quotes
- * it. Race Mode is stricter than v2.0 on purpose: it keeps the categories
- * v2.0 opened (checks inside dungeons, prizes upon collection, the HUD's
- * counts, some stats, the ROM's settings) forbidden until their limits are
- * clarified, but for the heart count (`health`: the hearts on screen), which
- * v2.0 names outright and the basic placement's dungeons ask for, and reads
- * only inside the memory windows below, in the SNES LoROM space, ends
- * inclusive (the internal header line $FFB0-$FFDF is bank $00). v2.0 lists
- * no addresses ("it does not matter where information is gathered, only
- * that its use is allowed or disallowed"): the windows are
+ * it. Race Mode reads what v2.0 permits in so many words, and nothing it
+ * leaves in doubt (in doubt, forbidden):
+ * - the items, the dungeon items, the bosses, the heart count (`health`)
+ *   and the bottles' contents (`bottles`), both named among the HUD's counts;
+ * - the locations checked, outside the dungeons and inside them
+ *   (`dungeon-checks`: "overworld-locations, underworld-locations, and
+ *   dungeon-locations"; "how many locations have been cleared, both in
+ *   total, and per dungeon"). A dungeon location checked says Link cleared
+ *   it, as a cave's says he was in the cave: that is the location tracking
+ *   v2.0 names, not his position, and the decoders read no other bit of a
+ *   room's word (its doors, the quadrants visited). Zelda's rescue, a
+ *   dungeon's event, stays out: "Likewise an auto-tracker may not alert
+ *   whether or not Zelda was rescued in a Standard opening seed.";
+ * - the pendants and crystals Link took (`prizes-held`): the pendants by
+ *   name, the crystals as a count, never which is crystal 5 or 6 (the
+ *   decoders read their field and let the count alone out), nor which
+ *   dungeon gave which (v2.0: "An auto-tracker may not associate an
+ *   acquired item with a specific location").
+ * It keeps forbidden the rest of the HUD's counts and the stats v2.0 opens
+ * within limits, the ROM's settings, and the ROM's prize table, a
+ * location's content. It reads only inside the memory windows below, in the
+ * SNES LoROM space, ends inclusive (the internal header line $FFB0-$FFDF is
+ * bank $00). v2.0 lists no addresses ("it does not matter where information
+ * is gathered, only that its use is allowed or disallowed"): the windows are
  * the tracker's own limit. They started as the earlier version's, whose
  * WRAM window ($7E:0000-$7E:00B0) held Link's coordinates ($20-$23), the
  * room ($A0) and the overworld screen ($8A). The race admins' clarification
@@ -51,9 +66,10 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
       permitted: true,
       rule: "Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal). This includes not auto-tracking who the dungeon boss is in Enemizer modes before the boss is defeated.",
     },
+    bottles: { permitted: true, rule: HUD_COUNTS },
     "dungeon-checks": {
-      permitted: false,
-      rule: `An auto-tracker is allowed to track whether or not a location's content has been acquired by the player. This includes: overworld-locations, underworld-locations, and dungeon-locations.${STRICT}`,
+      permitted: true,
+      rule: "An auto-tracker is allowed to track whether or not a location's content has been acquired by the player. This includes: overworld-locations, underworld-locations, and dungeon-locations. The tracker is allowed to display how many locations have been cleared, both in total, and per dungeon.",
     },
     entrances: {
       permitted: false,
@@ -96,9 +112,15 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
       permitted: true,
       rule: "An auto-tracker is allowed to track whether or not a location's content has been acquired by the player. This includes: overworld-locations, underworld-locations, and dungeon-locations.",
     },
+    // Which prize each dungeon holds, as the ROM's table and the world map
+    // tell it, and the world Link is in, which picks the map's half
     prizes: {
       permitted: false,
-      rule: `Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal). Map checks are not allowed to be auto-tracked, and trackers may not auto-track which crystal is a 5/6-crystal. The green pendant may not be auto-tracked before it is picked up.${STRICT}`,
+      rule: "Map checks are not allowed to be auto-tracked, and trackers may not auto-track which crystal is a 5/6-crystal. The green pendant may not be auto-tracked before it is picked up. ROM addresses associated with entrance locations and/or chest or other location contents should not ever be accessed by an auto-tracker before or during a race.",
+    },
+    "prizes-held": {
+      permitted: true,
+      rule: "Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal). The green pendant may not be auto-tracked before it is picked up. An auto-tracker may not associate an acquired item with a specific location.",
     },
     "race-flag": {
       permitted: true,

@@ -66,6 +66,7 @@ const holdingEverything = (race: boolean) => {
   // bows (sram.asm:180-185)
   memory.set([0xff, 0x03, 0xf0], SAVE(0x38c));
   memory[SAVE(0x3c5)] = 0x03; // Agahnim defeated (sram.asm:191-193)
+  memory[SAVE(0x3cc)] = 0x0d; // Link carries the big bomb (sram.asm:211)
   memory[SAVE(0x40f)] = 0x01; // Agahnim 2 too (events.asm:104-106)
   memory.fill(0xff, SAVE(0x472), SAVE(0x474)); // every prize taken
   for (const dungeon of LEGACY_DUNGEONS) checkIn(memory, `${dungeon}/boss`);
@@ -92,7 +93,14 @@ const shortOf = (
 ): string[] => {
   const board = freshBoard(settings);
   const reading = readingOf(holdingEverything(race), { race });
-  const view = gameView(reading, board, keysInHand(reading));
+  // The follower latches the big bomb as it sees it carried
+  const view = gameView(
+    reading,
+    board,
+    keysInHand(reading),
+    {},
+    reading.progress.bigBomb === true,
+  );
   const items = { ...view.items };
   for (const id of drop) delete items[id];
   const laid = mergeView(board, { ...view, items });
@@ -107,18 +115,22 @@ const shortOf = (
 
 /** What the game holds that the rules never get from it, and why. */
 const EXCEPTIONS: Readonly<Partial<Record<ItemId, string>>> = {
-  // No flag keeps Inverted's big bomb (check-flags.ts, UNMAPPED_LOCATIONS)
-  bigRedBomb: "the Bomb Merchant's bomb",
   // The silver bow: the board shows the bow and its silver arrows, which
   // canShootArrows2 reads beside it (`bow >= 2 | silverArrowUpgrade & bow`)
   bow: "the silver bow, as the bow and the silver arrows",
-  // The board's flute cell says found, not activated: canFly reads a flute
-  // found through canActivateOcarina, which only Inverted can deny
-  flute: "the active flute",
   // No memory says a shop sells them: the player marks the shop found
   shopArrow: "a retro shop's arrows",
   shopKey: "a retro shop's keys",
 };
+
+/**
+ * The big bomb, which no flag keeps (check-flags.ts, UNMAPPED_LOCATIONS):
+ * the follower latches the Bomb Merchant from the bomb carried, outside
+ * Race Mode (the follower byte also says Zelda follows) and in the one
+ * world whose map has the Merchant, Inverted, whose Pyramid Fairy wants it.
+ */
+const bombShort = (mode: RunSettings["mode"], race: boolean) =>
+  race || mode !== "inverted";
 
 /** The small keys, which the board records only while they leave their dungeons. */
 const SMALL_KEYS = ITEMS.map(({ id }) => id).filter((id) =>
@@ -126,24 +138,13 @@ const SMALL_KEYS = ITEMS.map(({ id }) => id).filter((id) =>
 );
 
 /**
- * What Race Mode keeps from the rules beside the exceptions: what the race
- * profile reads under a category it forbids, deliberately stricter than
- * v2.0 (race-profile.ts, STRICT): the bottles' contents (`hud`), and the
- * pendants and crystals (`prizes`).
+ * What Race Mode keeps from the rules beside the exceptions and the bomb:
+ * nothing. The bottles (v2.0's bottle contents) and the pendants and
+ * crystals (prizes upon collection) reach them; the crystals as a count,
+ * which gives all seven here, red ones included, only because seven
+ * crystals leave none regular to count.
  */
-const RACE_WITHHELD: readonly ItemId[] = [
-  "bottle",
-  "pendantOfCourage",
-  "pendantOfPower",
-  "pendantOfWisdom",
-  "crystal1",
-  "crystal2",
-  "crystal3",
-  "crystal4",
-  "crystal5",
-  "crystal6",
-  "crystal7",
-];
+const RACE_WITHHELD: readonly ItemId[] = [];
 
 const RUNS = (["open", "standard", "inverted", "retro"] as const).flatMap(
   (mode) =>
@@ -173,6 +174,7 @@ const expectedShort = (
   return ITEMS.map(({ id }) => id).filter(
     (id) =>
       id in EXCEPTIONS ||
+      (id === "bigRedBomb" && bombShort(mode, race)) ||
       (!keysOnBoard && SMALL_KEYS.includes(id)) ||
       (race && RACE_WITHHELD.includes(id)),
   );
@@ -222,6 +224,22 @@ describe("autotracking feeds the rules", () => {
     ]);
     expect(short).toEqual(
       expect.arrayContaining(["heartContainer", "pieceOfHeart", "tenBombs"]),
+    );
+  });
+
+  it("would catch the flute activated, and the prizes a race reads, left off the board", () => {
+    // The board before 2.53: no cell for them
+    const settings = getPreset("open").settings;
+    const cells = ["fluteactive", "heldcrystals", "heldgreen", "heldpendants"];
+    expect(shortOf(settings, false, cells)).toContain("flute");
+    expect(shortOf(settings, true, cells)).toEqual(
+      expect.arrayContaining([
+        "flute",
+        "crystal1",
+        "crystal5",
+        "pendantOfCourage",
+        "pendantOfPower",
+      ]),
     );
   });
 });

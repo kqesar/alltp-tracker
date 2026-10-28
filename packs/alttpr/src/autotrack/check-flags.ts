@@ -496,7 +496,7 @@ export const UNMAPPED_LOCATIONS: readonly UnmappedLocation[] = [
   },
   {
     id: "bomb-merchant",
-    reason: `Inverted's event that sells the big bomb: ${NO_FLAG}. PreGTBKLocations' "Big Bomb Acquired" bit (sram.asm:282-283) is never set at this commit, and FollowerIndicator $0D (sram.asm:211) holds only while Link carries the bomb.`,
+    reason: `Inverted's event that sells the big bomb: ${NO_FLAG}. PreGTBKLocations' "Big Bomb Acquired" bit (sram.asm:282-283) is never set at this commit, and FollowerIndicator $0D (sram.asm:211) holds only while Link carries the bomb. Outside Race Mode the tracker latches the purchase once it sees him carry it (decode.ts, bigBomb).`,
   },
   { id: "waterfall-bottle", reason: `A fairy fountain: ${NO_FLAG}.` },
   { id: "pyramid-bottle", reason: `A fairy fountain: ${NO_FLAG}.` },

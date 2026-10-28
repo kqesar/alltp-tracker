@@ -224,7 +224,7 @@ describe("useAutotrack", () => {
     await h.advance(1000);
     expect(state().status).toMatchObject({ race: { active: true } });
     expect(state().reading).toMatchObject({
-      items: { unsettled: { bottle: "race-mode" } },
+      items: { unsettled: { crystal5: "race-mode", rescueZelda: "race-mode" } },
       race: true,
     });
   });

@@ -257,7 +257,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
               beyond it stay. Sync from game sets the board to the game,
               clearing them.
               {race &&
-                ` In Race Mode, these stay yours to mark: pendants and crystals, chests inside dungeons, bottles${shuffled ? ", where entrances lead" : ""}.`}
+                ` In Race Mode, these stay yours to mark: each dungeon's prize, red crystals included${shuffled ? ", and where entrances lead" : ""}.`}
             </p>
             <div className="autotrack-actions">
               <button
