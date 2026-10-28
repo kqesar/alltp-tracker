@@ -219,6 +219,39 @@ describe("a review", () => {
   });
 });
 
+describe("a log of a mode whose spoiler writes it otherwise", () => {
+  // Retro writes every small key as a bare `Key`; a Standard seed's playthrough
+  // starts with a sphere 0, the uncle's sword. Both were refused once.
+  it.each([
+    ["Standard", "standard", "6v1ab7qmv7"],
+    ["Retro", "retro", "VMR3zKaKv5"],
+  ] as const)("opens a %s seed's on its own run", async (_, preset, hash) => {
+    act(() => store().applyPreset(preset));
+    useGameStore.setState({ seed: hash });
+    render(<Board />);
+    finishRun();
+    await importFile(spoilerFile(hash));
+    await screen.findByTestId("review-notice");
+    expect(screen.queryByTestId("review-error")).toBeNull();
+    expect(screen.getByTestId("review-binding")).toHaveTextContent(
+      `Seed ${hash}: the log's seed is this run's`,
+    );
+    expect(useReviewStore.getState().review).not.toBeNull();
+  });
+
+  it("says why a Retro run's waits are not shown", async () => {
+    act(() => store().applyPreset("retro"));
+    useGameStore.setState({ seed: "VMR3zKaKv5" });
+    render(<Board />);
+    finishRun();
+    await importFile(spoilerFile("VMR3zKaKv5"));
+    await screen.findByTestId("review-notice");
+    expect(await screen.findByTestId("review-hidden")).toHaveTextContent(
+      "Small keys are generic in Retro",
+    );
+  });
+});
+
 describe("a log that is refused", () => {
   const refused = async (file: File, seed: string | null = HASH) => {
     useGameStore.setState({ seed });

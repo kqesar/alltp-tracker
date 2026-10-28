@@ -14,19 +14,22 @@ import { itemsFromPack } from "@/games/alttpr/logic/packItems";
 import { stampTimeline, type Timeline } from "@/games/alttpr/logic/timeline";
 import type { ReviewedRun } from "@/games/alttpr/review/adapter";
 import entrances from "../../../../../../packs/alttpr/test/spoilers/0yAObedRMV.txt?raw";
+import standard from "../../../../../../packs/alttpr/test/spoilers/6v1ab7qmv7.txt?raw";
 import vt from "../../../../../../packs/alttpr/test/spoilers/9MQ9gO1wMD.txt?raw";
 import daily from "../../../../../../packs/alttpr/test/spoilers/eM43RgZ4Gj.txt?raw";
 import retro from "../../../../../../packs/alttpr/test/spoilers/VMR3zKaKv5.txt?raw";
 
-/** A seed the pack holds: vt's own layout, the entrance randomizer's, a daily's (no placements) and a retro seed's. */
+/** A seed the pack holds: vt's own layout, the entrance randomizer's, a daily's (no placements), a retro seed's and a Standard seed's (its playthrough starts at sphere 0). */
 export type FixtureHash =
   | "0yAObedRMV"
   | "9MQ9gO1wMD"
   | "eM43RgZ4Gj"
-  | "VMR3zKaKv5";
+  | "VMR3zKaKv5"
+  | "6v1ab7qmv7";
 
 const TEXTS: Readonly<Record<FixtureHash, string>> = {
   "0yAObedRMV": entrances,
+  "6v1ab7qmv7": standard,
   "9MQ9gO1wMD": vt,
   eM43RgZ4Gj: daily,
   VMR3zKaKv5: retro,
