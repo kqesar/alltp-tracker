@@ -186,7 +186,7 @@ describe("GoMode", () => {
       within(left)
         .getAllByRole("listitem", { hidden: true })
         .map((item) => item.textContent),
-    ).toEqual(["15 hearts", "Tempered Sword"]);
+    ).toEqual(["12 hearts", "Tempered Sword"]);
   });
 
   it("says in a sentence what no list can", async () => {
@@ -220,7 +220,7 @@ describe("GoMode", () => {
   });
 
   it("says a go mode basic placement's margin alone holds back, and what is left", async () => {
-    // Basic placement, 11 hearts on screen: Ganon's Tower waits for 15
+    // Basic placement, 11 hearts on screen: Ganon's Tower waits for 12
     setRun({ hearts: 9 }, { itemPlacement: "basic" });
     render(<GoMode />);
     act(() => analyzeNow());
@@ -236,7 +236,7 @@ describe("GoMode", () => {
       /^Doable now, outside Basic's safety margin:/,
     );
     const left = within(panel).getByTestId("go-mode-left");
-    expect(left).toHaveTextContent(/^In logic with, crystals aside:15 hearts$/);
+    expect(left).toHaveTextContent(/^In logic with, crystals aside:12 hearts$/);
   });
 
   it("lists nothing once in go mode", async () => {

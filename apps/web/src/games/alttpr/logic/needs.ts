@@ -3,11 +3,7 @@
 // by, from the grid's cells where it has one.
 import { type Atom, type Blockers, itemValue, type State } from "@alltp/engine";
 import { DUNGEONS } from "@alltp/pack-alttpr";
-import {
-  items as freshItems,
-  itemLabels,
-  STARTING_HEARTS,
-} from "@/games/alttpr/data/items";
+import { items as freshItems, itemLabels } from "@/games/alttpr/data/items";
 import { PACK_ITEMS } from "@/games/alttpr/logic/packItems";
 
 /** One thing to get, as the tracker shows it. */
@@ -121,7 +117,7 @@ const CELL_IDS: ReadonlyMap<string, string> = new Map(
 const plural = (count: number, one: string, many = `${one}s`) =>
   count === 1 ? `1 ${one}` : `${count} ${many}`;
 
-/** What each heart item adds to the hearts found: a piece is a quarter. */
+/** What each heart item adds to Link's hearts: a piece is a quarter. */
 export const HEART_POWER: Readonly<Record<string, number>> = {
   heartContainer: 1,
   pieceOfHeart: 0.25,
@@ -130,15 +126,14 @@ export const HEART_POWER: Readonly<Record<string, number>> = {
 const QUARTERS = ["", "¼", "½", "¾"];
 
 /**
- * Hearts found, as the hearts on screen they make: 7 found are "10
- * hearts", the 3 Link starts with added, as the player counts them.
+ * Hearts on screen, as the player counts them: a state holds the 3 Link
+ * starts with (the pack's PRE_COLLECTED_STATE), so 7 are "7 hearts".
  */
-const heartsNeed = (found: number): Need => {
-  const shown = STARTING_HEARTS + found;
+const heartsNeed = (shown: number): Need => {
   const whole = Math.floor(shown);
   return {
     icon: "heart.png",
-    key: `hearts>=${found}`,
+    key: `hearts>=${shown}`,
     label: `${whole}${QUARTERS[Math.round((shown - whole) * 4)]} hearts`,
   };
 };
@@ -195,7 +190,7 @@ export const needOf = (atom: Atom): Need => {
 /**
  * A blocker set in the tracker's words: its heart containers and pieces as
  * the hearts they make with those held, as the hearts cell counts them (7
- * found, whether a seventh container or four pieces beside six).
+ * on screen, whether a seventh container or four pieces beside six).
  */
 const setOf = (set: readonly Atom[], held: State): Need[] => {
   const hearts = new Map<string, number>();
@@ -206,17 +201,17 @@ const setOf = (set: readonly Atom[], held: State): Need[] => {
     } else needs.push(needOf(atom));
   }
   if (hearts.size === 0) return needs;
-  const found = Object.entries(HEART_POWER).reduce(
+  const shown = Object.entries(HEART_POWER).reduce(
     (sum, [item, power]) =>
       sum + power * Math.max(hearts.get(item) ?? 0, itemValue(held, item)),
     0,
   );
-  return [heartsNeed(found), ...needs];
+  return [heartsNeed(shown), ...needs];
 };
 
 /**
  * The engine's blockers in the tracker's words: sets that read the same
- * (the ways to 7 hearts found, containers or pieces) are one.
+ * (the ways to 7 hearts, containers or pieces) are one.
  * @param held - The state they were worked out in, for the hearts held
  */
 export const waysOf = (blockers: Blockers, held: State): Ways => {

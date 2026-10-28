@@ -90,13 +90,21 @@ describe("needOf", () => {
 });
 
 describe("hearts", () => {
-  it("names the hearts found as the hearts on screen they make", () => {
+  it("names the hearts as the hearts on screen, the 3 Link starts with among them", () => {
+    // A state holds the 3 every world is given: 7 containers are 7 hearts
     expect(needOf(item("heartContainer", 7))).toEqual({
       icon: "heart.png",
       key: "hearts>=7",
-      label: "10 hearts",
+      label: "7 hearts",
     });
-    expect(needOf(item("pieceOfHeart", 3)).label).toBe("3¾ hearts");
+    expect(
+      waysText(
+        waysOf(
+          { sets: [[item("pieceOfHeart", 3)]], truncated: false },
+          { heartContainer: 7 },
+        ),
+      ),
+    ).toBe("7¾ hearts");
   });
 
   it("joins a set's containers and pieces, and the sets that then read alike", () => {
@@ -111,8 +119,8 @@ describe("hearts", () => {
       },
       {},
     );
-    expect(waysText(ways)).toBe("10 hearts, or 10 hearts + Hammer");
-    // Four pieces beside six containers held: the seventh heart found
+    expect(waysText(ways)).toBe("7 hearts, or 7 hearts + Hammer");
+    // Four pieces beside six containers held: the seventh heart
     expect(
       waysText(
         waysOf(
@@ -120,7 +128,7 @@ describe("hearts", () => {
           { heartContainer: 6 },
         ),
       ),
-    ).toBe("10 hearts");
+    ).toBe("7 hearts");
   });
 });
 

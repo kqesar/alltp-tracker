@@ -3,10 +3,16 @@ import {
   fromLegacy,
   INVENTORY_ITEM_IDS,
   LEGACY_ITEM_RANGES,
+  PRE_COLLECTED_STATE,
   toState,
 } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
-import { items, itemsMax, itemsMin } from "@/games/alttpr/data/items";
+import {
+  items,
+  itemsMax,
+  itemsMin,
+  STARTING_HEARTS,
+} from "@/games/alttpr/data/items";
 import { getPreset } from "@/games/alttpr/data/presets";
 import {
   ACTIVATION,
@@ -190,8 +196,10 @@ describe("the app's one table of the pack's items", () => {
     // 3 hearts (1), the start: none found, and the health known
     expect(found(1).items).toEqual({});
     expect(found(1).unknown).toEqual({ bombs: true });
-    // 10 hearts: 7 found, upstream's hasHealth(7)
+    // 10 hearts: 7 found, to which the pack adds the 3 every world is
+    // given (Randomizer.php:46-56)
     expect(found(8).items).toEqual({ heartContainer: 7 });
+    expect(STARTING_HEARTS).toBe(PRE_COLLECTED_STATE.heartContainer);
     // 20 hearts: the pool's 11 containers and 24 pieces
     expect(found(18).items).toEqual({ heartContainer: 11, pieceOfHeart: 24 });
   });
@@ -262,8 +270,9 @@ describe("RECORDED_LEVELS", () => {
     }
   });
 
-  it("holds the hearts the hearts cell reaches: the pool's containers and pieces", () => {
-    expect(RECORDED_LEVELS.get("heartContainer")).toBe(11);
+  it("holds the hearts the hearts cell reaches, as the state holds them", () => {
+    // The pool's 11 containers and the 3 every world is given
+    expect(RECORDED_LEVELS.get("heartContainer")).toBe(14);
     expect(RECORDED_LEVELS.get("pieceOfHeart")).toBe(24);
   });
 });

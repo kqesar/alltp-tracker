@@ -61,7 +61,7 @@ test.describe("basic placement's safety margin", () => {
     await boss.hover();
     const tooltip = page.getByTestId("tooltip");
     await expect(tooltip).toContainText(
-      "Doable now, outside Basic's safety margin; Basic placement waits for 15 hearts (you have 11 hearts) before the seed relies on entering Misery Mire",
+      "Doable now, outside Basic's safety margin; Basic placement waits for 12 hearts (you have 11 hearts) before the seed relies on entering Misery Mire",
     );
   });
 
@@ -114,7 +114,7 @@ test.describe("basic placement's safety margin", () => {
     await goMode.click();
     const panel = page.getByTestId("go-mode-panel");
     await expect(panel.getByTestId("go-mode-margin")).toBeVisible();
-    await expect(panel.getByTestId("go-mode-left")).toContainText("15 hearts");
+    await expect(panel.getByTestId("go-mode-left")).toContainText("12 hearts");
   });
 });
 
@@ -145,11 +145,11 @@ for (const width of WIDTHS) {
       await expect(row).toContainText("Outside margin");
       await page.getByTestId("check-why-misery-mire/big-chest").click();
       await expect(row.getByTestId("missing-margin")).toHaveText(
-        "Doable now, outside Basic's safety margin: Basic placement waits for 15 hearts (you have 11 hearts) before the seed relies on entering Misery Mire.",
+        "Doable now, outside Basic's safety margin: Basic placement waits for 12 hearts (you have 11 hearts) before the seed relies on entering Misery Mire.",
       );
       await page.getByTestId("zone-why-misery-mire").click();
       await expect(page.getByTestId("zone-missing-misery-mire")).toContainText(
-        "Doable now, outside Basic's safety margin; Basic placement waits for 15 hearts (you have 11 hearts) before the seed relies on entering Misery Mire",
+        "Doable now, outside Basic's safety margin; Basic placement waits for 12 hearts (you have 11 hearts) before the seed relies on entering Misery Mire",
       );
       await auditPage(page, ".mapspan");
     });
