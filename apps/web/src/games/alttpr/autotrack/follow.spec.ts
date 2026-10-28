@@ -786,6 +786,22 @@ describe("what no flag keeps, and what a race may read", () => {
     createFollower().read(readingOf(raced, { race: true }));
     expect(store().checked["bomb-merchant"]).toBeUndefined();
 
+    // The follower's own gate: a race reading that, by a decoder's fault,
+    // said the bomb is carried latches nothing either
+    const decoded = readingOf(raced, { race: true });
+    expect(decoded.progress.bigBomb).toBe("race-mode");
+    const leaked = {
+      ...decoded,
+      progress: { ...decoded.progress, bigBomb: true },
+    };
+    const follower = createFollower();
+    follower.read(leaked);
+    expect(store().checked["bomb-merchant"]).toBeUndefined();
+    // And it starts over: a casual reading after it, without the bomb,
+    // latches nothing a race reading saw
+    follower.read(readingOf(seedMemory({ race: false })));
+    expect(store().checked["bomb-merchant"]).toBeUndefined();
+
     store().applyPreset("open");
     const open = seedMemory({ race: false });
     open[FOLLOWER] = 0x0d;
