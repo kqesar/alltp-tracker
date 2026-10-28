@@ -67,7 +67,11 @@ describe("the board's cells, read from the game through PACK_ITEMS", () => {
   });
 
   it("shows a count above a cell's range at its top", () => {
-    expect(cellsFromPack({ flute: 2 })).toEqual({ flute: true });
+    // The flute activated: its cell says found, the cell no one draws the rest
+    expect(cellsFromPack({ flute: 2 })).toEqual({
+      flute: true,
+      fluteactive: 1,
+    });
     expect(cellsFromPack({ bottle: 9 })).toEqual({ bottle: 4 });
     expect(mostShown("bow")).toBe(1);
     expect(mostShown("sword")).toBe(4);

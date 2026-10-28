@@ -102,6 +102,13 @@ export const createFollower = (): Follower => {
    * starts it over.
    */
   const known: Record<number, number> = {};
+  /**
+   * Whether a reading saw Link carry the big bomb, which only its purchase
+   * gives him: memory keeps no flag of the Bomb Merchant, and the bomb goes
+   * once it blows up, so the session keeps that it was bought. Outside Race
+   * Mode only, which starts it over as it does the medallions.
+   */
+  let bombBought = false;
   /** The doors and holes last noted, to note only what the game shows anew. */
   let noted: string | null = null;
 
@@ -154,7 +161,8 @@ export const createFollower = (): Follower => {
       const game =
         last === null
           ? null
-          : syncView(fresh, gameView(last, fresh, found, known))?.next;
+          : syncView(fresh, gameView(last, fresh, found, known, bombBought))
+              ?.next;
       const run = { ...fresh, ...game };
       return (
         sameValues(run.items, store.items) &&
@@ -199,8 +207,12 @@ export const createFollower = (): Follower => {
       countKeys(reading, store.smallKeys);
       if (reading.race) {
         for (const slot of Object.keys(known)) delete known[Number(slot)];
-      } else Object.assign(known, medallionsShown(reading));
-      const view = gameView(reading, store, found, known);
+        bombBought = false;
+      } else {
+        Object.assign(known, medallionsShown(reading));
+        if (reading.progress.bigBomb === true) bombBought = true;
+      }
+      const view = gameView(reading, store, found, known, bombBought);
       const news = shown === null ? view : newsOf(shown, view);
       last = reading;
       shown = view;
@@ -222,8 +234,10 @@ export const createFollower = (): Follower => {
         (fresh) =>
           reading === null
             ? null
-            : (syncView(fresh, gameView(reading, fresh, found, known))?.next ??
-              null),
+            : (syncView(
+                fresh,
+                gameView(reading, fresh, found, known, bombBought),
+              )?.next ?? null),
         // The timer the game just started goes on in the seed's run
         true,
       );
@@ -231,7 +245,10 @@ export const createFollower = (): Follower => {
     sync: () => {
       if (last === null) return null;
       const store = useGameStore.getState();
-      const laid = syncView(store, gameView(last, store, found, known));
+      const laid = syncView(
+        store,
+        gameView(last, store, found, known, bombBought),
+      );
       if (laid !== null) store.syncWithGame(laid.next);
       return laid?.count ?? 0;
     },

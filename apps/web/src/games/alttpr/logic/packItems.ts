@@ -6,6 +6,7 @@
 import {
   type DungeonId,
   dungeon,
+  type HeldPrize,
   type InventoryItemId,
   ITEMS,
   LEGACY_DUNGEONS,
@@ -64,6 +65,29 @@ export type PackItem =
       readonly item: InventoryItemId;
       readonly count: UnknownCount;
     }
+  /**
+   * A pack item held at least at level `at` while the value is set, which
+   * no cell draws and autotracking reads: the flute activated (flute 2),
+   * where the flute's cell says found.
+   */
+  | {
+      readonly kind: "level";
+      readonly item: InventoryItemId;
+      readonly at: number;
+    }
+  /**
+   * Standard's escape, which no cell draws and autotracking reads: 0 not
+   * known (Hyrule Castle counted finished, as a run by hand counts it), 1
+   * Zelda not yet in the Sanctuary, 2 the escape done.
+   */
+  | { readonly kind: "escape" }
+  /**
+   * How many prizes of a class Link holds, whichever dungeons gave them,
+   * as autotracking counts them (the crystals never told 5/6 or not): no
+   * cell draws it, and the rules get at least as many (TrackerInput's
+   * `held`).
+   */
+  | { readonly kind: "held"; readonly prize: HeldPrize }
   /** Nothing the rules read: the blank cell, a dungeon's counter. */
   | { readonly kind: "none" };
 
@@ -113,14 +137,22 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   bow: { items: ["silverArrowUpgrade", "bow"], kind: "bits" },
   byrna: count("caneOfByrna"),
   cape: count("cape"),
+  // What autotracking alone sets, no cell drawing it: Standard's escape,
+  // the flute activated (canFly without the weathervane, which only
+  // Inverted can deny), the prizes held by class
+  escape: { kind: "escape" },
   ether: count("ether"),
   firerod: count("fireRod"),
   flippers: count("flippers"),
   // Found: this world activates it without the weathervane (canFly)
   flute: count("flute"),
+  fluteactive: { at: 2, item: "flute", kind: "level" },
   glove: count("glove"),
   hammer: count("hammer"),
   hearts: { kind: "hearts" },
+  heldcrystals: { kind: "held", prize: "crystal" },
+  heldgreen: { kind: "held", prize: "greenPendant" },
+  heldpendants: { kind: "held", prize: "pendant" },
   hookshot: count("hookshot"),
   icerod: count("iceRod"),
   lantern: count("lamp"),
@@ -175,7 +207,8 @@ const HEART_CONTAINERS = POOL.get("heartContainer") ?? 0;
  * item, the event a dungeon beaten gives (Agahnim, Agahnim 2), the prizes a
  * boss drops, and the heart containers and pieces the hearts cell stands
  * for, its 17 hearts found being the pool's 11 and 24. What the cells cannot
- * say (the escape's bombs, the bow's second level) is left out: no player
+ * say (the escape's bombs and its end, the flute activated, the bow's second
+ * level) is left out: no player
  * could mark it collected.
  */
 export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
@@ -201,12 +234,12 @@ export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
 })();
 
 /**
- * What the tracker's items record: TrackerInput's items, beaten, prizes, and
- * the counts it does not know.
+ * What the tracker's items record: TrackerInput's items, beaten, prizes, the
+ * prizes held by class, and the counts it does not know.
  */
 export type PackReading = Pick<
   TrackerInput,
-  "beaten" | "items" | "prizes" | "unknown"
+  "beaten" | "held" | "items" | "prizes" | "unknown"
 >;
 
 /**
@@ -226,9 +259,11 @@ const heartItems = (
 
 /**
  * The tracker's items as the pack reads them, through PACK_ITEMS. Like a
- * legacy run, a run counts Hyrule Castle finished, Zelda rescued: the
- * tracker does not record the escape, which in Standard opens the Light
- * World. An id the table lacks records nothing. The hearts found are those
+ * legacy run, a run counts Hyrule Castle finished, Zelda rescued: no cell
+ * records the escape, which in Standard opens the Light World, until
+ * autotracking reads that Zelda is not yet in the Sanctuary (`escape` 1).
+ * The flute activated raises the flute to 2, and the prizes held by class
+ * go to `held`. An id the table lacks records nothing. The hearts found are those
  * on screen less the 3 Link starts with; hearts not set (or not given) leave
  * the health unknown, and the escape's bombs are unknown until autotracking
  * reads them.
@@ -240,6 +275,8 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
     "hyrule-castle": true,
   };
   const prizes: Partial<Record<DungeonId, Prize>> = {};
+  const prizesHeld: Partial<Record<HeldPrize, number>> = {};
+  const atLeast = new Map<InventoryItemId, number>();
   const known = new Set<UnknownCount>();
   const hold = (item: InventoryItemId, times: number) => {
     if (times > 0) held[item] = (held[item] ?? 0) + times;
@@ -281,10 +318,24 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
         }
         break;
       }
+      case "level":
+        if (value > 0) atLeast.set(entry.item, entry.at);
+        break;
+      case "escape":
+        // Zelda not yet in the Sanctuary: Hyrule Castle not finished
+        if (value === 1) beaten["hyrule-castle"] = false;
+        break;
+      case "held":
+        if (value > 0) prizesHeld[entry.prize] = value;
+        break;
     }
+  }
+  for (const [item, level] of atLeast) {
+    held[item] = Math.max(held[item] ?? 0, level);
   }
   return {
     beaten,
+    ...(Object.keys(prizesHeld).length > 0 && { held: prizesHeld }),
     items: held,
     prizes,
     unknown: Object.fromEntries(
@@ -321,6 +372,10 @@ export const itemsFromPack = (
         (sum, item, bit) => sum | (Math.min(1, held(item)) << bit),
         0,
       );
+    } else if (entry.kind === "level") {
+      // Known only where the reading has it, as for a count
+      if (!(entry.item in counts)) continue;
+      value = held(entry.item) >= entry.at ? 1 : 0;
     } else continue;
     items[id] =
       typeof freshItems[id] === "boolean"

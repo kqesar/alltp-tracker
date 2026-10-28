@@ -612,8 +612,10 @@ export const MEMORY_RANGES = [
     source: "zelda3:src/variables.h:1055",
   }),
   // Dungeon rooms $00-$E0: every dungeon location's room lies there, the
-  // last being Castle Tower's Room 03 ($E0). The boss rooms and the three
-  // caves among them are ranges of their own too, which Race Mode reads.
+  // last being Castle Tower's Room 03 ($E0). Race Mode reads them (v2.0's
+  // dungeon-locations), the chest, key and boss bits alone (check-flags.ts),
+  // never the doors or the quadrants visited. The boss rooms and the three
+  // caves among them are ranges of their own too, under their categories.
   rooms("dungeon-rooms", [0x00, 0xe0], "dungeon-checks", "z3:sram.asm:16-52"),
   bossRoom("swamp-palace-boss-room", 0x06),
   bossRoom("tower-of-hera-boss-room", 0x07),
@@ -665,8 +667,9 @@ export const MEMORY_RANGES = [
   save("bottle-index", 0x34f, 1, "hud", "z3:sram.asm:98", null),
   // Somaria through the armor.
   save("equipment-c", 0x350, 12, "items", "z3:sram.asm:99-110"),
-  // What each bottle holds, $00 for no bottle: forbidden bottle contents.
-  save("bottles", 0x35c, 4, "hud", "z3:sram.asm:111-115"),
+  // What each bottle holds, $00 for no bottle: the bottle contents v2.0
+  // lets a tracker show, which Race Mode reads (`bottles`).
+  save("bottles", 0x35c, 4, "bottles", "z3:sram.asm:111-115"),
   save("compasses", 0x364, 2, "items", "z3:sram.asm:119-126"),
   save("big-keys", 0x366, 2, "keys", "z3:sram.asm:119-126"),
   save("maps", 0x368, 2, "items", "z3:sram.asm:119-126"),
@@ -674,8 +677,10 @@ export const MEMORY_RANGES = [
   // with ($18) to 20 ($A0) (sram.asm:131-132). The race rules (v2.0) let a
   // tracker show and react to the heart count: Race Mode reads it.
   save("max-health", 0x36c, 1, "health", "z3:sram.asm:131-132"),
-  save("pendants", 0x374, 1, "prizes", "z3:sram.asm:139-140"),
-  save("crystals", 0x37a, 1, "prizes", "z3:sram.asm:148-150"),
+  // The pendants and crystals taken (sram.asm:139-150): Race Mode reads
+  // them as `prizes-held`, the crystals as a count alone (decode.ts).
+  save("pendants", 0x374, 1, "prizes-held", "z3:sram.asm:139-140"),
+  save("crystals", 0x37a, 1, "prizes-held", "z3:sram.asm:148-150"),
   save("magic-upgrade", 0x37b, 1, "items", "z3:sram.asm:151"),
   // Small keys held, sewers to Ganon's Tower.
   save("small-keys", 0x37c, 14, "keys", "z3:sram.asm:153-168"),
@@ -691,6 +696,12 @@ export const MEMORY_RANGES = [
   // CurrentWorld: $00 the Light World, $40 the Dark World. The world map
   // shows the prizes of its own world's dungeons (overworldmap.asm:73-78).
   save("current-world", 0x3ca, 1, "prizes", "z3:sram.asm:206"),
+  // FollowerIndicator: who follows Link (sram.asm:208-211). $0D is the big
+  // bomb, which only its purchase sets for good (zelda3 sprite_main.c:
+  // 24295; its explosion sets it for one frame, ancilla.c:5382): seen once,
+  // the Bomb Merchant sold it. Outside Race Mode only (`other`: the byte
+  // also says Zelda follows, which v2.0 forbids telling in a race).
+  save("follower", 0x3cc, 1, "other", "z3:sram.asm:208-211"),
   // Set when Agahnim 2 falls.
   save("agahnim-2", 0x40f, 1, "boss-kills", "z3:events.asm:104-106"),
   // The randomizer's NPC item flags.

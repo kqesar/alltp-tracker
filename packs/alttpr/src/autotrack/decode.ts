@@ -3,12 +3,14 @@
 // the events. Pure and total: any bytes decode, none throw.
 //
 // In Race Mode a decoder never asks for a range whose category the race
-// profile forbids, and withholds what the profile keeps from races even when
-// a permitted range holds it (checks inside dungeons, which the race rules,
-// v2.0, allow: Race Mode is deliberately stricter). What it cannot tell, it
-// leaves unsettled, with the reason, rather than guessing.
+// profile forbids, and withholds what the race rules (v2.0) keep from races
+// even when a permitted range holds it: which crystal is 5 or 6 (the
+// crystals' field is read, its count alone leaves: decodePrizesHeld), and
+// Zelda's rescue. What it cannot tell, it leaves unsettled, with the
+// reason, rather than guessing.
 
 import { ITEMS, type ItemId } from "../items";
+import { type HeldPrize, PRIZES } from "../tracker";
 import { CHECK_FLAGS, type CheckFlag } from "./check-flags";
 import ENTRANCE_TABLES from "./entrance-tables.json" with { type: "json" };
 import {
@@ -97,6 +99,13 @@ interface ItemSource {
    * key counters of sram.asm:361-375 are unwritten at this commit).
    */
   readonly bound?: true;
+  /**
+   * Race Mode reads the range but not this item: which crystal is which
+   * (v2.0: "but not identify if a crystal is a 5/6 crystal or a regular
+   * crystal"), Zelda's rescue ("may not alert whether or not Zelda was
+   * rescued in a Standard opening seed").
+   */
+  readonly raceWithheld?: true;
 }
 
 const SAVE = (offset: number) => SAVE_DATA + offset;
@@ -155,8 +164,17 @@ function smallKeys(code: DungeonCode): ItemSource {
   };
 }
 
-function prize(range: "crystals" | "pendants", mask: number): ItemSource {
-  return { range, read: ({ byte }) => bit(byte(), mask) };
+function pendant(mask: number): ItemSource {
+  return { range: "pendants", read: ({ byte }) => bit(byte(), mask) };
+}
+
+/** A crystal by its number: never in Race Mode, which counts them only. */
+function crystal(mask: number): ItemSource {
+  return {
+    raceWithheld: true,
+    range: "crystals",
+    read: ({ byte }) => bit(byte(), mask),
+  };
 }
 
 /** A count capped by decodeItems at the item's max. */
@@ -185,7 +203,8 @@ export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource | null>> = {
   // Bomb Acquired" bit in PreGTBKLocations ($7EF42A), but no code sets it at
   // this commit (inventory.asm:228 only counts Ganon's Tower's checks), and
   // FollowerIndicator $0D (sram.asm:211) holds only while Link carries it:
-  // memory does not tell, so the board keeps what the player says.
+  // no count, but the purchase itself, which decodeProgress's `bigBomb`
+  // says while it lasts, for the tracker to latch the Bomb Merchant.
   bigRedBomb: null,
   bombos: equipment("equipment-b", 0x347),
   bookOfMudora: equipment("equipment-b", 0x34e),
@@ -221,13 +240,13 @@ export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource | null>> = {
   compassP1: dungeonItem("compasses", "P1"),
   compassP2: dungeonItem("compasses", "P2"),
   compassP3: dungeonItem("compasses", "P3"),
-  crystal1: prize("crystals", CRYSTAL_BITS.crystal1),
-  crystal2: prize("crystals", CRYSTAL_BITS.crystal2),
-  crystal3: prize("crystals", CRYSTAL_BITS.crystal3),
-  crystal4: prize("crystals", CRYSTAL_BITS.crystal4),
-  crystal5: prize("crystals", CRYSTAL_BITS.crystal5),
-  crystal6: prize("crystals", CRYSTAL_BITS.crystal6),
-  crystal7: prize("crystals", CRYSTAL_BITS.crystal7),
+  crystal1: crystal(CRYSTAL_BITS.crystal1),
+  crystal2: crystal(CRYSTAL_BITS.crystal2),
+  crystal3: crystal(CRYSTAL_BITS.crystal3),
+  crystal4: crystal(CRYSTAL_BITS.crystal4),
+  crystal5: crystal(CRYSTAL_BITS.crystal5),
+  crystal6: crystal(CRYSTAL_BITS.crystal6),
+  crystal7: crystal(CRYSTAL_BITS.crystal7),
   // ProgressIndicator $03 (sram.asm:191-193, events.asm:89-90).
   defeatAgahnim: {
     range: "progress",
@@ -289,15 +308,20 @@ export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource | null>> = {
   // m while held, n once traded to the witch: found either way.
   mushroom: tracked(0x28),
   pegasusBoots: equipment("equipment-c", 0x355),
-  pendantOfCourage: prize("pendants", PENDANT_BITS.pendantOfCourage),
-  pendantOfPower: prize("pendants", PENDANT_BITS.pendantOfPower),
-  pendantOfWisdom: prize("pendants", PENDANT_BITS.pendantOfWisdom),
+  pendantOfCourage: pendant(PENDANT_BITS.pendantOfCourage),
+  pendantOfPower: pendant(PENDANT_BITS.pendantOfPower),
+  pendantOfWisdom: pendant(PENDANT_BITS.pendantOfWisdom),
   pieceOfHeart: count("heart-pieces"),
   powder: tracked(0x10),
   quake: equipment("equipment-b", 0x349),
   redBoomerang: tracked(0x40),
-  // ProgressIndicator $02 (zelda.asm:11-13), where Open starts.
-  rescueZelda: { range: "progress", read: ({ byte }) => (byte() >= 2 ? 1 : 0) },
+  // ProgressIndicator $02, set as the rain ends with Zelda in the Sanctuary
+  // (zelda.asm:11-13, EndRainState), where Open starts. Never in Race Mode.
+  rescueZelda: {
+    raceWithheld: true,
+    range: "progress",
+    read: ({ byte }) => (byte() >= 2 ? 1 : 0),
+  },
   shield: equipmentLevel(0x35a, 3),
   // The retro world's shops: a key for sale is a place the player found, no
   // memory says it; an arrow bought is CurrentArrows in the rupee bow mode
@@ -342,7 +366,10 @@ export function decodeItems(
   for (const { id, max } of ITEMS) {
     const source = ITEM_SOURCES[id];
     if (source === null) continue;
-    const bytes = reader.range(source.range);
+    const bytes =
+      options.race && source.raceWithheld
+        ? "race-mode"
+        : reader.range(source.range);
     if (typeof bytes === "string") {
       unsettled[id] = bytes;
       continue;
@@ -385,6 +412,58 @@ export function decodeHealth(
     : Math.floor(value / HEART);
 }
 
+/**
+ * The pendants and crystals Link took, by class: the Pendant of Courage
+ * (the green pendant), the two others, and the crystals counted, never told
+ * apart; or why memory cannot say.
+ */
+export type PrizesHeldReading = Readonly<Record<HeldPrize, number>> | Unsettled;
+
+/** Every bit of a prize field that names a prize. */
+const fieldMask = (bits: Readonly<Record<string, number>>) =>
+  Object.values(bits).reduce((mask, bit) => mask | bit, 0);
+
+/** How many of `mask`'s bits are set in `value`. */
+const bitsSet = (value: number, mask: number) => {
+  let count = 0;
+  for (let rest = value & mask; rest !== 0; rest &= rest - 1) count++;
+  return count;
+};
+
+/**
+ * The pendants and crystals Link took (PendantsField, CrystalsField:
+ * sram.asm:139-150), Race Mode or not: the race rules (v2.0) let a tracker
+ * show "Defeated bosses and their prizes upon collection (but not identify
+ * if a crystal is a 5/6 crystal or a regular crystal)", and the game sets a
+ * prize's bit only as Link takes it. The crystals' field names each crystal
+ * by its number; only their count leaves here. Nothing says which dungeon
+ * gave which (v2.0: "An auto-tracker may not associate an acquired item with
+ * a specific location").
+ */
+export function decodePrizesHeld(
+  memory: MemoryView,
+  options: DecodeOptions,
+): PrizesHeldReading {
+  const reader = new Reader(memory, options.race);
+  const pendants = reader.range("pendants");
+  if (typeof pendants === "string") return pendants;
+  const crystals = reader.range("crystals");
+  if (typeof crystals === "string") return crystals;
+  const green = PENDANT_BITS[PRIZES.greenPendant[0]];
+  return {
+    crystal: bitsSet(crystals.byte(), fieldMask(CRYSTAL_BITS)),
+    greenPendant: bitsSet(pendants.byte(), green),
+    pendant: bitsSet(pendants.byte(), fieldMask(PENDANT_BITS) & ~green),
+  };
+}
+
+/**
+ * The checks inside a dungeon that Race Mode withholds though a permitted
+ * range holds them: Zelda's rescue, which v2.0 forbids telling ("may not
+ * alert whether or not Zelda was rescued in a Standard opening seed").
+ */
+const RACE_WITHHELD_CHECKS: ReadonlySet<string> = new Set(["zelda"]);
+
 /** What memory says of the locations CHECK_FLAGS maps. */
 export interface CheckReading {
   /** Locations checked, by the pack's location id. */
@@ -394,10 +473,9 @@ export interface CheckReading {
 }
 
 /**
- * The checked locations. In Race Mode the checks inside a dungeon stay
- * unsettled, even the boss drops and prizes whose flags permitted ranges
- * hold: the race rules (v2.0) allow them, but Race Mode keeps them the
- * player's, deliberately strict.
+ * The checked locations. Race Mode reads them inside the dungeons too (v2.0:
+ * "overworld-locations, underworld-locations, and dungeon-locations"), the
+ * prizes as they are taken, but for Zelda's rescue (RACE_WITHHELD_CHECKS).
  */
 export function decodeChecks(
   memory: MemoryView,
@@ -406,9 +484,11 @@ export function decodeChecks(
   const reader = new Reader(memory, options.race);
   const checked = new Set<string>();
   const unsettled = new Map<string, Unsettled>();
-  for (const { dungeon, flag, id } of CHECK_FLAGS) {
+  for (const { flag, id } of CHECK_FLAGS) {
     const set =
-      options.race && dungeon !== null ? "race-mode" : reader.flag(flag);
+      options.race && RACE_WITHHELD_CHECKS.has(id)
+        ? "race-mode"
+        : reader.flag(flag);
     if (typeof set === "string") unsettled.set(id, set);
     else if (set) checked.add(id);
   }
@@ -445,8 +525,17 @@ export interface ProgressReading {
   readonly romStats: RomStats | Unsettled;
   /** The Triforce room reached: game mode $19 or $1A, or StatsLocked. */
   readonly goal: Fact;
-  /** Zelda rescued: ProgressIndicator $02, where Open starts. */
+  /**
+   * Zelda rescued: ProgressIndicator $02, where Open starts. Never in Race
+   * Mode (v2.0: "may not alert whether or not Zelda was rescued in a
+   * Standard opening seed").
+   */
   readonly rescueZelda: Fact;
+  /**
+   * Link carries the big bomb (FollowerIndicator $0D), which only its
+   * purchase gives him: the Bomb Merchant sold it. Outside Race Mode only.
+   */
+  readonly bigBomb: Fact;
 }
 
 /**
@@ -557,8 +646,14 @@ const inGoal = byteFlag("game-mode", (mode) => GOAL.includes(mode));
 const preGame = byteFlag("game-mode", (mode) => BEFORE_PLAY.includes(mode));
 const statsLocked = byteFlag("stats-locked", (value) => value !== 0);
 const zelda = byteFlag("progress", (value) => value >= 2);
+/** FollowerIndicator's big bomb (sram.asm:211). */
+const BIG_BOMB = 0x0d;
+const bigBomb = byteFlag("follower", (value) => value === BIG_BOMB);
 
-/** The bosses and events, from memory. Race Mode permits all of it. */
+/**
+ * The bosses and events, from memory. Race Mode reads them all but Zelda's
+ * rescue, the big bomb and the ROM's stats.
+ */
 export function decodeProgress(
   memory: MemoryView,
   options: DecodeOptions,
@@ -586,10 +681,11 @@ export function decodeProgress(
   const locked = statsLocked(reader);
   return {
     beforePlay: preGame(reader),
+    bigBomb: bigBomb(reader),
     bosses,
     completed,
     goal: mode === true || locked === true ? true : locked,
-    rescueZelda: zelda(reader),
+    rescueZelda: options.race ? "race-mode" : zelda(reader),
     romStats: romStats(reader),
     started: inPlay(reader),
   };

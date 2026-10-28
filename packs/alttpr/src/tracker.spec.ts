@@ -183,6 +183,43 @@ describe("toState", () => {
     expect(toState(input({ items }), OPEN)).not.toBe(once);
   });
 
+  it("tops up the prizes the dungeons give with those held, regular crystals first", () => {
+    const has = (state: Record<string, number>, items: readonly string[]) =>
+      items.filter((item) => state[item] === 1);
+    const crystals = [...PRIZES.crystal, ...PRIZES.redCrystal];
+    // Five crystals counted: five regular ones, no red crystal told
+    const five = toState(input({ held: { crystal: 5 } }), OPEN) as Record<
+      string,
+      number
+    >;
+    expect(has(five, crystals)).toEqual([...PRIZES.crystal]);
+    // Six: one must be red; seven: both are
+    const six = toState(input({ held: { crystal: 6 } }), OPEN);
+    expect(has(six as Record<string, number>, PRIZES.redCrystal)).toEqual([
+      "crystal5",
+    ]);
+    const seven = toState(input({ held: { crystal: 9 } }), OPEN);
+    expect(has(seven as Record<string, number>, crystals)).toHaveLength(7);
+    // A red crystal the player named counts toward the crystals held
+    const named = toState(
+      input({
+        beaten: { "palace-of-darkness": true },
+        held: { crystal: 2, greenPendant: 1, pendant: 1 },
+        prizes: { "palace-of-darkness": "redCrystal" },
+      }),
+      OPEN,
+    ) as Record<string, number>;
+    expect(has(named, crystals)).toEqual(["crystal1", "crystal5"]);
+    expect(has(named, [...PRIZES.greenPendant, ...PRIZES.pendant])).toEqual([
+      "pendantOfCourage",
+      "pendantOfPower",
+    ]);
+    // None held, or a count the dungeons already give: nothing more
+    expect(toState(input({ held: {} }), OPEN)).toEqual(
+      toState(input({}), OPEN),
+    );
+  });
+
   it("feeds the key model: a run's state, read without its keys", () => {
     const run = input({
       beaten: { "eastern-palace": true },

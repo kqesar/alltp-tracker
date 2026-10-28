@@ -26,7 +26,6 @@ describe("ALTTPR_RACE_PROFILE", () => {
       .filter(([, c]) => !c.permitted)
       .map(([name]) => name);
     expect(forbidden.sort()).toEqual([
-      "dungeon-checks",
       "entrances",
       "hud",
       "navigation",

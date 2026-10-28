@@ -21,6 +21,7 @@ import {
   dungeon,
   dungeonLocations,
   dungeonPool,
+  type HeldPrize,
   LEGACY_DUNGEONS,
   MAP_LOCATIONS,
   PRIZES,
@@ -82,6 +83,9 @@ export type GameView = {
    */
   readonly medallions: Readonly<Record<number, number>>;
 };
+
+/** The event that sells the big bomb, which no flag keeps (check-flags.ts). */
+const BOMB_MERCHANT = "bomb-merchant";
 
 /** The locations whose flag the game keeps, on the map. */
 const FLAGGED = CHECK_FLAGS.map(({ id }) => id).filter((id) =>
@@ -205,15 +209,53 @@ const byElimination = (
  * board already names for finished dungeons are taken as given, and so are
  * those the tables told; the dungeons finished with no prize named share
  * what is left, which they can only do one way when it is all of one class
- * (the first dungeon finished, or two red crystals). Race Mode reads no
- * pendant or crystal: it tells nothing then.
+ * (the first dungeon finished, or two red crystals). Race Mode names no
+ * dungeon's prize: it reads no prize table and no crystal's number, and
+ * v2.0 forbids tying an item to a location (the prizes held reach the
+ * rules without a dungeon: `heldCells`).
  */
 const prizeCells = (
   reading: AutotrackReading,
   board: Board,
 ): Record<string, CellValue> => {
+  if (reading.race) return {};
   const shown = shownCells(reading, board);
   return { ...byElimination(reading, board, shown), ...shown };
+};
+
+/** The cells no one draws that hold the prizes held, by class. */
+const HELD_CELLS = {
+  crystal: "heldcrystals",
+  greenPendant: "heldgreen",
+  pendant: "heldpendants",
+} as const satisfies Readonly<Record<HeldPrize, string>>;
+
+/**
+ * The pendants and crystals Link holds by class (the pack's
+ * decodePrizesHeld), Race Mode or not, as the cells that carry them to the
+ * rules: the crystals as a count, which makes a crystal red to the rules
+ * only when there are more crystals than regular ones.
+ */
+const heldCells = (reading: AutotrackReading): Record<string, CellValue> => {
+  const { held } = reading;
+  if (typeof held === "string") return {};
+  return Object.fromEntries(
+    (Object.keys(HELD_CELLS) as HeldPrize[]).map((prize) => [
+      HELD_CELLS[prize],
+      held[prize],
+    ]),
+  );
+};
+
+/**
+ * Standard's escape, outside Race Mode (v2.0 forbids telling Zelda's
+ * rescue in a race): 2 once Zelda is in the Sanctuary, 1 before.
+ */
+const escapeCells = (reading: AutotrackReading): Record<string, CellValue> => {
+  const { rescueZelda } = reading.progress;
+  return typeof rescueZelda === "boolean"
+    ? { escape: rescueZelda ? 2 : 1 }
+    : {};
 };
 
 /** The bosses the game tells, as their cells' values. */
@@ -269,6 +311,8 @@ export const gameCells = (
   ...cellsFromPack(asShown(reading.items.counts as Record<string, number>)),
   ...beatenCells(reading),
   ...prizeCells(reading, board),
+  ...heldCells(reading),
+  ...escapeCells(reading),
   // The hearts on screen, which Race Mode reads too (v2.0's heart count)
   ...(typeof reading.health === "number"
     ? { hearts: heartsValue(reading.health) }
@@ -358,18 +402,26 @@ const counterRanges = (
  * @param keysFound - The least small keys found, by grid dungeon index
  * @param medallionsKept - The medallions shown at earlier readings, by slot:
  * once shown, a medallion stays known whatever the screen in view
+ * @param bombBought - Whether a reading of this session saw Link carry the
+ * big bomb, which only its purchase gives him: Inverted's Bomb Merchant is
+ * checked then, and stays so (memory keeps no flag of it)
  */
 export const gameView = (
   reading: AutotrackReading,
   board: Board,
   keysFound: Readonly<Record<number, number>> = {},
   medallionsKept: Readonly<Record<number, number>> = {},
+  bombBought = false,
 ): GameView => {
   const isChecked = new Set(reading.checked);
   const unsettled = new Set(reading.unsettled.map(([id]) => id));
   const checked: Record<string, boolean> = {};
   for (const id of FLAGGED) {
     if (!unsettled.has(id)) checked[id] = isChecked.has(id);
+  }
+  // Only Inverted's map has the Bomb Merchant (the pack's INVERTED_MARKERS)
+  if (bombBought && worldOf(packSettings(board.settings)) === "inverted") {
+    checked[BOMB_MERCHANT] = true;
   }
   const smallKeys: Record<number, number> = {};
   if (wildItems(board.settings).keys) {

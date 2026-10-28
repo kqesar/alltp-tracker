@@ -7,6 +7,7 @@ import {
   decodeEntrances,
   decodeHealth,
   decodeItems,
+  decodePrizesHeld,
   decodeProgress,
   FRAMES_PER_SECOND,
   ITEM_SOURCES,
@@ -461,6 +462,7 @@ describe("decodeProgress", () => {
     });
     expect(decoded).toEqual({
       beforePlay: false,
+      bigBomb: false,
       bosses: {
         A1: false,
         A2: false,
@@ -813,14 +815,14 @@ describe("Race Mode", () => {
     expect(forbidden.length).toBeGreaterThan(0);
   });
 
-  it("leaves the HUD and prize items unsettled, and only those", () => {
+  it("withholds the crystals' numbers, Zelda's rescue and the heart counters, and only those", () => {
     const { atLeast, counts, unsettled } = decodeItems(
       endGame().view({ strict: true }),
       { race: true },
     );
     expect(Object.keys(unsettled).sort()).toEqual(
       [
-        "bottle",
+        // Which crystal is 5 or 6: v2.0 forbids telling it
         "crystal1",
         "crystal2",
         "crystal3",
@@ -828,14 +830,22 @@ describe("Race Mode", () => {
         "crystal5",
         "crystal6",
         "crystal7",
+        // The stats' counters, a HUD count Race Mode leaves alone
         "heartContainer",
-        "pendantOfCourage",
-        "pendantOfPower",
-        "pendantOfWisdom",
         "pieceOfHeart",
+        // v2.0: "may not alert whether or not Zelda was rescued"
+        "rescueZelda",
       ].sort(),
     );
     expect(new Set(Object.values(unsettled))).toEqual(new Set(["race-mode"]));
+    // The bottles (bottle contents) and the pendants (prizes upon
+    // collection) are read
+    expect(counts).toMatchObject({
+      bottle: 4,
+      pendantOfCourage: 1,
+      pendantOfPower: 1,
+      pendantOfWisdom: 1,
+    });
     expect({ ...counts, ...atLeast }).toEqual(
       Object.fromEntries(
         Object.entries(END_GAME_ITEMS).filter(([id]) => !(id in unsettled)),
@@ -843,28 +853,39 @@ describe("Race Mode", () => {
     );
   });
 
-  it("withholds every dungeon location and reads every other", () => {
+  it("reads every location, inside the dungeons too, but Zelda's rescue", () => {
     const { checked, unsettled } = decodeChecks(
       endGame().view({ strict: true }),
       { race: true },
     );
-    expect([...checked].sort()).toEqual([...OUTSIDE_IDS].sort());
-    expect([...unsettled.keys()].sort()).toEqual([...DUNGEON_IDS].sort());
-    expect(new Set(unsettled.values())).toEqual(new Set(["race-mode"]));
+    const all = CHECK_FLAGS.map(({ id }) => id);
+    expect([...checked].sort()).toEqual(
+      all.filter((id) => id !== "zelda").sort(),
+    );
+    expect([...unsettled]).toEqual([["zelda", "race-mode"]]);
+    expect(DUNGEON_IDS.length).toBeGreaterThan(130);
     expect(OUTSIDE_IDS.length).toBeGreaterThan(80);
   });
 
-  it("reads the bosses and events as outside Race Mode, not the ROM's stats", () => {
-    const image = endGame().set(SAVE(0x43e), 0x10, 0x0e);
-    const { romStats: raced, ...race } = decodeProgress(
-      image.view({ strict: true }),
-      { race: true },
+  it("reads the bosses and events as outside Race Mode, but not Zelda's rescue, the big bomb or the ROM's stats", () => {
+    const image = endGame().set(SAVE(0x43e), 0x10, 0x0e).set(SAVE(0x3cc), 0x0d);
+    const {
+      bigBomb: raceBomb,
+      rescueZelda: raceZelda,
+      romStats: raced,
+      ...race
+    } = decodeProgress(image.view({ strict: true }), { race: true });
+    const { bigBomb, rescueZelda, romStats, ...casual } = decodeProgress(
+      image.view(),
+      { race: false },
     );
-    const { romStats, ...casual } = decodeProgress(image.view(), {
-      race: false,
-    });
     expect(race).toEqual(casual);
-    expect(raced).toBe("race-mode");
+    expect([raced, raceZelda, raceBomb]).toEqual([
+      "race-mode",
+      "race-mode",
+      "race-mode",
+    ]);
+    expect([rescueZelda, bigBomb]).toEqual([true, true]);
     expect(romStats).toMatchObject({ playFrames: 0x0e10 });
   });
 
@@ -876,6 +897,71 @@ describe("Race Mode", () => {
       expect(Object.keys(items.unsettled)).toHaveLength(READ.length);
       expect(decodeChecks(view, { race }).checked.size).toBe(0);
       expect(decodeProgress(view, { race }).goal).toBe("not-read");
+    }
+  });
+});
+
+describe("decodePrizesHeld", () => {
+  // PendantsField (sram.asm:139-140): Courage $04, Power $02, Wisdom $01.
+  // CrystalsField (sram.asm:148-150): crystal 5 is $04, crystal 6 $01.
+  const held = (pendants: number, crystals: number, race: boolean) =>
+    decodePrizesHeld(
+      new Image()
+        .set(SAVE(0x374), pendants)
+        .set(SAVE(0x37a), crystals)
+        .view({ strict: race }),
+      { race },
+    );
+
+  it("counts the prizes taken by class, in Race Mode as outside it", () => {
+    for (const race of [false, true]) {
+      expect(held(0x00, 0x00, race)).toEqual({
+        crystal: 0,
+        greenPendant: 0,
+        pendant: 0,
+      });
+      expect(held(0x04, 0x00, race)).toEqual({
+        crystal: 0,
+        greenPendant: 1,
+        pendant: 0,
+      });
+      expect(held(0x03, 0x7f, race)).toEqual({
+        crystal: 7,
+        greenPendant: 0,
+        pendant: 2,
+      });
+    }
+  });
+
+  it("never tells a red crystal from another", () => {
+    // Crystals 5 and 6, or crystals 1 and 2: the same reading
+    expect(held(0, 0x04 | 0x01, true)).toEqual(held(0, 0x02 | 0x10, true));
+    expect(held(0, 0x04 | 0x01, false)).toEqual(held(0, 0x02 | 0x10, false));
+    // Bits no crystal sets are not counted
+    expect(held(0xf8, 0x80, false)).toEqual({
+      crystal: 0,
+      greenPendant: 0,
+      pendant: 0,
+    });
+  });
+
+  it("waits for both fields", () => {
+    const view = new Image().view({ read: (id) => id === "pendants" });
+    expect(decodePrizesHeld(view, { race: true })).toBe("not-read");
+  });
+});
+
+describe("the big bomb", () => {
+  // FollowerIndicator (sram.asm:208-211): $0D the big bomb, $01 Zelda
+  const follower = (value: number) =>
+    decodeProgress(freshFile("open").set(SAVE(0x3cc), value).view(), {
+      race: false,
+    }).bigBomb;
+
+  it("is seen while Link carries it, and no other follower", () => {
+    expect(follower(0x0d)).toBe(true);
+    for (const other of [0x00, 0x01, 0x04, 0x0a, 0x0c]) {
+      expect(follower(other), String(other)).toBe(false);
     }
   });
 });

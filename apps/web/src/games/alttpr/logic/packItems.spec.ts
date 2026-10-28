@@ -107,6 +107,40 @@ describe("the app's one table of the pack's items", () => {
     expect(itemsFromPack({})).not.toHaveProperty("tenbombs");
   });
 
+  it("reads the flute activated as flute 2, and gives it back from the game", () => {
+    expect(packReading({ flute: true } as never).items).toEqual({ flute: 1 });
+    expect(packReading({ flute: true, fluteactive: 1 } as never).items).toEqual(
+      { flute: 2 },
+    );
+    // Known where the game was read, left alone where not
+    expect(itemsFromPack({ flute: 2 })).toMatchObject({
+      flute: true,
+      fluteactive: 1,
+    });
+    expect(itemsFromPack({ flute: 1 }).fluteactive).toBe(0);
+    expect(itemsFromPack({})).not.toHaveProperty("fluteactive");
+  });
+
+  it("counts Hyrule Castle finished but while autotracking reads the escape going on", () => {
+    const castle = (value: number) =>
+      packReading({ escape: value } as never).beaten["hyrule-castle"];
+    // Not known (a run by hand), then done: finished, as a legacy run
+    expect(castle(0)).toBe(true);
+    expect(castle(2)).toBe(true);
+    // Zelda not yet in the Sanctuary
+    expect(castle(1)).toBe(false);
+  });
+
+  it("reads the prizes held by class, none when none is held", () => {
+    expect(
+      packReading({ heldcrystals: 3, heldgreen: 1, heldpendants: 0 } as never)
+        .held,
+    ).toEqual({ crystal: 3, greenPendant: 1 });
+    expect(packReading({ heldcrystals: 0 } as never)).not.toHaveProperty(
+      "held",
+    );
+  });
+
   it("reads the hearts on screen as those found beyond the 3 Link starts with", () => {
     const found = (hearts: number) => packReading({ hearts } as never);
     // Not set: the health is unknown, and nothing is held

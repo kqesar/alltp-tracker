@@ -193,15 +193,25 @@ describe("ALTTPR_AUTOTRACK", () => {
       race: { active: true, flag: "race" },
     });
     expect(readForbidden(console)).toEqual([]);
-    expect(decoded?.items.counts).toMatchObject({ rescueZelda: 1, sword: 2 });
-    expect(decoded?.items.unsettled).toMatchObject({
-      bottle: "race-mode",
-      pendantOfCourage: "race-mode",
+    // v2.0's bottle contents, prizes upon collection and dungeon-locations
+    expect(decoded?.items.counts).toMatchObject({
+      bottle: 1,
+      pendantOfCourage: 1,
+      sword: 2,
     });
-    expect([...(decoded?.checks.checked ?? [])]).toEqual(["links-house"]);
-    expect(decoded?.checks.unsettled.get("eastern-palace/compass-chest")).toBe(
-      "race-mode",
-    );
+    // Not which crystal is 5 or 6, nor Zelda's rescue
+    expect(decoded?.items.unsettled).toMatchObject({
+      crystal5: "race-mode",
+      rescueZelda: "race-mode",
+    });
+    expect([...(decoded?.checks.checked ?? [])].sort()).toEqual([
+      "eastern-palace/boss",
+      "eastern-palace/compass-chest",
+      "links-house",
+    ]);
+    expect([...(decoded?.checks.unsettled ?? [])]).toEqual([
+      ["zelda", "race-mode"],
+    ]);
     expect(decoded?.progress.bosses.P1).toBe(true);
   });
 

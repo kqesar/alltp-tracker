@@ -51,6 +51,7 @@ export {
   decodeEntrances,
   decodeHealth,
   decodeItems,
+  decodePrizesHeld,
   decodeProgress,
   type EntranceLink,
   type EntranceReading,
@@ -59,6 +60,7 @@ export {
   type HealthReading,
   type ItemReading,
   type MemoryView,
+  type PrizesHeldReading,
   type ProgressReading,
   playTimeMs,
   type RomStats,
@@ -271,6 +273,7 @@ export type {
 export {
   EMPTY_INPUT,
   EVENT_CHECKS,
+  type HeldPrize,
   INVENTORY_ITEM_IDS,
   type InventoryItemId,
   PRIZES,

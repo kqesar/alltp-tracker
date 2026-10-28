@@ -113,11 +113,21 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   boomerang: [0, 3],
   bottle: [0, 4],
   bow: [0, 3],
+  // More values no cell draws, which autotracking alone sets
+  // (logic/packItems.ts): Standard's escape (0 not known, counted done; 1
+  // Zelda not yet in the Sanctuary; 2 done), the flute activated (1), and
+  // the prizes Link holds by class, whichever dungeon gave them: the green
+  // pendant, the two others, the crystals counted (never told 5/6)
+  escape: [0, 2],
+  fluteactive: [0, 1],
   glove: [0, 2],
   // Link's hearts on screen, less 2: 0 not set (unknown to the logic), 1 the
   // 3 hearts every run starts with, 18 the 20 a full pool reaches
   // (heartsShown)
   hearts: [0, 18],
+  heldcrystals: [0, 7],
+  heldgreen: [0, 1],
+  heldpendants: [0, 2],
   // 1 the half magic, 2 the quarter, which only a customized seed gives
   magic: [0, 2],
   shield: [0, 3],
@@ -246,11 +256,16 @@ const ITEM_NAMES: Record<string, string> = {
   boots: "Pegasus Boots",
   byrna: "Cane of Byrna",
   cape: "Magic Cape",
+  escape: "Zelda's escape",
   ether: "Ether Medallion",
   firerod: "Fire Rod",
   flippers: "Zora's Flippers",
+  fluteactive: "Flute (activated)",
   glove: "Power Glove",
   hearts: "Hearts",
+  heldcrystals: "Crystals held",
+  heldgreen: "Pendant of Courage held",
+  heldpendants: "Other pendants held",
   icerod: "Ice Rod",
   magic: "Half Magic",
   mirror: "Magic Mirror",

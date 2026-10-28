@@ -223,8 +223,8 @@ export interface ReviewComparison {
 /**
  * Locations whose state the board cannot tell: those it does not track as a
  * check (the bottles' and medallions' pads, Ganon), and a dungeon's, when the
- * dungeon was only counted (a manual run, or a race: autotracking checks them
- * one by one otherwise) and it is not finished.
+ * dungeon was only counted (a manual run, or a race tracked before 2.53:
+ * autotracking checks them one by one otherwise) and it is not finished.
  */
 const unknownLocations = (
   log: AlttprSpoilerLog,

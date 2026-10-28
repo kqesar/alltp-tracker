@@ -14,7 +14,8 @@ import { items, itemsMax, itemsMin } from "@/games/alttpr/data/items";
  * dungeons' own items (version 11), Ganon's Tower's counter, the retro
  * world's shops (a save without them starts them unfound), the half magic,
  * the hearts and the escape's bombs (a save without them leaves them not
- * known).
+ * known), and the values autotracking alone sets: the escape's end, the
+ * flute activated, the prizes held (a save without them holds none).
  */
 const ADDED = [
   "agahnim2",
@@ -32,6 +33,11 @@ const ADDED = [
   "shoparrow",
   "shopkey",
   "tenbombs",
+  "escape",
+  "fluteactive",
+  "heldcrystals",
+  "heldgreen",
+  "heldpendants",
 ];
 
 /**

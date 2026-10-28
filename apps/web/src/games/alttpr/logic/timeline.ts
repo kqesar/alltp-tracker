@@ -22,14 +22,28 @@ interface Finds {
 }
 
 /**
+ * The kinds of value that are no find: a dungeon's items left, the prize
+ * picked for it, the hearts on screen, the spacer, and what no cell draws
+ * (the escape's bombs and its end, the flute activated, the prizes held).
+ */
+const NO_FINDS: ReadonlySet<string> = new Set([
+  "escape",
+  "hearts",
+  "held",
+  "known",
+  "level",
+  "none",
+  "prize",
+]);
+
+/**
  * How the timeline reads an item's value, from what it records for the
  * pack (logic/packItems.ts): each bit an item, each level a find, or no
- * find at all (a dungeon's items left, the prize picked for it, the hearts
- * on screen, the spacer).
+ * find at all (NO_FINDS).
  */
 const findsOf = (id: string): "bits" | "levels" | null => {
   const kind = Object.hasOwn(PACK_ITEMS, id) ? PACK_ITEMS[id].kind : "none";
-  if (["hearts", "known", "none", "prize"].includes(kind)) return null;
+  if (NO_FINDS.has(kind)) return null;
   return kind === "bits" ? "bits" : "levels";
 };
 

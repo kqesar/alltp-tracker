@@ -53,6 +53,7 @@ export const SHARE_ITEMS: readonly string[] = `
   reward9
   magic
   hearts tenbombs
+  escape fluteactive heldcrystals heldgreen heldpendants
 `
   .trim()
   .split(/\s+/);

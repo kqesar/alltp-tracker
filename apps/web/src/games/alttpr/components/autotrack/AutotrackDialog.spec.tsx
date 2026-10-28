@@ -475,12 +475,12 @@ describe("AutotrackDialog's actions", () => {
     );
 
     expect(screen.getByTestId("autotrack-follow")).toHaveTextContent(
-      "In Race Mode, these stay yours to mark: pendants and crystals, chests inside dungeons, bottles.",
+      "In Race Mode, these stay yours to mark: each dungeon's prize, red crystals included.",
     );
     // Where shuffled entrances lead, too
     act(() => useGameStore.getState().applyPreset("crosskeys"));
     expect(screen.getByTestId("autotrack-follow")).toHaveTextContent(
-      "chests inside dungeons, bottles, where entrances lead.",
+      "red crystals included, and where entrances lead.",
     );
     await user.click(screen.getByTestId("autotrack-sync"));
     expect(screen.getByTestId("autotrack-sync-status")).toHaveTextContent(
@@ -745,11 +745,15 @@ describe("AutotrackDialog's readout", () => {
     expect(screen.getByTestId("readout-progress")).toHaveTextContent(
       "Game startednot read yet",
     );
+    // The pendants by name, the crystals never by number
     expect(screen.getByTestId("readout-prizes")).toHaveTextContent(
-      "Not read in Race Mode",
+      "Pendant of Courage",
     );
     expect(screen.getByTestId("readout-race-mode")).toHaveTextContent(
-      "Bottles",
+      "Which crystals are 5 and 6",
+    );
+    expect(screen.getByTestId("readout-race-mode")).toHaveTextContent(
+      "Zelda's rescue",
     );
   });
 });

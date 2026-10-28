@@ -157,6 +157,15 @@ const DUNGEON_ITEM_NAMES: Readonly<Record<string, string>> = {
   map: "Map",
 };
 
+/** A crystal by its number. */
+const CRYSTAL = /^crystal\d$/;
+
+/** What Race Mode keeps of the crystals: which are 5 and 6. */
+const CRYSTAL_NUMBERS = "Which crystals are 5 and 6";
+
+/** Zelda's rescue, a location the pack checks (check-flags.ts). */
+const ZELDA = "zelda";
+
 /** Items not listed one by one when withheld, named once as a group. */
 const GROUPS: readonly (readonly [RegExp, string])[] = [
   [/^(pendant|crystal)/, "Pendants and crystals"],
@@ -172,8 +181,12 @@ export type Readout = {
     readonly dungeon: string;
     readonly items: readonly string[];
   }[];
+  /**
+   * The pendants and crystals held: each by name, or in Race Mode the
+   * crystals as a count ("Crystals ×2"), never which are 5 and 6.
+   */
   readonly prizes: readonly string[];
-  /** Why the prizes are not known, when they are not (Race Mode). */
+  /** Why the prizes are not known, when they are not (not read yet). */
   readonly prizesUnread: Unsettled | null;
   /**
    * The dungeon prizes the game shows, read from the ROM (the pack's
@@ -529,9 +542,17 @@ export const describeReading = (
     if (count > 0)
       add(byDungeon, code, `${count} small key${count > 1 ? "s" : ""} in hand`);
   }
+  // Race Mode counts the crystals, never names them (v2.0: not which is a
+  // 5/6 crystal)
+  const { held } = reading;
+  if (typeof held !== "string" && unsettled.crystal1 === "race-mode") {
+    if (held.crystal > 0) prizes.push(`Crystals ×${held.crystal}`);
+    withheld.set(CRYSTAL_NUMBERS, "race-mode");
+  }
   let prizesUnread: Unsettled | null = null;
   for (const [id, why] of Object.entries(unsettled) as [ItemId, Unsettled][]) {
     if (EVENTS.has(id)) continue;
+    if (CRYSTAL.test(id) && withheld.has(CRYSTAL_NUMBERS)) continue;
     if (PRIZES[id]) prizesUnread = why;
     const group = GROUPS.find(([pattern]) => pattern.test(id))?.[1];
     withheld.set(group ?? NAMES[id] ?? LEVELS[id]?.[0] ?? id, why);
@@ -546,17 +567,17 @@ export const describeReading = (
       locationName(id, code !== null),
     );
   }
-  for (const why of ["race-mode", "not-read"] as const) {
-    const count = reading.unsettled.filter(([, w]) => w === why).length;
-    if (count > 0) {
-      withheld.set(
-        why === "race-mode"
-          ? `Checks inside dungeons (${count})`
-          : `Checked locations (${count})`,
-        why,
-      );
-    }
+  // Race Mode reads every check but Zelda's rescue (v2.0 forbids telling it)
+  const raceChecks = reading.unsettled.filter(([, w]) => w === "race-mode");
+  if (raceChecks.some(([id]) => id === ZELDA)) {
+    withheld.set("Zelda's rescue", "race-mode");
   }
+  const otherRaceChecks = raceChecks.filter(([id]) => id !== ZELDA).length;
+  if (otherRaceChecks > 0) {
+    withheld.set(`Checked locations (${otherRaceChecks})`, "race-mode");
+  }
+  const unread = reading.unsettled.filter(([, w]) => w === "not-read").length;
+  if (unread > 0) withheld.set(`Checked locations (${unread})`, "not-read");
 
   const { bosses, completed, goal, rescueZelda, started } = reading.progress;
   const fallen = (code: DungeonCode) =>

@@ -61,8 +61,9 @@ export type Hidden =
   /** Tracked by hand: its times are clicks. */
   | "by-hand"
   /**
-   * Autotracked in Race Mode, which never reads a dungeon's chests: places
-   * outside dungeons are stamped, none inside, so most finds go by item.
+   * Places outside dungeons stamped, none inside: autotracked in Race Mode
+   * before 2.53, which did not read a dungeon's chests, so most finds go by
+   * item.
    */
   | "race-mode";
 
