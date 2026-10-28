@@ -1,5 +1,13 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { ShareDialog } from "@/components/ui/ShareDialog";
 import type { ShareResult } from "@/share/shareRun";
 
@@ -8,6 +16,13 @@ const COPIED =
   "Link copied. The run stays in the link, never sent to a server.";
 
 describe("ShareDialog", () => {
+  // The QR code is a lazy chunk. Its first evaluation is the slowest thing a
+  // test here waits for (coverage instruments it, a busy machine delays it),
+  // and findBy* gives up after a second: load it once, outside any wait.
+  beforeAll(async () => {
+    await import("@/components/ui/QrCode");
+  });
+
   const writeText = vi.fn<(text: string) => Promise<void>>();
   const onClose = vi.fn();
 
