@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.50.1](https://github.com/kqesar/alltp-tracker/compare/v2.50.0...v2.50.1) (2026-10-28)
+
+
+### 🐛 Bug Fixes
+
+* **web:** leave a dungeon's unopened checks unticked when its counter is 0 ([5bdb2b5](https://github.com/kqesar/alltp-tracker/commit/5bdb2b545a5e2c8e0b8126626b22290cd4ada0a4))
+
+
+### 📚 Documentation
+
+* say when a dungeon's counter ticks its checks ([11cf1f5](https://github.com/kqesar/alltp-tracker/commit/11cf1f5d9089e350e2dbf7afc1d07a3aeee00100))
+
 ## [2.50.0](https://github.com/kqesar/alltp-tracker/compare/v2.49.0...v2.50.0) (2026-10-28)
 
 
