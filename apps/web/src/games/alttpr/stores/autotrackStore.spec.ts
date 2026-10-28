@@ -506,6 +506,29 @@ describe("a race, once read, is remembered", () => {
     expect(isRaceModeOrPending(store())).toBe(true);
   });
 
+  it("decodes as in a race while remembered, over a ROM whose flag says open", async () => {
+    act(() => useAutotrackStore.setState({ raceSeen: true }));
+    const h = harness({ race: false });
+    await act(() => connectAutotrack());
+    await h.advance(0);
+
+    // The session reads the flag as open; the page still shows Race Mode,
+    // so nothing a race keeps back is decoded
+    expect(store().status).toMatchObject({ race: { flag: "open" } });
+    expect(isRaceModeOrPending(store())).toBe(true);
+    expect(store().reading).toMatchObject({
+      entrances: "race-mode",
+      prizes: "race-mode",
+      race: true,
+    });
+    expect(store().reading?.progress.rescueZelda).toBe("race-mode");
+
+    // The race called over: decoded again at once, as the seed is
+    act(() => store().endRace());
+    expect(store().reading?.race).toBe(false);
+    expect(store().reading?.progress.rescueZelda).toBe(true);
+  });
+
   it("keeps it across a reload", async () => {
     await raceThenDisconnect();
     expect(saved().raceSeen).toBe(true);
