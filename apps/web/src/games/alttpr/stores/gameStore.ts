@@ -3,7 +3,11 @@ import { devtools, persist } from "zustand/middleware";
 import { boardRestored, runReplaced } from "@/autotrack/raceMode";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
 import type { ItemState } from "@/games/alttpr/data/items";
-import { items as initialItems, TOGGLE_ITEMS } from "@/games/alttpr/data/items";
+import {
+  CLAMPED_ITEMS,
+  items as initialItems,
+  TOGGLE_ITEMS,
+} from "@/games/alttpr/data/items";
 import {
   DEFAULT_SHORTCUTS,
   type Keymap,
@@ -526,10 +530,14 @@ export const useGameStore = create<GameState>()(
             }
 
             // Chest counters count down as chests are emptied; everything
-            // else counts up. Both wrap round to the far end of their range.
+            // else counts up. Both wrap round to the far end of their range,
+            // but for the counters that stop there (CLAMPED_ITEMS).
             const step = (item.startsWith("chest") ? -1 : 1) * direction;
             const [min, max] = itemRange(item, state.settings);
             const next = current + step;
+            if (CLAMPED_ITEMS.has(item) && (next < min || next > max)) {
+              return state;
+            }
             return record(state, {
               items: {
                 ...state.items,

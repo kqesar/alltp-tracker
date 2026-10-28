@@ -48,10 +48,17 @@ describe("GridItem", () => {
     fireEvent.click(hearts);
     expect(useGameStore.getState().items.hearts).toBe(2);
     expect(hearts).toHaveTextContent("4");
-    // Back past 3: not set again
+    // Back past 3: not set again, and never round to 20
     fireEvent.contextMenu(hearts);
     fireEvent.contextMenu(hearts);
     expect(hearts).toHaveTextContent("?");
+    fireEvent.contextMenu(hearts);
+    expect(hearts).toHaveTextContent("?");
+    expect(useGameStore.getState().items.hearts).toBe(0);
+    // Nor past 20 round to not set
+    act(() => useGameStore.getState().setItem("hearts", 18));
+    fireEvent.click(hearts);
+    expect(hearts).toHaveTextContent("20");
   });
 
   it("gives a boss cell its three overlays", () => {
