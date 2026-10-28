@@ -292,8 +292,9 @@ describe("gameView", () => {
     // a prize to its dungeon
     expect(gameView(readingOf(memory), fresh()).items.reward0).toBe(1);
     expect(view.items).not.toHaveProperty("reward0");
-    // Nor Zelda's rescue
-    expect(view.items).not.toHaveProperty("escape");
+    // Nor Zelda's rescue: the escape not known, done as by hand, whatever a
+    // reading before the race said
+    expect(view.items.escape).toBe(0);
     // The checks inside dungeons (dungeon-locations), and the counter
     expect(view.checked).toMatchObject({
       "eastern-palace/boss": true,
@@ -556,8 +557,9 @@ describe("syncView", () => {
       // What a race reads: the bottles, and the counter from the checks
       bottle: 1,
       chest0: 1,
-      // What it does not: the dungeon's prize, Zelda's rescue
-      escape: 1,
+      // What it does not: the dungeon's prize, kept as the player named it;
+      // Zelda's rescue, an escape read before the race no longer known
+      escape: 0,
       hookshot: true,
       reward0: 3,
       sword: 2,

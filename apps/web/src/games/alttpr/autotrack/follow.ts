@@ -62,6 +62,12 @@ export type Follower = {
    * what the game holds laid on it, nothing the player marked beyond.
    */
   holdsGameOnly: () => boolean;
+  /**
+   * Lay all the game says at the next reading, as at the first: the board
+   * lost a value the game still holds (the escape, forgotten when the
+   * connection dropped).
+   */
+  resume: () => void;
 };
 
 /** Two records or arrays with the same values under the same keys. */
@@ -218,6 +224,9 @@ export const createFollower = (): Follower => {
       shown = view;
       if (isEmptyView(news)) return;
       store.applyGameNews((board) => mergeView(board, news)?.next ?? null);
+    },
+    resume: () => {
+      shown = null;
     },
     steady: (at) => {
       const game = useGameStore.getState();

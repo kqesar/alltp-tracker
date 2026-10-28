@@ -96,6 +96,28 @@ export type PackItem =
   /** Nothing the rules read: the blank cell, a dungeon's counter. */
   | { readonly kind: "none" };
 
+/**
+ * The values of the `escape` cell. It never sticks: Race Mode, the end of
+ * autotracking, an imported or shared run set it back to NOT_KNOWN
+ * (`forgetEscape`, `loadProgress`), and the relay of a race never carries it.
+ */
+export const ESCAPE = {
+  /** Read: the escape done. */
+  DONE: 2,
+  /** Read: Zelda not yet in the Sanctuary. */
+  GOING: 1,
+  /** Not known: Hyrule Castle counted finished, as a run by hand counts it. */
+  NOT_KNOWN: 0,
+} as const;
+
+/** A run's items with the escape no longer known: the same object if it was not. */
+export const withoutEscape = <Items extends Readonly<Record<string, unknown>>>(
+  items: Items,
+): Items =>
+  items.escape === undefined || items.escape === ESCAPE.NOT_KNOWN
+    ? items
+    : { ...items, escape: ESCAPE.NOT_KNOWN };
+
 /** The values of an `activation` cell (`fluteactive`). */
 export const ACTIVATION = {
   /** Read: activated. */
@@ -354,7 +376,7 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
         break;
       case "escape":
         // Zelda not yet in the Sanctuary: Hyrule Castle not finished
-        if (value === 1) beaten["hyrule-castle"] = false;
+        if (value === ESCAPE.GOING) beaten["hyrule-castle"] = false;
         break;
       case "held":
         if (value > 0) prizesHeld[entry.prize] = value;

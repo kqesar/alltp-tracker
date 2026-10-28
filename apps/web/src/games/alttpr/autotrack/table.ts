@@ -136,7 +136,8 @@ export const prizeOf = (
  * The least value of a cell that holds both what the player marked and
  * what the game shows: the higher of two levels, the blue and the red
  * boomerang together, a boss beaten on either side. A prize the player
- * named stays: two prizes never join.
+ * named stays: two prizes never join. The escape, which no player marks,
+ * is the game's.
  * @param id - The cell's item id
  * @param board - The value the player marked
  * @param game - The value the game shows
@@ -149,6 +150,8 @@ export const joinValues = (
   const entry = PACK_ITEMS[id];
   switch (entry?.kind) {
     case "escape":
+      // The game's alone: no player marks it, and Race Mode sets it back
+      return game;
     case "hearts":
     case "held":
     case "known":
