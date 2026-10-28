@@ -364,6 +364,45 @@ describe("following the game", () => {
     expect(store().past).toEqual([]);
   });
 
+  it("stamps each find the game lays with the timer's reading, outside Race Mode", () => {
+    vi.useFakeTimers({ now: Date.UTC(2026, 9, 28, 9, 30), toFake: ["Date"] });
+    try {
+      const start = Date.now();
+      store().startTimer(start);
+      const memory = seedMemory({ race: false });
+      const follower = createFollower();
+
+      vi.setSystemTime(start + 60_000);
+      follower.read(readingOf(memory));
+      const first = { at: start + 60_000, ms: 60_000 };
+      expect(store().timeline).toEqual({
+        "check:eastern-palace/boss": first,
+        "check:eastern-palace/compass-chest": first,
+        "check:links-house": first,
+        "item:boss0:2": first,
+        "item:bottle:1": first,
+        "item:hookshot": first,
+        "item:sword:1": first,
+        "item:sword:2": first,
+      });
+
+      // A later reading: King's Tomb opened and the Moon Pearl found there
+      vi.setSystemTime(start + 90_000);
+      checkIn(memory, "kings-tomb");
+      memory[SAVE(0x357)] = 0x01;
+      follower.read(readingOf(memory));
+      const second = { at: start + 90_000, ms: 90_000 };
+      expect(store().timeline).toMatchObject({
+        "check:kings-tomb": second,
+        "check:links-house": first,
+        "item:moonpearl": second,
+      });
+      expect(Object.keys(store().timeline)).toHaveLength(10);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("tells a board holding the game alone from one the player marked", () => {
     const follower = createFollower();
     expect(follower.holdsGameOnly()).toBe(true);

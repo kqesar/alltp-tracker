@@ -1147,6 +1147,70 @@ describe("GameStore", () => {
       });
     });
 
+    it("keeps an earlier release's stamps through a reload, and the cells added since date nothing", async () => {
+      // A run as a release before the hearts cell saved it: no `hearts`,
+      // `tenbombs`, `escape`, `fluteactive` or `held*` among its items
+      const added = ["hearts", "tenbombs", "escape", "fluteactive"];
+      const earlier = Object.fromEntries(
+        Object.entries(store().items).filter(
+          ([id]) => !added.includes(id) && !id.startsWith("held"),
+        ),
+      );
+      const { hearts } = store().items;
+      expect(Object.keys(store().items)).toEqual(
+        expect.arrayContaining([...added, "heldcrystals"]),
+      );
+      const timeline = {
+        "check:eastern-palace/boss": { at: T0 + 1000, ms: 900 },
+        "check:links-house": { at: T0, ms: 0 },
+        "item:boss0:2": { at: T0 + 1000, ms: 900 },
+        "item:bow:2": { at: T0 + 2000, ms: 1900 },
+        "item:hookshot": { at: T0 + 3000, ms: null },
+        "item:sword:1": { at: T0 + 4000, ms: 3900 },
+        "item:sword:2": { at: T0 + 5000, ms: 4900 },
+      };
+      storeSave(
+        {
+          checked: { "eastern-palace/boss": true, "links-house": true },
+          items: { ...earlier, boss0: 2, bow: 2, hookshot: true, sword: 2 },
+          timeline,
+        },
+        PERSIST_VERSION,
+      );
+
+      await useGameStore.persist.rehydrate();
+      expect(store().timeline).toEqual(timeline);
+      expect(store().items.hearts).toBe(hearts);
+
+      // What autotracking reads of the cells added since dates nothing, and
+      // takes no stamp away
+      store().startTimer(T0);
+      at(60_000);
+      store().applyGameNews((progress) => ({
+        items: {
+          ...progress.items,
+          escape: 2,
+          fluteactive: 3,
+          hearts: 9,
+          heldcrystals: 2,
+          tenbombs: 2,
+        },
+      }));
+      expect(store().timeline).toEqual(timeline);
+
+      // A find then is stamped beside them, and the whole is saved
+      store().handleItemClick("hammer");
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+      expect(saved.state.timeline).toEqual({
+        ...timeline,
+        "item:hammer": { at: T0 + 60_000, ms: 60_000 },
+      });
+      useGameStore.setState(useGameStore.getInitialState(), true);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+      await useGameStore.persist.rehydrate();
+      expect(Object.keys(store().timeline)).toHaveLength(8);
+    });
+
     it("refuses a save file whose timeline holds what is not a time", () => {
       const file = JSON.parse(store().exportState());
       file.progress.timeline = { "item:hammer": { at: T0, ms: "1:00" } };
