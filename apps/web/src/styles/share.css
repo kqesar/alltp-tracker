@@ -20,6 +20,19 @@
   font-size: var(--font-size-sm);
 }
 
+/* A shortened link's full form, with the timeline: why it is apart, and
+   the button that copies it */
+.share-full {
+  display: grid;
+  gap: var(--spacing-sm);
+  justify-items: start;
+  margin-top: var(--spacing-md);
+}
+
+.share-full .share-dialog__help {
+  margin-top: 0;
+}
+
 /* Live follow, the desktop app's section under the run's link
    (desktop/LiveFollowSection.tsx) */
 .live-follow {

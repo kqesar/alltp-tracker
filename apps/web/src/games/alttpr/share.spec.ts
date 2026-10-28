@@ -8,11 +8,13 @@ import {
   unpackLink,
 } from "@/games/alttpr/share";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-import { parseSave } from "@/games/alttpr/stores/persistence";
+import { parseSave, withoutTimeline } from "@/games/alttpr/stores/persistence";
 import { BitWriter, ByteWriter, toBase64Url } from "@/share/bytes";
 import legacyLink from "@/share/fixtures/link-alttpr-before-sizes.json";
 import { LINK_FORMAT, OTHER_VERSION } from "@/share/packed";
 import { play, randoms, SEEDS, STAGES } from "@/share/playedRuns";
+import { decodeRun, sharedPayload } from "@/share/runLink";
+import { CHAT_LINK_CHARS, makeLink } from "@/share/shareRun";
 
 const MALFORMED = "This link does not hold a tracker run.";
 
@@ -140,6 +142,44 @@ describe("an ALttPR run in a packed link", () => {
     const unpacked = unpackLink(packLink(save));
 
     expect(unpacked.ok && runOf(unpacked.save).timeline).toEqual({});
+  });
+
+  it("shares a late run short, without its timeline, and keeps the full link with it all", async () => {
+    // A run on the game's clock, which every menu pauses: each find's
+    // reading drifts from the instant anew, as an autotracked run's does
+    const played = play.alttpr(STAGES.late, randoms());
+    const stamps = Object.entries(runOf(played).timeline ?? {}).sort(
+      ([, a], [, b]) => a.at - b.at,
+    );
+    const save = withProgress(played, {
+      timeline: Object.fromEntries(
+        stamps.map(([key, { at, ms }], index) => [
+          key,
+          { at, ms: ms === null ? null : ms - index * 1237 },
+        ]),
+      ),
+    });
+    // What Share makes of a run: the full export, then the one without timeline
+    const link = await makeLink([save, withoutTimeline(save)].map(packLink));
+    const runIn = async (url: string) => {
+      const unpacked = unpackLink(
+        await decodeRun(sharedPayload(new URL(url).hash) ?? ""),
+      );
+      if (!unpacked.ok) throw new Error(unpacked.reason);
+      return runOf(unpacked.save);
+    };
+
+    expect(link.url.length).toBeLessThanOrEqual(CHAT_LINK_CHARS);
+    expect(link.full).not.toBeNull();
+    const short = await runIn(link.url);
+    const full = await runIn(link.full ?? "");
+    expect(short.timeline).toEqual({});
+    expect({ ...short, timeline: undefined }).toEqual({
+      ...runOf(save),
+      timeline: undefined,
+    });
+    expect(full).toEqual(runOf(save));
+    expect(Object.keys(full.timeline ?? {}).length).toBeGreaterThan(200);
   });
 
   it("opens a plain link as it always did", () => {
