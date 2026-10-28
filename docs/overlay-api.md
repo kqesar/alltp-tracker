@@ -127,7 +127,7 @@ sequenceDiagram
 | `timer` | `{state, elapsedMs, startedAt}`, or `null` for a game with no timer and in Race Mode. `state` is `idle`, `running`, `paused` or `finished` |
 | `goMode` | `yes` (every step in logic), `maybe`, `no`, or `null` |
 
-`goMode` is `null` when the game has none (Super Metroid, SMZ3), for a goal without one (all dungeons, triforce hunt), while a Mystery run's goal is not known, for a run whose logic the tracker does not model, and, for a run with shuffled entrances, until its solver has loaded (it is then recomputed at the next change to the run).
+`goMode` is `null` when the game has none (Super Metroid, SMZ3), for a goal without one (all dungeons), while a Mystery run's goal is not known, for a run whose logic the tracker does not model, and, for a run with shuffled entrances, until its solver has loaded (it is then recomputed at the next change to the run). A Triforce Hunt's is `yes` once the pieces its goal asks for are found, else `no`, from the two counts on its board; the counts themselves are not relayed.
 
 ### Events
 
