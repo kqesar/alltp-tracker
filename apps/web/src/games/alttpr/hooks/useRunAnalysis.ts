@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import {
   analyzeRun,
+  type GoModeLeft,
   type Missing,
   type RunAnalysis,
 } from "@/games/alttpr/logic/missing";
-import type { Ways } from "@/games/alttpr/logic/needs";
 import {
   type Solution,
   solutionOf,
@@ -108,8 +108,16 @@ export const useMissing = (id: string): Missing | null | undefined => {
 };
 
 /**
- * What the go mode is missing: undefined while the analysis is pending or
- * for a goal without one.
+ * What the go mode is missing, crystals aside: undefined while the analysis
+ * is pending or for a goal without one.
  */
-export const useGoModeMissing = (): Ways | undefined =>
+export const useGoModeLeft = (): GoModeLeft | undefined =>
   useCurrentAnalysis()?.goMode;
+
+/**
+ * What the go mode was missing at the last analysis, whichever solution it
+ * was for: a summary that waits for the next idle moment rather than blank
+ * out on every click (a list is read from useGoModeLeft only).
+ */
+export const useLastGoModeLeft = (): GoModeLeft | undefined =>
+  useAnalysisStore((state) => state.analysis?.goMode);

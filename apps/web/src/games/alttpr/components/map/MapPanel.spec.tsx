@@ -128,7 +128,7 @@ describe("MapPanel", () => {
       );
       act(() => analyzeNow());
       expect(screen.getByTestId("go-mode-panel")).toHaveTextContent(
-        "In logic with:",
+        "More than three items away, crystals aside.",
       );
     });
 

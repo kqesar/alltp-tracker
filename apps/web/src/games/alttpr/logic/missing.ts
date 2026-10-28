@@ -14,6 +14,7 @@
 // never runs on a click: apps/web/src/hooks/useRunAnalysis.ts asks for it
 // when the browser is idle, once per solution, and a hover only reads it.
 import {
+  type Analysis,
   type AnalyzeOptions,
   analyze,
   type CompiledWorld,
@@ -33,10 +34,13 @@ import {
   DUNGEONS,
   type DungeonId,
   dungeon,
+  everything,
+  type GoMode,
   type GoModeStatus,
   goModeBlockers,
   goModeOf,
   goModeStatus,
+  goModeStatusBy,
   TRICKS,
   type TrickId,
   trickFiller,
@@ -123,12 +127,88 @@ export type RunAnalysis = {
   /** Every location of the world not in logic. */
   readonly missing: ReadonlyMap<string, Missing>;
   /** What the run's go mode is missing, if its goal has one. */
-  readonly goMode?: Ways;
+  readonly goMode?: GoModeLeft;
   /**
    * The tricks it was worked out with (`TrickSolution.techniques`), by
    * identity: another list, or none, and it is stale, as for another run.
    */
   readonly tricks?: readonly TrickId[];
+};
+
+/**
+ * What the go mode is missing, crystals aside: the player counts the
+ * crystals on the board, so the ways are asked with every crystal held, and
+ * three items are three items, not two and the crystals.
+ */
+export type GoModeLeft =
+  /**
+   * The ways in items, fewest first; none when no three items bring it
+   * (everything held does).
+   */
+  | { readonly kind: "items"; readonly ways: Ways }
+  /** Nothing to get but crystals. */
+  | { readonly kind: "crystals" }
+  /**
+   * Nothing to get: in logic with every key the player does not track held.
+   * Short of go mode, a dungeon key may sit where the player cannot reach
+   * yet (the key model's `maybe`).
+   */
+  | { readonly kind: "nothing" }
+  /**
+   * No item brings it, everything held: it hangs on a setting not known yet
+   * or on where an item sits, which no list of items can settle.
+   */
+  | { readonly kind: "unknown" }
+  /** Behind a door not noted yet, in a run with shuffled entrances. */
+  | { readonly kind: "door" };
+
+/** Whether a list of ways is the one empty set: nothing to get. */
+export const isThere = (ways: Ways): boolean =>
+  ways.sets.length === 1 && ways.sets[0]?.length === 0;
+
+/** `state` with every crystal held: the members of the rules' crystal group. */
+const withCrystals = (rules: Rules, state: State): State => ({
+  ...state,
+  ...Object.fromEntries(
+    (rules.groups.get("crystal") ?? []).map((crystal) => [crystal, 1]),
+  ),
+});
+
+/**
+ * What the go mode is missing, from the ways to it with every crystal held.
+ * @param asIs - The ways to it as the run stands, asked only when nothing
+ *   is left with the crystals: are they what it waits on, or a key?
+ * @param anyItems - Whether everything held puts it in logic, asked only
+ *   when no three items do
+ */
+export const goModeLeftOf = (
+  left: Ways,
+  asIs: () => Ways,
+  anyItems: () => boolean,
+): GoModeLeft => {
+  if (isThere(left)) return { kind: isThere(asIs()) ? "nothing" : "crystals" };
+  if (left.sets.length === 0 && !anyItems()) return { kind: "unknown" };
+  // waysOf may fold a set's hearts into one need: fewest needs first again
+  const sets = [...left.sets].sort((a, b) => a.length - b.length);
+  return { kind: "items", ways: { ...left, sets } };
+};
+
+const everythingGoMode = new WeakMap<AlttprSettings, boolean>();
+
+/** Whether a run's go mode is in logic with everything held. */
+const inLogicWithEverything = (
+  settings: AlttprSettings,
+  mode: GoMode,
+): boolean => {
+  let found = everythingGoMode.get(settings);
+  if (found === undefined) {
+    const { world } = fillerOf(settings);
+    found =
+      goModeStatusBy((s) => solve(world, s), everything(settings), mode).tri ===
+      "yes";
+    everythingGoMode.set(settings, found);
+  }
+  return found;
 };
 
 /** The most atoms in one set: three things to get at once. */
@@ -562,19 +642,38 @@ export const analyzeRun = (
     }
   }
   return {
-    goMode:
-      mode === undefined
-        ? undefined
-        : waysOf(
-            goModeBlockers(fill.world, state, mode, settingsOptions, (s) =>
-              s === state ? analysis : analyze(fill.world, s, settingsOptions),
-            ),
-            state,
-          ),
+    goMode: mode && standardGoMode(solution, mode, state, analysis),
     missing,
     solution,
     tricks: tricks?.techniques,
   };
+};
+
+/**
+ * What the go mode is missing in a world without shuffled entrances.
+ * @param state - The run's state with every untracked key held
+ * @param analysis - That state analyzed
+ */
+const standardGoMode = (
+  { settings }: Solution,
+  mode: GoMode,
+  state: State,
+  analysis: Analysis,
+): GoModeLeft => {
+  const { world } = fillerOf(settings);
+  const opts = optionsOf(settings);
+  const crystals = withCrystals(world.rules, state);
+  return goModeLeftOf(
+    waysOf(goModeBlockers(world, crystals, mode, opts), crystals),
+    () =>
+      waysOf(
+        goModeBlockers(world, state, mode, opts, (s) =>
+          s === state ? analysis : analyze(world, s, opts),
+        ),
+        state,
+      ),
+    () => inLogicWithEverything(settings, mode),
+  );
 };
 
 /**
@@ -625,25 +724,27 @@ const analyzeCrossed = (solution: Solution, run: RunSettings): RunAnalysis => {
     });
   }
   const mode = goModeOfRun(run, settings);
+  const goMode = (found: GoMode): GoModeLeft => {
+    const steps = found.steps.map(({ location }) => all.location(location));
+    if (steps.includes("no")) return { kind: "door" };
+    const { compiled } = crossed.world;
+    const blockers = (state: State) =>
+      waysOf(
+        goModeBlockers(compiled, state, found, settingsOptions, (s) =>
+          s === crossed.state
+            ? analysis
+            : crossed.solver.analyze(crossed, s, settingsOptions),
+        ),
+        state,
+      );
+    return goModeLeftOf(
+      blockers(withCrystals(compiled.rules, crossed.state)),
+      () => blockers(crossed.state),
+      () => steps.every((tri) => tri === "yes"),
+    );
+  };
   return {
-    goMode:
-      mode === undefined
-        ? undefined
-        : mode.steps.some(({ location }) => all.location(location) === "no")
-          ? door
-          : waysOf(
-              goModeBlockers(
-                crossed.world.compiled,
-                crossed.state,
-                mode,
-                settingsOptions,
-                (s) =>
-                  s === crossed.state
-                    ? analysis
-                    : crossed.solver.analyze(crossed, s, settingsOptions),
-              ),
-              crossed.state,
-            ),
+    goMode: mode && goMode(mode),
     missing,
     solution,
   };

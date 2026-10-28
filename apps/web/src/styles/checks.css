@@ -174,6 +174,13 @@
   box-shadow: var(--focus-ring);
 }
 
+/* Not yet: room for the count the idle analysis brings ("3 items left"),
+   so the buttons beside it do not move when it comes; on a narrow screen
+   with large text the room gives way before the page overflows */
+.go-mode--no {
+  min-width: min(15em, 100vw - 4rem);
+}
+
 .go-mode__glyph {
   font-size: var(--font-size-base);
   font-weight: 800;
@@ -218,6 +225,80 @@
   border: 1px solid var(--color-border-strong);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-elevated);
+}
+
+/* What go mode is missing, crystals aside: a way per row, its items with
+   their icons and a "+" between them, which a screen reader skips (each
+   item is a list item of its own) */
+.go-left {
+  display: grid;
+  gap: var(--spacing-xs);
+  line-height: 1.6;
+}
+
+.go-left__lead {
+  margin: 0;
+}
+
+.go-left__ways,
+.go-left__needs {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.go-left__way {
+  padding: var(--spacing-xs) 0;
+}
+
+.go-left__way + .go-left__way {
+  border-top: 1px solid var(--color-border);
+}
+
+.go-left__needs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--spacing-sm);
+  align-items: center;
+}
+
+.go-left__need {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.go-left__needs--alone {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.go-left__needs:not(.go-left__needs--alone)
+  .go-left__need
+  + .go-left__need::before {
+  margin-right: var(--spacing-sm);
+  color: var(--color-text-muted);
+  content: "+" / "";
+}
+
+.go-left__more summary {
+  min-height: 2rem;
+  font-weight: 600;
+  line-height: 2rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.go-left__more summary:focus-visible {
+  outline: none;
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--focus-ring);
+}
+
+.go-left__note {
+  margin: 0;
+  color: var(--color-text-muted);
 }
 
 .map-view {

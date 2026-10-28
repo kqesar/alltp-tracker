@@ -2,11 +2,12 @@ import type { TrickId } from "@alltp/pack-alttpr";
 import { Fragment } from "react";
 import { OutLink } from "@/components/ui/OutLink";
 import { TRICK_WORDS } from "@/games/alttpr/data/tricks";
-import type {
-  Doubt,
-  Missing,
-  MissingGroup,
-  Spot,
+import {
+  type Doubt,
+  isThere,
+  type Missing,
+  type MissingGroup,
+  type Spot,
 } from "@/games/alttpr/logic/missing";
 import type { Ways } from "@/games/alttpr/logic/needs";
 import { getAssetPath } from "@/games/alttpr/utils";
@@ -112,10 +113,6 @@ export const TrickWays = ({
     ))}
   </>
 );
-
-/** Whether a list of ways is the one empty set: nothing to get. */
-const isThere = (ways: Ways) =>
-  ways.sets.length === 1 && ways.sets[0]?.length === 0;
 
 /**
  * What a location is missing, line by line: out of logic, what puts it in

@@ -203,9 +203,7 @@ describe("a run with shuffled entrances", () => {
     expect(goModeStatusOf(store())).toMatchObject({ tri: "no" });
     // Nothing to get brings it: only a door noted would
     expect(analyzeRun(solutionOf(store()), store().settings).goMode).toEqual({
-      door: true,
-      sets: [],
-      truncated: false,
+      kind: "door",
     });
   });
 });
