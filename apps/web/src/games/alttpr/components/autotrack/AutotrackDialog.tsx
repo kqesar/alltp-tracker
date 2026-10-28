@@ -10,6 +10,7 @@ import { RaceModeOption } from "@/components/autotrack/RaceModeOption";
 import { SetupGuide } from "@/components/autotrack/SetupGuide";
 import {
   RaceBadge,
+  RememberedRaceBadge,
   raceReason,
   StatusDot,
 } from "@/components/autotrack/StatusDot";
@@ -152,6 +153,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
                 {headline}
               </p>
               {race && <RaceBadge race={race} />}
+              {!race && remembered && <RememberedRaceBadge />}
             </div>
             <p className="autotrack-status__detail">
               {unavailable

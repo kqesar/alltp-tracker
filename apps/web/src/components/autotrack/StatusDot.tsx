@@ -73,6 +73,22 @@ export const RaceBadge = ({
   </span>
 );
 
+/**
+ * The badge of a Race Mode that only the memory holds (`isRaceHeldByMemory`):
+ * the seed was read as a race's earlier and nobody called the race over, so
+ * every gate keeps to Race Mode while the session says nothing of one. It
+ * claims no legality: nothing is being read.
+ */
+export const RememberedRaceBadge = () => (
+  <span
+    className="race-badge"
+    data-testid="race-badge-remembered"
+    title="This run's seed was read as a race's, so Race Mode stays on until the race is called over."
+  >
+    Race Mode
+  </span>
+);
+
 /** The race-legal badge's words, for a name that holds it. */
 export const raceBadgeText = (race: RaceStatus) =>
   race.setting === "on" ? "Race-legal Always on" : "Race-legal";

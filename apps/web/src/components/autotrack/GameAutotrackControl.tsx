@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import type { GameAutotrack } from "@/autotrack/gameSession";
+import { isRaceHeldByMemory } from "@/autotrack/raceMode";
 import { headlineOf, phaseOf } from "@/autotrack/status";
-import { StatusDot } from "@/components/autotrack/StatusDot";
+import {
+  RememberedRaceBadge,
+  StatusDot,
+} from "@/components/autotrack/StatusDot";
 import type { lazyDialog } from "@/components/ui/lazyDialog";
 import { PlugIcon } from "@/components/ui/ToolbarIcons";
 
@@ -36,6 +40,7 @@ export const GameAutotrackControl = <Reading,>({
   const elsewhere = session.useStore((state) => state.elsewhere);
   const shown = session.useStore((state) => state.shown);
   const unavailable = session.useStore((state) => state.unavailable);
+  const remembered = session.useStore(isRaceHeldByMemory);
   const { open, shown: shownDialog } = dialog.useDialog();
   const phase = unavailable ? "problem" : phaseOf(shown, active, elsewhere);
   const headline = unavailable
@@ -52,7 +57,7 @@ export const GameAutotrackControl = <Reading,>({
     <>
       <button
         {...dialog.handlers}
-        aria-label={`Autotracking, ${headline}`}
+        aria-label={`Autotracking${remembered ? " Race Mode" : ""}, ${headline}`}
         className="tracker-controls__button autotrack-button"
         data-phase={phase}
         data-testid="autotrack-button"
@@ -65,6 +70,12 @@ export const GameAutotrackControl = <Reading,>({
           <StatusDot phase={phase} />
         </span>
         <span className="toolbar-label">Autotracking</span>
+        {remembered && (
+          <>
+            {" "}
+            <RememberedRaceBadge />
+          </>
+        )}
       </button>
       <span className="sr-only" data-testid="autotrack-live" role="status">
         {message}

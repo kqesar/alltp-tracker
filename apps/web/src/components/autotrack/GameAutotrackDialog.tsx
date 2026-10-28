@@ -7,6 +7,7 @@ import { RaceModeOption } from "@/components/autotrack/RaceModeOption";
 import { SetupGuide } from "@/components/autotrack/SetupGuide";
 import {
   RaceBadge,
+  RememberedRaceBadge,
   raceReason,
   StatusDot,
 } from "@/components/autotrack/StatusDot";
@@ -88,6 +89,7 @@ export const GameAutotrackDialog = <Reading,>({
                 {headline}
               </p>
               {race && <RaceBadge flag={session.raceFlag} race={race} />}
+              {!race && remembered && <RememberedRaceBadge />}
             </div>
             <p className="autotrack-status__detail">
               {unavailable

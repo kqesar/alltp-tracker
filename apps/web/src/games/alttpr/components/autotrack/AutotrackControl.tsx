@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { isRaceHeldByMemory } from "@/autotrack/raceMode";
 import { headlineOf, phaseOf } from "@/autotrack/status";
 import { lazyAutotrackDialog } from "@/components/autotrack/lazyAutotrackDialog";
 import {
   RaceBadge,
+  RememberedRaceBadge,
   raceBadgeText,
   StatusDot,
 } from "@/components/autotrack/StatusDot";
@@ -25,6 +27,7 @@ const useAutotrackSummary = () => {
   const elsewhere = useAutotrackStore((state) => state.elsewhere);
   const shown = useAutotrackStore((state) => state.shown);
   const unavailable = useAutotrackStore((state) => state.unavailable);
+  const remembered = useAutotrackStore(isRaceHeldByMemory);
   return {
     headline: unavailable
       ? "Could not load: reload the page"
@@ -36,6 +39,7 @@ const useAutotrackSummary = () => {
       active && !elsewhere && shown.code === "connected" && shown.race.active
         ? shown.race
         : null,
+    remembered,
   };
 };
 
@@ -52,7 +56,9 @@ export const AutotrackControl = ({
 }: {
   variant?: "toolbar" | "menu";
 }) => {
-  const { headline, phase, race } = useAutotrackSummary();
+  const { headline, phase, race, remembered } = useAutotrackSummary();
+  // Race Mode held by the memory alone has a badge too: the gates keep to it
+  const memory = race === null && remembered;
   const { open, shown } = dialog.useDialog();
   const icon = (
     <span className="autotrack-icon">
@@ -68,7 +74,7 @@ export const AutotrackControl = ({
           {...dialog.handlers}
           detail={
             race === null
-              ? headline
+              ? `${headline}${memory ? ", Race Mode" : ""}`
               : `${headline}, race-legal${race.setting === "on" ? ", always on" : ""}`
           }
           icon={icon}
@@ -82,7 +88,7 @@ export const AutotrackControl = ({
           // Its words and badge are flex items, which browsers name with
           // spaces between them: one name, the visible text first, in the
           // order it shows, then the status the dot stands for
-          aria-label={`Autotracking${race ? ` ${raceBadgeText(race)}` : ""}, ${headline}`}
+          aria-label={`Autotracking${race ? ` ${raceBadgeText(race)}` : memory ? " Race Mode" : ""}, ${headline}`}
           className="tracker-controls__button autotrack-button"
           data-phase={phase}
           data-testid="autotrack-button"
@@ -96,6 +102,12 @@ export const AutotrackControl = ({
             <>
               {" "}
               <RaceBadge race={race} />
+            </>
+          )}
+          {memory && (
+            <>
+              {" "}
+              <RememberedRaceBadge />
             </>
           )}
         </button>
