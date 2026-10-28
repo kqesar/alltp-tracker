@@ -143,6 +143,20 @@ describe("a place out of logic by basic placement's margin alone", () => {
     ]);
   });
 
+  it("shows Turtle Rock's laser bridge without protection, and names it", () => {
+    const bare = run(15, { boss9: 0, byrna: false, cape: false, shield: 2 });
+    const BRIDGE = "turtle-rock/eye-bridge/top-right";
+    expect(solutionOf(bare).tris[BRIDGE]).toBe("no");
+    expect(locationStateOf(BRIDGE, bare)).toBe("margin");
+    const missing = analyzeRun(solutionOf(bare), bare.settings).missing.get(
+      BRIDGE,
+    );
+    expect(missing?.margin).toEqual({ gates: ["laserBridge"] });
+    expect(missing && waysText(missing.inLogic)).toBe(
+      "Cane of Byrna, or Magic Cape, or Mirror Shield",
+    );
+  });
+
   it("shows a boss Basic wants a better weapon for, and names it", () => {
     // The Fighter's Sword, no magic: Ice Palace's way in and Kholdstare
     // both wait for the Master Sword

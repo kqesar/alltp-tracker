@@ -22,6 +22,11 @@
 //   magic and the Fire Rod; Blind a sword with the Cape or the Cane of
 //   Byrna) on top of what beats them (Boss.php:86-123): every
 //   `!setting(basicPlacement)` of the boss's rule reads `|` its item;
+// - Turtle Rock's laser bridge: basic placement asks the Cape, the Cane of
+//   Byrna or the Mirror Shield against the lasers (TurtleRock.php:192-222,
+//   Inverted's alike), which the advanced placement does without: the
+//   clause, an `or` with `!setting(basicPlacement)` beside `cape`, gains
+//   `marginLaserBridge`;
 // - Ganon: basic placement asks the Tempered Sword where the Master Sword
 //   does (`region.requireBetterSword`) and the silver arrows
 //   (`region.requireBetterBow`, World.php:261-267; DarkWorld/NorthEast.php:
@@ -33,8 +38,7 @@
 // With every item at 0 the world reads as the real one; with one at 1, as
 // the real one without that margin. What is not a margin stays as it is:
 // those clauses ask the player to get through, or to know less, not to be
-// sturdier. Turtle Rock's laser bridge (the Cape, the Cane of Byrna or the
-// Mirror Shield against its lasers), the Pegasus Boots for a gap the
+// sturdier. The Pegasus Boots for a gap the
 // Hookshot crosses (Misery Mire, Ganon's Tower, the Hookshot Cave), Ganon's
 // Tower's torches (the Fire Rod or Ether), the Book of Mudora at the
 // Pedestal, the Magic Mirror to bring the smith back, the Hookshot at the
@@ -63,7 +67,13 @@ export type MarginGate =
       readonly source: Source;
     }
   /** Ganon's better sword and silver arrows. */
-  | { readonly kind: "ganon"; readonly item: string; readonly source: Source };
+  | { readonly kind: "ganon"; readonly item: string; readonly source: Source }
+  /** Turtle Rock's laser bridge: the Cape, Byrna or the Mirror Shield. */
+  | {
+      readonly kind: "laserBridge";
+      readonly item: string;
+      readonly source: Source;
+    };
 
 const dungeonGate = (dungeon: DungeonId, item: string, source: Source) =>
   ({ dungeon, item, kind: "dungeon", source }) as const;
@@ -101,6 +111,11 @@ export const MARGIN_GATES = {
     "marginKholdstare",
     108,
   ),
+  laserBridge: {
+    item: "marginLaserBridge",
+    kind: "laserBridge",
+    source: "app/Region/Standard/TurtleRock.php:192",
+  },
   miseryMire: dungeonGate(
     "misery-mire",
     "marginMiseryMire",
@@ -193,6 +208,12 @@ const readsHealth = (e: Expr): boolean => {
   return found;
 };
 
+/** Whether an `or` is the laser bridge's: not basic, or the Cape. */
+const isLaserBridge = (e: Expr): boolean =>
+  e.type === "or" &&
+  e.args.some((arg) => notSetting(arg, BASIC)) &&
+  e.args.some((arg) => arg.type === "item" && arg.name === "cape");
+
 /** Whether an `or` is a dungeon's health gate: not basic, or the health. */
 export const isHealthGate = (e: Expr): boolean =>
   e.type === "or" &&
@@ -230,7 +251,14 @@ function rewrite(e: Expr, region: string | undefined, boss?: Expr): Expr {
     case "or": {
       const args = e.args.map((arg) => rewrite(arg, region, boss));
       const node = flat(e.type, args);
-      if (boss !== undefined || !isHealthGate(e)) return node;
+      if (boss !== undefined) return node;
+      if (isLaserBridge(e)) {
+        if (region !== "turtleRock") {
+          throw new RangeError(`A laser bridge outside Turtle Rock: ${region}`);
+        }
+        return flat("or", [...args, itemOf("laserBridge")]);
+      }
+      if (!isHealthGate(e)) return node;
       const gate = region === undefined ? undefined : DUNGEON_GATE.get(region);
       if (gate === undefined) {
         throw new RangeError(`A health gate outside a dungeon: ${region}`);
