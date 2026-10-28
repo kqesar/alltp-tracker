@@ -28,7 +28,7 @@ import {
 import { derivedFacts } from "./derived";
 import { DUNGEONS, type DungeonId, dungeonPool } from "./dungeons";
 import type { Filler } from "./fill";
-import { fromUpstream, ITEMS } from "./items";
+import { fromUpstream, STATE_MAX } from "./items";
 import { medallionFacts } from "./medallions";
 import { RULES } from "./rules";
 import type { AlttprSettings } from "./settings";
@@ -46,9 +46,8 @@ function withFacts(
   };
 }
 
-const POOL: Readonly<Record<string, number>> = Object.fromEntries(
-  ITEMS.map(({ id, max }) => [id, max]),
-);
+/** The pool and what every world is given beside it (RandomAssumed.php:86). */
+const POOL: Readonly<Record<string, number>> = Object.fromEntries(STATE_MAX);
 
 /**
  * A world's pool: the shops sell an arrow and a key in the retro world
@@ -63,9 +62,9 @@ const poolOf = (
 });
 
 /**
- * Everything a world holds: every item at its count in its pool, every
- * prize and event, both medallion pads open. What the randomizer assumes
- * held before it places the first item.
+ * Everything a world holds: every item at its count in its pool and its
+ * pre-collected items, every prize and event, both medallion pads open.
+ * What the randomizer assumes held before it places the first item.
  */
 export function everything(settings: AlttprSettings): State {
   return withFacts(poolOf(settings), settings);

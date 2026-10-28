@@ -15,7 +15,7 @@ import {
   type DungeonId,
   dungeonPool,
 } from "./dungeons";
-import { ITEMS, type ItemId } from "./items";
+import { ITEMS, type ItemId, PRE_COLLECTED_STATE } from "./items";
 import { medallionFacts, type PadKnowledge } from "./medallions";
 import type { AlttprSettings } from "./settings";
 import { type CountKnowledge, unknownCountFacts } from "./unknown-counts";
@@ -95,7 +95,9 @@ const MAX = new Map<string, number>(ITEMS.map(({ id, max }) => [id, max]));
 export interface TrackerInput {
   /**
    * The items held, by pack id; one left out is not held. Big keys, maps
-   * and compasses count whenever the player marks them.
+   * and compasses count whenever the player marks them. The heart
+   * containers and pieces are those found: the 3 hearts Link starts with
+   * are given by toState (PRE_COLLECTED_STATE).
    */
   readonly items: Readonly<Partial<Record<InventoryItemId, number>>>;
   /**
@@ -154,19 +156,20 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
 
 /**
  * The engine state of what the player records, under the run's settings.
- * Items keep their counts, within their pool. Zelda is rescued from the
- * start in an Open world (app/Randomizer.php:133-135), once Hyrule Castle
- * is finished in a Standard one; Agahnim is defeated once Castle Tower is,
- * Agahnim 2 once Ganon's Tower is. A finished dungeon's prize, once known,
- * gives the next item of its class in dungeon order: two red crystals are
- * crystals 5 and 6, whichever dungeons dropped them; a prize the pool has
- * no item left for is a mistake, and gives nothing. The prizes held by
- * class (`held`) top up those the dungeons gave, from the next free items
- * of their class: a crystal counted takes a regular crystal while one is
- * left, so a count makes a crystal red only when there are more crystals
- * than regular ones. The pads' facts read
- * an unknown pad as unknown. The keys count only with wild keys that are
- * not generic. A checked
+ * Items keep their counts, within their pool, and every world's
+ * pre-collected items are added to them (PRE_COLLECTED_STATE,
+ * app/Randomizer.php:46-56): Link's 3 starting hearts. Zelda is rescued
+ * from the start in an Open world (app/Randomizer.php:133-135), once Hyrule
+ * Castle is finished in a Standard one; Agahnim is defeated once Castle
+ * Tower is, Agahnim 2 once Ganon's Tower is. A finished dungeon's prize,
+ * once known, gives the next item of its class in dungeon order: two red
+ * crystals are crystals 5 and 6, whichever dungeons dropped them; a prize
+ * the pool has no item left for is a mistake, and gives nothing. The prizes
+ * held by class (`held`) top up those the dungeons gave, from the next free
+ * items of their class: a crystal counted takes a regular crystal while one
+ * is left, so a count makes a crystal red only when there are more crystals
+ * than regular ones. The pads' facts read an unknown pad as unknown. The
+ * keys count only with wild keys that are not generic. A checked
  * event gives its item (EVENT_CHECKS). A count not known holds its fact
  * (unknown-counts.ts).
  *
@@ -181,6 +184,9 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
     }
     const held = count(id, value ?? 0);
     if (held > 0) state[id] = held;
+  }
+  for (const [id, given] of Object.entries(PRE_COLLECTED_STATE)) {
+    state[id] = (state[id] ?? 0) + given;
   }
   const finished = (d: DungeonId) => input.beaten[d] === true;
   if (!settings.standardMode || finished("hyrule-castle")) {

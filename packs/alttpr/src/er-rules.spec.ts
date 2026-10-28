@@ -467,9 +467,11 @@ describe("the entrance randomizer's rules (rules.json)", () => {
 
   it("stand as written, hearts and bombs included", () => {
     // A seed's fill never counts them, the randomizer's tests do
-    // (TestMiseryMire.py:72: the Spike Chest with a heart container)
+    // (TestMiseryMire.py:72: the Spike Chest with a heart container). The
+    // state holds Link's 3 starting hearts, which heart_count adds
+    // (BaseClasses.py:418): 4 hearts are one found
     expect(rules.helpers.erHasHearts4.req).toBe(
-      "heartContainer | pieceOfHeart >= 4",
+      "heartContainer >= 4 | heartContainer >= 3 & pieceOfHeart >= 4",
     );
     expect(rules.locations["Misery Mire - Spike Chest"].req).toBe(
       "!setting(cantTakeDamage) & @erHasHearts4 | caneOfByrna | cape",

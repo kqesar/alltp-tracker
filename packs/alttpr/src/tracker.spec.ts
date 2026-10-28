@@ -4,7 +4,7 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { DUNGEON_IDS, type DungeonId } from "./dungeons";
 import { filler } from "./fill";
-import { ITEMS } from "./items";
+import { ITEMS, STATE_MAX } from "./items";
 import { solveWithKeys } from "./keys";
 import { MEDALLIONS } from "./medallions";
 import { compile, STATE_NAMES } from "./pack";
@@ -49,6 +49,17 @@ describe("toState", () => {
     expect(bad({ defeatAgahnim: 1 })).toThrow(RangeError);
     expect(bad({ keyD1: 1 })).toThrow(RangeError);
     expect(bad({ triforce: 1 })).toThrow(RangeError);
+  });
+
+  it("gives Link's 3 starting hearts beside those found, as every world pre-collects them", () => {
+    // app/Randomizer.php:46-56: three boss heart containers
+    expect(toState(EMPTY_INPUT, OPEN).heartContainer).toBe(3);
+    expect(toState(EMPTY_INPUT, STANDARD).heartContainer).toBe(3);
+    const found = input({ items: { heartContainer: 11, pieceOfHeart: 24 } });
+    expect(toState(found, OPEN)).toMatchObject({
+      heartContainer: 14,
+      pieceOfHeart: 24,
+    });
   });
 
   it("rescues Zelda from the start in Open, after the escape in Standard", () => {
@@ -262,7 +273,6 @@ const anyInput = fc.record({
 describe("toState over any input", () => {
   it("gives only names the rules may read, each within its range", () => {
     const names = new Set(STATE_NAMES);
-    const max = new Map<string, number>(ITEMS.map((i) => [i.id, i.max]));
     for (const settings of [OPEN, STANDARD, KEYSANITY]) {
       fc.assert(
         fc.property(anyInput, (any) => {
@@ -272,7 +282,7 @@ describe("toState over any input", () => {
               names.has(name) &&
               typeof value === "number" &&
               value >= 0 &&
-              value <= (max.get(name) ?? 1),
+              value <= (STATE_MAX.get(name) ?? 1),
           );
         }),
         { numRuns: 200, seed: 5 },

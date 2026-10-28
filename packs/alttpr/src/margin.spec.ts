@@ -67,10 +67,13 @@ const relaxed = (settings: AlttprSettings): string[] => {
     .sort();
 };
 
-/** Everything held but Link's health: 8 hearts found, 11 on screen. */
+/**
+ * Everything held but Link's health: 11 hearts on screen, the 3 every
+ * world is given among them (Randomizer.php:46-56).
+ */
 const elevenHearts = (settings: AlttprSettings): State => ({
   ...everything(settings),
-  heartContainer: 8,
+  heartContainer: 11,
   pieceOfHeart: 0,
 });
 
@@ -253,12 +256,8 @@ describe("the margin world", () => {
     });
   });
 
-  it("reads 15 hearts in logic, and the margin moves nothing then", () => {
-    const state = {
-      ...elevenHearts(OPEN_BASIC),
-      heartContainer: 11,
-      pieceOfHeart: 4,
-    };
+  it("reads 12 hearts in logic, and the margin moves nothing then", () => {
+    const state = { ...elevenHearts(OPEN_BASIC), heartContainer: 12 };
     expect(tri(OPEN_BASIC, state, "misery-mire/big-chest")).toEqual({
       margin: "yes",
       real: "yes",

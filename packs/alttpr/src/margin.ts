@@ -9,10 +9,10 @@
 // that ask Link to be able to take a beating or to hit harder are the
 // margins here, one item each (`MARGIN_GATES`):
 //
-// - a dungeon's way in: a sword (or a swordless run), 7 hearts found and a
-//   bottle before Palace of Darkness, Swamp Palace, Skull Woods and
-//   Thieves' Town; the Master Sword, 12 hearts found and two bottles or a
-//   mail before Ice Palace, Misery Mire, Turtle Rock and Ganon's Tower
+// - a dungeon's way in: a sword (or a swordless run), 7 hearts (on screen:
+//   Link's 3 starting hearts count) and a bottle before Palace of Darkness,
+//   Swamp Palace, Skull Woods and Thieves' Town; the Master Sword, 12 hearts
+//   and two bottles or a mail before Ice Palace, Misery Mire, Turtle Rock and Ganon's Tower
 //   (`itemPlacement !== 'basic' || …hasHealth(n)…`, SwampPalace.php:177,
 //   MiseryMire.php:132 and the others, Inverted's alike): the clause, an
 //   `or` with `!setting(basicPlacement)` beside an argument reading

@@ -167,8 +167,16 @@ closes it to a player holding Bombos only), so nothing carries over.
 ### Counts a tracker may not know
 
 Upstream's `hasHealth($minimum)` sums the health items collected, a heart
-container 1 and a piece a quarter, the 3 starting hearts left out
-(`ItemCollection.php:546-553`): `@hasHealth7` is 10 hearts on screen. The
+container 1 and a piece a quarter (`ItemCollection.php:546-553`). Every
+world is given three boss heart containers before its fill, Link's 3
+starting hearts, with the bomb and arrow capacities, which no rule reads
+(`Randomizer.php:46-56`, `PRE_COLLECTED`); every fill and a seed's
+playthrough start from them (`World.php:557`, `RandomAssumed.php:86`,
+`PlaythroughService.php:181`), so `toState` adds them to the hearts the
+player found (`PRE_COLLECTED_STATE`) and `@hasHealth7` is 7 hearts on
+screen. A state holds 14 containers at most (`STATE_MAX`). The upstream
+tests pass their collections as they are, with nothing pre-collected, and
+the fixtures do the same. The
 basic item placement gates eight dungeons on it
 (`rescueZelda & (!setting(basicPlacement) | … & @hasHealth7 & @hasABottle)`,
 `PalaceOfDarkness.php:183-185` and its seven siblings), and the entrance
@@ -953,8 +961,10 @@ flowchart LR
   stands as it is written, even where a seed's fill never meets it: hearts
   and bombs are no advancement items, so the fill never counts them, but
   the randomizer's own tests do (`TestMiseryMire.py:72` opens the Spike
-  Chest with a heart container), so `has_hearts(4)` is `heartContainer |
-  pieceOfHeart >= 4`. `can_extend_magic` counts the bottles a potion shop
+  Chest with a heart container), so `has_hearts(4)` is `heartContainer >= 4
+  | heartContainer >= 3 & pieceOfHeart >= 4`: `heart_count` adds the 3
+  starting hearts (`BaseClasses.py:418`), which the state holds as heart
+  containers, and the contract's states start from them. `can_extend_magic` counts the bottles a potion shop
   refills, by the pack's bottle magic settings.
 - **Bosses**: each `Bosses.py` rule is a helper (`@erDefeatArmosKnights`),
   each dungeon's the one `Dungeons.py` gives it.
@@ -1330,8 +1340,8 @@ harder: the safety margins.
 
 | Margin (`MARGIN_GATES`) | Basic asks | Upstream |
 | --- | --- | --- |
-| Palace of Darkness, Swamp Palace, Skull Woods, Thieves' Town (their ways in) | a sword (or a swordless run), 7 hearts found (10 on screen), a bottle | `PalaceOfDarkness.php:186`, `SwampPalace.php:177`, `SkullWoods.php:153`, `ThievesTown.php:118`; Inverted's alike |
-| Ice Palace, Misery Mire, Turtle Rock, Ganon's Tower (their ways in) | the Master Sword (or swordless), 12 hearts found (15 on screen), two bottles or a mail | `IcePalace.php:137`, `MiseryMire.php:132`, `TurtleRock.php:261`, `GanonsTower.php:401`; Inverted's alike |
+| Palace of Darkness, Swamp Palace, Skull Woods, Thieves' Town (their ways in) | a sword (or a swordless run), 7 hearts on screen (the 3 Link starts with count), a bottle | `PalaceOfDarkness.php:186`, `SwampPalace.php:177`, `SkullWoods.php:153`, `ThievesTown.php:118`; Inverted's alike |
+| Ice Palace, Misery Mire, Turtle Rock, Ganon's Tower (their ways in) | the Master Sword (or swordless), 12 hearts on screen, two bottles or a mail | `IcePalace.php:137`, `MiseryMire.php:132`, `TurtleRock.php:261`, `GanonsTower.php:401`; Inverted's alike |
 | Helmasaur King | the Master Sword or a bow, where a sword does | `Boss.php:86` |
 | Arrghus | the Master Sword (or swordless) | `Boss.php:91` |
 | Mothula | the Master Sword, or the Fire Rod with magic | `Boss.php:96` |

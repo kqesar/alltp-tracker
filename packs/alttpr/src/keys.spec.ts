@@ -2,7 +2,7 @@
 // rules, and the dungeon lock.
 import { describe, expect, it } from "vitest";
 import { filler } from "./fill";
-import { ITEMS } from "./items";
+import { ITEMS, STATE_MAX } from "./items";
 import {
   everything,
   everythingBut,
@@ -32,12 +32,14 @@ function where(item: string, settings: AlttprSettings = OPEN): string[] {
 }
 
 describe("everything", () => {
-  it("holds every item at its count in the pool, and opens both pads", () => {
+  it("holds every item at its count in the pool, the pre-collected beside it, and opens both pads", () => {
     const all = everything(UPSTREAM_TEST);
     // No shop sells an arrow or a key outside the retro world
     const shop = (id: string) => id === "shopArrow" || id === "shopKey";
-    for (const { id, max } of ITEMS)
-      expect(all[id], id).toBe(shop(id) ? 0 : max);
+    for (const { id } of ITEMS)
+      expect(all[id], id).toBe(shop(id) ? 0 : STATE_MAX.get(id));
+    // Link's 3 starting hearts beside the pool's 11 (RandomAssumed.php:86)
+    expect(all.heartContainer).toBe(14);
     expect(everything(settingsFromUpstream("retro"))).toMatchObject({
       shopArrow: 1,
       shopKey: 1,

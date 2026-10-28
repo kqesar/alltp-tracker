@@ -1116,7 +1116,7 @@
       "source": "BaseClasses.py:481"
     },
     "erHasHearts4": {
-      "req": "heartContainer | pieceOfHeart >= 4",
+      "req": "heartContainer >= 4 | heartContainer >= 3 & pieceOfHeart >= 4",
       "source": "BaseClasses.py:407"
     },
     "erHasMirror": {

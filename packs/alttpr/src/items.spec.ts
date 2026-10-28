@@ -12,6 +12,9 @@ import {
   ITEM_IDS,
   ITEMS,
   type ItemId,
+  PRE_COLLECTED,
+  PRE_COLLECTED_STATE,
+  STATE_MAX,
   stateFromUpstream,
   UPSTREAM_ENGLISH_NAMES,
   UPSTREAM_ITEMS,
@@ -217,6 +220,33 @@ describe("fromUpstream", () => {
         expect(UPSTREAM_ITEMS.has(member), `${name}: ${member}`).toBe(true);
       }
     }
+  });
+});
+
+describe("PRE_COLLECTED", () => {
+  it("counts what every world is given: Link's 3 starting hearts, and capacities no rule reads", () => {
+    // Randomizer.php:46-56
+    expect(PRE_COLLECTED).toEqual([
+      ...Array(3).fill("BossHeartContainer"),
+      "BombUpgrade10",
+      ...Array(3).fill("ArrowUpgrade10"),
+    ]);
+    expect(PRE_COLLECTED_STATE).toEqual({ heartContainer: 3 });
+    // Each adds to its item: none is a level a found item would overlap
+    for (const name of PRE_COLLECTED) {
+      expect(fromUpstream(name)?.atLeast, name).toBeUndefined();
+    }
+  });
+
+  it("holds a state's heart containers beyond the pool's", () => {
+    expect(STATE_MAX.get("heartContainer")).toBe(14);
+    expect(STATE_MAX.get("pieceOfHeart")).toBe(24);
+    expect(
+      stateFromUpstream([
+        ...PRE_COLLECTED,
+        ...Array(11).fill("BossHeartContainer"),
+      ]),
+    ).toEqual({ heartContainer: 14 });
   });
 });
 

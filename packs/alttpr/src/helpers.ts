@@ -15,6 +15,7 @@
 // `@canKillMostThings8`. A `$world` argument only lets the helper read the
 // settings, which `setting()` does here.
 
+import { STATE_MAX } from "./items";
 import type { Source } from "./location";
 
 /** A named rule: what `@name` stands for, and where upstream says it. */
@@ -25,16 +26,18 @@ export interface Rule {
 
 const at = (line: number): Source => `app/Support/ItemCollection.php:${line}`;
 
-/** The upstream item counts, for the helpers that add items up. */
-const HEART_CONTAINERS = 11;
-const PIECES_OF_HEART = 24;
+/** The most heart containers and pieces a state holds. */
+const HEART_CONTAINERS = STATE_MAX.get("heartContainer") ?? 0;
+const PIECES_OF_HEART = STATE_MAX.get("pieceOfHeart") ?? 0;
 
 /**
  * hasHealth($minimum) sums the power of the health items collected: 1 for
  * a heart container, a quarter for a piece of heart (Item.php:116, 131,
- * 155-156). The three hearts Link starts with do not count. The engine has
- * no fractions, so this lists every way to reach `minimum` within the
- * pool's 11 containers and 24 pieces.
+ * 155-156). The collection holds the three boss heart containers every
+ * world is given (Randomizer.php:46-56), Link's 3 starting hearts, so
+ * `@hasHealth7` is 7 hearts on screen; toState puts them in the state. The
+ * engine has no fractions, so this lists every way to reach `minimum`
+ * within the state's 14 containers and the pool's 24 pieces.
  */
 function hasHealth(minimum: number): string {
   const ways: string[] = [];
