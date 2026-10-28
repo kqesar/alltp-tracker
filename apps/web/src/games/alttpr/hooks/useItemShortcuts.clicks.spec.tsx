@@ -2,7 +2,12 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
-import { items, itemsMax, itemsMin } from "@/games/alttpr/data/items";
+import {
+  CLAMPED_ITEMS,
+  items,
+  itemsMax,
+  itemsMin,
+} from "@/games/alttpr/data/items";
 import {
   CONTROLS,
   type ControlId,
@@ -130,8 +135,10 @@ describe("a shortcut steps its control exactly as a click does", () => {
       expect(
         new Set(clicked.map((run) => JSON.stringify(run))).size,
       ).toBeGreaterThan(1);
-      // One undoable step per press
-      expect(useGameStore.getState().past).toHaveLength(2 * steps);
+      // One undoable step per press that moved it: a counter that stops at
+      // its ends (CLAMPED_ITEMS, the hearts) does not move past them
+      const ends = CLAMPED_ITEMS.has(control) ? 2 : 0;
+      expect(useGameStore.getState().past).toHaveLength(2 * (steps - ends));
     },
   );
 });
