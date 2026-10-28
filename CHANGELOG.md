@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.50.0](https://github.com/kqesar/alltp-tracker/compare/v2.49.0...v2.50.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **web:** turn Export and Share off in Race Mode ([485a039](https://github.com/kqesar/alltp-tracker/commit/485a03962c9ec6ce8a314ee9db61c9df95664fc3))
+
+
+### 🐛 Bug Fixes
+
+* **web:** keep the remembered race through Undo and for a flag in doubt ([4a80ff7](https://github.com/kqesar/alltp-tracker/commit/4a80ff7b8f1ddc533250116010aaf93678fd9dad))
+* **web:** make Export and Share follow Race Mode in every state ([b28c6c2](https://github.com/kqesar/alltp-tracker/commit/b28c6c21764b850c6c3e42f6df391afdf2d820d4))
+* **web:** remember a race read from the seed through a Disconnect ([22c9e37](https://github.com/kqesar/alltp-tracker/commit/22c9e3751d160750035fb909b8eaa117f78ee31d))
+* **web:** show Race Mode held by memory, and keep the focus on Copy ([11c9617](https://github.com/kqesar/alltp-tracker/commit/11c9617f0113abfbaf166fb1abdbf7681037dee5))
+
+
+### 📚 Documentation
+
+* describe the remembered race ([1c7d065](https://github.com/kqesar/alltp-tracker/commit/1c7d065e2d8218327333ec61a99ef8ea7b8c76b8))
+* describe the Share dialog and the More menu in Race Mode ([af03b19](https://github.com/kqesar/alltp-tracker/commit/af03b19072ece556337ffbf474aa40d419017e2c))
+* describe Undo, a flag in doubt and the memory badge ([f82dfcf](https://github.com/kqesar/alltp-tracker/commit/f82dfcfd1965a090cce794cd8357d5e7bb589d02))
+* say in the area rules how Race Mode turns Export and Share off ([e8cf1cb](https://github.com/kqesar/alltp-tracker/commit/e8cf1cbf46a44b5e28151e664dae71fd2f6772d0))
+
 ## [2.49.0](https://github.com/kqesar/alltp-tracker/compare/v2.48.3...v2.49.0) (2026-10-27)
 
 
