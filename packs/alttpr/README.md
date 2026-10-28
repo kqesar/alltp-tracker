@@ -346,8 +346,9 @@ items, per dungeon (`collected-keys`: `DungeonCollectedKeys`, `$7EF4E0`,
 `sram.asm:361-375`), not from the keys in hand (`DungeonKeys`), which a door
 spends. `DungeonIncrement` (`inventory.asm:208-213`) counts every item of
 property `$40` (`$24` and `$A0-$AD`, `itemdatatables.asm:730, 854-867`)
-through `CountChestKey` (`stats.asm:126-148`): a key from a chest, an NPC, a
-standing spot or a torch, wherever it is found. A key an enemy or a pot drops
+through `CountChestKey` (`stats.asm:126-148`): a key from a chest, an NPC or
+a torch, wherever it is found. v31's one standing key spot, Tower of Hera's
+basement cage, takes the path below. A key an enemy or a pot drops
 (not shuffled in v31) goes through `IncrementSmallKeysNoPrimary`
 (`stats.asm:90-117`), which raises the keys in hand only: it is no location,
 and the rules never count it. That routine counts once more in Tower of
@@ -358,13 +359,31 @@ own key (`HeraBasement.php:27`), so that key is counted twice. The decoder
 takes the second count back by name (`HERA_BASEMENT_DOUBLE_COUNT`): Hera's
 pool holds one key, so a count of 2 is that key. No other count may exceed
 its dungeon's keys. If one does, the rules get the dungeon's keys, and
-`decodeItems` reports the count it read in `beyond`, which "What I read"
-shows on the dungeon's line ("2 small keys found (the game counts 3, more
-than the dungeon holds)"), so a double count elsewhere is noticed rather
-than hidden by the cap. The sewers' and Hyrule Castle's bytes are written
-together. The count is saved
-with the file, so keys found while the tracker was closed are counted, and
-no door ever lowers it.
+`decodeItems` reports the count it read in `beyond` (for Hera, the byte as
+read, before the take-back), which "What I read" shows on the dungeon's
+line ("2 small keys found (the game counts 3, more than the dungeon
+holds)"), so a double count elsewhere is noticed rather than hidden by the
+cap. The sewers' and Hyrule Castle's bytes are written together. The count
+is saved with the file, so keys found while the tracker was closed are
+counted, and no door ever lowers it.
+
+With generic keys (retro) the app reads no key count, in any mode. Such a
+key is no dungeon's and never reaches `CountChestKey` (`KeyGK`, `$AF`, has no
+property `$40`), but the routine above still counts Hera's basement cage
+when its sprite is the standing key, whatever generic key it gives: Hera's
+byte would only say where a key was taken. `gameView` lays no small key and
+the readout lists none (`genericKeys`).
+
+A board saved before this count was read may hold more keys than it, counted
+from the keys in hand, drops included. A merge never lowers a mark, so such
+a board stays optimistic until **Sync from game**.
+
+The count needs the base patch the pack pins (z3randomizer 31.2.2, through
+`CountChestKey`). A ROM from an older base patch without it reads 0 keys
+found. The tracker already rests on that patch for other ranges
+(`DungeonsCompleted`, `InventoryTracking`). alttpr.com served it for both
+seeds checked on 2026-10-28 (a Full keysanity one and a Crosskeys one: the
+same BPS).
 
 Seen on a real game (2026-10-28, an alttpr.com Full keysanity seed on the
 pinned base patch, bsnes-mercury in RetroArch, read over its UDP commands,
