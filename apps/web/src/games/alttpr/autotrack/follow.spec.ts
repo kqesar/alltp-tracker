@@ -22,8 +22,10 @@ import {
 
 const store = () => useGameStore.getState();
 
-/** Palace of Darkness's byte of small keys in hand. */
-const POD_KEYS = SAVE(0x37c + 6);
+/** Palace of Darkness's byte of small keys in hand (DungeonKeys). */
+const POD_HELD = SAVE(0x37c + 6);
+/** Its byte of small keys found (DungeonCollectedKeys). */
+const POD_FOUND = SAVE(0x4e0 + 6);
 
 beforeEach(() => {
   localStorage.clear();
@@ -450,40 +452,40 @@ describe("following the game", () => {
     expect(store().past).toHaveLength(before + 1);
   });
 
-  it("counts every small key picked up, though doors spend them", () => {
+  it("counts the small keys the game counts as found, which doors never spend", () => {
     store().applyPreset("keysanity");
     const memory = seedMemory({ race: false });
     const follower = createFollower();
     follower.read(readingOf(memory));
 
-    memory[POD_KEYS] = 1; // a key
+    // Two keys found and both spent between two readings
+    memory[POD_FOUND] = 2;
+    memory[POD_HELD] = 0;
     follower.read(readingOf(memory));
-    memory[POD_KEYS] = 0; // a door
-    follower.read(readingOf(memory));
-    memory[POD_KEYS] = 1; // another key
+    expect(store().smallKeys[3]).toBe(2);
+
+    // A key an enemy or a pot drops is held, not found
+    memory[POD_HELD] = 1;
     checkIn(memory, "kings-tomb"); // any other news
     follower.read(readingOf(memory));
-
     expect(store().smallKeys[3]).toBe(2);
   });
 
-  it("starts each stretch of play from the board's key count", () => {
+  it("counts keys found while it was closed, and keeps the player's marks beyond", () => {
     store().applyPreset("keysanity");
     const memory = seedMemory({ race: false });
-    memory[POD_KEYS] = 1;
+    // Found and spent before the tracker connected
+    memory[POD_FOUND] = 3;
     const follower = createFollower();
     follower.read(readingOf(memory));
-    expect(store().smallKeys[3]).toBe(1);
+    expect(store().smallKeys[3]).toBe(3);
 
-    // Out of play, the player counts a key spent before they connected
-    memory[0xf5_0010] = 0x0e;
-    follower.read(readingOf(memory));
+    // A key the player marks ahead of the game stays, until a sync
     store().handleSmallKeyClick(3);
-    memory[0xf5_0010] = 0x09;
+    memory[0xf5_0010] = 0x07;
     follower.read(readingOf(memory));
-    memory[POD_KEYS] = 2;
-    follower.read(readingOf(memory));
-
+    expect(store().smallKeys[3]).toBe(4);
+    expect(follower.sync()).toBe(1);
     expect(store().smallKeys[3]).toBe(3);
   });
 

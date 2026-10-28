@@ -80,7 +80,6 @@ const RACE_READS = [
   "pendants:prizes-held",
   "crystals:prizes-held",
   "magic-upgrade:items",
-  "small-keys:keys",
   "item-tracking:items",
   "progress:items",
   "progress-flags:outside-checks",
@@ -89,6 +88,8 @@ const RACE_READS = [
   "npc-flags:outside-checks",
   "stats-locked:goal",
   "dungeons-completed:items",
+  // The small keys found (DungeonCollectedKeys)
+  "collected-keys:keys",
 ];
 
 const overlaps = (a: ByteRange, b: ByteRange) =>
@@ -130,8 +131,10 @@ describe("MEMORY_RANGES", () => {
       address: 0xf5_f280,
       size: 0x82,
     });
-    expect(MEMORY_RANGE["small-keys"]).toMatchObject({
-      address: 0xf5_f37c,
+    // DungeonCollectedKeys, inside Race Mode's save window
+    expect(MEMORY_RANGE["collected-keys"]).toMatchObject({
+      address: 0xf5_f4e0,
+      category: "keys",
       size: 14,
     });
     expect(MEMORY_RANGE["dungeons-completed"]).toMatchObject({
@@ -346,6 +349,9 @@ describe("MEMORY_RANGES", () => {
     // bottle contents and prizes upon collection): the rooms bridge the
     // boss rooms, so the race phase reads more bytes in fewer pieces; the
     // follower byte (the big bomb) joins the casual one.
+    // The small keys found (collected-keys)
+    // replace the keys held: the casual plan already spans them, Race Mode
+    // reads 14 bytes more, in one more piece.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -357,7 +363,7 @@ describe("MEMORY_RANGES", () => {
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
       casual: { bytes: 340, pieces: 18 },
-      race: { bytes: 812, pieces: 12 },
+      race: { bytes: 826, pieces: 13 },
       ranges: { casual: 32, race: 37 },
     });
   });

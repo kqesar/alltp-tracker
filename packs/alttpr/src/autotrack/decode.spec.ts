@@ -141,7 +141,7 @@ function writeItem(image: Image, id: ItemId, level: number): void {
     P2: 0x1000,
     P3: 0x0020,
   };
-  // DungeonKeys, sewers first (sram.asm:154-168).
+  // DungeonCollectedKeys, sewers first (sram.asm:361-375).
   const keyBytes: Record<string, number> = {
     A1: 4,
     A2: 13,
@@ -177,7 +177,7 @@ function writeItem(image: Image, id: ItemId, level: number): void {
     image.or(SAVE(prizes[id][0]), prizes[id][1]);
   else if (dungeon !== null) {
     const [, kind, code] = dungeon;
-    if (kind === "key") image.set(SAVE(0x37c + keyBytes[code]), level);
+    if (kind === "key") image.set(SAVE(0x4e0 + keyBytes[code]), level);
     const field = { bigKey: 0x366, compass: 0x364, map: 0x368 }[kind];
     if (field !== undefined) image.orWord(SAVE(field), dungeonBits[code]);
   } else {
@@ -224,12 +224,9 @@ function writeItem(image: Image, id: ItemId, level: number): void {
   }
 }
 
-const isKey = (id: string) => /^key[A-Z]\d$/.test(id);
-
-/** Every item's value: its count, or for small keys the bound. */
+/** Every item's count. */
 function values(view: MemoryView, race = false): Record<string, number> {
-  const { atLeast, counts } = decodeItems(view, { race });
-  return { ...counts, ...atLeast };
+  return decodeItems(view, { race }).counts;
 }
 
 /** The items memory holds: the Big Bomb it does not (ITEM_SOURCES). */
@@ -277,7 +274,7 @@ const END_GAME_ITEMS: Record<string, number> = {
 describe("decodeItems", () => {
   it("reads a fresh Open file as Zelda rescued and nothing found", () => {
     const decoded = decodeItems(freshFile("open").view(), { race: false });
-    expect({ ...decoded.counts, ...decoded.atLeast }).toEqual({
+    expect(decoded.counts).toEqual({
       ...zeros(),
       rescueZelda: 1,
     });
@@ -303,19 +300,46 @@ describe("decodeItems", () => {
     }
   });
 
-  it("keeps small keys as lower bounds, the keys held", () => {
-    const { atLeast, counts } = decodeItems(
-      new Image().set(SAVE(0x37c + 6), 2).view(),
-      { race: false },
-    );
-    expect(atLeast.keyD1).toBe(2);
-    expect(Object.keys(counts).filter(isKey)).toEqual([]);
-    expect(Object.keys(atLeast).sort()).toEqual(ITEM_IDS.filter(isKey).sort());
+  it("counts the small keys found, not those held", () => {
+    // Two Palace of Darkness keys found, one spent on a door: DungeonKeys
+    // holds one, DungeonCollectedKeys two.
+    const image = new Image().set(SAVE(0x37c + 6), 1).set(SAVE(0x4e0 + 6), 2);
+    expect(values(image.view()).keyD1).toBe(2);
+    // A key an enemy or a pot drops is held, never counted as found.
+    expect(values(new Image().set(SAVE(0x37c + 3), 1).view()).keyP2).toBe(0);
+  });
+
+  it("takes back the second count of Tower of Hera's basement key", () => {
+    // The game counts its own key there twice (stats.asm:99-103), seen on a
+    // real game: one key, the byte at 2. Taken back by name, not by the cap:
+    // nothing is beyond Hera's one key.
+    const read = (count: number) =>
+      decodeItems(new Image().set(SAVE(0x4e0 + 10), count).view(), {
+        race: false,
+      });
+    expect(read(2).counts.keyP3).toBe(1);
+    expect(read(2).beyond).toEqual({});
+    expect(read(1).counts.keyP3).toBe(1);
+    // A count past the double count is still reported
+    expect(read(3).counts.keyP3).toBe(1);
+    expect(read(3).beyond).toEqual({ keyP3: 2 });
+  });
+
+  it("reports a key count beyond a dungeon's keys rather than hiding it", () => {
+    // Ice Palace holds two keys: a third counted is a double count the
+    // decoder does not know of. The rules get the cap, the readout the count.
+    const decoded = decodeItems(new Image().set(SAVE(0x4e0 + 9), 3).view(), {
+      race: false,
+    });
+    expect(decoded.counts.keyD5).toBe(2);
+    expect(decoded.beyond).toEqual({ keyD5: 3 });
   });
 
   it("reads Hyrule Castle's keys from the castle or the sewers byte", () => {
-    const sewers = new Image().set(SAVE(0x37c), 1).view();
-    expect(decodeItems(sewers, { race: false }).atLeast.keyH2).toBe(1);
+    const sewers = new Image().set(SAVE(0x4e0), 1).view();
+    expect(values(sewers).keyH2).toBe(1);
+    const castle = new Image().set(SAVE(0x4e0 + 1), 1).view();
+    expect(values(castle).keyH2).toBe(1);
   });
 
   it("reads a found mushroom whether held or traded", () => {
@@ -357,7 +381,7 @@ describe("decodeItems", () => {
       .set(SAVE(0x37a), 0x02) // crystal 1
       .set(SAVE(0x448), 3)
       .set(SAVE(0x470), 6)
-      .set(SAVE(0x37c + 6), 2) // two Palace of Darkness keys held
+      .set(SAVE(0x4e0 + 6), 2) // two Palace of Darkness keys found
       .orWord(SAVE(0x366), 0x2000 | 0x0200) // big keys P1, D1
       .orWord(SAVE(0x364), 0x0200); // compass D1
     expect(values(image.view())).toEqual({
@@ -816,7 +840,7 @@ describe("Race Mode", () => {
   });
 
   it("withholds the crystals' numbers, Zelda's rescue and the heart counters, and only those", () => {
-    const { atLeast, counts, unsettled } = decodeItems(
+    const { counts, unsettled } = decodeItems(
       endGame().view({ strict: true }),
       { race: true },
     );
@@ -847,7 +871,7 @@ describe("Race Mode", () => {
       pendantOfWisdom: 1,
     });
     // The flute held, never whether it was activated
-    expect({ ...counts, ...atLeast }).toEqual({
+    expect(counts).toEqual({
       ...Object.fromEntries(
         Object.entries(END_GAME_ITEMS).filter(([id]) => !(id in unsettled)),
       ),
@@ -1017,12 +1041,12 @@ describe("the decoders on random bytes", () => {
       fc.property(memory, fc.boolean(), (ranges, race) => {
         const items = decodeItems(view(ranges), { race });
         for (const id of ITEM_IDS) {
-          const where = [items.counts, items.atLeast, items.unsettled].filter(
+          const where = [items.counts, items.unsettled].filter(
             (part) => id in part,
           );
           // An item memory does not hold is in none
           expect(where, id).toHaveLength(ITEM_SOURCES[id] === null ? 0 : 1);
-          const value = items.counts[id] ?? items.atLeast[id];
+          const value = items.counts[id];
           if (value !== undefined) {
             expect(value).toBeGreaterThanOrEqual(0);
             expect(value).toBeLessThanOrEqual(max.get(id) ?? 0);

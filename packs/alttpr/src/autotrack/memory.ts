@@ -119,7 +119,8 @@ export const SCREEN_ITEM = 0x40;
  *   and in DungeonsCompleted (sram.asm:320-321), from DungeonItemMasks
  *   (newitems.asm:820-824) indexed by DungeonID (newitems.asm:1141-1157).
  *   Hyrule Castle's items set the sewers' bit too ($C000, newitems.asm:294);
- * - `keys`: its byte in DungeonKeys, the small keys held (sram.asm:154-168);
+ * - `keys`: its byte in DungeonCollectedKeys, the small keys found
+ *   (sram.asm:361-375), laid out as DungeonKeys (sram.asm:154-168);
  * - `bossRoom`: the room whose boss bit says the boss fell, for the ten
  *   dungeons with a heart container (heartpieces.asm:345-378).
  */
@@ -152,7 +153,7 @@ export const DUNGEON = Object.fromEntries(
   DUNGEONS.map((dungeon) => [dungeon.code, dungeon]),
 ) as Readonly<Record<DungeonCode, (typeof DUNGEONS)[number]>>;
 
-/** The sewers' byte in DungeonKeys, kept in step with Hyrule Castle's. */
+/** The sewers' byte in DungeonCollectedKeys, written with Hyrule Castle's. */
 export const SEWER_KEYS = 0;
 
 /** PendantsField bits (vt app/Item.php:148-150, sram.asm:139-140). */
@@ -682,8 +683,6 @@ export const MEMORY_RANGES = [
   save("pendants", 0x374, 1, "prizes-held", "z3:sram.asm:139-140"),
   save("crystals", 0x37a, 1, "prizes-held", "z3:sram.asm:148-150"),
   save("magic-upgrade", 0x37b, 1, "items", "z3:sram.asm:151"),
-  // Small keys held, sewers to Ganon's Tower.
-  save("small-keys", 0x37c, 14, "keys", "z3:sram.asm:153-168"),
   // InventoryTracking and BowTracking.
   save("item-tracking", 0x38c, 4, "items", "z3:sram.asm:175-185"),
   // $02 Zelda rescued, $03 Agahnim defeated: upstream's RescueZelda and
@@ -744,6 +743,17 @@ export const MEMORY_RANGES = [
   // fall sets Castle Tower's bit, Agahnim 2's Ganon's Tower's (events.asm:
   // 89-109).
   save("dungeons-completed", 0x472, 2, "items", "z3:dungeondrops.asm:323-329"),
+  // DungeonCollectedKeys: the small keys received as items, sewers to
+  // Ganon's Tower, which no door spends. DungeonIncrement counts each key
+  // item (property $40, itemdatatables.asm:730, 854-867) through
+  // CountChestKey (inventory.asm:208-213, stats.asm:126-148): a chest's, an
+  // NPC's, a standing or a torch's key; never a key an enemy or a pot drops
+  // (IncrementSmallKeysNoPrimary, stats.asm:90-117), but in Tower of Hera's
+  // basement, room $87, whose standing key it counts once more: twice in
+  // all. The keysanity HUD shows it (newhud.asm:326). Seen on a real game
+  // (2026-10-28): a chest key +1, a key sprite picked up outside room $87
+  // +0, Hera's basement key +2, the Desert torch's +1, a key door -0.
+  save("collected-keys", 0x4e0, 14, "keys", "z3:sram.asm:361-375"),
   // The room's collision map: the two attribute tables, 64 x 64 bytes each,
   // contiguous (dung_bg2_attr_table, dung_bg1_attr_table). Read alone, as its
   // own request, and only while the room is dark and Link has no Lamp

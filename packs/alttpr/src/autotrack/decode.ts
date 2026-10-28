@@ -94,12 +94,6 @@ interface ItemSource {
   /** The count, from the range's bytes. decodeItems caps it at its max. */
   readonly read: (bytes: Bytes) => number;
   /**
-   * Memory gives a lower bound only: the small keys held, which the keys
-   * found can only exceed (DungeonKeys counts down as doors open; the chest
-   * key counters of sram.asm:361-375 are unwritten at this commit).
-   */
-  readonly bound?: true;
-  /**
    * Race Mode reads the range but not this item: which crystal is which
    * (v2.0: "but not identify if a crystal is a 5/6 crystal or a regular
    * crystal"), Zelda's rescue ("may not alert whether or not Zelda was
@@ -156,16 +150,38 @@ function dungeonItem(
   return { range, read: ({ word }) => bit(word(), DUNGEON[code].bit) };
 }
 
+/**
+ * Tower of Hera's own key, taken from its basement cage, is counted twice.
+ * vt puts the standing key sprite ($E4) there only for that key
+ * (vt Location/Standing/HeraBasement.php:27). Picking it up runs
+ * IncrementSmallKeysNoPrimary, which in room $87 calls AddInventory, and so
+ * DungeonIncrement's CountChestKeyLong (inventory.asm:208-213), then calls
+ * CountChestKey once more (stats.asm:99-103). Hera's pool holds one key, so
+ * a count of 2 is that key. Seen on a real game (2026-10-28): one key, the
+ * byte at 2.
+ */
+const HERA_BASEMENT_DOUBLE_COUNT = 1;
+
+/**
+ * The small keys found for a dungeon, which no door spends: its byte in
+ * DungeonCollectedKeys (memory.ts), less Tower of Hera's double count. Any
+ * other count above the pool is a defect to notice: decodeItems reports it
+ * (`beyond`) before capping it.
+ */
 function smallKeys(code: DungeonCode): ItemSource {
-  const at = MEMORY_RANGE["small-keys"].bus;
+  const at = MEMORY_RANGE["collected-keys"].bus;
   return {
-    bound: true,
-    range: "small-keys",
-    // Hyrule Castle's keys and the sewers' rise together (sram.asm:155-156).
-    read: ({ byte }) =>
-      code === "H2"
-        ? Math.max(byte(at + DUNGEON.H2.keys), byte(at + SEWER_KEYS))
-        : byte(at + DUNGEON[code].keys),
+    range: "collected-keys",
+    read: ({ byte }) => {
+      // A sewers' or Hyrule Castle's key writes both bytes (stats.asm:142-145).
+      const counted =
+        code === "H2"
+          ? Math.max(byte(at + DUNGEON.H2.keys), byte(at + SEWER_KEYS))
+          : byte(at + DUNGEON[code].keys);
+      return code === "P3" && counted > 1
+        ? counted - HERA_BASEMENT_DOUBLE_COUNT
+        : counted;
+    },
   };
 }
 
@@ -353,13 +369,17 @@ export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource | null>> = {
   tenBombs: tracked(0x02, 1),
 };
 
-/** What memory says of the items. Each pack item is in one of the three. */
+/** What memory says of the items. Each pack item is in one of the two. */
 export interface ItemReading {
   /** Counts memory settles, by pack item id. */
   readonly counts: Partial<Record<ItemId, number>>;
-  /** Lower bounds where memory holds no count: the small keys held. */
-  readonly atLeast: Partial<Record<ItemId, number>>;
   readonly unsettled: Partial<Record<ItemId, Unsettled>>;
+  /**
+   * What memory counts beyond an item's max, before `counts` caps it: a
+   * count the game should not reach, such as a key counted twice somewhere
+   * other than Tower of Hera's basement. The readout names it.
+   */
+  readonly beyond: Partial<Record<ItemId, number>>;
 }
 
 /** The pack's items, from memory. */
@@ -369,8 +389,8 @@ export function decodeItems(
 ): ItemReading {
   const reader = new Reader(memory, options.race);
   const counts: Partial<Record<ItemId, number>> = {};
-  const atLeast: Partial<Record<ItemId, number>> = {};
   const unsettled: Partial<Record<ItemId, Unsettled>> = {};
+  const beyond: Partial<Record<ItemId, number>> = {};
   for (const { id, max } of ITEMS) {
     const source = ITEM_SOURCES[id];
     if (source === null) continue;
@@ -383,11 +403,11 @@ export function decodeItems(
       continue;
     }
     const read = (options.race && source.raceRead) || source.read;
-    const value = Math.min(max, read(bytes));
-    if (source.bound) atLeast[id] = value;
-    else counts[id] = value;
+    const value = read(bytes);
+    counts[id] = Math.min(max, value);
+    if (value > max) beyond[id] = value;
   }
-  return { atLeast, counts, unsettled };
+  return { beyond, counts, unsettled };
 }
 
 /**

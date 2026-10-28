@@ -94,7 +94,7 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
     },
     keys: {
       permitted: true,
-      rule: "Dungeon items (keys, maps, compasses).",
+      rule: "Dungeon items (keys, maps, compasses). An item is anything Link would normally raise over his head when picked up, as well as small keys.",
     },
     "msu-track": {
       permitted: true,
