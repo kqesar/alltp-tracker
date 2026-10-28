@@ -219,6 +219,26 @@ describe("GoMode", () => {
     }
   });
 
+  it("says a go mode basic placement's margin alone holds back, and what is left", async () => {
+    // Basic placement, 11 hearts on screen: Ganon's Tower waits for 15
+    setRun({ hearts: 9 }, { itemPlacement: "basic" });
+    render(<GoMode />);
+    act(() => analyzeNow());
+
+    expect(screen.getByTestId("go-mode")).toHaveAccessibleName(
+      "Go mode: outside Basic's margin",
+    );
+    expect(screen.getByTestId("go-mode-status")).toHaveTextContent(
+      "Go mode: outside Basic's margin",
+    );
+    const panel = await openPanel();
+    expect(within(panel).getByTestId("go-mode-margin")).toHaveTextContent(
+      /^Doable now, outside Basic's safety margin:/,
+    );
+    const left = within(panel).getByTestId("go-mode-left");
+    expect(left).toHaveTextContent(/^In logic with, crystals aside:15 hearts$/);
+  });
+
   it("lists nothing once in go mode", async () => {
     setRun({});
     render(<GoMode />);

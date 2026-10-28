@@ -50,6 +50,26 @@ describe("MapLegend", () => {
     ]);
   });
 
+  it("adds the margin state, before the trick, only in a basic placement run", () => {
+    render(<MapLegend margin trick />);
+    expect(
+      [...document.querySelectorAll(".map-legend__swatch")].map((swatch) =>
+        swatch.className.replace("map-legend__swatch state-glyph ", ""),
+      ),
+    ).toEqual([
+      "available",
+      "possible",
+      "margin",
+      "trick",
+      "seen",
+      "unavailable",
+      "opened",
+    ]);
+    expect(
+      screen.getByText("Doable, outside Basic's safety margin"),
+    ).toBeInTheDocument();
+  });
+
   it("exposes an accessible label", () => {
     render(<MapLegend />);
     expect(
