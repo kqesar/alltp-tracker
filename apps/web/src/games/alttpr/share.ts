@@ -16,6 +16,8 @@ import {
   isCount,
   isSigned,
   MAX_FIELD_NUMBER,
+  unzigzag,
+  zigzag,
 } from "@/share/bytes";
 import {
   bitsetField,
@@ -151,67 +153,26 @@ const riceCost = (gaps: readonly number[], k: number): number =>
  */
 type Reading = number | null;
 
+/** The bits one key takes: enough for an index in the table. */
+const keyBitsOf = (keys: readonly string[]): number =>
+  Math.max(1, Math.ceil(Math.log2(keys.length)));
+
 /**
- * The timeline, finds in the order they came, in three parts. Varints: how
- * many finds, the first one's instant, the Rice parameter of the gaps, then
- * the readings as runs of finds that share one. Then bits, no padding between
- * them: each find's key (an index in the key table), then the time since the
- * find before as a Rice code, which costs a bit or two over what a gap's
- * magnitude says and so takes a long wait without making every gap pay.
- * Bits, not bytes: the finds' keys and times are close to noise, and a
- * varint's continuation bits only make deflate's job harder.
+ * The timeline as link 2 wrote it, read only: the tracker writes link 3
+ * (`compactField`), and links of this layout recorded by its last writer,
+ * v2.58.0's (`share/fixtures/links-alttpr-v2.json`), hold this reader to
+ * them. The finds in the order they came, in three parts.
+ * Varints: how many finds, the first one's instant, the Rice parameter of
+ * the gaps, then the readings as runs of finds that share one, each its
+ * length, then 0 for no reading or 1 and its drift whole. Then bits, no
+ * padding between them: each find's key (an index in the key table), then
+ * the time since the find before as a Rice code.
  * @param keys - The key table the link was made against
  */
-const timelineField = (keys: readonly string[]): FieldCodec => {
-  const index = new Map(keys.map((key, at) => [key, at]));
-  // The bits one key takes: enough for an index in the table
-  const keyBits = Math.max(1, Math.ceil(Math.log2(keys.length)));
+const wholeDriftsField = (keys: readonly string[]): FieldCodec => {
+  const keyBits = keyBitsOf(keys);
   return {
-    pack: (value) => {
-      if (!isRecord(value)) return null;
-      const finds: { key: number; stamp: Stamp }[] = [];
-      for (const [key, stamp] of Object.entries(value)) {
-        const at = index.get(key);
-        if (at === undefined || !isPackable(stamp)) return null;
-        finds.push({ key: at, stamp });
-      }
-      finds.sort((a, b) => a.stamp.at - b.stamp.at || a.key - b.key);
-      const out = new ByteWriter();
-      out.uint(finds.length);
-      if (finds.length === 0) return out.done();
-      out.uint(finds[0].stamp.at);
-      const gaps = finds
-        .slice(1)
-        .map(({ stamp }, i) => stamp.at - finds[i].stamp.at);
-      const k = RICE_PARAMETERS.reduce((best, now) =>
-        riceCost(gaps, now) < riceCost(gaps, best) ? now : best,
-      );
-      out.uint(k);
-
-      const runs: { length: number; reading: Reading }[] = [];
-      for (const { stamp } of finds) {
-        const reading = stamp.ms === null ? null : stamp.at - stamp.ms;
-        const last = runs.at(-1);
-        if (last?.reading === reading) last.length++;
-        else runs.push({ length: 1, reading });
-      }
-      out.uint(runs.length);
-      for (const { length, reading } of runs) {
-        out.uint(length);
-        if (reading === null) out.uint(0);
-        else {
-          out.uint(1);
-          out.int(reading);
-        }
-      }
-
-      const bits = new BitWriter();
-      for (const { key } of finds) bits.bits(key, keyBits);
-      for (const gap of gaps) bits.rice(gap, k);
-      const head = out.done();
-      const tail = bits.done();
-      return Uint8Array.from([...head, ...tail]);
-    },
+    pack: () => null,
     unpack: (bytes) => {
       const read = new ByteReader(bytes);
       const length = read.uint();
@@ -265,19 +226,204 @@ const timelineField = (keys: readonly string[]): FieldCodec => {
   };
 };
 
+/** The layout version whose timeline is written in bits throughout (link 3). */
+const COMPACT = 3;
+
+/** The Rice parameter of `values` that costs the fewest bits. */
+const bestRice = (values: readonly number[]): number =>
+  RICE_PARAMETERS.reduce((best, now) =>
+    riceCost(values, now) < riceCost(values, best) ? now : best,
+  );
+
+/**
+ * The timeline as link 3 writes it. Link 2 (`wholeDriftsField`) wrote each run
+ * of finds sharing a reading as varints, its drift whole: an epoch-sized
+ * number, six bytes. A timer on the game's clock is set anew at every pause,
+ * so its runs are short, and a run of about 250 finds passed 2000
+ * characters. Here the finds are in the same order, but every part is bits
+ * after five varints: how many finds, the first one's instant, the gaps'
+ * Rice parameter and whether they mark a shared instant (`k * 2 + 1` if
+ * they do), the runs' and the drifts' changes' Rice parameters. Then:
+ * - each find's key, an index in the key table;
+ * - each find's time since the one before, as a Rice code; or, when they
+ *   mark a shared instant (autotracking lays a check and the item it gave
+ *   in one, about three finds in ten), `0` for one, else `1` and the gap
+ *   less one: whichever the writer found shorter;
+ * - the runs of finds sharing a reading, until every find has one: the run's
+ *   length less one as a Rice code, then `0` for no reading (the timer not
+ *   started), or `1` and the change from the last drift written (the first
+ *   instant before any), zigzagged, as a Rice code: a few seconds of pause,
+ *   about fifteen bits.
+ * Two runs side by side never share a reading: a writer would have made them
+ * one, so such a field is refused, as one with a key twice.
+ * @param keys - The key table the link was made against
+ */
+const compactField = (keys: readonly string[]): FieldCodec => {
+  const index = new Map(keys.map((key, at) => [key, at]));
+  const keyBits = keyBitsOf(keys);
+  /** The most a drift's change is: two drifts of a field's magnitude, zigzagged. */
+  const maxChange = MAX_FIELD_NUMBER * 4;
+  return {
+    pack: (value) => {
+      if (!isRecord(value)) return null;
+      const finds: { key: number; stamp: Stamp }[] = [];
+      for (const [key, stamp] of Object.entries(value)) {
+        const at = index.get(key);
+        if (at === undefined || !isPackable(stamp)) return null;
+        finds.push({ key: at, stamp });
+      }
+      finds.sort((a, b) => a.stamp.at - b.stamp.at || a.key - b.key);
+      const out = new ByteWriter();
+      out.uint(finds.length);
+      if (finds.length === 0) return out.done();
+      const first = finds[0].stamp.at;
+
+      const gaps = finds
+        .slice(1)
+        .map(({ stamp }, i) => stamp.at - finds[i].stamp.at);
+      const moved = gaps.filter((gap) => gap > 0).map((gap) => gap - 1);
+      const kGap = bestRice(gaps);
+      const kMoved = bestRice(moved);
+      const shared =
+        gaps.length + riceCost(moved, kMoved) < riceCost(gaps, kGap);
+
+      const runs: { length: number; reading: Reading }[] = [];
+      for (const { stamp } of finds) {
+        const reading = stamp.ms === null ? null : stamp.at - stamp.ms;
+        const last = runs.at(-1);
+        if (last !== undefined && last.reading === reading) last.length++;
+        else runs.push({ length: 1, reading });
+      }
+      const changes: number[] = [];
+      let drift = first;
+      for (const { reading } of runs) {
+        if (reading === null) continue;
+        changes.push(zigzag(reading - drift));
+        drift = reading;
+      }
+      const kRun = bestRice(runs.map(({ length }) => length - 1));
+      const kChange = bestRice(changes);
+
+      for (const head of [
+        first,
+        shared ? kMoved * 2 + 1 : kGap * 2,
+        kRun,
+        kChange,
+      ]) {
+        out.uint(head);
+      }
+      const bits = new BitWriter();
+      for (const { key } of finds) bits.bits(key, keyBits);
+      for (const gap of gaps) {
+        if (!shared) bits.rice(gap, kGap);
+        else if (gap === 0) bits.bits(0, 1);
+        else {
+          bits.bits(1, 1);
+          bits.rice(gap - 1, kMoved);
+        }
+      }
+      let change = 0;
+      for (const { length, reading } of runs) {
+        bits.rice(length - 1, kRun);
+        bits.bits(reading === null ? 0 : 1, 1);
+        if (reading !== null) bits.rice(changes[change++], kChange);
+      }
+      return Uint8Array.from([...out.done(), ...bits.done()]);
+    },
+    unpack: (bytes) => {
+      const read = new ByteReader(bytes);
+      const length = read.uint();
+      if (length === null || length > keys.length) return undefined;
+      if (length === 0) return read.done ? {} : undefined;
+      const first = read.uint();
+      const gapHead = read.uint();
+      const kRun = read.uint();
+      const kChange = read.uint();
+      if (
+        first === null ||
+        gapHead === null ||
+        kRun === null ||
+        kChange === null
+      ) {
+        return undefined;
+      }
+      const kGap = Math.floor(gapHead / 2);
+      const shared = gapHead % 2 === 1;
+      if (first > MAX_FIELD_NUMBER || kGap > 40 || kRun > 40 || kChange > 40)
+        return undefined;
+
+      const bits = new BitReader(read.rest());
+      const found: string[] = [];
+      for (let i = 0; i < length; i++) {
+        const slot = bits.bits(keyBits);
+        const key = slot === null ? undefined : keys[slot];
+        if (key === undefined || found.includes(key)) return undefined;
+        found.push(key);
+      }
+      const instants = [first];
+      for (let i = 1; i < length; i++) {
+        let gap: number | null = 0;
+        if (!shared) gap = bits.rice(kGap, MAX_FIELD_NUMBER);
+        else {
+          const moved = bits.bits(1);
+          if (moved === null) return undefined;
+          if (moved === 1) {
+            const less = bits.rice(kGap, MAX_FIELD_NUMBER);
+            gap = less === null ? null : less + 1;
+          }
+        }
+        if (gap === null) return undefined;
+        const at = instants[i - 1] + gap;
+        if (at > MAX_FIELD_NUMBER) return undefined;
+        instants.push(at);
+      }
+
+      const timeline: Record<string, Stamp> = {};
+      let done = 0;
+      let drift = first;
+      let before: Reading | undefined;
+      while (done < length) {
+        const less = bits.rice(kRun, length - 1 - done);
+        const timed = bits.bits(1);
+        if (less === null || timed === null) return undefined;
+        let reading: Reading = null;
+        if (timed === 1) {
+          const written = bits.rice(kChange, maxChange);
+          if (written === null) return undefined;
+          reading = drift + unzigzag(written);
+          if (Math.abs(reading) > MAX_FIELD_NUMBER) return undefined;
+          drift = reading;
+        }
+        if (reading === before) return undefined;
+        before = reading;
+        for (const at of instants.slice(done, done + less + 1)) {
+          const ms = reading === null ? null : at - reading;
+          if (ms !== null && (ms < 0 || ms > MAX_FIELD_NUMBER)) {
+            return undefined;
+          }
+          timeline[found[done++]] = { at, ms };
+        }
+      }
+      return bits.padded ? timeline : undefined;
+    },
+  };
+};
+
 /**
  * The fields over the location and item tables a link was made against: the
  * whole of today's, or a prefix of each. The timeline's key table follows
- * from them, and the digest covers it too.
+ * from them, and the digest covers it too. Its bytes follow the link's
+ * layout version: whole drifts in runs (link 2), or bits throughout (link 3).
  */
-const layoutAt = ([locations, items]: Tables): Layout => {
+const layoutAt = ([locations, items]: Tables, version: number): Layout => {
   const keys = timelineKeys(items, locations);
   return {
     digested: [locations, items, keys],
     fields: {
       checked: bitsetField(locations, "record"),
       items: itemsField(items),
-      timeline: timelineField(keys),
+      timeline:
+        version >= COMPACT ? compactField(keys) : wholeDriftsField(keys),
     },
   };
 };
@@ -287,6 +433,7 @@ const CODEC: PackCodec = {
   game: "alttpr",
   legacySizes: LEGACY_SIZES,
   tables: [LOCATIONS, SHARE_ITEMS],
+  version: COMPACT,
 };
 
 /** An export as a packed link's text, for the Share action. */

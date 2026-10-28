@@ -221,14 +221,18 @@ test("a late run shares short, and its full link with the timeline is a keyboard
     permissions: ["clipboard-read", "clipboard-write"],
   });
   const page = await context.newPage();
-  // Every place checked, each on the game's clock, which every pause sets
-  // again: the timeline a late autotracked run holds, too long for a chat
+  // Every place checked, each on the game's clock and its reading set anew
+  // at every one, minutes apart: a timeline too long for a chat message
+  // even as link 3 packs it
   const t0 = Date.UTC(2026, 9, 28, 9, 30);
   const places = [...MAP_LOCATIONS];
+  let at = t0;
+  let paused = 0;
   const timeline = Object.fromEntries(
     places.map((id, index) => {
-      const at = t0 + index * 37_000 + ((index * 7919) % 23_000);
-      return [`check:${id}`, { at, ms: at - t0 - index * 1237 }];
+      at += 1000 + ((index * 104_729) % 299_000);
+      paused += 200 + ((index * 7919) % 59_000);
+      return [`check:${id}`, { at, ms: at - t0 - paused }];
     }),
   );
   await page.goto("./");
