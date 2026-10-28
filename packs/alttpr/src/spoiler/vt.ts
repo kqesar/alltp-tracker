@@ -4,6 +4,13 @@
 // (Location.php:289-292, Item.php:332-335), and an item as the class
 // `UPSTREAM_ITEMS` keys on: `ProgressiveSword:1`.
 //
+// Two values are written without a world, because World::getSpoiler spells
+// them out instead of asking the item (World.php:965-969): `Key`, every small
+// key of a seed with generic keys (the retro world's, `rom.genericKeys`), and
+// `Nothing`, a location that holds no item. Every other name carries its
+// world, the shops' and `Equipped` ones included (ItemAlias.php:48-51,
+// World.php:947, :980).
+//
 // The playthrough is a list of spheres, each holding the locations it opens by
 // region: `{ "1": { "Light World": { "Hobo:1": "IceRod:1" } }, … }`, then two
 // counts (`longest_item_chain`, `regions_visited`).
@@ -22,6 +29,18 @@ const ofWorld = (written: string): string | null => {
   return match?.[2] === "1" && match[1] !== undefined ? match[1] : null;
 };
 
+/**
+ * What the spoiler writes bare, single-player as it is: the item class it
+ * stands for and the name to show. The generic key is `KeyGK`, the class the
+ * entrance randomizer's `Small Key (Universal)` joins (er-items.json).
+ */
+const BARE: Readonly<
+  Record<string, { readonly class: string; readonly name: string } | undefined>
+> = {
+  Key: { class: "KeyGK", name: "Key" },
+  Nothing: { class: "Nothing", name: "Nothing" },
+};
+
 const PLAYTHROUGH = z.record(
   z.string(),
   z.union([z.number(), z.record(z.string(), z.record(z.string(), z.string()))]),
@@ -36,12 +55,16 @@ export const englishName = (itemClass: string): string =>
 
 export const VT: Shape = {
   describeItem: (written) => {
+    const bare = BARE[written];
+    if (bare !== undefined) return bare.name;
     const itemClass = ofWorld(written);
     return itemClass === null ? written : englishName(itemClass);
   },
   format: "vt",
   id: locationId,
   item: (written) => {
+    const bare = BARE[written];
+    if (bare !== undefined) return { ...bare, kind: "item" };
     const itemClass = ofWorld(written);
     if (itemClass === null) return { kind: "world" };
     return UPSTREAM_ITEMS.has(itemClass)
