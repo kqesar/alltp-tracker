@@ -782,6 +782,37 @@ describe("GameStore", () => {
       expect(store().timer.elapsedMs).toBe(0);
     });
 
+    it.each([
+      ["untimed", { elapsedMs: 0, finished: true, startedAt: null }],
+      ["timed", { elapsedMs: 477_000, finished: true, startedAt: null }],
+    ])(
+      "clears a run that ended %s on every way to replace the run",
+      (_, ended) => {
+        const finished = () => useGameStore.setState({ timer: ended });
+        const replace: (() => void)[] = [
+          () => store().reset(),
+          () => store().loadProgress({}),
+          () => store().applyPreset("standard"),
+          () => store().applyRun("keysanity", getPreset("keysanity").settings),
+          () =>
+            store().applyRun(
+              "keysanity",
+              getPreset("keysanity").settings,
+              () => ({ seed: "AbCdEfGhIj" }),
+            ),
+        ];
+        for (const run of replace) {
+          finished();
+          run();
+          expect(store().timer).toEqual({
+            elapsedMs: 0,
+            finished: false,
+            startedAt: null,
+          });
+        }
+      },
+    );
+
     it("goes on through autotracking's switch to the seed's run type", () => {
       store().startTimer(T0);
       const running = store().timer;

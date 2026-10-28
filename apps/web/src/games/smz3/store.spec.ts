@@ -45,6 +45,31 @@ describe("the SMZ3 run timer", () => {
     expect(store().timer.finished).toBe(true);
   });
 
+  it.each([
+    ["untimed", 0],
+    ["timed", 477_000],
+  ])(
+    "is cleared by a new game and an import after a run that ended %s",
+    (_, elapsedMs) => {
+      const ended = { elapsedMs, finished: true, startedAt: null };
+      useSmz3Store.setState({ timer: ended });
+      store().reset();
+      expect(store().timer).toEqual({
+        elapsedMs: 0,
+        finished: false,
+        startedAt: null,
+      });
+
+      useSmz3Store.setState({ timer: ended });
+      store().load(freshProgress());
+      expect(store().timer).toEqual({
+        elapsedMs: 0,
+        finished: false,
+        startedAt: null,
+      });
+    },
+  );
+
   it("is saved with the run, its choices too, and restored", async () => {
     store().step("sword", 1);
     store().setAutoTimer(false);
