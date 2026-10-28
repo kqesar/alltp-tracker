@@ -8,7 +8,8 @@
 // a link made against a prefix of today's tables still reads (what the link
 // does not hold stays as a fresh run has it), while one made against tables
 // that were reordered or cut would put its bits on the wrong places, and is
-// refused instead of read.
+// refused instead of read. It also names its layout version: a codec whose
+// bytes changed writes a later one and still reads every one before.
 
 import * as z from "zod/mini";
 import type { GameId } from "@/games/registry";
@@ -20,7 +21,11 @@ export const LINK_FORMAT = "alltp-tracker-link";
 /** What a save file's JSON is (every game's export). */
 export const SAVE_FORMAT = "alltp-tracker-save";
 
-/** The packed layout's version; a link of another one is another tracker's. */
+/**
+ * The packed layout's first version, which every codec reads. A codec that
+ * changes a field's bytes writes a later one (`PackCodec.version`) and reads
+ * every one from this up; a link of any other is another tracker's.
+ */
 export const LINK_VERSION = 2;
 
 /** Shown for a link written against other tables, or by a newer packing. */
@@ -67,9 +72,21 @@ export interface PackCodec {
    * version of the packed form did not write.
    */
   readonly legacySizes: readonly number[];
-  /** The fields over `tables`, or over a prefix of each: an older link's. */
-  readonly at: (tables: Tables) => Layout;
+  /**
+   * The layout version this codec writes, `LINK_VERSION` when absent: it
+   * reads every version from `LINK_VERSION` up to it, and refuses a later
+   * one, a newer tracker's.
+   */
+  readonly version?: number;
+  /**
+   * The fields over `tables`, or over a prefix of each (an older link's), in
+   * the layout of `version`.
+   */
+  readonly at: (tables: Tables, version: number) => Layout;
 }
+
+/** The layout version a codec writes. */
+const versionOf = (codec: PackCodec): number => codec.version ?? LINK_VERSION;
 
 /**
  * A 32-bit FNV-1a of the tables, as six base64url characters. It guards
@@ -105,7 +122,8 @@ export const packRun = (save: string, codec: PackCodec): string => {
   const file: unknown = JSON.parse(save);
   if (!isRecord(file) || file.format !== SAVE_FORMAT) return save;
   if (file.game !== codec.game || !isRecord(file.progress)) return save;
-  const layout = codec.at(codec.tables);
+  const version = versionOf(codec);
+  const layout = codec.at(codec.tables, version);
   const progress: Record<string, unknown> = { ...file.progress };
   for (const [name, field] of Object.entries(layout.fields)) {
     if (!(name in progress)) continue;
@@ -116,7 +134,7 @@ export const packRun = (save: string, codec: PackCodec): string => {
   return JSON.stringify({
     ...file,
     format: LINK_FORMAT,
-    link: LINK_VERSION,
+    link: version,
     progress,
     sizes: codec.tables.map((table) => table.length),
     table: digestOf(layout.digested),
@@ -180,13 +198,13 @@ export const unpackRun = (text: string, codec: PackCodec): Unpacked => {
     table,
     ...rest
   } = link.data;
-  const made = prefixes(codec, sizes ?? codec.legacySizes);
-  const layout = made && codec.at(made);
-  if (
-    version !== LINK_VERSION ||
-    layout === null ||
-    table !== digestOf(layout.digested)
-  ) {
+  const known =
+    Number.isInteger(version) &&
+    version >= LINK_VERSION &&
+    version <= versionOf(codec);
+  const made = known ? prefixes(codec, sizes ?? codec.legacySizes) : null;
+  const layout = made && codec.at(made, version);
+  if (layout === null || table !== digestOf(layout.digested)) {
     return { ok: false, reason: OTHER_VERSION };
   }
   const unpacked: Record<string, unknown> = { ...progress };

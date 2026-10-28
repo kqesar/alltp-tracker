@@ -226,6 +226,79 @@ describe("a packed link", () => {
     ).toEqual({ ok: false, reason: OTHER_VERSION });
   });
 
+  it("writes a codec's own layout version, reads every one from the first, and refuses any other", () => {
+    // A codec whose field changed its bytes in layout 3: each version's are
+    // its own, the first's a byte more
+    const seen: number[] = [];
+    const versioned: PackCodec = {
+      ...codec,
+      at: (tables, version) => {
+        seen.push(version);
+        const field = bitsetField(tables[0], "list");
+        return {
+          digested: tables,
+          fields: {
+            checked:
+              version >= 3
+                ? field
+                : {
+                    pack: (value) => {
+                      const bytes = field.pack(value);
+                      return bytes && Uint8Array.of(7, ...bytes);
+                    },
+                    unpack: (bytes) =>
+                      bytes[0] === 7 ? field.unpack(bytes.slice(1)) : undefined,
+                  },
+          },
+        };
+      },
+      version: 3,
+    };
+    /** The save a link opens to, or why it does not. */
+    const opened = (text: string) => {
+      const unpacked = unpackRun(text, versioned);
+      return unpacked.ok ? JSON.parse(unpacked.save) : unpacked;
+    };
+    const link = packRun(save(["b/one"]), versioned);
+    expect(JSON.parse(link).link).toBe(3);
+    expect(seen).toEqual([3]);
+    expect(opened(link)).toEqual(JSON.parse(save(["b/one"])));
+
+    // A link the first layout wrote reads by the first layout
+    const first = tampered(link, (file) => {
+      const progress = file.progress as Record<string, string>;
+      file.link = LINK_VERSION;
+      progress.checked = toBase64Url(
+        Uint8Array.of(7, ...fromBase64Url(progress.checked)),
+      );
+    });
+    expect(opened(first)).toEqual(JSON.parse(save(["b/one"])));
+    expect(seen.at(-1)).toBe(LINK_VERSION);
+    // A codec that never changed its bytes writes the first, as it did
+    expect(JSON.parse(packRun(save(["b/one"]), codec)).link).toBe(LINK_VERSION);
+
+    for (const version of [LINK_VERSION - 1, 4, 2.5, "3"]) {
+      expect(
+        unpackRun(
+          tampered(link, (file) => {
+            file.link = version;
+          }),
+          versioned,
+        ),
+        String(version),
+      ).toMatchObject({ ok: false });
+    }
+    // A newer link is another version's, not a broken one
+    expect(
+      unpackRun(
+        tampered(link, (file) => {
+          file.link = 4;
+        }),
+        versioned,
+      ),
+    ).toEqual({ ok: false, reason: OTHER_VERSION });
+  });
+
   it("reads a link that carries no sizes as the tables the first version had", () => {
     const link = tampered(packRun(save(["b/one"]), codec), (file) => {
       delete file.sizes;
