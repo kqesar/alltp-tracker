@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.56.0](https://github.com/kqesar/alltp-tracker/compare/v2.55.0...v2.56.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **alttpr:** solve a run without basic placement's safety margin ([6dc5682](https://github.com/kqesar/alltp-tracker/commit/6dc568281c0d300e061db5e1bf5d6f3b51b09cbb))
+* **web:** show what basic placement's margin alone holds back as doable ([491290b](https://github.com/kqesar/alltp-tracker/commit/491290b731d7ba309099d736dca2f4af67d349c0))
+
+
+### 📚 Documentation
+
+* say what Basic placement's safety margin state means ([34799c4](https://github.com/kqesar/alltp-tracker/commit/34799c4f907ee95a70c5e02c7a94d7c72965399d))
+
 ## [2.55.0](https://github.com/kqesar/alltp-tracker/compare/v2.54.1...v2.55.0) (2026-10-28)
 
 
