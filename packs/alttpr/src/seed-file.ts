@@ -74,8 +74,14 @@ const SEED_FILE = z.object({
         "superexpert",
         "crowd_control",
       ]),
-      // World.php:1292-1324, the logics with a seed type
-      logic: oneOf(["NoGlitches", "OverworldGlitches", "MajorGlitches"]),
+      // RandomizerController.php:110-116, the logics alttpr.com offers
+      logic: oneOf([
+        "NoGlitches",
+        "OverworldGlitches",
+        "HybridMajorGlitches",
+        "MajorGlitches",
+        "NoLogic",
+      ]),
       // config/alttp.php:227-232
       mode: oneOf(["open", "standard", "inverted", "retro"]),
       // config/alttp.php:233-240; absent when the entrances are vanilla

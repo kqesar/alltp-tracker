@@ -146,8 +146,18 @@ export type SeedSetting<T> =
   | { readonly known: true; readonly value: T }
   | { readonly known: false; readonly why: SeedUnknown };
 
-/** The logic the seed was generated for (vt RandomizerController.php:110). */
-export type SeedLogic = "NoGlitches" | "OverworldGlitches" | "MajorGlitches";
+/**
+ * The logic the seed was generated for: alttpr.com's five "Glitches
+ * Required" (vt RandomizerController.php:110-116, config/alttp.php:174-180).
+ * The ROM's seed type folds the last three into one, MajorGlitches
+ * (World.php:1292-1304, Rom.php:836-848); the seed's file names each.
+ */
+export type SeedLogic =
+  | "NoGlitches"
+  | "OverworldGlitches"
+  | "HybridMajorGlitches"
+  | "MajorGlitches"
+  | "NoLogic";
 
 /** upstream's mode.state: the world (World::factory, World.php:288-305). */
 export type SeedMode = "open" | "standard" | "inverted" | "retro";
@@ -256,7 +266,10 @@ const VULNERABLE = {
 /** The pyramid's bit in its screen's byte (InitialSram.php:93-95). */
 const PYRAMID_OPEN = 0x20;
 
-/** RandomizerSeedType's values (Rom.php:832-851). */
+/**
+ * RandomizerSeedType's values (Rom.php:832-851): $01 is written for Major
+ * Glitches, Hybrid Major Glitches and No Logic alike (World.php:1293-1302).
+ */
 const LOGICS: Readonly<Record<number, SeedLogic>> = {
   0: "NoGlitches",
   1: "MajorGlitches",
