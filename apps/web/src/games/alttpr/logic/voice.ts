@@ -88,6 +88,7 @@ const ITEMS: readonly (readonly [
   [["glove", "gloves", "power glove"], "glove", NEXT],
   [["mitts", "titan mitt"], "glove", { atLeast: 2 }],
   [["bottle"], "bottle", NEXT],
+  [["heart", "heart container"], "hearts", NEXT],
   [["samaria", "red cane"], "somaria", ON],
   // Nor Byrna, which it hears as "mire": these are the words that work
   [["burner", "blue cane"], "byrna", ON],

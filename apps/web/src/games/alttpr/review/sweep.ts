@@ -24,6 +24,7 @@ import {
   solveWithKeys,
   type TrackerInput,
   toState,
+  UNKNOWN_FACT_OF,
 } from "@alltp/pack-alttpr";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import { logicModelled } from "@/games/alttpr/data/presets";
@@ -361,6 +362,12 @@ export function* sweepRun(
       keyOf.set(location, { big: key[1] === "bigKey", dungeon: owner.id });
     }
   }
+  // Where the log put the counts the board may not know (the hearts, the
+  // escape's bombs): counted, as the keys are, once their place is taken
+  const countOf = new Map<string, string>();
+  for (const { item, location } of log.placements) {
+    if (item !== null && UNKNOWN_FACT_OF.has(item)) countOf.set(location, item);
+  }
   const takenAt = (key: string): string[] => {
     if (key.startsWith("check:")) return [key.slice(6)];
     const beaten = /^item:boss(\d+):2$/.exec(key)?.[1];
@@ -392,6 +399,7 @@ export function* sweepRun(
   const checked: Record<string, true> = {};
   const smallKeys: Partial<Record<DungeonId, number>> = {};
   const bigKeys: Record<string, number> = {};
+  const counted: Record<string, number> = {};
   const inputs: TrackerInput[] = [];
   const tris: Readonly<Record<string, string>>[] = [];
   const first = new Map<string, number>();
@@ -411,6 +419,8 @@ export function* sweepRun(
         for (const place of takenAt(key)) {
           if (placeTaken.has(place)) continue;
           placeTaken.set(place, index);
+          const count = countOf.get(place);
+          if (count !== undefined) counted[count] = (counted[count] ?? 0) + 1;
           const owned = keyOf.get(place);
           if (owned?.big) {
             const big = `bigKey${dungeon(owned.dungeon).code}`;
@@ -434,10 +444,12 @@ export function* sweepRun(
     );
     const input: TrackerInput = {
       ...board,
-      items: { ...held, ...bigKeys },
+      items: { ...held, ...bigKeys, ...counted },
       keys: { ...smallKeys },
       medallions,
       prizes,
+      // The log's hearts and bombs, whatever the board was left with
+      unknown: {},
     };
     const solved = solveAt(input);
     solves++;

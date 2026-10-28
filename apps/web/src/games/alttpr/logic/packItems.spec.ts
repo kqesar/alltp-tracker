@@ -61,6 +61,8 @@ describe("the app's one table of the pack's items", () => {
             beaten,
             items: held,
             prizes,
+            // A legacy run has no hearts set, nor any bombs
+            unknown: { bombs: true, health: true },
           },
         );
       }
@@ -85,7 +87,24 @@ describe("the app's one table of the pack's items", () => {
       },
       items: {},
       prizes: { "palace-of-darkness": "redCrystal", "swamp-palace": "pendant" },
+      unknown: { bombs: true, health: true },
     });
+  });
+
+  it("reads the hearts on screen as those found beyond the 3 Link starts with", () => {
+    const found = (hearts: number) => packReading({ hearts } as never);
+    // Not set: the health is unknown, and nothing is held
+    expect(found(0)).toMatchObject({
+      items: {},
+      unknown: { bombs: true, health: true },
+    });
+    // 3 hearts (1), the start: none found, and the health known
+    expect(found(1).items).toEqual({});
+    expect(found(1).unknown).toEqual({ bombs: true });
+    // 10 hearts: 7 found, upstream's hasHealth(7)
+    expect(found(8).items).toEqual({ heartContainer: 7 });
+    // 20 hearts: the pool's 11 containers and 24 pieces
+    expect(found(18).items).toEqual({ heartContainer: 11, pieceOfHeart: 24 });
   });
 
   it("gives back every item value from the pack items it records", () => {
@@ -149,14 +168,13 @@ describe("RECORDED_LEVELS", () => {
   });
 
   it("leaves out what no cell records", () => {
-    for (const item of [
-      "heartContainer",
-      "keyD1",
-      "pieceOfHeart",
-      "rescueZelda",
-      "tenBombs",
-    ]) {
+    for (const item of ["keyD1", "rescueZelda", "tenBombs"]) {
       expect(RECORDED_LEVELS.has(item), item).toBe(false);
     }
+  });
+
+  it("holds the hearts the hearts cell reaches: the pool's containers and pieces", () => {
+    expect(RECORDED_LEVELS.get("heartContainer")).toBe(11);
+    expect(RECORDED_LEVELS.get("pieceOfHeart")).toBe(24);
   });
 });

@@ -1,9 +1,13 @@
 // The engine's blockers in the tracker's words: each atom (an item at a
 // level, a count of crystals) as the name and the icon the player knows it
 // by, from the grid's cells where it has one.
-import type { Atom, Blockers } from "@alltp/engine";
+import { type Atom, type Blockers, itemValue, type State } from "@alltp/engine";
 import { DUNGEONS } from "@alltp/pack-alttpr";
-import { items as freshItems, itemLabels } from "@/games/alttpr/data/items";
+import {
+  items as freshItems,
+  itemLabels,
+  STARTING_HEARTS,
+} from "@/games/alttpr/data/items";
 import { PACK_ITEMS } from "@/games/alttpr/logic/packItems";
 
 /** One thing to get, as the tracker shows it. */
@@ -117,6 +121,28 @@ const CELL_IDS: ReadonlyMap<string, string> = new Map(
 const plural = (count: number, one: string, many = `${one}s`) =>
   count === 1 ? `1 ${one}` : `${count} ${many}`;
 
+/** What each heart item adds to the hearts found: a piece is a quarter. */
+const HEART_POWER: Readonly<Record<string, number>> = {
+  heartContainer: 1,
+  pieceOfHeart: 0.25,
+};
+
+const QUARTERS = ["", "¼", "½", "¾"];
+
+/**
+ * Hearts found, as the hearts on screen they make: 7 found are "10
+ * hearts", the 3 Link starts with added, as the player counts them.
+ */
+const heartsNeed = (found: number): Need => {
+  const shown = STARTING_HEARTS + found;
+  const whole = Math.floor(shown);
+  return {
+    icon: "heart.png",
+    key: `hearts>=${found}`,
+    label: `${whole}${QUARTERS[Math.round((shown - whole) * 4)]} hearts`,
+  };
+};
+
 /** An item at a level, in the tracker's words. */
 const itemNeed = (item: string, level: number): Need => {
   const key = `${item}>=${level}`;
@@ -150,7 +176,12 @@ const itemNeed = (item: string, level: number): Need => {
 
 /** One atom of a blocker set, in the tracker's words. */
 export const needOf = (atom: Atom): Need => {
-  if ("item" in atom) return itemNeed(atom.item, atom.min);
+  if ("item" in atom) {
+    const power = HEART_POWER[atom.item];
+    return power === undefined
+      ? itemNeed(atom.item, atom.min)
+      : heartsNeed(atom.min * power);
+  }
   return {
     icon: atom.group === "crystal" ? "dungeon3.png" : undefined,
     key: `${atom.group}>=${atom.min}`,
@@ -161,11 +192,45 @@ export const needOf = (atom: Atom): Need => {
   };
 };
 
-/** The engine's blockers in the tracker's words. */
-export const waysOf = (blockers: Blockers): Ways => ({
-  sets: blockers.sets.map((set) => set.map(needOf)),
-  truncated: blockers.truncated,
-});
+/**
+ * A blocker set in the tracker's words: its heart containers and pieces as
+ * the hearts they make with those held, as the hearts cell counts them (7
+ * found, whether a seventh container or four pieces beside six).
+ */
+const setOf = (set: readonly Atom[], held: State): Need[] => {
+  const hearts = new Map<string, number>();
+  const needs: Need[] = [];
+  for (const atom of set) {
+    if ("item" in atom && HEART_POWER[atom.item] !== undefined) {
+      hearts.set(atom.item, atom.min);
+    } else needs.push(needOf(atom));
+  }
+  if (hearts.size === 0) return needs;
+  const found = Object.entries(HEART_POWER).reduce(
+    (sum, [item, power]) =>
+      sum + power * Math.max(hearts.get(item) ?? 0, itemValue(held, item)),
+    0,
+  );
+  return [heartsNeed(found), ...needs];
+};
+
+/**
+ * The engine's blockers in the tracker's words: sets that read the same
+ * (the ways to 7 hearts found, containers or pieces) are one.
+ * @param held - The state they were worked out in, for the hearts held
+ */
+export const waysOf = (blockers: Blockers, held: State = {}): Ways => {
+  const seen = new Set<string>();
+  const sets: Need[][] = [];
+  for (const set of blockers.sets) {
+    const needs = setOf(set, held);
+    const key = needs.map((need) => need.key).join();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    sets.push(needs);
+  }
+  return { sets, truncated: blockers.truncated };
+};
 
 /** Whether two lists of ways name the same sets. */
 export const sameWays = (a: Ways, b: Ways): boolean =>

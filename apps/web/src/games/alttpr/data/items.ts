@@ -107,6 +107,10 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   bottle: [0, 4],
   bow: [0, 3],
   glove: [0, 2],
+  // Link's hearts on screen, less 2: 0 not set (unknown to the logic), 1 the
+  // 3 hearts every run starts with, 18 the 20 a full pool reaches
+  // (heartsShown)
+  hearts: [0, 18],
   // 1 the half magic, 2 the quarter, which only a customized seed gives
   magic: [0, 2],
   shield: [0, 3],
@@ -190,6 +194,26 @@ export const itemsMax: Record<string, number> = Object.fromEntries(
   numericEntries.map(([name, [, max]]) => [name, max]),
 );
 
+/** The hearts the `hearts` value 1 stands for: the 3 Link starts with. */
+export const STARTING_HEARTS = 3;
+
+/**
+ * The hearts on screen a `hearts` value says, or null while not set: what
+ * the hearts cell shows, and less the 3 Link starts with, the hearts found
+ * the rules read (logic/packItems.ts).
+ * @param value - The `hearts` value: 0 not set, else the hearts less 2
+ */
+export const heartsShown = (value: number): number | null =>
+  value > 0 ? value + STARTING_HEARTS - 1 : null;
+
+/**
+ * The `hearts` value of a number of hearts on screen, within its range: 3
+ * hearts or fewer are 1, the run's start.
+ * @param shown - The hearts on screen
+ */
+export const heartsValue = (shown: number): number =>
+  Math.max(1, Math.min(itemsMax.hearts, shown - STARTING_HEARTS + 1));
+
 /** Dungeon bosses, in dungeon-index order. */
 const BOSS_NAMES = [
   "Armos Knights",
@@ -216,6 +240,7 @@ const ITEM_NAMES: Record<string, string> = {
   firerod: "Fire Rod",
   flippers: "Zora's Flippers",
   glove: "Power Glove",
+  hearts: "Hearts",
   icerod: "Ice Rod",
   magic: "Half Magic",
   mirror: "Magic Mirror",

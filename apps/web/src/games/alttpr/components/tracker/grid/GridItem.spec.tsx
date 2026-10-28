@@ -29,6 +29,31 @@ describe("GridItem", () => {
     expect(button).not.toHaveClass("grid-item-relative");
   });
 
+  it("gives the tunic's cell the hearts, not set until counted", () => {
+    render(<GridItem col={4} item="tunic" row={1} />);
+
+    expect(screen.getByRole("group")).toHaveAccessibleName("Mail and hearts");
+    expect(screen.getByTestId("item-tunic")).toBeInTheDocument();
+    const hearts = screen.getByTestId("hearts-overlay");
+    expect(hearts).toHaveAccessibleName(/^Hearts: not set\./);
+    expect(hearts).toHaveTextContent("?");
+    expect(hearts).toHaveClass("griditem--dimmed");
+    expect(hearts).toHaveAttribute("data-grid-slot", "1");
+
+    // A click counts the 3 hearts every run starts with, the next one more
+    fireEvent.click(hearts);
+    expect(hearts).toHaveAccessibleName(/^Hearts: 3\./);
+    expect(hearts).toHaveTextContent("3");
+    expect(hearts).not.toHaveClass("griditem--dimmed");
+    fireEvent.click(hearts);
+    expect(useGameStore.getState().items.hearts).toBe(2);
+    expect(hearts).toHaveTextContent("4");
+    // Back past 3: not set again
+    fireEvent.contextMenu(hearts);
+    fireEvent.contextMenu(hearts);
+    expect(hearts).toHaveTextContent("?");
+  });
+
   it("gives a boss cell its three overlays", () => {
     render(<GridItem col={6} item="boss8" row={5} />);
 

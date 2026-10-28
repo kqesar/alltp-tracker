@@ -5,12 +5,14 @@
 import {
   decodeChecks,
   decodeEntrances,
+  decodeHealth,
   decodeItems,
   decodeMedallions,
   decodePrizes,
   decodeProgress,
   decodeSeedSettings,
   type EntranceReading,
+  type HealthReading,
   type ItemReading,
   type MedallionReading,
   type MemoryView,
@@ -31,6 +33,8 @@ export type AutotrackReading = {
   /** The locations memory could not settle, with why. */
   readonly unsettled: readonly (readonly [id: string, why: Unsettled])[];
   readonly progress: ProgressReading;
+  /** Link's hearts on screen (`decodeHealth`), Race Mode or not. */
+  readonly health: HealthReading;
   /**
    * The dungeon prizes the game shows, outside Race Mode: a finished
    * dungeon's, and those the world map draws. No other prize is kept.
@@ -70,6 +74,7 @@ export const readMemory = (
     at,
     checked: [...checks.checked],
     entrances: decodeEntrances(memory, options),
+    health: decodeHealth(memory, options),
     items: decodeItems(memory, options),
     medallions: decodeMedallions(memory, options),
     prizes: decodePrizes(memory, options),

@@ -59,13 +59,19 @@ export type Modifier = (typeof MODIFIERS)[number];
 const isItemCell = (id: string) =>
   Boolean(id) && id !== "blank" && !id.startsWith("boss") && !isKeyCell(id);
 
-/** The grid's items, in reading order, then the retro world's shops. */
+/**
+ * The grid's items, in reading order, then the retro world's shops, then
+ * Link's hearts, on the tunic's cell.
+ */
 export const ITEM_CONTROLS: readonly ControlId[] = [
-  ...new Set([
-    ...defaultItemGrid.flat(),
-    ...itemGridFor({ mode: "retro" }).flat(),
-  ]),
-].filter(isItemCell);
+  ...[
+    ...new Set([
+      ...defaultItemGrid.flat(),
+      ...itemGridFor({ mode: "retro" }).flat(),
+    ]),
+  ].filter(isItemCell),
+  "hearts",
+];
 
 /** Whether a dungeon's boss cell carries a medallion picker. */
 const hasMedallion = (index: number) =>
