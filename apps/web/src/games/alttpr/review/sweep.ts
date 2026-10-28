@@ -296,6 +296,32 @@ const withKeysKnown = (settings: AlttprSettings): AlttprSettings => {
   return known;
 };
 
+/**
+ * The board's items with the log's own: its big keys, and the counts the
+ * board may not know (the hearts, the escape's bombs) as the log put them
+ * where the run took them, never the board's last count, which no timeline
+ * dates. A run that dated no place (Race Mode's stamps none) cannot date
+ * them: they stay unknown, maybe at most.
+ * @param board - The board's input at a step
+ * @param logs - The big keys and counts of the places taken by then
+ * @param dated - Whether the run dated the places it checked
+ */
+export const withLogCounts = (
+  board: TrackerInput,
+  logs: Readonly<Record<string, number>>,
+  dated: boolean,
+): Pick<TrackerInput, "items" | "unknown"> => {
+  const held = Object.fromEntries(
+    Object.entries(board.items).filter(
+      ([id]) => !id.startsWith("bigKey") && !UNKNOWN_FACT_OF.has(id),
+    ),
+  );
+  return {
+    items: { ...held, ...logs },
+    unknown: dated ? {} : { bombs: true, health: true },
+  };
+};
+
 /** An item's value once a timeline key is applied to it. */
 const applyKey = (
   value: boolean | number | undefined,
@@ -404,6 +430,10 @@ export function* sweepRun(
   const tris: Readonly<Record<string, string>>[] = [];
   const first = new Map<string, number>();
   const placeTaken = new Map<string, number>();
+  // A run that checked places dates the hearts and bombs taken at them
+  const dated = Object.keys(run.timeline).some((key) =>
+    key.startsWith("check:"),
+  );
   const solveAt = (input: TrackerInput) =>
     solveWithKeys(filler, toState(input, seedSettings)).locations();
   let solves = 0;
@@ -438,18 +468,12 @@ export function* sweepRun(
       settings: run.settings,
       smallKeys: run.smallKeys,
     });
-    // The board's own big keys give way to the log's
-    const held = Object.fromEntries(
-      Object.entries(board.items).filter(([id]) => !id.startsWith("bigKey")),
-    );
     const input: TrackerInput = {
       ...board,
-      items: { ...held, ...bigKeys, ...counted },
+      ...withLogCounts(board, { ...bigKeys, ...counted }, dated),
       keys: { ...smallKeys },
       medallions,
       prizes,
-      // The log's hearts and bombs, whatever the board was left with
-      unknown: {},
     };
     const solved = solveAt(input);
     solves++;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getPreset } from "@/games/alttpr/data/presets";
-import { locationName } from "@/games/alttpr/logic/solution";
+import { locationName, trackerInput } from "@/games/alttpr/logic/solution";
 import { compareReview, type ReviewedRun } from "@/games/alttpr/review/adapter";
 import {
   type Played,
@@ -14,6 +14,7 @@ import {
   hiddenReason,
   type Sweep,
   sweepRun,
+  withLogCounts,
 } from "@/games/alttpr/review/sweep";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -353,5 +354,33 @@ describe("the seed's prizes and medallions", () => {
       result.waits.find(({ location }) => location === "misery-mire/prize")
         ?.reach,
     ).not.toBeNull();
+  });
+});
+
+describe("the hearts and the escape's bombs", () => {
+  /** The board's input with 20 hearts set, as a run may end. */
+  const board = () => {
+    const start = fresh();
+    return trackerInput({
+      ...start,
+      items: { ...start.items, hearts: 18 },
+    });
+  };
+
+  it("take the log's count at each step, never the board's last one", () => {
+    expect(board().items).toMatchObject({ heartContainer: 11 });
+    const { items, unknown } = withLogCounts(
+      board(),
+      { bigKeyD1: 1, heartContainer: 2 },
+      true,
+    );
+    expect(items).toEqual({ bigKeyD1: 1, heartContainer: 2 });
+    expect(unknown).toEqual({});
+  });
+
+  it("stay unknown for a run that dated no place, as Race Mode's", () => {
+    const { items, unknown } = withLogCounts(board(), {}, false);
+    expect(items).toEqual({});
+    expect(unknown).toEqual({ bombs: true, health: true });
   });
 });
