@@ -24,13 +24,17 @@ export type RaceFeed = {
  * @param fresh - The persisted state of a fresh run: every field the
  * whitelist leaves out takes its value
  * @param kept - The fields the relayed views draw
+ * @param cut - What the game takes out of a kept field still: a value no
+ * view draws that a race keeps back (ALttPR's escape, in its items)
  * @param source - The game's Race Mode
  */
 export const raceFeed = ({
+  cut = (state) => state,
   fresh,
   kept,
   source,
 }: {
+  cut?: (state: Record<string, unknown>) => Record<string, unknown>;
   fresh: () => object;
   kept: readonly string[];
   source: RaceSource;
@@ -51,7 +55,7 @@ export const raceFeed = ({
         state[key] = (savedState as Record<string, unknown>)[key];
       }
     }
-    return JSON.stringify({ ...parsed, state });
+    return JSON.stringify({ ...parsed, state: cut(state) });
   },
   source,
 });

@@ -330,7 +330,9 @@ Race Mode, Standard's escape: `ProgressIndicator` `$02`, set as the rain
 ends with Zelda in the Sanctuary (`zelda.asm:11-13`), is upstream's
 `RescueZelda`, and until it the app counts Hyrule Castle unfinished, so the
 Light World stays shut during the escape. A run by hand still counts the
-escape done from the start.
+escape done from the start, and so does the app once the value can no longer
+be read: Race Mode coming on, the connection lost, autotracking stopped, an
+import or a shared run set it back to not known, so it never sticks.
 
 A shield a Pikit takes drops `ShieldEquipment` (`$7EF35A`) to 0; it takes
 the fighter's and the fire shield, never the mirror shield, and gives it

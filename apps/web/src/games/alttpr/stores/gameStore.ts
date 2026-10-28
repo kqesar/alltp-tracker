@@ -26,6 +26,7 @@ import {
   restoreTricks,
   type TrickPrefs,
 } from "@/games/alttpr/data/tricks";
+import { withoutEscape } from "@/games/alttpr/logic/packItems";
 import {
   COUNTER_INDICES,
   counterMax,
@@ -580,8 +581,14 @@ export const useGameStore = create<GameState>()(
           }),
 
         loadProgress: (progress: Partial<Progress>) => {
+          const loaded = restoreProgress(createProgress(), progress);
           set((state) => ({
-            ...record(state, restoreProgress(createProgress(), progress)),
+            // The escape a file or a link says is another session's reading:
+            // never this run's until autotracking reads it again
+            ...record(state, {
+              ...loaded,
+              items: withoutEscape(loaded.items),
+            }),
             timer: IDLE_TIMER,
           }));
           runReplaced("alttpr", get().past);

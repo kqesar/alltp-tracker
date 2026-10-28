@@ -41,7 +41,7 @@ import {
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import { heartsValue } from "@/games/alttpr/data/items";
 import { wildItems } from "@/games/alttpr/data/presets";
-import { ACTIVATION } from "@/games/alttpr/logic/packItems";
+import { ACTIVATION, ESCAPE } from "@/games/alttpr/logic/packItems";
 import {
   COUNTER_INDICES,
   counterMax,
@@ -249,14 +249,16 @@ const heldCells = (reading: AutotrackReading): Record<string, CellValue> => {
 };
 
 /**
- * Standard's escape, outside Race Mode (v2.0 forbids telling Zelda's
- * rescue in a race): 2 once Zelda is in the Sanctuary, 1 before.
+ * Standard's escape, outside Race Mode: 2 once Zelda is in the Sanctuary, 1
+ * before. In Race Mode 0, not known (v2.0 forbids telling Zelda's rescue in
+ * a race): the escape counts done, as by hand, whatever a reading before
+ * the race said.
  */
 const escapeCells = (reading: AutotrackReading): Record<string, CellValue> => {
+  if (reading.race) return { escape: ESCAPE.NOT_KNOWN };
   const { rescueZelda } = reading.progress;
-  return typeof rescueZelda === "boolean"
-    ? { escape: rescueZelda ? 2 : 1 }
-    : {};
+  if (typeof rescueZelda !== "boolean") return {};
+  return { escape: rescueZelda ? ESCAPE.DONE : ESCAPE.GOING };
 };
 
 /** The bosses the game tells, as their cells' values. */

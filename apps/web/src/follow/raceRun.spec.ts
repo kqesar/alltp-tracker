@@ -62,6 +62,20 @@ describe("the run the desktop app relays in Race Mode", () => {
     expect(useGameStore.getState().checked).toEqual({});
   });
 
+  it("never relays Standard's escape as autotracking read it before the race", () => {
+    // Zelda not yet in the Sanctuary, read outside Race Mode
+    const store = useGameStore.getState();
+    store.applyGameNews((board) => ({
+      items: { ...board.items, escape: 1, hookshot: true },
+    }));
+    expect(
+      JSON.parse(localStorage.getItem("alltp-tracker-state") ?? "{}"),
+    ).toMatchObject({ state: { items: { escape: 1 } } });
+
+    const { state } = cut(alttpr, "alltp-tracker-state");
+    expect(state.items).toMatchObject({ escape: 0, hookshot: true });
+  });
+
   it("keeps of Super Metroid's run the grid and the timer alone", () => {
     useSmStore.setState({
       done: ["kraid"],

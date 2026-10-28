@@ -11,6 +11,7 @@ import { isRaceModeOn, isRaceModeOrPending } from "@/autotrack/raceMode";
 import { SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
 import { forgetSeedFiles } from "@/games/alttpr/autotrack/seedFile";
+import { solutionOf } from "@/games/alttpr/logic/solution";
 import {
   connectAutotrack,
   disconnectAutotrack,
@@ -115,6 +116,68 @@ describe("autotracking and the board", () => {
     await h.advance(2000);
 
     expect(board().items.hookshot).toBe(false);
+  });
+});
+
+describe("Standard's escape, as autotracking reads it", () => {
+  /** ProgressIndicator: $01 the uncle's item, $02 Zelda in the Sanctuary. */
+  const PROGRESS = SAVE(0x3c5);
+  const rescued = () =>
+    (solutionOf(board()).keyed.state as Readonly<Record<string, number>>)
+      .rescueZelda;
+
+  /** A Standard seed read mid-escape, outside Race Mode. */
+  const midEscape = async () => {
+    act(() => board().applyPreset("standard"));
+    const h = harness();
+    h.memory[PROGRESS] = 0x01;
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(board().items.escape).toBe(1);
+    expect(rescued()).toBeUndefined();
+    return h;
+  };
+
+  it("settles once Zelda is in the Sanctuary", async () => {
+    const h = await midEscape();
+    h.memory[PROGRESS] = 0x02;
+    await h.advance(1000);
+    expect(board().items.escape).toBe(2);
+    expect(rescued()).toBe(1);
+  });
+
+  it("goes when Race Mode is set always on mid-escape, and stays gone", async () => {
+    const h = await midEscape();
+    act(() => useAutotrackStore.getState().setRaceChoice("on"));
+    expect(board().items.escape).toBe(0);
+    expect(rescued()).toBe(1);
+    await h.advance(2000);
+    expect(board().items.escape).toBe(0);
+    // Sync in the race leaves it not known
+    act(() => {
+      syncFromGame();
+    });
+    expect(board().items.escape).toBe(0);
+  });
+
+  it("goes when autotracking stops, never stuck where no reading can move it", async () => {
+    await midEscape();
+    act(() => disconnectAutotrack());
+    expect(board().items.escape).toBe(0);
+    expect(rescued()).toBe(1);
+  });
+
+  it("goes with New game, an import or a shared run", async () => {
+    await midEscape();
+    act(() => stopAutotrack());
+    const escaping = { ...board().items, escape: 1 };
+    act(() => board().applyGameNews(() => ({ items: escaping })));
+    expect(board().items.escape).toBe(1);
+    act(() => board().reset());
+    expect(board().items.escape).toBe(0);
+    // An exported run, or a link, carrying another session's reading
+    act(() => board().loadProgress({ items: escaping }));
+    expect(board().items.escape).toBe(0);
   });
 });
 

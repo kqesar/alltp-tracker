@@ -13,6 +13,7 @@ import { bridgeOptions } from "@/autotrack/bridge";
 import { createAutotrackLock } from "@/autotrack/lock";
 import { mergeRaceChoice, type RaceChoice } from "@/autotrack/raceChoice";
 import {
+  isRaceModeOn,
   onRaceRestored,
   onRunReplaced,
   rememberRace,
@@ -32,6 +33,7 @@ import {
   type SeedFileResult,
   withSeedFile,
 } from "@/games/alttpr/autotrack/seedFile";
+import { withoutEscape } from "@/games/alttpr/logic/packItems";
 import { useDarkRoomStore } from "@/games/alttpr/stores/darkRoomStore";
 import { isFreshRun, useGameStore } from "@/games/alttpr/stores/gameStore";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
@@ -223,10 +225,22 @@ onRaceRestored((game) => {
 /** The one session of this page, once started. */
 let runtime: Runtime | null = null;
 
+/**
+ * Forget Standard's escape as autotracking read it: Race Mode came on (v2.0
+ * forbids telling Zelda's rescue in a race), or no session reads it any
+ * more. The escape then counts done, as by hand: the value never sticks.
+ */
+const forgetEscape = () =>
+  useGameStore.getState().applyGameNews((board) => {
+    const items = withoutEscape(board.items);
+    return items === board.items ? null : { items };
+  });
+
 // The session follows the player's Race Mode as it changes, here or in
 // another tab of the tracker (the choice is saved, and read again from
 // storage): a tab that waits for the session can set it too
 useAutotrackStore.subscribe((state, before) => {
+  if (isRaceModeOn(state) && !isRaceModeOn(before)) forgetEscape();
   if (state.raceChoice !== before.raceChoice) {
     runtime?.setRaceMode(state.raceChoice);
   }
@@ -403,6 +417,15 @@ const sinkFor = (mine: number): RuntimeSink => ({
   },
   status: (status, since, { bridge, devices }) => {
     if (mine !== generation) return;
+    // The game no longer read: the escape it said goes, and comes back with
+    // the next reading in play
+    if (
+      status.code !== "connected" &&
+      useAutotrackStore.getState().status.code === "connected"
+    ) {
+      forgetEscape();
+      follower?.resume();
+    }
     set((state) => ({
       ...(status.code !== state.status.code && {
         news:
@@ -491,6 +514,7 @@ export const stopAutotrack = () => {
   runtime?.stop();
   runtime = null;
   follower = null;
+  forgetEscape();
   useDarkRoomStore.getState().show(null);
   lock.release();
   set({

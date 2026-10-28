@@ -5,6 +5,7 @@ import "@/games/review.css";
 import { raceSourceOf } from "@/autotrack/raceMode";
 import { raceFeed } from "@/follow/raceRun";
 import App from "@/games/alttpr/App";
+import { withoutEscape } from "@/games/alttpr/logic/packItems";
 import { ObsView } from "@/games/alttpr/ObsView";
 import { unpackLink } from "@/games/alttpr/share";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
@@ -32,6 +33,15 @@ export const alttpr: GameModule = {
   // and the timer. Never the places checked, their times, the entrances
   // noted or the seed.
   race: raceFeed({
+    // The escape autotracking read before the race: Zelda's rescue, which no
+    // race is told, and which no relayed view draws
+    cut: (state) =>
+      typeof state.items === "object" && state.items !== null
+        ? {
+            ...state,
+            items: withoutEscape(state.items as Record<string, unknown>),
+          }
+        : state,
     fresh: () =>
       useGameStore.persist
         .getOptions()
