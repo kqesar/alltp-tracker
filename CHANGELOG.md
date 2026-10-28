@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.53.0](https://github.com/kqesar/alltp-tracker/compare/v2.52.1...v2.53.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **alttpr:** read in a race what v2.0 permits, and follow what no cell drew ([dec757d](https://github.com/kqesar/alltp-tracker/commit/dec757dbfc7ebbca88d25676f3a3d0d60bc16cd8))
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** never read in a race whether the flute was activated ([da59b13](https://github.com/kqesar/alltp-tracker/commit/da59b13cf51e62c36471ef1c56baa33f276b0033))
+* **web:** decode a remembered race as a race ([bc3c09f](https://github.com/kqesar/alltp-tracker/commit/bc3c09fbf27a1f6573549f1c1a732709902ce40f))
+* **web:** never let Standard's escape stick, nor reach a race ([fdbb412](https://github.com/kqesar/alltp-tracker/commit/fdbb4122f807c688622f737bc6c8fa447de6c0d4))
+
+
+### 📚 Documentation
+
+* **alttpr:** say what a race reads under v2.0, and what the logic follows ([bbfbc73](https://github.com/kqesar/alltp-tracker/commit/bbfbc73857afb095a179bdc3dbd45e8465eaae4a))
+* **web:** name no release in the review's word on older race runs ([7dca5fb](https://github.com/kqesar/alltp-tracker/commit/7dca5fbecf847c0b2ee29e3b6485d309f58f995f))
+
 ## [2.52.1](https://github.com/kqesar/alltp-tracker/compare/v2.52.0...v2.52.1) (2026-10-28)
 
 
