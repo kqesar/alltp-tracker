@@ -106,6 +106,11 @@ interface ItemSource {
    * rescued in a Standard opening seed").
    */
   readonly raceWithheld?: true;
+  /**
+   * How Race Mode reads it, when only part of what `read` tells is the
+   * player's in a race: the flute held, not whether it was activated.
+   */
+  readonly raceRead?: (bytes: Bytes) => number;
 }
 
 const SAVE = (offset: number) => SAVE_DATA + offset;
@@ -258,8 +263,11 @@ export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource | null>> = {
   fireRod: equipment("equipment-b", 0x345),
   flippers: equipment("equipment-c", 0x356),
   // f: the active flute, k: the inactive one, which activating clears
-  // (inventory.asm:450-453).
+  // (inventory.asm:450-453). Race Mode reads the flute held, either bit,
+  // never which: activating it is an event at a place in Inverted, which
+  // v2.0 does not name (in doubt, forbidden).
   flute: {
+    raceRead: ({ byte }) => bit(byte(INVENTORY_TRACKING), 0x03),
     range: "item-tracking",
     read: ({ byte }) => {
       const tracking = byte(INVENTORY_TRACKING);
@@ -374,7 +382,8 @@ export function decodeItems(
       unsettled[id] = bytes;
       continue;
     }
-    const value = Math.min(max, source.read(bytes));
+    const read = (options.race && source.raceRead) || source.read;
+    const value = Math.min(max, read(bytes));
     if (source.bound) atLeast[id] = value;
     else counts[id] = value;
   }

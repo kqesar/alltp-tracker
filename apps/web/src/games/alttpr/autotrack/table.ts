@@ -35,7 +35,7 @@ export type CellValue = number | boolean;
 /** The pack items a cell's value counts: none for a boss or a prize. */
 const countedBy = (entry: PackItem): readonly string[] => {
   if (entry.kind === "count" || entry.kind === "known") return [entry.item];
-  if (entry.kind === "level") return [entry.item];
+  if (entry.kind === "activation") return [entry.item];
   return entry.kind === "bits" ? entry.items : [];
 };
 
@@ -152,7 +152,7 @@ export const joinValues = (
     case "hearts":
     case "held":
     case "known":
-    case "level":
+    case "activation":
       return Math.max(Number(board), Number(game));
     case "count":
       return typeof board === "boolean"
@@ -182,7 +182,7 @@ export const boardItems = (wildKeys: boolean): ReadonlySet<ItemId> => {
   );
   for (const [, entry] of ENTRIES) {
     // What no cell draws is not on the board
-    if (entry.kind === "known" || entry.kind === "level") continue;
+    if (entry.kind === "known" || entry.kind === "activation") continue;
     for (const item of countedBy(entry)) shown.add(item);
   }
   if (PRIZE_CELLS.length > 0) {

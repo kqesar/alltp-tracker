@@ -41,6 +41,7 @@ import {
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import { heartsValue } from "@/games/alttpr/data/items";
 import { wildItems } from "@/games/alttpr/data/presets";
+import { ACTIVATION } from "@/games/alttpr/logic/packItems";
 import {
   COUNTER_INDICES,
   counterMax,
@@ -317,6 +318,9 @@ export const gameCells = (
   ...(typeof reading.health === "number"
     ? { hearts: heartsValue(reading.health) }
     : {}),
+  // Race Mode reads the flute, never whether it was activated: the rules
+  // read that as not known, maybe at most (the pack's unknown counts)
+  ...(reading.race ? { fluteactive: ACTIVATION.UNKNOWN } : {}),
 });
 
 /** The small keys in hand, by key dungeon index, where memory tells. */

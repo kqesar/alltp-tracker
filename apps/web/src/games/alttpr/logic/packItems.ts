@@ -66,14 +66,19 @@ export type PackItem =
       readonly count: UnknownCount;
     }
   /**
-   * A pack item held at least at level `at` while the value is set, which
-   * no cell draws and autotracking reads: the flute activated (flute 2),
-   * where the flute's cell says found.
+   * Whether an item held reached its higher level, which no cell draws and
+   * autotracking reads outside Race Mode: the flute activated (flute 2),
+   * where the flute's cell says found. ACTIVATION gives the values: by hand
+   * (0) the item is as its cell says; in Race Mode (1) whether it was
+   * activated is the pack's unknown `count`, so a rule asking for it is
+   * maybe at most; read (2, 3) it is not, or is. Only while the cell holds
+   * the item: clearing the cell clears the level.
    */
   | {
-      readonly kind: "level";
+      readonly kind: "activation";
       readonly item: InventoryItemId;
       readonly at: number;
+      readonly count: UnknownCount;
     }
   /**
    * Standard's escape, which no cell draws and autotracking reads: 0 not
@@ -90,6 +95,18 @@ export type PackItem =
   | { readonly kind: "held"; readonly prize: HeldPrize }
   /** Nothing the rules read: the blank cell, a dungeon's counter. */
   | { readonly kind: "none" };
+
+/** The values of an `activation` cell (`fluteactive`). */
+export const ACTIVATION = {
+  /** Read: activated. */
+  ACTIVE: 3,
+  /** Read: not activated. */
+  INACTIVE: 2,
+  /** Not read: the item is as its cell says (a run by hand). */
+  NOT_READ: 0,
+  /** Read in Race Mode, which never reads it: not known. */
+  UNKNOWN: 1,
+} as const;
 
 /**
  * The prize each reward value records: 1 the Pendant of Courage, 2 another
@@ -146,7 +163,7 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   flippers: count("flippers"),
   // Found: this world activates it without the weathervane (canFly)
   flute: count("flute"),
-  fluteactive: { at: 2, item: "flute", kind: "level" },
+  fluteactive: { at: 2, count: "flute", item: "flute", kind: "activation" },
   glove: count("glove"),
   hammer: count("hammer"),
   hearts: { kind: "hearts" },
@@ -196,6 +213,17 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   map10: dungeonItem("map")("hyrule-castle"),
   map12: dungeonItem("map")("ganons-tower"),
 };
+
+/**
+ * The unknown counts an `activation` cell stands for: known unless it says
+ * Race Mode did not read them (a run by hand counts the item as its cell
+ * says), where the hearts and the bombs are unknown until set.
+ */
+const ACTIVATION_COUNTS: ReadonlySet<UnknownCount> = new Set(
+  Object.values(PACK_ITEMS).flatMap((entry) =>
+    entry.kind === "activation" ? [entry.count] : [],
+  ),
+);
 
 /** The pool's heart containers and pieces: the most the hearts cell records. */
 const POOL = new Map(ITEMS.map(({ id, max }) => [id, max]));
@@ -278,6 +306,8 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
   const prizesHeld: Partial<Record<HeldPrize, number>> = {};
   const atLeast = new Map<InventoryItemId, number>();
   const known = new Set<UnknownCount>();
+  /** An activation Race Mode did not read: its count is not known. */
+  const notRead = new Set<UnknownCount>();
   const hold = (item: InventoryItemId, times: number) => {
     if (times > 0) held[item] = (held[item] ?? 0) + times;
   };
@@ -318,8 +348,9 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
         }
         break;
       }
-      case "level":
-        if (value > 0) atLeast.set(entry.item, entry.at);
+      case "activation":
+        if (value === ACTIVATION.ACTIVE) atLeast.set(entry.item, entry.at);
+        if (value === ACTIVATION.UNKNOWN) notRead.add(entry.count);
         break;
       case "escape":
         // Zelda not yet in the Sanctuary: Hyrule Castle not finished
@@ -330,8 +361,9 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
         break;
     }
   }
+  // A level only while the cell holds the item: cleared, the flute is gone
   for (const [item, level] of atLeast) {
-    held[item] = Math.max(held[item] ?? 0, level);
+    if ((held[item] ?? 0) > 0) held[item] = Math.max(held[item] ?? 0, level);
   }
   return {
     beaten,
@@ -340,7 +372,9 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
     prizes,
     unknown: Object.fromEntries(
       (Object.keys(UNKNOWN_COUNTS) as UnknownCount[])
-        .filter((count) => !known.has(count))
+        .filter((count) =>
+          ACTIVATION_COUNTS.has(count) ? notRead.has(count) : !known.has(count),
+        )
         .map((count) => [count, true]),
     ),
   };
@@ -372,10 +406,12 @@ export const itemsFromPack = (
         (sum, item, bit) => sum | (Math.min(1, held(item)) << bit),
         0,
       );
-    } else if (entry.kind === "level") {
-      // Known only where the reading has it, as for a count
+    } else if (entry.kind === "activation") {
+      // Known only where the reading has it, as for a count; Race Mode lays
+      // its own value (autotrack/apply.ts)
       if (!(entry.item in counts)) continue;
-      value = held(entry.item) >= entry.at ? 1 : 0;
+      value =
+        held(entry.item) >= entry.at ? ACTIVATION.ACTIVE : ACTIVATION.INACTIVE;
     } else continue;
     items[id] =
       typeof freshItems[id] === "boolean"

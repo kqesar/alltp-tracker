@@ -66,7 +66,7 @@ describe("buildWorld", () => {
           },
           {
             from: START,
-            req: "flute",
+            req: "hookshot",
             source: "app/Region/Standard/Field.php:9",
           },
         ],
@@ -92,7 +92,7 @@ describe("buildWorld", () => {
         {
           exits: [
             { req: "boots", to: "field" },
-            { req: "flute", to: "field" },
+            { req: "hookshot", to: "field" },
           ],
           id: START,
           locations: [],
@@ -127,7 +127,7 @@ describe("buildWorld", () => {
       ledge: "no",
       start: "yes",
     });
-    const flying = solve(world, { flute: 1 });
+    const flying = solve(world, { hookshot: 1 });
     expect(flying.region("field")).toBe("yes");
     expect(flying.location("field/stone")).toBe("no");
     expect(flying.visible("ledge/chest")).toBe("yes");

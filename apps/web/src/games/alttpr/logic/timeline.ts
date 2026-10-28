@@ -31,7 +31,7 @@ const NO_FINDS: ReadonlySet<string> = new Set([
   "hearts",
   "held",
   "known",
-  "level",
+  "activation",
   "none",
   "prize",
 ]);
