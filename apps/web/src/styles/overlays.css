@@ -33,10 +33,12 @@
    the key counts so it reads over stream footage too */
 .heart-counter {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-end;
+  justify-content: flex-end;
 }
 
+/* Over the heart's bottom right quarter, which the menu fills last: the
+   three quarters a count of pieces fills stay in sight */
 .heart-counter__count {
   position: relative;
   z-index: 1;
@@ -49,6 +51,7 @@
     -1px 0 var(--color-bg),
     0 1px var(--color-bg),
     0 -1px var(--color-bg);
+  translate: 2px 2px;
 }
 
 /* Key cell: a 2x2 grid holding the big key (top right), the small key

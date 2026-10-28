@@ -40,25 +40,43 @@ describe("GridItem", () => {
     expect(hearts).toHaveClass("griditem--dimmed");
     expect(hearts).toHaveAttribute("data-grid-slot", "1");
 
-    // A click counts the 3 hearts every run starts with, the next one more
+    const icon = () => hearts.style.backgroundImage;
+    // A click counts the 3 hearts every run starts with, the next a quarter
     fireEvent.click(hearts);
     expect(hearts).toHaveAccessibleName(/^Hearts: 3\./);
     expect(hearts).toHaveTextContent("3");
     expect(hearts).not.toHaveClass("griditem--dimmed");
+    expect(icon()).toMatch(/heart0\.png/);
     fireEvent.click(hearts);
-    expect(useGameStore.getState().items.hearts).toBe(2);
+    expect(hearts).toHaveAccessibleName(/^Hearts: 3 and 1 quarter\./);
+    expect(icon()).toMatch(/heart1\.png/);
+    fireEvent.click(hearts);
+    fireEvent.click(hearts);
+    expect(hearts).toHaveAccessibleName(/^Hearts: 3 and 3 quarters\./);
+    expect(hearts).toHaveTextContent("3");
+    expect(icon()).toMatch(/heart3\.png/);
+    // The fourth piece makes a heart, as in the game
+    fireEvent.click(hearts);
+    expect(useGameStore.getState().items).toMatchObject({
+      heartquarters: 0,
+      hearts: 2,
+    });
+    expect(hearts).toHaveAccessibleName(/^Hearts: 4\./);
     expect(hearts).toHaveTextContent("4");
-    // Back past 3: not set again, and never round to 20
+    // Back a quarter at a time, past 3: not set again, never round to 20
     fireEvent.contextMenu(hearts);
-    fireEvent.contextMenu(hearts);
+    expect(hearts).toHaveAccessibleName(/^Hearts: 3 and 3 quarters\./);
+    for (let i = 0; i < 4; i++) fireEvent.contextMenu(hearts);
     expect(hearts).toHaveTextContent("?");
     fireEvent.contextMenu(hearts);
     expect(hearts).toHaveTextContent("?");
     expect(useGameStore.getState().items.hearts).toBe(0);
-    // Nor past 20 round to not set
-    act(() => useGameStore.getState().setItem("hearts", 18));
-    fireEvent.click(hearts);
+    // Nor past 20 round to not set, nor to a quarter more
+    act(() => useGameStore.getState().setItem("hearts", 17));
+    for (let i = 0; i < 5; i++) fireEvent.click(hearts);
     expect(hearts).toHaveTextContent("20");
+    expect(hearts).toHaveAccessibleName(/^Hearts: 20\./);
+    expect(useGameStore.getState().items.heartquarters).toBe(0);
   });
 
   it("gives a boss cell its three overlays", () => {

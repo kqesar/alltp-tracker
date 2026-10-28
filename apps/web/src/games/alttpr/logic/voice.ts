@@ -10,11 +10,22 @@
 // words it has that sound like it ("samaria" for Somaria), as checked against
 // synthesized speech of the real names in three voices.
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
-import { heartsValue, STARTING_HEARTS } from "@/games/alttpr/data/items";
 import { CONTROLS, type ControlId } from "@/games/alttpr/data/keymap";
 
 /** The word every command starts with. */
 export const WAKE_WORD = "tracker";
+
+/**
+ * A whole heart or a heart piece found, which moves the hearts counter's two
+ * values together (`heartsAfter`): one more heart on screen, the quarters
+ * kept, or one more quarter, the fourth making a heart; from not set, the 3
+ * hearts Link starts with and the find.
+ */
+export type HeartsFind = { readonly to: "heart" | "piece" };
+
+/** Whether a command finds a heart or a heart piece. */
+export const isHeartsFind = (change: Change): change is HeartsFind =>
+  "to" in change && (change.to === "heart" || change.to === "piece");
 
 /** How a command changes a control's value. */
 export type Change =
@@ -22,11 +33,8 @@ export type Change =
   | { readonly to: "on" }
   /** One level, or one small key, more: never past the top */
   | { readonly to: "next" }
-  /**
-   * A whole heart found: one more on screen, or from not set the 3 Link
-   * starts with and this one. A heart piece is not spoken: four make one.
-   */
-  | { readonly to: "heart" }
+  /** A heart container or a heart piece found (`heartsAfter`) */
+  | HeartsFind
   /** One item fewer left in a dungeon: never below none */
   | { readonly to: "less" }
   /** The bow's and the boomerangs' bits: one more item among them */
@@ -94,8 +102,9 @@ const ITEMS: readonly (readonly [
   [["glove", "gloves", "power glove"], "glove", NEXT],
   [["mitts", "titan mitt"], "glove", { atLeast: 2 }],
   [["bottle"], "bottle", NEXT],
-  // Whole hearts only: four pieces make one, which the player then says
   [["heart", "heart container"], "hearts", { to: "heart" }],
+  // A quarter: the fourth makes the next heart, as in the game
+  [["heart piece", "piece of heart"], "hearts", { to: "piece" }],
   [["samaria", "red cane"], "somaria", ON],
   // Nor Byrna, which it hears as "mire": these are the words that work
   [["burner", "blue cane"], "byrna", ON],
@@ -274,7 +283,7 @@ export const commandsOf = (text: string): VoiceAction[] =>
  * @param max - The highest it goes
  */
 export const changedValue = (
-  change: Change,
+  change: Exclude<Change, HeartsFind>,
   value: boolean | number,
   min: number,
   max: number,
@@ -286,10 +295,6 @@ export const changedValue = (
   switch (change.to) {
     case "next":
       return Math.min(value + 1, max);
-    case "heart":
-      return value === 0
-        ? heartsValue(STARTING_HEARTS + 1)
-        : Math.min(value + 1, max);
     case "less":
       return Math.max(value - 1, min);
     default:

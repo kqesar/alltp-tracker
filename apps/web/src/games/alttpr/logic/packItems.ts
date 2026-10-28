@@ -21,6 +21,7 @@ import {
 import { BOSS_STATES } from "@/games/alttpr/constants";
 import {
   items as freshItems,
+  heartsOf,
   heartsShown,
   type ItemState,
   itemsMax,
@@ -58,6 +59,12 @@ export type PackItem =
    * sums the hearts on screen; not set, the health is unknown to the rules.
    */
   | { readonly kind: "hearts" }
+  /**
+   * The heart pieces toward the next heart (0-3), which the `hearts` entry
+   * reads with the hearts on screen: a quarter each, nothing while the
+   * hearts are not set.
+   */
+  | { readonly kind: "quarters" }
   /**
    * A count no cell draws, which autotracking reads: 0 not known (the
    * pack's `unknown`), else the item held one less times than the value.
@@ -190,6 +197,7 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   fluteactive: { at: 2, count: "flute", item: "flute", kind: "activation" },
   glove: count("glove"),
   hammer: count("hammer"),
+  heartquarters: { kind: "quarters" },
   hearts: { kind: "hearts" },
   heldcrystals: { kind: "held", prize: "crystal" },
   heldgreen: { kind: "held", prize: "greenPendant" },
@@ -252,6 +260,7 @@ const ACTIVATION_COUNTS: ReadonlySet<UnknownCount> = new Set(
 /** The pool's heart containers and pieces: the most the hearts cell records. */
 const POOL = new Map(ITEMS.map(({ id, max }) => [id, max]));
 const HEART_CONTAINERS = POOL.get("heartContainer") ?? 0;
+const PIECES_OF_HEART = POOL.get("pieceOfHeart") ?? 0;
 
 /** The heart containers every world is given: Link's 3 starting hearts. */
 const GIVEN_HEARTS = PRE_COLLECTED_STATE.heartContainer ?? 0;
@@ -300,15 +309,22 @@ export type PackReading = Pick<
 /**
  * The heart containers and pieces of hearts found, as upstream's hasHealth
  * sums them beside the 3 every world is given: the containers first, up to
- * the pool's, then four pieces a heart.
+ * the pool's, then four pieces a heart, then the pieces toward the next
+ * heart, never more pieces than the pool holds.
+ * @param found - The whole hearts found
+ * @param quarters - The pieces toward the next heart
  */
 const heartItems = (
   found: number,
+  quarters: number,
 ): Partial<Record<InventoryItemId, number>> => {
   const containers = Math.min(HEART_CONTAINERS, found);
   return {
     heartContainer: containers,
-    pieceOfHeart: 4 * (found - containers),
+    pieceOfHeart: Math.min(
+      PIECES_OF_HEART,
+      4 * (found - containers) + quarters,
+    ),
   };
 };
 
@@ -320,7 +336,7 @@ const heartItems = (
  * The flute activated raises the flute to 2, and the prizes held by class
  * go to `held`. An id the table lacks records nothing. The hearts found
  * are those on screen less the 3 Link starts with, which the pack's toState
- * gives; hearts not set (or not given) leave the health unknown, and the
+ * gives, with the pieces toward the next one; hearts not set (or not given) leave the health unknown, and the
  * escape's bombs are unknown until autotracking reads them.
  * @param items - The run's items, by the tracker's ids
  */
@@ -365,11 +381,12 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
         }
         break;
       case "hearts": {
+        const { quarters } = heartsOf(items);
         const shown = heartsShown(value);
         if (shown === null) break;
         known.add("health");
         for (const [item, times] of Object.entries(
-          heartItems(shown - GIVEN_HEARTS),
+          heartItems(shown - GIVEN_HEARTS, quarters),
         )) {
           hold(item as InventoryItemId, times);
         }

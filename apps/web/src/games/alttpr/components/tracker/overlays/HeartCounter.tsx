@@ -1,4 +1,4 @@
-import { heartsShown } from "@/games/alttpr/data/items";
+import { heartsOf, heartsShown, heartsText } from "@/games/alttpr/data/items";
 import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -11,20 +11,28 @@ type HeartCounterProps = {
 };
 
 /**
- * Link's hearts on screen (`hearts`), on the tunic's cell (bottom right): a
- * heart with the count over it, "?" while not set, which the logic reads as
- * unknown (maybe, never out of logic). Click adds a heart, right-click or
- * "-" takes one off, stopping at not set and at 20 (CLAMPED_ITEMS).
- * Autotracking sets it from the game.
+ * Link's hearts on screen (`hearts`) and the pieces toward the next one
+ * (`heartquarters`), on the tunic's cell (bottom right): the count over a
+ * heart filled by quarters as the game's menu draws the pieces (heart0.png
+ * to heart3.png), "?" while not set, which the logic reads as unknown
+ * (maybe, never out of logic). Click adds a quarter, the fourth making a
+ * heart; right-click or "-" takes one off, stopping at not set and at 20
+ * (heartsAfter). Autotracking sets it from the game.
  */
 export const HeartCounter = ({ row, col }: HeartCounterProps) => {
-  const value = useGameStore((state) => state.items.hearts as number);
+  const hearts = useGameStore((state) => state.items.hearts as number);
+  const quarters = useGameStore(
+    (state) => state.items.heartquarters as number | undefined,
+  );
   const handleItemClick = useGameStore((state) => state.handleItemClick);
-  const shown = heartsShown(value);
+  const held = heartsOf({ heartquarters: quarters ?? 0, hearts });
+  const shown = heartsShown(held.hearts);
+  const text = heartsText(held);
   const label =
-    shown === null
+    text === null
       ? "Hearts: not set. Click to count them."
-      : `Hearts: ${shown}. Click to change.`;
+      : `Hearts: ${text}. Click to add a quarter.`;
+  const icon = shown === null ? "heart.png" : `heart${held.quarters}.png`;
 
   return (
     <button
@@ -35,8 +43,9 @@ export const HeartCounter = ({ row, col }: HeartCounterProps) => {
       )}
       aria-label={label}
       className={`overlay-base overlay--bottom-right heart-counter${shown === null ? " griditem--dimmed" : ""}`}
+      data-quarters={held.quarters}
       data-testid="hearts-overlay"
-      style={{ backgroundImage: `url(${getAssetPath("heart.png")})` }}
+      style={{ backgroundImage: `url(${getAssetPath(icon)})` }}
       title={label}
       type="button"
     >

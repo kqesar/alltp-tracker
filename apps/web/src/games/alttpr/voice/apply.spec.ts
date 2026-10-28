@@ -35,6 +35,27 @@ describe("applyVoice", () => {
     expect(store().items.sword).toBe(4);
   });
 
+  it("finds hearts and heart pieces, the fourth piece making a heart", () => {
+    // From not set: the 3 Link starts with and the one found
+    expect(say("heart")).toEqual({ changed: true, words: "Hearts" });
+    expect(store().items).toMatchObject({ heartquarters: 0, hearts: 2 });
+    say("heart piece");
+    say("piece of heart");
+    expect(store().items).toMatchObject({ heartquarters: 2, hearts: 2 });
+    // A whole heart keeps the pieces toward the next
+    say("heart container");
+    expect(store().items).toMatchObject({ heartquarters: 2, hearts: 3 });
+    say("heart piece");
+    say("heart piece");
+    expect(store().items).toMatchObject({ heartquarters: 0, hearts: 4 });
+    // Each find one undo step
+    expect(store().past).toHaveLength(6);
+    // A piece from not set: the 3 starting hearts and a quarter
+    useGameStore.setState(useGameStore.getInitialState(), true);
+    say("heart piece");
+    expect(store().items).toMatchObject({ heartquarters: 1, hearts: 1 });
+  });
+
   it("adds the bow's bits apart", () => {
     say("bow");
     expect(store().items.bow).toBe(2);
