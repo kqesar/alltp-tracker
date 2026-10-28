@@ -2,8 +2,23 @@ import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { items as freshItems } from "@/games/alttpr/data/items";
 import {
+  ACCESSIBILITY_LABELS,
+  DUNGEON_ITEM_LABELS,
+  ENTRANCE_LABELS,
+  FUNCTIONALITY_LABELS,
+  GLITCHES_LABELS,
+  GOAL_LABELS,
+  getPreset,
+  HIDEABLE,
+  MODE_LABELS,
+  PLACEMENT_LABELS,
+  POOL_LABELS,
+  presets,
+} from "@/games/alttpr/data/presets";
+import {
   packLink,
   SHARE_ITEMS,
+  SHARE_SETTINGS,
   TIMELINE_KEYS,
   unpackLink,
 } from "@/games/alttpr/share";
@@ -18,6 +33,7 @@ import {
 } from "@/share/bytes";
 import legacyLink from "@/share/fixtures/link-alttpr-before-sizes.json";
 import firstLayout from "@/share/fixtures/links-alttpr-v2.json";
+import thirdLayout from "@/share/fixtures/links-alttpr-v3.json";
 import { LINK_FORMAT, OTHER_VERSION } from "@/share/packed";
 import {
   play,
@@ -59,6 +75,17 @@ const runOf = (save: string) => {
   const parsed = parseSave(save);
   if (!parsed.ok) throw new Error(parsed.reason);
   return parsed.progress;
+};
+
+/**
+ * A link of each layout to lay bytes in: one its own writer recorded for 2
+ * and 3 (fixtures/), today's for 4.
+ */
+const linkOf = (version: 2 | 3 | 4): string => {
+  if (version === 4) return packLink(play.alttpr(0.5, randoms()));
+  const [recorded] = (version === 2 ? firstLayout : thirdLayout).links;
+  expect(recorded.link.link).toBe(version);
+  return JSON.stringify(recorded.link);
 };
 
 const KEY_BITS = Math.ceil(Math.log2(TIMELINE_KEYS.length));
@@ -225,7 +252,7 @@ describe("an ALttPR run in a packed link", () => {
     expect(unpacked.ok && runOf(unpacked.save).timeline).toEqual({});
   });
 
-  it("writes link 2 for a run with no find, which a tracker before link 3 opens, and link 3 for any other", () => {
+  it("writes link 2 for a run with no find, which every tracker since the packed form opens, and link 4 for any other", () => {
     const played = play.alttpr(0.5, randoms());
     const bare = JSON.parse(packLink(withProgress(played, { timeline: {} })));
     const { timeline: _, ...progress } = JSON.parse(played).progress;
@@ -237,7 +264,7 @@ describe("an ALttPR run in a packed link", () => {
     expect(bare.link).toBe(2);
     expect(bare.progress.timeline).toBe("AA");
     expect(none.link).toBe(2);
-    expect(JSON.parse(packLink(played)).link).toBe(3);
+    expect(JSON.parse(packLink(played)).link).toBe(4);
     // As v2.58.0, the last tracker to read link 2 alone, wrote it
     const recorded = firstLayout.links.find(
       ({ name }) => name === "an empty timeline",
@@ -257,19 +284,31 @@ describe("an ALttPR run in a packed link", () => {
     return runOf(unpacked.save);
   };
 
-  it("shares a run of 270 finds on the game's clock whole, its timeline in the link", async () => {
-    const save = playOnGameClock(270, randoms());
+  it("shares a run of 300 finds on the game's clock whole, its timeline in the link", async () => {
+    const save = playOnGameClock(300, randoms());
     // What Share makes of a run: the full export, then the one without timeline
     const link = await makeLink([save, withoutTimeline(save)].map(packLink));
 
     expect(link.full).toBeNull();
     expect(link.url.length).toBeLessThanOrEqual(CHAT_LINK_CHARS);
     expect(await runIn(link.url)).toEqual(runOf(save));
-    expect(Object.keys(runOf(save).timeline ?? {})).toHaveLength(270);
+    expect(Object.keys(runOf(save).timeline ?? {})).toHaveLength(300);
   });
 
-  it("shares a longer one short, without its timeline, and keeps the full link with it all", async () => {
-    const save = playOnGameClock(300, randoms());
+  it("shares one too long short, without its timeline, and keeps the full link with it all", async () => {
+    // 300 finds minutes apart, each read anew after a pause of up to a minute
+    const t0 = 1_793_179_725_000;
+    let at = t0;
+    let paused = 0;
+    const save = withProgress(playOnGameClock(0, randoms()), {
+      timeline: Object.fromEntries(
+        TIMELINE_KEYS.slice(0, 300).map((key, index) => {
+          at += 1000 + ((index * 104_729) % 299_000);
+          paused += 200 + ((index * 7919) % 59_000);
+          return [key, { at, ms: at - t0 - paused }];
+        }),
+      ),
+    });
     const link = await makeLink([save, withoutTimeline(save)].map(packLink));
 
     expect(link.url.length).toBeLessThanOrEqual(CHAT_LINK_CHARS);
@@ -285,7 +324,7 @@ describe("an ALttPR run in a packed link", () => {
     expect(Object.keys(full.timeline ?? {})).toHaveLength(300);
   });
 
-  it("writes link 3, whose timeline comes back exactly whatever its timer did", () => {
+  it("writes link 4, whose timeline comes back exactly whatever its timer did", () => {
     const base = play.alttpr(0.15, randoms());
     const T = 1_793_179_725_000;
     const cases: Record<string, Record<string, unknown>> = {
@@ -326,7 +365,7 @@ describe("an ALttPR run in a packed link", () => {
     for (const [name, timeline] of Object.entries(cases)) {
       const save = withProgress(base, { timeline });
       const link = packLink(save);
-      expect(JSON.parse(link).link, name).toBe(3);
+      expect(JSON.parse(link).link, name).toBe(4);
       const unpacked = unpackLink(link);
       expect(unpacked.ok && runOf(unpacked.save).timeline, name).toEqual(
         timeline,
@@ -343,17 +382,39 @@ describe("an ALttPR run in a packed link", () => {
     }
   });
 
-  // Recorded from the first layout's own writer (fixtures/), never edited:
-  // links already shared, which must keep opening as they were made
-  it.each(firstLayout.links.map((recorded) => [recorded.name, recorded]))(
-    "opens a link of the first layout as it was made (%s)",
-    (_name, { link, save }) => {
-      expect(link.link).toBe(2);
+  /** A link its layout's own writer recorded, beside the save it was made from. */
+  type Recorded = {
+    readonly link: { readonly link: number };
+    readonly name: string;
+    readonly save: { readonly progress: { readonly settings: unknown } };
+  };
+
+  // Recorded from each earlier layout's own writer (fixtures/), never
+  // changed: links already shared, which must keep opening as they were made
+  it.each(
+    (
+      [
+        [2, firstLayout.links],
+        [3, thirdLayout.links],
+      ] as const
+    ).flatMap(([version, links]) =>
+      (links as readonly Recorded[]).map(
+        (recorded) => [version, recorded.name, recorded] as const,
+      ),
+    ),
+  )(
+    "opens a link of layout %i as it was made (%s)",
+    (version, _name, { link, save }) => {
+      expect(link.link).toBe(version);
       const unpacked = unpackLink(JSON.stringify(link));
 
       expect(unpacked.ok).toBe(true);
       if (!unpacked.ok) return;
       expect(runOf(unpacked.save)).toEqual(runOf(JSON.stringify(save)));
+      // Each setting as the save had it, its hidden list in its order
+      expect(JSON.parse(unpacked.save).progress.settings).toStrictEqual(
+        save.progress.settings,
+      );
     },
   );
 
@@ -398,6 +459,7 @@ describe("an ALttPR run in a packed link", () => {
     expect(JSON.parse(packLink(play.alttpr(0.5, randoms()))).sizes).toEqual([
       MAP_LOCATIONS.size,
       SHARE_ITEMS.length,
+      SHARE_SETTINGS.length,
     ]);
   });
 
@@ -505,7 +567,7 @@ describe("an ALttPR run in a packed link", () => {
   });
 
   it("refuses a timeline of the first layout that its writer never wrote", () => {
-    const link = packLink(play.alttpr(0.5, randoms()));
+    const link = linkOf(2);
     const off = 2 ** KEY_BITS - 1;
     expect(off).toBeGreaterThanOrEqual(TIMELINE_KEYS.length);
 
@@ -579,18 +641,18 @@ describe("an ALttPR run in a packed link", () => {
     };
 
     // A sound one first, so the refusals are the bytes', not the link's
-    expect(unpackLink(withBytes(link, "timeline", wholeDrifts({}), 2)).ok).toBe(
+    expect(unpackLink(withBytes(link, "timeline", wholeDrifts({}))).ok).toBe(
       true,
     );
     for (const [name, bytes] of Object.entries(refused)) {
-      expect(unpackLink(withBytes(link, "timeline", bytes, 2)), name).toEqual({
+      expect(unpackLink(withBytes(link, "timeline", bytes)), name).toEqual({
         ok: false,
         reason: MALFORMED,
       });
     }
   });
 
-  it("refuses a timeline of link 3 that its writer never writes", () => {
+  it("refuses a timeline of link 3 and later that its writer never writes", () => {
     const link = packLink(play.alttpr(0.5, randoms()));
     const off = 2 ** KEY_BITS - 1;
     const two = { count: 2, gaps: [5], keys: [1, 2] };
@@ -679,9 +741,10 @@ describe("an ALttPR run in a packed link", () => {
   });
 
   it("reads a find as each layout wrote it", () => {
-    const link = packLink(play.alttpr(0.5, randoms()));
-    const read = (bytes: Uint8Array, version: number) => {
-      const unpacked = unpackLink(withBytes(link, "timeline", bytes, version));
+    const read = (bytes: Uint8Array, version: 2 | 3 | 4) => {
+      const unpacked = unpackLink(
+        withBytes(linkOf(version), "timeline", bytes),
+      );
       return unpacked.ok
         ? Object.values(JSON.parse(unpacked.save).progress.timeline)
         : unpacked;
@@ -710,24 +773,216 @@ describe("an ALttPR run in a packed link", () => {
       ),
     ).toEqual(written);
     // The drift as its change from the first instant, the shared instant a bit
-    for (const shared of [false, true]) {
-      expect(
-        read(
-          compact({
-            count: 3,
-            first: 1000,
-            gaps: [0, 70_000],
-            k: 4,
-            keys: [0, 1, 2],
-            runs: [
-              [1, null],
-              [2, 400 - 1000],
-            ],
-            shared,
-          }),
-          3,
-        ),
-      ).toEqual(written);
+    for (const version of [3, 4] as const) {
+      for (const shared of [false, true]) {
+        expect(
+          read(
+            compact({
+              count: 3,
+              first: 1000,
+              gaps: [0, 70_000],
+              k: 4,
+              keys: [0, 1, 2],
+              runs: [
+                [1, null],
+                [2, 400 - 1000],
+              ],
+              shared,
+            }),
+            version,
+          ),
+        ).toEqual(written);
+      }
     }
+  });
+});
+
+describe("the settings in a link (link 4)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(1_793_179_725_000);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  /** A run with a find, so its link is link 4, under these settings. */
+  const runWith = (settings: Record<string, unknown>, presetId = "open") =>
+    withProgress(playOnGameClock(3, randoms()), { presetId, settings });
+
+  /** What a link makes of a save's settings, key order and all. */
+  const settingsBack = (save: string) => {
+    const link = JSON.parse(packLink(save));
+    expect(link.link).toBe(4);
+    expect(typeof link.progress.settings).toBe("string");
+    const unpacked = unpackLink(JSON.stringify(link));
+    if (!unpacked.ok) throw new Error(unpacked.reason);
+    return JSON.parse(unpacked.save).progress.settings;
+  };
+
+  const base = getPreset("open").settings as unknown as Record<string, unknown>;
+
+  it("holds every option the tracker has, each once, each setting's own", () => {
+    const options = [
+      ...Object.keys(MODE_LABELS).map((value) => `mode:${value}`),
+      ...Object.keys(GOAL_LABELS).map((value) => `goal:${value}`),
+      ...Object.keys(DUNGEON_ITEM_LABELS).map((v) => `dungeonItems:${v}`),
+      ...Object.keys(ENTRANCE_LABELS).map((v) => `entranceShuffle:${v}`),
+      "swordless:false",
+      "swordless:true",
+      ...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((count) => [
+        `crystalsTower:${count}`,
+        `crystalsGanon:${count}`,
+      ]),
+      ...Object.keys(PLACEMENT_LABELS).map((v) => `itemPlacement:${v}`),
+      ...Object.keys(ACCESSIBILITY_LABELS).map((v) => `accessibility:${v}`),
+      ...Object.keys(POOL_LABELS).map((value) => `itemPool:${value}`),
+      ...Object.keys(FUNCTIONALITY_LABELS).map(
+        (value) => `itemFunctionality:${value}`,
+      ),
+      // None is said by the absence of `glitches`
+      ...Object.keys(GLITCHES_LABELS)
+        .filter((value) => value !== "none")
+        .map((value) => `glitches:${value}`),
+      "hidden:",
+      ...HIDEABLE.map((setting) => `hidden:${setting}`),
+    ];
+    // A new option is appended to SHARE_SETTINGS: moving one breaks links
+    expect(new Set(SHARE_SETTINGS)).toEqual(new Set(options));
+    expect(SHARE_SETTINGS).toHaveLength(options.length);
+    expect(SHARE_SETTINGS.slice(0, 4)).toEqual([
+      "mode:open",
+      "mode:standard",
+      "mode:inverted",
+      "mode:retro",
+    ]);
+  });
+
+  it("brings back every value of every setting exactly, in the save's key order", () => {
+    for (const entry of SHARE_SETTINGS) {
+      const [key, text] = [
+        entry.slice(0, entry.indexOf(":")),
+        entry.slice(entry.indexOf(":") + 1),
+      ];
+      if (key === "hidden") continue;
+      const value =
+        key === "swordless"
+          ? text === "true"
+          : key.startsWith("crystals")
+            ? Number(text)
+            : text;
+      const settings = { ...base, [key]: value };
+      const back = settingsBack(runWith(settings));
+      expect(back, entry).toStrictEqual(settings);
+      expect(Object.keys(back), entry).toEqual(Object.keys(settings));
+    }
+  });
+
+  it("brings back each run type, a Mystery run's hidden list in its order, and a glitched logic", () => {
+    for (const preset of presets) {
+      const settings = preset.settings as unknown as Record<string, unknown>;
+      expect(settingsBack(runWith(settings, preset.id)), preset.id).toEqual(
+        settings,
+      );
+    }
+    const mystery = getPreset("mystery").settings;
+    for (const hidden of [
+      [...HIDEABLE],
+      [...HIDEABLE].reverse(),
+      ["accessibility", "goal"],
+      // Present and empty is not absent
+      [],
+    ]) {
+      const settings = {
+        ...mystery,
+        glitches: "hybrid_major_glitches",
+        hidden,
+      };
+      expect(settingsBack(runWith(settings, "mystery"))).toStrictEqual(
+        settings,
+      );
+    }
+    // Every run of a seed carries its hash as it is: no field packs it
+    const seeded = withProgress(playOnGameClock(3, randoms()), {
+      seed: "kveDj1OeMm",
+    });
+    const opened = unpackLink(packLink(seeded));
+    expect(opened.ok && runOf(opened.save).seed).toBe("kveDj1OeMm");
+  });
+
+  it("writes the settings in far fewer characters than their JSON", () => {
+    const save = playOnGameClock(271, randoms());
+    const link = packLink(save);
+    const asJson = JSON.parse(link);
+    asJson.progress.settings = JSON.parse(save).progress.settings;
+    expect(link.length).toBeLessThan(JSON.stringify(asJson).length - 200);
+  });
+
+  it("leaves settings the table does not hold as JSON, the save plain", () => {
+    for (const settings of [
+      { ...base, keysanity: true },
+      { ...base, goal: "no-such-goal" },
+      { ...base, crystalsTower: "7" },
+      { ...base, crystalsGanon: 8 },
+      { ...base, swordless: "false" },
+      { ...base, glitches: "none" },
+      { ...base, hidden: ["goal", "goal"] },
+      { ...base, hidden: ["mode"] },
+      { ...base, hidden: "goal" },
+      {},
+      "open",
+    ]) {
+      const odd = runWith(settings as Record<string, unknown>);
+      expect(packLink(odd), JSON.stringify(settings)).toBe(odd);
+    }
+  });
+
+  it("refuses settings bytes a writer never writes", () => {
+    const link = packLink(runWith(base));
+    const at = (entry: string) => {
+      const index = SHARE_SETTINGS.indexOf(entry);
+      expect(index, entry).toBeGreaterThanOrEqual(0);
+      return index;
+    };
+    const bytes = (...entries: (string | number)[]) => {
+      const out = new ByteWriter();
+      for (const entry of entries) {
+        out.uint(typeof entry === "number" ? entry : at(entry));
+      }
+      return out.done();
+    };
+
+    expect(unpackLink(withBytes(link, "settings", bytes("mode:open"))).ok).toBe(
+      true,
+    );
+    const refused: Record<string, Uint8Array> = {
+      "a hidden setting away from its list": bytes(
+        "hidden:",
+        "mode:open",
+        "hidden:goal",
+      ),
+      "a hidden setting twice": bytes("hidden:", "hidden:goal", "hidden:goal"),
+      "a hidden setting with no list": bytes("hidden:goal"),
+      "a setting twice": bytes("mode:open", "mode:retro"),
+      "a varint cut short": Uint8Array.of(0x80),
+      "an entry past the table": bytes(SHARE_SETTINGS.length),
+      "the list twice": bytes("hidden:", "hidden:"),
+    };
+    for (const [name, written] of Object.entries(refused)) {
+      expect(unpackLink(withBytes(link, "settings", written)), name).toEqual({
+        ok: false,
+        reason: MALFORMED,
+      });
+    }
+  });
+
+  it("reads link 3 over its two tables only: a third size there is another tracker's", () => {
+    const [recorded] = thirdLayout.links;
+    const link = JSON.parse(JSON.stringify(recorded.link));
+    expect(link.sizes).toHaveLength(2);
+    // Link 3 names two tables: three is another tracker's
+    link.sizes = [...link.sizes, SHARE_SETTINGS.length];
+    expect(unpackLink(JSON.stringify(link))).toEqual({
+      ok: false,
+      reason: OTHER_VERSION,
+    });
   });
 });
