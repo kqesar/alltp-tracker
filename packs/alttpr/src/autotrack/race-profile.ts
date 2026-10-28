@@ -8,6 +8,10 @@ import { defineRaceProfile, type RaceProfile } from "@alltp/autotrack";
 const RULES_URL =
   "https://docs.google.com/document/d/e/2PACX-1vTgsj0FMiWyaBOYP97e_ABc4P_0vIGiJxoUJ5Rj-PBr1T7i_zpyLqhLLVkbftPwS_B6nwad5j5zhtMg/pub";
 
+/** v2.0's line on the HUD's counts: the heart count, read; the rest, not. */
+const HUD_COUNTS =
+  "The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.";
+
 /** What a category v2.0 allows but Race Mode keeps forbidden says of it. */
 const STRICT =
   " Race Mode still leaves it to the player: deliberately strict, pending clarification with the race admins.";
@@ -21,8 +25,9 @@ const STRICT =
  * clarified, but for the heart count (`health`: the hearts on screen), which
  * v2.0 names outright and the basic placement's dungeons ask for, and reads
  * only inside the memory windows below, in the SNES LoROM space, ends
- * inclusive (the internal header line $FFB0-$FFDF is bank $00). v2.0 lists no addresses ("it does not matter where information is
- * gathered, only that its use is allowed or disallowed"): the windows are
+ * inclusive (the internal header line $FFB0-$FFDF is bank $00). v2.0 lists
+ * no addresses ("it does not matter where information is gathered, only
+ * that its use is allowed or disallowed"): the windows are
  * the tracker's own limit. They started as the earlier version's, whose
  * WRAM window ($7E:0000-$7E:00B0) held Link's coordinates ($20-$23), the
  * room ($A0) and the overworld screen ($8A). The race admins' clarification
@@ -42,10 +47,6 @@ const STRICT =
  */
 export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
   categories: {
-    ammo: {
-      permitted: true,
-      rule: "The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.",
-    },
     "boss-kills": {
       permitted: true,
       rule: "Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal). This includes not auto-tracking who the dungeon boss is in Enemizer modes before the boss is defeated.",
@@ -66,13 +67,10 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
       permitted: true,
       rule: "A program may keep track of when the game starts and when the game ends (i.e. auto-livesplit).",
     },
-    health: {
-      permitted: true,
-      rule: "The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.",
-    },
+    health: { permitted: true, rule: HUD_COUNTS },
     hud: {
       permitted: false,
-      rule: `The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.${STRICT}`,
+      rule: `${HUD_COUNTS}${STRICT}`,
     },
     items: {
       permitted: true,
