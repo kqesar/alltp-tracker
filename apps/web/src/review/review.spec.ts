@@ -1,9 +1,11 @@
 import type { SpoilerError, SpoilerGame } from "@alltp/spoiler";
 import { describe, expect, it, vi } from "vitest";
 import {
+  boardRestored,
   isRaceHeldByMemory,
   isRaceModeOn,
   isRaceModeOrPending,
+  onRaceRestored,
   onRunReplaced,
   type RaceModeState,
   rememberRace,
@@ -176,9 +178,13 @@ describe("a race remembered (raceSeen)", () => {
     ).toBe(true);
   });
 
-  it("reads the seed as a race's only from a connected ROM flag that says race", () => {
-    expect(seedIsRace({ status: flagged("race", true) })).toBe(true);
-    for (const flag of ["open", "none", "pending", "unknown", "unreadable"]) {
+  it("reads the seed as a race's from a ROM flag that says race or cannot tell, never from one that says open", () => {
+    // In doubt, a race: a flag the tracker does not know or cannot read
+    for (const flag of ["race", "unknown", "unreadable"]) {
+      expect(seedIsRace({ status: flagged(flag, true) })).toBe(true);
+    }
+    // Open, none (a game with no flag) and a flag not read yet say nothing
+    for (const flag of ["open", "none", "pending"]) {
       expect(seedIsRace({ status: flagged(flag, true) })).toBe(false);
     }
     expect(seedIsRace({ status: { code: "idle" } })).toBe(false);
@@ -188,49 +194,108 @@ describe("a race remembered (raceSeen)", () => {
     const held = { ...idle, raceSeen: true };
     expect(isRaceHeldByMemory(held)).toBe(true);
     expect(isRaceHeldByMemory(idle)).toBe(false);
-    // The player's choice, or the session now reading a race, holds it itself
+    // The player's choice, or the session now holding Race Mode, holds it itself
     expect(isRaceHeldByMemory({ ...held, raceChoice: "on" })).toBe(false);
     expect(isRaceHeldByMemory({ ...held, status: flagged("race", true) })).toBe(
       false,
     );
+    // A session on an open seed does not: the memory still does
+    expect(
+      isRaceHeldByMemory({ ...held, status: flagged("open", false) }),
+    ).toBe(true);
   });
 
-  it("is set by the store once the session reads a race, never before", () => {
-    let state = { ...idle };
-    const listeners = new Set<(next: typeof state) => void>();
-    const store = {
-      getState: () => state,
-      setState: (change: { raceSeen: boolean }) => {
-        state = { ...state, ...change };
-        for (const listener of listeners) listener(state);
-      },
-      subscribe: (listener: (next: typeof state) => void) => {
-        listeners.add(listener);
-        return () => listeners.delete(listener);
-      },
+  describe("rememberRace", () => {
+    type Slice = Pick<RaceModeState, "raceSeen" | "status">;
+    /** A store that hands each change, and the state before it, to its listeners. */
+    const fakeStore = () => {
+      let state: Slice = { raceSeen: false, status: { code: "idle" } };
+      const listeners = new Set<(next: Slice, before: Slice) => void>();
+      const move = (next: Partial<Slice>) => {
+        const before = state;
+        state = { ...state, ...next };
+        for (const listener of listeners) listener(state, before);
+      };
+      rememberRace({
+        getState: () => state,
+        setState: (change) => move(change),
+        subscribe: (listener) => {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+      });
+      return { move, seen: () => state.raceSeen };
     };
-    rememberRace(store);
-    store.setState({ raceSeen: false });
-    expect(state.raceSeen).toBe(false);
 
-    state = { ...state, status: flagged("open", false) };
-    for (const listener of listeners) listener(state);
-    expect(state.raceSeen).toBe(false);
+    it("is set once the session reads a race, or a flag it cannot tell", () => {
+      for (const flag of ["race", "unknown", "unreadable"]) {
+        const store = fakeStore();
+        store.move({ status: flagged("open", false) });
+        expect(store.seen()).toBe(false);
+        store.move({ status: flagged(flag, true) });
+        expect(store.seen()).toBe(true);
+      }
+    });
 
-    state = { ...state, status: flagged("race", true) };
-    for (const listener of listeners) listener(state);
-    expect(state.raceSeen).toBe(true);
+    it("is never set by an open flag, or a game that has none", () => {
+      const store = fakeStore();
+      for (const flag of ["open", "none"]) {
+        store.move({ status: flagged(flag, false) });
+        store.move({ status: { code: "stopped" } });
+      }
+      expect(store.seen()).toBe(false);
+    });
+
+    it("is set when the session ends before the flag was read, Race Mode in effect", () => {
+      const store = fakeStore();
+      store.move({ status: flagged("pending", true) });
+      // The moment the flag is unread is no word: still not remembered
+      expect(store.seen()).toBe(false);
+      store.move({ status: { code: "stopped" } });
+      expect(store.seen()).toBe(true);
+    });
+
+    it("is not set by a session that read open, then ended", () => {
+      const store = fakeStore();
+      store.move({ status: flagged("pending", true) });
+      store.move({ status: flagged("open", false) });
+      store.move({ status: { code: "stopped" } });
+      expect(store.seen()).toBe(false);
+    });
   });
 
-  it("tells a game's listeners its run was replaced", () => {
-    const heard = vi.fn();
+  it("tells a game's listeners its run was replaced, and which race it forgot", () => {
+    const heard = vi.fn(() => false);
     const stop = onRunReplaced(heard);
-    runReplaced("sm");
+    runReplaced("sm", []);
     stop();
-    runReplaced("alttpr");
+    runReplaced("alttpr", []);
 
     expect(heard).toHaveBeenCalledOnce();
     expect(heard).toHaveBeenCalledWith("sm");
+  });
+
+  it("brings the race back when Undo restores a board of the race that was replaced", () => {
+    const board = {};
+    const other = {};
+    const restored = vi.fn();
+    const stops = [
+      onRunReplaced((game) => game === "g"),
+      onRaceRestored(restored),
+    ];
+    runReplaced("g", [board]);
+
+    boardRestored("g", other);
+    expect(restored).not.toHaveBeenCalled();
+    boardRestored("g", board);
+    expect(restored).toHaveBeenCalledWith("g");
+
+    // A run replaced with no race remembered marks nothing
+    const plain = {};
+    runReplaced("h", [plain]);
+    boardRestored("h", plain);
+    expect(restored).toHaveBeenCalledOnce();
+    for (const stop of stops) stop();
   });
 });
 

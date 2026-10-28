@@ -1,7 +1,12 @@
 import { parseUserAgent } from "@alltp/autotrack";
 import { act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FakeVisibility, GRANTED, ManualClock } from "@/autotrack/fixtures";
+import {
+  FakeVisibility,
+  GRANTED,
+  ManualClock,
+  statusOf,
+} from "@/autotrack/fixtures";
 import { isRaceModeOn, isRaceModeOrPending } from "@/autotrack/raceMode";
 import { SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
@@ -498,5 +503,109 @@ describe("a race, once read, is remembered", () => {
     expect(store().raceSeen).toBe(false);
     act(() => store().setRaceChoice("auto"));
     expect(isRaceModeOrPending(store())).toBe(false);
+  });
+});
+
+describe("a race in doubt is remembered too", () => {
+  const store = () => useAutotrackStore.getState();
+  const connectedWith = (flag: string, active: boolean) =>
+    statusOf("connected", {
+      race: {
+        active,
+        flag,
+        overridden: false,
+        raceLegal: true,
+        setting: "auto",
+      },
+    } as never);
+
+  it.each(["unknown", "unreadable"])(
+    "remembers a %s flag after a Disconnect, as the session failed closed on it",
+    (flag) => {
+      act(() =>
+        useAutotrackStore.setState({
+          active: true,
+          shown: connectedWith(flag, true),
+          status: connectedWith(flag, true),
+        }),
+      );
+      expect(store().raceSeen).toBe(true);
+
+      act(() => disconnectAutotrack());
+      expect(isRaceModeOrPending(store())).toBe(true);
+    },
+  );
+
+  it("remembers a session that ends before the flag was read, and no open one", () => {
+    act(() =>
+      useAutotrackStore.setState({
+        active: true,
+        status: connectedWith("pending", true),
+      }),
+    );
+    // Not a word yet
+    expect(store().raceSeen).toBe(false);
+    act(() => disconnectAutotrack());
+    expect(store().raceSeen).toBe(true);
+
+    act(() => store().endRace());
+    act(() =>
+      useAutotrackStore.setState({
+        active: true,
+        status: connectedWith("pending", true),
+      }),
+    );
+    act(() =>
+      useAutotrackStore.setState({ status: connectedWith("open", false) }),
+    );
+    act(() => disconnectAutotrack());
+    expect(store().raceSeen).toBe(false);
+  });
+});
+
+describe("a race remembered and Undo", () => {
+  const store = () => useAutotrackStore.getState();
+
+  /** A race read, the player disconnected, and a mark made on the board. */
+  const afterTheRace = () => {
+    act(() => board().toggleChecks(["links-house"]));
+    act(() => useAutotrackStore.setState({ raceSeen: true }));
+  };
+
+  it.each([
+    ["New game", () => board().reset()],
+    ["an import", () => board().loadProgress({})],
+  ])(
+    "brings the race back with its board when %s is undone",
+    (_name, replace) => {
+      afterTheRace();
+      act(() => replace());
+      expect(store().raceSeen).toBe(false);
+      expect(isRaceModeOrPending(store())).toBe(false);
+
+      act(() => board().undo());
+
+      // The board is the race's again, its places checked and when: no export
+      expect(board().checked["links-house"]).toBe(true);
+      expect(store().raceSeen).toBe(true);
+      expect(isRaceModeOrPending(store())).toBe(true);
+    },
+  );
+
+  it("leaves a run that was no race's alone, undone or not", () => {
+    act(() => board().toggleChecks(["links-house"]));
+    act(() => board().reset());
+    act(() => board().undo());
+
+    expect(board().checked["links-house"]).toBe(true);
+    expect(store().raceSeen).toBe(false);
+  });
+
+  it("keeps the memory through undo steps inside the race, whatever they restore", () => {
+    afterTheRace();
+    act(() => board().toggleChecks(["kings-tomb"]));
+    act(() => board().undo());
+    act(() => board().undo());
+    expect(store().raceSeen).toBe(true);
   });
 });

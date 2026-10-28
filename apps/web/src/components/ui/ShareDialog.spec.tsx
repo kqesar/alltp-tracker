@@ -39,7 +39,10 @@ describe("ShareDialog", () => {
     expect(screen.getByTestId("share-copy-again")).toHaveAccessibleName(
       "Copy the snapshot link",
     );
-    expect(screen.getByTestId("share-copy-again")).toBeDisabled();
+    expect(screen.getByTestId("share-copy-again")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     expect(screen.queryByTestId("share-qr")).not.toBeInTheDocument();
 
     finish({ link: LINK, message: COPIED });
@@ -91,7 +94,10 @@ describe("ShareDialog", () => {
       expect(screen.getByRole("status")).toHaveTextContent("cannot turn"),
     );
     expect(screen.queryByTestId("share-qr")).not.toBeInTheDocument();
-    expect(screen.getByTestId("share-copy-again")).toBeDisabled();
+    expect(screen.getByTestId("share-copy-again")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
   });
 
   it("says a link too long for a QR code cannot be drawn", async () => {
@@ -156,5 +162,22 @@ describe("ShareDialog", () => {
     expect(screen.queryByTestId("share-qr")).not.toBeInTheDocument();
     expect(screen.getByTestId("share-copy-again")).toBe(copy);
     expect(copy).toHaveFocus();
+  });
+
+  it("keeps the focus on Copy, never natively disabled, while a link is made after Race Mode goes off", () => {
+    const pending = new Promise<ShareResult>(() => {});
+    const { rerender } = render(
+      <ShareDialog onClose={onClose} race share={pending} />,
+    );
+    const copy = screen.getByTestId("share-copy-again");
+    copy.focus();
+
+    // Race Mode off: the link is not there yet
+    rerender(<ShareDialog onClose={onClose} share={pending} />);
+
+    expect(copy).toHaveFocus();
+    expect(copy).toHaveAttribute("aria-disabled", "true");
+    expect(copy).not.toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent("Copying…");
   });
 });
