@@ -106,6 +106,53 @@ describe("the run timer, with the game", () => {
   });
 });
 
+describe("the run timer, through a switch to another run", () => {
+  const seedRun = (memory: Uint8Array, mode: number, seconds: number) => {
+    memory[GAME_MODE] = mode;
+    const reading = readingOf(memory);
+    return { ...reading, at: reading.at + seconds * 1000 };
+  };
+
+  it.each([
+    ["untimed", false],
+    ["timed", true],
+  ])("starts the seed's run over after one that ended %s", (_, timed) => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    // The game already in play when connected: its goal ends the run untimed
+    // (a timed one began at the file select)
+    if (timed) {
+      follower.read(seedRun(memory, 0x01, 0));
+      follower.read(seedRun(memory, 0x07, 1));
+    } else follower.read(seedRun(memory, 0x09, 0));
+    follower.read(seedRun(memory, 0x19, 61));
+    expect(store().timer.finished).toBe(true);
+
+    // The game restarted on another seed, the player takes its run type
+    follower.read(seedRun(memory, 0x01, 100));
+    follower.switchRun("keysanity", store().settings);
+
+    expect(store().presetId).toBe("keysanity");
+    expect(store().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: null,
+    });
+  });
+
+  it("keeps the run's end when the switch is made on the credits", () => {
+    const memory = seedMemory({ race: false });
+    const follower = createFollower();
+    follower.read(seedRun(memory, 0x09, 0));
+    follower.read(seedRun(memory, 0x19, 61));
+    const ended = store().timer;
+
+    follower.switchRun("keysanity", store().settings);
+
+    expect(store().timer).toBe(ended);
+  });
+});
+
 describe("the run timer, on the game's time", () => {
   /** A reading in `mode`, the game's counter at `frames`, `seconds` on. */
   const at = (

@@ -263,8 +263,9 @@ export const createFollower = (): Follower => {
             ? null
             : (syncView(fresh, gameView(reading, fresh, known, bombBought))
                 ?.next ?? null),
-        // The timer the game just started goes on in the seed's run
-        true,
+        // The timer the game just started goes on in the seed's run; one
+        // that ended is the run replaced's, unless this game is at its goal
+        !useGameStore.getState().timer.finished || atGoal,
       );
     },
     sync: () => {
