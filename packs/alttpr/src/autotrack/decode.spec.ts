@@ -846,11 +846,30 @@ describe("Race Mode", () => {
       pendantOfPower: 1,
       pendantOfWisdom: 1,
     });
-    expect({ ...counts, ...atLeast }).toEqual(
-      Object.fromEntries(
+    // The flute held, never whether it was activated
+    expect({ ...counts, ...atLeast }).toEqual({
+      ...Object.fromEntries(
         Object.entries(END_GAME_ITEMS).filter(([id]) => !(id in unsettled)),
       ),
-    );
+      flute: 1,
+    });
+  });
+
+  it("reads the flute held in Race Mode, activated or not, as found alone", () => {
+    // InventoryTracking: k the inactive flute $02, f the active one $01
+    for (const [tracking, casual, race] of [
+      [0x00, 0, 0],
+      [0x02, 1, 1],
+      [0x01, 2, 1],
+    ] as const) {
+      const image = new Image().set(SAVE(0x38c), tracking);
+      expect(decodeItems(image.view(), { race: false }).counts.flute).toBe(
+        casual,
+      );
+      expect(
+        decodeItems(image.view({ strict: true }), { race: true }).counts.flute,
+      ).toBe(race);
+    }
   });
 
   it("reads every location, inside the dungeons too, but Zelda's rescue", () => {

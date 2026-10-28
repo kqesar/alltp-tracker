@@ -119,7 +119,7 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   // the prizes Link holds by class, whichever dungeon gave them: the green
   // pendant, the two others, the crystals counted (never told 5/6)
   escape: [0, 2],
-  fluteactive: [0, 1],
+  fluteactive: [0, 3],
   glove: [0, 2],
   // Link's hearts on screen, less 2: 0 not set (unknown to the logic), 1 the
   // 3 hearts every run starts with, 18 the 20 a full pool reaches

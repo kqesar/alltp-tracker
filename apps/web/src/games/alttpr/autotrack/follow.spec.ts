@@ -12,6 +12,7 @@ import {
 } from "@/games/alttpr/autotrack/fixtures";
 import { createFollower } from "@/games/alttpr/autotrack/follow";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
+import { ACTIVATION } from "@/games/alttpr/logic/packItems";
 import { solutionOf } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import {
@@ -821,13 +822,41 @@ describe("what no flag keeps, and what a race may read", () => {
     memory[SAVE(0x38c)] = 0x02; // the flute, not activated (sram.asm:175)
     const follower = createFollower();
     follower.read(readingOf(memory));
-    expect(store().items).toMatchObject({ flute: true, fluteactive: 0 });
+    expect(store().items).toMatchObject({
+      flute: true,
+      fluteactive: ACTIVATION.INACTIVE,
+    });
     expect(solved().flute).toBe(1);
 
     memory[SAVE(0x38c)] = 0x01; // activated (inventory.asm:450-453)
     follower.read(readingOf(memory));
-    expect(store().items).toMatchObject({ flute: true, fluteactive: 1 });
+    expect(store().items).toMatchObject({
+      flute: true,
+      fluteactive: ACTIVATION.ACTIVE,
+    });
     expect(solved().flute).toBe(2);
+
+    // The flute's cell cleared by hand: no flute, activated or not
+    store().setItem("flute", false);
+    expect(solved().flute).toBeUndefined();
+    expect(solved().fluteActivationUnknown).toBeUndefined();
+  });
+
+  it("never reads in Race Mode whether the flute was activated: maybe, not yes", () => {
+    store().applyPreset("inverted");
+    const memory = seedMemory({ race: true });
+    memory[SAVE(0x38c)] = 0x01; // activated
+    createFollower().read(readingOf(memory, { race: true }));
+
+    expect(store().items).toMatchObject({
+      flute: true,
+      fluteactive: ACTIVATION.UNKNOWN,
+    });
+    // The flute found, its activation not known: a rule asking for it reads
+    // maybe at most (the pack's unknown counts)
+    const state = solved();
+    expect(state.flute).toBe(1);
+    expect(state.fluteActivationUnknown).toBe(1);
   });
 
   it("gives a race the pendants and crystals held, never a red crystal it cannot count", () => {

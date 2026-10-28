@@ -398,6 +398,8 @@ describe("mergeView", () => {
       chest0: 1,
       // Zelda in the Sanctuary, the green pendant held
       escape: 2,
+      // No flute: read, not activated
+      fluteactive: 2,
       heldgreen: 1,
       hookshot: true,
       sword: 2,
@@ -410,8 +412,8 @@ describe("mergeView", () => {
       "links-house": true,
     });
     // Hookshot, sword, bottle, Armos Knights, the counter, the bombs, the
-    // escape, the green pendant, three checks
-    expect(laid?.count).toBe(11);
+    // escape, the green pendant, the flute not activated, three checks
+    expect(laid?.count).toBe(12);
   });
 
   it("never undoes what the player marked beyond the game", () => {

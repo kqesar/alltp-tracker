@@ -32,6 +32,8 @@ export const doubtText = (doubt: Doubt): string => {
         : "it takes hearts, and your hearts are not set";
     case "bombs":
       return "it takes the Ten Bombs, which no cell records: autotracking reads them from the game";
+    case "flute":
+      return "it takes the flute activated, which Race Mode does not read";
   }
 };
 

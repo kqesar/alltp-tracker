@@ -74,7 +74,11 @@ describe("unknownCountFacts", () => {
       bombsUnknown: 1,
     });
     expect(unknownCountFacts({})).toEqual({});
-    expect(UNKNOWN_COUNT_FACTS).toEqual(["bombsUnknown", "healthUnknown"]);
+    expect(UNKNOWN_COUNT_FACTS).toEqual([
+      "bombsUnknown",
+      "fluteActivationUnknown",
+      "healthUnknown",
+    ]);
   });
 });
 
@@ -98,5 +102,34 @@ describe("the basic placement's dungeon gate", () => {
   it("asks for no hearts with the advanced placement", () => {
     expect(shooterRoom(atPalace({}), ADVANCED)).toBe("yes");
     expect(shooterRoom(atPalace({}, { health: true }), ADVANCED)).toBe("yes");
+  });
+});
+
+describe("the flute's activation", () => {
+  const INVERTED = settingsFromUpstream("inverted", {});
+  const rules = loadRules(RULES);
+  /** Whether the flute flies, in Inverted, where the bird must be woken. */
+  const canFly = (items: TrackerInput["items"], unknown?: CountKnowledge) =>
+    evaluate(
+      parse("@canFly"),
+      toState({ ...EMPTY_INPUT, items, ...(unknown && { unknown }) }, INVERTED),
+      rules,
+      { settings: INVERTED },
+    );
+
+  it("reads a flute not known activated as maybe, never as no", () => {
+    // Known: found but asleep (a run by hand), or woken
+    expect(canFly({ flute: 1 })).toBe("no");
+    expect(canFly({ flute: 2 })).toBe("yes");
+    // Race Mode reads the flute, not whether it was woken
+    expect(canFly({ flute: 1 }, { flute: true })).toBe("maybe");
+  });
+
+  it("holds the fact only while the flute is held", () => {
+    expect(canFly({}, { flute: true })).toBe("no");
+    expect(unknownCountFacts({ flute: true })).toEqual({});
+    expect(unknownCountFacts({ flute: true }, { flute: 1 })).toEqual({
+      fluteActivationUnknown: 1,
+    });
   });
 });

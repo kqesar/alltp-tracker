@@ -233,6 +233,6 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
       turtleRock: input.medallions.turtleRock ?? "unknown",
     }),
     ...derivedFacts(state, settings),
-    ...unknownCountFacts(input.unknown ?? {}),
+    ...unknownCountFacts(input.unknown ?? {}, state),
   };
 }

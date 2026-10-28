@@ -70,7 +70,7 @@ describe("the board's cells, read from the game through PACK_ITEMS", () => {
     // The flute activated: its cell says found, the cell no one draws the rest
     expect(cellsFromPack({ flute: 2 })).toEqual({
       flute: true,
-      fluteactive: 1,
+      fluteactive: 3,
     });
     expect(cellsFromPack({ bottle: 9 })).toEqual({ bottle: 4 });
     expect(mostShown("bow")).toBe(1);

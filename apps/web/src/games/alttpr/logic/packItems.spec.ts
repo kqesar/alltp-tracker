@@ -1,16 +1,23 @@
 import {
+  EMPTY_INPUT,
   fromLegacy,
   INVENTORY_ITEM_IDS,
   LEGACY_ITEM_RANGES,
+  toState,
 } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import { items, itemsMax, itemsMin } from "@/games/alttpr/data/items";
+import { getPreset } from "@/games/alttpr/data/presets";
 import {
+  ACTIVATION,
   itemsFromPack,
   PACK_ITEMS,
   packReading,
   RECORDED_LEVELS,
 } from "@/games/alttpr/logic/packItems";
+import { packSettings } from "@/games/alttpr/logic/settings";
+
+const INVERTED = getPreset("inverted").settings;
 
 /** Every value an item takes in the tracker, as the store holds it. */
 const valuesOf = (id: string): (number | boolean)[] => {
@@ -107,18 +114,50 @@ describe("the app's one table of the pack's items", () => {
     expect(itemsFromPack({})).not.toHaveProperty("tenbombs");
   });
 
+  /** The flute's cell and its activation, as the pack reads them. */
+  const read = (fluteactive: number, flute = true) =>
+    packReading({ flute, fluteactive } as never);
+
   it("reads the flute activated as flute 2, and gives it back from the game", () => {
-    expect(packReading({ flute: true } as never).items).toEqual({ flute: 1 });
-    expect(packReading({ flute: true, fluteactive: 1 } as never).items).toEqual(
-      { flute: 2 },
-    );
+    // By hand, or read not activated: the flute as its cell says
+    expect(read(ACTIVATION.NOT_READ).items).toEqual({ flute: 1 });
+    expect(read(ACTIVATION.INACTIVE).items).toEqual({ flute: 1 });
+    expect(read(ACTIVATION.ACTIVE).items).toEqual({ flute: 2 });
     // Known where the game was read, left alone where not
     expect(itemsFromPack({ flute: 2 })).toMatchObject({
       flute: true,
-      fluteactive: 1,
+      fluteactive: ACTIVATION.ACTIVE,
     });
-    expect(itemsFromPack({ flute: 1 }).fluteactive).toBe(0);
+    expect(itemsFromPack({ flute: 1 }).fluteactive).toBe(ACTIVATION.INACTIVE);
     expect(itemsFromPack({})).not.toHaveProperty("fluteactive");
+  });
+
+  it("drops the activation with the flute: the cell cleared holds no flute", () => {
+    expect(read(ACTIVATION.ACTIVE, false).items).toEqual({});
+    // Not known in a race, and no flute: the pack then holds no fact
+    const none = read(ACTIVATION.UNKNOWN, false);
+    expect(none.unknown).toMatchObject({ flute: true });
+    expect(
+      toState({ ...EMPTY_INPUT, ...none }, packSettings(INVERTED)),
+    ).not.toHaveProperty("fluteActivationUnknown");
+  });
+
+  it("leaves the activation unknown in Race Mode alone, known otherwise", () => {
+    expect(read(ACTIVATION.UNKNOWN).unknown).toEqual({
+      bombs: true,
+      flute: true,
+      health: true,
+    });
+    for (const known of [
+      ACTIVATION.NOT_READ,
+      ACTIVATION.INACTIVE,
+      ACTIVATION.ACTIVE,
+    ]) {
+      expect(read(known).unknown, String(known)).toEqual({
+        bombs: true,
+        health: true,
+      });
+    }
   });
 
   it("counts Hyrule Castle finished but while autotracking reads the escape going on", () => {

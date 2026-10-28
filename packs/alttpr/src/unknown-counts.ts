@@ -1,6 +1,8 @@
 // Counts a tracker may not know: Link's health (the heart containers and
 // pieces found, which upstream's hasHealth sums, ItemCollection.php:546-553)
-// and the escape's ten bombs (canKillEscapeThings, ItemCollection.php:562).
+// and the escape's ten bombs (canKillEscapeThings, ItemCollection.php:562), and
+// whether the flute was activated (canFly, ItemCollection.php:415-428), which
+// Race Mode never reads.
 // A player sees them on the HUD but may leave them unrecorded, and a rule
 // that asks for them must not then read "none found": that would put every
 // dungeon of the basic placement out of logic for good.
@@ -18,9 +20,15 @@
 
 import { type Expr, parse, print } from "@alltp/engine";
 
-/** What a tracker may leave unknown, and the fact that says it is. */
+/**
+ * What a tracker may leave unknown, and the fact that says it is. `heldOnly`:
+ * only the item's higher level may be unknown, so the fact holds only while
+ * the item is held at all (the flute found, its activation not known: an
+ * autotracker in a race reads the flute, never whether the bird woke).
+ */
 export const UNKNOWN_COUNTS = {
   bombs: { fact: "bombsUnknown", items: ["tenBombs"] },
+  flute: { fact: "fluteActivationUnknown", heldOnly: true, items: ["flute"] },
   health: { fact: "healthUnknown", items: ["heartContainer", "pieceOfHeart"] },
 } as const;
 
@@ -95,13 +103,21 @@ export function unknownCountRequirement(req: string): string {
 /** What a tracker does not know, by count; one left out is known. */
 export type CountKnowledge = Readonly<Partial<Record<UnknownCount, boolean>>>;
 
-/** The facts that hold, each at 1, for the counts not known. */
+/**
+ * The facts that hold, each at 1, for the counts not known; a `heldOnly`
+ * one only while its item is held in `items`.
+ */
 export function unknownCountFacts(
   unknown: CountKnowledge,
+  items: Readonly<Record<string, number>> = {},
 ): Readonly<Record<string, number>> {
   const facts: Record<string, number> = {};
-  for (const [count, { fact }] of Object.entries(UNKNOWN_COUNTS)) {
-    if (unknown[count as UnknownCount] === true) facts[fact] = 1;
+  for (const [count, entry] of Object.entries(UNKNOWN_COUNTS)) {
+    if (unknown[count as UnknownCount] !== true) continue;
+    if ("heldOnly" in entry && !entry.items.some((item) => items[item] > 0)) {
+      continue;
+    }
+    facts[entry.fact] = 1;
   }
   return facts;
 }

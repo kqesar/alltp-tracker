@@ -160,7 +160,8 @@ closes it to a player holding Bombos only), so nothing carries over.
   key model reads the dungeons without them.
 - **The counts not known** (`unknown`, `src/unknown-counts.ts`): Link's
   health and the escape's ten bombs, which a player sees on the HUD but may
-  not record. See below.
+  not record, and whether the flute was activated, which Race Mode never
+  reads. See below.
 
 ### Counts a tracker may not know
 
@@ -318,9 +319,13 @@ did until 2.52.0:
 | small keys | in their dungeons the key model holds them; retro's generic keys are never vouched for; with keys outside their dungeons the board takes those memory shows in hand (below) |
 
 Three more reach the rules through values no cell draws, which the app's
-`logic/packItems.ts` lists: the flute activated (`InventoryTracking` f,
-`inventory.asm:450-453`: `flute` 2, so an Inverted run that activated it
-out of logic keeps `canFly`), the prizes held by class (above), and, outside
+`logic/packItems.ts` lists: outside Race Mode, the flute activated
+(`InventoryTracking` f, `inventory.asm:450-453`: `flute` 2, so an Inverted
+run that activated it out of logic keeps `canFly`; in Race Mode the decoder
+reads the flute held, never which bit, and the activation is an unknown
+count, `fluteActivationUnknown`, which holds only while the flute is held,
+so `canFly` reads maybe at most: activating it is an event at a place in
+Inverted, which v2.0 does not name), the prizes held by class (above), and, outside
 Race Mode, Standard's escape: `ProgressIndicator` `$02`, set as the rain
 ends with Zelda in the Sanctuary (`zelda.asm:11-13`), is upstream's
 `RescueZelda`, and until it the app counts Hyrule Castle unfinished, so the
@@ -353,6 +358,7 @@ category's line; `memory.spec.ts` lists every range a race reads):
 | which crystal is 5 or 6; which dungeon gave which prize | "trackers may not auto-track which crystal is a 5/6-crystal"; "may not associate an acquired item with a specific location" |
 | the ROM's prize table, the world map's prizes | "ROM addresses associated with ... chest or other location contents should not ever be accessed"; "Map checks are not allowed to be auto-tracked" |
 | Zelda's rescue (the `zelda` check, Standard's escape) | "may not alert whether or not Zelda was rescued in a Standard opening seed" |
+| whether the flute was activated | an event at a place in Inverted, not named: the flute is read found, its activation an unknown count (maybe at most) |
 | the big bomb (`FollowerIndicator`), the ROM's stats, the bomb count, the stats' heart counters, the seed's settings | not named, or named within limits: "Anything not covered in this document is, by default, considered not permitted" |
 | Link's position, room, dungeon, entrances | the race admins' clarification of June 2026 (below) and "Region endpoints may not be auto-tracked" |
 

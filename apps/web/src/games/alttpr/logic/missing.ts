@@ -93,7 +93,9 @@ export type Doubt =
       readonly basic: boolean;
     }
   /** A rule takes the escape's ten bombs, which no cell records. */
-  | { readonly kind: "bombs" };
+  | { readonly kind: "bombs" }
+  /** A rule takes the flute activated, which Race Mode does not read. */
+  | { readonly kind: "flute" };
 
 /** What a location not in logic is missing. */
 export type Missing = {
@@ -304,9 +306,9 @@ const doubtOf = (key: string): Doubt => {
     };
   }
   if (kind === "unknown") {
-    return what === "bombs"
-      ? { kind: "bombs" }
-      : { basic: false, hearts: 0, kind: "hearts" };
+    if (what === "bombs") return { kind: "bombs" };
+    if (what === "flute") return { kind: "flute" };
+    return { basic: false, hearts: 0, kind: "hearts" };
   }
   return { kind: "placement" };
 };

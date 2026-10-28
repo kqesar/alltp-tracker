@@ -139,12 +139,14 @@ const SMALL_KEYS = ITEMS.map(({ id }) => id).filter((id) =>
 
 /**
  * What Race Mode keeps from the rules beside the exceptions and the bomb:
- * nothing. The bottles (v2.0's bottle contents) and the pendants and
- * crystals (prizes upon collection) reach them; the crystals as a count,
- * which gives all seven here, red ones included, only because seven
- * crystals leave none regular to count.
+ * whether the flute was activated, which v2.0 does not name (in doubt,
+ * forbidden): the flute reaches them found, its activation not known, so a
+ * rule asking for it is maybe at most. The bottles (v2.0's bottle contents)
+ * and the pendants and crystals (prizes upon collection) reach them; the
+ * crystals as a count, which gives all seven here, red ones included, only
+ * because seven crystals leave none regular to count.
  */
-const RACE_WITHHELD: readonly ItemId[] = [];
+const RACE_WITHHELD: readonly ItemId[] = ["flute"];
 
 const RUNS = (["open", "standard", "inverted", "retro"] as const).flatMap(
   (mode) =>
