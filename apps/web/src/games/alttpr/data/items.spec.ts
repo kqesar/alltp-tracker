@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultItemGrid,
+  heartsAfter,
+  heartsOf,
+  heartsText,
   isKeyCell,
   itemGridFor,
   itemLabels,
@@ -143,6 +146,49 @@ describe("itemGridFor", () => {
       "boss12",
     ]);
     expect(items).toMatchObject({ shoparrow: false, shopkey: false });
+  });
+});
+
+describe("the hearts counter", () => {
+  const at = (hearts: number, quarters = 0) => ({ hearts, quarters });
+
+  it("steps a quarter, the fourth making a heart, and back", () => {
+    expect(heartsAfter(at(5, 2), "forward")).toEqual(at(5, 3));
+    expect(heartsAfter(at(5, 3), "forward")).toEqual(at(6, 0));
+    expect(heartsAfter(at(6, 0), "back")).toEqual(at(5, 3));
+  });
+
+  it("stops at not set and at 20 hearts, never wrapping round", () => {
+    // From not set: the 3 hearts Link starts with, whole
+    expect(heartsAfter(at(0), "forward")).toEqual(at(1));
+    expect(heartsAfter(at(1), "back")).toEqual(at(0));
+    expect(heartsAfter(at(0), "back")).toEqual(at(0));
+    expect(heartsAfter(at(17, 3), "forward")).toEqual(at(18));
+    expect(heartsAfter(at(18), "forward")).toEqual(at(18));
+  });
+
+  it("finds a whole heart, the quarters kept, or a piece; from not set the start and the find", () => {
+    expect(heartsAfter(at(0), "heart")).toEqual(at(2));
+    expect(heartsAfter(at(5, 2), "heart")).toEqual(at(6, 2));
+    expect(heartsAfter(at(17, 2), "heart")).toEqual(at(18));
+    expect(heartsAfter(at(0), "piece")).toEqual(at(1, 1));
+    expect(heartsAfter(at(5, 3), "piece")).toEqual(at(6));
+    expect(heartsAfter(at(18), "piece")).toEqual(at(18));
+  });
+
+  it("reads a run's quarters only beside hearts set and short of 20", () => {
+    expect(heartsOf({ heartquarters: 2, hearts: 5 })).toEqual(at(5, 2));
+    expect(heartsOf({ heartquarters: 2, hearts: 0 })).toEqual(at(0));
+    expect(heartsOf({ heartquarters: 2, hearts: 18 })).toEqual(at(18));
+    // A save from before the quarters: none
+    expect(heartsOf({ hearts: 5 })).toEqual(at(5));
+  });
+
+  it("says the hearts and their quarters in words", () => {
+    expect(heartsText(at(0))).toBeNull();
+    expect(heartsText(at(11))).toBe("13");
+    expect(heartsText(at(11, 1))).toBe("13 and 1 quarter");
+    expect(heartsText(at(11, 2))).toBe("13 and 2 quarters");
   });
 });
 

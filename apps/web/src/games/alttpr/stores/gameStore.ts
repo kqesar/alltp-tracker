@@ -3,9 +3,10 @@ import { devtools, persist } from "zustand/middleware";
 import { boardRestored, runReplaced } from "@/autotrack/raceMode";
 import { requestResync } from "@/autotrack/resync";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
-import type { ItemState } from "@/games/alttpr/data/items";
+import type { Hearts, ItemState } from "@/games/alttpr/data/items";
 import {
-  CLAMPED_ITEMS,
+  heartsAfter,
+  heartsOf,
   items as initialItems,
   TOGGLE_ITEMS,
 } from "@/games/alttpr/data/items";
@@ -115,6 +116,11 @@ type GameState = Progress &
      * already, or for a value outside the item's range.
      */
     setItem: (item: string, value: boolean | number) => void;
+    /**
+     * Set Link's hearts and the quarters toward the next one together, as
+     * one undo step (a voice command's find); nothing when unchanged.
+     */
+    setHearts: (hearts: Hearts) => void;
     /** Set a key dungeon's small keys, as one undo step; nothing if equal. */
     setSmallKeys: (dungeonIndex: number, count: number) => void;
     /** Step a dungeon's medallion through unknown, Bombos, Ether, Quake */
@@ -443,6 +449,24 @@ const record = (state: GameState, next: Partial<Progress>) => ({
   past: [...state.past, progressOf(state)].slice(-HISTORY_LIMIT),
 });
 
+/**
+ * The run with Link's hearts and quarters set to `next`, as one undo step,
+ * or the same state when they do not change.
+ */
+const withHearts = (state: GameState, next: Hearts) => {
+  const now = heartsOf(state.items);
+  if (now.hearts === next.hearts && now.quarters === next.quarters) {
+    return state;
+  }
+  return record(state, {
+    items: {
+      ...state.items,
+      heartquarters: next.quarters,
+      hearts: next.hearts,
+    },
+  });
+};
+
 /** Project the store onto what localStorage keeps. */
 const toPersisted = (state: GameState): PersistedState => ({
   ...progressOf(state),
@@ -533,15 +557,21 @@ export const useGameStore = create<GameState>()(
               });
             }
 
+            // Link's hearts step a quarter, the fourth making a heart, and
+            // stop at not set and at 20 (heartsAfter)
+            if (item === "hearts") {
+              const change = direction > 0 ? "forward" : "back";
+              return withHearts(
+                state,
+                heartsAfter(heartsOf(state.items), change),
+              );
+            }
+
             // Chest counters count down as chests are emptied; everything
-            // else counts up. Both wrap round to the far end of their range,
-            // but for the counters that stop there (CLAMPED_ITEMS).
+            // else counts up. Both wrap round to the far end of their range.
             const step = (item.startsWith("chest") ? -1 : 1) * direction;
             const [min, max] = itemRange(item, state.settings);
             const next = current + step;
-            if (CLAMPED_ITEMS.has(item) && (next < min || next > max)) {
-              return state;
-            }
             return record(state, {
               items: {
                 ...state.items,
@@ -640,6 +670,8 @@ export const useGameStore = create<GameState>()(
         setBigKeysVisible: (visible: boolean) =>
           set({ bigKeysVisible: visible }),
 
+        setHearts: (hearts: Hearts) =>
+          set((state) => withHearts(state, hearts)),
         setItem: (item: string, value: boolean | number) =>
           set((state) => {
             const current = state.items[item];

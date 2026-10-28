@@ -204,6 +204,23 @@ describe("the app's one table of the pack's items", () => {
     expect(found(18).items).toEqual({ heartContainer: 11, pieceOfHeart: 24 });
   });
 
+  it("reads the pieces toward the next heart as pieces of heart, a quarter each", () => {
+    const read = (hearts: number, heartquarters: number) =>
+      packReading({ heartquarters, hearts } as never);
+    // 3 hearts and 2 pieces: the pieces alone found
+    expect(read(1, 2).items).toEqual({ pieceOfHeart: 2 });
+    // 10 hearts and 3 pieces: 7 containers found, and the 3 pieces
+    expect(read(8, 3).items).toEqual({ heartContainer: 7, pieceOfHeart: 3 });
+    // 16 hearts and a piece: the pool's 11 containers, 2 hearts of pieces
+    expect(read(14, 1).items).toEqual({ heartContainer: 11, pieceOfHeart: 9 });
+    // Not set, the pieces say nothing; at 20 there is no piece left
+    expect(read(0, 3)).toMatchObject({ items: {}, unknown: { health: true } });
+    expect(read(18, 3).items).toEqual({
+      heartContainer: 11,
+      pieceOfHeart: 24,
+    });
+  });
+
   it("gives back every item value from the pack items it records", () => {
     for (const [id, entry] of Object.entries(PACK_ITEMS)) {
       if (entry.kind !== "count" && entry.kind !== "bits") continue;

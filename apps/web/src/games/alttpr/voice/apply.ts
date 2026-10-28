@@ -1,7 +1,12 @@
+import { heartsAfter, heartsOf } from "@/games/alttpr/data/items";
 import { controlTitle } from "@/games/alttpr/data/keymap";
 import { isControlShown } from "@/games/alttpr/hooks/useItemShortcuts";
 import { smallKeysMax } from "@/games/alttpr/logic/settings";
-import { changedValue, type VoiceAction } from "@/games/alttpr/logic/voice";
+import {
+  changedValue,
+  isHeartsFind,
+  type VoiceAction,
+} from "@/games/alttpr/logic/voice";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { itemRange } from "@/games/alttpr/stores/persistence";
 import { isRunning } from "@/utils/runTimer";
@@ -46,6 +51,16 @@ export const applyVoice = (action: VoiceAction): Heard => {
   const words = controlTitle(control);
   if (!isControlShown(control)) return { changed: false, words };
 
+  // A heart or a piece moves the hearts and the quarters together
+  if (isHeartsFind(change)) {
+    const was = heartsOf(store.items);
+    const next = heartsAfter(was, change.to);
+    store.setHearts(next);
+    return {
+      changed: next.hearts !== was.hearts || next.quarters !== was.quarters,
+      words,
+    };
+  }
   const [, kind, index] = /^(smallkey|medallion)(\d+)$/.exec(control) ?? [];
   const dungeon = Number(index);
   if (kind === "smallkey") {

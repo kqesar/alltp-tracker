@@ -50,6 +50,8 @@ const findLabel = (control: string, change: Change): string => {
   if ("to" in change && change.to === "next") {
     return `${controlTitle(control)}, one level up`;
   }
+  if ("to" in change && change.to === "heart") return "A whole heart";
+  if ("to" in change && change.to === "piece") return "A heart piece";
   return controlTitle(control);
 };
 

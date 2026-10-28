@@ -99,6 +99,8 @@ describe("VoiceControl", () => {
         "Silver Arrows",
         "Master Sword",
         "Sword, one level up",
+        "A whole heart",
+        "A heart piece",
       ]),
     );
     expect(guide).toHaveTextContent("undo, redo");

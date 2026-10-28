@@ -27,6 +27,7 @@ import { parseSave, withoutTimeline } from "@/games/alttpr/stores/persistence";
 import {
   BitWriter,
   ByteWriter,
+  fromBase64Url,
   MAX_FIELD_NUMBER,
   toBase64Url,
   zigzag,
@@ -265,14 +266,44 @@ describe("an ALttPR run in a packed link", () => {
     expect(bare.progress.timeline).toBe("AA");
     expect(none.link).toBe(2);
     expect(JSON.parse(packLink(played)).link).toBe(4);
-    // As v2.58.0, the last tracker to read link 2 alone, wrote it
+    // As v2.58.0, the last tracker to read link 2 alone, wrote it, but for
+    // the items appended to the table since (heartquarters), at the end
     const recorded = firstLayout.links.find(
       ({ name }) => name === "an empty timeline",
     );
-    expect(recorded).toBeDefined();
-    expect(JSON.parse(packLink(JSON.stringify(recorded?.save)))).toEqual(
-      recorded?.link,
+    if (recorded === undefined) throw new Error("No empty timeline recorded");
+    const since = SHARE_ITEMS.slice(recorded.link.sizes[1]);
+    expect(since).toEqual(["heartquarters"]);
+    const save = recorded.save as { progress: { items: object } };
+    const written = JSON.parse(
+      packLink(
+        JSON.stringify({
+          ...save,
+          progress: {
+            ...save.progress,
+            items: {
+              ...save.progress.items,
+              ...Object.fromEntries(since.map((id) => [id, freshItems[id]])),
+            },
+          },
+        }),
+      ),
     );
+    const { items: writtenItems, ...writtenRest } = written.progress;
+    const { items: recordedItems, ...recordedRest } = recorded.link.progress;
+    expect(writtenRest).toEqual(recordedRest);
+    expect({ ...written, progress: null, sizes: null, table: null }).toEqual({
+      ...recorded.link,
+      progress: null,
+      sizes: null,
+      table: null,
+    });
+    expect(written.sizes).toEqual([MAP_LOCATIONS.size, SHARE_ITEMS.length]);
+    // The recorded items' bytes, then a 0 for each item appended
+    expect([...fromBase64Url(writtenItems)]).toEqual([
+      ...fromBase64Url(recordedItems),
+      ...since.map(() => 0),
+    ]);
   });
 
   /** The run a link's address opens to. */
@@ -447,7 +478,7 @@ describe("an ALttPR run in a packed link", () => {
     // A new item is appended to SHARE_ITEMS: moving one breaks every link
     expect(new Set(SHARE_ITEMS)).toEqual(new Set(Object.keys(freshItems)));
     expect(SHARE_ITEMS).toHaveLength(new Set(SHARE_ITEMS).size);
-    expect(SHARE_ITEMS.slice(-7)).toEqual([
+    expect(SHARE_ITEMS.slice(-8)).toEqual([
       "hearts",
       "tenbombs",
       "escape",
@@ -455,6 +486,7 @@ describe("an ALttPR run in a packed link", () => {
       "heldcrystals",
       "heldgreen",
       "heldpendants",
+      "heartquarters",
     ]);
     expect(JSON.parse(packLink(play.alttpr(0.5, randoms()))).sizes).toEqual([
       MAP_LOCATIONS.size,
@@ -480,10 +512,12 @@ describe("an ALttPR run in a packed link", () => {
       sword: 2,
     });
     expect(run.items).not.toHaveProperty("magic");
-    // Laid on the board, the item the link lacks starts as in a fresh run
+    expect(run.items).not.toHaveProperty("heartquarters");
+    // Laid on the board, the items the link lacks start as in a fresh run
     useGameStore.setState(useGameStore.getInitialState(), true);
     useGameStore.getState().loadProgress(run);
     expect(useGameStore.getState().items).toMatchObject({
+      heartquarters: 0,
       lantern: true,
       magic: 0,
     });

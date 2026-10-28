@@ -75,13 +75,6 @@ const RETRO_ITEM_GRID: string[][] = [
  */
 export const TOGGLE_ITEMS: ReadonlySet<string> = new Set(["magic"]);
 
-/**
- * The counters that stop at their ends instead of wrapping round: the
- * hearts, whose "not set" one step back from 20 would say all hearts held
- * on a stray right-click, and the reverse.
- */
-export const CLAMPED_ITEMS: ReadonlySet<string> = new Set(["hearts"]);
-
 /** Whether a grid id is a key cell's or a castle dungeon's label. */
 export const isKeyCell = (id: string): boolean =>
   id.startsWith("keys") || id.startsWith("keylabel");
@@ -121,6 +114,10 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   escape: [0, 2],
   fluteactive: [0, 3],
   glove: [0, 2],
+  // The heart pieces toward the next heart, 0 to 3, as the game's menu
+  // shows them (HeartPieceQuarter): read beside `hearts`, which they never
+  // reach a whole heart of (heartsAfter)
+  heartquarters: [0, 3],
   // Link's hearts on screen, less 2: 0 not set (unknown to the logic), 1 the
   // 3 hearts every run starts with, 18 the 20 a full pool reaches
   // (heartsShown)
@@ -234,6 +231,80 @@ export const heartsShown = (value: number): number | null =>
 export const heartsValue = (shown: number): number =>
   Math.max(1, Math.min(itemsMax.hearts, shown - STARTING_HEARTS + 1));
 
+/**
+ * Link's health as the hearts counter holds it: the `hearts` value (0 not
+ * set) and `heartquarters`, the pieces toward the next heart.
+ */
+export interface Hearts {
+  readonly hearts: number;
+  readonly quarters: number;
+}
+
+/** A run's hearts and quarters, the quarters 0 while the hearts are not set. */
+export const heartsOf = (
+  items: Readonly<Partial<Record<string, number | boolean>>>,
+): Hearts => {
+  const hearts = Number(items.hearts ?? 0);
+  const quarters = Number(items.heartquarters ?? 0);
+  return {
+    hearts,
+    quarters:
+      hearts > 0 && hearts < itemsMax.hearts
+        ? Math.max(0, Math.min(itemsMax.heartquarters, quarters))
+        : 0,
+  };
+};
+
+/** How the hearts counter moves: a step, or a whole heart or a piece found. */
+export type HeartsChange = "back" | "forward" | "heart" | "piece";
+
+/**
+ * The hearts counter once changed, as the game counts: a piece is a
+ * quarter, and the fourth makes the next heart (HeartPieceQuarter wraps to 0
+ * as MaximumHealth gains one). A step (`forward`, `back`: a click, a
+ * right-click, a shortcut) moves a quarter; from not set, forward is the 3
+ * hearts Link starts with, and back from those is not set again. It stops
+ * at not set and at 20 hearts, never wrapping round. What a player finds
+ * (`heart`, `piece`, said by voice) never takes one away: from not set it
+ * is the 3 hearts and the find, a heart keeps the quarters held.
+ * @param from - The counter now
+ * @param change - What moves it
+ */
+export const heartsAfter = (from: Hearts, change: HeartsChange): Hearts => {
+  const top = itemsMax.hearts;
+  const quarters = (total: number): Hearts =>
+    Math.floor(total / 4) >= top
+      ? { hearts: top, quarters: 0 }
+      : { hearts: Math.floor(total / 4), quarters: total % 4 };
+  const total = from.hearts * 4 + from.quarters;
+  switch (change) {
+    case "forward":
+      if (from.hearts === 0) return { hearts: 1, quarters: 0 };
+      return from.hearts >= top ? from : quarters(total + 1);
+    case "back":
+      if (from.hearts === 0) return from;
+      return total - 1 < 4 ? { hearts: 0, quarters: 0 } : quarters(total - 1);
+    case "heart":
+      return from.hearts === 0
+        ? { hearts: heartsValue(STARTING_HEARTS + 1), quarters: 0 }
+        : quarters(total + 4);
+    case "piece":
+      return quarters((from.hearts === 0 ? 4 : total) + 1);
+  }
+};
+
+/**
+ * What the hearts counter says, for its name: "13", "13 and 2 quarters",
+ * or null while not set.
+ * @param hearts - The counter
+ */
+export const heartsText = ({ hearts, quarters }: Hearts): string | null => {
+  const shown = heartsShown(hearts);
+  if (shown === null) return null;
+  if (quarters === 0) return `${shown}`;
+  return `${shown} and ${quarters} ${quarters === 1 ? "quarter" : "quarters"}`;
+};
+
 /** Dungeon bosses, in dungeon-index order. */
 const BOSS_NAMES = [
   "Armos Knights",
@@ -262,6 +333,7 @@ const ITEM_NAMES: Record<string, string> = {
   flippers: "Zora's Flippers",
   fluteactive: "Flute (activated)",
   glove: "Power Glove",
+  heartquarters: "Heart pieces",
   hearts: "Hearts",
   heldcrystals: "Crystals held",
   heldgreen: "Pendant of Courage held",

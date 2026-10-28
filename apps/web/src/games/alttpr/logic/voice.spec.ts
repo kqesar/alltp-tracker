@@ -6,6 +6,7 @@ import {
   changedValue,
   commandsOf,
   GRAMMAR,
+  isHeartsFind,
   type VoiceAction,
   WAKE_WORD,
 } from "@/games/alttpr/logic/voice";
@@ -129,14 +130,17 @@ describe("changedValue", () => {
     expect(changedValue({ to: "on" }, 0, 0, 1)).toBe(1);
   });
 
-  it("finds a whole heart: 4 on screen from not set, then one more each", () => {
-    // From not set: the 3 Link starts with and the one found, the cell's 2
-    expect(changedValue({ to: "heart" }, 0, 0, 18)).toBe(2);
-    expect(changedValue({ to: "heart" }, 2, 0, 18)).toBe(3);
-    expect(changedValue({ to: "heart" }, 18, 0, 18)).toBe(18);
+  it("hears a whole heart and a heart piece, both on the hearts counter", () => {
     expect(commandsOf("tracker heart container")).toEqual([
       { change: { to: "heart" }, control: "hearts", kind: "set" },
     ]);
+    for (const said of ["tracker heart piece", "tracker piece of heart"]) {
+      expect(commandsOf(said), said).toEqual([
+        { change: { to: "piece" }, control: "hearts", kind: "set" },
+      ]);
+    }
+    expect(isHeartsFind({ to: "piece" })).toBe(true);
+    expect(isHeartsFind({ to: "next" })).toBe(false);
   });
 
   it("goes one level up, never past the top nor round to none", () => {
