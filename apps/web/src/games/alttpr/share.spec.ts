@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { items as freshItems } from "@/games/alttpr/data/items";
 import {
   ACCESSIBILITY_LABELS,
+  BOSS_SHUFFLE_LABELS,
   DUNGEON_ITEM_LABELS,
   ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
@@ -878,6 +879,7 @@ describe("the settings in a link (link 4)", () => {
         .map((value) => `glitches:${value}`),
       "hidden:",
       ...HIDEABLE.map((setting) => `hidden:${setting}`),
+      ...Object.keys(BOSS_SHUFFLE_LABELS).map((v) => `bossShuffle:${v}`),
     ];
     // A new option is appended to SHARE_SETTINGS: moving one breaks links
     expect(new Set(SHARE_SETTINGS)).toEqual(new Set(options));

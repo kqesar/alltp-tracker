@@ -426,6 +426,7 @@ describe("the seed's settings", () => {
       { label: "Item pool", value: "not in the ROM" },
       { label: "Item functionality", value: "not in the ROM" },
       { label: "Accessibility", value: "not in the ROM" },
+      { label: "Boss shuffle", value: "not in the ROM" },
     ]);
   });
 

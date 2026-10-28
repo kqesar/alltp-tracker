@@ -105,6 +105,17 @@ describe("MapPanel", () => {
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });
 
+  it("says shuffled bosses behind shuffled entrances are not modelled", () => {
+    act(() => {
+      useGameStore.getState().applyPreset("crosskeys");
+      useGameStore.getState().updateSettings({ bossShuffle: "full" });
+    });
+    render(<MapPanel />);
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The tracker has no logic for shuffled bosses behind shuffled entrances yet: every check shows as maybe.",
+    );
+  });
+
   it("says a Crosskeys run's logic follows the entrances noted", () => {
     act(() => useGameStore.getState().applyPreset("crosskeys"));
     render(<MapPanel />);

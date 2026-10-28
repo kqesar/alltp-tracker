@@ -25,6 +25,7 @@ import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
 import { boardItems } from "@/games/alttpr/autotrack/table";
 import {
   ACCESSIBILITY_LABELS,
+  BOSS_SHUFFLE_LABELS,
   ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
   MODE_LABELS,
@@ -432,6 +433,10 @@ export const describeSeed = (
     {
       label: "Accessibility",
       value: settingText(seed.accessibility, labelled(ACCESSIBILITY_LABELS)),
+    },
+    {
+      label: "Boss shuffle",
+      value: settingText(seed.bossShuffle, labelled(BOSS_SHUFFLE_LABELS)),
     },
   ];
 };

@@ -101,6 +101,7 @@ export const withSeedFile = (
     ? rom
     : {
         accessibility: take(rom.accessibility, file.accessibility),
+        bossShuffle: take(rom.bossShuffle, file.bossShuffle),
         crystalsGanon: take(rom.crystalsGanon, file.crystalsGanon),
         crystalsTower: take(rom.crystalsTower, file.crystalsTower),
         entrances: take(rom.entrances, file.entrances),

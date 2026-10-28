@@ -12,6 +12,7 @@ import {
   type UpstreamConfig,
 } from "@alltp/pack-alttpr";
 import {
+  bossShuffleOf,
   type HiddenSetting,
   isHidden,
   type RunSettings,
@@ -34,8 +35,8 @@ const cache = new Map<string, AlttprSettings>();
 
 /**
  * The pack's settings for a run: the run's world, goal, crystal counts, item
- * placement, accessibility, item pool and functionality, swordless weapons
- * when it has no sword, and its dungeon items (dungeonItems: which of them
+ * placement, accessibility, item pool and functionality, boss shuffle,
+ * swordless weapons when it has no sword, and its dungeon items (dungeonItems: which of them
  * may lie outside their dungeons), in NoGlitches
  * logic with randomized weapons, as the site's default preset has them
  * (config/alttp.php:78-96). The pack models the Open, Standard, Inverted
@@ -60,6 +61,7 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
     run.accessibility,
     run.itemPool,
     run.itemFunctionality,
+    bossShuffleOf(run),
     ...(run.hidden ?? []),
   ].join("/");
   let settings = cache.get(key);
@@ -69,6 +71,7 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
       "crystals.ganon": known("crystalsGanon", run.crystalsGanon),
       "crystals.tower": known("crystalsTower", run.crystalsTower),
       dungeonItems: run.dungeonItems,
+      "enemizer.bossShuffle": known("bossShuffle", bossShuffleOf(run)),
       goal: known("goal", GOALS[run.goal]),
       "item.functionality": known("itemFunctionality", run.itemFunctionality),
       "item.pool": known("itemPool", run.itemPool),

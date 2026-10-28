@@ -11,6 +11,7 @@ import {
   walk,
 } from "@alltp/engine";
 import {
+  BOSS_FACTS,
   compileTricks,
   DERIVED_FACTS,
   erWorld,
@@ -88,6 +89,8 @@ const fullBoard = (run: RunSettings) => {
 /** What the state holds beside the items, set by the app or the pack. */
 const FACTS = new Set([
   ...MEDALLION_FACTS,
+  // Each slot's boss under boss shuffle: toState holds its Unknown fact
+  ...BOSS_FACTS,
   ...DERIVED_FACTS,
   ...TRICK_ITEMS,
   ...new Set(UNKNOWN_FACT_OF.values()),

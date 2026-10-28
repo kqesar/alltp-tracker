@@ -72,6 +72,13 @@ type ItemPool = "normal" | "hard" | "expert" | "superexpert" | "crowd_control";
 type ItemFunctionality = "normal" | "hard" | "expert" | "superexpert";
 
 /**
+ * alttpr.com's boss shuffle, the enemizer's (config/alttp.php:241-246;
+ * Randomizer.php:396-447): none, each boss once (simple), each once and
+ * three more (full), any (random).
+ */
+export type BossShuffle = "none" | "simple" | "full" | "random";
+
+/**
  * The settings a Mystery run hides until the player finds them: those the
  * pack can leave unknown (packs/alttpr, settingsFromUpstream's UNKNOWN). The
  * world shows on the first screen, and the dungeon items are assumed until
@@ -86,6 +93,7 @@ export const HIDEABLE = [
   "itemPool",
   "itemFunctionality",
   "accessibility",
+  "bossShuffle",
 ] as const;
 
 export type HiddenSetting = (typeof HIDEABLE)[number];
@@ -115,6 +123,11 @@ export type RunSettings = {
    * "None", the NoGlitches logic of every preset, which the pack ports.
    */
   glitches?: Glitches;
+  /**
+   * The bosses shuffled between the dungeons; absent, as in every preset,
+   * is "none" (`bossShuffleOf`).
+   */
+  bossShuffle?: BossShuffle;
   /**
    * The settings not known yet, a Mystery run's: their values above only
    * stand in, and the logic reads them as unknown. Absent when all are known.
@@ -220,12 +233,23 @@ export const presets: Preset[] = [
  * crossed shuffle, in the Open or Standard world, every dungeon item wild.
  * vt hands the randomizer --keysanity for `full` dungeon items alone
  * (app/EntranceRandomizer.php:69-71); under any other, the randomizer keeps
- * the keys in their dungeons, which the tracker does not track.
+ * the keys in their dungeons, which the tracker does not track. Its port
+ * keeps each dungeon's vanilla boss (the randomizer's Bosses.py, imported
+ * as is), so a run whose bosses may move is not one it models.
  */
 export const crossedLogic = (settings: RunSettings): boolean =>
   settings.entranceShuffle === "crossed" &&
   (settings.mode === "open" || settings.mode === "standard") &&
-  settings.dungeonItems === "full";
+  settings.dungeonItems === "full" &&
+  !bossesMayMove(settings);
+
+/** A run's boss shuffle: "none" when its settings name none. */
+export const bossShuffleOf = (settings: RunSettings): BossShuffle =>
+  settings.bossShuffle ?? "none";
+
+/** Whether a run's bosses may be shuffled: so set, or not known yet. */
+export const bossesMayMove = (settings: RunSettings): boolean =>
+  isHidden(settings, "bossShuffle") || bossShuffleOf(settings) !== "none";
 
 /**
  * Whether the entrance assistant knows a run's shuffled entrances
@@ -321,6 +345,14 @@ export const GLITCHES_LABELS: Record<Glitches | "none", string> = {
   overworld_glitches: "Overworld Glitches",
 };
 
+/** alttpr.com's boss shuffle options (config/alttp.php:241-246). */
+export const BOSS_SHUFFLE_LABELS: Record<BossShuffle, string> = {
+  full: "Full",
+  none: "None",
+  random: "Random",
+  simple: "Simple",
+};
+
 export const ENTRANCE_LABELS: Record<EntranceShuffle, string> = {
   crossed: "Crossworld",
   full: "Full",
@@ -355,6 +387,10 @@ const CRYSTAL_COUNTS = Array.from(
 /** Each tunable setting's options, as [value, words]. */
 export const TUNING = {
   accessibility: ordered(["items", "locations", "none"], ACCESSIBILITY_LABELS),
+  bossShuffle: ordered<BossShuffle>(
+    ["none", "simple", "full", "random"],
+    BOSS_SHUFFLE_LABELS,
+  ),
   crystalsGanon: CRYSTAL_COUNTS,
   crystalsTower: CRYSTAL_COUNTS,
   dungeonItems: ordered(["standard", "mc", "mcs", "full"], DUNGEON_ITEM_LABELS),
@@ -437,6 +473,11 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
       "Accessibility",
       "accessibility",
       ACCESSIBILITY_LABELS[settings.accessibility],
+    ),
+    row(
+      "Boss shuffle",
+      "bossShuffle",
+      BOSS_SHUFFLE_LABELS[bossShuffleOf(settings)],
     ),
     { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
     { label: "Glitches", value: GLITCHES_LABELS[settings.glitches ?? "none"] },

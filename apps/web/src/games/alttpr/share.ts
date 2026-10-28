@@ -446,6 +446,8 @@ export const SHARE_SETTINGS: readonly string[] = `
   hidden: hidden:goal hidden:swordless hidden:crystalsTower
   hidden:crystalsGanon hidden:itemPlacement hidden:itemPool
   hidden:itemFunctionality hidden:accessibility
+  bossShuffle:none bossShuffle:simple bossShuffle:full bossShuffle:random
+  hidden:bossShuffle
 `
   .trim()
   .split(/\s+/);

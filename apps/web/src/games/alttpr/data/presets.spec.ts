@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  bossesMayMove,
   crossedLogic,
   DEFAULT_PRESET_ID,
   describeSettings,
@@ -39,6 +40,33 @@ describe("presets", () => {
       expect(crossedLogic(settings)).toBe(false);
       expect(logicModelled(settings)).toBe(false);
     }
+  });
+
+  it("says a run's boss shuffle, and models none behind shuffled entrances", () => {
+    const open = getPreset("open").settings;
+    const bosses = (settings: typeof open) =>
+      describeSettings(settings).find((row) => row.label === "Boss shuffle");
+    expect(bosses(open)).toEqual({
+      label: "Boss shuffle",
+      setting: "bossShuffle",
+      value: "None",
+    });
+    expect(bosses({ ...open, bossShuffle: "full" })?.value).toBe("Full");
+    // Mystery hides it until the player finds it
+    expect(bosses(getPreset("mystery").settings)?.value).toBe("?");
+    expect(bossesMayMove(open)).toBe(false);
+    expect(bossesMayMove(getPreset("mystery").settings)).toBe(true);
+    // vt's logic reads the shuffle; the entrance randomizer's port does not
+    expect(logicModelled({ ...open, bossShuffle: "random" })).toBe(true);
+    const crosskeys = getPreset("crosskeys").settings;
+    for (const settings of [
+      { ...crosskeys, bossShuffle: "simple" as const },
+      { ...crosskeys, hidden: ["bossShuffle" as const] },
+    ]) {
+      expect(crossedLogic(settings)).toBe(false);
+      expect(logicModelled(settings)).toBe(false);
+    }
+    expect(crossedLogic({ ...crosskeys, bossShuffle: "none" })).toBe(true);
   });
 
   it("models no glitched logic, and says a run's in its summary", () => {
