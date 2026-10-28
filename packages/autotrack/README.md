@@ -362,11 +362,13 @@ v2.0, pending clarification with the race admins:
   only "if it can ensure it does not do so on Mystery seeds", and a race
   seed's ROM does not say whether it is one;
 - permitted categories: items, keys, boss kills, checks outside dungeons,
-  game start, goal, "at least one bomb/arrow", the MSU-1 track, the header,
-  the race flag; forbidden: entrances and spheres (as v2.0 has it), and
-  dungeon checks and counts, prizes, HUD data (counts, heart pieces, bottle
-  contents) and the ROM's settings and stats, which v2.0 allows within
-  limits but Race Mode keeps the player's; and anything else;
+  game start, goal, the heart count on screen (`health`: MaximumHealth,
+  which v2.0 lets a tracker react to and the basic placement's dungeons
+  ask for), the MSU-1 track, the header, the race flag; forbidden:
+  entrances and spheres (as v2.0 has it), and dungeon checks and counts,
+  prizes, the rest of the HUD's data (bombs, heart pieces, bottle contents)
+  and the ROM's settings and stats, which v2.0 allows within limits but
+  Race Mode keeps the player's; and anything else;
 - race flag `$30:8213`: `0x01` race, `0x00` not. v2.0 names no race flag:
   the randomizer's tournament flag is what switches Race Mode on.
 
