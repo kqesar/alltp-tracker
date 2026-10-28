@@ -505,6 +505,32 @@
   white-space: nowrap;
 }
 
+/* The tricks that open a check, a chip on a line of its own under its name,
+   ringed in the trick state's purple */
+.check-row__check:has(.check-row__trick) {
+  flex-wrap: wrap;
+  row-gap: var(--spacing-xs);
+  padding-block: var(--spacing-xs);
+}
+
+.check-row__trick {
+  max-width: calc(100% - 1.125rem - var(--spacing-sm));
+  padding: 0.1875rem var(--spacing-sm);
+  margin-inline-start: calc(1.125rem + var(--spacing-sm));
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-text);
+  border: 1px solid var(--state-trick);
+  /* A pill on one line, a rounded box when a long name wraps */
+  border-radius: 0.75rem;
+}
+
+/* Alone on its line, whatever the name's length */
+.check-row__check:has(.check-row__trick) .check-row__name {
+  flex: 1 1 calc(100% - 1.125rem - var(--spacing-sm));
+}
+
 .check-row__state {
   display: inline-flex;
   gap: var(--spacing-xs);

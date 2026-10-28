@@ -5,6 +5,7 @@ import { useShallow } from "zustand/react/shallow";
 import {
   MissingGroups,
   MissingLines,
+  TrickWays,
 } from "@/games/alttpr/components/ui/Missing";
 import { TricksDialog } from "@/games/alttpr/components/ui/TricksDialog";
 import {
@@ -84,6 +85,22 @@ const WhyLines = ({ id }: { id: string }) => {
         </>
       )}
     </>
+  );
+};
+
+/**
+ * The tricks that open a check out of logic, under its name, so the list
+ * says which without its "Why?": "Fake flipper". Nothing while the analysis
+ * is pending. Mounted for a row in the trick state alone, so the other rows
+ * never follow the analysis.
+ */
+const TrickNames = ({ id }: { id: string }) => {
+  const tricks = useMissing(id)?.tricks;
+  if (tricks === undefined) return null;
+  return (
+    <span className="check-row__trick" data-testid={`check-trick-${id}`}>
+      <span className="sr-only">, doable with</span> <TrickWays ways={tricks} />
+    </span>
   );
 };
 
@@ -174,6 +191,7 @@ const CheckRow = memo(
               {held.name}
             </span>
           )}
+          {state === "trick" && <TrickNames id={check.id} />}
         </label>
         <span className="check-row__state">
           <Swatch state={state} />

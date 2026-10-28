@@ -81,6 +81,32 @@ describe("ChecksPanel", () => {
     expect(screen.getByRole("dialog", { name: "Tricks" })).toBeInTheDocument();
   });
 
+  it("names the trick under a check it opens, in its checkbox's name too", async () => {
+    const user = userEvent.setup();
+    act(() =>
+      useGameStore
+        .getState()
+        .setTricks({ enabled: true, techniques: ["fakeFlipper"] }),
+    );
+    render(<ChecksPanel />);
+    await user.click(filter("trick"));
+    await user.click(filter("unavailable"));
+    // Nothing while the analysis is pending
+    expect(screen.queryByTestId("check-trick-hobo")).toBeNull();
+
+    act(() => analyzeNow());
+
+    expect(screen.getByTestId("check-trick-hobo")).toHaveTextContent(
+      "Fake flipper",
+    );
+    expect(
+      within(row("hobo") as HTMLElement).getByRole("checkbox"),
+    ).toHaveAccessibleName("Hobo, doable with Fake flipper");
+    // A check out of logic that no trick opens names none
+    expect(row("library")).not.toBeNull();
+    expect(screen.queryByTestId("check-trick-library")).toBeNull();
+  });
+
   it("offers no About tricks for a check no trick opens", async () => {
     const user = userEvent.setup();
     act(() =>
