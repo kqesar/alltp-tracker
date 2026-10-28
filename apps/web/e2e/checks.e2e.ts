@@ -167,9 +167,82 @@ test.describe("go mode", () => {
 
     const panel = page.getByTestId("go-mode-panel");
     await expect(panel).toBeVisible();
-    await expect(panel).toContainText("In logic with:");
+    await expect(panel).toContainText(
+      "More than three items away, crystals aside.",
+    );
     await page.keyboard.press("Escape");
     await expect(panel).toBeHidden();
+  });
+
+  test("lists the items left, crystals aside, accessibly at every width", async ({
+    page,
+  }) => {
+    // Fast Ganon without Agahnim, the gloves, the Hammer, the Moon Pearl and
+    // Turtle Rock's crystal: three ways, the crystal left out of each
+    const run = JSON.parse(END_GAME);
+    Object.assign(run.state.items, {
+      agahnim: 0,
+      boss8: 0,
+      glove: 0,
+      hammer: false,
+      moonpearl: false,
+    });
+    run.state.settings.goal = "fast-ganon";
+    await openTracker(page, JSON.stringify(run));
+    const goMode = page.getByTestId("go-mode");
+    await expect(goMode).toHaveAccessibleName("Go mode: 2 items left");
+    await expect(page.getByTestId("go-mode-status")).toHaveText(
+      "Go mode: not yet",
+    );
+
+    for (const width of WIDTHS) {
+      await page.setViewportSize({ height: width < 600 ? 844 : 900, width });
+      await goMode.click();
+      const panel = page.getByTestId("go-mode-panel");
+      await expect(panel).toBeVisible();
+      await expect(panel).toContainText(
+        "Missing, crystals aside, one of these:",
+      );
+      const ways = page.getByTestId("go-mode-way");
+      await expect(ways).toHaveCount(3);
+      for (const [index, items] of [
+        ["Agahnim", "Moon Pearl"],
+        ["Titan's Mitt", "Moon Pearl"],
+        ["Power Glove", "Hammer", "Moon Pearl"],
+      ].entries()) {
+        await expect(ways.nth(index).getByRole("listitem")).toHaveText(items);
+      }
+      await expect(panel).not.toContainText("crystals left");
+      const box = await panel.boundingBox();
+      expect((box?.x ?? -1) >= 0, `${width}`).toBe(true);
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
+
+      // Map pins closer than 24 px fall under WCAG 2.5.8's exception
+      const { violations } = await new AxeBuilder({ page })
+        .withTags(WCAG_AA)
+        .exclude(".mapspan")
+        .analyze();
+      expect(
+        violations.map(({ id, nodes }) => `${id} ×${nodes.length}`),
+        `${width}`,
+      ).toEqual([]);
+      expect(await unreachableClickables(page)).toEqual([]);
+      await page.keyboard.press("Escape");
+      await expect(panel).toBeHidden();
+    }
+  });
+
+  test("says only crystals are left, the button too", async ({ page }) => {
+    const run = JSON.parse(END_GAME);
+    Object.assign(run.state.items, { boss7: 0, boss8: 0, boss9: 0 });
+    await openTracker(page, JSON.stringify(run));
+
+    const goMode = page.getByTestId("go-mode");
+    await expect(goMode).toHaveAccessibleName("Go mode: crystals left");
+    await goMode.click();
+    await expect(page.getByTestId("go-mode-panel")).toHaveText(
+      "Only crystals left.",
+    );
   });
 
   test("is on at the end of a run", async ({ page }) => {
