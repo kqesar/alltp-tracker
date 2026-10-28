@@ -31,6 +31,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags, seed settings, the prizes the game shows (`prizes.ts`) and the pad medallions it shows (`medallion-pads.ts`), from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
 | `src/pack.ts` | the run's world, compiled with its settings |
 | `src/tricks.ts` | `config/logic.php`, `CustomizerController.php`, the customizer's `glitches.js`: the tricks world, six minor tricks as items (see "Tricks") |
+| `src/margin.ts`, `src/rewritten.ts` | the regions' `itemPlacement !== 'basic'` health gates: the world without basic placement's safety margin (see "Basic placement's safety margin"), and the rewritten world it shares with the tricks world |
 
 `upstream.json` maps every upstream file to its module, with its status;
 `test/contract.ts` checks the pack against every case of the test files it
@@ -1316,6 +1317,48 @@ loose budget):
 | The first compile of a variant, its rewrite included | 10 ms | |
 | Compile and key model, cold | 23 ms | 23 ms |
 | A keyed solve read for every location, warm | 0.1 to 0.9 ms | 0.1 to 0.3 ms |
+
+## Basic placement's safety margin
+
+With basic item placement, upstream lets the dark world's dungeons and
+Ganon's Tower in only once Link can take a beating: a sword, 7 hearts found
+(10 on screen) and a bottle before Palace of Darkness, Swamp Palace, Skull
+Woods and Thieves' Town; the Master Sword, 12 hearts found (15 on screen)
+and two bottles or a mail before Ice Palace, Misery Mire, Turtle Rock and
+Ganon's Tower. Each is a clause `itemPlacement !== 'basic' || …hasHealth(n)…`
+of the dungeon's way in (`SwampPalace.php:177`, `MiseryMire.php:132`, and so
+on, Standard's and Inverted's regions alike). The pack keeps it as upstream
+writes it: it is in the logic, and the counts, the go mode and the refactor
+guard read it. But it is a placement guarantee, not something a player
+cannot do, so the tracker also asks what the run could do without it.
+
+**The margin world** (`src/margin.ts`). `marginRequirement` rewrites each
+such clause, an `or` with `!setting(basicPlacement)` beside an argument that
+reads `@hasHealth…`, into the same clause `| basicMargin`; `marginModules`,
+`compileMargin` and `marginFiller` are that world's modules, compiled world
+and key model, built the way the tricks world is (`src/rewritten.ts`, which
+both share: the rules rewritten, the fill rules the real world's, once per
+settings object). With `basicMargin` at 0 it reads as the real world; with
+`MARGIN_STATE` spread over the real state, as the real world without those
+gates. `src/margin.spec.ts` holds the sites: in Open, Standard and Inverted,
+only the entrances of those eight dungeons change.
+
+**What the margin is not.** Every other rule basic placement changes stays
+as it is, because it says what the seed expects a player to know or to fight
+with, not how much damage Link can take: the bosses' weapons (`bosses.ts`,
+`!setting(basicPlacement) | @hasSword2`, never read with a health helper),
+Turtle Rock's laser bridge (cape, Byrna or the Mirror Shield), the Pegasus
+Boots for a hookshot gap, Ganon's Tower's torches (`GanonsTower.php:282`:
+the Fire Rod or Ether), the Book of Mudora at the Pedestal, and Ganon's
+silver arrows and better sword (`requireBetterBow`, `requireBetterSword`,
+derived settings). A dark room's Lamp is no placement rule at all.
+
+The tracker reads it as a state of its own beside the real solution
+(`apps/web/src/games/alttpr/logic/solution.ts`, `marginOf`; the guide's
+"Basic placement's safety margin"): never in the solution, the analysis or
+Race Mode's reads. An advanced run's margin world is its real world, and an
+unknown placement (Mystery) folds `!setting(basicPlacement)` to maybe, so
+the gate is maybe already.
 
 ## Go mode
 
