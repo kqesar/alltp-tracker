@@ -202,6 +202,45 @@ describe("Tooltip", () => {
     expect(rows().every((row) => row.endsWith(" opened"))).toBe(true);
   });
 
+  it("shows an unopened chest of a dungeon ticked check by check at 0 unopened", () => {
+    const index = LEGACY_DUNGEONS.indexOf("desert-palace");
+    act(() => {
+      useGameStore
+        .getState()
+        .toggleChecks([
+          "desert-palace/map-chest",
+          "desert-palace/torch",
+          "desert-palace/big-key-chest",
+          "desert-palace/compass-chest",
+        ]);
+      useGameStore.setState((state) => ({
+        items: {
+          ...state.items,
+          [`bigkey${index}`]: 1,
+          book: true,
+          [`chest${index}`]: 0,
+        },
+      }));
+    });
+    renderMap();
+    fireEvent.pointerEnter(screen.getByTestId("boss-marker-desert-palace"), {
+      pointerType: "mouse",
+    });
+
+    expect(screen.getByTestId("tooltip-count")).toHaveTextContent(
+      "No item left",
+    );
+    // The big chest is not opened: it holds the map or the compass
+    expect(rows()).toEqual([
+      "Big Chest available",
+      "Map Chest opened",
+      "Torch opened",
+      "Big Key Chest opened",
+      "Compass Chest opened",
+      "Boss unavailable",
+    ]);
+  });
+
   /** Palace of Darkness in reach, without the Lantern or the Fire Rod. */
   const lightsOut = () =>
     act(() => {
