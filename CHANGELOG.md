@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.61.2](https://github.com/kqesar/alltp-tracker/compare/v2.61.1...v2.61.2) (2026-10-28)
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** read a Retro spoiler's bare Key instead of refusing it as multiworld ([a620cd6](https://github.com/kqesar/alltp-tracker/commit/a620cd66856e9060c9b5283a95493fbc22d866ea))
+* **alttpr:** read a spoiler playthrough's sphere 0 as the start, not a malformed one ([a8cbcb3](https://github.com/kqesar/alltp-tracker/commit/a8cbcb3d3b4fb880b5d5079880c399b7ee595431))
+* **web:** hide the review's waits for Retro, where no door is solved from keys ([ae115de](https://github.com/kqesar/alltp-tracker/commit/ae115de67ca7a2d082715994c62ceb2791951535))
+
 ## [2.61.1](https://github.com/kqesar/alltp-tracker/compare/v2.61.0...v2.61.1) (2026-10-28)
 
 
