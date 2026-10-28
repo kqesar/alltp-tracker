@@ -88,4 +88,7 @@ rewritten in React and TypeScript.
 Super Metroid's item sprites are Map Rando's item sheet (`blkerby/MapRandomizer`, MIT). SMZ3's
 map of Zebes is composed from VARIA's area maps, its locations placed as VARIA's autotracker
 places them (`theonlydude/RandomMetroidSolver`, MIT). Each ships with its licence beside it.
-The games' art belongs to Nintendo.
+The games' art belongs to Nintendo. The hearts counter's heart is drawn by hand, pixel by pixel
+(`apps/web/scripts/heart-icon.mjs`), filled by quarters as the game's pause menu draws heart
+pieces (its tile layout, read in the zelda3 decompilation's `hud.c`); nothing is extracted from a
+ROM.
