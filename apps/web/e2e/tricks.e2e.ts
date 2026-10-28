@@ -140,9 +140,25 @@ for (const width of WIDTHS) {
       await page.getByTestId("map-view-tab-checks").click();
       await page.getByTestId("checks-filter-trick").check();
 
+      const row = page.getByTestId("check-row-hobo");
+      // Named under the check without opening Why?, inside the row
+      const chip = page.getByTestId("check-trick-hobo");
+      await expect(chip).toHaveText(", doable with Fake flipper");
+      await expect(row.getByRole("checkbox")).toHaveAccessibleName(
+        // The flex items read apart: "Hobo , doable with"
+        /^Hobo ?, doable with Fake flipper$/,
+      );
+      const chipBox = await chip.boundingBox();
+      const rowBox = await row.boundingBox();
+      expect(chipBox && rowBox).not.toBeNull();
+      if (chipBox && rowBox) {
+        expect(chipBox.x + chipBox.width).toBeLessThanOrEqual(
+          rowBox.x + rowBox.width,
+        );
+      }
+
       await page.getByTestId("check-why-hobo").click();
 
-      const row = page.getByTestId("check-row-hobo");
       await expect(row).toContainText("Doable now with: Fake flipper");
       await expect(row).toContainText("Missing: Zora's Flippers");
       await expect(
