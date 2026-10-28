@@ -316,7 +316,7 @@ did until 2.52.0:
 | `bow` 2 (the silver bow) | the board shows it as the bow and the silver arrows, which `canShootArrows2` reads alike |
 | `shopArrow`, `shopKey` | no memory says what a retro shop sells |
 | `bigRedBomb` | no flag keeps the Bomb Merchant (`UNMAPPED_LOCATIONS`); outside Race Mode, in an Inverted run (the one world whose map has the Merchant), the app checks it once a reading sees Link carry the big bomb (`FollowerIndicator` `$0D`, `sram.asm:211`, which only the purchase sets for good: zelda3 `sprite_main.c:24295`) and keeps it for the session |
-| small keys | in their dungeons the key model holds them; retro's generic keys are never vouched for; with keys outside their dungeons the board takes those memory shows in hand (below) |
+| small keys | in their dungeons the key model holds them; retro's generic keys are never vouched for; with keys outside their dungeons the board takes the keys found (below) |
 
 Three more reach the rules through values no cell draws, which the app's
 `logic/packItems.ts` lists: outside Race Mode, the flute activated
@@ -340,6 +340,57 @@ back when it dies (zelda3 `sprite_main.c:19892-19894`, `sprite.c:1413`).
 The rules read the mirror shield alone (`canBlockLasers`, `shield >= 3`),
 so the logic never moves with it: the board keeps the shield found until
 **Sync from game** sets it to what Link holds.
+
+**Small keys** are read from the base patch's count of the keys received as
+items, per dungeon (`collected-keys`: `DungeonCollectedKeys`, `$7EF4E0`,
+`sram.asm:361-375`), not from the keys in hand (`DungeonKeys`), which a door
+spends. `DungeonIncrement` (`inventory.asm:208-213`) counts every item of
+property `$40` (`$24` and `$A0-$AD`, `itemdatatables.asm:730, 854-867`)
+through `CountChestKey` (`stats.asm:126-148`): a key from a chest, an NPC, a
+standing spot or a torch, wherever it is found. A key an enemy or a pot drops
+(not shuffled in v31) goes through `IncrementSmallKeysNoPrimary`
+(`stats.asm:90-117`), which raises the keys in hand only: it is no location,
+and the rules never count it. That routine counts once more in Tower of
+Hera's basement (room `$87`): there, it calls `AddInventory`, whose
+`DungeonIncrement` counts the key, then `CountChestKey` again
+(`stats.asm:99-103`). vt puts the standing key sprite there only for Hera's
+own key (`HeraBasement.php:27`), so that key is counted twice. The decoder
+takes the second count back by name (`HERA_BASEMENT_DOUBLE_COUNT`): Hera's
+pool holds one key, so a count of 2 is that key. No other count may exceed
+its dungeon's keys. If one does, the rules get the dungeon's keys, and
+`decodeItems` reports the count it read in `beyond`, which "What I read"
+shows on the dungeon's line ("2 small keys found (the game counts 3, more
+than the dungeon holds)"), so a double count elsewhere is noticed rather
+than hidden by the cap. The sewers' and Hyrule Castle's bytes are written
+together. The count is saved
+with the file, so keys found while the tracker was closed are counted, and
+no door ever lowers it.
+
+Seen on a real game (2026-10-28, an alttpr.com Full keysanity seed on the
+pinned base patch, bsnes-mercury in RetroArch, read over its UDP commands,
+the tracker's production build following through SNI). "Played" rows were
+played with the pad from a dungeon or cave entrance (walking, stairs,
+sword, pots, crystal switches); the others reached the spot through memory
+writes (Link's position, a spawned sprite):
+
+| Event | How | Keys in hand (`$7EF37C+i`) | `DungeonCollectedKeys` (`$7EF4E0+i`) | Tracker |
+| --- | --- | --- | --- | --- |
+| Turtle Rock's key from Eastern Palace's Cannonball Chest | played | 0 → 1 | 0 → 1 | 1 of 4 |
+| Tower of Hera's own key, standing in its basement cage (vt's bytes for that placement: `$AA` at `$180162`, sprite `$E4` at `$4E3BB`) | played | 0 → 1 | 0 → **2** | 1 of 1 |
+| Hera's key spent on its locked staircase | played | 1 → 0 | 2 → 2 | 1 of 1 |
+| Skull Woods' key from a chest of Blind's Hideout | position written | 0 → 1 | 0 → 1 | |
+| Desert Palace's own key, from the torch (`$A3` at `$180160`) | position written | 0 → 0 (`CurrentSmallKeys` 0 → 1) | 0 → 1 | |
+| A key sprite (`$E4`, what a drop or pot key becomes) picked up in Desert Palace | sprite written | 0 → 1 | 1 → 1 | |
+
+No drop or pot key was reached by play: that row rests on the spawned
+sprite and on `IncrementSmallKeysNoPrimary`, which never calls
+`CountChestKey` outside room `$87`.
+
+A Crosskeys seed from alttpr.com uses the same base patch (`/api/h/<hash>`
+names the same BPS), so the count is there too. In a run whose keys stay in
+their dungeons, the same count tells which checked chests held the
+dungeon's own keys: a dungeon's counter is exact once its map, compass and
+big key are read too (the app's `counterRanges`).
 
 ### What Race Mode reads (v2.0)
 
@@ -370,17 +421,6 @@ he is. The decoders read only the chest, key and boss bits of a room's word,
 never its doors or the quadrants visited, and nothing marks where he is now.
 `DungeonLocationsChecked` (`$7EF4C0`, the HUD's per-dungeon count) is not
 read: the locations' own flags give the same count and say which.
-
-With small keys outside their dungeons (MCS, Full), memory holds the keys
-in hand (`DungeonKeys`, `sram.asm:153-168`), which a door spends: the app
-counts each rise between two readings as a key found. A key an enemy or a
-pot drops (not shuffled in v31) rises the same, and a key found and spent
-while the tracker does not read is missed. The base patch also counts the
-keys received as items per dungeon (`DungeonCollectedKeys`, `$7EF4E0`,
-`sram.asm:361-375`, written by `CountChestKey`, `stats.asm:126-148`, from
-`DungeonIncrement`, `inventory.asm:208-213`): what the HUD shows in such a
-run. Reading it waits on a real game's check, Tower of Hera's basement key
-and a Crosskeys ROM's base patch included.
 
 ## The dark room map
 
