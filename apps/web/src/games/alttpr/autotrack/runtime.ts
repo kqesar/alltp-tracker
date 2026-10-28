@@ -84,6 +84,11 @@ export type Runtime = {
   setDarkRoomArt: (on: boolean) => void;
   /** Follow the player's Race Mode: the next reading is decoded under it. */
   setRaceMode: (setting: RaceSetting) => void;
+  /**
+   * Race Mode as the page holds it (`raceHeld`) changed: the last reading is
+   * decoded again under it, at once.
+   */
+  raceChanged: () => void;
   /** Stop for good: no socket, timer or listener survives. */
   stop: () => void;
 };
@@ -101,10 +106,21 @@ export const startRuntime = (
     readonly darkRoom?: boolean;
     /** It is drawn in the game's graphics (on by default, with the map). */
     readonly darkRoomArt?: boolean;
+    /**
+     * Race Mode held by the page beyond the session's own choice and flag: a
+     * race remembered (`raceSeen`). Every decoder then reads as in a race,
+     * as the UI shows it.
+     */
+    readonly raceHeld?: () => boolean;
   },
   sink: RuntimeSink,
 ): Runtime => {
-  const { darkRoom = true, darkRoomArt = true, ...sessionOptions } = options;
+  const {
+    darkRoom = true,
+    darkRoomArt = true,
+    raceHeld = () => false,
+    ...sessionOptions
+  } = options;
   let mapOn = darkRoom;
   let artWanted = darkRoomArt;
   const artOn = () => mapOn && artWanted;
@@ -116,8 +132,9 @@ export const startRuntime = (
     ],
     pack: ALTTPR_AUTOTRACK,
   });
-  // Race Mode is on until the race flag says otherwise: fail closed
-  const raceActive = () => session.race?.active ?? true;
+  // Race Mode is on until the race flag says otherwise: fail closed. A race
+  // the page remembers holds it on too
+  const raceActive = () => (session.race?.active ?? true) || raceHeld();
 
   // The picture: what it is drawn from is read on demand (navigation, which
   // the session refuses in Race Mode), one draw at a time, the last asked for
@@ -207,6 +224,21 @@ export const startRuntime = (
     if (was && !shownRoom) sink.darkRoomArt?.(null);
   };
 
+  /** The last reading decoded again, if Race Mode moved since it was. */
+  const decodeAgain = () => {
+    const snapshot = session.snapshot;
+    if (
+      snapshot === null ||
+      decodedInRace === null ||
+      decodedInRace === raceActive()
+    ) {
+      return;
+    }
+    decode(snapshot);
+    showDarkRoom(snapshot);
+    void drawArt();
+  };
+
   session.subscribe((status) => {
     sink.status(status, session.statusSince, session.seen);
     // No bridge, no game: no room to show
@@ -219,17 +251,7 @@ export const startRuntime = (
       void drawArt();
     }
     // Race Mode can change without memory changing: decode again under it
-    const snapshot = session.snapshot;
-    if (
-      status.code === "connected" &&
-      snapshot !== null &&
-      decodedInRace !== null &&
-      decodedInRace !== status.race.active
-    ) {
-      decode(snapshot);
-      showDarkRoom(snapshot);
-      void drawArt();
-    }
+    if (status.code === "connected") decodeAgain();
   });
   session.onUpdate(({ changed, snapshot }) => {
     // Link walking changes the dark room's ranges alone: the board's reading
@@ -246,6 +268,9 @@ export const startRuntime = (
   session.start();
 
   return {
+    raceChanged: () => {
+      if (session.status.code === "connected") decodeAgain();
+    },
     retryNow: () => session.retryNow(),
     setDarkRoom: (on) => {
       mapOn = on;

@@ -226,6 +226,18 @@ onRaceRestored((game) => {
 let runtime: Runtime | null = null;
 
 /**
+ * Race Mode as the UI shows it (`isRaceModeOn`, which `isRaceModeOrPending`
+ * extends), for the decoders: a race remembered (`raceSeen`) holds them in a
+ * race though the ROM's flag says open, so nothing a race keeps back is
+ * decoded while the page says Race Mode. Left out: the last reading's own
+ * `race`, which this decides, and the pending case, a flag not read yet,
+ * which the session fails closed on itself (Race Mode until the flag says
+ * open) and the store's copy of its status only follows.
+ */
+const raceHeldByPage = (state = useAutotrackStore.getState()) =>
+  isRaceModeOn({ ...state, reading: null });
+
+/**
  * Forget Standard's escape as autotracking read it: Race Mode came on (v2.0
  * forbids telling Zelda's rescue in a race), or no session reads it any
  * more. The escape then counts done, as by hand: the value never sticks.
@@ -243,6 +255,9 @@ useAutotrackStore.subscribe((state, before) => {
   if (isRaceModeOn(state) && !isRaceModeOn(before)) forgetEscape();
   if (state.raceChoice !== before.raceChoice) {
     runtime?.setRaceMode(state.raceChoice);
+  }
+  if (raceHeldByPage(state) !== raceHeldByPage(before)) {
+    runtime?.raceChanged();
   }
   if (state.darkRoomMap !== before.darkRoomMap) {
     runtime?.setDarkRoom(state.darkRoomMap);
@@ -495,6 +510,7 @@ export const connectAutotrack = async () => {
         ...bridge,
         darkRoom: useAutotrackStore.getState().darkRoomMap,
         darkRoomArt: useAutotrackStore.getState().darkRoomStyle === "art",
+        raceHeld: raceHeldByPage,
         raceSetting: useAutotrackStore.getState().raceChoice,
         ...overrides,
       },
