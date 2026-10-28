@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.57.0](https://github.com/kqesar/alltp-tracker/compare/v2.56.0...v2.57.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **alttpr:** count the bosses' weapons and Ganon's among Basic's margins ([16e21f8](https://github.com/kqesar/alltp-tracker/commit/16e21f86b199a16b7255cc9521426307f7448e73))
+* **alttpr:** count Turtle Rock's laser bridge among Basic's margins ([ffcf88a](https://github.com/kqesar/alltp-tracker/commit/ffcf88a0749a55b0b9f3853e9d087b1cbb964182))
+* **web:** name the margin that holds a place back ([73afcc2](https://github.com/kqesar/alltp-tracker/commit/73afcc2b6a920a59885fe671db712786a4969c99))
+
+
+### 📚 Documentation
+
+* list Basic placement's margins and what is kept out ([7667559](https://github.com/kqesar/alltp-tracker/commit/766755932f4da2b79f61e12630781a80c0741202))
+* list the laser bridge among Basic's margins ([074d0e1](https://github.com/kqesar/alltp-tracker/commit/074d0e1bd495b1762521bde6f30be345b59349b0))
+
 ## [2.56.0](https://github.com/kqesar/alltp-tracker/compare/v2.55.0...v2.56.0) (2026-10-28)
 
 
