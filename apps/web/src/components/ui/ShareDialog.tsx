@@ -59,14 +59,13 @@ export const ShareDialog = ({
   return (
     <Modal
       footer={
-        // In a race the button stays, off but described, so a focus on it
-        // when Race Mode comes on is not lost to the page behind the dialog
+        // Off while there is no link (in a race, or while it is made) but never
+        // `disabled`, which would drop a focus on it to the page behind the dialog
         <button
           aria-describedby={race ? messageId : undefined}
-          aria-disabled={race ? true : undefined}
+          aria-disabled={link ? undefined : true}
           className="modal-btn modal-btn--ghost"
           data-testid="share-copy-again"
-          disabled={!link && !race}
           onClick={() => {
             if (link) void copyLink(link).then(setAgain);
           }}
