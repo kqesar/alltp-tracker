@@ -2,6 +2,8 @@
 
 The toolbar's **Share** button copies a link that holds the player's run and opens a dialog that shows the same link as a QR code. There is no server: the run travels in the address's **fragment** (`#run=…`), the part after the `#`, which the browser keeps to itself and never puts in a request. Opening the link asks before replacing anything.
 
+The button is off while Race Mode is on or not yet known to be off (`isRaceModeOrPending`, the overlay API's and live follow's own test): a link carries the places checked and when (`checked`, the timeline's `check:` stamps), which Race Mode keeps from both. Export is off for the same reason; Import is not. In the desktop app the button still opens the dialog in a race, with live follow's switch and a note instead of a link (`ShareDialog`'s `race`).
+
 ## Format
 
 ```

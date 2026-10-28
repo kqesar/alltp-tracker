@@ -224,6 +224,11 @@ type ToolbarMenuItemProps = {
   label: string;
   onSelect: () => void;
   testId: string;
+  /**
+   * Why the command cannot be used now, or null: the item stays in the menu
+   * and in its arrow order (`aria-disabled`), described by the reason
+   */
+  unavailable?: string | null;
 } & Pick<
   ComponentProps<"button">,
   "onFocus" | "onPointerDown" | "onPointerEnter"
@@ -239,30 +244,41 @@ export const ToolbarMenuItem = ({
   label,
   onSelect,
   testId,
+  unavailable = null,
   ...handlers
-}: ToolbarMenuItemProps) => (
-  <button
-    {...handlers}
-    // The item lays its parts out as flex items, which browsers name with
-    // spaces of their own between them: one name, label then state, as shown
-    aria-label={detail ? `${label} ${detail}` : undefined}
-    className="toolbar-menu__item"
-    data-testid={testId}
-    onClick={onSelect}
-    role="menuitem"
-    tabIndex={-1}
-    type="button"
-  >
-    {icon}
-    {label}
-    {detail && (
-      <>
-        {" "}
-        <span className="toolbar-menu__detail">{detail}</span>
-      </>
-    )}
-  </button>
-);
+}: ToolbarMenuItemProps) => {
+  const reasonId = useId();
+  return (
+    <button
+      {...handlers}
+      aria-describedby={unavailable ? reasonId : undefined}
+      aria-disabled={unavailable ? true : undefined}
+      // The item lays its parts out as flex items, which browsers name with
+      // spaces of their own between them: one name, label then state, as shown
+      aria-label={detail ? `${label} ${detail}` : undefined}
+      className="toolbar-menu__item"
+      data-testid={testId}
+      onClick={onSelect}
+      role="menuitem"
+      tabIndex={-1}
+      type="button"
+    >
+      {icon}
+      {label}
+      {detail && (
+        <>
+          {" "}
+          <span className="toolbar-menu__detail">{detail}</span>
+        </>
+      )}
+      {unavailable && (
+        <span hidden id={reasonId}>
+          {unavailable}
+        </span>
+      )}
+    </button>
+  );
+};
 
 type ToolbarMenuChoiceProps = {
   checked: boolean;

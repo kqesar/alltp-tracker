@@ -1,8 +1,10 @@
 import { OBJECTIVES } from "@alltp/pack-sm";
 import { useId } from "react";
+import { isRaceModeOrPending } from "@/autotrack/raceMode";
 import { GamePicker } from "@/components/ui/GamePicker";
 import { Modal } from "@/components/ui/Modal";
 import { RunToolbar } from "@/components/ui/RunToolbar";
+import { useSmAutotrackStore } from "@/games/sm/autotrack/store";
 import { SmAutotrack } from "@/games/sm/components/SmAutotrack";
 import {
   OBJECTIVE_PRESET_NAMES,
@@ -110,12 +112,14 @@ const SmModeDialog = ({ onClose }: { onClose: () => void }) => {
 export const SmControls = () => {
   const wallJump = useSmStore((state) => state.wallJump);
   const splitSpeed = useSmStore((state) => state.splitSpeed);
+  const race = useSmAutotrackStore(isRaceModeOrPending);
   return (
     <RunToolbar
       autotrack={<SmAutotrack />}
       game="sm"
       ModeDialog={SmModeDialog}
       modeValue="Super Metroid"
+      race={race}
       resetMessage="Start a new game? What you found, the objectives done and the run timer are cleared; the seed's objectives and settings stay."
       saveFormat={{ exportSave, IMPORT_ERRORS, parseSave }}
       streamSizeOf={streamSize(smGrid({ splitSpeed, wallJump }).length)}

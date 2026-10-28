@@ -100,6 +100,12 @@
   background: var(--surface-hover);
 }
 
+/* Off, yet in the arrow order and described: a disabled one would be skipped */
+.toolbar-menu__item[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 /* Open, the button stays lit, as a pressed toggle does */
 .toolbar-more [aria-expanded="true"] {
   color: var(--color-accent);
