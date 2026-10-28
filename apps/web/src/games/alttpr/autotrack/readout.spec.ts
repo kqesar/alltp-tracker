@@ -56,7 +56,7 @@ describe("describeReading", () => {
     const memory = seedMemory({ race: false });
     // Eastern and Desert Palace's maps, and Hyrule Castle's: each its cell
     memory[SAVE(0x369)] = 0x20 | 0x10 | 0x40;
-    memory[SAVE(0x37c + 6)] = 2; // Palace of Darkness keys in hand
+    memory[SAVE(0x4e0 + 6)] = 2; // Palace of Darkness keys found
     memory[SAVE(0x470)] = 3; // heart pieces
     const reading = readMemory(viewOf(memory), false, 0);
 
@@ -233,8 +233,8 @@ describe("describeReading", () => {
     memory[SAVE(0x448)] = 0x03; // three heart containers
     memory[SAVE(0x367)] = 0x02; // Palace of Darkness's big key ($0200)
     memory[SAVE(0x369)] = 0x02; // ...and its map
-    memory[SAVE(0x37c + 6)] = 0x02; // two of its small keys in hand
-    memory[SAVE(0x37c + 7)] = 0x01; // one of Misery Mire's
+    memory[SAVE(0x4e0 + 6)] = 0x02; // two of its small keys found
+    memory[SAVE(0x4e0 + 7)] = 0x01; // one of Misery Mire's
     memory[SAVE(0x473)] = 0x20; // Eastern Palace's prize taken
     memory[SAVE(0x3c5)] = 0x03; // Agahnim defeated
     memory[SAVE(0x40f)] = 0x01; // Agahnim 2 too
@@ -252,9 +252,9 @@ describe("describeReading", () => {
     expect(readout.dungeons).toEqual([
       {
         dungeon: "Palace of Darkness",
-        items: ["Big Key", "Map", "2 small keys in hand"],
+        items: ["2 small keys found", "Big Key", "Map"],
       },
-      { dungeon: "Misery Mire", items: ["1 small key in hand"] },
+      { dungeon: "Misery Mire", items: ["1 small key found"] },
     ]);
     expect(readout.completed).toEqual(["Eastern Palace"]);
     expect(readout.bosses).toEqual([
@@ -292,13 +292,30 @@ describe("describeReading", () => {
   });
 });
 
+describe("describeReading's key counts", () => {
+  it("names a key count beyond the dungeon's keys", () => {
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x4e0 + 9)] = 3; // Ice Palace holds two keys
+    const readout = describeReading(readMemory(viewOf(memory), false, 0));
+
+    expect(readout.dungeons).toEqual([
+      {
+        dungeon: "Ice Palace",
+        items: [
+          "2 small keys found (the game counts 3, more than the dungeon holds)",
+        ],
+      },
+    ]);
+  });
+});
+
 describe("describeReading's unknowns", () => {
   it("lists an item the panel has no name for by its id", () => {
     const reading = readMemory(viewOf(seedMemory({ race: false })), false, 0);
     const readout = describeReading({
       ...reading,
       items: {
-        atLeast: {},
+        beyond: {},
         counts: { newItem: 1 } as never,
         unsettled: { otherItem: "race-mode" } as never,
       },

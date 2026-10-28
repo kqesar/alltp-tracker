@@ -20,7 +20,6 @@ import {
   type GameView,
   gameView,
   isEmptyView,
-  keysInHand,
   medallionsShown,
   mergeView,
   newsOf,
@@ -96,10 +95,6 @@ export const createFollower = (): Follower => {
   let frames: number | undefined;
   /** The game's clock the timer was last set on, to hold it if the game stops. */
   let lastClock: GameClock | undefined;
-  /** The small keys in hand at the last reading, or null out of play. */
-  let hand: Record<number, number> | null = null;
-  /** The least small keys found, by grid dungeon index. */
-  const found: Record<number, number> = {};
   /**
    * The medallions the game has shown, by slot of the board's `medallions`:
    * a reading shows one only while its pad's screen is in view (or its
@@ -140,26 +135,6 @@ export const createFollower = (): Follower => {
     );
   };
 
-  /**
-   * Count the small keys found: memory holds those in hand, which a door
-   * spends, so every rise between two readings is a key found. A stretch of
-   * play starts from the board's count, or the keys in hand if more. A key
-   * an enemy or a pot drops rises the same, though the rules count only the
-   * pool's: the pack's README ("What autotracking gives the rules").
-   */
-  const countKeys = (reading: AutotrackReading, smallKeys: number[]) => {
-    const now = keysInHand(reading);
-    for (const [index, held] of Object.entries(now)) {
-      const i = Number(index);
-      const before = hand?.[i];
-      found[i] =
-        before === undefined || found[i] === undefined
-          ? Math.max(smallKeys[i] ?? 0, held)
-          : found[i] + Math.max(0, held - before);
-    }
-    hand = now;
-  };
-
   return {
     holdsGameOnly: () => {
       const store = useGameStore.getState();
@@ -167,8 +142,7 @@ export const createFollower = (): Follower => {
       const game =
         last === null
           ? null
-          : syncView(fresh, gameView(last, fresh, found, known, bombBought))
-              ?.next;
+          : syncView(fresh, gameView(last, fresh, known, bombBought))?.next;
       const run = { ...fresh, ...game };
       return (
         sameValues(run.items, store.items) &&
@@ -203,14 +177,10 @@ export const createFollower = (): Follower => {
       }
       const { beforePlay: now } = reading.progress;
       if (typeof now === "boolean") beforePlay = now;
-      if (reading.progress.started !== true) {
-        hand = null;
-        return;
-      }
+      if (reading.progress.started !== true) return;
       noteEntrances(reading.entrances);
       recordSeed(useGameStore, reading.seed.seed);
       const store = useGameStore.getState();
-      countKeys(reading, store.smallKeys);
       if (reading.race) {
         for (const slot of Object.keys(known)) delete known[Number(slot)];
         bombBought = false;
@@ -218,7 +188,7 @@ export const createFollower = (): Follower => {
         Object.assign(known, medallionsShown(reading));
         if (reading.progress.bigBomb === true) bombBought = true;
       }
-      const view = gameView(reading, store, found, known, bombBought);
+      const view = gameView(reading, store, known, bombBought);
       const news = shown === null ? view : newsOf(shown, view);
       last = reading;
       shown = view;
@@ -243,10 +213,8 @@ export const createFollower = (): Follower => {
         (fresh) =>
           reading === null
             ? null
-            : (syncView(
-                fresh,
-                gameView(reading, fresh, found, known, bombBought),
-              )?.next ?? null),
+            : (syncView(fresh, gameView(reading, fresh, known, bombBought))
+                ?.next ?? null),
         // The timer the game just started goes on in the seed's run
         true,
       );
@@ -254,10 +222,7 @@ export const createFollower = (): Follower => {
     sync: () => {
       if (last === null) return null;
       const store = useGameStore.getState();
-      const laid = syncView(
-        store,
-        gameView(last, store, found, known, bombBought),
-      );
+      const laid = syncView(store, gameView(last, store, known, bombBought));
       if (laid !== null) store.syncWithGame(laid.next);
       return laid?.count ?? 0;
     },

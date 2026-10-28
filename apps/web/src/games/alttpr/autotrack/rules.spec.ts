@@ -16,7 +16,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   type Board,
   gameView,
-  keysInHand,
   mergeView,
 } from "@/games/alttpr/autotrack/apply";
 import {
@@ -59,8 +58,8 @@ const holdingEverything = (race: boolean) => {
   memory[SAVE(0x374)] = 0x07; // the three pendants (sram.asm:139-140)
   memory[SAVE(0x37a)] = 0x7f; // the seven crystals (sram.asm:148-150)
   memory[SAVE(0x37b)] = 0x02; // quarter magic (sram.asm:151)
-  // Small keys in hand, more than any dungeon's (sram.asm:153-168)
-  memory.fill(9, SAVE(0x37c), SAVE(0x38a));
+  // Small keys found, more than any dungeon's (sram.asm:361-375)
+  memory.fill(9, SAVE(0x4e0), SAVE(0x4ee));
   // InventoryTracking: every bit, the flute active, any bomb (sram.asm:
   // 175-179); BowTracking: the bow, the silver arrows, both progressive
   // bows (sram.asm:180-185)
@@ -94,13 +93,7 @@ const shortOf = (
   const board = freshBoard(settings);
   const reading = readingOf(holdingEverything(race), { race });
   // The follower latches the big bomb as it sees it carried
-  const view = gameView(
-    reading,
-    board,
-    keysInHand(reading),
-    {},
-    reading.progress.bigBomb === true,
-  );
+  const view = gameView(reading, board, {}, reading.progress.bigBomb === true);
   const items = { ...view.items };
   for (const id of drop) delete items[id];
   const laid = mergeView(board, { ...view, items });

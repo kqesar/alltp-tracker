@@ -514,7 +514,7 @@ export const describeReading = (
   reading: AutotrackReading,
   wildKeys = false,
 ): Readout => {
-  const { atLeast, counts, unsettled } = reading.items;
+  const { beyond, counts, unsettled } = reading.items;
   const items: string[] = [];
   const prizes: string[] = [];
   const byDungeon = new Map<DungeonCode, string[]>();
@@ -531,16 +531,23 @@ export const describeReading = (
     offBoard(id, count);
     if (count === 0 || EVENTS.has(id)) continue;
     const own = DUNGEON_ITEM.exec(id);
-    if (own) add(byDungeon, own[2] as DungeonCode, DUNGEON_ITEM_NAMES[own[1]]);
-    else if (PRIZES[id]) prizes.push(PRIZES[id]);
+    if (own?.[1] === "key") {
+      // The base patch's count of keys found, which no door spends; a count
+      // above the dungeon's keys is a double count the decoder does not
+      // know, named so it is noticed
+      const keys = `${count} small key${count > 1 ? "s" : ""} found`;
+      const over = beyond[id];
+      add(
+        byDungeon,
+        own[2] as DungeonCode,
+        over === undefined
+          ? keys
+          : `${keys} (the game counts ${over}, more than the dungeon holds)`,
+      );
+    } else if (own) {
+      add(byDungeon, own[2] as DungeonCode, DUNGEON_ITEM_NAMES[own[1]]);
+    } else if (PRIZES[id]) prizes.push(PRIZES[id]);
     else items.push(itemName(id, count));
-  }
-  // Memory holds the small keys in hand, which the keys found can exceed
-  for (const [id, count] of Object.entries(atLeast) as [ItemId, number][]) {
-    offBoard(id, count);
-    const code = DUNGEON_ITEM.exec(id)?.[2] as DungeonCode;
-    if (count > 0)
-      add(byDungeon, code, `${count} small key${count > 1 ? "s" : ""} in hand`);
   }
   // Race Mode counts the crystals, never names them (v2.0: not which is a
   // 5/6 crystal)

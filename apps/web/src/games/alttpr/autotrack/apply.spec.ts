@@ -3,7 +3,6 @@ import {
   type Board,
   gameView,
   isEmptyView,
-  keysInHand,
   medallionsShown,
   mergeView,
   newsOf,
@@ -112,16 +111,27 @@ describe("gameView", () => {
     ]);
   });
 
-  it("keeps a counter open while a chest may have held a small key", () => {
+  it("tells a chest that held a small key from one that held an item", () => {
     const memory = seedMemory({ race: false });
     checkIn(memory, "desert-palace/map-chest");
     checkIn(memory, "desert-palace/torch");
 
-    // Desert Palace's two items, and one small key among its chests: both
-    // items found, or one and the key
+    // Desert Palace's two items, and one small key among its locations: no
+    // key found, so both held items
     expect(counterMax(1, OPEN)).toBe(2);
     expect(gameView(readingOf(memory), fresh()).counters.chest1).toEqual([
-      0, 1,
+      0, 0,
+    ]);
+    // The base patch counts the key found: one of the two held it
+    memory[SAVE(0x4e0 + 3)] = 1;
+    expect(gameView(readingOf(memory), fresh()).counters.chest1).toEqual([
+      1, 1,
+    ]);
+    // A key in hand an enemy dropped is no location's
+    memory[SAVE(0x4e0 + 3)] = 0;
+    memory[SAVE(0x37c + 3)] = 1;
+    expect(gameView(readingOf(memory), fresh()).counters.chest1).toEqual([
+      0, 0,
     ]);
   });
 
@@ -274,7 +284,7 @@ describe("gameView", () => {
     orWord(memory, 0x472, EASTERN);
     memory[SAVE(0x3cc)] = 0x0d; // Link carries the big bomb
     const raced = readingOf(memory, { race: true });
-    const view = gameView(raced, fresh(), {}, {}, true);
+    const view = gameView(raced, fresh(), {}, true);
 
     // The bottles (bottle contents) and the prizes held by class (prizes
     // upon collection), the green pendant by name
@@ -331,17 +341,18 @@ describe("gameView", () => {
 
   it("counts small keys with keysanity only, within each dungeon's", () => {
     const memory = seedMemory({ race: false });
-    memory[SAVE(0x37c + 6)] = 2; // Palace of Darkness keys in hand
+    memory[SAVE(0x4e0 + 6)] = 2; // two Palace of Darkness keys found
+    memory[SAVE(0x37c + 6)] = 0; // and spent on doors
+    memory[SAVE(0x37c + 5)] = 1; // a Swamp Palace key a pot dropped, held
+    memory[SAVE(0x4e0 + 10)] = 2; // Tower of Hera's basement key, counted twice
     const reading = readingOf(memory);
-    expect(keysInHand(reading)).toMatchObject({ 3: 2 });
 
-    expect(gameView(reading, fresh("keysanity"), { 3: 2 }).smallKeys).toEqual({
+    expect(gameView(reading, fresh("keysanity")).smallKeys).toMatchObject({
+      2: 1,
       3: 2,
+      4: 0,
     });
-    expect(gameView(reading, fresh("keysanity"), { 4: 9 }).smallKeys).toEqual({
-      4: 1,
-    });
-    expect(gameView(reading, fresh(), { 3: 2 }).smallKeys).toEqual({});
+    expect(gameView(reading, fresh()).smallKeys).toEqual({});
     // Small keys leave their dungeons from MCS Shuffle up, not MC
     const level = (dungeonItems: "mc" | "mcs") => {
       useGameStore.getState().applyRun("open", { ...OPEN, dungeonItems });
@@ -349,10 +360,8 @@ describe("gameView", () => {
         useGameStore.getState();
       return { checked, items, medallions, settings, smallKeys };
     };
-    expect(gameView(reading, level("mcs"), { 3: 2 }).smallKeys).toEqual({
-      3: 2,
-    });
-    expect(gameView(reading, level("mc"), { 3: 2 }).smallKeys).toEqual({});
+    expect(gameView(reading, level("mcs")).smallKeys).toMatchObject({ 3: 2 });
+    expect(gameView(reading, level("mc")).smallKeys).toEqual({});
   });
 });
 
@@ -373,14 +382,17 @@ describe("newsOf", () => {
   });
 
   it("counts every counter and key as news for a run of other settings", () => {
-    const reading = readingOf(seedMemory({ race: false }));
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x4e0 + 6)] = 1; // a Palace of Darkness key found
+    const reading = readingOf(memory);
     const open = gameView(reading, fresh());
-    const keysanity = gameView(reading, fresh("keysanity"), { 3: 1 });
+    const keysanity = gameView(reading, fresh("keysanity"));
 
     const news = newsOf(open, keysanity);
 
     expect(news.counters).toEqual(keysanity.counters);
-    expect(news.smallKeys).toEqual({ 3: 1 });
+    expect(news.smallKeys).toEqual(keysanity.smallKeys);
+    expect(news.smallKeys[3]).toBe(1);
     expect(news.items).toEqual({});
   });
 });
@@ -462,8 +474,10 @@ describe("mergeView", () => {
 
   it("raises the small keys found with keysanity", () => {
     const board = marked(fresh("keysanity"), {});
-    const reading = readingOf(seedMemory({ race: false }));
-    const laid = mergeView(board, gameView(reading, board, { 3: 2, 9: 0 }));
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x4e0 + 6)] = 2; // two Palace of Darkness keys found
+    const reading = readingOf(memory);
+    const laid = mergeView(board, gameView(reading, board));
 
     expect(laid?.next.smallKeys).toEqual([
       0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -474,13 +488,14 @@ describe("mergeView", () => {
       smallKeys: [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     };
     expect(
-      mergeView(higher, gameView(reading, higher, { 3: 2 }))?.next.smallKeys,
+      mergeView(higher, gameView(reading, higher))?.next.smallKeys,
     ).toBeUndefined();
   });
 
   it("lays no counter or key count of another run's view", () => {
-    const reading = readingOf(seedMemory({ race: false }));
-    const view = gameView(reading, fresh(), { 3: 2 });
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x4e0 + 6)] = 2;
+    const view = gameView(readingOf(memory), fresh());
     const board = fresh("keysanity");
 
     const laid = mergeView(board, view);
@@ -518,25 +533,17 @@ describe("syncView", () => {
     });
   });
 
-  it("keeps a counter within what the game allows, and the keys above its floor", () => {
+  it("sets the small keys found to the game's count", () => {
     const memory = seedMemory({ race: false });
-    checkIn(memory, "desert-palace/map-chest");
-    checkIn(memory, "desert-palace/torch");
+    // The game counts the keys found: the player's count beyond it goes
+    memory[SAVE(0x4e0 + 6)] = 2;
     const board = {
       ...marked(fresh("keysanity"), {}),
-      smallKeys: [0, 0, 0, 5, 0, 0, 0, 0, 0, 0],
+      smallKeys: [0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     };
-    const open = marked(fresh(), { chest1: 1 });
-
-    // Desert Palace's counter may be 0 or 1: the player's 1 stands
     expect(
-      syncView(open, gameView(readingOf(memory), open))?.next.items?.chest1,
-    ).toBe(1);
-    // Memory bounds the keys found from below only
-    expect(
-      syncView(board, gameView(readingOf(memory), board, { 3: 2 }))?.next
-        .smallKeys,
-    ).toBeUndefined();
+      syncView(board, gameView(readingOf(memory), board))?.next.smallKeys?.[3],
+    ).toBe(2);
   });
 
   it("leaves what Race Mode withholds as the player marked it", () => {
@@ -607,7 +614,7 @@ describe("the pads' medallions", () => {
     const shown = medallionsShown(readingOf(standing(0x70)));
     const away = readingOf(standing(0x30));
     expect(gameView(away, board).medallions).toEqual({});
-    expect(gameView(away, board, {}, shown).medallions).toEqual({
+    expect(gameView(away, board, shown).medallions).toEqual({
       [MIRE]: MEDALLION_VALUES.ETHER,
     });
   });

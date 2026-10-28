@@ -714,7 +714,7 @@ describe("AutotrackDialog's readout", () => {
       "Not on the boardPiece of Heart ×3",
     );
     // The board then counts small keys: not with keysanity
-    memory[SAVE(0x37c + 6)] = 1;
+    memory[SAVE(0x4e0 + 6)] = 1; // a Palace of Darkness key found
     act(() => useAutotrackStore.setState({ reading: readingOf(memory) }));
     expect(screen.getByTestId("readout-untracked")).toHaveTextContent(
       "Small keys",

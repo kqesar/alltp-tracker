@@ -2,9 +2,10 @@
 //
 // A reading becomes a view: for each value of the run the game settles,
 // what the game says of it. Items, bosses, prizes and checked locations are
-// values; a dungeon's counter is a range, since the game says which of its
-// locations are checked but not always whether each held an item; the small
-// keys found are a floor, since memory holds the keys in hand only.
+// values, the small keys found among them (the base patch counts each key
+// received as an item, which no door spends); a dungeon's counter is a
+// range, since the game says which of its locations are checked but not
+// always whether each held an item.
 //
 // The view is laid on the board in one of two ways. A merge moves the board
 // only towards progress: it raises an item, checks a location, lowers a
@@ -73,8 +74,8 @@ export type GameView = {
   /** Whether each location the game settles is checked, by pack id. */
   readonly checked: Readonly<Record<string, boolean>>;
   /**
-   * The least small keys found, by grid dungeon index: only while small keys
-   * leave their dungeons (MCS and Full Shuffle).
+   * The small keys found, by key dungeon index: only while small keys leave
+   * their dungeons (MCS and Full Shuffle).
    */
   readonly smallKeys: Readonly<Record<number, number>>;
   /**
@@ -325,18 +326,17 @@ export const gameCells = (
   ...(reading.race ? { fluteactive: ACTIVATION.UNKNOWN } : {}),
 });
 
-/** The small keys in hand, by key dungeon index, where memory tells. */
-export const keysInHand = (
-  reading: AutotrackReading,
-): Record<number, number> => {
-  const hand: Record<number, number> = {};
+/** The small keys found, by key dungeon index, where memory tells. */
+const keysFound = (reading: AutotrackReading): Record<number, number> => {
+  const found: Record<number, number> = {};
   KEY_DUNGEONS.forEach((id, index) => {
-    const count = (reading.items.atLeast as Readonly<Record<string, number>>)[
+    const count = (reading.items.counts as Readonly<Record<string, number>>)[
       `key${dungeon(id).code}`
     ];
-    if (count !== undefined) hand[index] = count;
+    if (count !== undefined)
+      found[index] = Math.min(count, smallKeysMax(index));
   });
-  return hand;
+  return found;
 };
 
 const locationsOf = new Map<string, readonly string[]>();
@@ -360,10 +360,11 @@ const dungeonLocationsOf = (
  * and the dungeon's own items the player holds. In Full Shuffle each
  * location counts: the counter is exact. Otherwise the dungeon items that
  * stay inside (its map, compass, big key and small keys, as the run's
- * dungeon items leave them) are no items to the player: memory tells the
- * first three, not how many small keys came from chests (keys
- * also drop from enemies, and are spent on doors). The counter then lies
- * between the chests' keys all found and none: it never shows a dungeon
+ * dungeon items leave them) are no items to the player: memory tells all
+ * four, the small keys by the base patch's count of keys received as items
+ * (a key an enemy or a pot drops is no location, and is not counted). A
+ * retro run's generic keys belong to no dungeon: the counter then lies
+ * between the chests' keys all found and none, and never shows a dungeon
  * done that may hold an item.
  */
 const counterRanges = (
@@ -385,7 +386,11 @@ const counterRanges = (
       [settings.wildBigKeys, pool.bigKey, `bigKey${code}`],
       [settings.wildMaps, pool.map, `map${code}`],
       [settings.wildCompasses, pool.compass, `compass${code}`],
-      [settings.wildKeys, pool.smallKeys, null],
+      [
+        settings.wildKeys,
+        pool.smallKeys,
+        settings.genericKeys ? null : `key${code}`,
+      ],
     ] as const) {
       if (wild) continue;
       const held = item === null ? undefined : counts[item];
@@ -405,7 +410,6 @@ const counterRanges = (
  * @param reading - The game, decoded
  * @param board - The run it is laid on: its settings, and the prizes it
  * already names
- * @param keysFound - The least small keys found, by grid dungeon index
  * @param medallionsKept - The medallions shown at earlier readings, by slot:
  * once shown, a medallion stays known whatever the screen in view
  * @param bombBought - Whether a reading of this session saw Link carry the
@@ -415,7 +419,6 @@ const counterRanges = (
 export const gameView = (
   reading: AutotrackReading,
   board: Board,
-  keysFound: Readonly<Record<number, number>> = {},
   medallionsKept: Readonly<Record<number, number>> = {},
   bombBought = false,
 ): GameView => {
@@ -429,12 +432,7 @@ export const gameView = (
   if (bombBought && worldOf(packSettings(board.settings)) === "inverted") {
     checked[BOMB_MERCHANT] = true;
   }
-  const smallKeys: Record<number, number> = {};
-  if (wildItems(board.settings).keys) {
-    for (const [index, found] of Object.entries(keysFound)) {
-      smallKeys[Number(index)] = Math.min(found, smallKeysMax(Number(index)));
-    }
-  }
+  const smallKeys = wildItems(board.settings).keys ? keysFound(reading) : {};
   return {
     checked,
     counters: counterRanges(
@@ -500,7 +498,7 @@ type Lay = {
   item: (id: string, board: CellValue, game: CellValue) => CellValue;
   counter: (board: number, least: number, most: number) => number;
   checked: (board: boolean, game: boolean) => boolean;
-  keys: (board: number, least: number) => number;
+  keys: (board: number, game: number) => number;
   medallion: (board: number, game: number) => number;
 };
 
@@ -509,21 +507,21 @@ const MERGE: Lay = {
   checked: (board, game) => board || game,
   counter: (board, _least, most) => Math.min(board, most),
   item: joinValues,
-  keys: (board, least) => Math.max(board, least),
+  keys: (board, game) => Math.max(board, game),
   // A medallion the player named stays theirs, as a prize does
   medallion: (board, game) =>
     board === MEDALLION_VALUES.UNKNOWN ? game : board,
 };
 
 /**
- * To what the game says: the player's marks beyond it go. The small keys
- * found stay a floor, and a counter a range, since memory bounds them only.
+ * To what the game says: the player's marks beyond it go. A counter stays a
+ * range, since memory bounds it only.
  */
 const SYNC: Lay = {
   checked: (_board, game) => game,
   counter: (board, least, most) => Math.min(most, Math.max(least, board)),
   item: (_id, _board, game) => game,
-  keys: (board, least) => Math.max(board, least),
+  keys: (_board, game) => game,
   medallion: (_board, game) => game,
 };
 
@@ -561,9 +559,9 @@ const lay = (board: Board, view: GameView, how: Lay): Laid | null => {
   }
   let smallKeys: number[] | undefined;
   if (sameRun) {
-    for (const [index, least] of Object.entries(view.smallKeys)) {
+    for (const [index, game] of Object.entries(view.smallKeys)) {
       const i = Number(index);
-      const next = how.keys(board.smallKeys[i] ?? 0, least);
+      const next = how.keys(board.smallKeys[i] ?? 0, game);
       if (next === board.smallKeys[i]) continue;
       smallKeys ??= [...board.smallKeys];
       smallKeys[i] = next;
