@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.60.0](https://github.com/kqesar/alltp-tracker/compare/v2.59.0...v2.60.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **web:** pack an ALttPR link's settings, so 300 finds fit a chat message ([d9f2f3f](https://github.com/kqesar/alltp-tracker/commit/d9f2f3fbfcfb9d5c7929708fc6afc4f640acc9d3))
+
+
+### 📚 Documentation
+
+* describe link 4's settings and the lengths it measures ([8040043](https://github.com/kqesar/alltp-tracker/commit/80400430aa69e54788b7f053654cab64b1b7a587))
+
+
+### 🔧 Code Refactoring
+
+* **web:** let a link layout index a table more than the ones before ([aed7041](https://github.com/kqesar/alltp-tracker/commit/aed7041a9c3a1a992b4e9145a2bd166657152291))
+
 ## [2.59.0](https://github.com/kqesar/alltp-tracker/compare/v2.58.0...v2.59.0) (2026-10-28)
 
 
