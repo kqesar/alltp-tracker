@@ -123,6 +123,11 @@ the tab no longer shows it. What the board cannot tell is **unknown**, never mis
 does not track (the bottles, the medallion pads, Ganon) and a dungeon's checks when only its counter
 was kept. A dungeon the counter finished reads "done, no time" when only its counter was kept;
 once its checks were ticked one by one, a check left unticked reads missed, as the board shows it.
+A dungeon's prize has no check on the board: the game gives it on the boss's kill, so a boss beaten
+(`bossN` at 2) makes its prize done (`runStates`). With the boss's stamp the prize is a find at that
+time; without one (a run opened from a link that left its timeline out, a save older than the
+timeline) it reads "done, no time", never "never taken", in the playthrough and in the places never
+checked alike.
 
 ### The sweep
 
@@ -194,6 +199,7 @@ readings instead:
 
 | Reason | Why it cannot be told |
 |---|---|
+| `no-timeline` (first, after `no-playthrough`) | the board has finds done and the run no timeline at all: opened from a shared link that left it out to stay short ([share.md](share.md#length)), or a save older than the timeline; the sentence says to review it where it was played or to open its full link |
 | `keysanity` (MCS, Full) | small keys are counts on the board, not stamped |
 | `entrances` | where each entrance led is not stamped, and the final ones would leak |
 | `not-modelled` | the pack does not model the run's logic: settings hidden (Mystery), bosses shuffled (the log's `Bosses`), a logic other than NoGlitches (the log's `meta.logic`) |
