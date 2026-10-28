@@ -100,24 +100,39 @@ describe("hearts", () => {
   });
 
   it("joins a set's containers and pieces, and the sets that then read alike", () => {
-    const ways = waysOf({
-      sets: [
-        [item("heartContainer", 7)],
-        [item("heartContainer", 6), item("pieceOfHeart", 4)],
-        [item("heartContainer", 5), item("pieceOfHeart", 8), item("hammer")],
-      ],
-      truncated: false,
-    });
+    const ways = waysOf(
+      {
+        sets: [
+          [item("heartContainer", 7)],
+          [item("heartContainer", 6), item("pieceOfHeart", 4)],
+          [item("heartContainer", 5), item("pieceOfHeart", 8), item("hammer")],
+        ],
+        truncated: false,
+      },
+      {},
+    );
     expect(waysText(ways)).toBe("10 hearts, or 10 hearts + Hammer");
+    // Four pieces beside six containers held: the seventh heart found
+    expect(
+      waysText(
+        waysOf(
+          { sets: [[item("pieceOfHeart", 4)]], truncated: false },
+          { heartContainer: 6 },
+        ),
+      ),
+    ).toBe("10 hearts");
   });
 });
 
 describe("waysText", () => {
   it("joins atoms with +, sets with or, and says when some were cut", () => {
-    const ways = waysOf({
-      sets: [[item("hammer")], [item("moonPearl"), item("glove")]],
-      truncated: false,
-    });
+    const ways = waysOf(
+      {
+        sets: [[item("hammer")], [item("moonPearl"), item("glove")]],
+        truncated: false,
+      },
+      {},
+    );
     expect(waysText(ways)).toBe("Hammer, or Moon Pearl + Power Glove");
     expect(waysText({ ...ways, truncated: true })).toBe(
       "Hammer, or Moon Pearl + Power Glove, and more",
@@ -127,11 +142,11 @@ describe("waysText", () => {
 
 describe("sameWays", () => {
   it("compares the sets atom by atom", () => {
-    const a = waysOf({ sets: [[item("hammer")]], truncated: false });
+    const a = waysOf({ sets: [[item("hammer")]], truncated: false }, {});
     expect(sameWays(a, a)).toBe(true);
     expect(
-      sameWays(a, waysOf({ sets: [[item("sword", 2)]], truncated: false })),
+      sameWays(a, waysOf({ sets: [[item("sword", 2)]], truncated: false }, {})),
     ).toBe(false);
-    expect(sameWays(a, waysOf({ sets: [], truncated: false }))).toBe(false);
+    expect(sameWays(a, waysOf({ sets: [], truncated: false }, {}))).toBe(false);
   });
 });

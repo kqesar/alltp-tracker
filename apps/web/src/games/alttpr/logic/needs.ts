@@ -122,7 +122,7 @@ const plural = (count: number, one: string, many = `${one}s`) =>
   count === 1 ? `1 ${one}` : `${count} ${many}`;
 
 /** What each heart item adds to the hearts found: a piece is a quarter. */
-const HEART_POWER: Readonly<Record<string, number>> = {
+export const HEART_POWER: Readonly<Record<string, number>> = {
   heartContainer: 1,
   pieceOfHeart: 0.25,
 };
@@ -219,7 +219,7 @@ const setOf = (set: readonly Atom[], held: State): Need[] => {
  * (the ways to 7 hearts found, containers or pieces) are one.
  * @param held - The state they were worked out in, for the hearts held
  */
-export const waysOf = (blockers: Blockers, held: State = {}): Ways => {
+export const waysOf = (blockers: Blockers, held: State): Ways => {
   const seen = new Set<string>();
   const sets: Need[][] = [];
   for (const set of blockers.sets) {
