@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.54.1](https://github.com/kqesar/alltp-tracker/compare/v2.54.0...v2.54.1) (2026-10-28)
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** count wild small keys from the game's own key counter ([e9f67ad](https://github.com/kqesar/alltp-tracker/commit/e9f67ad4c9b1b10a7f2d648fd3fc7bdf2d5746b4))
+* **alttpr:** report the key count read, before Hera's take-back ([903fe82](https://github.com/kqesar/alltp-tracker/commit/903fe82ae94fa51de09fc018d40e6dd8c97cb641))
+* **web:** read no small key count with generic keys ([59f5cf8](https://github.com/kqesar/alltp-tracker/commit/59f5cf8a92508cac9ce186d37614313099f9154e))
+
+
+### 📚 Documentation
+
+* **alttpr:** say how autotracking counts wild small keys ([6588ff8](https://github.com/kqesar/alltp-tracker/commit/6588ff89c1da1aa5726191cbfb72e8ea2962df41))
+* **alttpr:** say what the key count tells, and where it is not read ([22e6f6d](https://github.com/kqesar/alltp-tracker/commit/22e6f6df86323ba0546737bc06992ec5a398f469))
+
 ## [2.54.0](https://github.com/kqesar/alltp-tracker/compare/v2.53.0...v2.54.0) (2026-10-28)
 
 
