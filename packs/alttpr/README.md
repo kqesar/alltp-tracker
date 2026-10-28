@@ -31,7 +31,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags, seed settings, the prizes the game shows (`prizes.ts`) and the pad medallions it shows (`medallion-pads.ts`), from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
 | `src/pack.ts` | the run's world, compiled with its settings |
 | `src/tricks.ts` | `config/logic.php`, `CustomizerController.php`, the customizer's `glitches.js`: the tricks world, six minor tricks as items (see "Tricks") |
-| `src/margin.ts`, `src/rewritten.ts` | the regions' `itemPlacement !== 'basic'` health gates: the world without basic placement's safety margin (see "Basic placement's safety margin"), and the rewritten world it shares with the tricks world |
+| `src/margin.ts`, `src/rewritten.ts` | `itemPlacement !== 'basic'` in the regions' health gates and `Boss.php`, `region.requireBetterSword` and `requireBetterBow` (`World.php`): the world without basic placement's safety margins (see "Basic placement's safety margin"), and the rewritten world it shares with the tricks world |
 
 `upstream.json` maps every upstream file to its module, with its status;
 `test/contract.ts` checks the pack against every case of the test files it
@@ -1320,45 +1320,67 @@ loose budget):
 
 ## Basic placement's safety margin
 
-With basic item placement, upstream lets the dark world's dungeons and
-Ganon's Tower in only once Link can take a beating: a sword, 7 hearts found
-(10 on screen) and a bottle before Palace of Darkness, Swamp Palace, Skull
-Woods and Thieves' Town; the Master Sword, 12 hearts found (15 on screen)
-and two bottles or a mail before Ice Palace, Misery Mire, Turtle Rock and
-Ganon's Tower. Each is a clause `itemPlacement !== 'basic' || …hasHealth(n)…`
-of the dungeon's way in (`SwampPalace.php:177`, `MiseryMire.php:132`, and so
-on, Standard's and Inverted's regions alike). The pack keeps it as upstream
-writes it: it is in the logic, and the counts, the go mode and the refactor
-guard read it. But it is a placement guarantee, not something a player
-cannot do, so the tracker also asks what the run could do without it.
+Basic item placement adds clauses to rules that the advanced placement does
+without. Upstream's advanced placement counts the place in logic without
+them, so they are no wall: they promise the player is never asked to scrape
+through. The pack keeps them as upstream writes them (the counts, the go
+mode and the refactor guard read them), and the tracker also asks what the
+run could do without those that ask Link to take a beating or to hit
+harder: the safety margins.
 
-**The margin world** (`src/margin.ts`). `marginRequirement` rewrites each
-such clause, an `or` with `!setting(basicPlacement)` beside an argument that
-reads `@hasHealth…`, into the same clause `| basicMargin`; `marginModules`,
-`compileMargin` and `marginFiller` are that world's modules, compiled world
-and key model, built the way the tricks world is (`src/rewritten.ts`, which
-both share: the rules rewritten, the fill rules the real world's, once per
-settings object). With `basicMargin` at 0 it reads as the real world; with
-`MARGIN_STATE` spread over the real state, as the real world without those
-gates. `src/margin.spec.ts` holds the sites: in Open, Standard and Inverted,
-only the entrances of those eight dungeons change.
+| Margin (`MARGIN_GATES`) | Basic asks | Upstream |
+| --- | --- | --- |
+| Palace of Darkness, Swamp Palace, Skull Woods, Thieves' Town (their ways in) | a sword (or a swordless run), 7 hearts found (10 on screen), a bottle | `PalaceOfDarkness.php:186`, `SwampPalace.php:177`, `SkullWoods.php:153`, `ThievesTown.php:118`; Inverted's alike |
+| Ice Palace, Misery Mire, Turtle Rock, Ganon's Tower (their ways in) | the Master Sword (or swordless), 12 hearts found (15 on screen), two bottles or a mail | `IcePalace.php:137`, `MiseryMire.php:132`, `TurtleRock.php:261`, `GanonsTower.php:401`; Inverted's alike |
+| Helmasaur King | the Master Sword or a bow, where a sword does | `Boss.php:86` |
+| Arrghus | the Master Sword (or swordless) | `Boss.php:91` |
+| Mothula | the Master Sword, or the Fire Rod with magic | `Boss.php:96` |
+| Blind | a sword with the Cape or the Cane of Byrna (or swordless) | `Boss.php:103` |
+| Kholdstare | the Master Sword, or the Fire Rod with more magic, or Bombos and the Fire Rod | `Boss.php:108` |
+| Vitreous | the Master Sword or a bow | `Boss.php:115` |
+| Trinexx | the Tempered Sword, or the Master Sword with magic (or swordless) | `Boss.php:119` |
+| Ganon | the Tempered Sword where the Master Sword does (`region.requireBetterSword`), the silver arrows (`region.requireBetterBow`, which a swordless run sets whatever the placement) | `World.php:261-273`, `DarkWorld/NorthEast.php:227-232` |
 
-**What the margin is not.** Every other rule basic placement changes stays
-as it is, because it says what the seed expects a player to know or to fight
-with, not how much damage Link can take: the bosses' weapons (`bosses.ts`,
-`!setting(basicPlacement) | @hasSword2`, never read with a health helper),
-Turtle Rock's laser bridge (cape, Byrna or the Mirror Shield), the Pegasus
-Boots for a hookshot gap, Ganon's Tower's torches (`GanonsTower.php:282`:
-the Fire Rod or Ether), the Book of Mudora at the Pedestal, and Ganon's
-silver arrows and better sword (`requireBetterBow`, `requireBetterSword`,
-derived settings). A dark room's Lamp is no placement rule at all.
+**The margin world** (`src/margin.ts`). Each margin is an item
+(`marginMiseryMire`, `marginArrghus`, `marginGanon`…). `marginRequirement`
+reads every rule with where it sits (`RuleSite`, which `src/rewritten.ts`
+passes): in a dungeon's region, an `or` with `!setting(basicPlacement)`
+beside an argument reading `@hasHealth…` gains the dungeon's item (a health
+gate anywhere else throws); in a boss's rule, every `!setting(basicPlacement)`
+reads `| ` the boss's item (Helmasaur King's `!setting(basicPlacement) &
+@hasSword` branch included); anywhere, `!setting(requireBetterSword)` reads
+`| marginGanon` and `!setting(requireBetterBow)` `| !setting(swordless) &
+marginGanon`. `marginModules`, `MARGIN_RULES`, `compileMargin` and
+`marginFiller` are that world's modules, named rules, compiled world and key
+model, built the way the tricks world is (`src/rewritten.ts`, which both
+share: the rules rewritten, the fill rules the real world's, once per
+settings object). With no margin held it reads as the real world; with one,
+as the real world without it; `MARGIN_STATE` holds them all.
+`src/margin.spec.ts` pins every rule that moves, with its upstream source:
+in Open, Standard and Inverted, the eight dungeons' ways in and Ganon's
+rule, and among the named rules the seven bosses'.
+
+**What is not a margin.** The other clauses basic placement adds ask the
+player to get through a place, not to be sturdier, so a tracker saying
+"doable now" for them could send a player where they cannot pass: Turtle
+Rock's laser bridge (the Cape, the Cane of Byrna or the Mirror Shield,
+`TurtleRock.php:192-222`), the Pegasus Boots where the Hookshot crosses a
+gap (Misery Mire, Ganon's Tower's map chest, `GanonsTower.php:266`, the
+Hookshot Cave), Bob's Chest's Fire Rod or Ether (`GanonsTower.php:286`), the
+Book of Mudora at the Pedestal, the Magic Mirror to bring the smith back,
+the Hookshot at the Bumper Cave, Ice Palace's keys with the Cane of Somaria
+(the one rule reading `setting(basicPlacement)` the other way), and Skull
+Woods's forced key (a fill rule, `region.forceSkullWoodsKey`). A dark room's
+Lamp is no placement rule at all.
 
 The tracker reads it as a state of its own beside the real solution
 (`apps/web/src/games/alttpr/logic/solution.ts`, `marginOf`; the guide's
 "Basic placement's safety margin"): never in the solution, the analysis or
-Race Mode's reads. An advanced run's margin world is its real world, and an
-unknown placement (Mystery) folds `!setting(basicPlacement)` to maybe, so
-the gate is maybe already.
+Race Mode's reads. The run's analysis asks the margin world which margins
+open each check (`Missing.margin.gates`), so the words name them. An
+advanced run's margin world is its real world, and an unknown placement
+(Mystery) folds `!setting(basicPlacement)` to maybe, so the margins are
+maybe already.
 
 ## Go mode
 

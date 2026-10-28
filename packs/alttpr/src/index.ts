@@ -229,9 +229,14 @@ export {
 } from "./location";
 export {
   compileMargin,
-  isMarginGate,
-  MARGIN_ITEM,
+  GATE_OF_ITEM,
+  isHealthGate,
+  MARGIN_GATES,
+  MARGIN_ITEMS,
+  MARGIN_RULES,
   MARGIN_STATE,
+  type MarginGate,
+  type MarginGateId,
   marginFiller,
   marginModules,
   marginRequirement,
@@ -259,6 +264,7 @@ export {
   padsFromUpstream,
 } from "./medallions";
 export { compile, regionModules, STATE_NAMES, world } from "./pack";
+export type { RuleSite } from "./rewritten";
 export { NAMED_RULES, RULES } from "./rules";
 export { RUPEE_COSTS, type RupeeCost, rupeeCostOf } from "./rupee-costs";
 export { seedFileReading } from "./seed-file";
