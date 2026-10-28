@@ -93,14 +93,25 @@ export interface PackCodec {
    */
   readonly versionFor?: (progress: Record<string, unknown>) => number;
   /**
-   * The fields over `tables`, or over a prefix of each (an older link's), in
-   * the layout of `version`.
+   * How many of `tables`, from the first, a layout version indexes, all of
+   * them when absent: a version that packs another field over a table of its
+   * own adds it at the end, and a link of an earlier one names the sizes of
+   * the tables it had.
+   */
+  readonly tablesIn?: (version: number) => number;
+  /**
+   * The fields over the tables of `version`, or over a prefix of each (an
+   * older link's), in the layout of `version`.
    */
   readonly at: (tables: Tables, version: number) => Layout;
 }
 
 /** The layout version a codec writes. */
 const versionOf = (codec: PackCodec): number => codec.version ?? LINK_VERSION;
+
+/** The tables a layout version of a codec indexes, as this tracker has them. */
+const tablesOf = (codec: PackCodec, version: number): Tables =>
+  codec.tables.slice(0, codec.tablesIn?.(version) ?? codec.tables.length);
 
 /**
  * A 32-bit FNV-1a of the tables, as six base64url characters. It guards
@@ -143,7 +154,8 @@ export const packRun = (save: string, codec: PackCodec): string => {
       codec.versionFor?.(file.progress) ?? versionOf(codec),
     ),
   );
-  const layout = codec.at(codec.tables, version);
+  const tables = tablesOf(codec, version);
+  const layout = codec.at(tables, version);
   const progress: Record<string, unknown> = { ...file.progress };
   for (const [name, field] of Object.entries(layout.fields)) {
     if (!(name in progress)) continue;
@@ -156,7 +168,7 @@ export const packRun = (save: string, codec: PackCodec): string => {
     format: LINK_FORMAT,
     link: version,
     progress,
-    sizes: codec.tables.map((table) => table.length),
+    sizes: tables.map((table) => table.length),
     table: digestOf(layout.digested),
   });
 };
@@ -174,16 +186,18 @@ const linkSchema = z.looseObject({
 /**
  * The tables as a link was made against them; `"newer"` for a link of a
  * newer tracker, a table of it longer than this one's; null for sizes that
- * are none a tracker writes, another number of tables among them.
+ * are none a tracker writes, another number of tables than its layout
+ * indexes among them.
+ * @param tables - The tables of the link's layout version, as this tracker has them
  */
 const prefixes = (
-  codec: PackCodec,
+  tables: Tables,
   sizes: readonly number[],
 ): Tables | "newer" | null => {
-  if (sizes.length !== codec.tables.length) return null;
+  if (sizes.length !== tables.length) return null;
   if (!sizes.every((size) => Number.isInteger(size) && size >= 0)) return null;
-  if (sizes.some((size, at) => size > codec.tables[at].length)) return "newer";
-  return codec.tables.map((table, at) => table.slice(0, sizes[at]));
+  if (sizes.some((size, at) => size > tables[at].length)) return "newer";
+  return tables.map((table, at) => table.slice(0, sizes[at]));
 };
 
 /**
@@ -228,7 +242,7 @@ export const unpackRun = (text: string, codec: PackCodec): Unpacked => {
     return { ok: false, reason: OTHER_VERSION };
   }
   if (version > versionOf(codec)) return NEWER;
-  const made = prefixes(codec, sizes ?? codec.legacySizes);
+  const made = prefixes(tablesOf(codec, version), sizes ?? codec.legacySizes);
   if (made === "newer") return NEWER;
   const layout = made && codec.at(made, version);
   if (layout === null || table !== digestOf(layout.digested)) {
