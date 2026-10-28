@@ -278,6 +278,20 @@ test("lays the game on a run replaced by Switch & reset, memory unchanged", asyn
   await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
     cell("Hookshot", "obtained"),
   );
+
+  // The game was in play, so the timer waits for the player, who is told
+  const timer = page.getByTestId("run-timer");
+  await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
+  await timer.click();
+  await expect(page.getByTestId("run-timer-start-hint")).toHaveText(
+    "The game was already in play: start the timer yourself.",
+  );
+  await page.keyboard.press("Escape");
+
+  // The goal ends the run all the same, untimed
+  bridge.memory[WRAM + 0x10] = 0x19;
+  bridge.memory[SAVE(0x443)] = 0x01;
+  await expect(timer).toHaveAccessibleName(/^Run timer: [\d:]+, stopped$/);
 });
 
 test("notes the doors Link goes through in a Crosskeys run", async ({

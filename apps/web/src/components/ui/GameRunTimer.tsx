@@ -1,4 +1,4 @@
-import { RunTimer } from "@/components/ui/RunTimer";
+import { RunTimer, STARTED_IN_PLAY } from "@/components/ui/RunTimer";
 import type { TimerActions, TimerSlice } from "@/games/timerSlice";
 import { isIdle } from "@/utils/runTimer";
 
@@ -18,6 +18,9 @@ type RunStore = <T>(
  * @param useRun - The game's store
  * @param raceMode - Race Mode is on: the clock is never read
  * @param clockRead - The clock was read: autotracking runs, outside Race Mode
+ * @param inPlay - Autotracking reads a game in play, not at its goal: with the
+ * timer not started, it was already running (or the run was reset), so the
+ * panel tells the player to start the timer
  * @param endable - The board reviews a finished run: the timer offers End run
  * @param autoInRace - The game may start and stop the timer in Race Mode;
  * false for Super Metroid, whose races state no rule for it (the player's
@@ -27,12 +30,14 @@ export const GameRunTimer = ({
   autoInRace = true,
   clockRead,
   endable = false,
+  inPlay,
   raceMode,
   useRun,
 }: {
   autoInRace?: boolean;
   clockRead: boolean;
   endable?: boolean;
+  inPlay: boolean;
   raceMode: boolean;
   useRun: RunStore;
 }) => {
@@ -49,16 +54,17 @@ export const GameRunTimer = ({
   const following =
     timerClock === "game" && !raceMode && clockRead && !isIdle(timer);
 
+  const autoUnavailable = raceMode && !autoInRace;
+
   return (
     <RunTimer
       auto={{
         checked: autoTimer,
         label: "Start and stop with the game",
         onChange: setAutoTimer,
-        unavailable:
-          raceMode && !autoInRace
-            ? "Not in Race Mode: start and end the run yourself, as racetime.gg times the race."
-            : null,
+        unavailable: autoUnavailable
+          ? "Not in Race Mode: start and end the run yourself, as racetime.gg times the race."
+          : null,
       }}
       clock={{
         following,
@@ -75,6 +81,9 @@ export const GameRunTimer = ({
       onPause={() => pauseTimer()}
       onReset={resetTimer}
       onStart={() => startTimer()}
+      startHint={
+        inPlay && autoTimer && !autoUnavailable ? STARTED_IN_PLAY : null
+      }
       timer={timer}
     />
   );

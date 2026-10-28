@@ -5,6 +5,7 @@ import { FakeVisibility, GRANTED, ManualClock } from "@/autotrack/fixtures";
 import { isRaceModeOrPending } from "@/autotrack/raceMode";
 import { smz3Autotrack } from "@/games/smz3/autotrack/store";
 import { freshProgress, useSmz3Store } from "@/games/smz3/store";
+import { isIdle } from "@/utils/runTimer";
 import { MemoryTransport } from "../../../../../../packages/autotrack/test/memory-transport";
 import { MEMORY_RANGE } from "../../../../../../packs/smz3/src/autotrack/memory";
 import {
@@ -306,6 +307,35 @@ describe("SMZ3's autotracking and the run timer", () => {
       finished: true,
       startedAt: null,
     });
+  });
+
+  it("ends a run whose timer never started at the credits, connected mid-play or reset", async () => {
+    const h = harness({ clock: { sm: 0, zelda: 5_000 }, mode: "zelda" });
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    run().reset();
+    await h.advance(1000);
+    expect(isIdle(run().timer)).toBe(true);
+
+    h.play({ clock: { sm: 0, zelda: 6_000 }, mode: "credits" });
+    await h.advance(1000);
+    await h.advance(1000);
+
+    expect(run().timer.finished).toBe(true);
+  });
+
+  it("does not end again a run reset on the credits", async () => {
+    const h = harness({ clock: { sm: 0, zelda: 5_000 }, mode: "credits" });
+    await smz3Autotrack.connect();
+    await h.advance(0);
+    await h.advance(1000);
+    expect(run().timer.finished).toBe(true);
+
+    run().reset();
+    await h.advance(2000);
+
+    expect(isIdle(run().timer)).toBe(true);
   });
 
   it("stops the timer on the game's time while the emulator is paused, and goes on when it runs", async () => {

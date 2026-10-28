@@ -29,7 +29,9 @@ flowchart LR
 
 A review opens only when the run is **over** and **Race Mode is off** (`review/gate.ts`).
 
-- **Over** is the run timer's `finished`: autotracking stopped it at the goal, or the player used
+- **Over** is the run timer's `finished`: autotracking ended it at the goal (a timer that never
+  started too: the game was already in play when it connected, or the run was reset, so the run
+  ends untimed; a run reset on the credits screen is not ended again by it), or the player used
   **End run** (the shared `components/ui/RunTimer.tsx`, a `ConfirmDialog` that opens on Cancel,
   "End this run?"). End run is offered while the timer counts or is paused; it is final, so peeking
   at a spoiler costs the player their timer, and the board never shows one while a run is live (a

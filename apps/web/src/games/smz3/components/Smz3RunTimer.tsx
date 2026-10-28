@@ -6,6 +6,15 @@ import { useSmz3Store } from "@/games/smz3/store";
 const useClockRead = (): boolean =>
   smz3Autotrack.useStore((state) => typeof state.reading?.clock === "object");
 
+/** Whether a game in play, not at its goal, is read now. */
+const useInPlay = (): boolean =>
+  smz3Autotrack.useStore(
+    (state) =>
+      state.status.code === "connected" &&
+      state.reading?.inPlay === true &&
+      state.reading.goal !== true,
+  );
+
 /** Whether Race Mode is on as the player set it (a race seed's own flag is not asked: the clock is read only when it is off). */
 const useRaceMode = (): boolean =>
   smz3Autotrack.useStore(
@@ -24,6 +33,7 @@ export const Smz3RunTimer = () => (
   <GameRunTimer
     clockRead={useClockRead()}
     endable
+    inPlay={useInPlay()}
     raceMode={useRaceMode()}
     useRun={useSmz3Store}
   />

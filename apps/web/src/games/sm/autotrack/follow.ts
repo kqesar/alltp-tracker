@@ -95,6 +95,8 @@ export const createSmFollower = () => {
    * start; undefined until a reading says.
    */
   let beforePlay: boolean | undefined;
+  /** Whether the reading before was at the goal. */
+  let atGoal = false;
   /** The RTA clock as last read, and the frames of the last reading taken. */
   let lastClock: ClockReading | undefined;
   let frames: number | undefined;
@@ -122,7 +124,7 @@ export const createSmFollower = () => {
     // of a tracker starting or stopping it
     const news =
       run.autoTimer && !reading.race
-        ? timerNews(beforePlay, reading, run.timer)
+        ? timerNews(beforePlay, reading, run.timer, atGoal)
         : null;
     if (news === "start") {
       // The clock's frames at the run's 0: the game's time counts from here
@@ -151,6 +153,7 @@ export const createSmFollower = () => {
     if (typeof reading.beforePlay === "boolean") {
       beforePlay = reading.beforePlay;
     }
+    atGoal = reading.goal === true;
   };
 
   /** Lay a reading in play on the run: the news against the view shown. */

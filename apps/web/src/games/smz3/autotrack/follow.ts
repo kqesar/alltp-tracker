@@ -90,6 +90,8 @@ export const createSmz3Follower = () => {
    * it as it is, so a file that starts in either game starts the timer.
    */
   let armed = false;
+  /** Whether the reading before was at the goal. */
+  let atGoal = false;
   /** The sum of the counters as last read, to tell a game that stands still. */
   let frames: number | undefined;
   /** The game's clock the timer was last set on, to hold it if the game stops. */
@@ -108,10 +110,17 @@ export const createSmz3Follower = () => {
     const moving = now !== frames;
     frames = now;
 
-    const news = run.autoTimer ? timerNews(armed, reading, run.timer) : null;
+    const news = run.autoTimer
+      ? timerNews(armed, reading, run.timer, atGoal)
+      : null;
     if (news === "start") run.startTimer(reading.at);
     const after = useSmz3Store.getState();
     lastGame = undefined;
+    // On game time the credits' own total is the stop: the tick that sees
+    // the credits has not read the counters yet (a new mode), and a timer
+    // finished on real time could not be set right
+    const awaitsClock =
+      after.timerClock === "game" && reading.clock === "not-read";
     // Game time: only a timer that has begun is set on the counters
     if (
       after.timerClock === "game" &&
@@ -126,17 +135,13 @@ export const createSmz3Follower = () => {
         after.autoTimer,
       );
       after.alignTimer(lastGame, reading.at);
-    } else if (
-      news === "finish" &&
-      // On game time the credits' own total is the stop: the tick that sees
-      // the credits has not read the counters yet (a new mode), and a timer
-      // finished on real time could not be set right
-      !(after.timerClock === "game" && reading.clock === "not-read")
-    ) {
+    } else if (news === "finish" && !awaitsClock) {
       after.finishTimer(reading.at);
     }
     if (reading.beforePlay === true) armed = true;
     else if (reading.inPlay === true) armed = false;
+    // The goal not yet taken in (the counters unread) is still to come
+    atGoal = reading.goal === true && !awaitsClock;
   };
 
   /** Lay a reading in play on the run: the news against the view shown. */

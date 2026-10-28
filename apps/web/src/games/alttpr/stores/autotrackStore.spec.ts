@@ -1,4 +1,5 @@
 import { parseUserAgent } from "@alltp/autotrack";
+import { playTimeMs } from "@alltp/pack-alttpr";
 import { act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -8,7 +9,7 @@ import {
   statusOf,
 } from "@/autotrack/fixtures";
 import { isRaceModeOn, isRaceModeOrPending } from "@/autotrack/raceMode";
-import { SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
+import { GAME_MODE, SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
 import { forgetSeedFiles } from "@/games/alttpr/autotrack/seedFile";
 import { solutionOf } from "@/games/alttpr/logic/solution";
@@ -23,6 +24,7 @@ import {
   useAutotrackStore,
 } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { isIdle } from "@/utils/runTimer";
 import { MemoryTransport } from "../../../../../../packages/autotrack/test/memory-transport";
 import openSeedFile from "../../../../../../packs/alttpr/test/seed-files/9MQ9gO1wMD.json";
 import { writeSeedSettings } from "../../../../../../packs/alttpr/test/seed-rom";
@@ -192,6 +194,85 @@ describe("a run replaced under a connected session", () => {
     await act(() => connectAutotrack());
     await h.advance(0);
     expect(board().items.sword).toBe(2);
+  });
+});
+
+describe("the goal ends the run", () => {
+  /** Game mode $19 and StatsLocked: the goal. */
+  const reachGoal = (memory: Uint8Array) => {
+    memory[GAME_MODE] = 0x19;
+    memory[SAVE(0x443)] = 0x01;
+  };
+
+  it("ends a run whose timer never started, as when connected mid-play", async () => {
+    const h = harness();
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(isIdle(board().timer)).toBe(true);
+
+    reachGoal(h.memory);
+    await h.advance(1000);
+
+    expect(board().timer.finished).toBe(true);
+  });
+
+  it("ends a run reset in play, which the game does not start again", async () => {
+    const h = harness();
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    act(() => board().reset());
+    await h.advance(1000);
+    expect(isIdle(board().timer)).toBe(true);
+
+    reachGoal(h.memory);
+    await h.advance(1000);
+
+    expect(board().timer.finished).toBe(true);
+  });
+
+  it("does not end again a run reset on the credits screen", async () => {
+    const h = harness();
+    reachGoal(h.memory);
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(board().timer.finished).toBe(true);
+
+    act(() => board().reset());
+    await h.advance(2000);
+
+    expect(isIdle(board().timer)).toBe(true);
+  });
+
+  it("leaves the timer to the player who turned the game off", async () => {
+    act(() => board().setAutoTimer(false));
+    const h = harness();
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    reachGoal(h.memory);
+    await h.advance(1000);
+
+    expect(isIdle(board().timer)).toBe(true);
+  });
+
+  it("follows the game's counter after a reset on Game time, outside Race Mode", async () => {
+    act(() => board().setTimerClock("game"));
+    const h = harness();
+    const count = (frames: number) =>
+      h.memory.set(
+        [frames & 0xff, (frames >> 8) & 0xff, (frames >> 16) & 0xff, 0],
+        SAVE(0x43e),
+      );
+    count(3600);
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    act(() => board().reset());
+    expect(isIdle(board().timer)).toBe(true);
+
+    count(7200);
+    await h.advance(1000);
+
+    expect(board().timer.elapsedMs).toBe(playTimeMs(7200));
+    expect(isIdle(board().timer)).toBe(false);
   });
 });
 

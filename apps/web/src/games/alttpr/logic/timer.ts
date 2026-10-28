@@ -13,16 +13,22 @@ import {
  * What the game's own progress does to the timer, while the player lets it
  * start and stop with the game: start an idle timer when a reading in play
  * follows one before play (the title, the file select or the spawn select:
- * a menu during play is no new start), stop a running one once the goal is
- * reached. `before` is whether the reading before was before play, or
- * undefined when there was none.
+ * a menu during play is no new start), end the run once the goal is reached.
+ * A timer that never started ends too (the game was already in play when it
+ * was connected or the run reset): the run is over, untimed. `before` is
+ * whether the reading before was before play, or undefined when there was
+ * none; `atGoal` whether the goal was already reached at that reading, so a
+ * run reset on the credits screen is not ended again by it.
  */
 export const timerNews = (
   before: boolean | undefined,
   progress: Pick<ProgressReading, "goal" | "started">,
   timer: RunTimer,
+  atGoal = false,
 ): "finish" | "start" | null => {
-  if (progress.goal === true) return isRunning(timer) ? "finish" : null;
+  if (progress.goal === true) {
+    return isRunning(timer) || (!timer.finished && !atGoal) ? "finish" : null;
+  }
   return before === true && progress.started === true && isIdle(timer)
     ? "start"
     : null;

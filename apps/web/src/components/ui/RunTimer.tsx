@@ -34,6 +34,10 @@ const announce = (state: TimerState, time: string): string => {
   }
 };
 
+/** Said while the game plays and the timer has not started. */
+export const STARTED_IN_PLAY =
+  "The game was already in play: start the timer yourself.";
+
 /** The clock choice of a game that has a clock of its own. */
 export type ClockChoice = {
   value: TimerClock;
@@ -95,6 +99,13 @@ export type RunTimerProps = {
    * game's. Omitted (Archipelago's board), no choice is offered.
    */
   clock?: ClockChoice;
+  /**
+   * Said under the checkbox while the timer has not started: the game is in
+   * play and would not start it (it was already running when autotracking
+   * connected, or the run was reset), so the player must. Null or omitted,
+   * nothing is said.
+   */
+  startHint?: string | null;
   /** More in the panel, under the clock choice (ALttPR's in-game time). */
   children?: ReactNode;
 };
@@ -115,6 +126,7 @@ export const RunTimer = ({
   onPause,
   onReset,
   onStart,
+  startHint,
   timer,
 }: RunTimerProps) => {
   const panelId = useId();
@@ -226,6 +238,14 @@ export const RunTimer = ({
             id={`${autoId}-hint`}
           >
             {auto.unavailable}
+          </p>
+        )}
+        {state === "idle" && startHint && (
+          <p
+            className="run-timer-clock__hint"
+            data-testid="run-timer-start-hint"
+          >
+            {startHint}
           </p>
         )}
         {clock && (

@@ -6,6 +6,15 @@ import { useSmStore } from "@/games/sm/store";
 const useClockRead = (): boolean =>
   useSmAutotrackStore((state) => typeof state.reading?.clock === "object");
 
+/** Whether a game in play, not at its goal, is read now. */
+const useInPlay = (): boolean =>
+  useSmAutotrackStore(
+    (state) =>
+      state.status.code === "connected" &&
+      state.reading?.inPlay === true &&
+      state.reading.goal !== true,
+  );
+
 /** Whether Race Mode is on: Map Rando has no race flag, so the player's choice. */
 const useRaceMode = (): boolean =>
   useSmAutotrackStore((state) => state.raceChoice === "on");
@@ -23,6 +32,7 @@ export const SmRunTimer = () => (
     autoInRace={false}
     clockRead={useClockRead()}
     endable
+    inPlay={useInPlay()}
     raceMode={useRaceMode()}
     useRun={useSmStore}
   />
