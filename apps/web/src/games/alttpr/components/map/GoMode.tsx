@@ -1,5 +1,6 @@
 import type { Tri } from "@alltp/engine";
 import { useId } from "react";
+import { isHunt } from "@/games/alttpr/data/items";
 import { isHidden } from "@/games/alttpr/data/presets";
 import {
   useGoModeLeft,
@@ -93,8 +94,24 @@ const Line = ({ children }: { children: string }) => (
  * or the ways to it, fewest items first, the first three in sight and the
  * others behind a disclosure; a sentence when no list can say it.
  */
-const GoModeDetail = ({ tri }: { tri: Shown }) => {
+const GoModeDetail = ({
+  pieces,
+  tri,
+}: {
+  /** A triforce hunt's pieces left to find; undefined for any other goal */
+  pieces: number | undefined;
+  tri: Shown;
+}) => {
   const left = useGoModeLeft();
+  if (pieces !== undefined) {
+    return (
+      <p className="missing" data-testid="go-mode-left">
+        {tri === "yes"
+          ? "Every Triforce piece the goal asks for is found: bring them to Murahdahla at Hyrule Castle."
+          : `${pieces === 1 ? "1 Triforce piece" : `${pieces} Triforce pieces`} left to find, then bring them to Murahdahla at Hyrule Castle.`}
+      </p>
+    );
+  }
   if (tri === "yes") {
     return <p className="missing">Every step to the goal is in logic.</p>;
   }
@@ -187,8 +204,9 @@ const GoModeLeftDetail = ({
  * `goModeMarginOf`) or not yet (☆), in words beside the glyph; not yet,
  * how far it is when one word can say it ("2 items left", "crystals left").
  * A screen reader hears a change of state as it comes. A click shows what
- * is missing, crystals aside. Nothing for a goal without a go mode (all
- * dungeons, triforce hunt); a Mystery run's goal not known yet says so,
+ * is missing, crystals aside. A triforce hunt's is its count: "7 pieces
+ * left", in logic once the pieces its goal asks for are found. Nothing for a
+ * goal without a go mode (all dungeons); a Mystery run's goal not known yet says so,
  * until the player sets it.
  */
 export const GoMode = () => {
@@ -197,7 +215,15 @@ export const GoMode = () => {
   const margin = useGameStore(goModeMarginOf);
   const tri: Shown | undefined = margin ? "margin" : status;
   const goalHidden = useGameStore((state) => isHidden(state.settings, "goal"));
-  const summary = goModeSummary(useLastGoModeLeft());
+  const hunt = useGameStore((state) => isHunt(state.settings));
+  const found = useGameStore((state) => state.items.triforce as number);
+  const asked = useGameStore((state) => state.items.goalpieces as number);
+  const piecesLeft = hunt ? Math.max(0, asked - found) : undefined;
+  const lastLeft = useLastGoModeLeft();
+  const summary =
+    piecesLeft === undefined
+      ? goModeSummary(lastLeft)
+      : `${piecesLeft} ${piecesLeft === 1 ? "piece" : "pieces"} left`;
   const panelId = useId();
   if (goalHidden) {
     return (
@@ -235,7 +261,7 @@ export const GoMode = () => {
         id={panelId}
         popover="auto"
       >
-        <GoModeDetail tri={tri} />
+        <GoModeDetail pieces={piecesLeft} tri={tri} />
       </div>
       <span className="sr-only" data-testid="go-mode-status" role="status">
         Go mode: {words}

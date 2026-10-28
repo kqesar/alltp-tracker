@@ -368,6 +368,59 @@ describe("GridItem", () => {
     expect(smallKey).not.toHaveClass("griditem--dimmed");
   });
 
+  it("counts a triforce hunt's pieces found over the pieces asked for", () => {
+    render(<GridItem col={3} item="triforce" row={8} />);
+
+    const cell = screen.getByTestId("item-triforce");
+    expect(cell).toHaveAccessibleName(
+      "Triforce pieces: 0/20. Click to add a piece.",
+    );
+    expect(cell).toHaveTextContent("0/20");
+    expect(cell).toHaveClass("griditem--dimmed");
+
+    fireEvent.click(cell);
+    expect(useGameStore.getState().items.triforce).toBe(1);
+    expect(cell).toHaveAccessibleName(/^Triforce pieces: 1\/20\./);
+    expect(cell).toHaveTextContent("1/20");
+    expect(cell).not.toHaveClass("griditem--dimmed");
+    expect(cell).not.toHaveClass("pieces-cell--enough");
+
+    act(() => {
+      useGameStore.setState({
+        items: { ...useGameStore.getState().items, triforce: 20 },
+      });
+    });
+    expect(cell).toHaveClass("pieces-cell--enough");
+
+    // A seed that asks for more
+    act(() => {
+      useGameStore.setState({
+        items: { ...useGameStore.getState().items, goalpieces: 25 },
+      });
+    });
+    expect(cell).toHaveTextContent("20/25");
+    expect(cell).not.toHaveClass("pieces-cell--enough");
+  });
+
+  it("stops the pieces at none and at the most a goal holds, never wrapping", () => {
+    render(<GridItem col={3} item="triforce" row={8} />);
+    const cell = screen.getByTestId("item-triforce");
+
+    fireEvent.contextMenu(cell);
+    expect(useGameStore.getState().items.triforce).toBe(0);
+    expect(useGameStore.getState().past).toHaveLength(0);
+
+    act(() => {
+      useGameStore.setState({
+        items: { ...useGameStore.getState().items, triforce: 50 },
+      });
+    });
+    fireEvent.click(cell);
+    expect(useGameStore.getState().items.triforce).toBe(50);
+    fireEvent.contextMenu(cell);
+    expect(useGameStore.getState().items.triforce).toBe(49);
+  });
+
   it("disables the blank slot", () => {
     render(<GridItem col={0} item="blank" row={0} />);
 

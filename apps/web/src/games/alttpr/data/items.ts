@@ -25,6 +25,13 @@ export interface ItemState {
 }
 
 /**
+ * The Triforce pieces found, on a Triforce Hunt's own cell (`triforce`), and
+ * the pieces the goal asks for (`goalpieces`), which no cell draws: the
+ * cell says "found/asked".
+ */
+export const PIECES_ITEM = "triforce";
+
+/**
  * The item grid, row by row. Each id is an item's cell, but for the
  * dungeons' cells: `bossN`, the boss cell of key dungeon N (logic/settings.ts
  * KEY_DUNGEONS: the grid's ten, and Ganon's Tower's, 12); `keysN`, its key
@@ -54,19 +61,44 @@ export const defaultItemGrid: string[][] = [
 ];
 
 /**
+ * Whether a run is a Triforce Hunt as far as the player knows: its goal, not
+ * one a Mystery run still hides.
+ */
+export const isHunt = (run: {
+  readonly goal: string;
+  readonly hidden?: readonly string[];
+}): boolean => run.goal === "triforce-hunt" && !run.hidden?.includes("goal");
+
+/**
  * The item grid of a run: a retro run's last row holds the shops that sell
  * arrows and keys where Hyrule Castle's and Castle Tower's key cells stand,
  * which have nothing to show there (no big key, no small key of their own);
- * Agahnim keeps the place between them.
- * @param run - The run's world
+ * Agahnim keeps the place between them. A Triforce Hunt adds a row under the
+ * grid with the pieces found, centred.
+ * @param run - The run's world and goal
  */
-export const itemGridFor = (run: { readonly mode: string }): string[][] =>
-  run.mode === "retro" ? RETRO_ITEM_GRID : defaultItemGrid;
+export const itemGridFor = (run: {
+  readonly mode: string;
+  readonly goal?: string;
+  readonly hidden?: readonly string[];
+}): string[][] => {
+  const retro = run.mode === "retro";
+  if (run.goal !== undefined && isHunt({ ...run, goal: run.goal })) {
+    return retro ? RETRO_HUNT_ITEM_GRID : HUNT_ITEM_GRID;
+  }
+  return retro ? RETRO_ITEM_GRID : defaultItemGrid;
+};
 
 const RETRO_ITEM_GRID: string[][] = [
   ...defaultItemGrid.slice(0, -1),
   ["shoparrow", "shopkey", "agahnim", "", "keylabel12", "keys12", "boss12"],
 ];
+
+/** The Triforce Hunt's row: the pieces found, under the grid's middle. */
+const PIECES_ROW = ["", "", "", PIECES_ITEM, "", "", ""];
+
+const HUNT_ITEM_GRID: string[][] = [...defaultItemGrid, PIECES_ROW];
+const RETRO_HUNT_ITEM_GRID: string[][] = [...RETRO_ITEM_GRID, PIECES_ROW];
 
 /**
  * The items that count levels but whose cell is a plain toggle: the half magic
@@ -114,6 +146,10 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   escape: [0, 2],
   fluteactive: [0, 3],
   glove: [0, 2],
+  // The Triforce pieces a hunt asks for, 20 unless the seed says (autotracking
+  // reads the ROM's GoalItemRequirement), and the pieces found (GoalCounter);
+  // 50 is ganonhunt's pool, the most any goal holds (config/alttp.php:44-50)
+  goalpieces: [1, 50, 20],
   // The heart pieces toward the next heart, 0 to 3, as the game's menu
   // shows them (HeartPieceQuarter): read beside `hearts`, which they never
   // reach a whole heart of (heartsAfter)
@@ -132,6 +168,7 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   // The Ten Bombs (the escape's), which no cell draws: 0 not known, 1 none
   // found, 2 found; autotracking reads it
   tenbombs: [0, 2],
+  triforce: [0, 50],
   tunic: [1, 3],
 
   // Big keys (0 = not obtained, 1 = obtained)
@@ -333,6 +370,7 @@ const ITEM_NAMES: Record<string, string> = {
   flippers: "Zora's Flippers",
   fluteactive: "Flute (activated)",
   glove: "Power Glove",
+  goalpieces: "Triforce pieces asked for",
   heartquarters: "Heart pieces",
   hearts: "Hearts",
   heldcrystals: "Crystals held",
@@ -349,6 +387,7 @@ const ITEM_NAMES: Record<string, string> = {
   shopkey: "Key shop",
   somaria: "Cane of Somaria",
   tenbombs: "Ten Bombs",
+  triforce: "Triforce pieces",
 };
 
 /**

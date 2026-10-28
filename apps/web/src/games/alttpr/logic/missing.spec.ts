@@ -18,6 +18,7 @@ import {
   compactSpots,
   dungeonMissing,
   goModeLeftOf,
+  goModeMarginOf,
   goModeStatusOf,
   groupMissing,
   type Missing,
@@ -417,9 +418,23 @@ describe("goModeStatusOf", () => {
     expect(goModeStatusOf({ ...FRESH })).toBe(status);
   });
 
-  it("has none for all dungeons and the triforce hunt", () => {
+  it("has none for all dungeons", () => {
     expect(goModeStatusOf(withGoal("all-dungeons"))).toBe(undefined);
-    expect(goModeStatusOf(withGoal("triforce-hunt"))).toBe(undefined);
+  });
+
+  it("is the pieces found against the pieces asked for in a triforce hunt, with no step", () => {
+    const base = withGoal("triforce-hunt");
+    const hunt = (triforce: number, goalpieces = 20) => ({
+      ...base,
+      items: { ...base.items, goalpieces, triforce },
+    });
+    expect(goModeStatusOf(hunt(0))).toEqual({ steps: [], tri: "no" });
+    expect(goModeStatusOf(hunt(19))?.tri).toBe("no");
+    expect(goModeStatusOf(hunt(20))?.tri).toBe("yes");
+    // A seed that asks for more, from the ROM
+    expect(goModeStatusOf(hunt(20, 25))?.tri).toBe("no");
+    expect(goModeStatusOf(hunt(25, 25))?.tri).toBe("yes");
+    expect(goModeMarginOf(hunt(0))).toBe(false);
   });
 
   it("has none, nor any analysis, under logic the pack does not model", () => {

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { isHunt, PIECES_ITEM } from "@/games/alttpr/data/items";
 import {
   actionFor,
   type ControlId,
@@ -27,6 +28,8 @@ export const isControlShown = (control: ControlId): boolean => {
   if (isKeyControl(control) && !bigKeysVisible) return false;
   // The shops' cells are a retro run's alone
   if (control.startsWith("shop") && settings.mode !== "retro") return false;
+  // The pieces are a triforce hunt's alone
+  if (control === PIECES_ITEM && !isHunt(settings)) return false;
   return !(
     isMapCompassControl(control) && !wildItems(settings).mapsAndCompasses
   );

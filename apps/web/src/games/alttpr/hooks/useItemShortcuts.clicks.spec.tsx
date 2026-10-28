@@ -70,8 +70,8 @@ const snapshot = () => {
 
 /**
  * A fresh run, key cells shown, `control` alone bound to K and Shift+K: a
- * keysanity run for a map or a compass, which only it shows, and a retro
- * run for a shop.
+ * keysanity run for a map or a compass, which only it shows, a retro run
+ * for a shop and a triforce hunt for the pieces.
  */
 const freshRun = (control: ControlId) =>
   act(() => {
@@ -80,7 +80,9 @@ const freshRun = (control: ControlId) =>
       ? "keysanity"
       : control.startsWith("shop")
         ? "retro"
-        : null;
+        : control === "triforce"
+          ? "triforce-hunt"
+          : null;
     if (presetId !== null) {
       useGameStore.setState({
         presetId,
@@ -134,7 +136,8 @@ describe("a shortcut steps its control exactly as a click does", () => {
       ).toBeGreaterThan(1);
       // One undoable step per press that moved it: a counter that stops at
       // its ends (the hearts, heartsAfter) does not move past them
-      const ends = control === "hearts" ? 2 : 0;
+      // (the triforce pieces too: none and the most a goal holds)
+      const ends = control === "hearts" || control === "triforce" ? 2 : 0;
       expect(useGameStore.getState().past).toHaveLength(2 * (steps - ends));
     },
   );

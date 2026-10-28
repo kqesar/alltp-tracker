@@ -63,6 +63,8 @@ const iconOf = (control: ControlId): string => {
   if (kind === "reward") return "dungeon0.png";
   // Link's hearts: the counter's full heart, no level of their own
   if (control === "hearts") return "heart.png";
+  // A triforce hunt's pieces: the one sprite, whatever the count
+  if (control === "triforce") return "triforce.png";
   // Agahnim 2, atop Ganon's Tower, is drawn as Agahnim, as on the board
   if (control === "agahnim2") return "agahnim1.png";
 

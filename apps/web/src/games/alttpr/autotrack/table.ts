@@ -22,6 +22,7 @@ import {
   type ItemState,
   itemsMax,
   itemsMin,
+  PIECES_ITEM,
 } from "@/games/alttpr/data/items";
 import {
   itemsFromPack,
@@ -149,6 +150,9 @@ export const joinValues = (
   board: CellValue,
   game: CellValue,
 ): CellValue => {
+  // The Triforce pieces found only rise; the pieces asked for are the ROM's
+  if (id === PIECES_ITEM) return Math.max(Number(board), Number(game));
+  if (id === "goalpieces") return game;
   const entry = PACK_ITEMS[id];
   switch (entry?.kind) {
     case "escape":

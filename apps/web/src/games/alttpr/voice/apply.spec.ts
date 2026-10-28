@@ -96,6 +96,25 @@ describe("applyVoice", () => {
     expect(store().items).toMatchObject({ shoparrow: true, shopkey: true });
   });
 
+  it("counts a Triforce piece found in a triforce hunt only, whose board shows the cell", () => {
+    expect(say("tri force")).toEqual({
+      changed: false,
+      words: "Triforce pieces",
+    });
+    expect(store().items.triforce).toBe(0);
+
+    store().applyPreset("triforce-hunt");
+    expect(say("tri force")).toEqual({
+      changed: true,
+      words: "Triforce pieces",
+    });
+    expect(say("try force").changed).toBe(true);
+    expect(say("tri force piece").changed).toBe(true);
+    expect(store().items.triforce).toBe(3);
+    // Each find one undo step
+    expect(store().past).toHaveLength(4);
+  });
+
   it("undoes, redoes and drives the timer, saying when there was nothing to do", () => {
     expect(say("undo").changed).toBe(false);
     say("hammer");

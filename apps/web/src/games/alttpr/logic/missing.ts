@@ -43,9 +43,11 @@ import {
   goModeOf,
   goModeStatus,
   goModeStatusBy,
+  huntGoModeOf,
   type MarginGateId,
   marginFiller,
   TRICKS,
+  TRIFORCE_HUNT,
   type TrickId,
   trickFiller,
   UNKNOWN_COUNTS,
@@ -53,6 +55,7 @@ import {
   untrackedItems,
   withUntracked,
 } from "@alltp/pack-alttpr";
+import { isHunt, PIECES_ITEM } from "@/games/alttpr/data/items";
 import type { RunSettings } from "@/games/alttpr/data/presets";
 import {
   HEART_POWER,
@@ -852,8 +855,21 @@ const analyzeCrossed = (solution: Solution, run: RunSettings): RunAnalysis => {
 };
 
 /**
+ * The Triforce pieces found and the pieces the goal asks for, from the
+ * board's two counts.
+ * @param items - The run's items
+ */
+export const piecesOf = (
+  items: Readonly<Record<string, number | boolean>>,
+): [found: number, asked: number] => [
+  Number(items[PIECES_ITEM] ?? 0),
+  Number(items.goalpieces ?? TRIFORCE_HUNT.required),
+];
+
+/**
  * The run's go mode, from the pack's goal; none for a triforce hunt, which
- * the pack reads as Ganon though its end is the pieces it does not count.
+ * the pack reads as Ganon though its end is the pieces it does not count: a
+ * hunt's is the count (`goModeStatusOf`).
  */
 const goModeOfRun = (run: RunSettings, settings: AlttprSettings) =>
   run.goal === "triforce-hunt" ? undefined : goModeOf(settings);
@@ -862,11 +878,16 @@ let lastStatus: { solution: Solution; status?: GoModeStatus } | undefined;
 
 /**
  * Where the run stands against its go mode: each step in the key model.
- * Undefined when its goal has none (all dungeons, triforce hunt). Memoized
+ * Undefined when its goal has none (all dungeons). A triforce hunt's is the
+ * pieces found against the pieces asked for, with no step. Memoized
  * on the solution: a step past the first, solved with what it gives, costs
  * a solve only once the first is possible.
  */
 export const goModeStatusOf = (inputs: Inputs): GoModeStatus | undefined => {
+  // A triforce hunt is won by the count: no rule of the pack to solve
+  if (isHunt(inputs.settings)) {
+    return { steps: [], tri: huntGoModeOf(...piecesOf(inputs.items)) };
+  }
   const solution = solutionOf(inputs);
   if (lastStatus?.solution === solution) return lastStatus.status;
   const mode = goModeOfRun(inputs.settings, solution.settings);
@@ -897,6 +918,7 @@ let lastMargin: { solution: Solution; margin: boolean } | undefined;
  * run (`marginOf`), and when the go mode is in logic or maybe already.
  */
 export const goModeMarginOf = (inputs: Inputs): boolean => {
+  if (isHunt(inputs.settings)) return false;
   const status = goModeStatusOf(inputs);
   if (status?.tri !== "no") return false;
   const solution = solutionOf(inputs);

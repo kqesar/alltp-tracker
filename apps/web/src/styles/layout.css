@@ -40,6 +40,15 @@
   --grid-rows: 8;
 }
 
+/* A triforce hunt's pieces cell is a row more, under the grid */
+.layout--pieces-row {
+  --grid-rows: 8;
+}
+
+.layout--pieces-row.layout--key-rows {
+  --grid-rows: 9;
+}
+
 /* Stacked, each world keeps the grid's 7-cell height. */
 .layout--stacked {
   grid-template-columns: calc(var(--cell) * 8) calc(var(--cell) * 7);
