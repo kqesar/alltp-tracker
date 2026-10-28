@@ -2,11 +2,13 @@ import { parseUserAgent } from "@alltp/autotrack";
 import { act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FakeVisibility, GRANTED, ManualClock } from "@/autotrack/fixtures";
+import { isRaceModeOn, isRaceModeOrPending } from "@/autotrack/raceMode";
 import { SAVE, seedMemory } from "@/games/alttpr/autotrack/fixtures";
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
 import { forgetSeedFiles } from "@/games/alttpr/autotrack/seedFile";
 import {
   connectAutotrack,
+  disconnectAutotrack,
   keepRunType,
   setAutotrackOptions,
   stopAutotrack,
@@ -141,6 +143,7 @@ describe("Race Mode as the player sets it", () => {
       darkRoomStyle: "art",
       keptSeed: null,
       raceChoice: "on",
+      raceSeen: false,
     });
   });
 
@@ -261,6 +264,7 @@ describe("following the seed's run type", () => {
       darkRoomStyle: "art",
       keptSeed: "KEPT",
       raceChoice: "auto",
+      raceSeen: false,
     });
 
     // A new game, fresh: still the player's run type for this seed
@@ -401,5 +405,98 @@ describe("following the seed's run type", () => {
         result: "offline",
       });
     });
+  });
+});
+
+describe("a race, once read, is remembered", () => {
+  const store = () => useAutotrackStore.getState();
+  const saved = () =>
+    JSON.parse(localStorage.getItem("alltp-tracker-autotrack") ?? "{}").state;
+
+  /** Connected to a race seed, read, then the player disconnects. */
+  const raceThenDisconnect = async () => {
+    const h = harness({ race: true });
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(store().raceSeen).toBe(true);
+    act(() => disconnectAutotrack());
+    return h;
+  };
+
+  it("holds Race Mode through a Disconnect, for everything that asks", async () => {
+    await raceThenDisconnect();
+
+    // Disconnect clears the reading, the session and the wish to connect:
+    // without the memory every consumer would read this run as no race's
+    expect(store()).toMatchObject({
+      active: false,
+      connectOnStart: false,
+      reading: null,
+    });
+    expect(isRaceModeOn(store())).toBe(true);
+    expect(isRaceModeOrPending(store())).toBe(true);
+  });
+
+  it("keeps it across a reload", async () => {
+    await raceThenDisconnect();
+    expect(saved().raceSeen).toBe(true);
+
+    act(() => useAutotrackStore.setState({ raceSeen: false }));
+    expect(isRaceModeOrPending(store())).toBe(false);
+    await act(() => useAutotrackStore.persist.rehydrate());
+    // The saved value, as a page loading again reads it
+    expect(store().raceSeen).toBe(false);
+    localStorage.setItem(
+      "alltp-tracker-autotrack",
+      JSON.stringify({
+        state: { raceChoice: "auto", raceSeen: true },
+        version: 1,
+      }),
+    );
+    await act(() => useAutotrackStore.persist.rehydrate());
+    expect(isRaceModeOrPending(store())).toBe(true);
+  });
+
+  it("is ended by New game, an import and the player's word, and by nothing else", async () => {
+    await raceThenDisconnect();
+    // Autotracking's own readings are no new run
+    expect(store().raceSeen).toBe(true);
+
+    act(() => board().reset());
+    expect(store().raceSeen).toBe(false);
+    expect(isRaceModeOrPending(store())).toBe(false);
+
+    act(() => useAutotrackStore.setState({ raceSeen: true }));
+    act(() => board().loadProgress({}));
+    expect(store().raceSeen).toBe(false);
+
+    act(() => useAutotrackStore.setState({ raceSeen: true }));
+    act(() => store().endRace());
+    expect(store().raceSeen).toBe(false);
+    expect(saved().raceSeen).toBe(false);
+  });
+
+  it("is never set by a seed that is no race's", async () => {
+    const h = harness();
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    expect(store().reading?.race).toBe(false);
+    act(() => disconnectAutotrack());
+
+    expect(store().raceSeen).toBe(false);
+    expect(isRaceModeOrPending(store())).toBe(false);
+  });
+
+  it("is not set by Race Mode held always on over an open seed", async () => {
+    const h = harness();
+    act(() => store().setRaceChoice("on"));
+    await act(() => connectAutotrack());
+    await h.advance(0);
+    act(() => disconnectAutotrack());
+
+    // The player's own choice holds it, and goes with the choice
+    expect(store().raceSeen).toBe(false);
+    act(() => store().setRaceChoice("auto"));
+    expect(isRaceModeOrPending(store())).toBe(false);
   });
 });

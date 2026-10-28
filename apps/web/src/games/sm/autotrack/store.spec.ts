@@ -7,6 +7,7 @@ import {
   GRANTED,
   ManualClock,
   settle,
+  statusOf,
 } from "@/autotrack/fixtures";
 import {
   connectSmAutotrack,
@@ -412,5 +413,30 @@ describe("Super Metroid's session code", () => {
 
     store.disconnectSmAutotrack();
     expect(store.useSmAutotrackStore.getState().unavailable).toBe(false);
+  });
+});
+
+describe("Super Metroid never remembers a race", () => {
+  it("ignores a race flag, which its ROMs do not carry, and saves none", () => {
+    useSmAutotrackStore.setState({
+      active: true,
+      status: statusOf("connected", {
+        race: {
+          active: true,
+          flag: "race",
+          overridden: false,
+          raceLegal: true,
+          setting: "on",
+        },
+      }),
+    });
+
+    expect(state().raceSeen).toBe(false);
+    smAutotrack.setRaceChoice("off");
+    // Its save is as it always was
+    expect(saved()).toEqual({ connectOnStart: false, raceChoice: "off" });
+    // Replacing the run changes nothing either
+    run().reset();
+    expect(state().raceSeen).toBe(false);
   });
 });

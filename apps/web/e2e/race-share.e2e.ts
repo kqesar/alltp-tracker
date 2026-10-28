@@ -152,6 +152,46 @@ for (const width of WIDTHS) {
   });
 }
 
+test("a race read earlier keeps Export and Share off after a reload, until the player ends it", async ({
+  page,
+}) => {
+  // What a race seed leaves behind once the player disconnected and came back
+  await page.goto("./");
+  await page.evaluate(() => {
+    localStorage.clear();
+    localStorage.setItem(
+      "alltp-tracker-autotrack",
+      JSON.stringify({
+        state: { raceChoice: "auto", raceSeen: true },
+        version: 1,
+      }),
+    );
+  });
+  await page.reload();
+  await page.getByTestId("toolbar").waitFor();
+  for (const action of await actions(page)) {
+    await expect(action).toHaveAttribute("aria-disabled", "true");
+  }
+  await page.keyboard.press("Escape");
+
+  await clickToolbarAction(
+    page,
+    page.getByTestId("autotrack-button"),
+    "toolbar-more-autotrack",
+  );
+  const dialog = page.getByRole("dialog", { name: "Autotracking" });
+  await expect(dialog.getByTestId("race-remembered")).toContainText(
+    "read as a race's",
+  );
+  await dialog.getByTestId("race-end").click();
+  await expect(dialog.getByTestId("race-remembered")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  for (const action of await actions(page)) {
+    await expect(action).not.toHaveAttribute("aria-disabled");
+  }
+});
+
 test("Super Metroid's Export and Share are off while its Race Mode is on", async ({
   page,
 }) => {

@@ -131,8 +131,12 @@ describe("SeedImport", () => {
     );
     expect(screen.getByTestId("seed-import-race")).toBeVisible();
 
-    // Out of it, the form is back
+    // The race read is remembered: an open flag read after it does not end it
     act(() => useAutotrackStore.setState({ status: STATUSES.connected }));
+    expect(screen.getByTestId("seed-import-race")).toBeVisible();
+
+    // Out of it once the player calls the race over, the form is back
+    act(() => useAutotrackStore.getState().endRace());
     expect(screen.getByTestId("seed-import-input")).toBeVisible();
     expect(fetch).not.toHaveBeenCalled();
   });

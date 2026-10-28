@@ -161,6 +161,38 @@ describe.each(GAMES)("$name toolbar and Race Mode", (game) => {
   );
 });
 
+describe("a race remembered", () => {
+  afterEach(() => {
+    act(() => useAutotrackStore.setState({ raceSeen: false }));
+  });
+
+  it("keeps Export and Share off with no session, until the race is called over", async () => {
+    const user = userEvent.setup();
+    localStorage.clear();
+    // A race was read, then the player disconnected: nothing is connected
+    act(() =>
+      useAutotrackStore.setState({
+        active: false,
+        connectOnStart: false,
+        raceChoice: "auto",
+        raceSeen: true,
+        reading: null,
+      }),
+    );
+    render(<TrackerControls />);
+    for (const button of [exportButton(), shareButton()]) {
+      expect(button).toHaveAttribute("aria-disabled", "true");
+    }
+    await user.click(shareButton());
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    act(() => useAutotrackStore.getState().endRace());
+
+    expect(exportButton()).not.toHaveAttribute("aria-disabled");
+    expect(shareButton()).not.toHaveAttribute("aria-disabled");
+  });
+});
+
 describe("the More menu of A Link to the Past", () => {
   const download = vi.fn();
   beforeEach(() => {

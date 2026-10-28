@@ -1,9 +1,14 @@
 import type { SpoilerError, SpoilerGame } from "@alltp/spoiler";
 import { describe, expect, it, vi } from "vitest";
 import {
+  isRaceHeldByMemory,
   isRaceModeOn,
   isRaceModeOrPending,
+  onRunReplaced,
   type RaceModeState,
+  rememberRace,
+  runReplaced,
+  seedIsRace,
 } from "@/autotrack/raceMode";
 import { spoilerFile, spoilerLog } from "@/games/alttpr/review/fixtures";
 import { reviewGate } from "@/review/gate";
@@ -43,6 +48,7 @@ describe("isRaceModeOn", () => {
     active: false,
     connectOnStart: false,
     raceChoice: "auto",
+    raceSeen: false,
     reading: null,
     status: { code: "idle" },
   };
@@ -79,6 +85,7 @@ describe("isRaceModeOrPending", () => {
     active: false,
     connectOnStart: false,
     raceChoice: "auto",
+    raceSeen: false,
     reading: null,
     status: { code: "idle" },
   };
@@ -135,6 +142,95 @@ describe("isRaceModeOrPending", () => {
         raceChoice: "off",
       }),
     ).toBe(false);
+  });
+});
+
+describe("a race remembered (raceSeen)", () => {
+  const idle: RaceModeState = {
+    active: false,
+    connectOnStart: false,
+    raceChoice: "auto",
+    raceSeen: false,
+    reading: null,
+    status: { code: "idle" },
+  };
+  const flagged = (flag: string, active: boolean) =>
+    ({
+      code: "connected",
+      race: { active, flag, setting: "auto" },
+    }) as RaceModeState["status"];
+
+  it("keeps Race Mode on for every consumer, with no session and no reading", () => {
+    expect(isRaceModeOn(idle)).toBe(false);
+    expect(isRaceModeOn({ ...idle, raceSeen: true })).toBe(true);
+    // Not even autotracking set to connect and an open flag read after it
+    expect(isRaceModeOrPending({ ...idle, raceSeen: true })).toBe(true);
+    expect(
+      isRaceModeOrPending({
+        ...idle,
+        active: true,
+        raceSeen: true,
+        reading: { race: false },
+        status: flagged("open", false),
+      }),
+    ).toBe(true);
+  });
+
+  it("reads the seed as a race's only from a connected ROM flag that says race", () => {
+    expect(seedIsRace({ status: flagged("race", true) })).toBe(true);
+    for (const flag of ["open", "none", "pending", "unknown", "unreadable"]) {
+      expect(seedIsRace({ status: flagged(flag, true) })).toBe(false);
+    }
+    expect(seedIsRace({ status: { code: "idle" } })).toBe(false);
+  });
+
+  it("says when only the memory holds Race Mode", () => {
+    const held = { ...idle, raceSeen: true };
+    expect(isRaceHeldByMemory(held)).toBe(true);
+    expect(isRaceHeldByMemory(idle)).toBe(false);
+    // The player's choice, or the session now reading a race, holds it itself
+    expect(isRaceHeldByMemory({ ...held, raceChoice: "on" })).toBe(false);
+    expect(isRaceHeldByMemory({ ...held, status: flagged("race", true) })).toBe(
+      false,
+    );
+  });
+
+  it("is set by the store once the session reads a race, never before", () => {
+    let state = { ...idle };
+    const listeners = new Set<(next: typeof state) => void>();
+    const store = {
+      getState: () => state,
+      setState: (change: { raceSeen: boolean }) => {
+        state = { ...state, ...change };
+        for (const listener of listeners) listener(state);
+      },
+      subscribe: (listener: (next: typeof state) => void) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+    };
+    rememberRace(store);
+    store.setState({ raceSeen: false });
+    expect(state.raceSeen).toBe(false);
+
+    state = { ...state, status: flagged("open", false) };
+    for (const listener of listeners) listener(state);
+    expect(state.raceSeen).toBe(false);
+
+    state = { ...state, status: flagged("race", true) };
+    for (const listener of listeners) listener(state);
+    expect(state.raceSeen).toBe(true);
+  });
+
+  it("tells a game's listeners its run was replaced", () => {
+    const heard = vi.fn();
+    const stop = onRunReplaced(heard);
+    runReplaced("sm");
+    stop();
+    runReplaced("alttpr");
+
+    expect(heard).toHaveBeenCalledOnce();
+    expect(heard).toHaveBeenCalledWith("sm");
   });
 });
 
