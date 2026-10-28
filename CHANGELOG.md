@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.61.1](https://github.com/kqesar/alltp-tracker/compare/v2.61.0...v2.61.1) (2026-10-28)
+
+
+### 🐛 Bug Fixes
+
+* **web:** do not carry a finished run timer into the seed's run ([7f9100f](https://github.com/kqesar/alltp-tracker/commit/7f9100fe2ff5b85e7afc7d26a3e3cb2b0bb7c5b1))
+
 ## [2.61.0](https://github.com/kqesar/alltp-tracker/compare/v2.60.2...v2.61.0) (2026-10-28)
 
 
