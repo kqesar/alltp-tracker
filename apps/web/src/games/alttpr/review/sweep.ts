@@ -56,6 +56,12 @@ export type Hidden =
    * shuffled, a glitched logic.
    */
   | "not-modelled"
+  /**
+   * The board has finds and the run no timeline at all: opened from a
+   * shared link that left it out to stay short, or a save from before the
+   * tracker kept one.
+   */
+  | "no-timeline"
   /** Nothing the seed needed has a time. */
   | "no-times"
   /** Tracked by hand: its times are clicks. */
@@ -82,6 +88,13 @@ export const hiddenReason = (
 ): Hidden | null => {
   const { settings } = run;
   if (log.spheres === 0) return "no-playthrough";
+  // First: whatever else holds, the times are to be had where it was played
+  if (
+    Object.keys(run.timeline).length === 0 &&
+    comparison.rows.some(({ state }) => state === "untimed")
+  ) {
+    return "no-timeline";
+  }
   if (settings.dungeonItems === "mcs" || settings.dungeonItems === "full") {
     return "keysanity";
   }

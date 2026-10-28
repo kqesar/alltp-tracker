@@ -285,6 +285,27 @@ describe("the waits of a reviewed run", () => {
       within(steps).queryByRole("columnheader", { name: "Waited" }),
     ).toBeNull();
   });
+
+  it("are not shown for a run that came without its timeline, which says what to do, its beaten bosses' prizes taken", async () => {
+    const prize = log.placements.find(
+      (p) => p.sphere !== null && p.location.endsWith("/prize"),
+    );
+    if (prize === undefined) throw new Error("no needed prize in the log");
+    // The board as a link without its timeline opens it: all done, no stamp
+    await openReview({ timeline: {} });
+
+    expect(screen.getByTestId("review-hidden")).toHaveTextContent(
+      "This run came without its timeline (a shared link leaves it out to stay short), so nothing on it has a time: review it on the device where it was played, or open its full link",
+    );
+    // The list and the steps agree: a prize whose boss fell was taken
+    expect(screen.getByTestId("review-missed")).toHaveTextContent(
+      "Nothing the seed needed.",
+    );
+    expect(screen.queryByTestId(`review-missed-${prize.location}`)).toBeNull();
+    expect(
+      screen.getByTestId(`review-row-${prize.location}`),
+    ).toHaveTextContent("done, no time");
+  });
 });
 
 describe("the sweep on the page", () => {
