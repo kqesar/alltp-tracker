@@ -17,6 +17,14 @@ import { RULES } from "./rules";
 import type { AlttprSettings } from "./settings";
 import { buildWorld, type RegionDef, type RegionModule } from "./world";
 
+/**
+ * Where a rule sits, for a rewrite that depends on it: a region's (its
+ * entrances', its locations', what seeing them needs) or a named rule's.
+ */
+export type RuleSite =
+  | { readonly region: string }
+  | { readonly helper: string };
+
 /** A world of the run, its rules read through one rewrite. */
 export interface RewrittenWorld {
   /**
@@ -38,14 +46,14 @@ export interface RewrittenWorld {
  * items it adds to STATE_NAMES.
  */
 export function rewrittenWorld(
-  requirement: (req: string) => string,
+  requirement: (req: string, site: RuleSite) => string,
   items: readonly string[],
 ): RewrittenWorld {
-  const location = (def: LocationDef): LocationDef => {
-    const req = requirement(def.req);
+  const location = (def: LocationDef, site: RuleSite): LocationDef => {
+    const req = requirement(def.req, site);
     const visible = def.visible;
     const seen =
-      visible?.req === undefined ? undefined : requirement(visible.req);
+      visible?.req === undefined ? undefined : requirement(visible.req, site);
     if (req === def.req && seen === visible?.req) return def;
     return {
       ...def,
@@ -53,14 +61,17 @@ export function rewrittenWorld(
       ...(visible === undefined ? {} : { visible: { ...visible, req: seen } }),
     };
   };
-  const region = (def: RegionDef): RegionDef => ({
-    ...def,
-    entrances: def.entrances.map((entrance) => ({
-      ...entrance,
-      req: requirement(entrance.req),
-    })),
-    locations: def.locations.map(location),
-  });
+  const region = (def: RegionDef): RegionDef => {
+    const site = { region: def.id };
+    return {
+      ...def,
+      entrances: def.entrances.map((entrance) => ({
+        ...entrance,
+        req: requirement(entrance.req, site),
+      })),
+      locations: def.locations.map((each) => location(each, site)),
+    };
+  };
 
   const rewritten = new WeakMap<
     readonly RegionModule[],
@@ -84,7 +95,7 @@ export function rewrittenWorld(
     helpers: Object.fromEntries(
       Object.entries(RULES.helpers ?? {}).map(([name, req]) => [
         name,
-        requirement(req),
+        requirement(req, { helper: name }),
       ]),
     ),
   };
