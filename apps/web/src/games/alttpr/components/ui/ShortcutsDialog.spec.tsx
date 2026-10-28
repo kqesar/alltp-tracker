@@ -86,7 +86,20 @@ describe("ShortcutsDialog", () => {
     expect(iconOf("Bow")).toMatch(/\/bow1\.png$/);
     // Eastern Palace's: its three chests, its boss alive
     expect(iconOf("Chests")).toMatch(/\/chest3\.png$/);
-    expect(iconOf("Boss")).toMatch(/\/boss01\.png$/);
+    expect(iconOf("Boss")).toMatch(/\/boss02\.png$/);
+    expect(iconOf("Hearts")).toMatch(/\/heart\.png$/);
+    // Every row's icon is an asset the site ships
+    const assets = new Set(
+      Object.keys(import.meta.glob("../../../../../public/assets/*.png")).map(
+        (path) => path.slice(path.lastIndexOf("/") + 1),
+      ),
+    );
+    const icons = [...dialog().querySelectorAll("th img")].map((img) => {
+      const src = img.getAttribute("src") ?? "";
+      return src.slice(src.lastIndexOf("/") + 1);
+    });
+    expect(icons.length).toBeGreaterThan(50);
+    expect(icons.filter((icon) => !assets.has(icon))).toEqual([]);
     expect(binding("shortcut-advance-hookshot")).toHaveAccessibleName(
       "Hookshot forward: W",
     );

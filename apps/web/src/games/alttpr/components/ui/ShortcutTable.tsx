@@ -10,6 +10,7 @@ import {
 } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { KeyChord } from "@/games/alttpr/components/ui/KeyChord";
+import { BOSS_STATES } from "@/games/alttpr/constants";
 import {
   items,
   itemsMax,
@@ -50,7 +51,8 @@ const DIRECTION_NAMES: Record<ShortcutDirection, string> = {
 
 /** The art a control is listed with: an item as found, a dungeon control at rest. */
 const iconOf = (control: ControlId): string => {
-  const kind = /^(bigkey|smallkey|map|compass|medallion|reward)\d$/.exec(
+  // The castle dungeons' too: Hyrule Castle's map10 to Ganon's Tower's 12
+  const kind = /^(bigkey|smallkey|map|compass|medallion|reward)\d+$/.exec(
     control,
   )?.[1];
   if (kind === "bigkey" || kind === "smallkey" || kind === "compass") {
@@ -59,14 +61,19 @@ const iconOf = (control: ControlId): string => {
   if (kind === "map") return "dungeonmap.png";
   if (kind === "medallion") return "medallion0.png";
   if (kind === "reward") return "dungeon0.png";
+  // Link's hearts: the counter's full heart, no level of their own
+  if (control === "hearts") return "heart.png";
+  // Agahnim 2, atop Ganon's Tower, is drawn as Agahnim, as on the board
+  if (control === "agahnim2") return "agahnim1.png";
 
   const value = items[control];
   if (typeof value === "boolean" || TOGGLE_ITEMS.has(control)) {
     return `${control}.png`;
   }
-  // A dungeon's chests all there, its boss alive: their starting art
+  // A dungeon's chests all there: their starting art; a boss has one
+  // portrait, which the board greys while it is alive
   if (control.startsWith("chest")) return `chest${value}.png`;
-  if (control.startsWith("boss")) return `${control}${value}.png`;
+  if (control.startsWith("boss")) return `${control}${BOSS_STATES.BEATEN}.png`;
   return `${control}${Math.min(itemsMin[control] + 1, itemsMax[control])}.png`;
 };
 
