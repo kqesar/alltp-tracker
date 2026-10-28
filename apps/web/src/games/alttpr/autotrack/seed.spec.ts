@@ -7,7 +7,7 @@ import {
   seedLineText,
   switchedText,
 } from "@/games/alttpr/autotrack/seed";
-import { getPreset } from "@/games/alttpr/data/presets";
+import { getPreset, logicModelled } from "@/games/alttpr/data/presets";
 import {
   type SeedRom,
   writeSeedSettings,
@@ -262,6 +262,83 @@ describe("checkSeed", () => {
     expect(seedLineText(check, false)).toBe(
       "A Mystery seed: its settings stay hidden until you find them in game.",
     );
+  });
+
+  it("carries a glitched seed's logic, which the tracker does not model", () => {
+    const check = checkSeed(
+      seedOf({ logic: "OverworldGlitches" }),
+      run("open"),
+    );
+
+    expect(check).toMatchObject({
+      kind: "differs",
+      presetId: "open",
+      runText: "Open (Open, Ganon, 7/7)",
+      seedText: "Open (Open, Ganon, 7/7, Overworld Glitches)",
+      settings: {
+        ...getPreset("open").settings,
+        glitches: "overworld_glitches",
+      },
+    });
+    if (check.kind !== "differs") throw new Error("expected differs");
+    expect(logicModelled(check.settings)).toBe(false);
+    // The same seed again is the run's
+    expect(
+      checkSeed(seedOf({ logic: "OverworldGlitches" }), {
+        presetId: "open",
+        settings: check.settings,
+      }),
+    ).toMatchObject({ kind: "same" });
+  });
+
+  it("takes a NoGlitches seed's logic off a glitched run", () => {
+    const glitched = {
+      presetId: "open",
+      settings: {
+        ...getPreset("open").settings,
+        glitches: "major_glitches" as const,
+      },
+    };
+
+    const check = checkSeed(seedOf({}), glitched);
+
+    expect(check).toMatchObject({
+      kind: "differs",
+      seedText: "Open (Open, Ganon, 7/7)",
+      settings: getPreset("open").settings,
+    });
+    if (check.kind !== "differs") throw new Error("expected differs");
+    expect(check.settings).not.toHaveProperty("glitches");
+  });
+
+  it("keeps the run's logic when the seed does not state it", () => {
+    const glitched = {
+      presetId: "open",
+      settings: {
+        ...getPreset("open").settings,
+        glitches: "no_logic" as const,
+      },
+    };
+    const seed = {
+      ...seedOf({}),
+      logic: { known: false, why: "unrecognized" },
+    } as const;
+
+    expect(checkSeed(seed, glitched)).toMatchObject({ kind: "same" });
+  });
+
+  it("switches a Mystery run to a glitched Mystery seed's logic", () => {
+    const seed = {
+      ...mysterySeed(),
+      logic: { known: true, value: "HybridMajorGlitches" },
+    } as const;
+
+    expect(checkSeed(seed, run("mystery"))).toMatchObject({
+      kind: "differs",
+      presetId: "mystery",
+      seedText: "Mystery (Open, Hybrid Major Glitches)",
+      settings: { glitches: "hybrid_major_glitches" },
+    });
   });
 
   it("waits for settings not read yet, and refuses values no seed has", () => {

@@ -108,18 +108,39 @@ describe("withSeedFile", () => {
     const rom = {
       ...raceRom,
       // A setting the ROM states stands, whatever the file says
-      logic: { known: true, value: "MajorGlitches" },
+      goal: { known: true, value: "ganon" },
       mode: { known: false, why: "not-read" },
       swordless: { known: false, why: "unrecognized" },
     } as const;
 
-    expect(withSeedFile(rom, file)).toEqual({ ...file, logic: rom.logic });
+    expect(withSeedFile(rom, file)).toEqual({ ...file, goal: rom.goal });
     // The settings only the file states come with it
     expect(withSeedFile(rom, file)).toMatchObject({
       itemFunctionality: { known: true, value: "hard" },
       itemPlacement: { known: true, value: "basic" },
       itemPool: { known: true, value: "hard" },
     });
+  });
+
+  it("takes the file's logic, which the ROM's seed type folds", () => {
+    // Major Glitches, Hybrid Major Glitches and No Logic write one seed type
+    const rom = {
+      ...raceRom,
+      logic: { known: true, value: "MajorGlitches" },
+    } as const;
+    const hybrid = {
+      ...file,
+      logic: { known: true, value: "HybridMajorGlitches" },
+    } as const;
+
+    expect(withSeedFile(rom, hybrid).logic).toEqual(hybrid.logic);
+    // A file that names none leaves the ROM's
+    expect(
+      withSeedFile(rom, {
+        ...file,
+        logic: { known: false, why: "unrecognized" },
+      }).logic,
+    ).toEqual(rom.logic);
   });
 
   it("keeps the ROM's when the file is another seed's", () => {

@@ -361,12 +361,27 @@ describe("migrate", () => {
       { accessibility: "all" },
       { itemPool: "toString" },
       { itemFunctionality: 3 },
+      // None is said by the setting's absence, as every preset says it
+      { glitches: "none" },
+      { glitches: "minor_glitches" },
     ]) {
       expect(
         refusal(saveFile({ settings: { ...settings, ...wrong } })),
         JSON.stringify(wrong),
       ).toMatch(/item placement, accessibility, item pool and functionality/);
     }
+  });
+
+  it("keeps a glitched logic a seed was generated for", () => {
+    const settings = {
+      ...getPreset("open").settings,
+      glitches: "overworld_glitches",
+    };
+
+    expect(parseSave(saveFile({ settings }))).toMatchObject({
+      ok: true,
+      progress: { settings: { glitches: "overworld_glitches" } },
+    });
   });
 
   it("refuses crystal counts beyond the seven crystals", () => {

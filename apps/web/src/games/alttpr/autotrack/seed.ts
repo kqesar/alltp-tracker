@@ -14,6 +14,7 @@
 
 import type {
   SeedGoal,
+  SeedLogic,
   SeedSetting,
   SeedSettingsReading,
   SeedUnknown,
@@ -23,6 +24,8 @@ import {
   DUNGEON_ITEM_LABELS,
   ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
+  GLITCHES_LABELS,
+  type Glitches,
   getPreset,
   isHidden,
   MODE_LABELS,
@@ -87,6 +90,31 @@ const GOALS: Partial<Record<SeedGoal, RunSettings["goal"]>> = {
 const OTHER_GOALS: Partial<Record<SeedGoal, string>> = {
   completionist: "the Completionist goal",
   ganonhunt: "the Ganonhunt goal",
+};
+
+/**
+ * The run's glitched logic for each of upstream's (RandomizerController.php:
+ * 110-116): none for NoGlitches, which every preset is.
+ */
+const GLITCHES: Readonly<Record<SeedLogic, Glitches | undefined>> = {
+  HybridMajorGlitches: "hybrid_major_glitches",
+  MajorGlitches: "major_glitches",
+  NoGlitches: undefined,
+  NoLogic: "no_logic",
+  OverworldGlitches: "overworld_glitches",
+};
+
+/**
+ * Settings with the seed's logic: its glitches when it states them, the
+ * run's own when it does not (Race Mode, not read), none for NoGlitches.
+ */
+const withGlitches = (
+  settings: RunSettings,
+  logic: SeedSetting<SeedLogic>,
+): RunSettings => {
+  const glitches = logic.known ? GLITCHES[logic.value] : settings.glitches;
+  const { glitches: _, ...rest } = settings;
+  return glitches === undefined ? rest : { ...rest, glitches };
 };
 
 /** Short names for the goals, as a seed's summary says them. */
@@ -227,6 +255,10 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
   if (differs("accessibility")) {
     parts.push(ACCESSIBILITY_LABELS[settings.accessibility]);
   }
+  // No preset is glitched
+  if (settings.glitches !== undefined) {
+    parts.push(GLITCHES_LABELS[settings.glitches]);
+  }
   return `${preset.name} (${parts.join(", ")})`;
 };
 
@@ -234,12 +266,22 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
  * A Mystery seed, which hides its settings: a Mystery run is its run type,
  * in the run's world, which the player sees on the first screen.
  */
-const mysterySeed = (seed: string, run: Run): SeedCheck => {
-  if (run.presetId === "mystery") return { kind: "unread", why: "mystery" };
-  const settings = {
-    ...getPreset("mystery").settings,
-    mode: run.settings.mode,
-  };
+const mysterySeed = (
+  seed: string,
+  logic: SeedSetting<SeedLogic>,
+  run: Run,
+): SeedCheck => {
+  // Its file hides every setting but the logic
+  const settings = withGlitches(
+    { ...getPreset("mystery").settings, mode: run.settings.mode },
+    logic,
+  );
+  if (
+    run.presetId === "mystery" &&
+    settings.glitches === run.settings.glitches
+  ) {
+    return { kind: "unread", why: "mystery" };
+  }
   return {
     kind: "differs",
     presetId: "mystery",
@@ -279,7 +321,7 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     wildMaps,
   ]);
   if (seed.seed === null) return { kind: "unread", why: why ?? "not-read" };
-  if (why === "mystery") return mysterySeed(seed.seed, run);
+  if (why === "mystery") return mysterySeed(seed.seed, seed.logic, run);
   if (
     why !== null ||
     !crystalsGanon.known ||
@@ -322,30 +364,36 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     return { kind: "unsupported", reasons, seed: seed.seed };
   }
 
-  const settings: RunSettings = {
-    ...run.settings,
-    accessibility: fromFile(seed.accessibility, run.settings.accessibility),
-    crystalsGanon: crystalsGanon.value,
-    crystalsTower: crystalsTower.value,
-    dungeonItems,
-    entranceShuffle: fromFile(seed.entrances, run.settings.entranceShuffle),
-    goal: runGoal,
-    itemFunctionality: fromFile(
-      seed.itemFunctionality,
-      run.settings.itemFunctionality,
-    ),
-    itemPlacement: fromFile(seed.itemPlacement, run.settings.itemPlacement),
-    itemPool: fromFile(seed.itemPool, run.settings.itemPool),
-    mode: mode.value,
-    swordless: swordless.value,
-  };
+  const settings: RunSettings = withGlitches(
+    {
+      ...run.settings,
+      accessibility: fromFile(seed.accessibility, run.settings.accessibility),
+      crystalsGanon: crystalsGanon.value,
+      crystalsTower: crystalsTower.value,
+      dungeonItems,
+      entranceShuffle: fromFile(seed.entrances, run.settings.entranceShuffle),
+      goal: runGoal,
+      itemFunctionality: fromFile(
+        seed.itemFunctionality,
+        run.settings.itemFunctionality,
+      ),
+      itemPlacement: fromFile(seed.itemPlacement, run.settings.itemPlacement),
+      itemPool: fromFile(seed.itemPool, run.settings.itemPool),
+      mode: mode.value,
+      swordless: swordless.value,
+    },
+    seed.logic,
+  );
   // The seed's settings hide nothing: a Mystery run's hidden list is its own
   delete settings.hidden;
+  const sameLogic = settings.glitches === run.settings.glitches;
   // A Mystery run takes what the seed reveals, in place, in its own world
+  // and logic
   if (
     run.presetId === "mystery" &&
     settings.mode === run.settings.mode &&
-    settings.entranceShuffle === run.settings.entranceShuffle
+    settings.entranceShuffle === run.settings.entranceShuffle &&
+    sameLogic
   ) {
     const said: Partial<Pick<RunSettings, TunableSetting>> = {
       crystalsGanon: settings.crystalsGanon,
@@ -382,7 +430,10 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
       };
     }
   }
-  if (COMPARED.every((key) => settings[key] === run.settings[key])) {
+  if (
+    sameLogic &&
+    COMPARED.every((key) => settings[key] === run.settings[key])
+  ) {
     return {
       kind: "same",
       seed: seed.seed,

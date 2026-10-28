@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
+import { getPreset } from "@/games/alttpr/data/presets";
 import { analyzeNow } from "@/games/alttpr/hooks/useRunAnalysis";
 import { useAnalysisStore } from "@/games/alttpr/stores/analysisStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -82,6 +83,24 @@ describe("MapPanel", () => {
     });
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
       "The tracker has no logic for Crosskeys runs yet: every check shows as maybe.",
+    );
+    expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
+  });
+
+  it("says a glitched seed's logic is not modelled, and shows no marker in logic", () => {
+    act(() =>
+      useGameStore.getState().applyRun("open", {
+        ...getPreset("open").settings,
+        glitches: "overworld_glitches",
+      }),
+    );
+    render(<MapPanel />);
+
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The tracker has no logic for Overworld Glitches seeds yet: every check shows as maybe.",
+    );
+    expect(screen.getByTestId("marker-sahasrahlas-hut")).toHaveAccessibleName(
+      /: maybe available$/,
     );
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });

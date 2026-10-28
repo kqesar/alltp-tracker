@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   crossedLogic,
   DEFAULT_PRESET_ID,
+  describeSettings,
   getPreset,
   logicModelled,
   presets,
@@ -38,6 +39,23 @@ describe("presets", () => {
       expect(crossedLogic(settings)).toBe(false);
       expect(logicModelled(settings)).toBe(false);
     }
+  });
+
+  it("models no glitched logic, and says a run's in its summary", () => {
+    const open = getPreset("open").settings;
+    const glitched = { ...open, glitches: "major_glitches" as const };
+
+    expect(logicModelled(glitched)).toBe(false);
+    expect(
+      logicModelled({
+        ...getPreset("crosskeys").settings,
+        glitches: "no_logic",
+      }),
+    ).toBe(false);
+    const glitches = (settings: typeof open) =>
+      describeSettings(settings).find((row) => row.label === "Glitches")?.value;
+    expect(glitches(open)).toBe("None");
+    expect(glitches(glitched)).toBe("Major Glitches");
   });
 
   it("getPreset returns the matching preset", () => {

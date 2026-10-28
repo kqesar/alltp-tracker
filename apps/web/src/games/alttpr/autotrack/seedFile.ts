@@ -108,7 +108,9 @@ export const withSeedFile = (
         itemFunctionality: take(rom.itemFunctionality, file.itemFunctionality),
         itemPlacement: take(rom.itemPlacement, file.itemPlacement),
         itemPool: take(rom.itemPool, file.itemPool),
-        logic: take(rom.logic, file.logic),
+        // The ROM's seed type folds three logics into Major Glitches; the
+        // file names each
+        logic: file.logic.known ? file.logic : rom.logic,
         mode: take(rom.mode, file.mode),
         seed: rom.seed,
         swordless: take(rom.swordless, file.swordless),
