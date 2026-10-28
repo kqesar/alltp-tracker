@@ -76,7 +76,7 @@ const RACE_READS = [
   "compasses:items",
   "big-keys:keys",
   "maps:items",
-  "max-health:health",
+  "health:health",
   "pendants:prizes-held",
   "crystals:prizes-held",
   "magic-upgrade:items",
@@ -291,14 +291,18 @@ describe("MEMORY_RANGES", () => {
     expect(phasePlan(false).plan.requests).toHaveLength(1);
   });
 
-  it("lets Race Mode read the heart count alone of the HUD", () => {
+  it("lets Race Mode read the heart count and the heart piece count alone of the HUD", () => {
     const health = MEMORY_RANGES.filter((range) => range.category === "health");
+    // HeartPieceQuarter, then MaximumHealth (sram.asm:130-132)
     expect(health.map((range) => [range.id, range.bus, range.size])).toEqual([
-      ["max-health", 0x7e_f36c, 1],
+      ["health", 0x7e_f36b, 2],
     ]);
-    expect(permitted("max-health")).toBe(true);
-    // The pieces, the stats' heart counters and the rest of the HUD stay
-    // the player's
+    expect(permitted("health")).toBe(true);
+    expect(ALTTPR_RACE_PROFILE.categories.health?.rule).toContain(
+      "heart count, heart piece count",
+    );
+    // The stats' heart counters (the pieces collected in all, the
+    // containers) and the rest of the HUD stay the player's
     for (const id of ["heart-containers", "heart-pieces", "bomb-count"]) {
       expect(permitted(id), id).toBe(false);
     }
@@ -343,8 +347,8 @@ describe("MEMORY_RANGES", () => {
     // phase with its switch on, 13 bytes and 2 pieces over what it was; the
     // rest of it is gated, read apart. The seed type left the race phase
     // for the casual one (a setting, which Race Mode never reads). The heart
-    // count (max-health) joins the race phase: 3 bytes, the gap from the
-    // maps' range, in no new piece. The dungeon rooms, the bottles, the
+    // count and the pieces toward the next heart (health) join the race
+    // phase: 3 bytes, the gap from the maps' range, in no new piece. The dungeon rooms, the bottles, the
     // pendants and the crystals joined it too (v2.0's dungeon-locations,
     // bottle contents and prizes upon collection): the rooms bridge the
     // boss rooms, so the race phase reads more bytes in fewer pieces; the

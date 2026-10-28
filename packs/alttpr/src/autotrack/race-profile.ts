@@ -8,7 +8,11 @@ import { defineRaceProfile, type RaceProfile } from "@alltp/autotrack";
 const RULES_URL =
   "https://docs.google.com/document/d/e/2PACX-1vTgsj0FMiWyaBOYP97e_ABc4P_0vIGiJxoUJ5Rj-PBr1T7i_zpyLqhLLVkbftPwS_B6nwad5j5zhtMg/pub";
 
-/** v2.0's line on the HUD's counts: the heart count and the bottles, read. */
+/**
+ * v2.0's line on the HUD's counts: the heart count, the heart piece count
+ * (the pieces toward the next heart, as the pause menu shows them) and the
+ * bottles, read.
+ */
 const HUD_COUNTS =
   "The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.";
 
@@ -21,8 +25,10 @@ const STRICT =
  * 2.0 (2024), which racetime.gg's ALTTPR category links. Each `rule` quotes
  * it. Race Mode reads what v2.0 permits in so many words, and nothing it
  * leaves in doubt (in doubt, forbidden):
- * - the items, the dungeon items, the bosses, the heart count (`health`)
- *   and the bottles' contents (`bottles`), both named among the HUD's counts;
+ * - the items, the dungeon items, the bosses, the heart count and the heart
+ *   piece count (`health`: the hearts on screen and the pieces toward the
+ *   next) and the bottles' contents (`bottles`), all named among the HUD's
+ *   counts;
  * - the locations checked, outside the dungeons and inside them
  *   (`dungeon-checks`: "overworld-locations, underworld-locations, and
  *   dungeon-locations"; "how many locations have been cleared, both in

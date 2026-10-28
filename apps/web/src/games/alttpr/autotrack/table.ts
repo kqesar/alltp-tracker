@@ -4,8 +4,9 @@
 // (itemsFromPack), the cells that say a boss is beaten, the prize cells and
 // the value each prize takes, and how a value the player marked joins one
 // the game shows. Nothing here names an item: a cell added to the table is
-// read from the game with no change here. The hearts cell is laid from the
-// game's heart count (`decodeHealth`), which joins as a count does.
+// read from the game with no change here. The hearts counter is laid from
+// the game's heart count and the pieces toward the next (`decodeHealth`),
+// which join as one count of quarters (`joinHearts`).
 
 import {
   type DungeonId,
@@ -17,6 +18,7 @@ import {
 } from "@alltp/pack-alttpr";
 import {
   items as freshItems,
+  type Hearts,
   type ItemState,
   itemsMax,
   itemsMin,
@@ -152,7 +154,6 @@ export const joinValues = (
     case "escape":
       // The game's alone: no player marks it, and Race Mode sets it back
       return game;
-    case "hearts":
     case "held":
     case "known":
     case "activation":
@@ -168,8 +169,23 @@ export const joinValues = (
     case "prize":
       return board === 0 ? game : board;
     default:
+      // The hearts and the quarters join together, apart (joinHearts)
       return board;
   }
+};
+
+/**
+ * The hearts counter that holds both what the player marked and what the
+ * game shows: the more health, counted in quarters, its hearts and quarters
+ * together (never 11 hearts marked with the game's 3 quarters of its 10);
+ * the game's while the board's are not set.
+ * @param board - The hearts and quarters the player marked
+ * @param game - Those the game shows
+ */
+export const joinHearts = (board: Hearts, game: Hearts): Hearts => {
+  if (board.hearts === 0) return game;
+  const total = ({ hearts, quarters }: Hearts) => hearts * 4 + quarters;
+  return total(game) > total(board) ? game : board;
 };
 
 /**

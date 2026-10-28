@@ -200,17 +200,21 @@ spots, so a rule ported later is covered without a line here. The app holds
 its rules to this (`logic/atoms.spec.ts`: every atom a world reads is one
 the board can satisfy, or a count paired with its fact).
 
-Autotracking reads the hearts on screen, `MaximumHealth` (`$7E:F36C`,
-`max-health`: `$08` a heart, from `$18` to `$A0`, `sram.asm:131-132`), whole:
-four pieces add a heart there and `HeartPieceQuarter` wraps (`sram.asm:130`),
-so 9 hearts and three pieces read 9 (`decodeHealth`). Its category,
-`health`, is one of the two HUD counts Race Mode reads, beside the bottles'
+Autotracking reads Link's health as the pause menu shows it, one range
+(`health`, `$7E:F36B-$7E:F36C`, `sram.asm:130-132`): the hearts on screen,
+`MaximumHealth` (`$7E:F36C`: `$08` a heart, from `$18` to `$A0`), whole, and
+the pieces toward the next heart, `HeartPieceQuarter` (`$7E:F36B`: 0 to 3,
+wrapping to `$00` as the fourth adds a heart), so 9 hearts and three pieces
+read `{ hearts: 9, quarters: 3 }` (`decodeHealth`), each piece a quarter to
+`hasHealth`. Its category, `health`, is one of the two HUD counts Race Mode
+reads, beside the bottles'
 contents (`bottles`, which `@hasABottle` and `bottleCount` read in the same
 gate): v2.0 says "The tracker may also display and/or react to changes in
 current bomb count, arrow count, rupee count, heart count, heart piece
 count, and bottle contents", and the basic placement's dungeons ask for
-both. The stats' heart counters (`heart-containers`, `heart-pieces`) stay
-`hud`, unread in a race.
+both. The stats' heart counters (`heart-containers`, `heart-pieces`: every
+container and piece collected, not the menu's count) stay `hud`, unread in
+a race.
 
 ### A dungeon's prize, as the game shows it
 
@@ -430,7 +434,7 @@ category's line; `memory.spec.ts` lists every range a race reads):
 | --- | --- |
 | items, dungeon items, bosses | "Y-, B-, and A-items"; "Dungeon items (keys, maps, compasses)"; "Defeated bosses" |
 | locations checked, outside and inside the dungeons, and so each dungeon's counter | "overworld-locations, underworld-locations, and dungeon-locations"; "how many locations have been cleared, both in total, and per dungeon" |
-| the heart count, the bottles' contents | "heart count, heart piece count, and bottle contents" |
+| the heart count, the pieces toward the next heart, the bottles' contents | "heart count, heart piece count, and bottle contents" |
 | the pendants by name, the crystals as a count | "Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal)" |
 | the game's start and end | "when the game starts and when the game ends" |
 

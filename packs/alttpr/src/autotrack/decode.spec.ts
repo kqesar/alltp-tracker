@@ -1098,24 +1098,26 @@ describe("decodeHealth", () => {
     );
 
   it("reads the hearts on screen, $08 a heart", () => {
-    expect(health(0x18)).toBe(3);
-    expect(health(0x50)).toBe(10);
-    expect(health(0xa0)).toBe(20);
+    expect(health(0x18)).toEqual({ hearts: 3, quarters: 0 });
+    expect(health(0x50)).toEqual({ hearts: 10, quarters: 0 });
+    expect(health(0xa0)).toEqual({ hearts: 20, quarters: 0 });
   });
 
-  it("leaves the pieces toward the next heart out: 9 and three pieces are 9", () => {
-    expect(health(0x48, 3)).toBe(9);
-    expect(health(0x50, 0)).toBe(10);
+  it("reads the pieces toward the next heart beside them: 9 and three pieces", () => {
+    expect(health(0x48, 3)).toEqual({ hearts: 9, quarters: 3 });
+    expect(health(0x48, 1)).toEqual({ hearts: 9, quarters: 1 });
   });
 
-  it("reads it in Race Mode, which v2.0 lets react to the heart count", () => {
-    expect(racePermitted("max-health")).toBe(true);
-    expect(health(0x50, 3, true)).toBe(10);
+  it("reads both in Race Mode, which v2.0 lets react to the heart and piece counts", () => {
+    expect(racePermitted("health")).toBe(true);
+    expect(health(0x50, 3, true)).toEqual({ hearts: 10, quarters: 3 });
   });
 
   it("settles nothing off the scale or before it is read", () => {
     expect(health(0)).toBe("not-read");
     expect(health(0xa8)).toBe("not-read");
+    // HeartPieceQuarter wraps after $03: more is no save of the game's
+    expect(health(0x50, 4)).toBe("not-read");
     expect(
       decodeHealth(new Image().view({ read: () => false }), { race: false }),
     ).toBe("not-read");

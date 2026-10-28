@@ -34,13 +34,14 @@ import {
   BEATEN_CELLS,
   type CellValue,
   cellsFromPack,
+  joinHearts,
   joinValues,
   mostShown,
   PRIZE_CELLS,
   prizeOf,
 } from "@/games/alttpr/autotrack/table";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
-import { heartsValue } from "@/games/alttpr/data/items";
+import { type Hearts, heartsOf, heartsValue } from "@/games/alttpr/data/items";
 import { wildItems } from "@/games/alttpr/data/presets";
 import { ACTIVATION, ESCAPE } from "@/games/alttpr/logic/packItems";
 import {
@@ -307,6 +308,18 @@ export const medallionsShown = (
   return told;
 };
 
+/** The hearts counter's two values from the game's health. */
+const healthCells = (health: {
+  readonly hearts: number;
+  readonly quarters: number;
+}): Record<string, CellValue> => {
+  const held = heartsOf({
+    heartquarters: health.quarters,
+    hearts: heartsValue(health.hearts),
+  });
+  return { heartquarters: held.quarters, hearts: held.hearts };
+};
+
 /** The board's cells the game settles, and the value each shows. */
 export const gameCells = (
   reading: AutotrackReading,
@@ -317,10 +330,9 @@ export const gameCells = (
   ...prizeCells(reading, board),
   ...heldCells(reading),
   ...escapeCells(reading),
-  // The hearts on screen, which Race Mode reads too (v2.0's heart count)
-  ...(typeof reading.health === "number"
-    ? { hearts: heartsValue(reading.health) }
-    : {}),
+  // The hearts on screen and the pieces toward the next, which Race Mode
+  // reads too (v2.0's heart count and heart piece count)
+  ...(typeof reading.health === "object" ? healthCells(reading.health) : {}),
   // Race Mode reads the flute, never whether it was activated: the rules
   // read that as not known, maybe at most (the pack's unknown counts)
   ...(reading.race ? { fluteactive: ACTIVATION.UNKNOWN } : {}),
@@ -470,6 +482,26 @@ const changed = <T>(
     ),
   );
 
+/** The hearts counter's two values, laid together (joinHearts). */
+const HEARTS_CELLS = ["hearts", "heartquarters"] as const;
+
+/**
+ * Changed items with the hearts counter whole: either of its values
+ * changed brings both, which are laid together.
+ */
+const withHeartsWhole = (
+  news: Record<string, CellValue>,
+  all: Readonly<Record<string, CellValue>>,
+): Record<string, CellValue> =>
+  HEARTS_CELLS.some((id) => id in news)
+    ? {
+        ...news,
+        ...Object.fromEntries(
+          HEARTS_CELLS.filter((id) => id in all).map((id) => [id, all[id]]),
+        ),
+      }
+    : news;
+
 /**
  * What the game says now that it did not at the last view: the news a
  * merge lays on the board. A run of other settings makes every counter and
@@ -486,7 +518,7 @@ export const newsOf = (prev: GameView, next: GameView): GameView => {
           (a, b) => a[0] === b[0] && a[1] === b[1],
         )
       : next.counters,
-    items: changed(prev.items, next.items),
+    items: withHeartsWhole(changed(prev.items, next.items), next.items),
     medallions: changed(prev.medallions, next.medallions),
     settings: next.settings,
     smallKeys: sameRun
@@ -506,6 +538,7 @@ export const isEmptyView = (view: GameView) =>
 /** How a value of the board moves to what the game says of it. */
 type Lay = {
   item: (id: string, board: CellValue, game: CellValue) => CellValue;
+  hearts: (board: Hearts, game: Hearts) => Hearts;
   counter: (board: number, least: number, most: number) => number;
   checked: (board: boolean, game: boolean) => boolean;
   keys: (board: number, game: number) => number;
@@ -516,6 +549,7 @@ type Lay = {
 const MERGE: Lay = {
   checked: (board, game) => board || game,
   counter: (board, _least, most) => Math.min(board, most),
+  hearts: joinHearts,
   item: joinValues,
   keys: (board, game) => Math.max(board, game),
   // A medallion the player named stays theirs, as a prize does
@@ -530,6 +564,7 @@ const MERGE: Lay = {
 const SYNC: Lay = {
   checked: (_board, game) => game,
   counter: (board, least, most) => Math.min(most, Math.max(least, board)),
+  hearts: (_board, game) => game,
   item: (_id, _board, game) => game,
   keys: (_board, game) => game,
   medallion: (_board, game) => game,
@@ -549,8 +584,18 @@ const lay = (board: Board, view: GameView, how: Lay): Laid | null => {
     count++;
   };
   for (const [id, game] of Object.entries(view.items)) {
+    // The hearts counter's two values, laid together below
+    if ((HEARTS_CELLS as readonly string[]).includes(id)) continue;
     const current = board.items[id];
     if (current !== undefined) setItem(id, how.item(id, current, game));
+  }
+  if (view.items.hearts !== undefined) {
+    const now = heartsOf(board.items);
+    const next = how.hearts(now, heartsOf(view.items));
+    if (next.hearts !== now.hearts) setItem("hearts", next.hearts);
+    if (next.quarters !== now.quarters) {
+      setItem("heartquarters", next.quarters);
+    }
   }
   if (sameRun) {
     for (const [id, [least, most]] of Object.entries(view.counters)) {
