@@ -670,6 +670,10 @@ export const MEMORY_RANGES = [
   save("compasses", 0x364, 2, "items", "z3:sram.asm:119-126"),
   save("big-keys", 0x366, 2, "keys", "z3:sram.asm:119-126"),
   save("maps", 0x368, 2, "items", "z3:sram.asm:119-126"),
+  // MaximumHealth: the hearts on screen, $08 a heart, from the 3 Link starts
+  // with ($18) to 20 ($A0) (sram.asm:131-132). The race rules (v2.0) let a
+  // tracker show and react to the heart count: Race Mode reads it.
+  save("max-health", 0x36c, 1, "health", "z3:sram.asm:131-132"),
   save("pendants", 0x374, 1, "prizes", "z3:sram.asm:139-140"),
   save("crystals", 0x37a, 1, "prizes", "z3:sram.asm:148-150"),
   save("magic-upgrade", 0x37b, 1, "items", "z3:sram.asm:151"),

@@ -158,6 +158,47 @@ closes it to a player holding Bombos only), so nothing carries over.
 - **The derived facts** (`src/derived.ts`), from the items it gives.
 - **Small keys**, per dungeon, only with wild keys. Outside keysanity the
   key model reads the dungeons without them.
+- **The counts not known** (`unknown`, `src/unknown-counts.ts`): Link's
+  health and the escape's ten bombs, which a player sees on the HUD but may
+  not record. See below.
+
+### Counts a tracker may not know
+
+Upstream's `hasHealth($minimum)` sums the health items collected, a heart
+container 1 and a piece a quarter, the 3 starting hearts left out
+(`ItemCollection.php:546-553`): `@hasHealth7` is 10 hearts on screen. The
+basic item placement gates eight dungeons on it
+(`rescueZelda & (!setting(basicPlacement) | … & @hasHealth7 & @hasABottle)`,
+`PalaceOfDarkness.php:183-185` and its seven siblings), and the entrance
+randomizer's Spike Cave and Misery Mire spike chest read `has_hearts(4)`.
+A tracker that never records hearts would hold every one of them out of
+logic for good, whatever the player holds; `canKillEscapeThings` has the
+same edge for the uncle's `TenBombs`.
+
+The engine has no unknown item count (only unknown settings, folded at
+compile time), so the pack carries the knowledge in the state, as it does
+the medallion pads: `healthUnknown` or `bombsUnknown` at 1 while the count
+is unknown (`TrackerInput.unknown`). Every rule is loaded through
+`unknownCountRequirement`, which pairs each atom of such an item with its
+fact: `heartContainer >= 7` becomes `heartContainer >= 7 | healthUnknown &
+maybe`. With the count known the fact is 0 and the rule reads as upstream
+wrote it, so upstream's tests hold unchanged; while unknown the rule is at
+worst `maybe`, and counts recorded still bring it in logic. The rewrite
+runs on the named rules (`RULES`), on every region rule `buildWorld` lays
+(the tricks world's too) and on the entrance randomizer's helpers and
+spots, so a rule ported later is covered without a line here. The app holds
+its rules to this (`logic/atoms.spec.ts`: every atom a world reads is one
+the board can satisfy, or a count paired with its fact).
+
+Autotracking reads the hearts on screen, `MaximumHealth` (`$7E:F36C`,
+`max-health`: `$08` a heart, from `$18` to `$A0`, `sram.asm:131-132`), whole:
+four pieces add a heart there and `HeartPieceQuarter` wraps (`sram.asm:130`),
+so 9 hearts and three pieces read 9 (`decodeHealth`). Its category,
+`health`, is the one HUD count Race Mode reads: v2.0 says "The tracker may
+also display and/or react to changes in current bomb count, arrow count,
+rupee count, heart count, heart piece count, and bottle contents", and the
+basic placement's dungeons ask for it. The stats' heart counters
+(`heart-containers`, `heart-pieces`) stay `hud`, unread in a race.
 
 ### A dungeon's prize, as the game shows it
 

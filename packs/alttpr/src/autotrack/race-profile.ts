@@ -18,9 +18,10 @@ const STRICT =
  * it. Race Mode is stricter than v2.0 on purpose: it keeps the categories
  * v2.0 opened (checks inside dungeons, prizes upon collection, the HUD's
  * counts, some stats, the ROM's settings) forbidden until their limits are
- * clarified, and reads only inside the memory windows below, in the SNES
- * LoROM space, ends inclusive (the internal header line $FFB0-$FFDF is bank
- * $00). v2.0 lists no addresses ("it does not matter where information is
+ * clarified, but for the heart count (`health`: the hearts on screen), which
+ * v2.0 names outright and the basic placement's dungeons ask for, and reads
+ * only inside the memory windows below, in the SNES LoROM space, ends
+ * inclusive (the internal header line $FFB0-$FFDF is bank $00). v2.0 lists no addresses ("it does not matter where information is
  * gathered, only that its use is allowed or disallowed"): the windows are
  * the tracker's own limit. They started as the earlier version's, whose
  * WRAM window ($7E:0000-$7E:00B0) held Link's coordinates ($20-$23), the
@@ -64,6 +65,10 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
     goal: {
       permitted: true,
       rule: "A program may keep track of when the game starts and when the game ends (i.e. auto-livesplit).",
+    },
+    health: {
+      permitted: true,
+      rule: "The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.",
     },
     hud: {
       permitted: false,

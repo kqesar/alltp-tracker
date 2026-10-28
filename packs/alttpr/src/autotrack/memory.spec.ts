@@ -242,6 +242,19 @@ describe("MEMORY_RANGES", () => {
     expect(phasePlan(false).plan.requests).toHaveLength(1);
   });
 
+  it("lets Race Mode read the heart count alone of the HUD", () => {
+    const health = MEMORY_RANGES.filter((range) => range.category === "health");
+    expect(health.map((range) => [range.id, range.bus, range.size])).toEqual([
+      ["max-health", 0x7e_f36c, 1],
+    ]);
+    expect(permitted("max-health")).toBe(true);
+    // The pieces, the stats' heart counters and the rest of the HUD stay
+    // the player's
+    for (const id of ["heart-containers", "heart-pieces", "bomb-count"]) {
+      expect(permitted(id), id).toBe(false);
+    }
+  });
+
   it("reads this many bytes on a full tick", () => {
     // Without the two race flag bytes, which the race phase adds. The seed's
     // settings count in: every range falls due on the first tick, and the
@@ -254,7 +267,9 @@ describe("MEMORY_RANGES", () => {
     // The dark room's gate (mode, indoors, dark: 4 bytes) rides in the casual
     // phase with its switch on, 13 bytes and 2 pieces over what it was; the
     // rest of it is gated, read apart. The seed type left the race phase
-    // for the casual one (a setting, which Race Mode never reads).
+    // for the casual one (a setting, which Race Mode never reads). The heart
+    // count (max-health) joins the race phase: 3 bytes, the gap from the
+    // maps' range, in no new piece.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -266,8 +281,8 @@ describe("MEMORY_RANGES", () => {
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
       casual: { bytes: 799, pieces: 22 },
-      race: { bytes: 363, pieces: 24 },
-      ranges: { casual: 35, race: 32 },
+      race: { bytes: 366, pieces: 24 },
+      ranges: { casual: 35, race: 33 },
     });
   });
 });

@@ -10,6 +10,7 @@
 import type { Location, Region, World } from "@alltp/engine";
 import type { LocationDef, Refusal, Source } from "./location";
 import type { AlttprSettings } from "./settings";
+import { unknownCountRequirement } from "./unknown-counts";
 
 /**
  * The root of the graph. Upstream has no start region: a region whose
@@ -143,7 +144,8 @@ export function regionId(name: string): string {
 
 /**
  * The engine's graph for a list of modules: START, then every region in
- * order, each entrance an exit of the region it comes from.
+ * order, each entrance an exit of the region it comes from. Every rule reads
+ * a count a tracker may not know as maybe while it is not (unknown-counts.ts).
  */
 export function buildWorld(modules: readonly RegionModule[]): World {
   const regions = modules.flatMap((module) => module.regions);
@@ -151,7 +153,7 @@ export function buildWorld(modules: readonly RegionModule[]): World {
   for (const region of regions) {
     for (const { from, req } of region.entrances) {
       const list = exits.get(from) ?? [];
-      list.push({ req, to: region.id });
+      list.push({ req: unknownCountRequirement(req), to: region.id });
       exits.set(from, list);
     }
   }
@@ -169,7 +171,9 @@ export function buildWorld(modules: readonly RegionModule[]): World {
   };
 }
 
-function engineLocation({ id, req, visible }: LocationDef): Location {
+/** A location of the engine's graph, its rules read for unknown counts. */
+function engineLocation({ id, req: rule, visible }: LocationDef): Location {
+  const req = unknownCountRequirement(rule);
   if (visible === undefined) return { id, req };
   const { from, req: seen } = visible;
   return {
@@ -177,7 +181,7 @@ function engineLocation({ id, req, visible }: LocationDef): Location {
     req,
     visible: {
       ...(from === undefined ? {} : { from }),
-      ...(seen === undefined ? {} : { req: seen }),
+      ...(seen === undefined ? {} : { req: unknownCountRequirement(seen) }),
     },
   };
 }

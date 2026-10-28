@@ -354,6 +354,37 @@ export function decodeItems(
   return { atLeast, counts, unsettled };
 }
 
+/**
+ * Link's hearts on screen, whole, or why memory cannot say: a number from 1
+ * to 20, which upstream's hasHealth reads less the 3 Link starts with.
+ */
+export type HealthReading = number | Unsettled;
+
+/** A heart in MaximumHealth (sram.asm:132): $04 is half a heart. */
+const HEART = 0x08;
+/** MaximumHealth's top: 20 hearts (sram.asm:132). */
+const MAX_HEALTH = 0xa0;
+
+/**
+ * The hearts on screen: MaximumHealth over $08 (sram.asm:131-132). A heart
+ * container adds $08, and so do four heart pieces, the fourth turning
+ * HeartPieceQuarter back to $00 (sram.asm:130), so the pieces toward the
+ * next heart never make a whole one and are not read: 9 hearts and three
+ * pieces are 9 hearts. Race Mode reads it (category `health`). A value off
+ * the scale (no save loaded yet) is not read.
+ */
+export function decodeHealth(
+  memory: MemoryView,
+  options: DecodeOptions,
+): HealthReading {
+  const bytes = new Reader(memory, options.race).range("max-health");
+  if (typeof bytes === "string") return bytes;
+  const value = bytes.byte();
+  return value < HEART || value > MAX_HEALTH
+    ? "not-read"
+    : Math.floor(value / HEART);
+}
+
 /** What memory says of the locations CHECK_FLAGS maps. */
 export interface CheckReading {
   /** Locations checked, by the pack's location id. */
