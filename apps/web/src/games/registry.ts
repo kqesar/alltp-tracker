@@ -42,11 +42,12 @@ export interface RunStore {
 
 /**
  * A save read and checked by a game's own import, not yet applied: `load`
- * replaces the run with it, as Import does once the player confirms.
+ * replaces the run with it, as Import does once the player confirms. Refused,
+ * `newer` says a newer tracker wrote it, which a reload may open.
  */
 export type RunImport =
   | { ok: true; load: () => void }
-  | { ok: false; reason: string };
+  | { ok: false; reason: string; newer?: true };
 
 /** A game, as the shell runs it. */
 export type GameModule = {

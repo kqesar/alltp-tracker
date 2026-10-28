@@ -14,6 +14,7 @@ import {
   digestOf,
   LINK_FORMAT,
   LINK_VERSION,
+  NEWER_VERSION,
   OTHER_VERSION,
   type PackCodec,
   packRun,
@@ -199,14 +200,17 @@ describe("a packed link", () => {
       [PLACES[1], PLACES[0], ...PLACES.slice(2), "c/one"],
       ["a/one", "a/two", "x/new", ...PLACES.slice(2)],
       [...PLACES.slice(0, 4), "b/renamed"],
-      // Cut: the link holds a place the table no longer has
-      PLACES.slice(0, 4),
-      [],
     ]) {
       expect(unpackRun(link, codecOver(places))).toEqual({
         ok: false,
         reason: OTHER_VERSION,
       });
+    }
+    // A table shorter than the link's: from where this tracker stands, a
+    // newer one made it (tables only grow), which a reload may bring
+    const newer = { newer: true, ok: false, reason: NEWER_VERSION };
+    for (const places of [PLACES.slice(0, 4), []]) {
+      expect(unpackRun(link, codecOver(places))).toEqual(newer);
     }
     expect(
       unpackRun(
@@ -215,7 +219,7 @@ describe("a packed link", () => {
         }),
         codec,
       ),
-    ).toEqual({ ok: false, reason: OTHER_VERSION });
+    ).toEqual(newer);
     expect(
       unpackRun(
         tampered(link, (file) => {
@@ -223,7 +227,10 @@ describe("a packed link", () => {
         }),
         codec,
       ),
-    ).toEqual({ ok: false, reason: OTHER_VERSION });
+    ).toEqual(newer);
+    expect(NEWER_VERSION).toBe(
+      "This link comes from a newer version of the tracker: reload to update.",
+    );
   });
 
   it("writes a codec's own layout version, reads every one from the first, and refuses any other", () => {
@@ -288,11 +295,20 @@ describe("a packed link", () => {
         String(version),
       ).toMatchObject({ ok: false });
     }
-    // A newer link is another version's, not a broken one
+    // A later layout is a newer tracker's, which a reload may bring; an
+    // earlier one than the first, no tracker's
     expect(
       unpackRun(
         tampered(link, (file) => {
           file.link = 4;
+        }),
+        versioned,
+      ),
+    ).toEqual({ newer: true, ok: false, reason: NEWER_VERSION });
+    expect(
+      unpackRun(
+        tampered(link, (file) => {
+          file.link = LINK_VERSION - 1;
         }),
         versioned,
       ),

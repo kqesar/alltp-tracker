@@ -28,9 +28,17 @@ export const SAVE_FORMAT = "alltp-tracker-save";
  */
 export const LINK_VERSION = 2;
 
-/** Shown for a link written against other tables, or by a newer packing. */
+/** Shown for a link written against other tables than these or their prefixes. */
 export const OTHER_VERSION =
   "This link comes from another version of the tracker.";
+
+/**
+ * Shown for a link a later tracker wrote: a layout version past this one's,
+ * or a table longer than this one's. Reloading the page fetches the latest
+ * release, which reads it, so the link's address is kept for it.
+ */
+export const NEWER_VERSION =
+  "This link comes from a newer version of the tracker: reload to update.";
 
 const MALFORMED = "This link does not hold a tracker run.";
 
@@ -152,23 +160,29 @@ const linkSchema = z.looseObject({
 });
 
 /**
- * The tables as a link was made against them, or null when this version
- * cannot have them: a link of a newer tracker, whose tables are longer, or
- * one that names another number of tables.
+ * The tables as a link was made against them; `"newer"` for a link of a
+ * newer tracker, a table of it longer than this one's; null for sizes that
+ * are none a tracker writes, another number of tables among them.
  */
-const prefixes = (codec: PackCodec, sizes: readonly number[]): Tables | null =>
-  sizes.length === codec.tables.length &&
-  sizes.every(
-    (size, at) =>
-      Number.isInteger(size) && size >= 0 && size <= codec.tables[at].length,
-  )
-    ? codec.tables.map((table, at) => table.slice(0, sizes[at]))
-    : null;
+const prefixes = (
+  codec: PackCodec,
+  sizes: readonly number[],
+): Tables | "newer" | null => {
+  if (sizes.length !== codec.tables.length) return null;
+  if (!sizes.every((size) => Number.isInteger(size) && size >= 0)) return null;
+  if (sizes.some((size, at) => size > codec.tables[at].length)) return "newer";
+  return codec.tables.map((table, at) => table.slice(0, sizes[at]));
+};
 
-/** A link read back: the save it stands for, or why it cannot be one. */
+/**
+ * A link read back: the save it stands for, or why it cannot be one, and
+ * whether a newer tracker wrote it (a reload may then open it).
+ */
 export type Unpacked =
   | { ok: true; save: string }
-  | { ok: false; reason: string };
+  | { ok: false; reason: string; newer?: true };
+
+const NEWER = { newer: true, ok: false, reason: NEWER_VERSION } as const;
 
 /**
  * The save a link's text stands for. Text that is not a packed link (a plain
@@ -198,11 +212,12 @@ export const unpackRun = (text: string, codec: PackCodec): Unpacked => {
     table,
     ...rest
   } = link.data;
-  const known =
-    Number.isInteger(version) &&
-    version >= LINK_VERSION &&
-    version <= versionOf(codec);
-  const made = known ? prefixes(codec, sizes ?? codec.legacySizes) : null;
+  if (!Number.isInteger(version) || version < LINK_VERSION) {
+    return { ok: false, reason: OTHER_VERSION };
+  }
+  if (version > versionOf(codec)) return NEWER;
+  const made = prefixes(codec, sizes ?? codec.legacySizes);
+  if (made === "newer") return NEWER;
   const layout = made && codec.at(made, version);
   if (layout === null || table !== digestOf(layout.digested)) {
     return { ok: false, reason: OTHER_VERSION };
