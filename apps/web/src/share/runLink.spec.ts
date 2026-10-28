@@ -5,7 +5,13 @@ import {
   withoutTimeline,
 } from "@/games/alttpr/stores/persistence";
 import { packLink as packSmz3 } from "@/games/smz3/share";
-import { play, randoms, SEEDS, STAGES } from "@/share/playedRuns";
+import {
+  play,
+  playOnGameClock,
+  randoms,
+  SEEDS,
+  STAGES,
+} from "@/share/playedRuns";
 import {
   clearSharedRun,
   decodeRun,
@@ -83,6 +89,13 @@ describe("a run in a link", () => {
         (await link(alttpr)) * 0.6,
       );
       expect(lengths[`smz3 ${stage}`]).toBeLessThan((await link(smz3)) * 0.7);
+    }
+    // Autotracked on the game's clock, its reading drifting at every pause:
+    // up to about 270 finds (300 falls back to the short link, alttpr/share)
+    for (const stamps of [66, 250, 270]) {
+      lengths[`alttpr game clock ${stamps}`] = await link(
+        packAlttpr(playOnGameClock(stamps, randoms())),
+      );
     }
 
     // Every run, at every stage, with its timeline, fits a chat message
