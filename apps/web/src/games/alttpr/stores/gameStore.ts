@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
+import { runReplaced } from "@/autotrack/raceMode";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
 import type { ItemState } from "@/games/alttpr/data/items";
 import { items as initialItems, TOGGLE_ITEMS } from "@/games/alttpr/data/items";
@@ -570,11 +571,13 @@ export const useGameStore = create<GameState>()(
             return record(state, { settings: { ...state.settings, hidden } });
           }),
 
-        loadProgress: (progress: Partial<Progress>) =>
+        loadProgress: (progress: Partial<Progress>) => {
           set((state) => ({
             ...record(state, restoreProgress(createProgress(), progress)),
             timer: IDLE_TIMER,
-          })),
+          }));
+          runReplaced("alttpr");
+        },
 
         noteEntrance: (entrance: string, target: string | null) =>
           get().noteEntrances({ [entrance]: target }),
@@ -599,11 +602,13 @@ export const useGameStore = create<GameState>()(
             };
           }),
 
-        reset: () =>
+        reset: () => {
           set((state) => ({
             ...record(state, createProgress(state.presetId, state.settings)),
             timer: IDLE_TIMER,
-          })),
+          }));
+          runReplaced("alttpr");
+        },
         resetTimer: () => set({ timer: IDLE_TIMER }),
         revealSettings: (change) => {
           const settings = retune(progressOf(get()), change)?.settings;

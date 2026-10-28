@@ -34,9 +34,12 @@ export const restoreRaceChoice = (
 /**
  * The persist middleware's merge for a store that saves a Race Mode choice:
  * the saved fields over the fresh ones, the choice checked against what the
- * game offers, so any other value reads as the game's default.
+ * game offers, so any other value reads as the game's default; the race
+ * remembered (`raceSeen`) only if the save says so.
  */
-export const mergeRaceChoice = <State extends { raceChoice: RaceChoice }>(
+export const mergeRaceChoice = <
+  State extends { raceChoice: RaceChoice; raceSeen: boolean },
+>(
   persisted: unknown,
   current: State,
   choices: readonly RaceChoice[] = RACE_CHOICES.flag,
@@ -49,5 +52,7 @@ export const mergeRaceChoice = <State extends { raceChoice: RaceChoice }>(
     ...current,
     ...saved,
     raceChoice: restoreRaceChoice(saved.raceChoice, choices),
+    // Absent from a save before the memory, or not a boolean: no race read
+    raceSeen: saved.raceSeen === true,
   };
 };

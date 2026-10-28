@@ -12,6 +12,7 @@ import { persist } from "zustand/middleware";
 import { bridgeOptions } from "@/autotrack/bridge";
 import { createAutotrackLock } from "@/autotrack/lock";
 import { mergeRaceChoice, type RaceChoice } from "@/autotrack/raceChoice";
+import { onRunReplaced, rememberRace } from "@/autotrack/raceMode";
 import { shownStatus } from "@/autotrack/status";
 import type { Follower } from "@/games/alttpr/autotrack/follow";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
@@ -93,6 +94,12 @@ type AutotrackState = {
    */
   raceChoice: RaceChoice;
   /**
+   * This run's seed was read as a race's, and nobody called the race over:
+   * Race Mode holds through a Disconnect and a reload (`autotrack/raceMode.ts`).
+   * Saved.
+   */
+  raceSeen: boolean;
+  /**
    * Draw a dark room's plan and Link's place in it while he has no Lamp (never
    * in Race Mode). On by default; a device setting, saved, that the session
    * follows at once: off, its memory is not read at all.
@@ -107,6 +114,8 @@ type AutotrackState = {
   darkRoomStyle: DarkRoomStyle;
   setConnectOnStart: (connectOnStart: boolean) => void;
   setRaceChoice: (raceChoice: RaceChoice) => void;
+  /** The player says the race is over: Race Mode is the run's again. */
+  endRace: () => void;
   setDarkRoomMap: (darkRoomMap: boolean) => void;
   setDarkRoomStyle: (darkRoomStyle: DarkRoomStyle) => void;
 };
@@ -152,10 +161,12 @@ export const useAutotrackStore = create<AutotrackState>()(
       darkRoomStyle: "art",
       devices: [],
       elsewhere: false,
+      endRace: () => set({ raceSeen: false }),
       environment: null,
       keptSeed: null,
       news: null,
       raceChoice: "auto",
+      raceSeen: false,
       reading: null,
       seedFile: null,
       setConnectOnStart: (connectOnStart) => set({ connectOnStart }),
@@ -176,12 +187,14 @@ export const useAutotrackStore = create<AutotrackState>()(
         darkRoomStyle,
         keptSeed,
         raceChoice,
+        raceSeen,
       }) => ({
         connectOnStart,
         darkRoomMap,
         darkRoomStyle,
         keptSeed,
         raceChoice,
+        raceSeen,
       }),
       version: 1,
     },
@@ -189,6 +202,13 @@ export const useAutotrackStore = create<AutotrackState>()(
 );
 
 const set = useAutotrackStore.setState;
+
+// A race read is remembered; the run replaced (New game, Import, a shared
+// link) ends it
+rememberRace(useAutotrackStore);
+onRunReplaced((game) => {
+  if (game === "alttpr") set({ raceSeen: false });
+});
 
 /** The one session of this page, once started. */
 let runtime: Runtime | null = null;

@@ -15,6 +15,7 @@ import {
 import * as z from "zod/mini";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { runReplaced } from "@/autotrack/raceMode";
 import { type History, historyActions } from "@/games/runHistory";
 import { createSaveFormat } from "@/games/saveFormat";
 import { SEED_ID } from "@/games/seedId";
@@ -151,12 +152,14 @@ export const useSmz3Store = create<Smz3State>()(
         load: (progress) => {
           record(progress);
           set({ timer: IDLE_TIMER });
+          runReplaced("smz3");
         },
         past: [],
         redo,
         reset: () => {
           record(freshProgress(get().settings));
           set({ timer: IDLE_TIMER });
+          runReplaced("smz3");
         },
         resetTimer: () => set({ timer: IDLE_TIMER }),
         setPad: (which, medallion) => {
