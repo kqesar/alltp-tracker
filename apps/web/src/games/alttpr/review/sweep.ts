@@ -47,6 +47,8 @@ export const BREAK_MS = 30 * 60_000;
 export type Hidden =
   /** The log has no playthrough (a spoiler race's). */
   | "no-playthrough"
+  /** Small keys are generic (Retro): the board counts none, so no door is solved. */
+  | "generic-keys"
   /** Small keys are shuffled, and the run does not time them. */
   | "keysanity"
   /** Entrances are shuffled: the run does not time them. */
@@ -98,6 +100,7 @@ export const hiddenReason = (
   if (settings.dungeonItems === "mcs" || settings.dungeonItems === "full") {
     return "keysanity";
   }
+  if (packSettings(settings).genericKeys) return "generic-keys";
   if (settings.entranceShuffle !== "none" || log.format === "er") {
     return "entrances";
   }

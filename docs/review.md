@@ -203,6 +203,7 @@ readings instead:
 |---|---|
 | `no-timeline` (first, after `no-playthrough`) | the board has finds done and the run no timeline at all: opened from a shared link that left it out to stay short ([share.md](share.md#length)), or a save older than the timeline; the sentence says to review it where it was played or to open its full link |
 | `keysanity` (MCS, Full) | small keys are counts on the board, not stamped |
+| `generic-keys` (Retro) | a small key opens any door and the board counts none, so no door can be solved from the log's keys; the rest of the tab (finds, times, playthrough) is shown |
 | `entrances` | where each entrance led is not stamped, and the final ones would leak |
 | `not-modelled` | the pack does not model the run's logic: settings hidden (Mystery), bosses shuffled (the log's `Bosses`), a logic other than NoGlitches (the log's `meta.logic`) |
 | `race-mode` | fewer than half the needed finds are matched by place, and places outside dungeons are stamped but none inside: Race Mode in an earlier version did not read a dungeon's chests (it does now, v2.0's dungeon-locations) |

@@ -34,6 +34,8 @@ const HIDDEN: Readonly<Record<Hidden, string>> = {
     "This run was tracked by hand: its times are when you clicked, so when each item waited is not shown.",
   entrances:
     "Entrances were shuffled: the run does not time where each led, so when each place came into logic is not shown.",
+  "generic-keys":
+    "Small keys are generic in Retro (any key opens any door): the board counts none, so when each place came into logic is not shown.",
   keysanity:
     "Small keys were shuffled: the run does not time them, so when each place came into logic is not shown.",
   "no-playthrough":

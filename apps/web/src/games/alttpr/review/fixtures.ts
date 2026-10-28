@@ -16,14 +16,20 @@ import type { ReviewedRun } from "@/games/alttpr/review/adapter";
 import entrances from "../../../../../../packs/alttpr/test/spoilers/0yAObedRMV.txt?raw";
 import vt from "../../../../../../packs/alttpr/test/spoilers/9MQ9gO1wMD.txt?raw";
 import daily from "../../../../../../packs/alttpr/test/spoilers/eM43RgZ4Gj.txt?raw";
+import retro from "../../../../../../packs/alttpr/test/spoilers/VMR3zKaKv5.txt?raw";
 
-/** A seed the pack holds: vt's own layout, the entrance randomizer's, and a daily's (no placements). */
-export type FixtureHash = "0yAObedRMV" | "9MQ9gO1wMD" | "eM43RgZ4Gj";
+/** A seed the pack holds: vt's own layout, the entrance randomizer's, a daily's (no placements) and a retro seed's. */
+export type FixtureHash =
+  | "0yAObedRMV"
+  | "9MQ9gO1wMD"
+  | "eM43RgZ4Gj"
+  | "VMR3zKaKv5";
 
 const TEXTS: Readonly<Record<FixtureHash, string>> = {
   "0yAObedRMV": entrances,
   "9MQ9gO1wMD": vt,
   eM43RgZ4Gj: daily,
+  VMR3zKaKv5: retro,
 };
 
 /** The file as the site's Save Spoiler button writes it. */
