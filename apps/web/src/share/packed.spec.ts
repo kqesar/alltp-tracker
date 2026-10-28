@@ -337,6 +337,51 @@ describe("a packed link", () => {
     expect(unpackRun(packRun(save([]), earliest), earliest).ok).toBe(true);
   });
 
+  it("names the sizes of the tables its layout indexes, a later one a table more", () => {
+    const TAGS = ["x", "y", "z"];
+    // Layout 3 packs `tags` over a table of its own, the codec's second
+    const tagged: PackCodec = {
+      at: (tables, version) => ({
+        digested: tables,
+        fields: {
+          checked: bitsetField(tables[0], "list"),
+          ...(version >= 3 && { tags: bitsetField(tables[1], "list") }),
+        },
+      }),
+      game: "smz3",
+      legacySizes: [PLACES.length],
+      tables: [PLACES, TAGS],
+      tablesIn: (version) => (version >= 3 ? 2 : 1),
+      version: 3,
+      versionFor: (progress) => (progress.tags === undefined ? 2 : 3),
+    };
+    const withTags = JSON.stringify({
+      ...JSON.parse(save(["a/one"])),
+      progress: { checked: ["a/one"], other: 1, tags: ["y"] },
+    });
+    const later = JSON.parse(packRun(withTags, tagged));
+    const earlier = JSON.parse(packRun(save(["a/one"]), tagged));
+
+    expect(later).toMatchObject({ link: 3, sizes: [5, 3] });
+    expect(typeof later.progress.tags).toBe("string");
+    expect(earlier).toMatchObject({ link: 2, sizes: [5] });
+    for (const link of [later, earlier]) {
+      expect(unpackRun(JSON.stringify(link), tagged).ok).toBe(true);
+    }
+    const opened = unpackRun(JSON.stringify(later), tagged);
+    expect(opened.ok && JSON.parse(opened.save).progress.tags).toEqual(["y"]);
+    // Each layout names its own number of tables: another is no tracker's
+    for (const [link, sizes] of [
+      [later, [5]],
+      [earlier, [5, 3]],
+    ] as const) {
+      expect(unpackRun(JSON.stringify({ ...link, sizes }), tagged)).toEqual({
+        ok: false,
+        reason: OTHER_VERSION,
+      });
+    }
+  });
+
   it("reads a link that carries no sizes as the tables the first version had", () => {
     const link = tampered(packRun(save(["b/one"]), codec), (file) => {
       delete file.sizes;
