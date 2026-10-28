@@ -152,6 +152,12 @@ flowchart LR
   the seed's. There a needed place is in logic at the latest at the instant every needed item of the
   spheres before its own was held (unknown and untimed ones aside): the playthrough's own bound, an
   estimate the tab says.
+- **Hearts and the escape's bombs are the log's.** The board's hearts cell is no timeline entry, so
+  its last count would read as held from the start and open the basic placement's dungeons too early.
+  The board's hearts and bombs are dropped (`withLogCounts`): a heart container, a piece of heart or
+  the Ten Bombs counts once the place the log put it at is taken, like a key. A run that dated no
+  place (Race Mode stamps no check) cannot date them, so they stay unknown, and a rule asking for
+  them reads `maybe`, never `yes`.
 - **Prizes and pads are the log's.** Each dungeon's prize (`log.extra.prizes`) counts held once its
   boss is beaten, which is timed, and the medallion pads (`log.extra.medallions`) are known from
   the start, whatever the board was left with: Race Mode reads no prize, a hand run may set none,
