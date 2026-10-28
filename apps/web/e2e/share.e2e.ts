@@ -1,15 +1,18 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { deflateRawSync } from "node:zlib";
+import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import {
+  auditDialog,
   clickToolbarAction,
   focusedTestId,
   smRaceModeOff,
   tabTo,
   unreachableClickables,
   WCAG_AA,
+  WIDTHS,
 } from "./support";
 
 /** The tracker with nothing saved. */
@@ -208,6 +211,93 @@ test("the share dialog is keyboard-driven and accessible", async ({
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   expect(await focusedTestId(page)).toBe(opener);
+  await context.close();
+});
+
+test("a late run shares short, and its full link with the timeline is a keyboard away", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    permissions: ["clipboard-read", "clipboard-write"],
+  });
+  const page = await context.newPage();
+  // Every place checked, each on the game's clock, which every pause sets
+  // again: the timeline a late autotracked run holds, too long for a chat
+  const t0 = Date.UTC(2026, 9, 28, 9, 30);
+  const places = [...MAP_LOCATIONS];
+  const timeline = Object.fromEntries(
+    places.map((id, index) => {
+      const at = t0 + index * 37_000 + ((index * 7919) % 23_000);
+      return [`check:${id}`, { at, ms: at - t0 - index * 1237 }];
+    }),
+  );
+  await page.goto("./");
+  await page.evaluate(
+    (state) => {
+      localStorage.clear();
+      localStorage.setItem(
+        "alltp-tracker-state",
+        JSON.stringify({ state, version: 12 }),
+      );
+    },
+    {
+      checked: Object.fromEntries(places.map((id) => [id, true])),
+      timeline,
+    },
+  );
+  await page.reload();
+  await page.getByTestId("toolbar").waitFor();
+
+  await clickToolbarAction(
+    page,
+    page.getByTestId("share-button"),
+    "toolbar-more-share",
+  );
+  const dialog = page.getByRole("dialog", { name: "Share this run" });
+  await expect(dialog.getByRole("status")).toHaveText(
+    "Link copied without the timeline, to keep it short.",
+  );
+  const short = await page.evaluate(() => navigator.clipboard.readText());
+  expect(short.length).toBeLessThanOrEqual(2000);
+  expect(
+    JSON.parse(await inflated(page, short.split("#run=")[1])).progress,
+  ).toMatchObject({ timeline: "AA" });
+
+  const copyFull = dialog.getByTestId("share-copy-full");
+  await expect(copyFull).toHaveAccessibleName(
+    "Copy the full link (with the timeline)",
+  );
+  await expect(copyFull).toHaveAccessibleDescription(
+    /The full link keeps it, in \d{4,} characters, which some chat apps cut\./,
+  );
+  expect(await unreachableClickables(page, "dialog[open]")).toEqual([]);
+  for (const width of WIDTHS) {
+    await page.setViewportSize({ height: width < 600 ? 844 : 900, width });
+    await auditDialog(page, dialog, width);
+    const box = await copyFull.boundingBox();
+    expect(box && box.x + box.width).toBeLessThanOrEqual(width);
+  }
+
+  // From the keyboard: the full link, every stamp in it
+  await copyFull.focus();
+  await page.keyboard.press("Enter");
+  await expect(dialog.getByRole("status")).toContainText(
+    "Full link copied, with the timeline (",
+  );
+  const full = await page.evaluate(() => navigator.clipboard.readText());
+  expect(full.length).toBeGreaterThan(2000);
+  const viewer = await context.newPage();
+  await viewer.goto(full);
+  await viewer.getByTestId("shared-run-open").click();
+  await expect(viewer.getByTestId("map-view-tab-run")).toBeVisible();
+  const opened = await viewer.evaluate(
+    () =>
+      Object.keys(
+        JSON.parse(localStorage.getItem("alltp-tracker-state") ?? "{}").state
+          .timeline,
+      ).length,
+  );
+  expect(opened).toBe(places.length);
   await context.close();
 });
 

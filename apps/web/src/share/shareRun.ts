@@ -16,7 +16,12 @@ export const CHAT_LINK_CHARS = 2000;
 export const SHARE_HELP =
   "Copy a link to this run and show it as a QR code. The run travels in the link's fragment (after the #), which the browser never sends to any server.";
 
-export type Link = { url: string; fallback: boolean };
+/**
+ * A run's link. `full` is the first, most complete one when `url` is a
+ * shorter form of it (ALttPR's leaves out the timeline to fit a chat
+ * message), null when `url` is that first one: the player may still copy it.
+ */
+export type Link = { url: string; full: string | null };
 
 /**
  * How a share went: the line to tell the player, and the link that was made
@@ -30,18 +35,17 @@ const REFUSED =
 /**
  * The link of a run, from its exports best first (each a save the game's
  * import reads): the first that fits a chat message, else the last, the
- * shortest. `fallback` says it is not the first.
+ * shortest, with the first kept as `full`.
  */
 export const makeLink = async (saves: readonly string[]): Promise<Link> => {
-  let link: Link = { fallback: false, url: "" };
-  for (const [index, save] of saves.entries()) {
-    link = {
-      fallback: index > 0,
-      url: runLinkUrl(shareBaseUrl(), await encodeRun(save)),
-    };
-    if (link.url.length <= CHAT_LINK_CHARS) break;
+  let first: string | null = null;
+  let url = "";
+  for (const save of saves) {
+    url = runLinkUrl(shareBaseUrl(), await encodeRun(save));
+    first ??= url;
+    if (url.length <= CHAT_LINK_CHARS) break;
   }
-  return link;
+  return { full: url === first ? null : first, url };
 };
 
 /**
@@ -68,9 +72,9 @@ const copy = async (link: Promise<Link>) => {
 };
 
 /** The line that says a link was copied, and what to watch for in it. */
-const copiedMessage = ({ fallback, url }: Link): string => {
+const copiedMessage = ({ full, url }: Link): string => {
   const long = url.length > CHAT_LINK_CHARS;
-  if (fallback) {
+  if (full !== null) {
     return long
       ? `Link copied without the timeline, but still long (${url.length} characters): some chat apps will cut it.`
       : "Link copied without the timeline, to keep it short.";
@@ -118,7 +122,7 @@ export const snapshotRun = async (
     return {
       link,
       message: `The link is ready: copy it with the button below. ${
-        link.fallback
+        link.full !== null
           ? "It leaves out the timeline, to keep it short."
           : "The run stays in the link, never sent to a server."
       }`,
@@ -131,15 +135,31 @@ export const snapshotRun = async (
   }
 };
 
+/** Copy `url` from the click of a button: `line` once it is copied. */
+const copyFromClick = async (url: string, line: string): Promise<string> => {
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch {
+    return REFUSED;
+  }
+  return line;
+};
+
 /**
  * Copy a link again, from the click of a button, and say how it went.
  * @returns A line for the share dialog
  */
-export const copyLink = async (link: Link): Promise<string> => {
-  try {
-    await navigator.clipboard.writeText(link.url);
-  } catch {
-    return REFUSED;
-  }
-  return copiedMessage(link);
-};
+export const copyLink = (link: Link): Promise<string> =>
+  copyFromClick(link.url, copiedMessage(link));
+
+/**
+ * Copy a shortened link's full form (`Link.full`), the one with the timeline
+ * that a review of the run reads, and say how it went. It is the one too long
+ * for a chat message.
+ * @returns A line for the share dialog
+ */
+export const copyFullLink = (full: string): Promise<string> =>
+  copyFromClick(
+    full,
+    `Full link copied, with the timeline (${full.length} characters): some chat apps will cut it.`,
+  );

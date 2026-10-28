@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useId, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { RACE_SHARE_NOTE } from "@/share/raceShare";
-import { copyLink, type ShareResult } from "@/share/shareRun";
+import { copyFullLink, copyLink, type ShareResult } from "@/share/shareRun";
 
 // The QR encoder is only needed once a run is shared: its chunk loads then
 const QrCode = lazy(() => import("@/components/ui/QrCode"));
@@ -30,7 +30,8 @@ type ShareDialogProps = {
  * link as a QR code (to open the run on another device), and a button to
  * copy it again, named after the snapshot it copies: in the desktop app it
  * sits under live follow's section, whose link is another. The copy itself
- * already happened, inside the Share click.
+ * already happened, inside the Share click. When that link is a shortened
+ * one (ALttPR's, without the timeline), a second button copies the full one.
  */
 export const ShareDialog = ({
   race = false,
@@ -38,17 +39,26 @@ export const ShareDialog = ({
   onClose,
 }: ShareDialogProps) => {
   const [result, setResult] = useState<ShareResult | null>(null);
-  // What the last copy from the footer said, over the first copy's line
+  // What the last copy from a button said, over the first copy's line
   const [again, setAgain] = useState<string | null>(null);
+  // A shortened link came: its full form's button stays until the dialog
+  // closes, off in a race, so Race Mode coming on drops no focus from it
+  const [offersFull, setOffersFull] = useState(false);
   const messageId = useId();
+  const fullId = useId();
 
   useEffect(() => {
     setResult(null);
     setAgain(null);
-    if (!share) return;
+    if (!share) {
+      setOffersFull(false);
+      return;
+    }
     let current = true;
     void share.then((done) => {
-      if (current) setResult(done);
+      if (!current) return;
+      setResult(done);
+      if (done.link?.full) setOffersFull(true);
     });
     return () => {
       current = false;
@@ -56,6 +66,7 @@ export const ShareDialog = ({
   }, [share]);
 
   const link = race ? null : (result?.link ?? null);
+  const full = link?.full ?? null;
   return (
     <Modal
       footer={
@@ -96,6 +107,32 @@ export const ShareDialog = ({
             does not follow the game.
           </p>
         </>
+      )}
+      {offersFull && (
+        <div className="share-full" data-testid="share-full">
+          {full !== null && (
+            <p className="modal__message share-dialog__help" id={fullId}>
+              To fit a chat message, this link leaves out the timeline: when
+              each thing was found, which a review of the run reads. The full
+              link keeps it, in {full.length} characters, which some chat apps
+              cut.
+            </p>
+          )}
+          <button
+            aria-describedby={
+              full !== null ? fullId : race ? messageId : undefined
+            }
+            aria-disabled={full !== null ? undefined : true}
+            className="modal-btn modal-btn--ghost"
+            data-testid="share-copy-full"
+            onClick={() => {
+              if (full !== null) void copyFullLink(full).then(setAgain);
+            }}
+            type="button"
+          >
+            Copy the full link (with the timeline)
+          </button>
+        </div>
       )}
       {LiveFollowSection && (
         <Suspense fallback={null}>

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ShareDialog } from "@/components/ui/ShareDialog";
 import type { ShareResult } from "@/share/shareRun";
 
-const LINK = { fallback: false, url: "https://example.test/#run=abc" };
+const LINK = { full: null, url: "https://example.test/#run=abc" };
 const COPIED =
   "Link copied. The run stays in the link, never sent to a server.";
 
@@ -73,6 +73,81 @@ describe("ShareDialog", () => {
     );
   });
 
+  describe("a link shortened without the timeline", () => {
+    const FULL = `https://example.test/#run=${"f".repeat(2400)}`;
+    const SHORT = { full: FULL, url: "https://example.test/#run=short" };
+    const SHORTENED = "Link copied without the timeline, to keep it short.";
+
+    it("keeps the short one as the link, and offers the full one, its length said", async () => {
+      open({ link: SHORT, message: SHORTENED });
+
+      const copyFull = await screen.findByTestId("share-copy-full");
+      expect(copyFull).toHaveAccessibleName(
+        "Copy the full link (with the timeline)",
+      );
+      expect(copyFull).toHaveAccessibleDescription(
+        new RegExp(`The full link keeps it, in ${FULL.length} characters`),
+      );
+      expect(copyFull).not.toHaveAttribute("aria-disabled");
+      // The link shown and copied again is still the short one
+      expect(screen.getByRole("status")).toHaveTextContent(SHORTENED);
+      fireEvent.click(screen.getByTestId("share-copy-again"));
+      await waitFor(() => expect(writeText).toHaveBeenCalledWith(SHORT.url));
+    });
+
+    it("copies the full one from its button, and says so", async () => {
+      open({ link: SHORT, message: SHORTENED });
+
+      fireEvent.click(await screen.findByTestId("share-copy-full"));
+
+      await waitFor(() =>
+        expect(screen.getByRole("status")).toHaveTextContent(
+          `Full link copied, with the timeline (${FULL.length} characters)`,
+        ),
+      );
+      expect(writeText).toHaveBeenCalledWith(FULL);
+    });
+
+    it("is a native button the keyboard reaches after the snapshot's help", async () => {
+      open({ link: SHORT, message: SHORTENED });
+
+      const copyFull = await screen.findByTestId("share-copy-full");
+      expect(copyFull.tagName).toBe("BUTTON");
+      expect(copyFull).toHaveAttribute("type", "button");
+      copyFull.focus();
+      expect(copyFull).toHaveFocus();
+    });
+
+    it("keeps its focus, off and described, when Race Mode comes on under it", async () => {
+      const share = Promise.resolve({ link: SHORT, message: SHORTENED });
+      const { rerender } = render(
+        <ShareDialog onClose={onClose} share={share} />,
+      );
+      const copyFull = await screen.findByTestId("share-copy-full");
+      copyFull.focus();
+
+      rerender(<ShareDialog onClose={onClose} race share={share} />);
+
+      expect(screen.getByTestId("share-copy-full")).toBe(copyFull);
+      expect(copyFull).toHaveFocus();
+      expect(copyFull).toHaveAttribute("aria-disabled", "true");
+      expect(copyFull).toHaveAccessibleDescription(
+        /^No link to the run is made/,
+      );
+      // Its length, a word on the run, is gone with the link
+      expect(screen.queryByText(/The full link keeps it/)).toBeNull();
+      fireEvent.click(copyFull);
+      expect(writeText).not.toHaveBeenCalled();
+    });
+
+    it("is not offered for a link that kept everything", async () => {
+      open({ link: LINK, message: COPIED });
+
+      await screen.findByTestId("share-qr");
+      expect(screen.queryByTestId("share-copy-full")).toBeNull();
+    });
+  });
+
   it("still shows the QR code when the clipboard refused", async () => {
     open({
       link: LINK,
@@ -103,7 +178,7 @@ describe("ShareDialog", () => {
   it("says a link too long for a QR code cannot be drawn", async () => {
     open({
       link: {
-        fallback: false,
+        full: null,
         url: `https://example.test/#run=${"a".repeat(3000)}`,
       },
       message:

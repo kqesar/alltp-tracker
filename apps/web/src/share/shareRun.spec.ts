@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { decodeRun, sharedPayload } from "@/share/runLink";
 import {
   CHAT_LINK_CHARS,
+  copyFullLink,
   copyLink,
   makeLink,
   shareRun,
@@ -54,15 +55,34 @@ describe("sharing a run", () => {
     const link = await makeLink([long, short]);
     const { message: line } = await shareRun([long, short]);
 
-    expect(link.fallback).toBe(true);
     expect(link.url.length).toBeLessThanOrEqual(CHAT_LINK_CHARS);
     expect(line).toBe("Link copied without the timeline, to keep it short.");
+    // The first form is kept, for the player who wants it whole
+    expect(link.full?.length).toBeGreaterThan(CHAT_LINK_CHARS);
+    const full = new URL(link.full ?? "");
+    expect(JSON.parse(await decodeRun(sharedPayload(full.hash) ?? ""))).toEqual(
+      JSON.parse(long),
+    );
   });
 
   it("keeps the first form when it fits", async () => {
     const link = await makeLink([save(3), save(1)]);
 
-    expect(link.fallback).toBe(false);
+    expect(link.full).toBeNull();
+  });
+
+  it("copies the full form of a shortened link, and says how long it is", async () => {
+    const { link } = await shareRun([save(400), save(3)]);
+    const full = link?.full ?? "";
+    writeText.mockClear();
+
+    expect(await copyFullLink(full)).toBe(
+      `Full link copied, with the timeline (${full.length} characters): some chat apps will cut it.`,
+    );
+    expect(writeText).toHaveBeenCalledWith(full);
+
+    writeText.mockRejectedValue(new DOMException("denied", "NotAllowedError"));
+    expect(await copyFullLink(full)).toMatch(/refused the clipboard/);
   });
 
   it("copies a link that is still too long, and says so", async () => {
