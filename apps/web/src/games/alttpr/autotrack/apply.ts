@@ -326,7 +326,12 @@ export const gameCells = (
   ...(reading.race ? { fluteactive: ACTIVATION.UNKNOWN } : {}),
 });
 
-/** The small keys found, by key dungeon index, where memory tells. */
+/**
+ * The small keys found, by key dungeon index, where memory tells. Never
+ * with generic keys (retro): those belong to no dungeon, and the one byte
+ * that rises there, Tower of Hera's, would only say where a generic key was
+ * taken (its basement cage, which the base patch counts whatever the key).
+ */
 const keysFound = (reading: AutotrackReading): Record<number, number> => {
   const found: Record<number, number> = {};
   KEY_DUNGEONS.forEach((id, index) => {
@@ -362,10 +367,12 @@ const dungeonLocationsOf = (
  * stay inside (its map, compass, big key and small keys, as the run's
  * dungeon items leave them) are no items to the player: memory tells all
  * four, the small keys by the base patch's count of keys received as items
- * (a key an enemy or a pot drops is no location, and is not counted). A
- * retro run's generic keys belong to no dungeon: the counter then lies
- * between the chests' keys all found and none, and never shows a dungeon
- * done that may hold an item.
+ * (a key an enemy or a pot drops is no location, and is not counted).
+ * Generic keys belong to no dungeon, so their count is no dungeon's: the
+ * counter then lies between the chests' keys all found and none. Only a
+ * hand-made config reaches that case (`rom.genericKeys` with keys kept in
+ * their dungeons): the retro world forces wild keys, which count no key
+ * here.
  */
 const counterRanges = (
   board: Board,
@@ -432,7 +439,10 @@ export const gameView = (
   if (bombBought && worldOf(packSettings(board.settings)) === "inverted") {
     checked[BOMB_MERCHANT] = true;
   }
-  const smallKeys = wildItems(board.settings).keys ? keysFound(reading) : {};
+  const smallKeys =
+    wildItems(board.settings).keys && !packSettings(board.settings).genericKeys
+      ? keysFound(reading)
+      : {};
   return {
     checked,
     counters: counterRanges(

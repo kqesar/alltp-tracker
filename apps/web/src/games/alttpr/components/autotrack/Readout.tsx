@@ -2,6 +2,7 @@ import { type ReactNode, useId } from "react";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
 import { describeReading } from "@/games/alttpr/autotrack/readout";
 import { wildItems } from "@/games/alttpr/data/presets";
+import { packSettings } from "@/games/alttpr/logic/settings";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -70,7 +71,10 @@ export const Readout = ({
 }) => {
   const titleId = useId();
   const wildKeys = useGameStore((state) => wildItems(state.settings).keys);
-  const readout = describeReading(reading, wildKeys);
+  const genericKeys = useGameStore(
+    (state) => packSettings(state.settings).genericKeys,
+  );
+  const readout = describeReading(reading, wildKeys, genericKeys);
   // What the ROM does not state comes from the seed's file once it is in,
   // outside Race Mode only
   const fileIn = useAutotrackStore(

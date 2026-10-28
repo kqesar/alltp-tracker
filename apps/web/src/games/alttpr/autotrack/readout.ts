@@ -509,10 +509,13 @@ const add = <K>(map: Map<K, string[]>, key: K, entry: string) => {
  * @param reading - What the session decoded last
  * @param wildKeys - Whether the run's small keys are wild, which the board
  * then counts
+ * @param genericKeys - Whether a small key opens any dungeon (retro): no key
+ * count is then listed, since a dungeon's would say where a key was taken
  */
 export const describeReading = (
   reading: AutotrackReading,
   wildKeys = false,
+  genericKeys = false,
 ): Readout => {
   const { beyond, counts, unsettled } = reading.items;
   const items: string[] = [];
@@ -528,9 +531,12 @@ export const describeReading = (
   };
 
   for (const [id, count] of Object.entries(counts) as [ItemId, number][]) {
+    const own = DUNGEON_ITEM.exec(id);
+    // Generic keys belong to no dungeon, and the one byte that rises is
+    // Tower of Hera's basement cage's: never listed
+    if (genericKeys && own?.[1] === "key") continue;
     offBoard(id, count);
     if (count === 0 || EVENTS.has(id)) continue;
-    const own = DUNGEON_ITEM.exec(id);
     if (own?.[1] === "key") {
       // The base patch's count of keys found, which no door spends; a count
       // above the dungeon's keys is a double count the decoder does not

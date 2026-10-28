@@ -307,6 +307,43 @@ describe("describeReading's key counts", () => {
       },
     ]);
   });
+
+  it("names the count read for Tower of Hera, its double count taken back", () => {
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x4e0 + 10)] = 2; // its one key, counted twice
+    const once = describeReading(readMemory(viewOf(memory), false, 0));
+    expect(once.dungeons).toEqual([
+      { dungeon: "Tower of Hera", items: ["1 small key found"] },
+    ]);
+    memory[SAVE(0x4e0 + 10)] = 3;
+    const more = describeReading(readMemory(viewOf(memory), false, 0));
+    expect(more.dungeons).toEqual([
+      {
+        dungeon: "Tower of Hera",
+        items: [
+          "1 small key found (the game counts 3, more than the dungeon holds)",
+        ],
+      },
+    ]);
+  });
+
+  it("lists no key count with generic keys, in a race or not", () => {
+    // Retro: the base patch counts Tower of Hera's basement cage whatever
+    // generic key it holds; a dungeon's count would say where it was taken
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x4e0 + 10)] = 2;
+    for (const race of [false, true]) {
+      for (const wildKeys of [false, true]) {
+        const readout = describeReading(
+          readMemory(viewOf(memory), race, 0),
+          wildKeys,
+          true,
+        );
+        expect(readout.dungeons, `race ${race}`).toEqual([]);
+        expect(readout.untracked).not.toContain("Small keys");
+      }
+    }
+  });
 });
 
 describe("describeReading's unknowns", () => {
