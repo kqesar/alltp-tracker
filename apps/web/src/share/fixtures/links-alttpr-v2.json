@@ -1,5 +1,5 @@
 {
-  "description": "Links as the tracker packed them with the timeline's first layout (link 2: each timer reading's drift written whole), recorded by the packLink of v2.58.0 (the last release to write this layout, its encoder unchanged since commit 8c39c3a0), each beside the save it was made from. They stand for links already shared: never edit or regenerate them.",
+  "description": "Links as the tracker packed them with the timeline's first layout (link 2: each timer reading's drift written whole), recorded by the packLink of v2.58.0 (commit 1dfb31e1), the last release to write it for a timeline with finds, each beside the save it was made from. They stand for links already shared: never change their content or regenerate them (Biome only orders their keys).",
   "links": [
     {
       "link": {
