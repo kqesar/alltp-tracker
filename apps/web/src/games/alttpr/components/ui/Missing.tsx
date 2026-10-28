@@ -273,7 +273,7 @@ const SpotName = ({ spot }: { spot: Spot }) => (
  * Chest"). A check a trick known opens leads with it: "Doable now with Fake
  * flipper; or Zora's Flippers: King Zora"; one out of logic by basic
  * placement's safety margins alone says which: "Doable now, outside Basic's
- * safety margin; Basic placement waits for 15 hearts (you have 11 hearts)
+ * safety margin; Basic placement waits for 12 hearts (you have 11 hearts)
  * before the seed relies on entering Misery Mire: Big Chest".
  */
 export const MissingGroups = ({

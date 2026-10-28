@@ -10,8 +10,10 @@ import {
   type InventoryItemId,
   ITEMS,
   LEGACY_DUNGEONS,
+  PRE_COLLECTED_STATE,
   PRIZES,
   type Prize,
+  STATE_MAX,
   type TrackerInput,
   UNKNOWN_COUNTS,
   type UnknownCount,
@@ -23,7 +25,6 @@ import {
   type ItemState,
   itemsMax,
   itemsMin,
-  STARTING_HEARTS,
 } from "@/games/alttpr/data/items";
 
 /** What one of the tracker's item ids records, in the pack's terms. */
@@ -52,8 +53,9 @@ export type PackItem =
   | { readonly kind: "prize"; readonly dungeon: DungeonId }
   /**
    * Link's hearts on screen (`heartsShown`): the heart containers and
-   * pieces found beyond the 3 he starts with, which upstream's hasHealth
-   * sums; not set, the health is unknown to the rules.
+   * pieces found beyond the 3 he starts with, to which the pack's toState
+   * adds those 3 (every world is given them), so upstream's hasHealth
+   * sums the hearts on screen; not set, the health is unknown to the rules.
    */
   | { readonly kind: "hearts" }
   /**
@@ -251,15 +253,18 @@ const ACTIVATION_COUNTS: ReadonlySet<UnknownCount> = new Set(
 const POOL = new Map(ITEMS.map(({ id, max }) => [id, max]));
 const HEART_CONTAINERS = POOL.get("heartContainer") ?? 0;
 
+/** The heart containers every world is given: Link's 3 starting hearts. */
+const GIVEN_HEARTS = PRE_COLLECTED_STATE.heartContainer ?? 0;
+
 /**
  * Every pack item the tracker's cells can record, at the highest level they
  * reach: a count's top less its base (the tunic's 3 is armor 2), each bit's
  * item, the event a dungeon beaten gives (Agahnim, Agahnim 2), the prizes a
  * boss drops, and the heart containers and pieces the hearts cell stands
- * for, its 17 hearts found being the pool's 11 and 24. What the cells cannot
- * say (the escape's bombs and its end, the flute activated, the bow's second
- * level) is left out: no player
- * could mark it collected.
+ * for, as the state holds them: the pool's 11 and the 3 every world is
+ * given (the pack's STATE_MAX), and the pool's 24 pieces. What the cells
+ * cannot say (the escape's bombs and its end, the flute activated, the
+ * bow's second level) is left out: no player could mark it collected.
  */
 export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
   const levels = new Map<string, number>();
@@ -272,8 +277,8 @@ export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
     } else if (entry.kind === "bits") {
       for (const item of entry.items) reach(item, 1);
     } else if (entry.kind === "hearts") {
-      reach("heartContainer", HEART_CONTAINERS);
-      reach("pieceOfHeart", POOL.get("pieceOfHeart") ?? 0);
+      reach("heartContainer", STATE_MAX.get("heartContainer") ?? 0);
+      reach("pieceOfHeart", STATE_MAX.get("pieceOfHeart") ?? 0);
     } else if (entry.kind === "beaten") {
       const { event } = dungeon(entry.dungeon);
       if (event) reach(event.item, 1);
@@ -294,8 +299,8 @@ export type PackReading = Pick<
 
 /**
  * The heart containers and pieces of hearts found, as upstream's hasHealth
- * sums them: the containers first, up to the pool's, then four pieces a
- * heart.
+ * sums them beside the 3 every world is given: the containers first, up to
+ * the pool's, then four pieces a heart.
  */
 const heartItems = (
   found: number,
@@ -313,10 +318,10 @@ const heartItems = (
  * records the escape, which in Standard opens the Light World, until
  * autotracking reads that Zelda is not yet in the Sanctuary (`escape` 1).
  * The flute activated raises the flute to 2, and the prizes held by class
- * go to `held`. An id the table lacks records nothing. The hearts found are those
- * on screen less the 3 Link starts with; hearts not set (or not given) leave
- * the health unknown, and the escape's bombs are unknown until autotracking
- * reads them.
+ * go to `held`. An id the table lacks records nothing. The hearts found
+ * are those on screen less the 3 Link starts with, which the pack's toState
+ * gives; hearts not set (or not given) leave the health unknown, and the
+ * escape's bombs are unknown until autotracking reads them.
  * @param items - The run's items, by the tracker's ids
  */
 export const packReading = (items: Readonly<ItemState>): PackReading => {
@@ -364,7 +369,7 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
         if (shown === null) break;
         known.add("health");
         for (const [item, times] of Object.entries(
-          heartItems(shown - STARTING_HEARTS),
+          heartItems(shown - GIVEN_HEARTS),
         )) {
           hold(item as InventoryItemId, times);
         }

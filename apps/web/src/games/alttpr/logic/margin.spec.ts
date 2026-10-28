@@ -66,10 +66,46 @@ describe("a place out of logic by basic placement's margin alone", () => {
     expect(locationStateOf(BIG_CHEST, eleven)).toBe("margin");
   });
 
-  it("shows them in logic with the 15 hearts basic placement waits for", () => {
-    const fifteen = run(15, ALIVE);
-    expect(dungeonStateOf("misery-mire", fifteen)).toBe("available");
-    expect(locationStateOf(BIG_CHEST, fifteen)).toBe("available");
+  it("shows them in logic with the 12 hearts basic placement waits for", () => {
+    const twelve = run(12, ALIVE);
+    expect(dungeonStateOf("misery-mire", twelve)).toBe("available");
+    expect(locationStateOf(BIG_CHEST, twelve)).toBe("available");
+  });
+
+  it("counts the 3 hearts Link starts with, as upstream's hasHealth does", () => {
+    // Randomizer.php:46-56 gives every world three heart containers, which
+    // hasHealth sums (ItemCollection.php:546-553): hasHealth(12) is 12
+    // hearts on screen, hasHealth(7) 7
+    const late = [
+      "ice-palace/compass-chest",
+      "misery-mire/big-chest",
+      "turtle-rock/compass-chest",
+      "ganons-tower/bobs-torch",
+    ];
+    const early = [
+      "palace-of-darkness/shooter-room",
+      "swamp-palace/entrance",
+      "skull-woods/compass-chest",
+      "thieves-town/ambush-chest",
+    ];
+    const at = (hearts: number) => {
+      const tris = solutionOf(run(hearts)).tris;
+      return Object.fromEntries(
+        [...late, ...early].map((id) => [id, tris[id]]),
+      );
+    };
+    const all = (ids: string[], tri: string) =>
+      Object.fromEntries(ids.map((id) => [id, tri]));
+    expect(at(12)).toEqual({ ...all(late, "yes"), ...all(early, "yes") });
+    expect(at(11)).toEqual({ ...all(late, "no"), ...all(early, "yes") });
+    expect(at(7)).toEqual({ ...all(late, "no"), ...all(early, "yes") });
+    expect(at(6)).toEqual({ ...all(late, "no"), ...all(early, "no") });
+    for (const id of ["ice-palace", "ganons-tower"] as const) {
+      expect(dungeonStateOf(id, run(11))).toBe("margin");
+    }
+    expect(locationStateOf("palace-of-darkness/shooter-room", run(6))).toBe(
+      "margin",
+    );
   });
 
   it("leaves an advanced placement run as it was", () => {
@@ -97,8 +133,8 @@ describe("a place out of logic by basic placement's margin alone", () => {
   });
 
   it("keeps the dark rooms out of logic: the lamp is no part of the margin", () => {
-    // 9 hearts: one short of Palace of Darkness's 10, and no light
-    const dark = run(9, { firerod: false, lantern: false });
+    // 6 hearts: one short of Palace of Darkness's 7, and no light
+    const dark = run(6, { firerod: false, lantern: false });
     expect(locationStateOf("palace-of-darkness/shooter-room", dark)).toBe(
       "margin",
     );
@@ -122,9 +158,9 @@ describe("a place out of logic by basic placement's margin alone", () => {
     const missing = analysis.missing.get(BIG_CHEST);
     expect(missing?.tri).toBe("no");
     expect(missing?.margin).toEqual({ gates: ["miseryMire"], hearts: 11 });
-    expect(missing && waysText(missing.inLogic)).toBe("15 hearts");
+    expect(missing && waysText(missing.inLogic)).toBe("12 hearts");
     // A check out of logic for something else says no margin
-    const dark = run(9, { firerod: false, lantern: false });
+    const dark = run(6, { firerod: false, lantern: false });
     const darkAnalysis = analyzeRun(solutionOf(dark), dark.settings);
     expect(
       darkAnalysis.missing.get("palace-of-darkness/dark-maze/top")?.margin,
@@ -138,7 +174,7 @@ describe("a place out of logic by basic placement's margin alone", () => {
       darkAnalysis,
     );
     expect(groups.map(({ missing }) => missing.margin)).toEqual([
-      { gates: ["palaceOfDarkness"], hearts: 9 },
+      { gates: ["palaceOfDarkness"], hearts: 6 },
       undefined,
     ]);
   });
@@ -189,13 +225,13 @@ describe("the go mode outside basic placement's margin", () => {
     expect(goModeStatusOf(eleven)?.tri).toBe("no");
     expect(goModeMarginOf(eleven)).toBe(true);
     const left = analyzeRun(solutionOf(eleven), eleven.settings).goMode;
-    expect(left?.kind === "items" && waysText(left.ways)).toBe("15 hearts");
+    expect(left?.kind === "items" && waysText(left.ways)).toBe("12 hearts");
   });
 
-  it("is in logic with 15 hearts, and not without the margin's say", () => {
-    const fifteen = run(15);
-    expect(goModeStatusOf(fifteen)?.tri).toBe("yes");
-    expect(goModeMarginOf(fifteen)).toBe(false);
+  it("is in logic with 12 hearts, and not without the margin's say", () => {
+    const twelve = run(12);
+    expect(goModeStatusOf(twelve)?.tri).toBe("yes");
+    expect(goModeMarginOf(twelve)).toBe(false);
   });
 
   it("is not yet in an advanced run, or one short of more than the margin", () => {

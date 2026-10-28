@@ -53,7 +53,6 @@ import {
   untrackedItems,
   withUntracked,
 } from "@alltp/pack-alttpr";
-import { STARTING_HEARTS } from "@/games/alttpr/data/items";
 import type { RunSettings } from "@/games/alttpr/data/presets";
 import {
   HEART_POWER,
@@ -93,7 +92,7 @@ export type Doubt =
   | { readonly kind: "placement" }
   /**
    * A rule asks for hearts and the hearts are not set: `hearts` on screen,
-   * the 3 Link starts with included; `basic` when it is the basic item
+   * the 3 Link starts with among them; `basic` when it is the basic item
    * placement's dungeon gate (upstream's hasHealth).
    */
   | {
@@ -320,11 +319,14 @@ const trickWays = (
   return ways;
 };
 
-/** The hearts on screen a state holds, the 3 Link starts with included. */
+/**
+ * The hearts on screen a state holds: the 3 Link starts with are in it, as
+ * every world is given them (the pack's PRE_COLLECTED_STATE).
+ */
 const heartsHeld = (state: State): number =>
   Object.entries(HEART_POWER).reduce(
     (sum, [item, power]) => sum + power * itemValue(state, item),
-    STARTING_HEARTS,
+    0,
   );
 
 /** What a check out of logic by the margins alone says. */
@@ -395,8 +397,9 @@ const unknownBranch = (expr: Expr): string | undefined => {
 };
 
 /**
- * The hearts found a rule of hearts alone asks for, the fewest any of its
- * ways does (hasHealth7: 7); undefined for a rule that reads anything else.
+ * The hearts on screen a rule of hearts alone asks for, the fewest any of
+ * its ways does (hasHealth7: 7, Link's 3 starting hearts among them);
+ * undefined for a rule that reads anything else.
  */
 const heartsAsked = (expr: Expr): number | undefined => {
   if (expr.type === "item") {
@@ -460,7 +463,7 @@ const doubtOf = (key: string): Doubt => {
   if (kind === "hearts") {
     return {
       basic: basic === "true",
-      hearts: STARTING_HEARTS + Number(what),
+      hearts: Number(what),
       kind: "hearts",
     };
   }

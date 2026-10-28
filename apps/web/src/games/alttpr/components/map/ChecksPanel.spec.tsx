@@ -165,7 +165,7 @@ describe("ChecksPanel", () => {
     render(<ChecksPanel />);
     expect(screen.queryByTestId("checks-filter-margin")).toBeNull();
 
-    // Basic placement, everything but the hearts: 11 on screen of the 15
+    // Basic placement, everything but the hearts: 11 on screen of the 12
     // Misery Mire's way in waits for
     act(() => {
       const state = useGameStore.getState();
@@ -198,7 +198,7 @@ describe("ChecksPanel", () => {
     act(() => analyzeNow());
     await user.click(screen.getByTestId("check-why-misery-mire/big-chest"));
     expect(within(bigChest).getByTestId("missing-margin")).toHaveTextContent(
-      "Doable now, outside Basic's safety margin: Basic placement waits for 15 hearts (you have 11 hearts) before the seed relies on entering Misery Mire.",
+      "Doable now, outside Basic's safety margin: Basic placement waits for 12 hearts (you have 11 hearts) before the seed relies on entering Misery Mire.",
     );
     // What the margin says is all that is missing: no line repeats it
     expect(within(bigChest).queryByTestId("missing-in-logic")).toBeNull();

@@ -1,5 +1,7 @@
+import { toState } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import { getPreset } from "@/games/alttpr/data/presets";
+import { packSettings } from "@/games/alttpr/logic/settings";
 import { locationName, trackerInput } from "@/games/alttpr/logic/solution";
 import { compareReview, type ReviewedRun } from "@/games/alttpr/review/adapter";
 import {
@@ -404,6 +406,11 @@ describe("the hearts and the escape's bombs", () => {
     );
     expect(items).toEqual({ bigKeyD1: 1, heartContainer: 2 });
     expect(unknown).toEqual({});
+    // The log's are those found: the state holds Link's 3 starting hearts
+    // beside them, as upstream's playthrough does (PlaythroughService.php:181)
+    const settings = packSettings(getPreset("open").settings);
+    const state = toState({ ...board(), items, unknown }, settings);
+    expect(state.heartContainer).toBe(5);
   });
 
   it("stay unknown for a run that dated no place, as Race Mode's", () => {

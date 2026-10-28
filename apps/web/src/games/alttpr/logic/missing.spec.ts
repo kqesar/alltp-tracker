@@ -356,7 +356,7 @@ describe("what the go mode is missing, crystals aside", () => {
       { hidden: ["swordless", "itemPlacement", "crystalsGanon"] },
     );
     expect(goModeStatusOf(mystery)?.tri).toBe("maybe");
-    expect(left(mystery)).toBe("15 hearts + Tempered Sword");
+    expect(left(mystery)).toBe("12 hearts + Tempered Sword");
   });
 
   it("follows the pedestal goal's pendants", () => {
@@ -728,24 +728,25 @@ describe("the hearts, under the basic placement", () => {
     const run = basic(0);
     expect(solutionOf(run).tris[SHOOTER_ROOM]).toBe("maybe");
     expect(words(analysisOf(run).missing.get(SHOOTER_ROOM))).toEqual({
-      doubts: [{ basic: true, hearts: 10, kind: "hearts" }],
-      inLogic: "10 hearts",
+      doubts: [{ basic: true, hearts: 7, kind: "hearts" }],
+      inLogic: "7 hearts",
       possible: undefined,
       tri: "maybe",
     });
   });
 
   it("propose the hearts a dungeon lacks once they are set", () => {
-    // 9 hearts on screen: 6 found, one short of upstream's hasHealth(7)
-    const run = basic(7);
+    // 6 hearts on screen, one short of upstream's hasHealth(7), which counts
+    // the 3 Link starts with (Randomizer.php:46-56)
+    const run = basic(4);
     expect(solutionOf(run).tris[SHOOTER_ROOM]).toBe("no");
     expect(words(analysisOf(run).missing.get(SHOOTER_ROOM))).toMatchObject({
       doubts: [],
-      inLogic: "10 hearts",
+      inLogic: "7 hearts",
       tri: "no",
     });
-    // 10 hearts: in logic
-    expect(solutionOf(basic(8)).tris[SHOOTER_ROOM]).toBe("yes");
+    // 7 hearts on screen: in logic
+    expect(solutionOf(basic(5)).tris[SHOOTER_ROOM]).toBe("yes");
   });
 });
 
