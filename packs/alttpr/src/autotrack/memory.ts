@@ -713,6 +713,12 @@ export const MEMORY_RANGES = [
   // field (overworldmap.asm:133-135), and vt writes it so (Region
   // map_reveal: Tower of Hera $0020, Eastern Palace $2000).
   save("map-overlay", 0x414, 2, "prizes", "z3:sram.asm:249-256"),
+  // GoalCounter, a word: the goal items collected, which a Triforce Hunt
+  // counts a piece at a time (newitems.asm:102-105, 470-473) and the HUD
+  // shows beside the pieces the goal asks for (newhud.asm:69-80). v2.0 lists
+  // "Triforce pieces" among the inventory items a tracker may auto-track, so
+  // Race Mode reads it as an item.
+  save("goal-counter", 0x418, 2, "items", "z3:sram.asm:265"),
   // The ROM's own stats, which its end credits show (stats/statConfig.asm:
   // 50-68) and the game stops counting once StatsLocked is set. The race
   // rules (v2.0) let a tracker show bonks, deaths, chest turns and save &

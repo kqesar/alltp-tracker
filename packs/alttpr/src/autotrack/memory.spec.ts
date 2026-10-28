@@ -86,6 +86,8 @@ const RACE_READS = [
   "npc-flags-vanilla:outside-checks",
   "agahnim-2:boss-kills",
   "npc-flags:outside-checks",
+  // The Triforce pieces found (GoalCounter): v2.0 lists them as items
+  "goal-counter:items",
   "stats-locked:goal",
   "dungeons-completed:items",
   // The small keys found (DungeonCollectedKeys)
@@ -355,7 +357,9 @@ describe("MEMORY_RANGES", () => {
     // follower byte (the big bomb) joins the casual one.
     // The small keys found (collected-keys)
     // replace the keys held: the casual plan already spans them, Race Mode
-    // reads 14 bytes more, in one more piece.
+    // reads 14 bytes more, in one more piece. The Triforce pieces found
+    // (goal-counter, a word v2.0 lists among the items) join it too: 2 bytes,
+    // in one more piece.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -367,8 +371,8 @@ describe("MEMORY_RANGES", () => {
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
       casual: { bytes: 340, pieces: 18 },
-      race: { bytes: 826, pieces: 13 },
-      ranges: { casual: 32, race: 37 },
+      race: { bytes: 828, pieces: 14 },
+      ranges: { casual: 32, race: 38 },
     });
   });
 });

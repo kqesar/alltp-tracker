@@ -20,6 +20,8 @@ export type SeedRom = {
   readonly crystalsGanon?: number;
   readonly dungeonItems?: "standard" | "mc" | "mcs" | "full";
   readonly logic?: SeedLogic;
+  /** The pieces the goal asks for, where a customized seed asks another number. */
+  readonly pieces?: number;
 };
 
 /** The free item menu's bits for each dungeonItems (World.php:111-129). */
@@ -68,6 +70,7 @@ export const writeSeedSettings = (
     goal = "ganon",
     logic = "NoGlitches",
     mode = "open",
+    pieces: asked,
     swordless = false,
   }: SeedRom = {},
 ): Uint8Array => {
@@ -77,7 +80,7 @@ export const writeSeedSettings = (
   memory[at("swordless-mode") + 2] = sword;
   memory[at("dungeon-item-menu")] = MENU[dungeonItems];
   memory[at("inverted-mode")] = mode === "inverted" ? 0x01 : 0x00;
-  const pieces = PIECES[goal] ?? 0;
+  const pieces = asked ?? PIECES[goal] ?? 0;
   memory[at("goal-items")] = pieces & 0xff;
   memory[at("goal-items") + 1] = pieces >> 8;
   memory[at("generic-keys")] = mode === "retro" ? 0x01 : 0x00;

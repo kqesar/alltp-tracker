@@ -49,6 +49,7 @@ export {
   type DecodeOptions,
   decodeChecks,
   decodeEntrances,
+  decodeGoalPieces,
   decodeHealth,
   decodeItems,
   decodePrizesHeld,
@@ -189,8 +190,10 @@ export {
   goModeOf,
   goModeStatus,
   goModeStatusBy,
+  huntGoModeOf,
   joinBlockers,
   type LocationSolution,
+  TRIFORCE_HUNT,
 } from "./goals";
 export { GROUPS, HELPERS, type Rule } from "./helpers";
 export {

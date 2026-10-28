@@ -222,6 +222,11 @@ export interface SeedSettingsReading {
   /** mode.weapons is 'swordless' (World.php:1249). */
   readonly swordless: SeedSetting<boolean>;
   readonly goal: SeedSetting<SeedGoal>;
+  /**
+   * item.Goal.Required: the Triforce pieces the goal asks for, 1 to 50; the
+   * ROM alone states it (GoalItemRequirement), a seed's file does not.
+   */
+  readonly goalPieces?: SeedSetting<number>;
   /** crystals.tower: the crystals that open Ganon's Tower, 0 to 7. */
   readonly crystalsTower: SeedSetting<number>;
   /** crystals.ganon: the crystals Ganon asks for, 0 to 7. */
@@ -274,6 +279,9 @@ const VULNERABLE = {
 
 /** The pyramid's bit in its screen's byte (InitialSram.php:93-95). */
 const PYRAMID_OPEN = 0x20;
+
+/** The most Triforce pieces a goal asks for: ganonhunt's pool (config/alttp.php:44-50). */
+export const MAX_GOAL_PIECES = 50;
 
 /**
  * RandomizerSeedType's values (Rom.php:832-851): $01 is written for Major
@@ -432,6 +440,10 @@ export function decodeSeedSettings(
       typeof vulnerable === "string"
         ? unknown(vulnerable)
         : goalOf(memory, race, vulnerable),
+    goalPieces: from(["goal-items"], ([low, high]) => {
+      const pieces = low | (high << 8);
+      return pieces >= 1 && pieces <= MAX_GOAL_PIECES ? pieces : null;
+    }),
     logic: from(["seed-type"], (type) => LOGICS[type[0]] ?? null),
     mode: from(["inverted-mode", "generic-keys", "initial-progress"], modeOf),
     seed: seedName(memory),

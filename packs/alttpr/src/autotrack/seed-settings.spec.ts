@@ -162,6 +162,21 @@ describe("decodeSeedSettings", () => {
     });
   });
 
+  it("reads the pieces a triforce hunt asks for, 1 to 50, from the goal items word", () => {
+    const pieces = (low: number, high = 0) =>
+      shown(
+        decode(image({ [OFFSET.goalItems]: low, [OFFSET.goalItems + 1]: high }))
+          .goalPieces ?? { known: false, why: "unrecognized" },
+      );
+    expect(pieces(20)).toBe(20);
+    expect(pieces(30)).toBe(30);
+    expect(pieces(50)).toBe(50);
+    // None asked for (pedestal), more than any goal asks, counter-only $FFFF
+    expect(pieces(0)).toBe("?unrecognized");
+    expect(pieces(51)).toBe("?unrecognized");
+    expect(pieces(0xff, 0xff)).toBe("?unrecognized");
+  });
+
   it("reads the crystal counts from 0 to 7", () => {
     for (let count = 0; count <= 7; count++) {
       const reading = decode(

@@ -26,6 +26,7 @@ import {
   SEWER_KEYS,
 } from "./memory";
 import { ALTTPR_RACE_PROFILE } from "./race-profile";
+import { MAX_GOAL_PIECES } from "./seed-settings";
 
 /**
  * What the decoders read: a range's bytes, once read. The session's
@@ -457,6 +458,24 @@ export function decodeHealth(
   return health < HEART || health > MAX_HEALTH || quarters > MAX_QUARTERS
     ? "not-read"
     : { hearts: Math.floor(health / HEART), quarters };
+}
+
+/**
+ * The Triforce pieces Link holds, or why memory cannot say: GoalCounter
+ * (sram.asm:265), which each goal item adds one to as Link raises it
+ * (newitems.asm:102-105, 470-473). v2.0 lists "Triforce pieces" among the
+ * inventory items a tracker may auto-track, so Race Mode reads it (category
+ * `items`). A word above the most pieces any goal asks for is no count of
+ * the game's (no save loaded yet): not read.
+ */
+export function decodeGoalPieces(
+  memory: MemoryView,
+  options: DecodeOptions,
+): number | Unsettled {
+  const bytes = new Reader(memory, options.race).range("goal-counter");
+  if (typeof bytes === "string") return bytes;
+  const pieces = bytes.word(SAVE(0x418));
+  return pieces > MAX_GOAL_PIECES ? "not-read" : pieces;
 }
 
 /**
