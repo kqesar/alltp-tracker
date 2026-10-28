@@ -2,6 +2,33 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.52.0](https://github.com/kqesar/alltp-tracker/compare/v2.51.0...v2.52.0) (2026-10-28)
+
+
+### ✨ Features
+
+* **web:** track Link's hearts on the tunic's cell ([e070596](https://github.com/kqesar/alltp-tracker/commit/e0705962a82a8285c227d8d1644cc1ef956e34ff))
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** read hearts and bombs a tracker does not know as maybe ([b3f6dfb](https://github.com/kqesar/alltp-tracker/commit/b3f6dfb51c4e54726337d66ee70aa09ae42aa1c0))
+* **web:** date a review's hearts and bombs by the log, never the board ([4dd4f89](https://github.com/kqesar/alltp-tracker/commit/4dd4f898a404a5dad924ae2381180d1cabd770fe))
+* **web:** know the escape's Ten Bombs once autotracking reads them ([b524654](https://github.com/kqesar/alltp-tracker/commit/b5246545844dd90016eeaf86877fa1c510f4070f))
+* **web:** say a whole heart by voice, 4 on screen from not set ([5f82ca7](https://github.com/kqesar/alltp-tracker/commit/5f82ca7bd562bbf017614e49ddcdcd7497a8d3ef))
+* **web:** stop the hearts cell at not set and at 20 ([66ce741](https://github.com/kqesar/alltp-tracker/commit/66ce741fb747f3f04265edfdaa780dfd421ca200))
+
+
+### 📚 Documentation
+
+* **alttpr:** say Race Mode reads the heart count, and quote v2.0 once ([bf1f4cf](https://github.com/kqesar/alltp-tracker/commit/bf1f4cf26da938350e0f065fe1f72b35856a3d33))
+* describe the hearts cell and counts the board may not know ([1606544](https://github.com/kqesar/alltp-tracker/commit/16065444edd6e9715068fe041261f16034d23d71))
+
+
+### 🔧 Code Refactoring
+
+* **web:** share the heart items' power, and ask waysOf for what is held ([cd21345](https://github.com/kqesar/alltp-tracker/commit/cd213454946c0083940753cfdd35167179fe4d0b))
+
 ## [2.51.0](https://github.com/kqesar/alltp-tracker/compare/v2.50.1...v2.51.0) (2026-10-28)
 
 
