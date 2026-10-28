@@ -149,6 +149,39 @@ for (const width of WIDTHS) {
 
       expect(unringed).toEqual([]);
     });
+
+    test("fits the hearts in the tunic's cell, two digits included, and steps them by keyboard", async ({
+      page,
+    }) => {
+      await openTracker(page);
+      const hearts = page.getByTestId("hearts-overlay");
+      await expect(hearts).toHaveAccessibleName(/^Hearts: not set\./);
+
+      // From the tunic, the arrow keys reach the hearts in the same cell
+      await page.getByTestId("item-tunic").focus();
+      await page.keyboard.press("ArrowRight");
+      await expect(hearts).toBeFocused();
+      for (let step = 0; step < 18; step++) await page.keyboard.press("Space");
+      await expect(hearts).toHaveAccessibleName(/^Hearts: 20\./);
+
+      const [cell, button, count] = await Promise.all([
+        page.getByTestId("item-tunic").boundingBox(),
+        hearts.boundingBox(),
+        hearts.locator(".heart-counter__count").boundingBox(),
+      ]);
+      if (!(cell && button && count)) throw new Error("no hearts box");
+      const inside = (
+        a: { x: number; y: number; width: number; height: number },
+        b: { x: number; y: number; width: number; height: number },
+      ) =>
+        a.x >= b.x - 0.5 &&
+        a.y >= b.y - 0.5 &&
+        a.x + a.width <= b.x + b.width + 0.5 &&
+        a.y + a.height <= b.y + b.height + 0.5;
+      expect(inside(button, cell)).toBe(true);
+      // "20" stays within its heart
+      expect(inside(count, button)).toBe(true);
+    });
   });
 }
 
