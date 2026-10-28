@@ -230,6 +230,25 @@ describe("the run timer", () => {
     });
   });
 
+  it.each([
+    ["untimed", 0],
+    ["timed", 477_000],
+  ])(
+    "is cleared by a new game and an import after a run that ended %s",
+    (_, elapsedMs) => {
+      const ended = { elapsedMs, finished: true, startedAt: null };
+      useSmStore.setState({ timer: ended });
+      store().reset();
+      expect(store().timer.finished).toBe(false);
+      expect(store().timer.elapsedMs).toBe(0);
+
+      useSmStore.setState({ timer: ended });
+      store().load(freshProgress());
+      expect(store().timer.finished).toBe(false);
+      expect(store().timer.elapsedMs).toBe(0);
+    },
+  );
+
   it("sets the timer on the game's clock outside the undo history", () => {
     store().startTimer(T0);
     store().alignTimer({ ms: 5_000, status: "running" }, T0 + 1_000);
