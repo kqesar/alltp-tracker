@@ -1,6 +1,7 @@
 import { detectEnvironment, parseUserAgent } from "@alltp/autotrack";
 import { type ReactNode, useEffect } from "react";
 import type { GameAutotrack } from "@/autotrack/gameSession";
+import { isRaceHeldByMemory } from "@/autotrack/raceMode";
 import { detailOf, headlineOf, phaseOf } from "@/autotrack/status";
 import { RaceModeOption } from "@/components/autotrack/RaceModeOption";
 import { SetupGuide } from "@/components/autotrack/SetupGuide";
@@ -49,6 +50,7 @@ export const GameAutotrackDialog = <Reading,>({
   const connected = active && !elsewhere && shown.code === "connected";
   const race = connected && shown.race.active ? shown.race : null;
   const raceChoice = session.useStore((state) => state.raceChoice);
+  const remembered = session.useStore(isRaceHeldByMemory);
 
   // The setup guide, before any connection: the system, once, as it opens
   useEffect(() => {
@@ -148,6 +150,8 @@ export const GameAutotrackDialog = <Reading,>({
         <RaceModeOption
           flag={session.raceFlag}
           onChange={session.setRaceChoice}
+          onEnd={session.endRace}
+          remembered={remembered}
           value={raceChoice}
         />
 

@@ -7,6 +7,7 @@ import { createGameAutotrack } from "@/autotrack/gameSession";
 import type { SmReading } from "@/games/sm/autotrack/reading";
 
 export const smAutotrack = createGameAutotrack<SmReading>({
+  game: "sm",
   load: () =>
     import("@/games/sm/autotrack/runtime").then((runtime) => ({
       createFollower: runtime.createSmFollower,

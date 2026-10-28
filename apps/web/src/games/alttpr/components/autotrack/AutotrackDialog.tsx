@@ -4,6 +4,7 @@ import {
   parseUserAgent,
 } from "@alltp/autotrack";
 import { useEffect, useId, useRef, useState } from "react";
+import { isRaceHeldByMemory } from "@/autotrack/raceMode";
 import { detailOf, headlineOf, phaseOf } from "@/autotrack/status";
 import { RaceModeOption } from "@/components/autotrack/RaceModeOption";
 import { SetupGuide } from "@/components/autotrack/SetupGuide";
@@ -62,6 +63,8 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
     (state) => state.setConnectOnStart,
   );
   const raceChoice = useAutotrackStore((state) => state.raceChoice);
+  const remembered = useAutotrackStore(isRaceHeldByMemory);
+  const endRace = useAutotrackStore((state) => state.endRace);
   const setRaceChoice = useAutotrackStore((state) => state.setRaceChoice);
   const darkRoomMap = useAutotrackStore((state) => state.darkRoomMap);
   const setDarkRoomMap = useAutotrackStore((state) => state.setDarkRoomMap);
@@ -286,7 +289,12 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
             Connect when the tracker opens, on this device
           </label>
         </div>
-        <RaceModeOption onChange={setRaceChoice} value={raceChoice} />
+        <RaceModeOption
+          onChange={setRaceChoice}
+          onEnd={endRace}
+          remembered={remembered}
+          value={raceChoice}
+        />
         <div className="check-option">
           <input
             aria-describedby={`${darkRoomId}-hint`}

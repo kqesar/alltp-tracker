@@ -5,6 +5,7 @@ import { createGameAutotrack } from "@/autotrack/gameSession";
 import type { Smz3Reading } from "@/games/smz3/autotrack/reading";
 
 export const smz3Autotrack = createGameAutotrack<Smz3Reading>({
+  game: "smz3",
   load: () =>
     import("@/games/smz3/autotrack/runtime").then((runtime) => ({
       createFollower: runtime.createSmz3Follower,

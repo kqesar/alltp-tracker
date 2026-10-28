@@ -26,6 +26,7 @@ import {
   RACE_CHOICES,
   type RaceChoice,
 } from "@/autotrack/raceChoice";
+import { onRunReplaced, rememberRace } from "@/autotrack/raceMode";
 import { shownStatus } from "@/autotrack/status";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isObsView } from "@/utils/view";
@@ -93,6 +94,12 @@ export type GameAutotrackState<Reading> = {
   unavailable: boolean;
   /** Race Mode as the player set it: the ROM's race flag, or always on. */
   raceChoice: RaceChoice;
+  /**
+   * This run's seed was read as a race's, and nobody called the race over:
+   * Race Mode holds through a Disconnect and a reload (`autotrack/raceMode.ts`).
+   * Saved; never set for a game with no race flag.
+   */
+  raceSeen: boolean;
 };
 
 const IDLE: SessionStatus = { code: "idle" };
@@ -103,16 +110,19 @@ const STOPPED: SessionStatus = { code: "stopped" };
  * @param storageKey - Where the wish to connect on start is saved
  * @param load - Imports the game's runtime chunk
  * @param seed - What the board tracks, as headlines name it: "a Map Rando seed"
+ * @param game - The game's id, whose run being replaced ends a remembered race
  * @param raceFlag - Whether the game's ROMs carry a race flag. Without one
  * (Map Rando) there is nothing for "auto" to read, so Race Mode is "on" by
  * default and its option reads On or Off ("off")
  */
 export const createGameAutotrack = <Reading>({
+  game,
   load,
   raceFlag = true,
   seed,
   storageKey,
 }: {
+  game: string;
   load: () => Promise<GameRuntimeModule<Reading>>;
   raceFlag?: boolean;
   seed: string;
@@ -128,6 +138,7 @@ export const createGameAutotrack = <Reading>({
         elsewhere: false,
         environment: null,
         raceChoice: raceDefault,
+        raceSeen: false,
         reading: null,
         seen: { bridge: null, devices: [] },
         shown: IDLE,
@@ -139,9 +150,11 @@ export const createGameAutotrack = <Reading>({
         merge: (persisted, current) =>
           mergeRaceChoice(persisted, current, raceChoices),
         name: storageKey,
-        partialize: ({ connectOnStart, raceChoice }) => ({
+        // A game with no race flag never remembers a race: its save is as it was
+        partialize: ({ connectOnStart, raceChoice, raceSeen }) => ({
           connectOnStart,
           raceChoice,
+          ...(raceFlag ? { raceSeen } : {}),
         }),
         storage: createJSONStorage(() => localStorage),
       },
@@ -165,6 +178,13 @@ export const createGameAutotrack = <Reading>({
     }
   });
   syncAcrossTabs(useStore);
+  // A game with a race flag remembers a race read; its run replaced ends it
+  if (raceFlag) {
+    rememberRace(useStore);
+    onRunReplaced((replaced) => {
+      if (replaced === game) set({ raceSeen: false });
+    });
+  }
 
   /**
    * Start autotracking: load the session's code, take the lock, connect, and
@@ -256,6 +276,8 @@ export const createGameAutotrack = <Reading>({
       stop();
       set({ connectOnStart: false, unavailable: false });
     },
+    /** The player says the race is over: Race Mode is the run's again. */
+    endRace: () => set({ raceSeen: false }),
     /** Whether the game's ROMs carry a race flag ("auto" reads it). */
     raceFlag,
     /** Retry now rather than after the session's wait. */
@@ -266,7 +288,10 @@ export const createGameAutotrack = <Reading>({
       overrides = options;
     },
     /** Set Race Mode: the ROM's race flag decides, or on; without one, on or off. */
-    setRaceChoice: (raceChoice: RaceChoice) => set({ raceChoice }),
+    setRaceChoice: (raceChoice: RaceChoice) =>
+      set(
+        raceChoice === "off" ? { raceChoice, raceSeen: false } : { raceChoice },
+      ),
     stop,
     useStore,
   };

@@ -259,6 +259,20 @@
   color: var(--color-text-muted);
 }
 
+/* Race Mode held only by a race read earlier, and the way to end it */
+.race-option__memory {
+  display: grid;
+  gap: var(--spacing-sm);
+  justify-items: start;
+}
+
+.race-option__memory p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
 /* What the board does with what was read, and Sync from game */
 .autotrack-follow {
   display: grid;
