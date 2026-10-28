@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.60.1](https://github.com/kqesar/alltp-tracker/compare/v2.60.0...v2.60.1) (2026-10-28)
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** count Link's 3 starting hearts, as vt pre-collects them ([fa6889e](https://github.com/kqesar/alltp-tracker/commit/fa6889e9ff3b40c26319ed615d5a27bf37fc5456))
+* **web:** word the hearts as on screen, the 3 Link starts with among them ([d421194](https://github.com/kqesar/alltp-tracker/commit/d4211943225057a87b303fc5f0c7cc19b0519cca))
+
+
+### 📚 Documentation
+
+* say Basic's dungeons wait for 7 and 12 hearts on screen ([31aab91](https://github.com/kqesar/alltp-tracker/commit/31aab91d52d4ea5461c828511ccb60bddf5bb208))
+
 ## [2.60.0](https://github.com/kqesar/alltp-tracker/compare/v2.59.0...v2.60.0) (2026-10-28)
 
 
