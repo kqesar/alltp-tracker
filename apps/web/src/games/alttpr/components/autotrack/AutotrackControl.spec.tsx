@@ -289,3 +289,49 @@ describe("AutotrackLiveRegion", () => {
     expect(live).toHaveTextContent("Autotracking: Running in another tab");
   });
 });
+
+describe("AutotrackControl and a race remembered", () => {
+  it("shows a Race Mode badge, named, when only the memory holds Race Mode", () => {
+    render(<AutotrackControl />);
+    const button = screen.getByTestId("autotrack-button");
+    expect(screen.queryByTestId("race-badge-remembered")).toBeNull();
+
+    // A race was read, the player disconnected: nothing is connected
+    act(() => useAutotrackStore.setState({ raceSeen: true }));
+    expect(screen.getByTestId("race-badge-remembered")).toHaveTextContent(
+      "Race Mode",
+    );
+    expect(button).toHaveAccessibleName("Autotracking Race Mode, Off");
+
+    // A session on an open seed does not undo the memory, nor the badge
+    show(
+      statusOf("connected", {
+        race: {
+          active: false,
+          flag: "open",
+          overridden: false,
+          raceLegal: true,
+          setting: "auto",
+        },
+      }),
+    );
+    expect(screen.getByTestId("race-badge-remembered")).toBeInTheDocument();
+    expect(screen.queryByTestId("race-badge")).toBeNull();
+
+    // A session that says race has its own badge, and the memory adds none
+    show(RACE);
+    expect(screen.getByTestId("race-badge")).toBeInTheDocument();
+    expect(screen.queryByTestId("race-badge-remembered")).toBeNull();
+
+    // The race called over: no badge
+    act(() =>
+      useAutotrackStore.setState({
+        active: false,
+        raceSeen: false,
+        shown: STATUSES.idle,
+        status: STATUSES.idle,
+      }),
+    );
+    expect(screen.queryByTestId("race-badge-remembered")).toBeNull();
+  });
+});

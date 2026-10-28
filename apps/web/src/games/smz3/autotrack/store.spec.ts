@@ -457,3 +457,32 @@ describe("a race, once read, is remembered", () => {
     expect(isRaceModeOrPending(state())).toBe(false);
   });
 });
+
+describe("a race remembered and Undo", () => {
+  it("brings the race back with its board when New game or an import is undone", () => {
+    run().step("missile", 1);
+    smz3Autotrack.useStore.setState({ raceSeen: true });
+
+    run().reset();
+    expect(state().raceSeen).toBe(false);
+    run().undo();
+    expect(run().items.missile).toBe(1);
+    expect(state().raceSeen).toBe(true);
+
+    smz3Autotrack.endRace();
+    run().step("missile", 1);
+    smz3Autotrack.useStore.setState({ raceSeen: true });
+    run().load(run());
+    expect(state().raceSeen).toBe(false);
+    run().undo();
+    expect(state().raceSeen).toBe(true);
+  });
+
+  it("leaves a run that was no race's alone", () => {
+    run().step("missile", 1);
+    run().reset();
+    run().undo();
+    expect(run().items.missile).toBe(1);
+    expect(state().raceSeen).toBe(false);
+  });
+});
