@@ -219,6 +219,28 @@ both. The stats' heart counters (`heart-containers`, `heart-pieces`: every
 container and piece collected, not the menu's count) stay `hud`, unread in
 a race.
 
+The bottles' contents are the same four bytes as their count
+(`BottleContents`, `$7E:F35C-$7E:F35F`, `sram.asm:111-115`): `$00` no bottle,
+`$01` a mushroom, `$02` empty, `$03` red, `$04` green, `$05` blue, `$06` a
+fairy, `$07` a bee, `$08` a good bee. `decodeItems` counts the slots that
+are not `$00` (`bottle`, which the rules read), and `decodeBottles` gives
+what each of them holds, in the game's order, as the tracker's values
+(0 empty, 1 red, 2 green, 3 blue, 4 fairy, 5 bee, 6 good bee; a mushroom
+and any other byte read empty). A potion drunk empties a bottle, so
+contents move both ways. Both run in Race Mode: they are the "bottle
+contents" the quote above names.
+
+How many bombs and arrows Link can hold is a range of its own
+(`capacities`, `$7E:F370-$7E:F371`, `sram.asm:135-136`: `BombCapacity` and
+`ArrowCapacity`, "flatly how many can be held", set by each upgrade in
+`newitems.asm:353-400`: 10 and 30 at the start, `+5` or `+10` a step, `50`
+and `70` at the top). `decodeCapacities` reads both, clamped to 0-99, and
+reads neither while both are `0` (a game with no save loaded). v2.0 names
+the bomb and arrow counts but no capacity upgrade, so its category is `hud`,
+forbidden in a race like the counts beside it: the planner treats the two
+bytes as a barrier, and Race Mode's reads of the hearts and the pendants
+around them are no longer bridged across (`memory.spec.ts`).
+
 ### The Triforce pieces of a Triforce Hunt
 
 alttpr.com's `triforce-hunt` goal puts 30 `TriforcePiece` items among the
@@ -477,7 +499,7 @@ entrance, is never read, not even to be discarded):
 | the ROM's prize table, the world map's prizes | "ROM addresses associated with ... chest or other location contents should not ever be accessed"; "Map checks are not allowed to be auto-tracked" |
 | Zelda's rescue (the `zelda` check, Standard's escape) | "may not alert whether or not Zelda was rescued in a Standard opening seed" |
 | whether the flute was activated | an event at a place in Inverted, not named: the flute is read found, its activation an unknown count (maybe at most) |
-| the big bomb (`FollowerIndicator`), the ROM's stats, the bomb count, the stats' heart counters, the seed's settings | not named, or named within limits: "Anything not covered in this document is, by default, considered not permitted" |
+| the big bomb (`FollowerIndicator`), the ROM's stats, the bomb count, the bomb and arrow capacities, the stats' heart counters, the seed's settings | not named, or named within limits: "Anything not covered in this document is, by default, considered not permitted" |
 | Link's position, room, dungeon, entrances | the race admins' clarification of June 2026 (below) and "Region endpoints may not be auto-tracked" |
 
 A dungeon location checked says Link cleared it, as a cave's says he was in

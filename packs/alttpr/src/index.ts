@@ -52,8 +52,12 @@ export {
 } from "./autotrack/dark-room-art-loader";
 export {
   type BossDungeon,
+  type BottlesReading,
+  type CapacitiesReading,
   type CheckReading,
   type DecodeOptions,
+  decodeBottles,
+  decodeCapacities,
   decodeChecks,
   decodeEntrances,
   decodeGoalPieces,

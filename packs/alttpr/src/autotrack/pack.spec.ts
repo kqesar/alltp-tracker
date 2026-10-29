@@ -12,6 +12,8 @@ import { describe, expect, it } from "vitest";
 import { writeSeedSettings } from "../../test/seed-rom";
 import { CHECK_FLAGS } from "./check-flags";
 import {
+  decodeBottles,
+  decodeCapacities,
   decodeChecks,
   decodeItems,
   decodeProgress,
@@ -84,7 +86,9 @@ class Console implements Transport {
   play(): this {
     this.memory[WRAM + 0x10] = 0x09; // game mode: overworld
     this.memory[SAVE(0x359)] = 0x02; // Master Sword
-    this.memory[SAVE(0x35c)] = 0x02; // one empty bottle
+    this.memory[SAVE(0x35c)] = 0x03; // one bottle, a red potion
+    this.memory[SAVE(0x370)] = 50; // bomb capacity, bought up
+    this.memory[SAVE(0x371)] = 70; // arrow capacity
     this.memory[SAVE(0x374)] = 0x04; // the pendant of courage
     this.memory[SAVE(0x3c5)] = 0x02; // Zelda rescued
     this.memory[SAVE(0x208)] = 0x10; // Link's House chest (room $104)
@@ -138,6 +142,8 @@ function decodeAll(
   race: boolean,
 ) {
   return {
+    bottles: decodeBottles(snapshot, { race }),
+    capacities: decodeCapacities(snapshot, { race }),
     checks: decodeChecks(snapshot, { race }),
     items: decodeItems(snapshot, { race }),
     medallions: decodeMedallions(snapshot, { race }),
@@ -199,6 +205,9 @@ describe("ALTTPR_AUTOTRACK", () => {
       pendantOfCourage: 1,
       sword: 2,
     });
+    expect(decoded?.bottles).toEqual([1]);
+    // The capacities are in the console's memory and never asked for
+    expect(decoded?.capacities).toBe("race-mode");
     // Not which crystal is 5 or 6, nor Zelda's rescue
     expect(decoded?.items.unsettled).toMatchObject({
       crystal5: "race-mode",
@@ -234,6 +243,8 @@ describe("ALTTPR_AUTOTRACK", () => {
       "zelda",
     ]);
     expect(decoded?.checks.unsettled.size).toBe(0);
+    expect(decoded?.bottles).toEqual([1]);
+    expect(decoded?.capacities).toEqual({ arrows: 70, bombs: 50 });
     expect(CHECK_FLAGS.length).toBeGreaterThan(4);
   });
 

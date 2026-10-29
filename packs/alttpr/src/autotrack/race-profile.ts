@@ -11,7 +11,10 @@ const RULES_URL =
 /**
  * v2.0's line on the HUD's counts: the heart count, the heart piece count
  * (the pieces toward the next heart, as the pause menu shows them) and the
- * bottles, read.
+ * bottle contents, read: how many bottles Link holds and what each holds,
+ * the potion, the fairy, the bee (`bottles`, decodeItems and decodeBottles).
+ * It names the bomb and arrow counts, not the capacity upgrades
+ * (`capacities`, filed under `hud`): those stay forbidden.
  */
 const HUD_COUNTS =
   "The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.";
@@ -27,8 +30,8 @@ const STRICT =
  * leaves in doubt (in doubt, forbidden):
  * - the items, the dungeon items, the bosses, the heart count and the heart
  *   piece count (`health`: the hearts on screen and the pieces toward the
- *   next) and the bottles' contents (`bottles`), all named among the HUD's
- *   counts;
+ *   next) and the bottles' contents (`bottles`: that Link has a bottle and
+ *   what it holds, "bottle contents"), all named among the HUD's counts;
  * - the locations checked, outside the dungeons and inside them
  *   (`dungeon-checks`: "overworld-locations, underworld-locations, and
  *   dungeon-locations"; "how many locations have been cleared, both in
@@ -44,7 +47,8 @@ const STRICT =
  *   dungeon gave which (v2.0: "An auto-tracker may not associate an
  *   acquired item with a specific location").
  * It keeps forbidden the rest of the HUD's counts and the stats v2.0 opens
- * within limits, the ROM's settings, and the ROM's prize table, a
+ * within limits, and the bomb and arrow capacity upgrades (`capacities`: v2.0
+ * names the counts held, not how many may be held), the ROM's settings, and the ROM's prize table, a
  * location's content. It reads only inside the memory windows below, in the
  * SNES LoROM space, ends inclusive (the internal header line $FFB0-$FFDF is
  * bank $00). v2.0 lists no addresses ("it does not matter where information
