@@ -54,10 +54,17 @@ import {
   regionNamed,
 } from "./data";
 import {
+  type DoorRule,
+  type KeyLogic,
+  vanillaKeyLogic,
+} from "./key-analysis/analysis";
+import {
   addKeyRules,
   DR_KEY_CODES,
   KEY_DROPS,
   KEY_ITEMS,
+  type KeyHolding,
+  type WorldKeys,
   worldKeys,
 } from "./keys";
 import { addZeldaPath, UNCLE_SAVE_AND_QUIT, zeldaPath } from "./standard";
@@ -92,6 +99,19 @@ export interface DrWorldOptions {
    * (vanillaConnections).
    */
   readonly connections?: DrConnections;
+  /**
+   * Test only: how a key door reads its rule of DR's analysis, the
+   * player's reading by default (keys.ts). The key model's soundness spec
+   * passes the fill's truth, where a placement is known.
+   */
+  readonly doorRule?: (
+    dungeon: string,
+    rule: DoorRule,
+    logic: KeyLogic,
+    keys: WorldKeys,
+  ) => string;
+  /** Test only: items the `doorRule` reads beside the pack's. */
+  readonly items?: readonly string[];
 }
 
 /** A compiled Door Randomizer world, its facts and its locations' ids. */
@@ -328,6 +348,8 @@ export const DR_DEFAULTS: Settings = {
   // and compass
   restrictBossItems: false,
   retroBow: false,
+  // key_logic_algorithm strict (with wild keys, all the chests' keys)
+  strictKeyLogic: false,
   treasureHunt: 0,
   triforceHuntGoal: false,
   trinityGoal: false,
@@ -509,6 +531,60 @@ function addSpikesPotRule(locations: Map<string, string>): void {
 }
 
 /**
+ * How the run holds its small keys (keyshuffle, key_logic_algorithm):
+ * strict logic reads its own rule only once keys are wild (Rules.py:
+ * 2345-2347); `dangerous` reads as partial, which the app notes.
+ */
+export function keyHoldingOf(settings: Settings): KeyHolding {
+  if (settings.universalKeys === true) return "universal";
+  if (settings.wildKeys !== true) return "dungeon";
+  return settings.strictKeyLogic === true ? "strict" : "wild";
+}
+
+/** The analyses run, by what they read of the settings. */
+const KEY_LOGIC = new Map<string, ReadonlyMap<string, KeyLogic>>();
+
+/**
+ * DR's key analysis of the vanilla world for a run's settings
+ * (key-analysis/, vanilla_key_logic, DoorShuffle.py:222-309), once per
+ * mode and the settings it reads.
+ */
+export function drKeyLogic(settings: Settings): ReadonlyMap<string, KeyLogic> {
+  const all = { ...DR_DEFAULTS, ...settings };
+  const mode = drModeOf(all);
+  const keys = worldKeys(keyHoldingOf(all), {
+    drops: all.dropShuffle === true,
+    pots: all.potKeys === true,
+  });
+  const analysis = {
+    accessibility:
+      all.locationsAccessibility === true
+        ? ("locations" as const)
+        : ("items" as const),
+    bigKeyShuffle: all.wildBigKeys === true,
+    dropShuffleNone: all.dropShuffle !== true,
+    forcedDrops: new Set(keys.forcedDrops.map((d) => d.location)),
+    keyShuffle:
+      keys.holding === "universal"
+        ? ("universal" as const)
+        : keys.holding === "dungeon"
+          ? ("none" as const)
+          : ("wild" as const),
+    mode,
+  };
+  const id = JSON.stringify({
+    ...analysis,
+    forcedDrops: [...analysis.forcedDrops].sort(),
+  });
+  let found = KEY_LOGIC.get(id);
+  if (found === undefined) {
+    found = vanillaKeyLogic(analysis);
+    KEY_LOGIC.set(id, found);
+  }
+  return found;
+}
+
+/**
  * The Door Randomizer's world for a run's settings, its doors and
  * entrances vanilla, compiled: once per settings change.
  * @param settings - The pack's settings and DR's (DR_DEFAULTS)
@@ -519,8 +595,7 @@ export function drWorld(
 ): DrWorld {
   const all = { ...DR_DEFAULTS, ...settings };
   const mode = drModeOf(all);
-  const universal = all.universalKeys === true;
-  const keys = worldKeys(universal, {
+  const keys = worldKeys(keyHoldingOf(all), {
     drops: all.dropShuffle === true,
     pots: all.potKeys === true,
   });
@@ -554,7 +629,20 @@ export function drWorld(
   const derived = derivedSettings(connections, marked, mode);
   // In set_rules' order: global_rules (the key logic, the boss items, the
   // spikes' pot), standard_rules, the bomb shop, the bunny last
-  addKeyRules(exits, locations, keys, mode, universal);
+  const { doorRule } = options;
+  addKeyRules(
+    exits,
+    locations,
+    doorRule === undefined
+      ? keys
+      : {
+          ...keys,
+          doorRule: (dungeon, rule, logic) =>
+            doorRule(dungeon, rule, logic, keys),
+        },
+    mode,
+    options.connections === undefined ? drKeyLogic(all) : undefined,
+  );
   if (all.restrictBossItems === true) addBossItemRules(locations);
   if (all.potShuffle === true) addSpikesPotRule(locations);
   if (mode === "standard") {
@@ -649,6 +737,7 @@ export function drWorld(
     items: [
       ...new Set([
         ...STATE_NAMES,
+        ...(options.items ?? []),
         ...DR_RULES.newItems,
         ...Object.keys(DR_RULES.events),
         ...KEY_ITEMS,

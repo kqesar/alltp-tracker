@@ -151,7 +151,7 @@
       {
         "file": "test/suite/default_key_logic.yaml",
         "fixture": "test/dr-upstream/suite/default_key_logic.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/suite/enemy_logic/lynel_test.yaml",
@@ -226,22 +226,22 @@
       {
         "file": "test/suite/partial_key_logic.yaml",
         "fixture": "test/dr-upstream/suite/partial_key_logic.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/suite/partial_key_logic_2.yaml",
         "fixture": "test/dr-upstream/suite/partial_key_logic_2.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/suite/partial_key_logic_3.yaml",
         "fixture": "test/dr-upstream/suite/partial_key_logic_3.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/suite/strict_key_logic.yaml",
         "fixture": "test/dr-upstream/suite/strict_key_logic.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/vanilla/TestDarkWorld.py",

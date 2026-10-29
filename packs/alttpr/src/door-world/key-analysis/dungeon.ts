@@ -23,7 +23,7 @@ import {
   REGION_NAMED,
   tableOf,
 } from "../data";
-import { KEY_DROPS } from "../keys";
+import { KEY_DROPS, UGLY_SMALLS } from "../keys";
 
 /** DR's dungeons, in the order create_dungeons lists them (Dungeons.py:30). */
 export const DR_DUNGEON_ORDER: readonly string[] = [
@@ -212,16 +212,6 @@ export const DUNGEON_EVENTS: ReadonlySet<string> = new Set([
   "Skull Star Tile",
   "Zelda Pickup",
   "Zelda Drop Off",
-]);
-
-/** The small key doors that are none with vanilla doors (unmark_ugly_smalls). */
-const UGLY_SMALLS: ReadonlySet<string> = new Set([
-  "Eastern Hint Tile Blocked Path SE",
-  "Eastern Darkness S",
-  "Thieves Hallway SE",
-  "Mire Left Bridge S",
-  "TR Lava Escape SE",
-  "GT Hidden Spikes SE",
 ]);
 
 /** How the run sets what the analysis reads. */

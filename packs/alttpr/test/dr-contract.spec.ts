@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import { type DrWorld, drWorld, probeId } from "../src/door-world/index";
 import { solveFacts } from "../src/facts";
 import { contractHolds } from "./contract";
-import { KEY_PENDING, STALE } from "./dr-stale";
+import { STALE } from "./dr-stale";
 import { collect, itemsOf, settingsOf } from "./dr-state";
 import { loadManifest, PACK_DIR } from "./manifest";
 
@@ -58,7 +58,7 @@ describe("the Door Randomizer's own tests", () => {
 
   it("list each held case once, and only cases of ported files", () => {
     const files = new Set(ported.map((t) => t.file));
-    for (const key of [...Object.keys(STALE), ...KEY_PENDING])
+    for (const key of Object.keys(STALE))
       expect(files.has(key.split(":")[0] ?? ""), key).toBe(true);
   });
 
@@ -95,7 +95,7 @@ describe("the Door Randomizer's own tests", () => {
         const failures = test.cases.flatMap((c, index) => {
           const [name, access, items, allExcept] = c;
           const key = caseKey(fixture.file, test.line, index, c);
-          const listed = STALE[key] !== undefined || KEY_PENDING.has(key);
+          const listed = STALE[key] !== undefined;
           const id =
             test.kind === "entrance"
               ? probeId(name)

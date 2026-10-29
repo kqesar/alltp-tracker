@@ -154,13 +154,14 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(regionIds).not.toContain("linksHouse__orange");
   });
 
-  it("opens a key door with every key of the dungeon, else maybe", () => {
+  it("asks a key door's number of keys of DR's analysis, drops' too, else maybe", () => {
     const world = drWorld(settings("open"));
     const unswept = drWorld(settings("open"), { sweepEvents: false });
     const chest = drLocationId("Eastern Palace - Big Key Chest");
     const lamp = { heartContainer: 3, lamp: 1 };
-    // Eastern's two keys are drops, the dark eyegore's past the big key
-    // door, against its bow: until both are reached, maybe
+    // The dark square's door asks two keys; Eastern's two keys are drops,
+    // the dark eyegore's past the big key door, against its bow: until both
+    // are reached, maybe
     expect(solveFacts(world, lamp).location(chest)).toBe("maybe");
     expect(solveFacts(world, { ...lamp, bow: 1 }).location(chest)).toBe(
       "maybe",
@@ -174,6 +175,34 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(solveFacts(unswept, { ...all, keyP1: 2 }).location(chest)).toBe(
       "yes",
     );
+  });
+
+  it("reads each key holding as DR's add_key_logic_rules does", () => {
+    // Agahnim's Tower: the Room 03 stairs ask one key (validate_vanilla_key_
+    // logic, KeyDoorShuffle.py:1979-1983), every key of the tower four
+    const maze = drLocationId("Castle Tower - Dark Maze");
+    const held = { heartContainer: 3, lamp: 1, sword: 1 };
+    const at = (more: Settings, keys: number, options = {}) =>
+      solveFacts(
+        drWorld(
+          { ...settings("open"), ...more },
+          { start: ["Agahnims Tower Portal"], sweepEvents: false, ...options },
+        ),
+        { ...held, keyA1: keys },
+      ).location(maze);
+    const wild = { wildBigKeys: true, wildKeys: true };
+    // Keys in their dungeon: below the number maybe, never no
+    expect([at({}, 0), at({}, 1)]).toEqual(["maybe", "yes"]);
+    // Wild keys: what the player recorded decides
+    expect([at(wild, 0), at(wild, 1)]).toEqual(["no", "yes"]);
+    // Strict with wild keys: every chest key (has_sm_key_strict)
+    const strict = { ...wild, strictKeyLogic: true };
+    expect([at(strict, 1), at(strict, 2)]).toEqual(["no", "yes"]);
+    // Universal keys are bought: maybe, the shops not ported
+    expect(at({ universalKeys: true }, 4)).toBe("maybe");
+    // On connections given, no analysis: every key of the dungeon
+    const given = { connections: vanillaConnections("open") };
+    expect([at({}, 1, given), at({}, 4, given)]).toEqual(["maybe", "yes"]);
   });
 
   it("puts a big chest behind its dungeon's big key", () => {

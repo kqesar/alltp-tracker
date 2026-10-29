@@ -1,9 +1,9 @@
 // The cases of DR's own tests the pack answers otherwise, each with why
 // (dr-contract.spec.ts holds every other case of a ported file). Upstream
 // itself fails 181 cases of test/dungeons and 52 of test/inverted at the
-// harness commit (626691a's message); in dungeons the 169 below and the 12
-// key cases make 181, in inverted 51 are below (1 upstream fails the pack
-// holds: which, only running DR would tell),
+// harness commit (626691a's message); in dungeons the 181 below, in
+// inverted 51 (1 upstream fails the pack holds: which, only running DR
+// would tell),
 // sorted by what upstream's own rules ask that the case does not hold,
 // each reason checked against the world (the case passes with what the
 // reason names added, or, for a false case, fails without it).
@@ -26,6 +26,7 @@ const WHY = {
     "TestDungeon never sweeps events: the Convenient Block or Maiden Unmasked is no item of the case",
   iceberg:
     "no water exit lands on Ice Palace's iceberg: the ledge drop or the bomb jump, which No Glitches forbids (Rules.py:1284)",
+  keys: "DR's own key rule (its partial analysis, KeyDoorShuffle.py) counts the dungeon's drop keys, which TestDungeon never sweeps: the case holds fewer keys than the door asks",
   mirror:
     "with the swamp unpatched, Swamp's moat asks the mirror (Rules.py:85-86)",
   mirrorEvents:
@@ -47,6 +48,9 @@ export const STALE: Readonly<Record<string, string>> = {
     WHY.bombs,
   "test/dungeons/TestAgahnimsTower.py:6#1 Castle Tower - Room 03 false":
     WHY.overworld,
+  "test/dungeons/TestAgahnimsTower.py:6#6 Castle Tower - Dark Maze false":
+    WHY.bombs,
+  "test/dungeons/TestAgahnimsTower.py:6#12 Agahnim 1 true": WHY.keys,
   "test/dungeons/TestDarkPalace.py:6#0 Palace of Darkness - Shooter Room true":
     WHY.bunny,
   "test/dungeons/TestDarkPalace.py:6#3 Palace of Darkness - The Arena - Ledge true":
@@ -79,6 +83,20 @@ export const STALE: Readonly<Record<string, string>> = {
     WHY.bunny,
   "test/dungeons/TestDarkPalace.py:6#53 Palace of Darkness - Boss true":
     WHY.bunny,
+  "test/dungeons/TestDesertPalace.py:6#9 Desert Palace - Compass Chest true":
+    WHY.keys,
+  "test/dungeons/TestDesertPalace.py:6#12 Desert Palace - Big Key Chest true":
+    WHY.keys,
+  "test/dungeons/TestDesertPalace.py:6#18 Desert Palace - Boss true": WHY.keys,
+  "test/dungeons/TestDesertPalace.py:6#19 Desert Palace - Boss true": WHY.keys,
+  "test/dungeons/TestDesertPalace.py:6#20 Desert Palace - Boss true": WHY.keys,
+  "test/dungeons/TestDesertPalace.py:6#21 Desert Palace - Boss true": WHY.keys,
+  "test/dungeons/TestDesertPalace.py:6#22 Desert Palace - Boss true": WHY.keys,
+  "test/dungeons/TestDesertPalace.py:6#23 Desert Palace - Boss true": WHY.keys,
+  "test/dungeons/TestEasternPalace.py:6#8 Eastern Palace - Big Key Chest true":
+    WHY.keys,
+  "test/dungeons/TestEasternPalace.py:6#13 Eastern Palace - Boss true":
+    WHY.keys,
   "test/dungeons/TestGanonsTower.py:6#2 Ganons Tower - Bob's Torch true":
     WHY.bunny,
   "test/dungeons/TestGanonsTower.py:6#6 Ganons Tower - DMs Room - Top Left true":
@@ -461,27 +479,3 @@ export const STALE: Readonly<Record<string, string>> = {
   "test/inverted/TestInvertedEntrances.py:6#96 Ganons Tower true":
     WHY.atgtNames,
 };
-
-/**
- * Cases that need the key analysis (study step 4.10-4.12): a small key
- * door is maybe until then, where DR's partial key logic opens it with
- * fewer keys than all of the dungeon's (in TestDungeon's harness, which
- * never sweeps, the drops' keys are not held either).
- */
-export const KEY_PENDING: ReadonlySet<string> = new Set([
-  // Through Turtle Rock's front with 2 of its 4 chest keys (its 2 drop keys
-  // swept): DR's partial rule asks fewer than all
-  "test/vanilla/TestDeathMountain.py:40#9 Mimic Cave true",
-  "test/dungeons/TestAgahnimsTower.py:6#7 Castle Tower - Dark Maze true",
-  "test/dungeons/TestAgahnimsTower.py:6#12 Agahnim 1 true",
-  "test/dungeons/TestDesertPalace.py:6#9 Desert Palace - Compass Chest true",
-  "test/dungeons/TestDesertPalace.py:6#12 Desert Palace - Big Key Chest true",
-  "test/dungeons/TestDesertPalace.py:6#18 Desert Palace - Boss true",
-  "test/dungeons/TestDesertPalace.py:6#19 Desert Palace - Boss true",
-  "test/dungeons/TestDesertPalace.py:6#20 Desert Palace - Boss true",
-  "test/dungeons/TestDesertPalace.py:6#21 Desert Palace - Boss true",
-  "test/dungeons/TestDesertPalace.py:6#22 Desert Palace - Boss true",
-  "test/dungeons/TestDesertPalace.py:6#23 Desert Palace - Boss true",
-  "test/dungeons/TestEasternPalace.py:6#8 Eastern Palace - Big Key Chest true",
-  "test/dungeons/TestEasternPalace.py:6#13 Eastern Palace - Boss true",
-]);

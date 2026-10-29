@@ -968,8 +968,9 @@ Randomizer (DR) or its Overworld fork (OWR), most with the doors vanilla
 (the study of 2026-10-29). The pack reads them in phases; this one holds
 the vanilla-door part: the ROMs, their settings, and the locations DR adds.
 Its logic is under way: DR's world, rules, enemy logic and tests are
-imported as data (below); the world built from them, its key logic
-(`KeyDoorShuffle.py`) and the contract with its tests are the next steps.
+imported as data (below), the world is built from them with DR's key
+analysis (`KeyDoorShuffle.py`) and held to DR's tests; the app does not
+read it yet.
 
 **Sources, read as data and never run** (`upstream.json`, `doorRandomizer`):
 DR 1.5.6 (`4da73127`, the version Hyrule Town Hall and SahasrahBot ran for
@@ -1079,13 +1080,14 @@ only, so the harness is read there (`git show`: the world each suite
 builds, the dungeon tests' `STARTING_REGION_MAP`) and the cases at the
 release. `pool.json` is the pool an "everything but" case draws from, from
 `ItemList.py`'s lists and the harness's prizes, cited; `suite/` holds the
-customizer seeds' Verification checks. `vanilla-key-logic.json` is
+customizer seeds' Verification checks, the key logic seeds held by
+`test/dr-suite.spec.ts` (below). `vanilla-key-logic.json` is
 `KeyDoorShuffle.py`'s `validate_vanilla_key_logic`, which no code of DR
 calls: the rule it expects of each vanilla key door, read per mode. A file is listed `pending` in
 `upstream.json` until DR's world is held to it (`test/dr-fixtures.spec.ts`
 holds the list); `test/dr-contract.spec.ts` holds each `ported` file to its
-cases, a case it answers otherwise listed with why (`STALE`, or
-`KEY_PENDING` until the key analysis, `test/dr-stale.ts`), in the harness the suite runs in
+cases, a case it answers otherwise listed with why (`STALE`,
+`test/dr-stale.ts`), in the harness the suite runs in
 (`test/dr-state.ts`: the items as the pack's state, the pool, the medallions
 the harness fixes; the dungeon tests never sweep events).
 
@@ -1111,19 +1113,53 @@ state some path brings it in, a region reached in both split in two copies
 locations sit; a door that hits a switch lets both states through, a
 barrier its colour only, a rule reading the region's own state holds in
 that copy, and any other crystal read is a fact (`reachedBlue_<region>`).
-`keys.ts` holds the keys strict-safe until DR's key analysis is ported: a
-small key door asks every key of its dungeon (the chests', `Dungeons.py`,
-and the vanilla drops'), else `maybe`, never `no` because of keys; a
-vanilla drop's key is a fact once its location is reached
-(`dropKey_<location>`, as DR sweeps the forced key), unless the run
-shuffles that drop; the big key doors and chests ask the big key (or the
-escape's drop); Mire's blue barriers take their two-key alternative. A
+The keys come from DR's own analysis of each dungeon
+(`key-analysis/`, ported from `KeyDoorShuffle.py` and `DungeonGenerator.py`
+at the release): `dungeon.ts` builds what it walks (the overworld only a
+dungeon reaches, `find_inaccessible_regions`, and the logical doors DR
+gives its exits; each dungeon's start regions as `vanilla_key_logic` finds
+them, Python's `rstrip` quirk in `_find_portal_for_region` kept),
+`exploration.ts` and `counters.ts` walk each dungeon's doors without item
+rules into its key counters (every set of key doors a player may have
+opened, `create_key_counters`), and `analysis.ts` gives each key door its
+rule (`analyze_dungeon`: the counter that spent the most keys elsewhere
+and still gains from the door sets the worst case, `create_rule` partial
+logic's number, `check_for_self_lock_key` and `bk_restricted_rules` the
+alternatives a placement grants) and makes `vanilla_key_logic`'s own
+adjustments; the fill's placement rules are left out (they choose where
+keys go, never what a door asks). `analysis.spec.ts` holds it to
+`validate_vanilla_key_logic`, the validator no DR code calls: every rule
+it checks but three of Ganons Tower's, where the port asks a key more and
+DR's own adjustment outdates the validator. `keys.ts` attaches the rules
+as `add_key_logic_rules` does: each key door of the analysis asks partial
+logic's number (the worst case capped, `Rules.py:2411-2441`; `strict`
+logic with wild keys every chest key, `dangerous` read as partial); what a
+placement grants beside it (the key in the one location behind a door,
+the big key behind it) is `maybe`; with the keys in their dungeons a door
+short of its number is `maybe`, never `no` (a key may lie inside), with
+wild keys the keys recorded decide; universal keys are `maybe` (the shops
+are not ported). A vanilla drop's key is a fact once its location is
+reached (`dropKey_<location>`, as DR sweeps the forced key), unless the
+run shuffles that drop; the big key doors and chests ask the big key (or
+the escape's drop). Misery Mire's blue barriers take DR's two-key
+alternative at `maybe` only: DR's code opens them with two keys, its own
+key logic seeds refuse what lies behind them with more. On other
+connections than the vanilla ones the analysis is not run (a dungeon's
+portals may be unknown) and a key door asks every key of its dungeon, or
+`maybe`. `key-model.spec.ts` holds the model to DR's fill (Open, Standard,
+Inverted): over random states and placements of the dungeons' keys the fill may make, the model
+never says yes where playing the placement out with DR's own rule for it
+does not reach, and a model one key short, or one taking a placement's
+alternative for granted, is found unsound. `test/dr-suite.spec.ts` holds
+DR's key logic seeds (`test/suite/*key_logic*.yaml`): a location their
+fill may not place an item at is never `yes` but where only
+`bk_restricted` forbids the big key. A
 flood switch is swept only once its trench's pot key is reached
 (`_do_not_flood_the_keys`). Held: `test/vanilla` and `test/dungeons`, whose
 181 cases upstream fails itself are listed in `test/dr-stale.ts` with why
 (the bunny, the swamp's mirror, the events `TestDungeon` never sweeps, the
-enemy logic, the harness reaching the overworld) or as waiting on the key
-analysis. The Inverted world is the same builder in that mode: its
+drop keys DR's own key rules count, which it never sweeps either, the
+enemy logic, the harness reaching the overworld). The Inverted world is the same builder in that mode: its
 connections swap as `link_entrances_new` swaps them, the flute leaves from
 the dark world and the mirror from the light, the bunny is the light
 world's. `test/inverted` is held but `TestInvertedTurtleRock` (every test

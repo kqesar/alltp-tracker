@@ -6,6 +6,7 @@
 // door in `bigDoors`, a door an event opens in `eventDoors`; the crystal
 // state rides each door as DR's does. Lists keep DR's order, which its
 // best-counter choice depends on.
+import { specialBigKeyDoors } from "../keys";
 import {
   type Crystal,
   DUNGEON_EVENTS,
@@ -32,12 +33,9 @@ const FLOODED_KEYS_REVERSE: Readonly<Record<string, string>> = {
 
 /**
  * The doors add_all_doors_check_keys holds for the big key: the module's
- * special_big_key_doors (DungeonGenerator.py:774), whatever the mode.
+ * special_big_key_doors (DungeonGenerator.py:774), Open's whatever the mode.
  */
-const SPECIAL_BIG_KEY_DOORS: ReadonlySet<string> = new Set([
-  "Hyrule Dungeon Cellblock Door",
-  "Thieves Blind's Cell Door",
-]);
+const SPECIAL_BIG_KEY_DOORS = specialBigKeyDoors("open");
 
 /** valid_region_to_explore (DungeonGenerator.py:1171-1176). */
 export type ExplorePredicate = (region: KRegion) => boolean;

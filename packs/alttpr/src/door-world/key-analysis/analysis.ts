@@ -8,11 +8,15 @@
 // that asks more (:340-346). The fill's own constraints
 // (create_exhaustive_placement_rules, sm_restricted, the placement rules)
 // are left out: they decide where DR puts keys, never what a door asks.
+
+import { ALTERNATIVE_CRYSTAL_DOORS } from "../keys";
 import {
   canOpenDoorByCounter,
   cid,
   findCounter,
   findMaxCounter,
+  isForcedBigKey,
+  isImportant,
   type KeyCounter,
   type KeyLayout,
   keyLayout,
@@ -64,25 +68,6 @@ const difference = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): Set<T> =>
 const subset = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean =>
   [...a].every((x) => b.has(x));
 const isBigChest = (loc: KLocation) => loc.name.includes("- Big Chest");
-const isForcedBigKey = (loc: KLocation): boolean =>
-  loc.forced?.big === true && loc.forced.dungeon === loc.dungeon;
-
-/** important_location (KeyDoorShuffle.py:1813-1814). */
-function isImportant(layout: KeyLayout, loc: KLocation): boolean {
-  return (
-    loc.name.includes("- Prize") ||
-    [
-      "Agahnim 1",
-      "Agahnim 2",
-      "Attic Cracked Floor",
-      "Suspicious Maiden",
-    ].includes(loc.name) ||
-    (layout.world.settings.mode === "standard" &&
-      (loc.name === "Zelda Pickup" || loc.name === "Zelda Drop Off")) ||
-    isForcedBigKey(loc)
-  );
-}
-
 /** A counter as DR builds one by hand (create_odd_key_counter and kin). */
 interface PartialCounter {
   freeLocations: ReadonlySet<KLocation>;
@@ -547,23 +532,6 @@ export function analyzeDungeon(layout: KeyLayout): KeyLogic {
 }
 
 /**
- * Misery Mire's blue barriers two keys open from either state
- * (create_alternative_door_rules, DoorShuffle.py:293-303, 312-316).
- */
-export const ALTERNATIVE_CRYSTAL_DOORS: readonly string[] = [
-  "Mire Hub Upper Blue Barrier",
-  "Mire Hub Lower Blue Barrier",
-  "Mire Hub Right Blue Barrier",
-  "Mire Hub Top Blue Barrier",
-  "Mire Hub Switch Blue Barrier N",
-  "Mire Hub Switch Blue Barrier S",
-  "Mire Map Spot Blue Barrier",
-  "Mire Map Spike Side Blue Barrier",
-  "Mire Crystal Dead End Left Barrier",
-  "Mire Crystal Dead End Right Barrier",
-];
-
-/**
  * vanilla_key_logic (DoorShuffle.py:222-309): every dungeon's layout on
  * its vanilla key doors, analyzed, then the adjustments DR makes by hand.
  */
@@ -597,6 +565,7 @@ export function vanillaKeyLogic(
     podFront.worstCase = 1;
     podFront.smallKeyNum = 1;
   }
+  // Mire's blue barriers: two keys from either state (:294-303, 312-316)
   const mire = logics.get("Misery Mire");
   for (const door of ALTERNATIVE_CRYSTAL_DOORS)
     mire?.doorRules.set(door, {

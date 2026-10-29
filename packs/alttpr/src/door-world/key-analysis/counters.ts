@@ -5,7 +5,7 @@
 // can_open_door_by_counter, :1752-1900). A counter's id is DR's: the big
 // key's bit, then a bit for each door of the flattened proposal.
 import { DR_DUNGEONS } from "../data";
-import { KEY_DROPS } from "../keys";
+import { KEY_DROPS, specialBigKeyDoors } from "../keys";
 import {
   DEFAULT_SMALL_KEY_DOORS,
   DUNGEON_EVENTS,
@@ -62,7 +62,7 @@ export interface KeyLayout {
 }
 
 /** imp_locations_factory and important_location (:1802-1814). */
-function isImportant(layout: KeyLayout, loc: KLocation): boolean {
+export function isImportant(layout: KeyLayout, loc: KLocation): boolean {
   return (
     loc.name.includes("- Prize") ||
     [
@@ -78,7 +78,7 @@ function isImportant(layout: KeyLayout, loc: KLocation): boolean {
 }
 
 /** Location.forced_big_key (BaseClasses.py:2316-2322). */
-const isForcedBigKey = (loc: KLocation): boolean =>
+export const isForcedBigKey = (loc: KLocation): boolean =>
   loc.forced?.big === true && loc.forced.dungeon === loc.dungeon;
 
 /** prize_or_event (DungeonGenerator.py:1098-1099). */
@@ -427,11 +427,7 @@ export function keyLayout(world: KeyWorld, dungeon: string): KeyLayout {
     proposal,
     proposalSet: new Set(flatProposal),
     regions,
-    specialBig: new Set([
-      "Hyrule Dungeon Cellblock Door",
-      "Thieves Blind's Cell Door",
-      ...(mode === "standard" ? ["Hyrule Castle Throne Room Tapestry"] : []),
-    ]),
+    specialBig: specialBigKeyDoors(mode),
     starts: world.starts.get(dungeon) ?? [],
     world,
   };
