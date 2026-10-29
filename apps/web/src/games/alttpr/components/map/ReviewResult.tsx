@@ -38,6 +38,8 @@ const HIDDEN: Readonly<Record<Hidden, string>> = {
     "Small keys are generic in Retro (any key opens any door): the board counts none, so when each place came into logic is not shown.",
   keysanity:
     "Small keys were shuffled: the run does not time them, so when each place came into logic is not shown.",
+  "no-logic":
+    "This seed has No Logic: it promises no route, so no place was ever in logic and nothing waited for it. When each place came into logic is not shown.",
   "no-playthrough":
     "This log has no playthrough (a spoiler race's): there is nothing to set the run against.",
   "no-timeline":
@@ -45,7 +47,7 @@ const HIDDEN: Readonly<Record<Hidden, string>> = {
   "no-times":
     "Nothing the seed needed has a time on this run, so when each item waited is not shown.",
   "not-modelled":
-    "This seed's logic is not one the tracker models (hidden settings, shuffled bosses, a glitched logic or a mode it does not model), so when each place came into logic is not shown.",
+    "This seed's logic is not one the tracker models (hidden settings, shuffled bosses, a logic other than the run's Glitches, or a mode it does not model), so when each place came into logic is not shown.",
   "race-mode":
     "Only places outside dungeons have times in this run (autotracked in Race Mode by an earlier version of the tracker, which did not read a dungeon's chests), so most needed items are matched by the item, not by its place: when each waited is not shown.",
 };
