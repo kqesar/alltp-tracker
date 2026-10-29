@@ -18,8 +18,10 @@ type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
 type OverlayProps = {
   corner: Corner;
-  /** Asset filename, without the assets/ prefix */
-  asset: string;
+  /** Asset filename, without the assets/ prefix; null draws `text` instead */
+  asset: string | null;
+  /** A glyph drawn in place of an asset, lettered like the cell's labels */
+  text?: string;
   /** The control it is, for its keyboard shortcuts, e.g. "chest3" */
   control: ControlId;
   /** What a screen reader hears: the dungeon, the counter and its value */
@@ -41,16 +43,23 @@ const Overlay = ({
   position,
   step,
   testId,
+  text,
 }: OverlayProps) => (
   <button
     {...useGridFocusable(position)}
     {...useStepHandlers(step, useControlShortcuts(control).aria)}
     aria-label={label}
-    className={`overlay-base overlay--${corner}`}
+    className={`overlay-base overlay--${corner}${asset === null ? " overlay--text" : ""}`}
     data-testid={testId}
-    style={{ backgroundImage: `url(${getAssetPath(asset)})` }}
+    style={
+      asset === null
+        ? undefined
+        : { backgroundImage: `url(${getAssetPath(asset)})` }
+    }
     type="button"
-  />
+  >
+    {asset === null && <span aria-hidden="true">{text}</span>}
+  </button>
 );
 
 /** The prize a dungeon's boss drops, by the value of `rewardN`. */
@@ -166,14 +175,16 @@ export const KnownBossPicker = ({ index, row, col }: CornerProps) => {
   if (!shown) return null;
   return (
     <Overlay
-      // The ten bosses' sprites, in the pack's order (boss02.png to boss92.png)
-      asset={value === 0 ? "medallion0.png" : `boss${value - 1}2.png`}
+      // The ten bosses' sprites, in the pack's order (boss02.png to
+      // boss92.png); not known, a lettered "?", unlike a medallion's coin
+      asset={value === 0 ? null : `boss${value - 1}2.png`}
       control={control}
       corner="top-left"
       label={`${dungeonName(index)} boss: ${knownBossText(value)}`}
       position={{ col, row, slot: 1 }}
       step={(direction) => handleItemClick(control, direction)}
       testId={`known-boss-overlay-${index}`}
+      text="?"
     />
   );
 };

@@ -1,4 +1,4 @@
-import type { MapMarker } from "@alltp/pack-alttpr";
+import { LEGACY_DUNGEONS, type MapMarker } from "@alltp/pack-alttpr";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { KeyChord } from "@/games/alttpr/components/ui/KeyChord";
@@ -18,6 +18,11 @@ import {
 } from "@/games/alttpr/data/keymap";
 import { useCurrentAnalysis } from "@/games/alttpr/hooks/useRunAnalysis";
 import { markerTitle, withCost } from "@/games/alttpr/logic/costs";
+import {
+  knownBossCell,
+  knownBossShown,
+  knownBossText,
+} from "@/games/alttpr/logic/knownBosses";
 import {
   dungeonMissing,
   type Missing,
@@ -217,6 +222,15 @@ export const Tooltip = () => {
     const slot = dungeon === undefined ? undefined : PAD_SLOTS[dungeon];
     return slot === undefined ? undefined : (state.medallions[slot] ?? 0) % 4;
   });
+  // The boss the player knows a grid dungeon holds, under boss shuffle
+  const known = useGameStore((state) => {
+    const index =
+      dungeon === undefined
+        ? -1
+        : (LEGACY_DUNGEONS as readonly string[]).indexOf(dungeon);
+    if (index < 0 || !knownBossShown(index, state.settings)) return undefined;
+    return Number(state.items[knownBossCell(index)] ?? 0);
+  });
   const boss = useGameStore((state) =>
     dungeon === undefined ? undefined : bossStateOf(dungeon, state),
   );
@@ -415,6 +429,22 @@ export const Tooltip = () => {
             src={getAssetPath(`medallion${pad}.png`)}
           />
           {MEDALLION_NAMES[pad]}
+        </span>
+      )}
+      {known !== undefined && (
+        <span
+          aria-hidden="true"
+          className="tooltip__pad"
+          data-testid="tooltip-known-boss"
+        >
+          {known > 0 && (
+            <img
+              alt=""
+              className="mini"
+              src={getAssetPath(`boss${known - 1}2.png`)}
+            />
+          )}
+          {known > 0 ? knownBossText(known) : "Boss not known"}
         </span>
       )}
       {text !== "" && (
