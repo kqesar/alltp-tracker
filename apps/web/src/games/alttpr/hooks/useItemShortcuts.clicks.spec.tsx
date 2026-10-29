@@ -153,7 +153,7 @@ describe("a shortcut steps its control exactly as a click does", () => {
 
       freshRun(control);
       const fresh = snapshot();
-      const pressed = [];
+      const pressed: ReturnType<typeof snapshot>[] = [];
       for (let step = 0; step < steps; step++) {
         await user.keyboard("k");
         pressed.push(snapshot());
