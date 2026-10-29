@@ -167,14 +167,14 @@ describe("MapPanel", () => {
     );
   });
 
-  it("says shuffled bosses behind shuffled entrances are not modelled", () => {
+  it("models shuffled bosses behind shuffled entrances", () => {
     act(() => {
       useGameStore.getState().applyPreset("crosskeys");
       useGameStore.getState().updateSettings({ bossShuffle: "full" });
     });
     render(<MapPanel />);
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for shuffled bosses behind Crossworld entrances yet: every check shows as maybe.",
+      "The logic follows the entrances you noted: a check behind a door you have not noted stays out of logic.",
     );
   });
 

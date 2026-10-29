@@ -245,16 +245,14 @@ export const presets: Preset[] = [
  * crossed shuffle, in the Open or Standard world, every dungeon item wild.
  * vt hands the randomizer --keysanity for `full` dungeon items alone
  * (app/EntranceRandomizer.php:69-71); under any other, the randomizer keeps
- * the keys in their dungeons, which the tracker does not track. Its port
- * keeps each dungeon's vanilla boss (the randomizer's Bosses.py, imported
- * as is), so a run whose bosses may move is not one it models.
+ * the keys in their dungeons, which the tracker does not track. Its boss
+ * slots read the boss shuffle as vt's world does, set or hidden.
  */
 export const crossedLogic = (settings: RunSettings): boolean =>
   settings.entranceShuffle === "crossed" &&
   !glitchedLogic(settings) &&
   (settings.mode === "open" || settings.mode === "standard") &&
-  settings.dungeonItems === "full" &&
-  !bossesMayMove(settings);
+  settings.dungeonItems === "full";
 
 /** A run's boss shuffle: "none" when its settings name none. */
 export const bossShuffleOf = (settings: RunSettings): BossShuffle =>
@@ -303,8 +301,6 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
     reasons.push(
       "Crossworld entrances with dungeon items kept in their dungeons",
     );
-  else if (bossesMayMove(settings))
-    reasons.push("shuffled bosses behind Crossworld entrances");
   return reasons;
 };
 
