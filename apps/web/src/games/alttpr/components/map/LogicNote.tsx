@@ -18,8 +18,9 @@ const listOf = (items: readonly string[]) =>
  * What the map's states rest on, when not the whole world: with shuffled
  * entrances, the doors noted (a check behind a door not noted stays out of
  * logic); under logic the pack does not model yet, the causes by name
- * (`unmodelledReasons`: a glitched logic, an entrance shuffle) and that
- * every check is maybe; in a No Logic run,
+ * (`unmodelledReasons`: a glitched logic, an entrance shuffle, the
+ * Inverted world's entrances), "not modelled yet", and that every check is
+ * maybe; in a No Logic run,
  * that the seed promises no route and what the map shows instead. Nothing
  * for any other run.
  */
@@ -51,8 +52,7 @@ export const LogicNote = () => {
   if (reasons.length === 0) return null;
   return (
     <p className="logic-note" data-testid="logic-note">
-      The tracker has no logic for {listOf(reasons)} yet: every check shows as
-      maybe.
+      Not modelled yet: {listOf(reasons)}. Every check shows as maybe.
     </p>
   );
 };
