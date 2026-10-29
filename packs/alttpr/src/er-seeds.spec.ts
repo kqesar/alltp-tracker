@@ -7,8 +7,9 @@
 // Where the randomizer kept the keys in their dungeons, the player does not
 // track them and its playthrough does not list them: the key model reads
 // them (er-keys.ts), and a location it doubts must be one a placement its
-// fill may make would lock (`KEY_DOUBTS`). Noting more of a seed's doors
-// never takes a `yes` away: what a door not noted hides may only add.
+// fill may make would lock (`KEY_DOUBTS`). Nor may a location of a later
+// sphere be `yes` yet. Noting more of a seed's doors never takes a `yes`
+// away: what a door not noted hides may only add.
 import { itemValue, type State } from "@alltp/engine";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
@@ -25,6 +26,7 @@ import {
 } from "../test/er-seeds";
 import { erLocationId, targetNamed } from "./entrances";
 import er from "./entrances/er.json" with { type: "json" };
+import rules from "./entrances/rules.json" with { type: "json" };
 import { solveErWithKeys } from "./er-keys";
 import type { ErWorld } from "./er-world";
 
@@ -50,14 +52,20 @@ const regionNamed = (name: string): string => {
 /** A world name's `:1` suffix is the world's number; the pack has one. */
 const plain = (name: string) => name.replace(/:1$/, "");
 
+/** One sphere of a playthrough, and the state a player starts it in. */
+interface Played {
+  readonly number: string;
+  readonly sphere: Readonly<Record<string, string>>;
+  readonly state: State;
+}
+
 /**
- * The locations of a seed's playthrough the pack does not say `yes` to, each
- * with its sphere and the answer. Throws a RangeError, naming what, for a
- * seed whose settings or entrances the pack does not model.
+ * A seed's playthrough as a player plays it: each sphere starts with the
+ * items of the earlier ones, what the spoiler tells (the pads' medallions,
+ * the bosses), and in Retro the key and arrow shops marked once one is
+ * reached in the seed's world.
  */
-function misses(hash: string): string[] {
-  const { spoiler } = erSeed(hash);
-  const world = worldOf(spoiler);
+function played(spoiler: ErSeed["spoiler"], world: ErWorld): Played[] {
   const knowledge = {
     ...knowing(spoiler.Special),
     ...bossesKnown(spoiler.Bosses),
@@ -68,34 +76,38 @@ function misses(hash: string): string[] {
   const arrowShops = shopsSelling(spoiler.Shops, "Single Arrow");
   const marked: Record<string, number> = {};
   const held: string[] = [];
-  const missed: string[] = [];
-  for (const [number, sphere] of spheresOf(spoiler)) {
+  return spheresOf(spoiler).map(([number, sphere]) => {
+    const before = { ...holding(held), ...knowledge, ...marked };
     // The key model: with keysanity, the solver's answer
-    let solution = solveErWithKeys(world, {
-      ...holding(held),
-      ...knowledge,
-      ...marked,
-    });
+    const { solution } = solveErWithKeys(world, before);
     const inside = (shops: readonly string[]) =>
-      shops.some(
-        (shop) => solution.solution.region(regionNamed(shop)) === "yes",
-      );
+      shops.some((shop) => solution.region(regionNamed(shop)) === "yes");
     if (marked.shopKey === undefined && inside(keyShops)) marked.shopKey = 1;
     if (marked.shopArrow === undefined && inside(arrowShops))
       marked.shopArrow = 1;
-    solution = solveErWithKeys(world, {
-      ...holding(held),
-      ...knowledge,
-      ...marked,
-    });
-    for (const location of Object.keys(sphere)) {
-      const answer = solution.location(erLocationId(plain(location)));
-      if (answer !== "yes")
-        missed.push(`sphere ${number}: ${location} ${answer}`);
-    }
+    const state = { ...holding(held), ...knowledge, ...marked };
     held.push(...Object.values(sphere).map(plain));
-  }
-  return missed;
+    return { number, sphere, state };
+  });
+}
+
+/**
+ * The locations of a seed's playthrough the pack does not say `yes` to, each
+ * with its sphere and the answer. Throws a RangeError, naming what, for a
+ * seed whose settings or entrances the pack does not model.
+ */
+function misses(hash: string): string[] {
+  const { spoiler } = erSeed(hash);
+  const world = worldOf(spoiler);
+  return played(spoiler, world).flatMap(({ number, sphere, state }) => {
+    const solution = solveErWithKeys(world, state);
+    return Object.keys(sphere).flatMap((location) => {
+      const answer = solution.location(erLocationId(plain(location)));
+      return answer === "yes"
+        ? []
+        : [`sphere ${number}: ${location} ${answer}`];
+    });
+  });
 }
 
 /**
@@ -197,22 +209,57 @@ const MODELLED = SEEDS.filter((hash) => PENDING[hash] === undefined);
 /** The world's locations, by the pack's ids: those a map shows. */
 const LOCATIONS = er.regions.flatMap((r) => r.locations).map(erLocationId);
 
-/**
- * The playthrough's states: what each sphere starts with, and what a
- * player who read the spoiler knows (its pads, its bosses).
- */
-function sphereStates(spoiler: ErSeed["spoiler"]): State[] {
-  const knowledge = {
-    ...knowing(spoiler.Special),
-    ...bossesKnown(spoiler.Bosses),
-  };
-  const held: string[] = [];
-  return spheresOf(spoiler).map(([, sphere]) => {
-    const state = { ...holding(held), ...knowledge };
-    held.push(...Object.values(sphere).map(plain));
-    return state;
-  });
-}
+/** The randomizer's events (the floodgate, the frog...), by the pack's id. */
+const EVENT_ITEMS = new Set(Object.keys(rules.events));
+
+describe("a recorded seed's playthrough, nothing yes too early", () => {
+  for (const hash of MODELLED) {
+    // Its final spheres (Main.py:368-385): each the required locations the
+    // state of the earlier ones reaches, where that state is their items,
+    // and without keysanity the keys reachable (sweep_for_events with
+    // key_only, :372-373). A location of a later sphere was not reached
+    // then: the pack must not say yes to it. That state holds an event
+    // once a sphere collects it, where the pack holds it as soon as it is
+    // reached (solveFactsState), so the pack is asked without its events
+    // (the floodgate's water reaches Swamp Palace a sphere early).
+    //
+    // Only the playthrough's locations: of the others (not required, culled
+    // at :343-360, or the keys it never lists) the recording states nothing.
+    // Its placements would tell where every key sits, but replaying them
+    // needs the rules that read what a spot holds (item_name: a key in the
+    // big chest or the room it opens, Rules.py:283-413, 1033-1083), which
+    // the pack reads as maybe: the replay would stop short of what the
+    // player reaches (dMEp8enPG1's Swamp big key lies in its own big chest)
+    it(`says yes to no location of a later sphere (${hash})`, () => {
+      const { spoiler } = erSeed(hash);
+      const world = worldOf(spoiler);
+      const unswept: ErWorld = {
+        ...world,
+        facts: world.facts.filter(({ item }) => !EVENT_ITEMS.has(item)),
+      };
+      const spheres = played(spoiler, world);
+      const early = spheres.flatMap(({ number, state }, i) => {
+        const solution = solveErWithKeys(unswept, state);
+        return spheres.slice(i + 1).flatMap((later) =>
+          Object.keys(later.sphere)
+            .filter(
+              (location) =>
+                solution.location(erLocationId(plain(location))) === "yes",
+            )
+            .map(
+              (location) =>
+                `sphere ${number}: ${location} of sphere ${later.number}`,
+            ),
+        );
+      });
+      expect(early).toEqual([]);
+    });
+  }
+});
+
+/** The states a seed's playthrough starts each sphere in (`played`). */
+const sphereStates = (spoiler: ErSeed["spoiler"]): State[] =>
+  played(spoiler, worldOf(spoiler)).map(({ state }) => state);
 
 /** The locations `yes` in a world, in each state. */
 const yesIn = (world: ErWorld, states: readonly State[]) =>
