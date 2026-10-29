@@ -1149,6 +1149,17 @@ sphere 5 (a Ganon's Tower key may sit at Bob's Torch, behind the boots); the
 simple and restricted seeds have six more of the same kind, and only the
 insanity seed stays pending.
 
+The other way too: a playthrough's sphere lists the required locations the
+earlier spheres' items reach (`Main.py:368-385`, the keys swept in without
+keysanity), so a location of a later sphere was out of reach then, and the
+pack must not say `yes` to it in that state. The randomizer holds an event
+(the floodgate, the frog) once a sphere collects it, the pack as soon as it
+is reached, so this check runs without the events. It holds for the
+playthrough's locations alone: of the others the recording says nothing,
+and replaying its placements would need the rules that read what a spot
+holds (`item_name`, a key in its own big chest), which the pack reads as
+`maybe`.
+
 The same spec holds that noting more of a seed's doors never takes a `yes`
 away, in the playthrough's states: what a door not noted hides may only
 add. Once with each door into Turtle Rock left out, then noted alone of
