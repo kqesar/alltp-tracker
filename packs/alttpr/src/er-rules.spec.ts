@@ -102,6 +102,9 @@ const CHECKOUT: Readonly<Record<string, string>> = {
     "",
     "    def has_Boots(self, player):",
     "        return True",
+    "",
+    "    def can_buy_unlimited(self, item, player):",
+    "        return True",
   ].join("\n"),
   "Bosses.py": [
     "def MoldormDefeatRule(state, player):",
@@ -157,10 +160,28 @@ const CHECKOUT: Readonly<Record<string, string>> = {
     "    world.push_item(world.get_location('Floodgate', player), ItemFactory('Open Floodgate', player), False)",
     "    world.push_item(world.get_location('Agahnim 1', player), ItemFactory('Beat Agahnim 1', player), False)",
     "    world.push_item(world.get_location('Ganon', player), ItemFactory('Triforce', player), False)",
+    "",
+    "def set_up_shops(world, player):",
+    "    if world.retro:",
+    "        rss = world.get_region('Red Shield Shop', player).shop",
+    "        rss.active = True",
+    "        rss.add_inventory(2, 'Single Arrow', 80)",
+    "    if world.retro:",
+    "        for shop in random.sample([s for s in world.shops if s.replaceable and s.type == ShopType.Shop and s.region.player == player], 5):",
+    "            shop.active = True",
+    "            shop.add_inventory(0, 'Single Arrow', 80)",
+    "            shop.add_inventory(1, 'Small Key (Universal)', 100)",
+    "",
+    "def get_pool_core(progressive):",
+    "    pool = []",
   ].join("\n"),
   "Items.py":
     "item_table = {'Hookshot': (True,), 'Hammer': (True,), 'Fire Rod': (True,), 'Open Floodgate': (True,), 'Small Key (Swamp Palace)': (True,)}",
   "Regions.py": [
+    "shop_table = {",
+    "    'Kakariko Shop': (0x011F, 0xA0, True),",
+    "    'Potion Shop': (0x0109, 0xFF, False),",
+    "}",
     "_basic_shop_defaults = [('Red Potion', 150)]",
     "default_shop_contents = {",
     "    'Kakariko Shop': _basic_shop_defaults,",
@@ -294,8 +315,14 @@ describe("the translation of the entrance randomizer's rules", () => {
 
   it("reads a placement as maybe, a boss through its dungeon's slot", () => {
     const { bossSlots, helpers, locations } = translate();
+    // In the retro world, has_key buys a key (BaseClasses.py:378-380)
     expect(locations["Swamp Palace - Big Chest"]?.req).toBe(
-      "keyD2 >= 2 | maybe",
+      "!setting(genericKeys) & keyD2 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe",
+    );
+    // A key for sale: a shop drawn among the replaceable ones (maybe), or
+    // one the player found
+    expect(helpers.erCanBuyUnlimitedSmallKeyUniversal?.req).toBe(
+      "shopKey | maybe & reach(kakarikoShop)",
     );
     expect(locations["Tower of Hera - Boss"]?.req).toBe(
       "@erDefeatTowerOfHeraBoss",
@@ -417,7 +444,7 @@ describe("the translation of the entrance randomizer's rules", () => {
     });
     // A count by what a location holds: 0 with the key in it, else 2
     expect(locations["Swamp Palace - Boss"]?.req).toBe(
-      "setting(allItemsReach_dam) & (maybe | keyD2 >= 2) | !setting(allItemsReach_dam) & @erDefeatSwampPalaceBoss",
+      "setting(allItemsReach_dam) & (!setting(genericKeys) & (maybe | keyD2 >= 2) | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | !setting(allItemsReach_dam) & @erDefeatSwampPalaceBoss",
     );
     expect(entrances["Swamp Palace Moat"]?.req).toBe(
       "setting(swampPatch) | hammer",
@@ -528,6 +555,22 @@ describe("the entrance randomizer's rules (rules.json)", () => {
       "!setting(cantTakeDamage) & @erHasHearts4 | caneOfByrna | cape",
     );
     expect(rules.helpers.erCanKillMostThings.req).toMatch(/\| tenBombs$/);
+  });
+
+  it("buy the retro world's arrows and keys as its shops sell them", () => {
+    // The Red Shield Shop sells arrows; five of the nine replaceable shops
+    // sell both (ItemList.py:341-352), which a key shop found tells
+    const drawn =
+      "maybe & (reach(caveShopDarkDeathMountain) | reach(redShieldShop) | reach(darkLakeHyliaShop) | reach(darkWorldLumberjackShop) | reach(villageOfOutcastsShop) | reach(darkWorldPotionShop) | reach(lightWorldDeathMountainShop) | reach(kakarikoShop) | reach(caveShopLakeHylia))";
+    expect(rules.helpers.erCanBuyUnlimitedSingleArrow.req).toBe(
+      `reach(redShieldShop) | shopArrow | shopKey | ${drawn}`,
+    );
+    expect(rules.helpers.erCanBuyUnlimitedSmallKeyUniversal.req).toBe(
+      `shopKey | ${drawn}`,
+    );
+    expect(rules.helpers.erCanShootArrows.req).toBe(
+      "bow & (!setting(rupeeBow) | @erCanBuyUnlimitedSingleArrow)",
+    );
   });
 
   it("leave out only what is code, each with its line", () => {

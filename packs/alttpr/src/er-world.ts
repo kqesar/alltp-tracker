@@ -101,7 +101,21 @@ const RULE_TABLES = ruleTables as unknown as {
   readonly locations: Readonly<Record<string, SpotRule>>;
 };
 
-const REGIONS = er.regions as readonly ErRegion[];
+/**
+ * Its regions: Regions.py's, and the retro world's take-any caves
+ * (ItemList.py set_up_take_anys), which hold nothing the map shows and lead
+ * nowhere but back out.
+ */
+const REGIONS: readonly ErRegion[] = [
+  ...(er.regions as readonly ErRegion[]),
+  ...er.takeAnys.regions.map(({ id, name }) => ({
+    exits: [],
+    id,
+    kind: "cave",
+    locations: [],
+    name,
+  })),
+];
 const REGION_NAMED = new Map(REGIONS.map((r) => [r.name, r]));
 
 /** The region each entrance (or cave's exit) leaves from, by name. */

@@ -231,6 +231,44 @@ describe("the crossed shuffle", () => {
     expect(kinds("kakariko-shop").has("drop")).toBe(false);
   });
 
+  it("gives the retro world's take-any caves the doors of the caves they draw", () => {
+    // set_up_take_anys (ItemList.py:243-286): five caves of
+    // take_any_locations lose their door to the old man's sword cave or a
+    // take-any
+    expect(er.takeAnys.regions.map(({ name }) => name)).toEqual([
+      "Old Man Sword Cave",
+      "Take-Any #1",
+      "Take-Any #2",
+      "Take-Any #3",
+      "Take-Any #4",
+    ]);
+    expect(targetNamed("Take-Any #4")).toMatchObject({
+      kind: "single",
+      place: "Take-Any Cave",
+      side: "4",
+    });
+    const retro = crossedPool("open", true);
+    const ids = (pool: CrossedPool, entrance: string) =>
+      pool.targetsOf.get(entrance)?.map((t) => t.id) ?? [];
+    // Any door that may lead to a single cave, a fairy's among them
+    for (const door of ["east-dark-world-hint", "desert-palace-entrance-north"])
+      expect(ids(retro, door)).toEqual([
+        ...ids(open, door),
+        "old-man-sword-cave",
+        "take-any-1",
+        "take-any-2",
+        "take-any-3",
+        "take-any-4",
+      ]);
+    // Never a hole, nor a cave a hole drops into, nor outside retro
+    expect(ids(retro, "kakariko-well-cave")).not.toContain("take-any-1");
+    expect(ids(retro, "kakariko-well-drop")).not.toContain("take-any-1");
+    expect(ids(open, "kakariko-shop")).not.toContain("take-any-1");
+    expect(ids(fullPool("open", true), "kakariko-shop")).toContain(
+      "old-man-sword-cave",
+    );
+  });
+
   it("settles a hole and its cave's door together", () => {
     expect(open.partner("kakariko-well-drop", "bat-cave-right")).toEqual([
       "kakariko-well-cave",
@@ -361,7 +399,10 @@ describe("where the game shows Link went", () => {
 
   it("knows every target by the entrance the game loads, a few alike by one", () => {
     const byEntrance = new Map<number, string[]>();
-    for (const target of TARGETS) {
+    // The retro world's take-any caves load another place's entrance
+    // (ItemList.py:256, 275-279): exit_ids names none of them
+    const takeAnys = new Set(er.takeAnys.regions.map(({ name }) => name));
+    for (const target of TARGETS.filter((t) => !takeAnys.has(t.name))) {
       const loads = exits[target.name]?.entrance;
       expect(typeof loads, target.name).toBe("number");
       byEntrance.set(loads ?? -1, [

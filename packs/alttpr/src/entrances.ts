@@ -18,7 +18,9 @@
 // --shuffle crossed; the randomizer shuffles Ganon's Tower by default,
 // EntranceRandomizer.py:228): crossedPool says which entrances it shuffles
 // and which targets it shuffles them with (EntranceShuffle.py:365-460,
-// scramble_holes, skull_woods_shuffle).
+// scramble_holes, skull_woods_shuffle). The retro world then gives five
+// doors that lead to some single caves a take-any cave instead (ItemList.py
+// set_up_take_anys).
 
 import type { EntranceLink } from "./autotrack/decode";
 import er from "./entrances/er.json" with { type: "json" };
@@ -243,7 +245,23 @@ export const TARGETS: readonly EntranceTarget[] = [
     "Pyramid",
     ...skullHoleTargets,
   ].map((name) => target(name, "drop", dropParts(name))),
+  // The retro world's alone: the old man's sword cave, then the take-anys,
+  // alike but for their number ("Take-Any #1")
+  ...er.takeAnys.regions.map(({ name }) => {
+    const [, place = name, side] = /^(.*?) #(\d+)$/.exec(name) ?? [];
+    return target(
+      name,
+      "single",
+      side === undefined ? { place } : { place: `${place} Cave`, side },
+    );
+  }),
 ];
+
+/** The retro world's take-any caves, by id (set_up_take_anys). */
+const TAKE_ANYS = new Set(er.takeAnys.regions.map(({ name }) => slug(name)));
+
+/** The caves whose door may lead to a take-any instead, by id. */
+const TAKE_ANY_CAVES = new Set(er.takeAnys.caves.value.map(slug));
 
 const TARGET_BY_NAME = new Map(TARGETS.map((t) => [t.name, t]));
 
@@ -375,10 +393,14 @@ const LIGHT_ONLY_STANDARD = [
  * The entrances alttpr.com's crossed shuffle mixes in an Open or Standard
  * world (EntranceShuffle.py:365-460). Standard keeps the castle's front door
  * and its secret passage for the escape (:379-381, scramble_holes).
- * Inverted runs its own tables, not ported yet.
+ * Inverted runs its own tables, not ported yet. In the retro world (Open's,
+ * `retro`), a door that may lead to a cave set_up_take_anys draws from may
+ * lead to a take-any cave instead.
  */
-export const crossedPool = (mode: "open" | "standard"): CrossedPool =>
-  shufflePool("crossed", mode);
+export const crossedPool = (
+  mode: "open" | "standard",
+  retro = false,
+): CrossedPool => shufflePool("crossed", mode, retro);
 
 /**
  * The entrances alttpr.com's full shuffle mixes (EntranceShuffle.py:260-364):
@@ -387,12 +409,15 @@ export const crossedPool = (mode: "open" | "standard"): CrossedPool =>
  * world its door lies in, so a Dark World door never leads to the places
  * only the Light World holds (`LIGHT_ONLY`).
  */
-export const fullPool = (mode: "open" | "standard"): CrossedPool =>
-  shufflePool("full", mode);
+export const fullPool = (
+  mode: "open" | "standard",
+  retro = false,
+): CrossedPool => shufflePool("full", mode, retro);
 
 function shufflePool(
   shuffle: "crossed" | "full",
   mode: "open" | "standard",
+  retro: boolean,
 ): CrossedPool {
   const doors = [
     ...table("LW_Entrances"),
@@ -478,17 +503,21 @@ function shufflePool(
   const targetsOf = new Map(
     entrances.map((entrance) => {
       const group = groups.find(({ from }) => from.has(entrance.id));
-      return [
-        entrance.id,
-        TARGETS.filter((t) =>
-          group === undefined
-            ? t.kind !== "drop" &&
-              !grouped.has(t.id) &&
-              !kept.has(t.id) &&
-              !(entrance.world === "dark" && lightOnly.has(t.id))
-            : group.to.has(t.id),
-        ),
-      ];
+      const targets = TARGETS.filter((t) =>
+        group === undefined
+          ? t.kind !== "drop" &&
+            !grouped.has(t.id) &&
+            !kept.has(t.id) &&
+            !TAKE_ANYS.has(t.id) &&
+            !(entrance.world === "dark" && lightOnly.has(t.id))
+          : group.to.has(t.id),
+      );
+      // A take-any takes the door of a cave it draws (set_up_take_anys)
+      const takeAny =
+        retro && targets.some((t) => TAKE_ANY_CAVES.has(t.id))
+          ? TARGETS.filter((t) => TAKE_ANYS.has(t.id))
+          : [];
+      return [entrance.id, [...targets, ...takeAny]];
     }),
   );
 
