@@ -463,6 +463,7 @@ function numberOf(expr, otherwise) {
  *   heldEvents: Set<string>,
  *   itemNames: ReadonlySet<string>,
  *   potionShops: readonly string[],
+ *   retroShops: RetroShops,
  *   methodLine: (name: string) => number,
  *   helpers: Map<string, { req: string, source: string }>,
  *   reachedLocations: Set<string>,
@@ -489,6 +490,61 @@ function numberOf(expr, otherwise) {
 function derive(ctx, name, derived) {
   ctx.derived.set(name, derived);
   return setting(name);
+}
+
+/**
+ * The retro world's shops (ItemList.py set_up_shops): those that sell an
+ * item whatever the seed (`fixed`, by item), and the `count` shops drawn
+ * among `regions` that sell `items`.
+ * @typedef {{
+ *   fixed: ReadonlyMap<string, readonly string[]>,
+ *   drawn: { regions: readonly string[], items: readonly string[], count: number },
+ * }} RetroShops
+ */
+
+/**
+ * What the tracker records of a shop that sells an item without end in the
+ * retro world: the pack's `shopArrow` and `shopKey` (items.ts), which the
+ * player marks on finding such a shop.
+ * @type {Readonly<Record<string, string>>}
+ */
+const SHOP_RECORDS = {
+  "Single Arrow": "shopArrow",
+  "Small Key (Universal)": "shopKey",
+};
+
+/**
+ * can_buy_unlimited(item) (BaseClasses.py): a shop selling it is reached.
+ * A fixed one by its region; one of the drawn shops is a placement the
+ * tracker does not know, so `maybe` while any of them is reached, unless
+ * the player recorded a shop that sells it: one selling the item itself,
+ * or something that only the drawn shops sell, all of which sell it too.
+ * @param {Context} ctx
+ * @param {string} item
+ * @returns {Rule}
+ */
+function canBuyUnlimited(ctx, item) {
+  return helper(
+    ctx,
+    `erCanBuyUnlimited${pascal(item)}`,
+    () => {
+      const { drawn, fixed } = ctx.retroShops;
+      const reached = (/** @type {readonly string[]} */ regions) =>
+        regions.map((r) => atom(`reach(${regionId(r)})`));
+      const sold = drawn.items.includes(item);
+      const records = Object.entries(SHOP_RECORDS).filter(
+        ([other]) =>
+          other === item ||
+          (sold && drawn.items.includes(other) && !fixed.has(other)),
+      );
+      return any(
+        ...reached(fixed.get(item) ?? []),
+        ...records.map(([, record]) => atom(record)),
+        sold ? all(MAYBE, any(...reached(drawn.regions))) : FALSE,
+      );
+    },
+    `BaseClasses.py:${ctx.methodLine("can_buy_unlimited")}`,
+  );
 }
 
 /**
@@ -587,9 +643,15 @@ const METHODS = {
         all(atom("bombos"), METHODS.has_sword?.(ctx, []) ?? FALSE),
       ),
     ),
-  // Not the retro world, whose arrows are bought
+  // The retro world's arrows are bought (BaseClasses.py:379-381): its
+  // world.retro is vt's Retro world, whose rupee bow is `rupeeBow`
   can_shoot_arrows: (ctx) =>
-    method(ctx, "can_shoot_arrows", "", () => atom("bow")),
+    method(ctx, "can_shoot_arrows", "", () =>
+      all(
+        atom("bow"),
+        any(negate(setting("rupeeBow")), canBuyUnlimited(ctx, "Single Arrow")),
+      ),
+    ),
   has_Boots: (ctx) => method(ctx, "has_Boots", "", () => atom("pegasusBoots")),
   has_beam_sword: (ctx) =>
     method(ctx, "has_beam_sword", "", () => atom("sword >= 2")),
@@ -929,21 +991,41 @@ function call(ctx, expr, scope) {
   switch (fn.name) {
     case "has":
     case "has_key": {
+      const name = fn.name;
       const item = stringOf(args[0], scope);
       const counted = args[2];
       // A count a local function gives by what a location holds
       if (counted?.t === "call" && counted.fn.t === "name") {
         const fn = localFunction(counted.fn.name, scope);
-        if (fn !== undefined)
-          return any(
+        if (fn !== undefined) {
+          const held = any(
             ...placedCounts(fn).map(({ count, placed }) =>
               all(placed ? MAYBE : TRUE, holding(ctx, item, count)),
             ),
           );
+          return name === "has"
+            ? held
+            : any(
+                all(negate(setting("genericKeys")), held),
+                all(
+                  setting("genericKeys"),
+                  canBuyUnlimited(ctx, "Small Key (Universal)"),
+                ),
+              );
+        }
       }
       const count = numberOf(counted, 1);
       if (typeof count !== "number") throw new Untranslatable("a count");
-      return holding(ctx, item, count);
+      if (name === "has") return holding(ctx, item, count);
+      // The retro world's has_key buys a key, whatever key or count it is
+      // asked (BaseClasses.py:378-380): vt's Retro world, `genericKeys`
+      return any(
+        all(negate(setting("genericKeys")), holding(ctx, item, count)),
+        all(
+          setting("genericKeys"),
+          canBuyUnlimited(ctx, "Small Key (Universal)"),
+        ),
+      );
     }
     case "can_reach": {
       const target = stringOf(args[0], scope);
@@ -1607,17 +1689,65 @@ export function importErRules(read, regions) {
   const contents = /** @type {Record<string, unknown>} */ (
     assigned(regionsSource, "default_shop_contents", "Regions.py").value
   );
+  /** @param {unknown} stock - A shop's, or the name of a list of it */
+  const itemsSold = (stock) =>
+    /** @type {[string, number][]} */ (
+      stock !== null && typeof stock === "object" && "name" in stock
+        ? assigned(regionsSource, String(stock.name), "Regions.py").value
+        : stock
+    ).map(([item]) => item);
   const potionShops = Object.entries(contents)
-    .filter(([, stock]) => {
-      const list =
-        stock !== null && typeof stock === "object" && "name" in stock
-          ? assigned(regionsSource, String(stock.name), "Regions.py").value
-          : stock;
-      return /** @type {[string, number][]} */ (list).some(([item]) =>
+    .filter(([, stock]) =>
+      itemsSold(stock).some((item) =>
         ["Green Potion", "Blue Potion"].includes(item),
-      );
-    })
+      ),
+    )
     .map(([region]) => region);
+
+  // The retro world's shops (set_up_shops): one shop's stock it extends
+  // with an item, and those it draws among the replaceable shops of
+  // shop_table, each selling the same items. Read as written, or not at all
+  const shops = body(itemListSource, "set_up_shops", "ItemList.py");
+  const shopsText = itemListSource.slice(shops.start, shops.end);
+  const extended =
+    /(\w+) = world\.get_region\('([^']+)', player\)\.shop\n\s+\1\.active = True\n\s+\1\.add_inventory\(\d, '([^']+)', \d+\)/.exec(
+      shopsText,
+    );
+  const drawnShops =
+    /for shop in random\.sample\(\[s for s in world\.shops if s\.replaceable and s\.type == ShopType\.Shop and s\.region\.player == player\], (\d+)\):((?:\n {12}shop\..*)+)/.exec(
+      shopsText,
+    );
+  if (extended === null || drawnShops === null)
+    throw new Error("ItemList.py: set_up_shops reads otherwise");
+  const shopTable = /** @type {Record<string, unknown>} */ (
+    assigned(regionsSource, "shop_table", "Regions.py").value
+  );
+  const drawnItems = [
+    ...(drawnShops[2] ?? "").matchAll(
+      /shop\.add_inventory\(\d, '([^']+)', \d+\)/g,
+    ),
+  ].map((m) => m[1] ?? "");
+  // No shop sells an arrow or a key by default: only what it adds
+  const retroItems = [...drawnItems, extended[3] ?? ""].filter(
+    (item) => item in SHOP_RECORDS,
+  );
+  if (
+    Object.values(contents).some((stock) =>
+      itemsSold(stock).some((item) => retroItems.includes(item)),
+    )
+  )
+    throw new Error("Regions.py: a shop sells a retro item by default");
+  /** @type {RetroShops} */
+  const retroShops = {
+    drawn: {
+      count: Number(drawnShops[1]),
+      items: drawnItems,
+      regions: Object.entries(shopTable)
+        .filter(([, row]) => Array.isArray(row) && row[2] === true)
+        .map(([region]) => region),
+    },
+    fixed: new Map([[extended[3] ?? "", [extended[2] ?? ""]]]),
+  };
 
   // The events: items generate_itempool places at locations it locks
   // (ItemList.py), which no player finds; the pack's own (Agahnim) aside
@@ -1731,6 +1861,7 @@ export function importErRules(read, regions) {
     reachedLocations: new Set(),
     regionOfEntrance,
     regionOfLocation,
+    retroShops,
   };
 
   // Every boss's rule, a helper of its own

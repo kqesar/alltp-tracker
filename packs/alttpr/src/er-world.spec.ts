@@ -290,6 +290,71 @@ describe("the entrance randomizer's boss slots", () => {
   });
 });
 
+describe("the entrance randomizer's retro world", () => {
+  // alttpr.com sends a Retro seed as --mode open --retro
+  // (app/EntranceRandomizer.php:79-82)
+  const retro = settingsFromUpstream("retro", { dungeonItems: "full" });
+  /** Everything held but what a shop sells, with these doors noted. */
+  const answer = (
+    location: string,
+    noted: Readonly<Record<string, string>>,
+    held: State = {},
+  ) =>
+    solveFacts(erWorld(retro, crossedConnections("open", noted)), {
+      ...everything(retro),
+      shopArrow: 0,
+      shopKey: 0,
+      ...held,
+    }).location(erLocationId(location));
+  const eastern = { [id("Eastern Palace")]: target("Eastern Palace Exit") };
+  const desert = {
+    [id("Desert Palace Entrance (South)")]: target(
+      "Desert Palace Exit (South)",
+    ),
+  };
+
+  it("shoots the bow once an arrow is for sale (BaseClasses.py:378-381)", () => {
+    const boss = "Eastern Palace - Boss";
+    // No shop reached, none found
+    expect(answer(boss, eastern)).toBe("no");
+    // A shop the draw may have picked
+    const kakariko = { [id("Kakariko Shop")]: target("Kakariko Shop") };
+    expect(answer(boss, { ...eastern, ...kakariko })).toBe("maybe");
+    // The Red Shield Shop always sells them, a key shop does too
+    const redShield = { [id("Red Shield Shop")]: target("Red Shield Shop") };
+    expect(answer(boss, { ...eastern, ...redShield })).toBe("yes");
+    expect(answer(boss, eastern, { shopArrow: 1 })).toBe("yes");
+    expect(answer(boss, eastern, { shopKey: 1 })).toBe("yes");
+    // Outside the retro world, the bow alone
+    expect(
+      solveFacts(
+        erWorld(OPEN, crossedConnections("open", eastern)),
+        everything(OPEN),
+      ).location(erLocationId(boss)),
+    ).toBe("yes");
+  });
+
+  it("opens a key door once a key is for sale, whatever keys are held", () => {
+    // Behind its east wing's key door (Rules.py:270)
+    const chest = "Desert Palace - Compass Chest";
+    // Every key held counts for nothing (has_key, BaseClasses.py:378-380)
+    expect(answer(chest, desert)).toBe("no");
+    expect(answer(chest, desert, { shopKey: 1 })).toBe("yes");
+    expect(answer(chest, desert, { keyP2: 0, shopKey: 1 })).toBe("yes");
+    // A shop arrows are sold at tells no key
+    expect(answer(chest, desert, { shopArrow: 1 })).toBe("no");
+  });
+
+  it("takes a door noted to a take-any cave (ItemList.py set_up_take_anys)", () => {
+    const noted = {
+      [id("East Dark World Hint")]: target("Take-Any #4"),
+      [id("Checkerboard Cave")]: target("Old Man Sword Cave"),
+    };
+    const world = erWorld(retro, crossedConnections("open", noted));
+    expect(world.compiled.locationIds.length).toBeGreaterThan(200);
+  });
+});
+
 describe("the pack's ids", () => {
   it("name every location of the map and every dungeon's prize", () => {
     const world = erWorld(OPEN, crossedConnections("open", {}));

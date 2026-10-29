@@ -972,6 +972,17 @@ keys: a key door is `maybe` until a key is for sale, and `yes` after.
 `test/upstream/RetroBow.json` holds the official `RetroBowTest` (32 cases)
 to the rupee bow.
 
+**With shuffled entrances**, alttpr.com sends a Retro seed to the entrance
+randomizer as `--mode open --retro` (`app/EntranceRandomizer.php:79-82`),
+whose own retro rules differ from vt's ([Its rules](#its-rules)): an arrow
+or a key is for sale once a shop selling it is reached (`can_buy_unlimited`,
+`BaseClasses.py:378-390`), and `has_key` asks for nothing else, whatever
+key and count (Misery Mire's big key included). The silver arrows do not
+shoot without a bought arrow there. Its take-any caves take the doors of
+five caves (`ItemList.py` `set_up_take_anys`): the entrance assistant
+offers them, and the world gives them a region each, holding nothing the
+map shows (the old man's sword is marked on the grid when found).
+
 ## The entrance randomizer's tables
 
 vt hands a seed with shuffled entrances to the entrance randomizer, a Python
@@ -1008,14 +1019,20 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
 - `TARGETS`: a side of a dungeon or connector cave (its exit), a single
   door's place, or where a hole drops, grouped by the place a player knows
   (`place`, `side`);
-- `crossedPool(mode)`: what alttpr.com's crossed shuffle mixes. It
+- `crossedPool(mode, retro)`: what alttpr.com's crossed shuffle mixes. It
   shuffles Ganon's Tower by default (`EntranceRandomizer.py:228`).
   - `targetsOf`: what the shuffle may give each entrance. A hole gets a
     drop, a hole's cave door gets such a cave's exit, Skull Woods' doors and
     holes get their own, and any other door the rest.
   - `partner`: what one note settles, since a hole and its cave's door
     lead into the same cave.
-- `fullPool(mode)`: what the full shuffle mixes (`EntranceShuffle.py:
+  - In the retro world, the take-any caves (`takeAnys` in `er.json`, read
+    from `ItemList.py`'s `set_up_take_anys`: the old man's sword cave and
+    four take-anys, and the caves whose doors it draws for them) join
+    every door that may lead to such a cave. The game loads a take-any by
+    another place's entrance (a cave shop's), so autotracking cannot tell
+    one from that shop: noting it is left to the player.
+- `fullPool(mode, retro)`: what the full shuffle mixes (`EntranceShuffle.py:
   260-364`): the same doors and holes, as both draw on the same tables,
   `scramble_holes` and Skull Woods' shuffle, but a cave stays in the world
   of its door, so a Dark World door never leads to the Old Man's cave and
@@ -1107,7 +1124,7 @@ flowchart LR
 
 - **vt's path.** `set_rules` is walked as vt calls the randomizer
   (`app/EntranceRandomizer.php`): No Glitches, the Open or Standard world,
-  no retro. A branch on another value (No Logic,
+  retro or not. A branch on another value (No Logic,
   Inverted, the triforce goals) is `false` and is never read; one on a
   setting the pack has becomes `setting()`: the mode `standardMode`, the
   goals, `swordless`, `locationsAccessibility`, `cantTakeDamage`. The
@@ -1147,6 +1164,16 @@ flowchart LR
   helpers stand.
 - **Placements** (`item_name`, `item_in_locations`) are `maybe`, as the
   pack's own rules read vt's: a tracker does not know them.
+- **The retro world** (`world.retro`, vt's Retro world, so `rupeeBow` and
+  `genericKeys`): `can_shoot_arrows` and `has_key` read
+  `can_buy_unlimited` (`@erCanBuyUnlimitedSingleArrow`,
+  `@erCanBuyUnlimitedSmallKeyUniversal`). Which shops sell what is read
+  from `set_up_shops` as written (else the import stops): the shop whose
+  stock it extends (the Red Shield Shop's arrows) by its region reached;
+  the five it draws among `shop_table`'s replaceable ones, a placement,
+  `maybe` while any of them is reached; and what the player records of a
+  shop found (`shopArrow`, `shopKey`, `SHOP_RECORDS`): a key shop is a
+  drawn one, so it sells arrows too.
 - **Events** (`Open Floodgate`, `Get Frog`, `Return Smith`, `Pick Up
   Purple Chest`) are items of their own, held once their location is
   reached (`events`, from `ItemList.py`). Agahnim's are the pack's

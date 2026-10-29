@@ -207,6 +207,45 @@ export function autotrackTables(rom, doorAddresses, exits) {
 }
 
 /**
+ * The retro world's take-any caves (ItemList.py set_up_take_anys): the
+ * regions it makes, the old man's sword cave and the take-anys, and the
+ * caves whose doors it draws for them (`take_any_locations`), each such
+ * door then leading to one of its regions instead. Read as written, or the
+ * import stops.
+ * @param {string} source - ItemList.py
+ */
+export function takeAnys(source) {
+  const file = "ItemList.py";
+  const { end, start } = body(source, "set_up_take_anys", file);
+  const text = source.slice(start, end);
+  const line = source.slice(0, start + 1).split("\n").length;
+  const old = /= Region\("([^"]+)", RegionType\.Cave/.exec(text);
+  const loop =
+    /for num in range\((\d+)\):\n\s+take_any = Region\("([^"#]*#)\{\}"\.format\(num\+1\), RegionType\.Cave/.exec(
+      text,
+    );
+  const drawn = /regions = random\.sample\(take_any_locations, (\d+)\)/.exec(
+    text,
+  );
+  if (old === null || loop === null || drawn === null)
+    throw new Error(`${file}:${line}: set_up_take_anys reads otherwise`);
+  const regions = [
+    old[1] ?? "",
+    ...Array.from(
+      { length: Number(loop[1]) },
+      (_, i) => `${loop[2] ?? ""}${i + 1}`,
+    ),
+  ];
+  if (Number(drawn[1]) !== regions.length)
+    throw new Error(`${file}:${line}: a take-any cave for each door drawn`);
+  return {
+    caves: assigned(source, "take_any_locations", file),
+    line,
+    regions: regions.map((name) => ({ id: regionId(name), name })),
+  };
+}
+
+/**
  * Everything the tracker reads of the entrance randomizer.
  * @param {string} checkout
  * @param {string} romFile - The base ROM
@@ -354,6 +393,7 @@ export function importEr(checkout, romFile) {
       holes: { line: skullHoles.line, value: skullHoles.args.slice(1, 3) },
     },
     tables,
+    takeAnys: takeAnys(readFileSync(join(checkout, "ItemList.py"), "utf8")),
     upstream,
   };
 }

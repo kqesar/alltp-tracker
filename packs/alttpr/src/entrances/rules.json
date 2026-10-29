@@ -1,6 +1,6 @@
 {
   "allItemsReach": {
-    "Agahnim 1": "setting(swordless) & (hammer | fireRod | @erCanShootArrows | caneOfSomaria) & keyA1 >= 2 | !setting(swordless) & @erHasSword & keyA1 >= 2",
+    "Agahnim 1": "setting(swordless) & (hammer | fireRod | @erCanShootArrows | caneOfSomaria) & (!setting(genericKeys) & keyA1 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | !setting(swordless) & @erHasSword & (!setting(genericKeys) & keyA1 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
     "Dark Lake Hylia Drop (East)": "@erHasPearl & flippers | @erHasMirror",
     "Dark Lake Hylia Ledge Drop": "true",
     "Dark Lake Hylia Teleporter": "@erHasPearl & (hammer | @erCanLiftRocks)",
@@ -8,7 +8,7 @@
     "Death Mountain Return Cave Exit (West)": "true",
     "East Dark World River Pier": "@erHasPearl",
     "Ganons Tower": "false",
-    "Ganons Tower (Double Switch Room)": "keyA2 >= 2",
+    "Ganons Tower (Double Switch Room)": "!setting(genericKeys) & keyA2 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
     "Ganons Tower (Hookshot Room)": "hammer",
     "Hobo Bridge": "true",
     "Hyrule Castle Exit (East)": "true",
@@ -18,12 +18,12 @@
     "Old Man Cave Exit (East)": "true",
     "Old Man House Back to Front": "true",
     "Old Man House Front to Back": "true",
-    "Palace of Darkness Big Key Door": "keyD1 >= 6 & bigKeyD1 & @erCanShootArrows & hammer",
-    "Palace of Darkness Maze Door": "keyD1 >= 6",
+    "Palace of Darkness Big Key Door": "(!setting(genericKeys) & keyD1 >= 6 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & bigKeyD1 & @erCanShootArrows & hammer",
+    "Palace of Darkness Maze Door": "!setting(genericKeys) & keyD1 >= 6 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
     "Paradox Cave Bomb Jump": "true",
     "Pyramid Fairy": "true",
-    "Sewers Back Door": "keyH2",
-    "Sewers Door": "keyH2",
+    "Sewers Back Door": "!setting(genericKeys) & keyH2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
+    "Sewers Door": "!setting(genericKeys) & keyH2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
     "Skull Woods First Section Bomb Jump": "true",
     "Swamp Palace Moat": "flippers & openFloodgate",
     "Throne Room": "true",
@@ -452,7 +452,7 @@
       "source": ["Rules.py:143"]
     },
     "Agahnim 1": {
-      "req": "(setting(swordless) & (hammer | fireRod | @erCanShootArrows | caneOfSomaria) & keyA1 >= 2 | !setting(swordless) & @erHasSword & keyA1 >= 2) & lamp",
+      "req": "(setting(swordless) & (hammer | fireRod | @erCanShootArrows | caneOfSomaria) & (!setting(genericKeys) & keyA1 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | !setting(swordless) & @erHasSword & (!setting(genericKeys) & keyA1 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)) & lamp",
       "source": ["Rules.py:171", "Rules.py:953", "Rules.py:921"]
     },
     "Agahnims Tower": {
@@ -468,7 +468,7 @@
       "source": ["Rules.py:217"]
     },
     "Blind Fight": {
-      "req": "keyD4",
+      "req": "!setting(genericKeys) & keyD4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:309"]
     },
     "Bonk Fairy (Dark)": {
@@ -584,7 +584,7 @@
       "source": ["Rules.py:166"]
     },
     "Desert Palace East Wing": {
-      "req": "keyP2",
+      "req": "!setting(genericKeys) & keyP2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:270"]
     },
     "Desert Palace Entrance (North) Mirror Spot": {
@@ -656,11 +656,11 @@
       "source": ["Rules.py:465"]
     },
     "Ganons Tower (Double Switch Room)": {
-      "req": "keyA2 >= 2 & hookshot",
+      "req": "(!setting(genericKeys) & keyA2 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & hookshot",
       "source": ["Rules.py:419", "Rules.py:886"]
     },
     "Ganons Tower (Firesnake Room)": {
-      "req": "keyA2 >= 3",
+      "req": "!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:421"]
     },
     "Ganons Tower (Hookshot Room)": {
@@ -668,7 +668,7 @@
       "source": ["Rules.py:411", "Rules.py:885"]
     },
     "Ganons Tower (Map Room)": {
-      "req": "keyA2 >= 4 | maybe & keyA2 >= 3",
+      "req": "!setting(genericKeys) & keyA2 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:413"]
     },
     "Ganons Tower (Tile Room)": {
@@ -676,7 +676,7 @@
       "source": ["Rules.py:410"]
     },
     "Ganons Tower (Tile Room) Key Door": {
-      "req": "keyA2 >= 3 & fireRod",
+      "req": "(!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & fireRod",
       "source": ["Rules.py:429"]
     },
     "Ganons Tower Big Key Door": {
@@ -684,7 +684,7 @@
       "source": ["Rules.py:440"]
     },
     "Ganons Tower Moldorm Door": {
-      "req": "keyA2 >= 4",
+      "req": "!setting(genericKeys) & keyA2 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:443"]
     },
     "Ganons Tower Moldorm Gap": {
@@ -736,11 +736,11 @@
       "source": ["Rules.py:339"]
     },
     "Ice Palace (East)": {
-      "req": "(hookshot | maybe & keyD5) & (!setting(cantTakeDamage) | hookshot | cape | caneOfByrna)",
+      "req": "(hookshot | maybe & (!setting(genericKeys) & keyD5 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)) & (!setting(cantTakeDamage) | hookshot | cape | caneOfByrna)",
       "source": ["Rules.py:338"]
     },
     "Ice Palace (Kholdstare)": {
-      "req": "@erCanLiftRocks & hammer & bigKeyD5 & (keyD5 >= 2 | caneOfSomaria & keyD5)",
+      "req": "@erCanLiftRocks & hammer & bigKeyD5 & (!setting(genericKeys) & keyD5 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | caneOfSomaria & (!setting(genericKeys) & keyD5 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal))",
       "source": ["Rules.py:336"]
     },
     "Ice Palace Entrance Room": {
@@ -808,7 +808,7 @@
       "source": ["Rules.py:358", "Rules.py:913"]
     },
     "Misery Mire (West)": {
-      "req": "keyD6 >= 3 | keyD6 >= 2 & maybe",
+      "req": "(!setting(genericKeys) & keyD6 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & (!setting(genericKeys) & keyD6 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | (!setting(genericKeys) & keyD6 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | !setting(genericKeys) & keyD6 >= 3) & maybe",
       "source": ["Rules.py:354"]
     },
     "Misery Mire Big Key Door": {
@@ -844,15 +844,15 @@
       "source": ["Rules.py:193"]
     },
     "Palace of Darkness (North)": {
-      "req": "keyD1 >= 4",
+      "req": "!setting(genericKeys) & keyD1 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:386"]
     },
     "Palace of Darkness Big Key Chest Staircase": {
-      "req": "keyD1 >= 6 | maybe & keyD1 >= 3",
+      "req": "!setting(genericKeys) & keyD1 >= 6 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyD1 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:389"]
     },
     "Palace of Darkness Big Key Door": {
-      "req": "keyD1 >= 6 & bigKeyD1 & @erCanShootArrows & hammer & lamp",
+      "req": "(!setting(genericKeys) & keyD1 >= 6 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & bigKeyD1 & @erCanShootArrows & hammer & lamp",
       "source": ["Rules.py:385", "Rules.py:916"]
     },
     "Palace of Darkness Bonk Wall": {
@@ -860,7 +860,7 @@
       "source": ["Rules.py:382"]
     },
     "Palace of Darkness Bridge Room": {
-      "req": "keyD1",
+      "req": "!setting(genericKeys) & keyD1 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:384"]
     },
     "Palace of Darkness Hammer Peg Drop": {
@@ -868,11 +868,11 @@
       "source": ["Rules.py:383"]
     },
     "Palace of Darkness Maze Door": {
-      "req": "keyD1 >= 6 & lamp",
+      "req": "(!setting(genericKeys) & keyD1 >= 6 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & lamp",
       "source": ["Rules.py:401", "Rules.py:917"]
     },
     "Palace of Darkness Spike Statue Room Door": {
-      "req": "keyD1 >= 6 | maybe & keyD1 >= 4",
+      "req": "!setting(genericKeys) & keyD1 >= 6 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyD1 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:395"]
     },
     "Paradox Cave Bomb Jump": {
@@ -900,11 +900,11 @@
       "source": ["Rules.py:141"]
     },
     "Sewers Back Door": {
-      "req": "keyH2 & (setting(standardMode) | lamp)",
+      "req": "(!setting(genericKeys) & keyH2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & (setting(standardMode) | lamp)",
       "source": ["Rules.py:260", "Rules.py:938"]
     },
     "Sewers Door": {
-      "req": "keyH2 & (!setting(standardMode) | @erCanKillMostThings)",
+      "req": "(!setting(genericKeys) & keyH2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & (!setting(standardMode) | @erCanKillMostThings)",
       "source": ["Rules.py:259", "Rules.py:972"]
     },
     "Skull Woods Final Section": {
@@ -912,11 +912,11 @@
       "source": ["Rules.py:226"]
     },
     "Skull Woods First Section (Left) Door to Exit": {
-      "req": "keyD3 >= 2",
+      "req": "!setting(genericKeys) & keyD3 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:324"]
     },
     "Skull Woods First Section (Right) North Door": {
-      "req": "keyD3",
+      "req": "!setting(genericKeys) & keyD3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:322"]
     },
     "Skull Woods First Section Bomb Jump": {
@@ -928,11 +928,11 @@
       "source": ["Rules.py:206"]
     },
     "Skull Woods First Section South Door": {
-      "req": "keyD3",
+      "req": "!setting(genericKeys) & keyD3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:321"]
     },
     "Skull Woods First Section West Door": {
-      "req": "keyD3 >= 2",
+      "req": "!setting(genericKeys) & keyD3 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:323"]
     },
     "Skull Woods Second Section Hole": {
@@ -940,7 +940,7 @@
       "source": ["Rules.py:207"]
     },
     "Skull Woods Torch Room": {
-      "req": "setting(swordless) & keyD3 >= 3 & fireRod | !setting(swordless) & keyD3 >= 3 & fireRod & @erHasSword",
+      "req": "setting(swordless) & (!setting(genericKeys) & keyD3 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & fireRod | !setting(swordless) & (!setting(genericKeys) & keyD3 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & fireRod & @erHasSword",
       "source": ["Rules.py:328", "Rules.py:955"]
     },
     "South Dark World Bridge": {
@@ -976,7 +976,7 @@
       "source": ["Rules.py:294", "Rules.py:57"]
     },
     "Swamp Palace Small Key Door": {
-      "req": "keyD2",
+      "req": "!setting(genericKeys) & keyD2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:297"]
     },
     "Thieves Town": {
@@ -1000,7 +1000,7 @@
       "source": ["Rules.py:284"]
     },
     "Tower of Hera Small Key Door": {
-      "req": "keyP3 | maybe",
+      "req": "!setting(genericKeys) & keyP3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe",
       "source": ["Rules.py:283"]
     },
     "Turtle Rock": {
@@ -1012,11 +1012,11 @@
       "source": ["Rules.py:370"]
     },
     "Turtle Rock (Chain Chomp Room) (North)": {
-      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & keyD7 >= 2 | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockSecondSection) | !setting(allItemsReach_turtleRockEntrance)) & keyD7 >= 4",
+      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & (!setting(genericKeys) & keyD7 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockSecondSection) | !setting(allItemsReach_turtleRockEntrance)) & (!setting(genericKeys) & keyD7 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:1024", "Rules.py:1059"]
     },
     "Turtle Rock (Chain Chomp Room) (South)": {
-      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & !setting(allItemsReach_turtleRockBigChest) & (keyD7 >= 4 | keyD7 >= 2 & maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | setting(allItemsReach_turtleRockBigChest)) & (!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockBigChest) & (keyD7 >= 4 | keyD7 >= 2 & maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | !setting(allItemsReach_turtleRockBigChest)) & keyD7 >= 4)",
+      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & !setting(allItemsReach_turtleRockBigChest) & ((!setting(genericKeys) & keyD7 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & (!setting(genericKeys) & keyD7 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | (!setting(genericKeys) & keyD7 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | !setting(genericKeys) & keyD7 >= 4) & maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | setting(allItemsReach_turtleRockBigChest)) & (!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockBigChest) & ((!setting(genericKeys) & keyD7 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & (!setting(genericKeys) & keyD7 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | (!setting(genericKeys) & keyD7 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | !setting(genericKeys) & keyD7 >= 4) & maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | !setting(allItemsReach_turtleRockBigChest)) & (!setting(genericKeys) & keyD7 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal))",
       "source": ["Rules.py:1023", "Rules.py:1070", "Rules.py:1082"]
     },
     "Turtle Rock (Dark Room) (North)": {
@@ -1028,7 +1028,7 @@
       "source": ["Rules.py:373", "Rules.py:915"]
     },
     "Turtle Rock (Trinexx)": {
-      "req": "keyD7 >= 4 & bigKeyD7 & caneOfSomaria",
+      "req": "(!setting(genericKeys) & keyD7 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & bigKeyD7 & caneOfSomaria",
       "source": ["Rules.py:378"]
     },
     "Turtle Rock Big Key Door": {
@@ -1036,7 +1036,7 @@
       "source": ["Rules.py:371"]
     },
     "Turtle Rock Dark Room Staircase": {
-      "req": "setting(allItemsReach_turtleRockEyeBridge) & keyD7 >= 4 | !setting(allItemsReach_turtleRockEyeBridge) & keyD7 >= 3",
+      "req": "setting(allItemsReach_turtleRockEyeBridge) & (!setting(genericKeys) & keyD7 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | !setting(allItemsReach_turtleRockEyeBridge) & (!setting(genericKeys) & keyD7 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:1020", "Rules.py:1044"]
     },
     "Turtle Rock Entrance Gap": {
@@ -1048,7 +1048,7 @@
       "source": ["Rules.py:365"]
     },
     "Turtle Rock Pokey Room": {
-      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & keyD7 | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockSecondSection) | !setting(allItemsReach_turtleRockEntrance)) & keyD7 >= 4",
+      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & (!setting(genericKeys) & keyD7 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockSecondSection) | !setting(allItemsReach_turtleRockEntrance)) & (!setting(genericKeys) & keyD7 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:1025", "Rules.py:1060"]
     },
     "Turtle Rock Teleporter": {
@@ -1113,6 +1113,14 @@
       "req": "reach(masterSwordMeadow) & pendantOfWisdom & pendantOfPower & pendantOfCourage",
       "source": "Rules.py:168"
     },
+    "erCanBuyUnlimitedSingleArrow": {
+      "req": "reach(redShieldShop) | shopArrow | shopKey | maybe & (reach(caveShopDarkDeathMountain) | reach(redShieldShop) | reach(darkLakeHyliaShop) | reach(darkWorldLumberjackShop) | reach(villageOfOutcastsShop) | reach(darkWorldPotionShop) | reach(lightWorldDeathMountainShop) | reach(kakarikoShop) | reach(caveShopLakeHylia))",
+      "source": "BaseClasses.py:385"
+    },
+    "erCanBuyUnlimitedSmallKeyUniversal": {
+      "req": "shopKey | maybe & (reach(caveShopDarkDeathMountain) | reach(redShieldShop) | reach(darkLakeHyliaShop) | reach(darkWorldLumberjackShop) | reach(villageOfOutcastsShop) | reach(darkWorldPotionShop) | reach(lightWorldDeathMountainShop) | reach(kakarikoShop) | reach(caveShopLakeHylia))",
+      "source": "BaseClasses.py:385"
+    },
     "erCanExtendMagic10": {
       "req": "reach(potionShop) & bottle | magic",
       "source": "BaseClasses.py:424"
@@ -1166,7 +1174,7 @@
       "source": "BaseClasses.py:488"
     },
     "erCanShootArrows": {
-      "req": "bow",
+      "req": "bow & (!setting(rupeeBow) | @erCanBuyUnlimitedSingleArrow)",
       "source": "BaseClasses.py:447"
     },
     "erDefeatAgahnim": {
@@ -1276,7 +1284,7 @@
       "source": ["Rules.py:197", "Rules.py:964"]
     },
     "Castle Tower - Dark Maze": {
-      "req": "@erCanKillMostThings8 & keyA1 & lamp",
+      "req": "@erCanKillMostThings8 & (!setting(genericKeys) & keyA1 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & lamp",
       "source": ["Rules.py:174", "Rules.py:922"]
     },
     "Castle Tower - Room 03": {
@@ -1296,11 +1304,11 @@
       "source": ["Rules.py:268"]
     },
     "Desert Palace - Boss": {
-      "req": "keyP2 & bigKeyP2 & @erHasFireSource & @erDefeatDesertPalaceBoss",
+      "req": "(!setting(genericKeys) & keyP2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & bigKeyP2 & @erHasFireSource & @erDefeatDesertPalaceBoss",
       "source": ["Rules.py:272"]
     },
     "Desert Palace - Prize": {
-      "req": "keyP2 & bigKeyP2 & @erHasFireSource & @erDefeatDesertPalaceBoss & (setting(wildBigKeys) | reach(desertPalaceMainOuter))",
+      "req": "(!setting(genericKeys) & keyP2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) & bigKeyP2 & @erHasFireSource & @erDefeatDesertPalaceBoss & (setting(wildBigKeys) | reach(desertPalaceMainOuter))",
       "source": ["Rules.py:271", "Rules.py:281"]
     },
     "Desert Palace - Torch": {
@@ -1360,19 +1368,19 @@
       "source": ["Rules.py:409"]
     },
     "Ganons Tower - Compass Room - Bottom Left": {
-      "req": "fireRod & (keyA2 >= 4 | maybe & keyA2 >= 3)",
+      "req": "fireRod & (!setting(genericKeys) & keyA2 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal))",
       "source": ["Rules.py:432"]
     },
     "Ganons Tower - Compass Room - Bottom Right": {
-      "req": "fireRod & (keyA2 >= 4 | maybe & keyA2 >= 3)",
+      "req": "fireRod & (!setting(genericKeys) & keyA2 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal))",
       "source": ["Rules.py:432"]
     },
     "Ganons Tower - Compass Room - Top Left": {
-      "req": "fireRod & (keyA2 >= 4 | maybe & keyA2 >= 3)",
+      "req": "fireRod & (!setting(genericKeys) & keyA2 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal))",
       "source": ["Rules.py:432"]
     },
     "Ganons Tower - Compass Room - Top Right": {
-      "req": "fireRod & (keyA2 >= 4 | maybe & keyA2 >= 3)",
+      "req": "fireRod & (!setting(genericKeys) & keyA2 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal))",
       "source": ["Rules.py:432"]
     },
     "Ganons Tower - DMs Room - Bottom Left": {
@@ -1392,27 +1400,27 @@
       "source": ["Rules.py:889"]
     },
     "Ganons Tower - Firesnake Room": {
-      "req": "keyA2 >= 3 | maybe & keyA2 >= 2",
+      "req": "!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyA2 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:424"]
     },
     "Ganons Tower - Pre-Moldorm Chest": {
-      "req": "keyA2 >= 3",
+      "req": "!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:442"]
     },
     "Ganons Tower - Randomizer Room - Bottom Left": {
-      "req": "keyA2 >= 4 | maybe & keyA2 >= 3",
+      "req": "!setting(genericKeys) & keyA2 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:426"]
     },
     "Ganons Tower - Randomizer Room - Bottom Right": {
-      "req": "keyA2 >= 4 | maybe & keyA2 >= 3",
+      "req": "!setting(genericKeys) & keyA2 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:426"]
     },
     "Ganons Tower - Randomizer Room - Top Left": {
-      "req": "keyA2 >= 4 | maybe & keyA2 >= 3",
+      "req": "!setting(genericKeys) & keyA2 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:426"]
     },
     "Ganons Tower - Randomizer Room - Top Right": {
-      "req": "keyA2 >= 4 | maybe & keyA2 >= 3",
+      "req": "!setting(genericKeys) & keyA2 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe & (!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:426"]
     },
     "Hookshot Cave - Bottom Left": {
@@ -1432,7 +1440,7 @@
       "source": ["Rules.py:251"]
     },
     "Hyrule Castle - Boomerang Chest": {
-      "req": "setting(standardMode) & @erCanKillMostThings | !setting(standardMode) & keyH2",
+      "req": "setting(standardMode) & @erCanKillMostThings | !setting(standardMode) & (!setting(genericKeys) & keyH2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:947", "Rules.py:992"]
     },
     "Hyrule Castle - Map Chest": {
@@ -1440,7 +1448,7 @@
       "source": ["Rules.py:979"]
     },
     "Hyrule Castle - Zelda's Chest": {
-      "req": "setting(standardMode) & @erCanKillMostThings | !setting(standardMode) & keyH2",
+      "req": "setting(standardMode) & @erCanKillMostThings | !setting(standardMode) & (!setting(genericKeys) & keyH2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal)",
       "source": ["Rules.py:948", "Rules.py:993"]
     },
     "Ice Palace - Big Chest": {
@@ -1488,11 +1496,11 @@
       "source": ["Rules.py:356"]
     },
     "Misery Mire - Main Lobby": {
-      "req": "keyD6 | bigKeyD6",
+      "req": "!setting(genericKeys) & keyD6 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | !setting(genericKeys) & bigKeyD6",
       "source": ["Rules.py:352"]
     },
     "Misery Mire - Map Chest": {
-      "req": "keyD6 | bigKeyD6",
+      "req": "!setting(genericKeys) & keyD6 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | bigKeyD6",
       "source": ["Rules.py:351"]
     },
     "Misery Mire - Prize": {
@@ -1588,11 +1596,11 @@
       "source": ["Rules.py:304"]
     },
     "Thieves' Town - Attic": {
-      "req": "keyD4",
+      "req": "!setting(genericKeys) & keyD4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
       "source": ["Rules.py:315"]
     },
     "Thieves' Town - Big Chest": {
-      "req": "(keyD4 | maybe) & hammer",
+      "req": "(!setting(genericKeys) & keyD4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe) & hammer",
       "source": ["Rules.py:312"]
     },
     "Thieves' Town - Boss": {
@@ -1624,7 +1632,7 @@
       "source": ["Rules.py:369"]
     },
     "Turtle Rock - Big Key Chest": {
-      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & !setting(allItemsReach_turtleRockBigChest) & (keyD7 >= 4 | maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | setting(allItemsReach_turtleRockBigChest)) & (!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockBigChest) & (keyD7 >= 4 | maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | !setting(allItemsReach_turtleRockBigChest)) & (!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & (maybe | keyD7 >= 4) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockSecondSection) | !setting(allItemsReach_turtleRockEntrance)) & (!setting(allItemsReach_turtleRockEyeBridge) & setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockSecondSection) & (maybe | keyD7 >= 4) | (setting(allItemsReach_turtleRockEyeBridge) | !setting(allItemsReach_turtleRockEntrance) | !setting(allItemsReach_turtleRockSecondSection)) & (keyD7 >= 4 | maybe | !setting(allItemsReach_turtleRockEyeBridge)))))",
+      "req": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & !setting(allItemsReach_turtleRockBigChest) & (!setting(genericKeys) & keyD7 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | setting(allItemsReach_turtleRockBigChest)) & (!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockBigChest) & (!setting(genericKeys) & keyD7 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockEntrance) | !setting(allItemsReach_turtleRockBigChest)) & (!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & (!setting(genericKeys) & (maybe | keyD7 >= 4) | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | (setting(allItemsReach_turtleRockEyeBridge) | setting(allItemsReach_turtleRockSecondSection) | !setting(allItemsReach_turtleRockEntrance)) & (!setting(allItemsReach_turtleRockEyeBridge) & setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockSecondSection) & (!setting(genericKeys) & (maybe | keyD7 >= 4) | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | (setting(allItemsReach_turtleRockEyeBridge) | !setting(allItemsReach_turtleRockEntrance) | !setting(allItemsReach_turtleRockSecondSection)) & (!setting(genericKeys) & keyD7 >= 4 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe | !setting(allItemsReach_turtleRockEyeBridge)))))",
       "source": [
         "Rules.py:1043",
         "Rules.py:1050",
