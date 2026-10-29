@@ -146,14 +146,23 @@ const CHECKOUT: Readonly<Record<string, string>> = {
   ].join("\n"),
   "Dungeons.py": [
     "def create_dungeons(world, player):",
-    "    def make_dungeon(name, default_boss, dungeon_regions, big_key):",
-    "        return name",
+    "    def make_dungeon(name, default_boss, dungeon_regions, big_key, small_keys, dungeon_items):",
+    "        dungeon = Dungeon(name, dungeon_regions, big_key, [] if world.retro else small_keys, dungeon_items, player)",
+    "        return dungeon",
     "",
-    "    TH = make_dungeon('Tower of Hera', 'Moldorm', ['Tower of Hera (Top)'], None)",
-    "    SP = make_dungeon('Swamp Palace', 'Arrghus', ['Swamp Palace (North)'], None)",
+    "    TH = make_dungeon('Tower of Hera', 'Moldorm', ['Tower of Hera (Top)'], None, [], [])",
+    "    SP = make_dungeon('Swamp Palace', 'Arrghus', ['Swamp Palace (North)'], ItemFactory('Big Key (Swamp Palace)', player), ItemFactory(['Small Key (Swamp Palace)'] * 2, player), ItemFactory(['Map (Swamp Palace)', 'Compass (Swamp Palace)'], player))",
     "    if world.mode == 'inverted':",
-    "        GT = make_dungeon('Inverted Ganons Tower', 'Agahnim2', ['Ganons Tower (Top)'], None)",
+    "        GT = make_dungeon('Inverted Ganons Tower', 'Agahnim2', ['Ganons Tower (Top)'], None, [], [])",
     "    GT.bosses['top'] = BossFactory('Moldorm', player)",
+    "",
+    "def fill_dungeons_restrictive(world, shuffled_locations):",
+    "    for player in range(1, world.players + 1):",
+    "        pinball_room = world.get_location('Swamp Palace - Boss', player)",
+    "        if world.retro:",
+    "            world.push_item(pinball_room, ItemFactory('Small Key (Universal)', player), False)",
+    "        else:",
+    "            world.push_item(pinball_room, ItemFactory('Small Key (Swamp Palace)', player), False)",
   ].join("\n"),
   "ItemList.py": [
     "def generate_itempool(world, player):",
@@ -171,6 +180,11 @@ const CHECKOUT: Readonly<Record<string, string>> = {
     "            shop.active = True",
     "            shop.add_inventory(0, 'Single Arrow', 80)",
     "            shop.add_inventory(1, 'Small Key (Universal)', 100)",
+    "",
+    "def fill_prizes(world, attempts=15):",
+    "    for player in range(1, world.players + 1):",
+    "        crystal_locations = [world.get_location('Tower of Hera - Boss', player),",
+    "                             world.get_location('Thieves\\' Town - Prize', player)]",
     "",
     "def get_pool_core(progressive):",
     "    pool = []",
@@ -370,6 +384,46 @@ describe("the translation of the entrance randomizer's rules", () => {
     expect(helpers.erAtPotionShop?.req).toBe("reach(lightWorld) & reach(dam)");
   });
 
+  it("reads each dungeon's keys and the spots filled before them", () => {
+    const { dungeons } = translate();
+    expect(dungeons).toEqual({
+      byName: {
+        "Swamp Palace": {
+          bigKey: true,
+          code: "D2",
+          items: ["Map (Swamp Palace)", "Compass (Swamp Palace)"],
+          regions: ["Swamp Palace (North)"],
+          smallKeys: 2,
+          source: "Dungeons.py:7",
+        },
+        "Tower of Hera": {
+          bigKey: false,
+          code: "",
+          items: [],
+          regions: ["Tower of Hera (Top)"],
+          smallKeys: 0,
+          source: "Dungeons.py:6",
+        },
+      },
+      prefilled: [
+        { location: "Floodgate", source: "ItemList.py:2" },
+        { location: "Agahnim 1", source: "ItemList.py:3" },
+        { location: "Ganon", source: "ItemList.py:4" },
+        { location: "Tower of Hera - Boss", source: "ItemList.py:19" },
+        { location: "Thieves' Town - Prize", source: "ItemList.py:20" },
+      ],
+      preplaced: [
+        {
+          id: "keyD2",
+          item: "Small Key (Swamp Palace)",
+          location: "Swamp Palace - Boss",
+          source: "Dungeons.py:18",
+        },
+      ],
+      retroSmallKeys: "Dungeons.py:3",
+    });
+  });
+
   it("lists what it cannot say, and what only places items", () => {
     const { events, fill, unported } = translate();
     expect(unported).toEqual([
@@ -389,7 +443,32 @@ describe("the translation of the entrance randomizer's rules", () => {
         why: "the bunny's paths, by which regions the entrances make dark",
       },
     ]);
-    expect(fill).toEqual([27, 65]);
+    // Where an item may go, as data: each forbid under its branch's
+    // settings (set_trock_key_rules' list as it stands outside the branch)
+    expect(fill).toEqual({
+      always: [],
+      forbid: [
+        {
+          item: "Hammer",
+          location: "Swamp Palace - Big Chest",
+          source: "Rules.py:27",
+          when: "true",
+        },
+        {
+          item: "Hammer",
+          location: "Tower of Hera - Boss",
+          source: "Rules.py:27",
+          when: "true",
+        },
+        {
+          item: "Hammer",
+          location: "Swamp Palace - Boss",
+          source: "Rules.py:65",
+          when: "true",
+        },
+      ],
+      itemRules: [],
+    });
     // Only the events a rule reads; Agahnim is the pack's own item
     expect(events).toEqual({
       openFloodgate: {

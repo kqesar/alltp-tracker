@@ -442,6 +442,275 @@
       "source": "EntranceShuffle.py"
     }
   },
+  "dungeons": {
+    "byName": {
+      "Agahnims Tower": {
+        "bigKey": false,
+        "code": "A1",
+        "items": [],
+        "regions": ["Agahnims Tower", "Agahnim 1"],
+        "smallKeys": 2,
+        "source": "Dungeons.py:31"
+      },
+      "Desert Palace": {
+        "bigKey": true,
+        "code": "P2",
+        "items": ["Map (Desert Palace)", "Compass (Desert Palace)"],
+        "regions": [
+          "Desert Palace North",
+          "Desert Palace Main (Inner)",
+          "Desert Palace Main (Outer)",
+          "Desert Palace East"
+        ],
+        "smallKeys": 1,
+        "source": "Dungeons.py:20"
+      },
+      "Eastern Palace": {
+        "bigKey": true,
+        "code": "P1",
+        "items": ["Map (Eastern Palace)", "Compass (Eastern Palace)"],
+        "regions": ["Eastern Palace"],
+        "smallKeys": 0,
+        "source": "Dungeons.py:19"
+      },
+      "Ganons Tower": {
+        "bigKey": true,
+        "code": "A2",
+        "items": ["Map (Ganons Tower)", "Compass (Ganons Tower)"],
+        "regions": [
+          "Ganons Tower (Entrance)",
+          "Ganons Tower (Tile Room)",
+          "Ganons Tower (Compass Room)",
+          "Ganons Tower (Hookshot Room)",
+          "Ganons Tower (Map Room)",
+          "Ganons Tower (Firesnake Room)",
+          "Ganons Tower (Teleport Room)",
+          "Ganons Tower (Bottom)",
+          "Ganons Tower (Top)",
+          "Ganons Tower (Before Moldorm)",
+          "Ganons Tower (Moldorm)",
+          "Agahnim 2"
+        ],
+        "smallKeys": 4,
+        "source": "Dungeons.py:32"
+      },
+      "Hyrule Castle": {
+        "bigKey": false,
+        "code": "H2",
+        "items": ["Map (Escape)"],
+        "regions": [
+          "Hyrule Castle",
+          "Sewers",
+          "Sewer Drop",
+          "Sewers (Dark)",
+          "Sanctuary"
+        ],
+        "smallKeys": 1,
+        "source": "Dungeons.py:18"
+      },
+      "Ice Palace": {
+        "bigKey": true,
+        "code": "D5",
+        "items": ["Map (Ice Palace)", "Compass (Ice Palace)"],
+        "regions": [
+          "Ice Palace (Entrance)",
+          "Ice Palace (Main)",
+          "Ice Palace (East)",
+          "Ice Palace (East Top)",
+          "Ice Palace (Kholdstare)"
+        ],
+        "smallKeys": 2,
+        "source": "Dungeons.py:26"
+      },
+      "Misery Mire": {
+        "bigKey": true,
+        "code": "D6",
+        "items": ["Map (Misery Mire)", "Compass (Misery Mire)"],
+        "regions": [
+          "Misery Mire (Entrance)",
+          "Misery Mire (Main)",
+          "Misery Mire (West)",
+          "Misery Mire (Final Area)",
+          "Misery Mire (Vitreous)"
+        ],
+        "smallKeys": 3,
+        "source": "Dungeons.py:27"
+      },
+      "Palace of Darkness": {
+        "bigKey": true,
+        "code": "D1",
+        "items": ["Map (Palace of Darkness)", "Compass (Palace of Darkness)"],
+        "regions": [
+          "Palace of Darkness (Entrance)",
+          "Palace of Darkness (Center)",
+          "Palace of Darkness (Big Key Chest)",
+          "Palace of Darkness (Bonk Section)",
+          "Palace of Darkness (North)",
+          "Palace of Darkness (Maze)",
+          "Palace of Darkness (Harmless Hellway)",
+          "Palace of Darkness (Final Section)"
+        ],
+        "smallKeys": 6,
+        "source": "Dungeons.py:22"
+      },
+      "Skull Woods": {
+        "bigKey": true,
+        "code": "D3",
+        "items": ["Map (Skull Woods)", "Compass (Skull Woods)"],
+        "regions": [
+          "Skull Woods Final Section (Entrance)",
+          "Skull Woods First Section",
+          "Skull Woods Second Section",
+          "Skull Woods Second Section (Drop)",
+          "Skull Woods Final Section (Mothula)",
+          "Skull Woods First Section (Right)",
+          "Skull Woods First Section (Left)",
+          "Skull Woods First Section (Top)"
+        ],
+        "smallKeys": 2,
+        "source": "Dungeons.py:24"
+      },
+      "Swamp Palace": {
+        "bigKey": true,
+        "code": "D2",
+        "items": ["Map (Swamp Palace)", "Compass (Swamp Palace)"],
+        "regions": [
+          "Swamp Palace (Entrance)",
+          "Swamp Palace (First Room)",
+          "Swamp Palace (Starting Area)",
+          "Swamp Palace (Center)",
+          "Swamp Palace (North)"
+        ],
+        "smallKeys": 1,
+        "source": "Dungeons.py:25"
+      },
+      "Thieves Town": {
+        "bigKey": true,
+        "code": "D4",
+        "items": ["Map (Thieves Town)", "Compass (Thieves Town)"],
+        "regions": [
+          "Thieves Town (Entrance)",
+          "Thieves Town (Deep)",
+          "Blind Fight"
+        ],
+        "smallKeys": 1,
+        "source": "Dungeons.py:23"
+      },
+      "Tower of Hera": {
+        "bigKey": true,
+        "code": "P3",
+        "items": ["Map (Tower of Hera)", "Compass (Tower of Hera)"],
+        "regions": [
+          "Tower of Hera (Bottom)",
+          "Tower of Hera (Basement)",
+          "Tower of Hera (Top)"
+        ],
+        "smallKeys": 1,
+        "source": "Dungeons.py:21"
+      },
+      "Turtle Rock": {
+        "bigKey": true,
+        "code": "D7",
+        "items": ["Map (Turtle Rock)", "Compass (Turtle Rock)"],
+        "regions": [
+          "Turtle Rock (Entrance)",
+          "Turtle Rock (First Section)",
+          "Turtle Rock (Chain Chomp Room)",
+          "Turtle Rock (Second Section)",
+          "Turtle Rock (Big Chest)",
+          "Turtle Rock (Crystaroller Room)",
+          "Turtle Rock (Dark Room)",
+          "Turtle Rock (Eye Bridge)",
+          "Turtle Rock (Trinexx)"
+        ],
+        "smallKeys": 4,
+        "source": "Dungeons.py:28"
+      }
+    },
+    "prefilled": [
+      {
+        "location": "Ganon",
+        "source": "ItemList.py:144"
+      },
+      {
+        "location": "Ganon",
+        "source": "ItemList.py:146"
+      },
+      {
+        "location": "Agahnim 1",
+        "source": "ItemList.py:167"
+      },
+      {
+        "location": "Agahnim 2",
+        "source": "ItemList.py:170"
+      },
+      {
+        "location": "Dark Blacksmith Ruins",
+        "source": "ItemList.py:173"
+      },
+      {
+        "location": "Frog",
+        "source": "ItemList.py:176"
+      },
+      {
+        "location": "Missing Smith",
+        "source": "ItemList.py:179"
+      },
+      {
+        "location": "Floodgate",
+        "source": "ItemList.py:182"
+      },
+      {
+        "location": "Turtle Rock - Prize",
+        "source": "ItemList.py:310"
+      },
+      {
+        "location": "Eastern Palace - Prize",
+        "source": "ItemList.py:310"
+      },
+      {
+        "location": "Desert Palace - Prize",
+        "source": "ItemList.py:310"
+      },
+      {
+        "location": "Tower of Hera - Prize",
+        "source": "ItemList.py:310"
+      },
+      {
+        "location": "Palace of Darkness - Prize",
+        "source": "ItemList.py:310"
+      },
+      {
+        "location": "Thieves' Town - Prize",
+        "source": "ItemList.py:311"
+      },
+      {
+        "location": "Skull Woods - Prize",
+        "source": "ItemList.py:311"
+      },
+      {
+        "location": "Swamp Palace - Prize",
+        "source": "ItemList.py:311"
+      },
+      {
+        "location": "Ice Palace - Prize",
+        "source": "ItemList.py:311"
+      },
+      {
+        "location": "Misery Mire - Prize",
+        "source": "ItemList.py:312"
+      }
+    ],
+    "preplaced": [
+      {
+        "id": "keyD3",
+        "item": "Small Key (Skull Woods)",
+        "location": "Skull Woods - Pinball Room",
+        "source": "Dungeons.py:133"
+      }
+    ],
+    "retroSmallKeys": "Dungeons.py:11"
+  },
   "entrances": {
     "20 Rupee Cave": {
       "req": "@erCanLiftRocks",
@@ -1102,11 +1371,391 @@
       "source": "ItemList.py:179"
     }
   },
-  "fill": [
-    114, 266, 274, 277, 288, 292, 301, 306, 314, 317, 319, 327, 332, 343, 362,
-    391, 393, 397, 399, 415, 449, 1001, 1046, 1048, 1052, 1054, 1063, 1065,
-    1073, 1075, 1085, 1094, 1098, 944, 945, 987
-  ],
+  "fill": {
+    "always": [
+      {
+        "id": "keyP3",
+        "item": "Small Key (Tower of Hera)",
+        "location": "Tower of Hera - Big Key Chest",
+        "req": "true",
+        "source": "Rules.py:288",
+        "when": "!setting(locationsAccessibility)"
+      },
+      {
+        "id": "bigKeyD2",
+        "item": "Big Key (Swamp Palace)",
+        "location": "Swamp Palace - Big Chest",
+        "req": "true",
+        "source": "Rules.py:301",
+        "when": "!setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD4",
+        "item": "Small Key (Thieves Town)",
+        "location": "Thieves' Town - Big Chest",
+        "req": "hammer",
+        "source": "Rules.py:314",
+        "when": "!setting(locationsAccessibility)"
+      },
+      {
+        "id": "bigKeyD3",
+        "item": "Big Key (Skull Woods)",
+        "location": "Skull Woods - Big Chest",
+        "req": "true",
+        "source": "Rules.py:327",
+        "when": "!setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD1",
+        "item": "Small Key (Palace of Darkness)",
+        "location": "Palace of Darkness - Big Key Chest",
+        "req": "!setting(genericKeys) & keyD1 >= 5 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
+        "source": "Rules.py:391",
+        "when": "!setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD1",
+        "item": "Small Key (Palace of Darkness)",
+        "location": "Palace of Darkness - Harmless Hellway",
+        "req": "!setting(genericKeys) & keyD1 >= 5 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
+        "source": "Rules.py:397",
+        "when": "!setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyA2",
+        "item": "Small Key (Ganons Tower)",
+        "location": "Ganons Tower - Map Chest",
+        "req": "!setting(genericKeys) & keyA2 >= 3 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
+        "source": "Rules.py:415",
+        "when": "!setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Key Chest",
+        "req": "true",
+        "source": "Rules.py:1046",
+        "when": "setting(allItemsReach_turtleRockEyeBridge) & !setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Key Chest",
+        "req": "true",
+        "source": "Rules.py:1052",
+        "when": "!setting(allItemsReach_turtleRockEyeBridge) & setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockSecondSection) & !setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Key Chest",
+        "req": "!setting(genericKeys) & keyD7 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal",
+        "source": "Rules.py:1063",
+        "when": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & !setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Key Chest",
+        "req": "true",
+        "source": "Rules.py:1073",
+        "when": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockBigChest) & !setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Key Chest",
+        "req": "true",
+        "source": "Rules.py:1085",
+        "when": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & !setting(allItemsReach_turtleRockBigChest) & !setting(locationsAccessibility)"
+      }
+    ],
+    "forbid": [
+      {
+        "id": "bigKeyP1",
+        "item": "Big Key (Eastern Palace)",
+        "location": "Eastern Palace - Boss",
+        "source": "Rules.py:266",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyP1",
+        "item": "Big Key (Eastern Palace)",
+        "location": "Eastern Palace - Big Chest",
+        "source": "Rules.py:266",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyP2",
+        "item": "Big Key (Desert Palace)",
+        "location": "Desert Palace - Boss",
+        "source": "Rules.py:274",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyP2",
+        "item": "Big Key (Desert Palace)",
+        "location": "Desert Palace - Big Chest",
+        "source": "Rules.py:274",
+        "when": "true"
+      },
+      {
+        "id": "keyP2",
+        "item": "Small Key (Desert Palace)",
+        "location": "Desert Palace - Boss",
+        "source": "Rules.py:277",
+        "when": "true"
+      },
+      {
+        "id": "keyP2",
+        "item": "Small Key (Desert Palace)",
+        "location": "Desert Palace - Big Key Chest",
+        "source": "Rules.py:277",
+        "when": "true"
+      },
+      {
+        "id": "keyP2",
+        "item": "Small Key (Desert Palace)",
+        "location": "Desert Palace - Compass Chest",
+        "source": "Rules.py:277",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyP3",
+        "item": "Big Key (Tower of Hera)",
+        "location": "Tower of Hera - Boss",
+        "source": "Rules.py:292",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyP3",
+        "item": "Big Key (Tower of Hera)",
+        "location": "Tower of Hera - Big Chest",
+        "source": "Rules.py:292",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyP3",
+        "item": "Big Key (Tower of Hera)",
+        "location": "Tower of Hera - Compass Chest",
+        "source": "Rules.py:292",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyD2",
+        "item": "Big Key (Swamp Palace)",
+        "location": "Swamp Palace - Entrance",
+        "source": "Rules.py:306",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyD4",
+        "item": "Big Key (Thieves Town)",
+        "location": "Thieves' Town - Attic",
+        "source": "Rules.py:317",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyD4",
+        "item": "Big Key (Thieves Town)",
+        "location": "Thieves' Town - Big Chest",
+        "source": "Rules.py:317",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyD4",
+        "item": "Big Key (Thieves Town)",
+        "location": "Thieves' Town - Blind's Cell",
+        "source": "Rules.py:317",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyD4",
+        "item": "Big Key (Thieves Town)",
+        "location": "Thieves' Town - Boss",
+        "source": "Rules.py:317",
+        "when": "true"
+      },
+      {
+        "id": "keyD4",
+        "item": "Small Key (Thieves Town)",
+        "location": "Thieves' Town - Attic",
+        "source": "Rules.py:319",
+        "when": "true"
+      },
+      {
+        "id": "keyD4",
+        "item": "Small Key (Thieves Town)",
+        "location": "Thieves' Town - Boss",
+        "source": "Rules.py:319",
+        "when": "true"
+      },
+      {
+        "id": "keyD3",
+        "item": "Small Key (Skull Woods)",
+        "location": "Skull Woods - Boss",
+        "source": "Rules.py:332",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyD5",
+        "item": "Big Key (Ice Palace)",
+        "location": "Ice Palace - Big Chest",
+        "source": "Rules.py:343",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyD5",
+        "item": "Big Key (Ice Palace)",
+        "location": "Ice Palace - Boss",
+        "source": "Rules.py:343",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyD6",
+        "item": "Big Key (Misery Mire)",
+        "location": "Misery Mire - Big Chest",
+        "source": "Rules.py:362",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyD6",
+        "item": "Big Key (Misery Mire)",
+        "location": "Misery Mire - Boss",
+        "source": "Rules.py:362",
+        "when": "true"
+      },
+      {
+        "id": "keyD1",
+        "item": "Small Key (Palace of Darkness)",
+        "location": "Palace of Darkness - Big Key Chest",
+        "source": "Rules.py:393",
+        "when": "setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD1",
+        "item": "Small Key (Palace of Darkness)",
+        "location": "Palace of Darkness - Harmless Hellway",
+        "source": "Rules.py:399",
+        "when": "setting(locationsAccessibility)"
+      },
+      {
+        "id": "bigKeyA2",
+        "item": "Big Key (Ganons Tower)",
+        "location": "Ganons Tower - Big Chest",
+        "source": "Rules.py:449",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyA2",
+        "item": "Big Key (Ganons Tower)",
+        "location": "Ganons Tower - Mini Helmasaur Room - Left",
+        "source": "Rules.py:449",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyA2",
+        "item": "Big Key (Ganons Tower)",
+        "location": "Ganons Tower - Mini Helmasaur Room - Right",
+        "source": "Rules.py:449",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyA2",
+        "item": "Big Key (Ganons Tower)",
+        "location": "Ganons Tower - Pre-Moldorm Chest",
+        "source": "Rules.py:449",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyA2",
+        "item": "Big Key (Ganons Tower)",
+        "location": "Ganons Tower - Validation Chest",
+        "source": "Rules.py:449",
+        "when": "true"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Key Chest",
+        "source": "Rules.py:1001",
+        "when": "setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Key Chest",
+        "source": "Rules.py:1048",
+        "when": "setting(allItemsReach_turtleRockEyeBridge) & setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Key Chest",
+        "source": "Rules.py:1054",
+        "when": "!setting(allItemsReach_turtleRockEyeBridge) & setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockSecondSection) & setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Key Chest",
+        "source": "Rules.py:1065",
+        "when": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockSecondSection) & setting(allItemsReach_turtleRockEntrance) & setting(locationsAccessibility)"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Key Chest",
+        "source": "Rules.py:1075",
+        "when": "!setting(allItemsReach_turtleRockEyeBridge) & !setting(allItemsReach_turtleRockEntrance) & setting(allItemsReach_turtleRockBigChest) & setting(locationsAccessibility)"
+      },
+      {
+        "id": "bigKeyD7",
+        "item": "Big Key (Turtle Rock)",
+        "location": "Turtle Rock - Big Chest",
+        "source": "Rules.py:1094",
+        "when": "true"
+      },
+      {
+        "id": "bigKeyD7",
+        "item": "Big Key (Turtle Rock)",
+        "location": "Turtle Rock - Boss",
+        "source": "Rules.py:1094",
+        "when": "true"
+      },
+      {
+        "id": "keyD7",
+        "item": "Small Key (Turtle Rock)",
+        "location": "Turtle Rock - Boss",
+        "source": "Rules.py:1098",
+        "when": "true"
+      },
+      {
+        "id": "keyH2",
+        "item": "Small Key (Escape)",
+        "location": "Hyrule Castle - Boomerang Chest",
+        "source": "Rules.py:944",
+        "when": "!setting(standardMode)"
+      },
+      {
+        "id": "keyH2",
+        "item": "Small Key (Escape)",
+        "location": "Hyrule Castle - Zelda's Chest",
+        "source": "Rules.py:945",
+        "when": "!setting(standardMode)"
+      }
+    ],
+    "itemRules": [
+      {
+        "location": "Ganon",
+        "source": "Rules.py:114"
+      },
+      {
+        "location": "Link's Uncle",
+        "source": "Rules.py:987"
+      }
+    ]
+  },
   "generated": "By packs/alttpr/scripts/import-er.mjs from the entrance randomizer. Re-import, never edit.",
   "helpers": {
     "erAtMasterSwordPedestal": {
