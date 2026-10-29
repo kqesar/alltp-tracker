@@ -8,7 +8,12 @@ import { ITEMS, STATE_MAX } from "./items";
 import { solveWithKeys } from "./keys";
 import { MEDALLIONS } from "./medallions";
 import { compile, STATE_NAMES } from "./pack";
-import { OPEN, STANDARD, settingsFromUpstream } from "./settings";
+import {
+  noLogicSettings,
+  OPEN,
+  STANDARD,
+  settingsFromUpstream,
+} from "./settings";
 import {
   EMPTY_INPUT,
   INVENTORY_ITEM_IDS,
@@ -60,6 +65,18 @@ describe("toState", () => {
       heartContainer: 14,
       pieceOfHeart: 24,
     });
+  });
+
+  it("gives the boots a glitched or No Logic world starts with", () => {
+    // app/Randomizer.php:122-131
+    expect(toState(EMPTY_INPUT, OPEN).pegasusBoots).toBeUndefined();
+    const glitched = settingsFromUpstream("open", {
+      logic: "OverworldGlitches",
+    });
+    expect(toState(EMPTY_INPUT, glitched).pegasusBoots).toBe(1);
+    expect(toState(EMPTY_INPUT, noLogicSettings(OPEN)).pegasusBoots).toBe(1);
+    const found = input({ items: { pegasusBoots: 1 } });
+    expect(toState(found, glitched).pegasusBoots).toBe(1);
   });
 
   it("rescues Zelda from the start in Open, after the escape in Standard", () => {

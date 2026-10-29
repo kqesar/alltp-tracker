@@ -24,6 +24,7 @@ import { compile, regionModules } from "./pack";
 import { RULES } from "./rules";
 import {
   type AlttprSettings,
+  noLogicSettings,
   OPEN,
   STANDARD,
   settingsFromUpstream,
@@ -175,6 +176,18 @@ describe("the key model on real dungeons", () => {
     expect(safe.location("mimic-cave")).toBe("yes");
     expect(safe.dungeons("mimic-cave")).toEqual(["turtle-rock"]);
     expect(safe.dungeons("kings-tomb")).toEqual([]);
+  });
+
+  it("vouches for no key under No Logic until every place it may sit is reached", () => {
+    // The randomizer placed it anywhere in its dungeon (World.php:93)
+    const noLogic = noLogicSettings(OPEN);
+    const HERA = { flute: 1, lamp: 1, magicMirror: 1, sword: 1 };
+    const keyed = model(HERA, noLogic);
+    expect(keyed.safe("tower-of-hera")).toBe(false);
+    expect(keyed.location("tower-of-hera/map-chest")).toBe("yes");
+    expect(model(HERA).location("tower-of-hera/big-chest")).toBe("yes");
+    // The big key may sit in the Big Chest it opens
+    expect(keyed.location("tower-of-hera/big-chest")).toBe("maybe");
   });
 
   it("calls a dungeon with nothing untracked safe", () => {

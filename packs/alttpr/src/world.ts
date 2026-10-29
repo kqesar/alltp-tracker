@@ -225,8 +225,8 @@ export function refuseKeptDungeonItems(source: Source): readonly Refusal[] {
  * Region::canFill (Region.php:232-246): whether the item may be placed in
  * the region. A dungeon item stays in its own dungeon unless its class is
  * wild, and the sewers key stays in the escape of a Standard world; a
- * region's own items are always welcome. NoGlitches is the only logic
- * modeled, so NoLogic's exception does not arise.
+ * region's own items are always welcome. No Logic lets the sewers key
+ * out (Region.php:238).
  */
 export function canFill(
   region: RegionDef,
@@ -239,7 +239,7 @@ export function canFill(
   return !(
     (kind === "key" && !settings.wildKeys) ||
     (kind === "bigKey" && !settings.wildBigKeys) ||
-    (item === "KeyH2" && settings.standardMode) ||
+    (item === "KeyH2" && settings.standardMode && !settings.noLogic) ||
     (kind === "map" && !settings.wildMaps) ||
     (kind === "compass" && !settings.wildCompasses)
   );

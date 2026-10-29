@@ -11,6 +11,8 @@
 //   forceSkullWoodsKey 275-277); factory() sets mode.state (288-292);
 // - config/logic.php: the glitch flags each logic turns on, none for
 //   NoGlitches (line 4);
+// - app/Randomizer.php: the Pegasus Boots a glitched or No Logic world
+//   starts with (122-131);
 // - config/alttp.php: the site's presets (randomizer.item.presets, 57-173).
 //
 // A Mystery seed hides its settings, which the player learns as the run goes:
@@ -188,26 +190,85 @@ export type AlttprSettings = {
    */
   readonly catchableFairies: Flag;
 
-  // The glitch flags of config/logic.php, and two the region rules read that
-  // no logic sets. NoGlitches sets none (logic.php:4), and it is the only
-  // logic the pack models: a rule writes the branch upstream gates on one as
-  // `setting(canBootsClip) & ...`, which folds away. The five tricks that
-  // tricks.ts reads as items may be compiled on, as its tests do; a run
-  // sets none.
-  readonly canBootsClip: false;
+  // The glitch flags of config/logic.php (`LOGIC_FLAGS`), and two the
+  // region rules read that no logic sets. A rule writes the branch upstream
+  // gates on one as `setting(canBootsClip) & ...`, which folds away while
+  // the flag is off. The tricks that tricks.ts reads as items may be
+  // compiled on, as its tests do.
+  readonly canBootsClip: boolean;
   readonly canBunnyRevive: boolean;
-  readonly canBunnySurf: false;
+  readonly canBunnySurf: boolean;
   readonly canDungeonRevive: boolean;
   readonly canFakeFlipper: boolean;
-  readonly canMirrorClip: false;
-  readonly canMirrorWrap: false;
-  readonly canOneFrameClipOW: false;
-  readonly canOneFrameClipUW: false;
-  readonly canOWYBA: false;
+  readonly canMirrorClip: boolean;
+  readonly canMirrorWrap: boolean;
+  readonly canOneFrameClipOW: boolean;
+  readonly canOneFrameClipUW: boolean;
+  readonly canOWYBA: boolean;
   readonly canSuperBunny: boolean;
-  readonly canSuperSpeed: false;
-  readonly canTransitionWrapped: false;
+  readonly canSuperSpeed: boolean;
+  readonly canTransitionWrapped: boolean;
   readonly canWaterWalk: boolean;
+
+  /**
+   * The world starts with the Pegasus Boots: a glitched logic's or No
+   * Logic's, unless the customizer built it (Randomizer.php:122-131).
+   * toState adds them to what the player found.
+   */
+  readonly bootsAtStart: boolean;
+  /**
+   * The seed has No Logic (`noLogicSettings`): upstream sets no region's
+   * rules (World.php:93), so a location's fill rules do not hold either,
+   * and the sewers key may leave the escape (Region.php:238). Its dungeon
+   * items stay in their dungeons, anywhere in them: the key model then
+   * vouches for a key only once every place it may sit is reached
+   * (keys.ts). The rules the pack reads it with are a logic's, the
+   * glitches the player plays it with.
+   */
+  readonly noLogic: boolean;
+};
+
+/** The glitch flags of config/logic.php. */
+export type GlitchFlag =
+  | "canBootsClip"
+  | "canBunnyRevive"
+  | "canBunnySurf"
+  | "canDungeonRevive"
+  | "canFakeFlipper"
+  | "canMirrorClip"
+  | "canMirrorWrap"
+  | "canOneFrameClipOW"
+  | "canOneFrameClipUW"
+  | "canOWYBA"
+  | "canSuperBunny"
+  | "canSuperSpeed"
+  | "canTransitionWrapped"
+  | "canWaterWalk";
+
+/**
+ * The logics a seed is generated for (config/logic.php), whose rules the
+ * pack reads. No Logic has none: `noLogicSettings` reads such a seed with
+ * one of these.
+ */
+export const LOGICS = [
+  "NoGlitches",
+  "OverworldGlitches",
+  "HybridMajorGlitches",
+  "MajorGlitches",
+] as const;
+
+export type Logic = (typeof LOGICS)[number];
+
+/**
+ * The glitch flags each logic turns on (config/logic.php). A logic's
+ * flags are listed here once its port holds to upstream's tests: until
+ * then it reads as NoGlitches, and the app does not model it.
+ */
+export const LOGIC_FLAGS: Readonly<Record<Logic, readonly GlitchFlag[]>> = {
+  HybridMajorGlitches: [],
+  MajorGlitches: [],
+  NoGlitches: [],
+  OverworldGlitches: [],
 };
 
 /** The worlds this pack builds: `World::factory`'s type. */
@@ -278,7 +339,7 @@ export type UpstreamConfig = {
   readonly "item.pool"?: Discovered<(typeof POOLS)[number]>;
   readonly "item.require.Lamp"?: number;
   readonly itemPlacement?: Discovered<"advanced" | "basic">;
-  readonly logic?: "NoGlitches";
+  readonly logic?: Logic;
   readonly "mode.weapons"?: Discovered<
     "assured" | "randomized" | "swordless" | "vanilla"
   >;
@@ -334,7 +395,7 @@ const KEYS: Readonly<Record<keyof UpstreamConfig, Check>> = {
   "item.pool": orUnknown(oneOf(...POOLS)),
   "item.require.Lamp": isCount,
   itemPlacement: orUnknown(oneOf("advanced", "basic")),
-  logic: oneOf("NoGlitches"),
+  logic: oneOf(...LOGICS),
   "mode.weapons": orUnknown(
     oneOf("assured", "randomized", "swordless", "vanilla"),
   ),
@@ -390,9 +451,10 @@ const crystalsOf = (value: number | typeof UNKNOWN | undefined): Count =>
 /**
  * The settings of a world `World::factory(mode, config)` builds, as its
  * constructor derives them: dungeonItems turns the wild flags on, basic
- * placement and swordless ask for better bows and swords. Throws a
- * RangeError for a mode, key or value the pack does not model, such as a
- * logic other than NoGlitches.
+ * placement and swordless ask for better bows and swords, the logic turns
+ * its glitch flags on and starts Link with the boots. Throws a RangeError
+ * for a mode, key or value the pack does not model, such as No Logic
+ * (`noLogicSettings` reads it).
  */
 export function settingsFromUpstream(
   mode: string,
@@ -422,6 +484,8 @@ export function settingsFromUpstream(
   // value the config gave
   const functionality = c["item.functionality"] ?? "normal";
   const pool = c["item.pool"];
+  const logic = c.logic ?? "NoGlitches";
+  const glitch = (flag: GlitchFlag) => LOGIC_FLAGS[logic].includes(flag);
   const shields: Flag = isUnknown(pool)
     ? UNKNOWN
     : (pool === undefined
@@ -433,25 +497,26 @@ export function settingsFromUpstream(
   return {
     advancedPlacement: is(c.itemPlacement, "advanced"),
     basicPlacement: basic,
+    bootsAtStart: logic !== "NoGlitches" && c.difficulty !== "custom",
     bossNormalLocation: c["region.bossNormalLocation"] ?? true,
     bossShuffle: isUnknown(c["enemizer.bossShuffle"])
       ? UNKNOWN
       : (c["enemizer.bossShuffle"] ?? "none") !== "none",
-    canBootsClip: false,
-    canBunnyRevive: false,
-    canBunnySurf: false,
-    canDungeonRevive: false,
-    canFakeFlipper: false,
-    canMirrorClip: false,
-    canMirrorWrap: false,
-    canOneFrameClipOW: false,
-    canOneFrameClipUW: false,
-    canOWYBA: false,
-    canSuperBunny: false,
-    canSuperSpeed: false,
-    canTransitionWrapped: false,
+    canBootsClip: glitch("canBootsClip"),
+    canBunnyRevive: glitch("canBunnyRevive"),
+    canBunnySurf: glitch("canBunnySurf"),
+    canDungeonRevive: glitch("canDungeonRevive"),
+    canFakeFlipper: glitch("canFakeFlipper"),
+    canMirrorClip: glitch("canMirrorClip"),
+    canMirrorWrap: glitch("canMirrorWrap"),
+    canOneFrameClipOW: glitch("canOneFrameClipOW"),
+    canOneFrameClipUW: glitch("canOneFrameClipUW"),
+    canOWYBA: glitch("canOWYBA"),
+    canSuperBunny: glitch("canSuperBunny"),
+    canSuperSpeed: glitch("canSuperSpeed"),
+    canTransitionWrapped: glitch("canTransitionWrapped"),
     cantTakeDamage: c["region.cantTakeDamage"] ?? false,
-    canWaterWalk: false,
+    canWaterWalk: glitch("canWaterWalk"),
     catchableFairies: all(
       is(functionality, "normal"),
       c["rom.CatchableFairies"] ?? true,
@@ -471,6 +536,7 @@ export function settingsFromUpstream(
     invertedMode: mode === "inverted",
     locationsAccessibility: is(c.accessibility, "locations"),
     mirrorShieldInPool: shields,
+    noLogic: false,
     pedestalGoal: is(goal, "pedestal"),
     quarterBottleMagic: is(bottleMagic, 0x20),
     requireBetterBow: any(basic, swordless),
@@ -487,6 +553,19 @@ export function settingsFromUpstream(
     wildMaps: mc || (c["region.wildMaps"] ?? false),
   };
 }
+
+/**
+ * A No Logic seed's settings, read with the rules of the logic `settings`
+ * were built for: the glitches the player plays it with. Upstream gives
+ * No Logic no rules at all (World.php:93), so everything is accessible;
+ * a tracker shows instead what Link can reach with those glitches. Link
+ * starts with the boots (Randomizer.php:122-131).
+ */
+export const noLogicSettings = (settings: AlttprSettings): AlttprSettings => ({
+  ...settings,
+  bootsAtStart: true,
+  noLogic: true,
+});
 
 /**
  * The site's default preset (config/alttp.php:78-96): advanced placement,

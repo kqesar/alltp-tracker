@@ -165,7 +165,8 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
  * The engine state of what the player records, under the run's settings.
  * Items keep their counts, within their pool, and every world's
  * pre-collected items are added to them (PRE_COLLECTED_STATE,
- * app/Randomizer.php:46-56): Link's 3 starting hearts. Zelda is rescued
+ * app/Randomizer.php:46-56): Link's 3 starting hearts, and the Pegasus
+ * Boots in a world that starts with them (`bootsAtStart`). Zelda is rescued
  * from the start in an Open world (app/Randomizer.php:133-135), once Hyrule
  * Castle is finished in a Standard one; Agahnim is defeated once Castle
  * Tower is, Agahnim 2 once Ganon's Tower is. A finished dungeon's prize,
@@ -196,6 +197,8 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
   for (const [id, given] of Object.entries(PRE_COLLECTED_STATE)) {
     state[id] = (state[id] ?? 0) + given;
   }
+  // A glitched or No Logic world's boots (Randomizer.php:122-131)
+  if (settings.bootsAtStart) state.pegasusBoots = 1;
   const finished = (d: DungeonId) => input.beaten[d] === true;
   if (!settings.standardMode || finished("hyrule-castle")) {
     state.rescueZelda = 1;
