@@ -102,11 +102,31 @@ function misses(hash: string): string[] {
  * doubted more would turn up here.
  */
 const KEY_DOUBTS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  "6GKBQZ3pye": {
+    "sphere 7: Thieves' Town - Prize maybe":
+      "a Thieves' Town key may sit in the big chest, which the hammer opens; no hammer yet",
+    "sphere 8: Palace of Darkness - Dark Maze - Top maybe":
+      "a Palace of Darkness key may sit behind a key door the spheres' items do not open yet (Rules.py:395)",
+    "sphere 9: Swamp Palace - Map Chest maybe":
+      "a Swamp Palace key may sit in a room the spheres' items do not reach yet",
+    "sphere 10: Ganons Tower - Firesnake Room maybe":
+      "the room asks for three keys, or two with the big key or this key placed where the fill may not have (Rules.py:424); a key may still wait behind a door the spheres' items do not open",
+  },
+  DvW0egkQyd: {
+    "sphere 3: Desert Palace - Prize maybe":
+      "Desert Palace's key may sit at the Torch, behind the Pegasus Boots (Rules.py:269); no boots yet",
+    "sphere 5: Misery Mire - Prize maybe":
+      "a Misery Mire key may sit in the Spike Chest, which asks for 4 hearts, the Cane of Byrna or the Cape (Rules.py:347)",
+  },
   dMEp8enPG1: {
     "sphere 3: Ice Palace - Prize maybe":
       "Ice Palace's second key may sit with Kholdstare, whose door one key opens with the Cane of Somaria (Rules.py:336); no Somaria yet",
     "sphere 5: Agahnim 2 maybe":
       "a Ganon's Tower key may sit at Bob's Torch, behind the Pegasus Boots (Rules.py:409); no boots yet",
+  },
+  qMleRm5avd: {
+    "sphere 3: Palace of Darkness - Compass Chest maybe":
+      "a Palace of Darkness key may sit behind a key door the spheres' items do not open yet (Rules.py:395)",
   },
 };
 
@@ -120,21 +140,9 @@ const KEY_DOUBTS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
 const PENDING: Readonly<
   Record<string, { reason: string; pinned?: () => boolean }>
 > = {
-  "6GKBQZ3pye": {
-    reason:
-      "standard dungeon items (keys in their dungeon, the ER world reads them as items)",
-  },
-  DvW0egkQyd: {
-    reason:
-      "standard dungeon items (keys in their dungeon, the ER world reads them as items)",
-  },
   kveDj7bgMm: {
     reason:
       "insanity decouples a door from its exit (Entrances lists them apart); a mode that stays unmodelled",
-  },
-  qMleRm5avd: {
-    reason:
-      "standard dungeon items: every miss is a dungeon's key, big key or prize",
   },
 };
 
@@ -154,7 +162,10 @@ describe("a recorded seed's playthrough, entrances all noted", () => {
     const pending = PENDING[hash];
     if (pending === undefined || pending.pinned !== undefined) {
       it(`${label}: every location of a sphere is yes, or doubted for a key`, () => {
-        expect(misses(hash)).toEqual(Object.keys(KEY_DOUBTS[hash] ?? {}));
+        // Sorted: the table's keys are kept in Biome's order, not the spheres'
+        expect(misses(hash).sort()).toEqual(
+          Object.keys(KEY_DOUBTS[hash] ?? {}).sort(),
+        );
       });
     }
     if (pending !== undefined) {
