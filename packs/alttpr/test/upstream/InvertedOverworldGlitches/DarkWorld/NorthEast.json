@@ -1,0 +1,53 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php",
+  "class": "InvertedOverworldGlitches\\DarkWorld\\NorthEastTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Catfish","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["PegasusBoots"],"base":"setUp"},"kind":"location","line":52,"location":"Catfish","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":54,"location":"Pyramid","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":56,"location":"Pyramid Fairy - Sword","method":"testLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["MagicMirror"]},"kind":"location","line":57,"location":"Pyramid Fairy - Sword","method":"testLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["BigRedBomb"]},"kind":"location","line":58,"location":"Pyramid Fairy - Sword","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["AnySword"]},"kind":"location","line":59,"location":"Pyramid Fairy - Sword","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["BigRedBomb","UncleSword","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":60,"location":"Pyramid Fairy - Sword","method":"testLocation"},
+    {"dataSet":8,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":62,"location":"Pyramid Fairy - Bow","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["MagicMirror"]},"kind":"location","line":63,"location":"Pyramid Fairy - Bow","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["BigRedBomb"]},"kind":"location","line":64,"location":"Pyramid Fairy - Bow","method":"testLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["AnyBow"]},"kind":"location","line":65,"location":"Pyramid Fairy - Bow","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["BigRedBomb","BowAndArrows","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":66,"location":"Pyramid Fairy - Bow","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":68,"location":"Pyramid Fairy - Left","method":"testLocation"},
+    {"dataSet":14,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["MagicMirror"]},"kind":"location","line":69,"location":"Pyramid Fairy - Left","method":"testLocation"},
+    {"dataSet":15,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["BigRedBomb"]},"kind":"location","line":70,"location":"Pyramid Fairy - Left","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["BigRedBomb","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":71,"location":"Pyramid Fairy - Left","method":"testLocation"},
+    {"dataSet":17,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":73,"location":"Pyramid Fairy - Right","method":"testLocation"},
+    {"dataSet":18,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["MagicMirror"]},"kind":"location","line":74,"location":"Pyramid Fairy - Right","method":"testLocation"},
+    {"dataSet":19,"expected":false,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["BigRedBomb"]},"kind":"location","line":75,"location":"Pyramid Fairy - Right","method":"testLocation"},
+    {"dataSet":20,"expected":true,"file":"tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["BigRedBomb","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":76,"location":"Pyramid Fairy - Right","method":"testLocation"}
+  ]
+}

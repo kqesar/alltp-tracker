@@ -1,0 +1,43 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php",
+  "class": "InvertedOverworldGlitches\\HyruleCastleTowerTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":[],"base":"setUp"},"kind":"regionEnter","line":50,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":["PegasusBoots","UncleSword"],"base":"setUp"},"kind":"regionEnter","line":51,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":["PegasusBoots","Hammer"],"base":"setUp"},"kind":"regionEnter","line":52,"method":"testEntry","region":"Hyrule Castle Tower"},
+    {"dataSet":0,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":[],"base":"setUp"},"kind":"regionComplete","line":78,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":1,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"regionComplete","line":79,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":2,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":[],"base":"allItems","except":["AnySword"]},"kind":"regionComplete","line":80,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":3,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","PegasusBoots","Lamp","UncleSword"],"base":"setUp"},"kind":"regionComplete","line":81,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":4,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","PegasusBoots","Lamp","ProgressiveSword"],"base":"setUp"},"kind":"regionComplete","line":82,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":5,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","PegasusBoots","Lamp","MasterSword"],"base":"setUp"},"kind":"regionComplete","line":83,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":6,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","PegasusBoots","Lamp","L3Sword"],"base":"setUp"},"kind":"regionComplete","line":84,"method":"testComplete","region":"Hyrule Castle Tower"},
+    {"dataSet":7,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php","items":{"add":["KeyA1","KeyA1","PegasusBoots","Lamp","L4Sword"],"base":"setUp"},"kind":"regionComplete","line":85,"method":"testComplete","region":"Hyrule Castle Tower"}
+  ]
+}

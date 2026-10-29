@@ -1,0 +1,55 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/OverworldGlitches/DarkWorld/NorthWestTest.php",
+  "class": "OverworldGlitches\\DarkWorld\\NorthWestTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Brewery","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":52,"location":"Brewery","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":53,"location":"Brewery","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":55,"location":"C-Shaped House","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":56,"location":"C-Shaped House","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":57,"location":"C-Shaped House","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":59,"location":"Chest Game","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":60,"location":"Chest Game","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":61,"location":"Chest Game","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":63,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":64,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["Hammer"]},"kind":"location","line":65,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","Hammer","PegasusBoots"],"base":"setUp"},"kind":"location","line":66,"location":"Hammer Pegs","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":68,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":14,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":69,"location":"Bumper Cave","method":"testLocation"},
+    {"dataSet":15,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":71,"location":"Blacksmith","method":"testLocation"},
+    {"dataSet":16,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":72,"location":"Blacksmith","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","ProgressiveGlove","ProgressiveGlove"],"base":"setUp"},"kind":"location","line":73,"location":"Blacksmith","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","TitansMitt"],"base":"setUp"},"kind":"location","line":74,"location":"Blacksmith","method":"testLocation"},
+    {"dataSet":19,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":76,"location":"Purple Chest","method":"testLocation"},
+    {"dataSet":20,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":77,"location":"Purple Chest","method":"testLocation"},
+    {"dataSet":21,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","ProgressiveGlove","ProgressiveGlove"],"base":"setUp"},"kind":"location","line":78,"location":"Purple Chest","method":"testLocation"},
+    {"dataSet":22,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthWestTest.php","items":{"add":["MoonPearl","TitansMitt"],"base":"setUp"},"kind":"location","line":79,"location":"Purple Chest","method":"testLocation"}
+  ]
+}

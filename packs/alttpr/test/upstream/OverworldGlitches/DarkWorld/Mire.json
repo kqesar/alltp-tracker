@@ -1,0 +1,40 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/OverworldGlitches/DarkWorld/MireTest.php",
+  "class": "OverworldGlitches\\DarkWorld\\MireTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/MireTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Mire Shed - Left","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/MireTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":52,"location":"Mire Shed - Left","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/MireTest.php","items":{"add":["MagicMirror","Flute","ProgressiveGlove","ProgressiveGlove"],"base":"setUp"},"kind":"location","line":53,"location":"Mire Shed - Left","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/MireTest.php","items":{"add":["MagicMirror","Flute","TitansMitt"],"base":"setUp"},"kind":"location","line":54,"location":"Mire Shed - Left","method":"testLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/MireTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":56,"location":"Mire Shed - Right","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/MireTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":57,"location":"Mire Shed - Right","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/MireTest.php","items":{"add":["MagicMirror","Flute","ProgressiveGlove","ProgressiveGlove"],"base":"setUp"},"kind":"location","line":58,"location":"Mire Shed - Right","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/MireTest.php","items":{"add":["MagicMirror","Flute","TitansMitt"],"base":"setUp"},"kind":"location","line":59,"location":"Mire Shed - Right","method":"testLocation"}
+  ]
+}
