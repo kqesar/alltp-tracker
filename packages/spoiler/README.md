@@ -91,8 +91,8 @@ that is not valid JSON may pass in a part nobody asked for; the wanted values ar
 ## `sniffSpoiler(head, fileName)`
 
 Which randomizer wrote a file, from the first `SNIFF_HEAD_LENGTH` characters and the name. It
-answers `{ known: true, game, format }` (`format` is null for ALttPR, where only the body tells the
-plain vt log from the entrance randomizer's) or `{ known: false, what }` with `what` one of
+answers `{ known: true, game, format }` (`format` is null for an alttpr.com log, where only the
+body tells the plain vt log from the entrance randomizer's, and `dr` for the Door Randomizer's) or `{ known: false, what }` with `what` one of
 `archipelago`, `smz3-sm` (samus.link's Super Metroid, a real spoiler this tracker does not read),
 `rom` (a NUL or replacement character in the head, or a ROM or archive extension) and `unknown`.
 
@@ -100,7 +100,12 @@ Signatures, each from a real file: ALttPR's JSON starts with `"meta"` (the Save 
 with `"logic"` and `"patch"` (the S3 seed file); Map Rando's carries `item_priority`, `all_items`,
 `start_location` or a first `summary` step; samus.link's Download starts `- SMZ3 <version>` (`- SM`
 for Super Metroid) and its API starts `{"seed":{` (its `gameId` sits after the spoiler text, past
-any head, so a Super Metroid API file reads as SMZ3 here and its pack refuses it). The sniff decides
+any head, so a Super Metroid API file reads as SMZ3 here and its pack refuses it); the Door
+Randomizer's text log starts `ALttP Dungeon Randomizer Version <v>  -  Seed:` (its Overworld fork's
+`ALttP Overworld Randomizer  -  Seed:`), and its JSON, whose entrance and door lists come first and
+may fill any head, is told by a key only DR writes (`Doors`, `Lobbies`, `DoorTypes`, `Whirlpools`)
+or by its name (`DR_…`, `OR_…`, avianart's `alttprcustom - DR__<hash>_Spoiler.txt`); an `Entrances`
+list alone is no sign, alttpr.com's entrance randomizer writes one too. The sniff decides
 nothing about soundness: that is the parse.
 
 ## `bindSeed(evidence)`
