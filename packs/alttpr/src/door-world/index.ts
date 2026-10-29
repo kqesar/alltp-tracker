@@ -53,6 +53,7 @@ import {
   DR_RULES,
   type DrMode,
   type DrRegion,
+  REGION_NAMED,
   regionNamed,
 } from "./data";
 import {
@@ -118,6 +119,19 @@ export interface DrWorldOptions {
    * Hyrule Castle's): each reads `maybe` until held, never `no`.
    */
   readonly unrecorded?: readonly string[];
+  /**
+   * The run's pots and enemy drops (the pack's `drLocationsOf`), which
+   * adjust_locations adds to their regions (Regions.py:1165-1232): each in
+   * its DR region with its rules, pot_rules' and drop_rules' (Rules.py:
+   * 949-1007) as the translation reads them by name (the two pots of the
+   * Dark Lake Hylia ledge's spike cave its loop names, :970-975, are no pots
+   * of DR's at 1.5.6: `get_location_unsafe` finds none). Key drops are in
+   * the world already.
+   */
+  readonly dropsAndPots?: readonly {
+    readonly name: string;
+    readonly region: string;
+  }[];
   /** Test only: items the `doorRule` reads beside the pack's. */
   readonly items?: readonly string[];
 }
@@ -135,8 +149,13 @@ const MENU = "Menu";
 /** The id of a DR location: the pack's slug, vt's name where it differs. */
 export const drLocationId = (name: string): string => erLocationId(name);
 
-/** The engine's id of a DR region, by DR's name ("Eastern Lobby"). */
-export const drRegionId = (name: string): string => regionNamed(name).id;
+/**
+ * The engine's id of a DR region, by DR's name ("Eastern Lobby"); undefined
+ * for a region the world does not hold (a take-any cave, which ItemList.py
+ * makes where the seed puts it).
+ */
+export const drRegionId = (name: string): string | undefined =>
+  REGION_NAMED.get(name)?.id;
 
 /** The id of a probe on an exit. */
 export const probeId = (exit: string): string => `exit:${exit}`;
@@ -636,6 +655,11 @@ export function drWorld(
       "count(triforcePiece, powerStar) >= setting(treasureHunt)",
     );
   }
+  for (const { name, region } of options.dropsAndPots ?? []) {
+    if (locations.has(name)) continue;
+    added.set(regionNamed(region).name, [...(added.get(region) ?? []), name]);
+    locations.set(name, DR_RULES.locations[name]?.req ?? "true");
+  }
   // A big key a vanilla drop holds (the escape's) is the item DR's rules
   // read: its fact stands for it wherever they do
   for (const drop of keys.forcedDrops) {
@@ -680,7 +704,7 @@ export function drWorld(
     addZeldaPath(exits, locations, path);
   }
   addBombShopRule(exits, mode);
-  addBunnyRules(exits, locations, marked, mode);
+  addBunnyRules(exits, locations, marked, mode, added);
 
   // The events: each a fact once its location is reached, a flood switch
   // once its trench's key is too

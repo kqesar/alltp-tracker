@@ -28,25 +28,38 @@ export type DoorRun = OwnWorldRun<DrWorld>;
  */
 const UNRECORDED = ["bigKeyH2"];
 
-let built: { settings: Settings; world: DrWorld } | undefined;
+/** A run's pots and enemy drops, each in its DR region. */
+type Added = readonly { readonly name: string; readonly region: string }[];
+
+let built: { added: Added; settings: Settings; world: DrWorld } | undefined;
 
 /**
  * The world of a run's settings (drSettingsOf, the same object for the
- * same run), built again only when they change: tens of milliseconds, DR's
- * key analysis included, once per settings.
+ * same run) and its pots and drops (doorLocationsOf's, memoized per modes),
+ * built again only when either changes: tens of milliseconds, DR's key
+ * analysis included.
  */
-const worldOf = (settings: Settings): DrWorld => {
-  if (built?.settings === settings) return built.world;
-  const world = drWorld(settings, { unrecorded: UNRECORDED });
-  built = { settings, world };
+const worldOf = (settings: Settings, added: Added): DrWorld => {
+  if (built?.settings === settings && built.added === added) return built.world;
+  const world = drWorld(settings, {
+    dropsAndPots: added,
+    unrecorded: UNRECORDED,
+  });
+  built = { added, settings, world };
   return world;
 };
 
 /** What the tracker asks of a Door Randomizer run. */
 export interface DoorSolver extends OwnWorldSolver {
-  /** The run solved: every location of DR's world. */
-  solve(settings: Settings, state: State): DoorRun;
-  /** Where a region of DR's stands (a DR location's, by DR's name). */
+  /**
+   * The run solved: every location of DR's world, its pots and drops
+   * (`added`) among them.
+   */
+  solve(settings: Settings, added: Added, state: State): DoorRun;
+  /**
+   * Where a region of DR's stands (a DR location's, by DR's name): maybe
+   * for one the world does not hold (a take-any cave).
+   */
   region(run: DoorRun, name: string): Tri;
 }
 
@@ -57,6 +70,9 @@ export const solver: DoorSolver = {
       KEY_ITEMS.map((item) => [item, item.startsWith("big") ? 1 : 99]),
     ),
   ),
-  region: ({ solution }, name) => solution.region(drRegionId(name)),
-  solve: (settings, state) => solveIn(worldOf(settings), state),
+  region: ({ solution }, name) => {
+    const id = drRegionId(name);
+    return id === undefined ? "maybe" : solution.region(id);
+  },
+  solve: (settings, added, state) => solveIn(worldOf(settings, added), state),
 };

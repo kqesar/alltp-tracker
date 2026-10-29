@@ -1175,7 +1175,10 @@ never links the Dark Sanctuary's exit (`do_vanilla_connections`; only a
 shuffle does, `EntranceShuffle2.py:216-229`), so its save point leads
 nowhere, and DR names the castle's entrance `Agahnims Tower` whatever it
 leads to. `drWorld`'s `connections` option builds the world on other
-connections than the vanilla ones. `standard.ts` ports what Standard adds
+connections than the vanilla ones; its `dropsAndPots` adds a run's pots and
+enemy drops to their regions, as `adjust_locations` does, with the rules the
+translation read for them by name (`pot_rules`, `drop_rules`, the dark rooms'
+lamp, Standard's escape) and the bunny's. `standard.ts` ports what Standard adds
 in code: the save-and-quit to Uncle, and Zelda's way back from her cell
 (`find_rules_for_zelda_delivery`: the rules of the first path to the throne
 room that a blank state does not pass, read from the world's rules so far,

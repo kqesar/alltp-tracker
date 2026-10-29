@@ -13,6 +13,7 @@ import {
   type AlttprSettings,
   bossLocation,
   compile,
+  type DrLocation,
   type DungeonId,
   dungeon,
   dungeonItemCount,
@@ -43,6 +44,7 @@ import {
   trickState,
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES, DUNGEON_INDICES } from "@/games/alttpr/constants";
+import { doorLocationsOf } from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
   crossedLogic,
@@ -291,6 +293,25 @@ const doorStateOf = (inputs: Inputs, settings: AlttprSettings): State => {
   return state;
 };
 
+const added = new WeakMap<readonly DrLocation[], DrLocation[]>();
+
+/**
+ * The pots and enemy drops of a DR run, which DR's world adds to their
+ * regions (key drops are in it already, shop items too): the same list for
+ * the same locations, so the world built for it is kept.
+ */
+const doorAddedOf = (run: RunSettings): readonly DrLocation[] => {
+  const { locations } = doorLocationsOf(run);
+  let found = added.get(locations);
+  if (found === undefined) {
+    found = locations.filter(
+      (location) => location.kind === "pot" || location.kind === "enemyDrop",
+    );
+    added.set(locations, found);
+  }
+  return found;
+};
+
 let last:
   | {
       crossed?: CrossedSolver;
@@ -349,6 +370,7 @@ export const solutionOf = (state: Inputs): Solution => {
       : {
           ...door.solve(
             drSettingsOf(state.settings),
+            doorAddedOf(state.settings),
             doorStateOf(state, settings),
           ),
           solver: door,

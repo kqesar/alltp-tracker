@@ -58,8 +58,9 @@ describe("a Door Randomizer run's logic", () => {
     expect(
       doorNotes(with_(DR, { dropShuffle: "keys" }), "borrowed")[1],
     ).toMatch(/show as maybe until then/);
-    expect(doorNotes(with_(DR, { dropShuffle: "keys" }), "door")[1]).toMatch(
-      /whether their room is reached/,
+    // DR's world gives them their rules: nothing more to say
+    expect(doorNotes(with_(DR, { dropShuffle: "keys" }), "door")).toHaveLength(
+      1,
     );
   });
 

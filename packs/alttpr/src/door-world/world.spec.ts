@@ -1,4 +1,4 @@
-import type { Settings } from "@alltp/engine";
+import type { Settings, State } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
@@ -397,6 +397,42 @@ describe("the Door Randomizer's world (door-world)", () => {
         boss,
       ),
     ).toBe("yes");
+  });
+
+  it("adds the run's pots and drops to their regions, with their rules and the bunny's", () => {
+    const pot = "Palace of Darkness Hint Pot #1";
+    const drop = "Sewers Dark Cross Enemy #2";
+    const world = drWorld(
+      { ...settings("open"), pottery: true },
+      {
+        dropsAndPots: [
+          { name: pot, region: "Palace of Darkness Hint" },
+          { name: drop, region: "Sewers Dark Cross" },
+        ],
+      },
+    );
+    const all = everything(OPEN);
+    const at = (name: string, state: State) =>
+      solveFacts(world, state).location(drLocationId(name));
+    expect([at(pot, all), at(drop, all)]).toEqual(["yes", "yes"]);
+    // pot_rules: the bombs or the boots (Rules.py:967-969); a bunny in the
+    // dark world gets no pot (set_bunny_rules)
+    expect(at(pot, { ...all, bombUpgrade: 0, pegasusBoots: 0 })).toBe("yes");
+    expect(at(pot, { ...all, moonPearl: 0 })).not.toBe("yes");
+    // In the dark (Rules.py:1310), and drop_rules: the enemy's defeat,
+    // the bombs without a bomb bag (can_use_bombs) or a weapon
+    expect(at(drop, { heartContainer: 3 })).toBe("no");
+    expect(at(drop, { heartContainer: 3, lamp: 1 })).toBe("yes");
+    const bag = drWorld(
+      { ...settings("open"), bombBag: true },
+      { dropsAndPots: [{ name: drop, region: "Sewers Dark Cross" }] },
+    );
+    const inBag = (state: State) =>
+      solveFacts(bag, state).location(drLocationId(drop));
+    expect(inBag({ heartContainer: 3, lamp: 1 })).toBe("no");
+    expect(inBag({ heartContainer: 3, lamp: 1, sword: 1 })).toBe("yes");
+    // Not asked for, not in the world
+    expect(drWorld(settings("open")).locationIds.has(pot)).toBe(false);
   });
 
   it("puts Mire's spikes' key pot behind the spikes once pots shuffle", () => {

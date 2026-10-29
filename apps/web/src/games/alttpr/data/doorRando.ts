@@ -332,14 +332,8 @@ export const doorNotes = (
 ): string[] => {
   const door = doorOf(settings);
   if (door === null) return [];
-  if (kind === "door") {
-    const notes = ["Door Randomizer seed: the logic is DR's own (1.5.6)."];
-    if (doorLocationsOf(settings).locations.length > 0)
-      notes.push(
-        "Its pots, enemy drops and shop items show whether their room is reached, until their own rules are in.",
-      );
-    return notes;
-  }
+  if (kind === "door")
+    return ["Door Randomizer seed: the logic is DR's own (1.5.6)."];
   const notes = [
     kind === "crossed"
       ? "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported."

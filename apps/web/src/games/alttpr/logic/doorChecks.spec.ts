@@ -1,5 +1,11 @@
 import { DR_LOCATIONS } from "@alltp/pack-alttpr";
 import { beforeEach, describe, expect, it } from "vitest";
+import { doorLocationsOf } from "@/games/alttpr/data/doorRando";
+import {
+  items as freshItems,
+  type ItemState,
+  itemsMax,
+} from "@/games/alttpr/data/items";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import { checkStates, runZones } from "@/games/alttpr/logic/checks";
 import { setDoorSolver } from "@/games/alttpr/logic/solution";
@@ -67,6 +73,36 @@ describe("a Door Randomizer run's checks", () => {
     expect(checkStates(state())["eastern-palace/dark-square-pot-key"]).toBe(
       "opened",
     );
+  });
+
+  it("follow DR's rules for pots, a take-any cave's item maybe", async () => {
+    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    setDoorSolver(solver);
+    useGameStore.getState().updateDoorSettings({ takeAny: "random" });
+    const idOf = (name: string) => {
+      const found = DR_LOCATIONS.find((l) => l.name === name);
+      if (found === undefined) throw new Error(`no ${name}`);
+      return found.id;
+    };
+    const hookshotPot = idOf("Hookshot Fairy Pot #1");
+    const takeAny = doorLocationsOf(state().settings).locations.find(
+      (l) => l.kind === "takeAny" && l.region.startsWith("Take-Any"),
+    )?.id;
+    if (takeAny === undefined) throw new Error("no take-any cave's item");
+    // Everything held but the hookshot: the fairy cave's pot wants it
+    // (pot_rules, Rules.py:955-957)
+    useGameStore.setState({
+      items: Object.fromEntries(
+        Object.entries(freshItems).map(([id, value]) => [
+          id,
+          typeof value === "boolean" ? id !== "hookshot" : itemsMax[id],
+        ]),
+      ) as unknown as ItemState,
+    });
+    expect(checkStates(state())[hookshotPot]).toBe("unavailable");
+    expect(checkStates(state())[takeAny]).toBe("possible");
+    useGameStore.getState().setItem("hookshot", true);
+    expect(checkStates(state())[hookshotPot]).toBe("available");
   });
 
   it("are none in an alttpr.com run", () => {

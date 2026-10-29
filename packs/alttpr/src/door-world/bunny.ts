@@ -41,6 +41,8 @@ const PEARL = "moonPearl";
  * path is found, as DR's lambdas capture them.
  * @param exits - The world's exits, the trapped dungeon doors left out
  * @param locations - Each location's rule, by name
+ * @param added - The locations added to regions beside their own (the
+ *   run's pots and drops, Murahdahla), by region
  */
 export function addBunnyRules(
   exits: readonly BunnyExit[],
@@ -50,6 +52,7 @@ export function addBunnyRules(
     readonly dark: ReadonlySet<string>;
   },
   mode: DrMode,
+  added: ReadonlyMap<string, readonly string[]> = new Map(),
 ): void {
   const inverted = mode === "inverted";
   const isBunny = (region: string) =>
@@ -132,7 +135,10 @@ export function addBunnyRules(
   const accessible = new Set(LISTS.accessibleLocations.value);
   for (const region of DR_REGIONS) {
     if (!isBunny(region.name)) continue;
-    for (const name of region.locations) {
+    for (const name of [
+      ...region.locations,
+      ...(added.get(region.name) ?? []),
+    ]) {
       if (accessible.has(name) || !locations.has(name)) continue;
       locations.set(
         name,

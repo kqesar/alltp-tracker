@@ -1,7 +1,9 @@
 // A Door Randomizer run's own checks: its key drops, pots, enemy drops and
 // shop items (the pack's door-rando/locations.ts), as the Checks list shows
-// them. In a run DR's own world holds (doorLogic), a check DR's world has
-// shows its own tri, any other the tri of its DR region (reached or not).
+// them. In a run DR's own world holds (doorLogic), each shows its tri
+// there: the key drops, pots, enemy drops and shop items are locations of
+// that world with DR's rules; a take-any cave's item, which it does not
+// hold, shows its DR region's.
 // Elsewhere no rule of the pack reads them: a check shows maybe, but one in
 // a dungeon the run cannot enter (its region `no` in the run's world), which
 // shows out of logic: no way in, no way to it.
