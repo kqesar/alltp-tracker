@@ -18,25 +18,40 @@ import {
 } from "@alltp/pack-alttpr";
 import { entrancesKnown, type RunSettings } from "@/games/alttpr/data/presets";
 
-const crossed = {
+/** A shuffle's pools, by world: Retro's is Open's with its take-any caves. */
+interface Pools {
+  readonly open: CrossedPool;
+  readonly standard: CrossedPool;
+  readonly retro: CrossedPool;
+}
+
+const crossed: Pools = {
   open: crossedPool("open"),
+  retro: crossedPool("open", true),
   standard: crossedPool("standard"),
-} as const;
+};
 
 /** The full shuffle's pools, made when a Full run first asks. */
-let full: { open: CrossedPool; standard: CrossedPool } | undefined;
+let full: Pools | undefined;
 
 /**
  * The entrances a run shuffles, or null when the assistant has none for its
  * shuffle or world (`entrancesKnown`): the crossed and full shuffles of the
- * Open or Standard world are ported. Simple, Restricted and Insanity pool
- * their entrances otherwise, and Inverted runs tables of its own.
+ * Open, Retro or Standard world are ported. Simple, Restricted and Insanity
+ * pool their entrances otherwise, and Inverted runs tables of its own.
  */
 export const poolOf = (settings: RunSettings): CrossedPool | null => {
   if (!entrancesKnown(settings)) return null;
-  const world = settings.mode === "standard" ? "standard" : "open";
+  const world =
+    settings.mode === "standard" || settings.mode === "retro"
+      ? settings.mode
+      : "open";
   if (settings.entranceShuffle === "crossed") return crossed[world];
-  full ??= { open: fullPool("open"), standard: fullPool("standard") };
+  full ??= {
+    open: fullPool("open"),
+    retro: fullPool("open", true),
+    standard: fullPool("standard"),
+  };
   return full[world];
 };
 

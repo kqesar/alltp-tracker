@@ -207,6 +207,35 @@ describe("a run with shuffled entrances", () => {
     });
   });
 
+  it("buys a Retro run's arrows in the shops it found", async () => {
+    const { solver } = await import("@/games/alttpr/logic/crossed");
+    act(() => {
+      setCrossedSolver(solver);
+      store().applyPreset("crosskeys");
+      useGameStore.setState({
+        settings: { ...store().settings, mode: "retro" },
+      });
+      useGameStore.setState({
+        items: Object.fromEntries(
+          Object.entries(freshItems).map(([id, value]) => [
+            id,
+            id === "shoparrow" || id === "shopkey"
+              ? 0
+              : typeof value === "boolean"
+                ? true
+                : itemsMax[id],
+          ]),
+        ) as unknown as ItemState,
+      });
+      store().noteEntrance("eastern-palace", "eastern-palace-exit");
+    });
+    const boss = "eastern-palace/boss";
+    // No shop found nor reached: the bow shoots nothing
+    expect(solutionOf(store()).tris[boss]).toBe("no");
+    act(() => store().setItem("shoparrow", 1));
+    expect(solutionOf(store()).tris[boss]).toBe("yes");
+  });
+
   it("reads a shuffled boss as any its slot may hold", async () => {
     const { solver } = await import("@/games/alttpr/logic/crossed");
     act(() => {

@@ -26,6 +26,18 @@ describe("the entrance assistant's model", () => {
     expect(poolOf({ ...crosskeys, mode: "inverted" })).toBeNull();
   });
 
+  it("offers a Retro run's doors its take-any caves", () => {
+    const retro = { ...crosskeys, mode: "retro" as const };
+    const ids = (settings: typeof crosskeys) =>
+      poolOf(settings)
+        ?.targetsOf.get("kakariko-shop")
+        ?.map((t) => t.id) ?? [];
+    expect(ids(retro)).toContain("take-any-1");
+    expect(ids(retro)).toContain("old-man-sword-cave");
+    expect(ids(crosskeys)).not.toContain("take-any-1");
+    expect(ids({ ...retro, entranceShuffle: "full" })).toContain("take-any-1");
+  });
+
   it("has a pool of its own for the full shuffle, and none for the shuffles it does not port", () => {
     const full = { ...crosskeys, entranceShuffle: "full" as const };
     expect(poolOf(full)).not.toBe(poolOf(crosskeys));

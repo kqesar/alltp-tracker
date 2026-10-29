@@ -33,6 +33,9 @@ describe("presets", () => {
     const crosskeys = getPreset("crosskeys").settings;
     expect(crossedLogic(crosskeys)).toBe(true);
     expect(crossedLogic({ ...crosskeys, mode: "standard" })).toBe(true);
+    // Retro's is Open's, its arrows and keys bought
+    expect(crossedLogic({ ...crosskeys, mode: "retro" })).toBe(true);
+    expect(logicModelled({ ...crosskeys, mode: "retro" })).toBe(true);
     // Not other shuffles, nor its keys kept in their dungeons, nor Inverted
     for (const settings of [
       { ...getPreset("open").settings, entranceShuffle: "full" as const },
