@@ -11,6 +11,7 @@ import {
   logicModelled,
   noLogicRun,
   presets,
+  sameSettings,
   TUNING,
   tunedOf,
   unmodelledReasons,
@@ -336,5 +337,24 @@ describe("entrancesKnown", () => {
     expect(
       entrancesKnown({ ...open, entranceShuffle: "simple", mode: "inverted" }),
     ).toBe(false);
+  });
+
+  it("tells whether two runs have the same settings, in any order", () => {
+    const mystery = getPreset("mystery").settings;
+    expect(sameSettings(mystery, { ...mystery })).toBe(true);
+    expect(
+      sameSettings(mystery, {
+        ...mystery,
+        hidden: [...(mystery.hidden ?? [])].reverse(),
+      }),
+    ).toBe(true);
+    // A field left out and one set to undefined are alike
+    const open = getPreset("open").settings;
+    expect(sameSettings(open, { ...open, glitches: undefined })).toBe(true);
+    expect(
+      sameSettings(open, { ...open, glitches: "overworld_glitches" }),
+    ).toBe(false);
+    expect(sameSettings(mystery, { ...mystery, hidden: ["goal"] })).toBe(false);
+    expect(sameSettings(open, { ...open, crystalsGanon: 6 })).toBe(false);
   });
 });

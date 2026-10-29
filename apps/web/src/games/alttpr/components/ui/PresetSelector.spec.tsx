@@ -181,6 +181,38 @@ describe("PresetSelector", () => {
     );
   });
 
+  it("resets the run type in play once its settings were tuned, after confirmation", () => {
+    // OPEN_RUN's crystals were tuned (a seed's own): Open again is a reset
+    render(<PresetSelector />);
+    fireEvent.click(within(openList()).getByRole("button", { name: /^open/i }));
+
+    const confirm = screen.getByRole("dialog", { name: /reset run type/i });
+    expect(confirm).toHaveTextContent(
+      'Going back to the settings of "Open" will reset your current progress.',
+    );
+    expect(applyRun).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /switch & reset/i }));
+    expect(applyRun).toHaveBeenCalledWith("open", getPreset("open").settings);
+  });
+
+  it("asks nothing of the run type in play while it keeps its own settings", () => {
+    Object.assign(fakeState, {
+      settings: { ...getPreset("open").settings },
+    });
+    render(<PresetSelector />);
+    const dialog = openList();
+    fireEvent.click(within(dialog).getByRole("button", { name: /^open/i }));
+
+    expect(
+      screen.queryByRole("dialog", { name: /reset run type/i }),
+    ).toBeNull();
+    expect(applyRun).not.toHaveBeenCalled();
+    // The list closes
+    expect(
+      screen.queryByRole("dialog", { name: /choose a run type/i }),
+    ).toBeNull();
+  });
+
   it("starts from a seed's link: its run type, once confirmed, under its settings", async () => {
     vi.stubGlobal(
       "fetch",
