@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import EntranceLayer from "@/games/alttpr/components/map/entrances/EntranceLayer";
 import EntrancePicker from "@/games/alttpr/components/map/entrances/EntrancePicker";
 import EntrancesPanel from "@/games/alttpr/components/map/entrances/EntrancesPanel";
+import { getPreset } from "@/games/alttpr/data/presets";
 import { useEntrancePicker } from "@/games/alttpr/stores/entrancePickerStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -163,5 +164,39 @@ describe("the entrance assistant", () => {
       screen.getByRole("button", { name: /^Kakariko Shop: leads to/ }),
     );
     expect(useEntrancePicker.getState().picking).toBe("kakariko-shop");
+  });
+
+  it("lists the Full shuffle's own pool, and says plainly when a shuffle has none", () => {
+    const open = getPreset("open").settings;
+    act(() =>
+      useGameStore
+        .getState()
+        .applyRun("open", { ...open, entranceShuffle: "full" }),
+    );
+    const { unmount } = render(<EntrancesPanel />);
+    expect(screen.getByTestId("entrances-summary")).toHaveTextContent(
+      "0 of 138 entrances noted",
+    );
+    unmount();
+
+    // Simple, Restricted and Insanity pool their entrances otherwise: no
+    // list is better than the crossed shuffle's
+    for (const [shuffle, name] of [
+      ["simple", "Simple"],
+      ["restricted", "Restricted"],
+      ["insanity", "Insanity"],
+    ] as const) {
+      act(() =>
+        useGameStore
+          .getState()
+          .applyRun("open", { ...open, entranceShuffle: shuffle }),
+      );
+      const view = render(<EntrancesPanel />);
+      expect(screen.queryByTestId("entrances-summary")).toBeNull();
+      expect(screen.getByTestId("entrances-panel")).toHaveTextContent(
+        `The tracker has no list of the entrances a ${name} shuffle mixes yet`,
+      );
+      view.unmount();
+    }
   });
 });

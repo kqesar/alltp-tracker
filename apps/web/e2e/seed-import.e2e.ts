@@ -121,7 +121,7 @@ test("starts a glitched seed's run with no logic, every check maybe", async ({
 
   await expect(dialog).toBeHidden();
   await expect(page.getByTestId("logic-note")).toHaveText(
-    "The tracker has no logic for Overworld Glitches seeds yet: every check shows as maybe.",
+    "The tracker has no logic for Overworld Glitches yet: every check shows as maybe.",
   );
   await expect(page.getByTestId("marker-sahasrahlas-hut")).toHaveAccessibleName(
     /: maybe available$/,

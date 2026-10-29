@@ -1,5 +1,6 @@
 import type { OverworldEntrance } from "@alltp/pack-alttpr";
 import { memo, useId, useState } from "react";
+import { ENTRANCE_LABELS } from "@/games/alttpr/data/presets";
 import { poolOf, targetById, targetText } from "@/games/alttpr/logic/entrances";
 import { useEntrancePicker } from "@/games/alttpr/stores/entrancePickerStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -51,13 +52,18 @@ const WORLDS = [
 const EntrancesPanel = () => {
   const pool = useGameStore((state) => poolOf(state.settings));
   const noted = useGameStore((state) => Object.keys(state.entrances).length);
+  const shuffle = useGameStore((state) => state.settings.entranceShuffle);
+  const mode = useGameStore((state) => state.settings.mode);
   const [query, setQuery] = useState("");
   const searchId = useId();
   const headingId = useId();
   if (pool === null) {
     return (
       <p className="logic-note" data-testid="entrances-panel">
-        The tracker has no entrance tables for this world yet.
+        The tracker has no list of the entrances a {ENTRANCE_LABELS[shuffle]}{" "}
+        shuffle mixes
+        {mode === "inverted" ? " in the Inverted world" : ""} yet: it knows the
+        Crossworld and Full shuffles of the Open and Standard worlds.
       </p>
     );
   }

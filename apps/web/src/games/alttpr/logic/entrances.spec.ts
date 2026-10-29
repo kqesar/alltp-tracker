@@ -26,6 +26,16 @@ describe("the entrance assistant's model", () => {
     expect(poolOf({ ...crosskeys, mode: "inverted" })).toBeNull();
   });
 
+  it("has a pool of its own for the full shuffle, and none for the shuffles it does not port", () => {
+    const full = { ...crosskeys, entranceShuffle: "full" as const };
+    expect(poolOf(full)).not.toBe(poolOf(crosskeys));
+    expect(poolOf(full)?.entrances).toHaveLength(138);
+    expect(poolOf({ ...full, mode: "inverted" })).toBeNull();
+    // Simple, Restricted and Insanity mix other doors with other targets
+    for (const entranceShuffle of ["simple", "restricted", "insanity"] as const)
+      expect(poolOf({ ...crosskeys, entranceShuffle })).toBeNull();
+  });
+
   const pool = poolOf(crosskeys);
   if (pool === null) throw new Error("no pool");
 
