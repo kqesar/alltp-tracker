@@ -268,7 +268,16 @@ export const LOGIC_FLAGS: Readonly<Record<Logic, readonly GlitchFlag[]>> = {
   HybridMajorGlitches: [],
   MajorGlitches: [],
   NoGlitches: [],
-  OverworldGlitches: [],
+  // logic.php:5-13
+  OverworldGlitches: [
+    "canSuperBunny",
+    "canFakeFlipper",
+    "canSuperSpeed",
+    "canBootsClip",
+    "canMirrorClip",
+    "canWaterWalk",
+    "canDungeonRevive",
+  ],
 };
 
 /** The worlds this pack builds: `World::factory`'s type. */
