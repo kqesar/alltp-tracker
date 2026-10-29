@@ -1693,8 +1693,9 @@ rests on):
   is one `maybe` beside the branch it relaxes, so comparing yes, maybe and
   no compares the same placements on both sides.
 
-**A way in that reads a key** (Hybrid Major Glitches' clips alone; the
-tests list them, each behind `canOneFrameClipUW`) breaks the third fact
+**A way in that reads a key** (the one-frame clips underworld of Hybrid
+Major Glitches and Major Glitches alone; the tests list them, each behind
+`canOneFrameClipUW`) breaks the third fact
 above, so where one exists the model reads its *gating dungeons* (those
 whose untracked items such a way reads) at what is surely in hand: a
 location's yes is read with its own dungeons' items raised and the other
@@ -1714,7 +1715,9 @@ way (every world under NoGlitches and Overworld Glitches) each of these is
 the unchanged model, so nothing moves there.
 
 **Its laws**, as fast-check properties over random states of the Open and
-Standard worlds, Overworld Glitches', Hybrid Major Glitches' and No Logic's: adding an item never lowers a location (near the top too,
+Standard worlds, under Overworld Glitches too, of the Open world under No
+Logic, and of the Open and Inverted worlds under Hybrid Major Glitches and
+Major Glitches: adding an item never lowers a location (near the top too,
 where one item turns a dungeon safe), and a location is never above the
 solver with every untracked item nor below it without them. With wild keys,
 Palace of Darkness's doors do want one key more once the hammer, a bow and
@@ -1764,11 +1767,15 @@ app counts its runs not modelled.
   spot needs (`src/key-model.spec.ts` checks them in the Open, Standard and
   Inverted worlds under each logic, and the laws under the glitched logics
   and No Logic too). Overworld Glitches opens Turtle Rock's middle way,
-  whose rules read its keys: they are then tied to it as any other. Hybrid
-  Major Glitches' one-frame clips underworld are the only ways in that
-  read a key (into Tower of Hera from Misery Mire, `keyD6`; in Inverted
-  into Desert Palace from Thieves' Town, `keyD4`, `bigKeyD4`), which the
-  key model handles strictly additively (see "The key model").
+  whose rules read its keys: they are then tied to it as any other. The
+  one-frame clips underworld (`canOneFrameClipUW`, which Hybrid Major
+  Glitches and Major Glitches turn on) are the only ways in that read a
+  key: from Misery Mire into Tower of Hera (`keyD6`) and into Swamp Palace
+  (`keyD6`, `bigKeyD6`, and Tower of Hera's `bigKeyP3`), and in Inverted
+  from Thieves' Town into Desert Palace (`keyD4`, `bigKeyD4`). Their
+  gating dungeons are Misery Mire and Tower of Hera, and Thieves' Town in
+  Inverted, which the key model handles strictly additively (see "The key
+  model").
 - **Two regions at once.** Swamp Palace's glitched way in (Standard
   `SwampPalace.php:185-192`, Inverted `:147-153`) needs Misery Mire, the
   Old Man and the palace's own side of the world at once, which an entrance
