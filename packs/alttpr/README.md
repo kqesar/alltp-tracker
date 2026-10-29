@@ -1296,7 +1296,10 @@ flowchart LR
 - **What is code** stays out, listed in `unported` with its line, and is
   ported by hand in the world: the save-and-quit points and the bunny's
   paths (which regions the entrances make dark, `bunny` holding its two
-  lists).
+  lists). One clause is folded away and ported there too: a ganonhunt's
+  Ganon wants the pieces asked for (Rules.py:454, `not state.has`, which has
+  no monotone form in the translation), read as the fact `ganonhuntPieces`
+  the pack holds once they are found.
 - **Placement-only rules** (`forbid_item`, `add_item_rule`,
   `set_always_allow`) decide where an item may go, not what Link can
   reach. `fill` holds them as data, each with its location, its line and
