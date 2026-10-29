@@ -1139,7 +1139,9 @@ of them: a sphere's location the model doubts must be in the spec's
 `KEY_DOUBTS`, with the placement the fill may make that would lock it. Of
 `dMEp8enPG1`'s, two: Ice Palace's prize at sphere 3 (its second key may wait
 with Kholdstare, whom one key and the Cane of Somaria reach) and Agahnim 2 at
-sphere 5 (a Ganon's Tower key may sit at Bob's Torch, behind the boots).
+sphere 5 (a Ganon's Tower key may sit at Bob's Torch, behind the boots); the
+simple and restricted seeds have seven more of the same kind, and only the
+insanity seed stays pending.
 
 ### Where Link went: autotracking the entrances
 
