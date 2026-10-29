@@ -1,7 +1,7 @@
 import type { State } from "@alltp/engine";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { erSeed } from "../test/er-seeds";
+import { erSeed, seedNotes, seedWorld } from "../test/er-seeds";
 import {
   BOSS_FACTS,
   BOSS_PLACES,
@@ -159,6 +159,33 @@ describe("the entrance randomizer's world", () => {
       ).location(location);
     expect(bunny(true)).toBe("no");
     expect(bunny(false)).toBe("yes");
+  });
+
+  it("takes the pearl where a door not noted may make a region dark", () => {
+    // 0yAObedRMV: the Pyramid's door leads into Sanctuary, its hole into the
+    // sewers behind, and the Dark World's eastern ledge into the castle, so
+    // Link starts in the dark world (save and quit), the chest the bunny's
+    const { spoiler } = erSeed("0yAObedRMV");
+    const notes = seedNotes(spoiler);
+    const left = new Set(
+      [
+        "Pyramid Entrance",
+        "Pyramid Hole",
+        "Dark Death Mountain Ledge (East)",
+      ].map(id),
+    );
+    const rest = Object.fromEntries(
+      Object.entries(notes).filter(([door]) => !left.has(door)),
+    );
+    const sanctuary = (noted: typeof notes, state: State) =>
+      solveFacts(seedWorld(spoiler, {}, noted), state).location(
+        erLocationId("Sanctuary"),
+      );
+    expect(sanctuary(notes, {})).toBe("no");
+    // Those three not noted, Sanctuary may lie in either world
+    expect(sanctuary(rest, {})).toBe("maybe");
+    expect(sanctuary(notes, { moonPearl: 1 })).toBe("yes");
+    expect(sanctuary(rest, { moonPearl: 1 })).toBe("yes");
   });
 
   it("asks the big bomb's route by where the shop's door is", () => {
