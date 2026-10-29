@@ -285,7 +285,7 @@ export const PresetSelector = () => {
       </Modal>
 
       <ConfirmDialog
-        confirmLabel="Switch & reset"
+        confirmLabel={pending?.again ? "Reset" : "Switch & reset"}
         isOpen={pending !== null}
         message={
           pending?.again

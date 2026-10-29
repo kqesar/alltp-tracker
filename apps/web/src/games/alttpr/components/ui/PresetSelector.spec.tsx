@@ -191,7 +191,11 @@ describe("PresetSelector", () => {
       'Going back to the settings of "Open" will reset your current progress.',
     );
     expect(applyRun).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: /switch & reset/i }));
+    // The title says reset, so does the button
+    expect(
+      within(confirm).queryByRole("button", { name: /switch/i }),
+    ).toBeNull();
+    fireEvent.click(within(confirm).getByRole("button", { name: /^reset$/i }));
     expect(applyRun).toHaveBeenCalledWith("open", getPreset("open").settings);
   });
 

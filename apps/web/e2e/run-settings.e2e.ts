@@ -255,7 +255,7 @@ test("picking the run type in play after tuning it resets it, after confirmation
   await expect(glitches).toHaveValue("overworld_glitches");
 
   await dialog.getByRole("button", { name: /^Open/ }).click();
-  await confirm.getByRole("button", { name: "Switch & reset" }).click();
+  await confirm.getByRole("button", { name: "Reset" }).click();
   await expect(hookshot).toHaveAccessibleName(/^Hookshot, not obtained\./);
   await page.getByRole("button", { name: /^Mode/ }).click();
   await expect(glitches).toHaveValue("none");
