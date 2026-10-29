@@ -1,6 +1,10 @@
 import { act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DOOR_OPTIONS, type DoorSetting } from "@/games/alttpr/data/doorRando";
+import {
+  DOOR_OPTIONS,
+  type DoorSetting,
+  DOOR_LOCATION_IDS as DR_IDS,
+} from "@/games/alttpr/data/doorRando";
 import {
   bindRun,
   compareReview,
@@ -9,9 +13,10 @@ import {
 import {
   doorRunOf,
   doorSpoilerLog,
+  playedRun,
   spoilerLog,
 } from "@/games/alttpr/review/fixtures";
-import { hiddenReason } from "@/games/alttpr/review/sweep";
+import { drain, hiddenReason, sweepRun } from "@/games/alttpr/review/sweep";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 const T0 = Date.UTC(2026, 9, 25, 12, 0, 0);
@@ -180,5 +185,55 @@ describe("comparing a Door Randomizer run", () => {
     expect(hiddenReason(drops, run(), compareReview(drops, run()))).toBe(
       "door-logic",
     );
+  });
+});
+
+describe("the waits of a run in DR's own world", () => {
+  // DR 1.5.7-u, Open, every dungeon item in its dungeon, nothing of DR's
+  // places shuffled: solved in DR's world, its waits shown
+  const inDungeon = doorSpoilerLog("239088210");
+  const plan = inDungeon.placements
+    .filter((p) => p.sphere !== null)
+    .sort(
+      (a, b) =>
+        (a.sphere ?? 0) - (b.sphere ?? 0) ||
+        a.locationName.localeCompare(b.locationName),
+    )
+    .map((p, index) => ({ location: p.location, minute: 2 * (index + 1) }));
+
+  it("is swept through DR's rules once its solver is handed in", async () => {
+    play(inDungeon);
+    // Agahnim's defeat is an event of the log's, no placement the plan
+    // takes: held from the start, as the board's cell would say
+    useGameStore.setState({ items: { ...store().items, agahnim: 1 } });
+    const played = playedRun(inDungeon, plan, run());
+    const comparison = compareReview(inDungeon, played);
+    expect(hiddenReason(inDungeon, played, comparison)).toBeNull();
+    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const endMs = (plan.length + 3) * 120_000;
+    const sweep = drain(sweepRun(inDungeon, played, comparison, endMs, solver));
+    expect(sweep.waits.length).toBeGreaterThan(0);
+    // Taken in the playthrough's order: each needed item in DR's logic by
+    // the time it was taken (the pack's playthrough contract, replayed)
+    const late = sweep.waits.filter(
+      (wait) => wait.reach === null || (wait.waited ?? -1) < 0,
+    );
+    expect(late.map((wait) => wait.location)).toEqual([]);
+  });
+
+  it("hides them where an item it needed lay at one of DR's places", () => {
+    play(drops);
+    useGameStore.setState({
+      settings: { ...store().settings, dungeonItems: "standard" },
+    });
+    const comparison = compareReview(drops, run());
+    expect(
+      comparison.rows.some(
+        ({ entry }) =>
+          entry.placement.sphere !== null &&
+          DR_IDS.has(entry.placement.location),
+      ),
+    ).toBe(true);
+    expect(hiddenReason(drops, run(), comparison)).toBe("door-logic");
   });
 });

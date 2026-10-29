@@ -300,7 +300,7 @@ const added = new WeakMap<readonly DrLocation[], DrLocation[]>();
  * regions (key drops are in it already, shop items too): the same list for
  * the same locations, so the world built for it is kept.
  */
-const doorAddedOf = (run: RunSettings): readonly DrLocation[] => {
+export const doorAddedOf = (run: RunSettings): readonly DrLocation[] => {
   const { locations } = doorLocationsOf(run);
   let found = added.get(locations);
   if (found === undefined) {

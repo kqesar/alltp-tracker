@@ -15,6 +15,7 @@ import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import { itemsFromPack } from "@/games/alttpr/logic/packItems";
 import { stampTimeline, type Timeline } from "@/games/alttpr/logic/timeline";
 import type { ReviewedRun } from "@/games/alttpr/review/adapter";
+import doorInDungeon from "../../../../../../packs/alttpr/test/dr-spoilers/DR_239088210_Spoiler.txt?raw";
 import doorDrops from "../../../../../../packs/alttpr/test/dr-spoilers/DR_278438665_Spoiler.txt?raw";
 import doorKeysanity from "../../../../../../packs/alttpr/test/dr-spoilers/DR_660701088_Spoiler.txt?raw";
 import entrances from "../../../../../../packs/alttpr/test/spoilers/0yAObedRMV.txt?raw";
@@ -129,11 +130,13 @@ export const playedRun = (
 /**
  * The Door Randomizer's real spoiler races' logs the pack keeps (packs/alttpr/
  * test/dr-spoilers/, recorded by its script): keysanity with the doors, pots
- * and drops vanilla, and key drops and key pots shuffled.
+ * and drops vanilla (an unstable build's static key logic), key drops and
+ * key pots shuffled, and the dungeon items kept in their dungeons.
  */
-export type DoorFixture = "660701088" | "278438665";
+export type DoorFixture = "660701088" | "278438665" | "239088210";
 
 const DOOR_TEXTS: Readonly<Record<DoorFixture, string>> = {
+  "239088210": doorInDungeon,
   "278438665": doorDrops,
   "660701088": doorKeysanity,
 };

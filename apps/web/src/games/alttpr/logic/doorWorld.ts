@@ -31,21 +31,23 @@ const UNRECORDED = ["bigKeyH2"];
 /** A run's pots and enemy drops, each in its DR region. */
 type Added = readonly { readonly name: string; readonly region: string }[];
 
-let built: { added: Added; settings: Settings; world: DrWorld } | undefined;
+const built = new WeakMap<Settings, { added: Added; world: DrWorld }>();
 
 /**
  * The world of a run's settings (drSettingsOf, the same object for the
  * same run) and its pots and drops (doorLocationsOf's, memoized per modes),
- * built again only when either changes: tens of milliseconds, DR's key
- * analysis included.
+ * built again only when they change: tens of milliseconds, DR's key
+ * analysis included. Kept per settings, so the board's run and a review's
+ * sweep (its keys tracked) never rebuild each other's.
  */
 const worldOf = (settings: Settings, added: Added): DrWorld => {
-  if (built?.settings === settings && built.added === added) return built.world;
+  const found = built.get(settings);
+  if (found?.added === added) return found.world;
   const world = drWorld(settings, {
     dropsAndPots: added,
     unrecorded: UNRECORDED,
   });
-  built = { added, settings, world };
+  built.set(settings, { added, world });
   return world;
 };
 

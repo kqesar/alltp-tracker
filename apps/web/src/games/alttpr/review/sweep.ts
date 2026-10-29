@@ -5,9 +5,13 @@
 // room without the Lamp is not yet). The log says where every dungeon key
 // is, so the keys count as held once their place is checked, solved as
 // keysanity solves them: the seed's own key logic, not the board's guess.
+// A Door Randomizer run solved in DR's own world (doorLogic) is replayed
+// through that world (logic/doorWorld.ts, handed in by useSweep.ts once its
+// chunk is loaded), with the same keys.
 // Pure: `sweepRun` is a generator that yields after each solve, so the page
 // runs it in slices (useSweep.ts).
 
+import type { Settings, State, Tri } from "@alltp/engine";
 import {
   type AlttprSettings,
   type AlttprSpoilerLog,
@@ -28,12 +32,17 @@ import {
 } from "@alltp/pack-alttpr";
 import { DOOR_LOCATION_IDS } from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
-import { logicModelled } from "@/games/alttpr/data/presets";
+import { doorLogic, logicModelled } from "@/games/alttpr/data/presets";
 import { withCost } from "@/games/alttpr/logic/costs";
+import type { DoorSolver } from "@/games/alttpr/logic/doorWorld";
 import { PACK_ITEMS } from "@/games/alttpr/logic/packItems";
 import { findIcon, findName, splitName } from "@/games/alttpr/logic/runLog";
-import { packSettings } from "@/games/alttpr/logic/settings";
-import { fillerOf, trackerInput } from "@/games/alttpr/logic/solution";
+import { drSettingsOf, packSettings } from "@/games/alttpr/logic/settings";
+import {
+  doorAddedOf,
+  fillerOf,
+  trackerInput,
+} from "@/games/alttpr/logic/solution";
 import type {
   ReviewComparison,
   ReviewedRun,
@@ -60,9 +69,11 @@ export type Hidden =
    */
   | "not-modelled"
   /**
-   * The log is a Door Randomizer's. Its rules (key doors, pots, enemy drops,
-   * its own dungeon logic) are not ported yet, and the sweep's, alttpr.com's,
-   * would say "in logic" from rules the seed was not made with.
+   * The log is a Door Randomizer's, but its run is not solved in DR's own
+   * world (an OWR seed, shuffled bosses: alttpr.com's v31 stands in, which
+   * would say "in logic" from rules the seed was not made with), or an item
+   * it needed lay at one of DR's places (a key drop, a pot, an enemy drop, a
+   * shop item), which the run keeps no time for.
    */
   | "door-logic"
   /**
@@ -125,7 +136,15 @@ export const hiddenReason = (
     return "not-modelled";
   }
   // After the causes above, which are the more specific
-  if (log.extra.door !== undefined) return "door-logic";
+  if (
+    log.extra.door !== undefined &&
+    (!doorLogic(settings) ||
+      required(comparison.rows).some(({ entry }) =>
+        DOOR_LOCATION_IDS.has(entry.placement.location),
+      ))
+  ) {
+    return "door-logic";
+  }
   const found = required(comparison.rows).filter(
     ({ entry, ms }) => entry.find !== null && ms !== null,
   );
@@ -306,6 +325,17 @@ const PRIZE_OF = new Map<string, Prize>(
 );
 
 const keysKnown = new WeakMap<AlttprSettings, AlttprSettings>();
+const doorKeysKnown = new WeakMap<Settings, Settings>();
+
+/** withKeysKnown for DR's world: its settings with the keys tracked. */
+const withDoorKeysKnown = (settings: Settings): Settings => {
+  let known = doorKeysKnown.get(settings);
+  if (known === undefined) {
+    known = { ...settings, wildBigKeys: true, wildKeys: true };
+    doorKeysKnown.set(settings, known);
+  }
+  return known;
+};
 
 /**
  * A run's settings with its small and big keys tracked, as keysanity
@@ -369,12 +399,14 @@ const applyKey = (
  * changed, then each needed item set against those solves. Yields after each
  * solve; returns the sweep.
  * @param endMs - The run timer's reading at the end
+ * @param door - DR's world's solver, for a run solved there (doorLogic)
  */
 export function* sweepRun(
   log: AlttprSpoilerLog,
   run: ReviewedRun,
   comparison: ReviewComparison,
   endMs: number,
+  door?: DoorSolver,
 ): Generator<void, Sweep, void> {
   const settings = packSettings(run.settings);
   // The keys are the log's: solved as wild keys, counted where it put them
@@ -464,8 +496,25 @@ export function* sweepRun(
   const dated = Object.keys(run.timeline).some((key) =>
     key.startsWith("check:"),
   );
-  const solveAt = (input: TrackerInput) =>
-    solveWithKeys(filler, toState(input, seedSettings)).locations();
+  const doorSettings =
+    door !== undefined && doorLogic(run.settings)
+      ? withDoorKeysKnown(drSettingsOf(run.settings))
+      : undefined;
+  const solveAt = (input: TrackerInput): Readonly<Record<string, Tri>> => {
+    if (door === undefined || doorSettings === undefined)
+      return solveWithKeys(filler, toState(input, seedSettings)).locations();
+    // DR's dungeons hold more keys than vt's pools: each as the log counts
+    const state: Record<string, State[string]> = {
+      ...toState(input, seedSettings),
+    };
+    for (const d of DUNGEONS) {
+      const keys = input.keys?.[d.id] ?? 0;
+      if (keys > 0) state[`key${d.code}`] = keys;
+    }
+    return door
+      .solve(doorSettings, doorAddedOf(run.settings), state)
+      .solution.locations();
+  };
   let solves = 0;
   for (const [index, step] of steps.entries()) {
     if (index > 0) {
