@@ -1395,8 +1395,26 @@ export function importDrRules(read, world, extras) {
     Object.fromEntries(
       [...map.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
     );
+  // The bunny's lists (set_bunny_rules, Rules.py:2035), which the world
+  // ports: two local to the function, two of the module
+  const bunny = body(rulesSource, "set_bunny_rules", "Rules.py");
+  const bunnySource = rulesSource.slice(bunny.start + 1, bunny.end);
+  const bunnyLine = rulesSource.slice(0, bunny.start + 1).split("\n").length;
+  /** @param {string} name @param {boolean} local */
+  const bunnyList = (name, local) => {
+    if (!local) return assigned(rulesSource, name, "Rules.py");
+    const { line, value } = assigned(bunnySource, name, "Rules.py", "\\s+");
+    return { line: bunnyLine + line - 1, value };
+  };
+
   return {
     bombShop,
+    bunny: {
+      accessibleLocations: bunnyList("bunny_accessible_locations", true),
+      impassableCaves: bunnyList("bunny_impassable_caves", true),
+      impassableDoors: bunnyList("bunny_impassible_doors", false),
+      impassableIfTrapped: bunnyList("bunny_impassible_if_trapped", false),
+    },
     crystal: [...found.crystal.values()].sort((a, b) =>
       `${a.region}:${a.color}` < `${b.region}:${b.color}` ? -1 : 1,
     ),

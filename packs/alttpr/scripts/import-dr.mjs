@@ -535,6 +535,7 @@ function main(args) {
   // Stage B: the rules
   const {
     bombShop,
+    bunny,
     crystal,
     doorsOpen,
     fill,
@@ -548,6 +549,7 @@ function main(args) {
     join(WORLD, "rules.json"),
     {
       bombShop,
+      bunny,
       doorsOpen,
       fill,
       generated,

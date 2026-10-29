@@ -1,7 +1,7 @@
 // The Door Randomizer's own tests, imported as fixtures (import-dr, stage
-// C): what they hold, before any world is held to them. The contract
-// (upstream true is our yes, upstream false is not our yes) runs once DR's
-// world is built (study step 4.06 on); until then every file is pending.
+// C): what they hold. The contract (upstream true is our yes, upstream
+// false is not our yes) runs in dr-contract.spec.ts over each file
+// upstream.json lists `ported`; the others stay `pending`.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -206,9 +206,9 @@ describe("the Door Randomizer's tests (test/dr-upstream)", () => {
     expect(checks(/\/hmg\//)).toBe(80);
   });
 
-  it("are listed in upstream.json, each pending", () => {
+  it("are listed in upstream.json, pending or held (dr-contract.spec.ts)", () => {
     const listed = manifest.doorRandomizer.tests;
-    expect(listed.map((t) => t.status)).toEqual(listed.map(() => "pending"));
+    for (const t of listed) expect(["pending", "ported"]).toContain(t.status);
     expect(listed.map((t) => t.fixture).sort()).toEqual(
       jsonFiles(DIR)
         .filter((path) => !path.endsWith("pool.json"))

@@ -10,11 +10,6 @@
 // bunny's paths (set_bunny_rules, 1520-1589) and what the derived settings
 // read of the connections.
 import {
-  type Analysis,
-  type AnalyzeOptions,
-  type Atom,
-  analyze,
-  type Blockers,
   type CompiledWorld,
   compileWorld,
   type Exit,
@@ -22,9 +17,6 @@ import {
   loadRules,
   type Region,
   type Settings,
-  type Solution,
-  type State,
-  solve,
   type World,
 } from "@alltp/engine";
 import {
@@ -35,7 +27,7 @@ import {
 } from "./entrances";
 import er from "./entrances/er.json" with { type: "json" };
 import ruleTables from "./entrances/rules.json" with { type: "json" };
-import { joinBlockers } from "./goals";
+import { type FactWorld, solveFacts } from "./facts";
 import { everything } from "./keys";
 import { STATE_NAMES } from "./pack";
 import { RULES } from "./rules";
@@ -250,7 +242,7 @@ export interface ErOptions {
 }
 
 /** A compiled world of the entrance randomizer, and its facts. */
-export interface ErWorld {
+export interface ErWorld extends FactWorld {
   readonly compiled: CompiledWorld;
   /**
    * What the solver holds once a location (pack id) is reached, as the
@@ -638,101 +630,6 @@ export function erWorld(
   return { compiled, facts: eventFacts(events, reached) };
 }
 
-/**
- * Solves a world, holding each fact once what gives it is surely reached,
- * as the randomizer sweeps for events, until nothing more is gained. Each
- * pass can only add facts, so this ends within a pass per fact.
- * @returns The solution, and the state with the facts gained
- */
-export function solveFactsState(
-  world: ErWorld,
-  state: State,
-): { readonly solution: Solution; readonly state: State } {
-  let current: State = state;
-  for (;;) {
-    const solution = solve(world.compiled, current);
-    const gained = world.facts.filter(
-      ({ item, location }) =>
-        !current[item] && solution.location(location) === "yes",
-    );
-    if (gained.length === 0) return { solution, state: current };
-    current = {
-      ...current,
-      ...Object.fromEntries(gained.map(({ item }) => [item, 1])),
-    };
-  }
-}
-
-/** solveFactsState's solution. */
-export const solveFacts = (world: ErWorld, state: State): Solution =>
-  solveFactsState(world, state).solution;
-
-/**
- * The engine's analysis of a world, its facts read through: a fact is no
- * item to get, so the analysis proposes it, then each set that holds one
- * takes, in its place, what brings the location that gives it (`yes`, the
- * level a fact asks), every way of it, at most `maxAtoms` atoms in all. A
- * fact that needs itself again gives nothing.
- * @param state - The state with its facts gained (solveFactsState)
- */
-export function analyzeFacts(
-  world: ErWorld,
-  state: State,
-  options: AnalyzeOptions = {},
-): Analysis {
-  const sources = new Map(world.facts.map((f) => [f.item, f.location]));
-  const inner = analyze(world.compiled, state, {
-    ...options,
-    acquirable: (item) =>
-      sources.has(item) || (options.acquirable?.(item) ?? true),
-  });
-  const memo = new Map<string, Blockers>();
-  const expand = (
-    location: string,
-    target: "yes" | "maybe",
-    seen: ReadonlySet<string>,
-  ): Blockers => {
-    const key = `${location}/${target}`;
-    const known = memo.get(key);
-    if (known !== undefined) return known;
-    const raw = inner.blockers(location, target);
-    let sets: (readonly Atom[])[] = [];
-    let truncated = raw.truncated;
-    for (const set of raw.sets) {
-      let ways: Blockers = {
-        sets: [
-          set.filter((atom) => !("item" in atom && sources.has(atom.item))),
-        ],
-        truncated: false,
-      };
-      for (const atom of set) {
-        const from = "item" in atom ? sources.get(atom.item) : undefined;
-        if (from === undefined) continue;
-        if (seen.has(from)) {
-          ways = { sets: [], truncated: ways.truncated };
-          break;
-        }
-        ways = joinBlockers(
-          ways,
-          expand(from, "yes", new Set([...seen, from])),
-          options.maxAtoms,
-        );
-      }
-      sets = [...sets, ...ways.sets];
-      truncated ||= ways.truncated;
-    }
-    // Each way once, the minimal ones
-    const found = joinBlockers(
-      { sets: [[]], truncated: false },
-      { sets, truncated },
-      options.maxAtoms,
-    );
-    memo.set(key, found);
-    return found;
-  };
-  return {
-    blockers: (location, target) =>
-      expand(location, target, new Set([location])),
-    doableNow: () => inner.doableNow(),
-  };
-}
+// The fact solver moved to facts.ts, which the Door Randomizer's world
+// shares; kept here under the names the app imports.
+export { analyzeFacts, solveFacts, solveFactsState } from "./facts";

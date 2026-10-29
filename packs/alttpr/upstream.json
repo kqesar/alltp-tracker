@@ -241,22 +241,22 @@
       {
         "file": "test/vanilla/TestDarkWorld.py",
         "fixture": "test/dr-upstream/vanilla/TestDarkWorld.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/vanilla/TestDeathMountain.py",
         "fixture": "test/dr-upstream/vanilla/TestDeathMountain.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/vanilla/TestEntrances.py",
         "fixture": "test/dr-upstream/vanilla/TestEntrances.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/vanilla/TestLightWorld.py",
         "fixture": "test/dr-upstream/vanilla/TestLightWorld.json",
-        "status": "pending"
+        "status": "ported"
       }
     ],
     "version": "1.5.6"

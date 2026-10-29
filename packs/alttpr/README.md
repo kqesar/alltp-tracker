@@ -1045,7 +1045,8 @@ region on Link's side of the world for the bunny (`notBunny_<region>`),
 the dark rooms' lamp, the vanilla boss of each slot. Upstream's own slip
 stays as written: `state.can_flute` uncalled is true in Python
 (`uncalledMethods`). What is code is listed in `unported` with its line
-and why, never dropped: the key logic, Zelda's path, the bunny's paths.
+and why, never dropped: the key logic, Zelda's path, the bunny's paths
+(the bunny's lists are kept, `bunny`, for the world to port).
 `rules.spec.ts` holds that list and compiles every rule in the engine.
 
 **The enemy logic** (`packs/alttpr/scripts/dr-enemies.mjs`): DR builds its kill
@@ -1078,8 +1079,30 @@ only, so the harness is read there (`git show`: the world each suite
 builds, the dungeon tests' `STARTING_REGION_MAP`) and the cases at the
 release. `pool.json` is the pool an "everything but" case draws from, from
 `ItemList.py`'s lists and the harness's prizes, cited; `suite/` holds the
-customizer seeds' Verification checks. Every file is listed `pending` in
-`upstream.json` until DR's world is held to it (`test/dr-fixtures.spec.ts`).
+customizer seeds' Verification checks. A file is listed `pending` in
+`upstream.json` until DR's world is held to it (`test/dr-fixtures.spec.ts`
+holds the list); `test/dr-contract.spec.ts` holds each `ported` file to its
+cases, a case it answers otherwise listed with why (`STALE`, or
+`KEY_PENDING` until the key analysis), in the harness the suite runs in
+(`test/dr-state.ts`: the items as the pack's state, the pool, the medallions
+the harness fixes; the dungeon tests never sweep events).
+
+**Its world, built** (`src/door-world/`): `drWorld(settings, options)`
+compiles DR's world for the engine, its doors and entrances vanilla.
+`connections.ts` links every exit as DR's vanilla world does
+(`link_overworld`, `link_entrances_new`'s vanilla path with the Inverted
+swaps, `EntranceShuffle2.py:64-78`, `link_doors_prep`'s tables and the
+portals, a controller's dependents following it) and makes the flute and
+mirror exits DR makes in code (`create_dynamic_exits`). `index.ts` gives
+each exit and location its rule from `rules.json` (a `reach()` in an exit
+read as a fact, `reached_<region>`), starts at the Menu and its
+save-and-quit exits, adds the bomb shop's case, sets the derived settings
+from the connections (the worlds' light and dark regions, the swamp patch,
+the doors' vanilla flags) and sweeps DR's events as facts (`src/facts.ts`,
+shared with the entrance randomizer's world). `bunny.ts` ports
+`set_bunny_rules`, but the door kinds `RoomData.py` holds (dashable,
+bombable, hidden walls), which the import does not read yet. Until the
+dungeons are ported, a crystal barrier and a small key door are `maybe`.
 
 **Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
 `RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,
