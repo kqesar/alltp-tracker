@@ -59,7 +59,10 @@ export type PlayGlitches = Exclude<Glitches, "no_logic">;
  * The logics the pack ports and holds to upstream's tests: None, then each
  * glitched logic once its port lands. A run of another is not modelled.
  */
-const PORTED_LOGICS: ReadonlySet<PlayGlitches | "none"> = new Set(["none"]);
+const PORTED_LOGICS: ReadonlySet<PlayGlitches | "none"> = new Set([
+  "none",
+  "overworld_glitches",
+]);
 
 /**
  * alttpr.com's dungeon items (config/alttp.php:185-190): which of a

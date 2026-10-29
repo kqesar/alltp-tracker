@@ -1,5 +1,6 @@
-import { TRICK_IDS, type TrickId } from "@alltp/pack-alttpr";
+import { TRICK_IDS, type TrickId, tricksInLogic } from "@alltp/pack-alttpr";
 import { useEffect, useId } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { Modal } from "@/components/ui/Modal";
 import { OutLink } from "@/components/ui/OutLink";
 import { crossedLogic, logicModelled } from "@/games/alttpr/data/presets";
@@ -10,8 +11,15 @@ import {
   withTrick,
 } from "@/games/alttpr/data/tricks";
 import { whenIdle } from "@/games/alttpr/hooks/useRunAnalysis";
+import { packSettings } from "@/games/alttpr/logic/settings";
 import { warmTricks } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+
+/** "A", "A and B", "A, B and C". */
+const listOf = (items: readonly string[]) =>
+  items.length < 2
+    ? items.join("")
+    : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 
 /** One trick: its checkbox, what it does and where to learn it. */
 const TrickRow = ({
@@ -85,6 +93,14 @@ export const TricksDialog = ({
   );
   const switchId = useId();
   const settings = useGameStore((state) => state.settings);
+  // A glitched logic counts some tricks already (Overworld Glitches: four)
+  const inLogic = useGameStore(
+    useShallow((state) =>
+      logicModelled(state.settings)
+        ? tricksInLogic(packSettings(state.settings))
+        : [],
+    ),
+  );
   // The tricks world compiles in about 50 ms: let it happen while the player
   // reads, not when the switch is ticked
   useEffect(
@@ -115,6 +131,13 @@ export const TricksDialog = ({
           a lightning bolt on purple, by the rules of the randomizer's glitched
           logic. Nothing is read from the game, and Race Mode is unchanged.
         </p>
+        {inLogic.length > 0 && (
+          <p className="tricks-dialog__note" data-testid="tricks-in-logic">
+            This run's logic counts{" "}
+            {listOf(inLogic.map((id) => TRICK_WORDS[id].name))} already: the
+            checks they open are in logic, and only the others are marked.
+          </p>
+        )}
         {!modelled && (
           <p className="tricks-dialog__note" data-testid="tricks-unsupported">
             This run's logic has no tricks yet (shuffled entrances, a glitched

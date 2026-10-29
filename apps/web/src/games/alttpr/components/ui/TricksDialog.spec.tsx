@@ -1,5 +1,5 @@
 import { TRICK_IDS } from "@alltp/pack-alttpr";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TricksDialog } from "@/games/alttpr/components/ui/TricksDialog";
 import { getPreset } from "@/games/alttpr/data/presets";
@@ -104,6 +104,22 @@ describe("TricksDialog", () => {
     open();
     expect(screen.getByTestId("tricks-unsupported")).toHaveTextContent(
       /nothing is marked/i,
+    );
+  });
+
+  it("names the tricks a glitched logic counts already", () => {
+    open();
+    expect(screen.queryByTestId("tricks-in-logic")).toBeNull();
+    act(() =>
+      useGameStore.setState({
+        settings: {
+          ...getPreset("open").settings,
+          glitches: "overworld_glitches",
+        },
+      }),
+    );
+    expect(screen.getByTestId("tricks-in-logic")).toHaveTextContent(
+      "This run's logic counts Fake flipper, Water walk, Super bunny and Dungeon revival already",
     );
   });
 

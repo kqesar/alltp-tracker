@@ -91,18 +91,38 @@ describe("MapPanel", () => {
     act(() =>
       useGameStore.getState().applyRun("open", {
         ...getPreset("open").settings,
-        glitches: "overworld_glitches",
+        glitches: "major_glitches",
       }),
     );
     render(<MapPanel />);
 
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Overworld Glitches yet: every check shows as maybe.",
+      "The tracker has no logic for Major Glitches yet: every check shows as maybe.",
     );
     expect(screen.getByTestId("marker-sahasrahlas-hut")).toHaveAccessibleName(
       /: maybe available$/,
     );
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
+  });
+
+  it("reads an Overworld Glitches seed by its logic, the boots given", () => {
+    act(() =>
+      useGameStore.getState().applyRun("open", {
+        ...getPreset("open").settings,
+        glitches: "overworld_glitches",
+      }),
+    );
+    render(<MapPanel />);
+
+    expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
+    // Under the bridge with a fake flipper (South.php:131), in logic here
+    expect(screen.getByTestId("marker-hobo")).toHaveAccessibleName(
+      /: available$/,
+    );
+    act(() => useGameStore.getState().updateSettings({ glitches: "none" }));
+    expect(screen.getByTestId("marker-hobo")).toHaveAccessibleName(
+      /: out of logic$/,
+    );
   });
 
   it("names the entrance shuffle as the cause in an Open run, not the run type", () => {
