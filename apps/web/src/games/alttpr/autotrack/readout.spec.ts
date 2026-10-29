@@ -34,7 +34,14 @@ describe("describeReading", () => {
   it("lists an open seed's items, prizes, bosses and checks by name", () => {
     const readout = describeSeed(seedMemory({ race: false }));
 
-    expect(readout.items).toEqual(["Master Sword", "Bottle ×1", "Hookshot"]);
+    // The bottle with what it holds, and the capacities (outside Race Mode)
+    expect(readout.items).toEqual([
+      "Master Sword",
+      "Bottle ×1 (empty)",
+      "Hookshot",
+      "Bomb capacity 10",
+      "Arrow capacity 30",
+    ]);
     expect(readout.prizes).toEqual(["Pendant of Courage"]);
     expect(readout.prizesUnread).toBeNull();
     expect(readout.bosses).toEqual(["Eastern Palace"]);
@@ -83,7 +90,11 @@ describe("describeReading", () => {
 
     // The bottles (bottle contents), the pendants by name and the crystals
     // counted (prizes upon collection), the checks inside dungeons
-    expect(readout.items).toEqual(["Master Sword", "Bottle ×1", "Hookshot"]);
+    expect(readout.items).toEqual([
+      "Master Sword",
+      "Bottle ×1 (empty)",
+      "Hookshot",
+    ]);
     expect(readout.prizes).toEqual(["Pendant of Courage", "Crystals ×2"]);
     expect(readout.prizesUnread).toBeNull();
     expect(readout.checked).toEqual([
@@ -94,6 +105,7 @@ describe("describeReading", () => {
       },
     ]);
     expect(readout.withheld.map(({ label }) => label)).toEqual([
+      "Bomb and arrow capacity",
       "Which crystals are 5 and 6",
       "Heart containers and pieces",
       "Zelda's rescue",
@@ -245,7 +257,7 @@ describe("describeReading", () => {
       expect.arrayContaining([
         "Golden Sword",
         "Titan's Mitt",
-        "Bottle ×2",
+        "Bottle ×2 (empty, red potion)",
         "Heart Container ×3",
       ]),
     );
@@ -346,6 +358,36 @@ describe("describeReading's key counts", () => {
   });
 });
 
+describe("describeReading's bottles and capacities", () => {
+  it("names what each bottle holds, in the game's order, Race Mode too", () => {
+    const memory = seedMemory({ race: true });
+    memory.set([0x04, 0x07, 0x06], SAVE(0x35c));
+    for (const race of [false, true]) {
+      expect(describeSeed(memory, race).items, `race ${race}`).toContain(
+        "Bottle ×3 (green potion, a bee, a fairy)",
+      );
+    }
+  });
+
+  it("lists the capacities outside Race Mode, and says Race Mode left them", () => {
+    const memory = seedMemory({ race: false });
+    memory.set([50, 70], SAVE(0x370));
+    const open = describeSeed(memory);
+    expect(open.items).toEqual(
+      expect.arrayContaining(["Bomb capacity 50", "Arrow capacity 70"]),
+    );
+    expect(open.withheld.map(({ label }) => label)).not.toContain(
+      "Bomb and arrow capacity",
+    );
+    const race = describeSeed(memory, true);
+    expect(race.items.join(" ")).not.toContain("capacity");
+    expect(race.withheld).toContainEqual({
+      label: "Bomb and arrow capacity",
+      why: "race-mode",
+    });
+  });
+});
+
 describe("describeReading's unknowns", () => {
   it("lists an item the panel has no name for by its id", () => {
     const reading = readMemory(viewOf(seedMemory({ race: false })), false, 0);
@@ -358,7 +400,11 @@ describe("describeReading's unknowns", () => {
       },
     });
 
-    expect(readout.items).toEqual(["newItem"]);
+    expect(readout.items).toEqual([
+      "newItem",
+      "Bomb capacity 10",
+      "Arrow capacity 30",
+    ]);
     expect(readout.withheld).toContainEqual({
       label: "otherItem",
       why: "race-mode",

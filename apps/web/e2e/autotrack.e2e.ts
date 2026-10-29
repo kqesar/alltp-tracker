@@ -499,8 +499,9 @@ test("a race seed reads what v2.0 permits, and leaves the dungeons' prizes to th
   await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
     cell("Hookshot", "obtained"),
   );
-  await expect(page.getByTestId("item-bottle")).not.toHaveAccessibleName(
-    cell("Bottle", "not obtained"),
+  // The bottle and what it holds: v2.0's "bottle contents"
+  await expect(page.getByTestId("item-bottlecontents1")).toHaveAccessibleName(
+    "Bottle 1, empty. Click to change.",
   );
   await expect(page.getByTestId("item-boss0")).toHaveAccessibleName(/defeated/);
   await expect(page.getByTestId("marker-links-house")).toHaveAccessibleName(
@@ -596,7 +597,12 @@ test("connects through the dialog, ticks every step and lists what it read", asy
   await expect(page.getByTestId("race-badge")).toHaveCount(0);
 
   const items = shown.getByTestId("readout-items");
-  for (const item of ["Hookshot", "Moon Pearl", "Master Sword", "Bottle ×1"]) {
+  for (const item of [
+    "Hookshot",
+    "Moon Pearl",
+    "Master Sword",
+    "Bottle ×1 (empty)",
+  ]) {
     await expect(items.getByText(item, { exact: true })).toBeVisible();
   }
   await expect(shown.getByTestId("readout-prizes")).toHaveText(

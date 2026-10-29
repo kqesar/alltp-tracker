@@ -651,7 +651,13 @@ describe("AutotrackDialog's readout", () => {
       within(items)
         .getAllByRole("listitem")
         .map((item) => item.textContent),
-    ).toEqual(["Master Sword", "Bottle ×1", "Hookshot"]);
+    ).toEqual([
+      "Master Sword",
+      "Bottle ×1 (empty)",
+      "Hookshot",
+      "Bomb capacity 10",
+      "Arrow capacity 30",
+    ]);
     expect(
       within(readout).getByTestId("readout-dungeon-items"),
     ).toHaveTextContent("Eastern PalaceBig Key");

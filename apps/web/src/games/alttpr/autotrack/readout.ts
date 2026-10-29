@@ -24,6 +24,10 @@ import {
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
 import { boardItems } from "@/games/alttpr/autotrack/table";
 import {
+  BOTTLE_CONTENT_NAMES,
+  BOTTLE_CONTENTS,
+} from "@/games/alttpr/data/items";
+import {
   ACCESSIBILITY_LABELS,
   BOSS_SHUFFLE_LABELS,
   ENTRANCE_LABELS,
@@ -504,6 +508,23 @@ const itemName = (id: ItemId, count: number) => {
   return COUNTED.has(id) ? `${name} ×${count}` : name;
 };
 
+/**
+ * The bottles' name with what each holds, in the game's order: "Bottle ×2
+ * (red potion, empty)".
+ */
+const bottlesWithContents = (
+  name: string,
+  bottles: AutotrackReading["bottles"],
+) =>
+  typeof bottles === "string" || bottles.length === 0
+    ? name
+    : `${name} (${bottles
+        .map(
+          (content) =>
+            BOTTLE_CONTENT_NAMES[BOTTLE_CONTENTS[content] ?? "empty"],
+        )
+        .join(", ")})`;
+
 /** Pushes `entry` to the list `key` holds in `map`. */
 const add = <K>(map: Map<K, string[]>, key: K, entry: string) => {
   const list = map.get(key);
@@ -560,7 +581,20 @@ export const describeReading = (
     } else if (own) {
       add(byDungeon, own[2] as DungeonCode, DUNGEON_ITEM_NAMES[own[1]]);
     } else if (PRIZES[id]) prizes.push(PRIZES[id]);
-    else items.push(itemName(id, count));
+    else if (id === "bottle") {
+      items.push(bottlesWithContents(itemName(id, count), reading.bottles));
+    } else items.push(itemName(id, count));
+  }
+  // How many bombs and arrows Link can hold, outside Race Mode: v2.0 does
+  // not name the capacity upgrades
+  const { capacities } = reading;
+  if (typeof capacities === "string") {
+    withheld.set("Bomb and arrow capacity", capacities);
+  } else {
+    items.push(
+      `Bomb capacity ${capacities.bombs}`,
+      `Arrow capacity ${capacities.arrows}`,
+    );
   }
   // Race Mode counts the crystals, never names them (v2.0: not which is a
   // 5/6 crystal)

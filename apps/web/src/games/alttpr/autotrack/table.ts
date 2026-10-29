@@ -17,6 +17,8 @@ import {
   type Prize,
 } from "@alltp/pack-alttpr";
 import {
+  BOTTLE_SLOTS,
+  CAPACITIES,
   items as freshItems,
   type Hearts,
   type ItemState,
@@ -135,6 +137,12 @@ export const prizeOf = (
     (prize) => cell.values[prize] === value,
   );
 
+/** The cells whose value is the game's whenever it changes: not a progress. */
+const GAME_SETTLED: ReadonlySet<string> = new Set([
+  ...BOTTLE_SLOTS,
+  ...Object.keys(CAPACITIES),
+]);
+
 /**
  * The least value of a cell that holds both what the player marked and
  * what the game shows: the higher of two levels, the blue and the red
@@ -154,6 +162,9 @@ export const joinValues = (
   // The Triforce pieces found only rise; the pieces asked for are the ROM's
   if (id === PIECES_ITEM) return Math.max(Number(board), Number(game));
   if (id === "goalpieces") return game;
+  // What a bottle holds and what the bags can hold go both ways in play (a
+  // potion drunk, an upgrade bought): the game's reading wins when it moves
+  if (GAME_SETTLED.has(id)) return game;
   const entry = PACK_ITEMS[id];
   switch (entry?.kind) {
     case "escape":

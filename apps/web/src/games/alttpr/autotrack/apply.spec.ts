@@ -803,3 +803,90 @@ describe("the Triforce pieces", () => {
     expect(view.items).not.toHaveProperty("triforce");
   });
 });
+
+describe("the bottles' contents and the capacities", () => {
+  /** A game holding `bottles` (BottleContents bytes) and the two capacities. */
+  const holding = (bottles: number[], bombs = 10, arrows = 30) => {
+    const memory = seedMemory({ race: false });
+    bottles.forEach((content, slot) => {
+      memory[SAVE(0x35c + slot)] = content;
+    });
+    memory[SAVE(0x370)] = bombs;
+    memory[SAVE(0x371)] = arrows;
+    return memory;
+  };
+
+  it("lays what each bottle holds, Race Mode too, in the order the game fills them", () => {
+    // A red potion, then a bee: slots 1 and 2; the others are not there
+    const memory = holding([0x03, 0x07, 0x00, 0x00]);
+    for (const race of [false, true]) {
+      const board = fresh();
+      const view = gameView(readingOf(memory, { race }), board);
+      expect(view.items, `race ${race}`).toMatchObject({
+        bottle: 2,
+        bottlecontents1: 1,
+        bottlecontents2: 5,
+      });
+      // No bottle there, nothing said of its cell
+      expect(view.items).not.toHaveProperty("bottlecontents3");
+      expect(mergeView(board, view)?.next.items).toMatchObject({
+        bottle: 2,
+        bottlecontents1: 1,
+        bottlecontents2: 5,
+      });
+    }
+  });
+
+  it("lays the bomb and arrow capacities outside Race Mode, never in a race", () => {
+    const memory = holding([0x02], 50, 70);
+    const board = fresh();
+    const view = gameView(readingOf(memory), board);
+    expect(view.items).toMatchObject({ arrowcapacity: 70, bombcapacity: 50 });
+    expect(mergeView(board, view)?.next.items).toMatchObject({
+      arrowcapacity: 70,
+      bombcapacity: 50,
+    });
+    // Race Mode never reads them: the cells are the player's
+    const raced = gameView(readingOf(memory, { race: true }), board);
+    expect(raced.items).not.toHaveProperty("bombcapacity");
+    expect(raced.items).not.toHaveProperty("arrowcapacity");
+    const marks = marked(fresh(), { arrowcapacity: 45, bombcapacity: 25 });
+    expect(mergeView(marks, raced)?.next.items?.bombcapacity ?? 25).toBe(25);
+    expect(syncView(marks, raced)?.next.items?.arrowcapacity ?? 45).toBe(45);
+  });
+
+  it("takes a content the game empties, and a capacity it lowers, on a merge too", () => {
+    // Both go both ways in play, unlike an item: the game's reading wins
+    const board = marked(fresh(), {
+      arrowcapacity: 70,
+      bombcapacity: 50,
+      bottle: 1,
+      bottlecontents1: 1,
+    });
+    const view = gameView(readingOf(holding([0x02], 30, 50)), board);
+    expect(mergeView(board, view)?.next.items).toMatchObject({
+      arrowcapacity: 50,
+      bombcapacity: 30,
+      bottlecontents1: 0,
+    });
+  });
+
+  it("lays a change as news, and nothing while the game says the same", () => {
+    const board = fresh();
+    const before = gameView(readingOf(holding([0x03], 10, 30)), board);
+    const same = gameView(readingOf(holding([0x03], 10, 30)), board);
+    expect(newsOf(before, same).items).toEqual({});
+    // The potion drunk, a bomb upgrade bought
+    const after = gameView(readingOf(holding([0x02], 15, 30)), board);
+    expect(newsOf(before, after).items).toEqual({
+      bombcapacity: 15,
+      bottlecontents1: 0,
+    });
+  });
+
+  it("leaves a capacity alone while the game has no save loaded", () => {
+    const view = gameView(readingOf(holding([0x02], 0, 0)), fresh());
+    expect(view.items).not.toHaveProperty("bombcapacity");
+    expect(view.items).not.toHaveProperty("arrowcapacity");
+  });
+});

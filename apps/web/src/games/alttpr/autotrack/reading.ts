@@ -5,6 +5,10 @@
 import {
   type BossReading,
   decodeBosses,
+  type BottlesReading,
+  type CapacitiesReading,
+  decodeBottles,
+  decodeCapacities,
   decodeChecks,
   decodeEntrances,
   decodeGoalPieces,
@@ -33,6 +37,16 @@ export type AutotrackReading = {
   /** Race Mode was on: what it withholds was neither read nor decoded. */
   readonly race: boolean;
   readonly items: ItemReading;
+  /**
+   * What each bottle Link holds contains (`decodeBottles`), Race Mode or not:
+   * v2.0 lists the bottle contents among the HUD's counts.
+   */
+  readonly bottles: BottlesReading;
+  /**
+   * How many bombs and arrows Link can hold (`decodeCapacities`), outside
+   * Race Mode: v2.0 does not name the capacity upgrades.
+   */
+  readonly capacities: CapacitiesReading;
   /** The locations checked, by the pack's location id, in the pack's order. */
   readonly checked: readonly string[];
   /** The locations memory could not settle, with why. */
@@ -94,6 +108,8 @@ export const readMemory = (
   return {
     at,
     bosses: decodeBosses(memory, options),
+    bottles: decodeBottles(memory, options),
+    capacities: decodeCapacities(memory, options),
     checked: [...checks.checked],
     entrances: decodeEntrances(memory, options),
     health: decodeHealth(memory, options),
