@@ -1,5 +1,6 @@
 // The key model (solveWithKeys): golden cases on real dungeons, its laws as
-// properties, and the facts about the world its soundness rests on
+// properties, its soundness against placements the randomizer's fill may
+// make (test/fill.ts), and the facts about the world its soundness rests on
 // (README.md, "The key model").
 import {
   evaluate,
@@ -19,7 +20,13 @@ import { DERIVED, derivedFacts } from "./derived";
 import { DUNGEONS, dungeonRegions } from "./dungeons";
 import { type Filler, filler } from "./fill";
 import { fromUpstream, ITEMS } from "./items";
-import { everythingBut, readsOf, solveWithKeys, untrackedItems } from "./keys";
+import {
+  everythingBut,
+  readsOf,
+  solveWithKeys,
+  untrackedItems,
+  withUntracked,
+} from "./keys";
 import { medallionFacts } from "./medallions";
 import { compile, regionModules } from "./pack";
 import { RULES } from "./rules";
@@ -553,6 +560,65 @@ describe("the key model's laws", () => {
     );
     expect([...seen].sort()).toEqual(["doubted", "raised"]);
   });
+});
+
+describe("the key model's soundness", () => {
+  // NoGlitches, and the worlds where a way in reads a key (its gating
+  // dungeons): a fill takes ~35 ms, so few runs, the adversary drawing
+  for (const [name, settings] of [
+    ["Open", OPEN],
+    ["Open, Hybrid Major Glitches", HMG_OPEN],
+    ["Inverted, Hybrid Major Glitches", HMG_INVERTED],
+    ["Open, Major Glitches", MG_OPEN],
+    ["Inverted, Major Glitches", MG_INVERTED],
+  ] as const) {
+    it(`says yes only where every placement the fill may make lets the player in (${name})`, () => {
+      const f = fillerOf(settings);
+      const seen = new Set<string>();
+      fc.assert(
+        fc.property(
+          grown,
+          fc.array(odds, { maxLength: 40, minLength: 40 }),
+          fc.boolean(),
+          ([items], draws, adversarial) => {
+            const state = tracked(items, settings);
+            let next = 0;
+            const draw = (count: number) =>
+              Math.min(
+                count - 1,
+                Math.floor((draws[next++ % draws.length] ?? 0) * count),
+              );
+            // The adversary draws among the spots the player reaches least,
+            // with every key and then without
+            const all = solve(f.world, withUntracked(f, state));
+            const alone = solve(f.world, state);
+            const score = (spot: string) =>
+              rank(all.location(spot)) * 3 + rank(alone.location(spot));
+            const placement = fill(f, (spots) => {
+              const low = Math.min(...spots.map(score));
+              const drawn = adversarial
+                ? spots.filter((spot) => score(spot) === low)
+                : spots;
+              return drawn[draw(drawn.length)] as string;
+            });
+            // A fill that finds no spot fails, and the randomizer tries again
+            if (placement === undefined) return true;
+            const keyed = solveWithKeys(f, state);
+            const played = sweep(f, state, placement).solution;
+            for (const id of f.locations) {
+              if (keyed.location(id) !== "yes") continue;
+              if (played.location(id) !== "yes") return false;
+              if (alone.location(id) !== "yes") seen.add("raised");
+            }
+            return true;
+          },
+        ),
+        { numRuns: 20, seed: 11 },
+      );
+      // Not vacuous: the model said yes where only its keys could
+      expect([...seen]).toEqual(["raised"]);
+    });
+  }
 });
 
 describe("readsOf", () => {
