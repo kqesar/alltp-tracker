@@ -1079,7 +1079,9 @@ only, so the harness is read there (`git show`: the world each suite
 builds, the dungeon tests' `STARTING_REGION_MAP`) and the cases at the
 release. `pool.json` is the pool an "everything but" case draws from, from
 `ItemList.py`'s lists and the harness's prizes, cited; `suite/` holds the
-customizer seeds' Verification checks. A file is listed `pending` in
+customizer seeds' Verification checks. `vanilla-key-logic.json` is
+`KeyDoorShuffle.py`'s `validate_vanilla_key_logic`, which no code of DR
+calls: the rule it expects of each vanilla key door, read per mode. A file is listed `pending` in
 `upstream.json` until DR's world is held to it (`test/dr-fixtures.spec.ts`
 holds the list); `test/dr-contract.spec.ts` holds each `ported` file to its
 cases, a case it answers otherwise listed with why (`STALE`, or

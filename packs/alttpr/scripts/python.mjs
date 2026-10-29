@@ -453,8 +453,10 @@ export function expression(stream, primaryOnly = false) {
       if (name === "None") return { t: "const", value: null };
       return { name, t: "name" };
     }
-    if (token.value === "(" || token.value === "[") {
-      const close = token.value === "(" ? ")" : "]";
+    // A set display is a sequence too: {'a', 'b'} (KeyDoorShuffle.py's
+    // validators); a dict display still stops the import at its ':'
+    if (token.value === "(" || token.value === "[" || token.value === "{") {
+      const close = token.value === "(" ? ")" : token.value === "[" ? "]" : "}";
       /** @type {Expr[]} */
       const items = [];
       let comma = false;

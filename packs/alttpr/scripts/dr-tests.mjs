@@ -23,7 +23,13 @@
 import { execFileSync } from "node:child_process";
 import { load } from "js-yaml";
 import { caseValue, classOf, valueAfter } from "./er-tests.mjs";
-import { assigned, expression, tokens } from "./python.mjs";
+import {
+  assigned,
+  expression,
+  functionBody,
+  pythonExpression,
+  tokens,
+} from "./python.mjs";
 
 /**
  * @typedef {import("./python.mjs").Statement} Statement
@@ -294,6 +300,165 @@ function suiteOf(read, files) {
 }
 
 /**
+ * KeyDoorShuffle.py's validate_vanilla_key_logic (:1919-2093), which no
+ * code calls: per dungeon, each door rule it expects (val_rule: the small
+ * key number, allow_small and its location, the alternate number and big
+ * key locations) and the big key restrictions it asserts, with the modes
+ * each holds in (its `if`s read for vanilla entrances, no glitches) and the
+ * comment a line carries.
+ * @param {(file: string) => string} read
+ */
+export function vanillaKeyLogicOf(read) {
+  const file = "KeyDoorShuffle.py";
+  const source = read(file);
+  const lines = source.split("\n");
+  const validate = functionBody(source, "validate_vanilla_key_logic", file);
+  const [validators] = validate.body;
+  if (validators === undefined) throw new Error(`${file}: no validators`);
+  // validators = {'Hyrule Castle': val_hyrule, ...}
+  const dungeons = [...validators.text.matchAll(/'([^']+)': (val_\w+)/g)].map(
+    ([, dungeon, name]) => ({
+      dungeon: String(dungeon),
+      function: String(name),
+    }),
+  );
+  const MODES = ["open", "standard", "inverted"];
+  /**
+   * A condition of world settings, read for one mode with vanilla
+   * entrances and no glitches.
+   * @param {any} e
+   * @param {string} mode
+   * @returns {unknown}
+   */
+  const value = (e, mode) => {
+    if (e.t === "const") return e.value;
+    if (e.t === "seq")
+      return e.items.map((/** @type {any} */ x) => value(x, mode));
+    if (e.t === "index" && e.of.t === "attr" && e.of.of.name === "world") {
+      const setting = /** @type {Record<string, string>} */ ({
+        logic: "noglitches",
+        mode,
+        shuffle: "vanilla",
+      })[e.of.name];
+      if (setting === undefined) throw new Error(`${file}: world.${e.of.name}`);
+      return setting;
+    }
+    if (e.t === "compare") {
+      const left = value(e.left, mode);
+      const right = value(e.right, mode);
+      if (e.op === "==") return left === right;
+      if (e.op === "!=") return left !== right;
+      if (e.op === "in") return /** @type {unknown[]} */ (right).includes(left);
+    }
+    if (e.t === "and")
+      return e.args.every((/** @type {any} */ a) => value(a, mode));
+    if (e.t === "or")
+      return e.args.some((/** @type {any} */ a) => value(a, mode));
+    if (e.t === "not") return !value(e.of, mode);
+    throw new Error(`${file}: cannot read ${JSON.stringify(e)}`);
+  };
+  /** @param {string} text @param {number} line */
+  const noteOf = (text, line) => {
+    const raw = lines[line - 1] ?? "";
+    const at = raw.indexOf("#");
+    return at >= 0 && !text.includes("#")
+      ? raw.slice(at + 1).trim()
+      : undefined;
+  };
+  return {
+    called: false,
+    dungeons: dungeons.map(({ dungeon, function: name }) => {
+      const fn = functionBody(source, name, file);
+      /** @type {Record<string, string[]>} */
+      const sets = {};
+      /** @type {unknown[]} */
+      const checks = [];
+      /**
+       * @param {any} e
+       * @returns {string[]}
+       */
+      const strings = (e) => {
+        if (e.t === "const" && e.value === null) return [];
+        if (e.t === "seq")
+          return e.items.map((/** @type {any} */ x) => String(x.value));
+        if (e.t === "name") {
+          const found = sets[e.name];
+          if (found === undefined) throw new Error(`${file}: no set ${e.name}`);
+          return found;
+        }
+        if (e.t === "call" && e.fn.t === "attr" && e.fn.name === "union")
+          return [...strings(e.fn.of), ...e.args.flatMap(strings)];
+        throw new Error(`${file}: cannot read a set ${JSON.stringify(e)}`);
+      };
+      /**
+       * @param {Statement[]} statements
+       * @param {string[]} modes
+       */
+      const walk = (statements, modes) => {
+        /** @type {any} */
+        let last;
+        for (const st of statements) {
+          if (st.block && st.text.startsWith("if ")) {
+            last = pythonExpression(st.text.slice(3));
+            walk(
+              st.body,
+              modes.filter((m) => value(last, m)),
+            );
+            continue;
+          }
+          if (st.block && st.text === "else") {
+            walk(
+              st.body,
+              modes.filter((m) => !value(last, m)),
+            );
+            continue;
+          }
+          const note = noteOf(st.text, st.line);
+          const where = { line: st.line, modes, ...(note ? { note } : {}) };
+          const set = /^(\w+) = (\{.*\})$/.exec(st.text);
+          if (set !== null) {
+            sets[set[1] ?? ""] = strings(pythonExpression(set[2] ?? ""));
+            continue;
+          }
+          const e = /** @type {any} */ (
+            pythonExpression(st.text.replace(/^assert /, ""))
+          );
+          if (e.t === "call" && e.fn.name === "val_rule") {
+            const [door, skn, allow, loc, askn, setCheck] = e.args;
+            checks.push({
+              allowSmall: allow ? allow.value : false,
+              alternateBigKeyLoc: setCheck ? strings(setCheck).sort() : [],
+              alternateSmallKey: askn ? askn.value : null,
+              door: door.at.value,
+              kind: "rule",
+              smallKeyNum: skn.value,
+              smallLocation: loc ? loc.value : null,
+              ...where,
+            });
+          } else if (e.t === "compare" && e.op === "in")
+            checks.push({
+              kind: "bkRestricted",
+              location: e.left.args[0].value,
+              ...where,
+            });
+          else if (e.t === "compare" && e.op === "==" && e.left.t === "call")
+            checks.push({
+              count: e.right.value,
+              kind: "bkRestrictedCount",
+              ...where,
+            });
+          else throw new Error(`${file}:${st.line}: cannot read ${st.text}`);
+        }
+      };
+      walk(fn.body, MODES);
+      return { checks, dungeon, function: name, line: fn.line };
+    }),
+    file,
+    line: validate.line,
+  };
+}
+
+/**
  * Every DR test fixture.
  * @param {(file: string) => string} read - A file of the checkout at 1.5.6
  * @param {(file: string) => string} harness - A file at the harness commit
@@ -332,5 +497,6 @@ export function importDrTests(read, harness, commit, files) {
     fixtures,
     pool: poolOf(read, harness),
     suite: suiteOf(read, files.suite),
+    vanillaKeyLogic: vanillaKeyLogicOf(read),
   };
 }

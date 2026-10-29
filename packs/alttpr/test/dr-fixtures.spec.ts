@@ -60,7 +60,13 @@ function jsonFiles(dir: string): string[] {
 const read = <T>(path: string): T =>
   JSON.parse(readFileSync(path, "utf8")) as T;
 const fixtures = jsonFiles(DIR)
-  .filter((path) => !path.includes("/suite/") && !path.endsWith("pool.json"))
+  .filter(
+    (path) =>
+      !path.includes("/suite/") &&
+      !path.endsWith("pool.json") &&
+      // KeyDoorShuffle.py's validator, held by key-analysis/analysis.spec.ts
+      !path.endsWith("vanilla-key-logic.json"),
+  )
   .map((path) => read<Fixture>(path));
 
 /** A suite's cases, all, of entrances, of disabled tests. */

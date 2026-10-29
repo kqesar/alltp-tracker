@@ -219,6 +219,11 @@
         "status": "pending"
       },
       {
+        "file": "KeyDoorShuffle.py",
+        "fixture": "test/dr-upstream/vanilla-key-logic.json",
+        "status": "ported"
+      },
+      {
         "file": "test/suite/partial_key_logic.yaml",
         "fixture": "test/dr-upstream/suite/partial_key_logic.json",
         "status": "pending"

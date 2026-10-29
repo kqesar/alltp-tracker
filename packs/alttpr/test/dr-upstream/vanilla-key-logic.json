@@ -1,0 +1,970 @@
+{
+  "called": false,
+  "dungeons": [
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Hyrule Dungeon Map Room Key Door S",
+          "kind": "rule",
+          "line": 1942,
+          "modes": ["standard"],
+          "smallKeyNum": 1,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Hyrule Dungeon Armory Interior Key Door N",
+          "kind": "rule",
+          "line": 1943,
+          "modes": ["standard"],
+          "smallKeyNum": 2,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Sewers Dark Cross Key Door N",
+          "kind": "rule",
+          "line": 1944,
+          "modes": ["standard"],
+          "smallKeyNum": 3,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Sewers Key Rat NE",
+          "kind": "rule",
+          "line": 1945,
+          "modes": ["standard"],
+          "smallKeyNum": 4,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Sewers Secret Room Key Door S",
+          "kind": "rule",
+          "line": 1947,
+          "modes": ["open", "inverted"],
+          "smallKeyNum": 2,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Sewers Dark Cross Key Door N",
+          "kind": "rule",
+          "line": 1948,
+          "modes": ["open", "inverted"],
+          "smallKeyNum": 2,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Hyrule Dungeon Map Room Key Door S",
+          "kind": "rule",
+          "line": 1949,
+          "modes": ["open", "inverted"],
+          "smallKeyNum": 2,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Hyrule Dungeon Armory Interior Key Door N",
+          "kind": "rule",
+          "line": 1950,
+          "modes": ["open", "inverted"],
+          "smallKeyNum": 4,
+          "smallLocation": null
+        }
+      ],
+      "dungeon": "Hyrule Castle",
+      "function": "val_hyrule",
+      "line": 1940
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": true,
+          "alternateBigKeyLoc": ["Eastern Palace - Big Key Chest"],
+          "alternateSmallKey": 1,
+          "door": "Eastern Dark Square Key Door WN",
+          "kind": "rule",
+          "line": 1954,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 2,
+          "smallLocation": "Eastern Palace - Big Key Chest"
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Eastern Darkness Up Stairs",
+          "kind": "rule",
+          "line": 1955,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 2,
+          "smallLocation": null
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 1956,
+          "location": "Eastern Palace - Big Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 1957,
+          "location": "Eastern Palace - Boss",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "count": 2,
+          "kind": "bkRestrictedCount",
+          "line": 1958,
+          "modes": ["open", "standard", "inverted"]
+        }
+      ],
+      "dungeon": "Eastern Palace",
+      "function": "val_eastern",
+      "line": 1953
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Desert East Wing Key Door EN",
+          "kind": "rule",
+          "line": 1962,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 4,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Desert Tiles 1 Up Stairs",
+          "kind": "rule",
+          "line": 1963,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 2,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Desert Beamos Hall NE",
+          "kind": "rule",
+          "line": 1964,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 3,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Desert Tiles 2 NE",
+          "kind": "rule",
+          "line": 1965,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 4,
+          "smallLocation": null
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 1966,
+          "location": "Desert Palace - Big Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 1967,
+          "location": "Desert Palace - Boss",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "count": 2,
+          "kind": "bkRestrictedCount",
+          "line": 1968,
+          "modes": ["open", "standard", "inverted"]
+        }
+      ],
+      "dungeon": "Desert Palace",
+      "function": "val_desert",
+      "line": 1961
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": true,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Hera Lobby Key Stairs",
+          "kind": "rule",
+          "line": 1972,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 1,
+          "smallLocation": "Tower of Hera - Big Key Chest"
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 1973,
+          "location": "Tower of Hera - Big Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 1974,
+          "location": "Tower of Hera - Compass Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 1975,
+          "location": "Tower of Hera - Boss",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "count": 3,
+          "kind": "bkRestrictedCount",
+          "line": 1976,
+          "modes": ["open", "standard", "inverted"]
+        }
+      ],
+      "dungeon": "Tower of Hera",
+      "function": "val_hera",
+      "line": 1971
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Tower Room 03 Up Stairs",
+          "kind": "rule",
+          "line": 1980,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 1,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Tower Dark Maze ES",
+          "kind": "rule",
+          "line": 1981,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 2,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Tower Dark Archers Up Stairs",
+          "kind": "rule",
+          "line": 1982,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 3,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Tower Circle of Pots ES",
+          "kind": "rule",
+          "line": 1983,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 4,
+          "smallLocation": null
+        }
+      ],
+      "dungeon": "Agahnims Tower",
+      "function": "val_tower",
+      "line": 1979
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "PoD Arena Main NW",
+          "kind": "rule",
+          "line": 1987,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 4,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": true,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "PoD Basement Ledge Up Stairs",
+          "kind": "rule",
+          "line": 1988,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 6,
+          "smallLocation": "Palace of Darkness - Big Key Chest"
+        },
+        {
+          "allowSmall": true,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "PoD Compass Room SE",
+          "kind": "rule",
+          "line": 1989,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 6,
+          "smallLocation": "Palace of Darkness - Harmless Hellway"
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "PoD Falling Bridge WN",
+          "kind": "rule",
+          "line": 1990,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 6,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "PoD Dark Pegs WN",
+          "kind": "rule",
+          "line": 1991,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 6,
+          "smallLocation": null
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 1992,
+          "location": "Palace of Darkness - Big Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 1993,
+          "location": "Palace of Darkness - Boss",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "count": 2,
+          "kind": "bkRestrictedCount",
+          "line": 1994,
+          "modes": ["open", "standard", "inverted"]
+        }
+      ],
+      "dungeon": "Palace of Darkness",
+      "function": "val_pod",
+      "line": 1986
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Swamp Entrance Down Stairs",
+          "kind": "rule",
+          "line": 1998,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 1,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Swamp Pot Row WS",
+          "kind": "rule",
+          "line": 1999,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 2,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Swamp Trench 1 Key Ledge NW",
+          "kind": "rule",
+          "line": 2000,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 3,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Swamp Hub North Ledge N",
+          "kind": "rule",
+          "line": 2001,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 5,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Swamp Hub WN",
+          "kind": "rule",
+          "line": 2002,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 6,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Swamp Waterway NW",
+          "kind": "rule",
+          "line": 2003,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 6,
+          "smallLocation": null
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2004,
+          "location": "Swamp Palace - Entrance",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "count": 1,
+          "kind": "bkRestrictedCount",
+          "line": 2005,
+          "modes": ["open", "standard", "inverted"]
+        }
+      ],
+      "dungeon": "Swamp Palace",
+      "function": "val_swamp",
+      "line": 1997
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Skull 3 Lobby NW",
+          "kind": "rule",
+          "line": 2009,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 4,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Skull Spike Corner ES",
+          "kind": "rule",
+          "line": 2010,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 5,
+          "smallLocation": null
+        }
+      ],
+      "dungeon": "Skull Woods",
+      "function": "val_skull",
+      "line": 2008
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Thieves Hallway WS",
+          "kind": "rule",
+          "line": 2014,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 1,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Thieves Spike Switch Up Stairs",
+          "kind": "rule",
+          "line": 2015,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 3,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": true,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Thieves Conveyor Bridge WS",
+          "kind": "rule",
+          "line": 2016,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 3,
+          "smallLocation": "Thieves' Town - Big Chest"
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2017,
+          "location": "Thieves' Town - Attic",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2018,
+          "location": "Thieves' Town - Boss",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2019,
+          "location": "Thieves' Town - Blind's Cell",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2020,
+          "location": "Thieves' Town - Big Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "count": 4,
+          "kind": "bkRestrictedCount",
+          "line": 2021,
+          "modes": ["open", "standard", "inverted"]
+        }
+      ],
+      "dungeon": "Thieves Town",
+      "function": "val_thieves",
+      "line": 2013
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Ice Jelly Key Down Stairs",
+          "kind": "rule",
+          "line": 2025,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 1,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Ice Conveyor SW",
+          "kind": "rule",
+          "line": 2026,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 2,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Ice Backwards Room Down Stairs",
+          "kind": "rule",
+          "line": 2027,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 5,
+          "smallLocation": null
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2028,
+          "location": "Ice Palace - Boss",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2029,
+          "location": "Ice Palace - Big Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "count": 2,
+          "kind": "bkRestrictedCount",
+          "line": 2030,
+          "modes": ["open", "standard", "inverted"]
+        }
+      ],
+      "dungeon": "Ice Palace",
+      "function": "val_ice",
+      "line": 2024
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "Mire Spikes NW",
+          "kind": "rule",
+          "line": 2035,
+          "modes": ["open", "standard", "inverted"],
+          "note": "todo: is sometimes 3 or 5? best_counter order matters",
+          "smallKeyNum": 3,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [
+            "Misery Mire - Big Key Chest",
+            "Misery Mire - Compass Chest"
+          ],
+          "alternateSmallKey": 3,
+          "door": "Mire Hub WS",
+          "kind": "rule",
+          "line": 2037,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 5,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [
+            "Misery Mire - Big Key Chest",
+            "Misery Mire - Compass Chest"
+          ],
+          "alternateSmallKey": 4,
+          "door": "Mire Conveyor Crystal WS",
+          "kind": "rule",
+          "line": 2038,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 6,
+          "smallLocation": null
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2039,
+          "location": "Misery Mire - Boss",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2040,
+          "location": "Misery Mire - Big Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "count": 2,
+          "kind": "bkRestrictedCount",
+          "line": 2041,
+          "modes": ["open", "standard", "inverted"]
+        }
+      ],
+      "dungeon": "Misery Mire",
+      "function": "val_mire",
+      "line": 2033
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "TR Hub NW",
+          "kind": "rule",
+          "line": 2047,
+          "modes": ["open", "standard"],
+          "smallKeyNum": 1,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "TR Pokey 1 NW",
+          "kind": "rule",
+          "line": 2048,
+          "modes": ["open", "standard"],
+          "smallKeyNum": 2,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "TR Chain Chomps Down Stairs",
+          "kind": "rule",
+          "line": 2049,
+          "modes": ["open", "standard"],
+          "smallKeyNum": 3,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": true,
+          "alternateBigKeyLoc": ["Turtle Rock - Big Key Chest"],
+          "alternateSmallKey": 4,
+          "door": "TR Pokey 2 ES",
+          "kind": "rule",
+          "line": 2050,
+          "modes": ["open", "standard"],
+          "smallKeyNum": 6,
+          "smallLocation": "Turtle Rock - Big Key Chest"
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "TR Crystaroller Down Stairs",
+          "kind": "rule",
+          "line": 2051,
+          "modes": ["open", "standard"],
+          "smallKeyNum": 5,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "TR Dash Bridge WS",
+          "kind": "rule",
+          "line": 2052,
+          "modes": ["open", "standard"],
+          "smallKeyNum": 6,
+          "smallLocation": null
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2053,
+          "location": "Turtle Rock - Eye Bridge - Bottom Right",
+          "modes": ["open", "standard"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2054,
+          "location": "Turtle Rock - Eye Bridge - Top Left",
+          "modes": ["open", "standard"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2055,
+          "location": "Turtle Rock - Eye Bridge - Top Right",
+          "modes": ["open", "standard"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2056,
+          "location": "Turtle Rock - Eye Bridge - Bottom Left",
+          "modes": ["open", "standard"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2057,
+          "location": "Turtle Rock - Boss",
+          "modes": ["open", "standard"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2058,
+          "location": "Turtle Rock - Crystaroller Room",
+          "modes": ["open", "standard"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2059,
+          "location": "Turtle Rock - Big Chest",
+          "modes": ["open", "standard"]
+        },
+        {
+          "count": 7,
+          "kind": "bkRestrictedCount",
+          "line": 2060,
+          "modes": ["open", "standard"]
+        }
+      ],
+      "dungeon": "Turtle Rock",
+      "function": "val_turtle",
+      "line": 2044
+    },
+    {
+      "checks": [
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [
+            "Ganons Tower - Firesnake Room",
+            "Ganons Tower - Randomizer Room - Bottom Left",
+            "Ganons Tower - Randomizer Room - Bottom Right",
+            "Ganons Tower - Randomizer Room - Top Left",
+            "Ganons Tower - Randomizer Room - Top Right"
+          ],
+          "alternateSmallKey": 4,
+          "door": "GT Double Switch EN",
+          "kind": "rule",
+          "line": 2067,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 6,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": ["Ganons Tower - Map Chest"],
+          "alternateSmallKey": 5,
+          "door": "GT Hookshot ES",
+          "kind": "rule",
+          "line": 2068,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 7,
+          "smallLocation": "Ganons Tower - Map Chest"
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [
+            "Ganons Tower - Compass Room - Bottom Left",
+            "Ganons Tower - Compass Room - Bottom Right",
+            "Ganons Tower - Compass Room - Top Left",
+            "Ganons Tower - Compass Room - Top Right"
+          ],
+          "alternateSmallKey": 5,
+          "door": "GT Tile Room EN",
+          "kind": "rule",
+          "line": 2069,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 6,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [
+            "Ganons Tower - Randomizer Room - Bottom Left",
+            "Ganons Tower - Randomizer Room - Bottom Right",
+            "Ganons Tower - Randomizer Room - Top Left",
+            "Ganons Tower - Randomizer Room - Top Right"
+          ],
+          "alternateSmallKey": 5,
+          "door": "GT Firesnake Room SW",
+          "kind": "rule",
+          "line": 2070,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 7,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [
+            "Ganons Tower - Big Chest",
+            "Ganons Tower - Big Key Chest",
+            "Ganons Tower - Big Key Room - Left",
+            "Ganons Tower - Big Key Room - Right",
+            "Ganons Tower - Bob's Chest"
+          ],
+          "alternateSmallKey": 5,
+          "door": "GT Conveyor Star Pits EN",
+          "kind": "rule",
+          "line": 2071,
+          "modes": ["open", "standard", "inverted"],
+          "note": "should be 7?",
+          "smallKeyNum": 6,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "GT Mini Helmasaur Room WN",
+          "kind": "rule",
+          "line": 2072,
+          "modes": ["open", "standard", "inverted"],
+          "note": "not sure about this 6...",
+          "smallKeyNum": 6,
+          "smallLocation": null
+        },
+        {
+          "allowSmall": false,
+          "alternateBigKeyLoc": [],
+          "alternateSmallKey": null,
+          "door": "GT Crystal Circles SW",
+          "kind": "rule",
+          "line": 2073,
+          "modes": ["open", "standard", "inverted"],
+          "smallKeyNum": 8,
+          "smallLocation": null
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2074,
+          "location": "Ganons Tower - Mini Helmasaur Room - Left",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2075,
+          "location": "Ganons Tower - Mini Helmasaur Room - Right",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2076,
+          "location": "Ganons Tower - Big Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2077,
+          "location": "Ganons Tower - Pre-Moldorm Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "kind": "bkRestricted",
+          "line": 2078,
+          "location": "Ganons Tower - Validation Chest",
+          "modes": ["open", "standard", "inverted"]
+        },
+        {
+          "count": 5,
+          "kind": "bkRestrictedCount",
+          "line": 2079,
+          "modes": ["open", "standard", "inverted"]
+        }
+      ],
+      "dungeon": "Ganons Tower",
+      "function": "val_ganons",
+      "line": 2063
+    }
+  ],
+  "file": "KeyDoorShuffle.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "line": 1919,
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  }
+}

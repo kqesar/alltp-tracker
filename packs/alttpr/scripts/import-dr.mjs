@@ -609,6 +609,10 @@ function main(args) {
       join(out, "pool.json"),
       { generated, upstream: harnessUpstream, ...tests.pool },
     ],
+    [
+      join(out, "vanilla-key-logic.json"),
+      { generated, upstream, ...tests.vanillaKeyLogic },
+    ],
     ...tests.suite.map(
       (seed) =>
         /** @type {[string, unknown]} */ ([

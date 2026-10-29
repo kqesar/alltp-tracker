@@ -50,7 +50,11 @@ const caseKey = (
 ) => `${file}:${line}#${index} ${name} ${access}`;
 
 describe("the Door Randomizer's own tests", () => {
-  const ported = LISTED.filter((t) => t.status === "ported");
+  // The test files' cases: the suite seeds and KeyDoorShuffle.py's
+  // validator have specs of their own
+  const ported = LISTED.filter(
+    (t) => t.status === "ported" && /^test\/(?!suite\/)/.test(t.file),
+  );
 
   it("list each held case once, and only cases of ported files", () => {
     const files = new Set(ported.map((t) => t.file));
