@@ -1,17 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { HOLES, holeAt } from "../scripts/import-er.mjs";
 import { pythonLiteral } from "../scripts/python.mjs";
-import { erSeed } from "../test/er-seeds";
+import { erSeed, erSeedHashes } from "../test/er-seeds";
 import tables from "./autotrack/entrance-tables.json" with { type: "json" };
 import {
-  type CrossedPool,
   crossedPool,
   ENTRANCES,
+  type EntrancePool,
+  type ErShuffle,
   entranceNamed,
+  entrancePool,
   fullPool,
   labelOf,
   linksOf,
   PLACE_OF_LOCATION,
+  restrictedPool,
+  simplePool,
   TARGETS,
   targetNamed,
 } from "./entrances";
@@ -240,7 +244,7 @@ describe("the crossed shuffle", () => {
       side: "4",
     });
     const retro = crossedPool("open", true);
-    const ids = (pool: CrossedPool, entrance: string) =>
+    const ids = (pool: EntrancePool, entrance: string) =>
       pool.targetsOf.get(entrance)?.map((t) => t.id) ?? [];
     // Any door that may lead to a single cave, a fairy's among them
     for (const door of ["east-dark-world-hint", "desert-palace-entrance-north"])
@@ -262,15 +266,50 @@ describe("the crossed shuffle", () => {
   });
 
   it("settles a hole and its cave's door together", () => {
-    expect(open.partner("kakariko-well-drop", "bat-cave-right")).toEqual([
-      "kakariko-well-cave",
-      "bat-cave-exit",
+    expect(open.partners("kakariko-well-drop", "bat-cave-right")).toEqual([
+      ["kakariko-well-cave", "bat-cave-exit"],
     ]);
-    expect(open.partner("kakariko-well-cave", "bat-cave-exit")).toEqual([
-      "kakariko-well-drop",
-      "bat-cave-right",
+    expect(open.partners("kakariko-well-cave", "bat-cave-exit")).toEqual([
+      ["kakariko-well-drop", "bat-cave-right"],
     ]);
-    expect(open.partner("kakariko-shop", "blinds-hideout")).toBeUndefined();
+    expect(open.partners("kakariko-shop", "blinds-hideout")).toEqual([]);
+    // Nor a dungeon's door, nor a cave's: the crossed shuffle splits them
+    expect(
+      open.partners("desert-palace-entrance-south", "desert-palace-exit-east"),
+    ).toEqual([]);
+    expect(open.partners("elder-house-east", "elder-house-exit-west")).toEqual(
+      [],
+    );
+  });
+
+  it("gives a must-exit door a cave's last exit, the Old Man's way out his doors", () => {
+    const ids = (entrance: string) =>
+      open.targetsOf.get(entrance)?.map((t) => t.id) ?? [];
+    // connect_mandatory_exits (EntranceShuffle.py:1938): never a lone exit
+    // nor a single cave, never what a tuple keeps first
+    const ledge = ids("dark-death-mountain-ledge-east");
+    expect(ledge).toContain("turtle-rock-isolated-ledge-exit");
+    expect(ledge).toContain("spectacle-rock-cave-exit");
+    for (const never of [
+      "eastern-palace-exit",
+      "ganons-tower-exit",
+      "blinds-hideout",
+      "turtle-rock-ledge-exit-east",
+      "superbunny-cave-exit-bottom",
+      "spectacle-rock-cave-exit-peak",
+      "old-man-cave-exit-west",
+    ])
+      expect(ledge).not.toContain(never);
+    // The Old Man's way out: Death Mountain's doors or Tower of Hera's
+    // (:371, :402)
+    expect(ids("tower-of-hera")).toContain("old-man-cave-exit-east");
+    expect(ids("kakariko-shop")).not.toContain("old-man-cave-exit-east");
+    expect(ids("kakariko-shop")).toContain("old-man-cave-exit-west");
+    // The blacksmith and the bomb shop behind their own doors (:408-421)
+    expect(ids("kakariko-shop")).toContain("blacksmiths-hut");
+    expect(ids("pyramid-fairy")).not.toContain("big-bomb-shop");
+    expect(ids("misery-mire")).toContain("big-bomb-shop");
+    expect(ids("misery-mire")).not.toContain("blacksmiths-hut");
   });
 
   it("holds a real Crosskeys seed: every entrance it shuffled, every target", () => {
@@ -298,9 +337,8 @@ describe("the crossed shuffle", () => {
         open.targetsOf.get(entrance)?.map((t) => t.id),
         entrance,
       ).toContain(target);
-      const partner = open.partner(entrance, target);
-      if (partner !== undefined)
-        expect(noted.get(partner[0]), entrance).toBe(partner[1]);
+      for (const [other, to] of open.partners(entrance, target))
+        expect(noted.get(other), entrance).toBe(to);
     }
   });
 });
@@ -309,24 +347,16 @@ describe("the full shuffle", () => {
   const crossed = crossedPool("open");
   const full = fullPool("open");
 
-  const targets = (pool: CrossedPool, id: string) =>
+  const targets = (pool: EntrancePool, id: string) =>
     pool.targetsOf.get(id)?.map((t) => t.id) ?? [];
   const OLD_MAN = [
     "old-man-house-exit-bottom",
     "old-man-house-exit-top",
-    "old-man-cave-exit-east",
     "old-man-cave-exit-west",
   ];
-  const doorIn = (world: "light" | "dark") => {
-    const found = crossed.entrances.find(
-      (e) =>
-        e.world === world &&
-        e.kind === "door" &&
-        targets(crossed, e.id).includes("old-man-house-exit-bottom"),
-    );
-    if (found === undefined) throw new Error("no door");
-    return found.id;
-  };
+  // A shop in each world, beside the Old Man's own door
+  const dark = "dark-lake-hylia-shop";
+  const light = "kakariko-shop";
 
   it("mixes the same doors and holes as the crossed one", () => {
     // Both draw on the same tables, scramble_holes and Skull Woods
@@ -338,8 +368,12 @@ describe("the full shuffle", () => {
   });
 
   it("keeps the Light World's places out of a Dark World door", () => {
-    const dark = doorIn("dark");
-    const light = doorIn("light");
+    expect(entranceNamed("Dark Lake Hylia Shop").world).toBe("dark");
+    // His way out only ever behind his Death Mountain doors (:319)
+    expect(targets(full, "old-man-cave-east")).toContain(
+      "old-man-cave-exit-east",
+    );
+    expect(targets(full, light)).not.toContain("old-man-cave-exit-east");
     for (const id of OLD_MAN) {
       // The crossed shuffle places them anywhere
       expect(targets(crossed, dark)).toContain(id);
@@ -356,6 +390,161 @@ describe("the full shuffle", () => {
     expect(targets(crossedPool("standard"), dark)).toContain(
       "hyrule-castle-exit-west",
     );
+  });
+
+  it("never puts Sanctuary's cave under the Pyramid, as the crossed one may", () => {
+    // scramble_holes (:1838-1844)
+    expect(targets(full, "pyramid-entrance")).not.toContain("sanctuary-exit");
+    expect(targets(full, "pyramid-hole")).not.toContain("sewer-drop");
+    expect(targets(crossed, "pyramid-entrance")).toContain("sanctuary-exit");
+    expect(targets(full, "sanctuary")).toContain("pyramid-exit");
+  });
+});
+
+describe("the simple and restricted shuffles", () => {
+  const ids = (pool: EntrancePool, id: string) =>
+    pool.targetsOf.get(id)?.map((t) => t.id) ?? [];
+  const simple = simplePool("open");
+  const restricted = restrictedPool("open");
+
+  it("shuffle the crossed one's doors, but the castle's a Standard world keeps", () => {
+    for (const pool of [simple, restricted])
+      expect(pool.entrances.map((e) => e.id)).toEqual(
+        crossedPool("open").entrances.map((e) => e.id),
+      );
+    // simple_shuffle_dungeons leaves Hyrule Castle where it is (:2054-2069)
+    const standard = simplePool("standard").entrances.map((e) => e.name);
+    for (const kept of [
+      "Hyrule Castle Entrance (South)",
+      "Hyrule Castle Entrance (East)",
+      "Hyrule Castle Entrance (West)",
+      "Agahnims Tower",
+      "Hyrule Castle Secret Entrance Drop",
+    ])
+      expect(standard).not.toContain(kept);
+    expect(standard).toContain("Desert Palace Entrance (North)");
+    expect(restrictedPool("standard").entrances.map((e) => e.name)).toEqual(
+      standard,
+    );
+  });
+
+  it("mix dungeons among dungeons only", () => {
+    for (const pool of [simple, restricted]) {
+      expect(new Set(ids(pool, "eastern-palace"))).toEqual(
+        new Set([
+          "eastern-palace-exit",
+          "tower-of-hera-exit",
+          "thieves-town-exit",
+          "skull-woods-final-section-exit",
+          "palace-of-darkness-exit",
+          "ice-palace-exit",
+          "misery-mire-exit",
+          "swamp-palace-exit",
+          "ganons-tower-exit",
+        ]),
+      );
+      // A four-door dungeon's door: the door of whichever moved there
+      expect(new Set(ids(pool, "agahnims-tower"))).toEqual(
+        new Set([
+          "desert-palace-exit-north",
+          "agahnims-tower-exit",
+          "turtle-rock-isolated-ledge-exit",
+        ]),
+      );
+      expect(ids(pool, "kakariko-shop")).not.toContain("eastern-palace-exit");
+    }
+    expect(ids(simplePool("standard"), "turtle-rock")).toEqual([
+      "desert-palace-exit-south",
+      "turtle-rock-exit-front",
+    ]);
+  });
+
+  it("settle a four-door dungeon's doors by one", () => {
+    // Turtle Rock at the castle's doors (:2096-2100)
+    expect(
+      restricted.partners(
+        "hyrule-castle-entrance-east",
+        "turtle-rock-ledge-exit-east",
+      ),
+    ).toEqual([
+      ["hyrule-castle-entrance-south", "turtle-rock-exit-front"],
+      ["hyrule-castle-entrance-west", "turtle-rock-ledge-exit-west"],
+      ["agahnims-tower", "turtle-rock-isolated-ledge-exit"],
+    ]);
+    // At its own doors, its ledges otherwise (:2104-2108)
+    expect(simple.partners("turtle-rock", "turtle-rock-exit-front")).toEqual([
+      [
+        "turtle-rock-isolated-ledge-entrance",
+        "turtle-rock-isolated-ledge-exit",
+      ],
+      ["dark-death-mountain-ledge-west", "turtle-rock-ledge-exit-west"],
+      ["dark-death-mountain-ledge-east", "turtle-rock-ledge-exit-east"],
+    ]);
+    // A one-door dungeon settles nothing, nor does the crossed shuffle
+    expect(simple.partners("eastern-palace", "ice-palace-exit")).toEqual([]);
+    expect(
+      crossedPool("open").partners("turtle-rock", "turtle-rock-exit-front"),
+    ).toEqual([]);
+  });
+
+  it("give the simple shuffle's pairs of doors a two-door cave whole, in order", () => {
+    // Two_Door_Caves(_Directional) take Cave_Exits (:76-95)
+    const first = ids(simple, "elder-house-east");
+    expect(first).toHaveLength(14);
+    expect(first).toContain("superbunny-cave-exit-bottom");
+    expect(first).not.toContain("superbunny-cave-exit-top");
+    expect(first).not.toContain("spiral-cave-exit");
+    expect(ids(simple, "elder-house-west")).toContain("spiral-cave-exit");
+    expect(ids(simple, "elder-house-west")).not.toContain(
+      "spiral-cave-exit-top",
+    );
+    expect(first).not.toContain("old-man-house-exit-top");
+    expect(
+      simple.partners("bumper-cave-bottom", "spiral-cave-exit-top"),
+    ).toEqual([["bumper-cave-top", "spiral-cave-exit"]]);
+    expect(
+      simple.partners("hookshot-cave-back-entrance", "elder-house-exit-east"),
+    ).toEqual([["hookshot-cave", "elder-house-exit-west"]]);
+    // The restricted shuffle places each exit apart
+    expect(
+      restricted.partners("bumper-cave-bottom", "spiral-cave-exit-top"),
+    ).toEqual([]);
+  });
+
+  it("fill Death Mountain's doors with its caves, and single doors with single caves, in the simple shuffle", () => {
+    const mountain = ids(simple, "paradox-cave-bottom");
+    expect(mountain).toContain("old-man-house-exit-top");
+    expect(mountain).toContain("paradox-cave-exit-top");
+    expect(mountain).toContain("old-man-cave-exit-west");
+    expect(mountain).toContain("bumper-cave-exit-top");
+    expect(mountain).not.toContain("old-man-cave-exit-east");
+    expect(ids(simple, "spectacle-rock-cave")).toContain(
+      "old-man-cave-exit-east",
+    );
+    expect(mountain).not.toContain("blinds-hideout");
+    const shop = ids(simple, "kakariko-shop");
+    expect(shop).toContain("blinds-hideout");
+    expect(shop).toContain("blacksmiths-hut");
+    expect(shop).not.toContain("elder-house-exit-east");
+    expect(ids(simple, "pyramid-fairy")).not.toContain("big-bomb-shop");
+  });
+
+  it("mix caves and single doors in the restricted shuffle, the Old Man in the Light World", () => {
+    const shop = ids(restricted, "kakariko-shop");
+    expect(shop).toContain("elder-house-exit-east");
+    expect(shop).toContain("blinds-hideout");
+    expect(shop).toContain("old-man-house-exit-top");
+    const dark = ids(restricted, "dark-lake-hylia-shop");
+    expect(dark).toContain("paradox-cave-exit-top");
+    expect(dark).not.toContain("old-man-house-exit-top");
+    expect(dark).not.toContain("old-man-cave-exit-west");
+    // A must-exit door a cave's last exit (:151)
+    const top = ids(restricted, "bumper-cave-top");
+    expect(top).toContain("elder-house-exit-east");
+    expect(top).not.toContain("blinds-hideout");
+    expect(top).not.toContain("spectacle-rock-cave-exit-top");
+    // The bomb shop at a blacksmith's door left (:162-178)
+    expect(ids(restricted, "old-man-cave-west")).toContain("big-bomb-shop");
   });
 });
 
@@ -450,4 +639,97 @@ describe("where the game shows Link went", () => {
       ]),
     ).toEqual([]);
   });
+});
+
+describe("every recorded seed of a shuffle the pack ports", () => {
+  const SHUFFLES: readonly string[] = [
+    "simple",
+    "restricted",
+    "full",
+    "crossed",
+  ];
+  // Link's House and the Tavern's back door stay; the house's Chris
+  // Houlihan room is a way out, never in
+  const fixed = new Set(["Links House", "Tavern North"]);
+  const seeds = erSeedHashes()
+    .map((hash) => ({ hash, spoiler: erSeed(hash).spoiler }))
+    .filter(({ spoiler }) => SHUFFLES.includes(spoiler.meta.shuffle));
+
+  it("covers every shuffle and world", () => {
+    expect(
+      new Set(
+        seeds.map(({ spoiler: { meta } }) => `${meta.shuffle} ${meta.mode}`),
+      ),
+    ).toEqual(
+      new Set([
+        "crossed open",
+        "crossed retro",
+        "crossed standard",
+        "full open",
+        "restricted open",
+        "simple open",
+        "simple standard",
+      ]),
+    );
+  });
+
+  for (const { hash, spoiler } of seeds) {
+    const { mode, shuffle } = spoiler.meta;
+    const pool = entrancePool(
+      shuffle as ErShuffle,
+      mode === "standard" ? "standard" : "open",
+      mode === "retro",
+    );
+    // What a Standard world keeps: the escape's doors, and in the simple
+    // and restricted shuffles the castle's others (EntranceShuffle.py:
+    // 2054-2069)
+    const kept: Readonly<Record<string, string>> =
+      mode !== "standard"
+        ? {}
+        : {
+            "Hyrule Castle Entrance (South)": "Hyrule Castle Exit (South)",
+            "Hyrule Castle Secret Entrance Drop":
+              "Hyrule Castle Secret Entrance",
+            "Hyrule Castle Secret Entrance Stairs":
+              "Hyrule Castle Secret Entrance Exit",
+            ...(shuffle === "simple" || shuffle === "restricted"
+              ? {
+                  "Agahnims Tower": "Agahnims Tower Exit",
+                  "Hyrule Castle Entrance (East)": "Hyrule Castle Exit (East)",
+                  "Hyrule Castle Entrance (West)": "Hyrule Castle Exit (West)",
+                }
+              : {}),
+          };
+    const listed = spoiler.Entrances.filter(
+      (m) => m.direction !== "exit" && !fixed.has(m.entrance),
+    );
+    const mapped = listed.filter((m) => kept[m.entrance] === undefined);
+    const noted = new Map(
+      mapped.map((m) => [entranceNamed(m.entrance).id, targetNamed(m.exit).id]),
+    );
+
+    it(`${hash} (${shuffle}, ${mode}): kept what its world keeps, and shuffled every other entrance of the pool`, () => {
+      expect(
+        Object.fromEntries(
+          listed
+            .filter((m) => kept[m.entrance] !== undefined)
+            .map((m) => [m.entrance, m.exit]),
+        ),
+      ).toEqual(kept);
+      expect(new Set(mapped.map((m) => m.entrance))).toEqual(
+        new Set(pool.entrances.map((e) => e.name)),
+      );
+    });
+
+    it(`${hash} (${shuffle}, ${mode}): led each to a target its pool offers, and as its partners say`, () => {
+      for (const [entrance, target] of noted) {
+        expect(
+          pool.targetsOf.get(entrance)?.map((t) => t.id),
+          entrance,
+        ).toContain(target);
+        for (const [other, to] of pool.partners(entrance, target))
+          expect(noted.get(other), `${entrance} settles ${other}`).toBe(to);
+      }
+    });
+  }
 });

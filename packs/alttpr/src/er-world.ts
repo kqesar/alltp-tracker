@@ -39,6 +39,7 @@ import {
 import {
   ENTRANCES,
   type EntranceTarget,
+  type ErShuffle,
   erLocationId,
   TARGETS,
 } from "./entrances";
@@ -201,28 +202,54 @@ const TARGET_BY_ID = new Map(TARGETS.map((t) => [t.id, t]));
 
 /**
  * The crossed shuffle's, as far as the entrances noted tell
- * (EntranceShuffle.py:365-460): what it keeps (the Tavern's back door, and
- * in Standard the castle's front door and its secret passage), then each
- * noted entrance. A cave or dungeon's exit is connected both ways
- * (connect_two_way), a single cave's door or a hole one way
- * (connect_entrance, scramble_holes). An entrance not noted leads nowhere.
+ * (EntranceShuffle.py:365-460): `erConnections` of the crossed shuffle.
  * @param mode - The world's
  * @param noted - Each noted entrance's target, by the pack's ids
  */
-export function crossedConnections(
+export const crossedConnections = (
+  mode: "open" | "standard",
+  noted: Readonly<Record<string, string>>,
+): ErConnections => erConnections("crossed", mode, noted);
+
+/**
+ * A shuffle's connections, as far as the entrances noted tell
+ * (EntranceShuffle.py:63-440): what it keeps (the Tavern's back door; in
+ * Standard the castle's front door and its secret passage, and in the
+ * simple and restricted shuffles the castle's other doors and Agahnim's
+ * Tower's, which simple_shuffle_dungeons leaves, :2054-2069), then each
+ * noted entrance. A cave or dungeon's exit is connected both ways
+ * (connect_two_way), a single cave's door or a hole one way
+ * (connect_entrance, scramble_holes). An entrance not noted leads nowhere:
+ * what one note settles beside it (`EntrancePool.partners`) is noted by
+ * the tracker, not guessed here.
+ * @param shuffle - The run's
+ * @param mode - The world's
+ * @param noted - Each noted entrance's target, by the pack's ids
+ */
+export function erConnections(
+  shuffle: ErShuffle,
   mode: "open" | "standard",
   noted: Readonly<Record<string, string>>,
 ): ErConnections {
   const connections = baseConnections();
-  // The Tavern's back door is not shuffled yet (:377)
+  // The Tavern's back door is not shuffled yet (:130, :148, :275, :378)
   connections.set("Tavern North", "Tavern");
   if (mode === "standard") {
-    // The escape's doors stay (:379-381; scramble_holes, :1827-1830)
+    // The escape's doors stay (:279-280, :380-381; scramble_holes,
+    // :1827-1830)
     twoWay(
       connections,
       "Hyrule Castle Entrance (South)",
       "Hyrule Castle Exit (South)",
     );
+    // And the castle's others, in the simple and restricted shuffles
+    if (shuffle === "simple" || shuffle === "restricted")
+      for (const [door, exit] of [
+        ["Hyrule Castle Entrance (East)", "Hyrule Castle Exit (East)"],
+        ["Hyrule Castle Entrance (West)", "Hyrule Castle Exit (West)"],
+        ["Agahnims Tower", "Agahnims Tower Exit"],
+      ] as const)
+        twoWay(connections, door, exit);
     twoWay(
       connections,
       "Hyrule Castle Secret Entrance Stairs",

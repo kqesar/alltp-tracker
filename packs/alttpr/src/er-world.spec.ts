@@ -16,6 +16,7 @@ import {
   analyzeFacts,
   crossedConnections,
   type ErConnections,
+  erConnections,
   erWorld,
   solveFacts,
   solveFactsState,
@@ -70,6 +71,45 @@ describe("the entrance randomizer's connections", () => {
         "Hyrule Castle Secret Entrance Drop",
       ),
     ).toBe("Hyrule Castle Secret Entrance");
+  });
+
+  it("keep the castle whole in a Standard world's simple and restricted shuffles", () => {
+    // simple_shuffle_dungeons leaves Hyrule Castle and Agahnim's Tower
+    // (EntranceShuffle.py:2054-2069); the full and crossed ones its front
+    // door alone (:279-280, :380-381)
+    const castle = [
+      "Hyrule Castle Entrance (South)",
+      "Hyrule Castle Entrance (East)",
+      "Hyrule Castle Entrance (West)",
+      "Agahnims Tower",
+    ];
+    const kept = (connections: ErConnections) =>
+      castle.filter((door) => connections.has(door));
+    for (const shuffle of ["simple", "restricted"] as const) {
+      const connections = erConnections(shuffle, "standard", {});
+      expect(kept(connections)).toEqual(castle);
+      expect(connections.get("Agahnims Tower Exit")).toBe(
+        "Hyrule Castle Ledge",
+      );
+      expect(kept(erConnections(shuffle, "open", {}))).toEqual([]);
+    }
+    for (const shuffle of ["full", "crossed"] as const)
+      expect(kept(erConnections(shuffle, "standard", {}))).toEqual([
+        "Hyrule Castle Entrance (South)",
+      ]);
+    // Agahnim's Tower behind its own door: reached with the cape
+    const world = erConnections("simple", "standard", {});
+    expect(
+      at(world, everything(STANDARD), "Castle Tower - Room 03", STANDARD),
+    ).toBe("yes");
+    expect(
+      at(
+        crossedConnections("standard", {}),
+        everything(STANDARD),
+        "Castle Tower - Room 03",
+        STANDARD,
+      ),
+    ).toBe("no");
   });
 
   it("lead only through the doors noted", () => {
