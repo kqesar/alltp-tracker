@@ -129,7 +129,7 @@ export const SeedImport = ({
           data-testid="seed-import-input"
           id={inputId}
           onChange={(event) => setText(event.target.value)}
-          placeholder="alttpr.com, avianart or Hyrule Town Hall link"
+          placeholder="Seed link or alttpr.com hash"
           spellCheck={false}
           type="text"
           value={text}
