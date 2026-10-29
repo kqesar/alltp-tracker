@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.65.0](https://github.com/kqesar/alltp-tracker/compare/v2.64.0...v2.65.0) (2026-10-29)
+
+
+### ✨ Features
+
+* **alttpr:** know a met boss, from the player or the boss room ([8455618](https://github.com/kqesar/alltp-tracker/commit/8455618ff3d9ca1509056e23c9dae76f8f390c17))
+* **web:** mark a dungeon's boss under boss shuffle ([6e19785](https://github.com/kqesar/alltp-tracker/commit/6e19785f053b451e981d18d0c56708651d98b70c))
+
+
+### 🐛 Bug Fixes
+
+* **web:** letter an unknown boss, and name the marked one in the tooltip ([cf7682d](https://github.com/kqesar/alltp-tracker/commit/cf7682dce47e9ffcab3103aff893f5e8e14fc2d9))
+
 ## [2.64.0](https://github.com/kqesar/alltp-tracker/compare/v2.63.0...v2.64.0) (2026-10-29)
 
 
