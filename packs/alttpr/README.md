@@ -1706,10 +1706,12 @@ while it placed this one's (it places Misery Mire's keys before Tower of
 Hera's, and collects them: a Hera key may sit where only the clip
 reaches); a gating dungeon proven safe joins what is surely in hand with
 all of its items, which the player collects, so its way opens for the
-player then; and a dungeon where a rule reads the raised items of another
-is never safe. With no such way (every world under NoGlitches and
-Overworld Glitches) each of these is the unchanged model, so nothing moves
-there.
+player then. A dungeon's safety raises every other dungeon's items with
+its own but the gating ones', which holds because no rule where a
+dungeon's keys may sit reads another's items but a gating dungeon's
+(tested; the retro world's generic keys, never safe, aside). With no such
+way (every world under NoGlitches and Overworld Glitches) each of these is
+the unchanged model, so nothing moves there.
 
 **Its laws**, as fast-check properties over random states of the Open and
 Standard worlds, Overworld Glitches', Hybrid Major Glitches' and No Logic's: adding an item never lowers a location (near the top too,

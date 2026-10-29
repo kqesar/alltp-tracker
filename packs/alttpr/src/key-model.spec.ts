@@ -807,6 +807,39 @@ describe("what the model's soundness rests on", () => {
       );
     });
 
+    it(`ties where a dungeon's keys may sit to no other dungeon but one a way in reads (${nameOf(settings)})`, () => {
+      // Safety raises the other dungeons' items with a dungeon's own, but a
+      // gating dungeon's: what it compares must not read them
+      const f = fillerOf(settings);
+      const keyed = solveWithKeys(f, tracked({}, settings));
+      const gating = new Set(
+        waysInWithKeys(settings).map((way) => {
+          const code = way.replace(/^.*: (key|bigKey)/, "");
+          return DUNGEONS.find((d) => d.code === code)?.id;
+        }),
+      );
+      const stray: string[] = [];
+      // The retro world's generic keys may sit anywhere: never safe
+      for (const u of untrackedItems(f).filter((u) => !u.generic)) {
+        for (const spot of u.locations) {
+          for (const d of keyed.dungeons(spot)) {
+            if (d !== u.dungeon && !gating.has(d)) {
+              stray.push(`${u.item} at ${spot}: ${d}`);
+            }
+          }
+        }
+      }
+      expect(stray).toEqual([]);
+      // Not vacuous: Hybrid Major Glitches ties Tower of Hera's to Misery Mire
+      expect(
+        untrackedItems(f).some((u) =>
+          u.locations.some((spot) =>
+            keyed.dungeons(spot).some((d) => d !== u.dungeon),
+          ),
+        ),
+      ).toBe(settings.canOneFrameClipUW === true);
+    });
+
     it(`lets an always-allowed key lock in only what no other spot needs (${nameOf(settings)})`, () => {
       const world = fillerOf(settings).world;
       const all = modules.flatMap((m) => m.regions.flatMap((r) => r.locations));

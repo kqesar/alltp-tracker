@@ -199,12 +199,6 @@ interface Model {
    * dungeon proven safe), so what those ways open is what the player has.
    */
   readonly gating: ReadonlySet<DungeonId>;
-  /**
-   * The dungeons never safe for keys beyond the generic ones, where a way
-   * in reads a key: an untracked item of theirs may sit where a rule reads
-   * the untracked items of another dungeon, not a gating one.
-   */
-  readonly unsafe: ReadonlySet<DungeonId>;
 }
 
 /**
@@ -381,17 +375,9 @@ function modelOf(filler: Filler): Model {
   }
   // A way in that reads a key breaks what safety rests on (README.md, "The
   // key model"): its dungeon's items are never raised past what is surely
-  // in hand, and a dungeon where a rule reads the items of another, raised,
-  // is never safe
+  // in hand. No rule where a dungeon's items may sit reads another's, but a
+  // gating one's (key-model.spec.ts), so the others' levels change nothing
   const gating = gatingDungeons(regions, owner, settings, closed);
-  const unsafe = new Set<DungeonId>();
-  if (gating.size > 0) {
-    for (const [id, entry] of dungeons) {
-      const tied = (l: string) =>
-        (dungeonsOf.get(l) ?? []).some((d) => d !== id && !gating.has(d));
-      if (entry.at.some(tied)) unsafe.add(id);
-    }
-  }
   const model: Model = {
     bigKeys,
     dungeons,
@@ -399,7 +385,6 @@ function modelOf(filler: Filler): Model {
     everything: all,
     gating,
     keys,
-    unsafe,
     untracked,
   };
   models.set(filler, model);
@@ -494,9 +479,7 @@ function readingOf(filler: Filler, model: Model, sure: State): Reading {
     // A generic key found may open another dungeon's door; under No Logic
     // the randomizer placed no item where Link could reach it, so a key may
     // sit behind its own door
-    if (entry.generic || filler.settings.noLogic || model.unsafe.has(id)) {
-      return false;
-    }
+    if (entry.generic || filler.settings.noLogic) return false;
     let found = safety.get(id);
     if (found === undefined) {
       found = true;
