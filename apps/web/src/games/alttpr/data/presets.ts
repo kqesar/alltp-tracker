@@ -62,6 +62,7 @@ export type PlayGlitches = Exclude<Glitches, "no_logic">;
 const PORTED_LOGICS: ReadonlySet<PlayGlitches | "none"> = new Set([
   "none",
   "overworld_glitches",
+  "hybrid_major_glitches",
 ]);
 
 /**
