@@ -1145,7 +1145,11 @@ the escape's drop). Misery Mire's blue barriers take DR's two-key
 alternative at `maybe` only: DR's code opens them with two keys, its own
 key logic seeds refuse what lies behind them with more. On other
 connections than the vanilla ones the analysis is not run (a dungeon's
-portals may be unknown) and a key door asks every key of its dungeon, or
+portals may be unknown), nor in a run whose pots or enemy drops join the
+dungeons beyond their keys (`dungeonPotsAndDrops`: pottery beyond the keys
+and caves, every enemy's drops), whose locations DR's analysis counts and
+the port's does not (`adjust_locations` runs before `link_doors`,
+`Main.py:234`, `:286`): there a key door asks every key of its dungeon, or
 `maybe`. `key-model.spec.ts` holds the model to DR's fill (Open, Standard,
 Inverted): over random states and placements of the dungeons' keys the fill may make, the model
 never says yes where playing the placement out with DR's own rule for it

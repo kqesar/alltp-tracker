@@ -10,8 +10,10 @@
 // Rules.py:2035, bunny.ts) and what the derived settings read of the
 // connections (light and dark world, Regions.py:1113; the swamp patch,
 // EntranceShuffle2.py:141-143; the doors' flags, Doors.py), the crystal
-// switches' states (crystal.ts) and the keys, strict-safe until DR's key
-// analysis is ported (keys.ts).
+// switches' states (crystal.ts) and the keys of DR's key analysis
+// (keys.ts), strict-safe where the analysis is not run: other connections
+// than the vanilla ones, or a run whose pots or enemy drops join the
+// dungeons (`dungeonPotsAndDrops`).
 import {
   type CompiledWorld,
   compileWorld,
@@ -338,6 +340,12 @@ export const DR_DEFAULTS: Settings = {
   // dropshuffle and pottery: the enemies' and the pots' vanilla keys are
   // forced items, events DR sweeps (keys.ts)
   dropShuffle: false,
+  // Pots or enemy drops of the dungeons beyond their keys (pottery beyond
+  // keys and caves, the drops of every enemy): adjust_locations adds them
+  // to the dungeons before DR's key analysis counts their locations
+  // (Main.py:234 before link_doors at :286), which the port's analysis does
+  // not, so their key doors ask every key of the dungeon (strict-safe)
+  dungeonPotsAndDrops: false,
   ganonHuntGoal: false,
   openPyramid: false,
   potKeys: false,
@@ -641,7 +649,9 @@ export function drWorld(
             doorRule(dungeon, rule, logic, keys),
         },
     mode,
-    options.connections === undefined ? drKeyLogic(all) : undefined,
+    options.connections === undefined && all.dungeonPotsAndDrops !== true
+      ? drKeyLogic(all)
+      : undefined,
   );
   if (all.restrictBossItems === true) addBossItemRules(locations);
   if (all.potShuffle === true) addSpikesPotRule(locations);

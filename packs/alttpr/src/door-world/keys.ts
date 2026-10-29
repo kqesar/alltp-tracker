@@ -271,8 +271,8 @@ const DEPENDENTS: ReadonlyMap<string, readonly string[]> = (() => {
  * door of a dungeon's analysis and the doors its link carries along ask
  * its rule, each big key door and chest the big key, each of Mire's blue
  * barriers its alternative. Without an analysis (`logic` undefined: other
- * connections than the vanilla ones), each small key door asks the
- * strict-safe rule.
+ * connections than the vanilla ones, or pots and drops the analysis does
+ * not count), each small key door asks the strict-safe rule.
  */
 export function addKeyRules(
   exits: readonly KeyExit[],

@@ -205,6 +205,14 @@ describe("the Door Randomizer's world (door-world)", () => {
     const given = { connections: vanillaConnections("open") };
     expect([at({}, 1, given), at({}, 4, given)]).toEqual(["maybe", "yes"]);
     expect(at({ universalKeys: true }, 4, given)).toBe("maybe");
+    // Pots or drops in the dungeons, which the analysis does not count:
+    // every key of the dungeon too
+    const added = { dungeonPotsAndDrops: true };
+    expect([at(added, 1), at(added, 4)]).toEqual(["maybe", "yes"]);
+    expect([
+      at({ ...wild, ...added }, 1),
+      at({ ...wild, ...added }, 4),
+    ]).toEqual(["maybe", "yes"]);
   });
 
   it("leaves Standard's escape doors to its key, universal keys or not", () => {
