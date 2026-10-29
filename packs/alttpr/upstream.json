@@ -86,22 +86,22 @@
       {
         "file": "test/inverted/TestInvertedDarkWorld.py",
         "fixture": "test/dr-upstream/inverted/TestInvertedDarkWorld.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/inverted/TestInvertedDeathMountain.py",
         "fixture": "test/dr-upstream/inverted/TestInvertedDeathMountain.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/inverted/TestInvertedEntrances.py",
         "fixture": "test/dr-upstream/inverted/TestInvertedEntrances.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/inverted/TestInvertedLightWorld.py",
         "fixture": "test/dr-upstream/inverted/TestInvertedLightWorld.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/inverted/TestInvertedTurtleRock.py",

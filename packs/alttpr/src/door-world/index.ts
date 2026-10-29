@@ -77,6 +77,11 @@ export interface DrWorldOptions {
    * it false and hold the events as items.
    */
   readonly sweepEvents?: boolean;
+  /**
+   * Where each exit leads: the vanilla world's for the mode by default
+   * (vanillaConnections).
+   */
+  readonly connections?: DrConnections;
 }
 
 /** A compiled Door Randomizer world, its facts and its locations' ids. */
@@ -435,7 +440,7 @@ export function drWorld(
     drops: all.dropShuffle === true,
     pots: all.potKeys === true,
   });
-  const connections = vanillaConnections(mode);
+  const connections = options.connections ?? vanillaConnections(mode);
   const exits = exitsOf(connections, mode, options);
   const locations = new Map<string, string>();
   for (const region of DR_REGIONS)

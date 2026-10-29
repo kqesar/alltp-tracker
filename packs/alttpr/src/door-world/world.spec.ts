@@ -183,4 +183,33 @@ describe("the Door Randomizer's world (door-world)", () => {
       "yes",
     );
   });
+
+  it("makes the light world the bunny's in Inverted", () => {
+    const world = drWorld(settings("inverted"));
+    // Through Agahnim's portal: a light world chest asks the pearl, the
+    // bottle merchant does not (bunny_accessible_locations)
+    const held = { defeatAgahnim: 1, glove: 1, hammer: 1, heartContainer: 3 };
+    const bunny = solveFacts(world, held);
+    const link = solveFacts(world, { ...held, moonPearl: 1 });
+    const well = drLocationId("Kakariko Well - Top");
+    expect(bunny.location(well)).toBe("no");
+    expect(link.location(well)).toBe("yes");
+    expect(bunny.location(drLocationId("Bottle Merchant"))).toBe("yes");
+    expect(bunny.location(drLocationId("Link's House"))).toBe("yes");
+  });
+
+  it("builds on the connections it is given", () => {
+    const connections = new Map(vanillaConnections("inverted"));
+    const brewery = drLocationId("Brewery");
+    const before = solveFacts(drWorld(settings("inverted")), {
+      heartContainer: 3,
+    });
+    // DR's vanilla Inverted world leaves the Dark Sanctuary's exit unlinked
+    expect(before.location(brewery)).toBe("no");
+    connections.set("Dark Sanctuary Hint Exit", "Dark Chapel Area");
+    const after = solveFacts(drWorld(settings("inverted"), { connections }), {
+      heartContainer: 3,
+    });
+    expect(after.location(brewery)).toBe("yes");
+  });
 });

@@ -1121,7 +1121,17 @@ flood switch is swept only once its trench's pot key is reached
 181 cases upstream fails itself are listed in `test/dr-stale.ts` with why
 (the bunny, the swamp's mirror, the events `TestDungeon` never sweeps, the
 enemy logic, the harness reaching the overworld) or as waiting on the key
-analysis.
+analysis. The Inverted world is the same builder in that mode: its
+connections swap as `link_entrances_new` swaps them, the flute leaves from
+the dark world and the mirror from the light, the bunny is the light
+world's. `test/inverted` is held but `TestInvertedTurtleRock` (every test
+disabled upstream) and `TestInvertedBombRules` (code, no case), with the
+cases upstream's own world answers otherwise: DR's vanilla Inverted world
+never links the Dark Sanctuary's exit (`do_vanilla_connections`; only a
+shuffle does, `EntranceShuffle2.py:216-229`), so its save point leads
+nowhere, and DR names the castle's entrance `Agahnims Tower` whatever it
+leads to. `drWorld`'s `connections` option builds the world on other
+connections than the vanilla ones.
 
 **Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
 `RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,

@@ -1,13 +1,17 @@
 // The cases of DR's own tests the pack answers otherwise, each with why
 // (dr-contract.spec.ts holds every other case of a ported file). Upstream
-// itself fails 181 cases of test/dungeons at the harness commit (626691a's
-// message: "dungeons 181"); the 169 below and the 12 key cases make 181,
+// itself fails 181 cases of test/dungeons and 52 of test/inverted at the
+// harness commit (626691a's message); in dungeons the 169 below and the 12
+// key cases make 181, in inverted 51 are below (1 upstream fails the pack
+// holds: which, only running DR would tell),
 // sorted by what upstream's own rules ask that the case does not hold,
 // each reason checked against the world (the case passes with what the
 // reason names added, or, for a false case, fails without it).
 
 /** Why upstream's own world answers a case otherwise than the test says. */
 const WHY = {
+  atgtNames:
+    "DR names an entrance by its place: the castle's is Agahnims Tower, Ganon's Tower's in Inverted (is_atgt_swapped); the test reads the old names",
   beetles:
     "Hera's beetles die to a sword, the hammer, the bow or a cane only (the kill room's rule, EnemyLogic.py)",
   bombs:
@@ -16,8 +20,12 @@ const WHY = {
     "no Moon Pearl: a dark world dungeon's location asks it (set_bunny_rules, Rules.py:2191-2196)",
   byrna:
     "the Cane of Byrna kills Mire 2's wizzrobes with the pool's magic (the kill room's rule, EnemyLogic.py)",
+  darkSanctuary:
+    "DR's vanilla Inverted world never links the Dark Sanctuary's exit (do_vanilla_connections, EntranceShuffle2.py:162-170; only a shuffle does, :216-229): its save point leads nowhere",
   events:
     "TestDungeon never sweeps events: the Convenient Block or Maiden Unmasked is no item of the case",
+  iceberg:
+    "no water exit lands on Ice Palace's iceberg: the ledge drop or the bomb jump, which No Glitches forbids (Rules.py:1284)",
   mirror:
     "with the swamp unpatched, Swamp's moat asks the mirror (Rules.py:85-86)",
   mirrorEvents:
@@ -352,6 +360,106 @@ export const STALE: Readonly<Record<string, string>> = {
     WHY.beetles,
   "test/dungeons/TestTowerOfHera.py:6#12 Tower of Hera - Big Chest true":
     WHY.beetles,
+  "test/inverted/TestInvertedDarkWorld.py:6#0 Brewery true": WHY.darkSanctuary,
+  "test/inverted/TestInvertedDarkWorld.py:6#1 C-Shaped House true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDarkWorld.py:6#2 Chest Game true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:6#3 Old Man true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:6#13 Spectacle Rock Cave true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:25#10 Spiral Cave true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:25#21 Paradox Cave Lower - Far Left true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:25#32 Paradox Cave Lower - Left true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:25#43 Paradox Cave Lower - Middle true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:25#54 Paradox Cave Lower - Right true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:25#65 Paradox Cave Lower - Far Right true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:25#76 Paradox Cave Upper - Left true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:25#87 Paradox Cave Upper - Right true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:160#2 Superbunny Cave - Top true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:160#7 Superbunny Cave - Bottom true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:160#13 Hookshot Cave - Bottom Right true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:160#16 Hookshot Cave - Bottom Right true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:160#22 Hookshot Cave - Bottom Left true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:160#28 Hookshot Cave - Top Left true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:160#34 Hookshot Cave - Top Right true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:206#6 Spike Cave true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:206#7 Spike Cave true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:206#9 Spike Cave true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:206#10 Spike Cave true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:206#12 Spike Cave true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:206#14 Spike Cave true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:206#16 Spike Cave true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedDeathMountain.py:206#18 Spike Cave true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedEntrances.py:6#41 Agahnims Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#42 Agahnims Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#43 Agahnims Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#44 Agahnims Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#45 Agahnims Tower true":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#46 Agahnims Tower true":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#47 Agahnims Tower true":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#48 Agahnims Tower true":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#58 Thieves Town true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedEntrances.py:6#59 Skull Woods First Section Door true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedEntrances.py:6#62 Skull Woods Final Section true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedEntrances.py:6#65 Ice Palace true": WHY.iceberg,
+  "test/inverted/TestInvertedEntrances.py:6#82 Turtle Rock true":
+    WHY.darkSanctuary,
+  "test/inverted/TestInvertedEntrances.py:6#87 Ganons Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#88 Ganons Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#89 Ganons Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#90 Ganons Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#91 Ganons Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#92 Ganons Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#93 Ganons Tower false":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#94 Ganons Tower true":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#95 Ganons Tower true":
+    WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#96 Ganons Tower true":
+    WHY.atgtNames,
 };
 
 /**
