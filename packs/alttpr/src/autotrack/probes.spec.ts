@@ -5,7 +5,9 @@ import {
   ALTTPR_GAME_CHECK,
   ALTTPR_RACE_FLAG,
   checkGame,
+  DOOR_RANDOMIZER_VERSION,
   probeRaceFlag,
+  seedRomOf,
 } from "./probes";
 import { ALTTPR_RACE_PROFILE } from "./race-profile";
 
@@ -62,7 +64,7 @@ describe("checkGame", () => {
     ).toEqual({
       code: "not-alttpr",
       message:
-        "The running game is not an alttpr.com seed of A Link to the Past.",
+        "The running game is not a seed of A Link to the Past from alttpr.com or the Door Randomizer.",
       ok: false,
     });
     // A seed name needs its space: "VTX..." is another title.
@@ -83,6 +85,54 @@ describe("checkGame", () => {
     expect(checkGame(header("APPLE GAME", PATCHED))).toMatchObject({
       code: "not-alttpr",
     });
+  });
+
+  it("accepts a Door Randomizer seed and its Overworld fork's, by their titles", () => {
+    // DR 1.5.6 Rom.py:1454: "DR", the version's digits, team, player, seed;
+    // a title Hyrule Town Hall served on 2026-10-29 (the study's patch_meta)
+    expect(checkGame(header("DR156_1_1_367825107", PATCHED))).toEqual({
+      ok: true,
+    });
+    // OWR 0.8.0.0 Rom.py:1848: "OR" and the Door Randomizer digits; 1840: a
+    // site's three-character generation tag in their place
+    expect(checkGame(header("OR156_1_1_123456789", PATCHED))).toEqual({
+      ok: true,
+    });
+    expect(checkGame(header("ORhth_1_1_abcdefghi", PATCHED))).toEqual({
+      ok: true,
+    });
+    // A title that only starts alike is another game
+    expect(checkGame(header("DRAGON QUEST", PATCHED))).toMatchObject({
+      code: "not-alttpr",
+    });
+    expect(checkGame(header("DR156 1 1 367825107", PATCHED))).toMatchObject({
+      code: "not-alttpr",
+    });
+  });
+
+  it("names the randomizer, its version and the seed a title carries", () => {
+    expect(seedRomOf("DR156_1_1_367825107\0\0")).toEqual({
+      overworld: false,
+      randomizer: "door",
+      seed: "1_1_367825107",
+      version: "1.5.6",
+    });
+    expect(seedRomOf("OR158_1_2_000000042\0\0")).toEqual({
+      overworld: true,
+      randomizer: "door",
+      seed: "1_2_000000042",
+      version: "1.5.8",
+    });
+    expect(seedRomOf("ORhth_1_1_abcdefghi\0\0")).toMatchObject({
+      overworld: true,
+      version: null,
+    });
+    expect(seedRomOf("VT 7P4KZ0QW3B        ")).toEqual({
+      randomizer: "vt",
+      seed: "7P4KZ0QW3B",
+    });
+    expect(seedRomOf("THE LEGEND OF ZELDA  ")).toBeNull();
+    expect(DOOR_RANDOMIZER_VERSION).toBe("1.5.6");
   });
 
   it("calls a header of zeros unreadable rather than another game", () => {
@@ -175,5 +225,17 @@ describe("ALTTPR_RACE_FLAG", () => {
     // Zero fill: the 0x00 flag alone would have read "open".
     expect(decode(0x00, 0x00)).toBe("unknown");
     expect(decode(0x01, 0x01)).toBe("unknown");
+  });
+
+  it("reads a Door Randomizer seed's flag where vt's is, failing closed alike", () => {
+    // DR 1.5.6 writes $00 $01 for every seed (Rom.py:1113) and $01 $00 for a
+    // race (patch_race_rom, 1483-1484), at the same 0x180213: the probe is
+    // the same, and so is its answer to bytes it cannot trust
+    const decode = (...bytes: number[]) =>
+      ALTTPR_RACE_FLAG.decode(Uint8Array.from(bytes));
+    expect(decode(0x01, 0x00)).toBe("race");
+    expect(decode(0x00, 0x01)).toBe("open");
+    expect(decode(0x00, 0x00)).toBe("unknown");
+    expect(decode(0xff, 0xff)).toBe("unknown");
   });
 });

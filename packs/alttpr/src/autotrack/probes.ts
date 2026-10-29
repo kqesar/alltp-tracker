@@ -1,6 +1,7 @@
-// The probes: whether the running ROM is an alttpr.com seed (the game check)
-// and whether it is a race seed (the race flag), read so that a device that
-// fills unreadable memory with zeros cannot pass for an open seed.
+// The probes: whether the running ROM is an ALttPR seed, alttpr.com's or the
+// Door Randomizer's (the game check), and whether it is a race seed (the
+// race flag), read so that a device that fills unreadable memory with zeros
+// cannot pass for an open seed.
 
 import {
   ARCHIPELAGO_ROM,
@@ -16,6 +17,62 @@ import {
  * 2318-2321, at ROM 0x7FC0, which is A-bus $00:FFC0).
  */
 export const SEED_TITLE_PREFIX = "VT ";
+
+/**
+ * The title the Door Randomizer writes at ROM 0x7FC0: "DR", the first three
+ * digits of its version ("156" for 1.5.6), "_", the team, "_", the player,
+ * "_", the seed, cut to 21 bytes (DR 1.5.6 Rom.py:1452-1456). Its Overworld
+ * fork writes "OR" and the same digits of the Door Randomizer version it is
+ * built on (OWR 0.8.0.0 Rom.py:1843, 1848), or a generation tag of up to
+ * three characters a site names (1836-1840).
+ */
+export const DOOR_RANDOMIZER_TITLE =
+  /^(DR|OR)([^_\0]{1,3})_(\d+)_(\d+)_([^\0]*)/;
+
+/**
+ * The Door Randomizer version the tracker's DR data is read from (the pack's
+ * upstream.json, `doorRandomizer`): what Hyrule Town Hall ran for the
+ * Crosskeys and Enemizer races of 2026 (the study of 2026-10-29). A seed of
+ * another version is still tracked; "What I read" says it differs.
+ */
+export const DOOR_RANDOMIZER_VERSION = "1.5.6";
+
+/** Which randomizer wrote a seed, by its title. */
+export type SeedRom =
+  | {
+      /** alttpr.com: "VT " and the seed's hash. */
+      readonly randomizer: "vt";
+      readonly seed: string;
+    }
+  | {
+      /** The Door Randomizer ("DR") or its Overworld fork ("OR"). */
+      readonly randomizer: "door";
+      readonly overworld: boolean;
+      /**
+       * Its version, from the title's three digits ("1.5.6"); null when
+       * the title carries a site's tag in their place.
+       */
+      readonly version: string | null;
+      /** The rest of the title: team, player and seed ("1_1_367825107"). */
+      readonly seed: string;
+    };
+
+/** The randomizer and seed a 21-byte title names, or null. */
+export function seedRomOf(title: string): SeedRom | null {
+  if (title.startsWith(SEED_TITLE_PREFIX)) {
+    const seed = title.slice(SEED_TITLE_PREFIX.length).replace(/\0+$/, "");
+    return { randomizer: "vt", seed: seed.trim() };
+  }
+  const door = DOOR_RANDOMIZER_TITLE.exec(title);
+  if (door === null) return null;
+  const [, kind, digits, team, player, seed] = door;
+  return {
+    overworld: kind === "OR",
+    randomizer: "door",
+    seed: `${team}_${player}_${seed.trim()}`,
+    version: /^\d{3}$/.test(digits) ? [...digits].join(".") : null,
+  };
+}
 
 /**
  * The original game's title, which the base patch leaves alone
@@ -65,7 +122,7 @@ export function checkGame(header: Uint8Array): GameCheckResult {
     );
   }
   const title = String.fromCharCode(...header.subarray(0, TITLE_LENGTH));
-  if (title.startsWith(SEED_TITLE_PREFIX)) return { ok: true };
+  if (seedRomOf(title) !== null) return { ok: true };
   if (ARCHIPELAGO_TITLE.test(title)) {
     return fail(
       ARCHIPELAGO_ROM,
@@ -85,7 +142,7 @@ export function checkGame(header: Uint8Array): GameCheckResult {
   }
   return fail(
     "not-alttpr",
-    "The running game is not an alttpr.com seed of A Link to the Past.",
+    "The running game is not a seed of A Link to the Past from alttpr.com or the Door Randomizer.",
   );
 }
 
@@ -101,7 +158,12 @@ export const ALTTPR_GAME_CHECK: GameCheck = {
  * tables.asm:997-999), then TournamentSeedInverse, its complement
  * (tables.asm:1000-1001). The front end writes the pair as $01 $00 for a
  * race seed and $00 $01 otherwise (vt app/Rom.php:908-920); the base
- * patch's default is $00 $01.
+ * patch's default is $00 $01. The Door Randomizer writes the same pair at
+ * the same place: $00 $01 for every seed (DR 1.5.6 Rom.py:1113), $01 $00
+ * for a race (patch_race_rom, 1483-1484), which its Mystery.py always asks
+ * for (Mystery.py:70); its Overworld fork too (OWR 0.8.0.0 Rom.py:1231,
+ * 1879-1880). Its base patch keeps the flag where vt's does
+ * (aerinon/z3randomizer d0f4651, tables.asm: TournamentSeed at $B0:8213).
  */
 export const RACE_FLAG_AT = 0x30_8213;
 
