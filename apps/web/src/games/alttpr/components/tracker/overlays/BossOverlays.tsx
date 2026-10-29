@@ -8,7 +8,8 @@ import {
   knownBossText,
 } from "@/games/alttpr/logic/knownBosses";
 import { dungeonAt, dungeonName } from "@/games/alttpr/logic/settings";
-import { STATE_LABELS, useDungeonStatus } from "@/games/alttpr/logic/solution";
+import { useDungeonStatus } from "@/games/alttpr/logic/solution";
+import { useLogicWords } from "@/games/alttpr/logic/words";
 import { type Direction, useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath } from "@/games/alttpr/utils";
 import { type GridPosition, useGridFocusable } from "@/hooks/useGridNavigation";
@@ -88,6 +89,7 @@ type CornerProps = {
 export const ChestCounter = ({ index, row, col }: CornerProps) => {
   const remaining = useGameStore((state) => state.items[`chest${index}`]);
   const status = useDungeonStatus(dungeonAt(index));
+  const { states } = useLogicWords();
   const handleItemClick = useGameStore((state) => state.handleItemClick);
 
   return (
@@ -95,7 +97,7 @@ export const ChestCounter = ({ index, row, col }: CornerProps) => {
       asset={`chest${remaining}.png`}
       control={`chest${index}`}
       corner="bottom-left"
-      label={`${dungeonName(index)} chests: ${remaining} left${remaining ? `, ${STATE_LABELS[status]}` : ""}`}
+      label={`${dungeonName(index)} chests: ${remaining} left${remaining ? `, ${states[status]}` : ""}`}
       position={{ col, row, slot: 3 }}
       step={(direction) => handleItemClick(`chest${index}`, direction)}
       testId={`chest-overlay-${index}`}

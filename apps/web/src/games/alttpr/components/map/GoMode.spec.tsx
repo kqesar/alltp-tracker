@@ -269,7 +269,10 @@ describe("GoMode", () => {
       "Go mode: reachable",
     );
     const panel = await openPanel();
-    expect(panel).toHaveTextContent("Every step to the goal is reachable.");
+    expect(panel).toHaveTextContent(
+      "Every step to the goal is reachable without glitches.",
+    );
+    expect(panel).not.toHaveTextContent(/in logic/i);
     expect(screen.getByTestId("go-mode-status")).toHaveTextContent(
       "Go mode: reachable",
     );

@@ -25,6 +25,15 @@ describe("MapLegend", () => {
     ).toEqual(["available", "possible", "seen", "unavailable", "opened"]);
   });
 
+  it("words the state out of reach as the map says it", () => {
+    render(<MapLegend unavailable="Not reachable without glitches" />);
+    const items = [...document.querySelectorAll(".map-legend__item")].map(
+      (item) => item.textContent,
+    );
+    expect(items).toContain("Not reachable without glitches");
+    expect(items).not.toContain("Out of logic");
+  });
+
   it("leaves out the seen state for a map that has none", () => {
     render(<MapLegend seen={false} />);
     expect(

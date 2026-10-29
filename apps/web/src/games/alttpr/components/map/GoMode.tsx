@@ -1,7 +1,7 @@
 import type { Tri } from "@alltp/engine";
 import { useId } from "react";
 import { isHunt } from "@/games/alttpr/data/items";
-import { isHidden, noLogicRun } from "@/games/alttpr/data/presets";
+import { isHidden } from "@/games/alttpr/data/presets";
 import {
   useGoModeLeft,
   useLastGoModeLeft,
@@ -12,6 +12,7 @@ import {
   goModeStatusOf,
 } from "@/games/alttpr/logic/missing";
 import type { Need } from "@/games/alttpr/logic/needs";
+import { type LogicWords, useLogicWords } from "@/games/alttpr/logic/words";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath } from "@/games/alttpr/utils";
 import { placeUnder } from "@/utils/popover";
@@ -29,12 +30,6 @@ const STATES: Record<Shown, { glyph: string; words: string }> = {
   no: { glyph: "☆", words: "not yet" },
   yes: { glyph: "★", words: "in logic" },
 };
-
-/**
- * A No Logic run's words for a go mode every step of which is reachable:
- * the seed promises no route, so nothing is in logic.
- */
-const REACHABLE = "reachable";
 
 /** The ways shown at once; the others behind "N more ways". */
 const SHOWN_WAYS = 3;
@@ -101,15 +96,15 @@ const Line = ({ children }: { children: string }) => (
  * others behind a disclosure; a sentence when no list can say it.
  */
 const GoModeDetail = ({
-  noLogic,
   pieces,
   tri,
+  words,
 }: {
-  /** A No Logic run: reachable, never in logic */
-  noLogic: boolean;
   /** A triforce hunt's pieces left to find; undefined for any other goal */
   pieces: number | undefined;
   tri: Shown;
+  /** The run's words: a No Logic run's go mode is reachable, never in logic */
+  words: LogicWords;
 }) => {
   const left = useGoModeLeft();
   if (pieces !== undefined) {
@@ -123,9 +118,7 @@ const GoModeDetail = ({
   }
   if (tri === "yes") {
     return (
-      <p className="missing">
-        Every step to the goal is {noLogic ? REACHABLE : "in logic"}.
-      </p>
+      <p className="missing">Every step to the goal is {words.yesFull}.</p>
     );
   }
   return (
@@ -139,7 +132,7 @@ const GoModeDetail = ({
           before the seed relies on it.
         </p>
       )}
-      <GoModeLeftDetail left={left} noLogic={noLogic} tri={tri} />
+      <GoModeLeftDetail left={left} tri={tri} words={words} />
     </>
   );
 };
@@ -147,12 +140,12 @@ const GoModeDetail = ({
 /** What the go mode is missing, from the run's analysis. */
 const GoModeLeftDetail = ({
   left,
-  noLogic,
   tri,
+  words,
 }: {
   left: GoModeLeft | undefined;
-  noLogic: boolean;
   tri: Shown;
+  words: LogicWords;
 }) => {
   if (left === undefined) {
     return <p className="missing missing--pending">Working it out…</p>;
@@ -170,8 +163,7 @@ const GoModeLeftDetail = ({
     case "unknown":
       return (
         <Line>
-          No item puts it in logic yet: it hangs on a setting not known yet or
-          on where an item sits.
+          {`No item puts it ${words.noLogic ? "within reach" : "in logic"} yet: it hangs on a setting not known yet or on where an item sits.`}
         </Line>
       );
     case "door":
@@ -181,8 +173,7 @@ const GoModeLeftDetail = ({
   if (sets.length === 0) {
     return <Line>More than three items away, crystals aside.</Line>;
   }
-  const lead =
-    tri === "no" ? "Missing" : noLogic ? "Reachable with" : "In logic with";
+  const lead = tri === "no" ? "Missing" : words.yesWith;
   const [first] = sets;
   if (sets.length === 1 && first !== undefined) {
     return (
@@ -231,7 +222,7 @@ export const GoMode = () => {
   const margin = useGameStore(goModeMarginOf);
   const tri: Shown | undefined = margin ? "margin" : status;
   const goalHidden = useGameStore((state) => isHidden(state.settings, "goal"));
-  const noLogic = useGameStore((state) => noLogicRun(state.settings));
+  const logicWords = useLogicWords();
   const hunt = useGameStore((state) => isHunt(state.settings));
   const found = useGameStore((state) => state.items.triforce as number);
   const asked = useGameStore((state) => state.items.goalpieces as number);
@@ -254,7 +245,7 @@ export const GoMode = () => {
   }
   if (tri === undefined) return null;
   const { glyph } = STATES[tri];
-  const words = noLogic && tri === "yes" ? REACHABLE : STATES[tri].words;
+  const words = tri === "yes" ? logicWords.yes : STATES[tri].words;
 
   return (
     <>
@@ -279,7 +270,7 @@ export const GoMode = () => {
         id={panelId}
         popover="auto"
       >
-        <GoModeDetail noLogic={noLogic} pieces={piecesLeft} tri={tri} />
+        <GoModeDetail pieces={piecesLeft} tri={tri} words={logicWords} />
       </div>
       <span className="sr-only" data-testid="go-mode-status" role="status">
         Go mode: {words}
