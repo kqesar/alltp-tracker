@@ -236,6 +236,46 @@ describe("a run with shuffled entrances", () => {
     expect(solutionOf(store()).tris[boss]).toBe("yes");
   });
 
+  it("reads the keys kept in their dungeons by that world's own key model", async () => {
+    const { solver } = await import("@/games/alttpr/logic/crossed");
+    act(() => {
+      setCrossedSolver(solver);
+      store().applyPreset("crosskeys");
+      store().updateSettings({ dungeonItems: "standard" });
+      useGameStore.setState({
+        items: Object.fromEntries(
+          Object.entries(freshItems).map(([id, value]) => [
+            id,
+            typeof value === "boolean"
+              ? true
+              : // Its big keys are no more marked than its small keys
+                id.startsWith("bigkey")
+                ? 0
+                : itemsMax[id],
+          ]),
+        ) as unknown as ItemState,
+      });
+      store().noteEntrance(
+        "hyrule-castle-entrance-south",
+        "hyrule-castle-exit-south",
+      );
+    });
+    const room = "sewers/secret-room/left";
+    // vt's world holds Eastern Palace's big key surely in hand, its spots
+    // all reached there; behind no door noted, the run's world does not
+    const { crossed, keyed } = solutionOf(store());
+    expect(keyed.state.bigKeyP1).toBe(1);
+    expect(crossed?.state.bigKeyP1 ?? 0).toBe(0);
+    // The castle's key may sit in the sewers' secret room, which the
+    // grave's hole, not noted, may drop the fill's state into without it
+    expect(crossed?.state.keyH2 ?? 0).toBe(0);
+    expect(solutionOf(store()).tris[room]).toBe("maybe");
+    // The hole noted: every spot of the key is the player's as the fill's
+    act(() => store().noteEntrance("sanctuary-grave", "sewer-drop"));
+    expect(solutionOf(store()).crossed?.state.keyH2).toBe(1);
+    expect(solutionOf(store()).tris[room]).toBe("yes");
+  });
+
   it("reads a shuffled boss as any its slot may hold", async () => {
     const { solver } = await import("@/games/alttpr/logic/crossed");
     act(() => {

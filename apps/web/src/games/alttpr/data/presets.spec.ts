@@ -36,10 +36,11 @@ describe("presets", () => {
     // Retro's is Open's, its arrows and keys bought
     expect(crossedLogic({ ...crosskeys, mode: "retro" })).toBe(true);
     expect(logicModelled({ ...crosskeys, mode: "retro" })).toBe(true);
-    // Not other shuffles, nor its keys kept in their dungeons, nor Inverted
+    // Its keys kept in their dungeons: the pack's key model of that world
+    expect(crossedLogic({ ...crosskeys, dungeonItems: "standard" })).toBe(true);
+    // Not other shuffles, nor Inverted
     for (const settings of [
       { ...getPreset("open").settings, entranceShuffle: "full" as const },
-      { ...crosskeys, dungeonItems: "mcs" as const },
       { ...crosskeys, mode: "inverted" as const },
     ]) {
       expect(crossedLogic(settings)).toBe(false);
@@ -83,9 +84,12 @@ describe("presets", () => {
         playGlitches: "major_glitches",
       }),
     ).toEqual([]);
-    expect(unmodelledReasons({ ...crosskeys, dungeonItems: "mcs" })).toEqual([
-      "Crossworld entrances with dungeon items kept in their dungeons",
-    ]);
+    // The entrance randomizer keeps the keys in their dungeons but in full
+    // shuffle (EntranceRandomizer.php:69-71): the pack's key model reads them
+    for (const dungeonItems of ["standard", "mc", "mcs"] as const) {
+      expect(unmodelledReasons({ ...crosskeys, dungeonItems })).toEqual([]);
+      expect(crossedLogic({ ...crosskeys, dungeonItems })).toBe(true);
+    }
     expect(unmodelledReasons({ ...crosskeys, mode: "inverted" })).toEqual([
       "Crossworld entrances in the Inverted world",
     ]);

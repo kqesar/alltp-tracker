@@ -75,14 +75,16 @@ describe("MapPanel", () => {
     render(<MapPanel />);
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
 
-    // Crosskeys with its keys in their dungeons: the entrance randomizer
-    // keeps them there, which the tracker does not track
+    // Crosskeys set by hand to a glitched logic, which alttpr.com never
+    // sends to the entrance randomizer
     act(() => {
       useGameStore.getState().applyPreset("crosskeys");
-      useGameStore.getState().updateSettings({ dungeonItems: "mcs" });
+      useGameStore
+        .getState()
+        .updateSettings({ glitches: "overworld_glitches" });
     });
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Crossworld entrances with dungeon items kept in their dungeons yet: every check shows as maybe.",
+      "The tracker has no logic for Overworld Glitches with shuffled entrances yet: every check shows as maybe.",
     );
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });
