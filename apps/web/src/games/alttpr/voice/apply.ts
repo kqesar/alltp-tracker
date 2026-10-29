@@ -1,4 +1,5 @@
 import {
+  BOTTLE_CONTENTS,
   bottleSlotOf,
   CAPACITIES,
   heartsAfter,
@@ -81,9 +82,15 @@ export const applyVoice = (action: VoiceAction): Heard => {
     return { changed: next !== now, words };
   }
   // A bottle said changes what it holds as its click does, finding it when
-  // it is not there yet (bottleAfter)
-  if (bottleSlotOf(control) !== null) {
+  // it is not there yet (bottleAfter), but never round from the last content
+  // to empty: a phrase says what was found
+  const slot = bottleSlotOf(control);
+  if (slot !== null) {
     const before = store.items;
+    const held = slot <= Number(before.bottle ?? 0);
+    if (held && Number(before[control] ?? 0) >= BOTTLE_CONTENTS.length - 1) {
+      return { changed: false, words };
+    }
     store.handleItemClick(control, 1);
     return { changed: useGameStore.getState().items !== before, words };
   }

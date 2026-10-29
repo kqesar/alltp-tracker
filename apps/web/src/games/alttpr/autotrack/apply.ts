@@ -350,8 +350,9 @@ const healthCells = (health: {
 };
 
 /**
- * What each bottle Link has holds, in its slot's cell. The cells of bottles
- * he has not found are left alone: the game says nothing of them.
+ * What each bottle Link has holds, in its slot's cell, and the cells of the
+ * bottles he has not found cleared (empty): a count the game lowers (a sync)
+ * keeps no contents beyond it, which a bottle found later would show.
  */
 const bottleCells = (
   bottles: AutotrackReading["bottles"],
@@ -359,9 +360,7 @@ const bottleCells = (
   typeof bottles === "string"
     ? {}
     : Object.fromEntries(
-        bottles
-          .slice(0, BOTTLE_SLOTS.length)
-          .map((content, index) => [BOTTLE_SLOTS[index], content]),
+        BOTTLE_SLOTS.map((slot, index) => [slot, bottles[index] ?? 0]),
       );
 
 /**

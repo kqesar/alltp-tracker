@@ -20,19 +20,19 @@ type BottleCellProps = {
 };
 
 /**
- * The sprite of what a bottle holds: the game's empty bottle, or that
- * bottle filled (`apps/web/scripts/bottle-icons.mjs`).
+ * The sprite of what a bottle holds: the game's own, as its item menu draws
+ * each content (zelda3 src/hud.c kHudItemBottles), taken from the menu.
  * @param contents - What the bottle holds
  */
 export const bottleSprite = (contents: BottleContents): string =>
-  contents === "empty" ? "bottle0.png" : `bottle-${contents}.png`;
+  `bottle-${contents}.png`;
 
 /**
  * One of the four bottles: what it holds, greyed while the bottle is not
  * found. The game fills its bottles in order, so a bottle is there while
  * its slot is within the bottles' count (`bottle`). A click on a bottle not
- * there finds the bottles up to it; on one there, the next content, round
- * from the good bee to empty; a right-click or "-" the content before, and
+ * there finds the bottles up to it, empty; on one there, the next content,
+ * round from the mushroom to empty; a right-click or "-" the content before, and
  * from empty the bottle goes (`bottleAfter`). Autotracking reads both from
  * the game, in Race Mode too (v2.0's "bottle contents").
  */

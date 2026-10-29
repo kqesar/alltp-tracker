@@ -71,7 +71,7 @@ const iconOf = (control: ControlId): string => {
   if (control === "agahnim2") return "agahnim1.png";
   // A bottle's contents: the empty bottle; the capacities: the bombs, the
   // bow with arrows
-  if (bottleSlotOf(control) !== null) return "bottle0.png";
+  if (bottleSlotOf(control) !== null) return "bottle-empty.png";
   if (control === "bombcapacity") return "bomb.png";
   if (control === "arrowcapacity") return "bow2.png";
 

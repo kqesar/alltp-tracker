@@ -484,7 +484,7 @@ describe("the bottles' cells", () => {
       "Bottle 1, empty. Click to change.",
     );
     expect(third).not.toHaveClass("griditem--dimmed");
-    expect(third.style.backgroundImage).toContain("bottle0.png");
+    expect(third.style.backgroundImage).toContain("bottle-empty.png");
   });
 
   it("steps what a bottle holds, round to empty, and back until it goes", () => {
@@ -500,6 +500,12 @@ describe("the bottles' cells", () => {
     for (let step = 0; step < 4; step++) fireEvent.click(first);
     expect(first).toHaveAccessibleName("Bottle 1, a bee. Click to change.");
     fireEvent.click(first);
+    fireEvent.click(first);
+    // The mushroom, which the game's menu draws in a bottle too, last
+    expect(first).toHaveAccessibleName(
+      "Bottle 1, a mushroom. Click to change.",
+    );
+    expect(first.style.backgroundImage).toContain("bottle-mushroom.png");
     fireEvent.click(first);
     expect(first).toHaveAccessibleName("Bottle 1, empty. Click to change.");
 
@@ -523,6 +529,33 @@ describe("the bottles' cells", () => {
     );
     expect(screen.getByTestId("item-bottlecontents3")).toHaveAccessibleName(
       "Bottle 3, not found. Click to change.",
+    );
+  });
+
+  it("finds bottles empty past a count lowered without clearing them", () => {
+    // A count set straight (a save, a link, a reading) over stale contents
+    act(() =>
+      useGameStore.setState((state) => ({
+        items: {
+          ...state.items,
+          bottle: 1,
+          bottlecontents2: 3,
+          bottlecontents3: 5,
+        },
+      })),
+    );
+    bottles();
+    expect(screen.getByTestId("item-bottlecontents2")).toHaveAccessibleName(
+      "Bottle 2, not found. Click to change.",
+    );
+    fireEvent.click(screen.getByTestId("item-bottlecontents3"));
+    expect(useGameStore.getState().items).toMatchObject({
+      bottle: 3,
+      bottlecontents2: 0,
+      bottlecontents3: 0,
+    });
+    expect(screen.getByTestId("item-bottlecontents2")).toHaveAccessibleName(
+      "Bottle 2, empty. Click to change.",
     );
   });
 

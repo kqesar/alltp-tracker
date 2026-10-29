@@ -268,7 +268,7 @@ describe("the bottles", () => {
   it("keeps the count, and reads a save made before the contents as empty bottles", () => {
     expect([itemsMin.bottle, itemsMax.bottle, items.bottle]).toEqual([0, 4, 0]);
     for (const slot of BOTTLE_SLOTS) {
-      expect([itemsMin[slot], itemsMax[slot], items[slot]]).toEqual([0, 6, 0]);
+      expect([itemsMin[slot], itemsMax[slot], items[slot]]).toEqual([0, 7, 0]);
     }
     expect(BOTTLE_CONTENTS[0]).toBe("empty");
     expect(bottleSlotOf("bottlecontents3")).toBe(3);
@@ -276,14 +276,16 @@ describe("the bottles", () => {
   });
 
   it("finds the bottles up to the one clicked, then steps what it holds, round to empty", () => {
-    expect(bottleAfter({ bottle: 1 }, 3, 1)).toEqual({
+    // Every bottle found empty, whatever a slot past the count still held
+    expect(bottleAfter({ bottle: 1, bottlecontents2: 4 }, 3, 1)).toEqual({
       bottle: 3,
+      bottlecontents2: 0,
       bottlecontents3: 0,
     });
     expect(bottleAfter({ bottle: 2, bottlecontents2: 0 }, 2, 1)).toEqual({
       bottlecontents2: 1,
     });
-    expect(bottleAfter({ bottle: 2, bottlecontents2: 6 }, 2, 1)).toEqual({
+    expect(bottleAfter({ bottle: 2, bottlecontents2: 7 }, 2, 1)).toEqual({
       bottlecontents2: 0,
     });
   });

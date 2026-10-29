@@ -464,14 +464,15 @@ export function decodeHealth(
  * What each bottle Link has holds, or why memory cannot say: one value per
  * bottle held, in the game's order (as many as `decodeItems` counts, 0 to 4),
  * each 0 for empty, 1 a red potion, 2 green, 3 blue, 4 a fairy, 5 a bee,
- * 6 a good bee.
+ * 6 a good bee, 7 a mushroom.
  */
 export type BottlesReading = readonly number[] | Unsettled;
 
 /**
  * BottleContents' values (sram.asm:111-115) as the tracker names them: $03
- * red, $04 green, $05 blue, $06 fairy, $07 bee, $08 good bee. $01 (a
- * mushroom no randomized seed puts there) and $02 (empty) are empty.
+ * red, $04 green, $05 blue, $06 fairy, $07 bee, $08 good bee, $01 a
+ * mushroom (the item menu draws one, zelda3 hud.c kHudItemBottles[1]); $02
+ * and any value the game never writes, empty.
  */
 const BOTTLE_CONTENTS = new Map([
   [0x03, 1],
@@ -480,6 +481,7 @@ const BOTTLE_CONTENTS = new Map([
   [0x06, 4],
   [0x07, 5],
   [0x08, 6],
+  [0x01, 7],
 ]);
 
 /**
