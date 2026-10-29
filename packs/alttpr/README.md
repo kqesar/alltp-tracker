@@ -1044,9 +1044,57 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
   (`VT_NAMES`), and its bosses' and sewers' regions are told by hand
   (`REGION_PLACES`).
 
-`test/er-seeds/0yAObedRMV.json` is a real Crosskeys seed's spoiler: its
-shuffled entrances are exactly the pool, and every one leads to a target
-the model knows.
+`entrances.spec.ts` holds the pool to `0yAObedRMV`, a real Crosskeys seed
+(see "Entrance randomizer seeds" below): its shuffled entrances are exactly
+the pool, and every one leads to a target the model knows.
+
+### Entrance randomizer seeds
+
+`test/er-seeds/<hash>.json` are the spoilers of real alttpr.com seeds that
+shuffle entrances, as `{ generated, hash, spoiler }`: `spoiler` is the seed
+file's own on S3 (`Entrances`, the item at every location, the playthrough's
+spheres, `Special` for the pads' medallions), its patch left out, and
+`generated` says how the file was made. Written by
+
+```sh
+pnpm --filter @alltp/pack-alttpr record-er-seeds [<hash>…]
+```
+
+(no hash records the index's seeds again). It shares the fetching, the
+refusal of a `meta.notes` and the index with `spoiler-fixtures`;
+`test/er-seeds/index.json` records, per seed, the address, the time recorded,
+the file's own `generated` time, size, SHA-256 and the settings its `meta`
+states. Biome ignores the directory, so the bytes stay the script's.
+
+| Seed | Mode | Shuffle | Dungeon items | Note |
+| --- | --- | --- | --- | --- |
+| `0yAObedRMV` | open | crossed | full | the first recording |
+| `AvpDR9mgvn` | open | crossed | full | |
+| `DvW0egkQyd` | open | simple | standard | |
+| `dMEp8enPG1` | open | full | standard | |
+| `kveDj7bgMm` | open | insanity | standard | a mode that stays unmodelled |
+| `qMleRm5avd` | open | restricted | standard | |
+| `0yAObLe6MV` | open | crossed | full | boss shuffle `full` |
+| `ry08p2d9y5` | retro | crossed | full | the site took `full` |
+| `9MQ9gQwAMD` | standard | crossed | full | |
+| `6GKBQZ3pye` | standard | simple | standard | |
+
+The last five were generated for this purpose with `POST
+https://alttpr.com/api/randomizer` (spoilers `on`, tournament false, glitches
+`none`, item placement `advanced`, accessibility `items`, Ganon with 7 and 7
+crystals, normal pool, no hints; one POST each). The site accepted every
+combination asked, Retro with full dungeon items included, and spelled
+Retro's keys as bare `Key`s.
+
+`src/er-seeds.spec.ts` holds `erWorld` to each recording: every entrance of
+the seed noted (`crossedConnections`), then, sphere by sphere, every location
+of the sphere must be `yes` with the items of the earlier spheres held and
+the pads' medallions known from `Special`: the randomizer reaches it, so the
+pack must say yes. The entrance randomizer spells items and locations its own
+way (`Small Key (Desert Palace)`, `Rupees (20)`; `test/er-seeds.ts`
+`holding`). A seed whose mode the pack does not model is listed in the spec's
+`PENDING` table with the reason and asserted to be still pending, so the step
+that models it has to remove it, and none is skipped silently.
 
 ### Where Link went: autotracking the entrances
 
