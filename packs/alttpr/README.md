@@ -1353,6 +1353,15 @@ flowchart LR
 - **Save-and-quit points**: the start reaches Link's House and Sanctuary
   (Standard: the uncle's passage, then Link's House once Sanctuary is),
   and the Old Man's house once his location is reached.
+- **The bunny's rules** (`set_bunny_rules`) hang on which regions the
+  connections mark light or dark, and a door noted later may mark more. A
+  region the doors noted mark dark takes the pearl, or a path from a region
+  wholly light; one only a door not noted may make dark (marked through
+  the world where those lead anywhere, below) takes that or `maybe`. A
+  path counts only from a region the doors noted mark light that no door
+  not noted may make dark: in a crossed seed where the Pyramid's door
+  leads into Sanctuary, Link starts there a bunny, which a map read off
+  the doors noted would not have known.
 - **Facts.** The engine reads `reach()` in locations only. A rule of an
   exit or of a helper that asks for a region reads the fact
   `reached_<region>` instead, given by a location of its own in that

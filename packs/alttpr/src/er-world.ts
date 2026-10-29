@@ -376,11 +376,19 @@ const or = (...reqs: string[]): string => {
   return kept.length === 0 ? "false" : kept.map((r) => `(${r})`).join(" | ");
 };
 
-/** The worlds' light and dark regions (mark_light_world_regions). */
-function markWorlds(connections: ErConnections): {
+/**
+ * The worlds' light and dark regions (mark_light_world_regions). With
+ * `anywhere`, a door or exit not noted leads wherever it may (`anywhere`):
+ * what the seed's world may mark, the doors noted and those not.
+ */
+function markWorlds(
+  connections: ErConnections,
+  anywhere = false,
+): {
   light: ReadonlySet<string>;
   dark: ReadonlySet<string>;
 } {
+  const beyond = anywhere ? anywhereTargets(connections) : [];
   // From every region of a world, through its connected exits, never into
   // the other world's overworld (Regions.py:339-366)
   const mark = (kind: string, other: string) => {
@@ -388,13 +396,21 @@ function markWorlds(connections: ErConnections): {
       REGIONS.filter((r) => r.kind === kind).map((r) => r.name),
     );
     const queue = [...seen];
+    let through = false;
     for (let name = queue.shift(); name !== undefined; name = queue.shift()) {
       for (const exit of region(name).exits) {
         const to = connections.get(exit);
-        if (to === undefined || region(to).kind === other || seen.has(to))
-          continue;
-        seen.add(to);
-        queue.push(to);
+        let next: readonly string[] = to === undefined ? [] : [to];
+        // Into anywhere once: it leads the same wherever it is entered from
+        if (to === undefined && !through && SHUFFLED.has(exit)) {
+          through = true;
+          next = beyond;
+        }
+        for (const into of next) {
+          if (region(into).kind === other || seen.has(into)) continue;
+          seen.add(into);
+          queue.push(into);
+        }
       }
     }
     return seen;
@@ -458,10 +474,24 @@ const GANON = "Ganon";
  * in the dark world, and each location in the dark world it cannot get,
  * takes the pearl, or (for a region also in the light world) a path from
  * a region wholly in the light world, each entrance on it passable.
+ *
+ * The marks are those of the seed's world, which the doors not noted may
+ * add to (markWorlds through them, `mayBeDark`). A region the doors noted
+ * mark dark takes the rule; one only the doors not noted may make dark
+ * takes it or `maybe`, the meet of the rule and none. A path counts only
+ * from a region the doors noted mark light that none may make dark, and
+ * goes on through one that may be both. Each is the randomizer's rule
+ * or stricter, so noting a door never takes a `yes` away. The world where
+ * the doors not noted lead anywhere (er-keys.ts) holds the pearl
+ * throughout.
  */
 function addBunnyRules(
   connections: ErConnections,
-  marked: { light: ReadonlySet<string>; dark: ReadonlySet<string> },
+  marked: {
+    light: ReadonlySet<string>;
+    dark: ReadonlySet<string>;
+    mayBeDark: ReadonlySet<string>;
+  },
   exits: Map<string, string>,
   locations: Map<string, string>,
 ): void {
@@ -486,30 +516,31 @@ function addBunnyRules(
         const newPath = [...path, rule];
         seen.add(from);
         if (!marked.light.has(from)) continue;
-        if (marked.dark.has(from)) queue.push([from, newPath]);
+        if (marked.mayBeDark.has(from)) queue.push([from, newPath]);
         // can_reach(entrance): its region, and its rule
         else options.push(and(`reach(${region(from).id})`, rule, ...newPath));
       }
     }
-    return or(...options);
+    const rule = or(...options);
+    return marked.dark.has(name) ? rule : or(rule, "maybe");
   };
 
   for (const name of RULE_TABLES.bunny.impassableCaves.value) {
-    if (!marked.dark.has(name)) continue;
+    if (!marked.mayBeDark.has(name)) continue;
     const rule = ruleToAdd(name);
     for (const exit of region(name).exits)
       if (exits.has(exit))
         exits.set(exit, and(exits.get(exit) ?? "true", rule));
   }
   const shop = "Light World Death Mountain Shop";
-  if (marked.dark.has(shop)) {
+  if (marked.mayBeDark.has(shop)) {
     const entrance = into.get(shop)?.[0];
     if (entrance !== undefined)
       exits.set(entrance, and(exits.get(entrance) ?? "true", ruleToAdd(shop)));
   }
   const accessible = new Set(RULE_TABLES.bunny.accessibleLocations.value);
   for (const [location, name] of REGION_OF_LOCATION) {
-    if (!marked.dark.has(name) || accessible.has(location)) continue;
+    if (!marked.mayBeDark.has(name) || accessible.has(location)) continue;
     locations.set(
       location,
       and(locations.get(location) ?? "true", ruleToAdd(name)),
@@ -689,6 +720,17 @@ const SHUFFLED = new Set(
  * coupled with.
  */
 function anywhereRegion(connections: ErConnections): Region {
+  return {
+    exits: anywhereTargets(connections).map((name) => ({
+      to: region(name).id,
+    })),
+    id: ANYWHERE,
+    locations: [],
+  };
+}
+
+/** The regions `anywhereRegion` leads into, by name. */
+function anywhereTargets(connections: ErConnections): readonly string[] {
   // What a noted door or hole leads into: a region a fixed way leads into
   // (inside a dungeon, between Skull Woods' sections) may be a drop too
   const entered = new Set(
@@ -706,13 +748,7 @@ function anywhereRegion(connections: ErConnections): Region {
     (e) =>
       e.kind === "door" && SHUFFLED.has(e.name) && !connections.has(e.name),
   ).map((e) => parentOf(e.name));
-  return {
-    exits: [...new Set([...into, ...out])].map((name) => ({
-      to: region(name).id,
-    })),
-    id: ANYWHERE,
-    locations: [],
-  };
+  return [...new Set([...into, ...out])];
 }
 
 /** The randomizer's events, and any the options add, as facts. */
@@ -904,7 +940,12 @@ export function erWorld(
     options.anywhere,
   );
   if (options.marked !== false)
-    addBunnyRules(connections, marked, exits, locations);
+    addBunnyRules(
+      connections,
+      { ...marked, mayBeDark: markWorlds(connections, true).dark },
+      exits,
+      locations,
+    );
   const reached = reachedBy(exits, locations);
   const compiledSettings: Settings = {
     ...settings,
