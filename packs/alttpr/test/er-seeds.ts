@@ -3,6 +3,13 @@
 import { readFileSync } from "node:fs";
 import type { State } from "@alltp/engine";
 import { DUNGEON_CODES, ITEMS } from "../scripts/er-rules.mjs";
+import {
+  BOSS_PLACES,
+  type BossPlaceId,
+  bossFacts,
+  SHUFFLED_BOSSES,
+  type ShuffledBoss,
+} from "../src/bosses";
 import rules from "../src/entrances/rules.json" with { type: "json" };
 import { medallionFacts, padsFromUpstream } from "../src/medallions";
 
@@ -117,4 +124,46 @@ export function knowing(special: Readonly<Record<string, string>>): State {
       ),
     ),
   );
+}
+
+/** A spoiler's `Bosses` place that is no slot's name spelled alike. */
+const BOSS_PLACE_NAMES: Readonly<Record<string, BossPlaceId>> = {
+  "Ganons Tower Basement": "ganonsTowerBottom",
+};
+
+/** A name without its spaces and case: "Tower Of Hera", "towerOfHera". */
+const squeezed = (name: string) => name.replaceAll(" ", "").toLowerCase();
+
+/**
+ * What the seed's spoiler tells of its bosses (`Bosses`), as the facts of a
+ * state: each slot boss shuffle fills, its boss (the Agahnims and Ganon,
+ * which never move, left out).
+ */
+export function bossesKnown(bosses: Readonly<Record<string, string>>): State {
+  const known: Partial<Record<BossPlaceId, ShuffledBoss>> = {};
+  for (const [place, name] of Object.entries(bosses)) {
+    const slot =
+      BOSS_PLACE_NAMES[place] ??
+      (Object.keys(BOSS_PLACES) as BossPlaceId[]).find(
+        (id) => squeezed(id) === squeezed(place),
+      );
+    const boss = SHUFFLED_BOSSES.find((b) => squeezed(b) === squeezed(name));
+    if (slot !== undefined && boss !== undefined) known[slot] = boss;
+  }
+  return bossFacts(known);
+}
+
+/** A retro seed's shops (`Shops`) selling an item: their names. */
+export function shopsSelling(
+  shops: unknown,
+  item: "Single Arrow" | "Small Key (Universal)",
+): string[] {
+  if (!Array.isArray(shops)) return [];
+  return (shops as readonly Record<string, string>[])
+    .filter((shop) =>
+      Object.entries(shop).some(
+        ([key, value]) => key.startsWith("item_") && value.startsWith(item),
+      ),
+    )
+    .map((shop) => shop.location ?? "");
 }

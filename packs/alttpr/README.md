@@ -1089,8 +1089,10 @@ Retro's keys as bare `Key`s.
 `src/er-seeds.spec.ts` holds `erWorld` to each recording: every entrance of
 the seed noted (`crossedConnections`), then, sphere by sphere, every location
 of the sphere must be `yes` with the items of the earlier spheres held and
-the pads' medallions known from `Special`: the randomizer reaches it, so the
-pack must say yes. The entrance randomizer spells items and locations its own
+the pads' medallions known from `Special` and the bosses from `Bosses`
+(`bossesKnown`), and in Retro the key and arrow shops marked from the first
+sphere that reaches one (`Shops`, `shopsSelling`): the randomizer reaches it,
+so the pack must say yes. The entrance randomizer spells items and locations its own
 way (`Small Key (Desert Palace)`, `Rupees (20)`; `test/er-seeds.ts`
 `holding`). A seed whose mode the pack does not model is listed in the spec's
 `PENDING` table with the reason and asserted to be still pending, so the step
