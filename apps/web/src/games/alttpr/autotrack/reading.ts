@@ -4,9 +4,9 @@
 
 import {
   type BossReading,
-  decodeBosses,
   type BottlesReading,
   type CapacitiesReading,
+  decodeBosses,
   decodeBottles,
   decodeCapacities,
   decodeChecks,
