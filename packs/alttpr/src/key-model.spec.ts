@@ -14,6 +14,7 @@ import {
 } from "@alltp/engine";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
+import { fill, sweep } from "../test/fill";
 import { DERIVED, derivedFacts } from "./derived";
 import { DUNGEONS, dungeonRegions } from "./dungeons";
 import { type Filler, filler } from "./fill";
@@ -251,14 +252,18 @@ describe("the key model on real dungeons", () => {
   it("reads a Hybrid Major Glitches clip by the gating dungeons' keys in hand", () => {
     // Swamp Palace's rules read Misery Mire's and Tower of Hera's keys
     // there, both read by a way in: held at what is surely in hand, they
-    // leave it safe with everything held, as without the clip
+    // leave it safe with everything held, as without the clip. Misery Mire's
+    // keys sit behind its own doors, never all in logic before they are
+    // found: the dungeon proven safe, the player collects them all
     const top = Object.fromEntries(
       ITEMS.filter((item) => !/^(key|bigKey)/.test(item.id)).map(
         ({ id, max }) => [id, max],
       ),
     );
     expect(model(top, OWG_OPEN).safe("swamp-palace")).toBe(true);
-    expect(model(top, HMG_OPEN).safe("swamp-palace")).toBe(true);
+    const clipped = model(top, HMG_OPEN);
+    expect(clipped.safe("swamp-palace")).toBe(true);
+    expect(clipped.state).toMatchObject({ bigKeyD6: 1, bigKeyP3: 1, keyD6: 3 });
     // Without the hookshot, a key may sit where the player cannot follow
     expect(model({ ...top, hookshot: 0 }, HMG_OPEN).safe("swamp-palace")).toBe(
       false,
@@ -299,6 +304,90 @@ describe("the key model on real dungeons", () => {
       "maybe",
     );
   });
+
+  it.each([
+    ["Open, Hybrid Major Glitches", HMG_OPEN],
+    ["Standard, Hybrid Major Glitches", HMG_STANDARD],
+    ["Inverted, Hybrid Major Glitches", HMG_INVERTED],
+    ["Open, Major Glitches", MG_OPEN],
+    ["Standard, Major Glitches", MG_STANDARD],
+    ["Inverted, Major Glitches", MG_INVERTED],
+  ] as const)(
+    "never vouches for Tower of Hera by Misery Mire's keys the player lacks (%s)",
+    (_, settings) => {
+      // The fill holds Misery Mire's keys while it places Tower of Hera's
+      // (RandomAssumed.php:59-135), so the clip from Mire (keyD6 >= 3) may be
+      // the only way to the key: here in the Compass Chest, behind the big
+      // key, which waits behind the key in the Big Key Chest
+      const f = fillerOf(settings);
+      const wanted = new Map([
+        ["bigKeyP3", "tower-of-hera/big-key-chest"],
+        ["keyP3", "tower-of-hera/compass-chest"],
+      ]);
+      const placement = fill(f, (spots, item) => {
+        const spot = wanted.get(item);
+        return spot !== undefined && spots.includes(spot)
+          ? spot
+          : (spots[0] as string);
+      });
+      expect(placement?.get("tower-of-hera/big-key-chest")).toBe("bigKeyP3");
+      expect(placement?.get("tower-of-hera/compass-chest")).toBe("keyP3");
+      // The boots clip into the tower (in Inverted from West Death Mountain,
+      // through the Old Man's cave, the pearl for its Big Key Chest), the
+      // lamp lights its torches; Misery Mire stays shut
+      const items = {
+        lamp: 1,
+        pegasusBoots: 1,
+        sword: 1,
+        ...(settings.invertedMode ? { glove: 1, moonPearl: 1 } : {}),
+      };
+      const state = tracked(items, settings);
+      const played = sweep(f, state, placement ?? new Map()).solution;
+      expect(played.region("miseryMire")).toBe("no");
+      expect(played.region("towerOfHera")).toBe("yes");
+      const keyed = model(items, settings);
+      expect(keyed.safe("tower-of-hera")).toBe(false);
+      for (const chest of ["compass-chest", "big-key-chest"]) {
+        expect(played.location(`tower-of-hera/${chest}`)).toBe("no");
+        expect(keyed.location(`tower-of-hera/${chest}`)).toBe("maybe");
+      }
+    },
+  );
+
+  it.each([
+    ["Open, Hybrid Major Glitches", HMG_OPEN],
+    ["Inverted, Hybrid Major Glitches", HMG_INVERTED],
+    ["Open, Major Glitches", MG_OPEN],
+  ] as const)(
+    "never calls Swamp Palace safe by Misery Mire's keys the player lacks (%s)",
+    (_, settings) => {
+      // The clip from Misery Mire passes the first key door, so the fill,
+      // holding Mire's keys, may place Swamp Palace's key past it
+      const f = fillerOf(settings);
+      const placement = fill(f, (spots, item) =>
+        item === "keyD2" && spots.includes("swamp-palace/map-chest")
+          ? "swamp-palace/map-chest"
+          : (spots[0] as string),
+      );
+      expect(placement?.get("swamp-palace/map-chest")).toBe("keyD2");
+      // Swamp Palace by its door, Misery Mire shut: no medallion opens it
+      const items = {
+        flippers: 1,
+        glove: 1,
+        hammer: 1,
+        hookshot: 1,
+        lamp: 1,
+        magicMirror: 1,
+        moonPearl: 1,
+        sword: 1,
+      };
+      const played = sweep(f, tracked(items, settings), placement ?? new Map());
+      expect(played.solution.region("miseryMire")).toBe("no");
+      expect(played.solution.location("swamp-palace/entrance")).toBe("yes");
+      expect(played.solution.location("swamp-palace/map-chest")).toBe("no");
+      expect(model(items, settings).safe("swamp-palace")).toBe(false);
+    },
+  );
 
   it("is the solver's answer where every key is tracked", () => {
     const items = { glove: 1, hammer: 1, keyD1: 2, lamp: 1, moonPearl: 1 };
