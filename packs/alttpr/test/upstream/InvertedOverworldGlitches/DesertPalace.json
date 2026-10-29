@@ -1,0 +1,64 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/InvertedOverworldGlitches/DesertPalaceTest.php",
+  "class": "InvertedOverworldGlitches\\DesertPalaceTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"regionEnter","line":50,"method":"testEntry","region":"Desert Palace"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"regionEnter","line":51,"method":"testEntry","region":"Desert Palace"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["BookOfMudora","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"regionEnter","line":52,"method":"testEntry","region":"Desert Palace"},
+    {"dataSet":0,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","item":"KeyP2","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"fill","line":80,"location":"Desert Palace - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","item":"KeyP2","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"fill","line":81,"location":"Desert Palace - Compass Chest","method":"testFillLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","item":"BigKeyP2","items":{"add":[],"base":"allItems","except":["BigKeyP2"]},"kind":"fill","line":83,"location":"Desert Palace - Big Chest","method":"testFillLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","item":"BigKeyP2","items":{"add":[],"base":"allItems","except":["BigKeyP2"]},"kind":"fill","line":85,"location":"Desert Palace - Boss","method":"testFillLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","item":"KeyP2","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"fill","line":86,"location":"Desert Palace - Boss","method":"testFillLocation"},
+    {"dataSet":0,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":113,"location":"Desert Palace - Map Chest","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":114,"location":"Desert Palace - Map Chest","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["BookOfMudora","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":115,"location":"Desert Palace - Map Chest","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":117,"location":"Desert Palace - Big Chest","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["MoonPearl","PegasusBoots","BigKeyP2"],"base":"setUp"},"kind":"location","line":118,"location":"Desert Palace - Big Chest","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["BookOfMudora","MagicMirror","PegasusBoots","BigKeyP2"],"base":"setUp"},"kind":"location","line":119,"location":"Desert Palace - Big Chest","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":121,"location":"Desert Palace - Torch","method":"testLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["PegasusBoots"]},"kind":"location","line":122,"location":"Desert Palace - Torch","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":123,"location":"Desert Palace - Torch","method":"testLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["BookOfMudora","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":124,"location":"Desert Palace - Torch","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":126,"location":"Desert Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"location","line":127,"location":"Desert Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["MoonPearl","PegasusBoots","KeyP2"],"base":"setUp"},"kind":"location","line":128,"location":"Desert Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":13,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["BookOfMudora","MagicMirror","PegasusBoots","KeyP2"],"base":"setUp"},"kind":"location","line":129,"location":"Desert Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":14,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":131,"location":"Desert Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":15,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"location","line":132,"location":"Desert Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["MoonPearl","PegasusBoots","KeyP2"],"base":"setUp"},"kind":"location","line":133,"location":"Desert Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["BookOfMudora","MagicMirror","PegasusBoots","KeyP2"],"base":"setUp"},"kind":"location","line":134,"location":"Desert Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":18,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":136,"location":"Desert Palace - Boss","method":"testLocation"},
+    {"dataSet":19,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"location","line":137,"location":"Desert Palace - Boss","method":"testLocation"},
+    {"dataSet":20,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP2"]},"kind":"location","line":138,"location":"Desert Palace - Boss","method":"testLocation"},
+    {"dataSet":21,"expected":false,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["Lamp","FireRod"]},"kind":"location","line":139,"location":"Desert Palace - Boss","method":"testLocation"},
+    {"dataSet":22,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["UncleSword","KeyP2","BigKeyP2","MoonPearl","PegasusBoots","Lamp"],"base":"setUp"},"kind":"location","line":140,"location":"Desert Palace - Boss","method":"testLocation"},
+    {"dataSet":23,"expected":true,"file":"tests/InvertedOverworldGlitches/DesertPalaceTest.php","items":{"add":["UncleSword","KeyP2","BigKeyP2","MoonPearl","PegasusBoots","FireRod"],"base":"setUp"},"kind":"location","line":141,"location":"Desert Palace - Boss","method":"testLocation"}
+  ]
+}

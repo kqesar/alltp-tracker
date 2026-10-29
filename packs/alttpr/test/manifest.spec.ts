@@ -27,7 +27,7 @@ describe("upstream.json", () => {
       ["items.json", loadItemTable().upstream] as const,
       ["locations.json", index.upstream] as const,
     ];
-    expect(headers).toHaveLength(48);
+    expect(headers).toHaveLength(93);
     for (const [path, upstream] of headers) {
       expect(
         [upstream.repo, upstream.commit, upstream.logic],
@@ -110,7 +110,7 @@ describe("upstream.json", () => {
 
   it("lists the test file of every fixture, and a fixture for every test file", () => {
     const tests = new Map(manifest.tests.map((t) => [t.file, t]));
-    expect(fixtures).toHaveLength(46);
+    expect(fixtures).toHaveLength(91);
     for (const fixture of fixtures) {
       expect(tests.get(fixture.file)?.fixture, fixture.file).toBe(
         `test/upstream/${fixture.path}`,

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /// <reference types="node" />
-// Imports the official randomizer's NoGlitches and Inverted tests as JSON
-// fixtures.
+// Imports the official randomizer's NoGlitches and Inverted tests, and its
+// glitched logics' (OverworldGlitches and InvertedOverworldGlitches), as
+// JSON fixtures.
 //
 //   node scripts/import-upstream-tests.mjs <upstream-checkout> [--out <dir>]
 //
@@ -42,6 +43,8 @@ export const UPSTREAM_REPO = "sporchia/alttp_vt_randomizer";
 export const TEST_ROOTS = [
   "tests/NoGlitches",
   "tests/Inverted",
+  "tests/OverworldGlitches",
+  "tests/InvertedOverworldGlitches",
   // The retro world's rupee bow (World::factory('retro', ...))
   "tests/RetroBowTest.php",
 ];
@@ -1532,8 +1535,12 @@ export function importAll(checkout, out) {
     .filter((path) => path.endsWith("Test.php"))
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
+  // What another importer writes there is its own: import-rupee-texts.mjs's
+  const others = new Set([join(out, "rupee-texts.json")]);
   const stale = new Set(
-    existsSync(out) ? walk(out).filter((path) => path.endsWith(".json")) : [],
+    existsSync(out)
+      ? walk(out).filter((path) => path.endsWith(".json") && !others.has(path))
+      : [],
   );
   const summary = sources.map((file) => {
     const fixture = importTestFile(

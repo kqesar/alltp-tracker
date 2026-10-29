@@ -35,7 +35,10 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 
 `upstream.json` maps every upstream file to its module, with its status;
 `test/contract.ts` checks the pack against every case of the test files it
-marks ported.
+marks ported. `packs/alttpr/scripts/import-upstream-tests.mjs` writes them under
+`test/upstream/`: `tests/NoGlitches`, `tests/Inverted`, the glitched logics'
+`tests/OverworldGlitches` and `tests/InvertedOverworldGlitches`, and
+`tests/RetroBowTest.php`.
 
 ## The world model
 
@@ -1413,7 +1416,7 @@ app counts its runs not modelled.
 | Logic | Flags | Held to |
 | --- | --- | --- |
 | NoGlitches | none (`logic.php:4`) | `tests/NoGlitches`, `tests/Inverted` |
-| OverworldGlitches | not yet | |
+| OverworldGlitches | not yet | `tests/OverworldGlitches`, `tests/InvertedOverworldGlitches` (imported, pending) |
 | HybridMajorGlitches | not yet | |
 | MajorGlitches | not yet | |
 

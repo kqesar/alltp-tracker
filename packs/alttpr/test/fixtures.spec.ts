@@ -10,10 +10,16 @@ import {
 } from "./upstream-state";
 
 const fixtures = loadFixtures();
+
+/** The logic each glitched directory's test classes build their world in. */
+const LOGIC_OF_DIRECTORY = new Map([
+  ["InvertedOverworldGlitches", "OverworldGlitches"],
+  ["OverworldGlitches", "OverworldGlitches"],
+]);
 const cases = fixtures.flatMap((fixture) => fixture.cases);
 
 describe("the upstream fixtures", () => {
-  it("hold the cases of every NoGlitches and Inverted test class and the retro bow's, file by file", () => {
+  it("hold the cases of every NoGlitches, Inverted and glitched test class and the retro bow's, file by file", () => {
     const counts = Object.fromEntries(
       fixtures.map((f) => [f.path, f.cases.length]),
     );
@@ -40,6 +46,28 @@ describe("the upstream fixtures", () => {
       "Inverted/ThievesTown.json": 30,
       "Inverted/TowerOfHera.json": 78,
       "Inverted/TurtleRock.json": 165,
+      "InvertedOverworldGlitches/DarkWorld/DeathMountain/East.json": 20,
+      "InvertedOverworldGlitches/DarkWorld/DeathMountain/West.json": 22,
+      "InvertedOverworldGlitches/DarkWorld/Mire.json": 4,
+      "InvertedOverworldGlitches/DarkWorld/NorthEast.json": 21,
+      "InvertedOverworldGlitches/DarkWorld/NorthWest.json": 14,
+      "InvertedOverworldGlitches/DarkWorld/South.json": 7,
+      "InvertedOverworldGlitches/DeathMountain/East.json": 35,
+      "InvertedOverworldGlitches/DeathMountain/West.json": 5,
+      "InvertedOverworldGlitches/DesertPalace.json": 32,
+      "InvertedOverworldGlitches/EasternPalace.json": 35,
+      "InvertedOverworldGlitches/GanonsTower.json": 390,
+      "InvertedOverworldGlitches/HyruleCastleEscape.json": 47,
+      "InvertedOverworldGlitches/HyruleCastleTower.json": 11,
+      "InvertedOverworldGlitches/IcePalace.json": 218,
+      "InvertedOverworldGlitches/LightWorld.json": 231,
+      "InvertedOverworldGlitches/MiseryMire.json": 72,
+      "InvertedOverworldGlitches/PalaceOfDarkness.json": 54,
+      "InvertedOverworldGlitches/SkullWoods.json": 27,
+      "InvertedOverworldGlitches/SwampPalace.json": 75,
+      "InvertedOverworldGlitches/ThievesTown.json": 30,
+      "InvertedOverworldGlitches/TowerOfHera.json": 40,
+      "InvertedOverworldGlitches/TurtleRock.json": 56,
       "NoGlitches/DarkWorld/DeathMountain/East.json": 54,
       "NoGlitches/DarkWorld/DeathMountain/West.json": 41,
       "NoGlitches/DarkWorld/Mire.json": 12,
@@ -63,6 +91,29 @@ describe("the upstream fixtures", () => {
       "NoGlitches/ThievesTown.json": 124,
       "NoGlitches/TowerOfHera.json": 81,
       "NoGlitches/TurtleRock.json": 213,
+      "OverworldGlitches/DarkWorld/DeathMountain/East.json": 29,
+      "OverworldGlitches/DarkWorld/DeathMountain/West.json": 23,
+      "OverworldGlitches/DarkWorld/Mire.json": 8,
+      "OverworldGlitches/DarkWorld/NorthEast.json": 24,
+      "OverworldGlitches/DarkWorld/NorthWest.json": 23,
+      "OverworldGlitches/DarkWorld/South.json": 21,
+      "OverworldGlitches/DeathMountain/East.json": 24,
+      "OverworldGlitches/DeathMountain/West.json": 14,
+      "OverworldGlitches/DesertPalace.json": 25,
+      "OverworldGlitches/EasternPalace.json": 21,
+      "OverworldGlitches/GanonsTower.json": 130,
+      "OverworldGlitches/HyruleCastleEscape.json": 16,
+      "OverworldGlitches/HyruleCastleTower.json": 2,
+      "OverworldGlitches/IcePalace.json": 212,
+      "OverworldGlitches/LightWorld.json": 104,
+      "OverworldGlitches/MiseryMire.json": 75,
+      "OverworldGlitches/Open.json": 33,
+      "OverworldGlitches/PalaceOfDarkness.json": 102,
+      "OverworldGlitches/SkullWoods.json": 48,
+      "OverworldGlitches/SwampPalace.json": 74,
+      "OverworldGlitches/ThievesTown.json": 46,
+      "OverworldGlitches/TowerOfHera.json": 27,
+      "OverworldGlitches/TurtleRock.json": 123,
       "RetroBow.json": 32,
     });
   });
@@ -71,10 +122,10 @@ describe("the upstream fixtures", () => {
     const kinds: Partial<Record<CaseKind, number>> = {};
     for (const c of cases) kinds[c.kind] = (kinds[c.kind] ?? 0) + 1;
     expect(kinds).toEqual({
-      fill: 262,
-      location: 5536,
-      regionComplete: 19,
-      regionEnter: 35,
+      fill: 524,
+      location: 7893,
+      regionComplete: 28,
+      regionEnter: 57,
       regionFill: 720,
     });
   });
@@ -108,7 +159,7 @@ describe("the upstream fixtures", () => {
     }
   });
 
-  it("run in a Standard, Open, Inverted or retro world with the test rules", () => {
+  it("run in a Standard, Open, Inverted or retro world with the test rules, in their directory's logic", () => {
     for (const fixture of fixtures) {
       const world = fixture.worlds.world;
       expect(["inverted", "open", "retro", "standard"], fixture.path).toContain(
@@ -116,14 +167,19 @@ describe("the upstream fixtures", () => {
       );
       expect(world?.config, fixture.path).toEqual({
         difficulty: "test_rules",
-        logic: "NoGlitches",
+        logic:
+          LOGIC_OF_DIRECTORY.get(fixture.path.split("/")[0] ?? "") ??
+          "NoGlitches",
       });
     }
     expect(
       fixtures
         .filter((f) => f.worlds.world?.mode === "open")
         .map((f) => f.file),
-    ).toEqual(["tests/NoGlitches/OpenTest.php"]);
+    ).toEqual([
+      "tests/NoGlitches/OpenTest.php",
+      "tests/OverworldGlitches/OpenTest.php",
+    ]);
     expect(
       fixtures
         .filter((f) => f.worlds.world?.mode === "retro")
@@ -132,7 +188,7 @@ describe("the upstream fixtures", () => {
     // Every Inverted test class, and only they, build an Inverted world
     for (const fixture of fixtures) {
       expect(fixture.worlds.world?.mode === "inverted", fixture.path).toBe(
-        fixture.path.startsWith("Inverted/"),
+        /^Inverted\w*\//.test(fixture.path),
       );
     }
   });
@@ -182,10 +238,12 @@ describe("the upstream fixtures", () => {
         ? [["location" in c ? c.location : c.region, c.expected, c.items]]
         : [];
     });
-    // Sick Kid with no bottle, once per world it is tested in
-    expect(removing).toEqual([
-      ["Sick Kid", false, { add: [], base: "allItems", except: ["AnyBottle"] }],
-      ["Sick Kid", false, { add: [], base: "allItems", except: ["AnyBottle"] }],
-    ]);
+    // Sick Kid with no bottle, once per world and logic it is tested in
+    const sickKid = [
+      "Sick Kid",
+      false,
+      { add: [], base: "allItems", except: ["AnyBottle"] },
+    ];
+    expect(removing).toEqual([sickKid, sickKid, sickKid, sickKid]);
   });
 });
