@@ -274,6 +274,24 @@ test.describe("the stream view", () => {
     );
   });
 
+  test("keeps a source sized for the grid whole-pixel with layout=grid", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ height: 448, width: 512 });
+    await page.goto("./?view=obs&layout=grid");
+    await expect(page.getByTestId("item-grid")).toBeVisible();
+
+    // Seven cells between two half cells, seven rows: 64 px, edge to edge
+    expect(await cellOf(page)).toBe(64);
+    const grid = await page.getByTestId("item-grid").boundingBox();
+    expect(grid).toEqual({ height: 448, width: 512, x: 0, y: 0 });
+    await expect(page.getByTestId("grid-row")).toHaveCount(7);
+    const { violations } = await new AxeBuilder({ page })
+      .withTags(WCAG_AA)
+      .analyze();
+    expect(violations.map(({ id }) => id)).toEqual([]);
+  });
+
   test("follows the tracker live, and the tracker follows it", async ({
     context,
     page,

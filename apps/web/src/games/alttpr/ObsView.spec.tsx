@@ -134,6 +134,21 @@ describe("ObsView", () => {
     );
   });
 
+  it("lays out the app's grid with layout=grid, whole-pixel in a 512 × 448 source", () => {
+    window.history.replaceState(null, "", "?view=obs&layout=grid");
+    resizeTo(512, 448);
+    render(<ObsView background={null} />);
+
+    // Seven cells between two half cells, seven rows: 64 px, as before
+    expect(cssVar("--cell")).toBe("64px");
+    expect(cssVar("--obs-top")).toBe("0px");
+    expect(screen.getAllByTestId("grid-row")).toHaveLength(7);
+    expect(
+      screen.getByTestId("item-grid").querySelector(".halfcell"),
+    ).not.toBeNull();
+    window.history.replaceState(null, "", "/");
+  });
+
   it("folds the band in two on a page taller than wide", () => {
     vi.stubGlobal("matchMedia", (query: string) => ({
       addEventListener: () => {},

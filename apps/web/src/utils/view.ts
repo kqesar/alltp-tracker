@@ -119,6 +119,18 @@ const FEED_PARAM = "feed";
 export const obsFeed = (search: string = window.location.search): boolean =>
   new URLSearchParams(search).get(FEED_PARAM) === "1";
 
+/** `&layout=grid` asks A Link to the Past's stream view for the app's grid. */
+const LAYOUT_PARAM = "layout";
+
+/**
+ * Whether A Link to the Past's stream view draws the app's grid (seven
+ * cells between two half cells, `&layout=grid`) rather than its band: the
+ * layout a source sized for the grid (512 × 448) keeps whole-pixel.
+ * @param search - The query string, `window.location.search` by default
+ */
+export const obsGrid = (search: string = window.location.search): boolean =>
+  new URLSearchParams(search).get(LAYOUT_PARAM) === "grid";
+
 /** `&bridge=` names the port SNI listens on, when it is not the usual one. */
 const BRIDGE_PARAM = "bridge";
 
@@ -170,13 +182,21 @@ export const obsViewUrl = (
   {
     base,
     feed = false,
+    grid = false,
     timer = false,
     token,
-  }: { base?: string; feed?: boolean; timer?: boolean; token?: string } = {},
+  }: {
+    base?: string;
+    feed?: boolean;
+    grid?: boolean;
+    timer?: boolean;
+    token?: string;
+  } = {},
   page: string = window.location.href,
 ): string => {
   const url = new URL(base ?? trackerUrl(page));
   url.searchParams.set(VIEW_PARAM, OBS_VIEW);
+  if (grid) url.searchParams.set(LAYOUT_PARAM, "grid");
   if (token !== undefined) url.searchParams.set(TOKEN_PARAM, token);
   if (timer) url.searchParams.set(TIMER_PARAM, "1");
   if (feed) url.searchParams.set(FEED_PARAM, "1");

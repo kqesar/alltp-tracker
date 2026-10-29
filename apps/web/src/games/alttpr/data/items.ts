@@ -208,7 +208,8 @@ const STREAM_COLUMNS = 12;
  * under them while those show, Hyrule Castle's at the end (its name over
  * them). The pendants, which each dungeon's prize already shows, are left
  * out. Narrow (a phone following the run), each row is cut in two halves of
- * six, the key cells kept under their dungeons.
+ * six, the key cells kept under their dungeons (the dungeons' second half
+ * seven wide while they show: Hyrule Castle's at its end).
  * @param run - The run's world and goal
  * @param keys - Whether the key cells show
  * @param narrow - Six columns rather than twelve
