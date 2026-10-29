@@ -903,6 +903,10 @@ describe("the settings in a link (link 4)", () => {
       "hidden:",
       ...HIDEABLE.map((setting) => `hidden:${setting}`),
       ...Object.keys(BOSS_SHUFFLE_LABELS).map((v) => `bossShuffle:${v}`),
+      // A No Logic run's: a glitched logic's, None said by its absence
+      ...Object.keys(GLITCHES_LABELS)
+        .filter((value) => value !== "none" && value !== "no_logic")
+        .map((value) => `playGlitches:${value}`),
     ];
     // A new option is appended to SHARE_SETTINGS: moving one breaks links
     expect(new Set(SHARE_SETTINGS)).toEqual(new Set(options));

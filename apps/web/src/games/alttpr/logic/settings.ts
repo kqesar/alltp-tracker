@@ -19,6 +19,7 @@ import {
   glitchesOf,
   type HiddenSetting,
   isHidden,
+  playGlitchesOf,
   type RunSettings,
 } from "@/games/alttpr/data/presets";
 
@@ -79,6 +80,7 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
     run.itemFunctionality,
     bossShuffleOf(run),
     glitchesOf(run),
+    playGlitchesOf(run),
     ...(run.hidden ?? []),
   ].join("/");
   let settings = cache.get(key);
@@ -94,7 +96,8 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
       "item.functionality": known("itemFunctionality", run.itemFunctionality),
       "item.pool": known("itemPool", run.itemPool),
       itemPlacement: known("itemPlacement", run.itemPlacement),
-      logic: LOGICS[glitches],
+      // No Logic is read with the glitches the player plays it with
+      logic: LOGICS[glitches === "no_logic" ? playGlitchesOf(run) : glitches],
       "mode.weapons": known(
         "swordless",
         run.swordless ? "swordless" : "randomized",

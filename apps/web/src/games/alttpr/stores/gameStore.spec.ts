@@ -284,6 +284,22 @@ describe("GameStore", () => {
       expect(store().past).toBe(past);
     });
 
+    it("keeps the glitches a No Logic run is played with to that run", () => {
+      const store = () => useGameStore.getState();
+      store().updateSettings({ glitches: "no_logic" });
+      store().updateSettings({ playGlitches: "overworld_glitches" });
+      expect(store().settings).toMatchObject({
+        glitches: "no_logic",
+        playGlitches: "overworld_glitches",
+      });
+      store().updateSettings({ playGlitches: "none" });
+      expect(store().settings).not.toHaveProperty("playGlitches");
+      store().updateSettings({ playGlitches: "overworld_glitches" });
+      // Another logic drops them
+      store().updateSettings({ glitches: "major_glitches" });
+      expect(store().settings).not.toHaveProperty("playGlitches");
+    });
+
     it("records no step for settings that change nothing", () => {
       const past = useGameStore.getState().past;
 

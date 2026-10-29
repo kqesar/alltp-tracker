@@ -495,6 +495,7 @@ const isRunSettings = (value: unknown): value is RunSettings => {
     crystalsTower,
     glitches,
     hidden,
+    playGlitches,
     itemFunctionality,
     itemPlacement,
     itemPool,
@@ -514,9 +515,17 @@ const isRunSettings = (value: unknown): value is RunSettings => {
   const glitchesOk =
     glitches === undefined ||
     (glitches !== "none" && named(glitches, GLITCHES_LABELS));
+  // A No Logic run's glitches, a glitched logic's; None is their absence
+  const playOk =
+    playGlitches === undefined ||
+    (glitches === "no_logic" &&
+      playGlitches !== "none" &&
+      playGlitches !== "no_logic" &&
+      named(playGlitches, GLITCHES_LABELS));
   return (
     hiddenOk &&
     glitchesOk &&
+    playOk &&
     // Absent in every save before it, and in any run without it: none
     (bossShuffle === undefined || named(bossShuffle, BOSS_SHUFFLE_LABELS)) &&
     typeof swordless === "boolean" &&

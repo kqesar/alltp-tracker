@@ -127,9 +127,10 @@ export interface TrackerInput {
    */
   readonly bosses?: BossKnowledge;
   /**
-   * The small keys found in each dungeon, with wild keys (keysanity). The
-   * player does not track them otherwise, and they are not read then: the
-   * key model (keys.ts) stands in for them. Nor are they with generic keys
+   * The small keys found in each dungeon, with wild keys (keysanity) or
+   * under No Logic, where the key model cannot vouch for a key behind its
+   * own door. The player does not track them otherwise, and they are not
+   * read then: the key model (keys.ts) stands in for them. Nor are they with generic keys
    * (the retro world), which no dungeon owns.
    */
   readonly keys?: Readonly<Partial<Record<DungeonId, number>>>;
@@ -178,7 +179,7 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
  * is left, so a count makes a crystal red only when there are more crystals
  * than regular ones. The pads' facts read an unknown pad as unknown, the
  * boss slots' an unknown boss as unknown. The
- * keys count only with wild keys that are not generic. A checked
+ * keys count only with wild keys that are not generic, or under No Logic. A checked
  * event gives its item (EVENT_CHECKS). A count not known holds its fact
  * (unknown-counts.ts).
  *
@@ -233,7 +234,9 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
       }
     }
   }
-  if (settings.wildKeys && !settings.genericKeys) {
+  // Under No Logic a key may sit behind its own door: the keys a player
+  // marks by hand are then the only ones known in hand
+  if ((settings.wildKeys || settings.noLogic) && !settings.genericKeys) {
     for (const d of DUNGEONS) {
       const found = count(
         `key${d.code}`,

@@ -29,7 +29,6 @@ import {
   GLITCHES_LABELS,
   type Glitches,
   getPreset,
-  glitchesOf,
   isHidden,
   MODE_LABELS,
   PLACEMENT_LABELS,
@@ -37,6 +36,7 @@ import {
   presets,
   type RunSettings,
   type TunableSetting,
+  tunedOf,
 } from "@/games/alttpr/data/presets";
 
 /** The run the tracker holds: its run type and settings. */
@@ -116,8 +116,12 @@ const withGlitches = (
   logic: SeedSetting<SeedLogic>,
 ): RunSettings => {
   const glitches = logic.known ? GLITCHES[logic.value] : settings.glitches;
-  const { glitches: _, ...rest } = settings;
-  return glitches === undefined ? rest : { ...rest, glitches };
+  const { glitches: _, playGlitches, ...rest } = settings;
+  if (glitches === undefined) return rest;
+  // The glitches a No Logic run is played with stay the player's
+  return glitches === "no_logic" && playGlitches !== undefined
+    ? { ...rest, glitches, playGlitches }
+    : { ...rest, glitches };
 };
 
 /** Short names for the goals, as a seed's summary says them. */
@@ -151,12 +155,6 @@ export const COMPARED = [
 type SeedChange = Partial<
   Pick<RunSettings, Exclude<TunableSetting, "glitches">>
 >;
-
-/** A tunable setting's value, a boss shuffle or glitches left out "none". */
-const tunedValue = (settings: RunSettings, key: TunableSetting) => {
-  if (key === "bossShuffle") return bossShuffleOf(settings);
-  return key === "glitches" ? glitchesOf(settings) : settings[key];
-};
 
 /** A setting only the seed's file states: the seed's when known, else `own`. */
 const fromFile = <T>(setting: SeedSetting<T> | undefined, own: T): T =>
@@ -443,7 +441,7 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
       (Object.keys(said) as (keyof SeedChange)[])
         .filter(
           (key) =>
-            said[key] !== tunedValue(run.settings, key) ||
+            said[key] !== tunedOf(run.settings, key) ||
             isHidden(run.settings, key),
         )
         .map((key) => [key, said[key]]),

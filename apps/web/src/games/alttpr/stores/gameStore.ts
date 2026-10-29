@@ -25,11 +25,11 @@ import {
 import {
   DEFAULT_PRESET_ID,
   getPreset,
-  glitchesOf,
   type HiddenSetting,
   type RunSettings,
   type SettingsChange,
   type TunableSetting,
+  tunedOf,
   wildItems,
 } from "@/games/alttpr/data/presets";
 import {
@@ -409,17 +409,14 @@ export const retune = (
 ): { items?: ItemState; settings: RunSettings } | null => {
   const changed = (Object.keys(change) as TunableSetting[]).filter(
     (key) =>
-      change[key] !==
-        (key === "glitches"
-          ? glitchesOf(progress.settings)
-          : progress.settings[key]) ||
+      change[key] !== tunedOf(progress.settings, key) ||
       progress.settings.hidden?.includes(key as HiddenSetting),
   );
   if (changed.length === 0) return null;
   const hidden = progress.settings.hidden?.filter(
     (key) => !changed.includes(key),
   );
-  const { glitches, ...rest } = change;
+  const { glitches, playGlitches, ...rest } = change;
   const settings: RunSettings = {
     ...progress.settings,
     ...rest,
@@ -429,6 +426,10 @@ export const retune = (
   // None is said by the glitches' absence, as every preset says it
   if (glitches === "none") delete settings.glitches;
   else if (glitches !== undefined) settings.glitches = glitches;
+  if (playGlitches === "none") delete settings.playGlitches;
+  else if (playGlitches !== undefined) settings.playGlitches = playGlitches;
+  // Only a No Logic run is played with glitches of the player's choice
+  if (settings.glitches !== "no_logic") delete settings.playGlitches;
   if (settings.dungeonItems === progress.settings.dungeonItems) {
     return { settings };
   }
