@@ -827,14 +827,36 @@ describe("the bottles' contents and the capacities", () => {
         bottlecontents1: 1,
         bottlecontents2: 5,
       });
-      // No bottle there, nothing said of its cell
-      expect(view.items).not.toHaveProperty("bottlecontents3");
+      // No bottle there: its cell is cleared, so none found later shows old
+      // contents
+      expect(view.items).toMatchObject({
+        bottlecontents3: 0,
+        bottlecontents4: 0,
+      });
       expect(mergeView(board, view)?.next.items).toMatchObject({
         bottle: 2,
         bottlecontents1: 1,
         bottlecontents2: 5,
       });
     }
+  });
+
+  it("clears what the bottles past the game's count held, when a sync lowers it", () => {
+    const board = marked(fresh(), {
+      bottle: 3,
+      bottlecontents1: 1,
+      bottlecontents2: 4,
+      bottlecontents3: 5,
+    });
+    // The game holds one bottle, a green potion
+    const view = gameView(readingOf(holding([0x04, 0x00, 0x00, 0x00])), board);
+    const synced = syncView(board, view)?.next.items;
+    expect(synced).toMatchObject({
+      bottle: 1,
+      bottlecontents1: 2,
+      bottlecontents2: 0,
+      bottlecontents3: 0,
+    });
   });
 
   it("lays the bomb and arrow capacities outside Race Mode, never in a race", () => {

@@ -45,9 +45,12 @@ export const BOTTLE_SLOTS = [
 
 /**
  * What a bottle holds, by its `bottlecontentsN` value: 0 empty (or not
- * recorded: an old save's bottles), then the menu's potions, the fairy and
- * the bees. The game's own values (sram.asm BottleContents) are one more, its
- * $00 being no bottle and $01 a mushroom no randomized seed puts there.
+ * recorded: an old save's bottles), then the potions, the fairy, the bees
+ * and last the mushroom, every content the game's item menu draws a bottle
+ * for (zelda3 src/hud.c kHudItemBottles; sram.asm BottleContents, whose
+ * $00 is no bottle, $01 the mushroom, $02 empty, $03 to $08 the rest in
+ * this order). Each is drawn with the game's own sprite, `bottle-<name>.png`,
+ * taken from its item menu.
  */
 export const BOTTLE_CONTENTS = [
   "empty",
@@ -57,6 +60,7 @@ export const BOTTLE_CONTENTS = [
   "fairy",
   "bee",
   "goodbee",
+  "mushroom",
 ] as const;
 
 export type BottleContents = (typeof BOTTLE_CONTENTS)[number];
@@ -69,6 +73,7 @@ export const BOTTLE_CONTENT_NAMES: Readonly<Record<BottleContents, string>> = {
   fairy: "a fairy",
   goodbee: "a good bee",
   green: "green potion",
+  mushroom: "a mushroom",
   red: "red potion",
 };
 
@@ -575,9 +580,11 @@ export const withBottleCount = (
  * A bottle cell's step, as the items it changes, or null when it changes
  * nothing. The game fills its bottles in order, so a bottle is there while
  * its slot is within the `bottle` count. Forward on a bottle not there finds
- * the bottles up to it, empty; on one there, the next content, round from
- * the good bee to empty. Back on one there, the content before; from empty,
- * that bottle and those after it go. Back on one not there changes nothing.
+ * the bottles up to it, every one empty, whatever a slot past the count still
+ * held (a count lowered by the game's reading keeps no contents beyond it);
+ * on one there, the next content, round from the last to empty. Back on one
+ * there, the content before; from empty, that bottle and those after it go.
+ * Back on one not there changes nothing.
  * @param items - The run's items
  * @param slot - The bottle, 1 to 4
  * @param direction - 1 forward (a click), -1 back (a right-click, "-")
@@ -592,7 +599,12 @@ export const bottleAfter = (
   const count = Number(items.bottle ?? 0);
   const content = Number(items[id] ?? 0);
   if (slot > count) {
-    return direction > 0 ? { ...withBottleCount(items, slot), [id]: 0 } : null;
+    if (direction < 0) return null;
+    const found: Record<string, number> = { bottle: slot };
+    BOTTLE_SLOTS.forEach((other, index) => {
+      if (index >= count && index < slot) found[other] = 0;
+    });
+    return { ...withBottleCount(items, slot), ...found };
   }
   if (direction > 0) return { [id]: (content + 1) % BOTTLE_CONTENTS.length };
   if (content > 0) return { [id]: content - 1 };

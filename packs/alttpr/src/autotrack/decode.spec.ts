@@ -1173,8 +1173,8 @@ describe("decodeBottles", () => {
     expect(bottles([0x07, 0x08, 0x02, 0x03])).toEqual([5, 6, 0, 1]);
   });
 
-  it("reads a mushroom, an empty bottle and any other byte as empty", () => {
-    expect(bottles([0x01, 0x02, 0x09, 0xff])).toEqual([0, 0, 0, 0]);
+  it("reads a mushroom as the menu draws it, an empty bottle and any other byte as empty", () => {
+    expect(bottles([0x01, 0x02, 0x09, 0xff])).toEqual([7, 0, 0, 0]);
   });
 
   it("gives the contents of the bottles held, in the game's order, as many as it counts", () => {

@@ -62,6 +62,10 @@ describe("applyVoice", () => {
     say("bottle two");
     expect(store().items.bottlecontents2).toBe(1);
     expect(store().past).toHaveLength(2);
+    // Never round from the last content to empty: a phrase says a find
+    for (let i = 0; i < 10; i++) say("bottle two");
+    expect(store().items.bottlecontents2).toBe(7);
+    expect(say("bottle two").changed).toBe(false);
   });
 
   it("adds a capacity upgrade of 5, never past the most a seed gives", () => {
