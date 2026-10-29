@@ -453,6 +453,8 @@ export const SHARE_SETTINGS: readonly string[] = `
   hidden:itemFunctionality hidden:accessibility
   bossShuffle:none bossShuffle:simple bossShuffle:full bossShuffle:random
   hidden:bossShuffle
+  playGlitches:overworld_glitches playGlitches:hybrid_major_glitches
+  playGlitches:major_glitches
 `
   .trim()
   .split(/\s+/);

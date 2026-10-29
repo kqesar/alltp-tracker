@@ -5,10 +5,8 @@ import { Modal } from "@/components/ui/Modal";
 import { SeedImport } from "@/games/alttpr/components/ui/SeedImport";
 import { TricksDialog } from "@/games/alttpr/components/ui/TricksDialog";
 import {
-  bossShuffleOf,
   describeSettings,
   getPreset,
-  glitchesOf,
   HIDEABLE,
   type HiddenSetting,
   isHidden,
@@ -17,6 +15,7 @@ import {
   type RunSettings,
   TUNING,
   type TunableSetting,
+  tunedOf,
 } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -31,12 +30,6 @@ type PendingRun = {
 
 /** The option of a setting not known yet, a Mystery run's. */
 const HIDDEN = "?";
-
-/** A tunable setting's option: a boss shuffle or glitches left out "none". */
-const tunedOf = (settings: RunSettings, setting: TunableSetting) => {
-  if (setting === "bossShuffle") return bossShuffleOf(settings);
-  return setting === "glitches" ? glitchesOf(settings) : settings[setting];
-};
 
 /**
  * A tunable setting's select: a change applies at once, the run's progress

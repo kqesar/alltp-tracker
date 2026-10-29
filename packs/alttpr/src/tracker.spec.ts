@@ -173,7 +173,7 @@ describe("toState", () => {
     ).toBe(1);
   });
 
-  it("counts the keys found with wild keys only", () => {
+  it("counts the keys found with wild keys, or by hand under No Logic", () => {
     const keys = input({
       keys: { "eastern-palace": 3, "palace-of-darkness": 4, "swamp-palace": 9 },
     });
@@ -181,6 +181,8 @@ describe("toState", () => {
     // Eastern Palace has no small key to find
     expect(toState(keys, KEYSANITY)).not.toHaveProperty("keyP1");
     expect(toState(keys, OPEN)).not.toHaveProperty("keyD1");
+    // A key may sit behind its own door: only those marked are in hand
+    expect(toState(keys, noLogicSettings(OPEN))).toMatchObject({ keyD1: 4 });
     // Generic keys belong to no dungeon: the key model reads them
     expect(toState(keys, settingsFromUpstream("retro"))).not.toHaveProperty(
       "keyD1",

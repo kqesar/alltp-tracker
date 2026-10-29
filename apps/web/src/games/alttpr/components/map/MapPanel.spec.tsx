@@ -125,12 +125,25 @@ describe("MapPanel", () => {
       useGameStore.getState().applyRun("open", {
         ...getPreset("open").settings,
         entranceShuffle: "simple",
+        glitches: "major_glitches",
+      }),
+    );
+    render(<MapPanel />);
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The tracker has no logic for Major Glitches and Simple entrance shuffle yet: every check shows as maybe.",
+    );
+  });
+
+  it("says a No Logic seed promises no route, and what the map shows", () => {
+    act(() =>
+      useGameStore.getState().applyRun("open", {
+        ...getPreset("open").settings,
         glitches: "no_logic",
       }),
     );
     render(<MapPanel />);
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for No Logic and Simple entrance shuffle yet: every check shows as maybe.",
+      "No Logic: the seed promises no route, so nothing is in logic. The map shows what you can reach without glitches (set under Played with in Mode). A key may sit behind its own door: a key door stays maybe until every spot its key may sit in is reached, or you mark its keys (Show key cells).",
     );
   });
 

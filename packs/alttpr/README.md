@@ -1429,7 +1429,9 @@ app counts its runs not modelled.
   with, the boots given (`bootsAtStart`) and `noLogic` set: `canFill` keeps
   only the region's own test (`src/fill.ts`), and the key model calls no
   dungeon safe for keys (a key may sit behind its own door), so a key door is
-  `yes` only once every place its key may sit is reached, `maybe` before.
+  `yes` only once every place its key may sit is reached, `maybe` before;
+  `toState` reads the small keys a player marks by hand (`TrackerInput.keys`),
+  as with wild keys, so marking them settles their doors.
 
 ## Tricks
 

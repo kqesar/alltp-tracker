@@ -6,7 +6,9 @@ import {
   describeSettings,
   getPreset,
   logicModelled,
+  noLogicRun,
   presets,
+  TUNING,
   unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 
@@ -60,7 +62,15 @@ describe("presets", () => {
         entranceShuffle: "full",
         glitches: "no_logic",
       }),
-    ).toEqual(["No Logic", "Full entrance shuffle"]);
+    ).toEqual(["Full entrance shuffle"]);
+    // No Logic is read with the glitches it is played with, once ported
+    expect(
+      unmodelledReasons({
+        ...open,
+        glitches: "no_logic",
+        playGlitches: "major_glitches",
+      }),
+    ).toEqual(["No Logic played with Major Glitches"]);
     expect(unmodelledReasons({ ...crosskeys, dungeonItems: "mcs" })).toEqual([
       "Crossworld entrances with dungeon items kept in their dungeons",
     ]);
@@ -99,21 +109,31 @@ describe("presets", () => {
     expect(crossedLogic({ ...crosskeys, bossShuffle: "none" })).toBe(true);
   });
 
-  it("models no glitched logic, and says a run's in its summary", () => {
+  it("models a glitched logic once ported, No Logic by what it is played with", () => {
     const open = getPreset("open").settings;
     const glitched = { ...open, glitches: "major_glitches" as const };
+    const noLogic = { ...open, glitches: "no_logic" as const };
 
     expect(logicModelled(glitched)).toBe(false);
-    expect(
-      logicModelled({
-        ...getPreset("crosskeys").settings,
-        glitches: "no_logic",
-      }),
-    ).toBe(false);
-    const glitches = (settings: typeof open) =>
-      describeSettings(settings).find((row) => row.label === "Glitches")?.value;
-    expect(glitches(open)).toBe("None");
-    expect(glitches(glitched)).toBe("Major Glitches");
+    expect(logicModelled(noLogic)).toBe(true);
+    expect(noLogicRun(noLogic)).toBe(true);
+    expect(noLogicRun(glitched)).toBe(false);
+    const row = (settings: typeof open, label: string) =>
+      describeSettings(settings).find((r) => r.label === label);
+    expect(row(open, "Glitches")).toEqual({
+      label: "Glitches",
+      setting: "glitches",
+      value: "None",
+    });
+    expect(row(glitched, "Glitches")?.value).toBe("Major Glitches");
+    // A No Logic run alone says what it is played with, none at first
+    expect(row(open, "Played with")).toBeUndefined();
+    expect(row(noLogic, "Played with")).toEqual({
+      label: "Played with",
+      setting: "playGlitches",
+      value: "None",
+    });
+    expect(TUNING.playGlitches.map(([value]) => value)).toContain("none");
   });
 
   it("getPreset returns the matching preset", () => {

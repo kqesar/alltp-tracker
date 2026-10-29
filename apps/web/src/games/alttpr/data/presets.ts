@@ -50,6 +50,18 @@ export type Glitches =
   | "no_logic";
 
 /**
+ * The glitches a No Logic seed is played with, which the map reads it
+ * with: a glitched logic's, or none.
+ */
+export type PlayGlitches = Exclude<Glitches, "no_logic">;
+
+/**
+ * The logics the pack ports and holds to upstream's tests: None, then each
+ * glitched logic once its port lands. A run of another is not modelled.
+ */
+const PORTED_LOGICS: ReadonlySet<PlayGlitches | "none"> = new Set(["none"]);
+
+/**
  * alttpr.com's dungeon items (config/alttp.php:185-190): which of a
  * dungeon's own items may lie outside it. Each level lets out the ones below
  * it too (World.php:111-129): maps and compasses (mc), then small keys
@@ -124,6 +136,12 @@ export type RunSettings = {
    * "None", the NoGlitches logic of every preset, which the pack ports.
    */
   glitches?: Glitches;
+  /**
+   * In a No Logic run, the glitches the player plays it with: the map shows
+   * what they reach, the seed promising no route. Absent is none, and in
+   * any other run.
+   */
+  playGlitches?: PlayGlitches;
   /**
    * The bosses shuffled between the dungeons; absent, as in every preset,
    * is "none" (`bossShuffleOf`).
@@ -275,8 +293,14 @@ export const entrancesKnown = (settings: RunSettings): boolean =>
  */
 export const unmodelledReasons = (settings: RunSettings): string[] => {
   const reasons: string[] = [];
-  if (settings.glitches !== undefined)
-    reasons.push(GLITCHES_LABELS[settings.glitches]);
+  const glitches = glitchesOf(settings);
+  if (glitches === "no_logic") {
+    const play = playGlitchesOf(settings);
+    if (!PORTED_LOGICS.has(play))
+      reasons.push(`No Logic played with ${GLITCHES_LABELS[play]}`);
+  } else if (!PORTED_LOGICS.has(glitches)) {
+    reasons.push(GLITCHES_LABELS[glitches]);
+  }
   const { entranceShuffle: shuffle, mode } = settings;
   if (shuffle !== "none" && !crossedLogic(settings)) {
     if (shuffle !== "crossed")
@@ -291,6 +315,13 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
   }
   return reasons;
 };
+
+/**
+ * Whether a run's seed has No Logic: the map shows what the glitches the
+ * player plays it with reach, never what is in logic.
+ */
+export const noLogicRun = (settings: RunSettings): boolean =>
+  settings.glitches === "no_logic";
 
 /** Whether the pack models a run's logic (`unmodelledReasons`). */
 export const logicModelled = (settings: RunSettings): boolean =>
@@ -400,7 +431,11 @@ const crystals = (count: number) => `${count} crystal${count === 1 ? "" : "s"}`;
  * glitches the seed was generated for, which neither the ROM tells apart
  * nor a race reads. The world names a run type, which a new run changes.
  */
-export type TunableSetting = HiddenSetting | "dungeonItems" | "glitches";
+export type TunableSetting =
+  | HiddenSetting
+  | "dungeonItems"
+  | "glitches"
+  | "playGlitches";
 
 /**
  * The value a tunable setting's option sets: the run's own, but for the
@@ -408,7 +443,9 @@ export type TunableSetting = HiddenSetting | "dungeonItems" | "glitches";
  */
 export type TuningValue<K extends TunableSetting> = K extends "glitches"
   ? Glitches | "none"
-  : RunSettings[K];
+  : K extends "playGlitches"
+    ? PlayGlitches | "none"
+    : RunSettings[K];
 
 /** A change of tunable settings, as `updateSettings` takes it. */
 export type SettingsChange = { [K in TunableSetting]?: TuningValue<K> };
@@ -416,6 +453,10 @@ export type SettingsChange = { [K in TunableSetting]?: TuningValue<K> };
 /** A run's glitches: "none" when its settings name none. */
 export const glitchesOf = (settings: RunSettings): Glitches | "none" =>
   settings.glitches ?? "none";
+
+/** The glitches a No Logic run is played with: "none" when it names none. */
+export const playGlitchesOf = (settings: RunSettings): PlayGlitches | "none" =>
+  settings.playGlitches ?? "none";
 
 /** Options in the order alttpr.com lists them, each with its words. */
 const ordered = <T extends string>(
@@ -462,6 +503,18 @@ export const TUNING = {
     ["normal", "hard", "expert", "superexpert", "crowd_control"],
     POOL_LABELS,
   ),
+  // The logics the pack ports, as each lands
+  playGlitches: ordered<PlayGlitches | "none">(
+    (
+      [
+        "none",
+        "overworld_glitches",
+        "hybrid_major_glitches",
+        "major_glitches",
+      ] as const
+    ).filter((glitches) => PORTED_LOGICS.has(glitches)),
+    GLITCHES_LABELS,
+  ),
   swordless: [
     [false, "With swords"],
     [true, "Swordless"],
@@ -485,6 +538,25 @@ export const isHidden = (settings: RunSettings, setting: TunableSetting) =>
   (settings.hidden as readonly TunableSetting[] | undefined)?.includes(
     setting,
   ) === true;
+
+/**
+ * A tunable setting's value as its options name it: a boss shuffle, the
+ * glitches or those a No Logic run is played with left out read "none".
+ */
+export const tunedOf = <K extends TunableSetting>(
+  settings: RunSettings,
+  setting: K,
+): TuningValue<K> => {
+  const value =
+    setting === "bossShuffle"
+      ? bossShuffleOf(settings)
+      : setting === "glitches"
+        ? glitchesOf(settings)
+        : setting === "playGlitches"
+          ? playGlitchesOf(settings)
+          : settings[setting];
+  return value as TuningValue<K>;
+};
 
 /** A labeled summary of a run's settings, for display: "?" for a hidden one. */
 export const describeSettings = (settings: RunSettings): SettingRow[] => {
@@ -535,5 +607,14 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
     ),
     { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
     row("Glitches", "glitches", GLITCHES_LABELS[glitchesOf(settings)]),
+    ...(noLogicRun(settings)
+      ? [
+          row(
+            "Played with",
+            "playGlitches",
+            GLITCHES_LABELS[playGlitchesOf(settings)],
+          ),
+        ]
+      : []),
   ];
 };

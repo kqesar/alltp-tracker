@@ -104,10 +104,11 @@ export const hiddenReason = (
   if (settings.entranceShuffle !== "none" || log.format === "er") {
     return "entrances";
   }
-  // The pack ports vt's NoGlitches rules with the vanilla bosses
+  // The waits are the NoGlitches logic's, with the vanilla bosses
   const logic = log.extra.settings?.logic;
   if (
     !logicModelled(settings) ||
+    settings.glitches !== undefined ||
     (settings.hidden?.length ?? 0) > 0 ||
     log.extra.bosses !== null ||
     (logic?.known === true && logic.value !== "NoGlitches")
