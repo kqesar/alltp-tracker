@@ -227,7 +227,7 @@ test.describe("reviewing a finished Super Metroid run", () => {
         log('{"meta":{"worlds":1}}', "alttpr - NoGlitches_9MQ9gO1wMD.txt"),
       );
     await expect(page.getByTestId("review-error")).toContainText(
-      "alttpr.com spoiler log",
+      "A Link to the Past spoiler log",
     );
     await expect(page.getByTestId("review-notice")).toHaveCount(0);
   });
