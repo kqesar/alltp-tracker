@@ -1149,6 +1149,15 @@ sphere 5 (a Ganon's Tower key may sit at Bob's Torch, behind the boots); the
 simple and restricted seeds have seven more of the same kind, and only the
 insanity seed stays pending.
 
+The same spec holds that noting more of a seed's doors never takes a `yes`
+away, in the playthrough's states: what a door not noted hides may only
+add. Once with each door into Turtle Rock left out, then noted alone of
+the four, its keys at every count in a keysanity seed: its key doors hang
+on what everything held reaches (`set_trock_key_rules`), which caught the
+flags read off the doors noted alone. And with the doors noted in random
+orders, a third, two thirds, then all of them: which caught the bunny's
+rules read off the doors noted alone (Sanctuary behind the Pyramid's door).
+
 ### Where Link went: autotracking the entrances
 
 Outside races, autotracking notes each door or hole Link goes through. The

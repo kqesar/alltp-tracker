@@ -7,7 +7,10 @@
 // Where the randomizer kept the keys in their dungeons, the player does not
 // track them and its playthrough does not list them: the key model reads
 // them (er-keys.ts), and a location it doubts must be one a placement its
-// fill may make would lock (`KEY_DOUBTS`).
+// fill may make would lock (`KEY_DOUBTS`). Noting more of a seed's doors
+// never takes a `yes` away: what a door not noted hides may only add.
+import { itemValue, type State } from "@alltp/engine";
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import {
   bossesKnown,
@@ -16,12 +19,14 @@ import {
   erSeedHashes,
   holding,
   knowing,
+  seedNotes,
   seedWorld,
   shopsSelling,
 } from "../test/er-seeds";
-import { erLocationId } from "./entrances";
+import { erLocationId, targetNamed } from "./entrances";
 import er from "./entrances/er.json" with { type: "json" };
 import { solveErWithKeys } from "./er-keys";
+import type { ErWorld } from "./er-world";
 
 /** The seed's world, entrances all noted (seedWorld). */
 const worldOf = (spoiler: ErSeed["spoiler"]) => seedWorld(spoiler);
@@ -185,5 +190,131 @@ describe("a recorded seed's playthrough, entrances all noted", () => {
         );
       });
     }
+  }
+});
+
+/** The seeds the pack models: all but the pending ones. */
+const MODELLED = SEEDS.filter((hash) => PENDING[hash] === undefined);
+
+/** The world's locations, by the pack's ids: those a map shows. */
+const LOCATIONS = er.regions.flatMap((r) => r.locations).map(erLocationId);
+
+/**
+ * The playthrough's states: what each sphere starts with, and what a
+ * player who read the spoiler knows (its pads, its bosses).
+ */
+function sphereStates(spoiler: ErSeed["spoiler"]): State[] {
+  const knowledge = {
+    ...knowing(spoiler.Special),
+    ...bossesKnown(spoiler.Bosses),
+  };
+  const held: string[] = [];
+  return spheresOf(spoiler).map(([, sphere]) => {
+    const state = { ...holding(held), ...knowledge };
+    held.push(...Object.values(sphere).map(plain));
+    return state;
+  });
+}
+
+/** The locations `yes` in a world, in each state. */
+const yesIn = (world: ErWorld, states: readonly State[]) =>
+  states.map((state) => {
+    const solution = solveErWithKeys(world, state);
+    return new Set(LOCATIONS.filter((id) => solution.location(id) === "yes"));
+  });
+
+/** What `fewer` says `yes` to and `more` does not, state by state. */
+const taken = (
+  fewer: readonly ReadonlySet<string>[],
+  more: readonly ReadonlySet<string>[],
+): string[] =>
+  fewer.flatMap((yes, i) =>
+    [...yes].filter((id) => !more[i]?.has(id)).map((id) => `state ${i}: ${id}`),
+  );
+
+/**
+ * Turtle Rock's ways out: where everything held enters it decides how many
+ * keys its doors take (set_trock_key_rules, Rules.py:1007-1090).
+ */
+const TURTLE_ROCK_EXITS = new Set(
+  [
+    "Turtle Rock Exit (Front)",
+    "Turtle Rock Isolated Ledge Exit",
+    "Turtle Rock Ledge Exit (East)",
+    "Turtle Rock Ledge Exit (West)",
+  ].map((name) => targetNamed(name).id),
+);
+
+describe("noting more of a seed's doors", () => {
+  for (const hash of MODELLED) {
+    it(`never takes a yes away, each door into Turtle Rock left out or alone noted (${hash})`, () => {
+      const { spoiler } = erSeed(hash);
+      const notes = seedNotes(spoiler);
+      // Where the player tracks its keys (keysanity), at every count its
+      // doors may ask for less than (Rules.py:1019-1025)
+      const states = sphereStates(spoiler).flatMap((state) =>
+        spoiler.meta.dungeon_items === "full"
+          ? [0, 1, 2, 3].map((keys) => ({
+              ...state,
+              keyD7: Math.max(keys, itemValue(state, "keyD7")),
+            }))
+          : [state],
+      );
+      const all = yesIn(seedWorld(spoiler), states);
+      const doors = Object.keys(notes).filter((door) =>
+        TURTLE_ROCK_EXITS.has(notes[door] ?? ""),
+      );
+      expect(doors).toHaveLength(4);
+      const takenBy = (noted: (door: string) => boolean) =>
+        taken(
+          yesIn(
+            seedWorld(
+              spoiler,
+              {},
+              Object.fromEntries(
+                Object.entries(notes).filter(([door]) => noted(door)),
+              ),
+            ),
+            states,
+          ),
+          all,
+        );
+      for (const door of doors) {
+        expect(takenBy((other) => other !== door)).toEqual([]);
+        expect(
+          takenBy((other) => other === door || !doors.includes(other)),
+        ).toEqual([]);
+      }
+    });
+
+    it(`never takes a yes away, its doors noted in any order (${hash})`, () => {
+      const { spoiler } = erSeed(hash);
+      const notes = Object.entries(seedNotes(spoiler));
+      const states = sphereStates(spoiler);
+      fc.assert(
+        fc.property(
+          fc.shuffledSubarray(notes, { minLength: notes.length }),
+          (order) => {
+            // A third of them noted, two thirds, all
+            const yes = [1, 2, 3].map((third) =>
+              yesIn(
+                seedWorld(
+                  spoiler,
+                  {},
+                  Object.fromEntries(
+                    order.slice(0, Math.round((order.length * third) / 3)),
+                  ),
+                ),
+                states,
+              ),
+            );
+            return yes.every(
+              (now, i) => i === 0 || taken(yes[i - 1] ?? [], now).length === 0,
+            );
+          },
+        ),
+        { numRuns: 2, seed: hash.charCodeAt(0) },
+      );
+    });
   }
 });
