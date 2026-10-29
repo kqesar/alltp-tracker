@@ -35,6 +35,13 @@ export type Randomizer = "dr" | "owr";
 /** DR's door shuffle (`--doorShuffle`). */
 export type DoorShuffle = "vanilla" | "basic" | "partitioned" | "crossed";
 
+/**
+ * DR's key logic (`--key_logic_algorithm`: dangerous, partial, strict at
+ * 1.5.6, args.json:209-215), and the `static` of DR's unstable builds,
+ * which some race seeds of 2026 ran on.
+ */
+export type DoorKeyLogic = "partial" | "strict" | "dangerous" | "static";
+
 /** DR's enemy shuffle (`--shuffleenemies`). */
 export type EnemyShuffle = "none" | "shuffled";
 
@@ -64,6 +71,7 @@ export type DoorRunSettings = {
   /** DR's generator; absent for an alttpr.com seed. */
   randomizer?: Randomizer;
   doorShuffle?: DoorShuffle;
+  keyLogic?: DoorKeyLogic;
   dropShuffle?: DropShuffle;
   pottery?: PotteryMode;
   shopsanity?: boolean;
@@ -92,6 +100,7 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   doorShuffle: "vanilla",
   dropShuffle: "none",
   enemyShuffle: "none",
+  keyLogic: "partial",
   owCrossed: "none",
   owFluteShuffle: "vanilla",
   owLayout: "vanilla",
@@ -144,6 +153,12 @@ export const DOOR_OPTIONS = {
   enemyShuffle: [
     ["none", "None"],
     ["shuffled", "Shuffled"],
+  ],
+  keyLogic: [
+    ["dangerous", "Dangerous"],
+    ["partial", "Partial"],
+    ["strict", "Strict"],
+    ["static", "Static"],
   ],
   owCrossed: [
     ["none", "None"],
@@ -207,6 +222,7 @@ export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
   doorShuffle: "Door shuffle",
   dropShuffle: "Enemy drops",
   enemyShuffle: "Enemies",
+  keyLogic: "Key logic",
   owCrossed: "Crossed overworld",
   owFluteShuffle: "Flute spots",
   owLayout: "Overworld layout",
@@ -221,6 +237,7 @@ export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
 /** The DR settings the summary shows, in DR's order; OWR's in an OWR run. */
 const DR_ROWS = [
   "doorShuffle",
+  "keyLogic",
   "dropShuffle",
   "pottery",
   "shopsanity",
@@ -261,6 +278,9 @@ export const isDoorSettings = (value: Record<string, unknown>): boolean => {
   const keys = Object.keys(DOOR_OPTIONS) as DoorSetting[];
   const present = keys.filter((key) => value[key] !== undefined);
   if (present.length > 0 && value.randomizer === undefined) return false;
+  // District is the Overworld fork's alone (OWR's EntranceShuffle2.py)
+  if (value.doorEntrances === "district" && value.randomizer !== "owr")
+    return false;
   return present.every((key) =>
     (DOOR_OPTIONS[key] as readonly (readonly [unknown, string])[]).some(
       ([option]) => option === value[key],
@@ -302,6 +322,7 @@ export const doorReasons = (
     reasons.push("shuffled key drops with keys outside their dungeons");
   }
   if (door.enemyShuffle !== "none") reasons.push("shuffled enemies");
+  if (door.keyLogic === "static") reasons.push("DR's static key logic");
   if (door.owLayout !== "vanilla") {
     reasons.push(
       `the ${doorValueText("owLayout", door.owLayout)} overworld layout`,
@@ -333,7 +354,14 @@ export const doorNotes = (
   const door = doorOf(settings);
   if (door === null) return [];
   if (kind === "door")
-    return ["Door Randomizer seed: the logic is DR's own (1.5.6)."];
+    return [
+      "Door Randomizer seed: the logic is DR's own (1.5.6).",
+      ...(door.keyLogic === "dangerous"
+        ? [
+            "Its dangerous key logic is read as partial: the seed may count on fewer keys than a door shows.",
+          ]
+        : []),
+    ];
   const notes = [
     kind === "crossed"
       ? "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported."
@@ -502,12 +530,17 @@ export const doorFromSeed = (
     return withoutDefaults({
       ...own,
       ...(exact.doorEntrances !== undefined &&
-      option("doorEntrances", exact.doorEntrances) !== undefined
+      option("doorEntrances", exact.doorEntrances) !== undefined &&
+      (exact.doorEntrances !== "district" || own.randomizer === "owr")
         ? { doorEntrances: exact.doorEntrances as DoorEntrances }
         : {}),
       doorShuffle: exact.doorShuffle,
       dropShuffle: exact.dropShuffle,
       enemyShuffle: option("enemyShuffle", exact.enemyShuffle),
+      keyLogic:
+        exact.keyLogic === undefined
+          ? own.keyLogic
+          : option("keyLogic", exact.keyLogic),
       pottery: option("pottery", exact.pottery),
       shopsanity: exact.shopsanity,
       takeAny: option("takeAny", exact.takeAny),

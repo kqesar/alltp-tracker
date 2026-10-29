@@ -114,7 +114,8 @@ const doorSettings = new WeakMap<AlttprSettings, Map<string, Settings>>();
 /**
  * The settings of the Door Randomizer's world for a DR run (doorLogic): the
  * pack's, and what DR reads beside them (the pack's door-world, whose
- * DR_DEFAULTS fill the rest): retro's universal keys and rupee bow, the
+ * DR_DEFAULTS fill the rest): retro's universal keys and rupee bow, strict
+ * key logic, the
  * drops' and pots' keys shuffled, the pots, whether pots or drops join the
  * dungeons beyond their keys (the key analysis then left out), the pyramid
  * a fast Ganon opens (open_pyramid auto, is_pyramid_open, BaseClasses.py:
@@ -128,7 +129,8 @@ export const drSettingsOf = (run: RunSettings): Settings => {
   const door = doorOf(run);
   const pottery = door?.pottery ?? "none";
   const drops = door?.dropShuffle ?? "none";
-  const key = [pottery, drops, run.goal].join("/");
+  const keyLogic = door?.keyLogic ?? "partial";
+  const key = [pottery, drops, keyLogic, run.goal].join("/");
   let byKey = doorSettings.get(settings);
   if (byKey === undefined) {
     byKey = new Map();
@@ -144,6 +146,8 @@ export const drSettingsOf = (run: RunSettings): Settings => {
       potKeys: pottery !== "none" && pottery !== "cave",
       pottery: pottery !== "none",
       retroBow: settings.rupeeBow,
+      // key_logic_algorithm strict; dangerous reads as partial (doorNotes)
+      strictKeyLogic: keyLogic === "strict",
       triforceHuntGoal: run.goal === "triforce-hunt",
       universalKeys: settings.genericKeys,
     };

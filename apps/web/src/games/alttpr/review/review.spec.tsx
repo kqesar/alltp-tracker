@@ -306,7 +306,7 @@ describe("a Door Randomizer log", () => {
     expect(useReviewStore.getState().review).toBeNull();
   });
 
-  it("does not say when a place came into logic: the pack has no rules of DR's", async () => {
+  it("does not say when a place came into logic for DR's static key logic", async () => {
     // The same seed with its dungeon items kept in their dungeons, which
     // would otherwise be the first thing said (keys wild)
     const text = doorSpoilerText(SEED)
@@ -333,10 +333,12 @@ describe("a Door Randomizer log", () => {
     finishRun();
     await importFile(doorSpoilerFile(SEED, text));
     await screen.findByTestId("review-notice");
+    // An unstable build's static key logic, which DR 1.5.6 has not: the
+    // tracker does not model it
+    expect(settings.keyLogic).toBe("static");
     expect(await screen.findByTestId("review-hidden")).toHaveTextContent(
-      "Door Randomizer seed, whose own rules",
+      "This seed's logic is not one the tracker models",
     );
-    expect(screen.getByTestId("review-hidden")).toHaveTextContent("not shown");
   });
 });
 

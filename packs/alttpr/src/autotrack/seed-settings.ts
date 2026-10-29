@@ -314,6 +314,11 @@ export interface DoorExactSettings {
   readonly shopsanity: boolean;
   readonly takeAny: string;
   readonly enemyShuffle: string;
+  /**
+   * Its key logic (`key_logic_algorithm`, BaseClasses.py:2576), as named:
+   * DR 1.5.6's dangerous, partial or strict, an unstable build's static.
+   */
+  readonly keyLogic?: string;
   /** Its entrance shuffle, when alttpr.com has none of that name. */
   readonly doorEntrances?: string;
   readonly overworld?: {

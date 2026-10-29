@@ -81,6 +81,7 @@ describe("avianartReading", () => {
       doorShuffle: "vanilla",
       dropShuffle: "keys",
       enemyShuffle: "none",
+      keyLogic: "partial",
       pottery: "keys",
       shopsanity: false,
       takeAny: "none",

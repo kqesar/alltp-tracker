@@ -18,7 +18,11 @@ import {
   type RunSettings,
   unmodelledReasons,
 } from "@/games/alttpr/data/presets";
-import { counterMax, smallKeysMax } from "@/games/alttpr/logic/settings";
+import {
+  counterMax,
+  drSettingsOf,
+  smallKeysMax,
+} from "@/games/alttpr/logic/settings";
 
 const DR = getPreset("door-randomizer").settings;
 const DR_CROSSKEYS = getPreset("door-crosskeys").settings;
@@ -70,6 +74,28 @@ describe("a Door Randomizer run's logic", () => {
     expect(doorNotes(DR_CROSSKEYS, "crossed")[0]).toBe(
       "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported.",
     );
+  });
+
+  it("reads strict key logic, notes dangerous, and names static as not modelled", () => {
+    expect(drSettingsOf(with_(DR, { keyLogic: "strict" }))).toMatchObject({
+      strictKeyLogic: true,
+    });
+    expect(drSettingsOf(DR)).toMatchObject({ strictKeyLogic: false });
+    expect(doorNotes(with_(DR, { keyLogic: "dangerous" }), "door")[1]).toBe(
+      "Its dangerous key logic is read as partial: the seed may count on fewer keys than a door shows.",
+    );
+    const fixed = with_(DR, { keyLogic: "static" });
+    expect(unmodelledReasons(fixed)).toEqual(["DR's static key logic"]);
+    expect(doorLogic(fixed)).toBe(false);
+  });
+
+  it("refuses District outside the Overworld fork", () => {
+    expect(
+      isDoorSettings({ doorEntrances: "district", randomizer: "dr" }),
+    ).toBe(false);
+    expect(
+      isDoorSettings({ doorEntrances: "district", randomizer: "owr" }),
+    ).toBe(true);
   });
 
   it("names every cause it cannot model, and models none of them", () => {
@@ -264,6 +290,39 @@ describe("doorFromSeed", () => {
       randomizer: "owr",
       takeAny: "fixed",
     });
+  });
+
+  it("takes a spoiler's key logic, and District from the Overworld fork alone", () => {
+    const exact = (more: Record<string, unknown>, overworld: boolean) =>
+      ({
+        doorExact: {
+          doorShuffle: "vanilla",
+          dropShuffle: "none",
+          enemyShuffle: "none",
+          pottery: "none",
+          shopsanity: false,
+          takeAny: "none",
+          ...more,
+        },
+        randomizer: { kind: "door", overworld, version: "1.5.6" },
+      }) as unknown as SeedSettingsReading;
+    expect(doorFromSeed(exact({ keyLogic: "static" }, false), {})).toEqual({
+      keyLogic: "static",
+      randomizer: "dr",
+    });
+    // Partial is DR's default: left out; a name it does not know keeps the run's
+    expect(doorFromSeed(exact({ keyLogic: "partial" }, false), {})).toEqual({
+      randomizer: "dr",
+    });
+    expect(
+      doorFromSeed(exact({ keyLogic: "newer" }, false), { keyLogic: "strict" }),
+    ).toEqual({ keyLogic: "strict", randomizer: "dr" });
+    expect(
+      doorFromSeed(exact({ doorEntrances: "district" }, false), {}),
+    ).toEqual({ randomizer: "dr" });
+    expect(
+      doorFromSeed(exact({ doorEntrances: "district" }, true), {}),
+    ).toEqual({ doorEntrances: "district", randomizer: "owr" });
   });
 
   it("keeps the run's own in Race Mode, the generator from the title", () => {

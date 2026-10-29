@@ -478,6 +478,7 @@ export const SHARE_SETTINGS: readonly string[] = `
   owWhirlpool:false owWhirlpool:true
   owFluteShuffle:vanilla owFluteShuffle:balanced owFluteShuffle:random
   bonkDrops:false bonkDrops:true
+  keyLogic:partial keyLogic:strict keyLogic:dangerous keyLogic:static
 `
   .trim()
   .split(/\s+/);

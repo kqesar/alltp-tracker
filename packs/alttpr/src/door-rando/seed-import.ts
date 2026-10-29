@@ -173,6 +173,7 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
     doorShuffle,
     dropShuffle,
     enemyShuffle: String(meta.enemy_shuffle ?? "none"),
+    ...(typeof meta.key_logic === "string" ? { keyLogic: meta.key_logic } : {}),
     pottery,
     shopsanity,
     takeAny: String(meta.take_any ?? "none"),
