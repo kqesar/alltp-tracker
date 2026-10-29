@@ -967,10 +967,13 @@ About half of the alttpr races of 2025-2026 ran on seeds of aerinon's Door
 Randomizer (DR) or its Overworld fork (OWR), most with the doors vanilla
 (the study of 2026-10-29). The pack reads them in phases; this one holds
 the vanilla-door part: the ROMs, their settings, and the locations DR adds.
-Its logic is under way: DR's world, rules, enemy logic and tests are
+Its logic is DR's own: DR's world, rules, enemy logic and tests are
 imported as data (below), the world is built from them with DR's key
-analysis (`KeyDoorShuffle.py`) and held to DR's tests; the app does not
-read it yet.
+analysis (`KeyDoorShuffle.py`) and held to DR's tests and to real seeds'
+playthroughs; the app solves a DR run with vanilla doors and entrances in
+it, through the package's `./door-world` export, which only its lazy chunk
+imports (`apps/web/src/games/alttpr/logic/doorWorld.ts`), so no other run
+downloads DR's rules.
 
 **Sources, read as data and never run** (`upstream.json`, `doorRandomizer`):
 DR 1.5.6 (`4da73127`, the version Hyrule Town Hall and SahasrahBot ran for
