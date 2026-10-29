@@ -1719,6 +1719,17 @@ Palace of Darkness's doors do want one key more once the hammer, a bow and
 the lamp are held, as upstream has it (`src/derived.ts`); the model is then
 the solver, so that drop stays.
 
+**Its soundness**, held as the entrance randomizer's is: placements the
+fill may make (`test/fill.ts`: vt's order, every big key then every small
+key, each at a location canFill surely takes with the items not placed yet
+held, never one an always-allow alone lets in, drawn at random or among
+those the player reaches least), played out by the player from a random
+state, reach every location the model says `yes` to, in the Open world and
+Hybrid Major Glitches' and Major Glitches' Open and Inverted ones. The
+property fails when a dungeon's safety is weighed against everything with
+every dungeon's items at its level (checked by hand), which closed Misery
+Mire's clip into Tower of Hera.
+
 The entrance randomizer's world has a key model of its own, built on the
 same argument: [Its key model](#its-key-model).
 
