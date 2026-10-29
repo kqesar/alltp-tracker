@@ -247,6 +247,128 @@
     ],
     "spot": "Pyramid Fairy"
   },
+  "bossSlots": {
+    "erDefeatDesertPalaceBoss": {
+      "boss": "Lanmolas",
+      "place": "desertPalace",
+      "refuses": ["Agahnim", "Agahnim2"],
+      "source": "Bosses.py:156",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatLanmolas"
+    },
+    "erDefeatEasternPalaceBoss": {
+      "boss": "Armos Knights",
+      "place": "easternPalace",
+      "refuses": ["Agahnim", "Agahnim2"],
+      "source": "Bosses.py:155",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatArmosKnights"
+    },
+    "erDefeatGanonsTowerBottomBoss": {
+      "boss": "Armos Knights",
+      "place": "ganonsTowerBottom",
+      "refuses": ["Agahnim", "Agahnim2"],
+      "source": "Bosses.py:163",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatArmosKnights"
+    },
+    "erDefeatGanonsTowerMiddleBoss": {
+      "boss": "Lanmolas",
+      "place": "ganonsTowerMiddle",
+      "refuses": ["Blind", "Agahnim", "Agahnim2"],
+      "source": "Bosses.py:154",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatLanmolas"
+    },
+    "erDefeatGanonsTowerTopBoss": {
+      "boss": "Moldorm",
+      "place": "ganonsTowerTop",
+      "refuses": [
+        "Armos Knights",
+        "Lanmolas",
+        "Arrghus",
+        "Blind",
+        "Trinexx",
+        "Agahnim",
+        "Agahnim2"
+      ],
+      "source": "Bosses.py:151",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatMoldorm"
+    },
+    "erDefeatIcePalaceBoss": {
+      "boss": "Kholdstare",
+      "place": "icePalace",
+      "refuses": ["Agahnim", "Agahnim2"],
+      "source": "Bosses.py:160",
+      "swordless": [],
+      "vanilla": "erDefeatKholdstare"
+    },
+    "erDefeatMiseryMireBoss": {
+      "boss": "Vitreous",
+      "place": "miseryMire",
+      "refuses": ["Agahnim", "Agahnim2"],
+      "source": "Bosses.py:161",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatVitreous"
+    },
+    "erDefeatPalaceOfDarknessBoss": {
+      "boss": "Helmasaur King",
+      "place": "palaceOfDarkness",
+      "refuses": ["Agahnim", "Agahnim2"],
+      "source": "Bosses.py:157",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatHelmasaurKing"
+    },
+    "erDefeatSkullWoodsBoss": {
+      "boss": "Mothula",
+      "place": "skullWoods",
+      "refuses": ["Trinexx", "Agahnim", "Agahnim2"],
+      "source": "Bosses.py:153",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatMothula"
+    },
+    "erDefeatSwampPalaceBoss": {
+      "boss": "Arrghus",
+      "place": "swampPalace",
+      "refuses": ["Agahnim", "Agahnim2"],
+      "source": "Bosses.py:158",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatArrghus"
+    },
+    "erDefeatThievesTownBoss": {
+      "boss": "Blind",
+      "place": "thievesTown",
+      "refuses": ["Agahnim", "Agahnim2"],
+      "source": "Bosses.py:159",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatBlind"
+    },
+    "erDefeatTowerOfHeraBoss": {
+      "boss": "Moldorm",
+      "place": "towerOfHera",
+      "refuses": [
+        "Armos Knights",
+        "Lanmolas",
+        "Arrghus",
+        "Blind",
+        "Trinexx",
+        "Agahnim",
+        "Agahnim2"
+      ],
+      "source": "Bosses.py:152",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatMoldorm"
+    },
+    "erDefeatTurtleRockBoss": {
+      "boss": "Trinexx",
+      "place": "turtleRock",
+      "refuses": ["Agahnim", "Agahnim2"],
+      "source": "Bosses.py:162",
+      "swordless": ["Kholdstare"],
+      "vanilla": "erDefeatTrinexx"
+    }
+  },
   "bunny": {
     "accessibleLocations": {
       "line": 1527,
@@ -566,11 +688,11 @@
       "source": ["Rules.py:443"]
     },
     "Ganons Tower Moldorm Gap": {
-      "req": "hookshot & @erDefeatMoldorm",
+      "req": "hookshot & @erDefeatGanonsTowerTopBoss",
       "source": ["Rules.py:444"]
     },
     "Ganons Tower Torch Rooms": {
-      "req": "@erHasFireSource & @erDefeatLanmolas",
+      "req": "@erHasFireSource & @erDefeatGanonsTowerMiddleBoss",
       "source": ["Rules.py:441"]
     },
     "Grassy Lawn Pegs": {
@@ -1174,11 +1296,11 @@
       "source": ["Rules.py:268"]
     },
     "Desert Palace - Boss": {
-      "req": "keyP2 & bigKeyP2 & @erHasFireSource & @erDefeatLanmolas",
+      "req": "keyP2 & bigKeyP2 & @erHasFireSource & @erDefeatDesertPalaceBoss",
       "source": ["Rules.py:272"]
     },
     "Desert Palace - Prize": {
-      "req": "keyP2 & bigKeyP2 & @erHasFireSource & @erDefeatLanmolas & (setting(wildBigKeys) | reach(desertPalaceMainOuter))",
+      "req": "keyP2 & bigKeyP2 & @erHasFireSource & @erDefeatDesertPalaceBoss & (setting(wildBigKeys) | reach(desertPalaceMainOuter))",
       "source": ["Rules.py:271", "Rules.py:281"]
     },
     "Desert Palace - Torch": {
@@ -1194,11 +1316,11 @@
       "source": ["Rules.py:932"]
     },
     "Eastern Palace - Boss": {
-      "req": "@erCanShootArrows & bigKeyP1 & @erDefeatArmosKnights & lamp",
+      "req": "@erCanShootArrows & bigKeyP1 & @erDefeatEasternPalaceBoss & lamp",
       "source": ["Rules.py:263", "Rules.py:933"]
     },
     "Eastern Palace - Prize": {
-      "req": "@erCanShootArrows & bigKeyP1 & @erDefeatArmosKnights & lamp",
+      "req": "@erCanShootArrows & bigKeyP1 & @erDefeatEasternPalaceBoss & lamp",
       "source": ["Rules.py:264", "Rules.py:934"]
     },
     "Ether Tablet": {
@@ -1222,15 +1344,15 @@
       "source": ["Rules.py:434"]
     },
     "Ganons Tower - Big Key Chest": {
-      "req": "@erDefeatArmosKnights",
+      "req": "@erDefeatGanonsTowerBottomBoss",
       "source": ["Rules.py:437"]
     },
     "Ganons Tower - Big Key Room - Left": {
-      "req": "@erDefeatArmosKnights",
+      "req": "@erDefeatGanonsTowerBottomBoss",
       "source": ["Rules.py:436"]
     },
     "Ganons Tower - Big Key Room - Right": {
-      "req": "@erDefeatArmosKnights",
+      "req": "@erDefeatGanonsTowerBottomBoss",
       "source": ["Rules.py:438"]
     },
     "Ganons Tower - Bob's Torch": {
@@ -1326,11 +1448,11 @@
       "source": ["Rules.py:335"]
     },
     "Ice Palace - Boss": {
-      "req": "@erDefeatKholdstare",
+      "req": "@erDefeatIcePalaceBoss",
       "source": ["Rules.py:340"]
     },
     "Ice Palace - Prize": {
-      "req": "@erDefeatKholdstare",
+      "req": "@erDefeatIcePalaceBoss",
       "source": ["Rules.py:341"]
     },
     "Library": {
@@ -1358,7 +1480,7 @@
       "source": ["Rules.py:357"]
     },
     "Misery Mire - Boss": {
-      "req": "@erDefeatVitreous",
+      "req": "@erDefeatMiseryMireBoss",
       "source": ["Rules.py:359"]
     },
     "Misery Mire - Compass Chest": {
@@ -1374,7 +1496,7 @@
       "source": ["Rules.py:351"]
     },
     "Misery Mire - Prize": {
-      "req": "@erDefeatVitreous",
+      "req": "@erDefeatMiseryMireBoss",
       "source": ["Rules.py:360"]
     },
     "Misery Mire - Spike Chest": {
@@ -1394,7 +1516,7 @@
       "source": ["Rules.py:387"]
     },
     "Palace of Darkness - Boss": {
-      "req": "@erDefeatHelmasaurKing",
+      "req": "@erDefeatPalaceOfDarknessBoss",
       "source": ["Rules.py:402"]
     },
     "Palace of Darkness - Dark Basement - Left": {
@@ -1406,7 +1528,7 @@
       "source": ["Rules.py:919"]
     },
     "Palace of Darkness - Prize": {
-      "req": "@erDefeatHelmasaurKing",
+      "req": "@erDefeatPalaceOfDarknessBoss",
       "source": ["Rules.py:403"]
     },
     "Potion Shop": {
@@ -1438,11 +1560,11 @@
       "source": ["Rules.py:325"]
     },
     "Skull Woods - Boss": {
-      "req": "@erDefeatMothula",
+      "req": "@erDefeatSkullWoodsBoss",
       "source": ["Rules.py:329"]
     },
     "Skull Woods - Prize": {
-      "req": "@erDefeatMothula",
+      "req": "@erDefeatSkullWoodsBoss",
       "source": ["Rules.py:330"]
     },
     "Spike Cave": {
@@ -1458,11 +1580,11 @@
       "source": ["Rules.py:299"]
     },
     "Swamp Palace - Boss": {
-      "req": "@erDefeatArrghus",
+      "req": "@erDefeatSwampPalaceBoss",
       "source": ["Rules.py:303"]
     },
     "Swamp Palace - Prize": {
-      "req": "@erDefeatArrghus",
+      "req": "@erDefeatSwampPalaceBoss",
       "source": ["Rules.py:304"]
     },
     "Thieves' Town - Attic": {
@@ -1474,11 +1596,11 @@
       "source": ["Rules.py:312"]
     },
     "Thieves' Town - Boss": {
-      "req": "@erDefeatBlind",
+      "req": "@erDefeatThievesTownBoss",
       "source": ["Rules.py:310"]
     },
     "Thieves' Town - Prize": {
-      "req": "@erDefeatBlind",
+      "req": "@erDefeatThievesTownBoss",
       "source": ["Rules.py:311"]
     },
     "Tower of Hera - Big Chest": {
@@ -1490,11 +1612,11 @@
       "source": ["Rules.py:286"]
     },
     "Tower of Hera - Boss": {
-      "req": "@erDefeatMoldorm",
+      "req": "@erDefeatTowerOfHeraBoss",
       "source": ["Rules.py:289"]
     },
     "Tower of Hera - Prize": {
-      "req": "@erDefeatMoldorm",
+      "req": "@erDefeatTowerOfHeraBoss",
       "source": ["Rules.py:290"]
     },
     "Turtle Rock - Big Chest": {
@@ -1512,7 +1634,7 @@
       ]
     },
     "Turtle Rock - Boss": {
-      "req": "@erDefeatTrinexx",
+      "req": "@erDefeatTurtleRockBoss",
       "source": ["Rules.py:379"]
     },
     "Turtle Rock - Compass Chest": {
@@ -1536,7 +1658,7 @@
       "source": ["Rules.py:377"]
     },
     "Turtle Rock - Prize": {
-      "req": "@erDefeatTrinexx",
+      "req": "@erDefeatTurtleRockBoss",
       "source": ["Rules.py:380"]
     },
     "Turtle Rock - Roller Room - Left": {

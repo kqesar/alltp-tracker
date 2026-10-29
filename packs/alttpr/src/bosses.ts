@@ -210,9 +210,11 @@ export function bossesAt(place: BossPlaceId): readonly ShuffledBoss[] {
   return SHUFFLED_BOSSES.filter((boss) => !refuses.includes(boss));
 }
 
-const factOf = (place: BossPlaceId, boss: ShuffledBoss) =>
+/** The fact that a slot holds a boss: `easternPalaceBossIsBlind`. */
+export const bossFactOf = (place: BossPlaceId, boss: ShuffledBoss) =>
   `${place}BossIs${capital(boss)}`;
-const unknownFactOf = (place: BossPlaceId) => `${place}BossUnknown`;
+/** The fact that a slot's boss is not known yet: `easternPalaceBossUnknown`. */
+export const bossUnknownFactOf = (place: BossPlaceId) => `${place}BossUnknown`;
 const ruledOutFactOf = (place: BossPlaceId, boss: ShuffledBoss) =>
   `${place}BossNot${capital(boss)}`;
 
@@ -221,8 +223,8 @@ const ruledOutFactOf = (place: BossPlaceId, boss: ShuffledBoss) =>
  * `easternPalaceBossUnknown`, then `easternPalaceBossNotBlind`.
  */
 export const BOSS_FACTS: readonly string[] = PLACE_IDS.flatMap((place) => [
-  ...bossesAt(place).map((boss) => factOf(place, boss)),
-  unknownFactOf(place),
+  ...bossesAt(place).map((boss) => bossFactOf(place, boss)),
+  bossUnknownFactOf(place),
   ...bossesAt(place).map((boss) => ruledOutFactOf(place, boss)),
 ]);
 
@@ -266,11 +268,11 @@ export function bossFacts(
   for (const place of PLACE_IDS) {
     const boss = known[place];
     if (boss === undefined || !bossesAt(place).includes(boss)) {
-      facts[unknownFactOf(place)] = 1;
+      facts[bossUnknownFactOf(place)] = 1;
       unknown.push(place);
       continue;
     }
-    facts[factOf(place, boss)] = 1;
+    facts[bossFactOf(place, boss)] = 1;
     // Swordless Ice Palace is Kholdstare's, outside the draw
     if (!(draw.swordless === true && place === "icePalace")) {
       placed.set(boss, (placed.get(boss) ?? 0) + 1);
@@ -293,30 +295,41 @@ const canBeat = (boss: ShuffledBoss) => `@canBeat${capital(boss)}`;
 
 /**
  * A slot's boss under boss shuffle, as far as the player knows it: the boss
- * known, or, while unknown, every boss the slot may hold beaten (yes), some
- * (maybe), none (no); a boss ruled out (`…BossNot…`, 'simple' alone) need
- * not be beaten for yes. Swordless keeps Kholdstare in Ice Palace alone
- * (Randomizer.php:380-394, Region.php:100-105): elsewhere it counts only
- * with swords.
+ * known, or, while unknown, every boss of `bosses` (those the slot may hold)
+ * beaten (yes), some (maybe), none (no), each read through `beat`; a boss
+ * ruled out (`…BossNot…`, 'simple' alone) need not be beaten for yes. A boss
+ * of `swordless` the slot never holds in a swordless world: there it counts
+ * only with swords.
  */
-function shuffledRule(place: BossPlaceId): string {
-  const bosses = bossesAt(place);
+export function shuffledBossRule(
+  place: BossPlaceId,
+  bosses: readonly ShuffledBoss[],
+  beat: (boss: ShuffledBoss) => string,
+  swordless: readonly ShuffledBoss[],
+): string {
   const all = bosses.map((boss) => {
     const out = ruledOutFactOf(place, boss);
-    return boss === "kholdstare"
-      ? `(setting(swordless) | ${out} | ${canBeat(boss)})`
-      : `(${out} | ${canBeat(boss)})`;
+    return swordless.includes(boss)
+      ? `(setting(swordless) | ${out} | ${beat(boss)})`
+      : `(${out} | ${beat(boss)})`;
   });
   const any = bosses.map((boss) =>
-    boss === "kholdstare"
-      ? `!setting(swordless) & ${canBeat(boss)}`
-      : canBeat(boss),
+    swordless.includes(boss)
+      ? `!setting(swordless) & ${beat(boss)}`
+      : beat(boss),
   );
   return [
-    ...bosses.map((boss) => `${factOf(place, boss)} & ${canBeat(boss)}`),
-    `${unknownFactOf(place)} & (${all.join(" & ")} | maybe & (${any.join(" | ")}))`,
+    ...bosses.map((boss) => `${bossFactOf(place, boss)} & ${beat(boss)}`),
+    `${bossUnknownFactOf(place)} & (${all.join(" & ")} | maybe & (${any.join(" | ")}))`,
   ].join(" | ");
 }
+
+/**
+ * vt's: swordless keeps Kholdstare in Ice Palace alone (Randomizer.php:
+ * 380-394, Region.php:100-105), so elsewhere it counts only with swords.
+ */
+const shuffledRule = (place: BossPlaceId): string =>
+  shuffledBossRule(place, bossesAt(place), canBeat, ["kholdstare"]);
 
 /**
  * The boss each region fights without boss shuffle: `Region::$boss` as its

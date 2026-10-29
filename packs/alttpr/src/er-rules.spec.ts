@@ -117,7 +117,29 @@ const CHECKOUT: Readonly<Record<string, string>> = {
     "boss_table = {",
     "    'Moldorm': ('Moldorm', MoldormDefeatRule),",
     "    'Arrghus': ('Arrghus', ArrghusDefeatRule),",
+    "    'Agahnim': ('Agahnim', MoldormDefeatRule),",
     "}",
+    "",
+    "def can_place_boss(world, boss, dungeon_name, level=None):",
+    "    if world.swords in ['swordless'] and boss == 'Arrghus' and dungeon_name != 'Swamp Palace':",
+    "        return False",
+    "    if dungeon_name == 'Tower of Hera' and level == None:",
+    '        if boss in ["Moldorm"]:',
+    "            return False",
+    '    if boss in ["Agahnim"]:',
+    "        return False",
+    "    return True",
+    "",
+    "def place_bosses(world, player):",
+    "    if world.mode != 'inverted':",
+    "        boss_locations = [",
+    "            ['Tower of Hera', None],",
+    "            ['Swamp Palace', None],",
+    "        ]",
+    "    else:",
+    "        boss_locations = [",
+    "            ['Inverted Ganons Tower', 'top'],",
+    "        ]",
   ].join("\n"),
   "Dungeons.py": [
     "def create_dungeons(world, player):",
@@ -270,17 +292,39 @@ describe("the translation of the entrance randomizer's rules", () => {
     expect(locations["Potion Shop"]?.req).toBe("reach(dam)");
   });
 
-  it("reads a placement as maybe, a boss through its dungeon", () => {
-    const { helpers, locations } = translate();
+  it("reads a placement as maybe, a boss through its dungeon's slot", () => {
+    const { bossSlots, helpers, locations } = translate();
     expect(locations["Swamp Palace - Big Chest"]?.req).toBe(
       "keyD2 >= 2 | maybe",
     );
-    expect(locations["Tower of Hera - Boss"]?.req).toBe("@erDefeatMoldorm");
+    expect(locations["Tower of Hera - Boss"]?.req).toBe(
+      "@erDefeatTowerOfHeraBoss",
+    );
     // (set_trock_key_rules sets it again, where everything held reaches
     // the Dam)
     expect(locations["Swamp Palace - Boss"]?.req).toMatch(
-      / \| !setting\(allItemsReach_dam\) & @erDefeatArrghus$/,
+      / \| !setting\(allItemsReach_dam\) & @erDefeatSwampPalaceBoss$/,
     );
+    // Each slot place_bosses fills: its vanilla boss, and what
+    // can_place_boss refuses there, the more it refuses swordless apart
+    expect(bossSlots).toEqual({
+      erDefeatSwampPalaceBoss: {
+        boss: "Arrghus",
+        place: "swampPalace",
+        refuses: ["Agahnim"],
+        source: "Bosses.py:31",
+        swordless: [],
+        vanilla: "erDefeatArrghus",
+      },
+      erDefeatTowerOfHeraBoss: {
+        boss: "Moldorm",
+        place: "towerOfHera",
+        refuses: ["Moldorm", "Agahnim"],
+        source: "Bosses.py:30",
+        swordless: ["Arrghus"],
+        vanilla: "erDefeatMoldorm",
+      },
+    });
     // if not x: return False is x & …; if y: return True is y | …
     expect(helpers.erDefeatArrghus).toEqual({
       req: "hookshot & (hammer | fireRod & @erCanExtendMagic12)",
@@ -373,7 +417,7 @@ describe("the translation of the entrance randomizer's rules", () => {
     });
     // A count by what a location holds: 0 with the key in it, else 2
     expect(locations["Swamp Palace - Boss"]?.req).toBe(
-      "setting(allItemsReach_dam) & (maybe | keyD2 >= 2) | !setting(allItemsReach_dam) & @erDefeatArrghus",
+      "setting(allItemsReach_dam) & (maybe | keyD2 >= 2) | !setting(allItemsReach_dam) & @erDefeatSwampPalaceBoss",
     );
     expect(entrances["Swamp Palace Moat"]?.req).toBe(
       "setting(swampPatch) | hammer",
@@ -446,6 +490,13 @@ describe("the entrance randomizer's rules (rules.json)", () => {
         ...RULES.helpers,
         ...Object.fromEntries(
           Object.entries(rules.helpers).map(([name, { req }]) => [name, req]),
+        ),
+        // The world defines each boss slot (er-world.ts)
+        ...Object.fromEntries(
+          Object.entries(rules.bossSlots).map(([name, { vanilla }]) => [
+            name,
+            `@${vanilla}`,
+          ]),
         ),
       },
     });

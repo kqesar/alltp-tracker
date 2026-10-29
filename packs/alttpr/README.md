@@ -890,9 +890,18 @@ never told. Both ranges are categories no race permits (`entrances`,
 Link's room, so a race leaves the boss to the player. Not yet checked on the
 real game: the specs build the bytes by hand.
 
-The entrance randomizer's port (`src/entrances/rules.json`) is imported as
-the randomizer writes it on vt's path, with no boss shuffle: a crossed run
-with shuffled bosses is not one the pack models.
+The entrance randomizer places its bosses alike (`Bosses.py` `place_bosses`,
+145-219: vt's `simple`, `full` and `random` are its `basic`, `normal` and
+`chaos`, `app/EntranceRandomizer.php:19-23`), and its rules read a dungeon's
+boss through `dungeon.boss` (`Rules.py:68-69`, and `bosses['bottom']`,
+`['middle']`, `['top']` for Ganon's Tower, 436-444). Its world reads them
+through slots of its own, on the same facts (["Its rules"](#its-rules)):
+its `can_place_boss` (`Bosses.py:123-143`) refuses the same bosses at the
+same slots as vt's `canPlaceBoss`, which the import checks by running it.
+One difference: under `chaos`, Ice Palace may hold any boss even swordless,
+and only `basic` and `normal` put Kholdstare back there (186-191). One flag
+cannot tell them apart, so the entrance randomizer's Ice Palace slot keeps
+every boss swordless too: sound, and exact once the boss is known.
 
 No ROM table states the setting itself: only the bosses the enemizer wrote
 into each boss room, which the player is not to learn before meeting them.
@@ -1098,7 +1107,7 @@ flowchart LR
 
 - **vt's path.** `set_rules` is walked as vt calls the randomizer
   (`app/EntranceRandomizer.php`): No Glitches, the Open or Standard world,
-  no retro, no boss shuffle. A branch on another value (No Logic,
+  no retro. A branch on another value (No Logic,
   Inverted, the triforce goals) is `false` and is never read; one on a
   setting the pack has becomes `setting()`: the mode `standardMode`, the
   goals, `swordless`, `locationsAccessibility`, `cantTakeDamage`. The
@@ -1125,8 +1134,17 @@ flowchart LR
   starting hearts (`BaseClasses.py:418`), which the state holds as heart
   containers, and the contract's states start from them. `can_extend_magic` counts the bottles a potion shop
   refills, by the pack's bottle magic settings.
-- **Bosses**: each `Bosses.py` rule is a helper (`@erDefeatArmosKnights`),
-  each dungeon's the one `Dungeons.py` gives it.
+- **Bosses**: each `Bosses.py` rule is a helper (`@erDefeatArmosKnights`).
+  A rule reads a dungeon's boss through its slot when `place_bosses` fills
+  that slot (`boss_locations`, the Open and Standard list):
+  `@erDefeatEasternPalaceBoss`, `@erDefeatGanonsTowerTopBoss`. `bossSlots`
+  gives each its place (`src/bosses.ts`'s `BOSS_PLACES`), its vanilla boss
+  (`Dungeons.py`) and what `can_place_boss` refuses there, any world's
+  (`refuses`) and the more a swordless one's (`swordless`), worked out by
+  running that function's statements on each boss of `boss_table`; a
+  statement other than an `if` on names, literals and comparisons, or a
+  `return`, stops the import. Agahnim and Agahnim 2 never move: their
+  helpers stand.
 - **Placements** (`item_name`, `item_in_locations`) are `maybe`, as the
   pack's own rules read vt's: a tracker does not know them.
 - **Events** (`Open Floodgate`, `Get Frog`, `Return Smith`, `Pick Up
@@ -1199,6 +1217,14 @@ flowchart LR
   location in logic, every way of it within `maxAtoms`: the Blacksmith
   wants the smith back, who wants the frog, so it misses the Titan's Mitt
   and the pearl.
+- **Boss slots** (`bossSlots`): each slot's helper is its vanilla boss
+  without `bossShuffle`; with it, as vt's slots read
+  ([Boss shuffle](#boss-shuffle), `shuffledBossRule`): the boss known
+  (`<slot>BossIs<Boss>`) through its `Bosses.py` rule, or, while unknown,
+  every boss the slot may hold (all beaten `yes`, some `maybe`), a boss it
+  refuses swordless counting only with swords. The state carries the same
+  facts as vt's world (`toState`), so a crossed run reads what the player
+  knows of the bosses with nothing more.
 - **Derived settings**: whether Swamp Palace needs its patch (its door
   and the Dam's not both vanilla), each region's light world mark, and
   Turtle Rock's `allItemsReach_*`, from a first world with the entrances'
@@ -1211,7 +1237,11 @@ dungeon and Death Mountain tests, imported by `packs/alttpr/scripts/er-tests.mjs
 the world each `setUp` builds) run in `test/er-contract.spec.ts` under the
 pack's contract, upstream `true` our `yes` and `false` never `yes`. And on
 the real Crosskeys seed `0yAObedRMV`, every entrance noted from its
-spoiler, everything held reaches all its locations.
+spoiler, everything held reaches all its locations. Under boss shuffle,
+`src/er-world.spec.ts` holds the slots: without it, or with every slot
+known as its vanilla boss, every location of the Open, Standard and
+swordless worlds solves as without slots, whatever bosses are known, over
+random states.
 
 ## The legacy format
 
