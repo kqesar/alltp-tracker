@@ -177,6 +177,13 @@ export {
   targetNamed,
 } from "./entrances";
 export {
+  type ErDungeon,
+  erDungeons,
+  erUntracked,
+  solveErWithKeys,
+  withErUntracked,
+} from "./er-keys";
+export {
   analyzeFacts,
   crossedConnections,
   type ErConnections,

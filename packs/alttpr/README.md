@@ -1096,7 +1096,14 @@ so the pack must say yes. The entrance randomizer spells items and locations its
 way (`Small Key (Desert Palace)`, `Rupees (20)`; `test/er-seeds.ts`
 `holding`). A seed whose mode the pack does not model is listed in the spec's
 `PENDING` table with the reason and asserted to be still pending, so the step
-that models it has to remove it, and none is skipped silently.
+that models it has to remove it, and none is skipped silently. A seed whose
+keys stayed in their dungeons is read through the key model (below, "Its key
+model"), its keys untracked as a player's are, and its playthrough lists none
+of them: a sphere's location the model doubts must be in the spec's
+`KEY_DOUBTS`, with the placement the fill may make that would lock it. Of
+`dMEp8enPG1`'s, two: Ice Palace's prize at sphere 3 (its second key may wait
+with Kholdstare, whom one key and the Cane of Somaria reach) and Agahnim 2 at
+sphere 5 (a Ganon's Tower key may sit at Bob's Torch, behind the boots).
 
 ### Where Link went: autotracking the entrances
 
@@ -1263,7 +1270,8 @@ flowchart LR
   small keys (`[] if world.retro else small_keys`), the key placed before
   the others (`fill_dungeons_restrictive`: Skull Woods' Pinball Room) and
   the spots filled before the dungeons' items (`generate_itempool`'s
-  locked events, `fill_prizes`' prizes).
+  locked events, `fill_prizes`' prizes). The key model reads them (below,
+  "Its key model").
 
 ### Its world
 
@@ -1321,6 +1329,11 @@ flowchart LR
   and the Dam's not both vanilla), each region's light world mark, and
   Turtle Rock's `allItemsReach_*`, from a first world with the entrances'
   rules of that moment, solved with everything held.
+- **The world the randomizer filled** (`anywhere`): a door or exit not
+  noted leads, instead of nowhere, to a region of its own that leads into
+  every target no noted door or hole leads into and out by every door not
+  noted, with the door's or exit's rule. Whatever the doors not noted lead
+  to, that world reaches at least as much: the key model reads it (below).
 - **Cost**: building a world takes about 6 to 8 ms (two compiles), done
   once per entrance noted; a solve about 0.2 ms.
 
@@ -1334,6 +1347,125 @@ spoiler, everything held reaches all its locations. Under boss shuffle,
 known as its vanilla boss, every location of the Open, Standard and
 swordless worlds solves as without slots, whatever bosses are known, over
 random states.
+
+### Its key model
+
+vt sends `--keysanity` for `full` dungeon items alone
+(`app/EntranceRandomizer.php:69-71`): under any other setting the
+randomizer keeps each dungeon's small keys and big key in it, and the
+player does not track them, though the rules count them (`keyD1 >= 4`).
+`src/er-keys.ts` is the key model of this world (`solveErWithKeys`). vt's
+([The key model](#the-key-model)) does not carry over as it is, since two of
+the facts it rests on fail here:
+
+- **Keys gate regions.** vt's rules read a dungeon's keys in its locations
+  only; the randomizer's read them on the doors between its rooms
+  (`Palace of Darkness (North)`), and a dungeon's exits lead, through the
+  shuffled doors, anywhere: one dungeon's key door may stand on the only
+  way to another's spots. No location belongs to "the dungeons its rule
+  reads".
+- **The doors not noted.** The randomizer filled the whole world; the
+  tracker knows the doors noted. A spot out of reach through them may hold
+  a key all the same.
+
+What the fill does, read against the model: vt passes no `--algorithm`, so
+the randomizer's is `balanced` (`EntranceRandomizer.py:122`, `Main.py:
+96-99`), and `fill_dungeons_restrictive` places the
+dungeon items before any other (`Dungeons.py:125-153`): the big keys, then
+the small keys, then the maps and compasses, each at the first spot of a
+shuffled list where `Location.can_fill` holds (`BaseClasses.py:806-807`)
+with everything else held: the item pool, the dungeon items not placed
+yet, and those placed where that state reaches (`fill_restrictive`,
+`Fill.py:164-207`, `sweep_for_events`). Skull Woods' Pinball Room gets its
+key first. A dungeon's items stay in it (`Region.can_fill`,
+`BaseClasses.py:681-686`). `can_fill` is the spot's always-allow, or its
+region keeping the item, its item rules taking it and Link reaching it, and
+each of these only grows with the state. So, as with vt's assumed fill,
+everything held collects every dungeon item, whatever counts of them are
+already held: each item was placed where what was placed after it, held,
+reaches. Beatable only, the access is not checked once that state beats
+the game (`Fill.py:186-188`): the fill then promises nothing of where a
+key is.
+
+The model:
+
+```mermaid
+flowchart LR
+  noted["the doors noted"] --> world["erWorld:<br/>the player's world"]
+  noted --> upper["erWorld, anywhere:<br/>reaches at least what<br/>the filled world does"]
+  upper --> spots["each item's spots:<br/>can_fill with everything"]
+  upper --> levels["everything, one dungeon's<br/>items at each count"]
+  world --> sure["keys surely in hand"]
+  spots --> sure
+  levels --> safe["a dungeon proven safe:<br/>all its items in hand"]
+  sure --> safe
+  safe --> sure
+  sure --> tri["yes in that state,<br/>else maybe or no<br/>with every key"]
+```
+
+1. **Where an item may sit** (`erUntracked`): the spots of its dungeon (its
+   regions' locations but the prizes and events filled before it,
+   `prefilled`) where `can_fill` is not `no` with everything held, read in
+   the world where the doors not noted lead anywhere (`anywhere`, above).
+   An always-allow lets its key in whatever reaches the spot, any branch's
+   of `set_trock_key_rules` that may hold; a `forbid_item` refuses it where
+   its branch surely holds. Beatable only, no access is asked.
+2. **Keys surely in hand**, as in vt's model: an item every spot of which is
+   `yes` joins the state.
+3. **A dungeon proven safe** joins all its items to the state: at every
+   count of them the player may hold (from those in hand up), each spot they
+   may sit at is at least as available to the player (the state, the other
+   dungeons' items at what is surely in hand, this one's at that count) as
+   to everything (every other item held, in the world where the doors not
+   noted lead anywhere). Wherever the next item is, the fill's state
+   reached it at that count, so the player does too, and by induction he
+   collects them all. Comparing `yes`, `maybe` and `no` compares the same
+   placements on both sides, as vt's model does.
+4. These repeat until nothing joins. A location is `yes` in that state,
+   else `maybe` if it is with every untracked item, `no` if not even then.
+
+It vouches for no dungeon when the seed is beatable only, nor for Turtle
+Rock while its key doors are not known: they hang on what everything held
+reaches in the world the randomizer filled (`set_trock_key_rules`,
+`allItemsReach_*`), known when the doors noted reach as much as the world
+where the others lead anywhere does. The retro world's dungeons hold no
+small key (`Dungeons.py:11`): its keys are universal and the rules ask for a
+key shop instead, so its big keys alone go untracked. Keysanity tracks every
+key, and the model is then the solver.
+
+**Held to** (`src/er-keys.spec.ts`):
+
+- the data: each dungeon's keys are the pack's items at their maxima, so
+  everything holds them all; its spots lie among vt's dungeon locations and
+  it keeps as many keys, maps and compasses in them as vt's pool, so the
+  app's counters, read off vt's world, count right; no item rule sits on a
+  dungeon's spot; the always-allowed keys are among their spots, the
+  refused ones not;
+- golden cases on the randomizer's tests' world: Desert Palace waits on the
+  boots its torch wants, Kholdstare on the Cane of Somaria (his door opens
+  with one key and the Cane, so the second key may be his), beatable only
+  vouches for no dungeon;
+- its laws, over random states of that world (Open and Standard) and of
+  two real seeds' (`dMEp8enPG1`, `0yAObedRMV`'s crossed doors with the keys
+  kept): adding an item never lowers a location; a location stays between
+  the solver without the keys and with them all;
+- its soundness: placements the fill may make (`test/er-fill.ts`: each item
+  at a spot the fill surely takes, never an always-allowed or refused one,
+  drawn at random or among those the player reaches least), drawn on the
+  world the randomizer filled and played out by the player in the world of
+  the doors noted (part of a real seed's, at random), reach every location
+  the model says `yes` to. The property fails when the model checks one
+  count of a dungeon's items only, takes a key once one of its spots is
+  reached, or reads its spots or everything in the world of the doors noted
+  (checked by hand). Two parts rest on the argument alone, no random world
+  having turned up what breaks them: the other dungeons' items kept at what
+  is surely in hand, and Turtle Rock's doors known.
+
+**Cost**: the model builds the second world and solves it with everything,
+about 5 to 10 ms more per entrance noted. A solve takes a few solves of the
+world: about 1 to 1.5 ms on average along a whole game under Vitest, up to
+7 ms on the click that proves a dungeon safe, once per world, since a proof
+holds in every state that holds as much and is kept.
 
 ## The legacy format
 
@@ -1531,6 +1663,9 @@ solver with every untracked item nor below it without them. With wild keys,
 Palace of Darkness's doors do want one key more once the hammer, a bow and
 the lamp are held, as upstream has it (`src/derived.ts`); the model is then
 the solver, so that drop stays.
+
+The entrance randomizer's world has a key model of its own, built on the
+same argument: [Its key model](#its-key-model).
 
 **Cost.** The first call of a world builds what does not depend on the
 state (where each item may sit, the world with everything held at each

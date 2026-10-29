@@ -10,8 +10,11 @@ import {
   SHUFFLED_BOSSES,
   type ShuffledBoss,
 } from "../src/bosses";
+import { entranceNamed, targetNamed } from "../src/entrances";
 import rules from "../src/entrances/rules.json" with { type: "json" };
+import { crossedConnections, erWorld } from "../src/er-world";
 import { medallionFacts, padsFromUpstream } from "../src/medallions";
+import { settingsFromUpstream } from "../src/settings";
 
 /** One line of a spoiler's `Entrances`: a door or hole and where it leads. */
 export interface ErEntrance {
@@ -57,6 +60,44 @@ export function erSeed(hash: string): ErSeed {
   return JSON.parse(
     readFileSync(new URL(`er-seeds/${hash}.json`, import.meta.url), "utf8"),
   ) as ErSeed;
+}
+
+/**
+ * Every entrance of the seed's spoiler, as a player notes it (an entrance
+ * id to its target's): Link's House and the Tavern's back door stay, its
+ * Chris Houlihan room is a way out (entrances.spec.ts).
+ */
+export function seedNotes(
+  spoiler: ErSeed["spoiler"],
+): Readonly<Record<string, string>> {
+  const fixed = new Set(["Links House", "Tavern North"]);
+  return Object.fromEntries(
+    spoiler.Entrances.filter(
+      (m) => m.direction !== "exit" && !fixed.has(m.entrance),
+    ).map((m) => [entranceNamed(m.entrance).id, targetNamed(m.exit).id]),
+  );
+}
+
+/**
+ * The seed's world, the entrances `noted` (all of them by default). Its
+ * settings are the spoiler's, and what `config` sets over them (vt's
+ * names: `dungeonItems`, `enemizer.bossShuffle`).
+ */
+export function seedWorld(
+  spoiler: ErSeed["spoiler"],
+  config: Readonly<Record<string, unknown>> = {},
+  noted: Readonly<Record<string, string>> = seedNotes(spoiler),
+) {
+  const { meta } = spoiler;
+  const settings = settingsFromUpstream(meta.mode, {
+    dungeonItems: meta.dungeon_items,
+    "enemizer.bossShuffle": meta["enemizer.boss_shuffle"],
+    ...config,
+  });
+  return erWorld(
+    settings,
+    crossedConnections(settings.standardMode ? "standard" : "open", noted),
+  );
 }
 
 const PROGRESSIVE: Readonly<Record<string, string>> = {
