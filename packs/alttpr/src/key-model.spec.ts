@@ -312,6 +312,51 @@ describe("the key model on real dungeons", () => {
     );
   });
 
+  it("reads a way in that only a clip from another dungeon opens as maybe, not no", () => {
+    // Swamp Palace's entrance is reached by a clip that reads Misery Mire's
+    // and Tower of Hera's keys; with them not surely in hand it is out of
+    // logic as things stand, yet in logic were they found: maybe, as long
+    // as it is in logic with every key held
+    const items = {
+      armor: 2,
+      bombos: 1,
+      bookOfMudora: 1,
+      boomerang: 1,
+      bottle: 4,
+      bow: 2,
+      caneOfByrna: 1,
+      cape: 1,
+      ether: 1,
+      fireRod: 1,
+      flippers: 1,
+      glove: 2,
+      hammer: 1,
+      hookshot: 1,
+      iceRod: 1,
+      lamp: 1,
+      magic: 2,
+      moonPearl: 1,
+      mushroom: 1,
+      pegasusBoots: 1,
+      powder: 1,
+      quake: 1,
+      shield: 1,
+      sword: 4,
+    };
+    const world = fillerOf(HMG_OPEN).world;
+    const state = tracked(items, HMG_OPEN);
+    expect(solve(world, state).location("swamp-palace/entrance")).toBe("no");
+    expect(model(items, HMG_OPEN).location("swamp-palace/entrance")).toBe(
+      "maybe",
+    );
+    // Where the keys cannot help, it stays no: no sword and no way across
+    expect(
+      model({ ...items, flippers: 0, glove: 0 }, HMG_OPEN).location(
+        "swamp-palace/entrance",
+      ),
+    ).toBe("no");
+  });
+
   it.each([
     ["Open, Hybrid Major Glitches", HMG_OPEN],
     ["Standard, Hybrid Major Glitches", HMG_STANDARD],
