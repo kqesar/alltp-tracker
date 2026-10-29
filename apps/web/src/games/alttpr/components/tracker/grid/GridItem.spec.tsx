@@ -116,6 +116,22 @@ describe("GridItem", () => {
     expect(screen.queryByTestId("medallion-overlay-0")).toBeNull();
   });
 
+  it("gives the dungeon's name's corner to the boss's marker while bosses may move", () => {
+    render(
+      <>
+        <GridItem col={0} item="boss8" row={5} />
+        <GridItem col={1} item="boss12" row={5} />
+      </>,
+    );
+    expect(screen.getByTestId("boss-name-8")).toHaveTextContent("MM");
+
+    act(() => useGameStore.getState().updateSettings({ bossShuffle: "full" }));
+    expect(screen.queryByTestId("boss-name-8")).toBeNull();
+    expect(screen.getByTestId("known-boss-overlay-8")).toBeInTheDocument();
+    // Ganon's Tower has no marker: its name stays
+    expect(screen.getByTestId("boss-name-12")).toHaveTextContent("GT");
+  });
+
   it("lets the player mark a dungeon's boss while the run's bosses may move", () => {
     render(<GridItem col={0} item="boss8" row={5} />);
     expect(screen.queryByTestId("known-boss-overlay-8")).toBeNull();
