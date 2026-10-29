@@ -354,12 +354,46 @@ export interface CrossedPool {
 }
 
 /**
+ * What only the Light World may hold in the full shuffle, which keeps each
+ * cave in one world (connect_caves): the Old Man House
+ * (EntranceShuffle.py:301, 312), his cave (:322, 352) and, in a Standard
+ * world, the castle's side doors (:315). The crossed shuffle places them
+ * anywhere (:394-434).
+ */
+const LIGHT_ONLY = [
+  "Old Man House Exit (Bottom)",
+  "Old Man House Exit (Top)",
+  "Old Man Cave Exit (East)",
+  "Old Man Cave Exit (West)",
+].map(slug);
+const LIGHT_ONLY_STANDARD = [
+  "Hyrule Castle Exit (West)",
+  "Hyrule Castle Exit (East)",
+].map(slug);
+
+/**
  * The entrances alttpr.com's crossed shuffle mixes in an Open or Standard
  * world (EntranceShuffle.py:365-460). Standard keeps the castle's front door
  * and its secret passage for the escape (:379-381, scramble_holes).
  * Inverted runs its own tables, not ported yet.
  */
-export function crossedPool(mode: "open" | "standard"): CrossedPool {
+export const crossedPool = (mode: "open" | "standard"): CrossedPool =>
+  shufflePool("crossed", mode);
+
+/**
+ * The entrances alttpr.com's full shuffle mixes (EntranceShuffle.py:260-364):
+ * the same doors and holes as the crossed one, since both draw on the same
+ * tables, scramble_holes and Skull Woods' shuffle; but a cave stays in the
+ * world its door lies in, so a Dark World door never leads to the places
+ * only the Light World holds (`LIGHT_ONLY`).
+ */
+export const fullPool = (mode: "open" | "standard"): CrossedPool =>
+  shufflePool("full", mode);
+
+function shufflePool(
+  shuffle: "crossed" | "full",
+  mode: "open" | "standard",
+): CrossedPool {
   const doors = [
     ...table("LW_Entrances"),
     ...table("LW_Dungeon_Entrances"),
@@ -436,6 +470,11 @@ export function crossedPool(mode: "open" | "standard"): CrossedPool {
           "Hyrule Castle Secret Entrance",
         ].map(slug),
   );
+  const lightOnly = new Set(
+    shuffle === "full"
+      ? [...LIGHT_ONLY, ...(mode === "standard" ? LIGHT_ONLY_STANDARD : [])]
+      : [],
+  );
   const targetsOf = new Map(
     entrances.map((entrance) => {
       const group = groups.find(({ from }) => from.has(entrance.id));
@@ -443,7 +482,10 @@ export function crossedPool(mode: "open" | "standard"): CrossedPool {
         entrance.id,
         TARGETS.filter((t) =>
           group === undefined
-            ? t.kind !== "drop" && !grouped.has(t.id) && !kept.has(t.id)
+            ? t.kind !== "drop" &&
+              !grouped.has(t.id) &&
+              !kept.has(t.id) &&
+              !(entrance.world === "dark" && lightOnly.has(t.id))
             : group.to.has(t.id),
         ),
       ];

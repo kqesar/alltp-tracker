@@ -4,9 +4,11 @@ import { HOLES, holeAt } from "../scripts/import-er.mjs";
 import { pythonLiteral } from "../scripts/python.mjs";
 import tables from "./autotrack/entrance-tables.json" with { type: "json" };
 import {
+  type CrossedPool,
   crossedPool,
   ENTRANCES,
   entranceNamed,
+  fullPool,
   labelOf,
   linksOf,
   PLACE_OF_LOCATION,
@@ -270,6 +272,60 @@ describe("the crossed shuffle", () => {
       if (partner !== undefined)
         expect(noted.get(partner[0]), entrance).toBe(partner[1]);
     }
+  });
+});
+
+describe("the full shuffle", () => {
+  const crossed = crossedPool("open");
+  const full = fullPool("open");
+
+  const targets = (pool: CrossedPool, id: string) =>
+    pool.targetsOf.get(id)?.map((t) => t.id) ?? [];
+  const OLD_MAN = [
+    "old-man-house-exit-bottom",
+    "old-man-house-exit-top",
+    "old-man-cave-exit-east",
+    "old-man-cave-exit-west",
+  ];
+  const doorIn = (world: "light" | "dark") => {
+    const found = crossed.entrances.find(
+      (e) =>
+        e.world === world &&
+        e.kind === "door" &&
+        targets(crossed, e.id).includes("old-man-house-exit-bottom"),
+    );
+    if (found === undefined) throw new Error("no door");
+    return found.id;
+  };
+
+  it("mixes the same doors and holes as the crossed one", () => {
+    // Both draw on the same tables, scramble_holes and Skull Woods
+    // (EntranceShuffle.py:260-364, 365-440)
+    for (const mode of ["open", "standard"] as const)
+      expect(fullPool(mode).entrances.map((e) => e.id)).toEqual(
+        crossedPool(mode).entrances.map((e) => e.id),
+      );
+  });
+
+  it("keeps the Light World's places out of a Dark World door", () => {
+    const dark = doorIn("dark");
+    const light = doorIn("light");
+    for (const id of OLD_MAN) {
+      // The crossed shuffle places them anywhere
+      expect(targets(crossed, dark)).toContain(id);
+      expect(targets(full, dark)).not.toContain(id);
+      expect(targets(full, light)).toContain(id);
+    }
+    // And Standard's castle sides (:315)
+    expect(targets(fullPool("standard"), dark)).not.toContain(
+      "hyrule-castle-exit-west",
+    );
+    expect(targets(fullPool("standard"), light)).toContain(
+      "hyrule-castle-exit-west",
+    );
+    expect(targets(crossedPool("standard"), dark)).toContain(
+      "hyrule-castle-exit-west",
+    );
   });
 });
 
