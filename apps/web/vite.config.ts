@@ -2,6 +2,7 @@ import { rmSync } from "node:fs";
 import { resolve } from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
+import { lazyGuard } from "./lazy-guard/plugin.ts";
 import { gamePages } from "./seo/plugin.ts";
 import { serviceWorker } from "./sw/plugin.ts";
 
@@ -57,6 +58,17 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
+      // Code only some runs load stays out of every player's first download
+      lazyGuard({
+        lazy: [
+          {
+            // A region of DR's world alone (packs/alttpr/src/door-world/)
+            marker: "Swamp Trench 1 Approach Dry",
+            what: "The Door Randomizer's world",
+          },
+        ],
+        roots: ["src/games/alttpr/module.ts"],
+      }),
       desktop
         ? withoutSiteOnlyFiles()
         : [
