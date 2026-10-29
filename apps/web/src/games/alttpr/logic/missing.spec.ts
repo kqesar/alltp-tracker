@@ -487,6 +487,54 @@ describe("a run with shuffled entrances", () => {
   });
 });
 
+describe("a run with shuffled entrances, its keys in their dungeons", () => {
+  it("says which spots of a key it waits on, the key never an item to find", async () => {
+    const { solver } = await import("@/games/alttpr/logic/crossed");
+    setCrossedSolver(solver);
+    const inputs: Inputs = {
+      ...inputsOf(
+        {
+          boots: true,
+          glove: 2,
+          lantern: true,
+          mirror: true,
+          moonpearl: true,
+          sword: 2,
+        },
+        {
+          settings: {
+            ...getPreset("crosskeys").settings,
+            dungeonItems: "standard",
+          },
+        },
+      ),
+      // The castle's front door alone: its key may sit in the sewers'
+      // secret room, which the grave's hole, not noted, may drop into
+      entrances: { "hyrule-castle-entrance-south": "hyrule-castle-exit-south" },
+    };
+    const found = analysisOf(inputs).missing.get("sewers/secret-room/left");
+    expect(words(found)).toMatchInlineSnapshot(`
+      {
+        "doubts": [
+          {
+            "dungeon": "Hyrule Castle",
+            "key": "small key",
+            "kind": "keys",
+            "spots": [
+              "Sewers - Secret Room - Left",
+              "Sewers - Secret Room - Middle",
+              "Sewers - Secret Room - Right",
+            ],
+          },
+        ],
+        "inLogic": "",
+        "possible": undefined,
+        "tri": "maybe",
+      }
+    `);
+  });
+});
+
 describe("compactSpots", () => {
   it("folds the checks of a shared room into the room with a count", () => {
     expect(

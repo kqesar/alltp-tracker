@@ -211,7 +211,9 @@ export interface Solution {
   readonly keyed: KeyedSolution;
   /**
    * A run with shuffled entrances (crossedLogic): the entrance randomizer's
-   * world solved for the entrances noted, whose tris the tracker shows.
+   * world solved for the entrances noted, its keys read by its own key
+   * model, whose tris the tracker shows. `keyed` above is then vt's world's,
+   * which nothing of the run reads.
    */
   readonly crossed?: CrossedRun & {
     readonly solver: CrossedSolver;
@@ -267,17 +269,17 @@ export const solutionOf = (state: Inputs): Solution => {
     return last.solution;
   }
   const settings = packSettings(state.settings);
-  const keyed = solveWithKeys(
-    fillerOf(settings),
-    toState(trackerInput(state), settings),
-  );
+  const recorded = toState(trackerInput(state), settings);
+  const keyed = solveWithKeys(fillerOf(settings), recorded);
   // Shuffled entrances: the entrance randomizer's world once its solver is
-  // loaded, every check maybe until then
+  // loaded, every check maybe until then. It reads what the player recorded,
+  // its own key model the keys it kept in their dungeons: vt's keys surely
+  // in hand are those of another world
   const solved =
     entrances === undefined || crossed === undefined
       ? undefined
       : {
-          ...crossed.solve(settings, entrances, keyed.state),
+          ...crossed.solve(settings, entrances, recorded),
           entrances,
           solver: crossed,
         };
@@ -286,7 +288,7 @@ export const solutionOf = (state: Inputs): Solution => {
     (!crossedLogic(state.settings) || solved !== undefined);
   const unknown = (tris: Readonly<Record<string, Tri>>) =>
     Object.fromEntries(Object.keys(tris).map((id) => [id, "maybe" as const]));
-  const tris = solved?.solution.locations() ?? keyed.locations();
+  const tris = solved?.keyed.locations() ?? keyed.locations();
   const visibles = solved?.solution.visibles() ?? keyed.solution.visibles();
   const solution = {
     ...(solved === undefined ? {} : { crossed: solved }),

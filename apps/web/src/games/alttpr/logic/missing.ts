@@ -44,6 +44,7 @@ import {
   goModeStatus,
   goModeStatusBy,
   huntGoModeOf,
+  type KeyedSolution,
   type MarginGateId,
   marginFiller,
   TRICKS,
@@ -498,30 +499,42 @@ const doubtsOf = (
 ): Doubt[] => {
   const { keyed, settings } = solution;
   const fill = fillerOf(settings);
-  if (allKeys.location(id) === "yes") {
-    // In logic with every key: a dungeon not safe for keys holds it back
-    return keyed
-      .dungeons(id)
-      .filter((d) => !keyed.safe(d))
-      .flatMap((d) => {
-        const place = nameOf(d);
-        return untracked(settings)
-          .filter((item) => item.dungeon === d)
-          .map((item) => ({
-            dungeon: place,
-            key: item.item.startsWith("bigKey")
-              ? ("big key" as const)
-              : ("small key" as const),
-            kind: "keys" as const,
-            spots: item.locations
-              .filter((spot) => keyed.location(spot) !== "yes")
-              .map((spot) => spotName(spot, place)),
-          }))
-          .filter((doubt) => doubt.spots.length > 0);
-      });
-  }
+  // In logic with every key: a dungeon not safe for keys holds it back
+  if (allKeys.location(id) === "yes")
+    return keyDoubts(id, keyed, untracked(settings));
   return rulesDoubts(fill.world, state, id);
 };
+
+/**
+ * The keys a location the key model holds at `maybe` waits on, in logic
+ * with every key: each dungeon not safe for keys among those it reads, and
+ * where its keys may sit that the player does not reach yet.
+ * @param items - The world's untracked items
+ */
+const keyDoubts = (
+  id: string,
+  keyed: KeyedSolution,
+  items: readonly UntrackedItem[],
+): Doubt[] =>
+  keyed
+    .dungeons(id)
+    .filter((d) => !keyed.safe(d))
+    .flatMap((d) => {
+      const place = nameOf(d);
+      return items
+        .filter((item) => item.dungeon === d)
+        .map((item) => ({
+          dungeon: place,
+          key: item.item.startsWith("bigKey")
+            ? ("big key" as const)
+            : ("small key" as const),
+          kind: "keys" as const,
+          spots: item.locations
+            .filter((spot) => keyed.location(spot) !== "yes")
+            .map((spot) => spotName(spot, place)),
+        }))
+        .filter((doubt) => doubt.spots.length > 0);
+    });
 
 /**
  * Why a location is `maybe` by its rules, which `explain` says: where an
@@ -783,18 +796,18 @@ const standardGoMode = (
 /**
  * analyzeRun for a run with shuffled entrances: the same, over the entrance
  * randomizer's world solved for the entrances noted, its facts (an event, a
- * region reached) read through as the items that bring them. It has no key
- * the player does not track (crossedLogic), so a `maybe` is by its rules.
+ * region reached) read through as the items that bring them, with every key
+ * it kept in their dungeons held (its key model's: a key is never something
+ * to find). A `maybe` in logic with them all waits on a key, as in vt's
+ * world; any other, on its rules.
  */
 const analyzeCrossed = (solution: Solution, run: RunSettings): RunAnalysis => {
   const { crossed, settings, tris } = solution;
   if (crossed === undefined) return { missing: new Map(), solution };
   const settingsOptions = optionsOf(settings);
-  const analysis = crossed.solver.analyze(
-    crossed,
-    crossed.state,
-    settingsOptions,
-  );
+  const state = crossed.solver.withUntracked(crossed, crossed.state);
+  const untrackedKeys = crossed.solver.untracked(crossed);
+  const analysis = crossed.solver.analyze(crossed, state, settingsOptions);
   // A fact's own location is no check
   const facts = new Set(crossed.world.facts.map(({ location }) => location));
   // The world solved with everything held
@@ -805,20 +818,22 @@ const analyzeCrossed = (solution: Solution, run: RunSettings): RunAnalysis => {
     if (tri === "yes" || facts.has(id)) continue;
     // Out of reach with everything held: no item brings it, a door does
     const behind = all.location(id) === "no";
-    const inLogic = behind
-      ? door
-      : waysOf(analysis.blockers(id, "yes"), crossed.state);
+    const inLogic = behind ? door : waysOf(analysis.blockers(id, "yes"), state);
     const possible =
       tri !== "no"
         ? undefined
         : behind
           ? door
-          : waysOf(analysis.blockers(id, "maybe"), crossed.state);
+          : waysOf(analysis.blockers(id, "maybe"), state);
+    const keys =
+      tri === "maybe" ? keyDoubts(id, crossed.keyed, untrackedKeys) : [];
     missing.set(id, {
       doubts:
-        tri === "maybe"
-          ? rulesDoubts(crossed.world.compiled, crossed.state, id)
-          : [],
+        tri !== "maybe"
+          ? []
+          : keys.length > 0
+            ? keys
+            : rulesDoubts(crossed.world.compiled, state, id),
       inLogic,
       possible:
         possible === undefined || sameWays(possible, inLogic)
@@ -832,18 +847,18 @@ const analyzeCrossed = (solution: Solution, run: RunSettings): RunAnalysis => {
     const steps = found.steps.map(({ location }) => all.location(location));
     if (steps.includes("no")) return { kind: "door" };
     const { compiled } = crossed.world;
-    const blockers = (state: State) =>
+    const blockers = (at: State) =>
       waysOf(
-        goModeBlockers(compiled, state, found, settingsOptions, (s) =>
-          s === crossed.state
+        goModeBlockers(compiled, at, found, settingsOptions, (s) =>
+          s === state
             ? analysis
             : crossed.solver.analyze(crossed, s, settingsOptions),
         ),
-        state,
+        at,
       );
     return goModeLeftOf(
-      blockers(withCrystals(compiled.rules, crossed.state)),
-      () => blockers(crossed.state),
+      blockers(withCrystals(compiled.rules, state)),
+      () => blockers(state),
       () => steps.every((tri) => tri === "yes"),
     );
   };

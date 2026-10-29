@@ -123,16 +123,16 @@ test("a run type whose logic is not modelled says so, every check maybe", async 
     .getByRole("button", { name: /^Crosskeys/ })
     .click();
   await page.getByRole("button", { name: "Switch & reset" }).click();
-  // Its keys kept in their dungeons: the entrance randomizer keeps them
-  // there, which the tracker does not track
+  // A glitched logic, which alttpr.com never sends to the entrance
+  // randomizer
   await page.getByRole("button", { name: /^Mode/ }).click();
   await runTypes(page)
-    .getByRole("combobox", { name: "Dungeon items" })
-    .selectOption("mcs");
+    .getByRole("combobox", { name: "Glitches" })
+    .selectOption("overworld_glitches");
   await runTypes(page).getByRole("button", { name: "Close" }).click();
 
   await expect(page.getByTestId("logic-note")).toHaveText(
-    "The tracker has no logic for Crossworld entrances with dungeon items kept in their dungeons yet: every check shows as maybe.",
+    "The tracker has no logic for Overworld Glitches with shuffled entrances yet: every check shows as maybe.",
   );
   // No marker says available or out of logic: the Open logic would be wrong
   const markers = page.getByTestId(/^marker-/);
