@@ -947,6 +947,13 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
     holes get their own, and any other door the rest.
   - `partner`: what one note settles, since a hole and its cave's door
     lead into the same cave.
+- `fullPool(mode)`: what the full shuffle mixes (`EntranceShuffle.py:
+  260-364`): the same doors and holes, as both draw on the same tables,
+  `scramble_holes` and Skull Woods' shuffle, but a cave stays in the world
+  of its door, so a Dark World door never leads to the Old Man's cave and
+  house (`:301-322, 352`) nor, in Standard, to the castle's side doors
+  (`:315`). The simple, restricted and insanity shuffles pool other doors
+  with other targets (`:63-259, 759-905`) and are not ported.
 - `PLACE_OF_LOCATION`: the place a check inside lies in, by the region the
   randomizer puts it in. A few of its names are vt's under other words
   (`VT_NAMES`), and its bosses' and sewers' regions are told by hand

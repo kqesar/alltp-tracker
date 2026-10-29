@@ -154,6 +154,7 @@ export {
   type EntranceTarget,
   entranceNamed,
   erLocationId,
+  fullPool,
   type GameLink,
   labelOf,
   linksOf,
