@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.65.1](https://github.com/kqesar/alltp-tracker/compare/v2.65.0...v2.65.1) (2026-10-29)
+
+
+### 🐛 Bug Fixes
+
+* **autotrack:** read no byte between race ranges in Race Mode ([7ef8c47](https://github.com/kqesar/alltp-tracker/commit/7ef8c475f0f573f7de5d85f397af527e23478549))
+* **autotrack:** read the mode before a race tick plans ([a640a16](https://github.com/kqesar/alltp-tracker/commit/a640a16201e6de8f60383d79c4193ce7a732d819))
+
 ## [2.65.0](https://github.com/kqesar/alltp-tracker/compare/v2.64.0...v2.65.0) (2026-10-29)
 
 
