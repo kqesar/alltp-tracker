@@ -5,6 +5,9 @@
 
 import {
   DOOR_RANDOMIZER_VERSION,
+  DR_LOCATIONS,
+  type DrLocation,
+  dungeon,
   dungeonOf,
   type ItemId,
   type Medallion,
@@ -38,6 +41,11 @@ import {
   POOL_LABELS,
 } from "@/games/alttpr/data/presets";
 import { withCost } from "@/games/alttpr/logic/costs";
+
+/** The Door Randomizer's locations, by id. */
+const DOOR_LOCATION: ReadonlyMap<string, DrLocation> = new Map(
+  DR_LOCATIONS.map((location) => [location.id, location]),
+);
 
 /** The dungeons, by the pack's codes. */
 const DUNGEON_NAMES = {
@@ -604,11 +612,14 @@ const add = <K>(map: Map<K, string[]>, key: K, entry: string) => {
  * then counts
  * @param genericKeys - Whether a small key opens any dungeon (retro): no key
  * count is then listed, since a dungeon's would say where a key was taken
+ * @param doorLocations - A Door Randomizer run's locations, by id: a bit of
+ * its tables for any other location is not listed
  */
 export const describeReading = (
   reading: AutotrackReading,
   wildKeys = false,
   genericKeys = false,
+  doorLocations: ReadonlySet<string> = new Set(),
 ): Readout => {
   const { beyond, counts, unsettled } = reading.items;
   const items: string[] = [];
@@ -678,13 +689,31 @@ export const describeReading = (
   }
 
   const checked = new Map<string, string[]>();
+  let checkedCount = 0;
   for (const id of reading.checked) {
+    const door = DOOR_LOCATION.get(id);
+    if (door !== undefined) {
+      // A Door Randomizer table's bit: told only for a location of the run's
+      if (!doorLocations.has(id)) continue;
+      const area =
+        door.dungeon === null ? "Outside dungeons" : dungeon(door.dungeon).name;
+      add(
+        checked,
+        area,
+        door.name.startsWith(`${area} - `)
+          ? door.name.slice(area.length + 3)
+          : door.name,
+      );
+      checkedCount++;
+      continue;
+    }
     const code = dungeonOf(id) as DungeonCode | null;
     add(
       checked,
       code === null ? "Outside dungeons" : DUNGEON_NAMES[code],
       locationName(id, code !== null),
     );
+    checkedCount++;
   }
   // Race Mode reads every check but Zelda's rescue (v2.0 forbids telling it)
   const raceChecks = reading.unsettled.filter(([, w]) => w === "race-mode");
@@ -711,7 +740,7 @@ export const describeReading = (
     checked: ["Outside dungeons", ...DUNGEON_CODES.map((c) => DUNGEON_NAMES[c])]
       .filter((area) => checked.has(area))
       .map((area) => ({ area, locations: checked.get(area) as string[] })),
-    checkedCount: reading.checked.length,
+    checkedCount,
     completed: DUNGEON_CODES.filter(
       (code) => code !== "H2" && completed[code] === true,
     ).map((code) => DUNGEON_NAMES[code]),

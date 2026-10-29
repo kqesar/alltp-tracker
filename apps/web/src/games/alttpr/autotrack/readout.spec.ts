@@ -522,3 +522,62 @@ describe("the seed's settings", () => {
     });
   });
 });
+
+describe("a Door Randomizer seed's readout", () => {
+  /** A DR seed's ROM: its title, its table's magic and its version text. */
+  const doorMemory = (title: string, version: string) => {
+    const memory = seedMemory({ race: false });
+    const write = (at: number, text: string) => {
+      memory.fill(0, at, at + 21);
+      for (let i = 0; i < text.length; i++) memory[at + i] = text.charCodeAt(i);
+    };
+    write(0x7fc0, title); // Rom.py:1454-1456
+    write(0x13_8000, "DR"); // doorrando.asm:15
+    write(0x13_8010, version); // Rom.py:1458
+    return memory;
+  };
+  const rows = (memory: Uint8Array, race = false) =>
+    Object.fromEntries(
+      describeReading(readMemory(viewOf(memory), race, 0)).seed.map(
+        ({ label, value }) => [label, value],
+      ),
+    );
+
+  it("names the randomizer and its version, and says when DR's data is another version's", () => {
+    expect(rows(doorMemory("DR156_1_1_367825107", "1.5.6-u"))).toMatchObject({
+      "Door shuffle": "Vanilla",
+      Pottery: "None",
+      Randomizer: "Door Randomizer 1.5.6",
+      Seed: "1_1_367825107",
+    });
+    expect(rows(doorMemory("DR158_1_1_1", "1.5.8-u")).Randomizer).toBe(
+      "Door Randomizer 1.5.8 (the tracker reads DR 1.5.6: this version's locations may differ)",
+    );
+    // In Race Mode the title alone: the version it names, no setting
+    const race = rows(doorMemory("DR157_1_1_1", "1.5.7-u"), true);
+    expect(race.Randomizer).toBe(
+      "Door Randomizer 1.5.7 (the tracker reads DR 1.5.6: this version's locations may differ)",
+    );
+    expect(race["Door shuffle"]).toBe("not read in Race Mode");
+  });
+
+  it("lists the run's DR locations taken, and no other bit of their tables", () => {
+    const memory = doorMemory("DR156_1_1_1", "1.5.6-u");
+    // Eastern Palace's dark square pot key, and a pot of no location
+    memory[0xf6_6018 + 0xba * 2 + 1] = 0x08;
+    memory[0xf6_6018 + 0x09 * 2 + 1] = 0x80;
+    const reading = readMemory(viewOf(memory), false, 0);
+    const readout = describeReading(
+      reading,
+      false,
+      false,
+      new Set(["eastern-palace/dark-square-pot-key"]),
+    );
+    expect(
+      readout.checked.find(({ area }) => area === "Eastern Palace")?.locations,
+    ).toContain("Dark Square Pot Key");
+    expect(readout.checkedCount).toBe(
+      describeReading(reading).checkedCount + 1,
+    );
+  });
+});

@@ -1,6 +1,7 @@
-import { type ReactNode, useId } from "react";
+import { type ReactNode, useId, useMemo } from "react";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
 import { describeReading } from "@/games/alttpr/autotrack/readout";
+import { doorLocationsOf } from "@/games/alttpr/data/doorRando";
 import { wildItems } from "@/games/alttpr/data/presets";
 import { packSettings } from "@/games/alttpr/logic/settings";
 import { useAutotrackStore } from "@/games/alttpr/stores/autotrackStore";
@@ -74,7 +75,15 @@ export const Readout = ({
   const genericKeys = useGameStore(
     (state) => packSettings(state.settings).genericKeys,
   );
-  const readout = describeReading(reading, wildKeys, genericKeys);
+  // A Door Randomizer run's locations: memoized per settings, so stable
+  const door = useGameStore(
+    (state) => doorLocationsOf(state.settings).locations,
+  );
+  const doorIds = useMemo(
+    () => new Set(door.map((location) => location.id)),
+    [door],
+  );
+  const readout = describeReading(reading, wildKeys, genericKeys, doorIds);
   // What the ROM does not state comes from the seed's file once it is in,
   // outside Race Mode only
   const fileIn = useAutotrackStore(
