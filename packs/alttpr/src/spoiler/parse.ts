@@ -23,6 +23,7 @@ import {
 } from "@alltp/spoiler";
 import * as z from "zod/mini";
 import { SEED_HASH } from "../seed-link";
+import { isDoorDocument, parseDoorLog } from "./dr";
 import { ER } from "./er";
 import { type AlttprSpoilerLog, readLog, sectionsOf } from "./read";
 import { VT } from "./vt";
@@ -53,7 +54,8 @@ export function hashInName(fileName: string): string | null {
 
 /**
  * Reads the text of a spoiler log, saved by alttpr.com or the seed file S3
- * keeps, into the model.
+ * keeps, or written by the Door Randomizer (text or JSON, dr.ts), into the
+ * model.
  *
  * Refuses, with the code of @alltp/spoiler: a file over the size bound
  * (`too-large`); a ROM, a binary or anything that is not a JSON object with
@@ -84,6 +86,17 @@ export function parseSpoiler(
   } else if (sniffed.what !== "unknown") {
     return refuse("unsupported", sniffed.what);
   }
+  // The Door Randomizer's text log (dr.ts); its JSON is told once parsed
+  if (
+    sniffed.known &&
+    sniffed.format === "dr" &&
+    !text
+      .replace(/^\uFEFF/, "")
+      .trimStart()
+      .startsWith("{")
+  ) {
+    return parseDoorLog({ text }, fileName);
+  }
 
   let json: unknown;
   try {
@@ -93,6 +106,9 @@ export function parseSpoiler(
   }
   const root = DOCUMENT.safeParse(json);
   if (!root.success) return refuse("not-a-spoiler", "not an object");
+  if (isDoorDocument(root.data, sniffed)) {
+    return parseDoorLog({ json: root.data }, fileName);
+  }
   // The seed file wraps the spoiler with the hash that names it
   const wrapped = SEED_FILE.safeParse(root.data);
   const doc = wrapped.success ? wrapped.data.spoiler : root.data;

@@ -207,7 +207,24 @@ export const avianartReading = (
   const response = isRecord(json) ? json.response : null;
   const spoiler = isRecord(response) ? response.spoiler : null;
   const meta = isRecord(spoiler) ? spoiler.meta : null;
-  if (!isRecord(meta) || typeof meta.version !== "string") return null;
+  return isRecord(meta) ? doorMetaReading(meta, hash) : null;
+};
+
+/**
+ * A DR seed's settings from its spoiler's `meta`, one player's, each value
+ * as DR writes it (BaseClasses.py:2556-2620): an avianart permalink's, or a
+ * spoiler log's (spoiler/dr.ts, which takes player 1's of a JSON's and
+ * reads a text log's lines into the same names). Null when it holds no DR
+ * version or one of the settings that decide a DR run.
+ * @param meta - The settings by DR's names
+ * @param seed - The seed's id for the reading: a permalink's hash, the ROM
+ *   title's seed
+ */
+export const doorMetaReading = (
+  meta: Meta,
+  seed: string | null,
+): SeedSettingsReading | null => {
+  if (typeof meta.version !== "string") return null;
   const exact = exactOf(meta);
   if (exact === null) return null;
   const shuffle = String(meta.shuffle ?? "vanilla");
@@ -274,7 +291,7 @@ export const avianartReading = (
       overworld: exact.overworld !== undefined,
       version,
     },
-    seed: hash,
+    seed,
     swordless: setting(
       typeof meta.weapons === "string" ? meta.weapons === "swordless" : null,
     ),

@@ -18,6 +18,7 @@
     "import-upstream": "node scripts/import-upstream-tests.mjs",
     "record-dark-room": "node scripts/record-dark-room.mjs",
     "record-dr-seeds": "node scripts/record-dr-seeds.mjs",
+    "record-dr-spoilers": "node scripts/record-dr-spoilers.mjs",
     "spoiler-fixtures": "node scripts/spoiler-fixtures.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"

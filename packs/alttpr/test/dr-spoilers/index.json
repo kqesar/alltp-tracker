@@ -1,0 +1,21 @@
+{
+  "generated": "By packs/alttpr/scripts/record-dr-spoilers.mjs from real spoiler races. Record again, never edit.",
+  "logs": {
+    "DR_278438665_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/bce949a5-7b7f-4ae6-ab1b-813fccb367f9/DR_278438665_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/snug-fireshield-5696",
+      "recorded": "2026-10-29",
+      "sha256": "89e3e5b0403e9a47b58b97116bc85263726457e62a47b5b2aa470a06a07b733a",
+      "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 278438665"
+    },
+    "DR_660701088_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/747ed70a-541f-4744-ae5a-6f061eb07284/DR_660701088_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/saucy-birdtoss-3937",
+      "recorded": "2026-10-29",
+      "sha256": "680c8545fed79316daae537263ee6d4bc6afe25816f5c7d4947abaf354dd78c4",
+      "version": "ALttP Dungeon Randomizer Version 1.5.6-u  -  Seed: 660701088"
+    }
+  }
+}
