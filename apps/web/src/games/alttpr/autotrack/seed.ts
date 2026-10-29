@@ -29,6 +29,7 @@ import {
   GLITCHES_LABELS,
   type Glitches,
   getPreset,
+  glitchesOf,
   isHidden,
   MODE_LABELS,
   PLACEMENT_LABELS,
@@ -63,7 +64,7 @@ export type SeedCheck =
   | {
       readonly kind: "reveals";
       readonly seed: string;
-      readonly change: Partial<Pick<RunSettings, TunableSetting>>;
+      readonly change: SeedChange;
       /** "Mystery (Open, Ganon, 7/7)" */
       readonly seedText: string;
     }
@@ -143,9 +144,19 @@ export const COMPARED = [
   "itemFunctionality",
 ] as const satisfies readonly (keyof RunSettings)[];
 
-/** A tunable setting's value, a boss shuffle left out read as "none". */
-const tunedValue = (settings: RunSettings, key: TunableSetting) =>
-  key === "bossShuffle" ? bossShuffleOf(settings) : settings[key];
+/**
+ * What a seed lays on a Mystery run: its tunable settings but the glitches,
+ * which a seed changes by switching the run (`sameLogic`).
+ */
+type SeedChange = Partial<
+  Pick<RunSettings, Exclude<TunableSetting, "glitches">>
+>;
+
+/** A tunable setting's value, a boss shuffle or glitches left out "none". */
+const tunedValue = (settings: RunSettings, key: TunableSetting) => {
+  if (key === "bossShuffle") return bossShuffleOf(settings);
+  return key === "glitches" ? glitchesOf(settings) : settings[key];
+};
 
 /** A setting only the seed's file states: the seed's when known, else `own`. */
 const fromFile = <T>(setting: SeedSetting<T> | undefined, own: T): T =>
@@ -409,7 +420,7 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     settings.entranceShuffle === run.settings.entranceShuffle &&
     sameLogic
   ) {
-    const said: Partial<Pick<RunSettings, TunableSetting>> = {
+    const said: SeedChange = {
       crystalsGanon: settings.crystalsGanon,
       crystalsTower: settings.crystalsTower,
       dungeonItems: settings.dungeonItems,
@@ -429,7 +440,7 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
       ...(seed.bossShuffle?.known && { bossShuffle }),
     };
     const change = Object.fromEntries(
-      (Object.keys(said) as TunableSetting[])
+      (Object.keys(said) as (keyof SeedChange)[])
         .filter(
           (key) =>
             said[key] !== tunedValue(run.settings, key) ||

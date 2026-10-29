@@ -33,13 +33,14 @@ type EntranceShuffle =
 
 /**
  * alttpr.com's "Glitches Required" beyond None (config/alttp.php:174-180):
- * the glitched logics a seed may be generated for. The pack ports
- * NoGlitches alone (`logicModelled`), so a run of any of these shows every
- * check as maybe. The six tricks of the Tricks dialog are no logic of
- * alttpr.com's: Overworld Glitches turns four of them on, but with boots
- * clips, mirror clips and super speed besides (config/logic.php:5-13),
- * whose branches of the region rules the pack folds away, and upstream's
- * tests/OverworldGlitches hold them; the Minor Glitches logic left in VT8.25
+ * the glitched logics a seed may be generated for, set by a seed's import,
+ * autotracking or by hand (`TUNING`). The pack reads each with its logic's
+ * glitch flags (config/logic.php) and the boots a glitched world starts
+ * with; a logic whose port it does not hold yet is not modelled
+ * (`logicModelled`), and its run shows every check as maybe. The six tricks
+ * of the Tricks dialog are no logic of alttpr.com's: Overworld Glitches
+ * turns four of them on, with boots clips, mirror clips and super speed
+ * besides (config/logic.php:5-13); the Minor Glitches logic left in VT8.25
  * (resources/views/updates.blade.php:965).
  */
 export type Glitches =
@@ -395,10 +396,26 @@ const crystals = (count: number) => `${count} crystal${count === 1 ? "" : "s"}`;
 /**
  * The settings a player may change in a run already going, its progress
  * kept (the store's `updateSettings`): what a Mystery run lets them
- * discover, and its dungeon items, whose counters keep the items found. The
- * world names a run type, which a new run changes.
+ * discover, its dungeon items, whose counters keep the items found, and the
+ * glitches the seed was generated for, which neither the ROM tells apart
+ * nor a race reads. The world names a run type, which a new run changes.
  */
-export type TunableSetting = HiddenSetting | "dungeonItems";
+export type TunableSetting = HiddenSetting | "dungeonItems" | "glitches";
+
+/**
+ * The value a tunable setting's option sets: the run's own, but for the
+ * glitches, whose None is a value here and their absence in a run.
+ */
+export type TuningValue<K extends TunableSetting> = K extends "glitches"
+  ? Glitches | "none"
+  : RunSettings[K];
+
+/** A change of tunable settings, as `updateSettings` takes it. */
+export type SettingsChange = { [K in TunableSetting]?: TuningValue<K> };
+
+/** A run's glitches: "none" when its settings name none. */
+export const glitchesOf = (settings: RunSettings): Glitches | "none" =>
+  settings.glitches ?? "none";
 
 /** Options in the order alttpr.com lists them, each with its words. */
 const ordered = <T extends string>(
@@ -421,6 +438,16 @@ export const TUNING = {
   crystalsGanon: CRYSTAL_COUNTS,
   crystalsTower: CRYSTAL_COUNTS,
   dungeonItems: ordered(["standard", "mc", "mcs", "full"], DUNGEON_ITEM_LABELS),
+  glitches: ordered<Glitches | "none">(
+    [
+      "none",
+      "overworld_glitches",
+      "hybrid_major_glitches",
+      "major_glitches",
+      "no_logic",
+    ],
+    GLITCHES_LABELS,
+  ),
   // Triforce Hunt is a run type of its own: the pack has no pieces
   goal: ordered(
     ["ganon", "fast-ganon", "all-dungeons", "pedestal"],
@@ -441,7 +468,7 @@ export const TUNING = {
   ],
 } as const satisfies {
   readonly [K in TunableSetting]: readonly (readonly [
-    RunSettings[K],
+    TuningValue<K>,
     string,
   ])[];
 };
@@ -507,6 +534,6 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
       BOSS_SHUFFLE_LABELS[bossShuffleOf(settings)],
     ),
     { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
-    { label: "Glitches", value: GLITCHES_LABELS[settings.glitches ?? "none"] },
+    row("Glitches", "glitches", GLITCHES_LABELS[glitchesOf(settings)]),
   ];
 };

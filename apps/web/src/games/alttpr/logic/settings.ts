@@ -7,12 +7,16 @@ import {
   dungeonItemCount,
   dungeonPool,
   LEGACY_DUNGEONS,
+  type Logic,
+  noLogicSettings,
   settingsFromUpstream,
   UNKNOWN,
   type UpstreamConfig,
 } from "@alltp/pack-alttpr";
 import {
   bossShuffleOf,
+  type Glitches,
+  glitchesOf,
   type HiddenSetting,
   isHidden,
   type RunSettings,
@@ -31,15 +35,27 @@ const GOALS: Record<
   "triforce-hunt": "ganon",
 };
 
+/**
+ * The pack's logic for each of the app's glitches. No Logic has none of
+ * its own: the pack reads it with a logic's rules (`noLogicSettings`).
+ */
+const LOGICS: Record<Glitches | "none", Logic> = {
+  hybrid_major_glitches: "HybridMajorGlitches",
+  major_glitches: "MajorGlitches",
+  no_logic: "NoGlitches",
+  none: "NoGlitches",
+  overworld_glitches: "OverworldGlitches",
+};
+
 const cache = new Map<string, AlttprSettings>();
 
 /**
  * The pack's settings for a run: the run's world, goal, crystal counts, item
  * placement, accessibility, item pool and functionality, boss shuffle,
  * swordless weapons when it has no sword, and its dungeon items (dungeonItems: which of them
- * may lie outside their dungeons), in NoGlitches
- * logic with randomized weapons, as the site's default preset has them
- * (config/alttp.php:78-96). The pack models the Open, Standard, Inverted
+ * may lie outside their dungeons), in the logic of its glitches (No Logic
+ * read with NoGlitches' rules) with randomized weapons, as the site's
+ * default preset has them (config/alttp.php:78-96). The pack models the Open, Standard, Inverted
  * and retro worlds; the entrance shuffle it does not model
  * (`logicModelled`). The same run settings always give the same object, so
  * a world compiled for it can be kept.
@@ -62,11 +78,13 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
     run.itemPool,
     run.itemFunctionality,
     bossShuffleOf(run),
+    glitchesOf(run),
     ...(run.hidden ?? []),
   ].join("/");
   let settings = cache.get(key);
   if (settings === undefined) {
-    settings = settingsFromUpstream(run.mode, {
+    const glitches = glitchesOf(run);
+    const built = settingsFromUpstream(run.mode, {
       accessibility: known("accessibility", run.accessibility),
       "crystals.ganon": known("crystalsGanon", run.crystalsGanon),
       "crystals.tower": known("crystalsTower", run.crystalsTower),
@@ -76,12 +94,13 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
       "item.functionality": known("itemFunctionality", run.itemFunctionality),
       "item.pool": known("itemPool", run.itemPool),
       itemPlacement: known("itemPlacement", run.itemPlacement),
-      logic: "NoGlitches",
+      logic: LOGICS[glitches],
       "mode.weapons": known(
         "swordless",
         run.swordless ? "swordless" : "randomized",
       ),
     });
+    settings = glitches === "no_logic" ? noLogicSettings(built) : built;
     cache.set(key, settings);
   }
   return settings;
