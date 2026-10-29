@@ -32,32 +32,103 @@ export interface ItemState {
 export const PIECES_ITEM = "triforce";
 
 /**
- * The item grid, row by row. Each id is an item's cell, but for the
- * dungeons' cells: `bossN`, the boss cell of key dungeon N (logic/settings.ts
- * KEY_DUNGEONS: the grid's ten, and Ganon's Tower's, 12); `keysN`, its key
- * cell, holding its big key, small keys, map and compass; and `keylabelN`,
- * the short name of a castle dungeon, which has no boss cell above its key
- * cell to tell it. The key cells and labels show only with the key cells, a
- * row of nothing else with them. On that row Agahnim stands where Castle
- * Tower's label would, as the head of its keys.
+ * The four bottles' cells, in the game's order: each draws what its bottle
+ * holds (`BottleContents`), and whether it is there at all is the `bottle`
+ * count's, as the game fills its bottles in order.
  */
-export const defaultItemGrid: string[][] = [
+export const BOTTLE_SLOTS = [
+  "bottlecontents1",
+  "bottlecontents2",
+  "bottlecontents3",
+  "bottlecontents4",
+] as const;
+
+/**
+ * What a bottle holds, by its `bottlecontentsN` value: 0 empty (or not
+ * recorded: an old save's bottles), then the menu's potions, the fairy and
+ * the bees. The game's own values (sram.asm BottleContents) are one more, its
+ * $00 being no bottle and $01 a mushroom no randomized seed puts there.
+ */
+export const BOTTLE_CONTENTS = [
+  "empty",
+  "red",
+  "green",
+  "blue",
+  "fairy",
+  "bee",
+  "goodbee",
+] as const;
+
+export type BottleContents = (typeof BOTTLE_CONTENTS)[number];
+
+/** Each content's words, for a bottle cell's name. */
+export const BOTTLE_CONTENT_NAMES: Readonly<Record<BottleContents, string>> = {
+  bee: "a bee",
+  blue: "blue potion",
+  empty: "empty",
+  fairy: "a fairy",
+  goodbee: "a good bee",
+  green: "green potion",
+  red: "red potion",
+};
+
+/**
+ * The bomb and arrow capacities, as the game holds them: flatly how many
+ * can be held (sram.asm BombCapacity, ArrowCapacity), 10 bombs and 30 arrows
+ * at the start, each upgrade adding 5 (or 10 at once) up to 50 and 70
+ * (newitems.asm .bombs_5 to .arrows_70). A click steps 5 between the two.
+ */
+export const CAPACITIES: Readonly<
+  Record<string, { readonly start: number; readonly top: number }>
+> = {
+  arrowcapacity: { start: 30, top: 70 },
+  bombcapacity: { start: 10, top: 50 },
+};
+
+/**
+ * The two cells that show what the goal asks for in crystals, Ganon's
+ * Tower's and Ganon's: the run's settings (`crystalsTower`,
+ * `crystalsGanon`), which a seed sets and the player steps from the cell.
+ */
+export const GOAL_CELLS = {
+  goalganon: "crystalsGanon",
+  goaltower: "crystalsTower",
+} as const;
+
+export type GoalCell = keyof typeof GOAL_CELLS;
+
+/**
+ * The item rows, five of seven: the Y items, the equipment (the bow with
+ * the arrows' capacity, the tunic with Link's hearts), then the bombs with
+ * their capacity, the four bottles and what the goal asks for in crystals.
+ */
+const ITEM_ROWS: readonly string[][] = [
   ["flute", "hookshot", "hammer", "firerod", "icerod", "boomerang", "net"],
   ["bow", "lantern", "shield", "sword", "tunic", "magic", "boots"],
-  ["shovel", "book", "quake", "bombos", "ether", "keys0", "boss0"],
-  ["powder", "glove", "bottle", "somaria", "byrna", "keys1", "boss1"],
-  ["mushroom", "cape", "mirror", "moonpearl", "flippers", "keys2", "boss2"],
+  ["shovel", "book", "quake", "bombos", "ether", "mushroom", "powder"],
+  ["glove", "flippers", "moonpearl", "cape", "mirror", "somaria", "byrna"],
+  ["bombcapacity", ...BOTTLE_SLOTS, "goaltower", "goalganon"],
+];
+
+/**
+ * The item grid, row by row. Each id is an item's cell, but for the
+ * dungeons' cells: `bossN`, the boss cell of key dungeon N (logic/settings.ts
+ * KEY_DUNGEONS: the grid's ten, and Ganon's Tower's, 12), named in its top
+ * left corner; `keysN`, its key cell, holding its big key, small keys, map
+ * and compass, under its boss; and `keylabelN`, the short name of Hyrule
+ * Castle, which has no boss cell above its key cell to tell it. Under the
+ * items, the Light World's dungeons with Castle Tower (Agahnim, `agahnim`)
+ * and Ganon's Tower, then the pendants and crystals held (`pendants`,
+ * `crystals`, which only show); under them the seven crystals' dungeons.
+ * The key cells and labels show only with the key cells, a row of nothing
+ * else with them.
+ */
+export const defaultItemGrid: string[][] = [
+  ...ITEM_ROWS,
+  ["boss0", "boss1", "boss2", "agahnim", "boss12", "pendants", "crystals"],
+  ["keys0", "keys1", "keys2", "keys11", "keys12", "keylabel10", "keys10"],
   ["boss3", "boss4", "boss5", "boss6", "boss7", "boss8", "boss9"],
   ["keys3", "keys4", "keys5", "keys6", "keys7", "keys8", "keys9"],
-  [
-    "keylabel10",
-    "keys10",
-    "agahnim",
-    "keys11",
-    "keylabel12",
-    "keys12",
-    "boss12",
-  ],
 ];
 
 /**
@@ -69,36 +140,156 @@ export const isHunt = (run: {
   readonly hidden?: readonly string[];
 }): boolean => run.goal === "triforce-hunt" && !run.hidden?.includes("goal");
 
-/**
- * The item grid of a run: a retro run's last row holds the shops that sell
- * arrows and keys where Hyrule Castle's and Castle Tower's key cells stand,
- * which have nothing to show there (no big key, no small key of their own);
- * Agahnim keeps the place between them. A Triforce Hunt adds a row under the
- * grid with the pieces found, centred.
- * @param run - The run's world and goal
- */
-export const itemGridFor = (run: {
+type GridRun = {
   readonly mode: string;
   readonly goal?: string;
   readonly hidden?: readonly string[];
-}): string[][] => {
-  const retro = run.mode === "retro";
-  if (run.goal !== undefined && isHunt({ ...run, goal: run.goal })) {
-    return retro ? RETRO_HUNT_ITEM_GRID : HUNT_ITEM_GRID;
-  }
-  return retro ? RETRO_ITEM_GRID : defaultItemGrid;
 };
 
-const RETRO_ITEM_GRID: string[][] = [
-  ...defaultItemGrid.slice(0, -1),
-  ["shoparrow", "shopkey", "agahnim", "", "keylabel12", "keys12", "boss12"],
-];
+/**
+ * The cells a run adds under the board, centred: a retro run's shops that
+ * sell arrows and keys, a Triforce Hunt's pieces between them.
+ */
+const extrasOf = (run: GridRun): string[] => {
+  const retro = run.mode === "retro";
+  const hunt = run.goal !== undefined && isHunt({ ...run, goal: run.goal });
+  return [
+    ...(retro ? ["shoparrow"] : []),
+    ...(hunt ? [PIECES_ITEM] : []),
+    ...(retro ? ["shopkey"] : []),
+  ];
+};
 
-/** The Triforce Hunt's row: the pieces found, under the grid's middle. */
-const PIECES_ROW = ["", "", "", PIECES_ITEM, "", "", ""];
+/** A row `width` wide with `cells` in its middle, a gap either side. */
+const centred = (cells: string[], width: number): string[] => {
+  const before = Math.floor((width - cells.length) / 2);
+  return Array.from({ length: width }, (_, index) =>
+    index >= before && index < before + cells.length
+      ? (cells[index - before] ?? "")
+      : "",
+  );
+};
 
-const HUNT_ITEM_GRID: string[][] = [...defaultItemGrid, PIECES_ROW];
-const RETRO_HUNT_ITEM_GRID: string[][] = [...RETRO_ITEM_GRID, PIECES_ROW];
+/**
+ * The item grid of a run: a retro run adds a row under the grid with the
+ * shops that sell arrows and keys, a Triforce Hunt one with the pieces found
+ * (both share one row), centred.
+ * @param run - The run's world and goal
+ */
+export const itemGridFor = (run: GridRun): string[][] => {
+  const extras = extrasOf(run);
+  const key = extras.join(" ");
+  // One array per kind of run, so a store selector returning it is stable
+  let grid = GRIDS.get(key);
+  if (grid === undefined) {
+    grid =
+      extras.length > 0
+        ? [...defaultItemGrid, centred(extras, ITEM_ROWS[0]?.length ?? 7)]
+        : defaultItemGrid;
+    GRIDS.set(key, grid);
+  }
+  return grid;
+};
+
+const GRIDS = new Map<string, string[][]>();
+
+/** The stream view's columns, twelve; thirteen with Hyrule Castle's keys. */
+const STREAM_COLUMNS = 12;
+
+/**
+ * The stream view's band, row by row, twelve wide: the equipment and the
+ * bow, the Y items, the rest of the items with the crystals held and asked
+ * for, then the dungeons from Castle Tower to Ganon's Tower, their key cells
+ * under them while those show, Hyrule Castle's at the end (its name over
+ * them). The pendants, which each dungeon's prize already shows, are left
+ * out. Narrow (a phone following the run), each row is cut in two halves of
+ * six, the key cells kept under their dungeons.
+ * @param run - The run's world and goal
+ * @param keys - Whether the key cells show
+ * @param narrow - Six columns rather than twelve
+ */
+export const streamGridFor = (
+  run: GridRun,
+  keys: boolean,
+  narrow = false,
+): string[][] => {
+  const castle = keys ? ["keylabel10"] : [];
+  const rows: string[][] = [
+    [
+      "sword",
+      "shield",
+      "tunic",
+      "glove",
+      "boots",
+      "flippers",
+      "moonpearl",
+      "magic",
+      "bow",
+      "boomerang",
+      "hookshot",
+      "bombcapacity",
+    ],
+    [
+      "mushroom",
+      "powder",
+      "firerod",
+      "icerod",
+      "bombos",
+      "ether",
+      "quake",
+      "lantern",
+      "hammer",
+      "shovel",
+      "flute",
+      "net",
+    ],
+    [
+      "book",
+      "somaria",
+      "byrna",
+      "cape",
+      "mirror",
+      ...BOTTLE_SLOTS,
+      "crystals",
+      "goaltower",
+      "goalganon",
+    ],
+  ];
+  const dungeons = [
+    "agahnim",
+    ...Array.from({ length: 10 }, (_, index) => `boss${index}`),
+    "boss12",
+    ...castle,
+  ];
+  const keyCells = [
+    "keys11",
+    ...Array.from({ length: 10 }, (_, index) => `keys${index}`),
+    "keys12",
+    ...(keys ? ["keys10"] : []),
+  ];
+  const extras = extrasOf(run);
+  if (!narrow) {
+    const width = STREAM_COLUMNS + castle.length;
+    return [
+      ...rows.map((row) => [...row, ...castle.map(() => "")]),
+      dungeons,
+      keyCells,
+      ...(extras.length > 0 ? [centred(extras, width)] : []),
+    ];
+  }
+  const half = STREAM_COLUMNS / 2;
+  const halves = (row: string[]) => [row.slice(0, half), row.slice(half)];
+  const [dungeonsA = [], dungeonsB = []] = halves(dungeons);
+  const [keysA = [], keysB = []] = halves(keyCells);
+  return [
+    ...rows.flatMap(halves),
+    dungeonsA,
+    keysA,
+    dungeonsB,
+    keysB,
+    ...(extras.length > 0 ? [centred(extras, half)] : []),
+  ];
+};
 
 /**
  * The items that count levels but whose cell is a plain toggle: the half magic
@@ -170,6 +361,17 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   tenbombs: [0, 2],
   triforce: [0, 50],
   tunic: [1, 3],
+
+  // What each bottle holds (BOTTLE_CONTENTS: 0 empty), drawn while the
+  // `bottle` count says it is there: a save made before them reads its
+  // bottles empty, as their cell drew them
+  ...Object.fromEntries(
+    BOTTLE_SLOTS.map((slot) => [slot, [0, BOTTLE_CONTENTS.length - 1]]),
+  ),
+  // The bomb and arrow capacities, flatly (CAPACITIES): what a run starts
+  // with, up to what a byte of the game may hold that the cell can draw
+  arrowcapacity: [0, 99, 30],
+  bombcapacity: [0, 99, 10],
 
   // Big keys (0 = not obtained, 1 = obtained)
   ...perDungeon("bigkey", () => [0, 1]),
@@ -345,6 +547,132 @@ export const heartsText = ({ hearts, quarters }: Hearts): string | null => {
   return `${shown} and ${quarters} ${quarters === 1 ? "quarter" : "quarters"}`;
 };
 
+/** The bottle slot (1-4) a `bottlecontentsN` id names, or null. */
+export const bottleSlotOf = (id: string): number | null => {
+  const slot = BOTTLE_SLOTS.indexOf(id as (typeof BOTTLE_SLOTS)[number]);
+  return slot < 0 ? null : slot + 1;
+};
+
+/**
+ * The items a bottle count sets: the count, and the contents of the bottles
+ * it no longer holds back to empty, so a bottle found again is not drawn
+ * with what an earlier one held.
+ * @param items - The run's items
+ * @param count - The bottles held, 0 to 4
+ */
+export const withBottleCount = (
+  items: Readonly<Partial<Record<string, number | boolean>>>,
+  count: number,
+): Record<string, number> => {
+  const change: Record<string, number> = { bottle: count };
+  BOTTLE_SLOTS.forEach((slot, index) => {
+    if (index + 1 > count && Number(items[slot] ?? 0) !== 0) change[slot] = 0;
+  });
+  return change;
+};
+
+/**
+ * A bottle cell's step, as the items it changes, or null when it changes
+ * nothing. The game fills its bottles in order, so a bottle is there while
+ * its slot is within the `bottle` count. Forward on a bottle not there finds
+ * the bottles up to it, empty; on one there, the next content, round from
+ * the good bee to empty. Back on one there, the content before; from empty,
+ * that bottle and those after it go. Back on one not there changes nothing.
+ * @param items - The run's items
+ * @param slot - The bottle, 1 to 4
+ * @param direction - 1 forward (a click), -1 back (a right-click, "-")
+ */
+export const bottleAfter = (
+  items: Readonly<Partial<Record<string, number | boolean>>>,
+  slot: number,
+  direction: 1 | -1,
+): Record<string, number> | null => {
+  const id = BOTTLE_SLOTS[slot - 1];
+  if (id === undefined) return null;
+  const count = Number(items.bottle ?? 0);
+  const content = Number(items[id] ?? 0);
+  if (slot > count) {
+    return direction > 0 ? { ...withBottleCount(items, slot), [id]: 0 } : null;
+  }
+  if (direction > 0) return { [id]: (content + 1) % BOTTLE_CONTENTS.length };
+  if (content > 0) return { [id]: content - 1 };
+  return withBottleCount(items, slot - 1);
+};
+
+/**
+ * A capacity's value once stepped: 5 more, round from the most a seed gives
+ * to the start, or 5 fewer, round from the start to the most. A value off
+ * those steps (a customized seed's, read from the game) steps from the
+ * nearest one.
+ * @param id - `bombcapacity` or `arrowcapacity`
+ * @param value - The capacity now
+ * @param direction - 1 forward, -1 back
+ */
+export const capacityAfter = (
+  id: string,
+  value: number,
+  direction: 1 | -1,
+): number => {
+  const range = CAPACITIES[id];
+  if (range === undefined) return value;
+  const { start, top } = range;
+  const step = Math.round((Math.min(top, Math.max(start, value)) - start) / 5);
+  const steps = (top - start) / 5 + 1;
+  return start + ((step + direction + steps) % steps) * 5;
+};
+
+/** The prizes Link holds: the green pendant, the other two, the crystals. */
+export interface PrizesHeld {
+  readonly green: number;
+  readonly pendants: number;
+  readonly crystals: number;
+}
+
+/**
+ * The prizes Link holds, as the board knows them: each beaten boss's prize
+ * the player marked (`rewardN`: 1 the green pendant, 2 another pendant, 3 a
+ * crystal, 4 a 5/6 crystal), or what autotracking read by class
+ * (`heldgreen`, `heldpendants`, `heldcrystals`) when it says more.
+ * @param items - The run's items
+ */
+export const prizesHeld = (
+  items: Readonly<Partial<Record<string, number | boolean>>>,
+): PrizesHeld => {
+  let green = 0;
+  let pendants = 0;
+  let crystals = 0;
+  DUNGEON_CHEST_COUNTS.forEach((_, index) => {
+    if (items[`boss${index}`] !== 2) return;
+    const reward = Number(items[`reward${index}`] ?? 0);
+    if (reward === 1) green += 1;
+    else if (reward === 2) pendants += 1;
+    else if (reward >= 3) crystals += 1;
+  });
+  return {
+    crystals: Math.max(crystals, Number(items.heldcrystals ?? 0)),
+    green: Math.max(green, Number(items.heldgreen ?? 0)),
+    pendants: Math.max(pendants, Number(items.heldpendants ?? 0)),
+  };
+};
+
+/** The most crystals a goal can ask for. */
+export const CRYSTALS = 7;
+
+/**
+ * The crystals a goal asks for once a goal cell is stepped, wrapping round
+ * from 7 to 0: as a sign in the game is read, from none up. Not known yet
+ * (a Mystery run's), forward is none and back is all seven.
+ * @param asked - The crystals asked for now, or null while not known
+ * @param direction - 1 forward, -1 back
+ */
+export const crystalGoalAfter = (
+  asked: number | null,
+  direction: 1 | -1,
+): number => {
+  if (asked === null) return direction > 0 ? 0 : CRYSTALS;
+  return (asked + direction + CRYSTALS + 1) % (CRYSTALS + 1);
+};
+
 /** Dungeon bosses, in dungeon-index order. */
 const BOSS_NAMES = [
   "Armos Knights",
@@ -362,9 +690,15 @@ const BOSS_NAMES = [
 /** Item ids whose readable name is not just the capitalised id. */
 const ITEM_NAMES: Record<string, string> = {
   agahnim2: "Agahnim 2",
+  arrowcapacity: "Arrow capacity",
+  bombcapacity: "Bombs",
   bombos: "Bombos Medallion",
   book: "Book of Mudora",
   boots: "Pegasus Boots",
+  bottlecontents1: "Bottle 1",
+  bottlecontents2: "Bottle 2",
+  bottlecontents3: "Bottle 3",
+  bottlecontents4: "Bottle 4",
   byrna: "Cane of Byrna",
   cape: "Magic Cape",
   escape: "Zelda's escape",

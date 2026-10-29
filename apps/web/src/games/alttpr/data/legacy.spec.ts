@@ -15,8 +15,11 @@ import { items, itemsMax, itemsMin } from "@/games/alttpr/data/items";
  * world's shops (a save without them starts them unfound), the half magic,
  * the hearts and the escape's bombs (a save without them leaves them not
  * known), the pieces toward the next heart (none), a triforce hunt's pieces
- * found and asked for (none, 20), and the values autotracking alone sets: the escape's end, the
- * flute activated, the prizes held (a save without them holds none).
+ * found and asked for (none, 20), what each bottle holds (empty: the
+ * bottles the count says, as their cell drew them), the bomb and arrow
+ * capacities (10 and 30, where a run starts), and the values autotracking
+ * alone sets: the escape's end, the flute activated, the prizes held (a
+ * save without them holds none).
  */
 const ADDED = [
   "agahnim2",
@@ -43,6 +46,12 @@ const ADDED = [
   "triforce",
   "goalpieces",
   ...Array.from({ length: 10 }, (_, index) => `knownboss${index}`),
+  "bottlecontents1",
+  "bottlecontents2",
+  "bottlecontents3",
+  "bottlecontents4",
+  "bombcapacity",
+  "arrowcapacity",
 ];
 
 /**

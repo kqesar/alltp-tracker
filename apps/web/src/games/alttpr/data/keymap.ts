@@ -2,6 +2,7 @@ import { LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { DUNGEON_INDICES } from "@/games/alttpr/constants";
 import {
   defaultItemGrid,
+  GOAL_CELLS,
   isKeyCell,
   itemGridFor,
   itemLabels,
@@ -55,22 +56,49 @@ export const MODIFIERS = ["Control", "Alt", "Shift", "Meta"] as const;
 
 export type Modifier = (typeof MODIFIERS)[number];
 
+/**
+ * The grid's cells that only show, or step a setting rather than an item:
+ * the prizes held, and what the goal asks for in crystals (set in the cell
+ * or in Mode, as a run's settings are).
+ */
+const NOT_CONTROLS: ReadonlySet<string> = new Set([
+  "crystals",
+  "pendants",
+  ...Object.keys(GOAL_CELLS),
+]);
+
 /** Every grid cell holding an item, as opposed to a dungeon or an empty cell. */
 const isItemCell = (id: string) =>
-  Boolean(id) && id !== "blank" && !id.startsWith("boss") && !isKeyCell(id);
+  Boolean(id) &&
+  id !== "blank" &&
+  !id.startsWith("boss") &&
+  !isKeyCell(id) &&
+  !NOT_CONTROLS.has(id);
+
+/**
+ * The controls a cell carries beside its own: the arrows' capacity on the
+ * bow's, and the bottles' count before the first bottle's (no cell of its
+ * own, but its key and its words step it as they always have).
+ */
+const CARRIED: Readonly<Record<string, readonly ControlId[]>> = {
+  bottlecontents1: ["bottle"],
+  bow: ["bow", "arrowcapacity"],
+};
 
 /**
  * The grid's items, in reading order, then the retro world's shops and a
  * triforce hunt's pieces, then Link's hearts, on the tunic's cell.
  */
 export const ITEM_CONTROLS: readonly ControlId[] = [
-  ...[
-    ...new Set([
+  ...new Set([
+    ...[
       ...defaultItemGrid.flat(),
       ...itemGridFor({ goal: "triforce-hunt", mode: "retro" }).flat(),
-    ]),
-  ].filter(isItemCell),
-  "hearts",
+    ]
+      .filter(isItemCell)
+      .flatMap((id) => [...(CARRIED[id] ?? []), id]),
+    "hearts",
+  ]),
 ];
 
 /** Whether a dungeon's boss cell carries a medallion picker. */
@@ -187,46 +215,56 @@ export const controlTitle = (control: ControlId): string => {
 };
 
 /**
- * The default layout mirrors the grid on the keyboard, by physical key. The
- * grid's item block is five columns wide, as is each hand on the letter
- * keys; its five rows run down the left hand (the Q, A and Z rows) and go on
- * at the top of the right hand (the Y and H rows), column for column, like
- * text in two newspaper columns. The items beside the block take the right
- * hand's bottom row, each the key it has had since it was added: the grid's
- * order does not choose them (Agahnim left the block's row for the castles'
- * when the half magic took its cell), and no key changes hands.
+ * Each item's default key, by physical key, as it was laid when the grid's
+ * item block was five columns wide like each hand on the letter keys: its
+ * five rows ran down the left hand (the Q, A and Z rows) and went on at the
+ * top of the right hand (the Y and H rows), column for column, like text in
+ * two newspaper columns, and the items beside the block took the right
+ * hand's bottom row. The keys are data, not the grid's order: when cells
+ * move (the dungeons' own rows, the bottles' four cells) no key changes
+ * hands, and a first visit gets the keys every guide and saved keymap knows.
+ * A control added later (a bottle's contents, the capacities) has no key
+ * until the player binds one.
  */
-const ITEM_BLOCK_KEYS = [
-  ["KeyQ", "KeyW", "KeyE", "KeyR", "KeyT"],
-  ["KeyA", "KeyS", "KeyD", "KeyF", "KeyG"],
-  ["KeyZ", "KeyX", "KeyC", "KeyV", "KeyB"],
-  ["KeyY", "KeyU", "KeyI", "KeyO", "KeyP"],
-  ["KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon"],
-];
-const BESIDE_BLOCK_KEYS: Readonly<Record<ControlId, string>> = {
+const ITEM_KEYS: Readonly<Record<ControlId, string>> = {
   agahnim: "Comma",
+  bombos: "KeyV",
+  book: "KeyX",
   boomerang: "KeyN",
   boots: "Period",
+  bottle: "KeyI",
+  bow: "KeyA",
+  byrna: "KeyP",
+  cape: "KeyJ",
+  ether: "KeyB",
+  firerod: "KeyR",
+  flippers: "Semicolon",
+  flute: "KeyQ",
+  glove: "KeyU",
+  hammer: "KeyE",
+  hookshot: "KeyW",
+  icerod: "KeyT",
+  lantern: "KeyS",
   magic: "Slash",
+  mirror: "KeyK",
+  moonpearl: "KeyL",
+  mushroom: "KeyH",
   net: "KeyM",
+  powder: "KeyY",
+  quake: "KeyC",
+  shield: "KeyD",
+  shovel: "KeyZ",
+  somaria: "KeyO",
+  sword: "KeyF",
+  tunic: "KeyG",
 };
-const ITEM_BLOCK_WIDTH = 5;
 
-/** Each grid item's default key, by the newspaper-column rule above. */
-const itemKeys = (): [ControlId, string][] => {
-  const keys: [ControlId, string][] = [];
-  defaultItemGrid.forEach((row, rowIndex) => {
-    row.forEach((id, colIndex) => {
-      if (!isItemCell(id)) return;
-      const code =
-        (colIndex < ITEM_BLOCK_WIDTH &&
-          ITEM_BLOCK_KEYS[rowIndex]?.[colIndex]) ||
-        BESIDE_BLOCK_KEYS[id];
-      if (code) keys.push([id, code]);
-    });
+/** Each item's default key, in the controls' order. */
+const itemKeys = (): [ControlId, string][] =>
+  ITEM_CONTROLS.flatMap((control) => {
+    const code = ITEM_KEYS[control];
+    return code ? [[control, code] as [ControlId, string]] : [];
   });
-  return keys;
-};
 
 /**
  * Dungeon chests, the control a run clicks most, are on the digits: 1 to 0

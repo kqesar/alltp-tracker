@@ -268,8 +268,9 @@ describe("an ALttPR run in a packed link", () => {
     expect(none.link).toBe(2);
     expect(JSON.parse(packLink(played)).link).toBe(4);
     // As v2.58.0, the last tracker to read link 2 alone, wrote it, but for
-    // the items appended to the table since (heartquarters, then the hunt's
-    // pieces, then the known bosses), at the end
+    // the items appended to the table since (heartquarters, the hunt's
+    // pieces, the known bosses, then the bottles' contents and the
+    // capacities), at the end
     const recorded = firstLayout.links.find(
       ({ name }) => name === "an empty timeline",
     );
@@ -280,6 +281,12 @@ describe("an ALttPR run in a packed link", () => {
       "triforce",
       "goalpieces",
       ...Array.from({ length: 10 }, (_, index) => `knownboss${index}`),
+      "bottlecontents1",
+      "bottlecontents2",
+      "bottlecontents3",
+      "bottlecontents4",
+      "bombcapacity",
+      "arrowcapacity",
     ]);
     const save = recorded.save as { progress: { items: object } };
     const written = JSON.parse(
@@ -486,7 +493,7 @@ describe("an ALttPR run in a packed link", () => {
     // A new item is appended to SHARE_ITEMS: moving one breaks every link
     expect(new Set(SHARE_ITEMS)).toEqual(new Set(Object.keys(freshItems)));
     expect(SHARE_ITEMS).toHaveLength(new Set(SHARE_ITEMS).size);
-    expect(SHARE_ITEMS.slice(-20)).toEqual([
+    expect(SHARE_ITEMS.slice(-26)).toEqual([
       "hearts",
       "tenbombs",
       "escape",
@@ -498,6 +505,12 @@ describe("an ALttPR run in a packed link", () => {
       "triforce",
       "goalpieces",
       ...Array.from({ length: 10 }, (_, index) => `knownboss${index}`),
+      "bottlecontents1",
+      "bottlecontents2",
+      "bottlecontents3",
+      "bottlecontents4",
+      "bombcapacity",
+      "arrowcapacity",
     ]);
     expect(JSON.parse(packLink(play.alttpr(0.5, randoms()))).sizes).toEqual([
       MAP_LOCATIONS.size,

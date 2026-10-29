@@ -70,13 +70,14 @@ test.describe("the stream view", () => {
     });
     await openObsView(page);
 
-    // The page and everything in the grid but its controls paint nothing
+    // The page and everything in the grid but its controls and the cells
+    // that only show (the crystals held) paint nothing
     const painted = await page.evaluate(() =>
       [
         document.documentElement,
         document.body,
         ...document.querySelectorAll(
-          "[data-testid='obs-view'], [data-testid='item-grid'], [data-testid='item-grid'] *:not(button, button *)",
+          "[data-testid='obs-view'], [data-testid='item-grid'], [data-testid='item-grid'] *:not(button, button *, [role='img'], [role='img'] *)",
         ),
       ]
         .map((element) => ({
@@ -96,20 +97,18 @@ test.describe("the stream view", () => {
     await expect(page.getByTestId("toolbar")).toHaveCount(0);
     await expect(page.getByTestId("map-tracker")).toHaveCount(0);
 
-    // A half cell at the grid's side, and the corner of an item not held:
-    // the app's dimming veil would paint that one dark
-    const grid = await page.getByTestId("item-grid").boundingBox();
+    // The corner of an item not held: the app's dimming veil would paint
+    // that one dark
     const hammer = await page.getByTestId("item-hammer").boundingBox();
-    expect(grid && hammer).toBeTruthy();
-    if (!grid || !hammer) return;
-    const cell = await cellOf(page);
-    expect(await alphaAt(page, grid.x + cell / 4, grid.y + cell / 2)).toBe(0);
+    expect(hammer).toBeTruthy();
+    if (!hammer) return;
     expect(await alphaAt(page, hammer.x + 2, hammer.y + 2)).toBe(0);
     // ...and of a boss not beaten, once drawn on an opaque black square
+    // (its top right: the dungeon's name holds the top left)
     const boss = await page.getByTestId("item-boss0").boundingBox();
     expect(boss).toBeTruthy();
     if (!boss) return;
-    expect(await alphaAt(page, boss.x + 2, boss.y + 2)).toBe(0);
+    expect(await alphaAt(page, boss.x + boss.width - 2, boss.y + 2)).toBe(0);
     // ...while the icon itself is drawn, once loaded
     await expect
       .poll(() =>
@@ -215,8 +214,10 @@ test.describe("the stream view", () => {
         where,
       ).toBeLessThanOrEqual(1);
       expect(scroll, where).toEqual({ x: 0, y: 0 });
-      // As large as it can be, short of an eighth given up for crispness
-      const room = Math.min(width / 8, height / rows);
+      // As large as it can be, short of an eighth given up for crispness: a
+      // band twelve cells wide
+      expect(grid.width, where).toBe(12 * cell);
+      const room = Math.min(width / 12, height / rows);
       expect(cell, where).toBeGreaterThanOrEqual(Math.floor(room * (7 / 8)));
     }
   });
@@ -225,7 +226,7 @@ test.describe("the stream view", () => {
     context,
     page,
   }) => {
-    await page.setViewportSize({ height: 512, width: 512 });
+    await page.setViewportSize({ height: 320, width: 768 });
     await page.goto("./?view=obs&timer=1");
     const timer = page.getByTestId("stream-timer");
     await expect(timer).toHaveAccessibleName("Run timer: 0:00, not started");
@@ -238,7 +239,8 @@ test.describe("the stream view", () => {
     await tracker.getByTestId("run-timer-pause").click();
     await expect(timer).toHaveAccessibleName(/^Run timer: 0:0\d, paused$/);
 
-    // Seven rows and the timer's fill 512 px at the icons' own 64 px
+    // The band's four rows and the timer's fill 320 px at the icons' own
+    // 64 px, twelve wide
     const cell = await cellOf(page);
     const grid = await page.getByTestId("item-grid").boundingBox();
     const box = await timer.boundingBox();
@@ -247,17 +249,17 @@ test.describe("the stream view", () => {
     if (!grid || !box) return;
     expect(box).toEqual({
       height: cell,
-      width: 8 * cell,
+      width: 12 * cell,
       x: grid.x,
       y: grid.y + grid.height,
     });
     // "0:0N" is 32 game pixels wide, 4 px each, centred: the frame is drawn
-    // from x 192 to 320 and nothing around it
+    // from x 320 to 448 and nothing around it
     const middle = box.y + cell / 2;
-    expect(await alphaAt(page, 192, middle)).toBe(255);
-    expect(await alphaAt(page, 319, middle)).toBe(255);
-    expect(await alphaAt(page, 191, middle)).toBe(0);
-    expect(await alphaAt(page, 320, middle)).toBe(0);
+    expect(await alphaAt(page, 320, middle)).toBe(255);
+    expect(await alphaAt(page, 447, middle)).toBe(255);
+    expect(await alphaAt(page, 319, middle)).toBe(0);
+    expect(await alphaAt(page, 448, middle)).toBe(0);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollHeight - window.innerHeight,
@@ -291,14 +293,17 @@ test.describe("the stream view", () => {
       /^Hookshot, obtained\./,
     );
 
-    // The key cells add two rows: the view refits to keep them on screen
+    // The key cells add a row, and Hyrule Castle's a column: the view
+    // refits to keep them on screen
     const before = await cellOf(page);
     await setKeyCells(tracker, true);
-    await expect(page.getByTestId("grid-row")).toHaveCount(8);
+    await expect(page.getByTestId("grid-row")).toHaveCount(5);
     const after = await cellOf(page);
     const grid = await page.getByTestId("item-grid").boundingBox();
-    const height = page.viewportSize()?.height ?? 0;
-    expect(after).toBeLessThan(before);
+    const { height = 0, width = 0 } = page.viewportSize() ?? {};
+    expect(after).toBeLessThanOrEqual(before);
+    expect(grid?.width).toBe(13 * after);
+    expect(grid && grid.x + grid.width).toBeLessThanOrEqual(width);
     expect(grid && grid.y + grid.height).toBeLessThanOrEqual(height);
   });
 });

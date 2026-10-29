@@ -5,12 +5,17 @@ import { requestResync } from "@/autotrack/resync";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
 import type { Hearts, ItemState } from "@/games/alttpr/data/items";
 import {
+  bottleAfter,
+  bottleSlotOf,
+  CAPACITIES,
+  capacityAfter,
   heartsAfter,
   heartsOf,
   items as initialItems,
   itemsMax,
   PIECES_ITEM,
   TOGGLE_ITEMS,
+  withBottleCount,
 } from "@/games/alttpr/data/items";
 import {
   DEFAULT_SHORTCUTS,
@@ -602,15 +607,38 @@ export const useGameStore = create<GameState>()(
               return record(state, { items: { ...state.items, [item]: next } });
             }
 
+            // A bottle's cell steps what it holds, and finds or loses the
+            // bottles in the game's order (bottleAfter)
+            const slot = bottleSlotOf(item);
+            if (slot !== null) {
+              const change = bottleAfter(state.items, slot, direction);
+              if (change === null) return state;
+              return record(state, { items: { ...state.items, ...change } });
+            }
+
+            // A capacity steps 5 at a time between the start and the most a
+            // seed gives (capacityAfter)
+            if (Object.hasOwn(CAPACITIES, item)) {
+              return record(state, {
+                items: {
+                  ...state.items,
+                  [item]: capacityAfter(item, current, direction),
+                },
+              });
+            }
+
             // Chest counters count down as chests are emptied; everything
             // else counts up. Both wrap round to the far end of their range.
             const step = (item.startsWith("chest") ? -1 : 1) * direction;
             const [min, max] = itemRange(item, state.settings);
-            const next = current + step;
+            const raw = current + step;
+            const next = raw < min ? max : raw > max ? min : raw;
             return record(state, {
               items: {
                 ...state.items,
-                [item]: next < min ? max : next > max ? min : next,
+                ...(item === "bottle"
+                  ? withBottleCount(state.items, next)
+                  : { [item]: next }),
               },
             });
           });
@@ -724,7 +752,12 @@ export const useGameStore = create<GameState>()(
                 return state;
               }
             }
-            return record(state, { items: { ...state.items, [item]: value } });
+            // The bottles' count keeps their contents within it
+            const change =
+              item === "bottle" && typeof value === "number"
+                ? withBottleCount(state.items, value)
+                : { [item]: value };
+            return record(state, { items: { ...state.items, ...change } });
           }),
 
         setKeymap: (keymap: Keymap) =>

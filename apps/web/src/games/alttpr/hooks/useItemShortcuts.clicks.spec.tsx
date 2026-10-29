@@ -2,7 +2,14 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
-import { items, itemsMax, itemsMin } from "@/games/alttpr/data/items";
+import {
+  BOTTLE_CONTENTS,
+  bottleSlotOf,
+  CAPACITIES,
+  items,
+  itemsMax,
+  itemsMin,
+} from "@/games/alttpr/data/items";
 import {
   CONTROLS,
   type ControlId,
@@ -23,6 +30,8 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
  * The grid cell a control is drawn in: its own, its boss's or its key cell.
  */
 const cellOf = (control: ControlId) => {
+  // The arrows' capacity rides on the bow's cell
+  if (control === "arrowcapacity") return "bow";
   const index = dungeonOf(control);
   if (index === null) return control;
   return isKeyControl(control) ? `keys${index}` : `boss${index}`;
@@ -47,6 +56,10 @@ const statesOf = (control: ControlId) => {
   }
   // Not set, then the 3 starting hearts to 20 a quarter at a time
   if (control === "hearts") return 1 + 4 * (itemsMax.hearts - 1) + 1;
+  // A capacity's steps of 5; a bottle not found, then what it holds
+  const capacity = CAPACITIES[control];
+  if (capacity) return (capacity.top - capacity.start) / 5 + 1;
+  if (bottleSlotOf(control) !== null) return BOTTLE_CONTENTS.length + 1;
   if (typeof items[control] === "boolean") return 2;
   return itemsMax[control] - itemsMin[control] + 1;
 };
@@ -139,6 +152,7 @@ describe("a shortcut steps its control exactly as a click does", () => {
       }
 
       freshRun(control);
+      const fresh = snapshot();
       const pressed = [];
       for (let step = 0; step < steps; step++) {
         await user.keyboard("k");
@@ -157,8 +171,13 @@ describe("a shortcut steps its control exactly as a click does", () => {
       // One undoable step per press that moved it: a counter that stops at
       // its ends (the hearts, heartsAfter) does not move past them
       // (the triforce pieces too: none and the most a goal holds)
-      const ends = control === "hearts" || control === "triforce" ? 2 : 0;
-      expect(useGameStore.getState().past).toHaveLength(2 * (steps - ends));
+      // (a bottle from empty goes, then stays gone)
+      const moves = pressed.filter(
+        (run, step) =>
+          JSON.stringify(run) !== JSON.stringify(pressed[step - 1] ?? fresh),
+      ).length;
+      expect(moves).toBeGreaterThanOrEqual(steps);
+      expect(useGameStore.getState().past).toHaveLength(moves);
     },
   );
 });

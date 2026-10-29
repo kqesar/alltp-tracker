@@ -7,10 +7,15 @@
   display: grid;
   grid-template-columns:
     calc(var(--cell) / 2)
-    repeat(7, var(--cell))
+    repeat(var(--grid-columns, 7), var(--cell))
     calc(var(--cell) / 2);
   grid-auto-rows: var(--cell);
   background-color: var(--color-bg);
+}
+
+/* The stream view's band: its columns edge to edge, no half cells */
+.tracker--band {
+  grid-template-columns: repeat(var(--grid-columns, 12), var(--cell));
 }
 
 .tracker-row {
@@ -78,7 +83,7 @@
   top: 2px;
   left: 2px;
   z-index: var(--z-overlay);
-  font-size: calc(var(--cell) * 0.3);
+  font-size: calc(var(--cell) * 0.26);
   font-weight: bold;
   line-height: 1;
   color: var(--color-text);
@@ -88,4 +93,140 @@
     0 1px var(--color-bg),
     0 -1px var(--color-bg);
   pointer-events: none;
+}
+
+/* A count in a cell's bottom right corner (the bombs' and arrows'
+   capacities, the crystals held), lettered like the key counts so it reads
+   over stream footage too; green at the most a seed gives */
+.cell-count {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  z-index: var(--z-overlay);
+  font-size: calc(var(--cell) * 0.24);
+  font-weight: bold;
+  line-height: 1;
+  color: var(--color-text);
+  text-shadow:
+    1px 0 var(--color-bg),
+    -1px 0 var(--color-bg),
+    0 1px var(--color-bg),
+    0 -1px var(--color-bg);
+  pointer-events: none;
+}
+
+.cell-count--most {
+  color: var(--state-available);
+}
+
+/* The arrows' capacity, a button over the bow's bottom right corner */
+.capacity-overlay {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.capacity-overlay .cell-count {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  translate: 2px 2px;
+}
+
+/* Castle Tower's cell: Agahnim under the tower's short name */
+.agahnim-cell {
+  display: grid;
+}
+
+/* What a goal asks for in crystals: its short name, a crystal, the count */
+.goal-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4%;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  line-height: 1;
+  color: var(--color-text);
+  text-shadow:
+    1px 0 var(--color-bg),
+    -1px 0 var(--color-bg),
+    0 1px var(--color-bg),
+    0 -1px var(--color-bg);
+}
+
+.goal-cell__name {
+  font-size: calc(var(--cell) * 0.2);
+}
+
+.goal-cell__crystal {
+  width: 36%;
+  height: 36%;
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.goal-cell__count {
+  font-size: calc(var(--cell) * 0.26);
+}
+
+.goal-cell--reached .goal-cell__name,
+.goal-cell--reached .goal-cell__count {
+  color: var(--state-available);
+}
+
+/* The prizes held: the pendants as the menu lays them (green on top, blue
+   and red under it), or the crystal over the count of crystals */
+.prize-cell {
+  position: relative;
+}
+
+.prize-cell--pendants {
+  display: grid;
+  grid-template-areas:
+    ". g g ."
+    "b b r r";
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 6%;
+}
+
+.prize-cell__pendant,
+.prize-cell__crystal {
+  position: relative;
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.prize-cell__pendant:nth-child(1) {
+  grid-area: g;
+}
+
+.prize-cell__pendant:nth-child(2) {
+  grid-area: b;
+}
+
+.prize-cell__pendant:nth-child(3) {
+  grid-area: r;
+}
+
+.prize-cell__crystal {
+  position: absolute;
+  inset: 8% 20% 30%;
+}
+
+/* Greyed (dimmed.css), a prize keeps its shape in its box */
+.prize-cell__pendant.griditem--dimmed::after,
+.prize-cell__crystal.griditem--dimmed::after {
+  background-position: center;
+  background-size: contain;
+}
+
+.prize-cell .prize-cell__count {
+  right: 0;
+  left: 0;
+  text-align: center;
 }

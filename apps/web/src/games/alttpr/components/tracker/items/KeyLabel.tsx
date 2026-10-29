@@ -3,14 +3,26 @@ import { dungeonAt } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 /**
- * The short names of the castle dungeons, as keysanity trackers label their
- * key rows (CodeTracker's hc_label, at_label, gt_label). Castle Tower has
- * none: Agahnim's cell stands there, as the head of its keys. Ganon's Tower's
- * also marks its boss cell, whose Agahnim 2 would pass for Castle Tower's.
+ * The dungeons' short names, as racers write them and other trackers label
+ * them (CodeTracker's hc_label, at_label, gt_label): each boss cell's top
+ * left corner, Agahnim's for Castle Tower, and Hyrule Castle's key cell,
+ * which has no boss cell above it. With shuffled bosses a boss's sprite no
+ * longer tells its dungeon; the name does.
  */
-export const SHORT_NAMES: Partial<Record<DungeonId, string>> = {
+export const SHORT_NAMES: Readonly<Record<DungeonId, string>> = {
+  "castle-tower": "CT",
+  "desert-palace": "DP",
+  "eastern-palace": "EP",
   "ganons-tower": "GT",
   "hyrule-castle": "HC",
+  "ice-palace": "IP",
+  "misery-mire": "MM",
+  "palace-of-darkness": "PoD",
+  "skull-woods": "SW",
+  "swamp-palace": "SP",
+  "thieves-town": "TT",
+  "tower-of-hera": "ToH",
+  "turtle-rock": "TR",
 };
 
 type KeyLabelProps = {

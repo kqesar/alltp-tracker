@@ -85,13 +85,12 @@ test.describe("a keysanity run", () => {
   test("records the castle dungeons' keys on their own row", async ({
     page,
   }) => {
-    for (const [id, short] of [
-      ["hyrule-castle", "HC"],
-      ["ganons-tower", "GT"],
-    ]) {
-      await expect(page.getByTestId(`key-label-${id}`)).toHaveText(short);
-    }
-    // Castle Tower's keys are headed by Agahnim, where its label would be
+    // Hyrule Castle, which has no boss cell, by its key cell; Ganon's
+    // Tower and every other dungeon on its boss cell, over its keys
+    await expect(page.getByTestId("key-label-hyrule-castle")).toHaveText("HC");
+    await expect(page.getByTestId("boss-name-12")).toHaveText("GT");
+    await expect(page.getByTestId("boss-name-3")).toHaveText("PoD");
+    // Castle Tower's keys are headed by Agahnim, under the tower's name
     await expect(page.getByTestId("item-agahnim")).toBeVisible();
     await expect(page.getByTestId("big-key-12")).toHaveAccessibleName(
       "Ganon's Tower big key: not obtained",
@@ -116,10 +115,10 @@ test.describe("a keysanity run", () => {
       /^Castle Tower: boss available,/,
     );
 
-    // The keys and labels go with the key cells; Agahnim and Ganon's Tower's
-    // cell stay
+    // The keys' rows and Hyrule Castle's name go with the key cells;
+    // Agahnim and Ganon's Tower's cell stay
     await setKeyCells(page, false);
-    await expect(page.getByTestId("key-label-hyrule-castle")).toBeEmpty();
+    await expect(page.getByTestId("key-label-hyrule-castle")).toHaveCount(0);
     await expect(page.getByTestId("item-agahnim")).toBeVisible();
     await expect(page.getByTestId("small-key-11")).toHaveCount(0);
     await expect(page.getByTestId("item-boss12")).toBeVisible();

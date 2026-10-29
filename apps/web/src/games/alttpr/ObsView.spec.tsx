@@ -102,45 +102,66 @@ describe("ObsView", () => {
     expect(screen.getByTestId("obs-view").style.backgroundColor).toBe("");
   });
 
-  it("sizes the grid from the viewport and follows its resizes", () => {
+  it("sizes the band from the viewport and follows its resizes", () => {
     resizeTo(1920, 1080);
     render(<ObsView background={null} />);
 
-    // Seven rows while the key cells are hidden: 1080 / 7 = 154 → 144
-    expect(cssVar("--cell")).toBe("144px");
-    expect(cssVar("--obs-left")).toBe("384px");
-    expect(cssVar("--obs-top")).toBe("36px");
+    // Twelve columns, four rows while the key cells are hidden: 1920 / 12
+    expect(cssVar("--cell")).toBe("160px");
+    expect(cssVar("--obs-left")).toBe("0px");
+    expect(cssVar("--obs-top")).toBe("220px");
+    expect(screen.getAllByTestId("grid-row")).toHaveLength(4);
+    expect(screen.getByTestId("item-bottlecontents1")).toBeInTheDocument();
+    expect(screen.getByTestId("goal-goaltower")).toBeInTheDocument();
 
-    resizeTo(512, 448);
+    resizeTo(768, 256);
     expect(cssVar("--cell")).toBe("64px");
     expect(cssVar("--obs-left")).toBe("0px");
   });
 
-  it("refits when the key cells add their rows", () => {
-    resizeTo(512, 480);
+  it("refits when the key cells add their row and Hyrule Castle's column", () => {
+    resizeTo(768, 320);
     render(<ObsView background={null} />);
     expect(cssVar("--cell")).toBe("64px");
 
     act(() => useGameStore.getState().setBigKeysVisible(true));
 
-    // Eight rows in 480 px: 60 of room, too far above 48 to snap
-    expect(cssVar("--cell")).toBe("60px");
-    expect(screen.getAllByTestId("grid-row")).toHaveLength(8);
+    // Thirteen columns in 768 px: 59 of room, too far above 48 to snap
+    expect(cssVar("--cell")).toBe("58px");
+    expect(screen.getAllByTestId("grid-row")).toHaveLength(5);
+    expect(screen.getByTestId("key-label-hyrule-castle")).toHaveTextContent(
+      "HC",
+    );
   });
 
-  it("keeps a row under the grid for the run timer, when asked", () => {
-    resizeTo(512, 512);
+  it("folds the band in two on a page taller than wide", () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      addEventListener: () => {},
+      matches: query === "(orientation: portrait)",
+      removeEventListener: () => {},
+    }));
+    resizeTo(390, 844);
+    render(<ObsView background={null} />);
+
+    // Six columns: the three rows of items and the dungeons cut in halves
+    expect(screen.getAllByTestId("grid-row")).toHaveLength(8);
+    expect(cssVar("--cell")).toBe("64px");
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps a row under the band for the run timer, when asked", () => {
+    resizeTo(768, 320);
     const { unmount } = render(<ObsView background={null} />);
-    // Seven rows: the grid centres in the room, and no timer is drawn
+    // Four rows: the band centres in the room, and no timer is drawn
     expect(cssVar("--obs-top")).toBe("32px");
     expect(screen.queryByTestId("stream-timer")).toBeNull();
     unmount();
 
     render(<ObsView background={null} timer />);
-    // Eight: the grid's seven and the timer's, right under them
+    // Five: the band's four and the timer's, right under them
     expect(cssVar("--cell")).toBe("64px");
     expect(cssVar("--obs-top")).toBe("0px");
-    expect(cssVar("--obs-timer-top")).toBe("448px");
+    expect(cssVar("--obs-timer-top")).toBe("256px");
     expect(screen.getByTestId("stream-timer")).toHaveAccessibleName(
       "Run timer: 0:00, not started",
     );
@@ -158,7 +179,7 @@ describe("ObsView", () => {
   });
 
   it("stops following the viewport once unmounted", () => {
-    resizeTo(512, 448);
+    resizeTo(768, 256);
     const { unmount } = render(<ObsView background={null} />);
     const stage = screen.getByTestId("obs-view");
     unmount();

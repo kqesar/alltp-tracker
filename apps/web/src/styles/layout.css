@@ -1,9 +1,11 @@
 /*
  * Page layout. One custom property, --cell, sizes the item grid (8 cells
- * wide counting its two half cells, 7 rows tall, 8 with the key cells'
- * rows) and the map with it: side by side, the map is 14 cells wide, so its
- * two square worlds are as tall as the grid's first 7 rows. --cell follows
- * the space available, from phone to wide desktop, instead of fixed pixels.
+ * wide counting its two half cells, 7 rows tall, 9 with the key cells'
+ * rows, a row more for a retro run's shops or a hunt's pieces: --grid-rows,
+ * which App sets from the rows shown) and the map with it: side by side, the
+ * map is 14 cells wide, so its two square worlds are as tall as the grid's
+ * 7 rows. --cell follows the space available, from phone to wide desktop,
+ * instead of fixed pixels.
  */
 .toolbar {
   display: flex;
@@ -33,20 +35,6 @@
   gap: var(--gap);
   align-items: start;
   justify-content: center;
-}
-
-/* The key cells' rows make the grid 8 rows tall */
-.layout--key-rows {
-  --grid-rows: 8;
-}
-
-/* A triforce hunt's pieces cell is a row more, under the grid */
-.layout--pieces-row {
-  --grid-rows: 8;
-}
-
-.layout--pieces-row.layout--key-rows {
-  --grid-rows: 9;
 }
 
 /* Stacked, each world keeps the grid's 7-cell height. */

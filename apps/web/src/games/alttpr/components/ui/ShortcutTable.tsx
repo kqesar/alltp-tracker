@@ -12,6 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import { KeyChord } from "@/games/alttpr/components/ui/KeyChord";
 import { BOSS_STATES } from "@/games/alttpr/constants";
 import {
+  bottleSlotOf,
   items,
   itemsMax,
   itemsMin,
@@ -68,6 +69,11 @@ const iconOf = (control: ControlId): string => {
   if (control === "triforce") return "triforce.png";
   // Agahnim 2, atop Ganon's Tower, is drawn as Agahnim, as on the board
   if (control === "agahnim2") return "agahnim1.png";
+  // A bottle's contents: the empty bottle; the capacities: the bombs, the
+  // bow with arrows
+  if (bottleSlotOf(control) !== null) return "bottle0.png";
+  if (control === "bombcapacity") return "bomb.png";
+  if (control === "arrowcapacity") return "bow2.png";
 
   const value = items[control];
   if (typeof value === "boolean" || TOGGLE_ITEMS.has(control)) {

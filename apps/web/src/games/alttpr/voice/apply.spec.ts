@@ -56,6 +56,25 @@ describe("applyVoice", () => {
     expect(store().items).toMatchObject({ heartquarters: 1, hearts: 1 });
   });
 
+  it("finds a bottle by its place, then steps what it holds", () => {
+    expect(say("second bottle")).toEqual({ changed: true, words: "Bottle 2" });
+    expect(store().items).toMatchObject({ bottle: 2, bottlecontents2: 0 });
+    say("bottle two");
+    expect(store().items.bottlecontents2).toBe(1);
+    expect(store().past).toHaveLength(2);
+  });
+
+  it("adds a capacity upgrade of 5, never past the most a seed gives", () => {
+    expect(say("bomb upgrade")).toEqual({ changed: true, words: "Bombs" });
+    expect(store().items.bombcapacity).toBe(15);
+    for (let i = 0; i < 6; i++) say("quiver");
+    expect(store().items.arrowcapacity).toBe(60);
+    say("arrow upgrade");
+    say("arrow upgrade");
+    expect(store().items.arrowcapacity).toBe(70);
+    expect(say("arrow upgrade").changed).toBe(false);
+  });
+
   it("adds the bow's bits apart", () => {
     say("bow");
     expect(store().items.bow).toBe(2);

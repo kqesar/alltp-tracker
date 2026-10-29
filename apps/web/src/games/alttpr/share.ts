@@ -61,6 +61,8 @@ export const SHARE_ITEMS: readonly string[] = `
   triforce goalpieces
   knownboss0 knownboss1 knownboss2 knownboss3 knownboss4 knownboss5
   knownboss6 knownboss7 knownboss8 knownboss9
+  bottlecontents1 bottlecontents2 bottlecontents3 bottlecontents4
+  bombcapacity arrowcapacity
 `
   .trim()
   .split(/\s+/);
