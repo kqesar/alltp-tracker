@@ -160,7 +160,7 @@ const timeMs = (timer) =>
 
 A level is the tracker's own. Where SMZ3 has an item A Link to the Past has, the id is SMZ3's, so an overlay written for one works for the other's Zelda items.
 
-**A Link to the Past**, 29 items in the grid's order. `level` counts as the tracker does: the bow and the boomerang are masks of what is held (bow: 1 silver arrows, 2 bow, 3 both; boomerang: 1 blue, 2 red, 3 both), `halfMagic` is 0 or 1, the `tunic` starts at 1 (green mail) and goes to 3, the bottles count from 0 to 4, the sword from 0 to 4, the shield to 3, the glove to 2.
+**A Link to the Past**, 29 items in a fixed order, the API's own, which a change of the board's layout never moves (the bottles' contents and the capacities are not among them). `level` counts as the tracker does: the bow and the boomerang are masks of what is held (bow: 1 silver arrows, 2 bow, 3 both; boomerang: 1 blue, 2 red, 3 both), `halfMagic` is 0 or 1, the `tunic` starts at 1 (green mail) and goes to 3, the bottles count from 0 to 4, the sword from 0 to 4, the shield to 3, the glove to 2.
 
 | Ids |
 |---|

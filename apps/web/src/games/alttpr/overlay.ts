@@ -32,8 +32,8 @@ import { overlayTimerOf } from "@/overlay/timer";
 import type { RunTimer } from "@/utils/runTimer";
 
 /**
- * The items, in the grid's order: the API's id, then the tracker's key in the
- * run. Where SMZ3 has the same item the id is SMZ3's (`lamp`, `halfMagic`,
+ * The items, in a fixed order (the API's, which the board's layout never
+ * moves): the API's id, then the tracker's key in the run. Where SMZ3 has the same item the id is SMZ3's (`lamp`, `halfMagic`,
  * `moonPearl`), so an overlay written for one game's Zelda items works for
  * the other's. A level is the tracker's: a count for the bottles, 0 to 4 for
  * the swords, and for the bow and the boomerang a mask of what is held (the
