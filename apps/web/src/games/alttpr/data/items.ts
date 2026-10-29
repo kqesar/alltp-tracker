@@ -686,20 +686,6 @@ export const crystalGoalAfter = (
   return (asked + direction + CRYSTALS + 1) % (CRYSTALS + 1);
 };
 
-/** Dungeon bosses, in dungeon-index order. */
-const BOSS_NAMES = [
-  "Armos Knights",
-  "Lanmolas",
-  "Moldorm",
-  "Helmasaur King",
-  "Arrghus",
-  "Mothula",
-  "Blind the Thief",
-  "Kholdstare",
-  "Vitreous",
-  "Trinexx",
-];
-
 /** Item ids whose readable name is not just the capitalised id. */
 const ITEM_NAMES: Record<string, string> = {
   agahnim2: "Agahnim 2",
@@ -749,7 +735,8 @@ export const itemLabels = (item: string): string => {
 
   if (item.startsWith("boss")) {
     const index = Number.parseInt(item.slice("boss".length), 10);
-    return BOSS_NAMES[index] ?? `Boss ${index}`;
+    // A dungeon's boss has no name of its own: bosses move (bossName)
+    return `Boss ${index}`;
   }
 
   return ITEM_NAMES[item] ?? item.charAt(0).toUpperCase() + item.slice(1);

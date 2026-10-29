@@ -149,6 +149,8 @@ const Splits = ({ splits }: { splits: readonly Split[] }) => {
 /** One find: its time, its image (or a location's tick) and its name. */
 const FindRow = memo(({ find, held }: { find: Find; held?: string }) => {
   const icon = findIcon(find.key);
+  // A string, so a click re-renders only the row whose name it changed
+  const name = useGameStore((state) => findName(find.key, state));
   return (
     <li className="run-find" data-testid={`find-${find.key}`}>
       <RunTime ms={find.stamp.ms} />
@@ -166,7 +168,7 @@ const FindRow = memo(({ find, held }: { find: Find; held?: string }) => {
         />
       )}
       <span className="run-find__name">
-        {findName(find.key)}
+        {name}
         {held !== undefined && (
           <span
             className="run-find__held"

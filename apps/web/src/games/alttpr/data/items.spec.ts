@@ -253,9 +253,9 @@ describe("itemLabels", () => {
     expect(itemLabels("hookshot")).toBe("Hookshot");
   });
 
-  it("names bosses rather than their index", () => {
-    expect(itemLabels("boss0")).toBe("Armos Knights");
-    expect(itemLabels("boss9")).toBe("Trinexx");
+  it("never names a boss from its dungeon's index alone, bosses being shuffled", () => {
+    expect(itemLabels("boss0")).toBe("Boss 0");
+    expect(itemLabels("boss9")).toBe("Boss 9");
   });
 
   it("describes empty slots", () => {

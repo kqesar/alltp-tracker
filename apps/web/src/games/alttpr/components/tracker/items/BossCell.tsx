@@ -10,7 +10,7 @@ import { BOSS_STATES } from "@/games/alttpr/constants";
 import { itemLabels } from "@/games/alttpr/data/items";
 import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
-import { knownBossShown } from "@/games/alttpr/logic/knownBosses";
+import { bossName, knownBossShown } from "@/games/alttpr/logic/knownBosses";
 import { dungeonAt, dungeonName } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getItemBackground, isItemDimmed } from "@/games/alttpr/utils";
@@ -49,6 +49,10 @@ export const BossCell = ({ row, col, item }: BossCellProps) => {
   const marked = useGameStore(
     (state) => !isTower && knownBossShown(index, state.settings),
   );
+  // The boss the run knows there, else the dungeon's: bosses may be shuffled
+  const name = useGameStore((state) =>
+    isTower ? itemLabels(control) : bossName(index, state),
+  );
   const handlers = mergeHandlers(
     useGridFocusable({ col, row, slot: 0 }),
     useStepHandlers(
@@ -66,7 +70,7 @@ export const BossCell = ({ row, col, item }: BossCellProps) => {
     >
       <button
         {...handlers}
-        aria-label={`${itemLabels(control)}, ${beaten ? "defeated" : "not defeated"}. Click to change state.`}
+        aria-label={`${name}, ${beaten ? "defeated" : "not defeated"}. Click to change state.`}
         className={`griditem boss-cell__boss${isItemDimmed(control, value) ? " griditem--dimmed" : ""}`}
         data-testid={`item-${item}`}
         style={{ backgroundImage: getItemBackground(control, value) }}
