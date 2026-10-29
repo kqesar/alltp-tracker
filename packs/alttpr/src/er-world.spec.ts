@@ -188,6 +188,28 @@ describe("the entrance randomizer's world", () => {
     expect(sanctuary(rest, { moonPearl: 1 })).toBe("yes");
   });
 
+  it("reads a region no door noted reaches as maybe without the pearl, never no", () => {
+    // Nothing noted: the start reaches Sanctuary by save and quit, and a door
+    // not noted may make it dark (crossed), so the chest is `maybe`, as
+    // `yes` in the other shuffles would be were the pools modelled
+    const sanctuary =
+      (shuffle: "simple" | "restricted" | "full" | "crossed") =>
+      (pearl: number) =>
+        solveFacts(erWorld(OPEN, erConnections(shuffle, "open", {})), {
+          moonPearl: pearl,
+          rescueZelda: 1,
+        }).location(erLocationId("Sanctuary"));
+    for (const shuffle of [
+      "simple",
+      "restricted",
+      "full",
+      "crossed",
+    ] as const) {
+      expect(sanctuary(shuffle)(0), shuffle).toBe("maybe");
+      expect(sanctuary(shuffle)(1), shuffle).toBe("yes");
+    }
+  });
+
   it("asks the big bomb's route by where the shop's door is", () => {
     // The vanilla door is a southern Dark World one: the peg bridge, or the
     // mirror through the castle's gate (Rules.py:1263-1266)

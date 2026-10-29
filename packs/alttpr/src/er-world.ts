@@ -503,7 +503,8 @@ function addBunnyRules(
   // get_rule_to_add: read when added, so a later region's paths see the
   // rules added before, as the randomizer's lambdas do
   const ruleToAdd = (name: string): string => {
-    if (!marked.light.has(name)) return pearl;
+    if (!marked.light.has(name))
+      return marked.dark.has(name) ? pearl : or(pearl, "maybe");
     const options = [pearl];
     const seen = new Set([name]);
     const queue: [string, string[]][] = [[name, []]];
