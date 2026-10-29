@@ -7,8 +7,9 @@
 // Read from cassidoxa/ALttPEntranceRandomizer at the commit upstream.json
 // pins (entranceRandomizer). What the translation leaves to the world, it
 // ports here by hand: the save-and-quit points (Rules.py:115-127), the
-// bunny's paths (set_bunny_rules, 1520-1589) and what the derived settings
-// read of the connections.
+// bunny's paths (set_bunny_rules, 1520-1589), what the derived settings
+// read of the connections, and the boss slots under boss shuffle
+// (Bosses.py place_bosses, 145-219).
 import {
   type Analysis,
   type AnalyzeOptions,
@@ -27,6 +28,14 @@ import {
   solve,
   type World,
 } from "@alltp/engine";
+import {
+  BOSS_PLACES,
+  type BossPlaceId,
+  bossesAt,
+  SHUFFLED_BOSSES,
+  type ShuffledBoss,
+  shuffledBossRule,
+} from "./bosses";
 import {
   ENTRANCES,
   type EntranceTarget,
@@ -59,6 +68,17 @@ interface ErRegion {
 
 const RULE_TABLES = ruleTables as unknown as {
   readonly allItemsReach: Readonly<Record<string, string>>;
+  readonly bossSlots: Readonly<
+    Record<
+      string,
+      {
+        readonly place: string;
+        readonly refuses: readonly string[];
+        readonly swordless: readonly string[];
+        readonly vanilla: string;
+      }
+    >
+  >;
   readonly bombShop: {
     readonly spot: string;
     readonly cases: readonly {
@@ -419,6 +439,47 @@ function addBunnyRules(
   }
 }
 
+/** A boss of boss_table (Bosses.py) by the pack's id: `Armos Knights`. */
+const shuffledBoss = (name: string): ShuffledBoss | undefined =>
+  SHUFFLED_BOSSES.find(
+    (boss) => boss.toLowerCase() === name.replaceAll(" ", "").toLowerCase(),
+  );
+
+const bossesOf = (names: readonly string[]): ShuffledBoss[] =>
+  names.flatMap((name) => {
+    const boss = shuffledBoss(name);
+    return boss === undefined ? [] : [boss];
+  });
+
+/**
+ * Each boss slot's rule (rules.json bossSlots, the rules reading a
+ * dungeon's boss through it): its vanilla boss without boss shuffle; with
+ * it, the boss the player knows (the facts bosses.ts names, which the
+ * state holds as for vt's world) or, while unknown, every boss its
+ * can_place_boss takes (Bosses.py:123-143), each through its Bosses.py
+ * rule. A boss it refuses swordless counts then only with swords. Ice
+ * Palace's slot keeps every boss even swordless: 'chaos' (vt's 'random')
+ * may place any there, and only 'basic' and 'normal' put Kholdstare back
+ * (Bosses.py:186-191), which one flag cannot tell apart.
+ */
+function bossSlotRule(slot: string): string {
+  const { place, refuses, swordless, vanilla } =
+    RULE_TABLES.bossSlots[slot] ?? {};
+  if (place === undefined || !(place in BOSS_PLACES))
+    throw new RangeError(`No boss place for ${slot}`);
+  const at = place as BossPlaceId;
+  const held = SHUFFLED_BOSSES.filter(
+    (boss) => !bossesOf(refuses ?? []).includes(boss),
+  );
+  // The facts are vt's slots' (bosses.ts): a boss the randomizer may place
+  // that vt's slot refuses would have none
+  if (held.some((boss) => !bossesAt(at).includes(boss)))
+    throw new RangeError(`${slot} may hold a boss vt's slot refuses`);
+  const beat = (boss: ShuffledBoss) =>
+    `@erDefeat${boss.charAt(0).toUpperCase()}${boss.slice(1)}`;
+  return `!setting(bossShuffle) & @${vanilla} | setting(bossShuffle) & (${shuffledBossRule(at, held, beat, bossesOf(swordless ?? []))})`;
+}
+
 /** The pack's rules, then the randomizer's helpers, reach() as facts. */
 const RULES_SOURCE = {
   groups: RULES.groups,
@@ -428,6 +489,12 @@ const RULES_SOURCE = {
       Object.entries(RULE_TABLES.helpers).map(([name, { req }]) => [
         name,
         withFacts(req),
+      ]),
+    ),
+    ...Object.fromEntries(
+      Object.keys(RULE_TABLES.bossSlots).map((slot) => [
+        slot,
+        withFacts(bossSlotRule(slot)),
       ]),
     ),
   },

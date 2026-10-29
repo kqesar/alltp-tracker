@@ -458,7 +458,7 @@ function numberOf(expr, otherwise) {
  * @typedef {{
  *   regionOfLocation: ReadonlyMap<string, string>,
  *   regionOfEntrance: ReadonlyMap<string, string>,
- *   bossOfRegion: (region: string, level?: string) => string,
+ *   bossHelper: (region: string, level?: string) => string,
  *   events: ReadonlyMap<string, string>,
  *   heldEvents: Set<string>,
  *   itemNames: ReadonlySet<string>,
@@ -751,7 +751,7 @@ function regionOf(ctx, spot) {
 
 /**
  * The boss a `….parent_region.dungeon.boss` (or `.bosses['top']`) of a
- * spot fights, as its helper.
+ * spot fights, as its helper: its slot's, if boss shuffle fills it.
  * @param {Context} ctx
  * @param {Expr} expr - What `.can_defeat` is called on
  * @param {Scope} scope
@@ -773,7 +773,7 @@ function bossRule(ctx, expr, scope) {
   )
     throw new Untranslatable("a boss");
   const region = regionOf(ctx, spotOf(dungeon.of.of, scope));
-  return atom(`@erDefeat${pascal(ctx.bossOfRegion(region, level))}`);
+  return atom(`@${ctx.bossHelper(region, level)}`);
 }
 
 /**
@@ -1339,11 +1339,10 @@ function walkRules(source, ctx) {
       }
       case "set_defeat_dungeon_boss_rule": {
         const spot = spotOf(args[0] ?? found, scope);
-        const boss = ctx.bossOfRegion(regionOf(ctx, spot));
         return apply(
           "set",
           spot,
-          atom(`@erDefeat${pascal(boss)}`),
+          atom(`@${ctx.bossHelper(regionOf(ctx, spot))}`),
           scope.when,
           line,
         );
@@ -1428,6 +1427,108 @@ function bossFunction(ctx, source, name) {
     throw new Untranslatable(`a statement of ${name}`);
   };
   return { line: fn.line, rule: rest(fn.body) };
+}
+
+/**
+ * The bosses can_place_boss (Bosses.py) refuses at a slot, by running its
+ * statements on their expression trees for each boss: with the swords of
+ * any world (`refuses`), and the more it refuses swordless (`swordless`).
+ * Anything but names, the world's swords, literals, comparisons, `if` and
+ * `return` stops the import.
+ * @param {string} source - Bosses.py
+ * @param {readonly string[]} bosses - boss_table's
+ * @param {string} dungeon
+ * @param {string | null} level
+ */
+function refusals(source, bosses, dungeon, level) {
+  const fn = functionBody(source, "can_place_boss", "Bosses.py");
+  const [world, boss, dungeonName, levelName] = fn.params;
+  /**
+   * @param {Expr} expr
+   * @param {ReadonlyMap<string, unknown>} env
+   * @returns {unknown}
+   */
+  const value = (expr, env) => {
+    switch (expr.t) {
+      case "const":
+        return expr.value;
+      case "name":
+        if (env.has(expr.name)) return env.get(expr.name);
+        break;
+      case "attr":
+        if (
+          expr.of.t === "name" &&
+          expr.of.name === world &&
+          expr.name === "swords"
+        )
+          return env.get("swords");
+        break;
+      case "seq":
+        return expr.items.map((item) => value(item, env));
+      case "not":
+        return !value(expr.of, env);
+      case "and":
+        return expr.args.every((arg) => value(arg, env));
+      case "or":
+        return expr.args.some((arg) => value(arg, env));
+      case "compare": {
+        const left = value(expr.left, env);
+        const right = value(expr.right, env);
+        if (expr.op === "==") return left === right;
+        if (expr.op === "!=") return left !== right;
+        if (Array.isArray(right) && expr.op === "in")
+          return right.includes(left);
+        if (Array.isArray(right) && expr.op === "not in")
+          return !right.includes(left);
+        break;
+      }
+    }
+    throw new Error(`Bosses.py:${fn.line}: can_place_boss reads more`);
+  };
+  /**
+   * @param {readonly Statement[]} statements
+   * @param {ReadonlyMap<string, unknown>} env
+   * @returns {boolean | undefined} What it returns, if it does
+   */
+  const run = (statements, env) => {
+    for (const statement of statements) {
+      const { line, text } = statement;
+      const stream = tokens(text, 0, "Bosses.py", line);
+      if (text.startsWith("return ")) {
+        stream.next();
+        const returned = value(expression(stream), env);
+        if (typeof returned !== "boolean")
+          throw new Error(`Bosses.py:${line}: a return of no boolean`);
+        return returned;
+      }
+      if (!text.startsWith("if ") || !statement.block)
+        throw new Error(`Bosses.py:${line}: can_place_boss does more`);
+      stream.next();
+      if (!value(expression(stream), env)) continue;
+      const returned = run(statement.body, env);
+      if (returned !== undefined) return returned;
+    }
+    return undefined;
+  };
+  /** @param {string} swords */
+  const refused = (swords) =>
+    bosses.filter(
+      (name) =>
+        !run(
+          fn.body,
+          new Map([
+            ["swords", swords],
+            [boss ?? "", name],
+            [dungeonName ?? "", dungeon],
+            [levelName ?? "", level],
+          ]),
+        ),
+    );
+  const refuses = refused("randomized");
+  return {
+    refuses,
+    swordless: refused("swordless").filter((name) => !refuses.includes(name)),
+  };
 }
 
 /**
@@ -1547,9 +1648,58 @@ export function importErRules(read, regions) {
     return baseSource.slice(0, at).split("\n").length;
   };
 
+  // The slots boss shuffle fills (Bosses.py place_bosses), the Open and
+  // Standard worlds' list: a rule reads its dungeon's boss through the
+  // slot's helper, which the world defines (er-world.ts), its vanilla boss
+  // without boss shuffle. Agahnim and Agahnim 2 never move.
+  const slotList = assigned(
+    bossesSource,
+    "boss_locations",
+    "Bosses.py",
+    " {8}",
+  );
+  const slotLines = bossesSource.split("\n");
+  const bossNames = Object.keys(
+    /** @type {Record<string, unknown>} */ (
+      assigned(bossesSource, "boss_table", "Bosses.py").value
+    ),
+  );
+  /**
+   * @type {Map<string, { boss: string, place: string, refuses: string[],
+   *   swordless: string[], source: string, vanilla: string }>}
+   */
+  const bossSlots = new Map();
+  for (const [i, entry] of /** @type {unknown[]} */ (
+    slotList.value
+  ).entries()) {
+    const [dungeon, level] = Array.isArray(entry) ? entry : [];
+    if (
+      typeof dungeon !== "string" ||
+      (level !== null && typeof level !== "string") ||
+      dungeon.startsWith("Inverted ")
+    )
+      throw new Error(`Bosses.py: a boss_locations entry of no dungeon`);
+    const boss =
+      level === null ? bossOfDungeon.get(dungeon) : towerBosses.get(level);
+    if (typeof boss !== "string")
+      throw new Error(`Bosses.py: no boss in ${dungeon} ${level ?? ""}`);
+    const line = slotList.line + 1 + i;
+    if (!slotLines[line - 1]?.includes(`'${dungeon}'`))
+      throw new Error(`Bosses.py: boss_locations is not one entry a line`);
+    bossSlots.set(`${dungeon}/${level ?? ""}`, {
+      boss,
+      place: regionId(`${dungeon} ${level ?? ""}`),
+      ...refusals(bossesSource, bossNames, dungeon, level),
+      source: `Bosses.py:${line}`,
+      vanilla: `erDefeat${pascal(boss)}`,
+    });
+  }
+  /** @type {Set<string>} */
+  const slotsRead = new Set();
+
   /** @type {Context} */
   const ctx = {
-    bossOfRegion: (region, level) => {
+    bossHelper: (region, level) => {
       const dungeon = dungeonOfRegion.get(region);
       const boss =
         dungeon === undefined
@@ -1557,9 +1707,12 @@ export function importErRules(read, regions) {
           : level === undefined
             ? bossOfDungeon.get(dungeon)
             : towerBosses.get(level);
-      if (boss === undefined || boss === null)
+      if (dungeon === undefined || boss === undefined || boss === null)
         throw new Untranslatable(`no boss in ${region}`);
-      return boss;
+      const slot = `${dungeon}/${level ?? ""}`;
+      if (!bossSlots.has(slot)) return `erDefeat${pascal(boss)}`;
+      slotsRead.add(slot);
+      return `erDefeat${pascal(dungeon)}${pascal(level ?? "")}Boss`;
     },
     derived: new Map(),
     events,
@@ -1649,6 +1802,15 @@ export function importErRules(read, regions) {
   return {
     allItemsReach,
     bombShop,
+    bossSlots: Object.fromEntries(
+      [...bossSlots.entries()]
+        .filter(([slot]) => slotsRead.has(slot))
+        .map(([slot, rule]) => {
+          const [dungeon = "", level = ""] = slot.split("/");
+          return [`erDefeat${pascal(dungeon)}${pascal(level)}Boss`, rule];
+        })
+        .sort(([a], [b]) => String(a).localeCompare(String(b))),
+    ),
     bunny: {
       accessibleLocations: bunnyList("bunny_accessible_locations"),
       impassableCaves: bunnyList("bunny_impassable_caves"),

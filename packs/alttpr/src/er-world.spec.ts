@@ -1,6 +1,16 @@
 import type { State } from "@alltp/engine";
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import seed from "../test/er-seeds/0yAObedRMV.json" with { type: "json" };
+import {
+  BOSS_FACTS,
+  BOSS_PLACES,
+  type BossKnowledge,
+  type BossPlaceId,
+  bossesAt,
+  bossFacts,
+  type ShuffledBoss,
+} from "./bosses";
 import { entranceNamed, erLocationId, targetNamed } from "./entrances";
 import {
   analyzeFacts,
@@ -11,8 +21,10 @@ import {
   solveFactsState,
   vanillaConnections,
 } from "./er-world";
+import { ITEMS } from "./items";
 import { everything } from "./keys";
 import { MARKERS } from "./markers";
+import { MEDALLION_FACTS } from "./medallions";
 import { OPEN, STANDARD, settingsFromUpstream } from "./settings";
 
 const id = (name: string) => entranceNamed(name).id;
@@ -146,6 +158,135 @@ describe("the entrance randomizer's world", () => {
     expect(() => erWorld(settingsFromUpstream("inverted"), vanilla)).toThrow(
       /Inverted/,
     );
+  });
+});
+
+describe("the entrance randomizer's boss slots", () => {
+  const vanilla = vanillaConnections();
+  const shuffled = { ...OPEN, bossShuffle: true };
+  /** Each slot's boss without boss shuffle (Dungeons.py:18-39). */
+  const VANILLA: Required<BossKnowledge> = {
+    desertPalace: "lanmolas",
+    easternPalace: "armosKnights",
+    ganonsTowerBottom: "armosKnights",
+    ganonsTowerMiddle: "lanmolas",
+    ganonsTowerTop: "moldorm",
+    icePalace: "kholdstare",
+    miseryMire: "vitreous",
+    palaceOfDarkness: "helmasaurKing",
+    skullWoods: "mothula",
+    swampPalace: "arrghus",
+    thievesTown: "blind",
+    towerOfHera: "moldorm",
+    turtleRock: "trinexx",
+  };
+  /** A location's answer, with `known` of the bosses and nothing else. */
+  const boss = (
+    settings: typeof OPEN,
+    state: State,
+    known: BossKnowledge,
+    location = "Eastern Palace - Boss",
+  ) =>
+    solveFacts(erWorld(settings, vanilla), {
+      ...state,
+      ...Object.fromEntries(BOSS_FACTS.map((fact) => [fact, 0])),
+      ...bossFacts(known),
+    }).location(erLocationId(location));
+
+  /** Each item at a random level, most not held, and the pads' facts. */
+  const anyItems: fc.Arbitrary<State> = fc.record(
+    Object.fromEntries([
+      ...ITEMS.map(({ id, max }) => [
+        id,
+        fc.nat({ max: 2 * max }).map((n) => Math.max(0, n - max)),
+      ]),
+      ...MEDALLION_FACTS.map((f) => [f, fc.integer({ max: 1, min: 0 })]),
+    ]),
+  );
+  /** Some slots known, each as a boss it may hold. */
+  const anyBosses: fc.Arbitrary<BossKnowledge> = fc.record(
+    Object.fromEntries(
+      (Object.keys(BOSS_PLACES) as BossPlaceId[]).map((place) => [
+        place,
+        fc.option(fc.constantFrom(...bossesAt(place)), { nil: undefined }),
+      ]),
+    ),
+  );
+
+  for (const settings of [OPEN, STANDARD, { ...OPEN, swordless: true }]) {
+    const name = `${settings.standardMode ? "Standard" : "Open"}${settings.swordless === true ? ", swordless" : ""}`;
+    const plain = erWorld(settings, vanilla);
+    const moved = erWorld({ ...settings, bossShuffle: true }, vanilla);
+
+    it(`read the vanilla bosses without boss shuffle, whatever is known (${name})`, () => {
+      // and under boss shuffle with every slot known as its vanilla boss
+      fc.assert(
+        fc.property(anyItems, anyBosses, (items, known) => {
+          const expected = solveFacts(plain, {
+            ...items,
+            ...bossFacts({}),
+          }).locations();
+          expect(
+            solveFacts(plain, { ...items, ...bossFacts(known) }).locations(),
+          ).toEqual(expected);
+          expect(
+            solveFacts(moved, { ...items, ...bossFacts(VANILLA) }).locations(),
+          ).toEqual(expected);
+        }),
+        { numRuns: 60, seed: 7 },
+      );
+    });
+  }
+
+  it("read a boss known exactly, an unknown one as every boss its slot may hold", () => {
+    const noIceRod = allBut("iceRod");
+    // Trinexx in Eastern Palace wants both rods (Bosses.py:98-103)
+    expect(boss(shuffled, noIceRod, { easternPalace: "trinexx" })).toBe("no");
+    expect(boss(shuffled, everything(OPEN), { easternPalace: "trinexx" })).toBe(
+      "yes",
+    );
+    // Without boss shuffle, the Armos Knights
+    expect(boss(OPEN, noIceRod, { easternPalace: "trinexx" })).toBe("yes");
+    // Unknown: some boss it may hold falls, not every one
+    expect(boss(shuffled, noIceRod, {})).toBe("maybe");
+    expect(boss(shuffled, everything(OPEN), {})).toBe("yes");
+  });
+
+  it("leave out of a slot what can_place_boss refuses there", () => {
+    // Neither Trinexx nor Arrghus at Tower of Hera (Bosses.py:135-136):
+    // the ice rod and the hookshot are none of its bosses' needs
+    const noRodNorHook = allBut("iceRod", "hookshot");
+    expect(boss(shuffled, noRodNorHook, {}, "Tower of Hera - Boss")).toBe(
+      "yes",
+    );
+    expect(boss(shuffled, noRodNorHook, {}, "Desert Palace - Boss")).toBe(
+      "maybe",
+    );
+    // Ganon's Tower's top, on the climb past its gap (Rules.py:444)
+    const top = (boss3: ShuffledBoss) =>
+      boss(
+        shuffled,
+        allBut("hammer", "sword"),
+        {
+          // Its big key behind the bottom's boss, its torches the middle's
+          ganonsTowerBottom: "armosKnights",
+          ganonsTowerMiddle: "lanmolas",
+          ganonsTowerTop: boss3,
+        },
+        "Ganons Tower - Validation Chest",
+      );
+    expect(top("moldorm")).toBe("no");
+    expect(top("vitreous")).toBe("yes");
+  });
+
+  it("place no Kholdstare but in Ice Palace when swordless (Bosses.py:124)", () => {
+    // Without the fire rod nor Bombos, Kholdstare stands: Tower of Hera
+    // may hold him, unless the world is swordless
+    const noFire = { ...allBut("fireRod", "bombos"), sword: 0 };
+    const hera = (settings: typeof OPEN) =>
+      boss(settings, noFire, {}, "Tower of Hera - Boss");
+    expect(hera(shuffled)).toBe("maybe");
+    expect(hera({ ...shuffled, swordless: true })).toBe("yes");
   });
 });
 
