@@ -1,7 +1,7 @@
 # @alltp/pack-alttpr
 
 The A Link to the Past Randomizer game pack: the v31 rules (Standard, Open and
-Inverted worlds, NoGlitches and Overworld Glitches) as plain data over `@alltp/engine`, read from
+Inverted worlds, NoGlitches, Overworld Glitches and Hybrid Major Glitches) as plain data over `@alltp/engine`, read from
 [sporchia/alttp_vt_randomizer](https://github.com/sporchia/alttp_vt_randomizer)
 at the commit `upstream.json` pins, and held to upstream's own test cases.
 
@@ -1389,8 +1389,20 @@ rests on):
   is one `maybe` beside the branch it relaxes, so comparing yes, maybe and
   no compares the same placements on both sides.
 
+**A way in that reads a key** (Hybrid Major Glitches' clips alone; the
+tests list them, each behind `canOneFrameClipUW`) breaks the third fact
+above, so where one exists the model reads its *gating dungeons* (those
+whose untracked items such a way reads) at what is surely in hand: a
+location's yes is read with its own dungeons' items raised and the other
+gating dungeons' kept, so such a way opens only as it does for the player;
+a dungeon's safety compares the player's side with the gating dungeons'
+items kept but its own, against everything; and a dungeon where a rule
+reads the raised items of another is never safe. With no such way (every
+world under NoGlitches and Overworld Glitches) each of these is the
+unchanged model, so nothing moves there.
+
 **Its laws**, as fast-check properties over random states of the Open and
-Standard worlds: adding an item never lowers a location (near the top too,
+Standard worlds, Overworld Glitches', Hybrid Major Glitches' and No Logic's: adding an item never lowers a location (near the top too,
 where one item turns a dungeon safe), and a location is never above the
 solver with every untracked item nor below it without them. With wild keys,
 Palace of Darkness's doors do want one key more once the hammer, a bow and
@@ -1417,16 +1429,19 @@ app counts its runs not modelled.
 | --- | --- | --- |
 | NoGlitches | none (`logic.php:4`) | `tests/NoGlitches`, `tests/Inverted` |
 | OverworldGlitches | `canSuperBunny`, `canFakeFlipper`, `canSuperSpeed`, `canBootsClip`, `canMirrorClip`, `canWaterWalk`, `canDungeonRevive` (`logic.php:5-13`) | `tests/OverworldGlitches`, `tests/InvertedOverworldGlitches` (2650 cases, every one held) |
-| HybridMajorGlitches | not yet | |
+| HybridMajorGlitches | Overworld Glitches' and `canOneFrameClipUW` (`logic.php:14-23`) | no suite upstream: every case Overworld Glitches' suites find true (`test/contract.spec.ts`), and the order of the logics (`src/logics.spec.ts`: none reads a location or region lower than the one before it, over random states of each world) |
 | MajorGlitches | not yet | |
 
-- **The key model** rests on the same facts in a glitched world: no way
-  in reads a key, and an always-allowed key locks in nothing another spot
-  needs (`src/key-model.spec.ts` checks them in the Open, Standard and
-  Inverted worlds under NoGlitches and Overworld Glitches, and the laws
-  under Overworld Glitches and No Logic too). Overworld Glitches opens
-  Turtle Rock's middle way, whose rules read its keys: they are then tied to
-  it as any other.
+- **The key model** rests on the same facts under Overworld Glitches: no
+  way in reads a key, and an always-allowed key locks in nothing another
+  spot needs (`src/key-model.spec.ts` checks them in the Open, Standard and
+  Inverted worlds under each logic, and the laws under the glitched logics
+  and No Logic too). Overworld Glitches opens Turtle Rock's middle way,
+  whose rules read its keys: they are then tied to it as any other. Hybrid
+  Major Glitches' one-frame clips underworld are the only ways in that
+  read a key (into Tower of Hera from Misery Mire, `keyD6`; in Inverted
+  into Desert Palace from Thieves' Town, `keyD4`, `bigKeyD4`), which the
+  key model handles strictly additively (see "The key model").
 - **The boots.** A glitched world starts with the Pegasus Boots, unless the
   customizer built it (`Randomizer.php:122-131`): `bootsAtStart`, which
   `toState` adds to what the player found. Upstream's tests hold no

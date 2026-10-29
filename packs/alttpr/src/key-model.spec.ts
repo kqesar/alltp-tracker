@@ -39,6 +39,13 @@ const INVERTED = settingsFromUpstream("inverted");
 const OWG_INVERTED = settingsFromUpstream("inverted", {
   logic: "OverworldGlitches",
 });
+const HMG_OPEN = settingsFromUpstream("open", { logic: "HybridMajorGlitches" });
+const HMG_STANDARD = settingsFromUpstream("standard", {
+  logic: "HybridMajorGlitches",
+});
+const HMG_INVERTED = settingsFromUpstream("inverted", {
+  logic: "HybridMajorGlitches",
+});
 const fillers = new Map<AlttprSettings, Filler>();
 function fillerOf(settings: AlttprSettings): Filler {
   let found = fillers.get(settings);
@@ -234,6 +241,52 @@ describe("the key model on real dungeons", () => {
     expect(shop.location("palace-of-darkness/boss")).toBe("yes");
   });
 
+  it("trusts no dungeon a Hybrid Major Glitches clip ties to another's keys", () => {
+    // Swamp Palace's rules read Misery Mire's and Tower of Hera's keys there
+    const top = Object.fromEntries(
+      ITEMS.filter((item) => !/^(key|bigKey)/.test(item.id)).map(
+        ({ id, max }) => [id, max],
+      ),
+    );
+    expect(model(top, OWG_OPEN).safe("swamp-palace")).toBe(true);
+    expect(model(top, HMG_OPEN).safe("swamp-palace")).toBe(false);
+    // Tower of Hera stays in logic by its own way, which reads no key
+    expect(model(top, HMG_OPEN).location("tower-of-hera/big-chest")).toBe(
+      "yes",
+    );
+  });
+
+  it("reads the clip from Misery Mire by its keys surely in hand", () => {
+    // Misery Mire's big key opens Tower of Hera's big chest through the clip
+    // (canOneFrameClipUW), Tower of Hera's own big key by its way
+    const items = {
+      bombos: 1,
+      bookOfMudora: 1,
+      bow: 2,
+      ether: 1,
+      fireRod: 1,
+      flute: 2,
+      lamp: 1,
+      magicMirror: 1,
+      moonPearl: 1,
+      pegasusBoots: 1,
+      quake: 1,
+      sword: 4,
+    };
+    const world = fillerOf(HMG_OPEN).world;
+    const state = tracked(items, HMG_OPEN);
+    expect(solve(world, state).location("tower-of-hera/big-chest")).toBe("no");
+    expect(
+      solve(world, { ...state, bigKeyD6: 1, keyD6: 3 }).location(
+        "tower-of-hera/big-chest",
+      ),
+    ).toBe("yes");
+    // Never vouched for by Misery Mire's keys raised, only those in hand
+    expect(model(items, HMG_OPEN).location("tower-of-hera/big-chest")).toBe(
+      "maybe",
+    );
+  });
+
   it("is the solver's answer where every key is tracked", () => {
     const items = { glove: 1, hammer: 1, keyD1: 2, lamp: 1, moonPearl: 1 };
     const state = tracked(items, KEYSANITY);
@@ -306,6 +359,8 @@ describe("the key model's laws", () => {
     ["Open, Overworld Glitches", OWG_OPEN],
     ["Standard, Overworld Glitches", OWG_STANDARD],
     ["Open, No Logic", noLogicSettings(OPEN)],
+    ["Open, Hybrid Major Glitches", HMG_OPEN],
+    ["Inverted, Hybrid Major Glitches", HMG_INVERTED],
   ] as const) {
     it(`never lowers a location when an item is added (${name})`, () => {
       const f = fillerOf(settings);
@@ -443,7 +498,48 @@ const isKey = (name: string) => /^(key|bigKey)[A-Z]/.test(name);
 
 /** A world's name in a test's: its world, and its logic when glitched. */
 const nameOf = (settings: AlttprSettings) =>
-  `${settings.invertedMode ? "Inverted" : settings.standardMode ? "Standard" : "Open"}${settings.canBootsClip ? ", Overworld Glitches" : ""}`;
+  `${settings.invertedMode ? "Inverted" : settings.standardMode ? "Standard" : "Open"}${settings.canOneFrameClipUW ? ", Hybrid Major Glitches" : settings.canBootsClip ? ", Overworld Glitches" : ""}`;
+
+/**
+ * The ways in that read a key: Hybrid Major Glitches' alone, each behind
+ * its one-frame clip underworld (canOneFrameClipUW): into Tower of Hera
+ * from Misery Mire, and in Inverted into Desert Palace from Thieves' Town.
+ */
+const waysInWithKeys = (settings: AlttprSettings): readonly string[] => {
+  if (!settings.canOneFrameClipUW) return [];
+  return [
+    ...(settings.invertedMode
+      ? [
+          "thievesTown -> desertPalace: keyD4",
+          "thievesTown -> desertPalace: bigKeyD4",
+        ]
+      : []),
+    "miseryMire -> towerOfHeraMire: keyD6",
+  ];
+};
+
+/** Swamp Palace's locations, which Hybrid Major Glitches ties to two more. */
+const SWAMP_TIES = [
+  "swamp-palace/big-chest: misery-mire",
+  "swamp-palace/big-chest: tower-of-hera",
+  "swamp-palace/big-key-chest: misery-mire",
+  "swamp-palace/big-key-chest: tower-of-hera",
+  "swamp-palace/map-chest: misery-mire",
+  "swamp-palace/west-chest: misery-mire",
+  "swamp-palace/west-chest: tower-of-hera",
+  "swamp-palace/compass-chest: misery-mire",
+  "swamp-palace/compass-chest: tower-of-hera",
+  "swamp-palace/flooded-room/left: misery-mire",
+  "swamp-palace/flooded-room/left: tower-of-hera",
+  "swamp-palace/flooded-room/right: misery-mire",
+  "swamp-palace/flooded-room/right: tower-of-hera",
+  "swamp-palace/waterfall-room: misery-mire",
+  "swamp-palace/waterfall-room: tower-of-hera",
+  "swamp-palace/boss: misery-mire",
+  "swamp-palace/boss: tower-of-hera",
+  "swamp-palace/prize: misery-mire",
+  "swamp-palace/prize: tower-of-hera",
+];
 
 describe("what the model's soundness rests on", () => {
   for (const settings of [
@@ -453,6 +549,9 @@ describe("what the model's soundness rests on", () => {
     OWG_OPEN,
     OWG_STANDARD,
     OWG_INVERTED,
+    HMG_OPEN,
+    HMG_STANDARD,
+    HMG_INVERTED,
   ]) {
     const modules = regionModules(settings);
     const ownCode = new Map<string, string>();
@@ -462,16 +561,23 @@ describe("what the model's soundness rests on", () => {
       }
     }
 
-    it(`opens no way in with a key, so keys never move a region (${nameOf(settings)})`, () => {
+    it(`opens no way in with a key, but Hybrid Major Glitches' clips (${nameOf(settings)})`, () => {
       const stray: string[] = [];
+      const unclipped: string[] = [];
+      const noClip = { ...settings, canOneFrameClipUW: false };
       for (const region of modules.flatMap((m) => m.regions)) {
         for (const e of region.entrances) {
           for (const name of reads(e.req, settings)) {
             if (isKey(name)) stray.push(`${e.from} -> ${region.id}: ${name}`);
           }
+          for (const name of reads(e.req, noClip)) {
+            if (isKey(name)) unclipped.push(`${e.from} -> ${region.id}`);
+          }
         }
       }
-      expect(stray).toEqual([]);
+      expect(stray).toEqual(waysInWithKeys(settings));
+      // Each behind the clip: without it, no way in reads a key
+      expect(unclipped).toEqual([]);
     });
 
     it(`ties each location to the dungeons whose keys its rule reads (${nameOf(settings)})`, () => {
@@ -499,11 +605,18 @@ describe("what the model's soundness rests on", () => {
       // and Turtle Rock's middle way (Overworld Glitches'; Inverted's
       // stands open), glitched, are closed: what they read does not count.
       // Inverted's Mimic Cave reads no Turtle Rock key
+      // Hybrid Major Glitches opens the first, which ties Tower of Hera to
+      // Misery Mire and Swamp Palace to both
+      const hybrid = settings.canOneFrameClipUW;
+      const hera = ["big-chest", "boss", "prize"].map((l) =>
+        hybrid
+          ? `tower-of-hera/${l}: misery-mire`
+          : `tower-of-hera/${l}: reads bigKeyD6 untied`,
+      );
       expect(elsewhere).toEqual([
         ...(settings.invertedMode ? [] : ["mimic-cave: turtle-rock"]),
-        "tower-of-hera/big-chest: reads bigKeyD6 untied",
-        "tower-of-hera/boss: reads bigKeyD6 untied",
-        "tower-of-hera/prize: reads bigKeyD6 untied",
+        ...hera,
+        ...(hybrid ? SWAMP_TIES : []),
         ...(settings.canBootsClip || settings.invertedMode
           ? []
           : [
@@ -512,9 +625,9 @@ describe("what the model's soundness rests on", () => {
               "turtle-rock/roller-room/right: reads keyD7 untied",
             ]),
       ]);
-      expect(keyed.dungeons("tower-of-hera/big-chest")).toEqual([
-        "tower-of-hera",
-      ]);
+      expect(keyed.dungeons("tower-of-hera/big-chest")).toEqual(
+        hybrid ? ["tower-of-hera", "misery-mire"] : ["tower-of-hera"],
+      );
     });
 
     it(`lets an always-allowed key lock in only what no other spot needs (${nameOf(settings)})`, () => {
@@ -551,9 +664,14 @@ describe("what the model's soundness rests on", () => {
           }
         }
       }
+      // Hybrid Major Glitches opens more ways to Swamp Palace's big chest,
+      // and in Inverted to Tower of Hera's big key chest
+      const hybrid = settings.canOneFrameClipUW;
       expect(locked).toEqual([
-        "tower-of-hera/big-key-chest <- KeyP3",
-        "swamp-palace/big-chest <- BigKeyD2",
+        ...(hybrid && settings.invertedMode
+          ? []
+          : ["tower-of-hera/big-key-chest <- KeyP3"]),
+        ...(hybrid ? [] : ["swamp-palace/big-chest <- BigKeyD2"]),
         "skull-woods/big-chest <- BigKeyD3",
       ]);
     });
