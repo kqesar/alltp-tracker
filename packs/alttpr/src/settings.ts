@@ -153,6 +153,14 @@ export type AlttprSettings = {
    * 'items' and 'none', and the upstream tests' unset value, read the same.
    */
   readonly locationsAccessibility: Flag;
+  /**
+   * accessibility is 'none', beatable only. No rule reads it, nor vt's fill
+   * of the dungeon items it keeps in their dungeons (RandomAssumed.php:
+   * 101-106), but the entrance randomizer then places them without asking
+   * whether Link reaches them, once everything else beats the game
+   * (Fill.py:186-188): its key model vouches for no dungeon (er-keys.ts).
+   */
+  readonly beatableOnly: Flag;
   /** region.cantTakeDamage, false by default (IcePalace.php:75). */
   readonly cantTakeDamage: boolean;
   /**
@@ -525,6 +533,7 @@ export function settingsFromUpstream(
   return {
     advancedPlacement: is(c.itemPlacement, "advanced"),
     basicPlacement: basic,
+    beatableOnly: is(c.accessibility, "none"),
     bootsAtStart: logic !== "NoGlitches" && c.difficulty !== "custom",
     bossNormalLocation: c["region.bossNormalLocation"] ?? true,
     bossShuffle: isUnknown(c["enemizer.bossShuffle"])

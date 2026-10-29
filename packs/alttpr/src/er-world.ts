@@ -281,11 +281,28 @@ export interface ErOptions {
    * player, the tests to the randomizer.
    */
   readonly events?: Readonly<Record<string, string>>;
+  /**
+   * Whether a door or exit the connections leave out leads anywhere the
+   * shuffle may have led it: to every target no noted door leads to, and
+   * out by every door not noted. The world the randomizer filled, as far as
+   * the doors noted tell, which the key model reads (er-keys.ts). False by
+   * default: a door not noted leads nowhere.
+   */
+  readonly anywhere?: boolean;
 }
 
 /** A compiled world of the entrance randomizer, and its facts. */
 export interface ErWorld {
   readonly compiled: CompiledWorld;
+  /** What it was built from: the connections, and how (er-keys.ts). */
+  readonly connections: ErConnections;
+  readonly options: ErOptions;
+  /**
+   * The settings it was compiled with: the run's, and the derived ones the
+   * connections give (`derived` in rules.json), which the fill's rules read
+   * too (er-keys.ts).
+   */
+  readonly settings: Settings;
   /**
    * What the solver holds once a location (pack id) is reached, as the
    * randomizer collects events (sweep_for_events): an event's item by the
@@ -369,9 +386,13 @@ const bombShopDoor = (connections: ErConnections): string | undefined =>
 function spotRules(
   connections: ErConnections,
   then?: Readonly<Record<string, string>>,
+  anywhere = false,
 ) {
   const exits = new Map<string, string>();
-  for (const [exit] of connections)
+  const ruled = anywhere
+    ? new Set([...connections.keys(), ...SHUFFLED])
+    : connections.keys();
+  for (const exit of ruled)
     exits.set(exit, then?.[exit] ?? RULE_TABLES.entrances[exit]?.req ?? "true");
   // set_big_bomb_rules: the case of the door the shop is entered by
   const door = bombShopDoor(connections);
@@ -550,8 +571,10 @@ function graph(
   mode: "open" | "standard",
   start: readonly string[],
   reached: readonly string[],
+  options: ErOptions = {},
 ): World {
   const factRegions = new Set(reached);
+  const anywhere = options.anywhere === true;
   const saveAndQuit: Exit[] = (
     mode === "open"
       ? // Rules.py:121-123: always reached
@@ -564,9 +587,14 @@ function graph(
   const regions: Region[] = REGIONS.map((r) => {
     const out: Exit[] = r.exits.flatMap((exit) => {
       const to = connections.get(exit);
-      return to === undefined
-        ? []
-        : [{ req: withFacts(exits.get(exit) ?? "true"), to: region(to).id }];
+      if (to !== undefined)
+        return [
+          { req: withFacts(exits.get(exit) ?? "true"), to: region(to).id },
+        ];
+      // A door or exit not noted, where it may lead
+      return anywhere && SHUFFLED.has(exit)
+        ? [{ req: withFacts(exits.get(exit) ?? "true"), to: ANYWHERE }]
+        : [];
     });
     // Rules.py:118-119: in Standard, Link's House once Sanctuary is reached
     if (mode === "standard" && r.name === "Sanctuary")
@@ -586,8 +614,61 @@ function graph(
     return { exits: out, id: r.id, locations: located };
   });
   return {
-    regions: [{ exits: saveAndQuit, id: START }, ...regions],
+    regions: [
+      { exits: saveAndQuit, id: START },
+      ...regions,
+      ...(anywhere ? [anywhereRegion(connections)] : []),
+    ],
     start: START,
+  };
+}
+
+/** The engine's id of where a door or exit not noted leads (`anywhere`). */
+const ANYWHERE = "anywhere";
+
+/**
+ * What the shuffles connect: the doors and holes (`ENTRANCES`), and the
+ * exits of the caves and dungeons they lead into, which lead out by a door.
+ */
+const SHUFFLED = new Set(
+  [
+    ...ENTRANCES.map((e) => e.name),
+    ...TARGETS.filter(
+      (t) => t.kind === "dungeon" || t.kind === "connector",
+    ).map((t) => t.name),
+  ].filter((name) => PARENT.has(name)),
+);
+
+/**
+ * Where a door or exit not noted may lead: into every target no noted door
+ * leads into (a cave's or dungeon's side by its exit, a single cave, a
+ * drop), and out by every door not noted, which an exit not noted may be
+ * coupled with.
+ */
+function anywhereRegion(connections: ErConnections): Region {
+  // What a noted door or hole leads into: a region a fixed way leads into
+  // (inside a dungeon, between Skull Woods' sections) may be a drop too
+  const entered = new Set(
+    [...connections].flatMap(([exit, to]) => (SHUFFLED.has(exit) ? [to] : [])),
+  );
+  // The Open and Standard worlds' alone: Inverted's are not ported
+  const into = TARGETS.flatMap((t) => {
+    if (t.kind === "dungeon" || t.kind === "connector")
+      return connections.has(t.name) || !SHUFFLED.has(t.name)
+        ? []
+        : [parentOf(t.name)];
+    return entered.has(t.name) || !REGION_NAMED.has(t.name) ? [] : [t.name];
+  });
+  const out = ENTRANCES.filter(
+    (e) =>
+      e.kind === "door" && SHUFFLED.has(e.name) && !connections.has(e.name),
+  ).map((e) => parentOf(e.name));
+  return {
+    exits: [...new Set([...into, ...out])].map((name) => ({
+      to: region(name).id,
+    })),
+    id: ANYWHERE,
+    locations: [],
   };
 }
 
@@ -645,22 +726,27 @@ function derivedSettings(
   const { exits, locations } = spotRules(
     connections,
     RULE_TABLES.allItemsReach,
+    options.anywhere,
   );
   const reached = reachedBy(exits, locations);
+  const thenSettings: Settings = {
+    ...settings,
+    ...derived,
+    ...Object.fromEntries(allItems.map((name) => [name, false])),
+  };
   const then = compileWorld(
-    graph(connections, exits, locations, mode, [], reached),
+    graph(connections, exits, locations, mode, [], reached, options),
     LOADED_RULES,
-    {
-      items: itemsOf(events, reached),
-      settings: {
-        ...settings,
-        ...derived,
-        ...Object.fromEntries(allItems.map((name) => [name, false])),
-      },
-    },
+    { items: itemsOf(events, reached), settings: thenSettings },
   );
   const solved = solveFacts(
-    { compiled: then, facts: eventFacts(events, reached) },
+    {
+      compiled: then,
+      connections,
+      facts: eventFacts(events, reached),
+      options,
+      settings: thenSettings,
+    },
     everything(settings),
   );
   for (const name of allItems) {
@@ -701,22 +787,38 @@ export function erWorld(
       ? { dark: new Set<string>(), light: new Set<string>() }
       : markWorlds(connections);
   const events = options.events ?? {};
-  const { exits, locations } = spotRules(connections);
+  const { exits, locations } = spotRules(
+    connections,
+    undefined,
+    options.anywhere,
+  );
   if (options.marked !== false)
     addBunnyRules(connections, marked, exits, locations);
   const reached = reachedBy(exits, locations);
+  const compiledSettings: Settings = {
+    ...settings,
+    ...derivedSettings(settings, connections, marked, options),
+  };
   const compiled = compileWorld(
-    graph(connections, exits, locations, mode, options.start ?? [], reached),
+    graph(
+      connections,
+      exits,
+      locations,
+      mode,
+      options.start ?? [],
+      reached,
+      options,
+    ),
     LOADED_RULES,
-    {
-      items: itemsOf(events, reached),
-      settings: {
-        ...settings,
-        ...derivedSettings(settings, connections, marked, options),
-      },
-    },
+    { items: itemsOf(events, reached), settings: compiledSettings },
   );
-  return { compiled, facts: eventFacts(events, reached) };
+  return {
+    compiled,
+    connections,
+    facts: eventFacts(events, reached),
+    options,
+    settings: compiledSettings,
+  };
 }
 
 /**

@@ -4,6 +4,10 @@
 // proof that its spheres are reachable in order, so with every entrance of
 // the seed noted and the items of the earlier spheres held, every location
 // of a sphere must be `yes` (the contract: upstream reaches it, so must we).
+// Where the randomizer kept the keys in their dungeons, the player does not
+// track them and its playthrough does not list them: the key model reads
+// them (er-keys.ts), and a location it doubts must be one a placement its
+// fill may make would lock (`KEY_DOUBTS`).
 import { describe, expect, it } from "vitest";
 import {
   bossesKnown,
@@ -12,33 +16,15 @@ import {
   erSeedHashes,
   holding,
   knowing,
+  seedWorld,
   shopsSelling,
 } from "../test/er-seeds";
-import { entranceNamed, erLocationId, targetNamed } from "./entrances";
+import { erLocationId } from "./entrances";
 import er from "./entrances/er.json" with { type: "json" };
-import { crossedConnections, erWorld, solveFacts } from "./er-world";
-import { settingsFromUpstream } from "./settings";
+import { solveErWithKeys } from "./er-keys";
 
-/** The seed's world, entrances all noted, and what its spoiler lets us know. */
-function worldOf(spoiler: ErSeed["spoiler"], bossShuffle?: string) {
-  const { meta } = spoiler;
-  const settings = settingsFromUpstream(meta.mode, {
-    dungeonItems: meta.dungeon_items,
-    "enemizer.bossShuffle": bossShuffle ?? meta["enemizer.boss_shuffle"],
-  });
-  // Link's House and the Tavern's back door stay, its Chris Houlihan room
-  // is a way out (entrances.spec.ts)
-  const fixed = new Set(["Links House", "Tavern North"]);
-  const noted = Object.fromEntries(
-    spoiler.Entrances.filter(
-      (m) => m.direction !== "exit" && !fixed.has(m.entrance),
-    ).map((m) => [entranceNamed(m.entrance).id, targetNamed(m.exit).id]),
-  );
-  return erWorld(
-    settings,
-    crossedConnections(settings.standardMode ? "standard" : "open", noted),
-  );
-}
+/** The seed's world, entrances all noted (seedWorld). */
+const worldOf = (spoiler: ErSeed["spoiler"]) => seedWorld(spoiler);
 
 /** The playthrough's spheres in order, a location to its item in each. */
 const spheresOf = (spoiler: ErSeed["spoiler"]) =>
@@ -79,17 +65,20 @@ function misses(hash: string): string[] {
   const held: string[] = [];
   const missed: string[] = [];
   for (const [number, sphere] of spheresOf(spoiler)) {
-    let solution = solveFacts(world, {
+    // The key model: with keysanity, the solver's answer
+    let solution = solveErWithKeys(world, {
       ...holding(held),
       ...knowledge,
       ...marked,
     });
     const inside = (shops: readonly string[]) =>
-      shops.some((shop) => solution.region(regionNamed(shop)) === "yes");
+      shops.some(
+        (shop) => solution.solution.region(regionNamed(shop)) === "yes",
+      );
     if (marked.shopKey === undefined && inside(keyShops)) marked.shopKey = 1;
     if (marked.shopArrow === undefined && inside(arrowShops))
       marked.shopArrow = 1;
-    solution = solveFacts(world, {
+    solution = solveErWithKeys(world, {
       ...holding(held),
       ...knowledge,
       ...marked,
@@ -103,6 +92,23 @@ function misses(hash: string): string[] {
   }
   return missed;
 }
+
+/**
+ * The locations of a seed's playthrough the key model holds at `maybe`
+ * though the randomizer reached them, the keys it kept in their dungeons
+ * untracked: each is one a placement its fill may make would lock, the
+ * playthrough's own placement aside. With the reason, which the misses must
+ * match exactly: a model that vouched for one would be unsound, one that
+ * doubted more would turn up here.
+ */
+const KEY_DOUBTS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  dMEp8enPG1: {
+    "sphere 3: Ice Palace - Prize maybe":
+      "Ice Palace's second key may sit with Kholdstare, whose door one key opens with the Cane of Somaria (Rules.py:336); no Somaria yet",
+    "sphere 5: Agahnim 2 maybe":
+      "a Ganon's Tower key may sit at Bob's Torch, behind the Pegasus Boots (Rules.py:409); no boots yet",
+  },
+};
 
 /**
  * The seeds the pack cannot hold yet, and why. Each is asserted to still be
@@ -121,10 +127,6 @@ const PENDING: Readonly<
   DvW0egkQyd: {
     reason:
       "standard dungeon items (keys in their dungeon, the ER world reads them as items) and the simple shuffle's pools",
-  },
-  dMEp8enPG1: {
-    reason:
-      "standard dungeon items: every miss is a dungeon's key, big key or prize",
   },
   kveDj7bgMm: {
     reason:
@@ -151,8 +153,8 @@ describe("a recorded seed's playthrough, entrances all noted", () => {
     const label = `${hash}: ${meta.mode}, ${meta.shuffle}, ${meta.dungeon_items} dungeon items, boss shuffle ${meta["enemizer.boss_shuffle"]}`;
     const pending = PENDING[hash];
     if (pending === undefined || pending.pinned !== undefined) {
-      it(`${label}: every location of a sphere is yes`, () => {
-        expect(misses(hash)).toEqual([]);
+      it(`${label}: every location of a sphere is yes, or doubted for a key`, () => {
+        expect(misses(hash)).toEqual(Object.keys(KEY_DOUBTS[hash] ?? {}));
       });
     }
     if (pending !== undefined) {
