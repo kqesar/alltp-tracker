@@ -543,6 +543,72 @@ describe("modes (a combined ROM such as SMZ3)", () => {
     expect(Array.from(poller.bytes("zelda-saved"))).toEqual([1, 2, 3, 6]);
   });
 
+  it("in Race Mode, reads the mode first and never the bytes of a game that stopped running", async () => {
+    const memory = new Uint8Array(0x100_0000);
+    const transport = new MemoryTransport(memory);
+    let requests = 0;
+    const read = transport.read.bind(transport);
+    transport.read = (request, into, offset) => {
+      requests++;
+      return read(request, into, offset);
+    };
+    const race = new Poller(pack, transport, {
+      now: () => 0,
+      romReadable: true,
+      setting: "on",
+    });
+    const tick = async () => {
+      transport.pieces.length = 0;
+      requests = 0;
+      const update = await race.tick();
+      return {
+        addresses: new Set(transport.pieces.map(([address]) => address)),
+        update,
+      };
+    };
+    // The first tick already reads the game that runs, not the probe alone
+    const first = await tick();
+    expect(race.mode).toBe("zelda");
+    expect(first.update?.modeChanged).toBe(true);
+    expect(first.addresses).toEqual(new Set([PROBE, ZELDA_WRAM, METROID_SRAM]));
+    expect(Array.from(race.bytes("zelda-items"))).toEqual([0, 0, 0, 0]);
+
+    // A portal between two ticks: the next reads Super Metroid's ranges, and
+    // never ALttP's WRAM nor Super Metroid's save, which now hold the other
+    // game's bytes
+    memory[PROBE] = 1;
+    memory.set([7, 7, 7, 7], METROID_WRAM);
+    const portal = await tick();
+    expect(race.mode).toBe("metroid");
+    expect(portal.update?.modeChanged).toBe(true);
+    expect(portal.addresses).toEqual(
+      new Set([PROBE, ZELDA_SRAM, METROID_WRAM]),
+    );
+    expect(race.has("zelda-items")).toBe(false);
+    expect(Array.from(race.bytes("metroid-items"))).toEqual([7, 7, 7, 7]);
+    // One request more than outside races: the probe, read first
+    expect(requests).toBe(3);
+    // Outside races (this pack has no flag: "auto" is off), the race phase
+    // and the probe read again after it, as before
+    const counted = new MemoryTransport(memory);
+    const countedRead = counted.read.bind(counted);
+    let casualRequests = 0;
+    counted.read = (request, into, offset) => {
+      casualRequests++;
+      return countedRead(request, into, offset);
+    };
+    const settled = new Poller(pack, counted, {
+      now: () => 0,
+      romReadable: true,
+      setting: "auto",
+    });
+    await settled.tick();
+    casualRequests = 0;
+    await settled.tick();
+    expect(casualRequests).toBe(2);
+    expect(settled.race.active).toBe(false);
+  });
+
   describe("a portal inside a tick", () => {
     /** A poller over `memory` whose transport runs `after` when a request is read. */
     const watched = (

@@ -6,6 +6,8 @@ import {
   USB2SNES_LIMITS,
 } from "@alltp/autotrack";
 import { describe, expect, it } from "vitest";
+import { Poller } from "../../../../packages/autotrack/src/scheduler";
+import { MemoryTransport } from "../../../../packages/autotrack/test/memory-transport";
 import {
   outside,
   raceReads,
@@ -192,11 +194,13 @@ describe("Race Mode, byte by byte", () => {
     // whole polling cycle in each, the game check first
     const reads = await raceReads(SMZ3_AUTOTRACK);
     expect(outside(reads, SMZ3_AUTOTRACK.permittedBytes)).toEqual([]);
+    // Each piece against the mode running when it was sent, the tick of a
+    // switch included
     for (const mode of MODES) {
-      const steady = reads.filter((read) => read.mode === mode);
-      expect(steady.length, mode).toBeGreaterThan(0);
+      const running = reads.filter((read) => read.mode === mode);
+      expect(running.length, mode).toBeGreaterThan(0);
       expect(
-        outside(steady, SMZ3_AUTOTRACK.raceBytes[slot(mode)]),
+        outside(running, SMZ3_AUTOTRACK.raceBytes[slot(mode)]),
         mode,
       ).toEqual([]);
     }
@@ -214,6 +218,43 @@ describe("Race Mode, byte by byte", () => {
         id,
       ).toBe(false);
     }
+  });
+
+  it("reads the game that runs now, not the one that ran on the last tick, across a switch", async () => {
+    const memory = new Uint8Array(0x100_0000);
+    const transport = new MemoryTransport(memory);
+    const poller = new Poller(SMZ3_AUTOTRACK, transport, {
+      now: () => 0,
+      romReadable: true,
+      setting: "on",
+    });
+    const game = MEMORY_RANGE["current-game"].address;
+    // $00 Zelda, negative Super Metroid (common.asm:53-68)
+    for (const [mode, value] of [
+      ["zelda", 0x00],
+      ["sm", 0xff],
+      ["zelda", 0x00],
+    ] as const) {
+      memory[game] = value;
+      transport.pieces.length = 0;
+      await poller.tick();
+      expect(poller.mode).toBe(mode);
+      const pieces = transport.pieces.map(([address, size]) => ({
+        address,
+        size,
+      }));
+      // The tick of the switch reads the new game's ranges, and only them
+      expect(
+        outside(pieces, SMZ3_AUTOTRACK.raceBytes[slot(mode)]),
+        mode,
+      ).toEqual([]);
+      const save = mode === "zelda" ? "zelda-wram" : "sm-equipment";
+      expect(
+        pieces.some((piece) => overlaps(piece, MEMORY_RANGE[save])),
+        save,
+      ).toBe(true);
+    }
+    expect(poller.race.active).toBe(true);
   });
 });
 

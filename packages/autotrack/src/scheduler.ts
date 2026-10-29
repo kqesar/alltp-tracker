@@ -195,9 +195,17 @@ export class Poller implements MemorySnapshot {
   private readonly probeBytes: Uint8Array;
   private readonly plans = new Map<number, DuePlans>();
   private readonly checkPlan: Phase;
-  /** The probe alone, read again at the end of a tick that read mode-bound ranges. */
+  /**
+   * The probe alone: read first on a race tick due for mode-bound ranges, and
+   * again at the end of a tick that read some.
+   */
   private readonly probePhase: Phase;
   private readonly probeScratch: Uint8Array;
+  /**
+   * For each due set: whether its race phase reads a range bound to some
+   * modes, which Race Mode plans from the probe read first on that tick.
+   */
+  private readonly raceModeBound: readonly boolean[];
   private readonly build: (set: number, mode: number) => DuePlans;
   private readonly now: () => number;
   private scratch: Uint8Array;
@@ -385,6 +393,15 @@ export class Poller implements MemorySnapshot {
         ? phaseOfProbe(pack, probe, transport.limits)
         : NO_PHASE;
     this.probeScratch = new Uint8Array(this.probePhase.plan.size);
+    this.raceModeBound = pack.dueSets.map((due) =>
+      due.some(
+        (index) =>
+          pack.racePermitted[index] &&
+          !pack.isGated[index] &&
+          readable[index] &&
+          pack.modeMasks[index] !== ALL_MODES,
+      ),
+    );
     for (const name of options.optIn ?? []) this.setOptIn(name, true);
     this.update = {
       at: 0,
@@ -486,7 +503,24 @@ export class Poller implements MemorySnapshot {
   async tick(): Promise<PollUpdate | null> {
     const pack = this.pack;
     const set = pack.cycle[this.ticks % pack.cycle.length];
+    const before = this.modeIndex;
+    // In Race Mode, a tick that reads ranges bound to a mode first reads which
+    // mode runs, and plans from it: the race phase never asks for the bytes of
+    // a game that stopped running since the last tick, which may hold anything
+    // (in doubt, forbidden). Outside races the last tick's mode is planned
+    // for, and a switch found by the race phase discards what it brought.
+    if (
+      this.raceModeBound[set] &&
+      this.probePhase.plan.size > 0 &&
+      this.raceActive()
+    ) {
+      this.modeIndex = await this.readMode();
+    }
     const planned = this.modeIndex;
+    // A mode entered since the last tick: the mode-bound ranges hold the
+    // last stint's bytes, unread until this tick reads them again
+    const entered = planned !== before;
+    if (entered) this.forgetModeBound();
     const key = (set * 33 + planned + 1) * (1 << OPT_BITS) + this.optMask;
     let plans = this.plans.get(key);
     if (plans === undefined) {
@@ -530,10 +564,10 @@ export class Poller implements MemorySnapshot {
     if (switched) this.forgetModeBound();
     this.forgetForbidden();
     this.ticks++;
-    if (this.changedIds.length === 0 && !switched) return null;
+    if (this.changedIds.length === 0 && !switched && !entered) return null;
     this.update.tick = this.ticks;
     this.update.at = this.now();
-    this.update.modeChanged = switched;
+    this.update.modeChanged = switched || entered;
     return this.update;
   }
 
@@ -867,17 +901,25 @@ export class Poller implements MemorySnapshot {
    * not, takes the new one, which the next tick plans for.
    */
   private async stillIn(planned: number): Promise<boolean> {
-    const modes = this.pack.modes;
-    const { plan } = this.probePhase;
-    if (modes === null || plan.size === 0) return true;
-    for (const request of plan.requests) {
-      await this.transport.read(request, this.probeScratch, request.offset);
+    if (this.pack.modes === null || this.probePhase.plan.size === 0) {
+      return true;
     }
-    const name = modes.decode(this.probeScratch);
-    const index = name === null ? UNKNOWN_MODE : modes.names.indexOf(name);
+    const index = await this.readMode();
     if (index === planned) return true;
     this.modeIndex = index;
     return false;
+  }
+
+  /** Reads the probe alone (a pack with modes) and decodes the mode. */
+  private async readMode(): Promise<number> {
+    const modes = this.pack.modes;
+    for (const request of this.probePhase.plan.requests) {
+      await this.transport.read(request, this.probeScratch, request.offset);
+    }
+    const name = modes?.decode(this.probeScratch) ?? null;
+    return name === null || modes === null
+      ? UNKNOWN_MODE
+      : modes.names.indexOf(name);
   }
 
   /** `race.active` without building the status object. */

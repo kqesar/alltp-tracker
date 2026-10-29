@@ -545,7 +545,8 @@ SMZ3 holds Super Metroid and ALttP in one ROM: the running game's state is
 in WRAM, the other's in SRAM. A pack declares `modes: { range, names,
 decode }`: the probe range is read on every tick, first, and ranges with
 `modes: [...]` are read only in those modes. Plans follow the last mode the
-probe gave; a tick that sees a new mode keeps only the shared ranges and
+probe gave (in Race Mode, the mode it gives on that very tick: "In Race Mode,
+the mode first", below); a tick that sees a new mode keeps only the shared ranges and
 skips the casual phase, and the next tick reads the new layout. From the
 switch on, every mode-bound range counts as unread (`has` is false) until
 read in the new mode: a decoder never takes an earlier stint's bytes, which
@@ -571,6 +572,21 @@ it, so a portal between them (or between the probe and a mode-bound read
 later in the same request) hands a decoder the other game's memory under the old
 mode's name, which no ordering of one request's pieces can rule out: SRAM sorts
 before WRAM, and the probe is SRAM.
+
+**In Race Mode, the mode first.** Planning from the last tick's mode means the
+tick after a portal asks for the old game's ranges while the other game runs:
+its WRAM, or its save buffers, then hold bytes no race profile names. Outside
+races they are only discarded; in a race, in doubt, forbidden. So in Race Mode a
+tick due for a mode-bound race-permitted range first reads the probe alone, in a
+request of its own, and plans its race phase from the mode it gives: across a
+switch, every byte asked for is in the new mode's permitted set
+(`pack.raceBytes`), from the very first tick (which no longer reads the probe
+alone). What it costs: one more two-byte request on those ticks in a race (three
+in all for SMZ3, once a second); casual ticks keep theirs. What it leaves: a
+portal landing in the milliseconds between that read and the race phase, which
+the probe the race phase carries and the one read at the end of the tick catch,
+as above. `scheduler.spec.ts` and SMZ3's `memory.spec.ts` drive the poller
+across a switch in a race and hold every piece to the new mode's bytes.
 
 ## Setup guide and environment
 
