@@ -250,12 +250,15 @@ function modelOf(world: ErWorld): Model {
     ...world.options,
     anywhere: true,
   });
-  // Turtle Rock's key doors hang on what everything held reaches in it
-  // (set_trock_key_rules): known only when the doors noted reach as much
-  // as the doors not noted may
+  // Turtle Rock's key doors hang on what everything held reaches in the
+  // world filled (set_trock_key_rules): while the doors noted do not settle
+  // it, both worlds meet its rules both ways, which is no longer at least
+  // what the fill's state reached with Turtle Rock's own items short. Every
+  // other dungeon is compared with Turtle Rock's items all held, which open
+  // its doors whichever way they read
   const trockKnown = Object.keys(world.settings)
     .filter((name) => name.startsWith("allItemsReach_"))
-    .every((name) => world.settings[name] === upper.settings[name]);
+    .every((name) => typeof world.settings[name] === "boolean");
   const all = everything(settings);
   const allSolved = solveFactsState(upper, all).solution;
   // vt sends --keysanity for `full` dungeon items alone, which set

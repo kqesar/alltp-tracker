@@ -26,6 +26,8 @@ import {
   type Solution,
   type State,
   solve,
+  type Tri,
+  type UnknownSetting,
   type World,
 } from "@alltp/engine";
 import {
@@ -759,9 +761,80 @@ function derivedSettings(
     else allItems.push(name);
   }
   if (allItems.length === 0) return derived;
-  // The world as the randomizer has it then (rules.json allItemsReach),
-  // its other derived settings known, solved with everything held; a
-  // test's starting regions are set after set_rules
+  // Read once per connections: the key model's world (er-keys.ts) asks again
+  const key = JSON.stringify([
+    Object.entries(settings).filter(
+      ([name]) => !Object.hasOwn(RULE_TABLES.derived, name),
+    ),
+    derived,
+    options.events ?? {},
+  ]);
+  let read = TROCK_READ.get(connections);
+  if (read === undefined) {
+    read = new Map();
+    TROCK_READ.set(connections, read);
+  }
+  const known = read.get(key);
+  if (known !== undefined) return { ...derived, ...known };
+  // set_trock_key_rules reads what everything held reaches in the seed's
+  // whole world (all_state.can_reach, Rules.py:1007-1016), the doors not
+  // noted yet included. The doors noted bound it: where a door not noted
+  // leads nowhere, everything held reaches no more than in the seed's world
+  // (a region reached there, the flag holds); where it leads anywhere the
+  // shuffle leaves room for, no less (a region not reached there, the flag
+  // fails). In between the flag is not known, and the engine folds each
+  // rule reading it both ways and meets them (foldSettings): `yes` only if
+  // it is whatever the doors not noted lead to. Read off the doors noted
+  // alone, the eye bridge not reached yet, the doors took fewer keys than
+  // the seed's, and noting a door could turn a `yes` into `no`
+  const lower = allItemsReach(settings, connections, derived, allItems, {
+    ...options,
+    anywhere: false,
+  });
+  // The second world only where it may reach more: a door left to note
+  const upper =
+    allItems.every((name) => lower(name) === "yes") ||
+    [...SHUFFLED].every((exit) => connections.has(exit))
+      ? lower
+      : allItemsReach(settings, connections, derived, allItems, {
+          ...options,
+          anywhere: true,
+        });
+  const flags = Object.fromEntries(
+    allItems.map((name) => {
+      if (lower(name) === "yes") return [name, true];
+      return [name, upper(name) === "no" ? false : NOT_KNOWN];
+    }),
+  );
+  read.set(key, flags);
+  return { ...derived, ...flags };
+}
+
+/** A derived setting the doors noted do not settle. */
+const NOT_KNOWN: UnknownSetting = { unknown: true };
+
+/**
+ * Turtle Rock's flags (`derivedSettings`), by the connections they were
+ * read from, then by the settings and events they were read with.
+ */
+const TROCK_READ = new WeakMap<
+  ErConnections,
+  Map<string, Readonly<Record<string, boolean | UnknownSetting>>>
+>();
+
+/**
+ * What everything held reaches of each region Turtle Rock's key rules ask
+ * for, in the world as the randomizer has it then (rules.json
+ * allItemsReach), its other derived settings known; a test's starting
+ * regions are set after set_rules.
+ */
+function allItemsReach(
+  settings: AlttprSettings,
+  connections: ErConnections,
+  derived: Settings,
+  allItems: readonly string[],
+  options: ErOptions,
+): (name: string) => Tri {
   const mode = settings.standardMode ? "standard" : "open";
   const events = options.events ?? {};
   const { exits, locations } = spotRules(
@@ -790,11 +863,8 @@ function derivedSettings(
     },
     everything(settings),
   );
-  for (const name of allItems) {
-    const of = RULE_TABLES.derived[name]?.region ?? "";
-    derived[name] = solved.region(region(of).id) === "yes";
-  }
-  return derived;
+  return (name) =>
+    solved.region(region(RULE_TABLES.derived[name]?.region ?? "").id);
 }
 
 /** Every item a world's rules may read. */

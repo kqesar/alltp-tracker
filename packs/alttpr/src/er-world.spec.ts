@@ -181,6 +181,41 @@ describe("the entrance randomizer's world", () => {
     expect(at(vanilla, keys(4), "Turtle Rock - Big Key Chest")).toBe("yes");
   });
 
+  it("reads Turtle Rock's key rules off the seed's whole world, the doors noted bounding it", () => {
+    // The seed: Elder House's east door and the eye bridge's ledge swap
+    // places, so everything held reaches the eye bridge from Kakariko, and
+    // each key door wants four keys (Rules.py:1023-1025, 1042-1044)
+    const before = (exit: string) => vanilla.get(exit) ?? "";
+    const seed = new Map([
+      ...vanilla,
+      ["Elder House (East)", before("Turtle Rock Isolated Ledge Entrance")],
+      ["Turtle Rock Isolated Ledge Exit", before("Elder House Exit (East)")],
+      ["Turtle Rock Isolated Ledge Entrance", before("Elder House (East)")],
+      ["Elder House Exit (East)", before("Turtle Rock Isolated Ledge Exit")],
+    ]);
+    // The player has noted every door but Elder House's east one
+    const noted = new Map(seed);
+    noted.delete("Elder House (East)");
+    noted.delete("Turtle Rock Isolated Ledge Exit");
+    const keysanity = settingsFromUpstream("open", { dungeonItems: "full" });
+    const chomps = (connections: ErConnections, keyD7: number) =>
+      at(
+        connections,
+        { ...everything(keysanity), keyD7, lamp: 0 },
+        "Turtle Rock - Chain Chomps",
+        keysanity,
+      );
+    for (const keys of [1, 2]) {
+      expect(chomps(seed, keys)).toBe("no");
+      // Read off the doors noted alone, the eye bridge not reached, fewer
+      // keys opened the doors
+      expect(chomps(noted, keys)).not.toBe("yes");
+    }
+    // Four keys open them whatever the door not noted leads to
+    expect(chomps(seed, 4)).toBe("yes");
+    expect(chomps(noted, 4)).toBe("yes");
+  });
+
   it("says what a check misses through its facts, in items", () => {
     // The Blacksmith wants the smith back (an event), who wants the frog
     // (another), whom only the Titan's Mitt and the pearl reach
