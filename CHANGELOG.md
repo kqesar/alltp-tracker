@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.63.0](https://github.com/kqesar/alltp-tracker/compare/v2.62.0...v2.63.0) (2026-10-29)
+
+
+### ✨ Features
+
+* **alttpr:** read a Triforce Hunt's pieces and its go mode count ([c9a06bb](https://github.com/kqesar/alltp-tracker/commit/c9a06bb8c9c81bad5a66a9ec8a77ab28e7ba256c))
+* **web:** count a Triforce Hunt's pieces on the board, with its go mode ([ce2a2bf](https://github.com/kqesar/alltp-tracker/commit/ce2a2bfac5531e334dd19b1b7aa15e4ef7707fba))
+
+
+### 📚 Documentation
+
+* describe the Triforce Hunt cell, its go mode and its autotracking ([27f1fef](https://github.com/kqesar/alltp-tracker/commit/27f1fef4564fe157beda18bf1c6a5f45c7d81319))
+
 ## [2.62.0](https://github.com/kqesar/alltp-tracker/compare/v2.61.2...v2.62.0) (2026-10-28)
 
 
