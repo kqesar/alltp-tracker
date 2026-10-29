@@ -60,6 +60,7 @@ describe("the controls", () => {
     // Eastern Palace has no small key in v31
     expect(dungeonControls(0)).toEqual([
       "boss0",
+      "knownboss0",
       "chest0",
       "reward0",
       "bigkey0",
@@ -69,6 +70,7 @@ describe("the controls", () => {
     expect(dungeonControls(1)).toContain("smallkey1");
     expect(dungeonControls(8)).toEqual([
       "boss8",
+      "knownboss8",
       "medallion8",
       "chest8",
       "reward8",
@@ -88,7 +90,7 @@ describe("the controls", () => {
       "map12",
       "compass12",
     ]);
-    expect(CONTROLS).toHaveLength(34 + 10 * 7 - 1 + 2 + 2 + 1 + 6);
+    expect(CONTROLS).toHaveLength(34 + 10 * 8 - 1 + 2 + 2 + 1 + 6);
     expect(ACTIONS).toHaveLength(CONTROLS.length * 2);
   });
 

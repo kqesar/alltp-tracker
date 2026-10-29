@@ -16,6 +16,7 @@
 // touched by either.
 
 import {
+  BOSS_PLACES,
   type BossDungeon,
   CHECK_FLAGS,
   type DungeonId,
@@ -42,7 +43,8 @@ import {
 } from "@/games/alttpr/autotrack/table";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import { type Hearts, heartsOf, heartsValue } from "@/games/alttpr/data/items";
-import { wildItems } from "@/games/alttpr/data/presets";
+import { bossesMayMove, wildItems } from "@/games/alttpr/data/presets";
+import { knownBossCell, valueOfBoss } from "@/games/alttpr/logic/knownBosses";
 import { ACTIVATION, ESCAPE } from "@/games/alttpr/logic/packItems";
 import {
   COUNTER_INDICES,
@@ -308,6 +310,28 @@ export const medallionsShown = (
   return told;
 };
 
+/**
+ * The bosses the game shows now (the pack's decodeBosses: Link in a
+ * dungeon's boss room with its boss), as the values of the known boss
+ * cells, by item id. A later reading, out of the room, shows none: the
+ * follower keeps what was shown, as it keeps the medallions.
+ */
+export const bossesShown = (
+  reading: AutotrackReading,
+): Record<string, number> => {
+  const told: Record<string, number> = {};
+  const { bosses } = reading;
+  if (typeof bosses === "string") return told;
+  for (const [place, boss] of Object.entries(bosses)) {
+    const { dungeon: id } = BOSS_PLACES[place as keyof typeof BOSS_PLACES];
+    const index = (LEGACY_DUNGEONS as readonly string[]).indexOf(id);
+    if (index >= 0 && boss !== undefined) {
+      told[knownBossCell(index)] = valueOfBoss(boss);
+    }
+  }
+  return told;
+};
+
 /** The hearts counter's two values from the game's health. */
 const healthCells = (health: {
   readonly hearts: number;
@@ -440,12 +464,16 @@ const counterRanges = (
  * @param bombBought - Whether a reading of this session saw Link carry the
  * big bomb, which only its purchase gives him: Inverted's Bomb Merchant is
  * checked then, and stays so (memory keeps no flag of it)
+ * @param bossesKept - The bosses shown at earlier readings, by known boss
+ * cell: once met, a boss stays known out of its room. Laid only in a run
+ * whose bosses may move: elsewhere every boss is the dungeon's own
  */
 export const gameView = (
   reading: AutotrackReading,
   board: Board,
   medallionsKept: Readonly<Record<number, number>> = {},
   bombBought = false,
+  bossesKept: Readonly<Record<string, number>> = {},
 ): GameView => {
   const isChecked = new Set(reading.checked);
   const unsettled = new Set(reading.unsettled.map(([id]) => id));
@@ -469,7 +497,12 @@ export const gameView = (
       isChecked,
       new Set(Object.keys(checked)),
     ),
-    items: gameCells(reading, board),
+    items: {
+      ...gameCells(reading, board),
+      ...(bossesMayMove(board.settings)
+        ? { ...bossesKept, ...bossesShown(reading) }
+        : {}),
+    },
     medallions: { ...medallionsKept, ...medallionsShown(reading) },
     settings: packSettings(board.settings),
     smallKeys,

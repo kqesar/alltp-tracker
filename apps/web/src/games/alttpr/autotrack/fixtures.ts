@@ -108,6 +108,29 @@ export const standOn = (memory: Uint8Array, screen: number, mode = 0x09) => {
   return memory;
 };
 
+/**
+ * Put Link in a dungeon room with these sprites loaded: the game mode a
+ * dungeon's, the room index ($7E:00A0), and each sprite's type in a slot
+ * whose state is set ($0E20 and $0DD0: the pack's boss-rooms.ts). None
+ * empties the slots: Link left the room.
+ */
+export const standInRoom = (
+  memory: Uint8Array,
+  room: number,
+  sprites: readonly number[],
+) => {
+  memory[GAME_MODE] = 0x07;
+  memory[MEMORY_RANGE.room.address] = room & 0xff;
+  memory[MEMORY_RANGE.room.address + 1] = room >> 8;
+  const slots = MEMORY_RANGE["boss-sprites"].address;
+  memory.fill(0, slots, slots + MEMORY_RANGE["boss-sprites"].size);
+  sprites.forEach((type, slot) => {
+    memory[slots + slot] = 0x09;
+    memory[slots + 0x50 + slot] = type;
+  });
+  return memory;
+};
+
 /** Set the bit that says a screen's entrance was opened ($20 of its event byte). */
 export const openEntrance = (memory: Uint8Array, screen: number) => {
   memory[MEMORY_RANGE.overworld.address + screen] |= 0x20;

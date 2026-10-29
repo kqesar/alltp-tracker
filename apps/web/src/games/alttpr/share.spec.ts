@@ -269,13 +269,18 @@ describe("an ALttPR run in a packed link", () => {
     expect(JSON.parse(packLink(played)).link).toBe(4);
     // As v2.58.0, the last tracker to read link 2 alone, wrote it, but for
     // the items appended to the table since (heartquarters, then the hunt's
-    // pieces), at the end
+    // pieces, then the known bosses), at the end
     const recorded = firstLayout.links.find(
       ({ name }) => name === "an empty timeline",
     );
     if (recorded === undefined) throw new Error("No empty timeline recorded");
     const since = SHARE_ITEMS.slice(recorded.link.sizes[1]);
-    expect(since).toEqual(["heartquarters", "triforce", "goalpieces"]);
+    expect(since).toEqual([
+      "heartquarters",
+      "triforce",
+      "goalpieces",
+      ...Array.from({ length: 10 }, (_, index) => `knownboss${index}`),
+    ]);
     const save = recorded.save as { progress: { items: object } };
     const written = JSON.parse(
       packLink(
@@ -481,7 +486,7 @@ describe("an ALttPR run in a packed link", () => {
     // A new item is appended to SHARE_ITEMS: moving one breaks every link
     expect(new Set(SHARE_ITEMS)).toEqual(new Set(Object.keys(freshItems)));
     expect(SHARE_ITEMS).toHaveLength(new Set(SHARE_ITEMS).size);
-    expect(SHARE_ITEMS.slice(-10)).toEqual([
+    expect(SHARE_ITEMS.slice(-20)).toEqual([
       "hearts",
       "tenbombs",
       "escape",
@@ -492,6 +497,7 @@ describe("an ALttPR run in a packed link", () => {
       "heartquarters",
       "triforce",
       "goalpieces",
+      ...Array.from({ length: 10 }, (_, index) => `knownboss${index}`),
     ]);
     expect(JSON.parse(packLink(play.alttpr(0.5, randoms()))).sizes).toEqual([
       MAP_LOCATIONS.size,

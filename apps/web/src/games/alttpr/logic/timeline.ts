@@ -23,7 +23,8 @@ interface Finds {
 
 /**
  * The kinds of value that are no find: a dungeon's items left, the prize
- * picked for it, the hearts on screen and the pieces toward the next, the
+ * picked for it, the boss known to hold it, the hearts on screen and the
+ * pieces toward the next, the
  * spacer, and what no cell draws
  * (the escape's bombs and its end, the flute activated, the prizes held).
  */
@@ -35,6 +36,7 @@ const NO_FINDS: ReadonlySet<string> = new Set([
   "activation",
   "none",
   "prize",
+  "boss",
   "quarters",
 ]);
 

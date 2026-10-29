@@ -2,7 +2,7 @@
 // never reads a shuffled run as its vanilla bosses. The pack's slots
 // (packs/alttpr/src/bosses.ts) say yes only when every boss the slot may
 // hold is beaten, maybe when some is; these specs hold the board to them.
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { ItemState } from "@/games/alttpr/data/items";
 import type { RunSettings } from "@/games/alttpr/data/presets";
 import { goModeStatusOf } from "@/games/alttpr/logic/missing";
@@ -11,6 +11,7 @@ import {
   type MarkerInputs,
   solutionOf,
 } from "@/games/alttpr/logic/solution";
+import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import END_GAME from "../../../../e2e/fixtures/end-game.json";
 
 /** The browser tests' end of a run, with these cells and settings. */
@@ -75,5 +76,44 @@ describe("a run with shuffled bosses", () => {
     expect(bossStateOf("misery-mire", run({ boss8: 1 }, hidden.settings))).toBe(
       "available",
     );
+  });
+
+  it("reads a boss the player marked exactly", () => {
+    const full = { bossShuffle: "full" } as const;
+    // Blind falls to the sword: no hookshot needed
+    const blind = run({ ...NO_HOOKSHOT, knownboss8: 7 }, full);
+    expect(bossStateOf("misery-mire", blind)).toBe("available");
+    expect(solutionOf(blind).tris["misery-mire/boss"]).toBe("yes");
+    // Arrghus does not, whatever else may be there
+    const arrghus = run({ ...NO_HOOKSHOT, knownboss8: 5 }, full);
+    expect(solutionOf(arrghus).tris["misery-mire/boss"]).toBe("no");
+    // Turtle Rock, not marked, stays maybe
+    expect(bossStateOf("turtle-rock", blind)).toBe("possible");
+  });
+});
+
+describe("marking a dungeon's boss", () => {
+  beforeEach(() => {
+    useGameStore.setState(useGameStore.getInitialState(), true);
+    useGameStore.getState().updateSettings({ bossShuffle: "full" });
+  });
+
+  it("steps through the bosses its slot can hold, one undo step each", () => {
+    const { handleItemClick } = useGameStore.getState();
+    // Tower of Hera starts at Moldorm, the first it can hold
+    handleItemClick("knownboss2");
+    expect(useGameStore.getState().items.knownboss2).toBe(3);
+    handleItemClick("knownboss2", -1);
+    handleItemClick("knownboss2", -1);
+    expect(useGameStore.getState().items.knownboss2).toBe(9);
+    expect(useGameStore.getState().past).toHaveLength(4);
+  });
+
+  it("refuses a boss the slot cannot hold, as a misheard command would set", () => {
+    const { setItem } = useGameStore.getState();
+    setItem("knownboss2", 10);
+    expect(useGameStore.getState().items.knownboss2).toBe(0);
+    setItem("knownboss2", 9);
+    expect(useGameStore.getState().items.knownboss2).toBe(9);
   });
 });

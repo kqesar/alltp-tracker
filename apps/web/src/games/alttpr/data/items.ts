@@ -197,6 +197,9 @@ const NUMERIC_ITEMS: Record<string, Range> = {
   chest12: [0, 27, 20],
   // Boss reward icon (dungeon0.png to dungeon4.png)
   ...perDungeon("reward", () => [0, 4]),
+  // The boss the player knows a dungeon holds under boss shuffle: 0 not
+  // known, then the pack's SHUFFLED_BOSSES from 1 (logic/knownBosses.ts)
+  ...perDungeon("knownboss", () => [0, 10]),
 };
 
 /** Items that are simply held or not held. */

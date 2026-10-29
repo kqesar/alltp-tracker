@@ -4,6 +4,8 @@
 // the tracker and the pack (autotracking) reads the same table, so an item
 // added here reaches every one of them.
 import {
+  type BossPlaceId,
+  bossPlaceOf,
   type DungeonId,
   dungeon,
   type HeldPrize,
@@ -13,6 +15,8 @@ import {
   PRE_COLLECTED_STATE,
   PRIZES,
   type Prize,
+  SHUFFLED_BOSSES,
+  type ShuffledBoss,
   STATE_MAX,
   type TrackerInput,
   UNKNOWN_COUNTS,
@@ -52,6 +56,12 @@ export type PackItem =
     }
   /** What a dungeon's boss drops, by the value: see REWARDS. */
   | { readonly kind: "prize"; readonly dungeon: DungeonId }
+  /**
+   * The boss a dungeon's slot holds under boss shuffle, as the player knows
+   * it: 0 not known, else the pack's SHUFFLED_BOSSES from 1
+   * (logic/knownBosses.ts).
+   */
+  | { readonly kind: "boss"; readonly place: BossPlaceId }
   /**
    * Link's hearts on screen (`heartsShown`): the heart containers and
    * pieces found beyond the 3 he starts with, to which the pack's toState
@@ -240,6 +250,10 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   // The items a dungeon has left: the map counts them, the rules do not
   ...perDungeon("chest", () => NONE),
   ...perDungeon("reward", (id) => ({ dungeon: id, kind: "prize" })),
+  ...perDungeon("knownboss", (id) => ({
+    kind: "boss",
+    place: bossPlaceOf(id) as BossPlaceId,
+  })),
   // The castle dungeons' own items, on key cells 10-12 (KEY_DUNGEONS), as
   // their pools hold them
   bigkey12: dungeonItem("bigKey")("ganons-tower"),
@@ -307,7 +321,7 @@ export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
  */
 export type PackReading = Pick<
   TrackerInput,
-  "beaten" | "held" | "items" | "prizes" | "unknown"
+  "beaten" | "bosses" | "held" | "items" | "prizes" | "unknown"
 >;
 
 /**
@@ -350,6 +364,7 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
     "hyrule-castle": true,
   };
   const prizes: Partial<Record<DungeonId, Prize>> = {};
+  const bosses: Partial<Record<BossPlaceId, ShuffledBoss>> = {};
   const prizesHeld: Partial<Record<HeldPrize, number>> = {};
   const atLeast = new Map<InventoryItemId, number>();
   const known = new Set<UnknownCount>();
@@ -376,6 +391,11 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
       case "prize": {
         const prize = REWARDS[value];
         if (prize !== undefined) prizes[entry.dungeon] = prize;
+        break;
+      }
+      case "boss": {
+        const boss = SHUFFLED_BOSSES[value - 1];
+        if (boss !== undefined) bosses[entry.place] = boss;
         break;
       }
       case "known":
@@ -415,6 +435,7 @@ export const packReading = (items: Readonly<ItemState>): PackReading => {
   }
   return {
     beaten,
+    ...(Object.keys(bosses).length > 0 && { bosses }),
     ...(Object.keys(prizesHeld).length > 0 && { held: prizesHeld }),
     items: held,
     prizes,

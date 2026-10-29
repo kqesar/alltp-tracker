@@ -52,14 +52,15 @@ const DIRECTION_NAMES: Record<ShortcutDirection, string> = {
 /** The art a control is listed with: an item as found, a dungeon control at rest. */
 const iconOf = (control: ControlId): string => {
   // The castle dungeons' too: Hyrule Castle's map10 to Ganon's Tower's 12
-  const kind = /^(bigkey|smallkey|map|compass|medallion|reward)\d+$/.exec(
-    control,
-  )?.[1];
+  const kind =
+    /^(bigkey|smallkey|map|compass|medallion|reward|knownboss)\d+$/.exec(
+      control,
+    )?.[1];
   if (kind === "bigkey" || kind === "smallkey" || kind === "compass") {
     return `${kind}.png`;
   }
   if (kind === "map") return "dungeonmap.png";
-  if (kind === "medallion") return "medallion0.png";
+  if (kind === "medallion" || kind === "knownboss") return "medallion0.png";
   if (kind === "reward") return "dungeon0.png";
   // Link's hearts: the counter's full heart, no level of their own
   if (control === "hearts") return "heart.png";

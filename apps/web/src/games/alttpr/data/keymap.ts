@@ -82,8 +82,8 @@ const hasMedallion = (index: number) =>
 const TOWER = KEY_DUNGEONS.indexOf("ganons-tower");
 
 /**
- * A dungeon's controls: the boss cell's (boss, medallion, chests, reward),
- * for the grid's ten; Ganon's Tower's (Agahnim 2 and its chests); then the
+ * A dungeon's controls: the boss cell's (boss, known boss, medallion,
+ * chests, reward) for the grid's ten; Ganon's Tower's (Agahnim 2 and its chests); then the
  * key cell's, as its pool holds them (big key, small keys: not Eastern
  * Palace's; map and compass, shown while they leave their dungeons).
  * Hyrule Castle and Castle Tower have a key cell only.
@@ -95,6 +95,7 @@ export const dungeonControls = (index: number): ControlId[] => {
     ...(index < LEGACY_DUNGEONS.length
       ? [
           `boss${index}`,
+          `knownboss${index}`,
           ...(hasMedallion(index) ? [`medallion${index}`] : []),
           `chest${index}`,
           `reward${index}`,
@@ -150,6 +151,7 @@ const DUNGEON_CONTROL_NAMES: Record<string, string> = {
   boss: "Boss",
   chest: "Chests",
   compass: "Compass",
+  knownboss: "Known boss",
   map: "Map",
   medallion: "Medallion",
   reward: "Reward",
@@ -157,7 +159,7 @@ const DUNGEON_CONTROL_NAMES: Record<string, string> = {
 };
 
 const DUNGEON_CONTROL =
-  /^(bigkey|boss|chest|compass|map|medallion|reward|smallkey)(\d+)$/;
+  /^(bigkey|boss|chest|compass|knownboss|map|medallion|reward|smallkey)(\d+)$/;
 
 /** The index of the dungeon a control belongs to, or null for an item. */
 export const dungeonOf = (control: ControlId): number | null => {

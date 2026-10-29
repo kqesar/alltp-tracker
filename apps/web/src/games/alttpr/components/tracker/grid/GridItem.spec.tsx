@@ -116,6 +116,26 @@ describe("GridItem", () => {
     expect(screen.queryByTestId("medallion-overlay-0")).toBeNull();
   });
 
+  it("lets the player mark a dungeon's boss while the run's bosses may move", () => {
+    render(<GridItem col={0} item="boss8" row={5} />);
+    expect(screen.queryByTestId("known-boss-overlay-8")).toBeNull();
+
+    act(() => useGameStore.getState().updateSettings({ bossShuffle: "full" }));
+    const known = screen.getByTestId("known-boss-overlay-8");
+    expect(known).toHaveAccessibleName("Misery Mire boss: unknown");
+    expect(known).toHaveAttribute("data-grid-slot", "1");
+    expect(screen.getByTestId("medallion-overlay-8")).toHaveAttribute(
+      "data-grid-slot",
+      "2",
+    );
+    fireEvent.click(known);
+    expect(known).toHaveAccessibleName("Misery Mire boss: Armos Knights");
+    expect(known.style.backgroundImage).toMatch(/boss02\.png/);
+    fireEvent.contextMenu(known);
+    fireEvent.contextMenu(known);
+    expect(known).toHaveAccessibleName("Misery Mire boss: Trinexx");
+  });
+
   it("routes a big key to the keysanity cell", () => {
     useGameStore.getState().setBigKeysVisible(true);
 
