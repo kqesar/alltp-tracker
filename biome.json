@@ -37,6 +37,7 @@
       "!packs/sm/test/spoilers",
       "!packages/archipelago/test/fixtures",
       "!packages/archipelago/test/datapackages",
+      "!packs/alttpr/test/er-seeds",
       "!packs/smz3/src/markers-hyrule.json",
       "!packs/smz3/src/autotrack/zelda-flags.json",
       "!packs/smz3/src/spoiler/item-types.json",

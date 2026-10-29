@@ -16,6 +16,7 @@
     "import-rupee-texts": "node scripts/import-rupee-texts.mjs",
     "import-upstream": "node scripts/import-upstream-tests.mjs",
     "record-dark-room": "node scripts/record-dark-room.mjs",
+    "record-er-seeds": "node scripts/record-er-seeds.mjs",
     "spoiler-fixtures": "node scripts/spoiler-fixtures.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"

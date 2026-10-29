@@ -1,7 +1,7 @@
 import type { State } from "@alltp/engine";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import seed from "../test/er-seeds/0yAObedRMV.json" with { type: "json" };
+import { erSeed } from "../test/er-seeds";
 import {
   BOSS_FACTS,
   BOSS_PLACES,
@@ -373,10 +373,11 @@ describe("a real Crosskeys seed, its entrances all noted", () => {
   // Link's House and the Tavern's back door stay, its Chris Houlihan room
   // is a way out (entrances.spec.ts)
   const fixed = new Set(["Links House", "Tavern North"]);
+  const seed = erSeed("0yAObedRMV").spoiler;
   const noted = Object.fromEntries(
-    seed.entrances
-      .filter((m) => m.direction !== "exit" && !fixed.has(m.entrance))
-      .map((m) => [id(m.entrance), target(m.exit)]),
+    seed.Entrances.filter(
+      (m) => m.direction !== "exit" && !fixed.has(m.entrance),
+    ).map((m) => [id(m.entrance), target(m.exit)]),
   );
   const connections = crossedConnections("open", noted);
 
