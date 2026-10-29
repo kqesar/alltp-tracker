@@ -10,6 +10,10 @@ import {
   parseAction,
 } from "@/games/alttpr/data/keymap";
 import { wildItems } from "@/games/alttpr/data/presets";
+import {
+  knownBossIndex,
+  knownBossShown,
+} from "@/games/alttpr/logic/knownBosses";
 import { type Direction, useGameStore } from "@/games/alttpr/stores/gameStore";
 import { isAwayFromBoard } from "@/utils/keyboard";
 
@@ -20,7 +24,8 @@ type Step = { control: ControlId; direction: Direction };
  * Whether the board shows a control, so that a shortcut or a voice command
  * may change it: a key cell can only be clicked while it is shown; so it is
  * with its keys, and its map and compass, shown only when they lie outside
- * their dungeons; and the shops, a retro run's.
+ * their dungeons; the shops, a retro run's; and a dungeon's known boss, a
+ * run's whose bosses may move.
  * @param control - The control
  */
 export const isControlShown = (control: ControlId): boolean => {
@@ -30,6 +35,9 @@ export const isControlShown = (control: ControlId): boolean => {
   if (control.startsWith("shop") && settings.mode !== "retro") return false;
   // The pieces are a triforce hunt's alone
   if (control === PIECES_ITEM && !isHunt(settings)) return false;
+  // A dungeon's known boss, while its bosses may move
+  const known = knownBossIndex(control);
+  if (known !== null && !knownBossShown(known, settings)) return false;
   return !(
     isMapCompassControl(control) && !wildItems(settings).mapsAndCompasses
   );

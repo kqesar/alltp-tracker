@@ -17,6 +17,7 @@
 
 import type { EntranceReading } from "@alltp/pack-alttpr";
 import {
+  bossesShown,
   type GameView,
   gameView,
   isEmptyView,
@@ -115,6 +116,12 @@ export const createFollower = (): Follower => {
    */
   const known: Record<number, number> = {};
   /**
+   * The bosses the game has shown, by known boss cell: a reading shows one
+   * only while Link stands in its boss room, so the session keeps what was
+   * shown, as the medallions. Race Mode starts it over.
+   */
+  const bosses: Record<string, number> = {};
+  /**
    * Whether a reading saw Link carry the big bomb, which only its purchase
    * gives him: memory keeps no flag of the Bomb Merchant, and the bomb goes
    * once it blows up, so the session keeps that it was bought. Outside Race
@@ -133,6 +140,7 @@ export const createFollower = (): Follower => {
    */
   const forget = () => {
     for (const slot of Object.keys(known)) delete known[Number(slot)];
+    for (const cell of Object.keys(bosses)) delete bosses[cell];
     bombBought = false;
     noted = null;
   };
@@ -172,12 +180,14 @@ export const createFollower = (): Follower => {
     const store = useGameStore.getState();
     if (reading.race) {
       for (const slot of Object.keys(known)) delete known[Number(slot)];
+      for (const cell of Object.keys(bosses)) delete bosses[cell];
       bombBought = false;
     } else {
       Object.assign(known, medallionsShown(reading));
+      Object.assign(bosses, bossesShown(reading));
       if (reading.progress.bigBomb === true) bombBought = true;
     }
-    const view = gameView(reading, store, known, bombBought);
+    const view = gameView(reading, store, known, bombBought, bosses);
     const news = shown === null ? view : newsOf(shown, view);
     last = reading;
     shown = view;
@@ -192,7 +202,8 @@ export const createFollower = (): Follower => {
       const game =
         last === null
           ? null
-          : syncView(fresh, gameView(last, fresh, known, bombBought))?.next;
+          : syncView(fresh, gameView(last, fresh, known, bombBought, bosses))
+              ?.next;
       const run = { ...fresh, ...game };
       return (
         sameValues(run.items, store.items) &&

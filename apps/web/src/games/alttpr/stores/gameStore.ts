@@ -30,6 +30,11 @@ import {
   restoreTricks,
   type TrickPrefs,
 } from "@/games/alttpr/data/tricks";
+import {
+  knownBossIndex,
+  knownBossValues,
+  stepKnownBoss,
+} from "@/games/alttpr/logic/knownBosses";
 import { withoutEscape } from "@/games/alttpr/logic/packItems";
 import {
   COUNTER_INDICES,
@@ -559,6 +564,23 @@ export const useGameStore = create<GameState>()(
               });
             }
 
+            // A dungeon's known boss steps through the bosses its slot can
+            // hold, round from not known (logic/knownBosses.ts)
+            const known = knownBossIndex(item);
+            if (known !== null) {
+              return record(state, {
+                items: {
+                  ...state.items,
+                  [item]: stepKnownBoss(
+                    known,
+                    current,
+                    state.settings,
+                    direction,
+                  ),
+                },
+              });
+            }
+
             // Link's hearts step a quarter, the fourth making a heart, and
             // stop at not set and at 20 (heartsAfter)
             if (item === "hearts") {
@@ -693,6 +715,14 @@ export const useGameStore = create<GameState>()(
             if (typeof value === "number") {
               const [min, max] = itemRange(item, state.settings);
               if (value < min || value > max) return state;
+              // A boss its dungeon cannot hold (a voice command misheard)
+              const known = knownBossIndex(item);
+              if (
+                known !== null &&
+                !knownBossValues(known, state.settings).includes(value)
+              ) {
+                return state;
+              }
             }
             return record(state, { items: { ...state.items, [item]: value } });
           }),

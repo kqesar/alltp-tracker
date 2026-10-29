@@ -2,6 +2,11 @@ import { DUNGEON_INDICES } from "@/games/alttpr/constants";
 import type { ControlId } from "@/games/alttpr/data/keymap";
 import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
+import {
+  knownBossCell,
+  knownBossShown,
+  knownBossText,
+} from "@/games/alttpr/logic/knownBosses";
 import { dungeonAt, dungeonName } from "@/games/alttpr/logic/settings";
 import { STATE_LABELS, useDungeonStatus } from "@/games/alttpr/logic/solution";
 import { type Direction, useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -9,7 +14,7 @@ import { getAssetPath } from "@/games/alttpr/utils";
 import { type GridPosition, useGridFocusable } from "@/hooks/useGridNavigation";
 
 /** Corner of the boss cell an overlay occupies. */
-type Corner = "top-right" | "bottom-left" | "bottom-right";
+type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
 type OverlayProps = {
   corner: Corner;
@@ -82,7 +87,7 @@ export const ChestCounter = ({ index, row, col }: CornerProps) => {
       control={`chest${index}`}
       corner="bottom-left"
       label={`${dungeonName(index)} chests: ${remaining} left${remaining ? `, ${STATE_LABELS[status]}` : ""}`}
-      position={{ col, row, slot: 2 }}
+      position={{ col, row, slot: 3 }}
       step={(direction) => handleItemClick(`chest${index}`, direction)}
       testId={`chest-overlay-${index}`}
     />
@@ -105,7 +110,7 @@ export const RewardPicker = ({ index, row, col }: CornerProps) => {
       control={`reward${index}`}
       corner="bottom-right"
       label={`${dungeonName(index)} reward: ${REWARD_LABELS[reward]}`}
-      position={{ col, row, slot: 3 }}
+      position={{ col, row, slot: 4 }}
       step={(direction) => handleItemClick(`reward${index}`, direction)}
       testId={`reward-overlay-${index}`}
     />
@@ -140,9 +145,35 @@ export const MedallionPicker = ({ index, row, col }: CornerProps) => {
       control={`medallion${index}`}
       corner="top-right"
       label={`${dungeonName(index)} medallion: ${MEDALLION_LABELS[medallion]}`}
-      position={{ col, row, slot: 1 }}
+      position={{ col, row, slot: 2 }}
       step={(direction) => stepMedallion(index, direction)}
       testId={`medallion-overlay-${index}`}
+    />
+  );
+};
+
+/**
+ * The boss a dungeon holds under boss shuffle (top left): not known, then
+ * each boss its slot can hold, drawn as its sprite. Nothing is drawn while
+ * the run's bosses stay home, nor for a swordless Ice Palace.
+ * @param index - The dungeon index (0-9)
+ */
+export const KnownBossPicker = ({ index, row, col }: CornerProps) => {
+  const control = knownBossCell(index);
+  const value = useGameStore((state) => Number(state.items[control] ?? 0));
+  const shown = useGameStore((state) => knownBossShown(index, state.settings));
+  const handleItemClick = useGameStore((state) => state.handleItemClick);
+  if (!shown) return null;
+  return (
+    <Overlay
+      // The ten bosses' sprites, in the pack's order (boss02.png to boss92.png)
+      asset={value === 0 ? "medallion0.png" : `boss${value - 1}2.png`}
+      control={control}
+      corner="top-left"
+      label={`${dungeonName(index)} boss: ${knownBossText(value)}`}
+      position={{ col, row, slot: 1 }}
+      step={(direction) => handleItemClick(control, direction)}
+      testId={`known-boss-overlay-${index}`}
     />
   );
 };

@@ -68,6 +68,10 @@ describe("the voice commands", () => {
     ["eastern green pendant", set("reward0", { exactly: 1 })],
     ["thieves crystal", set("reward6", { exactly: 3 })],
     ["skull red crystal", set("reward5", { exactly: 4 })],
+    ["mire blind", set("knownboss8", { exactly: 7 })],
+    ["hera cold stare", set("knownboss2", { exactly: 8 })],
+    ["turtle rock tri necks", set("knownboss9", { exactly: 10 })],
+    ["swamp helma saur king", set("knownboss4", { exactly: 4 })],
     ["undo", { kind: "undo" }],
     ["start timer", { kind: "startTimer" }],
     ["pause", { kind: "pauseTimer" }],
@@ -83,6 +87,10 @@ describe("the voice commands", () => {
     "escape chest",
     // Only Misery Mire and Turtle Rock have a medallion
     "eastern ether",
+    // A boss a slot cannot hold, and Ganon's Tower's, which have no cell
+    "hera tri necks",
+    "skull tri necks",
+    "g t blind",
   ])("have no %s", (phrase) => {
     expect(COMMANDS.has(phrase)).toBe(false);
   });

@@ -7,6 +7,7 @@ import {
   readingOf,
   SAVE,
   seedMemory,
+  standInRoom,
   standOn,
   writeMedallions,
 } from "@/games/alttpr/autotrack/fixtures";
@@ -695,6 +696,54 @@ describe("following the game", () => {
       );
       follower.read(readingOf(memory, { race: true }));
       expect(store().medallions).toEqual(Array(10).fill(0));
+    });
+  });
+
+  describe("the bosses met under boss shuffle", () => {
+    /** Misery Mire's boss room, holding Blind as bGbbOaDWGP's does. */
+    const MIRE_ROOM = 0x90;
+    const BLIND = 0xce;
+    const shuffled = () =>
+      store().updateSettings({ bossShuffle: "full" } as const);
+    const inRoom = (sprites: readonly number[], race = false) =>
+      readingOf(standInRoom(seedMemory({ race }), MIRE_ROOM, sprites), {
+        race,
+      });
+
+    it("marks a dungeon's boss once Link meets it, and keeps it out of the room", () => {
+      shuffled();
+      const follower = createFollower();
+      follower.read(inRoom([]));
+      expect(store().items.knownboss8).toBe(0);
+
+      follower.read(inRoom([BLIND]));
+      expect(store().items.knownboss8).toBe(7);
+      // Out of the room: Blind stays known
+      follower.read(readingOf(seedMemory({ race: false })));
+      expect(store().items.knownboss8).toBe(7);
+      // The game's news, no undo step of the player's
+      expect(store().past).toHaveLength(1);
+    });
+
+    it("leaves a boss the player named before the game showed it, until a sync", () => {
+      shuffled();
+      store().setItem("knownboss8", 9);
+      const follower = createFollower();
+      follower.read(inRoom([BLIND]));
+      expect(store().items.knownboss8).toBe(9);
+      follower.sync();
+      expect(store().items.knownboss8).toBe(7);
+    });
+
+    it("marks nothing in Race Mode, nor in a run whose bosses stay home", () => {
+      shuffled();
+      const follower = createFollower();
+      follower.read(inRoom([BLIND], true));
+      expect(store().items.knownboss8).toBe(0);
+
+      store().updateSettings({ bossShuffle: "none" });
+      createFollower().read(inRoom([BLIND]));
+      expect(store().items.knownboss8).toBe(0);
     });
   });
 

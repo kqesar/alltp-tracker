@@ -3,6 +3,8 @@
 // tracker's own state is the store's job, not this module's.
 
 import {
+  type BossReading,
+  decodeBosses,
   decodeChecks,
   decodeEntrances,
   decodeGoalPieces,
@@ -60,6 +62,12 @@ export type AutotrackReading = {
    */
   readonly medallions: MedallionReading;
   /**
+   * The bosses the game shows, outside Race Mode: a dungeon's, while Link
+   * stands in its boss room with it. No other boss is kept, and the ROM's
+   * table of them is never read.
+   */
+  readonly bosses: BossReading;
+  /**
    * The door or hole Link last went in by and the door he last came out
    * by, outside Race Mode: the game's numbers, which the entrance tables
    * name (`linksOf`).
@@ -85,6 +93,7 @@ export const readMemory = (
   const checks = decodeChecks(memory, options);
   return {
     at,
+    bosses: decodeBosses(memory, options),
     checked: [...checks.checked],
     entrances: decodeEntrances(memory, options),
     health: decodeHealth(memory, options),

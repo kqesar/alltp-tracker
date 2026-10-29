@@ -224,6 +224,21 @@ test("a boss shuffle reads each boss as any its dungeon may hold", async ({
     () => JSON.parse(localStorage.getItem("alltp-tracker-state") ?? "{}").state,
   );
   expect(state.settings.bossShuffle).toBe("full");
+
+  // Marked Blind, whom the sword beats: in logic again, by keyboard too
+  const known = page.getByTestId("known-boss-overlay-8");
+  await expect(known).toHaveAccessibleName("Misery Mire boss: unknown");
+  for (let step = 0; step < 7; step++) await known.click();
+  await expect(known).toHaveAccessibleName("Misery Mire boss: Blind");
+  await expect(boss).toHaveAccessibleName(/: boss available/);
+  await known.focus();
+  await page.keyboard.press("-");
+  await expect(known).toHaveAccessibleName("Misery Mire boss: Mothula");
+  const { violations } = await new AxeBuilder({ page })
+    .include('[data-testid="item-grid"]')
+    .withTags(WCAG_AA)
+    .analyze();
+  expect(violations.map(({ id }) => id)).toEqual([]);
 });
 
 for (const width of WIDTHS) {

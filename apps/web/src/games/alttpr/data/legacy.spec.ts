@@ -42,6 +42,7 @@ const ADDED = [
   "heldpendants",
   "triforce",
   "goalpieces",
+  ...Array.from({ length: 10 }, (_, index) => `knownboss${index}`),
 ];
 
 /**

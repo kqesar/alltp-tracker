@@ -12,10 +12,16 @@ import {
 } from "@/games/alttpr/data/keymap";
 import { getPreset } from "@/games/alttpr/data/presets";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
+import {
+  knownBossIndex,
+  knownBossValues,
+} from "@/games/alttpr/logic/knownBosses";
 import { smallKeysMax } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
-/** The grid cell a control is drawn in: its own, its boss's or its key cell. */
+/**
+ * The grid cell a control is drawn in: its own, its boss's or its key cell.
+ */
 const cellOf = (control: ControlId) => {
   const index = dungeonOf(control);
   if (index === null) return control;
@@ -30,9 +36,15 @@ const Board = ({ control }: { control: ControlId }) => {
 
 /** How many values a control cycles through. */
 const statesOf = (control: ControlId) => {
-  const [, kind, index] = /^(smallkey|medallion)(\d+)$/.exec(control) ?? [];
+  const [, kind, index] =
+    /^(smallkey|medallion|knownboss)(\d+)$/.exec(control) ?? [];
   if (kind === "smallkey") return smallKeysMax(Number(index)) + 1;
   if (kind === "medallion") return 4;
+  // Not known, then the bosses its slot can hold
+  if (kind === "knownboss") {
+    return knownBossValues(Number(index), useGameStore.getState().settings)
+      .length;
+  }
   // Not set, then the 3 starting hearts to 20 a quarter at a time
   if (control === "hearts") return 1 + 4 * (itemsMax.hearts - 1) + 1;
   if (typeof items[control] === "boolean") return 2;
@@ -42,10 +54,12 @@ const statesOf = (control: ControlId) => {
 /** The grid button a control is drawn as. */
 const testIdOf = (control: ControlId) => {
   const [, kind, index] =
-    /^(chest|reward|medallion|bigkey|smallkey|map|compass)(\d+)$/.exec(
+    /^(chest|reward|medallion|bigkey|smallkey|map|compass|knownboss)(\d+)$/.exec(
       control,
     ) ?? [];
   switch (kind) {
+    case "knownboss":
+      return `known-boss-overlay-${index}`;
     case "chest":
     case "reward":
     case "medallion":
@@ -87,6 +101,12 @@ const freshRun = (control: ControlId) =>
       useGameStore.setState({
         presetId,
         settings: getPreset(presetId).settings,
+      });
+    }
+    // A dungeon's known boss shows while its bosses may move
+    if (knownBossIndex(control) !== null) {
+      useGameStore.setState({
+        settings: { ...getPreset("open").settings, bossShuffle: "full" },
       });
     }
     useGameStore.getState().setBigKeysVisible(true);

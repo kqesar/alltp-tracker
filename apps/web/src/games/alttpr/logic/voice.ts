@@ -9,8 +9,14 @@
 // dictionary (vosk-model-small-en-us-0.15): a name it lacks is spoken as the
 // words it has that sound like it ("samaria" for Somaria), as checked against
 // synthesized speech of the real names in three voices.
+import { bossesAt, LEGACY_DUNGEONS } from "@alltp/pack-alttpr";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
 import { CONTROLS, type ControlId } from "@/games/alttpr/data/keymap";
+import {
+  knownBossCell,
+  placeAt,
+  valueOfBoss,
+} from "@/games/alttpr/logic/knownBosses";
 
 /** The word every command starts with. */
 export const WAKE_WORD = "tracker";
@@ -191,6 +197,35 @@ const PARTS: readonly (readonly [
     (index) => `reward${index}`,
     { exactly: 4 },
   ],
+  // The boss a dungeon holds under boss shuffle, each said in words the
+  // dictionary has (checked against the model's Gr.fst): only "blind" and
+  // "vitreous" are its own; Agahnim and Ganon never move
+  ...(
+    [
+      [["armor knights"], "armosKnights"],
+      [["lan molas"], "lanmolas"],
+      [["mold dorm"], "moldorm"],
+      [["helma saur", "helma saur king"], "helmasaurKing"],
+      [["argus"], "arrghus"],
+      [["moth hula"], "mothula"],
+      [["blind"], "blind"],
+      [["cold stare"], "kholdstare"],
+      [["vitreous"], "vitreous"],
+      [["tri necks"], "trinexx"],
+    ] as const
+  ).map(
+    ([phrases, boss]) =>
+      [
+        phrases,
+        // Only a dungeon whose slot can hold that boss
+        (index: number) =>
+          index < LEGACY_DUNGEONS.length &&
+          bossesAt(placeAt(index)).includes(boss)
+            ? knownBossCell(index)
+            : null,
+        { exactly: valueOfBoss(boss) },
+      ] as const,
+  ),
 ];
 
 /** Commands about the run rather than a control. */
