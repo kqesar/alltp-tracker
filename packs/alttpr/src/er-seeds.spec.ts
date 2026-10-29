@@ -122,11 +122,11 @@ const PENDING: Readonly<
 > = {
   "6GKBQZ3pye": {
     reason:
-      "standard dungeon items (keys in their dungeon, the ER world reads them as items) and the simple shuffle's pools",
+      "standard dungeon items (keys in their dungeon, the ER world reads them as items)",
   },
   DvW0egkQyd: {
     reason:
-      "standard dungeon items (keys in their dungeon, the ER world reads them as items) and the simple shuffle's pools",
+      "standard dungeon items (keys in their dungeon, the ER world reads them as items)",
   },
   kveDj7bgMm: {
     reason:
@@ -134,7 +134,7 @@ const PENDING: Readonly<
   },
   qMleRm5avd: {
     reason:
-      "standard dungeon items (every miss is a dungeon's) and the restricted shuffle's pools",
+      "standard dungeon items: every miss is a dungeon's key, big key or prize",
   },
 };
 

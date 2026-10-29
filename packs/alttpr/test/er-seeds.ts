@@ -10,9 +10,9 @@ import {
   SHUFFLED_BOSSES,
   type ShuffledBoss,
 } from "../src/bosses";
-import { entranceNamed, targetNamed } from "../src/entrances";
+import { type ErShuffle, entranceNamed, targetNamed } from "../src/entrances";
 import rules from "../src/entrances/rules.json" with { type: "json" };
-import { crossedConnections, erWorld } from "../src/er-world";
+import { erConnections, erWorld } from "../src/er-world";
 import { medallionFacts, padsFromUpstream } from "../src/medallions";
 import { settingsFromUpstream } from "../src/settings";
 
@@ -94,9 +94,12 @@ export function seedWorld(
     "enemizer.bossShuffle": meta["enemizer.boss_shuffle"],
     ...config,
   });
+  const shuffle = meta.shuffle as ErShuffle;
+  if (!["simple", "restricted", "full", "crossed"].includes(shuffle))
+    throw new RangeError(`the ${meta.shuffle} shuffle is not ported`);
   return erWorld(
     settings,
-    crossedConnections(settings.standardMode ? "standard" : "open", noted),
+    erConnections(shuffle, settings.standardMode ? "standard" : "open", noted),
   );
 }
 

@@ -1019,34 +1019,70 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
 - `TARGETS`: a side of a dungeon or connector cave (its exit), a single
   door's place, or where a hole drops, grouped by the place a player knows
   (`place`, `side`);
-- `crossedPool(mode, retro)`: what alttpr.com's crossed shuffle mixes. It
-  shuffles Ganon's Tower by default (`EntranceRandomizer.py:228`).
-  - `targetsOf`: what the shuffle may give each entrance. A hole gets a
-    drop, a hole's cave door gets such a cave's exit, Skull Woods' doors and
-    holes get their own, and any other door the rest.
-  - `partner`: what one note settles, since a hole and its cave's door
-    lead into the same cave.
+- `entrancePool(shuffle, mode, retro)`: what a shuffle mixes in the Open
+  (Retro's with `retro`) or Standard world, one `EntrancePool` per shuffle
+  (`ErShuffle`: `simplePool`, `restrictedPool`, `fullPool`, `crossedPool`).
+  The randomizer's rules never ask which shuffle made a seed (`Rules.py`
+  branches on No Logic alone), so a shuffle is its pool and how it connects
+  doors (`EntranceShuffle.py:63-440`). It shuffles Ganon's Tower by default
+  (`EntranceRandomizer.py:228`).
+  - `entrances`: every pool shuffles the same 138 doors and holes in the
+    Open world. Standard keeps the escape's doors (the castle's front door,
+    the uncle's passage and its hole), and the simple and restricted
+    shuffles also keep the castle's side doors and Agahnim's Tower's
+    (`simple_shuffle_dungeons` leaves Hyrule Castle in Standard,
+    `:2054-2069`).
+  - `targetsOf`: what the shuffle may give each entrance, read off the
+    tables each step of the shuffle is handed. A hole gets a drop, a hole's
+    cave door such a cave's exit (the Pyramid never Sanctuary's but in the
+    crossed shuffle, `:1838-1844`), Skull Woods' doors and holes their own.
+    Any other door:
+
+    | Shuffle | Dungeons | Caves with several doors | Single doors |
+    | --- | --- | --- | --- |
+    | simple | among dungeons: a one-door dungeon's door any one-door dungeon, a four-door dungeon's door (Desert, Turtle Rock, the castle with Agahnim's Tower in Open) that door of whichever four-door dungeon moved there | each pair of two-door caves' doors (`Two_Door_Caves`) a two-door cave; Death Mountain's other doors the rest, the Old Man's house and cave among them | single caves only |
+    | restricted | as simple | any other door, the Old Man's house and cave in the Light World | any other door |
+    | full | any door | any door, each cave in one world (the Old Man's, and Standard's castle sides, in the Light World only) | any door |
+    | crossed | any door | any door | any door |
+
+    The restricted, full and crossed shuffles send a must-exit door
+    (`*_Must_Exit`: Bumper Cave's top and Hookshot Cave's back; in full and
+    crossed also Dark Death Mountain's east ledge, Turtle Rock's isolated
+    ledge and the Desert's east door) a cave's last exit
+    (`connect_mandatory_exits`), so never a single cave nor a lone exit,
+    never the first of the caves the randomizer keeps as tuples
+    (Superbunny's bottom, Spiral Cave's top, Spectacle Rock's peak and top)
+    nor Turtle Rock's east ledge, which it puts first. The Old Man's way out
+    is one of his Death Mountain doors (or Tower of Hera's, but in simple
+    and restricted), the blacksmith's and the bomb shop's huts take the
+    doors of their tables.
+  - `partners`: what one note settles beside it, only what the randomizer
+    always connects together. A hole and its cave's door lead into the same
+    cave (`scramble_holes`). In the simple shuffle a pair of doors takes a
+    two-door cave whole, its first door the cave's first exit (`:76-95`;
+    `unbias_some_entrances` shuffles a cave's exits but those it keeps as
+    tuples, so Superbunny's and Spiral Cave's keep their order). In the
+    simple and restricted shuffles a four-door dungeon moves whole by a
+    fixed table (`:2064-2110`): one door tells the other three.
   - In the retro world, the take-any caves (`takeAnys` in `er.json`, read
     from `ItemList.py`'s `set_up_take_anys`: the old man's sword cave and
     four take-anys, and the caves whose doors it draws for them) join
     every door that may lead to such a cave. The game loads a take-any by
     another place's entrance (a cave shop's), so autotracking cannot tell
     one from that shop: noting it is left to the player.
-- `fullPool(mode, retro)`: what the full shuffle mixes (`EntranceShuffle.py:
-  260-364`): the same doors and holes, as both draw on the same tables,
-  `scramble_holes` and Skull Woods' shuffle, but a cave stays in the world
-  of its door, so a Dark World door never leads to the Old Man's cave and
-  house (`:301-322, 352`) nor, in Standard, to the castle's side doors
-  (`:315`). The simple, restricted and insanity shuffles pool other doors
-  with other targets (`:63-259, 759-905`) and are not ported.
+  - The insanity shuffle parts a door from its way out (`:759-905`) and the
+    Inverted world runs tables of its own (`link_inverted_entrances`):
+    neither is ported.
 - `PLACE_OF_LOCATION`: the place a check inside lies in, by the region the
   randomizer puts it in. A few of its names are vt's under other words
   (`VT_NAMES`), and its bosses' and sewers' regions are told by hand
   (`REGION_PLACES`).
 
-`entrances.spec.ts` holds the pool to `0yAObedRMV`, a real Crosskeys seed
-(see "Entrance randomizer seeds" below): its shuffled entrances are exactly
-the pool, and every one leads to a target the model knows.
+`entrances.spec.ts` holds each pool to every recorded seed of its shuffle
+(see "Entrance randomizer seeds" below), each world's: the entrances the
+seed shuffled are exactly the pool's (what a Standard world keeps listed as
+vanilla), each leads to a target its pool offers it, and every partner a
+note settles is the seed's.
 
 ### Entrance randomizer seeds
 
@@ -1087,7 +1123,7 @@ combination asked, Retro with full dungeon items included, and spelled
 Retro's keys as bare `Key`s.
 
 `src/er-seeds.spec.ts` holds `erWorld` to each recording: every entrance of
-the seed noted (`crossedConnections`), then, sphere by sphere, every location
+the seed noted (`erConnections` of its shuffle), then, sphere by sphere, every location
 of the sphere must be `yes` with the items of the earlier spheres held and
 the pads' medallions known from `Special` and the bosses from `Bosses`
 (`bossesKnown`), and in Retro the key and arrow shops marked from the first
@@ -1280,7 +1316,7 @@ run's settings and its connections, and compiles it with the engine.
 
 ```mermaid
 flowchart LR
-  noted["entrances noted<br/>(entrance id → target id)"] --> conn["crossedConnections<br/>kept doors, mandatory,<br/>two-way caves, one-way doors"]
+  noted["entrances noted<br/>(entrance id → target id)"] --> conn["erConnections<br/>kept doors, mandatory,<br/>two-way caves, one-way doors"]
   conn --> mark["mark light / dark<br/>(mark_light_world_regions)"]
   conn --> spots["rules.json per spot<br/>+ the bomb shop's case"]
   mark --> bunny["bunny's rules<br/>(set_bunny_rules)"]
@@ -1293,9 +1329,11 @@ flowchart LR
 ```
 
 - **Connections** (`ErConnections`: an entrance's name to the region it
-  opens on). `crossedConnections(mode, noted)` makes what
-  `link_entrances` keeps (Link's House, the Tavern's back door, in
-  Standard the escape's doors) and the mandatory ones, then each noted
+  opens on). `erConnections(shuffle, mode, noted)` (`crossedConnections`
+  for the crossed shuffle) makes what `link_entrances` keeps (Link's House,
+  the Tavern's back door, in Standard the escape's doors, and in the simple
+  and restricted shuffles the castle's other doors and Agahnim's Tower's)
+  and the mandatory ones, then each noted
   entrance: a dungeon's or a connector cave's exit both ways
   (`connect_two_way`), a single cave or a hole one way. An entrance not
   noted leads nowhere, so a check is in logic only through doors the

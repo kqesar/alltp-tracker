@@ -161,11 +161,13 @@ export {
   dungeonStatus,
 } from "./dungeons";
 export {
-  type CrossedPool,
   crossedPool,
   ENTRANCES,
+  type EntrancePool,
   type EntranceTarget,
+  type ErShuffle,
   entranceNamed,
+  entrancePool,
   erLocationId,
   fullPool,
   type GameLink,
@@ -173,6 +175,8 @@ export {
   linksOf,
   type OverworldEntrance,
   PLACE_OF_LOCATION,
+  restrictedPool,
+  simplePool,
   TARGETS,
   targetNamed,
 } from "./entrances";
@@ -189,6 +193,7 @@ export {
   type ErConnections,
   type ErOptions,
   type ErWorld,
+  erConnections,
   erWorld,
   mandatoryConnections,
   solveFacts,
