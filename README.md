@@ -88,7 +88,17 @@ rewritten in React and TypeScript.
 Super Metroid's item sprites are Map Rando's item sheet (`blkerby/MapRandomizer`, MIT). SMZ3's
 map of Zebes is composed from VARIA's area maps, its locations placed as VARIA's autotracker
 places them (`theonlydude/RandomMetroidSolver`, MIT). Each ships with its licence beside it.
-The games' art belongs to Nintendo. The hearts counter's heart is drawn by hand, pixel by pixel
-(`apps/web/scripts/heart-icon.mjs`), filled by quarters as the game's pause menu draws heart
-pieces (its tile layout, read in the zelda3 decompilation's `hud.c`); nothing is extracted from a
-ROM.
+The games' art belongs to Nintendo. A Link to the Past's item sprites came with the original
+tracker (TestRunnerSRL/lttp-tracker, MIT), its dungeon map and compass from
+[hutchch/ALTTPR-Tracker](https://github.com/hutchch/ALTTPR-Tracker) (MIT, at `55a838e`). The
+Triforce piece is the randomizer's own, cut from z3randomizer's `data/customitems.png`
+([KatDevsGames/z3randomizer](https://github.com/KatDevsGames/z3randomizer), MIT, at `dcb0a2b`,
+by `apps/web/scripts/triforce-icon.mjs`). Where the game has no sprite for what the board shows,
+the art is ours, drawn on the game's own sprites: the dungeon counters' digits
+(`apps/web/scripts/chest-counts.mjs`), the "?" medallion and prize, the 5/6 crystal, both
+boomerangs at once, the retro shops' rupee. The hearts counter's heart is drawn by hand, pixel by
+pixel (`apps/web/scripts/heart-icon.mjs`), filled by quarters as the game's pause menu draws heart
+pieces (its tile layout, read in the zelda3 decompilation's `hud.c`). The bottles' contents (the
+potions, the fairy, the bees) are drawn by us over the game's empty bottle
+(`apps/web/scripts/bottle-icons.mjs`): the game draws a sprite for each in its pause menu, but no
+licence-clean copy of them exists. Nothing is extracted from a ROM.
