@@ -1542,22 +1542,31 @@ key, and the model is then the solver.
   the solver without the keys and with them all;
 - its soundness: placements the fill may make (`test/er-fill.ts`: each item
   at a spot the fill surely takes, never an always-allowed or refused one,
-  drawn at random or among those the player reaches least), drawn on the
-  world the randomizer filled and played out by the player in the world of
-  the doors noted (part of a real seed's, at random), reach every location
-  the model says `yes` to. The property fails when the model checks one
-  count of a dungeon's items only, takes a key once one of its spots is
-  reached, or reads its spots or everything in the world of the doors noted
-  (checked by hand). Two parts rest on the argument alone, no random world
-  having turned up what breaks them: the other dungeons' items kept at what
-  is surely in hand, and Turtle Rock's doors known.
+  drawn at random or among those the player reaches least, the big keys
+  then the small keys, each kind in any order, the randomizer's reversed
+  pool among them), drawn on the world the randomizer filled and played out
+  by the player in the world of the doors noted (part of a real seed's, at
+  random: a crossed one, a full one and a Standard simple one), reach every
+  location the model says `yes` to. The property fails when the model
+  checks one count of a dungeon's items only, takes a key once one of its
+  spots is reached, or reads its spots or everything in the world of the
+  doors noted (checked by hand). Two parts rest on the argument alone, no
+  random world having turned up what breaks them: the other dungeons' items
+  kept at what is surely in hand, and Turtle Rock's doors known. It never
+  draws a key locking itself in (a small key in the room it opens, a big
+  key in its own big chest): the door or chest then reads what the spot
+  holds (`item_name`), which the pack reads as `maybe`, so the player's
+  sweep could not follow. Nor does it catch, in its 50 runs, a spot list
+  one key short (each item's spots read with two of it missing): the golden
+  cases and `KEY_DOUBTS` do.
 
 **Cost**: the model builds the second world and solves it with everything,
 then once per untracked item without one of it (the facts everything gains
-kept, which only adds spots), about 5 to 10 ms more per entrance noted. A solve takes a few solves of the
-world: about 1 to 1.5 ms on average along a whole game under Vitest, up to
-7 ms on the click that proves a dungeon safe, once per world, since a proof
-holds in every state that holds as much and is kept.
+kept, which only adds spots), about 5 to 10 ms more per entrance noted. A
+solve takes a few solves of the world: about 1 to 1.5 ms on average along a
+whole game under Vitest, up to 7 ms on the click that proves a dungeon safe,
+once per world, since a proof holds in every state that holds as much and
+is kept.
 
 ## The legacy format
 

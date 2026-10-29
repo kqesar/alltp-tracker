@@ -356,6 +356,8 @@ const FILLED: readonly (readonly [
     [
       ["dMEp8enPG1", {}],
       ["0yAObedRMV", { dungeonItems: "standard" }],
+      // Standard's escape key, in a simple shuffle
+      ["6GKBQZ3pye", {}],
     ] as const
   ).map(([hash, config]) => {
     const { spoiler } = erSeed(hash);
@@ -401,13 +403,18 @@ describe("the key model's soundness", () => {
             const score = (spot: string) =>
               rank(all.location(spot)) * 3 + rank(alone.location(spot));
             // The randomizer fills the seed's whole world
-            const placement = fill(filled, (spots) => {
-              const low = Math.min(...spots.map(score));
-              const drawn = adversarial
-                ? spots.filter((spot) => score(spot) === low)
-                : spots;
-              return drawn[draw(drawn.length)] as string;
-            });
+            const placement = fill(
+              filled,
+              (spots) => {
+                const low = Math.min(...spots.map(score));
+                const drawn = adversarial
+                  ? spots.filter((spot) => score(spot) === low)
+                  : spots;
+                return drawn[draw(drawn.length)] as string;
+              },
+              // Each kind's items in any order, the randomizer's among them
+              (items) => items[draw(items.length)] as string,
+            );
             if (placement === undefined) return true;
             const keyed = solveErWithKeys(world, state);
             const played = sweep(world, state, placement);

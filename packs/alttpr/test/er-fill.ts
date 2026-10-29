@@ -7,15 +7,20 @@
 // Room's key among them (Dungeons.py fill_dungeons_restrictive). `fill`
 // draws such a placement, a spot the rules surely take (`yes`) for each
 // item, never one an always-allow alone lets in, nor a spot a forbid_item
-// refuses: each is a placement the randomizer may make, whatever the order
-// it takes the items in. `sweep` plays a placement out as the player does,
+// refuses: each is a placement the randomizer may make, in an order it may
+// take the items in. `sweep` plays a placement out as the player does,
 // picking up each key where the state so far surely reaches it.
+//
+// What it leaves out: a key the always-allow lets lock itself in (a small
+// key in the room it opens, a big key in its own big chest). The door or
+// chest then reads what the spot holds (item_name, Rules.py:283-413), which
+// the pack's rules read as maybe: a sweep could not follow the player in.
 import { itemValue, type Solution, type State } from "@alltp/engine";
 import { erLocationId } from "../src/entrances";
 import ruleTables from "../src/entrances/rules.json" with { type: "json" };
 import { erDungeons, erUntracked } from "../src/er-keys";
 import { type ErWorld, solveFactsState } from "../src/er-world";
-import { everything } from "../src/keys";
+import { everything, type UntrackedItem } from "../src/keys";
 import type { AlttprSettings } from "../src/settings";
 
 /** Where each key sits: a spot (the pack's id) to its item (`keyD1`). */
@@ -76,21 +81,31 @@ export function sweep(
 /**
  * A placement of a world's untracked items the randomizer may make, each
  * spot chosen by `pick` among those the fill surely takes: the big keys
- * first, then the small keys (Dungeons.py:149-153). Undefined when an item
- * finds no such spot.
+ * first, then the small keys (Dungeons.py:149-153), each kind in the order
+ * `next` draws among the items left of it. The randomizer takes them from
+ * the end of its pool (Fill.py:174-182), one order of those. Undefined when
+ * an item finds no such spot.
  */
 export function fill(
   world: ErWorld,
   pick: (spots: readonly string[]) => string,
+  next: (items: readonly string[]) => string = ([first]) => first ?? "",
 ): Placement | undefined {
   const untracked = erUntracked(world);
-  const items = [
-    ...untracked.filter((u) => u.item.startsWith("bigKey")),
-    ...untracked.filter((u) => u.item.startsWith("key")),
-  ].flatMap((u) => {
-    const preplaced = [...PREPLACED.values()].filter((i) => i === u.item);
-    return Array.from({ length: u.count - preplaced.length }, () => u);
-  });
+  const copies = (kind: string) =>
+    untracked
+      .filter((u) => u.item.startsWith(kind))
+      .flatMap((u) => {
+        const preplaced = [...PREPLACED.values()].filter((i) => i === u.item);
+        return Array.from({ length: u.count - preplaced.length }, () => u);
+      });
+  const items: UntrackedItem[] = [];
+  for (const left of [copies("bigKey"), copies("key")])
+    while (left.length > 0) {
+      const item = next([...new Set(left.map((u) => u.item))]);
+      const at = left.findIndex((u) => u.item === item);
+      items.push(...left.splice(at < 0 ? 0 : at, 1));
+    }
   const placed = new Map(PREPLACED);
   const retro = world.settings.genericKeys === true;
   const dungeonSpots = new Map(erDungeons(retro).map((d) => [d.id, d.spots]));
