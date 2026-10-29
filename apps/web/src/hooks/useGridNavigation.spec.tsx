@@ -17,7 +17,7 @@ const tabStops = () =>
   document.querySelectorAll('[data-grid-row][tabindex="0"]');
 
 const layout = [
-  ["bow", "", "hammer"],
+  ["lantern", "", "hammer"],
   ["sword", "boots", "flute"],
 ];
 
@@ -30,7 +30,7 @@ describe("grid keyboard navigation", () => {
     render(<TrackerGrid itemLayout={layout} />);
 
     expect(tabStops()).toHaveLength(1);
-    expect(screen.getByTestId("item-bow")).toHaveAttribute("tabindex", "0");
+    expect(screen.getByTestId("item-lantern")).toHaveAttribute("tabindex", "0");
 
     act(() => screen.getByTestId("item-boots").focus());
 
@@ -40,13 +40,13 @@ describe("grid keyboard navigation", () => {
 
   it("moves along a row, skipping empty cells and wrapping within the row", () => {
     render(<TrackerGrid itemLayout={layout} />);
-    act(() => screen.getByTestId("item-bow").focus());
+    act(() => screen.getByTestId("item-lantern").focus());
 
     press("ArrowRight");
     expect(focused()).toBe("item-hammer");
 
     press("ArrowRight");
-    expect(focused()).toBe("item-bow");
+    expect(focused()).toBe("item-lantern");
 
     press("ArrowLeft");
     expect(focused()).toBe("item-hammer");
@@ -59,7 +59,7 @@ describe("grid keyboard navigation", () => {
     press("ArrowDown");
     expect(focused()).toBe("item-flute");
 
-    act(() => screen.getByTestId("item-bow").focus());
+    act(() => screen.getByTestId("item-lantern").focus());
     press("ArrowUp");
     expect(focused()).toBe("item-sword");
   });
@@ -73,13 +73,13 @@ describe("grid keyboard navigation", () => {
     press("End");
     expect(focused()).toBe("item-flute");
     press("Home", { ctrlKey: true });
-    expect(focused()).toBe("item-bow");
+    expect(focused()).toBe("item-lantern");
     press("End", { ctrlKey: true });
     expect(focused()).toBe("item-flute");
   });
 
   it("reaches every overlay of a boss cell, in reading order", () => {
-    render(<TrackerGrid itemLayout={[["boss8", "bow"]]} />);
+    render(<TrackerGrid itemLayout={[["boss8", "lantern"]]} />);
     act(() => screen.getByTestId("item-boss8").focus());
 
     const visited = [focused()];
@@ -93,30 +93,30 @@ describe("grid keyboard navigation", () => {
       "medallion-overlay-8",
       "chest-overlay-8",
       "reward-overlay-8",
-      "item-bow",
+      "item-lantern",
     ]);
   });
 
   it("reaches both keys of a keysanity cell", () => {
     act(() => useGameStore.getState().setBigKeysVisible(true));
-    render(<TrackerGrid itemLayout={[["keys3", "bow"]]} />);
+    render(<TrackerGrid itemLayout={[["keys3", "lantern"]]} />);
     act(() => screen.getByTestId("big-key-3").focus());
 
     press("ArrowRight");
     expect(focused()).toBe("small-key-3");
     press("ArrowRight");
-    expect(focused()).toBe("item-bow");
+    expect(focused()).toBe("item-lantern");
   });
 
   it("keeps a Tab stop when the control holding it disappears", () => {
     act(() => useGameStore.getState().setBigKeysVisible(true));
-    render(<TrackerGrid itemLayout={[["keys3", "bow"]]} />);
+    render(<TrackerGrid itemLayout={[["keys3", "lantern"]]} />);
     act(() => screen.getByTestId("small-key-3").focus());
 
     act(() => useGameStore.getState().setBigKeysVisible(false));
 
     expect(tabStops()).toHaveLength(1);
-    expect(screen.getByTestId("item-bow")).toHaveAttribute("tabindex", "0");
+    expect(screen.getByTestId("item-lantern")).toHaveAttribute("tabindex", "0");
   });
 
   it("leaves focus alone for keys it does not handle", () => {
