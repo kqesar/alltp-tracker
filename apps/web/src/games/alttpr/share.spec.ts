@@ -1,5 +1,6 @@
 import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { DOOR_LOCATION_IDS, DOOR_OPTIONS } from "@/games/alttpr/data/doorRando";
 import { items as freshItems } from "@/games/alttpr/data/items";
 import {
   ACCESSIBILITY_LABELS,
@@ -46,6 +47,9 @@ import {
 } from "@/share/playedRuns";
 import { decodeRun, sharedPayload } from "@/share/runLink";
 import { CHAT_LINK_CHARS, makeLink } from "@/share/shareRun";
+
+/** The locations links index: the map's, then the Door Randomizer's. */
+const LINK_LOCATIONS = MAP_LOCATIONS.size + DOOR_LOCATION_IDS.size;
 
 const MALFORMED = "This link does not hold a tracker run.";
 
@@ -303,16 +307,32 @@ describe("an ALttPR run in a packed link", () => {
         }),
       ),
     );
-    const { items: writtenItems, ...writtenRest } = written.progress;
-    const { items: recordedItems, ...recordedRest } = recorded.link.progress;
+    const {
+      checked: writtenChecked,
+      items: writtenItems,
+      ...writtenRest
+    } = written.progress;
+    const {
+      checked: recordedChecked,
+      items: recordedItems,
+      ...recordedRest
+    } = recorded.link.progress;
     expect(writtenRest).toEqual(recordedRest);
+    // The recorded checks' bits, then the Door Randomizer's locations
+    // appended to the table, none set
+    expect([...fromBase64Url(writtenChecked)]).toEqual([
+      ...fromBase64Url(recordedChecked),
+      ...Array(
+        Math.ceil(LINK_LOCATIONS / 8) - Math.ceil(MAP_LOCATIONS.size / 8),
+      ).fill(0),
+    ]);
     expect({ ...written, progress: null, sizes: null, table: null }).toEqual({
       ...recorded.link,
       progress: null,
       sizes: null,
       table: null,
     });
-    expect(written.sizes).toEqual([MAP_LOCATIONS.size, SHARE_ITEMS.length]);
+    expect(written.sizes).toEqual([LINK_LOCATIONS, SHARE_ITEMS.length]);
     // The recorded items' bytes, then each item appended at its fresh value
     // (a signed varint: twice a small count)
     expect([...fromBase64Url(writtenItems)]).toEqual([
@@ -513,7 +533,7 @@ describe("an ALttPR run in a packed link", () => {
       "arrowcapacity",
     ]);
     expect(JSON.parse(packLink(play.alttpr(0.5, randoms()))).sizes).toEqual([
-      MAP_LOCATIONS.size,
+      LINK_LOCATIONS,
       SHARE_ITEMS.length,
       SHARE_SETTINGS.length,
     ]);
@@ -588,7 +608,7 @@ describe("an ALttPR run in a packed link", () => {
 
   it("refuses checked locations of the wrong length, or past the table", () => {
     const link = packLink(play.alttpr(0.5, randoms()));
-    const length = Math.ceil(MAP_LOCATIONS.size / 8);
+    const length = Math.ceil(LINK_LOCATIONS / 8);
     const full = new Uint8Array(length);
 
     for (const bytes of [
@@ -903,6 +923,10 @@ describe("the settings in a link (link 4)", () => {
       "hidden:",
       ...HIDEABLE.map((setting) => `hidden:${setting}`),
       ...Object.keys(BOSS_SHUFFLE_LABELS).map((v) => `bossShuffle:${v}`),
+      // A Door Randomizer run's own
+      ...Object.entries(DOOR_OPTIONS).flatMap(([key, options]) =>
+        options.map(([option]) => `${key}:${String(option)}`),
+      ),
     ];
     // A new option is appended to SHARE_SETTINGS: moving one breaks links
     expect(new Set(SHARE_SETTINGS)).toEqual(new Set(options));
@@ -923,7 +947,7 @@ describe("the settings in a link (link 4)", () => {
       ];
       if (key === "hidden") continue;
       const value =
-        key === "swordless"
+        text === "true" || text === "false"
           ? text === "true"
           : key.startsWith("crystals")
             ? Number(text)

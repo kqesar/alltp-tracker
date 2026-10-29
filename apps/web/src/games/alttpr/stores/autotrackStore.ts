@@ -34,6 +34,7 @@ import {
   type SeedFileResult,
   withSeedFile,
 } from "@/games/alttpr/autotrack/seedFile";
+import { doorTablesOf } from "@/games/alttpr/data/doorRando";
 import { withoutEscape } from "@/games/alttpr/logic/packItems";
 import { useDarkRoomStore } from "@/games/alttpr/stores/darkRoomStore";
 import { isFreshRun, useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -272,6 +273,19 @@ useAutotrackStore.subscribe((state, before) => {
   }
 });
 syncAcrossTabs(useAutotrackStore);
+
+/**
+ * A Door Randomizer run's tables follow its settings while a session runs:
+ * read while they shuffle what each records, never otherwise (v2.0's
+ * locations "only ... in modes where they are shuffled").
+ */
+const followDoorTables = () =>
+  useGameStore.subscribe((state, before) => {
+    if (state.settings !== before.settings) {
+      runtime?.setDoorTables(doorTablesOf(state.settings));
+    }
+  });
+let stopDoorTables: (() => void) | null = null;
 
 /** The board's side of the session: what it read, laid on the run. */
 let follower: Follower | null = null;
@@ -518,12 +532,15 @@ export const connectAutotrack = async () => {
     if (mine !== generation) return;
     set({ environment });
     follower = createFollower();
+    stopDoorTables?.();
+    stopDoorTables = followDoorTables();
     runtime = startRuntime(
       {
         environment,
         ...bridge,
         darkRoom: useAutotrackStore.getState().darkRoomMap,
         darkRoomArt: useAutotrackStore.getState().darkRoomStyle === "art",
+        doorTables: doorTablesOf(useGameStore.getState().settings),
         raceHeld: raceHeldByPage,
         raceSetting: useAutotrackStore.getState().raceChoice,
         ...overrides,
@@ -543,6 +560,8 @@ export const stopAutotrack = () => {
   generation++;
   runtime?.stop();
   runtime = null;
+  stopDoorTables?.();
+  stopDoorTables = null;
   follower = null;
   forgetEscape();
   useDarkRoomStore.getState().show(null);

@@ -71,7 +71,12 @@ export const applyVoice = (action: VoiceAction): Heard => {
   const dungeon = Number(index);
   if (kind === "smallkey") {
     const now = store.smallKeys[dungeon] ?? 0;
-    const next = changedValue(change, now, 0, smallKeysMax(dungeon));
+    const next = changedValue(
+      change,
+      now,
+      0,
+      smallKeysMax(dungeon, store.settings),
+    );
     store.setSmallKeys(dungeon, Number(next));
     return { changed: next !== now, words };
   }

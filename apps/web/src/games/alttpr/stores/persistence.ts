@@ -5,6 +5,10 @@ import {
   MAP_LOCATIONS,
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES, MEDALLION_VALUES } from "@/games/alttpr/constants";
+import {
+  DOOR_LOCATION_IDS,
+  isDoorSettings,
+} from "@/games/alttpr/data/doorRando";
 import type { ItemState } from "@/games/alttpr/data/items";
 import {
   items as freshItems,
@@ -33,7 +37,7 @@ import {
   type RunSettings,
 } from "@/games/alttpr/data/presets";
 import type { TrickPrefs } from "@/games/alttpr/data/tricks";
-import { counterMax, SMALL_KEYS_MAX } from "@/games/alttpr/logic/settings";
+import { counterMax, SMALL_KEYS_CAP } from "@/games/alttpr/logic/settings";
 import { isTimelineKey, type Timeline } from "@/games/alttpr/logic/timeline";
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
 import { isSeedId } from "@/games/seedId";
@@ -432,7 +436,8 @@ const validateChecked = (
   for (const [id, value] of Object.entries(saved)) {
     if (value !== true) errors.push(`checked["${id}"] must be true`);
     // A location this version does not know: ignore it rather than fail
-    else if (MAP_LOCATIONS.has(id)) valid[id] = true;
+    else if (MAP_LOCATIONS.has(id) || DOOR_LOCATION_IDS.has(id))
+      valid[id] = true;
   }
   return valid;
 };
@@ -525,7 +530,9 @@ const isRunSettings = (value: unknown): value is RunSettings => {
     named(itemPlacement, PLACEMENT_LABELS) &&
     named(accessibility, ACCESSIBILITY_LABELS) &&
     named(itemPool, POOL_LABELS) &&
-    named(itemFunctionality, FUNCTIONALITY_LABELS)
+    named(itemFunctionality, FUNCTIONALITY_LABELS) &&
+    // A Door Randomizer run's own, absent from every other
+    isDoorSettings(value as Record<string, unknown>)
   );
 };
 
@@ -580,14 +587,14 @@ export const validateProgress = (
 
   if (saved.smallKeys !== undefined) {
     if (
-      isArrayOf(saved.smallKeys, SMALL_KEYS_MAX.length, (count, index) =>
-        isIntIn(count, 0, SMALL_KEYS_MAX[index] ?? 0),
+      isArrayOf(saved.smallKeys, SMALL_KEYS_CAP.length, (count, index) =>
+        isIntIn(count, 0, SMALL_KEYS_CAP[index] ?? 0),
       )
     ) {
       value.smallKeys = saved.smallKeys as number[];
     } else
       errors.push(
-        `smallKeys must hold ${SMALL_KEYS_MAX.length} counts within each dungeon's keys`,
+        `smallKeys must hold ${SMALL_KEYS_CAP.length} counts within each dungeon's keys`,
       );
   }
 

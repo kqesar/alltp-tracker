@@ -14,6 +14,18 @@
  * them best, under the seed's exact crystals and swords.
  */
 
+import {
+  DOOR_SETTING_LABELS,
+  type DoorRunSettings,
+  type DoorSetting,
+  type DoorSettings,
+  doorOf,
+  doorReasons,
+  doorRows,
+  doorValueText,
+  isDoorRun,
+} from "@/games/alttpr/data/doorRando";
+
 type RunMode = "open" | "standard" | "inverted" | "retro";
 
 type RunGoal =
@@ -133,7 +145,7 @@ export type RunSettings = {
    * stand in, and the logic reads them as unknown. Absent when all are known.
    */
   hidden?: readonly HiddenSetting[];
-};
+} & DoorRunSettings;
 
 type Preset = {
   id: string;
@@ -225,6 +237,29 @@ export const presets: Preset[] = [
     name: "Mystery",
     settings: { ...baseSettings, hidden: HIDEABLE },
   },
+  {
+    // aerinon's Door Randomizer with its doors vanilla: Hyrule Town Hall's
+    // and SahasrahBot's seeds for most races of 2026 (the DR study)
+    description:
+      "A Door Randomizer seed, doors vanilla: key drops, pots, enemy drops and shop items as its settings shuffle them.",
+    id: "door-randomizer",
+    name: "Door Randomizer",
+    settings: { ...baseSettings, randomizer: "dr" },
+  },
+  {
+    // Crosskeys rolled on the Door Randomizer (Crosskeys 2026, Hyrule Town
+    // Hall): crossed entrances, every dungeon item wild, doors vanilla
+    description:
+      "Crosskeys on the Door Randomizer: Crossworld entrances, keysanity, doors vanilla.",
+    id: "door-crosskeys",
+    name: "DR Crosskeys",
+    settings: {
+      ...baseSettings,
+      dungeonItems: "full",
+      entranceShuffle: "crossed",
+      randomizer: "dr",
+    },
+  },
 ];
 
 /**
@@ -241,7 +276,9 @@ export const crossedLogic = (settings: RunSettings): boolean =>
   settings.entranceShuffle === "crossed" &&
   (settings.mode === "open" || settings.mode === "standard") &&
   settings.dungeonItems === "full" &&
-  !bossesMayMove(settings);
+  !bossesMayMove(settings) &&
+  // A Door Randomizer seed it can hold: DR's Crosskeys, doors vanilla
+  doorReasons(settings, true).length === 0;
 
 /** A run's boss shuffle: "none" when its settings name none. */
 export const bossShuffleOf = (settings: RunSettings): BossShuffle =>
@@ -276,6 +313,8 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
   const reasons: string[] = [];
   if (settings.glitches !== undefined)
     reasons.push(GLITCHES_LABELS[settings.glitches]);
+  // A Door Randomizer seed's own (data/doorRando.ts)
+  reasons.push(...doorReasons(settings, wildItems(settings).keys));
   const { entranceShuffle: shuffle, mode } = settings;
   if (shuffle !== "none" && !crossedLogic(settings)) {
     if (shuffle !== "crossed")
@@ -286,7 +325,8 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
       reasons.push(
         "Crossworld entrances with dungeon items kept in their dungeons",
       );
-    else reasons.push("shuffled bosses behind Crossworld entrances");
+    else if (bossesMayMove(settings))
+      reasons.push("shuffled bosses behind Crossworld entrances");
   }
   return reasons;
 };
@@ -451,6 +491,8 @@ export type SettingRow = {
   readonly label: string;
   readonly value: string;
   readonly setting?: TunableSetting;
+  /** A Door Randomizer setting, which its own select changes. */
+  readonly doorSetting?: DoorSetting;
 };
 
 /** Whether a run's setting is one it has not discovered yet. */
@@ -508,5 +550,21 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
     ),
     { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
     { label: "Glitches", value: GLITCHES_LABELS[settings.glitches ?? "none"] },
+    ...(isDoorRun(settings)
+      ? [
+          {
+            label: DOOR_SETTING_LABELS.randomizer,
+            value: doorValueText("randomizer", settings.randomizer),
+          },
+        ]
+      : []),
+    ...doorRows(settings).map((doorSetting) => ({
+      doorSetting,
+      label: DOOR_SETTING_LABELS[doorSetting],
+      value: doorValueText(
+        doorSetting,
+        (doorOf(settings) as DoorSettings)[doorSetting],
+      ),
+    })),
   ];
 };

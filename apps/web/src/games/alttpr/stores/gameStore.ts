@@ -3,6 +3,10 @@ import { devtools, persist } from "zustand/middleware";
 import { boardRestored, runReplaced } from "@/autotrack/raceMode";
 import { requestResync } from "@/autotrack/resync";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
+import type {
+  DoorRunSettings,
+  DoorSetting,
+} from "@/games/alttpr/data/doorRando";
 import type { Hearts, ItemState } from "@/games/alttpr/data/items";
 import {
   bottleAfter,
@@ -162,6 +166,12 @@ type GameState = Progress &
     updateSettings: (
       change: Partial<Pick<RunSettings, TunableSetting>>,
     ) => void;
+    /**
+     * Change a Door Randomizer run's own settings in the run going, as
+     * `updateSettings` does: the counters keep their items found as the
+     * locations the settings make come and go. One undo step.
+     */
+    updateDoorSettings: (change: Partial<DoorRunSettings>) => void;
     /** Hide a setting again, as not known yet: one undo step. */
     hideSetting: (setting: HiddenSetting) => void;
     /**
@@ -407,9 +417,11 @@ const dated = (
  */
 export const retune = (
   progress: Progress,
-  change: Partial<Pick<RunSettings, TunableSetting>>,
+  change: Partial<Pick<RunSettings, TunableSetting | DoorSetting>>,
 ): { items?: ItemState; settings: RunSettings } | null => {
-  const changed = (Object.keys(change) as TunableSetting[]).filter(
+  const changed = (
+    Object.keys(change) as (TunableSetting | DoorSetting)[]
+  ).filter(
     (key) =>
       change[key] !== progress.settings[key] ||
       progress.settings.hidden?.includes(key as HiddenSetting),
@@ -424,7 +436,14 @@ export const retune = (
     ...(hidden === undefined ? {} : { hidden }),
   };
   if (hidden?.length === 0) delete settings.hidden;
-  if (settings.dungeonItems === progress.settings.dungeonItems) {
+  // Each counter keeps its items found when its top moves: dungeon items
+  // let out or kept, a Door Randomizer run's locations added or taken away
+  if (
+    COUNTER_INDICES.every(
+      (index) =>
+        counterMax(index, settings) === counterMax(index, progress.settings),
+    )
+  ) {
     return { settings };
   }
   const items = { ...progress.items } as Record<string, boolean | number>;
@@ -657,7 +676,7 @@ export const useGameStore = create<GameState>()(
         ) => {
           const state = get();
           // A dungeon without small keys (Eastern Palace) has nothing to step
-          const maxForDungeon = smallKeysMax(dungeonIndex);
+          const maxForDungeon = smallKeysMax(dungeonIndex, state.settings);
           if (maxForDungeon === 0) return;
           const newSmallKeys = [...state.smallKeys];
 
@@ -772,7 +791,8 @@ export const useGameStore = create<GameState>()(
         setSmallKeys: (dungeonIndex: number, count: number) =>
           set((state) => {
             if (state.smallKeys[dungeonIndex] === count) return state;
-            if (count < 0 || count > smallKeysMax(dungeonIndex)) return state;
+            if (count < 0 || count > smallKeysMax(dungeonIndex, state.settings))
+              return state;
             const smallKeys = [...state.smallKeys];
             smallKeys[dungeonIndex] = count;
             return record(state, { smallKeys });
@@ -817,6 +837,12 @@ export const useGameStore = create<GameState>()(
           }));
           boardRestored("alttpr", previous);
         },
+
+        updateDoorSettings: (change) =>
+          set((state) => {
+            const next = retune(progressOf(state), change);
+            return next === null ? state : record(state, next);
+          }),
 
         updateSettings: (change) =>
           set((state) => {

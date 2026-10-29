@@ -5,6 +5,12 @@ import { Modal } from "@/components/ui/Modal";
 import { SeedImport } from "@/games/alttpr/components/ui/SeedImport";
 import { TricksDialog } from "@/games/alttpr/components/ui/TricksDialog";
 import {
+  DOOR_OPTIONS,
+  type DoorSetting,
+  type DoorSettings,
+  doorOf,
+} from "@/games/alttpr/data/doorRando";
+import {
   bossShuffleOf,
   describeSettings,
   getPreset,
@@ -79,6 +85,47 @@ const SettingSelect = ({
       }
     >
       {hideable && <option value={HIDDEN}>? Unknown</option>}
+      {options.map(([option, words]) => (
+        <option key={String(option)} value={String(option)}>
+          {words}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+/**
+ * A Door Randomizer run's own setting: its options as DR names them. A
+ * change applies at once, the run's progress kept (`updateDoorSettings`),
+ * as one undo step: in a race, where the ROM's settings are never read,
+ * the player sets them so.
+ */
+const DoorSettingSelect = ({
+  id,
+  setting,
+}: {
+  id: string;
+  setting: DoorSetting;
+}) => {
+  const value = useGameStore(
+    (state) => (doorOf(state.settings) as DoorSettings | null)?.[setting],
+  );
+  const updateDoorSettings = useGameStore((state) => state.updateDoorSettings);
+  const options: readonly (readonly [boolean | string, string])[] =
+    DOOR_OPTIONS[setting];
+  return (
+    <select
+      className="run-settings__select"
+      data-testid={`run-setting-${setting}`}
+      id={id}
+      onChange={(event) => {
+        const picked = options.find(
+          ([option]) => String(option) === event.target.value,
+        );
+        if (picked) updateDoorSettings({ [setting]: picked[0] });
+      }}
+      value={String(value)}
+    >
       {options.map(([option, words]) => (
         <option key={String(option)} value={String(option)}>
           {words}
@@ -211,29 +258,37 @@ export const PresetSelector = () => {
       >
         <GamePicker current="alttpr" />
         <dl aria-label="Current run settings" className="run-settings">
-          {describeSettings(settings).map((row) => (
-            <div className="run-settings__row" key={row.label}>
-              <dt className="run-settings__label">
-                {row.setting ? (
-                  <label htmlFor={`${idPrefix}-${row.setting}`}>
-                    {row.label}
-                  </label>
-                ) : (
-                  row.label
-                )}
-              </dt>
-              <dd className="run-settings__value">
-                {row.setting ? (
-                  <SettingSelect
-                    id={`${idPrefix}-${row.setting}`}
-                    setting={row.setting}
-                  />
-                ) : (
-                  row.value
-                )}
-              </dd>
-            </div>
-          ))}
+          {describeSettings(settings).map((row) => {
+            const control = row.setting ?? row.doorSetting;
+            return (
+              <div className="run-settings__row" key={row.label}>
+                <dt className="run-settings__label">
+                  {control ? (
+                    <label htmlFor={`${idPrefix}-${control}`}>
+                      {row.label}
+                    </label>
+                  ) : (
+                    row.label
+                  )}
+                </dt>
+                <dd className="run-settings__value">
+                  {row.setting ? (
+                    <SettingSelect
+                      id={`${idPrefix}-${row.setting}`}
+                      setting={row.setting}
+                    />
+                  ) : row.doorSetting ? (
+                    <DoorSettingSelect
+                      id={`${idPrefix}-${row.doorSetting}`}
+                      setting={row.doorSetting}
+                    />
+                  ) : (
+                    row.value
+                  )}
+                </dd>
+              </div>
+            );
+          })}
         </dl>
         <KeyCellsOption />
         <TricksOption />

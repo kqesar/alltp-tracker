@@ -6,10 +6,13 @@ import {
   type BossReading,
   type BottlesReading,
   type CapacitiesReading,
+  DOOR_FLAG_RANGES,
+  DR_LOCATIONS,
   decodeBosses,
   decodeBottles,
   decodeCapacities,
   decodeChecks,
+  decodeDoorChecks,
   decodeEntrances,
   decodeGoalPieces,
   decodeHealth,
@@ -47,8 +50,17 @@ export type AutotrackReading = {
    * Race Mode: v2.0 does not name the capacity upgrades.
    */
   readonly capacities: CapacitiesReading;
-  /** The locations checked, by the pack's location id, in the pack's order. */
+  /**
+   * The locations checked, by the pack's location id, in the pack's order,
+   * then the Door Randomizer's whose table was read (a run lays those its
+   * settings make, `gameView`).
+   */
   readonly checked: readonly string[];
+  /**
+   * The Door Randomizer's locations whose table was read and settled: those
+   * `checked` lists were taken, the others not.
+   */
+  readonly doorRead: readonly string[];
   /** The locations memory could not settle, with why. */
   readonly unsettled: readonly (readonly [id: string, why: Unsettled])[];
   readonly progress: ProgressReading;
@@ -105,12 +117,22 @@ export const readMemory = (
 ): AutotrackReading => {
   const options = { race };
   const checks = decodeChecks(memory, options);
+  // The Door Randomizer's tables are read only while the run's settings
+  // shuffle what they record (the runtime's switches): only the locations
+  // of a table read are decoded, so an alttpr.com run decodes none
+  const read = DR_LOCATIONS.filter((location) =>
+    memory.has(DOOR_FLAG_RANGES[location.flag.memory].range),
+  );
+  const door = decodeDoorChecks(memory, read, options);
   return {
     at,
     bosses: decodeBosses(memory, options),
     bottles: decodeBottles(memory, options),
     capacities: decodeCapacities(memory, options),
-    checked: [...checks.checked],
+    checked: [...checks.checked, ...door.checked],
+    doorRead: read
+      .map((location) => location.id)
+      .filter((id) => !door.unsettled.has(id)),
     entrances: decodeEntrances(memory, options),
     health: decodeHealth(memory, options),
     held: decodePrizesHeld(memory, options),
@@ -121,6 +143,6 @@ export const readMemory = (
     progress: decodeProgress(memory, options),
     race,
     seed: decodeSeedSettings(memory, options),
-    unsettled: [...checks.unsettled],
+    unsettled: [...checks.unsettled, ...door.unsettled],
   };
 };

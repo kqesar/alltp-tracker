@@ -77,6 +77,7 @@ export const KeyToggle = ({
         : 0,
   );
   const handleItemClick = useGameStore((state) => state.handleItemClick);
+  const settings = useGameStore((state) => state.settings);
   const handleSmallKeyClick = useGameStore(
     (state) => state.handleSmallKeyClick,
   );
@@ -90,7 +91,7 @@ export const KeyToggle = ({
   const dungeon = dungeonName(dungeonIndex);
 
   const label = isSmallKey
-    ? `${dungeon} ${name}: ${held} of ${smallKeysMax(dungeonIndex)}`
+    ? `${dungeon} ${name}: ${held} of ${smallKeysMax(dungeonIndex, settings)}`
     : `${dungeon} ${name}: ${held === 1 ? "obtained" : "not obtained"}`;
 
   return (

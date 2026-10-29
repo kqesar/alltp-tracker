@@ -22,8 +22,15 @@ import {
   DARK_ROOM_ART_SWITCH,
   DARK_ROOM_SWITCH,
   type DarkRoomReading,
+  DOOR_DROPS_SWITCH,
+  DOOR_POTS_SWITCH,
+  DOOR_SHOPS_SWITCH,
   decodeDarkRoom,
 } from "@alltp/pack-alttpr";
+
+/** The Door Randomizer's table switches, which the run's settings set. */
+const DOOR_SWITCHES = [DOOR_POTS_SWITCH, DOOR_DROPS_SWITCH, DOOR_SHOPS_SWITCH];
+
 import {
   type AutotrackReading,
   readMemory,
@@ -82,6 +89,11 @@ export type Runtime = {
   setDarkRoom: (on: boolean) => void;
   /** Draw the dark room in the game's graphics, or not (the plan alone). */
   setDarkRoomArt: (on: boolean) => void;
+  /**
+   * The Door Randomizer tables the run's settings shuffle (the pack's
+   * `doorSwitches`): only those are read, in Race Mode too.
+   */
+  setDoorTables: (switches: ReadonlySet<string>) => void;
   /** Follow the player's Race Mode: the next reading is decoded under it. */
   setRaceMode: (setting: RaceSetting) => void;
   /**
@@ -106,6 +118,8 @@ export const startRuntime = (
     readonly darkRoom?: boolean;
     /** It is drawn in the game's graphics (on by default, with the map). */
     readonly darkRoomArt?: boolean;
+    /** The Door Randomizer tables the run shuffles: none by default. */
+    readonly doorTables?: ReadonlySet<string>;
     /**
      * Race Mode held by the page beyond the session's own choice and flag: a
      * race remembered (`raceSeen`). Every decoder then reads as in a race,
@@ -118,6 +132,7 @@ export const startRuntime = (
   const {
     darkRoom = true,
     darkRoomArt = true,
+    doorTables = new Set<string>(),
     raceHeld = () => false,
     ...sessionOptions
   } = options;
@@ -129,6 +144,7 @@ export const startRuntime = (
     optIn: [
       ...(darkRoom ? [DARK_ROOM_SWITCH] : []),
       ...(artOn() ? [DARK_ROOM_ART_SWITCH] : []),
+      ...doorTables,
     ],
     pack: ALTTPR_AUTOTRACK,
   });
@@ -290,6 +306,11 @@ export const startRuntime = (
       if (!on) {
         dropReads();
         sink.darkRoomArt?.(null);
+      }
+    },
+    setDoorTables: (switches) => {
+      for (const name of DOOR_SWITCHES) {
+        session.setOptIn(name, switches.has(name));
       }
     },
     setRaceMode: (setting) => session.setRaceMode(setting),

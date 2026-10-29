@@ -2,6 +2,7 @@
 // to the ALttPR v31 rules, and how many items each dungeon counter counts.
 import {
   type AlttprSettings,
+  DR_LOCATIONS,
   type DungeonId,
   dungeon,
   dungeonItemCount,
@@ -12,10 +13,16 @@ import {
   type UpstreamConfig,
 } from "@alltp/pack-alttpr";
 import {
+  doorCounterExtra,
+  doorKeysExtra,
+  isDoorRun,
+} from "@/games/alttpr/data/doorRando";
+import {
   bossShuffleOf,
   type HiddenSetting,
   isHidden,
   type RunSettings,
+  wildItems,
 } from "@/games/alttpr/data/presets";
 
 /** The pack's goal for each of the app's. */
@@ -138,12 +145,33 @@ export const SMALL_KEYS_MAX: readonly number[] = KEY_DUNGEONS.map(
   (id) => dungeonPool(dungeon(id)).smallKeys,
 );
 
-/** How many small keys the dungeon at a key index (0-12) holds. */
-export const smallKeysMax = (index: number): number => {
+/**
+ * How many small keys the dungeon at a key index (0-12) holds: its pool's,
+ * and in a Door Randomizer run whose key drops are shuffled the keys they
+ * bring (the pack's `drKeysAdded`).
+ */
+export const smallKeysMax = (index: number, run?: RunSettings): number => {
   const max = SMALL_KEYS_MAX[index];
   if (max === undefined) throw new RangeError(`No dungeon at index ${index}`);
-  return max;
+  return run === undefined || !isDoorRun(run)
+    ? max
+    : max + doorKeysExtra(dungeonAt(index), run);
 };
+
+/**
+ * The most small keys a dungeon at a key index may hold in any run, which a
+ * save is checked against: its pool's and every key drop's.
+ */
+export const SMALL_KEYS_CAP: readonly number[] = KEY_DUNGEONS.map(
+  (id, index) =>
+    (SMALL_KEYS_MAX[index] ?? 0) +
+    DR_LOCATIONS.filter(
+      (location) =>
+        location.kind === "keyDrop" &&
+        location.dungeon === id &&
+        location.key === "small",
+    ).length,
+);
 
 /**
  * Which of its own big key, map and compass a key dungeon's pool holds:
@@ -183,5 +211,8 @@ export const counterMax = (index: number, run: RunSettings): number => {
   }
   const max = maxima[index];
   if (max === undefined) throw new RangeError(`No dungeon at index ${index}`);
-  return max;
+  // A Door Randomizer run's key drops, pots and enemies hold items too
+  return isDoorRun(run)
+    ? max + doorCounterExtra(dungeonAt(index), run, wildItems(run))
+    : max;
 };

@@ -1,8 +1,12 @@
 // The Checks panel's model: every location of the map's markers, grouped by
 // zone in upstream's world order, and what each shows. The panel lists the
-// same locations as the map, so the two never disagree on what is left.
+// same locations as the map, so the two never disagree on what is left. A
+// Door Randomizer run adds its own (logic/doorChecks.ts), which no marker
+// stands for: its key drops, pots, enemies and shop items.
 import {
   type AlttprSettings,
+  DR_LOCATIONS,
+  type DrLocation,
   DUNGEONS,
   type DungeonId,
   dungeonLocations,
@@ -10,7 +14,18 @@ import {
   regionModules,
   rupeeCostOf,
 } from "@alltp/pack-alttpr";
+import {
+  type DoorZoneChecks,
+  doorStateOf,
+  doorZonesOf,
+} from "@/games/alttpr/logic/doorChecks";
 import { worldOf } from "@/games/alttpr/logic/settings";
+
+/** The Door Randomizer's locations, by id. */
+const DOOR_LOCATION: ReadonlyMap<string, DrLocation> = new Map(
+  DR_LOCATIONS.map((location) => [location.id, location]),
+);
+
 import {
   clearedStateOf,
   isCountedOut,
@@ -28,6 +43,11 @@ export type Check = {
   readonly name: string;
   /** Rupees the game takes to give it; shown only, the logic ignores it. */
   readonly cost?: number;
+  /**
+   * A Door Randomizer location (a key drop, a pot, an enemy, a shop item),
+   * which no rule reads yet: no analysis says what it misses.
+   */
+  readonly door?: true;
 };
 
 /** A zone of the world and the checks in it, in upstream's order. */
@@ -88,9 +108,57 @@ export const zonesOf = (settings: AlttprSettings): readonly Zone[] => {
   return made;
 };
 
-/** The run's zones, in its world. */
+const withDoor = new WeakMap<
+  readonly Zone[],
+  WeakMap<readonly DoorZoneChecks[], readonly Zone[]>
+>();
+
+/**
+ * The map's zones and a Door Randomizer run's checks: a dungeon's join its
+ * zone, after the map's; a cave's or a shop's make zones of their own,
+ * after the map's. Memoized per both.
+ */
+const joinZones = (
+  map: readonly Zone[],
+  door: readonly DoorZoneChecks[],
+): readonly Zone[] => {
+  if (door.length === 0) return map;
+  let byDoor = withDoor.get(map);
+  if (byDoor === undefined) {
+    byDoor = new WeakMap();
+    withDoor.set(map, byDoor);
+  }
+  const found = byDoor.get(door);
+  if (found !== undefined) return found;
+  const checksOf = (zone: DoorZoneChecks): Check[] =>
+    zone.locations.map((location) => ({
+      door: true,
+      id: location.id,
+      name: location.name.startsWith(`${zone.name} - `)
+        ? location.name.slice(zone.name.length + 3)
+        : location.name,
+    }));
+  const extra = new Map(door.map((zone) => [zone.name, zone]));
+  const joined: Zone[] = map.map((zone) => {
+    const more = extra.get(zone.name);
+    if (more === undefined) return zone;
+    extra.delete(zone.name);
+    return { ...zone, checks: [...zone.checks, ...checksOf(more)] };
+  });
+  for (const zone of extra.values()) {
+    joined.push({
+      checks: checksOf(zone),
+      ...(zone.dungeon === undefined ? {} : { dungeon: zone.dungeon }),
+      name: zone.name,
+    });
+  }
+  byDoor.set(door, joined);
+  return joined;
+};
+
+/** The run's zones, in its world, a Door Randomizer run's checks joined. */
 export const runZones = (state: MarkerInputs): readonly Zone[] =>
-  zonesOf(solutionOf(state).settings);
+  joinZones(zonesOf(solutionOf(state).settings), doorZonesOf(state.settings));
 
 /**
  * Whether a dungeon tracked by its counter alone is counted down to 0
@@ -108,11 +176,14 @@ export const checkStates = (
   for (const zone of runZones(state)) {
     const { dungeon } = zone;
     const cleared = isCleared(zone, state);
-    for (const { id } of zone.checks) {
-      states[id] =
+    for (const check of zone.checks) {
+      const door = check.door ? DOOR_LOCATION.get(check.id) : undefined;
+      states[check.id] =
         cleared && dungeon !== undefined
-          ? clearedStateOf(dungeon, id, state)
-          : locationStateOf(id, state);
+          ? clearedStateOf(dungeon, check.id, state)
+          : door !== undefined
+            ? doorStateOf(door, state)
+            : locationStateOf(check.id, state);
     }
   }
   return states;
