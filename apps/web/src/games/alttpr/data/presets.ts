@@ -253,20 +253,47 @@ export const bossesMayMove = (settings: RunSettings): boolean =>
 
 /**
  * Whether the entrance assistant knows a run's shuffled entrances
- * (`logic/entrances.ts`, `poolOf`): those of the Open or Standard world.
- * Inverted's crossed shuffle runs tables of its own, not ported yet.
+ * (`logic/entrances.ts`, `poolOf`): the crossed and full shuffles of the
+ * Open world (Retro's too) or the Standard one (packs/alttpr, `crossedPool`,
+ * `fullPool`). The simple, restricted and insanity shuffles pool their
+ * entrances differently, and Inverted runs tables of its own: none of them
+ * is ported yet.
  */
 export const entrancesKnown = (settings: RunSettings): boolean =>
-  settings.entranceShuffle !== "none" && settings.mode !== "inverted";
+  (settings.entranceShuffle === "crossed" ||
+    settings.entranceShuffle === "full") &&
+  settings.mode !== "inverted";
 
 /**
- * Whether the pack models a run's logic: vt's NoGlitches without shuffled
- * entrances, the entrance randomizer's for a crossed shuffle it models
- * (crossedLogic). No glitched logic (`Glitches`).
+ * Why the pack does not model a run's logic, one phrase per cause: the
+ * glitched logic the seed was generated for, and an entrance shuffle the
+ * pack does not port (it ports vt's NoGlitches without shuffled entrances,
+ * and the entrance randomizer's for the crossed shuffle, `crossedLogic`).
+ * Empty when the run is modelled. The one place the cause is told, for the
+ * note over the map.
  */
+export const unmodelledReasons = (settings: RunSettings): string[] => {
+  const reasons: string[] = [];
+  if (settings.glitches !== undefined)
+    reasons.push(GLITCHES_LABELS[settings.glitches]);
+  const { entranceShuffle: shuffle, mode } = settings;
+  if (shuffle !== "none" && !crossedLogic(settings)) {
+    if (shuffle !== "crossed")
+      reasons.push(`${ENTRANCE_LABELS[shuffle]} entrance shuffle`);
+    else if (mode !== "open" && mode !== "standard")
+      reasons.push(`Crossworld entrances in the ${MODE_LABELS[mode]} world`);
+    else if (settings.dungeonItems !== "full")
+      reasons.push(
+        "Crossworld entrances with dungeon items kept in their dungeons",
+      );
+    else reasons.push("shuffled bosses behind Crossworld entrances");
+  }
+  return reasons;
+};
+
+/** Whether the pack models a run's logic (`unmodelledReasons`). */
 export const logicModelled = (settings: RunSettings): boolean =>
-  settings.glitches === undefined &&
-  (settings.entranceShuffle === "none" || crossedLogic(settings));
+  unmodelledReasons(settings).length === 0;
 
 /** The preset selected by default. */
 export const DEFAULT_PRESET_ID = "open";

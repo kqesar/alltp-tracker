@@ -9,6 +9,7 @@ import {
   crossedPool,
   type EntranceLink,
   type EntranceTarget,
+  fullPool,
   linksOf,
   type MapMarker,
   type OverworldEntrance,
@@ -17,24 +18,33 @@ import {
 } from "@alltp/pack-alttpr";
 import { entrancesKnown, type RunSettings } from "@/games/alttpr/data/presets";
 
-const pools = {
+const crossed = {
   open: crossedPool("open"),
   standard: crossedPool("standard"),
 } as const;
 
+/** The full shuffle's pools, made when a Full run first asks. */
+let full: { open: CrossedPool; standard: CrossedPool } | undefined;
+
 /**
  * The entrances a run shuffles, or null when the assistant has none for its
- * world: Inverted's crossed shuffle runs tables of its own, not ported yet.
+ * shuffle or world (`entrancesKnown`): the crossed and full shuffles of the
+ * Open or Standard world are ported. Simple, Restricted and Insanity pool
+ * their entrances otherwise, and Inverted runs tables of its own.
  */
-export const poolOf = (settings: RunSettings): CrossedPool | null =>
-  !entrancesKnown(settings)
-    ? null
-    : settings.mode === "standard"
-      ? pools.standard
-      : pools.open;
+export const poolOf = (settings: RunSettings): CrossedPool | null => {
+  if (!entrancesKnown(settings)) return null;
+  const world = settings.mode === "standard" ? "standard" : "open";
+  if (settings.entranceShuffle === "crossed") return crossed[world];
+  full ??= { open: fullPool("open"), standard: fullPool("standard") };
+  return full[world];
+};
 
 const ENTRANCE_BY_ID = new Map(
-  [...pools.open.entrances, ...pools.standard.entrances].map((e) => [e.id, e]),
+  [...crossed.open.entrances, ...crossed.standard.entrances].map((e) => [
+    e.id,
+    e,
+  ]),
 );
 const TARGET_BY_ID = new Map(TARGETS.map((t) => [t.id, t]));
 

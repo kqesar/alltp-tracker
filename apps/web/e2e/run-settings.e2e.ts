@@ -132,7 +132,7 @@ test("a run type whose logic is not modelled says so, every check maybe", async 
   await runTypes(page).getByRole("button", { name: "Close" }).click();
 
   await expect(page.getByTestId("logic-note")).toHaveText(
-    "The tracker has no logic for Crosskeys runs yet: every check shows as maybe.",
+    "The tracker has no logic for Crossworld entrances with dungeon items kept in their dungeons yet: every check shows as maybe.",
   );
   // No marker says available or out of logic: the Open logic would be wrong
   const markers = page.getByTestId(/^marker-/);

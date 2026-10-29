@@ -82,7 +82,7 @@ describe("MapPanel", () => {
       useGameStore.getState().updateSettings({ dungeonItems: "mcs" });
     });
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Crosskeys runs yet: every check shows as maybe.",
+      "The tracker has no logic for Crossworld entrances with dungeon items kept in their dungeons yet: every check shows as maybe.",
     );
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });
@@ -97,12 +97,41 @@ describe("MapPanel", () => {
     render(<MapPanel />);
 
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Overworld Glitches seeds yet: every check shows as maybe.",
+      "The tracker has no logic for Overworld Glitches yet: every check shows as maybe.",
     );
     expect(screen.getByTestId("marker-sahasrahlas-hut")).toHaveAccessibleName(
       /: maybe available$/,
     );
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
+  });
+
+  it("names the entrance shuffle as the cause in an Open run, not the run type", () => {
+    act(() =>
+      useGameStore.getState().applyRun("open", {
+        ...getPreset("open").settings,
+        entranceShuffle: "full",
+      }),
+    );
+    render(<MapPanel />);
+    const note = screen.getByTestId("logic-note");
+    expect(note).toHaveTextContent(
+      "The tracker has no logic for Full entrance shuffle yet: every check shows as maybe.",
+    );
+    expect(note).not.toHaveTextContent("Open runs");
+  });
+
+  it("names every cause when several apply", () => {
+    act(() =>
+      useGameStore.getState().applyRun("open", {
+        ...getPreset("open").settings,
+        entranceShuffle: "simple",
+        glitches: "no_logic",
+      }),
+    );
+    render(<MapPanel />);
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The tracker has no logic for No Logic and Simple entrance shuffle yet: every check shows as maybe.",
+    );
   });
 
   it("says shuffled bosses behind shuffled entrances are not modelled", () => {
@@ -112,7 +141,7 @@ describe("MapPanel", () => {
     });
     render(<MapPanel />);
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for shuffled bosses behind shuffled entrances yet: every check shows as maybe.",
+      "The tracker has no logic for shuffled bosses behind Crossworld entrances yet: every check shows as maybe.",
     );
   });
 

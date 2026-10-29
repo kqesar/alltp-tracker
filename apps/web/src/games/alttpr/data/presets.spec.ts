@@ -7,6 +7,7 @@ import {
   getPreset,
   logicModelled,
   presets,
+  unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 
 describe("presets", () => {
@@ -40,6 +41,35 @@ describe("presets", () => {
       expect(crossedLogic(settings)).toBe(false);
       expect(logicModelled(settings)).toBe(false);
     }
+  });
+
+  it("names why a run's logic is not modelled, from one place", () => {
+    const open = getPreset("open").settings;
+    const crosskeys = getPreset("crosskeys").settings;
+    expect(unmodelledReasons(open)).toEqual([]);
+    expect(unmodelledReasons(crosskeys)).toEqual([]);
+    expect(unmodelledReasons({ ...open, glitches: "major_glitches" })).toEqual([
+      "Major Glitches",
+    ]);
+    expect(unmodelledReasons({ ...open, entranceShuffle: "insanity" })).toEqual(
+      ["Insanity entrance shuffle"],
+    );
+    expect(
+      unmodelledReasons({
+        ...open,
+        entranceShuffle: "full",
+        glitches: "no_logic",
+      }),
+    ).toEqual(["No Logic", "Full entrance shuffle"]);
+    expect(unmodelledReasons({ ...crosskeys, dungeonItems: "mcs" })).toEqual([
+      "Crossworld entrances with dungeon items kept in their dungeons",
+    ]);
+    expect(unmodelledReasons({ ...crosskeys, mode: "inverted" })).toEqual([
+      "Crossworld entrances in the Inverted world",
+    ]);
+    expect(unmodelledReasons({ ...crosskeys, bossShuffle: "full" })).toEqual([
+      "shuffled bosses behind Crossworld entrances",
+    ]);
   });
 
   it("says a run's boss shuffle, and models none behind shuffled entrances", () => {
