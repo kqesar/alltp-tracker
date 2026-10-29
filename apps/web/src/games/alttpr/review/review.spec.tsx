@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import { RunTimer } from "@/games/alttpr/components/map/RunTimer";
 import {
+  doorRunOf,
+  doorSpoilerFile,
+  doorSpoilerLog,
+  doorSpoilerText,
   spoilerFile,
   spoilerLog,
   spoilerText,
@@ -249,6 +253,90 @@ describe("a log of a mode whose spoiler writes it otherwise", () => {
     expect(await screen.findByTestId("review-hidden")).toHaveTextContent(
       "Small keys are generic in Retro",
     );
+  });
+});
+
+describe("a Door Randomizer log", () => {
+  const SEED = "660701088";
+
+  /** The run the log's seed makes, over, with the log picked. */
+  const open = async () => {
+    const { presetId, seed, settings } = doorRunOf(doorSpoilerLog(SEED));
+    useGameStore.setState({ presetId, seed, settings });
+    render(<Board />);
+    finishRun();
+    await importFile(doorSpoilerFile(SEED));
+    await screen.findByTestId("review-notice");
+  };
+
+  it("opens on the run its ROM title names, and says which randomizer", async () => {
+    await open();
+    expect(screen.getByTestId("review-binding")).toHaveTextContent(
+      "Seed 1_1_660701088: the log's seed is this run's",
+    );
+    expect(await screen.findByTestId("review-facts")).toHaveTextContent(
+      "RandomizerDoor Randomizer 1.5.6",
+    );
+    expect(screen.getByTestId("review-facts")).toHaveTextContent(
+      "Title screen codePowder, Key, Bottle, Compass, Pearl",
+    );
+  });
+
+  it("reads a place of DR's as taken, not timed, and says why", async () => {
+    const drops = doorSpoilerLog("278438665");
+    const { presetId, seed, settings } = doorRunOf(drops);
+    useGameStore.setState({ presetId, seed, settings });
+    act(() => store().toggleChecks(["thieves-town/map-chest"]));
+    act(() => store().toggleChecks(["thieves-town/hallway-pot-key"]));
+    render(<Board />);
+    finishRun();
+    await importFile(doorSpoilerFile("278438665"));
+    await screen.findByTestId("review-notice");
+    expect(await screen.findByTestId("review-door-untimed")).toHaveTextContent(
+      "1 place of the Door Randomizer (a key drop, pot, enemy drop or shop item) taken",
+    );
+  });
+
+  it("refuses it on a run of another seed, in words", async () => {
+    useGameStore.setState({ seed: "1_1_111111111" });
+    render(<Board />);
+    finishRun();
+    await importFile(doorSpoilerFile(SEED));
+    expect(await screen.findByTestId("review-error")).toBeInTheDocument();
+    expect(useReviewStore.getState().review).toBeNull();
+  });
+
+  it("does not say when a place came into logic: the pack has no rules of DR's", async () => {
+    // The same seed with its dungeon items kept in their dungeons, which
+    // would otherwise be the first thing said (keys wild)
+    const text = doorSpoilerText(SEED)
+      .replace(
+        "Map shuffle:                     Yes",
+        "Map shuffle:                     No",
+      )
+      .replace(
+        "Compass shuffle:                 Yes",
+        "Compass shuffle:                 No",
+      )
+      .replace(
+        "Small Key shuffle:               wild",
+        "Small Key shuffle:               none",
+      )
+      .replace(
+        "Big Key shuffle:                 Yes",
+        "Big Key shuffle:                 No",
+      );
+    const { presetId, seed, settings } = doorRunOf(doorSpoilerLog(SEED, text));
+    expect(settings.dungeonItems).toBe("standard");
+    useGameStore.setState({ presetId, seed, settings });
+    render(<Board />);
+    finishRun();
+    await importFile(doorSpoilerFile(SEED, text));
+    await screen.findByTestId("review-notice");
+    expect(await screen.findByTestId("review-hidden")).toHaveTextContent(
+      "Door Randomizer seed, whose own rules",
+    );
+    expect(screen.getByTestId("review-hidden")).toHaveTextContent("not shown");
   });
 });
 

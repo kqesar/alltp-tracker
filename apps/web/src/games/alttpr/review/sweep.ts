@@ -26,6 +26,7 @@ import {
   toState,
   UNKNOWN_FACT_OF,
 } from "@alltp/pack-alttpr";
+import { DOOR_LOCATION_IDS } from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import { logicModelled } from "@/games/alttpr/data/presets";
 import { withCost } from "@/games/alttpr/logic/costs";
@@ -58,6 +59,12 @@ export type Hidden =
    * shuffled, a glitched logic.
    */
   | "not-modelled"
+  /**
+   * The log is a Door Randomizer's. Its rules (key doors, pots, enemy drops,
+   * its own dungeon logic) are not ported yet, and the sweep's, alttpr.com's,
+   * would say "in logic" from rules the seed was not made with.
+   */
+  | "door-logic"
   /**
    * The board has finds and the run no timeline at all: opened from a
    * shared link that left it out to stay short, or a save from before the
@@ -93,7 +100,10 @@ export const hiddenReason = (
   // First: whatever else holds, the times are to be had where it was played
   if (
     Object.keys(run.timeline).length === 0 &&
-    comparison.rows.some(({ state }) => state === "untimed")
+    comparison.rows.some(
+      ({ entry, state }) =>
+        state === "untimed" && !DOOR_LOCATION_IDS.has(entry.placement.location),
+    )
   ) {
     return "no-timeline";
   }
@@ -114,6 +124,8 @@ export const hiddenReason = (
   ) {
     return "not-modelled";
   }
+  // After the causes above, which are the more specific
+  if (log.extra.door !== undefined) return "door-logic";
   const found = required(comparison.rows).filter(
     ({ entry, ms }) => entry.find !== null && ms !== null,
   );

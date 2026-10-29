@@ -7,7 +7,7 @@ import type { Refusal } from "@alltp/spoiler";
 
 /** What each game's spoiler log is called, and which randomizer writes it. */
 const SOURCES: Readonly<Record<string, string>> = {
-  alttpr: "an alttpr.com spoiler log",
+  alttpr: "an A Link to the Past spoiler log",
   archipelago: "an Archipelago spoiler log",
   sm: "a Map Rando spoiler log (Super Metroid)",
   smz3: "a samus.link spoiler log (SMZ3)",
@@ -29,6 +29,13 @@ const SETTING_NAMES: Readonly<Record<string, string>> = {
   accessibility: "accessibility",
   crystalsGanon: "crystals for Ganon",
   crystalsTower: "crystals for Ganon's Tower",
+  "door:doors": "door shuffle",
+  "door:drops": "enemy drop shuffle",
+  "door:enemies": "enemy shuffle",
+  "door:pottery": "pottery shuffle",
+  "door:randomizer": "randomizer",
+  "door:shopsanity": "shopsanity",
+  "door:take-any": "take-any caves",
   dungeonItems: "dungeon items",
   entranceShuffle: "entrance shuffle",
   goal: "goal",
