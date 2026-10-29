@@ -84,9 +84,9 @@ export const LogicNote = () => {
   if (reasons.length === 0 && glitchesHidden)
     return (
       <p className="logic-note" data-testid="logic-note">
-        The glitches are not set yet: a check a glitched logic reaches, or whose
-        key may sit behind its own door (as in No Logic), shows as maybe until
-        you set <strong>Glitches</strong> in Mode.
+        The glitches are not set yet: a check only a glitched logic reaches, or
+        whose key may sit behind its own door (as in No Logic), shows as maybe
+        until you set <strong>Glitches</strong> in Mode.
       </p>
     );
   if (reasons.length === 0) return null;
