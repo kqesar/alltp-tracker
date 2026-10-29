@@ -22,6 +22,7 @@ import {
   rank,
   type Solution,
   type State,
+  solve,
   type Tri,
 } from "@alltp/engine";
 import { DUNGEONS, type DungeonId } from "./dungeons";
@@ -234,10 +235,10 @@ const models = new WeakMap<ErWorld, Model>();
 
 /**
  * Where each of a world's untracked items may sit: the spots of its dungeon
- * where Location.can_fill is not `no` with everything held. The randomizer
- * places them with everything else held but them (Fill.py:164-207, below):
- * with more held, can_fill only grows, so this holds every spot it may
- * choose.
+ * where Location.can_fill is not `no` with everything held but one of that
+ * item. The randomizer places each copy with everything else held at most
+ * (Fill.py:164-207, below), never the copy itself: with more held, can_fill
+ * only grows, so this holds every spot it may choose.
  */
 function modelOf(world: ErWorld): Model {
   const cached = models.get(world);
@@ -260,7 +261,7 @@ function modelOf(world: ErWorld): Model {
     .filter((name) => name.startsWith("allItemsReach_"))
     .every((name) => typeof world.settings[name] === "boolean");
   const all = everything(settings);
-  const allSolved = solveFactsState(upper, all).solution;
+  const { solution: allSolved, state: allFacts } = solveFactsState(upper, all);
   // vt sends --keysanity for `full` dungeon items alone, which set
   // wildBigKeys: then every key is the player's to track
   const kept = flag(world, "wildBigKeys") === false;
@@ -274,8 +275,13 @@ function modelOf(world: ErWorld): Model {
     ].filter(({ count }) => count > 0);
     if (kinds.length === 0) continue;
     for (const { count, item } of kinds) {
+      // Each copy is placed out of the pool the fill sweeps (Fill.py:
+      // 174-182): with the others at most, never with itself. The facts
+      // everything gains, held: at least what the fill's state swept
+      const but = { ...allFacts, [item]: count - 1 };
+      const solved = solve(upper.compiled, but);
       const spots = d.spots.filter(
-        (spot) => canFill(upper, spot, item, all, allSolved) !== "no",
+        (spot) => canFill(upper, spot, item, but, solved) !== "no",
       );
       const first = PREPLACED.filter((p) => p.item === item).map((p) => p.spot);
       untracked.push({

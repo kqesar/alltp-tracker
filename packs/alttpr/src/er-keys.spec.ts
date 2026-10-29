@@ -132,6 +132,35 @@ describe("what the key model reads of the randomizer's dungeons", () => {
     expect(spots("keyD1")).toContain("palace-of-darkness/big-key-chest");
   });
 
+  it("lists where each item may go without itself (Fill.py:174-182)", () => {
+    const spots = (world: ErWorld, item: string) =>
+      erUntracked(world).find((u) => u.item === item)?.locations;
+    // Swamp Palace's one key opens its first door (Rules.py:297): the
+    // chest before it
+    expect(spots(vanilla(), "keyD2")).toEqual(["swamp-palace/entrance"]);
+    // Turtle Rock's big key opens the way on (Rules.py:371)
+    expect(spots(vanilla(), "bigKeyD7")).toEqual([
+      "turtle-rock/compass-chest",
+      "turtle-rock/roller-room/left",
+      "turtle-rock/roller-room/right",
+      "turtle-rock/chain-chomps",
+      "turtle-rock/big-key-chest",
+    ]);
+    // The sixth key of Palace of Darkness: not behind the doors six open
+    // (Rules.py:385, 401)
+    const darkness = spots(vanilla(), "keyD1");
+    expect(darkness).toHaveLength(10);
+    for (const spot of ["dark-maze/top", "big-chest", "boss"])
+      expect(darkness).not.toContain(`palace-of-darkness/${spot}`);
+    // Standard's escape key: not past the sewers' door (Rules.py:259)
+    expect(spots(vanilla(STANDARD), "keyH2")).toEqual([
+      "hyrule-castle/boomerang-chest",
+      "hyrule-castle/map-chest",
+      "hyrule-castle/zeldas-cell",
+      "sewers/dark-cross",
+    ]);
+  });
+
   it("leaves the retro world's small keys out, its big keys in", () => {
     const items = erUntracked(vanilla(RETRO)).map((u) => u.item);
     expect(items.length).toBeGreaterThan(0);

@@ -112,8 +112,6 @@ const KEY_DOUBTS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
       "a Thieves' Town key may sit in the big chest, which the hammer opens; no hammer yet",
     "sphere 8: Palace of Darkness - Dark Maze - Top maybe":
       "a Palace of Darkness key may sit behind a key door the spheres' items do not open yet (Rules.py:395)",
-    "sphere 9: Swamp Palace - Map Chest maybe":
-      "a Swamp Palace key may sit in a room the spheres' items do not reach yet",
     "sphere 10: Ganons Tower - Firesnake Room maybe":
       "the room asks for three keys, or two with the big key or this key placed where the fill may not have (Rules.py:424); a key may still wait behind a door the spheres' items do not open",
   },

@@ -1146,7 +1146,7 @@ of them: a sphere's location the model doubts must be in the spec's
 `dMEp8enPG1`'s, two: Ice Palace's prize at sphere 3 (its second key may wait
 with Kholdstare, whom one key and the Cane of Somaria reach) and Agahnim 2 at
 sphere 5 (a Ganon's Tower key may sit at Bob's Torch, behind the boots); the
-simple and restricted seeds have seven more of the same kind, and only the
+simple and restricted seeds have six more of the same kind, and only the
 insanity seed stays pending.
 
 The same spec holds that noting more of a seed's doors never takes a `yes`
@@ -1479,8 +1479,11 @@ flowchart LR
 
 1. **Where an item may sit** (`erUntracked`): the spots of its dungeon (its
    regions' locations but the prizes and events filled before it,
-   `prefilled`) where `can_fill` is not `no` with everything held, read in
-   the world where the doors not noted lead anywhere (`anywhere`, above).
+   `prefilled`) where `can_fill` is not `no` with everything held but one
+   of that item (the fill takes each copy out of the pool it sweeps,
+   `Fill.py:174-182`: Swamp Palace's key goes to its first chest only),
+   read in the world where the doors not noted lead anywhere (`anywhere`,
+   above).
    An always-allow lets its key in whatever reaches the spot, any branch's
    of `set_trock_key_rules` that may hold; a `forbid_item` refuses it where
    its branch surely holds. Beatable only, no access is asked.
@@ -1539,7 +1542,8 @@ key, and the model is then the solver.
   is surely in hand, and Turtle Rock's doors known.
 
 **Cost**: the model builds the second world and solves it with everything,
-about 5 to 10 ms more per entrance noted. A solve takes a few solves of the
+then once per untracked item without one of it (the facts everything gains
+kept, which only adds spots), about 5 to 10 ms more per entrance noted. A solve takes a few solves of the
 world: about 1 to 1.5 ms on average along a whole game under Vitest, up to
 7 ms on the click that proves a dungeon safe, once per world, since a proof
 holds in every state that holds as much and is kept.
