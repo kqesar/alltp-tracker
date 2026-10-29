@@ -176,6 +176,12 @@
   color: var(--state-available);
 }
 
+/* Ganon's crystals in a run whose goal is not Ganon: greyed, as an item
+   not held is */
+.goal-cell--moot > * {
+  filter: var(--missing-item-filter);
+}
+
 /* The prizes held: the pendants as the menu lays them (green on top, blue
    and red under it), or the crystal over the count of crystals */
 .prize-cell {

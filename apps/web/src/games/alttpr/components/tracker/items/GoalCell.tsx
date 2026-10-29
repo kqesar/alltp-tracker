@@ -17,6 +17,12 @@ type GoalCellProps = {
   item: GoalCellId;
 };
 
+/** The goals that never ask for Ganon: his crystals are no step of them. */
+const NOT_GANON_GOALS: ReadonlySet<string> = new Set([
+  "pedestal",
+  "triforce-hunt",
+]);
+
 /** Each goal cell's short name and what it names, for its words. */
 const GOALS: Readonly<Record<GoalCellId, { short: string; name: string }>> = {
   goalganon: { name: "Ganon", short: "Ganon" },
@@ -38,9 +44,17 @@ export const GoalCell = ({ row, col, item }: GoalCellProps) => {
     state.settings.hidden?.includes(setting) ? null : state.settings[setting],
   );
   const crystals = useGameStore((state) => prizesHeld(state.items).crystals);
+  // Ganon's crystals are no goal's step when the goal is the pedestal or
+  // the Triforce pieces: the cell greys and says so
+  const moot = useGameStore(
+    (state) =>
+      item === "goalganon" &&
+      !state.settings.hidden?.includes("goal") &&
+      NOT_GANON_GOALS.has(state.settings.goal),
+  );
   const updateSettings = useGameStore((state) => state.updateSettings);
   const { name, short } = GOALS[item];
-  const reached = asked !== null && crystals >= asked;
+  const reached = !moot && asked !== null && crystals >= asked;
   const handlers = mergeHandlers(
     useGridFocusable({ col, row, slot: 0 }),
     useStepHandlers((direction) =>
@@ -52,8 +66,9 @@ export const GoalCell = ({ row, col, item }: GoalCellProps) => {
       title: `Crystals ${name} asks for`,
     }),
   );
-  const words =
-    asked === null
+  const words = moot
+    ? `${name} is not this run's goal. Click to change.`
+    : asked === null
       ? `${name}'s crystals not known yet. Click to set them.`
       : `${name} asks for ${asked} ${asked === 1 ? "crystal" : "crystals"}, you hold ${crystals}${reached ? ", reached" : ""}. Click to change.`;
 
@@ -61,7 +76,7 @@ export const GoalCell = ({ row, col, item }: GoalCellProps) => {
     <button
       {...handlers}
       aria-label={`${short} ${asked ?? "?"}: ${words}`}
-      className={`griditem grid-item-base goal-cell${reached ? " goal-cell--reached" : ""}`}
+      className={`griditem grid-item-base goal-cell${reached ? " goal-cell--reached" : ""}${moot ? " goal-cell--moot" : ""}`}
       data-testid={`goal-${item}`}
       type="button"
     >

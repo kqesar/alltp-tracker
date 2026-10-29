@@ -640,6 +640,17 @@ describe("the crystals' cells", () => {
     expect(useGameStore.getState().settings.crystalsGanon).toBe(6);
   });
 
+  it("greys Ganon's crystals when the goal is the pedestal or the pieces", () => {
+    act(() => useGameStore.getState().applyPreset("triforce-hunt"));
+    render(<GridItem col={6} item="goalganon" row={4} />);
+    const ganon = screen.getByTestId("goal-goalganon");
+    expect(ganon).toHaveClass("goal-cell--moot");
+    expect(ganon).not.toHaveClass("goal-cell--reached");
+    expect(ganon).toHaveAccessibleName(
+      "Ganon 7: Ganon is not this run's goal. Click to change.",
+    );
+  });
+
   it("asks a Mystery run's player, from none up", () => {
     act(() => useGameStore.getState().applyPreset("mystery"));
     render(<GridItem col={5} item="goaltower" row={4} />);
