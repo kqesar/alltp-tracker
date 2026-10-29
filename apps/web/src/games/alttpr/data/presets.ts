@@ -392,6 +392,25 @@ export const noLogicRun = (settings: RunSettings): boolean =>
 export const logicModelled = (settings: RunSettings): boolean =>
   unmodelledReasons(settings).length === 0;
 
+/**
+ * Whether two runs have the same settings: every field alike, the settings
+ * not discovered in any order. A field left out and one set to undefined
+ * are alike.
+ */
+export const sameSettings = (a: RunSettings, b: RunSettings): boolean => {
+  const normal = (settings: RunSettings) =>
+    JSON.stringify(
+      Object.entries(settings)
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]): [string, unknown] => [
+          key,
+          key === "hidden" ? [...(value as string[])].sort() : value,
+        ])
+        .sort(([x], [y]) => x.localeCompare(y)),
+    );
+  return normal(a) === normal(b);
+};
+
 /** The preset selected by default. */
 export const DEFAULT_PRESET_ID = "open";
 
