@@ -182,6 +182,45 @@ describe("definePack modes", () => {
     expect(pack.modes?.probe).toBe(0);
   });
 
+  it("lets Race Mode read, in each mode, the permitted ranges read in it and the flag, and bars every other byte", () => {
+    const more = {
+      address: bus(0x7e_f350),
+      category: "items",
+      everyMs: 500,
+      id: "more",
+      modes: ["a"],
+      size: 2,
+    };
+    const hud = { ...more, category: "hud", id: "hud", modes: undefined };
+    const pack = define([probe, { ...item, modes: ["b"] }, more, hud])();
+    const flag = { address: 0x18_0213, size: 1 };
+    const at = (range: { address: number; size: number }) => ({
+      address: range.address,
+      size: range.size,
+    });
+    // At 0 the mode unknown, then a and b; the forbidden range in none
+    expect(pack.raceBytes).toEqual([
+      [flag, at(probe)],
+      [flag, at(probe), at(more)],
+      [flag, at(probe), at(item)],
+    ]);
+    pack.raceBytes.forEach((allowed, slot) => {
+      const barriers = pack.raceBarriers[slot];
+      // Together they tile the address space: a byte is one or the other
+      const total = [...allowed, ...barriers].reduce((n, r) => n + r.size, 0);
+      expect(total).toBe(0x100_0000);
+      for (const range of allowed) {
+        expect(
+          barriers.some(
+            (b) =>
+              b.address < range.address + range.size &&
+              range.address < b.address + b.size,
+          ),
+        ).toBe(false);
+      }
+    });
+  });
+
   it.each([
     [
       "no names",

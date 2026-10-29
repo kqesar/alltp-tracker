@@ -144,8 +144,18 @@ export interface AutotrackPack {
   };
   readonly raceFlag: RaceFlagProbe | null;
   readonly gap: number;
-  /** Bytes a race-mode merge must not bridge into. */
-  readonly raceBarriers: readonly ByteRange[];
+  /**
+   * The bytes Race Mode may read in each mode, at `mode + 1` (0 while the
+   * mode is unknown, and for a pack without modes): those of the
+   * race-permitted ranges read in that mode, and the race flag. A race read
+   * asks for no other byte, even one it would discard.
+   */
+  readonly raceBytes: readonly (readonly ByteRange[])[];
+  /**
+   * Every other byte, at the same index: what a race-mode merge never
+   * bridges, however small the gap.
+   */
+  readonly raceBarriers: readonly (readonly ByteRange[])[];
   /** Ranges of race-permitted categories and the race flag, as byte ranges. */
   readonly permittedBytes: readonly ByteRange[];
   /** Ranges of forbidden categories, as byte ranges. */
@@ -473,9 +483,30 @@ export function definePack(source: AutotrackPackSource): AutotrackPack {
     fail(id, "gap must be a natural number");
 
   // The flag is always readable in Race Mode: the profile permits it.
-  if (raceFlag !== null) {
-    permittedBytes.push({ address: raceFlag.address, size: raceFlag.size });
-  }
+  const flagBytes =
+    raceFlag === null
+      ? []
+      : [{ address: raceFlag.address, size: raceFlag.size }];
+  permittedBytes.push(...flagBytes);
+  // In doubt, forbidden: a race read touches only the bytes of the permitted
+  // ranges read in the mode it was planned for, never a gap between them
+  const raceBytes = Array.from(
+    { length: (modes?.names.length ?? 0) + 1 },
+    (_, slot) => {
+      const mode = slot - 1;
+      const bytes: ByteRange[] = [...flagBytes];
+      ranges.forEach((range, index) => {
+        const mask = modeMasks[index];
+        if (
+          racePermitted[index] &&
+          (mask === ALL_MODES || (mode >= 0 && (mask & (1 << mode)) !== 0))
+        ) {
+          bytes.push({ address: range.address, size: range.size });
+        }
+      });
+      return bytes;
+    },
+  );
 
   return {
     cycle,
@@ -494,7 +525,8 @@ export function definePack(source: AutotrackPackSource): AutotrackPack {
     optIns,
     permittedBytes,
     profile,
-    raceBarriers: [...complement(profile.permitted), ...forbiddenBytes],
+    raceBarriers: raceBytes.map(complement),
+    raceBytes,
     raceFlag,
     racePermitted,
     ranges,

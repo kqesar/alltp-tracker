@@ -95,7 +95,7 @@ describe("the dark room's ranges", () => {
         ALTTPR_RACE_PROFILE.categories[r.category]?.permitted === true,
     );
     const plan = planReads(raceRanges, {
-      barriers: ALTTPR_AUTOTRACK.raceBarriers,
+      barriers: ALTTPR_AUTOTRACK.raceBarriers[0],
       gap: ALTTPR_AUTOTRACK.gap,
       limits: USB2SNES_LIMITS,
     });
@@ -104,7 +104,6 @@ describe("the dark room's ranges", () => {
         plan,
         ALTTPR_RACE_PROFILE,
         ALTTPR_AUTOTRACK.permittedBytes,
-        ALTTPR_AUTOTRACK.forbiddenBytes,
       ),
     ).not.toThrow();
     // The race plan's pieces touch none of the dark room's bytes

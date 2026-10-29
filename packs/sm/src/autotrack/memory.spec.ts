@@ -110,18 +110,13 @@ describe("MEMORY_RANGES", () => {
         (range) => MAP_RANDO_RACE_PROFILE.categories[range.category]?.permitted,
       ),
       {
-        barriers: racePack.raceBarriers,
+        barriers: racePack.raceBarriers[0],
         gap: racePack.gap,
         limits: USB2SNES_LIMITS,
       },
     );
     expect(() =>
-      assertRaceSafe(
-        plan,
-        MAP_RANDO_RACE_PROFILE,
-        racePack.permittedBytes,
-        racePack.forbiddenBytes,
-      ),
+      assertRaceSafe(plan, MAP_RANDO_RACE_PROFILE, racePack.permittedBytes),
     ).not.toThrow();
     for (const request of plan.requests) {
       for (let i = 0; i < request.pieces.length; i += 2) {
@@ -156,12 +151,7 @@ describe("MEMORY_RANGES", () => {
       limits: USB2SNES_LIMITS,
     });
     expect(() =>
-      assertRaceSafe(
-        peeking,
-        MAP_RANDO_RACE_PROFILE,
-        racePack.permittedBytes,
-        racePack.forbiddenBytes,
-      ),
+      assertRaceSafe(peeking, MAP_RANDO_RACE_PROFILE, racePack.permittedBytes),
     ).toThrow(RaceViolationError);
     // And the guard stops a plan that does read it
     const reading = planReads(clock, {
@@ -170,12 +160,7 @@ describe("MEMORY_RANGES", () => {
       limits: USB2SNES_LIMITS,
     });
     expect(() =>
-      assertRaceSafe(
-        reading,
-        MAP_RANDO_RACE_PROFILE,
-        racePack.permittedBytes,
-        racePack.forbiddenBytes,
-      ),
+      assertRaceSafe(reading, MAP_RANDO_RACE_PROFILE, racePack.permittedBytes),
     ).toThrow(RaceViolationError);
   });
 
