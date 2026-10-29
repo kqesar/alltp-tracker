@@ -75,17 +75,6 @@ export type LocationStatus = MarkerStatus | "margin" | "seen" | "trick";
 /** What a marker shows: what is left in logic, or done. */
 export type MarkerState = LocationStatus | "opened";
 
-/** The words a screen reader hears for each state; the glyph says it on screen. */
-export const STATE_LABELS: Record<MarkerState, string> = {
-  available: "available",
-  margin: "out of logic, doable outside Basic's safety margin",
-  opened: "done",
-  possible: "maybe available",
-  seen: "visible, not reachable yet",
-  trick: "out of logic, doable with a trick",
-  unavailable: "out of logic",
-};
-
 /**
  * What locations left show, from their tris, what can be seen of them
  * (`visible`, never below the tri), their tris with the player's tricks and

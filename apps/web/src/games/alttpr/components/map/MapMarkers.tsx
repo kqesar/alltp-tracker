@@ -7,10 +7,10 @@ import type { CSSProperties } from "react";
 import { markerTitle } from "@/games/alttpr/logic/costs";
 import {
   dungeonCount,
-  STATE_LABELS,
   useBossStatus,
   useMarkerStatus,
 } from "@/games/alttpr/logic/solution";
+import { useLogicWords } from "@/games/alttpr/logic/words";
 import { useMarkerHeld } from "@/games/alttpr/review/labels";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath, toWorldPosition } from "@/games/alttpr/utils";
@@ -39,6 +39,7 @@ const markerStyle = (
  */
 export const MapLocation = ({ marker }: { marker: MapMarker }) => {
   const state = useMarkerStatus(marker.id);
+  const { states } = useLogicWords();
   const toggleChecks = useGameStore((store) => store.toggleChecks);
   const tooltip = useTooltip({ id: marker.id, kind: "marker" });
   const count = marker.locations.length;
@@ -52,7 +53,7 @@ export const MapLocation = ({ marker }: { marker: MapMarker }) => {
   return (
     <button
       {...tooltip}
-      aria-label={`${markerTitle(marker)}${count > 1 ? ` (${count} checks)` : ""}: ${STATE_LABELS[state]}${held ? `. Held: ${held.words}; ${state === "opened" ? "all checked" : "not all checked"}` : ""}`}
+      aria-label={`${markerTitle(marker)}${count > 1 ? ` (${count} checks)` : ""}: ${states[state]}${held ? `. Held: ${held.words}; ${state === "opened" ? "all checked" : "not all checked"}` : ""}`}
       aria-pressed={state === "opened"}
       className={`mapspan chest state-glyph ${state}`}
       data-held={held && heldStyle ? "" : undefined}
@@ -95,6 +96,7 @@ export const MapDungeon = ({
 }) => {
   const squareState = useMarkerStatus(marker.id);
   const bossState = useBossStatus(dungeon);
+  const { states } = useLogicWords();
   const left = useGameStore((store) => dungeonCount(dungeon, store));
   const medallion = useGameStore((store) =>
     dungeon === "misery-mire"
@@ -114,8 +116,8 @@ export const MapDungeon = ({
     left === undefined
       ? squareState === "opened"
         ? "no item to find"
-        : `its chests ${STATE_LABELS[squareState]}`
-      : `${left === 1 ? "1 chest" : `${left} chests`} left (${STATE_LABELS[squareState]})`;
+        : `its chests ${states[squareState]}`
+      : `${left === 1 ? "1 chest" : `${left} chests`} left (${states[squareState]})`;
   const beaten = bossState === "opened";
 
   return (
@@ -130,7 +132,7 @@ export const MapDungeon = ({
       />
       <button
         {...tooltip}
-        aria-label={`${marker.name}${pad}: boss ${STATE_LABELS[bossState]}, ${counter}`}
+        aria-label={`${marker.name}${pad}: boss ${states[bossState]}, ${counter}`}
         aria-pressed={beaten}
         className={`mapspan boss state-glyph ${bossState}`}
         data-testid={`boss-marker-${dungeon}`}

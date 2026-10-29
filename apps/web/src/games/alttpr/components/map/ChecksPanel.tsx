@@ -30,6 +30,7 @@ import {
   tricksShown,
   useDungeonStatus,
 } from "@/games/alttpr/logic/solution";
+import { type LogicWords, useLogicWords } from "@/games/alttpr/logic/words";
 import { useInReview, useLocationHeld } from "@/games/alttpr/review/labels";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath } from "@/games/alttpr/utils";
@@ -48,6 +49,10 @@ const FILTERS: readonly { state: MarkerState; label: string }[] = [
 const LABELS = Object.fromEntries(
   FILTERS.map(({ label, state }) => [state, label]),
 ) as Record<MarkerState, string>;
+
+/** A state's words in the list: a No Logic run's no is "Not reachable". */
+const labelOf = (state: MarkerState, words: LogicWords): string =>
+  state === "unavailable" ? words.noShort : LABELS[state];
 
 /** What the list shows at first: what can be done now, or maybe. */
 const FIRST_SHOWN: ReadonlySet<MarkerState> = new Set([
@@ -154,6 +159,7 @@ const CheckRow = memo(
     state: MarkerState;
   }) => {
     const held = useLocationHeld(check.id);
+    const words = useLogicWords();
     return (
       <li className="check-row" data-testid={`check-row-${check.id}`}>
         <label className="check-row__check">
@@ -197,7 +203,7 @@ const CheckRow = memo(
         </label>
         <span className="check-row__state">
           <Swatch state={state} />
-          {LABELS[state]}
+          {labelOf(state, words)}
         </span>
         {explained && state !== "available" && state !== "opened" && (
           <Why check={check} />
@@ -211,13 +217,14 @@ const CheckRow = memo(
 const DungeonCount = ({ dungeon }: { dungeon: DungeonId }) => {
   const left = useGameStore((state) => dungeonCount(dungeon, state));
   const state = useDungeonStatus(dungeon);
+  const words = useLogicWords();
   if (left === undefined) return null;
   return (
     <span className="checks-zone__count">
       <Swatch state={state} />
       {left === 0
         ? "no item left"
-        : `${left} ${left === 1 ? "item" : "items"} left, ${LABELS[state].toLowerCase()}`}
+        : `${left} ${left === 1 ? "item" : "items"} left, ${labelOf(state, words).toLowerCase()}`}
     </span>
   );
 };
@@ -362,6 +369,7 @@ export const ChecksPanel = () => {
     ),
   );
   const toggleChecks = useGameStore((state) => state.toggleChecks);
+  const { noShort } = useLogicWords();
   // The Trick and Outside margin filters exist while the map marks them
   const tricksOn = useGameStore(tricksShown);
   const marginOn = useGameStore(marginShown);
@@ -445,7 +453,7 @@ export const ChecksPanel = () => {
                 type="checkbox"
               />
               <Swatch state={state} />
-              {label}
+              {state === "unavailable" ? noShort : label}
               <span className="checks-filter__count">{counts[state]}</span>
             </label>
           ))}

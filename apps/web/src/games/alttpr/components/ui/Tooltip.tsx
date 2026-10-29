@@ -41,6 +41,7 @@ import {
   markerById,
   markerDetail,
 } from "@/games/alttpr/logic/solution";
+import { capitalized, useLogicWords } from "@/games/alttpr/logic/words";
 import {
   placesText,
   useCellHeld,
@@ -202,6 +203,7 @@ export const Tooltip = () => {
   const target = useTooltipStore((state) => state.target);
   const anchor = useTooltipStore((state) => state.anchor);
   const shortcuts = useGameStore((state) => state.shortcuts);
+  const words = useLogicWords();
   const marker = markerOf(target);
   const dungeon = marker?.dungeon;
   // In a review: what each place held, and where an item was
@@ -272,7 +274,9 @@ export const Tooltip = () => {
             label:
               marker.locations.length > 1 || dungeon !== undefined
                 ? withCost(locationLabel(marker, id), id)
-                : STATE_TEXT[state],
+                : state === "unavailable"
+                  ? capitalized(words.no)
+                  : STATE_TEXT[state],
             state,
           };
         });
@@ -476,7 +480,7 @@ export const Tooltip = () => {
                 : left === 1
                   ? "1 item left"
                   : `${left} items left`}
-              {sure > 0 && `, at least ${sure} in logic`}
+              {sure > 0 && `, at least ${sure} ${words.yes}`}
             </span>
           )}
           {!single && checks}
