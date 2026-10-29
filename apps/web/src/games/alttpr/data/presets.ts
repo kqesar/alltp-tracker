@@ -403,6 +403,18 @@ export const GLITCHES_LABELS: Record<Glitches | "none", string> = {
   overworld_glitches: "Overworld Glitches",
 };
 
+/**
+ * The same in the summary's selects, after their row's "Glitches" or
+ * "Played with": the full names would not fit their width on a phone.
+ */
+const GLITCHES_SHORT: Record<Glitches | "none", string> = {
+  hybrid_major_glitches: "Hybrid Major",
+  major_glitches: "Major",
+  no_logic: "No Logic",
+  none: "None",
+  overworld_glitches: "Overworld",
+};
+
 /** alttpr.com's boss shuffle options (config/alttp.php:241-246). */
 export const BOSS_SHUFFLE_LABELS: Record<BossShuffle, string> = {
   full: "Full",
@@ -486,7 +498,7 @@ export const TUNING = {
       "major_glitches",
       "no_logic",
     ],
-    GLITCHES_LABELS,
+    GLITCHES_SHORT,
   ),
   // Triforce Hunt is a run type of its own: the pack has no pieces
   goal: ordered(
@@ -504,7 +516,7 @@ export const TUNING = {
   ),
   playGlitches: ordered<PlayGlitches | "none">(
     ["none", "overworld_glitches", "hybrid_major_glitches", "major_glitches"],
-    GLITCHES_LABELS,
+    GLITCHES_SHORT,
   ),
   swordless: [
     [false, "With swords"],
