@@ -1,5 +1,23 @@
 {
   "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+  "doorRandomizer": {
+    "basePatch": {
+      "branch": "DRUnstable",
+      "commit": "d0f46511300be05076b7403d71656f3955f3f8fc",
+      "repo": "aerinon/z3randomizer"
+    },
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "data": "src/door-rando/locations.json",
+    "importer": "scripts/import-dr.mjs",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "overworld": {
+      "commit": "2297be2f45c6b9710a7dfdbdc11cf166baa6de70",
+      "repo": "codemann8/ALttPDoorRandomizer",
+      "version": "0.8.0.0"
+    },
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  },
   "entranceRandomizer": {
     "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
     "data": "src/entrances/er.json",

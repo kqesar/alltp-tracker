@@ -11,6 +11,7 @@
     "./spoiler": "./src/spoiler/parse.ts"
   },
   "scripts": {
+    "import-dr": "node scripts/import-dr.mjs",
     "import-er": "node scripts/import-er.mjs",
     "import-item-names": "node scripts/import-item-names.mjs",
     "import-rupee-texts": "node scripts/import-rupee-texts.mjs",

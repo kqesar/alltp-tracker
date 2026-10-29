@@ -23,6 +23,29 @@ export interface ManifestEntry {
 
 export interface Manifest {
   readonly commit: string;
+  /**
+   * The Door Randomizer release the DR locations are read from
+   * (scripts/import-dr.mjs), its base patch (the memory it keeps) and the
+   * Overworld Randomizer release built on it.
+   */
+  readonly doorRandomizer: {
+    readonly basePatch: {
+      readonly branch: string;
+      readonly commit: string;
+      readonly repo: string;
+    };
+    readonly commit: string;
+    readonly data: string;
+    readonly importer: string;
+    readonly license: string;
+    readonly overworld: {
+      readonly commit: string;
+      readonly repo: string;
+      readonly version: string;
+    };
+    readonly repo: string;
+    readonly version: string;
+  };
   /** The entrance randomizer vt hands shuffled entrances to, pinned too. */
   readonly entranceRandomizer: {
     readonly commit: string;

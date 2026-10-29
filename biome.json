@@ -34,6 +34,7 @@
       "!**/coverage_backup",
       "!**/package.json",
       "!packs/*/test/upstream",
+      "!packs/alttpr/src/door-rando/locations.json",
       "!packs/sm/test/spoilers",
       "!packages/archipelago/test/fixtures",
       "!packages/archipelago/test/datapackages",
