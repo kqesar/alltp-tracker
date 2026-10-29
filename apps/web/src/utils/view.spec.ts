@@ -8,6 +8,7 @@ import {
   isRelayedObsView,
   obsBackground,
   obsFeed,
+  obsGrid,
   obsTimer,
   obsViewUrl,
   trackerUrl,
@@ -185,6 +186,23 @@ describe("trackerUrl and obsViewUrl", () => {
     expect(obsFeed(new URL(url).search)).toBe(true);
     expect(obsFeed("?view=obs")).toBe(false);
     expect(obsFeed("?view=obs&feed=yes")).toBe(false);
+  });
+});
+
+describe("obsGrid", () => {
+  it("lays out the app's grid for layout=grid only, the band otherwise", () => {
+    expect(obsGrid("?view=obs&layout=grid")).toBe(true);
+    expect(obsGrid("?view=obs")).toBe(false);
+    expect(obsGrid("?view=obs&layout=band")).toBe(false);
+    const url = new URL(
+      obsViewUrl({ grid: true, timer: true }, "https://example.org/"),
+    );
+    expect(url.searchParams.get("layout")).toBe("grid");
+    expect(url.searchParams.get("timer")).toBe("1");
+    expect(obsGrid(url.search)).toBe(true);
+    expect(
+      obsGrid(new URL(obsViewUrl({}, "https://example.org/")).search),
+    ).toBe(false);
   });
 });
 

@@ -1,7 +1,13 @@
-import { type CSSProperties, useMemo, useSyncExternalStore } from "react";
+import {
+  type CSSProperties,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
 import { StreamTimer } from "@/games/alttpr/components/ui/StreamTimer";
-import { streamGridFor } from "@/games/alttpr/data/items";
+import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
+import { itemGridFor, streamGridFor } from "@/games/alttpr/data/items";
 import { useCrossedLogic } from "@/games/alttpr/hooks/useCrossedLogic";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -9,6 +15,7 @@ import { visibleRows } from "@/games/alttpr/utils";
 import type { ObsViewProps } from "@/games/registry";
 import { useUndoShortcuts } from "@/games/useUndoShortcuts";
 import { useObsStage } from "@/hooks/useObsStage";
+import { obsGrid } from "@/utils/view";
 
 /** The stream view's keyboard: undo, redo and the item shortcuts. */
 const ObsShortcuts = () => {
@@ -40,7 +47,10 @@ const usePortrait = (): boolean =>
  * the equipment, the Y items, the bottles and the crystals, then the
  * dungeons from Castle Tower to Ganon's Tower, their key cells under them
  * while those show. On a page taller than wide (a phone following the run)
- * the band folds in two, six cells wide. It fills the source, centred, at a
+ * the band folds in two, six cells wide (seven with Hyrule Castle's key
+ * cell). With `&layout=grid` it draws the app's grid instead, seven cells
+ * between two half cells, the layout a source sized for the grid before the
+ * band (512 × 448) keeps whole-pixel. It fills the source, centred, at a
  * size that keeps the pixel art crisp, and follows the run live through the
  * store's cross-tab sync. Its items stay clickable, and its undo and item
  * shortcuts work, for OBS's Interact window. With `&timer=1` the run timer
@@ -58,12 +68,19 @@ export const ObsView = ({ background, relay, timer = false }: ObsViewProps) => {
   const goal = useGameStore((state) => state.settings.goal);
   const hidden = useGameStore((state) => state.settings.hidden);
   const narrow = usePortrait();
+  const [asGrid] = useState(obsGrid);
   const grid = useMemo(
-    () => streamGridFor({ goal, hidden, mode }, bigKeysVisible, narrow),
-    [goal, hidden, mode, bigKeysVisible, narrow],
+    () =>
+      asGrid
+        ? itemGridFor({ goal, hidden, mode })
+        : streamGridFor({ goal, hidden, mode }, bigKeysVisible, narrow),
+    [asGrid, goal, hidden, mode, bigKeysVisible, narrow],
   );
   const rows = visibleRows(grid, bigKeysVisible);
-  const columns = Math.max(...rows.map((row) => row.length));
+  // The grid's seven cells and its two half cells; the band's own width
+  const columns = asGrid
+    ? ITEMS_PER_ROW + 1
+    : Math.max(...rows.map((row) => row.length));
   const stageRef = useObsStage({
     columns,
     extraRows: timer ? 1 : 0,
@@ -84,7 +101,7 @@ export const ObsView = ({ background, relay, timer = false }: ObsViewProps) => {
       }
     >
       {!relay && <ObsShortcuts />}
-      <TrackerGrid band itemLayout={grid} />
+      <TrackerGrid band={!asGrid} itemLayout={grid} />
       {timer && <StreamTimer />}
     </main>
   );

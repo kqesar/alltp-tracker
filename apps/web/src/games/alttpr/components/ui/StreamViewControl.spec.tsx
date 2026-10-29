@@ -171,6 +171,22 @@ describe("StreamViewControl", () => {
     expect(screen.getByTestId("stream-view-url")).toHaveValue(obsUrl);
   });
 
+  it("offers the app's grid for a source sized before the band", () => {
+    const dialog = openDialog();
+    const grid = within(dialog).getByLabelText(
+      "Lay it out as the tracker's grid",
+    );
+    expect(grid).not.toBeChecked();
+    expect(grid).toHaveAccessibleDescription(/512 × 448 source/);
+
+    fireEvent.click(grid);
+    expect(screen.getByTestId("stream-view-url")).toHaveValue(
+      `${obsUrl}&layout=grid`,
+    );
+    // Seven cells between two half cells, seven rows: the size it had
+    expect(dialog.textContent).toMatch(/512\s×\s448 for the crispest/);
+  });
+
   it("names the tracker's own address for the dock and the bg option", () => {
     const dialog = openDialog();
 

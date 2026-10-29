@@ -3,7 +3,8 @@ import { Modal } from "@/components/ui/Modal";
 import { StreamTools } from "@/components/ui/StreamTools";
 import { StreamIcon } from "@/components/ui/ToolbarIcons";
 import { ToolbarMenuItem } from "@/components/ui/ToolbarMenu";
-import { streamGridFor } from "@/games/alttpr/data/items";
+import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
+import { itemGridFor, streamGridFor } from "@/games/alttpr/data/items";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { visibleRows } from "@/games/alttpr/utils";
 import { copyStatus, copyText } from "@/utils/clipboard";
@@ -31,18 +32,24 @@ export const StreamViewControl = ({
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState("");
   const [timer, setTimer] = useState(false);
+  const [grid, setGrid] = useState(false);
   const urlRef = useRef<HTMLInputElement>(null);
   const urlId = useId();
   const timerId = useId();
+  const gridId = useId();
 
-  const url = obsViewUrl({ timer });
-  // The stream view's band, as an OBS source (wider than tall) draws it
-  const band = visibleRows(
-    streamGridFor({ goal, hidden, mode }, bigKeysVisible),
+  const url = obsViewUrl({ grid, timer });
+  // The stream view's band, as an OBS source (wider than tall) draws it, or
+  // the app's grid, seven cells between two half cells (`&layout=grid`)
+  const run = { goal, hidden, mode };
+  const shown = visibleRows(
+    grid ? itemGridFor(run) : streamGridFor(run, bigKeysVisible),
     bigKeysVisible,
   );
-  const width = Math.max(...band.map((row) => row.length)) * NATIVE_CELL;
-  const rows = band.length;
+  const width =
+    (grid ? ITEMS_PER_ROW + 1 : Math.max(...shown.map((row) => row.length))) *
+    NATIVE_CELL;
+  const rows = shown.length;
   // The timer takes a row of its own under the grid
   const sizeOf = (withTimer: boolean) => ({
     height: (withTimer ? rows + 1 : rows) * NATIVE_CELL,
@@ -163,6 +170,25 @@ export const StreamViewControl = ({
             />
             <label htmlFor={timerId}>Show the run timer under the grid</label>
           </div>
+          <div className="check-option">
+            <input
+              aria-describedby={`${gridId}-hint`}
+              checked={grid}
+              className="check-option__input"
+              data-testid="stream-view-grid"
+              id={gridId}
+              onChange={(event) => {
+                setGrid(event.target.checked);
+                setStatus("");
+              }}
+              type="checkbox"
+            />
+            <label htmlFor={gridId}>Lay it out as the tracker's grid</label>
+          </div>
+          <p className="stream-view__note" id={`${gridId}-hint`}>
+            Off, a band twelve cells wide that fits along an edge of the scene.
+            On, the grid a 512 × 448 source was sized for.
+          </p>
           <ol className="stream-view__steps">
             <li>
               In OBS, add this tracker, <code>{trackerUrl()}</code>, under Docks
