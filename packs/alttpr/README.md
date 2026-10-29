@@ -1045,9 +1045,25 @@ region on Link's side of the world for the bunny (`notBunny_<region>`),
 the dark rooms' lamp, the vanilla boss of each slot. Upstream's own slip
 stays as written: `state.can_flute` uncalled is true in Python
 (`uncalledMethods`). What is code is listed in `unported` with its line
-and why, never dropped: the key logic, the kill rooms, drops and pots
-(the enemy logic), Zelda's path, the bunny's paths. `rules.spec.ts`
-holds that list and compiles every rule in the engine.
+and why, never dropped: the key logic, Zelda's path, the bunny's paths.
+`rules.spec.ts` holds that list and compiles every rule in the engine.
+
+**The enemy logic** (`packs/alttpr/scripts/dr-enemies.mjs`): DR builds its kill
+rooms', its enemy drops' and its pots' rules in code (`challenge_room_rules`,
+`drop_rules`, `pot_rules`), from `source/enemizer/EnemyLogic.py` over the
+vanilla sprites, each kind's stats (`source/dungeon/EnemyList.py`) and the
+damage table (`damage_table.yaml`, read with js-yaml). The port computes
+them as the code does, RuleFactory's folds included (a disjunction of static
+falses is true, as written), and hands them to the walk where `set_rules`
+calls them: each kill room on its doors in (unless a portal), its trapped
+doors and its chests, the escape's in Standard with every other sewers
+location behind a weapon or Uncle's bombs, each drop on its sprite (`kill`
+and `drops` cite them). Where `defeat_rule_multiple` breaks a tie with
+`random.choice`, every choice is followed and anded (`ties`, none among the
+vanilla rooms); an enemy whose health depends on the world it is in reads the
+region's side through derived settings (`lightWorld_<region>`,
+`darkWorld_<region>`). As DR 1.5.6 computes it, Ganon's Tower's tile room
+chest needs the powder (its anti-fairy).
 
 **Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
 `RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,

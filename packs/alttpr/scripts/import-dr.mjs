@@ -23,17 +23,11 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { constant, member, readSprites } from "./dr-enemies.mjs";
 import { importDrRules } from "./dr-rules.mjs";
 import { importDrWorld } from "./dr-world-data.mjs";
 import { readCommit } from "./import-upstream-tests.mjs";
-import {
-  assigned,
-  body,
-  callExpressions,
-  expression,
-  literal,
-  tokens,
-} from "./python.mjs";
+import { assigned, expression, literal, tokens } from "./python.mjs";
 
 export const DR_REPO = "aerinon/ALttPDoorRandomizer";
 export const DR_VERSION = "1.5.6";
@@ -148,40 +142,6 @@ function dictOf(source, name, file) {
   return entries;
 }
 
-/** `Enum.Member` as the member's name. @param {Expr | undefined} e @param {string} of */
-const member = (e, of) =>
-  e?.t === "attr" && e.of.t === "name" && e.of.name === of
-    ? e.name
-    : fail(`expected ${of}.<member>, read ${JSON.stringify(e)}`);
-
-/** A constant's value. @param {Expr | undefined} e */
-const constant = (e) =>
-  e?.t === "const"
-    ? e.value
-    : fail(`expected a constant: ${JSON.stringify(e)}`);
-
-/**
- * `class Name(FastEnum):` members, `Member = value`, by name.
- * @param {string} source
- * @param {string} name
- * @param {string} file
- */
-function enumOf(source, name, file) {
-  const start = source.indexOf(`\nclass ${name}(`);
-  if (start === -1) fail(`${file}: no class ${name}`);
-  const end = /\n\S/g;
-  end.lastIndex = start + 1;
-  const stop = end.exec(source)?.index ?? source.length;
-  /** @type {Map<string, number>} */
-  const members = new Map();
-  for (const m of source
-    .slice(start, stop)
-    .matchAll(/^ {4}(\w+) = (0x[0-9a-fA-F]+|\d+)/gm)) {
-    members.set(m[1], Number(m[2]));
-  }
-  return members;
-}
-
 /** The line of `index` in `source`. @param {string} source @param {number} index */
 const lineAt = (source, index) => source.slice(0, index).split("\n").length;
 
@@ -279,93 +239,7 @@ export function importDr(checkout) {
     potsByRoom.set(key, list);
   }
 
-  // ---- Sprites: init_vanilla_sprites' create_sprite calls, in order
-  // (EnemyList.py:579-592 for the arguments), and the stats of each kind.
-  const kindsOf = enumOf(enemies, "EnemySprite", ENEMIES);
-  const nameOfKind = assigned(enemies, "enemy_names", ENEMIES).value;
-  const spritesFn = body(enemies, "init_vanilla_sprites", ENEMIES);
-  const PARAMS = [
-    "super_tile",
-    "kind",
-    "sub_type",
-    "layer",
-    "tile_x",
-    "tile_y",
-    "region",
-    "drops_item",
-    "drop_item_kind",
-    "fix",
-    "water",
-    "embed",
-    "never_drop",
-  ];
-  /** @type {Map<number, { kind: number, overlord: boolean, region: string | null, keyDrop: boolean, fix: boolean, embed: boolean, neverDrop: boolean, line: number }[]>} */
-  const spritesByRoom = new Map();
-  for (const { call, line } of callExpressions(
-    enemies,
-    "create_sprite",
-    ENEMIES,
-    spritesFn.start,
-    spritesFn.end,
-  )) {
-    /** @type {Record<string, Expr>} */
-    const arg = {};
-    call.args.forEach((a, i) => {
-      arg[PARAMS[i]] = a;
-    });
-    Object.assign(arg, call.keywords);
-    const room = Number(constant(arg.super_tile));
-    // SpriteType.Overlord is 0x07 (EnemyList.py:280-282)
-    const sub = arg.sub_type;
-    const overlord =
-      sub.t === "attr"
-        ? member(sub, "SpriteType") === "Overlord"
-        : constant(sub) === 0x07;
-    const kindExpr = arg.kind;
-    const kind =
-      kindExpr.t === "attr"
-        ? (kindsOf.get(member(kindExpr, "EnemySprite")) ??
-          fail(`${ENEMIES}:${line}: unknown sprite`))
-        : Number(constant(kindExpr));
-    const flagOf = (/** @type {string} */ k) =>
-      arg[k] === undefined ? false : constant(arg[k]) === true;
-    const dropKind =
-      arg.drop_item_kind === undefined ? null : constant(arg.drop_item_kind);
-    const list = spritesByRoom.get(room) ?? [];
-    list.push({
-      embed: flagOf("embed"),
-      fix: flagOf("fix"),
-      // A key drop's sprite (valid_drop_location, EnemyList.py:2250-2252)
-      keyDrop: flagOf("drops_item") && (dropKind === 0xe4 || dropKind === 0xe5),
-      kind,
-      line,
-      neverDrop: flagOf("never_drop"),
-      overlord,
-      region:
-        arg.region === undefined
-          ? null
-          : /** @type {string | null} */ (constant(arg.region)),
-    });
-    spritesByRoom.set(room, list);
-  }
-  // init_enemy_stats' dict: the last entry of a kind wins, as in a Python
-  // dict (EnemyStats(sprite, static, drop_flag=False, ...), EnemyList.py:20-22)
-  const statsFn = body(enemies, "init_enemy_stats", ENEMIES);
-  /** @type {Map<number, boolean>} */
-  const dropFlag = new Map();
-  for (const { call, line } of callExpressions(
-    enemies,
-    "EnemyStats",
-    ENEMIES,
-    statsFn.start,
-    statsFn.end,
-  )) {
-    const kind =
-      kindsOf.get(member(call.args[0], "EnemySprite")) ??
-      fail(`${ENEMIES}:${line}: unknown sprite`);
-    const flag = call.args[2] ?? call.keywords.drop_flag;
-    dropFlag.set(kind, flag === undefined ? false : constant(flag) === true);
-  }
+  const { dropFlag, nameOfKind, spritesByRoom } = readSprites(enemies);
   /** A sprite's slot: its index less the overlords before it (EnemyList.py:2133-2139). @param {number} room @param {number} index */
   const slotOf = (room, index) => {
     const list =
@@ -666,7 +540,7 @@ function main(args) {
     uncalledMethods,
     unported,
     ...tables
-  } = importDrRules(read, world);
+  } = importDrRules(read, world, locations);
   writeLines(
     join(WORLD, "rules.json"),
     {

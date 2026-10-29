@@ -27,5 +27,8 @@
     "@alltp/engine": "workspace:*",
     "@alltp/spoiler": "workspace:*",
     "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "js-yaml": "5.5.0"
   }
 }

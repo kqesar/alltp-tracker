@@ -358,6 +358,7 @@ export function numberOf(ctx, expr, otherwise) {
  *   statement?: (call: Hook) => boolean,
  *   list?: (ctx: Context, expr: Expr, scope: Scope) => unknown[] | undefined,
  *   assign?: (ctx: Context, value: Expr, scope: Scope) => unknown,
+ *   block?: (block: Omit<Hook, "name" | "call"> & { statement: Statement }) => boolean,
  * }} Dialect
  * @typedef {{
  *   ctx: Context,
@@ -398,7 +399,7 @@ export function numberOf(ctx, expr, otherwise) {
  * them: whether a region lies in the light world (mark_light_world_regions),
  * whether everything held reaches it as Turtle Rock's key rules ask
  * (set_trock_key_rules), whether Swamp Palace needs the patch.
- * @typedef {{ kind: "lightWorld" | "allItemsReach" | "door", region: string, source: string }
+ * @typedef {{ kind: "lightWorld" | "darkWorld" | "allItemsReach" | "door", region: string, source: string }
  *   | { kind: "swampPatch", source: string }} Derived
  */
 
@@ -885,6 +886,20 @@ export function walkRules(source, ctx) {
       const statement = /** @type {Statement} */ (statements[i]);
       const { line, text } = statement;
       try {
+        // A block the dialect reads itself (DR's escape kill rooms)
+        if (
+          statement.block &&
+          ctx.dialect.block?.({
+            apply,
+            ctx,
+            line,
+            scope,
+            statement,
+            unported: (code, at, why) => unported.push({ code, line: at, why }),
+            walk,
+          })
+        )
+          continue;
         if (text.startsWith("if ")) {
           // The chain: if, then each elif and the else after it
           const chain = [statement];

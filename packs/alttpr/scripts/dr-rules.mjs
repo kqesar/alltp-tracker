@@ -28,13 +28,20 @@
 // built in code by the enemy logic (kill rooms, drops, pots), which
 // dr-enemies.mjs translates.
 
+import { enemyRules, readEnemyData } from "./dr-enemies.mjs";
 import { drRegionId } from "./dr-world-data.mjs";
 import {
   ITEMS as ER_ITEMS,
   METHODS as ER_METHODS,
   extendMagic,
 } from "./er-rules.mjs";
-import { assigned, body, functionBody, pythonLiteral } from "./python.mjs";
+import {
+  assigned,
+  body,
+  functionBody,
+  pythonExpression,
+  pythonLiteral,
+} from "./python.mjs";
 import {
   all,
   any,
@@ -54,6 +61,7 @@ import {
   setting,
   stringOf,
   TRUE,
+  translate,
   Untranslatable,
   walkRules,
   worldAttribute,
@@ -431,7 +439,8 @@ const found = {
  * @returns {Rule | undefined}
  */
 function expression(ctx, expr, scope) {
-  const shaped = doorExpression(ctx, expr, scope);
+  const shaped =
+    doorExpression(ctx, expr, scope) ?? locationExpression(expr, scope);
   if (shaped !== undefined) return shaped;
   // not state.has('Trench 1 Filled'): the dry path, open while the switch
   // is left alone
@@ -695,8 +704,35 @@ function doorExpression(ctx, expr, scope) {
 function assign(_ctx, value, scope) {
   const door = doorNamed(value, scope);
   if (door !== undefined) return new Bound("door", door);
+  // world.get_location_unsafe('X', player): the location, or None
+  if (
+    value.t === "call" &&
+    value.fn.t === "attr" &&
+    value.fn.name === "get_location_unsafe"
+  ) {
+    const name = stringOf(value.args[0], scope);
+    return typeOf.has(name) ? spotOfLocation(name) : NONE;
+  }
+  // What the escape's kill rooms read (Rules.py:1539-1541), which the
+  // block hook ports: the sewers' builder, the room map, the stats
+  for (let at = value; at.t === "attr" || at.t === "index"; at = at.of)
+    if (["dungeon_layouts", "data_tables"].includes(worldAttribute(at) ?? ""))
+      return NONE;
   return undefined;
 }
+
+/** What `get_location_unsafe` gives for a location this seed lacks. */
+const NONE = Object.freeze({ none: true });
+
+/**
+ * A location as a loop binds it, with its LocationType.
+ * @param {string} name
+ */
+const spotOfLocation = (name) => ({
+  kind: "location",
+  name,
+  type: typeOf.get(name) ?? "Normal",
+});
 
 /**
  * The lists DR loops over: `world.get_region('X', player).locations`.
@@ -708,12 +744,94 @@ function list(_ctx, expr, scope) {
   if (expr.t === "attr" && expr.name === "locations") {
     const region = regionNamed(expr.of, scope);
     if (region !== undefined)
-      return (locationsOf.get(region) ?? []).map((name) => ({
-        kind: "location",
-        name,
-      }));
+      return (locationsOf.get(region) ?? []).map(spotOfLocation);
+  }
+  // pot_rules' blocks: the pots of a large block (Rules.py:951, a list
+  // comprehension the reader leaves; read here from the pots' data)
+  if (
+    expr.t === "name" &&
+    expr.name === "blocks" &&
+    rulesSource.includes(
+      "blocks = [l for l in world.get_locations() if l.type == LocationType.Pot and l.pot.flags & PotFlags.Block]",
+    )
+  )
+    return [...blockPots].map(spotOfLocation);
+  return undefined;
+}
+
+/** Each location's LocationType (Regions.py adjust_locations). @type {Map<string, string>} */
+const typeOf = new Map();
+/** The pots of a large block. @type {Set<string>} */
+const blockPots = new Set();
+
+/**
+ * A location's type, or its presence: `l.type == LocationType.Pot`, `if
+ * loc:` (Rules.py pot_rules).
+ * @param {Expr} expr
+ * @param {Scope} scope
+ * @returns {Rule | undefined}
+ */
+function locationExpression(expr, scope) {
+  /** @param {Expr} e */
+  const bound = (e) => (e.t === "name" ? scope.env.get(e.name) : undefined);
+  if (expr.t === "name") {
+    const value = bound(expr);
+    if (value === NONE) return FALSE;
+    if (value !== null && typeof value === "object" && "type" in value)
+      return TRUE;
+  }
+  if (
+    expr.t === "compare" &&
+    (expr.op === "==" || expr.op === "!=") &&
+    expr.left.t === "attr" &&
+    expr.left.name === "type" &&
+    expr.right.t === "attr" &&
+    expr.right.of.t === "name" &&
+    expr.right.of.name === "LocationType"
+  ) {
+    const value = bound(expr.left.of);
+    if (value !== null && typeof value === "object" && "type" in value) {
+      const same = value.type === expr.right.name;
+      return same === (expr.op === "==") ? TRUE : FALSE;
+    }
   }
   return undefined;
+}
+
+/**
+ * What the enemy logic reads of the state, through DR's methods
+ * (EnemyLogic.py:386-450).
+ * @param {Context} ctx
+ * @returns {import("./dr-enemies.mjs").Lib}
+ */
+function enemyLib(ctx) {
+  return {
+    canUseBombs: () => canUseBombs(ctx),
+    extendMagic: (magic, full) =>
+      method(
+        ctx,
+        "can_extend_magic",
+        `${String(magic).replace(".", "_")}${full ? "Full" : ""}`,
+        () => extendMagic(ctx, magic, full),
+      ),
+    has: (item, count = 1) => holding(ctx, item, count),
+    normalArrows: () => canShootArrows(ctx),
+    // can_shoot_silver_arrows (EnemyLogic.py:437-445): retro's silvers
+    // need arrows bought
+    silverArrows: () =>
+      any(
+        all(
+          negate(setting("retroBow")),
+          atom("bow"),
+          holding(ctx, "Silver Arrows", 1),
+        ),
+        all(
+          setting("retroBow"),
+          holding(ctx, "Silver Arrows", 1),
+          buyable(ctx, "Single Arrow"),
+        ),
+      ),
+  };
 }
 
 /** Rule functions that are code rather than rules, by what they do. */
@@ -722,13 +840,9 @@ const CODE = {
   add_hmg_key_logic_rules: "hybrid glitches' key logic (unmodelled)",
   add_key_logic_rules:
     "the key logic: KeyDoorShuffle's analysis of each dungeon (keys, §2.5 of the design)",
-  challenge_room_rules:
-    "kill rooms: EnemyLogic over the room's sprites (dr-enemies.mjs)",
-  drop_rules: "enemy drops: EnemyLogic over the sprite (dr-enemies.mjs)",
   find_rules_for_zelda_delivery:
     "the path Zelda is led by: a search over the world's exits",
   overworld_glitches_rules: "overworld glitches (unmodelled)",
-  pot_rules: "pots: which pots the pottery mode shuffles (dr-enemies.mjs)",
   set_bunny_rules:
     "the bunny's paths, by which regions the entrances make dark",
   underworld_glitches_rules: "underworld glitches (unmodelled)",
@@ -760,8 +874,169 @@ function statement({ apply, call, ctx, line, name, scope, walk }) {
     conditionalLamps(apply, scope, line);
     return true;
   }
+  if (name === "challenge_room_rules") {
+    challengeRooms(ctx, apply, scope, line, undefined);
+    return true;
+  }
+  if (name === "drop_rules") {
+    dropRules(apply, scope, line);
+    return true;
+  }
   return false;
 }
+
+/**
+ * The state of the enemy logic for one import.
+ * @type {{ rules: ReturnType<typeof enemyRules>, kill: Map<string, { req: string, source: string, sprites: string[] }>, drops: Map<string, { req: string, sprite: string }>, keyDrops: Map<string, [number, number]>, dropLocations: { name: string, region: string, room: number, index: number }[] } | undefined}
+ */
+let enemies;
+
+/**
+ * challenge_room_rules (Rules.py:906-924): each kill room's rule on its
+ * doors in (not a portal: an entrance flag lets Link in from outside) and
+ * on the doors a trap closes, each kill chest's on its chests. With
+ * `regions`, the escape's (standard_rules, Rules.py:1542-1561): only those
+ * rooms, and every other location of the sewers gets `escape`.
+ * @param {Context} ctx
+ * @param {import("./rules-core.mjs").Hook["apply"]} apply
+ * @param {Scope} scope
+ * @param {number} line
+ * @param {{ regions: readonly string[], escape: Rule } | undefined} sewers
+ */
+function challengeRooms(ctx, apply, scope, line, sewers) {
+  if (enemies === undefined) throw new Error("no enemy logic");
+  const state = enemies;
+  const rooms = assigned(rulesSource, "std_kill_rooms", "Rules.py");
+  const chests = assigned(rulesSource, "kill_chests", "Rules.py");
+  /** @param {string} region @param {number} room @param {number[]} list @param {number} at */
+  const ruleOf = (region, room, list, at) => {
+    const { rule, sprites } = state.rules.challenge(room, list, region);
+    state.kill.set(region, {
+      req: print(rule),
+      source: `Rules.py:${at}`,
+      sprites: sprites.map((sprite) =>
+        sprite.line === 0
+          ? "Rules.py:941-946"
+          : `source/dungeon/EnemyList.py:${sprite.line}`,
+      ),
+    });
+    return rule;
+  };
+  const roomTable =
+    /** @type {Record<string, [string[], string[], number, number[]]>} */ (
+      rooms.value
+    );
+  const chestTable =
+    /** @type {Record<string, [string[], number, number[]]>} */ (chests.value);
+  /** @param {string} region */
+  const killRoom = (region) => {
+    const [entrances, trapAbles, room, list] =
+      /** @type {[string[], string[], number, number[]]} */ (roomTable[region]);
+    const rule = ruleOf(region, room, list, rooms.line);
+    for (const name of entrances) {
+      // not entrance.door or not entrance.door.entranceFlag
+      const door = doorsByName.has(name)
+        ? doorFlag(ctx, name, "entranceFlag")
+        : FALSE;
+      apply(
+        "and",
+        { kind: "entrance", name },
+        any(rule, door),
+        scope.when,
+        line,
+      );
+    }
+    for (const name of trapAbles) {
+      // entrance.door.trapped and not entrance.door.entranceFlag
+      apply(
+        "and",
+        { kind: "entrance", name },
+        any(
+          rule,
+          negate(doorFlag(ctx, name, "trapped")),
+          doorFlag(ctx, name, "entranceFlag"),
+        ),
+        scope.when,
+        line,
+      );
+    }
+  };
+  /** @param {string} region */
+  const killChest = (region) => {
+    const [locations, room, list] =
+      /** @type {[string[], number, number[]]} */ (chestTable[region]);
+    const rule = ruleOf(region, room, list, chests.line);
+    for (const name of locations)
+      apply("and", { kind: "location", name }, rule, scope.when, line);
+  };
+  if (sewers === undefined) {
+    for (const region of Object.keys(roomTable)) killRoom(region);
+    for (const region of Object.keys(chestTable)) killChest(region);
+    return;
+  }
+  for (const region of sewers.regions) {
+    if (region in roomTable) killRoom(region);
+    else
+      for (const name of locationsOf.get(region) ?? []) {
+        const chest = Object.entries(chestTable).find(([, [names]]) =>
+          names.includes(name),
+        );
+        if (chest !== undefined) killChest(chest[0]);
+        else
+          apply(
+            "and",
+            { kind: "location", name },
+            sewers.escape,
+            scope.when,
+            line,
+          );
+      }
+  }
+}
+
+/**
+ * drop_rules (Rules.py:994-1006): every sprite with a location, the key
+ * drops' (adjust_locations, Regions.py:1170-1176) and the enemy drops'
+ * (setup_enemy_locations), its defeat rule.
+ * @param {import("./rules-core.mjs").Hook["apply"]} apply
+ * @param {Scope} scope
+ * @param {number} line
+ */
+function dropRules(apply, scope, line) {
+  if (enemies === undefined) throw new Error("no enemy logic");
+  for (const { index, name, region, room } of enemies.dropLocations) {
+    const { rule, sprite } = enemies.rules.drop(room, index, region, name);
+    enemies.drops.set(name, {
+      req: print(rule),
+      sprite: `source/dungeon/EnemyList.py:${sprite.line}`,
+    });
+    apply("and", { kind: "location", name }, rule, scope.when, line);
+  }
+}
+
+/**
+ * The blocks only DR writes: the escape's kill rooms (Rules.py:1542-1561).
+ * @param {Omit<import("./rules-core.mjs").Hook, "name" | "call"> & { statement: import("./python.mjs").Statement }} block
+ */
+function block({ apply, ctx, line, scope, statement }) {
+  if (statement.text !== "for region in escape_builder.master_sector.regions")
+    return false;
+  // The sewers' master sector: Hyrule Castle's regions with its doors
+  // vanilla (Dungeons.py hyrule_castle_regions)
+  const escapeRule = translate(
+    ctx,
+    pythonExpression("standard_escape_rule(state)"),
+    scope,
+  );
+  challengeRooms(ctx, apply, scope, line, {
+    escape: escapeRule,
+    regions: hyruleCastleRegions,
+  });
+  return true;
+}
+
+/** Hyrule Castle's regions, Dungeons.py's list. @type {string[]} */
+let hyruleCastleRegions = [];
 
 /**
  * A spot expression: `world.get_entrance/get_location('X', player)`.
@@ -831,6 +1106,7 @@ function conditionalLamps(apply, scope, line) {
 /** @type {Dialect} */
 const DR = {
   assign,
+  block,
   code: CODE,
   dungeonCodes: DUNGEON_CODES,
   expression,
@@ -848,9 +1124,11 @@ const DR = {
  * DR's rules, translated.
  * @param {(file: string) => string} read - A file of the checkout
  * @param {{ regions: readonly { name: string, locations: readonly string[], exits: readonly string[] }[], dungeons: readonly { name: string, boss: string | null }[], doors: readonly (Record<string, unknown> & { name: string })[] }} world
+ * @param {readonly { name: string, region: string, kind: string, pot?: { block: boolean }, flag: { memory: string, room?: number } }[]} extras
+ *   The locations DR adds (src/door-rando/locations.json): pots, drops, shops
  *   Stage A's regions and dungeons
  */
-export function importDrRules(read, world) {
+export function importDrRules(read, world, extras) {
   rulesSource = read("Rules.py");
   const bossesSource = read("Bosses.py");
   const baseSource = read("BaseClasses.py");
@@ -869,11 +1147,64 @@ export function importDrRules(read, world) {
   locationsOf.clear();
   doorsByName.clear();
   for (const door of world.doors) doorsByName.set(door.name, door);
+  typeOf.clear();
+  blockPots.clear();
   for (const region of world.regions) {
     locationsOf.set(region.name, [...region.locations]);
-    for (const location of region.locations)
+    for (const location of region.locations) {
       regionOfLocation.set(location, region.name);
+      typeOf.set(location, "Normal");
+    }
     for (const exit of region.exits) regionOfEntrance.set(exit, region.name);
+  }
+  // DR's own locations (adjust_locations, Regions.py:1165-1215): a pot is
+  // a Pot, an enemy's drop a Drop, a key drop either by key_drop_data
+  const keyDrops = /** @type {Record<string, [string, unknown]>} */ (
+    assigned(read("PotShuffle.py"), "key_drop_data", "PotShuffle.py").value
+  );
+  /** @type {{ name: string, region: string, room: number, index: number }[]} */
+  const dropLocations = [];
+  for (const [name, [type, at]] of Object.entries(keyDrops)) {
+    typeOf.set(name, type);
+    if (type === "Drop") {
+      const [, room, index] = /** @type {number[]} */ (at);
+      const region = regionOfLocation.get(name) ?? "";
+      dropLocations.push({
+        index: Number(index),
+        name,
+        region,
+        room: Number(room),
+      });
+    }
+  }
+  for (const entry of extras) {
+    if (
+      typeOf.has(entry.name) &&
+      entry.kind !== "pot" &&
+      entry.kind !== "enemyDrop"
+    )
+      continue;
+    if (!regionOfLocation.has(entry.name)) {
+      regionOfLocation.set(entry.name, entry.region);
+      locationsOf.set(entry.region, [
+        ...(locationsOf.get(entry.region) ?? []),
+        entry.name,
+      ]);
+    }
+    if (entry.kind === "pot") {
+      typeOf.set(entry.name, "Pot");
+      if (entry.pot?.block) blockPots.add(entry.name);
+    } else if (entry.kind === "enemyDrop") {
+      typeOf.set(entry.name, "Drop");
+      // '<region> Enemy #n': sprite n - 1 of its room (create_drop_location)
+      const index = Number(entry.name.split("#")[1]) - 1;
+      dropLocations.push({
+        index,
+        name: entry.name,
+        region: entry.region,
+        room: Number(entry.flag.room),
+      });
+    } else typeOf.set(entry.name, entry.kind === "shop" ? "Shop" : "Normal");
   }
 
   // Dungeons and their bosses (Dungeons.py create_dungeons, GT's three)
@@ -1003,6 +1334,29 @@ export function importDrRules(read, world) {
     }
   }
 
+  // The enemy logic, through DR's methods
+  hyruleCastleRegions = /** @type {string[]} */ (
+    assigned(dungeonsSource, "hyrule_castle_regions", "Dungeons.py").value
+  );
+  enemies = {
+    dropLocations,
+    drops: new Map(),
+    keyDrops: new Map(),
+    kill: new Map(),
+    rules: enemyRules(readEnemyData(read), enemyLib(ctx), (region) => ({
+      dark: derive(ctx, `darkWorld_${drRegionId(region)}`, {
+        kind: "darkWorld",
+        region,
+        source: "Regions.py:1113",
+      }),
+      light: derive(ctx, `lightWorld_${drRegionId(region)}`, {
+        kind: "lightWorld",
+        region,
+        source: "Regions.py:1113",
+      }),
+    })),
+  };
+
   const { bombShop, fill, spots, unported } = walkRules(rulesSource, ctx);
 
   // A spot reached (can_reach(…, 'Location' or 'Entrance')): its region,
@@ -1049,6 +1403,7 @@ export function importDrRules(read, world) {
     derived: sortedOf(ctx.derived),
     doorData: sortedOf(found.doorData),
     doorsOpen: [...found.doorsOpen].sort(),
+    drops: sortedOf(enemies.drops),
     entrances: rulesOf("entrance"),
     events: Object.fromEntries(
       [...placed.values()]
@@ -1060,9 +1415,11 @@ export function importDrRules(read, world) {
     ),
     fill: [...new Set(fill)],
     helpers: sortedOf(ctx.helpers),
+    kill: sortedOf(enemies.kill),
     locations: rulesOf("location"),
     negatedEvents: [...found.negatedEvents].sort(),
     newItems: NEW_ITEMS,
+    ties: enemies.rules.ties.map((names) => names.join(" ")),
     uncalledMethods: [...found.uncalled].sort(),
     unported,
   };
