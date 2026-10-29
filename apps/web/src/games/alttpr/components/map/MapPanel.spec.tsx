@@ -195,7 +195,7 @@ describe("MapPanel", () => {
       useGameStore.getState().updateSettings({ entranceShuffle: "none" }),
     );
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The glitches are not set yet: a check a glitched logic reaches, or whose key may sit behind its own door (as in No Logic), shows as maybe until you set Glitches in Mode.",
+      "The glitches are not set yet: a check only a glitched logic reaches, or whose key may sit behind its own door (as in No Logic), shows as maybe until you set Glitches in Mode.",
     );
     act(() => useGameStore.getState().updateSettings({ glitches: "none" }));
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
