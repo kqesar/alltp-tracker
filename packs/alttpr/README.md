@@ -1014,6 +1014,23 @@ What it cannot know it says (`partial`): reduced and clustered choose a
 random share of the dungeons' pots, enemy shuffle decides which enemies
 drop, a moved boss rewrites its room's sprites.
 
+**The world, as data** (`src/door-rando/world/`, the same `import-dr` run,
+`packs/alttpr/scripts/dr-world-data.mjs`): what DR's logic will be built on. `regions.json`
+holds the 913 regions `Regions.py` makes (578 in dungeons, the overworld
+screens and caves, two menus), each with its kind, terrain, locations,
+exits, dungeon and crystal switch (55), a list that differs by mode read
+for each (`locationModes`); ids are `regionId` of each part around " - ",
+joined by `_` (DR names `Mire Conveyor Crystal` and `Mire Conveyor -
+Crystal` apart). `doors.json` holds the 1,200 doors of `Doors.py`, their
+builder chains and the statements after them read into flags (keys,
+barriers, traps, events, dead ends, pairs, portals, controllers; a flag set
+under an `if` kept with its condition, a flag at its default left out, no
+layout byte), and the 25 portals. `connections.json` holds the tables
+`OverworldShuffle.py`, `EntranceShuffle2.py` and `DoorShuffle.py` wire the
+world with, as written, each with its line. `world-data.spec.ts` holds the
+counts and that every exit is linked, but the doors the vanilla world never
+leaves by.
+
 **Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
 `RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,
 bit `$8000 >> i` (`BitFieldMasks`, `keydrop/standing_items.asm:571-573`),

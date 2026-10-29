@@ -16,12 +16,14 @@
 //
 // What comes out: src/door-rando/locations.json, one entry per location
 // with DR's exact name, its dungeon, its region, and the bit of DR's base
-// patch that says it was collected (src/door-rando/locations.ts reads it).
-// Never edit that file by hand: run this script again.
+// patch that says it was collected (src/door-rando/locations.ts reads it);
+// src/door-rando/world/, DR's regions, doors and connection tables
+// (dr-world-data.mjs). Never edit those files by hand: run this script again.
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { importDrWorld } from "./dr-world-data.mjs";
 import { readCommit } from "./import-upstream-tests.mjs";
 import {
   assigned,
@@ -37,6 +39,47 @@ export const DR_VERSION = "1.5.6";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(HERE, "../src/door-rando/locations.json");
+const WORLD = resolve(HERE, "../src/door-rando/world");
+
+/**
+ * A value as JSON, its object keys sorted: the files come out the same for
+ * the same source.
+ * @param {unknown} value
+ * @returns {string}
+ */
+const sorted = (value) =>
+  JSON.stringify(value, (_, v) =>
+    v !== null && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(
+          Object.entries(v).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+        )
+      : v,
+  );
+
+/**
+ * A generated file of entries a line: `{ "upstream": …, "<list>": [\n …\n] }`.
+ * @param {string} file
+ * @param {Record<string, unknown>} head - Written first, a key a line
+ * @param {Record<string, readonly unknown[] | Record<string, unknown>>} lists
+ *   Each array an entry a line; each object a key a line
+ */
+function writeLines(file, head, lists) {
+  const parts = [
+    ...Object.entries(head).map(
+      ([k, v]) => `  ${JSON.stringify(k)}: ${sorted(v)}`,
+    ),
+    ...Object.entries(lists).map(([k, list]) => {
+      const lines = Array.isArray(list)
+        ? list.map((entry) => `    ${sorted(entry)}`)
+        : Object.entries(list).map(
+            ([key, entry]) => `    ${JSON.stringify(key)}: ${sorted(entry)}`,
+          );
+      const [open, close] = Array.isArray(list) ? ["[", "]"] : ["{", "}"];
+      return `  ${JSON.stringify(k)}: ${open}\n${lines.join(",\n")}\n  ${close}`;
+    }),
+  ];
+  writeFileSync(file, `{\n${parts.join(",\n")}\n}\n`);
+}
 
 /**
  * DR's dungeons (Dungeons.py:16-29, make_dungeon's first argument) by the
@@ -582,6 +625,34 @@ function main(args) {
   const count = /** @type {Record<string, number>} */ ({});
   for (const l of locations) count[l.kind] = (count[l.kind] ?? 0) + 1;
   process.stdout.write(`${OUT}: ${JSON.stringify(count)}\n`);
+
+  // Stage A: the world's data
+  const read = (/** @type {string} */ file) =>
+    readFileSync(join(checkout, file), "utf8");
+  const world = importDrWorld(read);
+  const generated =
+    "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.";
+  mkdirSync(WORLD, { recursive: true });
+  writeLines(
+    join(WORLD, "regions.json"),
+    { generated, upstream },
+    { dungeons: world.dungeons, regions: world.regions },
+  );
+  writeLines(
+    join(WORLD, "doors.json"),
+    { generated, upstream },
+    { doors: world.doors, portals: world.portals },
+  );
+  writeLines(
+    join(WORLD, "connections.json"),
+    { generated, upstream },
+    Object.fromEntries(
+      Object.entries(world.connections).map(([file, tables]) => [file, tables]),
+    ),
+  );
+  process.stdout.write(
+    `${WORLD}: ${world.regions.length} regions, ${world.doors.length} doors, ${world.portals.length} portals\n`,
+  );
 }
 
 if (
