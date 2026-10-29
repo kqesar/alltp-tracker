@@ -25,6 +25,7 @@ import {
   solve,
   type Tri,
 } from "@alltp/engine";
+import { bossFacts } from "./bosses";
 import { derivedFacts } from "./derived";
 import { DUNGEONS, type DungeonId, dungeonPool } from "./dungeons";
 import type { Filler } from "./fill";
@@ -43,6 +44,8 @@ function withFacts(
     ...items,
     // Either pad may want any medallion: with all three, both open
     ...medallionFacts({ mire: "unknown", turtleRock: "unknown" }),
+    // Any slot may hold any boss it takes: with everything, each is beaten
+    ...bossFacts({}),
     ...derivedFacts(items, settings),
   };
 }
@@ -64,7 +67,8 @@ const poolOf = (
 
 /**
  * Everything a world holds: every item at its count in its pool and its
- * pre-collected items, every prize and event, both medallion pads open.
+ * pre-collected items, every prize and event, both medallion pads open,
+ * every boss slot unknown (each boss it may hold beaten).
  * What the randomizer assumes held before it places the first item.
  */
 export function everything(settings: AlttprSettings): State {
