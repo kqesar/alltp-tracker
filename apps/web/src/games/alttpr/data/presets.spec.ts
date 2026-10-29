@@ -50,9 +50,19 @@ describe("presets", () => {
     const crosskeys = getPreset("crosskeys").settings;
     expect(unmodelledReasons(open)).toEqual([]);
     expect(unmodelledReasons(crosskeys)).toEqual([]);
-    expect(unmodelledReasons({ ...open, glitches: "major_glitches" })).toEqual([
-      "Major Glitches",
-    ]);
+    // Every glitched logic is modelled, but not behind shuffled entrances,
+    // which alttpr.com never generates (the entrance randomizer is
+    // NoGlitches)
+    expect(unmodelledReasons({ ...open, glitches: "major_glitches" })).toEqual(
+      [],
+    );
+    expect(
+      unmodelledReasons({ ...crosskeys, glitches: "overworld_glitches" }),
+    ).toEqual(["Overworld Glitches with shuffled entrances"]);
+    expect(crossedLogic({ ...crosskeys, glitches: "overworld_glitches" })).toBe(
+      false,
+    );
+    expect(crossedLogic({ ...crosskeys, glitches: "no_logic" })).toBe(true);
     expect(unmodelledReasons({ ...open, entranceShuffle: "insanity" })).toEqual(
       ["Insanity entrance shuffle"],
     );
@@ -63,14 +73,14 @@ describe("presets", () => {
         glitches: "no_logic",
       }),
     ).toEqual(["Full entrance shuffle"]);
-    // No Logic is read with the glitches it is played with, once ported
+    // No Logic is read with the glitches it is played with
     expect(
       unmodelledReasons({
         ...open,
         glitches: "no_logic",
         playGlitches: "major_glitches",
       }),
-    ).toEqual(["No Logic played with Major Glitches"]);
+    ).toEqual([]);
     expect(unmodelledReasons({ ...crosskeys, dungeonItems: "mcs" })).toEqual([
       "Crossworld entrances with dungeon items kept in their dungeons",
     ]);
@@ -109,12 +119,12 @@ describe("presets", () => {
     expect(crossedLogic({ ...crosskeys, bossShuffle: "none" })).toBe(true);
   });
 
-  it("models a glitched logic once ported, No Logic by what it is played with", () => {
+  it("models every glitched logic, No Logic by what it is played with", () => {
     const open = getPreset("open").settings;
     const glitched = { ...open, glitches: "major_glitches" as const };
     const noLogic = { ...open, glitches: "no_logic" as const };
 
-    expect(logicModelled(glitched)).toBe(false);
+    expect(logicModelled(glitched)).toBe(true);
     expect(logicModelled(noLogic)).toBe(true);
     expect(logicModelled({ ...open, glitches: "hybrid_major_glitches" })).toBe(
       true,
@@ -136,7 +146,12 @@ describe("presets", () => {
       setting: "playGlitches",
       value: "None",
     });
-    expect(TUNING.playGlitches.map(([value]) => value)).toContain("none");
+    expect(TUNING.playGlitches.map(([value]) => value)).toEqual([
+      "none",
+      "overworld_glitches",
+      "hybrid_major_glitches",
+      "major_glitches",
+    ]);
   });
 
   it("getPreset returns the matching preset", () => {

@@ -87,17 +87,17 @@ describe("MapPanel", () => {
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });
 
-  it("says a glitched seed's logic is not modelled, and shows no marker in logic", () => {
+  it("says a glitched seed behind shuffled entrances is not modelled, and shows no marker in logic", () => {
     act(() =>
-      useGameStore.getState().applyRun("open", {
-        ...getPreset("open").settings,
+      useGameStore.getState().applyRun("crosskeys", {
+        ...getPreset("crosskeys").settings,
         glitches: "major_glitches",
       }),
     );
     render(<MapPanel />);
 
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Major Glitches yet: every check shows as maybe.",
+      "The tracker has no logic for Major Glitches with shuffled entrances yet: every check shows as maybe.",
     );
     expect(screen.getByTestId("marker-sahasrahlas-hut")).toHaveAccessibleName(
       /: maybe available$/,
@@ -150,7 +150,7 @@ describe("MapPanel", () => {
     );
     render(<MapPanel />);
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Major Glitches and Simple entrance shuffle yet: every check shows as maybe.",
+      "The tracker has no logic for Major Glitches with shuffled entrances and Simple entrance shuffle yet: every check shows as maybe.",
     );
   });
 
