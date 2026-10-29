@@ -1,7 +1,7 @@
 # @alltp/pack-alttpr
 
 The A Link to the Past Randomizer game pack: the v31 rules (Standard, Open and
-Inverted worlds, NoGlitches) as plain data over `@alltp/engine`, read from
+Inverted worlds, NoGlitches and Overworld Glitches) as plain data over `@alltp/engine`, read from
 [sporchia/alttp_vt_randomizer](https://github.com/sporchia/alttp_vt_randomizer)
 at the commit `upstream.json` pins, and held to upstream's own test cases.
 
@@ -1416,10 +1416,17 @@ app counts its runs not modelled.
 | Logic | Flags | Held to |
 | --- | --- | --- |
 | NoGlitches | none (`logic.php:4`) | `tests/NoGlitches`, `tests/Inverted` |
-| OverworldGlitches | not yet | `tests/OverworldGlitches`, `tests/InvertedOverworldGlitches` (imported, pending) |
+| OverworldGlitches | `canSuperBunny`, `canFakeFlipper`, `canSuperSpeed`, `canBootsClip`, `canMirrorClip`, `canWaterWalk`, `canDungeonRevive` (`logic.php:5-13`) | `tests/OverworldGlitches`, `tests/InvertedOverworldGlitches` (2650 cases, every one held) |
 | HybridMajorGlitches | not yet | |
 | MajorGlitches | not yet | |
 
+- **The key model** rests on the same facts in a glitched world: no way
+  in reads a key, and an always-allowed key locks in nothing another spot
+  needs (`src/key-model.spec.ts` checks them in the Open, Standard and
+  Inverted worlds under NoGlitches and Overworld Glitches, and the laws
+  under Overworld Glitches and No Logic too). Overworld Glitches opens
+  Turtle Rock's middle way, whose rules read its keys: they are then tied to
+  it as any other.
 - **The boots.** A glitched world starts with the Pegasus Boots, unless the
   customizer built it (`Randomizer.php:122-131`): `bootsAtStart`, which
   `toState` adds to what the player found. Upstream's tests hold no
@@ -1438,8 +1445,8 @@ app counts its runs not modelled.
 
 ## Tricks
 
-The pack models NoGlitches only, but upstream's region files already write
-what six minor tricks open, behind config flags no NoGlitches run sets. The
+Upstream's region files write what six minor tricks open, behind config
+flags no NoGlitches run sets. The
 *tricks world* (`src/tricks.ts`) keeps those branches, so the tracker can
 say which checks out of logic a trick would open, and which trick.
 
@@ -1455,15 +1462,18 @@ say which checks out of logic a trick would open, and which trick.
 No upstream logic turns these six on alone, so the tricks world is no
 seed's logic: a check it opens stays out of logic. Minor Glitches left in
 VT8.25 (`resources/views/updates.blade.php:965`), and OverworldGlitches
-adds boots clips, mirror clips and super speed (`config/logic.php:5-13`),
-which the pack does not port.
+adds boots clips, mirror clips and super speed (`config/logic.php:5-13`).
+Under a logic that counts a trick (`tricksInLogic`: Overworld Glitches'
+four), its branches are in logic already, in the tricks world too.
 
 **One world, the tricks as items.** A setting is folded at compile time, so
 the real world cannot hold a trick for one state and not another, and a
 world per combination would be 64 compiles. `trickModules(settings)` rewrites
 every requirement of the run's modules instead (entrances, locations, what
 seeing a location needs) and `TRICK_RULES` the helpers:
-`setting(canFakeFlipper)` becomes the item `trickFakeFlipper`, and
+`setting(canFakeFlipper)` becomes `(setting(canFakeFlipper) |
+trickFakeFlipper)`, its flag kept so a logic that turns it on keeps the
+branch open whatever the player knows, and
 `lamp >= setting(requireLamp)` becomes `(lamp >= setting(requireLamp) |
 trickDarkRooms)`. The rest of each rule, other glitches included, is left as
 it is. `compileTricks(settings)` compiles it with `STATE_NAMES` and
@@ -1471,7 +1481,8 @@ it is. `compileTricks(settings)` compiles it with `STATE_NAMES` and
 holds those tricks, to spread over the real world's state.
 
 **Exact, not approximate** (`src/tricks.spec.ts`, fast-check over random
-states of Open, Standard and Inverted, every location, visible and region):
+states of Open, Standard, Inverted and Standard under Overworld Glitches,
+every location, visible and region):
 
 - with a set of tricks held, the tricks world reads as the real world
   compiled with those switches on (`requireLamp` at 0 for the dark rooms);

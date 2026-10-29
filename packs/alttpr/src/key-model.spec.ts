@@ -31,6 +31,14 @@ import {
 } from "./settings";
 
 const KEYSANITY = settingsFromUpstream("open", { dungeonItems: "full" });
+const OWG_OPEN = settingsFromUpstream("open", { logic: "OverworldGlitches" });
+const OWG_STANDARD = settingsFromUpstream("standard", {
+  logic: "OverworldGlitches",
+});
+const INVERTED = settingsFromUpstream("inverted");
+const OWG_INVERTED = settingsFromUpstream("inverted", {
+  logic: "OverworldGlitches",
+});
 const fillers = new Map<AlttprSettings, Filler>();
 function fillerOf(settings: AlttprSettings): Filler {
   let found = fillers.get(settings);
@@ -295,6 +303,9 @@ describe("the key model's laws", () => {
   for (const [name, settings] of [
     ["Open", OPEN],
     ["Standard", STANDARD],
+    ["Open, Overworld Glitches", OWG_OPEN],
+    ["Standard, Overworld Glitches", OWG_STANDARD],
+    ["Open, No Logic", noLogicSettings(OPEN)],
   ] as const) {
     it(`never lowers a location when an item is added (${name})`, () => {
       const f = fillerOf(settings);
@@ -430,8 +441,19 @@ function reads(req: string, settings: AlttprSettings): Set<string> {
 
 const isKey = (name: string) => /^(key|bigKey)[A-Z]/.test(name);
 
+/** A world's name in a test's: its world, and its logic when glitched. */
+const nameOf = (settings: AlttprSettings) =>
+  `${settings.invertedMode ? "Inverted" : settings.standardMode ? "Standard" : "Open"}${settings.canBootsClip ? ", Overworld Glitches" : ""}`;
+
 describe("what the model's soundness rests on", () => {
-  for (const settings of [OPEN, STANDARD]) {
+  for (const settings of [
+    OPEN,
+    STANDARD,
+    INVERTED,
+    OWG_OPEN,
+    OWG_STANDARD,
+    OWG_INVERTED,
+  ]) {
     const modules = regionModules(settings);
     const ownCode = new Map<string, string>();
     for (const d of DUNGEONS) {
@@ -440,7 +462,7 @@ describe("what the model's soundness rests on", () => {
       }
     }
 
-    it(`opens no way in with a key, so keys never move a region (${settings.standardMode ? "Standard" : "Open"})`, () => {
+    it(`opens no way in with a key, so keys never move a region (${nameOf(settings)})`, () => {
       const stray: string[] = [];
       for (const region of modules.flatMap((m) => m.regions)) {
         for (const e of region.entrances) {
@@ -452,7 +474,7 @@ describe("what the model's soundness rests on", () => {
       expect(stray).toEqual([]);
     });
 
-    it(`ties each location to the dungeons whose keys its rule reads (${settings.standardMode ? "Standard" : "Open"})`, () => {
+    it(`ties each location to the dungeons whose keys its rule reads (${nameOf(settings)})`, () => {
       const keyed = solveWithKeys(fillerOf(settings), tracked({}, settings));
       const elsewhere: string[] = [];
       for (const l of modules.flatMap((m) =>
@@ -473,23 +495,29 @@ describe("what the model's soundness rests on", () => {
           if (!tied) elsewhere.push(`${l.id}: reads ${name} untied`);
         }
       }
-      // Tower of Hera's way in from Misery Mire and Turtle Rock's middle
-      // way, glitched, are closed: what they read does not count
+      // Tower of Hera's way in from Misery Mire (Hybrid Major Glitches')
+      // and Turtle Rock's middle way (Overworld Glitches'; Inverted's
+      // stands open), glitched, are closed: what they read does not count.
+      // Inverted's Mimic Cave reads no Turtle Rock key
       expect(elsewhere).toEqual([
-        "mimic-cave: turtle-rock",
+        ...(settings.invertedMode ? [] : ["mimic-cave: turtle-rock"]),
         "tower-of-hera/big-chest: reads bigKeyD6 untied",
         "tower-of-hera/boss: reads bigKeyD6 untied",
         "tower-of-hera/prize: reads bigKeyD6 untied",
-        "turtle-rock/compass-chest: reads keyD7 untied",
-        "turtle-rock/roller-room/left: reads keyD7 untied",
-        "turtle-rock/roller-room/right: reads keyD7 untied",
+        ...(settings.canBootsClip || settings.invertedMode
+          ? []
+          : [
+              "turtle-rock/compass-chest: reads keyD7 untied",
+              "turtle-rock/roller-room/left: reads keyD7 untied",
+              "turtle-rock/roller-room/right: reads keyD7 untied",
+            ]),
       ]);
       expect(keyed.dungeons("tower-of-hera/big-chest")).toEqual([
         "tower-of-hera",
       ]);
     });
 
-    it(`lets an always-allowed key lock in only what no other spot needs (${settings.standardMode ? "Standard" : "Open"})`, () => {
+    it(`lets an always-allowed key lock in only what no other spot needs (${nameOf(settings)})`, () => {
       const world = fillerOf(settings).world;
       const all = modules.flatMap((m) => m.regions.flatMap((r) => r.locations));
       const locked: string[] = [];

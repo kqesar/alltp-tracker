@@ -346,6 +346,7 @@ export {
   trickModules,
   trickRequirement,
   trickState,
+  tricksInLogic,
 } from "./tricks";
 export {
   type CountKnowledge,

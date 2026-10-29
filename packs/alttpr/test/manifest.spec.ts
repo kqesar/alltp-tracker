@@ -152,7 +152,7 @@ describe("porting a test file", () => {
     expect(portedTooEarly(manifest, fixtures, index)).toEqual([]);
     // Tower of Hera's test ported before its region, whatever upstream.json
     // says of either today. Inverted's tower extends Standard's, so its
-    // test (ported) needs Standard's too
+    // tests (ported, Overworld Glitches' too) need Standard's too
     const early: Manifest = {
       ...manifest,
       rules: manifest.rules.map((r) =>
@@ -167,6 +167,8 @@ describe("porting a test file", () => {
     expect(portedTooEarly(early, fixtures, index)).toEqual([
       "tests/NoGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
       "tests/Inverted/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
+      "tests/InvertedOverworldGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
+      "tests/OverworldGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
     ]);
   });
 

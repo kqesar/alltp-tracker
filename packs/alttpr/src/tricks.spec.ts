@@ -38,6 +38,7 @@ import {
   trickModules,
   trickRequirement,
   trickState,
+  tricksInLogic,
 } from "./tricks";
 import { buildWorld, type RegionModule } from "./world";
 
@@ -45,14 +46,20 @@ const INVERTED = settingsFromUpstream("inverted", {
   goal: "ganon",
   itemPlacement: "advanced",
 });
+const OWG = settingsFromUpstream("standard", { logic: "OverworldGlitches" });
 const WORLDS = [
   ["Open", OPEN],
   ["Standard", STANDARD],
   ["Inverted", INVERTED],
+  ["Standard, Overworld Glitches", OWG],
 ] as const;
 
-const FLAGS = new Set<string>(
-  TRICK_IDS.map((id) => TRICKS[id].setting).filter((s) => s !== "requireLamp"),
+/** Each trick's glitch flag, and the item that stands for it. */
+const FLAGS = new Map<string, string>(
+  TRICK_IDS.filter((id) => TRICKS[id].setting !== "requireLamp").map((id) => [
+    TRICKS[id].setting,
+    TRICKS[id].item,
+  ]),
 );
 
 /** The settings that turn upstream's own switch on for each trick. */
@@ -97,7 +104,17 @@ const requirements = (modules: readonly RegionModule[]): string[] =>
 function leftovers(req: string): string[] {
   const found: string[] = [];
   const visit = (e: Expr, parent?: Expr) => {
-    if (e.type === "setting" && FLAGS.has(e.name)) found.push(e.name);
+    // A trick's flag stands beside its item: a logic may turn it on
+    const item = e.type === "setting" ? FLAGS.get(e.name) : undefined;
+    if (
+      item !== undefined &&
+      !(
+        parent?.type === "or" &&
+        parent.args.some((a) => a.type === "item" && a.name === item)
+      )
+    ) {
+      found.push(item);
+    }
     if (
       (e.type === "item" || e.type === "count") &&
       typeof e.min === "object" &&
@@ -165,7 +182,9 @@ describe("the tricks world's rules", () => {
       trickRequirement(
         "setting(canWaterWalk) & pegasusBoots | setting(canFakeFlipper) | flippers",
       ),
-    ).toBe("trickWaterWalk & pegasusBoots | trickFakeFlipper | flippers");
+    ).toBe(
+      "(setting(canWaterWalk) | trickWaterWalk) & pegasusBoots | setting(canFakeFlipper) | trickFakeFlipper | flippers",
+    );
     expect(trickRequirement("setting(canBootsClip) & ?bigKeyP1")).toBe(
       "setting(canBootsClip) & ?bigKeyP1",
     );
@@ -190,6 +209,31 @@ describe("the tricks world's rules", () => {
     );
     expect(kept).toBeDefined();
     expect(trickRequirement(kept as string)).toBe(kept);
+  });
+});
+
+describe("the tricks a logic counts", () => {
+  it("are none in NoGlitches, four in Overworld Glitches (logic.php:5-13)", () => {
+    expect(tricksInLogic(OPEN)).toEqual([]);
+    expect(tricksInLogic(OWG)).toEqual([
+      "fakeFlipper",
+      "waterWalk",
+      "superBunny",
+      "dungeonRevive",
+    ]);
+    expect(tricksInLogic({ ...OPEN, requireLamp: 0 })).toEqual(["darkRooms"]);
+  });
+
+  it("open their branches in the tricks world with no trick held", () => {
+    // The Hobo, under the bridge with a fake flipper (South.php:131)
+    // Standard's escape done
+    const state = toState(
+      { ...EMPTY_INPUT, beaten: { "hyrule-castle": true } },
+      OWG,
+    );
+    expect(solve(compile(STANDARD), state).location("hobo")).toBe("no");
+    expect(solve(compileTricks(OWG), state).location("hobo")).toBe("yes");
+    expect(solve(compile(OWG), state).location("hobo")).toBe("yes");
   });
 });
 
