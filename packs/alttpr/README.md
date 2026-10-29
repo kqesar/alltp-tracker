@@ -1377,14 +1377,21 @@ flowchart LR
 - **Derived settings**: whether Swamp Palace needs its patch (its door
   and the Dam's not both vanilla), each region's light world mark, and
   Turtle Rock's `allItemsReach_*`, from a first world with the entrances'
-  rules of that moment, solved with everything held.
+  rules of that moment, solved with everything held. The randomizer reads
+  these in the seed's whole world, the doors not noted included: a region
+  that world reaches with only the doors noted holds, one it does not
+  reach even where they lead anywhere (below) fails, and in between the
+  setting is not known, so the engine reads each rule both ways and meets
+  them (`foldSettings`): a door noted later never takes a `yes` away. The
+  two worlds are solved once per connections, the key model's included.
 - **The world the randomizer filled** (`anywhere`): a door or exit not
   noted leads, instead of nowhere, to a region of its own that leads into
   every target no noted door or hole leads into and out by every door not
   noted, with the door's or exit's rule. Whatever the doors not noted lead
   to, that world reaches at least as much: the key model reads it (below).
-- **Cost**: building a world takes about 6 to 8 ms (two compiles), done
-  once per entrance noted; a solve about 0.2 ms.
+- **Cost**: building a world takes about 6 to 8 ms (two compiles, a
+  third while a door is left to note and Turtle Rock's settings wait on
+  it, about 2 ms more), done once per entrance noted; a solve about 0.2 ms.
 
 The randomizer's own tests hold it: `test/er-upstream/` (510 cases of its
 dungeon and Death Mountain tests, imported by `packs/alttpr/scripts/er-tests.mjs` with
@@ -1477,7 +1484,10 @@ It vouches for no dungeon when the seed is beatable only, nor for Turtle
 Rock while its key doors are not known: they hang on what everything held
 reaches in the world the randomizer filled (`set_trock_key_rules`,
 `allItemsReach_*`), known when the doors noted reach as much as the world
-where the others lead anywhere does. The retro world's dungeons hold no
+where the others lead anywhere does. Until then both worlds read its rules
+both ways and meet them, which no longer bounds what the fill's state
+reached with Turtle Rock's own items short; every other dungeon is
+compared with those all held, which open its doors either way. The retro world's dungeons hold no
 small key (`Dungeons.py:11`): its keys are universal and the rules ask for a
 key shop instead, so its big keys alone go untracked. Keysanity tracks every
 key, and the model is then the solver.
