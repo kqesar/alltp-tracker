@@ -44,6 +44,8 @@ export interface Manifest {
       readonly version: string;
     };
     readonly repo: string;
+    /** Its item names joined to vt's classes (scripts/import-item-names.mjs). */
+    readonly spoilerItems: string;
     readonly version: string;
   };
   /** The entrance randomizer vt hands shuffled entrances to, pinned too. */

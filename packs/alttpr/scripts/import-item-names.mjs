@@ -2,9 +2,10 @@
 /// <reference types="node" />
 // Imports the item names a spoiler log is written in.
 //
-//   node scripts/import-item-names.mjs --vt <vt-checkout> --er <er-checkout>
+//   node scripts/import-item-names.mjs --vt <vt-checkout> --er <er-checkout> \
+//     --dr <door-randomizer-checkout>
 //
-// Both checkouts are untrusted data: this script only reads their files, and
+// The checkouts are untrusted data: this script only reads their files, and
 // never runs PHP, Python or anything else from them.
 //
 // alttpr.com writes two spoiler shapes (src/spoiler/README section of the
@@ -25,7 +26,13 @@
 //   item-names.json  vt class -> its English name (resources/lang/en/item.php),
 //                    for display and for the starting items by name;
 //   er-items.json    the entrance randomizer's name -> vt class, or null for
-//                    an event.
+//                    an event;
+//   dr-items.json    the Door Randomizer's name -> vt class, or null for an
+//                    event, and apart the names no vt item has (the Small
+//                    Magic, Fairy or Bee Trap its pots and enemies drop),
+//                    which a log shows by name. Its Items.py is the entrance
+//                    randomizer's with a price after the code and a dungeon
+//                    byte after a prize's sprite bytes (DR 1.5.6 Items.py:23).
 // The output is deterministic; the repository's Biome then sorts its keys and
 // formats it, as the checks want it.
 
@@ -44,6 +51,8 @@ import { assigned } from "./python.mjs";
 export const VT_REPO = "sporchia/alttp_vt_randomizer";
 export const ER_REPO = "cassidoxa/ALttPEntranceRandomizer";
 export const ER_ITEMS_FILE = "Items.py";
+export const DR_REPO = "aerinon/ALttPDoorRandomizer";
+export const DR_ITEMS_FILE = "Items.py";
 
 const GENERATED =
   "By packs/alttpr/scripts/import-item-names.mjs from the upstream item tables. Re-import, never edit.";
@@ -177,10 +186,105 @@ export function joinOnCode(vt, er) {
 }
 
 /**
+ * The Door Randomizer's items and the key of their codes: null for an event
+ * (type `Event`, code 999). A prize's list ends with the dungeon byte DR
+ * adds (`Green Pendant`: `[0x04, 0x38, 0x62, 0x00, 0x69, 0x37, 0x08]`), which
+ * is dropped so the five sprite bytes before the prize's own code are the
+ * key, as for the entrance randomizer's six.
+ *
+ * @param {string} source DR's Items.py
+ * @returns {Map<string, string | null>}
+ */
+export function drCodes(source) {
+  const { value } = assigned(source, "item_table", DR_ITEMS_FILE);
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${DR_ITEMS_FILE}: item_table is not a dict`);
+  }
+  /** @type {Map<string, string | null>} */
+  const items = new Map();
+  for (const [name, row] of Object.entries(value)) {
+    if (!Array.isArray(row)) {
+      throw new Error(`${DR_ITEMS_FILE}: ${name} is not a tuple`);
+    }
+    // (advancement, priority, type, code, price, …)
+    const [, , type, code] = row;
+    if (type === "Event") {
+      items.set(name, null);
+      continue;
+    }
+    const key = codeKey(
+      Array.isArray(code) && code.length === 7 ? code.slice(0, 6) : code,
+    );
+    if (key === undefined) {
+      throw new Error(`${DR_ITEMS_FILE}: no code for ${name}`);
+    }
+    items.set(name, key);
+  }
+  return items;
+}
+
+/**
+ * The Door Randomizer's name of each item -> vt's class, joined on the ROM
+ * code as `joinOnCode` does, with two differences: an item whose code no vt
+ * class has is listed apart (`unmatched`: DR's own pickups, Big Magic,
+ * Fairy, Bee Trap…), and where two of DR's names share one code (`Nothing`
+ * and `Arrows (5)`, 0x5A) only the name vt's English table gives that class
+ * keeps it, the others going to `unmatched`. Throws when a code matches two
+ * vt classes: the importer cannot guess which.
+ *
+ * @param {Map<string, string>} vt
+ * @param {Record<string, string>} english vt class -> English name
+ * @param {Map<string, string | null>} dr
+ * @returns {{ items: Record<string, string | null>, unmatched: string[] }}
+ */
+export function joinDr(vt, english, dr) {
+  /** @type {Map<string, string[]>} */
+  const byCode = new Map();
+  for (const [name, key] of vt) {
+    byCode.set(key, [...(byCode.get(key) ?? []), name]);
+  }
+  /** @type {Map<string, string[]>} */
+  const namesOfCode = new Map();
+  for (const [name, key] of dr) {
+    if (key !== null) {
+      namesOfCode.set(key, [...(namesOfCode.get(key) ?? []), name]);
+    }
+  }
+  /** @type {Record<string, string | null>} */
+  const items = {};
+  /** @type {string[]} */
+  const unmatched = [];
+  for (const [name, key] of dr) {
+    if (key === null) {
+      items[name] = null;
+      continue;
+    }
+    const classes = byCode.get(key) ?? [];
+    if (classes.length > 1) {
+      throw new Error(
+        `${DR_ITEMS_FILE}: "${name}" (code ${key}) matches ${classes.join(", ")}`,
+      );
+    }
+    const itemClass = classes[0];
+    const sharing = namesOfCode.get(key) ?? [];
+    if (
+      itemClass === undefined ||
+      (sharing.length > 1 && english[itemClass] !== name)
+    ) {
+      unmatched.push(name);
+      continue;
+    }
+    items[name] = itemClass;
+  }
+  return { items, unmatched: unmatched.sort() };
+}
+
+/**
  * @param {string} vtCheckout
  * @param {string} erCheckout
+ * @param {string} drCheckout
  */
-export function importItemNames(vtCheckout, erCheckout) {
+export function importItemNames(vtCheckout, erCheckout, drCheckout) {
   /** @param {string} file */
   const vt = (file) => readFileSync(join(vtCheckout, file), "utf8");
   const upstream = {
@@ -197,7 +301,22 @@ export function importItemNames(vtCheckout, erCheckout) {
     vtCodes(itemSource),
     erCodes(readFileSync(join(erCheckout, ER_ITEMS_FILE), "utf8")),
   );
+  const drItems = joinDr(
+    vtCodes(itemSource),
+    english,
+    drCodes(readFileSync(join(drCheckout, DR_ITEMS_FILE), "utf8")),
+  );
   return {
+    drItems: {
+      files: [`${DR_REPO}: ${DR_ITEMS_FILE}`, `${VT_REPO}: ${ITEMS_FILE}`],
+      generated: GENERATED,
+      items: drItems.items,
+      unmatched: drItems.unmatched,
+      upstream: {
+        dr: { commit: readCommit(drCheckout), repo: DR_REPO },
+        vt: upstream.vt,
+      },
+    },
     erItems: {
       files: [`${ER_REPO}: ${ER_ITEMS_FILE}`, `${VT_REPO}: ${ITEMS_FILE}`],
       generated: GENERATED,
@@ -223,18 +342,29 @@ function main(argv) {
   };
   const vt = take("--vt");
   const er = take("--er");
-  if (vt === undefined || er === undefined || args.length > 0) {
+  const dr = take("--dr");
+  if (
+    vt === undefined ||
+    er === undefined ||
+    dr === undefined ||
+    args.length > 0
+  ) {
     process.stderr.write(
-      "Usage: import-item-names.mjs --vt <vt-checkout> --er <er-checkout>\n",
+      "Usage: import-item-names.mjs --vt <vt-checkout> --er <er-checkout> --dr <dr-checkout>\n",
     );
     process.exit(2);
   }
   const out = join(dirname(fileURLToPath(import.meta.url)), "../src/spoiler");
-  const { erItems, itemNames } = importItemNames(resolve(vt), resolve(er));
+  const { drItems, erItems, itemNames } = importItemNames(
+    resolve(vt),
+    resolve(er),
+    resolve(dr),
+  );
   mkdirSync(out, { recursive: true });
   for (const [file, data] of /** @type {[string, unknown][]} */ ([
     ["item-names.json", itemNames],
     ["er-items.json", erItems],
+    ["dr-items.json", drItems],
   ])) {
     writeFileSync(join(out, file), `${JSON.stringify(data, null, 2)}\n`);
     process.stdout.write(`${file} written\n`);
@@ -243,7 +373,9 @@ function main(argv) {
   process.stdout.write(
     `${Object.keys(itemNames.names).length} vt names, ${
       Object.keys(erItems.items).length
-    } entrance randomizer items (${events} events)\n`,
+    } entrance randomizer items (${events} events), ${
+      Object.keys(drItems.items).length
+    } Door Randomizer items and ${drItems.unmatched.length} no vt item has\n`,
   );
 }
 
