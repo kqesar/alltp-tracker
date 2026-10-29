@@ -1700,10 +1700,16 @@ whose untracked items such a way reads) at what is surely in hand: a
 location's yes is read with its own dungeons' items raised and the other
 gating dungeons' kept, so such a way opens only as it does for the player;
 a dungeon's safety compares the player's side with the gating dungeons'
-items kept but its own, against everything; and a dungeon where a rule
-reads the raised items of another is never safe. With no such way (every
-world under NoGlitches and Overworld Glitches) each of these is the
-unchanged model, so nothing moves there.
+items kept but its own, against everything with only its own items at the
+count, every other dungeon's at its full count, as the fill held them
+while it placed this one's (it places Misery Mire's keys before Tower of
+Hera's, and collects them: a Hera key may sit where only the clip
+reaches); a gating dungeon proven safe joins what is surely in hand with
+all of its items, which the player collects, so its way opens for the
+player then; and a dungeon where a rule reads the raised items of another
+is never safe. With no such way (every world under NoGlitches and
+Overworld Glitches) each of these is the unchanged model, so nothing moves
+there.
 
 **Its laws**, as fast-check properties over random states of the Open and
 Standard worlds, Overworld Glitches', Hybrid Major Glitches' and No Logic's: adding an item never lowers a location (near the top too,
@@ -1717,8 +1723,9 @@ The entrance randomizer's world has a key model of its own, built on the
 same argument: [Its key model](#its-key-model).
 
 **Cost.** The first call of a world builds what does not depend on the
-state (where each item may sit, the world with everything held at each
-count): about 14 ms under Vitest. Each call after that takes a few solves:
+state (where each item may sit, the world with everything held and a
+dungeon's items at each count, as safety asks for them): about 20 ms under
+Vitest. Each call after that takes a few solves:
 the keys in hand, all keys, and the counts a dungeon's safety asks about,
 about 0.2 to 0.5 ms under Vitest for every location of the world.
 
