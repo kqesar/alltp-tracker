@@ -304,7 +304,12 @@ export { seedFileUrl, seedHashOf } from "./seed-link";
 export {
   type AlttprSettings,
   BOSS_SHUFFLES,
+  type GlitchFlag,
+  LOGIC_FLAGS,
+  LOGICS,
+  type Logic,
   type Mode,
+  noLogicSettings,
   OPEN,
   STANDARD,
   settingsFromUpstream,

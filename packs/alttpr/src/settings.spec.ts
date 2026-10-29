@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import { loadFixtures } from "../test/fixtures";
 import {
   type AlttprSettings,
+  LOGIC_FLAGS,
+  LOGICS,
+  noLogicSettings,
   OPEN,
   STANDARD,
   settingsFromUpstream,
@@ -63,15 +66,38 @@ describe("the settings", () => {
     expect(world.locationIds).toHaveLength(Object.keys(UPSTREAM_TEST).length);
   });
 
-  it("model NoGlitches only: every glitch flag is off", () => {
+  it("turn no glitch flag on in NoGlitches", () => {
     for (const settings of [OPEN, STANDARD, UPSTREAM_TEST]) {
       expect(Object.values(pick(settings, GLITCHES))).toEqual(
         GLITCHES.map(() => false),
       );
+      expect(settings.bootsAtStart).toBe(false);
+      expect(settings.noLogic).toBe(false);
+    }
+  });
+
+  it("turn on each logic's flags, and start a glitched world with the boots", () => {
+    for (const logic of LOGICS) {
+      const settings = settingsFromUpstream("open", { logic });
+      expect(
+        GLITCHES.filter((flag) => settings[flag]),
+        logic,
+      ).toEqual([...LOGIC_FLAGS[logic]].sort());
+      // Randomizer.php:122-131
+      expect(settings.bootsAtStart, logic).toBe(logic !== "NoGlitches");
+      expect(
+        settingsFromUpstream("open", { difficulty: "custom", logic })
+          .bootsAtStart,
+      ).toBe(false);
     }
     expect(() =>
-      settingsFromUpstream("standard", { logic: "OverworldGlitches" }),
-    ).toThrow(/"logic" cannot be "OverworldGlitches"/);
+      settingsFromUpstream("standard", { logic: "NoLogic" }),
+    ).toThrow(/"logic" cannot be "NoLogic"/);
+  });
+
+  it("read a No Logic seed with a logic's rules, the boots given", () => {
+    const settings = noLogicSettings(OPEN);
+    expect(settings).toEqual({ ...OPEN, bootsAtStart: true, noLogic: true });
   });
 });
 

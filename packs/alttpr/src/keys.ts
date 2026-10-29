@@ -398,8 +398,10 @@ export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
   const safe = (id: DungeonId): boolean => {
     const entry = model.dungeons.get(id);
     if (entry === undefined) return true;
-    // A generic key found may open another dungeon's door
-    if (entry.generic) return false;
+    // A generic key found may open another dungeon's door; under No Logic
+    // the randomizer placed no item where Link could reach it, so a key may
+    // sit behind its own door
+    if (entry.generic || filler.settings.noLogic) return false;
     let found = safety.get(id);
     if (found === undefined) {
       found = true;

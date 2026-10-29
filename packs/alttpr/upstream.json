@@ -290,7 +290,7 @@
     {
       "file": "app/Randomizer.php",
       "module": "src/goals.ts",
-      "role": "prepareWorld: where each goal puts the Triforce, which go mode reaches; placeBosses: the bosses each slot may hold under boss shuffle, read by src/bosses.ts",
+      "role": "prepareWorld: where each goal puts the Triforce, which go mode reaches, and the Pegasus Boots a glitched or No Logic world starts with (src/settings.ts, bootsAtStart); placeBosses: the bosses each slot may hold under boss shuffle, read by src/bosses.ts",
       "status": "ported"
     },
     {
@@ -302,7 +302,7 @@
     {
       "file": "config/logic.php",
       "module": "src/settings.ts",
-      "role": "the glitch flags World::config falls back to for each logic (all off for NoGlitches)",
+      "role": "the glitch flags World::config falls back to for each logic (LOGIC_FLAGS: all off for NoGlitches, a glitched logic's listed once its port holds to its tests)",
       "status": "ported"
     },
     {

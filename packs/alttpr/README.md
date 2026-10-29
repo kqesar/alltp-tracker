@@ -105,7 +105,8 @@ engine's graph:
   `!== 'basic'` is `!setting(basicPlacement)`, `has('Lamp',
   config('item.require.Lamp', 1))` is `lamp >= setting(requireLamp)`. A glitch
   branch keeps its flag (`setting(canBootsClip) & pegasusBoots`): NoGlitches
-  folds it away.
+  folds it away, a glitched logic keeps it (see "Glitched logics and No
+  Logic").
 - **What a tracker cannot know.** Upstream's rules may ask where an item
   sits (`$location->hasItem(...)`); a tracker does not know the placement,
   so that test is `maybe`: "the boss holds its own compass" makes
@@ -1398,6 +1399,37 @@ state (where each item may sit, the world with everything held at each
 count): about 14 ms under Vitest. Each call after that takes a few solves:
 the keys in hand, all keys, and the counts a dungeon's safety asks about,
 about 0.2 to 0.5 ms under Vitest for every location of the world.
+
+## Glitched logics and No Logic
+
+vt has no region file per logic: a glitched logic is a set of flags
+(`config/logic.php`), each read by `config('canBootsClip', false)` in the
+same region files, and the pack ports every such branch behind its
+`setting(...)`. `settingsFromUpstream` takes the seed's `logic` and turns on
+its flags (`LOGIC_FLAGS`). A logic's flags are listed there only once its
+port holds to upstream's tests; until then it reads as NoGlitches, and the
+app counts its runs not modelled.
+
+| Logic | Flags | Held to |
+| --- | --- | --- |
+| NoGlitches | none (`logic.php:4`) | `tests/NoGlitches`, `tests/Inverted` |
+| OverworldGlitches | not yet | |
+| HybridMajorGlitches | not yet | |
+| MajorGlitches | not yet | |
+
+- **The boots.** A glitched world starts with the Pegasus Boots, unless the
+  customizer built it (`Randomizer.php:122-131`): `bootsAtStart`, which
+  `toState` adds to what the player found. Upstream's tests hold no
+  pre-collected item, so the contract never reads it.
+- **No Logic** has no rules: vt skips every region's `initalize`
+  (`World.php:93`), so every location is accessible and no fill rule holds,
+  but a dungeon's items still stay in it (`Region::canFill`), the sewers key
+  excepted (`Region.php:238`). `noLogicSettings(settings)` reads such a seed
+  with the rules of `settings`' logic, the glitches the player plays it
+  with, the boots given (`bootsAtStart`) and `noLogic` set: `canFill` keeps
+  only the region's own test (`src/fill.ts`), and the key model calls no
+  dungeon safe for keys (a key may sit behind its own door), so a key door is
+  `yes` only once every place its key may sit is reached, `maybe` before.
 
 ## Tricks
 
