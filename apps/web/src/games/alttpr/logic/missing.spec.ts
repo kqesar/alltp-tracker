@@ -192,6 +192,20 @@ describe("analyzeRun", () => {
     expect(missing.size).toBeGreaterThan(150);
   });
 
+  it("says a check is maybe by a Mystery run's glitches alone, and what puts it in logic", () => {
+    const hidden = inputsOf(
+      {},
+      { settings: { ...getPreset("open").settings, hidden: ["glitches"] } },
+    );
+    // Major Glitches starts Link with the boots: the Library is theirs
+    expect(words(analysisOf(hidden).missing.get("library"))).toEqual({
+      doubts: [{ kind: "glitches" }],
+      inLogic: "Pegasus Boots",
+      possible: undefined,
+      tri: "maybe",
+    });
+  });
+
   it("asks only for what the cells can mark", () => {
     const { missing } = analysisOf(FRESH);
     const named = [...missing.values()].flatMap((m) =>

@@ -42,6 +42,8 @@ export const doubtText = (doubt: Doubt): string => {
       return "it takes the Ten Bombs, which no cell records: autotracking reads them from the game";
     case "flute":
       return "it takes the flute activated, which Race Mode does not read";
+    case "glitches":
+      return "a glitched logic has it, and the seed's glitches are not set";
   }
 };
 
@@ -248,6 +250,9 @@ export const shortDoubts = (doubts: readonly Doubt[]): string[] => {
       : []),
     ...(doubts.some(({ kind }) => kind === "placement")
       ? ["depends on where an item was placed"]
+      : []),
+    ...(doubts.some(({ kind }) => kind === "glitches")
+      ? ["depends on the seed's glitches, not set"]
       : []),
   ];
 };

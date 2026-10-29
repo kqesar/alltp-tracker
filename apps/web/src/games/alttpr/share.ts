@@ -455,6 +455,7 @@ export const SHARE_SETTINGS: readonly string[] = `
   hidden:bossShuffle
   playGlitches:overworld_glitches playGlitches:hybrid_major_glitches
   playGlitches:major_glitches
+  hidden:glitches hidden:entranceShuffle
 `
   .trim()
   .split(/\s+/);

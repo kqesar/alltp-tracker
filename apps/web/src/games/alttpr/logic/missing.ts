@@ -72,6 +72,7 @@ import {
   locationName,
   type MarkerState,
   marginOf,
+  meetTri,
   prizeOf,
   type Solution,
   solutionOf,
@@ -107,7 +108,12 @@ export type Doubt =
   /** A rule takes the escape's ten bombs, which no cell records. */
   | { readonly kind: "bombs" }
   /** A rule takes the flute activated, which Race Mode does not read. */
-  | { readonly kind: "flute" };
+  | { readonly kind: "flute" }
+  /**
+   * A Mystery run's glitches are not known: a glitched logic would have it,
+   * NoGlitches not yet.
+   */
+  | { readonly kind: "glitches" };
 
 /** What a location not in logic is missing. */
 export type Missing = {
@@ -725,8 +731,17 @@ export const analyzeRun = (
     const inLogic = waysOf(analysis.blockers(id, "yes"), state);
     const possible =
       tri === "no" ? waysOf(analysis.blockers(id, "maybe"), state) : undefined;
+    // Maybe by the glitches alone: no logic but a glitched one has it yet
+    const glitches =
+      tri === "maybe" &&
+      solution.upper !== undefined &&
+      keyed.location(id) === "no";
     missing.set(id, {
-      doubts: tri === "maybe" ? doubtsOf(id, solution, state, allKeys) : [],
+      doubts: glitches
+        ? [{ kind: "glitches" }]
+        : tri === "maybe"
+          ? doubtsOf(id, solution, state, allKeys)
+          : [],
       inLogic,
       possible:
         possible === undefined || sameWays(possible, inLogic)
@@ -889,6 +904,31 @@ export const piecesOf = (
 const goModeOfRun = (run: RunSettings, settings: AlttprSettings) =>
   run.goal === "triforce-hunt" ? undefined : goModeOf(settings);
 
+/**
+ * The go mode in the key model; between two logics while a Mystery run's
+ * glitches are not known (`Solution.upper`): `yes` once the least
+ * permissive has it, `no` while the most permissive does not, else maybe,
+ * the steps the least permissive's.
+ */
+const boundedGoMode = (solution: Solution, mode: GoMode): GoModeStatus => {
+  const lower = goModeStatus(
+    fillerOf(solution.settings),
+    solution.keyed.state,
+    mode,
+    solution.keyed,
+  );
+  const { upper } = solution;
+  if (upper === undefined || lower.tri === "yes") return lower;
+  const upperMode = goModeOf(upper.settings) ?? mode;
+  const most = goModeStatus(
+    fillerOf(upper.settings),
+    upper.keyed.state,
+    upperMode,
+    upper.keyed,
+  );
+  return { ...lower, tri: meetTri(lower.tri, most.tri) };
+};
+
 let lastStatus: { solution: Solution; status?: GoModeStatus } | undefined;
 
 /**
@@ -914,12 +954,7 @@ export const goModeStatusOf = (inputs: Inputs): GoModeStatus | undefined => {
       ? undefined
       : crossed !== undefined
         ? crossed.solver.goMode(crossed, mode)
-        : goModeStatus(
-            fillerOf(solution.settings),
-            solution.keyed.state,
-            mode,
-            solution.keyed,
-          );
+        : boundedGoMode(solution, mode);
   lastStatus = { solution, status };
   return status;
 };

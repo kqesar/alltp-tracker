@@ -255,13 +255,16 @@ describe("PresetSelector", () => {
     ]);
     expect(applyRun).not.toHaveBeenCalled();
     // The world names the run type: it is no field
-    expect(within(dialog).getAllByRole("combobox")).toHaveLength(11);
+    expect(within(dialog).getAllByRole("combobox")).toHaveLength(12);
   });
 
   it("offers a Mystery run's settings as not known yet, and hides one again", () => {
     Object.assign(fakeState, {
       presetId: "mystery",
-      settings: { ...getPreset("mystery").settings, hidden: ["goal"] },
+      settings: {
+        ...getPreset("mystery").settings,
+        hidden: ["goal", "glitches", "entranceShuffle"],
+      },
     });
     render(<PresetSelector />);
     const dialog = openList();
@@ -276,6 +279,19 @@ describe("PresetSelector", () => {
     const swords = within(dialog).getByRole("combobox", { name: "Swords" });
     fireEvent.change(swords, { target: { value: "?" } });
     expect(hideSetting).toHaveBeenCalledWith("swordless");
+    // The glitches and the entrance shuffle may be unknown too
+    for (const name of ["Glitches", "Entrances"]) {
+      const select = within(dialog).getByRole("combobox", { name });
+      expect(select).toHaveValue("?");
+      expect(
+        within(select).getByRole("option", { name: "? Unknown" }),
+      ).toBeInTheDocument();
+    }
+    fireEvent.change(
+      within(dialog).getByRole("combobox", { name: "Entrances" }),
+      { target: { value: "crossed" } },
+    );
+    expect(updateSettings).toHaveBeenCalledWith({ entranceShuffle: "crossed" });
     // The dungeon items are assumed, never hidden
     expect(
       within(

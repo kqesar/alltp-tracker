@@ -55,6 +55,7 @@ import type { TrickPrefs } from "@/games/alttpr/data/tricks";
 import type { CrossedRun, CrossedSolver } from "@/games/alttpr/logic/crossed";
 import { packReading } from "@/games/alttpr/logic/packItems";
 import {
+  glitchBounds,
   KEY_DUNGEONS,
   packSettings,
   worldOf,
@@ -209,7 +210,36 @@ export interface Solution {
     readonly solver: CrossedSolver;
     readonly entrances: Readonly<Record<string, string>>;
   };
+  /**
+   * A run whose glitches are not known yet (Mystery): solved again in the
+   * most permissive logic (`glitchBounds`), `settings` and `keyed` being
+   * the least. Its tris are those two met (`meetTri`).
+   */
+  readonly upper?: {
+    readonly settings: AlttprSettings;
+    readonly keyed: KeyedSolution;
+  };
 }
+
+/**
+ * What holds between two bounds of a location: `yes` once the least
+ * permissive logic says so, `no` once the most permissive does, else
+ * maybe. Every logic in between reads as one of them would.
+ */
+export const meetTri = (lower: Tri, upper: Tri): Tri =>
+  lower === "yes" ? "yes" : upper === "no" ? "no" : "maybe";
+
+/** Two bounds' tris met, location by location. */
+const meetTris = (
+  lower: Readonly<Record<string, Tri>>,
+  upper: Readonly<Record<string, Tri>>,
+): Readonly<Record<string, Tri>> =>
+  Object.fromEntries(
+    Object.entries(lower).map(([id, low]) => [
+      id,
+      meetTri(low, upper[id] ?? "yes"),
+    ]),
+  );
 
 /** The solver of runs with shuffled entrances, once its chunk is loaded. */
 let crossed: CrossedSolver | undefined;
@@ -259,8 +289,21 @@ export const solutionOf = (state: Inputs): Solution => {
     return last.solution;
   }
   const settings = packSettings(state.settings);
-  const recorded = toState(trackerInput(state), settings);
+  const input = trackerInput(state);
+  const recorded = toState(input, settings);
   const keyed = solveWithKeys(fillerOf(settings), recorded);
+  // Glitches not known yet: the most permissive logic too
+  const bounds = glitchBounds(state.settings);
+  const upper =
+    bounds === undefined
+      ? undefined
+      : {
+          keyed: solveWithKeys(
+            fillerOf(bounds.upper),
+            toState(input, bounds.upper),
+          ),
+          settings: bounds.upper,
+        };
   // Shuffled entrances: the entrance randomizer's world once its solver is
   // loaded, every check maybe until then. It reads what the player recorded,
   // its own key model the keys it kept in their dungeons: vt's keys surely
@@ -279,10 +322,19 @@ export const solutionOf = (state: Inputs): Solution => {
     (!crossedLogic(state.settings) || solved !== undefined);
   const unknown = (tris: Readonly<Record<string, Tri>>) =>
     Object.fromEntries(Object.keys(tris).map((id) => [id, "maybe" as const]));
-  const tris = solved?.keyed.locations() ?? keyed.locations();
-  const visibles = solved?.solution.visibles() ?? keyed.solution.visibles();
+  const tris =
+    solved?.keyed.locations() ??
+    (upper === undefined
+      ? keyed.locations()
+      : meetTris(keyed.locations(), upper.keyed.locations()));
+  const visibles =
+    solved?.solution.visibles() ??
+    (upper === undefined
+      ? keyed.solution.visibles()
+      : meetTris(keyed.solution.visibles(), upper.keyed.solution.visibles()));
   const solution = {
     ...(solved === undefined ? {} : { crossed: solved }),
+    ...(upper === undefined ? {} : { upper }),
     keyed,
     modelled,
     settings,

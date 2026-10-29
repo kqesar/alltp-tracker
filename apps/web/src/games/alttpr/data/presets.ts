@@ -86,9 +86,14 @@ export type BossShuffle = "none" | "simple" | "full" | "random";
 
 /**
  * The settings a Mystery run hides until the player finds them: those the
- * pack can leave unknown (packs/alttpr, settingsFromUpstream's UNKNOWN). The
- * world shows on the first screen, and the dungeon items are assumed until
- * set: the key model and the counters rest on them.
+ * pack can leave unknown (packs/alttpr, settingsFromUpstream's UNKNOWN), and
+ * the glitches and the entrance shuffle, which alttpr.com's own weighted
+ * seeds roll (vt config/alttp.php:296-302 and 355-362, routes/console.php:
+ * 40-66): hidden glitches read as what every logic agrees on
+ * (`logic/settings.ts`, `glitchBounds`), a hidden entrance shuffle as every
+ * check maybe until it is set (`unmodelledReasons`). The world shows on the
+ * first screen, and the dungeon items are assumed until set: the key model
+ * and the counters rest on them.
  */
 export const HIDEABLE = [
   "goal",
@@ -100,6 +105,8 @@ export const HIDEABLE = [
   "itemFunctionality",
   "accessibility",
   "bossShuffle",
+  "glitches",
+  "entranceShuffle",
 ] as const;
 
 export type HiddenSetting = (typeof HIDEABLE)[number];
@@ -275,6 +282,7 @@ export const portedShuffleOf = (
  */
 export const crossedLogic = (settings: RunSettings): boolean =>
   portedShuffleOf(settings) !== undefined &&
+  !isHidden(settings, "entranceShuffle") &&
   !glitchedLogic(settings) &&
   settings.mode !== "inverted";
 
@@ -294,7 +302,9 @@ export const bossesMayMove = (settings: RunSettings): boolean =>
  * which runs tables of its own, are not modelled yet.
  */
 export const entrancesKnown = (settings: RunSettings): boolean =>
-  portedShuffleOf(settings) !== undefined && settings.mode !== "inverted";
+  !isHidden(settings, "entranceShuffle") &&
+  portedShuffleOf(settings) !== undefined &&
+  settings.mode !== "inverted";
 
 /**
  * Why the pack does not model a run's logic, one phrase per cause: the
@@ -308,6 +318,8 @@ export const entrancesKnown = (settings: RunSettings): boolean =>
 export const unmodelledReasons = (settings: RunSettings): string[] => {
   const reasons: string[] = [];
   const { entranceShuffle: shuffle, mode } = settings;
+  // Not known yet: any shuffle, or none (`LogicNote` says to set it)
+  if (isHidden(settings, "entranceShuffle")) return [HIDDEN_ENTRANCES];
   if (shuffle === "none") return reasons;
   // alttpr.com sends no glitched seed to the entrance randomizer, whose
   // rules are NoGlitches' (EntranceRandomizer.php:83-91)
@@ -323,18 +335,28 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
 };
 
 /**
+ * The cause `unmodelledReasons` gives while a Mystery run's entrance
+ * shuffle is not known yet: no logic can be told before it is set.
+ */
+export const HIDDEN_ENTRANCES = "entrances not known yet";
+
+/**
  * Whether a run's seed was generated for a glitched logic (Overworld
  * Glitches, Hybrid Major Glitches or Major Glitches): No Logic is no logic.
+ * False while a Mystery run's glitches are not known.
  */
 export const glitchedLogic = (settings: RunSettings): boolean =>
-  settings.glitches !== undefined && settings.glitches !== "no_logic";
+  !isHidden(settings, "glitches") &&
+  settings.glitches !== undefined &&
+  settings.glitches !== "no_logic";
 
 /**
  * Whether a run's seed has No Logic: the map shows what the glitches the
- * player plays it with reach, never what is in logic.
+ * player plays it with reach, never what is in logic. False while a
+ * Mystery run's glitches are not known.
  */
 export const noLogicRun = (settings: RunSettings): boolean =>
-  settings.glitches === "no_logic";
+  !isHidden(settings, "glitches") && settings.glitches === "no_logic";
 
 /** Whether the pack models a run's logic (`unmodelledReasons`). */
 export const logicModelled = (settings: RunSettings): boolean =>
@@ -452,9 +474,10 @@ const crystals = (count: number) => `${count} crystal${count === 1 ? "" : "s"}`;
 /**
  * The settings a player may change in a run already going, its progress
  * kept (the store's `updateSettings`): what a Mystery run lets them
- * discover, its dungeon items, whose counters keep the items found, and the
- * glitches the seed was generated for, which neither the ROM tells apart
- * nor a race reads. The world names a run type, which a new run changes.
+ * discover (its entrance shuffle included), its dungeon items, whose
+ * counters keep the items found, and the glitches the seed was generated
+ * for, which neither the ROM tells apart nor a race reads. The world names
+ * a run type, which a new run changes.
  */
 export type TunableSetting =
   | HiddenSetting
@@ -504,6 +527,10 @@ export const TUNING = {
   crystalsGanon: CRYSTAL_COUNTS,
   crystalsTower: CRYSTAL_COUNTS,
   dungeonItems: ordered(["standard", "mc", "mcs", "full"], DUNGEON_ITEM_LABELS),
+  entranceShuffle: ordered<EntranceShuffle>(
+    ["none", "simple", "restricted", "full", "crossed", "insanity"],
+    ENTRANCE_LABELS,
+  ),
   glitches: ordered<Glitches | "none">(
     [
       "none",
@@ -622,7 +649,11 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
       "bossShuffle",
       BOSS_SHUFFLE_LABELS[bossShuffleOf(settings)],
     ),
-    { label: "Entrances", value: ENTRANCE_LABELS[settings.entranceShuffle] },
+    row(
+      "Entrances",
+      "entranceShuffle",
+      ENTRANCE_LABELS[settings.entranceShuffle],
+    ),
     row("Glitches", "glitches", GLITCHES_LABELS[glitchesOf(settings)]),
     ...(noLogicRun(settings)
       ? [

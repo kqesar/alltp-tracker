@@ -50,24 +50,9 @@ const LOGICS: Record<Glitches | "none", Logic> = {
 
 const cache = new Map<string, AlttprSettings>();
 
-/**
- * The pack's settings for a run: the run's world, goal, crystal counts, item
- * placement, accessibility, item pool and functionality, boss shuffle,
- * swordless weapons when it has no sword, and its dungeon items (dungeonItems: which of them
- * may lie outside their dungeons), in the logic of its glitches (No Logic
- * read with NoGlitches' rules) with randomized weapons, as the site's
- * default preset has them (config/alttp.php:78-96). The pack models the Open, Standard, Inverted
- * and retro worlds; the entrance shuffle it does not model
- * (`logicModelled`). The same run settings always give the same object, so
- * a world compiled for it can be kept.
- * @param run - The run's settings: its preset's, or the seed's
- */
-export const packSettings = (run: RunSettings): AlttprSettings => {
-  // A setting the run has not discovered is unknown to the pack, whatever
-  // value stands in for it
-  const known = <T>(setting: HiddenSetting, value: T) =>
-    isHidden(run, setting) ? UNKNOWN : value;
-  const key = [
+/** A run's settings as a key: the same key, the same pack settings. */
+const keyOf = (run: RunSettings): string =>
+  [
     run.mode,
     run.goal,
     run.dungeonItems,
@@ -83,30 +68,99 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
     playGlitchesOf(run),
     ...(run.hidden ?? []),
   ].join("/");
+
+/** The pack's settings for a run in a given logic, cached under `key`. */
+const built = (
+  key: string,
+  run: RunSettings,
+  logic: Logic,
+  noLogic: boolean,
+): AlttprSettings => {
   let settings = cache.get(key);
-  if (settings === undefined) {
-    const glitches = glitchesOf(run);
-    const built = settingsFromUpstream(run.mode, {
-      accessibility: known("accessibility", run.accessibility),
-      "crystals.ganon": known("crystalsGanon", run.crystalsGanon),
-      "crystals.tower": known("crystalsTower", run.crystalsTower),
-      dungeonItems: run.dungeonItems,
-      "enemizer.bossShuffle": known("bossShuffle", bossShuffleOf(run)),
-      goal: known("goal", GOALS[run.goal]),
-      "item.functionality": known("itemFunctionality", run.itemFunctionality),
-      "item.pool": known("itemPool", run.itemPool),
-      itemPlacement: known("itemPlacement", run.itemPlacement),
-      // No Logic is read with the glitches the player plays it with
-      logic: LOGICS[glitches === "no_logic" ? playGlitchesOf(run) : glitches],
-      "mode.weapons": known(
-        "swordless",
-        run.swordless ? "swordless" : "randomized",
-      ),
-    });
-    settings = glitches === "no_logic" ? noLogicSettings(built) : built;
-    cache.set(key, settings);
-  }
+  if (settings !== undefined) return settings;
+  // A setting the run has not discovered is unknown to the pack, whatever
+  // value stands in for it
+  const known = <T>(setting: HiddenSetting, value: T) =>
+    isHidden(run, setting) ? UNKNOWN : value;
+  settings = settingsFromUpstream(run.mode, {
+    accessibility: known("accessibility", run.accessibility),
+    "crystals.ganon": known("crystalsGanon", run.crystalsGanon),
+    "crystals.tower": known("crystalsTower", run.crystalsTower),
+    dungeonItems: run.dungeonItems,
+    "enemizer.bossShuffle": known("bossShuffle", bossShuffleOf(run)),
+    goal: known("goal", GOALS[run.goal]),
+    "item.functionality": known("itemFunctionality", run.itemFunctionality),
+    "item.pool": known("itemPool", run.itemPool),
+    itemPlacement: known("itemPlacement", run.itemPlacement),
+    logic,
+    "mode.weapons": known(
+      "swordless",
+      run.swordless ? "swordless" : "randomized",
+    ),
+  });
+  if (noLogic) settings = noLogicSettings(settings);
+  cache.set(key, settings);
   return settings;
+};
+
+/**
+ * The pack's settings for a run: the run's world, goal, crystal counts, item
+ * placement, accessibility, item pool and functionality, boss shuffle,
+ * swordless weapons when it has no sword, and its dungeon items (dungeonItems: which of them
+ * may lie outside their dungeons), in the logic of its glitches (No Logic
+ * read with those it is played with; not known yet, the least permissive
+ * of `glitchBounds`) with randomized weapons, as the site's
+ * default preset has them (config/alttp.php:78-96). The pack models the Open, Standard, Inverted
+ * and retro worlds; the entrance shuffle it does not model
+ * (`logicModelled`). The same run settings always give the same object, so
+ * a world compiled for it can be kept.
+ * @param run - The run's settings: its preset's, or the seed's
+ */
+export const packSettings = (run: RunSettings): AlttprSettings => {
+  const bounds = glitchBounds(run);
+  if (bounds !== undefined) return bounds.lower;
+  const glitches = glitchesOf(run);
+  // No Logic is read with the glitches the player plays it with
+  return built(
+    keyOf(run),
+    run,
+    LOGICS[glitches === "no_logic" ? playGlitchesOf(run) : glitches],
+    glitches === "no_logic",
+  );
+};
+
+/**
+ * The two logics a run whose glitches are not known yet (Mystery) is read
+ * between: what holds under every logic its seed may have, and what holds
+ * under any. A location is `yes` once the lower says so, `no` once the
+ * upper does, else maybe (`solutionOf`).
+ *
+ * - `lower`, NoGlitches' rules (each glitched logic only adds ways:
+ *   packs/alttpr/src/logics.spec.ts) read as a No Logic seed's, without the
+ *   boots a glitched world starts with: a key may sit behind its own door,
+ *   which a No Logic seed allows (`noLogicSettings`), and nothing is given.
+ * - `upper`, Major Glitches', the boots given: every other logic's ways are
+ *   among its own.
+ *
+ * Undefined while the glitches are known.
+ */
+export const glitchBounds = (
+  run: RunSettings,
+):
+  | { readonly lower: AlttprSettings; readonly upper: AlttprSettings }
+  | undefined => {
+  if (!isHidden(run, "glitches")) return undefined;
+  const key = keyOf(run);
+  const lower = built(`${key}/lower`, run, "NoGlitches", false);
+  const unbooted = cache.get(`${key}/lower/no-logic`) ?? {
+    ...noLogicSettings(lower),
+    bootsAtStart: false,
+  };
+  cache.set(`${key}/lower/no-logic`, unbooted);
+  return {
+    lower: unbooted,
+    upper: built(`${key}/upper`, run, "MajorGlitches", false),
+  };
 };
 
 /** The world a run's settings build: what is kept per world is keyed by it. */
