@@ -1,0 +1,329 @@
+{
+  "file": "test/owg/TestLightWorld.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [
+      "self.world.precollected_items.clear()",
+      "self.world.itempool.append(ItemFactory('Pegasus Boots', 1))"
+    ],
+    "keyLogic": "partial",
+    "logic": "owglitches",
+    "mode": "open",
+    "source": "test/owg/TestVanillaOWG.py:6@626691a",
+    "suite": "owg"
+  },
+  "suite": "owg",
+  "tests": [
+    {
+      "cases": [
+        ["Master Sword Pedestal", false, []],
+        ["Master Sword Pedestal", false, [], ["Green Pendant"]],
+        ["Master Sword Pedestal", false, [], ["Red Pendant"]],
+        ["Master Sword Pedestal", false, [], ["Blue Pendant"]],
+        [
+          "Master Sword Pedestal",
+          true,
+          ["Green Pendant", "Red Pendant", "Blue Pendant"]
+        ],
+        ["Link's Uncle", true, []],
+        ["Secret Passage", true, []],
+        ["King's Tomb", false, []],
+        ["King's Tomb", false, [], ["Pegasus Boots"]],
+        ["King's Tomb", true, ["Pegasus Boots"]],
+        ["Floodgate Chest", true, []],
+        ["Link's House", true, []],
+        ["Kakariko Tavern", true, []],
+        ["Chicken House", true, []],
+        ["Aginah's Cave", true, []],
+        ["Sahasrahla's Hut - Left", true, []],
+        ["Sahasrahla's Hut - Middle", true, []],
+        ["Sahasrahla's Hut - Right", true, []],
+        ["Kakariko Well - Top", true, []],
+        ["Kakariko Well - Left", true, []],
+        ["Kakariko Well - Middle", true, []],
+        ["Kakariko Well - Right", true, []],
+        ["Kakariko Well - Bottom", true, []],
+        ["Blind's Hideout - Top", true, []],
+        ["Blind's Hideout - Left", true, []],
+        ["Blind's Hideout - Right", true, []],
+        ["Blind's Hideout - Far Left", true, []],
+        ["Blind's Hideout - Far Right", true, []],
+        ["Bonk Rock Cave", false, []],
+        ["Bonk Rock Cave", false, [], ["Pegasus Boots"]],
+        ["Bonk Rock Cave", true, ["Pegasus Boots"]],
+        ["Mini Moldorm Cave - Far Left", true, []],
+        ["Mini Moldorm Cave - Left", true, []],
+        ["Mini Moldorm Cave - Right", true, []],
+        ["Mini Moldorm Cave - Far Right", true, []],
+        ["Ice Rod Cave", true, []],
+        ["Bottle Merchant", true, []],
+        ["Sahasrahla", false, []],
+        ["Sahasrahla", false, [], ["Green Pendant"]],
+        ["Sahasrahla", true, ["Green Pendant"]],
+        ["Magic Bat", false, []],
+        ["Magic Bat", false, [], ["Magic Powder"]],
+        ["Magic Bat", false, [], ["Pegasus Boots", "Hammer", "Magic Mirror"]],
+        ["Magic Bat", false, [], ["Pegasus Boots", "Hammer", "Moon Pearl"]],
+        [
+          "Magic Bat",
+          false,
+          ["Progressive Glove"],
+          ["Pegasus Boots", "Hammer", "Progressive Glove"]
+        ],
+        ["Magic Bat", true, ["Magic Powder", "Pegasus Boots"]],
+        ["Magic Bat", true, ["Magic Powder", "Hammer"]],
+        [
+          "Magic Bat",
+          true,
+          [
+            "Magic Powder",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Moon Pearl",
+            "Magic Mirror"
+          ]
+        ],
+        ["Sick Kid", false, []],
+        ["Sick Kid", false, [], ["AnyBottle"]],
+        ["Sick Kid", true, ["Bottle (Bee)"]],
+        ["Sick Kid", true, ["Bottle (Fairy)"]],
+        ["Sick Kid", true, ["Bottle (Red Potion)"]],
+        ["Sick Kid", true, ["Bottle (Green Potion)"]],
+        ["Sick Kid", true, ["Bottle (Blue Potion)"]],
+        ["Sick Kid", true, ["Bottle"]],
+        ["Sick Kid", true, ["Bottle (Good Bee)"]],
+        ["Hobo", true, []],
+        ["Bombos Tablet", false, []],
+        ["Bombos Tablet", false, ["Progressive Sword"], ["Progressive Sword"]],
+        ["Bombos Tablet", false, [], ["Book of Mudora"]],
+        [
+          "Bombos Tablet",
+          true,
+          [
+            "Pegasus Boots",
+            "Book of Mudora",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        ["King Zora", true, []],
+        ["Lost Woods Hideout", true, []],
+        ["Lumberjack Tree", false, []],
+        ["Lumberjack Tree", false, [], ["Pegasus Boots"]],
+        ["Lumberjack Tree", false, [], ["Beat Agahnim 1"]],
+        ["Lumberjack Tree", true, ["Pegasus Boots", "Beat Agahnim 1"]],
+        ["Cave 45", false, []],
+        ["Cave 45", false, [], ["Pegasus Boots", "Magic Mirror"]],
+        [
+          "Cave 45",
+          false,
+          [],
+          ["Pegasus Boots", "Moon Pearl", "Ocarina", "Lamp"]
+        ],
+        [
+          "Cave 45",
+          false,
+          [],
+          ["Pegasus Boots", "Moon Pearl", "Ocarina", "Progressive Glove"]
+        ],
+        ["Cave 45", true, ["Pegasus Boots"]],
+        ["Cave 45", true, ["Ocarina", "Magic Mirror"]],
+        ["Cave 45", true, ["Progressive Glove", "Lamp", "Magic Mirror"]],
+        [
+          "Cave 45",
+          true,
+          [
+            "Moon Pearl",
+            "Magic Mirror",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        [
+          "Cave 45",
+          true,
+          ["Moon Pearl", "Magic Mirror", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Cave 45",
+          true,
+          ["Moon Pearl", "Magic Mirror", "Beat Agahnim 1", "Hammer"]
+        ],
+        [
+          "Cave 45",
+          true,
+          [
+            "Moon Pearl",
+            "Magic Mirror",
+            "Beat Agahnim 1",
+            "Progressive Glove",
+            "Hookshot"
+          ]
+        ],
+        [
+          "Cave 45",
+          true,
+          [
+            "Moon Pearl",
+            "Magic Mirror",
+            "Beat Agahnim 1",
+            "Flippers",
+            "Hookshot"
+          ]
+        ],
+        ["Graveyard Cave", false, []],
+        ["Graveyard Cave", false, [], ["Pegasus Boots", "Magic Mirror"]],
+        ["Graveyard Cave", false, [], ["Pegasus Boots", "Moon Pearl"]],
+        ["Graveyard Cave", true, ["Pegasus Boots"]],
+        [
+          "Graveyard Cave",
+          true,
+          [
+            "Moon Pearl",
+            "Magic Mirror",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        [
+          "Graveyard Cave",
+          true,
+          ["Moon Pearl", "Magic Mirror", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Graveyard Cave",
+          true,
+          ["Moon Pearl", "Magic Mirror", "Beat Agahnim 1", "Hammer", "Hookshot"]
+        ],
+        [
+          "Graveyard Cave",
+          true,
+          [
+            "Moon Pearl",
+            "Magic Mirror",
+            "Beat Agahnim 1",
+            "Progressive Glove",
+            "Hookshot"
+          ]
+        ],
+        [
+          "Graveyard Cave",
+          true,
+          [
+            "Moon Pearl",
+            "Magic Mirror",
+            "Beat Agahnim 1",
+            "Flippers",
+            "Hookshot"
+          ]
+        ],
+        ["Checkerboard Cave", false, []],
+        ["Checkerboard Cave", false, [], ["Progressive Glove"]],
+        ["Checkerboard Cave", false, [], ["Pegasus Boots", "Ocarina"]],
+        ["Checkerboard Cave", false, [], ["Pegasus Boots", "Magic Mirror"]],
+        ["Checkerboard Cave", true, ["Pegasus Boots", "Progressive Glove"]],
+        [
+          "Checkerboard Cave",
+          true,
+          ["Ocarina", "Magic Mirror", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Mini Moldorm Cave - Generous Guy", true, []],
+        ["Library", false, []],
+        ["Library", false, [], ["Pegasus Boots"]],
+        ["Library", true, ["Pegasus Boots"]],
+        ["Mushroom", true, []],
+        ["Potion Shop", false, []],
+        ["Potion Shop", false, [], ["Mushroom"]],
+        ["Potion Shop", true, ["Mushroom"]],
+        ["Maze Race", true, []],
+        ["Desert Ledge", false, []],
+        [
+          "Desert Ledge",
+          false,
+          [],
+          ["Pegasus Boots", "Book of Mudora", "Ocarina"]
+        ],
+        [
+          "Desert Ledge",
+          false,
+          [],
+          ["Pegasus Boots", "Book of Mudora", "Magic Mirror"]
+        ],
+        [
+          "Desert Ledge",
+          false,
+          ["Progressive Glove"],
+          ["Pegasus Boots", "Book of Mudora", "Progressive Glove"]
+        ],
+        ["Desert Ledge", true, ["Pegasus Boots"]],
+        ["Desert Ledge", true, ["Book of Mudora"]],
+        [
+          "Desert Ledge",
+          true,
+          ["Ocarina", "Magic Mirror", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Lake Hylia Island", false, []],
+        ["Lake Hylia Island", false, [], ["Pegasus Boots", "Magic Mirror"]],
+        ["Lake Hylia Island", false, [], ["Pegasus Boots", "Moon Pearl"]],
+        ["Lake Hylia Island", false, [], ["Pegasus Boots", "Flippers"]],
+        ["Lake Hylia Island", true, ["Pegasus Boots"]],
+        [
+          "Lake Hylia Island",
+          true,
+          [
+            "Flippers",
+            "Moon Pearl",
+            "Magic Mirror",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        [
+          "Lake Hylia Island",
+          true,
+          [
+            "Flippers",
+            "Moon Pearl",
+            "Magic Mirror",
+            "Progressive Glove",
+            "Hammer"
+          ]
+        ],
+        [
+          "Lake Hylia Island",
+          true,
+          ["Flippers", "Moon Pearl", "Magic Mirror", "Beat Agahnim 1"]
+        ],
+        ["Sunken Treasure", true, []],
+        ["Zora's Ledge", false, []],
+        ["Zora's Ledge", false, [], ["Pegasus Boots", "Flippers"]],
+        ["Zora's Ledge", true, ["Pegasus Boots"]],
+        ["Zora's Ledge", true, ["Flippers"]],
+        ["Flute Spot", false, []],
+        ["Flute Spot", false, [], ["Shovel"]],
+        ["Flute Spot", true, ["Shovel"]],
+        ["Waterfall Fairy - Left", false, []],
+        ["Waterfall Fairy - Left", true, ["Flippers"]],
+        ["Waterfall Fairy - Left", true, ["Moon Pearl"]],
+        ["Waterfall Fairy - Left", true, ["Pegasus Boots"]],
+        ["Waterfall Fairy - Right", false, []],
+        ["Waterfall Fairy - Right", true, ["Flippers"]],
+        ["Waterfall Fairy - Right", true, ["Moon Pearl"]],
+        ["Waterfall Fairy - Right", true, ["Pegasus Boots"]]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testLightWorld"
+    }
+  ],
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "harness": {
+      "branch": "DoorDevUnstable",
+      "commit": "626691a94b718ebe25bb7d3d2c2a46574f05160c"
+    },
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  }
+}

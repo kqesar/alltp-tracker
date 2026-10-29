@@ -1,0 +1,196 @@
+{
+  "file": "test/suite/partial_key_logic_3.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {},
+  "settings": {
+    "crystals_needed_for_gt": 0,
+    "key_logic_algorithm": "partial"
+  },
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  },
+  "verifications": [
+    {
+      "item": "Big Key (Desert Palace)",
+      "locations": {
+        "Desert Palace - Big Chest": false,
+        "Desert Palace - Big Key Chest": true,
+        "Desert Palace - Boss": false,
+        "Desert Palace - Compass Chest": true,
+        "Desert Palace - Map Chest": true,
+        "Desert Palace - Torch": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Eastern Palace)",
+      "locations": {
+        "Eastern Palace - Big Chest": false,
+        "Eastern Palace - Big Key Chest": true,
+        "Eastern Palace - Boss": false,
+        "Eastern Palace - Cannonball Chest": true,
+        "Eastern Palace - Compass Chest": true,
+        "Eastern Palace - Map Chest": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Ganons Tower)",
+      "locations": {
+        "Ganons Tower - Big Chest": false,
+        "Ganons Tower - Big Key Chest": false,
+        "Ganons Tower - Big Key Room - Left": false,
+        "Ganons Tower - Big Key Room - Right": false,
+        "Ganons Tower - Bob's Chest": false,
+        "Ganons Tower - Bob's Torch": true,
+        "Ganons Tower - Compass Room - Bottom Left": true,
+        "Ganons Tower - Compass Room - Bottom Right": true,
+        "Ganons Tower - Compass Room - Top Left": true,
+        "Ganons Tower - Compass Room - Top Right": true,
+        "Ganons Tower - DMs Room - Bottom Left": true,
+        "Ganons Tower - DMs Room - Bottom Right": true,
+        "Ganons Tower - DMs Room - Top Left": true,
+        "Ganons Tower - DMs Room - Top Right": true,
+        "Ganons Tower - Firesnake Room": true,
+        "Ganons Tower - Hope Room - Left": true,
+        "Ganons Tower - Hope Room - Right": true,
+        "Ganons Tower - Map Chest": true,
+        "Ganons Tower - Mini Helmasaur Room - Left": false,
+        "Ganons Tower - Mini Helmasaur Room - Right": false,
+        "Ganons Tower - Pre-Moldorm Chest": false,
+        "Ganons Tower - Randomizer Room - Bottom Left": true,
+        "Ganons Tower - Randomizer Room - Bottom Right": true,
+        "Ganons Tower - Randomizer Room - Top Left": true,
+        "Ganons Tower - Randomizer Room - Top Right": true,
+        "Ganons Tower - Tile Room": true,
+        "Ganons Tower - Validation Chest": false
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Ice Palace)",
+      "locations": {
+        "Ice Palace - Big Chest": false,
+        "Ice Palace - Big Key Chest": true,
+        "Ice Palace - Boss": false,
+        "Ice Palace - Compass Chest": true,
+        "Ice Palace - Freezor Chest": true,
+        "Ice Palace - Iced T Room": true,
+        "Ice Palace - Map Chest": true,
+        "Ice Palace - Spike Room": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Misery Mire)",
+      "locations": {
+        "Misery Mire - Big Chest": false,
+        "Misery Mire - Big Key Chest": true,
+        "Misery Mire - Boss": false,
+        "Misery Mire - Bridge Chest": true,
+        "Misery Mire - Compass Chest": true,
+        "Misery Mire - Main Lobby": true,
+        "Misery Mire - Map Chest": true,
+        "Misery Mire - Spike Chest": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Palace of Darkness)",
+      "locations": {
+        "Palace of Darkness - Big Chest": false,
+        "Palace of Darkness - Big Key Chest": true,
+        "Palace of Darkness - Boss": false,
+        "Palace of Darkness - Compass Chest": true,
+        "Palace of Darkness - Dark Basement - Left": true,
+        "Palace of Darkness - Dark Basement - Right": true,
+        "Palace of Darkness - Dark Maze - Bottom": true,
+        "Palace of Darkness - Dark Maze - Top": true,
+        "Palace of Darkness - Harmless Hellway": true,
+        "Palace of Darkness - Map Chest": true,
+        "Palace of Darkness - Shooter Room": true,
+        "Palace of Darkness - Stalfos Basement": true,
+        "Palace of Darkness - The Arena - Bridge": true,
+        "Palace of Darkness - The Arena - Ledge": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Skull Woods)",
+      "locations": {
+        "Skull Woods - Big Chest": true,
+        "Skull Woods - Big Key Chest": true,
+        "Skull Woods - Boss": true,
+        "Skull Woods - Bridge Room": true,
+        "Skull Woods - Compass Chest": true,
+        "Skull Woods - Map Chest": true,
+        "Skull Woods - Pinball Room": true,
+        "Skull Woods - Pot Prison": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Swamp Palace)",
+      "locations": {
+        "Swamp Palace - Big Chest": true,
+        "Swamp Palace - Big Key Chest": true,
+        "Swamp Palace - Boss": true,
+        "Swamp Palace - Compass Chest": true,
+        "Swamp Palace - Entrance": false,
+        "Swamp Palace - Flooded Room - Left": true,
+        "Swamp Palace - Flooded Room - Right": true,
+        "Swamp Palace - Map Chest": true,
+        "Swamp Palace - Waterfall Room": true,
+        "Swamp Palace - West Chest": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Thieves Town)",
+      "locations": {
+        "Thieves' Town - Ambush Chest": true,
+        "Thieves' Town - Attic": false,
+        "Thieves' Town - Big Chest": false,
+        "Thieves' Town - Big Key Chest": true,
+        "Thieves' Town - Blind's Cell": false,
+        "Thieves' Town - Boss": false,
+        "Thieves' Town - Compass Chest": true,
+        "Thieves' Town - Map Chest": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Tower of Hera)",
+      "locations": {
+        "Tower of Hera - Basement Cage": true,
+        "Tower of Hera - Big Chest": false,
+        "Tower of Hera - Big Key Chest": true,
+        "Tower of Hera - Boss": false,
+        "Tower of Hera - Compass Chest": false,
+        "Tower of Hera - Map Chest": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Turtle Rock)",
+      "locations": {
+        "Turtle Rock - Big Chest": false,
+        "Turtle Rock - Big Key Chest": true,
+        "Turtle Rock - Boss": false,
+        "Turtle Rock - Chain Chomps": true,
+        "Turtle Rock - Compass Chest": true,
+        "Turtle Rock - Crystaroller Room": false,
+        "Turtle Rock - Eye Bridge - Bottom Left": false,
+        "Turtle Rock - Eye Bridge - Bottom Right": false,
+        "Turtle Rock - Eye Bridge - Top Left": false,
+        "Turtle Rock - Eye Bridge - Top Right": false,
+        "Turtle Rock - Roller Room - Left": true,
+        "Turtle Rock - Roller Room - Right": true
+      },
+      "type": "Verification"
+    }
+  ]
+}

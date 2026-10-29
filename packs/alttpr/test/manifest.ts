@@ -24,8 +24,8 @@ export interface ManifestEntry {
 export interface Manifest {
   readonly commit: string;
   /**
-   * The Door Randomizer release the DR locations are read from
-   * (scripts/import-dr.mjs), its base patch (the memory it keeps) and the
+   * The Door Randomizer release the DR locations, world and rules are read
+   * from (scripts/import-dr.mjs), its base patch (the memory it keeps) and the
    * Overworld Randomizer release built on it.
    */
   readonly doorRandomizer: {
@@ -44,6 +44,17 @@ export interface Manifest {
       readonly version: string;
     };
     readonly repo: string;
+    /**
+     * The commit DR's unit tests were made to run again at (DoorDevUnstable):
+     * the harness is read there, the cases at the release (scripts/dr-tests.mjs).
+     */
+    readonly testHarness: {
+      readonly branch: string;
+      readonly commit: string;
+      readonly why: string;
+    };
+    /** Its own tests, imported as fixtures under test/dr-upstream/. */
+    readonly tests: readonly ManifestEntry[];
     readonly version: string;
   };
   /** The entrance randomizer vt hands shuffled entrances to, pinned too. */

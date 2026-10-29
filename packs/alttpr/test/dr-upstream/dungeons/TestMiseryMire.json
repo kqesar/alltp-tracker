@@ -1,0 +1,385 @@
+{
+  "file": "test/dungeons/TestMiseryMire.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "open",
+    "source": "test/dungeons/TestDungeon.py:31@626691a",
+    "startingRegions": {
+      "Agahnims Tower": ["Agahnims Tower Portal"],
+      "Desert Palace Main (Inner)": ["Desert South Portal"],
+      "Desert Palace Main (Outer)": [
+        "Desert West Portal",
+        "Desert East Portal"
+      ],
+      "Desert Palace North": ["Desert Back Portal"],
+      "Eastern Palace": ["Eastern Portal"],
+      "Ganons Tower (Entrance)": ["Ganons Tower Portal"],
+      "Ice Palace (Entrance)": ["Ice Portal"],
+      "Misery Mire (Entrance)": ["Mire Portal"],
+      "Palace of Darkness (Entrance)": ["Palace of Darkness Portal"],
+      "Skull Woods Final Section (Entrance)": ["Skull 3 Portal"],
+      "Skull Woods First Section": ["Skull 1 Portal", "Skull Pinball"],
+      "Skull Woods First Section (Left)": ["Skull Left Drop"],
+      "Skull Woods First Section (Top)": ["Skull Pot Circle"],
+      "Skull Woods Second Section": [
+        "Skull 2 East Portal",
+        "Skull 2 West Portal",
+        "Skull Back Drop"
+      ],
+      "Swamp Palace (Entrance)": ["Swamp Portal"],
+      "Thieves Town (Entrance)": ["Thieves Town Portal"],
+      "Tower of Hera (Bottom)": ["Hera Portal"]
+    },
+    "suite": "dungeons"
+  },
+  "suite": "dungeons",
+  "tests": [
+    {
+      "cases": [
+        ["Misery Mire - Bridge Chest", false, []],
+        [
+          "Misery Mire - Bridge Chest",
+          false,
+          [],
+          ["Pegasus Boots", "Hookshot"]
+        ],
+        [
+          "Misery Mire - Bridge Chest",
+          false,
+          [],
+          [
+            "Progressive Sword",
+            "Hammer",
+            "Fire Rod",
+            "Cane of Somaria",
+            "Progressive Bow",
+            "Ice Rod"
+          ]
+        ],
+        [
+          "Misery Mire - Bridge Chest",
+          true,
+          ["Progressive Sword", "Pegasus Boots"]
+        ],
+        ["Misery Mire - Bridge Chest", true, ["Progressive Sword", "Hookshot"]],
+        ["Misery Mire - Bridge Chest", true, ["Hammer", "Pegasus Boots"]],
+        ["Misery Mire - Bridge Chest", true, ["Hammer", "Hookshot"]],
+        ["Misery Mire - Bridge Chest", true, ["Fire Rod", "Pegasus Boots"]],
+        ["Misery Mire - Bridge Chest", true, ["Fire Rod", "Hookshot"]],
+        [
+          "Misery Mire - Bridge Chest",
+          true,
+          ["Cane of Somaria", "Pegasus Boots"]
+        ],
+        ["Misery Mire - Bridge Chest", true, ["Cane of Somaria", "Hookshot"]],
+        [
+          "Misery Mire - Bridge Chest",
+          true,
+          ["Progressive Bow", "Pegasus Boots"]
+        ],
+        ["Misery Mire - Bridge Chest", true, ["Progressive Bow", "Hookshot"]],
+        ["Misery Mire - Bridge Chest", true, ["Ice Rod", "Pegasus Boots"]],
+        ["Misery Mire - Bridge Chest", true, ["Ice Rod", "Hookshot"]],
+        ["Misery Mire - Big Chest", false, []],
+        ["Misery Mire - Big Chest", false, [], ["Big Key (Misery Mire)"]],
+        ["Misery Mire - Big Chest", false, [], ["Pegasus Boots", "Hookshot"]],
+        [
+          "Misery Mire - Big Chest",
+          false,
+          [],
+          [
+            "Progressive Sword",
+            "Hammer",
+            "Fire Rod",
+            "Cane of Somaria",
+            "Progressive Bow",
+            "Ice Rod"
+          ]
+        ],
+        [
+          "Misery Mire - Big Chest",
+          true,
+          ["Big Key (Misery Mire)", "Pegasus Boots", "Progressive Sword"]
+        ],
+        [
+          "Misery Mire - Big Chest",
+          true,
+          ["Big Key (Misery Mire)", "Hookshot", "Progressive Sword"]
+        ],
+        ["Misery Mire - Main Lobby", false, []],
+        ["Misery Mire - Main Lobby", false, [], ["Pegasus Boots", "Hookshot"]],
+        [
+          "Misery Mire - Main Lobby",
+          false,
+          [],
+          ["Small Key (Misery Mire)", "Big Key (Misery Mire)"]
+        ],
+        [
+          "Misery Mire - Main Lobby",
+          true,
+          ["Small Key (Misery Mire)", "Hookshot", "Progressive Sword"]
+        ],
+        [
+          "Misery Mire - Main Lobby",
+          true,
+          ["Small Key (Misery Mire)", "Pegasus Boots", "Progressive Sword"]
+        ],
+        [
+          "Misery Mire - Main Lobby",
+          true,
+          ["Big Key (Misery Mire)", "Hookshot", "Progressive Sword"]
+        ],
+        [
+          "Misery Mire - Main Lobby",
+          true,
+          ["Big Key (Misery Mire)", "Pegasus Boots", "Progressive Sword"]
+        ],
+        ["Misery Mire - Big Key Chest", false, []],
+        ["Misery Mire - Big Key Chest", false, [], ["Fire Rod", "Lamp"]],
+        [
+          "Misery Mire - Big Key Chest",
+          false,
+          [],
+          ["Pegasus Boots", "Hookshot"]
+        ],
+        [
+          "Misery Mire - Big Key Chest",
+          false,
+          ["Small Key (Misery Mire)", "Small Key (Misery Mire)"],
+          ["Small Key (Misery Mire)"]
+        ],
+        [
+          "Misery Mire - Big Key Chest",
+          true,
+          [
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Lamp",
+            "Progressive Sword",
+            "Pegasus Boots"
+          ]
+        ],
+        [
+          "Misery Mire - Big Key Chest",
+          true,
+          [
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Lamp",
+            "Progressive Sword",
+            "Hookshot"
+          ]
+        ],
+        [
+          "Misery Mire - Big Key Chest",
+          true,
+          [
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Fire Rod",
+            "Progressive Sword",
+            "Pegasus Boots"
+          ]
+        ],
+        [
+          "Misery Mire - Big Key Chest",
+          true,
+          [
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Fire Rod",
+            "Progressive Sword",
+            "Hookshot"
+          ]
+        ],
+        ["Misery Mire - Compass Chest", false, []],
+        ["Misery Mire - Compass Chest", false, [], ["Fire Rod", "Lamp"]],
+        [
+          "Misery Mire - Compass Chest",
+          false,
+          [],
+          ["Pegasus Boots", "Hookshot"]
+        ],
+        [
+          "Misery Mire - Compass Chest",
+          false,
+          ["Small Key (Misery Mire)", "Small Key (Misery Mire)"],
+          ["Small Key (Misery Mire)"]
+        ],
+        [
+          "Misery Mire - Compass Chest",
+          true,
+          [
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Lamp",
+            "Progressive Sword",
+            "Pegasus Boots"
+          ]
+        ],
+        [
+          "Misery Mire - Compass Chest",
+          true,
+          [
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Lamp",
+            "Progressive Sword",
+            "Hookshot"
+          ]
+        ],
+        [
+          "Misery Mire - Compass Chest",
+          true,
+          [
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Fire Rod",
+            "Progressive Sword",
+            "Pegasus Boots"
+          ]
+        ],
+        [
+          "Misery Mire - Compass Chest",
+          true,
+          [
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Small Key (Misery Mire)",
+            "Fire Rod",
+            "Progressive Sword",
+            "Hookshot"
+          ]
+        ],
+        ["Misery Mire - Map Chest", false, []],
+        [
+          "Misery Mire - Map Chest",
+          false,
+          [],
+          ["Small Key (Misery Mire)", "Big Key (Misery Mire)"]
+        ],
+        ["Misery Mire - Map Chest", false, [], ["Pegasus Boots", "Hookshot"]],
+        [
+          "Misery Mire - Map Chest",
+          true,
+          ["Small Key (Misery Mire)", "Progressive Sword", "Pegasus Boots"]
+        ],
+        [
+          "Misery Mire - Map Chest",
+          true,
+          ["Small Key (Misery Mire)", "Progressive Sword", "Hookshot"]
+        ],
+        [
+          "Misery Mire - Map Chest",
+          true,
+          ["Big Key (Misery Mire)", "Progressive Sword", "Pegasus Boots"]
+        ],
+        [
+          "Misery Mire - Map Chest",
+          true,
+          ["Big Key (Misery Mire)", "Progressive Sword", "Hookshot"]
+        ],
+        ["Misery Mire - Spike Chest", false, []],
+        ["Misery Mire - Spike Chest", false, [], ["Pegasus Boots", "Hookshot"]],
+        [
+          "Misery Mire - Spike Chest",
+          true,
+          ["Progressive Sword", "Pegasus Boots", "Cape"]
+        ],
+        [
+          "Misery Mire - Spike Chest",
+          true,
+          ["Progressive Sword", "Hookshot", "Cape"]
+        ],
+        [
+          "Misery Mire - Spike Chest",
+          true,
+          ["Progressive Sword", "Pegasus Boots", "Cane of Byrna"]
+        ],
+        [
+          "Misery Mire - Spike Chest",
+          true,
+          ["Progressive Sword", "Hookshot", "Cane of Byrna"]
+        ],
+        [
+          "Misery Mire - Spike Chest",
+          true,
+          ["Progressive Sword", "Pegasus Boots", "Boss Heart Container"]
+        ],
+        [
+          "Misery Mire - Spike Chest",
+          true,
+          ["Progressive Sword", "Hookshot", "Boss Heart Container"]
+        ],
+        ["Misery Mire - Boss", false, []],
+        ["Misery Mire - Boss", false, [], ["Lamp"]],
+        ["Misery Mire - Boss", false, [], ["Cane of Somaria"]],
+        [
+          "Misery Mire - Boss",
+          false,
+          [],
+          ["Progressive Sword", "Hammer", "Progressive Bow"]
+        ],
+        ["Misery Mire - Boss", false, [], ["Big Key (Misery Mire)"]],
+        ["Misery Mire - Boss", false, [], ["Pegasus Boots", "Hookshot"]],
+        [
+          "Misery Mire - Boss",
+          true,
+          [
+            "Big Key (Misery Mire)",
+            "Lamp",
+            "Cane of Somaria",
+            "Progressive Sword",
+            "Pegasus Boots"
+          ]
+        ],
+        [
+          "Misery Mire - Boss",
+          true,
+          [
+            "Big Key (Misery Mire)",
+            "Lamp",
+            "Cane of Somaria",
+            "Hammer",
+            "Pegasus Boots"
+          ]
+        ],
+        [
+          "Misery Mire - Boss",
+          true,
+          [
+            "Big Key (Misery Mire)",
+            "Lamp",
+            "Cane of Somaria",
+            "Progressive Bow",
+            "Pegasus Boots"
+          ]
+        ]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testMiseryMire",
+      "startingRegions": ["Misery Mire (Entrance)"]
+    }
+  ],
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "harness": {
+      "branch": "DoorDevUnstable",
+      "commit": "626691a94b718ebe25bb7d3d2c2a46574f05160c"
+    },
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  }
+}

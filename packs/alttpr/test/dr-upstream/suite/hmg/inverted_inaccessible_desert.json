@@ -1,0 +1,21 @@
+{
+  "file": "test/suite/hmg/inverted_inaccessible_desert.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {
+    "Desert Palace - Boss": "Moon Pearl",
+    "Desert Palace - Prize": "Green Pendant",
+    "Sahasrahla": "Magic Mirror"
+  },
+  "settings": {
+    "logic": "hybridglitches",
+    "mode": "inverted",
+    "shuffle": "crossed"
+  },
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  },
+  "verifications": []
+}

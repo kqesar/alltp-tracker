@@ -18,13 +18,16 @@
 // with DR's exact name, its dungeon, its region, and the bit of DR's base
 // patch that says it was collected (src/door-rando/locations.ts reads it);
 // src/door-rando/world/, DR's regions, doors and connection tables
-// (dr-world-data.mjs) and its rules in the engine's language (dr-rules.mjs). Never edit those files by hand: run this script again.
+// (dr-world-data.mjs) and its rules in the engine's language (dr-rules.mjs);
+// test/dr-upstream/, its own tests and customizer seeds (dr-tests.mjs). Never edit those files by hand: run this script again.
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { constant, member, readSprites } from "./dr-enemies.mjs";
 import { importDrRules } from "./dr-rules.mjs";
+import { harnessFile, importDrTests, SUITES } from "./dr-tests.mjs";
 import { importDrWorld } from "./dr-world-data.mjs";
 import { readCommit } from "./import-upstream-tests.mjs";
 import { assigned, expression, literal, tokens } from "./python.mjs";
@@ -554,6 +557,80 @@ function main(args) {
       upstream,
     },
     { ...tables, crystal, unported },
+  );
+  // Stage C: DR's own tests, with the harness upstream restored them by
+  const pack = resolve(HERE, "..");
+  const manifest = JSON.parse(
+    readFileSync(join(pack, "upstream.json"), "utf8"),
+  );
+  const harnessCommit = manifest.doorRandomizer.testHarness.commit;
+  /** @param {string} dir @param {RegExp} pattern */
+  const filesIn = (dir, pattern) =>
+    readdirSync(join(checkout, dir), { recursive: true })
+      .map(String)
+      .filter((name) => pattern.test(name))
+      .sort();
+  const tests = importDrTests(
+    read,
+    (file) => harnessFile(checkout, harnessCommit, file),
+    harnessCommit,
+    {
+      suite: filesIn("test/suite", /\.yaml$/),
+      tests: Object.fromEntries(
+        Object.entries(SUITES).map(([suite, base]) => [
+          suite,
+          filesIn(`test/${suite}`, /^Test\w+\.py$/).filter(
+            (name) => name !== `${base}.py`,
+          ),
+        ]),
+      ),
+    },
+  );
+  const harnessUpstream = {
+    ...upstream,
+    harness: {
+      branch: manifest.doorRandomizer.testHarness.branch,
+      commit: harnessCommit,
+    },
+  };
+  const out = join(pack, "test/dr-upstream");
+  /** @type {[string, unknown][]} */
+  const fixtures = [
+    ...tests.fixtures.map(
+      (fixture) =>
+        /** @type {[string, unknown]} */ ([
+          join(out, fixture.suite, `${basename(fixture.file, ".py")}.json`),
+          { generated, upstream: harnessUpstream, ...fixture },
+        ]),
+    ),
+    [
+      join(out, "pool.json"),
+      { generated, upstream: harnessUpstream, ...tests.pool },
+    ],
+    ...tests.suite.map(
+      (seed) =>
+        /** @type {[string, unknown]} */ ([
+          join(
+            out,
+            "suite",
+            seed.file.replace(/^test\/suite\//, "").replace(/\.yaml$/, ".json"),
+          ),
+          { generated, upstream, ...seed },
+        ]),
+    ),
+  ];
+  for (const [file, data] of fixtures) {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, `${JSON.stringify(data, null, 1)}\n`);
+  }
+  // As the repository checks them: keys sorted, Biome's format
+  execFileSync(join(pack, "../../node_modules/.bin/biome"), [
+    "check",
+    "--write",
+    ...fixtures.map(([file]) => file),
+  ]);
+  process.stdout.write(
+    `tests: ${tests.fixtures.length} files, ${tests.fixtures.reduce((n, f) => n + f.tests.reduce((m, t) => m + /** @type {unknown[]} */ (t.cases).length, 0), 0)} cases; ${tests.suite.length} suite seeds\n`,
   );
   process.stdout.write(
     `rules: ${Object.keys(tables.entrances).length} entrances, ${Object.keys(tables.locations).length} locations, ${Object.keys(tables.helpers).length} helpers, ${unported.length} unported\n`,

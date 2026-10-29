@@ -1,0 +1,77 @@
+{
+  "file": "test/dungeons/TestEasternPalace.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "open",
+    "source": "test/dungeons/TestDungeon.py:31@626691a",
+    "startingRegions": {
+      "Agahnims Tower": ["Agahnims Tower Portal"],
+      "Desert Palace Main (Inner)": ["Desert South Portal"],
+      "Desert Palace Main (Outer)": [
+        "Desert West Portal",
+        "Desert East Portal"
+      ],
+      "Desert Palace North": ["Desert Back Portal"],
+      "Eastern Palace": ["Eastern Portal"],
+      "Ganons Tower (Entrance)": ["Ganons Tower Portal"],
+      "Ice Palace (Entrance)": ["Ice Portal"],
+      "Misery Mire (Entrance)": ["Mire Portal"],
+      "Palace of Darkness (Entrance)": ["Palace of Darkness Portal"],
+      "Skull Woods Final Section (Entrance)": ["Skull 3 Portal"],
+      "Skull Woods First Section": ["Skull 1 Portal", "Skull Pinball"],
+      "Skull Woods First Section (Left)": ["Skull Left Drop"],
+      "Skull Woods First Section (Top)": ["Skull Pot Circle"],
+      "Skull Woods Second Section": [
+        "Skull 2 East Portal",
+        "Skull 2 West Portal",
+        "Skull Back Drop"
+      ],
+      "Swamp Palace (Entrance)": ["Swamp Portal"],
+      "Thieves Town (Entrance)": ["Thieves Town Portal"],
+      "Tower of Hera (Bottom)": ["Hera Portal"]
+    },
+    "suite": "dungeons"
+  },
+  "suite": "dungeons",
+  "tests": [
+    {
+      "cases": [
+        ["Eastern Palace - Compass Chest", true, []],
+        ["Eastern Palace - Cannonball Chest", true, []],
+        ["Eastern Palace - Big Chest", false, []],
+        ["Eastern Palace - Big Chest", false, [], ["Big Key (Eastern Palace)"]],
+        ["Eastern Palace - Big Chest", true, ["Big Key (Eastern Palace)"]],
+        ["Eastern Palace - Map Chest", true, []],
+        ["Eastern Palace - Big Key Chest", false, []],
+        ["Eastern Palace - Big Key Chest", false, [], ["Lamp"]],
+        ["Eastern Palace - Big Key Chest", true, ["Lamp"]],
+        ["Eastern Palace - Boss", false, []],
+        ["Eastern Palace - Boss", false, [], ["Lamp"]],
+        ["Eastern Palace - Boss", false, [], ["Progressive Bow"]],
+        ["Eastern Palace - Boss", false, [], ["Big Key (Eastern Palace)"]],
+        [
+          "Eastern Palace - Boss",
+          true,
+          ["Lamp", "Progressive Bow", "Big Key (Eastern Palace)"]
+        ]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testEastern",
+      "startingRegions": ["Eastern Palace"]
+    }
+  ],
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "harness": {
+      "branch": "DoorDevUnstable",
+      "commit": "626691a94b718ebe25bb7d3d2c2a46574f05160c"
+    },
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  }
+}

@@ -16,6 +16,248 @@
       "version": "0.8.0.0"
     },
     "repo": "aerinon/ALttPDoorRandomizer",
+    "testHarness": {
+      "branch": "DoorDevUnstable",
+      "commit": "626691a94b718ebe25bb7d3d2c2a46574f05160c",
+      "why": "test: restore the unit test suite: the harness only (build_vanilla_world, STARTING_REGION_MAP); the cases are read at 1.5.6"
+    },
+    "tests": [
+      {
+        "file": "test/dungeons/TestAgahnimsTower.py",
+        "fixture": "test/dr-upstream/dungeons/TestAgahnimsTower.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/dungeons/TestDarkPalace.py",
+        "fixture": "test/dr-upstream/dungeons/TestDarkPalace.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/dungeons/TestDesertPalace.py",
+        "fixture": "test/dr-upstream/dungeons/TestDesertPalace.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/dungeons/TestEasternPalace.py",
+        "fixture": "test/dr-upstream/dungeons/TestEasternPalace.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/dungeons/TestGanonsTower.py",
+        "fixture": "test/dr-upstream/dungeons/TestGanonsTower.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/dungeons/TestIcePalace.py",
+        "fixture": "test/dr-upstream/dungeons/TestIcePalace.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/dungeons/TestMiseryMire.py",
+        "fixture": "test/dr-upstream/dungeons/TestMiseryMire.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/dungeons/TestSkullWoods.py",
+        "fixture": "test/dr-upstream/dungeons/TestSkullWoods.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/dungeons/TestSwampPalace.py",
+        "fixture": "test/dr-upstream/dungeons/TestSwampPalace.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/dungeons/TestThievesTown.py",
+        "fixture": "test/dr-upstream/dungeons/TestThievesTown.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/dungeons/TestTowerOfHera.py",
+        "fixture": "test/dr-upstream/dungeons/TestTowerOfHera.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/inverted/TestInvertedBombRules.py",
+        "fixture": "test/dr-upstream/inverted/TestInvertedBombRules.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/inverted/TestInvertedDarkWorld.py",
+        "fixture": "test/dr-upstream/inverted/TestInvertedDarkWorld.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/inverted/TestInvertedDeathMountain.py",
+        "fixture": "test/dr-upstream/inverted/TestInvertedDeathMountain.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/inverted/TestInvertedEntrances.py",
+        "fixture": "test/dr-upstream/inverted/TestInvertedEntrances.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/inverted/TestInvertedLightWorld.py",
+        "fixture": "test/dr-upstream/inverted/TestInvertedLightWorld.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/inverted/TestInvertedTurtleRock.py",
+        "fixture": "test/dr-upstream/inverted/TestInvertedTurtleRock.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/inverted_owg/TestDarkWorld.py",
+        "fixture": "test/dr-upstream/inverted_owg/TestDarkWorld.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/inverted_owg/TestDeathMountain.py",
+        "fixture": "test/dr-upstream/inverted_owg/TestDeathMountain.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/inverted_owg/TestDungeons.py",
+        "fixture": "test/dr-upstream/inverted_owg/TestDungeons.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/inverted_owg/TestLightWorld.py",
+        "fixture": "test/dr-upstream/inverted_owg/TestLightWorld.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/owg/TestDarkWorld.py",
+        "fixture": "test/dr-upstream/owg/TestDarkWorld.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/owg/TestDeathMountain.py",
+        "fixture": "test/dr-upstream/owg/TestDeathMountain.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/owg/TestDungeons.py",
+        "fixture": "test/dr-upstream/owg/TestDungeons.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/owg/TestLightWorld.py",
+        "fixture": "test/dr-upstream/owg/TestLightWorld.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/default_key_logic.yaml",
+        "fixture": "test/dr-upstream/suite/default_key_logic.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/enemy_logic/lynel_test.yaml",
+        "fixture": "test/dr-upstream/suite/enemy_logic/lynel_test.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/entrance_bunny_pocket_sw.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/entrance_bunny_pocket_sw.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/fireless_ice.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/fireless_ice.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/flippers_locked_flippers.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/flippers_locked_flippers.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/flippers_wraps.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/flippers_wraps.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/hera_from_mire.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/hera_from_mire.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/inverted_inaccessible_desert.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/inverted_inaccessible_desert.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/inverted_moon_pearl_locs.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/inverted_moon_pearl_locs.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/moon_pearl_locs.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/moon_pearl_locs.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/no_east_dw_from_kikiskip.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/no_east_dw_from_kikiskip.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/pearlless_sw.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/pearlless_sw.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/pod_mp.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/pod_mp.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/hmg/swamp_from_mire.yaml",
+        "fixture": "test/dr-upstream/suite/hmg/swamp_from_mire.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/partial_key_logic.yaml",
+        "fixture": "test/dr-upstream/suite/partial_key_logic.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/partial_key_logic_2.yaml",
+        "fixture": "test/dr-upstream/suite/partial_key_logic_2.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/partial_key_logic_3.yaml",
+        "fixture": "test/dr-upstream/suite/partial_key_logic_3.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/suite/strict_key_logic.yaml",
+        "fixture": "test/dr-upstream/suite/strict_key_logic.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/vanilla/TestDarkWorld.py",
+        "fixture": "test/dr-upstream/vanilla/TestDarkWorld.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/vanilla/TestDeathMountain.py",
+        "fixture": "test/dr-upstream/vanilla/TestDeathMountain.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/vanilla/TestEntrances.py",
+        "fixture": "test/dr-upstream/vanilla/TestEntrances.json",
+        "status": "pending"
+      },
+      {
+        "file": "test/vanilla/TestLightWorld.py",
+        "fixture": "test/dr-upstream/vanilla/TestLightWorld.json",
+        "status": "pending"
+      }
+    ],
     "version": "1.5.6"
   },
   "entranceRandomizer": {

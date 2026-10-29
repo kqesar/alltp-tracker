@@ -1,0 +1,124 @@
+{
+  "file": "test/dungeons/TestThievesTown.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "open",
+    "source": "test/dungeons/TestDungeon.py:31@626691a",
+    "startingRegions": {
+      "Agahnims Tower": ["Agahnims Tower Portal"],
+      "Desert Palace Main (Inner)": ["Desert South Portal"],
+      "Desert Palace Main (Outer)": [
+        "Desert West Portal",
+        "Desert East Portal"
+      ],
+      "Desert Palace North": ["Desert Back Portal"],
+      "Eastern Palace": ["Eastern Portal"],
+      "Ganons Tower (Entrance)": ["Ganons Tower Portal"],
+      "Ice Palace (Entrance)": ["Ice Portal"],
+      "Misery Mire (Entrance)": ["Mire Portal"],
+      "Palace of Darkness (Entrance)": ["Palace of Darkness Portal"],
+      "Skull Woods Final Section (Entrance)": ["Skull 3 Portal"],
+      "Skull Woods First Section": ["Skull 1 Portal", "Skull Pinball"],
+      "Skull Woods First Section (Left)": ["Skull Left Drop"],
+      "Skull Woods First Section (Top)": ["Skull Pot Circle"],
+      "Skull Woods Second Section": [
+        "Skull 2 East Portal",
+        "Skull 2 West Portal",
+        "Skull Back Drop"
+      ],
+      "Swamp Palace (Entrance)": ["Swamp Portal"],
+      "Thieves Town (Entrance)": ["Thieves Town Portal"],
+      "Tower of Hera (Bottom)": ["Hera Portal"]
+    },
+    "suite": "dungeons"
+  },
+  "suite": "dungeons",
+  "tests": [
+    {
+      "cases": [
+        ["Thieves' Town - Attic", false, []],
+        ["Thieves' Town - Attic", false, [], ["Big Key (Thieves Town)"]],
+        ["Thieves' Town - Attic", false, [], ["Small Key (Thieves Town)"]],
+        [
+          "Thieves' Town - Attic",
+          true,
+          ["Big Key (Thieves Town)", "Small Key (Thieves Town)"]
+        ],
+        ["Thieves' Town - Big Key Chest", true, []],
+        ["Thieves' Town - Map Chest", true, []],
+        ["Thieves' Town - Compass Chest", true, []],
+        ["Thieves' Town - Ambush Chest", true, []],
+        ["Thieves' Town - Big Chest", false, []],
+        ["Thieves' Town - Big Chest", false, [], ["Big Key (Thieves Town)"]],
+        ["Thieves' Town - Big Chest", false, [], ["Small Key (Thieves Town)"]],
+        ["Thieves' Town - Big Chest", false, [], ["Hammer"]],
+        [
+          "Thieves' Town - Big Chest",
+          true,
+          ["Hammer", "Small Key (Thieves Town)", "Big Key (Thieves Town)"]
+        ],
+        ["Thieves' Town - Blind's Cell", false, []],
+        ["Thieves' Town - Blind's Cell", false, [], ["Big Key (Thieves Town)"]],
+        ["Thieves' Town - Blind's Cell", true, ["Big Key (Thieves Town)"]],
+        ["Thieves' Town - Boss", false, []],
+        ["Thieves' Town - Boss", false, [], ["Big Key (Thieves Town)"]],
+        ["Thieves' Town - Boss", false, [], ["Small Key (Thieves Town)"]],
+        [
+          "Thieves' Town - Boss",
+          false,
+          [],
+          ["Hammer", "Progressive Sword", "Cane of Somaria", "Cane of Byrna"]
+        ],
+        [
+          "Thieves' Town - Boss",
+          true,
+          ["Small Key (Thieves Town)", "Big Key (Thieves Town)", "Hammer"]
+        ],
+        [
+          "Thieves' Town - Boss",
+          true,
+          [
+            "Small Key (Thieves Town)",
+            "Big Key (Thieves Town)",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Thieves' Town - Boss",
+          true,
+          [
+            "Small Key (Thieves Town)",
+            "Big Key (Thieves Town)",
+            "Cane of Somaria"
+          ]
+        ],
+        [
+          "Thieves' Town - Boss",
+          true,
+          [
+            "Small Key (Thieves Town)",
+            "Big Key (Thieves Town)",
+            "Cane of Byrna"
+          ]
+        ]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testThievesTown",
+      "startingRegions": ["Thieves Town (Entrance)"]
+    }
+  ],
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "harness": {
+      "branch": "DoorDevUnstable",
+      "commit": "626691a94b718ebe25bb7d3d2c2a46574f05160c"
+    },
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  }
+}

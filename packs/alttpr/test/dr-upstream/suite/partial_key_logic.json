@@ -1,0 +1,33 @@
+{
+  "file": "test/suite/partial_key_logic.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {
+    "Hobo": "Lamp",
+    "Waterfall Fairy - Left": "Small Key (Misery Mire)"
+  },
+  "settings": {
+    "key_logic_algorithm": "partial",
+    "keysanity": true
+  },
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  },
+  "verifications": [
+    {
+      "item": "Flippers",
+      "locations": {
+        "Misery Mire - Big Key Chest": false,
+        "Misery Mire - Boss": false,
+        "Misery Mire - Bridge Chest": true,
+        "Misery Mire - Compass Chest": false,
+        "Misery Mire - Main Lobby": true,
+        "Misery Mire - Map Chest": true,
+        "Misery Mire - Spike Chest": true
+      },
+      "type": "Verification"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "file": "test/suite/hmg/flippers_locked_flippers.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {},
+  "settings": {
+    "logic": "hybridglitches"
+  },
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  },
+  "verifications": [
+    {
+      "item": "Flippers",
+      "locations": {
+        "Hobo": true,
+        "Ice Palace - Boss": true,
+        "Swamp Palace - Entrance": false,
+        "Zora's Ledge": true
+      },
+      "type": "Verification"
+    }
+  ]
+}

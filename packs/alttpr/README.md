@@ -967,9 +967,9 @@ About half of the alttpr races of 2025-2026 ran on seeds of aerinon's Door
 Randomizer (DR) or its Overworld fork (OWR), most with the doors vanilla
 (the study of 2026-10-29). The pack reads them in phases; this one holds
 the vanilla-door part: the ROMs, their settings, and the locations DR adds.
-Its logic is the next step: DR's own dungeon logic (`Rules.py`,
-`KeyDoorShuffle.py`) and its tests (about 2,400 cases, all vanilla doors)
-are not ported yet.
+Its logic is under way: DR's world, rules, enemy logic and tests are
+imported as data (below); the world built from them, its key logic
+(`KeyDoorShuffle.py`) and the contract with its tests are the next steps.
 
 **Sources, read as data and never run** (`upstream.json`, `doorRandomizer`):
 DR 1.5.6 (`4da73127`, the version Hyrule Town Hall and SahasrahBot ran for
@@ -1064,6 +1064,22 @@ vanilla rooms); an enemy whose health depends on the world it is in reads the
 region's side through derived settings (`lightWorld_<region>`,
 `darkWorld_<region>`). As DR 1.5.6 computes it, Ganon's Tower's tile room
 chest needs the powder (its anti-fairy).
+
+**Its own tests** (`test/dr-upstream/`, the same run, `packs/alttpr/scripts/dr-tests.mjs`): the
+unit tests DR kept from the entrance randomizer, re-aimed at its world, as
+fixtures: `vanilla` (573 cases, 112 of entrances), `inverted` (852, 97 of
+entrances, Turtle Rock's 186 disabled by a `return`), `dungeons` (483),
+`owg` (558) and `inverted_owg` (432), each test with its kind, its starting
+regions and whether it is disabled; a test of no case list
+(`TestInvertedBombRules`) is kept as code. At 1.5.6 their setUps no longer
+run; upstream restored them on DoorDevUnstable (`626691a`, pinned in
+`upstream.json` as `doorRandomizer.testHarness`), changing the harness
+only, so the harness is read there (`git show`: the world each suite
+builds, the dungeon tests' `STARTING_REGION_MAP`) and the cases at the
+release. `pool.json` is the pool an "everything but" case draws from, from
+`ItemList.py`'s lists and the harness's prizes, cited; `suite/` holds the
+customizer seeds' Verification checks. Every file is listed `pending` in
+`upstream.json` until DR's world is held to it (`test/dr-fixtures.spec.ts`).
 
 **Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
 `RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,

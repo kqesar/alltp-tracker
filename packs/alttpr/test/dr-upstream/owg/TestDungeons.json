@@ -1,0 +1,374 @@
+{
+  "file": "test/owg/TestDungeons.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [
+      "self.world.precollected_items.clear()",
+      "self.world.itempool.append(ItemFactory('Pegasus Boots', 1))"
+    ],
+    "keyLogic": "partial",
+    "logic": "owglitches",
+    "mode": "open",
+    "source": "test/owg/TestVanillaOWG.py:6@626691a",
+    "suite": "owg"
+  },
+  "suite": "owg",
+  "tests": [
+    {
+      "cases": [
+        ["Hyrule Castle - Map Chest", true, []],
+        ["Sanctuary", true, []],
+        ["Sewers - Secret Room - Left", false, []],
+        ["Sewers - Secret Room - Left", true, ["Progressive Glove"]],
+        ["Sewers - Secret Room - Left", true, ["Lamp", "Small Key (Escape)"]],
+        ["Eastern Palace - Compass Chest", true, []],
+        ["Desert Palace - Map Chest", false, []],
+        ["Desert Palace - Map Chest", true, ["Pegasus Boots"]],
+        ["Desert Palace - Map Chest", true, ["Book of Mudora"]],
+        [
+          "Desert Palace - Map Chest",
+          true,
+          ["Ocarina", "Progressive Glove", "Progressive Glove", "Magic Mirror"]
+        ],
+        ["Desert Palace - Boss", false, []],
+        ["Desert Palace - Boss", false, [], ["Small Key (Desert Palace)"]],
+        ["Desert Palace - Boss", false, [], ["Big Key (Desert Palace)"]],
+        ["Desert Palace - Boss", false, [], ["Lamp", "Fire Rod"]],
+        [
+          "Desert Palace - Boss",
+          true,
+          [
+            "Progressive Sword",
+            "Small Key (Desert Palace)",
+            "Pegasus Boots",
+            "Lamp",
+            "Big Key (Desert Palace)"
+          ]
+        ],
+        [
+          "Desert Palace - Boss",
+          true,
+          [
+            "Small Key (Desert Palace)",
+            "Pegasus Boots",
+            "Fire Rod",
+            "Big Key (Desert Palace)"
+          ]
+        ],
+        ["Tower of Hera - Basement Cage", false, []],
+        [
+          "Tower of Hera - Basement Cage",
+          false,
+          [],
+          ["Pegasus Boots", "Ocarina", "Progressive Glove"]
+        ],
+        [
+          "Tower of Hera - Basement Cage",
+          false,
+          [],
+          ["Pegasus Boots", "Ocarina", "Lamp"]
+        ],
+        [
+          "Tower of Hera - Basement Cage",
+          false,
+          [],
+          ["Pegasus Boots", "Magic Mirror", "Hammer"]
+        ],
+        [
+          "Tower of Hera - Basement Cage",
+          false,
+          [],
+          ["Pegasus Boots", "Magic Mirror", "Hookshot"]
+        ],
+        ["Tower of Hera - Basement Cage", true, ["Pegasus Boots"]],
+        ["Tower of Hera - Basement Cage", true, ["Ocarina", "Magic Mirror"]],
+        [
+          "Tower of Hera - Basement Cage",
+          true,
+          ["Progressive Glove", "Lamp", "Magic Mirror"]
+        ],
+        [
+          "Tower of Hera - Basement Cage",
+          true,
+          ["Ocarina", "Hookshot", "Hammer"]
+        ],
+        [
+          "Tower of Hera - Basement Cage",
+          true,
+          ["Progressive Glove", "Lamp", "Magic Mirror"]
+        ],
+        ["Castle Tower - Room 03", false, []],
+        [
+          "Castle Tower - Room 03",
+          false,
+          ["Progressive Sword"],
+          ["Progressive Sword", "Cape", "Beat Agahnim 1"]
+        ],
+        [
+          "Castle Tower - Room 03",
+          false,
+          [],
+          [
+            "Progressive Sword",
+            "Hammer",
+            "Progressive Bow",
+            "Fire Rod",
+            "Ice Rod",
+            "Cane of Somaria",
+            "Cane of Byrna"
+          ]
+        ],
+        [
+          "Castle Tower - Room 03",
+          true,
+          ["Progressive Sword", "Progressive Sword"]
+        ],
+        ["Castle Tower - Room 03", true, ["Cape", "Progressive Bow"]],
+        ["Castle Tower - Room 03", true, ["Beat Agahnim 1", "Fire Rod"]],
+        ["Palace of Darkness - Shooter Room", false, []],
+        ["Palace of Darkness - Shooter Room", false, [], ["Moon Pearl"]],
+        [
+          "Palace of Darkness - Shooter Room",
+          true,
+          ["Moon Pearl", "Pegasus Boots"]
+        ],
+        [
+          "Palace of Darkness - Shooter Room",
+          true,
+          ["Moon Pearl", "Beat Agahnim 1"]
+        ],
+        [
+          "Palace of Darkness - Shooter Room",
+          true,
+          ["Moon Pearl", "Hammer", "Progressive Glove"]
+        ],
+        [
+          "Palace of Darkness - Shooter Room",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove", "Flippers"]
+        ],
+        ["Swamp Palace - Entrance", false, []],
+        ["Swamp Palace - Entrance", false, [], ["Magic Mirror"]],
+        ["Swamp Palace - Entrance", false, [], ["Moon Pearl"]],
+        ["Swamp Palace - Entrance", false, [], ["Flippers"]],
+        [
+          "Swamp Palace - Entrance",
+          true,
+          ["Magic Mirror", "Moon Pearl", "Flippers", "Pegasus Boots"]
+        ],
+        [
+          "Swamp Palace - Entrance",
+          true,
+          ["Magic Mirror", "Moon Pearl", "Flippers", "Ocarina"]
+        ],
+        [
+          "Swamp Palace - Entrance",
+          true,
+          [
+            "Magic Mirror",
+            "Moon Pearl",
+            "Flippers",
+            "Hammer",
+            "Progressive Glove"
+          ]
+        ],
+        [
+          "Swamp Palace - Entrance",
+          true,
+          [
+            "Magic Mirror",
+            "Moon Pearl",
+            "Flippers",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Skull Woods - Compass Chest", false, []],
+        [
+          "Skull Woods - Compass Chest",
+          true,
+          ["Magic Mirror", "Pegasus Boots"]
+        ],
+        ["Skull Woods - Compass Chest", true, ["Moon Pearl", "Pegasus Boots"]],
+        ["Skull Woods - Big Chest", false, []],
+        ["Skull Woods - Big Chest", false, [], ["Big Key (Skull Woods)"]],
+        [
+          "Skull Woods - Big Chest",
+          true,
+          ["Moon Pearl", "Pegasus Boots", "Big Key (Skull Woods)"]
+        ],
+        ["Skull Woods - Big Key Chest", false, []],
+        [
+          "Skull Woods - Big Key Chest",
+          true,
+          ["Magic Mirror", "Pegasus Boots"]
+        ],
+        ["Skull Woods - Big Key Chest", true, ["Moon Pearl", "Pegasus Boots"]],
+        ["Skull Woods - Bridge Room", false, []],
+        ["Skull Woods - Bridge Room", false, [], ["Moon Pearl"]],
+        ["Skull Woods - Bridge Room", false, [], ["Fire Rod"]],
+        [
+          "Skull Woods - Bridge Room",
+          true,
+          ["Moon Pearl", "Pegasus Boots", "Fire Rod"]
+        ],
+        ["Thieves' Town - Map Chest", false, []],
+        ["Thieves' Town - Map Chest", false, [], ["Moon Pearl"]],
+        ["Thieves' Town - Map Chest", true, ["Moon Pearl", "Pegasus Boots"]],
+        ["Ice Palace - Compass Chest", false, []],
+        ["Ice Palace - Compass Chest", false, [], ["Fire Rod", "Bombos"]],
+        [
+          "Ice Palace - Compass Chest",
+          false,
+          [],
+          ["Fire Rod", "Progressive Sword"]
+        ],
+        [
+          "Ice Palace - Compass Chest",
+          false,
+          ["Progressive Glove"],
+          ["Progressive Glove"]
+        ],
+        [
+          "Ice Palace - Compass Chest",
+          true,
+          ["Progressive Glove", "Progressive Glove", "Fire Rod"]
+        ],
+        [
+          "Ice Palace - Compass Chest",
+          true,
+          [
+            "Progressive Glove",
+            "Progressive Glove",
+            "Bombos",
+            "Progressive Sword"
+          ]
+        ],
+        ["Misery Mire - Bridge Chest", false, []],
+        ["Misery Mire - Bridge Chest", false, [], ["Moon Pearl"]],
+        ["Misery Mire - Bridge Chest", false, [], ["Ether"]],
+        ["Misery Mire - Bridge Chest", false, [], ["Progressive Sword"]],
+        [
+          "Misery Mire - Bridge Chest",
+          true,
+          ["Moon Pearl", "Pegasus Boots", "Ether", "Progressive Sword"]
+        ],
+        ["Turtle Rock - Compass Chest", false, []],
+        ["Turtle Rock - Compass Chest", false, [], ["Cane of Somaria"]],
+        [
+          "Turtle Rock - Compass Chest",
+          true,
+          [
+            "Moon Pearl",
+            "Pegasus Boots",
+            "Cane of Somaria",
+            "Small Key (Turtle Rock)",
+            "Small Key (Turtle Rock)",
+            "Small Key (Turtle Rock)",
+            "Small Key (Turtle Rock)",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Turtle Rock - Compass Chest",
+          true,
+          [
+            "Moon Pearl",
+            "Pegasus Boots",
+            "Cane of Somaria",
+            "Progressive Sword",
+            "Quake",
+            "Hammer"
+          ]
+        ],
+        [
+          "Turtle Rock - Compass Chest",
+          true,
+          [
+            "Pegasus Boots",
+            "Magic Mirror",
+            "Hammer",
+            "Cane of Somaria",
+            "Small Key (Turtle Rock)",
+            "Small Key (Turtle Rock)",
+            "Small Key (Turtle Rock)",
+            "Small Key (Turtle Rock)"
+          ]
+        ],
+        ["Turtle Rock - Chain Chomps", false, []],
+        [
+          "Turtle Rock - Chain Chomps",
+          true,
+          ["Moon Pearl", "Pegasus Boots", "Progressive Sword"]
+        ],
+        [
+          "Turtle Rock - Chain Chomps",
+          true,
+          ["Pegasus Boots", "Magic Mirror", "Hammer"]
+        ],
+        [
+          "Turtle Rock - Chain Chomps",
+          true,
+          [
+            "Pegasus Boots",
+            "Magic Mirror",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Turtle Rock - Crystaroller Room", false, []],
+        [
+          "Turtle Rock - Crystaroller Room",
+          false,
+          [],
+          ["Big Key (Turtle Rock)"]
+        ],
+        [
+          "Turtle Rock - Crystaroller Room",
+          true,
+          [
+            "Moon Pearl",
+            "Pegasus Boots",
+            "Big Key (Turtle Rock)",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Turtle Rock - Crystaroller Room",
+          true,
+          ["Moon Pearl", "Pegasus Boots", "Big Key (Turtle Rock)", "Hookshot"]
+        ],
+        [
+          "Turtle Rock - Crystaroller Room",
+          true,
+          ["Pegasus Boots", "Magic Mirror", "Hammer", "Big Key (Turtle Rock)"]
+        ],
+        ["Ganons Tower - Hope Room - Left", false, []],
+        ["Ganons Tower - Hope Room - Left", false, ["Moon Pearl", "Crystal 1"]],
+        [
+          "Ganons Tower - Hope Room - Left",
+          false,
+          ["Pegasus Boots", "Crystal 1"]
+        ],
+        [
+          "Ganons Tower - Hope Room - Left",
+          true,
+          ["Moon Pearl", "Pegasus Boots"]
+        ]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testFirstDungeonChests"
+    }
+  ],
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "harness": {
+      "branch": "DoorDevUnstable",
+      "commit": "626691a94b718ebe25bb7d3d2c2a46574f05160c"
+    },
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  }
+}

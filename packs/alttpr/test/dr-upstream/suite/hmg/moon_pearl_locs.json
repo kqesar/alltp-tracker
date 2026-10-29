@@ -1,0 +1,45 @@
+{
+  "file": "test/suite/hmg/moon_pearl_locs.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {},
+  "settings": {
+    "logic": "hybridglitches",
+    "shuffle": "vanilla"
+  },
+  "upstream": {
+    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.6"
+  },
+  "verifications": [
+    {
+      "item": "Moon Pearl",
+      "locations": {
+        "Bombos Tablet": true,
+        "C-Shaped House": true,
+        "Palace of Darkness - Big Chest": true,
+        "Palace of Darkness - Big Key Chest": true,
+        "Palace of Darkness - Boss": true,
+        "Palace of Darkness - Compass Chest": true,
+        "Palace of Darkness - Dark Basement - Left": true,
+        "Palace of Darkness - Dark Basement - Right": true,
+        "Palace of Darkness - Dark Maze - Bottom": true,
+        "Palace of Darkness - Dark Maze - Top": true,
+        "Palace of Darkness - Harmless Hellway": true,
+        "Palace of Darkness - Map Chest": true,
+        "Palace of Darkness - Shooter Room": true,
+        "Palace of Darkness - Stalfos Basement": true,
+        "Palace of Darkness - The Arena - Bridge": true,
+        "Palace of Darkness - The Arena - Ledge": true,
+        "Pyramid Fairy - Left": true,
+        "Skull Woods - Bridge Room": true,
+        "Skull Woods - Compass Chest": true,
+        "Swamp Palace - Boss": false,
+        "Swamp Palace - Entrance": false,
+        "Thieves' Town - Map Chest": false
+      },
+      "type": "Verification"
+    }
+  ]
+}
