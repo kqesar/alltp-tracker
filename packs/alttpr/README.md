@@ -1742,7 +1742,8 @@ see the Triforce pieces above).
 ## Spoiler logs
 
 `parseSpoiler(text, fileName)` (`src/spoiler/parse.ts`) reads the spoiler log
-alttpr.com lets a player save, into `@alltp/spoiler`'s `SpoilerLog` (its
+alttpr.com lets a player save, or a Door Randomizer log
+([below](#the-door-randomizers-logs)), into `@alltp/spoiler`'s `SpoilerLog` (its
 README is the model's design doc). It is pure and never throws on the file:
 a reason not to show it is a refusal with one of that package's codes. The
 review that uses it (a finished run, Race Mode off) lives in the app; this
@@ -1839,15 +1840,26 @@ adapter pairs each with the run's value of the same name.
   before it are the key. The importer stops at a code that matches no item or
   two.
 
-Both are written, never edited, by
+- `src/spoiler/dr-items.json`: the Door Randomizer's item name -> vt class, or
+  null for an event, joined on the code the same way. DR's `item_table` puts a
+  price after the code, writes an event as type `Event` with code 999 and adds a
+  dungeon byte after a prize's sprite bytes (DR 1.5.6 `Items.py:23-194`), which
+  is dropped before keying. A code no vt class has (`Big Magic`, `Fairy`, `Bee
+  Trap`, `Chicken`: what DR's pots and enemies drop) goes to `unmatched`, read as
+  an item with no pack item, shown by name; so does `Arrows (5)`, which shares
+  0x5A with `Nothing` (only the name vt's English table gives a shared class
+  keeps it).
+
+All three are written, never edited, by
 
 ```sh
-pnpm --filter @alltp/pack-alttpr import-item-names --vt <vt-checkout> --er <er-checkout>
+pnpm --filter @alltp/pack-alttpr import-item-names --vt <vt-checkout> --er <er-checkout> --dr <dr-checkout>
 ```
 
-at the commits `upstream.json` pins (`entranceRandomizer.spoilerItems` names
-the second; the first reads the two files the manifest already lists, so the
-weekly drift workflow watches them). A checkout is read, never run.
+at the commits `upstream.json` pins (`entranceRandomizer.spoilerItems` and
+`doorRandomizer.spoilerItems` name the second and third; the first reads the two
+files the manifest already lists, so the weekly drift workflow watches them). A
+checkout is read, never run.
 
 ### Fixtures
 
@@ -1869,3 +1881,71 @@ The script refuses a file whose `meta` carries `notes`, free text a player
 wrote; the files hold seed data, item names and a public daily's title, no
 personal data. Spoiler-race, multiworld, shuffled-boss and malformed variants
 are made in the specs by editing a fixture's parsed document, never stored.
+
+### The Door Randomizer's logs
+
+`parseSpoiler` hands a Door Randomizer log (and its Overworld fork's) to
+`src/spoiler/dr.ts`, which reads what DR 1.5.6 writes (`Spoiler`,
+`BaseClasses.py:2497-2985` at the commit `doorRandomizer` pins) in either form:
+
+| | Text (`to_file`) | JSON (`to_json`) |
+| --- | --- | --- |
+| Who hands it out | DR's command line (`DR_<seed>_Spoiler.txt`); SahasrahBot posts it for a spoiler race | DR's `--jsonout`; avianart's Download Spoiler (`alttprcustom - DR__<hash>_Spoiler.txt`, `JSON.stringify(spoiler, null, 4)`) and its permalink API (`{ response: { spoiler, hash } }`) |
+| Told by | its first line, `ALttP Dungeon Randomizer Version <v>  -  Seed: <n>` (`ALttP Overworld Randomizer  -  Seed:` for the fork) | a key only DR writes (`Doors`, `Lobbies`, `DoorTypes`, `Whirlpools`), its file name, or a `meta` with `door_shuffle` or `versions` |
+| Settings | one `Label:   value` line each (`meta_to_file`, `:2746-2840`); `Yes`/`No` are flags, labels matched in lower case since the fork words a few otherwise (OWR 0.8.0.0 `:3328-3453`) | `meta`, each setting keyed by player (`{ "1": "open" }`); avianart's is flat |
+| Locations | one flat `Locations:` list, `name: item` (`area` null) | a section per kind of region and per dungeon (`parse_data`, `:2623-2712`), kept as `area` |
+| Playthrough | `n: { … }` blocks, `0` the starting items | `"0"` a list of the starting items, then `{ location: item }` by sphere (`Main.py:797-799`) |
+
+Both are turned into the JSON's shape (`textDocument` for the text) and read by
+`readLog` with the `DR` shape:
+
+- **Names.** A location is `gen_name()` (`:2325-2334`): its name, ` @ <dungeon>`
+  when the doors are shuffled past basic, ` (<enemy>)` for an enemy's drop
+  (`EnemyList.py:2268-2270`, a key drop's under enemy shuffle,
+  `Regions.py:1177-1178`). The suffixes are dropped only when the whole name is
+  unknown. A name is one of the pack's DR locations (`DR_LOCATIONS`, by its
+  exact name: the key drops, pots, enemy drops and shop items) or the entrance
+  randomizer's (`erLocationId`). Items go through `dr-items.json`; DR prints an
+  item of no world with ` (Player 1)` after it (`Item.__unicode__`), which is
+  dropped. BabelFish translates the text log's names through an English table
+  that is empty (`resources/app/meta/lang/en.json`), so both forms write them
+  alike.
+- **Seed.** DR's ROM title is `DR<3 digits>_<team>_<player>_<seed:09>`, cut to 21
+  bytes (`Rom.py:1453-1455`), and autotracking records what follows the
+  version as the run's seed (`seedRomOf`). `titleSeedOf` writes the log's
+  `meta.seed` (or the first line's) the same way, `1_1_660701088`: that is
+  `log.seed` (`content`). Without it, avianart's hash, from the file's name or
+  the API's wrapper, is the seed (`file-name`): a run started from an avianart
+  link keeps that hash until autotracking reads the ROM.
+- **`extra.door`** (`DoorSpoilerFacts`): the version, whether it is the fork's,
+  the title's seed, avianart's hash and the title screen's code (`Hash: Bow,
+  …`, `hashes_to_file`, `:2842-2867`). The run does not read that code, so it
+  is shown, not compared.
+- **Settings.** `meta` goes through the seed import's `doorMetaReading`, the
+  reading an avianart permalink gets, so a log and a seed started from avianart
+  state the same settings; the requirements' crystals and medallions come from
+  the text's `Requirements:` (`Misery Mire: Quake Medallion`) or the JSON's
+  `Special`.
+- **Refusals.** A multiworld (`players` or `teams` over 1, an item of `Player 2`)
+  is `unsupported`; a log with no placement is `stripped`, `door-race` when its
+  `meta` says race (an avianart permalink of a race seed keeps its `meta`
+  alone), `door-settings` otherwise (DR's `settings` and `semi` spoiler modes
+  list no item); an item `dr-items.json` lacks, or more than four unknown
+  locations (a newer DR, the fork's bonk drops), is `newer-version`.
+
+The JSON's `Entrances`, `Doors`, `Lobbies`, `DoorTypes`, `Bottles`, `paths`
+and the fork's `Overworld`, `Whirlpools` and `Maps`, and the text's sections
+of the same, are not read.
+
+`test/dr-spoilers/` holds DR's own text log of two spoiler races, cut by
+`pnpm --filter @alltp/pack-alttpr record-dr-spoilers` to the header (less the
+`User Notes` a person wrote) and the sections read: `DR_660701088_Spoiler.txt`
+(1.5.6-u, Open, keysanity, vanilla doors) and `DR_278438665_Spoiler.txt`
+(1.5.7-u, keysanity, key drops and key pots). The script finds the log the race
+room's bot posted in its chat log and fetches DR's text beside it;
+`index.json` keeps the race, the address, the day and the whole file's SHA-256.
+Why not avianart: a race seed's permalink keeps the spoiler's `meta` alone
+(`test/dr-seeds/avianart-*.json`, which the specs read as a `stripped` log),
+and every DR permalink of the study is a race seed's. The JSON form is held to
+documents the specs build from those logs in `to_json`'s shape; no real DR
+JSON with placements is stored.

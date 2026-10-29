@@ -9,10 +9,14 @@ import {
   MEDALLIONS,
   parseSpoiler,
 } from "@alltp/pack-alttpr";
+import { checkSeed } from "@/games/alttpr/autotrack/seed";
 import type { ItemState } from "@/games/alttpr/data/items";
+import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import { itemsFromPack } from "@/games/alttpr/logic/packItems";
 import { stampTimeline, type Timeline } from "@/games/alttpr/logic/timeline";
 import type { ReviewedRun } from "@/games/alttpr/review/adapter";
+import doorDrops from "../../../../../../packs/alttpr/test/dr-spoilers/DR_278438665_Spoiler.txt?raw";
+import doorKeysanity from "../../../../../../packs/alttpr/test/dr-spoilers/DR_660701088_Spoiler.txt?raw";
 import entrances from "../../../../../../packs/alttpr/test/spoilers/0yAObedRMV.txt?raw";
 import standard from "../../../../../../packs/alttpr/test/spoilers/6v1ab7qmv7.txt?raw";
 import vt from "../../../../../../packs/alttpr/test/spoilers/9MQ9gO1wMD.txt?raw";
@@ -120,4 +124,64 @@ export const playedRun = (
   medallions[8] = pad(log.extra.medallions.mire);
   medallions[9] = pad(log.extra.medallions.turtleRock);
   return { ...run, checked, items, medallions, timeline };
+};
+
+/**
+ * The Door Randomizer's real spoiler races' logs the pack keeps (packs/alttpr/
+ * test/dr-spoilers/, recorded by its script): keysanity with the doors, pots
+ * and drops vanilla, and key drops and key pots shuffled.
+ */
+export type DoorFixture = "660701088" | "278438665";
+
+const DOOR_TEXTS: Readonly<Record<DoorFixture, string>> = {
+  "278438665": doorDrops,
+  "660701088": doorKeysanity,
+};
+
+/** The name DR writes the file under. */
+export const doorSpoilerName = (seed: DoorFixture): string =>
+  `DR_${seed}_Spoiler.txt`;
+
+/** The file as DR writes it. */
+export const doorSpoilerText = (seed: DoorFixture): string => DOOR_TEXTS[seed];
+
+/** The DR file the player would pick. */
+export const doorSpoilerFile = (
+  seed: DoorFixture,
+  text = DOOR_TEXTS[seed],
+): File => new File([text], doorSpoilerName(seed), { type: "text/plain" });
+
+/** The DR log, parsed. */
+export const doorSpoilerLog = (
+  seed: DoorFixture,
+  text = DOOR_TEXTS[seed],
+): AlttprSpoilerLog => {
+  const result = parseSpoiler(text, doorSpoilerName(seed));
+  if (!result.ok) throw new Error(`fixture ${seed}: ${result.error}`);
+  return result.value;
+};
+
+/**
+ * The run type and seed a DR log's own run holds, as the seed import lays
+ * them on the Door Randomizer run type (the log's settings; its seed as the
+ * ROM's title names it, which autotracking records).
+ */
+export const doorRunOf = (
+  log: AlttprSpoilerLog,
+): { presetId: string; seed: string; settings: RunSettings } => {
+  const preset = getPreset("door-randomizer");
+  const { settings } = log.extra;
+  if (settings === null) throw new Error(`fixture ${log.seed.id}: no settings`);
+  const check = checkSeed(
+    { ...settings, seed: log.seed.id },
+    { presetId: preset.id, settings: preset.settings },
+  );
+  if (check.kind !== "differs" && check.kind !== "same") {
+    throw new Error(`fixture ${log.seed.id}: ${check.kind}`);
+  }
+  return {
+    presetId: check.kind === "same" ? preset.id : check.presetId,
+    seed: log.seed.id ?? "",
+    settings: check.kind === "same" ? preset.settings : check.settings,
+  };
 };

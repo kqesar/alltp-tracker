@@ -16,6 +16,7 @@
       "version": "0.8.0.0"
     },
     "repo": "aerinon/ALttPDoorRandomizer",
+    "spoilerItems": "src/spoiler/dr-items.json",
     "testHarness": {
       "branch": "DoorDevUnstable",
       "commit": "626691a94b718ebe25bb7d3d2c2a46574f05160c",

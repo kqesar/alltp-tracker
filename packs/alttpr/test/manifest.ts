@@ -44,6 +44,8 @@ export interface Manifest {
       readonly version: string;
     };
     readonly repo: string;
+    /** Its item names joined to vt's classes (scripts/import-item-names.mjs). */
+    readonly spoilerItems: string;
     /**
      * The commit DR's unit tests were made to run again at (DoorDevUnstable):
      * the harness is read there, the cases at the release (scripts/dr-tests.mjs).

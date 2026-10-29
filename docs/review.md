@@ -85,11 +85,15 @@ follows its rule: **refuse on any contradiction, verified when the seeds are equ
 | Evidence | Run | Log |
 |---|---|---|
 | Seed | `Progress.seed` (the ROM's `VT <hash>`, or the seed the run started from) | the seed file's `hash`, or the `_<hash>` in the file's name (said "matched by its file name") |
+| Seed of a Door Randomizer log | the ROM title's `<team>_<player>_<seed>` autotracking records, or an avianart hash for a run started from an avianart link | the seed the log's first line or `meta` gives in the ROM title's form, or avianart's hash (its file name or permalink): the one of the run's kind, `fileSeed` |
 | Settings | the run type's compared settings, through the seed import's `checkSeed` | the log's `meta`, read as a seed file's |
 | Medallions | the board's two pads, when set | `Special` |
 | Prizes | each dungeon's reward, when set | `<Dungeon> - Prize` |
 
-A mystery run's hidden settings are not compared. A run that knows no seed (tracked by hand) or a
+A Door Randomizer log adds which randomizer wrote it (a DR log on an alttpr.com run, or the reverse,
+is refused) and the settings the game's ROM states exactly: doors shuffled or not, enemy drops,
+pottery or not, shops, take-any caves, enemy shuffle. Which door shuffle or which pottery mode a run
+read from its ROM only approximates, so those refuse nothing. A mystery run's hidden settings are not compared. A run that knows no seed (tracked by hand) or a
 log that names none (a renamed file) opens "Not verified", with how many settings agreed.
 
 ## Memory only
@@ -206,6 +210,7 @@ readings instead:
 | `generic-keys` (Retro) | a small key opens any door and the board counts none, so no door can be solved from the log's keys; the rest of the tab (finds, times, playthrough) is shown |
 | `entrances` | where each entrance led is not stamped, and the final ones would leak |
 | `not-modelled` | the pack does not model the run's logic: settings hidden (Mystery), bosses shuffled (the log's `Bosses`), a logic other than NoGlitches (the log's `meta.logic`) |
+| `door-logic` (after the causes above) | the log is a Door Randomizer's and the pack has none of DR's rules yet (key doors, pots, enemy drops, shops, its dungeon logic: the pack's [Door Randomizer](../packs/alttpr/README.md#the-door-randomizer) section): the sweep would say "in logic" from alttpr.com's rules, which the seed was not made with |
 | `race-mode` | fewer than half the needed finds are matched by place, and places outside dungeons are stamped but none inside: Race Mode in an earlier version did not read a dungeon's chests (it does now, v2.0's dungeon-locations) |
 | `by-hand` | fewer than half the needed finds are matched by place otherwise: the times are clicks |
 | `no-times` | nothing needed has a time |
@@ -237,6 +242,14 @@ readings instead:
    line, progression and hearts by item, and how many other places held rupees, arrows or the like.
 8. **Details by step**: the playthrough folded (Step, Item, Where, In logic from, Taken, Waited).
 9. The seed's facts (medallions, prizes, starting items, bosses when shuffled).
+
+A Door Randomizer log (DR's own text or JSON, [read by the pack](../packs/alttpr/README.md#the-door-randomizers-logs))
+reads the same way, with the waits hidden for now (`door-logic`). Its key drops, pots, enemy drops and shop
+items are places of the board when the run's settings shuffle them: one the run took reads "taken, not timed"
+(the timeline never dates them, `isTimelineKey`, which keeps a shared link short), one it did not "never
+taken", and one its settings leave out is not known. The seed's facts add which randomizer and version
+wrote it and the title screen's code. Nothing here reads more than a run in Race Mode already lets the
+review (the review stays closed there): the log is the player's own file, read after the run.
 
 An entrance randomizer log reads the same way, with the waits hidden. The timeline's `check:` rows
 gain "→ the item held".

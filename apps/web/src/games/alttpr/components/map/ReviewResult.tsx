@@ -5,6 +5,7 @@ import {
   duration,
   ReviewWaits,
 } from "@/games/alttpr/components/map/ReviewWaits";
+import { DOOR_LOCATION_IDS } from "@/games/alttpr/data/doorRando";
 import { withCost } from "@/games/alttpr/logic/costs";
 import { locationName } from "@/games/alttpr/logic/solution";
 import {
@@ -32,6 +33,8 @@ const plural = (count: number, word: string): string =>
 const HIDDEN: Readonly<Record<Hidden, string>> = {
   "by-hand":
     "This run was tracked by hand: its times are when you clicked, so when each item waited is not shown.",
+  "door-logic":
+    "This is a Door Randomizer seed, whose own rules (key doors, pots, enemy drops, shops) are not ported yet. Saying when each place came into logic would use alttpr.com's rules, which the seed was not made with, so it is not shown.",
   entrances:
     "Entrances were shuffled: the run does not time where each led, so when each place came into logic is not shown.",
   "generic-keys":
@@ -58,7 +61,9 @@ const RawTime = ({ row }: { row: ReviewRow }) => {
     return (
       <>
         {row.state === "untimed"
-          ? "done, no time"
+          ? DOOR_LOCATION_IDS.has(row.entry.placement.location)
+            ? "taken, not timed"
+            : "done, no time"
           : row.state === "unknown"
             ? "not tracked"
             : "never taken"}
@@ -399,12 +404,19 @@ const NeverChecked = ({
 
 /** The seed's own facts: medallions, prizes, starting items, shuffled bosses. */
 const Facts = ({ log }: { log: AlttprSpoilerLog }) => {
-  const { bosses, medallions, prizes } = log.extra;
+  const { bosses, door, medallions, prizes } = log.extra;
   const prizeNames = Object.entries(prizes).map(([dungeon, item]) => {
     const held = log.placements.find((p) => p.location === `${dungeon}/prize`);
     return [dungeon, held?.itemName ?? item] as const;
   });
   const rows: [string, string][] = [];
+  if (door !== undefined) {
+    rows.push([
+      "Randomizer",
+      `${door.overworld ? "Overworld Randomizer on the Door Randomizer" : "Door Randomizer"}${door.version === null ? "" : ` ${door.version}`}`,
+    ]);
+    if (door.code !== null) rows.push(["Title screen code", door.code]);
+  }
   if (medallions.mire !== null || medallions.turtleRock !== null) {
     rows.push([
       "Medallions",
@@ -477,6 +489,10 @@ const ReviewResult = ({ review }: { review: Loaded }) => {
   );
   const comparison = useMemo(() => compareReview(log, run), [log, run]);
   const hidden = hiddenReason(log, run, comparison);
+  const doorUntimed = comparison.rows.filter(
+    ({ entry, state }) =>
+      state === "untimed" && DOOR_LOCATION_IDS.has(entry.placement.location),
+  ).length;
   const sweep = useSweep(review, run, comparison, endMs, hidden !== null);
   const stepsId = useId();
   const factsId = useId();
@@ -532,6 +548,13 @@ const ReviewResult = ({ review }: { review: Loaded }) => {
           <p className="run-section__empty">
             An entrance randomizer log: placements and playthrough are compared;
             where each entrance really led is not shown yet.
+          </p>
+        )}
+        {doorUntimed > 0 && (
+          <p className="run-section__empty" data-testid="review-door-untimed">
+            {plural(doorUntimed, "place")} of the Door Randomizer (a key drop,
+            pot, enemy drop or shop item) taken: the run keeps no time for
+            those, so they read "taken, not timed".
           </p>
         )}
         {log.skipped.length > 0 && (

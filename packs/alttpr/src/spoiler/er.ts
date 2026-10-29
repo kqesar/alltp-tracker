@@ -14,7 +14,7 @@ import * as z from "zod/mini";
 import { erLocationId } from "../entrances";
 import { UPSTREAM_ITEMS } from "../items";
 import ER_ITEMS from "./er-items.json" with { type: "json" };
-import type { Shape } from "./read";
+import { ALTTPR_COM, type Shape } from "./read";
 
 const PLAYTHROUGH = z.record(
   z.string(),
@@ -28,6 +28,9 @@ const classOf = (written: string): string | null | undefined =>
   (ER_ITEMS.items as Record<string, string | null | undefined>)[written];
 
 export const ER: Shape = {
+  ...ALTTPR_COM,
+  // Its sections are kinds of region, meaningless
+  area: () => null,
   describeItem: (written) => written,
   format: "er",
   id: erLocationId,
