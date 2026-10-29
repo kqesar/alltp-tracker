@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.64.0](https://github.com/kqesar/alltp-tracker/compare/v2.63.0...v2.64.0) (2026-10-29)
+
+
+### ✨ Features
+
+* **alttpr:** pool the full entrance shuffle apart from the crossed one ([b1adadb](https://github.com/kqesar/alltp-tracker/commit/b1adadb3b5e69962a2da5b2a5e945d3fa6474ab2))
+
+
+### 🐛 Bug Fixes
+
+* **web:** name the real cause of an unmodelled run, and pool entrances per shuffle ([d9e3392](https://github.com/kqesar/alltp-tracker/commit/d9e33924f061620b0be0414ccc1f6bbea4d0d8c1))
+
 ## [2.63.0](https://github.com/kqesar/alltp-tracker/compare/v2.62.0...v2.63.0) (2026-10-29)
 
 
