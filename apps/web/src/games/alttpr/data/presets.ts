@@ -242,7 +242,9 @@ export const presets: Preset[] = [
 /**
  * Whether a run's entrances are shuffled as the pack's port of the entrance
  * randomizer models them (packs/alttpr/src/er-world.ts): alttpr.com's
- * crossed shuffle, in the Open or Standard world, every dungeon item wild.
+ * crossed shuffle, in the Open, Retro (sent as --mode open --retro,
+ * app/EntranceRandomizer.php:79-82) or Standard world, every dungeon item
+ * wild.
  * vt hands the randomizer --keysanity for `full` dungeon items alone
  * (app/EntranceRandomizer.php:69-71); under any other, the randomizer keeps
  * the keys in their dungeons, which the tracker does not track. Its boss
@@ -251,7 +253,7 @@ export const presets: Preset[] = [
 export const crossedLogic = (settings: RunSettings): boolean =>
   settings.entranceShuffle === "crossed" &&
   !glitchedLogic(settings) &&
-  (settings.mode === "open" || settings.mode === "standard") &&
+  settings.mode !== "inverted" &&
   settings.dungeonItems === "full";
 
 /** A run's boss shuffle: "none" when its settings name none. */
@@ -295,7 +297,7 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
     );
   if (shuffle !== "crossed")
     reasons.push(`${ENTRANCE_LABELS[shuffle]} entrance shuffle`);
-  else if (mode !== "open" && mode !== "standard")
+  else if (mode === "inverted")
     reasons.push(`Crossworld entrances in the ${MODE_LABELS[mode]} world`);
   else if (settings.dungeonItems !== "full")
     reasons.push(
