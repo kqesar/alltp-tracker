@@ -792,6 +792,11 @@ describe("the checkout", () => {
       "tests/InvertedOverworldGlitches/TestCase.php",
       "<?php // not a test class",
     );
+    write("tests/MajorGlitches/TestCase.php", "<?php // not a test class");
+    write(
+      "tests/InvertedMajorGlitches/TestCase.php",
+      "<?php // not a test class",
+    );
     // A test file of its own, at the top of tests/
     write("tests/RetroBowTest.php", TEST_CLASS);
     write("app/Item.php", ITEM_PHP);

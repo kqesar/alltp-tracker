@@ -138,6 +138,8 @@ const FIXTURE_ROOTS = [
   "Inverted",
   "OverworldGlitches",
   "InvertedOverworldGlitches",
+  "MajorGlitches",
+  "InvertedMajorGlitches",
   "RetroBow.json",
 ];
 

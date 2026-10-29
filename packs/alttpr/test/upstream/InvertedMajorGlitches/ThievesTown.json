@@ -1,0 +1,63 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/InvertedMajorGlitches/ThievesTownTest.php",
+  "class": "InvertedMajorGlitches\\ThievesTownTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "MajorGlitches"
+      },
+      "line": 18,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "bosses": {
+      "Thieves Town": "Dummy Boss"
+    },
+    "collected": [],
+    "line": 15,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":77,"location":"Thieves' Town - Attic","method":"testFillLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"KeyD4","items":{"add":[],"base":"allItems","except":["KeyD4"]},"kind":"fill","line":78,"location":"Thieves' Town - Attic","method":"testFillLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":80,"location":"Thieves' Town - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":82,"location":"Thieves' Town - Map Chest","method":"testFillLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":84,"location":"Thieves' Town - Compass Chest","method":"testFillLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":86,"location":"Thieves' Town - Ambush Chest","method":"testFillLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":88,"location":"Thieves' Town - Big Chest","method":"testFillLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"KeyD4","items":{"add":[],"base":"allItems","except":["KeyD4"]},"kind":"fill","line":89,"location":"Thieves' Town - Big Chest","method":"testFillLocation"},
+    {"dataSet":8,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":91,"location":"Thieves' Town - Blind's Cell","method":"testFillLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":93,"location":"Thieves' Town - Boss","method":"testFillLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","item":"KeyD4","items":{"add":[],"base":"allItems","except":["KeyD4"]},"kind":"fill","line":94,"location":"Thieves' Town - Boss","method":"testFillLocation"},
+    {"dataSet":0,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":101,"location":"Thieves' Town - Attic","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"location","line":102,"location":"Thieves' Town - Attic","method":"testLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["KeyD4"]},"kind":"location","line":103,"location":"Thieves' Town - Attic","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":["BigKeyD4","KeyD4"],"base":"setUp"},"kind":"location","line":104,"location":"Thieves' Town - Attic","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":106,"location":"Thieves' Town - Big Key Chest","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":108,"location":"Thieves' Town - Map Chest","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":110,"location":"Thieves' Town - Compass Chest","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":112,"location":"Thieves' Town - Ambush Chest","method":"testLocation"},
+    {"dataSet":8,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":114,"location":"Thieves' Town - Big Chest","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"location","line":115,"location":"Thieves' Town - Big Chest","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["Hammer"]},"kind":"location","line":116,"location":"Thieves' Town - Big Chest","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":["Hammer","KeyD4","BigKeyD4"],"base":"setUp"},"kind":"location","line":117,"location":"Thieves' Town - Big Chest","method":"testLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":119,"location":"Thieves' Town - Blind's Cell","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"location","line":120,"location":"Thieves' Town - Blind's Cell","method":"testLocation"},
+    {"dataSet":14,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":["BigKeyD4"],"base":"setUp"},"kind":"location","line":121,"location":"Thieves' Town - Blind's Cell","method":"testLocation"},
+    {"dataSet":15,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":123,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":16,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"location","line":124,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":17,"expected":false,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["KeyD4"]},"kind":"location","line":125,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/InvertedMajorGlitches/ThievesTownTest.php","items":{"add":["KeyD4","BigKeyD4"],"base":"setUp"},"kind":"location","line":126,"location":"Thieves' Town - Boss","method":"testLocation"}
+  ]
+}

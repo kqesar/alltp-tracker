@@ -1,0 +1,60 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/MajorGlitches/TowerOfHeraTest.php",
+  "class": "MajorGlitches\\TowerOfHeraTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "MajorGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":75,"location":"Tower of Hera - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","item":"KeyP3","items":{"add":[],"base":"allItems","except":["KeyP3"]},"kind":"fill","line":76,"location":"Tower of Hera - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":78,"location":"Tower of Hera - Basement Cage","method":"testFillLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":80,"location":"Tower of Hera - Map Chest","method":"testFillLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":82,"location":"Tower of Hera - Compass Chest","method":"testFillLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":84,"location":"Tower of Hera - Big Chest","method":"testFillLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":86,"location":"Tower of Hera - Boss","method":"testFillLocation"},
+    {"dataSet":0,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":93,"location":"Tower of Hera - Big Key Chest","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["Lamp","FireRod"]},"kind":"location","line":94,"location":"Tower of Hera - Big Key Chest","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":["Lamp","KeyP3"],"base":"setUp"},"kind":"location","line":95,"location":"Tower of Hera - Big Key Chest","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":["FireRod","KeyP3"],"base":"setUp"},"kind":"location","line":96,"location":"Tower of Hera - Big Key Chest","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":98,"location":"Tower of Hera - Basement Cage","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":100,"location":"Tower of Hera - Map Chest","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":102,"location":"Tower of Hera - Compass Chest","method":"testLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"location","line":103,"location":"Tower of Hera - Compass Chest","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":["BigKeyP3"],"base":"setUp"},"kind":"location","line":104,"location":"Tower of Hera - Compass Chest","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":106,"location":"Tower of Hera - Big Chest","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"location","line":107,"location":"Tower of Hera - Big Chest","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":["BigKeyP3"],"base":"setUp"},"kind":"location","line":108,"location":"Tower of Hera - Big Chest","method":"testLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":110,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"location","line":111,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":14,"expected":false,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["AnySword","Hammer"]},"kind":"location","line":112,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":["BigKeyP3","ProgressiveSword"],"base":"setUp"},"kind":"location","line":113,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":["BigKeyP3","UncleSword"],"base":"setUp"},"kind":"location","line":114,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":["BigKeyP3","MasterSword"],"base":"setUp"},"kind":"location","line":115,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":["BigKeyP3","L3Sword"],"base":"setUp"},"kind":"location","line":116,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":["BigKeyP3","L4Sword"],"base":"setUp"},"kind":"location","line":117,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":20,"expected":true,"file":"tests/MajorGlitches/TowerOfHeraTest.php","items":{"add":["BigKeyP3","Hammer"],"base":"setUp"},"kind":"location","line":118,"location":"Tower of Hera - Boss","method":"testLocation"}
+  ]
+}

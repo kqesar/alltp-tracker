@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /// <reference types="node" />
 // Imports the official randomizer's NoGlitches and Inverted tests, and its
-// glitched logics' (OverworldGlitches and InvertedOverworldGlitches), as
-// JSON fixtures.
+// glitched logics' (OverworldGlitches, MajorGlitches and their Inverted
+// suites), as JSON fixtures.
 //
 //   node scripts/import-upstream-tests.mjs <upstream-checkout> [--out <dir>]
 //
@@ -45,6 +45,8 @@ export const TEST_ROOTS = [
   "tests/Inverted",
   "tests/OverworldGlitches",
   "tests/InvertedOverworldGlitches",
+  "tests/MajorGlitches",
+  "tests/InvertedMajorGlitches",
   // The retro world's rupee bow (World::factory('retro', ...))
   "tests/RetroBowTest.php",
 ];

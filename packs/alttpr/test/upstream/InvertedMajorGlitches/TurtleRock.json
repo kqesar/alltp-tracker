@@ -1,0 +1,88 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/InvertedMajorGlitches/TurtleRockTest.php",
+  "class": "InvertedMajorGlitches\\TurtleRockTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "MajorGlitches"
+      },
+      "line": 16,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [],
+    "line": 13,
+    "locationItems": {
+      "Turtle Rock Medallion": "Quake"
+    }
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":71,"location":"Turtle Rock - Chain Chomps","method":"testFillLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":73,"location":"Turtle Rock - Compass Chest","method":"testFillLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":75,"location":"Turtle Rock - Roller Room - Left","method":"testFillLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":77,"location":"Turtle Rock - Roller Room - Right","method":"testFillLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":79,"location":"Turtle Rock - Big Chest","method":"testFillLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":["KeyD7","KeyD7"],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":81,"location":"Turtle Rock - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":83,"location":"Turtle Rock - Crystaroller Room","method":"testFillLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":85,"location":"Turtle Rock - Eye Bridge - Bottom Left","method":"testFillLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":87,"location":"Turtle Rock - Eye Bridge - Bottom Right","method":"testFillLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":89,"location":"Turtle Rock - Eye Bridge - Top Left","method":"testFillLocation"},
+    {"dataSet":10,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":91,"location":"Turtle Rock - Eye Bridge - Top Right","method":"testFillLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"BigKeyD7","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"fill","line":93,"location":"Turtle Rock - Boss","method":"testFillLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","item":"KeyD7","items":{"add":[],"base":"allItems","except":["KeyD7"]},"kind":"fill","line":94,"location":"Turtle Rock - Boss","method":"testFillLocation"},
+    {"dataSet":0,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":101,"location":"Turtle Rock - Chain Chomps","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl"],"base":"setUp"},"kind":"location","line":102,"location":"Turtle Rock - Chain Chomps","method":"testLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":104,"location":"Turtle Rock - Compass Chest","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["CaneOfSomaria"]},"kind":"location","line":105,"location":"Turtle Rock - Compass Chest","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl","CaneOfSomaria","KeyD7","KeyD7","KeyD7","KeyD7"],"base":"setUp"},"kind":"location","line":106,"location":"Turtle Rock - Compass Chest","method":"testLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":108,"location":"Turtle Rock - Roller Room - Left","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["CaneOfSomaria"]},"kind":"location","line":109,"location":"Turtle Rock - Roller Room - Left","method":"testLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["FireRod"]},"kind":"location","line":110,"location":"Turtle Rock - Roller Room - Left","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl","CaneOfSomaria","FireRod","KeyD7","KeyD7","KeyD7","KeyD7"],"base":"setUp"},"kind":"location","line":111,"location":"Turtle Rock - Roller Room - Left","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":113,"location":"Turtle Rock - Roller Room - Right","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["CaneOfSomaria"]},"kind":"location","line":114,"location":"Turtle Rock - Roller Room - Right","method":"testLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["FireRod"]},"kind":"location","line":115,"location":"Turtle Rock - Roller Room - Right","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl","CaneOfSomaria","FireRod","KeyD7","KeyD7","KeyD7","KeyD7"],"base":"setUp"},"kind":"location","line":116,"location":"Turtle Rock - Roller Room - Right","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":118,"location":"Turtle Rock - Big Chest","method":"testLocation"},
+    {"dataSet":14,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"location","line":119,"location":"Turtle Rock - Big Chest","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl","Hookshot","BigKeyD7"],"base":"setUp"},"kind":"location","line":120,"location":"Turtle Rock - Big Chest","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl","CaneOfSomaria","BigKeyD7"],"base":"setUp"},"kind":"location","line":121,"location":"Turtle Rock - Big Chest","method":"testLocation"},
+    {"dataSet":17,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":123,"location":"Turtle Rock - Big Key Chest","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl","KeyD7","KeyD7","KeyD7","KeyD7"],"base":"setUp"},"kind":"location","line":124,"location":"Turtle Rock - Big Key Chest","method":"testLocation"},
+    {"dataSet":19,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":126,"location":"Turtle Rock - Crystaroller Room","method":"testLocation"},
+    {"dataSet":20,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl","BigKeyD7"],"base":"setUp"},"kind":"location","line":127,"location":"Turtle Rock - Crystaroller Room","method":"testLocation"},
+    {"dataSet":21,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl","Lamp","CaneOfSomaria"],"base":"setUp"},"kind":"location","line":128,"location":"Turtle Rock - Crystaroller Room","method":"testLocation"},
+    {"dataSet":22,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":130,"location":"Turtle Rock - Eye Bridge - Bottom Left","method":"testLocation"},
+    {"dataSet":23,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl"],"base":"setUp"},"kind":"location","line":131,"location":"Turtle Rock - Eye Bridge - Bottom Left","method":"testLocation"},
+    {"dataSet":24,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":133,"location":"Turtle Rock - Eye Bridge - Bottom Right","method":"testLocation"},
+    {"dataSet":25,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl"],"base":"setUp"},"kind":"location","line":134,"location":"Turtle Rock - Eye Bridge - Bottom Right","method":"testLocation"},
+    {"dataSet":26,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":136,"location":"Turtle Rock - Eye Bridge - Top Left","method":"testLocation"},
+    {"dataSet":27,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl"],"base":"setUp"},"kind":"location","line":137,"location":"Turtle Rock - Eye Bridge - Top Left","method":"testLocation"},
+    {"dataSet":28,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":139,"location":"Turtle Rock - Eye Bridge - Top Right","method":"testLocation"},
+    {"dataSet":29,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["MagicMirror","MoonPearl"],"base":"setUp"},"kind":"location","line":140,"location":"Turtle Rock - Eye Bridge - Top Right","method":"testLocation"},
+    {"dataSet":30,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":142,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":31,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["CaneOfSomaria"]},"kind":"location","line":143,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":32,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["IceRod"]},"kind":"location","line":144,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":33,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["FireRod"]},"kind":"location","line":145,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":34,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["AnySword","Hammer"]},"kind":"location","line":146,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":35,"expected":false,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":[],"base":"allItems","except":["BigKeyD7"]},"kind":"location","line":147,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":36,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["IceRod","FireRod","MagicMirror","MoonPearl","UncleSword","Bottle","Bottle","Bottle","Bottle","CaneOfSomaria","KeyD7","KeyD7","KeyD7","KeyD7","BigKeyD7"],"base":"setUp"},"kind":"location","line":148,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":37,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["IceRod","FireRod","MagicMirror","MoonPearl","ProgressiveSword","Bottle","Bottle","Bottle","Bottle","CaneOfSomaria","KeyD7","KeyD7","KeyD7","KeyD7","BigKeyD7"],"base":"setUp"},"kind":"location","line":149,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":38,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["IceRod","FireRod","MagicMirror","MoonPearl","MasterSword","Bottle","Bottle","CaneOfSomaria","KeyD7","KeyD7","KeyD7","KeyD7","BigKeyD7"],"base":"setUp"},"kind":"location","line":150,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":39,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["IceRod","FireRod","MagicMirror","MoonPearl","ProgressiveSword","ProgressiveSword","Bottle","Bottle","CaneOfSomaria","KeyD7","KeyD7","KeyD7","KeyD7","BigKeyD7"],"base":"setUp"},"kind":"location","line":151,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":40,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["IceRod","FireRod","MagicMirror","MoonPearl","L3Sword","CaneOfSomaria","KeyD7","KeyD7","KeyD7","KeyD7","BigKeyD7"],"base":"setUp"},"kind":"location","line":152,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":41,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["IceRod","FireRod","MagicMirror","MoonPearl","L4Sword","CaneOfSomaria","KeyD7","KeyD7","KeyD7","KeyD7","BigKeyD7"],"base":"setUp"},"kind":"location","line":153,"location":"Turtle Rock - Boss","method":"testLocation"},
+    {"dataSet":42,"expected":true,"file":"tests/InvertedMajorGlitches/TurtleRockTest.php","items":{"add":["IceRod","FireRod","MagicMirror","MoonPearl","Hammer","CaneOfSomaria","KeyD7","KeyD7","KeyD7","KeyD7","BigKeyD7"],"base":"setUp"},"kind":"location","line":154,"location":"Turtle Rock - Boss","method":"testLocation"}
+  ]
+}

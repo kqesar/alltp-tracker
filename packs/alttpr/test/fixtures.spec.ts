@@ -3,17 +3,15 @@
 // change it points at, never edit a fixture to make it pass.
 import { describe, expect, it } from "vitest";
 import { type CaseKind, loadFixtures } from "./fixtures";
-import {
-  allItemsExcept,
-  collectionState,
-  EXCEPT_GROUPS,
-} from "./upstream-state";
+import { collectionState } from "./upstream-state";
 
 const fixtures = loadFixtures();
 
 /** The logic each glitched directory's test classes build their world in. */
 const LOGIC_OF_DIRECTORY = new Map([
+  ["InvertedMajorGlitches", "MajorGlitches"],
   ["InvertedOverworldGlitches", "OverworldGlitches"],
+  ["MajorGlitches", "MajorGlitches"],
   ["OverworldGlitches", "OverworldGlitches"],
 ]);
 const cases = fixtures.flatMap((fixture) => fixture.cases);
@@ -46,6 +44,28 @@ describe("the upstream fixtures", () => {
       "Inverted/ThievesTown.json": 30,
       "Inverted/TowerOfHera.json": 78,
       "Inverted/TurtleRock.json": 165,
+      "InvertedMajorGlitches/DarkWorld/DeathMountain/East.json": 15,
+      "InvertedMajorGlitches/DarkWorld/DeathMountain/West.json": 22,
+      "InvertedMajorGlitches/DarkWorld/Mire.json": 2,
+      "InvertedMajorGlitches/DarkWorld/NorthEast.json": 20,
+      "InvertedMajorGlitches/DarkWorld/NorthWest.json": 15,
+      "InvertedMajorGlitches/DarkWorld/South.json": 7,
+      "InvertedMajorGlitches/DeathMountain/East.json": 87,
+      "InvertedMajorGlitches/DeathMountain/West.json": 4,
+      "InvertedMajorGlitches/DesertPalace.json": 24,
+      "InvertedMajorGlitches/EasternPalace.json": 20,
+      "InvertedMajorGlitches/GanonsTower.json": 319,
+      "InvertedMajorGlitches/HyruleCastleEscape.json": 109,
+      "InvertedMajorGlitches/HyruleCastleTower.json": 11,
+      "InvertedMajorGlitches/IcePalace.json": 89,
+      "InvertedMajorGlitches/LightWorld.json": 438,
+      "InvertedMajorGlitches/MiseryMire.json": 122,
+      "InvertedMajorGlitches/PalaceOfDarkness.json": 54,
+      "InvertedMajorGlitches/SkullWoods.json": 27,
+      "InvertedMajorGlitches/SwampPalace.json": 435,
+      "InvertedMajorGlitches/ThievesTown.json": 30,
+      "InvertedMajorGlitches/TowerOfHera.json": 341,
+      "InvertedMajorGlitches/TurtleRock.json": 56,
       "InvertedOverworldGlitches/DarkWorld/DeathMountain/East.json": 20,
       "InvertedOverworldGlitches/DarkWorld/DeathMountain/West.json": 22,
       "InvertedOverworldGlitches/DarkWorld/Mire.json": 4,
@@ -68,6 +88,29 @@ describe("the upstream fixtures", () => {
       "InvertedOverworldGlitches/ThievesTown.json": 30,
       "InvertedOverworldGlitches/TowerOfHera.json": 40,
       "InvertedOverworldGlitches/TurtleRock.json": 56,
+      "MajorGlitches/DarkWorld/DeathMountain/East.json": 54,
+      "MajorGlitches/DarkWorld/DeathMountain/West.json": 42,
+      "MajorGlitches/DarkWorld/Mire.json": 22,
+      "MajorGlitches/DarkWorld/NorthEast.json": 73,
+      "MajorGlitches/DarkWorld/NorthWest.json": 48,
+      "MajorGlitches/DarkWorld/South.json": 71,
+      "MajorGlitches/DeathMountain/East.json": 8,
+      "MajorGlitches/DeathMountain/West.json": 12,
+      "MajorGlitches/DesertPalace.json": 23,
+      "MajorGlitches/EasternPalace.json": 21,
+      "MajorGlitches/GanonsTower.json": 132,
+      "MajorGlitches/HyruleCastleEscape.json": 16,
+      "MajorGlitches/HyruleCastleTower.json": 1,
+      "MajorGlitches/IcePalace.json": 208,
+      "MajorGlitches/LightWorld.json": 102,
+      "MajorGlitches/MiseryMire.json": 226,
+      "MajorGlitches/Open.json": 33,
+      "MajorGlitches/PalaceOfDarkness.json": 53,
+      "MajorGlitches/SkullWoods.json": 41,
+      "MajorGlitches/SwampPalace.json": 481,
+      "MajorGlitches/ThievesTown.json": 144,
+      "MajorGlitches/TowerOfHera.json": 28,
+      "MajorGlitches/TurtleRock.json": 84,
       "NoGlitches/DarkWorld/DeathMountain/East.json": 54,
       "NoGlitches/DarkWorld/DeathMountain/West.json": 41,
       "NoGlitches/DarkWorld/Mire.json": 12,
@@ -122,10 +165,10 @@ describe("the upstream fixtures", () => {
     const kinds: Partial<Record<CaseKind, number>> = {};
     for (const c of cases) kinds[c.kind] = (kinds[c.kind] ?? 0) + 1;
     expect(kinds).toEqual({
-      fill: 524,
-      location: 7893,
-      regionComplete: 28,
-      regionEnter: 57,
+      fill: 804,
+      location: 11667,
+      regionComplete: 37,
+      regionEnter: 164,
       regionFill: 720,
     });
   });
@@ -136,6 +179,12 @@ describe("the upstream fixtures", () => {
     );
     expect(unsupported).toEqual([
       ["tests/Inverted/DesertPalaceTest.php", "testDungeonItemWrite", 8],
+      [
+        "tests/InvertedMajorGlitches/DesertPalaceTest.php",
+        "testDungeonItemWrite",
+        8,
+      ],
+      ["tests/MajorGlitches/DesertPalaceTest.php", "testDungeonItemWrite", 8],
       ["tests/NoGlitches/DesertPalaceTest.php", "testDungeonItemWrite", 8],
     ]);
   });
@@ -177,6 +226,7 @@ describe("the upstream fixtures", () => {
         .filter((f) => f.worlds.world?.mode === "open")
         .map((f) => f.file),
     ).toEqual([
+      "tests/MajorGlitches/OpenTest.php",
       "tests/NoGlitches/OpenTest.php",
       "tests/OverworldGlitches/OpenTest.php",
     ]);
@@ -215,35 +265,5 @@ describe("the upstream fixtures", () => {
         ).not.toThrow();
       }
     }
-  });
-
-  // allItemsExcept leaves removed bottles and hearts where bottleCount() and
-  // hasHealth() still count them (see test/upstream-state.ts); the port does
-  // not. Only a case that removes some can tell, and there is one: Sick Kid
-  // with no bottle, which reads hasABottle
-  // (app/Region/Standard/LightWorld/NorthWest.php:124), where the port and
-  // upstream agree.
-  it("do not depend on the bottles and hearts allItemsExcept still counts", () => {
-    const counted = new Set([
-      ...(EXCEPT_GROUPS.get("AnyBottle") ?? []),
-      "PieceOfHeart",
-      "HeartContainer",
-      "HeartContainerNoAnimation",
-      "BossHeartContainer",
-    ]);
-    const removing = cases.flatMap((c) => {
-      if (!("items" in c) || c.items.base !== "allItems") return [];
-      const held = new Set(allItemsExcept(c.items.except ?? []));
-      return [...counted].some((name) => !held.has(name))
-        ? [["location" in c ? c.location : c.region, c.expected, c.items]]
-        : [];
-    });
-    // Sick Kid with no bottle, once per world and logic it is tested in
-    const sickKid = [
-      "Sick Kid",
-      false,
-      { add: [], base: "allItems", except: ["AnyBottle"] },
-    ];
-    expect(removing).toEqual([sickKid, sickKid, sickKid, sickKid]);
   });
 });

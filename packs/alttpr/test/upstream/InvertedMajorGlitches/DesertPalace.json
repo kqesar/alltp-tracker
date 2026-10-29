@@ -1,0 +1,70 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/InvertedMajorGlitches/DesertPalaceTest.php",
+  "class": "InvertedMajorGlitches\\DesertPalaceTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "MajorGlitches"
+      },
+      "line": 19,
+      "mode": "inverted"
+    },
+    "world_free_items": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "MajorGlitches",
+        "region.wildBigKeys": true,
+        "region.wildCompasses": true,
+        "region.wildKeys": true,
+        "region.wildMaps": true
+      },
+      "line": 20,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 16,
+    "locationItems": {}
+  },
+  "unsupported": [
+    {"line":154,"method":"testDungeonItemWrite","reason":"writes an item into a ROM and reads the byte back: ROM output, not logic","rows":[{"args":{"chest_location":"Desert Palace - Map Chest","expected":163,"free":true,"item_name":"KeyP2"},"dataSet":0,"line":168},{"args":{"chest_location":"Desert Palace - Map Chest","expected":36,"free":false,"item_name":"KeyP2"},"dataSet":1,"line":169},{"args":{"chest_location":"Desert Palace - Map Chest","expected":156,"free":true,"item_name":"BigKeyP2"},"dataSet":2,"line":170},{"args":{"chest_location":"Desert Palace - Map Chest","expected":50,"free":false,"item_name":"BigKeyP2"},"dataSet":3,"line":171},{"args":{"chest_location":"Desert Palace - Map Chest","expected":140,"free":true,"item_name":"CompassP2"},"dataSet":4,"line":172},{"args":{"chest_location":"Desert Palace - Map Chest","expected":37,"free":false,"item_name":"CompassP2"},"dataSet":5,"line":173},{"args":{"chest_location":"Desert Palace - Map Chest","expected":124,"free":true,"item_name":"MapP2"},"dataSet":6,"line":174},{"args":{"chest_location":"Desert Palace - Map Chest","expected":51,"free":false,"item_name":"MapP2"},"dataSet":7,"line":175}]}
+  ],
+  "cases": [
+    {"dataSet":0,"expected":true,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"regionEnter","line":59,"method":"testEntry","region":"Desert Palace"},
+    {"dataSet":0,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","item":"KeyP2","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"fill","line":87,"location":"Desert Palace - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","item":"KeyP2","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"fill","line":88,"location":"Desert Palace - Compass Chest","method":"testFillLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","item":"BigKeyP2","items":{"add":[],"base":"allItems","except":["BigKeyP2"]},"kind":"fill","line":90,"location":"Desert Palace - Big Chest","method":"testFillLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","item":"BigKeyP2","items":{"add":[],"base":"allItems","except":["BigKeyP2"]},"kind":"fill","line":92,"location":"Desert Palace - Boss","method":"testFillLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","item":"KeyP2","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"fill","line":93,"location":"Desert Palace - Boss","method":"testFillLocation"},
+    {"dataSet":0,"expected":true,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":120,"location":"Desert Palace - Map Chest","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":122,"location":"Desert Palace - Big Chest","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":["BigKeyP2"],"base":"setUp"},"kind":"location","line":123,"location":"Desert Palace - Big Chest","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":125,"location":"Desert Palace - Torch","method":"testLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["PegasusBoots"]},"kind":"location","line":126,"location":"Desert Palace - Torch","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":["PegasusBoots"],"base":"setUp"},"kind":"location","line":127,"location":"Desert Palace - Torch","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":129,"location":"Desert Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"location","line":130,"location":"Desert Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":["KeyP2"],"base":"setUp"},"kind":"location","line":131,"location":"Desert Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":133,"location":"Desert Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"location","line":134,"location":"Desert Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":["KeyP2"],"base":"setUp"},"kind":"location","line":135,"location":"Desert Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":137,"location":"Desert Palace - Boss","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["KeyP2"]},"kind":"location","line":138,"location":"Desert Palace - Boss","method":"testLocation"},
+    {"dataSet":14,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP2"]},"kind":"location","line":139,"location":"Desert Palace - Boss","method":"testLocation"},
+    {"dataSet":15,"expected":false,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":[],"base":"allItems","except":["Lamp","FireRod"]},"kind":"location","line":140,"location":"Desert Palace - Boss","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":["UncleSword","KeyP2","BigKeyP2","Lamp"],"base":"setUp"},"kind":"location","line":141,"location":"Desert Palace - Boss","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/InvertedMajorGlitches/DesertPalaceTest.php","items":{"add":["UncleSword","KeyP2","BigKeyP2","FireRod"],"base":"setUp"},"kind":"location","line":142,"location":"Desert Palace - Boss","method":"testLocation"}
+  ]
+}
