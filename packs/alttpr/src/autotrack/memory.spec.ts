@@ -212,6 +212,8 @@ describe("MEMORY_RANGES", () => {
       "dark-room-art-palette:navigation",
       "bomb-count:hud",
       "bottle-index:hud",
+      // The bomb and arrow capacities: v2.0 names no capacity upgrade
+      "capacities:hud",
       // The world Link is in, which picks the world map's half
       "current-world:prizes",
       // Who follows Link: Zelda among them, whose rescue a race never tells
@@ -312,6 +314,37 @@ describe("MEMORY_RANGES", () => {
     }
   });
 
+  it("keeps the bomb and arrow capacities from Race Mode, and the bottles in", () => {
+    // BombCapacity, ArrowCapacity (sram.asm:135-136): v2.0 names the counts
+    // held, not the capacity upgrades, so by default they are not permitted
+    expect(MEMORY_RANGE.capacities).toMatchObject({
+      address: wram(0x7e_f370),
+      category: "hud",
+      size: 2,
+    });
+    expect(permitted("capacities")).toBe(false);
+    expect(permitted("bottles")).toBe(true);
+    const at = { address: wram(0x7e_f370), size: 2 };
+    // No read of Race Mode's covers them, bridged or not, while the
+    // bottles' bytes and the hearts' either side are read
+    const { plan } = phasePlan(true);
+    const pieces = planPieces(plan);
+    for (const id of ["bottles", "health", "pendants"] as const) {
+      const range = MEMORY_RANGE[id];
+      expect(
+        pieces.some((piece) => overlaps(piece, range)),
+        id,
+      ).toBe(true);
+    }
+    for (const piece of pieces) {
+      expect(overlaps(piece, at), "a piece over the capacities").toBe(false);
+    }
+    // The casual plan does read them
+    expect(
+      planPieces(phasePlan(false).plan).some((piece) => overlaps(piece, at)),
+    ).toBe(true);
+  });
+
   it("lets Race Mode read exactly what v2.0 names", () => {
     const read = MEMORY_RANGES.filter((range) => permitted(range.id)).map(
       (range) => `${range.id}:${range.category}`,
@@ -365,6 +398,9 @@ describe("MEMORY_RANGES", () => {
     // in one more piece. Race Mode bridges no byte outside its ranges (the
     // rupee and arrow counts, the ability flags, the keys held, the map icons,
     // the starting entrance): 35 bytes less, in six more pieces, one request.
+    // The bomb and arrow capacities (capacities, forbidden) join the casual
+    // phase alone: 2 bytes in a piece of their own; the race phase is
+    // unchanged.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -375,9 +411,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 436, pieces: 19 },
+      casual: { bytes: 438, pieces: 20 },
       race: { bytes: 793, pieces: 20 },
-      ranges: { casual: 33, race: 38 },
+      ranges: { casual: 34, race: 38 },
     });
   });
 });

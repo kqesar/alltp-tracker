@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { ITEM_IDS, ITEMS, type ItemId } from "../items";
 import { CHECK_FLAGS } from "./check-flags";
 import {
+  decodeBottles,
+  decodeCapacities,
   decodeChecks,
   decodeEntrances,
   decodeGoalPieces,
@@ -1154,6 +1156,83 @@ describe("decodeHealth", () => {
     expect(health(0x50, 4)).toBe("not-read");
     expect(
       decodeHealth(new Image().view({ read: () => false }), { race: false }),
+    ).toBe("not-read");
+  });
+});
+
+describe("decodeBottles", () => {
+  const BOTTLES = SAVE(0x35c);
+  const bottles = (slots: number[], race = false) =>
+    decodeBottles(new Image().set(BOTTLES, ...slots).view({ strict: race }), {
+      race,
+    });
+
+  it("reads what each bottle holds, by the tracker's values", () => {
+    // $03 red, $04 green, $05 blue, $06 fairy, $07 bee, $08 good bee
+    expect(bottles([0x03, 0x04, 0x05, 0x06])).toEqual([1, 2, 3, 4]);
+    expect(bottles([0x07, 0x08, 0x02, 0x03])).toEqual([5, 6, 0, 1]);
+  });
+
+  it("reads a mushroom, an empty bottle and any other byte as empty", () => {
+    expect(bottles([0x01, 0x02, 0x09, 0xff])).toEqual([0, 0, 0, 0]);
+  });
+
+  it("gives the contents of the bottles held, in the game's order, as many as it counts", () => {
+    // A slot at $00 is no bottle: the bottles after it move up
+    expect(bottles([0x00, 0x04, 0x00, 0x08])).toEqual([2, 6]);
+    expect(bottles([0x00, 0x00, 0x00, 0x00])).toEqual([]);
+    const counted = decodeItems(
+      new Image().set(BOTTLES, 0x00, 0x04, 0x00, 0x08).view(),
+      { race: false },
+    ).counts.bottle;
+    expect(counted).toBe(2);
+  });
+
+  it("reads them in Race Mode, which v2.0 lets display the bottle contents", () => {
+    expect(racePermitted("bottles")).toBe(true);
+    expect(bottles([0x03, 0x06], true)).toEqual([1, 4]);
+  });
+
+  it("settles nothing before it is read", () => {
+    expect(
+      decodeBottles(new Image().view({ read: () => false }), { race: false }),
+    ).toBe("not-read");
+  });
+});
+
+describe("decodeCapacities", () => {
+  const BOMBS = SAVE(0x370);
+  const capacities = (bombs: number, arrows: number, race = false) =>
+    decodeCapacities(
+      new Image().set(BOMBS, bombs, arrows).view({ strict: race }),
+      { race },
+    );
+
+  it("reads how many bombs and arrows Link can hold, flatly", () => {
+    expect(capacities(10, 30)).toEqual({ arrows: 30, bombs: 10 });
+    // newitems.asm .bombs_50 and .arrows_70
+    expect(capacities(50, 70)).toEqual({ arrows: 70, bombs: 50 });
+    expect(capacities(35, 45)).toEqual({ arrows: 45, bombs: 35 });
+  });
+
+  it("clamps what a byte holds beyond 99", () => {
+    expect(capacities(0xff, 100)).toEqual({ arrows: 99, bombs: 99 });
+    expect(capacities(99, 99)).toEqual({ arrows: 99, bombs: 99 });
+  });
+
+  it("never asks for them in Race Mode: v2.0 does not name the upgrades", () => {
+    expect(racePermitted("capacities")).toBe(false);
+    // strict throws on any question about a forbidden range
+    expect(capacities(50, 70, true)).toBe("race-mode");
+  });
+
+  it("settles nothing before it is read or from a game with no save loaded", () => {
+    // A run starts with 10 and 30 and an upgrade only adds
+    expect(capacities(0, 0)).toBe("not-read");
+    expect(
+      decodeCapacities(new Image().view({ read: () => false }), {
+        race: false,
+      }),
     ).toBe("not-read");
   });
 });

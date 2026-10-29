@@ -681,7 +681,9 @@ export const MEMORY_RANGES = [
   // Somaria through the armor.
   save("equipment-c", 0x350, 12, "items", "z3:sram.asm:99-110"),
   // What each bottle holds, $00 for no bottle: the bottle contents v2.0
-  // lets a tracker show, which Race Mode reads (`bottles`).
+  // lets a tracker show ("bottle contents"), which Race Mode reads
+  // (`bottles`): how many bottles Link has (decodeItems) and what each holds
+  // (decodeBottles) are the same four bytes.
   save("bottles", 0x35c, 4, "bottles", "z3:sram.asm:111-115"),
   save("compasses", 0x364, 2, "items", "z3:sram.asm:119-126"),
   save("big-keys", 0x366, 2, "keys", "z3:sram.asm:119-126"),
@@ -692,6 +694,13 @@ export const MEMORY_RANGES = [
   // ($A0) (sram.asm:131-132). The race rules (v2.0) let a tracker show and
   // react to the heart count and the heart piece count: Race Mode reads both.
   save("health", 0x36b, 2, "health", "z3:sram.asm:130-132"),
+  // BombCapacity and ArrowCapacity: "flatly how many can be held", set by
+  // each upgrade (newitems.asm:353-400). v2.0 names the bomb and arrow
+  // *counts* but no capacity upgrade, and "anything not covered in this
+  // document is, by default, considered not permitted": `hud`, which the
+  // race profile keeps forbidden like the counts beside it, so Race Mode
+  // never reads these two bytes (and the planner never bridges across them).
+  save("capacities", 0x370, 2, "hud", "z3:sram.asm:135-136"),
   // The pendants and crystals taken (sram.asm:139-150): Race Mode reads
   // them as `prizes-held`, the crystals as a count alone (decode.ts).
   save("pendants", 0x374, 1, "prizes-held", "z3:sram.asm:139-140"),

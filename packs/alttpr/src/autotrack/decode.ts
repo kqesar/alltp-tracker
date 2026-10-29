@@ -461,6 +461,79 @@ export function decodeHealth(
 }
 
 /**
+ * What each bottle Link has holds, or why memory cannot say: one value per
+ * bottle held, in the game's order (as many as `decodeItems` counts, 0 to 4),
+ * each 0 for empty, 1 a red potion, 2 green, 3 blue, 4 a fairy, 5 a bee,
+ * 6 a good bee.
+ */
+export type BottlesReading = readonly number[] | Unsettled;
+
+/**
+ * BottleContents' values (sram.asm:111-115) as the tracker names them: $03
+ * red, $04 green, $05 blue, $06 fairy, $07 bee, $08 good bee. $01 (a
+ * mushroom no randomized seed puts there) and $02 (empty) are empty.
+ */
+const BOTTLE_CONTENTS = new Map([
+  [0x03, 1],
+  [0x04, 2],
+  [0x05, 3],
+  [0x06, 4],
+  [0x07, 5],
+  [0x08, 6],
+]);
+
+/**
+ * What each bottle Link has holds (BottleContents, $7EF35C-$7EF35F), in the
+ * order the game fills them: the contents of the slots that are not $00
+ * (the same count decodeItems gives `bottle`), in slot order. A bottle
+ * emptied or refilled in play changes it both ways. Race Mode reads it
+ * (category `bottles`: v2.0 lets a tracker display "bottle contents").
+ */
+export function decodeBottles(
+  memory: MemoryView,
+  options: DecodeOptions,
+): BottlesReading {
+  const bytes = new Reader(memory, options.race).range("bottles");
+  if (typeof bytes === "string") return bytes;
+  return [0, 1, 2, 3]
+    .map((slot) => bytes.byte(SAVE(0x35c + slot)))
+    .filter((content) => content !== 0)
+    .map((content) => BOTTLE_CONTENTS.get(content) ?? 0);
+}
+
+/** The bomb and arrow capacities as the game holds them, or why it cannot say. */
+export type CapacitiesReading =
+  | { readonly bombs: number; readonly arrows: number }
+  | Unsettled;
+
+/** The most a capacity shows: the byte holds how many, flatly (sram.asm:135-136). */
+const MAX_CAPACITY = 99;
+
+/**
+ * How many bombs and arrows Link can hold (BombCapacity, ArrowCapacity:
+ * $7EF370-$7EF371, "flatly how many can be held", sram.asm:135-136; each
+ * upgrade in newitems.asm:353-400 adds 5 or 10, or sets 50 and 70), 0 to
+ * 99, or not read while both are 0 (no save loaded). Never read in Race Mode: v2.0 names the counts held but not the
+ * capacity upgrades, so by default they are not permitted (category `hud`).
+ */
+export function decodeCapacities(
+  memory: MemoryView,
+  options: DecodeOptions,
+): CapacitiesReading {
+  const bytes = new Reader(memory, options.race).range("capacities");
+  if (typeof bytes === "string") return bytes;
+  const bombs = bytes.byte(SAVE(0x370));
+  const arrows = bytes.byte(SAVE(0x371));
+  // A run starts with 10 and 30 and an upgrade only adds: both at 0 is a
+  // game with no save loaded yet
+  if (bombs === 0 && arrows === 0) return "not-read";
+  return {
+    arrows: Math.min(MAX_CAPACITY, arrows),
+    bombs: Math.min(MAX_CAPACITY, bombs),
+  };
+}
+
+/**
  * The Triforce pieces Link holds, or why memory cannot say: GoalCounter
  * (sram.asm:265), which each goal item adds one to as Link raises it
  * (newitems.asm:102-105, 470-473). v2.0 lists "Triforce pieces" among the
