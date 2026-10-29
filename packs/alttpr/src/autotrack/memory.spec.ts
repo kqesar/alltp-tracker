@@ -97,6 +97,11 @@ const RACE_READS = [
   "dungeons-completed:items",
   // The small keys found (DungeonCollectedKeys)
   "collected-keys:keys",
+  // A Door Randomizer seed's pots, enemy drops and shop slots, each behind
+  // its switch: v2.0's locations "only ... in modes where they are shuffled"
+  "door-pots:pots",
+  "door-drops:enemy-drops",
+  "door-purchases:shop-items",
 ];
 
 const overlaps = (a: ByteRange, b: ByteRange) =>
@@ -171,7 +176,11 @@ describe("MEMORY_RANGES", () => {
       // Where the seed's doors and holes lead, and where Link went through
       "hole-table:entrances",
       "door-table:entrances",
-      // Outside Race Mode's windows: anything else, which Race Mode leaves
+      // Outside Race Mode's windows: anything else, which Race Mode leaves;
+      // first the Door Randomizer's settings and its Overworld fork's
+      "door-settings:other",
+      "standing-items:other",
+      "overworld-settings:other",
       "medallions:other",
       "map-mode:prizes",
       "swordless-mode:other",
@@ -400,7 +409,12 @@ describe("MEMORY_RANGES", () => {
     // the starting entrance): 35 bytes less, in six more pieces, one request.
     // The bomb and arrow capacities (capacities, forbidden) join the casual
     // phase alone: 2 bytes in a piece of their own; the race phase is
-    // unchanged.
+    // unchanged. The Door Randomizer's settings and its Overworld fork's
+    // (seed-settings.ts) join the casual phase with the rest of the seed's:
+    // 70 bytes in three more pieces, every 10 s. A Door Randomizer seed's
+    // pots, enemy drops and shop slots, all three switches on, join the race
+    // phase (they are v2.0's locations): 1,280 bytes in six more pieces
+    // (usb2snes cuts a span into 255-byte ones).
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -411,9 +425,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 438, pieces: 20 },
-      race: { bytes: 793, pieces: 20 },
-      ranges: { casual: 34, race: 38 },
+      casual: { bytes: 508, pieces: 23 },
+      race: { bytes: 2073, pieces: 26 },
+      ranges: { casual: 37, race: 41 },
     });
   });
 });

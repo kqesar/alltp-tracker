@@ -24,7 +24,7 @@
 import { bus } from "@alltp/autotrack";
 import type { MemoryView, Unsettled } from "./decode";
 import type { AlttprRange, SourceRef } from "./memory";
-import { SEED_TITLE_PREFIX } from "./probes";
+import { type SeedRom, seedRomOf } from "./probes";
 import { ALTTPR_RACE_PROFILE } from "./race-profile";
 
 /**
@@ -61,6 +61,38 @@ function rom<const Id extends string>(
  * which no race permits.
  */
 export const SEED_SETTINGS_RANGES = [
+  // The Door Randomizer's own table, $A7:8000 (ROM 0x138000): "DR", then
+  // DRMode, a word: 0 vanilla doors, 1 basic, 2 partitioned or crossed (DR
+  // 1.5.6 Rom.py:629, 656); DRFlags, a word (doorrando.asm:16-37 at the DR
+  // base patch, aerinon/z3randomizer d0f4651; DoorShuffle.py:3651-3664:
+  // Hide_Total $0100 for a Mystery seed, Rom.py:676-679, EnemyDropIndicator
+  // $0800 when the drops of every enemy are shuffled, 588-589); and at
+  // $A7:8010 DRVersionInfo, the version as text ("1.5.6-u", Rom.py:1458).
+  // An alttpr.com ROM holds something else here: read for a DR title only.
+  rom(
+    "door-settings",
+    0x27_8000,
+    0x20,
+    "other",
+    "drz3:doorrando/doorrando.asm:15-40",
+  ),
+  // StandingItemsOn, then MultiClientFlagsROM (a word: $01 enemy drops,
+  // $02 shopsanity, $04 take-any caves, $08 pots, $10 a Mystery seed),
+  // the swamp drains, then StandingItemCounterMask ($01 pots beyond the
+  // caves count, $02 drops: Rom.py:728-740) (standing_items.asm:117-126).
+  rom(
+    "standing-items",
+    0x28_aa50,
+    6,
+    "other",
+    "drz3:keydrop/standing_items.asm:116-126",
+  ),
+  // The Overworld fork's table at ROM 0x150000: owMode, a word (layout in
+  // its low byte, $0200 crossed, $0400 mixed), owFlags ($01 whirlpools, $02
+  // mixed, $06 grid, $0100 flute spots moved, $0200 bonk drops) and at
+  // 0x150010 its version as text (OWR 0.8.0.0 Rom.py:526-616, 665-678,
+  // 1854). Read for an "OR" title only.
+  rom("overworld-settings", 0x2a_8000, 0x20, "other", "owr:Rom.py:526-678"),
   // MireRequiredMedallion and TRockRequiredMedallion: the medallion each
   // pad wants, $00 Bombos, $01 Ether, $02 Quake (tables.asm:53-62; vt
   // Medallions.php:30-31 writes the item's second byte there). The game
@@ -255,6 +287,66 @@ export interface SeedSettingsReading {
    * to learn before meeting each (so the ROM leaves it out).
    */
   readonly bossShuffle?: SeedSetting<SeedBossShuffle>;
+  /**
+   * Which randomizer wrote the seed, from the title (the header, which Race
+   * Mode reads): absent for a header not read or not a seed's.
+   */
+  readonly randomizer?: SeedRandomizer;
+  /** A Door Randomizer seed's own settings: absent for alttpr.com's. */
+  readonly door?: DoorSeedSettings;
+}
+
+/** The randomizer a seed's title names (probes.ts, `seedRomOf`). */
+export type SeedRandomizer =
+  | { readonly kind: "vt" }
+  | {
+      readonly kind: "door";
+      /** The Overworld fork's ("OR"). */
+      readonly overworld: boolean;
+      /** The version the title's digits say, "1.5.6"; null for a tag. */
+      readonly version: string | null;
+    };
+
+/**
+ * DR's door shuffle as its ROM tells it (DRMode, Rom.py:629, 656): the ROM
+ * writes the same 2 for partitioned and crossed.
+ */
+export type SeedDoorShuffle = "vanilla" | "basic" | "shuffled";
+
+/** DR's dropshuffle (resources/app/cli/args.json): which enemies' drops. */
+export type SeedDropShuffle = "none" | "keys" | "underworld";
+
+/**
+ * DR's pottery as its ROM tells it: none; the caves' pots only; or more,
+ * which the ROM does not name (keys, cavekeys, dungeon, reduced, clustered,
+ * nonempty, lottery all count pots beyond the caves: Rom.py:738-740).
+ */
+export type SeedPotteryKind = "none" | "cave" | "beyond-caves";
+
+/** The Overworld fork's layout (OWR args.json `ow_layout`). */
+export type SeedOverworldLayout = "vanilla" | "grid" | "wild";
+
+/** What a Door Randomizer ROM says of its settings, outside Race Mode. */
+export interface DoorSeedSettings {
+  /** DRVersionInfo's text, its branch suffix dropped: "1.5.6". */
+  readonly version: SeedSetting<string>;
+  readonly doorShuffle: SeedSetting<SeedDoorShuffle>;
+  readonly dropShuffle: SeedSetting<SeedDropShuffle>;
+  readonly pottery: SeedSetting<SeedPotteryKind>;
+  readonly shopsanity: SeedSetting<boolean>;
+  /** Take-any caves (DR's take_any random or fixed). */
+  readonly takeAny: SeedSetting<boolean>;
+  /** The Overworld fork's settings, for an "OR" title only. */
+  readonly overworld?: {
+    readonly version: SeedSetting<string>;
+    readonly layout: SeedSetting<SeedOverworldLayout>;
+    readonly crossed: SeedSetting<boolean>;
+    readonly mixed: SeedSetting<boolean>;
+    readonly whirlpool: SeedSetting<boolean>;
+    /** The flute's spots moved (ow_fluteshuffle balanced or random). */
+    readonly fluteShuffle: SeedSetting<boolean>;
+    readonly bonkDrops: SeedSetting<boolean>;
+  };
 }
 
 /** upstream's enemizer.bossShuffle (config/alttp.php:241-246). */
@@ -405,13 +497,186 @@ function goalOf(
 const crystals = ([count]: Uint8Array) => (count <= 7 ? count : null);
 
 /** The seed's name from the header title, or null. */
-function seedName(memory: MemoryView): string | null {
+function seedRom(memory: MemoryView): SeedRom | null {
   if (!memory.has(HEADER)) return null;
   const header = memory.bytes(HEADER);
-  const title = String.fromCharCode(...header.subarray(0, TITLE_LENGTH));
-  if (!title.startsWith(SEED_TITLE_PREFIX)) return null;
-  const name = title.slice(SEED_TITLE_PREFIX.length).trim();
-  return name === "" ? null : name;
+  const rom = seedRomOf(
+    String.fromCharCode(...header.subarray(0, TITLE_LENGTH)),
+  );
+  return rom === null || rom.seed === "" ? null : rom;
+}
+
+/**
+ * GanonVulnerableMode as the Door Randomizer writes it (Rom.py:1164-1175):
+ * its own "ganon" goal asks for the crystals and Agahnim 2 ($03), which the
+ * tracker's Ganon goal is; "crystals" and "trinity" write $04, as vt's
+ * ganon and fast_ganon do, trinity with Triforce pieces besides (1109-1110),
+ * a goal the tracker has no run type for.
+ */
+function doorGoalOf(
+  memory: MemoryView,
+  race: boolean,
+  vulnerable: Uint8Array,
+): SeedSetting<SeedGoal> {
+  const pieces = (bytes: Uint8Array) => (bytes[0] | (bytes[1] << 8)) !== 0;
+  switch (vulnerable[0]) {
+    case 0x03:
+      return known("ganon");
+    case VULNERABLE.crystals:
+      return decodeFrom(
+        memory,
+        race,
+        ["goal-items", "initial-pyramid"],
+        (items, pyramid) =>
+          pieces(items)
+            ? null
+            : (pyramid[0] & PYRAMID_OPEN) !== 0
+              ? "fast_ganon"
+              : "ganon",
+      );
+    default:
+      return goalOf(memory, race, vulnerable);
+  }
+}
+
+/** Text written into the ROM, up to its first zero, or null when none. */
+const textOf = (bytes: Uint8Array): string | null => {
+  const end = bytes.indexOf(0);
+  const text = String.fromCharCode(
+    ...bytes.subarray(0, end === -1 ? bytes.length : end),
+  );
+  return /^[0-9]+(\.[0-9]+)+(-[a-z]+)?$/.test(text)
+    ? text.replace(/-[a-z]+$/, "")
+    : null;
+};
+
+const word = (bytes: Uint8Array, at: number) =>
+  bytes[at] | (bytes[at + 1] << 8);
+
+/** DRMode's values (Rom.py:629, 656; doorrando.asm:16-17). */
+const DOOR_MODES: Readonly<Record<number, SeedDoorShuffle>> = {
+  0: "vanilla",
+  1: "basic",
+  2: "shuffled",
+};
+
+/** DRFlags' bits (DoorShuffle.py:3651-3664). */
+const DR_FLAGS = { enemyDrops: 0x0800, hideTotal: 0x0100 } as const;
+
+/** MultiClientFlagsROM's bits (Rom.py:731-736). */
+const MULTI_CLIENT = {
+  drops: 0x01,
+  mystery: 0x10,
+  pottery: 0x08,
+  shopsanity: 0x02,
+  takeAny: 0x04,
+} as const;
+
+/** Whether DR's table opens with "DR", as its base patch writes it (doorrando.asm:15). */
+const isDoorTable = (table: Uint8Array) =>
+  table[0] === 0x44 && table[1] === 0x52;
+
+/**
+ * A setting as a Mystery seed shows it: hidden once read, whatever its
+ * value; still unknown for the reason it was (Race Mode, not read yet).
+ */
+const hiddenIf = <T>(mystery: boolean, setting: SeedSetting<T>) =>
+  mystery && (setting.known || setting.why === "unrecognized")
+    ? (MYSTERY as SeedSetting<T>)
+    : setting;
+
+/**
+ * A Door Randomizer ROM's own settings. Each needs DR's table to open as
+ * the base patch writes it (the Overworld fork's, its version), so a table
+ * the ROM does not hold is unrecognized, never read as vanilla.
+ */
+function doorSettings(
+  memory: MemoryView,
+  race: boolean,
+  overworld: boolean,
+  mystery: boolean,
+): DoorSeedSettings {
+  const hide = <T>(setting: SeedSetting<T>): SeedSetting<T> =>
+    hiddenIf(mystery, setting);
+  /** A setting from DR's table, and the standing items' beside it. */
+  const dr = <T>(
+    decode: (table: Uint8Array, client: number, mask: number) => T | null,
+  ) =>
+    hide(
+      decodeFrom(memory, race, ["door-settings", "standing-items"], (t, s) =>
+        isDoorTable(t) ? decode(t, word(s, 1), s[5]) : null,
+      ),
+    );
+  /** A setting from the Overworld fork's table. */
+  const ow = <T>(decode: (mode: number, flags: number) => T) =>
+    hide(
+      decodeFrom(memory, race, ["overworld-settings"], (table) =>
+        textOf(table.subarray(0x10)) === null
+          ? null
+          : decode(word(table, 2), word(table, 4)),
+      ),
+    );
+  const settings: DoorSeedSettings = {
+    doorShuffle: dr((table) => DOOR_MODES[word(table, 2)] ?? null),
+    dropShuffle: dr<SeedDropShuffle>((table, client) =>
+      (client & MULTI_CLIENT.drops) === 0
+        ? "none"
+        : (word(table, 4) & DR_FLAGS.enemyDrops) !== 0
+          ? "underworld"
+          : "keys",
+    ),
+    // StandingItemCounterMask $01: pots beyond the caves count
+    pottery: dr<SeedPotteryKind>((_, client, mask) =>
+      (client & MULTI_CLIENT.pottery) === 0
+        ? "none"
+        : (mask & 0x01) !== 0
+          ? "beyond-caves"
+          : "cave",
+    ),
+    shopsanity: dr((_, client) => (client & MULTI_CLIENT.shopsanity) !== 0),
+    takeAny: dr((_, client) => (client & MULTI_CLIENT.takeAny) !== 0),
+    // The version is no setting a Mystery seed hides
+    version: decodeFrom(memory, race, ["door-settings"], (table) =>
+      isDoorTable(table) ? textOf(table.subarray(0x10)) : null,
+    ),
+  };
+  if (!overworld) return settings;
+  return {
+    ...settings,
+    overworld: {
+      bonkDrops: ow((_, flags) => (flags & 0x0200) !== 0),
+      crossed: ow((mode) => (mode & 0x0200) !== 0),
+      fluteShuffle: ow((_, flags) => (flags & 0x0100) !== 0),
+      layout: ow<SeedOverworldLayout>((mode, flags) =>
+        (flags & 0x06) === 0x06
+          ? "grid"
+          : (mode & 0xff) !== 0
+            ? "wild"
+            : "vanilla",
+      ),
+      mixed: ow((mode) => (mode & 0x0400) !== 0),
+      version: decodeFrom(memory, race, ["overworld-settings"], (table) =>
+        textOf(table.subarray(0x10)),
+      ),
+      whirlpool: ow((_, flags) => (flags & 0x01) !== 0),
+    },
+  };
+}
+
+/**
+ * Whether a Door Randomizer ROM says it is a Mystery seed: Mystery.py marks
+ * it twice, MultiClientFlagsROM's $10 and DRFlags' Hide_Total (Rom.py:
+ * 676-677, 736). Null while not known (Race Mode, not read).
+ */
+function doorMystery(memory: MemoryView, race: boolean): boolean | null {
+  const table = bytesOf(memory, race, "door-settings");
+  const standing = bytesOf(memory, race, "standing-items");
+  if (typeof table === "string" || typeof standing === "string") return null;
+  if (!isDoorTable(table)) return null;
+  return (
+    (word(standing, 1) & MULTI_CLIENT.mystery) !== 0 ||
+    (word(table, 4) & DR_FLAGS.hideTotal) !== 0
+  );
 }
 
 /**
@@ -433,20 +698,31 @@ export function decodeSeedSettings(
   const wild = (bit: number) =>
     from(["dungeon-item-menu"], (menu) => (menu[0] & bit) !== 0);
   const vulnerable = bytesOf(memory, race, "ganon-vulnerable");
-  return {
+  const rom = seedRom(memory);
+  const door = rom?.randomizer === "door" ? rom : null;
+  const reading: SeedSettingsReading = {
     crystalsGanon: from(["ganon-crystals"], crystals),
     crystalsTower: from(["tower-crystals"], crystals),
     goal:
       typeof vulnerable === "string"
         ? unknown(vulnerable)
-        : goalOf(memory, race, vulnerable),
+        : door === null
+          ? goalOf(memory, race, vulnerable)
+          : doorGoalOf(memory, race, vulnerable),
     goalPieces: from(["goal-items"], ([low, high]) => {
       const pieces = low | (high << 8);
       return pieces >= 1 && pieces <= MAX_GOAL_PIECES ? pieces : null;
     }),
-    logic: from(["seed-type"], (type) => LOGICS[type[0]] ?? null),
+    // The Door Randomizer never writes the seed type (its Rom.py has no
+    // 0x180210): its byte is the base patch's, whatever the logic
+    logic:
+      door === null
+        ? from(["seed-type"], (type) => LOGICS[type[0]] ?? null)
+        : race
+          ? unknown("race-mode")
+          : UNRECOGNIZED,
     mode: from(["inverted-mode", "generic-keys", "initial-progress"], modeOf),
-    seed: seedName(memory),
+    seed: rom?.seed ?? null,
     swordless: from(["swordless-mode"], (bytes) => {
       const hammer = flag(bytes[0]);
       return hammer !== null && flag(bytes[2]) === hammer ? hammer : null;
@@ -455,5 +731,32 @@ export function decodeSeedSettings(
     wildCompasses: wild(DUNGEON_ITEM_BITS.compasses),
     wildKeys: wild(DUNGEON_ITEM_BITS.smallKeys),
     wildMaps: wild(DUNGEON_ITEM_BITS.maps),
+  };
+  if (rom === null) return reading;
+  if (door === null) return { ...reading, randomizer: { kind: "vt" } };
+  // A Door Randomizer Mystery seed says so: its settings stay hidden, as an
+  // alttpr.com Mystery seed's file hides them (seed-file.ts)
+  const mystery = doorMystery(memory, race) === true;
+  const hide = <T>(setting: SeedSetting<T>): SeedSetting<T> =>
+    hiddenIf(mystery, setting);
+  return {
+    crystalsGanon: hide(reading.crystalsGanon),
+    crystalsTower: hide(reading.crystalsTower),
+    door: doorSettings(memory, race, door.overworld, mystery),
+    goal: hide(reading.goal),
+    ...(reading.goalPieces && { goalPieces: hide(reading.goalPieces) }),
+    logic: reading.logic,
+    mode: reading.mode,
+    randomizer: {
+      kind: "door",
+      overworld: door.overworld,
+      version: door.version,
+    },
+    seed: reading.seed,
+    swordless: hide(reading.swordless),
+    wildBigKeys: hide(reading.wildBigKeys),
+    wildCompasses: hide(reading.wildCompasses),
+    wildKeys: hide(reading.wildKeys),
+    wildMaps: hide(reading.wildMaps),
   };
 }

@@ -314,13 +314,235 @@ describe("decodeSeedSettings", () => {
   });
 });
 
+// A Door Randomizer ROM, at the PC offsets DR 1.5.6 writes (Rom.py) and its
+// base patch lays out (aerinon/z3randomizer d0f4651): the title, then its
+// own table, "DR" and DRMode, DRFlags, DRVersionInfo; the standing items'
+// table; the Overworld fork's.
+const DR = {
+  flags: 0x13_8004, // Rom.py:678-679
+  magic: 0x13_8000, // doorrando.asm:15
+  mode: 0x13_8002, // Rom.py:629, 656
+  multiClient: 0x14_2a51, // Rom.py:736
+  owFlags: 0x15_0004, // OWR Rom.py:677
+  owMode: 0x15_0002, // OWR Rom.py:676
+  owVersion: 0x15_0010, // OWR Rom.py:1854
+  standingMask: 0x14_2a55, // Rom.py:738
+  version: 0x13_8010, // Rom.py:1458
+} as const;
+
+/** Text written into an image at a PC offset. */
+const write = (memory: Uint8Array, at: number, value: string) => {
+  for (let i = 0; i < value.length; i++) memory[at + i] = value.charCodeAt(i);
+};
+
+/** A Door Randomizer image: its title, its table's magic and version. */
+const doorImage = (
+  title: string,
+  writes: Readonly<Record<number, number>> = {},
+) => {
+  const memory = image(writes);
+  memory.fill(0, OFFSET.header, OFFSET.header + 21);
+  write(memory, OFFSET.header, title);
+  if (memory[DR.magic] === 0) write(memory, DR.magic, "DR");
+  if (memory[DR.version] === 0) write(memory, DR.version, "1.5.6-u");
+  return memory;
+};
+
+/** Every DR setting's value, or its reason. */
+const doorShown = (reading: SeedSettingsReading) => {
+  const door = reading.door;
+  if (door === undefined) return undefined;
+  const { overworld, ...rest } = door;
+  const each = (group: Readonly<Record<string, SeedSetting<unknown>>>) =>
+    Object.fromEntries(
+      Object.entries(group).map(([key, setting]) => [key, shown(setting)]),
+    );
+  return { ...each(rest), ...(overworld && { overworld: each(overworld) }) };
+};
+
+describe("decodeSeedSettings, a Door Randomizer seed", () => {
+  it("names the seed and the version from the title, in Race Mode too", () => {
+    const rom = doorImage("DR156_1_1_367825107");
+    for (const race of [false, true]) {
+      const reading = decode(rom, { race });
+      expect(reading.seed).toBe("1_1_367825107");
+      expect(reading.randomizer).toEqual({
+        kind: "door",
+        overworld: false,
+        version: "1.5.6",
+      });
+    }
+    expect(decode(image()).randomizer).toEqual({ kind: "vt" });
+  });
+
+  it("reads none of its settings in Race Mode", () => {
+    const reading = decode(
+      doorImage("DR156_1_1_367825107", {
+        [DR.mode]: 2,
+        [DR.multiClient]: 0x0b,
+      }),
+      { race: true },
+    );
+    expect(doorShown(reading)).toEqual({
+      doorShuffle: "?race-mode",
+      dropShuffle: "?race-mode",
+      pottery: "?race-mode",
+      shopsanity: "?race-mode",
+      takeAny: "?race-mode",
+      version: "?race-mode",
+    });
+    expect(shown(reading.logic)).toBe("?race-mode");
+  });
+
+  it("reads Crosskeys' keydrop as Hyrule Town Hall's patch writes it", () => {
+    // The study's HTH patch DR156_1_1_367825107: DRMode 0, DRFlags $0213;
+    // the keydrop opt-in sets drops and pottery keys (Rom.py:731-740)
+    const reading = decode(
+      doorImage("DR156_1_1_367825107", {
+        [DR.flags]: 0x13,
+        [DR.flags + 1]: 0x02,
+        [DR.multiClient]: 0x09,
+        [DR.standingMask]: 0x03,
+      }),
+    );
+    expect(doorShown(reading)).toEqual({
+      doorShuffle: "vanilla",
+      dropShuffle: "keys",
+      pottery: "beyond-caves",
+      shopsanity: false,
+      takeAny: false,
+      version: "1.5.6",
+    });
+    // DR writes no seed type (no 0x180210 in its Rom.py): never NoGlitches
+    expect(shown(reading.logic)).toBe("?unrecognized");
+  });
+
+  it.each([
+    [{}, ["vanilla", "none", "none"]],
+    [{ [DR.mode]: 1 }, ["basic", "none", "none"]],
+    [{ [DR.mode]: 2 }, ["shuffled", "none", "none"]],
+    [
+      { [DR.flags + 1]: 0x08, [DR.multiClient]: 0x01 },
+      ["vanilla", "underworld", "none"],
+    ],
+    [{ [DR.multiClient]: 0x08 }, ["vanilla", "none", "cave"]],
+  ])("reads %j as doors, drops and pots %j", (writes, expected) => {
+    const door = decode(doorImage("DR156_1_1_1", writes)).door;
+    expect(
+      [door?.doorShuffle, door?.dropShuffle, door?.pottery].map((setting) =>
+        setting === undefined ? undefined : shown(setting),
+      ),
+    ).toEqual(expected);
+  });
+
+  it("never reads a table the ROM does not hold as vanilla", () => {
+    const rom = doorImage("DR156_1_1_1");
+    rom.fill(0, DR.magic, DR.magic + 2);
+    rom.fill(0, DR.version, DR.version + 16);
+    expect(doorShown(decode(rom))).toMatchObject({
+      doorShuffle: "?unrecognized",
+      pottery: "?unrecognized",
+      version: "?unrecognized",
+    });
+    expect(
+      doorShown(
+        decode(doorImage("DR156_1_1_1"), { unread: ["door-settings"] }),
+      ),
+    ).toMatchObject({ doorShuffle: "?not-read" });
+  });
+
+  it("reads DR's goals, its own Ganon goal included", () => {
+    const goal = (writes: Readonly<Record<number, number>>) =>
+      shown(decode(doorImage("DR156_1_1_1", writes)).goal);
+    // Rom.py:1164-1175
+    expect(goal({ [OFFSET.ganonVulnerable]: 0x03 })).toBe("ganon");
+    expect(goal({ [OFFSET.ganonVulnerable]: 0x04 })).toBe("ganon");
+    expect(goal({ [OFFSET.ganonVulnerable]: 0x04, [PYRAMID]: 0x20 })).toBe(
+      "fast_ganon",
+    );
+    // Trinity: crystals, and pieces besides (1109-1110)
+    expect(
+      goal({ [OFFSET.ganonVulnerable]: 0x04, [OFFSET.goalItems]: 20 }),
+    ).toBe("?unrecognized");
+    expect(goal({ [OFFSET.ganonVulnerable]: 0x02 })).toBe("dungeons");
+    expect(goal({ [OFFSET.ganonVulnerable]: 0x05 })).toBe("ganonhunt");
+    // An alttpr.com seed's $03 is none vt writes
+    expect(shown(decode(image({ [OFFSET.ganonVulnerable]: 0x03 })).goal)).toBe(
+      "?unrecognized",
+    );
+  });
+
+  it("hides the settings of a seed DR marks as Mystery, but the world", () => {
+    for (const writes of [
+      { [DR.multiClient]: 0x10 },
+      { [DR.flags + 1]: 0x01 },
+    ]) {
+      const reading = decode(
+        doorImage("DR156_1_1_1", { ...writes, [PROGRESS]: 0x02 }),
+      );
+      expect(settings(reading)).toMatchObject({
+        crystalsGanon: "?mystery",
+        goal: "?mystery",
+        mode: "open",
+        wildKeys: "?mystery",
+      });
+      expect(doorShown(reading)).toMatchObject({
+        doorShuffle: "?mystery",
+        pottery: "?mystery",
+        version: "1.5.6",
+      });
+    }
+  });
+
+  it("reads the Overworld fork's settings for an OR title only", () => {
+    const rom = doorImage("OR156_1_1_1", {
+      [DR.owFlags]: 0x01,
+      [DR.owFlags + 1]: 0x03,
+      [DR.owMode + 1]: 0x06,
+    });
+    write(rom, DR.owVersion, "0.8.0.0-u");
+    expect(doorShown(decode(rom))?.overworld).toEqual({
+      bonkDrops: true,
+      crossed: true,
+      fluteShuffle: true,
+      layout: "vanilla",
+      mixed: true,
+      version: "0.8.0.0",
+      whirlpool: true,
+    });
+    const grid = doorImage("OR156_1_1_1", {
+      [DR.owFlags]: 0x06,
+      [DR.owMode]: 0x01,
+    });
+    write(grid, DR.owVersion, "0.8.0.0");
+    expect(doorShown(decode(grid))?.overworld?.layout).toBe("grid");
+    expect(decode(doorImage("DR156_1_1_1")).door?.overworld).toBeUndefined();
+    // No OWR version, no OWR table
+    expect(doorShown(decode(doorImage("OR156_1_1_1")))?.overworld?.layout).toBe(
+      "?unrecognized",
+    );
+  });
+});
+
 describe("SEED_SETTINGS_RANGES", () => {
   const permitted = (category: string) =>
     ALTTPR_RACE_PROFILE.categories[category]?.permitted === true;
 
-  it("lies in bank $30 of the ROM, every range in the memory map", () => {
-    for (const range of SEED_SETTINGS_RANGES) {
+  it("lies in the base patches' tables of the ROM, every range in the memory map", () => {
+    // DR's in banks $27 and $28 (doorrando.asm:15, standing_items.asm:116),
+    // its Overworld fork's at ROM 0x150000, bank $2A; vt's all in bank $30
+    const banks = SEED_SETTINGS_RANGES.map(
+      (range) => `${range.id}:${(range.bus >>> 16).toString(16)}`,
+    );
+    expect(banks.slice(0, 3)).toEqual([
+      "door-settings:27",
+      "standing-items:28",
+      "overworld-settings:2a",
+    ]);
+    for (const range of SEED_SETTINGS_RANGES.slice(3)) {
       expect(range.bus >>> 16, range.id).toBe(0x30);
+    }
+    for (const range of SEED_SETTINGS_RANGES) {
       expect(MEMORY_RANGES, range.id).toContain(range);
     }
   });

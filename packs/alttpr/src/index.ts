@@ -79,6 +79,12 @@ export {
   type Unsettled,
 } from "./autotrack/decode";
 export {
+  DOOR_FLAG_RANGES,
+  type DoorChecksReading,
+  decodeDoorChecks,
+  doorSwitches,
+} from "./autotrack/door-checks";
+export {
   decodeMedallions,
   type MedallionReading,
   type MedallionShownBy,
@@ -88,6 +94,9 @@ export {
   type AlttprRange,
   DARK_ROOM_ART_SWITCH,
   DARK_ROOM_SWITCH,
+  DOOR_DROPS_SWITCH,
+  DOOR_POTS_SWITCH,
+  DOOR_SHOPS_SWITCH,
   MEMORY_RANGE,
   MEMORY_RANGES,
   MEMORY_SOURCES,
@@ -105,16 +114,22 @@ export {
   ALTTPR_GAME_CHECK,
   ALTTPR_RACE_FLAG,
   checkGame,
+  DOOR_RANDOMIZER_VERSION,
   type GameCheckCode,
   probeRaceFlag,
   type RaceFlagProbeResult,
+  type SeedRom,
+  seedRomOf,
 } from "./autotrack/probes";
 export { ALTTPR_RACE_PROFILE } from "./autotrack/race-profile";
 export {
+  type DoorSeedSettings,
   decodeSeedSettings,
   SEED_SETTINGS_RANGES,
   type SeedAccessibility,
   type SeedBossShuffle,
+  type SeedDoorShuffle,
+  type SeedDropShuffle,
   type SeedEntrances,
   type SeedGoal,
   type SeedItemFunctionality,
@@ -122,6 +137,9 @@ export {
   type SeedItemPool,
   type SeedLogic,
   type SeedMode,
+  type SeedOverworldLayout,
+  type SeedPotteryKind,
+  type SeedRandomizer,
   type SeedSetting,
   type SeedSettingsRangeId,
   type SeedSettingsReading,
@@ -147,6 +165,20 @@ export {
   type DerivedFact,
   derivedFacts,
 } from "./derived";
+export {
+  DR_LOCATIONS,
+  DR_UPSTREAM,
+  type DrLocation,
+  type DrLocationKind,
+  type DrLocationSet,
+  type DrModes,
+  type DropShuffle,
+  type DrPartial,
+  drKeysAdded,
+  drLocationsOf,
+  type PotteryMode,
+  type TakeAny,
+} from "./door-rando/locations";
 export {
   bossLocation,
   DUNGEON_IDS,

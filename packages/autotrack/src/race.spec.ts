@@ -12,6 +12,8 @@ describe("ALTTPR_RACE_PROFILE", () => {
       { address: 0x00_7fb0, size: 0x30 },
       { address: 0xf5_0010, size: 1 },
       { address: 0xf5_f000, size: 0x501 },
+      // The Door Randomizer's pots, enemy drops and shop slots, $7F:6018-$7F:6517
+      { address: 0xf6_6018, size: 0x500 },
       { address: 0x18_0213, size: 2 },
     ]);
     expect(ALTTPR_RACE_PROFILE.raceFlag).toEqual({
