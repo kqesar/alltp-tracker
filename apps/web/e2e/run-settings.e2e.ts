@@ -66,7 +66,25 @@ test("a Mystery run finds its settings as it goes, the run kept", async ({
   await summary
     .getByRole("combobox", { name: "Dungeon items" })
     .selectOption("full");
+  // The entrances and glitches may be anything until set: every check maybe
+  await expect(
+    summary.getByRole("combobox", { name: "Entrances" }),
+  ).toHaveValue("?");
+  await expect(summary.getByRole("combobox", { name: "Glitches" })).toHaveValue(
+    "?",
+  );
   await summary.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "The entrances are not set yet",
+  );
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await summary
+    .getByRole("combobox", { name: "Entrances" })
+    .selectOption("none");
+  await summary.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "The glitches are not set yet",
+  );
 
   // The run kept, Eastern Palace's 2 items found out of its 6 locations now
   await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(

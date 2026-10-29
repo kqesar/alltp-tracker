@@ -124,6 +124,19 @@ const withGlitches = (
     : { ...rest, glitches };
 };
 
+/**
+ * The glitches a seed's logic reveals to a Mystery run whose glitches are
+ * hidden: undefined while it is not known, and for Major Glitches, which
+ * the ROM's seed type also writes for Hybrid Major Glitches and No Logic
+ * (World.php:1292-1302): a hidden setting is never set from a guess.
+ */
+const revealedGlitches = (
+  logic: SeedSetting<SeedLogic>,
+): Glitches | "none" | undefined =>
+  !logic.known || logic.value === "MajorGlitches"
+    ? undefined
+    : (GLITCHES[logic.value] ?? "none");
+
 /** Short names for the goals, as a seed's summary says them. */
 const GOAL_NAMES: Readonly<Record<RunSettings["goal"], string>> = {
   "all-dungeons": "All Dungeons",
@@ -149,12 +162,13 @@ export const COMPARED = [
 ] as const satisfies readonly (keyof RunSettings)[];
 
 /**
- * What a seed lays on a Mystery run: its tunable settings but the glitches,
- * which a seed changes by switching the run (`sameLogic`).
+ * What a seed lays on a Mystery run: its tunable settings; the glitches
+ * only while hidden (`revealedGlitches`), a seed of another logic than the
+ * one set switching the run (`sameLogic`).
  */
 type SeedChange = Partial<
-  Pick<RunSettings, Exclude<TunableSetting, "glitches">>
->;
+  Pick<RunSettings, Exclude<TunableSetting, "glitches" | "playGlitches">>
+> & { glitches?: Glitches | "none" };
 
 /** A setting only the seed's file states: the seed's when known, else `own`. */
 const fromFile = <T>(setting: SeedSetting<T> | undefined, own: T): T =>
@@ -239,7 +253,10 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
   }
   const differs = (key: TunableSetting) =>
     shown(key) && settings[key] !== preset.settings[key];
-  if (settings.entranceShuffle !== preset.settings.entranceShuffle) {
+  if (
+    shown("entranceShuffle") &&
+    settings.entranceShuffle !== preset.settings.entranceShuffle
+  ) {
     parts.push(
       settings.entranceShuffle === "none"
         ? "vanilla entrances"
@@ -275,7 +292,7 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
     parts.push(`${BOSS_SHUFFLE_LABELS[bossShuffleOf(settings)]} boss shuffle`);
   }
   // No preset is glitched
-  if (settings.glitches !== undefined) {
+  if (shown("glitches") && settings.glitches !== undefined) {
     parts.push(GLITCHES_LABELS[settings.glitches]);
   }
   return `${preset.name} (${parts.join(", ")})`;
@@ -290,16 +307,38 @@ const mysterySeed = (
   logic: SeedSetting<SeedLogic>,
   run: Run,
 ): SeedCheck => {
-  // Its file hides every setting but the logic
+  // Its file hides every setting but the logic, which the ROM may tell
+  const revealed = revealedGlitches(logic);
+  const mystery = getPreset("mystery").settings;
   const settings = withGlitches(
-    { ...getPreset("mystery").settings, mode: run.settings.mode },
-    logic,
+    {
+      ...mystery,
+      hidden: mystery.hidden?.filter(
+        (key) => revealed === undefined || key !== "glitches",
+      ),
+      mode: run.settings.mode,
+    },
+    revealed === undefined ? { known: false, why: "mystery" } : logic,
   );
-  if (
-    run.presetId === "mystery" &&
-    settings.glitches === run.settings.glitches
-  ) {
-    return { kind: "unread", why: "mystery" };
+  if (run.presetId === "mystery") {
+    if (revealed !== undefined && isHidden(run.settings, "glitches")) {
+      return {
+        change: { glitches: revealed },
+        kind: "reveals",
+        seed,
+        seedText: describeRun("mystery", {
+          ...withGlitches(run.settings, logic),
+          hidden: run.settings.hidden?.filter((key) => key !== "glitches"),
+        }),
+      };
+    }
+    if (
+      revealed === undefined ||
+      isHidden(run.settings, "glitches") ||
+      revealed === tunedOf(run.settings, "glitches")
+    ) {
+      return { kind: "unread", why: "mystery" };
+    }
   }
   return {
     kind: "differs",
@@ -383,6 +422,8 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     return { kind: "unsupported", reasons, seed: seed.seed };
   }
 
+  const glitches = revealedGlitches(seed.logic);
+  const glitchesHidden = isHidden(run.settings, "glitches");
   const settings: RunSettings = withGlitches(
     {
       ...run.settings,
@@ -401,7 +442,10 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
       mode: mode.value,
       swordless: swordless.value,
     },
-    seed.logic,
+    // Hidden glitches stay the run's until the seed tells them for sure
+    glitchesHidden && glitches === undefined
+      ? { known: false, why: "mystery" }
+      : seed.logic,
   );
   // The seed's settings hide nothing: a Mystery run's hidden list is its own
   delete settings.hidden;
@@ -411,12 +455,14 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   else settings.bossShuffle = bossShuffle;
   const sameLogic = settings.glitches === run.settings.glitches;
   // A Mystery run takes what the seed reveals, in place, in its own world
-  // and logic
+  // and logic, and its entrance shuffle and glitches while they are hidden
+  const entrancesHidden = isHidden(run.settings, "entranceShuffle");
   if (
     run.presetId === "mystery" &&
     settings.mode === run.settings.mode &&
-    settings.entranceShuffle === run.settings.entranceShuffle &&
-    sameLogic
+    (settings.entranceShuffle === run.settings.entranceShuffle ||
+      (entrancesHidden && seed.entrances?.known === true)) &&
+    (sameLogic || (glitchesHidden && glitches !== undefined))
   ) {
     const said: SeedChange = {
       crystalsGanon: settings.crystalsGanon,
@@ -436,6 +482,10 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
       }),
       ...(seed.itemPool?.known && { itemPool: settings.itemPool }),
       ...(seed.bossShuffle?.known && { bossShuffle }),
+      ...(seed.entrances?.known && {
+        entranceShuffle: settings.entranceShuffle,
+      }),
+      ...(glitchesHidden && glitches !== undefined && { glitches }),
     };
     const change = Object.fromEntries(
       (Object.keys(said) as (keyof SeedChange)[])

@@ -114,10 +114,14 @@ describe("checkSeed", () => {
       "This seed is Mystery (Open, Ganon, 5/7, MC Shuffle, Swordless): its settings are laid on your Mystery run.",
     );
 
+    // The ROM tells NoGlitches apart: the hidden glitches are None
+    const { glitches, ...change } = check.change;
+    expect(glitches).toBe("none");
+
     // Once laid, the seed and the run agree
     const settings = {
       ...getPreset("mystery").settings,
-      ...check.change,
+      ...change,
       hidden: [
         "itemPlacement",
         "itemPool",
@@ -189,14 +193,36 @@ describe("checkSeed", () => {
       runText: "Keysanity",
       seedText: "Crosskeys (Open, Ganon, 7/7)",
     });
-    // Nor does a Mystery run take a seed of other entrances in place
+    // A Mystery run takes them in place while its entrances are hidden
     const vanilla = {
       ...seedOf({}),
       entrances: { known: true, value: "none" },
     } as const;
     expect(
       checkSeed({ ...vanilla, entrances: crosskeys.entrances }, run("mystery")),
+    ).toMatchObject({
+      change: { entranceShuffle: "crossed" },
+      kind: "reveals",
+    });
+    // Once set, a seed of other entrances is another run
+    const mystery = getPreset("mystery").settings;
+    expect(
+      checkSeed(
+        { ...vanilla, entrances: crosskeys.entrances },
+        {
+          presetId: "mystery",
+          settings: {
+            ...mystery,
+            hidden: mystery.hidden?.filter((key) => key !== "entranceShuffle"),
+          },
+        },
+      ),
     ).toMatchObject({ kind: "differs", seedText: /Crossworld entrances/ });
+    // Without the file, the ROM says nothing of them: they stay hidden
+    const rom = checkSeed(seedOf({}), run("mystery"));
+    expect(rom).toMatchObject({ kind: "reveals" });
+    if (rom.kind !== "reveals") throw new Error("expected reveals");
+    expect(rom.change).not.toHaveProperty("entranceShuffle");
     expect(checkSeed(vanilla, run("open"))).toMatchObject({ kind: "same" });
   });
 
@@ -369,17 +395,65 @@ describe("checkSeed", () => {
     expect(checkSeed(seed, glitched)).toMatchObject({ kind: "same" });
   });
 
-  it("switches a Mystery run to a glitched Mystery seed's logic", () => {
+  it("reveals a glitched Mystery seed's logic to a Mystery run that hides it", () => {
     const seed = {
       ...mysterySeed(),
       logic: { known: true, value: "HybridMajorGlitches" },
     } as const;
 
-    expect(checkSeed(seed, run("mystery"))).toMatchObject({
+    const check = checkSeed(seed, run("mystery"));
+    expect(check).toMatchObject({
+      change: { glitches: "hybrid_major_glitches" },
+      kind: "reveals",
+      seedText: "Mystery (Open, Hybrid Major Glitches)",
+    });
+  });
+
+  it("switches a Mystery run whose glitches are set to another logic's seed", () => {
+    const seed = {
+      ...mysterySeed(),
+      logic: { known: true, value: "HybridMajorGlitches" },
+    } as const;
+    const mystery = getPreset("mystery").settings;
+    expect(
+      checkSeed(seed, {
+        presetId: "mystery",
+        settings: {
+          ...mystery,
+          hidden: mystery.hidden?.filter((key) => key !== "glitches"),
+        },
+      }),
+    ).toMatchObject({
       kind: "differs",
       presetId: "mystery",
       seedText: "Mystery (Open, Hybrid Major Glitches)",
       settings: { glitches: "hybrid_major_glitches" },
+    });
+  });
+
+  it("never reveals glitches from the ROM's Major Glitches, which three logics write", () => {
+    const rom = checkSeed(seedOf({ logic: "MajorGlitches" }), run("mystery"));
+    if (rom.kind !== "reveals") throw new Error("expected reveals");
+    expect(rom.change).not.toHaveProperty("glitches");
+    const overworld = checkSeed(
+      seedOf({ logic: "OverworldGlitches" }),
+      run("mystery"),
+    );
+    expect(overworld).toMatchObject({
+      change: { glitches: "overworld_glitches" },
+      kind: "reveals",
+    });
+  });
+
+  it("reveals nothing in Race Mode, the glitches and entrances included", () => {
+    const check = checkSeed(
+      seedOf({ logic: "OverworldGlitches" }, { race: true }),
+      run("mystery"),
+    );
+    expect(check).toEqual({ kind: "unread", why: "race-mode" });
+    expect(checkSeed(mysterySeed(), run("mystery"))).toEqual({
+      kind: "unread",
+      why: "mystery",
     });
   });
 

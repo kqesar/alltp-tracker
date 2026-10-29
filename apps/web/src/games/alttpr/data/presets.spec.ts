@@ -5,10 +5,14 @@ import {
   describeSettings,
   entrancesKnown,
   getPreset,
+  glitchedLogic,
+  HIDDEN_ENTRANCES,
+  HIDEABLE,
   logicModelled,
   noLogicRun,
   presets,
   TUNING,
+  tunedOf,
   unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 
@@ -25,11 +29,23 @@ describe("presets", () => {
   });
 
   it("models every run type's logic", () => {
+    // Mystery's entrances are not known until set: no logic is missing
     expect(
       presets
-        .filter((preset) => !logicModelled(preset.settings))
+        .filter(
+          (preset) =>
+            !logicModelled({
+              ...preset.settings,
+              hidden: preset.settings.hidden?.filter(
+                (key) => key !== "entranceShuffle",
+              ),
+            }),
+        )
         .map((preset) => preset.id),
     ).toEqual([]);
+    expect(unmodelledReasons(getPreset("mystery").settings)).toEqual([
+      HIDDEN_ENTRANCES,
+    ]);
     // Crosskeys': the entrance randomizer's world
     const crosskeys = getPreset("crosskeys").settings;
     expect(crossedLogic(crosskeys)).toBe(true);
@@ -190,6 +206,47 @@ describe("presets", () => {
       "hybrid_major_glitches",
       "major_glitches",
     ]);
+  });
+
+  it("hides a Mystery run's glitches and entrance shuffle, as alttpr.com's weighted seeds roll them", () => {
+    const mystery = getPreset("mystery").settings;
+    expect(mystery.hidden).toEqual(expect.arrayContaining([...HIDEABLE]));
+    expect(HIDEABLE).toContain("glitches");
+    expect(HIDEABLE).toContain("entranceShuffle");
+    const rows = Object.fromEntries(
+      describeSettings(mystery).map((row) => [row.label, row]),
+    );
+    expect(rows.Entrances).toEqual({
+      label: "Entrances",
+      setting: "entranceShuffle",
+      value: "?",
+    });
+    expect(rows.Glitches?.value).toBe("?");
+    expect(TUNING.entranceShuffle.map(([value]) => value)).toEqual([
+      "none",
+      "simple",
+      "restricted",
+      "full",
+      "crossed",
+      "insanity",
+    ]);
+    expect(tunedOf(mystery, "entranceShuffle")).toBe("none");
+    // A value standing in for a hidden one is never read
+    const standIn = {
+      ...getPreset("crosskeys").settings,
+      glitches: "no_logic" as const,
+      hidden: ["entranceShuffle", "glitches"] as const,
+    };
+    expect(crossedLogic(standIn)).toBe(false);
+    expect(entrancesKnown(standIn)).toBe(false);
+    expect(noLogicRun(standIn)).toBe(false);
+    expect(glitchedLogic({ ...standIn, glitches: "major_glitches" })).toBe(
+      false,
+    );
+    expect(unmodelledReasons(standIn)).toEqual([HIDDEN_ENTRANCES]);
+    expect(
+      describeSettings(standIn).some((row) => row.label === "Played with"),
+    ).toBe(false);
   });
 
   it("getPreset returns the matching preset", () => {

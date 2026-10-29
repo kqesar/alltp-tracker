@@ -185,6 +185,22 @@ describe("MapPanel", () => {
     );
   });
 
+  it("tells a Mystery run to set its entrances, then its glitches", () => {
+    act(() => useGameStore.getState().applyPreset("mystery"));
+    render(<MapPanel />);
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The entrances are not set yet: they may be shuffled, so every check shows as maybe until you set Entrances in Mode.",
+    );
+    act(() =>
+      useGameStore.getState().updateSettings({ entranceShuffle: "none" }),
+    );
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The glitches are not set yet: a check only a glitched logic reaches shows as maybe until you set Glitches in Mode.",
+    );
+    act(() => useGameStore.getState().updateSettings({ glitches: "none" }));
+    expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
+  });
+
   it("models shuffled bosses behind shuffled entrances", () => {
     act(() => {
       useGameStore.getState().applyPreset("crosskeys");
@@ -212,7 +228,12 @@ describe("MapPanel", () => {
       expect(goMode).toHaveTextContent("Go mode: goal unknown");
       expect(goMode.tagName).toBe("SPAN");
 
+      // Its entrances not known yet, every check is maybe: no go mode
       act(() => useGameStore.getState().updateSettings({ goal: "ganon" }));
+      expect(screen.queryByTestId("go-mode")).toBeNull();
+      act(() =>
+        useGameStore.getState().updateSettings({ entranceShuffle: "none" }),
+      );
       expect(screen.getByTestId("go-mode")).toHaveAccessibleName(
         "Go mode: not yet",
       );

@@ -7,15 +7,16 @@ import { TricksDialog } from "@/games/alttpr/components/ui/TricksDialog";
 import {
   describeSettings,
   getPreset,
+  HIDDEN_ENTRANCES,
   HIDEABLE,
   type HiddenSetting,
   isHidden,
-  logicModelled,
   presets,
   type RunSettings,
   TUNING,
   type TunableSetting,
   tunedOf,
+  unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -251,7 +252,10 @@ export const PresetSelector = () => {
               >
                 <span className="preset-card__header">
                   <span className="preset-card__name">{preset.name}</span>
-                  {!logicModelled(preset.settings) && (
+                  {/* Entrances not known yet are no logic missing: set, they are */}
+                  {unmodelledReasons(preset.settings).some(
+                    (reason) => reason !== HIDDEN_ENTRANCES,
+                  ) && (
                     <span
                       className="preset-card__badge"
                       title="Selectable now; accessibility logic for this mode is coming soon"
