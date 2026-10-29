@@ -10,15 +10,19 @@
 //   location `ganon`): crystals.ganon crystals for ganon and fast_ganon
 //   (213-222), the pearl, and Agahnim 2 but for fast_ganon (226);
 // - Agahnim 2, Ganon's Tower's prize (app/Region/Standard/GanonsTower.php:
-//   388-392), which gives DefeatAgahnim2 (84).
+//   388-392), which gives DefeatAgahnim2 (84);
+// - ganonhunt: Ganon wants item.Goal.Required Triforce pieces (NorthEast.php:
+//   187-192, `ganonhuntPieces`) and not Agahnim 2 (226); 40 of 50 by
+//   default (config/alttp.php:43-53).
 //
 // So go mode is the Triforce's location in logic. For the ganon goal, Ganon
 // wants Agahnim 2 beaten, which the solver does not compute (the player
 // records it): its go mode is Ganon's Tower up to Agahnim 2 in logic, then
-// Ganon with Agahnim 2 beaten. Not modeled: the dungeons goal, whose Ganon
-// wants every dungeon done (no go mode before the end), completionist,
-// which wants every location, and the triforce hunts, whose pieces are not
-// items of this pack: a hunt's go mode is its count (TRIFORCE_HUNT).
+// Ganon with Agahnim 2 beaten; for ganonhunt, Ganon once the pieces are
+// found. Not modeled: the dungeons goal, whose Ganon wants every dungeon done
+// (no go mode before the end), completionist, which wants every location,
+// and the triforce hunt, whose pieces win beside any region's rule: its go
+// mode is its count (TRIFORCE_HUNT).
 import {
   type Analysis,
   type AnalyzeOptions,
@@ -53,6 +57,17 @@ export const TRIFORCE_HUNT = {
   /** The pieces the goal asks for. */
   required: 20,
   source: "config/alttp.php:32-41",
+} as const;
+
+/**
+ * The ganonhunt goal's pieces, read at the same commit (config/alttp.php:
+ * 43-53): Ganon wants `required` of the `pool` (NorthEast.php:187-192). The
+ * ROM holds the number asked for as a triforce hunt's.
+ */
+export const GANONHUNT = {
+  pool: 50,
+  required: 40,
+  source: "config/alttp.php:43-53",
 } as const;
 
 /**
@@ -104,6 +119,8 @@ export const GO_MODES = {
       GANON,
     ],
   },
+  /** Ganon through the pyramid's hole, with the pieces he asks for. */
+  ganonhunt: { source: "app/Randomizer.php:110", steps: [GANON] },
   pedestal: {
     source: "app/Randomizer.php:104",
     steps: [
@@ -123,6 +140,7 @@ export const GO_MODES = {
 export function goModeOf(settings: AlttprSettings): GoMode | undefined {
   if (settings.ganonGoal === true) return GO_MODES.ganon;
   if (settings.fastGanonGoal === true) return GO_MODES.fastGanon;
+  if (settings.ganonhuntGoal === true) return GO_MODES.ganonhunt;
   if (settings.pedestalGoal === true) return GO_MODES.pedestal;
   return undefined;
 }

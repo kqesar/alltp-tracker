@@ -51,6 +51,8 @@ const NAMES: Readonly<Record<string, string>> = {
   crystal7: "Crystal 7",
   defeatAgahnim: "Agahnim",
   defeatAgahnim2: "Agahnim 2",
+  // A ganonhunt's: the pieces its goal asks for, found
+  ganonhuntPieces: "Triforce pieces",
   pendantOfCourage: "Pendant of Courage",
   pendantOfPower: "Pendant of Power",
   pendantOfWisdom: "Pendant of Wisdom",
@@ -70,6 +72,7 @@ const ICONS: Readonly<Record<string, string>> = {
   crystal7: "dungeon3.png",
   defeatAgahnim: "agahnim0.png",
   defeatAgahnim2: "agahnim0.png",
+  ganonhuntPieces: "triforce.png",
   // One picture for the half and the quarter, as the cell shows it
   magic: "magic.png",
   pendantOfCourage: "dungeon1.png",

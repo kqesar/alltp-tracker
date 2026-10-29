@@ -31,6 +31,27 @@ describe("GameStore", () => {
     useGameStore.setState(useGameStore.getInitialState(), true);
   });
 
+  it("asks a Ganonhunt for its own 40 pieces, and keeps where swords are only with swords", () => {
+    useGameStore.getState().applyPreset("ganonhunt");
+    expect(useGameStore.getState().items.goalpieces).toBe(40);
+    expect(useGameStore.getState().items.triforce).toBe(0);
+
+    const { updateSettings } = useGameStore.getState();
+    updateSettings({ enemyHealth: "hard", swords: "assured" });
+    expect(useGameStore.getState().settings).toMatchObject({
+      enemyHealth: "hard",
+      swords: "assured",
+    });
+    // Randomized and default are said by their absence
+    updateSettings({ enemyHealth: "default", swords: "randomized" });
+    expect(useGameStore.getState().settings).not.toHaveProperty("swords");
+    expect(useGameStore.getState().settings).not.toHaveProperty("enemyHealth");
+    // Swordless: no swords to place
+    updateSettings({ swords: "vanilla" });
+    updateSettings({ swordless: true });
+    expect(useGameStore.getState().settings).not.toHaveProperty("swords");
+  });
+
   it("starts a fresh Open run with nothing found", () => {
     const state = useGameStore.getState();
 

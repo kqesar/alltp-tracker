@@ -15,12 +15,14 @@ import {
 } from "@alltp/pack-alttpr";
 import {
   bossShuffleOf,
+  enemyHealthOf,
   type Glitches,
   glitchesOf,
   type HiddenSetting,
   isHidden,
   playGlitchesOf,
   type RunSettings,
+  swordsOf,
 } from "@/games/alttpr/data/presets";
 
 /** The pack's goal for each of the app's. */
@@ -29,10 +31,13 @@ const GOALS: Record<
   NonNullable<UpstreamConfig["goal"]>
 > = {
   "all-dungeons": "dungeons",
+  completionist: "completionist",
   "fast-ganon": "fast_ganon",
   ganon: "ganon",
+  ganonhunt: "ganonhunt",
   pedestal: "pedestal",
-  // The pack has no triforce pieces; only Ganon's own rule reads the goal
+  // Its pieces win beside any rule (the pack's TRIFORCE_HUNT): only
+  // Ganon's own rule reads the goal
   "triforce-hunt": "ganon",
 };
 
@@ -64,6 +69,8 @@ const keyOf = (run: RunSettings): string =>
     run.itemPool,
     run.itemFunctionality,
     bossShuffleOf(run),
+    swordsOf(run),
+    enemyHealthOf(run),
     glitchesOf(run),
     playGlitchesOf(run),
     ...(run.hidden ?? []),
@@ -88,6 +95,7 @@ const built = (
     "crystals.tower": known("crystalsTower", run.crystalsTower),
     dungeonItems: run.dungeonItems,
     "enemizer.bossShuffle": known("bossShuffle", bossShuffleOf(run)),
+    "enemizer.enemyHealth": enemyHealthOf(run),
     goal: known("goal", GOALS[run.goal]),
     "item.functionality": known("itemFunctionality", run.itemFunctionality),
     "item.pool": known("itemPool", run.itemPool),
@@ -95,7 +103,7 @@ const built = (
     logic,
     "mode.weapons": known(
       "swordless",
-      run.swordless ? "swordless" : "randomized",
+      run.swordless ? "swordless" : swordsOf(run),
     ),
   });
   if (noLogic) settings = noLogicSettings(settings);

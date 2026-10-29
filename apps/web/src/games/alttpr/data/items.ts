@@ -145,6 +145,18 @@ export const isHunt = (run: {
   readonly hidden?: readonly string[];
 }): boolean => run.goal === "triforce-hunt" && !run.hidden?.includes("goal");
 
+/**
+ * Whether a run counts Triforce pieces as far as the player knows: a
+ * Triforce Hunt, or a Ganonhunt, whose Ganon wants them (the grid's pieces
+ * cell, `triforce`).
+ */
+export const hasPieces = (run: {
+  readonly goal: string;
+  readonly hidden?: readonly string[];
+}): boolean =>
+  (run.goal === "triforce-hunt" || run.goal === "ganonhunt") &&
+  !run.hidden?.includes("goal");
+
 type GridRun = {
   readonly mode: string;
   readonly goal?: string;
@@ -157,7 +169,7 @@ type GridRun = {
  */
 const extrasOf = (run: GridRun): string[] => {
   const retro = run.mode === "retro";
-  const hunt = run.goal !== undefined && isHunt({ ...run, goal: run.goal });
+  const hunt = run.goal !== undefined && hasPieces({ ...run, goal: run.goal });
   return [
     ...(retro ? ["shoparrow"] : []),
     ...(hunt ? [PIECES_ITEM] : []),

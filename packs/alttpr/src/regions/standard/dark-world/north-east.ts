@@ -2,8 +2,7 @@
 // pyramid and its fairy, and Ganon, its prize.
 //
 // Not ported here: the shops (44-55, 74-93), which are not locations; the
-// fixed items of the fairy's sword and bow (59-60), which the fill reads;
-// and the ganonhunt goal (187-192, 226), as the pack has no triforce pieces.
+// fixed items of the fairy's sword and bow (59-60), which the fill reads.
 import type { RegionModule } from "../../../world";
 
 /**
@@ -20,17 +19,19 @@ const CROSS =
 
 /**
  * Ganon (186-234). Each `return false` guard is its positive form, ANDed
- * in: the dungeons goal wants every pendant, crystal and Agahnim, and the
- * ganon and fast_ganon goals want crystals.ganon crystals. Then the pearl,
- * Agahnim 2 (but for fast_ganon), silvers when the run wants a better bow,
+ * in: the ganonhunt goal wants the pieces it asks for (187-192), the
+ * dungeons goal every pendant, crystal and Agahnim, and the ganon and
+ * fast_ganon goals crystals.ganon crystals. Then the pearl, Agahnim 2 (but
+ * for fast_ganon and ganonhunt), silvers when the run wants a better bow,
  * and a sword or, swordless, the hammer, with the lamp or the Fire Rod and
  * the magic for it.
  */
 const GANON = [
+  "(!setting(ganonhuntGoal) | ganonhuntPieces)",
   "(!setting(dungeonsGoal) | pendantOfCourage & pendantOfWisdom & pendantOfPower & defeatAgahnim & crystal1 & crystal2 & crystal3 & crystal4 & crystal5 & crystal6 & crystal7 & defeatAgahnim2)",
   "(!setting(ganonGoal) & !setting(fastGanonGoal) | count(crystal) >= setting(crystalsGanon))",
   "(moonPearl | setting(canOWYBA) & @hasABottle)",
-  "(defeatAgahnim2 | setting(fastGanonGoal))",
+  "(defeatAgahnim2 | setting(fastGanonGoal) | setting(ganonhuntGoal))",
   "(!setting(requireBetterBow) | @canShootArrows2)",
   "(setting(swordless) & hammer & (lamp >= setting(requireLamp) | fireRod & @canExtendMagic1) | !setting(requireBetterSword) & @hasSword2 & (lamp >= setting(requireLamp) | fireRod & @canExtendMagic3) | @hasSword3 & (lamp >= setting(requireLamp) | fireRod & @canExtendMagic))",
 ].join(" & ");

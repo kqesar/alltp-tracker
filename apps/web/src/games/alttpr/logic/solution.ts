@@ -142,13 +142,19 @@ const padOf = (value: number | undefined): Medallion | "unknown" =>
  * What the player recorded, as the pack's TrackerInput: the items, bosses
  * beaten and prizes through the app's one table (packReading), the
  * medallion pads (Misery Mire's slot 8, Turtle Rock's 9), the small keys
- * by grid dungeon, and the events checked on the map.
+ * by grid dungeon, the Triforce pieces found and asked for, and the events
+ * checked on the map.
  */
 export const trackerInput = (inputs: Inputs): TrackerInput => {
   const { items, medallions, smallKeys } = inputs;
   const events = eventsOf(inputs);
   return {
     ...packReading(items),
+    // The pieces a ganonhunt's Ganon wants, as the board counts them
+    goalPieces: {
+      found: Number(items.triforce ?? 0),
+      required: Number(items.goalpieces ?? 0),
+    },
     ...(events === ""
       ? {}
       : {

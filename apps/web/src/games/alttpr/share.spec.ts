@@ -5,6 +5,7 @@ import {
   ACCESSIBILITY_LABELS,
   BOSS_SHUFFLE_LABELS,
   DUNGEON_ITEM_LABELS,
+  ENEMY_HEALTH_LABELS,
   ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
   GLITCHES_LABELS,
@@ -15,6 +16,7 @@ import {
   PLACEMENT_LABELS,
   POOL_LABELS,
   presets,
+  SWORDS_LABELS,
 } from "@/games/alttpr/data/presets";
 import {
   packLink,
@@ -907,6 +909,13 @@ describe("the settings in a link (link 4)", () => {
       ...Object.keys(GLITCHES_LABELS)
         .filter((value) => value !== "none" && value !== "no_logic")
         .map((value) => `playGlitches:${value}`),
+      // Randomized swords and default health are said by their absence
+      ...Object.keys(SWORDS_LABELS)
+        .filter((value) => value !== "randomized")
+        .map((value) => `swords:${value}`),
+      ...Object.keys(ENEMY_HEALTH_LABELS)
+        .filter((value) => value !== "default")
+        .map((value) => `enemyHealth:${value}`),
     ];
     // A new option is appended to SHARE_SETTINGS: moving one breaks links
     expect(new Set(SHARE_SETTINGS)).toEqual(new Set(options));

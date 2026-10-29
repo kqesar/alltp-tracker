@@ -135,6 +135,12 @@ export interface TrackerInput {
    */
   readonly keys?: Readonly<Partial<Record<DungeonId, number>>>;
   /**
+   * The Triforce pieces found and the pieces the goal asks for, as the
+   * game counts them (GoalCounter, GoalItemRequirement): a ganonhunt's
+   * Ganon wants them (`ganonhuntPieces`). Left out, none are found.
+   */
+  readonly goalPieces?: { readonly found: number; readonly required: number };
+  /**
    * The locations checked on the map, by id. Only the events of
    * EVENT_CHECKS are read: an item location tells nothing of what it held.
    */
@@ -167,7 +173,8 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
  * Items keep their counts, within their pool, and every world's
  * pre-collected items are added to them (PRE_COLLECTED_STATE,
  * app/Randomizer.php:46-56): Link's 3 starting hearts, and the Pegasus
- * Boots in a world that starts with them (`bootsAtStart`). Zelda is rescued
+ * Boots in a world that starts with them (`bootsAtStart`), and a sword in
+ * one whose weapons are assured (`swordAtStart`). Zelda is rescued
  * from the start in an Open world (app/Randomizer.php:133-135), once Hyrule
  * Castle is finished in a Standard one; Agahnim is defeated once Castle
  * Tower is, Agahnim 2 once Ganon's Tower is. A finished dungeon's prize,
@@ -200,6 +207,18 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
   }
   // A glitched or No Logic world's boots (Randomizer.php:122-131)
   if (settings.bootsAtStart) state.pegasusBoots = 1;
+  // Assured weapons pre-collect Uncle's sword (Randomizer.php:256-260)
+  if (settings.swordAtStart === true)
+    state.sword = Math.max(state.sword ?? 0, 1);
+  // A ganonhunt's Ganon wants the pieces asked for (NorthEast.php:187-192)
+  const pieces = input.goalPieces;
+  if (
+    pieces !== undefined &&
+    pieces.required > 0 &&
+    pieces.found >= pieces.required
+  ) {
+    state.ganonhuntPieces = 1;
+  }
   const finished = (d: DungeonId) => input.beaten[d] === true;
   if (!settings.standardMode || finished("hyrule-castle")) {
     state.rescueZelda = 1;

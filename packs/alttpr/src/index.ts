@@ -115,6 +115,7 @@ export {
   SEED_SETTINGS_RANGES,
   type SeedAccessibility,
   type SeedBossShuffle,
+  type SeedEnemyHealth,
   type SeedEntrances,
   type SeedGoal,
   type SeedItemFunctionality,
@@ -126,6 +127,7 @@ export {
   type SeedSettingsRangeId,
   type SeedSettingsReading,
   type SeedUnknown,
+  type SeedWeapons,
 } from "./autotrack/seed-settings";
 export {
   BOSS_FACTS,
@@ -208,6 +210,7 @@ export {
   PRIZE_ITEMS,
 } from "./fill";
 export {
+  GANONHUNT,
   GO_MODES,
   type GoMode,
   type GoModeStatus,
@@ -317,6 +320,7 @@ export {
   type AlttprSettings,
   BOSS_SHUFFLES,
   type GlitchFlag,
+  GOAL_FACTS,
   LOGIC_FLAGS,
   LOGICS,
   type Logic,

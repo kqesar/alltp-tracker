@@ -21,7 +21,24 @@ type RunGoal =
   | "fast-ganon"
   | "all-dungeons"
   | "pedestal"
-  | "triforce-hunt";
+  | "triforce-hunt"
+  | "ganonhunt"
+  | "completionist";
+
+/**
+ * alttpr.com's weapons beside randomized and swordless (config/alttp.php:
+ * 260-265): assured starts Link with Uncle's sword (Randomizer.php:256-260),
+ * vanilla puts the swords at Uncle, the Pyramid Fairy, the Blacksmith and
+ * the Pedestal (241-252). Absent is randomized; a swordless run has none.
+ */
+export type Swords = "assured" | "vanilla";
+
+/**
+ * alttpr.com's enemizer enemy health beside the default (config/alttp.php:
+ * 282-287): the escape's kill rules count bombs and the Cane of Byrna only
+ * at default health (ItemCollection.php:567-591). Absent is default.
+ */
+export type EnemyHealth = "easy" | "hard" | "expert";
 
 type EntranceShuffle =
   | "none"
@@ -147,6 +164,10 @@ export type RunSettings = {
    * is "none" (`bossShuffleOf`).
    */
   bossShuffle?: BossShuffle;
+  /** Where the swords are, a run with swords: absent is randomized. */
+  swords?: Swords;
+  /** The enemizer's enemy health: absent is default. */
+  enemyHealth?: EnemyHealth;
   /**
    * The settings not known yet, a Mystery run's: their values above only
    * stand in, and the logic reads them as unknown. Absent when all are known.
@@ -213,6 +234,13 @@ export const presets: Preset[] = [
     id: "triforce-hunt",
     name: "Triforce Hunt",
     settings: { ...baseSettings, goal: "triforce-hunt" },
+  },
+  {
+    description:
+      "Collect the Triforce pieces asked for, then defeat Ganon through the pyramid.",
+    id: "ganonhunt",
+    name: "Ganonhunt",
+    settings: { ...baseSettings, goal: "ganonhunt" },
   },
   {
     description: "Link starts in the Dark World; the mirror is inverted.",
@@ -379,10 +407,27 @@ export const MODE_LABELS: Record<RunMode, string> = {
 
 export const GOAL_LABELS: Record<RunGoal, string> = {
   "all-dungeons": "All Dungeons",
+  completionist: "Completionist",
   "fast-ganon": "Fast Ganon",
   ganon: "Defeat Ganon",
+  ganonhunt: "Ganonhunt",
   pedestal: "Pedestal",
   "triforce-hunt": "Triforce Hunt",
+};
+
+/** alttpr.com's weapons, but swordless, which the Swords row says. */
+export const SWORDS_LABELS: Record<Swords | "randomized", string> = {
+  assured: "Assured",
+  randomized: "Randomized",
+  vanilla: "Vanilla",
+};
+
+/** alttpr.com's enemy health (config/alttp.php:282-287). */
+export const ENEMY_HEALTH_LABELS: Record<EnemyHealth | "default", string> = {
+  default: "Default",
+  easy: "Easy",
+  expert: "Expert",
+  hard: "Hard",
 };
 
 export const DUNGEON_ITEM_LABELS: Record<DungeonItems, string> = {
@@ -483,7 +528,9 @@ export type TunableSetting =
   | HiddenSetting
   | "dungeonItems"
   | "glitches"
-  | "playGlitches";
+  | "playGlitches"
+  | "swords"
+  | "enemyHealth";
 
 /**
  * The value a tunable setting's option sets: the run's own, but for the
@@ -493,7 +540,11 @@ export type TuningValue<K extends TunableSetting> = K extends "glitches"
   ? Glitches | "none"
   : K extends "playGlitches"
     ? PlayGlitches | "none"
-    : RunSettings[K];
+    : K extends "swords"
+      ? Swords | "randomized"
+      : K extends "enemyHealth"
+        ? EnemyHealth | "default"
+        : RunSettings[K];
 
 /** A change of tunable settings, as `updateSettings` takes it. */
 export type SettingsChange = { [K in TunableSetting]?: TuningValue<K> };
@@ -505,6 +556,14 @@ export const glitchesOf = (settings: RunSettings): Glitches | "none" =>
 /** The glitches a No Logic run is played with: "none" when it names none. */
 export const playGlitchesOf = (settings: RunSettings): PlayGlitches | "none" =>
   settings.playGlitches ?? "none";
+
+/** Where a run's swords are: "randomized" when its settings name none. */
+export const swordsOf = (settings: RunSettings): Swords | "randomized" =>
+  settings.swords ?? "randomized";
+
+/** A run's enemy health: "default" when its settings name none. */
+export const enemyHealthOf = (settings: RunSettings): EnemyHealth | "default" =>
+  settings.enemyHealth ?? "default";
 
 /** Options in the order alttpr.com lists them, each with its words. */
 const ordered = <T extends string>(
@@ -527,6 +586,10 @@ export const TUNING = {
   crystalsGanon: CRYSTAL_COUNTS,
   crystalsTower: CRYSTAL_COUNTS,
   dungeonItems: ordered(["standard", "mc", "mcs", "full"], DUNGEON_ITEM_LABELS),
+  enemyHealth: ordered<EnemyHealth | "default">(
+    ["default", "easy", "hard", "expert"],
+    ENEMY_HEALTH_LABELS,
+  ),
   entranceShuffle: ordered<EntranceShuffle>(
     ["none", "simple", "restricted", "full", "crossed", "insanity"],
     ENTRANCE_LABELS,
@@ -541,9 +604,9 @@ export const TUNING = {
     ],
     GLITCHES_SHORT,
   ),
-  // Triforce Hunt is a run type of its own: the pack has no pieces
+  // The hunts are run types of their own: their pieces' cell and count
   goal: ordered(
-    ["ganon", "fast-ganon", "all-dungeons", "pedestal"],
+    ["ganon", "fast-ganon", "all-dungeons", "pedestal", "completionist"],
     GOAL_LABELS,
   ),
   itemFunctionality: ordered(
@@ -563,6 +626,10 @@ export const TUNING = {
     [false, "With swords"],
     [true, "Swordless"],
   ],
+  swords: ordered<Swords | "randomized">(
+    ["randomized", "assured", "vanilla"],
+    SWORDS_LABELS,
+  ),
 } as const satisfies {
   readonly [K in TunableSetting]: readonly (readonly [
     TuningValue<K>,
@@ -598,7 +665,11 @@ export const tunedOf = <K extends TunableSetting>(
         ? glitchesOf(settings)
         : setting === "playGlitches"
           ? playGlitchesOf(settings)
-          : settings[setting];
+          : setting === "swords"
+            ? swordsOf(settings)
+            : setting === "enemyHealth"
+              ? enemyHealthOf(settings)
+              : settings[setting];
   return value as TuningValue<K>;
 };
 
@@ -626,6 +697,10 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
       "swordless",
       settings.swordless ? "Swordless" : "With swords",
     ),
+    // Where the swords are, once a run is known to have them
+    ...(settings.swordless || isHidden(settings, "swordless")
+      ? []
+      : [row("Sword placement", "swords", SWORDS_LABELS[swordsOf(settings)])]),
     row("Ganon's Tower", "crystalsTower", crystals(settings.crystalsTower)),
     row("Ganon", "crystalsGanon", crystals(settings.crystalsGanon)),
     row(
@@ -648,6 +723,11 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
       "Boss shuffle",
       "bossShuffle",
       BOSS_SHUFFLE_LABELS[bossShuffleOf(settings)],
+    ),
+    row(
+      "Enemy health",
+      "enemyHealth",
+      ENEMY_HEALTH_LABELS[enemyHealthOf(settings)],
     ),
     row(
       "Entrances",

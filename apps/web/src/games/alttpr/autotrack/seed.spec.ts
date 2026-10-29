@@ -115,7 +115,9 @@ describe("checkSeed", () => {
     );
 
     // The ROM tells NoGlitches apart: the hidden glitches are None
-    const { glitches, ...change } = check.change;
+    const { enemyHealth, glitches, swords, ...change } = check.change;
+    // Only the file states where the swords are and the enemies' health
+    expect([enemyHealth, swords]).toEqual([undefined, undefined]);
     expect(glitches).toBe("none");
 
     // Once laid, the seed and the run agree
@@ -293,10 +295,42 @@ describe("checkSeed", () => {
       reasons: ["only its small keys outside their dungeons"],
       seed: "OPEN",
     });
-    expect(checkSeed(seedOf({ goal: "ganonhunt" }), run("open"))).toEqual({
-      kind: "unsupported",
-      reasons: ["the Ganonhunt goal"],
-      seed: "OPEN",
+  });
+
+  it("takes where the swords are and the enemies' health from the seed's file", () => {
+    const seed = {
+      ...seedOf({}),
+      enemyHealth: { known: true, value: "hard" },
+      weapons: { known: true, value: "assured" },
+    } as const;
+    expect(checkSeed(seed, run("open"))).toMatchObject({
+      kind: "differs",
+      seedText: "Open (Open, Ganon, 7/7, Assured swords, Hard enemy health)",
+      settings: { enemyHealth: "hard", swords: "assured" },
+    });
+    // The ROM alone says neither: the run's own stand
+    expect(checkSeed(seedOf({}), run("open"))).toMatchObject({ kind: "same" });
+    // A Mystery run takes them in place
+    expect(checkSeed(seed, run("mystery"))).toMatchObject({
+      change: { enemyHealth: "hard", swords: "assured" },
+      kind: "reveals",
+    });
+  });
+
+  it("holds the Ganonhunt and Completionist goals", () => {
+    expect(checkSeed(seedOf({ goal: "ganonhunt" }), run("open"))).toMatchObject(
+      {
+        kind: "differs",
+        presetId: "ganonhunt",
+        seedText: "Ganonhunt (Open, Ganonhunt, 7/7)",
+      },
+    );
+    expect(
+      checkSeed(seedOf({ goal: "completionist" }), run("open")),
+    ).toMatchObject({
+      kind: "differs",
+      seedText: "Open (Open, Completionist, 7/7)",
+      settings: { goal: "completionist" },
     });
   });
 
@@ -525,13 +559,12 @@ describe("seedLineText", () => {
     expect(seedLineText(checkSeed(seedOf({}), run("open")), false)).toBe(
       "The run type matches this seed: Open (Open, Ganon, 7/7).",
     );
-    expect(
-      seedLineText(
-        checkSeed(seedOf({ goal: "ganonhunt" }), run("open")),
-        false,
-      ),
-    ).toBe(
-      "No run type here holds this seed (the Ganonhunt goal): the run type stays yours.",
+    const keysOnly = {
+      ...seedOf({}),
+      wildKeys: { known: true, value: true },
+    } as const;
+    expect(seedLineText(checkSeed(keysOnly, run("open")), false)).toBe(
+      "No run type here holds this seed (only its small keys outside their dungeons): the run type stays yours.",
     );
     expect(
       seedLineText(checkSeed(seedOf({}, { race: true }), run("open")), false),
