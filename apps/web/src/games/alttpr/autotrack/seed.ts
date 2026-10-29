@@ -28,6 +28,7 @@ import {
   doorOf,
   doorRows,
   doorValueText,
+  isDoorRun,
   sameDoorSettings,
 } from "@/games/alttpr/data/doorRando";
 import {
@@ -210,9 +211,15 @@ const likeness = (preset: RunSettings, settings: RunSettings) =>
  * they are, the current one on a tie, else the first listed.
  */
 const presetFor = (settings: RunSettings, currentId: string): string => {
-  let best = getPreset(currentId);
+  // A Door Randomizer seed's run type is one of DR's, an alttpr.com seed's
+  // one of alttpr.com's
+  const family = presets.filter(
+    (preset) => isDoorRun(preset.settings) === isDoorRun(settings),
+  );
+  const current = getPreset(currentId);
+  let best = family.includes(current) ? current : (family[0] ?? current);
   let score = likeness(best.settings, settings);
-  for (const preset of presets) {
+  for (const preset of family) {
     const own = likeness(preset.settings, settings);
     if (own > score) {
       best = preset;

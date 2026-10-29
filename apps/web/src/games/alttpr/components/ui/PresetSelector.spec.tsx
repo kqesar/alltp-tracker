@@ -19,6 +19,7 @@ vi.mock("@/games/alttpr/stores/gameStore", () => ({ useGameStore: vi.fn() }));
 
 const applyRun = vi.fn();
 const updateSettings = vi.fn();
+const updateDoorSettings = vi.fn();
 const hideSetting = vi.fn();
 const setBigKeysVisible = vi.fn();
 const setTricks = vi.fn();
@@ -249,6 +250,36 @@ describe("PresetSelector", () => {
     expect(applyRun).not.toHaveBeenCalled();
     // The world names the run type: it is no field
     expect(within(dialog).getAllByRole("combobox")).toHaveLength(10);
+  });
+
+  it("offers a Door Randomizer run's own settings, changed in place", () => {
+    Object.assign(fakeState, {
+      presetId: "door-randomizer",
+      settings: { ...getPreset("door-randomizer").settings, pottery: "keys" },
+      updateDoorSettings,
+    });
+    render(<PresetSelector />);
+    const dialog = openList();
+
+    expect(
+      within(dialog).getByText("Randomizer").nextSibling,
+    ).toHaveTextContent("Door Randomizer");
+    const pottery = within(dialog).getByRole("combobox", { name: "Pottery" });
+    expect(pottery).toHaveValue("keys");
+    fireEvent.change(pottery, { target: { value: "lottery" } });
+    fireEvent.change(
+      within(dialog).getByRole("combobox", { name: "Shopsanity" }),
+      { target: { value: "true" } },
+    );
+    expect(updateDoorSettings.mock.calls).toEqual([
+      [{ pottery: "lottery" }],
+      [{ shopsanity: true }],
+    ]);
+    // No overworld setting in a DR run, only in an OWR one
+    expect(
+      within(dialog).queryByRole("combobox", { name: "Overworld layout" }),
+    ).toBeNull();
+    expect(updateSettings).not.toHaveBeenCalled();
   });
 
   it("offers a Mystery run's settings as not known yet, and hides one again", () => {

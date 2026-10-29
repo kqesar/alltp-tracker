@@ -35,6 +35,7 @@
       "!**/package.json",
       "!packs/*/test/upstream",
       "!packs/alttpr/src/door-rando/locations.json",
+      "!packs/alttpr/test/dr-seeds",
       "!packs/sm/test/spoilers",
       "!packages/archipelago/test/fixtures",
       "!packages/archipelago/test/datapackages",

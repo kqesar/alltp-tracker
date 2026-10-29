@@ -898,6 +898,33 @@ describe("the settings in a link (link 4)", () => {
 
   const base = getPreset("open").settings as unknown as Record<string, unknown>;
 
+  it("carries a Door Randomizer run's settings and its own checks", () => {
+    const settings = {
+      ...getPreset("door-randomizer").settings,
+      dropShuffle: "underworld",
+      pottery: "lottery",
+      shopsanity: true,
+    };
+    const save = withProgress(runWith(settings, "door-randomizer"), {
+      checked: {
+        "eastern-palace/dark-square-pot-key": true,
+        "kakariko-shop/left": true,
+        "links-house": true,
+      },
+    });
+    const link = JSON.parse(packLink(save));
+    expect(link.link).toBe(4);
+    const unpacked = unpackLink(JSON.stringify(link));
+    if (!unpacked.ok) throw new Error(unpacked.reason);
+    const back = JSON.parse(unpacked.save).progress;
+    expect(back.settings).toEqual(settings);
+    expect(Object.keys(back.checked).sort()).toEqual([
+      "eastern-palace/dark-square-pot-key",
+      "kakariko-shop/left",
+      "links-house",
+    ]);
+  });
+
   it("holds every option the tracker has, each once, each setting's own", () => {
     const options = [
       ...Object.keys(MODE_LABELS).map((value) => `mode:${value}`),

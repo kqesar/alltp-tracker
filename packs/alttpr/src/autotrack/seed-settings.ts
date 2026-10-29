@@ -294,6 +294,36 @@ export interface SeedSettingsReading {
   readonly randomizer?: SeedRandomizer;
   /** A Door Randomizer seed's own settings: absent for alttpr.com's. */
   readonly door?: DoorSeedSettings;
+  /**
+   * A Door Randomizer seed's settings by DR's own names, as its spoiler's
+   * `meta` states them (an avianart permalink, door-rando/seed-import.ts):
+   * no ROM holds them so.
+   */
+  readonly doorExact?: DoorExactSettings;
+}
+
+/**
+ * A DR seed's settings by the names DR's command line gives them
+ * (resources/app/cli/args.json), as its spoiler's `meta` writes them
+ * (BaseClasses.py:2556-2620 at 1.5.6): only those the tracker keeps.
+ */
+export interface DoorExactSettings {
+  readonly doorShuffle: "vanilla" | "basic" | "partitioned" | "crossed";
+  readonly dropShuffle: SeedDropShuffle;
+  readonly pottery: string;
+  readonly shopsanity: boolean;
+  readonly takeAny: string;
+  readonly enemyShuffle: string;
+  /** Its entrance shuffle, when alttpr.com has none of that name. */
+  readonly doorEntrances?: string;
+  readonly overworld?: {
+    readonly layout: string;
+    readonly crossed: string;
+    readonly mixed: boolean;
+    readonly whirlpool: boolean;
+    readonly fluteShuffle: string;
+    readonly bonkDrops: boolean;
+  };
 }
 
 /** The randomizer a seed's title names (probes.ts, `seedRomOf`). */

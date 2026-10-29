@@ -4,6 +4,7 @@
 // names are upstream's, rebuilt from the pack's ids.
 
 import {
+  DOOR_RANDOMIZER_VERSION,
   dungeonOf,
   type ItemId,
   type Medallion,
@@ -392,7 +393,7 @@ export const describeSeed = (
       label: "Seed",
       value: race
         ? "not shown in Race Mode"
-        : (seed.seed ?? "not an alttpr.com seed"),
+        : (seed.seed ?? "not named in the ROM"),
     },
     { label: "Logic", value: settingText(seed.logic, (v) => LOGIC_NAMES[v]) },
     { label: "World", value: settingText(seed.mode, (v) => MODE_LABELS[v]) },
@@ -442,7 +443,71 @@ export const describeSeed = (
       label: "Boss shuffle",
       value: settingText(seed.bossShuffle, labelled(BOSS_SHUFFLE_LABELS)),
     },
+    ...doorRows(seed),
   ];
+};
+
+/** DR's door shuffle as its ROM tells it (DRMode). */
+const DOOR_SHUFFLE_WORDS = {
+  basic: "Basic",
+  shuffled: "Partitioned or Crossed",
+  vanilla: "Vanilla",
+} as const;
+
+/** DR's pottery as its ROM tells it. */
+const POTTERY_WORDS = {
+  "beyond-caves": "beyond the caves (the mode is not in the ROM)",
+  cave: "Cave pots",
+  none: "None",
+} as const;
+
+/** DR's drop shuffle. */
+const DROP_WORDS = { keys: "Keys", none: "None", underworld: "Underworld" };
+
+/**
+ * A Door Randomizer seed's lines: the randomizer and its version, which
+ * says so when it is not the one the tracker's DR data was read from (its
+ * locations and their flags may then differ), then its own settings. None
+ * for an alttpr.com seed.
+ */
+const doorRows = (seed: SeedSettingsReading): Readout["seed"] => {
+  const randomizer = seed.randomizer;
+  if (randomizer?.kind !== "door") return [];
+  const read = seed.door?.version;
+  const version = read?.known ? read.value : randomizer.version;
+  const name = randomizer.overworld
+    ? "Overworld Randomizer, on the Door Randomizer"
+    : "Door Randomizer";
+  const differs =
+    version !== null && version !== DOOR_RANDOMIZER_VERSION
+      ? ` (the tracker reads DR ${DOOR_RANDOMIZER_VERSION}: this version's locations may differ)`
+      : "";
+  const rows: { label: string; value: string }[] = [
+    {
+      label: "Randomizer",
+      value: `${name} ${version ?? "(version not in the title)"}${differs}`,
+    },
+  ];
+  const door = seed.door;
+  if (door === undefined) return rows;
+  const yesNo = (value: boolean) => (value ? "yes" : "no");
+  rows.push(
+    {
+      label: "Door shuffle",
+      value: settingText(door.doorShuffle, (v) => DOOR_SHUFFLE_WORDS[v]),
+    },
+    {
+      label: "Enemy drops",
+      value: settingText(door.dropShuffle, (v) => DROP_WORDS[v]),
+    },
+    {
+      label: "Pottery",
+      value: settingText(door.pottery, (v) => POTTERY_WORDS[v]),
+    },
+    { label: "Shopsanity", value: settingText(door.shopsanity, yesNo) },
+    { label: "Take-any caves", value: settingText(door.takeAny, yesNo) },
+  );
+  return rows;
 };
 
 /** A dungeon's own items, named as a kind when the board has no cell for them. */

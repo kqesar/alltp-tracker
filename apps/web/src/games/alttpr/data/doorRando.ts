@@ -433,7 +433,8 @@ const stated = <T>(setting: SeedSetting<T> | undefined, own: T): T =>
  */
 export const withoutDefaults = (door: DoorSettings): DoorRunSettings => {
   const out: Record<string, unknown> = { randomizer: door.randomizer };
-  for (const [key, value] of Object.entries(door)) {
+  for (const key of Object.keys(DOOR_OPTIONS) as DoorSetting[]) {
+    const value = door[key];
     if (key === "randomizer" || value === undefined) continue;
     if (DOOR_DEFAULTS[key as keyof typeof DOOR_DEFAULTS] !== value) {
       out[key] = value;
@@ -464,7 +465,7 @@ const kept = <T extends string>(value: T, of: readonly T[], or: T): T =>
  * run's own where it does not. Where the ROM tells a kind but not its mode
  * (doors shuffled, pots beyond the caves, take-any caves, a crossed
  * overworld, flute spots moved), the run's mode stands if it is of that
- * kind, else the commonest of it; `doorGuesses` names those.
+ * kind, else the commonest of it (What I read says the ROM named none).
  * @returns The DR settings to lay, defaults left out; null for a seed whose
  *   randomizer is not known (a header not read)
  */
@@ -480,6 +481,41 @@ export const doorFromSeed = (
     ...run,
     randomizer: randomizer.overworld ? "owr" : "dr",
   };
+  // A spoiler's meta names each (an avianart permalink): taken as named,
+  // where it is an option the tracker has
+  const exact = seed.doorExact;
+  if (exact !== undefined) {
+    const option = <K extends DoorSetting>(key: K, value: unknown) =>
+      (DOOR_OPTIONS[key] as readonly (readonly [unknown, string])[]).some(
+        ([known]) => known === value,
+      )
+        ? (value as DoorSettings[K])
+        : own[key];
+    const ow = exact.overworld;
+    return withoutDefaults({
+      ...own,
+      ...(exact.doorEntrances !== undefined &&
+      option("doorEntrances", exact.doorEntrances) !== undefined
+        ? { doorEntrances: exact.doorEntrances as DoorEntrances }
+        : {}),
+      doorShuffle: exact.doorShuffle,
+      dropShuffle: exact.dropShuffle,
+      enemyShuffle: option("enemyShuffle", exact.enemyShuffle),
+      pottery: option("pottery", exact.pottery),
+      shopsanity: exact.shopsanity,
+      takeAny: option("takeAny", exact.takeAny),
+      ...(ow === undefined
+        ? {}
+        : {
+            bonkDrops: ow.bonkDrops,
+            owCrossed: option("owCrossed", ow.crossed),
+            owFluteShuffle: option("owFluteShuffle", ow.fluteShuffle),
+            owLayout: option("owLayout", ow.layout),
+            owMixed: ow.mixed,
+            owWhirlpool: ow.whirlpool,
+          }),
+    });
+  }
   const rom = seed.door;
   if (rom === undefined) return withoutDefaults(own);
   const doors = stated(rom.doorShuffle, undefined);
@@ -528,27 +564,6 @@ export const doorFromSeed = (
     }
   }
   return withoutDefaults(door);
-};
-
-/**
- * What the run holds by its own choice where a seed's ROM tells a kind of
- * DR setting but not its mode: the words "What I read" adds.
- */
-export const doorGuesses = (seed: SeedSettingsReading): string[] => {
-  const rom = seed.door;
-  if (rom === undefined) return [];
-  const guesses: string[] = [];
-  if (stated(rom.doorShuffle, undefined) === "shuffled") {
-    guesses.push(
-      "the ROM shuffles doors without saying whether Partitioned or Crossed",
-    );
-  }
-  if (stated(rom.pottery, undefined) === "beyond-caves") {
-    guesses.push(
-      "the ROM shuffles pots beyond the caves without naming the pottery mode",
-    );
-  }
-  return guesses;
 };
 
 /** Whether two runs hold the same Door Randomizer settings. */

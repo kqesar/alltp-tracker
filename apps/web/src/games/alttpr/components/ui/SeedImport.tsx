@@ -1,6 +1,10 @@
-import { seedHashOf } from "@alltp/pack-alttpr";
+import { doorSeedLinkOf, seedHashOf } from "@alltp/pack-alttpr";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { isRaceModeOn } from "@/autotrack/raceMode";
+import {
+  type DoorSeedError,
+  loadDoorSeed,
+} from "@/games/alttpr/autotrack/doorSeed";
 import {
   checkSeed,
   type Run,
@@ -20,14 +24,25 @@ const ERRORS: Readonly<Record<SeedFileError, string>> = {
   unrecognized: "This seed's file on alttpr.com is not one the tracker reads.",
 };
 
+/** What the form says when a Door Randomizer seed's site gives no settings. */
+const DOOR_ERRORS = (
+  site: string,
+): Readonly<Record<DoorSeedError, string>> => ({
+  "not-found": `${site} has no Door Randomizer seed at this link.`,
+  offline: `${site} could not be reached. Try again once online.`,
+  unrecognized: `This seed on ${site} is not one the tracker reads.`,
+});
+
 /** A seed whose run type differs from the board's. */
 export type SeedSwitch = Extract<SeedCheck, { kind: "differs" }>;
 
 /**
- * SeedImport - starts a run from an alttpr.com seed: its link or hash names
- * its file, whose settings name the run type. A seed of another run type
- * goes to `onSwitch`; the form says anything else in its status line. In
- * Race Mode it fetches nothing and says why instead of the form.
+ * SeedImport - starts a run from a seed: an alttpr.com link or hash names
+ * its file, an avianart permalink or a Hyrule Town Hall patch a Door
+ * Randomizer seed's (`autotrack/doorSeed.ts`); their settings name the run
+ * type. A seed of another run type goes to `onSwitch`; the form says
+ * anything else in its status line. In Race Mode it fetches nothing and
+ * says why instead of the form.
  * @param run - The board's run type and settings
  * @param onSwitch - Called with a seed of another run type
  */
@@ -55,17 +70,29 @@ export const SeedImport = ({
   const load = async (event: FormEvent) => {
     event.preventDefault();
     if (race) return;
-    const hash = seedHashOf(text);
-    if (hash === null) {
-      setMessage("Paste the seed's link from alttpr.com, or its hash.");
+    const door = doorSeedLinkOf(text);
+    const hash = door === null ? seedHashOf(text) : null;
+    if (door === null && hash === null) {
+      setMessage(
+        "Paste the seed's link from alttpr.com (or its hash), avianart.games or Hyrule Town Hall.",
+      );
       return;
     }
     const mine = ++asked.current;
-    setMessage("Asking alttpr.com…");
-    const file = await loadSeedFile(hash);
+    const site =
+      door === null
+        ? "alttpr.com"
+        : door.site === "avianart"
+          ? "avianart.games"
+          : "Hyrule Town Hall";
+    setMessage(`Asking ${site}…`);
+    const file =
+      door === null
+        ? await loadSeedFile(hash as string)
+        : await loadDoorSeed(door);
     if (mine !== asked.current) return;
     if (typeof file === "string") {
-      setMessage(ERRORS[file]);
+      setMessage(door === null ? ERRORS[file] : DOOR_ERRORS(site)[file]);
       return;
     }
     const check = checkSeed(file, run);
@@ -82,9 +109,9 @@ export const SeedImport = ({
       <div className="seed-import" data-testid="seed-import">
         <p className="seed-import__label">Start from a seed</p>
         <p className="seed-import__status" data-testid="seed-import-race">
-          Off in Race Mode: during a race the tracker asks alttpr.com for
-          nothing, since a seed's file holds where every item is. Pick the run
-          type below.
+          Off in Race Mode: during a race the tracker asks alttpr.com,
+          avianart.games and Hyrule Town Hall for nothing, since a seed's file
+          holds where every item is. Pick the run type below.
         </p>
       </div>
     );
@@ -102,7 +129,7 @@ export const SeedImport = ({
           data-testid="seed-import-input"
           id={inputId}
           onChange={(event) => setText(event.target.value)}
-          placeholder="alttpr.com link or hash"
+          placeholder="alttpr.com, avianart or Hyrule Town Hall link"
           spellCheck={false}
           type="text"
           value={text}

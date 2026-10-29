@@ -105,6 +105,29 @@ describe("MapPanel", () => {
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });
 
+  it("says whose logic a Door Randomizer seed borrows, and names what it cannot model", () => {
+    act(() => useGameStore.getState().applyPreset("door-crosskeys"));
+    render(<MapPanel />);
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The logic follows the entrances you noted",
+    );
+    expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
+      "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported.",
+    );
+
+    act(() => useGameStore.getState().updateDoorSettings({ pottery: "keys" }));
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The tracker has no logic for shuffled key drops with keys outside their dungeons yet: every check shows as maybe.",
+    );
+    expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
+
+    act(() => useGameStore.getState().applyPreset("door-randomizer"));
+    expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
+    expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
+      "Door Randomizer seed: dungeon logic from alttpr.com's v31 until DR's own is ported.",
+    );
+  });
+
   it("names the entrance shuffle as the cause in an Open run, not the run type", () => {
     act(() =>
       useGameStore.getState().applyRun("open", {

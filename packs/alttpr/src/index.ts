@@ -123,6 +123,7 @@ export {
 } from "./autotrack/probes";
 export { ALTTPR_RACE_PROFILE } from "./autotrack/race-profile";
 export {
+  type DoorExactSettings,
   type DoorSeedSettings,
   decodeSeedSettings,
   SEED_SETTINGS_RANGES,
@@ -179,6 +180,13 @@ export {
   type PotteryMode,
   type TakeAny,
 } from "./door-rando/locations";
+export {
+  avianartReading,
+  avianartUrl,
+  bpsReading,
+  type DoorSeedLink,
+  doorSeedLinkOf,
+} from "./door-rando/seed-import";
 export {
   bossLocation,
   DUNGEON_IDS,
