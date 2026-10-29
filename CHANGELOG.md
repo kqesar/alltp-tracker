@@ -2,6 +2,64 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.67.0](https://github.com/kqesar/alltp-tracker/compare/v2.66.1...v2.67.0) (2026-10-29)
+
+
+### ✨ Features
+
+* **alttpr:** import the entrance randomizer's dungeons and fill rules ([77751a7](https://github.com/kqesar/alltp-tracker/commit/77751a79450be4b612f1f45a05d09c9b1ad67a9f))
+* **alttpr:** model Ganonhunt, Completionist, assured swords and enemy health ([20336fb](https://github.com/kqesar/alltp-tracker/commit/20336fbb1a753c3d8e13bec55dd9eefada52ec43))
+* **alttpr:** port Hybrid Major Glitches, its key model strictly additive ([8992794](https://github.com/kqesar/alltp-tracker/commit/8992794ad31852c2584ec48b9dca8ed8caab52d0))
+* **alttpr:** port Major Glitches, held to upstream's suites ([eb1c010](https://github.com/kqesar/alltp-tracker/commit/eb1c010f9995439c26637bb58a7a513fe1390de9))
+* **alttpr:** port Overworld Glitches, held to upstream's suites ([6de9b90](https://github.com/kqesar/alltp-tracker/commit/6de9b90bcc2d4ca2ec4f3492736297bee728a545))
+* **alttpr:** port the entrance randomizer's retro world ([e0a8236](https://github.com/kqesar/alltp-tracker/commit/e0a8236d5d58ded1aa8cb8a87d02da7f504f836d))
+* **alttpr:** port the simple, restricted and full shuffles' pools ([9be5323](https://github.com/kqesar/alltp-tracker/commit/9be5323128ae5b3f09f4290402986672fd765d19))
+* **alttpr:** read kept keys in the entrance randomizer's world ([4586c05](https://github.com/kqesar/alltp-tracker/commit/4586c05bec6ce95f110396d25feb8074a11b3db6))
+* **alttpr:** read shuffled bosses in the entrance randomizer's world ([8c82df6](https://github.com/kqesar/alltp-tracker/commit/8c82df654890bb26171a94ce7a125322fe2b2695))
+* **web:** hide a Mystery run's glitches and entrance shuffle until set ([0a3ce74](https://github.com/kqesar/alltp-tracker/commit/0a3ce74c294f3b6c909275f3d9fa2d46735d145b))
+* **web:** model a Crosskeys run with shuffled bosses ([d2520a6](https://github.com/kqesar/alltp-tracker/commit/d2520a6351cc5c665b295a4350688340baeb7908))
+* **web:** model a Retro Crosskeys run ([bb03123](https://github.com/kqesar/alltp-tracker/commit/bb03123afffc1e51d717ae181c36986b7a6da58a))
+* **web:** model Crosskeys runs whose keys stay in their dungeons ([f51f14c](https://github.com/kqesar/alltp-tracker/commit/f51f14c830780a8c39acce11a57ed9fcec8aa01b))
+* **web:** model Hybrid Major Glitches runs ([964c466](https://github.com/kqesar/alltp-tracker/commit/964c466eabcefe01f8ade2cab3ebaec8b0cdb6e5))
+* **web:** model Major Glitches runs, every logic now read ([17b5176](https://github.com/kqesar/alltp-tracker/commit/17b51764e712246096071fbac0da061da42c9e5d))
+* **web:** model Overworld Glitches runs, and play No Logic with them ([151ec3b](https://github.com/kqesar/alltp-tracker/commit/151ec3bb862b6d6573789e1167fd0d1315c9cf5f))
+* **web:** model Simple, Restricted and Full runs with shuffled entrances ([8272138](https://github.com/kqesar/alltp-tracker/commit/82721387e73121850b3136a96af159d55472f3c6))
+* **web:** read a No Logic seed by the glitches it is played with ([cf8a333](https://github.com/kqesar/alltp-tracker/commit/cf8a3333f304c9aae645db51b6d27c29bdc03dd2))
+* **web:** time a glitched run's waits in its own logic, refuse No Logic's ([c6d20df](https://github.com/kqesar/alltp-tracker/commit/c6d20dfc091525f7cc77095cb1a8ac822c013b2f))
+
+
+### 🐛 Bug Fixes
+
+* **alttpr:** ask a ganonhunt's Ganon for the pieces behind shuffled entrances ([5c57a42](https://github.com/kqesar/alltp-tracker/commit/5c57a421522aae0c6893f65126cd1ea2c1c9c26a))
+* **alttpr:** ask the bunny's pearl wherever a door not noted may darken a region ([cf94cf8](https://github.com/kqesar/alltp-tracker/commit/cf94cf87c00f28dacc9578a555b2669938572f52))
+* **alttpr:** beat every shuffled boss when everything is held ([44a297a](https://github.com/kqesar/alltp-tracker/commit/44a297a5d5511c2017a493bb3232fffd76ee676f))
+* **alttpr:** list where an untracked key may go without that key held ([0fb77c4](https://github.com/kqesar/alltp-tracker/commit/0fb77c479f68d85321dcb4182e332e6187c97cb3))
+* **alttpr:** read a region no door noted reaches as maybe without the pearl ([4c57655](https://github.com/kqesar/alltp-tracker/commit/4c57655d9de90e07068af022ad0515f4c431f9bf))
+* **alttpr:** read a way in through another dungeon's clip as maybe, not no ([4830e41](https://github.com/kqesar/alltp-tracker/commit/4830e41e59e40802bb2239ae9e84750581d0a01c))
+* **alttpr:** read Turtle Rock's key rules off the seed's whole world ([01d1421](https://github.com/kqesar/alltp-tracker/commit/01d142193b209fc457c6e6a5fc8413f3d17ea2e5))
+* **alttpr:** weigh a dungeon's key safety against the fill's other keys held ([bfd48ca](https://github.com/kqesar/alltp-tracker/commit/bfd48ca6cf25499476b5dda6c87cee228a2b22bb))
+* **web:** fit the glitches selects on a phone ([1d36cb4](https://github.com/kqesar/alltp-tracker/commit/1d36cb42c874704e6024b93530372c697cb25103))
+* **web:** label the same-run-type reset button Reset ([e6198ca](https://github.com/kqesar/alltp-tracker/commit/e6198ca5b8e7c8eb5a2f271e9d6be2d724f9bea4))
+* **web:** read a shuffled-entrance seed as NoGlitches whatever its glitches ([b56de0b](https://github.com/kqesar/alltp-tracker/commit/b56de0b3662da8a8b1dd4a6d41c9c654e058f90a))
+* **web:** reset the run type in play when its tuned settings differ from the preset ([d90c093](https://github.com/kqesar/alltp-tracker/commit/d90c093145a1a658a2398bd0883f8755a73d45f6))
+* **web:** say a hidden-glitches key door turns maybe too ([fed57ed](https://github.com/kqesar/alltp-tracker/commit/fed57ed519e0a3779449ad5246d61b93ad9b13e0))
+* **web:** say only a glitched logic reaches in the hidden-glitches note ([6272ae2](https://github.com/kqesar/alltp-tracker/commit/6272ae2745d1645d3f19f1ca7a39bf3293c582f3))
+* **web:** say reachable, never in logic, all over a No Logic run's map ([b933250](https://github.com/kqesar/alltp-tracker/commit/b9332503a25bd6abe0b546fc4f2ab918db594c8a))
+* **web:** tune boss shuffle to none as a preset says it, by its absence ([eee7611](https://github.com/kqesar/alltp-tracker/commit/eee7611bd94af64c41dcbc40ac0ddf3522680380))
+
+
+### 📚 Documentation
+
+* **alttpr:** name every way in that reads a key, under both glitched logics ([11d8099](https://github.com/kqesar/alltp-tracker/commit/11d80993cb4063e32a79a73fd12699343f3bc2d7))
+* **web:** say a Mystery seed is a race seed, known by its file only when its ROM is not ([b19b922](https://github.com/kqesar/alltp-tracker/commit/b19b9227375da774d45b060e08a216583ce97f38))
+
+
+### 🔧 Code Refactoring
+
+* **alttpr:** take a seed's logic, its boots and No Logic ([35b38e0](https://github.com/kqesar/alltp-tracker/commit/35b38e06bb6f388485f42549fb50193309970a55))
+* **alttpr:** test the key spots' ties instead of guarding them unused ([041d932](https://github.com/kqesar/alltp-tracker/commit/041d932dd02d5d6c78d87c79d623317e2cda5221))
+* **web:** plumb a run's glitches into the pack, set by hand ([56ea643](https://github.com/kqesar/alltp-tracker/commit/56ea643f029d1f65c33b3f1abaca489ac5b00f89))
+
 ## [2.66.1](https://github.com/kqesar/alltp-tracker/compare/v2.66.0...v2.66.1) (2026-10-29)
 
 
