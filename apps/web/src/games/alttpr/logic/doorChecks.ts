@@ -1,10 +1,17 @@
 // A Door Randomizer run's own checks: its key drops, pots, enemy drops and
 // shop items (the pack's door-rando/locations.ts), as the Checks list shows
-// them. No rule of the pack reads them yet: DR's dungeon logic is a later
-// step. Meanwhile a check shows maybe, but one in a dungeon the run cannot
-// enter (its region `no` in the run's world), which shows out of logic: no
-// way in, no way to it.
-import { type DrLocation, type DungeonId, dungeon } from "@alltp/pack-alttpr";
+// them. In a run DR's own world holds (doorLogic), a check DR's world has
+// shows its own tri, any other the tri of its DR region (reached or not).
+// Elsewhere no rule of the pack reads them: a check shows maybe, but one in
+// a dungeon the run cannot enter (its region `no` in the run's world), which
+// shows out of logic: no way in, no way to it.
+import type { Tri } from "@alltp/engine";
+import {
+  type DrLocation,
+  type DungeonId,
+  dungeon,
+  markerStatus,
+} from "@alltp/pack-alttpr";
 import { doorLocationsOf } from "@/games/alttpr/data/doorRando";
 import type { RunSettings } from "@/games/alttpr/data/presets";
 import {
@@ -13,14 +20,19 @@ import {
   solutionOf,
 } from "@/games/alttpr/logic/solution";
 
-/** What a run's DR check shows: done once checked, else maybe or out of logic. */
+/** What a run's DR check shows: done once checked, else its state. */
 export const doorStateOf = (
   location: DrLocation,
   state: MarkerInputs,
 ): MarkerState => {
   if (state.checked[location.id]) return "opened";
-  if (location.dungeon === null) return "possible";
   const solution = solutionOf(state);
+  const { door } = solution;
+  if (door !== undefined) {
+    const own: Tri | undefined = solution.tris[location.id];
+    return markerStatus([own ?? door.solver.region(door, location.region)]);
+  }
+  if (location.dungeon === null) return "possible";
   // Under logic the pack does not model, or a crossed world's own regions
   if (!solution.modelled || solution.crossed !== undefined) return "possible";
   return solution.keyed.solution.region(dungeon(location.dungeon).region) ===

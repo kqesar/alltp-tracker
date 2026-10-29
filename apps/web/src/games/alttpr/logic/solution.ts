@@ -8,7 +8,7 @@
 // on a map marker, which only checks locations, solves nothing. Each hook
 // returns a string, which Zustand compares by value, so a change re-renders
 // only the markers whose status it changed.
-import type { Tri } from "@alltp/engine";
+import type { State, Tri } from "@alltp/engine";
 import {
   type AlttprSettings,
   bossLocation,
@@ -46,14 +46,21 @@ import { BOSS_STATES, DUNGEON_INDICES } from "@/games/alttpr/constants";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
   crossedLogic,
+  doorLogic,
   isHidden,
   logicModelled,
   type RunSettings,
 } from "@/games/alttpr/data/presets";
 import type { TrickPrefs } from "@/games/alttpr/data/tricks";
 import type { CrossedRun, CrossedSolver } from "@/games/alttpr/logic/crossed";
+import type { DoorRun, DoorSolver } from "@/games/alttpr/logic/doorWorld";
+import type {
+  OwnWorldRun,
+  OwnWorldSolver,
+} from "@/games/alttpr/logic/ownWorld";
 import { packReading } from "@/games/alttpr/logic/packItems";
 import {
+  drSettingsOf,
   KEY_DUNGEONS,
   packSettings,
   worldOf,
@@ -217,7 +224,22 @@ export interface Solution {
     readonly solver: CrossedSolver;
     readonly entrances: Readonly<Record<string, string>>;
   };
+  /**
+   * A Door Randomizer run DR's own world holds (doorLogic): that world
+   * solved for the run's settings, whose tris the tracker shows.
+   */
+  readonly door?: DoorRun & { readonly solver: DoorSolver };
 }
+
+/**
+ * The world of its own a run is solved in, with its solver: the entrance
+ * randomizer's (`crossed`) or the Door Randomizer's (`door`); undefined for
+ * a run of vt's world.
+ */
+export const ownWorldOf = (
+  solution: Solution,
+): (OwnWorldRun & { readonly solver: OwnWorldSolver }) | undefined =>
+  solution.crossed ?? solution.door;
 
 /** The solver of runs with shuffled entrances, once its chunk is loaded. */
 let crossed: CrossedSolver | undefined;
@@ -234,9 +256,45 @@ export const setCrossedSolver = (solver: CrossedSolver): void => {
   useGameStore.setState({});
 };
 
+/** The solver of Door Randomizer runs, once its chunk is loaded. */
+let door: DoorSolver | undefined;
+
+/** Whether the solver of Door Randomizer runs is loaded. */
+export const doorSolverLoaded = (): boolean => door !== undefined;
+
+/**
+ * Takes up the solver of Door Randomizer runs (useDoorLogic): the store is
+ * set again as it was, so every selector solves the run anew.
+ */
+export const setDoorSolver = (solver: DoorSolver): void => {
+  door = solver;
+  useGameStore.setState({});
+};
+
+/**
+ * The state of a Door Randomizer run: the pack's of what the player
+ * recorded, and every dungeon's small keys as recorded, whether they are
+ * wild or not and beyond vt's pools (DR's dungeons hold their drops' keys
+ * too, Eastern Palace's among them): DR's world reads a key door below its
+ * number as maybe while the keys stay in their dungeons, never no.
+ */
+const doorStateOf = (inputs: Inputs, settings: AlttprSettings): State => {
+  const state: Record<string, State[string]> = {
+    ...toState(trackerInput(inputs), settings),
+  };
+  KEY_DUNGEONS.forEach((id, index) => {
+    const keys = inputs.smallKeys[index] ?? 0;
+    const item = `key${dungeon(id).code}`;
+    if (keys > 0) state[item] = keys;
+    else delete state[item];
+  });
+  return state;
+};
+
 let last:
   | {
       crossed?: CrossedSolver;
+      door?: DoorSolver;
       events: string;
       inputs: Inputs;
       solution: Solution;
@@ -258,6 +316,7 @@ export const solutionOf = (state: Inputs): Solution => {
     last !== undefined &&
     last.events === events &&
     last.crossed === crossed &&
+    last.door === door &&
     last.inputs.entrances === entrances &&
     last.inputs.items === state.items &&
     last.inputs.medallions === state.medallions &&
@@ -281,15 +340,31 @@ export const solutionOf = (state: Inputs): Solution => {
           entrances,
           solver: crossed,
         };
+  // A Door Randomizer run DR's world holds: that world once its solver is
+  // loaded, every check maybe until then
+  const doorRun = doorLogic(state.settings);
+  const doorSolved =
+    !doorRun || door === undefined
+      ? undefined
+      : {
+          ...door.solve(
+            drSettingsOf(state.settings),
+            doorStateOf(state, settings),
+          ),
+          solver: door,
+        };
   const modelled =
     logicModelled(state.settings) &&
-    (!crossedLogic(state.settings) || solved !== undefined);
+    (!crossedLogic(state.settings) || solved !== undefined) &&
+    (!doorRun || doorSolved !== undefined);
   const unknown = (tris: Readonly<Record<string, Tri>>) =>
     Object.fromEntries(Object.keys(tris).map((id) => [id, "maybe" as const]));
-  const tris = solved?.solution.locations() ?? keyed.locations();
-  const visibles = solved?.solution.visibles() ?? keyed.solution.visibles();
+  const own = solved ?? doorSolved;
+  const tris = own?.solution.locations() ?? keyed.locations();
+  const visibles = own?.solution.visibles() ?? keyed.solution.visibles();
   const solution = {
     ...(solved === undefined ? {} : { crossed: solved }),
+    ...(doorSolved === undefined ? {} : { door: doorSolved }),
     keyed,
     modelled,
     settings,
@@ -298,6 +373,7 @@ export const solutionOf = (state: Inputs): Solution => {
   };
   last = {
     crossed,
+    door,
     events,
     inputs: {
       ...(entrances === undefined ? {} : { entrances }),
@@ -313,12 +389,14 @@ export const solutionOf = (state: Inputs): Solution => {
 
 /**
  * Whether the map marks the checks a trick opens: the preference is on and
- * lists a trick, and the run has a tricks world (a crossed run has none).
+ * lists a trick, and the run has a tricks world (a crossed run or one in the
+ * Door Randomizer's world has none).
  */
 export const tricksShown = (state: Inputs): boolean =>
   state.tricks?.enabled === true &&
   state.tricks.techniques.length > 0 &&
-  !crossedLogic(state.settings);
+  !crossedLogic(state.settings) &&
+  !doorLogic(state.settings);
 
 /** A run solved again with the tricks the player knows held. */
 export interface TrickSolution {
@@ -342,7 +420,8 @@ let lastTricks:
  * hand included), so what a trick opens is what the real world says but for
  * the trick. Synchronous and memoized on the solution and the list of
  * tricks. Undefined when the preference is off or lists none, when the run's
- * logic is not modelled, and for a crossed run, which has no tricks world.
+ * logic is not modelled, and for a run of a world of its own (crossed, the
+ * Door Randomizer's), which has no tricks world.
  * @param state - The game store's state, or any object with those slices
  */
 export const trickSolutionOf = (state: Inputs): TrickSolution | undefined => {
@@ -373,7 +452,7 @@ export const trickSolutionOf = (state: Inputs): TrickSolution | undefined => {
  * @param run - The run's settings
  */
 export const warmTricks = (run: RunSettings): void => {
-  if (!logicModelled(run) || crossedLogic(run)) return;
+  if (!logicModelled(run) || crossedLogic(run) || doorLogic(run)) return;
   const settings = packSettings(run);
   const fresh = trackerInput({
     items: freshItems as ItemState,
@@ -387,15 +466,16 @@ export const warmTricks = (run: RunSettings): void => {
 /**
  * Whether the map marks what basic placement's safety margin alone keeps
  * out of logic: a run with basic item placement known, whose logic the pack
- * models in a world without shuffled entrances (the entrance randomizer's
- * has no margin world). An unknown placement (Mystery) reads the gates as
+ * models in vt's world (the entrance randomizer's and the Door Randomizer's
+ * have no margin world). An unknown placement (Mystery) reads the gates as
  * maybe already.
  */
 export const marginShown = (state: Inputs): boolean =>
   state.settings.itemPlacement === "basic" &&
   !isHidden(state.settings, "itemPlacement") &&
   logicModelled(state.settings) &&
-  !crossedLogic(state.settings);
+  !crossedLogic(state.settings) &&
+  !doorLogic(state.settings);
 
 /** A run solved again without basic placement's safety margin. */
 export interface MarginSolution {
@@ -412,14 +492,14 @@ const margins = new WeakMap<Solution, MarginSolution>();
  * margin dropped over the state it is made of (its keys surely in hand
  * included), so what it opens is what the real world says but for basic
  * placement's health gates. Memoized on the solution. Undefined but in a
- * basic placement run whose logic is modelled, without shuffled entrances.
+ * basic placement run whose logic is modelled in vt's world.
  * @param solution - The run solved (solutionOf)
  */
 export const marginOf = (solution: Solution): MarginSolution | undefined => {
   if (
     solution.settings.basicPlacement !== true ||
     !solution.modelled ||
-    solution.crossed !== undefined
+    ownWorldOf(solution) !== undefined
   ) {
     return undefined;
   }

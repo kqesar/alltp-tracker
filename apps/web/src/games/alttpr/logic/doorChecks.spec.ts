@@ -1,6 +1,8 @@
+import { DR_LOCATIONS } from "@alltp/pack-alttpr";
 import { beforeEach, describe, expect, it } from "vitest";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import { checkStates, runZones } from "@/games/alttpr/logic/checks";
+import { setDoorSolver } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 const KEYDROP: RunSettings = {
@@ -10,6 +12,15 @@ const KEYDROP: RunSettings = {
 };
 
 const state = () => useGameStore.getState();
+
+/** A pot of Kakariko Well's back room, which the drop reaches with nothing. */
+const KAKARIKO_WELL_POT = (() => {
+  const found = DR_LOCATIONS.find(
+    (l) => l.name === "Kakariko Well (back) Pot #1",
+  );
+  if (found === undefined) throw new Error("no Kakariko Well pot");
+  return found.id;
+})();
 
 beforeEach(() => {
   useGameStore.setState(useGameStore.getInitialState(), true);
@@ -34,11 +45,22 @@ describe("a Door Randomizer run's checks", () => {
     expect(caves.map((zone) => zone.name)).toContain("Hammer Peg Cave");
   });
 
-  it("show maybe, out of logic where the dungeon cannot be entered, done once checked", () => {
+  it("show maybe until DR's world is loaded, then its answer, done once checked", async () => {
+    // DR's world not loaded yet: every check maybe, the run not modelled
+    expect(checkStates(state())["turtle-rock/pokey-1-key-drop"]).toBe(
+      "possible",
+    );
+    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    setDoorSolver(solver);
     const states = checkStates(state());
-    expect(states["eastern-palace/dark-square-pot-key"]).toBe("possible");
-    // Turtle Rock, with nothing found: no way in (its region `no`)
+    // Turtle Rock, with nothing found: no way in
     expect(states["turtle-rock/pokey-1-key-drop"]).toBe("unavailable");
+    // A cave's pot, of no rule of its own yet: its room, reached
+    expect(states[KAKARIKO_WELL_POT]).toBe("available");
+    useGameStore.getState().setItem("lantern", true);
+    expect(checkStates(state())["eastern-palace/dark-square-pot-key"]).toBe(
+      "available",
+    );
     useGameStore
       .getState()
       .toggleChecks(["eastern-palace/dark-square-pot-key"]);

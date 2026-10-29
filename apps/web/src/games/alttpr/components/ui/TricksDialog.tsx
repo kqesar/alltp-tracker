@@ -2,7 +2,11 @@ import { TRICK_IDS, type TrickId } from "@alltp/pack-alttpr";
 import { useEffect, useId } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { OutLink } from "@/components/ui/OutLink";
-import { crossedLogic, logicModelled } from "@/games/alttpr/data/presets";
+import {
+  crossedLogic,
+  doorLogic,
+  logicModelled,
+} from "@/games/alttpr/data/presets";
 import {
   MINOR_GLITCHES_GUIDE,
   TRICK_WORDS,
@@ -81,7 +85,10 @@ export const TricksDialog = ({
   const { enabled } = tricks;
   const setTricks = useGameStore((state) => state.setTricks);
   const modelled = useGameStore(
-    (state) => logicModelled(state.settings) && !crossedLogic(state.settings),
+    (state) =>
+      logicModelled(state.settings) &&
+      !crossedLogic(state.settings) &&
+      !doorLogic(state.settings),
   );
   const switchId = useId();
   const settings = useGameStore((state) => state.settings);
@@ -117,8 +124,9 @@ export const TricksDialog = ({
         </p>
         {!modelled && (
           <p className="tricks-dialog__note" data-testid="tricks-unsupported">
-            This run's logic has no tricks yet (shuffled entrances, a glitched
-            logic, or logic not modelled): nothing is marked.
+            This run's logic has no tricks yet (shuffled entrances, a Door
+            Randomizer seed, a glitched logic, or logic not modelled): nothing
+            is marked.
           </p>
         )}
         <div className="check-option">

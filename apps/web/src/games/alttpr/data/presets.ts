@@ -280,6 +280,22 @@ export const crossedLogic = (settings: RunSettings): boolean =>
   // A Door Randomizer seed it can hold: DR's Crosskeys, doors vanilla
   doorReasons(settings, true).length === 0;
 
+/**
+ * Whether a run takes the Door Randomizer's own world (the pack's
+ * door-world, loaded on demand by `useDoorLogic`): a seed of DR itself (not
+ * its Overworld fork, whose rules differ), its doors and entrances vanilla,
+ * nothing the port of DR's world leaves out (`doorReasons`), no glitched
+ * logic, its bosses in place (DR's world reads each dungeon's own) and
+ * every setting known (a Mystery run's are not).
+ */
+export const doorLogic = (settings: RunSettings): boolean =>
+  settings.randomizer === "dr" &&
+  settings.entranceShuffle === "none" &&
+  settings.glitches === undefined &&
+  !bossesMayMove(settings) &&
+  (settings.hidden ?? []).length === 0 &&
+  doorReasons(settings, false).length === 0;
+
 /** A run's boss shuffle: "none" when its settings name none. */
 export const bossShuffleOf = (settings: RunSettings): BossShuffle =>
   settings.bossShuffle ?? "none";
@@ -313,8 +329,11 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
   const reasons: string[] = [];
   if (settings.glitches !== undefined)
     reasons.push(GLITCHES_LABELS[settings.glitches]);
-  // A Door Randomizer seed's own (data/doorRando.ts)
-  reasons.push(...doorReasons(settings, wildItems(settings).keys));
+  // A Door Randomizer seed's own (data/doorRando.ts); DR's world counts
+  // the drops' keys, which alttpr.com's v31 borrowed elsewhere does not
+  reasons.push(
+    ...doorReasons(settings, wildItems(settings).keys && !doorLogic(settings)),
+  );
   const { entranceShuffle: shuffle, mode } = settings;
   if (shuffle !== "none" && !crossedLogic(settings)) {
     if (shuffle !== "crossed")

@@ -12,6 +12,7 @@ import {
 } from "@/games/alttpr/data/doorRando";
 import {
   crossedLogic,
+  doorLogic,
   getPreset,
   logicModelled,
   type RunSettings,
@@ -31,18 +32,41 @@ const EASTERN = 0;
 const HYRULE_CASTLE = 10;
 
 describe("a Door Randomizer run's logic", () => {
-  it("keeps vt's logic for vanilla doors, and says it borrows it", () => {
+  it("takes DR's own world for vanilla doors and entrances, and says so", () => {
     expect(unmodelledReasons(DR)).toEqual([]);
     expect(logicModelled(DR)).toBe(true);
-    expect(doorNotes(DR, false)).toEqual([
+    expect(doorLogic(DR)).toBe(true);
+    expect(doorNotes(DR, "door")).toEqual([
+      "Door Randomizer seed: the logic is DR's own (1.5.6).",
+    ]);
+    expect(doorNotes(getPreset("open").settings, "door")).toEqual([]);
+  });
+
+  it("borrows v31 where DR's world does not reach, and says it borrows it", () => {
+    for (const change of [
+      { randomizer: "owr" },
+      { bossShuffle: "full" },
+      { hidden: ["goal"] },
+    ] as const) {
+      const run = with_(DR, change);
+      expect(doorLogic(run), JSON.stringify(change)).toBe(false);
+      expect(logicModelled(run), JSON.stringify(change)).toBe(true);
+    }
+    expect(doorNotes(with_(DR, { randomizer: "owr" }), "borrowed")).toEqual([
       "Door Randomizer seed: dungeon logic from alttpr.com's v31 until DR's own is ported.",
     ]);
-    expect(doorNotes(getPreset("open").settings, false)).toEqual([]);
+    expect(
+      doorNotes(with_(DR, { dropShuffle: "keys" }), "borrowed")[1],
+    ).toMatch(/show as maybe until then/);
+    expect(doorNotes(with_(DR, { dropShuffle: "keys" }), "door")[1]).toMatch(
+      /whether their room is reached/,
+    );
   });
 
   it("keeps the crossed logic for DR's Crosskeys, with the note the owner asked for", () => {
     expect(crossedLogic(DR_CROSSKEYS)).toBe(true);
-    expect(doorNotes(DR_CROSSKEYS, true)[0]).toBe(
+    expect(doorLogic(DR_CROSSKEYS)).toBe(false);
+    expect(doorNotes(DR_CROSSKEYS, "crossed")[0]).toBe(
       "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported.",
     );
   });
@@ -67,9 +91,13 @@ describe("a Door Randomizer run's logic", () => {
     }
   });
 
-  it("models key drops with keys in their dungeons, not with keys out of them", () => {
+  it("models key drops in DR's world, and with keys in their dungeons in v31's", () => {
     const keydrop = { dropShuffle: "keys", pottery: "keys" } as const;
     expect(unmodelledReasons(with_(DR, keydrop))).toEqual([]);
+    // DR's world counts the drops' keys, wild or not
+    const keysanity = with_(DR, { ...keydrop, dungeonItems: "full" });
+    expect(doorLogic(keysanity)).toBe(true);
+    expect(unmodelledReasons(keysanity)).toEqual([]);
     const crosskeys = with_(DR_CROSSKEYS, keydrop);
     expect(unmodelledReasons(crosskeys)).toEqual([
       "shuffled key drops with keys outside their dungeons",

@@ -228,6 +228,7 @@ export {
   solveFactsState,
   vanillaConnections,
 } from "./er-world";
+export type { FactWorld } from "./facts";
 export {
   EVENT_LOCATIONS,
   type Filler,

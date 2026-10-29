@@ -1,5 +1,7 @@
 // A run's settings in the alttpr pack's terms: what the app's run types mean
-// to the ALttPR v31 rules, and how many items each dungeon counter counts.
+// to the ALttPR v31 rules (and to the Door Randomizer's world), and how many
+// items each dungeon counter counts.
+import type { Settings } from "@alltp/engine";
 import {
   type AlttprSettings,
   DR_LOCATIONS,
@@ -15,6 +17,7 @@ import {
 import {
   doorCounterExtra,
   doorKeysExtra,
+  doorOf,
   isDoorRun,
 } from "@/games/alttpr/data/doorRando";
 import {
@@ -92,6 +95,61 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
     cache.set(key, settings);
   }
   return settings;
+};
+
+/**
+ * The pottery modes whose dungeons hold pots beyond their keys
+ * (adjust_locations, Regions.py:1165-1232).
+ */
+const DUNGEON_POTS: ReadonlySet<string> = new Set([
+  "dungeon",
+  "reduced",
+  "clustered",
+  "nonempty",
+  "lottery",
+]);
+
+const doorSettings = new WeakMap<AlttprSettings, Map<string, Settings>>();
+
+/**
+ * The settings of the Door Randomizer's world for a DR run (doorLogic): the
+ * pack's, and what DR reads beside them (the pack's door-world, whose
+ * DR_DEFAULTS fill the rest): retro's universal keys and rupee bow, the
+ * drops' and pots' keys shuffled, the pots, whether pots or drops join the
+ * dungeons beyond their keys (the key analysis then left out), the pyramid
+ * a fast Ganon opens (open_pyramid auto, is_pyramid_open, BaseClasses.py:
+ * 300-311), a triforce hunt.
+ * The same run settings always give the same object, so the world compiled
+ * for it can be kept.
+ * @param run - A DR run's settings
+ */
+export const drSettingsOf = (run: RunSettings): Settings => {
+  const settings = packSettings(run);
+  const door = doorOf(run);
+  const pottery = door?.pottery ?? "none";
+  const drops = door?.dropShuffle ?? "none";
+  const key = [pottery, drops, run.goal].join("/");
+  let byKey = doorSettings.get(settings);
+  if (byKey === undefined) {
+    byKey = new Map();
+    doorSettings.set(settings, byKey);
+  }
+  let found = byKey.get(key);
+  if (found === undefined) {
+    found = {
+      ...settings,
+      dropShuffle: drops !== "none",
+      dungeonPotsAndDrops: DUNGEON_POTS.has(pottery) || drops === "underworld",
+      openPyramid: settings.fastGanonGoal,
+      potKeys: pottery !== "none" && pottery !== "cave",
+      pottery: pottery !== "none",
+      retroBow: settings.rupeeBow,
+      triforceHuntGoal: run.goal === "triforce-hunt",
+      universalKeys: settings.genericKeys,
+    };
+    byKey.set(key, found);
+  }
+  return found;
 };
 
 /** The world a run's settings build: what is kept per world is keyed by it. */

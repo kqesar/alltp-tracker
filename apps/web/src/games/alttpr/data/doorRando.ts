@@ -8,10 +8,10 @@
  *
  * The tracker reads the vanilla-door part of DR: its key drops, pots, enemy
  * drops and shop items are locations (the pack's door-rando/locations.ts),
- * whose logic waits for DR's dungeon logic. What it does not model yet (door
- * shuffle, the overworld shuffles, enemy shuffle, DR's entrance pools, key
- * drops with keys outside their dungeons) is named by `doorReasons`, and the
- * logic it borrows meanwhile by `doorNotes`.
+ * and a DR run with vanilla doors and entrances is solved in the pack's port
+ * of DR's own world (`doorLogic` in presets.ts). What it does not model yet
+ * (door shuffle, the overworld shuffles, enemy shuffle, DR's entrance pools)
+ * is named by `doorReasons`, and what a run's logic rests on by `doorNotes`.
  */
 
 import {
@@ -314,21 +314,34 @@ export const doorReasons = (
   return reasons;
 };
 
+/** Which world a modelled DR run is solved in. */
+export type DoorLogicKind = "crossed" | "door" | "borrowed";
+
 /**
- * What a DR run's logic borrows meanwhile, when the tracker models it: the
- * entrance randomizer's crossed logic for DR's Crosskeys (until DR's own
- * entrance pools are ported), alttpr.com's v31 for the dungeons (until DR's
- * dungeon logic is), and the new locations shown as maybe.
- * @param crossed - Whether the run takes the crossed logic (crossedLogic)
+ * What a DR run's logic rests on, when the tracker models it: DR's own
+ * world (`door`: vanilla doors and entrances, doorLogic), the entrance
+ * randomizer's crossed logic for DR's Crosskeys (until DR's own entrance
+ * pools are ported), or alttpr.com's v31 for the rest (its Overworld
+ * fork, a boss shuffle, a Mystery run), its new locations then shown as
+ * maybe.
+ * @param kind - The world the run is solved in
  */
 export const doorNotes = (
   settings: DoorRunSettings,
-  crossed: boolean,
+  kind: DoorLogicKind,
 ): string[] => {
   const door = doorOf(settings);
   if (door === null) return [];
+  if (kind === "door") {
+    const notes = ["Door Randomizer seed: the logic is DR's own (1.5.6)."];
+    if (doorLocationsOf(settings).locations.length > 0)
+      notes.push(
+        "Its pots, enemy drops and shop items show whether their room is reached, until their own rules are in.",
+      );
+    return notes;
+  }
   const notes = [
-    crossed
+    kind === "crossed"
       ? "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported."
       : "Door Randomizer seed: dungeon logic from alttpr.com's v31 until DR's own is ported.",
   ];

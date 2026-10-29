@@ -21,6 +21,7 @@ import {
   toState,
   UNKNOWN_FACT_OF,
 } from "@alltp/pack-alttpr";
+import { drWorld, KEY_ITEMS } from "@alltp/pack-alttpr/door-world";
 import { describe, expect, it } from "vitest";
 import { items, itemsMax } from "@/games/alttpr/data/items";
 import {
@@ -28,7 +29,7 @@ import {
   HIDEABLE,
   type RunSettings,
 } from "@/games/alttpr/data/presets";
-import { packSettings } from "@/games/alttpr/logic/settings";
+import { drSettingsOf, packSettings } from "@/games/alttpr/logic/settings";
 import { fillerOf, trackerInput } from "@/games/alttpr/logic/solution";
 
 /**
@@ -36,6 +37,9 @@ import { fillerOf, trackerInput } from "@/games/alttpr/logic/solution";
  * beyond the board is a bug of this spec's kind.
  */
 const EXCEPTIONS: Readonly<Record<string, string>> = {
+  // Hyrule Castle's big key, which DR's key drops may shuffle: no cell
+  // records it, so DR's world reads it as maybe (its `unrecorded`)
+  "bigKeyH2>=1": "no cell; maybe in DR's world",
   // The silver bow: the board records it as the bow and its silver arrows,
   // which canShootArrows2 reads beside it (`silverArrowUpgrade & bow`)
   "bow>=2": "covered by the bow and silver arrows",
@@ -194,7 +198,19 @@ const neverOf = (
   return never;
 };
 
-/** The worlds the app compiles: vt's and its tricks', the entrance shuffle's. */
+/** A Door Randomizer run of a world: every setting known (doorLogic). */
+const doorRun = (
+  mode: RunSettings["mode"],
+  dungeonItems: DungeonItems,
+): RunSettings => {
+  const { hidden: _hidden, ...run } = mystery(mode, dungeonItems);
+  return { ...run, dropShuffle: "keys", pottery: "keys", randomizer: "dr" };
+};
+
+/**
+ * The worlds the app compiles: vt's and its tricks', the entrance shuffle's,
+ * the Door Randomizer's.
+ */
 const WORLDS = (["open", "standard", "inverted"] as const).flatMap((mode) =>
   (["standard", "full"] as const).flatMap((dungeonItems) => {
     const run = mystery(mode, dungeonItems);
@@ -211,12 +227,27 @@ const WORLDS = (["open", "standard", "inverted"] as const).flatMap((mode) =>
         er.facts.map(({ item }) => item),
       ]);
     }
-    return worlds.map(([name, world, facts]) => ({
-      facts,
-      full: fullBoard(run),
-      name,
-      world,
-    }));
+    const full = fullBoard(run);
+    const door = doorRun(mode, dungeonItems);
+    const dr = drWorld(drSettingsOf(door), { unrecorded: ["bigKeyH2"] });
+    return [
+      ...worlds.map(([name, world, facts]) => ({ facts, full, name, world })),
+      {
+        facts: dr.facts.flatMap(({ item, maybe }) => [item, maybe ?? item]),
+        // Every dungeon's keys, as DR's world reads the recorded ones
+        full: {
+          ...fullBoard(door),
+          ...Object.fromEntries(
+            KEY_ITEMS.filter((item) => item.startsWith("key")).map((item) => [
+              item,
+              9,
+            ]),
+          ),
+        },
+        name: `${mode} ${dungeonItems} door`,
+        world: dr.compiled,
+      },
+    ];
   }),
 );
 

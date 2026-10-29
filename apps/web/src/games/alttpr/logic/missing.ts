@@ -71,6 +71,7 @@ import {
   locationName,
   type MarkerState,
   marginOf,
+  ownWorldOf,
   prizeOf,
   type Solution,
   solutionOf,
@@ -700,7 +701,7 @@ export const analyzeRun = (
   const { keyed, settings, tris } = solution;
   // Nothing to say of a check under logic the pack does not model
   if (!solution.modelled) return { missing: new Map(), solution };
-  if (solution.crossed !== undefined) return analyzeCrossed(solution, run);
+  if (ownWorldOf(solution) !== undefined) return analyzeOwnWorld(solution, run);
   const fill = fillerOf(settings);
   const state = withUntracked(fill, keyed.state);
   const settingsOptions = optionsOf(settings);
@@ -781,13 +782,16 @@ const standardGoMode = (
 };
 
 /**
- * analyzeRun for a run with shuffled entrances: the same, over the entrance
- * randomizer's world solved for the entrances noted, its facts (an event, a
- * region reached) read through as the items that bring them. It has no key
- * the player does not track (crossedLogic), so a `maybe` is by its rules.
+ * analyzeRun for a run of a world of its own (ownWorldOf): the same, over
+ * the entrance randomizer's world solved for the entrances noted, or the
+ * Door Randomizer's, its facts (an event, a region reached) read through as
+ * the items that bring them. A `maybe` is by its rules: the crossed world
+ * has no key the player does not track (crossedLogic), DR's reads a key
+ * kept in its dungeon as maybe below its number.
  */
-const analyzeCrossed = (solution: Solution, run: RunSettings): RunAnalysis => {
-  const { crossed, settings, tris } = solution;
+const analyzeOwnWorld = (solution: Solution, run: RunSettings): RunAnalysis => {
+  const { settings, tris } = solution;
+  const crossed = ownWorldOf(solution);
   if (crossed === undefined) return { missing: new Map(), solution };
   const settingsOptions = optionsOf(settings);
   const analysis = crossed.solver.analyze(
@@ -892,8 +896,8 @@ export const goModeStatusOf = (inputs: Inputs): GoModeStatus | undefined => {
   if (lastStatus?.solution === solution) return lastStatus.status;
   const mode = goModeOfRun(inputs.settings, solution.settings);
   // A run whose logic the pack does not model has no go mode to speak of;
-  // one with shuffled entrances takes the entrance randomizer's world
-  const { crossed } = solution;
+  // one of a world of its own (shuffled entrances, DR's) takes that world
+  const crossed = ownWorldOf(solution);
   const status =
     mode === undefined || !solution.modelled
       ? undefined

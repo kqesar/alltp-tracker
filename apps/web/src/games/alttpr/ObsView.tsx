@@ -9,6 +9,7 @@ import { StreamTimer } from "@/games/alttpr/components/ui/StreamTimer";
 import { ITEMS_PER_ROW } from "@/games/alttpr/constants";
 import { itemGridFor, streamGridFor } from "@/games/alttpr/data/items";
 import { useCrossedLogic } from "@/games/alttpr/hooks/useCrossedLogic";
+import { useDoorLogic } from "@/games/alttpr/hooks/useDoorLogic";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { visibleRows } from "@/games/alttpr/utils";
@@ -63,6 +64,7 @@ const usePortrait = (): boolean =>
  */
 export const ObsView = ({ background, relay, timer = false }: ObsViewProps) => {
   useCrossedLogic();
+  useDoorLogic();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const mode = useGameStore((state) => state.settings.mode);
   const goal = useGameStore((state) => state.settings.goal);

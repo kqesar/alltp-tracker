@@ -1,6 +1,10 @@
 import { useShallow } from "zustand/react/shallow";
 import { doorNotes } from "@/games/alttpr/data/doorRando";
-import { crossedLogic, unmodelledReasons } from "@/games/alttpr/data/presets";
+import {
+  crossedLogic,
+  doorLogic,
+  unmodelledReasons,
+} from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 /** "A", "A and B", "A, B and C". */
@@ -16,7 +20,7 @@ const listOf = (items: readonly string[]) =>
  * (`unmodelledReasons`: a glitched logic, an entrance shuffle, shuffled
  * bosses behind one, a Door Randomizer seed's door, overworld or enemy
  * shuffle) and that every check is maybe. A Door Randomizer seed whose logic
- * it does model says whose logic it borrows meanwhile (`doorNotes`).
+ * it does model says what that logic rests on (`doorNotes`).
  * Nothing for any other run.
  */
 export const LogicNote = () => {
@@ -27,7 +31,14 @@ export const LogicNote = () => {
   const door = useGameStore(
     useShallow((state) =>
       unmodelledReasons(state.settings).length === 0
-        ? doorNotes(state.settings, crossedLogic(state.settings))
+        ? doorNotes(
+            state.settings,
+            crossedLogic(state.settings)
+              ? "crossed"
+              : doorLogic(state.settings)
+                ? "door"
+                : "borrowed",
+          )
         : [],
     ),
   );

@@ -105,7 +105,7 @@ describe("MapPanel", () => {
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });
 
-  it("says whose logic a Door Randomizer seed borrows, and names what it cannot model", () => {
+  it("says what a Door Randomizer seed's logic rests on, and names what it cannot model", () => {
     act(() => useGameStore.getState().applyPreset("door-crosskeys"));
     render(<MapPanel />);
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
@@ -123,6 +123,14 @@ describe("MapPanel", () => {
 
     act(() => useGameStore.getState().applyPreset("door-randomizer"));
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
+    expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
+      "Door Randomizer seed: the logic is DR's own (1.5.6).",
+    );
+
+    // Its Overworld fork borrows v31 still
+    act(() =>
+      useGameStore.getState().updateDoorSettings({ randomizer: "owr" }),
+    );
     expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
       "Door Randomizer seed: dungeon logic from alttpr.com's v31 until DR's own is ported.",
     );

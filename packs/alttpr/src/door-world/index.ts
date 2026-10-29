@@ -75,6 +75,7 @@ import { and, maybeOf, or, readFact } from "./text";
 export type { DrConnections } from "./connections";
 export { vanillaConnections } from "./connections";
 export type { DrMode } from "./data";
+export { KEY_ITEMS } from "./keys";
 
 /** How a world is built beside its settings. */
 export interface DrWorldOptions {
@@ -133,6 +134,9 @@ const MENU = "Menu";
 
 /** The id of a DR location: the pack's slug, vt's name where it differs. */
 export const drLocationId = (name: string): string => erLocationId(name);
+
+/** The engine's id of a DR region, by DR's name ("Eastern Lobby"). */
+export const drRegionId = (name: string): string => regionNamed(name).id;
 
 /** The id of a probe on an exit. */
 export const probeId = (exit: string): string => `exit:${exit}`;

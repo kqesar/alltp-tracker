@@ -31,6 +31,7 @@ import {
   locationStateOf,
   markerById,
   setCrossedSolver,
+  setDoorSolver,
   solutionOf,
   trickSolutionOf,
 } from "@/games/alttpr/logic/solution";
@@ -484,6 +485,36 @@ describe("a run with shuffled entrances", () => {
         "tri": "no",
       }
     `);
+  });
+});
+
+describe("a Door Randomizer run", () => {
+  it("says what a check misses in DR's world, and steps its go mode there", async () => {
+    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    setDoorSolver(solver);
+    const inputs = inputsOf(
+      { lantern: true },
+      { preset: "door-randomizer", smallKeys: Array(13).fill(0) },
+    );
+    const analysis = analysisOf(inputs);
+    expect(analysis.solution.door).toBeDefined();
+    expect(
+      words(analysis.missing.get("eastern-palace/big-chest")),
+    ).toMatchInlineSnapshot(`
+        {
+          "doubts": [
+            {
+              "kind": "placement",
+            },
+          ],
+          "inLogic": "Eastern Palace big key",
+          "possible": undefined,
+          "tri": "maybe",
+        }
+      `);
+    expect(
+      goModeStatusOf(inputs)?.steps.map(({ location }) => location),
+    ).toEqual(["agahnim-2", "ganon"]);
   });
 });
 

@@ -16,7 +16,7 @@ const openDoorRun = async (page: Page) => {
   return dialog;
 };
 
-test("a Door Randomizer run lists its key pots, checked in place, the map saying whose logic", async ({
+test("a Door Randomizer run lists its key pots in DR's logic, checked in place", async ({
   page,
 }) => {
   const dialog = await openDoorRun(page);
@@ -27,12 +27,16 @@ test("a Door Randomizer run lists its key pots, checked in place, the map saying
   await dialog.getByRole("button", { name: "Close" }).first().click();
 
   await expect(page.getByTestId("logic-note-door")).toHaveText(
-    /Door Randomizer seed: dungeon logic from alttpr\.com's v31 until DR's own is ported\./,
+    /Door Randomizer seed: the logic is DR's own \(1\.5\.6\)\./,
   );
   await page.getByTestId("map-view-tab-checks").click();
+  // DR's world, loaded on demand: the dark square's pot wants the lamp
+  await page.getByTestId("checks-filter-unavailable").check();
   const row = page.getByTestId("check-row-eastern-palace/dark-square-pot-key");
-  await expect(row).toBeVisible();
-  await expect(row).toContainText("maybe", { ignoreCase: true });
+  await expect(row).toContainText("out of logic", { ignoreCase: true });
+  await page.getByTestId("item-lantern").click();
+  await expect(row).not.toContainText("out of logic", { ignoreCase: true });
+  await expect(row).toContainText("available", { ignoreCase: true });
   // Done rows shown, so the row stays as it is ticked
   await page.getByTestId("checks-filter-opened").check();
   await row.getByRole("checkbox").check();
