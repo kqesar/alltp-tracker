@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_KEYMAP, DEFAULT_SHORTCUTS } from "@/games/alttpr/data/keymap";
-import { getPreset } from "@/games/alttpr/data/presets";
+import { getPreset, sameSettings } from "@/games/alttpr/data/presets";
 import v1Export from "@/games/alttpr/stores/fixtures/v1-export.json";
 import v2Export from "@/games/alttpr/stores/fixtures/v2-export.json";
 import v5KeysanityExport from "@/games/alttpr/stores/fixtures/v5-keysanity-export.json";
@@ -303,6 +303,17 @@ describe("GameStore", () => {
       const past = store().past;
       store().updateSettings({ glitches: "none" });
       expect(store().past).toBe(past);
+    });
+
+    it("sets the boss shuffle by hand, None said by its absence as in a preset", () => {
+      const store = () => useGameStore.getState();
+      store().updateSettings({ bossShuffle: "simple" });
+      expect(store().settings.bossShuffle).toBe("simple");
+      store().updateSettings({ bossShuffle: "none" });
+      expect(store().settings).not.toHaveProperty("bossShuffle");
+      expect(sameSettings(store().settings, getPreset("open").settings)).toBe(
+        true,
+      );
     });
 
     it("keeps the glitches a No Logic run is played with to that run", () => {
