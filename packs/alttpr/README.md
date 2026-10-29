@@ -915,6 +915,12 @@ logic and build (`SendPatchToDisk.php:46-67`), its intro text is masked
 (`Rom.php:2117`), and as a tournament seed its ROM settings are not read in
 Race Mode. The player learns them as the run goes.
 
+The app hides two more, the glitches and the entrance shuffle, which
+alttpr.com's own weighted seeds roll (`config/alttp.php:296-302, 355-362`):
+it reads hidden glitches between two of this pack's worlds (NoGlitches' rules
+as a No Logic seed's, without the boots; Major Glitches'), and a hidden
+entrance shuffle as every check maybe (the app's `data/presets.ts`).
+
 `settingsFromUpstream(mode, config)` takes `UNKNOWN` for each config value
 a player discovers: `mode.weapons`, `goal`, `crystals.tower`,
 `crystals.ganon`, `itemPlacement`, `accessibility`, `item.pool`,
@@ -1917,6 +1923,27 @@ advanced run's margin world is its real world, and an unknown placement
 (Mystery) folds `!setting(basicPlacement)` to maybe, so the margins are
 maybe already.
 
+## Weapons, goals and enemy health beyond the default
+
+Read at the pinned commit, beside the presets' defaults:
+
+- **Weapons** (`mode.weapons`): `swordless` is its own flag; `assured`
+  pre-collects Uncle's sword, a fifty rupees taking its place
+  (`Randomizer.php:256-260`), so `swordAtStart` makes `toState` give a sword
+  (held at least at 1); `vanilla` puts the swords at Uncle, the Pyramid
+  Fairy, the Blacksmith and the Pedestal (`:241-252`), which no rule reads:
+  it builds the same settings as `randomized` (`settings.spec.ts`).
+- **Goals.** `ganonhunt` (`ganonhuntGoal`, the go mode above) and
+  `completionist` (`completionistGoal`): Ganon reads it as no crystal goal,
+  and `prepareWorld` fills its seed for every location whatever the
+  accessibility (`Randomizer.php:99-101`), so `locationsAccessibility` is
+  true with it. Completionist has no go mode before its end.
+- **Enemy health** (`enemizer.enemyHealth`): anything but `default` drops
+  the escape's kills with bombs and the Cane of Byrna
+  (`ItemCollection.php:567-591`, `defaultEnemyHealth`, the helpers
+  `canKillEscapeThings`, `canKillMostThings`); a seed's file states it
+  (`enemizer.enemy_health`), the ROM does not.
+
 ## Go mode
 
 A run is won once Link holds the Triforce (`app/World.php:101-106`), which
@@ -1929,6 +1956,7 @@ order, each with its upstream line:
 | --- | --- |
 | `ganon` | Agahnim 2, the prize of Ganon's Tower (`GanonsTower.php:388`), then Ganon (`DarkWorld/NorthEast.php:186`), whose rule wants Agahnim 2 beaten |
 | `fastGanon` (upstream `fast_ganon`) | Ganon, who wants the crystals and the pyramid but not Agahnim 2 (`DarkWorld/NorthEast.php:226`) |
+| `ganonhunt` | Ganon, who wants the Triforce pieces the goal asks for (`DarkWorld/NorthEast.php:187-192`: the fact `ganonhuntPieces`, which `toState` sets from `TrackerInput.goalPieces` once the pieces found reach those asked, 40 of 50 by default, `GANONHUNT`, `config/alttp.php:43-53`) and not Agahnim 2 (226); no crystal count. Inverted's Ganon names no ganonhunt (`Inverted/LightWorld/NorthEast.php:144-206`): it reads as the ganon goal's, Agahnim 2 and no piece, as upstream fills it |
 | `pedestal` | the Master Sword Pedestal (`LightWorld/NorthWest.php:86`) |
 
 The solver computes no event, so a step that gives one (Agahnim 2 gives

@@ -52,6 +52,8 @@ const SEED_FILE = z.object({
       dungeon_items: oneOf(["standard", "mc", "mcs", "full"]),
       // config/alttp.php:241-246; World.php:1012 names it with its dot
       "enemizer.boss_shuffle": oneOf(["none", "simple", "full", "random"]),
+      // config/alttp.php:282-287, named with its dot as the boss shuffle
+      "enemizer.enemy_health": oneOf(["default", "easy", "hard", "expert"]),
       // config/alttp.php:205-226
       entry_crystals_ganon: oneOf(CRYSTALS),
       entry_crystals_tower: oneOf(CRYSTALS),
@@ -140,6 +142,7 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
       bossShuffle: MYSTERY,
       crystalsGanon: MYSTERY,
       crystalsTower: MYSTERY,
+      enemyHealth: MYSTERY,
       entrances: MYSTERY,
       goal: MYSTERY,
       itemFunctionality: MYSTERY,
@@ -149,6 +152,7 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
       mode: MYSTERY,
       seed: file.data.hash,
       swordless: MYSTERY,
+      weapons: MYSTERY,
       wildBigKeys: MYSTERY,
       wildCompasses: MYSTERY,
       wildKeys: MYSTERY,
@@ -163,6 +167,7 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
     bossShuffle: setting(meta["enemizer.boss_shuffle"]),
     crystalsGanon: crystals(meta.entry_crystals_ganon),
     crystalsTower: crystals(meta.entry_crystals_tower),
+    enemyHealth: setting(meta["enemizer.enemy_health"]),
     entrances:
       meta.shuffle === undefined ? known("none") : setting(meta.shuffle),
     goal: setting(meta.goal),
@@ -175,6 +180,7 @@ export const seedFileReading = (json: unknown): SeedSettingsReading | null => {
     swordless: setting(
       meta.weapons === null ? null : meta.weapons === "swordless",
     ),
+    weapons: setting(meta.weapons),
     wildBigKeys: setting(wild?.bigKeys ?? null),
     wildCompasses: setting(wild?.compasses ?? null),
     wildKeys: setting(wild?.keys ?? null),

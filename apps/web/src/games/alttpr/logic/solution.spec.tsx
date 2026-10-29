@@ -57,6 +57,8 @@ describe("trackerInput", () => {
   it("reads a fresh run as nothing held, Zelda rescued", () => {
     expect(trackerInput(store())).toEqual({
       beaten: { "hyrule-castle": true },
+      // None of the 20 a fresh board asks for
+      goalPieces: { found: 0, required: 20 },
       items: {},
       keys: Object.fromEntries(KEY_DUNGEONS.map((id) => [id, 0])),
       medallions: { mire: "unknown", turtleRock: "unknown" },

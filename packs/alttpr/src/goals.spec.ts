@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { dungeon } from "./dungeons";
 import { filler } from "./fill";
 import {
+  GANONHUNT,
   GO_MODES,
   type GoMode,
   goModeBlockers,
@@ -14,7 +15,7 @@ import {
   joinBlockers,
   TRIFORCE_HUNT,
 } from "./goals";
-import { withUntracked } from "./keys";
+import { solveWithKeys, withUntracked } from "./keys";
 import { compile, regionModules, STATE_NAMES } from "./pack";
 import {
   type AlttprSettings,
@@ -30,8 +31,11 @@ import {
 } from "./tracker";
 
 /** The site's default preset with another goal. */
-const withGoal = (goal: "dungeons" | "fast_ganon" | "pedestal") =>
-  settingsFromUpstream("open", {
+const withGoal = (
+  goal: "completionist" | "dungeons" | "fast_ganon" | "ganonhunt" | "pedestal",
+  mode: "inverted" | "open" = "open",
+) =>
+  settingsFromUpstream(mode, {
     accessibility: "items",
     dungeonItems: "standard",
     goal,
@@ -193,6 +197,68 @@ describe("GO_MODES", () => {
     const [tower] = GO_MODES.ganon.steps;
     expect(tower.gives).toBe(dungeon("ganons-tower").event?.item);
     expect(STATE_NAMES).toContain(tower.gives);
+  });
+});
+
+describe("a ganonhunt", () => {
+  const GANONHUNT_RUN = withGoal("ganonhunt");
+  /** Ganon's tri in the end game, with these pieces of the 40 asked. */
+  const ganon = (found: number | undefined, settings = GANONHUNT_RUN) => {
+    const input: TrackerInput = {
+      // Agahnim 2 not beaten: ganonhunt does without him (NorthEast.php:226)
+      ...endGame({ beaten: {} }),
+      ...(found === undefined
+        ? {}
+        : { goalPieces: { found, required: GANONHUNT.required } }),
+    };
+    return solveWithKeys(fillerOf(settings), toState(input, settings)).location(
+      "ganon",
+    );
+  };
+
+  it("asks for 40 of the 50 pieces (config/alttp.php:43-53)", () => {
+    expect(GANONHUNT).toMatchObject({ pool: 50, required: 40 });
+  });
+
+  it("opens Ganon once the pieces asked for are found, without Agahnim 2", () => {
+    expect(ganon(undefined)).toBe("no");
+    expect(ganon(39)).toBe("no");
+    expect(ganon(40)).toBe("yes");
+    expect(goModeOf(GANONHUNT_RUN)).toBe(GO_MODES.ganonhunt);
+    expect(
+      status(
+        { ...END_GAME, goalPieces: { found: 40, required: 40 } },
+        GANONHUNT_RUN,
+      ).tri,
+    ).toBe("yes");
+    expect(status(END_GAME, GANONHUNT_RUN).tri).toBe("no");
+    expect(missing(END_GAME, GANONHUNT_RUN).sets).toEqual([
+      [item("ganonhuntPieces")],
+    ]);
+  });
+
+  it("reads no piece in Inverted, whose Ganon upstream never asks them", () => {
+    // Inverted/LightWorld/NorthEast.php:144-206 names no ganonhunt: Ganon
+    // wants Agahnim 2, as for the ganon goal, and no crystal count
+    const inverted = withGoal("ganonhunt", "inverted");
+    const beaten = {
+      ...END_GAME,
+      beaten: { ...END_GAME.beaten, "ganons-tower": true },
+    };
+    const solve = (input: TrackerInput) =>
+      solveWithKeys(fillerOf(inverted), toState(input, inverted)).location(
+        "ganon",
+      );
+    expect(solve(beaten)).toBe("yes");
+    expect(solve(END_GAME)).toBe("no");
+  });
+});
+
+describe("completionist", () => {
+  it("fills for every location, whatever the accessibility (Randomizer.php:99-101)", () => {
+    expect(withGoal("completionist").locationsAccessibility).toBe(true);
+    expect(withGoal("ganonhunt").locationsAccessibility).toBe(false);
+    expect(goModeOf(withGoal("completionist"))).toBeUndefined();
   });
 });
 

@@ -249,6 +249,34 @@ describe("presets", () => {
     ).toBe(false);
   });
 
+  it("says where the swords are and the enemies' health, and every alttpr.com goal", () => {
+    const open = getPreset("open").settings;
+    const rows = (settings: typeof open) =>
+      Object.fromEntries(
+        describeSettings(settings).map((row) => [row.label, row.value]),
+      );
+    expect(rows(open)).toMatchObject({
+      "Enemy health": "Default",
+      "Sword placement": "Randomized",
+    });
+    expect(
+      rows({ ...open, enemyHealth: "expert", swords: "assured" }),
+    ).toMatchObject({ "Enemy health": "Expert", "Sword placement": "Assured" });
+    // No sword, nowhere to place one; not known, not said
+    expect(rows({ ...open, swordless: true })).not.toHaveProperty(
+      "Sword placement",
+    );
+    expect(rows(getPreset("mystery").settings)).not.toHaveProperty(
+      "Sword placement",
+    );
+    expect(TUNING.goal.map(([goal]) => goal)).toContain("completionist");
+    // The hunts are run types of their own, with their pieces' cell
+    expect(TUNING.goal.map(([goal]) => goal)).not.toContain("ganonhunt");
+    expect(getPreset("ganonhunt").settings.goal).toBe("ganonhunt");
+    expect(tunedOf(open, "swords")).toBe("randomized");
+    expect(tunedOf(open, "enemyHealth")).toBe("default");
+  });
+
   it("getPreset returns the matching preset", () => {
     expect(getPreset("keysanity").id).toBe("keysanity");
   });

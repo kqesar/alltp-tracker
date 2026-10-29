@@ -9,8 +9,10 @@ import {
   OPEN,
   STANDARD,
   settingsFromUpstream,
+  UNKNOWN,
   UPSTREAM_TEST,
 } from "./settings";
+import { EMPTY_INPUT, toState } from "./tracker";
 
 const GLITCHES = [
   "canBootsClip",
@@ -182,6 +184,33 @@ describe("the presets", () => {
     });
     expect(configs).toContainEqual({ ...UPSTREAM_TEST, wildMaps: true });
     expect(configs).toContainEqual({ ...UPSTREAM_TEST, wildCompasses: true });
+  });
+});
+
+describe("the weapons", () => {
+  it("start Link with a sword when assured (Randomizer.php:256-260)", () => {
+    const assured = settingsFromUpstream("open", { "mode.weapons": "assured" });
+    expect(assured.swordAtStart).toBe(true);
+    expect(toState(EMPTY_INPUT, assured).sword).toBe(1);
+    // A sword found counts on top of nothing: the pre-collected one is it
+    expect(
+      toState({ ...EMPTY_INPUT, items: { sword: 3 } }, assured).sword,
+    ).toBe(3);
+  });
+
+  it("read vanilla as randomized: no rule asks where the swords are", () => {
+    const vanilla = settingsFromUpstream("open", { "mode.weapons": "vanilla" });
+    const randomized = settingsFromUpstream("open", {
+      "mode.weapons": "randomized",
+    });
+    expect(vanilla).toEqual(randomized);
+    expect(toState(EMPTY_INPUT, vanilla).sword).toBeUndefined();
+  });
+
+  it("leave the sword out while they are not known", () => {
+    const hidden = settingsFromUpstream("open", { "mode.weapons": UNKNOWN });
+    expect(hidden.swordAtStart).toEqual(UNKNOWN);
+    expect(toState(EMPTY_INPUT, hidden).sword).toBeUndefined();
   });
 });
 

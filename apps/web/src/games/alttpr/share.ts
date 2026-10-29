@@ -456,6 +456,8 @@ export const SHARE_SETTINGS: readonly string[] = `
   playGlitches:overworld_glitches playGlitches:hybrid_major_glitches
   playGlitches:major_glitches
   hidden:glitches hidden:entranceShuffle
+  goal:ganonhunt goal:completionist swords:assured swords:vanilla
+  enemyHealth:easy enemyHealth:hard enemyHealth:expert
 `
   .trim()
   .split(/\s+/);

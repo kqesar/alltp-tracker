@@ -41,6 +41,26 @@ const run = (overrides: Partial<RunSettings> = {}): RunSettings => ({
 });
 
 describe("packSettings", () => {
+  it("reads alttpr.com's goals, weapons and enemy health as the pack's", () => {
+    expect(packSettings(run({ goal: "ganonhunt" })).ganonhuntGoal).toBe(true);
+    // Completionist fills for every location (Randomizer.php:99-101)
+    expect(packSettings(run({ goal: "completionist" }))).toMatchObject({
+      completionistGoal: true,
+      locationsAccessibility: true,
+    });
+    expect(packSettings(run({ swords: "assured" })).swordAtStart).toBe(true);
+    expect(packSettings(run({ swords: "vanilla" }))).toEqual(
+      packSettings(run()),
+    );
+    expect(packSettings(run()).defaultEnemyHealth).toBe(true);
+    expect(packSettings(run({ enemyHealth: "hard" })).defaultEnemyHealth).toBe(
+      false,
+    );
+    expect(packSettings(run({ enemyHealth: "easy" })).defaultEnemyHealth).toBe(
+      false,
+    );
+  });
+
   it("reads the Open and Standard presets as the site's default preset", () => {
     expect(packSettings(getPreset("open").settings)).toEqual(OPEN);
     expect(packSettings(getPreset("standard").settings)).toEqual(STANDARD);

@@ -313,6 +313,14 @@ describe("what the go mode is missing, crystals aside", () => {
     return found?.kind === "items" ? waysText(found.ways) : found?.kind;
   };
 
+  it("asks a Ganonhunt for its pieces, then Ganon without Agahnim 2", () => {
+    const hunt = (triforce: number) =>
+      endGame({ agahnim2: 0, goalpieces: 40, triforce }, { goal: "ganonhunt" });
+    expect(goModeStatusOf(hunt(39))?.tri).toBe("no");
+    expect(left(hunt(39))).toBe("Triforce pieces");
+    expect(goModeStatusOf(hunt(40))?.tri).toBe("yes");
+  });
+
   it("lists the items left, never the crystals", () => {
     // Was "Titan's Mitt + Hookshot + 7 crystals": the crystals are the board's
     expect(goModeStatusOf(MIDGAME)?.tri).toBe("no");

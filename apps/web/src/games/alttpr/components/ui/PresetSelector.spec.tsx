@@ -198,7 +198,7 @@ describe("PresetSelector", () => {
       name: /switch run type/i,
     });
     expect(confirm).toHaveTextContent(
-      'Switching to "Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality)"',
+      'Switching to "Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality, Hard enemy health)"',
     );
     expect(applyRun).not.toHaveBeenCalled();
 
@@ -209,6 +209,7 @@ describe("PresetSelector", () => {
         ...fakeState.settings,
         crystalsGanon: 7,
         crystalsTower: 4,
+        enemyHealth: "hard",
         goal: "fast-ganon",
         itemFunctionality: "hard",
         itemPlacement: "basic",
@@ -255,7 +256,7 @@ describe("PresetSelector", () => {
     ]);
     expect(applyRun).not.toHaveBeenCalled();
     // The world names the run type: it is no field
-    expect(within(dialog).getAllByRole("combobox")).toHaveLength(12);
+    expect(within(dialog).getAllByRole("combobox")).toHaveLength(14);
   });
 
   it("offers a Mystery run's settings as not known yet, and hides one again", () => {

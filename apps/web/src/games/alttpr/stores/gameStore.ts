@@ -1,3 +1,4 @@
+import { GANONHUNT } from "@alltp/pack-alttpr";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { boardRestored, runReplaced } from "@/autotrack/raceMode";
@@ -261,7 +262,14 @@ export const createProgress = (
 ): Progress => ({
   checked: {},
   entrances: {},
-  items: { ...initialItems, ...fullCounters(settings) } as ItemState,
+  items: {
+    ...initialItems,
+    ...fullCounters(settings),
+    // A ganonhunt asks for its own count of pieces (the pack's GANONHUNT)
+    ...(settings.goal === "ganonhunt"
+      ? { goalpieces: GANONHUNT.required }
+      : {}),
+  } as ItemState,
   medallions: Array(10).fill(0) as number[],
   presetId: getPreset(presetId).id,
   seed: null,
@@ -416,7 +424,7 @@ export const retune = (
   const hidden = progress.settings.hidden?.filter(
     (key) => !changed.includes(key),
   );
-  const { glitches, playGlitches, ...rest } = change;
+  const { enemyHealth, glitches, playGlitches, swords, ...rest } = change;
   const settings: RunSettings = {
     ...progress.settings,
     ...rest,
@@ -430,6 +438,13 @@ export const retune = (
   else if (playGlitches !== undefined) settings.playGlitches = playGlitches;
   // Only a No Logic run is played with glitches of the player's choice
   if (settings.glitches !== "no_logic") delete settings.playGlitches;
+  // Randomized swords and default health are said by their absence
+  if (swords === "randomized") delete settings.swords;
+  else if (swords !== undefined) settings.swords = swords;
+  if (enemyHealth === "default") delete settings.enemyHealth;
+  else if (enemyHealth !== undefined) settings.enemyHealth = enemyHealth;
+  // A swordless run's swords are nowhere
+  if (settings.swordless) delete settings.swords;
   if (settings.dungeonItems === progress.settings.dungeonItems) {
     return { settings };
   }

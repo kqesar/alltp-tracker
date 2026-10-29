@@ -20,8 +20,8 @@
 // setting derived from one is then unknown to the engine, which folds it to
 // maybe (a flag either way, a number in its range).
 //
-// Left out: the triforce-hunt and ganonhunt goals (triforce pieces are not
-// items of this pack).
+// Left out: the triforce-hunt goal, whose win is a count of pieces beside
+// any region's rule (World.php:101-106; goals.ts, `TRIFORCE_HUNT`).
 
 /** A config value the player has not discovered yet. */
 export const UNKNOWN = { unknown: true } as const;
@@ -100,8 +100,19 @@ export type AlttprSettings = {
   readonly dungeonsGoal: Flag;
   /** goal is 'pedestal': no rule reads it, the tracker's go mode will. */
   readonly pedestalGoal: Flag;
-  /** goal is 'completionist': no rule reads it, the tracker's go mode will. */
+  /**
+   * goal is 'completionist': Ganon's rule reads it as it reads no crystal
+   * goal, and the seed is filled for 100% locations whatever accessibility
+   * says (Randomizer.php:99-101, `locationsAccessibility`).
+   */
   readonly completionistGoal: Flag;
+  /**
+   * goal is 'ganonhunt': Ganon wants the Triforce pieces the goal asks for
+   * (DarkWorld/NorthEast.php:187-192, the fact `ganonhuntPieces`) and not
+   * Agahnim 2 (226). Inverted's Ganon reads neither
+   * (Inverted/LightWorld/NorthEast.php:144-206).
+   */
+  readonly ganonhuntGoal: Flag;
   /** crystals.tower, 7 by default (GanonsTower.php:407). */
   readonly crystalsTower: Count;
   /** crystals.ganon, 7 by default (DarkWorld/NorthEast.php:220). */
@@ -225,6 +236,13 @@ export type AlttprSettings = {
    */
   readonly bootsAtStart: boolean;
   /**
+   * mode.weapons is 'assured': Uncle's sword is pre-collected, a fifty
+   * rupees taking its place in the pool (Randomizer.php:256-260). toState
+   * gives a sword. 'vanilla' places the swords at Uncle, the Pyramid
+   * Fairy, the Blacksmith and the Pedestal (241-252), which no rule reads.
+   */
+  readonly swordAtStart: Flag;
+  /**
    * The seed has No Logic (`noLogicSettings`): upstream sets no region's
    * rules (World.php:93), so a location's fill rules do not hold either,
    * and the sewers key may leave the escape (Region.php:238). Its dungeon
@@ -235,6 +253,12 @@ export type AlttprSettings = {
    */
   readonly noLogic: boolean;
 };
+
+/**
+ * The fact a ganonhunt's Ganon reads (`ganonhuntGoal`): the pieces asked
+ * for are found (toState, from `TrackerInput.goalPieces`).
+ */
+export const GOAL_FACTS = ["ganonhuntPieces"] as const;
 
 /** The glitch flags of config/logic.php. */
 export type GlitchFlag =
@@ -315,6 +339,7 @@ const GOALS = [
   "dungeons",
   "fast_ganon",
   "ganon",
+  "ganonhunt",
   "pedestal",
 ] as const;
 
@@ -512,6 +537,7 @@ export function settingsFromUpstream(
   const dungeonItems = c.dungeonItems ?? "standard";
   const basic = is(c.itemPlacement, "basic");
   const swordless = is(c["mode.weapons"], "swordless");
+  const completionist = is(goal, "completionist");
   // World.php:111-129: each level falls through to the ones below it, and
   // turns its flags on whatever the config said
   const mc = dungeonItems !== "standard";
@@ -558,7 +584,7 @@ export function settingsFromUpstream(
       is(functionality, "normal"),
       c["rom.CatchableFairies"] ?? true,
     ),
-    completionistGoal: is(goal, "completionist"),
+    completionistGoal: completionist,
     crystalsGanon: crystalsOf(c["crystals.ganon"]),
     crystalsTower: crystalsOf(c["crystals.tower"]),
     defaultEnemyHealth: (c["enemizer.enemyHealth"] ?? "default") === "default",
@@ -567,11 +593,16 @@ export function settingsFromUpstream(
     forceSkullWoodsKey: basic,
     fullBottleMagic: is(bottleMagic, 0x80),
     ganonGoal: is(goal, "ganon"),
+    ganonhuntGoal: is(goal, "ganonhunt"),
     genericKeys: retro || (c["rom.genericKeys"] ?? false),
     halfBottleMagic: is(bottleMagic, 0x40),
     ignoreCanKillEscapeThings: c.ignoreCanKillEscapeThings ?? false,
     invertedMode: mode === "inverted",
-    locationsAccessibility: is(c.accessibility, "locations"),
+    // Randomizer.php:99-101: completionist fills for every location
+    locationsAccessibility: any(
+      is(c.accessibility, "locations"),
+      completionist,
+    ),
     mirrorShieldInPool: shields,
     noLogic: false,
     pedestalGoal: is(goal, "pedestal"),
@@ -582,6 +613,7 @@ export function settingsFromUpstream(
     rupeeBow: retro || (c["rom.rupeeBow"] ?? false),
     simpleBossShuffle: is(c["enemizer.bossShuffle"] ?? "none", "simple"),
     standardMode: mode === "standard",
+    swordAtStart: is(c["mode.weapons"], "assured"),
     swordless,
     swordsInPool: c["region.swordsInPool"] ?? true,
     wildBigKeys: dungeonItems === "full" || (c["region.wildBigKeys"] ?? false),
