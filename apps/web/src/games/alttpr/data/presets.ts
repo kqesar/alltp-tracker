@@ -393,15 +393,22 @@ export const logicModelled = (settings: RunSettings): boolean =>
   unmodelledReasons(settings).length === 0;
 
 /**
+ * The optional fields whose type can say what their absence means, which
+ * written out is no change (a preset leaves the boss shuffle out).
+ */
+const ABSENT_MEANS: Readonly<Record<string, unknown>> = { bossShuffle: "none" };
+
+/**
  * Whether two runs have the same settings: every field alike, the settings
- * not discovered in any order. A field left out and one set to undefined
- * are alike.
+ * not discovered in any order. A field left out, one set to undefined and
+ * one written as the value its absence means are alike.
  */
 export const sameSettings = (a: RunSettings, b: RunSettings): boolean => {
   const normal = (settings: RunSettings) =>
     JSON.stringify(
       Object.entries(settings)
         .filter(([, value]) => value !== undefined)
+        .filter(([key, value]) => ABSENT_MEANS[key] !== value)
         .map(([key, value]): [string, unknown] => [
           key,
           key === "hidden" ? [...(value as string[])].sort() : value,

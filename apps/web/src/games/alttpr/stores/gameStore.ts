@@ -424,7 +424,8 @@ export const retune = (
   const hidden = progress.settings.hidden?.filter(
     (key) => !changed.includes(key),
   );
-  const { enemyHealth, glitches, playGlitches, swords, ...rest } = change;
+  const { bossShuffle, enemyHealth, glitches, playGlitches, swords, ...rest } =
+    change;
   const settings: RunSettings = {
     ...progress.settings,
     ...rest,
@@ -438,6 +439,9 @@ export const retune = (
   else if (playGlitches !== undefined) settings.playGlitches = playGlitches;
   // Only a No Logic run is played with glitches of the player's choice
   if (settings.glitches !== "no_logic") delete settings.playGlitches;
+  // As in every preset, no boss shuffle is its absence
+  if (bossShuffle === "none") delete settings.bossShuffle;
+  else if (bossShuffle !== undefined) settings.bossShuffle = bossShuffle;
   // Randomized swords and default health are said by their absence
   if (swords === "randomized") delete settings.swords;
   else if (swords !== undefined) settings.swords = swords;

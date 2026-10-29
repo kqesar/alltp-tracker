@@ -354,6 +354,10 @@ describe("entrancesKnown", () => {
     expect(
       sameSettings(open, { ...open, glitches: "overworld_glitches" }),
     ).toBe(false);
+    // So is one written as the value its absence means, and no other
+    expect(sameSettings(open, { ...open, bossShuffle: "none" })).toBe(true);
+    expect(sameSettings(open, { ...open, bossShuffle: "simple" })).toBe(false);
+    expect(sameSettings(open, { ...open, enemyHealth: "hard" })).toBe(false);
     expect(sameSettings(mystery, { ...mystery, hidden: ["goal"] })).toBe(false);
     expect(sameSettings(open, { ...open, crystalsGanon: 6 })).toBe(false);
   });
