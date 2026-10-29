@@ -9,10 +9,9 @@
 // (set_big_bomb_rules, Rules.py:1610), the bunny's paths (set_bunny_rules,
 // Rules.py:2035, bunny.ts) and what the derived settings read of the
 // connections (light and dark world, Regions.py:1113; the swamp patch,
-// EntranceShuffle2.py:141-143; the doors' flags, Doors.py).
-//
-// Not yet: the crystal switches' states and the key doors' rules
-// (study step 4.07); until then a barrier or a small key door is maybe.
+// EntranceShuffle2.py:141-143; the doors' flags, Doors.py), the crystal
+// switches' states (crystal.ts) and the keys, strict-safe until DR's key
+// analysis is ported (keys.ts).
 import {
   type CompiledWorld,
   compileWorld,
@@ -37,6 +36,13 @@ import {
   vanillaConnections,
 } from "./connections";
 import {
+  CRYSTAL_READ,
+  crystalNodes,
+  crystalStates,
+  crystalsThrough,
+  inState,
+} from "./crystal";
+import {
   DOOR_NAMED,
   DR_REGIONS,
   DR_RULES,
@@ -44,6 +50,7 @@ import {
   type DrRegion,
   regionNamed,
 } from "./data";
+import { addKeyRules, KEY_DROPS, KEY_ITEMS, worldKeys } from "./keys";
 import { and } from "./text";
 
 export type { DrConnections } from "./connections";
@@ -102,20 +109,13 @@ export const drModeOf = (settings: Settings): DrMode =>
 /** A rule's reach() of a region, as a fact the solver holds once reached. */
 const factOf = (id: string) => `reached_${id}`;
 const REACH = /reach\((\w+)\)/g;
-/**
- * The crystal reads, which the crystal switches' states give (step 4.07):
- * maybe until then.
- */
-const CRYSTAL = /\breached(?:Blue|Orange)_\w+/g;
 
-/** A rule as an exit (or a helper) reads it: each reach() a fact. */
+/**
+ * A rule as an exit (or a helper) reads it: each reach() a fact, as each
+ * crystal read is (`reachedBlue_<id>`, given in that state's node).
+ */
 const exitRule = (req: string): string =>
-  unknownCountRequirement(
-    req.replace(REACH, (_, id) => factOf(id)).replace(CRYSTAL, "maybe"),
-  );
-/** A rule as a location reads it. */
-const locationRule = (req: string): string =>
-  unknownCountRequirement(req.replace(CRYSTAL, "maybe"));
+  unknownCountRequirement(req.replace(REACH, (_, id) => factOf(id)));
 
 /** The pack's helpers, then DR's, each reach() a fact. */
 const LOADED_RULES = loadRules({
@@ -216,28 +216,6 @@ function addBombShopRule(exits: readonly DrExit[], mode: DrMode): void {
     target.req = and(target.req, found.req);
 }
 
-/**
- * Placeholders until the dungeons' rules are ported (study step 4.07):
- * a crystal barrier, and a door a small key opens, are maybe.
- */
-function addDungeonPlaceholders(exits: readonly DrExit[]): void {
-  for (const exit of exits) {
-    const door = DOOR_NAMED.get(exit.name);
-    if (door === undefined) continue;
-    const controller =
-      door.controller === undefined
-        ? undefined
-        : DOOR_NAMED.get(door.controller);
-    if (
-      door.smallKey === true ||
-      controller?.smallKey === true ||
-      door.crystal === "blue" ||
-      door.crystal === "orange"
-    )
-      exit.req = and(exit.req, "maybe");
-  }
-}
-
 /** The worlds' light and dark regions (mark_light_dark_world_regions). */
 export function markWorlds(exits: readonly DrExit[]): {
   readonly light: ReadonlySet<string>;
@@ -300,8 +278,12 @@ export const DR_DEFAULTS: Settings = {
   bombBag: false,
   cantTakeDamage: false,
   completionistGoal: false,
+  // dropshuffle and pottery: the enemies' and the pots' vanilla keys are
+  // forced items, events DR sweeps (keys.ts)
+  dropShuffle: false,
   ganonHuntGoal: false,
   openPyramid: false,
+  potKeys: false,
   pottery: false,
   retroBow: false,
   treasureHunt: 0,
@@ -312,10 +294,12 @@ export const DR_DEFAULTS: Settings = {
 };
 
 /**
- * The engine's graph: a region per DR region, the Menu its start, each
- * exit with its rule (reach() as facts), each location with its own, a
- * probe on each exit asked for, and a fact location in each region a rule
- * reads the reach of.
+ * The engine's graph: a node per DR region and crystal state (crystal.ts),
+ * the Menu its start, each exit with its rule in the state it leaves from
+ * (reach() as facts), each location with its own (a crystal read as the
+ * reach of that state's node), a probe on each exit asked for, a fact
+ * location in each region a rule reads the reach of and in each node whose
+ * state a rule reads.
  */
 function graph(
   exits: readonly DrExit[],
@@ -323,14 +307,36 @@ function graph(
   mode: DrMode,
   options: DrWorldOptions,
   reached: ReadonlySet<string>,
-): { world: World; locationIds: Map<string, string> } {
-  const out = new Map<string, Exit[]>();
+  extra: ReadonlyMap<string, readonly Location[]>,
+): {
+  world: World;
+  locationIds: Map<string, string>;
+  crystalFacts: { item: string; location: string }[];
+} {
+  const nodes = crystalNodes(crystalStates(exits));
+  const out = new Map<string, DrExit[]>();
   const exitNamed = new Map(exits.map((e) => [e.name, e]));
   for (const exit of exits)
-    out.set(exit.from, [
-      ...(out.get(exit.from) ?? []),
-      { req: exitRule(exit.req), to: regionNamed(exit.to).id },
-    ]);
+    out.set(exit.from, [...(out.get(exit.from) ?? []), exit]);
+  // The crystal reads the exits and helpers make, each a fact
+  const crystalRead = new Set<string>();
+  for (const req of [
+    ...exits.map((e) => e.req),
+    ...Object.values(DR_RULES.helpers).map((h) => h.req),
+  ])
+    for (const m of req.matchAll(CRYSTAL_READ)) crystalRead.add(m[0]);
+  const crystalFacts: { item: string; location: string }[] = [];
+  /** A location's rule: each crystal read the reach of its node. */
+  const locationRule = (req: string) =>
+    unknownCountRequirement(
+      req.replace(CRYSTAL_READ, (_, colour: string, id: string) => {
+        const region = REGION_BY_ID.get(id);
+        const s = colour === "Blue" ? "blue" : "orange";
+        return region !== undefined && nodes.statesOf(region).includes(s)
+          ? `reach(${nodes.nodeOf(region, s)})`
+          : "false";
+      }),
+    );
   const probes = new Map<string, string[]>();
   for (const name of options.probes ?? []) {
     const exit = exitNamed.get(name);
@@ -338,7 +344,8 @@ function graph(
     probes.set(exit.from, [...(probes.get(exit.from) ?? []), name]);
   }
   const locationIds = new Map<string, string>();
-  const regions: Region[] = DR_REGIONS.map((r) => {
+  const regions: Region[] = [];
+  for (const r of DR_REGIONS) {
     const located: Location[] = locationsIn(r, mode).map((name) => {
       const id = drLocationId(name);
       locationIds.set(name, id);
@@ -350,13 +357,67 @@ function graph(
         req: locationRule(exitNamed.get(name)?.req ?? "true"),
       });
     if (reached.has(r.id)) located.push({ id: factOf(r.id) });
-    return { exits: out.get(r.name) ?? [], id: r.id, locations: located };
-  });
+    located.push(...(extra.get(r.name) ?? []));
+    const states = nodes.statesOf(r);
+    const split = nodes.isSplit(r);
+    for (const s of states.length === 0 ? [undefined] : states) {
+      const leaving: Exit[] = (out.get(r.name) ?? []).flatMap((exit) => {
+        const to = regionNamed(exit.to);
+        const req = exitRule(
+          s === undefined ? exit.req : inState(exit.req, r, s),
+        );
+        const through =
+          to.type !== "dungeon"
+            ? [undefined]
+            : s === undefined
+              ? (["orange"] as const)
+              : crystalsThrough(exit.name, s);
+        return through.map((t) => ({ req, to: nodes.nodeOf(to, t) }));
+      });
+      const facts: Location[] = [];
+      if (s !== undefined) {
+        const fact = `${s === "blue" ? "reachedBlue" : "reachedOrange"}_${r.id}`;
+        if (crystalRead.has(fact)) {
+          facts.push({ id: fact });
+          crystalFacts.push({ item: fact, location: fact });
+        }
+      }
+      if (split)
+        regions.push({
+          exits: [...leaving, { to: r.id }],
+          id: nodes.nodeOf(r, s),
+          locations: facts,
+        });
+      else
+        regions.push({
+          exits: leaving,
+          id: r.id,
+          locations: [...located, ...facts],
+        });
+    }
+    if (split) regions.push({ exits: [], id: r.id, locations: located });
+  }
   return {
+    crystalFacts: [
+      ...crystalFacts,
+      // Read but never given: the state no path brings the region in
+    ],
     locationIds,
     world: { regions, start: regionNamed(MENU).id },
   };
 }
+
+const REGION_BY_ID = new Map(DR_REGIONS.map((r) => [r.id, r]));
+
+/**
+ * The flood switches DR does not sweep while their trench's pot key is
+ * unchecked (_do_not_flood_the_keys, BaseClasses.py:1074-1084,
+ * flooded_keys :2982-2985): the event asks the key's location reached too.
+ */
+const FLOODED_KEYS: Readonly<Record<string, string>> = {
+  "Trench 1 Switch": "Swamp Palace - Trench 1 Pot Key",
+  "Trench 2 Switch": "Swamp Palace - Trench 2 Pot Key",
+};
 
 /**
  * The Door Randomizer's world for a run's settings, its doors and
@@ -367,53 +428,111 @@ export function drWorld(
   settings: Settings,
   options: DrWorldOptions = {},
 ): DrWorld {
-  const mode = drModeOf(settings);
+  const all = { ...DR_DEFAULTS, ...settings };
+  const mode = drModeOf(all);
+  const universal = all.universalKeys === true;
+  const keys = worldKeys(universal, {
+    drops: all.dropShuffle === true,
+    pots: all.potKeys === true,
+  });
   const connections = vanillaConnections(mode);
   const exits = exitsOf(connections, mode, options);
-  addBombShopRule(exits, mode);
-  addDungeonPlaceholders(exits);
-  const marked = markWorlds(exits);
   const locations = new Map<string, string>();
   for (const region of DR_REGIONS)
     for (const name of locationsIn(region, mode))
       locations.set(name, DR_RULES.locations[name]?.req ?? "true");
+  // In set_rules' order: the key logic (global_rules), the bomb shop, the
+  // bunny last
+  addKeyRules(exits, locations, keys, mode, universal);
+  addBombShopRule(exits, mode);
+  const marked = markWorlds(exits);
   addBunnyRules(exits, locations, marked, mode);
+
+  // The events: each a fact once its location is reached, a flood switch
+  // once its trench's key is too
+  const sweep = options.sweepEvents ?? true;
+  const regionOf = new Map(
+    DR_REGIONS.flatMap((r) => r.locations.map((l) => [l, r] as const)),
+  );
+  const extra = new Map<string, Location[]>();
+  const eventLocation = new Map<string, string>();
+  for (const [item, { location }] of Object.entries(DR_RULES.events)) {
+    const key = FLOODED_KEYS[location];
+    const region = regionOf.get(location);
+    const keyRegion = key === undefined ? undefined : regionOf.get(key);
+    if (
+      key === undefined ||
+      region === undefined ||
+      keyRegion === undefined ||
+      !keys.forcedDrops.some((d) => d.location === key)
+    )
+      continue;
+    const id = `event:${item}`;
+    eventLocation.set(item, id);
+    extra.set(region.name, [
+      ...(extra.get(region.name) ?? []),
+      {
+        id,
+        req: unknownCountRequirement(
+          and(
+            locations.get(location) ?? "true",
+            `reach(${keyRegion.id})`,
+            locations.get(key) ?? "true",
+          ),
+        ),
+      },
+    ]);
+  }
 
   // The regions a rule reads the reach of where only a fact can stand
   const reached = new Set([
     ...HELPERS_REACH,
     ...exits.flatMap((e) => [...e.req.matchAll(REACH)].map((m) => m[1] ?? "")),
   ]);
-  const { locationIds, world } = graph(
+  const { crystalFacts, locationIds, world } = graph(
     exits,
     locations,
     mode,
     options,
     reached,
+    extra,
   );
-  const sweep = options.sweepEvents ?? true;
   const events = Object.entries(DR_RULES.events).flatMap(
     ([item, { location }]) => {
-      const id = locationIds.get(location);
+      const id = eventLocation.get(item) ?? locationIds.get(location);
       return sweep && id !== undefined ? [{ item, location: id }] : [];
     },
   );
+  const drops = sweep
+    ? keys.forcedDrops.flatMap((d) => {
+        const id = locationIds.get(d.location);
+        return id === undefined ? [] : [{ item: d.fact, location: id }];
+      })
+    : [];
   const facts = [
     ...events,
+    ...drops,
+    ...crystalFacts,
     ...[...reached].map((id) => ({ item: factOf(id), location: factOf(id) })),
   ];
+  const crystalItems = [
+    ...exits.map((e) => e.req),
+    ...Object.values(DR_RULES.helpers).map((h) => h.req),
+  ].flatMap((req) => [...req.matchAll(CRYSTAL_READ)].map((m) => m[0]));
   const compiled = compileWorld(world, LOADED_RULES, {
     items: [
       ...new Set([
         ...STATE_NAMES,
         ...DR_RULES.newItems,
         ...Object.keys(DR_RULES.events),
+        ...KEY_ITEMS,
+        ...KEY_DROPS.map((d) => d.fact),
+        ...crystalItems,
         ...facts.map((f) => f.item),
       ]),
     ],
     settings: {
-      ...DR_DEFAULTS,
-      ...settings,
+      ...all,
       ...derivedSettings(connections, marked, mode),
     },
   });

@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import { type DrWorld, drWorld, probeId } from "../src/door-world/index";
 import { solveFacts } from "../src/facts";
 import { contractHolds } from "./contract";
+import { KEY_PENDING, STALE } from "./dr-stale";
 import { collect, itemsOf, settingsOf } from "./dr-state";
 import { loadManifest, PACK_DIR } from "./manifest";
 
@@ -40,23 +41,6 @@ interface DrFixture {
 const read = <T>(path: string): T =>
   JSON.parse(readFileSync(join(PACK_DIR, path), "utf8")) as T;
 const LISTED = loadManifest().doorRandomizer.tests;
-
-/**
- * Cases a ported file holds otherwise, by `file:line#index name access`
- * (the test's line, the case's index in its list), each with why.
- */
-const STALE: Readonly<Record<string, string>> = {};
-
-/**
- * Cases that need the key analysis (study step 4.10-4.12): a small key
- * door is maybe until then, where DR's partial key logic opens it with
- * fewer keys than all of the dungeon's.
- */
-const KEY_PENDING: ReadonlySet<string> = new Set([
-  // Through Turtle Rock's front with 2 of its 4 chest keys (and its 2 drop
-  // keys swept): DR's partial rule asks fewer than all
-  "test/vanilla/TestDeathMountain.py:40#9 Mimic Cave true",
-]);
 
 const caseKey = (
   file: string,
@@ -107,7 +91,7 @@ describe("the Door Randomizer's own tests", () => {
         const failures = test.cases.flatMap((c, index) => {
           const [name, access, items, allExcept] = c;
           const key = caseKey(fixture.file, test.line, index, c);
-          if (STALE[key] !== undefined || KEY_PENDING.has(key)) return [];
+          const listed = STALE[key] !== undefined || KEY_PENDING.has(key);
           const id =
             test.kind === "entrance"
               ? probeId(name)
@@ -116,6 +100,11 @@ describe("the Door Randomizer's own tests", () => {
             world,
             collect(itemsOf(items, allExcept)),
           ).location(id);
+          // A listed case must still fail: once it holds, drop it
+          if (listed)
+            return contractHolds(access, got)
+              ? [`${key}: listed, but holds`]
+              : [];
           return contractHolds(access, got)
             ? []
             : [

@@ -1083,7 +1083,7 @@ customizer seeds' Verification checks. A file is listed `pending` in
 `upstream.json` until DR's world is held to it (`test/dr-fixtures.spec.ts`
 holds the list); `test/dr-contract.spec.ts` holds each `ported` file to its
 cases, a case it answers otherwise listed with why (`STALE`, or
-`KEY_PENDING` until the key analysis), in the harness the suite runs in
+`KEY_PENDING` until the key analysis, `test/dr-stale.ts`), in the harness the suite runs in
 (`test/dr-state.ts`: the items as the pack's state, the pool, the medallions
 the harness fixes; the dungeon tests never sweep events).
 
@@ -1101,8 +1101,27 @@ from the connections (the worlds' light and dark regions, the swamp patch,
 the doors' vanilla flags) and sweeps DR's events as facts (`src/facts.ts`,
 shared with the entrance randomizer's world). `bunny.ts` ports
 `set_bunny_rules`, but the door kinds `RoomData.py` holds (dashable,
-bombable, hidden walls), which the import does not read yet. Until the
-dungeons are ported, a crystal barrier and a small key door are `maybe`.
+bombable, hidden walls), which the import does not read yet.
+`crystal.ts` carries the crystal switches' states as DR's traversal does
+(`traverse_world`, `BaseClasses.py:628-714`): a dungeon region a node per
+state some path brings it in, a region reached in both split in two copies
+(`<id>__orange`, `<id>__blue`) that lead to the region itself, where its
+locations sit; a door that hits a switch lets both states through, a
+barrier its colour only, a rule reading the region's own state holds in
+that copy, and any other crystal read is a fact (`reachedBlue_<region>`).
+`keys.ts` holds the keys strict-safe until DR's key analysis is ported: a
+small key door asks every key of its dungeon (the chests', `Dungeons.py`,
+and the vanilla drops'), else `maybe`, never `no` because of keys; a
+vanilla drop's key is a fact once its location is reached
+(`dropKey_<location>`, as DR sweeps the forced key), unless the run
+shuffles that drop; the big key doors and chests ask the big key (or the
+escape's drop); Mire's blue barriers take their two-key alternative. A
+flood switch is swept only once its trench's pot key is reached
+(`_do_not_flood_the_keys`). Held: `test/vanilla` and `test/dungeons`, whose
+181 cases upstream fails itself are listed in `test/dr-stale.ts` with why
+(the bunny, the swamp's mirror, the events `TestDungeon` never sweeps, the
+enemy logic, the harness reaching the overworld) or as waiting on the key
+analysis.
 
 **Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
 `RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,

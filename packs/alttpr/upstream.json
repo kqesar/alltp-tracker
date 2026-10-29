@@ -26,57 +26,57 @@
       {
         "file": "test/dungeons/TestAgahnimsTower.py",
         "fixture": "test/dr-upstream/dungeons/TestAgahnimsTower.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/dungeons/TestDarkPalace.py",
         "fixture": "test/dr-upstream/dungeons/TestDarkPalace.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/dungeons/TestDesertPalace.py",
         "fixture": "test/dr-upstream/dungeons/TestDesertPalace.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/dungeons/TestEasternPalace.py",
         "fixture": "test/dr-upstream/dungeons/TestEasternPalace.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/dungeons/TestGanonsTower.py",
         "fixture": "test/dr-upstream/dungeons/TestGanonsTower.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/dungeons/TestIcePalace.py",
         "fixture": "test/dr-upstream/dungeons/TestIcePalace.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/dungeons/TestMiseryMire.py",
         "fixture": "test/dr-upstream/dungeons/TestMiseryMire.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/dungeons/TestSkullWoods.py",
         "fixture": "test/dr-upstream/dungeons/TestSkullWoods.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/dungeons/TestSwampPalace.py",
         "fixture": "test/dr-upstream/dungeons/TestSwampPalace.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/dungeons/TestThievesTown.py",
         "fixture": "test/dr-upstream/dungeons/TestThievesTown.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/dungeons/TestTowerOfHera.py",
         "fixture": "test/dr-upstream/dungeons/TestTowerOfHera.json",
-        "status": "pending"
+        "status": "ported"
       },
       {
         "file": "test/inverted/TestInvertedBombRules.py",

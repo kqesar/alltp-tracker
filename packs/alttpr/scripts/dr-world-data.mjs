@@ -154,6 +154,36 @@ function names(value, where) {
 }
 
 /**
+ * The items an argument of make_dungeon makes: None, `[]`,
+ * `ItemFactory('X', player)`, `[ItemFactory('X', player)]` or
+ * `ItemFactory(['X'] * n, player)`.
+ * @param {Expr | undefined} e
+ * @param {string} where
+ * @returns {string[]}
+ */
+function itemsOf(e, where) {
+  if (e === undefined || (e.t === "const" && e.value === null)) return [];
+  if (e.t === "seq") return e.items.flatMap((item) => itemsOf(item, where));
+  if (e.t === "call" && e.fn.t === "name" && e.fn.name === "ItemFactory") {
+    const [arg] = e.args;
+    if (arg?.t === "const" && typeof arg.value === "string") return [arg.value];
+    if (arg?.t === "seq") return arg.items.flatMap((i) => itemsOf(i, where));
+    if (
+      arg?.t === "op" &&
+      arg.op === "*" &&
+      arg.left.t === "seq" &&
+      arg.right.t === "const" &&
+      typeof arg.right.value === "number"
+    ) {
+      const one = arg.left.items.flatMap((i) => itemsOf(i, where));
+      return Array.from({ length: arg.right.value }, () => one).flat();
+    }
+  }
+  if (e.t === "const" && typeof e.value === "string") return [e.value];
+  return fail(`${where}: a dungeon's items`);
+}
+
+/**
  * Each region Dungeons.py puts in a dungeon (create_dungeons' make_dungeon,
  * its fourth argument a module list), and each dungeon's boss.
  * @param {string} source
@@ -162,7 +192,7 @@ function readDungeons(source) {
   const create = body(source, "create_dungeons", DUNGEONS);
   /** @type {Map<string, string>} */
   const dungeonOf = new Map();
-  /** @type {{ name: string, boss: string | null, source: string }[]} */
+  /** @type {{ name: string, boss: string | null, bigKey: string | null, smallKeys: string[], source: string }[]} */
   const dungeons = [];
   for (const { call, line } of callExpressions(
     source,
@@ -171,7 +201,7 @@ function readDungeons(source) {
     create.start,
     create.end,
   )) {
-    const [name, , boss, list] = call.args;
+    const [name, , boss, list, bigKey, smallKeys] = call.args;
     if (
       name?.t !== "const" ||
       typeof name.value !== "string" ||
@@ -187,8 +217,10 @@ function readDungeons(source) {
       dungeonOf.set(String(region), name.value);
     }
     dungeons.push({
+      bigKey: itemsOf(bigKey, `${DUNGEONS}:${line}`)[0] ?? null,
       boss: typeof boss.value === "string" ? boss.value : null,
       name: name.value,
+      smallKeys: itemsOf(smallKeys, `${DUNGEONS}:${line}`),
       source: `${DUNGEONS}:${line}`,
     });
   }

@@ -55,6 +55,10 @@ export const DR_REGIONS = regionData.regions as readonly DrRegion[];
 export const DR_DUNGEONS = regionData.dungeons as readonly {
   readonly name: string;
   readonly boss: string | null;
+  /** Its big key, if it has one (Dungeons.py make_dungeon). */
+  readonly bigKey: string | null;
+  /** The small keys its chests hold. */
+  readonly smallKeys: readonly string[];
 }[];
 export const DR_DOORS = doorData.doors as readonly DrDoor[];
 export const DR_PORTALS = doorData.portals as readonly {

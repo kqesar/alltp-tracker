@@ -141,4 +141,46 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(link.location(drLocationId("Hype Cave - Top"))).toBe("yes");
     expect(bunny.location(drLocationId("Pyramid"))).toBe("yes");
   });
+
+  it("splits a dungeon region by the crystal states some path brings", () => {
+    const { regionIds } = drWorld(settings("open")).compiled;
+    // Hera's lobby: entered orange, its switch turns it blue
+    expect(regionIds).toContain("heraLobby__orange");
+    expect(regionIds).toContain("heraLobby__blue");
+    // A region out of the dungeons has one node
+    expect(regionIds).toContain("linksHouse");
+    expect(regionIds).not.toContain("linksHouse__orange");
+  });
+
+  it("opens a key door with every key of the dungeon, else maybe", () => {
+    const world = drWorld(settings("open"));
+    const unswept = drWorld(settings("open"), { sweepEvents: false });
+    const chest = drLocationId("Eastern Palace - Big Key Chest");
+    const lamp = { heartContainer: 3, lamp: 1 };
+    // Eastern's two keys are drops, the dark eyegore's past the big key
+    // door, against its bow: until both are reached, maybe
+    expect(solveFacts(world, lamp).location(chest)).toBe("maybe");
+    expect(solveFacts(world, { ...lamp, bow: 1 }).location(chest)).toBe(
+      "maybe",
+    );
+    expect(
+      solveFacts(world, { ...lamp, bigKeyP1: 1, bow: 1 }).location(chest),
+    ).toBe("yes");
+    // Not swept, the drops' keys are not held: maybe, never no
+    const all = { ...lamp, bigKeyP1: 1, bow: 1 };
+    expect(solveFacts(unswept, all).location(chest)).toBe("maybe");
+    expect(solveFacts(unswept, { ...all, keyP1: 2 }).location(chest)).toBe(
+      "yes",
+    );
+  });
+
+  it("puts a big chest behind its dungeon's big key", () => {
+    const world = drWorld(settings("open"));
+    const chest = drLocationId("Eastern Palace - Big Chest");
+    const held = { bow: 1, heartContainer: 3, lamp: 1 };
+    expect(solveFacts(world, held).location(chest)).toBe("no");
+    expect(solveFacts(world, { ...held, bigKeyP1: 1 }).location(chest)).toBe(
+      "yes",
+    );
+  });
 });
