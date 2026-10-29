@@ -1,5 +1,12 @@
 // Public entry point of @alltp/pack-alttpr: the app imports the pack from
 // here only, as it does the engine.
+
+export {
+  BOSS_ROOMS,
+  BOSS_SPRITES,
+  type BossReading,
+  decodeBosses,
+} from "./autotrack/boss-rooms";
 export {
   CHECK_FLAGS,
   type CheckEntry,
@@ -121,10 +128,12 @@ export {
   BOSS_PLACES,
   BOSS_SLOTS,
   BOSSES,
+  type BossDraw,
   type BossKnowledge,
   type BossPlaceId,
   bossesAt,
   bossFacts,
+  bossPlaceOf,
   SHUFFLED_BOSSES,
   type ShuffledBoss,
 } from "./bosses";

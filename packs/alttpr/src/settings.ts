@@ -83,6 +83,12 @@ export type AlttprSettings = {
    * 'random' let each slot hold the same bosses, so one flag says it.
    */
   readonly bossShuffle: Flag;
+  /**
+   * enemizer.bossShuffle is 'simple' (Randomizer.php:418-431): one boss a
+   * slot from a fixed set, so a boss known in one slot is one fewer for the
+   * others (bossFacts).
+   */
+  readonly simpleBossShuffle: Flag;
 
   /** goal is 'ganon', the default (World.php:67; DarkWorld/NorthEast.php:213). */
   readonly ganonGoal: Flag;
@@ -471,6 +477,7 @@ export function settingsFromUpstream(
     requireBetterSword: basic,
     requireLamp: c["item.require.Lamp"] ?? 1,
     rupeeBow: retro || (c["rom.rupeeBow"] ?? false),
+    simpleBossShuffle: is(c["enemizer.bossShuffle"] ?? "none", "simple"),
     standardMode: mode === "standard",
     swordless,
     swordsInPool: c["region.swordsInPool"] ?? true,

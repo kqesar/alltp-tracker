@@ -246,7 +246,10 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
       mire: input.medallions.mire ?? "unknown",
       turtleRock: input.medallions.turtleRock ?? "unknown",
     }),
-    ...bossFacts(input.bosses ?? {}),
+    ...bossFacts(input.bosses ?? {}, {
+      simple: settings.simpleBossShuffle === true,
+      swordless: settings.swordless === true,
+    }),
     ...derivedFacts(state, settings),
     ...unknownCountFacts(input.unknown ?? {}, state),
   };

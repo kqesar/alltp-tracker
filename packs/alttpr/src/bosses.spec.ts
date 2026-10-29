@@ -268,7 +268,13 @@ function slot(
 ): Tri {
   return evaluate(
     parse(`@${name}`),
-    { ...stateFromUpstream(items), ...bossFacts(known) },
+    {
+      ...stateFromUpstream(items),
+      ...bossFacts(known, {
+        simple: settings.simpleBossShuffle === true,
+        swordless: settings.swordless === true,
+      }),
+    },
     rules,
     { settings },
   );
@@ -456,6 +462,42 @@ describe("the boss slots", () => {
     expect(slot("canBeatTowerOfHeraBoss", hidden, items)).toBe("yes");
     expect(slot("canBeatTurtleRockBoss", hidden, items)).toBe("maybe");
     expect(slot("canBeatTurtleRockBoss", hidden, [])).toBe("no");
+  });
+
+  it("rule a boss out of the other slots once 'simple' has placed every copy", () => {
+    // Skull Woods never holds Trinexx: Arrghus is the one boss left unbeaten
+    const items = NO_ARRGHUS_NOR_TRINEXX;
+    const arrghus = { swampPalace: "arrghus" } as const;
+    const simple = shuffled("simple");
+    expect(slot("canBeatSkullWoodsBoss", simple, items)).toBe("maybe");
+    expect(slot("canBeatSkullWoodsBoss", simple, items, arrghus)).toBe("yes");
+    // 'full' and 'random' may place him twice
+    expect(slot("canBeatSkullWoodsBoss", FULL, items, arrghus)).toBe("maybe");
+    expect(
+      slot("canBeatSkullWoodsBoss", shuffled("random"), items, arrghus),
+    ).toBe("maybe");
+    // Armos, Lanmolas and Moldorm come twice: one known rules none out
+    expect(
+      bossFacts({ easternPalace: "armosKnights" }, { simple: true }),
+    ).not.toHaveProperty("desertPalaceBossNotArmosKnights");
+    const twice = bossFacts(
+      { easternPalace: "armosKnights", turtleRock: "armosKnights" },
+      { simple: true },
+    );
+    expect(twice).toMatchObject({ desertPalaceBossNotArmosKnights: 1 });
+    // Never in a slot known, nor in one that cannot hold him
+    expect(twice).not.toHaveProperty("easternPalaceBossNotArmosKnights");
+    expect(twice).not.toHaveProperty("towerOfHeraBossNotArmosKnights");
+    expect(Object.keys(twice).filter((fact) => fact.includes("Not"))).toEqual(
+      Object.keys(twice).filter((fact) => fact.endsWith("NotArmosKnights")),
+    );
+    // Swordless Ice Palace's Kholdstare is outside the draw
+    expect(
+      bossFacts({ icePalace: "kholdstare" }, { simple: true, swordless: true }),
+    ).not.toHaveProperty("easternPalaceBossNotKholdstare");
+    expect(
+      bossFacts({ icePalace: "kholdstare" }, { simple: true }),
+    ).toMatchObject({ easternPalaceBossNotKholdstare: 1 });
   });
 
   it("read as their boss does", () => {
