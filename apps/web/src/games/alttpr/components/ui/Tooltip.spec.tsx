@@ -639,6 +639,21 @@ describe("Tooltip", () => {
     expect(icon()).not.toBeNull();
   });
 
+  it("names the boss marked for a dungeon while the run's bosses may move", () => {
+    renderMap();
+    fireEvent.pointerEnter(screen.getByTestId("boss-marker-misery-mire"), {
+      pointerType: "mouse",
+    });
+    const known = () => screen.queryByTestId("tooltip-known-boss");
+    expect(known()).toBeNull();
+
+    act(() => useGameStore.getState().updateSettings({ bossShuffle: "full" }));
+    expect(known()).toHaveTextContent("Boss not known");
+    act(() => useGameStore.getState().setItem("knownboss8", 7));
+    expect(known()).toHaveTextContent("Blind");
+    expect(known()?.querySelector("img[src$='boss62.png']")).not.toBeNull();
+  });
+
   it("shows on a touch long-press without toggling the chest, then a tap elsewhere hides it", () => {
     vi.useFakeTimers();
     renderMap();
