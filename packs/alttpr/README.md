@@ -1031,6 +1031,24 @@ world with, as written, each with its line. `world-data.spec.ts` holds the
 counts and that every exit is linked, but the doors the vanilla world never
 leaves by.
 
+**Its rules** (`src/door-rando/world/rules.json`, `packs/alttpr/scripts/dr-rules.mjs`): DR's
+`Rules.py` and `Bosses.py` in the engine's language, through the entrance
+randomizer's walk and translation (`packs/alttpr/scripts/rules-core.mjs`) under DR's
+dialect: Open, Standard and Inverted are settings, as are the bomb bag, the
+bow mode, the key shuffle and the goals; the glitched logics are `false`.
+What only DR writes is read as data: a crystal state read by its region
+(`reachedBlue_<region>`, `crystal` lists each read), `not has('Trench 1
+Filled')` as `true` (the dry path, while the switch is left alone,
+`negatedEvents`), a door's flag (trapped, key door, portal, barrier
+colour) as a derived setting with its vanilla value (`doorData`), a
+region on Link's side of the world for the bunny (`notBunny_<region>`),
+the dark rooms' lamp, the vanilla boss of each slot. Upstream's own slip
+stays as written: `state.can_flute` uncalled is true in Python
+(`uncalledMethods`). What is code is listed in `unported` with its line
+and why, never dropped: the key logic, the kill rooms, drops and pots
+(the enemy logic), Zelda's path, the bunny's paths. `rules.spec.ts`
+holds that list and compiles every rule in the engine.
+
 **Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
 `RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,
 bit `$8000 >> i` (`BitFieldMasks`, `keydrop/standing_items.asm:571-573`),

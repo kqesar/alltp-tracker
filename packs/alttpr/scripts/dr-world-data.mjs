@@ -612,13 +612,16 @@ function readDoors(source) {
   walk(functionBody(source, "create_doors", DOORS).body, undefined);
   // A flag at its default (False, None) is left out; `passage` defaults to
   // True (BaseClasses.py Door), so it is kept when set
-  const lean = [...doors.values()].map((entry) =>
-    Object.fromEntries(
-      Object.entries(entry).filter(
-        ([k, v]) => k === "passage" || (v !== false && v !== null),
-      ),
-    ),
-  );
+  /** @param {Record<string, unknown> & { name: string }} entry */
+  const leanOf = (entry) =>
+    /** @type {Record<string, unknown> & { name: string }} */ (
+      Object.fromEntries(
+        Object.entries(entry).filter(
+          ([k, v]) => k === "passage" || (v !== false && v !== null),
+        ),
+      )
+    );
+  const lean = [...doors.values()].map(leanOf);
   return { doors: lean, portals };
 }
 

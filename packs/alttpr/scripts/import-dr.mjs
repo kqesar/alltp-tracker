@@ -18,11 +18,12 @@
 // with DR's exact name, its dungeon, its region, and the bit of DR's base
 // patch that says it was collected (src/door-rando/locations.ts reads it);
 // src/door-rando/world/, DR's regions, doors and connection tables
-// (dr-world-data.mjs). Never edit those files by hand: run this script again.
+// (dr-world-data.mjs) and its rules in the engine's language (dr-rules.mjs). Never edit those files by hand: run this script again.
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { importDrRules } from "./dr-rules.mjs";
 import { importDrWorld } from "./dr-world-data.mjs";
 import { readCommit } from "./import-upstream-tests.mjs";
 import {
@@ -652,6 +653,36 @@ function main(args) {
   );
   process.stdout.write(
     `${WORLD}: ${world.regions.length} regions, ${world.doors.length} doors, ${world.portals.length} portals\n`,
+  );
+
+  // Stage B: the rules
+  const {
+    bombShop,
+    crystal,
+    doorsOpen,
+    fill,
+    negatedEvents,
+    newItems,
+    uncalledMethods,
+    unported,
+    ...tables
+  } = importDrRules(read, world);
+  writeLines(
+    join(WORLD, "rules.json"),
+    {
+      bombShop,
+      doorsOpen,
+      fill,
+      generated,
+      negatedEvents,
+      newItems,
+      uncalledMethods,
+      upstream,
+    },
+    { ...tables, crystal, unported },
+  );
+  process.stdout.write(
+    `rules: ${Object.keys(tables.entrances).length} entrances, ${Object.keys(tables.locations).length} locations, ${Object.keys(tables.helpers).length} helpers, ${unported.length} unported\n`,
   );
 }
 

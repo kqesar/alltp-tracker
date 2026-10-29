@@ -143,7 +143,7 @@ export const DUNGEON_CODES = {
  * (vt app/EntranceRandomizer.php:69-71), which alone make big keys wild.
  * @type {Readonly<Record<string, Readonly<Record<string, Rule>> | Rule>>}
  */
-const WORLD = {
+export const WORLD = {
   accessibility: { locations: setting("locationsAccessibility") },
   // BaseClasses.py:75; ItemList.py turns it off for the OHKO timers
   can_take_damage: negate(setting("cantTakeDamage")),
@@ -191,7 +191,7 @@ const WORLD_NUMBERS = {
  * `@erCanKillMostThings8`.
  * @type {Readonly<Record<string, (ctx: Context, args: Expr[]) => Rule>>}
  */
-const METHODS = {
+export const METHODS = {
   can_avoid_lasers: (ctx) =>
     method(ctx, "can_avoid_lasers", "", () =>
       any(atom("shield >= 3"), atom("caneOfByrna"), atom("cape")),
@@ -319,7 +319,7 @@ const METHODS = {
 /**
  * can_extend_magic: Link's whole magic is at least `small` (BaseClasses.py
  * 423-436). 8, 16 with half magic, 32 with quarter magic; with a potion
- * shop in reach, each bottle refills it all, or a half with hard item
+ * shop in reach (`ctx.potionShop`, else one of `ctx.potionShops`), each bottle refills it all, or a half with hard item
  * functionality and a quarter with expert, unless `refill` asks for full
  * bottles (the halves round down). The pack's bottle magic flags are those
  * functionalities (settings.ts).
@@ -327,10 +327,10 @@ const METHODS = {
  * @param {number} small
  * @param {boolean} refill
  */
-function extendMagic(ctx, small, refill) {
-  const shop = any(
-    ...ctx.potionShops.map((r) => atom(`reach(${regionId(r)})`)),
-  );
+export function extendMagic(ctx, small, refill) {
+  const shop =
+    ctx.potionShop ??
+    any(...ctx.potionShops.map((r) => atom(`reach(${regionId(r)})`)));
   /** @param {number} share */
   const ways = (share) =>
     any(

@@ -235,6 +235,13 @@ export const key = (rule) => render(rule, false);
 // Names
 
 /**
+ * A region's engine id in the dialect's naming.
+ * @param {Context} ctx
+ * @param {string} name
+ */
+export const idOf = (ctx, name) => (ctx.dialect.regionId ?? regionId)(name);
+
+/**
  * A region's engine id: its name in lowerCamel case, "Ganons Tower (Tile
  * Room)" as ganonsTowerTileRoom.
  * @param {string} name
@@ -291,10 +298,13 @@ export function holding(ctx, name, count) {
 
 /**
  * The attribute `name` of the world, if `expr` reads one: `world.goal`,
- * `state.world.goal`.
+ * `state.world.goal`, `world.goal[player]`.
  * @param {Expr} expr
  */
 export function worldAttribute(expr) {
+  // DR reads each setting by player: world.mode[player]
+  if (expr.t === "index" && expr.at.t === "name" && expr.at.name === "player")
+    return worldAttribute(expr.of);
   if (expr.t !== "attr") return undefined;
   const of = expr.of;
   const world =
@@ -332,7 +342,9 @@ export function numberOf(ctx, expr, otherwise) {
  * setting's name), the items as the pack's state counts them (an id and
  * the level the item is), the dungeons' codes in the pack's key ids, the
  * state's methods, the rule functions that are code, by what they do, and
- * the prefix of the helpers the translation names (`@erHasBoots`).
+ * the prefix of the helpers the translation names (`@erHasBoots`). Hooks:
+ * a region's engine id (regionId by default), the expressions and the
+ * statements only its randomizer writes, read before the shared ones.
  * @typedef {{
  *   prefix: string,
  *   world: Readonly<Record<string, Readonly<Record<string, Rule>> | Rule>>,
@@ -341,7 +353,24 @@ export function numberOf(ctx, expr, otherwise) {
  *   dungeonCodes: Readonly<Record<string, string>>,
  *   methods: Readonly<Record<string, (ctx: Context, args: Expr[]) => Rule>>,
  *   code: Readonly<Record<string, string>>,
+ *   regionId?: (name: string) => string,
+ *   expression?: (ctx: Context, expr: Expr, scope: Scope) => Rule | undefined,
+ *   statement?: (call: Hook) => boolean,
+ *   list?: (ctx: Context, expr: Expr, scope: Scope) => unknown[] | undefined,
+ *   assign?: (ctx: Context, value: Expr, scope: Scope) => unknown,
  * }} Dialect
+ * @typedef {{
+ *   ctx: Context,
+ *   name: string,
+ *   call: Extract<Expr, { t: "call" }>,
+ *   scope: Scope,
+ *   line: number,
+ *   apply: (op: "set" | "and" | "or", spot: { kind: "entrance" | "location", name: string }, rule: Rule, when: Rule, line: number) => void,
+ *   walk: (statements: Statement[], scope: Scope) => void,
+ *   unported: (code: string, line: number, why: string) => void,
+ * }} Hook
+ *   A statement calling `name`, for a dialect that reads it itself: the
+ *   rules it sets go through `apply`, a function it walks through `walk`.
  */
 
 /**
@@ -355,6 +384,7 @@ export function numberOf(ctx, expr, otherwise) {
  *   heldEvents: Set<string>,
  *   itemNames: ReadonlySet<string>,
  *   potionShops: readonly string[],
+ *   potionShop?: Rule,
  *   methodLine: (name: string) => number,
  *   helpers: Map<string, { req: string, source: string }>,
  *   reachedLocations: Set<string>,
@@ -368,7 +398,7 @@ export function numberOf(ctx, expr, otherwise) {
  * them: whether a region lies in the light world (mark_light_world_regions),
  * whether everything held reaches it as Turtle Rock's key rules ask
  * (set_trock_key_rules), whether Swamp Palace needs the patch.
- * @typedef {{ kind: "lightWorld" | "allItemsReach", region: string, source: string }
+ * @typedef {{ kind: "lightWorld" | "allItemsReach" | "door", region: string, source: string }
  *   | { kind: "swampPatch", source: string }} Derived
  */
 
@@ -435,6 +465,19 @@ export function spotOf(expr, scope) {
       kind: expr.fn.name === "get_entrance" ? "entrance" : "location",
       name: stringOf(expr.args[0], scope),
     };
+  }
+  // A loop's name bound to a spot (a dialect's list of a region's locations)
+  if (expr.t === "name") {
+    const value = scope.env.get(expr.name);
+    if (
+      value !== null &&
+      typeof value === "object" &&
+      "kind" in value &&
+      "name" in value
+    )
+      return /** @type {{ kind: "entrance" | "location", name: string }} */ (
+        value
+      );
   }
   throw new Untranslatable("a spot other than an entrance or a location");
 }
@@ -504,6 +547,8 @@ export function bossRule(ctx, expr, scope) {
  * @returns {Rule}
  */
 export function translate(ctx, expr, scope) {
+  const shaped = ctx.dialect.expression?.(ctx, expr, scope);
+  if (shaped !== undefined) return shaped;
   switch (expr.t) {
     case "const":
       if (expr.value === true) return TRUE;
@@ -562,6 +607,12 @@ export function translate(ctx, expr, scope) {
           kind: "swampPatch",
           source: "EntranceShuffle.py",
         });
+      {
+        const name = worldAttribute(expr);
+        const value = name === undefined ? undefined : ctx.dialect.world[name];
+        if (value !== undefined && "k" in value)
+          return /** @type {Rule} */ (value);
+      }
       throw new Untranslatable("a subscript");
     default:
       throw new Untranslatable(`an expression (${expr.t})`);
@@ -644,7 +695,7 @@ function call(ctx, expr, scope) {
     fn.of.fn.t === "attr" &&
     fn.of.fn.name === "get_region"
   )
-    return atom(`reach(${regionId(stringOf(fn.of.args[0], scope))})`);
+    return atom(`reach(${idOf(ctx, stringOf(fn.of.args[0], scope))})`);
   if (fn.of.t !== "name" || fn.of.name !== "state")
     throw new Untranslatable(`a call of ${fn.name}`);
   switch (fn.name) {
@@ -669,7 +720,7 @@ function call(ctx, expr, scope) {
     case "can_reach": {
       const target = stringOf(args[0], scope);
       const hint = args[1] === undefined ? "Region" : stringOf(args[1], scope);
-      if (hint === "Region") return atom(`reach(${regionId(target)})`);
+      if (hint === "Region") return atom(`reach(${idOf(ctx, target)})`);
       if (hint === "Location") {
         ctx.reachedLocations.add(target);
         return atom(`@${ctx.dialect.prefix}At${pascal(target)}`);
@@ -794,8 +845,9 @@ export function walkRules(source, ctx) {
       // A case of the bomb shop's door: an entrance's rule, added
       if (op !== "and" || spot.kind !== "entrance")
         throw new Untranslatable("a bomb shop case other than an added rule");
-      if (key(when) !== "true")
-        throw new Untranslatable("a bomb shop case under a setting");
+      // A case under a setting (DR's Open rules, beside Inverted's) keeps it
+      if (!settingsOnly(when))
+        throw new Untranslatable("a bomb shop case under more than a setting");
       if (bombShop !== undefined && bombShop.spot !== spot.name)
         throw new Untranslatable("bomb shop cases on two entrances");
       bombShop ??= { cases: [], spot: spot.name };
@@ -803,6 +855,7 @@ export function walkRules(source, ctx) {
         doors,
         req: print(rule),
         source: `Rules.py:${line}`,
+        ...(key(when) === "true" ? {} : { when: print(when) }),
       });
       return;
     }
@@ -884,11 +937,14 @@ export function walkRules(source, ctx) {
           throw new Untranslatable("a block");
         } else simple(statement, scope);
       } catch (error) {
-        if (!(error instanceof Untranslatable)) throw error;
+        // Python the reader does not parse (a slice, a dict): code too
+        const unread =
+          error instanceof Error && /^Rules\.py:\d+: /.test(error.message);
+        if (!(error instanceof Untranslatable) && !unread) throw error;
         unported.push({
           code: text.length > 100 ? `${text.slice(0, 99)}…` : text,
           line,
-          why: error.message,
+          why: unread ? `unread: ${error.message}` : error.message,
         });
       }
     }
@@ -907,6 +963,8 @@ export function walkRules(source, ctx) {
       const value = scope.env.get(expr.name);
       if (Array.isArray(value)) return value;
     }
+    const listed = ctx.dialect.list?.(ctx, expr, scope);
+    if (listed !== undefined) return /** @type {string[]} */ (listed);
     throw new Untranslatable("a loop over no list");
   };
 
@@ -999,6 +1057,9 @@ export function walkRules(source, ctx) {
       value.of.name === "entrances"
     )
       return bind(BOMB_SHOP_DOOR);
+    // A name the dialect reads (a door, a location)
+    const bound = ctx.dialect.assign?.(ctx, value, scope);
+    if (bound !== undefined) return bind(bound);
     throw new Untranslatable(
       value.t === "attr" && value.name === "can_reach_private"
         ? "a save-and-quit point: what reaches a region"
@@ -1026,6 +1087,16 @@ export function walkRules(source, ctx) {
     /** @param {number} index */
     const lambda = (index) => {
       const arg = args[index];
+      // A local function of one return, passed by name
+      const local =
+        arg?.t === "name" ? localFunction(arg.name, scope) : undefined;
+      const [only] = local?.body ?? [];
+      if (
+        local !== undefined &&
+        local.body.length === 1 &&
+        only?.text.startsWith("return ")
+      )
+        return translate(ctx, parse(only, only.text.slice(7)).found, scope);
       if (arg?.t !== "lambda")
         throw new Untranslatable("a rule other than a lambda");
       return translate(ctx, arg.body, scope);
@@ -1092,6 +1163,20 @@ export function walkRules(source, ctx) {
         fill.push(line);
         return;
       default: {
+        const hook = ctx.dialect.statement;
+        if (
+          hook?.({
+            apply,
+            call: found,
+            ctx,
+            line,
+            name,
+            scope,
+            unported: (code, at, why) => unported.push({ code, line: at, why }),
+            walk,
+          })
+        )
+          return;
         const why = ctx.dialect.code[name];
         if (why !== undefined) throw new Untranslatable(why);
         if (/^\w+_rules$/.test(name))
