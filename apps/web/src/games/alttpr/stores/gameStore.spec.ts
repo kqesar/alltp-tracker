@@ -273,6 +273,17 @@ describe("GameStore", () => {
       expect(store().items.hookshot).toBe(true);
     });
 
+    it("sets the glitches by hand, None said by their absence", () => {
+      const store = () => useGameStore.getState();
+      store().updateSettings({ glitches: "major_glitches" });
+      expect(store().settings.glitches).toBe("major_glitches");
+      store().updateSettings({ glitches: "none" });
+      expect(store().settings).not.toHaveProperty("glitches");
+      const past = store().past;
+      store().updateSettings({ glitches: "none" });
+      expect(store().past).toBe(past);
+    });
+
     it("records no step for settings that change nothing", () => {
       const past = useGameStore.getState().past;
 

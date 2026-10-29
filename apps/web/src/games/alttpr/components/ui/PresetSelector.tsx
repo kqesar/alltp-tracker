@@ -8,6 +8,7 @@ import {
   bossShuffleOf,
   describeSettings,
   getPreset,
+  glitchesOf,
   HIDEABLE,
   type HiddenSetting,
   isHidden,
@@ -30,6 +31,12 @@ type PendingRun = {
 
 /** The option of a setting not known yet, a Mystery run's. */
 const HIDDEN = "?";
+
+/** A tunable setting's option: a boss shuffle or glitches left out "none". */
+const tunedOf = (settings: RunSettings, setting: TunableSetting) => {
+  if (setting === "bossShuffle") return bossShuffleOf(settings);
+  return setting === "glitches" ? glitchesOf(settings) : settings[setting];
+};
 
 /**
  * A tunable setting's select: a change applies at once, the run's progress
@@ -68,15 +75,7 @@ const SettingSelect = ({
         );
         if (picked) updateSettings({ [setting]: picked[0] });
       }}
-      value={
-        hidden
-          ? HIDDEN
-          : String(
-              setting === "bossShuffle"
-                ? bossShuffleOf(settings)
-                : settings[setting],
-            )
-      }
+      value={hidden ? HIDDEN : String(tunedOf(settings, setting))}
     >
       {hideable && <option value={HIDDEN}>? Unknown</option>}
       {options.map(([option, words]) => (

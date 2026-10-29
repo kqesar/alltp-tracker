@@ -73,6 +73,22 @@ describe("packSettings", () => {
     expect(packSettings(run({ goal }))).toMatchObject(expected);
   });
 
+  it("gives the pack a seed's logic, No Logic read with NoGlitches' rules", () => {
+    const glitched = packSettings(run({ glitches: "overworld_glitches" }));
+    // Randomizer.php:122-131: a glitched world starts with the boots
+    expect(glitched).toMatchObject({ bootsAtStart: true, noLogic: false });
+    expect(glitched).not.toBe(packSettings(run()));
+    expect(packSettings(run({ glitches: "no_logic" }))).toEqual({
+      ...OPEN,
+      bootsAtStart: true,
+      noLogic: true,
+    });
+    expect(packSettings(run())).toMatchObject({
+      bootsAtStart: false,
+      noLogic: false,
+    });
+  });
+
   it("gives the pack a seed's crystal counts and its swords", () => {
     expect(
       packSettings(run({ crystalsGanon: 6, crystalsTower: 5 })),

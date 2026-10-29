@@ -25,8 +25,10 @@ import {
 import {
   DEFAULT_PRESET_ID,
   getPreset,
+  glitchesOf,
   type HiddenSetting,
   type RunSettings,
+  type SettingsChange,
   type TunableSetting,
   wildItems,
 } from "@/games/alttpr/data/presets";
@@ -159,9 +161,7 @@ type GameState = Progress &
      * the items found. A setting changed is no longer hidden. One undo
      * step; none when nothing changes.
      */
-    updateSettings: (
-      change: Partial<Pick<RunSettings, TunableSetting>>,
-    ) => void;
+    updateSettings: (change: SettingsChange) => void;
     /** Hide a setting again, as not known yet: one undo step. */
     hideSetting: (setting: HiddenSetting) => void;
     /**
@@ -169,9 +169,7 @@ type GameState = Progress &
      * the run, its progress kept, as no step: on every snapshot of the
      * history too, like the game's other news.
      */
-    revealSettings: (
-      change: Partial<Pick<RunSettings, TunableSetting>>,
-    ) => void;
+    revealSettings: (change: SettingsChange) => void;
     setBigKeysVisible: (visible: boolean) => void;
     setMapLayout: (layout: MapLayout) => void;
     setMapView: (view: MapView) => void;
@@ -407,23 +405,30 @@ const dated = (
  */
 export const retune = (
   progress: Progress,
-  change: Partial<Pick<RunSettings, TunableSetting>>,
+  change: SettingsChange,
 ): { items?: ItemState; settings: RunSettings } | null => {
   const changed = (Object.keys(change) as TunableSetting[]).filter(
     (key) =>
-      change[key] !== progress.settings[key] ||
+      change[key] !==
+        (key === "glitches"
+          ? glitchesOf(progress.settings)
+          : progress.settings[key]) ||
       progress.settings.hidden?.includes(key as HiddenSetting),
   );
   if (changed.length === 0) return null;
   const hidden = progress.settings.hidden?.filter(
     (key) => !changed.includes(key),
   );
+  const { glitches, ...rest } = change;
   const settings: RunSettings = {
     ...progress.settings,
-    ...change,
+    ...rest,
     ...(hidden === undefined ? {} : { hidden }),
   };
   if (hidden?.length === 0) delete settings.hidden;
+  // None is said by the glitches' absence, as every preset says it
+  if (glitches === "none") delete settings.glitches;
+  else if (glitches !== undefined) settings.glitches = glitches;
   if (settings.dungeonItems === progress.settings.dungeonItems) {
     return { settings };
   }

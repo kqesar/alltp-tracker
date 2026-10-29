@@ -240,15 +240,22 @@ describe("PresetSelector", () => {
     });
     expect(bosses).toHaveValue("none");
     fireEvent.change(bosses, { target: { value: "full" } });
+    // Nor glitches: None, which the player sets by hand
+    const glitches = within(dialog).getByRole("combobox", {
+      name: "Glitches",
+    });
+    expect(glitches).toHaveValue("none");
+    fireEvent.change(glitches, { target: { value: "overworld_glitches" } });
 
     expect(updateSettings.mock.calls).toEqual([
       [{ itemPool: "hard" }],
       [{ crystalsTower: 0 }],
       [{ bossShuffle: "full" }],
+      [{ glitches: "overworld_glitches" }],
     ]);
     expect(applyRun).not.toHaveBeenCalled();
     // The world names the run type: it is no field
-    expect(within(dialog).getAllByRole("combobox")).toHaveLength(10);
+    expect(within(dialog).getAllByRole("combobox")).toHaveLength(11);
   });
 
   it("offers a Mystery run's settings as not known yet, and hides one again", () => {
