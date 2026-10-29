@@ -16,8 +16,9 @@ import type {
 import {
   type AlttprSettings,
   analyzeFacts,
-  crossedConnections,
+  type ErShuffle,
   type ErWorld,
+  erConnections,
   erUntracked,
   erWorld,
   everything,
@@ -51,26 +52,44 @@ export interface CrossedRun {
 }
 
 let built:
-  | { entrances: Noted; settings: AlttprSettings; world: ErWorld }
+  | {
+      entrances: Noted;
+      settings: AlttprSettings;
+      shuffle: ErShuffle;
+      world: ErWorld;
+    }
   | undefined;
 
 /**
- * The world of a run's settings and noted entrances, built again only when
- * either changes: a few milliseconds, once per entrance noted.
+ * The world of a run's settings, shuffle and noted entrances, built again
+ * only when one changes: a few milliseconds, once per entrance noted.
  */
-const worldOf = (settings: AlttprSettings, entrances: Noted): ErWorld => {
-  if (built?.settings === settings && built.entrances === entrances)
+const worldOf = (
+  settings: AlttprSettings,
+  shuffle: ErShuffle,
+  entrances: Noted,
+): ErWorld => {
+  if (
+    built?.settings === settings &&
+    built.shuffle === shuffle &&
+    built.entrances === entrances
+  )
     return built.world;
   const mode = settings.standardMode ? "standard" : "open";
-  const world = erWorld(settings, crossedConnections(mode, entrances));
-  built = { entrances, settings, world };
+  const world = erWorld(settings, erConnections(shuffle, mode, entrances));
+  built = { entrances, settings, shuffle, world };
   return world;
 };
 
 /** What the tracker asks of a run with shuffled entrances. */
 export interface CrossedSolver {
   /** The run solved: every location of its world, its keys read. */
-  solve(settings: AlttprSettings, entrances: Noted, state: State): CrossedRun;
+  solve(
+    settings: AlttprSettings,
+    shuffle: ErShuffle,
+    entrances: Noted,
+    state: State,
+  ): CrossedRun;
   /** Where the run stands against its go mode, step by step. */
   goMode(run: CrossedRun, mode: GoMode): GoModeStatus;
   /**
@@ -111,8 +130,8 @@ export const solver: CrossedSolver = {
   },
   goMode: ({ keyed, state, world }, mode) =>
     goModeStatusBy((s) => solveErWithKeys(world, s), state, mode, keyed),
-  solve: (settings, entrances, state) => {
-    const world = worldOf(settings, entrances);
+  solve: (settings, shuffle, entrances, state) => {
+    const world = worldOf(settings, shuffle, entrances);
     const keyed = solveErWithKeys(world, state);
     return { keyed, solution: keyed.solution, state: keyed.state, world };
   },

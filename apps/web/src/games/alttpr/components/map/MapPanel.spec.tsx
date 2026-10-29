@@ -84,7 +84,7 @@ describe("MapPanel", () => {
         .updateSettings({ glitches: "overworld_glitches" });
     });
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Overworld Glitches with shuffled entrances yet: every check shows as maybe.",
+      "Not modelled yet: Overworld Glitches with shuffled entrances. Every check shows as maybe.",
     );
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });
@@ -99,7 +99,7 @@ describe("MapPanel", () => {
     render(<MapPanel />);
 
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Major Glitches with shuffled entrances yet: every check shows as maybe.",
+      "Not modelled yet: Major Glitches with shuffled entrances. Every check shows as maybe.",
     );
     expect(screen.getByTestId("marker-sahasrahlas-hut")).toHaveAccessibleName(
       /: maybe available$/,
@@ -131,28 +131,44 @@ describe("MapPanel", () => {
     act(() =>
       useGameStore.getState().applyRun("open", {
         ...getPreset("open").settings,
-        entranceShuffle: "full",
+        entranceShuffle: "insanity",
       }),
     );
     render(<MapPanel />);
     const note = screen.getByTestId("logic-note");
     expect(note).toHaveTextContent(
-      "The tracker has no logic for Full entrance shuffle yet: every check shows as maybe.",
+      "Not modelled yet: the Insanity entrance shuffle. Every check shows as maybe.",
     );
     expect(note).not.toHaveTextContent("Open runs");
+  });
+
+  it("follows the entrances noted in a Simple, Restricted or Full run with its keys wild", () => {
+    for (const entranceShuffle of ["simple", "restricted", "full"] as const) {
+      act(() =>
+        useGameStore.getState().applyRun("crosskeys", {
+          ...getPreset("crosskeys").settings,
+          entranceShuffle,
+        }),
+      );
+      const { unmount } = render(<MapPanel />);
+      expect(screen.getByTestId("logic-note")).toHaveTextContent(
+        "The logic follows the entrances you noted",
+      );
+      unmount();
+    }
   });
 
   it("names every cause when several apply", () => {
     act(() =>
       useGameStore.getState().applyRun("open", {
         ...getPreset("open").settings,
-        entranceShuffle: "simple",
+        entranceShuffle: "insanity",
         glitches: "major_glitches",
       }),
     );
     render(<MapPanel />);
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Major Glitches with shuffled entrances and Simple entrance shuffle yet: every check shows as maybe.",
+      "Not modelled yet: Major Glitches with shuffled entrances and the Insanity entrance shuffle. Every check shows as maybe.",
     );
   });
 

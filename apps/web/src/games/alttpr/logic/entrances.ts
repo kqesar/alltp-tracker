@@ -5,61 +5,58 @@
 // tables.
 
 import {
-  crossedPool,
   type EntranceLink,
   type EntrancePool,
   type EntranceTarget,
-  fullPool,
+  entrancePool,
   linksOf,
   type MapMarker,
   type OverworldEntrance,
   PLACE_OF_LOCATION,
   TARGETS,
 } from "@alltp/pack-alttpr";
-import { entrancesKnown, type RunSettings } from "@/games/alttpr/data/presets";
+import {
+  entrancesKnown,
+  portedShuffleOf,
+  type RunSettings,
+} from "@/games/alttpr/data/presets";
 
-/** A shuffle's pools, by world: Retro's is Open's with its take-any caves. */
-interface Pools {
-  readonly open: EntrancePool;
-  readonly standard: EntrancePool;
-  readonly retro: EntrancePool;
-}
-
-const crossed: Pools = {
-  open: crossedPool("open"),
-  retro: crossedPool("open", true),
-  standard: crossedPool("standard"),
-};
-
-/** The full shuffle's pools, made when a Full run first asks. */
-let full: Pools | undefined;
+/** The pools made so far, by shuffle and world, each made once. */
+const pools = new Map<string, EntrancePool>();
 
 /**
  * The entrances a run shuffles, or null when the assistant has none for its
- * shuffle or world (`entrancesKnown`): the crossed and full shuffles of the
- * Open, Retro or Standard world are ported. Simple, Restricted and Insanity
- * pool their entrances otherwise, and Inverted runs tables of its own.
+ * shuffle or world (`entrancesKnown`): the pack's `entrancePool` of the
+ * run's simple, restricted, full or crossed shuffle in the Open, Retro
+ * (Open's with its take-any caves) or Standard world. Insanity parts a door
+ * from its way out, and Inverted runs tables of its own: not modelled yet.
  */
 export const poolOf = (settings: RunSettings): EntrancePool | null => {
-  if (!entrancesKnown(settings)) return null;
+  const shuffle = portedShuffleOf(settings);
+  if (shuffle === undefined || !entrancesKnown(settings)) return null;
   const world =
     settings.mode === "standard" || settings.mode === "retro"
       ? settings.mode
       : "open";
-  if (settings.entranceShuffle === "crossed") return crossed[world];
-  full ??= {
-    open: fullPool("open"),
-    retro: fullPool("open", true),
-    standard: fullPool("standard"),
-  };
-  return full[world];
+  const key = `${shuffle} ${world}`;
+  let pool = pools.get(key);
+  if (pool === undefined) {
+    pool = entrancePool(
+      shuffle,
+      world === "standard" ? "standard" : "open",
+      world === "retro",
+    );
+    pools.set(key, pool);
+  }
+  return pool;
 };
 
+// Every pool's entrances are among the crossed shuffle's of either world
 const ENTRANCE_BY_ID = new Map(
-  [...crossed.open.entrances, ...crossed.standard.entrances].map((e) => [
-    e.id,
-    e,
-  ]),
+  [
+    ...entrancePool("crossed", "open").entrances,
+    ...entrancePool("crossed", "standard").entrances,
+  ].map((e) => [e.id, e]),
 );
 const TARGET_BY_ID = new Map(TARGETS.map((t) => [t.id, t]));
 

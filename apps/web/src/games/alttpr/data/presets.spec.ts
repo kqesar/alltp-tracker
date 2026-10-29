@@ -3,6 +3,7 @@ import {
   crossedLogic,
   DEFAULT_PRESET_ID,
   describeSettings,
+  entrancesKnown,
   getPreset,
   logicModelled,
   noLogicRun,
@@ -38,10 +39,23 @@ describe("presets", () => {
     expect(logicModelled({ ...crosskeys, mode: "retro" })).toBe(true);
     // Its keys kept in their dungeons: the pack's key model of that world
     expect(crossedLogic({ ...crosskeys, dungeonItems: "standard" })).toBe(true);
-    // Not other shuffles, nor Inverted
+    // Every shuffle the pack ports reads that world: the randomizer's
+    // rules never ask which shuffle made a seed
+    for (const entranceShuffle of ["simple", "restricted", "full"] as const)
+      for (const mode of ["open", "retro", "standard"] as const) {
+        const settings = { ...crosskeys, entranceShuffle, mode };
+        expect(crossedLogic(settings), `${entranceShuffle} ${mode}`).toBe(true);
+        expect(logicModelled(settings)).toBe(true);
+      }
+    // Not Insanity, nor Inverted
     for (const settings of [
-      { ...getPreset("open").settings, entranceShuffle: "full" as const },
+      { ...crosskeys, entranceShuffle: "insanity" as const },
       { ...crosskeys, mode: "inverted" as const },
+      {
+        ...crosskeys,
+        entranceShuffle: "restricted" as const,
+        mode: "inverted" as const,
+      },
     ]) {
       expect(crossedLogic(settings)).toBe(false);
       expect(logicModelled(settings)).toBe(false);
@@ -67,15 +81,16 @@ describe("presets", () => {
     );
     expect(crossedLogic({ ...crosskeys, glitches: "no_logic" })).toBe(true);
     expect(unmodelledReasons({ ...open, entranceShuffle: "insanity" })).toEqual(
-      ["Insanity entrance shuffle"],
+      ["the Insanity entrance shuffle"],
     );
+    // No Logic behind shuffled entrances is the randomizer's NoGlitches
     expect(
       unmodelledReasons({
-        ...open,
+        ...crosskeys,
         entranceShuffle: "full",
         glitches: "no_logic",
       }),
-    ).toEqual(["Full entrance shuffle"]);
+    ).toEqual([]);
     // No Logic is read with the glitches it is played with
     expect(
       unmodelledReasons({
@@ -90,8 +105,26 @@ describe("presets", () => {
       expect(unmodelledReasons({ ...crosskeys, dungeonItems })).toEqual([]);
       expect(crossedLogic({ ...crosskeys, dungeonItems })).toBe(true);
     }
+    expect(
+      unmodelledReasons({
+        ...crosskeys,
+        dungeonItems: "standard",
+        entranceShuffle: "simple",
+      }),
+    ).toEqual([]);
     expect(unmodelledReasons({ ...crosskeys, mode: "inverted" })).toEqual([
-      "Crossworld entrances in the Inverted world",
+      "shuffled entrances in the Inverted world",
+    ]);
+    // Every cause that applies
+    expect(
+      unmodelledReasons({
+        ...crosskeys,
+        entranceShuffle: "insanity",
+        mode: "inverted",
+      }),
+    ).toEqual([
+      "the Insanity entrance shuffle",
+      "shuffled entrances in the Inverted world",
     ]);
     expect(unmodelledReasons({ ...crosskeys, bossShuffle: "full" })).toEqual(
       [],
@@ -175,5 +208,33 @@ describe("presets", () => {
     expect(presets.some((preset) => preset.id === DEFAULT_PRESET_ID)).toBe(
       true,
     );
+  });
+});
+
+describe("entrancesKnown", () => {
+  const open = getPreset("open").settings;
+
+  it("knows every ported shuffle's entrances in the Open, Retro and Standard worlds, whatever the dungeon items", () => {
+    for (const entranceShuffle of [
+      "simple",
+      "restricted",
+      "full",
+      "crossed",
+    ] as const)
+      for (const mode of ["open", "retro", "standard"] as const)
+        expect(
+          entrancesKnown({ ...open, entranceShuffle, mode }),
+          `${entranceShuffle} ${mode}`,
+        ).toBe(true);
+  });
+
+  it("knows none of Insanity's, the Inverted world's, nor a run without shuffled entrances", () => {
+    expect(entrancesKnown(open)).toBe(false);
+    expect(entrancesKnown({ ...open, entranceShuffle: "insanity" })).toBe(
+      false,
+    );
+    expect(
+      entrancesKnown({ ...open, entranceShuffle: "simple", mode: "inverted" }),
+    ).toBe(false);
   });
 });

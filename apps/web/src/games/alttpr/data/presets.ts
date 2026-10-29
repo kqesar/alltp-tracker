@@ -240,19 +240,41 @@ export const presets: Preset[] = [
 ];
 
 /**
+ * The entrance shuffles the pack ports (packs/alttpr/src/entrances.ts,
+ * `ErShuffle`): every one alttpr.com sends to the entrance randomizer
+ * (--shuffle, app/EntranceRandomizer.php) but Insanity, which parts a door
+ * from its way out.
+ */
+export const PORTED_SHUFFLES = [
+  "simple",
+  "restricted",
+  "full",
+  "crossed",
+] as const satisfies readonly EntranceShuffle[];
+
+/** A run's entrance shuffle when the pack ports it, else undefined. */
+export const portedShuffleOf = (
+  settings: RunSettings,
+): (typeof PORTED_SHUFFLES)[number] | undefined =>
+  PORTED_SHUFFLES.find((shuffle) => shuffle === settings.entranceShuffle);
+
+/**
  * Whether a run's entrances are shuffled as the pack's port of the entrance
  * randomizer models them (packs/alttpr/src/er-world.ts): alttpr.com's
- * crossed shuffle, in the Open, Retro (sent as --mode open --retro,
- * app/EntranceRandomizer.php:79-82) or Standard world, whatever its dungeon
- * items. vt hands the randomizer --keysanity for `full` dungeon items alone
- * (app/EntranceRandomizer.php:69-71); under any other, mc and mcs included,
- * the randomizer keeps every key, map and compass in its dungeon, and the
- * pack's key model of that world reads the keys the tracker does not track
- * (packs/alttpr/src/er-keys.ts). Its boss slots read the boss shuffle as
- * vt's world does, set or hidden.
+ * simple, restricted, full or crossed shuffle (`PORTED_SHUFFLES`), in the
+ * Open, Retro (sent as --mode open --retro, app/EntranceRandomizer.php:
+ * 79-82) or Standard world, whatever its dungeon items. The randomizer's
+ * rules never ask which shuffle made a seed (Rules.py), so one world reads
+ * them all, the entrances noted telling them apart. vt hands the randomizer
+ * --keysanity for `full` dungeon items alone (app/EntranceRandomizer.php:
+ * 69-71); under any other, mc and mcs included, the randomizer keeps every
+ * key, map and compass in its dungeon, and the pack's key model of that
+ * world reads the keys the tracker does not track (packs/alttpr/src/
+ * er-keys.ts). Its boss slots read the boss shuffle as vt's world does, set
+ * or hidden.
  */
 export const crossedLogic = (settings: RunSettings): boolean =>
-  settings.entranceShuffle === "crossed" &&
+  portedShuffleOf(settings) !== undefined &&
   !glitchedLogic(settings) &&
   settings.mode !== "inverted";
 
@@ -266,24 +288,22 @@ export const bossesMayMove = (settings: RunSettings): boolean =>
 
 /**
  * Whether the entrance assistant knows a run's shuffled entrances
- * (`logic/entrances.ts`, `poolOf`): the crossed and full shuffles of the
- * Open world (Retro's too) or the Standard one (packs/alttpr, `crossedPool`,
- * `fullPool`). The simple, restricted and insanity shuffles pool their
- * entrances differently, and Inverted runs tables of its own: none of them
- * is ported yet.
+ * (`logic/entrances.ts`, `poolOf`): those of a shuffle the pack ports
+ * (`PORTED_SHUFFLES`) in the Open world (Retro's too) or the Standard one
+ * (packs/alttpr, `entrancePool`). Insanity's and the Inverted world's,
+ * which runs tables of its own, are not modelled yet.
  */
 export const entrancesKnown = (settings: RunSettings): boolean =>
-  (settings.entranceShuffle === "crossed" ||
-    settings.entranceShuffle === "full") &&
-  settings.mode !== "inverted";
+  portedShuffleOf(settings) !== undefined && settings.mode !== "inverted";
 
 /**
  * Why the pack does not model a run's logic, one phrase per cause: the
- * glitched logic the seed was generated for, and an entrance shuffle the
- * pack does not port (it ports vt's NoGlitches without shuffled entrances,
- * and the entrance randomizer's for the crossed shuffle, `crossedLogic`).
- * Empty when the run is modelled. The one place the cause is told, for the
- * note over the map.
+ * glitched logic the seed was generated for, an entrance shuffle the pack
+ * does not port (Insanity), the Inverted world's shuffled entrances, and
+ * dungeon items kept in their dungeons behind shuffled entrances (it ports
+ * vt's NoGlitches without shuffled entrances, and the entrance randomizer's
+ * for `crossedLogic`). Empty when the run is modelled. The one place the
+ * cause is told, for the note over the map.
  */
 export const unmodelledReasons = (settings: RunSettings): string[] => {
   const reasons: string[] = [];
@@ -295,10 +315,10 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
     reasons.push(
       `${GLITCHES_LABELS[glitchesOf(settings)]} with shuffled entrances`,
     );
-  if (shuffle !== "crossed")
-    reasons.push(`${ENTRANCE_LABELS[shuffle]} entrance shuffle`);
-  else if (mode === "inverted")
-    reasons.push(`Crossworld entrances in the ${MODE_LABELS[mode]} world`);
+  if (portedShuffleOf(settings) === undefined)
+    reasons.push(`the ${ENTRANCE_LABELS[shuffle]} entrance shuffle`);
+  if (mode === "inverted")
+    reasons.push(`shuffled entrances in the ${MODE_LABELS[mode]} world`);
   return reasons;
 };
 

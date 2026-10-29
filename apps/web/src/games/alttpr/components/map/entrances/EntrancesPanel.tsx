@@ -60,10 +60,10 @@ const EntrancesPanel = () => {
   if (pool === null) {
     return (
       <p className="logic-note" data-testid="entrances-panel">
-        The tracker has no list of the entrances a {ENTRANCE_LABELS[shuffle]}{" "}
-        shuffle mixes
-        {mode === "inverted" ? " in the Inverted world" : ""} yet: it knows the
-        Crossworld and Full shuffles of the Open and Standard worlds.
+        The {ENTRANCE_LABELS[shuffle]} entrance shuffle
+        {mode === "inverted" ? " in the Inverted world" : ""} is not modelled
+        yet: the tracker lists the entrances of the Simple, Restricted, Full and
+        Crossworld shuffles in the Open, Retro and Standard worlds.
       </p>
     );
   }

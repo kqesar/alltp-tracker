@@ -48,6 +48,7 @@ import {
   crossedLogic,
   isHidden,
   logicModelled,
+  portedShuffleOf,
   type RunSettings,
 } from "@/games/alttpr/data/presets";
 import type { TrickPrefs } from "@/games/alttpr/data/tricks";
@@ -275,11 +276,12 @@ export const solutionOf = (state: Inputs): Solution => {
   // loaded, every check maybe until then. It reads what the player recorded,
   // its own key model the keys it kept in their dungeons: vt's keys surely
   // in hand are those of another world
+  const shuffle = portedShuffleOf(state.settings);
   const solved =
-    entrances === undefined || crossed === undefined
+    entrances === undefined || crossed === undefined || shuffle === undefined
       ? undefined
       : {
-          ...crossed.solve(settings, entrances, recorded),
+          ...crossed.solve(settings, shuffle, entrances, recorded),
           entrances,
           solver: crossed,
         };
