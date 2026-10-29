@@ -190,10 +190,13 @@ interface Model {
    */
   everything(dungeon: DungeonId, keys: number, bigKeys: number): Solution;
   /**
-   * The dungeons whose untracked items a way in reads: Hybrid Major
-   * Glitches' clip from Misery Mire into Tower of Hera (keyD6) and, in
-   * Inverted, from Thieves' Town into Desert Palace (keyD4, bigKeyD4). None
-   * under NoGlitches or Overworld Glitches, where no way in reads a key.
+   * The dungeons whose untracked items a way in reads, each way behind the
+   * one-frame clip underworld (canOneFrameClipUW) of Hybrid Major Glitches
+   * and Major Glitches: from Misery Mire into Tower of Hera (keyD6) and
+   * into Swamp Palace (keyD6, bigKeyD6, and Tower of Hera's bigKeyP3, which
+   * makes Tower of Hera one too), and in Inverted from Thieves' Town into
+   * Desert Palace (keyD4, bigKeyD4). None under NoGlitches or Overworld
+   * Glitches, where no way in reads a key.
    * The model never raises their items past what is surely in hand
    * (`solveWithKeys`: each in logic wherever it sits, or all of a gating
    * dungeon proven safe), so what those ways open is what the player has.

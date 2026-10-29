@@ -671,10 +671,10 @@ const nameOf = (settings: AlttprSettings) =>
   `${settings.invertedMode ? "Inverted" : settings.standardMode ? "Standard" : "Open"}${settings.canOWYBA ? ", Major Glitches" : settings.canOneFrameClipUW ? ", Hybrid Major Glitches" : settings.canBootsClip ? ", Overworld Glitches" : ""}`;
 
 /**
- * The ways in that read a key: Hybrid Major Glitches' alone, each behind
- * its one-frame clip underworld (canOneFrameClipUW): into Tower of Hera
- * and Swamp Palace from Misery Mire, and in Inverted into Desert Palace
- * from Thieves' Town.
+ * The ways in that read a key: Hybrid Major Glitches' and Major Glitches'
+ * alone, each behind the one-frame clip underworld (canOneFrameClipUW):
+ * into Tower of Hera and Swamp Palace from Misery Mire, and in Inverted
+ * into Desert Palace from Thieves' Town.
  */
 const waysInWithKeys = (settings: AlttprSettings): readonly string[] => {
   if (!settings.canOneFrameClipUW) return [];
@@ -738,7 +738,7 @@ describe("what the model's soundness rests on", () => {
       }
     }
 
-    it(`opens no way in with a key, but Hybrid Major Glitches' clips (${nameOf(settings)})`, () => {
+    it(`opens no way in with a key, but the one-frame clips underworld (${nameOf(settings)})`, () => {
       const stray: string[] = [];
       const unclipped: string[] = [];
       const noClip = { ...settings, canOneFrameClipUW: false };
