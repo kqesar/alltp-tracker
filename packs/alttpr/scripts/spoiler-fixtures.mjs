@@ -17,6 +17,8 @@
 // what its meta says of the seed. A file is refused when its meta carries
 // free text a player wrote (`notes`), so nothing personal is committed; a
 // `name` is shown, to be looked at.
+//
+// `record-er-seeds.mjs` shares the fetching, the refusal and the index.
 
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -25,20 +27,28 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const out = join(here, "../test/spoilers");
-const HASH = /^[A-Za-z0-9]{10,20}$/;
+export const HASH = /^[A-Za-z0-9]{10,20}$/;
 
 /** Where alttpr.com keeps a seed's file (src/seed-link.ts). */
-const urlOf = (/** @type {string} */ hash) =>
+export const urlOf = (/** @type {string} */ hash) =>
   `https://alttpr-patch-data.s3.us-east-2.amazonaws.com/${hash}.json`;
 
+/** A seed's S3 file, parsed. */
+export async function fetchSeedFile(/** @type {string} */ hash) {
+  const response = await fetch(urlOf(hash));
+  if (!response.ok) throw new Error(`${hash}: HTTP ${response.status}`);
+  return response.json();
+}
+
 /**
- * The fixture of a seed's S3 file: its bytes, and its record.
+ * The spoiler of a seed's S3 file, refused when the file is not that seed's
+ * or its meta carries free text a player wrote.
  *
  * @param {string} hash
  * @param {unknown} file - The S3 file, parsed
- * @param {string} recorded - An ISO time
+ * @returns {Record<string, any>}
  */
-export function fixtureOf(hash, file, recorded) {
+export function spoilerOf(hash, file) {
   if (
     file === null ||
     typeof file !== "object" ||
@@ -51,30 +61,78 @@ export function fixtureOf(hash, file, recorded) {
     throw new Error(`${hash}: not a seed file of that hash`);
   }
   const spoiler = /** @type {Record<string, any>} */ (file.spoiler);
-  const meta = spoiler.meta ?? {};
-  if (meta.notes !== undefined) {
+  if (spoiler.meta?.notes !== undefined) {
     throw new Error(`${hash}: meta.notes is free text; not committing it`);
   }
-  const text = JSON.stringify(spoiler, null, 4);
+  return spoiler;
+}
+
+/**
+ * What an index says of a recorded file.
+ *
+ * @param {string} hash
+ * @param {unknown} file - The S3 file, parsed
+ * @param {string} text - The bytes written
+ * @param {string} recorded - An ISO time
+ */
+export function recordOf(hash, file, text, recorded) {
+  const spoiler = spoilerOf(hash, file);
+  const meta = spoiler.meta ?? {};
   return {
-    record: {
-      address: urlOf(hash),
-      bytes: Buffer.byteLength(text),
-      generated: "generated" in file ? file.generated : null,
-      layout: Array.isArray(spoiler.Entrances) ? "entrance randomizer" : "vt",
-      meta: {
-        goal: meta.goal ?? null,
-        logic: meta.logic ?? null,
-        mode: meta.mode ?? null,
-        name: meta.name ?? null,
-        spoilers: meta.spoilers ?? null,
-        tournament: meta.tournament ?? null,
-      },
-      recorded,
-      sha256: createHash("sha256").update(text).digest("hex"),
+    address: urlOf(hash),
+    bytes: Buffer.byteLength(text),
+    generated:
+      file !== null && typeof file === "object" && "generated" in file
+        ? file.generated
+        : null,
+    layout: Array.isArray(spoiler.Entrances) ? "entrance randomizer" : "vt",
+    meta: {
+      goal: meta.goal ?? null,
+      logic: meta.logic ?? null,
+      mode: meta.mode ?? null,
+      name: meta.name ?? null,
+      spoilers: meta.spoilers ?? null,
+      tournament: meta.tournament ?? null,
     },
-    text,
+    recorded,
+    sha256: createHash("sha256").update(text).digest("hex"),
   };
+}
+
+/**
+ * The fixture of a seed's S3 file: its bytes, and its record.
+ *
+ * @param {string} hash
+ * @param {unknown} file - The S3 file, parsed
+ * @param {string} recorded - An ISO time
+ */
+export function fixtureOf(hash, file, recorded) {
+  const text = JSON.stringify(spoilerOf(hash, file), null, 4);
+  return { record: recordOf(hash, file, text, recorded), text };
+}
+
+/** The records of a directory's index.json, none before the first run. */
+export function readIndex(/** @type {string} */ dir) {
+  try {
+    return JSON.parse(readFileSync(join(dir, "index.json"), "utf8")).seeds;
+  } catch {
+    return {};
+  }
+}
+
+/** Writes a directory's index.json, its seeds sorted. */
+export function writeIndex(
+  /** @type {string} */ dir,
+  /** @type {string} */ generated,
+  /** @type {Record<string, unknown>} */ index,
+) {
+  const seeds = Object.fromEntries(
+    Object.entries(index).sort(([a], [b]) => a.localeCompare(b)),
+  );
+  writeFileSync(
+    join(dir, "index.json"),
+    `${JSON.stringify({ generated, seeds }, null, 2)}\n`,
+  );
 }
 
 /** @param {string[]} hashes */
@@ -84,20 +142,11 @@ async function main(hashes) {
     process.exit(2);
   }
   mkdirSync(out, { recursive: true });
-  const indexFile = join(out, "index.json");
-  /** @type {Record<string, unknown>} */
-  let index = {};
-  try {
-    index = JSON.parse(readFileSync(indexFile, "utf8")).seeds;
-  } catch {
-    // The first run
-  }
+  const index = readIndex(out);
   for (const hash of hashes) {
-    const response = await fetch(urlOf(hash));
-    if (!response.ok) throw new Error(`${hash}: HTTP ${response.status}`);
     const { record, text } = fixtureOf(
       hash,
-      await response.json(),
+      await fetchSeedFile(hash),
       new Date().toISOString(),
     );
     writeFileSync(join(out, `${hash}.txt`), text);
@@ -106,20 +155,10 @@ async function main(hashes) {
       `${hash}.txt: ${record.bytes} bytes, ${record.layout}, meta.name ${JSON.stringify(record.meta.name)}\n`,
     );
   }
-  const seeds = Object.fromEntries(
-    Object.entries(index).sort(([a], [b]) => a.localeCompare(b)),
-  );
-  writeFileSync(
-    indexFile,
-    `${JSON.stringify(
-      {
-        generated:
-          "By packs/alttpr/scripts/spoiler-fixtures.mjs from real seeds. Record again, never edit.",
-        seeds,
-      },
-      null,
-      2,
-    )}\n`,
+  writeIndex(
+    out,
+    "By packs/alttpr/scripts/spoiler-fixtures.mjs from real seeds. Record again, never edit.",
+    index,
   );
 }
 

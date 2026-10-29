@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { HOLES, holeAt } from "../scripts/import-er.mjs";
 import { pythonLiteral } from "../scripts/python.mjs";
+import { erSeed } from "../test/er-seeds";
 import tables from "./autotrack/entrance-tables.json" with { type: "json" };
 import {
   type CrossedPool,
@@ -19,15 +19,7 @@ import er from "./entrances/er.json" with { type: "json" };
 import { MARKERS } from "./markers";
 
 /** A real Crosskeys seed's entrances, from its spoiler (test/er-seeds). */
-const seed = JSON.parse(
-  readFileSync(
-    new URL("../test/er-seeds/0yAObedRMV.json", import.meta.url),
-    "utf8",
-  ),
-) as {
-  meta: { shuffle: string };
-  entrances: { entrance: string; exit: string; direction: string }[];
-};
+const seed = erSeed("0yAObedRMV").spoiler;
 
 const marker = (id: string) => {
   const found = MARKERS.find((m) => m.id === id);
@@ -287,7 +279,7 @@ describe("the crossed shuffle", () => {
     // Link's House and the Tavern's back door stay; the house's Chris
     // Houlihan room is a way out, never in
     const fixed = new Set(["Links House", "Tavern North"]);
-    const mapped = seed.entrances.filter(
+    const mapped = seed.Entrances.filter(
       (m) => m.direction !== "exit" && !fixed.has(m.entrance),
     );
     for (const { entrance, exit } of mapped) {
@@ -436,7 +428,7 @@ describe("where the game shows Link went", () => {
   });
 
   it("names a real seed's doors and holes as its spoiler", () => {
-    const mapped = seed.entrances.filter(
+    const mapped = seed.Entrances.filter(
       (m) =>
         m.direction !== "exit" &&
         open.targetsOf.has(entranceNamed(m.entrance).id),
