@@ -32,6 +32,7 @@ import { fromUpstream, STATE_MAX } from "./items";
 import { medallionFacts } from "./medallions";
 import { RULES } from "./rules";
 import type { AlttprSettings } from "./settings";
+import type { RegionDef } from "./world";
 
 /** Every item at its count in the pool, as the derived facts read them. */
 function withFacts(
@@ -179,21 +180,62 @@ interface Model {
   readonly bigKeys: number;
   /** The world with everything held, its untracked items at a level. */
   everything(keys: number, bigKeys: number): Solution;
+  /**
+   * The dungeons whose untracked items a way in reads: Hybrid Major
+   * Glitches' clip from Misery Mire into Tower of Hera (keyD6) and, in
+   * Inverted, from Thieves' Town into Desert Palace (keyD4, bigKeyD4). None
+   * under NoGlitches or Overworld Glitches, where no way in reads a key.
+   * The model never raises their items past what is surely in hand
+   * (`solveWithKeys`), so what those ways open is what the player has.
+   */
+  readonly gating: ReadonlySet<DungeonId>;
+  /**
+   * The dungeons never safe for keys beyond the generic ones, where a way
+   * in reads a key: an untracked item of theirs may sit where a rule reads
+   * the untracked items of another dungeon, not a gating one.
+   */
+  readonly unsafe: ReadonlySet<DungeonId>;
+}
+
+/**
+ * The dungeons whose untracked items (`owner`: by item, its dungeon) a way
+ * in reads. A branch the settings switch off, or through a region no state
+ * reaches, is left out (`readsOf`).
+ */
+function gatingDungeons(
+  regions: readonly RegionDef[],
+  owner: ReadonlyMap<string, DungeonId>,
+  settings: AlttprSettings,
+  closed: (region: string) => boolean,
+): Set<DungeonId> {
+  const found = new Set<DungeonId>();
+  for (const region of regions) {
+    for (const { req } of region.entrances) {
+      for (const name of readsOf(req, settings, closed) ?? []) {
+        const id = owner.get(name);
+        if (id !== undefined) found.add(id);
+      }
+    }
+  }
+  return found;
 }
 
 /**
  * `state` with every untracked item raised to a level: each dungeon's small
- * keys to `keys` (at most its count), its big key if `bigKeys` is 1. A
- * count already held is kept. No derived fact reads a key, so they stand.
+ * keys to `keys` (at most its count), its big key if `bigKeys` is 1, but a
+ * dungeon's `kept` at what `state` holds. A count already held is kept. No
+ * derived fact reads a key, so they stand.
  */
 function raise(
   state: State,
   untracked: readonly UntrackedItem[],
   keys: number,
   bigKeys: number,
+  kept: (dungeon: DungeonId) => boolean = () => false,
 ): State {
   const raised: Record<string, number> = {};
-  for (const { count, item } of untracked) {
+  for (const { count, dungeon, item } of untracked) {
+    if (kept(dungeon)) continue;
     const level = item.startsWith("bigKey") ? bigKeys * count : keys;
     raised[item] = Math.max(itemValue(state, item), Math.min(level, count));
   }
@@ -304,11 +346,25 @@ function modelOf(filler: Filler): Model {
   const closed = (region: string) => all(keys, bigKeys).region(region) === "no";
   const dungeonsOf = new Map<string, readonly DungeonId[]>();
   // The filler's own modules: a tricks world's rules read more than the run's
-  for (const region of filler.modules.flatMap((m) => m.regions)) {
+  const regions = filler.modules.flatMap((m) => m.regions);
+  for (const region of regions) {
     for (const location of region.locations) {
       const read = readsOf(location.req, settings, closed) ?? [];
       const ids = [...new Set(read.flatMap((n) => owner.get(n) ?? []))];
       if (ids.length > 0) dungeonsOf.set(location.id, ids);
+    }
+  }
+  // A way in that reads a key breaks what safety rests on (README.md, "The
+  // key model"): its dungeon's items are never raised past what is surely
+  // in hand, and a dungeon where a rule reads the items of another, raised,
+  // is never safe
+  const gating = gatingDungeons(regions, owner, settings, closed);
+  const unsafe = new Set<DungeonId>();
+  if (gating.size > 0) {
+    for (const [id, entry] of dungeons) {
+      const tied = (l: string) =>
+        (dungeonsOf.get(l) ?? []).some((d) => d !== id && !gating.has(d));
+      if (entry.at.some(tied)) unsafe.add(id);
     }
   }
   const model: Model = {
@@ -316,7 +372,9 @@ function modelOf(filler: Filler): Model {
     dungeons,
     dungeonsOf,
     everything: all,
+    gating,
     keys,
+    unsafe,
     untracked,
   };
   models.set(filler, model);
@@ -394,6 +452,24 @@ export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
   const at = levels(world, (keys, big) =>
     raise(sure, model.untracked, keys, big),
   );
+  // The gating dungeons' items held at what is surely in hand, so a way in
+  // that reads them opens only as it does for the player: the levels a yes
+  // is read at. Where no way in reads a key, the same solves
+  const { gating } = model;
+  const kept = (d: DungeonId) => gating.has(d);
+  const atKept =
+    gating.size === 0
+      ? at
+      : levels(world, (keys, big) =>
+          raise(sure, model.untracked, keys, big, kept),
+        );
+  // A gating dungeon's own items are raised for its safety, the others kept
+  const atOwn = (id: DungeonId) =>
+    gating.has(id)
+      ? levels(world, (keys, big) =>
+          raise(sure, model.untracked, keys, big, (d) => d !== id && kept(d)),
+        )
+      : atKept;
   const safety = new Map<DungeonId, boolean>();
   const safe = (id: DungeonId): boolean => {
     const entry = model.dungeons.get(id);
@@ -401,13 +477,16 @@ export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
     // A generic key found may open another dungeon's door; under No Logic
     // the randomizer placed no item where Link could reach it, so a key may
     // sit behind its own door
-    if (entry.generic || filler.settings.noLogic) return false;
+    if (entry.generic || filler.settings.noLogic || model.unsafe.has(id)) {
+      return false;
+    }
     let found = safety.get(id);
     if (found === undefined) {
       found = true;
+      const own = atOwn(id);
       check: for (let keys = entry.keys; keys >= 0; keys--) {
         for (let big = entry.bigKey; big >= 0; big--) {
-          const mine = at(keys, big);
+          const mine = own(keys, big);
           const theirs = model.everything(keys, big);
           for (const l of entry.at) {
             if (rank(mine.location(l)) < rank(theirs.location(l))) {
@@ -421,13 +500,39 @@ export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
     }
     return found;
   };
+  // A yes read with the items of the location's own dungeons raised, safe
+  // as they must be: the player collects them all. A gating dungeon's
+  // otherwise stay at what is surely in hand, so a way in that reads them
+  // opens only as it does for the player. Where no way in reads a key, no
+  // other dungeon's items change the answer, and all are raised at once
+  const raisedFor = new Map<string, Solution>();
+  const withOwn = (ds: readonly DungeonId[]): Solution => {
+    if (gating.size === 0) return at(model.keys, model.bigKeys);
+    const key = ds.join(",");
+    let found = raisedFor.get(key);
+    if (found === undefined) {
+      const own = new Set(ds);
+      found = solve(
+        world,
+        raise(
+          sure,
+          model.untracked,
+          model.keys,
+          model.bigKeys,
+          (d) => kept(d) && !own.has(d),
+        ),
+      );
+      raisedFor.set(key, found);
+    }
+    return found;
+  };
   const location = (id: string): Tri => {
     const now = solution.location(id);
     const ds = model.dungeonsOf.get(id);
     if (now === "yes" || ds === undefined) return now;
-    const all = at(model.keys, model.bigKeys).location(id);
-    if (all === "yes" && ds.every(safe)) return "yes";
-    return all === "no" ? "no" : "maybe";
+    const yes = withOwn(ds).location(id) === "yes";
+    if (yes && ds.every(safe)) return "yes";
+    return at(model.keys, model.bigKeys).location(id) === "no" ? "no" : "maybe";
   };
   return {
     dungeons: (id) => model.dungeonsOf.get(id) ?? [],

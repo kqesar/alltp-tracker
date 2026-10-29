@@ -259,25 +259,30 @@ export const LOGICS = [
 
 export type Logic = (typeof LOGICS)[number];
 
+/** Overworld Glitches' flags (logic.php:5-13). */
+const OVERWORLD_GLITCHES: readonly GlitchFlag[] = [
+  "canSuperBunny",
+  "canFakeFlipper",
+  "canSuperSpeed",
+  "canBootsClip",
+  "canMirrorClip",
+  "canWaterWalk",
+  "canDungeonRevive",
+];
+
 /**
  * The glitch flags each logic turns on (config/logic.php). A logic's
- * flags are listed here once its port holds to upstream's tests: until
- * then it reads as NoGlitches, and the app does not model it.
+ * flags are listed here once its port holds to upstream's tests (Hybrid
+ * Major Glitches has none: its laws hold it, the README's "Glitched logics
+ * and No Logic"): until then it reads as NoGlitches, and the app does not
+ * model it.
  */
 export const LOGIC_FLAGS: Readonly<Record<Logic, readonly GlitchFlag[]>> = {
-  HybridMajorGlitches: [],
+  // logic.php:14-23: Overworld Glitches' and one-frame clips underworld
+  HybridMajorGlitches: [...OVERWORLD_GLITCHES, "canOneFrameClipUW"],
   MajorGlitches: [],
   NoGlitches: [],
-  // logic.php:5-13
-  OverworldGlitches: [
-    "canSuperBunny",
-    "canFakeFlipper",
-    "canSuperSpeed",
-    "canBootsClip",
-    "canMirrorClip",
-    "canWaterWalk",
-    "canDungeonRevive",
-  ],
+  OverworldGlitches: OVERWORLD_GLITCHES,
 };
 
 /** The worlds this pack builds: `World::factory`'s type. */

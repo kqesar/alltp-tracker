@@ -72,6 +72,33 @@ describe("the upstream contract", () => {
   });
 });
 
+describe("Hybrid Major Glitches, which upstream does not test", () => {
+  // It turns on Overworld Glitches' flags and one more (config/logic.php:
+  // 14-23), so whatever Overworld Glitches' cases find true, it does too
+  const owg = fixtures.filter((f) => f.path.includes("OverworldGlitches/"));
+  const hybrid: Fixture[] = owg.map((f) => ({
+    ...f,
+    cases: f.cases.filter((c) => c.expected),
+    worlds: Object.fromEntries(
+      Object.entries(f.worlds).map(([name, w]) => [
+        name,
+        { ...w, config: { ...w.config, logic: "HybridMajorGlitches" } },
+      ]),
+    ),
+  }));
+
+  it("holds every case Overworld Glitches' suites find true", () => {
+    const report = runUpstreamCases(hybrid, manifest, PACK);
+    expect(report.failures).toEqual([]);
+    expect(report.files).toHaveLength(45);
+    const ran = Object.values(report.ran).reduce((sum, n) => sum + n, 0);
+    expect(ran).toBe(
+      hybrid.reduce((sum, fixture) => sum + fixture.cases.length, 0),
+    );
+    expect(ran).toBeGreaterThan(1000);
+  });
+});
+
 describe("contractHolds", () => {
   it.each([
     [true, "yes", true],

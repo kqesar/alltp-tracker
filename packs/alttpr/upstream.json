@@ -302,7 +302,7 @@
     {
       "file": "config/logic.php",
       "module": "src/settings.ts",
-      "role": "the glitch flags World::config falls back to for each logic (LOGIC_FLAGS: all off for NoGlitches, a glitched logic's listed once its port holds to its tests)",
+      "role": "the glitch flags World::config falls back to for each logic (LOGIC_FLAGS: none for NoGlitches; Overworld Glitches' held to its suites, Hybrid Major Glitches', which has none, to the order of the logics)",
       "status": "ported"
     },
     {
