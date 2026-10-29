@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ALTTPR_RACE_PROFILE } from "../../../packs/alttpr/src/autotrack/race-profile";
 import { DefinitionError, RaceViolationError } from "./errors";
-import { planReads, USB2SNES_LIMITS } from "./plan";
+import { planPieces, planReads, USB2SNES_LIMITS } from "./plan";
 import { assertRaceSafe, covers, defineRaceProfile } from "./race";
 import { raceStatus } from "./race-mode";
 
@@ -88,16 +88,32 @@ describe("assertRaceSafe", () => {
       gap: 16,
       limits: USB2SNES_LIMITS,
     });
-    expect(() =>
-      assertRaceSafe(plan, profile, [items, more], [bottles]),
-    ).not.toThrow();
+    expect(() => assertRaceSafe(plan, profile, [items, more])).not.toThrow();
   });
 
   it("refuses a plan that bridges into forbidden bytes", () => {
     const plan = planReads([items, more], { gap: 16, limits: USB2SNES_LIMITS });
+    expect(() => assertRaceSafe(plan, profile, [items, more])).toThrow(
+      /reads \$F5F35C, which no permitted range covers/,
+    );
+  });
+
+  it("refuses a bridged byte no range names, though it is permitted memory", () => {
+    // $7EF360, the rupee count, lies in the save window and in no range here:
+    // reading it to discard it is still reading it
+    const rupees = { address: 0xf5_f360, size: 4 };
+    const plan = planReads([bottles, more], {
+      gap: 16,
+      limits: USB2SNES_LIMITS,
+    });
+    expect(planPieces(plan)).toEqual([{ address: 0xf5_f35c, size: 0x18 }]);
+    expect(() => assertRaceSafe(plan, profile, [bottles, more])).toThrow(
+      RaceViolationError,
+    );
+    // Allowed, the same bytes pass
     expect(() =>
-      assertRaceSafe(plan, profile, [items, more], [bottles]),
-    ).toThrow(RaceViolationError);
+      assertRaceSafe(plan, profile, [bottles, rupees, more]),
+    ).not.toThrow();
   });
 
   it("refuses a plan that leaves permitted memory", () => {
@@ -105,16 +121,15 @@ describe("assertRaceSafe", () => {
       gap: 0,
       limits: USB2SNES_LIMITS,
     });
-    expect(() => assertRaceSafe(plan, profile, [], [])).toThrow(
+    expect(() => assertRaceSafe(plan, profile, [])).toThrow(
       /outside the memory alttpr permits/,
     );
   });
 
   it("allows forbidden bytes a permitted range also covers", () => {
     // $7EF343 is both "has bombs" (permitted) and the bomb count (HUD).
-    const bombs = { address: 0xf5_f343, size: 1 };
     const plan = planReads([items], { gap: 0, limits: USB2SNES_LIMITS });
-    expect(() => assertRaceSafe(plan, profile, [items], [bombs])).not.toThrow();
+    expect(() => assertRaceSafe(plan, profile, [items])).not.toThrow();
   });
 });
 

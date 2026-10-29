@@ -103,6 +103,15 @@ export function covers(
   address: number,
   size: number,
 ): boolean {
+  return firstUncovered(ranges, address, size) === null;
+}
+
+/** The first byte of `[address, address + size)` no range covers, or null. */
+function firstUncovered(
+  ranges: readonly ByteRange[],
+  address: number,
+  size: number,
+): number | null {
   // Walk the bytes block by block: ranges may abut without merging.
   let at = address;
   const end = address + size;
@@ -113,23 +122,22 @@ export function covers(
         next = Math.max(next, range.address + range.size);
       }
     }
-    if (next === at) return false;
+    if (next === at) return at;
     at = next;
   }
-  return true;
+  return null;
 }
 
 /**
  * Throws a RaceViolationError unless every byte `plan` reads is permitted
- * memory, and every byte inside a `forbidden` range is also inside an
- * `allowed` one (bytes a permitted range covers may be read; a bridged gap
- * may not reach into forbidden information).
+ * memory and lies in a range of `allowed`: the race-permitted ranges the plan
+ * was made for, and the race flag. A byte between two of them is refused,
+ * whatever it holds: in doubt, forbidden.
  */
 export function assertRaceSafe(
   plan: ReadPlan,
   profile: RaceProfile,
   allowed: readonly ByteRange[],
-  forbidden: readonly ByteRange[],
 ): void {
   for (const request of plan.requests) {
     const { pieces } = request;
@@ -141,14 +149,11 @@ export function assertRaceSafe(
           `Race Mode: $${hex(address, 6)}+${size} reaches outside the memory ${profile.id} permits`,
         );
       }
-      for (const range of forbidden) {
-        const from = Math.max(address, range.address);
-        const to = Math.min(address + size, range.address + range.size);
-        if (from < to && !covers(allowed, from, to - from)) {
-          throw new RaceViolationError(
-            `Race Mode: $${hex(address, 6)}+${size} reads forbidden bytes at $${hex(from, 6)}`,
-          );
-        }
+      const stray = firstUncovered(allowed, address, size);
+      if (stray !== null) {
+        throw new RaceViolationError(
+          `Race Mode: $${hex(address, 6)}+${size} reads $${hex(stray, 6)}, which no permitted range covers`,
+        );
       }
     }
   }

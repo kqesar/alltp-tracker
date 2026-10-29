@@ -386,9 +386,17 @@ Compliant by construction:
 1. `definePack` refuses a race-permitted range outside permitted memory and
    a category the profile does not know.
 2. Each tick has a **race phase** and a **casual phase**. The race phase
-   reads the flag, the mode probe and the permitted ranges, through a plan
-   whose merges never bridge into forbidden ranges or unpermitted memory;
-   `assertRaceSafe` checks every race plan when it is built, before any use.
+   reads the flag, the mode probe and the permitted ranges, and **no other
+   byte**. Casual plans bridge gaps of up to `gap` bytes to save pieces; a
+   race plan never does: every byte outside the race-permitted ranges read
+   in the mode it is planned for (and the flag) is a barrier
+   (`pack.raceBytes`, `pack.raceBarriers`, one entry per mode). In doubt,
+   forbidden: a byte no range names (ALttPR's rupee count between the
+   bottles and the compasses) is not read, even to be discarded.
+   `assertRaceSafe` checks every byte of every request of every race plan
+   when it is built, before any use, against those ranges, not against
+   range names. On ALttPR this costs nothing that matters: 793 bytes in 20
+   pieces instead of 830 in 15, still one request.
 3. The casual phase (forbidden categories) runs only if Race Mode is off
    **after the flag the race phase just read**: a race ROM loaded mid-session
    never receives a forbidden read. A casual fetch already in flight when

@@ -30,6 +30,9 @@ const piecesOf = (plan: ReturnType<typeof planReads>): ByteRange[] =>
     })),
   );
 
+/** A mode's slot in the pack's race bytes and barriers (0: unknown). */
+const slot = (mode: string) => (MODES as readonly string[]).indexOf(mode) + 1;
+
 /** What the poller reads in Race Mode in a mode: the permitted ranges only. */
 const racePlan = (mode: string) =>
   planReads(
@@ -40,7 +43,7 @@ const racePlan = (mode: string) =>
           (range.modes as readonly string[]).includes(mode)),
     ),
     {
-      barriers: SMZ3_AUTOTRACK.raceBarriers,
+      barriers: SMZ3_AUTOTRACK.raceBarriers[slot(mode)],
       gap: SMZ3_AUTOTRACK.gap,
       limits: USB2SNES_LIMITS,
     },
@@ -106,12 +109,7 @@ describe("Race Mode", () => {
       limits: USB2SNES_LIMITS,
     });
     expect(() =>
-      assertRaceSafe(
-        reading,
-        SMZ3_RACE_PROFILE,
-        SMZ3_AUTOTRACK.permittedBytes,
-        SMZ3_AUTOTRACK.forbiddenBytes,
-      ),
+      assertRaceSafe(reading, SMZ3_RACE_PROFILE, SMZ3_AUTOTRACK.permittedBytes),
     ).toThrow(RaceViolationError);
   });
 
@@ -122,8 +120,7 @@ describe("Race Mode", () => {
         assertRaceSafe(
           plan,
           SMZ3_RACE_PROFILE,
-          SMZ3_AUTOTRACK.permittedBytes,
-          SMZ3_AUTOTRACK.forbiddenBytes,
+          SMZ3_AUTOTRACK.raceBytes[slot(mode)],
         ),
       ).not.toThrow();
       const pieces = piecesOf(plan);
@@ -178,7 +175,6 @@ describe("Race Mode", () => {
           reading,
           SMZ3_RACE_PROFILE,
           SMZ3_AUTOTRACK.permittedBytes,
-          SMZ3_AUTOTRACK.forbiddenBytes,
         ),
       ).toThrow(RaceViolationError);
     }

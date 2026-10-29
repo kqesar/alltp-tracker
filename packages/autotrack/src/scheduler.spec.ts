@@ -310,7 +310,7 @@ describe("Race Mode", () => {
       }),
     );
 
-  it("never sends a forbidden byte, nor one outside permitted memory, when it is on", async () => {
+  it("never sends a byte no permitted range covers, nor one outside permitted memory, when it is on", async () => {
     const image = new Uint8Array(0x100_0000).fill(0xaa);
     await fc.assert(
       fc.asyncProperty(
@@ -334,13 +334,9 @@ describe("Race Mode", () => {
           expect(poller.race.active).toBe(true);
           for (const [address, size] of transport.pieces) {
             expect(covers(permitted, address, size)).toBe(true);
-            // Forbidden bytes read only where a permitted range covers them.
-            for (const f of pack.forbiddenBytes) {
-              const from = Math.max(address, f.address);
-              const to = Math.min(address + size, f.address + f.size);
-              if (from < to)
-                expect(covers(pack.permittedBytes, from, to - from)).toBe(true);
-            }
+            // Every byte is a permitted range's (or the flag's): a forbidden
+            // byte where a permitted range also covers it, never a gap
+            expect(covers(pack.permittedBytes, address, size)).toBe(true);
           }
           // Forbidden ranges never update in Race Mode.
           pack.ranges.forEach((range, index) => {
@@ -373,7 +369,7 @@ describe("packs without modes (A Link to the Past, Super Metroid)", () => {
     if (pack.raceFlag !== null && due.length > 0) race.push(pack.raceFlag);
     const options = { gap: pack.gap, limits: USB2SNES_LIMITS };
     return (
-      planReads(race, { ...options, barriers: pack.raceBarriers }).requests
+      planReads(race, { ...options, barriers: pack.raceBarriers[0] }).requests
         .length +
       planReads(
         casual.map((i) => pack.ranges[i]),

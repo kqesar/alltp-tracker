@@ -37,7 +37,7 @@ function phasePlan(race: boolean) {
       "everyMs" in range && !("when" in range) && permitted(range.id) === race,
   );
   const plan = planReads(ranges, {
-    barriers: race ? pack.raceBarriers : [],
+    barriers: race ? pack.raceBarriers[0] : [],
     gap: pack.gap,
     limits: USB2SNES_LIMITS,
   });
@@ -284,12 +284,7 @@ describe("MEMORY_RANGES", () => {
   it("passes the race guard and reads in one request per phase", () => {
     const race = phasePlan(true);
     expect(() =>
-      assertRaceSafe(
-        race.plan,
-        ALTTPR_RACE_PROFILE,
-        pack.permittedBytes,
-        pack.forbiddenBytes,
-      ),
+      assertRaceSafe(race.plan, ALTTPR_RACE_PROFILE, pack.permittedBytes),
     ).not.toThrow();
     expect(race.plan.requests).toHaveLength(1);
     expect(phasePlan(false).plan.requests).toHaveLength(1);
@@ -362,7 +357,9 @@ describe("MEMORY_RANGES", () => {
     // replace the keys held: the casual plan already spans them, Race Mode
     // reads 14 bytes more, in one more piece. The Triforce pieces found
     // (goal-counter, a word v2.0 lists among the items) join it too: 2 bytes,
-    // in one more piece.
+    // in one more piece. Race Mode bridges no byte outside its ranges (the
+    // rupee and arrow counts, the ability flags, the keys held, the map icons,
+    // the starting entrance): 35 bytes less, in six more pieces, one request.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -374,7 +371,7 @@ describe("MEMORY_RANGES", () => {
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
       casual: { bytes: 436, pieces: 19 },
-      race: { bytes: 828, pieces: 14 },
+      race: { bytes: 793, pieces: 20 },
       ranges: { casual: 33, race: 38 },
     });
   });
@@ -447,12 +444,7 @@ describe("Race Mode and Link's position", () => {
     }
     // The race flag is the only other thing the race phase adds
     expect(() =>
-      assertRaceSafe(
-        plan,
-        ALTTPR_RACE_PROFILE,
-        pack.permittedBytes,
-        pack.forbiddenBytes,
-      ),
+      assertRaceSafe(plan, ALTTPR_RACE_PROFILE, pack.permittedBytes),
     ).not.toThrow();
   });
 

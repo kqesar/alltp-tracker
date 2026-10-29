@@ -154,11 +154,11 @@ function phaseOfProbe(
   limits: Transport["limits"],
 ): Phase {
   const plan = planReads([pack.ranges[probe]], {
-    barriers: pack.raceBarriers,
+    barriers: pack.raceBarriers[0],
     gap: pack.gap,
     limits,
   });
-  assertRaceSafe(plan, pack.profile, pack.permittedBytes, pack.forbiddenBytes);
+  assertRaceSafe(plan, pack.profile, pack.raceBytes[0]);
   return { members: Uint32Array.of(probe), modeBound: false, plan };
 }
 
@@ -330,17 +330,11 @@ export class Poller implements MemorySnapshot {
       }
       if (ranges.length === 0) return NO_PHASE;
       const plan = planReads(ranges, {
-        barriers: race ? pack.raceBarriers : [],
+        barriers: race ? pack.raceBarriers[mode + 1] : [],
         gap: pack.gap,
         limits: transport.limits,
       });
-      if (race)
-        assertRaceSafe(
-          plan,
-          pack.profile,
-          pack.permittedBytes,
-          pack.forbiddenBytes,
-        );
+      if (race) assertRaceSafe(plan, pack.profile, pack.raceBytes[mode + 1]);
       return {
         members: Uint32Array.from(members),
         modeBound: members.some(
