@@ -148,6 +148,7 @@ export const smRaceModeOff = async (page: Page) => {
  * @param exclude - A selector axe leaves out, where a WCAG exception applies
  */
 export const auditPage = async (page: Page, exclude?: string) => {
+  await settled(page);
   const axe = new AxeBuilder({ page }).withTags(WCAG_AA);
   const { violations } = await (exclude ? axe.exclude(exclude) : axe).analyze();
   expect(violations.map(({ id, nodes }) => `${id} ×${nodes.length}`)).toEqual(
@@ -161,6 +162,24 @@ export const auditPage = async (page: Page, exclude?: string) => {
   ).toBeLessThanOrEqual(width);
   expect(await unreachableClickables(page)).toEqual([]);
 };
+
+/**
+ * Waits for every finite animation and transition on the page to end (a
+ * dialog fading in, a control changing colour with its status): axe reads the
+ * colours as they are, and mid-way they are blends the player never reads. A
+ * looping one (the busy dot's breathing) is left out, it never ends.
+ */
+const settled = (page: Page) =>
+  page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter(
+          ({ effect }) => effect?.getComputedTiming().iterations !== Infinity,
+        )
+        .map(({ finished }) => finished.catch(() => undefined)),
+    ),
+  );
 
 /**
  * An open dialog's checks: axe once its opening animation has ended (its
