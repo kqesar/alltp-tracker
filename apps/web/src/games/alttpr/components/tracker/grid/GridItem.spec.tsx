@@ -109,6 +109,18 @@ describe("GridItem", () => {
     expect(boss).not.toHaveClass("griditem--dimmed");
   });
 
+  it("names a boss cell for the boss the run knows, else for its dungeon", () => {
+    render(<GridItem col={0} item="boss6" row={0} />);
+    const cell = screen.getByTestId("item-boss6");
+    expect(cell).toHaveAccessibleName(/^Blind the Thief, not defeated\./);
+
+    act(() => useGameStore.getState().updateSettings({ bossShuffle: "full" }));
+    expect(cell).toHaveAccessibleName(/^Thieves' Town boss, not defeated\./);
+
+    fireEvent.click(screen.getByTestId("known-boss-overlay-6"));
+    expect(cell).toHaveAccessibleName(/^Armos Knights, not defeated\./);
+  });
+
   it("omits the medallion overlay for dungeons that are not gated", () => {
     render(<GridItem col={0} item="boss0" row={0} />);
 

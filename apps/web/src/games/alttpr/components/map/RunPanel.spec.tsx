@@ -97,6 +97,50 @@ describe("RunPanel", () => {
     expect(screen.queryByTestId("run-finds-race")).toBeNull();
   });
 
+  describe("a boss beaten, in a run whose bosses may be shuffled", () => {
+    const beatThievesTown = () => {
+      act(() => store().updateSettings({ bossShuffle: "full" }));
+      clickAt(0, "boss6");
+    };
+    const row = () => screen.getByTestId("find-item:boss6:2");
+
+    it("names the boss the run learned", () => {
+      act(() => store().updateSettings({ bossShuffle: "full" }));
+      clickAt(0, "knownboss6");
+      clickAt(1, "boss6");
+      render(<RunPanel />);
+      expect(row()).toHaveTextContent("Armos Knights beaten");
+    });
+
+    it("says only the dungeon while the boss is not known", () => {
+      beatThievesTown();
+      render(<RunPanel />);
+      expect(row()).toHaveTextContent("Thieves' Town boss beaten");
+      expect(row()).not.toHaveTextContent("Blind");
+    });
+
+    it("says only the dungeon in Race Mode, which never reads the boss", () => {
+      beatThievesTown();
+      act(() => useAutotrackStore.setState({ raceChoice: "on" }));
+      render(<RunPanel />);
+      expect(row()).toHaveTextContent("Thieves' Town boss beaten");
+    });
+
+    it("names the vanilla boss when the bosses stay home", () => {
+      clickAt(0, "boss6");
+      render(<RunPanel />);
+      expect(row()).toHaveTextContent("Blind the Thief beaten");
+    });
+
+    it("follows the boss the player marks afterwards", () => {
+      beatThievesTown();
+      render(<RunPanel />);
+      expect(row()).toHaveTextContent("Thieves' Town boss beaten");
+      act(() => store().handleItemClick("knownboss6"));
+      expect(row()).toHaveTextContent("Armos Knights beaten");
+    });
+  });
+
   it("splits the run at each boss, and at the goal", () => {
     act(() => store().startTimer(T0));
     clickAt(600, "boss0");

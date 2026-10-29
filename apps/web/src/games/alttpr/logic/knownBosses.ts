@@ -18,6 +18,7 @@ import {
   isHidden,
   type RunSettings,
 } from "@/games/alttpr/data/presets";
+import { dungeonName } from "@/games/alttpr/logic/settings";
 
 /** The cells' prefix: `knownboss0` is Eastern Palace's. */
 export const KNOWN_BOSS = "knownboss";
@@ -92,7 +93,7 @@ export const stepKnownBoss = (
 export const BOSS_LABELS: Readonly<Record<ShuffledBoss, string>> = {
   armosKnights: "Armos Knights",
   arrghus: "Arrghus",
-  blind: "Blind",
+  blind: "Blind the Thief",
   helmasaurKing: "Helmasaur King",
   kholdstare: "Kholdstare",
   lanmolas: "Lanmolas",
@@ -106,4 +107,33 @@ export const BOSS_LABELS: Readonly<Record<ShuffledBoss, string>> = {
 export const knownBossText = (value: number) => {
   const boss = bossOfValue(value);
   return boss === undefined ? "unknown" : BOSS_LABELS[boss];
+};
+
+/** The boss a grid dungeon holds in the vanilla game, by its index (0-9). */
+const vanillaBoss = (index: number): ShuffledBoss | undefined =>
+  SHUFFLED_BOSSES[index];
+
+/** What a boss's name is read from: the run's cells and its settings. */
+export interface BossNaming {
+  readonly items: Readonly<Record<string, number | boolean>>;
+  readonly settings: RunSettings;
+}
+
+/**
+ * What to call the boss of a grid dungeon (0-9), the one rule every text
+ * follows: its vanilla boss while the run's bosses stay home (and Ice
+ * Palace's Kholdstare in a swordless run, which never moves); once they may
+ * move, the boss the player has marked or autotracking has seen, else
+ * neutral, "<Dungeon> boss". It never guesses the vanilla boss of a slot
+ * that may hold another, which in Race Mode (it shows no boss before it
+ * falls, and the tracker is not told after) would tell what the rules keep
+ * from the player.
+ */
+export const bossName = (index: number, run: BossNaming): string => {
+  const known = knownBossShown(index, run.settings)
+    ? bossOfValue(Number(run.items[knownBossCell(index)] ?? 0))
+    : vanillaBoss(index);
+  return known === undefined
+    ? `${dungeonName(index)} boss`
+    : BOSS_LABELS[known];
 };
