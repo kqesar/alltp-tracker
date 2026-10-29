@@ -1182,8 +1182,20 @@ vanilla drop holds (the escape's) stands for the item wherever a rule reads
 it. A fact whose location is reached at `maybe` only is read at `maybe`
 (`<fact>__maybe`, `src/facts.ts`), so what hangs on a `maybe` key door is
 `maybe`, never `no`. Standard is held to no upstream test (DR's tests build
-Open and Inverted only): the recorded spoilers will hold it (study step
-4.13).
+Open and Inverted only), nor to a seed yet: every recorded spoiler race is
+Open.
+
+**Real seeds** (`test/dr-playthrough.spec.ts`): the playthrough of each
+recorded spoiler race (`test/dr-spoilers/`, below) is a contract.
+`create_playthrough` (`Main.py:673-774`) lists the items the seed needs by
+sphere, each reached by DR's logic with the spheres before it, the keys
+kept in their dungeons collected as its sweep reaches them; so each
+location of a sphere is `yes` with the items of the spheres before it held,
+the dungeons' keys found wherever the world does not refuse their place.
+The answers that are not `yes` are listed with why: Misery Mire's two-key
+alternative and a key rule that rests on a placement (`maybe`), and a seed
+of DR's unstable `static` key logic, which 1.5.6 does not have and which
+opens Ice Palace with fewer keys (`no`, a logic the app does not model).
 
 **Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
 `RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,
@@ -2041,11 +2053,15 @@ The JSON's `Entrances`, `Doors`, `Lobbies`, `DoorTypes`, `Bottles`, `paths`
 and the fork's `Overworld`, `Whirlpools` and `Maps`, and the text's sections
 of the same, are not read.
 
-`test/dr-spoilers/` holds DR's own text log of two spoiler races, cut by
+`test/dr-spoilers/` holds DR's own text log of twelve spoiler races, cut by
 `pnpm --filter @alltp/pack-alttpr record-dr-spoilers` to the header (less the
-`User Notes` a person wrote) and the sections read: `DR_660701088_Spoiler.txt`
-(1.5.6-u, Open, keysanity, vanilla doors) and `DR_278438665_Spoiler.txt`
-(1.5.7-u, keysanity, key drops and key pots). The script finds the log the race
+`User Notes` a person wrote) and the sections read, all Open with vanilla doors
+and entrances: `DR_660701088_Spoiler.txt` (1.5.6-u, keysanity, the unstable
+`static` key logic), `DR_278438665_Spoiler.txt` (1.5.7-u, keysanity, key drops
+and key pots), five more keysanity seeds and five with the keys in their
+dungeons (the script's `RACES` says which race each is). Their playthroughs
+hold DR's world (`test/dr-playthrough.spec.ts`, "The Door Randomizer's
+world"). The script finds the log the race
 room's bot posted in its chat log and fetches DR's text beside it;
 `index.json` keeps the race, the address, the day and the whole file's SHA-256.
 Why not avianart: a race seed's permalink keeps the spoiler's `meta` alone

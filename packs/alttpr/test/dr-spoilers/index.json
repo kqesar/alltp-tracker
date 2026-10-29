@@ -1,6 +1,46 @@
 {
   "generated": "By packs/alttpr/scripts/record-dr-spoilers.mjs from real spoiler races. Record again, never edit.",
   "logs": {
+    "DR_11732930_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/efd2e6c1-d24c-4762-bc22-b11a43821151/DR_11732930_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/zany-boots-3890",
+      "recorded": "2026-10-29",
+      "sha256": "130f62554ae7068e6d9ec2c7f49c1576b5a582c9300cb845c0b1fb519badf37e",
+      "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 11732930"
+    },
+    "DR_15235642_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/fdbab70b-6723-4bcb-bfd5-6f9b0da325b4/DR_15235642_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/dynamax-quake-9156",
+      "recorded": "2026-10-29",
+      "sha256": "19f3d7b80cd894924f7d2405aab19271c715c91cc88447afb29a9196be6462df",
+      "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 15235642"
+    },
+    "DR_135444540_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/de123cce-1f4e-49c1-8164-e364ce3da8e6/DR_135444540_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/amused-beetorp-4727",
+      "recorded": "2026-10-29",
+      "sha256": "8a82331b0fdf3b0ec8f57a2016fe98cc7697713d6238e3271fbf3e361ec177ef",
+      "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 135444540"
+    },
+    "DR_239088210_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/040db607-f559-4d35-861c-bdc7f1122f04/DR_239088210_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/wonderful-deathmountain-8176",
+      "recorded": "2026-10-29",
+      "sha256": "6ebae65cacb4fb8ec7377c3ab81ae27489f4a3fa2e9f66903cc02ba8e4590168",
+      "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 239088210"
+    },
+    "DR_261624899_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/f6a37d58-a7d3-415f-81b4-e6082c90b5c2/DR_261624899_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/scruffy-firerod-3556",
+      "recorded": "2026-10-29",
+      "sha256": "57d90e197d415863453b787c28951bab341b1e0e9af9f40dbbadab186f8a5a4c",
+      "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 261624899"
+    },
     "DR_278438665_Spoiler.txt": {
       "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/bce949a5-7b7f-4ae6-ab1b-813fccb367f9/DR_278438665_Spoiler.txt",
       "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
@@ -9,6 +49,38 @@
       "sha256": "89e3e5b0403e9a47b58b97116bc85263726457e62a47b5b2aa470a06a07b733a",
       "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 278438665"
     },
+    "DR_284821534_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/4f0ce4e0-e9a0-4bc1-865c-ecc818c6e486/DR_284821534_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/sunken-herapot-2931",
+      "recorded": "2026-10-29",
+      "sha256": "1cfe6656be96aa93ac5fc3450d4d52754a0336fd14dfa9e0f8ec3f31727f2d36",
+      "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 284821534"
+    },
+    "DR_417494345_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/103de5e2-3713-47b5-a531-7b896a0d2f8c/DR_417494345_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/wonderful-lumberjack-2747",
+      "recorded": "2026-10-29",
+      "sha256": "35a9e678eb8638cb9548376d63dc061e4677badec8ebd256831ce3f100ee4395",
+      "version": "ALttP Dungeon Randomizer Version 1.5.8-u  -  Seed: 417494345"
+    },
+    "DR_445464406_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/0574c651-c7b2-416f-bee7-074d4ec7adc7/DR_445464406_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/obedient-mearl-4724",
+      "recorded": "2026-10-29",
+      "sha256": "60460d0a4138ff158e2e070135831382f7c3d528f8403f2fdbee4cd5904895f9",
+      "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 445464406"
+    },
+    "DR_573843628_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/036309db-0773-47f9-a248-1dc6ac9b1c9b/DR_573843628_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/lazy-mushroom-6764",
+      "recorded": "2026-10-29",
+      "sha256": "0b42d87724afc4849a11c3f27ef9736fb40f48a3563d60b97036a3630e4f02d4",
+      "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 573843628"
+    },
     "DR_660701088_Spoiler.txt": {
       "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/747ed70a-541f-4744-ae5a-6f061eb07284/DR_660701088_Spoiler.txt",
       "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
@@ -16,6 +88,14 @@
       "recorded": "2026-10-29",
       "sha256": "680c8545fed79316daae537263ee6d4bc6afe25816f5c7d4947abaf354dd78c4",
       "version": "ALttP Dungeon Randomizer Version 1.5.6-u  -  Seed: 660701088"
+    },
+    "DR_792657229_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/157169e4-2a6f-4ea6-be4a-9f7d41220bb9/DR_792657229_Spoiler.txt",
+      "kept": ["Requirements", "Locations", "Shops", "Playthrough"],
+      "race": "https://racetime.gg/alttpr/curious-chestgame-8935",
+      "recorded": "2026-10-29",
+      "sha256": "2b1c855e8d2d9bad5f2a0d4042aa0ca8a3273ed1ce14e3e4e11280bb51672062",
+      "version": "ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 792657229"
     }
   }
 }

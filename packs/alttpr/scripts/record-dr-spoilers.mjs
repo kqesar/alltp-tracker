@@ -35,12 +35,29 @@ const OUT = join(
 );
 const AGENT = "RandoAtlas fixtures (KqesaR/alltp-tracker)";
 
-/** Spoiler races of the study (racetime.gg's alttpr category), by what they cover. */
+/**
+ * Spoiler races (racetime.gg's alttpr category), by what they cover. All
+ * are Open, vanilla doors and entrances, no enemy or boss shuffle: what
+ * DR's world holds at the port's step 4; the playthrough contract
+ * (test/dr-playthrough.spec.ts) reads each.
+ */
 export const RACES = [
-  // DR 1.5.6-u, Open, keysanity, vanilla doors: no DR location
+  // DR 1.5.6-u, keysanity, `static` key logic (not in DR 1.5.6), no DR location
   "alttpr/saucy-birdtoss-3937",
-  // DR 1.5.7-u, Open, keysanity, key drops (enemies' and pots')
+  // DR 1.5.7-u, keysanity, key drops (enemies' and pots')
   "alttpr/snug-fireshield-5696",
+  // DR 1.5.7-u, keysanity (small keys wild, the rest per its header)
+  "alttpr/dynamax-quake-9156",
+  "alttpr/scruffy-firerod-3556",
+  "alttpr/sunken-herapot-2931",
+  "alttpr/obedient-mearl-4724",
+  "alttpr/curious-chestgame-8935",
+  // DR 1.5.7-u / 1.5.8-u, keys in their dungeons
+  "alttpr/zany-boots-3890",
+  "alttpr/amused-beetorp-4727",
+  "alttpr/wonderful-deathmountain-8176",
+  "alttpr/lazy-mushroom-6764",
+  "alttpr/wonderful-lumberjack-2747",
 ];
 
 /** The sections of DR's text log the parser reads (src/spoiler/dr.ts). */
