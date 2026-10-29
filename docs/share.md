@@ -47,10 +47,10 @@ Where each table's order comes from:
 
 | Table | Order |
 |---|---|
-| ALttPR locations | The pack's (`MAP_LOCATIONS`). A new location must come after the existing ones; a spec holds the link made before the sizes to it. |
+| ALttPR locations | The pack's map locations (`MAP_LOCATIONS`), then the Door Randomizer's (its key drops, pots, enemies and shop items, `DOOR_LOCATION_IDS`, about 1,600): an alttpr.com run sets none of their bits, about 200 zero bytes that deflate carries in a few. A new location must come after the existing ones; a spec holds the link made before the sizes to it. Only the map's locations are timeline keys: a DR location is never dated, which keeps every find's key as narrow as before (over 1,600 more keys would add two bits to each). |
 | ALttPR items | `SHARE_ITEMS` in `games/alttpr/share.ts`, written out: the order links first shipped with, which neither the grid nor `data/items.ts` moves. A new item is appended; a spec fails until it is. |
 | ALttPR timeline keys | Derived from the items and locations the link was made against, through `isTimelineKey`, so the key table cannot drift from what an import accepts, and an older link's key indices (and the bits each takes) are the ones it was written with. The digest covers them too. |
-| ALttPR settings | `SHARE_SETTINGS` in `games/alttpr/share.ts`, written out as `key:value` entries (each setting's options, the crystal counts, the glitched logics, then `hidden:` and the hideable settings), never derived from the labels, whose order is the dialog's. A new option is appended; a spec holds the list to the tracker's options. Link 4's third table: a link 2 or 3 names two sizes. |
+| ALttPR settings | `SHARE_SETTINGS` in `games/alttpr/share.ts`, written out as `key:value` entries (each setting's options, the crystal counts, the glitched logics, then `hidden:` and the hideable settings, the boss shuffle, then a Door Randomizer run's own settings), never derived from the labels, whose order is the dialog's. A new option is appended; a spec holds the list to the tracker's options. Link 4's third table: a link 2 or 3 names two sizes. |
 | SMZ3 locations | The pack's regions' order (`LOCATION_IDS`), appended to as above. |
 
 A link written before `sizes` existed (the first packed links) carries none: it is read as the tables had the sizes `legacySizes` names, and its digest still has to match.

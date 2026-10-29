@@ -31,6 +31,8 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags, seed settings, the prizes the game shows (`prizes.ts`) and the pad medallions it shows (`medallion-pads.ts`), from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
 | `src/pack.ts` | the run's world, compiled with its settings |
 | `src/tricks.ts` | `config/logic.php`, `CustomizerController.php`, the customizer's `glitches.js`: the tricks world, six minor tricks as items (see "Tricks") |
+| `src/door-rando/locations.ts` | aerinon/ALttPDoorRandomizer 1.5.6 (`PotShuffle.py`, `source/dungeon/EnemyList.py`, `Regions.py`, `Dungeons.py`, `ItemList.py`): the Door Randomizer's key drops, pots, enemy drops, shop and take-any items (`locations.json`, imported), which a seed's settings make locations (`drLocationsOf`), and where its base patch keeps each one taken (see "The Door Randomizer") |
+| `src/door-rando/seed-import.ts` | a DR seed's settings from an avianart permalink's spoiler `meta` or a Hyrule Town Hall patch's bytes |
 | `src/margin.ts`, `src/rewritten.ts` | `itemPlacement !== 'basic'` in the regions' health gates and `Boss.php`, `region.requireBetterSword` and `requireBetterBow` (`World.php`): the world without basic placement's safety margins (see "Basic placement's safety margin"), and the rewritten world it shares with the tricks world |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -492,6 +494,7 @@ entrance, is never read, not even to be discarded):
 | the heart count, the pieces toward the next heart, the bottles' contents | "heart count, heart piece count, and bottle contents" |
 | the pendants by name, the crystals as a count | "Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal)" |
 | the game's start and end | "when the game starts and when the game ends" |
+| a Door Randomizer seed's pots, enemy drops and shop items taken, of the run's settings only (see "The Door Randomizer") | "a pot, a bonkable object, a shop item, or an enemy drop. The last 4 examples are only considered locations in modes where they are shuffled" |
 
 | Kept from a race | Why |
 | --- | --- |
@@ -957,6 +960,93 @@ keys: a key door is `maybe` until a key is for sale, and `yes` after.
 
 `test/upstream/RetroBow.json` holds the official `RetroBowTest` (32 cases)
 to the rupee bow.
+
+## The Door Randomizer
+
+About half of the alttpr races of 2025-2026 ran on seeds of aerinon's Door
+Randomizer (DR) or its Overworld fork (OWR), most with the doors vanilla
+(the study of 2026-10-29). The pack reads them in phases; this one holds
+the vanilla-door part: the ROMs, their settings, and the locations DR adds.
+Its logic is the next step: DR's own dungeon logic (`Rules.py`,
+`KeyDoorShuffle.py`) and its tests (about 2,400 cases, all vanilla doors)
+are not ported yet.
+
+**Sources, read as data and never run** (`upstream.json`, `doorRandomizer`):
+DR 1.5.6 (`4da73127`, the version Hyrule Town Hall and SahasrahBot ran for
+most races of 2026; 1.5.2 to 1.5.8 coexist), its base patch
+`aerinon/z3randomizer` `d0f46511` (DRUnstable, the same change as DR's
+`data/base2current.bps` at 1.5.6), and OWR 0.8.0.0 (`2297be2f`, the last
+release on DR 1.5.6).
+
+**The ROM.** DR names its seeds `DR` and its version's first three digits,
+then team, player and seed (`DR156_1_1_367825107`, `Rom.py:1452-1456`); OWR
+`OR` and the same digits (OWR `Rom.py:1843-1848`), or a site's tag
+(`probes.ts`, `seedRomOf`). The race flag is vt's pair at the same address
+(`Rom.py:1113`, `1483-1484`; Mystery.py always asks for a race,
+`Mystery.py:70`), so the probe and its fail-closed answer are the same. The
+SRAM the decoders read is vt's for every range (the two patches'
+`%assertSRAM` lists differ only where DR moved `DungeonLocationsChecked`,
+which no decoder reads, and dropped the absorbed keys), and so are bank
+$30's settings tables. DR writes no seed type (no `0x180210` in its
+`Rom.py`), so a DR seed's logic is unrecognized, never NoGlitches; its own
+"ganon" goal writes `GanonVulnerableMode` $03 (`Rom.py:1164-1175`), read
+as Ganon. Outside Race Mode, `seed-settings.ts` reads its own tables:
+`DRMode` (vanilla, basic, or partitioned or crossed, which it does not tell
+apart), `DRFlags` (every enemy's drops, a Mystery seed's `Hide_Total`),
+`MultiClientFlagsROM` (drops, shopsanity, take-any, pots, Mystery) and
+`StandingItemCounterMask` (pots beyond the caves), its version text, and
+OWR's `owMode`/`owFlags`. A table that does not open as the base patch
+writes it is unrecognized, never vanilla. A seed DR marks as Mystery hides
+its settings, the world but.
+
+**The locations** (`src/door-rando/locations.json`, written by
+`pnpm --filter @alltp/pack-alttpr import-dr <checkout>`, never by hand, and
+never a ROM byte: the pots' `RoomObject` arguments are skipped): the 33 key
+drops (`key_drop_data`: 19 pots, 14 enemies), 812 pots and large blocks
+(`vanilla_pots`), 714 enemies that may drop (`init_vanilla_sprites`,
+`valid_drop_location`), the 32 shop items and the 9 take-any items. Their
+names are DR's (`<region> Pot #n`, `<region> Enemy #n`), their ids
+`locationId(name)`, save keys like any. `drLocationsOf(modes)` is the
+seed's set, ported from `adjust_locations` (`Regions.py:1165-1232`): key
+drops by the drop shuffle and the pottery, each pottery mode's pots, every
+enemy's under `underworld`, shopsanity's shop items, the take-any caves'.
+What it cannot know it says (`partial`): reduced and clustered choose a
+random share of the dungeons' pots, enemy shuffle decides which enemies
+drop, a moved boss rewrites its room's sprites.
+
+**Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
+`RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,
+bit `$8000 >> i` (`BitFieldMasks`, `keydrop/standing_items.asm:571-573`),
+`i` the pot's index in its room's list or the sprite's slot (its index less
+the overlords before it, `EnemyList.py:2133-2139`); `PurchaseCounts`
+($7F:64B8), a byte a shop slot, the shop's sram index plus the slot
+(`shopkeeper.asm:463-480`). The three tables are ranges of their own
+(`door-pots`, `door-drops`, `door-purchases`), each behind a switch the app
+sets from the run's settings, and of categories the race profile permits
+(`pots`, `enemy-drops`, `shop-items`): v2.0 counts "a pot, a bonkable
+object, a shop item, or an enemy drop" as a location "only ... in modes
+where they are shuffled", so a table is read, in Race Mode too, only while
+the run's settings shuffle what it records, and only the run's own
+locations are laid on the board. Never a door, a room or a transition (the
+race admins' June 2026 clarification). Not checked on a real DR ROM yet: a
+sprite's slot being its load order with the overlords left out, and DR's
+item entries taking no slot (`standing_items.asm:403-405`).
+
+**Small keys.** `DungeonCollectedKeys` counts in DR as in vt: a key item
+received through `AddInventory` (`stats.asm:121-148`), so a key found at a
+shuffled pot or drop counts; a vanilla drop's key does not
+(`IncrementSmallKeysNoPrimary`). `DungeonAllCollectedKeys` ($7EF4F1) is not
+read: its `CountAllKey` is marked dead code (`stats.asm:155-156`).
+
+**Settings from where the seed is rolled** (`seed-import.ts`): an avianart
+permalink's JSON (`api.php?action=permlink&hash=`) holds its spoiler's
+`meta`, every DR setting by name (`doorExact`); a Hyrule Town Hall patch
+(`/seed/DR_<uuid>.bps`) writes the bytes the ROM decoder reads, which
+`bpsTarget` recovers without the base ROM (its TargetRead runs). Both hold
+the seed's placements too, so the app asks neither in Race Mode. Their
+fixtures (`test/dr-seeds/`) are written by `pnpm --filter
+@alltp/pack-alttpr record-dr-seeds`: the permalink cut to `meta`, the patch
+re-encoded with the decoder's bytes alone.
 
 ## The entrance randomizer's tables
 
