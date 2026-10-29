@@ -584,10 +584,18 @@ export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
   const location = (id: string): Tri => {
     const now = solution.location(id);
     const ds = model.dungeonsOf.get(id);
-    if (now === "yes" || ds === undefined) return now;
+    if (now === "yes") return now;
+    // Out of logic with what is surely in hand, but in logic with every item
+    // held when a way in reads a gating dungeon's keys not yet proven safe:
+    // maybe, as for a location of a dungeon. The answer only falls from yes
+    // to maybe or no to maybe, never rises to yes
+    const upper = () =>
+      at(model.keys, model.bigKeys).location(id) === "no" ? "no" : "maybe";
+    if (ds === undefined)
+      return now === "no" && gating.size > 0 ? upper() : now;
     const yes = withOwn(ds).location(id) === "yes";
     if (yes && ds.every(safe)) return "yes";
-    return at(model.keys, model.bigKeys).location(id) === "no" ? "no" : "maybe";
+    return upper();
   };
   return {
     dungeons: (id) => model.dungeonsOf.get(id) ?? [],

@@ -1759,7 +1759,8 @@ while it placed this one's (it places Misery Mire's keys before Tower of
 Hera's, and collects them: a Hera key may sit where only the clip
 reaches); a gating dungeon proven safe joins what is surely in hand with
 all of its items, which the player collects, so its way opens for the
-player then. A dungeon's safety raises every other dungeon's items with
+player then. A location of no dungeon whose only way in is such a clip reads
+`maybe`, not `no`, until then, if it is in logic with every key held. A dungeon's safety raises every other dungeon's items with
 its own but the gating ones', which holds because no rule where a
 dungeon's keys may sit reads another's items but a gating dungeon's
 (tested; the retro world's generic keys, never safe, aside). With no such
