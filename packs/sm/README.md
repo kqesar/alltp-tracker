@@ -169,7 +169,9 @@ forbids the rest:
   `max-power-bombs`, `max-reserve`), then `disabled-tanks`. Race Mode's memory
   is those words alone: no HUD (what is equipped, the energy and ammunition as
   they stand, the reserves' energy) and not the game's own in-game time
-  (`$7E:09DA-$7E:09E1`).
+  (`$7E:09DA-$7E:09E1`). A race read never bridges the gap between two words
+  either: `memory.spec.ts` holds the real poller in Race Mode to the bytes of
+  the items, the boss flags, the game state and the header.
 - The locations (category `locations`: the collected bits, `collected`, and
   the Nothing mask, `nothing-mask`) would say where the seed put no item, since
   a Nothing location's bit is set from the first frame, which a player learns

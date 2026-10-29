@@ -6,6 +6,10 @@ import {
   USB2SNES_LIMITS,
 } from "@alltp/autotrack";
 import { describe, expect, it } from "vitest";
+import {
+  outside,
+  raceReads,
+} from "../../../../packages/autotrack/test/race-reads";
 import { MEMORY_RANGE, MEMORY_RANGES, MODES } from "./memory";
 import { SMZ3_AUTOTRACK } from "./pack";
 import { SMZ3_RACE_PROFILE } from "./race-profile";
@@ -177,6 +181,38 @@ describe("Race Mode", () => {
           SMZ3_AUTOTRACK.permittedBytes,
         ),
       ).toThrow(RaceViolationError);
+    }
+  });
+});
+
+describe("Race Mode, byte by byte", () => {
+  it("asks for no byte outside the ranges permitted in the mode the game is in", async () => {
+    // The real poller: forced on, "auto" over a race ROM, a flag pending,
+    // unknown or unreadable, every mode and the switches between them, a
+    // whole polling cycle in each, the game check first
+    const reads = await raceReads(SMZ3_AUTOTRACK);
+    expect(outside(reads, SMZ3_AUTOTRACK.permittedBytes)).toEqual([]);
+    for (const mode of MODES) {
+      const steady = reads.filter((read) => read.mode === mode);
+      expect(steady.length, mode).toBeGreaterThan(0);
+      expect(
+        outside(steady, SMZ3_AUTOTRACK.raceBytes[slot(mode)]),
+        mode,
+      ).toEqual([]);
+    }
+    // Never the seed's random requirements (Ganon's, Tourian's), its
+    // medallions, its guid, nor Super Metroid's clock
+    for (const id of [
+      "requirements",
+      "tourian",
+      "seed-guid",
+      "clock-sm-live",
+      "clock-sm-saved",
+    ] as const) {
+      expect(
+        reads.some((read) => overlaps(read, MEMORY_RANGE[id])),
+        id,
+      ).toBe(false);
     }
   });
 });

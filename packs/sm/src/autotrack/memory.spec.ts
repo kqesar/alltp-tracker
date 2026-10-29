@@ -7,6 +7,10 @@ import {
   USB2SNES_LIMITS,
 } from "@alltp/autotrack";
 import { describe, expect, it } from "vitest";
+import {
+  outside,
+  raceReads,
+} from "../../../../packages/autotrack/test/race-reads";
 import { MEMORY_RANGE, MEMORY_RANGES } from "./memory";
 import { MAP_RANDO_AUTOTRACK } from "./pack";
 import { checkGame, MAP_RANDO_GAME_CHECK, MAP_RANDO_TITLE } from "./probes";
@@ -204,6 +208,22 @@ describe("MEMORY_RANGES", () => {
       MEMORY_RANGE["rta-pending"].address,
       1,
     ]);
+  });
+});
+
+describe("Race Mode, byte by byte", () => {
+  it("asks for the items, the boss kills and what tells a game in play, and no other byte", async () => {
+    // The real poller with Race Mode on (the game has no flag: the player's
+    // setting), a whole polling cycle, the game check first
+    const reads = await raceReads(MAP_RANDO_AUTOTRACK);
+    expect(reads.length).toBeGreaterThan(0);
+    expect(outside(reads, MAP_RANDO_AUTOTRACK.permittedBytes)).toEqual([]);
+    const tournament = MEMORY_RANGES.filter((range) =>
+      ["items", "boss-kills", "game-state", "rom-header"].includes(
+        range.category,
+      ),
+    );
+    expect(outside(reads, tournament)).toEqual([]);
   });
 });
 
