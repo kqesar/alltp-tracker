@@ -363,15 +363,17 @@ many words, and nothing it leaves in doubt:
   seed's ROM does not say whether it is one;
 - permitted categories: items, keys, boss kills, checks outside and inside
   dungeons (`dungeon-checks`: v2.0's "dungeon-locations" and per-dungeon
-  counts), game start, goal, the heart count on screen (`health`:
-  MaximumHealth) and the bottles' contents (`bottles`), both named among
-  the HUD's counts v2.0 lets a tracker react to, the pendants and crystals
-  taken (`prizes-held`: "their prizes upon collection", the pack's
-  decoders letting the crystals out as a count, never which is 5 or 6), the
-  MSU-1 track, the header, the race flag; forbidden: entrances and spheres
-  (as v2.0 has it), the ROM's prize table and the world map's prizes
-  (`prizes`: location contents and map checks), the rest of the HUD's data
-  (bombs, heart pieces) and the ROM's settings and stats, which v2.0 allows
+  counts), game start, goal, the heart count on screen and the pieces
+  toward the next heart (`health`: MaximumHealth and HeartPieceQuarter, "heart
+  count, heart piece count") and the bottles' contents (`bottles`), all
+  named among the HUD's counts v2.0 lets a tracker react to, the pendants
+  and crystals taken (`prizes-held`: "their prizes upon collection", the
+  pack's decoders letting the crystals out as a count, never which is 5 or
+  6), the MSU-1 track, the header, the race flag; forbidden: entrances and
+  spheres (as v2.0 has it), the ROM's prize table and the world map's
+  prizes (`prizes`: location contents and map checks), the rest of the HUD's
+  data (the bombs held, and the heart pieces collected over the run, the
+  stats' counter) and the ROM's settings and stats, which v2.0 allows
   within limits but Race Mode keeps the player's; and anything else;
 - race flag `$30:8213`: `0x01` race, `0x00` not. v2.0 names no race flag:
   the randomizer's tournament flag is what switches Race Mode on.
