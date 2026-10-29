@@ -20,8 +20,9 @@
 // connected, is listed in `unported` with its line, never dropped: the
 // world built from the noted entrances ports it by hand. What only decides
 // where the randomizer may place an item (forbid_item, add_item_rule,
-// set_always_allow) has no part in what Link can reach; its lines are listed
-// in `fill`.
+// set_always_allow) has no part in what Link can reach: it is `fill`, data
+// for the key model (src/er-keys.ts), beside the dungeons' keys
+// (Dungeons.py) and the spots filled before them (`dungeons`).
 
 import {
   assigned,
@@ -1120,6 +1121,162 @@ function parse(statement, text) {
 }
 
 /**
+ * Where the randomizer may place an item, as data (the key model reads it,
+ * src/er-keys.ts): what forbid_item refuses at a location, what
+ * set_always_allow lets in there whatever reaches it, each under the
+ * settings its branch asks for (`when`), and the add_item_rule lines,
+ * which only Ganon's Triforce and the uncle's weapon set.
+ * @typedef {{
+ *   forbid: { item: string, id?: string, location: string, source: string, when: string }[],
+ *   always: { item: string, id?: string, req: string, location: string, source: string, when: string }[],
+ *   itemRules: { location: string, source: string }[],
+ * }} Fill
+ */
+
+/**
+ * The location a fill rule is set on: `world.get_location('X', player)`,
+ * or one of the loop's names.
+ * @param {Context} ctx
+ * @param {Expr} expr
+ * @param {Scope} scope
+ */
+function fillSpot(ctx, expr, scope) {
+  const spot = spotOf(expr, scope);
+  if (spot.kind !== "location")
+    throw new Untranslatable("a fill rule on an entrance");
+  regionOf(ctx, spot);
+  return spot.name;
+}
+
+/**
+ * An item a fill rule names, and the pack's id of a dungeon's key or big key
+ * (`keyD1`, `bigKeyD1`), the items the key model places.
+ * @param {string} name
+ * @returns {{ item: string, id?: string }}
+ */
+function itemNamed(name) {
+  const key = /^(Small|Big) Key \((.+)\)$/.exec(name);
+  const code =
+    key === null
+      ? undefined
+      : DUNGEON_CODES[/** @type {keyof typeof DUNGEON_CODES} */ (key[2])];
+  if (key !== null && code === undefined)
+    throw new Untranslatable(`no dungeon ${key[2]}`);
+  return key === null
+    ? { item: name }
+    : { id: `${key[1] === "Small" ? "key" : "bigKey"}${code}`, item: name };
+}
+
+/**
+ * A dungeon as the key model reads it (Dungeons.py make_dungeon): its
+ * regions, the code of its keys, how many small keys it holds, whether it
+ * has a big key, and its maps and compasses, which no rule reads.
+ * @typedef {{ code: string, regions: string[], smallKeys: number, bigKey: boolean, items: string[], source: string }} ErDungeon
+ */
+
+/**
+ * The item names an `ItemFactory(…)` argument makes: a name, a list of
+ * names, a list times a count.
+ * @param {Expr | undefined} expr
+ * @returns {string[]}
+ */
+function namesOf(expr) {
+  if (expr?.t === "const" && typeof expr.value === "string")
+    return [expr.value];
+  if (expr?.t === "seq") return expr.items.flatMap(namesOf);
+  if (
+    expr?.t === "op" &&
+    expr.op === "*" &&
+    expr.right.t === "const" &&
+    typeof expr.right.value === "number"
+  )
+    return Array.from({ length: expr.right.value }, () =>
+      namesOf(expr.left),
+    ).flat();
+  throw new Error("Dungeons.py: an item list of no literals");
+}
+
+/**
+ * The items a make_dungeon argument makes: None, `ItemFactory(…)`, or a list
+ * of such calls.
+ * @param {Expr | undefined} expr
+ * @returns {string[]}
+ */
+function factoryItems(expr) {
+  if (expr === undefined || (expr.t === "const" && expr.value === null))
+    return [];
+  if (expr.t === "seq") return expr.items.flatMap(factoryItems);
+  if (
+    expr.t === "call" &&
+    expr.fn.t === "name" &&
+    expr.fn.name === "ItemFactory"
+  )
+    return namesOf(expr.args[0]);
+  throw new Error("Dungeons.py: dungeon items other than ItemFactory");
+}
+
+/**
+ * A dungeon of make_dungeon(name, boss, regions, big_key, small_keys,
+ * dungeon_items).
+ * @param {Extract<Expr, { t: "seq" }>} members
+ * @param {Expr | undefined} bigKey
+ * @param {Expr | undefined} smallKeys
+ * @param {Expr | undefined} items
+ * @param {string} source
+ * @returns {ErDungeon}
+ */
+function dungeonOf(members, bigKey, smallKeys, items, source) {
+  const big = factoryItems(bigKey);
+  const small = factoryItems(smallKeys);
+  const ids = [...big, ...small].map((name) => itemNamed(name).id);
+  const codes = new Set(ids.map((id) => id?.replace(/^(big)?[kK]ey/, "")));
+  if (ids.includes(undefined) || codes.size > 1)
+    throw new Error(`${source}: keys of no one dungeon`);
+  return {
+    bigKey: big.length > 0,
+    code: [...codes][0] ?? "",
+    items: factoryItems(items),
+    regions: members.items.map((m) => String(m.t === "const" ? m.value : "")),
+    smallKeys: small.length,
+    source,
+  };
+}
+
+/**
+ * What a set_always_allow lambda lets in: `lambda state, item: item.name ==
+ * 'X' and item.player == player [and <a rule on the state>]`, the item and
+ * that rule.
+ * @param {Context} ctx
+ * @param {Expr | undefined} fn
+ * @param {Scope} scope
+ * @returns {{ item: string, id?: string, req: string }}
+ */
+function alwaysAllowed(ctx, fn, scope) {
+  if (fn?.t !== "lambda" || fn.params.join(",") !== "state,item")
+    throw new Untranslatable("an always-allow other than a lambda");
+  /** @type {string | undefined} */
+  let item;
+  /** @type {Rule[]} */
+  const rules = [];
+  for (const term of fn.body.t === "and" ? fn.body.args : [fn.body]) {
+    const asked =
+      term.t === "compare" &&
+      term.op === "==" &&
+      term.left.t === "attr" &&
+      term.left.of.t === "name" &&
+      term.left.of.name === "item"
+        ? term.left.name
+        : undefined;
+    if (asked === "name" && term.t === "compare")
+      item = stringOf(term.right, scope);
+    else if (asked !== "player") rules.push(translate(ctx, term, scope));
+  }
+  if (item === undefined)
+    throw new Untranslatable("an always-allow of no one item");
+  return { ...itemNamed(item), req: print(all(...rules)) };
+}
+
+/**
  * Walks Rules.py's statements from set_rules, on vt's path, into the rules
  * of every spot.
  * @param {string} source - Rules.py
@@ -1130,8 +1287,8 @@ function walkRules(source, ctx) {
   const spots = new Map();
   /** @type {{ code: string, line: number, why: string }[]} */
   const unported = [];
-  /** @type {number[]} */
-  const fill = [];
+  /** @type {Fill} */
+  const fill = { always: [], forbid: [], itemRules: [] };
   /**
    * The rule added by where the Big Bomb Shop's door is (set_big_bomb_rules):
    * one case per list of doors, the first that holds the door applies.
@@ -1452,10 +1609,32 @@ function walkRules(source, ctx) {
         };
         return apply("and", spot, atom("lamp"), scope.when, line);
       }
-      case "forbid_item":
+      // Where an item may be placed, not what Link reaches: data of its own
+      case "forbid_item": {
+        const spot = fillSpot(ctx, args[0] ?? found, scope);
+        fill.forbid.push({
+          ...itemNamed(stringOf(args[1], scope)),
+          location: spot,
+          source: `Rules.py:${line}`,
+          when: print(scope.when),
+        });
+        return;
+      }
+      case "set_always_allow": {
+        const spot = fillSpot(ctx, args[0] ?? found, scope);
+        fill.always.push({
+          ...alwaysAllowed(ctx, args[1], scope),
+          location: spot,
+          source: `Rules.py:${line}`,
+          when: print(scope.when),
+        });
+        return;
+      }
       case "add_item_rule":
-      case "set_always_allow":
-        fill.push(line);
+        fill.itemRules.push({
+          location: fillSpot(ctx, args[0] ?? found, scope),
+          source: `Rules.py:${line}`,
+        });
         return;
       default: {
         const why = CODE[/** @type {keyof typeof CODE} */ (name)];
@@ -1654,14 +1833,16 @@ export function importErRules(read, regions) {
   const dungeonOfRegion = new Map();
   /** @type {Map<string, string | null>} */
   const bossOfDungeon = new Map();
-  for (const { call } of callExpressions(
+  /** @type {Map<string, ErDungeon>} */
+  const dungeonItems = new Map();
+  for (const { call, line } of callExpressions(
     dungeonsSource,
     "make_dungeon",
     "Dungeons.py",
     create.start,
     create.end,
   )) {
-    const [name, boss, members] = call.args;
+    const [name, boss, members, bigKey, smallKeys, items] = call.args;
     if (
       name?.t !== "const" ||
       typeof name.value !== "string" ||
@@ -1677,6 +1858,10 @@ export function importErRules(read, regions) {
     for (const member of members.items)
       if (member.t === "const" && !dungeonOfRegion.has(String(member.value)))
         dungeonOfRegion.set(String(member.value), name.value);
+    dungeonItems.set(
+      name.value,
+      dungeonOf(members, bigKey, smallKeys, items, `Dungeons.py:${line}`),
+    );
   }
   /** @type {Map<string, string>} */
   const towerBosses = new Map();
@@ -1770,6 +1955,64 @@ export function importErRules(read, regions) {
   const events = new Map(
     [...placed.keys()].map((item) => [item, regionId(item)]),
   );
+
+  // Where the dungeons' items go (the key model, src/er-keys.ts): the spots
+  // filled before them, which take none of them (generate_itempool's locked
+  // items, the prizes fill_prizes draws among), and the key placed first
+  // (fill_dungeons_restrictive's Pinball Room)
+  /** @param {string} text @param {number} index @param {number} first */
+  const lineAt = (text, index, first) =>
+    first + text.slice(0, index).split("\n").length - 1;
+  const prefilled = [
+    ...within.matchAll(
+      /world\.push_item\(world\.get_location\('((?:[^'\\]|\\.)+)', player\)/g,
+    ),
+  ].map((m) => ({
+    location: (m[1] ?? "").replaceAll("\\'", "'"),
+    source: `ItemList.py:${lineAt(within, m.index, offset + 1)}`,
+  }));
+  const prizes = body(itemListSource, "fill_prizes", "ItemList.py");
+  const prizesText = itemListSource.slice(prizes.start, prizes.end);
+  const prizesLine = lineAt(itemListSource, prizes.start, 1);
+  const crystals = /crystal_locations = \[([^\]]+)\]/.exec(prizesText);
+  if (crystals === null)
+    throw new Error("ItemList.py: fill_prizes reads otherwise");
+  const listed = crystals.index + "crystal_locations = [".length;
+  for (const m of (crystals[1] ?? "").matchAll(
+    /world\.get_location\('((?:[^'\\]|\\.)+)', player\)/g,
+  ))
+    prefilled.push({
+      location: (m[1] ?? "").replaceAll("\\'", "'"),
+      source: `ItemList.py:${lineAt(prizesText, listed + m.index, prizesLine)}`,
+    });
+  const restrictive = body(
+    dungeonsSource,
+    "fill_dungeons_restrictive",
+    "Dungeons.py",
+  );
+  const restrictiveText = dungeonsSource.slice(
+    restrictive.start,
+    restrictive.end,
+  );
+  const pinball =
+    /(\w+) = world\.get_location\('([^']+)', player\)\n\s+if world\.retro:\n\s+world\.push_item\(\1, ItemFactory\('Small Key \(Universal\)', player\), False\)\n\s+else:\n\s+(world\.push_item\(\1, ItemFactory\('([^']+)', player\), False\))/.exec(
+      restrictiveText,
+    );
+  if (pinball === null)
+    throw new Error("Dungeons.py: fill_dungeons_restrictive reads otherwise");
+  const restrictiveLine = lineAt(dungeonsSource, restrictive.start, 1);
+  const preplaced = [
+    {
+      ...itemNamed(pinball[4] ?? ""),
+      location: pinball[2] ?? "",
+      source: `Dungeons.py:${lineAt(restrictiveText, pinball.index + pinball[0].indexOf(pinball[3] ?? ""), restrictiveLine)}`,
+    },
+  ];
+  // The retro world's dungeons hold no small key: its keys are universal
+  const retroKeys = "[] if world.retro else small_keys";
+  if (!dungeonsSource.includes(retroKeys))
+    throw new Error(`Dungeons.py no longer says ${retroKeys}`);
+  const retroSmallKeys = `Dungeons.py:${lineAt(dungeonsSource, dungeonsSource.indexOf(retroKeys), 1)}`;
 
   /** @param {string} name */
   const methodLine = (name) => {
@@ -1949,6 +2192,12 @@ export function importErRules(read, regions) {
     derived: Object.fromEntries(
       [...ctx.derived.entries()].sort(([a], [b]) => a.localeCompare(b)),
     ),
+    dungeons: {
+      byName: Object.fromEntries(dungeonItems),
+      prefilled,
+      preplaced,
+      retroSmallKeys,
+    },
     entrances: final,
     events: Object.fromEntries(
       [...placed.values()]
@@ -1958,7 +2207,7 @@ export function importErRules(read, regions) {
           { item, location, source: `ItemList.py:${line}` },
         ]),
     ),
-    fill: [...new Set(fill)],
+    fill,
     helpers: Object.fromEntries(
       [...ctx.helpers.entries()].sort(([a], [b]) => a.localeCompare(b)),
     ),

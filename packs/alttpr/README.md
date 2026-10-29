@@ -1248,7 +1248,22 @@ flowchart LR
   lists).
 - **Placement-only rules** (`forbid_item`, `add_item_rule`,
   `set_always_allow`) decide where an item may go, not what Link can
-  reach: their lines are listed in `fill`.
+  reach. `fill` holds them as data, each with its location, its line and
+  the settings its branch asks for (`when`): the item `forbid_item`
+  refuses, the item `set_always_allow` lets in and its rule on the state
+  (`req`), a dungeon's key or big key with the pack's id (`keyD1`), and the
+  `add_item_rule` lines (Ganon's Triforce, the uncle's weapon, no dungeon
+  item's). A list a branch of `set_trock_key_rules` extends is read as it
+  stands outside the branch, so a refusal it adds there is left out: where
+  an item may go is then read wider, never narrower.
+- **The dungeons' keys** (`dungeons`): each dungeon of `create_dungeons`
+  (Open and Standard) with its regions, the code of its keys, its small
+  keys, whether it has a big key and its maps and compasses (`items`),
+  the retro world's line that drops the
+  small keys (`[] if world.retro else small_keys`), the key placed before
+  the others (`fill_dungeons_restrictive`: Skull Woods' Pinball Room) and
+  the spots filled before the dungeons' items (`generate_itempool`'s
+  locked events, `fill_prizes`' prizes).
 
 ### Its world
 
