@@ -1168,7 +1168,9 @@ A seed with shuffled entrances is filled by the entrance randomizer, under
 its own rules (`Rules.py`, `Bosses.py`), dungeons included: not vt's, which
 the regions of this pack port. The same run of `import-er` translates them
 into the engine's language, `src/entrances/rules.json`
-(`packs/alttpr/scripts/er-rules.mjs`, over the Python reader `packs/alttpr/scripts/python.mjs`).
+(`packs/alttpr/scripts/er-rules.mjs`, the entrance randomizer's dialect of the translation in
+`packs/alttpr/scripts/rules-core.mjs`, which the Door Randomizer's port shares, over the Python reader
+`packs/alttpr/scripts/python.mjs`).
 
 ```mermaid
 flowchart LR
