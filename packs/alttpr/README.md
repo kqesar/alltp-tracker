@@ -1,7 +1,8 @@
 # @alltp/pack-alttpr
 
 The A Link to the Past Randomizer game pack: the v31 rules (Standard, Open and
-Inverted worlds, NoGlitches, Overworld Glitches and Hybrid Major Glitches) as plain data over `@alltp/engine`, read from
+Inverted worlds, NoGlitches and every glitched logic: Overworld Glitches,
+Hybrid Major Glitches, Major Glitches; No Logic read with one of them) as plain data over `@alltp/engine`, read from
 [sporchia/alttp_vt_randomizer](https://github.com/sporchia/alttp_vt_randomizer)
 at the commit `upstream.json` pins, and held to upstream's own test cases.
 
@@ -1430,7 +1431,7 @@ app counts its runs not modelled.
 | NoGlitches | none (`logic.php:4`) | `tests/NoGlitches`, `tests/Inverted` |
 | OverworldGlitches | `canSuperBunny`, `canFakeFlipper`, `canSuperSpeed`, `canBootsClip`, `canMirrorClip`, `canWaterWalk`, `canDungeonRevive` (`logic.php:5-13`) | `tests/OverworldGlitches`, `tests/InvertedOverworldGlitches` (2650 cases, every one held) |
 | HybridMajorGlitches | Overworld Glitches' and `canOneFrameClipUW` (`logic.php:14-23`) | no suite upstream: every case Overworld Glitches' suites find true (`test/contract.spec.ts`), and the order of the logics (`src/logics.spec.ts`: none reads a location or region lower than the one before it, over random states of each world) |
-| MajorGlitches | not yet | `tests/MajorGlitches`, `tests/InvertedMajorGlitches` (imported, pending) |
+| MajorGlitches | Overworld Glitches', `canMirrorWrap`, `canOWYBA`, `canOneFrameClipOW`, `canOneFrameClipUW`, `canTransitionWrapped` (`logic.php:24-37`) | `tests/MajorGlitches`, `tests/InvertedMajorGlitches` (4170 cases, every one held) |
 
 - **The key model** rests on the same facts under Overworld Glitches: no
   way in reads a key, and an always-allowed key locks in nothing another
@@ -1442,6 +1443,14 @@ app counts its runs not modelled.
   read a key (into Tower of Hera from Misery Mire, `keyD6`; in Inverted
   into Desert Palace from Thieves' Town, `keyD4`, `bigKeyD4`), which the
   key model handles strictly additively (see "The key model").
+- **Two regions at once.** Swamp Palace's glitched way in (Standard
+  `SwampPalace.php:185-192`, Inverted `:147-153`) needs Misery Mire, the
+  Old Man and the palace's own side of the world at once, which an entrance
+  cannot say: it reads one region. `enteredAlsoFrom` (`src/world.ts`) adds
+  the way from Misery Mire and guards every location of the palace with the
+  others through `reach()`; the guard holds whenever the regular way does,
+  and folds to true without the one-frame clip, so NoGlitches and Overworld
+  Glitches read the palace as before.
 - **The boots.** A glitched world starts with the Pegasus Boots, unless the
   customizer built it (`Randomizer.php:122-131`): `bootsAtStart`, which
   `toState` adds to what the player found. Upstream's tests hold no

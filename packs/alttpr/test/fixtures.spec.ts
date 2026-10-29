@@ -3,7 +3,11 @@
 // change it points at, never edit a fixture to make it pass.
 import { describe, expect, it } from "vitest";
 import { type CaseKind, loadFixtures } from "./fixtures";
-import { collectionState } from "./upstream-state";
+import {
+  allItemsExcept,
+  collectionState,
+  EXCEPT_GROUPS,
+} from "./upstream-state";
 
 const fixtures = loadFixtures();
 
@@ -265,5 +269,31 @@ describe("the upstream fixtures", () => {
         ).not.toThrow();
       }
     }
+  });
+
+  // allItemsExcept leaves removed bottles and hearts where bottleCount() and
+  // hasHealth() still count them (see test/upstream-state.ts); the port does
+  // not. Counting more can only make upstream's answer true, so a case that
+  // expects false holds without them too, and the contract reads it alike.
+  // One that expects true could owe it to them: there is none.
+  it("expect true of no case without the bottles and hearts allItemsExcept still counts", () => {
+    const counted = new Set([
+      ...(EXCEPT_GROUPS.get("AnyBottle") ?? []),
+      "PieceOfHeart",
+      "HeartContainer",
+      "HeartContainerNoAnimation",
+      "BossHeartContainer",
+    ]);
+    const removing = cases.filter((c) => {
+      if (!("items" in c) || c.items.base !== "allItems") return false;
+      const held = new Set(allItemsExcept(c.items.except ?? []));
+      return [...counted].some((name) => !held.has(name));
+    });
+    // Sick Kid with no bottle, in each world, and many more of the glitched
+    // logics, the bunny's way through with a bottle among them
+    expect(removing.length).toBeGreaterThan(4);
+    expect(
+      removing.filter((c) => c.expected).map((c) => `${c.file}:${c.line}`),
+    ).toEqual([]);
   });
 });

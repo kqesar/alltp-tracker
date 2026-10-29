@@ -169,6 +169,8 @@ describe("porting a test file", () => {
       "tests/Inverted/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
       "tests/InvertedOverworldGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
       "tests/OverworldGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
+      "tests/InvertedMajorGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
+      "tests/MajorGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
     ]);
   });
 

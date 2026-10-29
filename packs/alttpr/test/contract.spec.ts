@@ -9,7 +9,6 @@ import {
 import { type CaseKind, type Fixture, loadFixtures } from "./fixtures";
 import { loadManifest, type Manifest } from "./manifest";
 import { PACK } from "./pack-subject";
-import { collectionState, EXCEPT_GROUPS } from "./upstream-state";
 
 const manifest = loadManifest();
 const fixtures = loadFixtures();
@@ -52,7 +51,7 @@ describe("the upstream contract", () => {
       regionFill: count("regionFill"),
     });
     // Location::canFill's cases: one per placement the tests try
-    expect(report.ran.fill).toBe(524);
+    expect(report.ran.fill).toBe(804);
   });
 
   it("would catch a pack that answers maybe, or yes, to everything", () => {
@@ -70,62 +69,6 @@ describe("the upstream contract", () => {
     expect(
       runUpstreamCases(fixtures, manifest, always("yes")).failures,
     ).toHaveLength(answered.filter((c) => !c.expected).length);
-  });
-});
-
-// allItemsExcept leaves removed bottles and hearts where bottleCount() and
-// hasHealth() still count them (see test/upstream-state.ts); the port does
-// not. A case that removes some is held to the same answer with them back,
-// but where the helper it reads is not one of those.
-describe("the bottles and hearts allItemsExcept still counts", () => {
-  const counted = new Set([
-    ...(EXCEPT_GROUPS.get("AnyBottle") ?? []),
-    "PieceOfHeart",
-    "HeartContainer",
-    "HeartContainerNoAnimation",
-    "BossHeartContainer",
-  ]);
-  const removes = (name: string) =>
-    counted.has(name) ||
-    (EXCEPT_GROUPS.get(name) ?? []).some((member) => counted.has(member));
-
-  it("change no answer of a ported case that removes them", () => {
-    const changed: string[] = [];
-    for (const fixture of fixtures) {
-      const world = fixture.worlds.world;
-      if (!ported.has(fixture.file) || world === undefined) continue;
-      for (const c of fixture.cases) {
-        if (c.kind !== "location" || c.items.base !== "allItems") continue;
-        const except = c.items.except ?? [];
-        const kept = except.filter((name) => !removes(name));
-        if (kept.length === except.length) continue;
-        const where = {
-          ...(fixture.setUp.bosses === undefined
-            ? {}
-            : { bosses: fixture.setUp.bosses }),
-          config: world.config,
-          locationItems: { ...fixture.setUp.locationItems, ...c.locationItems },
-          mode: world.mode,
-        };
-        const answer = (items: typeof c.items) =>
-          contractHolds(
-            c.expected,
-            PACK.location(
-              c.location,
-              collectionState(items, fixture.setUp.collected),
-              where,
-            ),
-          );
-        if (answer(c.items) !== answer({ ...c.items, except: kept })) {
-          changed.push(`${fixture.path}:${c.line} ${c.location}`);
-        }
-      }
-    }
-    // Only Sick Kid with no bottle, in each world and logic it is tested
-    // in: it reads hasABottle (Standard/LightWorld/NorthWest.php:124), which
-    // the quirk leaves alone, so upstream and the port agree there
-    expect(changed.length).toBeGreaterThan(0);
-    expect(changed.filter((c) => !c.endsWith(" Sick Kid"))).toEqual([]);
   });
 });
 
