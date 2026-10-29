@@ -2065,8 +2065,11 @@ weekly drift workflow watches them). A checkout is read, never run.
 `9MQ9gO1wMD` (vt's own layout), `0yAObedRMV` (entrance randomizer,
 "crossed", keysanity), `eM43RgZ4Gj` (the daily challenge: a race seed whose
 spoiler is `meta` only), `xvJo0drkyJ` (a mystery seed, the same) and
-`VMR3zKaKv5` (Retro, with 19 bare `Key`s) and `6v1ab7qmv7` (Standard, assured
-weapons: a sphere 0 in its playthrough). Written by
+`VMR3zKaKv5` (Retro, with 19 bare `Key`s), `6v1ab7qmv7` (Standard, assured
+weapons: a sphere 0 in its playthrough), and one Open seed per glitched
+logic, each with its playthrough: `kGZmYlABym` (Overworld Glitches),
+`lMjaek1VGo` (Hybrid Major Glitches), `ZGLqKd8NMk` (Major Glitches) and
+`4v5L3pl6Mq` (No Logic). Written by
 
 ```sh
 pnpm --filter @alltp/pack-alttpr spoiler-fixtures <hash>…
