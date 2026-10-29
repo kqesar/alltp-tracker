@@ -433,8 +433,22 @@ function spotRules(
       RULE_TABLES.locations[name]?.req ?? "true",
     ]),
   );
+  // Rules.py:454: a ganonhunt's Ganon wants the pieces asked for. The
+  // translation reads the goal as no ganonhunt (er-rules.mjs WORLD), since
+  // `not state.has(...)` has no monotone form there; ported here as the
+  // fact the pack holds once they are found (tracker.ts `ganonhuntPieces`)
+  locations.set(
+    GANON,
+    and(
+      locations.get(GANON) ?? "true",
+      "!setting(ganonhuntGoal) | ganonhuntPieces",
+    ),
+  );
   return { exits, locations };
 }
+
+/** The location Ganon is beaten at. */
+const GANON = "Ganon";
 
 /**
  * The bunny's rules (set_bunny_rules, Rules.py:1520-1589). Where the

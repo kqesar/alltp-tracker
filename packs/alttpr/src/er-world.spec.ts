@@ -138,6 +138,16 @@ describe("the entrance randomizer's world", () => {
     );
   });
 
+  it("asks a ganonhunt's Ganon for the pieces (Rules.py:454)", () => {
+    const hunt = settingsFromUpstream("open", { goal: "ganonhunt" });
+    const without = allBut("ganonhuntPieces");
+    expect(at(vanilla, without, "Ganon", OPEN)).toBe("yes");
+    expect(at(vanilla, without, "Ganon", hunt)).toBe("no");
+    expect(at(vanilla, { ...without, ganonhuntPieces: 1 }, "Ganon", hunt)).toBe(
+      "yes",
+    );
+  });
+
   it("takes the pearl in the dark world, the bunny's rules", () => {
     // Up the Dark World's mountain by the teleporter, no pearl asked; its
     // cave lies in the dark world once the regions are marked
