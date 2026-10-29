@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.66.0](https://github.com/kqesar/alltp-tracker/compare/v2.65.1...v2.66.0) (2026-10-29)
+
+
+### ✨ Features
+
+* **alttpr:** read what each bottle holds and the bomb and arrow capacities ([2fe4cc9](https://github.com/kqesar/alltp-tracker/commit/2fe4cc9541f2fb93fc8a5105bed0562c1bc197bd))
+* **web:** draw each bottle with the game's own sprite, the mushroom too ([c312651](https://github.com/kqesar/alltp-tracker/commit/c312651b4a8a6e6e55706f9af12bc69f84f4dfc5))
+* **web:** draw the Triforce piece with the randomizer's own sprite ([e7ea2dd](https://github.com/kqesar/alltp-tracker/commit/e7ea2dd845aa7f2e5f023dfef6b6c28e332bd32d))
+* **web:** grey Ganon's crystals in a run whose goal skips him ([962bdcd](https://github.com/kqesar/alltp-tracker/commit/962bdcd6f381f4c31e1a851f5d557987005bd641))
+* **web:** keep a scene sized for the grid with the stream view's layout=grid ([cbce456](https://github.com/kqesar/alltp-tracker/commit/cbce456f73773055212c92dea755fc313c5e73fd))
+* **web:** lay the board out by world, with the bottles, capacities and crystals ([05e082b](https://github.com/kqesar/alltp-tracker/commit/05e082bfb71722a756bf634d05fe44773701104a))
+* **web:** lay what each bottle holds and the capacities the game reads ([d4a3ba4](https://github.com/kqesar/alltp-tracker/commit/d4a3ba4ee04e7c2b70654d044e2c97f20619ecce))
+
+
+### 📚 Documentation
+
+* **autotrack:** say Race Mode reads the heart pieces toward the next heart ([8f0d1ed](https://github.com/kqesar/alltp-tracker/commit/8f0d1ed2eaa1cdc4aaafaa34273a659bb137d265))
+* ship the sprites' licence notices beside them ([9fc9df6](https://github.com/kqesar/alltp-tracker/commit/9fc9df615b96793a5a0b5e28795a59ccd65cfc1a))
+* **web:** say the overlay's items keep a fixed order ([36a3553](https://github.com/kqesar/alltp-tracker/commit/36a3553a4920d42c2b46c0a23d32165b4c1b4bd0))
+
 ## [2.65.1](https://github.com/kqesar/alltp-tracker/compare/v2.65.0...v2.65.1) (2026-10-29)
 
 
