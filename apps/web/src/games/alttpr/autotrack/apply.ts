@@ -42,7 +42,12 @@ import {
   prizeOf,
 } from "@/games/alttpr/autotrack/table";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
-import { type Hearts, heartsOf, heartsValue } from "@/games/alttpr/data/items";
+import {
+  BOTTLE_SLOTS,
+  type Hearts,
+  heartsOf,
+  heartsValue,
+} from "@/games/alttpr/data/items";
 import { bossesMayMove, wildItems } from "@/games/alttpr/data/presets";
 import { knownBossCell, valueOfBoss } from "@/games/alttpr/logic/knownBosses";
 import { ACTIVATION, ESCAPE } from "@/games/alttpr/logic/packItems";
@@ -344,6 +349,33 @@ const healthCells = (health: {
   return { heartquarters: held.quarters, hearts: held.hearts };
 };
 
+/**
+ * What each bottle Link has holds, in its slot's cell. The cells of bottles
+ * he has not found are left alone: the game says nothing of them.
+ */
+const bottleCells = (
+  bottles: AutotrackReading["bottles"],
+): Record<string, CellValue> =>
+  typeof bottles === "string"
+    ? {}
+    : Object.fromEntries(
+        bottles
+          .slice(0, BOTTLE_SLOTS.length)
+          .map((content, index) => [BOTTLE_SLOTS[index], content]),
+      );
+
+/**
+ * The bomb and arrow capacities, as the game holds them. Race Mode never
+ * reads them (the pack's `capacities`: v2.0 does not name them), so they
+ * are the player's there.
+ */
+const capacityCells = (
+  capacities: AutotrackReading["capacities"],
+): Record<string, CellValue> =>
+  typeof capacities === "string"
+    ? {}
+    : { arrowcapacity: capacities.arrows, bombcapacity: capacities.bombs };
+
 /** The board's cells the game settles, and the value each shows. */
 export const gameCells = (
   reading: AutotrackReading,
@@ -357,6 +389,10 @@ export const gameCells = (
   // The hearts on screen and the pieces toward the next, which Race Mode
   // reads too (v2.0's heart count and heart piece count)
   ...(typeof reading.health === "object" ? healthCells(reading.health) : {}),
+  // What the bottles hold, Race Mode too (v2.0: "bottle contents"), and the
+  // capacities, outside it
+  ...bottleCells(reading.bottles),
+  ...capacityCells(reading.capacities),
   // The Triforce pieces found, Race Mode too (v2.0 lists them as items), and
   // the pieces the ROM asks for, which the seed's settings state outside it
   ...(typeof reading.pieces === "number" ? { triforce: reading.pieces } : {}),
