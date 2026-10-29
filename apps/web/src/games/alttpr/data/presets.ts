@@ -36,12 +36,11 @@ type EntranceShuffle =
  * the glitched logics a seed may be generated for, set by a seed's import,
  * autotracking or by hand (`TUNING`). The pack reads each with its logic's
  * glitch flags (config/logic.php) and the boots a glitched world starts
- * with; a logic whose port it does not hold yet is not modelled
- * (`logicModelled`), and its run shows every check as maybe. The six tricks
- * of the Tricks dialog are no logic of alttpr.com's: Overworld Glitches
- * turns four of them on, with boots clips, mirror clips and super speed
- * besides (config/logic.php:5-13); the Minor Glitches logic left in VT8.25
- * (resources/views/updates.blade.php:965).
+ * with; No Logic with those the player plays it with (`playGlitches`). The
+ * six tricks of the Tricks dialog are no logic of alttpr.com's: Overworld
+ * Glitches turns four of them on, with boots clips, mirror clips and super
+ * speed besides (config/logic.php:5-13); the Minor Glitches logic left in
+ * VT8.25 (resources/views/updates.blade.php:965).
  */
 export type Glitches =
   | "overworld_glitches"
@@ -54,16 +53,6 @@ export type Glitches =
  * with: a glitched logic's, or none.
  */
 export type PlayGlitches = Exclude<Glitches, "no_logic">;
-
-/**
- * The logics the pack ports and holds to upstream's tests: None, then each
- * glitched logic once its port lands. A run of another is not modelled.
- */
-const PORTED_LOGICS: ReadonlySet<PlayGlitches | "none"> = new Set([
-  "none",
-  "overworld_glitches",
-  "hybrid_major_glitches",
-]);
 
 /**
  * alttpr.com's dungeon items (config/alttp.php:185-190): which of a
@@ -262,6 +251,7 @@ export const presets: Preset[] = [
  */
 export const crossedLogic = (settings: RunSettings): boolean =>
   settings.entranceShuffle === "crossed" &&
+  !glitchedLogic(settings) &&
   (settings.mode === "open" || settings.mode === "standard") &&
   settings.dungeonItems === "full" &&
   !bossesMayMove(settings);
@@ -297,28 +287,33 @@ export const entrancesKnown = (settings: RunSettings): boolean =>
  */
 export const unmodelledReasons = (settings: RunSettings): string[] => {
   const reasons: string[] = [];
-  const glitches = glitchesOf(settings);
-  if (glitches === "no_logic") {
-    const play = playGlitchesOf(settings);
-    if (!PORTED_LOGICS.has(play))
-      reasons.push(`No Logic played with ${GLITCHES_LABELS[play]}`);
-  } else if (!PORTED_LOGICS.has(glitches)) {
-    reasons.push(GLITCHES_LABELS[glitches]);
-  }
   const { entranceShuffle: shuffle, mode } = settings;
-  if (shuffle !== "none" && !crossedLogic(settings)) {
-    if (shuffle !== "crossed")
-      reasons.push(`${ENTRANCE_LABELS[shuffle]} entrance shuffle`);
-    else if (mode !== "open" && mode !== "standard")
-      reasons.push(`Crossworld entrances in the ${MODE_LABELS[mode]} world`);
-    else if (settings.dungeonItems !== "full")
-      reasons.push(
-        "Crossworld entrances with dungeon items kept in their dungeons",
-      );
-    else reasons.push("shuffled bosses behind Crossworld entrances");
-  }
+  if (shuffle === "none") return reasons;
+  // alttpr.com sends no glitched seed to the entrance randomizer, whose
+  // rules are NoGlitches' (EntranceRandomizer.php:83-91)
+  if (glitchedLogic(settings))
+    reasons.push(
+      `${GLITCHES_LABELS[glitchesOf(settings)]} with shuffled entrances`,
+    );
+  if (shuffle !== "crossed")
+    reasons.push(`${ENTRANCE_LABELS[shuffle]} entrance shuffle`);
+  else if (mode !== "open" && mode !== "standard")
+    reasons.push(`Crossworld entrances in the ${MODE_LABELS[mode]} world`);
+  else if (settings.dungeonItems !== "full")
+    reasons.push(
+      "Crossworld entrances with dungeon items kept in their dungeons",
+    );
+  else if (bossesMayMove(settings))
+    reasons.push("shuffled bosses behind Crossworld entrances");
   return reasons;
 };
+
+/**
+ * Whether a run's seed was generated for a glitched logic (Overworld
+ * Glitches, Hybrid Major Glitches or Major Glitches): No Logic is no logic.
+ */
+export const glitchedLogic = (settings: RunSettings): boolean =>
+  settings.glitches !== undefined && settings.glitches !== "no_logic";
 
 /**
  * Whether a run's seed has No Logic: the map shows what the glitches the
@@ -507,16 +502,8 @@ export const TUNING = {
     ["normal", "hard", "expert", "superexpert", "crowd_control"],
     POOL_LABELS,
   ),
-  // The logics the pack ports, as each lands
   playGlitches: ordered<PlayGlitches | "none">(
-    (
-      [
-        "none",
-        "overworld_glitches",
-        "hybrid_major_glitches",
-        "major_glitches",
-      ] as const
-    ).filter((glitches) => PORTED_LOGICS.has(glitches)),
+    ["none", "overworld_glitches", "hybrid_major_glitches", "major_glitches"],
     GLITCHES_LABELS,
   ),
   swordless: [
