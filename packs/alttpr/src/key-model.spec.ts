@@ -46,6 +46,13 @@ const HMG_STANDARD = settingsFromUpstream("standard", {
 const HMG_INVERTED = settingsFromUpstream("inverted", {
   logic: "HybridMajorGlitches",
 });
+const MG_OPEN = settingsFromUpstream("open", { logic: "MajorGlitches" });
+const MG_STANDARD = settingsFromUpstream("standard", {
+  logic: "MajorGlitches",
+});
+const MG_INVERTED = settingsFromUpstream("inverted", {
+  logic: "MajorGlitches",
+});
 const fillers = new Map<AlttprSettings, Filler>();
 function fillerOf(settings: AlttprSettings): Filler {
   let found = fillers.get(settings);
@@ -241,15 +248,21 @@ describe("the key model on real dungeons", () => {
     expect(shop.location("palace-of-darkness/boss")).toBe("yes");
   });
 
-  it("trusts no dungeon a Hybrid Major Glitches clip ties to another's keys", () => {
-    // Swamp Palace's rules read Misery Mire's and Tower of Hera's keys there
+  it("reads a Hybrid Major Glitches clip by the gating dungeons' keys in hand", () => {
+    // Swamp Palace's rules read Misery Mire's and Tower of Hera's keys
+    // there, both read by a way in: held at what is surely in hand, they
+    // leave it safe with everything held, as without the clip
     const top = Object.fromEntries(
       ITEMS.filter((item) => !/^(key|bigKey)/.test(item.id)).map(
         ({ id, max }) => [id, max],
       ),
     );
     expect(model(top, OWG_OPEN).safe("swamp-palace")).toBe(true);
-    expect(model(top, HMG_OPEN).safe("swamp-palace")).toBe(false);
+    expect(model(top, HMG_OPEN).safe("swamp-palace")).toBe(true);
+    // Without the hookshot, a key may sit where the player cannot follow
+    expect(model({ ...top, hookshot: 0 }, HMG_OPEN).safe("swamp-palace")).toBe(
+      false,
+    );
     // Tower of Hera stays in logic by its own way, which reads no key
     expect(model(top, HMG_OPEN).location("tower-of-hera/big-chest")).toBe(
       "yes",
@@ -361,6 +374,8 @@ describe("the key model's laws", () => {
     ["Open, No Logic", noLogicSettings(OPEN)],
     ["Open, Hybrid Major Glitches", HMG_OPEN],
     ["Inverted, Hybrid Major Glitches", HMG_INVERTED],
+    ["Open, Major Glitches", MG_OPEN],
+    ["Inverted, Major Glitches", MG_INVERTED],
   ] as const) {
     it(`never lowers a location when an item is added (${name})`, () => {
       const f = fillerOf(settings);
@@ -498,12 +513,13 @@ const isKey = (name: string) => /^(key|bigKey)[A-Z]/.test(name);
 
 /** A world's name in a test's: its world, and its logic when glitched. */
 const nameOf = (settings: AlttprSettings) =>
-  `${settings.invertedMode ? "Inverted" : settings.standardMode ? "Standard" : "Open"}${settings.canOneFrameClipUW ? ", Hybrid Major Glitches" : settings.canBootsClip ? ", Overworld Glitches" : ""}`;
+  `${settings.invertedMode ? "Inverted" : settings.standardMode ? "Standard" : "Open"}${settings.canOWYBA ? ", Major Glitches" : settings.canOneFrameClipUW ? ", Hybrid Major Glitches" : settings.canBootsClip ? ", Overworld Glitches" : ""}`;
 
 /**
  * The ways in that read a key: Hybrid Major Glitches' alone, each behind
  * its one-frame clip underworld (canOneFrameClipUW): into Tower of Hera
- * from Misery Mire, and in Inverted into Desert Palace from Thieves' Town.
+ * and Swamp Palace from Misery Mire, and in Inverted into Desert Palace
+ * from Thieves' Town.
  */
 const waysInWithKeys = (settings: AlttprSettings): readonly string[] => {
   if (!settings.canOneFrameClipUW) return [];
@@ -515,6 +531,9 @@ const waysInWithKeys = (settings: AlttprSettings): readonly string[] => {
         ]
       : []),
     "miseryMire -> towerOfHeraMire: keyD6",
+    "miseryMire -> swampPalace: bigKeyP3",
+    "miseryMire -> swampPalace: bigKeyD6",
+    "miseryMire -> swampPalace: keyD6",
   ];
 };
 
@@ -552,6 +571,9 @@ describe("what the model's soundness rests on", () => {
     HMG_OPEN,
     HMG_STANDARD,
     HMG_INVERTED,
+    MG_OPEN,
+    MG_STANDARD,
+    MG_INVERTED,
   ]) {
     const modules = regionModules(settings);
     const ownCode = new Map<string, string>();

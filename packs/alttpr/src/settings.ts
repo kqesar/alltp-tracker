@@ -280,7 +280,21 @@ const OVERWORLD_GLITCHES: readonly GlitchFlag[] = [
 export const LOGIC_FLAGS: Readonly<Record<Logic, readonly GlitchFlag[]>> = {
   // logic.php:14-23: Overworld Glitches' and one-frame clips underworld
   HybridMajorGlitches: [...OVERWORLD_GLITCHES, "canOneFrameClipUW"],
-  MajorGlitches: [],
+  // logic.php:24-37
+  MajorGlitches: [
+    "canSuperBunny",
+    "canFakeFlipper",
+    "canSuperSpeed",
+    "canBootsClip",
+    "canMirrorClip",
+    "canWaterWalk",
+    "canMirrorWrap",
+    "canDungeonRevive",
+    "canOWYBA",
+    "canOneFrameClipOW",
+    "canOneFrameClipUW",
+    "canTransitionWrapped",
+  ],
   NoGlitches: [],
   OverworldGlitches: OVERWORLD_GLITCHES,
 };

@@ -79,10 +79,9 @@ describe("the settings", () => {
   it("turn on each logic's flags, and start a glitched world with the boots", () => {
     for (const logic of LOGICS) {
       const settings = settingsFromUpstream("open", { logic });
-      expect(
-        GLITCHES.filter((flag) => settings[flag]),
-        logic,
-      ).toEqual([...LOGIC_FLAGS[logic]].sort());
+      expect(GLITCHES.filter((flag) => settings[flag]).sort(), logic).toEqual(
+        [...LOGIC_FLAGS[logic]].sort(),
+      );
       // Randomizer.php:122-131
       expect(settings.bootsAtStart, logic).toBe(logic !== "NoGlitches");
       expect(

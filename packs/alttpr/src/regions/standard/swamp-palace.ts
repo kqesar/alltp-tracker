@@ -1,12 +1,11 @@
 // app/Region/Standard/SwampPalace.php: Swamp Palace, its locations and its
-// prize.
-//
-// Not ported here: the glitched branch of can_enter (185-192:
-// canOneFrameClipUW with canBootsClip, canSuperSpeed or canOneFrameClipOW),
-// which needs Misery Mire (`$mire`) and the Old Man's location (West Death
-// Mountain) besides South Dark World: an entrance comes from one region only.
+// prize. The glitched branch of can_enter (185-192: canOneFrameClipUW with
+// canBootsClip, canSuperSpeed or canOneFrameClipOW) needs Misery Mire
+// (`$mire`), the Old Man's location (West Death Mountain) and South Dark
+// World at once: a way from Misery Mire, every location guarded by the
+// others (`enteredAlsoFrom`).
 import { dungeonBoss } from "../../bosses";
-import type { RegionModule } from "../../world";
+import { enteredAlsoFrom, type RegionModule } from "../../world";
 
 /** `$mire` (75-79): one-frame clipping in from Misery Mire, with its keys. */
 const MIRE = "setting(canOneFrameClipUW) & keyD6 >= 3 & reach(miseryMire)";
@@ -33,7 +32,8 @@ const BOSS = dungeonBoss(
   },
 );
 
-export const SWAMP_PALACE = {
+/** The palace's rules as can_enter's first branch reads them. */
+const RULES = {
   file: "app/Region/Standard/SwampPalace.php",
   regions: [
     {
@@ -171,3 +171,26 @@ export const SWAMP_PALACE = {
     },
   ],
 } as const satisfies RegionModule;
+
+/**
+ * The glitched branch's clip and run (189-192): the boots clip, a spin speed
+ * or a one-frame clip overworld.
+ */
+const CLIP_IN =
+  "(pegasusBoots & setting(canBootsClip) | setting(canSuperSpeed) & @canSpinSpeed | setting(canOneFrameClipOW))";
+
+/** The Old Man's location reached (West.php:46): `$locations["Old Man"]->canAccess`. */
+const OLD_MAN = "reach(westDeathMountain) & lamp >= setting(requireLamp)";
+
+export const SWAMP_PALACE = enteredAlsoFrom(
+  RULES,
+  "swampPalace",
+  {
+    // can_enter (177-193), its second branch: one-frame clipping in from
+    // Misery Mire with its keys (`$mire`) and either big key
+    from: "miseryMire",
+    req: `rescueZelda & (!setting(basicPlacement) | (setting(swordless) | @hasSword) & @hasHealth7 & @hasABottle) & flippers & setting(canOneFrameClipUW) & (bigKeyP3 | bigKeyD6) & keyD6 >= 3 & ${CLIP_IN}`,
+    source: "app/Region/Standard/SwampPalace.php:185",
+  },
+  `!setting(canOneFrameClipUW) | reach(southDarkWorld) & (moonPearl & magicMirror | ${OLD_MAN})`,
+);

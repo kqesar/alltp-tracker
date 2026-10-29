@@ -43,7 +43,10 @@ describe("Swamp Palace", () => {
       moonPearl: 1,
       rescueZelda: 1,
     };
-    expect(region.entrances.map((e) => e.from)).toEqual(["southDarkWorld"]);
+    expect(region.entrances.map((e) => e.from)).toEqual([
+      "southDarkWorld",
+      "miseryMire",
+    ]);
     expect(value(entrance.req, UPSTREAM_TEST, drain)).toBe("yes");
     expect(
       value(entrance.req, UPSTREAM_TEST, { ...drain, magicMirror: 0 }),
@@ -52,6 +55,50 @@ describe("Swamp Palace", () => {
     const healthy = { ...drain, bottle: 1, heartContainer: 7 };
     expect(value(entrance.req, basic, healthy)).toBe("no");
     expect(value(entrance.req, basic, { ...healthy, sword: 1 })).toBe("yes");
+  });
+
+  it("is clipped into from Misery Mire, South Dark World and the Old Man reached (185-192)", () => {
+    const hybrid = settingsFromUpstream("standard", {
+      logic: "HybridMajorGlitches",
+    });
+    const clip = region.entrances[1];
+    const clipper = {
+      bigKeyD6: 1,
+      flippers: 1,
+      keyD6: 3,
+      pegasusBoots: 1,
+      rescueZelda: 1,
+    };
+    expect(clip?.req && value(clip.req, hybrid, clipper)).toBe("yes");
+    expect(clip?.req && value(clip.req, hybrid, { ...clipper, keyD6: 2 })).toBe(
+      "no",
+    );
+    expect(clip?.req && value(clip.req, UPSTREAM_TEST, clipper)).toBe("no");
+    // Inside, every location asks the other regions: South Dark World, and
+    // the Old Man's (the Lamp) or the regular way's pearl and mirror
+    const regions = (...reached: string[]) => ({
+      regions: Object.fromEntries(
+        ["southDarkWorld", "westDeathMountain"].map((r) => [
+          r,
+          reached.includes(r) ? ("yes" as const) : ("no" as const),
+        ]),
+      ),
+      settings: hybrid,
+    });
+    const inside = (opts: ReturnType<typeof regions>, items: State) =>
+      evaluate(parse(region.locations[0]?.req ?? "false"), items, rules, opts);
+    expect(inside(regions("southDarkWorld"), clipper)).toBe("no");
+    expect(
+      inside(regions("southDarkWorld", "westDeathMountain"), {
+        ...clipper,
+        lamp: 1,
+      }),
+    ).toBe("yes");
+    expect(inside(regions("westDeathMountain"), { ...clipper, lamp: 1 })).toBe(
+      "no",
+    );
+    // NoGlitches folds the guard away
+    expect(at("entrance", UPSTREAM_TEST, {})).toBe("yes");
   });
 
   it("wants the map and compass with wild ones, which the boss may hold itself", () => {
