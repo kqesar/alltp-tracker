@@ -35,6 +35,19 @@ describe("logicWordsOf", () => {
     }
   });
 
+  it("says in logic behind shuffled entrances, whatever the glitches: the seed is NoGlitches'", () => {
+    for (const glitches of ["no_logic", "major_glitches"] as const) {
+      const words = logicWordsOf({
+        ...OPEN,
+        entranceShuffle: "full",
+        glitches,
+        playGlitches: "major_glitches",
+      });
+      expect(words.noLogic, glitches).toBe(false);
+      expect(words.yes, glitches).toBe("in logic");
+    }
+  });
+
   it("never says in logic for a No Logic seed: reachable without glitches", () => {
     const words = logicWordsOf(noLogic());
     expect(words.noLogic).toBe(true);

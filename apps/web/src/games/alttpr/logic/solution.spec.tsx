@@ -187,6 +187,32 @@ describe("a run with shuffled entrances", () => {
     expect(solutionOf(store())).toBe(solutionOf(store()));
   });
 
+  it("reads a glitched seed or a No Logic one as NoGlitches, without the boots", async () => {
+    // vt fills any shuffled seed as noglitches, no boots (EntranceRandomizer.php:84-91,
+    // Randomizer.php:122-131): a rock only the boots break stays out of logic
+    const { solver } = await import("@/games/alttpr/logic/crossed");
+    act(() => {
+      setCrossedSolver(solver);
+      store().applyPreset("crosskeys");
+      store().noteEntrance("bonk-rock-cave", "bonk-rock-cave");
+    });
+    const rocks = "pegasus-rocks";
+    expect(solutionOf(store()).tris[rocks]).toBe("no");
+    const plain = solutionOf(store());
+    for (const glitches of [
+      "overworld_glitches",
+      "major_glitches",
+      "no_logic",
+    ] as const) {
+      act(() => store().updateSettings({ glitches }));
+      expect(solutionOf(store()), glitches).toMatchObject({ modelled: true });
+      expect(solutionOf(store()).tris[rocks], glitches).toBe("no");
+      expect(solutionOf(store()).tris, glitches).toEqual(plain.tris);
+    }
+    act(() => store().setItem("boots", true));
+    expect(solutionOf(store()).tris[rocks]).toBe("yes");
+  });
+
   it("goes by the entrance randomizer's world for the go mode", async () => {
     const { solver } = await import("@/games/alttpr/logic/crossed");
     act(() => {

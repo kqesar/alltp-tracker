@@ -75,36 +75,36 @@ describe("MapPanel", () => {
     render(<MapPanel />);
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
 
-    // Crosskeys set by hand to a glitched logic, which alttpr.com never
-    // sends to the entrance randomizer
     act(() => {
       useGameStore.getState().applyPreset("crosskeys");
-      useGameStore
-        .getState()
-        .updateSettings({ glitches: "overworld_glitches" });
+      useGameStore.getState().updateSettings({ entranceShuffle: "insanity" });
     });
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "Not modelled yet: Overworld Glitches with shuffled entrances. Every check shows as maybe.",
+      "Not modelled yet: the Insanity entrance shuffle. Every check shows as maybe.",
     );
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });
 
-  it("says a glitched seed behind shuffled entrances is not modelled, and shows no marker in logic", () => {
-    act(() =>
-      useGameStore.getState().applyRun("crosskeys", {
-        ...getPreset("crosskeys").settings,
-        glitches: "major_glitches",
-      }),
-    );
-    render(<MapPanel />);
-
-    expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "Not modelled yet: Major Glitches with shuffled entrances. Every check shows as maybe.",
-    );
-    expect(screen.getByTestId("marker-sahasrahlas-hut")).toHaveAccessibleName(
-      /: maybe available$/,
-    );
-    expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
+  it("reads a glitched seed behind shuffled entrances as the entrance randomizer's NoGlitches", () => {
+    // vt hands it to the randomizer as noglitches, without the boots
+    // (EntranceRandomizer.php:84-91, Randomizer.php:122-131)
+    for (const glitches of [
+      "overworld_glitches",
+      "major_glitches",
+      "no_logic",
+    ] as const) {
+      act(() =>
+        useGameStore.getState().applyRun("crosskeys", {
+          ...getPreset("crosskeys").settings,
+          glitches,
+        }),
+      );
+      const { unmount } = render(<MapPanel />);
+      expect(screen.getByTestId("logic-note")).toHaveTextContent(
+        "The logic follows the entrances you noted: a check behind a door you have not noted stays out of logic. A seed with shuffled entrances is filled without glitches, whatever its Glitches: the map shows what is in logic without them, and Link starts without the boots.",
+      );
+      unmount();
+    }
   });
 
   it("reads an Overworld Glitches seed by its logic, the boots given", () => {
@@ -163,12 +163,12 @@ describe("MapPanel", () => {
       useGameStore.getState().applyRun("open", {
         ...getPreset("open").settings,
         entranceShuffle: "insanity",
-        glitches: "major_glitches",
+        mode: "inverted",
       }),
     );
     render(<MapPanel />);
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "Not modelled yet: Major Glitches with shuffled entrances and the Insanity entrance shuffle. Every check shows as maybe.",
+      "Not modelled yet: the Insanity entrance shuffle and shuffled entrances in the Inverted world. Every check shows as maybe.",
     );
   });
 

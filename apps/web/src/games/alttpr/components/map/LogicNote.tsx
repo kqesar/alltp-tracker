@@ -2,6 +2,7 @@ import { useShallow } from "zustand/react/shallow";
 import {
   crossedLogic,
   GLITCHES_LABELS,
+  glitchesOf,
   isHidden,
   noLogicRun,
   playGlitchesOf,
@@ -18,7 +19,8 @@ const listOf = (items: readonly string[]) =>
 /**
  * What the map's states rest on, when not the whole world: with shuffled
  * entrances, the doors noted (a check behind a door not noted stays out of
- * logic); under logic the pack does not model yet, the causes by name
+ * logic), and, when the run names glitches, that such a seed is filled
+ * without them; under logic the pack does not model yet, the causes by name
  * (`unmodelledReasons`: a glitched logic, an entrance shuffle, the
  * Inverted world's entrances), "not modelled yet", and that every check is
  * maybe; in a No Logic run, that the seed promises no route and what the
@@ -39,6 +41,13 @@ export const LogicNote = () => {
   const glitchesHidden = useGameStore((state) =>
     isHidden(state.settings, "glitches"),
   );
+  // Set to any, or not known yet: a seed behind shuffled entrances ignores
+  // them (`entranceRandomized`)
+  const glitched = useGameStore(
+    (state) =>
+      isHidden(state.settings, "glitches") ||
+      glitchesOf(state.settings) !== "none",
+  );
   if (entrancesHidden)
     return (
       <p className="logic-note" data-testid="logic-note">
@@ -51,6 +60,14 @@ export const LogicNote = () => {
       <p className="logic-note" data-testid="logic-note">
         The logic follows the entrances you noted: a check behind a door you
         have not noted stays out of logic.
+        {glitched && (
+          <>
+            {" "}
+            A seed with shuffled entrances is filled without glitches, whatever
+            its <strong>Glitches</strong>: the map shows what is in logic
+            without them, and Link starts without the boots.
+          </>
+        )}
       </p>
     );
   if (reasons.length === 0 && noLogic)
