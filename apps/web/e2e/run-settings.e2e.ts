@@ -152,6 +152,41 @@ test("a run type whose logic is not modelled says so, every check maybe", async 
   expect(violations.map(({ id }) => id)).toEqual([]);
 });
 
+test("a No Logic run shows what the glitches picked reach, never in logic", async ({
+  page,
+}) => {
+  await openTracker(page);
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const dialog = runTypes(page);
+  await dialog
+    .getByRole("combobox", { name: "Glitches" })
+    .selectOption("no_logic");
+  const played = dialog.getByRole("combobox", { name: "Played with" });
+  await expect(played).toHaveValue("none");
+  await dialog.getByRole("button", { name: "Close" }).click();
+
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "No Logic: the seed promises no route, so nothing is in logic. The map shows what you can reach without glitches",
+  );
+  const hobo = page.getByTestId("marker-hobo");
+  await expect(hobo).toHaveAccessibleName(/: out of logic$/);
+
+  // Under the bridge with a fake flipper, once played with Overworld Glitches
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await played.selectOption("overworld_glitches");
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(hobo).toHaveAccessibleName(/: available$/);
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "with Overworld Glitches",
+  );
+  const { violations } = await new AxeBuilder({ page })
+    .include(".map-panel")
+    .exclude(".mapspan")
+    .withTags(WCAG_AA)
+    .analyze();
+  expect(violations.map(({ id }) => id)).toEqual([]);
+});
+
 test("shows the key cells from the Mode dialog, by keyboard too", async ({
   page,
 }) => {
@@ -249,7 +284,7 @@ for (const width of WIDTHS) {
     await openTracker(page);
     await page.getByRole("button", { name: /^Mode/ }).click();
     const dialog = runTypes(page);
-    await expect(dialog.getByRole("combobox")).toHaveCount(10);
+    await expect(dialog.getByRole("combobox")).toHaveCount(11);
 
     await expect(
       dialog.getByRole("checkbox", { name: "Show key cells" }),
