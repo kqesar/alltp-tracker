@@ -6,13 +6,16 @@
 // of a sphere must be `yes` (the contract: upstream reaches it, so must we).
 import { describe, expect, it } from "vitest";
 import {
+  bossesKnown,
   type ErSeed,
   erSeed,
   erSeedHashes,
   holding,
   knowing,
+  shopsSelling,
 } from "../test/er-seeds";
 import { entranceNamed, erLocationId, targetNamed } from "./entrances";
+import er from "./entrances/er.json" with { type: "json" };
 import { crossedConnections, erWorld, solveFacts } from "./er-world";
 import { settingsFromUpstream } from "./settings";
 
@@ -46,6 +49,13 @@ const spheresOf = (spoiler: ErSeed["spoiler"]) =>
     )
     .sort(([a], [b]) => Number(a) - Number(b));
 
+/** A region's id in the entrance randomizer's world, by its name. */
+const regionNamed = (name: string): string => {
+  const found = er.regions.find((r) => r.name === name);
+  if (found === undefined) throw new RangeError(`No region "${name}"`);
+  return found.id;
+};
+
 /** A world name's `:1` suffix is the world's number; the pack has one. */
 const plain = (name: string) => name.replace(/:1$/, "");
 
@@ -57,11 +67,33 @@ const plain = (name: string) => name.replace(/:1$/, "");
 function misses(hash: string): string[] {
   const { spoiler } = erSeed(hash);
   const world = worldOf(spoiler);
-  const knowledge = knowing(spoiler.Special);
+  const knowledge = {
+    ...knowing(spoiler.Special),
+    ...bossesKnown(spoiler.Bosses),
+  };
+  // A retro seed's shops: the player marks the key shop (shopKey) or an
+  // arrow shop (shopArrow) once in it, which the spoiler says which are
+  const keyShops = shopsSelling(spoiler.Shops, "Small Key (Universal)");
+  const arrowShops = shopsSelling(spoiler.Shops, "Single Arrow");
+  const marked: Record<string, number> = {};
   const held: string[] = [];
   const missed: string[] = [];
   for (const [number, sphere] of spheresOf(spoiler)) {
-    const solution = solveFacts(world, { ...holding(held), ...knowledge });
+    let solution = solveFacts(world, {
+      ...holding(held),
+      ...knowledge,
+      ...marked,
+    });
+    const inside = (shops: readonly string[]) =>
+      shops.some((shop) => solution.region(regionNamed(shop)) === "yes");
+    if (marked.shopKey === undefined && inside(keyShops)) marked.shopKey = 1;
+    if (marked.shopArrow === undefined && inside(arrowShops))
+      marked.shopArrow = 1;
+    solution = solveFacts(world, {
+      ...holding(held),
+      ...knowledge,
+      ...marked,
+    });
     for (const location of Object.keys(sphere)) {
       const answer = solution.location(erLocationId(plain(location)));
       if (answer !== "yes")
@@ -70,27 +102,6 @@ function misses(hash: string): string[] {
     held.push(...Object.values(sphere).map(plain));
   }
   return missed;
-}
-
-/**
- * Whether the entrance randomizer's world answers a boss-shuffle seed as if
- * the bosses were not shuffled, in the state half its playthrough leads to.
- * It reads no boss slot (`rules.json` holds the vanilla bosses' rules alone).
- */
-function ignoresBossShuffle(hash: string): boolean {
-  const { spoiler } = erSeed(hash);
-  const spheres = spheresOf(spoiler);
-  const state = {
-    ...holding(
-      spheres
-        .slice(0, Math.floor(spheres.length / 2))
-        .flatMap(([, sphere]) => Object.values(sphere).map(plain)),
-    ),
-    ...knowing(spoiler.Special),
-  };
-  const answers = (bossShuffle?: string) =>
-    solveFacts(worldOf(spoiler, bossShuffle), state).locations();
-  return JSON.stringify(answers()) === JSON.stringify(answers("none"));
 }
 
 /**
@@ -103,13 +114,6 @@ function ignoresBossShuffle(hash: string): boolean {
 const PENDING: Readonly<
   Record<string, { reason: string; pinned?: () => boolean }>
 > = {
-  "0yAObLe6MV": {
-    // The spheres hold, the ER world being blind to which boss is where:
-    // that proves nothing of boss shuffle, so the blindness is pinned
-    pinned: () => ignoresBossShuffle("0yAObLe6MV"),
-    reason:
-      "boss shuffle full: the ER world reads no boss slot (rules.json has the vanilla bosses)",
-  },
   "6GKBQZ3pye": {
     reason:
       "standard dungeon items (keys in their dungeon, the ER world reads them as items) and the simple shuffle's pools",
@@ -129,10 +133,6 @@ const PENDING: Readonly<
   qMleRm5avd: {
     reason:
       "standard dungeon items (every miss is a dungeon's) and the restricted shuffle's pools",
-  },
-  ry08p2d9y5: {
-    reason:
-      'Retro: the pack knows no "Take-Any #4" target, and the spoiler spells its keys as a bare "Key"',
   },
 };
 
