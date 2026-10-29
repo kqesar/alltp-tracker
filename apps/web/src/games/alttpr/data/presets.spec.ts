@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  bossesMayMove,
   crossedLogic,
   DEFAULT_PRESET_ID,
   describeSettings,
@@ -87,12 +86,12 @@ describe("presets", () => {
     expect(unmodelledReasons({ ...crosskeys, mode: "inverted" })).toEqual([
       "Crossworld entrances in the Inverted world",
     ]);
-    expect(unmodelledReasons({ ...crosskeys, bossShuffle: "full" })).toEqual([
-      "shuffled bosses behind Crossworld entrances",
-    ]);
+    expect(unmodelledReasons({ ...crosskeys, bossShuffle: "full" })).toEqual(
+      [],
+    );
   });
 
-  it("says a run's boss shuffle, and models none behind shuffled entrances", () => {
+  it("says a run's boss shuffle, and models it behind shuffled entrances", () => {
     const open = getPreset("open").settings;
     const bosses = (settings: typeof open) =>
       describeSettings(settings).find((row) => row.label === "Boss shuffle");
@@ -104,19 +103,18 @@ describe("presets", () => {
     expect(bosses({ ...open, bossShuffle: "full" })?.value).toBe("Full");
     // Mystery hides it until the player finds it
     expect(bosses(getPreset("mystery").settings)?.value).toBe("?");
-    expect(bossesMayMove(open)).toBe(false);
-    expect(bossesMayMove(getPreset("mystery").settings)).toBe(true);
-    // vt's logic reads the shuffle; the entrance randomizer's port does not
+    // vt's logic reads the shuffle, and so does the entrance randomizer's
+    // port, its boss slots read alike
     expect(logicModelled({ ...open, bossShuffle: "random" })).toBe(true);
     const crosskeys = getPreset("crosskeys").settings;
     for (const settings of [
       { ...crosskeys, bossShuffle: "simple" as const },
       { ...crosskeys, hidden: ["bossShuffle" as const] },
+      { ...crosskeys, bossShuffle: "none" as const },
     ]) {
-      expect(crossedLogic(settings)).toBe(false);
-      expect(logicModelled(settings)).toBe(false);
+      expect(crossedLogic(settings)).toBe(true);
+      expect(logicModelled(settings)).toBe(true);
     }
-    expect(crossedLogic({ ...crosskeys, bossShuffle: "none" })).toBe(true);
   });
 
   it("models every glitched logic, No Logic by what it is played with", () => {

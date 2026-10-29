@@ -206,6 +206,44 @@ describe("a run with shuffled entrances", () => {
       kind: "door",
     });
   });
+
+  it("reads a shuffled boss as any its slot may hold", async () => {
+    const { solver } = await import("@/games/alttpr/logic/crossed");
+    act(() => {
+      setCrossedSolver(solver);
+      store().applyPreset("crosskeys");
+      useGameStore.setState({
+        items: Object.fromEntries(
+          Object.entries(freshItems).map(([id, value]) => [
+            id,
+            typeof value === "boolean"
+              ? id !== "icerod"
+              : // Every boss left unknown (its cell's top is a boss known)
+                id.startsWith("knownboss")
+                ? 0
+                : itemsMax[id],
+          ]),
+        ) as unknown as ItemState,
+      });
+      store().noteEntrance("eastern-palace", "eastern-palace-exit");
+    });
+    const boss = "eastern-palace/boss";
+    // The Armos Knights need no ice rod
+    expect(solutionOf(store()).tris[boss]).toBe("yes");
+    // Trinexx, whom the slot may hold, does
+    act(() => store().updateSettings({ bossShuffle: "full" }));
+    expect(solutionOf(store()).tris[boss]).toBe("maybe");
+    // The boss marked (knownboss0, Eastern Palace's): the Armos Knights
+    // again (1), or Trinexx (10), whom no ice rod beats
+    act(() =>
+      useGameStore.setState((s) => ({ items: { ...s.items, knownboss0: 1 } })),
+    );
+    expect(solutionOf(store()).tris[boss]).toBe("yes");
+    act(() =>
+      useGameStore.setState((s) => ({ items: { ...s.items, knownboss0: 10 } })),
+    );
+    expect(solutionOf(store()).tris[boss]).toBe("no");
+  });
 });
 
 describe("locationStatus", () => {
