@@ -13,9 +13,12 @@ import type { RaceSetting } from "../src/race-mode";
 import { Poller } from "../src/scheduler";
 import { MemoryTransport } from "./memory-transport";
 
-/** One piece sent, and the mode the game was in throughout its tick. */
+/** One piece sent, and the mode the game was in when it was sent. */
 export interface RaceRead extends ByteRange {
-  /** The mode, null while it cannot be told; undefined on a tick it changed. */
+  /**
+   * The game's mode (null while it cannot be told), including on the tick it
+   * switched to it; undefined for the game check, read before any.
+   */
   readonly mode: string | null | undefined;
 }
 
@@ -82,8 +85,11 @@ export async function raceReads(pack: AutotrackPack): Promise<RaceRead[]> {
   const probes = probeValues(pack);
   const modes: (string | null)[] =
     probes.size === 0 ? [null] : [...probes.keys()];
-  // Forwards, then backwards: every mode entered from another
-  const order = [...modes, ...[...modes].reverse()];
+  // Every mode entered from every other
+  const order = modes.flatMap((from) =>
+    modes.filter((to) => to !== from).flatMap((to) => [from, to]),
+  );
+  if (order.length === 0) order.push(...modes);
   const memory = new Uint8Array(0x100_0000);
   const reads: RaceRead[] = [];
   for (const scenario of scenarios) {
@@ -113,14 +119,13 @@ export async function raceReads(pack: AutotrackPack): Promise<RaceRead[]> {
           memory[pack.ranges[pack.modes.probe].address] = probes.get(mode) ?? 0;
         }
         for (let t = 0; t <= pack.cycle.length; t++) {
-          const before = poller.mode;
           await poller.tick();
           if (!poller.race.active) {
             throw new Error(
               `Race Mode is off: ${scenario.setting}, flag ${scenario.flag}`,
             );
           }
-          take(before === poller.mode && before === mode ? mode : undefined);
+          take(mode);
         }
       }
       poller.close();
