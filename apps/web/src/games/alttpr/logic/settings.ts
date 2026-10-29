@@ -16,6 +16,7 @@ import {
 import {
   bossShuffleOf,
   enemyHealthOf,
+  entranceRandomized,
   type Glitches,
   glitchesOf,
   type HiddenSetting,
@@ -117,7 +118,8 @@ const built = (
  * swordless weapons when it has no sword, and its dungeon items (dungeonItems: which of them
  * may lie outside their dungeons), in the logic of its glitches (No Logic
  * read with those it is played with; not known yet, the least permissive
- * of `glitchBounds`) with randomized weapons, as the site's
+ * of `glitchBounds`; behind shuffled entrances NoGlitches whatever they
+ * are, `entranceRandomized`) with randomized weapons, as the site's
  * default preset has them (config/alttp.php:78-96). The pack models the Open, Standard, Inverted
  * and retro worlds; the entrance shuffle it does not model
  * (`logicModelled`). The same run settings always give the same object, so
@@ -125,6 +127,18 @@ const built = (
  * @param run - The run's settings: its preset's, or the seed's
  */
 export const packSettings = (run: RunSettings): AlttprSettings => {
+  // Behind shuffled entrances, NoGlitches whatever the glitches say: one
+  // object for all of them
+  if (entranceRandomized(run)) {
+    const { glitches, hidden, playGlitches, ...rest } = run;
+    const kept = hidden?.filter((setting) => setting !== "glitches");
+    return built(
+      `${keyOf({ ...rest, ...(kept?.length ? { hidden: kept } : {}) })}/er`,
+      run,
+      "NoGlitches",
+      false,
+    );
+  }
   const bounds = glitchBounds(run);
   if (bounds !== undefined) return bounds.lower;
   const glitches = glitchesOf(run);
@@ -150,14 +164,15 @@ export const packSettings = (run: RunSettings): AlttprSettings => {
  * - `upper`, Major Glitches', the boots given: every other logic's ways are
  *   among its own.
  *
- * Undefined while the glitches are known.
+ * Undefined while the glitches are known, and behind shuffled entrances,
+ * whose seed is NoGlitches whatever they are (`entranceRandomized`).
  */
 export const glitchBounds = (
   run: RunSettings,
 ):
   | { readonly lower: AlttprSettings; readonly upper: AlttprSettings }
   | undefined => {
-  if (!isHidden(run, "glitches")) return undefined;
+  if (!isHidden(run, "glitches") || entranceRandomized(run)) return undefined;
   const key = keyOf(run);
   const lower = built(`${key}/lower`, run, "NoGlitches", false);
   const unbooted = cache.get(`${key}/lower/no-logic`) ?? {

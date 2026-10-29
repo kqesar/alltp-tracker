@@ -102,6 +102,18 @@ describe("when the waits are shown", () => {
     expect(hiddenReason(noLogicLog, run, comparison)).toBe("no-logic");
   });
 
+  it("not for a No Logic run behind shuffled entrances: the entrances come first", () => {
+    const changed = {
+      ...run,
+      settings: {
+        ...run.settings,
+        entranceShuffle: "full" as const,
+        glitches: "no_logic" as const,
+      },
+    };
+    expect(hiddenReason(log, changed, comparison)).toBe("entrances");
+  });
+
   it("not for a run whose glitches are not the log's", () => {
     const changed = {
       ...run,

@@ -306,12 +306,12 @@ export const portedShuffleOf = (
  * key, map and compass in its dungeon, and the pack's key model of that
  * world reads the keys the tracker does not track (packs/alttpr/src/
  * er-keys.ts). Its boss slots read the boss shuffle as vt's world does, set
- * or hidden.
+ * or hidden. The Glitches setting changes nothing: such a seed is filled
+ * as NoGlitches, without the boots, whatever it names (`entranceRandomized`).
  */
 export const crossedLogic = (settings: RunSettings): boolean =>
   portedShuffleOf(settings) !== undefined &&
   !isHidden(settings, "entranceShuffle") &&
-  !glitchedLogic(settings) &&
   settings.mode !== "inverted";
 
 /** A run's boss shuffle: "none" when its settings name none. */
@@ -335,13 +335,12 @@ export const entrancesKnown = (settings: RunSettings): boolean =>
   settings.mode !== "inverted";
 
 /**
- * Why the pack does not model a run's logic, one phrase per cause: the
- * glitched logic the seed was generated for, an entrance shuffle the pack
- * does not port (Insanity), the Inverted world's shuffled entrances, and
- * dungeon items kept in their dungeons behind shuffled entrances (it ports
- * vt's NoGlitches without shuffled entrances, and the entrance randomizer's
- * for `crossedLogic`). Empty when the run is modelled. The one place the
- * cause is told, for the note over the map.
+ * Why the pack does not model a run's logic, one phrase per cause: an
+ * entrance shuffle the pack does not port (Insanity) and the Inverted
+ * world's shuffled entrances. The pack ports vt's logics without shuffled
+ * entrances and the entrance randomizer's NoGlitches for `crossedLogic`,
+ * whatever the run's Glitches. Empty when the run is modelled. The one
+ * place the cause is told, for the note over the map.
  */
 export const unmodelledReasons = (settings: RunSettings): string[] => {
   const reasons: string[] = [];
@@ -349,12 +348,8 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
   // Not known yet: any shuffle, or none (`LogicNote` says to set it)
   if (isHidden(settings, "entranceShuffle")) return [HIDDEN_ENTRANCES];
   if (shuffle === "none") return reasons;
-  // alttpr.com sends no glitched seed to the entrance randomizer, whose
-  // rules are NoGlitches' (EntranceRandomizer.php:83-91)
-  if (glitchedLogic(settings))
-    reasons.push(
-      `${GLITCHES_LABELS[glitchesOf(settings)]} with shuffled entrances`,
-    );
+  // Glitches are no cause: alttpr.com hands any shuffled seed to the
+  // entrance randomizer as NoGlitches (`entranceRandomized`)
   if (portedShuffleOf(settings) === undefined)
     reasons.push(`the ${ENTRANCE_LABELS[shuffle]} entrance shuffle`);
   if (mode === "inverted")
@@ -369,22 +364,29 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
 export const HIDDEN_ENTRANCES = "entrances not known yet";
 
 /**
- * Whether a run's seed was generated for a glitched logic (Overworld
- * Glitches, Hybrid Major Glitches or Major Glitches): No Logic is no logic.
- * False while a Mystery run's glitches are not known.
+ * Whether a run's seed was filled by the entrance randomizer: its entrance
+ * shuffle known and not none. alttpr.com hands such a seed to it
+ * (app/Http/Controllers/RandomizerController.php:172-176) as `--logic
+ * noglitches` whatever its Glitches: app/EntranceRandomizer.php:84-91 maps
+ * only `no_logic` to `nologic`, a name the world never holds (the
+ * controller turns it into `NoLogic`, :110-116), and the boots a glitched
+ * or No Logic world starts with come from Randomizer.php:122-131, which
+ * such a seed never runs. Its logic is the entrance randomizer's
+ * NoGlitches, without the boots (`logic/settings.ts`, `packSettings`).
  */
-export const glitchedLogic = (settings: RunSettings): boolean =>
-  !isHidden(settings, "glitches") &&
-  settings.glitches !== undefined &&
-  settings.glitches !== "no_logic";
+export const entranceRandomized = (settings: RunSettings): boolean =>
+  !isHidden(settings, "entranceShuffle") && settings.entranceShuffle !== "none";
 
 /**
  * Whether a run's seed has No Logic: the map shows what the glitches the
  * player plays it with reach, never what is in logic. False while a
- * Mystery run's glitches are not known.
+ * Mystery run's glitches are not known, and behind shuffled entrances,
+ * whose seed is filled with NoGlitches' rules (`entranceRandomized`).
  */
 export const noLogicRun = (settings: RunSettings): boolean =>
-  !isHidden(settings, "glitches") && settings.glitches === "no_logic";
+  !isHidden(settings, "glitches") &&
+  settings.glitches === "no_logic" &&
+  !entranceRandomized(settings);
 
 /** Whether the pack models a run's logic (`unmodelledReasons`). */
 export const logicModelled = (settings: RunSettings): boolean =>

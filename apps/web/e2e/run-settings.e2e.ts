@@ -141,16 +141,15 @@ test("a run type whose logic is not modelled says so, every check maybe", async 
     .getByRole("button", { name: /^Crosskeys/ })
     .click();
   await page.getByRole("button", { name: "Switch & reset" }).click();
-  // A glitched logic, which alttpr.com never sends to the entrance
-  // randomizer
+  // A shuffle the pack does not port
   await page.getByRole("button", { name: /^Mode/ }).click();
   await runTypes(page)
-    .getByRole("combobox", { name: "Glitches" })
-    .selectOption("overworld_glitches");
+    .getByRole("combobox", { name: "Entrances" })
+    .selectOption("insanity");
   await runTypes(page).getByRole("button", { name: "Close" }).click();
 
   await expect(page.getByTestId("logic-note")).toHaveText(
-    "Not modelled yet: Overworld Glitches with shuffled entrances. Every check shows as maybe.",
+    "Not modelled yet: the Insanity entrance shuffle. Every check shows as maybe.",
   );
   // No marker says available or out of logic: the Open logic would be wrong
   const markers = page.getByTestId(/^marker-/);

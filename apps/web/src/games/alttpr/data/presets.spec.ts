@@ -3,9 +3,9 @@ import {
   crossedLogic,
   DEFAULT_PRESET_ID,
   describeSettings,
+  entranceRandomized,
   entrancesKnown,
   getPreset,
-  glitchedLogic,
   HIDDEN_ENTRANCES,
   HIDEABLE,
   logicModelled,
@@ -83,19 +83,37 @@ describe("presets", () => {
     const crosskeys = getPreset("crosskeys").settings;
     expect(unmodelledReasons(open)).toEqual([]);
     expect(unmodelledReasons(crosskeys)).toEqual([]);
-    // Every glitched logic is modelled, but not behind shuffled entrances,
-    // which alttpr.com never generates (the entrance randomizer is
-    // NoGlitches)
+    // Every glitched logic is modelled. Behind shuffled entrances the seed is
+    // the entrance randomizer's NoGlitches whatever they are
+    // (EntranceRandomizer.php:84-91): they read that world, none unmodelled
     expect(unmodelledReasons({ ...open, glitches: "major_glitches" })).toEqual(
       [],
     );
+    for (const glitches of [
+      "overworld_glitches",
+      "hybrid_major_glitches",
+      "major_glitches",
+      "no_logic",
+    ] as const) {
+      const settings = { ...crosskeys, glitches };
+      expect(unmodelledReasons(settings), glitches).toEqual([]);
+      expect(crossedLogic(settings), glitches).toBe(true);
+      expect(entranceRandomized(settings), glitches).toBe(true);
+      // ... and never a No Logic run, whose map reads the player's glitches
+      expect(noLogicRun(settings), glitches).toBe(false);
+      expect(
+        describeSettings({ ...settings, playGlitches: "major_glitches" }).some(
+          (row) => row.label === "Played with",
+        ),
+        glitches,
+      ).toBe(false);
+    }
+    // Without shuffled entrances No Logic stays one
+    expect(noLogicRun({ ...open, glitches: "no_logic" })).toBe(true);
+    expect(entranceRandomized(open)).toBe(false);
     expect(
-      unmodelledReasons({ ...crosskeys, glitches: "overworld_glitches" }),
-    ).toEqual(["Overworld Glitches with shuffled entrances"]);
-    expect(crossedLogic({ ...crosskeys, glitches: "overworld_glitches" })).toBe(
-      false,
-    );
-    expect(crossedLogic({ ...crosskeys, glitches: "no_logic" })).toBe(true);
+      entranceRandomized({ ...crosskeys, hidden: ["entranceShuffle"] }),
+    ).toBe(false);
     expect(unmodelledReasons({ ...open, entranceShuffle: "insanity" })).toEqual(
       ["the Insanity entrance shuffle"],
     );
@@ -240,9 +258,6 @@ describe("presets", () => {
     expect(crossedLogic(standIn)).toBe(false);
     expect(entrancesKnown(standIn)).toBe(false);
     expect(noLogicRun(standIn)).toBe(false);
-    expect(glitchedLogic({ ...standIn, glitches: "major_glitches" })).toBe(
-      false,
-    );
     expect(unmodelledReasons(standIn)).toEqual([HIDDEN_ENTRANCES]);
     expect(
       describeSettings(standIn).some((row) => row.label === "Played with"),

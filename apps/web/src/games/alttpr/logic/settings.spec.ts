@@ -17,6 +17,7 @@ import {
   counterMax,
   dungeonAt,
   dungeonName,
+  glitchBounds,
   KEY_DUNGEONS,
   ownItems,
   packSettings,
@@ -75,6 +76,35 @@ describe("packSettings", () => {
       wildKeys: true,
       wildMaps: true,
     });
+    // ... but behind shuffled entrances the seed is the entrance randomizer's
+    // NoGlitches, without the boots, whatever it names
+    // (EntranceRandomizer.php:84-91, Randomizer.php:122-131)
+    const shuffled = run({ entranceShuffle: "full" });
+    for (const glitches of [
+      "overworld_glitches",
+      "major_glitches",
+      "no_logic",
+    ] as const) {
+      const settings = packSettings({ ...shuffled, glitches });
+      expect(settings, glitches).toBe(packSettings(shuffled));
+      expect(settings, glitches).toMatchObject({
+        bootsAtStart: false,
+        noLogic: false,
+      });
+    }
+    expect(
+      packSettings({
+        ...shuffled,
+        glitches: "no_logic",
+        playGlitches: "major_glitches",
+      }),
+    ).toBe(packSettings(shuffled));
+    // ... hidden glitches too: no bounds to read between
+    expect(glitchBounds({ ...shuffled, hidden: ["glitches"] })).toBeUndefined();
+    expect(packSettings({ ...shuffled, hidden: ["glitches"] })).toBe(
+      packSettings(shuffled),
+    );
+    expect(glitchBounds({ ...run(), hidden: ["glitches"] })).toBeDefined();
     expect(packSettings(run())).toMatchObject({
       wildBigKeys: false,
       wildCompasses: false,
