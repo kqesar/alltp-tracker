@@ -112,6 +112,11 @@ export interface DrWorldOptions {
     logic: KeyLogic,
     keys: WorldKeys,
   ) => string;
+  /**
+   * Big keys the player has no way to record (the app draws no cell for
+   * Hyrule Castle's): each reads `maybe` until held, never `no`.
+   */
+  readonly unrecorded?: readonly string[];
   /** Test only: items the `doorRule` reads beside the pack's. */
   readonly items?: readonly string[];
 }
@@ -603,10 +608,14 @@ export function drWorld(
 ): DrWorld {
   const all = { ...DR_DEFAULTS, ...settings };
   const mode = drModeOf(all);
-  const keys = worldKeys(keyHoldingOf(all), {
-    drops: all.dropShuffle === true,
-    pots: all.potKeys === true,
-  });
+  const keys = worldKeys(
+    keyHoldingOf(all),
+    { drops: all.dropShuffle === true, pots: all.potKeys === true },
+    {
+      unrecorded: new Set(options.unrecorded),
+      wild: all.wildBigKeys === true,
+    },
+  );
   const connections = options.connections ?? vanillaConnections(mode);
   const exits = exitsOf(connections, mode, options);
   const locations = new Map<string, string>();

@@ -228,13 +228,22 @@ describe("the Door Randomizer's world (door-world)", () => {
   });
 
   it("puts a big chest behind its dungeon's big key", () => {
-    const world = drWorld(settings("open"));
+    const wild = { ...settings("open"), wildBigKeys: true };
     const chest = drLocationId("Eastern Palace - Big Chest");
     const held = { bow: 1, heartContainer: 3, lamp: 1 };
-    expect(solveFacts(world, held).location(chest)).toBe("no");
-    expect(solveFacts(world, { ...held, bigKeyP1: 1 }).location(chest)).toBe(
+    const at = (world: ReturnType<typeof drWorld>, more = {}) =>
+      solveFacts(world, { ...held, ...more }).location(chest);
+    // Wild big keys: the one recorded decides
+    expect([at(drWorld(wild)), at(drWorld(wild), { bigKeyP1: 1 })]).toEqual([
+      "no",
       "yes",
-    );
+    ]);
+    // Kept in its dungeon, the big key may lie inside: maybe until held
+    const kept = drWorld(settings("open"));
+    expect([at(kept), at(kept, { bigKeyP1: 1 })]).toEqual(["maybe", "yes"]);
+    // Wild but one the player cannot record: maybe too
+    const unrecorded = drWorld(wild, { unrecorded: ["bigKeyP1"] });
+    expect(at(unrecorded)).toBe("maybe");
   });
 
   it("lets a bunny through a region of both worlds by a way from Link's own", () => {

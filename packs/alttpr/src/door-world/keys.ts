@@ -169,9 +169,20 @@ export interface WorldKeys {
   readonly forcedDrops: readonly KeyDrop[];
 }
 
+/**
+ * The keys of a world.
+ * @param bigKeys - Whether the big keys are wild (keysanity's big keys),
+ *   and the big keys the player has no way to record (by item): a big key
+ *   kept in its dungeon, or one not recorded, reads `maybe` until held, as
+ *   a small key below its number does (it may lie inside), never `no`
+ */
 export function worldKeys(
   holding: KeyHolding,
   shuffled: DropShuffle,
+  bigKeys: {
+    readonly wild: boolean;
+    readonly unrecorded?: ReadonlySet<string>;
+  } = { wild: true },
 ): WorldKeys {
   const forced = KEY_DROPS.filter(
     (d) => !(d.pot ? shuffled.pots : shuffled.drops),
@@ -197,8 +208,15 @@ export function worldKeys(
   };
   return {
     atLeast,
-    bigKeyRule: (dungeon) =>
-      or(`bigKey${codeOf(dungeon)}`, ...factsOf(dungeon, true).map(readFact)),
+    bigKeyRule: (dungeon) => {
+      const item = `bigKey${codeOf(dungeon)}`;
+      const unsure = !bigKeys.wild || bigKeys.unrecorded?.has(item) === true;
+      return or(
+        item,
+        ...factsOf(dungeon, true).map(readFact),
+        ...(unsure ? ["maybe"] : []),
+      );
+    },
     doorRule: (dungeon, rule, logic) => {
       // has_sm_key_strict: the keys found, the forced ones aside
       // (BaseClasses.py:1119-1125), as many as the chests hold

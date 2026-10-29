@@ -1141,7 +1141,9 @@ wild keys the keys recorded decide; universal keys are `maybe` (the shops
 are not ported). A vanilla drop's key is a fact once its location is
 reached (`dropKey_<location>`, as DR sweeps the forced key), unless the
 run shuffles that drop; the big key doors and chests ask the big key (or
-the escape's drop). Misery Mire's blue barriers take DR's two-key
+the escape's drop), `maybe` until held where the big keys stay in their
+dungeons or the player cannot record one (`unrecorded`: the app has no cell
+for Hyrule Castle's), as a small key below its number is. Misery Mire's blue barriers take DR's two-key
 alternative at `maybe` only: DR's code opens them with two keys, its own
 key logic seeds refuse what lies behind them with more. On other
 connections than the vanilla ones the analysis is not run (a dungeon's
