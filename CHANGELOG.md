@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.66.1](https://github.com/kqesar/alltp-tracker/compare/v2.66.0...v2.66.1) (2026-10-29)
+
+
+### 🐛 Bug Fixes
+
+* **web:** name a dungeon's boss only as far as the run knows it ([2a73ea9](https://github.com/kqesar/alltp-tracker/commit/2a73ea98444512e9cbef92b464dbaa1a923c62b8))
+
 ## [2.66.0](https://github.com/kqesar/alltp-tracker/compare/v2.65.1...v2.66.0) (2026-10-29)
 
 
