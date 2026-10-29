@@ -833,6 +833,231 @@
       "file": "tests/OverworldGlitches/TurtleRockTest.php",
       "fixture": "test/upstream/OverworldGlitches/TurtleRock.json",
       "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/DeathMountain/East.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/DeathMountain/West.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/MireTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/Mire.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/NorthEastTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/NorthEast.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/NorthWestTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/NorthWest.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/SouthTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/South.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DeathMountain/East.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DeathMountain/West.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DesertPalaceTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DesertPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/EasternPalaceTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/EasternPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/GanonsTowerTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/GanonsTower.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/HyruleCastleEscapeTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/HyruleCastleEscape.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/HyruleCastleTowerTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/HyruleCastleTower.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/IcePalaceTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/IcePalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/LightWorldTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/LightWorld.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/MiseryMireTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/MiseryMire.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/PalaceOfDarknessTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/PalaceOfDarkness.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/SkullWoodsTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/SkullWoods.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/SwampPalaceTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/SwampPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/ThievesTownTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/ThievesTown.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/TowerOfHeraTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/TowerOfHera.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/TurtleRockTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/TurtleRock.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/DeathMountain/East.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/DeathMountain/West.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/MireTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/Mire.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/NorthEastTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/NorthEast.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/NorthWestTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/NorthWest.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/SouthTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/South.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/MajorGlitches/DeathMountain/East.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/MajorGlitches/DeathMountain/West.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/DesertPalaceTest.php",
+      "fixture": "test/upstream/MajorGlitches/DesertPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/EasternPalaceTest.php",
+      "fixture": "test/upstream/MajorGlitches/EasternPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/GanonsTowerTest.php",
+      "fixture": "test/upstream/MajorGlitches/GanonsTower.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/HyruleCastleEscapeTest.php",
+      "fixture": "test/upstream/MajorGlitches/HyruleCastleEscape.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/HyruleCastleTowerTest.php",
+      "fixture": "test/upstream/MajorGlitches/HyruleCastleTower.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/IcePalaceTest.php",
+      "fixture": "test/upstream/MajorGlitches/IcePalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/LightWorldTest.php",
+      "fixture": "test/upstream/MajorGlitches/LightWorld.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/MiseryMireTest.php",
+      "fixture": "test/upstream/MajorGlitches/MiseryMire.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/OpenTest.php",
+      "fixture": "test/upstream/MajorGlitches/Open.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/PalaceOfDarknessTest.php",
+      "fixture": "test/upstream/MajorGlitches/PalaceOfDarkness.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/SkullWoodsTest.php",
+      "fixture": "test/upstream/MajorGlitches/SkullWoods.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/SwampPalaceTest.php",
+      "fixture": "test/upstream/MajorGlitches/SwampPalace.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/ThievesTownTest.php",
+      "fixture": "test/upstream/MajorGlitches/ThievesTown.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/TowerOfHeraTest.php",
+      "fixture": "test/upstream/MajorGlitches/TowerOfHera.json",
+      "status": "pending"
+    },
+    {
+      "file": "tests/MajorGlitches/TurtleRockTest.php",
+      "fixture": "test/upstream/MajorGlitches/TurtleRock.json",
+      "status": "pending"
     }
   ]
 }

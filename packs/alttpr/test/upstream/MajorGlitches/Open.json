@@ -1,0 +1,63 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/MajorGlitches/OpenTest.php",
+  "class": "MajorGlitches\\OpenEscapeTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "MajorGlitches"
+      },
+      "line": 17,
+      "mode": "open"
+    }
+  },
+  "setUp": {
+    "collected": [],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":72,"location":"Sanctuary","method":"testFillLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":74,"location":"Sewers - Secret Room - Left","method":"testFillLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":76,"location":"Sewers - Secret Room - Middle","method":"testFillLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":78,"location":"Sewers - Secret Room - Right","method":"testFillLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":80,"location":"Sewers - Dark Cross","method":"testFillLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/MajorGlitches/OpenTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":82,"location":"Hyrule Castle - Boomerang Chest","method":"testFillLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":84,"location":"Hyrule Castle - Map Chest","method":"testFillLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/MajorGlitches/OpenTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":86,"location":"Hyrule Castle - Zelda's Cell","method":"testFillLocation"},
+    {"dataSet":0,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":93,"location":"Sanctuary","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":95,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["ProgressiveGlove"],"base":"setUp"},"kind":"location","line":96,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["PowerGlove"],"base":"setUp"},"kind":"location","line":97,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["TitansMitt"],"base":"setUp"},"kind":"location","line":98,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":99,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":101,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["ProgressiveGlove"],"base":"setUp"},"kind":"location","line":102,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["PowerGlove"],"base":"setUp"},"kind":"location","line":103,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["TitansMitt"],"base":"setUp"},"kind":"location","line":104,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":10,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":105,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":107,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["ProgressiveGlove"],"base":"setUp"},"kind":"location","line":108,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":13,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["PowerGlove"],"base":"setUp"},"kind":"location","line":109,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":14,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["TitansMitt"],"base":"setUp"},"kind":"location","line":110,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":111,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":16,"expected":false,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"location","line":113,"location":"Sewers - Dark Cross","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["Lamp"],"base":"setUp"},"kind":"location","line":114,"location":"Sewers - Dark Cross","method":"testLocation"},
+    {"dataSet":18,"expected":false,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":116,"location":"Hyrule Castle - Boomerang Chest","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["KeyH2"],"base":"setUp"},"kind":"location","line":117,"location":"Hyrule Castle - Boomerang Chest","method":"testLocation"},
+    {"dataSet":20,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":119,"location":"Hyrule Castle - Map Chest","method":"testLocation"},
+    {"dataSet":21,"expected":false,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":121,"location":"Hyrule Castle - Zelda's Cell","method":"testLocation"},
+    {"dataSet":22,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":["KeyH2"],"base":"setUp"},"kind":"location","line":122,"location":"Hyrule Castle - Zelda's Cell","method":"testLocation"},
+    {"dataSet":23,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":124,"location":"Link's Uncle","method":"testLocation"},
+    {"dataSet":24,"expected":true,"file":"tests/MajorGlitches/OpenTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":126,"location":"Secret Passage","method":"testLocation"}
+  ]
+}

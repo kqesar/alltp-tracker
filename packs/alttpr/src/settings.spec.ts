@@ -159,8 +159,8 @@ describe("the presets", () => {
     const worlds = new Set(configs.map((settings) => JSON.stringify(settings)));
     // Standard, Open, Inverted and retro, and the ways the cases set maps
     // and compasses in Standard's and Inverted's; Standard, Open and
-    // Inverted in Overworld Glitches
-    expect(worlds.size).toBe(11);
+    // Inverted in Overworld Glitches and in Major Glitches
+    expect(worlds.size).toBe(14);
     expect(configs).toContainEqual(
       settingsFromUpstream("standard", {
         difficulty: "test_rules",

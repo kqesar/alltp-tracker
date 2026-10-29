@@ -37,8 +37,8 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 `test/contract.ts` checks the pack against every case of the test files it
 marks ported. `packs/alttpr/scripts/import-upstream-tests.mjs` writes them under
 `test/upstream/`: `tests/NoGlitches`, `tests/Inverted`, the glitched logics'
-`tests/OverworldGlitches` and `tests/InvertedOverworldGlitches`, and
-`tests/RetroBowTest.php`.
+`tests/OverworldGlitches`, `tests/MajorGlitches` and their Inverted suites,
+and `tests/RetroBowTest.php`.
 
 ## The world model
 
@@ -1430,7 +1430,7 @@ app counts its runs not modelled.
 | NoGlitches | none (`logic.php:4`) | `tests/NoGlitches`, `tests/Inverted` |
 | OverworldGlitches | `canSuperBunny`, `canFakeFlipper`, `canSuperSpeed`, `canBootsClip`, `canMirrorClip`, `canWaterWalk`, `canDungeonRevive` (`logic.php:5-13`) | `tests/OverworldGlitches`, `tests/InvertedOverworldGlitches` (2650 cases, every one held) |
 | HybridMajorGlitches | Overworld Glitches' and `canOneFrameClipUW` (`logic.php:14-23`) | no suite upstream: every case Overworld Glitches' suites find true (`test/contract.spec.ts`), and the order of the logics (`src/logics.spec.ts`: none reads a location or region lower than the one before it, over random states of each world) |
-| MajorGlitches | not yet | |
+| MajorGlitches | not yet | `tests/MajorGlitches`, `tests/InvertedMajorGlitches` (imported, pending) |
 
 - **The key model** rests on the same facts under Overworld Glitches: no
   way in reads a key, and an always-allowed key locks in nothing another
