@@ -130,6 +130,15 @@ describe("DR's key analysis", () => {
     ).toBe(2);
   });
 
+  it("lets no key lock itself in when every location must be reached", () => {
+    // check_for_self_lock_key only below accessibility locations (:867)
+    const hera = (accessibility: KeyAnalysisSettings["accessibility"]) =>
+      vanillaKeyLogic(settingsOf("open", { accessibility }))
+        .get("Tower of Hera")
+        ?.doorRules.get("Hera Lobby Key Stairs")?.allowSmall;
+    expect([hera("items"), hera("locations")]).toEqual([true, false]);
+  });
+
   it("leaves universal keys to the shops, but Standard's escape", () => {
     const universal = vanillaKeyLogic(
       settingsOf("open", { keyShuffle: "universal" }),

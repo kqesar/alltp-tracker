@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { OPEN, settingsFromUpstream } from "../settings";
+import { addBunnyRules } from "./bunny";
 import {
   dynamicExits,
   isStaticExit,
@@ -203,6 +204,19 @@ describe("the Door Randomizer's world (door-world)", () => {
     // On connections given, no analysis: every key of the dungeon
     const given = { connections: vanillaConnections("open") };
     expect([at({}, 1, given), at({}, 4, given)]).toEqual(["maybe", "yes"]);
+    expect(at({ universalKeys: true }, 4, given)).toBe("maybe");
+  });
+
+  it("leaves Standard's escape doors to its key, universal keys or not", () => {
+    // has_sm_key's escape key holds in Standard with vanilla doors
+    // (BaseClasses.py:1114-1116): the escape's doors ask no key bought
+    const zelda = drLocationId("Hyrule Castle - Zelda's Chest");
+    const held = { ...everything(OPEN), keyH2: 0 };
+    const standard = (more: Settings) =>
+      solveFacts(drWorld({ ...settings("standard"), ...more }), held).location(
+        zelda,
+      );
+    expect(standard({ universalKeys: true })).toBe("yes");
   });
 
   it("puts a big chest behind its dungeon's big key", () => {
@@ -212,6 +226,48 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(solveFacts(world, held).location(chest)).toBe("no");
     expect(solveFacts(world, { ...held, bigKeyP1: 1 }).location(chest)).toBe(
       "yes",
+    );
+  });
+
+  it("lets a bunny through a region of both worlds by a way from Link's own", () => {
+    // get_rule_to_add (Rules.py:2079-2161): a cave the bunny reaches on
+    // Link's side, through a cave of both, the way in from Link's world's
+    // own region and its rule; a blocked door is no way
+    const exits = [
+      {
+        from: "Paradox Cave Front",
+        name: "Paradox Shop",
+        req: "true",
+        to: "Paradox Shop",
+      },
+      {
+        blocked: true,
+        from: "East Death Mountain (Bottom)",
+        name: "A trapped door",
+        req: "true",
+        to: "Paradox Shop",
+      },
+      {
+        from: "East Death Mountain (Bottom)",
+        name: "Paradox Cave (Bottom)",
+        req: "hammer",
+        to: "Paradox Cave Front",
+      },
+    ];
+    const both = ["Paradox Shop", "Paradox Cave Front"];
+    addBunnyRules(
+      exits,
+      new Map(),
+      {
+        dark: new Set(both),
+        light: new Set([...both, "East Death Mountain (Bottom)"]),
+      },
+      "open",
+    );
+    // can_reach(entrance) and the path's rules, its own among them
+    // (path_to_access_rule, Rules.py:2065-2066)
+    expect(exits[0]?.req).toBe(
+      "((moonPearl) | ((reach(eastDeathMountainBottom)) & (hammer) & (hammer)))",
     );
   });
 

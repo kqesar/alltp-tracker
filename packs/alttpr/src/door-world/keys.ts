@@ -148,7 +148,10 @@ export type KeyHolding = "dungeon" | "wild" | "strict" | "universal";
 /** The keys of the world, for a mode and the drops shuffled. */
 export interface WorldKeys {
   readonly holding: KeyHolding;
-  /** The rule a key door asks, from its dungeon's analysis. */
+  /**
+   * The rule a key door asks, from its dungeon's analysis (universal keys
+   * aside: addKeyRules reads them as bought, `maybe`).
+   */
   doorRule(dungeon: string, rule: DoorRule, logic: KeyLogic): string;
   /**
    * The rule a small key door asks where no analysis ran: every key of its
@@ -197,9 +200,6 @@ export function worldKeys(
     bigKeyRule: (dungeon) =>
       or(`bigKey${codeOf(dungeon)}`, ...factsOf(dungeon, true).map(readFact)),
     doorRule: (dungeon, rule, logic) => {
-      // Universal keys are bought (has_sm_key, BaseClasses.py:1113-1117):
-      // the shops are not ported
-      if (holding === "universal") return "maybe";
       // has_sm_key_strict: the keys found, the forced ones aside
       // (BaseClasses.py:1119-1125), as many as the chests hold
       if (holding === "strict") {
