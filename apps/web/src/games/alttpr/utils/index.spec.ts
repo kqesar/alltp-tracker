@@ -56,12 +56,17 @@ describe("visibleRows", () => {
   it("drops a row of nothing but key cells, labels and gaps while they are hidden", () => {
     const rows = visibleRows(defaultItemGrid, false);
 
-    expect(rows).toHaveLength(defaultItemGrid.length - 1);
+    // The two rows of key cells under the dungeons' rows
+    expect(rows).toHaveLength(defaultItemGrid.length - 2);
     expect(rows.flat()).not.toContain("keys3");
-    // Ganon's Tower's boss cell keeps the castles' row
-    expect(rows.at(-1)).toContain("boss12");
-    // A key cell sharing its row with other items keeps its place
-    expect(rows.flat()).toContain("keys0");
+    expect(rows.flat()).not.toContain("keys0");
+    expect(rows.flat()).not.toContain("keylabel10");
+    // A key cell sharing its row with other cells keeps its place
+    expect(visibleRows([["keys0", "boss0"]], false)).toEqual([
+      ["keys0", "boss0"],
+    ]);
+    // Ganon's Tower's boss cell stays, with the Light World's dungeons
+    expect(rows[5]).toContain("boss12");
   });
 });
 

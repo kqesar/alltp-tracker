@@ -116,8 +116,8 @@ hosted.describe("the stream view the app serves to OBS", () => {
   }
 
   for (const [width, height] of [
-    [512, 448],
-    [1024, 896],
+    [768, 256],
+    [1536, 512],
   ] as const) {
     hosted(
       `fills a ${width} × ${height} source with the grid, the pixels whole`,

@@ -275,7 +275,7 @@ describe("GridItem", () => {
     expect(useGameStore.getState().items.magic).toBe(1);
   });
 
-  it("puts Agahnim on the castles' row, among their key cells", () => {
+  it("names Agahnim, Castle Tower's boss, as before", () => {
     render(<GridItem col={2} item="agahnim" row={7} />);
 
     const cell = screen.getByTestId("item-agahnim");
@@ -447,5 +447,248 @@ describe("GridItem", () => {
     const button = screen.getByRole("button");
     expect(button).toBeDisabled();
     expect(button).toHaveAccessibleName(/Empty slot, empty/);
+  });
+});
+
+describe("the bottles' cells", () => {
+  beforeEach(() => {
+    useGameStore.setState(useGameStore.getInitialState(), true);
+  });
+
+  const bottles = () =>
+    render(
+      <>
+        {[1, 2, 3, 4].map((slot) => (
+          <GridItem
+            col={slot}
+            item={`bottlecontents${slot}`}
+            key={slot}
+            row={4}
+          />
+        ))}
+      </>,
+    );
+
+  it("greys a bottle not found, and finds the bottles up to the one clicked", () => {
+    bottles();
+    const third = screen.getByTestId("item-bottlecontents3");
+    expect(third).toHaveAccessibleName("Bottle 3, not found. Click to change.");
+    expect(third).toHaveClass("griditem--dimmed");
+
+    fireEvent.click(third);
+    expect(useGameStore.getState().items).toMatchObject({
+      bottle: 3,
+      bottlecontents3: 0,
+    });
+    expect(screen.getByTestId("item-bottlecontents1")).toHaveAccessibleName(
+      "Bottle 1, empty. Click to change.",
+    );
+    expect(third).not.toHaveClass("griditem--dimmed");
+    expect(third.style.backgroundImage).toContain("bottle0.png");
+  });
+
+  it("steps what a bottle holds, round to empty, and back until it goes", () => {
+    act(() => useGameStore.getState().setItem("bottle", 1));
+    bottles();
+    const first = screen.getByTestId("item-bottlecontents1");
+
+    fireEvent.click(first);
+    expect(first).toHaveAccessibleName(
+      "Bottle 1, red potion. Click to change.",
+    );
+    expect(first.style.backgroundImage).toContain("bottle-red.png");
+    for (let step = 0; step < 4; step++) fireEvent.click(first);
+    expect(first).toHaveAccessibleName("Bottle 1, a bee. Click to change.");
+    fireEvent.click(first);
+    fireEvent.click(first);
+    expect(first).toHaveAccessibleName("Bottle 1, empty. Click to change.");
+
+    // Back: the content before, and from empty the bottle goes
+    fireEvent.click(first);
+    fireEvent.contextMenu(first);
+    expect(first).toHaveAccessibleName("Bottle 1, empty. Click to change.");
+    fireEvent.contextMenu(first);
+    expect(useGameStore.getState().items.bottle).toBe(0);
+    expect(first).toHaveAccessibleName("Bottle 1, not found. Click to change.");
+  });
+
+  it("reads a save made before the contents as that many empty bottles", () => {
+    const { bottlecontents2: _, ...before } = useGameStore.getState().items;
+    act(() =>
+      useGameStore.getState().loadProgress({ items: { ...before, bottle: 2 } }),
+    );
+    bottles();
+    expect(screen.getByTestId("item-bottlecontents2")).toHaveAccessibleName(
+      "Bottle 2, empty. Click to change.",
+    );
+    expect(screen.getByTestId("item-bottlecontents3")).toHaveAccessibleName(
+      "Bottle 3, not found. Click to change.",
+    );
+  });
+
+  it("forgets what the bottles beyond a lower count held", () => {
+    act(() => {
+      useGameStore.getState().setItem("bottle", 2);
+      useGameStore.getState().setItem("bottlecontents2", 4);
+      useGameStore.getState().handleItemClick("bottle", -1);
+    });
+    expect(useGameStore.getState().items).toMatchObject({
+      bottle: 1,
+      bottlecontents2: 0,
+    });
+  });
+});
+
+describe("the capacities' cells", () => {
+  beforeEach(() => {
+    useGameStore.setState(useGameStore.getInitialState(), true);
+  });
+
+  it("counts the bombs Link can hold, 5 a click, green at 50", () => {
+    render(<GridItem col={0} item="bombcapacity" row={4} />);
+    const bombs = screen.getByTestId("item-bombcapacity");
+    expect(bombs).toHaveAccessibleName(
+      "Bombs, capacity 10. Click to add an upgrade.",
+    );
+    expect(bombs).toHaveTextContent("10");
+    expect(bombs.style.backgroundImage).toContain("bomb.png");
+
+    for (let step = 0; step < 8; step++) fireEvent.click(bombs);
+    expect(bombs).toHaveTextContent("50");
+    expect(bombs.querySelector(".cell-count")).toHaveClass("cell-count--most");
+    fireEvent.click(bombs);
+    expect(useGameStore.getState().items.bombcapacity).toBe(10);
+  });
+
+  it("gives the bow's cell the arrows Link can hold, beside the bow", () => {
+    render(<GridItem col={0} item="bow" row={1} />);
+    expect(screen.getByRole("group")).toHaveAccessibleName("Bow and arrows");
+    expect(screen.getByTestId("item-bow")).toBeInTheDocument();
+    const arrows = screen.getByTestId("item-arrowcapacity");
+    expect(arrows).toHaveAccessibleName(
+      "Arrow capacity 30. Click to add an upgrade.",
+    );
+    expect(arrows).toHaveAttribute("data-grid-slot", "1");
+
+    fireEvent.click(arrows);
+    expect(arrows).toHaveTextContent("35");
+    fireEvent.contextMenu(arrows);
+    fireEvent.contextMenu(arrows);
+    expect(useGameStore.getState().items.arrowcapacity).toBe(70);
+  });
+});
+
+describe("the crystals' cells", () => {
+  beforeEach(() => {
+    useGameStore.setState(useGameStore.getInitialState(), true);
+  });
+
+  it("says what Ganon's Tower and Ganon ask for, and steps the run's setting", () => {
+    render(
+      <>
+        <GridItem col={5} item="goaltower" row={4} />
+        <GridItem col={6} item="goalganon" row={4} />
+      </>,
+    );
+    const tower = screen.getByTestId("goal-goaltower");
+    expect(tower).toHaveAccessibleName(
+      "GT 7: Ganon's Tower asks for 7 crystals, you hold 0. Click to change.",
+    );
+    expect(tower).toHaveTextContent("GT 7");
+
+    fireEvent.click(tower);
+    expect(useGameStore.getState().settings.crystalsTower).toBe(0);
+    expect(tower).toHaveClass("goal-cell--reached");
+    // One undo step, as a change in Mode is
+    act(() => useGameStore.getState().undo());
+    expect(useGameStore.getState().settings.crystalsTower).toBe(7);
+
+    fireEvent.contextMenu(screen.getByTestId("goal-goalganon"));
+    expect(useGameStore.getState().settings.crystalsGanon).toBe(6);
+  });
+
+  it("asks a Mystery run's player, from none up", () => {
+    act(() => useGameStore.getState().applyPreset("mystery"));
+    render(<GridItem col={5} item="goaltower" row={4} />);
+    const tower = screen.getByTestId("goal-goaltower");
+    expect(tower).toHaveTextContent("GT ?");
+    expect(tower).toHaveAccessibleName(
+      "GT ?: Ganon's Tower's crystals not known yet. Click to set them.",
+    );
+
+    fireEvent.click(tower);
+    expect(useGameStore.getState().settings.crystalsTower).toBe(0);
+    expect(useGameStore.getState().settings.hidden).not.toContain(
+      "crystalsTower",
+    );
+  });
+
+  it("counts the pendants and crystals the beaten bosses gave", () => {
+    act(() =>
+      useGameStore.setState((state) => ({
+        items: {
+          ...state.items,
+          boss0: 2,
+          boss3: 2,
+          boss4: 2,
+          reward0: 1,
+          reward3: 3,
+          reward4: 4,
+        },
+      })),
+    );
+    render(
+      <>
+        <GridItem col={5} item="pendants" row={5} />
+        <GridItem col={6} item="crystals" row={5} />
+      </>,
+    );
+    expect(screen.getByTestId("prize-pendants")).toHaveAccessibleName(
+      "Pendants held: 1 of 3",
+    );
+    const crystals = screen.getByTestId("prize-crystals");
+    expect(crystals).toHaveAccessibleName("Crystals held: 2 of 7");
+    expect(crystals).toHaveTextContent("2/7");
+    // They only show: no control to step
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+});
+
+describe("the dungeons' names", () => {
+  it("names every dungeon in its cell's corner, and Castle Tower over Agahnim", () => {
+    useGameStore.setState(useGameStore.getInitialState(), true);
+    const names = [
+      "EP",
+      "DP",
+      "ToH",
+      "PoD",
+      "SP",
+      "SW",
+      "TT",
+      "IP",
+      "MM",
+      "TR",
+    ];
+    render(
+      <>
+        {names.map((_, index) => (
+          <GridItem
+            col={index}
+            item={`boss${index}`}
+            // biome-ignore lint/suspicious/noArrayIndexKey: one cell a dungeon
+            key={index}
+            row={5}
+          />
+        ))}
+        <GridItem col={3} item="agahnim" row={5} />
+      </>,
+    );
+    names.forEach((name, index) => {
+      const label = screen.getByTestId(`boss-name-${index}`);
+      expect(label).toHaveTextContent(name);
+      expect(label).toHaveAttribute("aria-hidden", "true");
+    });
+    const castle = screen.getByTestId("item-agahnim").parentElement;
+    expect(castle).toHaveTextContent("CT");
   });
 });

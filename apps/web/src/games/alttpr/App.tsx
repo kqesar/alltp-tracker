@@ -1,4 +1,4 @@
-import type { MouseEvent } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import { flushSync } from "react-dom";
 import { GameShell } from "@/components/ui/GameShell";
 import { SeedPrompt } from "@/games/alttpr/components/autotrack/SeedPrompt";
@@ -6,7 +6,7 @@ import { MAP_VIEW_ID, MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import { TrackerGrid } from "@/games/alttpr/components/tracker/TrackerGrid";
 import { Tooltip } from "@/games/alttpr/components/ui/Tooltip";
 import { TrackerControls } from "@/games/alttpr/components/ui/TrackerControls";
-import { itemGridFor, PIECES_ITEM } from "@/games/alttpr/data/items";
+import { itemGridFor } from "@/games/alttpr/data/items";
 import { useAutotrack } from "@/games/alttpr/hooks/useAutotrack";
 import { useCrossedLogic } from "@/games/alttpr/hooks/useCrossedLogic";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
@@ -14,7 +14,7 @@ import { useRunAnalysis } from "@/games/alttpr/hooks/useRunAnalysis";
 import { useVoice } from "@/games/alttpr/hooks/useVoice";
 import { useCloseReview } from "@/games/alttpr/review/useReview";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-import type { MapView } from "@/games/alttpr/utils";
+import { type MapView, visibleRows } from "@/games/alttpr/utils";
 import { useUndoShortcuts } from "@/games/useUndoShortcuts";
 
 /**
@@ -31,8 +31,9 @@ function App() {
   useCrossedLogic();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const grid = useGameStore((state) => itemGridFor(state.settings));
-  // The pieces cell is a row more, which --grid-rows counts
-  const hunt = grid.some((row) => row.includes(PIECES_ITEM));
+  // The grid's height in rows sizes --cell (layout.css): the key cells'
+  // rows while they show, a retro run's shops or a hunt's pieces
+  const gridRows = visibleRows(grid, bigKeysVisible).length;
   const mapLayout = useGameStore((state) => state.mapLayout);
   const setMapView = useGameStore((state) => state.setMapView);
 
@@ -63,8 +64,9 @@ function App() {
         toolbar={<TrackerControls />}
       >
         <div
-          className={`layout${mapLayout === "stacked" ? " layout--stacked" : ""}${bigKeysVisible ? " layout--key-rows" : ""}${hunt ? " layout--pieces-row" : ""}`}
+          className={`layout${mapLayout === "stacked" ? " layout--stacked" : ""}${bigKeysVisible ? " layout--key-rows" : ""}`}
           data-testid="layout"
+          style={{ "--grid-rows": gridRows } as CSSProperties}
         >
           <TrackerGrid itemLayout={grid} />
           <MapPanel />

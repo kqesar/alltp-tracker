@@ -36,14 +36,15 @@ const press = (code: string, held: Partial<KeyboardEvent> = {}) => ({
 
 describe("the controls", () => {
   it("lists every grid item once, in reading order, then the retro shops, the hunt's pieces and the hearts", () => {
-    expect(ITEM_CONTROLS).toHaveLength(34);
+    expect(ITEM_CONTROLS).toHaveLength(40);
     expect(ITEM_CONTROLS.slice(-4)).toEqual([
       "shoparrow",
-      "shopkey",
       "triforce",
+      "shopkey",
       "hearts",
     ]);
-    expect(ITEM_CONTROLS.slice(0, 8)).toEqual([
+    // The arrows' capacity rides on the bow's cell
+    expect(ITEM_CONTROLS.slice(0, 9)).toEqual([
       "flute",
       "hookshot",
       "hammer",
@@ -52,7 +53,22 @@ describe("the controls", () => {
       "boomerang",
       "net",
       "bow",
+      "arrowcapacity",
     ]);
+    // The bottles' count, before the four bottles it says are there
+    const bottles = ITEM_CONTROLS.indexOf("bottle");
+    expect(ITEM_CONTROLS.slice(bottles - 1, bottles + 5)).toEqual([
+      "bombcapacity",
+      "bottle",
+      "bottlecontents1",
+      "bottlecontents2",
+      "bottlecontents3",
+      "bottlecontents4",
+    ]);
+    // The cells that only show, or set the run's settings, are no controls
+    for (const cell of ["pendants", "crystals", "goaltower", "goalganon"]) {
+      expect(ITEM_CONTROLS).not.toContain(cell);
+    }
     expect(new Set(ITEM_CONTROLS).size).toBe(ITEM_CONTROLS.length);
   });
 
@@ -90,7 +106,7 @@ describe("the controls", () => {
       "map12",
       "compass12",
     ]);
-    expect(CONTROLS).toHaveLength(34 + 10 * 8 - 1 + 2 + 2 + 1 + 6);
+    expect(CONTROLS).toHaveLength(40 + 10 * 8 - 1 + 2 + 2 + 1 + 6);
     expect(ACTIONS).toHaveLength(CONTROLS.length * 2);
   });
 
@@ -126,8 +142,17 @@ describe("the controls", () => {
 });
 
 describe("the default keymap", () => {
-  it("lays the grid's item block on the letter keys like two newspaper columns", () => {
+  it("keeps the letter keys of the item block as it was laid, like two newspaper columns, whatever the grid's order", () => {
     const keyOf = (item: string) => DEFAULT_KEYMAP[`advance:${item}`];
+    // The block the keys were laid on: five columns of five rows, the
+    // grid's before the dungeons had rows of their own
+    const block = [
+      ["flute", "hookshot", "hammer", "firerod", "icerod"],
+      ["bow", "lantern", "shield", "sword", "tunic"],
+      ["shovel", "book", "quake", "bombos", "ether"],
+      ["powder", "glove", "bottle", "somaria", "byrna"],
+      ["mushroom", "cape", "mirror", "moonpearl", "flippers"],
+    ];
     const keyRows = [
       ["KeyQ", "KeyW", "KeyE", "KeyR", "KeyT"],
       ["KeyA", "KeyS", "KeyD", "KeyF", "KeyG"],
@@ -136,12 +161,25 @@ describe("the default keymap", () => {
       ["KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon"],
     ];
 
-    expect(
-      defaultItemGrid.slice(0, 5).map((row) => row.slice(0, 5).map(keyOf)),
-    ).toEqual(keyRows);
+    expect(block.map((row) => row.map(keyOf))).toEqual(keyRows);
     expect(
       ["boomerang", "net", "agahnim", "boots", "magic"].map(keyOf),
     ).toEqual(["KeyN", "KeyM", "Comma", "Period", "Slash"]);
+    // The grid moved the mushroom, the gloves and the bottles: no key did
+    expect(defaultItemGrid[3]?.[0]).toBe("glove");
+    expect(keyOf("glove")).toBe("KeyU");
+  });
+
+  it("gives the controls added since no key, for the player to bind", () => {
+    for (const control of [
+      "bottlecontents1",
+      "bottlecontents4",
+      "bombcapacity",
+      "arrowcapacity",
+    ]) {
+      expect(DEFAULT_KEYMAP[`advance:${control}`]).toBeUndefined();
+      expect(ACTIONS).toContain(`advance:${control}`);
+    }
   });
 
   it("keeps each key it ever gave, whatever place the grid gives the item", () => {

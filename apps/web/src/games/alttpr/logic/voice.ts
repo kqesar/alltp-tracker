@@ -108,6 +108,14 @@ const ITEMS: readonly (readonly [
   [["glove", "gloves", "power glove"], "glove", NEXT],
   [["mitts", "titan mitt"], "glove", { atLeast: 2 }],
   [["bottle"], "bottle", NEXT],
+  // One bottle by its place: what it holds next, as its cell's click
+  [["first bottle", "bottle one"], "bottlecontents1", NEXT],
+  [["second bottle", "bottle two"], "bottlecontents2", NEXT],
+  [["third bottle", "bottle three"], "bottlecontents3", NEXT],
+  [["fourth bottle", "bottle four"], "bottlecontents4", NEXT],
+  // A capacity upgrade found: 5 more
+  [["bomb upgrade", "bomb bag"], "bombcapacity", NEXT],
+  [["arrow upgrade", "quiver"], "arrowcapacity", NEXT],
   [["heart", "heart container"], "hearts", { to: "heart" }],
   // A quarter: the fourth makes the next heart, as in the game
   [["heart piece", "piece of heart"], "hearts", { to: "piece" }],

@@ -1,4 +1,9 @@
-import { heartsAfter, heartsOf } from "@/games/alttpr/data/items";
+import {
+  bottleSlotOf,
+  CAPACITIES,
+  heartsAfter,
+  heartsOf,
+} from "@/games/alttpr/data/items";
 import { controlTitle } from "@/games/alttpr/data/keymap";
 import { isControlShown } from "@/games/alttpr/hooks/useItemShortcuts";
 import { smallKeysMax } from "@/games/alttpr/logic/settings";
@@ -74,6 +79,21 @@ export const applyVoice = (action: VoiceAction): Heard => {
     const next = Number(changedValue(change, now, 0, 3));
     if (next !== now) store.handleMedallionChange(dungeon, next);
     return { changed: next !== now, words };
+  }
+  // A bottle said changes what it holds as its click does, finding it when
+  // it is not there yet (bottleAfter)
+  if (bottleSlotOf(control) !== null) {
+    const before = store.items;
+    store.handleItemClick(control, 1);
+    return { changed: useGameStore.getState().items !== before, words };
+  }
+  // A capacity said is an upgrade found: 5 more, never past the most
+  const capacity = CAPACITIES[control];
+  if (capacity !== undefined) {
+    const was = Number(store.items[control]);
+    const next = Math.min(capacity.top, Math.max(capacity.start, was) + 5);
+    store.setItem(control, next);
+    return { changed: next !== was, words };
   }
   const now = store.items[control];
   const [min, max] =

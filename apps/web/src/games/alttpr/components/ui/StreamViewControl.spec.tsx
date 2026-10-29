@@ -135,15 +135,15 @@ describe("StreamViewControl", () => {
     expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
   });
 
-  it("recommends a source the grid fills at the icons' own size", () => {
+  it("recommends a source the band fills at the icons' own size", () => {
     // Raw text: toHaveTextContent would fold the no-break spaces
     const dialog = openDialog();
-    expect(dialog.textContent).toMatch(/512 × 448 for the crispest/);
-    expect(dialog.textContent).toMatch(/or 1024 × 896\./);
+    expect(dialog.textContent).toMatch(/768 × 256 for the crispest/);
+    expect(dialog.textContent).toMatch(/or 1536 × 512\./);
 
-    // The key cells add a row
+    // The key cells add a row, and Hyrule Castle's a column
     act(() => useGameStore.getState().setBigKeysVisible(true));
-    expect(dialog.textContent).toMatch(/512 × 512 for the crispest/);
+    expect(dialog.textContent).toMatch(/832 × 320 for the crispest/);
   });
 
   it("asks the view for the run timer, a row more, when ticked", async () => {
@@ -160,7 +160,7 @@ describe("StreamViewControl", () => {
     const url = `${obsUrl}&timer=1`;
     expect(screen.getByTestId("stream-view-url")).toHaveValue(url);
     expect(screen.getByTestId("stream-view-open")).toHaveAttribute("href", url);
-    expect(dialog.textContent).toMatch(/512 × 512 for the crispest/);
+    expect(dialog.textContent).toMatch(/768 × 320 for the crispest/);
     fireEvent.click(screen.getByTestId("stream-view-copy"));
     await screen.findByText("Copied.");
     expect(writeText).toHaveBeenCalledWith(url);

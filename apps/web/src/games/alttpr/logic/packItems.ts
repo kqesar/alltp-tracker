@@ -186,12 +186,20 @@ export const PACK_ITEMS: Readonly<Record<string, PackItem>> = {
   agahnim: { at: 1, dungeon: "castle-tower", kind: "beaten" },
   // Agahnim beaten again, atop Ganon's Tower: its map marker
   agahnim2: { at: 1, dungeon: "ganons-tower", kind: "beaten" },
+  // What each bottle holds and the bomb and arrow capacities, which no rule
+  // of the pack reads (the bottles' count is `bottle`'s)
+  arrowcapacity: NONE,
   blank: NONE,
+  bombcapacity: NONE,
   bombos: count("bombos"),
   book: count("bookOfMudora"),
   boomerang: { items: ["boomerang", "redBoomerang"], kind: "bits" },
   boots: count("pegasusBoots"),
   bottle: count("bottle"),
+  bottlecontents1: NONE,
+  bottlecontents2: NONE,
+  bottlecontents3: NONE,
+  bottlecontents4: NONE,
   bow: { items: ["silverArrowUpgrade", "bow"], kind: "bits" },
   byrna: count("caneOfByrna"),
   cape: count("cape"),

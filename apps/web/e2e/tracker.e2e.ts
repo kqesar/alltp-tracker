@@ -330,6 +330,50 @@ test.describe("a tooltip", () => {
   });
 });
 
+test("tracks what each bottle holds, the capacities and the crystals asked for", async ({
+  page,
+}) => {
+  await openTracker(page);
+
+  // A bottle found, then its contents, drawn with their own sprite
+  const second = page.getByTestId("item-bottlecontents2");
+  await expect(second).toHaveAccessibleName(
+    "Bottle 2, not found. Click to change.",
+  );
+  await second.click();
+  await second.click();
+  await expect(second).toHaveAccessibleName(
+    "Bottle 2, red potion. Click to change.",
+  );
+  await expect(second).toHaveCSS("background-image", /bottle-red\.png/);
+  await expect(page.getByTestId("item-bottlecontents1")).toHaveAccessibleName(
+    "Bottle 1, empty. Click to change.",
+  );
+
+  // The capacities, 5 a click
+  const bombs = page.getByTestId("item-bombcapacity");
+  await bombs.click();
+  await expect(bombs).toHaveAccessibleName(
+    "Bombs, capacity 15. Click to add an upgrade.",
+  );
+  const arrows = page.getByTestId("item-arrowcapacity");
+  await arrows.click({ button: "right" });
+  await expect(arrows).toHaveAccessibleName(
+    "Arrow capacity 70. Click to add an upgrade.",
+  );
+
+  // Ganon's Tower's crystals, stepped from the board, as the run's setting
+  const tower = page.getByTestId("goal-goaltower");
+  await expect(tower).toHaveAccessibleName(/^GT 7: Ganon's Tower asks for 7/);
+  await tower.click({ button: "right" });
+  await expect(tower).toHaveAccessibleName(/^GT 6: /);
+  await expect(page.getByTestId("prize-crystals")).toHaveAccessibleName(
+    "Crystals held: 0 of 7",
+  );
+  // Every dungeon named on its cell
+  await expect(page.getByTestId("boss-name-5")).toHaveText("SW");
+});
+
 test.describe("a missing item", () => {
   test.beforeEach(({ page }) => openTracker(page));
 
@@ -422,10 +466,16 @@ test.describe("a missing item", () => {
     expect(box && reward).toBeTruthy();
     if (!box || !reward) return;
 
-    // The portrait's top half, clear of the corner overlays: grey
+    // The portrait's top right quarter, clear of the corner overlays and of
+    // the dungeon's name in the top left: grey
     const portrait = await drawnSpreads(
       page,
-      { ...box, height: box.height / 2 },
+      {
+        ...box,
+        height: box.height / 2,
+        width: box.width / 2,
+        x: box.x + box.width / 2,
+      },
       0.25,
     );
     expect(Math.max(...portrait)).toBeLessThanOrEqual(3);

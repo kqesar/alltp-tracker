@@ -10,7 +10,8 @@ import { BOSS_STATES } from "@/games/alttpr/constants";
 import { itemLabels } from "@/games/alttpr/data/items";
 import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
-import { dungeonName } from "@/games/alttpr/logic/settings";
+import { knownBossShown } from "@/games/alttpr/logic/knownBosses";
+import { dungeonAt, dungeonName } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getItemBackground, isItemDimmed } from "@/games/alttpr/utils";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
@@ -30,9 +31,12 @@ type BossCellProps = {
  * reward buttons. They are siblings
  * grouped under the dungeon's name, never buttons inside a button. Ganon's
  * Tower's cell (`boss12`) has its boss, Agahnim 2 (`agahnim2`, as on its map
- * marker), and its chests, and no reward: it gives none. Its short name, GT,
- * sits in the top left corner, decorative (the fieldset names the dungeon):
- * Agahnim's sprite alone would pass for Castle Tower's cell.
+ * marker), and its chests, and no reward: it gives none. The dungeon's short
+ * name (SHORT_NAMES: EP, PoD, GT…) sits in the top left corner, decorative
+ * (the fieldset names the dungeon), so the board reads at a glance and
+ * Ganon's Tower's Agahnim is not taken for Castle Tower's. Under boss
+ * shuffle that corner is the boss's marker (KnownBossPicker), and the
+ * portrait, the dungeon's own boss, still tells the dungeon.
  */
 export const BossCell = ({ row, col, item }: BossCellProps) => {
   const index = Number.parseInt(item.slice("boss".length), 10);
@@ -41,6 +45,10 @@ export const BossCell = ({ row, col, item }: BossCellProps) => {
   const value = useGameStore((state) => state.items[control]);
   const handleItemClick = useGameStore((state) => state.handleItemClick);
   const beaten = value === (isTower ? 1 : BOSS_STATES.BEATEN);
+  // Under boss shuffle the boss's marker holds the top left corner
+  const marked = useGameStore(
+    (state) => !isTower && knownBossShown(index, state.settings),
+  );
   const handlers = mergeHandlers(
     useGridFocusable({ col, row, slot: 0 }),
     useStepHandlers(
@@ -64,13 +72,13 @@ export const BossCell = ({ row, col, item }: BossCellProps) => {
         style={{ backgroundImage: getItemBackground(control, value) }}
         type="button"
       />
-      {isTower && (
+      {!marked && (
         <span
           aria-hidden="true"
           className="boss-cell__name"
           data-testid={`boss-name-${index}`}
         >
-          {SHORT_NAMES["ganons-tower"]}
+          {SHORT_NAMES[dungeonAt(index)]}
         </span>
       )}
       {!isTower && <KnownBossPicker col={col} index={index} row={row} />}
