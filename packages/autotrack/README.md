@@ -422,7 +422,13 @@ Race Mode is on, or the pack reads nothing forbidden.
 
 The fast-check property in `scheduler.spec.ts` runs random packs under the
 ALttPR profile and checks every piece sent: inside permitted memory, and
-forbidden bytes only where a permitted range covers them.
+every byte inside a permitted range (a forbidden one only where a permitted
+range also covers it). Each pack's `memory.spec.ts` holds its real pack to
+the same, byte by byte, through `test/race-reads.ts`: the real poller in
+every state Race Mode can be on in (forced on, `auto` over a race ROM, a
+flag pending, unknown or unreadable), every mode and the switches between
+them, every assist's switch off and on, a whole polling cycle, the game
+check first.
 
 ## Polling
 
@@ -602,10 +608,13 @@ gives the CPU where it is not frozen (Firefox on Linux): elsewhere `arch` is
 - `test/fake-retroarch.ts`: a RetroArch answering `send` as 1.22.2 with
   bsnes-mercury did (unpadded echoes, short reads at a descriptor's end,
   `CONTENTLESS`, Snes9x's refusal), by bus address over a memory image.
+- `test/race-reads.ts`: every piece a pack's real poller sends in Race Mode,
+  in every state, mode and switch (`raceReads`), and the bytes of them no
+  given range covers (`outside`); the packs' `memory.spec.ts` use it.
 - Properties (fast-check): planning covers every byte, respects limits and
   pages, bridges at most `gap` bytes and no barrier, makes the fewest spans,
-  and places every range; Race Mode never sends a forbidden byte; address
-  translation round-trips.
+  and places every range; Race Mode never sends a byte no permitted range
+  covers; address translation round-trips.
 - `test/session.e2e.spec.ts`: one realistic session end to end.
 - Each guarantee was checked by breaking the code and watching a test fail.
 

@@ -458,7 +458,10 @@ big key are read too (the app's `counterRanges`).
 
 Race Mode reads what the ALTTPR Auto-tracker Rules v2.0 permit in so many
 words, and nothing they leave in doubt (`race-profile.ts` quotes each
-category's line; `memory.spec.ts` lists every range a race reads):
+category's line; `memory.spec.ts` lists every range a race reads, and holds
+the real poller to their bytes: what lies between two of them, the rupee and
+arrow counts, the ability flags, the keys held, the map icons, the starting
+entrance, is never read, not even to be discarded):
 
 | Read in a race | v2.0 |
 | --- | --- |

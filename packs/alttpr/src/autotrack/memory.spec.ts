@@ -8,12 +8,17 @@ import {
 } from "@alltp/autotrack";
 import { describe, expect, it } from "vitest";
 import {
+  outside,
+  raceReads,
+} from "../../../../packages/autotrack/test/race-reads";
+import {
   DUNGEONS,
   MEMORY_RANGE,
   MEMORY_RANGES,
   roomAddress,
   screenAddress,
 } from "./memory";
+import { ALTTPR_AUTOTRACK } from "./pack";
 import { ALTTPR_RACE_PROFILE } from "./race-profile";
 
 const pack = definePack({
@@ -395,6 +400,53 @@ const POSITION: readonly { name: string; bus: number; size: number }[] = [
 ];
 
 const wram = (bus: number) => bus - 0x7e_0000 + 0xf5_0000;
+
+/**
+ * Save bytes between Race Mode's ranges that no range of it names, by
+ * z3randomizer's sram.asm names: a merge once bridged them.
+ */
+const UNNAMED: readonly { name: string; bus: number; size: number }[] = [
+  { bus: 0x7e_f360, name: "CurrentRupees / DisplayRupees", size: 4 },
+  { bus: 0x7e_f36a, name: "WishingPond", size: 1 },
+  { bus: 0x7e_f36d, name: "CurrentHealth to BombCapacity", size: 7 },
+  { bus: 0x7e_f375, name: "BombsFiller to AbilityFlags", size: 5 },
+  { bus: 0x7e_f37c, name: "DungeonKeys", size: 16 },
+  { bus: 0x7e_f3c7, name: "MapIcons", size: 1 },
+  { bus: 0x7e_f3c8, name: "StartingEntrance", size: 1 },
+];
+
+describe("Race Mode, byte by byte", () => {
+  it("asks for no byte outside its ranges and the flag, in every state Race Mode can be on in", async () => {
+    // The real poller: forced on, "auto" over a race ROM, a flag pending,
+    // unknown or unreadable, the dark room's switches off and on, a whole
+    // polling cycle, the game check first
+    const reads = await raceReads(ALTTPR_AUTOTRACK);
+    expect(reads.length).toBeGreaterThan(0);
+    expect(outside(reads, ALTTPR_AUTOTRACK.permittedBytes)).toEqual([]);
+    for (const place of UNNAMED) {
+      const at = { address: wram(place.bus), size: place.size };
+      expect(
+        ALTTPR_AUTOTRACK.permittedBytes.some((range) => overlaps(range, at)),
+        place.name,
+      ).toBe(false);
+      expect(
+        reads.some((piece) => overlaps(piece, at)),
+        place.name,
+      ).toBe(false);
+    }
+  });
+
+  it("has the guard refuse a plan that bridges them", () => {
+    const bridging = planReads([MEMORY_RANGE.bottles, MEMORY_RANGE.compasses], {
+      gap: 16,
+      limits: USB2SNES_LIMITS,
+    });
+    expect(planPieces(bridging)).toHaveLength(1);
+    expect(() =>
+      assertRaceSafe(bridging, ALTTPR_RACE_PROFILE, pack.permittedBytes),
+    ).toThrow(/\$F5F360, which no permitted range covers/);
+  });
+});
 
 describe("Race Mode and Link's position", () => {
   it("permits no memory where Link, the room, the dungeon or the entrance are", () => {
