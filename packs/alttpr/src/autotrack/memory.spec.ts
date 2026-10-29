@@ -198,6 +198,8 @@ describe("MEMORY_RANGES", () => {
       "dark-room-objects:navigation",
       "dark-room-chests:navigation",
       "dark-room-art-sprites:navigation",
+      // The boss in a boss room (boss-rooms.ts): which room Link is in
+      "boss-sprites:navigation",
       "dark-room-doors:navigation",
       "dark-room-art-bg2:navigation",
       "dark-room-art-bg1:navigation",
@@ -354,7 +356,8 @@ describe("MEMORY_RANGES", () => {
     // pendants and the crystals joined it too (v2.0's dungeon-locations,
     // bottle contents and prizes upon collection): the rooms bridge the
     // boss rooms, so the race phase reads more bytes in fewer pieces; the
-    // follower byte (the big bomb) joins the casual one.
+    // follower byte (the big bomb) joins the casual one. The sprites of a
+    // boss room (boss-rooms.ts) join it too: 96 bytes in one more piece.
     // The small keys found (collected-keys)
     // replace the keys held: the casual plan already spans them, Race Mode
     // reads 14 bytes more, in one more piece. The Triforce pieces found
@@ -370,9 +373,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 340, pieces: 18 },
+      casual: { bytes: 436, pieces: 19 },
       race: { bytes: 828, pieces: 14 },
-      ranges: { casual: 32, race: 38 },
+      ranges: { casual: 33, race: 38 },
     });
   });
 });

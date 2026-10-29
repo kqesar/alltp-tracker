@@ -14,6 +14,7 @@
 // placement. Swordless needs no setting where upstream reads none: a
 // swordless world holds no sword, so `@hasSword` is simply false there.
 
+import type { DungeonId } from "./dungeons";
 import type { Rule } from "./helpers";
 import type { LocationFill, Source } from "./location";
 
@@ -107,28 +108,90 @@ const NARROW = [
  * and Agahnim in Castle Tower never move (Randomizer.php:451-452).
  */
 export const BOSS_PLACES = {
-  desertPalace: { refuses: [], rule: "canBeatDesertPalaceBoss" },
-  easternPalace: { refuses: [], rule: "canBeatEasternPalaceBoss" },
-  ganonsTowerBottom: { refuses: [], rule: "canBeatGanonsTowerBottomBoss" },
+  desertPalace: {
+    dungeon: "desert-palace",
+    refuses: [],
+    rule: "canBeatDesertPalaceBoss",
+  },
+  easternPalace: {
+    dungeon: "eastern-palace",
+    refuses: [],
+    rule: "canBeatEasternPalaceBoss",
+  },
+  ganonsTowerBottom: {
+    dungeon: "ganons-tower",
+    refuses: [],
+    rule: "canBeatGanonsTowerBottomBoss",
+  },
   ganonsTowerMiddle: {
+    dungeon: "ganons-tower",
     refuses: ["blind"],
     rule: "canBeatGanonsTowerMiddleBoss",
   },
-  ganonsTowerTop: { refuses: NARROW, rule: "canBeatGanonsTowerTopBoss" },
-  icePalace: { refuses: [], rule: "canBeatIcePalaceBoss" },
-  miseryMire: { refuses: [], rule: "canBeatMiseryMireBoss" },
-  palaceOfDarkness: { refuses: [], rule: "canBeatPalaceOfDarknessBoss" },
-  skullWoods: { refuses: ["trinexx"], rule: "canBeatSkullWoodsBoss" },
-  swampPalace: { refuses: [], rule: "canBeatSwampPalaceBoss" },
-  thievesTown: { refuses: [], rule: "canBeatThievesTownBoss" },
-  towerOfHera: { refuses: NARROW, rule: "canBeatTowerOfHeraBoss" },
-  turtleRock: { refuses: [], rule: "canBeatTurtleRockBoss" },
+  ganonsTowerTop: {
+    dungeon: "ganons-tower",
+    refuses: NARROW,
+    rule: "canBeatGanonsTowerTopBoss",
+  },
+  icePalace: {
+    dungeon: "ice-palace",
+    refuses: [],
+    rule: "canBeatIcePalaceBoss",
+  },
+  miseryMire: {
+    dungeon: "misery-mire",
+    refuses: [],
+    rule: "canBeatMiseryMireBoss",
+  },
+  palaceOfDarkness: {
+    dungeon: "palace-of-darkness",
+    refuses: [],
+    rule: "canBeatPalaceOfDarknessBoss",
+  },
+  skullWoods: {
+    dungeon: "skull-woods",
+    refuses: ["trinexx"],
+    rule: "canBeatSkullWoodsBoss",
+  },
+  swampPalace: {
+    dungeon: "swamp-palace",
+    refuses: [],
+    rule: "canBeatSwampPalaceBoss",
+  },
+  thievesTown: {
+    dungeon: "thieves-town",
+    refuses: [],
+    rule: "canBeatThievesTownBoss",
+  },
+  towerOfHera: {
+    dungeon: "tower-of-hera",
+    refuses: NARROW,
+    rule: "canBeatTowerOfHeraBoss",
+  },
+  turtleRock: {
+    dungeon: "turtle-rock",
+    refuses: [],
+    rule: "canBeatTurtleRockBoss",
+  },
 } as const satisfies Readonly<
   Record<
     string,
-    { readonly refuses: readonly ShuffledBoss[]; readonly rule: string }
+    {
+      readonly dungeon: DungeonId;
+      readonly refuses: readonly ShuffledBoss[];
+      readonly rule: string;
+    }
   >
 >;
+
+/**
+ * The slot of a dungeon with one boss to shuffle: the grid's ten. Ganon's
+ * Tower has three, and the castles none.
+ */
+export function bossPlaceOf(dungeon: DungeonId): BossPlaceId | undefined {
+  const places = PLACE_IDS.filter((id) => BOSS_PLACES[id].dungeon === dungeon);
+  return places.length === 1 ? places[0] : undefined;
+}
 export type BossPlaceId = keyof typeof BOSS_PLACES;
 
 /** What the player knows of each slot's boss; a slot left out is unknown. */
@@ -150,29 +213,77 @@ export function bossesAt(place: BossPlaceId): readonly ShuffledBoss[] {
 const factOf = (place: BossPlaceId, boss: ShuffledBoss) =>
   `${place}BossIs${capital(boss)}`;
 const unknownFactOf = (place: BossPlaceId) => `${place}BossUnknown`;
+const ruledOutFactOf = (place: BossPlaceId, boss: ShuffledBoss) =>
+  `${place}BossNot${capital(boss)}`;
 
-/** Every fact a slot may read: `easternPalaceBossIsBlind` … `…BossUnknown`. */
+/**
+ * Every fact a slot may read: `easternPalaceBossIsBlind`, then
+ * `easternPalaceBossUnknown`, then `easternPalaceBossNotBlind`.
+ */
 export const BOSS_FACTS: readonly string[] = PLACE_IDS.flatMap((place) => [
   ...bossesAt(place).map((boss) => factOf(place, boss)),
   unknownFactOf(place),
+  ...bossesAt(place).map((boss) => ruledOutFactOf(place, boss)),
 ]);
+
+/**
+ * How many slots 'simple' gives each boss: the ten placeable once, and
+ * Armos, Lanmolas and Moldorm once more (Randomizer.php:418-423), thirteen
+ * bosses for thirteen slots. Swordless leaves Ice Palace and Kholdstare out
+ * of the draw (380-394), twelve for twelve.
+ */
+const SIMPLE_COPIES: Readonly<Partial<Record<ShuffledBoss, number>>> = {
+  armosKnights: 2,
+  lanmolas: 2,
+  moldorm: 2,
+};
+
+/** How the run shuffles its bosses, as far as `bossFacts` needs it. */
+export interface BossDraw {
+  /** enemizer.bossShuffle is 'simple' (settings' `simpleBossShuffle`). */
+  readonly simple?: boolean;
+  /** mode.weapons is 'swordless': Ice Palace is not drawn. */
+  readonly swordless?: boolean;
+}
 
 /**
  * The facts that hold, each at 1, for what the player knows: a slot's boss
  * once known, else its Unknown fact. A boss its slot cannot hold is no
- * knowledge a seed could give: the slot stays unknown.
+ * knowledge a seed could give: the slot stays unknown. Under 'simple', a
+ * boss known in as many slots as the draw has copies of it is in no other:
+ * each slot still unknown holds its `…BossNot…` fact for it, and needs no
+ * longer beat it to be sure (`shuffledRule`). That is sound (the boss is in
+ * none of those slots) but not complete: which bosses the slots left share
+ * between them narrows nothing more here.
  */
 export function bossFacts(
   known: BossKnowledge,
+  draw: BossDraw = {},
 ): Readonly<Record<string, number>> {
   const facts: Record<string, number> = {};
+  const placed = new Map<ShuffledBoss, number>();
+  const unknown: BossPlaceId[] = [];
   for (const place of PLACE_IDS) {
     const boss = known[place];
-    const fact =
-      boss !== undefined && bossesAt(place).includes(boss)
-        ? factOf(place, boss)
-        : unknownFactOf(place);
-    facts[fact] = 1;
+    if (boss === undefined || !bossesAt(place).includes(boss)) {
+      facts[unknownFactOf(place)] = 1;
+      unknown.push(place);
+      continue;
+    }
+    facts[factOf(place, boss)] = 1;
+    // Swordless Ice Palace is Kholdstare's, outside the draw
+    if (!(draw.swordless === true && place === "icePalace")) {
+      placed.set(boss, (placed.get(boss) ?? 0) + 1);
+    }
+  }
+  if (draw.simple !== true) return facts;
+  for (const [boss, count] of placed) {
+    if (count < (SIMPLE_COPIES[boss] ?? 1)) continue;
+    for (const place of unknown) {
+      if (bossesAt(place).includes(boss)) {
+        facts[ruledOutFactOf(place, boss)] = 1;
+      }
+    }
   }
   return facts;
 }
@@ -183,17 +294,19 @@ const canBeat = (boss: ShuffledBoss) => `@canBeat${capital(boss)}`;
 /**
  * A slot's boss under boss shuffle, as far as the player knows it: the boss
  * known, or, while unknown, every boss the slot may hold beaten (yes), some
- * (maybe), none (no). Swordless keeps Kholdstare in Ice Palace alone
+ * (maybe), none (no); a boss ruled out (`…BossNot…`, 'simple' alone) need
+ * not be beaten for yes. Swordless keeps Kholdstare in Ice Palace alone
  * (Randomizer.php:380-394, Region.php:100-105): elsewhere it counts only
  * with swords.
  */
 function shuffledRule(place: BossPlaceId): string {
   const bosses = bossesAt(place);
-  const all = bosses.map((boss) =>
-    boss === "kholdstare"
-      ? `(setting(swordless) | ${canBeat(boss)})`
-      : canBeat(boss),
-  );
+  const all = bosses.map((boss) => {
+    const out = ruledOutFactOf(place, boss);
+    return boss === "kholdstare"
+      ? `(setting(swordless) | ${out} | ${canBeat(boss)})`
+      : `(${out} | ${canBeat(boss)})`;
+  });
   const any = bosses.map((boss) =>
     boss === "kholdstare"
       ? `!setting(swordless) & ${canBeat(boss)}`

@@ -827,9 +827,38 @@ it, and with it:
 The dungeons' boss locations and prizes, Ganon's Tower's climb and Agahnim
 2, and so the go mode, all read the slots, and follow. Without
 boss shuffle every rule folds to its vanilla boss at compile time: upstream's
-tests and the tracker's refactor guard are unchanged. The `simple` mode's
-one-of-each (a boss met in one dungeon is not in another) is not used: it
-would only sharpen a `maybe`.
+tests and the tracker's refactor guard are unchanged.
+
+**'simple' places each boss a fixed number of times**: the ten placeable
+once, Armos, Lanmolas and Moldorm twice (`Randomizer.php:418-423`, thirteen
+for thirteen slots; twelve for twelve in swordless, without Ice Palace and
+Kholdstare). So once the player knows a boss in as many slots as it has
+copies, it is in no other: `bossFacts` (given `simpleBossShuffle`, a setting
+of its own) sets `<slot>BossNot<Boss>` in each slot still unknown, and the
+slot's `yes` no longer waits on beating it. That is sound (it rules out
+only what the draw cannot give) and cheap (a count over the slots known),
+but not complete: which bosses the unknown slots share among themselves
+narrows nothing more. 'full' and 'random' may repeat any boss, so knowing
+one rules nothing out there.
+
+**Autotracking tells a boss once the player meets it** (`decodeBosses`,
+`src/autotrack/boss-rooms.ts`), outside Race Mode only. The enemizer writes
+every boss into the ROM (vt `Enemizer.php:222-245`), but that table is never
+read: it would name every boss before the player met one. The decoder reads
+what is on screen instead:
+
+| What | Where | Source |
+| --- | --- | --- |
+| a dungeon, game mode `$07` | `$7E:0010` | z3 `ram.asm:41` |
+| the room is a dungeon's boss room | `RoomIndex`, `$7E:00A0` | z3 `ram.asm:107`; the ten rooms of `heartpieces.asm:345-378` (CheckIfBossRoom): the enemizer moves the boss, not the room |
+| one boss's sprites loaded | the sixteen slots' states (`$7E:0DD0`, 0 empty) and types (`$7E:0E20`) | zelda3 `variables.h:724, 729`; each boss's types named in `sprite_main.c:466-711` (Kholdstare's shell, Trinexx's three heads) |
+
+Two bosses' sprites, none, or a boss the slot cannot hold tell nothing.
+Ganon's Tower's three fight in rooms CheckIfBossRoom does not list: they are
+never told. Both ranges are categories no race permits (`entrances`,
+`navigation`): the race admins' clarification of June 2026 bars identifying
+Link's room, so a race leaves the boss to the player. Not yet checked on the
+real game: the specs build the bytes by hand.
 
 The entrance randomizer's port (`src/entrances/rules.json`) is imported as
 the randomizer writes it on vt's path, with no boss shuffle: a crossed run

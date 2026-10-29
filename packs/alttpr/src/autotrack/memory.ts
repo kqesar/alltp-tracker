@@ -571,6 +571,18 @@ export const MEMORY_RANGES = [
     size: 0x2fa,
     source: "zelda3:src/nmi.c:218",
   }),
+  // The sixteen sprite slots' states (0 an empty slot) at $0DD0 and types at
+  // $0E20 (zelda3 variables.h:724, 729), one range from the one to the
+  // other: in a boss room, which boss the game put there (boss-rooms.ts).
+  // `navigation`: it says which room Link is in, so no race reads it.
+  range({
+    at: 0x7e_0dd0,
+    category: "navigation",
+    everyMs: GAME_MS,
+    id: "boss-sprites",
+    size: 0x60,
+    source: "zelda3:src/variables.h:724-729",
+  }),
   // What each closed door is: its type in the low byte of the slot's word.
   assist({
     at: 0x7e_1980,
