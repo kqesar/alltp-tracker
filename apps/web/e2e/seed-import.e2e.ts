@@ -58,7 +58,7 @@ test("starts a run from a seed's link, once the reset is confirmed", async ({
 
   const confirm = page.getByRole("dialog", { name: "Switch run type?" });
   await expect(confirm).toContainText(
-    'Switching to "Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality)" will reset your current progress.',
+    'Switching to "Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality, Hard enemy health)" will reset your current progress.',
   );
   await confirm.getByRole("button", { name: "Switch & reset" }).click();
 

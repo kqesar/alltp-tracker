@@ -187,7 +187,14 @@ test("a No Logic run shows what the glitches picked reach, never in logic", asyn
     "No Logic: the seed promises no route, so nothing is in logic. The map shows what you can reach without glitches",
   );
   const hobo = page.getByTestId("marker-hobo");
-  await expect(hobo).toHaveAccessibleName(/: out of logic$/);
+  // Never in logic: what the glitches it is played with reach, or not
+  await expect(hobo).toHaveAccessibleName(/: not reachable without glitches$/);
+  await expect(page.getByTestId("map-legend")).toContainText(
+    "Not reachable without glitches",
+  );
+  await expect(page.getByTestId("map-legend")).not.toContainText(
+    "Out of logic",
+  );
 
   // Under the bridge with a fake flipper, once played with Overworld Glitches
   await page.getByRole("button", { name: /^Mode/ }).click();
@@ -302,7 +309,7 @@ for (const width of WIDTHS) {
     await openTracker(page);
     await page.getByRole("button", { name: /^Mode/ }).click();
     const dialog = runTypes(page);
-    await expect(dialog.getByRole("combobox")).toHaveCount(11);
+    await expect(dialog.getByRole("combobox")).toHaveCount(14);
 
     await expect(
       dialog.getByRole("checkbox", { name: "Show key cells" }),
