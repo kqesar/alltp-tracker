@@ -259,6 +259,44 @@ describe("DR's text log", () => {
     ).toEqual(["unsupported", "multiworld"]);
   });
 
+  it("reads a starting inventory over several lines, the bosses and a sphere 0", () => {
+    // DR's header writes the starting items one a line under the first
+    // (BaseClasses.py to_file), the bosses under their own heading, and the
+    // playthrough's sphere 0 the items it starts with
+    const text = textOf(KEYSANITY)
+      .replace(
+        "Hash: ",
+        "Starting Inventory:              Pegasus Boots\n                                 Ocarina\nHash: ",
+      )
+      .replace(
+        "\nPlaythrough:\n\n0: {\n\n}",
+        "\nBosses:\n\nEastern Palace: Moldorm\nTower of Hera: Armos Knights\n\nPlaythrough:\n\n0: {\n  Pegasus Boots\n}",
+      );
+    const doc = textDocument(text) as Doc;
+    expect(doc["Starting Inventory"]).toEqual(["Pegasus Boots", "Ocarina"]);
+    expect(doc.Bosses).toEqual({
+      "Eastern Palace": "Moldorm",
+      "Tower of Hera": "Armos Knights",
+    });
+    expect(doc.playthrough["0"]).toEqual(["Pegasus Boots"]);
+    const log = logOf(parseSpoiler(text, KEYSANITY));
+    expect(log.start).toEqual(["Pegasus Boots", "Ocarina"]);
+  });
+
+  it("reads the Overworld fork's first line and both versions", () => {
+    const text = textOf(KEYSANITY).replace(
+      /^ALttP Dungeon Randomizer Version 1\.5\.6-u {2}- {2}Seed: (\d+)/,
+      "ALttP Overworld Randomizer  -  Seed: $1\nDoor Version:                    1.5.6\nOverworld Version:               0.8.0.0",
+    );
+    const doc = textDocument(text) as Doc;
+    expect(doc.meta).toMatchObject({
+      overworld: true,
+      seed: "660701088",
+      version: "1.5.6",
+      versions: { Door: "1.5.6", Overworld: "0.8.0.0" },
+    });
+  });
+
   it("refuses a log with its settings and no placement", () => {
     const header = textOf(KEYSANITY).split("\nLocations:\n")[0] ?? "";
     expect(refused(parseSpoiler(header, KEYSANITY))).toEqual([
@@ -379,12 +417,22 @@ describe("DR's JSON log", () => {
   });
 
   it("refuses a playthrough DR would not write, and a document without meta", () => {
-    const doc = jsonOf(KEYSANITY);
-    doc.playthrough["3"] = ["Hookshot"];
-    expect(refused(parseSpoiler(JSON.stringify(doc)))).toEqual([
-      "not-a-spoiler",
-      "playthrough",
-    ]);
+    for (const playthrough of [
+      // A list is sphere 0's alone
+      { "3": ["Hookshot"] },
+      // A sphere is a number from 1
+      { x: { Mushroom: "Hookshot" } },
+      { "-1": { Mushroom: "Hookshot" } },
+      // Neither a list nor a map of names
+      { "1": 7 },
+    ]) {
+      const doc = jsonOf(KEYSANITY);
+      doc.playthrough = { ...doc.playthrough, ...playthrough };
+      expect(
+        refused(parseSpoiler(JSON.stringify(doc))),
+        JSON.stringify(playthrough),
+      ).toEqual(["not-a-spoiler", "playthrough"]);
+    }
     expect(
       refused(parseDoorLog({ json: { Doors: [] } }, "DR_1_Spoiler.json")),
     ).toEqual(["not-a-spoiler", "no meta"]);
