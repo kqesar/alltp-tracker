@@ -59,6 +59,8 @@ export const DR_DUNGEONS = regionData.dungeons as readonly {
   readonly bigKey: string | null;
   /** The small keys its chests hold. */
   readonly smallKeys: readonly string[];
+  /** Its prize's location (dungeon_table), if it has one. */
+  readonly prize: string | null;
 }[];
 export const DR_DOORS = doorData.doors as readonly DrDoor[];
 export const DR_PORTALS = doorData.portals as readonly {

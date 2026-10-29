@@ -16,8 +16,10 @@ import {
   type CompiledWorld,
   compileWorld,
   type Exit,
+  evaluate,
   type Location,
   loadRules,
+  parse,
   type Region,
   type Settings,
   type World,
@@ -44,14 +46,22 @@ import {
 } from "./crystal";
 import {
   DOOR_NAMED,
+  DR_DUNGEONS,
   DR_REGIONS,
   DR_RULES,
   type DrMode,
   type DrRegion,
   regionNamed,
 } from "./data";
-import { addKeyRules, KEY_DROPS, KEY_ITEMS, worldKeys } from "./keys";
-import { and } from "./text";
+import {
+  addKeyRules,
+  DR_KEY_CODES,
+  KEY_DROPS,
+  KEY_ITEMS,
+  worldKeys,
+} from "./keys";
+import { addZeldaPath, UNCLE_SAVE_AND_QUIT, zeldaPath } from "./standard";
+import { and, maybeOf, or, readFact } from "./text";
 
 export type { DrConnections } from "./connections";
 export { vanillaConnections } from "./connections";
@@ -115,12 +125,29 @@ export const drModeOf = (settings: Settings): DrMode =>
 const factOf = (id: string) => `reached_${id}`;
 const REACH = /reach\((\w+)\)/g;
 
+/** DR's events, each a fact its rules read. */
+const EVENT_READ = new RegExp(
+  `\\b(${Object.keys(DR_RULES.events).join("|")})\\b`,
+  "g",
+);
+
+/**
+ * The facts a rule reads, each read at maybe too while what gives it is
+ * reached at maybe only (facts.ts): the events, the crystal reads.
+ */
+const factsRead = (req: string): string =>
+  req
+    .replace(EVENT_READ, (event) => readFact(event))
+    .replace(CRYSTAL_READ, (read) => readFact(read));
+
 /**
  * A rule as an exit (or a helper) reads it: each reach() a fact, as each
  * crystal read is (`reachedBlue_<id>`, given in that state's node).
  */
 const exitRule = (req: string): string =>
-  unknownCountRequirement(req.replace(REACH, (_, id) => factOf(id)));
+  unknownCountRequirement(
+    factsRead(req).replace(REACH, (_, id) => readFact(factOf(id))),
+  );
 
 /** The pack's helpers, then DR's, each reach() a fact. */
 const LOADED_RULES = loadRules({
@@ -150,6 +177,11 @@ export interface DrExit {
   readonly from: string;
   readonly to: string;
   req: string;
+  /**
+   * A dungeon's trapped door, no exit to traverse (BaseClasses.py:646),
+   * which DR's code walking the connections still reads.
+   */
+  readonly blocked?: boolean;
 }
 
 /** The locations a region holds in a mode. */
@@ -159,10 +191,10 @@ const locationsIn = (region: DrRegion, mode: DrMode): readonly string[] =>
   );
 
 /**
- * Every exit of the world that leads somewhere, with the rule DR ends with
- * before the bunny's: the connected static exits (a dungeon's trapped door
- * is no exit, BaseClasses.py:646, but a portal's), the flute and mirror
- * exits, the test's start exits.
+ * Every exit of the world that leads somewhere, with its rule of
+ * rules.json: the connected static exits (a dungeon's trapped door
+ * blocked, but a portal's), the flute and mirror exits, Standard's
+ * save-and-quit to Uncle, the test's start exits.
  */
 function exitsOf(
   connections: DrConnections,
@@ -175,13 +207,12 @@ function exitsOf(
       const to = connections.get(name);
       if (to === undefined) continue;
       const door = DOOR_NAMED.get(name);
-      if (
+      const blocked =
         region.type === "dungeon" &&
         door?.trapped === true &&
-        !PORTAL_DOORS.has(name)
-      )
-        continue;
+        !PORTAL_DOORS.has(name);
       found.push({
+        ...(blocked ? { blocked } : {}),
         from: region.name,
         name,
         req: DR_RULES.entrances[name]?.req ?? "true",
@@ -191,6 +222,7 @@ function exitsOf(
   }
   const dynamic: readonly DrDynamicExit[] = dynamicExits(mode);
   for (const exit of dynamic) found.push({ ...exit });
+  if (mode === "standard") found.push({ ...UNCLE_SAVE_AND_QUIT });
   for (const name of options.start ?? [])
     found.push({
       from: MENU,
@@ -289,7 +321,12 @@ export const DR_DEFAULTS: Settings = {
   ganonHuntGoal: false,
   openPyramid: false,
   potKeys: false,
+  // potshuffle: a pot may move, the spikes' key pot onto the spikes
+  potShuffle: false,
   pottery: false,
+  // restrict_boss_items other than none: a boss's items behind its map
+  // and compass
+  restrictBossItems: false,
   retroBow: false,
   treasureHunt: 0,
   triforceHuntGoal: false,
@@ -313,15 +350,17 @@ function graph(
   options: DrWorldOptions,
   reached: ReadonlySet<string>,
   extra: ReadonlyMap<string, readonly Location[]>,
+  added: ReadonlyMap<string, readonly string[]>,
 ): {
   world: World;
   locationIds: Map<string, string>;
   crystalFacts: { item: string; location: string }[];
 } {
-  const nodes = crystalNodes(crystalStates(exits));
+  const passable = exits.filter((e) => e.blocked !== true);
+  const nodes = crystalNodes(crystalStates(passable));
   const out = new Map<string, DrExit[]>();
   const exitNamed = new Map(exits.map((e) => [e.name, e]));
-  for (const exit of exits)
+  for (const exit of passable)
     out.set(exit.from, [...(out.get(exit.from) ?? []), exit]);
   // The crystal reads the exits and helpers make, each a fact
   const crystalRead = new Set<string>();
@@ -334,13 +373,15 @@ function graph(
   /** A location's rule: each crystal read the reach of its node. */
   const locationRule = (req: string) =>
     unknownCountRequirement(
-      req.replace(CRYSTAL_READ, (_, colour: string, id: string) => {
-        const region = REGION_BY_ID.get(id);
-        const s = colour === "Blue" ? "blue" : "orange";
-        return region !== undefined && nodes.statesOf(region).includes(s)
-          ? `reach(${nodes.nodeOf(region, s)})`
-          : "false";
-      }),
+      req
+        .replace(EVENT_READ, (event) => readFact(event))
+        .replace(CRYSTAL_READ, (_, colour: string, id: string) => {
+          const region = REGION_BY_ID.get(id);
+          const s = colour === "Blue" ? "blue" : "orange";
+          return region !== undefined && nodes.statesOf(region).includes(s)
+            ? `reach(${nodes.nodeOf(region, s)})`
+            : "false";
+        }),
     );
   const probes = new Map<string, string[]>();
   for (const name of options.probes ?? []) {
@@ -351,7 +392,10 @@ function graph(
   const locationIds = new Map<string, string>();
   const regions: Region[] = [];
   for (const r of DR_REGIONS) {
-    const located: Location[] = locationsIn(r, mode).map((name) => {
+    const located: Location[] = [
+      ...locationsIn(r, mode),
+      ...(added.get(r.name) ?? []),
+    ].map((name) => {
       const id = drLocationId(name);
       locationIds.set(name, id);
       return { id, req: locationRule(locations.get(name) ?? "true") };
@@ -424,6 +468,46 @@ const FLOODED_KEYS: Readonly<Record<string, string>> = {
   "Trench 2 Switch": "Swamp Palace - Trench 2 Pot Key",
 };
 
+/** The location ItemList.py adds for a triforce hunt (:200-212). */
+const MURAHDAHLA = "Murahdahla";
+
+/**
+ * restrict_boss_items (Rules.py:807-822): each prize and boss of a dungeon
+ * that has a prize, and Agahnim 2, behind the dungeon's compass and map
+ * (Agahnim 1 too once doors shuffle, which this world does not).
+ */
+function addBossItemRules(locations: Map<string, string>): void {
+  const behind = (location: string, dungeon: string) => {
+    const code = DR_KEY_CODES[dungeon];
+    if (code === undefined || !locations.has(location)) return;
+    locations.set(
+      location,
+      and(locations.get(location) ?? "true", `compass${code} & map${code}`),
+    );
+  };
+  for (const dungeon of DR_DUNGEONS) {
+    if (dungeon.prize === null) continue;
+    const name = dungeon.name.startsWith("Thieves")
+      ? "Thieves' Town"
+      : dungeon.name;
+    behind(dungeon.prize, dungeon.name);
+    behind(`${name} - Boss`, dungeon.name);
+  }
+  behind("Agahnim 2", "Ganons Tower");
+}
+
+/**
+ * Mire's spikes' key pot (Rules.py:527-530): where pot shuffle lands it on
+ * the spikes, it takes the spike chest's rule; where it lands is unknown,
+ * so the rule or maybe.
+ */
+function addSpikesPotRule(locations: Map<string, string>): void {
+  const pot = "Misery Mire - Spikes Pot Key";
+  const spikes = DR_RULES.locations["Misery Mire - Spike Chest"]?.req;
+  if (spikes === undefined || !locations.has(pot)) return;
+  locations.set(pot, and(locations.get(pot) ?? "true", or(spikes, "maybe")));
+}
+
 /**
  * The Door Randomizer's world for a run's settings, its doors and
  * entrances vanilla, compiled: once per settings change.
@@ -446,11 +530,45 @@ export function drWorld(
   for (const region of DR_REGIONS)
     for (const name of locationsIn(region, mode))
       locations.set(name, DR_RULES.locations[name]?.req ?? "true");
-  // In set_rules' order: the key logic (global_rules), the bomb shop, the
-  // bunny last
-  addKeyRules(exits, locations, keys, mode, universal);
-  addBombShopRule(exits, mode);
+  // The locations ItemList.py adds: Murahdahla, in a triforce hunt (:200-212)
+  const added = new Map<string, string[]>();
+  if (all.triforceHuntGoal === true || all.trinityGoal === true) {
+    added.set("Hyrule Castle Courtyard", [MURAHDAHLA]);
+    // Rules.py:69
+    locations.set(
+      MURAHDAHLA,
+      "count(triforcePiece, powerStar) >= setting(treasureHunt)",
+    );
+  }
+  // A big key a vanilla drop holds (the escape's) is the item DR's rules
+  // read: its fact stands for it wherever they do
+  for (const drop of keys.forcedDrops) {
+    if (!drop.big) continue;
+    const item = new RegExp(`\\bbigKey${DR_KEY_CODES[drop.dungeon]}\\b`, "g");
+    const rule = keys.bigKeyRule(drop.dungeon);
+    for (const exit of exits) exit.req = exit.req.replace(item, rule);
+    for (const [name, req] of locations)
+      locations.set(name, req.replace(item, rule));
+  }
   const marked = markWorlds(exits);
+  const derived = derivedSettings(connections, marked, mode);
+  // In set_rules' order: global_rules (the key logic, the boss items, the
+  // spikes' pot), standard_rules, the bomb shop, the bunny last
+  addKeyRules(exits, locations, keys, mode, universal);
+  if (all.restrictBossItems === true) addBossItemRules(locations);
+  if (all.potShuffle === true) addSpikesPotRule(locations);
+  if (mode === "standard") {
+    const blank = { ...all, ...derived };
+    const path = zeldaPath(
+      exits,
+      (req) =>
+        evaluate(parse(exitRule(req)), {}, LOADED_RULES, {
+          settings: blank,
+        }) === "yes",
+    );
+    addZeldaPath(exits, locations, path);
+  }
+  addBombShopRule(exits, mode);
   addBunnyRules(exits, locations, marked, mode);
 
   // The events: each a fact once its location is reached, a flood switch
@@ -492,7 +610,9 @@ export function drWorld(
   // The regions a rule reads the reach of where only a fact can stand
   const reached = new Set([
     ...HELPERS_REACH,
-    ...exits.flatMap((e) => [...e.req.matchAll(REACH)].map((m) => m[1] ?? "")),
+    ...exits
+      .filter((e) => e.blocked !== true)
+      .flatMap((e) => [...e.req.matchAll(REACH)].map((m) => m[1] ?? "")),
   ]);
   const { crystalFacts, locationIds, world } = graph(
     exits,
@@ -501,6 +621,7 @@ export function drWorld(
     options,
     reached,
     extra,
+    added,
   );
   const events = Object.entries(DR_RULES.events).flatMap(
     ([item, { location }]) => {
@@ -519,7 +640,7 @@ export function drWorld(
     ...drops,
     ...crystalFacts,
     ...[...reached].map((id) => ({ item: factOf(id), location: factOf(id) })),
-  ];
+  ].map((fact) => ({ ...fact, maybe: maybeOf(fact.item) }));
   const crystalItems = [
     ...exits.map((e) => e.req),
     ...Object.values(DR_RULES.helpers).map((h) => h.req),
@@ -531,15 +652,15 @@ export function drWorld(
         ...DR_RULES.newItems,
         ...Object.keys(DR_RULES.events),
         ...KEY_ITEMS,
-        ...KEY_DROPS.map((d) => d.fact),
-        ...crystalItems,
-        ...facts.map((f) => f.item),
+        ...[
+          ...Object.keys(DR_RULES.events),
+          ...KEY_DROPS.map((d) => d.fact),
+          ...crystalItems,
+          ...facts.map((f) => f.item),
+        ].flatMap((fact) => [fact, maybeOf(fact)]),
       ]),
     ],
-    settings: {
-      ...all,
-      ...derivedSettings(connections, marked, mode),
-    },
+    settings: { ...all, ...derived },
   });
   return { compiled, facts, locationIds };
 }

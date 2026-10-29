@@ -18,6 +18,7 @@ interface BunnyExit {
   readonly from: string;
   readonly to: string;
   req: string;
+  readonly blocked?: boolean;
 }
 
 type List = { readonly line: number; readonly value: readonly string[] };
@@ -77,6 +78,8 @@ export function addBunnyRules(
     for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
       const [current, path, seen] = next;
       for (const entrance of into.get(current) ?? []) {
+        // A blocked door is no way (:2105-2106)
+        if (entrance.blocked === true) continue;
         const from = entrance.from;
         const newSeen = new Set([...seen, from]);
         const key = [...newSeen].sort().join("\n");

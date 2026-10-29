@@ -26,13 +26,21 @@ export interface FactWorld {
   readonly facts: readonly {
     readonly item: string;
     readonly location: string;
+    /**
+     * The item held while the location is reached at maybe only: a rule
+     * reads the fact `item | maybe & <this>`, so what hangs on a location
+     * the solver is unsure of is maybe, never no.
+     */
+    readonly maybe?: string;
   }[];
 }
 
 /**
  * Solves a world, holding each fact once what gives it is surely reached,
- * as the randomizer sweeps for events, until nothing more is gained. Each
- * pass can only add facts, so this ends within a pass per fact.
+ * as the randomizer sweeps for events, until nothing more is gained (and a
+ * fact's `maybe` item while it is reached at maybe only, dropped once it is
+ * surely). Each pass can only raise a fact, so this ends within two passes
+ * per fact.
  * @returns The solution, and the state with the facts gained
  */
 export function solveFactsState(
@@ -42,15 +50,18 @@ export function solveFactsState(
   let current: State = state;
   for (;;) {
     const solution = solve(world.compiled, current);
-    const gained = world.facts.filter(
-      ({ item, location }) =>
-        !current[item] && solution.location(location) === "yes",
-    );
-    if (gained.length === 0) return { solution, state: current };
-    current = {
-      ...current,
-      ...Object.fromEntries(gained.map(({ item }) => [item, 1])),
-    };
+    const raised: Record<string, number> = {};
+    for (const { item, location, maybe } of world.facts) {
+      if (current[item]) continue;
+      const level = solution.location(location);
+      if (level === "yes") {
+        raised[item] = 1;
+        if (maybe !== undefined && current[maybe]) raised[maybe] = 0;
+      } else if (level === "maybe" && maybe !== undefined && !current[maybe])
+        raised[maybe] = 1;
+    }
+    if (Object.keys(raised).length === 0) return { solution, state: current };
+    current = { ...current, ...raised };
   }
 }
 
@@ -71,7 +82,12 @@ export function analyzeFacts(
   state: State,
   options: AnalyzeOptions = {},
 ): Analysis {
-  const sources = new Map(world.facts.map((f) => [f.item, f.location]));
+  const sources = new Map(
+    world.facts.flatMap((f) => [
+      [f.item, f.location] as const,
+      ...(f.maybe === undefined ? [] : [[f.maybe, f.location] as const]),
+    ]),
+  );
   const inner = analyze(world.compiled, state, {
     ...options,
     acquirable: (item) =>

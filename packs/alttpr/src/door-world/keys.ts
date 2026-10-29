@@ -15,7 +15,7 @@
 import { locationId } from "@alltp/engine";
 import { DR_LOCATIONS } from "../door-rando/locations";
 import { DOOR_NAMED, DR_DUNGEONS, DR_REGIONS, type DrMode } from "./data";
-import { and, or } from "./text";
+import { and, maybeOf, or, readFact } from "./text";
 
 /** DR's dungeons in the pack's key codes (`key<code>`, `bigKey<code>`). */
 export const DR_KEY_CODES: Readonly<Record<string, string>> = {
@@ -158,22 +158,23 @@ export function worldKeys(
     if (code === undefined) throw new RangeError(`No dungeon ${dungeon}`);
     return code;
   };
-  const atLeast = (dungeon: string, n: number) =>
-    `count(${[
-      `key${codeOf(dungeon)}`,
-      ...forced
-        .filter((d) => !d.big && d.dungeon === dungeon)
-        .map((d) => d.fact),
-    ].join(", ")}) >= ${n}`;
+  const factsOf = (dungeon: string, big: boolean) =>
+    forced
+      .filter((d) => d.big === big && d.dungeon === dungeon)
+      .map((d) => d.fact);
+  // A drop reached at maybe only counts at maybe (facts.ts)
+  const atLeast = (dungeon: string, n: number) => {
+    const key = `key${codeOf(dungeon)}`;
+    const facts = factsOf(dungeon, false);
+    const sure = `count(${[key, ...facts].join(", ")}) >= ${n}`;
+    if (facts.length === 0) return sure;
+    const unsure = [key, ...facts, ...facts.map(maybeOf)].join(", ");
+    return or(sure, and(`count(${unsure}) >= ${n}`, "maybe"));
+  };
   return {
     atLeast,
     bigKeyRule: (dungeon) =>
-      or(
-        `bigKey${codeOf(dungeon)}`,
-        ...forced
-          .filter((d) => d.big && d.dungeon === dungeon)
-          .map((d) => d.fact),
-      ),
+      or(`bigKey${codeOf(dungeon)}`, ...factsOf(dungeon, true).map(readFact)),
     forcedDrops: forced,
     smallKeyRule: (dungeon) => {
       // Universal keys are bought (has_sm_key, BaseClasses.py:1113-1117):

@@ -1,7 +1,8 @@
 import type { Settings } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { solveFacts } from "../facts";
-import { settingsFromUpstream } from "../settings";
+import { everything } from "../keys";
+import { OPEN, settingsFromUpstream } from "../settings";
 import {
   dynamicExits,
   isStaticExit,
@@ -10,8 +11,9 @@ import {
 } from "./connections";
 import { DR_REGIONS, pairsOf, REGION_NAMED } from "./data";
 import { DR_DEFAULTS, drLocationId, drWorld, markWorlds } from "./index";
+import { zeldaPath } from "./standard";
 
-const settings = (mode: "open" | "inverted"): Settings => ({
+const settings = (mode: "open" | "standard" | "inverted"): Settings => ({
   ...DR_DEFAULTS,
   ...settingsFromUpstream(mode),
 });
@@ -211,5 +213,99 @@ describe("the Door Randomizer's world (door-world)", () => {
       heartContainer: 3,
     });
     expect(after.location(brewery)).toBe("yes");
+  });
+
+  it("runs Standard's escape: Uncle's save point, Zelda's way back", () => {
+    const world = drWorld(settings("standard"));
+    const at = (state: Record<string, number>, name: string) =>
+      solveFacts(world, { heartContainer: 3, ...state }).location(
+        drLocationId(name),
+      );
+    // Uncle S&Q (Rules.py:1503): his item from the start
+    expect(at({}, "Link's Uncle")).toBe("yes");
+    // A weapon, or Uncle's bombs (unknown): maybe
+    expect(at({}, "Secret Passage")).toBe("maybe");
+    expect(at({ sword: 1 }, "Secret Passage")).toBe("yes");
+    // Zelda's way back asks the escape's doors: with every key, delivered,
+    // and the world opens
+    expect(at({ sword: 1 }, "Zelda Drop Off")).toBe("maybe");
+    expect(at({ keyH2: 4, sword: 1 }, "Zelda Drop Off")).toBe("yes");
+    expect(at({ keyH2: 4, sword: 1 }, "Kakariko Tavern")).toBe("yes");
+  });
+
+  it("reads the rules of the first way back from Zelda's cell", () => {
+    const exits = [
+      {
+        from: "Hyrule Dungeon Cellblock",
+        name: "a",
+        req: "keyH2",
+        to: "Hyrule Dungeon Staircase",
+      },
+      {
+        from: "Hyrule Dungeon Staircase",
+        name: "b",
+        req: "true",
+        to: "Hyrule Castle Throne Room",
+      },
+      {
+        from: "Hyrule Dungeon Cellblock",
+        name: "c",
+        req: "lamp",
+        to: "Hyrule Castle Throne Room",
+      },
+    ];
+    // Breadth first: the direct way, its rule only
+    expect(zeldaPath(exits, (req) => req === "true")).toEqual(["lamp"]);
+    expect(zeldaPath(exits.slice(0, 2), (req) => req === "true")).toEqual([
+      "keyH2",
+    ]);
+  });
+
+  it("adds Murahdahla to a triforce hunt", () => {
+    const hunt = {
+      ...settings("open"),
+      treasureHunt: 20,
+      triforceHuntGoal: true,
+    };
+    const world = drWorld(hunt);
+    const murahdahla = world.locationIds.get("Murahdahla") ?? "";
+    expect(murahdahla).toBe("murahdahla");
+    const pieces = (n: number) =>
+      solveFacts(world, { heartContainer: 3, triforcePiece: n }).location(
+        murahdahla,
+      );
+    expect(pieces(19)).toBe("no");
+    expect(pieces(20)).toBe("yes");
+    expect(drWorld(settings("open")).locationIds.has("Murahdahla")).toBe(false);
+  });
+
+  it("puts a boss's items behind its map and compass when restricted", () => {
+    const held = { bigKeyP1: 1, bow: 1, heartContainer: 3, keyP1: 2, lamp: 1 };
+    const boss = drLocationId("Eastern Palace - Boss");
+    const restricted = drWorld({
+      ...settings("open"),
+      restrictBossItems: true,
+    });
+    expect(solveFacts(drWorld(settings("open")), held).location(boss)).toBe(
+      "yes",
+    );
+    expect(solveFacts(restricted, held).location(boss)).toBe("no");
+    expect(
+      solveFacts(restricted, { ...held, compassP1: 1, mapP1: 1 }).location(
+        boss,
+      ),
+    ).toBe("yes");
+  });
+
+  it("puts Mire's spikes' key pot behind the spikes once pots shuffle", () => {
+    const pot = drLocationId("Misery Mire - Spikes Pot Key");
+    const state = { ...everything(OPEN), caneOfByrna: 0, cape: 0 };
+    const hurt = { ...state, heartContainer: 3, pieceOfHeart: 0 };
+    expect(solveFacts(drWorld(settings("open")), hurt).location(pot)).toBe(
+      "yes",
+    );
+    const shuffled = drWorld({ ...settings("open"), potShuffle: true });
+    expect(solveFacts(shuffled, hurt).location(pot)).toBe("maybe");
+    expect(solveFacts(shuffled, state).location(pot)).toBe("yes");
   });
 });

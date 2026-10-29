@@ -1131,7 +1131,21 @@ never links the Dark Sanctuary's exit (`do_vanilla_connections`; only a
 shuffle does, `EntranceShuffle2.py:216-229`), so its save point leads
 nowhere, and DR names the castle's entrance `Agahnims Tower` whatever it
 leads to. `drWorld`'s `connections` option builds the world on other
-connections than the vanilla ones.
+connections than the vanilla ones. `standard.ts` ports what Standard adds
+in code: the save-and-quit to Uncle, and Zelda's way back from her cell
+(`find_rules_for_zelda_delivery`: the rules of the first path to the throne
+room that a blank state does not pass, read from the world's rules so far,
+a stricter reading where DR added one later), set on the tapestry and her
+drop-off. The rest of `unported` but the key logic and the shuffles' code
+is ported in `index.ts`: Murahdahla in a triforce hunt, a boss's items
+behind its map and compass (`restrictBossItems`), Mire's spikes' key pot
+behind the spikes or `maybe` once pots shuffle (`potShuffle`); a big key a
+vanilla drop holds (the escape's) stands for the item wherever a rule reads
+it. A fact whose location is reached at `maybe` only is read at `maybe`
+(`<fact>__maybe`, `src/facts.ts`), so what hangs on a `maybe` key door is
+`maybe`, never `no`. Standard is held to no upstream test (DR's tests build
+Open and Inverted only): the recorded spoilers will hold it (study step
+4.13).
 
 **Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
 `RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,

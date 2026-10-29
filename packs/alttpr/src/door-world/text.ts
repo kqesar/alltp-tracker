@@ -14,3 +14,10 @@ export const or = (...reqs: readonly string[]): string => {
   if (kept.includes("true")) return "true";
   return kept.length === 0 ? "false" : kept.map((r) => `(${r})`).join(" | ");
 };
+
+/** The item a fact holds while its location is reached at maybe only. */
+export const maybeOf = (fact: string): string => `${fact}__maybe`;
+
+/** A fact as a rule reads it: held, or maybe while reached at maybe. */
+export const readFact = (fact: string): string =>
+  `(${fact} | ${maybeOf(fact)} & maybe)`;

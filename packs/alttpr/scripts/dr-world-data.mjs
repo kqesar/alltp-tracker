@@ -192,7 +192,7 @@ function readDungeons(source) {
   const create = body(source, "create_dungeons", DUNGEONS);
   /** @type {Map<string, string>} */
   const dungeonOf = new Map();
-  /** @type {{ name: string, boss: string | null, bigKey: string | null, smallKeys: string[], source: string }[]} */
+  /** @type {{ name: string, boss: string | null, bigKey: string | null, smallKeys: string[], prize?: string | null, source: string }[]} */
   const dungeons = [];
   for (const { call, line } of callExpressions(
     source,
@@ -223,6 +223,25 @@ function readDungeons(source) {
       smallKeys: itemsOf(smallKeys, `${DUNGEONS}:${line}`),
       source: `${DUNGEONS}:${line}`,
     });
+  }
+  // Each dungeon's prize location (dungeon_table, DungeonInfo's eighth
+  // argument), which restrict_boss_items reads (Rules.py:807-822)
+  const table = /^dungeon_table = \{$/m.exec(source);
+  if (table === null) fail(`${DUNGEONS}: no dungeon_table`);
+  const tableLine = source.slice(0, table.index).split("\n").length;
+  const rows = source.slice(table.index).split("\n");
+  for (let i = 1; i < rows.length && rows[i] !== "}"; i++) {
+    const row = /^ {4}'([^']+)': DungeonInfo\((.*)\),$/.exec(rows[i] ?? "");
+    if (row === null) fail(`${DUNGEONS}:${tableLine + i}: a dungeon_table row`);
+    const args = (row[2] ?? "").split(/, (?=(?:[^"']|"[^"]*"|'[^']*')*$)/);
+    const prize = args[7]?.trim() ?? "";
+    const dungeon = dungeons.find((d) => d.name === row[1]);
+    if (dungeon === undefined) fail(`${DUNGEONS}: no dungeon ${row[1]}`);
+    dungeon.prize =
+      prize === "None"
+        ? null
+        : (/^(['"])(.*)\1$/.exec(prize)?.[2] ??
+          fail(`${DUNGEONS}:${tableLine + i}: a prize`));
   }
   return { dungeonOf, dungeons };
 }
