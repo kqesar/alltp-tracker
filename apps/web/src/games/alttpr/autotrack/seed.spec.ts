@@ -306,7 +306,7 @@ describe("checkSeed", () => {
     );
   });
 
-  it("carries a glitched seed's logic, which the tracker does not model", () => {
+  it("carries a glitched seed's logic, modelled once ported", () => {
     const check = checkSeed(
       seedOf({ logic: "OverworldGlitches" }),
       run("open"),
@@ -323,7 +323,7 @@ describe("checkSeed", () => {
       },
     });
     if (check.kind !== "differs") throw new Error("expected differs");
-    expect(logicModelled(check.settings)).toBe(false);
+    expect(logicModelled(check.settings)).toBe(true);
     // The same seed again is the run's
     expect(
       checkSeed(seedOf({ logic: "OverworldGlitches" }), {
