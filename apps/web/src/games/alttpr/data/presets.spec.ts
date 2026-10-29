@@ -116,6 +116,9 @@ describe("presets", () => {
 
     expect(logicModelled(glitched)).toBe(false);
     expect(logicModelled(noLogic)).toBe(true);
+    expect(logicModelled({ ...open, glitches: "hybrid_major_glitches" })).toBe(
+      true,
+    );
     expect(noLogicRun(noLogic)).toBe(true);
     expect(noLogicRun(glitched)).toBe(false);
     const row = (settings: typeof open, label: string) =>
