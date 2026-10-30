@@ -924,7 +924,8 @@ export function drKeyLogic(
  * and walks as DR's analysis of the whole world has it; any other keeps
  * the strict-safe rule (keys.ts). Standard's castle keeps it too: its side
  * portals wait on the escape (is_standard_inaccessible). A decoupled world,
- * whose exits lead elsewhere unnoted, has none.
+ * whose exits lead elsewhere unnoted, has none. An OWR run's walk reads its
+ * overworld's notes and screens too (`overworld`).
  */
 function notedKeyLogic(
   data: DrData,
@@ -933,6 +934,7 @@ function notedKeyLogic(
   entrances: DrNotedEntrances,
   connections: DrConnections,
   decoupled: boolean,
+  overworld?: { readonly notes: OwrNotes; readonly screens: OwrScreens },
 ): ReadonlyMap<string, KeyLogic> | undefined {
   if (decoupled) return undefined;
   const key = JSON.stringify([
@@ -940,11 +942,17 @@ function notedKeyLogic(
     entrances.pool,
     Object.entries(entrances.noted).sort(),
     settings.drVersion,
+    ...(overworld === undefined ? [] : ["owr", overworld.notes]),
   ]);
-  const known = portalsKnown(data, mode, connections);
+  const screens = overworld?.screens;
+  const known = portalsKnown(data, mode, connections, screens);
   if (mode === "standard") known.delete("Hyrule Castle");
   if (known.size === 0) return new Map();
-  const logic = drKeyLogic(data, settings, { connections, key });
+  const logic = drKeyLogic(data, settings, {
+    connections,
+    key,
+    ...(screens === undefined ? {} : { screens }),
+  });
   return new Map([...logic].filter(([dungeon]) => known.has(dungeon)));
 }
 
@@ -1094,11 +1102,20 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
   const unknown = new Set(owr ? unknownScreenSettings(screens) : []);
   const version = Number(all.drVersion);
   const { doors } = options;
+  const possible: OwrPossibleLinks = [];
   const noted =
     options.entrances === undefined
       ? undefined
-      : notedConnections(data, mode, options.entrances, version, doors);
-  const possible: OwrPossibleLinks = [];
+      : notedConnections(
+          data,
+          mode,
+          options.entrances,
+          version,
+          doors,
+          options.overworld,
+          screens,
+          possible,
+        );
   const connections =
     noted?.connections ??
     options.connections ??
@@ -1246,6 +1263,7 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
               options.entrances,
               connections,
               noted.decoupled,
+              owr ? { notes: options.overworld ?? {}, screens } : undefined,
             )
         : options.connections === undefined
           ? owr && Object.keys(options.overworld ?? {}).length > 0

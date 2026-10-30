@@ -1704,8 +1704,36 @@ fork links or rules otherwise (`overworld.ts`), its layout vanilla:
   both screens flip, the pyramid's door and hole stand on the castle's
   ledge once its screen does (`relocate_pyramid_entrances`,
   `owrMovedExits`), the Bomb Shop's and Dark Chapel's ways out lead to their
-  own areas where Link starts there. OWR's own entrance shuffles (District,
-  Swapped) are not modelled yet: `notedConnections` refuses an OWR world.
+  own areas where Link starts there.
+- The fork's own entrance shuffles District (`modes`,
+  `EntranceShuffle2.py:2566-2726`: each entrance among its district's, by
+  the world its region stands in) and Swapped (`:2727-2743`: entrances
+  trading targets two by two, across worlds), as noted. Neither leaves an
+  entrance to vanilla connections (`undefined` error and swap, `:152-159`,
+  which `notedConnections` checks in the data), so `owrShuffled` moves the
+  whole pool but what `do_main_shuffle` surely connects as it stands: the
+  Tavern's back without shuffletavern (`:230-236`) and, without
+  shufflelinks, the start house's door (`do_links_house`, `:655-660`:
+  Links House, or the Big Bomb Shop once its screen flips,
+  `is_bombshop_start`; neither while that flip is not known). Ganon's Tower
+  and the pyramid stand only without `shuffle_ganon` (`:213-228`,
+  `:525-531`), which a run does not record: moved. The fork's tables are
+  DR's Open world's name for name (no Inverted names: its Inverted world
+  flips screens), and so are its ROM tables (`EntranceData`, `exit_ids`):
+  a note, the app's pool (`owrEntrancePool`, a hole any hole's drop, a door
+  any door's target) and autotracking read an OWR seed as a DR one
+  (`src/door-rando/entrances.spec.ts`). `notedConnections` links the
+  overworld as noted (above), what the shuffle keeps through
+  `linkOwrEntrances`, each noted door as connect_two_way and
+  connect_entrance do (`:2083-2155`), the pyramid's from either place
+  while its screen is not known (`owrEntranceRegion`, `OwrPossibleLinks`),
+  the Bomb Shop's and the Dark Chapel's ways out to the door noted into
+  them where Link starts there (`:2105-2110`), and Chris Houlihan's room
+  back to the start house's door (`:164-167`). The key analysis reads the
+  noted overworld and entrances together: a dungeon whose ways in they all
+  tell is analysed, any other keeps the strict-safe rule. Swapped's pairs
+  (`connect_swap`, `:1986-1995`) are not linked from one note: the player
+  notes each door.
 - Mixed's flips (`ow_mixed`, `OverworldShuffle.py:156-179`), as noted
   (`OwrNotes.flips`: a screen by its light world id, 0x80 and 0x81 the
   pedestal's and Zora's). `owrScreensOf` reads them into the run's screens

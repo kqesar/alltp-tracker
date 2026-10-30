@@ -42,6 +42,7 @@
       "!packs/alttpr/test/owr-spoilers",
       "!packs/alttpr/test/owr-crossed-spoilers",
       "!packs/alttpr/test/owr-mixed-spoilers",
+      "!packs/alttpr/test/owr-entrance-spoilers",
       "!packs/sm/test/spoilers",
       "!packages/archipelago/test/fixtures",
       "!packages/archipelago/test/datapackages",

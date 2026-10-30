@@ -7,7 +7,9 @@
 // unrestricted, each edge noted as the log pairs it) and of test/owr-mixed-
 // spoilers/ (… owr-mixed: screens flipped by Mixed, Open and Inverted,
 // with crossed edges or shuffled whirlpools, each flip noted from the
-// log's `Maps`), in the world the app
+// log's `Maps`) and of test/owr-entrance-spoilers/ (… owr-entrances: the
+// fork's own entrance shuffles, District and Swapped, one District seed
+// with Mixed, each entrance noted as its `Entrances` says), in the world the app
 // solves an OWR run in (drWorld on OWR_DATA, its bonk drops added as the
 // app adds them, `doorAddedOf`).
 //
@@ -17,8 +19,17 @@
 
 import { describe, expect, it } from "vitest";
 import { BONK_DROPS } from "../src/door-rando/bonk";
+import {
+  drEntranceName,
+  drEntranceOf,
+  drTargetOf,
+  type OwrShuffle,
+  owrEntrancePool,
+  vanillaEntrances,
+} from "../src/door-rando/entrances";
 import rules from "../src/door-rando/owr/rules.json" with { type: "json" };
 import {
+  type DrNotedEntrances,
   drWorld,
   type OwrNotes,
   owrNotesFromSpoiler,
@@ -35,6 +46,7 @@ import {
   flag,
   jsonLog,
   type Log,
+  poolOf,
   readFixture,
   settingsFor,
   walk,
@@ -42,19 +54,28 @@ import {
 import { eventsOf } from "./dr-state";
 
 /**
- * The sets, by directory: whether their edges are listed (crossed, or
- * moved by Mixed's flips) and their screens flipped by Mixed.
+ * The sets, by directory: whether their edges are crossed and their
+ * screens flipped by Mixed (either, where absent), and whether their
+ * entrances are shuffled.
  */
-const SETS = {
-  "owr-crossed-spoilers": { listed: true, mixed: false },
-  "owr-mixed-spoilers": { listed: true, mixed: true },
-  "owr-spoilers": { listed: false, mixed: false },
-} as const;
-
-type Set = keyof typeof SETS;
+const SETS: Readonly<
+  Record<
+    string,
+    {
+      readonly crossed?: boolean;
+      readonly mixed?: boolean;
+      readonly entrances: boolean;
+    }
+  >
+> = {
+  "owr-crossed-spoilers": { crossed: true, entrances: false, mixed: false },
+  "owr-entrance-spoilers": { crossed: false, entrances: true },
+  "owr-mixed-spoilers": { entrances: false, mixed: true },
+  "owr-spoilers": { crossed: false, entrances: false, mixed: false },
+};
 
 /** Each log, by `<set>/<file>`. */
-const LOGS: readonly string[] = (Object.keys(SETS) as Set[]).flatMap((set) =>
+const LOGS: readonly string[] = Object.keys(SETS).flatMap((set) =>
   Object.keys(
     (
       JSON.parse(readFixture(set, "index.json")) as {
@@ -70,7 +91,11 @@ const read = (path: string) => {
 };
 
 /** A log's set's kind. */
-const setOf = (path: string) => SETS[(path.split("/")[0] ?? "") as Set];
+const setOf = (path: string) => {
+  const set = SETS[path.split("/")[0] ?? ""];
+  if (set === undefined) throw new RangeError(`No set for ${path}`);
+  return set;
+};
 
 /** Whether a log's edges are crossed (grouped or unrestricted). */
 const crossedLog = (path: string): boolean => {
@@ -92,12 +117,47 @@ const EVENTS: ReadonlyMap<string, string> = new Map([
 ]);
 
 /**
+ * A dungeon whose portals the key walk does not all reach on the noted
+ * world (portalsKnown: a portal moved behind a ledge or into a cave only
+ * the dungeon reaches) keeps the strict-safe rule, every key of the
+ * dungeon (keys.ts), where the fork's analysis counts fewer.
+ */
+const STRICT_SAFE =
+  "its key doors ask every key of the dungeon, its portals not all reached by the walk (portalsKnown)";
+
+/**
  * Where the world's answer is not `yes`, by log: `sphere:location` → the
- * answer, each reviewed.
+ * answer, each reviewed: every one turns `yes` once the dungeon's keys
+ * (its chests' and its pots') are all held (checked 2026-10-30).
  */
 const REVIEWED: Readonly<
   Record<string, { readonly why: string; readonly at: Record<string, string> }>
-> = {};
+> = {
+  "owr-entrance-spoilers/avianart-p5dYMs8jC.json": {
+    at: {
+      "6:Attic Cracked Floor": "maybe",
+      "6:Suspicious Maiden": "maybe",
+      "7:Desert Palace - Prize": "maybe",
+      "8:Skull Woods - Prize": "maybe",
+    },
+    why: `Thieves Town, Desert Palace, Skull Woods: ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-qzj33CUOO.json": {
+    at: {
+      "6:Desert Palace - Prize": "maybe",
+      "6:Skull Woods - Prize": "maybe",
+      "10:Turtle Rock - Prize": "maybe",
+    },
+    why: `Turtle Rock, Desert Palace, Skull Woods: ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-sLcpC6Z45.json": {
+    at: {
+      "3:Skull Woods - Boss": "maybe",
+      "3:Skull Woods - Prize": "maybe",
+    },
+    why: `Skull Woods: ${STRICT_SAFE}`,
+  },
+};
 
 /** The prize-pack farms taken out of each log (PRIZE_FARM), reviewed. */
 const FARMS: Readonly<Record<string, readonly string[]>> = {
@@ -140,24 +200,56 @@ function withoutPrizeFarms(log: Log): { log: Log; farms: readonly string[] } {
   return { farms, log: { ...log, playthrough } };
 }
 
+/** A log's entrance shuffle, the fork's own (District, Swapped). */
+const shuffleOf = (log: Log): OwrShuffle => {
+  const { shuffle } = log.meta;
+  if (shuffle !== "district" && shuffle !== "swapped")
+    throw new RangeError(`Not an entrance shuffle of the fork: ${shuffle}`);
+  return shuffle;
+};
+
+/**
+ * A log's shuffled entrances, noted as its `Entrances` says: each entrance
+ * the fork's pool may move (both start houses' doors, as a run noting
+ * them all would) to the target it took.
+ */
+function entranceNotesOf(log: Log): DrNotedEntrances {
+  const pool = poolOf(log.meta);
+  const moved = new Set(
+    owrEntrancePool(shuffleOf(log), {
+      ...pool,
+      bombShopStart: undefined,
+    }).entrances.map((entrance) => entrance.id),
+  );
+  const noted: Record<string, string> = {};
+  for (const link of log.Entrances) {
+    if (link.direction === "exit") continue;
+    const id = drEntranceOf(link.entrance).id;
+    if (moved.has(id)) noted[id] = drTargetOf(link.exit).id;
+  }
+  return { noted, pool, shuffle: shuffleOf(log) };
+}
+
 /** A log, its settings those the fork's world holds, and its notes. */
 function logOf(name: string): {
   log: Log;
   notes: OwrNotes;
   farms: readonly string[];
+  entrances?: DrNotedEntrances;
 } {
   const json = JSON.parse(read(name)) as Json;
   const { Maps: maps, Overworld: edges, Whirlpools: pools, ...rest } = json;
   const { farms, log } = withoutPrizeFarms(jsonLog(rest));
   const { meta } = log;
   const crossed = crossedLog(name);
-  const { listed, mixed } = setOf(name);
-  // Only the Mixed set mixes its kinds
-  if (!mixed) expect(crossed).toBe(listed);
+  const set = setOf(name);
+  const mixed = flag(meta.ow_mixed);
+  if (set.crossed !== undefined) expect(crossed).toBe(set.crossed);
+  if (set.mixed !== undefined) expect(mixed).toBe(set.mixed);
   // Edges listed once crossed or flipped (all 141 pairs, connect_two_way's
   // spoiler, OverworldShuffle.py:721-722); whirlpools and flute spots only
   // where meta shuffles them
-  expect((edges as readonly unknown[]).length).toBe(listed ? 141 : 0);
+  expect((edges as readonly unknown[]).length).toBe(crossed || mixed ? 141 : 0);
   expect(meta.ow_crossed !== "none").toBe(crossed);
   expect((pools as readonly unknown[]).length > 0).toBe(
     flag(meta.ow_whirlpool),
@@ -169,19 +261,17 @@ function logOf(name: string): {
   ).toBe(meta.ow_fluteshuffle !== "vanilla");
   expect([
     meta.door_shuffle,
-    meta.shuffle,
+    meta.shuffle !== "vanilla",
     meta.logic,
     meta.ow_layout,
-    flag(meta.ow_mixed) === mixed,
     meta.prizeshuffle,
     flag(meta.shuffle_followers),
     flag(meta.bombbag),
   ]).toEqual([
     "vanilla",
-    "vanilla",
+    set.entrances,
     "noglitches",
     "vanilla",
-    true,
     "none",
     false,
     false,
@@ -199,6 +289,7 @@ function logOf(name: string): {
     notes: owrNotesFromSpoiler(
       json as Parameters<typeof owrNotesFromSpoiler>[0],
     ),
+    ...(set.entrances ? { entrances: entranceNotesOf(log) } : {}),
   };
 }
 
@@ -207,7 +298,15 @@ function logOf(name: string): {
  * whirlpools and flute spots as noted.
  */
 const worldOf = (
-  { log, notes }: { readonly log: Log; readonly notes: OwrNotes },
+  {
+    log,
+    notes,
+    entrances,
+  }: {
+    readonly log: Log;
+    readonly notes: OwrNotes;
+    readonly entrances?: DrNotedEntrances;
+  },
   options: { readonly sweepEvents?: boolean },
 ) => {
   const { meta } = log;
@@ -217,10 +316,14 @@ const worldOf = (
       ...settingsFor(meta),
       ...(meta.mode === "inverted" ? { invertedMode: true } : {}),
       ...(bonks ? { bonkDrops: true } : {}),
+      ...(entrances === undefined
+        ? {}
+        : { [`shuffle_${entrances.shuffle}`]: true }),
     },
     {
       data: OWR_DATA,
       overworld: notes,
+      ...(entrances === undefined ? {} : { entrances }),
       ...(bonks
         ? {
             dropsAndPots: BONK_DROPS.map(({ name, region }) => ({
@@ -237,25 +340,81 @@ const worldOf = (
 describe("the Overworld Randomizer's world against its own seeds' playthroughs", () => {
   const logs = LOGS;
 
-  it("reads Open and Inverted seeds, bonk drops, whirlpools and flute spots shuffled and not, edges crossed, screens flipped", () => {
+  it("reads Open and Inverted seeds, bonk drops, whirlpools and flute spots shuffled and not, edges crossed, screens flipped, entrances shuffled", () => {
     const seen = logs.map((name) => {
       const { meta } = logOf(name).log;
-      return `${meta.mode} ${flag(meta.bonk_drops)} ${flag(meta.ow_whirlpool)} ${meta.ow_fluteshuffle} ${meta.ow_crossed} ${flag(meta.ow_mixed)}`;
+      return `${meta.mode} ${flag(meta.bonk_drops)} ${flag(meta.ow_whirlpool)} ${meta.ow_fluteshuffle} ${meta.ow_crossed} ${flag(meta.ow_mixed)} ${meta.shuffle} ${meta.keyshuffle}`;
     });
     expect(seen.sort()).toEqual([
-      "inverted false false vanilla none false",
-      "inverted false false vanilla none true",
-      "inverted false true balanced none false",
-      "inverted true false vanilla none false",
-      "open false false vanilla grouped false",
-      "open false false vanilla grouped true",
-      "open false false vanilla none false",
-      "open false false vanilla none true",
-      "open false false vanilla unrestricted false",
-      "open false true random none false",
-      "open false true vanilla none true",
-      "open true false vanilla none false",
+      "inverted false false vanilla none false vanilla none",
+      "inverted false false vanilla none true vanilla none",
+      "inverted false true balanced none false vanilla none",
+      "inverted true false vanilla none false vanilla none",
+      "open false false vanilla grouped false vanilla none",
+      "open false false vanilla grouped true vanilla none",
+      "open false false vanilla none false district none",
+      "open false false vanilla none false swapped none",
+      "open false false vanilla none false swapped wild",
+      "open false false vanilla none false vanilla none",
+      "open false false vanilla none true district none",
+      "open false false vanilla none true vanilla none",
+      "open false false vanilla unrestricted false vanilla none",
+      "open false true random none false vanilla none",
+      "open false true vanilla none true vanilla none",
+      "open true false vanilla none false vanilla none",
     ]);
+  });
+
+  it("offers each entrance a shuffled seed moved, and its target; the rest stand", () => {
+    const shuffled = logs.filter((name) => setOf(name).entrances);
+    expect(shuffled).toHaveLength(4);
+    const maps = vanillaEntrances(false);
+    for (const name of shuffled) {
+      const { log, notes, entrances } = logOf(name);
+      const screens = owrScreensOf(OWR_DATA, "open", notes);
+      const pool = owrEntrancePool(shuffleOf(log), {
+        ...poolOf(log.meta),
+        bombShopStart: screens.swapped(0x2c),
+      });
+      const ways = log.Entrances.filter((link) => link.direction !== "exit");
+      expect(ways).toHaveLength(140);
+      const kept: string[] = [];
+      for (const link of ways) {
+        const offered = pool.targetsOf.get(drEntranceOf(link.entrance).id);
+        if (offered === undefined) {
+          const vanilla =
+            maps.twoWay.get(link.entrance) ?? maps.oneWay.get(link.entrance);
+          if (vanilla !== link.exit) kept.push(link.entrance);
+          continue;
+        }
+        expect(
+          offered.map((t) => t.id),
+          `${name}: ${link.entrance} → ${link.exit}`,
+        ).toContain(drTargetOf(link.exit).id);
+      }
+      expect(kept, name).toEqual([]);
+      // Each the pool moves noted; the start house kept (no shufflelinks),
+      // the Tavern's back moved (shuffletavern)
+      expect(
+        pool.entrances
+          .filter((e) => entrances?.noted[e.id] === undefined)
+          .map((e) => drEntranceName(e.id)),
+      ).toEqual([]);
+      expect(pool.entrances.map((e) => drEntranceName(e.id))).not.toContain(
+        "Links House",
+      );
+      expect(pool.entrances.map((e) => drEntranceName(e.id))).toContain(
+        "Tavern North",
+      );
+      // Some entrance leads elsewhere than its vanilla target
+      expect(
+        ways.filter(
+          (link) =>
+            (maps.twoWay.get(link.entrance) ??
+              maps.oneWay.get(link.entrance)) !== link.exit,
+        ).length,
+      ).toBeGreaterThan(50);
+    }
   });
 
   it("crosses exactly the edges a Mixed seed lists, from its flips alone", () => {

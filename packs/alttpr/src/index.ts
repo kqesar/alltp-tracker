@@ -177,6 +177,9 @@ export {
   type DrShuffle,
   drDecoupled,
   drEntrancePool,
+  type OwrPoolSettings,
+  type OwrShuffle,
+  owrEntrancePool,
 } from "./door-rando/entrances";
 export {
   BONK_DROP_IDS,

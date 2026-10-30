@@ -4,7 +4,7 @@
 // (test/dr-spoilers/): DR's own text log of real seeds, cut to what the
 // parser reads.
 //
-//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors|owr|owr-crossed|owr-mixed]
+//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors|owr|owr-crossed|owr-mixed|owr-entrances]
 //
 // With no argument it records both sets; with one, that set alone.
 //
@@ -87,6 +87,10 @@ const OUT_OWR_CROSSED = join(
 const OUT_OWR_MIXED = join(
   dirname(fileURLToPath(import.meta.url)),
   "../test/owr-mixed-spoilers",
+);
+const OUT_OWR_ENTRANCES = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../test/owr-entrance-spoilers",
 );
 const AGENT = "RandoAtlas fixtures (KqesaR/alltp-tracker)";
 
@@ -222,6 +226,22 @@ export const OWR_MIXED_SEEDS = [
   "6DIwXjzG5",
   "4yKJq5H2E",
   "t8B3wJpHK",
+];
+
+/**
+ * The shuffled entrances set (test/owr-entrance-spoilers/): avianart.games
+ * seeds of OWR 0.8.0.2 as OWR_SEEDS', Open, their entrances shuffled by the
+ * fork's own modes, generated 2026-10-30 (`[{"args":{"branch":"OWR",
+ * "worldstate":"open","entranceshuffle":"swapped","spoiler":"full"}}]`):
+ * Swapped, District (`"entranceshuffle":"district"`), Swapped with small
+ * keys wild (`"keyshuffle":"wild"`) and District with Mixed
+ * (`"entranceshuffle":"district","mixed":true`).
+ */
+export const OWR_ENTRANCE_SEEDS = [
+  "sLcpC6Z45",
+  "qzj33CUOO",
+  "sbuwNOmVF",
+  "p5dYMs8jC",
 ];
 
 /** The keys of DR's JSON spoiler the contract reads (to_json). */
@@ -440,6 +460,12 @@ async function main() {
       OUT_OWR_MIXED,
       await recordAvianart(OWR_MIXED_SEEDS, OUT_OWR_MIXED, OWR_KEYS),
       "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr-mixed): avianart.games seeds' JSON spoilers of the Overworld Randomizer, its screens flipped by Mixed. Record again, never edit.",
+    );
+  if (only === undefined || only === "owr-entrances")
+    writeIndex(
+      OUT_OWR_ENTRANCES,
+      await recordAvianart(OWR_ENTRANCE_SEEDS, OUT_OWR_ENTRANCES, OWR_KEYS),
+      "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr-entrances): avianart.games seeds' JSON spoilers of the Overworld Randomizer, its entrances shuffled by its own modes. Record again, never edit.",
     );
   if (only === undefined || only === "doors")
     writeIndex(

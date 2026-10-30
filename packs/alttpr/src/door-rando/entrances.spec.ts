@@ -12,6 +12,7 @@ import {
   drTargetOf,
   vanillaEntrances,
 } from "./entrances";
+import owr from "./owr/connections.json" with { type: "json" };
 import connections from "./world/connections.json" with { type: "json" };
 
 const SHUFFLES: readonly DrShuffle[] = [
@@ -228,5 +229,40 @@ describe("the Door Randomizer's entrance pools", () => {
     for (const inverted of [false, true])
       for (const name of vanillaEntrances(inverted).pool)
         expect(named.has(drEntranceOf(name).id), name).toBe(true);
+  });
+
+  it("reads the Overworld Randomizer's entrances as DR's Open world's", () => {
+    // The fork's EntranceShuffle2 tables (owr 0.8.0.2) are DR's, but for
+    // the Inverted names its world never uses: its pools (owrShuffled) and
+    // a note of either are the same; its ROM tables (EntranceData's slots,
+    // exit_ids) too, so autotracking reads an OWR seed's doors alike
+    const tables = (from: unknown, file: string) =>
+      (from as Record<string, Record<string, { value: unknown }>>)[file] ?? {};
+    const fork = tables(owr, "source/overworld/EntranceShuffle2.py");
+    const dr = tables(connections, "source/overworld/EntranceShuffle2.py");
+    const open = vanillaEntrances(false);
+    const drops = (fork.drop_map?.value ?? {}) as Record<string, string>;
+    expect(drops).toEqual(
+      Object.fromEntries([...open.oneWay].filter(([name]) => name in drops)),
+    );
+    expect(Object.keys(drops)).toHaveLength(12);
+    const twoWay = fork.entrance_map?.value as Record<string, string>;
+    expect(new Map(Object.entries(twoWay))).toEqual(
+      new Map(
+        [...open.twoWay].filter(([name]) => !name.startsWith("Inverted")),
+      ),
+    );
+    expect(
+      [
+        ...Object.keys(drops),
+        ...Object.keys(twoWay),
+        ...Object.keys(fork.single_entrance_map?.value as object),
+      ].sort(),
+    ).toEqual([...open.pool].sort());
+    expect(fork.exit_ids?.value).toEqual(dr.exit_ids?.value);
+    const data = "source/overworld/EntranceData.py";
+    expect(tables(owr, data).door_addresses?.value).toEqual(
+      tables(connections, data).door_addresses?.value,
+    );
   });
 });

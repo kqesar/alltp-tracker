@@ -208,6 +208,26 @@ const MOVED_FROM: ReadonlyMap<string, string> = new Map([
   ["Pyramid Entrance", "Hyrule Castle Ledge"],
 ]);
 
+/**
+ * The region an OWR entrance stands in (relocate_pyramid_entrances moves
+ * the pyramid's two onto the castle's ledge once 0x1b flips, EntranceShuffle2
+ * .py:2034-2055): undefined while that screen's flip is not known.
+ */
+export function owrEntranceRegion(
+  data: DrData,
+  screens: OwrScreens,
+  entrance: string,
+): string | undefined {
+  const moved = MOVED_FROM.get(entrance);
+  if (moved === undefined) return data.parentOf(entrance);
+  const flipped = screens.swapped(0x1b);
+  return flipped === undefined
+    ? undefined
+    : flipped
+      ? moved
+      : data.parentOf(entrance);
+}
+
 /** The overworld of an OWR bundle; throws for DR's. */
 export function overworldOf(data: DrData): OwrOverworld {
   if (data.overworld === undefined)
@@ -660,6 +680,9 @@ export function linkOwrOverworld(
  * pyramid's hole and door (on the castle's ledge once 0x1b flips,
  * relocate_pyramid_entrances :2034-2055) and the start's ways out are
  * linked neither way while the screens they read are not known.
+ * @param kept - The entrances an entrance shuffle leaves as they stand
+ *   (owrShuffled): every one by default; the start's ways out and Chris
+ *   Houlihan's room then follow the doors noted (notedConnections)
  */
 export function linkOwrEntrances(
   data: DrData,
@@ -667,6 +690,7 @@ export function linkOwrEntrances(
   mode: DrMode,
   screens: OwrScreens = screensOf(mode),
   possible: OwrPossibleLinks = [],
+  kept: (entrance: string) => boolean = () => true,
 ): void {
   for (const [exit, region] of data.pairsOf(
     "EntranceShuffle2",
@@ -716,6 +740,7 @@ export function linkOwrEntrances(
     ...Object.keys(singles),
   ].sort();
   for (const entrance of pool) {
+    if (!kept(entrance)) continue;
     const exit = twoWays[entrance];
     if (exit !== undefined) {
       if (unknown.has(entrance) || unknown.has(exit)) {
@@ -751,12 +776,18 @@ export function linkOwrEntrances(
     else c.set(entrance, region);
   }
   const bombShop = screens.swapped(0x2c);
-  if (bombShop === true) c.set("Big Bomb Shop Exit", "Big Bomb Shop Area");
-  else if (bombShop === undefined)
-    possible.push(["Big Bomb Shop Exit", "Big Bomb Shop Area"]);
-  if (mode === "inverted")
+  if (kept("Big Bomb Shop")) {
+    if (bombShop === true) c.set("Big Bomb Shop Exit", "Big Bomb Shop Area");
+    else if (bombShop === undefined)
+      possible.push(["Big Bomb Shop Exit", "Big Bomb Shop Area"]);
+  }
+  if (mode === "inverted" && kept("Dark Sanctuary Hint"))
     c.set("Dark Sanctuary Hint Exit", "Dark Chapel Area");
-  if (!c.has("Chris Houlihan Room Exit")) {
+  if (
+    kept("Links House") &&
+    kept("Big Bomb Shop") &&
+    !c.has("Chris Houlihan Room Exit")
+  ) {
     if (bombShop === undefined)
       possible.push(
         ["Chris Houlihan Room Exit", data.parentOf("Big Bomb Shop")],

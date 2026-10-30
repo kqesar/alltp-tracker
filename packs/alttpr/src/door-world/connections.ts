@@ -13,6 +13,8 @@ import {
   drKeepsRest,
   drShuffled,
   drTargetName,
+  type OwrShuffle,
+  owrShuffled,
   vanillaEntrances,
 } from "../door-rando/entrances";
 import { type DrData, type DrMode, type DrRegion, dependentsOf } from "./data";
@@ -29,6 +31,7 @@ import {
   type OwrNotes,
   type OwrPossibleLinks,
   type OwrScreens,
+  owrEntranceRegion,
   owrScreensOf,
 } from "./overworld";
 
@@ -370,7 +373,8 @@ function removeExits(c: Map<string, string>, doors?: DrNotedDoors): void {
 
 /** A DR run's shuffled entrances, as the player noted them. */
 export interface DrNotedEntrances {
-  readonly shuffle: DrShuffle;
+  /** DR's shuffle, or for the Overworld Randomizer's world one of its own. */
+  readonly shuffle: DrShuffle | OwrShuffle;
   readonly pool: DrPoolSettings;
   /** Each noted entrance's target, by the entrance randomizer's ids. */
   readonly noted: Readonly<Record<string, string>>;
@@ -403,23 +407,35 @@ export function notedConnections(
   entrances: DrNotedEntrances,
   version = 156,
   doors?: DrNotedDoors,
+  overworld?: OwrNotes,
+  screens: OwrScreens = owrScreensOf(data, mode, overworld),
+  possible: OwrPossibleLinks = [],
 ): DrNotedConnections {
-  // OWR's shuffled entrances (its own pools, District and Swapped) are
-  // not modelled yet
   if (data.flavor === "owr")
-    throw new RangeError("No noted entrances of the Overworld Randomizer");
+    return owrNotedConnections(
+      data,
+      mode,
+      entrances,
+      doors,
+      overworld,
+      screens,
+      possible,
+    );
+  const { shuffle } = entrances;
+  if (shuffle === "district")
+    throw new RangeError("District is the Overworld Randomizer's alone");
   const c = new Map<string, string>();
   linkOverworld(data, c, mode);
-  const moved = drShuffled(entrances.shuffle, entrances.pool);
+  const moved = drShuffled(shuffle, entrances.pool);
   linkEntrances(
     data,
     c,
     mode,
     version,
     (entrance) => !moved.has(entrance),
-    drKeepsRest(entrances.shuffle),
+    drKeepsRest(shuffle),
   );
-  const decoupled = drDecoupled(entrances.shuffle);
+  const decoupled = drDecoupled(shuffle);
   const { twoWay: twoWays } = vanillaEntrances(mode === "inverted");
   const exits = new Set(twoWays.values());
   const noted = new Set<string>();
@@ -443,6 +459,112 @@ export function notedConnections(
     complete: !decoupled && [...moved].every((e) => noted.has(e)),
     connections: c,
     decoupled,
+  };
+}
+
+/**
+ * An OWR run's world on its noted entrances, as the fork links them
+ * (EntranceShuffle2.py at owr 0.8.0.2): its overworld as noted
+ * (linkOwrOverworld), what its shuffle keeps as it stands (owrShuffled,
+ * linkOwrEntrances), each noted entrance as connect_two_way,
+ * connect_entrance and connect_exit do (:2083-2155): a cave's or dungeon's
+ * door both ways, a hole or a single cave's door one way. The pyramid's
+ * doors, which stand on the castle's ledge once its screen flips, lead
+ * from either place while that is not known (`possible`). Where Link
+ * starts at the Big Bomb Shop or the Dark Chapel (is_bombshop_start,
+ * is_dark_chapel_start), the door noted into it is where its way out
+ * leads (:2105-2110), and Chris Houlihan's room leads back to the start
+ * house's door (:164-167). Only District and Swapped, the modes whose
+ * `undefined` places every entrance (error, swap: `modes`, :2566-2743),
+ * are read.
+ */
+function owrNotedConnections(
+  data: DrData,
+  mode: DrMode,
+  entrances: DrNotedEntrances,
+  doors: DrNotedDoors | undefined,
+  overworld: OwrNotes | undefined,
+  screens: OwrScreens,
+  possible: OwrPossibleLinks,
+): DrNotedConnections {
+  const { shuffle } = entrances;
+  const modes = data.tableOf<{ readonly undefined: string }>(
+    "EntranceShuffle2",
+    "modes",
+  );
+  const placed = modes[shuffle]?.undefined;
+  if (
+    (shuffle !== "district" && shuffle !== "swapped") ||
+    (placed !== "error" && placed !== "swap")
+  )
+    throw new RangeError(`No noted ${shuffle} entrances of the fork`);
+  const c = new Map<string, string>();
+  linkOwrOverworld(data, c, mode, overworld, screens, possible);
+  const bombShopStart = screens.swapped(0x2c);
+  const moved = owrShuffled({ ...entrances.pool, bombShopStart });
+  linkOwrEntrances(data, c, mode, screens, possible, (e) => !moved.has(e));
+  const { twoWay: twoWays } = vanillaEntrances(false);
+  const exits = new Set(twoWays.values());
+  const noted = new Set<string>();
+  // Each start house's door, kept or noted
+  const houses = new Map<string, string>(
+    [
+      ["Links House", "Links House Exit"],
+      ["Big Bomb Shop", "Big Bomb Shop"],
+    ].flatMap(([door = "", target = ""]) =>
+      moved.has(door) ? [] : [[target, door] as const],
+    ),
+  );
+  /** Links `exit` to where `entrance` stands, from either place if not known. */
+  const backTo = (exit: string, entrance: string) => {
+    const at = owrEntranceRegion(data, screens, entrance);
+    if (at !== undefined) c.set(exit, at);
+    else
+      possible.push(
+        [exit, data.parentOf(entrance)],
+        [exit, "Hyrule Castle Ledge"],
+      );
+  };
+  for (const [id, targetId] of Object.entries(entrances.noted)) {
+    const entrance = drEntranceName(id);
+    const target = drTargetName(targetId);
+    if (entrance === undefined || target === undefined || !moved.has(entrance))
+      continue;
+    if (!data.parent.has(entrance)) continue;
+    noted.add(entrance);
+    if (target === "Links House Exit" || target === "Big Bomb Shop")
+      houses.set(target, entrance);
+    const to = exits.has(target) ? data.parentOf(target) : target;
+    if (owrEntranceRegion(data, screens, entrance) === undefined)
+      possible.push([entrance, to], [entrance, to, "Hyrule Castle Ledge"]);
+    else c.set(entrance, to);
+    if (exits.has(target)) backTo(target, entrance);
+    // connect_entrance (:2105-2110): the start's way out
+    if (target === "Big Bomb Shop") {
+      if (bombShopStart === true) backTo("Big Bomb Shop Exit", entrance);
+      else if (bombShopStart === undefined)
+        possible.push(["Big Bomb Shop Exit", data.parentOf(entrance)]);
+    }
+    if (target === DARK_SANCTUARY && mode === "inverted")
+      backTo(DARK_SANCTUARY_EXIT, entrance);
+  }
+  // Chris Houlihan's room, back to the start house's door (:164-167)
+  for (const [house, start] of [
+    ["Links House Exit", false],
+    ["Big Bomb Shop", true],
+  ] as const) {
+    const door = houses.get(house);
+    if (door === undefined || (bombShopStart ?? start) !== start) continue;
+    if (bombShopStart === undefined)
+      possible.push(["Chris Houlihan Room Exit", data.parentOf(door)]);
+    else backTo("Chris Houlihan Room Exit", door);
+  }
+  linkDoors(data, c, doors);
+  removeExits(c, doors);
+  return {
+    complete: [...moved].every((e) => noted.has(e)),
+    connections: c,
+    decoupled: false,
   };
 }
 
