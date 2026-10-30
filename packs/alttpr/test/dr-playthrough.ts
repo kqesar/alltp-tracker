@@ -172,13 +172,24 @@ export function entranceNotesOf(log: Log): DrNotedEntrances {
   return { noted, pool, shuffle };
 }
 
+/**
+ * The events a world names by the item its playthrough holds (dr-state's
+ * `eventsOf`): DR's own, or a release's of its own (the Overworld
+ * Randomizer's, with its dynamic events' facts).
+ */
+export type WalkEvents = ReadonlyMap<string, string> | undefined;
+
 /** What a player holds of `items`, with the seed's medallions. */
-function stateOf(items: readonly string[], special: Log["Special"]): State {
+function stateOf(
+  items: readonly string[],
+  special: Log["Special"],
+  events: WalkEvents,
+): State {
   const {
     mireIsEther: _mire,
     turtleRockIsQuake: _turtleRock,
     ...held
-  } = collect(items);
+  } = collect(items, events);
   const pad = (dungeon: string) => special[dungeon]?.toLowerCase() as Medallion;
   return {
     ...held,
@@ -223,6 +234,7 @@ const spheresOf = (log: Log) => {
 export function walk(
   log: Log,
   world: Parameters<typeof solveFacts>[0] & PlaythroughWorld,
+  events?: WalkEvents,
 ): {
   readonly checked: number;
   readonly notYes: Readonly<Record<string, string>>;
@@ -234,7 +246,7 @@ export function walk(
   const notYes: Record<string, string> = {};
   let checked = 0;
   for (const [i, sphere] of spheresOf(log).entries()) {
-    let solution = solveFacts(world, stateOf(held, log.Special));
+    let solution = solveFacts(world, stateOf(held, log.Special, events));
     for (;;) {
       const more = keys.filter(
         ([at]) => !found.has(at) && solution.location(id(at)) !== "no",
@@ -244,7 +256,7 @@ export function walk(
         found.add(at);
         held.push(item);
       }
-      solution = solveFacts(world, stateOf(held, log.Special));
+      solution = solveFacts(world, stateOf(held, log.Special, events));
     }
     for (const location of Object.keys(sphere)) {
       checked++;
@@ -281,6 +293,7 @@ export function walk(
 export function early(
   log: Log,
   world: Parameters<typeof solveFacts>[0] & PlaythroughWorld,
+  events?: WalkEvents,
 ): string[] {
   const id = idIn(world);
   const keys = sweptKeys(log);
@@ -289,7 +302,7 @@ export function early(
   const found = new Set<string>();
   const out: string[] = [];
   spheres.forEach((sphere, i) => {
-    let solution = solveFacts(world, stateOf(held, log.Special));
+    let solution = solveFacts(world, stateOf(held, log.Special, events));
     for (;;) {
       const more = keys.filter(
         ([at]) => !found.has(at) && solution.location(id(at)) === "yes",
@@ -299,7 +312,7 @@ export function early(
         found.add(at);
         held.push(item);
       }
-      solution = solveFacts(world, stateOf(held, log.Special));
+      solution = solveFacts(world, stateOf(held, log.Special, events));
     }
     spheres.slice(i + 1).forEach((later, j) => {
       for (const location of Object.keys(later))

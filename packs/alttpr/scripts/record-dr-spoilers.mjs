@@ -4,7 +4,7 @@
 // (test/dr-spoilers/): DR's own text log of real seeds, cut to what the
 // parser reads.
 //
-//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors]
+//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors|owr]
 //
 // With no argument it records both sets; with one, that set alone.
 //
@@ -75,6 +75,10 @@ const OUT_ENTRANCES = join(
 const OUT_DOORS = join(
   dirname(fileURLToPath(import.meta.url)),
   "../test/dr-door-spoilers",
+);
+const OUT_OWR = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../test/owr-spoilers",
 );
 const AGENT = "RandoAtlas fixtures (KqesaR/alltp-tracker)";
 
@@ -157,6 +161,26 @@ export const DOOR_SEEDS = [
   // partitioned, intensity 3, inverted, decoupled doors, key drops and key
   // pots (customizer)
   "2uDU33UMw",
+];
+
+/**
+ * The Overworld Randomizer set (test/owr-spoilers/): no OWR race keeps its
+ * spoiler (avianart race permalinks keep their meta alone), so avianart.games
+ * seeds of OWR 0.8.0.2 (on DR 1.5.7) generated for these fixtures on
+ * 2026-10-30, not races, from the customizer (`?action=generate`, branch
+ * OWR, `spoiler: full`, every other setting the site's default: noglitches,
+ * the Ganon goal, keys in their dungeons), the overworld, doors and
+ * entrances vanilla: the release the pack's OWR world reads.
+ */
+export const OWR_SEEDS = [
+  // Open, bonk drops shuffled
+  "n7Bg53tbm",
+  // Open
+  "2cWVkb9pK",
+  // Inverted, bonk drops shuffled
+  "rcEzGOnFN",
+  // Inverted
+  "nir3EmS5u",
 ];
 
 /** The keys of DR's JSON spoiler the contract reads (to_json). */
@@ -287,6 +311,13 @@ async function recordRaces(races, out) {
 const DOOR_KEYS = ["Doors", "Lobbies", "DoorTypes"];
 
 /**
+ * What the Overworld Randomizer's contract reads beside `KEPT_KEYS`: its
+ * edges, whirlpools and flute spots (Overworld, Whirlpools, Maps), empty
+ * while they stay vanilla.
+ */
+const OWR_KEYS = ["Overworld", "Whirlpools", "Maps"];
+
+/**
  * Records avianart.games seeds' JSON spoilers, cut to `KEPT_KEYS` (and
  * `extra`), into `out`.
  * @param {readonly string[]} hashes
@@ -351,6 +382,12 @@ async function main() {
       "By packs/alttpr/scripts/record-dr-spoilers.mjs (vanilla|entrances): spoiler races' DR text logs and avianart.games seeds' JSON spoilers, entrances shuffled. Record again, never edit.",
     );
   }
+  if (only === undefined || only === "owr")
+    writeIndex(
+      OUT_OWR,
+      await recordAvianart(OWR_SEEDS, OUT_OWR, OWR_KEYS),
+      "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr): avianart.games seeds' JSON spoilers of the Overworld Randomizer. Record again, never edit.",
+    );
   if (only === undefined || only === "doors")
     writeIndex(
       OUT_DOORS,

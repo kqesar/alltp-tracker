@@ -1720,6 +1720,24 @@ answers otherwise is listed in `test/owr-stale.ts` with why, and held to it:
   moves fails the spec until reviewed again. `src/door-world/owr-world.spec.ts`
 holds the links, the flute spots, the screens and the rules above.
 
+**Its own seeds' playthroughs** (`test/owr-spoilers/`, written by
+`pnpm --filter @alltp/pack-alttpr record-dr-spoilers owr`, never by hand):
+no OWR race keeps its spoiler (avianart's race permalinks keep their meta
+alone), so four avianart.games seeds of OWR 0.8.0.2 (on DR 1.5.7),
+generated for the fixtures from the site's customizer (branch OWR,
+noglitches, the Ganon goal, keys in their dungeons), the overworld, doors
+and entrances vanilla: Open and Inverted, bonk drops shuffled and not.
+Each JSON keeps the contract's keys and the fork's `Overworld`,
+`Whirlpools` and `Maps` (empty in these). `test/owr-playthrough.spec.ts`
+walks each in the world the app solves an OWR run in (`OWR_DATA`, the bonk
+drops added as locations, the fork's events and farms held by name): each
+sphere `yes` with the spheres before it, and no location of a later sphere
+`yes` too early. All four hold with no exception. The app's side
+(`apps/web/src/games/alttpr/logic/owrSeeds.spec.ts`) reads the same
+permalinks as **Start from a seed** does and holds the run they switch to
+to that world's settings: modelled, the fork's solver, its mode, its bonk
+drops, DR 1.5.7.
+
 ## The entrance randomizer's tables
 
 vt hands a seed with shuffled entrances to the entrance randomizer, a Python
