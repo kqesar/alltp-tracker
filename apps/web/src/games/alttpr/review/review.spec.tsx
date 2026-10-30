@@ -306,7 +306,7 @@ describe("a Door Randomizer log", () => {
     expect(useReviewStore.getState().review).toBeNull();
   });
 
-  it("does not say when a place came into logic for DR's static key logic", async () => {
+  it("reads DR's static key logic in DR's world, refusing it no more", async () => {
     // The same seed with its dungeon items kept in their dungeons, which
     // would otherwise be the first thing said (keys wild)
     const text = doorSpoilerText(SEED)
@@ -333,11 +333,12 @@ describe("a Door Randomizer log", () => {
     finishRun();
     await importFile(doorSpoilerFile(SEED, text));
     await screen.findByTestId("review-notice");
-    // An unstable build's static key logic, which DR 1.5.6 has not: the
-    // tracker does not model it
+    // An unstable 1.5.6 build's static key logic, DR's since 1.5.7: DR's
+    // world models it, so what stops the waits here is only that nothing
+    // was played
     expect(settings.keyLogic).toBe("static");
     expect(await screen.findByTestId("review-hidden")).toHaveTextContent(
-      "This seed's logic is not one the tracker models",
+      "Nothing the seed needed has a time on this run",
     );
   });
 });

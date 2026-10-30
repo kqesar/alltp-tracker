@@ -1153,7 +1153,13 @@ cases at the release. `pool.json` is the pool an "everything but" case draws fro
 customizer seeds' Verification checks, the key logic seeds held by
 `test/dr-suite.spec.ts` (below). `vanilla-key-logic.json` is
 `KeyDoorShuffle.py`'s `validate_vanilla_key_logic`, which no code of DR
-calls: the rule it expects of each vanilla key door, read per mode. A file is listed `pending` in
+calls: the rule it expects of each vanilla key door, read per mode. `static-key-logic.json` is
+`test/TestStaticKeyLogic.py`'s cases (1.5.7 on, below). The other tests
+1.5.7 and 1.5.8 add are code over what the world does not model:
+`TestKillChests` swaps an enemy for a Lynel (enemy shuffle; the vanilla
+room's rule is `world.spec.ts`'s), `TestKeyLogicPlando` the customizer's
+key rules, `TestForceEnemy` and `TestBossSheets` the enemizer,
+`TestMoneyBalance` the fill. A file is listed `pending` in
 `upstream.json` until DR's world is held to it (`test/dr-fixtures.spec.ts`
 holds the list); `test/dr-contract.spec.ts` holds each `ported` file to its
 cases, a case it answers otherwise listed with why (`STALE`,
@@ -1266,6 +1272,35 @@ it. A fact whose location is reached at `maybe` only is read at `maybe`
 Open and Inverted only), nor to a seed yet: every recorded spoiler race is
 Open.
 
+**The static key logic** (`src/door-world/static.ts`, `key_logic_algorithm`
+static, DR's from 1.5.7 and some unstable 1.5.6 builds' before): the
+entrance randomizer's key rules laid over DR's analysis.
+`source/dungeon/StaticKeyLogic.py`'s table (`DOOR_RULES`, imported into
+`rules.json` as `staticKeyLogic`) gives each of its key doors and the door
+across a fixed number, counted from the chests alone (`chest_counting`,
+`has_sm_key_strict`: the vanilla drops' facts aside), with the table's own
+alternatives (a big key or a small key in named chests) at `maybe`
+(`apply_key_rule_specs`, `KeyDoorShuffle.py:1422-1500`); its code gives
+Hyrule Castle's two chests, Desert's boss, Kholdstare (two keys, or the
+Cane of Somaria and one: an `or` over the doors' rules), Turtle Rock's big
+key chest and Ganon's Tower's top their own rules. Turtle Rock's doors
+follow which of its ways in the world reaches with every item but its
+small keys (`turtleRockAccess`, a probe world of its own, once per mode
+and release: the front alone in Open and Standard, every way in
+Inverted). Its fixes are read by the seed's release: 1.5.7 strips the
+analysis's own alternatives from the table's doors and probes with the
+other dungeons' keys, 1.5.7 and 1.5.8 open TR Pokey 2 ES to the chest's
+own key; a 1.5.6 build keeps the alternatives (`maybe` only) and, in
+Standard, the table's numbers (the probe found no way in without the
+sewers' key, `4222a44`). DR refuses it with key drops or key pots shuffled
+(`static_logic_supported`), so such a run is not modelled.
+`test/dr-static.spec.ts` holds it to `TestStaticKeyLogic.py`
+(`test/dr-upstream/static-key-logic.json`: each `min_keys` case, the
+fewest keys that reach a location, so yes with that many and not yes with
+one fewer, asked again with the keys wild, where one short is `no`; a case
+made with an item placed is only never `no` with that many), and the race
+seed of that logic (`DR_660701088`) to its playthrough.
+
 **Real seeds** (`test/dr-playthrough.spec.ts`): the playthrough of each
 recorded spoiler race (`test/dr-spoilers/`, below; built by 1.5.6-u to
 1.5.8-u, whose playthrough and sweep code is 1.5.6's) is a contract.
@@ -1275,9 +1310,9 @@ kept in their dungeons collected as its sweep reaches them; so each
 location of a sphere is `yes` with the items of the spheres before it held,
 the dungeons' keys found wherever the world does not refuse their place.
 The answers that are not `yes` are listed with why: Misery Mire's two-key
-alternative and a key rule that rests on a placement (`maybe`), and a seed
-of DR's unstable `static` key logic, which 1.5.6 does not have and which
-opens Ice Palace with fewer keys (`no`, a logic the app does not model).
+alternative and a key rule that rests on a placement (`maybe`). The seed
+of DR's `static` key logic (an unstable 1.5.6 build's) is held whole in
+its own world, below.
 The other way, nothing is `yes` too early: the spheres are first-reachable
 sets, so no location of a later sphere is `yes` with what a sphere starts
 with, asked as DR builds that state: the earlier spheres' items and the

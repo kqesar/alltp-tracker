@@ -55,19 +55,6 @@ const REVIEWED: Readonly<
     },
     why: "Mire's crystal alternative; a placement-dependent key rule",
   },
-  // Built by a DR unstable whose `static` key logic DR 1.5.6 does not have
-  // (its key_logic_algorithm choices are dangerous, partial and strict,
-  // resources/app/cli/args.json:209-215): it opens Ice Palace's way to the
-  // boss with fewer keys than partial logic counts. The app names it a
-  // logic it does not model.
-  "DR_660701088_Spoiler.txt": {
-    at: {
-      "12:Ice Palace - Boss": "no",
-      "12:Ice Palace - Prize": "no",
-      "12:Misery Mire - Map Chest": "maybe",
-    },
-    why: "static key logic; Mire's crystal alternative",
-  },
 };
 
 /** The world's settings for a log's header (DR's `meta`). */
@@ -85,6 +72,7 @@ function settingsFor(meta: Log["meta"]) {
     ...(meta.bigkeyshuffle === true ? { wildBigKeys: true } : {}),
     ...(meta.key_logic === "strict" ? { strictKeyLogic: true } : {}),
     ...(meta.key_logic === "dangerous" ? { dangerousKeyLogic: true } : {}),
+    ...(meta.key_logic === "static" ? { staticKeyLogic: true } : {}),
     ...(meta.pottery === "keys" ? { potKeys: true } : {}),
     ...(meta.dropshuffle === "keys" ? { dropShuffle: true } : {}),
     ...(meta.accessibility === "locations"

@@ -61,6 +61,12 @@ export interface KeyLogic {
   readonly bkDoors: ReadonlySet<KDoor>;
   /** bk_chests: the big chests and the big key's locked spots. */
   readonly bkChests: Set<KLocation>;
+  /**
+   * chest_counting (KeyDoorShuffle.py:66 at 1.5.8): its doors count the
+   * keys of the chests alone, the drops' aside (has_sm_key_strict), as the
+   * static key logic sets it (static.ts).
+   */
+  readonly chestCounting?: boolean;
 }
 
 const difference = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): Set<T> =>

@@ -27,9 +27,11 @@ import {
   type World,
 } from "@alltp/engine";
 import { erLocationId } from "../entrances";
-import type { FactWorld } from "../facts";
+import { type FactWorld, solveFacts } from "../facts";
+import { everything } from "../keys";
 import { STATE_NAMES } from "../pack";
 import { RULES } from "../rules";
+import { settingsFromUpstream } from "../settings";
 import { unknownCountRequirement } from "../unknown-counts";
 import { addBunnyRules } from "./bunny";
 import {
@@ -71,6 +73,14 @@ import {
   worldKeys,
 } from "./keys";
 import { addZeldaPath, UNCLE_SAVE_AND_QUIT, zeldaPath } from "./standard";
+import {
+  addStaticKeyRules,
+  staticKeyLogic,
+  TURTLE_ROCK_PROBES,
+  type TurtleRockAccess,
+  type TurtleRockCase,
+  turtleRockCase,
+} from "./static";
 import { and, maybeOf, or, readFact } from "./text";
 
 export type { DrConnections } from "./connections";
@@ -134,6 +144,12 @@ export interface DrWorldOptions {
   }[];
   /** Test only: items the `doorRule` reads beside the pack's. */
   readonly items?: readonly string[];
+  /**
+   * Regions to answer as locations: each a location `region:<name>` in it
+   * with no rule, reached with the region (Region.can_reach): what the
+   * static key logic's Turtle Rock probe asks.
+   */
+  readonly regions?: readonly string[];
 }
 
 /** A compiled Door Randomizer world, its facts and its locations' ids. */
@@ -159,6 +175,9 @@ export const drRegionId = (name: string): string | undefined =>
 
 /** The id of a probe on an exit. */
 export const probeId = (exit: string): string => `exit:${exit}`;
+
+/** The id of a probe on a region. */
+export const regionProbeId = (region: string): string => `region:${region}`;
 
 /** The mode a run's settings say. */
 export const drModeOf = (settings: Settings): DrMode =>
@@ -392,6 +411,9 @@ export const DR_DEFAULTS: Settings = {
   // and compass
   restrictBossItems: false,
   retroBow: false,
+  // key_logic_algorithm static: the entrance randomizer's key rules over
+  // DR's analysis, chest keys alone (static.ts)
+  staticKeyLogic: false,
   // key_logic_algorithm strict (with wild keys, all the chests' keys)
   strictKeyLogic: false,
   treasureHunt: 0,
@@ -471,6 +493,8 @@ function graph(
         id: probeId(name),
         req: locationRule(exitNamed.get(name)?.req ?? "true"),
       });
+    if (options.regions?.includes(r.name) === true)
+      located.push({ id: regionProbeId(r.name) });
     if (reached.has(r.id)) located.push({ id: factOf(r.id) });
     located.push(...(extra.get(r.name) ?? []));
     const states = nodes.statesOf(r);
@@ -639,6 +663,91 @@ export function drKeyLogic(settings: Settings): ReadonlyMap<string, KeyLogic> {
   return found;
 }
 
+/** The probe's answers, by mode and release. */
+const TR_ACCESS = new Map<string, TurtleRockAccess>();
+
+/**
+ * Which of Turtle Rock's ways in the vanilla world reaches with every item
+ * but the dungeon's small keys (set_turtle_rock_rules, StaticKeyLogic.py:
+ * 211-223): every other key door open and every big key held from 1.5.7
+ * (4222a44, get_all_state(keys=True)), none before (keys=False). Its own
+ * world, of partial key logic, answers once per mode and release. Before
+ * 1.5.7, in Standard, it is upstream's own account: "every TR entrance
+ * probe returned False" without the sewers' key, the dungeon keeping the
+ * table's numbers (4222a44's message), the strictest of the cases.
+ */
+export function turtleRockAccess(
+  mode: DrMode,
+  version: number,
+): TurtleRockAccess {
+  const id = `${mode}/${version}`;
+  const known = TR_ACCESS.get(id);
+  if (known !== undefined) return known;
+  const keys = version >= 157;
+  if (!keys && mode === "standard") {
+    const none = { back: false, bigChest: false, front: false, middle: false };
+    TR_ACCESS.set(id, none);
+    return none;
+  }
+  const world = drWorld(
+    {
+      ...DR_DEFAULTS,
+      ...settingsFromUpstream(mode),
+      drVersion: version,
+      wildBigKeys: true,
+      wildKeys: true,
+    },
+    {
+      doorRule: (dungeon) =>
+        keys && dungeon !== "Turtle Rock" ? "true" : "false",
+      regions: Object.values(TURTLE_ROCK_PROBES),
+    },
+  );
+  const all = everything(settingsFromUpstream(mode));
+  const state = keys
+    ? all
+    : Object.fromEntries(
+        Object.entries(all).filter(([item]) => !/^(big)?[kK]ey/.test(item)),
+      );
+  const solution = solveFacts(world, state);
+  const reached = (region: string) =>
+    solution.location(regionProbeId(region)) === "yes";
+  const access: TurtleRockAccess = {
+    back: reached(TURTLE_ROCK_PROBES.back),
+    bigChest: reached(TURTLE_ROCK_PROBES.bigChest),
+    front: reached(TURTLE_ROCK_PROBES.front),
+    middle: reached(TURTLE_ROCK_PROBES.middle),
+  };
+  TR_ACCESS.set(id, access);
+  return access;
+}
+
+/** The static key logic built, by analysis, Turtle Rock's case and release. */
+const STATIC_LOGIC = new WeakMap<
+  ReadonlyMap<string, KeyLogic>,
+  Map<string, ReadonlyMap<string, KeyLogic>>
+>();
+
+/** staticKeyLogic, once per analysis, case and release. */
+function staticLogicOf(
+  analysis: ReadonlyMap<string, KeyLogic>,
+  trCase: TurtleRockCase | null,
+  version: number,
+): ReadonlyMap<string, KeyLogic> {
+  let byKey = STATIC_LOGIC.get(analysis);
+  if (byKey === undefined) {
+    byKey = new Map();
+    STATIC_LOGIC.set(analysis, byKey);
+  }
+  const id = `${trCase}/${version}`;
+  let found = byKey.get(id);
+  if (found === undefined) {
+    found = staticKeyLogic(analysis, trCase, version);
+    byKey.set(id, found);
+  }
+  return found;
+}
+
 /**
  * The Door Randomizer's world for a run's settings, its doors and
  * entrances vanilla, compiled: once per settings change.
@@ -659,8 +768,8 @@ export function drWorld(
     },
     all.dangerousKeyLogic === true,
   );
-  const connections =
-    options.connections ?? vanillaConnections(mode, Number(all.drVersion));
+  const version = Number(all.drVersion);
+  const connections = options.connections ?? vanillaConnections(mode, version);
   const exits = exitsOf(connections, mode, options);
   const locations = new Map<string, string>();
   for (const region of DR_REGIONS)
@@ -696,8 +805,19 @@ export function drWorld(
   const marked = markWorlds(exits);
   const derived = derivedSettings(connections, marked, mode);
   // In set_rules' order: global_rules (the key logic, the boss items, the
-  // spikes' pot), standard_rules, the bomb shop, the bunny last
+  // spikes' pot), standard_rules, the static key logic's own rules
+  // (Rules.py:56-58 at 1.5.8), the bomb shop, the bunny last. The static
+  // key logic sets its doors' rules first, at link_doors (DoorShuffle.py:
+  // 55-57 at 1.5.8), over DR's analysis: none without one (strict-safe)
   const { doorRule } = options;
+  const analysis =
+    options.connections === undefined && all.dungeonPotsAndDrops !== true
+      ? drKeyLogic(all)
+      : undefined;
+  const isStatic = all.staticKeyLogic === true && analysis !== undefined;
+  const trCase = isStatic
+    ? turtleRockCase(turtleRockAccess(mode, version))
+    : null;
   addKeyRules(
     exits,
     locations,
@@ -709,9 +829,7 @@ export function drWorld(
             doorRule(dungeon, rule, logic, keys),
         },
     mode,
-    options.connections === undefined && all.dungeonPotsAndDrops !== true
-      ? drKeyLogic(all)
-      : undefined,
+    isStatic ? staticLogicOf(analysis, trCase, version) : analysis,
   );
   if (all.restrictBossItems === true)
     addBossItemRules(
@@ -730,6 +848,7 @@ export function drWorld(
     );
     addZeldaPath(exits, locations, path);
   }
+  if (isStatic) addStaticKeyRules(exits, locations, keys, mode, trCase);
   addBombShopRule(exits, mode);
   addBunnyRules(exits, locations, marked, mode, added);
 

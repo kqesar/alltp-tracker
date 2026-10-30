@@ -154,7 +154,7 @@ export const playedRun = (
 /**
  * The Door Randomizer's real spoiler races' logs the pack keeps (packs/alttpr/
  * test/dr-spoilers/, recorded by its script): keysanity with the doors, pots
- * and drops vanilla (an unstable build's static key logic), key drops and
+ * and drops vanilla (an unstable 1.5.6 build's static key logic), key drops and
  * key pots shuffled, and the dungeon items kept in their dungeons.
  */
 export type DoorFixture = "660701088" | "278438665" | "239088210";

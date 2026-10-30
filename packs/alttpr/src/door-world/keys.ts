@@ -167,6 +167,13 @@ export interface WorldKeys {
    * recorded and the vanilla drops reached.
    */
   atLeast(dungeon: string, n: number): string;
+  /**
+   * At least `n` keys of a dungeon from its chests, as has_sm_key_strict
+   * counts them (the forced keys aside, BaseClasses.py:1124-1130), as the
+   * run holds them: below `n` maybe while they stay in their dungeons, as
+   * a door is; bought, `maybe`, with universal keys.
+   */
+  chestKeys(dungeon: string, n: number): string;
   /** The key drops whose keys are facts, not items. */
   readonly forcedDrops: readonly KeyDrop[];
 }
@@ -212,6 +219,8 @@ export function worldKeys(
     const unsure = [key, ...facts, ...facts.map(maybeOf)].join(", ");
     return or(sure, and(`count(${unsure}) >= ${n}`, "maybe"));
   };
+  const chestsAtLeast = (dungeon: string, n: number) =>
+    n <= 0 ? "true" : `key${codeOf(dungeon)} >= ${n}`;
   return {
     atLeast,
     bigKeyRule: (dungeon) => {
@@ -223,33 +232,40 @@ export function worldKeys(
         ...(unsure ? ["maybe"] : []),
       );
     },
+    chestKeys: (dungeon, n) =>
+      holding === "universal"
+        ? "maybe"
+        : holding === "dungeon"
+          ? or(chestsAtLeast(dungeon, n), "maybe")
+          : chestsAtLeast(dungeon, n),
     doorRule: (dungeon, rule, logic) => {
       // has_sm_key_strict: the keys found, the forced ones aside
-      // (BaseClasses.py:1119-1125), as many as the chests hold
-      if (holding === "strict") {
-        const n = logic.layout.maxChests;
-        return n <= 0 ? "true" : `key${codeOf(dungeon)} >= ${n}`;
-      }
+      // (BaseClasses.py:1124-1130), as many as the chests hold
+      if (holding === "strict")
+        return chestsAtLeast(dungeon, logic.layout.maxChests);
+      // A dungeon counting its chests' keys alone (static key logic,
+      // Rules.py:2394 at 1.5.8) reads them with has_sm_key_strict
+      const count = logic.chestCounting === true ? chestsAtLeast : atLeast;
       // Every door the analysis walks gets one (analyze_dungeon): a rule
       // without it would open the door for nothing
       const worst = rule.worstCase;
       if (worst === undefined)
         throw new RangeError(`No worst case for a door of ${dungeon}`);
       const n = dangerous ? worst : Math.min(worst, rule.smallKeyNum);
-      if (holding === "dungeon") return or(atLeast(dungeon, n), "maybe");
+      if (holding === "dungeon") return or(count(dungeon, n), "maybe");
       const alternatives: string[] = [];
       // AllowSmall: the one location behind the door holds its key
       if (rule.allowSmall && rule.allowSmallNum !== undefined)
-        alternatives.push(and("maybe", atLeast(dungeon, rule.allowSmallNum)));
+        alternatives.push(and("maybe", count(dungeon, rule.allowSmallNum)));
       // (Lock, big key): the big key lies behind the door
       if (rule.lockNum !== undefined && rule.alternateSmallKey !== null)
         alternatives.push(
           and(
             "maybe",
-            atLeast(dungeon, Math.min(rule.lockNum, rule.alternateSmallKey)),
+            count(dungeon, Math.min(rule.lockNum, rule.alternateSmallKey)),
           ),
         );
-      return or(atLeast(dungeon, n), ...alternatives);
+      return or(count(dungeon, n), ...alternatives);
     },
     forcedDrops: forced,
     holding,

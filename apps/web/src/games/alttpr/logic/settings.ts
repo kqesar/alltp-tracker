@@ -290,6 +290,8 @@ export const drSettingsOf = (run: RunSettings): Settings => {
       pottery: pottery !== "none",
       restrictBossItems: bossItems !== "none",
       retroBow: settings.rupeeBow,
+      // static: the entrance randomizer's key rules, chest keys alone
+      staticKeyLogic: keyLogic === "static",
       strictKeyLogic: keyLogic === "strict",
       treasureHunt: hunt ? 1 : 0,
       triforceHuntGoal: run.goal === "triforce-hunt",

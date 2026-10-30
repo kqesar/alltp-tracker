@@ -251,7 +251,7 @@ section, `doorLogic`) is swept through that world: `useSweep.ts` loads its chunk
 the seed's own key holding, never keysanity's: DR's key rules depend on it (strict logic applies only to wild
 keys, `Rules.py:2345-2347`, and its key analysis reads the shuffles), where vt's do not. Its waits
 are hidden (`door-logic`) where that world does not hold the run or a needed item lay at one of DR's places;
-a static key logic seed's are as a logic the tracker does not model (`not-modelled`). Its key drops, pots, enemy drops and shop
+a static key logic seed is solved in that world too (its port, `door-world/static.ts`). Its key drops, pots, enemy drops and shop
 items are places of the board when the run's settings shuffle them: one the run took reads "taken, not timed"
 (the timeline never dates them, `isTimelineKey`, which keeps a shared link short), one it did not "never
 taken", and one its settings leave out is not known. The seed's facts add which randomizer and version

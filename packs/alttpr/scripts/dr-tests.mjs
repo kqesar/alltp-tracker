@@ -494,10 +494,178 @@ export function importDrTests(read, harness, commit, files) {
       };
     });
   });
+  const pool = poolOf(read, harness);
   return {
     fixtures,
-    pool: poolOf(read, harness),
+    pool,
+    staticKeyLogic: staticKeyLogicTestsOf(read, [
+      ...pool.progression.flatMap((p) => p.items),
+      ...pool.dungeonItems.items,
+      ...pool.prizes.items,
+    ]),
     suite: suiteOf(read, files.suite),
     vanillaKeyLogic: vanillaKeyLogicOf(read),
+  };
+}
+
+/**
+ * @typedef {{ location: string, dungeon: string, keys: number, line: number, without?: string[], placed?: Record<string, string> }} StaticCase
+ */
+
+/**
+ * The tests of the static key logic (test/TestStaticKeyLogic.py, 1.5.7 on)
+ * as cases. Its world is build_vanilla_world with that key logic (Open,
+ * keys in their dungeons), the Menu leading straight to six dungeons'
+ * portals (setUpClass); a state holds every item that is progress or a big
+ * key, each once (a set of names), less those a case leaves out, and a
+ * number of one dungeon's small keys. `min_keys` is the fewest keys, 0 to
+ * 6, with which a location is reached: so it is reached with that many,
+ * and not with one fewer. A case made while the test has placed an item
+ * (`self.place`, undone in its `finally`) keeps the placements. Asserting
+ * a fill's rule (`item_rule`) or the settings static logic takes is kept as
+ * code, with its line.
+ * @param {(file: string) => string} read - A file of the release's checkout
+ * @param {readonly string[]} pool - The world's item pool (`poolOf`)
+ */
+export function staticKeyLogicTestsOf(read, pool) {
+  const file = "test/TestStaticKeyLogic.py";
+  const source = read(file);
+  // cls.items (:22): the pool's names that are progress or a big key, but
+  // no small key, by Items.py's item_table (advancement first, type third)
+  const table = /** @type {Record<string, unknown[]>} */ (
+    assigned(read("Items.py"), "item_table", "Items.py").value
+  );
+  const items = [
+    ...new Set(
+      pool.filter((name) => {
+        const entry = table[name];
+        if (entry === undefined) throw new Error(`Items.py: no ${name}`);
+        return (
+          (entry[0] === true || entry[2] === "BigKey") &&
+          entry[2] !== "SmallKey"
+        );
+      }),
+    ),
+  ].sort();
+  const { methods } = classOf(source, file);
+  const keyNames = /** @type {Record<string, string>} */ (
+    assigned(source, "KEYS", file).value
+  );
+  const setUp = methods.find((m) => m.text === "def setUpClass(cls)");
+  if (setUp === undefined) throw new Error(`${file}: no setUpClass`);
+  const built = setUp.body.find((st) => st.text.startsWith("cls.world = "));
+  if (built?.text !== "cls.world = build_vanilla_world(key_logic='static')")
+    throw new Error(`${file}:${setUp.line}: a world the import does not read`);
+  const starts = setUp.body.find((st) => st.text.startsWith("for name in "));
+  const startList = /^for name in (\[.*\])$/.exec(starts?.text ?? "")?.[1];
+  if (startList === undefined)
+    throw new Error(`${file}:${setUp.line}: no starts`);
+  const where = (/** @type {number} */ line) => `${file}:${line}`;
+  /** @type {{ name: string, line: number }[]} */
+  const code = [];
+  /** @type {{ name: string, line: number, cases: StaticCase[] }[]} */
+  const tests = [];
+  for (const method of methods) {
+    const name = /^def (test\w+)\(self\)$/.exec(method.text)?.[1];
+    if (name === undefined) continue;
+    /** @type {Map<string, unknown>} */
+    const names = new Map();
+    /** @type {Map<string, string>} */
+    const placed = new Map();
+    /** @type {StaticCase[]} */
+    const cases = [];
+    /** @type {number[]} */
+    const asserted = [];
+    /** @type {number[]} */
+    const other = [];
+    const value = (/** @type {string} */ text, /** @type {number} */ line) =>
+      caseValue(pythonExpression(text), names, where(line));
+    /** @param {import("./python.mjs").Statement[]} statements */
+    const walk = (statements) => {
+      for (const st of statements) {
+        const { line, text } = st;
+        const bound = /^(\w+) = (.+)$/.exec(text);
+        const loop = st.block ? /^for (\w+) in (.+)$/.exec(text) : null;
+        if (bound !== null)
+          names.set(bound[1] ?? "", value(bound[2] ?? "", line));
+        else if (st.block && (text === "try" || text === "finally"))
+          walk(st.body);
+        else if (loop !== null)
+          for (const item of /** @type {unknown[]} */ (
+            value(loop[2] ?? "", line)
+          )) {
+            names.set(loop[1] ?? "", item);
+            walk(st.body);
+          }
+        else if (text.startsWith("self.place(")) {
+          const call = pythonExpression(text);
+          if (call.t !== "call" || call.args.length !== 2)
+            throw new Error(`${where(line)}: a place the import does not read`);
+          const [at, item] = call.args.map((a) =>
+            caseValue(
+              /** @type {import("./python.mjs").Expr} */ (a),
+              names,
+              where(line),
+            ),
+          );
+          if (item === null) placed.delete(String(at));
+          else placed.set(String(at), String(item));
+        } else if (text.startsWith("self.assertEqual(self.min_keys(")) {
+          // Its message, an f-string, is words for a failure only
+          const call = pythonExpression(text.replace(/, f'[^']*'\)$/, ")"));
+          const [inner, expected] = call.t === "call" ? call.args : [];
+          if (inner?.t !== "call" || expected === undefined)
+            throw new Error(
+              `${where(line)}: an assertion the import does not read`,
+            );
+          const [location, dungeon] = inner.args.map((a) =>
+            caseValue(a, names, where(line)),
+          );
+          const without = inner.keywords.without;
+          cases.push({
+            dungeon: String(dungeon),
+            keys: Number(caseValue(expected, names, where(line))),
+            line,
+            location: String(location),
+            ...(without === undefined
+              ? {}
+              : {
+                  without: /** @type {string[]} */ (
+                    caseValue(without, names, where(line))
+                  ),
+                }),
+            ...(placed.size === 0
+              ? {}
+              : { placed: Object.fromEntries([...placed].sort()) }),
+          });
+        } else if (text.startsWith("self.assert")) asserted.push(line);
+        else other.push(line);
+      }
+    };
+    walk(method.body);
+    if (cases.length === 0) code.push({ line: method.line, name });
+    else {
+      // Beside its cases, a test may only assert (a fill's item_rule): a
+      // statement that changes the world would change its cases
+      if (other.length > 0)
+        throw new Error(`${where(other[0] ?? 0)}: code among ${name}'s cases`);
+      code.push(...asserted.map((line) => ({ line, name })));
+      tests.push({ cases, line: method.line, name });
+    }
+  }
+  return {
+    code,
+    file,
+    harness: {
+      items,
+      keyLogic: "static",
+      keys: keyNames,
+      mode: "open",
+      source: `${file}:${setUp.line}`,
+      starts: /** @type {string[]} */ (
+        caseValue(pythonExpression(startList), new Map(), where(setUp.line))
+      ),
+    },
+    tests,
   };
 }

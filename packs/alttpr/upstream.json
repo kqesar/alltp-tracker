@@ -224,6 +224,11 @@
         "status": "ported"
       },
       {
+        "file": "test/TestStaticKeyLogic.py",
+        "fixture": "test/dr-upstream/static-key-logic.json",
+        "status": "ported"
+      },
+      {
         "file": "test/suite/partial_key_logic.yaml",
         "fixture": "test/dr-upstream/suite/partial_key_logic.json",
         "status": "ported"

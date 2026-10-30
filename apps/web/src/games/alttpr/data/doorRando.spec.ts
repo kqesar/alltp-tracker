@@ -112,7 +112,7 @@ describe("a Door Randomizer run's logic", () => {
     );
   });
 
-  it("reads strict and dangerous key logic, and names static as not modelled", () => {
+  it("reads strict, dangerous and static key logic", () => {
     expect(drSettingsOf(with_(DR, { keyLogic: "strict" }))).toMatchObject({
       strictKeyLogic: true,
     });
@@ -128,9 +128,26 @@ describe("a Door Randomizer run's logic", () => {
     expect(doorNotes(with_(DR, { keyLogic: "dangerous" }), "door")[1]).toBe(
       "Its dangerous key logic: a key door is in logic once the keys of its worst case are found.",
     );
+    // The entrance randomizer's key rules, in DR's world (static.ts)
     const fixed = with_(DR, { keyLogic: "static" });
-    expect(unmodelledReasons(fixed)).toEqual(["DR's static key logic"]);
-    expect(doorLogic(fixed)).toBe(false);
+    expect(unmodelledReasons(fixed)).toEqual([]);
+    expect(doorLogic(fixed)).toBe(true);
+    expect(drSettingsOf(fixed)).toMatchObject({
+      staticKeyLogic: true,
+      strictKeyLogic: false,
+    });
+    expect(doorNotes(fixed, "door")[1]).toBe(
+      "Its static key logic: each key door asks the entrance randomizer's number of keys, those from chests.",
+    );
+    // DR rolls none with key drops or key pots shuffled
+    for (const change of [
+      { dropShuffle: "keys" },
+      { pottery: "keys" },
+    ] as const)
+      expect(unmodelledReasons(with_(fixed, change))).toEqual([
+        "DR's static key logic with shuffled key drops",
+      ]);
+    expect(unmodelledReasons(with_(fixed, { pottery: "cave" }))).toEqual([]);
   });
 
   it("carries the pot shuffle, the boss items and the pyramid into DR's rules", () => {

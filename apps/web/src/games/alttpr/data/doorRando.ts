@@ -401,7 +401,11 @@ export const doorReasons = (
   // Bombs then need the bag, the +10 upgrade (can_use_bombs, BaseClasses.py:
   // 1208-1209), which no cell records: the bomb count starts at 10
   if (door.bombBag) reasons.push("the bomb bag");
-  if (door.keyLogic === "static") reasons.push("DR's static key logic");
+  // DR refuses its static key logic with key drops or key pots shuffled
+  // (static_logic_supported, StaticKeyLogic.py:80-84): no such seed is
+  // rolled, so no reading of its logic holds
+  if (door.keyLogic === "static" && keyDropsShuffled(door))
+    reasons.push("DR's static key logic with shuffled key drops");
   if (door.owLayout !== "vanilla") {
     reasons.push(
       `the ${doorValueText("owLayout", door.owLayout)} overworld layout`,
@@ -438,6 +442,11 @@ export const doorNotes = (
       ...(door.keyLogic === "dangerous"
         ? [
             "Its dangerous key logic: a key door is in logic once the keys of its worst case are found.",
+          ]
+        : []),
+      ...(door.keyLogic === "static"
+        ? [
+            "Its static key logic: each key door asks the entrance randomizer's number of keys, those from chests.",
           ]
         : []),
     ];

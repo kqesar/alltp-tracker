@@ -65,7 +65,9 @@ const fixtures = jsonFiles(DIR)
       !path.includes("/suite/") &&
       !path.endsWith("pool.json") &&
       // KeyDoorShuffle.py's validator, held by key-analysis/analysis.spec.ts
-      !path.endsWith("vanilla-key-logic.json"),
+      !path.endsWith("vanilla-key-logic.json") &&
+      // TestStaticKeyLogic.py's min_keys cases, held by dr-static.spec.ts
+      !path.endsWith("static-key-logic.json"),
   )
   .map((path) => read<Fixture>(path));
 

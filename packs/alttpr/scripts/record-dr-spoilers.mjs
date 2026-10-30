@@ -42,7 +42,7 @@ const AGENT = "RandoAtlas fixtures (KqesaR/alltp-tracker)";
  * (test/dr-playthrough.spec.ts) reads each.
  */
 export const RACES = [
-  // DR 1.5.6-u, keysanity, `static` key logic (not in DR 1.5.6), no DR location
+  // DR 1.5.6-u, keysanity, `static` key logic (an unstable build's, DR's from 1.5.7), no DR location
   "alttpr/saucy-birdtoss-3937",
   // DR 1.5.7-u, keysanity, key drops (enemies' and pots')
   "alttpr/snug-fireshield-5696",

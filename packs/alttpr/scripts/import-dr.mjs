@@ -26,7 +26,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { constant, member, readSprites } from "./dr-enemies.mjs";
-import { importDrRules } from "./dr-rules.mjs";
+import { importDrRules, importStaticKeyLogic } from "./dr-rules.mjs";
 import { harnessFile, importDrTests, SUITES } from "./dr-tests.mjs";
 import { importDrWorld } from "./dr-world-data.mjs";
 import { readCommit } from "./import-upstream-tests.mjs";
@@ -555,6 +555,7 @@ function main(args) {
       generated,
       negatedEvents,
       newItems,
+      staticKeyLogic: importStaticKeyLogic(read),
       uncalledMethods,
       upstream,
     },
@@ -612,6 +613,10 @@ function main(args) {
     [
       join(out, "vanilla-key-logic.json"),
       { generated, upstream, ...tests.vanillaKeyLogic },
+    ],
+    [
+      join(out, "static-key-logic.json"),
+      { generated, upstream, ...tests.staticKeyLogic },
     ],
     ...tests.suite.map(
       (seed) =>

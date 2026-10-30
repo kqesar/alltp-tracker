@@ -1472,3 +1472,87 @@ export function importDrRules(read, world, extras) {
  */
 const buyableAtom = (id, regions) =>
   any(...regions.map((region) => atom(`reach(${id(region)})`)));
+
+/**
+ * @typedef {{ keys: number, bigKeyIn?: string[], withBigKey?: number, smallKeyIn?: string, withSmallKey?: number }} StaticDoor
+ */
+
+/**
+ * The static key logic's tables (`key_logic_algorithm` static, 1.5.7 on:
+ * source/dungeon/StaticKeyLogic.py): each dungeon's key doors and the keys
+ * each asks, counted as the entrance randomizer counts them, chests alone
+ * (DOOR_RULES), each spec as static_door_rules reads it (a number is its
+ * `keys`, a lone `big_key_in` a list of one), and the chests its location
+ * rules name (GT_RANDOMIZER, GT_COMPASS, TR_EYE_BRIDGE). The rules
+ * themselves are code, ported in src/door-world/static.ts.
+ * @param {(file: string) => string} read
+ */
+export function importStaticKeyLogic(read) {
+  const file = "source/dungeon/StaticKeyLogic.py";
+  const source = read(file);
+  /** @param {string} name */
+  const names = (name) => {
+    const { value } = assigned(source, name, file);
+    if (!Array.isArray(value) || !value.every((v) => typeof v === "string"))
+      throw new Error(`${file}: ${name} is no list of names`);
+    return /** @type {string[]} */ (value);
+  };
+  /** @param {unknown} value @param {string} what */
+  const count = (value, what) => {
+    if (typeof value !== "number" || !Number.isInteger(value) || value < 0)
+      throw new Error(`${file}: ${what} is no number of keys`);
+    return value;
+  };
+  /**
+   * @param {string} door
+   * @param {unknown} value
+   * @returns {StaticDoor}
+   */
+  const spec = (door, value) => {
+    if (typeof value === "number") return { keys: count(value, door) };
+    if (value === null || typeof value !== "object" || Array.isArray(value))
+      throw new Error(`${file}: ${door} is no spec`);
+    const {
+      big_key_in: bigKeyIn,
+      keys,
+      small_key_in: smallKeyIn,
+      with_big_key: withBigKey,
+      with_small_key: withSmallKey,
+      ...rest
+    } = /** @type {Record<string, unknown>} */ (value);
+    if (Object.keys(rest).length > 0)
+      throw new Error(`${file}: ${door} asks ${Object.keys(rest).join(", ")}`);
+    /** @type {StaticDoor} */
+    const out = { keys: count(keys, door) };
+    if (bigKeyIn !== undefined) {
+      const list = typeof bigKeyIn === "string" ? [bigKeyIn] : bigKeyIn;
+      if (!Array.isArray(list) || !list.every((l) => typeof l === "string"))
+        throw new Error(`${file}: ${door}'s big_key_in`);
+      out.bigKeyIn = /** @type {string[]} */ (list);
+      out.withBigKey = count(withBigKey, `${door}'s with_big_key`);
+    }
+    if (smallKeyIn !== undefined) {
+      if (typeof smallKeyIn !== "string")
+        throw new Error(`${file}: ${door}'s small_key_in`);
+      out.smallKeyIn = smallKeyIn;
+      out.withSmallKey = count(withSmallKey, `${door}'s with_small_key`);
+    }
+    return out;
+  };
+  const table = assigned(source, "DOOR_RULES", file);
+  /** @type {Record<string, Record<string, StaticDoor>>} */
+  const doors = {};
+  for (const [dungeon, list] of Object.entries(
+    /** @type {Record<string, Record<string, unknown>>} */ (table.value),
+  ))
+    doors[dungeon] = Object.fromEntries(
+      Object.entries(list).map(([door, value]) => [door, spec(door, value)]),
+    );
+  return {
+    doors,
+    gtCompass: names("GT_COMPASS"),
+    gtRandomizer: names("GT_RANDOMIZER"),
+    source: `${file}:${table.line}`,
+    trEyeBridge: names("TR_EYE_BRIDGE"),
+  };
+}

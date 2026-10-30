@@ -64,8 +64,8 @@ describe("the Door Randomizer's rules (import-dr, stage B)", () => {
     // from the pots' data) and the two Dark Lake Hylia spike cave pots of an
     // f-string (974-975: absent from the vanilla pots); triforce hunt's
     // Murahdahla (72, a location ItemList.py adds); the bunny (93); the
-    // static key logic's rules (56-58, StaticKeyLogic.py), which the world
-    // does not model yet
+    // static key logic's rules (56-58, StaticKeyLogic.py, ported in
+    // door-world/static.ts)
     const why = new Map<string, number[]>();
     for (const { line, why: reason } of rules.unported)
       why.set(reason, [...(why.get(reason) ?? []), line]);
