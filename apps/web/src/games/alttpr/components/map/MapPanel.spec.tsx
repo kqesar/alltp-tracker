@@ -142,7 +142,10 @@ describe("MapPanel", () => {
   });
 
   it("says what a Door Randomizer seed's logic rests on, and names what it cannot model", () => {
-    act(() => useGameStore.getState().applyPreset("door-crosskeys"));
+    act(() => {
+      useGameStore.getState().applyPreset("door-crosskeys");
+      useGameStore.getState().updateDoorSettings({ bombBag: false });
+    });
     render(<MapPanel />);
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
       "The logic follows the entrances you noted",
@@ -169,7 +172,10 @@ describe("MapPanel", () => {
     );
 
     // DR's glitched logics are not alttpr.com's, which the pack ports
-    act(() => useGameStore.getState().applyPreset("door-randomizer"));
+    act(() => {
+      useGameStore.getState().applyPreset("door-randomizer");
+      useGameStore.getState().updateDoorSettings({ bombBag: false });
+    });
     act(() =>
       useGameStore
         .getState()
@@ -184,6 +190,11 @@ describe("MapPanel", () => {
     );
 
     act(() => useGameStore.getState().applyPreset("door-randomizer"));
+    // No run type knows the bomb bag: named until set, never assumed off
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: the bomb bag not known yet (set it in Mode).",
+    );
+    act(() => useGameStore.getState().updateDoorSettings({ bombBag: false }));
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
     expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
       "Door Randomizer seed: the logic is DR's own (1.5.8).",

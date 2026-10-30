@@ -348,7 +348,10 @@ describe("a Door Randomizer run", () => {
   const CASTLE_TOWER = KEY_DUNGEONS.indexOf("castle-tower");
 
   it("is maybe until DR's world loads, then solved in it", async () => {
-    act(() => store().applyPreset("door-randomizer"));
+    act(() => {
+      store().applyPreset("door-randomizer");
+      store().updateDoorSettings({ bombBag: false });
+    });
     expect(solutionOf(store())).toMatchObject({ modelled: false });
     expect(solutionOf(store()).tris.mushroom).toBe("maybe");
 
@@ -377,6 +380,7 @@ describe("a Door Randomizer run", () => {
     act(() => {
       setDoorSolver(solver);
       store().applyPreset("door-randomizer");
+      store().updateDoorSettings({ bombBag: false });
     });
     // Agahnim's Tower's dark maze: one key past its first door
     // (validate_vanilla_key_logic, KeyDoorShuffle.py:2079-2083)

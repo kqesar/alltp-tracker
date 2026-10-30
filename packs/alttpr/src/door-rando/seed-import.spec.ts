@@ -276,6 +276,9 @@ describe("bpsReading", () => {
     expect(reading?.door && shown(reading.door.doorShuffle)).toBe("vanilla");
     expect(reading?.door && shown(reading.door.version)).toBe("1.5.6");
     expect(reading?.door && shown(reading.door.pottery)).toBe("none");
+    // The item substitutions' bomb upgrade entry: +10, no bag
+    // (Rom.py:1063)
+    expect(reading?.door && shown(reading.door.bombBag)).toBe(false);
   });
 
   it("keeps only the bytes the settings decoder reads, none of a location", () => {

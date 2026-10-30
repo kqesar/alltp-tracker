@@ -165,6 +165,11 @@ export const SEED_SETTINGS_RANGES = [
   // 118; vt Rom.php:1554-1576, 1587-1590). Instant post-Agahnim sets bit 7
   // in Standard, $03 otherwise (InitialSram.php:688-701).
   rom("initial-progress", 0x30_b3c5, 1, "other", "z3:initsramtable.asm:118"),
+  // The item substitutions table's second entry, which DR and its fork
+  // write whole: the +5 bomb upgrade's limit and replacement, $00 and Bombs
+  // (10) $31 with the bomb bag, $06 and +10 $52 without (DR 1.5.8 Rom.py:
+  // 1060-1063, 1.5.6 :1017-1020, OWR 0.8.0.2 :1127-1129).
+  rom("item-substitutions", 0x30_c004, 4, "other", "dr:Rom.py:1060-1063"),
 ] as const;
 
 export type SeedSettingsRangeId = (typeof SEED_SETTINGS_RANGES)[number]["id"];
@@ -431,6 +436,8 @@ export interface DoorSeedSettings {
   readonly shopsanity: SeedSetting<boolean>;
   /** Take-any caves (DR's take_any random or fixed). */
   readonly takeAny: SeedSetting<boolean>;
+  /** The bomb bag (`--bombbag`), from the item substitutions. */
+  readonly bombBag: SeedSetting<boolean>;
   /** The Overworld fork's settings, for an "OR" title only. */
   readonly overworld?: {
     readonly version: SeedSetting<string>;
@@ -759,6 +766,23 @@ function doorSettings(
       ),
     );
   const settings: DoorSeedSettings = {
+    // The +5 bomb upgrade's entry as one of the two forms written, else
+    // unrecognized (an older DR, a table moved): never assumed off
+    bombBag: hide(
+      decodeFrom(
+        memory,
+        race,
+        ["door-settings", "item-substitutions"],
+        (table, [item, limit, replacement, filler]) =>
+          !isDoorTable(table) || item !== 0x51 || filler !== 0xff
+            ? null
+            : limit === 0x00 && replacement === 0x31
+              ? true
+              : limit === 0x06 && replacement === 0x52
+                ? false
+                : null,
+      ),
+    ),
     doorShuffle: dr((table) => DOOR_MODES[word(table, 2)] ?? null),
     dropShuffle: dr<SeedDropShuffle>((table, client) =>
       (client & MULTI_CLIENT.drops) === 0

@@ -12,6 +12,10 @@ const openDoorRun = async (page: Page) => {
   await dialog.getByRole("button", { name: /^Door Randomizer/ }).click();
   await page.getByRole("button", { name: "Switch & reset" }).click();
   await page.getByRole("button", { name: /^Mode/ }).click();
+  // No run type knows the bomb bag: not known until set, every check maybe
+  const bag = dialog.getByRole("combobox", { name: "Bomb bag" });
+  await expect(bag).toHaveValue("?");
+  await bag.selectOption("false");
   await dialog.getByRole("combobox", { name: "Pottery" }).selectOption("keys");
   return dialog;
 };
@@ -184,6 +188,9 @@ test("a DR Crosskeys run notes its entrances in DR's own pool and logic", async 
   await expect(
     dialog.getByRole("combobox", { name: "Link's House" }),
   ).toHaveValue("?");
+  await dialog
+    .getByRole("combobox", { name: "Bomb bag" })
+    .selectOption("false");
   await auditPage(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
 
@@ -230,6 +237,9 @@ test("a Door Randomizer run picks one of DR's own entrance shuffles in its summa
   await expect(
     dialog.getByRole("combobox", { name: "Link's House" }),
   ).toHaveValue("?");
+  await dialog
+    .getByRole("combobox", { name: "Bomb bag" })
+    .selectOption("false");
   await auditPage(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
   // DR's own pool: the dungeons' doors alone, on the Entrances tab
@@ -257,7 +267,9 @@ const openBonkRun = async (page: Page) => {
     saved.state.settings = {
       ...saved.state.settings,
       bonkDrops: true,
+      prizeShuffle: "none",
       randomizer: "owr",
+      shuffleFollowers: false,
     };
     localStorage.setItem(key, JSON.stringify(saved));
   });

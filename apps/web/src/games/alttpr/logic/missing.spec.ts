@@ -516,7 +516,11 @@ describe("a Door Randomizer run", () => {
     setDoorSolver(solver);
     const inputs = inputsOf(
       { lantern: true },
-      { preset: "door-randomizer", smallKeys: Array(13).fill(0) },
+      {
+        preset: "door-randomizer",
+        settings: { ...getPreset("door-randomizer").settings, bombBag: false },
+        smallKeys: Array(13).fill(0),
+      },
     );
     const analysis = analysisOf(inputs);
     expect(analysis.solution.door).toBeDefined();
@@ -555,6 +559,7 @@ describe("a Door Randomizer run", () => {
         {
           settings: {
             ...getPreset("door-randomizer").settings,
+            bombBag: false,
             goal: "ganonhunt",
           },
           smallKeys: Array(13).fill(9),

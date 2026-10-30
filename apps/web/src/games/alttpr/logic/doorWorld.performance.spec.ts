@@ -30,7 +30,7 @@ beforeAll(async () => {
 });
 
 describe("a Door Randomizer run's solve", () => {
-  const DR = getPreset("door-randomizer").settings;
+  const DR = { ...getPreset("door-randomizer").settings, bombBag: false };
   it.each<[string, RunSettings]>([
     ["keys in their dungeons", DR],
     [

@@ -1075,7 +1075,10 @@ wild (:1432), the compass mode's $40 wild alone (:1461), and
 `SmithTravelsFreely` $02 the followers shuffled, a value written then and
 never otherwise (:1731, :1773). No byte tells a prize shuffle of none from
 one of dungeon: the ROM reads "inside", which the app keeps unset unless
-the run says which. A table that does not open as the base patch
+the run says which. The bomb bag is read from the item substitutions'
+second entry, which DR and the fork write whole (DR 1.5.8 `Rom.py:1060-1063`,
+1.5.6 :1017-1020, OWR 0.8.0.2 :1127-1129): $51 $00 $31 $FF with the bag,
+$51 $06 $52 $FF without, anything else unrecognized. A table that does not open as the base patch
 writes it is unrecognized, never vanilla. A seed DR marks as Mystery hides
 its settings, the world but.
 

@@ -17,6 +17,7 @@ import { toWorldPosition } from "@/games/alttpr/utils";
 
 const KEYDROP: RunSettings = {
   ...getPreset("door-randomizer").settings,
+  bombBag: false,
   dropShuffle: "keys",
   pottery: "cavekeys",
 };
@@ -112,6 +113,7 @@ describe("a Door Randomizer run's checks", () => {
   it("list an OWR run's bonk drops by their region once loaded, maybe", async () => {
     useGameStore.getState().applyRun("door-randomizer", {
       ...getPreset("door-randomizer").settings,
+      bombBag: false,
       bonkDrops: true,
       randomizer: "owr",
     });
@@ -134,6 +136,7 @@ describe("a Door Randomizer run's checks", () => {
   it("follow the Overworld Randomizer's own rules once its world is loaded", async () => {
     useGameStore.getState().applyRun("door-randomizer", {
       ...getPreset("door-randomizer").settings,
+      bombBag: false,
       bonkDrops: true,
       prizeShuffle: "none",
       randomizer: "owr",
@@ -163,6 +166,7 @@ describe("a Door Randomizer run's checks", () => {
     for (const mode of ["open", "inverted"] as const) {
       const settings: RunSettings = {
         ...getPreset("door-randomizer").settings,
+        bombBag: false,
         bonkDrops: true,
         mode,
         randomizer: "owr",
@@ -205,6 +209,7 @@ describe("a Door Randomizer run's checks", () => {
 describe("a Door Randomizer run with shuffled entrances", () => {
   it("reads DR's world on the entrances noted, a door not noted leading nowhere", async () => {
     useGameStore.getState().applyPreset("door-crosskeys");
+    useGameStore.getState().updateDoorSettings({ bombBag: false });
     const { solver } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(solver);
     // DR's world, not the entrance randomizer's
@@ -233,6 +238,7 @@ describe("a Door Randomizer run with shuffled entrances", () => {
   it("reads DR's world on the doors noted, a door not noted leading nowhere", async () => {
     useGameStore.getState().applyRun("door-randomizer", {
       ...getPreset("door-randomizer").settings,
+      bombBag: false,
       doorShuffle: "basic",
     });
     const { solver } = await import("@/games/alttpr/logic/drSolver");

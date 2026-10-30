@@ -141,12 +141,17 @@ export type DoorRunSettings = {
   prizeShuffle?: PrizeShuffle;
   shuffleFollowers?: boolean;
   /**
-   * The settings DR's rules read that no ROM table states: the bomb bag
-   * (`--bombbag`: bombs need the +10 upgrade, can_use_bombs,
-   * BaseClasses.py:1208-1209), the legacy pot shuffle (`--shufflepots`:
-   * Mire's spikes' key pot may move onto the spikes, Rules.py:530-533), the
-   * boss items and the pyramid hole. A spoiler's meta names them; a run
-   * read from its ROM alone holds DR's defaults until the player sets them.
+   * The bomb bag (`--bombbag`: bombs need the +10 upgrade, can_use_bombs,
+   * BaseClasses.py:1208-1209): a spoiler's meta names it, the ROM's item
+   * substitutions tell it (seed-settings.ts). Unset, it is not known
+   * (`DOOR_UNSET`), a cause of `doorReasons`: off would be the permissive
+   * guess, bombs from the start.
+   *
+   * The settings DR's rules read that no ROM table states: the legacy pot
+   * shuffle (`--shufflepots`: Mire's spikes' key pot may move onto the
+   * spikes, Rules.py:530-533), the boss items and the pyramid hole. A
+   * spoiler's meta names them; a run read from its ROM alone holds DR's
+   * defaults until the player sets them.
    */
   bombBag?: boolean;
   potShuffle?: boolean;
@@ -178,7 +183,8 @@ export type DoorSetting = keyof DoorRunSettings;
  * The DR settings a run may leave unset, which no default stands for: what
  * a ROM may not state and a guess would make unsound. Unset, the entrance
  * shuffle may have moved the door (`doorPoolSettingsOf`), every lobby may
- * move, and OWR's prize and follower shuffles are causes of `doorReasons`.
+ * move, and the bomb bag and OWR's prize and follower shuffles are causes
+ * of `doorReasons`.
  */
 export const DOOR_UNSET = [
   "shuffleLinks",
@@ -186,6 +192,7 @@ export const DOOR_UNSET = [
   "doorIntensity",
   "prizeShuffle",
   "shuffleFollowers",
+  "bombBag",
 ] as const;
 
 /** A DR setting a run may leave unset. */
@@ -199,7 +206,6 @@ export type DoorSettings = Required<
 
 /** DR's defaults (args.json): what an absent field of a DR run means. */
 export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
-  bombBag: false,
   bonkDrops: false,
   decoupledDoors: false,
   doorShuffle: "vanilla",
@@ -701,7 +707,8 @@ export const doorReasons = (
   if (door.enemyShuffle !== "none") reasons.push("shuffled enemies");
   // Bombs then need the bag, the +10 upgrade (can_use_bombs, BaseClasses.py:
   // 1208-1209), which no cell records: the bomb count starts at 10
-  if (door.bombBag) reasons.push("the bomb bag");
+  if (door.bombBag === undefined) reasons.push(BOMB_BAG_NOT_KNOWN);
+  else if (door.bombBag) reasons.push("the bomb bag");
   // DR refuses its static key logic with key drops or key pots shuffled
   // (static_logic_supported, StaticKeyLogic.py:80-84): no such seed is
   // rolled, so no reading of its logic holds
@@ -728,6 +735,9 @@ export const doorReasons = (
   }
   return reasons;
 };
+
+/** The cause `doorReasons` gives while a DR run's bomb bag is unset. */
+export const BOMB_BAG_NOT_KNOWN = "the bomb bag not known yet (set it in Mode)";
 
 /** The cause `doorReasons` gives while an OWR run's prize shuffle is unset. */
 export const PRIZES_NOT_KNOWN =
@@ -1078,6 +1088,7 @@ export const doorFromSeed = (
   const takeAny = stated(rom.takeAny, undefined);
   const door: DoorSettings = {
     ...own,
+    bombBag: stated(rom.bombBag, own.bombBag),
     doorShuffle:
       doors === undefined
         ? own.doorShuffle

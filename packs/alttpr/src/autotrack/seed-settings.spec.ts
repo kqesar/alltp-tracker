@@ -319,6 +319,8 @@ describe("decodeSeedSettings", () => {
 // own table, "DR" and DRMode, DRFlags, DRVersionInfo; the standing items'
 // table; the Overworld fork's.
 const DR = {
+  // The item substitutions' +5 bomb upgrade entry (DR 1.5.8 Rom.py:1063)
+  bombUpgrade: 0x18_4004,
   // vt's tables, which the fork writes whole (OWR 0.8.0.2 Rom.py)
   compassMode: 0x18_003c, // :1463
   flags: 0x13_8004, // Rom.py:678-679
@@ -388,6 +390,7 @@ describe("decodeSeedSettings, a Door Randomizer seed", () => {
       { race: true },
     );
     expect(doorShown(reading)).toEqual({
+      bombBag: "?race-mode",
       doorShuffle: "?race-mode",
       dropShuffle: "?race-mode",
       pottery: "?race-mode",
@@ -410,6 +413,8 @@ describe("decodeSeedSettings, a Door Randomizer seed", () => {
       }),
     );
     expect(doorShown(reading)).toEqual({
+      // An image of zeros holds neither form of the item substitutions
+      bombBag: "?unrecognized",
       doorShuffle: "vanilla",
       dropShuffle: "keys",
       pottery: "beyond-caves",
@@ -527,6 +532,41 @@ describe("decodeSeedSettings, a Door Randomizer seed", () => {
     expect(doorShown(decode(doorImage("OR156_1_1_1")))?.overworld?.layout).toBe(
       "?unrecognized",
     );
+  });
+});
+
+describe("decodeSeedSettings, the bomb bag of a DR or OWR seed", () => {
+  /** The +5 bomb upgrade's entry: item, limit, replacement, filler. */
+  const entry = (...bytes: number[]) =>
+    Object.fromEntries(bytes.map((byte, i) => [DR.bombUpgrade + i, byte]));
+  /** The bomb bag as a reading shows it. */
+  const bagOf = (reading: SeedSettingsReading) =>
+    (doorShown(reading) as Record<string, unknown> | undefined)?.bombBag;
+
+  it("reads the bomb bag from the item substitutions DR writes", () => {
+    const bag = (
+      writes: Readonly<Record<number, number>>,
+      title = "DR156_1_1_1",
+    ) => bagOf(decode(doorImage(title, writes)));
+    // Rom.py:1063: $00 and Bombs (10) with the bag, $06 and +10 without
+    expect(bag(entry(0x51, 0x00, 0x31, 0xff))).toBe(true);
+    expect(bag(entry(0x51, 0x06, 0x52, 0xff))).toBe(false);
+    expect(bag(entry(0x51, 0x06, 0x52, 0xff), "OR157_1_1_1")).toBe(false);
+    // Any other bytes, a table moved: never assumed off
+    expect(bag(entry(0x51, 0x06, 0x31, 0xff))).toBe("?unrecognized");
+    expect(bag(entry(0x53, 0x06, 0x52, 0xff))).toBe("?unrecognized");
+    expect(bag({})).toBe("?unrecognized");
+    // Without DR's own table, nothing of DR's is read
+    const rom = doorImage("DR156_1_1_1", entry(0x51, 0x06, 0x52, 0xff));
+    rom.fill(0, DR.magic, DR.magic + 2);
+    expect(bagOf(decode(rom))).toBe("?unrecognized");
+    expect(
+      bagOf(
+        decode(doorImage("DR156_1_1_1", entry(0x51, 0x00, 0x31, 0xff)), {
+          race: true,
+        }),
+      ),
+    ).toBe("?race-mode");
   });
 });
 

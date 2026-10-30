@@ -199,6 +199,7 @@ describe("MEMORY_RANGES", () => {
       "seed-type:other",
       "initial-pyramid:other",
       "initial-progress:other",
+      "item-substitutions:other",
       // The dark room map (dark-room.ts): navigation, which no race permits
       "dark-room-mode:navigation",
       "dark-room-indoors:navigation",
@@ -426,7 +427,8 @@ describe("MEMORY_RANGES", () => {
     // drops, switch on, join the casual phase alone: the screens' 130 bytes
     // again, in a piece of their own. The fork's prize and follower bytes
     // (seed-settings.ts) are three ranges more, in pieces the settings
-    // already span: no byte or piece more.
+    // already span: no byte or piece more. The item substitutions' bomb
+    // upgrade entry (the bomb bag) is 4 bytes in a piece of their own.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -437,9 +439,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 638, pieces: 24 },
+      casual: { bytes: 642, pieces: 25 },
       race: { bytes: 2073, pieces: 26 },
-      ranges: { casual: 41, race: 41 },
+      ranges: { casual: 42, race: 41 },
     });
   });
 });

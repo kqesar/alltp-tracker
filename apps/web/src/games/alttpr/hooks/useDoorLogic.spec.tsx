@@ -18,7 +18,10 @@ describe("useDoorLogic", () => {
     rerender();
     expect(doorSolverLoaded()).toBe(false);
 
-    act(() => useGameStore.getState().applyPreset("door-randomizer"));
+    act(() => {
+      useGameStore.getState().applyPreset("door-randomizer");
+      useGameStore.getState().updateDoorSettings({ bombBag: false });
+    });
     await waitFor(() => expect(doorSolverLoaded()).toBe(true));
     // And the run is solved by it at once
     const solution = solutionOf(useGameStore.getState());
@@ -31,6 +34,7 @@ describe("useDoorLogic", () => {
     act(() => {
       useGameStore.getState().applyPreset("door-randomizer");
       useGameStore.getState().updateDoorSettings({
+        bombBag: false,
         prizeShuffle: "none",
         randomizer: "owr",
         shuffleFollowers: false,

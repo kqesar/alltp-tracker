@@ -1,6 +1,7 @@
 import type { SeedSettingsReading } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import {
+  BOMB_BAG_NOT_KNOWN,
   DOOR_LOCATION_IDS,
   doorEntranceChange,
   doorEntranceModes,
@@ -42,8 +43,13 @@ import {
   smallKeysMax,
 } from "@/games/alttpr/logic/settings";
 
-const DR = getPreset("door-randomizer").settings;
-const DR_CROSSKEYS = getPreset("door-crosskeys").settings;
+// The run types with the bomb bag set, which no run type knows (the seed's
+// ROM or spoiler, or the player, tells it)
+const DR = { ...getPreset("door-randomizer").settings, bombBag: false };
+const DR_CROSSKEYS = {
+  ...getPreset("door-crosskeys").settings,
+  bombBag: false,
+};
 /** An OWR run whose prize and follower shuffles are set: none of either. */
 const OWR = {
   prizeShuffle: "none",
@@ -874,7 +880,8 @@ describe("doorFromSeed", () => {
       randomizer: "dr",
       restrictBossItems: "dungeon",
     });
-    // DR's defaults are left out; a meta without them keeps the run's
+    // DR's defaults are left out, the bomb bag kept (it has none: unset is
+    // not known); a meta without them keeps the run's
     expect(
       doorFromSeed(
         exact({
@@ -885,7 +892,23 @@ describe("doorFromSeed", () => {
         }),
         { bombBag: true, randomizer: "dr" },
       ),
-    ).toEqual({ randomizer: "dr" });
+    ).toEqual({ bombBag: false, randomizer: "dr" });
+    // A ROM's item substitutions tell it; unread, the run's own, unset
+    const rom = (bombBag: unknown) =>
+      ({
+        door: { bombBag, version: { known: false, why: "not-read" } },
+        randomizer: { kind: "door", overworld: false, version: "1.5.6" },
+      }) as unknown as SeedSettingsReading;
+    expect(doorFromSeed(rom({ known: true, value: true }), {})).toEqual({
+      bombBag: true,
+      randomizer: "dr",
+    });
+    expect(doorFromSeed(rom({ known: false, why: "race-mode" }), {})).toEqual({
+      randomizer: "dr",
+    });
+    expect(unmodelledReasons({ ...DR, bombBag: undefined })).toEqual([
+      BOMB_BAG_NOT_KNOWN,
+    ]);
     expect(doorFromSeed(exact({}), { potShuffle: true })).toEqual({
       potShuffle: true,
       randomizer: "dr",

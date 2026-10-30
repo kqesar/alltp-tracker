@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BOMB_BAG_NOT_KNOWN } from "@/games/alttpr/data/doorRando";
 import {
   crossedLogic,
   DEFAULT_PRESET_ID,
@@ -30,13 +31,17 @@ describe("presets", () => {
   });
 
   it("models every run type's logic", () => {
-    // Mystery's entrances are not known until set: no logic is missing
+    // Mystery's entrances are not known until set, nor a DR seed's bomb
+    // bag, which no run type knows: no logic is missing
     expect(
       presets
         .filter(
           (preset) =>
             !logicModelled({
               ...preset.settings,
+              ...(preset.settings.randomizer === undefined
+                ? {}
+                : { bombBag: false }),
               hidden: preset.settings.hidden?.filter(
                 (key) => key !== "entranceShuffle",
               ),
@@ -44,6 +49,10 @@ describe("presets", () => {
         )
         .map((preset) => preset.id),
     ).toEqual([]);
+    for (const id of ["door-randomizer", "door-crosskeys"])
+      expect(unmodelledReasons(getPreset(id).settings), id).toEqual([
+        BOMB_BAG_NOT_KNOWN,
+      ]);
     expect(unmodelledReasons(getPreset("mystery").settings)).toEqual([
       HIDDEN_ENTRANCES,
     ]);

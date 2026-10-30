@@ -50,10 +50,13 @@ export const KEPT = [
   [0x13_8000, 0x20], // door-settings
   [0x14_2a50, 6], // standing-items
   [0x15_0000, 0x20], // overworld-settings
+  [0x18_003c, 1], // compass-mode
   [0x18_003f, 3], // swordless-mode
   [0x18_0045, 1], // dungeon-item-menu
   [0x18_004a, 1], // inverted-mode
+  [0x18_004c, 1], // follower-shuffle
   [0x18_0167, 2], // goal-items
+  [0x18_016a, 1], // free-item-text
   [0x18_0172, 1], // generic-keys
   [0x18_019a, 1], // tower-crystals
   [0x18_01a6, 1], // ganon-crystals
@@ -61,6 +64,7 @@ export const KEPT = [
   [0x18_0210, 1], // seed-type
   [0x18_32db, 1], // initial-pyramid
   [0x18_33c5, 1], // initial-progress
+  [0x18_4004, 4], // item-substitutions
 ];
 
 /** @param {string} url */

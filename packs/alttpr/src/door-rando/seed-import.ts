@@ -295,6 +295,7 @@ export const doorMetaReading = (
     crystalsGanon: setting(crystals(meta.ganon_crystals)),
     crystalsTower: setting(crystals(meta.gt_crystals)),
     door: {
+      bombBag: setting(exact.bombBag ?? null),
       doorShuffle: known(
         exact.doorShuffle === "partitioned" || exact.doorShuffle === "crossed"
           ? "shuffled"
