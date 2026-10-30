@@ -649,17 +649,6 @@ export const doorReasons = (
   const door = doorOf(settings);
   if (door === null) return [];
   const reasons: string[] = [];
-  // A pool of dungeons puts a boss room in another dungeon, whose map and
-  // compass its restricted items then ask (Rules.py:809-825 reads the
-  // room's dungeon), which the pack's world reads by the room's own
-  if (
-    (door.doorShuffle === "partitioned" || door.doorShuffle === "crossed") &&
-    door.restrictBossItems !== "none"
-  ) {
-    reasons.push(
-      `restricted boss items with a ${doorValueText("doorShuffle", door.doorShuffle).toLowerCase()} door shuffle`,
-    );
-  }
   // OWR's District moves its own overworld's entrances
   if (door.doorEntrances === "district") {
     reasons.push(

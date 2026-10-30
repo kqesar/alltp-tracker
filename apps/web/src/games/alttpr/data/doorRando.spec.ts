@@ -208,10 +208,11 @@ describe("a Door Randomizer run's logic", () => {
         "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon.",
       );
     }
-    // A basic shuffle keeps each boss room in its dungeon
+    // A boss room never leaves its dungeon (dungeon_boss_sectors): its
+    // restricted items stay its dungeon's in a pool too
     expect(
       doorLogic(
-        with_(DR, { doorShuffle: "basic", restrictBossItems: "mapcompass" }),
+        with_(DR, { doorShuffle: "crossed", restrictBossItems: "mapcompass" }),
       ),
     ).toBe(true);
   });
@@ -358,14 +359,6 @@ describe("a Door Randomizer run's logic", () => {
 
   it("names every cause it cannot model, and models none of them", () => {
     const cases: [Partial<RunSettings>, string][] = [
-      [
-        { doorShuffle: "crossed", restrictBossItems: "mapcompass" },
-        "restricted boss items with a crossed door shuffle",
-      ],
-      [
-        { doorShuffle: "partitioned", restrictBossItems: "dungeon" },
-        "restricted boss items with a partitioned door shuffle",
-      ],
       [{ enemyShuffle: "shuffled" }, "shuffled enemies"],
       [
         { doorEntrances: "district", randomizer: "owr" },

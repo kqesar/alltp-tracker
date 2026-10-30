@@ -13,8 +13,8 @@
 // - Dungeons. A partitioned or crossed shuffle makes each layout one
 //   dungeon's, whatever rooms it holds (update_forced_keys, :1039-1050:
 //   `region.dungeon`): its keys open its key doors, its big key its big
-//   chest, its boss stands in its boss room (set_defeat_dungeon_boss_rule
-//   reads the room's dungeon), its drops hold its keys. A room's dungeon is
+//   chest, its drops hold its keys (its boss room is always its own:
+//   dungeon_boss_sectors, DungeonGenerator.py:4138). A room's dungeon is
 //   the one whose portal the noted links reach it from; basic keeps each
 //   room in its own.
 // - Keys. DR analyses each generated layout (KeyDoorShuffle.py), which the
@@ -130,11 +130,6 @@ export function isShut(
   return kindIn(door, doors) === "trap" && !TRAP_EXCEPTIONS.has(door.name);
 }
 
-/** The region each DR location stands in, by name. */
-const REGION_OF_LOCATION: ReadonlyMap<string, string> = new Map(
-  DR_REGIONS.flatMap((r) => r.locations.map((l) => [l, r.name] as const)),
-);
-
 /**
  * Each dungeon room's dungeon in a run: basic keeps its own; partitioned
  * and crossed give it the dungeon of the portal whose lobby its layout
@@ -196,21 +191,6 @@ const KIND_RULES: Partial<Record<DoorKindNote, string>> = {
   dash: "@drCanUseBombs | @drHasBoots",
 };
 
-/** Each dungeon's boss's rule, read off its "- Boss" location's. */
-const BOSS_RULES: ReadonlyMap<string, string> = (() => {
-  const found = new Map<string, string>();
-  for (const [name, rule] of Object.entries(DR_RULES.locations)) {
-    if (!name.endsWith(" - Boss")) continue;
-    const region = REGION_OF_LOCATION.get(name);
-    const dungeon = region === undefined ? null : regionNamed(region).dungeon;
-    if (dungeon !== null) found.set(dungeon, rule.req);
-  }
-  return found;
-})();
-
-/** Every boss's rule at once: a boss room whose dungeon has none. */
-const EVERY_BOSS = and(...new Set(BOSS_RULES.values()));
-
 /** An exit, as the world builder holds it. */
 interface ShuffleExit {
   readonly name: string;
@@ -223,8 +203,9 @@ interface ShuffleExit {
  * kind's (its dependents its controller's), a key door the strict-safe
  * rule of its room's dungeon, a big key door (and the two cells DR always
  * asks it at, special_big_key_doors) and a big chest its big key, an
- * unknown kind `maybe`; a boss room in another dungeon than its own that
- * dungeon's boss (every boss for a dungeon without one).
+ * unknown kind `maybe`. A boss room never changes dungeon: DR assigns each
+ * dungeon its own first (dungeon_boss_sectors, DungeonGenerator.py:1320-
+ * 1322, :4138-4152), so its boss and its prize stay its dungeon's.
  */
 export function addShuffledDoorRules(
   exits: readonly ShuffleExit[],
@@ -262,28 +243,10 @@ export function addShuffledDoorRules(
     if (dungeon === undefined) continue;
     for (const name of region.locations) {
       const rule = locations.get(name);
-      if (rule === undefined) continue;
-      let req = rule;
-      if (isBigChest(name)) req = and(req, keys.bigKeyRule(dungeon));
-      if (dungeon !== region.dungeon && region.dungeon !== null)
-        req = bossIn(req, region.dungeon, dungeon);
-      locations.set(name, req);
+      if (rule !== undefined && isBigChest(name))
+        locations.set(name, and(rule, keys.bigKeyRule(dungeon)));
     }
   }
-  for (const exit of exits) {
-    const region = regionNamed(exit.from);
-    const dungeon = dungeons.get(region.name);
-    if (dungeon !== undefined && region.dungeon !== null)
-      if (dungeon !== region.dungeon)
-        exit.req = bossIn(exit.req, region.dungeon, dungeon);
-  }
-}
-
-/** A rule reading a room's own dungeon's boss, read with another's. */
-function bossIn(req: string, own: string, dungeon: string): string {
-  const mine = BOSS_RULES.get(own);
-  if (mine === undefined || !req.includes(mine)) return req;
-  return req.split(mine).join(`(${BOSS_RULES.get(dungeon) ?? EVERY_BOSS})`);
 }
 
 /**

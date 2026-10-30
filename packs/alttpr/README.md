@@ -1200,9 +1200,10 @@ a dashable one bombs or the boots, a trap shuts its way out but for
 pool of dungeons a room is the dungeon's whose portal its layout holds
 (`roomDungeons`: the rooms the noted links join to the lobby's, whichever
 way; `update_forced_keys`), so its key doors take that dungeon's keys, its
-big chest that big key, its boss room that dungeon's boss
-(`set_defeat_dungeon_boss_rule` reads the room's dungeon), its drops hold
-its keys, and in Standard its dark rooms are lit only in the castle's
+big chest that big key, its drops hold its keys (a boss room never moves:
+DR gives each dungeon its own first, `dungeon_boss_sectors`,
+`DungeonGenerator.py:1320-1322`, so its boss, prize and restricted items
+stay its dungeon's), and in Standard its dark rooms are lit only in the castle's
 layout (`add_conditional_lamps`, `Rules.py:1359-1366`: `litRoom_<region>`,
 a derived setting the vanilla world reads as the sewers in Standard).
 Sanctuary's mirror route leads, from intensity 3, to the lobby of the
