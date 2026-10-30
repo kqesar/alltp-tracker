@@ -3,6 +3,7 @@ import {
   LEGACY_DUNGEON_ITEMS,
   LEGACY_DUNGEONS,
   MAP_LOCATIONS,
+  OWR_FLIP_SCREENS,
 } from "@alltp/pack-alttpr";
 import type { DoorKindNote as PackDoorKind } from "@alltp/pack-alttpr/door-world";
 import { BOSS_STATES, MEDALLION_VALUES } from "@/games/alttpr/constants";
@@ -670,7 +671,7 @@ export const validateProgress = (
     if (isOverworldNotes(saved.overworld)) value.overworld = saved.overworld;
     else
       errors.push(
-        "overworld must pair the fork's whirlpools, list its flute screens and say its edges' crossings",
+        "overworld must pair the fork's whirlpools, list its flute screens and say its edges' crossings and screens' flips",
       );
   }
 
@@ -756,13 +757,21 @@ const isIdMap = (value: unknown): boolean =>
  * leads into (`whirlpools`, both ways), the screens a flute spot is
  * noted on (`flute`, at most eight) and each crossable edge pair of a
  * crossed overworld, by its first edge (`OWR_CROSSINGS`), whether it
- * crosses (`crossings`). Each absent when nothing is noted.
+ * crosses (`crossings`), and each screen Mixed may flip, by its light
+ * world id (`OWR_FLIP_SCREENS`), whether it is flipped (`flips`). Each
+ * absent when nothing is noted.
  */
 export type OverworldNotes = {
   readonly whirlpools?: Readonly<Record<string, string>>;
   readonly flute?: readonly number[];
   readonly crossings?: Readonly<Record<string, boolean>>;
+  readonly flips?: Readonly<Record<string, boolean>>;
 };
+
+/** The screens Mixed may flip, as a flip note's keys. */
+const FLIP_KEYS: ReadonlySet<string> = new Set(
+  OWR_FLIP_SCREENS.map((screen) => String(screen)),
+);
 
 /** The crossable pairs' first edges: a crossing note's keys. */
 const CROSSING_EDGES: ReadonlySet<string> = new Set(
@@ -773,8 +782,14 @@ const CROSSING_EDGES: ReadonlySet<string> = new Set(
 export const isOverworldNotes = (value: unknown): value is OverworldNotes =>
   isRecord(value) &&
   Object.keys(value).every((key) =>
-    ["whirlpools", "flute", "crossings"].includes(key),
+    ["whirlpools", "flute", "crossings", "flips"].includes(key),
   ) &&
+  (value.flips === undefined ||
+    (isRecord(value.flips) &&
+      Object.entries(value.flips).every(
+        ([screen, flipped]) =>
+          FLIP_KEYS.has(screen) && typeof flipped === "boolean",
+      ))) &&
   (value.crossings === undefined ||
     (isRecord(value.crossings) &&
       Object.entries(value.crossings).every(

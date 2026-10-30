@@ -104,3 +104,20 @@ export const RENAMED_REGIONS: readonly string[] = Object.keys(NAMES);
  */
 export const fluteScreenName = (region: string): string =>
   NAMES[region] ?? region;
+
+/** The screens Mixed flips that hold no flute spot: the pedestal's, Zora's. */
+const OTHER_SCREENS: Readonly<Record<number, string>> = {
+  128: "Master Sword Meadow",
+  129: "Zora's Domain",
+};
+
+/**
+ * A screen's name for the player, by its light world id: its flute
+ * region's, less the side in brackets (the whole screen), or the
+ * pedestal's and Zora's.
+ */
+export const screenNameOf = (screen: number): string => {
+  const found = FLUTE_SCREENS.find(([id]) => id === screen);
+  if (found === undefined) return OTHER_SCREENS[screen] ?? `Screen ${screen}`;
+  return fluteScreenName(found[1]).replace(/ \(.*\)$/, "");
+};

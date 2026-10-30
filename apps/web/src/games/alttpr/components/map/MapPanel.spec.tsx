@@ -216,12 +216,14 @@ describe("MapPanel", () => {
     expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
       "Overworld Randomizer seed: the logic is the fork's own (0.8.0.2, on DR 1.5.7).",
     );
-    act(() => useGameStore.getState().updateDoorSettings({ owMixed: true }));
+    act(() => useGameStore.getState().updateDoorSettings({ owLayout: "grid" }));
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "Not modelled yet: a mixed overworld.",
+      "Not modelled yet: the Grid overworld layout.",
     );
     expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
-    act(() => useGameStore.getState().updateDoorSettings({ owMixed: false }));
+    act(() =>
+      useGameStore.getState().updateDoorSettings({ owLayout: "vanilla" }),
+    );
     // A Mystery run's hidden settings: not modelled until set, never v31's
     act(() => {
       useGameStore.getState().updateDoorSettings({ randomizer: "dr" });

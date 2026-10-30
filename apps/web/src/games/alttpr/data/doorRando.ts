@@ -31,6 +31,8 @@ import {
   drLocationsOf,
   NO_SCREEN,
   OVERWORLD_RANDOMIZER_VERSION,
+  type OwrFlipGroup,
+  owrFlipGroups,
   type PotteryMode,
   type SeedSetting,
   type SeedSettingsReading,
@@ -746,7 +748,9 @@ export const doorReasons = (
   // none without Mixed; DR itself crosses none
   if (door.owCrossed !== "none" && door.randomizer !== "owr")
     reasons.push("a crossed overworld");
-  if (door.owMixed) reasons.push("a mixed overworld");
+  // An OWR run's flips are linked as noted (`owrNotesOf`); DR has none
+  if (door.owMixed && door.randomizer !== "owr")
+    reasons.push("a mixed overworld");
   // Shuffled whirlpools and moved flute spots: an OWR run's world links
   // them as noted (`owrNotesOf`); DR itself has neither
   if (door.randomizer !== "owr") {
@@ -1261,6 +1265,29 @@ export const whirlpoolTargetsOf = (
 };
 
 /**
+ * The whirlpool a run's whirlpool always leads into, where the fork's
+ * shuffle leaves it no choice (the pack's `forcedWhirlpoolsOf`,
+ * OverworldShuffle.py:370-413): the dark world's two, while the
+ * overworld is neither crossed but Polar nor mixed (their pool of two),
+ * or Polar with Mixed (linked outright, :376-378). Undefined otherwise,
+ * Mixed's other pools waiting on its flips.
+ */
+export const forcedWhirlpoolOf = (
+  name: string,
+  settings: DoorRunSettings,
+): string | undefined => {
+  const door = doorOf(settings);
+  if (door === null || !door.owWhirlpool || !OWR_DARK_WHIRLPOOLS.has(name))
+    return undefined;
+  const forced = door.owMixed
+    ? door.owCrossed === "polar"
+    : door.owCrossed === "none" || door.owCrossed === "polar";
+  return forced
+    ? [...OWR_DARK_WHIRLPOOLS].find((other) => other !== name)
+    : undefined;
+};
+
+/**
  * The screens a flute spot may stand on (flute_data's light world ids,
  * FluteShuffle.py:683-726): what an overworld note lists. Its spec holds
  * the list to the pack's data.
@@ -1369,6 +1396,7 @@ export const overworldShufflesOf = (
       readonly whirlpools: boolean;
       readonly flute: boolean;
       readonly crossings: boolean;
+      readonly flips: boolean;
     }
   | undefined => {
   const door = doorOf(settings);
@@ -1376,9 +1404,34 @@ export const overworldShufflesOf = (
   const whirlpools = door.owWhirlpool;
   const flute = door.owFluteShuffle !== "vanilla";
   const crossings = crossesEdges(door);
-  return whirlpools || flute || crossings
-    ? { crossings, flute, whirlpools }
+  const flips = door.owMixed;
+  return whirlpools || flute || crossings || flips
+    ? { crossings, flips, flute, whirlpools }
     : undefined;
+};
+
+/**
+ * The groups of screens an OWR run's Mixed flips together (the pack's
+ * `owrFlipGroups`, define_tile_groups): those that may flip, by the run's
+ * world, crossed overworld and whirlpools (its entrances vanilla, the only
+ * ones the fork's world holds). Empty outside a Mixed OWR run.
+ */
+export const flipGroupsOf = (
+  settings: DoorRunSettings & { mode?: string },
+): readonly OwrFlipGroup[] => {
+  const door = doorOf(settings);
+  if (door?.randomizer !== "owr" || !door.owMixed) return [];
+  return owrFlipGroups({
+    crossed: door.owCrossed !== "none",
+    mode:
+      settings.mode === "inverted"
+        ? "inverted"
+        : settings.mode === "standard"
+          ? "standard"
+          : "open",
+    shuffle: "vanilla",
+    whirlpools: door.owWhirlpool,
+  }).filter((group) => group.canFlip);
 };
 
 /** Each notes object's reading per shuffle, so a world is built once. */
@@ -1400,7 +1453,9 @@ export const owrNotesOf = (
   const whirlpools = door.owWhirlpool;
   const flute = door.owFluteShuffle !== "vanilla";
   const crossings = crossesEdges(door);
-  const key = `${whirlpools}/${flute}/${crossings}`;
+  const flips = door.owMixed;
+  const polar = door.owCrossed === "polar";
+  const key = `${whirlpools}/${flute}/${crossings}/${flips}/${polar}`;
   let byKey = owrNotes.get(notes);
   if (byKey === undefined) {
     byKey = new Map();
@@ -1412,6 +1467,8 @@ export const owrNotesOf = (
       ...(whirlpools ? { whirlpools: notes.whirlpools ?? {} } : {}),
       ...(flute ? { flute: notes.flute ?? [] } : {}),
       ...(crossings ? { crossings: notes.crossings ?? {} } : {}),
+      ...(flips ? { flips: notes.flips ?? {} } : {}),
+      ...(polar && flips ? { polar } : {}),
     };
     byKey.set(key, found);
   }

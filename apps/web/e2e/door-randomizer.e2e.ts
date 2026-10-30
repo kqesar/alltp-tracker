@@ -333,26 +333,30 @@ for (const width of WIDTHS) {
 
 /**
  * An OWR run whose whirlpools are shuffled and flute spots moved, and with
- * `crossed`, its edges crossed.
+ * `crossed`, its edges crossed, with `mixed`, its screens flipped by Mixed.
  */
-const openOverworldRun = async (page: Page, crossed = false) => {
+const openOverworldRun = async (page: Page, crossed = false, mixed = false) => {
   const dialog = await openDoorRun(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
-  await page.evaluate((crossed) => {
-    const key = "alltp-tracker-state";
-    const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
-    saved.state.settings = {
-      ...saved.state.settings,
-      customGoals: false,
-      ...(crossed ? { owCrossed: "grouped" } : {}),
-      owFluteShuffle: "random",
-      owWhirlpool: true,
-      prizeShuffle: "none",
-      randomizer: "owr",
-      shuffleFollowers: false,
-    };
-    localStorage.setItem(key, JSON.stringify(saved));
-  }, crossed);
+  await page.evaluate(
+    ([crossed, mixed]) => {
+      const key = "alltp-tracker-state";
+      const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
+      saved.state.settings = {
+        ...saved.state.settings,
+        customGoals: false,
+        ...(crossed ? { owCrossed: "grouped" } : {}),
+        ...(mixed ? { owMixed: true } : {}),
+        owFluteShuffle: "random",
+        owWhirlpool: true,
+        prizeShuffle: "none",
+        randomizer: "owr",
+        shuffleFollowers: false,
+      };
+      localStorage.setItem(key, JSON.stringify(saved));
+    },
+    [crossed, mixed],
+  );
   await page.reload();
   await expect(page.getByTestId("item-grid")).toBeVisible();
   await page.getByRole("tab", { name: "Overworld" }).click();
@@ -373,8 +377,9 @@ test("an OWR run's whirlpools and flute spots are noted by hand, from the keyboa
   await village.focus();
   await page.keyboard.press("Space");
   await expect(village).toBeChecked();
+  // The dark world's two whirlpools pair with no note
   await expect(page.getByTestId("overworld-summary")).toHaveText(
-    "2 of 8 whirlpools noted, 1 of 8 flute spots noted",
+    "4 of 8 whirlpools noted, 1 of 8 flute spots noted",
   );
   await auditPage(page);
   // One undo step a note; the notes are the run's, kept across a reload
@@ -407,10 +412,38 @@ test("a crossed OWR run's edge pairs are noted by hand, from the keyboard", asyn
   ).toHaveValue("crosses");
 });
 
+test("a mixed OWR run's screens are noted by hand, a group at a time, from the keyboard", async ({
+  page,
+}) => {
+  await openOverworldRun(page, false, true);
+  const group = page.getByRole("combobox", {
+    name: "Lost Woods, Stone Bridge, Master Sword Meadow: flipped",
+  });
+  await group.focus();
+  await expect(group).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect(group).toHaveValue("flipped");
+  // Its whirlpools shuffled: their screens flip apart (31 groups)
+  await expect(page.getByTestId("overworld-summary")).toContainText(
+    "1 of 31 screen groups noted",
+  );
+  await auditPage(page);
+  await page.reload();
+  await expect(
+    page.getByRole("combobox", {
+      name: "Lost Woods, Stone Bridge, Master Sword Meadow: flipped",
+    }),
+  ).toHaveValue("flipped");
+});
+
 for (const width of WIDTHS) {
   test(`the Overworld tab fits at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ height: 900, width });
-    await openOverworldRun(page, true);
+    await openOverworldRun(page, true, true);
+    await page
+      .getByRole("combobox", { name: "Link's House: flipped" })
+      .selectOption("stands");
     await page
       .getByRole("combobox", {
         name: "Lost Woods SC to Lost Woods Pass NE: world",

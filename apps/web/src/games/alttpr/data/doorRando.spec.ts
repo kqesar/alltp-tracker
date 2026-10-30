@@ -19,6 +19,8 @@ import {
   doorValueText,
   doorVersionOf,
   FOLLOWERS_NOT_KNOWN,
+  flipGroupsOf,
+  forcedWhirlpoolOf,
   GOALS_NOT_KNOWN,
   isDoorSettings,
   overworldShufflesOf,
@@ -95,9 +97,26 @@ describe("a Door Randomizer run's logic", () => {
     expect(
       unmodelledReasons(with_(DR, { ...OWR, shuffleFollowers: true })),
     ).toEqual(["shuffled followers"]);
+    // Mixed: its flips noted (none yet: nothing they decide in logic)
+    const mixed = with_(DR, { ...OWR, owMixed: true });
+    expect(unmodelledReasons(mixed)).toEqual([]);
+    expect(owrNotesOf(mixed, {})).toEqual({ flips: {} });
+    expect(owrNotesOf(mixed, { flips: { "44": true } })).toEqual({
+      flips: { "44": true },
+    });
+    expect(overworldShufflesOf(mixed)).toEqual({
+      crossings: false,
+      flips: true,
+      flute: false,
+      whirlpools: false,
+    });
+    // Polar with Mixed: its edges stay vanilla, which the world reads
+    expect(
+      owrNotesOf(with_(DR, { ...OWR, owCrossed: "polar", owMixed: true }), {}),
+    ).toEqual({ flips: {}, polar: true });
     // What the fork's world does not model yet stays named
-    expect(unmodelledReasons(with_(DR, { ...OWR, owMixed: true }))).toEqual([
-      "a mixed overworld",
+    expect(unmodelledReasons(with_(DR, { ...OWR, owLayout: "wild" }))).toEqual([
+      "the Wild overworld layout",
     ]);
     // Not known (a ROM that cannot tell none from dungeon, a race): never
     // read as none, each named until the player sets it
@@ -454,6 +473,7 @@ describe("a Door Randomizer run's logic", () => {
       expect(owrNotesOf(run, {})).toEqual({ crossings: {} });
       expect(overworldShufflesOf(run)).toEqual({
         crossings: true,
+        flips: false,
         flute: false,
         whirlpools: false,
       });
@@ -471,6 +491,47 @@ describe("a Door Randomizer run's logic", () => {
     ).toContain("a crossed overworld");
   });
 
+  it("offers Mixed's groups that may flip, and pairs the whirlpools no shuffle chooses", () => {
+    const mixed = with_(DR, { ...OWR, owMixed: true });
+    const groups = flipGroupsOf(mixed);
+    expect(groups).toHaveLength(27);
+    expect(groups.some((g) => g.screens.includes(0x13))).toBe(false);
+    // Crossed, the special screens stand apart
+    expect(
+      flipGroupsOf(with_(DR, { ...OWR, owCrossed: "grouped", owMixed: true }))
+        .length,
+    ).toBeGreaterThan(27);
+    expect(flipGroupsOf(with_(DR, OWR))).toEqual([]);
+    // OverworldShuffle.py:370-413
+    const pools = with_(DR, { ...OWR, owWhirlpool: true });
+    expect(forcedWhirlpoolOf("Qirn Jump Whirlpool", pools)).toBe(
+      "Bomber Corner Whirlpool",
+    );
+    expect(forcedWhirlpoolOf("C Whirlpool", pools)).toBeUndefined();
+    expect(
+      forcedWhirlpoolOf(
+        "Bomber Corner Whirlpool",
+        with_(DR, {
+          ...OWR,
+          owCrossed: "polar",
+          owMixed: true,
+          owWhirlpool: true,
+        }),
+      ),
+    ).toBe("Qirn Jump Whirlpool");
+    for (const change of [
+      { owCrossed: "grouped" as const },
+      { owMixed: true },
+      { owWhirlpool: false },
+    ])
+      expect(
+        forcedWhirlpoolOf(
+          "Qirn Jump Whirlpool",
+          with_(DR, { ...OWR, owWhirlpool: true, ...change }),
+        ),
+      ).toBeUndefined();
+  });
+
   it("names every cause it cannot model, and models none of them", () => {
     const cases: [Partial<RunSettings>, string][] = [
       [{ enemyShuffle: "shuffled" }, "shuffled enemies"],
@@ -479,7 +540,7 @@ describe("a Door Randomizer run's logic", () => {
         "the Door Randomizer's District entrance shuffle",
       ],
       [{ owLayout: "grid", randomizer: "owr" }, "the Grid overworld layout"],
-      [{ owMixed: true, randomizer: "owr" }, "a mixed overworld"],
+      [{ owMixed: true, randomizer: "dr" }, "a mixed overworld"],
     ];
     for (const [change, reason] of cases) {
       const run = with_(DR, change);

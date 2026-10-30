@@ -1,11 +1,17 @@
 import { memo, useId } from "react";
 import {
+  flipGroupsOf,
+  forcedWhirlpoolOf,
   OWR_CROSSINGS,
   OWR_WHIRLPOOLS,
   overworldShufflesOf,
   whirlpoolTargetsOf,
 } from "@/games/alttpr/data/doorRando";
-import { FLUTE_SCREENS, fluteScreenName } from "@/games/alttpr/data/owrScreens";
+import {
+  FLUTE_SCREENS,
+  fluteScreenName,
+  screenNameOf,
+} from "@/games/alttpr/data/owrScreens";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 /** The flute's eight spots (shuffle_flute_spots, FluteShuffle.py:54). */
@@ -20,6 +26,15 @@ const WhirlpoolRow = memo(({ name }: { name: string }) => {
   const pool = whirlpoolTargetsOf(name, settings);
   const targets =
     target === undefined || pool.includes(target) ? pool : [...pool, target];
+  // A pair the shuffle leaves no choice for is linked with no note
+  const forced = forcedWhirlpoolOf(name, settings);
+  if (forced !== undefined)
+    return (
+      <li className="door-row" data-testid={`whirlpool-row-${name}`}>
+        <span className="door-row__name">{name}</span>
+        <span className="door-row__link">leads to {forced} (always)</span>
+      </li>
+    );
   return (
     <li className="door-row" data-testid={`whirlpool-row-${name}`}>
       <span className="door-row__name">{name}</span>
@@ -40,6 +55,45 @@ const WhirlpoolRow = memo(({ name }: { name: string }) => {
             {other}
           </option>
         ))}
+      </select>
+    </li>
+  );
+});
+
+/** A flip's select value: not known, stands, flipped. */
+const FLIP_VALUE = { false: "stands", true: "flipped" } as const;
+
+/**
+ * A group of screens Mixed flips together: whether it is flipped, noted
+ * for every screen of the group.
+ */
+const FlipRow = memo(({ screens }: { screens: readonly number[] }) => {
+  const flips = useGameStore((state) => state.overworld.flips);
+  const noteOverworld = useGameStore((state) => state.noteOverworld);
+  const noted = new Set(screens.map((screen) => flips?.[String(screen)]));
+  const value = noted.size === 1 ? [...noted][0] : undefined;
+  const name = screens.map(screenNameOf).join(", ");
+  const id = (screens[0] ?? 0).toString(16).padStart(2, "0");
+  return (
+    <li className="door-row" data-testid={`flip-row-${id}`}>
+      <span className="door-row__name">{name}</span>
+      <select
+        aria-label={`${name}: flipped`}
+        className="checks__input door-row__link"
+        onChange={(event) => {
+          const chosen = event.currentTarget.value;
+          const flipped = chosen === "" ? null : chosen === FLIP_VALUE.true;
+          noteOverworld({
+            flips: Object.fromEntries(
+              screens.map((screen) => [String(screen), flipped]),
+            ),
+          });
+        }}
+        value={value === undefined ? "" : FLIP_VALUE[`${value}`]}
+      >
+        <option value="">? Not known</option>
+        <option value={FLIP_VALUE.false}>Not flipped</option>
+        <option value={FLIP_VALUE.true}>Flipped</option>
       </select>
     </li>
   );
@@ -86,9 +140,10 @@ const CrossingRow = memo(
 /**
  * An Overworld Randomizer run's shuffled overworld, noted by hand: where
  * each whirlpool leads (a note pairs both ways, as the fork links them),
- * the screens its eight flute spots stand on and, overworld crossed,
- * whether each edge pair crosses into the other world. Nothing here is
- * read from the game. Loaded on demand.
+ * the screens its eight flute spots stand on, overworld crossed, whether
+ * each edge pair crosses into the other world and, overworld mixed, which
+ * groups of screens are flipped. Nothing here is read from the game.
+ * Loaded on demand.
  */
 const OverworldPanel = () => {
   const run = useGameStore((state) => state.settings);
@@ -100,9 +155,23 @@ const OverworldPanel = () => {
   // An Inverted world flips every screen: the bird lands in the dark world
   const flipped = run.mode === "inverted";
   const flute = notes.flute ?? [];
-  const pools = Object.keys(notes.whirlpools ?? {}).length;
+  const pools = OWR_WHIRLPOOLS.filter(
+    (name) =>
+      notes.whirlpools?.[name] !== undefined ||
+      forcedWhirlpoolOf(name, run) !== undefined,
+  ).length;
   const crossings = Object.keys(notes.crossings ?? {}).length;
+  const groups = flipGroupsOf(run);
+  const flipsNoted = groups.filter((group) => {
+    const seen = new Set(
+      group.screens.map((screen) => notes.flips?.[String(screen)]),
+    );
+    return seen.size === 1 && !seen.has(undefined);
+  }).length;
   const said = [
+    ...(shuffles.flips
+      ? [`${flipsNoted} of ${groups.length} screen groups noted`]
+      : []),
     ...(shuffles.whirlpools
       ? [`${pools} of ${OWR_WHIRLPOOLS.length} whirlpools noted`]
       : []),
@@ -128,9 +197,33 @@ const OverworldPanel = () => {
       </p>
       <p className="entrances__hint">
         Note each by hand as you find it: the tracker never reads where a
-        whirlpool, the flute or a screen's edge takes you. One not noted leads
-        nowhere.
+        whirlpool, the flute or a screen's edge takes you, nor which screens are
+        flipped. One not noted leads nowhere.
       </p>
+      {shuffles.flips && (
+        <section
+          aria-labelledby={`${headingId}-flips`}
+          className="entrances__world"
+        >
+          <h3
+            className="entrances__heading page-background"
+            id={`${headingId}-flips`}
+          >
+            Screens
+          </h3>
+          <p className="entrances__hint">
+            Mixed flips screens in groups: a flipped screen shows the other
+            world's version of itself (the dark world's in the light world).
+            While a group is not known, nothing it decides is in logic. The
+            screens around the sanctuary never flip with these entrances.
+          </p>
+          <ul className="entrances__list">
+            {groups.map(({ screens }) => (
+              <FlipRow key={screens.join("-")} screens={screens} />
+            ))}
+          </ul>
+        </section>
+      )}
       {shuffles.whirlpools && (
         <section
           aria-labelledby={`${headingId}-whirlpools`}

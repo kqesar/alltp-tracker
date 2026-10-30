@@ -2,6 +2,7 @@ import { DR_LOCATIONS, markersOf } from "@alltp/pack-alttpr";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   doorLocationsOf,
+  flipGroupsOf,
   OWR_CROSSINGS,
   setBonkDrops,
 } from "@/games/alttpr/data/doorRando";
@@ -214,6 +215,35 @@ describe("a Door Randomizer run's checks", () => {
     useGameStore.getState().noteOverworld({
       crossings: Object.fromEntries(
         OWR_CROSSINGS.map(([edge]) => [edge, false]),
+      ),
+    });
+    expect(checkStates(state())[WELL]).toBe("available");
+    useGameStore.getState().undo();
+    expect(checkStates(state())[WELL]).toBe("unavailable");
+  });
+
+  it("walk a mixed OWR run's screens only once their flips are noted", async () => {
+    useGameStore.getState().applyRun("door-randomizer", {
+      ...getPreset("door-randomizer").settings,
+      bombBag: false,
+      customGoals: false,
+      owMixed: true,
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+    });
+    const { solver } = await import("@/games/alttpr/logic/owrWorld");
+    setDoorSolver(solver, "owr");
+    expect(solutionOf(state()).modelled).toBe(true);
+    // No flip noted: Link's House's screen not known, the run starts nowhere
+    const WELL = "kakariko-well/left";
+    expect(checkStates(state())[WELL]).toBe("unavailable");
+    // Every group the tab offers noted standing: the vanilla overworld
+    useGameStore.getState().noteOverworld({
+      flips: Object.fromEntries(
+        flipGroupsOf(state().settings).flatMap((group) =>
+          group.screens.map((screen) => [String(screen), false]),
+        ),
       ),
     });
     expect(checkStates(state())[WELL]).toBe("available");

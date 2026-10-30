@@ -57,9 +57,13 @@ describe("the Overworld tab", () => {
     const user = userEvent.setup();
     run({ owWhirlpool: true });
     render(<OverworldPanel />);
+    // The dark world's two, a pool of two, are paired with no note
     expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
-      "0 of 8 whirlpools noted",
+      "2 of 8 whirlpools noted",
     );
+    expect(
+      screen.getByTestId("whirlpool-row-Qirn Jump Whirlpool"),
+    ).toHaveTextContent("leads to Bomber Corner Whirlpool (always)");
     // Flute spots not moved: not offered
     expect(screen.queryByTestId("flute-screen-18")).toBeNull();
     const pool = screen.getByRole("combobox", {
@@ -74,7 +78,7 @@ describe("the Overworld tab", () => {
       screen.getByRole("combobox", { name: "Zora Whirlpool: leads to" }),
     ).toHaveValue("C Whirlpool");
     expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
-      "2 of 8 whirlpools noted",
+      "4 of 8 whirlpools noted",
     );
     // A whirlpool never leads into itself
     expect(
@@ -96,8 +100,11 @@ describe("the Overworld tab", () => {
         .filter((value) => value !== "");
     run({ owWhirlpool: true });
     const { unmount } = render(<OverworldPanel />);
-    // OverworldShuffle.py:378-391: light with light, dark with dark
-    expect(options("Qirn Jump Whirlpool")).toEqual(["Bomber Corner Whirlpool"]);
+    // OverworldShuffle.py:378-391: light with light, dark with dark (the
+    // two dark ones paired with no choice)
+    expect(
+      screen.queryByRole("combobox", { name: "Qirn Jump Whirlpool: leads to" }),
+    ).toBeNull();
     expect(options("C Whirlpool")).toEqual([
       "River Bend Whirlpool",
       "Lake Hylia Whirlpool",
@@ -181,6 +188,42 @@ describe("the Overworld tab", () => {
     expect(store().overworld).toEqual({});
     act(() => store().undo());
     expect(pair).toHaveValue("stays");
+  });
+
+  it("notes Mixed's screens a group at a time, by keyboard too", async () => {
+    const user = userEvent.setup();
+    run({ owMixed: true });
+    render(<OverworldPanel />);
+    // define_tile_groups' groups that may flip (the sanctuary's never)
+    expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
+      "0 of 27 screen groups noted",
+    );
+    expect(screen.queryByTestId("flip-row-13")).toBeNull();
+    const lostWoods = screen.getByRole("combobox", {
+      name: "Lost Woods, Stone Bridge, Master Sword Meadow: flipped",
+    });
+    expect(lostWoods.closest("li")).toHaveAttribute(
+      "data-testid",
+      "flip-row-00",
+    );
+    lostWoods.focus();
+    await user.selectOptions(lostWoods, ["flipped"]);
+    expect(store().overworld.flips).toEqual({
+      "0": true,
+      "45": true,
+      "128": true,
+    });
+    expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
+      "1 of 27 screen groups noted",
+    );
+    await user.selectOptions(lostWoods, ["stands"]);
+    expect(store().overworld.flips?.["45"]).toBe(false);
+    await user.selectOptions(lostWoods, [""]);
+    expect(store().overworld).toEqual({});
+    act(() => store().undo());
+    expect(lostWoods).toHaveValue("stands");
+    // A whirlpool select offers the seven others: Mixed's pools wait on flips
+    expect(screen.queryByTestId("whirlpool-row-C Whirlpool")).toBeNull();
   });
 
   it("names the flute screens as the tracker names places", () => {

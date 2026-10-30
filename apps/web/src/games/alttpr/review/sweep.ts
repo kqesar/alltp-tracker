@@ -176,13 +176,14 @@ export const hiddenReason = (
   }
   if (doorShuffleSettingsOf(settings) !== undefined) return "doors";
   // The sweep solves the fork's world without the player's notes, which
-  // hold no time: its shuffled whirlpools, flute spots and crossed edges
-  // would read vanilla
+  // hold no time: its shuffled whirlpools, flute spots, crossed edges and
+  // Mixed's flips would read vanilla
   const overworld = owrNotesOf(settings, NO_OVERWORLD_NOTES);
   if (
     overworld?.whirlpools !== undefined ||
     overworld?.flute !== undefined ||
-    overworld?.crossings !== undefined
+    overworld?.crossings !== undefined ||
+    overworld?.flips !== undefined
   )
     return "overworld";
   const logic = log.extra.settings?.logic;

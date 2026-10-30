@@ -1004,11 +1004,13 @@ describe("the settings in a link (link 4)", () => {
       ...getPreset("door-randomizer").settings,
       owCrossed: "grouped",
       owFluteShuffle: "random",
+      owMixed: true,
       owWhirlpool: true,
       randomizer: "owr",
     };
     const overworld = {
       crossings: { "Lost Woods SC": false, "Lost Woods SW": true },
+      flips: { "0": true, "44": false },
       flute: [0x30, 0x18],
       whirlpools: {
         "C Whirlpool": "Zora Whirlpool",

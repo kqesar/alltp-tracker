@@ -1,3 +1,4 @@
+import { OWR_FLIP_SCREENS } from "@alltp/pack-alttpr";
 import { crossablePairsOf, whirlpoolsOf } from "@alltp/pack-alttpr/door-world";
 import { OWR_DATA } from "@alltp/pack-alttpr/door-world/owr";
 import { describe, expect, it } from "vitest";
@@ -12,6 +13,7 @@ import {
   FLUTE_SCREENS,
   fluteScreenName,
   RENAMED_REGIONS,
+  screenNameOf,
 } from "@/games/alttpr/data/owrScreens";
 import { withOverworldNotes } from "@/games/alttpr/logic/overworldNotes";
 import { isOverworldNotes } from "@/games/alttpr/stores/persistence";
@@ -78,6 +80,29 @@ describe("an OWR run's overworld notes", () => {
     );
   });
 
+  it("notes Mixed's flips by screen, in screen order, forgotten by null", () => {
+    const notes = withOverworldNotes(
+      {},
+      { flips: { "0": true, "45": true, "128": true } },
+    );
+    expect(Object.keys(notes.flips ?? {})).toEqual(["0", "45", "128"]);
+    expect(withOverworldNotes(notes, { flips: { "45": true } })).toBe(notes);
+    expect(
+      withOverworldNotes(notes, {
+        flips: { "0": null, "45": null, "128": null },
+      }),
+    ).toEqual({});
+    expect(isOverworldNotes(notes)).toBe(true);
+  });
+
+  it("names every screen Mixed may flip", () => {
+    for (const screen of OWR_FLIP_SCREENS)
+      expect(screenNameOf(screen)).not.toMatch(/^Screen /);
+    expect(screenNameOf(0x00)).toBe("Lost Woods");
+    expect(screenNameOf(0x2c)).toBe("Link's House");
+    expect(screenNameOf(0x80)).toBe("Master Sword Meadow");
+  });
+
   it("validates a save's notes by the fork's whirlpools and flute screens", () => {
     expect(
       isOverworldNotes({
@@ -90,7 +115,13 @@ describe("an OWR run's overworld notes", () => {
     expect(isOverworldNotes({ whirlpools: { "C Whirlpool": "Nowhere" } })).toBe(
       false,
     );
-    expect(isOverworldNotes({ flips: {} })).toBe(false);
+    expect(isOverworldNotes({ screens: {} })).toBe(false);
+    // Mixed's flips: by the screens it may flip, flipped or standing
+    expect(isOverworldNotes({ flips: { "44": true, "128": false } })).toBe(
+      true,
+    );
+    expect(isOverworldNotes({ flips: { "1": true } })).toBe(false);
+    expect(isOverworldNotes({ flips: { "44": "yes" } })).toBe(false);
   });
 
   it("names the pack's whirlpools and flute screens", () => {
