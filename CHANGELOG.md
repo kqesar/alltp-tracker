@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.67.1](https://github.com/kqesar/alltp-tracker/compare/v2.67.0...v2.67.1) (2026-10-30)
+
+
+### 🐛 Bug Fixes
+
+* **desktop:** update tauri-plugin-updater to 2.14.1 for zip 9 ([8e5a57e](https://github.com/kqesar/alltp-tracker/commit/8e5a57e53bbcb31c10be81fc30876a4034de5ecc))
+
 ## [2.67.0](https://github.com/kqesar/alltp-tracker/compare/v2.66.1...v2.67.0) (2026-10-29)
 
 
